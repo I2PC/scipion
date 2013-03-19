@@ -42,7 +42,16 @@ class XmlMapper(Mapper):
             self.root.set("version", str(args.get('version')))
         Mapper.__init__(self, dictClasses)        
         self.pointerList=[]
+        # This dictionary serve to define how to write classes
+        # for example if the pair 'Integer': 'attribute' is present
+        # all Integer will be store as attributes in the xml
+        # possible values are: 
+        #   'attribute', 'class_only', 'class_name', 'name_class', 'name_only'
+        self.classTags = {} 
 
+    def setClassTag(self, classname, tag):
+        self.classTags[classname] = tag
+        
     def indent(self, elem, level=0):
         i = "\n" + level*"  "
         if len(elem):
@@ -91,9 +100,36 @@ class XmlMapper(Mapper):
         return self.objList
                     
         
+    def setChildObject(self, obj, childName, childClass=None):
+        childObj = getattr(obj, childName)
+        if childObj is None:
+            if childClass is None:
+                raise Exception('Attribute "%s" was not found in parent object and classname not stored' % childName)
+            childObj = self.buildObject(childClass)
+            setattr(obj, childName, childObj)
+        return childObj
+                  
     def fillObject(self, obj, objElem):
+        # Set attributes first
+        for k, v in objElem.attrib.iteritems():
+            if k not in ['id', 'classname', 'name']:
+                childObj = self.setChildObject(obj, k)
+                childObj.set(v)
+        # Set tree childs attributes
         for child in objElem:
-            childObj = getattr(obj, child.tag)
+            #print 'tag: ', child.tag, 'attrib: ', child.attrib
+            if 'classname' in child.attrib:
+                childName = child.tag
+                childClass = child.attrib['classname']
+            elif 'name' in child.attrib:
+                childName = child.attrib['name']
+                childClass = child.tag
+            else:
+                childName = child.tag
+                childClass = None
+                
+            childObj = self.setChildObject(obj, childName, childClass)
+            
             if child.text and len(child.text.strip()):
                 childObj.set(child.text)
             else:
@@ -104,6 +140,7 @@ class XmlMapper(Mapper):
                     #save obj in auxiliary file
                     self.pointerList.append(obj)
                 self.fillObject(childObj, child)
+    
     def write(self, filename):
         self.filename = filename
         self.commit()
@@ -118,9 +155,11 @@ class XmlMapper(Mapper):
     def setObjectId(self, objElem, obj):
         # Set attributes of this object element
         # The id is assumed to be a dictionary
-        if obj.id:
+        if type(obj.id) is dict:
             for k, v in obj.id.iteritems():
                 objElem.set(k, str(v))
+        else:
+            objElem.set('id', str(obj.id))
         
     def insert(self, obj):
         """Insert a new object into the system"""
@@ -138,14 +177,32 @@ class XmlMapper(Mapper):
     def insertObjectWithChilds(self, obj, parentElem):
         for key, attr in obj.getAttributesToStore():
             if attr.hasValue():
-                if attr.tag == 'attribute':
+                attrClass = attr.getClassName()
+                objClass = obj.getClassName()
+                allKey = '%s.ALL' % objClass
+                tag = self.classTags.get(allKey, '')
+                classKey = '%s.%s' % (objClass, attrClass)
+                tag = self.classTags.get(classKey, tag)
+                if attr.tag == 'attribute' or tag == 'attribute':
                     parentElem.set(key, str(attr))
                 else:
                     if attr.isPointer():
                         childElem = self.addSubElement(parentElem, key)
                         self.setObjectId(childElem, attr.get())
                     else:
-                        childElem = self.addSubElement(parentElem, key, attr.value)
+                        # Select if we want to use the classname or elem name
+                        # as element tagname
+                        if tag.startswith('class'):
+                            name = attrClass
+                        else:
+                            name = key
+                        childElem = self.addSubElement(parentElem, name, attr.value)
+                        if tag.endswith('class'):
+                            childElem.set('classname', attrClass)
+                        elif tag.endswith('name'):
+                            childElem.set('name', key)
+                        
+                        
                         self.insertObjectWithChilds(attr, childElem)
             
     def updateFrom(self, obj):

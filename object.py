@@ -33,13 +33,14 @@ class Object(object):
     """ All objects in our Domain should inherit from this class
     that will contains all base properties"""
     def __init__(self, value=None, **args):
+        object.__init__(self)
         self.set(value)
-        self.id        = args.get('id', None)
-        self.parent_id = args.get('parent_id', None)
-        self.name      = args.get('name', '')
-        self.tag       = args.get('tag', None) # True if the object serves as input to his parent
-        self.store     = args.get('store', True) # True if this object will be stored from his parent
-        self.pointer   = args.get('pointer', False) # True if will be treated as a reference for storage
+        self.id =  args.get('id', None)
+        self.parent_id =  args.get('parent_id', None)
+        self.name =  args.get('name', '')
+        self.tag =  args.get('tag', None) # True if the object serves as input to his parent
+        self.store =  args.get('store', True) # True if this object will be stored from his parent
+        self.pointer =  args.get('pointer', False) # True if will be treated as a reference for storage
         
     def getClassName(self):
         return self.__class__.__name__
@@ -107,6 +108,12 @@ class Float(Object):
 class Boolean(Object):
     """Boolean object"""
     def convert(self, value):
+        t = type(value)
+        if t is bool:
+            return value
+        if t is str:
+            v = value.strip().lower()
+            return v == 'true' or v == '1'
         return bool(value)    
     
     
@@ -116,6 +123,33 @@ class Pointer(Object):
         Object.__init__(self, value, pointer=True, **args)    
        
 
+class List(Object, list):
+    """Class to store a list of objects"""
+    def __init__(self, **args):
+        Object.__init__(self, **args)
+        list.__init__(self)
+        
+    def __setattr__(self, name, value):
+        if name.startswith('__item__'):
+            self.append(value)
+        else:
+            object.__setattr__(self, name, value)
+            
+    def __getattr__(self, name):
+        if name.startswith('__item__'):
+            index = int(name.split('__item__')[1]) - 1
+            if index < len(self):
+                return self[index]
+            return None
+
+    def getAttributesToStore(self):
+        for i, item in enumerate(self):
+            yield ("__item__%06d" % (i+1), item)
+            
+    def __str__(self):
+        return list.__str__(self)
+        
+        
 class Array(Object):
     """Class for holding fixed len array"""
     def __init__(self, size=10, **args):
