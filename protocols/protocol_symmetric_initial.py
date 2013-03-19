@@ -153,7 +153,7 @@ def calculatePsiProfile(log,avgSideView,avgTopView,ExtraDir,Symmetry,Nproc):
         MDpsi.setValue(MDL_ANGLE_PSI,psi,objIdPsi)
         MDpsi.setValue(MDL_COST,error,objIdPsi)
         MDpsi.write(os.path.join(ExtraDir,'psiProfile.xmd'))
-        psi+=90
+        psi+=3
     deleteFile(log,fnVolume)
     deleteFile(log,fnHist)
     deleteFile(log,fnInitial)
