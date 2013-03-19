@@ -217,7 +217,7 @@ public class MDSearchJDialog extends XmippDialog {
 					index = nextIndex(index, direction);
 			}
 			if (selected_index > -1)
-				parent.selectIndex(selected_index);
+				parent.selectItem(selected_index, 0);
 		} catch (Exception e) {
 			showException(e);
 		}

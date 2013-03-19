@@ -429,9 +429,6 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier)
         }
     }
 
-//    for (int nt=0;nt<Nthreads;nt++)
-//        pthread_join(th_ids[nt],NULL);
-
     if (auto_candidates.size() == 0)
         return 0;
     // Remove the occluded particles
