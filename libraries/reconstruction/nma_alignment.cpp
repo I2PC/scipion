@@ -312,7 +312,7 @@ double ProgNmaAlignment::performContinuousAssignment(const FileName &fnRandom,
 			program = "xmipp_angular_projection_matching";
 			arguments =	formatString(
 							"-i %s_downimg.xmp --ref %s -o %s --search5d_step 1 --max_shift %d -v 0",
-							randStr, refStkStr, fnResults.c_str(), round((double) imgSize / (10.0 * pow(2.0, (double) pyramidLevel))));
+							randStr, refStkStr, fnResults.c_str(), (int)round((double) imgSize / (10.0 * pow(2.0, (double) pyramidLevel))));
 			runSystem(program, arguments, false);
 		}
 	}
