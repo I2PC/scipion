@@ -29,6 +29,7 @@ import java.awt.Color;
 import java.awt.Window;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
@@ -1083,6 +1084,15 @@ public class GalleryData
 
 	public String getFileInfo()
 	{
-		return getFileName();
+		File file = new File(getFileName()); 
+        
+        String fileInfo = "Path: " + file.getAbsolutePath() + "\n\n";
+         
+         
+        fileInfo += "File Name: " + file.getName() + "\n"
+                + "Last Modified: " + new Date(file.lastModified()) + "\n"
+        
+        		+ "Size: " + Filename.humanReadableByteCount(file.length());
+		return fileInfo;
 	}
 }// class GalleryDaa
