@@ -1477,7 +1477,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			// Display
 			addItem(DISPLAY, "Display");
 			addItem(DISPLAY_NORMALIZE, "Global normalization", null, "control released N");
-			addItem(DISPLAY_SHOWLABELS, "Show labels", null, "control released L");
+			addItem(DISPLAY_SHOWLABELS, "Display labels", null, "control released L");
 			addSeparator(DISPLAY);
 			addItem(DISPLAY_RENDERIMAGES, "Render images", null, "control released R");
 			addItem(DISPLAY_APPLYGEO, "Apply geometry", null, "control released G");
@@ -2149,8 +2149,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	public Map<String, String> getKeyAssist()
 	{
 		Map<String, String> map = Collections.synchronizedMap(new LinkedHashMap<String, String>());
-		map.put("Shift + Scroll Up", "Zoom in if images displayed");
-		map.put("Shift + Scroll Down", "Zoom out if images displayed");
+		map.put("Shift + Scroll Up/Ctrl + P", "Zoom in if images displayed");
+		map.put("Shift + Scroll Down/Ctrl + O", "Zoom out if images displayed");
 		map.put("Left click", "Selects a cell in gallery mode and a row in table mode");
 		map.put("Right click", "Selects a row in table mode and displays row menu");
 		map.put("Supr", "Delete selected cell in gallery mode and row in table mode");
@@ -2158,6 +2158,17 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		map.put("Down", "Select next row in table mode and cell in next row in gallery mode");
 		map.put("Left", "Select  previous cell in gallery mode");
 		map.put("Right", "Select next cell in gallery mode");
+		map.put("Ctrl + O", "Open file");
+		map.put("Ctrl + J", "Open with ImageJ");
+		map.put("Ctrl + S", "Save");
+		map.put("F5", "Refresh");
+		map.put("Ctrl + Q", "Exit");
+		map.put("Ctrl + N", "Display global normalization");
+		map.put("Ctrl + L", "Display labels");
+		map.put("Ctrl + R", "Render images");
+		map.put("Ctrl + G", "Apply geometry");
+		map.put("Ctrl + W", "Wrap");
+		
 		return map;
 	}
 
