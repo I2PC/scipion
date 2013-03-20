@@ -140,8 +140,10 @@ def coorrXmippToEmx(emxData,xmdFileName):
     ''' convert a single file '''
     md    = MetaData()
     md.read(xmdFileName)
-    micrographName = xmdFileName.withoutExtension() + BINENDING
-    particleName   = xmdFileName.withoutExtension() + STACKENDING
+    xmdFileNameNoExt = FileName(xmdFileName.withoutExtension())
+    xmdFileNameNoExtNoBlock = xmdFileNameNoExt.removeBlockName()
+    micrographName = xmdFileNameNoExtNoBlock + BINENDING
+    particleName   = xmdFileNameNoExtNoBlock + STACKENDING
     m1             = micrograph(id={'filename': micrographName})
     emxData.addObject(m1)
     counter = FIRSTIMAGE
@@ -153,6 +155,7 @@ def coorrXmippToEmx(emxData,xmdFileName):
         p1             = particle(id={'filename': particleName, 'index':counter})
         p1.centerCoord.X.set(coorX)
         p1.centerCoord.Y.set(coorY)
+        p1.setMicrograph(m1)
         emxData.addObject(p1)
 
         counter += 1
