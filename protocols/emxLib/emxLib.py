@@ -98,13 +98,17 @@ def ctfMicEMXToXmipp(emxData,mode):
         acceleratingVoltage = micrograph.acceleratingVoltage.get()
         amplitudeContrast   = micrograph.amplitudeContrast.get()
         cs                  = micrograph.cs.get()
-        defocusU            = micrograph.defocusU.get()*10.
-        defocusV            = micrograph.defocusV.get()*10.
+
+        defocusU            = micrograph.defocusU.get()
+        if not defocusU is None:
+            defocusU *= 10.
+        defocusV            = micrograph.defocusV.get()
         if defocusV is None:
             defocusV = defocusU
             defocusUAngle = 0.
         else:
             defocusUAngle   = micrograph.defocusUAngle.get()
+            defocusV       *= 10.
         pixelSpacingX    = micrograph.pixelSpacing.X.get()
         pixelSpacingY    = micrograph.pixelSpacing.Y.get()
         if not pixelSpacingY is None:
@@ -114,13 +118,20 @@ def ctfMicEMXToXmipp(emxData,mode):
         MD = MetaData()
         MD.setColumnFormat(False)
         objId = MD.addObject()
-        MD.setValue(MDL_CTF_SAMPLING_RATE, float(pixelSpacingX), objId)
-        MD.setValue(MDL_CTF_VOLTAGE,       float(acceleratingVoltage), objId)
-        MD.setValue(MDL_CTF_CS,            float(cs), objId)
-        MD.setValue(MDL_CTF_DEFOCUSU,      float(defocusU), objId)
-        MD.setValue(MDL_CTF_DEFOCUSV,      float(defocusV), objId)
-        MD.setValue(MDL_CTF_DEFOCUS_ANGLE, float(defocusUAngle), objId)
-        MD.setValue(MDL_CTF_Q0,            float(amplitudeContrast), objId)
+        if pixelSpacingX:
+            MD.setValue(MDL_CTF_SAMPLING_RATE, float(pixelSpacingX), objId)
+        if acceleratingVoltage:
+            MD.setValue(MDL_CTF_VOLTAGE,       float(acceleratingVoltage), objId)
+        if cs:
+            MD.setValue(MDL_CTF_CS,            float(cs), objId)
+        if defocusU:
+            MD.setValue(MDL_CTF_DEFOCUSU,      float(defocusU), objId)
+        if defocusV:
+            MD.setValue(MDL_CTF_DEFOCUSV,      float(defocusV), objId)
+        if defocusUAngle:
+            MD.setValue(MDL_CTF_DEFOCUS_ANGLE, float(defocusUAngle), objId)
+        if amplitudeContrast:
+            MD.setValue(MDL_CTF_Q0,            float(amplitudeContrast), objId)
         MD.setValue(MDL_CTF_K,             1.0, objId)
         MD.write(ctfModelFileName)
     mdMic.write(MICFILE)
