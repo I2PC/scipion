@@ -51,8 +51,8 @@ def ctfMicXmippToEmx(emxData,xmdFileName,amplitudeContrast):
         pixelSpacing        = mdCTF.getValue(MDL_CTF_SAMPLING_RATE, objId2)####
         acceleratingVoltage = mdCTF.getValue(MDL_CTF_VOLTAGE, objId2)
         cs                  = mdCTF.getValue(MDL_CTF_CS, objId2)
-        defocusU            = mdCTF.getValue(MDL_CTF_DEFOCUSU, objId2)
-        defocusV            = mdCTF.getValue(MDL_CTF_DEFOCUSV, objId2)
+        defocusU            = mdCTF.getValue(MDL_CTF_DEFOCUSU, objId2)/10.
+        defocusV            = mdCTF.getValue(MDL_CTF_DEFOCUSV, objId2)/10.
         defocusUAngle       = mdCTF.getValue(MDL_CTF_DEFOCUS_ANGLE, objId2)
 
         m1.acceleratingVoltage.set(acceleratingVoltage)
@@ -98,8 +98,8 @@ def ctfMicEMXToXmipp(emxData,mode):
         acceleratingVoltage = micrograph.acceleratingVoltage.get()
         amplitudeContrast   = micrograph.amplitudeContrast.get()
         cs                  = micrograph.cs.get()
-        defocusU            = micrograph.defocusU.get()
-        defocusV            = micrograph.defocusV.get()
+        defocusU            = micrograph.defocusU.get()*10.
+        defocusV            = micrograph.defocusV.get()*10.
         if defocusV is None:
             defocusV = defocusU
             defocusUAngle = 0.
