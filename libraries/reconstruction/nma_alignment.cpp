@@ -261,22 +261,13 @@ void ProgNmaAlignment::performCompleteSearch(const FileName &fnRandom,
 	if (!projMatch) {
 		program = "xmipp_angular_discrete_assign";
 		arguments = formatString(
-<<<<<<< HEAD
 						"-i %s_downimg.xmp --ref %s -o %s_angledisc.xmd --psi_step 5 --max_shift_change %d --search5D -v 0",
-=======
-						"-i downimg_%s.xmp --ref %s -o angledisc_%s.xmd --psi_step 5 --max_shift_change %d --search5D -v 0",
->>>>>>> 3.0
 						randStr, refSelStr, randStr, (int)round((double) imgSize / (10.0 * pow(2.0, (double) pyramidLevel))));
 	} else {
 		program = "xmipp_angular_projection_matching";
 		arguments =	formatString(
-<<<<<<< HEAD
 				        "-i %s_downimg.xmp --ref %s -o %s_angledisc.xmd --search5d_step 1 --max_shift %d -v 0",
 				        randStr, refStkStr, randStr, (int)round((double) imgSize / (10.0 * pow(2.0, (double) pyramidLevel))));
-=======
-				        "-i downimg_%s.xmp --ref %s -o angledisc_%s.xmd --search5d_step 1 --max_shift %d -v 0",
-						randStr, refStkStr, randStr, (int)round((double) imgSize / (10.0 * pow(2.0, (double) pyramidLevel))));
->>>>>>> 3.0
 	}
 	runSystem(program, arguments, false);
 }
@@ -320,11 +311,7 @@ double ProgNmaAlignment::performContinuousAssignment(const FileName &fnRandom,
 			const char * refStkStr = formatString("%s_ref/ref.stk", randStr).c_str();
 			program = "xmipp_angular_projection_matching";
 			arguments =	formatString(
-<<<<<<< HEAD
 							"-i %s_downimg.xmp --ref %s -o %s --search5d_step 1 --max_shift %d -v 0",
-=======
-							"-i downimg_%s.xmp --ref %s -o %s --search5d_step 1 --max_shift %d -v 0",
->>>>>>> 3.0
 							randStr, refStkStr, fnResults.c_str(), (int)round((double) imgSize / (10.0 * pow(2.0, (double) pyramidLevel))));
 			runSystem(program, arguments, false);
 		}
