@@ -72,12 +72,20 @@ class Object(object):
         """Return internal value"""
         return self.value
     
+    def getId(self):
+        """Return object id"""
+        return self.id
+    
+    def strId(self):
+        """String representation of id"""
+        return str(self.id)
+    
     def __str__(self):
         """String representation of the scalar value"""
         return str(self.value)
         
     def hasValue(self):        
-        return not self.value is None
+        return True
     
     def __eq__(self, other):
         """Comparison for scalars should be by value
@@ -86,26 +94,52 @@ class Object(object):
             return object.__eq__(other)
         return self.value == other.value
     
+
+class OrderedObject(Object):
+    """This is based on Object, but keep the list
+    of the attributes to store in the same order
+    of insertion, this can be useful where order matters"""
+    def __init__(self, value=None, **args):
+        object.__setattr__(self, '_attributes', [])
+        Object.__init__(self, value, **args)
         
-class Integer(Object):
+    def __setattr__(self, name, value):
+        if not name in self._attributes and issubclass(value.__class__, Object) and value.store:
+            self._attributes.append(name)
+        Object.__setattr__(self, name, value)
+    
+    def getAttributesToStore(self):
+        """Return the list of attributes than are
+        subclasses of Object and will be stored"""
+        for key in self._attributes:
+            yield (key, getattr(self, key))
+
+                
+class Scalar(Object):
+    """Base class for basic types"""
+    def hasValue(self):        
+        return not self.value is None    
+    
+    
+class Integer(Scalar):
     """Integer object"""
     def convert(self, value):
         return int(value)
     
         
-class String(Object):
+class String(Scalar):
     """String object"""
     def convert(self, value):
         return str(value)
     
         
-class Float(Object):
+class Float(Scalar):
     """Float object"""
     def convert(self, value):
         return float(value)
     
     
-class Boolean(Object):
+class Boolean(Scalar):
     """Boolean object"""
     def convert(self, value):
         t = type(value)
@@ -120,7 +154,7 @@ class Boolean(Object):
 class Pointer(Object):
     """Reference object to other one"""
     def __init__(self, value=None, **args):
-        Object.__init__(self, value, pointer=True, **args)    
+        Object.__init__(self, value, pointer=True, **args)   
        
 
 class List(Object, list):

@@ -59,13 +59,14 @@ cfgMaxFontSize = 14
 cfgMinFontSize = 6
 cfgWrapLenght = cfgMaxWidth - 50
 
-from pyworkflow.object import *
+from pyworkflow.object import OrderedObject
 
-class Config(Object):
+class Config(OrderedObject):
     pass
 
 def saveConfig(filename):
     from pyworkflow.mapper import SqliteMapper
+    from pyworkflow.object import String, Integer
     
     mapper = SqliteMapper(filename)
     o = Config()

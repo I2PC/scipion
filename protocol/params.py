@@ -32,28 +32,62 @@ be shared by all protocol class instances
 
 from pyworkflow.object import *
 
-class Param(Object):
-    """Definition of a protocol paramter"""
-    
+
+class FormBase(OrderedObject):
     def __init__(self, **args):
-        """Create a new Param. Possible values in **args:
-        paramClass: this will be the class to store the param value(Integer, String...)
-        paramLabel: this will be used to display a text about the param
-           helpMsg: string value with the help about the param
-              tags: a dictionary containing several tags
-        conditions: some dependencies with other params
-        validators: some validations imposed to the param"""
-        Object.__init__(self, **args)
+        OrderedObject.__init__(self, **args)
+         
+    def setTags(self, tags):
+        for k, v in tags.iteritems():
+            if k in ['section']:
+                value = None
+            elif k in ['hidden', 'expert', 'view', 'has_question', 'visualize', 'text', 'file']:
+                value = Boolean(True)
+            else:
+                value = String(v)
+            if not value is None:
+                setattr(self, k, value)
+                
+    def __getattr__(self, name):
+        value = None
+        if name in ['hidden', 'expert', 'view', 'has_question', 'visualize', 'text', 'file']:
+            value = Boolean(True)
+        elif name in ['label', 'help', 'list', 'condition', 'validate', 'wizard']:
+            value = String()
+        elif name == 'default':
+            value = DefaultString()
+            
+        self.__setattr__(name, value)
+        return value
     
-class Section(Object):
+      
+class Param(FormBase):
+    """Definition of a protocol paramter"""
+    pass
+        
+    
+class Section(FormBase):
     """Definition of a section to hold other params"""
     
-    def __init__(self, **args):
-        """Posible values in **args are:
-        sectionLabel: string for the section label
-             helpMsg: help string message"""
-        Object.__init__(self, **args)
-             
+    def addParam(self, name, value):
+        """Add a new param to last section"""
+        setattr(self, name, value)        
+
+                    
+class Form(List):
+    """Store all sections and parameters"""
+
+    def addSection(self, section):
+        """Add a new section"""
+        self.lastSection = section
+        List.append(self, section)
+
+    def addParam(self, name, value):
+        """Add a new param to last section"""
+        self.lastSection.addParam(name, value)
+
+class DefaultString(String):
+    pass 
         
         
         

@@ -99,15 +99,23 @@ class SqliteMapper(Mapper):
             childsDict[childObj.id] = childObj  
    
               
-    def select(self, **args):
-        """Select object meetings some criterias"""
-        objRows = self.db.selectObjectsBy(**args)
+    def _objectsFromRows(self, objRows):
+        """Create a set of object from a set of rows"""
         objs = []
         for objRow in objRows:
             obj = self.buildObject(objRow['classname'])
             self.fillObject(obj, objRow)
             objs.append(obj)
         return objs
+        
+    def select(self, **args):
+        """Select object meetings some criterias"""
+        objRows = self.db.selectObjectsBy(**args)
+        return self._objectsFromRows(objRows)
+    
+    def getAll(self):
+        objRows = self.db.selectObjectsByParent(parent_id=None)
+        return self._objectsFromRows(objRows)
 
 
 class SqliteDb():
@@ -129,6 +137,10 @@ class SqliteDb():
         # Define some shortcuts functions
         self.executeCommand = self.cursor.execute
         self.commit = self.connection.commit
+        
+#    def executeCommand(self, cmd, *args, **kargs):
+#        print "executing: ", cmd
+#        self.cursor.execute(cmd, *args, **kargs)
         
     def createTables(self):
         """Create requiered tables if don't exists"""
@@ -164,9 +176,14 @@ class SqliteDb():
         self.executeCommand(self.SELECT + "id=?", (objId,))  
         return self.cursor.fetchone()
     
-    def selectObjectsByParent(self, parent_id):
-        """Select an object give its id"""
-        self.executeCommand(self.SELECT + "parent_id=?", (parent_id,))
+    def selectObjectsByParent(self, parent_id=None):
+        """Select object with a given parent
+        if the parent_id is None, all object with parent_id NULL
+        will be returned"""
+        if parent_id is None:
+            self.executeCommand(self.SELECT + "parent_id is NULL")
+        else:
+            self.executeCommand(self.SELECT + "parent_id=?", (parent_id,))
         return self.cursor.fetchall()  
     
     def selectObjectsByAncestor(self, ancestor_namePrefix):

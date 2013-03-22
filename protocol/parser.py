@@ -31,7 +31,7 @@ parsing, getting protocol variables and meta-information.
 
 import os, sys
 from protlib_include import *
-from protlib_xmipp import greenStr, redStr
+from params import *
 
 # Variable types
 VAR_STRING = 0
@@ -256,6 +256,7 @@ class ProtocolParser():
     variables information arranged in sections '''
     def __init__(self, header_script):
         self.script = header_script
+        self.f = Form()
         self.readProtocolScript(header_script)
         self.parseHeaderLines()
 
@@ -348,9 +349,26 @@ class ProtocolParser():
         self.sections.append(v)
         self.lastSection = v
         
+        s = Section()
+        print "v.commentline: ", v.commentline
+        
+        #s.label = String(v.name)
+        s.label = String(removeQuotes(v.comment))
+        s.setTags(v.tags)        
+        self.f.addSection(s)
+        
     def addVariable(self, v):
         self.variables[v.name] = v
         self.lastSection.addChild(v)
+        p = Param()
+        #p.name = String(v.name)
+        p.label = String(removeQuotes(v.comment))
+        p.default = DefaultString(removeQuotes(v.value))
+        p.setTags(v.tags)
+        helpMsg = v.help.replace('"""', '').strip()
+        if len(helpMsg):
+            p.help = String(helpMsg)
+        self.f.addParam(v.name, p)
         
     def hasVariable(self, varName):
         return varName in self.variables
@@ -394,6 +412,8 @@ class ProtocolParser():
         self.index = 0
         self.count = len(self.header_lines)
                  
+        
+        
         while self.moreLines():
             line = self.getLine()
             if not line.startswith("#---"): # skip separator lines
@@ -403,11 +423,11 @@ class ProtocolParser():
                     v.comment = match.group(2)
                     v.commentline = line
                     
+                    tags = ([], [])
                     if match.group(1) != '':
                         tags = reTags.findall(match.group(1))
                         v.setTags(tags)
-    
-
+                        
                     if not v.isSection():
                         v.help = self.parseMultilineString()
                         
@@ -446,6 +466,24 @@ class ProtocolParser():
         f.close()
         os.chmod(self.script, 0755)
         
+        from pyworkflow.mapper import XmlMapper, SqliteMapper
+        m = XmlMapper()
+        m.setClassTag('Form.Section', 'class_only')
+        m.setClassTag('Section.String', 'attribute')
+        m.setClassTag('Section.Boolean', 'attribute')
+        m.setClassTag('Section.Param', 'class_name')
+        m.setClassTag('Param.Boolean', 'attribute')
+        m.setClassTag('Param.DefaultString', 'attribute')
+        m.store(self.f)
+        m.write('kk.xml')
+        
+        m = SqliteMapper('kk.sqlite', globals())
+        for i in range(1):
+            self.f.id = None
+            m.store(self.f)
+            print self.f.id
+        m.commit()
+        
 
 
 #---------------- Some utilities functions --------------------------
@@ -461,6 +499,9 @@ def startswithQuotes(s, n):
     p = "'" * n
     if s.startswith(p):
         return s.replace(p, '')
+    
+def removeQuotes(value):
+    return value.replace("'", "").replace('"', '')
     
     return None
 

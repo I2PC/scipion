@@ -110,39 +110,32 @@ class TestPyworkflow(unittest.TestCase):
         #write file
         mapper.commit()
 
+        # Reading test
         fnGold = self.getTestPath(self.sqliteFile)
         mapper2 = SqliteMapper(fnGold, globals())
+        
         l = mapper2.select(classname='Integer')[0]
         self.assertEqual(l.get(), 1)
         
-        c2 = mapper2.get(cid)
-        #self.assertEqual(c, c2)
-        
-        #TODO: TESTS FOR UPDATE
-#        c2.imag.set(2.0)
-#        c3 = mapper2.get(cid)
-#        self.assertNotEqual(c2, c3)
-#        mapper2.updateTo(c2)
-#        mapper2.commit()
-#        mapper2.updateFrom(c3)
-#        self.assertEqual(c2, c3)
+        c2 = mapper2.select(classname='Complex')[0]
+        self.assertEqual(c, c2)
+
         
     def test_XML(self):
         fn = self.getTmpPath(self.xmlFile)
         c = self.createComplex()
-        mapper = XmlMapper(None)
+        mapper = XmlMapper(fn)
         mapper.insert(c)
         #write file
-        mapper.write(fn)
+        mapper.commit()
 
         fnGold = self.getTestPath(self.xmlFile)
         #print goldStandard, fileName
         #self.assertTrue(filecmp.cmp(fnGold, fn))
         #read file
-        mapper2 = XmlMapper(globals())
-        mapper2.read(fnGold)
+        mapper2 = XmlMapper(fnGold, globals())
         c2 = mapper2.getAll()[0]
-        #self.assertTrue(c.imag.get(), c2.imag.get())
+        self.assertEquals(c.imag.get(), c2.imag.get())
         
     def test_Step(self):
         print "running test_Step"
@@ -167,7 +160,7 @@ class TestPyworkflow(unittest.TestCase):
         mapper.store(l1)
         mapper.commit()
         
-        mapper2 = XmlMapper()
+        mapper2 = XmlMapper('kk.xml', globals())
         mapper2.setClassTag('Complex.Float', 'attribute')
         mapper2.setClassTag('List.ALL', 'class_name')
         mapper2.setClassTag('MyStep.ALL', 'attribute')
@@ -175,9 +168,12 @@ class TestPyworkflow(unittest.TestCase):
         step = MyStep()
         step.b.set('false')
         l1.append(step)
-        print l1
         mapper2.insert(l1)
-        mapper2.write('kk.xml')
+        mapper2.commit()
+        
+        mapper3 = SqliteMapper('kk.sqlite', globals())
+        mapper3.insert(l1)
+        mapper3.commit()
 
         
 if __name__ == '__main__':

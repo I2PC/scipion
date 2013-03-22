@@ -68,29 +68,15 @@ class XmippText(tk.Text, Scrollable):
     """ Base Text widget with some functionalities 
     that will be used for other extensions """
      
-    def __init__(self, master, **options):  
+    def __init__(self, master, **opts):  
         defaults = self.getDefaults()
-        defaults.update(options)
+        defaults.update(opts)
+        Scrollable.__init__(self, master, tk.Text, wrap=tk.WORD, **opts)
         self._createWidgets(master, **defaults)
         self.configureTags()        
 
     def _createWidgets(self, master, **opts):
         '''This is an internal function to create the Text, the Scrollbar and the Frame'''
-#        frame = tk.Frame(master)
-#        frame.columnconfigure(0, weight=1)
-#        frame.rowconfigure(0, weight=1)        
-#        
-#        scrollbar = AutoScrollbar(frame)
-#        scrollbar.grid(row=0, column=1, sticky='ns')
-#        options['yscrollcommand'] = scrollbar.set
-#        options['wrap'] = tk.WORD
-#        tk.Text.__init__(self, frame, options)
-#        scrollbar.config(command=self.yview)
-        
-#        self.grid(row=0, column=0, sticky='nsew')
-#        self.frame = frame
-#        self.scrollbar = scrollbar 
-        Scrollable.__init__(self, master, tk.Text, wrap=tk.WORD, **opts)
         
         # create a popup menu
         self.menu = tk.Menu(master, tearoff=0, postcommand=self.updateMenu)
@@ -201,9 +187,9 @@ class TaggedText(XmippText):
     [some_link] will display some_link as hiperlinnk
     also colors are recognized if set option colors=True
     '''           
-    def __init__(self, master, colors=True, **options):  
+    def __init__(self, master, colors=True, **opts):  
         self.colors = colors
-        XmippText.__init__(self, master, **options)
+        XmippText.__init__(self, master, **opts)
         # Create regex for tags parsing
         import re
         self.regex = re.compile('((?:\[[^]]+\])|(?:<[^>]+>))')
