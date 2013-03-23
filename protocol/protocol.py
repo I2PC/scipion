@@ -28,16 +28,19 @@ This modules contains classes required for the workflow
 execution and tracking like: Step and Protocol
 """
 
-from pyworkflow.object import Object
+from pyworkflow.object import FakedObject, String
 
-class Step(Object):
+class Step(FakedObject):
     """Basic execution unit.
     It should defines it Input, Output
     and define a run method"""
     def __init__(self):
-        Object.__init__(self)
-        self.inputs = []
-        self.outputs = []
+        FakedObject.__init__(self)
+        self._inputs = []
+        self._outputs = []
+        self.addAttribute('status', String)
+        self.addAttribute('inittime', String)
+        self.addAttribute('endtime', String)
         
     def _storeAttributes(self, attrList, attrDict):
         """Store all attributes in attrDict as 
@@ -49,12 +52,12 @@ class Step(Object):
     def defineInputs(self, **args):
         """This function should be used to define
         those attributes considered as Input"""
-        self._storeAttributes(self.inputs, args)
+        self._storeAttributes(self._inputs, args)
         
     def defineOutputs(self, **args):
         """This function should be used to specify
         expected outputs"""
-        self._storeAttributes(self.outputs, args)
+        self._storeAttributes(self._outputs, args)
     
     def preconditions(self):
         """Check if the necessary conditions to
@@ -69,3 +72,21 @@ class Step(Object):
     def run(self):
         """Do the job of this step"""
         pass
+    
+    
+def Protocol(Step):
+    """The Protocol is a higher type of Step.
+    It also have the inputs, outputs and other Steps properties,
+    but contains a list of steps that are executed"""
+    def __init__(self):
+        Step.__init__(self)
+        self._steps = [] # The list of steps
+        
+    def insertStep(self, step):
+        """Insert a new step in the list"""
+        self._steps.append(step)
+        
+    def defineSteps(self):
+        """Define all the steps that will be executed."""
+        pass
+    

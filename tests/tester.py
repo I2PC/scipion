@@ -118,7 +118,7 @@ class TestPyworkflow(unittest.TestCase):
         self.assertEqual(l.get(), 1)
         
         c2 = mapper2.select(classname='Complex')[0]
-        self.assertEqual(c, c2)
+        self.assertTrue(c.equalAttributes(c2))
 
         
     def test_XML(self):
@@ -137,20 +137,24 @@ class TestPyworkflow(unittest.TestCase):
         c2 = mapper2.getAll()[0]
         self.assertEquals(c.imag.get(), c2.imag.get())
         
-    def test_Step(self):
+    def test_zStep(self):
         print "running test_Step"
         fn = self.getTmpPath(self.sqliteFile)
         s = MyStep()
         s.x.set(7)
         s.y.set(3.0)
+        s.status = "KKK"
         mapper = SqliteMapper(fn, globals())
         mapper.insert(s)
         #write file
         mapper.commit()
         
+        s2 = mapper.select(classname='MyStep')[0]
+        self.assertTrue(s.equalAttributes(s2))
+        
     def test_zzList(self):
         """Test the list with several Complex"""
-        n = 10
+        n = 1
         l1 = List()
         for i in range(n):
             c = Complex(3., 3.)
@@ -167,6 +171,8 @@ class TestPyworkflow(unittest.TestCase):
         mapper2.setClassTag('MyStep.Boolean', 'name_only')
         step = MyStep()
         step.b.set('false')
+        step.status = "running"
+        step.inittime = "now"
         l1.append(step)
         mapper2.insert(l1)
         mapper2.commit()

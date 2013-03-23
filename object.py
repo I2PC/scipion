@@ -94,6 +94,19 @@ class Object(object):
             return object.__eq__(other)
         return self.value == other.value
     
+    def equalAttributes(self, other):
+        """Compare that all attributes are equal"""
+        for k, v in self.getAttributesToStore():
+            v1 = getattr(self, k) # This is necessary because of FakedObject simulation of getattr
+            v2 = getattr(other, k)
+            if issubclass(type(v1), Object):
+                comp = v1.equalAttributes(v2)
+            else:
+                comp = v1 == v2
+            if not comp:
+                return False
+        return True
+    
 
 class OrderedObject(Object):
     """This is based on Object, but keep the list
@@ -113,12 +126,45 @@ class OrderedObject(Object):
         subclasses of Object and will be stored"""
         for key in self._attributes:
             yield (key, getattr(self, key))
+            
+class FakedObject(Object):
+    """This is based on Object, but will hide the set and get
+    access to the attributes, they need to be defined with addAttribute"""
+    def __init__(self, value=None, **args):
+        object.__setattr__(self, '_attributes', {})
+        Object.__init__(self, value, **args)
+        
+    def addAttribute(self, name, attrClass, **args):
+        self._attributes[name] = attrClass(**args)
+           
+    def __setattr__(self, name, value):
+        if name in self._attributes:
+            if issubclass(type(value), Object):
+                self._attributes[name] = value
+            else:
+                self._attributes[name].set(value)
+        else:
+            object.__setattr__(self, name, value)
+    
+    def __getattr__(self, name):
+        if name in self._attributes:
+            return self._attributes[name].get()
+        return None
+    
+    def getAttributesToStore(self):
+        """Return the list of attributes than are
+        subclasses of Object and will be stored"""
+        return self._attributes.iteritems()
 
                 
 class Scalar(Object):
     """Base class for basic types"""
     def hasValue(self):        
-        return not self.value is None    
+        return not self.value is None
+    
+    def equalAttributes(self, other):
+        """Compare that all attributes are equal"""
+        return self.value == other.value
     
     
 class Integer(Scalar):
@@ -164,7 +210,7 @@ class List(Object, list):
         list.__init__(self)
         
     def __setattr__(self, name, value):
-        if name.startswith('__item__'):
+        if name.startswith('__item__') or len(name)==0:
             self.append(value)
         else:
             object.__setattr__(self, name, value)
@@ -174,9 +220,13 @@ class List(Object, list):
             index = int(name.split('__item__')[1]) - 1
             if index < len(self):
                 return self[index]
-            return None
+        return None
 
     def getAttributesToStore(self):
+        for key, attr in self.__dict__.iteritems():
+            if issubclass(attr.__class__, Object) and attr.store:
+                yield (key, attr)
+        
         for i, item in enumerate(self):
             yield ("__item__%06d" % (i+1), item)
             

@@ -161,4 +161,33 @@ def centerWindows(root, dim=None, refWindows=None):
         y = (h - gh) / 2
         
     root.geometry("%dx%d+%d+%d" % (gw, gh, x, y))
+    
+def configureWeigths(widget):
+    """This function is a shortcut to a common
+    used pair of calls: rowconfigure and columnconfigure
+    for making childs widgets take the space available"""
+    widget.columnconfigure(0, weight=1)
+    widget.rowconfigure(0, weight=1)
+    
+class Window():
+    """Class to manage a Tk windows.
+    It will encapsulates some basic creation and 
+    setup functions. """
+    def __init__(self, title, master=None, weight=True):
+        if master is None:
+            self.root = tk.Tk()
+        else:
+            self.root = tk.Toplevel()
+        self.root.withdraw()
+        self.root.title(title)
+        if weight:
+            configureWeigths(self.root)
+        self.master = master
+        setCommonFonts()
         
+    def show(self, center=True):
+        """This function will enter in the Tk mainloop"""
+        if center:
+            centerWindows(self.root, refWindows=self.master)
+        self.root.deiconify()
+        self.root.mainloop()

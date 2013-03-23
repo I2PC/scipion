@@ -467,7 +467,7 @@ class ProtocolParser():
         os.chmod(self.script, 0755)
         
         from pyworkflow.mapper import XmlMapper, SqliteMapper
-        m = XmlMapper()
+        m = XmlMapper('kk.xml', globals())
         m.setClassTag('Form.Section', 'class_only')
         m.setClassTag('Section.String', 'attribute')
         m.setClassTag('Section.Boolean', 'attribute')
@@ -475,7 +475,7 @@ class ProtocolParser():
         m.setClassTag('Param.Boolean', 'attribute')
         m.setClassTag('Param.DefaultString', 'attribute')
         m.store(self.f)
-        m.write('kk.xml')
+        m.commit()
         
         m = SqliteMapper('kk.sqlite', globals())
         for i in range(1):
