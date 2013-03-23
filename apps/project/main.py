@@ -27,6 +27,7 @@ from gui.gui import getImage
 """
 Main project window application
 """
+import os
 import sys
         
 import Tkinter as tk
@@ -41,62 +42,26 @@ from protocol import *
 from protocol.params import *
 from config import *
 
-class MyStep(Step):
-    def __init__(self):
-        Step.__init__(self)
-        self.defineInputs(x=Integer(1), y=Float(2), z=String("abc"), b=Boolean(True))
-        
-    def __str__(self):
-        s = ''
-        for k, v in self.getAttributesToStore():
-            s += '%s = %s\n' % (k, str(v))
-        return s
 
-    def hasValue(self):
-        return True  
-
-class Complex(Object):
-    def __init__(self, imag=0., real=0., **args):
-        Object.__init__(self, **args)
-        self.imag = Float(imag)
-        self.real = Float(real)
-        
-    def __str__(self):
-        return '(%s, %s)' % (self.imag, self.real)
-    
-    def __eq__(self, other):
-        return self.imag == other.imag and \
-            self.real == other.real
-            
-    def hasValue(self):
-        return True
-    
-def populateWithObject(tree, prefix, obj):
-    cls = obj.getClassName()
-    if obj.parent_id is None:
-        t = cls
+def populateTree(tree, prefix, obj, level=0):
+    text = obj.text.get()
+    if text:
+        key = '%s.%s' % (prefix, text)
+        img = obj.icon.get()
+        if img is None:
+            img = ''
+            if level == 3:
+                img = gui.getImage('step.gif')
+        else:
+            img = gui.getImage(img)
+        item = tree.insert(prefix, 'end', key, text=text, image=img)
+        if level < 3:
+            tree.item(item, open=True)
     else:
-        t = obj.name.split('.')[-1] 
-        if  t.startswith('__item__'):
-            t = "%s [%s]" % (cls, t.replace('__item__', ''))
-    if obj.value:
-        t += " = %s" % str(obj.value)
-    item = tree.insert(prefix, 'end', obj.name, text=t, values=(cls,))
-    haschilds = False
-    for k, v in obj.getAttributesToStore():
-        populateWithObject(tree, obj.name, v)
-        haschilds = True
-    if not haschilds:
-        img = getImage('step.gif')
-        tree.item(item, image=img)
-        
-    return item
-        
-def populateTree(tree, objList):
-    """Populate a tree from an object list"""
-    for obj in objList:
-        item = populateWithObject(tree, '', obj)
-        tree.item(item, open=True)
+        key = prefix
+    
+    for sub in obj:
+        populateTree(tree, key, sub, level+1)
     
 def getMapper(fn, classesDict):
     """Select what Mapper to use depending on
@@ -107,32 +72,40 @@ def getMapper(fn, classesDict):
         return SqliteMapper(fn, classesDict)
     return None
 
-def createMainMenu(root, menuConfig):
-    menubar = tk.Menu(root)
-    #Project menu
+def addMenuChilds(root, menu, menuConfig):
     for sub in menuConfig:
-        submenu = tk.Menu(root, tearoff=0)
-        print "adding label: ", sub.text.get()
-        menubar.add_cascade(label=sub.text.get(), menu=submenu)
-        for ssub in sub:
-            submenu.add_command(label=ssub.text.get(), compound=tk.LEFT, 
-                                image=gui.getImage(ssub.icon.get()))
-    root.config(menu=menubar)
+        if len(sub):
+            submenu = tk.Menu(root, tearoff=0)
+            menu.add_cascade(label=sub.text.get(), menu=submenu)
+            addMenuChilds(root, submenu, sub)
+        else:
+            menu.add_command(label=sub.text.get(), compound=tk.LEFT,
+                             image=gui.getImage(sub.icon.get()))
+ 
+def createMainMenu(root, menuConfig):
+    menu = tk.Menu(root)
+    addMenuChilds(root, menu, menuConfig)
+    root.config(menu=menu)
     
-def loadMenuConfig(fn='menu_default.xml'):
+def loadConfig(config, name):
+    c = getattr(config, name) 
+    fn = getConfigPath(c.get())
+    if not os.path.exists(fn):
+        raise Exception('loadMenuConfig: menu file "%s" not found' % fn )
     mapper = ConfigXmlMapper(getConfigPath(fn), globals())
-    menuConfig = mapper.getAll()[0]
-    print "menuConfig", menuConfig
+    menuConfig = mapper.getConfig()
     return menuConfig
 
+
 if __name__ == '__main__':
-    fn = sys.argv[1]
-    #mapper = getMapper(fn, globals())
-    #objList = mapper.getAll()
-    window = gui.Window("Project windows")
+    # Load global configuration
+    mapper = ConfigXmlMapper(getConfigPath('configuration.xml'), globals())
+    config = mapper.getConfig()
+
+    window = gui.Window("Project window")
     
     parent = window.root
-    menuConfig = loadMenuConfig()
+    menuConfig = loadConfig(config, 'menu')
     createMainMenu(parent, menuConfig)
     p = tk.PanedWindow(parent, orient=tk.HORIZONTAL)
     # first pane, which would get widgets gridded into it:
@@ -148,10 +121,11 @@ if __name__ == '__main__':
     
     gui.configureWeigths(f1)
     tree = Tree(f1)
-    #tree.heading(c, text=c) 
+    #tree.heading(c, text=c)
     #tree.heading('#0', text='Object')
     tree.column('#0', minwidth=300)
-    #populateTree(tree, objList)
+    objList = loadConfig(config, 'protocols')
+    populateTree(tree, '', objList)
     tree.grid(row=0, column=0, sticky='news')
     
     

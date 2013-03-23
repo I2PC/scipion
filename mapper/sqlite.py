@@ -70,10 +70,11 @@ class SqliteMapper(Mapper):
     def fillObjectWithRow(self, obj, objRow):
         """Fill the object with row data"""
         obj.id = objRow['id']
-        if len(objRow['name']):
-            obj.name = objRow['name']
-        else:
+        name = objRow['name']
+        if name is None or len(name) <= 0:
             obj.name = str(obj.id)
+        else:
+            obj.name = name
         obj.set(objRow['value'])
         obj.parent_id = objRow['parent_id']
         
@@ -91,7 +92,7 @@ class SqliteMapper(Mapper):
             # been processed first, so it will be in the dictiorary
             # Now it is working with the SQLITE resutls
             parentObj = childsDict[parentId]
-            childObj = getattr(parentObj, childName)
+            childObj = getattr(parentObj, childName, None)
             if childObj is None:
                 childObj = self.buildObject(childRow['classname'])
                 setattr(parentObj, childName, childObj)

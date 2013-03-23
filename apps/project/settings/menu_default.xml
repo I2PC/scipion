@@ -1,9 +1,18 @@
 <?xml version='1.0' encoding='utf-8'?>
 <ALL>
   <MenuConfig>
-    <MenuConfig text="Test">
-      <MenuConfig icon="tree.gif" text="KK" />
-      <MenuConfig icon="folderopen.gif" text="PP" />
+    <MenuConfig text="Project">
+      <MenuConfig action="browse" icon="folderopen.gif" text="Browse files" />
+      <MenuConfig icon="delete.gif" text="Remove temporary files" />
+      <MenuConfig text="Clean project" />
+      <MenuConfig text="Exit" />
+    </MenuConfig>
+    <MenuConfig text="Help">
+      <MenuConfig icon="online_help.gif" text="Online help" />
+      <MenuConfig text="About">
+      <MenuConfig text="Scipion" />
+      <MenuConfig text="Biocomputing Unit" />	
+      </MenuConfig>
     </MenuConfig>
   </MenuConfig>
 </ALL>

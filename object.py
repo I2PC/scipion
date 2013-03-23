@@ -37,7 +37,7 @@ class Object(object):
         self.set(value)
         self.id =  args.get('id', None)
         self.parent_id =  args.get('parent_id', None)
-        self.name =  args.get('name', '')
+        #self.name =  args.get('name', '')
         self.tag =  args.get('tag', None) # True if the object serves as input to his parent
         self.store =  args.get('store', True) # True if this object will be stored from his parent
         self.pointer =  args.get('pointer', False) # True if will be treated as a reference for storage
@@ -232,6 +232,9 @@ class List(Object, list):
             
     def __str__(self):
         return list.__str__(self)
+    
+    def __len__(self):
+        return list.__len__(self)
         
         
 class Array(Object):

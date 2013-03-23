@@ -41,9 +41,12 @@ def getConfigPath(filename):
     """Return a configuration filename from settings folder"""
     return join(SETTINGS, filename)
 
-class Configuration(OrderedObject):
+class ProjectConfig(OrderedObject):
     """A simple base class to store ordered parameters"""
-    pass
+    def __init__(self, menu=None, protocols=None, **args):
+        OrderedObject.__init__(self, **args)
+        self.menu = String(menu)
+        self.protocols = String(protocols)
 
 class MenuConfig(List):
     """Menu configuration in a tree fashion.
@@ -62,9 +65,6 @@ class MenuConfig(List):
         self.append(subMenu)
         return subMenu
     
-    def hasSubMenu(self):
-        return len(self) == 0
-    
     def _getStr(self, prefix):
         s = prefix + "MenuConfig text = %s, icon = %s\n" % (self.text.get(), self.icon.get())
         for sub in self:
@@ -80,13 +80,24 @@ class ConfigXmlMapper(XmlMapper):
         XmlMapper.__init__(self, filename, dictClasses, **args)
         self.setClassTag('MenuConfig.MenuConfig', 'class_only')
         self.setClassTag('MenuConfig.String', 'attribute')
+        
+    def getConfig(self):
+        return self.getAll()[0]
 
+def writeConfig(config, fn):
+    fn = getConfigPath(fn)
+    if exists(fn):
+        os.remove(fn)
+    mapper = ConfigXmlMapper(fn, globals())
+    mapper.insert(config)
+    mapper.commit()
+    
 def writeDefaults():
     """Write default configuration files"""
     # Write menu configuration
     menu = MenuConfig()
     projMenu = menu.addSubMenu('Project')
-    projMenu.addSubMenu('Browse files', 'folderopen.gif')
+    projMenu.addSubMenu('Browse files', 'folderopen.gif', action='browse')
     projMenu.addSubMenu('Remove temporary files', 'delete.gif')
     projMenu.addSubMenu('Clean project')
     projMenu.addSubMenu('Exit')
@@ -95,30 +106,35 @@ def writeDefaults():
     helpMenu.addSubMenu('Online help', 'online_help.gif')
     helpMenu.addSubMenu('About')
     
-    menuFn = join(SETTINGS, 'menu_default.xml')
-    if exists(menuFn):
-        os.remove(menuFn)
-#    mapper = ConfigXmlMapper(menuFn, globals())
-#    mapper.insert(menu)
-    #mapper.commit()
+    writeConfig(menu, 'menu_default.xml')
     
-    menu2 = MenuConfig()
-    m1 = menu2.addSubMenu('Test')
-    m2 = m1.addSubMenu('KK', 'tree.gif')
-    m3 = m1.addSubMenu('PP', 'folderopen.gif')
-    
-    #print menu2
-    print "creating mapper"
-    mapper2 = ConfigXmlMapper(menuFn, globals())
-    mapper2.insert(menu2)
-    print "before commit"
-    mapper2.commit()
-    
-    #print menu
+    # Write another test menu
+    menu = MenuConfig()
+    m1 = menu.addSubMenu('Test')
+    m1.addSubMenu('KK', 'tree.gif')
+    m1.addSubMenu('PP', 'folderopen.gif')
+    writeConfig(menu, 'menu_test.xml')
     
     # Write protocols configuration
+    menu = MenuConfig()
+    m1 = menu.addSubMenu('Preprocessing')
     
-    # Write 
+    m2 = m1.addSubMenu('Micrographs')
+    m2.addSubMenu('Import')
+    m2.addSubMenu('Screen')
+    m2.addSubMenu('Downsample')
+    
+    m2 = m1.addSubMenu('Particle Picking')
+    m2.addSubMenu('Manual')
+    m2.addSubMenu('Supervised')
+    m2.addSubMenu('Automatic')
+    
+    writeConfig(menu, 'protocols_default.xml')
+    
+    # Write global configuration
+    config = ProjectConfig(menu='menu_default.xml',
+                           protocols='protocols_default.xml')
+    writeConfig(config, 'configuration.xml')
     
 if __name__ == '__main__':
     writeDefaults()

@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ALL>
+  <MenuConfig>
+    <MenuConfig text="Test">
+      <MenuConfig icon="tree.gif" text="KK" />
+      <MenuConfig icon="folderopen.gif" text="PP" />
+    </MenuConfig>
+  </MenuConfig>
+</ALL>

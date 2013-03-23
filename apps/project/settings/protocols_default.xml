@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ALL>
+  <MenuConfig>
+    <MenuConfig text="Preprocessing">
+      <MenuConfig text="Micrographs">
+        <MenuConfig text="Import" />
+        <MenuConfig text="Screen" icon='step.gif'/>
+        <MenuConfig text="Downsample" />
+      </MenuConfig>
+      <MenuConfig text="Particle Picking">
+        <MenuConfig text="Manual" />
+        <MenuConfig text="Supervised" />
+        <MenuConfig text="Automatic" />
+      </MenuConfig>
+    </MenuConfig>
+  </MenuConfig>
+</ALL>

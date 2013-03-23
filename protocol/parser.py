@@ -350,25 +350,52 @@ class ProtocolParser():
         self.lastSection = v
         
         s = Section()
-        print "v.commentline: ", v.commentline
         
         #s.label = String(v.name)
         s.label = String(removeQuotes(v.comment))
-        s.setTags(v.tags)        
+        for k, v in v.tags.iteritems():
+            if k in ['expert', 'has_question']:
+                setattr(s, k, Boolean(True))
+            else:
+                if k != 'section':
+                    print "skipping Section '%s' tag: %s" % (s.label.get(), k)
+        #s.setTags(v.tags)        
         self.f.addSection(s)
         
     def addVariable(self, v):
         self.variables[v.name] = v
         self.lastSection.addChild(v)
-        p = Param()
-        #p.name = String(v.name)
-        p.label = String(removeQuotes(v.comment))
-        p.default = DefaultString(removeQuotes(v.value))
-        p.setTags(v.tags)
-        helpMsg = v.help.replace('"""', '').strip()
-        if len(helpMsg):
-            p.help = String(helpMsg)
-        self.f.addParam(v.name, p)
+        
+    def addNewVar(self, v):
+        p = None
+        if v.isString():
+            if v.hasTag('list'):
+                p = EnumParam(choices=v.getTag('list'))
+            else:
+                p = StringParam()
+        elif v.isText():
+            p = TextParam()
+        elif v.isBoolean():
+            p = BooleanParam()
+        elif v.isNumber():
+            if v.hasValidator('IsInt'):
+                p = IntParam()
+            else:
+                p = FloatParam()
+        
+        
+        if not p is None:
+            #p.name.set(v.name)
+            p.label.set(removeQuotes(v.comment))
+            p.default.set(removeQuotes(v.value))
+            
+            #p.setTags(v.tags)
+            helpMsg = v.help.replace('"""', '').strip()
+            if len(helpMsg):
+                p.help.set(helpMsg)
+            self.f.addParam(v.name, p)
+        else:
+            print "ignoring var: %s, type: %s" % (v.name, v.type)
         
     def hasVariable(self, varName):
         return varName in self.variables
@@ -446,6 +473,7 @@ class ProtocolParser():
                                         raise Exception("Parse variable failed", 
                                                         "Expecting multiline value for variable '%s'" % v.name)
                                 v.checkType()
+                                self.addNewVar(v)
                     else: self.addSection(v)
                         
     def writeLines(self, f, linesList):
@@ -467,20 +495,25 @@ class ProtocolParser():
         os.chmod(self.script, 0755)
         
         from pyworkflow.mapper import XmlMapper, SqliteMapper
+        os.remove('kk.xml')
         m = XmlMapper('kk.xml', globals())
         m.setClassTag('Form.Section', 'class_only')
         m.setClassTag('Section.String', 'attribute')
         m.setClassTag('Section.Boolean', 'attribute')
-        m.setClassTag('Section.Param', 'class_name')
-        m.setClassTag('Param.Boolean', 'attribute')
-        m.setClassTag('Param.DefaultString', 'attribute')
-        m.store(self.f)
+        m.setClassTag('Section.ALL', 'name_class')
+        #m.setClassTag('Param.Boolean', 'attribute')
+        m.setClassTag('ALL.default', 'attribute')
+        m.setClassTag('EnumParam.display', 'attribute')
+        n = 1
+        for i in range(n):
+            m.insert(self.f)
         m.commit()
         
+        os.remove('kk.sqlite')
         m = SqliteMapper('kk.sqlite', globals())
-        for i in range(1):
-            self.f.id = None
-            m.store(self.f)
+        for i in range(n):
+            #self.f.id = None
+            m.insert(self.f)
             print self.f.id
         m.commit()
         

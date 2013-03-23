@@ -219,6 +219,8 @@ class XmlMapper(Mapper):
                 objClass = obj.getClassName()
                 allKey = '%s.ALL' % objClass # First try with .ALL
                 tag = self.classTags.get(allKey, '')
+                allKey = 'ALL.%s' % key # also with ALL.attribute
+                tag = self.classTags.get(allKey, tag)
                 classKey = '%s.%s' % (objClass, attrClass) # Second, with .childClass
                 tag = self.classTags.get(classKey, tag)
                 attrKey = '%s.%s' % (objClass, key) # Finally with .attribute
