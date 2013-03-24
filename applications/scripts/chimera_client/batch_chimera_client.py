@@ -1,6 +1,6 @@
 #!/usr/bin/env xmipp_python
 
-from protlib_chimera import XmippProjectionExplorer
+from protlib_chimera import XmippChimeraClient, XmippProjectionExplorer
 from optparse import OptionParser
 from os import system
 from os.path import exists
@@ -11,15 +11,14 @@ class BatchXmippChimeraClient:
 	def __init__(self):
 		self.parseInput()
 		serverfile = getXmippPath('libraries/bindings/chimera/xmipp_chimera_server.py')
-		system("chimera %s&" % serverfile)
+		system("chimera %s  &" % serverfile)
 		#print 'running client'
 		print self.mode
 		if self.mode == 'projection':
-				XmippProjectionExplorer(volfile)
+			XmippProjectionExplorer(self.volfile)
 		elif self.mode == 'viewer':
-				XmippChimeraClient(volfile)
-
-
+			client = XmippChimeraClient(self.volfile)
+			client.listen()
 	def parseInput(self):
 		
 		try:
