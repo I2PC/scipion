@@ -29,6 +29,7 @@ import java.awt.Color;
 import java.awt.Window;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
@@ -928,6 +929,22 @@ public class GalleryData
 					return true;
 		return false;
 	}
+	
+	/** Take an index counting only visible columns
+	 * and translate into the general column index
+	 * @param col column index in visible counting
+	 * @return column index in general counting
+	 */
+	public int getVisibleColumnIndex(int col){
+		int visibleIndex = 0;
+		for (int i=0; i < labels.size(); i++)
+			if (labels.get(i).visible){
+				if (col == visibleIndex)
+					return i;
+				visibleIndex++;
+			}
+		return -1;
+	}
 
 	public int getLabelFromCol(int col)
 	{
@@ -1093,6 +1110,15 @@ public class GalleryData
 
 	public String getFileInfo()
 	{
-		return getFileName();
+		File file = new File(getFileName()); 
+        
+        String fileInfo = "Path: " + file.getAbsolutePath() + "\n\n";
+         
+         
+        fileInfo += "File Name: " + file.getName() + "\n"
+                + "Last Modified: " + new Date(file.lastModified()) + "\n"
+        
+        		+ "Size: " + Filename.humanReadableByteCount(file.length());
+		return fileInfo;
 	}
 }// class GalleryDaa

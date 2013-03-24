@@ -51,8 +51,8 @@ def ctfMicXmippToEmx(emxData,xmdFileName,amplitudeContrast):
         pixelSpacing        = mdCTF.getValue(MDL_CTF_SAMPLING_RATE, objId2)####
         acceleratingVoltage = mdCTF.getValue(MDL_CTF_VOLTAGE, objId2)
         cs                  = mdCTF.getValue(MDL_CTF_CS, objId2)
-        defocusU            = mdCTF.getValue(MDL_CTF_DEFOCUSU, objId2)
-        defocusV            = mdCTF.getValue(MDL_CTF_DEFOCUSV, objId2)
+        defocusU            = mdCTF.getValue(MDL_CTF_DEFOCUSU, objId2)/10.
+        defocusV            = mdCTF.getValue(MDL_CTF_DEFOCUSV, objId2)/10.
         defocusUAngle       = mdCTF.getValue(MDL_CTF_DEFOCUS_ANGLE, objId2)
 
         m1.acceleratingVoltage.set(acceleratingVoltage)
@@ -98,13 +98,17 @@ def ctfMicEMXToXmipp(emxData,mode):
         acceleratingVoltage = micrograph.acceleratingVoltage.get()
         amplitudeContrast   = micrograph.amplitudeContrast.get()
         cs                  = micrograph.cs.get()
+
         defocusU            = micrograph.defocusU.get()
+        if not defocusU is None:
+            defocusU *= 10.
         defocusV            = micrograph.defocusV.get()
         if defocusV is None:
             defocusV = defocusU
             defocusUAngle = 0.
         else:
             defocusUAngle   = micrograph.defocusUAngle.get()
+            defocusV       *= 10.
         pixelSpacingX    = micrograph.pixelSpacing.X.get()
         pixelSpacingY    = micrograph.pixelSpacing.Y.get()
         if not pixelSpacingY is None:
@@ -114,13 +118,20 @@ def ctfMicEMXToXmipp(emxData,mode):
         MD = MetaData()
         MD.setColumnFormat(False)
         objId = MD.addObject()
-        MD.setValue(MDL_CTF_SAMPLING_RATE, float(pixelSpacingX), objId)
-        MD.setValue(MDL_CTF_VOLTAGE,       float(acceleratingVoltage), objId)
-        MD.setValue(MDL_CTF_CS,            float(cs), objId)
-        MD.setValue(MDL_CTF_DEFOCUSU,      float(defocusU), objId)
-        MD.setValue(MDL_CTF_DEFOCUSV,      float(defocusV), objId)
-        MD.setValue(MDL_CTF_DEFOCUS_ANGLE, float(defocusUAngle), objId)
-        MD.setValue(MDL_CTF_Q0,            float(amplitudeContrast), objId)
+        if pixelSpacingX:
+            MD.setValue(MDL_CTF_SAMPLING_RATE, float(pixelSpacingX), objId)
+        if acceleratingVoltage:
+            MD.setValue(MDL_CTF_VOLTAGE,       float(acceleratingVoltage), objId)
+        if cs:
+            MD.setValue(MDL_CTF_CS,            float(cs), objId)
+        if defocusU:
+            MD.setValue(MDL_CTF_DEFOCUSU,      float(defocusU), objId)
+        if defocusV:
+            MD.setValue(MDL_CTF_DEFOCUSV,      float(defocusV), objId)
+        if defocusUAngle:
+            MD.setValue(MDL_CTF_DEFOCUS_ANGLE, float(defocusUAngle), objId)
+        if amplitudeContrast:
+            MD.setValue(MDL_CTF_Q0,            float(amplitudeContrast), objId)
         MD.setValue(MDL_CTF_K,             1.0, objId)
         MD.write(ctfModelFileName)
     mdMic.write(MICFILE)
@@ -129,8 +140,10 @@ def coorrXmippToEmx(emxData,xmdFileName):
     ''' convert a single file '''
     md    = MetaData()
     md.read(xmdFileName)
-    micrographName = xmdFileName.withoutExtension() + BINENDING
-    particleName   = xmdFileName.withoutExtension() + STACKENDING
+    xmdFileNameNoExt = FileName(xmdFileName.withoutExtension())
+    xmdFileNameNoExtNoBlock = xmdFileNameNoExt.removeBlockName()
+    micrographName = xmdFileNameNoExtNoBlock + BINENDING
+    particleName   = xmdFileNameNoExtNoBlock + STACKENDING
     m1             = micrograph(id={'filename': micrographName})
     emxData.addObject(m1)
     counter = FIRSTIMAGE
@@ -142,6 +155,7 @@ def coorrXmippToEmx(emxData,xmdFileName):
         p1             = particle(id={'filename': particleName, 'index':counter})
         p1.centerCoord.X.set(coorX)
         p1.centerCoord.Y.set(coorY)
+        p1.setMicrograph(m1)
         emxData.addObject(p1)
 
         counter += 1

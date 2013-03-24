@@ -1717,6 +1717,12 @@ void svdcmp(const Matrix2D< T >& a,
  */
 void generalizedEigs(const Matrix2D<double> &A, const Matrix2D<double> &B, Matrix1D<double> &D, Matrix2D<double> &P);
 
+/** First eigenvectors of a real, symmetric matrix.
+ * Solves the problem Av=dv.
+ * Only the eigenvectors of the largest M eigenvalues are returned as columns of P
+ */
+void firstEigs(const Matrix2D<double> &A, size_t M, Matrix1D<double> &D, Matrix2D<double> &P);
+
 /** Conversion from one type to another.
  *
  * If we have an integer array and we need a double one, we can use this
