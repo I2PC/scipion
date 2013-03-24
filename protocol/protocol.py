@@ -112,6 +112,7 @@ def Protocol(Step):
     def __init__(self, **args):
         Step.__init__(self, **args)
         self._steps = List() # The list of steps
+        self.workingDir = args.get('workingDir', None)
         
     def insertStep(self, step):
         """Insert a new step in the list"""
