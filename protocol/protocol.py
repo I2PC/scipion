@@ -101,13 +101,14 @@ def ProtocolType(type):
         print dct
         type.__init__(cls, name, bases, dct)
                 
-def Protocol(Step):
+                
+class Protocol(Step):
     """The Protocol is a higher type of Step.
     It also have the inputs, outputs and other Steps properties,
     but contains a list of steps that are executed"""
     #__metaclass__ = ProtocolType
     # Params definition for this class
-    _paramDefinition = "kkk"
+    #_paramDefinition = "kkk"
     
     def __init__(self, **args):
         Step.__init__(self, **args)
@@ -121,6 +122,10 @@ def Protocol(Step):
     def defineSteps(self):
         """Define all the steps that will be executed."""
         pass
+    
+    def run(self):
+        for step in self._steps:
+            step.run()
     
 
 class ProtImportMicrographs(Protocol):
