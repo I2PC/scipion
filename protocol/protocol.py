@@ -27,20 +27,27 @@
 This modules contains classes required for the workflow
 execution and tracking like: Step and Protocol
 """
+import datetime as dt
 
-from pyworkflow.object import FakedObject, String
+from pyworkflow.object import FakedObject, String, List
+
+STATUS_LAUNCHED = "launched"  # launched to queue system
+STATUS_RUNNING = "running"    # currently executing
+STATUS_FAILED = "failed"      # it have been failed
+STATUS_FINISHED = "finished"  # successfully finished
+STATUS_WAITING = "waiting"    # waiting for user interaction
 
 class Step(FakedObject):
     """Basic execution unit.
-    It should defines it Input, Output
+    It should defines its Input, Output
     and define a run method"""
     def __init__(self):
         FakedObject.__init__(self)
         self._inputs = []
         self._outputs = []
         self.addAttribute('status', String)
-        self.addAttribute('inittime', String)
-        self.addAttribute('endtime', String)
+        self.addAttribute('initTime', String)
+        self.addAttribute('endTime', String)
         
     def _storeAttributes(self, attrList, attrDict):
         """Store all attributes in attrDict as 
@@ -69,18 +76,42 @@ class Step(FakedObject):
         and accomplish its results"""
         return True
     
-    def run(self):
-        """Do the job of this step"""
+    def _run(self):
+        """This is the function that will do the real job.
+        It should be override by sub-classes."""
         pass
     
-    
+    def run(self):
+        """Do the job of this step"""
+        self.initTime = str(dt.datetime.now())
+        self.endTime = None
+        try:
+            self._run()
+        except Exception, e:
+            self.status = STATUS_FAILED
+        finally:
+            self.endTime = str(dt.datetime.now())
+            
+
+def ProtocolType(type):
+    """Protocols metaclass"""
+    def __init__(cls, name, bases, dct):
+        print '-----------------------------------'
+        print "Initializing protocol class", name
+        print dct
+        type.__init__(cls, name, bases, dct)
+                
 def Protocol(Step):
     """The Protocol is a higher type of Step.
     It also have the inputs, outputs and other Steps properties,
     but contains a list of steps that are executed"""
-    def __init__(self):
-        Step.__init__(self)
-        self._steps = [] # The list of steps
+    #__metaclass__ = ProtocolType
+    # Params definition for this class
+    _paramDefinition = "kkk"
+    
+    def __init__(self, **args):
+        Step.__init__(self, **args)
+        self._steps = List() # The list of steps
         
     def insertStep(self, step):
         """Insert a new step in the list"""

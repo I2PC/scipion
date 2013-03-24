@@ -6,8 +6,8 @@ import unittest
 import filecmp
 
 from pyworkflow.object import *
-from pyworkflow.protocol import Step
-from pyworkflow.mapper import SqliteMapper, XmlMapper
+from pyworkflow.protocol import *
+from pyworkflow.mapper import *
 
 class Complex(Object):
     def __init__(self, imag=0., real=0., **args):
@@ -138,7 +138,6 @@ class TestPyworkflow(unittest.TestCase):
         self.assertEquals(c.imag.get(), c2.imag.get())
         
     def test_zStep(self):
-        print "running test_Step"
         fn = self.getTmpPath(self.sqliteFile)
         s = MyStep()
         s.x.set(7)

@@ -37,7 +37,7 @@ class Object(object):
         self.set(value)
         self.id =  args.get('id', None)
         self.parent_id =  args.get('parent_id', None)
-        #self.name =  args.get('name', '')
+        self.name =  args.get('name', '')
         self.tag =  args.get('tag', None) # True if the object serves as input to his parent
         self.store =  args.get('store', True) # True if this object will be stored from his parent
         self.pointer =  args.get('pointer', False) # True if will be treated as a reference for storage
@@ -233,8 +233,12 @@ class List(Object, list):
     def __str__(self):
         return list.__str__(self)
     
+    #TODO: check if needed
     def __len__(self):
         return list.__len__(self)
+    
+    def isEmpty(self):
+        return len(self) > 0
         
         
 class Array(Object):
@@ -259,4 +263,25 @@ class Array(Object):
     
     def __len__(self):
         return self.value
+    
+    
+def ObjectWrap(value):
+    """This function will act as a simple Factory
+    to create objects from Python basic types"""
+    t = type(value)
+    if issubclass(t, Object):
+        return value
+    if t is str:
+        return String(value)
+    if t is int:
+        return Integer(value)
+    if t is bool:
+        return Boolean(value)
+    if t is float:
+        return Float(value)
+    if t is None:
+        return None
+    #If not known type, convert to string
+    return String(str(value))
+         
            

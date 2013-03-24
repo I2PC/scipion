@@ -36,33 +36,17 @@ from pyworkflow.object import *
 class FormBase(OrderedObject):
     def __init__(self, **args):
         OrderedObject.__init__(self, **args)
-         
-#    def setTags(self, tags):
-#        for k, v in tags.iteritems():
-#            if k in ['section']:
-#                value = None
-#            elif k in ['hidden', 'expert', 'view', 'has_question', 'visualize', 'text', 'file']:
-#                value = Boolean(True)
-#            else:
-#                value = String(v)
-#            if not value is None:
-#                setattr(self, k, value)
-#                
-#    def __getattr__(self, name):
-#        value = None
-#        if name in ['hidden', 'expert', 'view', 'has_question', 'visualize', 'text', 'file']:
-#            value = Boolean(True)
-#        elif name in ['label', 'help', 'list', 'condition', 'validate', 'wizard']:
-#            value = String()
-#        elif name == 'default':
-#            value = DefaultString()
-#            
-#        self.__setattr__(name, value)
-#        return value
-    
+        self.label = String(args.get('label', None))
+        self.expert = Boolean(args.get('expert', None))
+        
+    def isExpert(self):
+        return self.expert.hasValue()
     
 class Section(FormBase):
     """Definition of a section to hold other params"""
+    def __init__(self, **args):
+        FormBase.__init__(self, **args)
+        self.has_question = Boolean(args.get('has_question', None))
     
     def addParam(self, name, value):
         """Add a new param to last section"""
@@ -92,17 +76,12 @@ class Form(List):
             s += str(section)
         return s
         
-class DefaultString(String):
-    pass 
-      
       
 class Param(FormBase):
     """Definition of a protocol paramter"""
     def __init__(self, **args):
         FormBase.__init__(self)
         self.paramClass = args.get('paramClass', None) # This should be defined in subclasses
-        #self.name = String(args.get('name', None))
-        self.label = String(args.get('label', None))
         self.default = String(args.get('default', None))
         self.expert = Boolean(args.get('expert', None))
         self.help = String(args.get('help', None))
