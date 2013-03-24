@@ -121,3 +121,10 @@ def Protocol(Step):
         """Define all the steps that will be executed."""
         pass
     
+
+class ProtImportMicrographs(Protocol):
+    pass
+
+class ProtParticlePicking(Protocol):
+    pass
+
