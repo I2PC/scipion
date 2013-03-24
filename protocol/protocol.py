@@ -41,8 +41,8 @@ class Step(FakedObject):
     """Basic execution unit.
     It should defines its Input, Output
     and define a run method"""
-    def __init__(self):
-        FakedObject.__init__(self)
+    def __init__(self, **args):
+        FakedObject.__init__(self, **args)
         self._inputs = []
         self._outputs = []
         self.addAttribute('status', String)
@@ -132,5 +132,8 @@ class ProtImportMicrographs(Protocol):
     pass
 
 class ProtParticlePicking(Protocol):
-    pass
+    
+    def __init__(self, **args):
+        Protocol.__init__(self, **args)
+    
 
