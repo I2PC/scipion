@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <ALL>
   <ProjectConfig>
-    <menu>menu_default.xml</menu>
-    <protocols>protocols_default.xml</protocols>
+    <menu>menu_test.xml</menu>
+    <protocols>protocols_reduced.xml</protocols>
   </ProjectConfig>
 </ALL>

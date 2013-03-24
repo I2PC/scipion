@@ -99,8 +99,10 @@ def ProtocolType(type):
         print '-----------------------------------'
         print "Initializing protocol class", name
         print dct
-        type.__init__(cls, name, bases, dct)
-                
+        super(ProtocolType, cls).__init__(name, bases, dct)
+        
+def loadDef():
+    print "loading..."
                 
 class Protocol(Step):
     """The Protocol is a higher type of Step.
@@ -108,7 +110,7 @@ class Protocol(Step):
     but contains a list of steps that are executed"""
     #__metaclass__ = ProtocolType
     # Params definition for this class
-    #_paramDefinition = "kkk"
+    _paramDefinition = loadDef()
     
     def __init__(self, **args):
         Step.__init__(self, **args)
@@ -131,6 +133,20 @@ class Protocol(Step):
 class ProtImportMicrographs(Protocol):
     pass
 
+class ProtScreenMicrographs(Protocol):
+    pass
+
+class ProtDownsampleMicrographs(Protocol):
+    pass
+
 class ProtParticlePicking(Protocol):
     pass
 
+class ProtAlign(Protocol):
+    pass
+
+class ProtClassify(Protocol):
+    pass
+
+class ProtAlignClassify(Protocol):
+    pass

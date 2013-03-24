@@ -29,3 +29,4 @@ should be included in order to be automatically
 recognized.
 """
 
+from xmipp3 import *

@@ -61,12 +61,12 @@ class MenuConfig(List):
         self.action = String(action)
         
     def addSubMenu(self, text, icon=None, **args):
-        subMenu = MenuConfig(text, icon, **args)
+        subMenu = type(self)(text, icon, **args)
         self.append(subMenu)
         return subMenu
     
     def _getStr(self, prefix):
-        s = prefix + "MenuConfig text = %s, icon = %s\n" % (self.text.get(), self.icon.get())
+        s = prefix + "%s text = %s, icon = %s\n" % (self.getClassName(), self.text.get(), self.icon.get())
         for sub in self:
             s += sub._getStr(prefix + "  ")
         return s
@@ -74,12 +74,19 @@ class MenuConfig(List):
     def __str__(self):
         return self._getStr(' ')
     
+
+class ProtocolConfig(MenuConfig):
+    """Store protocols configuration """
+    pass
+    
 class ConfigXmlMapper(XmlMapper):
     """Sub-class of XmlMapper to store configurations"""
     def __init__(self, filename, dictClasses=None, **args):
         XmlMapper.__init__(self, filename, dictClasses, **args)
         self.setClassTag('MenuConfig.MenuConfig', 'class_only')
         self.setClassTag('MenuConfig.String', 'attribute')
+        self.setClassTag('ProtocolConfig.ProtocolConfig', 'class_only')
+        self.setClassTag('ProtocolConfig.String', 'attribute')
         
     def getConfig(self):
         return self.getAll()[0]
@@ -116,18 +123,25 @@ def writeDefaults():
     writeConfig(menu, 'menu_test.xml')
     
     # Write protocols configuration
-    menu = MenuConfig()
+    menu = ProtocolConfig()
     m1 = menu.addSubMenu('Preprocessing')
     
     m2 = m1.addSubMenu('Micrographs')
-    m2.addSubMenu('Import')
-    m2.addSubMenu('Screen')
-    m2.addSubMenu('Downsample')
+    m2.addSubMenu('Import', action='ProtImportMicrographs')
+    m2.addSubMenu('Screen', action='ProtScreenMicrographs')
+    m2.addSubMenu('Downsample', action='ProtDownsampleMicrographs')
     
     m2 = m1.addSubMenu('Particle Picking')
     m2.addSubMenu('Manual')
     m2.addSubMenu('Supervised')
     m2.addSubMenu('Automatic')
+    
+    m1 = menu.addSubMenu('2D')
+    
+    m1.addSubMenu('Align', action='ProtAlign')
+    m1.addSubMenu('Classify', action='ProtClassify')
+    m1.addSubMenu('Align+Classify', action='ProtAlignClassify')
+
     
     writeConfig(menu, 'protocols_default.xml')
     

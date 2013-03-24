@@ -28,3 +28,28 @@ This sub-package will contains Xmipp3.0 specific protocols
 """
 
 
+from protocol import *    
+
+
+class XmippProtImportMicrographs(ProtImportMicrographs):
+    pass
+
+
+class XmippProtParticlePicking(ProtParticlePicking):
+    pass
+
+
+class XmippProtDownsampleMicrographs(ProtDownsampleMicrographs):
+    pass
+
+
+class XmippProtAlign(ProtAlign):
+    pass
+
+
+class XmippProtClassify(ProtClassify):
+    pass
+
+
+class XmippProtAlignClassify(ProtAlignClassify):
+    pass

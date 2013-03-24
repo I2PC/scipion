@@ -24,16 +24,19 @@
 # *
 # **************************************************************************
 from gui.gui import getImage
+from inspect import isclass
 """
 Main project window application
 """
 import os
+from os.path import join, exists
 import sys
         
 import Tkinter as tk
 import ttk
 import tkFont
 
+import pyworkflow as pw
 from pyworkflow.object import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
 import gui
@@ -43,6 +46,26 @@ from protocol.params import *
 from config import *
 
 
+def loadSubclasses():
+    """This function will try to find
+    all sub-classes of className located in
+    the pyworkflow/protocol/packages/* path and made them
+    available in the menu"""
+    path = join(pw.HOME, 'protocol', 'packages')
+    sys.path.append(path)
+    folders = os.listdir(path)
+    #print "path: ", path
+    subclasses = {}
+    for f in folders:
+        if exists(join(path, f, '__init__.py')):
+            m = __import__(f)
+            for k, v in m.__dict__.iteritems():
+                if isclass(v) and issubclass(v, Protocol):
+                    subclasses[k] = v
+    return subclasses
+    
+subclasses =  loadSubclasses()
+    
 def populateTree(tree, prefix, obj, level=0):
     text = obj.text.get()
     if text:
@@ -55,8 +78,18 @@ def populateTree(tree, prefix, obj, level=0):
         else:
             img = gui.getImage(img)
         item = tree.insert(prefix, 'end', key, text=text, image=img)
+        
         if level < 3:
             tree.item(item, open=True)
+        if not obj.isEmpty() and obj.action.hasValue():
+            prot = globals().get(obj.action.get(), None)
+            if not prot is None:
+                for k, v in subclasses.iteritems():
+                    if not v is prot and issubclass(v, prot):
+                        tree.insert(item, 'end', item+k, text=k)
+                        
+            else:
+                raise Exception("Class '%s' not found" % obj.action.get())
     else:
         key = prefix
     

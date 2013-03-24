@@ -1,17 +1,22 @@
 <?xml version='1.0' encoding='utf-8'?>
 <ALL>
-  <MenuConfig>
-    <MenuConfig text="Preprocessing">
-      <MenuConfig text="Micrographs">
-        <MenuConfig text="Import" />
-        <MenuConfig text="Screen" icon='step.gif'/>
-        <MenuConfig text="Downsample" />
-      </MenuConfig>
-      <MenuConfig text="Particle Picking">
-        <MenuConfig text="Manual" />
-        <MenuConfig text="Supervised" />
-        <MenuConfig text="Automatic" />
-      </MenuConfig>
-    </MenuConfig>
-  </MenuConfig>
+  <ProtocolConfig>
+    <ProtocolConfig text="Preprocessing">
+      <ProtocolConfig text="Micrographs">
+        <ProtocolConfig action="ProtImportMicrographs" text="Import" />
+        <ProtocolConfig action="ProtScreenMicrographs" text="Screen" />
+        <ProtocolConfig action="ProtDownsampleMicrographs" text="Downsample" />
+      </ProtocolConfig>
+      <ProtocolConfig text="Particle Picking">
+        <ProtocolConfig text="Manual" />
+        <ProtocolConfig text="Supervised" />
+        <ProtocolConfig text="Automatic" />
+      </ProtocolConfig>
+    </ProtocolConfig>
+    <ProtocolConfig text="2D">
+      <ProtocolConfig action="ProtAlign" text="Align" />
+      <ProtocolConfig action="ProtClassify" text="Classify" />
+      <ProtocolConfig action="ProtAlignClassify" text="Align+Classify" />
+    </ProtocolConfig>
+  </ProtocolConfig>
 </ALL>

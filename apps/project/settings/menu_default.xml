@@ -9,10 +9,7 @@
     </MenuConfig>
     <MenuConfig text="Help">
       <MenuConfig icon="online_help.gif" text="Online help" />
-      <MenuConfig text="About">
-      <MenuConfig text="Scipion" />
-      <MenuConfig text="Biocomputing Unit" />	
-      </MenuConfig>
+      <MenuConfig text="About" />
     </MenuConfig>
   </MenuConfig>
 </ALL>
