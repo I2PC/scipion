@@ -949,7 +949,7 @@ int PROJECT_Effectively_project(const FileName &fnOut,
     FourierProjector *Vfourier=NULL;
     if (projType == SHEARS && side.phantomMode==PROJECT_Side_Info::VOXEL)
         Vshears=new RealShearsInfo(side.phantomVol());
-    if (projType == FOURIER && side.phantomMode==PROJECT_Side_Info::VOXEL)
+    if (projType == FOURIER && side.phantomMode==PROJECT_Side_Info::VOXEL)//////////////////////
         Vfourier=new FourierProjector(side.phantomVol(),side.paddFactor,side.maxFrequency,side.BSplineDeg);
 
     fn_proj=fnOut;
@@ -1007,7 +1007,7 @@ int PROJECT_Effectively_project(const FileName &fnOut,
             if (projType == SHEARS)
                 projectVolume(*Vshears, proj, prm.proj_Ydim, prm.proj_Xdim,
                               rot, tilt, psi);
-            else if (projType == FOURIER)
+            else if (projType == FOURIER)///////////////////////////////////////
                 projectVolume(*Vfourier, proj, prm.proj_Ydim, prm.proj_Xdim,
                               rot, tilt, psi);
             else if (projType == REALSPACE)

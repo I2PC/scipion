@@ -12,6 +12,7 @@ from threading import Thread
 from os import system
 from chimera import runCommand
 from time import gmtime, strftime
+from datetime import datetime
 
 class ChimeraServer:
     
@@ -92,8 +93,8 @@ class ChimeraServer:
         
             
 def printCmd(cmd):
-        timeformat = "%H:%M:%S" 
-        print strftime(timeformat, gmtime())
+        timeformat = "%S.%f" 
+        print datetime.now().strftime(timeformat)
         print cmd
 
 ChimeraServer()

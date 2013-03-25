@@ -35,19 +35,26 @@ from threading import Thread
 from os import system
 from numpy import array, ndarray, flipud
 from time import gmtime, strftime
+from datetime import datetime
 
-class ChimeraClient:
+class XmippChimeraClient:
     
-    def __init__(self, projexplorer):
-        self.projexplorer = projexplorer
+    def __init__(self, volfile):
+        self.volfile = volfile
         #print 'volfile: ' + self.volfile
         self.address = ''
         self.port = 6000
         self.authkey = 'test'
         self.client = Client((self.address, self.port), authkey=self.authkey)
+        printCmd('initVolumeData')
+        self.initVolumeData()
+        printCmd('openVolumeOnServer')
+        self.openVolumeOnServer(self.vol)
+        printCmd('init ended')
         
        
     def send(self, cmd, data):
+        print cmd
         self.client.send(cmd)
         self.client.send(data)
         
@@ -56,68 +63,57 @@ class ChimeraClient:
          self.send('open_volume', volume)
 
 
-    def exitClient(self):
-        self.client.send('exit_client')
-        self.client.close()
-        self.projexplorer.destroy()
+
         
 
     def initListen(self):
-        self.listen_thread = Thread(target=self.listen)
-        self.listen_thread.daemon = True
-        self.listen_thread.start()
+            self.listen_thread = Thread(target=self.listen)
+            self.listen_thread.daemon = True
+            self.listen_thread.start()
          
     def listen(self):
         
+        self.listen = True
         try:
-            while True:
+            while self.listen:
                 #print 'on client loop'
                 msg = self.client.recv()
-                print msg 
-                if msg == 'motion_stop':
-                    data = loads(self.client.recv())#wait for data
-                    printCmd('reading motion')
-                    self.motion = array(data)
-                    printCmd('getting euler angles')
-                    rot1, tilt1, psi1 = xmipp.Euler_matrix2angles(self.motion)
-                    printCmd('calling rotate')  
-                    self.projexplorer.rotate(rot1, tilt1, psi1)
-                    
-                elif msg == 'exit_server':
-                    #print 'exit msg received'
-                    break
-                
+                self.answer(msg)
                     
         except EOFError:
             print 'Lost connection to server'
         finally:
-            #print 'closing client'
+            print 'finally'
+            self.exit()
+            
+    def exit(self):
             self.client.close()#close connection
-            self.projexplorer.destroy()
 
-    
+    def initVolumeData(self):
+        self.image = xmipp.Image(self.volfile)
+        self.image.convert2DataType(xmipp.DT_DOUBLE)
+        xdim, ydim, zdim, n = self.image.getDimensions()
+        self.vol = getImageData(self.image)
+        
+    def answer(self, msg):
+        if msg == 'exit_server':
+            self.listen = False
 
 
 
-class XmippProjectionExplorer:
+class XmippProjectionExplorer(XmippChimeraClient):
     
     def __init__(self, volfile):
-        self.volfile = volfile
+        XmippChimeraClient.__init__(self, volfile)
+        self.initListen()
         self.initProjection()
-        self.client = ChimeraClient(self)
-        self.client.openVolumeOnServer(self.getVolumeData())
-        self.client.initListen()
-        
         self.iw = ImageWindow(image=self.projection, label="Projection")
-        self.iw.root.protocol("WM_DELETE_WINDOW", self.client.exitClient)
-        
+        self.iw.root.protocol("WM_DELETE_WINDOW", self.exitClient)
         self.iw.root.mainloop()
         
      
         
     def initProjection(self):
-        self.image = xmipp.Image(self.volfile)
-        self.image.convert2DataType(xmipp.DT_DOUBLE)
         self.projection = self.image.projectVolumeDouble(0, 0, 0)
         
 
@@ -125,23 +121,36 @@ class XmippProjectionExplorer:
         printCmd('image.projectVolumeDouble')
         self.projection = self.image.projectVolumeDouble(rot, tilt, psi)
         printCmd('flipud')
-        Z = flipud(getImageData(self.projection))
+        self.vol = flipud(getImageData(self.projection))
         printCmd('iw.updateData')
-        self.iw.updateData(Z)
+        self.iw.updateData(self.vol)
         printCmd('end rotate')
     
-    def getVolumeData(self):
-        xdim, ydim, zdim, n = self.image.getDimensions()
-        Z = getImageData(self.image)
-        return Z
+    
 
     
-    def destroy(self):
+    def exit(self):
+        XmippChimeraClient.exit(self)
         if not (self.iw is None):
             self.iw.root.destroy()
             
+    def answer(self, msg):
+        XmippChimeraClient.answer(self, msg)
+        if msg == 'motion_stop':
+            data = loads(self.client.recv())#wait for data
+            printCmd('reading motion')
+            self.motion = array(data)
+            printCmd('getting euler angles')
+            rot1, tilt1, psi1 = xmipp.Euler_matrix2angles(self.motion)
+            printCmd('calling rotate')  
+            self.rotate(rot1, tilt1, psi1)
+            
+    def exitClient(self):
+        self.client.send('exit_client')
+        self.exit()
+            
 def printCmd(cmd):
-        timeformat = "%H:%M:%S" 
-        print strftime(timeformat, gmtime())
+        timeformat = "%S.%f" 
+        print datetime.now().strftime(timeformat)
         print cmd
 
