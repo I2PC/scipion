@@ -69,7 +69,7 @@ _test_programs()
     
     #  The basic options we'll complete.
     #
-    opts="--outputdir --mail_only_errors --pattern --list --list_buggers --broadcast --program_name --continue --help --more --verbose --list_failed_tests --statistics"
+    opts="--outputdir --mail_only_errors --pattern --list --list_buggers --broadcast --program_name --continue --help --more --verbose --list_failed_tests --statistics --timeout"
   #
     #  Complete the arguments to some of the basic commands.
     #
