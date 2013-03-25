@@ -31,6 +31,11 @@ Volume = ""
 """
 SymmetryGroup ='c1'
 
+#{expert} Angular sampling
+""" In degrees. This sampling defines how fine the projection gallery from the volume is explored.
+"""
+AngularSampling = 5
+
 # {eval} expandParallel(threads=0,hours=12)
 
 #------------------------------------------------------------------------------------------------
