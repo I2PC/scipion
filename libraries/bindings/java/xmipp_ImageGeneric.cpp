@@ -824,9 +824,8 @@ JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_bestShift
 
         templates->getDimensions(dim);
         double corr, max = -MAXDOUBLE;
-        int maxIndex=0;
 
-        for (int i=0; i < dim.ndim; ++i)
+        for (size_t i=0; i < dim.ndim; ++i)
         {
         	T.aliasImageInStack(*Tp, i);
             tmpI=*I;
@@ -884,7 +883,7 @@ JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_bestShift
             double corr,max=-MAXDOUBLE;
             int maxIndex=0;
 
-            for (int i=0;i<dim.ndim;++i)
+            for (size_t i=0;i<dim.ndim;++i)
             {
             	T.aliasImageInStack(*Tp,i);
                 tmpI=*I;
