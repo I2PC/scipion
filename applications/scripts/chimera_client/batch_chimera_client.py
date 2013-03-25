@@ -31,7 +31,10 @@ class BatchXmippChimeraClient:
 				raise ValueError(options.volfile)
 			
 			self.volfile = options.volfile
-			self.mode = options.mode
+			if options.mode == '/dev/stdin':
+				self.mode = 'viewer'
+			else:
+				self.mode = options.mode
 		except:
 			print self.usage
 			exit()
