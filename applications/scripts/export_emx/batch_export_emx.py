@@ -24,7 +24,8 @@
 """
 #!/usr/bin/env xmipp_python
 
-from os.path import basename, splitext
+from os.path import basename, splitext,exists
+from os import remove
 from protlib_xmipp import XmippScript
 from xmipp import MetaData, MDL_CTF_MODEL, MD_APPEND, MD_OVERWRITE, FileName
 #from protlib_import import convertCtfparam
@@ -64,15 +65,17 @@ class ScriptImportEMX(XmippScript):
         mode         = self.getParam('-m')
         amplitudeContrast = self.getParam('-a')
 
+        if exists(emxFileName):
+           remove(emxFileName)
         emxData      = EmxData()
-        mapper       = EmxMapper(emxData, globals())
+        mapper       = EmxMapper(emxData, emxFileName,globals())
         #create emx files with mic CTF information
         if mode == 'micCTF':
             ctfMicXmippToEmx(emxData,xmdFileName,amplitudeContrast)
         elif mode == 'Coordinates':
             coorrXmippToEmx(emxData,xmdFileName)
         mapper.emxDataToXML()
-        mapper.write(emxFileName)
+        mapper.commit()
         
 
         #detect binary data type micrograph/particle
