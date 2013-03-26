@@ -62,11 +62,6 @@ enum MDLabel
     MDL_ANGLE_DIFF, ///< difference between two angles (double,degrees)
     MDL_ANGLE_Y,   ///< Angle between y-axis and tilt-axis (double, degrees) for untilted micrographs
     MDL_ANGLE_Y2,   ///< Angle between y-axis and tilt-axis (double, degrees) for tilted micrographs
-    MDL_IMAGE1, ///< Image associated to this object (std::string)
-    MDL_IMAGE2, ///< Image associated to this object (std::string)
-    MDL_IMAGE3, ///< Image associated to this object (std::string)
-    MDL_IMAGE4, ///< Image associated to this object (std::string)
-    MDL_IMAGE5, ///< Image associated to this object (std::string)
     MDL_AVG, ///< average value (double)
     MDL_BGMEAN, ///< Mean background value for an image
     MDL_BLOCK_NUMBER, ///< Current block number (for incremental EM)
@@ -187,8 +182,14 @@ enum MDLabel
     MDL_IDX, ///< Index within a list (size_t)
     MDL_IMAGE, ///< Name of an image (std::string)
     MDL_IMAGE_ORIGINAL, ///< Name of an image from which MDL_IMAGE is coming from
+    MDL_IMAGE_REF, ///< Name of of the class image from which MDL_IMAGE is coming from
     MDL_IMAGE_TILTED, ///< Name of the tilted images associated to MDL_IMAGE
     MDL_IMGMD, ///< Name of Metadata file for all images (string)
+    MDL_IMAGE1, ///< Image associated to this object (std::string)
+    MDL_IMAGE2, ///< Image associated to this object (std::string)
+    MDL_IMAGE3, ///< Image associated to this object (std::string)
+    MDL_IMAGE4, ///< Image associated to this object (std::string)
+    MDL_IMAGE5, ///< Image associated to this object (std::string)
     MDL_INTSCALE, ///< Intensity scale for an image
     MDL_ITER, ///< Current iteration number (int)
     MDL_KERDENSOM_FUNCTIONAL, ///< Functional value (double)
@@ -907,6 +908,7 @@ private:
 
         MDL::addLabel(MDL_IMAGE, LABEL_STRING, "image", TAGLABEL_IMAGE);
         MDL::addLabel(MDL_IMAGE_ORIGINAL, LABEL_STRING, "imageOriginal", TAGLABEL_IMAGE);
+        MDL::addLabel(MDL_IMAGE_REF, LABEL_STRING, "imageRef", TAGLABEL_IMAGE);
         MDL::addLabel(MDL_IMAGE_TILTED, LABEL_STRING, "imageTilted", TAGLABEL_IMAGE);
 
         MDL::addLabelAlias(MDL_IMAGE_ORIGINAL, "original_image"); //3.0
