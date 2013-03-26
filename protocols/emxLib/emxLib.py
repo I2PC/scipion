@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
  '''
-from emx_data_model import *
+#from emx_data_model import *
 from xmipp import *
 from emx.emx import *
 

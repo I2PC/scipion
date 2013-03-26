@@ -29,7 +29,7 @@ from os import remove
 from protlib_xmipp import XmippScript
 from xmipp import MetaData, MDL_CTF_MODEL, MD_APPEND, MD_OVERWRITE, FileName
 #from protlib_import import convertCtfparam
-from lib_emx import ctfMicXmippFromEmx
+#from lib_emx import ctfMicXmippFromEmx
 from pyworkflow.object import *
 from emx.emxmapper import EmxMapper
 from emx.emx import *
