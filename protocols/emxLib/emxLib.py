@@ -44,7 +44,7 @@ def ctfMicXmippToEmx(emxData,xmdFileName,amplitudeContrast):
     for objId in md:
         micrographName = md.getValue(MDL_MICROGRAPH, objId)
         ctfModel       = md.getValue(MDL_CTF_MODEL,objId)
-        m1             = micrograph(filename=micrographName)
+        m1             = micrograph(fileName=micrographName)
 
         mdCTF.read(ctfModel)
         objId2 = mdCTF.firstObject()
@@ -78,8 +78,8 @@ def ctfMicEMXToXmipp(emxData,mode):
         #id = micrograph.getValue('id')
         if micrograph.id.has_key('index'):
             micIndex     = micrograph.id['index']
-        if micrograph.id.has_key('filename'):
-            micFileName  = micrograph.id['filename']
+        if micrograph.id.has_key('fileName'):
+            micFileName  = micrograph.id['fileName']
         if micFileName is None:
             if micIndex is None:
                 raise Exception("ctfMicEMXToXmipp: Micrograph has neither filename not index")
@@ -157,7 +157,7 @@ def coorrXmippToEmx(emxData,xmdFileName):
 
         coorX = md.getValue(MDL_XCOOR, objId)
         coorY = md.getValue(MDL_YCOOR, objId)
-        p1             = particle(filename=particleName, index=counter)
+        p1             = particle(fileName=particleName, index=counter)
         p1.centerCoord.X.set(coorX)
         p1.centerCoord.Y.set(coorY)
         p1.setMicrograph(m1)
@@ -172,8 +172,8 @@ def coorEMXToXmipp(emxData,mode,emxFileName):
         mdPartId   = mdParticle.addObject()
         if particle.id.has_key('index'):
             partIndex     = particle.id['index']
-        if particle.id.has_key('filename'):
-            partFileName  = particle.id['filename']
+        if particle.id.has_key('fileName'):
+            partFileName  = particle.id['fileName']
         if partFileName is None:
             if partIndex is None:
                 raise Exception("coorEMXToXmipp: Particle has neither filename not index")
