@@ -33,7 +33,7 @@ from xmipp import MetaData, MDL_CTF_MODEL, MD_APPEND, MD_OVERWRITE, FileName
 from pyworkflow.object import *
 from emx.emxmapper import EmxMapper
 from emx.emx import *
-from emxLib.emxLib import ctfMicXmippToEmx, coorrXmippToEmx
+from emxLib.emxLib import ctfMicXmippToEmx, coorrXmippToEmx, ctfMicXmippToEmxChallenge
 
 
 class ScriptImportEMX(XmippScript):
