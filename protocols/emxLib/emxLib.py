@@ -54,7 +54,11 @@ def ctfMicXmippToEmx(emxData,xmdFileName,amplitudeContrast):
         defocusU            = mdCTF.getValue(MDL_CTF_DEFOCUSU, objId2)/10.
         defocusV            = mdCTF.getValue(MDL_CTF_DEFOCUSV, objId2)/10.
         defocusUAngle       = mdCTF.getValue(MDL_CTF_DEFOCUS_ANGLE, objId2)
-
+        if defocusUAngle < 0:
+            defocusUAngle += 180.
+        elif defocusUAngle > 180.:
+            defocusUAngle -= 180.;            
+            
         m1.acceleratingVoltage.set(acceleratingVoltage)
         m1.amplitudeContrast.set(amplitudeContrast)
         m1.defocusU.set(defocusU)
@@ -144,7 +148,7 @@ def coorrXmippToEmx(emxData,xmdFileName):
     xmdFileNameNoExtNoBlock = xmdFileNameNoExt.removeBlockName()
     micrographName = xmdFileNameNoExtNoBlock + BINENDING
     particleName   = xmdFileNameNoExtNoBlock + STACKENDING
-    m1             = micrograph(id={'filename': micrographName})
+    m1             = micrograph(id={'fileName': micrographName})
     emxData.addObject(m1)
     counter = FIRSTIMAGE
     for objId in md:
@@ -152,7 +156,7 @@ def coorrXmippToEmx(emxData,xmdFileName):
         coorX = md.getValue(MDL_XCOOR, objId)
         coorY = md.getValue(MDL_YCOOR, objId)
 
-        p1             = particle(id={'filename': particleName, 'index':counter})
+        p1             = particle(id={'fileName': particleName, 'index':counter})
         p1.centerCoord.X.set(coorX)
         p1.centerCoord.Y.set(coorY)
         p1.setMicrograph(m1)
