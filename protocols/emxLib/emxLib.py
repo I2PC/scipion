@@ -69,6 +69,32 @@ def ctfMicXmippToEmx(emxData,xmdFileName,amplitudeContrast):
         m1.cs.set(cs)
         emxData.addObject(m1)
 
+def ctfMicXmippToEmxChallenge(emxData,xmdFileName,amplitudeContrast):
+    
+    md    = MetaData()
+    mdCTF = MetaData()
+    md.read(xmdFileName)
+    for objId in md:
+        micrographName = md.getValue(MDL_MICROGRAPH, objId)
+        ctfModel       = md.getValue(MDL_CTF_MODEL,objId)
+        m1             = micrograph(fileName=micrographName)
+
+        mdCTF.read(ctfModel)
+        objId2 = mdCTF.firstObject()
+        defocusU            = mdCTF.getValue(MDL_CTF_DEFOCUSU, objId2)/10.
+        defocusV            = mdCTF.getValue(MDL_CTF_DEFOCUSV, objId2)/10.
+        defocusUAngle       = mdCTF.getValue(MDL_CTF_DEFOCUS_ANGLE, objId2)
+        if defocusUAngle < 0:
+            defocusUAngle += 180.
+        elif defocusUAngle > 180.:
+            defocusUAngle -= 180.;            
+            
+        m1.defocusU.set(defocusU)
+        m1.defocusV.set(defocusV)
+        m1.defocusUAngle.set(defocusUAngle)
+        emxData.addObject(m1)
+
+
 def ctfMicEMXToXmipp(emxData,mode):
     #iterate though emxData
     mdMic     = MetaData()
