@@ -24,15 +24,16 @@
 """
 #!/usr/bin/env xmipp_python
 
-from os.path import basename, splitext
+from os.path import basename, splitext,exists
+from os import remove
 from protlib_xmipp import XmippScript
 from xmipp import MetaData, MDL_CTF_MODEL, MD_APPEND, MD_OVERWRITE, FileName
 #from protlib_import import convertCtfparam
-from lib_emx import ctfMicXmippFromEmx
+#from lib_emx import ctfMicXmippFromEmx
 from pyworkflow.object import *
 from emx.emxmapper import EmxMapper
 from emx.emx import *
-from emxLib.emxLib import ctfMicXmippToEmx, coorrXmippToEmx
+from emxLib.emxLib import ctfMicXmippToEmx, coorrXmippToEmx, ctfMicXmippToEmxChallenge
 
 
 class ScriptImportEMX(XmippScript):
@@ -48,6 +49,7 @@ class ScriptImportEMX(XmippScript):
         self.addParamsLine(' [--mode <mode=micCTF>]         : information to extract')
         self.addParamsLine("         where <mode>");
         self.addParamsLine("             micCTF             : export micrograph ctf");
+        self.addParamsLine("             micCTFChallenge    : export micrograph ctf to challenge format");        
         self.addParamsLine("             Coordinates        : export particle coordinates (so far only works for a single image)");
         self.addParamsLine("     alias -m;");
         self.addParamsLine(' [--amplitudeContrast <Q=0.1>]   : amplitudeContrast, mandatory when mode=micCTF');
@@ -64,15 +66,19 @@ class ScriptImportEMX(XmippScript):
         mode         = self.getParam('-m')
         amplitudeContrast = self.getParam('-a')
 
+        if exists(emxFileName):
+           remove(emxFileName)
         emxData      = EmxData()
-        mapper       = EmxMapper(emxData, globals())
+        mapper       = EmxMapper(emxData, emxFileName,globals())
         #create emx files with mic CTF information
         if mode == 'micCTF':
             ctfMicXmippToEmx(emxData,xmdFileName,amplitudeContrast)
+        elif mode == 'micCTFChallenge':
+            ctfMicXmippToEmxChallenge(emxData,xmdFileName,amplitudeContrast)
         elif mode == 'Coordinates':
             coorrXmippToEmx(emxData,xmdFileName)
         mapper.emxDataToXML()
-        mapper.write(emxFileName)
+        mapper.commit()
         
 
         #detect binary data type micrograph/particle

@@ -1614,10 +1614,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					try
 					{
 						String args = data.selectedVolFn;
-						if (Filename.isSpiderVolume(args))
-							args = "spider:" + args;
-						// FIXME: Check chimera is installed
-						Process p = new ProcessBuilder("chimera", args).start();
+//						if (Filename.isSpiderVolume(args))
+//							args = "spider:" + args;
+//						// FIXME: Check chimera is installed
+//						Process p = new ProcessBuilder("chimera", args).start();
+						Runtime.getRuntime().exec("xmipp_chimera_client -i " + args);
 					}
 					catch (Exception ex)
 					{

@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
  '''
-from emx_data_model import *
+#from emx_data_model import *
 from xmipp import *
 from emx.emx import *
 
@@ -44,7 +44,7 @@ def ctfMicXmippToEmx(emxData,xmdFileName,amplitudeContrast):
     for objId in md:
         micrographName = md.getValue(MDL_MICROGRAPH, objId)
         ctfModel       = md.getValue(MDL_CTF_MODEL,objId)
-        m1             = micrograph(id={'filename': micrographName})
+        m1             = micrograph(fileName=micrographName)
 
         mdCTF.read(ctfModel)
         objId2 = mdCTF.firstObject()
@@ -54,7 +54,11 @@ def ctfMicXmippToEmx(emxData,xmdFileName,amplitudeContrast):
         defocusU            = mdCTF.getValue(MDL_CTF_DEFOCUSU, objId2)/10.
         defocusV            = mdCTF.getValue(MDL_CTF_DEFOCUSV, objId2)/10.
         defocusUAngle       = mdCTF.getValue(MDL_CTF_DEFOCUS_ANGLE, objId2)
-
+        if defocusUAngle < 0:
+            defocusUAngle += 180.
+        elif defocusUAngle > 180.:
+            defocusUAngle -= 180.;            
+            
         m1.acceleratingVoltage.set(acceleratingVoltage)
         m1.amplitudeContrast.set(amplitudeContrast)
         m1.defocusU.set(defocusU)
@@ -64,6 +68,32 @@ def ctfMicXmippToEmx(emxData,xmdFileName,amplitudeContrast):
         m1.pixelSpacing.Y.set(pixelSpacing)
         m1.cs.set(cs)
         emxData.addObject(m1)
+
+def ctfMicXmippToEmxChallenge(emxData,xmdFileName,amplitudeContrast):
+    
+    md    = MetaData()
+    mdCTF = MetaData()
+    md.read(xmdFileName)
+    for objId in md:
+        micrographName = md.getValue(MDL_MICROGRAPH, objId)
+        ctfModel       = md.getValue(MDL_CTF_MODEL,objId)
+        m1             = micrograph(fileName=micrographName)
+
+        mdCTF.read(ctfModel)
+        objId2 = mdCTF.firstObject()
+        defocusU            = mdCTF.getValue(MDL_CTF_DEFOCUSU, objId2)/10.
+        defocusV            = mdCTF.getValue(MDL_CTF_DEFOCUSV, objId2)/10.
+        defocusUAngle       = mdCTF.getValue(MDL_CTF_DEFOCUS_ANGLE, objId2)
+        if defocusUAngle < 0:
+            defocusUAngle += 180.
+        elif defocusUAngle > 180.:
+            defocusUAngle -= 180.;            
+            
+        m1.defocusU.set(defocusU)
+        m1.defocusV.set(defocusV)
+        m1.defocusUAngle.set(defocusUAngle)
+        emxData.addObject(m1)
+
 
 def ctfMicEMXToXmipp(emxData,mode):
     #iterate though emxData
@@ -80,7 +110,7 @@ def ctfMicEMXToXmipp(emxData,mode):
             if micIndex is None:
                 raise Exception("ctfMicEMXToXmipp: Micrograph has neither filename not index")
             else: #only index? for xmipp index should behave as filename
-                micFileName = FileName(str(micIndex))
+                micFileName = FileName(str(micIndex).zfill(FILENAMENUMBERLENGTH))
                 micIndex    = None
                 fileName = FileName(micFileName)
         elif micIndex is None:
@@ -88,7 +118,8 @@ def ctfMicEMXToXmipp(emxData,mode):
         #micrograph is a stack. Unlikely but not impossible
         else:
             fileName=FileName()
-            fileName.compose(micIndex,micFileName)
+            fileName.compose(int(micIndex),micFileName)
+
 
         mdMicId   = mdMic.addObject()
         mdMic.setValue(MDL_MICROGRAPH, fileName, mdMicId)
@@ -134,6 +165,7 @@ def ctfMicEMXToXmipp(emxData,mode):
             MD.setValue(MDL_CTF_Q0,            float(amplitudeContrast), objId)
         MD.setValue(MDL_CTF_K,             1.0, objId)
         MD.write(ctfModelFileName)
+    mdMic.sort(MDL_MICROGRAPH)
     mdMic.write(MICFILE)
     
 def coorrXmippToEmx(emxData,xmdFileName):
@@ -144,15 +176,14 @@ def coorrXmippToEmx(emxData,xmdFileName):
     xmdFileNameNoExtNoBlock = xmdFileNameNoExt.removeBlockName()
     micrographName = xmdFileNameNoExtNoBlock + BINENDING
     particleName   = xmdFileNameNoExtNoBlock + STACKENDING
-    m1             = micrograph(id={'filename': micrographName})
+    m1 = micrograph(fileName=micrographName)
     emxData.addObject(m1)
     counter = FIRSTIMAGE
     for objId in md:
 
         coorX = md.getValue(MDL_XCOOR, objId)
         coorY = md.getValue(MDL_YCOOR, objId)
-
-        p1             = particle(id={'filename': particleName, 'index':counter})
+        p1             = particle(fileName=particleName, index=counter)
         p1.centerCoord.X.set(coorX)
         p1.centerCoord.Y.set(coorY)
         p1.setMicrograph(m1)
@@ -165,12 +196,32 @@ def coorEMXToXmipp(emxData,mode,emxFileName):
     mdParticle     = MetaData()
     for particle in emxData.objLists[mode]:
         mdPartId   = mdParticle.addObject()
+        if particle.id.has_key('index'):
+            partIndex     = particle.id['index']
+        if particle.id.has_key('fileName'):
+            partFileName  = particle.id['fileName']
+        if partFileName is None:
+            if partIndex is None:
+                raise Exception("coorEMXToXmipp: Particle has neither filename not index")
+            else: #only index? for xmipp index should behave as filename
+                partFileName = FileName(str(partIndex).zfill(FILENAMENUMBERLENGTH))
+                partIndex    = None
+                fileName = FileName(partFileName)
+        elif partIndex is None:
+            fileName = FileName(partFileName)
+        #micrograph is a stack. Unlikely but not impossible
+        else:
+            fileName=FileName()
+            fileName.compose(int(partIndex),partFileName)
+
         centerCoordX   = particle.centerCoord.X.get()
         centerCoordY   = particle.centerCoord.Y.get()
+        mdParticle.setValue(MDL_IMAGE, fileName, mdPartId)
         mdParticle.setValue(MDL_XCOOR, int(centerCoordX), mdPartId)
         mdParticle.setValue(MDL_YCOOR, int(centerCoordY), mdPartId)
     f = FileName()
     f.compose(FAMILY,emxFileName)
+    mdParticle.sort(MDL_IMAGE)
     mdParticle.write(f.withoutExtension() + POSENDING)
     
         

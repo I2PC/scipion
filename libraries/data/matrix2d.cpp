@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include <algorithm>
+#include <queue>
 #include "matrix2d.h"
 #include "../../external/alglib/src/ap.h"
 #include "../../external/alglib/src/linalg.h"
@@ -417,4 +418,55 @@ void firstEigs(const Matrix2D<double> &A, size_t M, Matrix1D<double> &D, Matrix2
 	P.resizeNoCopy(N,M);
 	FOR_ALL_ELEMENTS_IN_MATRIX2D(P)
 		MAT_ELEM(P,i,j)=z(i,M-1-j);
+}
+
+void connectedComponentsOfUndirectedGraph(const Matrix2D<double> &G, Matrix1D<int> &component)
+{
+	size_t N=MAT_XSIZE(G);
+	component.resizeNoCopy(N);
+	component.initConstant(-1);
+
+	int nextComponent=0;
+	bool workDone=false;
+	std::queue<size_t> toExplore;
+	do
+	{
+		workDone=false;
+		// Find next unvisited element
+		bool found=false;
+		size_t seed=0;
+		FOR_ALL_ELEMENTS_IN_MATRIX1D(component)
+			if (VEC_ELEM(component,i)<0)
+			{
+				seed=i;
+				found=true;
+				break;
+			}
+
+		// If found, get its connected component
+		if (found)
+		{
+			int currentComponent=nextComponent;
+			nextComponent++;
+
+			VEC_ELEM(component,seed)=currentComponent;
+			toExplore.push(seed);
+			while (toExplore.size()>0)
+			{
+				seed=toExplore.front();
+				toExplore.pop();
+				for (size_t j=seed+1; j<N; ++j)
+					if (MAT_ELEM(G,seed,j)>0)
+					{
+						if (VEC_ELEM(component,j)<0)
+						{
+							VEC_ELEM(component,j)=currentComponent;
+							toExplore.push(j);
+						}
+
+					}
+			}
+			workDone=true;
+		}
+	} while (workDone);
 }
