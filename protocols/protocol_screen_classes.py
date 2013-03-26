@@ -101,5 +101,5 @@ def produceAlignedImages(log,fnOutputClass):
         MDout.setValue(MDL_SHIFT_X, x,id)
         MDout.setValue(MDL_SHIFT_Y, y,id)
         MDout.setValue(MDL_FLIP,flip,id)
-        MDout.setValue(MDL_ENABLED,True,id)
+        MDout.setValue(MDL_ENABLED,1,id)
     MDout.write('classes_aligned@'+fnOutputClass,MD_APPEND)
