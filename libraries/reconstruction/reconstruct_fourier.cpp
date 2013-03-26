@@ -126,9 +126,6 @@ void ProgRecFourier::run()
 
     processImages(0, SF.size() - 1, !fn_fsc.empty(), false);
 
-    // Method for correcting the weights
-    correctWeight();
-
     finishComputations(fn_out);
 
     threadOpCode = EXIT_THREAD;
@@ -935,7 +932,8 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
     }
 #endif
 
-
+    // Method for correcting the weights
+    correctWeight();
     // Enforce symmetry in the Fourier values as well as the weights
     // Sjors 19aug10 enforceHermitianSymmetry first checks ndim...
     Vout().initZeros(volPadSizeZ,volPadSizeY,volPadSizeX);

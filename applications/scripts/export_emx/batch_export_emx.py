@@ -29,11 +29,11 @@ from os import remove
 from protlib_xmipp import XmippScript
 from xmipp import MetaData, MDL_CTF_MODEL, MD_APPEND, MD_OVERWRITE, FileName
 #from protlib_import import convertCtfparam
-from lib_emx import ctfMicXmippFromEmx
+#from lib_emx import ctfMicXmippFromEmx
 from pyworkflow.object import *
 from emx.emxmapper import EmxMapper
 from emx.emx import *
-from emxLib.emxLib import ctfMicXmippToEmx, coorrXmippToEmx
+from emxLib.emxLib import ctfMicXmippToEmx, coorrXmippToEmx, ctfMicXmippToEmxChallenge
 
 
 class ScriptImportEMX(XmippScript):
@@ -49,6 +49,7 @@ class ScriptImportEMX(XmippScript):
         self.addParamsLine(' [--mode <mode=micCTF>]         : information to extract')
         self.addParamsLine("         where <mode>");
         self.addParamsLine("             micCTF             : export micrograph ctf");
+        self.addParamsLine("             micCTFChallenge    : export micrograph ctf to challenge format");        
         self.addParamsLine("             Coordinates        : export particle coordinates (so far only works for a single image)");
         self.addParamsLine("     alias -m;");
         self.addParamsLine(' [--amplitudeContrast <Q=0.1>]   : amplitudeContrast, mandatory when mode=micCTF');
@@ -72,6 +73,8 @@ class ScriptImportEMX(XmippScript):
         #create emx files with mic CTF information
         if mode == 'micCTF':
             ctfMicXmippToEmx(emxData,xmdFileName,amplitudeContrast)
+        elif mode == 'micCTFChallenge':
+            ctfMicXmippToEmxChallenge(emxData,xmdFileName,amplitudeContrast)
         elif mode == 'Coordinates':
             coorrXmippToEmx(emxData,xmdFileName)
         mapper.emxDataToXML()
