@@ -22,7 +22,7 @@ class BatchXmippChimeraClient:
 	def parseInput(self):
 		
 		try:
-			self.usage = "usage: %prog [options] Example: %prog -i hand.vol --mode projection"
+			self.usage = "usage: %prog [options] Example: %prog -i hand.vol --mode projector"
 			self.parser = OptionParser(self.usage)
 			self.parser.add_option("-i", "--input", dest="volfile", default="/dev/stdin", type="string", help="Volume to display")
 			self.parser.add_option("-m", "--mode", dest="mode", default="/dev/stdin", type="string", help="client mode: viewer for visualization and projection for projection explorer")
