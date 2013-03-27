@@ -25,19 +25,18 @@ class Complex(Object):
     def hasValue(self):
         return True
 
-class MyStep(Step):
-    def __init__(self):
-        Step.__init__(self)
+class MyProtocol(Protocol):
+    def __init__(self, **args):
+        Protocol.__init__(self, **args)
         self.defineInputs(x=Integer(1), y=Float(2), z=String("abc"), b=Boolean(True))
         
-    def __str__(self):
-        s = ''
-        for k, v in self.getAttributesToStore():
-            s += '%s = %s\n' % (k, str(v))
-        return s
-
-    def hasValue(self):
-        return True        
+    def sleep(self):
+        import time 
+        time.sleep(1)
+        
+    def defineSteps(self):
+        for i in range(2):
+            self.insertFunctionStep(self.sleep)
     
     
 class TestPyworkflow(unittest.TestCase):
@@ -137,49 +136,63 @@ class TestPyworkflow(unittest.TestCase):
         c2 = mapper2.getAll()[0]
         self.assertEquals(c.imag.get(), c2.imag.get())
         
-    def test_zStep(self):
-        fn = self.getTmpPath(self.sqliteFile)
-        s = MyStep()
-        s.x.set(7)
-        s.y.set(3.0)
-        s.status = "KKK"
-        mapper = SqliteMapper(fn, globals())
-        mapper.insert(s)
-        #write file
-        mapper.commit()
+#    def test_zStep(self):
+#        fn = self.getTmpPath(self.sqliteFile)
+#        s = MyStep()
+#        s.x.set(7)
+#        s.y.set(3.0)
+#        s.status = "KKK"
+#        mapper = SqliteMapper(fn, globals())
+#        mapper.insert(s)
+#        #write file
+#        mapper.commit()
+#        
+#        s2 = mapper.select(classname='MyStep')[0]
+#        self.assertTrue(s.equalAttributes(s2))
         
-        s2 = mapper.select(classname='MyStep')[0]
-        self.assertTrue(s.equalAttributes(s2))
-        
-    def test_zzList(self):
+#    def test_List(self):
+#        """Test the list with several Complex"""
+#        n = 10
+#        l1 = List()
+#        for i in range(n):
+#            c = Complex(3., 3.)
+#            l1.append(c)
+#        fn = self.getTmpPath(self.sqliteFile)        
+#        mapper = SqliteMapper(fn, globals())
+#        mapper.store(l1)
+#        mapper.commit()
+#        
+#        mapper2 = XmlMapper('kk.xml', globals())
+#        mapper2.setClassTag('Complex.Float', 'attribute')
+#        mapper2.setClassTag('List.ALL', 'class_name')
+#        mapper2.setClassTag('MyStep.ALL', 'attribute')
+#        mapper2.setClassTag('MyStep.Boolean', 'name_only')
+#        step = MyStep()
+#        step.b.set('false')
+#        step.status = "running"
+#        step.inittime = "now"
+#        l1.append(step)
+#        mapper2.insert(l1)
+#        mapper2.commit()
+#        
+#        mapper3 = SqliteMapper('kk.sqlite', globals())
+#        mapper3.insert(l1)
+#        mapper3.commit()
+
+    def test_Protocol(self):
         """Test the list with several Complex"""
-        n = 1
-        l1 = List()
-        for i in range(n):
-            c = Complex(3., 3.)
-            l1.append(c)
         fn = self.getTmpPath(self.sqliteFile)        
         mapper = SqliteMapper(fn, globals())
-        mapper.store(l1)
-        mapper.commit()
+        prot = MyProtocol(mapper=mapper)
+        prot.run()
         
-        mapper2 = XmlMapper('kk.xml', globals())
-        mapper2.setClassTag('Complex.Float', 'attribute')
-        mapper2.setClassTag('List.ALL', 'class_name')
-        mapper2.setClassTag('MyStep.ALL', 'attribute')
-        mapper2.setClassTag('MyStep.Boolean', 'name_only')
-        step = MyStep()
-        step.b.set('false')
-        step.status = "running"
-        step.inittime = "now"
-        l1.append(step)
-        mapper2.insert(l1)
-        mapper2.commit()
+        self.assertEqual(STATUS_FINISHED, prot.steps[0].status)
         
-        mapper3 = SqliteMapper('kk.sqlite', globals())
-        mapper3.insert(l1)
-        mapper3.commit()
-
+        mapper2 = SqliteMapper(fn, globals())
+        prot2 = mapper2.get(prot.id)
+        
+        self.assertEqual(prot.endTime, prot2.endTime)
+        self.assertEqual(prot.steps[1].status, prot2.steps[1].status)
         
 if __name__ == '__main__':
     unittest.main()

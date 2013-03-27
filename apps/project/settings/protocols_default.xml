@@ -3,7 +3,7 @@
   <ProtocolConfig>
     <ProtocolConfig text="Preprocessing">
       <ProtocolConfig text="Micrographs">
-        <ProtocolConfig action="ProtImportMicrographs" text="Import" />
+        <ProtocolConfig action="ProtImportMicrographs" text="Import Micrographs" />
         <ProtocolConfig action="ProtScreenMicrographs" text="Screen" />
         <ProtocolConfig action="ProtDownsampleMicrographs" text="Downsample" />
       </ProtocolConfig>

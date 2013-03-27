@@ -25,36 +25,52 @@
 # **************************************************************************
 
 from mapper import Mapper
+from utils.path import replaceExt, joinExt
 
 class SqliteMapper(Mapper):
     """Specific Mapper implementation using Sqlite database"""
     def __init__(self, dbName, dictClasses=None):
-        #print "FILENAME: ", dbName
-        #print "---------> ", dictClasses
         Mapper.__init__(self, dictClasses)
         self.db = SqliteDb(dbName)
     
     def commit(self):
         self.db.commit()
         
+    def _insert(self, obj, namePrefix=None):
+        obj.id = self.db.insertObject(obj.name, obj.getClassName(), obj.value, obj.parent_id)
+        sid = str(obj.id)
+        if namePrefix is None:
+            namePrefix = sid
+        else:
+            namePrefix = joinExt(namePrefix, sid)
+        self.insertObjectWithChilds(obj, namePrefix)
+        
     def insert(self, obj):
         """Insert a new object into the system, the id will be set"""
-        obj.id = self.db.insertObject(obj.name, obj.getClassName(), obj.value, obj.parent_id)
-        self.insertObjectWithChilds(obj, str(obj.id))
+        self._insert(obj)
+        
+    def insertChild(self, obj, key, attr, namePrefix):
+            attr.name = joinExt(namePrefix, key)
+            attr.parent_id = obj.id
+            attr.id = self.db.insertObject(attr.name, attr.getClassName(), attr.value, attr.parent_id)
+            self.insertObjectWithChilds(attr, joinExt(namePrefix, str(attr.id)))
         
     def insertObjectWithChilds(self, obj, namePrefix):
         for key, attr in obj.getAttributesToStore():
-            attr.name = '%s.%s' % (namePrefix, key)
-            attr.parent_id = obj.id
-            attr.id = self.db.insertObject(attr.name, attr.getClassName(), attr.value, attr.parent_id)
-            self.insertObjectWithChilds(attr, '%s.%d' % (namePrefix, attr.id))
+            self.insertChild(obj, key, attr, namePrefix)
         #self.db.commit()        
     
-    def updateTo(self, obj):
+    def updateTo(self, obj, level=1):
         self.db.updateObject(obj.id, obj.name, obj.getClassName(), obj.value, obj.parent_id)
         for key, attr in obj.getAttributesToStore():
-            self.updateTo(attr)
-        #self.db.commit()
+            if attr.id is None: # Insert new items from the previous state
+                attr.parent_id = obj.id
+                #path = obj.name[:obj.name.rfind('.')] # remove from last .
+                namePrefix = replaceExt(obj.name, str(obj.id))
+                attr.name = joinExt(namePrefix, key)
+                self._insert(attr, namePrefix)
+            else:                
+                self.updateTo(attr, level+2)
         
     def updateFrom(self, obj):
         objRow = self.db.selectObjectById(obj.id)

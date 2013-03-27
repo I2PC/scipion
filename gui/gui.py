@@ -173,7 +173,7 @@ class Window():
     """Class to manage a Tk windows.
     It will encapsulates some basic creation and 
     setup functions. """
-    def __init__(self, title, master=None, weight=True):
+    def __init__(self, title, master=None, weight=True, minsize=(500, 300)):
         if master is None:
             self.root = tk.Tk()
         else:
@@ -182,6 +182,8 @@ class Window():
         self.root.title(title)
         if weight:
             configureWeigths(self.root)
+        if not minsize is None:
+            self.root.minsize(minsize[0], minsize[1])
         self.master = master
         setCommonFonts()
         

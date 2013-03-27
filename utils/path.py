@@ -28,7 +28,7 @@ This module contains the PATH related utilities
 inside the utils module
 """
 
-from os.path import exists, join
+from os.path import exists, join, splitext
 import pyworkflow as pw
 
 def findFile(filename, *paths):
@@ -47,5 +47,15 @@ def findResource(filename):
     resource filename in the paths specified
     in pyworkflow.RESOURCES path list"""
     return findFile(filename, *pw.RESOURCES)
+
+def replaceExt(filename, newExt):
+    ''' Replace the current path extension(from last .)
+    with a new one. The new one should not contains the .'''
+    return splitext(filename)[0] + '.' + newExt
+
+def joinExt(*extensions):
+    """Join several path parts with a ."""
+    return '.'.join(extensions)
+
     
 

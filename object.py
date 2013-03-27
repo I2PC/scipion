@@ -39,7 +39,7 @@ class Object(object):
         self.parent_id =  args.get('parent_id', None)
         self.name =  args.get('name', '')
         self.tag =  args.get('tag', None) # True if the object serves as input to his parent
-        self.store =  args.get('store', True) # True if this object will be stored from his parent
+        self._store =  args.get('store', True) # True if this object will be stored from his parent
         self.pointer =  args.get('pointer', False) # True if will be treated as a reference for storage
         
     def getClassName(self):
@@ -49,7 +49,7 @@ class Object(object):
         """Return the list of attributes than are
         subclasses of Object and will be stored"""
         for key, attr in self.__dict__.iteritems():
-            if issubclass(attr.__class__, Object) and attr.store:
+            if issubclass(attr.__class__, Object) and attr._store:
                 yield (key, attr)
                 
     def isPointer(self):
@@ -79,10 +79,6 @@ class Object(object):
     def strId(self):
         """String representation of id"""
         return str(self.id)
-    
-    def __str__(self):
-        """String representation of the scalar value"""
-        return str(self.value)
         
     def hasValue(self):        
         return True
@@ -117,7 +113,7 @@ class OrderedObject(Object):
         Object.__init__(self, value, **args)
         
     def __setattr__(self, name, value):
-        if not name in self._attributes and issubclass(value.__class__, Object) and value.store:
+        if not name in self._attributes and issubclass(value.__class__, Object) and value._store:
             self._attributes.append(name)
         Object.__setattr__(self, name, value)
     
@@ -148,7 +144,11 @@ class FakedObject(Object):
     
     def __getattr__(self, name):
         if name in self._attributes:
-            return self._attributes[name].get()
+            attr = self._attributes[name]
+            if issubclass(type(attr), Scalar):
+                return attr.get()
+            else:
+                return attr
         return None
     
     def getAttributesToStore(self):
@@ -165,6 +165,10 @@ class Scalar(Object):
     def equalAttributes(self, other):
         """Compare that all attributes are equal"""
         return self.value == other.value
+    
+    def __str__(self):
+        """String representation of the scalar value"""
+        return str(self.value)
     
     
 class Integer(Scalar):
@@ -215,20 +219,27 @@ class List(Object, list):
         else:
             object.__setattr__(self, name, value)
             
-    def __getattr__(self, name):
-        if name.startswith('__item__'):
-            index = int(name.split('__item__')[1]) - 1
-            if index < len(self):
-                return self[index]
-        return None
+#    def __getattribute__(self, name):
+#        #return list.__getattribute__(self, *args, **kwargs)__(self, name):
+#        print "   requesting name: ", name
+#        if name.startswith('__item__'):
+#            index = int(name.split('__item__')[1]) - 1
+#            print "   requesting index: ", index
+#            if index < len(self):
+#                return self[index]
+#        return object.__getattribute__(self, name)
 
     def getAttributesToStore(self):
         for key, attr in self.__dict__.iteritems():
-            if issubclass(attr.__class__, Object) and attr.store:
+            if issubclass(attr.__class__, Object) and attr._store:
                 yield (key, attr)
         
         for i, item in enumerate(self):
-            yield ("__item__%06d" % (i+1), item)
+            yield (self.getIndexStr(i+1), item)
+            
+    def getIndexStr(self, i):
+        """Return the way the string index is generated"""
+        return "__item__%06d" % i
             
     def __str__(self):
         return list.__str__(self)

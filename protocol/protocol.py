@@ -23,13 +23,16 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from utils.path import replaceExt
 """
 This modules contains classes required for the workflow
 execution and tracking like: Step and Protocol
 """
-import datetime as dt
 
-from pyworkflow.object import FakedObject, String, List
+import datetime as dt
+import pickle
+
+from pyworkflow.object import FakedObject, String, List, Integer
 
 STATUS_LAUNCHED = "launched"  # launched to queue system
 STATUS_RUNNING = "running"    # currently executing
@@ -41,13 +44,14 @@ class Step(FakedObject):
     """Basic execution unit.
     It should defines its Input, Output
     and define a run method"""
-    def __init__(self):
-        FakedObject.__init__(self)
+    def __init__(self, **args):
+        FakedObject.__init__(self, **args)
         self._inputs = []
         self._outputs = []
         self.addAttribute('status', String)
         self.addAttribute('initTime', String)
         self.addAttribute('endTime', String)
+        self.addAttribute('error', String)
         
     def _storeAttributes(self, attrList, attrDict):
         """Store all attributes in attrDict as 
@@ -87,19 +91,36 @@ class Step(FakedObject):
         self.endTime = None
         try:
             self._run()
+            self.status = STATUS_FINISHED
         except Exception, e:
             self.status = STATUS_FAILED
+            self.error = str(e)
+            raise #only in development
         finally:
             self.endTime = str(dt.datetime.now())
             
+class FunctionStep(Step):
+    """This is a Step wrapper around a normal function"""
+    def __init__(self, func=None, *funcArgs):
+        """Receive the function to execute and the 
+        parameters to call it"""
+        Step.__init__(self)
+        self.func = func
+        self.funcArgs = funcArgs
+        self.funcName = String(func)
+        self.argsStr = String(pickle.dumps(funcArgs))
+        
+    def _run(self):
+        self.func(*self.funcArgs)
+        
 
-def ProtocolType(type):
-    """Protocols metaclass"""
-    def __init__(cls, name, bases, dct):
-        print '-----------------------------------'
-        print "Initializing protocol class", name
-        print dct
-        super(ProtocolType, cls).__init__(name, bases, dct)
+#def ProtocolType(type):
+#    """Protocols metaclass"""
+#    def __init__(cls, name, bases, dct):
+#        print '-----------------------------------'
+#        print "Initializing protocol class", name
+#        print dct
+#        super(ProtocolType, cls).__init__(name, bases, dct)
         
 def loadDef():
     print "loading..."
@@ -114,24 +135,71 @@ class Protocol(Step):
     
     def __init__(self, **args):
         Step.__init__(self, **args)
-        self._steps = List() # The list of steps
-        self.workingDir = args.get('workingDir', None)
+        self.addAttribute('steps', List)
+        self.workingDir = args.get('workingDir', '.')
+        self.mapper = args.get('mapper', None)
         
-    def insertStep(self, step):
-        """Insert a new step in the list"""
-        self._steps.append(step)
-        
+    def store(self, obj, commit=False):
+        if not self.mapper is None:
+            self.mapper.store(obj)
+            if commit:
+                self.commit()
+            
+    def commit(self):
+        if not self.mapper is None:
+            self.mapper.commit()
+            
     def defineSteps(self):
         """Define all the steps that will be executed."""
         pass
     
-    def run(self):
-        for step in self._steps:
+    def insertStep(self, step):
+        """Insert a new step in the list"""
+        self.steps.append(step)
+        
+    def insertFunctionStep(self, func, *funcArgs):
+        self.insertStep(FunctionStep(func, *funcArgs))
+        
+    def _run(self):
+        self.defineSteps()
+        
+        for step in self.steps:
             step.run()
-    
+            print "step_index: ", self.steps.getIndexStr(self.currentStep)
+            self.mapper.insertChild(self.steps, self.steps.getIndexStr(self.currentStep),
+                             step, self.namePrefix)
+            self.currentStep += 1
+            self.commit()
+            if step.status == STATUS_FAILED:
+                raise Exception("Protocol failed")
+
+    def run(self):
+        self.currentStep = 1
+        self.store(self, commit=True)
+        print "self.steps.name: ", self.steps.name
+        self.namePrefix = replaceExt(self.steps.name, str(self.steps.id)) #keep 
+        Step.run(self)
+        print 'PROTOCOL FINISHED'
+        #self.store(self, commit=True)
 
 class ProtImportMicrographs(Protocol):
-    pass
+    def __init__(self, **args):
+        Protocol.__init__(self, **args)
+        self.addAttribute('pattern', String)
+        self.addAttribute('n', Integer)
+        self.count = 1
+        
+    def defineSteps(self):
+        for i in range(self.n):
+            self.insertFunctionStep(self.copyMicrographs, self.pattern)
+        
+    def copyMicrographs(self, pattern):
+        """Copy micrograph with filename matching the pattern"""
+        import time
+        print "step: ", self.count
+        time.sleep(1)
+        self.count += 1
+        
 
 class ProtScreenMicrographs(Protocol):
     pass

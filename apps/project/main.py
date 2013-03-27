@@ -73,8 +73,7 @@ def populateTree(tree, prefix, obj, level=0):
         img = obj.icon.get()
         if img is None:
             img = ''
-            if level == 3:
-                img = gui.getImage('step.gif')
+            pass
         else:
             img = gui.getImage(img)
         item = tree.insert(prefix, 'end', key, text=text, image=img)
@@ -84,9 +83,10 @@ def populateTree(tree, prefix, obj, level=0):
         if not obj.isEmpty() and obj.action.hasValue():
             prot = globals().get(obj.action.get(), None)
             if not prot is None:
+                tree.item(item, image=gui.getImage('step.gif'))
                 for k, v in subclasses.iteritems():
                     if not v is prot and issubclass(v, prot):
-                        tree.insert(item, 'end', item+k, text=k)
+                        tree.insert(item, 'end', item+k, text=k, image=gui.getImage('python_file.gif'))
                         
             else:
                 raise Exception("Class '%s' not found" % obj.action.get())
