@@ -1,7 +1,6 @@
 /***************************************************************************
  *
  * Authors:     Airen Zaldivar (azaldivar@cnb.csic.es)
- *              Roberto Marabini       (roberto@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -24,45 +23,43 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef _PYTHON_FOURIERPROJECTOR_H
-#define _PYTHON_FOURIERPROJECTOR_H
+
+#ifndef _FOURIER_PROJECTOR_H
+#define _FOURIER_PROJECTOR_H
 
 #include "Python.h"
 
-
 /***************************************************************/
-/*                            FourierProjector                         */
-/**************************************************************/
+/*                            Fourier Projector                */
+/***************************************************************/
 
 #define FourierProjector_Check(v) (((v)->ob_type == &FourierProjectorType))
-#define FourierProjector_Value(v) ((*((FourierProjectorObject*)(v))->fourierprojector))
+#define FourierProjector_Value(v) ((*((FourierProjectorObject*)(v))->fourier_projector))
+
 
 /*FourierProjector Object*/
 typedef struct
 {
     PyObject_HEAD
-    FourierProjector* fourierprojector;
+
+    FourierProjector * fourier_projector;
 }
 FourierProjectorObject;
 
-#define FourierProjectorObject_New() (FourierProjectorObject*)malloc(sizeof(FourierProjectorObject))
+PyObject *
+FourierProjector_new(PyTypeObject *type, PyObject *args, PyObject *kwargs);
 
 /* Destructor */
 void FourierProjector_dealloc(FourierProjectorObject* self);
 
-/* Constructor */
+/* Project a volume.
+ * Result: double projection */
 PyObject *
-FourierProjector_new(PyTypeObject *type, PyObject *args, PyObject *kwargs);
+FourierProjector_projectVolume(PyObject * obj, PyObject *args, PyObject *kwargs);
 
-/* FourierProjector string representation */
-PyObject *
-FourierProjector_repr(PyObject * obj);
-
-/* projectVolumeDouble */
-PyObject *
-FourierProjector_projectVolumeDouble(PyObject *obj, PyObject *args, PyObject *kwargs);
-
+/* FourierProjector methods */
 extern PyMethodDef FourierProjector_methods[];
+/*SymList Type */
 extern PyTypeObject FourierProjectorType;
 
 

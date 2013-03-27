@@ -30,69 +30,85 @@
 /**************************************************************/
 
 
+
 /* Constructor */
 PyObject *
 FourierProjector_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-	FourierProjectorObject *self = (FourierProjectorObject*) type->tp_alloc(type, 0);
+
+    FourierProjectorObject *self = (FourierProjectorObject*) type->tp_alloc(type, 0);
+    XMIPP_TRY
+
     if (self != NULL)
     {
-        PyObject* volume = NULL;
-
-        if (PyArg_ParseTuple(args, "O", &volume))
+        PyObject *image = NULL;
+        if (PyArg_ParseTuple(args, "O", &image))
         {
-            if (volume != NULL)
-            {
-                try
-                {
-                	if (PyImage_Check(*volume))
-                    {
 
-                        self->fourierprojector = new FourierProjector(*volume, 1, 0.5, NEAREST);
-                    }
-                    else
-                    {
-                        PyErr_SetString(PyExc_TypeError, "FourierProjector_new: Expected volume as first argument");
-                        return NULL;
-                    }
-                }
-                catch (XmippError &xe)
-                {
-                    PyErr_SetString(PyXmippError, xe.msg.c_str());
-                    return NULL;
-                }
-            }
+          MultidimArray<double> * pVolume;
+          Image_Value(image).data->getMultidimArrayPointer(pVolume);
+          self->fourier_projector = new FourierProjector(*pVolume, 1, 0.5, NEAREST);
 
         }
-        else
-            return NULL;
     }
+    XMIPP_CATCH
+
     return (PyObject *) self;
-}//function FourierProjector_new
+}
 
 /* Destructor */
-void FourierProjector_dealloc(FourierProjectorObject* self)
+ void FourierProjector_dealloc(FourierProjectorObject* self)
 {
-    delete self->fourierprojector;
+    delete self->fourier_projector;
     self->ob_type->tp_free((PyObject*) self);
-}//function FourierProjector_dealloc
+}
 
+/* readSymmetryFile */
+PyObject *
+FourierProjector_projectVolume(PyObject * obj, PyObject *args, PyObject *kwargs)
+{
+      FourierProjectorObject *self = (FourierProjectorObject*) obj;
+      double rot, tilt, psi;
+      if (PyArg_ParseTuple(args, "O|ddd", &rot,&tilt,&psi))
+      {
+          try
+          {
+              Projection P;
+              MultidimArray<double> * pVolume;
+              //self->image->data->getMultidimArrayPointer(pVolume);
+              ArrayDim aDim;
+              pVolume->getDimensions(aDim);
+              pVolume->setXmippOrigin();
+              projectVolume(FourierProjector_Value(self), P, aDim.xdim, aDim.ydim,rot, tilt, psi);
+              ImageObject * result = PyObject_New(ImageObject, &ImageType);
+              Image <double> I;
+
+              result->image = new ImageGeneric();
+              result->image->setDatatype(DT_Double);
+              result->image->data->setImage(MULTIDIM_ARRAY(P));
+              return (PyObject *)result;
+          }
+          catch (XmippError &xe)
+          {
+              PyErr_SetString(PyXmippError, xe.msg.c_str());
+          }
+      }
+      return NULL;
+}
 
 
 /* FourierProjector methods */
 PyMethodDef FourierProjector_methods[] =
-   {
-
-   { "projectVolumeDouble", (PyCFunction) FourierProjector_projectVolumeDouble, METH_VARARGS,
-         "project a volume using Euler angles and fourier space to speed calculations" },
-
+{
+   { "projectVolume", (PyCFunction) FourierProjector_projectVolume,
+     METH_VARARGS, "read symmetry file" },
    { NULL } /* Sentinel */
 };//FourierProjector_methods
 
-
-
 /*FourierProjector Type */
-PyTypeObject FourierProjectorType = {
+PyTypeObject FourierProjectorType =
+{
+>>>>>>> 5a12ca07fc5c116e804b6c117b15fe78c18ccfef
     PyObject_HEAD_INIT(NULL)
     0, /*ob_size*/
     "xmipp.FourierProjector", /*tp_name*/
@@ -133,45 +149,5 @@ PyTypeObject FourierProjectorType = {
     0, /* tp_alloc */
     FourierProjector_new, /* tp_new */
 };//FourierProjectorType
-
-
-
-
-/* projectVolumeDoubleUsingFourier */
-PyObject *
-FourierProjector_projectVolumeDouble(PyObject *obj, PyObject *args, PyObject *kwargs)
-{
-
-    FourierProjectorObject *self = (FourierProjector*) obj;
-    double rot, tilt, psi;
-    if (PyArg_ParseTuple(args, "ddd", &rot,&tilt,&psi))
-    {
-        try
-        {
-            Projection P;
-            MultidimArray<double> * pVolume;
-            ArrayDim aDim;
-            pVolume->getDimensions(aDim);
-            pVolume->setXmippOrigin();
-            projectVolume(*self, P, aDim.xdim, aDim.ydim,rot, tilt, psi);
-            ImageObject * result = PyObject_New(ImageObject, &ImageType);
-            Image <double> I;
-
-            result->image = new ImageGeneric();
-            result->image->setDatatype(DT_Double);
-            result->image->data->setImage(MULTIDIM_ARRAY(P));
-            return (PyObject *)result;
-        }
-        catch (XmippError &xe)
-        {
-            PyErr_SetString(PyXmippError, xe.msg.c_str());
-        }
-    }
-    return NULL;
-}//function FourierProjector_projectVolumeDoubleUsingFourier
-
-
-
-
 
 
