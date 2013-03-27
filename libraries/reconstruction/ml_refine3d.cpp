@@ -754,7 +754,7 @@ void ProgMLRefine3D::reconstructVolumes()
 
     for (size_t i = 0; i < reconsOutFnBase.size(); ++i)
     {
-        for (size_t volno = 1; volno <= Nvols; ++volno)
+        for (int volno = 1; volno <= (int)Nvols; ++volno)
         {
             volno_index = Nvols * i + volno - 1;
             String &fn_base = reconsOutFnBase[i];
@@ -831,7 +831,7 @@ void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
     FileName fn_cref_base = FN_CREF_VOLBASE;
     double inv_dim2 = 1. / (double)(dim * dim);
 
-    for (size_t volno = 1; volno <= Nvols; ++volno)
+    for (int volno = 1; volno <= (int)Nvols; ++volno)
     {
     	COMPOSE_VOL_FN(fn_tmp, volno, fn_noise_base);
     	COMPOSE_VOL_FN(fn_tmp2, volno, fn_cref_base);
