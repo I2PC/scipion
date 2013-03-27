@@ -39,12 +39,14 @@
 #include <data/symmetries.h>
 #include <data/projection.h>
 #include <reconstruction/ctf_estimate_from_micrograph.h>
+#include <reconstruction/fourier_projection.h>
 
 #include "python_filename.h"
 #include "python_image.h"
 #include "python_program.h"
 #include "python_metadata.h"
 #include "python_symmetry.h"
+#include "python_fourierprojector.h"
 
 extern PyObject * PyXmippError;
 

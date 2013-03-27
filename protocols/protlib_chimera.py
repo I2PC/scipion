@@ -114,12 +114,13 @@ class XmippProjectionExplorer(XmippChimeraClient):
      
         
     def initProjection(self):
-        self.projection = self.image.projectVolumeDouble(0, 0, 0)
+        self.fourierprojector = FourierProjector(self.image)
+        self.projection = self.fourierprojector.projectVolume(0, 0, 0)
         
 
     def rotate(self, rot, tilt, psi):
         printCmd('image.projectVolumeDouble')
-        self.projection = self.image.projectVolumeDouble(rot, tilt, psi)
+        self.projection = self.fourierprojector.projectVolume(rot, tilt, psi)
         printCmd('flipud')
         self.vol = flipud(getImageData(self.projection))
         printCmd('iw.updateData')
