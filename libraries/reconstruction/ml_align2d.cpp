@@ -215,7 +215,7 @@ void ProgML2D::show()
             std::cout << formatString("  Reference image(s)      : %s (%d)\n", fn_ref.c_str(), model.n_ref);
         if (factor_nref > 1)
             std::cout << "  Reference expanding factor   : " << factor_nref << std::endl;
-        std::cout << "  Number of references:   : " << model.n_ref * (size_t)factor_nref << std::endl;
+        std::cout << "  Number of references:   : " << model.n_ref * factor_nref << std::endl;
 
         std::cout
         << "  Output rootname         : " << fn_root << std::endl
