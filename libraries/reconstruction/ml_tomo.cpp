@@ -852,7 +852,7 @@ ProgMLTomo::produceSideInfo()
             psi_sampling = angular_sampling;
 
     }
-
+    readMissingInfo();////////////////////////////
     // Get number of references
     if (do_only_average)
     {
@@ -881,7 +881,7 @@ ProgMLTomo::produceSideInfo()
             generateInitialReferences();
     }
 
-    readMissingInfo();
+
 
 } //end of function produceSideInfo
 
