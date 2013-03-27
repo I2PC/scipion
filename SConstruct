@@ -432,7 +432,7 @@ elif (ARGUMENTS['mode'] == 'compile'):
 
     # warnings?
     if int(env['warn']) or int(env['debug']):
-        env.Append(CXXFLAGS=['-Wall','-pedantic','-Wno-variadic-macros','-Wno-long-long','-Wno-deprecated'])
+        env.Append(CXXFLAGS=['-Werror','-Wall','-pedantic','-Wno-variadic-macros','-Wno-long-long','-Wno-deprecated'])
     else:
         env.Append(CXXFLAGS=['-w'])
         # TODO suppress linker warnings too... what's the flag?
