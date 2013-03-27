@@ -105,6 +105,7 @@ class XmippProjectionExplorer(XmippChimeraClient):
     
     def __init__(self, volfile):
         XmippChimeraClient.__init__(self, volfile)
+        self.fourierprojector = FourierProjector(self.vol)
         self.initListen()
         self.initProjection()
         self.iw = ImageWindow(image=self.projection, label="Projection")
@@ -119,16 +120,15 @@ class XmippProjectionExplorer(XmippChimeraClient):
 
     def rotate(self, rot, tilt, psi):
         printCmd('image.projectVolumeDouble')
-        self.projection = self.image.projectVolumeDouble(rot, tilt, psi)
+        
+        self.projection = self.fourier.projector.projectVolumeDouble(rot, tilt, psi)#self.image.projectVolumeDoubleUsingFourier(rot, tilt, psi)
         printCmd('flipud')
         self.vol = flipud(getImageData(self.projection))
         printCmd('iw.updateData')
         self.iw.updateData(self.vol)
         printCmd('end rotate')
     
-    
-
-    
+        
     def exit(self):
         XmippChimeraClient.exit(self)
         if not (self.iw is None):
@@ -148,6 +148,7 @@ class XmippProjectionExplorer(XmippChimeraClient):
     def exitClient(self):
         self.client.send('exit_client')
         self.exit()
+            
             
 def printCmd(cmd):
         timeformat = "%S.%f" 
