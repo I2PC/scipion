@@ -425,7 +425,7 @@ void ProgMLRefine3D::run()
             if (doProject)// || ml2d->current_block > 0)
             {
                 projectVolumes(ml2d->MDref);
-                size_t refno = 0;
+                int refno = 0;
 
                 // Read new references from disc (I could just as well keep them in memory, maybe...)
                 FOR_ALL_OBJECTS_IN_METADATA(ml2d->MDref)
@@ -621,7 +621,7 @@ void ProgMLRefine3D::makeNoiseImages()
     std::vector<Image<double> > & Iref = ml2d->model.Iref;
     FileName   fn_noise(FN_NOISE_IMG), fn_img;
     MetaData    mdNoise(ml2d->MDref);
-    size_t refno = 0;
+    int refno = 0;
     MDRow row;
 
     FOR_ALL_OBJECTS_IN_METADATA(mdNoise)

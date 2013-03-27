@@ -215,7 +215,7 @@ void ProgML2D::show()
             std::cout << formatString("  Reference image(s)      : %s (%d)\n", fn_ref.c_str(), model.n_ref);
         if (factor_nref > 1)
             std::cout << "  Reference expanding factor   : " << factor_nref << std::endl;
-        std::cout << "  Number of references:   : " << model.n_ref * factor_nref << std::endl;
+        std::cout << "  Number of references:   : " << model.n_ref * (size_t)factor_nref << std::endl;
 
         std::cout
         << "  Output rootname         : " << fn_root << std::endl
@@ -443,7 +443,7 @@ void ProgML2D::produceSideInfo2()
     if (model.do_norm)
     {
         average_scale = 1.;
-        for (size_t refno = 0; refno < model.n_ref; refno++)
+        for (int refno = 0; refno < model.n_ref; refno++)
         {
             model.scale.push_back(1.);
         }
@@ -640,7 +640,7 @@ void ProgML2D::preselectLimitedDirections(double &phi, double &theta)
     pdf_directions.clear();
     pdf_directions.resize(model.n_ref);
 
-    for (size_t refno = 0; refno < model.n_ref; refno++)
+    for (int refno = 0; refno < model.n_ref; refno++)
     {
         if (!limit_rot || (phi == -999. && theta == -999.))
             pdf_directions[refno] = 1.;
@@ -1969,7 +1969,7 @@ void ProgML2D::maximizeModel(ModelML2D &local_model)
         ASSIGN(wsum_sigma_noise);
 
 
-    for (size_t refno = 0; refno < local_model.n_ref; refno++)
+    for (int refno = 0; refno < local_model.n_ref; refno++)
     {
         double weight = sumw[refno];
         if (weight > 0.)

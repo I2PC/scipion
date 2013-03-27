@@ -1214,7 +1214,7 @@ void ProgMLF2D::generateInitialReferences()
     size_t nsub, first, last;
     size_t id;
 
-    for (size_t refno = 0; refno < model.n_ref; refno++)
+    for (int refno = 0; refno < model.n_ref; refno++)
     {
         nsub = divide_equally(nr_images_global, model.n_ref, refno, first, last);
         //Clear images
@@ -2724,7 +2724,7 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
     MDIterator mdIter(MDref);
     MDo = MDref;
 
-    for (size_t refno = 0; refno < model.n_ref; ++refno, mdIter.moveNext())
+    for (int refno = 0; refno < model.n_ref; ++refno, mdIter.moveNext())
     {
         //row.setValue(MDL_ITER, iter);
         row.setValue(MDL_REF, refno + 1);

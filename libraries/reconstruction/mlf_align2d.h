@@ -33,7 +33,7 @@
    @ingroup ReconsLibrary */
 //@{
 
-#define FOR_ALL_MODELS() for (size_t refno=0;refno<model.n_ref; refno++)
+#define FOR_ALL_MODELS() for (int refno=0;refno<model.n_ref; refno++)
 #define FOR_ALL_ROTATIONS() for (size_t ipsi=0; ipsi<nr_psi; ipsi++ )
 #define FOR_ALL_FLIPS() for (size_t iflip=0; iflip<nr_flip; iflip++)
 #define FOR_ALL_LIMITED_TRANSLATIONS() for (size_t itrans=0; itrans<nr_trans; itrans++)
