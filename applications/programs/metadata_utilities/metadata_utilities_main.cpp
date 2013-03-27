@@ -79,6 +79,7 @@ protected:
         addParamsLine("   randomize                            : Randomize elements of metadata");
         addParamsLine("    keep_column <labels>                : Keep some columns(label list) from metadata");
         addParamsLine("    drop_column <labels>                : Drop some columns(label list) from metadata");
+        addParamsLine("    rename_column <labels>              : Rename a column");
         addParamsLine("    modify_values <expression>          : Use an SQLite expression to modify the metadata");
         addParamsLine("                                        : This option requires knowledge of basic SQL syntax(more specific SQLite");
         addParamsLine(":+ Some of the function allowed are,");
@@ -176,6 +177,8 @@ protected:
         addExampleLine ("   xmipp_metadata_utilities -i mD1.doc -q sum defocusGroup count -o out.doc");
         addExampleLine(" Print the metadata Size", false);
         addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --query size");
+        addExampleLine(" Rename Column", false);
+        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --operate rename_column \"weight wRobust\"");
 
     }
 
@@ -239,6 +242,11 @@ protected:
                    MDL::str2LabelVector(getParam("--operate", 1), labels);
                    for (size_t i = 0; i < labels.size(); ++i)
                        mdIn.removeLabel(labels[i]);
+               }
+        else if ( operation == "rename_column")
+               {
+                   MDL::str2LabelVector(getParam("--operate", 1), labels);
+				   mdIn.renameColumn(labels[0],labels[1]);
                }
         else if (operation == "modify_values")// modify_values
         {

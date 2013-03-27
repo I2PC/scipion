@@ -49,14 +49,21 @@ class ScriptImportEMX(XmippScript):
         self.addExampleLine("xmipp_import_emx -i particlePicking.emx -m micCTF ");
       
     def run(self):
+#        baseFilename = 'EMXread.emx'
+#        scriptDir = os.path.dirname(__file__)
+#        goldStandard = os.path.join(scriptDir,baseFilename)
+#        emxData   = EmxData()
+#        mapper    = EmxMapper(emxData, goldStandard, globals())
+#        mapper.convertToEmxData(emxData)
+
         emxFileName  = self.getParam('-i')
         mode         = self.getParam('-m')
         #object to store emx data
         emxData   = EmxData()
         #object to read/write emxData
-        mapper    = EmxMapper(emxData, globals())
+        mapper    = EmxMapper(emxData, emxFileName,globals())
         #read file
-        mapper.read(emxFileName)
+        #mapper.read(emxFileName)
         mapper.convertToEmxData(emxData)
         #create xmd files with mic CTF information and auxiliary files
         if mode == 'micCTF':
@@ -64,16 +71,5 @@ class ScriptImportEMX(XmippScript):
         elif mode == 'Coordinates':
             coorEMXToXmipp(emxData,'particle',emxFileName)
 
-        #detect binary data type micrograph/particle
-        #type =emxData.findObjectType(binFileName)
-        #declare a 
-#        if type == MICROGRAPH:
-#            pass
-#        elif type == PARTICLE:
-#            pass
-#        else:
-#            raise Exception("Unknown object type associated with file=%s" % dictFK )
-            
-        
 if __name__ == '__main__':
     ScriptImportEMX().tryRun()

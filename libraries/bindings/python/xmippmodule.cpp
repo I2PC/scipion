@@ -790,6 +790,7 @@ PyMODINIT_FUNC initxmipp(void)
     INIT_TYPE(MetaData);
     INIT_TYPE(Program);
     INIT_TYPE(SymList);
+    INIT_TYPE(FourierProjector);
 
     //Add PyXmippError
     char message[32]="xmipp.XmippError";

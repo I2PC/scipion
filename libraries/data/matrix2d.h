@@ -1718,6 +1718,24 @@ void svdcmp(const Matrix2D< T >& a,
  */
 void generalizedEigs(const Matrix2D<double> &A, const Matrix2D<double> &B, Matrix1D<double> &D, Matrix2D<double> &P);
 
+/** First eigenvectors of a real, symmetric matrix.
+ * Solves the problem Av=dv.
+ * Only the eigenvectors of the largest M eigenvalues are returned as columns of P
+ */
+void firstEigs(const Matrix2D<double> &A, size_t M, Matrix1D<double> &D, Matrix2D<double> &P);
+
+/** Last eigenvectors of a real, symmetric matrix.
+ * Solves the problem Av=dv.
+ * Only the eigenvectors of the smallest M eigenvalues are returned as columns of P
+ */
+void lastEigs(const Matrix2D<double> &A, size_t M, Matrix1D<double> &D, Matrix2D<double> &P);
+
+/** Find connected components of a graph.
+ * Assuming that the matrix G represents an undirected graph (of size NxN), this function returns a vector (of size N) that indicates
+ * for each element which is the number of its connected component.
+ */
+void connectedComponentsOfUndirectedGraph(const Matrix2D<double> &G, Matrix1D<int> &component);
+
 /** Conversion from one type to another.
  *
  * If we have an integer array and we need a double one, we can use this

@@ -225,6 +225,73 @@ TEST_F( MatrixTest, generalizedEigsTest)
     EXPECT_EQ(expectedP,P) << "generalizedEigs failed";
 }
 
+TEST_F( MatrixTest, firstEigsTest)
+{
+    Matrix2D<double> A(3,3), P;
+    Matrix1D<double> D;
+    A(0,0)=1;   A(0,1)=0.5; A(0,2)=0.3;
+    A(1,0)=0.5; A(1,1)=1;   A(1,2)=0.5;
+    A(2,0)=0.3; A(2,1)=0.5; A(2,2)=1;
+
+    firstEigs(A,2,D,P);
+
+    Matrix1D<double> expectedD(2);
+    Matrix2D<double> expectedP(3,2);
+    expectedD(0)=1.872841614740048; expectedD(1)=0.7;
+    expectedP(0,0)= -0.549434786658031; expectedP(0,1)= 0.707106781186547;
+    expectedP(1,0)= -0.629478220767080; expectedP(1,1)= 0;
+    expectedP(2,0)= -0.549434786658031; expectedP(2,1)=-0.707106781186547;
+    EXPECT_EQ(expectedD,D) << "firstEigsTest failed";
+    EXPECT_EQ(expectedP,P) << "firstEigsTest failed";
+}
+
+TEST_F( MatrixTest, lastEigsTest)
+{
+    Matrix2D<double> A(3,3), P;
+    Matrix1D<double> D;
+    A(0,0)=1;   A(0,1)=0.5; A(0,2)=0.3;
+    A(1,0)=0.5; A(1,1)=1;   A(1,2)=0.5;
+    A(2,0)=0.3; A(2,1)=0.5; A(2,2)=1;
+
+    lastEigs(A,2,D,P);
+
+    Matrix1D<double> expectedD(2);
+    Matrix2D<double> expectedP(3,2);
+    expectedD(0)=0.427158385259952; expectedD(1)=0.7;
+    expectedP(0,0)=  0.445108318513645; expectedP(0,1)= 0.707106781186547;
+    expectedP(1,0)= -0.777018126931355; expectedP(1,1)= 0;
+    expectedP(2,0)=  0.445108318513645; expectedP(2,1)=-0.707106781186547;
+    EXPECT_EQ(expectedD,D) << "lastEigsTest failed";
+    EXPECT_EQ(expectedP,P) << "lastEigsTest failed";
+}
+
+TEST_F( MatrixTest, connectedComponentsTests)
+{
+    Matrix2D<double> A(3,3);
+    Matrix1D<int> components;
+    Matrix1D<int> expectedComponents(3);
+
+    A(0,0)=1;   A(0,1)=0.5; A(0,2)=0.3;
+    A(1,0)=0.5; A(1,1)=1;   A(1,2)=0.5;
+    A(2,0)=0.3; A(2,1)=0.5; A(2,2)=1;
+    connectedComponentsOfUndirectedGraph(A,components);
+    EXPECT_EQ(expectedComponents,components) << "connectedComponents failed";
+
+    A(0,0)=1;   A(0,1)=0.5; A(0,2)=0;
+    A(1,0)=0.5; A(1,1)=1;   A(1,2)=0;
+    A(2,0)=0;   A(2,1)=0;   A(2,2)=1;
+    expectedComponents(2)=1;
+    connectedComponentsOfUndirectedGraph(A,components);
+    EXPECT_EQ(expectedComponents,components) << "connectedComponents failed";
+
+    A(0,0)=1;   A(0,1)=0;   A(0,2)=0;
+    A(1,0)=0;   A(1,1)=1;   A(1,2)=0.1;
+    A(2,0)=0;   A(2,1)=0.1; A(2,2)=1;
+    expectedComponents(1)=1;
+    connectedComponentsOfUndirectedGraph(A,components);
+    EXPECT_EQ(expectedComponents,components) << "connectedComponents failed";
+}
+
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);

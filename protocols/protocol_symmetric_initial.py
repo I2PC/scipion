@@ -125,6 +125,9 @@ class ProtSymmetric(XmippProtocol):
         return errors    
 
     def visualize(self):
+        fnVol=self.workingDirPath('volume.vol')
+        if os.path.exists():
+            runShowJ(fnVol)
         return
 
 def getReconstructionError(fnHist):

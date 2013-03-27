@@ -177,7 +177,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	protected static final float MAX_HEIGHT_RATE = 2.0f / 3.0f;
 	// this rate is width/height
 	protected static final float DIM_RATE = 4.0f / 3.0f;
-	protected static final int MIN_WIDTH = 600;
+	protected static final int MIN_WIDTH = 650;
 	protected static int MIN_HEIGHT;
 	protected static int MAX_HEIGHT;
 	protected static int MAX_WIDTH;
@@ -538,7 +538,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			@Override
 			public void keyPressed(KeyEvent arg0)
 			{
-				int dir = 0;
+				int vdir = 0, hdir = 0;
 
 				switch (arg0.getKeyCode())
 				{
@@ -546,17 +546,25 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					removeObjects(true);
 					break;
 				case KeyEvent.VK_UP:
-					dir = -1;
+					vdir = -1;
 					break;
 				case KeyEvent.VK_DOWN:
-					dir = 1;
+					vdir = 1;
+					break;
+				case KeyEvent.VK_LEFT:
+					hdir = -1;
+					break;
+				case KeyEvent.VK_RIGHT:
+					hdir = 1;
 					break;
 				}
-				if (dir != 0)
+				if (vdir != 0 || hdir != 0)
 				{
-					int newRow = table.getSelectedRow() + dir;
-					if (newRow >= 0 && newRow <= table.getRowCount() - 1)
-						selectIndex(newRow);
+					int newRow = table.getSelectedRow() + vdir;
+					int col = table.getSelectedColumn() + hdir;
+					
+					selectItem(newRow, col);
+						
 				}
 			}// function keyPressed
 		});
@@ -1314,11 +1322,24 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		}
 	}
 
-	public void selectIndex(int index)
+	
+	
+	public void selectItem(int row, int col)
 	{
+		if (row < 0 || row > table.getRowCount() - 1 || col < 0 || col > table.getColumnCount() - 1)
+			return;
+		if(row * table.getColumnCount() + col + 1 > gallery.getSize())
+		{
+			int[] coords = gallery.getCoords(gallery.getSize() - 1);
+			row = coords[0];
+			col = coords[1];
+			
+		}
+		
 		gallery.clearSelection();
-		gallery.touchItem(index, 0);
-		makeVisible(index);
+		gallery.touchItem(row, col);
+		makeVisible(row);
+		
 	}
 
 	private void tableMouseClicked(MouseEvent evt)
@@ -1456,7 +1477,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			// Display
 			addItem(DISPLAY, "Display");
 			addItem(DISPLAY_NORMALIZE, "Global normalization", null, "control released N");
-			addItem(DISPLAY_SHOWLABELS, "Show labels", null, "control released L");
+			addItem(DISPLAY_SHOWLABELS, "Display labels", null, "control released L");
 			addSeparator(DISPLAY);
 			addItem(DISPLAY_RENDERIMAGES, "Render images", null, "control released R");
 			addItem(DISPLAY_APPLYGEO, "Apply geometry", null, "control released G");
@@ -1593,10 +1614,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					try
 					{
 						String args = data.selectedVolFn;
-						if (Filename.isSpiderVolume(args))
-							args = "spider:" + args;
-						// FIXME: Check chimera is installed
-						Process p = new ProcessBuilder("chimera", args).start();
+//						if (Filename.isSpiderVolume(args))
+//							args = "spider:" + args;
+//						// FIXME: Check chimera is installed
+//						Process p = new ProcessBuilder("chimera", args).start();
+						Runtime.getRuntime().exec("xmipp_chimera_client -i " + args);
 					}
 					catch (Exception ex)
 					{
@@ -1934,7 +1956,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			File iofile = new File(file);
 			if (!iofile.exists())// overwrite or append, save active
 			{
-				iofile.getParentFile().mkdirs();
+				if(iofile.getParentFile() != null)
+					iofile.getParentFile().mkdirs();
 				data.md.write(path);
 			}
 			else
@@ -1982,7 +2005,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			File file = new File(to);
 			if (dlgSave.isOverwrite())
 				file.delete();
-			if (!file.exists())
+			if (!file.exists() && file.getParentFile() != null)
 				file.getParentFile().mkdirs();
 			for (String blockit : data.mdBlocks)
 			{
@@ -2127,7 +2150,26 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	public Map<String, String> getKeyAssist()
 	{
 		Map<String, String> map = Collections.synchronizedMap(new LinkedHashMap<String, String>());
-
+		map.put("Shift + Scroll Up/Ctrl + P", "Zoom in if images displayed");
+		map.put("Shift + Scroll Down/Ctrl + O", "Zoom out if images displayed");
+		map.put("Left click", "Selects a cell in gallery mode and a row in table mode");
+		map.put("Right click", "Selects a row in table mode and displays row menu");
+		map.put("Supr", "Delete selected cell in gallery mode and row in table mode");
+		map.put("Up", "Select  previous row in table mode and cell in previous row in gallery mode");
+		map.put("Down", "Select next row in table mode and cell in next row in gallery mode");
+		map.put("Left", "Select  previous cell in gallery mode");
+		map.put("Right", "Select next cell in gallery mode");
+		map.put("Ctrl + O", "Open file");
+		map.put("Ctrl + J", "Open with ImageJ");
+		map.put("Ctrl + S", "Save");
+		map.put("F5", "Refresh");
+		map.put("Ctrl + Q", "Exit");
+		map.put("Ctrl + N", "Display global normalization");
+		map.put("Ctrl + L", "Display labels");
+		map.put("Ctrl + R", "Render images");
+		map.put("Ctrl + G", "Apply geometry");
+		map.put("Ctrl + W", "Wrap");
+		
 		return map;
 	}
 
