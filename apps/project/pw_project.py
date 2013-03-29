@@ -138,22 +138,38 @@ if __name__ == '__main__':
     window = gui.Window("Project window")
     
     parent = window.root
+    parent.iconbitmap("@/home/josem/work/development/workspace/pyworkflow/resources/scipion_bn.xbm")
     menuConfig = loadConfig(config, 'menu')
     createMainMenu(parent, menuConfig)
     p = tk.PanedWindow(parent, orient=tk.HORIZONTAL)
     # first pane, which would get widgets gridded into it:
-    f1 = ttk.Labelframe(p, text='Protocols', width=300, height=500)
+    f1 = tk.Frame(p)
+    f1.columnconfigure(0, weight=1)
+    f1.rowconfigure(1, weight=1)
+    logo = gui.getImage('scipion_logo.gif')
+    label = tk.Label(f1, image=logo, borderwidth=0, bg='white')
+    label.grid(row=0, column=0, sticky='nw', padx=5)
+    
+    lf = ttk.Labelframe(f1, text=' Protocols ', width=300, height=500)
+    lf.grid(row=1, column=0, sticky='news', padx=5, pady=5)
     # second pane
-    f2 = ttk.Labelframe(p, text='History', width=500, height=500)
-    p.add(f1)
-    p.add(f2)
+    #f2 = tk.Frame(p)
+    #f2.grid(row=0, column=0, sticky='news')
+    
+    
+    f2 = ttk.Labelframe(p, text=' History ', width=500, height=500)
+    #lf.grid(row=1, column=0, sticky='news')
+    
+    p.add(f1, padx=5, pady=5)
+    p.add(f2, padx=5, pady=5)
     p.paneconfig(f1, minsize=300)
     p.paneconfig(f2, minsize=300)
     
     p.grid(row=0, column=0, sticky='news')
     
-    gui.configureWeigths(f1)
-    tree = Tree(f1)
+    #gui.configureWeigths(f1)
+    gui.configureWeigths(lf)
+    tree = Tree(lf, show='tree')
     #tree.heading(c, text=c)
     #tree.heading('#0', text='Object')
     tree.column('#0', minwidth=300)

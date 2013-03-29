@@ -128,6 +128,31 @@ def loadConfig(config, name):
     menuConfig = mapper.getConfig()
     return menuConfig
 
+def createProjectLabel(parent, text, date):
+    frame = tk.Frame(parent)
+    label = tk.Label(frame, text=text, anchor='nw', 
+                     justify=tk.LEFT, font=projNameFont, cursor='hand1')
+    label.grid(row=0, column=0, padx=2, pady=2, sticky='nw')
+    dateLabel = tk.Label(frame, text='Modified: '+date, font=projDateFont)
+    dateLabel.grid(row=1, column=0)
+    return frame
+    
+    
+    
+def createProjectList(parent):
+    """Load the list of projects"""
+    f = open('kk.txt')
+    r = 0
+    parent.columnconfigure(0, weight=1)
+    
+    for line in f:
+        parts = line.split()
+        frame = createProjectLabel(parent, parts[3], ' '.join(parts[:3]))
+        frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
+        r += 1
+    
+projNameFont = None
+projLabelFont = None
 
 if __name__ == '__main__':
     # Load global configuration
@@ -135,8 +160,11 @@ if __name__ == '__main__':
     config = mapper.getConfig()
 
     window = gui.Window("Project window", minsize=(600, 350))
+    projNameFont = tkFont.Font(size=16, family='verdana')#, weight='bold')
+    projDateFont = tkFont.Font(size=10, family='verdana')
     
     parent = window.root
+    parent.iconbitmap("@/home/josem/work/development/workspace/pyworkflow/resources/scipion_bn.xbm")
     menuConfig = loadConfig(config, 'menu')
     createMainMenu(parent, menuConfig)
     
@@ -149,18 +177,18 @@ if __name__ == '__main__':
     label = tk.Label(f, image=logo, borderwidth=0)
     label.grid(row=0, column=0, sticky='nw')
     # Add create project button
-    font = tkFont.Font(size=11, family='tahoma')#, weight='bold')
+    font = tkFont.Font(size=11, family='verdana')#, weight='bold')
     btn = tk.Button(f, text='Create Project', fg='white', bg='#7D0709', font=font, 
                     activeforeground='white', activebackground='#A60C0C')
     btn.grid(row=1, column=0, sticky='new', padx=10, pady=10)
     
     lf = ttk.Labelframe(f, text='Current Projects')
-    lf.grid(row=0, column=1, sticky='news', padx=5, pady=5, rowspan=2)
-
+    lf.grid(row=0, column=1, sticky='news', padx=10, pady=10, rowspan=2)
+    createProjectList(lf)
     f.rowconfigure(0, weight=1)
     f.rowconfigure(1, weight=1)
     f.columnconfigure(1, weight=1)
     f.grid(row=0, column=0, sticky='news')   
     
     
-    window.show(center=False)            
+    window.show()            
