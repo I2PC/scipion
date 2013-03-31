@@ -37,8 +37,8 @@ class SqliteMapper(Mapper):
         self.db.commit()
         
     def _insert(self, obj, namePrefix=None):
-        obj.id = self.db.insertObject(obj.name, obj.getClassName(), obj.value, obj.parent_id)
-        sid = str(obj.id)
+        obj._objId = self.db.insertObject(obj._objName, obj.getClassName(), obj._objValue, obj._objParentId)
+        sid = obj.strId()
         if namePrefix is None:
             namePrefix = sid
         else:
@@ -50,10 +50,10 @@ class SqliteMapper(Mapper):
         self._insert(obj)
         
     def insertChild(self, obj, key, attr, namePrefix):
-            attr.name = joinExt(namePrefix, key)
-            attr.parent_id = obj.id
-            attr.id = self.db.insertObject(attr.name, attr.getClassName(), attr.value, attr.parent_id)
-            self.insertObjectWithChilds(attr, joinExt(namePrefix, str(attr.id)))
+            attr._objName = joinExt(namePrefix, key)
+            attr._objParentId = obj._objId
+            attr._objId = self.db.insertObject(attr._objName, attr.getClassName(), attr._objValue, attr._objParentId)
+            self.insertObjectWithChilds(attr, joinExt(namePrefix, attr.strId()))
         
     def insertObjectWithChilds(self, obj, namePrefix):
         for key, attr in obj.getAttributesToStore():
@@ -61,19 +61,19 @@ class SqliteMapper(Mapper):
         #self.db.commit()        
     
     def updateTo(self, obj, level=1):
-        self.db.updateObject(obj.id, obj.name, obj.getClassName(), obj.value, obj.parent_id)
+        self.db.updateObject(obj._objId, obj._objName, obj.getClassName(), obj._objValue, obj._objParentId)
         for key, attr in obj.getAttributesToStore():
-            if attr.id is None: # Insert new items from the previous state
-                attr.parent_id = obj.id
-                #path = obj.name[:obj.name.rfind('.')] # remove from last .
-                namePrefix = replaceExt(obj.name, str(obj.id))
-                attr.name = joinExt(namePrefix, key)
+            if attr._objId is None: # Insert new items from the previous state
+                attr._objParentId = obj._objId
+                #path = obj._objName[:obj._objName.rfind('.')] # remove from last .
+                namePrefix = replaceExt(obj._objName, obj.strId())
+                attr._objName = joinExt(namePrefix, key)
                 self._insert(attr, namePrefix)
             else:                
                 self.updateTo(attr, level+2)
         
     def updateFrom(self, obj):
-        objRow = self.db.selectObjectById(obj.id)
+        objRow = self.db.selectObjectById(obj._objId)
         self.fillObject(obj, objRow)
             
     def get(self, objId):
@@ -85,20 +85,20 @@ class SqliteMapper(Mapper):
     
     def fillObjectWithRow(self, obj, objRow):
         """Fill the object with row data"""
-        obj.id = objRow['id']
+        obj._objId = objRow['id']
         name = objRow['name']
         if name is None or len(name) <= 0:
-            obj.name = str(obj.id)
+            obj._objName = obj.strId()
         else:
-            obj.name = name
+            obj._objName = name
         obj.set(objRow['value'])
-        obj.parent_id = objRow['parent_id']
+        obj._objParentId = objRow['parent_id']
         
     def fillObject(self, obj, objRow):
         self.fillObjectWithRow(obj, objRow)
         
-        childs = self.db.selectObjectsByAncestor(obj.name)
-        childsDict = {obj.id: obj}
+        childs = self.db.selectObjectsByAncestor(obj._objName)
+        childsDict = {obj._objId: obj}
         
         for childRow in childs:
             childParts = childRow['name'].split('.')
@@ -113,7 +113,7 @@ class SqliteMapper(Mapper):
                 childObj = self.buildObject(childRow['classname'])
                 setattr(parentObj, childName, childObj)
             self.fillObjectWithRow(childObj, childRow)  
-            childsDict[childObj.id] = childObj  
+            childsDict[childObj._objId] = childObj  
    
               
     def _objectsFromRows(self, objRows):

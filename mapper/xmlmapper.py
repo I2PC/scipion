@@ -54,6 +54,8 @@ class XmlMapper(Mapper):
         # possible values are: 
         #   'attribute', 'class_only', 'class_name', 'name_class', 'name_only'
         self.classTags = {} 
+        # Counter to provide default objects id's
+        self.objCount = 0
 
     def setClassTag(self, classname, tag):
         self.classTags[classname] = tag
@@ -112,21 +114,25 @@ class XmlMapper(Mapper):
     
     def _addObjectToDict(self, obj, objDict):
         """Add object if have id"""
-        if not obj.getId() is None:
-            objDict[self.strId(obj.getId())] = obj
+        if obj.hasId():
+            key = self.strId(obj.getId())
+        else:
+            self.objCount += 1
+            key = '%s_%06d' % (obj.getClassName(), self.objCount)
+        objDict[key] = obj
         
     def getAll(self):
         """Select object from storage"""
         for child in self.root:
-            obj = self.buildObject(child.tag, id=child.attrib)
+            obj = self.buildObject(child.tag)
             self.fillObject(obj, child)
             self._addObjectToDict(obj, self.objDict)
         #set properlly primary keys
         for obj in self.pendingPtrDict.values():
             for key, attr in obj.getAttributesToStore():
                 if attr.isPointer(): 
-                    ptr = self.get(attr.id)
-                    attr.id = None
+                    ptr = self.get(attr._objId)
+                    attr._objId = None
                     attr.set(ptr)
         return self.objDict.values()
                    
@@ -173,7 +179,7 @@ class XmlMapper(Mapper):
                 #does have attributes?
                 attributes = child.attrib
                 if (attributes and childObj.isPointer()):
-                    childObj.id = attributes
+                    childObj._objId = attributes
                     #save obj in auxiliary file
                     self._addObjectToDict(obj, self.pendingPtrDict)
                 self.fillObject(childObj, child)
@@ -189,7 +195,6 @@ class XmlMapper(Mapper):
 
     def setObjectId(self, objElem, objId):
         # Set attributes of this object element
-        # The id is assumed to be a dictionary
         if objId:
             if type(objId) is dict:
                 for k, v in objId.iteritems():
@@ -200,7 +205,7 @@ class XmlMapper(Mapper):
         
     def insert(self, obj):
         """Insert a new object into the system"""
-        objElem = self.addSubElement(self.root, obj.getClassName(), obj.value) 
+        objElem = self.addSubElement(self.root, obj.getClassName(), obj._objValue) 
         self.setObjectId(objElem, obj.getId())
         # Insert object childs
         self.insertObjectWithChilds(obj, objElem )
@@ -239,7 +244,7 @@ class XmlMapper(Mapper):
                             name = attrClass
                         else:
                             name = key
-                        childElem = self.addSubElement(parentElem, name, attr.value)
+                        childElem = self.addSubElement(parentElem, name, attr._objValue)
                         if tag.endswith('class'):
                             childElem.set('classname', attrClass)
                         elif tag.endswith('name'):

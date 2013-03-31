@@ -103,7 +103,7 @@ class TestPyworkflow(unittest.TestCase):
         c = self.createComplex()
         mapper = SqliteMapper(fn)
         mapper.insert(c)
-        cid = c.id
+        cid = c.getId()
         i = Integer(1)
         mapper.insert(i)
         #write file
@@ -129,7 +129,7 @@ class TestPyworkflow(unittest.TestCase):
         mapper.commit()
 
         fnGold = self.getTestPath(self.xmlFile)
-        #print goldStandard, fileName
+        print fnGold, fn
         #self.assertTrue(filecmp.cmp(fnGold, fn))
         #read file
         mapper2 = XmlMapper(fnGold, globals())
@@ -179,7 +179,7 @@ class TestPyworkflow(unittest.TestCase):
 #        mapper3.insert(l1)
 #        mapper3.commit()
 
-    def test_Protocol(self):
+    def test_zzProtocol(self):
         """Test the list with several Complex"""
         fn = self.getTmpPath(self.sqliteFile)        
         mapper = SqliteMapper(fn, globals())
@@ -189,7 +189,7 @@ class TestPyworkflow(unittest.TestCase):
         self.assertEqual(STATUS_FINISHED, prot.steps[0].status)
         
         mapper2 = SqliteMapper(fn, globals())
-        prot2 = mapper2.get(prot.id)
+        prot2 = mapper2.get(prot.getId())
         
         self.assertEqual(prot.endTime, prot2.endTime)
         self.assertEqual(prot.steps[1].status, prot2.steps[1].status)

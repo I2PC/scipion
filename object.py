@@ -35,12 +35,12 @@ class Object(object):
     def __init__(self, value=None, **args):
         object.__init__(self)
         self.set(value)
-        self.id =  args.get('id', None)
-        self.parent_id =  args.get('parent_id', None)
-        self.name =  args.get('name', '')
-        self.tag =  args.get('tag', None) # True if the object serves as input to his parent
-        self._store =  args.get('store', True) # True if this object will be stored from his parent
-        self.pointer =  args.get('pointer', False) # True if will be treated as a reference for storage
+        self._objId =  args.get('objId', None)
+        self._objParentId =  args.get('objParentId', None)
+        self._objName =  args.get('objName', '')
+        self._objTag =  args.get('objTag', None) # True if the object serves as input to his parent
+        self._objDoStore =  args.get('objDoStore', True) # True if this object will be stored from his parent
+        self._objIsPointer =  args.get('objIsPointer', False) # True if will be treated as a reference for storage
         
     def getClassName(self):
         return self.__class__.__name__
@@ -49,13 +49,13 @@ class Object(object):
         """Return the list of attributes than are
         subclasses of Object and will be stored"""
         for key, attr in self.__dict__.iteritems():
-            if issubclass(attr.__class__, Object) and attr._store:
+            if issubclass(attr.__class__, Object) and attr._objDoStore:
                 yield (key, attr)
                 
     def isPointer(self):
         """If this is true, the value field is a pointer 
         to anothor object"""
-        return self.pointer
+        return self._objIsPointer
     
     def convert(self, value):
         """Convert a value to desired scalar type"""
@@ -66,19 +66,29 @@ class Object(object):
         call the convert function in subclasses"""
         if not value is None:
             value = self.convert(value)            
-        self.value = value
+        self._objValue = value
     
     def get(self):
         """Return internal value"""
-        return self.value
+        return self._objValue
     
     def getId(self):
         """Return object id"""
-        return self.id
+        return self._objId
+    
+    def setId(self, newId):
+        """Set the object id"""
+        self._objId = newId
+        
+    def hasId(self):
+        return not self._objId is None
     
     def strId(self):
         """String representation of id"""
-        return str(self.id)
+        return str(self._objId)
+    
+    def getName(self):
+        return self._objName
         
     def hasValue(self):        
         return True
@@ -86,13 +96,13 @@ class Object(object):
     def __eq__(self, other):
         """Comparison for scalars should be by value
         and for other objects by reference"""
-        if self.value is None:
+        if self._objValue is None:
             return object.__eq__(other)
-        return self.value == other.value
+        return self._objValue == other._objValue
     
     def equalAttributes(self, other):
         """Compare that all attributes are equal"""
-        for k, v in self.getAttributesToStore():
+        for k, _ in self.getAttributesToStore():
             v1 = getattr(self, k) # This is necessary because of FakedObject simulation of getattr
             v2 = getattr(other, k)
             if issubclass(type(v1), Object):
@@ -113,7 +123,7 @@ class OrderedObject(Object):
         Object.__init__(self, value, **args)
         
     def __setattr__(self, name, value):
-        if not name in self._attributes and issubclass(value.__class__, Object) and value._store:
+        if not name in self._attributes and issubclass(value.__class__, Object) and value._objDoStore:
             self._attributes.append(name)
         Object.__setattr__(self, name, value)
     
@@ -160,15 +170,15 @@ class FakedObject(Object):
 class Scalar(Object):
     """Base class for basic types"""
     def hasValue(self):        
-        return not self.value is None
+        return not self._objValue is None
     
     def equalAttributes(self, other):
         """Compare that all attributes are equal"""
-        return self.value == other.value
+        return self._objValue == other._objValue
     
     def __str__(self):
         """String representation of the scalar value"""
-        return str(self.value)
+        return str(self._objValue)
     
     
 class Integer(Scalar):
@@ -204,7 +214,7 @@ class Boolean(Scalar):
 class Pointer(Object):
     """Reference object to other one"""
     def __init__(self, value=None, **args):
-        Object.__init__(self, value, pointer=True, **args)   
+        Object.__init__(self, value, objIsPointer=True, **args)   
        
 
 class List(Object, list):
@@ -231,7 +241,7 @@ class List(Object, list):
 
     def getAttributesToStore(self):
         for key, attr in self.__dict__.iteritems():
-            if issubclass(attr.__class__, Object) and attr._store:
+            if issubclass(attr.__class__, Object) and attr._objDoStore:
                 yield (key, attr)
         
         for i, item in enumerate(self):
@@ -259,7 +269,7 @@ class Array(Object):
         
     def set(self, size):
         """Set the array size"""
-        self.value = int(size)  
+        self._objValue = int(size)  
         for i in range(int(size)):
             self.__setitem__(i, None)                 
         
@@ -273,7 +283,7 @@ class Array(Object):
         return self.__dict__[self.strIndex(index)]
     
     def __len__(self):
-        return self.value
+        return self._objValue
     
     
 def ObjectWrap(value):
@@ -293,6 +303,6 @@ def ObjectWrap(value):
     if t is None:
         return None
     #If not known type, convert to string
-    return String(str(value))
+    return String(value)
          
            

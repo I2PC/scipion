@@ -23,7 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from gui.gui import getImage
 """
 Object browser
 """
@@ -67,24 +66,36 @@ class Complex(Object):
     def hasValue(self):
         return True
     
-
+class MyProtocol(Protocol):
+    def __init__(self, **args):
+        Protocol.__init__(self, **args)
+        self.defineInputs(x=Integer(1), y=Float(2), z=String("abc"), b=Boolean(True))
+        
+    def sleep(self):
+        import time 
+        time.sleep(1)
+        
+    def defineSteps(self):
+        for i in range(2):
+            self.insertFunctionStep(self.sleep)
+            
 def populateWithObject(tree, prefix, obj):
     cls = obj.getClassName()
-    if obj.parent_id is None:
+    if obj._objParentId is None:
         t = cls
     else:
-        t = obj.name.split('.')[-1] 
+        t = obj.getName().split('.')[-1] 
         if  t.startswith('__item__'):
             t = "%s [%s]" % (cls, t.replace('__item__', ''))
-    if obj.value:
-        t += " = %s" % str(obj.value)
-    item = tree.insert(prefix, 'end', obj.name, text=t, values=(cls,))
+    if obj._objValue:
+        t += " = %s" % str(obj._objValue)
+    item = tree.insert(prefix, 'end', obj.getName(), text=t, values=(cls,))
     haschilds = False
     for k, v in obj.getAttributesToStore():
-        populateWithObject(tree, obj.name, v)
+        populateWithObject(tree, obj.getName(), v)
         haschilds = True
     if not haschilds:
-        img = getImage('step.gif')
+        img = gui.getImage('step.gif')
         tree.item(item, image=img)
         
     return item

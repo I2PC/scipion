@@ -78,7 +78,7 @@ class Mapper():
     
     def store(self, obj):
         '''Stores an object, it can be inserted or updated'''
-        if obj.id is None:
+        if obj._objId is None:
             self.insert(obj)
         else:
             self.updateTo(obj)

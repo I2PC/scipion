@@ -40,6 +40,7 @@ from pyworkflow.object import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
 import gui
 from gui.widgets import Tree
+from gui.text import TaggedText
 from protocol import *
 from protocol.params import *
 from config import *
@@ -133,16 +134,18 @@ def createProjectLabel(parent, text, date):
     label = tk.Label(frame, text=text, anchor='nw', 
                      justify=tk.LEFT, font=projNameFont, cursor='hand1')
     label.grid(row=0, column=0, padx=2, pady=2, sticky='nw')
-    dateLabel = tk.Label(frame, text='Modified: '+date, font=projDateFont)
+    dateLabel = tk.Label(frame, text='   Modified: '+date, font=projDateFont)
     dateLabel.grid(row=1, column=0)
     return frame
     
     
     
-def createProjectList(parent):
+def createProjectList(text):
     """Load the list of projects"""
     f = open('kk.txt')
     r = 0
+    
+    parent = tk.Frame(text)    
     parent.columnconfigure(0, weight=1)
     
     for line in f:
@@ -150,6 +153,9 @@ def createProjectList(parent):
         frame = createProjectLabel(parent, parts[3], ' '.join(parts[:3]))
         frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
         r += 1
+    
+    text.window_create(tk.INSERT, window=parent)
+    
     
 projNameFont = None
 projLabelFont = None
@@ -160,7 +166,7 @@ if __name__ == '__main__':
     config = mapper.getConfig()
 
     window = gui.Window("Project window", minsize=(600, 350))
-    projNameFont = tkFont.Font(size=16, family='verdana')#, weight='bold')
+    projNameFont = tkFont.Font(size=16, family='verdana', weight='bold')
     projDateFont = tkFont.Font(size=10, family='verdana')
     
     parent = window.root
@@ -184,7 +190,12 @@ if __name__ == '__main__':
     
     lf = ttk.Labelframe(f, text='Current Projects')
     lf.grid(row=0, column=1, sticky='news', padx=10, pady=10, rowspan=2)
-    createProjectList(lf)
+    text = TaggedText(lf, width=40, height=15)
+    text.grid(row=0, column=0, sticky='news')
+    text.config(state=tk.DISABLED)
+    gui.configureWeigths(lf)
+    
+    createProjectList(text)
     f.rowconfigure(0, weight=1)
     f.rowconfigure(1, weight=1)
     f.columnconfigure(1, weight=1)

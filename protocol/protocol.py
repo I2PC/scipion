@@ -23,7 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from utils.path import replaceExt
 """
 This modules contains classes required for the workflow
 execution and tracking like: Step and Protocol
@@ -33,6 +32,7 @@ import datetime as dt
 import pickle
 
 from pyworkflow.object import FakedObject, String, List, Integer
+from pyworkflow.utils.path import replaceExt
 
 STATUS_LAUNCHED = "launched"  # launched to queue system
 STATUS_RUNNING = "running"    # currently executing
@@ -59,6 +59,9 @@ class Step(FakedObject):
         for key, value in attrDict.iteritems():
             attrList.append(key)
             setattr(self, key, value)
+            
+    def _getAttribute(self, name):
+        return self._attributes.get(name, None)
         
     def defineInputs(self, **args):
         """This function should be used to define
@@ -176,9 +179,13 @@ class Protocol(Step):
     def run(self):
         self.currentStep = 1
         self.store(self, commit=True)
-        print "self.steps.name: ", self.steps.name
-        self.namePrefix = replaceExt(self.steps.name, str(self.steps.id)) #keep 
+        print "self.steps.name: ", self.steps.getName()
+        self.namePrefix = replaceExt(self.steps.getName(), self.steps.strId()) #keep 
         Step.run(self)
+        self.store(self._getAttribute('status'))
+        self.store(self._getAttribute('initTime'))
+        self.store(self._getAttribute('endTime'))
+        self.commit()
         print 'PROTOCOL FINISHED'
         #self.store(self, commit=True)
 

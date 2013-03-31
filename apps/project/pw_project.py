@@ -129,6 +129,26 @@ def loadConfig(config, name):
     menuConfig = mapper.getConfig()
     return menuConfig
 
+def createHistoryTree(parent):
+    columns = ('State', 'Modified')
+    tree = Tree(parent, columns=columns)
+    for c in columns:
+        tree.column(c, anchor='e')
+        tree.heading(c, text=c) 
+    tree.column('#0', width=300)
+    tree.heading('#0', text='Run')
+    #tree.bind('<<TreeviewSelect>>', self.selectTreeRun)
+    #tree.bind('<Double-1>', lambda e:self.runButtonClick('ACTION_DEFAULT'))
+    #tree.bind("<Button-3>", self.onRightClick)
+    mapper = SqliteMapper('kk.sqlite', globals())
+    objList = mapper.getAll()
+    
+    c = 0
+    for obj in objList:
+        tree.insert('',  'end', str(c), text=obj.getClassName())
+        c += 1
+    return tree
+
 
 if __name__ == '__main__':
     # Load global configuration
@@ -147,8 +167,9 @@ if __name__ == '__main__':
     f1.columnconfigure(0, weight=1)
     f1.rowconfigure(1, weight=1)
     logo = gui.getImage('scipion_logo.gif')
-    label = tk.Label(f1, image=logo, borderwidth=0, bg='white')
-    label.grid(row=0, column=0, sticky='nw', padx=5)
+    label = tk.Label(f1, image=logo, borderwidth=0, 
+                     anchor='nw', bg='white')
+    label.grid(row=0, column=0, sticky='new', padx=5)
     
     lf = ttk.Labelframe(f1, text=' Protocols ', width=300, height=500)
     lf.grid(row=1, column=0, sticky='news', padx=5, pady=5)
@@ -159,6 +180,10 @@ if __name__ == '__main__':
     
     f2 = ttk.Labelframe(p, text=' History ', width=500, height=500)
     #lf.grid(row=1, column=0, sticky='news')
+    
+    tree = createHistoryTree(f2)
+    tree.grid(row=0, column=0, sticky='news')
+    gui.configureWeigths(f2)
     
     p.add(f1, padx=5, pady=5)
     p.add(f2, padx=5, pady=5)
