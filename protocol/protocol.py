@@ -208,7 +208,10 @@ class ProtDownsampleMicrographs(Protocol):
     pass
 
 class ProtParticlePicking(Protocol):
-    pass
+    
+    def __init__(self, **args):
+        Protocol.__init__(self, **args)
+    
 
 class ProtAlign(Protocol):
     pass
