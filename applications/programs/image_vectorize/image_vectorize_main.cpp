@@ -99,7 +99,7 @@ public:
             std::ofstream fhOutRaw(fnOutRaw.c_str(),std::ios::binary);
             if (!fhOutRaw)
                 REPORT_ERROR(ERR_IO_NOWRITE,fnOutRaw);
-            int vectorSize;
+            size_t vectorSize;
             MDRow row;
             FOR_ALL_OBJECTS_IN_METADATA(SF)
             {
@@ -162,8 +162,7 @@ public:
 
             // Read header
             size_t headerId=vectorHeader.firstObject();
-            int Xdim, Ydim, Zdim, vectorSize;
-            size_t imgNo;
+            size_t Xdim, Ydim, Zdim, vectorSize, imgNo;
             vectorHeader.getValue(MDL_XSIZE,Xdim,headerId);
             vectorHeader.getValue(MDL_YSIZE,Ydim,headerId);
             vectorHeader.getValue(MDL_ZSIZE,Zdim,headerId);
