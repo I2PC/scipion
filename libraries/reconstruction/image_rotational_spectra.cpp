@@ -118,7 +118,7 @@ void ProgMakeSpectra::run()
         // Create header
         if (first)
         {
-            int vectorSize=MULTIDIM_SIZE(rot_spt.rot_spectrum);
+            size_t vectorSize=MULTIDIM_SIZE(rot_spt.rot_spectrum);
             size_t outId=vectorHeader.addObject();
             vectorHeader.setValue(MDL_XSIZE,XSIZE(I()),outId);
             vectorHeader.setValue(MDL_YSIZE,YSIZE(I()),outId);

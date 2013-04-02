@@ -953,3 +953,7 @@ def createMetaDataFromPattern(pattern, isStack=False, label="image"):
             mD.setValue(label, fileAux, objId)
             mD.setValue(MDL_ENABLED, 1, objId)
     return mD
+
+def getMemoryAvailable():
+    return int(os.popen("free -m").readlines()[1].split()[1])
+    
