@@ -134,7 +134,7 @@ bool ML2DBaseProgram::checkConvergence()
 
     conv.clear();
 
-    for (size_t refno = 0; refno < model.n_ref; refno++)
+    for (int refno = 0; refno < model.n_ref; refno++)
     {
         convv = -1;
 
@@ -195,7 +195,7 @@ void ML2DBaseProgram::run()
         if (verbose)
             std::cout << "  Multi-reference refinement:  iteration " << iter << " of " << Niter << std::endl;
 
-        for (size_t refno = 0;refno < model.n_ref; refno++)
+        for (int refno = 0;refno < model.n_ref; refno++)
             Iold[refno]() = model.Iref[refno]();
 
         //Perform an ML iteration
@@ -372,7 +372,7 @@ void ModelML2D::combineModel(const ModelML2D &model, int sign)
     MultidimArray<double> tmp;
     double sumweight = 0., w1 = 0., w2 = 0.;
 
-    for (size_t refno = 0; refno < n_ref; refno++)
+    for (int refno = 0; refno < n_ref; refno++)
     {
         w1 = WsumMref[refno].weight();
         w2 = sign * model.WsumMref[refno].weight();
@@ -436,7 +436,7 @@ void ModelML2D::update()
 
 //    std::cerr << "DEBUG_JM: sumw_allrefs: " << sumw_allrefs << std::endl;
 
-    for (size_t refno = 0; refno < n_ref; ++refno)
+    for (int refno = 0; refno < n_ref; ++refno)
     {
         weight = WsumMref[refno].weight();
 
@@ -494,7 +494,7 @@ void ModelML2D::print(int tabs) const
     pp(ss6, "WsumMref.weight");
     pp(ss7, "Iref.weight");
 
-    for (size_t refno = 0; refno < n_ref; refno++)
+    for (int refno = 0; refno < n_ref; refno++)
     {
         pp(ss1, refno);
         pp(ss3, sumw_mirror[refno]);

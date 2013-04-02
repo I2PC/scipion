@@ -425,7 +425,7 @@ void ProgMLRefine3D::run()
             if (doProject)// || ml2d->current_block > 0)
             {
                 projectVolumes(ml2d->MDref);
-                size_t refno = 0;
+                int refno = 0;
 
                 // Read new references from disc (I could just as well keep them in memory, maybe...)
                 FOR_ALL_OBJECTS_IN_METADATA(ml2d->MDref)
@@ -621,7 +621,7 @@ void ProgMLRefine3D::makeNoiseImages()
     std::vector<Image<double> > & Iref = ml2d->model.Iref;
     FileName   fn_noise(FN_NOISE_IMG), fn_img;
     MetaData    mdNoise(ml2d->MDref);
-    size_t refno = 0;
+    int refno = 0;
     MDRow row;
 
     FOR_ALL_OBJECTS_IN_METADATA(mdNoise)
@@ -754,7 +754,7 @@ void ProgMLRefine3D::reconstructVolumes()
 
     for (size_t i = 0; i < reconsOutFnBase.size(); ++i)
     {
-        for (size_t volno = 1; volno <= Nvols; ++volno)
+        for (int volno = 1; volno <= (int)Nvols; ++volno)
         {
             volno_index = Nvols * i + volno - 1;
             String &fn_base = reconsOutFnBase[i];
@@ -831,7 +831,7 @@ void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
     FileName fn_cref_base = FN_CREF_VOLBASE;
     double inv_dim2 = 1. / (double)(dim * dim);
 
-    for (size_t volno = 1; volno <= Nvols; ++volno)
+    for (int volno = 1; volno <= (int)Nvols; ++volno)
     {
     	COMPOSE_VOL_FN(fn_tmp, volno, fn_noise_base);
     	COMPOSE_VOL_FN(fn_tmp2, volno, fn_cref_base);

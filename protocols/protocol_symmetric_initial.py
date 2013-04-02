@@ -99,13 +99,15 @@ class ProtSymmetric(XmippProtocol):
         # Reconstruct
         fnCurrentVolume=self.extraPath('volume%02d.vol'%i)
         self.insertRunJobStep("xmipp_reconstruct_art","-i %s -o %s --sym %s -n 15 --surface %s"%(fnAnglesToReconstruct,fnCurrentVolume,self.SymmetryGroup,fnSurface))
+        # Fourier: self.insertRunJobStep("xmipp_reconstruct_fourier","-i %s -o %s --sym %s"%(fnAnglesToReconstruct,fnCurrentVolume,self.SymmetryGroup))
         self.insertStep("runJob",programname="xmipp_transform_symmetrize",params="-i %s --sym %s"%(fnCurrentVolume,self.SymmetryGroup))
         self.insertStep("runJob",programname="xmipp_transform_mask",params="-i %s --mask circular -%s"%(fnCurrentVolume,str(self.Xdim/2)))
         fnMask=self.extraPath('cylindricalMask.vol')
         self.insertStep("runJob",programname="xmipp_transform_mask",params="-i %s --mask binary_file %s"%(fnCurrentVolume,fnMask))
 
         # Delete intermediate files
-        self.insertStep("runJob",programname="rm",params="%s/gallery* %s/volume*.hist"%(self.ExtraDir,self.ExtraDir))
+        self.insertStep("runJob",programname="rm",params="%s/gallery*"%(self.ExtraDir))
+        self.insertStep("runJob",programname="rm",params="%s/volume*.hist"%(self.ExtraDir))
         
         # Stack reconstruction
         self.insertStep("runJob",programname="xmipp_image_convert",params="-i %s -o %02d@%s"%(fnCurrentVolume,i,fnVolumeStack))
@@ -155,16 +157,16 @@ def calculatePsiProfile(log,avgSideView,avgTopView,ExtraDir,Symmetry,Nproc):
     while psi<180.:
         MD.setValue(MDL_ANGLE_PSI,psi,objId)
         MD.write(fnInitial)
-        runJob(log,"xmipp_reconstruct_art","-i %s -o %s -n 3 --sym %s --thr %d"%(fnInitial,fnVolume,Symmetry,Nproc))
+        runJob(log,"xmipp_reconstruct_art","-i %s -o %s -n 3 --sym %s"%(fnInitial,fnVolume,Symmetry),Nproc)
         error=getReconstructionError(fnHist)
         objIdPsi=MDpsi.addObject()
         MDpsi.setValue(MDL_ANGLE_PSI,psi,objIdPsi)
         MDpsi.setValue(MDL_COST,error,objIdPsi)
         MDpsi.write(os.path.join(ExtraDir,'psiProfile.xmd'))
-        psi+=3
+        psi+=3.
     deleteFile(log,fnVolume)
-    deleteFile(log,fnHist)
     deleteFile(log,fnInitial)
+    runJob(log,"rm","%s/*.hist"%ExtraDir)
 
 def getBestPsi(ExtraDir):
     MDpsi=MetaData(os.path.join(ExtraDir,'psiProfile.xmd'))
@@ -175,7 +177,7 @@ def getBestPsi(ExtraDir):
         if error<bestError:
             bestError=error
             bestPsi=MDpsi.getValue(MDL_ANGLE_PSI,objId)
-    return bestPsi
+    return float(bestPsi)
 
 def constructCylindricalMask(log,ExtraDir,avgSideView,avgTopView,radius):
     bestPsi=getBestPsi(ExtraDir)
@@ -247,6 +249,7 @@ def constructFirstVolume(log,avgSideView,avgTopView,fnMask,ExtraDir,Symmetry,Npr
 
     runJob(log,"xmipp_reconstruct_art","-i %s -o %s -n 25 --sym %s --thr %d --surface %s"\
            %(fnInitial,fnVolume,Symmetry,Nproc,fnSurface ))
+    # Fourier: runJob(log,"xmipp_reconstruct_fourier","-i %s -o %s --sym %s"%(fnInitial,fnVolume,Symmetry))
     deleteFile(log,fnHist)
     deleteFile(log,fnInitial)
 
