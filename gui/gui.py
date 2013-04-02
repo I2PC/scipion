@@ -23,10 +23,12 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from utils.path import findResource
 """
 This module contains all configuration
 settings and gui general functions 
 """
+import os
 import Tkinter as tk
 
 """
@@ -173,7 +175,15 @@ class Window():
     """Class to manage a Tk windows.
     It will encapsulates some basic creation and 
     setup functions. """
-    def __init__(self, title, master=None, weight=True, minsize=(500, 300)):
+    def __init__(self, title, master=None, weight=True, minsize=(500, 300),
+                 icon=None):
+        """Create a Tk window.
+        title: string to use as title for the windows.
+        master: if not provided, the windows create will be the principal one
+        weight: if true, the first col and row will be configured with weight=1
+        minsize: a minimum size for height and width
+        icon: if not None, set the windows icon
+        """
         if master is None:
             self.root = tk.Tk()
         else:
@@ -184,6 +194,11 @@ class Window():
             configureWeigths(self.root)
         if not minsize is None:
             self.root.minsize(minsize[0], minsize[1])
+        if not icon is None:
+            path = findResource(icon)          
+            abspath = os.path.abspath(path)
+            self.root.iconbitmap("@" + abspath)
+            
         self.master = master
         setCommonFonts()
         

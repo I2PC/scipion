@@ -83,7 +83,7 @@ def populateTree(tree, prefix, obj, level=0):
         if not obj.isEmpty() and obj.action.hasValue():
             prot = globals().get(obj.action.get(), None)
             if not prot is None:
-                tree.item(item, image=gui.getImage('step.gif'))
+                tree.item(item, image=gui.getImage('class_obj.gif'))
                 for k, v in subclasses.iteritems():
                     if not v is prot and issubclass(v, prot):
                         tree.insert(item, 'end', item+k, text=k, image=gui.getImage('python_file.gif'))
@@ -133,9 +133,9 @@ def createHistoryTree(parent):
     columns = ('State', 'Modified')
     tree = Tree(parent, columns=columns)
     for c in columns:
-        tree.column(c, anchor='e')
+        tree.column(c, anchor='e', width=100)
         tree.heading(c, text=c) 
-    tree.column('#0', width=300)
+    tree.column('#0', width=250)
     tree.heading('#0', text='Run')
     #tree.bind('<<TreeviewSelect>>', self.selectTreeRun)
     #tree.bind('<Double-1>', lambda e:self.runButtonClick('ACTION_DEFAULT'))
@@ -155,10 +155,9 @@ if __name__ == '__main__':
     mapper = ConfigXmlMapper(getConfigPath('configuration.xml'), globals())
     config = mapper.getConfig()
 
-    window = gui.Window("Project window")
+    window = gui.Window("Project window", icon='scipion_bn.xbm')
     
     parent = window.root
-    parent.iconbitmap("@/home/josem/work/development/workspace/pyworkflow/resources/scipion_bn.xbm")
     menuConfig = loadConfig(config, 'menu')
     createMainMenu(parent, menuConfig)
     p = tk.PanedWindow(parent, orient=tk.HORIZONTAL)

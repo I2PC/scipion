@@ -19,8 +19,8 @@ class Complex(Object):
         return '(%s, %s)' % (self.imag, self.real)
     
     def __eq__(self, other):
-        return self.imag == other.imag and \
-            self.real == other.real
+        return (self.imag == other.imag and 
+                self.real == other.real)
             
     def hasValue(self):
         return True

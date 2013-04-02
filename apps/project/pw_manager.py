@@ -130,7 +130,7 @@ def loadConfig(config, name):
     return menuConfig
 
 def createProjectLabel(parent, text, date):
-    frame = tk.Frame(parent)
+    frame = tk.Frame(parent, bg='red')
     label = tk.Label(frame, text=text, anchor='nw', 
                      justify=tk.LEFT, font=projNameFont, cursor='hand1')
     label.grid(row=0, column=0, padx=2, pady=2, sticky='nw')
@@ -165,12 +165,11 @@ if __name__ == '__main__':
     mapper = ConfigXmlMapper(getConfigPath('configuration.xml'), globals())
     config = mapper.getConfig()
 
-    window = gui.Window("Project window", minsize=(600, 350))
+    window = gui.Window("Project window", minsize=(600, 350), icon='scipion_bn.xbm')
     projNameFont = tkFont.Font(size=16, family='verdana', weight='bold')
     projDateFont = tkFont.Font(size=10, family='verdana')
     
     parent = window.root
-    parent.iconbitmap("@/home/josem/work/development/workspace/pyworkflow/resources/scipion_bn.xbm")
     menuConfig = loadConfig(config, 'menu')
     createMainMenu(parent, menuConfig)
     

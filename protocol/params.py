@@ -33,24 +33,34 @@ be shared by all protocol class instances
 from pyworkflow.object import *
 
 
+LEVEL_NORMAL = 0
+LEVEL_ADVANCED = 1
+LEVEL_EXPERT = 2
+
+
 class FormBase(OrderedObject):
     def __init__(self, **args):
         OrderedObject.__init__(self, **args)
         self.label = String(args.get('label', None))
-        self.expert = Boolean(args.get('expert', None))
+        self.expertLevel = Integer(args.get('expertLevel', LEVEL_NORMAL))
         
     def isExpert(self):
         return self.expert.hasValue()
+    
     
 class Section(FormBase):
     """Definition of a section to hold other params"""
     def __init__(self, **args):
         FormBase.__init__(self, **args)
-        self.has_question = Boolean(args.get('has_question', None))
+        self.hasQuestion = Boolean(args.get('hasQuestion', None))
+        self.paramList = []
     
-    def addParam(self, name, value):
+    def addParam(self, name, ParamClass, **args):
         """Add a new param to last section"""
-        setattr(self, name, value)
+        p = ParamClass(**args)
+        setattr(self, name, p)
+        self.paramList.append(p)
+        return p
         
     def __str__(self):
         s = "  Section, label: %s\n" % self.label.get()
@@ -62,13 +72,15 @@ class Section(FormBase):
 class Form(List):
     """Store all sections and parameters"""
 
-    def addSection(self, section):
+    def addSection(self, **args):
         """Add a new section"""
-        List.append(self, section)
+        s = Section(**args)
+        self.append(s)
+        return s
 
-    def addParam(self, name, value):
+    def addParam(self, name, ParamClass, **args):
         """Add a new param to last section"""
-        self[-1].addParam(name, value)
+        return self[-1].addParam(name, ParamClass, **args)
         
     def __str__(self):
         s = "Form: \n"
@@ -78,17 +90,13 @@ class Form(List):
         
       
 class Param(FormBase):
-    """Definition of a protocol paramter"""
+    """Definition of a protocol parameter"""
     def __init__(self, **args):
-        FormBase.__init__(self)
+        FormBase.__init__(self, **args)
         self.paramClass = args.get('paramClass', None) # This should be defined in subclasses
         self.default = String(args.get('default', None))
-        self.expert = Boolean(args.get('expert', None))
         self.help = String(args.get('help', None))
-        
-    def addParam(self, name, value):
-        """Add a new param to last section"""
-        self.lastSection.addParam(name, value)
+        self.isImportant = args.get('important', False)
         
     def __str__(self):
         return "    label: %s" % self.label.get()
@@ -126,17 +134,18 @@ class FolderParam(PathParam):
     pass
 
         
-class EnumParam(StringParam):
-    """Select from a list of values, separated by comma"""
-    def __init__(self, **args):
-        StringParam.__init__(self, **args)
-        self.choices = String(args.get('choices', None))
-        self.display = String(args.get('display', 'list'))
-        
 class IntParam(Param):
     def __init__(self, **args):
         Param.__init__(self, paramClass=Integer, **args)
         
+        
+class EnumParam(IntParam):
+    """Select from a list of values, separated by comma"""
+    def __init__(self, **args):
+        IntParam.__init__(self, **args)
+        self.choices = args.get('choices', [])
+        self.display = String(args.get('display', 'list'))
+    
     
 class FloatParam(Param):
     def __init__(self, **args):

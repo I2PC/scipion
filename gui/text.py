@@ -183,7 +183,7 @@ def insertColoredLine(text, line, tag=""):
 class TaggedText(XmippText):  
     '''
     Implement a Text that will recognized some basic tags
-    <some_text> will display some_text in bold
+    {some_text} will display some_text in bold
     [some_link] will display some_link as hiperlinnk
     also colors are recognized if set option colors=True
     '''           
