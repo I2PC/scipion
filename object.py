@@ -181,6 +181,13 @@ class Scalar(Object):
         """String representation of the scalar value"""
         return str(self._objValue)
     
+    def __eq__(self, other):
+        """Comparison for scalars should be by value
+        and for other objects by reference"""
+        if issubclass(other.__class__, Object):
+            return Object.__eq__(self, other)
+        return self._objValue == other
+    
     
 class Integer(Scalar):
     """Integer object"""

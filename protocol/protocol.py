@@ -31,7 +31,7 @@ execution and tracking like: Step and Protocol
 import datetime as dt
 import pickle
 
-from pyworkflow.object import FakedObject, String, List, Integer
+from pyworkflow.object import Object, String, List, Integer
 from pyworkflow.utils.path import replaceExt
 
 STATUS_LAUNCHED = "launched"  # launched to queue system
@@ -40,18 +40,18 @@ STATUS_FAILED = "failed"      # it have been failed
 STATUS_FINISHED = "finished"  # successfully finished
 STATUS_WAITING = "waiting"    # waiting for user interaction
 
-class Step(FakedObject):
+class Step(Object):
     """Basic execution unit.
     It should defines its Input, Output
     and define a run method"""
     def __init__(self, **args):
-        FakedObject.__init__(self, **args)
+        Object.__init__(self, **args)
         self._inputs = []
         self._outputs = []
-        self.addAttribute('status', String)
-        self.addAttribute('initTime', String)
-        self.addAttribute('endTime', String)
-        self.addAttribute('error', String)
+        self.status = String()
+        self.initTime = String()
+        self.endTime = String()
+        self.error = String()
         
     def _storeAttributes(self, attrList, attrDict):
         """Store all attributes in attrDict as 
@@ -90,20 +90,22 @@ class Step(FakedObject):
     
     def run(self):
         """Do the job of this step"""
-        self.initTime = str(dt.datetime.now())
-        self.endTime = None
+        self.initTime.set(dt.datetime.now())
+        self.endTime.set(None)
         try:
             self._run()
-            self.status = STATUS_FINISHED
+            self.status.set(STATUS_FINISHED)
         except Exception, e:
-            self.status = STATUS_FAILED
-            self.error = str(e)
+            self.status.set(STATUS_FAILED)
+            self.error.set(e)
             raise #only in development
         finally:
-            self.endTime = str(dt.datetime.now())
+            self.endTime.set(dt.datetime.now())
             
 class FunctionStep(Step):
-    """This is a Step wrapper around a normal function"""
+    """This is a Step wrapper around a normal function
+    This class will ease the insertion of Protocol function steps
+    throught the function insertFunctionStep"""
     def __init__(self, func=None, *funcArgs):
         """Receive the function to execute and the 
         parameters to call it"""
@@ -112,6 +114,9 @@ class FunctionStep(Step):
         self.funcArgs = funcArgs
         self.funcName = String(func)
         self.argsStr = String(pickle.dumps(funcArgs))
+        print "funcName", self.funcName.get()
+        print "funcArgs:", funcArgs
+        print "args: ", pickle.loads(self.argsStr.get())
         
     def _run(self):
         self.func(*self.funcArgs)
@@ -138,18 +143,18 @@ class Protocol(Step):
     
     def __init__(self, **args):
         Step.__init__(self, **args)
-        self.addAttribute('steps', List)
+        self.steps = List()
         self.workingDir = args.get('workingDir', '.')
         self.mapper = args.get('mapper', None)
         
-    def store(self, obj, commit=False):
+    def store(self, *objs):
         if not self.mapper is None:
-            self.mapper.store(obj)
-            if commit:
-                self.commit()
-            
-    def commit(self):
-        if not self.mapper is None:
+            if len(objs) == 0:
+                self.mapper.store(self)
+            else:
+                for obj in objs:
+                    print "storing: ", obj
+                    self.mapper.store(obj)
             self.mapper.commit()
             
     def defineSteps(self):
@@ -168,36 +173,30 @@ class Protocol(Step):
         
         for step in self.steps:
             step.run()
-            print "step_index: ", self.steps.getIndexStr(self.currentStep)
             self.mapper.insertChild(self.steps, self.steps.getIndexStr(self.currentStep),
                              step, self.namePrefix)
             self.currentStep += 1
-            self.commit()
+            self.mapper.commit()
             if step.status == STATUS_FAILED:
                 raise Exception("Protocol failed")
 
     def run(self):
         self.currentStep = 1
-        self.store(self, commit=True)
-        print "self.steps.name: ", self.steps.getName()
+        self.store()
         self.namePrefix = replaceExt(self.steps.getName(), self.steps.strId()) #keep 
         Step.run(self)
-        self.store(self._getAttribute('status'))
-        self.store(self._getAttribute('initTime'))
-        self.store(self._getAttribute('endTime'))
-        self.commit()
+        self.store(self.status, self.initTime, self.endTime)
         print 'PROTOCOL FINISHED'
-        #self.store(self, commit=True)
 
 class ProtImportMicrographs(Protocol):
     def __init__(self, **args):
         Protocol.__init__(self, **args)
-        self.addAttribute('pattern', String)
-        self.addAttribute('n', Integer)
+        self.pattern = String()
+        self.n = Integer()
         self.count = 1
         
     def defineSteps(self):
-        for i in range(self.n):
+        for _ in range(self.n):
             self.insertFunctionStep(self.copyMicrographs, self.pattern)
         
     def copyMicrographs(self, pattern):

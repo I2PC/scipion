@@ -30,13 +30,13 @@ class MyProtocol(Protocol):
         Protocol.__init__(self, **args)
         self.defineInputs(x=Integer(1), y=Float(2), z=String("abc"), b=Boolean(True))
         
-    def sleep(self):
+    def sleep(self, t, s, z):
         import time 
-        time.sleep(1)
+        time.sleep(t)
         
     def defineSteps(self):
         for i in range(2):
-            self.insertFunctionStep(self.sleep)
+            self.insertFunctionStep(self.sleep, i, 'sleeping %d'%i, self.z.get())
     
     
 class TestPyworkflow(unittest.TestCase):
