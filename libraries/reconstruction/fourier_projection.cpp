@@ -116,8 +116,8 @@ void FourierProjector::project(double rot, double tilt, double psi)
             *(ptrI_ij+1) = ab_cd - ac - bd;
         }
     }
-    VfourierRealCoefs.clear();
-    VfourierImagCoefs.clear();
+    //VfourierRealCoefs.clear();
+    //VfourierImagCoefs.clear();
     transformer2D.inverseFourierTransform();
 }
 
@@ -149,8 +149,8 @@ void FourierProjector::produceSideInfo()
         Vfourier.clear();
         produceSplineCoefficients(BSPLINE3,VfourierRealCoefs,VfourierRealAux);
         produceSplineCoefficients(BSPLINE3,VfourierImagCoefs,VfourierImagAux);
-        VfourierRealAux.clear();
-        VfourierImagAux.clear();
+        //VfourierRealAux.clear();
+        //VfourierImagAux.clear();
     }
     else
         Complex2RealImag(Vfourier, VfourierRealCoefs, VfourierImagCoefs);
