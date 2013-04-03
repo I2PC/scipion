@@ -1,5 +1,6 @@
 #include <dimred/dimred_tools.h>
 #include <dimred/kernelPCA.h>
+#include <dimred/ltsa.h>
 #include <iostream>
 #include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"
 // MORE INFO HERE: http://code.google.com/p/googletest/wiki/AdvancedGuide
@@ -94,6 +95,27 @@ TEST_F( DimRedTest, kernelPCA)
 	// Compare C output with Matlab output
 	// ***
 	Y.write("dimred/kernelPCA.txt");
+}
+
+TEST_F( DimRedTest, ltsa)
+{
+	GenerateData generator;
+	generator.generateNewDataset("helix",1000,0);
+	// generator.X.write("dimred/helix.txt");
+	// MATLAB: load swiss.txt;
+
+	LTSA ltsa;
+	ltsa.setInputData(generator.X);
+	ltsa.setOutputDimensionality(2);
+	ltsa.setSpecificParameters();
+	ltsa.reduceDimensionality();
+	const Matrix2D<double> &Y=ltsa.getReducedData();
+
+	//Y.write("dimred/ltsa.txt");
+	Matrix2D<double> expectedY;
+	expectedY.resizeNoCopy(Y);
+	expectedY.read("dimred/ltsa.txt");
+	ASSERT_TRUE(expectedY.equal(Y,1e-5));
 }
 
 GTEST_API_ int main(int argc, char **argv)
