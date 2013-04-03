@@ -32,8 +32,10 @@
 /* Destructor */
 void Image_dealloc(ImageObject* self)
 {
+
     delete self->image;
     self->ob_type->tp_free((PyObject*) self);
+    std::cerr << "Image dealloc finish" <<std::endl;
 }//function Image_dealloc
 
 
@@ -108,8 +110,7 @@ PyMethodDef Image_methods[] =
      "Return NumPy array from image data" },
    { "projectVolumeDouble", (PyCFunction) Image_projectVolumeDouble, METH_VARARGS,
      "project a volume using Euler angles" },
-   { "projectVolumeDoubleUsingFourier", (PyCFunction) Image_projectVolumeDouble, METH_VARARGS,
-         "project a volume using Euler angles and fourier space to speed calculations" },
+
    { "setData", (PyCFunction) Image_setData, METH_VARARGS,
      "Copy NumPy array to image data" },
    { "getPixel", (PyCFunction) Image_getPixel, METH_VARARGS,
@@ -566,40 +567,7 @@ Image_projectVolumeDouble(PyObject *obj, PyObject *args, PyObject *kwargs)
 }//function Image_projectVolumeDouble
 
 
-/* projectVolumeDoubleUsingFourier */
-PyObject *
-Image_projectVolumeDoubleUsingFourier(PyObject *obj, PyObject *args, PyObject *kwargs)
-{
 
-    ImageObject *self = (ImageObject*) obj;
-    double rot, tilt, psi;
-    if (PyArg_ParseTuple(args, "ddd", &rot,&tilt,&psi))
-    {
-        try
-        {
-            Projection P;
-            MultidimArray<double> * pVolume;
-            self->image->data->getMultidimArrayPointer(pVolume);
-            ArrayDim aDim;
-            pVolume->getDimensions(aDim);
-            pVolume->setXmippOrigin();
-            FourierProjector *fp = new FourierProjector(*pVolume, 1, 0.5, NEAREST);
-            projectVolume(*fp, P, aDim.xdim, aDim.ydim,rot, tilt, psi);
-            ImageObject * result = PyObject_New(ImageObject, &ImageType);
-            Image <double> I;
-
-            result->image = new ImageGeneric();
-            result->image->setDatatype(DT_Double);
-            result->image->data->setImage(MULTIDIM_ARRAY(P));
-            return (PyObject *)result;
-        }
-        catch (XmippError &xe)
-        {
-            PyErr_SetString(PyXmippError, xe.msg.c_str());
-        }
-    }
-    return NULL;
-}//function Image_projectVolumeDoubleUsingFourier
 
 /* setData */
 PyObject *

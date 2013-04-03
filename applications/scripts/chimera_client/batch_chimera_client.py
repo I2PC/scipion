@@ -14,7 +14,7 @@ class BatchXmippChimeraClient:
 		system("chimera %s  &" % serverfile)
 		#print 'running client'
 		print self.mode
-		if self.mode == 'projection':
+		if self.mode == 'projector':
 			XmippProjectionExplorer(self.volfile)
 		elif self.mode == 'viewer':
 			client = XmippChimeraClient(self.volfile)

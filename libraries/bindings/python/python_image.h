@@ -103,9 +103,6 @@ Image_getData(PyObject *obj, PyObject *args, PyObject *kwargs);
 PyObject *
 Image_projectVolumeDouble(PyObject *obj, PyObject *args, PyObject *kwargs);
 
-/* projectVolumeDoubleUsingFourier */
-PyObject *
-Image_projectVolumeDoubleUsingFourier(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 /* setData */
 PyObject *

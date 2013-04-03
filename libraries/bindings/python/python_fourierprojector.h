@@ -41,8 +41,8 @@
 typedef struct
 {
     PyObject_HEAD
-
-    FourierProjector * fourier_projector;
+    ArrayDim* dims;
+    FourierProjector* fourier_projector;
 }
 FourierProjectorObject;
 
@@ -53,13 +53,13 @@ FourierProjector_new(PyTypeObject *type, PyObject *args, PyObject *kwargs);
 void FourierProjector_dealloc(FourierProjectorObject* self);
 
 /* Project a volume.
- * Result: double projection */
-PyObject *
-FourierProjector_projectVolume(PyObject * obj, PyObject *args, PyObject *kwargs);
+ */
+
+PyObject * FourierProjector_projectVolume(PyObject * obj, PyObject *args, PyObject *kwargs);
 
 /* FourierProjector methods */
 extern PyMethodDef FourierProjector_methods[];
-/*SymList Type */
+/*FourierProjectorType Type */
 extern PyTypeObject FourierProjectorType;
 
 
