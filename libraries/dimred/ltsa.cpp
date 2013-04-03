@@ -29,6 +29,31 @@ void LTSA::setSpecificParameters(int k)
     this->k = k;
 }
 
+void computeWeightsVector (const Matrix2D<double> &A, Matrix1D<int> &weightVector)
+{
+    weightVector.initZeros(MAT_XSIZE(A));
+    for (size_t i = 0; i < MAT_XSIZE(A); ++i)
+    {
+        double diagelem = MAT_ELEM(A, i, i);
+        for (size_t j = 0; j < MAT_XSIZE(A); ++j)
+            if (((i != j) && (MAT_ELEM(A, j, j) > diagelem)) ||  ((MAT_ELEM(A, j, j) == diagelem) && (j < i)))
+                VEC_ELEM(weightVector,i)++;
+    }
+}
+
+void getLessWeightNColumns (const Matrix2D<double> &A, const Matrix1D<int> &weightVector, Matrix2D<double> &B)
+{
+    size_t outputDim = MAT_XSIZE(B) - 1;
+    for (size_t index = 0; index < outputDim; ++index)
+        FOR_ALL_ELEMENTS_IN_MATRIX1D(weightVector)
+            if (VEC_ELEM(weightVector,i) == index)
+            {
+                for (size_t j = 0; j < MAT_YSIZE(A); ++j)
+                    MAT_ELEM(B, j, index + 1) = MAT_ELEM(A, j, i);
+                break;
+            }
+}
+
 void LTSA::reduceDimensionality()
 {
     subtractColumnMeans(*X);
@@ -76,38 +101,4 @@ void LTSA::reduceDimensionality()
         outputDim = MAT_XSIZE(Y) - 1;
 
     eraseFirstColumn(Y);
-}
-
-void computeWeightsVector (const Matrix2D<double> &A, Matrix1D<int> &weightVector)
-{
-    weightVector.initZeros(MAT_XSIZE(A));
-    for (size_t i = 0; i < MAT_XSIZE(A); ++i)
-    {
-        double diagelem = MAT_ELEM(A, i, i);
-        for (size_t j = 0; j < MAT_XSIZE(A); ++j)
-            if (((i != j) && (MAT_ELEM(A, j, j) > diagelem)) ||  ((MAT_ELEM(A, j, j) == diagelem) && (j < i)))
-                VEC_ELEM(weightVector,i)++;
-    }
-}
-
-void getLessWeightNColumns (const Matrix2D<double> &A, const Matrix1D<int> &weightVector, Matrix2D<double> &B)
-{
-    size_t outputDim = MAT_XSIZE(B) - 1;
-    for (size_t index = 0; index < outputDim; ++index)
-        FOR_ALL_ELEMENTS_IN_MATRIX1D(weightVector)
-            if (VEC_ELEM(weightVector,i) == index)
-            {
-                for (size_t j = 0; j < MAT_YSIZE(A); ++j)
-                    MAT_ELEM(B, j, index + 1) = MAT_ELEM(A, j, i);
-                break;
-            }
-}
-
-void eraseFirstColumn(Matrix2D<double> &A)
-{
-	Matrix2D<double> Ap;
-	Ap.resize(MAT_YSIZE(A),MAT_XSIZE(A)-1);
-    for (size_t i = 0; i < MAT_YSIZE(A); ++i)
-    	memcpy(&MAT_ELEM(Ap,i,0),&MAT_ELEM(A,i,1),MAT_XSIZE(Ap)*sizeof(double));
-    A=Ap;
 }

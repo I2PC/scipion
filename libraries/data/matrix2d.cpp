@@ -511,3 +511,12 @@ void matrixOperation_IminusA(Matrix2D<double> &A)
         else
             MAT_ELEM(A, i, j) = -MAT_ELEM(A, i, j);
 }
+
+void eraseFirstColumn(Matrix2D<double> &A)
+{
+	Matrix2D<double> Ap;
+	Ap.resize(MAT_YSIZE(A),MAT_XSIZE(A)-1);
+    for (size_t i = 0; i < MAT_YSIZE(A); ++i)
+    	memcpy(&MAT_ELEM(Ap,i,0),&MAT_ELEM(A,i,1),MAT_XSIZE(Ap)*sizeof(double));
+    A=Ap;
+}

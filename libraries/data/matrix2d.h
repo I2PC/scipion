@@ -1834,6 +1834,9 @@ void matrixOperation_AtA(const Matrix2D <double> &A, Matrix2D<double> &B);
 /** Matrix operation: A=I-A */
 void matrixOperation_IminusA(Matrix2D<double> &A);
 
+/** Erase first column */
+void eraseFirstColumn(Matrix2D<double> &A);
+
 /** Sparse element.
  *  This class is used to create the SparseMatrices. */
 class SparseElement

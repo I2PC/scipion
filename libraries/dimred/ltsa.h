@@ -29,10 +29,10 @@
 #include <data/matrix1d.h>
 #include "dimred_tools.h"
 
-/**@defgroup KernelPCA Kernel PCA
+/**@defgroup LTSA LTSA
    @ingroup DimRedLibrary */
 //@{
-/** Class for making a Kernel PCA dimensionality reduction */
+/** Class for making a LTSA dimensionality reduction */
 class LTSA: public DimRedAlgorithm
 {
 public:
@@ -45,20 +45,4 @@ public:
 	void reduceDimensionality();
 };
 //@}
-
-///
-void computeWeightsVector (const Matrix2D<double> &A, Matrix1D<int> &Vector);
-
-///
-void setFirstColumnToValue (Matrix2D<double> &A, double value);
-
-///
-void getLessWeightNColumns (const Matrix2D<double> &A, const Matrix1D<int> &Vector, Matrix2D<double> &B);
-
-///
-void substractMatrixToEye (Matrix2D<double> &A);
-
-///
-void eraseFirstColumn (Matrix2D<double> &A);
-
 #endif
