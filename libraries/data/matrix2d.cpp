@@ -489,3 +489,25 @@ void connectedComponentsOfUndirectedGraph(const Matrix2D<double> &G, Matrix1D<in
 		}
 	} while (workDone);
 }
+
+void matrixOperation_AtA (const Matrix2D <double> &A, Matrix2D<double> &B)
+{
+    B.resizeNoCopy(MAT_YSIZE(A), MAT_YSIZE(A));
+    for (size_t i = 0; i < MAT_YSIZE(A); ++i)
+        for (size_t j = i; j < MAT_YSIZE(A); ++j)
+        {
+            double aux=0.;
+            for (size_t k = 0; k < MAT_XSIZE(A); ++k)
+                aux += MAT_ELEM(A, i, k) * MAT_ELEM(A, j, k);
+            MAT_ELEM(B, j, i) = MAT_ELEM(B, i, j) = aux;
+        }
+}
+
+void matrixOperation_IminusA(Matrix2D<double> &A)
+{
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(A)
+        if (i == j)
+            MAT_ELEM(A, i, j) = 1 - MAT_ELEM(A, i, j);
+        else
+            MAT_ELEM(A, i, j) = -MAT_ELEM(A, i, j);
+}

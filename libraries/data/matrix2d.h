@@ -1416,6 +1416,21 @@ public:
             MAT_ELEM(*this,i, j) = VEC_ELEM(v,i);
     }
 
+    /** Set constant column.
+     * Set a given column to a constant value A(i,j)=val;
+     */
+
+    void setConstantCol(size_t j, T v)
+    {
+        if (mdimx == 0 || mdimy == 0)
+            REPORT_ERROR(ERR_MATRIX_EMPTY, "setCol: Target matrix is empty");
+
+        if (j < 0 || j>= mdimx)
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "setCol: Matrix subscript (j) out of range");
+
+        for (size_t i = 0; i < mdimy; i++)
+            MAT_ELEM(*this,i, j) = v;
+    }
     /** Determinant of a matrix
      *
      * An exception is thrown if the matrix is not squared or it is empty.
@@ -1812,6 +1827,12 @@ void normalizeColumns(Matrix2D<double> &A);
  * So that they have zero mean.
  */
 void subtractColumnMeans(Matrix2D<double> &A);
+
+/** Matrix operation: B=A^t*A. */
+void matrixOperation_AtA(const Matrix2D <double> &A, Matrix2D<double> &B);
+
+/** Matrix operation: A=I-A */
+void matrixOperation_IminusA(Matrix2D<double> &A);
 
 /** Sparse element.
  *  This class is used to create the SparseMatrices. */
