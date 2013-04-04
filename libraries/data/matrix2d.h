@@ -1457,6 +1457,17 @@ public:
         for (size_t i = 0; i < mdimy; i++)
             MAT_ELEM(*this,i, j) = v;
     }
+
+    /** Get diagonal.
+     * It is assumed that the matrix is squared
+     */
+    void getDiagonal(Matrix1D<T> &d)
+    {
+    	d.resizeNoCopy(MAT_XSIZE(*this));
+    	for (size_t i=0; i<MAT_XSIZE(*this); ++i)
+    		VEC_ELEM(d,i)=MAT_ELEM(*this,i,i);
+    }
+
     /** Determinant of a matrix
      *
      * An exception is thrown if the matrix is not squared or it is empty.
