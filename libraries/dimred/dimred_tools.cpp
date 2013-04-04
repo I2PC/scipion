@@ -215,7 +215,7 @@ void kNearestNeighbours(const Matrix2D<double> &X, int K, Matrix2D<int> &idx, Ma
 		MAT_ELEM(distance,i,j)=sqrt(MAT_ELEM(distance,i,j));
 }
 
-void computeDistance(const Matrix2D<double> &X, Matrix2D<double> &distance, DimRedDistance2* f)
+void computeDistance(const Matrix2D<double> &X, Matrix2D<double> &distance, DimRedDistance2* f, bool computeSqrt)
 {
 	distance.initZeros(MAT_YSIZE(X),MAT_YSIZE(X));
 	for (size_t i1=0; i1<MAT_YSIZE(X)-1; ++i1)
@@ -232,6 +232,8 @@ void computeDistance(const Matrix2D<double> &X, Matrix2D<double> &distance, DimR
 			else
 				d=(*f)(X,i1,i2);
 
+			if (computeSqrt)
+				d=sqrt(d);
 			MAT_ELEM(distance,i2,i1)=MAT_ELEM(distance,i1,i2)=sqrt(d);
 		}
 }
