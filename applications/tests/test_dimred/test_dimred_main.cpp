@@ -1,4 +1,5 @@
 #include <dimred/lpp.h>
+#include <dimred/nca.h>
 #include <dimred/spe.h>
 #include <dimred/ltsa.h>
 #include <dimred/diffusionMaps.h>
@@ -104,21 +105,22 @@ TEST_F( DimRedTest, intrinsic_dimensionality)
 	dimred.setSpecificParameters(); \
 	dimred.reduceDimensionality(); \
 	const Matrix2D<double> &Y=dimred.getReducedData();\
-	Y.write(file); \
+	/* Y.write(file); */ \
 	Matrix2D<double> expectedY; \
 	expectedY.resizeNoCopy(Y); \
 	expectedY.read(file); \
 	ASSERT_TRUE(expectedY.equal(Y,1e-5)); \
 }
 
-COMPLETE_TEST(ltsa,               LTSA,             "helix",1000,"dimred/ltsa.txt")
 #ifdef NEVERDEFINED
+COMPLETE_TEST(ltsa,               LTSA,             "helix",1000,"dimred/ltsa.txt")
 COMPLETE_TEST(diffusionMaps,      DiffusionMaps,    "helix",1000,"dimred/diffusionMaps.txt")
 INCOMPLETE_TEST(lpp,              LPP,              "helix",1000,"dimred/lpp.txt")
 INCOMPLETE_TEST(spe,              SPE,              "helix",1000,"dimred/spe.txt")
 INCOMPLETE_TEST(laplacianEigenmap,LaplacianEigenmap,"helix",1000,"dimred/laplacianEigenmap.txt")
 INCOMPLETE_TEST(probabilisticPCA, ProbabilisticPCA, "helix",1000,"dimred/probabilisticPCA.txt")
 #endif
+INCOMPLETE_TEST(nca,              NeighbourhoodCA,  "helix",1000,"dimred/nca.txt")
 
 GTEST_API_ int main(int argc, char **argv)
 {
