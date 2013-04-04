@@ -2,6 +2,7 @@
 #include <dimred/nca.h>
 #include <dimred/spe.h>
 #include <dimred/ltsa.h>
+#include <dimred/lltsa.h>
 #include <dimred/diffusionMaps.h>
 #include <dimred/probabilisticPCA.h>
 #include <dimred/laplacianEigenmaps.h>
@@ -119,8 +120,9 @@ INCOMPLETE_TEST(lpp,              LPP,              "helix",1000,"dimred/lpp.txt
 INCOMPLETE_TEST(spe,              SPE,              "helix",1000,"dimred/spe.txt")
 INCOMPLETE_TEST(laplacianEigenmap,LaplacianEigenmap,"helix",1000,"dimred/laplacianEigenmap.txt")
 INCOMPLETE_TEST(probabilisticPCA, ProbabilisticPCA, "helix",1000,"dimred/probabilisticPCA.txt")
-#endif
 INCOMPLETE_TEST(nca,              NeighbourhoodCA,  "helix",1000,"dimred/nca.txt")
+#endif
+INCOMPLETE_TEST(lltsa,            LLTSA,            "helix",1000,"dimred/lltsa.txt")
 
 GTEST_API_ int main(int argc, char **argv)
 {
