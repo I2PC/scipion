@@ -43,9 +43,7 @@ void DiffusionMaps::reduceDimensionality()
 	computeDistance(*X,L2distance,distance,false);
 
 	// Now use this distance to build a similarity matrix
-	double auxOperator=-1/(2.0*(sigma*sigma));
-	FOR_ALL_ELEMENTS_IN_MATRIX2D(L2distance)
-		MAT_ELEM(L2distance,i,j)=exp(MAT_ELEM(L2distance,i,j)*auxOperator);
+	computeSimilarityMatrix(L2distance,sigma);
 
 	// Normalize L2distance to be a stochastic matrix
 	Matrix1D<double> p;
