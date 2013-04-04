@@ -1306,6 +1306,38 @@ public:
         return temp;
     }
 
+    /** Gives a vector with the indexes for a sorted vector
+     *
+     * This function returns the indexes of a sorted vector. The input vector is
+     * not modified at all. For instance, if the input vector is [3 2 -1 0] the
+     * result of this function would be [3 4 2 1] meaning that the lowest value
+     * is at index 3, then comes the element at index 4, ... Note that
+     * indexes start at 1.
+     */
+    void indexSort(Matrix1D<int> &indx) const
+    {
+    	Matrix1D< double > temp;
+        indx.clear();
+
+        if (VEC_XSIZE(*this) == 0)
+            return;
+
+        if (VEC_XSIZE(*this) == 1)
+        {
+            indx.resizeNoCopy(1);
+            VEC_ELEM(indx,0) = 1;
+            return;
+        }
+
+        // Initialise data
+        indx.resizeNoCopy(VEC_XSIZE(*this));
+        typeCast(*this, temp);
+
+        // Sort indexes
+        indexx(VEC_XSIZE(*this), MATRIX1D_ARRAY(temp)-1, MATRIX1D_ARRAY(indx)-1);
+    }
+
+
     /** Maximum element */
     T computeMax() const
     {
