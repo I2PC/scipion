@@ -60,6 +60,7 @@ class XmippChimeraClient:
         
     def openVolumeOnServer(self, volume):
          self.send('open_volume', volume)
+         self.client.send('end')
         
 
     def initListenThread(self):
@@ -108,7 +109,6 @@ class XmippProjectionExplorer(XmippChimeraClient):
         self.projection = Image()
         self.projection.setDataType(DT_DOUBLE)
         
-        printCmd('creating projector and first projection')
         self.fourierprojector = FourierProjector(self.image, 1, 0.5, 0)
         self.fourierprojector.projectVolume(self.projection, 0, 0, 0)
 
@@ -151,7 +151,13 @@ class XmippProjectionExplorer(XmippChimeraClient):
     def exitClient(self):
         self.client.send('exit_client')
         self.exit()
-            
+        
+        
+    def openVolumeOnServer(self, volume):
+         self.send('open_volume', volume)
+         spheres = [[10, 0, 0, 0], [20, 10, 10, 10]]
+         self.send('draw_angular_distribution', spheres)
+         self.client.send('end')      
             
 def printCmd(cmd):
         timeformat = "%S.%f" 
