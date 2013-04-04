@@ -2,6 +2,7 @@
 #include <dimred/spe.h>
 #include <dimred/ltsa.h>
 #include <dimred/diffusionMaps.h>
+#include <dimred/probabilisticPCA.h>
 #include <dimred/laplacianEigenmaps.h>
 #include <iostream>
 #include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"
@@ -80,118 +81,44 @@ TEST_F( DimRedTest, intrinsic_dimensionality)
 	EXPECT_LT(fabs(dimCorrDim-expectedDim),1e-6);
 }
 
+#define INCOMPLETE_TEST(method,DimredClass,dataset,Npoints,file) \
+	TEST_F( DimRedTest, method) \
+{ \
+	GenerateData generator; \
+	generator.generateNewDataset(dataset,Npoints,0); \
+	DimredClass dimred; \
+	dimred.setInputData(generator.X); \
+	dimred.setOutputDimensionality(2); \
+	dimred.setSpecificParameters(); \
+	dimred.reduceDimensionality(); \
+}
+
+#define COMPLETE_TEST(method,DimredClass,dataset,Npoints,file) \
+	TEST_F( DimRedTest, method) \
+{ \
+	GenerateData generator; \
+	generator.generateNewDataset(dataset,Npoints,0); \
+	DimredClass dimred; \
+	dimred.setInputData(generator.X); \
+	dimred.setOutputDimensionality(2); \
+	dimred.setSpecificParameters(); \
+	dimred.reduceDimensionality(); \
+	const Matrix2D<double> &Y=dimred.getReducedData();\
+	Y.write(file); \
+	Matrix2D<double> expectedY; \
+	expectedY.resizeNoCopy(Y); \
+	expectedY.read(file); \
+	ASSERT_TRUE(expectedY.equal(Y,1e-5)); \
+}
+
+COMPLETE_TEST(ltsa,               LTSA,             "helix",1000,"dimred/ltsa.txt")
 #ifdef NEVERDEFINED
-TEST_F( DimRedTest, ltsa)
-{
-	GenerateData generator;
-	generator.generateNewDataset("helix",1000,0);
-	// generator.X.write("dimred/helix.txt");
-	// MATLAB: load swiss.txt;
-
-	LTSA ltsa;
-	ltsa.setInputData(generator.X);
-	ltsa.setOutputDimensionality(2);
-	ltsa.setSpecificParameters();
-	ltsa.reduceDimensionality();
-	const Matrix2D<double> &Y=ltsa.getReducedData();
-
-	//Y.write("dimred/ltsa.txt");
-	Matrix2D<double> expectedY;
-	expectedY.resizeNoCopy(Y);
-	expectedY.read("dimred/ltsa.txt");
-	ASSERT_TRUE(expectedY.equal(Y,1e-5));
-}
-
-TEST_F( DimRedTest, diffusionMaps)
-{
-	GenerateData generator;
-	generator.generateNewDataset("helix",1000,0);
-	// generator.X.write("dimred/helix.txt");
-	// MATLAB: load swiss.txt;
-
-	DiffusionMaps dimred;
-	dimred.setInputData(generator.X);
-	dimred.setOutputDimensionality(2);
-	dimred.setSpecificParameters();
-	dimred.reduceDimensionality();
-	const Matrix2D<double> &Y=dimred.getReducedData();
-
-	//Y.write("dimred/diffusionMaps.txt");
-	Matrix2D<double> expectedY;
-	expectedY.resizeNoCopy(Y);
-	expectedY.read("dimred/diffusionMaps.txt");
-	ASSERT_TRUE(expectedY.equal(Y,1e-5));
-}
-
-TEST_F( DimRedTest, lpp)
-{
-	GenerateData generator;
-	generator.generateNewDataset("helix",1000,0);
-	// generator.X.write("dimred/helix.txt");
-	// MATLAB: load swiss.txt;
-
-	LPP dimred;
-	dimred.setInputData(generator.X);
-	dimred.setOutputDimensionality(2);
-	dimred.setSpecificParameters();
-	dimred.reduceDimensionality();
-	//const Matrix2D<double> &Y=dimred.getReducedData();
-
-	//Y.write("dimred/lpp.txt");
-	/*
-	Matrix2D<double> expectedY;
-	expectedY.resizeNoCopy(Y);
-	expectedY.read("dimred/LPP.txt");
-	ASSERT_TRUE(expectedY.equal(Y,1e-5));
-	*/
-}
-
-TEST_F( DimRedTest, spe)
-{
-	GenerateData generator;
-	generator.generateNewDataset("helix",1000,0);
-	// generator.X.write("dimred/helix.txt");
-	// MATLAB: load swiss.txt;
-
-	SPE dimred;
-	dimred.setInputData(generator.X);
-	dimred.setOutputDimensionality(2);
-	dimred.setSpecificParameters();
-	dimred.reduceDimensionality();
-	//const Matrix2D<double> &Y=dimred.getReducedData();
-
-	//Y.write("dimred/lpp.txt");
-	/*
-	Matrix2D<double> expectedY;
-	expectedY.resizeNoCopy(Y);
-	expectedY.read("dimred/LPP.txt");
-	ASSERT_TRUE(expectedY.equal(Y,1e-5));
-	*/
-}
-
+COMPLETE_TEST(diffusionMaps,      DiffusionMaps,    "helix",1000,"dimred/diffusionMaps.txt")
+INCOMPLETE_TEST(lpp,              LPP,              "helix",1000,"dimred/lpp.txt")
+INCOMPLETE_TEST(spe,              SPE,              "helix",1000,"dimred/spe.txt")
+INCOMPLETE_TEST(laplacianEigenmap,LaplacianEigenmap,"helix",1000,"dimred/laplacianEigenmap.txt")
+INCOMPLETE_TEST(probabilisticPCA, ProbabilisticPCA, "helix",1000,"dimred/probabilisticPCA.txt")
 #endif
-TEST_F( DimRedTest, laplacianEigenmap)
-{
-	GenerateData generator;
-	generator.generateNewDataset("helix",1000,0);
-	// generator.X.write("dimred/helix.txt");
-	// MATLAB: load swiss.txt;
-
-	LaplacianEigenmap dimred;
-	dimred.setInputData(generator.X);
-	dimred.setOutputDimensionality(2);
-	dimred.setSpecificParameters();
-	dimred.reduceDimensionality();
-	//const Matrix2D<double> &Y=dimred.getReducedData();
-
-	//Y.write("dimred/lpp.txt");
-	/*
-	Matrix2D<double> expectedY;
-	expectedY.resizeNoCopy(Y);
-	expectedY.read("dimred/LPP.txt");
-	ASSERT_TRUE(expectedY.equal(Y,1e-5));
-	*/
-}
 
 GTEST_API_ int main(int argc, char **argv)
 {
