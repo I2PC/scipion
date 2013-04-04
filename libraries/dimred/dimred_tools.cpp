@@ -189,7 +189,7 @@ void insertNeighbour(Matrix2D<int> &idx, Matrix2D<double> &distance, int i1, int
 	}
 }
 
-void kNearestNeighbours(const Matrix2D<double> &X, int K, Matrix2D<int> &idx, Matrix2D<double> &distance, DimRedDistance2* f)
+void kNearestNeighbours(const Matrix2D<double> &X, int K, Matrix2D<int> &idx, Matrix2D<double> &distance, DimRedDistance2* f, bool computeSqrt)
 {
 	idx.initConstant(MAT_YSIZE(X),K,-1);
 	distance.initConstant(MAT_YSIZE(X),K,1e38);
@@ -211,8 +211,9 @@ void kNearestNeighbours(const Matrix2D<double> &X, int K, Matrix2D<int> &idx, Ma
 			insertNeighbour(idx,distance,i1,i2,d);
 			insertNeighbour(idx,distance,i2,i1,d);
 		}
-	FOR_ALL_ELEMENTS_IN_MATRIX2D(distance)
-		MAT_ELEM(distance,i,j)=sqrt(MAT_ELEM(distance,i,j));
+	if (computeSqrt)
+		FOR_ALL_ELEMENTS_IN_MATRIX2D(distance)
+			MAT_ELEM(distance,i,j)=sqrt(MAT_ELEM(distance,i,j));
 }
 
 void computeDistance(const Matrix2D<double> &X, Matrix2D<double> &distance, DimRedDistance2* f, bool computeSqrt)
@@ -238,17 +239,48 @@ void computeDistance(const Matrix2D<double> &X, Matrix2D<double> &distance, DimR
 		}
 }
 
-void computeDistanceToNeighbours(const Matrix2D<double> &X, int K, Matrix2D<double> &distance, DimRedDistance2* f)
+void computeDistanceToNeighbours(const Matrix2D<double> &X, int K, Matrix2D<double> &distance, DimRedDistance2* f, bool computeSqrt)
 {
 	Matrix2D<int> idx;
 	Matrix2D<double> kDistance;
-	kNearestNeighbours(X, K, idx, kDistance, f);
+	kNearestNeighbours(X, K, idx, kDistance, f, computeSqrt);
 	distance.initZeros(MAT_YSIZE(X),MAT_YSIZE(X));
 	FOR_ALL_ELEMENTS_IN_MATRIX2D(kDistance)
 	{
 		int idx_ij=MAT_ELEM(idx,i,j);
 		MAT_ELEM(distance,idx_ij,i)=MAT_ELEM(distance,i,idx_ij)=MAT_ELEM(kDistance,i,j);
 	}
+}
+
+void computeSimilarityMatrix(Matrix2D<double> &D2, double sigma, bool skipZeros, bool normalize)
+{
+	double maxDistance=1.0;
+	if (normalize)
+		maxDistance=D2.computeMax();
+	double K=-0.5/(sigma*sigma*maxDistance);
+	if (skipZeros)
+	{
+		FOR_ALL_ELEMENTS_IN_MATRIX2D(D2)
+			if (MAT_ELEM(D2,i,j)!=0)
+				MAT_ELEM(D2,i,j)=exp(MAT_ELEM(D2,i,j)*K);
+	}
+	else
+	{
+		FOR_ALL_ELEMENTS_IN_MATRIX2D(D2)
+			MAT_ELEM(D2,i,j)=exp(MAT_ELEM(D2,i,j)*K);
+	}
+}
+
+void computeGraphLaplacian(const Matrix2D<double> &G, Matrix2D<double> &L)
+{
+	Matrix1D<double> d;
+	G.rowSum(d);
+	L.resizeNoCopy(G);
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(L)
+		if (i==j)
+			MAT_ELEM(L,i,i)=VEC_ELEM(d,i)-MAT_ELEM(G,i,i);
+		else
+			MAT_ELEM(L,i,j)=-MAT_ELEM(G,i,j);
 }
 
 double intrinsicDimensionalityMLE(const Matrix2D<double> &X, DimRedDistance2* f)
