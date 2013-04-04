@@ -2,6 +2,7 @@
 #include <dimred/spe.h>
 #include <dimred/ltsa.h>
 #include <dimred/diffusionMaps.h>
+#include <dimred/laplacianEigenmaps.h>
 #include <iostream>
 #include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"
 // MORE INFO HERE: http://code.google.com/p/googletest/wiki/AdvancedGuide
@@ -121,7 +122,6 @@ TEST_F( DimRedTest, diffusionMaps)
 	expectedY.read("dimred/diffusionMaps.txt");
 	ASSERT_TRUE(expectedY.equal(Y,1e-5));
 }
-#endif
 
 TEST_F( DimRedTest, lpp)
 {
@@ -154,6 +154,30 @@ TEST_F( DimRedTest, spe)
 	// MATLAB: load swiss.txt;
 
 	SPE dimred;
+	dimred.setInputData(generator.X);
+	dimred.setOutputDimensionality(2);
+	dimred.setSpecificParameters();
+	dimred.reduceDimensionality();
+	//const Matrix2D<double> &Y=dimred.getReducedData();
+
+	//Y.write("dimred/lpp.txt");
+	/*
+	Matrix2D<double> expectedY;
+	expectedY.resizeNoCopy(Y);
+	expectedY.read("dimred/LPP.txt");
+	ASSERT_TRUE(expectedY.equal(Y,1e-5));
+	*/
+}
+
+#endif
+TEST_F( DimRedTest, laplacianEigenmap)
+{
+	GenerateData generator;
+	generator.generateNewDataset("helix",1000,0);
+	// generator.X.write("dimred/helix.txt");
+	// MATLAB: load swiss.txt;
+
+	LaplacianEigenmap dimred;
 	dimred.setInputData(generator.X);
 	dimred.setOutputDimensionality(2);
 	dimred.setSpecificParameters();
