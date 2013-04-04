@@ -512,6 +512,20 @@ void matrixOperation_AtA (const Matrix2D <double> &A, Matrix2D<double> &B)
         }
 }
 
+void matrixOperation_XtAX_symmetric(const Matrix2D<double> &X, const Matrix2D<double> &A, Matrix2D<double> &B)
+{
+	Matrix2D<double> AX=A*X;
+    B.resizeNoCopy(MAT_YSIZE(X), MAT_YSIZE(X));
+    for (size_t i = 0; i < MAT_XSIZE(X); ++i)
+        for (size_t j = i; j < MAT_XSIZE(X); ++j)
+        {
+            double aux=0.;
+            for (size_t k = 0; k < MAT_YSIZE(X); ++k)
+                aux += MAT_ELEM(X, k, i) * MAT_ELEM(AX, j, k);
+            MAT_ELEM(B, j, i) = MAT_ELEM(B, i, j) = aux;
+        }
+}
+
 void matrixOperation_IminusA(Matrix2D<double> &A)
 {
     FOR_ALL_ELEMENTS_IN_MATRIX2D(A)

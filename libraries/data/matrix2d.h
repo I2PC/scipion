@@ -1862,6 +1862,10 @@ void subtractColumnMeans(Matrix2D<double> &A);
 /** Matrix operation: B=A^t*A. */
 void matrixOperation_AtA(const Matrix2D <double> &A, Matrix2D<double> &B);
 
+/** Matrix operation: B=X^t*A*X.
+ * We know that the result B must be symmetric */
+void matrixOperation_XtAX_symmetric(const Matrix2D<double> &X, const Matrix2D<double> &A, Matrix2D<double> &B);
+
 /** Matrix operation: A=I-A */
 void matrixOperation_IminusA(Matrix2D<double> &A);
 
