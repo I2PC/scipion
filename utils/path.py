@@ -28,8 +28,11 @@ This module contains the PATH related utilities
 inside the utils module
 """
 
-from os.path import exists, join, splitext
+import os
+import shutil
+from os.path import exists, join, splitext, isdir
 import pyworkflow as pw
+
 
 def findFile(filename, *paths):
     """Search if the file is present in
@@ -57,5 +60,23 @@ def joinExt(*extensions):
     """Join several path parts with a ."""
     return '.'.join(extensions)
 
-    
-
+def cleanPath(*paths):
+    """Remove a list of paths, either folders or files"""
+    for p in paths:
+        if isdir(p):
+            shutil.rmtree(p)
+        else:
+            os.remove(p)
+            
+def makePath(*paths):
+    """Create a list of paths if they don't exists"""
+    for p in paths:
+        if not exists(p):
+            os.mkdir(p)
+            
+def existsPath(*paths):
+    """Check if the list of paths exists.
+    Will return the list of missing files,
+    if the list is empty means that all path exists
+    """
+    return [p for p in paths if not exists(p)]

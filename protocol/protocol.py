@@ -28,11 +28,12 @@ This modules contains classes required for the workflow
 execution and tracking like: Step and Protocol
 """
 
+from os.path import basename
 import datetime as dt
 import pickle
 
-from pyworkflow.object import Object, String, List, Integer
-from pyworkflow.utils.path import replaceExt
+from pyworkflow.object import OrderedObject, String, List, Integer
+from pyworkflow.utils.path import replaceExt, makePath, join, existsPath
 
 STATUS_LAUNCHED = "launched"  # launched to queue system
 STATUS_RUNNING = "running"    # currently executing
@@ -40,18 +41,20 @@ STATUS_FAILED = "failed"      # it have been failed
 STATUS_FINISHED = "finished"  # successfully finished
 STATUS_WAITING = "waiting"    # waiting for user interaction
 
-class Step(Object):
+
+class Step(OrderedObject):
     """Basic execution unit.
     It should defines its Input, Output
     and define a run method"""
     def __init__(self, **args):
-        Object.__init__(self, **args)
+        OrderedObject.__init__(self, **args)
         self._inputs = []
         self._outputs = []
         self.status = String()
         self.initTime = String()
         self.endTime = String()
         self.error = String()
+        self.runStartsCallback = None # Used to monitor the Step(Observer pattern)
         
     def _storeAttributes(self, attrList, attrDict):
         """Store all attributes in attrDict as 
@@ -59,9 +62,6 @@ class Step(Object):
         for key, value in attrDict.iteritems():
             attrList.append(key)
             setattr(self, key, value)
-            
-    def _getAttribute(self, name):
-        return self._attributes.get(name, None)
         
     def defineInputs(self, **args):
         """This function should be used to define
@@ -93,6 +93,8 @@ class Step(Object):
         self.initTime.set(dt.datetime.now())
         self.endTime.set(None)
         try:
+            if not self.runStartsCallback is None:
+                self.runStartsCallback(self)
             self._run()
             self.status.set(STATUS_FINISHED)
         except Exception, e:
@@ -102,36 +104,48 @@ class Step(Object):
         finally:
             self.endTime.set(dt.datetime.now())
             
+
 class FunctionStep(Step):
     """This is a Step wrapper around a normal function
     This class will ease the insertion of Protocol function steps
     throught the function insertFunctionStep"""
-    def __init__(self, func=None, *funcArgs):
+    def __init__(self, funcName=None, *funcArgs):
         """Receive the function to execute and the 
         parameters to call it"""
         Step.__init__(self)
-        self.func = func
+        self.func = None # Function should be set before run
+        self.funcName = String(funcName)
         self.funcArgs = funcArgs
-        self.funcName = String(func)
         self.argsStr = String(pickle.dumps(funcArgs))
-        print "funcName", self.funcName.get()
-        print "funcArgs:", funcArgs
-        print "args: ", pickle.loads(self.argsStr.get())
         
     def _run(self):
-        self.func(*self.funcArgs)
+        resultFiles = self.func(*self.funcArgs)
+        if len(resultFiles):
+            missingFiles = existsPath(resultFiles)
+            if len(missingFiles):
+                raise Exception('Missing files: ' + ' '.join(missingFiles))
+            self.resultFiles = String(pickle.dumps(resultFiles))
+    
+    def postconditions(self):
+        """This type of Step, will simply check
+        as postconditions that the result files exists"""
+        if not hasattr(self, 'resultFiles'):
+            return True
+        files = pickle.loads(self.resultFiles.get())
+
+        return len(existsPath(files)) == 0
+        
+                
         
 
-#def ProtocolType(type):
-#    """Protocols metaclass"""
-#    def __init__(cls, name, bases, dct):
-#        print '-----------------------------------'
-#        print "Initializing protocol class", name
-#        print dct
-#        super(ProtocolType, cls).__init__(name, bases, dct)
         
 def loadDef():
-    print "loading..."
+    print "loading...Protocol class"
+             
+
+MODE_RESUME = "resume"
+MODE_RESTART = "restart"
+MODE_CONTINUE = "continue"
                 
 class Protocol(Step):
     """The Protocol is a higher type of Step.
@@ -139,12 +153,13 @@ class Protocol(Step):
     but contains a list of steps that are executed"""
     #__metaclass__ = ProtocolType
     # Params definition for this class
-    _paramDefinition = loadDef()
+    _definition = loadDef()
     
     def __init__(self, **args):
         Step.__init__(self, **args)
-        self.steps = List()
-        self.workingDir = args.get('workingDir', '.')
+        self.mode = String(args.get('mode', MODE_RESUME))
+        self.steps = List() # List of steps that will be executed
+        self.workingDir = args.get('workingDir', '.') # All generated files should be inside workingDir
         self.mapper = args.get('mapper', None)
         
     def store(self, *objs):
@@ -153,7 +168,6 @@ class Protocol(Step):
                 self.mapper.store(self)
             else:
                 for obj in objs:
-                    print "storing: ", obj
                     self.mapper.store(obj)
             self.mapper.commit()
             
@@ -165,11 +179,18 @@ class Protocol(Step):
         """Insert a new step in the list"""
         self.steps.append(step)
         
-    def insertFunctionStep(self, func, *funcArgs):
-        self.insertStep(FunctionStep(func, *funcArgs))
+    def getPath(self, *paths):
+        """Return a path inside the workingDir"""
+        return join(self.workingDir, *paths)
+        
+    def insertFunctionStep(self, funcName, *funcArgs, **args):
+        step = FunctionStep(funcName, *funcArgs)
+        step.func = getattr(self, funcName)
+        self.insertStep(step)
         
     def _run(self):
-        self.defineSteps()
+        self.defineSteps() # Define steps for execute later
+        makePath(self.workingDir)
         
         for step in self.steps:
             step.run()
@@ -188,42 +209,49 @@ class Protocol(Step):
         self.store(self.status, self.initTime, self.endTime)
         print 'PROTOCOL FINISHED'
 
+
 class ProtImportMicrographs(Protocol):
     def __init__(self, **args):
         Protocol.__init__(self, **args)
-        self.pattern = String()
-        self.n = Integer()
-        self.count = 1
+        self.pattern = String(args.get('pattern', None))        
         
     def defineSteps(self):
         for _ in range(self.n):
             self.insertFunctionStep(self.copyMicrographs, self.pattern)
         
     def copyMicrographs(self, pattern):
-        """Copy micrograph with filename matching the pattern"""
-        import time
-        print "step: ", self.count
-        time.sleep(1)
-        self.count += 1
+        """Copy micrographs matching the filename pattern"""
+        from glob import glob
+        files = glob(self.pattern.get())
+        path = self.getPath('micrographs.txt')
+        f = open(path, 'w+')
+        for f in files:
+            dst = self.getPath(basename(f))
+            print >> f, dst
+        f.close()
+        
+        return path
         
 
 class ProtScreenMicrographs(Protocol):
     pass
 
+
 class ProtDownsampleMicrographs(Protocol):
     pass
 
+
 class ProtParticlePicking(Protocol):
-    
-    def __init__(self, **args):
-        Protocol.__init__(self, **args)
-    
+    pass
+
 
 class ProtAlign(Protocol):
     pass
 
+
 class ProtClassify(Protocol):
     pass
+
 
 class ProtAlignClassify(Protocol):
     pass

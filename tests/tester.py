@@ -28,15 +28,21 @@ class Complex(Object):
 class MyProtocol(Protocol):
     def __init__(self, **args):
         Protocol.__init__(self, **args)
-        self.defineInputs(x=Integer(1), y=Float(2), z=String("abc"), b=Boolean(True))
+        self.name = String(args.get('name', None))
+        self.numberOfSleeps = Integer(args.get('n', 1))
         
-    def sleep(self, t, s, z):
+    def sleep(self, t, s):
+        log = self.getPath("step_%02d.txt" % self.currentStep)
         import time 
         time.sleep(t)
+        f = open(log, 'w+')
+        f.write("Slept: %d seconds\n" % t)
+        f.close()
+        return log
         
     def defineSteps(self):
-        for i in range(2):
-            self.insertFunctionStep(self.sleep, i, 'sleeping %d'%i, self.z.get())
+        for i in range(self.numberOfSleeps.get()):
+            self.insertFunctionStep('sleep', i, 'sleeping %d'%i)
     
     
 class TestPyworkflow(unittest.TestCase):
@@ -186,7 +192,7 @@ class TestPyworkflow(unittest.TestCase):
         prot = MyProtocol(mapper=mapper)
         prot.run()
         
-        self.assertEqual(STATUS_FINISHED, prot.steps[0].status)
+        self.assertEqual(prot.steps[0].status, STATUS_FINISHED)
         
         mapper2 = SqliteMapper(fn, globals())
         prot2 = mapper2.get(prot.getId())

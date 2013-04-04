@@ -35,49 +35,8 @@ import gui
 from gui.widgets import Tree
 from protocol import *
 from protocol.params import *
+from pyworkflow.tests.tester import *
 
-class MyStep(Step):
-    def __init__(self):
-        Step.__init__(self)
-        self.defineInputs(x=Integer(1), y=Float(2), z=String("abc"), b=Boolean(True))
-        
-    def __str__(self):
-        s = ''
-        for k, v in self.getAttributesToStore():
-            s += '%s = %s\n' % (k, str(v))
-        return s
-
-    def hasValue(self):
-        return True  
-
-class Complex(Object):
-    def __init__(self, imag=0., real=0., **args):
-        Object.__init__(self, **args)
-        self.imag = Float(imag)
-        self.real = Float(real)
-        
-    def __str__(self):
-        return '(%s, %s)' % (self.imag, self.real)
-    
-    def __eq__(self, other):
-        return self.imag == other.imag and \
-            self.real == other.real
-            
-    def hasValue(self):
-        return True
-    
-class MyProtocol(Protocol):
-    def __init__(self, **args):
-        Protocol.__init__(self, **args)
-        self.defineInputs(x=Integer(1), y=Float(2), z=String("abc"), b=Boolean(True))
-        
-    def sleep(self):
-        import time 
-        time.sleep(1)
-        
-    def defineSteps(self):
-        for i in range(2):
-            self.insertFunctionStep(self.sleep)
             
 def populateWithObject(tree, prefix, obj):
     cls = obj.getClassName()
