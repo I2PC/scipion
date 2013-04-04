@@ -292,6 +292,21 @@ TEST_F( MatrixTest, connectedComponentsTests)
     EXPECT_EQ(expectedComponents,components) << "connectedComponents failed";
 }
 
+TEST_F( MatrixTest, matrixOperation_XtAX_symmetric)
+{
+    Matrix2D<double> A(3,3),B;
+    A(0,0)=1;   A(0,1)=0.5; A(0,2)=0.3;
+    A(1,0)=0.5; A(1,1)=1;   A(1,2)=0.5;
+    A(2,0)=0.3; A(2,1)=0.5; A(2,2)=1;
+
+    matrixOperation_XtAX_symmetric(A,A,B);
+    Matrix2D<double> expectedB(3,3);
+    expectedB(0,0)=2.17000; expectedB(0,1)=2.2450; expectedB(0,2)=1.82700;
+    expectedB(1,0)=2.24500; expectedB(1,1)=2.6500; expectedB(1,2)=2.24500;
+    expectedB(2,0)=1.82700; expectedB(2,1)=2.2450; expectedB(2,2)=2.17000;
+    EXPECT_EQ(expectedB,B) << "matrixOperation_XtAX_symmetric failed";
+}
+
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
