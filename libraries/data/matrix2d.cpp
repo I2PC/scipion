@@ -348,6 +348,15 @@ void normalizeColumns(Matrix2D<double> &A)
 		MAT_ELEM(A,i,j)=(MAT_ELEM(A,i,j)-VEC_ELEM(avg,j))*VEC_ELEM(stddev,j);
 }
 
+void normalizeColumnsBetween0and1(Matrix2D<double> &A)
+{
+	double maxValue,minValue;
+	A.computeMaxAndMin(maxValue,minValue);
+	double iMaxValue=1.0/(maxValue-minValue);
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(A)
+		MAT_ELEM(A,i,j)=(MAT_ELEM(A,i,j)-minValue)*iMaxValue;
+}
+
 void subtractColumnMeans(Matrix2D<double> &A)
 {
 	if (MAT_YSIZE(A)<1)

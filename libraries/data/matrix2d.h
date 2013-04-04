@@ -1112,6 +1112,14 @@ public:
         }
     }
 
+    /** Get row sum. */
+    void rowSum(Matrix1D<T> &sum) const
+    {
+    	sum.initZeros(MAT_YSIZE(*this));
+    	FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
+    		VEC_ELEM(sum,i)+=MAT_ELEM(*this,i,j);
+    }
+
     /** Produce a 2D array suitable for working with Numerical Recipes
     *
     * This function must be used only as a preparation for routines which need
@@ -1840,6 +1848,11 @@ void ransacWeightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> 
  * So that they have zero mean and unit variance.
  */
 void normalizeColumns(Matrix2D<double> &A);
+
+/** Normalize columns.
+ * So that the minimum is 0 and the maximum is 1
+ */
+void normalizeColumnsBetween0and1(Matrix2D<double> &A);
 
 /** Subtract mean of columns.
  * So that they have zero mean.
