@@ -29,7 +29,7 @@
 #include <data/matrix1d.h>
 #include "dimred_tools.h"
 
-/**@defgroup LTSA LTSA
+/**@defgroup LTSA Local Tangent Space Alignment
    @ingroup DimRedLibrary */
 //@{
 /** Class for making a LTSA dimensionality reduction */
