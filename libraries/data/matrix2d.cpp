@@ -499,29 +499,68 @@ void connectedComponentsOfUndirectedGraph(const Matrix2D<double> &G, Matrix1D<in
 	} while (workDone);
 }
 
-void matrixOperation_AtA (const Matrix2D <double> &A, Matrix2D<double> &B)
+void matrixOperation_AB(const Matrix2D <double> &A, const Matrix2D<double> &B, Matrix2D<double> &C)
 {
-    B.resizeNoCopy(MAT_YSIZE(A), MAT_YSIZE(A));
-    for (size_t i = 0; i < MAT_YSIZE(A); ++i)
-        for (size_t j = i; j < MAT_YSIZE(A); ++j)
+	C.initZeros(MAT_YSIZE(A), MAT_XSIZE(B));
+	for (size_t i = 0; i < MAT_YSIZE(A); ++i)
+		for (size_t j = 0; j < MAT_XSIZE(B); ++j)
+		{
+			double aux=0.;
+			for (size_t k = 0; k < MAT_XSIZE(A); ++k)
+				aux += MAT_ELEM(A, i, k) * MAT_ELEM(B, k, j);
+			MAT_ELEM(C, i, j)=aux;
+		}
+}
+
+void matrixOperation_AtA(const Matrix2D <double> &A, Matrix2D<double> &B)
+{
+    B.resizeNoCopy(MAT_XSIZE(A), MAT_XSIZE(A));
+    for (size_t i = 0; i < MAT_XSIZE(A); ++i)
+        for (size_t j = i; j < MAT_XSIZE(A); ++j)
         {
             double aux=0.;
-            for (size_t k = 0; k < MAT_XSIZE(A); ++k)
-                aux += MAT_ELEM(A, i, k) * MAT_ELEM(A, j, k);
+            for (size_t k = 0; k < MAT_YSIZE(A); ++k)
+                aux += MAT_ELEM(A, k, i) * MAT_ELEM(A, k, j);
             MAT_ELEM(B, j, i) = MAT_ELEM(B, i, j) = aux;
+        }
+}
+
+void matrixOperation_AAt(const Matrix2D <double> &A, Matrix2D<double> &C)
+{
+	C.initZeros(MAT_YSIZE(A), MAT_YSIZE(A));
+	for (size_t i = 0; i < MAT_YSIZE(A); ++i)
+		for (size_t j = 0; j < MAT_YSIZE(A); ++j)
+		{
+			double aux=0.;
+			for (size_t k = 0; k < MAT_XSIZE(A); ++k)
+				aux += MAT_ELEM(A, i, k) * MAT_ELEM(A, j, k);
+			MAT_ELEM(C, i, j)=aux;
+		}
+}
+
+void matrixOperation_AtB(const Matrix2D <double> &A, const Matrix2D<double> &B, Matrix2D<double> &C)
+{
+    C.resizeNoCopy(MAT_XSIZE(A), MAT_XSIZE(B));
+    for (size_t i = 0; i < MAT_XSIZE(A); ++i)
+        for (size_t j = 0; j < MAT_XSIZE(B); ++j)
+        {
+            double aux=0.;
+            for (size_t k = 0; k < MAT_YSIZE(A); ++k)
+                aux += MAT_ELEM(A, k, i) * MAT_ELEM(B, k, j);
+			MAT_ELEM(C, i, j)=aux;
         }
 }
 
 void matrixOperation_XtAX_symmetric(const Matrix2D<double> &X, const Matrix2D<double> &A, Matrix2D<double> &B)
 {
 	Matrix2D<double> AX=A*X;
-    B.resizeNoCopy(MAT_YSIZE(X), MAT_YSIZE(X));
+    B.resizeNoCopy(MAT_XSIZE(X), MAT_XSIZE(X));
     for (size_t i = 0; i < MAT_XSIZE(X); ++i)
         for (size_t j = i; j < MAT_XSIZE(X); ++j)
         {
             double aux=0.;
             for (size_t k = 0; k < MAT_YSIZE(X); ++k)
-                aux += MAT_ELEM(X, k, i) * MAT_ELEM(AX, j, k);
+                aux += MAT_ELEM(X, k, i) * MAT_ELEM(AX, k, j);
             MAT_ELEM(B, j, i) = MAT_ELEM(B, i, j) = aux;
         }
 }
