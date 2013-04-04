@@ -33,83 +33,8 @@ void LaplacianEigenmap::setSpecificParameters(double sigma, size_t numberOfNeigh
 
 void LaplacianEigenmap::reduceDimensionality()
 {
-	Matrix2D<double> G,L;
-	size_t xsize=MAT_XSIZE(G);
-	//std::cout<<"Constructing neighborhood graph...";
-	computeDistanceToNeighbours(*X,numberOfNeighbours,G);
-	//G.write("dimred/G2.txt");
-	FOR_ALL_ELEMENTS_IN_MATRIX2D(G)
-		MAT_ELEM(G,i,j)*=MAT_ELEM(G,i,j);
-	G/=G.computeMax();
-	//G.write("dimred/G.txt");
-
-	//Function component
-
-	Matrix1D<int> component;
-	connectedComponentsOfUndirectedGraph(G,component);
-
-    int max=0;
-    int indMAX=0;
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(component)
-    {
-        if(VEC_ELEM(component,i)>max)
-        {
-            max=VEC_ELEM(component,i);
-            indMAX=i;
-        }
-    }
-
-    Matrix1D<int> count;
-    count.resizeNoCopy(max);
-
-    for(int j=0;j<max;j++)
-    {
-        int NoElem=0;
-        FOR_ALL_ELEMENTS_IN_MATRIX1D(component)
-        {
-            if(VEC_ELEM(component,i)==i)
-                ++NoElem;
-        }
-        VEC_ELEM(count,j)=NoElem;
-    }
-
-    Matrix1D<int> conn_comp;
-    //conn_comp.initZeros(VEC_XSIZE(component));
-    conn_comp.resizeNoCopy(VEC_XSIZE(component));
-    size_t ord=0;
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(component)
-    {
-        if(VEC_ELEM(component,i)==indMAX)
-        {
-            VEC_ELEM(conn_comp,ord)=i;
-            ++ord;
-        }
-    }
-
-    Matrix1D<int> conn_comp2;
-    for(size_t j=0;j<ord-1;j++)
-    		VEC_ELEM(conn_comp2,j)=VEC_ELEM(conn_comp,j);
-
-
-
-	//std::cout<<"Computing weigth matrices...";
-	double K=-1.0/(2*sigma*sigma);
-	FOR_ALL_ELEMENTS_IN_MATRIX2D(G)
-	{
-		if(MAT_ELEM(G,i,j)!=0)
-			MAT_ELEM(G,i,j)=exp(-MAT_ELEM(G,i,j)*K);
-	}
-	FOR_ALL_ELEMENTS_IN_MATRIX2D(G)
-	{
-		if(i!=j)
-			MAT_ELEM(L,i,j)=-MAT_ELEM(G,i,j);
-		else
-		{
-			size_t RowSum=0;
-			for(size_t jj=0;jj<xsize;++jj)
-				RowSum+=MAT_ELEM(G,i,jj);
-			MAT_ELEM(L,i,j)=RowSum-MAT_ELEM(G,i,j);
-		}
-	}
-	//std::cout<<"Constructing Eigenmaps...";
+	Matrix2D<double> D2,L;
+	computeDistanceToNeighbours(*X,numberOfNeighbours,D2,distance,false);
+	computeSimilarityMatrix(D2,sigma,true,true);
+	computeGraphLaplacian(D2,L);
 }
