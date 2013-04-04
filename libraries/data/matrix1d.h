@@ -1324,15 +1324,12 @@ public:
      * This function returns the index of the maximum element of an matrix1d.
      * Returns -1 if the array is empty
      */
-    void maxIndex(int& jmax) const
+    int maxIndex() const
     {
         if (vdim == 0)
-        {
-            jmax = -1;
-            return;
-        }
+            return -1;
 
-        jmax = 0;
+        int jmax = 0;
         T maxval = VEC_ELEM(*this, 0);
         for (size_t j = 0; j < vdim; ++j)
             if (VEC_ELEM(*this,j) > maxval)
@@ -1340,6 +1337,7 @@ public:
                 jmax = j;
                 maxval = VEC_ELEM(*this,j);
             }
+        return jmax;
     }
 
     /** Index for the minimum element.
@@ -1347,15 +1345,12 @@ public:
      * This function returns the index of the minimum element of an matrix1d.
      * Returns -1 if the array is empty
      */
-    void minIndex(int& jmin) const
+    void minIndex() const
     {
         if (vdim == 0)
-        {
-            jmin = -1;
-            return;
-        }
+            return -1;
 
-        jmin = 0;
+        int jmin = 0;
         T minval = VEC_ELEM(*this, 0);
         for (size_t j = 0; j < vdim; ++j)
             if (VEC_ELEM(*this,j) < minval)
@@ -1363,6 +1358,7 @@ public:
                 jmin = j;
                 minval = VEC_ELEM(*this,j);
             }
+        return jmin;
     }
 
     /** Algebraic transpose of vector

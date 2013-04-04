@@ -175,8 +175,7 @@ double segment_threshold(const Image<double> *V_in, Image<double> *V_out,
 
     // Pick the maximum
     count(0) = 0; // We don't want to pick the background
-    int imax;
-    count.maxIndex(imax);
+    int imax=count.maxIndex();
 
     // Select the mask with only that piece
     const MultidimArray<double> &mVout=(*V_out)();
