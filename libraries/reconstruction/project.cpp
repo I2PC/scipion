@@ -951,7 +951,7 @@ int PROJECT_Effectively_project(const FileName &fnOut,
         Vshears=new RealShearsInfo(side.phantomVol());
     if (projType == FOURIER && side.phantomMode==PROJECT_Side_Info::VOXEL)//////////////////////
         Vfourier=new FourierProjector(side.phantomVol(),side.paddFactor,side.maxFrequency,side.BSplineDeg);
-
+                                     ///                   1              .5                        NEAREST
     fn_proj=fnOut;
     if (side.doCrystal)
         createEmptyFile(fn_proj, prm_crystal.crystal_Xdim, prm_crystal.crystal_Ydim,
