@@ -529,12 +529,12 @@ void matrixOperation_AAt(const Matrix2D <double> &A, Matrix2D<double> &C)
 {
 	C.initZeros(MAT_YSIZE(A), MAT_YSIZE(A));
 	for (size_t i = 0; i < MAT_YSIZE(A); ++i)
-		for (size_t j = 0; j < MAT_YSIZE(A); ++j)
+		for (size_t j = i; j < MAT_YSIZE(A); ++j)
 		{
 			double aux=0.;
 			for (size_t k = 0; k < MAT_XSIZE(A); ++k)
 				aux += MAT_ELEM(A, i, k) * MAT_ELEM(A, j, k);
-			MAT_ELEM(C, i, j)=aux;
+			MAT_ELEM(C, j, i)=MAT_ELEM(C, i, j)=aux;
 		}
 }
 
