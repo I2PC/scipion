@@ -1094,6 +1094,24 @@ public:
         return minval;
     }
 
+    /** Maximum and minimum of the values in the array. */
+    void computeMaxAndMin(T &maxValue, T &minValue) const
+    {
+    	maxValue=minValue=0;
+        if (mdim <= 0)
+            return;
+
+        maxValue = minValue = mdata[0];
+        for (size_t n = 0; n < mdim; n++)
+        {
+        	T val=mdata[n];
+            if (val < minValue)
+                minValue = val;
+            else if (val > maxValue)
+            	maxValue = val;
+        }
+    }
+
     /** Produce a 2D array suitable for working with Numerical Recipes
     *
     * This function must be used only as a preparation for routines which need
