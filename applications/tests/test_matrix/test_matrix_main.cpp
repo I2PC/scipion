@@ -307,6 +307,20 @@ TEST_F( MatrixTest, matrixOperation_XtAX_symmetric)
     EXPECT_EQ(expectedB,B) << "matrixOperation_XtAX_symmetric failed";
 }
 
+TEST_F( MatrixTest, matrixOperation_AtA)
+{
+    Matrix2D<double> A(3,2),B;
+    A(0,0)=1;   A(0,1)=0.5;
+    A(1,0)=0.5; A(1,1)=1;
+    A(2,0)=0.3; A(2,1)=0.5;
+
+    matrixOperation_AtA(A,B);
+    Matrix2D<double> expectedB(2,2);
+    expectedB(0,0)=1.34; expectedB(0,1)=1.15;
+    expectedB(1,0)=1.15; expectedB(1,1)=1.5;
+    EXPECT_EQ(expectedB,B) << "matrixOperation_AtA failed";
+}
+
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
