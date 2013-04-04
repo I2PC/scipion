@@ -24,32 +24,7 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains Eman3.0 specific protocols
+This sub-package will contains Xmipp3.0 specific protocols
 """
 
-
-from protocol import *    
-
-
-class EmanProtImportMicrographs(ProtImportMicrographs):
-    pass
-
-
-class EmanProtParticlePicking(ProtParticlePicking):
-    pass
-
-
-class EmanProtDownsampleMicrographs(ProtDownsampleMicrographs):
-    pass
-
-
-class EmanProtAlign(ProtAlign):
-    pass
-
-
-class EmanProtClassify(ProtClassify):
-    pass
-
-
-class EmanProtAlignClassify(ProtAlignClassify):
-    pass
+from eman2 import *
