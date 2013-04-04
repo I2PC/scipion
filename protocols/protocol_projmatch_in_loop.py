@@ -74,7 +74,7 @@ def angular_project_library(_log
               ' --compute_neighbors' + \
               ' --method ' + ProjectionMethod 
     if ProjectionMethod == 'fourier':
-        memoryUsed=memoryUsed*4
+        memoryUsed=memoryUsed*6
         if FourierMaxFrequencyOfInterest == -1:
                 md = MetaData(ResolutionXmdPrevIterMax)
                 id = md.firstObject()

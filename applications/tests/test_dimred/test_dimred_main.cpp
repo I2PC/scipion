@@ -1,7 +1,7 @@
 #include <dimred/dimred_tools.h>
-#include <dimred/kernelPCA.h>
 #include <dimred/ltsa.h>
 #include <dimred/diffusionMaps.h>
+#include <dimred/lpp.h>
 #include <iostream>
 #include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"
 // MORE INFO HERE: http://code.google.com/p/googletest/wiki/AdvancedGuide
@@ -79,25 +79,7 @@ TEST_F( DimRedTest, intrinsic_dimensionality)
 	EXPECT_LT(fabs(dimCorrDim-expectedDim),1e-6);
 }
 
-TEST_F( DimRedTest, kernelPCA)
-{
-	GenerateData generator;
-	generator.generateNewDataset("swiss",1000,0);
-	generator.X.write("dimred/swiss.txt");
-	// MATLAB: load swiss.txt;
-
-	KernelPCA kernelPCA;
-	kernelPCA.setInputData(generator.X);
-	kernelPCA.setOutputDimensionality(2);
-	kernelPCA.setSpecificParameters(0.1);
-	kernelPCA.reduceDimensionality();
-	const Matrix2D<double> &Y=kernelPCA.getReducedData();
-
-	// Compare C output with Matlab output
-	// ***
-	Y.write("dimred/kernelPCA.txt");
-}
-
+#ifdef NEVERDEFINED
 TEST_F( DimRedTest, ltsa)
 {
 	GenerateData generator;
@@ -138,6 +120,30 @@ TEST_F( DimRedTest, diffusionMaps)
 	expectedY.resizeNoCopy(Y);
 	expectedY.read("dimred/diffusionMaps.txt");
 	ASSERT_TRUE(expectedY.equal(Y,1e-5));
+}
+#endif
+
+TEST_F( DimRedTest, lpp)
+{
+	GenerateData generator;
+	generator.generateNewDataset("helix",1000,0);
+	// generator.X.write("dimred/helix.txt");
+	// MATLAB: load swiss.txt;
+
+	LPP dimred;
+	dimred.setInputData(generator.X);
+	dimred.setOutputDimensionality(2);
+	dimred.setSpecificParameters();
+	dimred.reduceDimensionality();
+	//const Matrix2D<double> &Y=dimred.getReducedData();
+
+	//Y.write("dimred/lpp.txt");
+	/*
+	Matrix2D<double> expectedY;
+	expectedY.resizeNoCopy(Y);
+	expectedY.read("dimred/LPP.txt");
+	ASSERT_TRUE(expectedY.equal(Y,1e-5));
+	*/
 }
 
 GTEST_API_ int main(int argc, char **argv)
