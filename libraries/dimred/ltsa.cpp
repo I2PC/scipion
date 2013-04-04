@@ -70,7 +70,7 @@ void LTSA::reduceDimensionality()
         extractNearestNeighbours(*X, ni, iLoop, Xi);
         subtractColumnMeans(Xi);
 
-        matrixOperation_AtA(Xi, W); // W=X^t*X
+        matrixOperation_AAt(Xi, W); // W=X*X^t
         schur(W, Vi, Si);           // W=Vi*Si*Vi^t
 
         if (MAT_XSIZE(Si) < outputDim)
@@ -85,7 +85,7 @@ void LTSA::reduceDimensionality()
         Vi2.setConstantCol(0, 1/sqrt(k)); //Vi2(0,:)=1/sqrt(k)
         getLessWeightNColumns(Vi, weightVector, Vi2);
 
-        matrixOperation_AtA(Vi2, Gi); // Gi=Vi2^t*Vi2
+        matrixOperation_AAt(Vi2, Gi); // Gi=Vi2*Vi2^t
         matrixOperation_IminusA(Gi);  // Gi=I-Gi
 
         // Compute partial B with correlation matrix Gi
