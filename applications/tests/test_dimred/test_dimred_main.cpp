@@ -1,6 +1,7 @@
 #include <dimred/dimred_tools.h>
 #include <dimred/kernelPCA.h>
 #include <dimred/ltsa.h>
+#include <dimred/diffusionMaps.h>
 #include <iostream>
 #include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"
 // MORE INFO HERE: http://code.google.com/p/googletest/wiki/AdvancedGuide
@@ -115,6 +116,27 @@ TEST_F( DimRedTest, ltsa)
 	Matrix2D<double> expectedY;
 	expectedY.resizeNoCopy(Y);
 	expectedY.read("dimred/ltsa.txt");
+	ASSERT_TRUE(expectedY.equal(Y,1e-5));
+}
+
+TEST_F( DimRedTest, diffusionMaps)
+{
+	GenerateData generator;
+	generator.generateNewDataset("helix",1000,0);
+	// generator.X.write("dimred/helix.txt");
+	// MATLAB: load swiss.txt;
+
+	DiffusionMaps dimred;
+	dimred.setInputData(generator.X);
+	dimred.setOutputDimensionality(2);
+	dimred.setSpecificParameters();
+	dimred.reduceDimensionality();
+	const Matrix2D<double> &Y=dimred.getReducedData();
+
+	//Y.write("dimred/diffusionMaps.txt");
+	Matrix2D<double> expectedY;
+	expectedY.resizeNoCopy(Y);
+	expectedY.read("dimred/diffusionMaps.txt");
 	ASSERT_TRUE(expectedY.equal(Y,1e-5));
 }
 
