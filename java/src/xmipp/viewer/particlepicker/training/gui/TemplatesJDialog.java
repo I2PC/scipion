@@ -35,6 +35,8 @@ public class TemplatesJDialog extends JDialog {
 	public TemplatesJDialog(TrainingPickerJFrame frame) {
 		super(frame);
 		this.frame = frame;
+		if(!frame.getParticlePicker().hasManualParticles())
+			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("Particles"));
 		initComponents();
 
 		addWindowListener(new WindowAdapter() {

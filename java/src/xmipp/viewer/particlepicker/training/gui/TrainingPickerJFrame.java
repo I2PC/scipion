@@ -245,13 +245,22 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	public void loadTemplates()
 	{
-		if (templatesdialog == null)
-			templatesdialog = new TemplatesJDialog(TrainingPickerJFrame.this);
-		else
+		try
 		{
+			if (templatesdialog == null)
+			{
+				templatesdialog = new TemplatesJDialog(TrainingPickerJFrame.this);
+			}
+			else
+			{
 
-			templatesdialog.loadTemplates(true);
-			templatesdialog.setVisible(true);
+				templatesdialog.loadTemplates(true);
+				templatesdialog.setVisible(true);
+			}
+		}
+		catch (Exception e)
+		{
+			XmippDialog.showError(this, e.getMessage());
 		}
 	}
 

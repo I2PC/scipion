@@ -1943,6 +1943,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			if (path.contains("@"))
 				gallery.data.selectBlock(path.substring(0, path.lastIndexOf("@")));
 			reloadFile(file, false);
+			setTitle(gallery.getTitle());
 		}
 		catch (Exception e)
 		{
