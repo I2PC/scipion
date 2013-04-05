@@ -108,8 +108,9 @@ class XmippProjectionExplorer(XmippChimeraClient):
         
         self.projection = Image()
         self.projection.setDataType(DT_DOUBLE)
-        
-        self.fourierprojector = FourierProjector(self.image, 1, 0.5, 0)
+        #0.5 ->  Niquiest frequency
+        #2 -> bspline interpolation
+        self.fourierprojector = FourierProjector(self.image, 1, 0.5, 2)
         self.fourierprojector.projectVolume(self.projection, 0, 0, 0)
 
         printCmd('initListenThread')
@@ -144,6 +145,7 @@ class XmippProjectionExplorer(XmippChimeraClient):
             self.motion = array(data)
             printCmd('getting euler angles')
             rot1, tilt1, psi1 = Euler_matrix2angles(self.motion)
+            print '%f, %f, %f'%(rot1, tilt1, psi1)
             printCmd('calling rotate')  
             self.rotate(rot1, tilt1, psi1)
             
