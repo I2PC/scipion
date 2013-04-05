@@ -16,12 +16,9 @@ from tests.tester import *
 #                              pattern="InputData/*.mrc", sampling=1, voltage=200)
 #proj.launchProtocol(prot2)
 
-#l = proj.mapper.select(classname='SetOfMicrographs')
-l = proj.mapper.getAll()
+l = proj.mapper.select(classname='SetOfMicrographs')
+#l = proj.mapper.getAll()
 
 for p in l:
     p.printAll()
-    continue
-    s = p.micrograph
-#for s in l:
-    s.printAll()
+
