@@ -9,7 +9,7 @@
 #
 
 from os.path import join, exists
-from xmipp import MetaData, ImgSize, MDL_IMAGE, MDL_IMAGE_REF, MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_ANGLE_PSI, MDL_REF, MDL_SHIFT_X, MDL_SHIFT_Y, \
+from xmipp import MetaData, MetaDataInfo, MDL_IMAGE, MDL_IMAGE_REF, MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_ANGLE_PSI, MDL_REF, MDL_SHIFT_X, MDL_SHIFT_Y, \
         MDL_FLIP, MD_APPEND, MDL_MAXCC, MDL_ENABLED, Euler_angles2matrix
 
 from protlib_base import *
@@ -24,7 +24,7 @@ class ProtScreenClasses(XmippProtocol):
             self.fnImages='classes@'+self.Classes
         else:
             self.fnImages=self.Classes
-        (self.Xdim, Ydim, Zdim, Ndim) = ImgSize(self.fnImages)
+        self.Xdim= MetaDataInfo(self.fnImages)[0]
         
     def defineSteps(self):
         fnOutputClass=self.workingDirPath('classes.xmd')

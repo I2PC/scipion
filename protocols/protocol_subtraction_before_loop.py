@@ -55,7 +55,7 @@ def scaleImages(_log
         md.setValue(MDL_IMAGE_ORIGINAL, imageOriginal, id)
     
     # Calculate scale factor
-    (x,y,z,n) =ImgSize(filename_currentAngles)
+    (x,y,z,n,_) =MetaDataInfo(filename_currentAngles)
     factorX = float(x) / dimX
     factorY = float(y) / dimY
 

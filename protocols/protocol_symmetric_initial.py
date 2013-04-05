@@ -9,7 +9,7 @@
 #
 
 from os.path import join, exists
-from xmipp import MetaData, ImgSize, MDL_IMAGE, MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_ANGLE_PSI, MDL_COST
+from xmipp import MetaData, MetaDataInfo, MDL_IMAGE, MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_ANGLE_PSI, MDL_COST
 
 from protlib_base import *
 from protlib_utils import getListFromRangeString, runJob, runShowJ
@@ -19,7 +19,7 @@ class ProtSymmetric(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.symmetric_initial.name, scriptname, project)
         self.Import = 'from protocol_symmetric_initial import *'
-        (self.Xdim, Ydim, Zdim, Ndim) = ImgSize(self.SideViews)
+        (self.Xdim,_,_,_,_) = MetaDataInfo(self.SideViews)
         
     def defineSteps(self):
         self.insertStep('createDir',path=self.ExtraDir)
