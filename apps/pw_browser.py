@@ -36,6 +36,7 @@ from gui.widgets import Tree
 from protocol import *
 from protocol.params import *
 from pyworkflow.tests.tester import *
+from pyworkflow.em import *
 
             
 def populateWithObject(tree, prefix, obj):

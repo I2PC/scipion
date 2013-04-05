@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -38,7 +40,9 @@ import tkFont
 
 import pyworkflow as pw
 from pyworkflow.object import *
+from pyworkflow.em import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
+from pyworkflow.project import Project
 import gui
 from gui.widgets import Tree
 from protocol import *
@@ -51,7 +55,7 @@ def loadSubclasses():
     all sub-classes of className located in
     the pyworkflow/protocol/packages/* path and made them
     available in the menu"""
-    path = join(pw.HOME, 'protocol', 'packages')
+    path = join(pw.HOME, 'em', 'packages')
     sys.path.append(path)
     folders = os.listdir(path)
     #print "path: ", path
@@ -129,7 +133,7 @@ def loadConfig(config, name):
     menuConfig = mapper.getConfig()
     return menuConfig
 
-def createHistoryTree(parent):
+def createHistoryTree(parent, path):
     columns = ('State', 'Modified')
     tree = Tree(parent, columns=columns)
     for c in columns:
@@ -140,22 +144,25 @@ def createHistoryTree(parent):
     #tree.bind('<<TreeviewSelect>>', self.selectTreeRun)
     #tree.bind('<Double-1>', lambda e:self.runButtonClick('ACTION_DEFAULT'))
     #tree.bind("<Button-3>", self.onRightClick)
-    mapper = SqliteMapper('kk.sqlite', globals())
-    objList = mapper.getAll()
+    proj = Project(path)
+    proj.load()
+    #mapper = SqliteMapper('kk.sqlite', globals())
+    objList = proj.mapper.getAll()
     
     c = 0
+    from pyworkflow.utils import prettyDate
     for obj in objList:
-        tree.insert('',  'end', str(c), text=obj.getClassName())
+        t = '%s.%02d' % (obj.getClassName(), obj.getId())
+        tree.insert('',  'end', str(c), text=t, values=(obj.status.get(), prettyDate(obj.endTime.get())))
         c += 1
     return tree
 
-
-if __name__ == '__main__':
+def createProjectGUI(path):
     # Load global configuration
     mapper = ConfigXmlMapper(getConfigPath('configuration.xml'), globals())
     config = mapper.getConfig()
 
-    window = gui.Window("Project window", icon='scipion_bn.xbm')
+    window = gui.Window("Project window", icon='scipion_bn.xbm', minsize=(900,500))
     
     parent = window.root
     menuConfig = loadConfig(config, 'menu')
@@ -180,7 +187,7 @@ if __name__ == '__main__':
     f2 = ttk.Labelframe(p, text=' History ', width=500, height=500)
     #lf.grid(row=1, column=0, sticky='news')
     
-    tree = createHistoryTree(f2)
+    tree = createHistoryTree(f2, path)
     tree.grid(row=0, column=0, sticky='news')
     gui.configureWeigths(f2)
     
@@ -199,8 +206,14 @@ if __name__ == '__main__':
     tree.column('#0', minwidth=300)
     objList = loadConfig(config, 'protocols')
     populateTree(tree, '', objList)
-    tree.grid(row=0, column=0, sticky='news')
-    
+    tree.grid(row=0, column=0, sticky='news')   
     
     
     window.show()            
+    
+if __name__ == '__main__':
+    import sys
+    path = '.'
+    if len(sys.argv) > 1:
+        path = sys.argv[1]
+    createProjectGUI(path)

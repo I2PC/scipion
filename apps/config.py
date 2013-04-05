@@ -31,11 +31,12 @@ mainly for project GUI
 import os
 from os.path import join, exists
 
+import pyworkflow as pw
 from pyworkflow.object import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
 
 PATH = os.path.dirname(__file__)
-SETTINGS = join(PATH, 'settings')
+SETTINGS = join(pw.HOME, 'settings')
 
 def getConfigPath(filename):
     """Return a configuration filename from settings folder"""
@@ -82,6 +83,8 @@ class ProtocolConfig(MenuConfig):
 class ConfigXmlMapper(XmlMapper):
     """Sub-class of XmlMapper to store configurations"""
     def __init__(self, filename, dictClasses=None, **args):
+        if not exists(filename):
+            raise Exception('Config file: %s does not exists' % filename)
         XmlMapper.__init__(self, filename, dictClasses, **args)
         self.setClassTag('MenuConfig.MenuConfig', 'class_only')
         self.setClassTag('MenuConfig.String', 'attribute')

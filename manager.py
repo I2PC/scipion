@@ -24,8 +24,41 @@
 # *
 # **************************************************************************
 """
-This modules contains classes related with EM
+This modules handles the System management
 """
+import os
+from os.path import abspath, join
 
-from data import *
-from protocol import *
+from project import Project
+from pyworkflow.mapper import SqliteMapper
+from pyworkflow.utils.path import cleanPath, makePath, getHomePath
+
+
+PROJECTS_PATH = 'Scipion_Projects'
+
+
+class Manager(object):
+    """This class will handle the creation, modification
+    and listing of projects."""
+    def __init__(self):
+        """For create a Project, the path is required"""
+        self.path = join(getHomePath(), PROJECTS_PATH)
+        makePath(self.path)
+        
+    def getProjectPath(self, projectName):
+        """Return the project path given the name"""
+        return join(self.path, projectName)
+        
+    def listProjects(self):
+        """Return a list with all existing projects"""
+        return [f for f in os.listdir(self.path) if os.path.isdir(self.getProjectPath(f))]
+    
+    def createProject(self, projectName):
+        """Create a new project """
+        proj = Project(self.getProjectPath(projectName))
+        proj.create()
+        
+    def deleteProject(self, projectName):
+        pass
+        
+        

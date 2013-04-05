@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -38,12 +40,13 @@ import tkFont
 import pyworkflow as pw
 from pyworkflow.object import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
-import gui
-from gui.widgets import Tree
-from gui.text import TaggedText
 from protocol import *
 from protocol.params import *
 from config import *
+from pyworkflow.em import *
+import gui
+from gui.widgets import Tree
+from gui.text import TaggedText
 
 
 def loadSubclasses():
@@ -51,7 +54,7 @@ def loadSubclasses():
     all sub-classes of className located in
     the pyworkflow/protocol/packages/* path and made them
     available in the menu"""
-    path = join(pw.HOME, 'protocol', 'packages')
+    path = join(pw.HOME, 'em', 'packages')
     sys.path.append(path)
     folders = os.listdir(path)
     #print "path: ", path
@@ -130,7 +133,7 @@ def loadConfig(config, name):
     return menuConfig
 
 def createProjectLabel(parent, text, date):
-    frame = tk.Frame(parent, bg='red')
+    frame = tk.Frame(parent)
     label = tk.Label(frame, text=text, anchor='nw', 
                      justify=tk.LEFT, font=projNameFont, cursor='hand1')
     label.grid(row=0, column=0, padx=2, pady=2, sticky='nw')
@@ -142,15 +145,16 @@ def createProjectLabel(parent, text, date):
     
 def createProjectList(text):
     """Load the list of projects"""
-    f = open('kk.txt')
+    from pyworkflow.manager import Manager
+    manager = Manager()
     r = 0
     
     parent = tk.Frame(text)    
     parent.columnconfigure(0, weight=1)
     
-    for line in f:
-        parts = line.split()
-        frame = createProjectLabel(parent, parts[3], ' '.join(parts[:3]))
+    for p in manager.listProjects():
+        print "proj: ", p
+        frame = createProjectLabel(parent, p, ' ')
         frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
         r += 1
     
@@ -166,7 +170,7 @@ if __name__ == '__main__':
     config = mapper.getConfig()
 
     window = gui.Window("Project window", minsize=(600, 350), icon='scipion_bn.xbm')
-    projNameFont = tkFont.Font(size=16, family='verdana', weight='bold')
+    projNameFont = tkFont.Font(size=14, family='verdana', weight='bold')
     projDateFont = tkFont.Font(size=10, family='verdana')
     
     parent = window.root

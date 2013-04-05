@@ -184,6 +184,11 @@ class Protocol(Step):
         return join(self.workingDir, *paths)
         
     def insertFunctionStep(self, funcName, *funcArgs, **args):
+        """Input params:
+        funcName: the string name of the function to be run in the Step.
+        *funcArgs: the variable list of arguments to pass to the function.
+        **args: variable dictionary with extra params, NOT USED NOW
+        """
         step = FunctionStep(funcName, *funcArgs)
         step.func = getattr(self, funcName)
         self.insertStep(step)
@@ -206,52 +211,9 @@ class Protocol(Step):
         self.store()
         self.namePrefix = replaceExt(self.steps.getName(), self.steps.strId()) #keep 
         Step.run(self)
-        self.store(self.status, self.initTime, self.endTime)
+        outputs = [getattr(self, o) for o in self._outputs]
+        #self.store(self.status, self.initTime, self.endTime, *outputs)
+        self.store()
         print 'PROTOCOL FINISHED'
 
 
-class ProtImportMicrographs(Protocol):
-    def __init__(self, **args):
-        Protocol.__init__(self, **args)
-        self.pattern = String(args.get('pattern', None))        
-        
-    def defineSteps(self):
-        for _ in range(self.n):
-            self.insertFunctionStep(self.copyMicrographs, self.pattern)
-        
-    def copyMicrographs(self, pattern):
-        """Copy micrographs matching the filename pattern"""
-        from glob import glob
-        files = glob(self.pattern.get())
-        path = self.getPath('micrographs.txt')
-        f = open(path, 'w+')
-        for f in files:
-            dst = self.getPath(basename(f))
-            print >> f, dst
-        f.close()
-        
-        return path
-        
-
-class ProtScreenMicrographs(Protocol):
-    pass
-
-
-class ProtDownsampleMicrographs(Protocol):
-    pass
-
-
-class ProtParticlePicking(Protocol):
-    pass
-
-
-class ProtAlign(Protocol):
-    pass
-
-
-class ProtClassify(Protocol):
-    pass
-
-
-class ProtAlignClassify(Protocol):
-    pass

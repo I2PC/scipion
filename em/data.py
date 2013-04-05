@@ -93,11 +93,18 @@ class SetOfImages(EMObject):
     def getSamplingRate(self, index=0):
         pass
     
+    def getFileName(self):
+        return self._objValue
+    
+    def setFileName(self, newFileName):
+        self._objValue = newFileName
+    
     
 class SetOfMicrographs(SetOfImages):
     """Represents a set of Images"""
     def __init__(self, **args):
         SetOfImages.__init__(self, **args)
+        self.sampling = Float(3.0)
         
     def getMicroscope(self, index=0):
         pass

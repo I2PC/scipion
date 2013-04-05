@@ -30,7 +30,7 @@ inside the utils module
 
 import os
 import shutil
-from os.path import exists, join, splitext, isdir
+from os.path import exists, join, splitext, isdir, expanduser
 import pyworkflow as pw
 
 
@@ -80,3 +80,7 @@ def existsPath(*paths):
     if the list is empty means that all path exists
     """
     return [p for p in paths if not exists(p)]
+
+def getHomePath(user=''):
+    """Return the home path of a give user."""
+    return expanduser("~" + user)

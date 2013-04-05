@@ -63,11 +63,19 @@ class SqliteMapper(Mapper):
     def updateTo(self, obj, level=1):
         self.db.updateObject(obj._objId, obj._objName, obj.getClassName(), obj._objValue, obj._objParentId)
         for key, attr in obj.getAttributesToStore():
+            print "updating key: ", key
             if attr._objId is None: # Insert new items from the previous state
                 attr._objParentId = obj._objId
                 #path = obj._objName[:obj._objName.rfind('.')] # remove from last .
-                namePrefix = replaceExt(obj._objName, obj.strId())
+                print "obj._objName", obj._objName
+                print "obj.strId()", obj.strId()
+                if len(obj._objName) > 0:
+                    namePrefix = replaceExt(obj._objName, obj.strId())
+                else:
+                    namePrefix = obj.strId()
+                print "namePrefix: ", namePrefix
                 attr._objName = joinExt(namePrefix, key)
+                print "attr._objName: ", attr._objName
                 self._insert(attr, namePrefix)
             else:                
                 self.updateTo(attr, level+2)

@@ -28,7 +28,7 @@ This sub-package will contains Xmipp3.0 specific protocols
 """
 
 
-from protocol import *    
+from pyworkflow.em import *    
 
 
 class XmippProtImportMicrographs(ProtImportMicrographs):

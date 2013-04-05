@@ -27,10 +27,12 @@
 This modules handles the Project management
 """
 import os
-from os.path import abspath, join
+from os.path import abspath
 
 from pyworkflow.mapper import SqliteMapper
-from pyworkflow.utils.path import cleanPath, makePath
+from pyworkflow.utils.path import cleanPath, makePath, join, exists
+from pyworkflow.protocol import *
+from pyworkflow.em import *
 
 
 PROJECT_DBNAME = 'project.sqlite'
@@ -38,7 +40,7 @@ PROJECT_LOGS = 'Logs'
 PROJECT_RUNS = 'Runs'
 
 
-class Project():
+class Project(object):
     """This class will handle all information 
     related with a Project"""
     def __init__(self, path):
@@ -62,7 +64,9 @@ class Project():
     def load(self):
         """Load project data and settings
         from the project dir."""
-        self.mapper = SqliteMapper(self.dbPath)
+        if not exists(self.dbPath):
+            raise Exception("Project doesn't exists in '%s'" % self.path)
+        self.mapper = SqliteMapper(self.dbPath, globals())
         
     def create(self):
         """Create a new project.

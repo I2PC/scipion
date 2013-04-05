@@ -28,7 +28,7 @@ This sub-package will contains Eman3.0 specific protocols
 """
 
 
-from protocol import *    
+from em import *    
 
 
 class EmanProtImportMicrographs(ProtImportMicrographs):
