@@ -51,10 +51,14 @@ def populateWithObject(tree, prefix, obj):
             t = "%s [%s]" % (cls, t.replace('__item__', ''))
     if obj._objValue:
         t += " = %s" % str(obj._objValue)
-    item = tree.insert(prefix, 'end', obj.getName(), text=t, values=(cls,))
+    
+    sid = obj.getName()
+    if len(sid) == 0:
+        sid = obj.strId()
+    item = tree.insert(prefix, 'end', sid, text=t, values=(cls,))
     haschilds = False
     for k, v in obj.getAttributesToStore():
-        populateWithObject(tree, obj.getName(), v)
+        populateWithObject(tree, sid, v)
         haschilds = True
     if not haschilds:
         img = gui.getImage('step.gif')

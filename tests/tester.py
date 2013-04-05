@@ -104,9 +104,10 @@ class TestPyworkflow(unittest.TestCase):
         self.assertEqual(c.imag.get(), self.cGold.imag)
         self.assertEqual(c.real.get(), self.cGold.real)
         
-    def test_SqliteMapper(self):
+    def test_zzzzzzzzzSqliteMapper(self):
         fn = self.getTmpPath(self.sqliteFile)
         c = self.createComplex()
+        c.printAll()
         mapper = SqliteMapper(fn)
         mapper.insert(c)
         cid = c.getId()
@@ -123,6 +124,7 @@ class TestPyworkflow(unittest.TestCase):
         self.assertEqual(l.get(), 1)
         
         c2 = mapper2.select(classname='Complex')[0]
+        c2.printAll()
         self.assertTrue(c.equalAttributes(c2))
 
         
@@ -187,9 +189,9 @@ class TestPyworkflow(unittest.TestCase):
 
     def test_zzProtocol(self):
         """Test the list with several Complex"""
-        fn = self.getTmpPath(self.sqliteFile)        
+        fn = self.getTmpPath(self.sqliteFile)   
         mapper = SqliteMapper(fn, globals())
-        prot = MyProtocol(mapper=mapper)
+        prot = MyProtocol(mapper=mapper, n=2)
         prot.run()
         
         self.assertEqual(prot.steps[0].status, STATUS_FINISHED)
@@ -202,3 +204,4 @@ class TestPyworkflow(unittest.TestCase):
         
 if __name__ == '__main__':
     unittest.main()
+    

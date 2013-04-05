@@ -60,16 +60,18 @@ class SqliteMapper(Mapper):
             self.insertChild(obj, key, attr, namePrefix)
         #self.db.commit()        
     
+    def getNamePrefix(self, obj):
+        if len(obj._objName) > 0 and '.' in obj._objName:
+            return replaceExt(obj._objName, obj.strId())
+        return obj.strId()
+    
     def updateTo(self, obj, level=1):
         self.db.updateObject(obj._objId, obj._objName, obj.getClassName(), obj._objValue, obj._objParentId)
         for key, attr in obj.getAttributesToStore():
             if attr._objId is None: # Insert new items from the previous state
                 attr._objParentId = obj._objId
                 #path = obj._objName[:obj._objName.rfind('.')] # remove from last .
-                if len(obj._objName) > 0:
-                    namePrefix = replaceExt(obj._objName, obj.strId())
-                else:
-                    namePrefix = obj.strId()
+                namePrefix = self.getNamePrefix(obj)
                 attr._objName = joinExt(namePrefix, key)
                 self._insert(attr, namePrefix)
             else:                
@@ -91,7 +93,7 @@ class SqliteMapper(Mapper):
         obj._objId = objRow['id']
         name = objRow['name']
         if name is None or len(name) <= 0:
-            obj._objName = obj.strId()
+            obj._objName = ''#obj.strId()
         else:
             obj._objName = name
         obj.set(objRow['value'])
@@ -99,8 +101,9 @@ class SqliteMapper(Mapper):
         
     def fillObject(self, obj, objRow):
         self.fillObjectWithRow(obj, objRow)
-        
-        childs = self.db.selectObjectsByAncestor(obj._objName)
+        namePrefix = self.getNamePrefix(obj)
+        print "namePrefix: ", namePrefix
+        childs = self.db.selectObjectsByAncestor(namePrefix)
         childsDict = {obj._objId: obj}
         
         for childRow in childs:
@@ -109,15 +112,14 @@ class SqliteMapper(Mapper):
             parentId = int(childParts[-2])
             # Here we are assuming that always the parent have
             # been processed first, so it will be in the dictiorary
-            # Now it is working with the SQLITE resutls
             parentObj = childsDict[parentId]
+            
             childObj = getattr(parentObj, childName, None)
             if childObj is None:
                 childObj = self.buildObject(childRow['classname'])
                 setattr(parentObj, childName, childObj)
             self.fillObjectWithRow(childObj, childRow)  
             childsDict[childObj._objId] = childObj  
-   
               
     def _objectsFromRows(self, objRows):
         """Create a set of object from a set of rows"""

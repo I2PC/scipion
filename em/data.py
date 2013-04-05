@@ -114,5 +114,12 @@ class SetOfMicrographs(SetOfImages):
         self.microscope = Microscope()
         
     def getMicroscope(self, index=0):
-        pass
+        return self.microscope
+    
+    def __iter__(self):
+        f = open(self.getFileName())
+        for l in f:
+            yield l.strip()
+        f.close()
+        
     

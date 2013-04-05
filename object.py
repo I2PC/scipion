@@ -114,6 +114,17 @@ class Object(object):
                 return False
         return True
     
+    def printAll(self, name=None, level=0):
+        """Print object and all its attributes.
+        Main for debugging"""
+        tab = ' ' * (level*3)
+        if name is None:
+            print tab, self.getClassName()
+        else:
+            print tab, '%s = %s' % (name, self._objValue)
+        for k, v in self.getAttributesToStore():
+            v.printAll(k, level + 1)
+    
 
 class OrderedObject(Object):
     """This is based on Object, but keep the list
