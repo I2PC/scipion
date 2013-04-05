@@ -39,12 +39,18 @@ class Microscope(EMObject):
     """Microscope information"""
     def __init__(self, **args):
         EMObject.__init__(self, **args)
+        self.magnification = Float(60000)
+        self.voltage = Float(300)
+        self.aberration = Float(1.2)
         
     def getMagnification(self):
-        pass
+        return self.magnification.get()
     
     def getVoltage(self):
-        pass
+        return self.voltage.get()
+    
+    def getSphericalAberration(self):
+        return self.aberration.get()
 
 
 class Image(EMObject):
@@ -104,7 +110,8 @@ class SetOfMicrographs(SetOfImages):
     """Represents a set of Images"""
     def __init__(self, **args):
         SetOfImages.__init__(self, **args)
-        self.sampling = Float(3.0)
+        self.sampling = Float(1.237)
+        self.microscope = Microscope()
         
     def getMicroscope(self, index=0):
         pass

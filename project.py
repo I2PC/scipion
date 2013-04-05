@@ -74,7 +74,7 @@ class Project(object):
         # Create project path if not exists
         makePath(self.path)
         # Create db throught the mapper
-        self.mapper = SqliteMapper(self.dbPath)
+        self.mapper = SqliteMapper(self.dbPath, globals())
         self.mapper.commit()
         # Create other paths inside project
         makePath(*self.pathList)

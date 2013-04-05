@@ -164,14 +164,21 @@ def createProjectList(text):
 projNameFont = None
 projLabelFont = None
 
+class ManagerWindow(gui.Window):
+    """Windows to manage projects"""
+    def __init__(self, **args):
+        gui.Window.__init__(self, "Projets", minsize=(600, 350), icon='scipion_bn.xbm', **args)
+        # Load global configuration
+        self.mapper = ConfigXmlMapper(getConfigPath('configuration.xml'), globals())
+        self.config = self.mapper.getConfig()
+        self.projNameFont = tkFont.Font(size=14, family='verdana', weight='bold')
+        self.projDateFont = tkFont.Font(size=10, family='verdana')
+    
+
+
 if __name__ == '__main__':
-    # Load global configuration
-    mapper = ConfigXmlMapper(getConfigPath('configuration.xml'), globals())
-    config = mapper.getConfig()
 
     window = gui.Window("Project window", minsize=(600, 350), icon='scipion_bn.xbm')
-    projNameFont = tkFont.Font(size=14, family='verdana', weight='bold')
-    projDateFont = tkFont.Font(size=10, family='verdana')
     
     parent = window.root
     menuConfig = loadConfig(config, 'menu')

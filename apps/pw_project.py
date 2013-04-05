@@ -153,7 +153,7 @@ def createHistoryTree(parent, path):
     from pyworkflow.utils import prettyDate
     for obj in objList:
         t = '%s.%02d' % (obj.getClassName(), obj.getId())
-        tree.insert('',  'end', str(c), text=t, values=(obj.status.get(), prettyDate(obj.endTime.get())))
+        tree.insert('',  'end', str(c), text=t, values=(obj.status.get(), obj.endTime.get()))
         c += 1
     return tree
 

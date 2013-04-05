@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)

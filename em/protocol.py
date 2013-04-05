@@ -28,7 +28,7 @@ Protocols related to EM
 """
 import os
 import shutil
-from pyworkflow.object import String
+from pyworkflow.object import String, Float
 from pyworkflow.protocol import Protocol
 from pyworkflow.em import SetOfMicrographs
 
@@ -36,13 +36,18 @@ class ProtImportMicrographs(Protocol):
     def __init__(self, **args):
         Protocol.__init__(self, **args)
         self.pattern = String(args.get('pattern', None))
-              
+        self.voltage = Float(args.get('voltage', 300))
+        self.aberration = Float(args.get('aberration', 1.2))
+        self.sampling = Float(args.get('sampling', 1.2))              
         
     def defineSteps(self):
-        self.insertFunctionStep('copyMicrographs', self.pattern.get())
+        self.insertFunctionStep('importMicrographs', self.pattern.get(),
+                                self.voltage.get(), self.aberration.get(), 
+                                self.sampling.get())
         
-    def copyMicrographs(self, pattern):
-        """Copy micrographs matching the filename pattern"""
+    def importMicrographs(self, pattern, voltage, aberration, sampling):
+        """Copy micrographs matching the filename pattern
+        Register other parameters"""
         from glob import glob
         files = glob(pattern)
         path = self.getPath('micrographs.txt')
@@ -52,9 +57,11 @@ class ProtImportMicrographs(Protocol):
             print >> micFile, dst
             shutil.copyfile(f, dst)
         micFile.close()
-        
-        self.defineOutputs(micrograph=SetOfMicrographs(value=path),
-                           micrographFiltered=SetOfMicrographs(value='KKK'))
+        micSet = SetOfMicrographs(value=path)
+        micSet.microscope.voltage.set(voltage)
+        micSet.microscope.aberration.set(aberration)
+        micSet.sampling.set(sampling)
+        self.defineOutputs(micrograph=micSet)
         
         return path
         
