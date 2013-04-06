@@ -28,8 +28,13 @@ from utils.path import findResource
 This module contains all configuration
 settings and gui general functions 
 """
-import os
+import os, sys
 import Tkinter as tk
+import tkFont
+
+from pyworkflow.object import OrderedObject
+
+thismodule = sys.modules[__name__]
 
 """
 Some GUI CONFIGURATION parameters
@@ -45,8 +50,10 @@ cfgSectionTextColor = "blue4"
 cfgBgColor = "light grey"
 cfgLabelBgColor = "white"
 cfgHighlightBgColor = cfgBgColor
-cfgButtonBgColor = "LightBlue"
-cfgButtonActiveBgColor = "LightSkyBlue"
+cfgButtonFgColor = "white"
+cfgButtonActiveFgColor = "white"
+cfgButtonBgColor = "#7D0709"
+cfgButtonActiveBgColor = "#A60C0C"
 cfgEntryBgColor = "lemon chiffon" 
 cfgExpertLabelBgColor = "light salmon"
 cfgSectionBgColor = cfgButtonBgColor
@@ -61,7 +68,6 @@ cfgMaxFontSize = 14
 cfgMinFontSize = 6
 cfgWrapLenght = cfgMaxWidth - 50
 
-from pyworkflow.object import OrderedObject
 
 class Config(OrderedObject):
     pass
@@ -90,11 +96,10 @@ def setFont(fontKey, **opts):
     """Register a tkFont and store it in a globals of this module
     this method should be called only after a tk.Tk() windows has been
     created."""
-    import tkFont
-    globals()[fontKey] = tkFont.Font(**opts)
+    setattr(thismodule, fontKey, tkFont.Font(**opts))
     
 def hasFont(fontKey):
-    return fontKey in globals()
+    return hasattr(thismodule, fontKey)
     
 def setCommonFonts():
     """Set some predifined common fonts.
@@ -102,7 +107,7 @@ def setCommonFonts():
     if not hasFont('fontNormal'):
         setFont('fontNormal', family=cfgFontName, size=cfgFontSize)
     if not hasFont('fontButton'):
-        setFont('fontButton', family=cfgFontName, size=cfgFontSize, weight='bold')
+        setFont('fontButton', family=cfgFontName, size=cfgFontSize)#, weight='bold')
     if not hasFont('fontLabel'):
         setFont('fontLabel', family=cfgFontName, size=cfgFontSize+1, weight='bold')
 

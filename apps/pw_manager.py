@@ -39,14 +39,16 @@ import tkFont
 
 import pyworkflow as pw
 from pyworkflow.object import *
+from pyworkflow.manager import Manager
 from pyworkflow.mapper import SqliteMapper, XmlMapper
 from protocol import *
 from protocol.params import *
 from config import *
 from pyworkflow.em import *
 import gui
-from gui.widgets import Tree
+from gui.widgets import Button
 from gui.text import TaggedText
+from gui.dialog import askString
 
 
 def loadSubclasses():
@@ -132,84 +134,77 @@ def loadConfig(config, name):
     menuConfig = mapper.getConfig()
     return menuConfig
 
-def createProjectLabel(parent, text, date):
-    frame = tk.Frame(parent)
-    label = tk.Label(frame, text=text, anchor='nw', 
-                     justify=tk.LEFT, font=projNameFont, cursor='hand1')
-    label.grid(row=0, column=0, padx=2, pady=2, sticky='nw')
-    dateLabel = tk.Label(frame, text='   Modified: '+date, font=projDateFont)
-    dateLabel.grid(row=1, column=0)
-    return frame
-    
-    
-    
-def createProjectList(text):
-    """Load the list of projects"""
-    from pyworkflow.manager import Manager
-    manager = Manager()
-    r = 0
-    
-    parent = tk.Frame(text)    
-    parent.columnconfigure(0, weight=1)
-    
-    for p in manager.listProjects():
-        print "proj: ", p
-        frame = createProjectLabel(parent, p, ' ')
-        frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
-        r += 1
-    
-    text.window_create(tk.INSERT, window=parent)
-    
-    
-projNameFont = None
-projLabelFont = None
 
 class ManagerWindow(gui.Window):
     """Windows to manage projects"""
     def __init__(self, **args):
         gui.Window.__init__(self, "Projets", minsize=(600, 350), icon='scipion_bn.xbm', **args)
         # Load global configuration
-        self.mapper = ConfigXmlMapper(getConfigPath('configuration.xml'), globals())
-        self.config = self.mapper.getConfig()
-        self.projNameFont = tkFont.Font(size=14, family='verdana', weight='bold')
-        self.projDateFont = tkFont.Font(size=10, family='verdana')
-    
+        mapper = ConfigXmlMapper(getConfigPath('configuration.xml'), globals())
+        config = mapper.getConfig()
+        self.projNameFont = tkFont.Font(size=12, family='verdana', weight='bold')
+        self.projDateFont = tkFont.Font(size=8, family='verdana')
+        self.manager = Manager()
+        parent = self.root
 
+        menuConfig = loadConfig(config, 'menu')
+        createMainMenu(parent, menuConfig)
+        
+        f = tk.Frame(parent, bg='white')
+        f.columnconfigure(0, minsize=200)
+        f.columnconfigure(1, minsize=400)
+        f.rowconfigure(1, minsize=250)
+        # Add logo
+        logo = gui.getImage('scipion_logo.gif')
+        label = tk.Label(f, image=logo, borderwidth=0)
+        label.grid(row=0, column=0, sticky='nw')
+        # Add create project button
+        #font = tkFont.Font(size=12, family='verdana')#, weight='bold')
+        btn = Button(f, text='Create Project', command=self.createNewProject)
+        btn.grid(row=1, column=0, sticky='new', padx=10, pady=10)
+        
+        lf = ttk.Labelframe(f, text='Current Projects')
+        lf.grid(row=0, column=1, sticky='news', padx=10, pady=10, rowspan=2)
+        text = TaggedText(lf, width=40, height=15)
+        text.grid(row=0, column=0, sticky='news')
+        text.config(state=tk.DISABLED)
+        gui.configureWeigths(lf)
+        
+        self.createProjectList(text)
+        self.text = text
+        f.rowconfigure(0, weight=1)
+        f.rowconfigure(1, weight=1)
+        f.columnconfigure(1, weight=1)
+        f.grid(row=0, column=0, sticky='news')  
+        
+    def createNewProject(self):
+        projName =  askString("Enter the project name", "Project Name:", self.root)
+        if not projName is None:
+            self.manager.createProject(projName)
+            self.createProjectList(self.text)
+
+    def createProjectList(self, text):
+        """Load the list of projects"""
+        r = 0
+        text.clear()
+        parent = tk.Frame(text)    
+        parent.columnconfigure(0, weight=1)
+        
+        for p in self.manager.listProjects():
+            frame = self.createProjectLabel(parent, p, ' ')
+            frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
+            r += 1
+        text.window_create(tk.INSERT, window=parent)
+        
+    def createProjectLabel(self, parent, text, date):
+        frame = tk.Frame(parent)
+        label = tk.Label(frame, text=text, anchor='nw', 
+                         justify=tk.LEFT, font=self.projNameFont, cursor='hand1')
+        label.grid(row=0, column=0, padx=2, pady=2, sticky='nw')
+        dateLabel = tk.Label(frame, text='   Modified: '+date, font=self.projDateFont)
+        dateLabel.grid(row=1, column=0)
+        return frame
 
 if __name__ == '__main__':
-
-    window = gui.Window("Project window", minsize=(600, 350), icon='scipion_bn.xbm')
+    ManagerWindow().show()
     
-    parent = window.root
-    menuConfig = loadConfig(config, 'menu')
-    createMainMenu(parent, menuConfig)
-    
-    f = tk.Frame(parent, bg='white')
-    f.columnconfigure(0, minsize=200)
-    f.columnconfigure(1, minsize=400)
-    f.rowconfigure(1, minsize=250)
-    # Add logo
-    logo = gui.getImage('scipion_logo.gif')
-    label = tk.Label(f, image=logo, borderwidth=0)
-    label.grid(row=0, column=0, sticky='nw')
-    # Add create project button
-    font = tkFont.Font(size=11, family='verdana')#, weight='bold')
-    btn = tk.Button(f, text='Create Project', fg='white', bg='#7D0709', font=font, 
-                    activeforeground='white', activebackground='#A60C0C')
-    btn.grid(row=1, column=0, sticky='new', padx=10, pady=10)
-    
-    lf = ttk.Labelframe(f, text='Current Projects')
-    lf.grid(row=0, column=1, sticky='news', padx=10, pady=10, rowspan=2)
-    text = TaggedText(lf, width=40, height=15)
-    text.grid(row=0, column=0, sticky='news')
-    text.config(state=tk.DISABLED)
-    gui.configureWeigths(lf)
-    
-    createProjectList(text)
-    f.rowconfigure(0, weight=1)
-    f.rowconfigure(1, weight=1)
-    f.columnconfigure(1, weight=1)
-    f.grid(row=0, column=0, sticky='news')   
-    
-    
-    window.show()            

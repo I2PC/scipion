@@ -91,7 +91,7 @@ class FormWindow(Window):
         Window.__init__(self, "Project: test_project", master, weight=False,
                         icon='scipion_bn.xbm', **args)
 
-        self.fontBig = tkFont.Font(size=14, family='verdana', weight='bold')
+        self.fontBig = tkFont.Font(size=12, family='verdana', weight='bold')
         self.font = tkFont.Font(size=10, family='verdana')#, weight='bold')
         self.fontBold = tkFont.Font(size=10, family='verdana', weight='bold')
         

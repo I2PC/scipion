@@ -24,163 +24,301 @@
 # *
 # **************************************************************************
 """
-Tooltip widget, taken from web.
+Module to handling Dialogs
+some code was taken from tkSimpleDialog
 """
         
 import Tkinter as tk
 
-'''Michael Lange <klappnase (at) freakmail (dot) de>
-The ToolTip class provides a flexible tooltip widget for Tkinter; it is based on IDLE's ToolTip
-module which unfortunately seems to be broken (at least the version I saw).
-INITIALIZATION OPTIONS:
-anchor :        where the text should be positioned inside the widget, must be on of "n", "s", "e", "w", "nw" and so on;
-                default is "center"
-bd :            borderwidth of the widget; default is 1 (NOTE: don't use "borderwidth" here)
-bg :            background color to use for the widget; default is "lightyellow" (NOTE: don't use "background")
-delay :         time in ms that it takes for the widget to appear on the screen when the mouse pointer has
-                entered the parent widget; default is 1500
-fg :            foreground (i.e. text) color to use; default is "black" (NOTE: don't use "foreground")
-follow_mouse :  if set to 1 the tooltip will follow the mouse pointer instead of being displayed
-                outside of the parent widget; this may be useful if you want to use tooltips for
-                large widgets like listboxes or canvases; default is 0
-font :          font to use for the widget; default is system specific
-justify :       how multiple lines of text will be aligned, must be "left", "right" or "center"; default is "left"
-padx :          extra space added to the left and right within the widget; default is 4
-pady :          extra space above and below the text; default is 2
-relief :        one of "flat", "ridge", "groove", "raised", "sunken" or "solid"; default is "solid"
-state :         must be "normal" or "disabled"; if set to "disabled" the tooltip will not appear; default is "normal"
-text :          the text that is displayed inside the widget
-textvariable :  if set to an instance of Tkinter.StringVar() the variable's value will be used as text for the widget
-width :         width of the widget; the default is 0, which means that "wraplength" will be used to limit the widgets width
-wraplength :    limits the number of characters in each line; default is 150
+import gui
+from widgets import Button
+from text import TaggedText
 
-WIDGET METHODS:
-configure(**opts) : change one or more of the widget's options as described above; the changes will take effect the
-                    next time the tooltip shows up; NOTE: follow_mouse cannot be changed after widget initialization
 
-Other widget methods that might be useful if you want to subclass ToolTip:
-enter() :           callback when the mouse pointer enters the parent widget
-leave() :           called when the mouse pointer leaves the parent widget
-motion() :          is called when the mouse pointer moves inside the parent widget if follow_mouse is set to 1 and the
-                    tooltip has shown up to continually update the coordinates of the tooltip window
-coords() :          calculates the screen coordinates of the tooltip window
-create_contents() : creates the contents of the tooltip window (by default a Tkinter.Label)
-'''
-# Ideas gleaned from PySol
+class Dialog(tk.Toplevel):
+    '''Implementation of our own dialog to display messages
+    It will have by default a three buttons: YES, NO and CANCEL
+    Subclasses can rename the labels of the buttons like: OK, CLOSE or others
+    The buttons(and theirs order) can be changed.
+    An image name can be passed to display left to the message.
+    '''
+    RESULT_YES = 0
+    RESULT_NO = 1
+    RESULT_CANCEL = 2
+    
+    def __init__(self, parent, title, **args):
+        """Initialize a dialog.
+        Arguments:
+            parent -- a parent window (the application window)
+            title -- the dialog title
+        **args accepts:
+            buttons -- list of buttons tuples containing which buttons to display
+        """
+        tk.Toplevel.__init__(self, parent)
 
-class ToolTip:
-    def __init__(self, master, text='Your text here', delay=1500, **opts):
-        self.master = master
-        self._opts = {'anchor':'center', 'bd':1, 'bg':'lightyellow', 'delay':delay, 'fg':'black',\
-                      'follow_mouse':0, 'font':None, 'justify':'left', 'padx':4, 'pady':2,\
-                      'relief':'solid', 'state':'normal', 'text':text, 'textvariable':None,\
-                      'width':0, 'wraplength':150}
-        self.configure(**opts)
-        self._tipwindow = None
-        self._id = None
-        self._id1 = self.master.bind("<Enter>", self.enter, '+')
-        self._id2 = self.master.bind("<Leave>", self.leave, '+')
-        self._id3 = self.master.bind("<ButtonPress>", self.leave, '+')
-        self._follow_mouse = 0
-        if self._opts['follow_mouse']:
-            self._id4 = self.master.bind("<Motion>", self.motion, '+')
-            self._follow_mouse = 1
-    
-    def configure(self, **opts):
-        for key in opts:
-            if self._opts.has_key(key):
-                self._opts[key] = opts[key]
-            else:    
-                KeyError = 'KeyError: Unknown option: "%s"' %key
-                raise KeyError
-    
-    ##----these methods handle the callbacks on "<Enter>", "<Leave>" and "<Motion>"---------------##
-    ##----events on the parent widget; override them if you want to change the widget's behavior--##
-    
-    def enter(self, event=None):
-        self._schedule()
+        self.withdraw() # remain invisible for now
+        # If the master is not viewable, don't
+        # make the child transient, or else it
+        # would be opened withdrawn
+        if parent.winfo_viewable():
+            self.transient(parent)
+
+        if title:
+            self.title(title)
+
+        self.parent = parent
+
+        self.result = None
+
+        bodyFrame = tk.Frame(self)
+        self.initial_focus = self.body(bodyFrame)
+        bodyFrame.grid(row=0, column=0, sticky='news',
+                       padx=5, pady=5)
+
+        self.buttons = args.get('buttons', [('OK', Dialog.RESULT_YES),
+                                            ('Cancel', Dialog.RESULT_CANCEL)])
+        self.defaultButton = args.get('default', 'OK')
+        btnFrame = tk.Frame(self)
+        self.buttonbox(btnFrame)
+        btnFrame.grid(row=1, column=0, sticky='sew',
+                      padx=5, pady=(0, 5))
         
-    def leave(self, event=None):
-        self._unschedule()
-        self._hide()
-    
-    def motion(self, event=None):
-        if self._tipwindow and self._follow_mouse:
-            x, y = self.coords()
-            self._tipwindow.wm_geometry("+%d+%d" % (x, y))
-    
-    ##------the methods that do the work:---------------------------------------------------------##
-    
-    def _schedule(self):
-        self._unschedule()
-        if self._opts['state'] == 'disabled':
+        gui.configureWeigths(self)
+
+
+        if not self.initial_focus:
+            self.initial_focus = self
+
+        self.protocol("WM_DELETE_WINDOW", self.cancel)
+
+        if self.parent is not None:
+            self.geometry("+%d+%d" % (parent.winfo_rootx()+50,
+                                      parent.winfo_rooty()+50))
+
+        self.deiconify() # become visibile now
+
+        self.initial_focus.focus_set()
+
+        # wait for window to appear on screen before calling grab_set
+        self.wait_visibility()
+        self.grab_set()
+        self.wait_window(self)
+        
+
+    def destroy(self):
+        '''Destroy the window'''
+        self.initial_focus = None
+        tk.Toplevel.destroy(self)
+
+    #
+    # construction hooks
+
+    def body(self, master):
+        '''create dialog body.
+        return widget that should have initial focus.
+        This method should be overridden, and is called
+        by the __init__ method.
+        '''
+        pass
+
+        
+    def _createButton(self, frame, text, result):
+        return  Button(frame, text=text, width=7, 
+                         command=lambda: self._handleResult(result))
+        
+    def buttonbox(self, btnFrame):
+        frame = tk.Frame(btnFrame)
+        btnFrame.columnconfigure(0, weight=1)
+        frame.grid(row=0, column=0)
+        col = 0
+        for btnLabel, btnResult in self.buttons:
+            btn = self._createButton(frame, btnLabel, btnResult)
+            btn.grid(row=0, column=col, padx=5, pady=5)
+            if btnLabel == self.defaultButton:
+                self.initial_focus = btn
+            col += 1
+        self.bind("<Return>", self._handleReturn)
+        self.bind("<Escape>", lambda: self._handleResult(Dialog.RESULT_CANCEL))
+
+
+    def _handleResult(self, resultValue):
+        """This method will be called when any button is pressed.
+        It will set the resultValue associated with the button
+        and close the Dialog"""
+        self.result = resultValue
+        noCancel = self.result != Dialog.RESULT_CANCEL
+        
+        if noCancel and not self.validate():
+            self.initial_focus.focus_set() # put focus back
             return
-        self._id = self.master.after(self._opts['delay'], self._show)
+        
 
-    def _unschedule(self):
-        id = self._id
-        self._id = None
-        if id:
-            self.master.after_cancel(id)
+        self.withdraw()
+        self.update_idletasks()
 
-    def _show(self):
-        if self._opts['state'] == 'disabled':
-            self._unschedule()
-            return
-        if not self._tipwindow:
-            self._tipwindow = tw = tk.Toplevel(self.master)
-            # hide the window until we know the geometry
-            tw.withdraw()
-            tw.wm_overrideredirect(1)
+        try:
+            if noCancel:
+                self.apply()
+        finally:
+            self.cancel()
+            
+    def _handleReturn(self, e=None):
+        """Handle press return key"""
+        self._handleResult(Dialog.RESULT_CANCEL)
 
-            if tw.tk.call("tk", "windowingsystem") == 'aqua':
-                tw.tk.call("::tk::unsupported::MacWindowStyle", "style", tw._w, "help", "none")
+    def cancel(self, event=None):
+        # put focus back to the parent window
+        if self.parent is not None:
+            self.parent.focus_set()
+        self.destroy()
 
-            self.create_contents()
-            tw.update_idletasks()
-            x, y = self.coords()
-            tw.wm_geometry("+%d+%d" % (x, y))
-            tw.deiconify()
+    #
+    # command hooks
+
+    def validate(self):
+        '''validate the data
+        This method is called automatically to validate the data before the
+        dialog is destroyed. By default, it always validates OK.
+        '''
+        return 1 # override
+
+    def apply(self):
+        '''process the data
+        This method is called automatically to process the data, *after*
+        the dialog is destroyed. By default, it does nothing.
+        '''
+        pass # override
+
+        
+class MessageDialog(Dialog):
+    """Dialog subclasses to show message info, questions or errors.
+    It can display an icon with the message"""
+    def __init__(self, parent, title, msg, iconPath, **args):
+        self.msg = msg
+        self.iconPath = iconPath
+        if not 'buttons' in args:
+            args['buttons'] = [('OK', Dialog.RESULT_YES)]
+            args['default'] = 'OK'
+        Dialog.__init__(self, parent, title, **args)
+        
+    def body(self, bodyFrame):
+        self.image = gui.getImage(self.iconPath)
+        bodyFrame.config(bg='white', bd=2)
+        text = TaggedText(bodyFrame, bg='white', bd=0)
+        # Insert image
+        if self.image:
+            label = tk.Label(bodyFrame, image=self.image, bg='white', bd=0)
+            label.grid(row=0, column=0, sticky='nw')
+        # Insert lines of text
+        mylines = self.msg.splitlines()
+        m = 0
+        for l in mylines:
+            m = max(m, len(l))
+            text.addLine(l)
+        m = min(m + 5, 80)
+        h = min(len(mylines)+3, 30)
+        text.config(height=h, width=m)
+        text.addNewline()
+        text.config(state=tk.DISABLED)
+        text.frame.grid(row=0, column=1, sticky='news', padx=5, pady=5)
+        
+        bodyFrame.rowconfigure(0, weight=1)
+        bodyFrame.columnconfigure(1, weight=1)
+
+
+class YesNoDialog(MessageDialog):
+    '''Ask a question with YES/NO answer'''
+    def __init__(self, master, title, msg):
+        MessageDialog.__init__(self, master, title, msg, 'warning.gif', default='No',
+                               buttons=[('Yes', Dialog.RESULT_YES), ('No', Dialog.RESULT_NO)])        
+
+
+class EntryDialog(Dialog):
+    """Dialog to ask some entry"""
+    def __init__(self, parent, title, entryLabel):
+        self.entryLabel = entryLabel
+        self.value = None
+        Dialog.__init__(self, parent, title)
+        
+    def body(self, bodyFrame):
+        bodyFrame.config(bg='white')
+        frame = tk.Frame(bodyFrame, bg='white')
+        frame.grid(row=0, column=0, padx=20, pady=20)
+        label = tk.Label(bodyFrame, text=self.entryLabel, bg='white', bd=0)
+        label.grid(row=0, column=0, sticky='nw', padx=(15, 10), pady=15)
+        self.entry = tk.Entry(bodyFrame, bg=gui.cfgEntryBgColor)
+        self.entry.grid(row=0, column=1, sticky='new', padx=(0,15), pady=15)
+        
+    def apply(self):
+        self.value = self.entry.get()
+        
+    def validate(self):
+        if len(self.entry.get().strip()) == 0:
+            showError("Validation error", "Value is empty", self)
+            return False
+        return True
+        
+''' Functions to display dialogs '''
+def askYesNo(title, msg, parent):
+    d = YesNoDialog(parent, title, msg)
+    return d.result == Dialog.RESULT_YES
+
+def showInfo(title, msg, parent):
+    MessageDialog(parent, title, msg, 'info.gif')
+
+def showWarning(title, msg, parent):
+    MessageDialog(parent, title, msg, 'warning.gif')
     
-    def _hide(self):
-        tw = self._tipwindow
-        self._tipwindow = None
-        if tw:
-            tw.destroy()
-                
-    ##----these methods might be overridden in derived classes:----------------------------------##
+def showError(title, msg, parent):
+    MessageDialog(parent, title, msg, 'error.gif')
     
-    def coords(self):
-        # The tip window must be completely outside the master widget;
-        # otherwise when the mouse enters the tip window we get
-        # a leave event and it disappears, and then we get an enter
-        # event and it reappears, and so on forever :-(
-        # or we take care that the mouse pointer is always outside the tipwindow :-)
-        tw = self._tipwindow
-        twx, twy = tw.winfo_reqwidth(), tw.winfo_reqheight()
-        w, h = tw.winfo_screenwidth(), tw.winfo_screenheight()
-        # calculate the y coordinate:
-        if self._follow_mouse:
-            y = tw.winfo_pointery() + 20
-            # make sure the tipwindow is never outside the screen:
-            if y + twy > h:
-                y = y - twy - 30
-        else:
-            y = self.master.winfo_rooty() + self.master.winfo_height() + 3
-            if y + twy > h:
-                y = self.master.winfo_rooty() - twy - 3
-        # we can use the same x coord in both cases:
-        x = tw.winfo_pointerx() - twx / 2
-        if x < 0:
-            x = 0
-        elif x + twx > w:
-            x = w - twx
-        return x, y
+def askString(title, label, parent):
+    d = EntryDialog(parent, title, label)
+    return d.value
+    
+'''Implement a Listbox Dialog, it will return
+the index selected in the lisbox or -1 on Cancel'''
+class ListboxDialog(Dialog):
+    def __init__(self, master, itemList, **kargs):
+        self.list = itemList
+        self.kargs = kargs
+        Dialog.__init__(self, master)        
+        
+    def body(self, master):
+        self.result = []
+        self.lb = tk.Listbox(master, selectmode=tk.EXTENDED, bg="white")
+        self.lb.config(**self.kargs)
+        self.lb.pack(fill=tk.BOTH)
+        self.lb.bind('<Double-Button-1>', self.ok)
+        maxLength=0
+        for item in self.list:
+            self.lb.insert(tk.END, item)
+            maxLength=max(maxLength,len(item))
+        self.lb.config(width=maxLength+3)
+        if len(self.list) > 0:
+            self.lb.selection_set(0)
+        return self.lb # initial focus
 
-    def create_contents(self):
-        opts = self._opts.copy()
-        for opt in ('delay', 'follow_mouse', 'state'):
-            del opts[opt]
-        label = tk.Label(self._tipwindow, **opts)
-        label.pack()
-
+    def buttonbox(self):
+        box = tk.Frame(self)
+        w = Button(box, text="OK", width=7, command=self.ok)
+        w.pack(side=tk.RIGHT, padx=5, pady=5)
+        self.bind("<Return>", self.ok)
+        box.pack()
+        
+    def apply(self):
+        self.result = map(int, self.lb.curselection())
+        
+        
+if __name__ == '__main__':
+    import sys
+    root = tk.Tk()
+    root.withdraw()
+    gui.setCommonFonts()
+    #result = askYesNo("Confirm DELETE", "Are you sure to delete this?", root)
+    #print result
+    #showInfo('Testing Info', "this is a [really] important infor", root)
+    
+    #showError('Testing error', "Fatal Error due to <problems>", root)
+    print askString("Enter project name", "Project name:", root)
+    #root.mainloop() 
