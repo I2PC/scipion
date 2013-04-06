@@ -5,6 +5,7 @@
 #include <dimred/lltsa.h>
 #include <dimred/hessianLLE.h>
 #include <dimred/diffusionMaps.h>
+#include <dimred/chartingmanifold.h>
 #include <dimred/probabilisticPCA.h>
 #include <dimred/laplacianEigenmaps.h>
 #include <iostream>
@@ -123,8 +124,9 @@ INCOMPLETE_TEST(laplacianEigenmap,LaplacianEigenmap,"helix",1000,"dimred/laplaci
 INCOMPLETE_TEST(probabilisticPCA, ProbabilisticPCA, "helix",1000,"dimred/probabilisticPCA.txt")
 INCOMPLETE_TEST(nca,              NeighbourhoodCA,  "helix",1000,"dimred/nca.txt")
 INCOMPLETE_TEST(lltsa,            LLTSA,            "helix",1000,"dimred/lltsa.txt")
-#endif
 INCOMPLETE_TEST(hessianlle,       HessianLLE,       "helix",1000,"dimred/hessianlle.txt")
+#endif
+INCOMPLETE_TEST(chartingmanifold, ChartingManifold, "helix",1000,"dimred/chartingmanifold.txt")
 
 GTEST_API_ int main(int argc, char **argv)
 {
