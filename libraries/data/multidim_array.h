@@ -2129,6 +2129,13 @@ public:
         }
     }
 
+    /** Get Z slice as matrix */
+    void getSliceAsMatrix(size_t k, Matrix2D<T> &m) const
+    {
+    	m.resizeNoCopy(YSIZE(*this),XSIZE(*this));
+    	memcpy(&MAT_ELEM(m,0,0),&A3D_ELEM(*this,k,0,0),YSIZE(*this),XSIZE(*this)*sizeof(double));
+    }
+
     /** Slice access for writing.
      *
      * This function sets a 2D matrix corresponding to the chosen slice inside the nth
