@@ -48,7 +48,7 @@ from pyworkflow.em import *
 import gui
 from gui.widgets import Button
 from gui.text import TaggedText
-from gui.dialog import askString
+from gui.dialog import askString, showError
 
 
 def loadSubclasses():
@@ -176,12 +176,6 @@ class ManagerWindow(gui.Window):
         f.rowconfigure(1, weight=1)
         f.columnconfigure(1, weight=1)
         f.grid(row=0, column=0, sticky='news')  
-        
-    def createNewProject(self):
-        projName =  askString("Enter the project name", "Project Name:", self.root)
-        if not projName is None:
-            self.manager.createProject(projName)
-            self.createProjectList(self.text)
 
     def createProjectList(self, text):
         """Load the list of projects"""
@@ -201,9 +195,25 @@ class ManagerWindow(gui.Window):
         label = tk.Label(frame, text=text, anchor='nw', 
                          justify=tk.LEFT, font=self.projNameFont, cursor='hand1')
         label.grid(row=0, column=0, padx=2, pady=2, sticky='nw')
+        label.bind('<Button-1>', lambda e: self.openProject(text))
         dateLabel = tk.Label(frame, text='   Modified: '+date, font=self.projDateFont)
         dateLabel.grid(row=1, column=0)
         return frame
+        
+    def createNewProject(self):
+        projName =  askString("Enter the project name", "Project Name:", self.root, 30)
+        if not projName is None:
+            self.manager.createProject(projName)
+            self.createProjectList(self.text)
+    
+    def openProject(self, projName):
+        projPath = self.manager.getProjectPath(projName)
+        from pw_project import createProjectGUI
+        try:
+            gui = createProjectGUI(projPath, self.root)
+            gui.show()
+        except Exception, e:
+            showError("Error loading project", str(e), self.root)
 
 if __name__ == '__main__':
     ManagerWindow().show()

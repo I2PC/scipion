@@ -157,12 +157,13 @@ def createHistoryTree(parent, path):
         c += 1
     return tree
 
-def createProjectGUI(path):
+def createProjectGUI(path, master=None):
     # Load global configuration
     mapper = ConfigXmlMapper(getConfigPath('configuration.xml'), globals())
     config = mapper.getConfig()
+    name = 'Project: ' + basename(path)
 
-    window = gui.Window("Project window", icon='scipion_bn.xbm', minsize=(900,500))
+    window = gui.Window(name, master, icon='scipion_bn.xbm', minsize=(900,500))
     
     parent = window.root
     menuConfig = loadConfig(config, 'menu')
@@ -208,12 +209,12 @@ def createProjectGUI(path):
     populateTree(tree, '', objList)
     tree.grid(row=0, column=0, sticky='news')   
     
-    
-    window.show()            
+    return window
     
 if __name__ == '__main__':
     import sys
     path = '.'
     if len(sys.argv) > 1:
         path = sys.argv[1]
-    createProjectGUI(path)
+    window = createProjectGUI(path)
+    window.show()

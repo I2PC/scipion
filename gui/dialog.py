@@ -235,8 +235,9 @@ class YesNoDialog(MessageDialog):
 
 class EntryDialog(Dialog):
     """Dialog to ask some entry"""
-    def __init__(self, parent, title, entryLabel):
+    def __init__(self, parent, title, entryLabel, entryWidth=20):
         self.entryLabel = entryLabel
+        self.entryWidth = entryWidth
         self.value = None
         Dialog.__init__(self, parent, title)
         
@@ -246,7 +247,7 @@ class EntryDialog(Dialog):
         frame.grid(row=0, column=0, padx=20, pady=20)
         label = tk.Label(bodyFrame, text=self.entryLabel, bg='white', bd=0)
         label.grid(row=0, column=0, sticky='nw', padx=(15, 10), pady=15)
-        self.entry = tk.Entry(bodyFrame, bg=gui.cfgEntryBgColor)
+        self.entry = tk.Entry(bodyFrame, bg=gui.cfgEntryBgColor, width=self.entryWidth)
         self.entry.grid(row=0, column=1, sticky='new', padx=(0,15), pady=15)
         
     def apply(self):
@@ -272,8 +273,8 @@ def showWarning(title, msg, parent):
 def showError(title, msg, parent):
     MessageDialog(parent, title, msg, 'error.gif')
     
-def askString(title, label, parent):
-    d = EntryDialog(parent, title, label)
+def askString(title, label, parent, entryWidth=20):
+    d = EntryDialog(parent, title, label, entryWidth)
     return d.value
     
 '''Implement a Listbox Dialog, it will return
