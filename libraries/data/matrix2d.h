@@ -1442,10 +1442,18 @@ public:
             MAT_ELEM(*this,i, j) = VEC_ELEM(v,i);
     }
 
+    /** Compute row means */
+    void computeRowMeans(Matrix1D<double> &Xmr) const
+    {
+    	Xmr.initZeros(MAT_YSIZE(*this));
+    	FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
+    		VEC_ELEM(Xmr,i)+=MAT_ELEM(*this,i,j);
+    	Xmr*=1.0/MAT_XSIZE(*this);
+    }
+
     /** Set constant column.
      * Set a given column to a constant value A(i,j)=val;
      */
-
     void setConstantCol(size_t j, T v)
     {
         if (mdimx == 0 || mdimy == 0)
