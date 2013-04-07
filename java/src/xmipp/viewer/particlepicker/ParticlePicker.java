@@ -34,7 +34,6 @@ public abstract class ParticlePicker
 	protected String familiesfile;
 	protected String macrosfile;
 	protected static Logger logger;
-	public static final int defAutopickPercent = 90;
 	protected String outputdir = ".";
 	protected boolean changed;
 	protected List<Family> families;

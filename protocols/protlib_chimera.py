@@ -26,7 +26,7 @@
 # ***************************************************************************
  '''
 
-import xmipp
+from xmipp import *
 from multiprocessing.connection import Client
 from protlib_xmipp import getImageData
 from protlib_gui_figure import ImageWindow
@@ -50,7 +50,6 @@ class XmippChimeraClient:
         self.initVolumeData()
         printCmd('openVolumeOnServer')
         self.openVolumeOnServer(self.vol)
-        printCmd('init ended')
         
        
     def send(self, cmd, data):
@@ -61,12 +60,10 @@ class XmippChimeraClient:
         
     def openVolumeOnServer(self, volume):
          self.send('open_volume', volume)
-
-
-
+         self.client.send('end')
         
 
-    def initListen(self):
+    def initListenThread(self):
             self.listen_thread = Thread(target=self.listen)
             self.listen_thread.daemon = True
             self.listen_thread.start()
@@ -86,12 +83,14 @@ class XmippChimeraClient:
             print 'finally'
             self.exit()
             
+            
     def exit(self):
             self.client.close()#close connection
 
+
     def initVolumeData(self):
-        self.image = xmipp.Image(self.volfile)
-        self.image.convert2DataType(xmipp.DT_DOUBLE)
+        self.image = Image(self.volfile)
+        self.image.convert2DataType(DT_DOUBLE)
         xdim, ydim, zdim, n = self.image.getDimensions()
         self.vol = getImageData(self.image)
         
@@ -104,36 +103,39 @@ class XmippChimeraClient:
 class XmippProjectionExplorer(XmippChimeraClient):
     
     def __init__(self, volfile):
+
         XmippChimeraClient.__init__(self, volfile)
-        self.initListen()
-        self.initProjection()
+        
+        self.projection = Image()
+        self.projection.setDataType(DT_DOUBLE)
+        #0.5 ->  Niquiest frequency
+        #2 -> bspline interpolation
+        self.fourierprojector = FourierProjector(self.image, 1, 0.5, 2)
+        self.fourierprojector.projectVolume(self.projection, 0, 0, 0)
+
+        printCmd('initListenThread')
+        self.initListenThread()
+        printCmd('creating iw')
         self.iw = ImageWindow(image=self.projection, label="Projection")
         self.iw.root.protocol("WM_DELETE_WINDOW", self.exitClient)
         self.iw.root.mainloop()
-        
-     
-        
-    def initProjection(self):
-        self.fourierprojector = FourierProjector(self.image)
-        self.projection = self.fourierprojector.projectVolume(0, 0, 0)
-        
+                
 
     def rotate(self, rot, tilt, psi):
         printCmd('image.projectVolumeDouble')
-        self.projection = self.fourierprojector.projectVolume(rot, tilt, psi)
+        self.fourierprojector.projectVolume(self.projection, rot, tilt, psi)
         printCmd('flipud')
         self.vol = flipud(getImageData(self.projection))
         printCmd('iw.updateData')
         self.iw.updateData(self.vol)
         printCmd('end rotate')
     
-    
-
-    
+        
     def exit(self):
         XmippChimeraClient.exit(self)
         if not (self.iw is None):
             self.iw.root.destroy()
+            
             
     def answer(self, msg):
         XmippChimeraClient.answer(self, msg)
@@ -142,16 +144,24 @@ class XmippProjectionExplorer(XmippChimeraClient):
             printCmd('reading motion')
             self.motion = array(data)
             printCmd('getting euler angles')
-            rot1, tilt1, psi1 = xmipp.Euler_matrix2angles(self.motion)
+            rot1, tilt1, psi1 = Euler_matrix2angles(self.motion)
+            print '%f, %f, %f'%(rot1, tilt1, psi1)
             printCmd('calling rotate')  
             self.rotate(rot1, tilt1, psi1)
+            
             
     def exitClient(self):
         self.client.send('exit_client')
         self.exit()
+        
+        
+    def openVolumeOnServer(self, volume):
+         self.send('open_volume', volume)
+         spheres = [[10, 0, 0, 0], [20, 10, 10, 10]]
+         self.send('draw_angular_distribution', spheres)
+         self.client.send('end')      
             
 def printCmd(cmd):
         timeformat = "%S.%f" 
-        print datetime.now().strftime(timeformat)
-        print cmd
+        print datetime.now().strftime(timeformat) + ' %s'%cmd
 

@@ -80,8 +80,8 @@ def findCenter(log, HowCenter, Selfile, ExtraDir, SpectraInnerRadius, SpectraOut
                 ' --r2 ' + str(SpectraOuterRadius) + \
                 ' --r3 ' + str(R3) + ' --r4 ' + str(R4))
     elif HowCenter == 'Use the middle of the image':
-        from xmipp import ImgSize
-        dims = ImgSize(Selfile)
+        from xmipp import MetaDataInfo
+        dims = MetaDataInfo(Selfile)
         MD = MetaData()
         id = MD.addObject()
         MD.setValue(MDL_X, float(dims[0] / 2), id)

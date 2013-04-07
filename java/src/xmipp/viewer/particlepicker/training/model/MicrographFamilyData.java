@@ -37,7 +37,7 @@ public class MicrographFamilyData
 	
 	public MicrographFamilyData(TrainingMicrograph micrograph, Family family, MicrographFamilyState state)
 	{
-		this(micrograph, family, state, ParticlePicker.defAutopickPercent);
+		this(micrograph, family, state, ParticlePicker.defAutoPickPercent);
 
 	}
 	

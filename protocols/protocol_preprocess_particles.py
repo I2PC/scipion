@@ -7,7 +7,7 @@
 #
 from protlib_base import *
 from protlib_particles import *
-from xmipp import MetaData, ImgSize, FileName, MDL_SAMPLINGRATE, MDL_IMAGE, MDL_ZSCORE, MDL_MICROGRAPH, MDL_XCOOR, MDL_YCOOR, MDL_IMAGE_ORIGINAL, \
+from xmipp import MetaData, MetaDataInfo, FileName, MDL_SAMPLINGRATE, MDL_IMAGE, MDL_ZSCORE, MDL_MICROGRAPH, MDL_XCOOR, MDL_YCOOR, MDL_IMAGE_ORIGINAL, \
     MDL_IMAGE_TILTED, INNER_JOIN
 import os
 from os.path import exists, split, splitext
@@ -127,7 +127,7 @@ def createAcquisition(log,InputFile,WorkingDir,DoResize,NewSize):
             md = MetaData(fnAcqIn)
             id = md.firstObject()
             Ts = md.getValue(MDL_SAMPLINGRATE, id)
-            (Xdim, Ydim, Zdim, Ndim) = ImgSize(InputFile)
+            (Xdim, Ydim, Zdim, Ndim, _) = MetaDataInfo(InputFile)
             downsampling = float(Xdim)/NewSize;
             md.setValue(MDL_SAMPLINGRATE,Ts*downsampling,id)
             md.write(getProtocolFilename('acquisition', WorkingDir=WorkingDir))

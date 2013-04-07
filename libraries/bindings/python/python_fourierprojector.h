@@ -1,7 +1,6 @@
 /***************************************************************************
  *
- * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
- *              Roberto Marabini       (roberto@cnb.csic.es)
+ * Authors:     Airen Zaldivar (azaldivar@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -24,6 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
+
 #ifndef _FOURIER_PROJECTOR_H
 #define _FOURIER_PROJECTOR_H
 
@@ -36,11 +36,13 @@
 #define FourierProjector_Check(v) (((v)->ob_type == &FourierProjectorType))
 #define FourierProjector_Value(v) ((*((FourierProjectorObject*)(v))->fourier_projector))
 
+
 /*FourierProjector Object*/
 typedef struct
 {
     PyObject_HEAD
-    FourierProjector * fourier_projector;
+    ArrayDim* dims;
+    FourierProjector* fourier_projector;
 }
 FourierProjectorObject;
 
@@ -51,13 +53,14 @@ FourierProjector_new(PyTypeObject *type, PyObject *args, PyObject *kwargs);
 void FourierProjector_dealloc(FourierProjectorObject* self);
 
 /* Project a volume.
- * Result: double projection */
-PyObject *
-FourierProjector_projectVolume(PyObject * obj, PyObject *args, PyObject *kwargs);
+ */
+
+PyObject * FourierProjector_projectVolume(PyObject * obj, PyObject *args, PyObject *kwargs);
 
 /* FourierProjector methods */
 extern PyMethodDef FourierProjector_methods[];
-/*SymList Type */
+/*FourierProjectorType Type */
 extern PyTypeObject FourierProjectorType;
+
 
 #endif
