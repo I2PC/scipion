@@ -94,7 +94,20 @@ class Scrollable(object):
             self.grid_remove = self.frame.grid_remove
         else:
             WidgetClass.__init__(self, master, **opts)
+
+        # with Windows OS
+#        self.bind("<MouseWheel>", self.scroll)
+#        # with Linux OS
+#        self.bind("<Button-4>", self.scroll)
+#        self.bind("<Button-5>", self.scroll) 
         
+    def scroll(self, event):
+        #print "scrolling", event.num, event.delta
+        if event.num == 5 or event.delta < 0:
+            count = 1
+        if event.num == 4 or event.delta > 0:
+            count = -1
+        self.yview("scroll", count, "units")  
         
 class Tree(ttk.Treeview, Scrollable):
     """ This widget acts as a wrapper around the ttk.Treeview"""

@@ -41,12 +41,14 @@ import tkFont
 import pyworkflow as pw
 from pyworkflow.object import *
 from pyworkflow.em import *
+from pyworkflow.protocol import *
+from pyworkflow.protocol.params import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
 from pyworkflow.project import Project
+
 import gui
 from gui.widgets import Tree
-from protocol import *
-from protocol.params import *
+from gui.form import FormWindow
 from config import *
 
 
@@ -58,34 +60,41 @@ def loadSubclasses():
     path = join(pw.HOME, 'em', 'packages')
     sys.path.append(path)
     folders = os.listdir(path)
-    #print "path: ", path
     subclasses = {}
     for f in folders:
         if exists(join(path, f, '__init__.py')):
             m = __import__(f)
+            print "imported: ", f
             for k, v in m.__dict__.iteritems():
                 if isclass(v) and issubclass(v, Protocol):
                     subclasses[k] = v
+    for k, v in globals().iteritems():
+        if isclass(v) and issubclass(v, Protocol):
+                    subclasses[k] = v
     return subclasses
     
+# All protocol subclasses
 subclasses =  loadSubclasses()
+
     
 def populateTree(tree, prefix, obj, level=0):
     text = obj.text.get()
     if text:
-        key = '%s.%s' % (prefix, text)
-        img = obj.icon.get()
-        if img is None:
-            img = ''
-            pass
-        else:
+        value = obj.value.get(text)
+        key = '%s.%s' % (prefix, value)
+        img = obj.icon.get('')
+        tag = obj.tag.get('')
+            
+        if len(img):
             img = gui.getImage(img)
-        item = tree.insert(prefix, 'end', key, text=text, image=img)
+        item = tree.insert(prefix, 'end', key, text=text, image=img, tags=(tag))
         
         if level < 3:
             tree.item(item, open=True)
-        if not obj.isEmpty() and obj.action.hasValue():
-            prot = globals().get(obj.action.get(), None)
+        if obj.value.hasValue() and tag == 'protocol_base':
+            protName = value.split('.')[-1] # Take last part
+            prot = subclasses.get(value, None)
+            print "found protocol_base: ", value
             if not prot is None:
                 tree.item(item, image=gui.getImage('class_obj.gif'))
                 for k, v in subclasses.iteritems():
@@ -93,7 +102,7 @@ def populateTree(tree, prefix, obj, level=0):
                         tree.insert(item, 'end', item+k, text=k, image=gui.getImage('python_file.gif'))
                         
             else:
-                raise Exception("Class '%s' not found" % obj.action.get())
+                raise Exception("Class '%s' not found" % obj.value.get())
     else:
         key = prefix
     
@@ -157,64 +166,80 @@ def createHistoryTree(parent, path):
         c += 1
     return tree
 
-def createProjectGUI(path, master=None):
-    # Load global configuration
-    mapper = ConfigXmlMapper(getConfigPath('configuration.xml'), globals())
-    config = mapper.getConfig()
-    name = 'Project: ' + basename(path)
+class ProjectWindow(gui.Window):
+    def __init__(self, path, master=None):
+        # Load global configuration
+        mapper = ConfigXmlMapper(getConfigPath('configuration.xml'), globals())
+        config = mapper.getConfig()
+        name = 'Project: ' + basename(path)
+    
+        gui.Window.__init__(self, name, master, icon='scipion_bn.xbm', minsize=(900,500))
+        
+        parent = self.root
+        menuConfig = loadConfig(config, 'menu')
+        createMainMenu(parent, menuConfig)
+        p = tk.PanedWindow(parent, orient=tk.HORIZONTAL)
+        # first pane, which would get widgets gridded into it:
+        f1 = tk.Frame(p)
+        f1.columnconfigure(0, weight=1)
+        f1.rowconfigure(1, weight=1)
+        logo = gui.getImage('scipion_logo.gif')
+        label = tk.Label(f1, image=logo, borderwidth=0, 
+                         anchor='nw', bg='white')
+        label.grid(row=0, column=0, sticky='new', padx=5)
+        
+        lf = ttk.Labelframe(f1, text=' Protocols ', width=300, height=500)
+        lf.grid(row=1, column=0, sticky='news', padx=5, pady=5)
+        # second pane
+        #f2 = tk.Frame(p)
+        #f2.grid(row=0, column=0, sticky='news')
+        
+        
+        f2 = ttk.Labelframe(p, text=' History ', width=500, height=500)
+        #lf.grid(row=1, column=0, sticky='news')
+        
+        tree = createHistoryTree(f2, path)
+        tree.grid(row=0, column=0, sticky='news')
+        gui.configureWeigths(f2)
+        
+        p.add(f1, padx=5, pady=5)
+        p.add(f2, padx=5, pady=5)
+        p.paneconfig(f1, minsize=300)
+        p.paneconfig(f2, minsize=300)
+        
+        p.grid(row=0, column=0, sticky='news')
+        
+        #gui.configureWeigths(f1)
+        gui.configureWeigths(lf)
+        tree = Tree(lf, show='tree')
+        #tree.heading(c, text=c)
+        #tree.heading('#0', text='Object')
+        tree.column('#0', minwidth=300)
+        tree.tag_configure('protocol', image=gui.getImage('python_file.gif'))
+        tree.tag_bind('protocol', '<Double-1>', self.itemClicked)
+        tree.tag_configure('protocol_base', image=gui.getImage('class_obj.gif'))
+        f = tkFont.Font(family='verdana', size='10', weight='bold')
+        tree.tag_configure('section', font=f)
+        objList = loadConfig(config, 'protocols')
+        populateTree(tree, '', objList)
+        tree.grid(row=0, column=0, sticky='news')
+        self.tree = tree
+    
 
-    window = gui.Window(name, master, icon='scipion_bn.xbm', minsize=(900,500))
-    
-    parent = window.root
-    menuConfig = loadConfig(config, 'menu')
-    createMainMenu(parent, menuConfig)
-    p = tk.PanedWindow(parent, orient=tk.HORIZONTAL)
-    # first pane, which would get widgets gridded into it:
-    f1 = tk.Frame(p)
-    f1.columnconfigure(0, weight=1)
-    f1.rowconfigure(1, weight=1)
-    logo = gui.getImage('scipion_logo.gif')
-    label = tk.Label(f1, image=logo, borderwidth=0, 
-                     anchor='nw', bg='white')
-    label.grid(row=0, column=0, sticky='new', padx=5)
-    
-    lf = ttk.Labelframe(f1, text=' Protocols ', width=300, height=500)
-    lf.grid(row=1, column=0, sticky='news', padx=5, pady=5)
-    # second pane
-    #f2 = tk.Frame(p)
-    #f2.grid(row=0, column=0, sticky='news')
-    
-    
-    f2 = ttk.Labelframe(p, text=' History ', width=500, height=500)
-    #lf.grid(row=1, column=0, sticky='news')
-    
-    tree = createHistoryTree(f2, path)
-    tree.grid(row=0, column=0, sticky='news')
-    gui.configureWeigths(f2)
-    
-    p.add(f1, padx=5, pady=5)
-    p.add(f2, padx=5, pady=5)
-    p.paneconfig(f1, minsize=300)
-    p.paneconfig(f2, minsize=300)
-    
-    p.grid(row=0, column=0, sticky='news')
-    
-    #gui.configureWeigths(f1)
-    gui.configureWeigths(lf)
-    tree = Tree(lf, show='tree')
-    #tree.heading(c, text=c)
-    #tree.heading('#0', text='Object')
-    tree.column('#0', minwidth=300)
-    objList = loadConfig(config, 'protocols')
-    populateTree(tree, '', objList)
-    tree.grid(row=0, column=0, sticky='news')   
-    
-    return window
+    def itemClicked(self, e=None):
+        print "protocol clicked"
+        print self.tree.getFirst()
+        protName = self.tree.getFirst().split('.')[-1]
+        protClass = subclasses.get(protName)
+        prot = protClass()
+        w = FormWindow(prot._definition)
+        w.show()
+        
     
 if __name__ == '__main__':
     import sys
     path = '.'
     if len(sys.argv) > 1:
         path = sys.argv[1]
-    window = createProjectGUI(path)
+    window = ProjectWindow(path)
     window.show()

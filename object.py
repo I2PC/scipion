@@ -182,7 +182,7 @@ class FakedObject(Object):
 class Scalar(Object):
     """Base class for basic types"""
     def hasValue(self):        
-        return not self._objValue is None
+        return self._objValue is not None
     
     def equalAttributes(self, other):
         """Compare that all attributes are equal"""
@@ -198,6 +198,14 @@ class Scalar(Object):
         if issubclass(other.__class__, Object):
             return Object.__eq__(self, other)
         return self._objValue == other
+    
+    def get(self, default=None):
+        """Get the value, if internal value is None
+        the default argument passed is returned"""
+        if self.hasValue():
+            return self._objValue
+        return default
+        
     
     
 class Integer(Scalar):

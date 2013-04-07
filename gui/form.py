@@ -154,6 +154,11 @@ class FormWindow(Window):
             self.fillSection(s, frame)
             r += 1
         
+        # with Windows OS
+        self.root.bind("<MouseWheel>", lambda e: text.scroll(e))
+        # with Linux OS
+        self.root.bind("<Button-4>", lambda e: text.scroll(e))
+        self.root.bind("<Button-5>", lambda e: text.scroll(e)) 
         text.window_create(tk.INSERT, window=parent)
         
 def defineImportMicrographForm():

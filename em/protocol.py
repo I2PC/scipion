@@ -30,9 +30,42 @@ import os
 import shutil
 from pyworkflow.object import String, Float
 from pyworkflow.protocol import Protocol
+from pyworkflow.protocol.params import *
 from pyworkflow.em import SetOfMicrographs
 
+
+def defineImportMicrograph():
+    """Create the definition of parameters for
+    the ImportMicrographs protocol"""
+    f = Form()
+    
+    f.addSection(label='Input')
+    f.addParam('Pattern', StringParam, label="Pattern")
+    f.addParam('TiltPairs', BooleanParam, default=False, important=True,
+               label='Are micrographs tilt pairs?')
+    
+    f.addSection(label='Microscope description')
+    f.addParam('Voltage', FloatParam, default=200,
+               label='Microscope voltage (in kV)')
+    f.addParam('SphericalAberration', FloatParam, default=2.26,
+               label='Spherical aberration (in mm)')
+    f.addParam('SamplingRateMode', EnumParam, default=0,
+               label='Sampling rate',
+               choices=['From image', 'From scanner'])
+    f.addParam('SamplingRate', FloatParam,
+               label='Sampling rate (A/px)', condition='SamplingRateMode==0')
+    f.addParam('Magnification', IntParam, default=60000,
+               label='Magnification rate', condition='SamplingRateMode==1')
+    f.addParam('ScannedPixelSize', FloatParam, 
+               label='Scanned pixel size', condition='SamplingRateMode==1')
+    
+    return f
+
+
 class ProtImportMicrographs(Protocol):
+    """Protocol to import a set of micrographs in the project"""
+    _definition = defineImportMicrograph()
+    
     def __init__(self, **args):
         Protocol.__init__(self, **args)
         self.pattern = String(args.get('pattern', None))
@@ -66,7 +99,7 @@ class ProtImportMicrographs(Protocol):
         return path
         
 
-class ProtScreenMicrographs(Protocol):
+class ProtCTFMicrographs(Protocol):
     pass
 
 

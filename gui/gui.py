@@ -179,6 +179,7 @@ def configureWeigths(widget):
     widget.columnconfigure(0, weight=1)
     widget.rowconfigure(0, weight=1)
     
+    
 class Window():
     """Class to manage a Tk windows.
     It will encapsulates some basic creation and 
@@ -220,12 +221,15 @@ class Window():
         if center:
             centerWindows(self.root, refWindows=self.master)
         self.root.deiconify()
+        self.root.focus_set()
         self.root.mainloop()
         
     def _onClosing(self):
         """Do some cleanning before closing"""
         Window._activeWindows -= 1
-        if Window._activeWindows == 0: # clean cached images if last windows closed
+        if Window._activeWindows <= 0: # clean cached images if last windows closed
             del thismodule._images
+        if self.master is not None:
+            self.master.focus_set()
         self.root.destroy()
             

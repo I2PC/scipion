@@ -71,23 +71,39 @@ class MenuConfig(OrderedObject):
         self.tag = String(tag)
         self.childCount = 0
         
+    def _getSubMenuName(self):
+        self.childCount += 1
+        return '_child_%03d' % self.childCount
+        
     def addSubMenu(self, text, value=None, **args):
         subMenu = type(self)(text, value, **args)
-        self.childCount += 1
-        setattr(self, '_child_%03d' % self.childCount, subMenu)
-        #self.append(subMenu)
+        name = self._getSubMenuName()
+        setattr(self, name, subMenu)
         return subMenu
     
     def __iter__(self):
-        for k, v in self.__dict__.iteritems():
-            if k.startswith('_child_'):
-                yield v
+        for v in self._getChilds():
+            yield v        
+                
+    def __setattr__(self, name, value):
+        if len(name) == 0:
+            name = self._getSubMenuName()
+        OrderedObject.__setattr__(self, name, value)
                 
     def _getStr(self, prefix):
         s = prefix + "%s text = %s, icon = %s\n" % (self.getClassName(), self.text.get(), self.icon.get())
         for sub in self:
             s += sub._getStr(prefix + "  ")
         return s
+    
+    def _getChilds(self):
+        return [v for k, v in self.__dict__.iteritems() if k.startswith('_child_')]
+    
+    def __len__(self):
+        return len(self._getChilds())
+    
+    def isEmpty(self):
+        return len(self._getChilds()) == 0
             
     def __str__(self):
         return self._getStr(' ')
@@ -146,21 +162,26 @@ def writeDefaults():
     
     # Write protocols configuration
     menu = ProtocolConfig()
-    m1 = menu.addSubMenu('Preprocessing')
+    m1 = menu.addSubMenu('Micrographs', tag='section')
     
-    m2 = m1.addSubMenu('Micrographs')
-    m2.addSubMenu('Import', value='ProtImportMicrographs')
-    m2.addSubMenu('Screen', value='ProtScreenMicrographs')
-    m2.addSubMenu('Downsample', value='ProtDownsampleMicrographs')
+    #m2 = m1.addSubMenu('Micrographs')
+    m1.addSubMenu(' Import', value='ProtImportMicrographs', 
+                  tag = 'protocol', icon='bookmark.gif')
+    m1.addSubMenu('CTF estimation', value='ProtCTFMicrographs',
+                  tag = 'protocol_base')
+    m1.addSubMenu('Downsample', value='ProtDownsampleMicrographs',)
     
-    m2 = m1.addSubMenu('Particle Picking')
-    m2.addSubMenu('Manual')
-    m2.addSubMenu('Supervised')
-    m2.addSubMenu('Automatic')
+    m1 = menu.addSubMenu('Particles', tag='section')
+    m1.addSubMenu('Import', value='ProtImportParticles', 
+                  tag = 'protocol', icon='bookmark.gif')
+    m1.addSubMenu('Picking', value='ProtParticlePicking',
+                  tag = 'protocol_base')
     
-    m1 = menu.addSubMenu('2D')
+
+    m1 = menu.addSubMenu('2D', tag='section')
     
-    m1.addSubMenu('Align', value='ProtAlign')
+    m1.addSubMenu('Align', value='ProtAlign',
+                  tag = 'protocol_base')
     m1.addSubMenu('Classify', value='ProtClassify')
     m1.addSubMenu('Align+Classify', value='ProtAlignClassify')
 

@@ -49,7 +49,7 @@ from pyworkflow.em import *
 import gui
 from gui.widgets import Button
 from gui.text import TaggedText
-from gui.dialog import askString, askYesNo
+from gui.dialog import askString, askYesNo, showError
 
 
 def loadSubclasses():
@@ -213,11 +213,12 @@ class ManagerWindow(gui.Window):
     
     def openProject(self, projName):
         projPath = self.manager.getProjectPath(projName)
-        from pw_project import createProjectGUI
+        from pw_project import ProjectWindow
         try:
-            gui = createProjectGUI(projPath, self.root)
-            gui.show()
+            projWindow = ProjectWindow(projPath, self.root)
+            projWindow.show()
         except Exception, e:
+            gui.Window._activeWindows -= 1
             showError("Error loading project", str(e), self.root)
             
     def deleteProject(self, projName):

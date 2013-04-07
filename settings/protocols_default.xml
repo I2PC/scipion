@@ -1,20 +1,17 @@
 <?xml version='1.0' encoding='utf-8'?>
 <ALL>
   <ProtocolConfig>
-    <ProtocolConfig text="Preprocessing">
-      <ProtocolConfig text="Micrographs">
-        <ProtocolConfig text="Import" value="ProtImportMicrographs" />
-        <ProtocolConfig text="Screen" value="ProtScreenMicrographs" />
-        <ProtocolConfig text="Downsample" value="ProtDownsampleMicrographs" />
-      </ProtocolConfig>
-      <ProtocolConfig text="Particle Picking">
-        <ProtocolConfig text="Manual" />
-        <ProtocolConfig text="Supervised" />
-        <ProtocolConfig text="Automatic" />
-      </ProtocolConfig>
+    <ProtocolConfig tag="section" text="Micrographs">
+      <ProtocolConfig icon="bookmark.gif" tag="protocol" text=" Import" value="ProtImportMicrographs" />
+      <ProtocolConfig tag="protocol_base" text="CTF estimation" value="ProtCTFMicrographs" />
+      <ProtocolConfig text="Downsample" value="ProtDownsampleMicrographs" />
     </ProtocolConfig>
-    <ProtocolConfig text="2D">
-      <ProtocolConfig text="Align" value="ProtAlign" />
+    <ProtocolConfig tag="section" text="Particles">
+      <ProtocolConfig icon="bookmark.gif" tag="protocol" text="Import" value="ProtImportParticles" />
+      <ProtocolConfig tag="protocol_base" text="Picking" value="ProtParticlePicking" />
+    </ProtocolConfig>
+    <ProtocolConfig tag="section" text="2D">
+      <ProtocolConfig tag="protocol_base" text="Align" value="ProtAlign" />
       <ProtocolConfig text="Classify" value="ProtClassify" />
       <ProtocolConfig text="Align+Classify" value="ProtAlignClassify" />
     </ProtocolConfig>
