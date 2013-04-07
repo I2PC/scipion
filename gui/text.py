@@ -200,7 +200,7 @@ class TaggedText(XmippText):
     
     def configureTags(self):
         self.tag_config('normal', justify=tk.LEFT)
-        self.tag_config('bold', justify=tk.LEFT, font=gui.fontButton)
+        self.tag_config('bold', justify=tk.LEFT, font=gui.fontBold)
         if self.colors:            
             self.colors = configureColorTags(self) # Color can be unavailable, so disable use of colors    
         

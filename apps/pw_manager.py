@@ -26,6 +26,7 @@
 # *
 # **************************************************************************
 from inspect import isclass
+from pyworkflow.utils.utils import prettyDate
 """
 Main project window application
 """
@@ -48,7 +49,7 @@ from pyworkflow.em import *
 import gui
 from gui.widgets import Button
 from gui.text import TaggedText
-from gui.dialog import askString, showError
+from gui.dialog import askString, askYesNo
 
 
 def loadSubclasses():
@@ -144,6 +145,7 @@ class ManagerWindow(gui.Window):
         config = mapper.getConfig()
         self.projNameFont = tkFont.Font(size=12, family='verdana', weight='bold')
         self.projDateFont = tkFont.Font(size=8, family='verdana')
+        self.projDelFont = tkFont.Font(size=8, family='verdana', weight='bold')
         self.manager = Manager()
         parent = self.root
 
@@ -185,19 +187,22 @@ class ManagerWindow(gui.Window):
         parent.columnconfigure(0, weight=1)
         
         for p in self.manager.listProjects():
-            frame = self.createProjectLabel(parent, p, ' ')
+            frame = self.createProjectLabel(parent, p)
             frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
             r += 1
         text.window_create(tk.INSERT, window=parent)
         
-    def createProjectLabel(self, parent, text, date):
+    def createProjectLabel(self, parent, projInfo):
         frame = tk.Frame(parent)
-        label = tk.Label(frame, text=text, anchor='nw', 
+        label = tk.Label(frame, text=projInfo.projName, anchor='nw', 
                          justify=tk.LEFT, font=self.projNameFont, cursor='hand1')
         label.grid(row=0, column=0, padx=2, pady=2, sticky='nw')
-        label.bind('<Button-1>', lambda e: self.openProject(text))
-        dateLabel = tk.Label(frame, text='   Modified: '+date, font=self.projDateFont)
+        label.bind('<Button-1>', lambda e: self.openProject(projInfo.projName))
+        dateLabel = tk.Label(frame, text='   Modified: ' + prettyDate(projInfo.mTime), font=self.projDateFont)
         dateLabel.grid(row=1, column=0)
+        delLabel = tk.Label(frame, text='Delete project', font=self.projDelFont, cursor='hand1')
+        delLabel.grid(row=1, column=1, padx=10)
+        delLabel.bind('<Button-1>', lambda e: self.deleteProject(projInfo.projName))
         return frame
         
     def createNewProject(self):
@@ -214,6 +219,12 @@ class ManagerWindow(gui.Window):
             gui.show()
         except Exception, e:
             showError("Error loading project", str(e), self.root)
+            
+    def deleteProject(self, projName):
+        if askYesNo("Confirm Project deletion", 
+                    "Are you sure to <DELETE> project <%s>\n and all its <DATA>?" % projName, self.root):
+            self.manager.deleteProject(projName)
+            self.createProjectList(self.text)
 
 if __name__ == '__main__':
     ManagerWindow().show()

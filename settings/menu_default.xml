@@ -2,14 +2,14 @@
 <ALL>
   <MenuConfig>
     <MenuConfig text="Project">
-      <MenuConfig action="browse" icon="folderopen.gif" text="Browse files" />
-      <MenuConfig icon="delete.gif" text="Remove temporary files" />
-      <MenuConfig text="Clean project" />
-      <MenuConfig text="Exit" />
+      <MenuConfig icon="folderopen.gif" text="Browse files" value="browse" />
+      <MenuConfig icon="delete.gif" text="Remove temporary files" value="delete" />
+      <MenuConfig text="Clean project" value="clean" />
+      <MenuConfig text="Exit" value="exit" />
     </MenuConfig>
     <MenuConfig text="Help">
-      <MenuConfig icon="online_help.gif" text="Online help" />
-      <MenuConfig text="About" />
+      <MenuConfig icon="online_help.gif" text="Online help" value="online_help" />
+      <MenuConfig text="About" value="about" />
     </MenuConfig>
   </MenuConfig>
 </ALL>

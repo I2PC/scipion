@@ -37,6 +37,14 @@ from pyworkflow.utils.path import cleanPath, makePath, getHomePath
 PROJECTS_PATH = 'Scipion_Projects'
 
 
+class ProjectInfo(object):
+    """Class to store some information about the project"""
+    def __init__(self, projName, mTime):
+        """At least it receives the Project Name and its modification time"""
+        self.projName = projName
+        self.mTime = mTime
+        
+        
 class Manager(object):
     """This class will handle the creation, modification
     and listing of projects."""
@@ -49,9 +57,20 @@ class Manager(object):
         """Return the project path given the name"""
         return join(self.path, projectName)
         
-    def listProjects(self):
-        """Return a list with all existing projects"""
-        return [f for f in os.listdir(self.path) if os.path.isdir(self.getProjectPath(f))]
+    def listProjects(self, sortByDate=True):
+        """Return a list with all existing projects
+        And some other project info
+        If sortByData is True, recently modified projects will be first"""
+        projList = []
+        for f in os.listdir(self.path):
+            p = self.getProjectPath(f)
+            if os.path.isdir(p):
+                stat = os.stat(p)
+                projList.append(ProjectInfo(f, stat.st_mtime))
+                
+        if sortByDate:
+            projList.sort(key=lambda k: k.mTime, reverse=True)
+        return projList
     
     def createProject(self, projectName):
         """Create a new project """
@@ -59,6 +78,6 @@ class Manager(object):
         proj.create()
         
     def deleteProject(self, projectName):
-        pass
+        cleanPath(self.getProjectPath(projectName))
         
         

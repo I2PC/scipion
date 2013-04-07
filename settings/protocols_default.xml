@@ -3,9 +3,9 @@
   <ProtocolConfig>
     <ProtocolConfig text="Preprocessing">
       <ProtocolConfig text="Micrographs">
-        <ProtocolConfig action="ProtImportMicrographs" text="Import Micrographs" />
-        <ProtocolConfig action="ProtScreenMicrographs" text="Screen" />
-        <ProtocolConfig action="ProtDownsampleMicrographs" text="Downsample" />
+        <ProtocolConfig text="Import" value="ProtImportMicrographs" />
+        <ProtocolConfig text="Screen" value="ProtScreenMicrographs" />
+        <ProtocolConfig text="Downsample" value="ProtDownsampleMicrographs" />
       </ProtocolConfig>
       <ProtocolConfig text="Particle Picking">
         <ProtocolConfig text="Manual" />
@@ -14,9 +14,9 @@
       </ProtocolConfig>
     </ProtocolConfig>
     <ProtocolConfig text="2D">
-      <ProtocolConfig action="ProtAlign" text="Align" />
-      <ProtocolConfig action="ProtClassify" text="Classify" />
-      <ProtocolConfig action="ProtAlignClassify" text="Align+Classify" />
+      <ProtocolConfig text="Align" value="ProtAlign" />
+      <ProtocolConfig text="Classify" value="ProtClassify" />
+      <ProtocolConfig text="Align+Classify" value="ProtAlignClassify" />
     </ProtocolConfig>
   </ProtocolConfig>
 </ALL>

@@ -92,24 +92,27 @@ def saveConfig(filename):
 """
 FONT related variables and functions 
 """
-def setFont(fontKey, **opts):
+def setFont(fontKey, update=False, **opts):
     """Register a tkFont and store it in a globals of this module
     this method should be called only after a tk.Tk() windows has been
     created."""
-    setattr(thismodule, fontKey, tkFont.Font(**opts))
+    if not hasFont(fontKey) or update:
+        setattr(thismodule, fontKey, tkFont.Font(**opts))
     
 def hasFont(fontKey):
     return hasattr(thismodule, fontKey)
+
+def aliasFont(fontKey, fontAlias):
+    """Set a font as alias of another one"""
+    setattr(thismodule, fontKey, getattr(thismodule, fontAlias))
     
 def setCommonFonts():
     """Set some predifined common fonts.
     Same conditions of setFont applies here."""
-    if not hasFont('fontNormal'):
-        setFont('fontNormal', family=cfgFontName, size=cfgFontSize)
-    if not hasFont('fontButton'):
-        setFont('fontButton', family=cfgFontName, size=cfgFontSize)#, weight='bold')
-    if not hasFont('fontLabel'):
-        setFont('fontLabel', family=cfgFontName, size=cfgFontSize+1, weight='bold')
+    setFont('fontNormal', family=cfgFontName, size=cfgFontSize)
+    aliasFont('fontButton', 'fontNormal')
+    setFont('fontBold', family=cfgFontName, size=cfgFontSize, weight='bold')
+    setFont('fontLabel', family=cfgFontName, size=cfgFontSize+1, weight='bold')
 
 def changeFontSizeByDeltha(font, deltha, minSize=-999, maxSize=999):
     size = font['size']
@@ -180,6 +183,8 @@ class Window():
     """Class to manage a Tk windows.
     It will encapsulates some basic creation and 
     setup functions. """
+    _activeWindows = 0 # Counter of the number of windows
+    
     def __init__(self, title, master=None, weight=True, minsize=(500, 300),
                  icon=None):
         """Create a Tk window.
@@ -204,6 +209,9 @@ class Window():
             abspath = os.path.abspath(path)
             self.root.iconbitmap("@" + abspath)
             
+        Window._activeWindows += 1
+        print "creating...", Window._activeWindows
+        self.root.protocol("WM_DELETE_WINDOW", self._onClosing)
         self.master = master
         setCommonFonts()
         
@@ -213,3 +221,11 @@ class Window():
             centerWindows(self.root, refWindows=self.master)
         self.root.deiconify()
         self.root.mainloop()
+        
+    def _onClosing(self):
+        """Do some cleanning before closing"""
+        Window._activeWindows -= 1
+        if Window._activeWindows == 0: # clean cached images if last windows closed
+            del thismodule._images
+        self.root.destroy()
+            
