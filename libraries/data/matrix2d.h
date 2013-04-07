@@ -1120,6 +1120,15 @@ public:
     		VEC_ELEM(sum,i)+=MAT_ELEM(*this,i,j);
     }
 
+    /** Get row energy sum.
+     * Sum of the squared values by row */
+    void rowEnergySum(Matrix1D<T> &sum) const
+    {
+    	sum.initZeros(MAT_YSIZE(*this));
+    	FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
+    		VEC_ELEM(sum,i)+=MAT_ELEM(*this,i,j)*MAT_ELEM(*this,i,j);
+    }
+
     /** Produce a 2D array suitable for working with Numerical Recipes
     *
     * This function must be used only as a preparation for routines which need
@@ -1519,6 +1528,7 @@ public:
 
         return d;
     }
+
     ///determinat of 3x3 matrix
     T det3x3() const
     {
@@ -1531,6 +1541,19 @@ public:
                                      dMij(*this,1,1)*dMij(*this,0,2) )
                );
     }
+
+    /** Frobenius norm of a matrix */
+    double norm()
+    {
+    	double sum=0.;
+    	FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
+    	{
+    		T aux=MAT_ELEM(*this,i,j);
+    		sum+=aux*aux;
+    	}
+    	return sqrt(sum);
+    }
+
     /** Algebraic transpose of a Matrix
      *
      * You can use the transpose in as complex expressions as you like. The
