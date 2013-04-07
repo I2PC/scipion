@@ -261,7 +261,6 @@ class XmlMapper():
     def writeEMXFile(self, fileName):
         """read xml file and store it in a document
         """
-        print fileName
         xmlFile = open(fileName, "w")
         xmlFile.write("<?xml version='1.0' encoding='utf-8'?>\n")
         xmlFile.write('''<EMX version="1.0">
