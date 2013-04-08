@@ -656,6 +656,8 @@ xmipp_Euler_angles2matrix(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+
+
 PyObject *
 xmipp_Euler_matrix2angles(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
@@ -676,6 +678,20 @@ xmipp_Euler_matrix2angles(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+
+PyObject *
+xmipp_Euler_direction(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    PyObject * input;
+    double rot, tilt, psi;
+    if (PyArg_ParseTuple(args, "ddd", &rot,&tilt,&psi))
+    {
+    	Matrix1D<double> direction(3);
+        Euler_direction(rot, tilt, psi, direction);
+        return Py_BuildValue("fff", VEC_ELEM(direction, 0), VEC_ELEM(direction, 1), VEC_ELEM(direction, 2));//fff three real
+    }
+    return NULL;
+}
 /* activateMathExtensions */
 PyObject *
 xmipp_activateMathExtensions(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -766,6 +782,8 @@ xmipp_methods[] =
           "convert euler angles to transformation matrix" },
         { "Euler_matrix2angles", (PyCFunction) xmipp_Euler_matrix2angles, METH_VARARGS,
           "convert transformation matrix to euler angles" },
+        { "Euler_direction", (PyCFunction) xmipp_Euler_direction, METH_VARARGS,
+                    "converts euler angles to direction" },
         { "activateMathExtensions", (PyCFunction) xmipp_activateMathExtensions,
           METH_VARARGS, "activate math function in metadatas" },
 

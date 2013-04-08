@@ -69,8 +69,9 @@ class ChimeraServer:
                     if msg == 'draw_angular_distribution':
                         spheres = self.remote_conn.recv()
                         for sphere in spheres:
-                            command = 'shape sphere radius %s center %s,%s,%s'%(sphere[0], sphere[1], sphere[2], sphere[3])
+                            command = 'shape sphere radius %s center %s,%s,%s color green '%(sphere[0], sphere[1], sphere[2], sphere[3])
                             runCommand(command)
+                            print command
                     if msg == 'end':    
                         break
                     else:
