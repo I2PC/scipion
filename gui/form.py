@@ -87,7 +87,7 @@ class SectionFrame(tk.Frame):
 
     
 class FormWindow(Window): 
-    def __init__(self, formDef, master=None, **args):
+    def __init__(self, protocol, master=None, **args):
         Window.__init__(self, "Project: test_project", master, weight=False,
                         icon='scipion_bn.xbm', **args)
 
@@ -103,7 +103,8 @@ class FormWindow(Window):
         text = TaggedText(self.root, width=40, height=15)
         text.grid(row=1, column=0, sticky='news')
         text.config(state=tk.DISABLED)
-        self.createSections(formDef, text)
+        self.protocol = protocol
+        self.createSections(protocol._definition, text)
         
         btnFrame = tk.Frame(self.root)
         btnFrame.columnconfigure(0, weight=1)
@@ -115,11 +116,12 @@ class FormWindow(Window):
         
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(1, weight=1)
+        
     
     def fillSection(self, sectionParam, sectionFrame):
         parent = sectionFrame.contentFrame
         r = 0
-        for param in sectionParam.paramList:
+        for paramName, param in sectionParam.getChildParams():
             # Create the label
             if param.isImportant:
                 f = self.fontBold
@@ -136,7 +138,11 @@ class FormWindow(Window):
                 rb2 = tk.Radiobutton(content, text='No', bg='white')
                 rb2.grid(row=0, column=1, padx=2)
             else:
-                content = tk.Entry(parent, width=25)
+                v = tk.StringVar()
+                content = tk.Entry(parent, width=25, textvariable=v)
+                value = getattr(self.protocol, paramName, None)
+                if value is not None:
+                    v.set(value.get(''))
             
             content.grid(row=r, column=1, padx=2, pady=2, sticky='w')
             r += 1
@@ -161,53 +167,14 @@ class FormWindow(Window):
         self.root.bind("<Button-5>", lambda e: text.scroll(e)) 
         text.window_create(tk.INSERT, window=parent)
         
-def defineImportMicrographForm():
-    """Create the definition of parameters for
-    the ImportMicrographs protocol"""
-    f = Form()
-    
-    f.addSection(label='Input')
-    f.addParam('Pattern', StringParam, label="Pattern")
-    f.addParam('TiltPairs', BooleanParam, default=False, important=True,
-               label='Are micrographs tilt pairs?')
-    
-    f.addSection(label='Microscope description')
-    f.addParam('Voltage', FloatParam, default=200,
-               label='Microscope voltage (in kV)')
-    f.addParam('SphericalAberration', FloatParam, default=2.26,
-               label='Spherical aberration (in mm)')
-    f.addParam('SamplingRateMode', EnumParam, default=0,
-               label='Sampling rate',
-               choices=['From image', 'From scanner'])
-    f.addParam('SamplingRate', FloatParam,
-               label='Sampling rate (A/px)', condition='SamplingRateMode==0')
-    f.addParam('Magnification', IntParam, default=60000,
-               label='Magnification rate', condition='SamplingRateMode==1')
-    f.addParam('ScannedPixelSize', FloatParam, 
-               label='Scanned pixel size', condition='SamplingRateMode==1')
-    
-    f.addSection(label='Microscope description')
-    f.addParam('Voltage', FloatParam, default=200,
-               label='Microscope voltage (in kV)')
-    f.addParam('SphericalAberration', FloatParam, default=2.26,
-               label='Spherical aberration (in mm)')
-    f.addParam('SamplingRateMode', EnumParam, default=0,
-               label='Sampling rate',
-               choices=['From image', 'From scanner'])
-    f.addParam('SamplingRate', FloatParam,
-               label='Sampling rate (A/px)', condition='SamplingRateMode==0')
-    f.addParam('Magnification', IntParam, default=60000,
-               label='Magnification rate', condition='SamplingRateMode==1')
-    f.addParam('ScannedPixelSize', FloatParam, 
-               label='Scanned pixel size', condition='SamplingRateMode==1')
-    
-    return f
   
 if __name__ == '__main__':
-    # Load global configuration
-    f = defineImportMicrographForm()
-    
-    w = FormWindow(f)
+    # Just for testing
+    from pyworkflow.em import ProtImportMicrographs
+    p = ProtImportMicrographs()
+    p.sphericalAberration.set(2.3)
+    p.samplingRate.set('5.4')
+    w = FormWindow(p)
     w.show()
     
    
