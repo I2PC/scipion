@@ -167,7 +167,7 @@ class ManagerWindow(gui.Window):
         
         lf = ttk.Labelframe(f, text='Current Projects')
         lf.grid(row=0, column=1, sticky='news', padx=10, pady=10, rowspan=2)
-        text = TaggedText(lf, width=40, height=15)
+        text = TaggedText(lf, width=40, height=15, bd=0)
         text.grid(row=0, column=0, sticky='news')
         text.config(state=tk.DISABLED)
         gui.configureWeigths(lf)

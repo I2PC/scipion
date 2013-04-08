@@ -227,6 +227,7 @@ class Window():
     def _onClosing(self):
         """Do some cleanning before closing"""
         Window._activeWindows -= 1
+        print "Closing window, ", Window._activeWindows
         if Window._activeWindows <= 0: # clean cached images if last windows closed
             del thismodule._images
         if self.master is not None:

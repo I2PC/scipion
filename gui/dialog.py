@@ -67,11 +67,12 @@ class Dialog(tk.Toplevel):
             self.title(title)
 
         self.parent = parent
-
         self.result = None
+        self.initial_focus = None
 
         bodyFrame = tk.Frame(self)
-        self.initial_focus = self.body(bodyFrame)
+        # Call subclass method body to create that region
+        self.body(bodyFrame)
         bodyFrame.grid(row=0, column=0, sticky='news',
                        padx=5, pady=5)
 
@@ -79,6 +80,7 @@ class Dialog(tk.Toplevel):
                                             ('Cancel', Dialog.RESULT_CANCEL)])
         self.defaultButton = args.get('default', 'OK')
         btnFrame = tk.Frame(self)
+        # Create buttons 
         self.buttonbox(btnFrame)
         btnFrame.grid(row=1, column=0, sticky='sew',
                       padx=5, pady=(0, 5))
@@ -86,7 +88,7 @@ class Dialog(tk.Toplevel):
         gui.configureWeigths(self)
 
 
-        if not self.initial_focus:
+        if self.initial_focus is not None:
             self.initial_focus = self
 
         self.protocol("WM_DELETE_WINDOW", self.cancel)
@@ -134,7 +136,8 @@ class Dialog(tk.Toplevel):
         for btnLabel, btnResult in self.buttons:
             btn = self._createButton(frame, btnLabel, btnResult)
             btn.grid(row=0, column=col, padx=5, pady=5)
-            if btnLabel == self.defaultButton:
+            if (btnLabel == self.defaultButton and 
+                self.initial_focus is None):
                 self.initial_focus = btn
             col += 1
         self.bind("<Return>", self._handleReturn)
@@ -249,6 +252,7 @@ class EntryDialog(Dialog):
         label.grid(row=0, column=0, sticky='nw', padx=(15, 10), pady=15)
         self.entry = tk.Entry(bodyFrame, bg=gui.cfgEntryBgColor, width=self.entryWidth)
         self.entry.grid(row=0, column=1, sticky='new', padx=(0,15), pady=15)
+        self.initial_focus = self.entry
         
     def apply(self):
         self.value = self.entry.get()
