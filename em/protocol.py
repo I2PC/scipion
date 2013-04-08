@@ -40,24 +40,24 @@ def defineImportMicrograph():
     f = Form()
     
     f.addSection(label='Input')
-    f.addParam('Pattern', StringParam, label="Pattern")
-    f.addParam('TiltPairs', BooleanParam, default=False, important=True,
+    f.addParam('pattern', StringParam, label="Pattern")
+    f.addParam('tiltPairs', BooleanParam, default=False, important=True,
                label='Are micrographs tilt pairs?')
     
     f.addSection(label='Microscope description')
-    f.addParam('Voltage', FloatParam, default=200,
+    f.addParam('voltage', FloatParam, default=200,
                label='Microscope voltage (in kV)')
-    f.addParam('SphericalAberration', FloatParam, default=2.26,
+    f.addParam('sphericalAberration', FloatParam, default=2.26,
                label='Spherical aberration (in mm)')
-    f.addParam('SamplingRateMode', EnumParam, default=0,
-               label='Sampling rate',
+    f.addParam('samplingRateMode', EnumParam, default=0,
+               label='Sampling rate mode',
                choices=['From image', 'From scanner'])
-    f.addParam('SamplingRate', FloatParam,
-               label='Sampling rate (A/px)', condition='SamplingRateMode==0')
-    f.addParam('Magnification', IntParam, default=60000,
-               label='Magnification rate', condition='SamplingRateMode==1')
+    f.addParam('samplingRate', FloatParam,
+               label='Sampling rate (A/px)', condition='samplingRateMode==0')
+    f.addParam('magnification', IntParam, default=60000,
+               label='Magnification rate', condition='samplingRateMode==1')
     f.addParam('ScannedPixelSize', FloatParam, 
-               label='Scanned pixel size', condition='SamplingRateMode==1')
+               label='Scanned pixel size', condition='samplingRateMode==1')
     
     return f
 
@@ -70,15 +70,16 @@ class ProtImportMicrographs(Protocol):
         Protocol.__init__(self, **args)
         self.pattern = String(args.get('pattern', None))
         self.voltage = Float(args.get('voltage', 300))
-        self.aberration = Float(args.get('aberration', 1.2))
-        self.sampling = Float(args.get('sampling', 1.2))              
+        self.sphericalAberration = Float(args.get('sphericalAberration', 1.2))
+        self.samplingRate = Float(args.get('samplingRate', 1.2))
+        self.magnification = Float(args.get('magnification', 50000))             
         
     def defineSteps(self):
         self.insertFunctionStep('importMicrographs', self.pattern.get(),
-                                self.voltage.get(), self.aberration.get(), 
-                                self.sampling.get())
+                                self.voltage.get(), self.sphericalAberration.get(), 
+                                self.samplingRate.get())
         
-    def importMicrographs(self, pattern, voltage, aberration, sampling):
+    def importMicrographs(self, pattern, voltage, sphericalAberration, samplingRate):
         """Copy micrographs matching the filename pattern
         Register other parameters"""
         from glob import glob
@@ -93,8 +94,8 @@ class ProtImportMicrographs(Protocol):
         
         micSet = SetOfMicrographs(value=path)
         micSet.microscope.voltage.set(voltage)
-        micSet.microscope.aberration.set(aberration)
-        micSet.sampling.set(sampling)
+        micSet.microscope.sphericalAberration.set(sphericalAberration)
+        micSet.samplingRate.set(samplingRate)
         self.defineOutputs(micrograph=micSet)
         
         return path

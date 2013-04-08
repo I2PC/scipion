@@ -59,8 +59,13 @@ class Section(FormBase):
         """Add a new param to last section"""
         p = ParamClass(**args)
         setattr(self, name, p)
-        self.paramList.append(p)
+        self.paramList.append(name)
         return p
+    
+    def getChildParams(self):
+        """Return key and param for every child param"""
+        for name in self.paramList:
+            yield (name, getattr(self, name))
         
     def __str__(self):
         s = "  Section, label: %s\n" % self.label.get()

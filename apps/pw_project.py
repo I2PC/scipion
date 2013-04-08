@@ -232,7 +232,7 @@ class ProjectWindow(gui.Window):
         protName = self.tree.getFirst().split('.')[-1]
         protClass = subclasses.get(protName)
         prot = protClass()
-        w = FormWindow(prot._definition)
+        w = FormWindow(prot)
         w.show()
         
     
