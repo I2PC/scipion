@@ -117,9 +117,12 @@ class SetOfMicrographs(SetOfImages):
         return self.microscope
     
     def __iter__(self):
+        """Iterate over the set of micrographs in a .txt file"""
         f = open(self.getFileName())
-        for l in f:
-            yield l.strip()
+        for l in f:    
+            m = Micrograph()
+            m.setFileName(l.strip())       
+            yield m
         f.close()
         
     

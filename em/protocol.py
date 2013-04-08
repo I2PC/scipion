@@ -90,6 +90,7 @@ class ProtImportMicrographs(Protocol):
             print >> micFile, dst
             shutil.copyfile(f, dst)
         micFile.close()
+        
         micSet = SetOfMicrographs(value=path)
         micSet.microscope.voltage.set(voltage)
         micSet.microscope.aberration.set(aberration)
