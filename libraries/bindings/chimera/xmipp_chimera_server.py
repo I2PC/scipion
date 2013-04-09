@@ -67,11 +67,9 @@ class ChimeraServer:
                         grid = Array_Grid_Data(data)
                         self.volume = volume_from_grid_data(grid)
                     if msg == 'draw_angular_distribution':
-                        spheres = self.remote_conn.recv()
-                        for sphere in spheres:
-                            command = 'shape sphere radius %s center %s,%s,%s color green '%(sphere[0], sphere[1], sphere[2], sphere[3])
+                        angulardist = self.remote_conn.recv()
+                        for command in angulardist:
                             runCommand(command)
-                            print command
                     if msg == 'end':    
                         break
                     else:

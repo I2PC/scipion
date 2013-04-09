@@ -18,12 +18,18 @@ class ScriptChimeraClient(XmippScript):
         ## params
         self.addParamsLine('[ --input <input>]          : Volume to visualize')
         self.addParamsLine('   alias -i;')
-        self.addParamsLine('[ --mode <mode="viewer">]             : Sets visualization mode')
+        self.addParamsLine('[ --mode <mode=viewer>]             : Sets visualization mode')
+
+        self.addParamsLine(' where <mode>')
+        self.addParamsLine('  viewer         : Allows volume visualization')
+        self.addParamsLine('  projector <padding_factor="1">  <max_freq="0.5"> <spline_degree="2">   : Allows volume visualization and projection')
         self.addParamsLine('   alias -m;')
-        self.addParamsLine('[ --angulardist <angulardist="angulardist.xmd">]     : Volume angular distribution to visualize')
+        
+        
+        self.addParamsLine('[ --angulardist <angulardist>  <color=red> <spheres_distance="default"> <spheres_maxradius="default">]     : Volume angular distribution to visualize')
         self.addParamsLine('   alias -a;')
         
-        self.addExampleLine('Open xmipp chimera client in projector mode:', False)
+        self.addExampleLine('Opens xmipp chimera client in projector mode:', False)
         self.addExampleLine('xmipp_chimera_client -i hand.vol --mode projector', False)
             
     def run(self):
@@ -31,23 +37,28 @@ class ScriptChimeraClient(XmippScript):
     	volfile = self.getParam('-i')
     	mode = self.getParam('-m')
     	angulardistfile = self.getParam('-a')
+        
+        spheres_color = self.getParam('-a', 1)
+        spheres_distance = self.getParam('-a', 2)
+        spheres_maxradius = self.getParam('-a', 3)
+        
+        
+        isprojector = (mode == 'projector')
+        if isprojector:
+            padding_factor = self.getDoubleParam('-m', 1)
+            max_freq = self.getDoubleParam('-m', 2)
+            spline_degree = self.getDoubleParam('-m', 3)
 		
-        if volfile is None or not(exists(volfile)):
-        	raise ValueError(volfile)
-		if options.mode is None:
-			mode = 'viewer'
-		if not angulardist is None:
-			if not(exists(angulardistfile)):
-				raise ValueError(angulardistfile)
+       
+		
 
         serverfile = getXmippPath('libraries/bindings/chimera/xmipp_chimera_server.py')
         system("chimera %s  &" % serverfile)
-        print mode
-        if mode == 'projector':
-			XmippProjectionExplorer(volfile, angulardistfile)
+        if isprojector:
+			XmippProjectionExplorer(volfile, angulardistfile, spheres_color, spheres_distance, spheres_maxradius, padding_factor, max_freq, spline_degree)
 			print 'created projection explorer'
         elif mode == 'viewer':
-			client = XmippChimeraClient(volfile, angulardistfile)
+			client = XmippChimeraClient(volfile, angulardistfile, spheres_color, spheres_distance, spheres_maxradius)
 			client.listen()
 			print 'created chimera client'
 if __name__ == '__main__':
