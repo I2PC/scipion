@@ -7,6 +7,7 @@ from os.path import exists
 from protlib_filesystem import getXmippPath
 import sys
 from protlib_xmipp import XmippScript
+from xmipp import *
 
 
 class ScriptChimeraClient(XmippScript):
@@ -22,7 +23,7 @@ class ScriptChimeraClient(XmippScript):
 
         self.addParamsLine(' where <mode>')
         self.addParamsLine('  viewer         : Allows volume visualization')
-        self.addParamsLine('  projector <padding_factor="1">  <max_freq="0.5"> <spline_degree="2">   : Allows volume visualization and projection')
+        self.addParamsLine('  projector <padding_factor="1">  <max_freq="0.5"> <spline_degree="BSPLINE2">   : Allows volume visualization and projection. spline_degree can be: NEAREST, LINEAR, BSPLINE2, BSPLINE3 and BSPLINE4.')
         self.addParamsLine('   alias -m;')
         
         
@@ -47,8 +48,19 @@ class ScriptChimeraClient(XmippScript):
         if isprojector:
             padding_factor = self.getDoubleParam('-m', 1)
             max_freq = self.getDoubleParam('-m', 2)
-            spline_degree = self.getDoubleParam('-m', 3)
-		
+            
+            spline_degree_str = self.getParam('-m', 3)
+            if spline_degree_str == 'NEAREST':
+                spline_degree = NEAREST
+            elif spline_degree_str == 'LINEAR':
+                spline_degree = LINEAR
+            elif spline_degree_str == 'BSPLINE2':
+                spline_degree = BSPLINE2
+            elif spline_degree_str == 'BSPLINE3':
+                spline_degree = BSPLINE3
+            elif spline_degree_str == 'BSPLINE4':
+                spline_degree = BSPLINE4
+		              
        
 		
 
