@@ -1,6 +1,6 @@
 emx is a pure python module, in order to install it create a directory named emx, copy to it all the files contained in this directory and modify the variable PYTHONPATH so it points towards the new created directory.
 
-In order to modify the variable PYTHONPATH edit .bashrc or .tcshrc with commands to change PYTHONPATH. (not sure what shell your terminal is using? Run ‘echo $0′ That’s the number zero.)
+In order to modify the variable PYTHONPATH edit .bashrc or .cshrc with commands to change PYTHONPATH. (not sure what shell your terminal is using? Run ‘echo $0′ That’s the number zero.)
 
 For CSH shells, edit .cshrc and add a line like this:
 setenv PYTHONPATH ${PYTHONPATH}:/path_to_the_emx_directory
