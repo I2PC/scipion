@@ -105,6 +105,7 @@ public class Family {
 		try {
 			this.templates = new ImageGeneric(ImageGeneric.Float);
 			templates.resize(size, size, 1, templatesNumber);
+			
 			templates.write(templatesfile);
 			templates.setFilename(templatesfile);
 		} catch (Exception e) {

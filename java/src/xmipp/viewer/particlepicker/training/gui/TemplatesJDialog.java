@@ -59,7 +59,7 @@ public class TemplatesJDialog extends JDialog {
 			
 			int size = frame.getFamily().getSize();
 
-			if (frame.getAvailableParticles().isEmpty()) {
+			if (!frame.getParticlePicker().hasManualParticles()) {
 				templatespn.removeAll();
 				templatespn.setPreferredSize(new Dimension(
 						(int) (size * templates.getNDim()), size));
@@ -74,6 +74,7 @@ public class TemplatesJDialog extends JDialog {
 				templatespn.add(new ImageCanvas(template));
 
 			}
+			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -85,7 +86,7 @@ public class TemplatesJDialog extends JDialog {
 
 
 	private void initComponents() {
-		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(HIDE_ON_CLOSE);
 		setTitle("Templates");
 		templatespn = new Panel();
 		add(templatespn);

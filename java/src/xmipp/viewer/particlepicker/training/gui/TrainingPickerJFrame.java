@@ -32,6 +32,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -250,12 +251,14 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			if (templatesdialog == null)
 			{
 				templatesdialog = new TemplatesJDialog(TrainingPickerJFrame.this);
+				
 			}
 			else
 			{
 
 				templatesdialog.loadTemplates(true);
-				templatesdialog.setVisible(true);
+				if(!templatesdialog.isVisible())
+					templatesdialog.setVisible(true);
 			}
 		}
 		catch (Exception e)
