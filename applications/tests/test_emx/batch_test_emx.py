@@ -314,13 +314,14 @@ class TestEMX(unittest.TestCase):
         p1.set('transformationMatrix__t31',31.1)
         p1.set('transformationMatrix__t32',32.1)
         p1.set('transformationMatrix__t33',33.1)
-        p1.set('transformationMatrix__t34',34.11)
+        p1.set('transformationMatrix__t34',34.1)
 
         p1.setForeignKey(m1)
         _list.append(p1)
 
         counter=0
         for _object in emxData:
+            print "Counter", counter, _object, _list[counter]
             self.assertTrue(_object.strongEq(_list[counter]))
             counter += 1
 
