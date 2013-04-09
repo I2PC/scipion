@@ -686,9 +686,11 @@ public abstract class TrainingPicker extends ParticlePicker
 	{
 		MicrographFamilyData mfd = null;
 		for (TrainingMicrograph m : micrographs)
+		{
 			mfd = m.getFamilyData(f);
-		if (mfd.hasManualParticles())
-			return true;
+			if (mfd.hasManualParticles())
+				return true;
+		}
 		return false;
 	}
 
