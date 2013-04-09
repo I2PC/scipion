@@ -27,6 +27,7 @@
 """
 This module handles process execution
 """
+import sys
 
 # The job should be launched from the working directory!
 def runJob(log, 
@@ -90,25 +91,26 @@ def loadLaunchModule():
     ''' Load the launch module containing queue and mpi related parameters
     the actual configuration should be in [parallel] section of the XMIPP/.xmipp.cfg file
     '''
-    launchModuleName = os.environ['XMIPP_PARALLEL_LAUNCH']
-    return loadModule(launchModuleName)
+    pass
+#    launchModuleName = os.environ['XMIPP_PARALLEL_LAUNCH']
+#    return loadModule(launchModuleName)
 
-def loadModule(modulePath, report=True):
-    directory , moduleName = os.path.split(modulePath)
-    moduleName = moduleName.replace('.py', '')
-    if directory=='':
-        sys.path.insert(0, '.')
-    else:
-        sys.path.insert(0, directory)
-    try:
-        if moduleName in sys.modules:
-            module = sys.modules[moduleName]
-            reload(module)
-        else:
-            module = __import__(moduleName)
-    except ImportError, e:
-        if report:
-            reportError(str(e))
-        module = None
-    del sys.path[0]
-    return module
+#def loadModule(modulePath, report=True):
+#    directory , moduleName = os.path.split(modulePath)
+#    moduleName = moduleName.replace('.py', '')
+#    if directory=='':
+#        sys.path.insert(0, '.')
+#    else:
+#        sys.path.insert(0, directory)
+#    try:
+#        if moduleName in sys.modules:
+#            module = sys.modules[moduleName]
+#            reload(module)
+#        else:
+#            module = __import__(moduleName)
+#    except ImportError, e:
+#        if report:
+#            reportError(str(e))
+#        module = None
+#    del sys.path[0]
+#    return module

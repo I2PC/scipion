@@ -120,7 +120,7 @@ class FunctionStep(Step):
         
     def _run(self):
         resultFiles = self.func(*self.funcArgs)
-        if len(resultFiles):
+        if resultFiles and len(resultFiles):
             missingFiles = existsPath(resultFiles)
             if len(missingFiles):
                 raise Exception('Missing files: ' + ' '.join(missingFiles))

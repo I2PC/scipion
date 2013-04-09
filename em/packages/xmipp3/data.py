@@ -24,8 +24,21 @@
 # *
 # **************************************************************************
 """
-This module contains utilities functions and classes.
+This modules contains basic hierarchy
+for specific Xmipp3 EM data objects
 """
 
-from utils import *
-from process import *
+from pyworkflow.em import *   
+from xmipp import MetaData, MDL_MICROGRAPH
+    
+class SetOfMicrographsXmipp(SetOfMicrographs):
+    
+    def __iter__(self):
+        """Iterate over the set of micrographs in the MetaData"""
+        md = MetaData(self.getFileName())
+        for objId in md:    
+            m = Micrograph()
+            m.setFileName(md.getValue(MDL_MICROGRAPH, objId))       
+            yield m
+        
+    
