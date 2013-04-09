@@ -771,7 +771,7 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	public void updateTemplates(Family f)
 	{
-		if (family.getStep() != FamilyState.Manual)
+		if (f.getStep() != FamilyState.Manual)
 			return;
 		if (!hasManualParticles(f))
 			return;
