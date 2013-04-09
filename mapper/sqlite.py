@@ -24,8 +24,8 @@
 # *
 # **************************************************************************
 
+from pyworkflow.utils.path import replaceExt, joinExt
 from mapper import Mapper
-from utils.path import replaceExt, joinExt
 
 class SqliteMapper(Mapper):
     """Specific Mapper implementation using Sqlite database"""
@@ -102,7 +102,6 @@ class SqliteMapper(Mapper):
     def fillObject(self, obj, objRow):
         self.fillObjectWithRow(obj, objRow)
         namePrefix = self.getNamePrefix(obj)
-        print "namePrefix: ", namePrefix
         childs = self.db.selectObjectsByAncestor(namePrefix)
         childsDict = {obj._objId: obj}
         

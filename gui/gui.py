@@ -23,7 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from utils.path import findResource
 """
 This module contains all configuration
 settings and gui general functions 
@@ -33,6 +32,7 @@ import Tkinter as tk
 import tkFont
 
 from pyworkflow.object import OrderedObject
+from pyworkflow.utils.path import findResource
 
 thismodule = sys.modules[__name__]
 

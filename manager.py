@@ -76,8 +76,16 @@ class Manager(object):
         """Create a new project """
         proj = Project(self.getProjectPath(projectName))
         proj.create()
+        return proj
         
     def deleteProject(self, projectName):
         cleanPath(self.getProjectPath(projectName))
+        
+    def hasProject(self, projectName):
+        """Return True if exists a project with projectName"""
+        for projInfo in self.listProjects():
+            if projectName == projInfo.projName:
+                return True
+        return False
         
         

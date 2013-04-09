@@ -37,6 +37,8 @@ def prettyDate(time=False):
     now = datetime.now()
     if type(time) is int:
         diff = now - datetime.fromtimestamp(time)
+    elif type(time) is float:
+        diff = now - datetime.fromtimestamp(int(time))
     elif isinstance(time,datetime):
         diff = now - time 
     elif not time:
