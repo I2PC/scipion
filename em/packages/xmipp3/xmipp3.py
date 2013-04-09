@@ -79,7 +79,7 @@ class XmippProtDownsampleMicrographs(ProtDownsampleMicrographs):
 
         mdOut = self.getPath("micrographs.xmd")
                 
-        self.downsampledmics = SetOfMicrographsXmipp(value=mdOut)     
+        self.downsampledmics = XmippSetOfMicrographs(value=mdOut)     
         self.downsampledmics.microscope.voltage.set(self.inputMicrographs.microscope.voltage.get())
         self.downsampledmics.microscope.sphericalAberration.set(self.inputMicrographs.microscope.sphericalAberration.get())
         self.downsampledmics.samplingRate.set(self.inputMicrographs.samplingRate.get())

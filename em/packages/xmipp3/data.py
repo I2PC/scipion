@@ -31,7 +31,7 @@ for specific Xmipp3 EM data objects
 from pyworkflow.em import *   
 from xmipp import MetaData, MDL_MICROGRAPH
     
-class SetOfMicrographsXmipp(SetOfMicrographs):
+class XmippSetOfMicrographs(SetOfMicrographs):
     
     def __iter__(self):
         """Iterate over the set of micrographs in the MetaData"""
