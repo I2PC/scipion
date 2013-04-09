@@ -28,8 +28,7 @@ from os.path import basename, splitext
 from protlib_xmipp import XmippScript
 from xmipp import MetaData, MDL_CTF_MODEL, MD_APPEND, MD_OVERWRITE, FileName
 from emxLib.emxLib import ctfMicXmippToEmx
-from pyworkflow.object import *
-from emx.emxmapper import EmxMapper
+from emx.emxmapper import *
 from emx.emx import *
 from emxLib.emxLib import ctfMicEMXToXmipp, coorEMXToXmipp
 
@@ -61,15 +60,15 @@ class ScriptImportEMX(XmippScript):
         #object to store emx data
         emxData   = EmxData()
         #object to read/write emxData
-        mapper    = EmxMapper(emxData, emxFileName,globals())
+        mapper = XmlMapper(emxData)
         #read file
-        #mapper.read(emxFileName)
-        mapper.convertToEmxData(emxData)
+        mapper.readEMXFile(emxFileName)
+#        xmlMapperW.writeEMXFile(fileName)
         #create xmd files with mic CTF information and auxiliary files
         if mode == 'micCTF':
-            ctfMicEMXToXmipp(emxData,'micrograph')
+            ctfMicEMXToXmipp(emxData,MICROGRAPH)
         elif mode == 'Coordinates':
-            coorEMXToXmipp(emxData,'particle',emxFileName)
+            coorEMXToXmipp(emxData,PARTICLE,emxFileName)
 
 if __name__ == '__main__':
     ScriptImportEMX().tryRun()

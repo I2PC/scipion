@@ -274,7 +274,57 @@ class TestEMX(unittest.TestCase):
             os.remove(fileName)
         if os.path.exists(fileName+'2'):
             os.remove(fileName+'2')
-           
+
+    def test_60iterate(self):
+        #fileName = "massive_million.xml"
+        #fileName = "massive_100000.xml"
+        fileName = join(self.testsPath,'EMX/EMXread.emx')
+        emxData=EmxData()
+        xmlMapper = XmlMapper(emxData)
+        xmlMapper.readEMXFile(fileName)
+        _list = []
+        
+        m1 = Emxmicrograph('mic',1)
+        m1.set('acceleratingVoltage',100.)
+        m1.set('defocusU',1000.)
+        m1.set('pixelSpacing__X',5.6)
+        m1.set('pixelSpacing__Y',5.7)
+        _list.append(m1)
+
+        m2 = Emxmicrograph('mic',2)
+        m2.set('acceleratingVoltage',200.)
+        m2.set('defocusUAngle',135.)
+        _list.append(m2)
+
+        p1 = Emxparticle('parti',1)
+        p1.set('boxSize__X',11)
+        p1.set('boxSize__Y',33)
+        p1.set('defocusU',1000.)
+        p1.set('pixelSpacing__X',55.6)
+        p1.set('pixelSpacing__Y',55.7)
+
+        p1.set('transformationMatrix__t11',11.1)
+        p1.set('transformationMatrix__t12',12.1)
+        p1.set('transformationMatrix__t13',13.1)
+        p1.set('transformationMatrix__t14',14.1)
+                                           
+        p1.set('transformationMatrix__t21',21.1)
+        p1.set('transformationMatrix__t24',24.1)
+
+        p1.set('transformationMatrix__t31',31.1)
+        p1.set('transformationMatrix__t32',32.1)
+        p1.set('transformationMatrix__t33',33.1)
+        p1.set('transformationMatrix__t34',34.11)
+
+        p1.setForeignKey(m1)
+        _list.append(p1)
+
+        counter=0
+        for _object in emxData:
+            self.assertTrue(_object.strongEq(_list[counter]))
+            counter += 1
+
+
 from  XmippPythonTestResult import XmippPythonTestResult
 
                                         

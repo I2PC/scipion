@@ -217,8 +217,8 @@ class XmlMapper():
                             raise Exception ("Element: "+tag+" is empty")
                         else:
                             text = elem.text.strip(' \n\t')
-                        if(len(text)<2):
-                            raise Exception ("ZERO")
+                        if(len(text)<1):
+                            raise Exception ("ZERO for tag=%s, value=%s"%(tag,text))
                         if  mergeParent: 
                             self._object.set(parentLabel+EMX_SEP+tag, text)
                         else:

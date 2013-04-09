@@ -200,7 +200,10 @@ class EmxObject:
     def _initPrimaryKey_ (self,key, value=None):
         '''Private function do not use outside this file
         '''
-        self.dictPrimaryKeys[key] = emxDataTypes[key].getType()(value)
+        if value is None:
+            pass
+        else:
+            self.dictPrimaryKeys[key] = emxDataTypes[key].getType()(value)
         
     def get(self, key):
         '''given a key (attribute name) returns 
@@ -209,7 +212,8 @@ class EmxObject:
             return self.dictPrimaryKeys[key]
         if key in self.dictAttributes:
             return self.dictAttributes[key]
-        raise Exception("Key %s not found in: %s" % (key, self.name))
+        return None
+        #raise Exception("Key %s not found in: %s" % (key, self.name))
     
     def set(self, key, value=None):
         '''given a key (attribute name) assigns a value to it'''
@@ -392,9 +396,14 @@ class EmxData():
         return len(self.mapObjectPK)
 
     def __iter__(self):
-        for node in self.objLists:
-            for subnode in self.objLists[node]:
+        for node, nodelist in self.objLists.iteritems():
+            for subnode in nodelist:
                 yield subnode
+
+    def iterClasses(self,className):
+        """Iterate through a particular class
+        """
+        return self.objLists[className]
 
     def __str__(self):
         partStr=""
