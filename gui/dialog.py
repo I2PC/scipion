@@ -55,7 +55,7 @@ class Dialog(tk.Toplevel):
             buttons -- list of buttons tuples containing which buttons to display
         """
         tk.Toplevel.__init__(self, parent)
-
+        
         self.withdraw() # remain invisible for now
         # If the master is not viewable, don't
         # make the child transient, or else it

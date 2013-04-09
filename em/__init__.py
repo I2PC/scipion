@@ -26,6 +26,24 @@
 """
 This modules contains classes related with EM
 """
+import os
 
+import pyworkflow as pw
+from pyworkflow.utils.reflection import getSubClassesFromPath, getSubclasses
 from data import *
 from protocol import *
+
+PACKAGES_PATH = os.path.join(pw.HOME, 'em', 'packages')
+
+# Load all Protocol subclasses found in EM-packages
+emProtocolsDict = getSubClassesFromPath(Protocol, PACKAGES_PATH)
+getSubclasses(Protocol, globals(), emProtocolsDict)
+
+# Load all EMObject subclasses found in EM-packages
+emObjectsDict = getSubClassesFromPath(EMObject, PACKAGES_PATH)
+getSubclasses(Protocol, globals(), emObjectsDict)
+
+# Update global dictionary with variables found
+globals().update(emProtocolsDict)
+globals().update(emObjectsDict)
+    

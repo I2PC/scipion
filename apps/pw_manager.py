@@ -81,7 +81,7 @@ def populateTree(tree, prefix, obj, level=0):
             img = ''
             pass
         else:
-            img = gui.getImage(img)
+            img = self.getImage(img)
         item = tree.insert(prefix, 'end', key, text=text, image=img)
         
         if level < 3:
@@ -89,10 +89,10 @@ def populateTree(tree, prefix, obj, level=0):
         if not obj.isEmpty() and obj.action.hasValue():
             prot = globals().get(obj.action.get(), None)
             if not prot is None:
-                tree.item(item, image=gui.getImage('step.gif'))
+                tree.item(item, image=self.getImage('step.gif'))
                 for k, v in subclasses.iteritems():
                     if not v is prot and issubclass(v, prot):
-                        tree.insert(item, 'end', item+k, text=k, image=gui.getImage('python_file.gif'))
+                        tree.insert(item, 'end', item+k, text=k, image=self.getImage('python_file.gif'))
                         
             else:
                 raise Exception("Class '%s' not found" % obj.action.get())
@@ -111,20 +111,7 @@ def getMapper(fn, classesDict):
         return SqliteMapper(fn, classesDict)
     return None
 
-def addMenuChilds(root, menu, menuConfig):
-    for sub in menuConfig:
-        if len(sub):
-            submenu = tk.Menu(root, tearoff=0)
-            menu.add_cascade(label=sub.text.get(), menu=submenu)
-            addMenuChilds(root, submenu, sub)
-        else:
-            menu.add_command(label=sub.text.get(), compound=tk.LEFT,
-                             image=gui.getImage(sub.icon.get()))
- 
-def createMainMenu(root, menuConfig):
-    menu = tk.Menu(root)
-    addMenuChilds(root, menu, menuConfig)
-    root.config(menu=menu)
+
     
 def loadConfig(config, name):
     c = getattr(config, name) 
@@ -150,14 +137,14 @@ class ManagerWindow(gui.Window):
         parent = self.root
 
         menuConfig = loadConfig(config, 'menu')
-        createMainMenu(parent, menuConfig)
+        self.createMainMenu(menuConfig)
         
         f = tk.Frame(parent, bg='white')
         f.columnconfigure(0, minsize=200)
         f.columnconfigure(1, minsize=400)
         f.rowconfigure(1, minsize=250)
         # Add logo
-        logo = gui.getImage('scipion_logo.gif')
+        logo = self.getImage('scipion_logo.gif')
         label = tk.Label(f, image=logo, borderwidth=0)
         label.grid(row=0, column=0, sticky='nw')
         # Add create project button
@@ -214,12 +201,8 @@ class ManagerWindow(gui.Window):
     def openProject(self, projName):
         projPath = self.manager.getProjectPath(projName)
         from pw_project import ProjectWindow
-        try:
-            projWindow = ProjectWindow(projPath, self.root)
-            projWindow.show()
-        except Exception, e:
-            gui.Window._activeWindows -= 1
-            showError("Error loading project", str(e), self.root)
+        projWindow = ProjectWindow(projPath, self)
+        projWindow.show()
             
     def deleteProject(self, projName):
         if askYesNo("Confirm Project deletion", 
