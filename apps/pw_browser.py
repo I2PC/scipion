@@ -39,6 +39,7 @@ from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
 from pyworkflow.tests.tester import *
 from pyworkflow.em import *
+from pyworkflow.em.packages.xmipp3 import *
 
             
 def populateWithObject(tree, prefix, obj):

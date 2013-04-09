@@ -16,7 +16,7 @@ from tests.tester import *
 #proj.launchProtocol(prot)
 
 prot2 = ProtImportMicrographs(workingDir=proj.getPath('Runs', 'Import1'), 
-                              pattern="InputData/*.mrc", sampling=1, voltage=200)
+                              pattern="/home/laura/Scipion_Projects/InputData/*.mrc", sampling=1, voltage=200)
 proj.launchProtocol(prot2)
 
 l = proj.mapper.select(classname='SetOfMicrographs')
