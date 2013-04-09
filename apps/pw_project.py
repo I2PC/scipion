@@ -25,14 +25,12 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from gui.gui import getImage
-from inspect import isclass
 """
 Main project window application
 """
-import os
+import os, sys
 from os.path import join, exists
-import sys
+from inspect import isclass
         
 import Tkinter as tk
 import ttk
@@ -46,9 +44,10 @@ from pyworkflow.protocol.params import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
 from pyworkflow.project import Project
 
-import gui
-from gui.widgets import Tree
-from gui.form import FormWindow
+import pyworkflow.gui as gui
+from pyworkflow.gui import getImage
+from pyworkflow.gui.widgets import Tree
+from pyworkflow.gui.form import FormWindow
 from config import *
 
 
@@ -142,98 +141,112 @@ def loadConfig(config, name):
     menuConfig = mapper.getConfig()
     return menuConfig
 
-def createHistoryTree(parent, path):
-    columns = ('State', 'Modified')
-    tree = Tree(parent, columns=columns)
-    for c in columns:
-        tree.column(c, anchor='e', width=100)
-        tree.heading(c, text=c) 
-    tree.column('#0', width=250)
-    tree.heading('#0', text='Run')
-    #tree.bind('<<TreeviewSelect>>', self.selectTreeRun)
-    #tree.bind('<Double-1>', lambda e:self.runButtonClick('ACTION_DEFAULT'))
-    #tree.bind("<Button-3>", self.onRightClick)
-    proj = Project(path)
-    proj.load()
-    #mapper = SqliteMapper('kk.sqlite', globals())
-    objList = proj.mapper.getAll()
-    
-    c = 0
-    from pyworkflow.utils import prettyDate
-    for obj in objList:
-        t = '%s.%02d' % (obj.getClassName(), obj.getId())
-        tree.insert('',  'end', str(c), text=t, values=(obj.status.get(), obj.endTime.get()))
-        c += 1
-    return tree
+
 
 class ProjectWindow(gui.Window):
     def __init__(self, path, master=None):
         # Load global configuration
-        mapper = ConfigXmlMapper(getConfigPath('configuration.xml'), globals())
-        config = mapper.getConfig()
-        name = 'Project: ' + basename(path)
+        self.configMapper = ConfigXmlMapper(getConfigPath('configuration.xml'), globals())
+        self.projName = 'Project: ' + basename(path)
+        self.projPath = path
     
-        gui.Window.__init__(self, name, master, icon='scipion_bn.xbm', minsize=(900,500))
+        gui.Window.__init__(self, self.projName, master, icon='scipion_bn.xbm', minsize=(900,500))
         
         parent = self.root
-        menuConfig = loadConfig(config, 'menu')
-        createMainMenu(parent, menuConfig)
+
+        self.loadProjectConfig()
+        createMainMenu(parent, self.menuCfg)
+        
+        # The main layout will be two panes, 
+        # At the left containing the Protocols
+        # and the right containing the Runs
         p = tk.PanedWindow(parent, orient=tk.HORIZONTAL)
-        # first pane, which would get widgets gridded into it:
-        f1 = tk.Frame(p)
-        f1.columnconfigure(0, weight=1)
-        f1.rowconfigure(1, weight=1)
+        
+        # Left pane, contains SCIPION Logo and Protocols Pane
+        leftFrame = tk.Frame(p)
+        leftFrame.columnconfigure(0, weight=1)
+        leftFrame.rowconfigure(1, weight=1)
         logo = gui.getImage('scipion_logo.gif')
-        label = tk.Label(f1, image=logo, borderwidth=0, 
+        label = tk.Label(leftFrame, image=logo, borderwidth=0, 
                          anchor='nw', bg='white')
         label.grid(row=0, column=0, sticky='new', padx=5)
+
+        # Protocols Tree Pane        
+        protFrame = ttk.Labelframe(leftFrame, text=' Protocols ', width=300, height=500)
+        protFrame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
+        gui.configureWeigths(protFrame)
+        self.protTree = self.createProtocolsTree(protFrame)
         
-        lf = ttk.Labelframe(f1, text=' Protocols ', width=300, height=500)
-        lf.grid(row=1, column=0, sticky='news', padx=5, pady=5)
-        # second pane
-        #f2 = tk.Frame(p)
-        #f2.grid(row=0, column=0, sticky='news')
+        # Runs history Pane
+        runsFrame = ttk.Labelframe(p, text=' History ', width=500, height=500)
+        self.runsTree = self.createRunsTree(runsFrame, path)
         
+        gui.configureWeigths(runsFrame)
         
-        f2 = ttk.Labelframe(p, text=' History ', width=500, height=500)
-        #lf.grid(row=1, column=0, sticky='news')
-        
-        tree = createHistoryTree(f2, path)
-        tree.grid(row=0, column=0, sticky='news')
-        gui.configureWeigths(f2)
-        
-        p.add(f1, padx=5, pady=5)
-        p.add(f2, padx=5, pady=5)
-        p.paneconfig(f1, minsize=300)
-        p.paneconfig(f2, minsize=300)
-        
+        # Add sub-windows to PanedWindows
+        p.add(leftFrame, padx=5, pady=5)
+        p.add(runsFrame, padx=5, pady=5)
+        p.paneconfig(leftFrame, minsize=300)
+        p.paneconfig(runsFrame, minsize=300)        
         p.grid(row=0, column=0, sticky='news')
         
-        #gui.configureWeigths(f1)
-        gui.configureWeigths(lf)
-        tree = Tree(lf, show='tree')
-        #tree.heading(c, text=c)
-        #tree.heading('#0', text='Object')
+    def loadProjectConfig(self):
+        self.project = Project(self.projPath)
+        self.project.load()
+        self.generalCfg = self.configMapper.getConfig()
+        self.menuCfg = loadConfig(self.generalCfg, 'menu')
+        self.protCfg = loadConfig(self.generalCfg, 'protocols')
+        
+    def createProtocolsTree(self, parent):
+        """Create the protocols Tree displayed in left panel"""
+        tree = Tree(parent, show='tree')
         tree.column('#0', minwidth=300)
         tree.tag_configure('protocol', image=gui.getImage('python_file.gif'))
-        tree.tag_bind('protocol', '<Double-1>', self.itemClicked)
+        tree.tag_bind('protocol', '<Double-1>', self.protocolItemClick)
         tree.tag_configure('protocol_base', image=gui.getImage('class_obj.gif'))
         f = tkFont.Font(family='verdana', size='10', weight='bold')
         tree.tag_configure('section', font=f)
-        objList = loadConfig(config, 'protocols')
-        populateTree(tree, '', objList)
+        populateTree(tree, '', self.protCfg)
         tree.grid(row=0, column=0, sticky='news')
-        self.tree = tree
+        return tree
+        
+    def createRunsTree(self, parent, projPath):
+        columns = ('State', 'Modified')
+        tree = Tree(parent, columns=columns)
+        for c in columns:
+            tree.column(c, anchor='e', width=100)
+            tree.heading(c, text=c) 
+        tree.column('#0', width=250)
+        tree.heading('#0', text='Run')
+        #tree.bind('<<TreeviewSelect>>', self.selectTreeRun)
+        tree.bind('<Double-1>', self.runItemClick)
+        #tree.bind("<Button-3>", self.onRightClick)
+        objList = self.project.mapper.getAll()
+        for obj in objList:
+            t = '%s.%02d' % (obj.getClassName(), obj.getId())
+            tree.insert('',  'end', obj.getId(), text=t, values=(obj.status.get(), obj.endTime.get()))
+        tree.grid(row=0, column=0, sticky='news')
+        return tree
     
-
-    def itemClicked(self, e=None):
+    def protocolItemClick(self, e=None):
         print "protocol clicked"
-        print self.tree.getFirst()
-        protName = self.tree.getFirst().split('.')[-1]
+        print self.protTree.getFirst()
+        protName = self.protTree.getFirst().split('.')[-1]
         protClass = subclasses.get(protName)
-        prot = protClass()
+        self._openProtocolForm(protClass())
+        
+    def runItemClick(self, e=None):
+        print "run clicked"
+        print self.runsTree.getFirst()
+        prot = self.project.mapper.get(int(self.runsTree.getFirst()))
+        #prot.printAll()
+        self._openProtocolForm(prot)
+        
+    def _openProtocolForm(self, prot):
+        """Open the Protocol GUI Form given a Protocol instance"""
         w = FormWindow(prot)
         w.show()
+        
         
     
 if __name__ == '__main__':

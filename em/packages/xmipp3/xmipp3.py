@@ -33,6 +33,7 @@ from pyworkflow.utils import *
 from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_ORIGINAL, MDL_MICROGRAPH_TILTED, MDL_MICROGRAPH_TILTED_ORIGINAL
 from pyworkflow.em.packages.xmipp3.data import *
 
+
 class XmippProtImportMicrographs(ProtImportMicrographs):
     pass
 

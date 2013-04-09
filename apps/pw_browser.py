@@ -30,13 +30,13 @@ Object browser
 """
         
 import Tkinter as tk
-from pyworkflow.object import *
 
+import pyworkflow.gui as gui
+from pyworkflow.object import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
-import gui
-from gui.widgets import Tree
-from protocol import *
-from protocol.params import *
+from pyworkflow.gui.widgets import Tree
+from pyworkflow.protocol import *
+from pyworkflow.protocol.params import *
 from pyworkflow.tests.tester import *
 from pyworkflow.em import *
 

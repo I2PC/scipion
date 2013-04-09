@@ -141,7 +141,9 @@ class FormWindow(Window):
                 v = tk.StringVar()
                 content = tk.Entry(parent, width=25, textvariable=v)
                 value = getattr(self.protocol, paramName, None)
+                print "paramName: %s, value: %s" % (paramName, str(value))
                 if value is not None:
+                    print " setting var with: ", value.get('')
                     v.set(value.get(''))
             
             content.grid(row=r, column=1, padx=2, pady=2, sticky='w')

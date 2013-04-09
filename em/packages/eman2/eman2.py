@@ -28,7 +28,7 @@ This sub-package will contains Eman3.0 specific protocols
 """
 
 
-from em import *    
+from pyworkflow.em import *    
 
 
 class EmanProtImportMicrographs(ProtImportMicrographs):

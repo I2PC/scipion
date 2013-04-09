@@ -1,12 +1,14 @@
 import sys
+
+from pyworkflow.manager import Manager
 from pyworkflow.project import *
 from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3 import *
 
-path = sys.argv[1]
+projName = sys.argv[1]
 
-proj = Project(path)
-proj.create()
+manager = Manager()
+proj = manager.createProject(projName) # Now it will be loaded if exists
 
 from tests.tester import *
 
