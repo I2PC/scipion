@@ -1,38 +1,40 @@
 /***************************************************************************
  *
- * Authors:    Carlos Oscar Sanchez Sorzano      coss@cnb.csic.es (2013)
+ * Authors:    Albrecht Wolf
  *
- * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
- * 02111-1307  USA
- *
- *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
 #include "kernelPCA.h"
 
-void KernelPCA::setSpecificParameters(double lambda)
+void KernelPCA::setSpecificParameters(double sigma)
 {
-	this->lambda=lambda;
+    this->sigma=sigma;
 }
 
 void KernelPCA::reduceDimensionality()
 {
-	Y.resizeNoCopy(MAT_YSIZE(*X),outputDim);
-	FOR_ALL_ELEMENTS_IN_MATRIX2D(Y)
-	MAT_ELEM(Y,i,j)=lambda*MAT_ELEM(*X,i,j);
+    Matrix2D<double> Z;
+    computeDistance(*X,Z,distance,false);
+    computeSimilarityMatrix(Z,sigma);
+
+    // Normalize the graph
+    Matrix1D<double> zi;
+    Z.computeRowMeans(zi);
+    double z=zi.computeMean();
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(Z)
+    	MAT_ELEM(Z,i,j)+=z-VEC_ELEM(zi,i)-VEC_ELEM(zi,j);
+
+    // Get the largest eigenvalues
+    Matrix2D<double> U;
+	Matrix1D<double> W;
+    firstEigs(Z, outputDim, W, U);
+
+    // Compute mapping
+    Y.initZeros(MAT_YSIZE(*X),outputDim);
+    Matrix1D<double> sqrtL(outputDim);
+    for(size_t i=0;i<outputDim; i++)
+        VEC_ELEM(sqrtL,i)=sqrt(VEC_ELEM(W,i));
+
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(Y)
+        MAT_ELEM(Y,i,j)=(MAT_ELEM(U,i,j)*VEC_ELEM(sqrtL,j));
 }
