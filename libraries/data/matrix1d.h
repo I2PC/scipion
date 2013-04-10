@@ -1337,6 +1337,17 @@ public:
         indexx(VEC_XSIZE(*this), MATRIX1D_ARRAY(temp)-1, MATRIX1D_ARRAY(indx)-1);
     }
 
+    /** Mean value of the vector */
+    double computeMean() const
+    {
+        if (vdim == 0)
+            return 0;
+
+        double sum = 0;
+        for (size_t j = 0; j < vdim; ++j)
+            sum+=VEC_ELEM(*this,j);
+        return sum/vdim;
+    }
 
     /** Maximum element */
     T computeMax() const
