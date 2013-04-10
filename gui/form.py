@@ -87,10 +87,11 @@ class SectionFrame(tk.Frame):
 
     
 class FormWindow(Window): 
-    def __init__(self, protocol, master=None, **args):
-        Window.__init__(self, "Project: test_project", master, weight=False,
-                        icon='scipion_bn.xbm', **args)
+    def __init__(self, title, protocol, master=None, **args):
+        Window.__init__(self, title, master, weight=False, **args)
 
+        self.varDict = {} # Store tkVars associated with params
+        
         self.fontBig = tkFont.Font(size=12, family='verdana', weight='bold')
         self.font = tkFont.Font(size=10, family='verdana')#, weight='bold')
         self.fontBold = tkFont.Font(size=10, family='verdana', weight='bold')
@@ -100,24 +101,29 @@ class FormWindow(Window):
         headerLabel = tk.Label(headerFrame, text='Protocol: Import micrographs', font=self.fontBig)
         headerLabel.grid(row=0, column=0, padx=5, pady=5)
         
-        text = TaggedText(self.root, width=40, height=15)
+        text = TaggedText(self.root, width=40, height=15, bd=0, cursor='arrow')
         text.grid(row=1, column=0, sticky='news')
         text.config(state=tk.DISABLED)
         self.protocol = protocol
-        self.createSections(protocol._definition, text)
+        self.createSections(text)
         
         btnFrame = tk.Frame(self.root)
         btnFrame.columnconfigure(0, weight=1)
         btnFrame.grid(row=2, column=0, sticky='sew')
         # Add create project button
         btn = tk.Button(btnFrame, text='Execute', fg='white', bg='#7D0709', font=self.font, 
-                        activeforeground='white', activebackground='#A60C0C')
+                        activeforeground='white', activebackground='#A60C0C', command=self.execute)
         btn.grid(row=0, column=0, padx=(5, 100), pady=5, sticky='se')
         
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(1, weight=1)
         
+    def execute(self, e=None):
+        self.updateProtocolParams()
+        self.close()
+        self.protocol.run()
     
+           
     def fillSection(self, sectionParam, sectionFrame):
         parent = sectionFrame.contentFrame
         r = 0
@@ -130,36 +136,53 @@ class FormWindow(Window):
             label = tk.Label(parent, text=param.label.get(), bg='white', font=f)
             label.grid(row=r, column=0, sticky='ne', padx=2, pady=2)
             # Create widgets for each type of param
+            tkVar = tk.StringVar()
+            self.setVarFromParam(tkVar, paramName)
             t = type(param)
             if t is BooleanParam:
                 content = tk.Frame(parent, bg='white')
-                rb1 = tk.Radiobutton(content, text='Yes', bg='white')
+                rb1 = tk.Radiobutton(content, text='Yes', bg='white', 
+                                     variable=tkVar, value='True')
                 rb1.grid(row=0, column=0, padx=2)
-                rb2 = tk.Radiobutton(content, text='No', bg='white')
+                rb2 = tk.Radiobutton(content, text='No', bg='white', 
+                                     variable=tkVar, value='False')
                 rb2.grid(row=0, column=1, padx=2)
             else:
-                v = tk.StringVar()
-                content = tk.Entry(parent, width=25, textvariable=v)
-                value = getattr(self.protocol, paramName, None)
-                print "paramName: %s, value: %s" % (paramName, str(value))
-                if value is not None:
-                    print " setting var with: ", value.get('')
-                    v.set(value.get(''))
+                #v = self.setVarValue(paramName)
+                content = tk.Entry(parent, width=25, textvariable=tkVar)
+                
             
             content.grid(row=r, column=1, padx=2, pady=2, sticky='w')
             r += 1
             
-    def createSections(self, formDef, text):
+    def setVarFromParam(self, tkVar, paramName):
+        value = getattr(self.protocol, paramName, None)
+        if value is not None:
+            tkVar.set(value.get(''))
+            self.varDict[paramName] = tkVar
+           
+    def setParamFromVar(self, paramName):
+        value = getattr(self.protocol, paramName, None)
+        if value is not None:
+            tkVar = self.varDict[paramName]
+            value.set(tkVar.get())               
+             
+    def updateProtocolParams(self):
+        for section in self.protocol._definition:
+            for paramName, _ in section.getChildParams():
+                self.setParamFromVar(paramName)
+                
+    def createSections(self, text):
         """Load the list of projects"""
         r = 0
-        parent = tk.Frame(text)    
+        parent = tk.Frame(text) 
         parent.columnconfigure(0, weight=1)
         
-        for s in formDef:
-            frame = SectionFrame(parent, s, bg='white')
+        for section in self.protocol._definition:
+            frame = SectionFrame(parent, section, bg='white')
             frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
             frame.columnconfigure(0, minsize=300)
-            self.fillSection(s, frame)
+            self.fillSection(section, frame)
             r += 1
         
         # with Windows OS

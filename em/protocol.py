@@ -84,6 +84,8 @@ class ProtImportMicrographs(Protocol):
         Register other parameters"""
         from glob import glob
         files = glob(pattern)
+        if len(files) == 0:
+            raise Exception('importMicrographs:There is not files matching pattern')
         path = self.getPath('micrographs.txt')
         micFile = open(path, 'w+')
         for f in files:

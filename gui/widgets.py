@@ -39,9 +39,13 @@ class Button(tk.Button):
                     'fg': gui.cfgButtonFgColor, 'activeforeground': gui.cfgButtonActiveFgColor,
                     'font': gui.fontButton}
         defaults.update(opts)
-        btnImage = gui.getImage(imagePath)
         
-        if btnImage:
+        if imagePath is not None:
+            btnImage = gui.getImage(imagePath)
+        else:
+            btnImage = None
+            
+        if btnImage is not None:
             #height=28, width=28,
             if not opts.has_key('bg'):
                 del defaults['bg']

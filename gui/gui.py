@@ -34,8 +34,6 @@ import tkFont
 from pyworkflow.object import OrderedObject
 from pyworkflow.utils.path import findResource
 
-thismodule = sys.modules[__name__]
-
 """
 Some GUI CONFIGURATION parameters
 """
@@ -97,14 +95,15 @@ def setFont(fontKey, update=False, **opts):
     this method should be called only after a tk.Tk() windows has been
     created."""
     if not hasFont(fontKey) or update:
-        setattr(thismodule, fontKey, tkFont.Font(**opts))
+        globals()[fontKey] = tkFont.Font(**opts)
     
 def hasFont(fontKey):
-    return hasattr(thismodule, fontKey)
+    return fontKey in globals()
 
-def aliasFont(fontKey, fontAlias):
-    """Set a font as alias of another one"""
-    setattr(thismodule, fontKey, getattr(thismodule, fontAlias))
+def aliasFont(fontAlias, fontKey):
+    """Set a fontAlias as another alias name of fontKey"""
+    g = globals()
+    g[fontAlias] = g[fontKey] 
     
 def setCommonFonts():
     """Set some predifined common fonts.
@@ -129,19 +128,18 @@ def changeFontSize(font, event, minSize=-999, maxSize=999):
 """
 IMAGE related variables and functions 
 """
-_images = {} # Cache of already loaded images
 
-def getImage(imageName):
+def getImage(imageName, imgDict=None):
     """Search for the image in the RESOURCES path list"""
     from pyworkflow.utils.path import findResource
-    global _images
-    if imageName in _images:
-        return _images[imageName]
+    if imgDict is not None and imageName in imgDict:
+        return imgDict[imageName]
     imagePath = findResource(imageName)
     image = None
     if imagePath:
         image = tk.PhotoImage(file=imagePath)
-        _images[imageName] = image
+        if imgDict is not None:
+            imgDict[imageName] = image
     return image
 
 """
@@ -184,9 +182,8 @@ class Window():
     """Class to manage a Tk windows.
     It will encapsulates some basic creation and 
     setup functions. """
-    _activeWindows = 0 # Counter of the number of windows
     
-    def __init__(self, title, master=None, weight=True, minsize=(500, 300),
+    def __init__(self, title, masterWindow=None, weight=True, minsize=(500, 300),
                  icon=None):
         """Create a Tk window.
         title: string to use as title for the windows.
@@ -195,12 +192,17 @@ class Window():
         minsize: a minimum size for height and width
         icon: if not None, set the windows icon
         """
-        if master is None:
+        if masterWindow is None:
+            Window._root = self
             self.root = tk.Tk()
+            self._images = {}
         else:
-            self.root = tk.Toplevel()
+            self.root = tk.Toplevel(masterWindow.root)
+            self._images = masterWindow._images
+            
         self.root.withdraw()
         self.root.title(title)
+        
         if weight:
             configureWeigths(self.root)
         if not minsize is None:
@@ -210,27 +212,51 @@ class Window():
             abspath = os.path.abspath(path)
             self.root.iconbitmap("@" + abspath)
             
-        Window._activeWindows += 1
-        print "creating...", Window._activeWindows
         self.root.protocol("WM_DELETE_WINDOW", self._onClosing)
-        self.master = master
+        self.master = masterWindow
         setCommonFonts()
         
     def show(self, center=True):
         """This function will enter in the Tk mainloop"""
         if center:
-            centerWindows(self.root, refWindows=self.master)
+            if self.master is None:
+                refw = None
+            else:
+                refw = self.master.root
+            centerWindows(self.root, refWindows=refw)
         self.root.deiconify()
         self.root.focus_set()
         self.root.mainloop()
         
+    def close(self):
+        self.root.destroy()
+        
     def _onClosing(self):
         """Do some cleanning before closing"""
-        Window._activeWindows -= 1
-        print "Closing window, ", Window._activeWindows
-        if Window._activeWindows <= 0: # clean cached images if last windows closed
-            del thismodule._images
-        if self.master is not None:
-            self.master.focus_set()
-        self.root.destroy()
+        if self.master is None: # clean cached images if last windows closed
+            print "deleting images"
+            global _images
+            #del _images
+        else:
+            self.master.root.focus_set()
+        self.close()
+        
+    def getImage(self, imgName):
+        return getImage(imgName, self._images)
+    
+    def createMainMenu(self, menuConfig):
+        """Create Main menu from a given configuration"""
+        menu = tk.Menu(self.root)
+        self._addMenuChilds(menu, menuConfig)
+        self.root.config(menu=menu)
             
+    def _addMenuChilds(self, menu, menuConfig):
+        """Helper function for creating main menu"""
+        for sub in menuConfig:
+            if len(sub):
+                submenu = tk.Menu(self.root, tearoff=0)
+                menu.add_cascade(label=sub.text.get(), menu=submenu)
+                self._addMenuChilds(submenu, sub)
+            else:
+                menu.add_command(label=sub.text.get(), compound=tk.LEFT,
+                                 image=self.getImage(sub.icon.get()))

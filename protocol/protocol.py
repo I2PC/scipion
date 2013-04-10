@@ -100,7 +100,7 @@ class Step(OrderedObject):
         except Exception, e:
             self.status.set(STATUS_FAILED)
             self.error.set(e)
-            raise #only in development
+            #raise #only in development
         finally:
             self.endTime.set(dt.datetime.now())
             
@@ -204,7 +204,7 @@ class Protocol(Step):
             self.currentStep += 1
             self.mapper.commit()
             if step.status == STATUS_FAILED:
-                raise Exception("Protocol failed")
+                raise Exception("Protocol failed: " + step.error.get())
 
     def run(self):
         self.currentStep = 1

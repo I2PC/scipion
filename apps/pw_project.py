@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from em import emProtocolsDict
 
 # **************************************************************************
 # *
@@ -30,7 +31,7 @@ Main project window application
 """
 import os, sys
 from os.path import join, exists
-from inspect import isclass
+
         
 import Tkinter as tk
 import ttk
@@ -51,32 +52,7 @@ from pyworkflow.gui.form import FormWindow
 from config import *
 
 
-def loadSubclasses():
-    """This function will try to find
-    all sub-classes of className located in
-    the pyworkflow/protocol/packages/* path and made them
-    available in the menu"""
-    path = join(pw.HOME, 'em', 'packages')
-    sys.path.append(path)
-    folders = os.listdir(path)
-    subclasses = {}
-    for f in folders:
-        if exists(join(path, f, '__init__.py')):
-            m = __import__(f)
-            print "imported: ", f
-            for k, v in m.__dict__.iteritems():
-                if isclass(v) and issubclass(v, Protocol):
-                    subclasses[k] = v
-    for k, v in globals().iteritems():
-        if isclass(v) and issubclass(v, Protocol):
-                    subclasses[k] = v
-    return subclasses
-    
-# All protocol subclasses
-subclasses =  loadSubclasses()
-
-    
-def populateTree(tree, prefix, obj, level=0):
+def populateTree(self, tree, prefix, obj, level=0):
     text = obj.text.get()
     if text:
         value = obj.value.get(text)
@@ -85,20 +61,20 @@ def populateTree(tree, prefix, obj, level=0):
         tag = obj.tag.get('')
             
         if len(img):
-            img = gui.getImage(img)
+            img = self.getImage(img)
         item = tree.insert(prefix, 'end', key, text=text, image=img, tags=(tag))
         
         if level < 3:
             tree.item(item, open=True)
         if obj.value.hasValue() and tag == 'protocol_base':
             protName = value.split('.')[-1] # Take last part
-            prot = subclasses.get(value, None)
-            print "found protocol_base: ", value
+            prot = emProtocolsDict.get(protName, None)
+            print "found protocol_base: ", protName
             if not prot is None:
-                tree.item(item, image=gui.getImage('class_obj.gif'))
-                for k, v in subclasses.iteritems():
+                tree.item(item, image=self.getImage('class_obj.gif'))
+                for k, v in emProtocolsDict.iteritems():
                     if not v is prot and issubclass(v, prot):
-                        tree.insert(item, 'end', item+k, text=k, image=gui.getImage('python_file.gif'))
+                        tree.insert(item, 'end', item+k, text=k, image=self.getImage('python_file.gif'))
                         
             else:
                 raise Exception("Class '%s' not found" % obj.value.get())
@@ -106,7 +82,7 @@ def populateTree(tree, prefix, obj, level=0):
         key = prefix
     
     for sub in obj:
-        populateTree(tree, key, sub, level+1)
+        populateTree(self, tree, key, sub, level+1)
     
 def getMapper(fn, classesDict):
     """Select what Mapper to use depending on
@@ -117,20 +93,6 @@ def getMapper(fn, classesDict):
         return SqliteMapper(fn, classesDict)
     return None
 
-def addMenuChilds(root, menu, menuConfig):
-    for sub in menuConfig:
-        if len(sub):
-            submenu = tk.Menu(root, tearoff=0)
-            menu.add_cascade(label=sub.text.get(), menu=submenu)
-            addMenuChilds(root, submenu, sub)
-        else:
-            menu.add_command(label=sub.text.get(), compound=tk.LEFT,
-                             image=gui.getImage(sub.icon.get()))
- 
-def createMainMenu(root, menuConfig):
-    menu = tk.Menu(root)
-    addMenuChilds(root, menu, menuConfig)
-    root.config(menu=menu)
     
 def loadConfig(config, name):
     c = getattr(config, name) 
@@ -146,16 +108,16 @@ def loadConfig(config, name):
 class ProjectWindow(gui.Window):
     def __init__(self, path, master=None):
         # Load global configuration
-        self.configMapper = ConfigXmlMapper(getConfigPath('configuration.xml'), globals())
         self.projName = 'Project: ' + basename(path)
         self.projPath = path
     
         gui.Window.__init__(self, self.projName, master, icon='scipion_bn.xbm', minsize=(900,500))
         
+        self.configMapper = ConfigXmlMapper(getConfigPath('configuration.xml'), globals())
         parent = self.root
 
         self.loadProjectConfig()
-        createMainMenu(parent, self.menuCfg)
+        self.createMainMenu(self.menuCfg)
         
         # The main layout will be two panes, 
         # At the left containing the Protocols
@@ -166,7 +128,7 @@ class ProjectWindow(gui.Window):
         leftFrame = tk.Frame(p)
         leftFrame.columnconfigure(0, weight=1)
         leftFrame.rowconfigure(1, weight=1)
-        logo = gui.getImage('scipion_logo.gif')
+        logo = self.getImage('scipion_logo.gif')
         label = tk.Label(leftFrame, image=logo, borderwidth=0, 
                          anchor='nw', bg='white')
         label.grid(row=0, column=0, sticky='new', padx=5)
@@ -179,7 +141,7 @@ class ProjectWindow(gui.Window):
         
         # Runs history Pane
         runsFrame = ttk.Labelframe(p, text=' History ', width=500, height=500)
-        self.runsTree = self.createRunsTree(runsFrame, path)
+        self.runsTree = self.createRunsTree(runsFrame)
         
         gui.configureWeigths(runsFrame)
         
@@ -201,16 +163,16 @@ class ProjectWindow(gui.Window):
         """Create the protocols Tree displayed in left panel"""
         tree = Tree(parent, show='tree')
         tree.column('#0', minwidth=300)
-        tree.tag_configure('protocol', image=gui.getImage('python_file.gif'))
+        tree.tag_configure('protocol', image=self.getImage('python_file.gif'))
         tree.tag_bind('protocol', '<Double-1>', self.protocolItemClick)
-        tree.tag_configure('protocol_base', image=gui.getImage('class_obj.gif'))
+        tree.tag_configure('protocol_base', image=self.getImage('class_obj.gif'))
         f = tkFont.Font(family='verdana', size='10', weight='bold')
         tree.tag_configure('section', font=f)
-        populateTree(tree, '', self.protCfg)
+        populateTree(self, tree, '', self.protCfg)
         tree.grid(row=0, column=0, sticky='news')
         return tree
         
-    def createRunsTree(self, parent, projPath):
+    def createRunsTree(self, parent):
         columns = ('State', 'Modified')
         tree = Tree(parent, columns=columns)
         for c in columns:
@@ -219,40 +181,51 @@ class ProjectWindow(gui.Window):
         tree.column('#0', width=250)
         tree.heading('#0', text='Run')
         #tree.bind('<<TreeviewSelect>>', self.selectTreeRun)
+        tree.grid(row=0, column=0, sticky='news')
         tree.bind('<Double-1>', self.runItemClick)
+        self.updateRunsTree(tree)
         #tree.bind("<Button-3>", self.onRightClick)
+        return tree
+    
+    def updateRunsTree(self, tree):
+        tree.clear()
         objList = self.project.mapper.getAll()
         for obj in objList:
             t = '%s.%02d' % (obj.getClassName(), obj.getId())
             tree.insert('',  'end', obj.getId(), text=t, values=(obj.status.get(), obj.endTime.get()))
-        tree.grid(row=0, column=0, sticky='news')
-        return tree
+        
+        tree.after(1000, self.updateRunsTree, tree)
     
     def protocolItemClick(self, e=None):
-        print "protocol clicked"
         print self.protTree.getFirst()
         protName = self.protTree.getFirst().split('.')[-1]
-        protClass = subclasses.get(protName)
-        self._openProtocolForm(protClass())
+        protClass = emProtocolsDict.get(protName)
+        prot = protClass()
+        prot.mapper = self.project.mapper
+        self._openProtocolForm(prot)
         
     def runItemClick(self, e=None):
         print "run clicked"
         print self.runsTree.getFirst()
         prot = self.project.mapper.get(int(self.runsTree.getFirst()))
+        prot.mapper = self.project.mapper
         #prot.printAll()
         self._openProtocolForm(prot)
         
     def _openProtocolForm(self, prot):
         """Open the Protocol GUI Form given a Protocol instance"""
-        w = FormWindow(prot)
+        w = FormWindow("Protocol Run: " + prot.getClassName(), prot, self)
         w.show()
-        
         
     
 if __name__ == '__main__':
-    import sys
-    path = '.'
+    import os, sys
+    from pyworkflow.manager import Manager
     if len(sys.argv) > 1:
-        path = sys.argv[1]
-    window = ProjectWindow(path)
-    window.show()
+        manager = Manager()
+        projName = os.path.basename(sys.argv[1])
+        projPath = manager.getProjectPath(projName)
+        projWindow = ProjectWindow(projPath)
+        projWindow.show()
+    else:
+        print "usage: pw_project.py PROJECT_NAME"
