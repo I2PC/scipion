@@ -42,52 +42,101 @@ class XmippProtParticlePicking(ProtParticlePicking):
     pass
 
 
-class XmippProtDownsampleMicrographs(ProtDownsampleMicrographs):
+class XmippProtPreprocessMicrographs(ProtDownsampleMicrographs):
     def __init__(self, **args):
         
         Protocol.__init__(self, **args)
         self.inputMicrographs = SetOfMicrographs()
         self.inputMicrographs = args.get('inputMicrographs')
-        
-        self.downFactor = Integer(args.get('downFactor', 2))    
-        self.IOTable = {}
+        self.doDownsample = Boolean(args.get('doDownsample', False))
+        self.downFactor = Integer(args.get('downFactor', 2))   
+        self.doCrop = Boolean(args.get('doCrop', False))
+        self.cropPixels = Integer(args.get('cropPixels', 10))
+        self.doLog = Boolean(args.get('doLog', False))
+        self.logA = Float(args.get('logA', 4.431))
+        self.logB = Float(args.get('logB', 0.4018))
+        self.logC = Float(args.get('logC', 336.6))
+        self.doRemoveBadPix = Boolean(args.get('doRemoveBadPix', False))
+        self.mulStddev = Integer(args.get('mulStddev', 5))
         
     def defineSteps(self):
         '''for each micrograph call the downsampling function
         '''
+        IOTable = {}
+        
+        self.params = {'downFactor': self.downFactor.get(),
+                       'cropPixels': self.cropPixels.get(),
+                       'logA': self.logA.get(),
+                       'logB': self.logB.get(),
+                       'logC': self.logC.get(),
+                       'stddev': self.mulStddev.get()}
+        
         for mic in self.inputMicrographs:
             fn = mic.getFileName()
             fnOut = self.getPath(os.path.basename(fn))
-            self.insertFunctionStep('downsampleMicrograph', fn, fnOut,
-                                    self.downFactor.get())
-            self.IOTable[fn] = fnOut
+            self.insertStepsForMicrograph(fn, fnOut)
+            IOTable[fn] = fnOut
         
         #create output objects       
-        self.insertFunctionStep('createOutput')
+        self.insertFunctionStep('createOutput', IOTable)
         
 
-    def downsampleMicrograph(self, mic, micOut, downFactor):
-        """Downsample a micrograph with a downsampling factor.
-        Accepts a micrograph path, the output path and a downsampling factor."""
 
-        #TODO: Set log
-        log=""
         
-        runJob(log,"xmipp_transform_downsample", "-i %(mic)s -o %(micOut)s --step %(downFactor)f --method fourier" % locals())
+    def _insertOneStep(self, condition, program, arguments):
+        """Insert operation if the condition is met.
+        Possible conditions are: doDownsample, doCrop...etc"""
+        if condition.get():
+            # If the input micrograph and output micrograph differss, 
+            # add the -o option
+            if self.params['inputMic'] != self.params['outputMic']:
+                arguments += " -o %(outputMic)s"
+            # Insert the command with the formatted parameters
+            self.insertFunctionStep("insertRunStep",program, arguments % self.params)
+            # Update inputMic for next step as outputMic
+            self.params['inputMic'] = self.params['outputMic']
+            
         
-    def createOutput(self):
+    def insertStepsForMicrograph(self, inputMic, outputMic):
+        self.params['inputMic'] = inputMic
+        self.params['outputMic'] = outputMic
+        # Downsample
+        self._insertOneStep(self.doDownsample, "xmipp_transform_downsample",
+                            "-i %(inputMic)s --step %(downFactor)f --method fourier")
+                    
+        # Crop
+        self._insertOneStep(self.doCrop, "xmipp_transform_window",
+                            " -i %(inputMic)s --crop %(cropPixels)d -v 0")
+        
+            
+        # Take logarithm
+        self._insertOneStep(self.doLog, "xmipp_transform_filter",
+                            " -i %(inputMic)s --log --fa %(logA)f --fb %(logB)f --fc %(logC)f")
+                    
+        # Remove bad pixels
+        self._insertOneStep(self.doRemoveBadPix, "xmipp_transform_filter",
+                            " -i %s --bad_pixels outliers %(stddev)f -v 0")
+        
+    def insertRunStep(self, program, args):
+        
+        log = None
+        
+        runJob(log, program, args)
+        
+                
+    def createOutput(self, IOTable):
 
         mdOut = self.getPath("micrographs.xmd")
                 
-        self.downsampledmics = XmippSetOfMicrographs(value=mdOut)     
-        self.downsampledmics.microscope.voltage.set(self.inputMicrographs.microscope.voltage.get())
-        self.downsampledmics.microscope.sphericalAberration.set(self.inputMicrographs.microscope.sphericalAberration.get())
-        self.downsampledmics.samplingRate.set(self.inputMicrographs.samplingRate.get())
+        self.outputMicrographs = XmippSetOfMicrographs(value=mdOut)     
+        self.outputMicrographs.microscope.voltage.set(self.inputMicrographs.microscope.voltage.get())
+        self.outputMicrographs.microscope.sphericalAberration.set(self.inputMicrographs.microscope.sphericalAberration.get())
+        self.outputMicrographs.samplingRate.set(self.inputMicrographs.samplingRate.get())
         
         #Create the xmipp metadata micrographs.xmd  
          
         md = MetaData()      
-        for i, v in self.IOTable.iteritems():
+        for i, v in IOTable.iteritems():
             objId = md.addObject()
             md.setValue(MDL_MICROGRAPH,v,objId)
             md.setValue(MDL_MICROGRAPH_ORIGINAL,i,objId)
@@ -97,9 +146,9 @@ class XmippProtDownsampleMicrographs(ProtDownsampleMicrographs):
 #                MD.setValue(xmipp.MDL_MICROGRAPH_TILTED_ORIGINAL,fnMicrographTilted,objId)
         md.write("micrographs"+"@"+mdOut)
         
-        self.downsampledmics.setFileName(mdOut)
+        self.outputMicrographs.setFileName(mdOut)
 
-        self.defineOutputs(micrograph=self.downsampledmics)
+        self.defineOutputs(micrograph=self.outputMicrographs)
         pass
 
 class XmippProtAlign(ProtAlign):
