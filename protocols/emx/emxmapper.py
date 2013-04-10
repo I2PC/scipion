@@ -280,7 +280,7 @@ class XmlMapper():
   -->
 ''')
         for object in self.emxData:
-            text = self.objectToXML(object)# to fileBBBBBBBBBBBBBBBBBBB
+            text = self.objectToXML(object)# 
 #            #implement this with a regular expression
 #            #format matrices properly
             for i, j in {

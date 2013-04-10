@@ -85,7 +85,7 @@ def ctfMicXmippToEmxChallenge(emxData,xmdFileName):
         defocusU            = mdCTF.getValue(MDL_CTF_DEFOCUSU, objId2)/10.
         defocusV            = mdCTF.getValue(MDL_CTF_DEFOCUSV, objId2)/10.
         defocusUAngle       = mdCTF.getValue(MDL_CTF_DEFOCUS_ANGLE, objId2)
-        amplitudeContrast   = 11111111111111111
+        amplitudeContrast   = mdCTF.getValue(MDL_Q0, objId2)
         while defocusUAngle < 0:
             defocusUAngle += 180.
         while defocusUAngle > 180.:
@@ -228,4 +228,44 @@ def coorEMXToXmipp(emxData,mode,emxFileName):
     mdParticle.sort(MDL_IMAGE)
     mdParticle.write(f.withoutExtension() + POSENDING)
     
-        
+def alignXmippToEmx(emxData,xmdFileName):
+    ''' convert a set of particles including geometric information '''
+    md       = MetaData(xmdFileName)
+    for objId in md:
+        #get fileName
+        fileName = FileName(md.getValue(MDL_IMAGE, objId))
+        (index,fileName)=fileName.decompose()
+        if index==0:
+            index= None
+        p1=Emxparticle(fileName=fileName, index=index)
+        rot  = md.getValue(MDL_ANGLE_ROT ,objId)
+        tilt = md.getValue(MDL_ANGLE_TILT,objId)
+        psi  = md.getValue(MDL_ANGLE_PSI ,objId)
+        if rot is  None:
+            rot = 0
+        if tilt is  None:
+            tilt = 0
+        if psi is  None:
+            psi = 0
+        tMatrix=Euler_angles2matrix(rot,tilt,psi)
+
+        p1.set('transformationMatrix__t11', tMatrix[0][0])
+        p1.set('transformationMatrix__t12', tMatrix[0][1])
+        p1.set('transformationMatrix__t13', tMatrix[0][2])
+        x = md.getValue(MDL_SHIFT_X, objId)
+        p1.set('transformationMatrix__t14',x if x is not None else 0.)
+
+        p1.set('transformationMatrix__t21', tMatrix[1][0])
+        p1.set('transformationMatrix__t22', tMatrix[1][1])
+        p1.set('transformationMatrix__t23', tMatrix[1][2])
+        y = md.getValue(MDL_SHIFT_Y, objId)
+        p1.set('transformationMatrix__t24',y if y is not None else 0.)
+
+        p1.set('transformationMatrix__t31', tMatrix[2][0])
+        p1.set('transformationMatrix__t32', tMatrix[2][1])
+        p1.set('transformationMatrix__t33', tMatrix[2][2])
+        z = md.getValue(MDL_SHIFT_Z, objId)
+        p1.set('transformationMatrix__t34',z if z is not None else 0.)
+
+        emxData.addObject(p1)
+
