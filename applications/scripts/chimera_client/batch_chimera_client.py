@@ -7,6 +7,7 @@ from os.path import exists
 from protlib_filesystem import getXmippPath
 import sys
 from protlib_xmipp import XmippScript
+from xmipp import *
 
 
 class ScriptChimeraClient(XmippScript):
@@ -22,11 +23,11 @@ class ScriptChimeraClient(XmippScript):
 
         self.addParamsLine(' where <mode>')
         self.addParamsLine('  viewer         : Allows volume visualization')
-        self.addParamsLine('  projector <padding_factor="1">  <max_freq="0.5"> <spline_degree="2">   : Allows volume visualization and projection')
+        self.addParamsLine('  projector <padding_factor="1">  <max_freq="0.5"> <spline_degree="BSPLINE2">   : Allows volume visualization and projection. spline_degree can be: NEAREST, LINEAR, BSPLINE2, BSPLINE3 and BSPLINE4.')
         self.addParamsLine('   alias -m;')
         
         
-        self.addParamsLine('[ --angulardist <angulardist>  <color=red> <spheres_distance="default"> <spheres_maxradius="default">]     : Volume angular distribution to visualize')
+        self.addParamsLine('[ --angulardist <angulardist=none>  <color=red> <spheres_distance="default"> <spheres_maxradius="default">]     : Volume angular distribution to visualize')
         self.addParamsLine('   alias -a;')
         
         self.addExampleLine('Opens xmipp chimera client in projector mode:', False)
@@ -37,6 +38,8 @@ class ScriptChimeraClient(XmippScript):
     	volfile = self.getParam('-i')
     	mode = self.getParam('-m')
     	angulardistfile = self.getParam('-a')
+        if angulardistfile == 'none':
+            angulardistfile = None
         
         spheres_color = self.getParam('-a', 1)
         spheres_distance = self.getParam('-a', 2)
@@ -47,8 +50,20 @@ class ScriptChimeraClient(XmippScript):
         if isprojector:
             padding_factor = self.getDoubleParam('-m', 1)
             max_freq = self.getDoubleParam('-m', 2)
-            spline_degree = self.getDoubleParam('-m', 3)
-		
+            
+            spline_degree_str = self.getParam('-m', 3)
+            if spline_degree_str.lower() == 'NEAREST'.lower():
+                spline_degree = NEAREST
+            elif spline_degree_str.lower() == 'LINEAR'.lower():
+                spline_degree = LINEAR
+            elif spline_degree_str.lower() == 'BSPLINE2'.lower():
+                spline_degree = BSPLINE2
+            elif spline_degree_str.lower() == 'BSPLINE3'.lower():
+                spline_degree = BSPLINE3
+            elif spline_degree_str.lower() == 'BSPLINE4'.lower():
+                spline_degree = BSPLINE4
+            print spline_degree
+		              
        
 		
 
@@ -61,6 +76,8 @@ class ScriptChimeraClient(XmippScript):
 			client = XmippChimeraClient(volfile, angulardistfile, spheres_color, spheres_distance, spheres_maxradius)
 			client.listen()
 			print 'created chimera client'
+
+
 if __name__ == '__main__':
     ScriptChimeraClient().tryRun()
     
