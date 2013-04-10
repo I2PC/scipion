@@ -233,10 +233,8 @@ class Window():
         
     def _onClosing(self):
         """Do some cleanning before closing"""
-        if self.master is None: # clean cached images if last windows closed
-            print "deleting images"
-            global _images
-            #del _images
+        if self.master is None: 
+            pass
         else:
             self.master.root.focus_set()
         self.close()
