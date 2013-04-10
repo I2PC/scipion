@@ -28,7 +28,6 @@ This modules contains classes required for the workflow
 execution and tracking like: Step and Protocol
 """
 
-from os.path import basename
 import datetime as dt
 import pickle
 
@@ -135,12 +134,22 @@ class FunctionStep(Step):
 
         return len(existsPath(files)) == 0
         
-                
+            
+class RunJobStep(FunctionStep):
+    """This Step will wrapper the commonly used function runJob
+    for launching specific programs with some parameters"""
+    def __init__(self, programName=None, arguments=None, resultFiles=[]):
+        FunctionStep.__init__(self, 'runJob', programName, arguments)
+        # Define the function that will do the job and return result files
+        self.func = self._runJob
+        
+    def _runJob(self, programName, arguments):
+        """Wrap around runJob function"""
+        runJob(programName, arguments)
+        #TODO: Add the option to return resultFiles
         
 
         
-def loadDef():
-    print "loading...Protocol class"
              
 
 MODE_RESUME = "resume"
@@ -151,9 +160,6 @@ class Protocol(Step):
     """The Protocol is a higher type of Step.
     It also have the inputs, outputs and other Steps properties,
     but contains a list of steps that are executed"""
-    #__metaclass__ = ProtocolType
-    # Params definition for this class
-    _definition = loadDef()
     
     def __init__(self, **args):
         Step.__init__(self, **args)
@@ -191,6 +197,11 @@ class Protocol(Step):
         """
         step = FunctionStep(funcName, *funcArgs)
         step.func = getattr(self, funcName)
+        self.insertStep(step)
+        
+    def insertRunJobStep(self, progName, progArguments, resultFiles=[]):
+        """Insert an Step that will simple call runJob function"""
+        step = RunJobStep(progName, progArguments, resultFiles)
         self.insertStep(step)
         
     def _run(self):
