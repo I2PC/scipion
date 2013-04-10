@@ -33,6 +33,7 @@ import pickle
 
 from pyworkflow.object import OrderedObject, String, List, Integer
 from pyworkflow.utils.path import replaceExt, makePath, join, existsPath
+from pyworkflow.utils.process import runJob
 
 STATUS_LAUNCHED = "launched"  # launched to queue system
 STATUS_RUNNING = "running"    # currently executing
@@ -145,16 +146,14 @@ class RunJobStep(FunctionStep):
         
     def _runJob(self, programName, arguments):
         """Wrap around runJob function"""
-        runJob(programName, arguments)
+        runJob(None, programName, arguments)
         #TODO: Add the option to return resultFiles
-        
-
-        
              
 
 MODE_RESUME = "resume"
 MODE_RESTART = "restart"
 MODE_CONTINUE = "continue"
+         
                 
 class Protocol(Step):
     """The Protocol is a higher type of Step.
@@ -167,6 +166,21 @@ class Protocol(Step):
         self.steps = List() # List of steps that will be executed
         self.workingDir = args.get('workingDir', '.') # All generated files should be inside workingDir
         self.mapper = args.get('mapper', None)
+        self._createVarsFromDefinition(**args)
+        
+    def _createVarsFromDefinition(self, **args):
+        """This function will setup the protocol instance variables
+        from the Protocol Class definition, taking into account
+        the variable type and default values"""
+        if hasattr(self, '_definition'):
+            for section in self._definition:
+                for paramName, param in section.getChildParams():
+                    # Create the var with value comming from args or from 
+                    # the default param definition
+                    var = param.paramClass(args.get(paramName, param.default.get()))
+                    setattr(self, paramName, var)
+        else:
+            print "FIXME: Protocol '%s' has not DEFINITION" % self.getClassName()
         
     def store(self, *objs):
         if not self.mapper is None:

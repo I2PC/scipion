@@ -104,15 +104,29 @@ class TestPyworkflow(unittest.TestCase):
         self.assertEqual(c.imag.get(), self.cGold.imag)
         self.assertEqual(c.real.get(), self.cGold.real)
         
+        # Test Boolean logic
+        b = Boolean(False)
+        self.assertTrue(not b.get())
+
+        b.set('True')
+        self.assertTrue(b.get())
+        
+        b = Boolean()
+        b.set(False)
+        self.assertTrue(not b.get())
+        
     def test_zzzzzzzzzSqliteMapper(self):
         fn = self.getTmpPath(self.sqliteFile)
         c = self.createComplex()
-        c.printAll()
         mapper = SqliteMapper(fn)
         mapper.insert(c)
         cid = c.getId()
         i = Integer(1)
         mapper.insert(i)
+        b = Boolean(False)
+        b2 = Boolean(True)
+        mapper.insert(b)
+        mapper.insert(b2)
         #write file
         mapper.commit()
 
@@ -124,8 +138,14 @@ class TestPyworkflow(unittest.TestCase):
         self.assertEqual(l.get(), 1)
         
         c2 = mapper2.select(classname='Complex')[0]
-        c2.printAll()
         self.assertTrue(c.equalAttributes(c2))
+        
+        mapper3 = SqliteMapper(fn, globals())
+        print "="*100
+        b = mapper3.select(classname='Boolean')[0]
+        print 'b', b.get()
+        
+        
 
         
     def test_XML(self):
@@ -137,7 +157,6 @@ class TestPyworkflow(unittest.TestCase):
         mapper.commit()
 
         fnGold = self.getTestPath(self.xmlFile)
-        print fnGold, fn
         #self.assertTrue(filecmp.cmp(fnGold, fn))
         #read file
         mapper2 = XmlMapper(fnGold, globals())

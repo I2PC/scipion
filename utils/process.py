@@ -50,11 +50,13 @@ def runJob(log,
     from subprocess import call
     retcode = 1000
     try:
+        #TODO: check differences and possibles improvements by using subprocess Python module
         retcode = call(command, shell=True, stdout=sys.stdout, stderr=sys.stderr)
         if log:
             #TODO: printLog("Process returned with code %d" % retcode,log)
-            if retcode != 0:
-                raise Exception("Process returned with code %d, command: %s" % (retcode,command))
+            pass
+        if retcode != 0:
+            raise Exception("Process returned with code %d, command: %s" % (retcode,command))
     except OSError, e:
         raise Exception("Execution failed %s, command: %s" % (e, command))
 

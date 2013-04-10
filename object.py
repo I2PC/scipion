@@ -232,7 +232,7 @@ class Boolean(Scalar):
         t = type(value)
         if t is bool:
             return value
-        if t is str:
+        if t is str or t is unicode:
             v = value.strip().lower()
             return v == 'true' or v == '1'
         return bool(value)    

@@ -30,7 +30,7 @@ from em import emProtocolsDict
 Main project window application
 """
 import os, sys
-from os.path import join, exists
+from os.path import join, exists, basename
 
         
 import Tkinter as tk

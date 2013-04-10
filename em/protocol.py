@@ -68,11 +68,12 @@ class ProtImportMicrographs(Protocol):
     
     def __init__(self, **args):
         Protocol.__init__(self, **args)
-        self.pattern = String(args.get('pattern', None))
-        self.voltage = Float(args.get('voltage', 300))
-        self.sphericalAberration = Float(args.get('sphericalAberration', 1.2))
-        self.samplingRate = Float(args.get('samplingRate', 1.2))
-        self.magnification = Float(args.get('magnification', 50000))             
+        
+#        self.pattern = String(args.get('pattern', None))
+#        self.voltage = Float(args.get('voltage', 300))
+#        self.sphericalAberration = Float(args.get('sphericalAberration', 1.2))
+#        self.samplingRate = Float(args.get('samplingRate', 1.2))
+#        self.magnification = Float(args.get('magnification', 50000))             
         
     def defineSteps(self):
         self.insertFunctionStep('importMicrographs', self.pattern.get(),

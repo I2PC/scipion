@@ -16,7 +16,7 @@ from tests.tester import *
 #proj.launchProtocol(prot)
 
 prot2 = ProtImportMicrographs(workingDir=proj.getPath('Runs', 'Import1'), 
-                              pattern="/home/josem/pyworkflow/InputData/*.mrc", sampling=1, voltage=200)
+                              pattern="/home/josem/pyworkflow/InputData/*.mrc", samplingRate=1, voltage=200)
 proj.launchProtocol(prot2)
 
 l = proj.mapper.select(classname='SetOfMicrographs')
@@ -24,13 +24,33 @@ l = proj.mapper.select(classname='SetOfMicrographs')
 
 for p in l:
     p.printAll()
+    
 
 if len(l):
-    print "Running downsampling..."
-    prot3 = XmippProtDownsampleMicrographs(workingDir=proj.getPath('Runs', 'Downsample1'),
-                                       inputMicrographs=l[0], downFactor=2)
+    print "Continue after import..."
+    prot3 = XmippProtPreprocessMicrographs(workingDir=proj.getPath('Runs', 'PreprocessDown'), inputMicrographs=l[0], 
+                                       doDownsample=True, downFactor=3, doCrop=True)
 
     proj.launchProtocol(prot3)
+    sys.exit(0)
+
+    prot4 = XmippProtPreprocessMicrographs(workingDir=proj.getPath('Runs', 'PreprocessCrop'), inputMicrographs=l[0], 
+                                           doCrop=True, cropPixels=5)
+    
+    
+    proj.launchProtocol(prot4)
+    
+    prot5 = XmippProtPreprocessMicrographs(workingDir=proj.getPath('Runs', 'PreprocessLog'), inputMicrographs=l[0], 
+                                           doLog=True)
+    
+    
+    proj.launchProtocol(prot5)
+    
+    prot6 = XmippProtPreprocessMicrographs(workingDir=proj.getPath('Runs', 'PreprocessRemove'), inputMicrographs=l[0], 
+                                           doRemoveBadPix=True)
+    
+    
+    proj.launchProtocol(prot6)
 
     l = proj.mapper.select(classname='SetOfMicrographs')
 #l = proj.mapper.getAll()
