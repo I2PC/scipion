@@ -68,6 +68,7 @@ class XmippChimeraClient:
         printCmd('openVolumeOnServer')
         self.openVolumeOnServer(self.vol)
     
+    
     def loadAngularDist(self):
         md = MetaData(self.angulardistfile)
         maxweight = md.aggregateSingle(AGGR_MAX, MDL_WEIGHT)
@@ -88,9 +89,9 @@ class XmippChimeraClient:
             y = y * self.spheres_distance
             z = z * self.spheres_distance
             command = 'shape sphere radius %s center %s,%s,%s color %s '%(radius, x, y, z, self.spheres_color)
-            print command
             self.angulardist.append(command)    
        
+    
     def send(self, cmd, data):
         print cmd
         self.client.send(cmd)
@@ -110,6 +111,7 @@ class XmippChimeraClient:
             self.listen_thread.daemon = True
             self.listen_thread.start()
          
+    
     def listen(self):
         
         self.listen = True
@@ -144,9 +146,9 @@ class XmippChimeraClient:
 
 class XmippProjectionExplorer(XmippChimeraClient):
     
-    def __init__(self, volfile, angulardist, spheres_color='red', spheres_distance='default', spheres_maxradius='default', padding_factor=1, max_freq=0.5, spline_degree=2):
+    def __init__(self, volfile, angulardistfile=None, spheres_color='red', spheres_distance='default', spheres_maxradius='default', padding_factor=1, max_freq=0.5, spline_degree=2):
 
-        XmippChimeraClient.__init__(self, volfile, angulardist, spheres_color, spheres_distance, spheres_maxradius)
+        XmippChimeraClient.__init__(self, volfile, angulardistfile, spheres_color, spheres_distance, spheres_maxradius)
         
         self.projection = Image()
         self.projection.setDataType(DT_DOUBLE)
