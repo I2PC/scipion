@@ -30,6 +30,7 @@ params definition.
 """
 
 import Tkinter as tk
+import ttk
 import tkFont
 
 from gui import configureWeigths, Window
@@ -128,6 +129,9 @@ class FormWindow(Window):
         parent = sectionFrame.contentFrame
         r = 0
         for paramName, param in sectionParam.getChildParams():
+            protVar = getattr(self.protocol, paramName, None)
+            if protVar is None:
+                raise Exception("fillSection: param '%s' not found in protocol" % paramName)
             # Create the label
             if param.isImportant:
                 f = self.fontBold
@@ -137,8 +141,11 @@ class FormWindow(Window):
             label.grid(row=r, column=0, sticky='ne', padx=2, pady=2)
             # Create widgets for each type of param
             tkVar = tk.StringVar()
-            self.setVarFromParam(tkVar, paramName)
+            
             t = type(param)
+            if protVar.hasValue():
+                tkVar.set(str(protVar))
+                
             if t is BooleanParam:
                 content = tk.Frame(parent, bg='white')
                 rb1 = tk.Radiobutton(content, text='Yes', bg='white', 
@@ -147,10 +154,26 @@ class FormWindow(Window):
                 rb2 = tk.Radiobutton(content, text='No', bg='white', 
                                      variable=tkVar, value='False')
                 rb2.grid(row=0, column=1, padx=2)
+            elif t is EnumParam:
+                tkVar.set(param.choices[protVar.get()])
+                if param.display == EnumParam.DISPLAY_COMBO:
+                    combo = ttk.Combobox(parent, textvariable=tkVar, state='readonly')
+                    combo['values'] = param.choices
+                    content = combo 
+                elif param.display == EnumParam.DISPLAY_LIST:
+                    rbFrame = tk.Frame(parent)
+                    for i, opt in enumerate(param.choices):
+                        rb = tk.Radiobutton(rbFrame, text=opt, value=str(i), variable=tkVar)
+                        rb.grid(row=i, column=0, sticky='w')
+                    content = rbFrame
+                else:
+                    raise Exception("Invalid display value '%s' for EnumParam" % str(param.display))
             else:
                 #v = self.setVarValue(paramName)
                 content = tk.Entry(parent, width=25, textvariable=tkVar)
-                
+
+            # Associate tkVar with protVar                
+            self.varDict[paramName] = tkVar
             
             content.grid(row=r, column=1, padx=2, pady=2, sticky='w')
             r += 1
@@ -159,7 +182,6 @@ class FormWindow(Window):
         value = getattr(self.protocol, paramName, None)
         if value is not None:
             tkVar.set(value.get(''))
-            self.varDict[paramName] = tkVar
            
     def setParamFromVar(self, paramName):
         value = getattr(self.protocol, paramName, None)
