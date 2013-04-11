@@ -30,7 +30,8 @@ from protlib_xmipp import XmippScript
 from xmipp import MetaData, MDL_CTF_MODEL, MD_APPEND, MD_OVERWRITE, FileName
 from emx.emxmapper import *
 from emx.emx import *
-from emxLib.emxLib import ctfMicXmippToEmx, coorrXmippToEmx, ctfMicXmippToEmxChallenge
+from emxLib.emxLib import ctfMicXmippToEmx, coorrXmippToEmx, ctfMicXmippToEmxChallenge,\
+                          alignXmippToEmx
 
 
 class ScriptImportEMX(XmippScript):
@@ -45,9 +46,10 @@ class ScriptImportEMX(XmippScript):
 #        self.addParamsLine("     alias -b;");
         self.addParamsLine(' [--mode <mode=micCTF>]         : information to extract')
         self.addParamsLine("         where <mode>");
+        self.addParamsLine("             alignment          : export particle shift and rotations");
+        self.addParamsLine("             coordinates        : export particle coordinates (so far only works for a single image)");
         self.addParamsLine("             micCTF             : export micrograph ctf");
         self.addParamsLine("             micCTFChallenge    : export micrograph ctf to challenge format");        
-        self.addParamsLine("             Coordinates        : export particle coordinates (so far only works for a single image)");
         self.addParamsLine("     alias -m;");
 #        self.addParamsLine(' [--amplitudeContrast <Q=0.1>]   : amplitudeContrast, mandatory when mode=micCTF');
 #        self.addParamsLine("     alias -a;");
@@ -67,12 +69,14 @@ class ScriptImportEMX(XmippScript):
         emxData = EmxData()
         mapper  = XmlMapper(emxData)
         #create emx files with mic CTF information
-        if mode == 'micCTF':
+        if mode   == 'micCTF':
             ctfMicXmippToEmx(emxData,xmdFileName)
         elif mode == 'micCTFChallenge':
             ctfMicXmippToEmxChallenge(emxData,xmdFileName)
-        elif mode == 'Coordinates':
+        elif mode == 'coordinates':
             coorrXmippToEmx(emxData,xmdFileName)
+        elif mode == 'alignment':
+            alignXmippToEmx(emxData,xmdFileName)
         mapper.writeEMXFile(emxFileName)
                     
         

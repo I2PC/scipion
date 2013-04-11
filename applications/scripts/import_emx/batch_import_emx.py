@@ -42,7 +42,7 @@ class ScriptImportEMX(XmippScript):
         self.addParamsLine(' [--mode <mode=micCTF>]          : information to extract')
         self.addParamsLine("         where <mode>");
         self.addParamsLine("             micCTF              : import micrograph ctf");
-        self.addParamsLine("             Coordinates         : import particle coordinates (so far only works for a single micrograph)");
+        self.addParamsLine("             coordinates         : import particle coordinates (so far only works for a single micrograph)");
         self.addParamsLine("     alias -m;");
         self.addExampleLine("Import information from EMX file to Xmipp", False);
         self.addExampleLine("xmipp_import_emx -i particlePicking.emx -m micCTF ");
@@ -67,7 +67,7 @@ class ScriptImportEMX(XmippScript):
         #create xmd files with mic CTF information and auxiliary files
         if mode == 'micCTF':
             ctfMicEMXToXmipp(emxData,MICROGRAPH)
-        elif mode == 'Coordinates':
+        elif mode == 'coordinates':
             coorEMXToXmipp(emxData,PARTICLE,emxFileName)
 
 if __name__ == '__main__':
