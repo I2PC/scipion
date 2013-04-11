@@ -108,7 +108,7 @@ class XmlMapper(Mapper):
             return sid
         return str(objId)
         
-    def get(self, objId):
+    def selectById(self, objId):
         """Retrieve an object give the id"""
         return self.objDict.get(self.strId(objId), None)
     
@@ -121,17 +121,17 @@ class XmlMapper(Mapper):
             key = '%s_%06d' % (obj.getClassName(), self.objCount)
         objDict[key] = obj
         
-    def getAll(self):
+    def selectAll(self):
         """Select object from storage"""
         for child in self.root:
-            obj = self.buildObject(child.tag)
+            obj = self._buildObject(child.tag)
             self.fillObject(obj, child)
             self._addObjectToDict(obj, self.objDict)
         #set properlly primary keys
         for obj in self.pendingPtrDict.values():
             for key, attr in obj.getAttributesToStore():
                 if attr.isPointer(): 
-                    ptr = self.get(attr._objId)
+                    ptr = self.selectById(attr._objId)
                     attr._objId = None
                     attr.set(ptr)
         return self.objDict.values()
@@ -142,7 +142,7 @@ class XmlMapper(Mapper):
         if childObj is None:
             if childClass is None:
                 raise Exception('Attribute "%s" was not found in parent object and classname not stored' % childName)
-            childObj = self.buildObject(childClass)
+            childObj = self._buildObject(childClass)
             setattr(obj, childName, childObj)
         return childObj
                   

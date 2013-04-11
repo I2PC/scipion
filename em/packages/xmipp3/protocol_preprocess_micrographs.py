@@ -166,4 +166,3 @@ class XmippProtPreprocessMicrographs(ProtDownsampleMicrographs):
         self.outputMicrographs.setFileName(mdOut)
 
         self.defineOutputs(micrograph=self.outputMicrographs)
-        pass

@@ -55,7 +55,7 @@ class BrowserWindow(gui.Window):
         gui.Window.__init__(self, title, master, **args)
 
         mapper = getMapper(path, globals())
-        objList = mapper.getAll()
+        objList = mapper.selectAll()
         columns = ('Class', )
         c = columns[0]
         tree = Tree(self.root, columns=columns)

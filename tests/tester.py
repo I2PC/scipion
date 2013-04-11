@@ -40,7 +40,7 @@ class MyProtocol(Protocol):
         f.close()
         return log
         
-    def defineSteps(self):
+    def _defineSteps(self):
         for i in range(self.numberOfSleeps.get()):
             self.insertFunctionStep('sleep', i, 'sleeping %d'%i)
     
@@ -58,18 +58,21 @@ class TestPyworkflow(unittest.TestCase):
         self.sqliteFile = 'SQLMapper.sqlite'
         self.xmlFile = 'XMLMapper.xml'
         
-    def getTestPath(self, filename):
+    def getTestPath(self, *filenames):
         """Return the path to the pyworkflow/tests dir
         joined with filename"""
-        return join(self.path, filename)
+        return join(self.path, *filenames)
     
-    def getTmpPath(self, filename):
+    def getTmpPath(self, *filenames):
         """Return the filename in /tmp/ folder.
         If the file exists, it will be deleted"""
-        path = join('/tmp', filename)
-        if exists(path):
-            os.remove(path)        
+        path = self.getTestPath('tmp', *filenames)
+        if os.path.exists(path) and not os.path.isdir(path):
+            os.remove(path)
         return path
+    
+    def getGoldPath(self, *filenames):
+        return self.getTestPath('gold', *filenames)
 
     def createComplex(self):
         """Create a Complex object and set
@@ -115,8 +118,8 @@ class TestPyworkflow(unittest.TestCase):
         b.set(False)
         self.assertTrue(not b.get())
         
-    def test_zzzzzzzzzSqliteMapper(self):
-        fn = self.getTmpPath(self.sqliteFile)
+    def test_SqliteMapper(self):
+        fn = self.getTmpPath("basic.sqlite")
         c = self.createComplex()
         mapper = SqliteMapper(fn)
         mapper.insert(c)
@@ -135,7 +138,7 @@ class TestPyworkflow(unittest.TestCase):
         mapper.commit()
 
         # Reading test
-        fnGold = self.getTestPath(self.sqliteFile)
+        fnGold = self.getGoldPath("basic.sqlite")
         mapper2 = SqliteMapper(fnGold, globals())
         
         l = mapper2.select(classname='Integer')[0]
@@ -144,29 +147,29 @@ class TestPyworkflow(unittest.TestCase):
         c2 = mapper2.select(classname='Complex')[0]
         self.assertTrue(c.equalAttributes(c2))
         
-        mapper3 = SqliteMapper(fn, globals())
-        b = mapper3.select(classname='Boolean')[0]
+        #mapper3 = SqliteMapper(fn, globals())
+        b = mapper2.select(classname='Boolean')[0]
         self.assertTrue(not b.get())
         
-        p = mapper3.select(classname='Pointer')[0]
+        p = mapper2.select(classname='Pointer')[0]
         self.assertEqual(c, p.get())
         
         
 
         
     def test_XML(self):
-        fn = self.getTmpPath(self.xmlFile)
+        fn = self.getTmpPath("basic.xml")
         c = self.createComplex()
         mapper = XmlMapper(fn)
         mapper.insert(c)
         #write file
         mapper.commit()
 
-        fnGold = self.getTestPath(self.xmlFile)
+        fnGold = self.getGoldPath("basic.xml")
         #self.assertTrue(filecmp.cmp(fnGold, fn))
         #read file
         mapper2 = XmlMapper(fnGold, globals())
-        c2 = mapper2.getAll()[0]
+        c2 = mapper2.selectFirst()
         self.assertEquals(c.imag.get(), c2.imag.get())
         
 #    def test_zStep(self):
@@ -212,17 +215,17 @@ class TestPyworkflow(unittest.TestCase):
 #        mapper3.insert(l1)
 #        mapper3.commit()
 
-    def test_zzProtocol(self):
+    def test_Protocol(self):
         """Test the list with several Complex"""
-        fn = self.getTmpPath(self.sqliteFile)   
+        fn = self.getTmpPath("protocol.sqlite")   
         mapper = SqliteMapper(fn, globals())
-        prot = MyProtocol(mapper=mapper, n=2)
+        prot = MyProtocol(mapper=mapper, n=2, workingDir=self.getTmpPath(''))
         prot.run()
         
         self.assertEqual(prot.steps[0].status, STATUS_FINISHED)
         
         mapper2 = SqliteMapper(fn, globals())
-        prot2 = mapper2.get(prot.getId())
+        prot2 = mapper2.selectById(prot.getId())
         
         self.assertEqual(prot.endTime, prot2.endTime)
         self.assertEqual(prot.steps[1].status, prot2.steps[1].status)

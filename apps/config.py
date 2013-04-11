@@ -48,6 +48,8 @@ class ProjectConfig(OrderedObject):
         OrderedObject.__init__(self, **args)
         self.menu = String(menu)
         self.protocols = String(protocols)
+        self.icon = String('no_icon')
+        self.logo = String('no_logo')
 
 class MenuConfig(OrderedObject):
     """Menu configuration in a tree fashion.
@@ -127,7 +129,7 @@ class ConfigXmlMapper(XmlMapper):
         self.setClassTag('ProtocolConfig.String', 'attribute')
         
     def getConfig(self):
-        return self.getAll()[0]
+        return self.selectAll()[0]
 
 def writeConfig(config, fn):
     fn = getConfigPath(fn)
@@ -191,6 +193,7 @@ def writeDefaults():
     # Write global configuration
     config = ProjectConfig(menu='menu_default.xml',
                            protocols='protocols_default.xml')
+    config.icon = ''
     writeConfig(config, 'configuration.xml')
     
 if __name__ == '__main__':
