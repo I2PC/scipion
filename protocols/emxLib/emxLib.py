@@ -26,6 +26,7 @@
 #from emx_data_model import *
 from xmipp import *
 from emx.emx import *
+from numpy import eye
 
 BINENDING     = '.mrc'
 CTFENDING     = '_ctf.param'
@@ -213,7 +214,7 @@ def coorEMXToXmipp(emxData,mode,emxFileName):
                 fileName = FileName(partFileName)
         elif partIndex is None:
             fileName = FileName(partFileName)
-        #micrograph is a stack. Unlikely but not impossible
+        #particle is a stack. 
         else:
             fileName=FileName()
             fileName.compose(int(partIndex),partFileName)
@@ -268,4 +269,69 @@ def alignXmippToEmx(emxData,xmdFileName):
         p1.set('transformationMatrix__t34',z if z is not None else 0.)
 
         emxData.addObject(p1)
-alignEMXToXmipp vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        
+def alignEMXToXmipp(emxData,mode,xmdFileName):
+    """import align related information
+    """
+    #iterate though emxData
+    mdParticle     = MetaData()
+    for particle in emxData.objLists[mode]:
+        mdPartId   = mdParticle.addObject()
+
+        partIndex     = particle.get('index')
+        partFileName  = particle.get('fileName')
+        if partFileName is None:
+            if partIndex is None:
+                raise Exception("coorEMXToXmipp: Particle has neither filename not index")
+            else: #only index? for xmipp index should behave as filename
+                partFileName = FileName(str(partIndex).zfill(FILENAMENUMBERLENGTH))
+                partIndex    = None
+                fileName = FileName(partFileName)
+        elif partIndex is None:
+            fileName = FileName(partFileName)
+        #particle is a stack. Unlikely but not impossible
+        else:
+            fileName=FileName()
+            fileName.compose(int(partIndex),partFileName)
+        mdParticle.setValue(MDL_IMAGE , fileName , mdPartId)
+        #eulerangle2matrix
+        _array = eye(3)# unitary matrix
+
+        t = particle.get('transformationMatrix__t11')
+        _array[0][0]   = t if t is not None else 1.
+        t = particle.get('transformationMatrix__t12')
+        _array[0][1]   = t if t is not None else 0.
+        t = particle.get('transformationMatrix__t13')
+        _array[0][2]   = t if t is not None else 0.
+        
+        t = particle.get('transformationMatrix__t21')
+        _array[1][0]   = t if t is not None else 0.
+        t = particle.get('transformationMatrix__t22')
+        _array[1][1]   = t if t is not None else 1.
+        t = particle.get('transformationMatrix__t23')
+        _array[1][2]   = t if t is not None else 0.
+
+        t = particle.get('transformationMatrix__t31')
+        _array[2][0]   = t if t is not None else 0.
+        t = particle.get('transformationMatrix__t32')
+        _array[2][1]   = t if t is not None else 0.
+        t = particle.get('transformationMatrix__t33')
+        _array[2][2]   = t if t is not None else 1.
+
+        rot,tilt,psi = Euler_matrix2angles(_array)
+        
+        t = particle.get('transformationMatrix__t14')
+        _X   = t if t is not None else 0.
+        t = particle.get('transformationMatrix__t24')
+        _Y   = t if t is not None else 0.
+        t = particle.get('transformationMatrix__t34')
+        _Z   = t if t is not None else 0.
+
+        mdParticle.setValue(MDL_ANGLE_ROT , rot , mdPartId)
+        mdParticle.setValue(MDL_ANGLE_TILT, tilt, mdPartId)
+        mdParticle.setValue(MDL_ANGLE_PSI , psi , mdPartId)
+
+        mdParticle.setValue(MDL_SHIFT_X, _X, mdPartId)
+        mdParticle.setValue(MDL_SHIFT_Y, _Y, mdPartId)
+        mdParticle.setValue(MDL_SHIFT_Z, _Z, mdPartId)
+    mdParticle.write(xmdFileName)

@@ -18,7 +18,7 @@
   -->
   <micrograph fileName="mic" index="1">
     <acceleratingVoltage unit="kV">100.0</acceleratingVoltage>
-    <defocusU unit="nn">1000.0</defocusU>
+    <defocusU unit="nm">1000.0</defocusU>
     <pixelSpacing>
       <X unit="A/px">5.6</X>
       <Y unit="A/px">5.7</Y>
@@ -33,7 +33,7 @@
       <X unit="px">11</X>
       <Y unit="px">33</Y>
     </boxSize>
-    <defocusU unit="nn">1000.0</defocusU>
+    <defocusU unit="nm">1000.0</defocusU>
     <pixelSpacing>
       <X unit="A/px">55.6</X>
       <Y unit="A/px">55.7</Y>

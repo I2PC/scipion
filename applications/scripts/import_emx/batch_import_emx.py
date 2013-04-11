@@ -30,21 +30,24 @@ from xmipp import MetaData, MDL_CTF_MODEL, MD_APPEND, MD_OVERWRITE, FileName
 from emxLib.emxLib import ctfMicXmippToEmx
 from emx.emxmapper import *
 from emx.emx import *
-from emxLib.emxLib import ctfMicEMXToXmipp, coorEMXToXmipp
+from emxLib.emxLib import ctfMicEMXToXmipp, coorEMXToXmipp, alignEMXToXmipp
 
 class ScriptImportEMX(XmippScript):
     def __init__(self):
         XmippScript.__init__(self)
         
     def defineParams(self):
-        self.addUsageLine("Convert  from EMX metadata files");
-        self.addParamsLine(' -i <text_file_emx>              : Input metadata file ');
+        self.addUsageLine("Convert  from EMX metadata files")
+        self.addParamsLine(' -i <text_file_emx>              : Input metadata file ')
         self.addParamsLine(' [--mode <mode=micCTF>]          : information to extract')
-        self.addParamsLine("         where <mode>");
-        self.addParamsLine("             alignment          : export particle shift and rotations");
-        self.addParamsLine("             coordinates         : import particle coordinates (so far only works for a single micrograph)");
-        self.addParamsLine("             micCTF              : import micrograph ctf");
-        self.addParamsLine("     alias -m;");
+        self.addParamsLine("         where <mode>")
+        self.addParamsLine("             alignment           : export particle shift and rotations")
+        self.addParamsLine("             coordinates         : import particle coordinates (so far only works for a single micrograph)")
+        self.addParamsLine("             micCTF              : import micrograph ctf")
+        self.addParamsLine("     alias -m;")
+        self.addParamsLine(' [--notValidate]                 : do not validate xml against schema');
+        self.addParamsLine('                                 : this option requires net connection');
+        self.addParamsLine('     alias -n;');
         self.addExampleLine("Import information from EMX file to Xmipp", False);
         self.addExampleLine("xmipp_import_emx -i particlePicking.emx -m micCTF ");
       
@@ -58,6 +61,16 @@ class ScriptImportEMX(XmippScript):
 
         emxFileName  = self.getParam('-i')
         mode         = self.getParam('-m')
+        doValidate   = self.checkParam('-n')
+        #validate emx file
+        if not doValidate:
+            try:
+                    (code, _out,_err)=validateSchema(emxFileName)
+                    if code !=0:
+                       raise Exception (_err) 
+            except Exception, e:
+                print "Error: ", str(e)
+                exit(1)
         #object to store emx data
         emxData   = EmxData()
         #object to read/write emxData
@@ -71,7 +84,8 @@ class ScriptImportEMX(XmippScript):
         elif mode == 'coordinates':
             coorEMXToXmipp(emxData,PARTICLE,emxFileName)
         elif mode == 'alignment':
-            alignEMXToXmipp(emxData,xmdFileName)
+            xmdFileName = emxFileName.replace(".emx",".xmd")
+            alignEMXToXmipp(emxData,PARTICLE,xmdFileName)
 
 if __name__ == '__main__':
     ScriptImportEMX().tryRun()

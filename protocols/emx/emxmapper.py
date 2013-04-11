@@ -299,7 +299,7 @@ class XmlMapper():
         xmlFile.write("</EMX>")
         xmlFile.close()
 
-def validateSchema(filename, schema_file):
+def validateSchema(filename, schema_file='http://sourceforge.net/p/emexchange/code/ci/master/tree/trunk/resourcesEmx/schemas/emx.xsd?format=raw'):
     """
     Code from astropy project released under BSD licence
     Validates an XML file against a schema or DTD.
@@ -326,14 +326,16 @@ def validateSchema(filename, schema_file):
     """
     import subprocess, os
 
+    print 
     base, ext = os.path.splitext(schema_file)
-    if ext == '.xsd':
+    if ext == '.xsd' or ext ==".xsd?format=raw":
         schema_part = '--schema ' + schema_file
     elif ext == '.dtd':
         schema_part = '--dtdvalid ' + schema_file
     else:
         raise TypeError("schema_file must be a path to an XML Schema or DTD")
 
+    #print "xmllint", "xmllint --noout %s %s" % (schema_part, filename)
     p = subprocess.Popen(
         "xmllint --noout %s %s" % (schema_part, filename),
         shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -350,7 +352,6 @@ If you want to use this routine install xmmlint""")
         raise OSError(
             "xmllint was terminated by signal '{0}'".format(
                 signal_number_to_name(-p.returncode)))
-    
     return p.returncode, stdout, stderr
 
             

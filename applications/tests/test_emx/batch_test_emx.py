@@ -233,8 +233,8 @@ class TestEMX(unittest.TestCase):
 
         #print "kdiff3", fileName,dataPath
         self.assertTrue(filecmp.cmp(fileName,fileName2))
-        if os.path.exists(fileName2):
-            os.remove(fileName2)
+        #if os.path.exists(fileName2):
+        #    os.remove(fileName2)
 
     def test_50MasiveReadWrite(self):
         """This is not really a test
@@ -318,11 +318,10 @@ class TestEMX(unittest.TestCase):
 
     def test_70schema(self):
         xmlFile    = join(self.testsPath,'EMX/EMXwrite.emx')
-        schemaFile = join(self.testsPath,'EMX/emx.xsd')
-        (code,_out,_err)=validateSchema(xmlFile,schemaFile)
+        (code,_out,_err)=validateSchema(xmlFile)
         self.assertEqual(code,0)
         xmlFile    = join(self.testsPath,'EMX/EMXwrite_badly_formed.emx')
-        (code,_out,_err)=validateSchema(xmlFile,schemaFile)
+        (code,_out,_err)=validateSchema(xmlFile)
         self.assertNotEqual(code,0)
 
 from  XmippPythonTestResult import XmippPythonTestResult
