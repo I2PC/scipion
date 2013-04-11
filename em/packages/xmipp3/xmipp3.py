@@ -41,23 +41,49 @@ class XmippProtImportMicrographs(ProtImportMicrographs):
 class XmippProtParticlePicking(ProtParticlePicking):
     pass
 
+def definePreprocessMicrograph():
+    """Create the definition of parameters for
+    the XmippPreprocessMicrographs protocol"""
+    f = Form()
+    
+    f.addSection(label='Input')
+    f.addParam('inputMicrographs', PointerParam, label="Micrographs", pointerClass='SetOfMicrographs')
+    
+    f.addSection(label='Crop',questionParam='doCrop')
+    f.addParam('doCrop', BooleanParam, default=False,
+               label='Crop borders?')
+    f.addParam('cropPixels', IntParam, default=10,
+               label='Pixels to crop')
+    f.addSection(label='Logarithm',questionParam='doLog')
+    f.addParam('doLog', BooleanParam, default=False,
+               label='Take logarithm?')
+    f.addParam('logA', FloatParam, default=4.431,
+               label='a')
+    f.addParam('logB', FloatParam, default=0.4018,
+               label='b')
+    f.addParam('logC', FloatParam, default=336.6,
+               label='c')
+    f.addSection(label='Remove bad pixels',questionParam='doRemoveBadPix')
+    f.addParam('doRemoveBadPix', BooleanParam, default=False,
+               label='Remove bad pixels?')
+    f.addParam('mulStddev', IntParam, default=5,
+               label='Multiple of Stddev')    
+    f.addSection(label='Downsample',questionParam='doDownsample')
+    f.addParam('doDownsample', BooleanParam, default=False,
+               label='Downsample micrographs?')
+    f.addParam('downFactor', IntParam, default=2,
+               label='Downsampling factor')
+    
+    return f
 
 class XmippProtPreprocessMicrographs(ProtDownsampleMicrographs):
+    
+    _definition = definePreprocessMicrograph()
+    
     def __init__(self, **args):
         
         Protocol.__init__(self, **args)
-        self.inputMicrographs = SetOfMicrographs()
-        self.inputMicrographs = args.get('inputMicrographs')
-        self.doDownsample = Boolean(args.get('doDownsample', False))
-        self.downFactor = Integer(args.get('downFactor', 2))   
-        self.doCrop = Boolean(args.get('doCrop', False))
-        self.cropPixels = Integer(args.get('cropPixels', 10))
-        self.doLog = Boolean(args.get('doLog', False))
-        self.logA = Float(args.get('logA', 4.431))
-        self.logB = Float(args.get('logB', 0.4018))
-        self.logC = Float(args.get('logC', 336.6))
-        self.doRemoveBadPix = Boolean(args.get('doRemoveBadPix', False))
-        self.mulStddev = Integer(args.get('mulStddev', 5))
+        self.inputMics = self.inputMicrographs.get() 
         
     def defineSteps(self):
         '''for each micrograph call the downsampling function
