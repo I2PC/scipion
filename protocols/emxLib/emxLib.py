@@ -268,4 +268,4 @@ def alignXmippToEmx(emxData,xmdFileName):
         p1.set('transformationMatrix__t34',z if z is not None else 0.)
 
         emxData.addObject(p1)
-
+alignEMXToXmipp vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
