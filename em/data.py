@@ -43,15 +43,6 @@ class Microscope(EMObject):
         self.voltage = Float(300)
         self.sphericalAberration = Float(1.2)
         
-    def getMagnification(self):
-        return self.magnification.get()
-    
-    def getVoltage(self):
-        return self.voltage.get()
-    
-    def getSphericalAberration(self):
-        return self.aberration.get()
-
 
 class Image(EMObject):
     """Represents an EM Image object"""

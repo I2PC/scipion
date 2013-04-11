@@ -34,7 +34,7 @@ from pyworkflow.protocol.params import *
 from pyworkflow.em import SetOfMicrographs
 
 
-def defineImportMicrograph():
+def _defineImportMicrograph():
     """Create the definition of parameters for
     the ImportMicrographs protocol"""
     f = Form()
@@ -64,12 +64,12 @@ def defineImportMicrograph():
 
 class ProtImportMicrographs(Protocol):
     """Protocol to import a set of micrographs in the project"""
-    _definition = defineImportMicrograph()
+    _definition = _defineImportMicrograph()
     
     def __init__(self, **args):
         Protocol.__init__(self, **args)         
         
-    def defineSteps(self):
+    def _defineSteps(self):
         self.insertFunctionStep('importMicrographs', self.pattern.get(),
                                 self.voltage.get(), self.sphericalAberration.get(), 
                                 self.samplingRate.get())
@@ -93,7 +93,7 @@ class ProtImportMicrographs(Protocol):
         micSet.microscope.voltage.set(voltage)
         micSet.microscope.sphericalAberration.set(sphericalAberration)
         micSet.samplingRate.set(samplingRate)
-        self.defineOutputs(micrograph=micSet)
+        self._defineOutputs(micrograph=micSet)
         
         return path
         

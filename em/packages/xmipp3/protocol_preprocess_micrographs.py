@@ -78,7 +78,7 @@ class XmippProtPreprocessMicrographs(ProtDownsampleMicrographs):
         
         Protocol.__init__(self, **args)
         
-    def defineSteps(self):
+    def _defineSteps(self):
         '''for each micrograph call the downsampling function
         '''
         self.inputMics = self.inputMicrographs.get() 
@@ -162,5 +162,4 @@ class XmippProtPreprocessMicrographs(ProtDownsampleMicrographs):
         
         self.outputMicrographs.setFileName(mdOut)
 
-        self.defineOutputs(micrograph=self.outputMicrographs)
-        pass
+        self._defineOutputs(micrograph=self.outputMicrographs)

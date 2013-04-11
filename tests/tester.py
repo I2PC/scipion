@@ -40,7 +40,7 @@ class MyProtocol(Protocol):
         f.close()
         return log
         
-    def defineSteps(self):
+    def _defineSteps(self):
         for i in range(self.numberOfSleeps.get()):
             self.insertFunctionStep('sleep', i, 'sleeping %d'%i)
     
@@ -169,7 +169,7 @@ class TestPyworkflow(unittest.TestCase):
         #self.assertTrue(filecmp.cmp(fnGold, fn))
         #read file
         mapper2 = XmlMapper(fnGold, globals())
-        c2 = mapper2.getAll()[0]
+        c2 = mapper2.selectFirst()
         self.assertEquals(c.imag.get(), c2.imag.get())
         
 #    def test_zStep(self):
@@ -225,7 +225,7 @@ class TestPyworkflow(unittest.TestCase):
         self.assertEqual(prot.steps[0].status, STATUS_FINISHED)
         
         mapper2 = SqliteMapper(fn, globals())
-        prot2 = mapper2.get(prot.getId())
+        prot2 = mapper2.selectById(prot.getId())
         
         self.assertEqual(prot.endTime, prot2.endTime)
         self.assertEqual(prot.steps[1].status, prot2.steps[1].status)

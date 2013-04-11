@@ -27,11 +27,11 @@
 from pyworkflow.object import *
 
 class Mapper():
-    '''This class will serves as a Data Mapper pattern.
+    """This class will serves as a Data Mapper pattern.
     It will store/retrieve objects from some storage enviroment.
     (like SQL, XML or others)
     The mapper should have access to class dictionary
-    in order to build any give class by name'''
+    in order to build any give class by name"""
     def __init__(self, dictClasses=None):
         #print '=========> Mapper:', dictClasses
         if dictClasses:
@@ -39,28 +39,28 @@ class Mapper():
         else:
             self.dictClasses = globals()
     
-    def buildObject(self, className, **args):
-        '''Build an instance of an object
+    def _buildObject(self, className, **args):
+        """Build an instance of an object
         given the class name, it should be in 
-        the classes dictionary'''
+        the classes dictionary"""
         if className in self.dictClasses:
             return self.dictClasses[className](**args)
-        raise Exception('Mapper.buildObject: Unknown class: %s' % className)
+        raise Exception('Mapper._buildObject: Unknown class: %s' % className)
     
     def commit(self):
-        '''Commit changes made to the storage'''
+        """Commit changes made to the storage"""
         pass
     
     def insert(self, obj):
-        '''Insert a new object into the system, the id will be set'''
+        """Insert a new object into the system, the id will be set"""
         pass
     
     def update(self, obj, direction='to'):
-        '''Update an existing object, the id should not be None
+        """Update an existing object, the id should not be None
         direction can be "to" or "from" which indicates the 
         priority of the update.
         If "to" is used, object data is put in storage.
-        If "from", object data is retrieved from storage'''
+        If "from", object data is retrieved from storage"""
         if direction == 'to': # Update db with object changes
             self.updateTo(obj)
         elif direction == 'from': # Update object with db info
@@ -69,30 +69,43 @@ class Mapper():
             raise Exception('Invalid option %s for Sqlite.updateObject' % direction)
     
     def updateFrom(self, obj):
-        '''Update object data with storage info'''
+        """Update object data with storage info"""
         pass
     
     def updateTo(self, obj):
-        '''Update storage with object info'''
+        """Update storage with object info"""
         pass
     
     def store(self, obj):
-        '''Stores an object, it can be inserted or updated'''
+        """Stores an object, it can be inserted or updated"""
         if obj._objId is None:
             self.insert(obj)
         else:
             self.updateTo(obj)
             
-    def get(self, objId):
-        '''Return the object which id is objId'''
+    def selectById(self, objId):
+        """Return the object which id is objId"""
         pass
     
-    def getAll(self):
-        '''Return all object from storage'''
+    def selectAll(self):
+        """Return all object from storage"""
         pass
     
-    def select(self, **args):
-        '''Select object meetings some criterias'''
+    def selectFirst(self):
+        """Return only the first element"""
+        allObj = self.selectAll()
+        if len(allObj):
+            return allObj[0]
+        return None
+    
+    def selectBy(self, **args):
+        """Select object meetings some criterias"""
         pass 
+    
+    def selectByClass(self, className, includeSubclasses=True):
+        """Select all object of a give class.
+        By default object of subclasses will be retrieved also.
+        This behaviour can be changed by passing includeSubclass=False"""
+        pass
             
     

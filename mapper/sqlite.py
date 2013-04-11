@@ -36,14 +36,14 @@ class SqliteMapper(Mapper):
     def commit(self):
         self.db.commit()
         
-    def _getObjectValue(self, obj):
+    def __getObjectValue(self, obj):
         if obj.isPointer():
             return obj.get().strId() # For pointers store the id of referenced object
         return obj._objValue
         
-    def _insert(self, obj, namePrefix=None):
+    def __insert(self, obj, namePrefix=None):
         obj._objId = self.db.insertObject(obj._objName, obj.getClassName(), 
-                                          self._getObjectValue(obj), obj._objParentId)
+                                          self.__getObjectValue(obj), obj._objParentId)
         sid = obj.strId()
         if namePrefix is None:
             namePrefix = sid
@@ -53,12 +53,12 @@ class SqliteMapper(Mapper):
         
     def insert(self, obj):
         """Insert a new object into the system, the id will be set"""
-        self._insert(obj)
+        self.__insert(obj)
         
     def insertChild(self, obj, key, attr, namePrefix):
             attr._objName = joinExt(namePrefix, key)
             attr._objParentId = obj._objId
-            self._insert(attr, namePrefix)
+            self.__insert(attr, namePrefix)
             #attr._objId = self.db.insertObject(attr._objName, attr.getClassName(), attr._objValue, attr._objParentId)
             #self.insertObjectWithChilds(attr, joinExt(namePrefix, attr.strId()))
         
@@ -67,21 +67,21 @@ class SqliteMapper(Mapper):
             self.insertChild(obj, key, attr, namePrefix)
         #self.db.commit()        
     
-    def getNamePrefix(self, obj):
+    def __getNamePrefix(self, obj):
         if len(obj._objName) > 0 and '.' in obj._objName:
             return replaceExt(obj._objName, obj.strId())
         return obj.strId()
     
     def updateTo(self, obj, level=1):
         self.db.updateObject(obj._objId, obj._objName, obj.getClassName(), 
-                             self._getObjectValue(obj), obj._objParentId)
+                             self.__getObjectValue(obj), obj._objParentId)
         for key, attr in obj.getAttributesToStore():
             if attr._objId is None: # Insert new items from the previous state
                 attr._objParentId = obj._objId
                 #path = obj._objName[:obj._objName.rfind('.')] # remove from last .
-                namePrefix = self.getNamePrefix(obj)
+                namePrefix = self.__getNamePrefix(obj)
                 attr._objName = joinExt(namePrefix, key)
-                self._insert(attr, namePrefix)
+                self.__insert(attr, namePrefix)
             else:                
                 self.updateTo(attr, level+2)
         
@@ -89,10 +89,10 @@ class SqliteMapper(Mapper):
         objRow = self.db.selectObjectById(obj._objId)
         self.fillObject(obj, objRow)
             
-    def get(self, objId):
+    def selectById(self, objId):
         """Build the object which id is objId"""
         objRow = self.db.selectObjectById(objId)
-        obj = self.buildObject(objRow['classname'])
+        obj = self._buildObject(objRow['classname'])
         self.fillObject(obj, objRow)
         return obj
     
@@ -107,13 +107,13 @@ class SqliteMapper(Mapper):
         obj.set(objRow['value'])
         obj._objParentId = objRow['parent_id']
         if obj.isPointer():
-            refObj = self.get(obj._objValue)
+            refObj = self.selectById(obj._objValue)
             refObj._objDoStore = False # Prevent to storing pointer references
             obj.set(refObj)
         
     def fillObject(self, obj, objRow):
         self.fillObjectWithRow(obj, objRow)
-        namePrefix = self.getNamePrefix(obj)
+        namePrefix = self.__getNamePrefix(obj)
         childs = self.db.selectObjectsByAncestor(namePrefix)
         childsDict = {obj._objId: obj}
         
@@ -127,16 +127,16 @@ class SqliteMapper(Mapper):
             
             childObj = getattr(parentObj, childName, None)
             if childObj is None:
-                childObj = self.buildObject(childRow['classname'])
+                childObj = self._buildObject(childRow['classname'])
                 setattr(parentObj, childName, childObj)
             self.fillObjectWithRow(childObj, childRow)  
             childsDict[childObj._objId] = childObj  
               
-    def _objectsFromRows(self, objRows):
+    def __objectsFromRows(self, objRows):
         """Create a set of object from a set of rows"""
         objs = []
         for objRow in objRows:
-            obj = self.buildObject(objRow['classname'])
+            obj = self._buildObject(objRow['classname'])
             self.fillObject(obj, objRow)
             objs.append(obj)
         return objs
@@ -144,11 +144,11 @@ class SqliteMapper(Mapper):
     def select(self, **args):
         """Select object meetings some criterias"""
         objRows = self.db.selectObjectsBy(**args)
-        return self._objectsFromRows(objRows)
+        return self.__objectsFromRows(objRows)
     
-    def getAll(self):
+    def selectAll(self):
         objRows = self.db.selectObjectsByParent(parent_id=None)
-        return self._objectsFromRows(objRows)
+        return self.__objectsFromRows(objRows)
 
 
 class SqliteDb():
@@ -158,10 +158,10 @@ class SqliteDb():
     SELECT = "SELECT id, parent_id, name, classname, value FROM Objects WHERE "
     
     def __init__(self, dbName, timeout=1000):
-        self.createConnection(dbName, timeout)
-        self.createTables()
+        self.__createConnection(dbName, timeout)
+        self.__createTables()
 
-    def createConnection(self, dbName, timeout):
+    def __createConnection(self, dbName, timeout):
         """Establish db connection"""
         from sqlite3 import dbapi2 as sqlite
         self.connection = sqlite.Connection(dbName, timeout)
@@ -175,7 +175,7 @@ class SqliteDb():
 #        print "executing: ", cmd
 #        self.cursor.execute(cmd, *args, **kargs)
         
-    def createTables(self):
+    def __createTables(self):
         """Create requiered tables if don't exists"""
         # Enable foreings keys
         self.executeCommand("PRAGMA foreign_keys=ON")

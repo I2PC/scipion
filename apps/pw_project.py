@@ -186,7 +186,7 @@ class ProjectWindow(gui.Window):
     
     def updateRunsTree(self, tree):
         tree.clear()
-        objList = self.project.mapper.getAll()
+        objList = self.project.mapper.selectAll()
         for obj in objList:
             t = '%s.%02d' % (obj.getClassName(), obj.getId())
             tree.insert('',  'end', obj.getId(), text=t, values=(obj.status.get(), obj.endTime.get()))
@@ -204,7 +204,7 @@ class ProjectWindow(gui.Window):
     def runItemClick(self, e=None):
         print "run clicked"
         print self.runsTree.getFirst()
-        prot = self.project.mapper.get(int(self.runsTree.getFirst()))
+        prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))
         prot.mapper = self.project.mapper
         #prot.printAll()
         self._openProtocolForm(prot)

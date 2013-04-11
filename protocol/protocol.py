@@ -63,22 +63,22 @@ class Step(OrderedObject):
             attrList.append(key)
             setattr(self, key, value)
         
-    def defineInputs(self, **args):
+    def _defineInputs(self, **args):
         """This function should be used to define
         those attributes considered as Input"""
         self._storeAttributes(self._inputs, args)
         
-    def defineOutputs(self, **args):
+    def _defineOutputs(self, **args):
         """This function should be used to specify
         expected outputs"""
         self._storeAttributes(self._outputs, args)
     
-    def preconditions(self):
+    def _preconditions(self):
         """Check if the necessary conditions to
         step execution are met"""
         return True
     
-    def postconditions(self):
+    def _postconditions(self):
         """Check if the step have done well its task
         and accomplish its results"""
         return True
@@ -108,7 +108,7 @@ class Step(OrderedObject):
 class FunctionStep(Step):
     """This is a Step wrapper around a normal function
     This class will ease the insertion of Protocol function steps
-    throught the function insertFunctionStep"""
+    throught the function _insertFunctionStep"""
     def __init__(self, funcName=None, *funcArgs):
         """Receive the function to execute and the 
         parameters to call it"""
@@ -126,7 +126,7 @@ class FunctionStep(Step):
                 raise Exception('Missing files: ' + ' '.join(missingFiles))
             self.resultFiles = String(pickle.dumps(resultFiles))
     
-    def postconditions(self):
+    def _postconditions(self):
         """This type of Step, will simply check
         as postconditions that the result files exists"""
         if not hasattr(self, 'resultFiles'):
@@ -182,7 +182,7 @@ class Protocol(Step):
         else:
             print "FIXME: Protocol '%s' has not DEFINITION" % self.getClassName()
         
-    def store(self, *objs):
+    def _store(self, *objs):
         if not self.mapper is None:
             if len(objs) == 0:
                 self.mapper.store(self)
@@ -191,19 +191,19 @@ class Protocol(Step):
                     self.mapper.store(obj)
             self.mapper.commit()
             
-    def defineSteps(self):
+    def _defineSteps(self):
         """Define all the steps that will be executed."""
         pass
     
-    def insertStep(self, step):
+    def __insertStep(self, step):
         """Insert a new step in the list"""
         self.steps.append(step)
         
-    def getPath(self, *paths):
+    def _getPath(self, *paths):
         """Return a path inside the workingDir"""
         return join(self.workingDir, *paths)
         
-    def insertFunctionStep(self, funcName, *funcArgs, **args):
+    def _insertFunctionStep(self, funcName, *funcArgs, **args):
         """Input params:
         funcName: the string name of the function to be run in the Step.
         *funcArgs: the variable list of arguments to pass to the function.
@@ -211,15 +211,15 @@ class Protocol(Step):
         """
         step = FunctionStep(funcName, *funcArgs)
         step.func = getattr(self, funcName)
-        self.insertStep(step)
+        self.__insertStep(step)
         
-    def insertRunJobStep(self, progName, progArguments, resultFiles=[]):
+    def _insertRunJobStep(self, progName, progArguments, resultFiles=[]):
         """Insert an Step that will simple call runJob function"""
         step = RunJobStep(progName, progArguments, resultFiles)
-        self.insertStep(step)
+        self.__insertStep(step)
         
     def _run(self):
-        self.defineSteps() # Define steps for execute later
+        self._defineSteps() # Define steps for execute later
         makePath(self.workingDir)
         
         for step in self.steps:
@@ -233,12 +233,12 @@ class Protocol(Step):
 
     def run(self):
         self.currentStep = 1
-        self.store()
+        self._store()
         self.namePrefix = replaceExt(self.steps.getName(), self.steps.strId()) #keep 
         Step.run(self)
         outputs = [getattr(self, o) for o in self._outputs]
-        #self.store(self.status, self.initTime, self.endTime, *outputs)
-        self.store()
+        #self._store(self.status, self.initTime, self.endTime, *outputs)
+        self._store()
         print 'PROTOCOL FINISHED'
 
 
