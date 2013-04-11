@@ -298,4 +298,59 @@ class XmlMapper():
             xmlFile.write( text)
         xmlFile.write("</EMX>")
         xmlFile.close()
+
+def validateSchema(filename, schema_file):
+    """
+    Code from astropy project released under BSD licence
+    Validates an XML file against a schema or DTD.
+
+    Functions to do XML schema and DTD validation.  At the moment, this
+    makes a subprocess call to xmllint.  This could use a Python-based
+    library at some point in the future, if something appropriate could be
+    found. lxml is a possibility but has too many dependences if anyone
+    knows about a pure python validator let my know
+
+    Parameters
+    ----------
+    filename : str
+        The path to the XML file to validate
+
+    schema : str
+        The path to the XML schema or DTD
+
+    Returns
+    -------
+    returncode, stdout, stderr : int, str, str
+        Returns the returncode from xmllint and the stdout and stderr
+        as strings
+    """
+    import subprocess, os
+
+    base, ext = os.path.splitext(schema_file)
+    if ext == '.xsd':
+        schema_part = '--schema ' + schema_file
+    elif ext == '.dtd':
+        schema_part = '--dtdvalid ' + schema_file
+    else:
+        raise TypeError("schema_file must be a path to an XML Schema or DTD")
+
+    p = subprocess.Popen(
+        "xmllint --noout %s %s" % (schema_part, filename),
+        shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+
+    if p.returncode == 127:
+        raise OSError(
+            """xmllint not found, so can not validate schema. 
+Schema validation is based on the xmllint program that belongs to the libxml2-tools package.
+If you want to use this routine install xmmlint""")
+        
+    elif p.returncode < 0:
+        from ..misc import signal_number_to_name
+        raise OSError(
+            "xmllint was terminated by signal '{0}'".format(
+                signal_number_to_name(-p.returncode)))
     
+    return p.returncode, stdout, stderr
+
+            

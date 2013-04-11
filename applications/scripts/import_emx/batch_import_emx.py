@@ -41,8 +41,9 @@ class ScriptImportEMX(XmippScript):
         self.addParamsLine(' -i <text_file_emx>              : Input metadata file ');
         self.addParamsLine(' [--mode <mode=micCTF>]          : information to extract')
         self.addParamsLine("         where <mode>");
-        self.addParamsLine("             micCTF              : import micrograph ctf");
+        self.addParamsLine("             alignment          : export particle shift and rotations");
         self.addParamsLine("             coordinates         : import particle coordinates (so far only works for a single micrograph)");
+        self.addParamsLine("             micCTF              : import micrograph ctf");
         self.addParamsLine("     alias -m;");
         self.addExampleLine("Import information from EMX file to Xmipp", False);
         self.addExampleLine("xmipp_import_emx -i particlePicking.emx -m micCTF ");
@@ -69,6 +70,8 @@ class ScriptImportEMX(XmippScript):
             ctfMicEMXToXmipp(emxData,MICROGRAPH)
         elif mode == 'coordinates':
             coorEMXToXmipp(emxData,PARTICLE,emxFileName)
+        elif mode == 'alignment':
+            alignEMXToXmipp(emxData,xmdFileName)
 
 if __name__ == '__main__':
     ScriptImportEMX().tryRun()

@@ -316,15 +316,14 @@ class TestEMX(unittest.TestCase):
         p1.set('transformationMatrix__t33',33.1)
         p1.set('transformationMatrix__t34',34.1)
 
-        p1.setForeignKey(m1)
-        _list.append(p1)
-
-        counter=0
-        for _object in emxData:
-            print "Counter", counter, _object, _list[counter]
-            self.assertTrue(_object.strongEq(_list[counter]))
-            counter += 1
-
+    def test_70schema(self):
+        xmlFile    = join(self.testsPath,'EMX/EMXwrite.emx')
+        schemaFile = join(self.testsPath,'EMX/emx.xsd')
+        (code,_out,_err)=validateSchema(xmlFile,schemaFile)
+        self.assertEqual(code,0)
+        xmlFile    = join(self.testsPath,'EMX/EMXwrite_badly_formed.emx')
+        (code,_out,_err)=validateSchema(xmlFile,schemaFile)
+        self.assertNotEqual(code,0)
 
 from  XmippPythonTestResult import XmippPythonTestResult
 
