@@ -307,7 +307,8 @@ def validateSchema(filename, schema_file):
     Functions to do XML schema and DTD validation.  At the moment, this
     makes a subprocess call to xmllint.  This could use a Python-based
     library at some point in the future, if something appropriate could be
-    found.
+    found. lxml is a possibility but has too many dependences if anyone
+    knows about a pure python validator let my know
 
     Parameters
     ----------
