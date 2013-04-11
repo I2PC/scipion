@@ -37,7 +37,10 @@ class SqliteMapper(Mapper):
         self.db.commit()
         
     def _insert(self, obj, namePrefix=None):
-        obj._objId = self.db.insertObject(obj._objName, obj.getClassName(), obj._objValue, obj._objParentId)
+        value = obj._objValue
+        if obj.isPointer():
+            value = obj.get().strId() # For pointers store the id of referenced object
+        obj._objId = self.db.insertObject(obj._objName, obj.getClassName(), value, obj._objParentId)
         sid = obj.strId()
         if namePrefix is None:
             namePrefix = sid
@@ -98,6 +101,8 @@ class SqliteMapper(Mapper):
             obj._objName = name
         obj.set(objRow['value'])
         obj._objParentId = objRow['parent_id']
+        if obj.isPointer():
+            obj.set(self.get(obj._objValue))
         
     def fillObject(self, obj, objRow):
         self.fillObjectWithRow(obj, objRow)

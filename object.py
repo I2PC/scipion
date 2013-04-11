@@ -243,7 +243,11 @@ class Pointer(Object):
     def __init__(self, value=None, **args):
         Object.__init__(self, value, objIsPointer=True, **args)   
        
-
+    def getAttributesToStore(self):
+        """Avoid storing _objValue"""
+        return []
+    
+    
 class List(Object, list):
     """Class to store a list of objects"""
     def __init__(self, **args):

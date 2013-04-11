@@ -127,6 +127,10 @@ class TestPyworkflow(unittest.TestCase):
         b2 = Boolean(True)
         mapper.insert(b)
         mapper.insert(b2)
+        #Test storing pointers
+        p = Pointer()
+        p.set(c)
+        mapper.insert(p)
         #write file
         mapper.commit()
 
@@ -141,9 +145,11 @@ class TestPyworkflow(unittest.TestCase):
         self.assertTrue(c.equalAttributes(c2))
         
         mapper3 = SqliteMapper(fn, globals())
-        print "="*100
         b = mapper3.select(classname='Boolean')[0]
-        print 'b', b.get()
+        self.assertTrue(not b.get())
+        
+        p = mapper3.select(classname='Pointer')[0]
+        self.assertEqual(c, p.get())
         
         
 

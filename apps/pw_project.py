@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-from em import emProtocolsDict
-
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -32,7 +30,6 @@ Main project window application
 import os, sys
 from os.path import join, exists, basename
 
-        
 import Tkinter as tk
 import ttk
 import tkFont
@@ -194,7 +191,7 @@ class ProjectWindow(gui.Window):
             t = '%s.%02d' % (obj.getClassName(), obj.getId())
             tree.insert('',  'end', obj.getId(), text=t, values=(obj.status.get(), obj.endTime.get()))
         
-        tree.after(1000, self.updateRunsTree, tree)
+        #tree.after(1000, self.updateRunsTree, tree)
     
     def protocolItemClick(self, e=None):
         print self.protTree.getFirst()

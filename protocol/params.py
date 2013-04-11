@@ -146,10 +146,14 @@ class IntParam(Param):
         
 class EnumParam(IntParam):
     """Select from a list of values, separated by comma"""
+    # Possible values for display
+    DISPLAY_LIST = 0
+    DISPLAY_COMBO = 1
+    
     def __init__(self, **args):
         IntParam.__init__(self, **args)
         self.choices = args.get('choices', [])
-        self.display = String(args.get('display', 'list'))
+        self.display = Integer(args.get('display', EnumParam.DISPLAY_LIST))
     
     
 class FloatParam(Param):
@@ -160,7 +164,7 @@ class FloatParam(Param):
 class BooleanParam(Param):
     def __init__(self, **args):
         Param.__init__(self, paramClass=Boolean, **args)
-        
+
         
 class PointerParam(Param):
     def __init__(self, **args):
