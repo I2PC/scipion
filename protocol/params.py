@@ -52,7 +52,7 @@ class Section(FormBase):
     """Definition of a section to hold other params"""
     def __init__(self, **args):
         FormBase.__init__(self, **args)
-        self.hasQuestion = Boolean(args.get('hasQuestion', None))
+        self.questionParam = String(args.get('questionParam', None))
         self.paramList = []
     
     def addParam(self, name, ParamClass, **args):
@@ -160,6 +160,12 @@ class FloatParam(Param):
 class BooleanParam(Param):
     def __init__(self, **args):
         Param.__init__(self, paramClass=Boolean, **args)
+        
+        
+class PointerParam(Param):
+    def __init__(self, **args):
+        Param.__init__(self, paramClass=Pointer, **args)
+        self.pointerClass = args.get('pointerClass')
         
         
         

@@ -16,7 +16,7 @@ from tests.tester import *
 #proj.launchProtocol(prot)
 
 prot2 = ProtImportMicrographs(workingDir=proj.getPath('Runs', 'Import1'), 
-                              pattern="/home/josem/pyworkflow/InputData/*.mrc", samplingRate=1, voltage=200)
+                              pattern="/home/laura/Scipion_Projects/InputData/*.mrc", samplingRate=1, voltage=200)
 proj.launchProtocol(prot2)
 
 l = proj.mapper.select(classname='SetOfMicrographs')
@@ -28,8 +28,9 @@ for p in l:
 
 if len(l):
     print "Continue after import..."
-    prot3 = XmippProtPreprocessMicrographs(workingDir=proj.getPath('Runs', 'PreprocessDown'), inputMicrographs=l[0], 
+    prot3 = XmippProtPreprocessMicrographs(workingDir=proj.getPath('Runs', 'PreprocessDown'), 
                                        doDownsample=True, downFactor=3, doCrop=True)
+    prot3.inputMicrographs.set(l[0])
 
     proj.launchProtocol(prot3)
     sys.exit(0)
