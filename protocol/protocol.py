@@ -100,7 +100,7 @@ class Step(OrderedObject):
         except Exception, e:
             self.status.set(STATUS_FAILED)
             self.error.set(e)
-            #raise #only in development
+            raise #only in development
         finally:
             self.endTime.set(dt.datetime.now())
             

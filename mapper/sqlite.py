@@ -36,11 +36,14 @@ class SqliteMapper(Mapper):
     def commit(self):
         self.db.commit()
         
-    def _insert(self, obj, namePrefix=None):
-        value = obj._objValue
+    def _getObjectValue(self, obj):
         if obj.isPointer():
-            value = obj.get().strId() # For pointers store the id of referenced object
-        obj._objId = self.db.insertObject(obj._objName, obj.getClassName(), value, obj._objParentId)
+            return obj.get().strId() # For pointers store the id of referenced object
+        return obj._objValue
+        
+    def _insert(self, obj, namePrefix=None):
+        obj._objId = self.db.insertObject(obj._objName, obj.getClassName(), 
+                                          self._getObjectValue(obj), obj._objParentId)
         sid = obj.strId()
         if namePrefix is None:
             namePrefix = sid
@@ -55,8 +58,9 @@ class SqliteMapper(Mapper):
     def insertChild(self, obj, key, attr, namePrefix):
             attr._objName = joinExt(namePrefix, key)
             attr._objParentId = obj._objId
-            attr._objId = self.db.insertObject(attr._objName, attr.getClassName(), attr._objValue, attr._objParentId)
-            self.insertObjectWithChilds(attr, joinExt(namePrefix, attr.strId()))
+            self._insert(attr, namePrefix)
+            #attr._objId = self.db.insertObject(attr._objName, attr.getClassName(), attr._objValue, attr._objParentId)
+            #self.insertObjectWithChilds(attr, joinExt(namePrefix, attr.strId()))
         
     def insertObjectWithChilds(self, obj, namePrefix):
         for key, attr in obj.getAttributesToStore():
@@ -69,7 +73,8 @@ class SqliteMapper(Mapper):
         return obj.strId()
     
     def updateTo(self, obj, level=1):
-        self.db.updateObject(obj._objId, obj._objName, obj.getClassName(), obj._objValue, obj._objParentId)
+        self.db.updateObject(obj._objId, obj._objName, obj.getClassName(), 
+                             self._getObjectValue(obj), obj._objParentId)
         for key, attr in obj.getAttributesToStore():
             if attr._objId is None: # Insert new items from the previous state
                 attr._objParentId = obj._objId
