@@ -143,4 +143,9 @@ public class ColumnInfo {
 		}
 	}
 	
+	public String toString()
+	{
+		return getLabelName();
+	}
+	
 }//class ColumnInfo

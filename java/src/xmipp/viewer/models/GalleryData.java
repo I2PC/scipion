@@ -139,6 +139,16 @@ public class GalleryData
 		}
 
 	}// constructor GalleryData
+	
+	public ArrayList<ColumnInfo> getColumns()
+	{
+		return labels;
+	}
+	
+	public void setRenderColumn(ColumnInfo ci)
+	{
+		ciFirstRender = ci;
+	}
 
 	/** Return the name of the selected md block */
 	public String getMdFilename()
