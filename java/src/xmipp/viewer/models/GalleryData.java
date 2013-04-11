@@ -149,6 +149,11 @@ public class GalleryData
 	{
 		ciFirstRender = ci;
 	}
+	
+	public ColumnInfo getRenderColumn()
+	{
+		return ciFirstRender;
+	}
 
 	/** Return the name of the selected md block */
 	public String getMdFilename()

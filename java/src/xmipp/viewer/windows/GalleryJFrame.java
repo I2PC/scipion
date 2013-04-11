@@ -50,6 +50,7 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -103,6 +104,7 @@ import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippLabel;
 import xmipp.utils.XmippMenuBarCreator;
+import xmipp.utils.XmippMenuCreator;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.utils.XmippQuestionDialog;
@@ -190,6 +192,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private ButtonGroup reslicegroup;
 
 	private JComboBox imagecolumnscb;
+
+	private JMenuItem rendercolumnmi;
+
+	private Hashtable<String, ColumnInfo> imagecolumns;
 	/** Some static initialization for fancy default dimensions */
 	static
 	{
@@ -351,7 +357,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		c.weightx = 1.0;
 		c.weighty = 1.0;
 		container.add(jspContent, c);
-
+		
+				
 		// Create the menu for table
 		menu = new GalleryMenu();
 		setJMenuBar(menu.getMenuBar());
@@ -1253,26 +1260,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			}
 		});
 		cbPanel.add(jcbVolumes);
-		ArrayList<ColumnInfo> imagecolumns = new ArrayList<ColumnInfo>();
-		for (ColumnInfo column : data.getColumns())
-			if (column.allowRender)
-				imagecolumns.add(column);
-		if (!imagecolumns.isEmpty())
-		{
-			imagecolumnscb = new JComboBox(imagecolumns.toArray());
-			cbPanel.add(new JLabel("Image Column"));
-			cbPanel.add(imagecolumnscb);
-			imagecolumnscb.addActionListener(new ActionListener()
-			{
-				
-				@Override
-				public void actionPerformed(ActionEvent arg0)
-				{
-					data.setRenderColumn((ColumnInfo)imagecolumnscb.getSelectedItem());
-					reloadTableData();
-				}
-			});
-		}
+		
 		initResliceButtonMenu();
 		cbPanel.add(reslicebt);
 	}
@@ -1499,6 +1487,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(DISPLAY_SHOWLABELS, "Display labels", null, "control released L");
 			addSeparator(DISPLAY);
 			addItem(DISPLAY_RENDERIMAGES, "Render images", null, "control released R");
+			
+			addRenderImageColumnItem();
+			
+		
 			addItem(DISPLAY_APPLYGEO, "Apply geometry", null, "control released G");
 			addItem(DISPLAY_WRAP, "Wrap", null, "control released W");
 			addItem(DISPLAY_COLUMNS, "Columns ...", "columns.gif");
@@ -1585,6 +1577,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					gallery.setRenderImages(getItemSelected(DISPLAY_RENDERIMAGES));
 					makeVisible(gallery.getFirstSelectedIndex());
 				}
+				
 				else if (cmd.equals(DISPLAY_COLUMNS))
 				{
 					ColumnsJDialog dialog = new ColumnsJDialog(GalleryJFrame.this);
@@ -1741,7 +1734,61 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				showException(e);
 			}
 		}// function handleActionPerformed
-	}// class GalleryMenu
+		
+		
+		protected void addRenderImageColumnItem()
+		{                  
+			addItem(DISPLAY_RENDERIMAGECOLUMN, "Render Image Column");
+			JMenuItem mi;
+			
+			imagecolumns = new Hashtable<String, ColumnInfo>();
+			for (ColumnInfo column : data.getColumns())
+				if (column.allowRender)
+					imagecolumns.put(column.toString(), column);
+			boolean rendercolumn = imagecolumns.size() > 1;
+			setItemEnabled(DISPLAY_RENDERIMAGECOLUMN, rendercolumn);
+			if(rendercolumn)
+			{
+				// Create the popup menu.
+				String id, column;
+				Enumeration<String> keys = imagecolumns.keys();
+				while (keys.hasMoreElements())
+				{
+					column = keys.nextElement();
+					id = String.format("Display.RenderImagesColumn.%s_rb", column);
+					mi = addItem(id, column);
+					mi.addActionListener(new RenderColumnActionListener());
+					if(data.getRenderColumn().toString().equals(column))
+						setItemSelected(id, true);
+				}
+			}
+
+		}
+		
+		class RenderColumnActionListener implements ActionListener
+		{
+
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				JRadioButtonMenuItem mi = (JRadioButtonMenuItem)e.getSource();
+				String key = mi.getText();
+				data.setRenderColumn(imagecolumns.get(key));
+				reloadTableData();
+			}
+
+		}
+			
+	}// class GalleryMenu //////////////////////////////////////////////////////////
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
 	class GalleryPopupMenu extends XmippPopupMenuCreator
 	{
@@ -2147,6 +2194,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		});
 
 	}
+	
+	
+		
+	
 
 	class ResliceActionListener implements ActionListener
 	{
