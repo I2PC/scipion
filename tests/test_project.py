@@ -5,6 +5,7 @@ from pyworkflow.project import *
 from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3 import *
 
+
 projName = sys.argv[1]
 pattern = sys.argv[2]
 
