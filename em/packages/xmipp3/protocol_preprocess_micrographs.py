@@ -71,7 +71,7 @@ def definePreprocessMicrograph():
     return f
 
 class XmippProtPreprocessMicrographs(ProtDownsampleMicrographs):
-    
+    """Protocol to preprocess a set of micrographs in the project"""
     _definition = definePreprocessMicrograph()
     
     def __init__(self, **args):
@@ -79,12 +79,14 @@ class XmippProtPreprocessMicrographs(ProtDownsampleMicrographs):
         Protocol.__init__(self, **args)
         
     def defineSteps(self):
-        '''for each micrograph call the downsampling function
+        '''for each micrograph insert the steps to preprocess it
         '''
+        # Get pointer to input micrographs 
         self.inputMics = self.inputMicrographs.get() 
         
         IOTable = {}
         
+        # Parameters needed to preprocess the micrographs
         self.params = {'downFactor': self.downFactor.get(),
                        'cropPixels': self.cropPixels.get(),
                        'logA': self.logA.get(),
@@ -92,13 +94,14 @@ class XmippProtPreprocessMicrographs(ProtDownsampleMicrographs):
                        'logC': self.logC.get(),
                        'stddev': self.mulStddev.get()}
         
+        # For each micrograph insert the steps to preprocess it
         for mic in self.inputMics:
             fn = mic.getFileName()
             fnOut = self.getPath(os.path.basename(fn))
             self.insertStepsForMicrograph(fn, fnOut)
             IOTable[fn] = fnOut
         
-        #create output objects       
+        # Insert step to create output objects       
         self.insertFunctionStep('createOutput', IOTable)
         
 
