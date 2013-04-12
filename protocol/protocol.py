@@ -121,7 +121,7 @@ class FunctionStep(Step):
     def _run(self):
         resultFiles = self.func(*self.funcArgs)
         if resultFiles and len(resultFiles):
-            missingFiles = existsPath(resultFiles)
+            missingFiles = existsPath(*resultFiles)
             if len(missingFiles):
                 raise Exception('Missing files: ' + ' '.join(missingFiles))
             self.resultFiles = String(pickle.dumps(resultFiles))
@@ -173,12 +173,11 @@ class Protocol(Step):
         from the Protocol Class definition, taking into account
         the variable type and default values"""
         if hasattr(self, '_definition'):
-            for section in self._definition:
-                for paramName, param in section.getChildParams():
-                    # Create the var with value comming from args or from 
-                    # the default param definition
-                    var = param.paramClass(args.get(paramName, param.default.get()))
-                    setattr(self, paramName, var)
+            for paramName, param in self._definition.iterParams():
+                # Create the var with value comming from args or from 
+                # the default param definition
+                var = param.paramClass(args.get(paramName, param.default.get()))
+                setattr(self, paramName, var)
         else:
             print "FIXME: Protocol '%s' has not DEFINITION" % self.getClassName()
         

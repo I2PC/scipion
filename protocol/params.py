@@ -31,6 +31,7 @@ be shared by all protocol class instances
 """
 
 from pyworkflow.object import *
+import re
 
 
 LEVEL_NORMAL = 0
@@ -39,69 +40,24 @@ LEVEL_EXPERT = 2
 
 
 class FormBase(OrderedObject):
+    
     def __init__(self, **args):
         OrderedObject.__init__(self, **args)
         self.label = String(args.get('label', None))
         self.expertLevel = Integer(args.get('expertLevel', LEVEL_NORMAL))
+        self.condition = String(args.get('condition', None))
+        # This two list will be filled by the Form
+        # which have a global-view of all parameters
+        self._dependants = [] # All param names in which condition appears this param
+        self._conditionParams = [] # All param names that appears in the condition
         
     def isExpert(self):
         return self.expert.hasValue()
     
+    def hasCondition(self):
+        return self.condition.hasValue()
     
-class Section(FormBase):
-    """Definition of a section to hold other params"""
-    def __init__(self, **args):
-        FormBase.__init__(self, **args)
-        self.questionParam = String(args.get('questionParam', ''))
-        self.paramList = []
-    
-    def hasQuestion(self):
-        """Return True if a question param was set"""
-        return hasattr(self, self.questionParam.get())
-    
-    def getQuestion(self):
-        """Return the question param"""
-        return getattr(self, self.questionParam.get())
-    
-    def addParam(self, name, ParamClass, **args):
-        """Add a new param to last section"""
-        p = ParamClass(**args)
-        setattr(self, name, p)
-        self.paramList.append(name)
-        return p
-    
-    def getChildParams(self):
-        """Return key and param for every child param"""
-        for name in self.paramList:
-            yield (name, getattr(self, name))
         
-    def __str__(self):
-        s = "  Section, label: %s\n" % self.label.get()
-        for key in self._attributes:
-            s += "    Param: '%s', %s\n" % (key, str(getattr(self, key)))
-        return s        
-
-                    
-class Form(List):
-    """Store all sections and parameters"""
-
-    def addSection(self, **args):
-        """Add a new section"""
-        s = Section(**args)
-        self.append(s)
-        return s
-
-    def addParam(self, name, ParamClass, **args):
-        """Add a new param to last section"""
-        return self[-1].addParam(name, ParamClass, **args)
-        
-    def __str__(self):
-        s = "Form: \n"
-        for section in self:
-            s += str(section)
-        return s
-        
-      
 class Param(FormBase):
     """Definition of a protocol parameter"""
     def __init__(self, **args):
@@ -113,7 +69,102 @@ class Param(FormBase):
         
     def __str__(self):
         return "    label: %s" % self.label.get()
+    
+    
+class Section(FormBase):
+    """Definition of a section to hold other params"""
+    def __init__(self, form, **args):
+        FormBase.__init__(self, **args)
+        self._form = form
+        self.questionParam = String(args.get('questionParam', ''))
+        self._paramList = []
+    
+    def hasQuestion(self):
+        """Return True if a question param was set"""
+        return self.questionParam.get() in self._paramList
+    
+    def getQuestion(self):
+        """Return the question param"""
+        return self._form.getParam(self.questionParam.get())
+    
+    def addParam(self, name):
+        """Add a new param to last section"""
+        self._paramList.append(name)
+    
+    def iterParams(self):
+        """Return key and param for every child param"""
+        for name in self._paramList:
+            yield (name, self._form.getParam(name))
 
+                    
+class Form():
+    """Store all sections and parameters"""
+    def __init__(self):
+        self._sectionList = [] # Store list of sections
+        self._paramsDict = {} # Dictionary to store all params, grouped by sections
+        self._lastSection = None
+
+    def addSection(self, **args):
+        """Add a new section"""
+        self.lastSection = Section(self, **args)
+        self._sectionList.append(self.lastSection)
+        return self.lastSection
+
+    def addParam(self, paramName, ParamClass, **args):
+        """Add a new param to last section"""
+        param = ParamClass(**args)
+        self._paramsDict[paramName] = param
+        self._analizeCondition(paramName, param)
+        return self.lastSection.addParam(paramName)
+    
+    def _analizeCondition(self, paramName, param):
+        if param.hasCondition():
+            param._conditionParams = re.split('\W+', param.condition.get())
+            for t in param._conditionParams:
+                if self.hasParam(t):
+                    self.getParam(t)._dependants.append(paramName)
+                    #print "tokens found: ", self.getParam(t)._dependants
+#                else:
+#                    raise Exception("Invalid token '%s' used in param '%s' condition" 
+#                                    % (t, paramName))
+    def evalCondition(self, protocol, paramName):
+        """Evaluate if a condition is True for a give param
+        with the values of a particular Protocol"""
+        param = self.getParam(paramName)
+        if not param.hasCondition():
+            return True
+        condStr = param.condition.get()
+        for t in param._conditionParams:
+            if self.hasParam(t):
+                condStr = condStr.replace(t, str(getattr(protocol, t).get()))
+#        if debug:
+#            print "  condition: ", param.condition.get()
+#            print "  condStr: ", condStr
+        return eval(condStr)
+        
+    def getParam(self, paramName):
+        """Retrieve a param given a the param name
+        None is returned if not found
+        """        
+        return self._paramsDict.get(paramName, None)
+    
+    def hasParam(self, paramName):
+        return paramName in self._paramsDict
+        
+    def __str__(self):
+        s = "Form: \n"
+        for section in self.iterSections():
+            s += str(section)
+        return s
+    
+    def iterSections(self):
+        return self._sectionList
+    
+    def iterParams(self):
+        return self._paramsDict.iteritems()
+
+
+# More Param sub-classes
 
 class StringParam(Param):
     """Param with underlying String value"""

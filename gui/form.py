@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from protocol.params import PointerParam
 """
 This modules implements the automatic
 creation of protocol form GUI from its
@@ -39,6 +40,39 @@ from text import TaggedText
 from pyworkflow.protocol.params import *
 
 
+class BoolVar():
+    """Wrapper around tk.IntVar"""
+    def __init__(self, value=False):
+        self.tkVar = tk.IntVar()
+        self.set(value)
+        self.trace = self.tkVar.trace
+        
+    def set(self, value):
+        if value:
+            self.tkVar.set(1)
+        else:
+            self.tkVar.set(0)    
+            
+    def get(self):
+        return self.tkVar.get() == 1   
+    
+class PointerVar():
+    """Wrapper around tk.StringVar to hold object pointers"""
+    def __init__(self):
+        self.tkVar = tk.StringVar()
+        self.value = None
+        self.trace = self.tkVar.trace
+        
+    def set(self, value):
+        self.value = value
+        v = ''
+        if value:
+            v = '%s.%s' % (value.getName(), value.strId())
+        self.tkVar.set(v)   
+            
+    def get(self):
+        return self.value        
+        
 class SectionFrame(tk.Frame):
     """This class will be used to create a section in FormWindow"""
     def __init__(self, form, master, section, **args):
@@ -60,14 +94,13 @@ class SectionFrame(tk.Frame):
         
         if self.section.hasQuestion():
             question = self.section.getQuestion()             
-            self.tkVar = tk.IntVar()
-            if question.get():
-                self.tkVar.set(1)
+            self.tkVar = BoolVar()
+            self.tkVar.set(question.get())
             
             self.chbLabel = tk.Label(self.headerFrame, text=question.label.get(), fg='white', bg=bgColor)
             self.chbLabel.grid(row=0, column=1, sticky='e', padx=2)
             
-            self.chb = tk.Checkbutton(self.headerFrame, variable=self.tkVar, 
+            self.chb = tk.Checkbutton(self.headerFrame, variable=self.tkVar.tkVar, 
                                       bg=bgColor, activebackground=gui.cfgButtonActiveBgColor, #bd=0,
                                       command=self.__expandCollapse)
             self.chb.grid(row=0, column=2, sticky='e')
@@ -84,6 +117,47 @@ class SectionFrame(tk.Frame):
             self.contentFrame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
         else:
             self.contentFrame.grid_remove()
+            
+    def get(self):
+        """Return boolean value if is selected"""
+        return self.tkVar.get() == 1
+    
+    def set(self, value):
+        pass
+    
+    
+class ParamWidget():
+    """This class will contains the label and content frame 
+    to display a Param. It will also contains a variable controlling
+    the changes and the values in the GUI"""
+    def __init__(self, paramName, row, label, content, var, callback=None):
+        self.paramName = paramName
+        self.row = row
+        self.label = label
+        self.content = content
+        self.var = var
+        self.callback = callback
+        self.var.trace('w', self._onVarChanged)
+        
+    def _onVarChanged(self, *args):
+        if self.callback is not None:
+            self.callback(self.paramName)        
+        
+    def grid(self):
+        """Grid the label and content in the specified row"""
+        self.label.grid(row=self.row, column=0, sticky='ne', padx=2, pady=2)
+        self.content.grid(row=self.row, column=1, padx=2, pady=2, sticky='w') 
+        
+    def grid_remove(self):
+        self.label.grid_remove()
+        self.content.grid_remove()
+        
+    def set(self, value):
+        self.var.set(value)
+        
+    def get(self):
+        return self.var.get()
+        
 
     
 class FormWindow(Window):
@@ -128,60 +202,99 @@ class FormWindow(Window):
         self.protocol.run()
     
            
-    def fillSection(self, sectionParam, sectionFrame):
+    def _fillSection(self, sectionParam, sectionFrame):
         parent = sectionFrame.contentFrame
         r = 0
-        for paramName, param in sectionParam.getChildParams():
-            protVar = getattr(self.protocol, paramName, None)
-            if protVar is None:
-                raise Exception("fillSection: param '%s' not found in protocol" % paramName)
-            # Create the label
-            if param.isImportant:
-                f = self.fontBold
-            else:
-                f = self.font
-            label = tk.Label(parent, text=param.label.get(), bg='white', font=f)
-            label.grid(row=r, column=0, sticky='ne', padx=2, pady=2)
-            # Create widgets for each type of param
-            tkVar = tk.StringVar()
-            
-            t = type(param)
-            if protVar.hasValue():
-                tkVar.set(str(protVar))
-                
-            #TODO: Move this to a Renderer class to be more flexible
-            if t is BooleanParam:
-                content = tk.Frame(parent, bg='white')
-                rb1 = tk.Radiobutton(content, text='Yes', bg='white', 
-                                     variable=tkVar, value='True')
-                rb1.grid(row=0, column=0, padx=2)
-                rb2 = tk.Radiobutton(content, text='No', bg='white', 
-                                     variable=tkVar, value='False')
-                rb2.grid(row=0, column=1, padx=2)
-            elif t is EnumParam:
-                tkVar.set(param.choices[protVar.get()])
-                if param.display == EnumParam.DISPLAY_COMBO:
-                    combo = ttk.Combobox(parent, textvariable=tkVar, state='readonly')
-                    combo['values'] = param.choices
-                    content = combo 
-                elif param.display == EnumParam.DISPLAY_LIST:
-                    rbFrame = tk.Frame(parent)
-                    for i, opt in enumerate(param.choices):
-                        rb = tk.Radiobutton(rbFrame, text=opt, value=str(i), variable=tkVar)
-                        rb.grid(row=i, column=0, sticky='w')
-                    content = rbFrame
+        for paramName, param in sectionParam.iterParams():
+            if sectionParam.questionParam.get() != paramName: # Skip if questionParam was set in section
+                protVar = getattr(self.protocol, paramName, None)
+                if protVar is None:
+                    raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
+                # Create the label
+                if param.isImportant:
+                    f = self.fontBold
                 else:
-                    raise Exception("Invalid display value '%s' for EnumParam" % str(param.display))
+                    f = self.font
+                label = tk.Label(parent, text=param.label.get(), bg='white', font=f)
+                # Create the content to display and the variable associated
+                content, var = self._createWidgetFromParam(parent, param)
+                # Set the value to the variable from Protocol instance or default
+                var.set(protVar.get(param.default.get()))
+                self.varDict[paramName] = ParamWidget(paramName, r, label, content, var, self._checkChanges)
+                self._checkCondition(paramName)
+                r += 1
+            
+    def _createWidgetFromParam(self, parent, param):
+        """Create the widget for an specific param.
+        The function should return a tuple (content, var)
+        content: will be the outer container of the widget(tipically a tk.Frame
+        var: should contain .set and .get methods with the same type of the protocol var"""
+        # Create widgets for each type of param
+        t = type(param)
+        #TODO: Move this to a Renderer class to be more flexible
+        if t is BooleanParam:
+            content = tk.Frame(parent, bg='white')
+            var = BoolVar()
+            rb1 = tk.Radiobutton(content, text='Yes', bg='white', variable=var.tkVar, value=1)
+            rb1.grid(row=0, column=0, padx=2)
+            rb2 = tk.Radiobutton(content, text='No', bg='white', variable=var.tkVar, value=0)
+            rb2.grid(row=0, column=1, padx=2)
+            
+        elif t is EnumParam:
+            var = tk.IntVar()
+            if param.display == EnumParam.DISPLAY_COMBO:
+                combo = ttk.Combobox(parent, textvariable=var, state='readonly')
+                combo['values'] = param.choices
+                content = combo
+            elif param.display == EnumParam.DISPLAY_LIST:
+                rbFrame = tk.Frame(parent)
+                for i, opt in enumerate(param.choices):
+                    rb = tk.Radiobutton(rbFrame, text=opt, variable=var, value=i)
+                    rb.grid(row=i, column=0, sticky='w')
+                content = rbFrame
             else:
-                #v = self.setVarValue(paramName)
-                content = tk.Entry(parent, width=25, textvariable=tkVar)
-
-            # Associate tkVar with protVar                
-            self.varDict[paramName] = tkVar
+                raise Exception("Invalid display value '%s' for EnumParam" % str(param.display))
+        elif t is PointerParam:
+            var = PointerVar()
+            content = tk.Entry(parent, width=25, textvariable=var.tkVar)
+        else:
+            #v = self.setVarValue(paramName)
+            var = tk.StringVar()
+            content = tk.Entry(parent, width=25, textvariable=var)
+                
             
-            content.grid(row=r, column=1, padx=2, pady=2, sticky='w')
-            r += 1
+        return (content, var)
+        
+    def _checkCondition(self, paramName):
+        """Check if the condition of a param is statisfied 
+        hide or show it depending on the result"""
+        w = self.varDict[paramName]
+        print " checking condition for: ", paramName
+        v = self.protocol._definition.evalCondition(self.protocol, paramName)
+        print " result: ", v
+        if v:
+            w.grid()
+        else:
+            w.grid_remove()
             
+    def _checkChanges(self, paramName):
+        """Check the conditions of all params affected
+        by this param"""
+        self.setParamFromVar(paramName)
+        param = self.protocol._definition.getParam(paramName)
+        
+        #TODO: REMOVE DEBUG PRINTS
+        #print "_checkChanges"
+        #print "param changed: ", paramName
+        #print " dependants: ", param._dependants
+        
+        for d in param._dependants:
+            self._checkCondition(d)
+        
+    def getVarValue(self, varName):
+        """This method should retrieve a value from """
+        pass
+    
     def setVarFromParam(self, tkVar, paramName):
         value = getattr(self.protocol, paramName, None)
         if value is not None:
@@ -190,13 +303,12 @@ class FormWindow(Window):
     def setParamFromVar(self, paramName):
         value = getattr(self.protocol, paramName, None)
         if value is not None:
-            tkVar = self.varDict[paramName]
-            value.set(tkVar.get())               
+            w = self.varDict[paramName]
+            value.set(w.get())
              
     def updateProtocolParams(self):
-        for section in self.protocol._definition:
-            for paramName, _ in section.getChildParams():
-                self.setParamFromVar(paramName)
+        for paramName, _ in self.protocol._definition.iterParams():
+            self.setParamFromVar(paramName)
                 
     def createSections(self, text):
         """Load the list of projects"""
@@ -204,11 +316,11 @@ class FormWindow(Window):
         parent = tk.Frame(text) 
         parent.columnconfigure(0, weight=1)
         
-        for section in self.protocol._definition:
+        for section in self.protocol._definition.iterSections():
             frame = SectionFrame(self, parent, section, bg='white')
             frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
             frame.columnconfigure(0, minsize=300)
-            self.fillSection(section, frame)
+            self._fillSection(section, frame)
             r += 1
         
         # with Windows OS
