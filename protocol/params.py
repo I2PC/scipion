@@ -52,8 +52,16 @@ class Section(FormBase):
     """Definition of a section to hold other params"""
     def __init__(self, **args):
         FormBase.__init__(self, **args)
-        self.questionParam = String(args.get('questionParam', None))
+        self.questionParam = String(args.get('questionParam', ''))
         self.paramList = []
+    
+    def hasQuestion(self):
+        """Return True if a question param was set"""
+        return hasattr(self, self.questionParam.get())
+    
+    def getQuestion(self):
+        """Return the question param"""
+        return getattr(self, self.questionParam.get())
     
     def addParam(self, name, ParamClass, **args):
         """Add a new param to last section"""

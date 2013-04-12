@@ -33,61 +33,64 @@ import Tkinter as tk
 import ttk
 import tkFont
 
+import gui
 from gui import configureWeigths, Window
 from text import TaggedText
 from pyworkflow.protocol.params import *
 
 
-class ProtocolStyle():
-    ''' Class to define some style settings like font, colors, etc '''
-    def __init__(self, configModuleName=None):        
-        #Font
-        self.FontName = "Helvetica"
-        self.FontSize = 10
-        self.ButtonFontSize = self.FontSize
-        #TextColor
-        self.CitationTextColor = "dark olive green"
-        self.LabelTextColor = "black"
-        self.SectionTextColor = "blue4"
-        #Background Color
-        self.BgColor = "white"
-        self.LabelBgColor = self.BgColor
-        self.HighlightBgColor = self.BgColor
-        self.ButtonBgColor = "LightBlue"
-        self.ButtonActiveBgColor = "LightSkyBlue"
-        self.EntryBgColor = "lemon chiffon" 
-        self.ExpertLabelBgColor = "light salmon"
-        #Color
-        self.ListSelectColor = "DeepSkyBlue4"
-        self.BooleanSelectColor = "DeepSkyBlue4"
-        #Dimensions limits
-        self.MaxHeight = 600
-        self.MaxWidth = 800
-        self.MaxFontSize = 14
-        self.MinFontSize = 6
-        self.WrapLenght = self.MaxWidth / 2
-        
-        if configModuleName:
-            self.load(configModuleName)
-                    
-    def createFonts(self):
-        self.Font = tkFont.Font(family=self.FontName, size=self.FontSize, weight=tkFont.BOLD)
-
-
 class SectionFrame(tk.Frame):
-    def __init__(self, master, frameParam, **args):
+    """This class will be used to create a section in FormWindow"""
+    def __init__(self, form, master, section, **args):
         tk.Frame.__init__(self, master, **args)
-        self.headerFrame = tk.Frame(self, bd=2, relief=tk.RAISED, bg='#7D0709')
+        self.form = form
+        self.section = section
+        self.__createHeader()
+        self.__createContent()
+        
+    def __createHeader(self):
+        bgColor = gui.cfgButtonBgColor
+        self.headerFrame = tk.Frame(self, bd=2, relief=tk.RAISED, bg=bgColor)
         self.headerFrame.grid(row=0, column=0, sticky='new')
-        self.headerLabel = tk.Label(self.headerFrame, text=frameParam.label.get(), fg='white', bg='#7D0709')
+        configureWeigths(self.headerFrame)
+        self.headerFrame.columnconfigure(1, weight=1)
+        #self.headerFrame.columnconfigure(2, weight=1)
+        self.headerLabel = tk.Label(self.headerFrame, text=self.section.label.get(), fg='white', bg=bgColor)
         self.headerLabel.grid(row=0, column=0, sticky='nw')
+        
+        if self.section.hasQuestion():
+            question = self.section.getQuestion()             
+            self.tkVar = tk.IntVar()
+            if question.get():
+                self.tkVar.set(1)
+            
+            self.chbLabel = tk.Label(self.headerFrame, text=question.label.get(), fg='white', bg=bgColor)
+            self.chbLabel.grid(row=0, column=1, sticky='e', padx=2)
+            
+            self.chb = tk.Checkbutton(self.headerFrame, variable=self.tkVar, 
+                                      bg=bgColor, activebackground=gui.cfgButtonActiveBgColor, #bd=0,
+                                      command=self.__expandCollapse)
+            self.chb.grid(row=0, column=2, sticky='e')
+                    #bg=SectionBgColor, activebackground=ButtonActiveBgColor)        
+    
+    def __createContent(self):
         self.contentFrame = tk.Frame(self, bg='white', bd=0)
         self.contentFrame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
         configureWeigths(self.contentFrame)
         self.columnconfigure(0, weight=1)
+        
+    def __expandCollapse(self, e=None):
+        if self.tkVar.get():
+            self.contentFrame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
+        else:
+            self.contentFrame.grid_remove()
 
     
-class FormWindow(Window): 
+class FormWindow(Window):
+    """This class will create the Protocol params GUI to enter parameters.
+    The creaation of compoments will be based on the Protocol Form definition.
+    This class will serve as a connection between the GUI variables (tk vars) and 
+    the Protocol variables."""
     def __init__(self, title, protocol, master=None, **args):
         Window.__init__(self, title, master, weight=False, **args)
 
@@ -146,6 +149,7 @@ class FormWindow(Window):
             if protVar.hasValue():
                 tkVar.set(str(protVar))
                 
+            #TODO: Move this to a Renderer class to be more flexible
             if t is BooleanParam:
                 content = tk.Frame(parent, bg='white')
                 rb1 = tk.Radiobutton(content, text='Yes', bg='white', 
@@ -201,7 +205,7 @@ class FormWindow(Window):
         parent.columnconfigure(0, weight=1)
         
         for section in self.protocol._definition:
-            frame = SectionFrame(parent, section, bg='white')
+            frame = SectionFrame(self, parent, section, bg='white')
             frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
             frame.columnconfigure(0, minsize=300)
             self.fillSection(section, frame)
