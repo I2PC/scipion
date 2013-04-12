@@ -102,7 +102,7 @@ class ProtCTFMicrographs(Protocol):
     pass
 
 
-class ProtDownsampleMicrographs(Protocol):
+class ProtPreprocessMicrographs(Protocol):
     pass
 
 
