@@ -43,12 +43,11 @@ def definePreprocessMicrograph():
     f.addSection(label='Input')
     f.addParam('inputMicrographs', PointerParam, label="Micrographs", pointerClass='SetOfMicrographs')
     
-    f.addSection(label='Crop',questionParam='doCrop')
+    f.addSection(label='Preprocess')
     f.addParam('doCrop', BooleanParam, default=False,
                label='Crop borders?')
     f.addParam('cropPixels', IntParam, default=10,
                label='Pixels to crop')
-    f.addSection(label='Logarithm',questionParam='doLog')
     f.addParam('doLog', BooleanParam, default=False,
                label='Take logarithm?')
     f.addParam('logA', FloatParam, default=4.431,
@@ -57,34 +56,34 @@ def definePreprocessMicrograph():
                label='b')
     f.addParam('logC', FloatParam, default=336.6,
                label='c')
-    f.addSection(label='Remove bad pixels',questionParam='doRemoveBadPix')
     f.addParam('doRemoveBadPix', BooleanParam, default=False,
                label='Remove bad pixels?')
     f.addParam('mulStddev', IntParam, default=5,
                label='Multiple of Stddev')    
-    f.addSection(label='Downsample',questionParam='doDownsample')
     f.addParam('doDownsample', BooleanParam, default=False,
                label='Downsample micrographs?')
-    f.addParam('downFactor', IntParam, default=2,
+    f.addParam('downFactor', FloatParam, default=2.,
                label='Downsampling factor')
     
     return f
 
-class XmippProtPreprocessMicrographs(ProtDownsampleMicrographs):
-    
+class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
+    """Protocol to preprocess a set of micrographs in the project"""
     _definition = definePreprocessMicrograph()
     
     def __init__(self, **args):
         
         Protocol.__init__(self, **args)
         
-    def _defineSteps(self):
-        '''for each micrograph call the downsampling function
+    def defineSteps(self):
+        '''for each micrograph insert the steps to preprocess it
         '''
+        # Get pointer to input micrographs 
         self.inputMics = self.inputMicrographs.get() 
         
         IOTable = {}
         
+        # Parameters needed to preprocess the micrographs
         self.params = {'downFactor': self.downFactor.get(),
                        'cropPixels': self.cropPixels.get(),
                        'logA': self.logA.get(),
@@ -92,13 +91,14 @@ class XmippProtPreprocessMicrographs(ProtDownsampleMicrographs):
                        'logC': self.logC.get(),
                        'stddev': self.mulStddev.get()}
         
+        # For each micrograph insert the steps to preprocess it
         for mic in self.inputMics:
             fn = mic.getFileName()
             fnOut = self.getPath(os.path.basename(fn))
             self.insertStepsForMicrograph(fn, fnOut)
             IOTable[fn] = fnOut
         
-        #create output objects       
+        # Insert step to create output objects       
         self.insertFunctionStep('createOutput', IOTable)
         
 
@@ -162,4 +162,4 @@ class XmippProtPreprocessMicrographs(ProtDownsampleMicrographs):
         
         self.outputMicrographs.setFileName(mdOut)
 
-        self._defineOutputs(micrograph=self.outputMicrographs)
+        self.defineOutputs(micrograph=self.outputMicrographs)
