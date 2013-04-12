@@ -182,6 +182,10 @@ class Protocol(Step):
         else:
             print "FIXME: Protocol '%s' has not DEFINITION" % self.getClassName()
         
+    
+    def _getFilename(self, key, **args):
+        return self.__templateDict[key] % args
+    
     def _store(self, *objs):
         if not self.mapper is None:
             if len(objs) == 0:
