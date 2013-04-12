@@ -32,7 +32,7 @@ class MyProtocol(Protocol):
         self.numberOfSleeps = Integer(args.get('n', 1))
         
     def sleep(self, t, s):
-        log = self.getPath("step_%02d.txt" % self.currentStep)
+        log = self._getPath("step_%02d.txt" % self.currentStep)
         import time 
         time.sleep(t)
         f = open(log, 'w+')
@@ -42,7 +42,7 @@ class MyProtocol(Protocol):
         
     def _defineSteps(self):
         for i in range(self.numberOfSleeps.get()):
-            self.insertFunctionStep('sleep', i, 'sleeping %d'%i)
+            self._insertFunctionStep('sleep', i, 'sleeping %d'%i)
     
     
 class TestPyworkflow(unittest.TestCase):

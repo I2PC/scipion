@@ -35,41 +35,41 @@ from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_ORIGINAL, MDL_MICROGR
 from pyworkflow.em.packages.xmipp3.data import *
 
 
-def definePreprocessMicrograph():
+class XmippDefPreprocessMicrograph(Form):
     """Create the definition of parameters for
     the XmippPreprocessMicrographs protocol"""
-    f = Form()
+    def __init__(self):
+        Form.__init__(self)
     
-    f.addSection(label='Input')
-    f.addParam('inputMicrographs', PointerParam, label="Micrographs", pointerClass='SetOfMicrographs')
+        self.addSection(label='Input')
+        self.addParam('inputMicrographs', PointerParam, label="Micrographs", pointerClass='SetOfMicrographs')
+        
+        self.addSection(label='Preprocess')
+        self.addParam('doCrop', BooleanParam, default=False,
+                   label='Crop borders?')
+        self.addParam('cropPixels', IntParam, default=10,
+                   label='Pixels to crop')
+        self.addParam('doLog', BooleanParam, default=False,
+                   label='Take logarithm?')
+        self.addParam('logA', FloatParam, default=4.431,
+                   label='a')
+        self.addParam('logB', FloatParam, default=0.4018,
+                   label='b')
+        self.addParam('logC', FloatParam, default=336.6,
+                   label='c')
+        self.addParam('doRemoveBadPix', BooleanParam, default=False,
+                   label='Remove bad pixels?')
+        self.addParam('mulStddev', IntParam, default=5,
+                   label='Multiple of Stddev')    
+        self.addParam('doDownsample', BooleanParam, default=False,
+                   label='Downsample micrographs?')
+        self.addParam('downFactor', FloatParam, default=2.,
+                   label='Downsampling factor')
     
-    f.addSection(label='Preprocess')
-    f.addParam('doCrop', BooleanParam, default=False,
-               label='Crop borders?')
-    f.addParam('cropPixels', IntParam, default=10,
-               label='Pixels to crop')
-    f.addParam('doLog', BooleanParam, default=False,
-               label='Take logarithm?')
-    f.addParam('logA', FloatParam, default=4.431,
-               label='a')
-    f.addParam('logB', FloatParam, default=0.4018,
-               label='b')
-    f.addParam('logC', FloatParam, default=336.6,
-               label='c')
-    f.addParam('doRemoveBadPix', BooleanParam, default=False,
-               label='Remove bad pixels?')
-    f.addParam('mulStddev', IntParam, default=5,
-               label='Multiple of Stddev')    
-    f.addParam('doDownsample', BooleanParam, default=False,
-               label='Downsample micrographs?')
-    f.addParam('downFactor', FloatParam, default=2.,
-               label='Downsampling factor')
-    
-    return f
 
 class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     """Protocol to preprocess a set of micrographs in the project"""
-    _definition = definePreprocessMicrograph()
+    _definition = XmippDefPreprocessMicrograph()
     
     def __init__(self, **args):
         

@@ -39,7 +39,7 @@ class EmanProtParticlePicking(ProtParticlePicking):
     pass
 
 
-class EmanProtDownsampleMicrographs(ProtDownsampleMicrographs):
+class EmanProtPreprocessMicrographs(ProtPreprocessMicrographs):
     pass
 
 

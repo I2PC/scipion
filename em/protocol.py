@@ -34,43 +34,43 @@ from pyworkflow.protocol.params import *
 from pyworkflow.em import SetOfMicrographs
 
 
-def _defineImportMicrograph():
+class DefImportMicrographs(Form):
     """Create the definition of parameters for
     the ImportMicrographs protocol"""
-    f = Form()
+    def __init__(self):
+        Form.__init__(self)
     
-    f.addSection(label='Input')
-    f.addParam('pattern', StringParam, label="Pattern")
-    f.addParam('tiltPairs', BooleanParam, default=False, important=True,
-               label='Are micrographs tilt pairs?')
-    
-    f.addSection(label='Microscope description')
-    f.addParam('voltage', FloatParam, default=200,
-               label='Microscope voltage (in kV)')
-    f.addParam('sphericalAberration', FloatParam, default=2.26,
-               label='Spherical aberration (in mm)')
-    f.addParam('samplingRateMode', EnumParam, default=0,
-               label='Sampling rate mode',
-               choices=['From image', 'From scanner'])
-    f.addParam('samplingRate', FloatParam,
-               label='Sampling rate (A/px)', condition='samplingRateMode==0')
-    f.addParam('magnification', IntParam, default=60000,
-               label='Magnification rate', condition='samplingRateMode==1')
-    f.addParam('ScannedPixelSize', FloatParam, 
-               label='Scanned pixel size', condition='samplingRateMode==1')
-    
-    return f
+        self.addSection(label='Input')
+        self.addParam('pattern', StringParam, label="Pattern")
+        self.addParam('tiltPairs', BooleanParam, default=False, important=True,
+                   label='Are micrographs tilt pairs?')
+        
+        self.addSection(label='Microscope description')
+        self.addParam('voltage', FloatParam, default=200,
+                   label='Microscope voltage (in kV)')
+        self.addParam('sphericalAberration', FloatParam, default=2.26,
+                   label='Spherical aberration (in mm)')
+        self.addParam('samplingRateMode', EnumParam, default=0,
+                   label='Sampling rate mode',
+                   choices=['From image', 'From scanner'])
+        self.addParam('samplingRate', FloatParam,
+                   label='Sampling rate (A/px)', condition='samplingRateMode==0')
+        self.addParam('magnification', IntParam, default=60000,
+                   label='Magnification rate', condition='samplingRateMode==1')
+        self.addParam('ScannedPixelSize', FloatParam, 
+                   label='Scanned pixel size', condition='samplingRateMode==1')
+        
 
 
 class ProtImportMicrographs(Protocol):
     """Protocol to import a set of micrographs in the project"""
-    _definition = _defineImportMicrograph()
+    _definition = DefImportMicrographs()
     
     def __init__(self, **args):
         Protocol.__init__(self, **args)         
         
     def _defineSteps(self):
-        self.insertFunctionStep('importMicrographs', self.pattern.get(),
+        self._insertFunctionStep('importMicrographs', self.pattern.get(),
                                 self.voltage.get(), self.sphericalAberration.get(), 
                                 self.samplingRate.get())
         
@@ -81,10 +81,10 @@ class ProtImportMicrographs(Protocol):
         files = glob(pattern)
         if len(files) == 0:
             raise Exception('importMicrographs:There is not files matching pattern')
-        path = self.getPath('micrographs.txt')
+        path = self._getPath('micrographs.txt')
         micFile = open(path, 'w+')
         for f in files:
-            dst = self.getPath(os.path.basename(f))
+            dst = self._getPath(os.path.basename(f))
             print >> micFile, dst
             shutil.copyfile(f, dst)
         micFile.close()
