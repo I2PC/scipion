@@ -29,6 +29,9 @@
 #ifndef __CYGWIN__
 #ifdef __APPLE__
 #include <limits.h>
+#include <float.h>
+#define MAXDOUBLE DBL_MAX
+#define MINDOUBLE DBL_MIN
 #else
 #include <values.h>
 #endif
