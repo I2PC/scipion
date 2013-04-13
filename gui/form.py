@@ -166,7 +166,7 @@ class FormWindow(Window):
     This class will serve as a connection between the GUI variables (tk vars) and 
     the Protocol variables."""
     def __init__(self, title, protocol, master=None, **args):
-        Window.__init__(self, title, master, weight=False, **args)
+        Window.__init__(self, title, master, icon='scipion_bn.xbm', weight=False, **args)
 
         self.varDict = {} # Store tkVars associated with params
         
@@ -176,14 +176,14 @@ class FormWindow(Window):
         
         headerFrame = tk.Frame(self.root)
         headerFrame.grid(row=0, column=0, sticky='new')
-        headerLabel = tk.Label(headerFrame, text='Protocol: Import micrographs', font=self.fontBig)
+        headerLabel = tk.Label(headerFrame, text='Protocol: ' + protocol.getClassName(), font=self.fontBig)
         headerLabel.grid(row=0, column=0, padx=5, pady=5)
         
         text = TaggedText(self.root, width=40, height=15, bd=0, cursor='arrow')
         text.grid(row=1, column=0, sticky='news')
         text.config(state=tk.DISABLED)
         self.protocol = protocol
-        self.createSections(text)
+        contentFrame = self.createSections(text)
         
         btnFrame = tk.Frame(self.root)
         btnFrame.columnconfigure(0, weight=1)
@@ -195,6 +195,24 @@ class FormWindow(Window):
         
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(1, weight=1)
+        
+        # Resize windows to use more space if needed
+        self.desiredDimensions = lambda: self.resize(contentFrame)
+        self.resize(contentFrame)
+        
+    def resize(self, frame):
+        self.root.update_idletasks()
+        MaxHeight = 600
+        MaxWidth = 600
+        rh = frame.winfo_reqheight()
+        rw = frame.winfo_reqwidth()
+        height = min(rh + 100, MaxHeight)
+        width = min(rw + 25, MaxWidth)
+        x = self.root.winfo_x()
+        y = self.root.winfo_y()
+        self.root.geometry("%dx%d%+d%+d" % (width, height, x, y))
+
+        return (width, height)
         
     def execute(self, e=None):
         self.updateProtocolParams()
@@ -269,9 +287,7 @@ class FormWindow(Window):
         """Check if the condition of a param is statisfied 
         hide or show it depending on the result"""
         w = self.varDict[paramName]
-        print " checking condition for: ", paramName
         v = self.protocol._definition.evalCondition(self.protocol, paramName)
-        print " result: ", v
         if v:
             w.grid()
         else:
@@ -282,11 +298,6 @@ class FormWindow(Window):
         by this param"""
         self.setParamFromVar(paramName)
         param = self.protocol._definition.getParam(paramName)
-        
-        #TODO: REMOVE DEBUG PRINTS
-        #print "_checkChanges"
-        #print "param changed: ", paramName
-        #print " dependants: ", param._dependants
         
         for d in param._dependants:
             self._checkCondition(d)
@@ -330,6 +341,7 @@ class FormWindow(Window):
         self.root.bind("<Button-5>", lambda e: text.scroll(e)) 
         text.window_create(tk.INSERT, window=parent)
         
+        return parent
   
 if __name__ == '__main__':
     # Just for testing

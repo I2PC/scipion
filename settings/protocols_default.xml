@@ -4,7 +4,7 @@
     <ProtocolConfig tag="section" text="Micrographs">
       <ProtocolConfig icon="bookmark.gif" tag="protocol" text=" Import" value="ProtImportMicrographs" />
       <ProtocolConfig tag="protocol_base" text="CTF estimation" value="ProtCTFMicrographs" />
-      <ProtocolConfig text="Downsample" value="ProtDownsampleMicrographs" />
+      <ProtocolConfig tag="protocol_base" text="Preprocess" value="ProtPreprocessMicrographs" />
     </ProtocolConfig>
     <ProtocolConfig tag="section" text="Particles">
       <ProtocolConfig icon="bookmark.gif" tag="protocol" text="Import" value="ProtImportParticles" />
