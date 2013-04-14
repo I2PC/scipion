@@ -42,7 +42,9 @@ class XmippDefPreprocessMicrograph(Form):
         Form.__init__(self)
     
         self.addSection(label='Input')
-        self.addParam('inputMicrographs', PointerParam, label="Micrographs", pointerClass='SetOfMicrographs')
+        self.addParam('inputMicrographs', PointerParam, label="Micrographs", 
+                      pointerClass='SetOfMicrographs',
+                      help='Select the SetOfMicrograph ')
         
         self.addSection(label='Preprocess')
         self.addParam('doCrop', BooleanParam, default=False, important=True,
@@ -119,9 +121,6 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         # Insert step to create output objects       
         self._insertFunctionStep('createOutput', IOTable)
         
-
-
-        
     def __insertOneStep(self, condition, program, arguments):
         """Insert operation if the condition is met.
         Possible conditions are: doDownsample, doCrop...etc"""
@@ -135,7 +134,6 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
             # Update inputMic for next step as outputMic
             self.params['inputMic'] = self.params['outputMic']
             
-        
     def __insertStepsForMicrograph(self, inputMic, outputMic):
         self.params['inputMic'] = inputMic
         self.params['outputMic'] = outputMic

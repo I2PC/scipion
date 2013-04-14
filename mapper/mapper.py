@@ -106,6 +106,6 @@ class Mapper():
         """Select all object of a give class.
         By default object of subclasses will be retrieved also.
         This behaviour can be changed by passing includeSubclass=False"""
-        pass
+        return self.selectBy(classname=className)
             
     

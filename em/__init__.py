@@ -37,11 +37,11 @@ PACKAGES_PATH = os.path.join(pw.HOME, 'em', 'packages')
 
 # Load all Protocol subclasses found in EM-packages
 emProtocolsDict = getSubClassesFromPath(Protocol, PACKAGES_PATH)
-getSubclasses(Protocol, globals(), emProtocolsDict)
+emProtocolsDict.update(getSubclasses(Protocol, globals()))
 
 # Load all EMObject subclasses found in EM-packages
 emObjectsDict = getSubClassesFromPath(EMObject, PACKAGES_PATH)
-getSubclasses(Protocol, globals(), emObjectsDict)
+emObjectsDict.update(getSubclasses(Protocol, globals()))
 
 # Update global dictionary with variables found
 globals().update(emProtocolsDict)

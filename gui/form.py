@@ -37,6 +37,8 @@ import tkFont
 import gui
 from gui import configureWeigths, Window
 from text import TaggedText
+from widgets import Button
+from dialog import showInfo
 from pyworkflow.protocol.params import *
 
 
@@ -127,17 +129,106 @@ class SectionFrame(tk.Frame):
     
     
 class ParamWidget():
-    """This class will contains the label and content frame 
-    to display a Param. It will also contains a variable controlling
-    the changes and the values in the GUI"""
-    def __init__(self, paramName, row, label, content, var, callback=None):
-        self.paramName = paramName
+    """For each one in the Protocol parameters, there will be
+    one of this in the Form GUI.
+    It is mainly composed by:
+    A Label: put in the left column
+    A Frame(content): in the middle column and container
+      of the specific components for this parameter
+    A Frame(buttons): a container for available actions buttons
+    It will also have a Variable that should be set when creating 
+      the specific components"""
+    def __init__(self, row, paramName, param, window, parent, value, callback=None):
+        self.window = window
         self.row = row
-        self.label = label
-        self.content = content
-        self.var = var
+        self.paramName = paramName
+        self.param = param
+        self.parent = parent
+        
+        self._createLabel() # self.label should be set after this 
+        self._btnCol = 0
+        self._createButtonsFrame() # self.btnFrame should be set after this
+        self._createContent() # self.content and self.var should be set after this
+        
+        self.set(value)
         self.callback = callback
         self.var.trace('w', self._onVarChanged)
+        
+        
+    def _createLabel(self):
+        if self.param.isImportant.get():
+            f = fontBold
+        else:
+            f = font
+        self.label = tk.Label(self.parent, text=self.param.label.get(), 
+                              bg='white', font=f)
+               
+    def _createContent(self):
+        self.content = tk.Frame(self.parent, bg='white')
+        gui.configureWeigths(self.content)
+        self._createContentWidgets(self.param, self.content) # self.var should be set after this
+        
+    def _addButton(self, text, imgPath, cmd):
+        btn = Button(self.btnFrame, text, imgPath, bg='white', command=cmd)
+        btn.grid(row=0, column=self._btnCol, sticky='w', padx=2)
+        self._btnCol += 1
+        
+    def _createButtonsFrame(self):
+        self.btnFrame = tk.Frame(self.parent, bg='white')
+        if self.param.help.hasValue():
+            self._addButton('Help', 'contents24.png', self._showHelpMessage)
+        
+    def _showHelpMessage(self, e=None):
+        showInfo("Help", self.param.help.get(), self.parent)
+        
+    def _createContentWidgets(self, param, content):
+        """Create the specific widgets inside the content frame"""
+        # Create widgets for each type of param
+        t = type(param)
+        #TODO: Move this to a Renderer class to be more flexible
+        if t is BooleanParam:
+            var = BoolVar()
+            frame = tk.Frame(content, bg='white')
+            frame.grid(row=0, column=0, sticky='w')
+            rb1 = tk.Radiobutton(frame, text='Yes', bg='white', variable=var.tkVar, value=1)
+            rb1.grid(row=0, column=0, padx=2, sticky='w')
+            rb2 = tk.Radiobutton(frame, text='No', bg='white', variable=var.tkVar, value=0)
+            rb2.grid(row=0, column=1, padx=2, sticky='w')
+            
+        elif t is EnumParam:
+            var = tk.IntVar()
+            if param.display == EnumParam.DISPLAY_COMBO:
+                combo = ttk.Combobox(content, textvariable=var, state='readonly')
+                combo['values'] = param.choices
+                combo.grid(row=0, column=0)
+            elif param.display == EnumParam.DISPLAY_LIST:
+                for i, opt in enumerate(param.choices):
+                    rb = tk.Radiobutton(content, text=opt, variable=var, value=i)
+                    rb.grid(row=i, column=0, sticky='w')
+            else:
+                raise Exception("Invalid display value '%s' for EnumParam" % str(param.display))
+        
+        elif t is PointerParam:
+            var = PointerVar()
+            entry = tk.Entry(content, width=25, textvariable=var.tkVar)
+            entry.grid(row=0, column=0)
+            self._addButton("Select", 'zoom.png', self._browseObject)
+        else:
+            #v = self.setVarValue(paramName)
+            var = tk.StringVar()
+            entry = tk.Entry(content, width=25, textvariable=var)
+            entry.grid(row=0, column=0)
+            
+        self.var = var
+        
+    def _browseObject(self, e=None):
+        """Select an object from DB
+        This function is suppose to be used only for PointerParam"""
+        from pyworkflow.gui.dialog import TreeProvider, ListDialog
+        tp = TreeProvider(self.window.protocol.mapper, self.param.pointerClass.get())
+        dlg = ListDialog(self.parent, "Select object", tp)
+        if dlg.value is not None:
+            self.set(dlg.value)
         
     def _onVarChanged(self, *args):
         if self.callback is not None:
@@ -146,11 +237,13 @@ class ParamWidget():
     def grid(self):
         """Grid the label and content in the specified row"""
         self.label.grid(row=self.row, column=0, sticky='ne', padx=2, pady=2)
-        self.content.grid(row=self.row, column=1, padx=2, pady=2, sticky='w') 
+        self.content.grid(row=self.row, column=1, padx=2, pady=2, sticky='news')
+        self.btnFrame.grid(row=self.row, column=2, padx=2, sticky='nw')
         
     def grid_remove(self):
         self.label.grid_remove()
         self.content.grid_remove()
+        self.btnFrame.grid_remove()
         
     def set(self, value):
         self.var.set(value)
@@ -159,6 +252,10 @@ class ParamWidget():
         return self.var.get()
         
 
+# FIXME: Organize this and make it configurable
+fontBig = None
+font = None
+fontBold = None
     
 class FormWindow(Window):
     """This class will create the Protocol params GUI to enter parameters.
@@ -168,15 +265,17 @@ class FormWindow(Window):
     def __init__(self, title, protocol, master=None, **args):
         Window.__init__(self, title, master, icon='scipion_bn.xbm', weight=False, **args)
 
-        self.varDict = {} # Store tkVars associated with params
+        self.widgetDict = {} # Store tkVars associated with params
         
-        self.fontBig = tkFont.Font(size=12, family='verdana', weight='bold')
-        self.font = tkFont.Font(size=10, family='verdana')#, weight='bold')
-        self.fontBold = tkFont.Font(size=10, family='verdana', weight='bold')
+        global fontBig, font, fontBold
+        fontBig = tkFont.Font(size=12, family='verdana', weight='bold')
+        font = tkFont.Font(size=10, family='verdana')#, weight='bold')
+        fontBold = tkFont.Font(size=10, family='verdana', weight='bold')        
+
         
         headerFrame = tk.Frame(self.root)
         headerFrame.grid(row=0, column=0, sticky='new')
-        headerLabel = tk.Label(headerFrame, text='Protocol: ' + protocol.getClassName(), font=self.fontBig)
+        headerLabel = tk.Label(headerFrame, text='Protocol: ' + protocol.getClassName(), font=fontBig)
         headerLabel.grid(row=0, column=0, padx=5, pady=5)
         
         text = TaggedText(self.root, width=40, height=15, bd=0, cursor='arrow')
@@ -189,7 +288,7 @@ class FormWindow(Window):
         btnFrame.columnconfigure(0, weight=1)
         btnFrame.grid(row=2, column=0, sticky='sew')
         # Add create project button
-        btn = tk.Button(btnFrame, text='Execute', fg='white', bg='#7D0709', font=self.font, 
+        btn = tk.Button(btnFrame, text='Execute', fg='white', bg='#7D0709', font=font, 
                         activeforeground='white', activebackground='#A60C0C', command=self.execute)
         btn.grid(row=0, column=0, padx=(5, 100), pady=5, sticky='se')
         
@@ -198,7 +297,7 @@ class FormWindow(Window):
         
         # Resize windows to use more space if needed
         self.desiredDimensions = lambda: self.resize(contentFrame)
-        self.resize(contentFrame)
+        #self.resize(contentFrame)
         
     def resize(self, frame):
         self.root.update_idletasks()
@@ -229,69 +328,23 @@ class FormWindow(Window):
                 if protVar is None:
                     raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
                 # Create the label
-                if param.isImportant:
-                    f = self.fontBold
-                else:
-                    f = self.font
-                label = tk.Label(parent, text=param.label.get(), bg='white', font=f)
-                # Create the content to display and the variable associated
-                content, var = self._createWidgetFromParam(parent, param)
+                self.widgetDict[paramName] = ParamWidget(r, paramName, param, self, parent, 
+                                                         value=protVar.get(param.default.get()),
+                                                         callback=self._checkChanges)
                 # Set the value to the variable from Protocol instance or default
-                var.set(protVar.get(param.default.get()))
-                self.varDict[paramName] = ParamWidget(paramName, r, label, content, var, self._checkChanges)
                 self._checkCondition(paramName)
-                r += 1
+                r += 1         
             
-    def _createWidgetFromParam(self, parent, param):
-        """Create the widget for an specific param.
-        The function should return a tuple (content, var)
-        content: will be the outer container of the widget(tipically a tk.Frame
-        var: should contain .set and .get methods with the same type of the protocol var"""
-        # Create widgets for each type of param
-        t = type(param)
-        #TODO: Move this to a Renderer class to be more flexible
-        if t is BooleanParam:
-            content = tk.Frame(parent, bg='white')
-            var = BoolVar()
-            rb1 = tk.Radiobutton(content, text='Yes', bg='white', variable=var.tkVar, value=1)
-            rb1.grid(row=0, column=0, padx=2)
-            rb2 = tk.Radiobutton(content, text='No', bg='white', variable=var.tkVar, value=0)
-            rb2.grid(row=0, column=1, padx=2)
-            
-        elif t is EnumParam:
-            var = tk.IntVar()
-            if param.display == EnumParam.DISPLAY_COMBO:
-                combo = ttk.Combobox(parent, textvariable=var, state='readonly')
-                combo['values'] = param.choices
-                content = combo
-            elif param.display == EnumParam.DISPLAY_LIST:
-                rbFrame = tk.Frame(parent)
-                for i, opt in enumerate(param.choices):
-                    rb = tk.Radiobutton(rbFrame, text=opt, variable=var, value=i)
-                    rb.grid(row=i, column=0, sticky='w')
-                content = rbFrame
-            else:
-                raise Exception("Invalid display value '%s' for EnumParam" % str(param.display))
-        elif t is PointerParam:
-            var = PointerVar()
-            content = tk.Entry(parent, width=25, textvariable=var.tkVar)
-        else:
-            #v = self.setVarValue(paramName)
-            var = tk.StringVar()
-            content = tk.Entry(parent, width=25, textvariable=var)
-                
-            
-        return (content, var)
         
     def _checkCondition(self, paramName):
         """Check if the condition of a param is statisfied 
         hide or show it depending on the result"""
-        w = self.varDict[paramName]
+        widget = self.widgetDict[paramName]
         v = self.protocol._definition.evalCondition(self.protocol, paramName)
         if v:
-            w.grid()
+            widget.grid()
         else:
-            w.grid_remove()
+            widget.grid_remove()
             
     def _checkChanges(self, paramName):
         """Check the conditions of all params affected
@@ -314,7 +367,7 @@ class FormWindow(Window):
     def setParamFromVar(self, paramName):
         value = getattr(self.protocol, paramName, None)
         if value is not None:
-            w = self.varDict[paramName]
+            w = self.widgetDict[paramName]
             value.set(w.get())
              
     def updateProtocolParams(self):

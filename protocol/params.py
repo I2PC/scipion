@@ -65,7 +65,7 @@ class Param(FormBase):
         self.paramClass = args.get('paramClass', None) # This should be defined in subclasses
         self.default = String(args.get('default', None))
         self.help = String(args.get('help', None))
-        self.isImportant = args.get('important', False)
+        self.isImportant = Boolean(args.get('important', False))
         
     def __str__(self):
         return "    label: %s" % self.label.get()
@@ -228,7 +228,7 @@ class BooleanParam(Param):
 class PointerParam(Param):
     def __init__(self, **args):
         Param.__init__(self, paramClass=Pointer, **args)
-        self.pointerClass = args.get('pointerClass')
+        self.pointerClass = String(args.get('pointerClass'))
         
         
         

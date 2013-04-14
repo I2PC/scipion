@@ -137,7 +137,9 @@ def getImage(imageName, imgDict=None):
     imagePath = findResource(imageName)
     image = None
     if imagePath:
-        image = tk.PhotoImage(file=imagePath)
+        from PIL import Image, ImageTk
+        image = Image.open(imagePath)
+        image = ImageTk.PhotoImage(image)
         if imgDict is not None:
             imgDict[imageName] = image
     return image
