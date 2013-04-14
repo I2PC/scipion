@@ -139,9 +139,6 @@ class ProtParticlePickingAuto(XmippProtocol):
         mode = PM_REVIEW + " %s"
         for f in glob.glob(self.extraPath("*extract_list.xmd")):
             launchParticlePickingGUI(None, self.Input['micrographs'], self.ExtraDir, mode % f, self.TiltPairs, self.Memory, self.Family)
-            
-            #params="-i %s -o %s --mode review %s &" % (self.Input['micrographs'], self.WorkingDir, f)
-            #os.system("xmipp_micrograph_particle_picking " + params)
 
 def gatherResults(log, Family, WorkingDir, PickingDir):
     familyFn = lambda fn: "%s@%s" % (Family, fn)
