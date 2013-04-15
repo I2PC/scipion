@@ -101,17 +101,55 @@ class SetOfMicrographs(SetOfImages):
     def __init__(self, **args):
         SetOfImages.__init__(self, **args)
         self.microscope = Microscope()
+        self.tiltPairs = Boolean(False)
+        self._files = []
         
     def getMicroscope(self, index=0):
         return self.microscope
     
+    def hasTiltPairs(self):
+        return self.tiltPairs.get()
+    
+    def append(self, path):
+        """Add simply a micrograph path to the set"""
+        self._files.append(path)        
+    
+    def __loadFiles(self):
+        """Read files from text files"""
+        f = open(self.getFileName())
+        self._files = [l.strip() for l in f]
+        f.close()
+        
     def __iter__(self):
         """Iterate over the set of micrographs in a .txt file"""
-        f = open(self.getFileName())
-        for l in f:    
+        self.__loadFiles()
+        for f in self._files:
             m = Micrograph()
-            m.setFileName(l.strip())       
+            m.setFileName(f)       
             yield m
-        f.close()
+        
+    def iterPairs(self):
+        """Iterate over the tilt pairs if is the case"""
+        #FIXME, we need to store the real relation 
+        # between micrographs
+        # TODO: Validate number of micrographs is even for Tilt Pairs
+        n = len(self._files) / 2
+        for i in range(n):
+            mU = Micrograph()
+            mU.setFileName(self._files[2*i])
+            mT = Micrograph()
+            mT.setFileName(self._files[2*i+1])
+            yield (mU, mT)
+        
+    def writeToFile(self, path):
+        """This method will be used to persist in a file the
+        list of micrographs path contained in this Set
+        path: output file path
+        micrographs: list with the micrographs path to be stored
+        """
+        micFile = open(path, 'w+')
+        for f in self._files:            
+            print >> micFile, f
+        micFile.close()
         
     

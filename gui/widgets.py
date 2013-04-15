@@ -34,6 +34,8 @@ import ttk
 import gui
 
 class Button(tk.Button):
+    _images = {}
+    
     def __init__(self, master, text, imagePath=None, tooltip=None, **opts):
         defaults = {'activebackground': gui.cfgButtonActiveBgColor, 'bg': gui.cfgButtonBgColor,
                     'fg': gui.cfgButtonFgColor, 'activeforeground': gui.cfgButtonActiveFgColor,
@@ -41,7 +43,7 @@ class Button(tk.Button):
         defaults.update(opts)
         
         if imagePath is not None:
-            btnImage = gui.getImage(imagePath)
+            btnImage = gui.getImage(imagePath, Button._images)
         else:
             btnImage = None
             

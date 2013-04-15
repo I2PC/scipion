@@ -168,16 +168,17 @@ def writeDefaults():
     
     #m2 = m1.addSubMenu('Micrographs')
     m1.addSubMenu(' Import', value='ProtImportMicrographs', 
-                  tag = 'protocol', icon='bookmark.gif')
+                  tag='protocol', icon='bookmark.gif')
     m1.addSubMenu('CTF estimation', value='ProtCTFMicrographs',
-                  tag = 'protocol_base')
-    m1.addSubMenu('Downsample', value='ProtDownsampleMicrographs',)
+                  tag='protocol_base')
+    m1.addSubMenu('Preprocess', value='ProtPreprocessMicrographs',
+                  tag='protocol_base')
     
     m1 = menu.addSubMenu('Particles', tag='section')
     m1.addSubMenu('Import', value='ProtImportParticles', 
-                  tag = 'protocol', icon='bookmark.gif')
+                  tag='protocol', icon='bookmark.gif')
     m1.addSubMenu('Picking', value='ProtParticlePicking',
-                  tag = 'protocol_base')
+                  tag='protocol_base')
     
 
     m1 = menu.addSubMenu('2D', tag='section')
@@ -193,7 +194,7 @@ def writeDefaults():
     # Write global configuration
     config = ProjectConfig(menu='menu_default.xml',
                            protocols='protocols_default.xml')
-    config.icon = ''
+    config.icon = String()
     writeConfig(config, 'configuration.xml')
     
 if __name__ == '__main__':

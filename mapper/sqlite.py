@@ -141,10 +141,25 @@ class SqliteMapper(Mapper):
             objs.append(obj)
         return objs
         
-    def select(self, **args):
+    def selectBy(self, **args):
         """Select object meetings some criterias"""
         objRows = self.db.selectObjectsBy(**args)
         return self.__objectsFromRows(objRows)
+    
+    def selectByClass(self, className, includeSubclasses=True):
+        if includeSubclasses:
+            from pyworkflow.utils.reflection import getSubclasses
+            whereStr = "classname='%s'" % className
+            base = self.dictClasses.get(className)
+            subDict = getSubclasses(base, self.dictClasses)
+            for k, v in subDict.iteritems():
+                if issubclass(v, base):
+                    whereStr += " OR classname='%s'" % k
+            objRows = self.db.selectObjectsWhere(whereStr)
+            return self.__objectsFromRows(objRows)
+        else:
+            return self.selectBy(classname=className)
+            
     
     def selectAll(self):
         objRows = self.db.selectObjectsByParent(parent_id=None)
@@ -232,6 +247,10 @@ class SqliteDb():
         whereTuple = tuple(args.values())
         self.executeCommand(self.SELECT + whereStr, whereTuple)
         return self.cursor.fetchall()
+    
+    def selectObjectsWhere(self, whereStr):
+        self.executeCommand(self.SELECT + whereStr)
+        return self.cursor.fetchall()   
         
         
         

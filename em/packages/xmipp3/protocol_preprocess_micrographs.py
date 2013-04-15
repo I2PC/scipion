@@ -42,29 +42,47 @@ class XmippDefPreprocessMicrograph(Form):
         Form.__init__(self)
     
         self.addSection(label='Input')
-        self.addParam('inputMicrographs', PointerParam, label="Micrographs", pointerClass='SetOfMicrographs')
+        self.addParam('inputMicrographs', PointerParam, label="Micrographs", 
+                      pointerClass='SetOfMicrographs',
+                      help='Select the SetOfMicrograph ')
         
         self.addSection(label='Preprocess')
-        self.addParam('doCrop', BooleanParam, default=False,
-                   label='Crop borders?')
-        self.addParam('cropPixels', IntParam, default=10,
-                   label='Pixels to crop')
-        self.addParam('doLog', BooleanParam, default=False,
-                   label='Take logarithm?')
-        self.addParam('logA', FloatParam, default=4.431,
-                   label='a')
-        self.addParam('logB', FloatParam, default=0.4018,
-                   label='b')
-        self.addParam('logC', FloatParam, default=336.6,
-                   label='c')
-        self.addParam('doRemoveBadPix', BooleanParam, default=False,
-                   label='Remove bad pixels?')
-        self.addParam('mulStddev', IntParam, default=5,
-                   label='Multiple of Stddev')    
-        self.addParam('doDownsample', BooleanParam, default=False,
-                   label='Downsample micrographs?')
-        self.addParam('downFactor', FloatParam, default=2.,
-                   label='Downsampling factor')
+        self.addParam('doCrop', BooleanParam, default=False, important=True,
+                      label='Crop borders?', 
+                      help='Crop a given amount of pixels from each border.')
+        self.addParam('cropPixels', IntParam, default=10, condition='doCrop',
+                      label='Pixels to crop',
+                      help='Amount of pixels you want to crop from borders.')
+        self.addParam('doLog', BooleanParam, default=False, important=True,
+                      label='Take logarithm?', 
+                      help='Depending on your acquisition system you may need to take the logarithm '
+                           'of the pixel values in order to have a linear relationship between '
+                           'the gray values in the image and those in the volume. a - b ln(x+c) '
+                           'by default 4.431-0.4018*LN((P1+336.6)) is applied (right one for nikon coolscan 9000)')
+        self.addParam('logA', FloatParam, default=4.431, condition='doLog',
+                      label='a',
+                      help='Parameter a in a - b ln(x+c).')
+        self.addParam('logB', FloatParam, default=0.4018, condition='doLog',
+                      label='b',
+                      help='Parameter b in a - b ln(x+c).')
+        self.addParam('logC', FloatParam, default=336.6, condition='doLog',
+                      label='c',
+                      help='Parameter c in a - b ln(x+c).')
+        self.addParam('doRemoveBadPix', BooleanParam, default=False, important=True,
+                      label='Remove bad pixels?',
+                      help='Values will be thresholded to this multiple of standard deviations. '
+                           'Typical values are about 5, i.e., pixel values beyond 5 times the '
+                           'standard deviation will be substituted by the local median. '
+                           'Set this option to -1 for not applying it.')
+        self.addParam('mulStddev', IntParam, default=5, condition='doRemoveBadPix',
+                      label='Multiple of Stddev',
+                      help='Multiple of standard devitation.')    
+        self.addParam('doDownsample', BooleanParam, default=False, important=True,
+                      label='Downsample micrographs?',
+                      help='Downsample micrographs by a given factor.')
+        self.addParam('downFactor', FloatParam, default=2., condition='doDownsample',
+                      label='Downsampling factor',
+                      help='Non-integer downsample factors are possible. Must be larger than 1.')
     
 
 class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
@@ -75,9 +93,10 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         
         Protocol.__init__(self, **args)
         
-    def defineSteps(self):
+    def _defineSteps(self):
         '''for each micrograph insert the steps to preprocess it
         '''
+        print "En defineSteps"
         # Get pointer to input micrographs 
         self.inputMics = self.inputMicrographs.get() 
         
@@ -94,17 +113,15 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         # For each micrograph insert the steps to preprocess it
         for mic in self.inputMics:
             fn = mic.getFileName()
-            fnOut = self.getPath(os.path.basename(fn))
-            self.insertStepsForMicrograph(fn, fnOut)
+            print "found mic ", mic
+            fnOut = self._getPath(os.path.basename(fn))
+            self.__insertStepsForMicrograph(fn, fnOut)
             IOTable[fn] = fnOut
         
         # Insert step to create output objects       
-        self.insertFunctionStep('createOutput', IOTable)
+        self._insertFunctionStep('createOutput', IOTable)
         
-
-
-        
-    def _insertOneStep(self, condition, program, arguments):
+    def __insertOneStep(self, condition, program, arguments):
         """Insert operation if the condition is met.
         Possible conditions are: doDownsample, doCrop...etc"""
         if condition.get():
@@ -113,34 +130,33 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
             if self.params['inputMic'] != self.params['outputMic']:
                 arguments += " -o %(outputMic)s"
             # Insert the command with the formatted parameters
-            self.insertRunJobStep(program, arguments % self.params)
+            self._insertRunJobStep(program, arguments % self.params)
             # Update inputMic for next step as outputMic
             self.params['inputMic'] = self.params['outputMic']
             
-        
-    def insertStepsForMicrograph(self, inputMic, outputMic):
+    def __insertStepsForMicrograph(self, inputMic, outputMic):
         self.params['inputMic'] = inputMic
         self.params['outputMic'] = outputMic
         # Downsample
-        self._insertOneStep(self.doDownsample, "xmipp_transform_downsample",
+        self.__insertOneStep(self.doDownsample, "xmipp_transform_downsample",
                             "-i %(inputMic)s --step %(downFactor)f --method fourier")
                     
         # Crop
-        self._insertOneStep(self.doCrop, "xmipp_transform_window",
+        self.__insertOneStep(self.doCrop, "xmipp_transform_window",
                             " -i %(inputMic)s --crop %(cropPixels)d -v 0")
         
             
         # Take logarithm
-        self._insertOneStep(self.doLog, "xmipp_transform_filter",
+        self.__insertOneStep(self.doLog, "xmipp_transform_filter",
                             " -i %(inputMic)s --log --fa %(logA)f --fb %(logB)f --fc %(logC)f")
                     
         # Remove bad pixels
-        self._insertOneStep(self.doRemoveBadPix, "xmipp_transform_filter",
+        self.__insertOneStep(self.doRemoveBadPix, "xmipp_transform_filter",
                             " -i %(inputMic)s --bad_pixels outliers %(stddev)f -v 0")
                 
     def createOutput(self, IOTable):
 
-        mdOut = self.getPath("micrographs.xmd")
+        mdOut = self._getPath("micrographs.xmd")
                 
         self.outputMicrographs = XmippSetOfMicrographs(value=mdOut)     
         self.outputMicrographs.microscope.voltage.set(self.inputMics.microscope.voltage.get())
@@ -162,4 +178,4 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         
         self.outputMicrographs.setFileName(mdOut)
 
-        self.defineOutputs(micrograph=self.outputMicrographs)
+        self._defineOutputs(micrograph=self.outputMicrographs)

@@ -44,14 +44,17 @@ def getSubClassesFromPath(BaseClass, path):
     for f in folders:
         if exists(join(path, f, '__init__.py')):
             m = __import__(f)
-            getSubclasses(BaseClass, m.__dict__, subclasses)
+            subDict = getSubclasses(BaseClass, m.__dict__)
+            subclasses.update(subDict)
     
     return subclasses
     
-def getSubclasses(BaseClass, inputDict, outputDict):
+def getSubclasses(BaseClass, inputDict):
     """Iterate over inputDict and find all subclasses
     of BaseClass, that will be set in outputDict"""
+    outputDict = {}
     for k, v in inputDict.iteritems():
         if isclass(v) and issubclass(v, BaseClass):
             outputDict[k] = v
+    return outputDict
     
