@@ -4,7 +4,8 @@ Created on Apr 9, 2013
 @author: antonio
 '''
 import unittest
-import fileTransferProcess.fileTransferProcess.FileTransferProcess as FileTransferProcess
+#from fileTransferProcess.fileTransferProcess import FileTransferProcess
+from fileTransferProcess.fileTransferProcess import *
 
 class TestFileTransferProcess(unittest.TestCase):
 
@@ -27,13 +28,14 @@ class TestFileTransferProcess(unittest.TestCase):
         self.forceOperationCase1 = False
     
     def tearDownModule(self):
-        filePaths = self.fileTransferProces.getTargetFilePathList(self.targetFilesCase1)
-        self.fileTransferProces.deleteFiles(filePaths, self.gatewayHostsCase1, self.hostsPaswordsCase1, 1, 1, False)
+        #filePaths = self.fileTransferProces.getTargetFilePathList(self.targetFilesCase1)
+        #self.fileTransferProces.deleteFiles(filePaths, self.gatewayHostsCase1, self.hostsPaswordsCase1, 1, 1, False)
+        pass
         
     def testSimpleLocalToRemoteFileTranfer(self):
-        self.fileTransferProces.transferFiles(self.sourceFilesCase1, self.targetFilesCase1, self.gatewayHostsCase1, self.hostsPaswordsCase1, self.operationIdCase1, self.numberTrialsCase1);
-        filePaths = self.fileTransferProces.getTargetFilePathList(self.targetFilesCase1)
-        passTest = len(self.fileTransferProces.checkFiles(filePaths, self.gatewayHostsCase1, self.hostsPaswordCase1s, self.operationIdCase1, self.numberTrialsCase1, self.forceOperationCase1)) == 0
+        self.fileTransferProces.transferFiles(self.sourceFilesCase1, self.targetFilesCase1, self.hostsPaswordsCase1, gatewayHosts=self.gatewayHostsCase1, operationId=self.operationIdCase1, numberTrials=self.numberTrialsCase1, forceOperation=False);
+        filePaths = getTargetFilePathList(self.targetFilesCase1)
+        passTest = len(self.fileTransferProces.checkFiles(filePaths, self.hostsPaswordCase1s, gatewayHosts=self.gatewayHostsCase1, operationId=self.operationIdCase1, numberTrials=self.numberTrialsCase1, forceOperation=self.forceOperationCase1)) == 0
         self.assertTrue(passTest)
     
 
