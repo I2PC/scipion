@@ -31,7 +31,8 @@ some code was taken from tkSimpleDialog
 import Tkinter as tk
 
 import gui
-from widgets import Button, Tree
+from widgets import Button
+from tree import Tree
 from text import TaggedText
 
 
