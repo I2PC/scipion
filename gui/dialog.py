@@ -38,12 +38,12 @@ from text import TaggedText
 
 class Dialog(tk.Toplevel):
     _images = {} #Images cache
-    '''Implementation of our own dialog to display messages
+    """Implementation of our own dialog to display messages
     It will have by default a three buttons: YES, NO and CANCEL
     Subclasses can rename the labels of the buttons like: OK, CLOSE or others
     The buttons(and theirs order) can be changed.
     An image name can be passed to display left to the message.
-    '''
+    """
     RESULT_YES = 0
     RESULT_NO = 1
     RESULT_CANCEL = 2
@@ -110,7 +110,7 @@ class Dialog(tk.Toplevel):
         
 
     def destroy(self):
-        '''Destroy the window'''
+        """Destroy the window"""
         self.initial_focus = None
         tk.Toplevel.destroy(self)
 
@@ -118,11 +118,11 @@ class Dialog(tk.Toplevel):
     # construction hooks
 
     def body(self, master):
-        '''create dialog body.
+        """create dialog body.
         return widget that should have initial focus.
         This method should be overridden, and is called
         by the __init__ method.
-        '''
+        """
         pass
 
         
@@ -181,17 +181,17 @@ class Dialog(tk.Toplevel):
     # command hooks
 
     def validate(self):
-        '''validate the data
+        """validate the data
         This method is called automatically to validate the data before the
         dialog is destroyed. By default, it always validates OK.
-        '''
+        """
         return 1 # override
 
     def apply(self):
-        '''process the data
+        """process the data
         This method is called automatically to process the data, *after*
         the dialog is destroyed. By default, it does nothing.
-        '''
+        """
         pass # override
     
     def getImage(self, imgName):
@@ -236,7 +236,7 @@ class MessageDialog(Dialog):
 
 
 class YesNoDialog(MessageDialog):
-    '''Ask a question with YES/NO answer'''
+    """Ask a question with YES/NO answer"""
     def __init__(self, master, title, msg):
         MessageDialog.__init__(self, master, title, msg, 'warning.gif', default='No',
                                buttons=[('Yes', Dialog.RESULT_YES), ('No', Dialog.RESULT_NO)])        
@@ -269,7 +269,7 @@ class EntryDialog(Dialog):
             return False
         return True
         
-''' Functions to display dialogs '''
+""" Functions to display dialogs """
 def askYesNo(title, msg, parent):
     d = YesNoDialog(parent, title, msg)
     return d.result == Dialog.RESULT_YES

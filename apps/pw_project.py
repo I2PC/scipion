@@ -151,7 +151,7 @@ class ProjectWindow(gui.Window):
         p.grid(row=0, column=0, sticky='news')
         
         # Event bindings
-        self.root.bind("<F5>", self.updateRunsTree)
+        self.root.bind("<F5>", lambda e: self.updateRunsTree(self.runsTree))
         
     def loadProjectConfig(self):
         self.project = Project(self.projPath)
@@ -189,6 +189,7 @@ class ProjectWindow(gui.Window):
         return tree
     
     def updateRunsTree(self, tree):
+        print "updating"
         tree.clear()
         objList = self.project.mapper.selectAll()
         for obj in objList:

@@ -151,5 +151,54 @@ class SetOfMicrographs(SetOfImages):
         for f in self._files:            
             print >> micFile, f
         micFile.close()
-        
     
+
+class Coordinate(EMObject):
+    """This class holds the (x,y) position and other information
+    associated with a coordinate"""
+    POS_CENTER = 0
+    POS_TOPLEFT = 1
+    
+    def getPosition(self, mode=POS_CENTER):
+        """Return the position of the coordinate.
+        mode: select if the position is the center of the box
+          or in the top left corner."""
+        pass
+    
+    def getMicrograph(self):
+        """Return the micrograph object to which
+        this coordinate is associated"""
+        pass
+    
+    def getPair(self):
+        """It should return the paired coordinate associate to self.
+        If self is an untilted coordinate, getPaired will return the 
+        tilted one and viceversa"""
+        pass 
+    
+    
+class SetOfCoordinates(EMObject):
+    """Encapsulate the logic of a set of particles coordinates.
+    Each coordinate has a (x,y) position and is related to a Micrograph
+    The SetOfCoordinates can also have information about TiltPairs"""
+    
+    def getBoxSize(self):
+        """Return the box size of the future particles.
+        This can be None, since when the POS_CENTER mode is used,
+        the box size is only relevant when extraction"""
+        return None
+    
+    def iterCoordinates(self):
+        """Itearates over the whole set of coordinates.
+        If the SetOfMicrographs has tilted pairs, the coordinates
+        should have the information related to its paired coordinate."""
+        pass
+    
+    def hasTiltPairs(self):
+        """Returns True if the SetOfMicrographs has tilted pairs"""
+        return self.getMicrographs().hasTiltPairs()
+    
+    def getMicrographs(self):
+        """Returns the SetOfMicrographs associated with 
+        this SetOfCoordinates"""
+        pass
