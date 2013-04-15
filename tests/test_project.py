@@ -21,7 +21,7 @@ prot2 = ProtImportMicrographs(workingDir=proj.getPath('Runs', 'Import1'),
                               pattern=pattern, samplingRate=1, voltage=200)
 proj.launchProtocol(prot2)
 
-l = proj.mapper.select(classname='SetOfMicrographs')
+l = proj.mapper.selectByClass('SetOfMicrographs')
 #l = proj.mapper.selectAll()
 
 for p in l:
@@ -55,7 +55,7 @@ if len(l):
     
     proj.launchProtocol(prot6)
 
-    l = proj.mapper.select(classname='SetOfMicrographs')
+    l = proj.mapper.selectByClass('SetOfMicrographs')
 #l = proj.mapper.selectAll()
 
     for p in l:

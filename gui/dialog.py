@@ -32,16 +32,18 @@ import Tkinter as tk
 
 import gui
 from widgets import Button
+from tree import Tree
 from text import TaggedText
 
 
 class Dialog(tk.Toplevel):
-    '''Implementation of our own dialog to display messages
+    _images = {} #Images cache
+    """Implementation of our own dialog to display messages
     It will have by default a three buttons: YES, NO and CANCEL
     Subclasses can rename the labels of the buttons like: OK, CLOSE or others
     The buttons(and theirs order) can be changed.
     An image name can be passed to display left to the message.
-    '''
+    """
     RESULT_YES = 0
     RESULT_NO = 1
     RESULT_CANCEL = 2
@@ -88,7 +90,7 @@ class Dialog(tk.Toplevel):
         gui.configureWeigths(self)
 
 
-        if self.initial_focus is not None:
+        if self.initial_focus is None:
             self.initial_focus = self
 
         self.protocol("WM_DELETE_WINDOW", self.cancel)
@@ -108,7 +110,7 @@ class Dialog(tk.Toplevel):
         
 
     def destroy(self):
-        '''Destroy the window'''
+        """Destroy the window"""
         self.initial_focus = None
         tk.Toplevel.destroy(self)
 
@@ -116,11 +118,11 @@ class Dialog(tk.Toplevel):
     # construction hooks
 
     def body(self, master):
-        '''create dialog body.
+        """create dialog body.
         return widget that should have initial focus.
         This method should be overridden, and is called
         by the __init__ method.
-        '''
+        """
         pass
 
         
@@ -179,18 +181,22 @@ class Dialog(tk.Toplevel):
     # command hooks
 
     def validate(self):
-        '''validate the data
+        """validate the data
         This method is called automatically to validate the data before the
         dialog is destroyed. By default, it always validates OK.
-        '''
+        """
         return 1 # override
 
     def apply(self):
-        '''process the data
+        """process the data
         This method is called automatically to process the data, *after*
         the dialog is destroyed. By default, it does nothing.
-        '''
+        """
         pass # override
+    
+    def getImage(self, imgName):
+        """A shortcut to get an image from its name"""
+        return gui.getImage(imgName, self._images)
 
         
 class MessageDialog(Dialog):
@@ -230,7 +236,7 @@ class MessageDialog(Dialog):
 
 
 class YesNoDialog(MessageDialog):
-    '''Ask a question with YES/NO answer'''
+    """Ask a question with YES/NO answer"""
     def __init__(self, master, title, msg):
         MessageDialog.__init__(self, master, title, msg, 'warning.gif', default='No',
                                buttons=[('Yes', Dialog.RESULT_YES), ('No', Dialog.RESULT_NO)])        
@@ -263,7 +269,7 @@ class EntryDialog(Dialog):
             return False
         return True
         
-''' Functions to display dialogs '''
+""" Functions to display dialogs """
 def askYesNo(title, msg, parent):
     d = YesNoDialog(parent, title, msg)
     return d.result == Dialog.RESULT_YES
@@ -281,39 +287,78 @@ def askString(title, label, parent, entryWidth=20):
     d = EntryDialog(parent, title, label, entryWidth)
     return d.value
     
-'''Implement a Listbox Dialog, it will return
-the index selected in the lisbox or -1 on Cancel'''
-class ListboxDialog(Dialog):
-    def __init__(self, master, itemList, **kargs):
-        self.list = itemList
-        self.kargs = kargs
-        Dialog.__init__(self, master)        
-        
-    def body(self, master):
-        self.result = []
-        self.lb = tk.Listbox(master, selectmode=tk.EXTENDED, bg="white")
-        self.lb.config(**self.kargs)
-        self.lb.pack(fill=tk.BOTH)
-        self.lb.bind('<Double-Button-1>', self.ok)
-        maxLength=0
-        for item in self.list:
-            self.lb.insert(tk.END, item)
-            maxLength=max(maxLength,len(item))
-        self.lb.config(width=maxLength+3)
-        if len(self.list) > 0:
-            self.lb.selection_set(0)
-        return self.lb # initial focus
 
-    def buttonbox(self):
-        box = tk.Frame(self)
-        w = Button(box, text="OK", width=7, command=self.ok)
-        w.pack(side=tk.RIGHT, padx=5, pady=5)
-        self.bind("<Return>", self.ok)
-        box.pack()
+class TreeProvider():
+    def __init__(self, mapper, className):
+        self.mapper = mapper
+        self._objects = mapper.selectByClass(className)
+        
+    def getColumns(self):
+        return [('Object', 250), ('Id', 50), ('Class', 200)]
+    
+    def getObjects(self):
+        return self._objects
+    
+    def getObjectInfo(self, obj):
+        return {'key': '%s.%s' % (obj.getName(), obj.strId()),
+                'values': (obj.strId(), obj.getClassName())}
+        
+        
+class ListDialog(Dialog):
+    """Dialog to select an element from a list.
+    It is implemented using a Tree widget"""
+    def __init__(self, parent, title, provider):
+        self.value = None
+        self.provider = provider
+        Dialog.__init__(self, parent, title,
+                        buttons=[('Select', Dialog.RESULT_YES), ('Cancel', Dialog.RESULT_CANCEL)])
+        
+    def body(self, bodyFrame):
+        bodyFrame.config(bg='white')
+        gui.configureWeigths(bodyFrame)
+        self._createTree(bodyFrame)
+        self.initial_focus = self.tree
+        
+    def _createTree(self, parent):
+        # Get colums to display and width
+        cols = self.provider.getColumns()
+        colsTuple = tuple([c[0] for c in cols[1:]])
+        tree = Tree(parent, columns=colsTuple)
+        # Set the special case of first tree column
+        tree.heading('#0', text=cols[0][0])
+        tree.column('#0', width=cols[0][1])
+        # Set other columns
+        for c, w in cols[1:]:
+            tree.column(c, width=w)
+            tree.heading(c, text=c)
+        tree.grid(row=0, column=0, sticky='news')
+        self._objects = self.provider.getObjects()
+        for obj in self._objects:
+            objDict = self.provider.getObjectInfo(obj)
+            parent = objDict.get('parent', None)
+            if parent is None:
+                parentId = ''
+            else:
+                parentId = parent._treeId # Previously set
+            key = objDict.get('key')
+            text = objDict.get('text', key)
+            image = objDict.get('image', '')
+            if len(image):
+                image = self.getImage(image)
+            values = objDict.get('values', ())
+            obj._treeId = tree.insert(parentId, 'end', objDict['key'],
+                        text=text, image=image, values=values)
+        self.tree = tree
         
     def apply(self):
-        self.result = map(int, self.lb.curselection())
-        
+        index = self.tree.index(self.tree.getFirst())
+        self.value = self._objects[index]
+    
+    def validate(self):
+        if self.tree.getFirst() is None:
+            showError("Validation error", "Please select an element", self)
+            return False
+        return True
         
 if __name__ == '__main__':
     import sys

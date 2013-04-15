@@ -44,7 +44,7 @@ from pyworkflow.project import Project
 
 import pyworkflow.gui as gui
 from pyworkflow.gui import getImage
-from pyworkflow.gui.widgets import Tree
+from pyworkflow.gui.tree import Tree
 from pyworkflow.gui.form import FormWindow
 from config import *
 
@@ -64,14 +64,15 @@ def populateTree(self, tree, prefix, obj, level=0):
         if level < 3:
             tree.item(item, open=True)
         if obj.value.hasValue() and tag == 'protocol_base':
-            protName = value.split('.')[-1] # Take last part
-            prot = emProtocolsDict.get(protName, None)
-            print "found protocol_base: ", protName
-            if not prot is None:
+            protClassName = value.split('.')[-1] # Take last part
+            prot = emProtocolsDict.get(protClassName, None)
+            print "found protocol_base: ", protClassName
+            if prot is not None:
                 tree.item(item, image=self.getImage('class_obj.gif'))
                 for k, v in emProtocolsDict.iteritems():
                     if not v is prot and issubclass(v, prot):
-                        tree.insert(item, 'end', item+k, text=k, image=self.getImage('python_file.gif'))
+                        key = '%s.%s' % (item, k)
+                        tree.insert(item, 'end', key, text=k, tags=('protocol'))
                         
             else:
                 raise Exception("Class '%s' not found" % obj.value.get())
@@ -149,6 +150,9 @@ class ProjectWindow(gui.Window):
         p.paneconfig(runsFrame, minsize=300)        
         p.grid(row=0, column=0, sticky='news')
         
+        # Event bindings
+        self.root.bind("<F5>", lambda e: self.updateRunsTree(self.runsTree))
+        
     def loadProjectConfig(self):
         self.project = Project(self.projPath)
         self.project.load()
@@ -185,6 +189,7 @@ class ProjectWindow(gui.Window):
         return tree
     
     def updateRunsTree(self, tree):
+        print "updating"
         tree.clear()
         objList = self.project.mapper.selectAll()
         for obj in objList:
@@ -195,28 +200,26 @@ class ProjectWindow(gui.Window):
     
     def protocolItemClick(self, e=None):
         print self.protTree.getFirst()
-        protName = self.protTree.getFirst().split('.')[-1]
-        protClass = emProtocolsDict.get(protName)
+        protClassName = self.protTree.getFirst().split('.')[-1]
+        protClass = emProtocolsDict.get(protClassName)
         prot = protClass()
         prot.mapper = self.project.mapper
         self._openProtocolForm(prot)
         
     def runItemClick(self, e=None):
-        print "run clicked"
-        print self.runsTree.getFirst()
         prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))
         prot.mapper = self.project.mapper
+        prot.setId(None) # Force insert a new run
         #prot.printAll()
         self._openProtocolForm(prot)
         
     def _openProtocolForm(self, prot):
         """Open the Protocol GUI Form given a Protocol instance"""
         w = FormWindow("Protocol Run: " + prot.getClassName(), prot, self)
-        w.show()
+        w.show(center=True)
         
     
 if __name__ == '__main__':
-    import os, sys
     from pyworkflow.manager import Manager
     if len(sys.argv) > 1:
         manager = Manager()

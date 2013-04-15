@@ -238,7 +238,7 @@ class Boolean(Scalar):
         return bool(value)    
     
     
-class Pointer(Object):
+class Pointer(Scalar):
     """Reference object to other one"""
     def __init__(self, value=None, **args):
         Object.__init__(self, value, objIsPointer=True, **args)   

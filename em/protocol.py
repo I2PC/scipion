@@ -70,11 +70,11 @@ class ProtImportMicrographs(Protocol):
         Protocol.__init__(self, **args)         
         
     def _defineSteps(self):
-        self._insertFunctionStep('importMicrographs', self.pattern.get(),
+        self._insertFunctionStep('importMicrographs', self.pattern.get(), self.tiltPairs.get(),
                                 self.voltage.get(), self.sphericalAberration.get(), 
                                 self.samplingRate.get())
         
-    def importMicrographs(self, pattern, voltage, sphericalAberration, samplingRate):
+    def importMicrographs(self, pattern, tiltPairs, voltage, sphericalAberration, samplingRate):
         """Copy micrographs matching the filename pattern
         Register other parameters"""
         from glob import glob
@@ -82,20 +82,21 @@ class ProtImportMicrographs(Protocol):
         if len(files) == 0:
             raise Exception('importMicrographs:There is not files matching pattern')
         path = self._getPath('micrographs.txt')
-        micFile = open(path, 'w+')
-        for f in files:
-            dst = self._getPath(os.path.basename(f))
-            print >> micFile, dst
-            shutil.copyfile(f, dst)
-        micFile.close()
-        
         micSet = SetOfMicrographs(value=path)
         micSet.microscope.voltage.set(voltage)
         micSet.microscope.sphericalAberration.set(sphericalAberration)
         micSet.samplingRate.set(samplingRate)
-        self._defineOutputs(micrograph=micSet)
+        micSet.tiltPairs.set(tiltPairs)
+        for f in files:
+            dst = self._getPath(os.path.basename(f))            
+            shutil.copyfile(f, dst)
+            micSet.append(dst)
         
-        return path
+        micSet.writeToFile(path)
+        self._defineOutputs(micrograph=micSet)
+        outFiles = micSet._files + [path]
+        
+        return outFiles
         
 
 class ProtCTFMicrographs(Protocol):

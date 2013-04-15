@@ -34,6 +34,8 @@ import ttk
 import gui
 
 class Button(tk.Button):
+    _images = {}
+    
     def __init__(self, master, text, imagePath=None, tooltip=None, **opts):
         defaults = {'activebackground': gui.cfgButtonActiveBgColor, 'bg': gui.cfgButtonBgColor,
                     'fg': gui.cfgButtonFgColor, 'activeforeground': gui.cfgButtonActiveFgColor,
@@ -41,7 +43,7 @@ class Button(tk.Button):
         defaults.update(opts)
         
         if imagePath is not None:
-            btnImage = gui.getImage(imagePath)
+            btnImage = gui.getImage(imagePath, Button._images)
         else:
             btnImage = None
             
@@ -113,57 +115,6 @@ class Scrollable(object):
             count = -1
         self.yview("scroll", count, "units")  
         
-class Tree(ttk.Treeview, Scrollable):
-    """ This widget acts as a wrapper around the ttk.Treeview"""
-    
-    def __init__(self, master, frame=True, **opts):
-        """Create a new Tree, if frame=True, a container
-        frame will be created and an scrollbar will be added"""
-        Scrollable.__init__(self, master, ttk.Treeview, frame, **opts)
-        
-    def getFirst(self):
-        ''' Return first selected item or None if selection empty'''
-        selection = self.selection()
-        if len(selection):
-            return selection[0]
-        return None
-    
-    def _moveSelection(self, moveFunc):
-        item = self.selection_first()
-        if item:
-            item = moveFunc(item)
-            if item != '':
-                self.selection_set(item)
-        
-    def moveSelectionUp(self, e=None):
-        ''' change selection to previous item '''
-        self._moveSelection(self.prev)
-    
-    def moveSelectionDown(self, e=None):
-        ''' change selection to to next item '''
-        self._moveSelection(self.next)
-        
-    def moveItemUp(self, e=None):
-        '''if selected item is not the first move up one position'''
-        item = self.selection_first()
-        if item:
-            index = self.index(item)
-            if index > 0:
-                self.move(item, '', index-1)
-                
-    def moveItemDown(self, e=None):
-        '''if selected item is not the first move up one position'''
-        item = self.selection_first()
-        if item:
-            index = self.index(item)
-            if self.next(item) != '':
-                self.move(item, '', index+1)
-                
-    def clear(self):
-        ''' remove all items '''
-        childs = self.get_children('')
-        for c in childs:
-            self.delete(c)
             
 class LabelSlider(ttk.Frame):
     """ Create a personalized frame that contains label, slider and label value

@@ -101,17 +101,104 @@ class SetOfMicrographs(SetOfImages):
     def __init__(self, **args):
         SetOfImages.__init__(self, **args)
         self.microscope = Microscope()
+        self.tiltPairs = Boolean(False)
+        self._files = []
         
     def getMicroscope(self, index=0):
         return self.microscope
     
-    def __iter__(self):
-        """Iterate over the set of micrographs in a .txt file"""
+    def hasTiltPairs(self):
+        return self.tiltPairs.get()
+    
+    def append(self, path):
+        """Add simply a micrograph path to the set"""
+        self._files.append(path)        
+    
+    def __loadFiles(self):
+        """Read files from text files"""
         f = open(self.getFileName())
-        for l in f:    
-            m = Micrograph()
-            m.setFileName(l.strip())       
-            yield m
+        self._files = [l.strip() for l in f]
         f.close()
         
+    def __iter__(self):
+        """Iterate over the set of micrographs in a .txt file"""
+        self.__loadFiles()
+        for f in self._files:
+            m = Micrograph()
+            m.setFileName(f)       
+            yield m
+        
+    def iterPairs(self):
+        """Iterate over the tilt pairs if is the case"""
+        #FIXME, we need to store the real relation 
+        # between micrographs
+        # TODO: Validate number of micrographs is even for Tilt Pairs
+        n = len(self._files) / 2
+        for i in range(n):
+            mU = Micrograph()
+            mU.setFileName(self._files[2*i])
+            mT = Micrograph()
+            mT.setFileName(self._files[2*i+1])
+            yield (mU, mT)
+        
+    def writeToFile(self, path):
+        """This method will be used to persist in a file the
+        list of micrographs path contained in this Set
+        path: output file path
+        micrographs: list with the micrographs path to be stored
+        """
+        micFile = open(path, 'w+')
+        for f in self._files:            
+            print >> micFile, f
+        micFile.close()
     
+
+class Coordinate(EMObject):
+    """This class holds the (x,y) position and other information
+    associated with a coordinate"""
+    POS_CENTER = 0
+    POS_TOPLEFT = 1
+    
+    def getPosition(self, mode=POS_CENTER):
+        """Return the position of the coordinate.
+        mode: select if the position is the center of the box
+          or in the top left corner."""
+        pass
+    
+    def getMicrograph(self):
+        """Return the micrograph object to which
+        this coordinate is associated"""
+        pass
+    
+    def getPair(self):
+        """It should return the paired coordinate associate to self.
+        If self is an untilted coordinate, getPaired will return the 
+        tilted one and viceversa"""
+        pass 
+    
+    
+class SetOfCoordinates(EMObject):
+    """Encapsulate the logic of a set of particles coordinates.
+    Each coordinate has a (x,y) position and is related to a Micrograph
+    The SetOfCoordinates can also have information about TiltPairs"""
+    
+    def getBoxSize(self):
+        """Return the box size of the future particles.
+        This can be None, since when the POS_CENTER mode is used,
+        the box size is only relevant when extraction"""
+        return None
+    
+    def iterCoordinates(self):
+        """Itearates over the whole set of coordinates.
+        If the SetOfMicrographs has tilted pairs, the coordinates
+        should have the information related to its paired coordinate."""
+        pass
+    
+    def hasTiltPairs(self):
+        """Returns True if the SetOfMicrographs has tilted pairs"""
+        return self.getMicrographs().hasTiltPairs()
+    
+    def getMicrographs(self):
+        """Returns the SetOfMicrographs associated with 
+        this SetOfCoordinates"""
+        pass

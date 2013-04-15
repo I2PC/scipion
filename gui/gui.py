@@ -137,7 +137,9 @@ def getImage(imageName, imgDict=None):
     imagePath = findResource(imageName)
     image = None
     if imagePath:
-        image = tk.PhotoImage(file=imagePath)
+        from PIL import Image, ImageTk
+        image = Image.open(imagePath)
+        image = ImageTk.PhotoImage(image)
         if imgDict is not None:
             imgDict[imageName] = image
     return image
@@ -155,7 +157,10 @@ def centerWindows(root, dim=None, refWindows=None):
     """Center a windows in the middle of the screen 
     or in the middle of other windows(refWindows param)"""
     root.update_idletasks()
-    gw, gh, gx, gy = getGeometry(root)
+    if dim is None:
+        gw, gh, gx, gy = getGeometry(root)
+    else:
+        gw, gh = dim
     if refWindows:
         rw, rh, rx, ry = getGeometry(refWindows)
         x = rx + (rw - gw) / 2
@@ -163,8 +168,6 @@ def centerWindows(root, dim=None, refWindows=None):
     else:
         w = root.winfo_screenwidth()
         h = root.winfo_screenheight()
-        if not dim is None:
-            gw, gh = dim
         x = (w - gw) / 2
         y = (h - gh) / 2
         
@@ -216,6 +219,11 @@ class Window():
         self.master = masterWindow
         setCommonFonts()
         
+    def desiredDimensions(self):
+        """This method should be used by subclasses
+        to calculate desired dimensions"""
+        return None
+    
     def show(self, center=True):
         """This function will enter in the Tk mainloop"""
         if center:
@@ -223,7 +231,8 @@ class Window():
                 refw = None
             else:
                 refw = self.master.root
-            centerWindows(self.root, refWindows=refw)
+            centerWindows(self.root, dim=self.desiredDimensions(),
+                          refWindows=refw)
         self.root.deiconify()
         self.root.focus_set()
         self.root.mainloop()
