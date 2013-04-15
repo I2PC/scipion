@@ -34,7 +34,8 @@ import os
 from os.path import abspath, join, exists, dirname, relpath
 import pyworkflow as pw
 import gui
-from widgets import Button, Tree
+from widgets import Button
+from tree import Tree
 from text import TaggedText
 
 #TODO: REMOVE AFTER PORTING

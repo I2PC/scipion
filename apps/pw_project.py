@@ -44,7 +44,7 @@ from pyworkflow.project import Project
 
 import pyworkflow.gui as gui
 from pyworkflow.gui import getImage
-from pyworkflow.gui.widgets import Tree
+from pyworkflow.gui.tree import Tree
 from pyworkflow.gui.form import FormWindow
 from config import *
 
@@ -150,6 +150,9 @@ class ProjectWindow(gui.Window):
         p.paneconfig(runsFrame, minsize=300)        
         p.grid(row=0, column=0, sticky='news')
         
+        # Event bindings
+        self.root.bind("<F5>", lambda e: self.updateRunsTree(self.runsTree))
+        
     def loadProjectConfig(self):
         self.project = Project(self.projPath)
         self.project.load()
@@ -186,6 +189,7 @@ class ProjectWindow(gui.Window):
         return tree
     
     def updateRunsTree(self, tree):
+        print "updating"
         tree.clear()
         objList = self.project.mapper.selectAll()
         for obj in objList:
@@ -203,10 +207,9 @@ class ProjectWindow(gui.Window):
         self._openProtocolForm(prot)
         
     def runItemClick(self, e=None):
-        print "run clicked"
-        print self.runsTree.getFirst()
         prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))
         prot.mapper = self.project.mapper
+        prot.setId(None) # Force insert a new run
         #prot.printAll()
         self._openProtocolForm(prot)
         
