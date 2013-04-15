@@ -157,16 +157,10 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                             " -i %(inputMic)s --bad_pixels outliers %(stddev)f -v 0")
                 
     def createOutput(self, IOTable):
-
-        mdOut = self._getPath("micrographs.xmd")
-                
-        self.outputMicrographs = XmippSetOfMicrographs(value=mdOut)     
-        self.outputMicrographs.microscope.voltage.set(self.inputMics.microscope.voltage.get())
-        self.outputMicrographs.microscope.sphericalAberration.set(self.inputMics.microscope.sphericalAberration.get())
-        self.outputMicrographs.samplingRate.set(self.inputMics.samplingRate.get())
         
-        #Create the xmipp metadata micrographs.xmd  
-         
+        mdOut = self._getPath("micrographs.xmd")    
+            
+        # Create the xmipp metadata micrographs.xmd           
         md = MetaData()      
         for i, v in IOTable.iteritems():
             objId = md.addObject()
@@ -177,7 +171,12 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
 #                MD.setValue(xmipp.MDL_MICROGRAPH_TILTED,IOTable[fnMicrographTilted],objId)
 #                MD.setValue(xmipp.MDL_MICROGRAPH_TILTED_ORIGINAL,fnMicrographTilted,objId)
         md.write("micrographs"+"@"+mdOut)
-        
+                
+        # Create the SetOfMicrographs object on the database
+        self.outputMicrographs = XmippSetOfMicrographs(value=mdOut)     
+        self.outputMicrographs.microscope.voltage.set(self.inputMics.microscope.voltage.get())
+        self.outputMicrographs.microscope.sphericalAberration.set(self.inputMics.microscope.sphericalAberration.get())
+        self.outputMicrographs.samplingRate.set(self.inputMics.samplingRate.get())       
         self.outputMicrographs.setFileName(mdOut)
 
         self._defineOutputs(micrograph=self.outputMicrographs)

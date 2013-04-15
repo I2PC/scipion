@@ -30,7 +30,7 @@ inside the utils module
 
 import os
 import shutil
-from os.path import exists, join, splitext, isdir, expanduser
+from os.path import exists, join, splitext, isdir, expanduser, basename
 import pyworkflow as pw
 
 
@@ -55,6 +55,16 @@ def replaceExt(filename, newExt):
     ''' Replace the current path extension(from last .)
     with a new one. The new one should not contains the .'''
     return splitext(filename)[0] + '.' + newExt
+
+
+def replaceBaseExt(filename, newExt):
+    ''' Replace the current basename extension(from last .)
+    with a new one. The new one should not contains the .'''
+    return replaceExt(basename(filename), newExt)
+
+def removeExt(filename):
+    ''' Remove extension from basename '''
+    return splitext(filename)[0]
 
 def joinExt(*extensions):
     """Join several path parts with a ."""

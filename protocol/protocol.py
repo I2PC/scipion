@@ -184,7 +184,7 @@ class Protocol(Step):
         
     
     def _getFilename(self, key, **args):
-        return self.__templateDict[key] % args
+        return self._templateDict[key] % args
     
     def _store(self, *objs):
         if not self.mapper is None:
@@ -206,6 +206,14 @@ class Protocol(Step):
     def _getPath(self, *paths):
         """Return a path inside the workingDir"""
         return join(self.workingDir, *paths)
+
+    def _getExtraPath(self, *paths):
+        """Return a path inside the extra folder"""
+        return self._getPath("extra", *paths)    
+    
+    def _getTmpPath(self, *paths):
+        """Return a path inside the tmp folder"""
+        return self._getPath("tmp", *paths)   
         
     def _insertFunctionStep(self, funcName, *funcArgs, **args):
         """Input params:
@@ -224,7 +232,12 @@ class Protocol(Step):
         
     def _run(self):
         self._defineSteps() # Define steps for execute later
+        # Create workingDir path
         makePath(self.workingDir)
+        # Create extra path
+        makePath(self._getExtraPath())
+        # Create tmp path
+        makePath(self._getTmpPath())
         
         for step in self.steps:
             step.run()
