@@ -41,17 +41,6 @@ class XmippSetOfMicrographs(SetOfMicrographs):
             m.setFileName(md.getValue(MDL_MICROGRAPH, objId))       
             yield m
         
-    def convertFrom(self, setOfMics):
-        """Method to convert a set of micrographs to be used in Xmipp"""
-        md = MetaData()
-
-        for mic in setOfMics:
-            objId = md.addObject()
-            md.setValue(MDL_MICROGRAPH, mic.getFileName(), objId)
-
-        md.write(self.getFileName())
-            
-        # finalname = self._getTmpPath(replaceBaseExt(fn, "tmp.mrc"))
         
         
     
