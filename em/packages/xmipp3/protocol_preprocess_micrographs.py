@@ -171,10 +171,8 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         md.write("micrographs"+"@"+mdOut)
                 
         # Create the SetOfMicrographs object on the database
-        self.outputMicrographs = XmippSetOfMicrographs(value=mdOut)     
-        self.outputMicrographs.microscope.voltage.set(self.inputMics.microscope.voltage.get())
-        self.outputMicrographs.microscope.sphericalAberration.set(self.inputMics.microscope.sphericalAberration.get())
-        self.outputMicrographs.samplingRate.set(self.inputMics.samplingRate.get())       
+        self.outputMicrographs = XmippSetOfMicrographs()     
         self.outputMicrographs.setFileName(mdOut)
+        self.outputMicrographs.copyInfo(self.inputMics)
 
         self._defineOutputs(micrograph=self.outputMicrographs)

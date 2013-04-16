@@ -41,7 +41,9 @@ class XmippDefParticlePicking(Form):
         Form.__init__(self)
     
         self.addSection(label='Input')
-        self.addParam('inputMicrographs', PointerParam, label="Micrographs", pointerClass='SetOfMicrographs')
+        self.addParam('inputMicrographs', PointerParam, label="Micrographs",
+                      pointerClass='SetOfMicrographs',
+                      help='Select the SetOfMicrograph ')
         self.addParam('memory', FloatParam, default=2,
                    label='Memory to use (In Gb)', expertLevel=2)        
 
@@ -64,7 +66,7 @@ class XmippProtParticlePicking(ProtParticlePicking):
         pass
         
         # Parameters needed 
-        self.params = {'inputMicsXmipp': self.inputMicsXmipp, #pillarlo del micrxmipp.metadata.filename
+        self.params = {'inputMicsXmipp': self.inputMicsXmipp,  # pillarlo del micrxmipp.metadata.filename
                        'memory': self.memory.get(),
                        'pickingMode': 'PM_MANUAL',
                        }
@@ -90,18 +92,20 @@ class XmippProtParticlePicking(ProtParticlePicking):
         
     def createOutput(self):
 
-        #Para cada familia crear un SetOfCoordinate.
+        # Para cada familia crear un SetOfCoordinate.
 
         mdOut = self.getPath("micrographs.xmd")
                 
-        self.outputMicrographs = XmippSetOfMicrographs(value=mdOut)     
-        self.outputMicrographs.microscope.voltage.set(self.inputMics.microscope.voltage.get())
-        self.outputMicrographs.microscope.sphericalAberration.set(self.inputMics.microscope.sphericalAberration.get())
-        self.outputMicrographs.samplingRate.set(self.inputMics.samplingRate.get())
+        self.outputMicrographs = XmippSetOfMicrographs(value=mdOut)
+        
+        # Create the set of coordinates
+        
+        
         
         # Create the xmipp metadata micrographs.xmd  
          
-        md = MetaData()      
+        md = MetaData()
+           
         for i, v in IOTable.iteritems():
             objId = md.addObject()
             md.setValue(MDL_MICROGRAPH, v, objId)

@@ -57,7 +57,7 @@ class DefImportMicrographs(Form):
                    label='Sampling rate (A/px)', condition='samplingRateMode==0')
         self.addParam('magnification', IntParam, default=60000,
                    label='Magnification rate', condition='samplingRateMode==1')
-        self.addParam('ScannedPixelSize', FloatParam, 
+        self.addParam('ScannedPixelSize', FloatParam,
                    label='Scanned pixel size', condition='samplingRateMode==1')
         
 
@@ -71,7 +71,7 @@ class ProtImportMicrographs(Protocol):
         
     def _defineSteps(self):
         self._insertFunctionStep('importMicrographs', self.pattern.get(), self.tiltPairs.get(),
-                                self.voltage.get(), self.sphericalAberration.get(), 
+                                self.voltage.get(), self.sphericalAberration.get(),
                                 self.samplingRate.get())
         
     def importMicrographs(self, pattern, tiltPairs, voltage, sphericalAberration, samplingRate):
