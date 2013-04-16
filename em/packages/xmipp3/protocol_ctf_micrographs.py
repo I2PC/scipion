@@ -31,8 +31,6 @@ This sub-package contains the XmippCtfMicrographs protocol
 
 from pyworkflow.em import *  
 from pyworkflow.utils import *
-from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_ORIGINAL, MDL_MICROGRAPH_TILTED
-from xmipp import MDL_MICROGRAPH_TILTED_ORIGINAL, MDL_PSD, MDL_PSD_ENHANCED, MDL_CTF_MODEL, MDL_IMAGE1, MDL_IMAGE2
 from pyworkflow.em.packages.xmipp3.data import *
 from pyworkflow.utils.path import makePath, replaceBaseExt, join, basename
 
@@ -93,6 +91,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
     __prefix = join('%(micrographDir)s','xmipp_ctf')
     _templateDict = {
         # This templates are relative to a micrographDir
+        'micrographs': 'micrographs.xmd',
         'prefix': __prefix,
         'ctfparam': __prefix +  '.ctfparam',
         'psd': __prefix + '.psd',
@@ -114,6 +113,19 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         '''
         # Get pointer to input micrographs 
         self.inputMics = self.inputMicrographs.get() 
+        
+        self.params = {'kV': self.inputMics.microscope.voltage.get(),
+                       'Cs': self.inputMics.microscope.sphericalAberration.get(),
+                       'sampling_rate': self.inputMics.samplingRate.get()*self.ctfDownFactor.get(),
+                       'downSamplingPerformed': self.ctfDownFactor.get(),
+                       'ctfmodelSize': 256,
+                       'Q0': self.ampContrast.get(),
+                       'min_freq': self.lowRes.get(),
+                       'max_freq': self.highRes.get(),
+                       'pieceDim': self.windowSize.get(),
+                       'defocus_range': (self.maxDefocus.get()-self.minDefocus.get())*10000/2,
+                       'defocusU': (self.maxDefocus.get()+self.minDefocus.get())*10000/2
+                       }
         
         # For each micrograph insert the steps to preprocess it
         for mic in self.inputMics:
@@ -142,25 +154,18 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
             
         # CTF estimation with Xmipp
             args="--micrograph "+mic+\
-                 " --oroot " + self._getFilename('prefix', micrographDir=micDir)+\
-                 " --kV "+str(self.inputMics.microscope.voltage.get())+\
-                 " --Cs "+str(self.inputMics.microscope.sphericalAberration.get())+\
-                 " --sampling_rate "+str(self.inputMics.samplingRate.get()*self.ctfDownFactor.get())+\
-                 " --downSamplingPerformed "+str(self.ctfDownFactor.get())+\
-                 " --ctfmodelSize 256"+\
-                 " --Q0 "+str(self.ampContrast.get())+\
-                 " --min_freq "+str(self.lowRes.get())+\
-                 " --max_freq "+str(self.highRes.get())+\
-                 " --pieceDim "+str(self.windowSize.get())+\
-                 " --defocus_range "+str((self.maxDefocus.get()-self.minDefocus.get())*10000/2)+\
-                 " --defocusU "+str((self.maxDefocus.get()+self.minDefocus.get())*10000/2)
+                 " --oroot " + self._getFilename('prefix', micrographDir=micDir)
+                 
+            for par, val in self.params.iteritems():
+                args+= " --" + par + " " + str(val)
+                
             if (self.fastDefocusEst.get()):
                 args+=" --fastDefocus"
             runJob(None, 'xmipp_ctf_estimate_from_micrograph', args)
 
     def createOutput(self):
         # Create micrographs metadata with CTF information
-        mdOut = self._getPath("micrographs.xmd")
+        mdOut = self._getPath(self._getFilename('micrographs'))
         
         md = MetaData()
         for mic in self.inputMics:
@@ -185,6 +190,12 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         if not md.isEmpty():
             md.sort(MDL_MICROGRAPH)
             md.write(mdOut)
+            
+        dirOut,fnOut=os.path.split(mdOut)
+        self._insertRunJobStep("xmipp_ctf_sort_psds","-i %s -o %s/aux_%s"%(mdOut,dirOut,fnOut))
+        self._insertRunJobStep("mv","-f %s/aux_%s %s"%(dirOut,fnOut,mdOut))
+        if self.ctfDownFactor.get() != 1:
+            runJob(None,"rm","-f "+self._getTmpPath("*"))
 
         # Create the SetOfMicrographs object on the database
         self.outputMicrographs = XmippSetOfMicrographs(value=mdOut)     

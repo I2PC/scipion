@@ -59,7 +59,7 @@ class Project(object):
         
     def getPath(self, *paths):
         """Return path from the project root"""
-        return join(self.path, *paths)
+        return join(*paths)
     
     def load(self):
         """Load project data and settings
@@ -89,6 +89,7 @@ class Project(object):
         # handle the communication of remove projects
         # and also the particularities of job submission: mpi, threads, queue, bash
         protocol.mapper = self.mapper
+        os.chdir(self.path) #Before launching any protocol move to the project path
         protocol.run()
         
         
