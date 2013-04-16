@@ -94,6 +94,14 @@ class Object(object):
     def hasValue(self):        
         return True
     
+    def getStore(self):
+        """Return True if the object will be stored by the mapper"""
+        return self._objDoStore
+    
+    def setStore(self, value):
+        """set the store flag"""
+        self._objDoStore = value
+    
     def __eq__(self, other):
         """Comparison for scalars should be by value
         and for other objects by reference"""

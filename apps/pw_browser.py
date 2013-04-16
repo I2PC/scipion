@@ -34,7 +34,7 @@ import Tkinter as tk
 import pyworkflow.gui as gui
 from pyworkflow.object import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
-from pyworkflow.gui.widgets import Tree
+from pyworkflow.gui.tree import Tree
 from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
 from pyworkflow.tests.tester import *

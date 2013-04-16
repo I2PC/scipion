@@ -32,7 +32,7 @@ import Tkinter as tk
 
 import gui
 from widgets import Button
-from tree import Tree
+from tree import BoundTree, TreeProvider
 from text import TaggedText
 
 
@@ -288,7 +288,9 @@ def askString(title, label, parent, entryWidth=20):
     return d.value
     
 
-class TreeProvider():
+class SubclassesTreeProvider(TreeProvider):
+    """Will implement the methods to provide the object info
+    of subclasses objects(of className) found by mapper"""
     def __init__(self, mapper, className):
         self.mapper = mapper
         self._objects = mapper.selectByClass(className)
@@ -320,39 +322,11 @@ class ListDialog(Dialog):
         self.initial_focus = self.tree
         
     def _createTree(self, parent):
-        # Get colums to display and width
-        cols = self.provider.getColumns()
-        colsTuple = tuple([c[0] for c in cols[1:]])
-        tree = Tree(parent, columns=colsTuple)
-        # Set the special case of first tree column
-        tree.heading('#0', text=cols[0][0])
-        tree.column('#0', width=cols[0][1])
-        # Set other columns
-        for c, w in cols[1:]:
-            tree.column(c, width=w)
-            tree.heading(c, text=c)
-        tree.grid(row=0, column=0, sticky='news')
-        self._objects = self.provider.getObjects()
-        for obj in self._objects:
-            objDict = self.provider.getObjectInfo(obj)
-            parent = objDict.get('parent', None)
-            if parent is None:
-                parentId = ''
-            else:
-                parentId = parent._treeId # Previously set
-            key = objDict.get('key')
-            text = objDict.get('text', key)
-            image = objDict.get('image', '')
-            if len(image):
-                image = self.getImage(image)
-            values = objDict.get('values', ())
-            obj._treeId = tree.insert(parentId, 'end', objDict['key'],
-                        text=text, image=image, values=values)
-        self.tree = tree
+        self.tree = BoundTree(parent, self.provider)
         
     def apply(self):
         index = self.tree.index(self.tree.getFirst())
-        self.value = self._objects[index]
+        self.value = self.tree._objects[index]
     
     def validate(self):
         if self.tree.getFirst() is None:
