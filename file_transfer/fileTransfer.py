@@ -12,7 +12,7 @@ LOCAL_USER_AND_HOST = ""
 SSH_PORT = "22";
 
 
-class FileTransferProcess():
+class FileTransfer():
     
     ssh = None   
     sftp = None 
@@ -164,16 +164,52 @@ class FileTransferProcess():
         # As we are going to create a session for each target host we must get different target hosts.
         userAndHosts = getDiferentHostsFromFilePaths(filePaths)
         for userAndHost in userAndHosts:
-            resultFilePaths = getFilePaths(filePaths, userAndHost)
-            # Recover host credentials to remove files
-            userName = getUserAndHost(userAndHost)[0]
-            hostName = getUserAndHost(userAndHost)[1]
-            hostPassword = hostsPaswords[userAndHost]
-            # Create ssh session to remote host
-            self.ssh.connect(hostName, SSH_PORT, userName, hostPassword)
-            self.sftp = self.ssh.open_sftp()
-            for resultFilePath in resultFilePaths:
-                self.sftp.remove(getLocationAndFilePath(resultFilePath)[1])
+            if (not isLocalCredential(userAndHost)):
+                resultFilePaths = getFilePaths(filePaths, userAndHost)
+                # Recover host credentials to remove files
+                userName = getUserAndHost(userAndHost)[0]
+                hostName = getUserAndHost(userAndHost)[1]
+                hostPassword = hostsPaswords[userAndHost]
+                # Create ssh session to remote host
+                self.ssh.connect(hostName, SSH_PORT, userName, hostPassword)
+                self.sftp = self.ssh.open_sftp()
+                for resultFilePath in resultFilePaths:
+                    self.sftp.remove(getLocationAndFilePath(resultFilePath)[1])
+            else:
+                pass
+            
+    def deleteDirectories(self, 
+                          directoryPaths,                    
+                          hostsPaswords, 
+                          gatewayHosts=None, 
+                          operationId=1, 
+                          numberTrials=1, 
+                          forceOperation=False):
+        """
+        filepaths -- List of file paths to remove with this format: "userName@hostName:absolute_directory_path"
+        gatewayHosts -- Gateway hosts dictionary with this format: "userName1@hostName1:userName2@hostName2":"userName@hostName"
+        hostsPasswords -- Passwords needed to connect to involved hosts with this format: "userName@hostName":"hostPassword"
+        operationId -- Operation identifier.
+        numberTrials -- Number of trials in error cases.
+        forceOperation -- Flag to indicate if, when an error happens and number of trials is exceeded, the operation must continue with the rest of files.
+        """
+        
+        # As we are going to create a session for each target host we must get different target hosts.
+        userAndHosts = getDiferentHostsFromFilePaths(directoryPaths)
+        for userAndHost in userAndHosts:
+            if (not isLocalCredential(userAndHost)):
+                resultDirectoryPaths = getFilePaths(directoryPaths, userAndHost)
+                # Recover host credentials to remove files
+                userName = getUserAndHost(userAndHost)[0]
+                hostName = getUserAndHost(userAndHost)[1]
+                hostPassword = hostsPaswords[userAndHost]
+                # Create ssh session to remote host
+                self.ssh.connect(hostName, SSH_PORT, userName, hostPassword)
+                self.sftp = self.ssh.open_sftp()
+                for resultDirectoryPath in resultDirectoryPaths:
+                    self.sftp.rmdir(getLocationAndFilePath(resultDirectoryPath)[1])
+            else:
+                pass
         
     def checkFiles(self, 
                    filePaths,                   
@@ -195,19 +231,22 @@ class FileTransferProcess():
         # As we are going to create a session for each target host we must get different target hosts.
         userAndHosts = getDiferentHostsFromFilePaths(filePaths)
         for userAndHost in userAndHosts:
-            resultFilePaths = getFilePaths(filePaths, userAndHost)
-            # Recover host credentials to remove files
-            userName = getUserAndHost(userAndHost)[0]
-            hostName = getUserAndHost(userAndHost)[1]
-            hostPassword = hostsPaswords[userAndHost]
-            # Create ssh session to remote host
-            self.ssh.connect(hostName, SSH_PORT, userName, hostPassword)
-            self.sftp = self.ssh.open_sftp()
-            for resultFilePath in resultFilePaths:
-                try:
-                    self.sftp.lstat(getLocationAndFilePath(resultFilePath)[1])                    
-                except IOError:
-                    returnFilePaths.append(resultFilePath)
+            if (not isLocalCredential(userAndHost)):
+                resultFilePaths = getFilePaths(filePaths, userAndHost)
+                # Recover host credentials
+                userName = getUserAndHost(userAndHost)[0]
+                hostName = getUserAndHost(userAndHost)[1]
+                hostPassword = hostsPaswords[userAndHost]
+                # Create ssh session to remote host
+                self.ssh.connect(hostName, SSH_PORT, userName, hostPassword)
+                self.sftp = self.ssh.open_sftp()
+                for resultFilePath in resultFilePaths:
+                    try:
+                        self.sftp.lstat(getLocationAndFilePath(resultFilePath)[1])                    
+                    except IOError:
+                        returnFilePaths.append(resultFilePath)
+            else:
+                pass
         return returnFilePaths
     
     def __trasferRemoteFiles(self,
@@ -371,7 +410,7 @@ def getDiferentHostsFromFilePaths (filePaths):
     """
     diferentHosts = []
     for filePath in filePaths:
-            userAndHost = getLocationAndFilePath(filePath)
+            userAndHost = getLocationAndFilePath(filePath)[0]
             if (isLocalCredential(userAndHost)):
                 userAndHost = LOCAL_USER_AND_HOST; # To simplify code for local credentials.
             if (userAndHost not in diferentHosts):
@@ -454,7 +493,7 @@ def getTargetFilePathList(targetFilePaths):
     returns -- List of target files with this format: "useName@hostName:/filePath".
     """
     filePaths = []
-    for targetFilePath in targetFilePaths:
+    for targetFilePath in targetFilePaths.values():
         for filePath in targetFilePath:
             filePaths.append(filePath)
     return filePaths
