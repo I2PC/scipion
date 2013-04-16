@@ -57,7 +57,7 @@ class DefImportMicrographs(Form):
                    label='Sampling rate (A/px)', condition='samplingRateMode==0')
         self.addParam('magnification', IntParam, default=60000,
                    label='Magnification rate', condition='samplingRateMode==1')
-        self.addParam('ScannedPixelSize', FloatParam, 
+        self.addParam('scannedPixelSize', FloatParam, 
                    label='Scanned pixel size', condition='samplingRateMode==1')
         
 
