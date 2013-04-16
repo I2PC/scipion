@@ -323,8 +323,6 @@ def ObjectWrap(value):
     t = type(value)
     if issubclass(t, Object):
         return value
-    if t is str:
-        return String(value)
     if t is int:
         return Integer(value)
     if t is bool:
@@ -333,7 +331,7 @@ def ObjectWrap(value):
         return Float(value)
     if t is None:
         return None
-    #If not known type, convert to string
+    #If it is str, unicode or unknown type, convert to string
     return String(value)
          
            
