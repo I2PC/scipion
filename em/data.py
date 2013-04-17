@@ -224,3 +224,13 @@ class SetOfCoordinates(EMObject):
         """ Set the SetOfMicrograph associates with 
         this set of coordinates """
         self._micrographsPointer.set(micrographs)
+        
+    def getFileName(self):
+        """ Get the metadata file with all all coordinates files for 
+        this setOfCoordinates """
+        return self._objValue
+    
+    def setFileName(self, newFileName):
+        """ Set the metadata file with all all coordinates files for 
+        this setOfCoordinates """
+        self._objValue = newFileName
