@@ -143,7 +143,7 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
 
     // Convert VAX floating point types if necessary
     if ( header->amin > header->amax )
-        REPORT_ERROR(ERR_UNCLASSIFIED,"readMRC: amin > max: VAX floating point conversion unsupported");
+        REPORT_ERROR(ERR_IMG_NOREAD,"readMRC: amin > max: VAX floating point conversion unsupported");
     size_t _xDim,_yDim,_zDim;
     size_t _nDim;
     _xDim = header->nx;
