@@ -24,6 +24,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from gui.tree import TreeProvider, BoundTree
 """
 Main project window application
 """
@@ -102,6 +103,19 @@ def loadConfig(config, name):
     return menuConfig
 
 
+class RunsTreeProvider(TreeProvider):
+    """Provide runs info to populate tree"""
+    def __init__(self, mapper):
+        self.getObjects = lambda: mapper.selectAll()
+        
+    def getColumns(self):
+        return [('Run', 250), ('State', 100), ('Modified', 100)]
+    
+    def getObjectInfo(self, obj):
+        return {'key': obj.getId(),
+                'text': '%s.%s' % (obj.getClassName(), obj.strId()),
+                'values': (obj.status.get(), obj.endTime.get())}
+      
 
 class ProjectWindow(gui.Window):
     def __init__(self, path, master=None):
@@ -174,27 +188,19 @@ class ProjectWindow(gui.Window):
         return tree
         
     def createRunsTree(self, parent):
-        columns = ('State', 'Modified')
-        tree = Tree(parent, columns=columns)
-        for c in columns:
-            tree.column(c, anchor='e', width=100)
-            tree.heading(c, text=c) 
-        tree.column('#0', width=250)
-        tree.heading('#0', text='Run')
-        #tree.bind('<<TreeviewSelect>>', self.selectTreeRun)
+        tree = BoundTree(parent, RunsTreeProvider(self.project.mapper))
         tree.grid(row=0, column=0, sticky='news')
         tree.bind('<Double-1>', self.runItemClick)
-        self.updateRunsTree(tree)
         #tree.bind("<Button-3>", self.onRightClick)
         return tree
     
-    def updateRunsTree(self, tree):
-        print "updating"
-        tree.clear()
-        objList = self.project.mapper.selectAll()
-        for obj in objList:
-            t = '%s.%02d' % (obj.getClassName(), obj.getId())
-            tree.insert('',  'end', obj.getId(), text=t, values=(obj.status.get(), obj.endTime.get()))
+#    def updateRunsTree(self, tree):
+#        print "updating"
+#        tree.clear()
+#        objList = self.project.mapper.selectAll()
+#        for obj in objList:
+#            t = '%s.%02d' % (obj.getClassName(), obj.getId())
+#            tree.insert('',  'end', obj.getId(), text=t, values=(obj.status.get(), obj.endTime.get()))
         
         #tree.after(1000, self.updateRunsTree, tree)
     

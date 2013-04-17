@@ -292,14 +292,10 @@ class SubclassesTreeProvider(TreeProvider):
     """Will implement the methods to provide the object info
     of subclasses objects(of className) found by mapper"""
     def __init__(self, mapper, className):
-        self.mapper = mapper
-        self._objects = mapper.selectByClass(className)
+        self.getObjects = lambda: mapper.selectByClass(className)
         
     def getColumns(self):
         return [('Object', 250), ('Id', 50), ('Class', 200)]
-    
-    def getObjects(self):
-        return self._objects
     
     def getObjectInfo(self, obj):
         return {'key': '%s.%s' % (obj.getName(), obj.strId()),
