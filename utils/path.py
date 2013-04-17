@@ -86,7 +86,7 @@ def makePath(*paths):
     """Create a list of paths if they don't exists"""
     for p in paths:
         if not exists(p):
-            os.mkdir(p)
+            os.makedirs(p)
             
 def existsPath(*paths):
     """Check if the list of paths exists.

@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     José Gutiérrez Tabuenca (jose.gutierrez@cnb.csic.es)
+# * Authors:     Jose Gutierrez Tabuenca (jose.gutierrez@cnb.csic.es)
 # *              J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -32,6 +32,7 @@ from pyworkflow.em import *
 from pyworkflow.utils import *  
 from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_ORIGINAL, MDL_MICROGRAPH_TILTED, MDL_MICROGRAPH_TILTED_ORIGINAL
 from pyworkflow.em.packages.xmipp3.data import *
+from xmipp3 import convertSetOfMicrographs
 
 
 class XmippDefParticlePicking(Form):
@@ -51,44 +52,46 @@ class XmippProtParticlePicking(ProtParticlePicking):
     """Protocol to pick particles manually of a set of micrographs in the project"""
     _definition = XmippDefParticlePicking()
     
-    def __init__(self, **args):
+    def __init__(self, **args):        
+        ProtParticlePicking.__init__(self, **args)
         
-        Protocol.__init__(self, **args)
-        
-    def defineSteps(self):
+    def _defineSteps(self):
         '''The Particle Picking proccess is realized for a set of micrographs'''
         
         # Get pointer to input micrographs 
         self.inputMics = self.inputMicrographs.get()
         
         # Convert from SetOfMicrographs to SetOfMicrographsXmipp
-        self.inputMicsXmipp = self.inputMics
-        pass
+        #convertSetOfMicrographs(self.inputMics, "micrographs.xmd")
+        self.inputMicsXmipp = convertSetOfMicrographs(self.inputMics, "micrographs.xmd")
+        
         
         # Parameters needed 
-        self.params = {'inputMicsXmipp': self.inputMicsXmipp,  # pillarlo del micrxmipp.metadata.filename
+        self.params = {'inputMicsXmipp': self.inputMicsXmipp.getFileName(),
                        'memory': self.memory.get(),
-                       'pickingMode': 'PM_MANUAL',
+                       'pickingMode': 'manual',
+                       'extraDir': self._getExtraPath()
                        }
         
         # For a list of micrograph is launched the Particle Picking GUI
         self.launchParticlePickGUI()
 
         # Insert step to create output objects       
-        self.insertFunctionStep('createOutput')
+        #self.insertFunctionStep('createOutput')
         
     def launchParticlePickGUI(self):
         # (log, InputMicrographs, ExtraDir, PickingMode=PM_MANUAL,TiltPairs=False, Memory=2, Family=""):
         
-        arguments = "-i %(inputMicsXmipp)s -o %(ExtraDir)s --mode %(PickingMode)s --memory %(Memory)dg"
+        arguments = "-i %(inputMicsXmipp)s -o %(extraDir)s --mode %(pickingMode)s --memory %(memory)dg"
         program = "xmipp_micrograph_particle_picking"
                      
         # TiltPairs
-        if self.params['tiltPairs'] != "":
+        if self.inputMicsXmipp.hasTiltPairs():
             program = "xmipp_micrograph_tiltpair_picking"
                
+        print "command: ",  program, arguments % self.params
         # Insert the command with the formatted parameters
-        self.insertRunJobStep(program, arguments % self.params)
+        self._insertRunJobStep(program, arguments % self.params)
         
     def createOutput(self):
 
@@ -100,8 +103,7 @@ class XmippProtParticlePicking(ProtParticlePicking):
         
         # Create the set of coordinates
         
-        
-        
+          
         # Create the xmipp metadata micrographs.xmd  
          
         md = MetaData()

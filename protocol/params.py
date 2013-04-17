@@ -39,7 +39,8 @@ LEVEL_ADVANCED = 1
 LEVEL_EXPERT = 2
 
 
-class FormBase(OrderedObject):
+class FormElement(OrderedObject):
+    """Base for any element on the form"""
     
     def __init__(self, **args):
         OrderedObject.__init__(self, **args)
@@ -58,10 +59,10 @@ class FormBase(OrderedObject):
         return self.condition.hasValue()
     
         
-class Param(FormBase):
+class Param(FormElement):
     """Definition of a protocol parameter"""
     def __init__(self, **args):
-        FormBase.__init__(self, **args)
+        FormElement.__init__(self, **args)
         self.paramClass = args.get('paramClass', None) # This should be defined in subclasses
         self.default = String(args.get('default', None))
         self.help = String(args.get('help', None))
@@ -71,10 +72,10 @@ class Param(FormBase):
         return "    label: %s" % self.label.get()
     
     
-class Section(FormBase):
+class Section(FormElement):
     """Definition of a section to hold other params"""
     def __init__(self, form, **args):
-        FormBase.__init__(self, **args)
+        FormElement.__init__(self, **args)
         self._form = form
         self.questionParam = String(args.get('questionParam', ''))
         self._paramList = []

@@ -1,7 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
-# *
+# *            
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
@@ -32,13 +32,6 @@ from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3.data import *
 from xmipp import MetaData, MDL_MICROGRAPH
 
-class XmippProtImportMicrographs(ProtImportMicrographs):
-    pass
-
-
-class XmippProtParticlePicking(ProtParticlePicking):
-    pass
-
 class XmippProtAlign(ProtAlign):
     pass
 
@@ -53,19 +46,20 @@ class XmippProtAlignClassify(ProtAlignClassify):
 # Group of converter fuction 
 
 def convertSetOfMicrographs(setOfMics, filename):
-        """Method to convert from a general set of micrographs to Xmipp set of micrographs"""
-        if type(setOfMics) is XmippSetOfMicrographs:
-            return setOfMics
-        md = MetaData()
-
-        for mic in setOfMics:
-            objId = md.addObject()
-            md.setValue(MDL_MICROGRAPH, mic.getFileName(), objId)
-
-        md.write(filename)
+    """Method to convert from a general set of micrographs to Xmipp set of micrographs"""
+    if type(setOfMics) is XmippSetOfMicrographs:
+        return setOfMics
         
-        micsOut = XmippSetOfMicrographs()
-        micsOut.setFileName(filename)
-        micsOut.copyInfo(setOfMics)
+    md = MetaData()
+
+    for mic in setOfMics:
+        objId = md.addObject()
+        md.setValue(MDL_MICROGRAPH, mic.getFileName(), objId)
+
+    md.write(filename)
         
-        return micsOut
+    micsOut = XmippSetOfMicrographs()
+    micsOut.setFileName(filename)
+    micsOut.copyInfo(setOfMics)
+        
+    return micsOut

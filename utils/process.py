@@ -45,6 +45,7 @@ def runJob(log,
                RunInBackground)
     if log:
         #TODO: printLog("Running command: %s" % greenStr(command),log)
+        print "Running command: %s" % command
         pass
 
     from subprocess import call

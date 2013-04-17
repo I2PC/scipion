@@ -32,6 +32,8 @@ if len(l):
     print "Continue after import..."
     prot3 = XmippProtPreprocessMicrographs(workingDir=proj.getPath('Runs', 'PreprocessDown'), 
                                        doDownsample=True, downFactor=3, doCrop=True)
+    #prot3 = XmippProtCTFMicrographs(workingDir=proj.getPath('Runs', 'Ctf'))
+    
     prot3.inputMicrographs.set(l[0])
 
     proj.launchProtocol(prot3)

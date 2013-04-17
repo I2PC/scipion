@@ -32,7 +32,9 @@ from pyworkflow.object import *
 
 
 class EMObject(Object):
-    pass
+    """Base object for all EM classes"""
+    def __init__(self, **args):
+        Object.__init__(self, **args)
 
 
 class Microscope(EMObject):
@@ -74,14 +76,19 @@ class Micrograph(Image):
     """Represents an EM Image object"""
     def __init__(self, **args):
         Image.__init__(self, **args)
+        self.ctfModel = None
         
     def getMicroscope(self):
         pass
     
+    def hasCTF(self):
+        return self.ctfModel is not None
 
 class SetOfImages(EMObject):
     """Represents a set of Images"""
     def __init__(self, **args):
+        if 'filename' in args:
+            args['value'] = args['filename']
         EMObject.__init__(self, **args)
         self.samplingRate = Float()
         
@@ -97,18 +104,23 @@ class SetOfImages(EMObject):
     
     
 class SetOfMicrographs(SetOfImages):
-    """Represents a set of Images"""
+    """Represents a set of Micrographs"""
     def __init__(self, **args):
         SetOfImages.__init__(self, **args)
         self.microscope = Microscope()
-        self.tiltPairs = Boolean(False)
+        self._tiltPairs = Boolean(args.get('tiltPairs', False))
+        self._ctf = Boolean(args.get('ctf', False))
         self._files = []
         
     def getMicroscope(self, index=0):
         return self.microscope
     
     def hasTiltPairs(self):
-        return self.tiltPairs.get()
+        return self._tiltPairs.get()
+    
+    def hasCTF(self):
+        """Return True if the SetOfMicrographs has associated a CTF model"""
+        return self._ctf.get()
     
     def append(self, path):
         """Add simply a micrograph path to the set"""
@@ -142,7 +154,7 @@ class SetOfMicrographs(SetOfImages):
             yield (mU, mT)
         
     def writeToFile(self, path):
-        """ This method will be used to persist in a file the
+        """This method will be used to persist in a file the
         list of micrographs path contained in this Set
         path: output file path
         micrographs: list with the micrographs path to be stored
@@ -157,7 +169,9 @@ class SetOfMicrographs(SetOfImages):
         from other set of micrographs to current one"""
         self.microscope.voltage.set(other.microscope.voltage.get())
         self.microscope.sphericalAberration.set(other.microscope.sphericalAberration.get())
-        self.samplingRate.set(other.samplingRate.get()) 
+        self.samplingRate.set(other.samplingRate.get())
+        self._tiltPairs.set(other._tiltPairs.get())
+        self._ctf.set(other._ctf.get())
     
 
 class Coordinate(EMObject):
@@ -234,3 +248,23 @@ class SetOfCoordinates(EMObject):
         """ Set the metadata file with all all coordinates files for 
         this setOfCoordinates """
         self._objValue = newFileName
+                
+    
+class CTFModel(EMObject):
+    """Represents a generic CTF model"""
+#TODO: See how this can be generic (no pointing to Xmipp labels
+#    ctfParams = {
+#                 "ctfSamplingRate":MDL_CTF_SAMPLING_RATE,
+#                 "ctfVoltage":MDL_CTF_VOLTAGE,
+#                 "ctfDefocusU":MDL_CTF_DEFOCUSU,
+#                 "ctfDefocusV":MDL_CTF_DEFOCUSV,
+#                 "ctfDefocusAngle":MDL_CTF_DEFOCUS_ANGLE,
+#                 "ctfSphericalAberration":MDL_CTF_CS,
+#                 "ctfQ0":MDL_CTF_Q0,
+#                 "ctfK":MDL_CTF_K
+#                }
+    def __init__(self, **args):
+        EMObject.__init__(self, **args)
+        
+        #Aqui meter los comunes
+        samplingRate = Float()
