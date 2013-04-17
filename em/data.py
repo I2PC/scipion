@@ -32,7 +32,9 @@ from pyworkflow.object import *
 
 
 class EMObject(Object):
-    pass
+    """Base object for all EM classes"""
+    def __init__(self, **args):
+        Object.__init__(self, **args)
 
 
 class Microscope(EMObject):
@@ -85,6 +87,8 @@ class Micrograph(Image):
 class SetOfImages(EMObject):
     """Represents a set of Images"""
     def __init__(self, **args):
+        if 'filename' in args:
+            args['value'] = args['filename']
         EMObject.__init__(self, **args)
         self.samplingRate = Float()
         
@@ -100,22 +104,23 @@ class SetOfImages(EMObject):
     
     
 class SetOfMicrographs(SetOfImages):
-    """Represents a set of Images"""
+    """Represents a set of Micrographs"""
     def __init__(self, **args):
         SetOfImages.__init__(self, **args)
         self.microscope = Microscope()
-        self.tiltPairs = Boolean(False)
+        self._tiltPairs = Boolean(args.get('tiltPairs', False))
+        self._ctf = Boolean(args.get('ctf', False))
         self._files = []
         
     def getMicroscope(self, index=0):
         return self.microscope
     
     def hasTiltPairs(self):
-        return self.tiltPairs.get()
+        return self._tiltPairs.get()
     
     def hasCTF(self):
         """Return True if the SetOfMicrographs has associated a CTF model"""
-        return False
+        return self._ctf.get()
     
     def append(self, path):
         """Add simply a micrograph path to the set"""
@@ -164,7 +169,9 @@ class SetOfMicrographs(SetOfImages):
         from other set of micrographs to current one"""
         self.microscope.voltage.set(other.microscope.voltage.get())
         self.microscope.sphericalAberration.set(other.microscope.sphericalAberration.get())
-        self.samplingRate.set(other.samplingRate.get()) 
+        self.samplingRate.set(other.samplingRate.get())
+        self._tiltPairs.set(other._tiltPairs.get())
+        self._ctf.set(other._ctf.get())
     
 
 class Coordinate(EMObject):

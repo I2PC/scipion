@@ -82,11 +82,11 @@ class ProtImportMicrographs(Protocol):
         if len(files) == 0:
             raise Exception('importMicrographs:There is not files matching pattern')
         path = self._getPath('micrographs.txt')
-        micSet = SetOfMicrographs(value=path)
+        micSet = SetOfMicrographs(filename=path, tiltPairs=tiltPairs)
         micSet.microscope.voltage.set(voltage)
         micSet.microscope.sphericalAberration.set(sphericalAberration)
         micSet.samplingRate.set(samplingRate)
-        micSet.tiltPairs.set(tiltPairs)
+
         for f in files:
             dst = self._getPath(os.path.basename(f))            
             shutil.copyfile(f, dst)

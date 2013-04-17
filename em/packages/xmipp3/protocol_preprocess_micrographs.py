@@ -171,8 +171,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         md.write("micrographs"+"@"+mdOut)
                 
         # Create the SetOfMicrographs object on the database
-        self.outputMicrographs = XmippSetOfMicrographs()     
-        self.outputMicrographs.setFileName(mdOut)
+        self.outputMicrographs = XmippSetOfMicrographs(filename=mdOut)     
         self.outputMicrographs.copyInfo(self.inputMics)
 
         self._defineOutputs(micrograph=self.outputMicrographs)

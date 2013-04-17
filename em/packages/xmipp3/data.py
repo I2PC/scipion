@@ -32,23 +32,21 @@ from pyworkflow.em import *
 from xmipp import *
     
 class XmippSetOfMicrographs(SetOfMicrographs):
-    
+    """Represents a set of Micrographs for Xmipp"""
+    def __init__(self, **args):
+        SetOfMicrographs.__init__(self, **args)
+        
     def __iter__(self):
         """Iterate over the set of micrographs in the MetaData"""
         md = MetaData(self.getFileName())
-        hasCTF = md.containsLabel(MDL_CTF_MODEL)
         
         for objId in md:    
             m = Micrograph()
             m.setFileName(md.getValue(MDL_MICROGRAPH, objId))
-            if hasCTF:
+            if self.hasCTF():
                 m.ctfModel = XmippCTFModel(md.getValue(MDL_CTF_MODEL, objId)) 
             yield m
-            
-            
-    def hasCTF(self):
-        md = MetaData(self.getFileName())
-        return md.containsLabel(MDL_CTF_MODEL)
+
         
 class XmippCTFModel(CTFModel):
     
