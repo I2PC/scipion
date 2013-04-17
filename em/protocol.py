@@ -93,7 +93,7 @@ class ProtImportMicrographs(Protocol):
             micSet.append(dst)
         
         micSet.writeToFile(path)
-        self._defineOutputs(micrograph=micSet)
+        self._defineOutputs(outputMicrographs=micSet)
         outFiles = micSet._files + [path]
         
         return outFiles
