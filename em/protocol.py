@@ -61,7 +61,6 @@ class DefImportMicrographs(Form):
                    label='Scanned pixel size', condition='samplingRateMode==1')
         
 
-
 class ProtImportMicrographs(Protocol):
     """Protocol to import a set of micrographs in the project"""
     _definition = DefImportMicrographs()
@@ -97,7 +96,50 @@ class ProtImportMicrographs(Protocol):
         outFiles = micSet._files + [path]
         
         return outFiles
+
+class DefCTFMicrographs(Form):
+    """Create the definition of parameters for
+    the XmippCtfMicrographs protocol"""
+    def __init__(self):
+        Form.__init__(self)
+    
+        self.addSection(label='Input')
+        self.addParam('inputMicrographs', PointerParam, label="Micrographs", pointerClass='SetOfMicrographs')
         
+        self.addSection(label='CTF Estimation')
+        self.addParam('ampContrast', FloatParam, default=0.1,
+                      label='Amplitude Contrast',
+                      help='It should be a positive number, typically between 0.05 and 0.3.')
+        self.addParam('lowRes', FloatParam, default=0.05,
+                      label='Lowest resolution',
+                      help='Give a value in digital frequency (i.e. between 0.0 and 0.5). '
+                           'This cut-off prevents the typically peak at the center of the PSD '
+                           'to interfere with CTF estimation. The default value is 0.05, but for '
+                           'micrographs with a very fine sampling this may be lowered towards 0.0')
+        self.addParam('highRes', FloatParam, default=0.35,
+                      label='Highest resolution', 
+                      help='Give a value in digital frequency (i.e. between 0.0 and 0.5). '
+                           'This cut-off prevents high-resolution terms where only noise exists '
+                           'to interfere with CTF estimation. The default value is 0.35, but it should '
+                           'be increased for micrographs with signals extending beyond this value. '
+                           'However, if your micrographs extend further than 0.35, you should consider '
+                           'sampling them at a finer rate.')
+        self.addParam('minDefocus', FloatParam, default=0.5,
+                      label='Minimum defocus to search (in microns)',
+                      help=' Minimum defocus value (in microns) to include in defocus search. ' 
+                      'Underfocus is represented by a positive number.',
+                      expertLevel=LEVEL_ADVANCED)
+        self.addParam('maxDefocus', FloatParam, default=10.,
+                      label='Maximum defocus to search (in microns)',
+                      help='Maximum defocus value (in microns) to include in defocus search. '
+                           'Underfocus is represented by a positive number.',
+                      expertLevel=LEVEL_ADVANCED)
+        self.addParam('windowSize', IntParam, default=256,
+                      label='Window size',
+                      help='The PSD is estimated from small patches of this size. Bigger patches '
+                           'allow identifying more details. However, since there are fewer windows, '
+                           'estimations are noisier',
+                      expertLevel=LEVEL_ADVANCED)        
 
 class ProtCTFMicrographs(Protocol):
     pass
