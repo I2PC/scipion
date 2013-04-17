@@ -239,6 +239,16 @@ class SetOfCoordinates(EMObject):
         this set of coordinates """
         self._micrographsPointer.set(micrographs)
         
+    def getFileName(self):
+        """ Get the metadata file with all all coordinates files for 
+        this setOfCoordinates """
+        return self._objValue
+    
+    def setFileName(self, newFileName):
+        """ Set the metadata file with all all coordinates files for 
+        this setOfCoordinates """
+        self._objValue = newFileName
+                
     
 class CTFModel(EMObject):
     """Represents a generic CTF model"""

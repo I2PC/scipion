@@ -6,6 +6,7 @@ Created on Apr 12, 2013
 
 from pyworkflow.em import *  
 from pyworkflow.utils import * 
+from pyworkflow.em.packages.eman2.data import *
 
 def defineBoxing():
     """Create the definition of parameters for
@@ -56,7 +57,13 @@ class EmanProtBoxing():
         self.insertRunJobStep(program, arguments % self.params)
         
     def createOutput(self):
-        self.__createBoxingCoordinatesMetadata()   
+        # Create metadata file with all .box files referenced
+        metaDataFilePath = self.__createBoxingCoordinatesMetadata()  
+        # Create the SetOfCoordinates object on the database        
+        self.setOfCoordinates = SetOfCoordinates()
+        self.setOfCoordinates.setMicrographs(self.inputMicrographs.get())
+        self.setOfCoordinates.setFileName(metaDataFilePath)
+        self._defineOutputs(setOfCoordinates=self.setOfCoordinates) 
     
     def __getBoxingBoxSize(self):
         #os.system("cd " + directory)
@@ -70,11 +77,14 @@ class EmanProtBoxing():
         return int(auxBoxSize)
     
     def __createBoxingCoordinatesMetadata(self):
-        command = "ls *.box"
-        pipe = os.popen(command)
-        stOutput = pipe.readlines()
-        pipe.close()
+        from glob import glob
+        files = glob("*.box")
+        if len(files) == 0:
+            raise Exception('Eman Particle Picking:There is not .box files')
         boxMetadataFile=open("boxMetaData.mdbox","w")
-        for line in stOutput:
-            boxMetadataFile.write(line + "\n")
+        for line in files:
+            boxMetadataFile.write(line + "\n")            
         boxMetadataFile.close()
+        return self._getPath("boxMetaData.mdbox")
+
+    

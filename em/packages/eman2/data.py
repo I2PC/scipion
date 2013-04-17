@@ -28,12 +28,111 @@ This modules contains basic hierarchy
 for specific Xmipp3 EM data objects
 """
 
-from pyworkflow.em import *   
+from pyworkflow.em import *  
+from pyworkflow.utils.path import removeBaseExt
     
 class EmanSetOfMicrographs(SetOfMicrographs):
     
     def __iter__(self):
-        """Iterate over the set of micrographs"""
-        pass
-        
+        """Iterate over the set of micrographs in the MetaData"""
+        metaDataFile=open(self.getFileName(),"r")
+        for line in metaDataFile:
+            micrograph = Micrograph()
+            micrograph.setFileName(line)       
+            yield micrograph
+        metaDataFile.close()
+            
+class EmanCoordinate(Coordinate):
+    """This class holds the (x,y) position and other information
+    associated with a EMAN coordinate"""
     
+    def getPosition(self, mode=Coordinate.POS_TOPLEFT):
+        """Return the position of the coordinate.
+        mode: select if the position is the center of the box
+          or in the top left corner."""
+        if mode == Coordinate.POS_TOPLEFT:
+            return self.x, self.y
+        else: 
+            pass
+    
+    def setPosition(self, x, y):
+        self.x = x
+        self.y = y
+    
+    def getMicrograph(self):
+        """Return the micrograph object to which
+        this coordinate is associated"""
+        return self._micrograph
+    
+    def setMicrograph(self, micrograph):
+        """Set the micrograph to which this coordinate belongs"""
+        self._micrograph = micrograph
+    
+    def getPair(self):
+        """It should return the paired coordinate associate to self.
+        If self is an untilted coordinate, getPaired will return the 
+        tilted one and viceversa"""
+        pass 
+    
+    
+class EmanSetOfCoordinates(SetOfCoordinates):
+    """Encapsulate the logic of a set of particles coordinates for EMAN.
+    Each coordinate has a (x,y) position and is related to a Micrograph
+    The SetOfCoordinates can also have information about TiltPairs.
+    EMAN coordinates are taken from top left"""
+    
+    def getBoxSize(self):
+        """Return the box size of the future particles.
+        This can be None, since when the POS_CENTER mode is used,
+        the box size is only relevant when extraction"""
+        return None
+    
+    def iterCoordinates(self):
+        """Iterates over the whole set of coordinates.
+        If the SetOfMicrographs has tilted pairs, the coordinates
+        should have the information related to its paired coordinate."""
+        metaDataFile=open(self.getFileName(),"r")
+        for boxFileName in metaDataFile:
+            # Recover micrograph which picking coordinates are stored in the .box file.
+            micrograph = self.__getMicrograph(boxFileName)
+            # Extract coordinates
+            boxFile =  open (boxFileName,"r")
+            for line in boxFile:
+                if len(line.strip()) > 0:
+                    parts = line.strip().split()
+                    x = parts[0]
+                    y = parts[1]
+                    coordinate = EmanCoordinate()
+                    coordinate.setMicrograph(micrograph)
+                    coordinate.setPosition(x, y)
+                    yield coordinate
+                else:
+                    pass
+            boxFile.close()
+        metaDataFile.close()
+    
+    def hasTiltPairs(self):
+        """Returns True if the SetOfMicrographs has tilted pairs"""
+        return self.getMicrographs().hasTiltPairs()
+    
+    def getMicrographs(self):
+        """Returns the SetOfMicrographs associated with 
+        this SetOfCoordinates"""
+        return self._micrographsPointer.get()
+    
+    def setMicrographs(self, micrographs):
+        """ Set the SetOfMicrograph associates with 
+        this set of coordinates """
+        self._micrographsPointer.set(micrographs)
+    
+    def __getMicrograph(self, boxFile):
+        """
+        Gets micrograph corresponding to given .box file.
+        """
+        coordFileNameNE = removeBaseExt(boxFile)
+        for micrograph in self._micrographsPointer:
+            micrographFileNameNE = removeBaseExt(micrograph.getFileName())
+            if (micrographFileNameNE == coordFileNameNE):
+                return micrograph
+        raise Exception("No micrograph found for coordinates file : " + boxFile)    
+        
