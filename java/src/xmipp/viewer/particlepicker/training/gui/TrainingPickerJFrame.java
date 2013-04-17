@@ -32,7 +32,9 @@ import javax.swing.ListSelectionModel;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import xmipp.jni.XmippError;
 import xmipp.utils.ColorIcon;
+import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippResource;
@@ -161,7 +163,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		mb = new JMenuBar();
 
 		// Setting menus
-		
+
 		exportmi = new JMenuItem("Export Particles...", XmippResource.getIcon("export_wiz.gif"));
 
 		exportmi.addActionListener(new ActionListener()
@@ -193,7 +195,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			importffmi.setEnabled(false);
 		filemn.add(exportmi);
 
-		
 		exportmi = new JMenuItem("Export Particles...", XmippResource.getIcon("export_wiz.gif"));
 
 		exportmi.addActionListener(new ActionListener()
@@ -225,7 +226,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			importffmi.setEnabled(false);
 		filemn.add(exportmi);
 		JMenu windowmn = new JMenu("Window");
-		
+
 		mb.add(filemn);
 		mb.add(filtersmn);
 		mb.add(windowmn);
@@ -239,8 +240,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		editfamiliesmi = new JMenuItem("Edit Families", XmippResource.getIcon("edit.gif"));
 		windowmn.add(editfamiliesmi);
 		windowmn.add(templatesmi);
-
-		
 
 		// Setting menu item listeners
 
@@ -269,15 +268,22 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	public void loadTemplates()
 	{
-		if (templatesdialog == null)
+		try
 		{
-			templatesdialog = new TemplatesJDialog(TrainingPickerJFrame.this);
-		}
-		else
-		{
+			if (templatesdialog == null)
+			{
+				templatesdialog = new TemplatesJDialog(TrainingPickerJFrame.this);
+			}
+			else
+			{
 
-			templatesdialog.loadTemplates(true);
-			templatesdialog.setVisible(true);
+				templatesdialog.loadTemplates(true);
+				templatesdialog.setVisible(true);
+			}
+		}
+		catch (Exception e)
+		{
+			XmippDialog.showError(this, e.getMessage());
 		}
 	}
 
@@ -419,7 +425,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	}
 
-	
 	private void initThresholdPane()
 	{
 		thresholdpn = new JPanel();
@@ -675,7 +680,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		ppicker.saveFamilies();
 	}
 
-
 	void updateFamilyComboBox()
 	{
 		Family item = (Family) familiescb.getSelectedItem();
@@ -736,13 +740,14 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	private void train()
 	{
-
-		family.goToNextStep(ppicker);// validate and change state if posible
-		// setChanged(true);
-		setStep(FamilyState.Supervised);// change visual appearance
-		ppicker.saveFamilies();
 		try
 		{
+			family.goToNextStep(ppicker);// validate and change state if
+											// possible
+			// setChanged(true);
+			setStep(FamilyState.Supervised);// change visual appearance
+			ppicker.saveFamilies();
+
 			canvas.setEnabled(false);
 			XmippWindowUtil.blockGUI(this, "Training...");
 
@@ -878,10 +883,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		return getFamilyData().isPickingAvailable();
 	}
 
-	
-
-
-
 	public String importParticlesFromFile(Format format, String file, float scale, boolean invertx, boolean inverty)
 	{
 		String result = "";
@@ -899,7 +900,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		canvas.refreshActive(null);
 		return result;
 	}
-
 
 	public String importMicrographParticles(Format format, String file, float scale, boolean invertx, boolean inverty)
 	{
@@ -921,8 +921,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		return result;
 	}
 
-	
-
 	@Override
 	protected void openHelpURl()
 	{
@@ -930,24 +928,35 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	}
 
-	public void updateTemplates()
+	public void updateTemplates(Family f)
 	{
-		ppicker.setUpdateTemplatesPending(true);
-		if (templatesdialog != null)
+		f.setUpdateTemplatesPending(true);
+		if (f.equals(family) && templatesdialog != null)
 			templatesdialog.loadTemplates(true);
 
 	}
 
+	public void updateTemplates()
+	{
+		updateTemplates(family);
+	}
 
 	public void updateSize(int size)
 	{
-		super.updateSize(size);
-		ppicker.resetParticleImages();
-		ppicker.setUpdateTemplatesPending(true);
-		ppicker.updateTemplates();
-		if (templatesdialog != null)
-			loadTemplates();
-
+		try
+		{
+			super.updateSize(size);
+			ppicker.resetParticleImages();
+			family.setUpdateTemplatesPending(true);
+			ppicker.updateTemplates();
+			if (templatesdialog != null)
+				loadTemplates();
+		}
+		catch (Exception e)
+		{
+			String msg = (e.getMessage() != null) ? e.getMessage() : XmippMessage.getUnexpectedErrorMsg();
+			XmippDialog.showError(this, msg);
+		}
 	}
 
 	@Override
@@ -975,17 +984,23 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	}
 
-	
 	public boolean isCenterPick()
 	{
 		return centerpickchb.isSelected();
 	}
-	
-	
 
 	@Override
 	public ParticlesJDialog initParticlesJDialog()
 	{
 		return new ParticlesJDialog(this);
+	}
+
+	public void setTemplatesNumber(Family f, int templates)
+	{
+		f.setTemplatesNumber(templates);
+
+		if (f.equals(family) && templatesdialog != null)
+			templatesdialog.loadTemplates(true);
+
 	}
 }

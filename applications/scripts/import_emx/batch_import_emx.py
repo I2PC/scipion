@@ -28,52 +28,65 @@ from os.path import basename, splitext
 from protlib_xmipp import XmippScript
 from xmipp import MetaData, MDL_CTF_MODEL, MD_APPEND, MD_OVERWRITE, FileName
 from emxLib.emxLib import ctfMicXmippToEmx
-from pyworkflow.object import *
-from emx.emxmapper import EmxMapper
+from emx.emxmapper import *
 from emx.emx import *
-from emxLib.emxLib import ctfMicEMXToXmipp, coorEMXToXmipp
+from emxLib.emxLib import ctfMicEMXToXmipp, coorEMXToXmipp, alignEMXToXmipp
 
 class ScriptImportEMX(XmippScript):
     def __init__(self):
         XmippScript.__init__(self)
         
     def defineParams(self):
-        self.addUsageLine("Convert  from EMX metadata files");
-        self.addParamsLine(' -i <text_file_emx>              : Input metadata file ');
+        self.addUsageLine("Convert  from EMX metadata files")
+        self.addParamsLine(' -i <text_file_emx>              : Input metadata file ')
         self.addParamsLine(' [--mode <mode=micCTF>]          : information to extract')
-        self.addParamsLine("         where <mode>");
-        self.addParamsLine("             micCTF              : import micrograph ctf");
-        self.addParamsLine("             Coordinates         : import particle coordinates (so far only works for a single micrograph)");
-        self.addParamsLine("     alias -m;");
+        self.addParamsLine("         where <mode>")
+        self.addParamsLine("             alignment           : export particle shift and rotations")
+        self.addParamsLine("             coordinates         : import particle coordinates (so far only works for a single micrograph)")
+        self.addParamsLine("             micCTF              : import micrograph ctf")
+        self.addParamsLine("     alias -m;")
+        self.addParamsLine(' [--notValidate]                 : do not validate xml against schema');
+        self.addParamsLine('                                 : validation requires net connection');
+        self.addParamsLine('                                 : and program xmllint installed');
+        self.addParamsLine('     alias -n;');
         self.addExampleLine("Import information from EMX file to Xmipp", False);
         self.addExampleLine("xmipp_import_emx -i particlePicking.emx -m micCTF ");
       
     def run(self):
+#        baseFilename = 'EMXread.emx'
+#        scriptDir = os.path.dirname(__file__)
+#        goldStandard = os.path.join(scriptDir,baseFilename)
+#        emxData   = EmxData()
+#        mapper    = EmxMapper(emxData, goldStandard, globals())
+#        mapper.convertToEmxData(emxData)
+
         emxFileName  = self.getParam('-i')
         mode         = self.getParam('-m')
+        doValidate   = self.checkParam('-n')
+        #validate emx file
+        if not doValidate:
+            try:
+                    (code, _out,_err)=validateSchema(emxFileName)
+                    if code !=0:
+                       raise Exception (_err) 
+            except Exception, e:
+                print "Error: ", str(e)
+                exit(1)
         #object to store emx data
         emxData   = EmxData()
         #object to read/write emxData
-        mapper    = EmxMapper(emxData, globals())
+        mapper = XmlMapper(emxData)
         #read file
-        mapper.read(emxFileName)
-        mapper.convertToEmxData(emxData)
+        mapper.readEMXFile(emxFileName)
+#        xmlMapperW.writeEMXFile(fileName)
         #create xmd files with mic CTF information and auxiliary files
         if mode == 'micCTF':
-            ctfMicEMXToXmipp(emxData,'micrograph')
-        elif mode == 'Coordinates':
-            coorEMXToXmipp(emxData,'particle',emxFileName)
+            ctfMicEMXToXmipp(emxData,MICROGRAPH)
+        elif mode == 'coordinates':
+            coorEMXToXmipp(emxData,PARTICLE,emxFileName)
+        elif mode == 'alignment':
+            xmdFileName = emxFileName.replace(".emx",".xmd")
+            alignEMXToXmipp(emxData,PARTICLE,xmdFileName)
 
-        #detect binary data type micrograph/particle
-        #type =emxData.findObjectType(binFileName)
-        #declare a 
-#        if type == MICROGRAPH:
-#            pass
-#        elif type == PARTICLE:
-#            pass
-#        else:
-#            raise Exception("Unknown object type associated with file=%s" % dictFK )
-            
-        
 if __name__ == '__main__':
     ScriptImportEMX().tryRun()

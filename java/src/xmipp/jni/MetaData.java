@@ -290,12 +290,11 @@ public class MetaData {
 	}
 	
 	public void setRow(MetaData mdRow, long objId){
-		int[] labels = getActiveLabels();
+		int[] labels = mdRow.getActiveLabels();
 		String value;
 		long rowId = mdRow.firstObject();
 		for (int l : labels){
 			value = mdRow.getValueString(l, rowId);
-			//DEBUG.printFormat("label: %d, value: %d", l, value);
 			setValueString(l, value, objId);
 		}
 	}

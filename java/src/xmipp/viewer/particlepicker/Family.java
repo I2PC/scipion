@@ -22,6 +22,7 @@ public class Family {
 	private int templatesNumber;
 	private ImageGeneric templates;
 	private String templatesfile;
+	protected boolean updateTemplatesPending;
 
 	
 	private static Color[] colors = new Color[] { Color.BLUE, Color.CYAN,
@@ -201,6 +202,7 @@ public class Family {
 
 		this.templatesNumber = num;
 		initTemplates();
+		setUpdateTemplatesPending(true);
 	}
 
 	public Color getColor() {
@@ -242,10 +244,11 @@ public class Family {
 	}
 
 	public void setTemplate(int index, ImageGeneric ig) {
+		
 		float[] matrix;
 		try {
-			matrix = ig.getArrayFloat(ImageGeneric.FIRST_IMAGE,
-					ImageGeneric.FIRST_SLICE);
+			//TODO getArrayFloat and setArrayFloat must be call from C both in one function
+			matrix = ig.getArrayFloat(ImageGeneric.FIRST_IMAGE,	ImageGeneric.FIRST_SLICE);
 			templates.setArrayFloat(matrix, index, ImageGeneric.FIRST_SLICE);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -257,4 +260,18 @@ public class Family {
 	{
 		return templatesfile;
 	}
+	
+	public void setUpdateTemplatesPending(boolean b)
+	{
+		updateTemplatesPending = b;
+
+	}
+
+	public boolean getUpdateTemplatesPending()
+	{
+		return updateTemplatesPending;
+	}
+
+	
+
 }

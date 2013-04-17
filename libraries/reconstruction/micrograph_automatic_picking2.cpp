@@ -128,71 +128,69 @@ bool isLocalMaxima(MultidimArray<double> &inputArray, int x, int y)
         return false;
 }
 
-void * autoPickThread(void * args)
-{
-    AutoPickThreadParams *prm=(AutoPickThreadParams *) args;
-    double label, score;
-    int idThread = prm->idThread;
-    int Nthreads=prm->Nthreads;
-    int num_correlation=prm->autoPicking->num_correlation;
-    int NangSteps=prm->autoPicking->NangSteps;
-    int NRsteps=prm->autoPicking->NRsteps;
-    int procprec=prm->autoPicking->proc_prec;
-    bool use2Classifier=prm->use2Classifier;
-    Particle2 p;
-    MultidimArray<double> IpolarCorr;
-    MultidimArray<double> featVec;
-    MultidimArray<double> pieceImage;
-    MultidimArray<double> staticVec, dilatedVec;
-    IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
-    int num=(int)(prm->positionArray.size()*(procprec/100.0));
-    for (int k=0;k<num;k++)
-    {
-        if (k%Nthreads==idThread)
-        {
-            int j=prm->positionArray[k].x;
-            int i=prm->positionArray[k].y;
-            prm->autoPicking->buildInvariant(IpolarCorr,j,i);
-            prm->autoPicking->extractParticle(j,i,prm->autoPicking->microImage(),pieceImage,false);
-            pieceImage.resize(1,1,1,XSIZE(pieceImage)*YSIZE(pieceImage));
-            prm->autoPicking->extractStatics(pieceImage,staticVec);
-            prm->autoPicking->buildVector(IpolarCorr,staticVec,featVec,pieceImage);
-            double max=featVec.computeMax();
-            double min=featVec.computeMin();
-            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
-            {
-                DIRECT_A1D_ELEM(featVec,i)=0+((1)*((DIRECT_A1D_ELEM(featVec,i)-min)/(max-min)));
-            }
-            label= prm->autoPicking->classifier.predict(featVec, score);
-            if (label==1)
-            {
-                if (use2Classifier==true)
-                {
-                    label=prm->autoPicking->classifier2.predict(featVec,score);
-                    if (label==1)
-                    {
-                        p.x=j;
-                        p.y=i;
-                        p.status=1;
-                        p.cost=score;
-                        p.vec=featVec;
-                        prm->autoPicking->auto_candidates.push_back(p);
-                    }
-                }
-                else
-                {
-                    p.x=j;
-                    p.y=i;
-                    p.status=1;
-                    p.cost=score;
-                    p.vec=featVec;
-                    prm->autoPicking->auto_candidates.push_back(p);
-                }
-            }
-        }
-    }
-    return NULL;
-}
+//void * autoPickThread(void * args)
+//{
+//    AutoPickThreadParams *prm=(AutoPickThreadParams *) args;
+//    double label, score;
+//    int idThread = prm->idThread;
+//    int Nthreads=prm->Nthreads;
+//    int num_correlation=prm->autoPicking->num_correlation;
+//    int NangSteps=prm->autoPicking->NangSteps;
+//    int NRsteps=prm->autoPicking->NRsteps;
+//    int procprec=prm->autoPicking->proc_prec;
+//    bool use2Classifier=prm->use2Classifier;
+//    Particle2 p;
+//    MultidimArray<double> IpolarCorr;
+//    MultidimArray<double> featVec;
+//    MultidimArray<double> pieceImage;
+//    MultidimArray<double> staticVec, dilatedVec;
+//    IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
+//    int num=(int)(prm->positionArray.size()*(procprec/100.0));
+//    for (int k=0;k<num;k++)
+//    {
+//        if (k%Nthreads==idThread)
+//        {
+//            int j=prm->positionArray[k].x;
+//            int i=prm->positionArray[k].y;
+//            prm->autoPicking->buildInvariant(IpolarCorr,j,i);
+//            prm->autoPicking->extractParticle(j,i,prm->autoPicking->microImage(),pieceImage,false);
+//            pieceImage.resize(1,1,1,XSIZE(pieceImage)*YSIZE(pieceImage));
+//            prm->autoPicking->extractStatics(pieceImage,staticVec);
+//            prm->autoPicking->buildVector(IpolarCorr,staticVec,featVec,pieceImage);
+//            double max=featVec.computeMax();
+//            double min=featVec.computeMin();
+//            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
+//                DIRECT_A1D_ELEM(featVec,i)=0+((1)*((DIRECT_A1D_ELEM(featVec,i)-min)/(max-min)));
+//            label= prm->autoPicking->classifier.predict(featVec, score);
+//            if (label==1)
+//            {
+//                if (use2Classifier==true)
+//                {
+//                    label=prm->autoPicking->classifier2.predict(featVec,score);
+//                    if (label==1)
+//                    {
+//                        p.x=j;
+//                        p.y=i;
+//                        p.status=1;
+//                        p.cost=score;
+//                        p.vec=featVec;
+//                        prm->autoPicking->auto_candidates.push_back(p);
+//                    }
+//                }
+//                else
+//                {
+//                    p.x=j;
+//                    p.y=i;
+//                    p.status=1;
+//                    p.cost=score;
+//                    p.vec=featVec;
+//                    prm->autoPicking->auto_candidates.push_back(p);
+//                }
+//            }
+//        }
+//    }
+//    return NULL;
+//}
 
 void AutoParticlePicking2::polarCorrelation(MultidimArray<double> &Ipolar,
         MultidimArray<double> &IpolarCorr)
@@ -363,26 +361,73 @@ void AutoParticlePicking2::trainSVM(const FileName &fnModel,
 
 int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier)
 {
+    double label, score;
     Particle2 p;
+    MultidimArray<double> IpolarCorr;
+    MultidimArray<double> featVec;
+    MultidimArray<double> pieceImage;
+    MultidimArray<double> staticVec, dilatedVec;
     std::vector<Particle2> positionArray;
 
+    IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
     buildSearchSpace(positionArray,fast);
-    pthread_t * th_ids = new pthread_t[Nthreads];
-    AutoPickThreadParams * th_args =
-        new AutoPickThreadParams[Nthreads];
-    for (int nt=0;nt<Nthreads;nt++)
-    {
-        th_args[nt].autoPicking=this;
-        th_args[nt].positionArray=positionArray;
-        th_args[nt].idThread=nt;
-        th_args[nt].use2Classifier=use2Classifier;
-        th_args[nt].Nthreads=Nthreads;
-        pthread_create(&th_ids[nt],NULL,autoPickThread,
-                       &th_args[nt]);
-    }
+    //    pthread_t * th_ids = new pthread_t[Nthreads];
+    //    AutoPickThreadParams * th_args =
+    //        new AutoPickThreadParams[Nthreads];
+    //    for (int nt=0;nt<Nthreads;nt++)
+    //    {
+    //        th_args[nt].autoPicking=this;
+    //        th_args[nt].positionArray=positionArray;
+    //        th_args[nt].idThread=nt;
+    //        th_args[nt].use2Classifier=use2Classifier;
+    //        th_args[nt].Nthreads=Nthreads;
+    //        pthread_create(&th_ids[nt],NULL,autoPickThread,
+    //                       &th_args[nt]);
+    //    }
 
-    for (int nt=0;nt<Nthreads;nt++)
-        pthread_join(th_ids[nt],NULL);
+    //    for (int nt=0;nt<Nthreads;nt++)
+    //        pthread_join(th_ids[nt],NULL);
+    int num=(int)(positionArray.size()*(proc_prec/100.0));
+    for (int k=0;k<num;k++)
+    {
+        int j=positionArray[k].x;
+        int i=positionArray[k].y;
+        buildInvariant(IpolarCorr,j,i);
+        extractParticle(j,i,microImage(),pieceImage,false);
+        pieceImage.resize(1,1,1,XSIZE(pieceImage)*YSIZE(pieceImage));
+        extractStatics(pieceImage,staticVec);
+        buildVector(IpolarCorr,staticVec,featVec,pieceImage);
+        double max=featVec.computeMax();
+        double min=featVec.computeMin();
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
+        DIRECT_A1D_ELEM(featVec,i)=0+((1)*((DIRECT_A1D_ELEM(featVec,i)-min)/(max-min)));
+        label= classifier.predict(featVec, score);
+        if (label==1)
+        {
+            if (use2Classifier==true)
+            {
+                label=classifier2.predict(featVec,score);
+                if (label==1)
+                {
+                    p.x=j;
+                    p.y=i;
+                    p.status=1;
+                    p.cost=score;
+                    p.vec=featVec;
+                    auto_candidates.push_back(p);
+                }
+            }
+            else
+            {
+                p.x=j;
+                p.y=i;
+                p.status=1;
+                p.cost=score;
+                p.vec=featVec;
+                auto_candidates.push_back(p);
+            }
+        }
+    }
 
     if (auto_candidates.size() == 0)
         return 0;

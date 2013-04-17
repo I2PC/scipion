@@ -88,8 +88,13 @@ class ProtProjMatch(XmippProtocol):
         # Check that all volumes have the same size
         #getListFromVector(self.ReferenceFileNames,processX=False)
         #listOfReferences=self.ReferenceFileNames.split()
-        validateInputSize(self.ReferenceFileNames, self.SelFileName, errors)
-            
+        md = MetaData(self.SelFileName)
+        validateInputSize(self.ReferenceFileNames, self.SelFileName, md, errors)
+        
+        # Check there are enough images to avoid overfitting through the FSC
+        if md.size()<100 and self.ConstantToAddToFiltration<0:
+            errors.append("You have less than 100 images. The constant to be added to the estimated resolution should be non-negative.")
+        
         # Check options compatibility
         #if self.DoAlign2D and self.DoCtfCorrection:
         #    errors.append("Yyyou cannot realign classes AND perform CTF-correction. Switch either of them off!")
@@ -119,8 +124,8 @@ the %s file
 
 EXAMPLE:
 # XMIPP_STAR_1 *
-# chage XXXXX by the sapling rate
-data_
+# change XXXXX by the sampling rate
+data_noname
  _sampling_rate XXXXX
 """ %(self.SelFileName,self.SelFileName))
             

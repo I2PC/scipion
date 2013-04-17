@@ -41,9 +41,9 @@ import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.ImageDimension;
 import xmipp.viewer.windows.ImagesWindowFactory;
 
-public class MetadataGalleryTableModel extends ImageGalleryTableModel {
-	
-	
+public class MetadataGalleryTableModel extends ImageGalleryTableModel
+{
+
 	private static final long serialVersionUID = 1L;
 
 	// Label to be rendered
@@ -54,27 +54,33 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 	// Also store the visible ones to fast access
 	public ArrayList<ColumnInfo> visibleLabels;
 
-	public MetadataGalleryTableModel(GalleryData data) throws Exception {
+	public MetadataGalleryTableModel(GalleryData data) throws Exception
+	{
 		super(data);
 		data.normalize = false;
+
 	}
 
 	/** Update the columns display information */
-	public void updateColumnInfo(ArrayList<ColumnInfo> newInfo) {
+	public void updateColumnInfo(ArrayList<ColumnInfo> newInfo)
+	{
 		int n = newInfo.size();
 		boolean changed = false;
 		data.globalRender = false;
 		data.ciFirstRender = null;
 
 		for (int i = 0; i < n; ++i)
-			for (int j = 0; j < n; ++j) {
+			for (int j = 0; j < n; ++j)
+			{
 				ColumnInfo ci1 = data.labels.get(i);
 				ColumnInfo ci2 = newInfo.get(j);
-				if (ci1.label == ci2.label) {
+				if (ci1.label == ci2.label)
+				{
 					if (ci1.updateInfo(ci2))
 						changed = true;
 
-					if (ci1.visible) {
+					if (ci1.visible)
+					{
 						visibleLabels.add(ci1);
 						if (data.ciFirstRender == null && ci1.allowRender)
 							data.ciFirstRender = ci1;
@@ -86,7 +92,8 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 				}
 			}
 
-		if (changed) {
+		if (changed)
+		{
 			data.labels = newInfo;
 			visibleLabels.clear();
 			for (ColumnInfo ci : data.labels)
@@ -99,15 +106,19 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 		}
 	}
 	
+	
+
 	public ImagePlus getImage(long id, String imagepath, int width, int height, boolean useGeo, boolean wrap)
 	{
 		ImagePlus imp = null;
-		if (imagepath != null && Filename.exists(imagepath)) {
-			try {
-			imp = XmippImageConverter.readMdRowToImagePlus(imagepath, data.md, id, 
-					width, height, useGeo, wrap);
+		if (imagepath != null && Filename.exists(imagepath))
+		{
+			try
+			{
+				imp = XmippImageConverter.readMdRowToImagePlus(imagepath, data.md, id, width, height, useGeo, wrap);
 			}
-			catch (Exception ex){
+			catch (Exception ex)
+			{
 				imp = null;
 			}
 		}
@@ -116,12 +127,14 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 
 	// Load initial dimensions
 	@Override
-	protected ImageDimension loadDimension() throws Exception {
+	protected ImageDimension loadDimension() throws Exception
+	{
 		// Set information about columns
 		visibleLabels = new ArrayList<ColumnInfo>();
 		// data.globalRender = false;
 
-		for (ColumnInfo ci : data.labels) {
+		for (ColumnInfo ci : data.labels)
+		{
 			if (ci.visible)
 				visibleLabels.add(ci);
 			// if (ci.render)
@@ -129,18 +142,24 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 		}
 		ImageDimension dim = null;
 
-		if (data.hasRenderLabel()) {
+		if (data.hasRenderLabel())
+		{
 			renderLabel = data.ciFirstRender;
 			displayLabel = renderLabel;
 			// if (renderLabels) {
-			for (int i = 0; i < data.ids.length; ++i) {
+			for (int i = 0; i < data.ids.length; ++i)
+			{
 				String imageFn = getImageFilename(i, renderLabel.getLabel());
-				if (imageFn != null && Filename.exists(imageFn)) {
-					try {
+				if (imageFn != null && Filename.exists(imageFn))
+				{
+					try
+					{
 						image = new ImageGeneric(imageFn);
 						dim = new ImageDimension(image);
 						break;
-					} catch (Exception e) {
+					}
+					catch (Exception e)
+					{
 						dim = null;
 					}
 				}
@@ -155,23 +174,28 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 	}
 
 	@Override
-	protected ImageItem createItem(int index, String key) throws Exception {
-		return createImageItem(index, renderLabel.getLabel(),
-				displayLabel.getLabel(), key);
+	protected ImageItem createItem(int index, String key) throws Exception
+	{
+		return createImageItem(index, renderLabel.getLabel(), displayLabel.getLabel(), key);
 	}
 
-	public String getLabel(int row, int col) {
-		try {
+	public String getLabel(int row, int col)
+	{
+		try
+		{
 			int index = getIndex(row, col);
 			long objId = data.ids[index];
-			if (data.is2dClassification) {
+			if (data.is2dClassification)
+			{
 				int ref = data.md.getValueInt(MDLabel.MDL_REF, objId);
-				long count = data.md.getValueLong(MDLabel.MDL_CLASS_COUNT,
-						objId);
+				long count = data.md.getValueLong(MDLabel.MDL_CLASS_COUNT, objId);
 				return String.format("class %d (%d images)", ref, count);
-			} else
+			}
+			else
 				return data.md.getValueString(displayLabel.getLabel(), objId);
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			e.printStackTrace();
 		}
 		return null;
@@ -180,8 +204,8 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 	/**
 	 * Function to create an image item
 	 */
-	protected ImageItem createImageItem(int index, int renderLabel,
-			int displayLabel, String key) throws Exception {
+	protected ImageItem createImageItem(int index, int renderLabel, int displayLabel, String key) throws Exception
+	{
 		String imageFn = getImageFilename(index, renderLabel);
 		long objId = data.ids[index];
 		ImageItem item = new ImageItem(index);
@@ -191,44 +215,36 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 	}
 
 	@Override
-	public String getItemKey(int index) throws Exception {
+	public String getItemKey(int index) throws Exception
+	{
 		return getItemKey(index, renderLabel.getLabel());
-	}
 
-	/**
-	 * Return a key string using label
-	 */
-	protected String getItemKey(int index, int label) throws Exception {
-		String format = data.getValueFromLabel(index, label) + "_i_(%d,%d)";
-		if (data.useGeo)
-			format += "_geo";
-		if (data.wrap)
-			format += "_wrap";
-		// String key = String.format(format, thumb_width, thumb_height);
-		// DEBUG.printMessage(String.format("key: %s", key));
-		return String.format(format, index, thumb_width, thumb_height);
 	}
 
 	@Override
-	public String getTitle() {
-		String title = "Metadata: "
-				+ (data.getFileName() != null ? Filename.getBaseName(data.getFileName()) : "");
+	public String getTitle()
+	{
+		String title = "Metadata: " + (data.getFileName() != null ? Filename.getBaseName(data.getFileName()) : "");
 		if (n > 1)
 			title += String.format(" %d items", n);
 		if (data.hasRenderLabel())
 			title += String.format(" (%d x %d)", image_width, image_height);
-		
+
 		return title;
 	}// function getTitle
 
-	public String getImageFilename(int index, int label) {
-		try {
+	public String getImageFilename(int index, int label)
+	{
+		try
+		{
 			String file = data.getValueFromLabel(index, label);
 			String mddir = data.md.getBaseDir();
 			file = Filename.findImagePath(file, mddir, true);
-			//System.out.println(file);
+			// System.out.println(file);
 			return file;
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			e.printStackTrace();
 		}
 		return null;
@@ -241,32 +257,44 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 	// }
 
 	@Override
-	public boolean handleDoubleClick(int row, int col) {
-		try {
-			if (data.isImageFile(renderLabel)) {
-				//new XmippImageWindow(data.window, new MdRowImageLoader(getIndex(row, col), renderLabel.getLabel()));
+	public boolean handleDoubleClick(int row, int col)
+	{
+		try
+		{
+			if (data.isImageFile(renderLabel))
+			{
+				// new XmippImageWindow(data.window, new
+				// MdRowImageLoader(getIndex(row, col),
+				// renderLabel.getLabel()));
 				ImagePlusLoader loader = new MdRowImageLoader(getIndex(row, col), renderLabel.getLabel());
 				ImagesWindowFactory.openXmippImageWindow(data.window, loader, loader.allowsPoll());
 				return true;
 			}
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			e.printStackTrace();
 		}
 		return false;
 	}// function handleDoubleClick
 
 	@Override
-	protected double[] getMinAndMax() {
-		try {
+	protected double[] getMinAndMax()
+	{
+		try
+		{
 			return data.md.getStatistics(false);
-		} catch (Exception ex) {
+		}
+		catch (Exception ex)
+		{
 			DEBUG.printException(ex);
 		}
 		return null;
 	}// function getMinAndMax
 
 	/** Change the use of geometry info */
-	public void setUseGeometry(boolean geo, boolean wrap) {
+	public void setUseGeometry(boolean geo, boolean wrap)
+	{
 		if (!geo)
 			wrap = false;
 		boolean changed = data.useGeo != geo || data.wrap != wrap;
@@ -277,46 +305,55 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 	}// function setUseGeometry
 
 	@Override
-	public ImagePlusLoader getImageLoader() {
-		try {
+	public ImagePlusLoader getImageLoader()
+	{
+		try
+		{
 			return new MetadataImageLoader(renderLabel.getLabel());
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			e.printStackTrace();
 		}
 		return null;
 	}// function getImageLoader
 
 	@Override
-	public boolean handleRightClick(int row, int col,
-			XmippPopupMenuCreator xpopup) {
+	public boolean handleRightClick(int row, int col, XmippPopupMenuCreator xpopup)
+	{
 		return true;
 	}// function handleRightClick
 
 	// Extension of the ImagePlusLoader, read an image from a Metadata row
-	public class MdRowImageLoader extends ImagePlusLoader {
+	public class MdRowImageLoader extends ImagePlusLoader
+	{
 		long objId;
 
-		public MdRowImageLoader(int index, int label) {
+		public MdRowImageLoader(int index, int label)
+		{
 			super(getImageFilename(index, label));
 			allowsGeometry = data.md.containsGeometryInfo();
 			useGeometry = data.useGeo;
-			
+
 			wrap = data.wrap;
 			objId = data.ids[index];
 		}
 
 		@Override
-		protected ImagePlus loadSingleImageFromFile() throws Exception {
+		protected ImagePlus loadSingleImageFromFile() throws Exception
+		{
 			return XmippImageConverter.readMdRowToImagePlus(fileName, data.md, objId, useGeometry, wrap);
 		}
 
-	}//class MetadataImageLoader
-	
+	}// class MetadataImageLoader
+
 	// Extension of the ImagePlusLoader, read an entire metadata as an ImagePlus
-	public class MetadataImageLoader extends ImagePlusLoader {
+	public class MetadataImageLoader extends ImagePlusLoader
+	{
 		int label;
 
-		public MetadataImageLoader(int label) {
+		public MetadataImageLoader(int label)
+		{
 
 			super(data.getFileName());
 
@@ -327,17 +364,17 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 		}
 
 		@Override
-
-		protected ImagePlus loadSingleImageFromFile() throws Exception {
+		protected ImagePlus loadSingleImageFromFile() throws Exception
+		{
 			return XmippImageConverter.readMetadataToImagePlus(label, data.md, data.useGeo, data.wrap);
 		}
+
 		@Override
 		public boolean isVolume()
 		{
 			return false;
 		}
-		
-	}//class MetadataImageLoader
-	
-	
+
+	}// class MetadataImageLoader
+
 }

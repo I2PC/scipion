@@ -76,6 +76,9 @@ public:
     /// Sum of the basis on the grid points
     double          sum_on_grid;
 
+    /// Auxiliary vector for projections
+    Matrix1D<double> aux;
+
 public:
     /// Empty constructor. By default, blobs
     Basis();

@@ -901,7 +901,7 @@ void PROJECT_Side_Info::produce_Side_Info(ParametersProjection &prm,
 }
 
 /* Effectively project ===================================================== */
-int PROJECT_Effectively_project(const String &fnOut,
+int PROJECT_Effectively_project(const FileName &fnOut,
                                 bool singleProjection,
                                 projectionType projType,
                                 const ParametersProjection &prm,
@@ -911,7 +911,8 @@ int PROJECT_Effectively_project(const String &fnOut,
 {
     int NumProjs = 0;
     SF.clear();
-    FileName(fnOut).deleteFile();
+    if (!fnOut.isInStack())
+    	fnOut.deleteFile();
     std::cerr << "Projecting ...\n";
     init_progress_bar(side.DF.size());
     SF.setComment("First set of angles=actual angles; Second set of angles=noisy angles");
@@ -948,9 +949,9 @@ int PROJECT_Effectively_project(const String &fnOut,
     FourierProjector *Vfourier=NULL;
     if (projType == SHEARS && side.phantomMode==PROJECT_Side_Info::VOXEL)
         Vshears=new RealShearsInfo(side.phantomVol());
-    if (projType == FOURIER && side.phantomMode==PROJECT_Side_Info::VOXEL)
+    if (projType == FOURIER && side.phantomMode==PROJECT_Side_Info::VOXEL)//////////////////////
         Vfourier=new FourierProjector(side.phantomVol(),side.paddFactor,side.maxFrequency,side.BSplineDeg);
-
+                                     ///                   1              .5                        NEAREST
     fn_proj=fnOut;
     if (side.doCrystal)
         createEmptyFile(fn_proj, prm_crystal.crystal_Xdim, prm_crystal.crystal_Ydim,
@@ -1006,7 +1007,7 @@ int PROJECT_Effectively_project(const String &fnOut,
             if (projType == SHEARS)
                 projectVolume(*Vshears, proj, prm.proj_Ydim, prm.proj_Xdim,
                               rot, tilt, psi);
-            else if (projType == FOURIER)
+            else if (projType == FOURIER)///////////////////////////////////////
                 projectVolume(*Vfourier, proj, prm.proj_Ydim, prm.proj_Xdim,
                               rot, tilt, psi);
             else if (projType == REALSPACE)

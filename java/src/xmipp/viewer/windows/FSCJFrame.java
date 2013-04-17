@@ -38,7 +38,7 @@ import xmipp.jni.MetaData;
  */
 public class FSCJFrame extends JFrame {
 
-    public FSCJFrame(GalleryData data) {
+    public FSCJFrame(GalleryData data, MetaData imagesmd) {
         super(XmippLabel.TITLE_FSC + data.md.getFilename());
 
         try {
@@ -46,9 +46,7 @@ public class FSCJFrame extends JFrame {
             setLayout(new BorderLayout());
 
             MetaData mdout = new MetaData();
-            MetaData imagesmd = data.getImagesMd(data.getRenderLabel());
-            if(imagesmd.findObjects().length == 0)
-    			throw new IllegalArgumentException("No images available");
+          
             mdout.computeFourierStatistics(imagesmd, data.getRenderLabel());
 
             double xValues[] = mdout.getColumnValues(MDLabel.MDL_RESOLUTION_FREQ);

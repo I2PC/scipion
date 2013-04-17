@@ -79,7 +79,7 @@ class ModelML2D
 {
 public:
     /** Number of reference images */
-    size_t n_ref;
+    int n_ref;
     /** References images */
     std::vector < Image<double> > Iref, WsumMref;
     /** Sigma value for expected pixel noise */

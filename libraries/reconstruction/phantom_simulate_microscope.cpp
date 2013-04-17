@@ -191,6 +191,7 @@ void ProgSimulateMicroscope::estimateSigma()
 
     sigma=sqrt(power_avg*power_avg*Xdim*Ydim / (targetSNR*area_avg));
     std::cout << "Estimated sigma=" << sigma << std::endl;
+    updateCtfs();
 }
 
 void ProgSimulateMicroscope::setupFourierFilter(FourierFilter &filter, bool isBackground,

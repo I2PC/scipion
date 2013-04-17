@@ -74,7 +74,7 @@ public class QuickHelpPane extends JPanel
 		helptb = new JTable();
 		helptb.setShowHorizontalLines(false);
 		helptb.setTableHeader(null);
-		int lines = 3;
+		int lines = 2;
 	    helptb.setRowHeight( helptb.getRowHeight() * lines);
 		helptb.setDefaultRenderer(String.class, new MultilineCellRenderer());
 		helptb.setModel(new AbstractTableModel()

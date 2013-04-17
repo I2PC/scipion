@@ -164,15 +164,17 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     sampling_points_angles.clear();
     sampling_points_vector.clear();
 
+    if(min_tilt <= 0.)
+        min_z= -1.;
+    else
+        min_z=-fabs(cos(PI * min_tilt / 180.));
 
-    if(max_tilt >= 90.)
-        max_z=10.;
+    if(max_tilt >= 180.)
+        max_z=1.;
+    else if (max_tilt<=90)
+    	max_z=-fabs(cos(PI * max_tilt / 180.));
     else
-        max_z=sin(PI * max_tilt / 180.);
-    if(min_tilt <= -90.)
-        min_z= -10.;
-    else
-        min_z=sin(PI * min_tilt / 180.);
+        max_z=fabs(cos(PI * max_tilt / 180.));
 
     //01a
     starting_point = vertices_vectors[0];

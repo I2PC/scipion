@@ -177,9 +177,10 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 	{
 		double magnification = getMagnification();
 		int min = 200;
-		while (getSrcRect().getWidth() * magnification < min)
+		while (Math.min(getSrcRect().getWidth() * magnification, getSrcRect().getHeight() * magnification) < min)
 		{
 			magnification = 2 * magnification;
+			System.out.println(magnification);
 		}
 		return magnification;
 	}

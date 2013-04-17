@@ -128,6 +128,8 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
 
     MRChead* header = new MRChead;
 
+    int errCode = 0;
+
     if ( fread( header, MRCSIZE, 1, fimg ) < 1 )
         return(-2);
 
@@ -189,7 +191,8 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
         datatype = DT_CFloat;
         break;
     default:
-        datatype = DT_UChar;
+        datatype = DT_Unknown;
+        errCode = -1;
         break;
     }
     offset = MRCSIZE + header->nsymbt;
@@ -223,7 +226,7 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     if (dataMode==HEADER || (dataMode == _HEADER_ALL && _nDim > 1)) // Stop reading if not necessary
     {
         delete header;
-        return 0;
+        return errCode;
     }
 
     size_t   imgStart = IMG_INDEX(select_img);
@@ -269,11 +272,11 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     delete header;
 
     if ( dataMode < DATA )   // Don't read the individual header and the data if not necessary
-        return 0;
+        return errCode;
 
     readData(fimg, select_img, datatype, 0);
 
-    return(0);
+    return errCode;
 }
 
 /** MRC Writer

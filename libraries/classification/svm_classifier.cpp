@@ -35,7 +35,7 @@ bool findElementIn1DArray(MultidimArray<double> &inputArray,double element)
 void SVMClassifier::setParameters(double c,double gamma)
 {
     param.svm_type = C_SVC;
-    param.kernel_type = LINEAR1;
+    param.kernel_type = RBF;
     param.degree = 2;
     param.gamma = gamma;
     param.coef0 = 0;

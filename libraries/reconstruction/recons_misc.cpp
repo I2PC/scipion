@@ -803,16 +803,17 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
         // int bg = (int) vol_POCS().sum();
         // int fg = MULTIDIM_SIZE(vol_POCS()) - bg;
         int relax = 0, posi = 0;
-        FOR_ALL_ELEMENTS_IN_ARRAY3D(vol_voxels())
-        if (vol_POCS(k, i, j) == 1 && vol_voxels(k, i, j) < 0)
+        const MultidimArray<double> &mVolVoxels=vol_voxels();
+        const MultidimArray<double> &mVolPOCS=vol_POCS();
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(mVolVoxels)
+        if (DIRECT_A3D_ELEM(mVolPOCS,k, i, j) == 1 && DIRECT_A3D_ELEM(mVolVoxels,k, i, j) < 0)
         {
-            vol_POCS(k, i, j) = 0;
+        	DIRECT_A3D_ELEM(mVolPOCS,k, i, j) = 0;
             relax++;
         }
-        else if (vol_POCS(k, i, j) == 0 && vol_voxels(k, i, j) < 0 &&
-                 prm->positivity)
+        else if (DIRECT_A3D_ELEM(mVolPOCS,k, i, j) == 0 && DIRECT_A3D_ELEM(mVolVoxels,k, i, j) < 0 && prm->positivity)
         {
-            vol_POCS(k, i, j) = 1;
+        	DIRECT_A3D_ELEM(mVolPOCS,k, i, j) = 1;
             posi++;
         }
         // Debugging messages

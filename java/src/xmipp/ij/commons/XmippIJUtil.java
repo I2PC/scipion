@@ -1,11 +1,7 @@
 package xmipp.ij.commons;
 
-import java.util.List;
-import java.util.logging.Level;
-
 import ij.IJ;
 import ij.ImagePlus;
-import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 

@@ -164,11 +164,12 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 
 	/** Function to force the refresh of some item */
 	public void refreshAt(int row, int col) {
+		
 		int index = getIndex(row, col);
 
 		if (isValidIndex(index)) {
 			try {
-				String key = getItemKey(index);
+				String key = getItemKey(index, data.getLabelFromCol(col));
 				// Clear cache entry
 				cache.remove(key);
 				fireTableRowsUpdated(row, row);
@@ -530,6 +531,20 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 * Function to create the key of the item knowing the item index
 	 */
 	public abstract String getItemKey(int index) throws Exception;
+	
+	/**
+	 * Return a key string using label
+	 */
+	public String getItemKey(int index, int label) throws Exception {
+		String format = data.getValueFromLabel(index, label) + "_i_(%d,%d)";
+		if (data.useGeo)
+			format += "_geo";
+		if (data.wrap)
+			format += "_wrap";
+		// String key = String.format(format, thumb_width, thumb_height);
+		// DEBUG.printMessage(String.format("key: %s", key));
+		return String.format(format, index, thumb_width, thumb_height);
+	}
 
 	/** Check if the item is busy */
 	public boolean isBusy(int row, int col) {

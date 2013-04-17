@@ -410,10 +410,12 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		public void mouseClicked(MouseEvent e) {
 			
 			TableColumnModel colModel = table.getColumnModel();
+			//Get the clicked column index
 			int columnModelIndex = colModel.getColumnIndexAtX(e.getX());
-			int modelIndex = colModel.getColumn(columnModelIndex)
-					.getModelIndex();
-
+			//Take into account a possible reordering of columns
+			int modelIndex = colModel.getColumn(columnModelIndex).getModelIndex();
+			//Take into account possible invisible columns indexing
+			modelIndex = data.getVisibleColumnIndex(modelIndex);
 			if (modelIndex < 0)
 				return;
 			if (sortColumnIndex == modelIndex)

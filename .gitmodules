@@ -1,6 +1,0 @@
-[submodule "protocols/pyworkflow"]
-	path = protocols/pyworkflow
-	url =  http://git.code.sf.net/p/pyworkflow/code
-[submodule "protocols/emx"]
-	path = protocols/emx
-	url = http://git.code.sf.net/p/emxlibrary/code

@@ -152,7 +152,7 @@ void MpiProgML2D::expectation()
     MPI_Allreduce(&wsum_sigma_offset, &aux, 1, MPI_DOUBLE,
                   MPI_SUM, MPI_COMM_WORLD);
     wsum_sigma_offset = aux;
-    for (size_t refno = 0; refno < model.n_ref * factor_nref; refno++)
+    for (int refno = 0; refno < model.n_ref * factor_nref; refno++)
     {
         MPI_Allreduce(MULTIDIM_ARRAY(wsum_Mref[refno]),
                       MULTIDIM_ARRAY(Maux),
@@ -349,7 +349,7 @@ void MpiProgMLF2D::expectation()
             DIRECT_MULTIDIM_ELEM(resolhist[ires], n) = DIRECT_MULTIDIM_ELEM(Vaux, n);
         }
     }
-    for (size_t refno = 0;refno < model.n_ref; refno++)
+    for (int refno = 0;refno < model.n_ref; refno++)
     {
         MPI_Allreduce(MULTIDIM_ARRAY(wsum_Mref[refno]), MULTIDIM_ARRAY(Maux),
                       MULTIDIM_SIZE(wsum_Mref[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);

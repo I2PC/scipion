@@ -239,18 +239,25 @@ public:
                         bool only_check)
     {
         result.initZeros(Y_window_size, X_window_size);
-        size_t i0 = ROUND(scaleY * P.Y) + FIRST_XMIPP_INDEX(Y_window_size);
-        size_t iF = ROUND(scaleY * P.Y) + LAST_XMIPP_INDEX(Y_window_size);
-        size_t j0 = ROUND(scaleX * P.X) + FIRST_XMIPP_INDEX(X_window_size);
-        size_t jF = ROUND(scaleX * P.X) + LAST_XMIPP_INDEX(X_window_size);
+        int _i0 = ROUND(scaleY * P.Y) + FIRST_XMIPP_INDEX(Y_window_size);
+        int _iF = ROUND(scaleY * P.Y) + LAST_XMIPP_INDEX(Y_window_size);
+        int _j0 = ROUND(scaleX * P.X) + FIRST_XMIPP_INDEX(X_window_size);
+        int _jF = ROUND(scaleX * P.X) + LAST_XMIPP_INDEX(X_window_size);
         int retval = 1;
         double irange=1.0/(Dmax - Dmin);
+		size_t i0 = (size_t)_i0;
+		size_t iF = (size_t)_iF;
+		size_t j0 = (size_t)_j0;
+		size_t jF = (size_t)_jF;
 
-        if (i0 < 0 || iF >= Ydim || j0 < 0 || jF >= Xdim)
-            retval = 0;
+        if (_i0 < 0 || iF >= Ydim || _j0 < 0 || jF >= Xdim)
+        {
+        	retval = 0;
+        }
         else
             if (!only_check)
             {
+
                 for (size_t i = i0; i <= iF; i++)
                 {
                     int i_i0=i-i0;

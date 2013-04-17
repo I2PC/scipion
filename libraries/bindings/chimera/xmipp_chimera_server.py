@@ -12,6 +12,7 @@ from threading import Thread
 from os import system
 from chimera import runCommand
 from time import gmtime, strftime
+from datetime import datetime
 
 class ChimeraServer:
     
@@ -41,6 +42,7 @@ class ChimeraServer:
                     
                     msg = self.remote_conn.recv()
                     print msg
+                    
                     if msg == 'exit_client':
                         break
                     else:
@@ -64,14 +66,18 @@ class ChimeraServer:
                         print 'volume data'
                         grid = Array_Grid_Data(data)
                         self.volume = volume_from_grid_data(grid)
+                    if msg == 'draw_angular_distribution':
+                        angulardist = self.remote_conn.recv()
+                        for command in angulardist:
+                            runCommand(command)
+                    if msg == 'end':    
                         break
                     else:
                         sleep(0.01)
         except EOFError:
             print 'Lost connection to client'
         
-            
-    
+
     
     def onMotionStop(self, trigger, extra, userdata):
         print "Motion stop"
@@ -92,8 +98,8 @@ class ChimeraServer:
         
             
 def printCmd(cmd):
-        timeformat = "%H:%M:%S" 
-        print strftime(timeformat, gmtime())
+        timeformat = "%S.%f" 
+        print datetime.now().strftime(timeformat)
         print cmd
 
 ChimeraServer()

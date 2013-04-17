@@ -28,7 +28,7 @@
 # This library contains some common utilities 
 # for all particles related protocols: Extract, Import
 from protlib_base import *
-from xmipp import MetaData, ImgSize, MDL_ZSCORE
+from xmipp import MetaData, MetaDataInfo, MDL_ZSCORE
 from protlib_utils import runJob, runShowJ
 from protlib_filesystem import moveFile
 #MDL_CTF_SAMPLING_RATE, MDL_CTF_VOLTAGE, MDL_CTF_DEFOCUSU, MDL_CTF_DEFOCUSV, \
@@ -109,7 +109,7 @@ def runNormalize(log,stack,normType,bgRadius,Nproc):
     args = "-i %(stack)s "
     
     if bgRadius <= 0:
-        particleSize = ImgSize(stack)[0]
+        particleSize = MetaDataInfo(stack)[0]
         bgRadius = int(particleSize/2)
     
     if normType=="OldXmipp":

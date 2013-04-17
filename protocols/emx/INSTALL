@@ -1,0 +1,13 @@
+emx is a pure python module, in order to install it create a directory named emx, copy to it all the files contained in this directory and modify the variable PYTHONPATH so it points towards the new created directory.
+
+In order to modify the variable PYTHONPATH edit .bashrc or .cshrc with commands to change PYTHONPATH. (not sure what shell your terminal is using? Run ‘echo $0′ That’s the number zero.)
+
+For CSH shells, edit .cshrc and add a line like this:
+setenv PYTHONPATH ${PYTHONPATH}:/path_to_the_emx_directory
+
+For BASH shells, edit .bashrc and add something like these lines:
+export PYTHONPATH=$PYTHONPATH:/path_to_the_emx_directory
+
+The changes will take effect in newly opened terminals.
+
+NOTE: At the moment schema validation is made through a subprocess call to the program _xmllint_. This could use a Python-based library at some point in the future, if pure python validator could be found. Therefore xmllint need to be install is schema validation is required. xmlint is usually avaliable through the libxml2 package
