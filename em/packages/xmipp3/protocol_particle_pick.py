@@ -62,11 +62,12 @@ class XmippProtParticlePicking(ProtParticlePicking):
         self.inputMics = self.inputMicrographs.get()
         
         # Convert from SetOfMicrographs to SetOfMicrographsXmipp
-        self.inputMicsXmipp = self.inputMics
-        pass
+        print self.convertSetOfMicrographs(self.inputMics, "micrographs.xmd")
+        #self.inputMicsXmipp = self.convertSetOfMicrographs(self.inputMics, "micrographs.xmd")
+        break
         
         # Parameters needed 
-        self.params = {'inputMicsXmipp': self.inputMicsXmipp,  # pillarlo del micrxmipp.metadata.filename
+        self.params = {'inputMicsXmipp': self.inputMicsXmipp,
                        'memory': self.memory.get(),
                        'pickingMode': 'PM_MANUAL',
                        }
@@ -75,7 +76,7 @@ class XmippProtParticlePicking(ProtParticlePicking):
         self.launchParticlePickGUI()
 
         # Insert step to create output objects       
-        self.insertFunctionStep('createOutput')
+        #self.insertFunctionStep('createOutput')
         
     def launchParticlePickGUI(self):
         # (log, InputMicrographs, ExtraDir, PickingMode=PM_MANUAL,TiltPairs=False, Memory=2, Family=""):
@@ -100,8 +101,7 @@ class XmippProtParticlePicking(ProtParticlePicking):
         
         # Create the set of coordinates
         
-        
-        
+          
         # Create the xmipp metadata micrographs.xmd  
          
         md = MetaData()
