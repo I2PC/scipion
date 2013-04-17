@@ -66,6 +66,7 @@ class Project(object):
         from the project dir."""
         if not exists(self.dbPath):
             raise Exception("Project doesn't exists in '%s'" % self.path)
+        os.chdir(self.path) #Before doing nothing go to project dir
         self.mapper = SqliteMapper(self.dbPath, globals())
         
     def create(self):
@@ -73,6 +74,7 @@ class Project(object):
         Prepare all required paths and files"""
         # Create project path if not exists
         makePath(self.path)
+        os.chdir(self.path) #Before doing nothing go to project dir
         # Create db throught the mapper
         self.mapper = SqliteMapper(self.dbPath, globals())
         self.mapper.commit()
@@ -89,7 +91,6 @@ class Project(object):
         # handle the communication of remove projects
         # and also the particularities of job submission: mpi, threads, queue, bash
         protocol.mapper = self.mapper
-        os.chdir(self.path) #Before launching any protocol move to the project path
         protocol.run()
         
         
