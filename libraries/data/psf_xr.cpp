@@ -762,8 +762,8 @@ void XRayPSF::adjustParam()
                 mask->initZeros(Niy,Nix);
 
                 double Rlens2=Rlens*Rlens;
-                double auxY = dyl*(1 - Niy);
-                double auxX = dxl*(1 - Nix);
+                double auxY = dyl*(1 - (int)Niy);
+                double auxX = dxl*(1 - (int)Nix);
 
                 for (size_t i=0; i<YSIZE(*mask); i++)
                 {
