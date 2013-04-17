@@ -32,6 +32,7 @@ from pyworkflow.object import String, Float
 from pyworkflow.protocol import Protocol
 from pyworkflow.protocol.params import *
 from pyworkflow.em import SetOfMicrographs
+from pyworkflow.utils.path import removeBaseExt
 
 
 class DefImportMicrographs(Form):
@@ -142,7 +143,48 @@ class DefCTFMicrographs(Form):
                       expertLevel=LEVEL_ADVANCED)        
 
 class ProtCTFMicrographs(Protocol):
-    pass
+    
+    _definition = DefCTFMicrographs()
+        
+#    def __init__(self, **args):
+#        
+#        Protocol.__init__(self, **args)
+            
+    
+    def _iterMicrographs(self):
+        """Iterate over micrographs and yield
+        micrograph name and a directory to process """
+        for mic in self.inputMics:
+            fn = mic.getFileName()
+            micrographDir = self._getExtraPath(removeBaseExt(fn)) 
+            yield (fn, micrographDir)  
+        
+    def _defineSteps(self):
+        ''' insert the steps to perform ctf estimation on a set of micrographs
+        '''
+        # Get pointer to input micrographs 
+        self.inputMics = self.inputMicrographs.get() 
+        
+        self.params = {'kV': self.inputMics.microscope.voltage.get(),
+                       'Cs': self.inputMics.microscope.sphericalAberration.get(),
+                       'sampling_rate': self.inputMics.samplingRate.get(),
+                       'ctfmodelSize': self.windowSize.get(),
+                       'Q0': self.ampContrast.get(),
+                       'min_freq': self.lowRes.get(),
+                       'max_freq': self.highRes.get(),
+                       'pieceDim': self.windowSize.get(),
+                       'defocus_range': (self.maxDefocus.get()-self.minDefocus.get())*10000/2,
+                       'defocusU': (self.maxDefocus.get()+self.minDefocus.get())*10000/2
+                       }
+        
+        # For each micrograph insert the steps to process it
+        for fn, micrographDir in self._iterMicrographs():
+            
+            # CTF estimation with Xmipp
+            self._insertFunctionStep('estimateCTF', fn, micrographDir)
+                    
+        # Insert step to create output objects       
+        self._insertFunctionStep('createOutput')
 
 
 class ProtPreprocessMicrographs(Protocol):

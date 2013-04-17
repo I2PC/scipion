@@ -89,9 +89,9 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     """Protocol to preprocess a set of micrographs in the project"""
     _definition = XmippDefPreprocessMicrograph()
     
-    def __init__(self, **args):
-        
-        Protocol.__init__(self, **args)
+#    def __init__(self, **args):
+#        
+#        ProtPreprocessMicrographs.__init__(self, **args)
         
     def _defineSteps(self):
         '''for each micrograph insert the steps to preprocess it

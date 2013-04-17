@@ -30,9 +30,9 @@ This sub-package contains the XmippCtfMicrographs protocol
 
 
 from pyworkflow.em import *  
-from pyworkflow.utils import *
 from pyworkflow.em.packages.xmipp3.data import *
-from pyworkflow.utils.path import makePath, replaceBaseExt, join, basename
+from pyworkflow.utils.path import makePath, basename, join
+from pyworkflow.utils import runJob
 
 
 class XmippProtCTFMicrographs(ProtCTFMicrographs):
@@ -52,39 +52,6 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
 #        'ctffind_spectrum': join('%(micrographDir)s', 'ctffind_spectrum.mrc')
         }
 
-    _definition = DefCTFMicrographs()
-        
-    def __init__(self, **args):
-        
-        Protocol.__init__(self, **args)
-        
-    def _defineSteps(self):
-        ''' insert the steps to perform ctf estimation on a set of micrographs
-        '''
-        # Get pointer to input micrographs 
-        self.inputMics = self.inputMicrographs.get() 
-        
-        self.params = {'kV': self.inputMics.microscope.voltage.get(),
-                       'Cs': self.inputMics.microscope.sphericalAberration.get(),
-                       'sampling_rate': self.inputMics.samplingRate.get(),
-                       'ctfmodelSize': 256,
-                       'Q0': self.ampContrast.get(),
-                       'min_freq': self.lowRes.get(),
-                       'max_freq': self.highRes.get(),
-                       'pieceDim': self.windowSize.get(),
-                       'defocus_range': (self.maxDefocus.get()-self.minDefocus.get())*10000/2,
-                       'defocusU': (self.maxDefocus.get()+self.minDefocus.get())*10000/2
-                       }
-        
-        # For each micrograph insert the steps to process it
-        for fn, micrographDir in self.__iterMicrographs():
-            
-            # CTF estimation with Xmipp
-            self._insertFunctionStep('estimateCTF', fn, micrographDir)
-                    
-        # Insert step to create output objects       
-        self._insertFunctionStep('createOutput')
-
     def estimateCTF(self, mic, micDir):
         ''' Run the estimate CTF program '''
         
@@ -99,23 +66,14 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         for par, val in self.params.iteritems():
             args+= " --" + par + " " + str(val)
                 
-        runJob(None, 'xmipp_ctf_estimate_from_micrograph', args)
-            
-    
-    def __iterMicrographs(self):
-        """Iterate over micrographs and yield
-        micrograph name and a directory to process """
-        for mic in self.inputMics:
-            fn = mic.getFileName()
-            micrographDir = self._getExtraPath(removeExt(basename(fn))) 
-            yield (fn, micrographDir)       
+        runJob(None, 'xmipp_ctf_estimate_from_micrograph', args)    
 
     def createOutput(self):
         # Create micrographs metadata with CTF information
         mdOut = self._getPath(self._getFilename('micrographs'))
         
         md = MetaData()
-        for fn, micrographDir in self.__iterMicrographs():
+        for fn, micrographDir in self._iterMicrographs():
             objId = md.addObject()
             md.setValue(MDL_MICROGRAPH, fn, objId)
             ctfparam = self._getFilename('ctfparam', micrographDir=micrographDir)
