@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from utils.path import cleanPath
 """
 This modules contains classes required for the workflow
 execution and tracking like: Step and Protocol
@@ -31,7 +32,7 @@ execution and tracking like: Step and Protocol
 import datetime as dt
 import pickle
 
-from pyworkflow.object import OrderedObject, String, List, Integer
+from pyworkflow.object import OrderedObject, String, List, Integer, Boolean
 from pyworkflow.utils.path import replaceExt, makePath, join, existsPath
 from pyworkflow.utils.process import runJob
 
@@ -54,7 +55,9 @@ class Step(OrderedObject):
         self.initTime = String()
         self.endTime = String()
         self.error = String()
-        self.runStartsCallback = None # Used to monitor the Step(Observer pattern)
+        self.isInteractive = Boolean(False)
+        self.runStartsCallback = None # Used to monitor the Step Starts(Observer pattern)
+        self.runFinishCallback = None # Used to monitor the Step Finish(Observer pattern)
         
     def _storeAttributes(self, attrList, attrDict):
         """Store all attributes in attrDict as 
@@ -96,14 +99,21 @@ class Step(OrderedObject):
             if not self.runStartsCallback is None:
                 self.runStartsCallback(self)
             self._run()
-            self.status.set(STATUS_FINISHED)
+            if self.isInteractive.get():
+                # If the Step is interactive, after run
+                # it will be waiting for use to mark it as DONE
+                status = STATUS_WAITING
+            else:
+                status = STATUS_FINISHED
+            self.status.set(status)
         except Exception, e:
             self.status.set(STATUS_FAILED)
             self.error.set(e)
             raise #only in development
         finally:
             self.endTime.set(dt.datetime.now())
-            
+            if not self.runFinishCallback is None:
+                self.runFinishCallback(self)
 
 class FunctionStep(Step):
     """This is a Step wrapper around a normal function
@@ -134,6 +144,12 @@ class FunctionStep(Step):
         files = pickle.loads(self.resultFiles.get())
 
         return len(existsPath(files)) == 0
+    
+    def __eq__(self, other):
+        """Compare with other FunctionStep"""
+        return (self.funcName == other.funcName and
+                self.funcArgs == other.funcArgs and
+                self.argsStr == other.argsStr)
         
             
 class RunJobStep(FunctionStep):
@@ -163,7 +179,7 @@ class Protocol(Step):
     def __init__(self, **args):
         Step.__init__(self, **args)
         self.mode = String(args.get('mode', MODE_RESUME))
-        self.steps = List() # List of steps that will be executed
+        self._steps = List() # List of steps that will be executed
         self.workingDir = args.get('workingDir', '.') # All generated files should be inside workingDir
         self.mapper = args.get('mapper', None)
         self._createVarsFromDefinition(**args)
@@ -200,7 +216,9 @@ class Protocol(Step):
     
     def __insertStep(self, step):
         """Insert a new step in the list"""
-        self.steps.append(step)
+        self._steps.append(step)
+        step.runStartsCallback = self._stepStarted
+        step.runFinishCallback = self._stepFinished
         
     def _getPath(self, *paths):
         """Return a path inside the workingDir"""
@@ -229,28 +247,90 @@ class Protocol(Step):
         step = RunJobStep(progName, progArguments, resultFiles)
         self.__insertStep(step)
         
-    def _run(self):
-        self._defineSteps() # Define steps for execute later
-        # Create workingDir path
-        makePath(self.workingDir)
-        # Create extra path
-        makePath(self._getExtraPath())
-        # Create tmp path
-        makePath(self._getTmpPath())
+    def __backupSteps(self):
+        """ Store the Steps list in another variable to prevent
+        overriden of stored steps when calling _defineSteps function.
+        This is need to later find in which Step will start the run
+        if the RESUME mode is used"""
+        self._steps.setStore(False)
+        self._prevSteps = self._steps
+        self._steps = List() # create a new object for steps
         
-        for step in self.steps:
+    def __findStartingStep(self):
+        """ From a previous run, compare self._steps and self._prevSteps
+        to find which steps we need to start at, skipping sucessful done 
+        and not changed steps. Steps that needs to be done, will be deleted
+        from the previous run storage"""
+        if self.mode.get() == MODE_RESTART:
+            return 0
+        
+        n = min(len(self._steps), len(self._prevSteps))
+        
+        for i in range(n):
+            newStep = self._steps[i]
+            oldStep = self._prevSteps[i]
+            if (newStep != oldStep or 
+                not oldStep._postconditions()):
+                return i
+            
+        return n
+    
+    def __cleanStepsFrom(self, index):
+        """ Clean from the persistence all steps in self._prevSteps
+        from that index. After this function self._steps is updated
+        with steps from self._prevSteps (<index) and self._prevSteps is 
+        deleted since is no longer needed"""
+        self._steps[:index] = self._prevSteps[:index]
+        
+        for oldStep in self._prevSteps[index:]:
+            self.mapper.delete(oldStep)
+            
+        self._prevSteps = []
+        
+    def _stepStarted(self, step):
+        """This function will be called whenever an step
+        has started running"""
+        print "STARTED: " + step.funcName.get()
+    
+    def _stepFinished(self, step):
+        """This function will be called whenever an step
+        has finished its run"""
+        self.mapper.insertChild(self._steps, self._steps.getIndexStr(self.currentStep),
+                         step, self.namePrefix)
+        self.currentStep += 1
+        self.mapper.commit()
+        if step.status == STATUS_FAILED:
+            raise Exception("Protocol failed: " + step.error.get())
+        print "FINISHED: ", step.funcName.get()
+    
+    def _runSteps(self, startIndex):
+        """ Run all steps defined in self._steps"""
+        self._steps.setStore(True) # Set steps to be stored
+        
+        for step in self._steps[startIndex:]:
             step.run()
-            self.mapper.insertChild(self.steps, self.steps.getIndexStr(self.currentStep),
-                             step, self.namePrefix)
-            self.currentStep += 1
-            self.mapper.commit()
-            if step.status == STATUS_FAILED:
-                raise Exception("Protocol failed: " + step.error.get())
+    
+    def _run(self):
+        self.__backupSteps() # Prevent from overriden previous stored steps
+        self._defineSteps() # Define steps for execute later
+        startIndex = self.__findStartingStep() # Find at which step we need to start
+        self.__cleanStepsFrom(startIndex) # 
+        
+        self._store()
+        paths = [self.workingDir, self._getExtraPath(), self._getTmpPath()]
+        
+        # Clean working path if in RESTART mode
+        if self.mode.get() == MODE_RESTART:
+            cleanPath(*paths)
+        # Create workingDir, extra and tmp paths
+        makePath(*paths)
+        
+        self._runSteps(startIndex)
+        
 
     def run(self):
         self.currentStep = 1
-        self._store()
-        self.namePrefix = replaceExt(self.steps.getName(), self.steps.strId()) #keep 
+        self.namePrefix = replaceExt(self._steps.getName(), self._steps.strId()) #keep 
         Step.run(self)
         outputs = [getattr(self, o) for o in self._outputs]
         #self._store(self.status, self.initTime, self.endTime, *outputs)

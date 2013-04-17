@@ -12,32 +12,44 @@ LOCAL_USER_AND_HOST = ""
 SSH_PORT = "22";
 
 
-class FileTransferProcess():
+class FileTransfer():
     
     ssh = None   
     sftp = None 
     
     def __init__(self):
         # Default ssh session options.
-        ssh = paramiko.SSHClient()
-        ssh.load_system_host_keys()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self.ssh = paramiko.SSHClient()
+        self.ssh.load_system_host_keys()
+        self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
     def transferFiles(self,
                       sourceFiles, 
                       targetFiles,
-                      gatewayHosts = None, 
                       hostsPaswords, 
-                      operationId, 
-                      numberTrials, 
+                      gatewayHosts = None,
+                      operationId = 1, 
+                      numberTrials = 1,                        
                       forceOperation = False):
         # Order source files by it host.
         filesByHosts = getSourceFilesByHosts(sourceFiles)
         # First we send local files.
-        localFiles = filesByHosts[LOCAL_USER_AND_HOST]    
-        if (localFiles is not None
-            and len(localFiles) > 0):
-            self.trasferLocalFiles(localFiles, getTargetFilesById(localFiles.keys(), targetFiles), gatewayHosts, 
+        localSourceFiles = filesByHosts[LOCAL_USER_AND_HOST]    
+        
+        # Classify local source files depending on their local target host or remote target host 
+        localClassifiedFiles = self.__classifyLocalFiles(localSourceFiles, targetFiles)
+        
+        # Copy local files inj local machine
+        localToLocalSourceFiles = localClassifiedFiles[0]
+        localToLocalTargetFiles = localClassifiedFiles[1]
+        if (localToLocalSourceFiles is not None and len(localToLocalSourceFiles) > 0):
+            self.__copyLocalFiles(localToLocalSourceFiles, localToLocalTargetFiles, operationId, numberTrials, forceOperation)
+        
+        # Send local files to remote machines  
+        localToRemoteSourceFiles = localClassifiedFiles[2]
+        localToRemoteTargetFiles = localClassifiedFiles[3]
+        if (localToRemoteSourceFiles is not None and len(localToRemoteSourceFiles) > 0):
+            self.__trasferLocalFilesToRemoteHost(localToRemoteSourceFiles, localToRemoteTargetFiles, gatewayHosts, 
                               hostsPaswords, operationId, numberTrials, forceOperation)
             
         self.sftp.close()
@@ -58,7 +70,7 @@ class FileTransferProcess():
         numberTrials -- Number of trials in error cases.
         forceOperation -- Flag to indicate if, when an error happens and number of trials is exceeded, the operation must continue with the rest of files.
         """
-        for sourceFileId, sourceFile in sourceFiles.iterItems():
+        for sourceFileId, sourceFile in sourceFiles.iteritems():
             targetFile = targetFiles[sourceFileId]
             copyLocalFile(sourceFile, targetFile)
             
@@ -80,6 +92,7 @@ class FileTransferProcess():
         numberTrials -- Number of trials in error cases.
         forceOperation -- Flag to indicate if, when an error happens and number of trials is exceeded, the operation must continue with the rest of files.
         """
+        
         # As we are going to create a session for each target host we must get different target hosts.
         targetUserAndHosts = getDiferentTargetHosts(targetFiles)
         for targetUserAndHost in targetUserAndHosts:
@@ -133,12 +146,12 @@ class FileTransferProcess():
                 
         
     def deleteFiles(self, 
-                    filePaths,
-                    gatewayHosts = None, 
+                    filePaths,                    
                     hostsPaswords, 
-                    operationId, 
-                    numberTrials, 
-                    forceOperation = False):
+                    gatewayHosts=None, 
+                    operationId=1, 
+                    numberTrials=1, 
+                    forceOperation=False):
         """
         filepaths -- List of file paths to remove with this format: "userName@hostName:absolute_file_path"
         gatewayHosts -- Gateway hosts dictionary with this format: "userName1@hostName1:userName2@hostName2":"userName@hostName"
@@ -151,23 +164,59 @@ class FileTransferProcess():
         # As we are going to create a session for each target host we must get different target hosts.
         userAndHosts = getDiferentHostsFromFilePaths(filePaths)
         for userAndHost in userAndHosts:
-            resultFilePaths = getFilePaths(filePaths, userAndHost)
-            # Recover host credentials to remove files
-            userName = getUserAndHost(userAndHost)[0]
-            hostName = getUserAndHost(userAndHost)[1]
-            hostPassword = hostsPaswords[userAndHost]
-            # Create ssh session to remote host
-            self.ssh.connect(hostName, SSH_PORT, userName, hostPassword)
-            self.sftp = self.ssh.open_sftp()
-            for resultFilePath in resultFilePaths:
-                self.sftp.remove(getLocationAndFilePath(resultFilePath)[1])
+            if (not isLocalCredential(userAndHost)):
+                resultFilePaths = getFilePaths(filePaths, userAndHost)
+                # Recover host credentials to remove files
+                userName = getUserAndHost(userAndHost)[0]
+                hostName = getUserAndHost(userAndHost)[1]
+                hostPassword = hostsPaswords[userAndHost]
+                # Create ssh session to remote host
+                self.ssh.connect(hostName, SSH_PORT, userName, hostPassword)
+                self.sftp = self.ssh.open_sftp()
+                for resultFilePath in resultFilePaths:
+                    self.sftp.remove(getLocationAndFilePath(resultFilePath)[1])
+            else:
+                pass
+            
+    def deleteDirectories(self, 
+                          directoryPaths,                    
+                          hostsPaswords, 
+                          gatewayHosts=None, 
+                          operationId=1, 
+                          numberTrials=1, 
+                          forceOperation=False):
+        """
+        filepaths -- List of file paths to remove with this format: "userName@hostName:absolute_directory_path"
+        gatewayHosts -- Gateway hosts dictionary with this format: "userName1@hostName1:userName2@hostName2":"userName@hostName"
+        hostsPasswords -- Passwords needed to connect to involved hosts with this format: "userName@hostName":"hostPassword"
+        operationId -- Operation identifier.
+        numberTrials -- Number of trials in error cases.
+        forceOperation -- Flag to indicate if, when an error happens and number of trials is exceeded, the operation must continue with the rest of files.
+        """
+        
+        # As we are going to create a session for each target host we must get different target hosts.
+        userAndHosts = getDiferentHostsFromFilePaths(directoryPaths)
+        for userAndHost in userAndHosts:
+            if (not isLocalCredential(userAndHost)):
+                resultDirectoryPaths = getFilePaths(directoryPaths, userAndHost)
+                # Recover host credentials to remove files
+                userName = getUserAndHost(userAndHost)[0]
+                hostName = getUserAndHost(userAndHost)[1]
+                hostPassword = hostsPaswords[userAndHost]
+                # Create ssh session to remote host
+                self.ssh.connect(hostName, SSH_PORT, userName, hostPassword)
+                self.sftp = self.ssh.open_sftp()
+                for resultDirectoryPath in resultDirectoryPaths:
+                    self.sftp.rmdir(getLocationAndFilePath(resultDirectoryPath)[1])
+            else:
+                pass
         
     def checkFiles(self, 
-                   filePaths,
-                   gatewayHosts = None, 
-                   hostsPaswords, 
-                   operationId, 
-                   numberTrials, 
+                   filePaths,                   
+                   hostsPaswords,
+                   gatewayHosts=None,  
+                   operationId=1, 
+                   numberTrials=1, 
                    forceOperation = False):
         """
         filepaths -- List of file paths to remove with this format: "userName@hostName:absolute_file_path"
@@ -182,19 +231,22 @@ class FileTransferProcess():
         # As we are going to create a session for each target host we must get different target hosts.
         userAndHosts = getDiferentHostsFromFilePaths(filePaths)
         for userAndHost in userAndHosts:
-            resultFilePaths = getFilePaths(filePaths, userAndHost)
-            # Recover host credentials to remove files
-            userName = getUserAndHost(userAndHost)[0]
-            hostName = getUserAndHost(userAndHost)[1]
-            hostPassword = hostsPaswords[userAndHost]
-            # Create ssh session to remote host
-            self.ssh.connect(hostName, SSH_PORT, userName, hostPassword)
-            self.sftp = self.ssh.open_sftp()
-            for resultFilePath in resultFilePaths:
-                try:
-                    self.sftp.lstat(getLocationAndFilePath(resultFilePath)[1])                    
-                except IOError:
-                    returnFilePaths.append(resultFilePath)
+            if (not isLocalCredential(userAndHost)):
+                resultFilePaths = getFilePaths(filePaths, userAndHost)
+                # Recover host credentials
+                userName = getUserAndHost(userAndHost)[0]
+                hostName = getUserAndHost(userAndHost)[1]
+                hostPassword = hostsPaswords[userAndHost]
+                # Create ssh session to remote host
+                self.ssh.connect(hostName, SSH_PORT, userName, hostPassword)
+                self.sftp = self.ssh.open_sftp()
+                for resultFilePath in resultFilePaths:
+                    try:
+                        self.sftp.lstat(getLocationAndFilePath(resultFilePath)[1])                    
+                    except IOError:
+                        returnFilePaths.append(resultFilePath)
+            else:
+                pass
         return returnFilePaths
     
     def __trasferRemoteFiles(self,
@@ -207,6 +259,44 @@ class FileTransferProcess():
                            forceOperation=False):
         pass
 
+
+    def __classifyLocalFiles(self, localSourceFilePaths, targetFiles):
+        """
+        Classifies those files that are going to be sent from local machine to local machine or remote machines.
+        localSourceFilePaths --  Local source files dictionary with "id":"useName@hostName:filePath" structure.   
+        targetFiles -- Target files dictionary with this format: "id": [userName1@hostName1:absolute_file_path1, userName2@hostName2:absolute_file_path2]
+        returns -- List with classified dictionaries: 1.- Local source files for local target dictionary with "id":"useName@hostName:filePath" structure.
+                                                      2.- Local target files dictionary with "id":"useName@hostName:filePath" structure. 
+                                                      3.- Local source files for remote target dictionary with "id":"useName@hostName:filePath" structure. 
+                                                      4.- Local target files for remote target dictionary with "id": [userName1@hostName1:absolute_file_path1, userName2@hostName2:absolute_file_path2].
+        """
+        resultLocalToLocalSourceFilePaths = {}
+        resultLocalToLocalTargetFilePaths = {}
+        resultLocalToRemoteSourceFilePaths = {}
+        resultLocalToRemoteTargetFilePaths = {}
+        for localSourceFileId in localSourceFilePaths.keys():
+            targetFilePaths = targetFiles[localSourceFileId]
+            for targetFilePath in targetFilePaths:
+                userAndHost = getLocationAndFilePath(targetFilePath)[0]
+                if (isLocalCredential(userAndHost)):
+                    resultLocalToLocalSourceFilePaths[localSourceFileId] = localSourceFilePaths[localSourceFileId]
+                    resultLocalToLocalTargetFilePaths[localSourceFileId] = targetFilePath
+                else:               
+                    if (localSourceFileId not in resultLocalToRemoteSourceFilePaths):
+                        resultLocalToRemoteSourceFilePaths[localSourceFileId] = localSourceFilePaths[localSourceFileId]
+                        targetFilePathList = []
+                        targetFilePathList.append(targetFilePath)
+                        resultLocalToRemoteTargetFilePaths[localSourceFileId] = targetFilePathList
+                    else:  
+                        targetFilePathList = resultLocalToRemoteTargetFilePaths[localSourceFileId]
+                        targetFilePathList.append(targetFilePath)
+                        resultLocalToRemoteTargetFilePaths[localSourceFileId] = targetFilePathList
+        results = []
+        results.append(resultLocalToLocalSourceFilePaths)
+        results.append(resultLocalToLocalTargetFilePaths)
+        results.append(resultLocalToRemoteSourceFilePaths)
+        results.append(resultLocalToRemoteTargetFilePaths)
+        return results
 
 ################################################################
 
@@ -221,12 +311,19 @@ def getUserAndHost(userAndHost):
     """
     return userAndHost.split("@")
 
-def getLocationAndFilePath(localtionAndFile):
+def getLocationAndFilePath(locationAndFile):
     """
     Function to get the user and the userName@hostName and file path from 'userName@hostname:filePath' string
     Returns: Tuple with ('userName@hostName', 'filePath')
     """
-    return localtionAndFile.split(":", 1)
+    if (":" in locationAndFile):
+        auxLocationAndFile = locationAndFile.split(":", 1)
+    else:
+        auxLocationAndFile = []
+        auxLocationAndFile.append(LOCAL_USER_AND_HOST)
+        auxLocationAndFile.append(locationAndFile)
+    
+    return auxLocationAndFile
 
 def isLocalHost(hostName):
     """
@@ -262,7 +359,7 @@ def getSourceFilesByHosts(files):
     """
     filesByHosts = {}
     registeredFiles = {}
-    for fileId, fileCredentials in files:
+    for fileId, fileCredentials in files.iteritems():
         fileCredentialsTuple = getLocationAndFilePath(fileCredentials)
         userAndHost = fileCredentialsTuple[0]
         filePath = fileCredentialsTuple[1]
@@ -298,7 +395,7 @@ def getDiferentTargetHosts (targetFiles):
     diferentTargetHosts = []
     for targetFileList in targetFiles.values():
         for targetFile in targetFileList:
-            userAndHost = getLocationAndFilePath(targetFile)
+            userAndHost = getLocationAndFilePath(targetFile)[0]
             if (isLocalCredential(userAndHost)):
                 userAndHost = LOCAL_USER_AND_HOST; # To simplify code for local credentials.
             if (userAndHost not in diferentTargetHosts):
@@ -313,7 +410,7 @@ def getDiferentHostsFromFilePaths (filePaths):
     """
     diferentHosts = []
     for filePath in filePaths:
-            userAndHost = getLocationAndFilePath(filePath)
+            userAndHost = getLocationAndFilePath(filePath)[0]
             if (isLocalCredential(userAndHost)):
                 userAndHost = LOCAL_USER_AND_HOST; # To simplify code for local credentials.
             if (userAndHost not in diferentHosts):
@@ -344,12 +441,12 @@ def copyLocalFile(sourceFile, targetFile):
     createLocalFolderForFile(targetFile)
     shutil.copy2(sourceFile, targetFile)
 
-def sendLocalFile(sourceFile, targetFile, sftp):
+def sendLocalFile(sourceFile, targetFile, gatewayHosts, sftp):
     """
     Send local file to remote machine
     sourceFile -- Source file path (/file path/...).
     targetFile -- Target file path (/file path/...).
-    ssh -- ssh session.
+    sftp -- sftp connection.
     """
     createRemoteFolderForFile(targetFile, sftp)
     sftp.put(sourceFile, targetFile)
@@ -359,7 +456,7 @@ def getRemoteFile(sourceFile, targetFile, sftp):
     Send local file to remote machine
     sourceFile -- Source file path (/file path/...).
     targetFile -- Target file path (/file path/...).
-    ssh -- ssh session.
+    sftp -- sftp connection.
     """
     createLocalFolderForFile(targetFile)
     sftp.get(sourceFile, targetFile)
@@ -396,17 +493,10 @@ def getTargetFilePathList(targetFilePaths):
     returns -- List of target files with this format: "useName@hostName:/filePath".
     """
     filePaths = []
-    for targetFilePath in targetFilePaths:
-        for filePath in  targetFilePath:
+    for targetFilePath in targetFilePaths.values():
+        for filePath in targetFilePath:
             filePaths.append(filePath)
     return filePaths
-
-def getLocalToLocalFiles(localSourceFilePaths, targetFiles):
-    for localSourceFileId in localSourceFilePaths.keys():
-        targetFilePaths = targetFiles[localSourceFileId]
-        for targetFilePath in targetFilePaths:
-            getLocationAndFilePath(targetFilePath)
-            pass
 
 if __name__ == '__main__':
     pass

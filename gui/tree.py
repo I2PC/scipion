@@ -85,11 +85,68 @@ class Tree(ttk.Treeview, Scrollable):
             self.delete(c)
             
             
+class TreeProvider():
+    """ Class class will serve to separete the logic of feed data
+    from the graphical Tree build. Subclasses should implement 
+    the abstract methods """
+        
+    def getColumns(self):
+        """Return a list of tuples (c, w) where:
+        c: is the column name and index
+        w: is the column width
+        """
+        pass
+    
+    def getObjects(self):
+        """Return the objects that will be inserted in the Tree"""
+        pass
+    
+    def getObjectInfo(self, obj):
+        """ This function will be called by the Tree with each
+        object that will be inserted. A dictionary should be 
+        returned with the possible following entries:
+        'key': the key value to inserte in the Tree
+        'text': text of the object to be displayed (if not passed the 'key' will be used)
+        'image': image path to be displayed as icon (optional)
+        'parent': the object's parent in which insert this object (optional)
+        """
+        pass
+        
+        
 class BoundTree(Tree):
-    """This class is base on Tree but fetch the
+    """ This class is base on Tree but fetch the
     items from a TreeProvider, which provides columns
-    values for each item"""
+    values for each item and items info to insert into the Tree """
     def __init__(self, master, provider, frame=True, **opts):
         """Create a new Tree, if frame=True, a container
         frame will be created and an scrollbar will be added"""
-        Tree.__init__(self, master, frame, **opts)
+        # Get colums to display and width
+        cols = provider.getColumns()
+        colsTuple = tuple([c[0] for c in cols[1:]])
+        Tree.__init__(self, master, frame, columns=colsTuple, **opts)
+        # Set the special case of first tree column
+        self.heading('#0', text=cols[0][0])
+        self.column('#0', width=cols[0][1])
+        # Set other columns
+        for c, w in cols[1:]:
+            self.column(c, width=w)
+            self.heading(c, text=c)
+        self.grid(row=0, column=0, sticky='news')
+        self._objects = provider.getObjects()
+        for obj in self._objects:
+            objDict = provider.getObjectInfo(obj)
+            parent = objDict.get('parent', None)
+            if parent is None:
+                parentId = ''
+            else:
+                parentId = parent._treeId # Previously set
+            key = objDict.get('key')
+            text = objDict.get('text', key)
+            image = objDict.get('image', '')
+            if len(image):
+                image = self.getImage(image)
+            values = objDict.get('values', ())
+            obj._treeId = self.insert(parentId, 'end', objDict['key'],
+                        text=text, image=image, values=values)
+        
+        

@@ -38,7 +38,7 @@ class MyProtocol(Protocol):
         f = open(log, 'w+')
         f.write("Slept: %d seconds\n" % t)
         f.close()
-        return log
+        return [log]
         
     def _defineSteps(self):
         for i in range(self.numberOfSleeps.get()):
@@ -141,17 +141,17 @@ class TestPyworkflow(unittest.TestCase):
         fnGold = self.getGoldPath("basic.sqlite")
         mapper2 = SqliteMapper(fnGold, globals())
         
-        l = mapper2.select(classname='Integer')[0]
+        l = mapper2.selectByClass('Integer')[0]
         self.assertEqual(l.get(), 1)
         
-        c2 = mapper2.select(classname='Complex')[0]
+        c2 = mapper2.selectByClass('Complex')[0]
         self.assertTrue(c.equalAttributes(c2))
         
         #mapper3 = SqliteMapper(fn, globals())
-        b = mapper2.select(classname='Boolean')[0]
+        b = mapper2.selectByClass('Boolean')[0]
         self.assertTrue(not b.get())
         
-        p = mapper2.select(classname='Pointer')[0]
+        p = mapper2.selectByClass('Pointer')[0]
         self.assertEqual(c, p.get())
         
         
@@ -183,7 +183,7 @@ class TestPyworkflow(unittest.TestCase):
 #        #write file
 #        mapper.commit()
 #        
-#        s2 = mapper.select(classname='MyStep')[0]
+#        s2 = mapper.selectByClass('MyStep')[0]
 #        self.assertTrue(s.equalAttributes(s2))
         
 #    def test_List(self):
@@ -222,13 +222,13 @@ class TestPyworkflow(unittest.TestCase):
         prot = MyProtocol(mapper=mapper, n=2, workingDir=self.getTmpPath(''))
         prot.run()
         
-        self.assertEqual(prot.steps[0].status, STATUS_FINISHED)
+        self.assertEqual(prot._steps[0].status, STATUS_FINISHED)
         
         mapper2 = SqliteMapper(fn, globals())
         prot2 = mapper2.selectById(prot.getId())
         
         self.assertEqual(prot.endTime, prot2.endTime)
-        self.assertEqual(prot.steps[1].status, prot2.steps[1].status)
+        self.assertEqual(prot._steps[1].status, prot2._steps[1].status)
         
 if __name__ == '__main__':
     unittest.main()

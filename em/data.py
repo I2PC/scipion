@@ -158,6 +158,13 @@ class SetOfMicrographs(SetOfImages):
         for f in self._files:            
             print >> micFile, f
         micFile.close()
+        
+    def copyInfo(self, other):
+        """ Copy basic information (voltage, spherical aberration and sampling rate)
+        from other set of micrographs to current one"""
+        self.microscope.voltage.set(other.microscope.voltage.get())
+        self.microscope.sphericalAberration.set(other.microscope.sphericalAberration.get())
+        self.samplingRate.set(other.samplingRate.get()) 
     
 
 class Coordinate(EMObject):

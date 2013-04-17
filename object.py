@@ -94,6 +94,14 @@ class Object(object):
     def hasValue(self):        
         return True
     
+    def getStore(self):
+        """Return True if the object will be stored by the mapper"""
+        return self._objDoStore
+    
+    def setStore(self, value):
+        """set the store flag"""
+        self._objDoStore = value
+    
     def __eq__(self, other):
         """Comparison for scalars should be by value
         and for other objects by reference"""
@@ -323,8 +331,6 @@ def ObjectWrap(value):
     t = type(value)
     if issubclass(t, Object):
         return value
-    if t is str:
-        return String(value)
     if t is int:
         return Integer(value)
     if t is bool:
@@ -333,7 +339,7 @@ def ObjectWrap(value):
         return Float(value)
     if t is None:
         return None
-    #If not known type, convert to string
+    #If it is str, unicode or unknown type, convert to string
     return String(value)
          
            

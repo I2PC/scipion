@@ -111,4 +111,6 @@ class XmippCTFModel(CTFModel):
                 getattr(self, key).set(mdVal)
                 
                 
+        
+        
     
