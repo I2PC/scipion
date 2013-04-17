@@ -173,6 +173,9 @@ class Coordinate(EMObject):
     POS_CENTER = 0
     POS_TOPLEFT = 1
     
+    def __init__(self, **args):
+        self._micrograph = None
+    
     def getPosition(self, mode=POS_CENTER):
         """Return the position of the coordinate.
         mode: select if the position is the center of the box
@@ -182,7 +185,11 @@ class Coordinate(EMObject):
     def getMicrograph(self):
         """Return the micrograph object to which
         this coordinate is associated"""
-        pass
+        return self._micrograph
+    
+    def setMicrograph(self, micrograph):
+        """Set the micrograph to which this coordinate belongs"""
+        self._micrograph = micrograph
     
     def getPair(self):
         """It should return the paired coordinate associate to self.
@@ -195,6 +202,9 @@ class SetOfCoordinates(EMObject):
     """Encapsulate the logic of a set of particles coordinates.
     Each coordinate has a (x,y) position and is related to a Micrograph
     The SetOfCoordinates can also have information about TiltPairs"""
+    
+    def __init__(self, **args):
+        self._micrographsPointer = Pointer()
     
     def getBoxSize(self):
         """Return the box size of the future particles.
@@ -215,7 +225,13 @@ class SetOfCoordinates(EMObject):
     def getMicrographs(self):
         """Returns the SetOfMicrographs associated with 
         this SetOfCoordinates"""
-        pass
+        return self._micrographsPointer.get()
+    
+    def setMicrographs(self, micrographs):
+        """ Set the SetOfMicrograph associates with 
+        this set of coordinates """
+        self._micrographsPointer.set(micrographs)
+        
     
 class CTFModel(EMObject):
     """Represents a generic CTF model"""

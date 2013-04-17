@@ -132,9 +132,14 @@ class BoundTree(Tree):
             self.column(c, width=w)
             self.heading(c, text=c)
         self.grid(row=0, column=0, sticky='news')
-        self._objects = provider.getObjects()
-        for obj in self._objects:
-            objDict = provider.getObjectInfo(obj)
+        self.provider = provider
+        self.update()
+        
+    def update(self):
+        self.clear()
+        objects = self.provider.getObjects()
+        for obj in objects:
+            objDict = self.provider.getObjectInfo(obj)
             parent = objDict.get('parent', None)
             if parent is None:
                 parentId = ''
