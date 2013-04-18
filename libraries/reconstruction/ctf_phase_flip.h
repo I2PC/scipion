@@ -60,5 +60,7 @@ public:
     void show();
 };
 
+void actualPhaseFlip(MultidimArray<double> &I, CTFDescription ctf);
+
 //@}
 #endif
