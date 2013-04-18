@@ -101,8 +101,8 @@ class XmippCTFModel(CTFModel):
         md = MetaData(filename)
         objId = md.firstObject()
         
-        for key, val in  self.ctfParams:
-            mdVal = md.getValue(val)
+        for key, val in  self.ctfParams.iteritems():
+            mdVal = md.getValue(val, objId)
             if not hasattr(self, key):
                 setattr(self, key, Float(mdVal))
             else:

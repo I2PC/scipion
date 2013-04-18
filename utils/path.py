@@ -64,7 +64,7 @@ def replaceBaseExt(filename, newExt):
 
 def removeBaseExt(filename):
     '''Take the basename of the filename and remove extension'''
-    return replaceBaseExt(filename, '')
+    return removeExt(basename(filename))
 
 def removeExt(filename):
     ''' Remove extension from basename '''
