@@ -24,14 +24,13 @@
 
 /*xmipp includes */
 #include "xmipp_image.h"
-#include "volume.h"
-#include "fft.h"
+#include "xmipp_fftw.h"
 #include "tom_xmipp_helpers.h"
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 {
  
-    Matrix1D<double> freq, frc, dpr, frc_noise;
+    MultidimArray<double> freq, frc, dpr, frc_noise, error_l2;
 
     float sam = (float) mxGetScalar(prhs[2]);
     mwSize ndims = mxGetNumberOfDimensions(prhs[0]);
@@ -39,19 +38,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     {
         if (ndims == 2)
         {
-            Image img, ref;
+            Image<double> img, ref;
             getMatrix2D(prhs[0],img());
             getMatrix2D(prhs[1],ref());
-            fourier_ring_correlation(ref(), img(), sam, freq, frc, frc_noise);
-            differential_phase_residual(ref(), img(), sam, freq, dpr);
+            frc_dpr(ref(), img(), sam, freq, frc, frc_noise, dpr, error_l2, true);
         }
         else
         {
-            Volume img, ref;
+            Image<double> img, ref;
             getMatrix3D(prhs[0],img());
             getMatrix3D(prhs[1],ref());
-            fourier_ring_correlation(ref(), img(), sam, freq, frc, frc_noise);
-            differential_phase_residual(ref(), img(), sam, freq, dpr);
+            frc_dpr(ref(), img(), sam, freq, frc, frc_noise, dpr, error_l2, true);
         }
     }
     catch (XmippError Xe)
@@ -75,7 +72,4 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 
     setMatrix1D(frc_noise,field4);
     mxSetField(plhs[0],0,"frc_noise",field4);
-   
-    frc.core_deallocate();
-    
 }
