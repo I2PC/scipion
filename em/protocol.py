@@ -98,6 +98,7 @@ class ProtImportMicrographs(Protocol):
         
         return outFiles
 
+
 class DefCTFMicrographs(Form):
     """Create the definition of parameters for
     the XmippCtfMicrographs protocol"""
@@ -141,6 +142,7 @@ class DefCTFMicrographs(Form):
                            'allow identifying more details. However, since there are fewer windows, '
                            'estimations are noisier',
                       expertLevel=LEVEL_ADVANCED)        
+
 
 class ProtCTFMicrographs(Protocol):
     

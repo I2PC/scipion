@@ -262,9 +262,10 @@ class FormWindow(Window):
     The creaation of compoments will be based on the Protocol Form definition.
     This class will serve as a connection between the GUI variables (tk vars) and 
     the Protocol variables."""
-    def __init__(self, title, protocol, master=None, **args):
+    def __init__(self, title, protocol, executeCallback, master=None, **args):
         Window.__init__(self, title, master, icon='scipion_bn.xbm', weight=False, **args)
 
+        self.executeCallback = executeCallback
         self.widgetDict = {} # Store tkVars associated with params
         
         global fontBig, font, fontBold
@@ -314,10 +315,8 @@ class FormWindow(Window):
         return (width, height)
         
     def execute(self, e=None):
-        self.updateProtocolParams()
         self.close()
-        self.protocol.run()
-    
+        self.executeCallback(self.protocol)
            
     def _fillSection(self, sectionParam, sectionFrame):
         parent = sectionFrame.contentFrame

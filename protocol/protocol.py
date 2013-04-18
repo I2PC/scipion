@@ -23,7 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from utils.path import cleanPath
 """
 This modules contains classes required for the workflow
 execution and tracking like: Step and Protocol
@@ -33,7 +32,7 @@ import datetime as dt
 import pickle
 
 from pyworkflow.object import OrderedObject, String, List, Integer, Boolean
-from pyworkflow.utils.path import replaceExt, makePath, join, existsPath
+from pyworkflow.utils.path import replaceExt, makePath, join, existsPath, cleanPath
 from pyworkflow.utils.process import runJob
 
 STATUS_LAUNCHED = "launched"  # launched to queue system

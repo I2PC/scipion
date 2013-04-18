@@ -44,7 +44,7 @@ class Project(object):
     """This class will handle all information 
     related with a Project"""
     def __init__(self, path):
-        """For create a Project, the path is required"""
+        """For create a Project, the path is required""" 
         self.path = abspath(path)
         self.pathList = [] # Store all related paths
         self.dbPath = self.addPath(PROJECT_DBNAME)
@@ -64,9 +64,9 @@ class Project(object):
     def load(self):
         """Load project data and settings
         from the project dir."""
+        os.chdir(self.path) #Before doing nothing go to project dir
         if not exists(self.dbPath):
             raise Exception("Project doesn't exists in '%s'" % self.path)
-        os.chdir(self.path) #Before doing nothing go to project dir
         self.mapper = SqliteMapper(self.dbPath, globals())
         
     def create(self):
@@ -75,6 +75,7 @@ class Project(object):
         # Create project path if not exists
         makePath(self.path)
         os.chdir(self.path) #Before doing nothing go to project dir
+        print abspath(self.dbPath)
         # Create db throught the mapper
         self.mapper = SqliteMapper(self.dbPath, globals())
         self.mapper.commit()
@@ -92,5 +93,10 @@ class Project(object):
         # and also the particularities of job submission: mpi, threads, queue, bash
         protocol.mapper = self.mapper
         protocol.run()
+        
+    def insertProtocol(self, protocol):
+        """Insert a new protocol instance in the database"""
+        self.mapper.insert(protocol)
+        self.mapper.commit()
         
         

@@ -55,6 +55,11 @@ class SqliteMapper(Mapper):
         """Insert a new object into the system, the id will be set"""
         self.__insert(obj)
         
+    def delete(self, obj):
+        """Delete an object and all its childs"""
+        namePrefix = self.__getNamePrefix(obj)
+        self.db.deleteChildObjects(namePrefix)
+        
     def insertChild(self, obj, key, attr, namePrefix):
             attr._objName = joinExt(namePrefix, key)
             attr._objParentId = obj._objId
@@ -92,8 +97,11 @@ class SqliteMapper(Mapper):
     def selectById(self, objId):
         """Build the object which id is objId"""
         objRow = self.db.selectObjectById(objId)
-        obj = self._buildObject(objRow['classname'])
-        self.fillObject(obj, objRow)
+        if objRow is None:
+            obj = None
+        else:
+            obj = self._buildObject(objRow['classname'])
+            self.fillObject(obj, objRow)
         return obj
     
     def fillObjectWithRow(self, obj, objRow):
@@ -171,6 +179,7 @@ class SqliteDb():
     It will create connection, execute queries and commands"""
     
     SELECT = "SELECT id, parent_id, name, classname, value FROM Objects WHERE "
+    DELETE = "DELETE FROM Objects WHERE "
     
     def __init__(self, dbName, timeout=1000):
         self.__createConnection(dbName, timeout)
@@ -215,10 +224,6 @@ class SqliteDb():
         self.executeCommand("UPDATE Objects SET parent_id=?, name=?,classname=?, value=? WHERE id=?", \
                             (parent_id, name, classname, value, objId))
         
-    def deleteObject(self, objId):
-        """Delete an existing object"""
-        self.executeCommand("DELETE FROM Objects WHERE id=?", (objId,))
-        
     def selectObjectById(self, objId):
         """Select an object give its id"""
         self.executeCommand(self.SELECT + "id=?", (objId,))  
@@ -251,6 +256,15 @@ class SqliteDb():
     def selectObjectsWhere(self, whereStr):
         self.executeCommand(self.SELECT + whereStr)
         return self.cursor.fetchall()   
+    
+    def deleteObject(self, objId):
+        """Delete an existing object"""
+        self.executeCommand(self.DELETE + "id=?", (objId,))
+        
+    def deleteChildObjects(self, ancestor_namePrefix):
+        """ Delete from db all objects that are childs 
+        of an ancestor, now them will have the same starting prefix"""
+        self.executeCommand(self.DELETE + "name LIKE '%s.%%'" % ancestor_namePrefix)
         
         
         
