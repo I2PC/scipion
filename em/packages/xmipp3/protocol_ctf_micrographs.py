@@ -31,7 +31,7 @@ This sub-package contains the XmippCtfMicrographs protocol
 
 from pyworkflow.em import *  
 from pyworkflow.em.packages.xmipp3.data import *
-from pyworkflow.utils.path import makePath, basename, join
+from pyworkflow.utils.path import makePath, basename, join, exists
 from pyworkflow.utils import runJob
 
 
