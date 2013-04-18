@@ -251,9 +251,14 @@ class Pointer(Scalar):
     def __init__(self, value=None, **args):
         Object.__init__(self, value, objIsPointer=True, **args)   
        
-    def getAttributesToStore(self):
-        """Avoid storing _objValue"""
-        return []
+#    def getAttributesToStore(self):
+#        return []
+    
+    def convert(self, value):
+        """Avoid storing _objValue and future objects
+        obtained from .get()"""
+        value.setStore(False)
+        return value
     
     
 class List(Object, list):

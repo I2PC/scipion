@@ -112,12 +112,11 @@ class SqliteMapper(Mapper):
             obj._objName = ''#obj.strId()
         else:
             obj._objName = name
-        obj.set(objRow['value'])
+        objValue = objRow['value']
         obj._objParentId = objRow['parent_id']
         if obj.isPointer():
-            refObj = self.selectById(obj._objValue)
-            refObj._objDoStore = False # Prevent to storing pointer references
-            obj.set(refObj)
+            objValue = self.selectById(objValue)
+        obj.set(objValue)
         
     def fillObject(self, obj, objRow):
         self.fillObjectWithRow(obj, objRow)

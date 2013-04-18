@@ -84,6 +84,7 @@ class Micrograph(Image):
     def hasCTF(self):
         return self.ctfModel is not None
 
+
 class SetOfImages(EMObject):
     """Represents a set of Images"""
     def __init__(self, **args):
