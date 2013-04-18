@@ -1528,6 +1528,12 @@ void ProgClassifyCL2D::defineParams()
     addParamsLine("   [--neigh+ <N=4>]          : Number of neighbour code vectors");
     addParamsLine("                             : Set -1 for all");
     addParamsLine("   [--minsize+ <N=20>]       : Percentage minimum node size");
+    addParamsLine("                             : Let's say that we have 1000 images and we are currently estimating 2 classes.");
+    addParamsLine("                             : On average each class should have about 500 images. ");
+    addParamsLine("                             : If one of the classes drops below 20% (by default) of 500,");
+    addParamsLine("                             : then that class is removed and the remaining class is splitted in two. ");
+    addParamsLine("                             : The same reasoning is applied when the number of classes is 4, but 20% ");
+    addParamsLine("                             : is calculated now on 250 (=1000/4).");
     addParamsLine("   [--distance <type=correntropy>]       : Distance type");
     addParamsLine("            where <type>");
     addParamsLine("                       correntropy correlation: See CL2D paper for the definition of correntropy");
