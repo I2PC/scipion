@@ -46,7 +46,8 @@ class ScriptImportEMX(XmippScript):
         self.addParamsLine("             micCTF              : import micrograph ctf")
         self.addParamsLine("     alias -m;")
         self.addParamsLine(' [--notValidate]                 : do not validate xml against schema');
-        self.addParamsLine('                                 : this option requires net connection');
+        self.addParamsLine('                                 : validation requires net connection');
+        self.addParamsLine('                                 : and program xmllint installed');
         self.addParamsLine('     alias -n;');
         self.addExampleLine("Import information from EMX file to Xmipp", False);
         self.addExampleLine("xmipp_import_emx -i particlePicking.emx -m micCTF ");
