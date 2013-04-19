@@ -44,7 +44,8 @@ class EmanSetOfMicrographs(SetOfMicrographs):
             
 class EmanCoordinate(Coordinate):
     """This class holds the (x,y) position and other information
-    associated with a EMAN coordinate"""
+    associated with a EMAN coordinate (Eman coordinates are POS_TOPLEFT mode)"""
+    
     
     def getPosition(self, mode=Coordinate.POS_TOPLEFT):
         """Return the position of the coordinate.
@@ -52,12 +53,15 @@ class EmanCoordinate(Coordinate):
           or in the top left corner."""
         if mode == Coordinate.POS_TOPLEFT:
             return self.x, self.y
-        else: 
-            pass
+        elif mode == Coordinate.POS_CENTER: 
+            return (self.x + self.boxSize/2, self.y + self.boxSize/2)
+        else:
+            raise Exception("No coordinate mode registered for : " + str(mode)) 
     
-    def setPosition(self, x, y):
+    def setPosition(self, x, y, boxSize):
         self.x = x
         self.y = y
+        self.boxSize = boxSize
     
     def getMicrograph(self):
         """Return the micrograph object to which
@@ -81,12 +85,6 @@ class EmanSetOfCoordinates(SetOfCoordinates):
     The SetOfCoordinates can also have information about TiltPairs.
     EMAN coordinates are taken from top left"""
     
-    def getBoxSize(self):
-        """Return the box size of the future particles.
-        This can be None, since when the POS_CENTER mode is used,
-        the box size is only relevant when extraction"""
-        return None
-    
     def iterCoordinates(self):
         """Iterates over the whole set of coordinates.
         If the SetOfMicrographs has tilted pairs, the coordinates
@@ -104,7 +102,7 @@ class EmanSetOfCoordinates(SetOfCoordinates):
                     y = parts[1]
                     coordinate = EmanCoordinate()
                     coordinate.setMicrograph(micrograph)
-                    coordinate.setPosition(x, y)
+                    coordinate.setPosition(x, y, self.boxSize)
                     yield coordinate
                 else:
                     pass

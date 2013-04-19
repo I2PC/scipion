@@ -33,24 +33,26 @@ class FileTransfer():
                       forceOperation = False):
         # Order source files by it host.
         filesByHosts = getSourceFilesByHosts(sourceFiles)
-        # First we send local files.
-        localSourceFiles = filesByHosts[LOCAL_USER_AND_HOST]    
         
+        # First we send local files. (Doing pop we get and remove local files).
+        localSourceFiles =  filesByHosts.pop(LOCAL_USER_AND_HOST)#filesByHosts[LOCAL_USER_AND_HOST]        
         # Classify local source files depending on their local target host or remote target host 
-        localClassifiedFiles = self.__classifyLocalFiles(localSourceFiles, targetFiles)
-        
-        # Copy local files inj local machine
+        localClassifiedFiles = self.__classifyLocalFiles(localSourceFiles, targetFiles)        
+        # Copy local files in local machine
         localToLocalSourceFiles = localClassifiedFiles[0]
         localToLocalTargetFiles = localClassifiedFiles[1]
         if (localToLocalSourceFiles is not None and len(localToLocalSourceFiles) > 0):
-            self.__copyLocalFiles(localToLocalSourceFiles, localToLocalTargetFiles, operationId, numberTrials, forceOperation)
-        
+            self.__copyLocalFiles(localToLocalSourceFiles, localToLocalTargetFiles, operationId, numberTrials, forceOperation)        
         # Send local files to remote machines  
         localToRemoteSourceFiles = localClassifiedFiles[2]
         localToRemoteTargetFiles = localClassifiedFiles[3]
         if (localToRemoteSourceFiles is not None and len(localToRemoteSourceFiles) > 0):
             self.__trasferLocalFilesToRemoteHost(localToRemoteSourceFiles, localToRemoteTargetFiles, gatewayHosts, 
                               hostsPaswords, operationId, numberTrials, forceOperation)
+            
+        # Send remote files
+        # Classify local source files depending on their local target host or remote target host 
+        localClassifiedFiles = self.__classifyRemoteFiles(filesByHosts, targetFiles)        
             
         self.sftp.close()
         self.ssh.close()
@@ -270,32 +272,75 @@ class FileTransfer():
                                                       3.- Local source files for remote target dictionary with "id":"useName@hostName:filePath" structure. 
                                                       4.- Local target files for remote target dictionary with "id": [userName1@hostName1:absolute_file_path1, userName2@hostName2:absolute_file_path2].
         """
-        resultLocalToLocalSourceFilePaths = {}
-        resultLocalToLocalTargetFilePaths = {}
-        resultLocalToRemoteSourceFilePaths = {}
-        resultLocalToRemoteTargetFilePaths = {}
+        localToLocalSourceFilePaths = {}
+        localToLocalTargetFilePaths = {}
+        localToRemoteSourceFilePaths = {}
+        localToRemoteTargetFilePaths = {}
         for localSourceFileId in localSourceFilePaths.keys():
             targetFilePaths = targetFiles[localSourceFileId]
             for targetFilePath in targetFilePaths:
                 userAndHost = getLocationAndFilePath(targetFilePath)[0]
                 if (isLocalCredential(userAndHost)):
-                    resultLocalToLocalSourceFilePaths[localSourceFileId] = localSourceFilePaths[localSourceFileId]
-                    resultLocalToLocalTargetFilePaths[localSourceFileId] = targetFilePath
+                    localToLocalSourceFilePaths[localSourceFileId] = localSourceFilePaths[localSourceFileId]
+                    localToLocalTargetFilePaths[localSourceFileId] = targetFilePath
                 else:               
-                    if (localSourceFileId not in resultLocalToRemoteSourceFilePaths):
-                        resultLocalToRemoteSourceFilePaths[localSourceFileId] = localSourceFilePaths[localSourceFileId]
+                    if (localSourceFileId not in localToRemoteSourceFilePaths):
+                        localToRemoteSourceFilePaths[localSourceFileId] = localSourceFilePaths[localSourceFileId]
                         targetFilePathList = []
                         targetFilePathList.append(targetFilePath)
-                        resultLocalToRemoteTargetFilePaths[localSourceFileId] = targetFilePathList
+                        localToRemoteTargetFilePaths[localSourceFileId] = targetFilePathList
                     else:  
-                        targetFilePathList = resultLocalToRemoteTargetFilePaths[localSourceFileId]
+                        targetFilePathList = localToRemoteTargetFilePaths[localSourceFileId]
                         targetFilePathList.append(targetFilePath)
-                        resultLocalToRemoteTargetFilePaths[localSourceFileId] = targetFilePathList
+                        localToRemoteTargetFilePaths[localSourceFileId] = targetFilePathList
         results = []
-        results.append(resultLocalToLocalSourceFilePaths)
-        results.append(resultLocalToLocalTargetFilePaths)
-        results.append(resultLocalToRemoteSourceFilePaths)
-        results.append(resultLocalToRemoteTargetFilePaths)
+        results.append(localToLocalSourceFilePaths)
+        results.append(localToLocalTargetFilePaths)
+        results.append(localToRemoteSourceFilePaths)
+        results.append(localToRemoteTargetFilePaths)
+        return results
+    
+    def __classifyRemoteFiles(self, remoteSourceFilePaths, targetFiles):
+        """
+        Classifies those files that are going to be sent from remote machine to local machine or remote machines.
+        remoteSourceFilePaths --  Local source files dictionary with this structure: "userName@hostName" : {"1": "filepath1", "2" : "filePath2"}  
+        targetFiles -- Target files dictionary with this format: "id": [userName1@hostName1:absolute_file_path1, userName2@hostName2:absolute_file_path2]
+        returns -- List with classified dictionaries: 1.- Local source files for local target dictionary with "id":"useName@hostName:filePath" structure.
+                                                      2.- Local target files dictionary with "id":"useName@hostName:filePath" structure. 
+                                                      3.- Local source files for remote target dictionary with "id":"useName@hostName:filePath" structure. 
+                                                      4.- Local target files for remote target dictionary with "id": [userName1@hostName1:absolute_file_path1, userName2@hostName2:absolute_file_path2].
+        """
+        remoteToLocalSourceFilePaths = {}
+        remoteToRemoteTargetFilePaths = {}
+        remoteToRemoteSourceFilePaths = {}
+        remoteToRemoteTargetFilePaths = {}
+        
+        
+        a organizarrr
+        
+        
+        for localSourceFileId in remoteSourceFilePaths.keys():
+            targetFilePaths = targetFiles[localSourceFileId]
+            for targetFilePath in targetFilePaths:
+                userAndHost = getLocationAndFilePath(targetFilePath)[0]
+                if (isLocalCredential(userAndHost)):
+                    remoteToLocalSourceFilePaths[localSourceFileId] = remoteSourceFilePaths[localSourceFileId]
+                    remoteToRemoteTargetFilePaths[localSourceFileId] = targetFilePath
+                else:               
+                    if (localSourceFileId not in remoteToRemoteSourceFilePaths):
+                        remoteToRemoteSourceFilePaths[localSourceFileId] = remoteSourceFilePaths[localSourceFileId]
+                        targetFilePathList = []
+                        targetFilePathList.append(targetFilePath)
+                        remoteToRemoteTargetFilePaths[localSourceFileId] = targetFilePathList
+                    else:  
+                        targetFilePathList = remoteToRemoteTargetFilePaths[localSourceFileId]
+                        targetFilePathList.append(targetFilePath)
+                        remoteToRemoteTargetFilePaths[localSourceFileId] = targetFilePathList
+        results = []
+        results.append(remoteToLocalSourceFilePaths)
+        results.append(remoteToRemoteTargetFilePaths)
+        results.append(remoteToRemoteSourceFilePaths)
+        results.append(remoteToRemoteTargetFilePaths)
         return results
 
 ################################################################
