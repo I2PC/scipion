@@ -64,3 +64,6 @@ documentation/
 gmon.out
 *~
 
+# Matlab
+*.mexa64
+*.mexa32

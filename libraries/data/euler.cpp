@@ -24,7 +24,7 @@
  ***************************************************************************/
 #include "euler.h"
 
-inline void
+void
 Euler::angleOrder(int &i, int &j, int &k) const
 {
     i = _initialAxis;
@@ -32,7 +32,7 @@ Euler::angleOrder(int &i, int &j, int &k) const
     k = _parityEven ? (i > 0 ? i-1 : 2) : (i+1)%3;
 }
 
-inline void
+void
 Euler::angleMapping(int &i, int &j, int &k) const
 {
     int m[3];
@@ -45,7 +45,7 @@ Euler::angleMapping(int &i, int &j, int &k) const
     k = m[2];
 }
 
-inline void
+void
 Euler::setXYZVector(const Matrix1D<double> &v)
 {
     int i,j,k;
@@ -91,7 +91,7 @@ Euler::Euler(Euler::eulerOrder p) :
     setOrder(p);
 }
 
-inline Euler::Euler( const Matrix1D <double> &v,
+Euler::Euler( const Matrix1D <double> &v,
                      Euler::eulerOrder p,
                      Euler::InputLayout l )
 {
@@ -107,14 +107,14 @@ inline Euler::Euler( const Matrix1D <double> &v,
     }
 }
 
-inline Euler::Euler(const Euler &euler)
+Euler::Euler(const Euler &euler)
 {
     init();
     operator=(euler);
 }
 
 
-inline Euler::Euler(const Euler &euler,eulerOrder p)
+Euler::Euler(const Euler &euler,eulerOrder p)
 {
     init();
     setOrder(p);
@@ -124,7 +124,7 @@ inline Euler::Euler(const Euler &euler,eulerOrder p)
 }
 
 
-inline Euler::Euler( double xi, double yi, double zi,
+Euler::Euler( double xi, double yi, double zi,
                      Euler::eulerOrder p,
                      Euler::InputLayout l)
 {
@@ -142,7 +142,7 @@ inline Euler::Euler( double xi, double yi, double zi,
     }
 }
 
-inline Euler::Euler( const Matrix2D<double> &M, Euler::eulerOrder p )
+Euler::Euler( const Matrix2D<double> &M, Euler::eulerOrder p )
 {
     setOrder(p);
     extract(M);
@@ -302,7 +302,7 @@ void Euler::toMatrix(Matrix2D<double>& M) const
 }
 
 
-inline bool
+bool
 Euler::legal(Euler::eulerOrder order)
 {
     return (order & ~Legal) ? false : true;
@@ -323,8 +323,7 @@ Euler::eulerOrder Euler::order() const
     return (eulerOrder)foo;
 }
 
-
-inline void Euler::setOrder(Euler::eulerOrder p)
+void Euler::setOrder(Euler::eulerOrder p)
 {
     set( p & 0x2000 ? axisZ : (p & 0x1000 ? axisY : axisX), // initial axis
          !(p & 0x1),        // static?

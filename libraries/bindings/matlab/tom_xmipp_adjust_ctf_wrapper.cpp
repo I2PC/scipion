@@ -23,7 +23,7 @@
  *=================================================================*/
 
 /*xmipp includes */
-#include "adjust_ctf.h"
+#include "ctf_estimate_from_psd.h"
 #include "tom_xmipp_helpers.h"
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
@@ -34,10 +34,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     getMatrix2D(prhs[0],adjustParams.ctftomodel());
     adjustParams.min_freq=(double) mxGetScalar(prhs[1]);
     adjustParams.max_freq=(double) mxGetScalar(prhs[2]);
-    adjustParams.astigmatic_noise=true;
     adjustParams.defocus_range=30000;
     adjustParams.ctfmodelSize=(int) mxGetScalar(prhs[3]);
-    adjustParams.initial_Ca=(double) mxGetScalar(prhs[4]);
+    adjustParams.initial_ctfmodel.Ca=(double) mxGetScalar(prhs[4]);
 
     adjustParams.initial_ctfmodel.enable_CTF = 
        adjustParams.initial_ctfmodel.enable_CTFnoise = true;
@@ -197,21 +196,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     // Get the ctfmodels
     if (adjustParams.ctfmodelSize!=0)
     {
-        Matrix2D<double> half;
+        MultidimArray<double> half;
         adjustParams.generate_model_halfplane(
         adjustParams.ctfmodelSize,adjustParams.ctfmodelSize,half);
         mxArray *field31;
         setMatrix2D(half,field31);
         mxSetField(plhs[0],0,"CTFmodelhalf",field31);
         
-        Matrix2D<double> quadrant;
+        MultidimArray<double> quadrant;
         adjustParams.generate_model_quadrant(
         adjustParams.ctfmodelSize,adjustParams.ctfmodelSize,quadrant);
         mxArray *field32;
         setMatrix2D(quadrant,field32);
         mxSetField(plhs[0],0,"CTFmodelquadrant",field32);
         
-        Matrix3D<double> zeros(10,100,2);
+        MultidimArray<double> zeros(10,100,2);
         for (int n=0; n<ZSIZE(zeros); n++) {
             for (int iu=0; iu<YSIZE(zeros); iu++) {
                 Matrix1D<double> u(2);

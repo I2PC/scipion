@@ -23,23 +23,16 @@
  *=================================================================*/
 
 /*xmipp includes */
-#include "psd_enhance.h"
+#include "ctf_enhance_psd.h"
 #include "tom_xmipp_helpers.h"
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 {
-
     /*read image*/
-    Matrix2D<double> image;
+    MultidimArray<double> image;
     getMatrix2D(prhs[0],image);
     
     ProgCTFEnhancePSD psdParams;
-    
-    /*read center flag*/
-    psdParams.center = (bool) mxGetScalar(prhs[1]);
-    
-    /*read log flag*/
-    psdParams.take_log = (bool) mxGetScalar(prhs[2]);
     
     /*read filter_w1 (Low freq. for band pass filtration,  max 0.5)*/
     psdParams.filter_w1 = (float) mxGetScalar(prhs[3]);
@@ -58,7 +51,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     
     try
     {
-        psdParams.apply(image);
+        psdParams.applyFilter(image);
     }
     catch (XmippError Xe)
     {
