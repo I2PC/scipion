@@ -173,5 +173,9 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         # Create the SetOfMicrographs object on the database
         self.outputMicrographs = XmippSetOfMicrographs(filename=mdOut)     
         self.outputMicrographs.copyInfo(self.inputMics)
+        
+        # If downsampled performed update the sampling rate
+        if self.doDownsample.get():
+            self.outputMicrographs.samplingRate.set(self.inputMics.samplingRate.get()*self.downFactor.get())
 
         self._defineOutputs(micrograph=self.outputMicrographs)
