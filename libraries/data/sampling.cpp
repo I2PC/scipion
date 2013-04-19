@@ -1404,6 +1404,7 @@ void Sampling::createAsymUnitFile(const FileName &docfilename)
         ;
 #endif
 
+        row.setValue(MDL_REF, (int)i);
         row.setValue(MDL_NEIGHBOR, no_redundant_sampling_points_index[i]);
         row.setValue(MDL_ANGLE_ROT,XX(no_redundant_sampling_points_angles[i]));
         row.setValue(MDL_ANGLE_TILT,YY(no_redundant_sampling_points_angles[i]));
@@ -1419,6 +1420,7 @@ void Sampling::createAsymUnitFile(const FileName &docfilename)
     #undef CHIMERA
 
     tmp_filename = docfilename + "_angles.doc";
+    DF.setComment("REF refers to the projection directions BEFORE delete those not in a neighborhood, ");
     DF.write(tmp_filename);
 }
 
@@ -1498,6 +1500,7 @@ void Sampling::saveSamplingFile(const FileName &fn_base, bool write_vectors, boo
             row.setValue(MDL_ANGLE_TILT, YY(angles));
             row.setValue(MDL_ANGLE_PSI, ZZ(angles));
 
+
             if (write_vectors)
             {
                 Matrix1D<double> &vectors = sampling_points_vector[i];
@@ -1507,6 +1510,7 @@ void Sampling::saveSamplingFile(const FileName &fn_base, bool write_vectors, boo
             }
             md.addRow(row);
         }
+        md.setComment("NEIGHBOR index points to the slice in a stack file in which the  projection projected in the direction defined by ref is stored");
         md.write(FN_SAMPLING_SPHERE(fn_base), MD_APPEND);
 
     }
@@ -1550,6 +1554,10 @@ void Sampling::readSamplingFile(const FileName &fn_base, bool read_vectors, bool
 
     FOR_ALL_OBJECTS_IN_METADATA(md)
     {
+        /** This is the object ID in the metadata, usually starts at 1 */
+        //size_t objId;
+        /** This is the index of the object, starts at 0 */
+        //size_t objIndex;
         size_t &i = __iter.objIndex;
         size_t &id = __iter.objId;
 

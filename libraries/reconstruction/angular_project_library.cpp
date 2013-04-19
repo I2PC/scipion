@@ -369,7 +369,7 @@ void ProgAngularProjectLibrary::run()
     mySFin.read(output_file_root+"_angles.doc");
     size_t myCounter=0;
     size_t id;
-
+    int ref;
     for (double mypsi=0;mypsi<360;mypsi += psi_sampling)
     {
         FOR_ALL_OBJECTS_IN_METADATA(mySFin)
@@ -381,6 +381,7 @@ void ProgAngularProjectLibrary::run()
             mySFin.getValue(MDL_X,x,__iter.objId);
             mySFin.getValue(MDL_Y,y,__iter.objId);
             mySFin.getValue(MDL_Z,z,__iter.objId);
+            mySFin.getValue(MDL_REF,ref,__iter.objId);
             fn_temp.compose( ++myCounter,output_file);
             id = mySFout.addObject();
             mySFout.setValue(MDL_IMAGE,fn_temp,id);
@@ -392,6 +393,7 @@ void ProgAngularProjectLibrary::run()
             mySFout.setValue(MDL_Y,y,id);
             mySFout.setValue(MDL_Z,z,id);
             mySFout.setValue(MDL_SCALE,1.0,id);
+            mySFout.setValue(MDL_REF,ref,id);
         }
     }
     mySFout.setComment("x,y,z refer to the coordinates of the unitary vector at direction given by the euler angles");
