@@ -107,7 +107,7 @@ public class CTFAnalyzerImagePane extends JPanel implements MouseListener, Mouse
 	public void mouseWheelMoved(MouseWheelEvent e)
 	{
 		int rotation = e.getWheelRotation();//1 or -1
-		updateProfile(profileangle + rotation * Math.toRadians(2));
+		updateProfile(profileangle + rotation * Math.toRadians(5));
 		
 	}
 

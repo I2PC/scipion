@@ -9,11 +9,16 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
+import javax.swing.Icon;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -26,16 +31,19 @@ import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import xmipp.jni.CTFDescription;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
+import xmipp.utils.XmippDialog;
+import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippLabel;
 import xmipp.utils.XmippWindowUtil;
 
-public class CTFAnalyzerJFrame extends JFrame
+public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 {
 
 	private ImagePlus imp;
@@ -58,7 +66,12 @@ public class CTFAnalyzerJFrame extends JFrame
 	private JTabbedPane tabspn;
 	private String psdfile;
 	private ChartPanel avgchartpn;
-	double[] ctf_avgplot, theorethicalpsd_avgplot, envelope_avgplot, bgnoise_avgplot, psdprofile_avgplot;
+	double[] ctf_avgplot, theorethicalpsd_avgplot, envelope_avgplot, bgnoise_avgplot, psdprofile_avgplot, difference_avgplot;
+	double[] ctfplot, theorethicalpsdplot, envelopeplot, bgnoiseplot, psdprofileplot, difference;
+	private JButton exportbt;
+	private JButton exportavgbt;
+	private XmippFileChooser fc;
+	private JCheckBox differencechb;
 
 	public CTFAnalyzerJFrame(ImagePlus imp, String ctffile, String psdfile)
 	{
@@ -70,22 +83,36 @@ public class CTFAnalyzerJFrame extends JFrame
 			this.psdfile = psdfile;
 
 			ctfmodel = new CTFDescription(ctffile);
-			
+
 			samples = imp.getWidth() / 2;
 			xvalues = getXValues(samples, getSamplingRate(ctffile));
+			fc = new XmippFileChooser();
 
 			constraints = new GridBagConstraints();
 			constraints.insets = new Insets(0, 5, 0, 5);
 			constraints.anchor = GridBagConstraints.NORTHWEST;
 			// constraints.fill = GridBagConstraints.HORIZONTAL;
 			setLayout(new GridBagLayout());
+			JPanel contentpn = new JPanel(new GridBagLayout());
+			contentpn.setBorder(BorderFactory.createEtchedBorder());
+			add(contentpn, XmippWindowUtil.getConstraints(constraints, 0, 0));
+			imagepn = new JPanel(new GridBagLayout());
+			imagepn.setBorder(BorderFactory.createTitledBorder("PSD Image"));
+			imageprofilepn = new CTFAnalyzerImagePane(imp, this);
+			imagepn.add(imageprofilepn, XmippWindowUtil.getConstraints(constraints, 0, 0));
+			contentpn.add(imagepn, XmippWindowUtil.getConstraints(constraints, 0, 0, 1));
 
-			initImagePane();
-			add(imagepn, XmippWindowUtil.getConstraints(constraints, 0, 0, 1));
+			initGraphicPanes();
+			contentpn.add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 1, 1, 1));
+			contentpn.add(graphicpn, XmippWindowUtil.getConstraints(constraints, 1, 0, 1, 3));
 
-			initGraphicPane();
-			add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 1, 1, 1));
-			add(graphicpn, XmippWindowUtil.getConstraints(constraints, 1, 0, 1, 2));
+			JPanel actionspn = new JPanel();
+			exportbt = XmippWindowUtil.getTextButton("Export Graphics", this);
+			actionspn.add(exportbt, XmippWindowUtil.getConstraints(constraints, 0, 1));
+//			exportavgbt = XmippWindowUtil.getTextButton("Export Average Graphics", this);
+//			actionspn.add(exportavgbt, XmippWindowUtil.getConstraints(constraints, 1, 1));
+			add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 1));
+			enableDisplay();
 			pack();
 			setVisible(true);
 		}
@@ -95,24 +122,17 @@ public class CTFAnalyzerJFrame extends JFrame
 		}
 	}
 
-	private void initImagePane()
-	{
-		imagepn = new JPanel(new GridBagLayout());
-		imagepn.setBorder(BorderFactory.createTitledBorder("PSD Image"));
-		imageprofilepn = new CTFAnalyzerImagePane(imp, this);
-		imagepn.add(imageprofilepn, XmippWindowUtil.getConstraints(constraints, 0, 0));
-
-	}
-
-	private void initGraphicPane()
+	private void initGraphicPanes()
 	{
 		actionspn = new JPanel(new GridBagLayout());
 		actionspn.setBorder(BorderFactory.createTitledBorder("Display"));
-		ctfrb = new JRadioButton(XmippLabel.LABEL_CTF);
+		ctfrb = new JRadioButton(getCTFLabel());
 		ctfrb.addActionListener(new FillGraphicsActionListener());
+		ctfrb.addActionListener(new EnableDisplayActionListener());
 
-		psdrb = new JRadioButton(XmippLabel.LABEL_PSD + " Profile");
+		psdrb = new JRadioButton(getPSDProfileLabel());
 		psdrb.addActionListener(new FillGraphicsActionListener());
+		psdrb.addActionListener(new EnableDisplayActionListener());
 		ButtonGroup drawbg = new ButtonGroup();
 		drawbg.add(ctfrb);
 		drawbg.add(psdrb);
@@ -121,17 +141,20 @@ public class CTFAnalyzerJFrame extends JFrame
 		actionspn.add(psdrb, XmippWindowUtil.getConstraints(constraints, 0, 1));
 
 		constraints.insets = new Insets(0, 20, 0, 5);
-		theorethicalpsdchb = new JCheckBox("Theorethical PSD");
+		theorethicalpsdchb = new JCheckBox(getTheorethicalPSDLabel());
 		theorethicalpsdchb.addActionListener(new FillGraphicsActionListener());
-		envelopepsdchb = new JCheckBox("Envelope");
+		envelopepsdchb = new JCheckBox(getEnvelopeLabel());
 		envelopepsdchb.addActionListener(new FillGraphicsActionListener());
-		noisechb = new JCheckBox("Noise");
+		noisechb = new JCheckBox(getBGNoiseLabel());
 		noisechb.addActionListener(new FillGraphicsActionListener());
+		differencechb = new JCheckBox(getDifferenceLabel());
+		differencechb.addActionListener(new FillGraphicsActionListener());
 
 		actionspn.add(theorethicalpsdchb, XmippWindowUtil.getConstraints(constraints, 0, 2));
 		actionspn.add(envelopepsdchb, XmippWindowUtil.getConstraints(constraints, 0, 3));
 		actionspn.add(noisechb, XmippWindowUtil.getConstraints(constraints, 0, 4));
-
+		actionspn.add(differencechb, XmippWindowUtil.getConstraints(constraints, 0, 5));
+		
 		graphicpn = new JPanel();
 		tabspn = new JTabbedPane();
 		JPanel tab1pn = new JPanel();
@@ -151,6 +174,8 @@ public class CTFAnalyzerJFrame extends JFrame
 		tab1pn.add(radialchartpn);
 		tab2pn.add(avgchartpn);
 	}
+
+	
 
 	private static ChartPanel createChartPanel(JFreeChart chart)
 	{
@@ -179,7 +204,8 @@ public class CTFAnalyzerJFrame extends JFrame
 
 	private void fillAvgGraphics()
 	{
-		if (psdprofile_avgplot == null)//avg data does not change, calculated only once
+		if (psdprofile_avgplot == null)// avg data does not change, calculated
+										// only once
 		{
 			int x0 = imageprofilepn.getX0();
 			int y0 = imageprofilepn.getY0();
@@ -219,6 +245,9 @@ public class CTFAnalyzerJFrame extends JFrame
 			envelope_avgplot = ctfmodel.avgprofiles[CTFDescription.ENVELOPE];
 			theorethicalpsd_avgplot = ctfmodel.avgprofiles[CTFDescription.PSD];
 			ctf_avgplot = ctfmodel.avgprofiles[CTFDescription.CTF];
+			difference_avgplot = new double[bgnoiseplot.length];
+			for (int i = 0; i < xvalues.length; i++)
+				difference_avgplot[i] = psdprofileplot[i] - bgnoiseplot[i];
 		}
 		XYSeriesCollection collection = getXYSeriesCollection(psdprofile_avgplot, ctf_avgplot, theorethicalpsd_avgplot, envelope_avgplot, bgnoise_avgplot);
 		XYPlot plot = ((XYPlot) avgchartpn.getChart().getPlot());
@@ -228,8 +257,8 @@ public class CTFAnalyzerJFrame extends JFrame
 
 	private void fillRadialGraphics()
 	{
-		double[] ctfplot, theorethicalpsdplot, envelopeplot, bgnoiseplot, psdprofileplot;
 		
+
 		int x0 = imageprofilepn.getX0();
 		int y0 = imageprofilepn.getY0();
 		// // Get profile.
@@ -240,11 +269,13 @@ public class CTFAnalyzerJFrame extends JFrame
 		psdprofileplot = new ProfilePlot(imp).getProfile();
 
 		ctfmodel.CTFProfile(imageprofilepn.getProfileangle(), samples);
-
 		bgnoiseplot = ctfmodel.profiles[CTFDescription.BACKGROUND_NOISE];
 		envelopeplot = ctfmodel.profiles[CTFDescription.ENVELOPE];
 		theorethicalpsdplot = ctfmodel.profiles[CTFDescription.PSD];
 		ctfplot = ctfmodel.profiles[CTFDescription.CTF];
+		difference = new double[bgnoiseplot.length];
+		for (int i = 0; i < xvalues.length; i++)
+			difference[i] = psdprofileplot[i] - bgnoiseplot[i];
 
 		XYSeriesCollection collection = getXYSeriesCollection(psdprofileplot, ctfplot, theorethicalpsdplot, envelopeplot, bgnoiseplot);
 
@@ -270,10 +301,11 @@ public class CTFAnalyzerJFrame extends JFrame
 
 		if (showCTF())
 			collection.addSeries(createSeries(XmippLabel.CB_PLOT_CTF, xvalues, ctfplot, max, min));
-		else
+		else if (showPSD())
 		{
-			collection.addSeries(createSeries(XmippLabel.LABEL_PSD + " " + XmippLabel.CB_PLOT_PROFILE, xvalues, psdprofileplot, max, min));
+			collection.addSeries(createSeries(getPSDProfileLabel(), xvalues, psdprofileplot, max, min));
 
+			/////////////////some max value is established and values displayed are filtered accordingly////////////////////////////////
 			// min = max;
 			max = -max;
 			for (int i = 0; i < xvalues.length; i++)
@@ -283,20 +315,23 @@ public class CTFAnalyzerJFrame extends JFrame
 			}
 			max += Math.abs(max) * 0.1;
 			// min -= Math.abs(min) * 0.1;
+			/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 			if (showBGNoise())
 			{
-				collection.addSeries(createSeries(XmippLabel.CB_PLOT_BGNOISE, xvalues, bgnoiseplot, max, min));
-				double[] difference = new double[bgnoiseplot.length];
-				for (int i = 0; i < xvalues.length; i++)
-					difference[i] = psdprofileplot[i] - bgnoiseplot[i];
-				collection.addSeries(createSeries(XmippLabel.CB_PLOT_DIFFERENCE, xvalues, difference, max, min));
+				collection.addSeries(createSeries(getBGNoiseLabel(), xvalues, bgnoiseplot, max, min));
+				
+			}
+			if(showDifference())
+			{
+				
+				collection.addSeries(createSeries(getDifferenceLabel(), xvalues, difference, max, min));
 			}
 			if (showEnvelope())
-				collection.addSeries(createSeries(XmippLabel.CB_PLOT_ENVELOPE, xvalues, envelopeplot, max, min));
+				collection.addSeries(createSeries(getEnvelopeLabel(), xvalues, envelopeplot, max, min));
 
 			if (showTheorethicalPSD())
-				collection.addSeries(createSeries("Theorethical " + XmippLabel.CB_PLOT_PSD, xvalues, theorethicalpsdplot, max, min));
+				collection.addSeries(createSeries(getTheorethicalPSDLabel(), xvalues, theorethicalpsdplot, max, min));
 		}
 		return collection;
 
@@ -337,6 +372,11 @@ public class CTFAnalyzerJFrame extends JFrame
 	private boolean showCTF()
 	{
 		return ctfrb.isSelected();
+	}
+	
+	private boolean showDifference()
+	{
+		return differencechb.isSelected();
 	}
 
 	private static double[] getXValues(int length, double Tm)
@@ -385,4 +425,132 @@ public class CTFAnalyzerJFrame extends JFrame
 		}
 
 	}
+	
+	class EnableDisplayActionListener implements ActionListener
+	{
+
+		@Override
+		public void actionPerformed(ActionEvent e)
+		{
+			enableDisplay();
+		}
+
+	}
+	
+	private void enableDisplay()
+	{
+		theorethicalpsdchb.setEnabled(showPSD());
+		envelopepsdchb.setEnabled(showPSD());
+		noisechb.setEnabled(showPSD());
+		differencechb.setEnabled(showPSD());
+	
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e)
+	{
+		int result = fc.showSaveDialog(this);
+		boolean export = result == XmippFileChooser.APPROVE_OPTION;
+		if (export)
+		{
+			File file = fc.getSelectedFile();
+			if (file != null)
+			{
+				
+				boolean saved = export(file.getAbsolutePath());
+				if (saved)
+					XmippDialog.showInfo(this, "File saved sucesfully.");
+			}
+		}
+
+	}
+	
+    private boolean export(String path) {
+
+
+        try {
+            FileWriter fstream = new FileWriter(path);
+            BufferedWriter out = new BufferedWriter(fstream);
+
+            String hformat = "%40s%36s AVG";
+            String vformat = "%40.4f%40.4f";
+            // Header.
+            out.write(String.format("%40s", "X"));
+            if(showCTF())
+            	out.write(String.format(hformat, getCTFLabel(), getCTFLabel()));
+            if(showPSD())
+            	out.write(String.format(hformat, getPSDProfileLabel(), getPSDProfileLabel()));
+            if(showTheorethicalPSD())
+            	out.write(String.format(hformat, getTheorethicalPSDLabel(), getTheorethicalPSDLabel()));
+            if(showEnvelope())
+            	out.write(String.format(hformat, getEnvelopeLabel(), getEnvelopeLabel()));
+            if(showBGNoise())
+            	out.write(String.format(hformat, getBGNoiseLabel(), getBGNoiseLabel()));
+            if(showDifference())
+            	out.write(String.format(hformat, getDifferenceLabel(), getDifferenceLabel()));
+            out.newLine();
+            
+            for (int i = 0; i < ctfplot.length; i++) {
+            	out.write(String.format("%40.4f", xvalues[i]));
+            	if(showCTF())
+                	out.write(String.format(vformat, ctfplot[i], ctf_avgplot[i]));
+                if(showPSD())
+                	out.write(String.format(vformat, psdprofileplot[i], psdprofile_avgplot[i]));
+                if(showTheorethicalPSD())
+                	out.write(String.format(vformat, theorethicalpsdplot[i], theorethicalpsd_avgplot[i]));
+                if(showEnvelope())
+                	out.write(String.format(vformat, envelopeplot[i], envelope_avgplot[i]));
+                if(showBGNoise())
+                	out.write(String.format(vformat, bgnoiseplot[i], bgnoise_avgplot[i]));
+                if(showDifference())
+                	out.write(String.format(vformat, difference[i], difference_avgplot[i]));
+
+            	out.newLine();
+            }
+            
+            
+            out.close();
+
+            return true;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            XmippDialog.showError(this, ex.getMessage());
+        }
+
+        return false;
+    }
+    
+    public String getDifferenceLabel()
+    {
+    	return XmippLabel.CB_PLOT_BGNOISE + " Corrected " + XmippLabel.LABEL_PSD + " Profile";
+    }
+    
+    private String getTheorethicalPSDLabel()
+	{
+		// TODO Auto-generated method stub
+		return "Theorethical " + XmippLabel.LABEL_PSD;
+	}
+    
+    public String getPSDProfileLabel()
+    {
+    	return XmippLabel.LABEL_PSD + " Profile";
+    }
+    
+    public String getEnvelopeLabel()
+    {
+    	return XmippLabel.CB_PLOT_ENVELOPE;
+    }
+    
+    public String getCTFLabel()
+    {
+    	return XmippLabel.LABEL_CTF;
+    }
+    
+    
+    public String getBGNoiseLabel()
+    {
+    	return XmippLabel.CB_PLOT_BGNOISE;
+    }
+    
+    
 }
