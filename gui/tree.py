@@ -34,12 +34,16 @@ from widgets import Scrollable
 
 class Tree(ttk.Treeview, Scrollable):
     """ This widget acts as a wrapper around the ttk.Treeview"""
+    _images = {}
     
     def __init__(self, master, frame=True, **opts):
         """Create a new Tree, if frame=True, a container
         frame will be created and an scrollbar will be added"""
         Scrollable.__init__(self, master, ttk.Treeview, frame, **opts)
         
+    def getImage(self, img):
+        return gui.getImage(img, Tree._images)
+    
     def getFirst(self):
         ''' Return first selected item or None if selection empty'''
         selection = self.selection()
@@ -140,18 +144,24 @@ class BoundTree(Tree):
         self._objects = self.provider.getObjects()
         for obj in self._objects:
             objDict = self.provider.getObjectInfo(obj)
+            key = objDict.get('key')
+            text = objDict.get('text', key)
             parent = objDict.get('parent', None)
             if parent is None:
                 parentId = ''
             else:
-                parentId = parent._treeId # Previously set
-            key = objDict.get('key')
-            text = objDict.get('text', key)
+                if hasattr(parent, '_treeId'): # This should happens always
+                    parentId = parent._treeId # Previously set
+                else:
+                    parentId = ''
+                    text += '---> Error: parent not Inserted'
             image = objDict.get('image', '')
             if len(image):
-                image = self.getImage(image)
+                image = self.getImage('step.gif')
+                if image is None:
+                    image = ''
             values = objDict.get('values', ())
-            obj._treeId = self.insert(parentId, 'end', objDict['key'],
+            obj._treeId = self.insert(parentId, 'end', key,
                         text=text, image=image, values=values)
         
         

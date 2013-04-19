@@ -67,7 +67,6 @@ def populateTree(self, tree, prefix, obj, level=0):
         if obj.value.hasValue() and tag == 'protocol_base':
             protClassName = value.split('.')[-1] # Take last part
             prot = emProtocolsDict.get(protClassName, None)
-            print "found protocol_base: ", protClassName
             if prot is not None:
                 tree.item(item, image=self.getImage('class_obj.gif'))
                 for k, v in emProtocolsDict.iteritems():

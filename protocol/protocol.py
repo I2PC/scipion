@@ -95,6 +95,7 @@ class Step(OrderedObject):
         self.initTime.set(dt.datetime.now())
         self.endTime.set(None)
         try:
+            self.status.set(STATUS_RUNNING)
             if not self.runStartsCallback is None:
                 self.runStartsCallback(self)
             self._run()
@@ -179,7 +180,7 @@ class Protocol(Step):
         Step.__init__(self, **args)
         self.mode = String(args.get('mode', MODE_RESUME))
         self._steps = List() # List of steps that will be executed
-        self.workingDir = args.get('workingDir', '.') # All generated files should be inside workingDir
+        self.workingDir = String(args.get('workingDir', '.')) # All generated files should be inside workingDir
         self.mapper = args.get('mapper', None)
         self._createVarsFromDefinition(**args)
         
@@ -221,7 +222,7 @@ class Protocol(Step):
         
     def _getPath(self, *paths):
         """Return a path inside the workingDir"""
-        return join(self.workingDir, *paths)
+        return join(self.workingDir.get(), *paths)
 
     def _getExtraPath(self, *paths):
         """Return a path inside the extra folder"""
@@ -290,14 +291,17 @@ class Protocol(Step):
         """This function will be called whenever an step
         has started running"""
         print "STARTED: " + step.funcName.get()
+        self.status.set(step.status)
+        #self.mapper.insertChild(self._steps, self._steps.getIndexStr(self.currentStep),
+        #                 step, self.namePrefix)
+        self._store(step)
     
     def _stepFinished(self, step):
         """This function will be called whenever an step
         has finished its run"""
-        self.mapper.insertChild(self._steps, self._steps.getIndexStr(self.currentStep),
-                         step, self.namePrefix)
+        self.endTime.set(step.endTime.get())
+        self._store(self.endTime, step)
         self.currentStep += 1
-        self.mapper.commit()
         if step.status == STATUS_FAILED:
             raise Exception("Protocol failed: " + step.error.get())
         print "FINISHED: ", step.funcName.get()
@@ -316,7 +320,7 @@ class Protocol(Step):
         self.__cleanStepsFrom(startIndex) # 
         
         self._store()
-        paths = [self.workingDir, self._getExtraPath(), self._getTmpPath()]
+        paths = [self.workingDir.get(), self._getExtraPath(), self._getTmpPath()]
         
         # Clean working path if in RESTART mode
         if self.mode.get() == MODE_RESTART:
@@ -328,12 +332,14 @@ class Protocol(Step):
         
 
     def run(self):
+        print 'RUNNING PROTOCOL -----------------'
+        print "   workingDir: ", self.workingDir.get()
         self.currentStep = 1
         self.namePrefix = replaceExt(self._steps.getName(), self._steps.strId()) #keep 
         Step.run(self)
         outputs = [getattr(self, o) for o in self._outputs]
         #self._store(self.status, self.initTime, self.endTime, *outputs)
         self._store()
-        print 'PROTOCOL FINISHED'
+        print '------------------- PROTOCOL FINISHED'
 
 
