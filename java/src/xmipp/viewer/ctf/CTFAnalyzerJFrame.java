@@ -163,11 +163,11 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 		tabspn.addTab("Radial Average", tab2pn);
 		graphicpn.add(tabspn);
 		JFreeChart chart = ChartFactory
-				.createXYLineChart("", XmippLabel.LABEL_SAMPLING, showCTF() ? XmippLabel.LABEL_CTF : XmippLabel.LABEL_PSD, collection, PlotOrientation.VERTICAL, true, true, false);
+				.createXYLineChart("", XmippLabel.LABEL_SAMPLING, showCTF() ? getCTFLabel() : getPSDProfileLabel(), collection, PlotOrientation.VERTICAL, true, true, false);
 
 		radialchartpn = createChartPanel(chart);
 		JFreeChart avgchart = ChartFactory
-				.createXYLineChart("", XmippLabel.LABEL_SAMPLING, showCTF() ? XmippLabel.LABEL_CTF : XmippLabel.LABEL_PSD, collection, PlotOrientation.VERTICAL, true, true, false);
+				.createXYLineChart("", XmippLabel.LABEL_SAMPLING, showCTF() ? getCTFLabel() : getPSDProfileLabel(), collection, PlotOrientation.VERTICAL, true, true, false);
 
 		avgchartpn = createChartPanel(avgchart);
 		fillGraphics();
@@ -252,7 +252,7 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 		XYSeriesCollection collection = getXYSeriesCollection(psdprofile_avgplot, ctf_avgplot, theorethicalpsd_avgplot, envelope_avgplot, bgnoise_avgplot);
 		XYPlot plot = ((XYPlot) avgchartpn.getChart().getPlot());
 		plot.setDataset(0, collection);
-		plot.getRangeAxis().setLabel(showCTF() ? XmippLabel.LABEL_CTF : XmippLabel.LABEL_PSD);
+		plot.getRangeAxis().setLabel(showCTF() ? getCTFLabel() : getPSDProfileLabel());
 	}
 
 	private void fillRadialGraphics()
@@ -281,7 +281,7 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 
 		XYPlot plot = ((XYPlot) radialchartpn.getChart().getPlot());
 		plot.setDataset(0, collection);
-		plot.getRangeAxis().setLabel(showCTF() ? XmippLabel.LABEL_CTF : XmippLabel.LABEL_PSD);
+		plot.getRangeAxis().setLabel(showCTF() ? getCTFLabel(): getPSDProfileLabel());
 	}
 
 	private static void sum(double a[], double b[])
