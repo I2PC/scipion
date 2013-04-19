@@ -23,7 +23,7 @@
  *=================================================================*/
 
 /*xmipp includes */
-#include "volume.h"
+#include "xmipp_image.h"
 #include "tom_xmipp_helpers.h"
 #include "volume_segment.h"
 
@@ -33,8 +33,8 @@
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 {
-    Prog_segment_prm prm;
-    VolumeXmipp vol;
+    ProgVolumeSegment prm;
+    Image<double> vol;
     getMatrix3D(prhs[0],vol());
     prm.V = vol;
     prm.fn_mask = "";
@@ -70,7 +70,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     else
         prm.do_prob = false;
     
-    VolumeXmipp mask;
+    Image<double> mask;
     try
     {
         prm.segment(mask);
