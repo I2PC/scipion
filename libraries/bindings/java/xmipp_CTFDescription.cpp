@@ -145,11 +145,13 @@ JNIEXPORT jobjectArray JNICALL Java_xmipp_jni_CTFDescription_CTFProfile(
                                           (jdouble *) aux);
 
                 // Assings the row to the result array object.
+
                 env->SetObjectArrayElement(profilesArray, i, row);
+
             }
             delete []aux;
-
             return profilesArray;
+
         }
         catch (XmippError xe)
         {
