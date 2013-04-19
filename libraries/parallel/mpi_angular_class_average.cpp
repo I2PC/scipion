@@ -420,7 +420,8 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     //std::cerr << "DEBUG_JM: BEFORE MDValueEQ" <<std::endl;
     MDValueEQ eq1(MDL_REF3D, ref3d);
     MDValueEQ eq2(MDL_DEFGROUP, defGroup);
-    MDValueEQ eq3(MDL_ORDER, order_number);
+    //MDValueEQ eq3(MDL_ORDER, order_number);
+    MDValueEQ eq3(MDL_REF, ref_number);
     MDMultiQuery multi;
     multi.addAndQuery(eq1);
     multi.addAndQuery(eq2);
