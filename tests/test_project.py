@@ -18,7 +18,7 @@ from tests.tester import *
 #proj.launchProtocol(prot)
 
 prot2 = ProtImportMicrographs(workingDir=proj.getPath('Runs', 'Import1'), 
-                              pattern=pattern, samplingRate=1, voltage=200)
+                              pattern=pattern, samplingRate=2, voltage=200)
 proj.launchProtocol(prot2)
 
 l = proj.mapper.selectByClass('SetOfMicrographs')
@@ -32,35 +32,24 @@ if len(l):
     print "Continue after import..."
     prot3 = XmippProtPreprocessMicrographs(workingDir=proj.getPath('Runs', 'PreprocessDown'), 
                                        doDownsample=True, downFactor=3, doCrop=True)
-    #prot3 = XmippProtCTFMicrographs(workingDir=proj.getPath('Runs', 'Ctf'))
-    
-    prot3.inputMicrographs.set(l[0])
+    prot3.inputMicrographs.set(prot2.outputMicrographs)
 
     proj.launchProtocol(prot3)
-    sys.exit(0)
+    
+    prot4 = XmippProtCTFMicrographs(workingDir=proj.getPath('Runs', 'Ctf'))
+        
+    #prot4.inputMicrographs.set(l[0])
+    prot4.inputMicrographs.set(prot3.outputMicrographs)
 
-    prot4 = XmippProtPreprocessMicrographs(workingDir=proj.getPath('Runs', 'PreprocessCrop'), inputMicrographs=l[0], 
-                                           doCrop=True, cropPixels=5)
-    
-    
     proj.launchProtocol(prot4)
-    
-    prot5 = XmippProtPreprocessMicrographs(workingDir=proj.getPath('Runs', 'PreprocessLog'), inputMicrographs=l[0], 
-                                           doLog=True)
-    
-    
-    proj.launchProtocol(prot5)
-    
-    prot6 = XmippProtPreprocessMicrographs(workingDir=proj.getPath('Runs', 'PreprocessRemove'), inputMicrographs=l[0], 
-                                           doRemoveBadPix=True)
-    
-    
-    proj.launchProtocol(prot6)
 
     l = proj.mapper.selectByClass('SetOfMicrographs')
-#l = proj.mapper.selectAll()
 
     for p in l:
-      p.printAll()
+        if p.hasCTF():
+            for mic in p:
+                if mic.hasCTF():
+                    mic.ctfModel.printAll() 
+    
 else:
     print "Not micrographs found"
