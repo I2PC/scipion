@@ -137,8 +137,8 @@ class BoundTree(Tree):
         
     def update(self):
         self.clear()
-        objects = self.provider.getObjects()
-        for obj in objects:
+        self._objects = self.provider.getObjects()
+        for obj in self._objects:
             objDict = self.provider.getObjectInfo(obj)
             parent = objDict.get('parent', None)
             if parent is None:

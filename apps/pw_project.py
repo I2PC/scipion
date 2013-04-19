@@ -165,7 +165,7 @@ class ProjectWindow(gui.Window):
         p.grid(row=0, column=0, sticky='news')
         
         # Event bindings
-        self.root.bind("<F5>", lambda e: self.updateRunsTree(self.runsTree))
+        self.root.bind("<F5>", lambda e: self.runsTree.update())
         
     def loadProjectConfig(self):
         self.project = Project(self.projPath)
@@ -221,9 +221,15 @@ class ProjectWindow(gui.Window):
         
     def _openProtocolForm(self, prot):
         """Open the Protocol GUI Form given a Protocol instance"""
-        w = FormWindow("Protocol Run: " + prot.getClassName(), prot, self)
+        w = FormWindow("Protocol Run: " + prot.getClassName(), prot, self._executeProtocol, self)
         w.show(center=True)
         
+    def _executeProtocol(self, prot):
+        self.project.insertProtocol(prot)        
+        from pyworkflow.protocol.launcher import FULLPATH
+        cmd = "python %s %s %s &" % (FULLPATH, os.path.basename(self.projPath), prot.strId())
+        print cmd
+        os.system(cmd)
     
 if __name__ == '__main__':
     from pyworkflow.manager import Manager

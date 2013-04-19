@@ -24,9 +24,33 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains Xmipp3.0 specific protocols
+This module is responsible for launching protocol executions.
 """
+import sys
+from os.path import abspath, dirname
+FULLPATH = abspath(__file__)
+sys.path.append(dirname(dirname(dirname(FULLPATH))))
+from pyworkflow.manager import Manager
 
-from eman2 import *
-from data import *
-from protocol_boxing import EmanProtBoxing
+
+
+if __name__ == '__main__':
+    if len(sys.argv) > 2:
+        projName = sys.argv[1]
+        protId = int(sys.argv[2])
+        
+        print "="*100
+        print "projName: ", projName
+        print "protId: ", protId
+        
+        
+        manager = Manager()
+        project = manager.createProject(projName) # Now it will be loaded if exists
+        protocol = project.mapper.selectById(protId)
+        if protocol is None:
+            print "Not protocol found"
+        project.launchProtocol(protocol)
+        #protocol.run()
+        #protocol.printAll()
+    else:
+        print "usage: %s projectName protocolID" % sys.argv[0]
