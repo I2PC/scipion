@@ -28,10 +28,11 @@ Protocols related to EM
 """
 import os
 import shutil
+from os.path import join
 from pyworkflow.object import String, Float
 from pyworkflow.protocol import Protocol
 from pyworkflow.protocol.params import *
-from pyworkflow.em import SetOfMicrographs
+from pyworkflow.em import Micrograph, SetOfMicrographs
 from pyworkflow.utils.path import removeBaseExt
 
 
@@ -65,6 +66,8 @@ class DefImportMicrographs(Form):
 class ProtImportMicrographs(Protocol):
     """Protocol to import a set of micrographs in the project"""
     _definition = DefImportMicrographs()
+    _label = 'Import micrographs'
+    _path = join('Micrographs', 'Import')
     
     def __init__(self, **args):
         Protocol.__init__(self, **args)         
@@ -82,7 +85,7 @@ class ProtImportMicrographs(Protocol):
         if len(files) == 0:
             raise Exception('importMicrographs:There is not files matching pattern')
         path = self._getPath('micrographs.txt')
-        micSet = SetOfMicrographs(filename=path, tiltPairs=tiltPairs)
+        micSet = SetOfMicrographs(path, tiltPairs=tiltPairs)
         micSet.microscope.voltage.set(voltage)
         micSet.microscope.sphericalAberration.set(sphericalAberration)
         micSet.samplingRate.set(samplingRate)
@@ -90,9 +93,9 @@ class ProtImportMicrographs(Protocol):
         for f in files:
             dst = self._getPath(os.path.basename(f))            
             shutil.copyfile(f, dst)
-            micSet.append(dst)
+            micSet.append(Micrograph(dst))
         
-        micSet.writeToFile(path)
+        micSet.write()
         self._defineOutputs(outputMicrographs=micSet)
         outFiles = micSet._files + [path]
         
@@ -145,13 +148,8 @@ class DefCTFMicrographs(Form):
 
 
 class ProtCTFMicrographs(Protocol):
-    
+    """Base class for all protocols that estimates the CTF"""
     _definition = DefCTFMicrographs()
-        
-#    def __init__(self, **args):
-#        
-#        Protocol.__init__(self, **args)
-            
     
     def _iterMicrographs(self):
         """Iterate over micrographs and yield

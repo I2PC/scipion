@@ -76,7 +76,7 @@ class XmippDefPreprocessMicrograph(Form):
                            'Set this option to -1 for not applying it.')
         self.addParam('mulStddev', IntParam, default=5, condition='doRemoveBadPix',
                       label='Multiple of Stddev',
-                      help='Multiple of standard devitation.')    
+                      help='Multiple of standard deviation.')    
         self.addParam('doDownsample', BooleanParam, default=False, important=True,
                       label='Downsample micrographs?',
                       help='Downsample micrographs by a given factor.')
@@ -88,6 +88,7 @@ class XmippDefPreprocessMicrograph(Form):
 class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     """Protocol to preprocess a set of micrographs in the project"""
     _definition = XmippDefPreprocessMicrograph()
+    _label = 'Xmipp Micrographs Preprocessing'
     
 #    def __init__(self, **args):
 #        
@@ -140,38 +141,31 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         # Downsample
         self.__insertOneStep(self.doDownsample, "xmipp_transform_downsample",
                             "-i %(inputMic)s --step %(downFactor)f --method fourier")
-                    
         # Crop
         self.__insertOneStep(self.doCrop, "xmipp_transform_window",
                             " -i %(inputMic)s --crop %(cropPixels)d -v 0")
-        
-            
         # Take logarithm
         self.__insertOneStep(self.doLog, "xmipp_transform_filter",
                             " -i %(inputMic)s --log --fa %(logA)f --fb %(logB)f --fc %(logC)f")
-                    
         # Remove bad pixels
         self.__insertOneStep(self.doRemoveBadPix, "xmipp_transform_filter",
                             " -i %(inputMic)s --bad_pixels outliers %(stddev)f -v 0")
                 
     def createOutput(self, IOTable):
         
-        mdOut = self._getPath("micrographs.xmd")    
+        mdOut = self._getPath("micrographs@micrographs.xmd")    
+        micSet = XmippSetOfMicrographs(mdOut)
             
-        # Create the xmipp metadata micrographs.xmd           
-        md = MetaData()      
+        print "after created micSet"
+        # Add micrographs to the set           
         for i, v in IOTable.iteritems():
-            objId = md.addObject()
-            md.setValue(MDL_MICROGRAPH,v,objId)
-            md.setValue(MDL_MICROGRAPH_ORIGINAL,i,objId)
+            micSet.append(XmippMicrograph(v))
+            print "after create: ", v
             #TODO: Handle Tilted micrographs
 #            if tiltPairs:
 #                MD.setValue(xmipp.MDL_MICROGRAPH_TILTED,IOTable[fnMicrographTilted],objId)
 #                MD.setValue(xmipp.MDL_MICROGRAPH_TILTED_ORIGINAL,fnMicrographTilted,objId)
-        md.write("micrographs"+"@"+mdOut)
-                
+        micSet.write()
         # Create the SetOfMicrographs object on the database
-        self.outputMicrographs = XmippSetOfMicrographs(filename=mdOut)     
-        self.outputMicrographs.copyInfo(self.inputMics)
-
-        self._defineOutputs(micrograph=self.outputMicrographs)
+        micSet.copyInfo(self.inputMics)
+        self._defineOutputs(outputMicrographs=micSet)

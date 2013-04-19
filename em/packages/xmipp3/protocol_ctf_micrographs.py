@@ -70,36 +70,34 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
 
     def createOutput(self):
         # Create micrographs metadata with CTF information
-        mdOut = self._getPath(self._getFilename('micrographs'))
+        mdOut = self._getPath(self._getFilename('micrographs'))        
+        micSet = XmippSetOfMicrographs(mdOut)
         
-        md = MetaData()
+        # Label to set values in metadata
+        labels = [MDL_PSD, MDL_PSD_ENHANCED, MDL_CTF_MODEL, MDL_IMAGE1, MDL_IMAGE2]
+        # Filenames key related to ctf estimation
+        keys = ['psd', 'enhanced_psd', 'ctfparam', 'ctfmodel_quadrant', 'ctfmodel_halfplane']
         for fn, micrographDir in self._iterMicrographs():
-            objId = md.addObject()
-            md.setValue(MDL_MICROGRAPH, fn, objId)
+            mic = XmippMicrograph(fn)
             ctfparam = self._getFilename('ctfparam', micrographDir=micrographDir)
-            labels = [MDL_PSD, MDL_PSD_ENHANCED, MDL_CTF_MODEL, MDL_IMAGE1, MDL_IMAGE2]
             if exists(ctfparam): # Get filenames
-                keys = ['psd', 'enhanced_psd', 'ctfparam', 'ctfmodel_quadrant', 'ctfmodel_halfplane']
                 values = [self._getFilename(key, micrographDir=micrographDir) for key in keys]
             else: # No files
                 values = ['NA' for i in range(len(labels))]
     
-            # Set values in metadata
-            for label, value in zip(labels, values):
-                md.setValue(label, value, objId)
-        
-        if not md.isEmpty():
-            md.sort(MDL_MICROGRAPH)
-            md.write(mdOut)
+            # Set values to the micrograph
+            mic.setValue(*zip(labels, values))
+            micSet.append(mic)
             
-        dirOut,fnOut=os.path.split(mdOut)
+        micSet.sort()
+        micSet.write()
+            
+        dirOut, fnOut = os.path.split(mdOut)
         runJob(None,"xmipp_ctf_sort_psds","-i %s -o %s/aux_%s"%(mdOut,dirOut,fnOut))
         runJob(None,"mv","-f %s/aux_%s %s"%(dirOut,fnOut,mdOut))
 
         # Create the SetOfMicrographs object on the database
-        self.outputMicrographs = XmippSetOfMicrographs(filename=mdOut)     
-        self.outputMicrographs.copyInfo(self.inputMics)
+        micSet.copyInfo(self.inputMics)
         # This property should only be set by CTF estimation protocols
-        self.outputMicrographs._ctf.set(True)
-        
-        self._defineOutputs(outputMicrographs=self.outputMicrographs)
+        micSet._ctf.set(True)       
+        self._defineOutputs(outputMicrographs=micSet)

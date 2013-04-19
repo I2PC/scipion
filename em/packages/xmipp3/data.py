@@ -31,10 +31,38 @@ for specific Xmipp3 EM data objects
 from pyworkflow.em import *   
 from xmipp import *
     
+    
+class XmippMicrograph(Micrograph):
+    """Xmipp implementation for Micrograph"""
+    def __init__(self, filename=None, **args):
+        Micrograph.__init__(self, filename, **args)
+        self._labelDict = {MDL_MICROGRAPH: filename}
+        
+    def setValue(self, *args):
+        """args: this list should contains tuples with 
+        MetaData Label and the desired value"""
+        for label, value in args:
+            self._labelDict[label] = value
+            
+        
 class XmippSetOfMicrographs(SetOfMicrographs):
     """Represents a set of Micrographs for Xmipp"""
-    def __init__(self, **args):
+    def __init__(self, filename=None, **args):
         SetOfMicrographs.__init__(self, **args)
+        self._md = MetaData()
+        
+    def append(self, micrograph):
+        """Add a micrograph to the set"""
+        objId = self._md.addObject()
+        for label, value in micrograph._labelDict.iteritems():
+            self._md.setValue(label, value, objId)
+            
+    def sort(self):
+        """Sort the set according to MDL_MICROGRAPH"""
+        self._md.sort(MDL_MICROGRAPH)
+        
+    def write(self):
+        self._md.write(self.getFileName())
         
     def __iter__(self):
         """Iterate over the set of micrographs in the MetaData"""

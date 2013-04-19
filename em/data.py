@@ -48,7 +48,9 @@ class Microscope(EMObject):
 
 class Image(EMObject):
     """Represents an EM Image object"""
-    def __init__(self, **args):
+    def __init__(self, filename=None, **args):
+        # Use the object value to store the filename
+        args['value'] = filename
         EMObject.__init__(self, **args)
         self.samplingRate = Float()
         
@@ -74,8 +76,8 @@ class Image(EMObject):
         
 class Micrograph(Image):
     """Represents an EM Image object"""
-    def __init__(self, **args):
-        Image.__init__(self, **args)
+    def __init__(self, filename=None, **args):
+        Image.__init__(self, filename, **args)
         self.ctfModel = None
         
     def getMicroscope(self):
@@ -87,9 +89,9 @@ class Micrograph(Image):
 
 class SetOfImages(EMObject):
     """Represents a set of Images"""
-    def __init__(self, **args):
-        if 'filename' in args:
-            args['value'] = args['filename']
+    def __init__(self, filename=None, **args):
+        # Use the object value to store the filename
+        args['value'] = filename
         EMObject.__init__(self, **args)
         self.samplingRate = Float()
         
@@ -102,12 +104,17 @@ class SetOfImages(EMObject):
     
     def setFileName(self, newFileName):
         self._objValue = newFileName
+        
+        
+    def append(self, image):
+        """Add an image to the set"""
+        pass
     
     
 class SetOfMicrographs(SetOfImages):
     """Represents a set of Micrographs"""
-    def __init__(self, **args):
-        SetOfImages.__init__(self, **args)
+    def __init__(self, filename=None, **args):
+        SetOfImages.__init__(self, filename, **args)
         self.microscope = Microscope()
         self._tiltPairs = Boolean(args.get('tiltPairs', False))
         self._ctf = Boolean(args.get('ctf', False))
@@ -123,9 +130,9 @@ class SetOfMicrographs(SetOfImages):
         """Return True if the SetOfMicrographs has associated a CTF model"""
         return self._ctf.get()
     
-    def append(self, path):
-        """Add simply a micrograph path to the set"""
-        self._files.append(path)        
+    def append(self, micrograph):
+        """Add a micrograph to the set"""
+        self._files.append(micrograph.getFileName())        
     
     def __loadFiles(self):
         """Read files from text files"""
@@ -154,13 +161,13 @@ class SetOfMicrographs(SetOfImages):
             mT.setFileName(self._files[2*i+1])
             yield (mU, mT)
         
-    def writeToFile(self, path):
+    def write(self):
         """This method will be used to persist in a file the
         list of micrographs path contained in this Set
         path: output file path
         micrographs: list with the micrographs path to be stored
         """
-        micFile = open(path, 'w+')
+        micFile = open(self.getFileName(), 'w+')
         for f in self._files:            
             print >> micFile, f
         micFile.close()
