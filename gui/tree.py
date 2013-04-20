@@ -29,6 +29,9 @@ Tree widget implementation.
         
 import Tkinter as tk
 import ttk
+
+from pyworkflow.object import Scalar
+from pyworkflow.mapper import SqliteMapper
 import gui
 from widgets import Scrollable
 
@@ -163,5 +166,66 @@ class BoundTree(Tree):
             values = objDict.get('values', ())
             obj._treeId = self.insert(parentId, 'end', key,
                         text=text, image=image, values=values)
+
+    def itemConfig(self, obj, **args):
+        """Expand/collapse a previous inserted object"""
+        self.item(obj._treeId, **args)
         
+              
+class ObjectTreeProvider(TreeProvider):
+    """Populate Tree from Objects"""
+    def __init__(self, objList=None):
+        self.objList = objList
+        self.getColumns = lambda: [('Object', 500), ('Id', 70), ('Class', 150)]
+    
+    def getObjectInfo(self, obj):
+        cls = obj.getClassName()
+        if obj._objParentId is None:
+            t = cls
+        else:
+            t = obj.getName().split('.')[-1] 
+            if  t.startswith('__item__'):
+                t = "%s [%s]" % (cls, t.replace('__item__', ''))
+        if obj.get() is not None:
+            t += " = %s" % str(obj)
+            
+        info = {'key': obj.getId(), 'parent': self._parentDict.get(obj.getId(), None),
+                'text': t, 'values': (obj.strId(), cls)}
+        if issubclass(obj.__class__, Scalar):
+            info['image'] = 'step.gif'
+            
+        return info
         
+    def _getObjectList(self):
+        """Retrieve the object list"""
+        return self.objList
+    
+    def getObjects(self):
+        objList = self._getObjectList()
+        self._parentDict = {}
+        childs = []
+        for obj in objList:
+            childs += self.__getChilds(obj)
+        objList += childs
+        return objList
+        
+    def __getChilds(self, obj):
+        childs = []
+        grandchilds = []
+        for _, v in obj.getAttributesToStore():
+            childs.append(v)
+            self._parentDict[v.getId()] = obj
+            grandchilds += self.__getChilds(v)
+        childs += grandchilds
+        return childs
+
+    
+class DbTreeProvider(ObjectTreeProvider):
+    """Retrieve the elements from the database"""
+    def __init__(self, dbName, classesDict):
+        ObjectTreeProvider.__init__(self)
+        self.mapper = SqliteMapper(dbName, classesDict)
+    
+    def _getObjectList(self):
+        return self.mapper.selectAll()
+

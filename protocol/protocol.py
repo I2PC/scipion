@@ -309,6 +309,7 @@ class Protocol(Step):
     def _runSteps(self, startIndex):
         """ Run all steps defined in self._steps"""
         self._steps.setStore(True) # Set steps to be stored
+        self._store()
         
         for step in self._steps[startIndex:]:
             step.run()
@@ -319,7 +320,6 @@ class Protocol(Step):
         startIndex = self.__findStartingStep() # Find at which step we need to start
         self.__cleanStepsFrom(startIndex) # 
         
-        self._store()
         paths = [self.workingDir.get(), self._getExtraPath(), self._getTmpPath()]
         
         # Clean working path if in RESTART mode

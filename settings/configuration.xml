@@ -3,6 +3,7 @@
   <ProjectConfig>
     <menu>menu_default.xml</menu>
     <protocols>protocols_default.xml</protocols>
+    <icon>scipion_bn.xbm</icon>
     <logo>no_logo</logo>
   </ProjectConfig>
 </ALL>

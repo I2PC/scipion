@@ -73,6 +73,12 @@ class Object(object):
         """Return internal value"""
         return self._objValue
     
+    def getValue(self):
+        """Return the internal value for storage.
+        This is a good place to do some update of the
+        internal value before been stored"""
+        return self._objValue
+    
     def getId(self):
         """Return object id"""
         return self._objId
@@ -215,7 +221,6 @@ class Scalar(Object):
         return default
         
     
-    
 class Integer(Scalar):
     """Integer object"""
     def convert(self, value):
@@ -273,16 +278,6 @@ class List(Object, list):
             self.append(value)
         else:
             object.__setattr__(self, name, value)
-            
-#    def __getattribute__(self, name):
-#        #return list.__getattribute__(self, *args, **kwargs)__(self, name):
-#        print "   requesting name: ", name
-#        if name.startswith('__item__'):
-#            index = int(name.split('__item__')[1]) - 1
-#            print "   requesting index: ", index
-#            if index < len(self):
-#                return self[index]
-#        return object.__getattribute__(self, name)
 
     def getAttributesToStore(self):
         for key, attr in self.__dict__.iteritems():
@@ -305,7 +300,25 @@ class List(Object, list):
     
     def isEmpty(self):
         return len(self) > 0
+    
+            
+class CsvList(Object, list):
+    """This class will store a list of objects
+    in a single DB row separated by comma.
+    pType: the type of the list elememnts, int, bool, str"""
+    def __init__(self, pType=str, **args):
+        Object.__init__(**args)
+        list.__init__(self)
+        self._pType = pType
         
+    def set(self, value):
+        """Value should be a str with comman separated values"""
+        for s in value.split(','):
+            self.append(self._pType(s))
+            
+    def getValue(self):
+        return ','.join(self)
+    
         
 class Array(Object):
     """Class for holding fixed len array"""

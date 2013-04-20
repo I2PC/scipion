@@ -91,6 +91,12 @@ class Micrograph(Image):
         return self.ctfModel is not None
 
 
+class TiltedPair(CsvList):
+    """Store the id of the untilted and tilted micrographs"""
+    def __init__(self, **args):
+        CsvList.__init__(self, int, **args)
+        
+
 class SetOfImages(EMObject):
     """Represents a set of Images"""
     def __init__(self, filename=None, **args):
@@ -122,7 +128,8 @@ class SetOfMicrographs(SetOfImages):
         self._ctf = Boolean(args.get('ctf', False))
         self._tiltPairs = Boolean(args.get('tiltPairs', False))
         self.microscope = Microscope()
-        self._mics = List(objDoStore=False) # The micrograph list will be stored seperately
+        self._micList = List(objDoStore=False) # The micrograph list will be stored seperately
+        self._pairList = List(objDoStore=False) 
         
     def getMicroscope(self, index=0):
         return self.microscope
@@ -137,17 +144,17 @@ class SetOfMicrographs(SetOfImages):
     def append(self, micrograph):
         """Add a micrograph to the set"""
         micrograph.samplingRate.set(self.samplingRate.get())
-        self._mics.append(micrograph)        
+        self._micList.append(micrograph)        
     
     def __loadFiles(self):
         """Read files from text files"""
         mapper = SqliteMapper(self.getFileName(), globals())
-        self._mics = mapper.selectFirst()
+        self._micList = mapper.selectFirst()
         
     def __iter__(self):
         """Iterate over the set of micrographs in a .txt file"""
         self.__loadFiles()
-        for m in self._mics:
+        for m in self._micList:
             yield m
         
     def iterPairs(self):
@@ -155,12 +162,12 @@ class SetOfMicrographs(SetOfImages):
         #FIXME, we need to store the real relation 
         # between micrographs
         # TODO: Validate number of micrographs is even for Tilt Pairs
-        n = len(self._mics) / 2
+        n = len(self._micList) / 2
         for i in range(n):
             mU = Micrograph()
-            mU.setFileName(self._mics[2*i])
+            mU.setFileName(self._micList[2*i])
             mT = Micrograph()
-            mT.setFileName(self._mics[2*i+1])
+            mT.setFileName(self._micList[2*i+1])
             yield (mU, mT)
         
     def write(self):
@@ -170,7 +177,12 @@ class SetOfMicrographs(SetOfImages):
         micrographs: list with the micrographs path to be stored
         """
         mapper = SqliteMapper(self.getFileName(), globals())
-        mapper.insert(self._mics)
+        mapper.insert(self._micList)
+#        for mic in self._micList:
+#            p = CsvList(int)
+#            p += [mic.getId(), 1]
+#            self._pairList.append(p)
+#        mapper.insert(self._pairList)
         mapper.commit()
         
     def copyInfo(self, other):

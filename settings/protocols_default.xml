@@ -2,12 +2,12 @@
 <ALL>
   <ProtocolConfig>
     <ProtocolConfig tag="section" text="Micrographs">
-      <ProtocolConfig icon="bookmark.png" tag="protocol" text="Import" value="ProtImportMicrographs" />
+      <ProtocolConfig icon="bookmark.gif" tag="protocol" text=" Import" value="ProtImportMicrographs" />
       <ProtocolConfig tag="protocol_base" text="CTF estimation" value="ProtCTFMicrographs" />
       <ProtocolConfig tag="protocol_base" text="Preprocess" value="ProtPreprocessMicrographs" />
     </ProtocolConfig>
     <ProtocolConfig tag="section" text="Particles">
-      <ProtocolConfig icon="bookmark.png" tag="protocol" text="Import" value="ProtImportParticles" />
+      <ProtocolConfig icon="bookmark.gif" tag="protocol" text="Import" value="ProtImportParticles" />
       <ProtocolConfig tag="protocol_base" text="Picking" value="ProtParticlePicking" />
     </ProtocolConfig>
     <ProtocolConfig tag="section" text="2D">

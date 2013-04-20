@@ -194,7 +194,6 @@ def writeDefaults():
     # Write global configuration
     config = ProjectConfig(menu='menu_default.xml',
                            protocols='protocols_default.xml')
-    config.icon = String()
     writeConfig(config, 'configuration.xml')
     
 if __name__ == '__main__':

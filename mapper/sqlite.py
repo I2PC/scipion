@@ -39,7 +39,7 @@ class SqliteMapper(Mapper):
     def __getObjectValue(self, obj):
         if obj.isPointer():
             return obj.get().strId() # For pointers store the id of referenced object
-        return obj._objValue
+        return obj.getValue()
         
     def __insert(self, obj, namePrefix=None):
         obj._objId = self.db.insertObject(obj._objName, obj.getClassName(), 
@@ -59,6 +59,7 @@ class SqliteMapper(Mapper):
         """Delete an object and all its childs"""
         namePrefix = self.__getNamePrefix(obj)
         self.db.deleteChildObjects(namePrefix)
+        self.db.deleteObject(obj.getId())
         
     def insertChild(self, obj, key, attr, namePrefix):
             attr._objName = joinExt(namePrefix, key)

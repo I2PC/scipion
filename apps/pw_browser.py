@@ -34,7 +34,7 @@ import Tkinter as tk
 import pyworkflow.gui as gui
 from pyworkflow.object import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
-from pyworkflow.gui.tree import BoundTree, TreeProvider
+from pyworkflow.gui.tree import BoundTree, DbTreeProvider
 from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
 from pyworkflow.tests.tester import *
@@ -50,56 +50,17 @@ def getMapper(fn, classesDict):
         return SqliteMapper(fn, classesDict)
     return None
 
-class DbTreeProvider(TreeProvider):
-    """Retrieve the elements from the database"""
-    def __init__(self, dbName):
-        self.mapper = getMapper(dbName, globals())
-        self.getColumns = lambda: [('Object', 300), ('Id', 100), ('Class', 200)]
-    
-    def getObjectInfo(self, obj):
-        cls = obj.getClassName()
-        if obj._objParentId is None:
-            t = cls
-        else:
-            t = obj.getName().split('.')[-1] 
-            if  t.startswith('__item__'):
-                t = "%s [%s]" % (cls, t.replace('__item__', ''))
-        if obj.get() is not None:
-            t += " = %s" % str(obj)
-            
-        info = {'key': obj.getId(), 'parent': self._parentDict.get(obj.getId(), None),
-                'text': t, 'values': (obj.strId(), cls)}
-        if issubclass(obj.__class__, Scalar):
-            info['image'] = 'step.gif'
-            
-        return info
-        
-    def getObjects(self):
-        self._parentDict = {}
-        objList = self.mapper.selectAll()
-        childs = []
-        for obj in objList:
-            childs += self.getChilds(obj)
-        objList += childs
-        return objList
-        
-    def getChilds(self, obj):
-        childs = []
-        grandchilds = []
-        for _, v in obj.getAttributesToStore():
-            childs.append(v)
-            self._parentDict[v.getId()] = obj
-            grandchilds += self.getChilds(v)
-        childs += grandchilds
-        return childs
     
 class BrowserWindow(gui.Window):
-    def __init__(self, title, path, master=None, **args):
+    def __init__(self, title, provider, master=None, **args):
+        if 'minsize' not in args:
+            args['minsize'] = (800, 400)
         gui.Window.__init__(self, title, master, **args)
 
-        tree = BoundTree(self.root, DbTreeProvider(path))
+        tree = BoundTree(self.root, provider)
         #self.populateTree(tree, objList)
         tree.grid(row=0, column=0, sticky='news')
+        self.itemConfig = tree.itemConfig
 
     def populateWithObject(self, tree, prefix, obj):
         
@@ -125,7 +86,8 @@ if __name__ == '__main__':
     import sys
     if len(sys.argv) > 1:
         path = sys.argv[1]
-        window = BrowserWindow("Browsing: " + path, path)    
+        provider = DbTreeProvider(path, globals())
+        window = BrowserWindow("Browsing: " + path, provider)    
         window.show()
     else:
         print "usage: pw_browser.py SQLITE_DB"
