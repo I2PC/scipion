@@ -106,8 +106,8 @@ class Project(object):
         protocol.run()
         
     def deleteProtocol(self, protocol):
-        print "project deleting..."
-        self.mapper.delete(protocol)        
+        self.mapper.delete(protocol)   
+        self.mapper.commit()     
         
     def insertProtocol(self, protocol):
         """Insert a new protocol instance in the database"""
