@@ -136,6 +136,9 @@ class TestPyworkflow(unittest.TestCase):
         mapper.insert(p)
         #write file
         mapper.commit()
+        
+        csv = CsvList(int)
+        csv += [1, 2]
 
         # Reading test
         fnGold = self.getGoldPath("basic.sqlite")

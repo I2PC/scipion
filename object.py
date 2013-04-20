@@ -307,17 +307,19 @@ class CsvList(Object, list):
     in a single DB row separated by comma.
     pType: the type of the list elememnts, int, bool, str"""
     def __init__(self, pType=str, **args):
-        Object.__init__(**args)
+        Object.__init__(self, **args)
         list.__init__(self)
         self._pType = pType
         
     def set(self, value):
         """Value should be a str with comman separated values"""
-        for s in value.split(','):
-            self.append(self._pType(s))
+        if value is not None:
+            for s in value.split(','):
+                self.append(self._pType(s))
+        Object.set(self, value)
             
     def getValue(self):
-        return ','.join(self)
+        return ','.join(map(str, self))
     
         
 class Array(Object):

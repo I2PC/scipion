@@ -180,7 +180,7 @@ class ObjectTreeProvider(TreeProvider):
     
     def getObjectInfo(self, obj):
         cls = obj.getClassName()
-        if obj._objParentId is None:
+        if obj.getName() is None:
             t = cls
         else:
             t = obj.getName().split('.')[-1] 

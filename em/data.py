@@ -128,8 +128,8 @@ class SetOfMicrographs(SetOfImages):
         self._ctf = Boolean(args.get('ctf', False))
         self._tiltPairs = Boolean(args.get('tiltPairs', False))
         self.microscope = Microscope()
-        self._micList = List(objDoStore=False) # The micrograph list will be stored seperately
-        self._pairList = List(objDoStore=False) 
+        self._micList = List(objName='Micrographs', objDoStore=False) # The micrograph list will be stored seperately
+        self._pairList = List(objName='TiltPairs', objDoStore=False) 
         
     def getMicroscope(self, index=0):
         return self.microscope
@@ -178,11 +178,11 @@ class SetOfMicrographs(SetOfImages):
         """
         mapper = SqliteMapper(self.getFileName(), globals())
         mapper.insert(self._micList)
-#        for mic in self._micList:
-#            p = CsvList(int)
-#            p += [mic.getId(), 1]
-#            self._pairList.append(p)
-#        mapper.insert(self._pairList)
+        for mic in self._micList:
+            p = TiltedPair()
+            p += [mic.getId(), 1]
+            self._pairList.append(p)
+        mapper.insert(self._pairList)
         mapper.commit()
         
     def copyInfo(self, other):
