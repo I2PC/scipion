@@ -291,8 +291,6 @@ class List(Object, list):
         """Return the way the string index is generated"""
         return "__item__%06d" % i
             
-    def __str__(self):
-        return list.__str__(self)
     
     #TODO: check if needed
     def __len__(self):
@@ -302,24 +300,28 @@ class List(Object, list):
         return len(self) > 0
     
             
-class CsvList(Object, list):
+class CsvList(Scalar, list):
     """This class will store a list of objects
     in a single DB row separated by comma.
     pType: the type of the list elememnts, int, bool, str"""
     def __init__(self, pType=str, **args):
-        Object.__init__(self, **args)
+        Scalar.__init__(self, **args)
         list.__init__(self)
         self._pType = pType
         
-    def set(self, value):
+    def convert(self, value):
         """Value should be a str with comman separated values"""
-        if value is not None:
-            for s in value.split(','):
-                self.append(self._pType(s))
-        Object.set(self, value)
+        for s in value.split(','):
+            self.append(self._pType(s))
             
     def getValue(self):
         return ','.join(map(str, self))
+    
+    def get(self):
+        return self
+    
+    def __str__(self):
+        return list.__str__(self)
     
         
 class Array(Object):

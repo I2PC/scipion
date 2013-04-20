@@ -137,8 +137,11 @@ class TestPyworkflow(unittest.TestCase):
         #write file
         mapper.commit()
         
-        csv = CsvList(int)
-        csv += [1, 2]
+        strList = ['1', '2', '3']
+        csv = CsvList()
+        csv += strList
+        mapper.insert(csv)
+        mapper.commit()
 
         # Reading test
         fnGold = self.getGoldPath("basic.sqlite")
@@ -157,7 +160,8 @@ class TestPyworkflow(unittest.TestCase):
         p = mapper2.selectByClass('Pointer')[0]
         self.assertEqual(c, p.get())
         
-        
+        csv = mapper2.selectByClass('CsvList')[0]
+        self.assertTrue(list.__eq__(csv, strList))
 
         
     def test_XML(self):
