@@ -28,12 +28,11 @@ Protocols related to EM
 """
 import os
 import shutil
-from os.path import join
 from pyworkflow.object import String, Float
 from pyworkflow.protocol import Protocol
 from pyworkflow.protocol.params import *
 from pyworkflow.em import Micrograph, SetOfMicrographs
-from pyworkflow.utils.path import removeBaseExt
+from pyworkflow.utils.path import removeBaseExt, join, basename
 
 
 class DefImportMicrographs(Form):
@@ -84,20 +83,21 @@ class ProtImportMicrographs(Protocol):
         files = glob(pattern)
         if len(files) == 0:
             raise Exception('importMicrographs:There is not files matching pattern')
-        path = self._getPath('micrographs.txt')
+        path = self._getPath('micrographs.sqlite')
         micSet = SetOfMicrographs(path, tiltPairs=tiltPairs)
         micSet.microscope.voltage.set(voltage)
         micSet.microscope.sphericalAberration.set(sphericalAberration)
         micSet.samplingRate.set(samplingRate)
-
+        outFiles = [path]
+        
         for f in files:
-            dst = self._getPath(os.path.basename(f))            
+            dst = self._getPath(basename(f))            
             shutil.copyfile(f, dst)
             micSet.append(Micrograph(dst))
+            outFiles.append(dst)
         
         micSet.write()
         self._defineOutputs(outputMicrographs=micSet)
-        outFiles = micSet._files + [path]
         
         return outFiles
 

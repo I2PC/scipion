@@ -29,12 +29,16 @@ for EM data objects like: Image, SetOfImage and others
 """
 
 from pyworkflow.object import *
+from pyworkflow.mapper.sqlite import SqliteMapper
 
 
 class EMObject(Object):
     """Base object for all EM classes"""
     def __init__(self, **args):
         Object.__init__(self, **args)
+        
+    def __str__(self):
+        return str(self.get())
 
 
 class Microscope(EMObject):
@@ -115,10 +119,10 @@ class SetOfMicrographs(SetOfImages):
     """Represents a set of Micrographs"""
     def __init__(self, filename=None, **args):
         SetOfImages.__init__(self, filename, **args)
-        self.microscope = Microscope()
-        self._tiltPairs = Boolean(args.get('tiltPairs', False))
         self._ctf = Boolean(args.get('ctf', False))
-        self._files = []
+        self._tiltPairs = Boolean(args.get('tiltPairs', False))
+        self.microscope = Microscope()
+        self._mics = List(objDoStore=False) # The micrograph list will be stored seperately
         
     def getMicroscope(self, index=0):
         return self.microscope
@@ -132,20 +136,18 @@ class SetOfMicrographs(SetOfImages):
     
     def append(self, micrograph):
         """Add a micrograph to the set"""
-        self._files.append(micrograph.getFileName())        
+        micrograph.samplingRate.set(self.samplingRate.get())
+        self._mics.append(micrograph)        
     
     def __loadFiles(self):
         """Read files from text files"""
-        f = open(self.getFileName())
-        self._files = [l.strip() for l in f]
-        f.close()
+        mapper = SqliteMapper(self.getFileName(), globals())
+        self._mics = mapper.selectFirst()
         
     def __iter__(self):
         """Iterate over the set of micrographs in a .txt file"""
         self.__loadFiles()
-        for f in self._files:
-            m = Micrograph()
-            m.setFileName(f)       
+        for m in self._mics:
             yield m
         
     def iterPairs(self):
@@ -153,12 +155,12 @@ class SetOfMicrographs(SetOfImages):
         #FIXME, we need to store the real relation 
         # between micrographs
         # TODO: Validate number of micrographs is even for Tilt Pairs
-        n = len(self._files) / 2
+        n = len(self._mics) / 2
         for i in range(n):
             mU = Micrograph()
-            mU.setFileName(self._files[2*i])
+            mU.setFileName(self._mics[2*i])
             mT = Micrograph()
-            mT.setFileName(self._files[2*i+1])
+            mT.setFileName(self._mics[2*i+1])
             yield (mU, mT)
         
     def write(self):
@@ -167,10 +169,9 @@ class SetOfMicrographs(SetOfImages):
         path: output file path
         micrographs: list with the micrographs path to be stored
         """
-        micFile = open(self.getFileName(), 'w+')
-        for f in self._files:            
-            print >> micFile, f
-        micFile.close()
+        mapper = SqliteMapper(self.getFileName(), globals())
+        mapper.insert(self._mics)
+        mapper.commit()
         
     def copyInfo(self, other):
         """ Copy basic information (voltage, spherical aberration and sampling rate)

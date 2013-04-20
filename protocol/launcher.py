@@ -49,7 +49,7 @@ if __name__ == '__main__':
         protocol = project.mapper.selectById(protId)
         if protocol is None:
             print "Not protocol found"
-        project.launchProtocol(protocol)
+        project.runProtocol(protocol)
         #protocol.run()
         #protocol.printAll()
     else:

@@ -86,13 +86,25 @@ class Project(object):
         """Clean all project data"""
         cleanPath(*self.pathList)        
                 
-    def launchProtocol(self, protocol):
-        """Execute a particular run."""
+    def launchProtocol(self, protocol, wait=False):
+        """Launch another scritp to run the protocol."""
         # TODO: Create a launcher class that will 
         # handle the communication of remove projects
         # and also the particularities of job submission: mpi, threads, queue, bash
+        self.insertProtocol(protocol)        
+        from pyworkflow.protocol.launcher import FULLPATH
+        cmd = "python %s %s %s" % (FULLPATH, os.path.basename(self.path), 
+                                     protocol.strId())
+        if not wait:
+            cmd += ' &'
+        print cmd
+        os.system(cmd)
+        
+    def runProtocol(self, protocol):
+        """Directly execute the protocol"""
         protocol.mapper = self.mapper
         protocol.run()
+        
         
     def insertProtocol(self, protocol):
         """Insert a new protocol instance in the database"""

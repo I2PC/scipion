@@ -224,11 +224,8 @@ class ProjectWindow(gui.Window):
         w.show(center=True)
         
     def _executeProtocol(self, prot):
-        self.project.insertProtocol(prot)        
-        from pyworkflow.protocol.launcher import FULLPATH
-        cmd = "python %s %s %s &" % (FULLPATH, os.path.basename(self.projPath), prot.strId())
-        print cmd
-        os.system(cmd)
+        self.project.launchProtocol(prot)
+
     
 if __name__ == '__main__':
     from pyworkflow.manager import Manager

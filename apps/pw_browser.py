@@ -65,7 +65,7 @@ class DbTreeProvider(TreeProvider):
             if  t.startswith('__item__'):
                 t = "%s [%s]" % (cls, t.replace('__item__', ''))
         if obj.get() is not None:
-            t += " = %s" % str(obj.get())
+            t += " = %s" % str(obj)
             
         info = {'key': obj.getId(), 'parent': self._parentDict.get(obj.getId(), None),
                 'text': t, 'values': (obj.strId(), cls)}

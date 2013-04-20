@@ -17,12 +17,12 @@ from tests.tester import *
 #prot = MyProtocol(name="test3", n=2, workingDir=proj.getPath('Runs', 'T3'))
 #proj.launchProtocol(prot)
 
-prot2 = ProtImportMicrographs(workingDir=proj.getPath('Runs', 'Import1'), 
-                              pattern=pattern, samplingRate=1, voltage=200)
-proj.launchProtocol(prot2)
+prot2 = ProtImportMicrographs(pattern=pattern, samplingRate=1, voltage=200)
+proj.launchProtocol(prot2, wait=True)
 
 l = proj.mapper.selectByClass('SetOfMicrographs')
-#l = proj.mapper.selectAll()
+
+sys.exit(0)
 
 for p in l:
     p.printAll()
