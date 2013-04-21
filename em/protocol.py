@@ -191,6 +191,10 @@ class ProtPreprocessMicrographs(Protocol):
     pass
 
 
+class ProtExtractParticles(Protocol):
+    pass
+
+
 class ProtParticlePicking(Protocol):
     pass
 

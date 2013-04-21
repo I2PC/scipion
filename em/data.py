@@ -232,13 +232,22 @@ class SetOfCoordinates(EMObject):
     The SetOfCoordinates can also have information about TiltPairs"""
     
     def __init__(self, **args):
+        EMObject.__init__(self, **args)
         self._micrographsPointer = Pointer()
+        self.boxSize = Integer()
     
     def getBoxSize(self):
         """Return the box size of the future particles.
         This can be None, since when the POS_CENTER mode is used,
         the box size is only relevant when extraction"""
-        return None
+        return self.boxSize.get()
+    
+    
+    def setBoxSize(self, boxSize):
+        """Set the box size of the future particles.
+        This can be None, since when the POS_CENTER mode is used,
+        the box size is only relevant when extraction"""
+        self.boxSize.set(boxSize)
     
     def iterCoordinates(self):
         """Itearates over the whole set of coordinates.

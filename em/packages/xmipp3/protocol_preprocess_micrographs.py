@@ -155,11 +155,9 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         mdOut = "Micrographs@" + self._getPath("micrographs.xmd")    
         micSet = XmippSetOfMicrographs(mdOut)
             
-        print "after created micSet"
         # Add micrographs to the set           
         for i, v in IOTable.iteritems():
             micSet.append(XmippMicrograph(v))
-            print "after create: ", v
             #TODO: Handle Tilted micrographs
 #            if tiltPairs:
 #                MD.setValue(xmipp.MDL_MICROGRAPH_TILTED,IOTable[fnMicrographTilted],objId)
