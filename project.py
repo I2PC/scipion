@@ -113,8 +113,10 @@ class Project(object):
     def insertProtocol(self, protocol):
         """Insert a new protocol instance in the database"""
         self.mapper.insert(protocol)
+        name = protocol.getClassName() + protocol.strId()
+        protocol.setName(name)
         protocol.mapper =  self.mapper
-        protocol.workingDir.set(self.getPath("Runs", protocol.getClassName() + protocol.strId()))
-        protocol._store(protocol.workingDir)
+        protocol.workingDir.set(self.getPath("Runs", name))
+        protocol._store() #FIXME, actually only need to update workingDir and name
         
         

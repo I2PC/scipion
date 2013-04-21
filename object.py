@@ -96,6 +96,9 @@ class Object(object):
     
     def getName(self):
         return self._objName
+    
+    def setName(self, name):
+        self._objName = name
         
     def hasValue(self):        
         return True

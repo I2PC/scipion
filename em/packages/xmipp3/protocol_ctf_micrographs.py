@@ -38,9 +38,9 @@ from pyworkflow.utils import runJob
 class XmippProtCTFMicrographs(ProtCTFMicrographs):
     """Protocol to perform CTF estimation on a set of micrographs in the project"""
     
-    __prefix = join('%(micrographDir)s','xmipp_ctf')
+    __prefix = join('%(micDir)s','xmipp_ctf')
     _templateDict = {
-        # This templates are relative to a micrographDir
+        # This templates are relative to a micDir
         'micrographs': 'micrographs.xmd',
         'prefix': __prefix,
         'ctfparam': __prefix +  '.ctfparam',
@@ -48,25 +48,26 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         'enhanced_psd': __prefix + '_enhanced_psd.xmp',
         'ctfmodel_quadrant': __prefix + '_ctfmodel_quadrant.xmp',
         'ctfmodel_halfplane': __prefix + '_ctfmodel_halfplane.xmp'
-#        'ctffind_ctfparam': join('%(micrographDir)s', 'ctffind.ctfparam'),
-#        'ctffind_spectrum': join('%(micrographDir)s', 'ctffind_spectrum.mrc')
+#        'ctffind_ctfparam': join('%(micDir)s', 'ctffind.ctfparam'),
+#        'ctffind_spectrum': join('%(micDir)s', 'ctffind_spectrum.mrc')
         }
-
-    def estimateCTF(self, mic, micDir):
-        ''' Run the estimate CTF program '''
+    
+    def _prepareCommand(self):
+        self._program = 'xmipp_ctf_estimate_from_micrograph'       
+        self._args = "--micrograph %(mic)s --oroot %(micDir)s --fastDefocus"
         
-        # Create micrograph dir under extra directory
-        makePath(micDir)
-            
-        # CTF estimation with Xmipp
-        args = "--micrograph " + mic + \
-               " --oroot " + self._getFilename('prefix', micrographDir=micDir) + \
-               " --fastDefocus"
-                 
         for par, val in self.params.iteritems():
-            args+= " --" + par + " " + str(val)
-                
-        runJob(None, 'xmipp_ctf_estimate_from_micrograph', args)    
+            self._args += " --%s %s" % (par, str(val))
+
+    def _estimateCTF(self, micFn, micDir):
+        """ Run the estimate CTF program """        
+        # Create micrograph dir under extra directory
+        makePath(micDir)            
+        # Update _params dictionary with mic and micDir
+        self._params['micFn'] = micFn
+        self._params['micDir'] = self._getFilename('prefix', micDir=micDir)
+        # CTF estimation with Xmipp                
+        runJob(None, self._program, self._args % self._params)    
 
     def createOutput(self):
         # Create micrographs metadata with CTF information
@@ -79,11 +80,11 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         # Filenames key related to ctf estimation
         keys = ['psd', 'enhanced_psd', 'ctfparam', 'ctfmodel_quadrant', 'ctfmodel_halfplane']
         
-        for fn, micrographDir in self._iterMicrographs():
+        for fn, micDir, _ in self._iterMicrographs():
             mic = XmippMicrograph(fn)
-            ctfparam = self._getFilename('ctfparam', micrographDir=micrographDir)
+            ctfparam = self._getFilename('ctfparam', micDir=micDir)
             if exists(ctfparam): # Get filenames
-                values = [self._getFilename(key, micrographDir=micrographDir) for key in keys]
+                values = [self._getFilename(key, micDir=micDir) for key in keys]
             else: # No files
                 values = ['NA'] * len(labels)
     

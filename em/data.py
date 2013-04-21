@@ -104,6 +104,7 @@ class SetOfImages(EMObject):
         args['value'] = filename
         EMObject.__init__(self, **args)
         self.samplingRate = Float()
+        self.scannedPixelSize = Float()
         
     def getSize(self):
         """Return the number of images"""
@@ -191,6 +192,7 @@ class SetOfMicrographs(SetOfImages):
         self.microscope.voltage.set(other.microscope.voltage.get())
         self.microscope.sphericalAberration.set(other.microscope.sphericalAberration.get())
         self.samplingRate.set(other.samplingRate.get())
+        self.scannedPixelSize.set(other.scannedPixelSize.get())
         self._tiltPairs.set(other._tiltPairs.get())
         self._ctf.set(other._ctf.get())
     
@@ -296,5 +298,7 @@ class CTFModel(EMObject):
     def __init__(self, **args):
         EMObject.__init__(self, **args)
         
-        #Aqui meter los comunes
-        samplingRate = Float()
+        self.samplingRate = Float()
+        self.defocusU = Float()
+        self.defocusV = Float()
+        self.defocusAngle = Float()

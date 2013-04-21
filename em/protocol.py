@@ -37,7 +37,8 @@ from pyworkflow.utils.path import removeBaseExt, join, basename
 
 class DefImportMicrographs(Form):
     """Create the definition of parameters for
-    the ImportMicrographs protocol"""
+    the ImportMicrographs protocol
+    """
     def __init__(self):
         Form.__init__(self)
     
@@ -58,7 +59,7 @@ class DefImportMicrographs(Form):
                    label='Sampling rate (A/px)', condition='samplingRateMode==0')
         self.addParam('magnification', IntParam, default=60000,
                    label='Magnification rate', condition='samplingRateMode==1')
-        self.addParam('scannedPixelSize', FloatParam,
+        self.addParam('scannedPixelSize', FloatParam, default=1.2,
                    label='Scanned pixel size', condition='samplingRateMode==1')
         
 
@@ -74,11 +75,13 @@ class ProtImportMicrographs(Protocol):
     def _defineSteps(self):
         self._insertFunctionStep('importMicrographs', self.pattern.get(), self.tiltPairs.get(),
                                 self.voltage.get(), self.sphericalAberration.get(),
-                                self.samplingRate.get())
+                                self.samplingRate.get(), self.scannedPixelSize.get())
         
-    def importMicrographs(self, pattern, tiltPairs, voltage, sphericalAberration, samplingRate):
+    def importMicrographs(self, pattern, tiltPairs, voltage, sphericalAberration, 
+                          samplingRate, scannedPixelSize):
         """Copy micrographs matching the filename pattern
-        Register other parameters"""
+        Register other parameters
+        """
         from glob import glob
         files = glob(pattern)
         if len(files) == 0:
@@ -88,6 +91,7 @@ class ProtImportMicrographs(Protocol):
         micSet.microscope.voltage.set(voltage)
         micSet.microscope.sphericalAberration.set(sphericalAberration)
         micSet.samplingRate.set(samplingRate)
+        micSet.scannedPixelSize.set(scannedPixelSize)
         outFiles = [path]
         
         for f in files:
@@ -104,7 +108,8 @@ class ProtImportMicrographs(Protocol):
 
 class DefCTFMicrographs(Form):
     """Create the definition of parameters for
-    the XmippCtfMicrographs protocol"""
+    the XmippCtfMicrographs protocol
+    """
     def __init__(self):
         Form.__init__(self)
     
@@ -155,36 +160,53 @@ class ProtCTFMicrographs(Protocol):
         """Iterate over micrographs and yield
         micrograph name and a directory to process """
         for mic in self.inputMics:
-            fn = mic.getFileName()
-            micrographDir = self._getExtraPath(removeBaseExt(fn)) 
-            yield (fn, micrographDir)  
+            micFn = mic.getFileName()
+            micDir = self._getExtraPath(removeBaseExt(micFn)) 
+            yield (micFn, micDir, mic)  
         
     def _defineSteps(self):
-        ''' insert the steps to perform ctf estimation on a set of micrographs
-        '''
+        """ insert the steps to perform ctf estimation on a set of micrographs
+        """
         # Get pointer to input micrographs 
         self.inputMics = self.inputMicrographs.get() 
         
-        self.params = {'kV': self.inputMics.microscope.voltage.get(),
-                       'Cs': self.inputMics.microscope.sphericalAberration.get(),
-                       'sampling_rate': self.inputMics.samplingRate.get(),
-                       'ctfmodelSize': self.windowSize.get(),
-                       'Q0': self.ampContrast.get(),
-                       'min_freq': self.lowRes.get(),
-                       'max_freq': self.highRes.get(),
-                       'pieceDim': self.windowSize.get(),
-                       'defocus_range': (self.maxDefocus.get()-self.minDefocus.get())*10000/2,
-                       'defocusU': (self.maxDefocus.get()+self.minDefocus.get())*10000/2
+        self._params = {'kV': self.inputMics.microscope.voltage.get(),
+                        'Cs': self.inputMics.microscope.sphericalAberration.get(),
+                        'magnification': self.inputMics.microscope.magnification.get(),
+                        'sampling_rate': self.inputMics.samplingRate.get(),
+                        'scannedPixelSize': self.inputMics.scannedPixelSize.get(),
+                        'ctfmodelSize': self.windowSize.get(),
+                        'Q0': self.ampContrast.get(),
+                        'min_freq': self.lowRes.get(),
+                        'max_freq': self.highRes.get(),
+                        'pieceDim': self.windowSize.get(),
+                        'defocus_range': (self.maxDefocus.get()-self.minDefocus.get())*10000/2,
+                        'defocusU': (self.maxDefocus.get()+self.minDefocus.get())*10000/2
                        }
         
+        self._prepareCommand()
         # For each micrograph insert the steps to process it
-        for fn, micrographDir in self._iterMicrographs():
-            
+        for micFn, micDir, _ in self._iterMicrographs():
             # CTF estimation with Xmipp
-            self._insertFunctionStep('estimateCTF', fn, micrographDir)
-                    
+            self._insertFunctionStep('_estimateCTF', micFn, micDir)
         # Insert step to create output objects       
         self._insertFunctionStep('createOutput')
+        
+    def _prepareCommand(self):
+        """This function should be implemented to prepare the
+        arguments template if doesn't change for each micrograph
+        After this method self._program and self._args should be set 
+        """
+        pass
+    
+    def _estimateCTF(self, micFn, micDir):
+        """Do the CTF estimation with the specific program
+        and the parameters required.
+        Params:
+         micFn: micrograph filename
+         micDir: micrograph directory
+        """
+        raise Exception("_estimateCTF should be implemented")
 
 
 class ProtPreprocessMicrographs(Protocol):
