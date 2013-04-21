@@ -70,8 +70,9 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
 
     def createOutput(self):
         # Create micrographs metadata with CTF information
-        mdOut = self._getPath(self._getFilename('micrographs'))        
-        micSet = XmippSetOfMicrographs(mdOut)
+        mdOut = FileName("Micrographs@" + 
+                         self._getPath(self._getFilename('micrographs')))        
+        micSet = XmippSetOfMicrographs(str(mdOut))
         
         # Label to set values in metadata
         labels = [MDL_PSD, MDL_PSD_ENHANCED, MDL_CTF_MODEL, MDL_IMAGE1, MDL_IMAGE2]
@@ -93,9 +94,11 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         micSet.sort()
         micSet.write()
             
-        dirOut, fnOut = os.path.split(mdOut)
-        runJob(None,"xmipp_ctf_sort_psds","-i %s -o %s/aux_%s"%(mdOut,dirOut,fnOut))
-        runJob(None,"mv","-f %s/aux_%s %s"%(dirOut,fnOut,mdOut))
+        auxMdOut = FileName("Micrographs@" + 
+                            self._getTmpPath(self._getFilename('micrographs')))
+        runJob(None,"xmipp_ctf_sort_psds","-i %s -o %s" % (mdOut, auxMdOut))
+        runJob(None,"mv","-f %s %s" % (auxMdOut.removeBlockName(),
+                                       mdOut.removeBlockName()))
 
         # Create the SetOfMicrographs object on the database
         micSet.copyInfo(self.inputMics)

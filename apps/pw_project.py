@@ -258,6 +258,7 @@ class ProjectWindow(gui.Window):
         
     def _executeProtocol(self, prot):
         self.project.launchProtocol(prot)
+        self.runsTree.after(1000, self.runsTree.update)
         
     def _deleteProtocol(self, prot):
         if askYesNo("Confirm DELETE", "<ALL DATA> related to this <protocol run> will be <DELETED>. \n"

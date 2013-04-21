@@ -114,7 +114,6 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         # For each micrograph insert the steps to preprocess it
         for mic in self.inputMics:
             fn = mic.getFileName()
-            print "found mic ", mic
             fnOut = self._getPath(os.path.basename(fn))
             self.__insertStepsForMicrograph(fn, fnOut)
             IOTable[fn] = fnOut
@@ -153,7 +152,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                 
     def createOutput(self, IOTable):
         
-        mdOut = self._getPath("micrographs@micrographs.xmd")    
+        mdOut = "Micrographs@" + self._getPath("micrographs.xmd")    
         micSet = XmippSetOfMicrographs(mdOut)
             
         print "after created micSet"

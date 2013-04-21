@@ -106,7 +106,8 @@ class Project(object):
         protocol.run()
         
     def deleteProtocol(self, protocol):
-        self.mapper.delete(protocol)   
+        self.mapper.delete(protocol) # Delete from database
+        cleanPath(protocol.workingDir.get())  
         self.mapper.commit()     
         
     def insertProtocol(self, protocol):

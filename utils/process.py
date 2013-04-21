@@ -43,7 +43,7 @@ def runJob(log,
                NumberOfMpi,
                NumberOfThreads,
                RunInBackground)
-    if log:
+    if log is None:
         #TODO: printLog("Running command: %s" % greenStr(command),log)
         print "Running command: %s" % command
         pass
