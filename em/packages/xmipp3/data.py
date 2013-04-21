@@ -48,13 +48,19 @@ class XmippMicrograph(Micrograph):
 class XmippSetOfMicrographs(SetOfMicrographs):
     """Represents a set of Micrographs for Xmipp"""
     def __init__(self, filename=None, **args):
-        SetOfMicrographs.__init__(self, **args)
+        SetOfMicrographs.__init__(self, filename, **args)
         self._md = MetaData()
         
     def append(self, micrograph):
         """Add a micrograph to the set"""
         objId = self._md.addObject()
         for label, value in micrograph._labelDict.iteritems():
+            # TODO: Check how to handle correctly unicode type
+            # in Xmipp and Scipion
+            if type(value) is unicode:
+                value = str(value)
+#            print "setting label: %s with value: %s" % (label2Str(label), str(value))
+#            print " type(value): ", type(value)
             self._md.setValue(label, value, objId)
             
     def sort(self):

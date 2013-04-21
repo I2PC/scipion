@@ -77,13 +77,14 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         labels = [MDL_PSD, MDL_PSD_ENHANCED, MDL_CTF_MODEL, MDL_IMAGE1, MDL_IMAGE2]
         # Filenames key related to ctf estimation
         keys = ['psd', 'enhanced_psd', 'ctfparam', 'ctfmodel_quadrant', 'ctfmodel_halfplane']
+        
         for fn, micrographDir in self._iterMicrographs():
             mic = XmippMicrograph(fn)
             ctfparam = self._getFilename('ctfparam', micrographDir=micrographDir)
             if exists(ctfparam): # Get filenames
                 values = [self._getFilename(key, micrographDir=micrographDir) for key in keys]
             else: # No files
-                values = ['NA' for i in range(len(labels))]
+                values = ['NA'] * len(labels)
     
             # Set values to the micrograph
             mic.setValue(*zip(labels, values))

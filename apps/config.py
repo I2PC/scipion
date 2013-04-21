@@ -48,7 +48,7 @@ class ProjectConfig(OrderedObject):
         OrderedObject.__init__(self, **args)
         self.menu = String(menu)
         self.protocols = String(protocols)
-        self.icon = String('no_icon')
+        self.icon = String('scipion_bn.xbm')
         self.logo = String('no_logo')
 
 class MenuConfig(OrderedObject):
@@ -168,15 +168,15 @@ def writeDefaults():
     
     #m2 = m1.addSubMenu('Micrographs')
     m1.addSubMenu(' Import', value='ProtImportMicrographs', 
-                  tag='protocol', icon='bookmark.gif')
-    m1.addSubMenu('CTF estimation', value='ProtCTFMicrographs',
-                  tag='protocol_base')
+                  tag='protocol', icon='bookmark.png')
     m1.addSubMenu('Preprocess', value='ProtPreprocessMicrographs',
+                  tag='protocol_base')
+    m1.addSubMenu('CTF estimation', value='ProtCTFMicrographs',
                   tag='protocol_base')
     
     m1 = menu.addSubMenu('Particles', tag='section')
     m1.addSubMenu('Import', value='ProtImportParticles', 
-                  tag='protocol', icon='bookmark.gif')
+                  tag='protocol', icon='bookmark.png')
     m1.addSubMenu('Picking', value='ProtParticlePicking',
                   tag='protocol_base')
     
