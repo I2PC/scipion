@@ -54,8 +54,8 @@ class ProtScreenParticles(XmippProtocol):
             runShowJ(self.outputFile)                                     
 
 def sortImages(log, inputFile, outputFile, addToSelf):
-    from xmipp import ImgSize
-    (Xdim, Ydim, Zdim, Ndim) = ImgSize(inputFile)
+    from xmipp import MetaDataInfo
+    (Xdim, Ydim, Zdim, Ndim, _) = MetaDataInfo(inputFile)
     if Ndim > 0:
         if addToSelf: 
             runJob(log,"xmipp_image_sort_by_statistics","-i "+outputFile+" --addToInput")

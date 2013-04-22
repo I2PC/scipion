@@ -29,7 +29,7 @@
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
   
-    Mask_Params maskParams;
+    Mask maskParams;
     maskParams.fn_mask = "";
     
     /** Mask Type
@@ -99,32 +99,32 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mwSize ndims = mxGetNumberOfDimensions(prhs[0]);
     if (ndims == 2)  
     {
-        Matrix2D<double> image;
+        MultidimArray<double> image;
         getMatrix2D(prhs[0],image);
-        maskParams.generate_2Dmask(image);
+        maskParams.generate_mask(image);
 
         if (maskParams.datatype() == DOUBLE_MASK)
         {
-            setMatrix2D(maskParams.get_cont_mask2D(), plhs[0]);
+            setMatrix2D(maskParams.get_cont_mask(), plhs[0]);
         }
         else
         {            
-            setMatrix2D(maskParams.get_binary_mask2D(), plhs[0]);
+            setMatrix2D(maskParams.get_binary_mask(), plhs[0]);
         }
     }
     else
     {
-        Matrix3D<double> volume;
+    	MultidimArray<double> volume;
         getMatrix3D(prhs[0],volume);
-        maskParams.generate_3Dmask(volume);
+        maskParams.generate_mask(volume);
 
         if (maskParams.datatype() == DOUBLE_MASK)
         {
-            setMatrix3D(maskParams.get_cont_mask3D(), plhs[0]);
+            setMatrix3D(maskParams.get_cont_mask(), plhs[0]);
         }
         else
         {
-            setMatrix3D(maskParams.get_binary_mask3D(), plhs[0]);
+            setMatrix3D(maskParams.get_binary_mask(), plhs[0]);
         }
     }
 

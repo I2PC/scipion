@@ -29,6 +29,9 @@
 #ifndef __CYGWIN__
 #ifdef __APPLE__
 #include <limits.h>
+#include <float.h>
+#define MAXDOUBLE DBL_MAX
+#define MINDOUBLE DBL_MIN
 #else
 #include <values.h>
 #endif
@@ -261,6 +264,23 @@
                             ? ((x) - (int)(((x) - (x0) + 1) / ((xF) - (x0) + 1) - 1) * \
                                ((xF) - (x0) + 1)) : ((x) - (int)(((x) - (xF) - 1) / ((xF) - (x0) + 1) \
                                                                  + 1) * ((xF) - (x0) + 1)))
+
+/** Fast wrapping for integers
+ *
+ * y=intWRAP(x,x0,xF) */
+#define fastIntWRAP(y, x, x0, xF) \
+{ \
+	if (((x) >= (x0) && (x) <= (xF))) \
+		y=x; \
+	else \
+	{ \
+		int range=(xF) - (x0) + 1; \
+		if ((x)<(x0)) \
+			y=((x) - (int)(((x) - (x0) + 1) / range - 1) * range); \
+		else \
+			y=((x) - (int)(((x) - (xF) - 1) / range + 1) * range); \
+	} \
+}
 
 /** Wrapping for real numbers
  *

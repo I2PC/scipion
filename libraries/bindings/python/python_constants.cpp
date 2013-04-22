@@ -44,10 +44,18 @@ void addIntConstant(PyObject * dict, const char * name, const long &value)
 void addLabels(PyObject * dict)
 {
   //Add constants
+  ADD_CONST(NEAREST);
+  ADD_CONST(LINEAR);
+  ADD_CONST(BSPLINE2);
+  ADD_CONST(BSPLINE3);
+  ADD_CONST(BSPLINE4);
+
+
   ADD_CONST(AGGR_COUNT);
   ADD_CONST(AGGR_MAX);
   ADD_CONST(AGGR_SUM);
   ADD_CONST(AGGR_AVG);
+  ADD_CONST(AGGR_MIN);
 
   ADD_CONST(UNION);
   ADD_CONST(UNION_DISTINCT);
@@ -345,4 +353,6 @@ void addLabels(PyObject * dict)
   ADD_CONST2("DT_LASTENTRY", DT_LastEntry);
 
   ADD_CONST2("XMIPP_EQUAL_ACCURACY",XMIPP_EQUAL_ACCURACY);
+
+
 }

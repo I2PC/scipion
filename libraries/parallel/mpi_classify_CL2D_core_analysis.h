@@ -60,6 +60,8 @@ public:
 	FileName fnODir;
 	/** Threshold junk Zscore */
 	double thZscore;
+	/** Number of PCA dimensions */
+	int NPCA;
 	/** Threshold PCA Zscore */
 	double thPCAZscore;
 	/** Tolerance: How many levels before are allowed two images not to coincide */

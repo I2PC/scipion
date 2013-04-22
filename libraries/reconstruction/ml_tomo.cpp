@@ -35,7 +35,7 @@ pthread_mutex_t mltomo_selfile_access_mutex = PTHREAD_MUTEX_INITIALIZER;
 void
 ProgMLTomo::defineParams()
 {
-    addUsageLine(
+   addUsageLine(
         "Align and classify 3D images with missing data regions in Fourier space,");
     addUsageLine(
         "e.g. subtomograms or RCT reconstructions, by a 3D multi-reference refinement");
@@ -381,7 +381,6 @@ ProgMLTomo::readParams()
 
     // Number of threads
     threads = getIntParam("--thr");
-
 }
 
 void
@@ -852,7 +851,8 @@ ProgMLTomo::produceSideInfo()
             psi_sampling = angular_sampling;
 
     }
-    readMissingInfo();////////////////////////////
+
+    readMissingInfo();
     // Get number of references
     if (do_only_average)
     {
@@ -880,7 +880,6 @@ ProgMLTomo::produceSideInfo()
         if ((do_generate_refs = fn_ref.empty())) //assign bool value and asking at same time
             generateInitialReferences();
     }
-
 
 
 } //end of function produceSideInfo

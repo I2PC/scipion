@@ -32,8 +32,10 @@
 /* Destructor */
 void Image_dealloc(ImageObject* self)
 {
+
     delete self->image;
     self->ob_type->tp_free((PyObject*) self);
+    std::cerr << "Image dealloc finish" <<std::endl;
 }//function Image_dealloc
 
 
@@ -108,6 +110,7 @@ PyMethodDef Image_methods[] =
      "Return NumPy array from image data" },
    { "projectVolumeDouble", (PyCFunction) Image_projectVolumeDouble, METH_VARARGS,
      "project a volume using Euler angles" },
+
    { "setData", (PyCFunction) Image_setData, METH_VARARGS,
      "Copy NumPy array to image data" },
    { "getPixel", (PyCFunction) Image_getPixel, METH_VARARGS,
@@ -562,6 +565,9 @@ Image_projectVolumeDouble(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }//function Image_projectVolumeDouble
+
+
+
 
 /* setData */
 PyObject *

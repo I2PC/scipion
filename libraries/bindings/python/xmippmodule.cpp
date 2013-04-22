@@ -203,9 +203,8 @@ xmipp_SingleImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }
-/* ImgSize (from metadata filename)*/
-PyObject *
-xmipp_ImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
+
+PyObject * xmipp_MetaDataInfo(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     PyObject *pyValue; //Only used to skip label and value
 
@@ -213,28 +212,35 @@ xmipp_ImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
     {
         try
         {
-            MetaData md;
+            MetaData *md = NULL;
+            bool destroyMd=true;
             if (PyString_Check(pyValue))
             {
                 char * str = PyString_AsString(pyValue);
-                md.read(str);
+                md = new MetaData();
+                md->read(str);
             }
             else if (FileName_Check(pyValue))
             {
-                md.read(FileName_Value(pyValue));
+                md = new MetaData();
+                md->read(FileName_Value(pyValue));
             }
             else if (MetaData_Check(pyValue))
             {
-                md = MetaData_Value(pyValue);
+                md = ((MetaDataObject*)pyValue)->metadata;
+                destroyMd=false;
             }
             else
             {
                 PyErr_SetString(PyXmippError, "Invalid argument: expected String, FileName or MetaData");
                 return NULL;
             }
-            size_t xdim, ydim, zdim, ndim;
-            getImageSize(md, xdim, ydim, zdim, ndim);
-            return Py_BuildValue("iiik", xdim, ydim, zdim, ndim);
+            size_t xdim, ydim, zdim, ndim, Nimgs;
+            Nimgs=md->size();
+            getImageSize(*md, xdim, ydim, zdim, ndim);
+            if (destroyMd)
+            	delete md;
+            return Py_BuildValue("iiikk", xdim, ydim, zdim, ndim, Nimgs);
         }
         catch (XmippError &xe)
         {
@@ -242,7 +248,7 @@ xmipp_ImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
         }
     }
     return NULL;
-}/* ImgSize (from metadata filename)*/
+}/* Metadata info (from metadata filename)*/
 
 PyObject *
 xmipp_CheckImageFileSize(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -656,6 +662,8 @@ xmipp_Euler_angles2matrix(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+
+
 PyObject *
 xmipp_Euler_matrix2angles(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
@@ -676,6 +684,20 @@ xmipp_Euler_matrix2angles(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+
+PyObject *
+xmipp_Euler_direction(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    PyObject * input;
+    double rot, tilt, psi;
+    if (PyArg_ParseTuple(args, "ddd", &rot,&tilt,&psi))
+    {
+    	Matrix1D<double> direction(3);
+        Euler_direction(rot, tilt, psi, direction);
+        return Py_BuildValue("fff", VEC_ELEM(direction, 0), VEC_ELEM(direction, 1), VEC_ELEM(direction, 2));//fff three real
+    }
+    return NULL;
+}
 /* activateMathExtensions */
 PyObject *
 xmipp_activateMathExtensions(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -736,8 +758,8 @@ xmipp_methods[] =
           METH_VARARGS, "create empty stack (speed up things)" },
         { "SingleImgSize", (PyCFunction) xmipp_SingleImgSize,
           METH_VARARGS, "Get image dimensions" },
-        { "ImgSize", (PyCFunction) xmipp_ImgSize, METH_VARARGS,
-          "Get image dimensions of first metadata entry" },
+        { "MetaDataInfo", (PyCFunction) xmipp_MetaDataInfo, METH_VARARGS,
+          "Get image dimensions of first metadata entry and the number of entries" },
         { "ImgCompare", (PyCFunction) xmipp_ImgCompare,  METH_VARARGS,
           "return true if both files are identical" },
         { "checkImageFileSize", (PyCFunction) xmipp_CheckImageFileSize,  METH_VARARGS,
@@ -766,6 +788,8 @@ xmipp_methods[] =
           "convert euler angles to transformation matrix" },
         { "Euler_matrix2angles", (PyCFunction) xmipp_Euler_matrix2angles, METH_VARARGS,
           "convert transformation matrix to euler angles" },
+        { "Euler_direction", (PyCFunction) xmipp_Euler_direction, METH_VARARGS,
+                    "converts euler angles to direction" },
         { "activateMathExtensions", (PyCFunction) xmipp_activateMathExtensions,
           METH_VARARGS, "activate math function in metadatas" },
 

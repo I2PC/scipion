@@ -56,11 +56,6 @@ java/src/xmipp/jni/XmippError.java
 .sconsign.dblite
 config.log
 
-#never update emx or pyworkflow from xmipp
-protocols/pyworkflow
-protocols/emx
-
-
 # Other
 bin/
 build/
@@ -69,3 +64,6 @@ documentation/
 gmon.out
 *~
 
+# Matlab
+*.mexa64
+*.mexa32

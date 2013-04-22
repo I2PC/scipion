@@ -42,6 +42,7 @@ class ChimeraServer:
                     
                     msg = self.remote_conn.recv()
                     print msg
+                    
                     if msg == 'exit_client':
                         break
                     else:
@@ -65,14 +66,18 @@ class ChimeraServer:
                         print 'volume data'
                         grid = Array_Grid_Data(data)
                         self.volume = volume_from_grid_data(grid)
+                    if msg == 'draw_angular_distribution':
+                        angulardist = self.remote_conn.recv()
+                        for command in angulardist:
+                            runCommand(command)
+                    if msg == 'end':    
                         break
                     else:
                         sleep(0.01)
         except EOFError:
             print 'Lost connection to client'
         
-            
-    
+
     
     def onMotionStop(self, trigger, extra, userdata):
         print "Motion stop"
