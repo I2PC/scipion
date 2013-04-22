@@ -798,7 +798,7 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     	img_ref().setXmippOrigin();
     	t1 = correlationIndex(img_ref(),avg1()/w1);
     	t2 = correlationIndex(img_ref(),avg2()/w2);
-	t = t1+t2;
+	    t = t1+t2;
     	//t  = correlationIndex(img_ref(),avg().statisticsAdjust(0,1));
     	//if (t1 <= 0) {t1=0.; avg1().initZeros();} else {avg1()*=(t1/w1); w1=t1;}
     	//if (t2 <= 0) {t2=0.; avg2().initZeros();} else {avg2()*=(t2/w2); w2=t2;}
@@ -1487,6 +1487,8 @@ void MpiProgAngularClassAverage::createJobList()
         };
     std::vector<MDLabel> groupbyLabels(myGroupByLabels,myGroupByLabels+6);
     mdJobList.aggregateGroupBy(DF, AGGR_COUNT, groupbyLabels, MDL_ORDER, MDL_COUNT);
+    DF.write("kk_DF.xmd");
+    mdJobList.write("kk_mdJobList.xmd");
     numberOfJobs = mdJobList.size();
 }
 
