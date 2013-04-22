@@ -165,4 +165,8 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         micSet.write()
         # Create the SetOfMicrographs object on the database
         micSet.copyInfo(self.inputMics)
+        
+        if self.doDownsample.get():
+            micSet.samplingRate.set(self.inputMics.samplingRate.get()*self.downFactor.get())
+
         self._defineOutputs(outputMicrographs=micSet)
