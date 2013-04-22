@@ -23,8 +23,7 @@
  *=================================================================*/
 
 /*xmipp includes */
-#include "image.h"
-#include "volume.h"
+#include "xmipp_image.h"
 #include "morphology.h"
 #include "tom_xmipp_helpers.h"
 
@@ -44,7 +43,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     
     if (ndims == 2)
     {
-        Image img, img_out;
+        Image<double> img, img_out;
         getMatrix2D(prhs[0],img());
         img_out() = img();
 
@@ -68,7 +67,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     }
     else
     {
-        Volume vol, vol_out;
+        Image<double> vol, vol_out;
         getMatrix3D(prhs[0],vol());
         vol_out = vol();
         
