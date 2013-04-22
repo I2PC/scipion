@@ -786,9 +786,9 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     avg() = avg1() + avg2();
     w = w1+w2;
     //We obtain the weights from the correlation between the mean classes and the projections of the library
-    if (w1 <= 0) (w1=1.);
-    if (w2 <= 0) (w2=1.);
-    if (w  <= 0)  (w =1.);
+    //if (w1 <= 0) (w1=1.);
+    //if (w2 <= 0) (w2=1.);
+    //if (w  <= 0)  (w =1.);
     double t1;
     double t2;
     double t;
@@ -798,10 +798,11 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     	img_ref().setXmippOrigin();
     	t1 = correlationIndex(img_ref(),avg1()/w1);
     	t2 = correlationIndex(img_ref(),avg2()/w2);
-    	t  = correlationIndex(img_ref(),avg()/w);
-    	if (t1 <= 0) {t1=0.; avg1().initZeros();} else {avg1()*=(t1/w1); w1=t1;}
-    	if (t2 <= 0) {t2=0.; avg2().initZeros();} else {avg2()*=(t2/w2); w2=t2;}
-    	if (t <= 0)  {t=0.; avg().initZeros();} else {avg()*=(t/w); w=t;}
+	t = t1+t2;
+    	//t  = correlationIndex(img_ref(),avg().statisticsAdjust(0,1));
+    	//if (t1 <= 0) {t1=0.; avg1().initZeros();} else {avg1()*=(t1/w1); w1=t1;}
+    	//if (t2 <= 0) {t2=0.; avg2().initZeros();} else {avg2()*=(t2/w2); w2=t2;}
+    	if (t <= 0)  {t=0.; avg().initZeros();} else {avg()*=(t/w); w=t; avg1()*=(t1/w1); avg2()*=(t2/w2);}
     }
      else
      {
@@ -813,6 +814,23 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     avg.setWeight(w);
     avg1.setWeight(w1);
     avg2.setWeight(w2);
+    
+    if (ref_number == 18440 )
+    {
+    	img_ref().write("kk.xmd");
+	avg().write("kk1.xmd");
+	avg1().write("kk2.xmd");
+	avg2().write("kk3.xmd");
+	std::cout << " w1: " << w1 << std::endl;
+	std::cout << " w2: " << w2 << std::endl;
+	std::cout << " w: "  << w << std::endl;
+	std::cout << " t1: " << t1 << std::endl;
+	std::cout << " t2: " << t2 << std::endl;
+	std::cout << " t: " << t << std::endl;	
+	exit(1);
+	
+      }
+	
 
     /*avg() = avg1() + avg2();
     //We obtain the weights from the correlation between the mean classes and the projections of the library
