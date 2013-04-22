@@ -1004,7 +1004,7 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
     Vout().initZeros(volPadSizeZ,volPadSizeY,volPadSizeX);
     transformerVol.setReal(Vout());
     transformerVol.enforceHermitianSymmetry();
-	forceWeightSymmetry(preFourierWeights);
+	//forceWeightSymmetry(preFourierWeights);
 
     // Tell threads what to do
     //#define DEBUG_VOL1
