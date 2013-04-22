@@ -1120,12 +1120,20 @@ void MpiProgAngularClassAverage::filterInputMetadata()
         auxDF.fillConstant(MDL_REF3D, "1");
     if (!auxDF.containsLabel(MDL_DEFGROUP))
         auxDF.fillConstant(MDL_DEFGROUP, "1");
+//    if (!auxDF.containsLabel(MDL_ORDER))
+//    {
+//
+//        String cmd = formatString("%s=%s+%d", MDL::label2Str(MDL_ORDER).c_str(),
+//                                  MDL::label2Str(MDL_REF).c_str(), FIRST_IMAGE);
+//        auxDF.addLabel(MDL_ORDER);
+//        auxDF.operate(cmd);
+//    }
     if (!auxDF.containsLabel(MDL_ORDER))
+        auxDF.addLabel(MDL_ORDER);
     {
 
         String cmd = formatString("%s=%s+%d", MDL::label2Str(MDL_ORDER).c_str(),
                                   MDL::label2Str(MDL_REF).c_str(), FIRST_IMAGE);
-        auxDF.addLabel(MDL_ORDER);
         auxDF.operate(cmd);
     }
     //std::cerr << "DEBUG_JM: Read inFile" <<std::endl;
