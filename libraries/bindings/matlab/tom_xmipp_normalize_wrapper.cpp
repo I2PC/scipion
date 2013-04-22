@@ -24,12 +24,11 @@
 
 /*xmipp includes */
 #include "xmipp_image.h"
-#include "micrograph.h"
+#include "normalize.h"
 #include "tom_xmipp_helpers.h"
 
 /*Matlab includes*/
 #include "mex.h"
-#include "matrix.h"
 
 #define NONE 0
 #define OLDXMIPP 1
@@ -44,34 +43,34 @@
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 {
 
-    Image I;
+    Image<double> I;
     getMatrix2D(prhs[0],I());
     
-    Matrix2D<int> mask;
+    MultidimArray<int> mask;
     getMatrix2D(prhs[1],mask);
         
     switch((int)mxGetScalar(prhs[2]))
     {
     case OLDXMIPP:
-        normalize_OldXmipp(&I);
+        normalize_OldXmipp(I());
         break;
     case NEAR_OLDXMIPP:
-        normalize_Near_OldXmipp(&I, mask);
+        normalize_Near_OldXmipp(I(), mask);
         break;
     case NEWXMIPP:
-        normalize_NewXmipp(&I, mask);
+        normalize_NewXmipp(I(), mask);
         break;
     case NEWXMIPP2:
-        normalize_NewXmipp2(&I, mask);
+        normalize_NewXmipp2(I(), mask);
         break;
     case RAMP:
-        normalize_ramp(&I, mask);
+        normalize_ramp(I(), mask);
         break;
     /*case NEIGHBOUR:
         normalize_remove_neighbours(img, bg_mask, thresh_neigh);
         break;*/
     case MICHAEL:
-        normalize_Michael(&I, mask);
+        normalize_Michael(I(), mask);
         break;
     /*case RANDOM:
         a = rnd_unif(a0, aF);

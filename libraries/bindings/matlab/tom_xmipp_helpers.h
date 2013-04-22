@@ -20,9 +20,28 @@
  *=================================================================*/
 
 #include "mex.h"
-#include "matrix.h"
-#include "matrix2d.h"
-#include "matrix3d.h"
+#include "multidim_array.h"
+
+template <class T>
+   void getMatrix1D(const mxArray* prhs, MultidimArray<T> &output)
+{
+    const int  *input_dims = mxGetDimensions(prhs);
+    T *indatapt=(T*)mxGetData(prhs);
+    output.resize(input_dims[0]);
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(output)
+       A1D_ELEM(output,i)=*indatapt++;
+}
+
+
+template <class T>
+   void getMatrix2D(const mxArray* prhs, MultidimArray<T> &output)
+{
+    const int  *input_dims = mxGetDimensions(prhs);
+    T *indatapt=(T*)mxGetData(prhs);
+    output.resize(input_dims[0],input_dims[1]);
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(output)
+    	A2D_ELEM(output,i,j)=*indatapt++;
+}
 
 template <class T>
    void getMatrix1D(const mxArray* prhs, Matrix1D<T> &output)
@@ -31,7 +50,7 @@ template <class T>
     T *indatapt=(T*)mxGetData(prhs);
     output.resize(input_dims[0]);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(output)
-       DIRECT_VEC_ELEM(output,i)=*indatapt++;
+       VEC_ELEM(output,i)=*indatapt++;
 }
 
 
@@ -42,22 +61,22 @@ template <class T>
     T *indatapt=(T*)mxGetData(prhs);
     output.resize(input_dims[0],input_dims[1]);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(output)
-       DIRECT_MAT_ELEM(output,i,j)=*indatapt++;
+    	MAT_ELEM(output,i,j)=*indatapt++;
 }
 
 template <class T>
-   void getMatrix3D(const mxArray* prhs, Matrix3D<T> &output)
+   void getMatrix3D(const mxArray* prhs, MultidimArray<T> &output)
 {
     const int  *input_dims = mxGetDimensions(prhs);
     T *indatapt=(T*)mxGetData(prhs);
     output.resize(input_dims[2],input_dims[0],input_dims[1]);
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(output)
-       DIRECT_VOL_ELEM(output,k,i,j)=*indatapt++;
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(output)
+       DIRECT_A3D_ELEM(output,k,i,j)=*indatapt++;
 }
 
 
 template <class T>
-   void setMatrix1D(const Matrix1D<T> &input, mxArray* &plhs)
+   void setMatrix1D(const MultidimArray<T> &input, mxArray* &plhs)
 {
     int output_dims[2];
     output_dims[0] = XSIZE(input);
@@ -71,12 +90,12 @@ template <class T>
     if ((plhs = mxCreateNumericArray(1,output_dims,typeClass,mxREAL))==NULL) 
         mexErrMsgTxt("Memory allocation problem in Xmipp converter.\n");
     T *outdata =(T*) mxGetData(plhs);
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(input)
-        *outdata++=DIRECT_VEC_ELEM(input,i);
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(input)
+        *outdata++=A1D_ELEM(input,i);
 }
 
 template <class T>
-   void setMatrix2D(const Matrix2D<T> &input, mxArray* &plhs)
+   void setMatrix2D(const MultidimArray<T> &input, mxArray* &plhs)
 {
     int output_dims[2];
     output_dims[0] = XSIZE(input);
@@ -91,13 +110,32 @@ template <class T>
     if ((plhs = mxCreateNumericArray(2,output_dims,typeClass,mxREAL))==NULL) 
         mexErrMsgTxt("Memory allocation problem in Xmipp converter.\n");
     T *outdata =(T*) mxGetData(plhs);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(input)
-       *outdata++=DIRECT_MAT_ELEM(input,i,j);
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(input)
+       *outdata++=A2D_ELEM(input,i,j);
 }
 
+template <class T>
+   void setMatrix2D(const Matrix2D<T> &input, mxArray* &plhs)
+{
+    int output_dims[2];
+    output_dims[0] = MAT_XSIZE(input);
+    output_dims[1] = MAT_YSIZE(input);
+
+    mxClassID typeClass;
+    if (typeid(T)==typeid(double))
+        typeClass=mxDOUBLE_CLASS;
+    else if (typeid(T)==typeid(int))
+        typeClass=mxINT32_CLASS;
+
+    if ((plhs = mxCreateNumericArray(2,output_dims,typeClass,mxREAL))==NULL)
+        mexErrMsgTxt("Memory allocation problem in Xmipp converter.\n");
+    T *outdata =(T*) mxGetData(plhs);
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(input)
+       *outdata++=MAT_ELEM(input,i,j);
+}
 
 template <class T>
-   void setMatrix3D(const Matrix3D<T> &input, mxArray* &plhs)
+   void setMatrix3D(const MultidimArray<T> &input, mxArray* &plhs)
 {
     int output_dims[3];
     output_dims[0] = XSIZE(input);
@@ -113,8 +151,8 @@ template <class T>
     if ((plhs = mxCreateNumericArray(3,output_dims,typeClass,mxREAL))==NULL) 
         mexErrMsgTxt("Memory allocation problem in Xmipp converter.\n");
     T *outdata =(T*) mxGetData(plhs);
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(input)
-       *outdata++=DIRECT_VOL_ELEM(input,k,i,j);
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(input)
+       *outdata++=DIRECT_A3D_ELEM(input,k,i,j);
 }
 
 #define NUMBER_OF_FIELDS (sizeof(field_names)/sizeof(*field_names))
