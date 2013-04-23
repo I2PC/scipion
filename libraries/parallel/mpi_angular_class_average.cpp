@@ -1,6 +1,6 @@
 /***************************************************************************
  * Authors:     AUTHOR_NAME (aerey@cnb.csic.es)
- * 							(jvargas@cnb.csic.es)
+ *        (jvargas@cnb.csic.es)
  *
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -432,27 +432,26 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
         REPORT_ERROR(ERR_DEBUG_IMPOSIBLE,
                      "Program should never execute this line, something went wrong");
 
-    //JV
+
     MetaData _DF_ref((fn_ref.removeAllExtensions()+".doc"));
     MetaData _DF_temp;
     MDValueEQ eq4(MDL_REF, ref_number);
     _DF_temp.importObjects(_DF_ref, eq4);
     int noRef = 0;
     if (_DF_temp.size() > 1)
-	REPORT_ERROR(ERR_DEBUG_IMPOSIBLE,
+        REPORT_ERROR(ERR_DEBUG_IMPOSIBLE,
                      "Program should never execute this line, something went wrong");
     if (_DF_temp.size() == 0)
         noRef =1;
 
     if (noRef!=1)
     {
-	    FOR_ALL_OBJECTS_IN_METADATA(_DF_temp)
-	    {
-    		_DF_temp.getValue(MDL_IMAGE, fn_img,__iter.objId);
-    		img_ref.read(fn_img);
-	    }
+        FOR_ALL_OBJECTS_IN_METADATA(_DF_temp)
+        {
+            _DF_temp.getValue(MDL_IMAGE, fn_img,__iter.objId);
+            img_ref.read(fn_img);
+        }
     }
-    //JV
 
     Matrix2D<double> A(3, 3);
     std::vector<int> exp_number, exp_split;
@@ -601,9 +600,9 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
                 //pcaAnalyzer.evaluateZScore(1,20);
                 FOR_ALL_OBJECTS_IN_METADATA(_DF)
                 {
-                	_DF.getValue(MDL_MAXCC, max_cc, __iter.objId);
+                    _DF.getValue(MDL_MAXCC, max_cc, __iter.objId);
                     _DF.setValue(MDL_WEIGHT,max_cc, __iter.objId);
-                    w1 +=max_cc;
+                    w1 += max_cc;
                     avg1() += img()*(max_cc);
                     index++;
                 }
@@ -622,7 +621,7 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
                         _DF.getValue(MDL_FLIP, mirror, __iter.objId);
                     _DF.getValue(MDL_SCALE, scale, __iter.objId);
 
-                	_DF.getValue(MDL_MAXCC, max_cc, __iter.objId);
+                    _DF.getValue(MDL_MAXCC, max_cc, __iter.objId);
 
                     img.read(fn_img);
                     img().setXmippOrigin();
@@ -673,7 +672,7 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
                     _DF.getValue(MDL_FLIP, mirror, __iter.objId);
                 _DF.getValue(MDL_SCALE, scale, __iter.objId);
 
-            	_DF.getValue(MDL_MAXCC, max_cc, __iter.objId);
+                _DF.getValue(MDL_MAXCC, max_cc, __iter.objId);
 
                 img.read(fn_img);
                 img().setXmippOrigin();
@@ -782,81 +781,58 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
 
     avg() = avg1() + avg2();
     w = w1+w2;
-    //We obtain the weights from the correlation between the mean classes and the projections of the library
-    //if (w1 <= 0) (w1=1.);
-    //if (w2 <= 0) (w2=1.);
-    //if (w  <= 0)  (w =1.);
+
     double t1;
     double t2;
     double t;
     if (noRef!=1)
     {
+        img_ref().setXmippOrigin();
+        if (w1 != 0)
+        {
+            t1 = correlationIndex(img_ref(),avg1()/w1);
+            avg1()*=(t1/w1);
+            w1 = t1;
+        }
+        else
+        {
+            t1 = 0.;
+            w1 = 0.;
+            avg1().initZeros();
+        }
 
-    	img_ref().setXmippOrigin();
-	if (w1 != 0)
-	{
-	    	t1 = correlationIndex(img_ref(),avg1()/w1);
-		avg1()*=(t1/w1);
-		w1 = t1;
-	}
-	else
-	{
-		t1 = 0.;
-		w1 = 0.;
-		avg1().initZeros();
-	}
+        if (w2 != 0)
+        {
+            t2 = correlationIndex(img_ref(),avg2()/w2);
+            avg2()*=(t2/w2);
+            w2 = t2;
+        }
+        else
+        {
+            t2 = 0.;
+            w2 = 0.;
+            avg2().initZeros();
 
-	if (w2 != 0)
-	{
-	    	t2 = correlationIndex(img_ref(),avg2()/w2);
-		avg2()*=(t2/w2);
-		w2 = t2;
-	}
-	else
-	{
-		t2 = 0.;
-		w2 = 0.;
-		avg2().initZeros();
+        }
 
-	}
-
-	if (w != 0)
-	{	
-	    	t = correlationIndex(img_ref(),avg()/w);
-		avg()*=(t/w);
-		w=t;
-	}
-	else
-	{
-		t = 0.;
-		w = 0.;
-		avg().initZeros();	
-	}
-		
+        if (w != 0)
+        {
+            t = correlationIndex(img_ref(),avg()/w);
+            avg()*=(t/w);
+            w=t;
+        }
+        else
+        {
+            t = 0.;
+            w = 0.;
+            avg().initZeros();
+        }
     }
-     /*
-     else
-     {
-	std::cout << "Entro2! " << " ref_num" << ref_number << std::endl;
-     	t1=0.0001; avg1().initZeros(); w1 = t1;
-     	t2=0.0001; avg2().initZeros(); w2 = t2;
-     	t=0.0001; avg().initZeros(); w = t;
-     }
-     */
 
     avg.setWeight(w);
     avg1.setWeight(w1);
     avg2.setWeight(w2);
-    
-    /*avg() = avg1() + avg2();
-    //We obtain the weights from the correlation between the mean classes and the projections of the library
-    w1 = fastCorrelation(img_ref(),avg1());
-    w2 = fastCorrelation(img_ref(),avg2());
-    w = w1+w2;
-    avg.setWeight(w);
-    avg1.setWeight(w1);
-    avg2.setWeight(w2);
-	*/
+
     DFscore.unionAll(_DF);
     mpi_writeController(order_number, avg, avg1, avg2, SFclass, SFclass1, SFclass2,
                         SFclassDiscarded,_DF, w1, w2, w, lockIndex);
@@ -1138,14 +1114,14 @@ void MpiProgAngularClassAverage::filterInputMetadata()
         auxDF.fillConstant(MDL_REF3D, "1");
     if (!auxDF.containsLabel(MDL_DEFGROUP))
         auxDF.fillConstant(MDL_DEFGROUP, "1");
-//    if (!auxDF.containsLabel(MDL_ORDER))
-//    {
-//
-//        String cmd = formatString("%s=%s+%d", MDL::label2Str(MDL_ORDER).c_str(),
-//                                  MDL::label2Str(MDL_REF).c_str(), FIRST_IMAGE);
-//        auxDF.addLabel(MDL_ORDER);
-//        auxDF.operate(cmd);
-//    }
+    //    if (!auxDF.containsLabel(MDL_ORDER))
+    //    {
+    //
+    //        String cmd = formatString("%s=%s+%d", MDL::label2Str(MDL_ORDER).c_str(),
+    //                                  MDL::label2Str(MDL_REF).c_str(), FIRST_IMAGE);
+    //        auxDF.addLabel(MDL_ORDER);
+    //        auxDF.operate(cmd);
+    //    }
     if (!auxDF.containsLabel(MDL_ORDER))
         auxDF.addLabel(MDL_ORDER);
     {
