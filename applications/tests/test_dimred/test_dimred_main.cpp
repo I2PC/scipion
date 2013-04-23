@@ -120,17 +120,17 @@ TEST_F( DimRedTest, intrinsic_dimensionality)
 #ifdef NEVERDEFINED
 COMPLETE_TEST(ltsa,               LTSA,             "helix",1000,"dimred/ltsa.txt")
 COMPLETE_TEST(diffusionMaps,      DiffusionMaps,    "helix",1000,"dimred/diffusionMaps.txt")
+COMPLETE_TEST(lltsa,            LLTSA,            "helix",1000,"dimred/lltsa.txt")
 INCOMPLETE_TEST(lpp,              LPP,              "helix",1000,"dimred/lpp.txt")
 INCOMPLETE_TEST(spe,              SPE,              "helix",1000,"dimred/spe.txt")
 INCOMPLETE_TEST(laplacianEigenmap,LaplacianEigenmap,"helix",1000,"dimred/laplacianEigenmap.txt")
 INCOMPLETE_TEST(probabilisticPCA, ProbabilisticPCA, "helix",1000,"dimred/probabilisticPCA.txt")
 INCOMPLETE_TEST(nca,              NeighbourhoodCA,  "helix",1000,"dimred/nca.txt")
-INCOMPLETE_TEST(lltsa,            LLTSA,            "helix",1000,"dimred/lltsa.txt")
 INCOMPLETE_TEST(hessianlle,       HessianLLE,       "helix",1000,"dimred/hessianlle.txt")
 INCOMPLETE_TEST(chartingmanifold, ChartingManifold, "helix",1000,"dimred/chartingmanifold.txt")
 INCOMPLETE_TEST(gplvm,            GPLVM,            "helix",1000,"dimred/gplvm.txt")
-#endif
 INCOMPLETE_TEST(kernelPCA,        KernelPCA,        "helix",1000,"dimred/kernelPCA.txt")
+#endif
 
 GTEST_API_ int main(int argc, char **argv)
 {

@@ -101,11 +101,10 @@ void LLTSA::reduceDimensionality()
 				MAT_ELEM(B,ni2,ni1)=MAT_ELEM(B,ni1,ni2);
 			}
 		}
-		MAT_ELEM(B,n,n)=MAT_ELEM(B,n,n)-1;
+		MAT_ELEM(B,n,n)-=1;
 	}
 
 	// Solve generalized eigenproblem X^tBX v = lambda * X^tX v
-
 	Matrix1D<double> Dmap;
 	Matrix2D<double> matA, matB;
 	Matrix2D<int> idxD;
@@ -118,6 +117,5 @@ void LLTSA::reduceDimensionality()
 	leaveOnlyNFirstColumns(Y,outputDim);
 
 	// Final result...
-
 	Y = *X * Y;
 }
