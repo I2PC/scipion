@@ -43,12 +43,16 @@ except ImportError:
  def getXmippPath(directory, fileName):
      return fileName
  
-import sys
-import os
+import random
+import unittest
+from emx import *
+from emx.emxmapper import *
 from os.path import join
-from emx_data_model import *
-from emx_writer import EmxXmlWriter
-from emx_reader import EmxXmlReader
+import filecmp
+try:
+    import collections
+except ImportError:
+    sys.stderr.write('Could not import OrderedDict, test not available')
 
 class TestEMX(unittest.TestCase):
     testsPath = getXmippPath("resources", "test")
@@ -57,169 +61,270 @@ class TestEMX(unittest.TestCase):
         """
         os.chdir(self.testsPath)
         
-    def test_findObjectType(self):
-        inFileName = join(self.testsPath,'EMX/emxTrivialFileRead.xml')
-        io = EmxXmlReader()
-        emxData = EmxData()
-        io.read(inFileName,emxData)
-        self.assertTrue(emxData.findObjectType('mic0017.mrc'),MICROGRAPH)
-        self.assertTrue(emxData.findObjectType('mic0018.mrc'),MICROGRAPH)
-        self.assertTrue(emxData.findObjectType('par0017.mrc'),PARTICLE)
-        self.assertFalse(emxData.findObjectType('par0017w.mrc'),PARTICLE)
+    def test_00emxMicrograph(self):
+        """ Create micrograph and play a little with it 
+        """
+        m1 = Emxmicrograph('mic',1)
+        m1.set('acceleratingVoltage',100)
+        m1.set('defocusU',1000.)
+        m1.set('pixelSpacing__X',5.6)
+        m1.set('pixelSpacing__Y',5.7)
+        #reference
+        dictPrimaryKeys = collections.OrderedDict([('fileName', 'mic'), 
+                                                   ('index', 1)])
+        dictAttributes  = collections.OrderedDict([('acceleratingVoltage', 100), 
+                        ('defocusU', 1000.0)
+                       ,('pixelSpacing__X', 5.6) 
+                       ,('pixelSpacing__Y', 5.7)
+                       ])
+        self.assertEqual(m1.dictPrimaryKeys, dictPrimaryKeys)
+        self.assertEqual(m1.dictAttributes, dictAttributes)
+
+    def test_10emxParticle(self):
+        """ Create a particle and play a little with it 
+        """
+        m1 = Emxmicrograph('mic',1)
+        m1.set('acceleratingVoltage',100)
+        m1.set('defocusU',1000.)
+        m1.set('pixelSpacing__X',5.6)
+        m1.set('pixelSpacing__Y',5.7)
+
+        p1 = Emxparticle('part',1)
+        p1.set('defocusU',1000.10)
+        p1.set('pixelSpacing__X',5.66)
+        p1.set('pixelSpacing__Y',5.77)
+        
+        p1.setForeignKey(m1)
+        #reference
+ 
+        dictPrimaryKeys = collections.OrderedDict([('fileName', 'part'), 
+                                                   ('index', 1)]) 
+        dictAttributes  = collections.OrderedDict([
+          ('defocusU', 1000.1), 
+          ('pixelSpacing__X', 5.66), 
+          ('pixelSpacing__Y', 5.77)
+          ]) 
+        
+        dictForeignKeys = collections.OrderedDict([('fileName', 'mic'), ('index', 1)])
+
+        #dictForeignKeys
+        self.assertEqual(p1.dictPrimaryKeys, dictPrimaryKeys)
+        self.assertEqual(p1.dictAttributes, dictAttributes)
+        self.assertEqual(p1.dictForeignKeys[MICROGRAPH].dictPrimaryKeys, dictForeignKeys)
+
+    def test_20clear(self):
+        """Test clear function
+        """
+        m1 = Emxmicrograph('mic',1)
+        m1.set('acceleratingVoltage',100)
+        m1.set('defocusU',1000.)
+        m1.set('pixelSpacing__X',5.6)
+        m1.set('pixelSpacing__Y',5.27)
+        m1.clear()
+        
+        m2 = Emxmicrograph('mic',1)
+        m2.set('activeFlag',None)
+        
+        self.assertEqual(m1, m2)
+        self.assertFalse(m1.strongEq(m2))
+
+    def test_30read(self):
+        #fileName = "massive_million.xml"
+        #fileName = "massive_100000.xml"
+        fileName = join(self.testsPath,'EMX/EMXread.emx')
+        emxData=EmxData()
+        xmlMapper = XmlMapper(emxData)
+        xmlMapper.readEMXFile(fileName)
+
+        m1 = Emxmicrograph('mic',1)
+        m1.set('acceleratingVoltage',100.)
+        m1.set('defocusU',1000.)
+        m1.set('pixelSpacing__X',5.6)
+        m1.set('pixelSpacing__Y',5.7)
+
+        m2 = Emxmicrograph('mic',2)
+        m2.set('acceleratingVoltage',200.)
+        m2.set('defocusUAngle',135.)
+
+        p1 = Emxparticle('parti',1)
+        p1.set('boxSize__X',11)
+        p1.set('boxSize__Y',33)
+        p1.set('defocusU',1000.)
+        p1.set('pixelSpacing__X',55.6)
+        p1.set('pixelSpacing__Y',55.7)
+
+        p1.set('transformationMatrix__t11',11.1)
+        p1.set('transformationMatrix__t12',12.1)
+        p1.set('transformationMatrix__t13',13.1)
+        p1.set('transformationMatrix__t14',14.1)
+                                           
+        p1.set('transformationMatrix__t21',21.1)
+        p1.set('transformationMatrix__t24',24.1)
+
+        p1.set('transformationMatrix__t31',31.1)
+        p1.set('transformationMatrix__t32',32.1)
+        p1.set('transformationMatrix__t33',33.1)
+        p1.set('transformationMatrix__t34',34.1)
+
+        p1.setForeignKey(m1)
+
+        self.assertTrue(emxData.objLists[MICROGRAPH][0].strongEq(m1))
+        self.assertTrue(emxData.objLists[MICROGRAPH][1].strongEq(m2))
+        self.assertTrue(emxData.objLists[PARTICLE][0].strongEq(p1))
+
+    def test_35size(self):
+        emxData=EmxData()
+
+        p1 = Emxparticle('part',1)
+        p1.set('defocusU',1000.10)
+        p1.set('pixelSpacing__X',5.66)
+        p1.set('pixelSpacing__Y',5.77)
+        emxData.addObject(p1)
+
+
+        m1 = Emxmicrograph('mic',1)
+        m1.set('acceleratingVoltage',100)
+        m1.set('defocusU',1000.)
+        m1.set('pixelSpacing__X',5.6)
+        m1.set('pixelSpacing__Y',5.7)
         
 
-    def test_findObject(self):
-        emxData     = EmxData()
+        for i in range (1,10):
+            m1.set('index',i)
+            emxData.addObject(m1)
+        self.assertEqual(emxData.size(),10)
 
-        emxMicrograph1 = EmxMicrograph('mic0017.mrc',1)
-        emxMicrograph1.set('acceleratingVoltage',100)
-        emxMicrograph1.set('pixelSpacing__X',5.)
-        emxMicrograph1.set('pixelSpacing__Y',6.)
-        emxData.appendMicrograph(emxMicrograph1)
+    def test_40write(self):
+        fileName = join(self.testsPath,'EMX/EMXwrite.emx')
+        emxData=EmxData()
+        xmlMapper = XmlMapper(emxData)
+        for i in range (1,3):
+            m1 = Emxmicrograph('mic',i)
+            m1.set('acceleratingVoltage',100)
+            m1.set('defocusU',1000.)
+            m1.set('pixelSpacing__X',5.6)
+            m1.set('pixelSpacing__Y',5.7)
+            emxData.addObject(m1)
+
+        p1 = Emxparticle('part',1)
+        p1.set('defocusU',1000.10)
+        p1.set('pixelSpacing__X',5.66)
+        p1.set('pixelSpacing__Y',5.77)
+
+        p1.set('transformationMatrix__t11',11)
+        p1.set('transformationMatrix__t12',12)
+        p1.set('transformationMatrix__t13',13)
+        p1.set('transformationMatrix__t14',14)
+
+        p1.set('transformationMatrix__t21',21)
+        p1.set('transformationMatrix__t22',22)
+        p1.set('transformationMatrix__t23',23)
+        p1.set('transformationMatrix__t24',24)
+
+        p1.set('transformationMatrix__t31',31)
+        p1.set('transformationMatrix__t32',32)
+        p1.set('transformationMatrix__t33',33)
+        p1.set('transformationMatrix__t34',34)
         
-        emxMicrograph2 = EmxMicrograph('mic0018.mrc',100)
-        emxMicrograph2.set('acceleratingVoltage',101)
-        emxMicrograph2.set('pixelSpacing__X',5.5)
-        emxMicrograph2.set('pixelSpacing__Y',6.6)
-        emxData.appendMicrograph(emxMicrograph2)
+        p1.addForeignKey(MICROGRAPH,m1)
+        emxData.addObject(p1)
+        fileName2= os.path.join('/tmp','EMXwrite.emx')
+        xmlMapper.writeEMXFile(fileName2)
+
+        #print "kdiff3", fileName,fileName2
+        self.assertTrue(filecmp.cmp(fileName,fileName2))
+        if os.path.exists(fileName2):
+            os.remove(fileName2)
+
+    def test_50MasiveReadWrite(self):
+        """This is not really a test
+        but an auxiliary function
+        """
+        fileName2 = join(self.testsPath,'EMX/EMXMasiveWrite.emx')
+        emxDataW=EmxData()
+        emxDataR=EmxData()
+        xmlMapperW = XmlMapper(emxDataW)
+        xmlMapperR = XmlMapper(emxDataR)
+
+        numberMic=3
+        numberPartPerMic = 2
+#        numberMic=100
+#        numberPartPerMic = 1000
+        for i in range (1,numberMic):
+            m1 = Emxmicrograph('mic',i)
+            m1.set('acceleratingVoltage',100)
+            m1.set('defocusU',1000.)
+            m1.set('pixelSpacing__X',5.6)
+            m1.set('pixelSpacing__Y',5.7)
+            emxDataW.addObject(m1)
+            for p in range (1,numberPartPerMic):
+                p1 = Emxparticle('part',p)
+                p1.set('defocusU',1000.10)
+                p1.set('pixelSpacing__X',5.66)
+                p1.set('pixelSpacing__Y',5.77)
+                p1.addForeignKey(MICROGRAPH,m1)
+                emxDataW.addObject(p1)
+        fileName= os.path.join('/tmp','EMXMasiveWrite.emx')
+        xmlMapperW.writeEMXFile(fileName)
+        xmlMapperR.readEMXFile(fileName)
+        xmlMapperR.writeEMXFile(fileName+"2")
+        self.assertTrue(filecmp.cmp(fileName,fileName+'2'))
+        #print "kdiff3", fileName,fileName+"2"
+        if os.path.exists(fileName):
+            os.remove(fileName)
+        if os.path.exists(fileName+'2'):
+            os.remove(fileName+'2')
+
+    def test_60iterate(self):
+        #fileName = "massive_million.xml"
+        #fileName = "massive_100000.xml"
+        fileName = join(self.testsPath,'EMX/EMXread.emx')
+        emxData=EmxData()
+        xmlMapper = XmlMapper(emxData)
+        xmlMapper.readEMXFile(fileName)
+        _list = []
         
-        valuesCmp={FILENAME:'mic0017.mrc',INDEX:1}
-        self.assertTrue(emxData.findObject(emxData.listMicrographs,**valuesCmp) == emxMicrograph1)
-        valuesCmp={FILENAME:'mic0017.mrc',INDEX:1}
-        self.assertFalse(emxData.findObject(emxData.listMicrographs,**valuesCmp) == emxMicrograph2)
-        valuesCmp={FILENAME:'mic0018.mrc',INDEX:100}
-        self.assertTrue(emxData.findObject(emxData.listMicrographs,**valuesCmp) == emxMicrograph2)
+        m1 = Emxmicrograph('mic',1)
+        m1.set('acceleratingVoltage',100.)
+        m1.set('defocusU',1000.)
+        m1.set('pixelSpacing__X',5.6)
+        m1.set('pixelSpacing__Y',5.7)
+        _list.append(m1)
 
-    def test_EMX_Eq(self):
-        #first mic
-        emxMicrograph = EmxMicrograph('mic0017.mrc',1)
-        emxMicrograph.set('acceleratingVoltage',100.)
-        emxMicrograph.set('pixelSpacing__X',5.)
-        emxMicrograph.set('pixelSpacing__Y',6.)
-        #second mic
-        emxMicrograph2 = EmxMicrograph('mic0017.mrc',1)
-        emxMicrograph2.set('acceleratingVoltage',100.)
-        emxMicrograph2.set('pixelSpacing__X',5.)
-        emxMicrograph2.set('pixelSpacing__Y',6.)
-        self.assertTrue(emxMicrograph == emxMicrograph2)
-        #third mic
-        emxMicrograph3 = EmxMicrograph('mic0017.mrc',1)
-        emxMicrograph3.set('acceleratingVoltage',100.)
-        emxMicrograph3.set('pixelSpacing__X',5.)
-        emxMicrograph3.set('pixelSpacing__Y',66.)
-        #compare
-        self.assertFalse(emxMicrograph3 == emxMicrograph2)
+        m2 = Emxmicrograph('mic',2)
+        m2.set('acceleratingVoltage',200.)
+        m2.set('defocusUAngle',135.)
+        _list.append(m2)
 
-        emxParticle = EmxParticle('par0017.mrc',1)
-        emxParticle.set('boxSize__X',11)
-        emxParticle.set('boxSize__Y',22)
-        emxParticle.set('pixelSpacing__X',6.6)
-        emxParticle.set('pixelSpacing__Y',66.6)
-        #
-        emxParticle2 = EmxParticle('par0017.mrc',1)
-        emxParticle2.set('boxSize__X',11)
-        emxParticle2.set('boxSize__Y',22)
-        emxParticle2.set('pixelSpacing__X',6.6)
-        emxParticle2.set('pixelSpacing__Y',66.6)
-        self.assertTrue(emxParticle == emxParticle2)
-        #
-        emxParticle3 = EmxParticle('par0017.mrc',1)
-        emxParticle3.set('boxSize__X',11)
-        emxParticle3.set('boxSize__Y',22)
-        emxParticle3.set('pixelSpacing__X',6.6)
-        emxParticle3.set('pixelSpacing__Y',666)
-        self.assertFalse(emxParticle3 == emxParticle2)
+        p1 = Emxparticle('parti',1)
+        p1.set('boxSize__X',11)
+        p1.set('boxSize__Y',33)
+        p1.set('defocusU',1000.)
+        p1.set('pixelSpacing__X',55.6)
+        p1.set('pixelSpacing__Y',55.7)
 
-        emxData  = EmxData()
-        emxData2 = EmxData()
-        emxData.appendMicrograph(emxMicrograph)
-        emxData.appendMicrograph(emxMicrograph2)
-        emxData.appendParticle(emxParticle)
-        emxData.appendParticle(emxParticle2)
-        emxData2.appendMicrograph(emxMicrograph)
-        emxData2.appendMicrograph(emxMicrograph2)
-        emxData2.appendParticle(emxParticle)
-        emxData2.appendParticle(emxParticle2)
-        self.assertTrue(emxData == emxData2)
-        
+        p1.set('transformationMatrix__t11',11.1)
+        p1.set('transformationMatrix__t12',12.1)
+        p1.set('transformationMatrix__t13',13.1)
+        p1.set('transformationMatrix__t14',14.1)
+                                           
+        p1.set('transformationMatrix__t21',21.1)
+        p1.set('transformationMatrix__t24',24.1)
 
-    def test_EMX_write(self):
-        emxData     = EmxData()
-        outFileName = "/tmp/emxTrivialFileWrite.xml"
+        p1.set('transformationMatrix__t31',31.1)
+        p1.set('transformationMatrix__t32',32.1)
+        p1.set('transformationMatrix__t33',33.1)
+        p1.set('transformationMatrix__t34',34.1)
 
-        emxMicrograph = EmxMicrograph('mic0017.mrc',1)
-        emxMicrograph.set('acceleratingVoltage',100)
-        emxMicrograph.set('pixelSpacing__X',5.)
-        emxMicrograph.set('pixelSpacing__Y',6.)
-        emxData.appendMicrograph(emxMicrograph)
-        
-        emxMicrograph = EmxMicrograph('mic0018.mrc',100)
-        emxMicrograph.set('acceleratingVoltage',101)
-        emxMicrograph.set('pixelSpacing__X',5.5)
-        emxMicrograph.set('pixelSpacing__Y',6.6)
-        emxData.appendMicrograph(emxMicrograph)
-        
-        emxParticle = EmxParticle('par0017.mrc',1,emxMicrograph)
-        emxParticle.set('boxSize__X',11)
-        emxParticle.set('boxSize__Y',22)
-        emxParticle.set('pixelSpacing__X',6.6)
-        emxParticle.set('pixelSpacing__Y',66.6)
-        emxParticle.set('transformationMatrix__t11',11.)
-        emxParticle.set('transformationMatrix__t12',12.)
-        emxParticle.set('transformationMatrix__t13',13.)
-        emxParticle.set('transformationMatrix__t14',14.)
-        emxParticle.set('transformationMatrix__t21',21.)
-        emxData.appendParticle(emxParticle)
+    def test_70schema(self):
+        xmlFile    = join(self.testsPath,'EMX/EMXwrite.emx')
+        (code,_out,_err)=validateSchema(xmlFile)
+        self.assertEqual(code,0)
+        xmlFile    = join(self.testsPath,'EMX/EMXwrite_badly_formed.emx')
+        with self.assertRaises(Exception) as context:
+            validateSchema(xmlFile)
+        self.assertEqual(context.exception.message, 'Error when validating file /home/roberto/xmipp_master/resources/test/EMX/EMXwrite_badly_formed.emx with schema http://sourceforge.net/p/emexchange/code/ci/master/tree/trunk/resourcesEmx/schemas/emx_11.xsd?format=raw.\n        \nError:[Error] EMXwrite_badly_formed.emx:20:20: cvc-complex-type.2.4.a: Invalid content was found starting with element \'pixelSpacingi\'. One of \'{defocusV, defocusUAngle, cs, activeFlag, amplitudeContrast, fom, pixelSpacing}\' is expected.\n[Fatal Error] EMXwrite_badly_formed.emx:23:7: The element type "pixelSpacingi" must be terminated by the matching end-tag "</pixelSpacingi>".\n')
 
-        emxParticle2 = EmxParticle('par0018.mrc',1)
-        emxData.appendParticle(emxParticle2)
-
-        io = EmxXmlWriter()
-        io.write(outFileName,emxData)
-
-        from filecmp import cmp
-        self.assertTrue(cmp(outFileName,join(self.testsPath,'EMX/emxTrivialFileWrite.xml'),False))
-        unlink(outFileName)
-
-    def test_EMX_read(self):
-        emxData = EmxData()
-        inFileName = join(self.testsPath,'EMX/emxTrivialFileRead.xml')
-                          
-        emxMicrograph = EmxMicrograph('mic0017.mrc',1)
-        emxMicrograph.set('acceleratingVoltage',100)
-        emxMicrograph.set('cs',2.2)
-        emxMicrograph.set('pixelSpacing__X',5.)
-        emxMicrograph.set('pixelSpacing__Y',6.)
-        emxData.appendMicrograph(emxMicrograph)
-        
-        emxMicrograph = EmxMicrograph('mic0018.mrc',100)
-        emxMicrograph.set('acceleratingVoltage',101)
-        emxMicrograph.set('cs',2.2)
-        emxMicrograph.set('pixelSpacing__X',5.5)
-        emxMicrograph.set('pixelSpacing__Y',6.6)
-        emxData.appendMicrograph(emxMicrograph)
-        
-        emxParticle = EmxParticle('par0017.mrc',1,emxMicrograph)
-        emxParticle.set('boxSize__X',11)
-        emxParticle.set('boxSize__Y',22)
-        emxParticle.set('pixelSpacing__X',6.6)
-        emxParticle.set('pixelSpacing__Y',66.6)
-        emxParticle.set('transformationMatrix__t11',11.)
-        emxParticle.set('transformationMatrix__t12',12.)
-        emxParticle.set('transformationMatrix__t13',13.)
-        emxParticle.set('transformationMatrix__t14',14.)
-        emxParticle.set('transformationMatrix__t21',21.)
-        emxData.appendParticle(emxParticle)
-
-        emxParticle = EmxParticle('par0018.mrc',1)
-        emxData.appendParticle(emxParticle)
-
-        io = EmxXmlReader()
-        emxData2 = EmxData()
-        io.read(inFileName,emxData2)
-#        print emxData2,emxData
-        self.assertTrue(emxData2 == emxData)
-           
 from  XmippPythonTestResult import XmippPythonTestResult
 
                                         

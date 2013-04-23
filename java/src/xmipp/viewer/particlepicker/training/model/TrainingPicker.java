@@ -686,9 +686,11 @@ public abstract class TrainingPicker extends ParticlePicker
 	{
 		MicrographFamilyData mfd = null;
 		for (TrainingMicrograph m : micrographs)
+		{
 			mfd = m.getFamilyData(f);
-		if (mfd.hasManualParticles())
-			return true;
+			if (mfd.hasManualParticles())
+				return true;
+		}
 		return false;
 	}
 
@@ -794,7 +796,9 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	public void updateTemplates(Family f)
 	{
-		if (family.getStep() != FamilyState.Manual)
+		if (f.getStep() != FamilyState.Manual)
+			return;
+		if (!hasManualParticles(f))
 			return;
 		if (!f.getUpdateTemplatesPending())
 			return;// nothing to update

@@ -62,6 +62,7 @@ void ProgClassifyCL2DCore::readParams()
     {
         thZscore = getDoubleParam("--computeCore",0);
         thPCAZscore = getDoubleParam("--computeCore",1);
+        NPCA = getIntParam("--computeCore",2);
         action=COMPUTE_CORE;
     }
     else if (checkParam("--computeStableCore"))
@@ -78,12 +79,12 @@ void ProgClassifyCL2DCore::show()
         return;
     std::cout << "CL2D rootname:        " << fnRoot << std::endl
     << "CL2D output dir:      " << fnODir << std::endl;
-    if (action==COMPUTE_CORE)
-        std::cout
-        << "Tolerance:            " << tolerance << std::endl
-        << "Threshold Zscore:     " << thZscore << std::endl;
+    if (action==COMPUTE_STABLE_CORE)
+        std::cout << "Tolerance:                " << tolerance << std::endl;
     else
-        std::cout << "Threshold PCA Zscore: " << thPCAZscore << std::endl ;
+        std::cout << "Threshold Zscore:         " << thZscore << std::endl
+                  << "Threshold PCA Zscore:     " << thPCAZscore << std::endl
+    			  << "Number of PCA dimensions: " << NPCA << std::endl;
 }
 
 // usage ===================================================================
@@ -92,8 +93,8 @@ void ProgClassifyCL2DCore::defineParams()
     addUsageLine("Compute the core of a CL2D clustering");
     addParamsLine("    --root <rootname>          : Rootname of the CL2D");
     addParamsLine("    --dir <dir>                : Output directory of the CL2D");
-    addParamsLine("    --computeCore <thZscore=3> <thPCAZscore=3> : The class cores are computed by thresholding the Zscore of");
-    addParamsLine("                               : the class images and their projections onto a 2D PCA space");
+    addParamsLine("    --computeCore <thZscore=3> <thPCAZscore=3> <NPCA=2>: The class cores are computed by thresholding the Zscore of");
+    addParamsLine("                               : the class images and their projections onto a nD PCA space (by default, n=2)");
     addParamsLine("or  --computeStableCore <tolerance=1> : The stable core is formed by all the images in the class that have been");
     addParamsLine("                               : in the same class (except in tolerance levels) in the whole hierarchy.");
     addParamsLine("                               : If tolerance=0, then the stable core is formed by the set of images that");
@@ -156,7 +157,7 @@ void ProgClassifyCL2DCore::computeCores()
         std::cerr << "Computing cores ...\n";
     ProgAnalyzeCluster analyzeCluster;
     analyzeCluster.verbose=0;
-    analyzeCluster.NPCA=2;
+    analyzeCluster.NPCA=NPCA;
     analyzeCluster.Niter=10;
     analyzeCluster.distThreshold=thPCAZscore;
     analyzeCluster.dontMask=false;

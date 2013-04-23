@@ -36,22 +36,62 @@ from os import system
 from numpy import array, ndarray, flipud
 from time import gmtime, strftime
 from datetime import datetime
+from os.path import exists
+from decimal import *
 
 class XmippChimeraClient:
     
-    def __init__(self, volfile):
+    def __init__(self, volfile, angulardistfile=None, spheres_color='red', spheres_distance='default', spheres_maxradius='default'):
+        
+        if volfile is None or not(exists(volfile)):
+            raise ValueError(volfile)
+        
+        if not angulardistfile is None:
+            if not(exists(angulardistfile)):
+                raise ValueError(angulardistfile)
+        
+            
         self.volfile = volfile
-        #print 'volfile: ' + self.volfile
+        self.angulardistfile = angulardistfile
+        
         self.address = ''
         self.port = 6000
         self.authkey = 'test'
         self.client = Client((self.address, self.port), authkey=self.authkey)
         printCmd('initVolumeData')
         self.initVolumeData()
+        self.spheres_color = spheres_color
+        self.spheres_distance = float(spheres_distance) if not spheres_distance == 'default' else max(self.xdim, self.ydim, self.zdim)
+        print self.spheres_distance
+        self.spheres_maxradius = float(spheres_maxradius) if not spheres_maxradius == 'default' else 0.02 * self.spheres_distance
+      
         printCmd('openVolumeOnServer')
         self.openVolumeOnServer(self.vol)
-        
+    
+    
+    def loadAngularDist(self):
+        md = MetaData(self.angulardistfile)
+        maxweight = md.aggregateSingle(AGGR_MAX, MDL_WEIGHT)
+        minweight = md.aggregateSingle(AGGR_MIN, MDL_WEIGHT)
+        interval = maxweight - minweight
+        self.angulardist = []  
+        for id in md:
+            
+            rot = md.getValue(MDL_ANGLE_ROT, id)
+            tilt = md.getValue(MDL_ANGLE_TILT, id)
+            psi = md.getValue(MDL_ANGLE_PSI, id)
+            weight = md.getValue(MDL_WEIGHT, id)
+            weight = (weight - minweight)/interval
+
+            x, y, z = Euler_direction(rot, tilt, psi)
+            radius = weight * self.spheres_maxradius
+            x = x * self.spheres_distance
+            y = y * self.spheres_distance
+            z = z * self.spheres_distance
+            command = 'shape sphere radius %s center %s,%s,%s color %s '%(radius, x, y, z, self.spheres_color)
+            self.angulardist.append(command)    
        
+    
     def send(self, cmd, data):
         print cmd
         self.client.send(cmd)
@@ -60,6 +100,9 @@ class XmippChimeraClient:
         
     def openVolumeOnServer(self, volume):
          self.send('open_volume', volume)
+         if not self.angulardistfile is None:
+             self.loadAngularDist()
+             self.send('draw_angular_distribution', self.angulardist)
          self.client.send('end')
         
 
@@ -68,6 +111,7 @@ class XmippChimeraClient:
             self.listen_thread.daemon = True
             self.listen_thread.start()
          
+    
     def listen(self):
         
         self.listen = True
@@ -80,7 +124,6 @@ class XmippChimeraClient:
         except EOFError:
             print 'Lost connection to server'
         finally:
-            print 'finally'
             self.exit()
             
             
@@ -91,7 +134,8 @@ class XmippChimeraClient:
     def initVolumeData(self):
         self.image = Image(self.volfile)
         self.image.convert2DataType(DT_DOUBLE)
-        xdim, ydim, zdim, n = self.image.getDimensions()
+        self.xdim, self.ydim, self.zdim, self.n = self.image.getDimensions()
+        printCmd("size %dx %dx %d"%(self.xdim, self.ydim, self.zdim))
         self.vol = getImageData(self.image)
         
     def answer(self, msg):
@@ -102,15 +146,16 @@ class XmippChimeraClient:
 
 class XmippProjectionExplorer(XmippChimeraClient):
     
-    def __init__(self, volfile):
+    def __init__(self, volfile, angulardistfile=None, spheres_color='red', spheres_distance='default', spheres_maxradius='default', padding_factor=1, max_freq=0.5, spline_degree=2):
 
-        XmippChimeraClient.__init__(self, volfile)
+        XmippChimeraClient.__init__(self, volfile, angulardistfile, spheres_color, spheres_distance, spheres_maxradius)
         
         self.projection = Image()
         self.projection.setDataType(DT_DOUBLE)
         #0.5 ->  Niquiest frequency
         #2 -> bspline interpolation
-        self.fourierprojector = FourierProjector(self.image, 1, 0.5, 2)
+        #print 'creating Fourier Projector'
+        self.fourierprojector = FourierProjector(self.image, padding_factor, max_freq, spline_degree)
         self.fourierprojector.projectVolume(self.projection, 0, 0, 0)
 
         printCmd('initListenThread')
@@ -144,10 +189,9 @@ class XmippProjectionExplorer(XmippChimeraClient):
             printCmd('reading motion')
             self.motion = array(data)
             printCmd('getting euler angles')
-            rot1, tilt1, psi1 = Euler_matrix2angles(self.motion)
-            print '%f, %f, %f'%(rot1, tilt1, psi1)
+            rot, tilt, psi = Euler_matrix2angles(self.motion)
             printCmd('calling rotate')  
-            self.rotate(rot1, tilt1, psi1)
+            self.rotate(rot, tilt, psi)
             
             
     def exitClient(self):
@@ -155,11 +199,7 @@ class XmippProjectionExplorer(XmippChimeraClient):
         self.exit()
         
         
-    def openVolumeOnServer(self, volume):
-         self.send('open_volume', volume)
-         spheres = [[10, 0, 0, 0], [20, 10, 10, 10]]
-         self.send('draw_angular_distribution', spheres)
-         self.client.send('end')      
+     
             
 def printCmd(cmd):
         timeformat = "%S.%f" 

@@ -1,1 +1,1 @@
-wc libraries/*/*.h libraries/*/*.cpp libraries/*/*/*.i java/src/xmipp/*/*.java applications/scripts/*/*.sh applications/scripts/*/*.pl applications/scripts/*/*py applications/programs/*/*.cpp protocols/*py
+wc libraries/*/*.h libraries/*/*.cpp java/src/xmipp/*/*.java applications/scripts/*/*py applications/programs/*/*.cpp protocols/*py

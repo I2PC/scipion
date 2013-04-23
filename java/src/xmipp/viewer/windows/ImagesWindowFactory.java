@@ -34,6 +34,7 @@ import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Param;
 import xmipp.utils.XmippDialog;
+import xmipp.viewer.ctf.CTFAnalyzerJFrame;
 import xmipp.viewer.ctf.CTFRecalculateImageWindow;
 import xmipp.viewer.ctf.TasksEngine;
 
@@ -247,9 +248,10 @@ public class ImagesWindowFactory {
 
 	public static void openCTFWindow(ImagePlus imp, String CTFFilename,
 			String PSDFilename) {
-		CTFProfileWindow ctfView = new CTFProfileWindow(imp, CTFFilename,
-				PSDFilename);
-		ctfView.setVisible(true);
+//		CTFProfileWindow ctfView = new CTFProfileWindow(imp, CTFFilename,
+//				PSDFilename);
+//		ctfView.setVisible(true);
+		new CTFAnalyzerJFrame(imp, CTFFilename, PSDFilename);
 	}
 
 	public static String getSortTitle(String title, int width,

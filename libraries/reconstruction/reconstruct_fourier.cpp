@@ -291,7 +291,25 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
     threadParams->selFile->findObjects(objId);
     ApplyGeoParams params;
     params.only_apply_shifts = true;
+    MultidimArray<int> zWrapped(3*parent->volPadSizeZ),yWrapped(3*parent->volPadSizeY),xWrapped(3*parent->volPadSizeX),
+    		zNegWrapped, yNegWrapped, xNegWrapped;
+    zWrapped.initConstant(-1);
+    yWrapped.initConstant(-1);
+	xWrapped.initConstant(-1);
+	zWrapped.setXmippOrigin();
+    yWrapped.setXmippOrigin();
+	xWrapped.setXmippOrigin();
+    zNegWrapped=zWrapped;
+    yNegWrapped=yWrapped;
+    xNegWrapped=xWrapped;
 
+    MultidimArray<double> x2precalculated(XSIZE(xWrapped)), y2precalculated(XSIZE(yWrapped)), z2precalculated(XSIZE(zWrapped));
+    x2precalculated.initConstant(-1);
+    y2precalculated.initConstant(-1);
+    z2precalculated.initConstant(-1);
+    x2precalculated.setXmippOrigin();
+    y2precalculated.setXmippOrigin();
+    z2precalculated.setXmippOrigin();
     do
     {
         barrier_wait( barrier );
@@ -336,16 +354,21 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     // and compute its Fourier transform
                     proj().setXmippOrigin();
                     size_t localPaddedImgSize=(size_t)(parent->imgSize*parent->padding_factor_proj);
-                    localPaddedImg.initZeros(localPaddedImgSize,localPaddedImgSize);
-                    localPaddedImg.setXmippOrigin();
-                    FOR_ALL_ELEMENTS_IN_ARRAY2D(proj())
-                    A2D_ELEM(localPaddedImg,i,j)=weight*proj(i,j);
-                    CenterFFT(localPaddedImg,true);
+                    if (threadParams->reprocessFlag)
+                    	localPaddedFourier.initZeros(localPaddedImgSize,localPaddedImgSize/2+1);
+                    else
+                    {
+                    	localPaddedImg.initZeros(localPaddedImgSize,localPaddedImgSize);
+                    	localPaddedImg.setXmippOrigin();
+                        FOR_ALL_ELEMENTS_IN_ARRAY2D(proj())
+                    		A2D_ELEM(localPaddedImg,i,j)=weight*proj(i,j);
+                    	CenterFFT(localPaddedImg,true);
 
-                    // Fourier transformer for the images
-                    localTransformerImg.setReal(localPaddedImg);
-                    localTransformerImg.FourierTransform();
-                    localTransformerImg.getFourierAlias(localPaddedFourier);
+                    	// Fourier transformer for the images
+                    	localTransformerImg.setReal(localPaddedImg);
+                    	localTransformerImg.FourierTransform();
+                    	localTransformerImg.getFourierAlias(localPaddedFourier);
+                    }
 
                     // Compute the coordinate axes associated to this image
                     Euler_angles2matrix(rot, tilt, psi, localA);
@@ -553,28 +576,70 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
 
                                 ptrIn =(double *)&(A2D_ELEM(*paddedFourier, i,j));
 
-                                for (int intz = ZZ(corner1); intz <= ZZ(corner2); intz++)
+                                // Some precalculations
+                                for (int intz = ZZ(corner1); intz <= ZZ(corner2); ++intz)
                                 {
-                                    double z = intz - ZZ(real_position);
-                                    double z2 = z * z;
-                                    int iz = intWRAP(intz, 0, zsize_1);
-                                    int miz=-iz;
-                                    int izneg = intWRAP(miz,0,zsize_1);
-
-                                    for (int inty = YY(corner1); inty <= YY(corner2); inty++)
+									double z = intz - ZZ(real_position);
+									A1D_ELEM(z2precalculated,intz)=z*z;
+                                    if (A1D_ELEM(zWrapped,intz)<0)
                                     {
-                                        double y = inty - YY(real_position);
-                                        double y2z2 = y * y + z2;
-                                        int iy = intWRAP(inty, 0, zsize_1);
-                                        int miy=-iy;
-                                        int iyneg = intWRAP(miy, 0, zsize_1);
+                                        int iz, izneg;
+										fastIntWRAP(iz, intz, 0, zsize_1);
+										A1D_ELEM(zWrapped,intz)=iz;
+										int miz=-iz;
+										fastIntWRAP(izneg, miz,0,zsize_1);
+										A1D_ELEM(zNegWrapped,intz)=izneg;
+                                    }
+                                }
+                                for (int inty = YY(corner1); inty <= YY(corner2); ++inty)
+                                {
+									double y = inty - YY(real_position);
+									A1D_ELEM(y2precalculated,inty)=y*y;
+                                    if (A1D_ELEM(yWrapped,inty)<0)
+                                    {
+										int iy, iyneg;
+										fastIntWRAP(iy, inty, 0, zsize_1);
+										A1D_ELEM(yWrapped,inty)=iy;
+										int miy=-iy;
+										fastIntWRAP(iyneg, miy,0,zsize_1);
+										A1D_ELEM(yNegWrapped,inty)=iyneg;
+                                    }
+                                }
+                                for (int intx = XX(corner1); intx <= XX(corner2); ++intx)
+                                {
+									double x = intx - XX(real_position);
+									A1D_ELEM(x2precalculated,intx)=x*x;
+                                    if (A1D_ELEM(xWrapped,intx)<0)
+                                    {
+                                    	int ix, ixneg;
+										fastIntWRAP(ix, intx, 0, zsize_1);
+										A1D_ELEM(xWrapped,intx)=ix;
+										int mix=-ix;
+										fastIntWRAP(ixneg, mix,0,zsize_1);
+										A1D_ELEM(xNegWrapped,intx)=ixneg;
+                                    }
+                                }
 
-                                        for (int intx = XX(corner1); intx <= XX(corner2); intx++)
+                                // Actually compute
+                                for (int intz = ZZ(corner1); intz <= ZZ(corner2); ++intz)
+                                {
+                                    double z2 = A1D_ELEM(z2precalculated,intz);
+                                    int iz=A1D_ELEM(zWrapped,intz);
+                                    int izneg=A1D_ELEM(zNegWrapped,intz);
+
+                                    for (int inty = YY(corner1); inty <= YY(corner2); ++inty)
+                                    {
+                                        double y2z2 = A1D_ELEM(y2precalculated,inty) + z2;
+                                        if (y2z2 > blobRadiusSquared)
+                                            continue;
+                                        int iy=A1D_ELEM(yWrapped,inty);
+                                        int iyneg=A1D_ELEM(yNegWrapped,inty);
+
+                                        for (int intx = XX(corner1); intx <= XX(corner2); ++intx)
                                         {
-                                            double x = intx - XX(real_position);
                                             // Compute distance to the center of the blob
                                             // Compute blob value at that distance
-                                            double d2 = x * x + y2z2;
+                                            double d2 = A1D_ELEM(x2precalculated,intx) + y2z2;
 
                                             if (d2 > blobRadiusSquared)
                                                 continue;
@@ -592,7 +657,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                             << " intz=" << intz << std::endl;
 #endif
 
-                                            int ix=intWRAP(intx,0,zsize_1);
+                                            int ix=A1D_ELEM(xWrapped,intx);
 #ifdef DEBUG
 
                                             std::cout << "   2: ix=" << ix << " iy=" << iy
@@ -605,8 +670,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                             {
                                                 izp = izneg;
                                                 iyp = iyneg;
-                                                int mix=-ix;
-                                                ixp = intWRAP(mix,0,zsize_1);
+                                                ixp = A1D_ELEM(xNegWrapped,intx);
                                                 conjugate=true;
                                             }
                                             else
@@ -623,10 +687,10 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
 
                                             // Add the weighted coefficient
                                             if (reprocessFlag)
-                                                A3D_ELEM(fourierWeights, izp,iyp,ixp) += (w *  A3D_ELEM(prefourierWeights, izp,iyp,ixp));
+                                                DIRECT_A3D_ELEM(fourierWeights, izp,iyp,ixp) += (w *  DIRECT_A3D_ELEM(prefourierWeights, izp,iyp,ixp));
                                             else
                                             {
-                                                double *ptrOut=(double *)&(A3D_ELEM(VoutFourier, izp,iyp,ixp));
+                                                double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, izp,iyp,ixp));
                                                 ptrOut[0] += w * ptrIn[0];
 
                                                 if (conjugate)
@@ -706,6 +770,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
             if ( imgIndex <= lastImageIndex )
             {
                 th_args[nt].imageIndex = imgIndex;
+                th_args[nt].reprocessFlag = reprocessFlag;
                 imgIndex++;
             }
             else
@@ -939,7 +1004,7 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
     Vout().initZeros(volPadSizeZ,volPadSizeY,volPadSizeX);
     transformerVol.setReal(Vout());
     transformerVol.enforceHermitianSymmetry();
-	forceWeightSymmetry(preFourierWeights);
+	//forceWeightSymmetry(preFourierWeights);
 
     // Tell threads what to do
     //#define DEBUG_VOL1

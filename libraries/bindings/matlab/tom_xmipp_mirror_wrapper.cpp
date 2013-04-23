@@ -23,13 +23,11 @@
  *=================================================================*/
 
 /*xmipp includes */
-#include "image.h"
-#include "volume.h"
+#include "xmipp_image.h"
 #include "tom_xmipp_helpers.h"
 
 /*Matlab includes*/
 #include "mex.h"
-#include "matrix.h"
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 {
@@ -46,7 +44,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     
     if (ndims == 2)
     {
-        Image img;
+        Image<double> img;
         getMatrix2D(prhs[0],img());
         if (flipx) img().selfReverseX();
         if (flipy) img().selfReverseY();
@@ -54,12 +52,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     }
     else
     {
-        Volume vol;
+        Image<double> vol;
         getMatrix3D(prhs[0],vol());
         if (flipx) vol().selfReverseX();
         if (flipy) vol().selfReverseY();
         if (flipz) vol().selfReverseZ();
         setMatrix3D(vol(),plhs[0]);     
     }
-    
 }

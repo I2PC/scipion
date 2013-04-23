@@ -28,12 +28,10 @@ from os.path import basename, splitext,exists
 from os import remove
 from protlib_xmipp import XmippScript
 from xmipp import MetaData, MDL_CTF_MODEL, MD_APPEND, MD_OVERWRITE, FileName
-#from protlib_import import convertCtfparam
-#from lib_emx import ctfMicXmippFromEmx
-from pyworkflow.object import *
-from emx.emxmapper import EmxMapper
+from emx.emxmapper import *
 from emx.emx import *
-from emxLib.emxLib import ctfMicXmippToEmx, coorrXmippToEmx, ctfMicXmippToEmxChallenge
+from emxLib.emxLib import ctfMicXmippToEmx, coorrXmippToEmx, ctfMicXmippToEmxChallenge,\
+                          alignXmippToEmx
 
 
 class ScriptImportEMX(XmippScript):
@@ -48,12 +46,13 @@ class ScriptImportEMX(XmippScript):
 #        self.addParamsLine("     alias -b;");
         self.addParamsLine(' [--mode <mode=micCTF>]         : information to extract')
         self.addParamsLine("         where <mode>");
+        self.addParamsLine("             alignment          : export particle shift and rotations");
+        self.addParamsLine("             coordinates        : export particle coordinates (so far only works for a single image)");
         self.addParamsLine("             micCTF             : export micrograph ctf");
         self.addParamsLine("             micCTFChallenge    : export micrograph ctf to challenge format");        
-        self.addParamsLine("             Coordinates        : export particle coordinates (so far only works for a single image)");
         self.addParamsLine("     alias -m;");
-        self.addParamsLine(' [--amplitudeContrast <Q=0.1>]   : amplitudeContrast, mandatory when mode=micCTF');
-        self.addParamsLine("     alias -a;");
+#        self.addParamsLine(' [--amplitudeContrast <Q=0.1>]   : amplitudeContrast, mandatory when mode=micCTF');
+#        self.addParamsLine("     alias -a;");
         self.addExampleLine("Export information from Metadata XmippFile file to EMX", False);
         self.addExampleLine("xmipp_export_emx -i microgaph.xmd -a 0.1");
         self.addExampleLine("input is the file micrograph.xmd created by screen micrograph protocol");
@@ -64,33 +63,22 @@ class ScriptImportEMX(XmippScript):
         if (emxFileName=='metadataXMIPP.emx'):
             emxFileName = xmdFileName.withoutExtension()+'.emx'
         mode         = self.getParam('-m')
-        amplitudeContrast = self.getParam('-a')
 
         if exists(emxFileName):
            remove(emxFileName)
-        emxData      = EmxData()
-        mapper       = EmxMapper(emxData, emxFileName,globals())
+        emxData = EmxData()
+        mapper  = XmlMapper(emxData)
         #create emx files with mic CTF information
-        if mode == 'micCTF':
-            ctfMicXmippToEmx(emxData,xmdFileName,amplitudeContrast)
+        if mode   == 'micCTF':
+            ctfMicXmippToEmx(emxData,xmdFileName)
         elif mode == 'micCTFChallenge':
-            ctfMicXmippToEmxChallenge(emxData,xmdFileName,amplitudeContrast)
-        elif mode == 'Coordinates':
+            ctfMicXmippToEmxChallenge(emxData,xmdFileName)
+        elif mode == 'coordinates':
             coorrXmippToEmx(emxData,xmdFileName)
-        mapper.emxDataToXML()
-        mapper.commit()
-        
-
-        #detect binary data type micrograph/particle
-        #type =emxData.findObjectType(binFileName)
-        #declare a 
-#        if type == MICROGRAPH:
-#            pass
-#        elif type == PARTICLE:
-#            pass
-#        else:
-#            raise Exception("Unknown object type associated with file=%s" % dictFK )
-            
+        elif mode == 'alignment':
+            alignXmippToEmx(emxData,xmdFileName)
+        mapper.writeEMXFile(emxFileName)
+                    
         
 if __name__ == '__main__':
     ScriptImportEMX().tryRun()
