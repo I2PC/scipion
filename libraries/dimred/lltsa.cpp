@@ -25,6 +25,18 @@
 
 #include "lltsa.h"
 
+/* Erases the last columns of a given matrix so that only the ones from 0 (the 1st) to N-1 (the N-th)
+ * are preserved.
+ */
+void leaveOnlyNFirstColumns(Matrix2D<double> &A, int N)
+{
+	Matrix2D<double> Ap;
+	Ap.resize(MAT_YSIZE(A),N);
+    for (size_t i = 0; i < MAT_YSIZE(A); ++i)
+    	memcpy(&MAT_ELEM(Ap,i,0),&MAT_ELEM(A,i,0),N*sizeof(double));
+    A=Ap;
+}
+
 void LLTSA::setSpecificParameters(int neighbourNumber)
 {
 	this->neighbourNumber=neighbourNumber;
@@ -47,13 +59,13 @@ void LLTSA::reduceDimensionality()
 	Matrix2D<double> Xi,W,Vi,Si,Gi, Bi, B;
 	Matrix1D<int> Ji;
 	Matrix1D<double> s;
-	B.initZeros(MAT_YSIZE(*X),MAT_YSIZE(*X));
+	B.initIdentity(MAT_YSIZE(*X));
 	double iNeighbourNumber=1.0/sqrt(neighbourNumber);
 	for(size_t n=0; n<MAT_YSIZE(*X); n++)
 	{
         extractNearestNeighbours(*X, ni, n, Xi);
 		subtractColumnMeans(Xi);
-        matrixOperation_AAt(Xi, W); // W=X*X^t
+		matrixOperation_AAt(Xi, W); // W=X*X^t
         schur(W, Vi, Si);           // W=Vi*Si*Vi^t
 
 		Si.getDiagonal(s);
@@ -65,16 +77,20 @@ void LLTSA::reduceDimensionality()
         // Approximate tangent space
 		Gi.resizeNoCopy(MAT_YSIZE(Vi),outputDim+1);
 		Gi.setConstantCol(0,iNeighbourNumber);
-		FOR_ALL_ELEMENTS_IN_MATRIX1D(Ji) // Copy the columns of Vi pointed by Ji
+
+		// Copy the columns of Vi pointed by Ji up to the outputDim.
+		// We do not need the first outputDim elements of Ji, but the last ones and in reverse order.
+		for(size_t j=0; j<outputDim; ++j)
 		{
-			size_t idxi=VEC_ELEM(Ji,i)-1;
-			size_t i_1=i+1;
-			for (int j=0; j<MAT_YSIZE(Vi); ++j)
-				MAT_ELEM(Gi,i_1,j)=MAT_ELEM(Vi,idxi,j);
+			size_t idxj=VEC_ELEM(Ji,VEC_XSIZE(Ji)-j-1)-1;
+			for (size_t i=0; i<MAT_YSIZE(Vi); ++i)
+			MAT_ELEM(Gi,i,j+1)=MAT_ELEM(Vi,i,idxj);
 		}
+
 		matrixOperation_AAt(Gi,Bi);
 		matrixOperation_IminusA(Bi);
 
+		// Construct alignment matrix
 		for (int j1=0; j1<neighbourNumber; ++j1)
 		{
 			int ni1=MAT_ELEM(ni,n,j1);
@@ -85,5 +101,23 @@ void LLTSA::reduceDimensionality()
 				MAT_ELEM(B,ni2,ni1)=MAT_ELEM(B,ni1,ni2);
 			}
 		}
+		MAT_ELEM(B,n,n)=MAT_ELEM(B,n,n)-1;
 	}
+
+	// Solve generalized eigenproblem X^tBX v = lambda * X^tX v
+
+	Matrix1D<double> Dmap;
+	Matrix2D<double> matA, matB;
+	Matrix2D<int> idxD;
+
+	matrixOperation_AtB(*X,B,matA);
+	matA = matA * *X;
+	matrixOperation_AtA(*X,matB);
+
+	generalizedEigs(matA,matB,Dmap,Y);
+	leaveOnlyNFirstColumns(Y,outputDim);
+
+	// Final result...
+
+	Y = *X * Y;
 }
