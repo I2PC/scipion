@@ -35,10 +35,6 @@ class EmanProtImportMicrographs(ProtImportMicrographs):
     pass
 
 
-class EmanProtParticlePicking(ProtParticlePicking):
-    pass
-
-
 class EmanProtPreprocessMicrographs(ProtPreprocessMicrographs):
     pass
 

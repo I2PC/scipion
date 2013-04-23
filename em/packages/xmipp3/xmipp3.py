@@ -29,7 +29,7 @@ This sub-package will contains Xmipp3.0 specific protocols
 
 
 from pyworkflow.em import *  
-from pyworkflow.em.packages.xmipp3.data import *
+from data import *
 from xmipp import MetaData, MDL_MICROGRAPH
 
 class XmippProtAlign(ProtAlign):
@@ -43,23 +43,4 @@ class XmippProtClassify(ProtClassify):
 class XmippProtAlignClassify(ProtAlignClassify):
     pass
 
-# Group of converter fuction 
 
-def convertSetOfMicrographs(setOfMics, filename):
-    """Method to convert from a general set of micrographs to Xmipp set of micrographs"""
-    if type(setOfMics) is XmippSetOfMicrographs:
-        return setOfMics
-        
-    md = MetaData()
-
-    for mic in setOfMics:
-        objId = md.addObject()
-        md.setValue(MDL_MICROGRAPH, mic.getFileName(), objId)
-
-    md.write(filename)
-        
-    micsOut = XmippSetOfMicrographs()
-    micsOut.setFileName(filename)
-    micsOut.copyInfo(setOfMics)
-        
-    return micsOut

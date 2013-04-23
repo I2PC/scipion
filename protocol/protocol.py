@@ -39,7 +39,7 @@ STATUS_LAUNCHED = "launched"  # launched to queue system
 STATUS_RUNNING = "running"    # currently executing
 STATUS_FAILED = "failed"      # it have been failed
 STATUS_FINISHED = "finished"  # successfully finished
-STATUS_WAITING = "waiting"    # waiting for user interaction
+STATUS_WAITING_APPROVAL = "waiting approval"    # waiting for user interaction
 
 
 class Step(OrderedObject):
@@ -102,7 +102,7 @@ class Step(OrderedObject):
             if self.isInteractive.get():
                 # If the Step is interactive, after run
                 # it will be waiting for use to mark it as DONE
-                status = STATUS_WAITING
+                status = STATUS_WAITING_APPROVAL
             else:
                 status = STATUS_FINISHED
             self.status.set(status)
@@ -119,7 +119,7 @@ class FunctionStep(Step):
     """This is a Step wrapper around a normal function
     This class will ease the insertion of Protocol function steps
     throught the function _insertFunctionStep"""
-    def __init__(self, funcName=None, *funcArgs):
+    def __init__(self, funcName=None, *funcArgs, **args):
         """Receive the function to execute and the 
         parameters to call it"""
         Step.__init__(self)
@@ -127,6 +127,7 @@ class FunctionStep(Step):
         self.funcName = String(funcName)
         self.funcArgs = funcArgs
         self.argsStr = String(pickle.dumps(funcArgs))
+        self.isInteractive.set(args.get('isInteractive', False))
         
     def _run(self):
         resultFiles = self.func(*self.funcArgs)
@@ -143,7 +144,7 @@ class FunctionStep(Step):
             return True
         files = pickle.loads(self.resultFiles.get())
 
-        return len(existsPath(files)) == 0
+        return len(existsPath(*files)) == 0
     
     def __eq__(self, other):
         """Compare with other FunctionStep"""
@@ -151,11 +152,14 @@ class FunctionStep(Step):
                 self.funcArgs == other.funcArgs and
                 self.argsStr == other.argsStr)
         
+    def __ne__(self, other):
+        return not self.__eq__(other)
+        
             
 class RunJobStep(FunctionStep):
     """This Step will wrapper the commonly used function runJob
     for launching specific programs with some parameters"""
-    def __init__(self, programName=None, arguments=None, resultFiles=[]):
+    def __init__(self, programName=None, arguments=None, resultFiles=[], **args):
         FunctionStep.__init__(self, 'runJob', programName, arguments)
         # Define the function that will do the job and return result files
         self.func = self._runJob
@@ -172,9 +176,10 @@ MODE_CONTINUE = "continue"
          
                 
 class Protocol(Step):
-    """The Protocol is a higher type of Step.
+    """ The Protocol is a higher type of Step.
     It also have the inputs, outputs and other Steps properties,
-    but contains a list of steps that are executed"""
+    but contains a list of steps that are executed
+    """
     
     def __init__(self, **args):
         Step.__init__(self, **args)
@@ -185,9 +190,10 @@ class Protocol(Step):
         self._createVarsFromDefinition(**args)
         
     def _createVarsFromDefinition(self, **args):
-        """This function will setup the protocol instance variables
+        """ This function will setup the protocol instance variables
         from the Protocol Class definition, taking into account
-        the variable type and default values"""
+        the variable type and default values
+        """
         if hasattr(self, '_definition'):
             for paramName, param in self._definition.iterParams():
                 # Create the var with value comming from args or from 
@@ -202,6 +208,9 @@ class Protocol(Step):
         return self._templateDict[key] % args
     
     def _store(self, *objs):
+        """ Stores objects of the protocol using the mapper.
+        If not objects are passed, the whole protocol is stored.
+        """
         if not self.mapper is None:
             if len(objs) == 0:
                 self.mapper.store(self)
@@ -210,40 +219,50 @@ class Protocol(Step):
                     self.mapper.store(obj)
             self.mapper.commit()
             
+    def _insertChild(self, key, child):
+        """ Insert a new child not stored previously.
+        If stored previously, _store should be used.
+        The child will be set as self.key attribute
+        """
+        setattr(self, key, child)
+        self.mapper.insertChild(self, key, child)
+        
     def _defineSteps(self):
-        """Define all the steps that will be executed."""
+        """ Define all the steps that will be executed."""
         pass
     
     def __insertStep(self, step):
-        """Insert a new step in the list"""
+        """ Insert a new step in the list"""
         self._steps.append(step)
         step.runStartsCallback = self._stepStarted
         step.runFinishCallback = self._stepFinished
         
     def _getPath(self, *paths):
-        """Return a path inside the workingDir"""
+        """ Return a path inside the workingDir"""
         return join(self.workingDir.get(), *paths)
 
     def _getExtraPath(self, *paths):
-        """Return a path inside the extra folder"""
+        """ Return a path inside the extra folder"""
         return self._getPath("extra", *paths)    
     
     def _getTmpPath(self, *paths):
-        """Return a path inside the tmp folder"""
+        """ Return a path inside the tmp folder"""
         return self._getPath("tmp", *paths)   
         
     def _insertFunctionStep(self, funcName, *funcArgs, **args):
-        """Input params:
+        """ Input params:
         funcName: the string name of the function to be run in the Step.
         *funcArgs: the variable list of arguments to pass to the function.
         **args: variable dictionary with extra params, NOT USED NOW
         """
-        step = FunctionStep(funcName, *funcArgs)
+        step = FunctionStep(funcName, *funcArgs, **args)
         step.func = getattr(self, funcName)
         self.__insertStep(step)
         
-    def _insertRunJobStep(self, progName, progArguments, resultFiles=[]):
-        """Insert an Step that will simple call runJob function"""
+    def _insertRunJobStep(self, progName, progArguments, resultFiles=[], **args):
+        """ Insert an Step that will simple call runJob function
+        **args: variable dictionary with extra params, NOT USED NOW
+        """
         step = RunJobStep(progName, progArguments, resultFiles)
         self.__insertStep(step)
         
@@ -251,7 +270,8 @@ class Protocol(Step):
         """ Store the Steps list in another variable to prevent
         overriden of stored steps when calling _defineSteps function.
         This is need to later find in which Step will start the run
-        if the RESUME mode is used"""
+        if the RESUME mode is used
+        """
         self._steps.setStore(False)
         self._prevSteps = self._steps
         self._steps = List() # create a new object for steps
@@ -260,7 +280,8 @@ class Protocol(Step):
         """ From a previous run, compare self._steps and self._prevSteps
         to find which steps we need to start at, skipping sucessful done 
         and not changed steps. Steps that needs to be done, will be deleted
-        from the previous run storage"""
+        from the previous run storage
+        """
         if self.mode.get() == MODE_RESTART:
             return 0
         
@@ -269,7 +290,8 @@ class Protocol(Step):
         for i in range(n):
             newStep = self._steps[i]
             oldStep = self._prevSteps[i]
-            if (newStep != oldStep or 
+            if (oldStep.status.get() != STATUS_FINISHED or
+                newStep != oldStep or 
                 not oldStep._postconditions()):
                 return i
             
@@ -309,10 +331,18 @@ class Protocol(Step):
     def _runSteps(self, startIndex):
         """ Run all steps defined in self._steps"""
         self._steps.setStore(True) # Set steps to be stored
+        self.status.set(STATUS_RUNNING)
         self._store()
         
+        print ">>> Starting at step: ", startIndex
         for step in self._steps[startIndex:]:
             step.run()
+            status = step.status.get()
+            if status == STATUS_WAITING_APPROVAL:
+                break
+        self.status.set(status)
+        self._store(self.status)
+            
     
     def _run(self):
         self.__backupSteps() # Prevent from overriden previous stored steps
@@ -336,7 +366,7 @@ class Protocol(Step):
         print "   workingDir: ", self.workingDir.get()
         self.currentStep = 1
         self.namePrefix = replaceExt(self._steps.getName(), self._steps.strId()) #keep 
-        Step.run(self)
+        self._run()
         outputs = [getattr(self, o) for o in self._outputs]
         #self._store(self.status, self.initTime, self.endTime, *outputs)
         self._store()

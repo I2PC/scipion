@@ -35,9 +35,10 @@ import pyworkflow as pw
 
 
 def findFile(filename, *paths):
-    """Search if the file is present in
+    """ Search if the file is present in
     some path in the *paths provided.
-    Return None if not found"""
+    Return None if not found.
+    """
     if filename:
         for p in paths:
             fn = join(p, filename)
@@ -46,28 +47,30 @@ def findFile(filename, *paths):
     return None
 
 def findResource(filename):
-    """This function will search for a give
+    """ This function will search for a give
     resource filename in the paths specified
-    in pyworkflow.RESOURCES path list"""
+    in pyworkflow.RESOURCES path list.
+    """
     return findFile(filename, *pw.RESOURCES)
 
 def replaceExt(filename, newExt):
-    ''' Replace the current path extension(from last .)
-    with a new one. The new one should not contains the .'''
+    """ Replace the current path extension(from last .)
+    with a new one. The new one should not contains the ."""
     return splitext(filename)[0] + '.' + newExt
 
 
 def replaceBaseExt(filename, newExt):
-    ''' Replace the current basename extension(from last .)
-    with a new one. The new one should not contains the .'''
+    """ Replace the current basename extension(from last .)
+    with a new one. The new one should not contains the .
+    """
     return replaceExt(basename(filename), newExt)
 
 def removeBaseExt(filename):
-    '''Take the basename of the filename and remove extension'''
+    """Take the basename of the filename and remove extension"""
     return removeExt(basename(filename))
 
 def removeExt(filename):
-    ''' Remove extension from basename '''
+    """ Remove extension from basename """
     return splitext(filename)[0]
 
 def joinExt(*extensions):

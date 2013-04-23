@@ -54,7 +54,9 @@ class XmippSetOfMicrographs(SetOfMicrographs):
     def append(self, micrograph):
         """Add a micrograph to the set"""
         objId = self._md.addObject()
-        for label, value in micrograph._labelDict.iteritems():
+        # Convert to xmipp micrograph if necessary
+        micXmipp = convertMicrograph(micrograph)
+        for label, value in micXmipp._labelDict.iteritems():
             # TODO: Check how to handle correctly unicode type
             # in Xmipp and Scipion
             if type(value) is unicode:
@@ -80,8 +82,8 @@ class XmippSetOfMicrographs(SetOfMicrographs):
             if self.hasCTF():
                 m.ctfModel = XmippCTFModel(md.getValue(MDL_CTF_MODEL, objId)) 
             yield m
-
         
+
 class XmippCTFModel(CTFModel):
     
     ctfParams = {
@@ -143,6 +145,37 @@ class XmippCTFModel(CTFModel):
                 getattr(self, key).set(mdVal)
                 
                 
+class XmippSetOfCoordinates(SetOfCoordinates):
+    """Implementation of SetOfCoordinates for Xmipp"""
+    def __init__(self, filename=None, **args):
+        SetOfCoordinates.__init__(self, **args)
+        self.family = String()
         
+                
         
+# Group of converter fuctions
+def convertMicrograph(mic):
+    """Convert from Micrograph to XmippMicrograph"""
+    if type(mic) is XmippMicrograph:
+        return mic
+    
+    micXmipp = XmippMicrograph(mic.getFileName())
+    #TODO: copyInfo??
+    # from mic to micXmipp??
+    return micXmipp
+       
+def convertSetOfMicrographs(setOfMics, filename):
+    """Method to convert from a general SetOfMicrographs to XmippSetOfMicrographs"""
+    if type(setOfMics) is XmippSetOfMicrographs:
+        return setOfMics
+        
+    micsOut = XmippSetOfMicrographs(filename)
+    micsOut.copyInfo(setOfMics)
+
+    for mic in setOfMics:
+        micsOut.append(mic)
+
+    micsOut.write()
+        
+    return micsOut
     
