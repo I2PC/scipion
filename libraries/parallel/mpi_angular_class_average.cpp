@@ -41,9 +41,7 @@ void MpiProgAngularClassAverage::readParams()
     do_limitR0per = do_limitR0class = do_limitRFclass = do_limit0 = do_limitF = false;
 
     // Read command line
-    //DFlib.read(getParam("--lib"));
     fn_out = getParam("-o");
-    //fn_ref  = getParam("--ref");
     fn_ref  = getParam("--lib");
 
     col_select = getParam("--select");
@@ -127,8 +125,6 @@ void MpiProgAngularClassAverage::defineParams()
     addParamsLine("    -i <doc_file>          : Docfile with assigned angles for all experimental particles");
     addParamsLine("    --lib <doc_file>       : Docfile with angles used to generate the projection matching library");
     addParamsLine("    -o <root_name>         : Output rootname for class averages and selfiles");
-    addParamsLine("   -r <stackFile>               : Reference projections");
-    addParamsLine("     alias --ref;");
     addParamsLine("   [--split ]              : Also output averages of random halves of the data");
     addParamsLine("   [--wien <img=\"\"> ]    : Apply this Wiener filter to the averages");
     addParamsLine("   [--pad <factor=1.> ]    : Padding factor for Wiener correction");
