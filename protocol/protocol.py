@@ -290,10 +290,6 @@ class Protocol(Step):
         for i in range(n):
             newStep = self._steps[i]
             oldStep = self._prevSteps[i]
-            print "i: ", i
-            print " oldStep.status: ", str(oldStep.status)
-            print " oldStep!=newStep", oldStep != newStep
-            print " not post: ", not oldStep._postconditions()
             if (oldStep.status.get() != STATUS_FINISHED or
                 newStep != oldStep or 
                 not oldStep._postconditions()):
