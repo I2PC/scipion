@@ -76,7 +76,7 @@ class ScriptImportEMX(XmippScript):
                 if code !=0:
                    raise Exception (_err) 
             except Exception, e:
-                print >> sys.stderr,  "Error: ", str(e)
+                print "Error: ", str(e)
                 exit(1)
         #object to store emx data
         emxData   = EmxData()
@@ -86,20 +86,13 @@ class ScriptImportEMX(XmippScript):
         mapper.readEMXFile(emxFileName)
 #        xmlMapperW.writeEMXFile(fileName)
         #create xmd files with mic CTF information and auxiliary files
-        try:
-		if mode == 'micCTF':
-		    ctfMicEMXToXmipp(emxData,MICROGRAPH)
-		elif mode == 'coordinates':
-		    coorEMXToXmipp(emxData,PARTICLE,emxFileName)
-		elif mode == 'alignment':
-		    xmdFileName = emxFileName.replace(".emx",".xmd")
-		    alignEMXToXmipp(emxData,PARTICLE,xmdFileName)
-        except Exception, e:
-                print >> sys.stderr,  "Error: ", str(e)
-                exit(1)
-        return 0
+        if mode == 'micCTF':
+            ctfMicEMXToXmipp(emxData,MICROGRAPH)
+        elif mode == 'coordinates':
+            coorEMXToXmipp(emxData,PARTICLE,emxFileName)
+        elif mode == 'alignment':
+            xmdFileName = emxFileName.replace(".emx",".xmd")
+            alignEMXToXmipp(emxData,PARTICLE,xmdFileName)
 
 if __name__ == '__main__':
     ScriptImportEMX().tryRun()
-
-
