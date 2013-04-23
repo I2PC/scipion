@@ -100,12 +100,13 @@ class XmippProtParticlePicking(ProtParticlePicking):
         runJob(None, program, arguments % self._params)
         
     def _createSetOfCoordinates(self, family, size):
+        inputMicsXmipp = getattr(self, 'inputMicsXmipp', self.inputMics)
         print "createSetOfCoordinates for family: ", family, size
         coords = XmippSetOfCoordinates()
         coords.family.set(family)
         coords.boxSize.set(size)
-        for mic in self.inputMicsXmipp:
-            fnPos = self._getExtraPath(replaceBaseExt(mic.getFileName()))
+        for mic in inputMicsXmipp:
+            fnPos = self._getExtraPath(replaceBaseExt(mic.getFileName(), 'pos'))
             
         
     def createOutput(self):

@@ -25,6 +25,7 @@
 # *
 # **************************************************************************
 from gui.tree import TreeProvider, BoundTree
+from protocol.protocol import STATUS_WAITING_APPROVAL, STATUS_RUNNING
 """
 Main project window application
 """
@@ -59,6 +60,7 @@ ACTION_STEPS = 'Show_Steps'
 ACTION_TREE = 'Show_DepsTree'
 ACTION_STOP = 'Stop'
 ACTION_DEFAULT = 'Default'
+ACTION_CONTINUE = 'Continue'
 
 ActionIcons = {
     ACTION_EDIT:  'edit.gif',
@@ -67,7 +69,8 @@ ActionIcons = {
     ACTION_REFRESH:  'refresh.gif',
     ACTION_STEPS:  'run_steps.gif',
     ACTION_TREE:  'tree2.gif',
-    ACTION_STOP: 'stop.gif'
+    ACTION_STOP: 'stop.gif',
+    ACTION_CONTINUE: 'play.png'
                }
 
 
@@ -219,18 +222,7 @@ class ProjectWindow(gui.Window):
         tree.bind('<Double-1>', lambda e: self._runActionClicked(ACTION_EDIT))
         tree.bind("<Button-3>", self._onRightClick)
         tree.bind('<<TreeviewSelect>>', self._runItemClick)
-        #tree.bind("<Button-3>", self.onRightClick)
         return tree
-    
-#    def updateRunsTree(self, tree):
-#        print "updating"
-#        tree.clear()
-#        objList = self.project.mapper.selectAll()
-#        for obj in objList:
-#            t = '%s.%02d' % (obj.getClassName(), obj.getId())
-#            tree.insert('',  'end', obj.getId(), text=t, values=(obj.status.get(), obj.endTime.get()))
-        
-        #tree.after(1000, self.updateRunsTree, tree)
     
     def _protocolItemClick(self, e=None):
         protClassName = self.protTree.getFirst().split('.')[-1]
@@ -260,6 +252,10 @@ class ProjectWindow(gui.Window):
         self.project.launchProtocol(prot)
         self.runsTree.after(1000, self.runsTree.update)
         
+    def _continueProtocol(self, prot):
+        self.project.continueProtocol(prot)
+        self.runsTree.after(1000, self.runsTree.update)        
+        
     def _deleteProtocol(self, prot):
         if askYesNo("Confirm DELETE", "<ALL DATA> related to this <protocol run> will be <DELETED>. \n"
                     "Do you really want to continue?", self.root):
@@ -286,19 +282,30 @@ class ProjectWindow(gui.Window):
                 pass
             elif event == ACTION_STOP:
                 pass
+            elif event == ACTION_CONTINUE:
+                self._continueProtocol(prot)
     
     def _unpostMenu(self, event=None):
         self.menuRun.unpost()  
          
     def _onRightClick(self, e=None):
+        prot = self.selectedProtocol
         self.menuRun.delete(0, tk.END)
-        aList = [(ACTION_EDIT, 'Edit     '),
-                 #(ACTION_COPY, 'Duplicate   '),
-                 (ACTION_DELETE, 'Delete    '),
-                 #(None, None),
-                 #(ACTION_STOP, 'Stop'),
-                 (ACTION_STEPS, 'Browse data')]
-        
+        actionsList = [(ACTION_EDIT, 'Edit     '),
+                       #(ACTION_COPY, 'Duplicate   '),
+                       (ACTION_DELETE, 'Delete    '),
+                       #(None, None),
+                       #(ACTION_STOP, 'Stop'),
+                       (ACTION_STEPS, 'Browse data')
+                       ]
+        status = prot.status.get()
+        if status == STATUS_RUNNING:
+            actionsList.insert(0, (ACTION_STOP, 'Stop execution'))
+            actionsList.insert(1, (None, None))
+        elif status == STATUS_WAITING_APPROVAL:
+            actionsList.insert(0, (ACTION_CONTINUE, 'Continue execution'))
+            actionsList.insert(1, (None, None))
+            
         def addMenuOption(action, label):
             if action is None: 
                 self.menuRun.add_separator()
@@ -307,9 +314,9 @@ class ProjectWindow(gui.Window):
                 self.menuRun.add_command(label=" "  + label, command=lambda: self._runActionClicked(action),
                                          image=self.getImage(imgName), compound=tk.LEFT)
         
-        for action, label in aList:
+        for action, label in actionsList:
             addMenuOption(action, label)
-        self.menuRun.post(e.x_root, e.y_root)
+        self.menuRun.post(e.x_root - 80, e.y_root - 10)
 
     
 if __name__ == '__main__':

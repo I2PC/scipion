@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from protocol.protocol import STATUS_WAITING_APPROVAL, STATUS_FINISHED
 """
 This modules handles the Project management
 """
@@ -104,6 +105,19 @@ class Project(object):
         """Directly execute the protocol"""
         protocol.mapper = self.mapper
         protocol.run()
+        
+    def continueProtocol(self, protocol):
+        """ This function should be called 
+        to mark a protocol that have an interactive step
+        waiting for approval that can continue
+        """
+        for step in protocol._steps:
+            if step.status == STATUS_WAITING_APPROVAL:
+                step.status.set(STATUS_FINISHED)
+                self.mapper.store(step)
+                self.mapper.commit()
+                break
+        self.launchProtocol(protocol)
         
     def deleteProtocol(self, protocol):
         self.mapper.delete(protocol) # Delete from database
