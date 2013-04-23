@@ -57,14 +57,8 @@ class XmippProtParticlePicking(ProtParticlePicking):
         
     def _defineSteps(self):
         '''The Particle Picking proccess is realized for a set of micrographs'''
-        
-        # Get pointer to input micrographs 
-        self.inputMics = self.inputMicrographs.get()
-        
-        # Convert from SetOfMicrographs to SetOfMicrographsXmipp
-        #convertSetOfMicrographs(self.inputMics, "micrographs.xmd")
-        self.inputMicsXmipp = convertSetOfMicrographs(self.inputMics, "micrographs.xmd")
-        
+    
+        self._insertFunctionStep("convertInput")
         
         # Parameters needed 
         self.params = {'inputMicsXmipp': self.inputMicsXmipp.getFileName(),
@@ -77,10 +71,16 @@ class XmippProtParticlePicking(ProtParticlePicking):
         self.launchParticlePickGUI()
 
         # Insert step to create output objects       
-        #self.insertFunctionStep('createOutput')
+        self._insertFunctionStep('createOutput')
         
+    def convertInput(self):
+        # Get pointer to input micrographs 
+        self.inputMics = self.inputMicrographs.get()
+        # Convert from SetOfMicrographs to SetOfMicrographsXmipp
+        self.inputMicsXmipp = convertSetOfMicrographs(self.inputMics, "micrographs.xmd")
+         
+    
     def launchParticlePickGUI(self):
-        # (log, InputMicrographs, ExtraDir, PickingMode=PM_MANUAL,TiltPairs=False, Memory=2, Family=""):
         
         arguments = "-i %(inputMicsXmipp)s -o %(extraDir)s --mode %(pickingMode)s --memory %(memory)dg"
         program = "xmipp_micrograph_particle_picking"
@@ -89,7 +89,7 @@ class XmippProtParticlePicking(ProtParticlePicking):
         if self.inputMicsXmipp.hasTiltPairs():
             program = "xmipp_micrograph_tiltpair_picking"
                
-        print "command: ",  program, arguments % self.params
+        print "command: ", program, arguments % self.params
         # Insert the command with the formatted parameters
         self._insertRunJobStep(program, arguments % self.params)
         
