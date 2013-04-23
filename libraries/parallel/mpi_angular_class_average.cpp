@@ -1,5 +1,6 @@
 /***************************************************************************
  * Authors:     AUTHOR_NAME (aerey@cnb.csic.es)
+ * 							(jvargas@cnb.csic.es)
  *
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -40,9 +41,10 @@ void MpiProgAngularClassAverage::readParams()
     do_limitR0per = do_limitR0class = do_limitRFclass = do_limit0 = do_limitF = false;
 
     // Read command line
-    DFlib.read(getParam("--lib"));
+    //DFlib.read(getParam("--lib"));
     fn_out = getParam("-o");
-    fn_ref  = getParam("--ref");
+    //fn_ref  = getParam("--ref");
+    fn_ref  = getParam("--lib");
 
     col_select = getParam("--select");
 
@@ -420,7 +422,6 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     //std::cerr << "DEBUG_JM: BEFORE MDValueEQ" <<std::endl;
     MDValueEQ eq1(MDL_REF3D, ref3d);
     MDValueEQ eq2(MDL_DEFGROUP, defGroup);
-    //MDValueEQ eq3(MDL_ORDER, order_number);
     MDValueEQ eq3(MDL_REF, ref_number);
     MDMultiQuery multi;
     multi.addAndQuery(eq1);
