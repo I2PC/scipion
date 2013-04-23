@@ -796,42 +796,61 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     {
 
     	img_ref().setXmippOrigin();
-    	t1 = correlationIndex(img_ref(),avg1()/w1);
-    	t2 = correlationIndex(img_ref(),avg2()/w2);
-	    t = t1+t2;
-    	//t  = correlationIndex(img_ref(),avg().statisticsAdjust(0,1));
-    	//if (t1 <= 0) {t1=0.; avg1().initZeros();} else {avg1()*=(t1/w1); w1=t1;}
-    	//if (t2 <= 0) {t2=0.; avg2().initZeros();} else {avg2()*=(t2/w2); w2=t2;}
-    	if (t <= 0)  {t=0.; avg().initZeros();} else {avg()*=(t/w); w=t; avg1()*=(t1/w1); avg2()*=(t2/w2);}
+	if (w1 != 0)
+	{
+	    	t1 = correlationIndex(img_ref(),avg1()/w1);
+		avg1()*=(t1/w1);
+		w1 = t1;
+	}
+	else
+	{
+		t1 = 0.;
+		w1 = 0.;
+		avg1().initZeros();
+	}
+
+	if (w2 != 0)
+	{
+	    	t2 = correlationIndex(img_ref(),avg2()/w2);
+		avg2()*=(t2/w2);
+		w2 = t2;
+	}
+	else
+	{
+		t2 = 0.;
+		w2 = 0.;
+		avg2().initZeros();
+
+	}
+
+	if (w != 0)
+	{	
+	    	t = correlationIndex(img_ref(),avg()/w);
+		avg()*=(t/w);
+		w=t;
+	}
+	else
+	{
+		t = 0.;
+		w = 0.;
+		avg().initZeros();	
+	}
+		
     }
+     /*
      else
      {
+	std::cout << "Entro2! " << " ref_num" << ref_number << std::endl;
      	t1=0.0001; avg1().initZeros(); w1 = t1;
      	t2=0.0001; avg2().initZeros(); w2 = t2;
      	t=0.0001; avg().initZeros(); w = t;
      }
+     */
 
     avg.setWeight(w);
     avg1.setWeight(w1);
     avg2.setWeight(w2);
     
-    if (ref_number == 18440 )
-    {
-    	img_ref().write("kk.xmd");
-	avg().write("kk1.xmd");
-	avg1().write("kk2.xmd");
-	avg2().write("kk3.xmd");
-	std::cout << " w1: " << w1 << std::endl;
-	std::cout << " w2: " << w2 << std::endl;
-	std::cout << " w: "  << w << std::endl;
-	std::cout << " t1: " << t1 << std::endl;
-	std::cout << " t2: " << t2 << std::endl;
-	std::cout << " t: " << t << std::endl;	
-	exit(1);
-	
-      }
-	
-
     /*avg() = avg1() + avg2();
     //We obtain the weights from the correlation between the mean classes and the projections of the library
     w1 = fastCorrelation(img_ref(),avg1());
@@ -843,7 +862,7 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
 	*/
     DFscore.unionAll(_DF);
     mpi_writeController(order_number, avg, avg1, avg2, SFclass, SFclass1, SFclass2,
-                        SFclassDiscarded,_DF, w1, w2, lockIndex);
+                        SFclassDiscarded,_DF, w1, w2, w, lockIndex);
 
 }
 
@@ -900,6 +919,7 @@ void MpiProgAngularClassAverage::mpi_writeController(
     MetaData _DF,
     double w1,
     double w2,
+    double w,
     int lockIndex)
 {
 
@@ -954,7 +974,8 @@ void MpiProgAngularClassAverage::mpi_writeController(
 #endif
 
     lockWeightIndexes[index_lockIndex] = lockIndex;
-    lockWeightIndexes[index_weight]= w1 + w2;
+    //lockWeightIndexes[index_weight]= w1 + w2;
+    lockWeightIndexes[index_weight]=    w;
     lockWeightIndexes[index_weights1] = w1;
     lockWeightIndexes[index_weights2] = w2;
     lockWeightIndexes[index_ref3d] = ref3dIndex;

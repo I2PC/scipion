@@ -243,6 +243,7 @@ public:
             MetaData _DF,
             double w1,
             double w2,
+	    double w,
             int lockIndex);
 
     /** Called by mpi_write does the actual writing
