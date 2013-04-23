@@ -334,13 +334,14 @@ def validateSchema(filename, schema_file=None):
         _schema = EMXSCHEMA11
     else:
         _schema = schema_file
+    #print "java jaxp.SourceValidator -a %s -i %s -xsd11"% (_schema, filename)
     p = subprocess.Popen("java jaxp.SourceValidator -a %s -i %s -xsd11" 
                          % (_schema, filename),
             shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     #xerces exists but is error
     if p.returncode == 0 and (stderr!=""):
-        raise Exception("""Error when validating file %s with schema %s.
+        raise Exception("""Error: when validating file %s with schema %s.
         \nError:%s"""%(filename,_schema,stderr))
     #######
     #no xerces available, let us try xmlint
@@ -357,12 +358,12 @@ def validateSchema(filename, schema_file=None):
         stdout, stderr = p.communicate()
         if p.returncode == 127:
             raise Exception(
-                """neither xerces-f nor xmllint could be found,  I cannot validate schema. 
+                """Error: neither xerces-f nor xmllint could be found,  I cannot validate schema. 
     Schema validation is based either on the xmllint program that belongs to the libxml2-tools package.
     or on the xerces-f project""")
             
         if p.returncode != 0:
-            raise Exception("""Error when validating file %s with schema %s.
+            raise Exception("""Error: when validating file %s with schema %s.
             \nError:%s"""%(filename,_schema,stderr))
     return p.returncode, stdout, stderr
 

@@ -25,7 +25,7 @@
 
 from os.path import basename, splitext
 from protlib_xmipp import XmippScript
-from xmipp import MetaData, MDL_CTF_MODEL, MD_APPEND, MD_OVERWRITE, FileName
+from xmipp import MetaData, MDL_CTF_MODEL, MD_APPEND, MD_OVERWRITE, FileName,XmippError
 from emxLib.emxLib import ctfMicXmippToEmx
 from emx.emxmapper import *
 from emx.emx import *
@@ -48,6 +48,8 @@ class ScriptImportEMX(XmippScript):
         self.addParamsLine('                                 : validation may require net connection');
         self.addParamsLine('                                 : and program xmllint installed');
         self.addParamsLine('     alias -n;');
+        self.addParamsLine(' [--onlyValidate]                : do not import');
+        self.addParamsLine('     alias -y;');
         self.addParamsLine(' [--schema <schema=default>]                      : validate again this schema ');
         self.addParamsLine("     alias -s;")
         self.addExampleLine(' default= http://sourceforge.net/p/emexchange/code/ci/master/tree/trunk/resourcesEmx/schemas/emx.xsd?format=raw>');
@@ -64,10 +66,11 @@ class ScriptImportEMX(XmippScript):
 
         emxFileName  = self.getParam('-i')
         mode         = self.getParam('-m')
-        doValidate   = self.checkParam('-n')
+        doNotValidate= self.checkParam('-n')
+        onlyValidate = self.checkParam('-y')
         schema       = self.getParam('-s')
         #validate emx file
-        if not doValidate:
+        if not doNotValidate:
             try:
                 if schema == 'default':
                     (code, _out,_err)=validateSchema(emxFileName)
@@ -76,8 +79,11 @@ class ScriptImportEMX(XmippScript):
                 if code !=0:
                    raise Exception (_err) 
             except Exception, e:
-                print "Error: ", str(e)
-                exit(1)
+                print >> sys.stderr, "XMIPP_ERROR -1:", str(e)
+                exit(-1)
+            if onlyValidate:
+                print emxFileName, " was successfully validated"
+                exit(0)
         #object to store emx data
         emxData   = EmxData()
         #object to read/write emxData
