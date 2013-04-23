@@ -61,12 +61,14 @@ class SqliteMapper(Mapper):
         self.db.deleteChildObjects(namePrefix)
         self.db.deleteObject(obj.getId())
         
-    def insertChild(self, obj, key, attr, namePrefix):
-            attr._objName = joinExt(namePrefix, key)
-            attr._objParentId = obj._objId
-            self.__insert(attr, namePrefix)
-            #attr._objId = self.db.insertObject(attr._objName, attr.getClassName(), attr._objValue, attr._objParentId)
-            #self.insertObjectWithChilds(attr, joinExt(namePrefix, attr.strId()))
+    def insertChild(self, obj, key, attr, namePrefix=None):
+        if namePrefix is None:
+            namePrefix = self.__getNamePrefix(obj)
+        attr._objName = joinExt(namePrefix, key)
+        attr._objParentId = obj._objId
+        self.__insert(attr, namePrefix)
+        #attr._objId = self.db.insertObject(attr._objName, attr.getClassName(), attr._objValue, attr._objParentId)
+        #self.insertObjectWithChilds(attr, joinExt(namePrefix, attr.strId()))
         
     def insertObjectWithChilds(self, obj, namePrefix):
         for key, attr in obj.getAttributesToStore():

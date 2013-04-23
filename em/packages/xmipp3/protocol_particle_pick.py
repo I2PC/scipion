@@ -29,7 +29,8 @@ This sub-package contains the XmippParticlePicking protocol
 """
 
 from pyworkflow.em import *  
-from pyworkflow.utils import *  
+from pyworkflow.utils.path import *  
+from pyworkflow.utils.process import runJob
 from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_ORIGINAL, MDL_MICROGRAPH_TILTED, MDL_MICROGRAPH_TILTED_ORIGINAL
 from pyworkflow.em.packages.xmipp3.data import *
 from xmipp3 import convertSetOfMicrographs
@@ -48,6 +49,7 @@ class XmippDefParticlePicking(Form):
         self.addParam('memory', FloatParam, default=2,
                    label='Memory to use (In Gb)', expertLevel=2)        
 
+
 class XmippProtParticlePicking(ProtParticlePicking):
     """Protocol to pick particles manually of a set of micrographs in the project"""
     _definition = XmippDefParticlePicking()
@@ -56,53 +58,69 @@ class XmippProtParticlePicking(ProtParticlePicking):
         ProtParticlePicking.__init__(self, **args)
         
     def _defineSteps(self):
-        '''The Particle Picking proccess is realized for a set of micrographs'''
+        """The Particle Picking proccess is realized for a set of micrographs"""
         
         # Get pointer to input micrographs 
         self.inputMics = self.inputMicrographs.get()
-        
-        # Convert from SetOfMicrographs to SetOfMicrographsXmipp
-        #convertSetOfMicrographs(self.inputMics, "micrographs.xmd")
-        self.inputMicsXmipp = convertSetOfMicrographs(self.inputMics, "micrographs.xmd")
-        
-        
         # Parameters needed 
-        self.params = {'inputMicsXmipp': self.inputMicsXmipp.getFileName(),
-                       'memory': self.memory.get(),
-                       'pickingMode': 'manual',
-                       'extraDir': self._getExtraPath()
-                       }
+        self._params = {'memory': self.memory.get(),
+                        'pickingMode': 'manual',
+                        'extraDir': self._getExtraPath()
+                        }
         
-        # For a list of micrograph is launched the Particle Picking GUI
-        self.launchParticlePickGUI()
-
+        # Convert input SetOfMicrographs to Xmipp if needed
+        self._insertFunctionStep('convertToXmippSetOfMicrograph')
+        # Launch Particle Picking GUI
+        self._insertFunctionStep('launchParticlePickGUI', isInteractive=True)       
         # Insert step to create output objects       
-        #self.insertFunctionStep('createOutput')
+        self._insertFunctionStep('createOutput')
+        
+    def convertToXmippSetOfMicrograph(self):
+        """ We need to ensure the micrograph.xmd metadata is available
+        to Xmipp picking program before launching it
+        """
+        # Convert from SetOfMicrographs to XmippSetOfMicrographs
+        micFn = self._getPath('micrographs.xmd')
+        inputMicsXmipp = convertSetOfMicrographs(self.inputMics, micFn)
+
+        if inputMicsXmipp != self.inputMics: # If distintic, micrographs.xmd should be produced
+            self._insertChild('inputMicsXmipp', inputMicsXmipp)
+            return [micFn]
         
     def launchParticlePickGUI(self):
-        # (log, InputMicrographs, ExtraDir, PickingMode=PM_MANUAL,TiltPairs=False, Memory=2, Family=""):
-        
-        arguments = "-i %(inputMicsXmipp)s -o %(extraDir)s --mode %(pickingMode)s --memory %(memory)dg"
+        inputMicsXmipp = getattr(self, 'inputMicsXmipp', self.inputMics)
+        self._params['inputMicsXmipp'] = inputMicsXmipp.getFileName()
+        # Launch the particle picking GUI
         program = "xmipp_micrograph_particle_picking"
-                     
+        arguments = "-i %(inputMicsXmipp)s -o %(extraDir)s --mode %(pickingMode)s --memory %(memory)dg"
         # TiltPairs
-        if self.inputMicsXmipp.hasTiltPairs():
+        if inputMicsXmipp.hasTiltPairs():
             program = "xmipp_micrograph_tiltpair_picking"
-               
-        print "command: ",  program, arguments % self.params
-        # Insert the command with the formatted parameters
-        self._insertRunJobStep(program, arguments % self.params)
+        # Run the command with formatted parameters
+        runJob(None, program, arguments % self._params)
+        
+    def _createSetOfCoordinates(self, family, size):
+        print "createSetOfCoordinates for family: ", family, size
+        coords = XmippSetOfCoordinates()
+        coords.family.set(family)
+        coords.boxSize.set(size)
+        for mic in self.inputMicsXmipp:
+            fnPos = self._getExtraPath(replaceBaseExt(mic.getFileName()))
+            
         
     def createOutput(self):
-
-        # Para cada familia crear un SetOfCoordinate.
-
-        mdOut = self.getPath("micrographs.xmd")
-                
-        self.outputMicrographs = XmippSetOfMicrographs(value=mdOut)
-        
-        # Create the set of coordinates
-        
+        fn = self._getExtraPath('families.xmd')
+        md = MetaData(fn)
+        for objId in md:
+            family = md.getValue(MDL_PICKING_FAMILY, objId)
+            size = md.getValue(MDL_PICKING_PARTICLE_SIZE, objId)
+            self._createSetOfCoordinates(family, size)
+            
+        return
+        # Para cada familia crear un SetOfCoordinates.
+        mdOut = self.getPath("micrographs.xmd")                
+        self.outputMicrographs = XmippSetOfMicrographs(value=mdOut)        
+        # Create the set of coordinates        
           
         # Create the xmipp metadata micrographs.xmd  
          

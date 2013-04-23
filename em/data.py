@@ -207,7 +207,7 @@ class Coordinate(EMObject):
         self._micrograph = None
     
     def getPosition(self, mode=POS_CENTER):
-        """Return the position of the coordinate.
+        """Return the position of the coordinate as a (x, y) tuple.
         mode: select if the position is the center of the box
           or in the top left corner."""
         pass
@@ -251,8 +251,15 @@ class SetOfCoordinates(EMObject):
         the box size is only relevant when extraction"""
         self.boxSize.set(boxSize)
     
-    def iterCoordinates(self):
-        """Itearates over the whole set of coordinates.
+    def iterMicrographs(self):
+        """Iterate over the micrographs set associated with this
+        set of coordinates
+        """
+        pass
+    
+    def iterCoordinates(self, micrograph=None):
+        """Itearate over the coordinates associated with a micrograph.
+        If micrograph=None, the iteration is performed over the whole set of coordinates.
         If the SetOfMicrographs has tilted pairs, the coordinates
         should have the information related to its paired coordinate."""
         pass

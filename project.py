@@ -112,7 +112,7 @@ class Project(object):
         
     def insertProtocol(self, protocol):
         """Insert a new protocol instance in the database"""
-        self.mapper.insert(protocol)
+        self.mapper.store(protocol)
         name = protocol.getClassName() + protocol.strId()
         protocol.setName(name)
         protocol.mapper =  self.mapper
