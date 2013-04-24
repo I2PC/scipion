@@ -22,20 +22,19 @@ prot2 = ProtImportMicrographs(pattern=pattern, samplingRate=1, voltage=200)
 proj.launchProtocol(prot2, wait=True)
 
 l = proj.mapper.selectByClass('SetOfMicrographs')
-
-sys.exit(0)
-
-for p in l:
-    p.printAll()
+#
+#for p in l:
+#    p.printAll()
     
 
 if len(l):
     print "Continue after import..."
-    prot3 = XmippProtPreprocessMicrographs(workingDir=proj.getPath('Runs', 'PreprocessDown'), 
-                                       doDownsample=True, downFactor=3, doCrop=True)
+    prot3 = XmippProtPreprocessMicrographs(doDownsample=True, downFactor=3, doCrop=False)
     prot3.inputMicrographs.set(prot2.outputMicrographs)
 
     proj.launchProtocol(prot3)
+    
+    sys.exit(0)
     
     prot4 = XmippProtCTFMicrographs(workingDir=proj.getPath('Runs', 'Ctf'))
         
