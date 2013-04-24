@@ -49,7 +49,7 @@ class ProjectConfig(OrderedObject):
         self.menu = String(menu)
         self.protocols = String(protocols)
         self.icon = String('scipion_bn.xbm')
-        self.logo = String('no_logo')
+        self.logo = String('scipion_logo.gif')
 
 class MenuConfig(OrderedObject):
     """Menu configuration in a tree fashion.
