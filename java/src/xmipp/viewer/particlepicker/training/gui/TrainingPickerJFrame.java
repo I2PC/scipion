@@ -142,8 +142,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			initMicrographsPane();
 			add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 3, 1, 1, GridBagConstraints.HORIZONTAL));
 			JPanel actionspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-			actionspn.add(exitbt);
-
+			actionspn.add(savebt);
+			actionspn.add(saveandexitbt);
 			add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 4, 1, 1, GridBagConstraints.HORIZONTAL));
 			pack();
 			positionx = 0.9f;
@@ -718,7 +718,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	{
 		ppicker.setChanged(changed);
 		savemi.setEnabled(changed);
-		exitbt.setEnabled(changed);
+		savebt.setEnabled(changed);
 	}
 
 	public void updateMicrographsModel(boolean all)

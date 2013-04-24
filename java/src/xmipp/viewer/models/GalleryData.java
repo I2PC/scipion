@@ -359,7 +359,10 @@ public class GalleryData
 						ciFirstRenderVisible = ci;
 				}
 				if ((ciFirstRender == null || ciFirstRender.getLabel() == MDLabel.MDL_MICROGRAPH) && ci.allowRender)//favor mdl_image over mdl_micrograph
+				{
 					ciFirstRender = ci;
+					System.out.println("favor mdl_image over mdl_micrograph " + ci.getLabelName());
+				}
 				if (ciFirstRenderVisible == null && ci.allowRender && ci.visible)
 					ciFirstRenderVisible = ci;
 			}
