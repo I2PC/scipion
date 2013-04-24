@@ -28,7 +28,8 @@ This modules contains basic hierarchy
 for specific Xmipp3 EM data objects
 """
 
-from pyworkflow.em import *   
+from pyworkflow.em import *
+from pyworkflow.utils.path import replaceBaseExt, exists
 from xmipp import *
     
     
@@ -186,27 +187,31 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         SetOfCoordinates.__init__(self, value=filename, **args)
         self.family = String()
         
-        
+    def getFileName(self):
+        return self.get()
+    
     def iterCoordinates(self):
         """Iterates over the whole set of coordinates.
         If the SetOfMicrographs has tilted pairs, the coordinates
         should have the information related to its paired coordinate."""
         
         path = self.getFileName()
+        template = self.family.get() + '@%s'
         
         for mic in self.getMicrographs():
-            pathPos = join(path, replaceBaseExt(mic.getFilename(), 'pos'))
+            pathPos = join(path, replaceBaseExt(mic.getFileName(), 'pos'))
             
-            mdPos = MetaData('%s@%s' % (family.get(), pathPos))
-                        
-            for objId in mdPos:
-                x = mdPos.getValue(MDL_XCOOR, objId)
-                y = mdPos.getValue(MDL_YCOOR, objId)
-                coordinate = XmippCoordinate()
-                coordinate.setPosition(x, y)
-                coordinate.setMicrograph(mic)
-                
-                yield coordinate
+            if exists(pathPos):
+                mdPos = MetaData(template % pathPos)
+                            
+                for objId in mdPos:
+                    x = mdPos.getValue(MDL_XCOOR, objId)
+                    y = mdPos.getValue(MDL_YCOOR, objId)
+                    coordinate = XmippCoordinate()
+                    coordinate.setPosition(x, y)
+                    coordinate.setMicrograph(mic)
+                    
+                    yield coordinate
 
         
 # Group of converter fuctions

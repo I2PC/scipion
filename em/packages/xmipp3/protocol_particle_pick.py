@@ -31,7 +31,7 @@ This sub-package contains the XmippParticlePicking protocol
 from pyworkflow.em import *  
 from pyworkflow.utils.path import *  
 from pyworkflow.utils.process import runJob
-from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_ORIGINAL, MDL_MICROGRAPH_TILTED, MDL_MICROGRAPH_TILTED_ORIGINAL
+from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_ORIGINAL, MDL_MICROGRAPH_TILTED, MDL_MICROGRAPH_TILTED_ORIGINAL, MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE
 from pyworkflow.em.packages.xmipp3.data import *
 from xmipp3 import convertSetOfMicrographs
 
@@ -107,7 +107,8 @@ class XmippProtParticlePicking(ProtParticlePicking):
         coords = XmippSetOfCoordinates(filename=self._getExtraPath())
         coords.setMicrographs(inputMicsXmipp)
         coords.family.set(family)
-        coords.boxSize.set(size)                    
+        coords.boxSize.set(size)
+        return coords                    
         
     def createOutput(self):
         fn = self._getExtraPath('families.xmd')
