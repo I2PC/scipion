@@ -358,7 +358,7 @@ public class GalleryData
 					if (ci.visible)
 						ciFirstRenderVisible = ci;
 				}
-				if (ciFirstRender == null && ci.allowRender)
+				if ((ciFirstRender == null || ciFirstRender.getLabel() == MDLabel.MDL_MICROGRAPH) && ci.allowRender)//favor mdl_image over mdl_micrograph
 					ciFirstRender = ci;
 				if (ciFirstRenderVisible == null && ci.allowRender && ci.visible)
 					ciFirstRenderVisible = ci;
