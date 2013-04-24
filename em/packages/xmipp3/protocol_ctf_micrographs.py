@@ -54,9 +54,22 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
     
     def _prepareCommand(self):
         self._program = 'xmipp_ctf_estimate_from_micrograph'       
-        self._args = "--micrograph %(mic)s --oroot %(micDir)s --fastDefocus"
+        self._args = "--micrograph %(micFn)s --oroot %(micDir)s --fastDefocus"
         
-        for par, val in self.params.iteritems():
+        # Mapping between base protocol parameters and the package specific command options
+        self.__params = {'kV': self._params['voltage'],
+                'Cs': self._params['sphericalAberration'],
+                'sampling_rate': self._params['samplingRate'], 
+                'ctfmodelSize': self._params['windowSize'],
+                'Q0': self._params['ampContrast'],
+                'min_freq': self._params['lowRes'],
+                'max_freq': self._params['highRes'],
+                'pieceDim': self._params['windowSize'],
+                'defocus_range': (self._params['maxDefocus']-self._params['minDefocus'])*10000/2,
+                'defocusU': (self._params['maxDefocus']+self._params['minDefocus'])*10000/2
+                }
+        
+        for par, val in self.__params.iteritems():
             self._args += " --%s %s" % (par, str(val))
 
     def _estimateCTF(self, micFn, micDir):

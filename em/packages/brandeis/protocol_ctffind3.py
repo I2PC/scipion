@@ -40,18 +40,14 @@ class ProtCTFFind(ProtCTFMicrographs):
     using the ctffind3 program"""
 
     def _prepareCommand(self):
-        #FIXME: Change the base ._params to be general
-        self._params['windowSize'] = self.windowSize.get()
-        self._params['min_defocus'] = self.minDefocus.get()
-        self._params['max_defocus'] = self.maxDefocus.get()
         self._params['step_focus'] = 1.0
         
         self._program = 'export NATIVEMTZ=kk ; ' + which('ctffind3.exe')
         self._args = """   << eof > %(ctffindOut)s
 %(micFn)s
 %(ctffindPSD)s
-%(Cs)f,%(kV)f,%(Q0)f,%(magnification)f,%(scannedPixelSize)f
-%(ctfmodelSize)d,%(min_freq)f,%(max_freq)f,%(min_defocus)f,%(max_defocus)f,%(step_focus)f
+%(sphericalAberration)f,%(voltage)f,%(ampContrast)f,%(magnification)f,%(scannedPixelSize)f
+%(windowSize)d,%(lowRes)f,%(highRes)f,%(minDefocus)f,%(maxDefocus)f,%(step_focus)f
 """
 
     def _estimateCTF(self, micFn, micDir):
