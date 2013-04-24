@@ -86,6 +86,15 @@ public class XmippWindowUtil
 	{
 		return getConstraints(constraints, x, y, columns, 1);
 	}
+	
+
+	public static GridBagConstraints getConstraints(GridBagConstraints constraints, int x, int y, int columns, int rows, int fill)
+	{
+		constraints = getConstraints(constraints, x, y, columns, rows);
+		constraints.fill = fill;
+		return constraints;
+	}
+	
 
 	public static JButton getIconButton(String icon, ActionListener listener)
 	{
