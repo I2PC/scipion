@@ -118,11 +118,13 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	public TemplatesJDialog templatesdialog;
 
 	private JToggleButton eraserbt;
-	protected JButton exitbt;
+	protected JButton savebt;
 
 	private JMenuItem keyassistmi;
 
 	protected JMenu helpmn;
+
+	protected JButton exitbt;
 
 	public ParticlePickerJFrame(ParticlePicker picker)
 	{
@@ -160,6 +162,17 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 						false);
 				if (qd.showDialog())
 					resetMicrograph();
+			}
+		});
+		
+		savebt = XmippWindowUtil.getTextButton("Save", new ActionListener()
+		{
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0)
+			{
+				saveChanges();
+				
 			}
 		});
 		
@@ -251,7 +264,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				saveChanges();
 				showMessage("Data saved successfully");
 				((JMenuItem) e.getSource()).setEnabled(false);
-				exitbt.setEnabled(false);
+				savebt.setEnabled(false);
 			}
 		});
 		filemn.add(savemi);
@@ -405,7 +418,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		sizesl.setEnabled(enable);
 		colorbt.setEnabled(enable);
 		resetbt.setEnabled(enable);
-		exitbt.setEnabled(enable);
+		savebt.setEnabled(enable);
 	}
 
 	private JCheckBoxMenuItem addFilterMenuItem(String command, boolean defaultlistener, ParticlePicker picker)
