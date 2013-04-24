@@ -191,13 +191,6 @@ public class XmippWindowUtil
 		progressPanel.setVisible(false);
 	}
 
-	public static Icon getImageIcon(ImagePlus imp, int width, int height)
-	{
-
-		Image image = imp.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
-		Icon icon = new ImageIcon(image);
-
-		return icon;
-	}
+	
 
 }
