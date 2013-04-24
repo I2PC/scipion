@@ -136,13 +136,17 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			setLayout(new GridBagLayout());
 
 			initImagePane();
-			add(imagepn, XmippWindowUtil.getConstraints(constraints, 0, 1, 3));
+			add(imagepn, XmippWindowUtil.getConstraints(constraints, 0, 1));
 
 			initFamilyPane();
-			add(familypn, XmippWindowUtil.getConstraints(constraints, 0, 2, 3));
+			add(familypn, XmippWindowUtil.getConstraints(constraints, 0, 2));
 
 			initMicrographsPane();
-			add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 3, 3));
+			add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 3, 1, 1, GridBagConstraints.HORIZONTAL));
+			JPanel actionspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+			actionspn.add(exitbt);
+
+			add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 4, 1, 1, GridBagConstraints.HORIZONTAL));
 
 			// if (getFamily().getStep() != FamilyState.Manual)
 			// importffmi.setEnabled(false);
@@ -721,6 +725,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	{
 		ppicker.setChanged(changed);
 		savemi.setEnabled(changed);
+		exitbt.setEnabled(changed);
 	}
 
 	public void updateMicrographsModel(boolean all)
