@@ -96,10 +96,13 @@ class Project(object):
         from pyworkflow.protocol.launcher import FULLPATH
         cmd = "python %s %s %s" % (FULLPATH, os.path.basename(self.path), 
                                      protocol.strId())
-        if not wait:
+        
+        if wait:
+            self.runProtocol(protocol) # This case is mainly for tests
+        else:
             cmd += ' &'
-        print cmd
-        os.system(cmd)
+            print cmd
+            os.system(cmd)
         
     def runProtocol(self, protocol):
         """Directly execute the protocol"""
