@@ -82,7 +82,41 @@ class XmippSetOfMicrographs(SetOfMicrographs):
             if self.hasCTF():
                 m.ctfModel = XmippCTFModel(md.getValue(MDL_CTF_MODEL, objId)) 
             yield m
-        
+
+class XmippCoordinate(Coordinate):
+    """This class holds the (x,y) position and other information
+    associated with a Xmipp coordinate (Xmipp coordinates are POS_CENTER mode)"""
+    
+    def getPosition(self, mode=Coordinate.POS_CENTER):
+        """Return the position of the coordinate.
+        mode: select if the position is the center of the box
+          or in the top left corner."""
+        if mode == Coordinate.POS_CENTER:
+            return self.x, self.y
+        elif mode == Coordinate.POS_TOPLEFT: 
+            return (self.x - self.boxSize / 2, self.y - self.boxSize / 2)
+        else:
+            raise Exception("No coordinate mode registered for : " + str(mode)) 
+    
+    def setPosition(self, x, y):
+        self.x = x
+        self.y = y
+    
+    def getMicrograph(self):
+        """Return the micrograph object to which
+        this coordinate is associated"""
+        return self._micrograph
+    
+    def setMicrograph(self, micrograph):
+        """Set the micrograph to which this coordinate belongs"""
+        self._micrograph = micrograph
+    
+    def getPair(self):
+        """It should return the paired coordinate associate to self.
+        If self is an untilted coordinate, getPaired will return the 
+        tilted one and viceversa"""
+        pass 
+    
 
 class XmippCTFModel(CTFModel):
     
@@ -148,10 +182,32 @@ class XmippCTFModel(CTFModel):
 class XmippSetOfCoordinates(SetOfCoordinates):
     """Implementation of SetOfCoordinates for Xmipp"""
     def __init__(self, filename=None, **args):
-        SetOfCoordinates.__init__(self, **args)
+        # Use object value to store filename
+        SetOfCoordinates.__init__(self, value=filename, **args)
         self.family = String()
         
+        
+    def iterCoordinates(self):
+        """Iterates over the whole set of coordinates.
+        If the SetOfMicrographs has tilted pairs, the coordinates
+        should have the information related to its paired coordinate."""
+        
+        path = self.getFileName()
+        
+        for mic in self.getMicrographs():
+            pathPos = join(path, replaceBaseExt(mic.getFilename(), 'pos'))
+            
+            mdPos = MetaData('%s@%s' % (family.get(), pathPos))
+                        
+            for objId in mdPos:
+                x = mdPos.getValue(MDL_XCOOR, objId)
+                y = mdPos.getValue(MDL_YCOOR, objId)
+                coordinate = XmippCoordinate()
+                coordinate.setPosition(x, y)
+                coordinate.setMicrograph(mic)
                 
+                yield coordinate
+
         
 # Group of converter fuctions
 def convertMicrograph(mic):
@@ -160,8 +216,8 @@ def convertMicrograph(mic):
         return mic
     
     micXmipp = XmippMicrograph(mic.getFileName())
-    #TODO: copyInfo??
-    # from mic to micXmipp??
+    # TODO: copyInfo??
+    # from mic to micXmipp??  
     return micXmipp
        
 def convertSetOfMicrographs(setOfMics, filename):
