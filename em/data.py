@@ -227,6 +227,12 @@ class Coordinate(EMObject):
         tilted one and viceversa"""
         pass 
     
+    def getBoxSize(self):
+        return self._boxSize
+    
+    def setBoxSize(self, boxSize):
+        self._boxSize = boxSize
+    
     
 class SetOfCoordinates(EMObject):
     """Encapsulate the logic of a set of particles coordinates.
@@ -277,16 +283,6 @@ class SetOfCoordinates(EMObject):
         """ Set the SetOfMicrograph associates with 
         this set of coordinates """
         self._micrographsPointer.set(micrographs)
-        
-    def getFileName(self):
-        """ Get the metadata file with all all coordinates files for 
-        this setOfCoordinates """
-        return self._objValue
-    
-    def setFileName(self, newFileName):
-        """ Set the metadata file with all all coordinates files for 
-        this setOfCoordinates """
-        self._objValue = newFileName
                 
     
 class CTFModel(EMObject):

@@ -7,6 +7,7 @@ Created on Apr 12, 2013
 from pyworkflow.em import *  
 from pyworkflow.utils import * 
 from pyworkflow.em.packages.eman2.data import *
+import os
 
 class EmanDefParticlePicking(Form):
     """Create the definition of parameters for
@@ -27,26 +28,33 @@ class EmanProtBoxing(ProtParticlePicking):
         ProtParticlePicking.__init__(self, **args)
         
     def _defineSteps(self):
-        self.params = {'inputMics': ' '.join([mic.getFileName() for mic in self.inputMicrographs.get()]),
+        self._params = {'inputMics': ' '.join([mic.getFileName() for mic in self.inputMicrographs.get()]),
                        'boxSize': self.boxSize.get()}      
-        # Insert the step with the command and the formatted parameters
-        self._insertRunJobStep("e2boxer.py",  "%(inputMics)s --gui --boxsize=%(boxSize)i" % self.params)
+        # Launch Boxing GUI
+        self._insertFunctionStep('launchBoxingGUI', isInteractive=True) 
         # Insert step to create output objects       
         self._insertFunctionStep('createOutput')
+    
+    def launchBoxingGUI(self):
+        # First we go to runs directory (we create if it does not exist)
+        path.makePath("runs")
+        os.chdir("runs")
+        # Program to execute and it arguments
+        program = "e2boxer.py"
+        arguments = "%(inputMics)s --gui --boxsize=%(boxSize)i"
+        # Run the command with formatted parameters
+        runJob(None, program, arguments % self._params)
         
     def createOutput(self):
         # Generate .box files with picked coordinates.
         newBoxSize =  self.__getBoxingBoxSize()
-        self.params['boxSize'] = newBoxSize
+        self._params['boxSize'] = newBoxSize
         runJob(None, "e2boxer.py", 
-                     "%(inputMics)s --boxsize=%(boxSize)d --write_dbbox" % self.params) 
-        # Create metadata file with all .box files referenced
-        metaDataFilePath = self.__createBoxingCoordinatesMetadata()  
+                     "%(inputMics)s --boxsize=%(boxSize)d --write_dbbox" % self._params)   
         # Create the SetOfCoordinates object on the database        
         self.outputCoordinates = EmanSetOfCoordinates()
-        self.outputCoordinates.setBoxSize(self.params['boxSize'])
+        self.outputCoordinates.setBoxSize(self._params['boxSize'])
         self.outputCoordinates.setMicrographs(self.inputMicrographs.get())
-        self.outputCoordinates.setFileName(metaDataFilePath)
         self._defineOutputs(outputCoordinates=self.outputCoordinates) 
     
     def __getBoxingBoxSize(self):
@@ -59,17 +67,5 @@ class EmanProtBoxing(ProtParticlePicking):
             if ("box_size" in line):
                 auxBoxSize = line.split(" : ")[1]
         return int(auxBoxSize)
-    
-    def __createBoxingCoordinatesMetadata(self):
-        """ Create a metadata registering all coordinates files. """
-        from glob import glob
-        files = glob("*.box")
-        if len(files) == 0:
-            raise Exception('Eman Particle Picking:There is not .box files')
-        boxMetadataFile=open("boxMetaData.mdbox","w")
-        for line in files:
-            boxMetadataFile.write(line + "\n")            
-        boxMetadataFile.close()
-        return self._getPath("boxMetaData.mdbox")
 
     

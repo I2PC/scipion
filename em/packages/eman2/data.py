@@ -44,8 +44,7 @@ class EmanSetOfMicrographs(SetOfMicrographs):
             
 class EmanCoordinate(Coordinate):
     """This class holds the (x,y) position and other information
-    associated with a EMAN coordinate (Eman coordinates are POS_TOPLEFT mode)"""
-    
+    associated with a EMAN coordinate (Eman coordinates are POS_TOPLEFT mode)"""    
     
     def getPosition(self, mode=Coordinate.POS_TOPLEFT):
         """Return the position of the coordinate.
@@ -58,10 +57,9 @@ class EmanCoordinate(Coordinate):
         else:
             raise Exception("No coordinate mode registered for : " + str(mode)) 
     
-    def setPosition(self, x, y, boxSize):
+    def setPosition(self, x, y):
         self.x = x
         self.y = y
-        self.boxSize = boxSize
     
     def getMicrograph(self):
         """Return the micrograph object to which
@@ -89,11 +87,10 @@ class EmanSetOfCoordinates(SetOfCoordinates):
         """Iterates over the whole set of coordinates.
         If the SetOfMicrographs has tilted pairs, the coordinates
         should have the information related to its paired coordinate."""
-        metaDataFile=open(self.getFileName(),"r")
-        for boxFileName in metaDataFile:
-            # Recover micrograph which picking coordinates are stored in the .box file.
-            micrograph = self.__getMicrograph(boxFileName)
-            # Extract coordinates
+        
+        for micrograph in self._micrographsPointer.get():
+            micrographFileNameNE = removeBaseExt(micrograph.getFileName())
+            boxFileName = micrographFileNameNE + ".box"
             boxFile =  open (boxFileName,"r")
             for line in boxFile:
                 if len(line.strip()) > 0:
@@ -102,12 +99,12 @@ class EmanSetOfCoordinates(SetOfCoordinates):
                     y = parts[1]
                     coordinate = EmanCoordinate()
                     coordinate.setMicrograph(micrograph)
-                    coordinate.setPosition(x, y, self.boxSize)
+                    coordinate.setPosition(x, y)
+                    coordinate.setBoxSize(self.boxSize)
                     yield coordinate
                 else:
                     pass
             boxFile.close()
-        metaDataFile.close()
     
     def hasTiltPairs(self):
         """Returns True if the SetOfMicrographs has tilted pairs"""
@@ -122,15 +119,4 @@ class EmanSetOfCoordinates(SetOfCoordinates):
         """ Set the SetOfMicrograph associates with 
         this set of coordinates """
         self._micrographsPointer.set(micrographs)
-    
-    def __getMicrograph(self, boxFile):
-        """
-        Gets micrograph corresponding to given .box file.
-        """
-        coordFileNameNE = removeBaseExt(boxFile)
-        for micrograph in self._micrographsPointer:
-            micrographFileNameNE = removeBaseExt(micrograph.getFileName())
-            if (micrographFileNameNE == coordFileNameNE):
-                return micrograph
-        raise Exception("No micrograph found for coordinates file : " + boxFile)
         

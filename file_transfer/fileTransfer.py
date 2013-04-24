@@ -7,6 +7,7 @@ import socket
 import paramiko
 import os
 import shutil
+from pyworkflow.utils.path import *
 
 LOCAL_USER_AND_HOST = ''
 SSH_PORT = '22';
@@ -432,13 +433,11 @@ class FileTransfer():
             
     def __createLocalFolderForFile(self, filePath):
         """
-        Create folder for file in local host.
+        Create folder for file in local host if it does not exist.
         filePath -- File path which parent directory we must create (/file path/...).
         """
         filePathParentDirectory = os.path.dirname(filePath)
-        # We check if this file path exist
-        if not os.path.exists(filePathParentDirectory):
-            os.makedirs(filePathParentDirectory)
+        makePath(filePathParentDirectory)
     
 ################################################################
 
