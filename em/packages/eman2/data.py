@@ -132,5 +132,5 @@ class EmanSetOfCoordinates(SetOfCoordinates):
             micrographFileNameNE = removeBaseExt(micrograph.getFileName())
             if (micrographFileNameNE == coordFileNameNE):
                 return micrograph
-        raise Exception("No micrograph found for coordinates file : " + boxFile)    
+        raise Exception("No micrograph found for coordinates file : " + boxFile)
         
