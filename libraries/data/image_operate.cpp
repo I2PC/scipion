@@ -226,6 +226,8 @@ void radialAvg(Image<double> &op)
 void ProgOperate::defineParams()
 {
     each_image_produces_an_output = true;
+    save_metadata_stack = true;
+    keep_input_columns = true;
     addUsageLine("A simple Xmipp images calculator. Binary and unary operations");
     XmippMetadataProgram::defineParams();
     addParamsLine("== Binary operations: ==");
