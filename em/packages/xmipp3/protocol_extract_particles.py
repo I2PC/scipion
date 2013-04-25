@@ -34,6 +34,8 @@ from pyworkflow.em.packages.xmipp3.data import *
 from pyworkflow.utils.path import makePath, removeBaseExt, join, exists
 from pyworkflow.utils import runJob
 from protlib_particles import runNormalize
+from glob import glob
+import xmipp
 
 
 class XmippDefExtractParticles(Form):
@@ -177,10 +179,12 @@ class XmippProtExtractParticles(ProtExtractParticles):
             # Actually extract
             self._insertFunctionStep('extractParticles', micrographToExtract)
                 
-        #TODO: Borrar temporal
+        # Delete temporary files
+        
+        
                 
         # Insert step to create output objects       
-        # self._insertFunctionStep('createOutput')
+        self._insertFunctionStep('createOutput')
  
     def extractParticles(self, micrographToExtract):
         ''' Extract particles from one micrograph '''
@@ -215,16 +219,34 @@ class XmippProtExtractParticles(ProtExtractParticles):
             micName = removeBaseExt(mic.getFileName())
             
             # Create micrograph datablock
-            coorMD = MetaData()
+            coorMD = xmipp.MetaData()
             #Iterate over the coordinates on that micrograph
             for coords in self.inputCoords.iterCoordinates(mic):
                 print "%d, %d" % (coords.x, coords.y)        
                 coorId = coorMD.addObject()
-                coorMD.setValue(MDL_XCOOR, int(coords.x), coorId)
-                coorMD.setValue(MDL_YCOOR, int(coords.y), coorId)
+                coorMD.setValue(xmipp.MDL_XCOOR, int(coords.x), coorId)
+                coorMD.setValue(xmipp.MDL_YCOOR, int(coords.y), coorId)
                                 
-            coorMD.write(micName + "@%s" % fnExtractList, MD_APPEND)        
+            coorMD.write(micName + "@%s" % fnExtractList, xmipp.MD_APPEND)        
         
     def createOutput(self):
-        # Create micrographs metadata with CTF information
-        pass
+        # Create the SetOfImages object on the database
+        mdOut = xmipp.FileName(self._getPath('images.xmd'))        
+        imgSet = XmippSetOfImages(str(mdOut))
+        imgSet.copyInfo(self.inputMics)
+        
+        stackFiles = glob(join(self._getExtraPath(),"*.stk"))
+        stackFiles.sort()
+        imagesMd = xmipp.MetaData()
+        for stack in stackFiles:
+            fn = stack.replace(".stk",".xmd")
+            md = xmipp.MetaData(fn)
+            imagesMd.unionAll(md)
+
+        imgSet.setMd(imagesMd)
+        imgSet.sort()
+        imgSet.write()
+    
+        self._defineOutputs(outputImages=imgSet)
+        
+
