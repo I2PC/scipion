@@ -1056,7 +1056,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			public void stateChanged(javax.swing.event.ChangeEvent evt)
 			{
 				Integer zoom = (Integer) jsZoom.getValue();
-				if( zoom < 10)
+				if( zoom < 10 || gallery.getCellSize().getHeight() < 30)
 				{
 					jsZoom.setValue(gallery.data.zoom);//keep previous zoom
 					return;

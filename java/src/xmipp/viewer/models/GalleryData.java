@@ -361,7 +361,6 @@ public class GalleryData
 				if ((ciFirstRender == null || ci.getLabel() == MDLabel.MDL_IMAGE) && ci.allowRender)//favor mdl_image over mdl_micrograph
 				{
 					ciFirstRender = ci;
-					System.out.println("favor mdl_image over mdl_micrograph " + ci.getLabelName());
 				}
 				if ((ciFirstRenderVisible == null || ci.getLabel() == MDLabel.MDL_IMAGE)  && ci.allowRender && ci.visible)
 					ciFirstRenderVisible = ci;
