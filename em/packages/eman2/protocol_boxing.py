@@ -28,7 +28,7 @@ class EmanProtBoxing(ProtParticlePicking):
         ProtParticlePicking.__init__(self, **args)
         
     def _defineSteps(self):
-        self._params = {'inputMics': ' '.join([mic.getFileName() for mic in self.inputMicrographs.get()]),
+        self._params = {'inputMics': ' '.join([os.path.relpath(mic.getFileName(), self.workingDir.get()) for mic in self.inputMicrographs.get()]),
                        'boxSize': self.boxSize.get()}      
         # Launch Boxing GUI
         self._insertFunctionStep('launchBoxingGUI', isInteractive=True) 
@@ -37,8 +37,8 @@ class EmanProtBoxing(ProtParticlePicking):
     
     def launchBoxingGUI(self):
         # First we go to runs directory (we create if it does not exist)
-        path.makePath("runs")
-        os.chdir("runs")
+        #path.makePath("runs")
+        os.chdir(self.workingDir.get())
         # Program to execute and it arguments
         program = "e2boxer.py"
         arguments = "%(inputMics)s --gui --boxsize=%(boxSize)i"
