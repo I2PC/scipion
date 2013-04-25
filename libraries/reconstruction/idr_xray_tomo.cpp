@@ -54,7 +54,7 @@ void ProgIDRXrayTomo::defineParams()
     addParamsLine("       where <recons_type>           ");
     addParamsLine("           ART  <params=\"\">        : wlsART parameters");
     addParamsLine("           fourier <params=\"\">     : fourier parameters");
-    addParamsLine("           tomo3d  <params=\"\">     : fourier parameters");
+    addParamsLine("           tomo3d  <params=\"\">     : tomo3d parameters");
 
 
     addParamsLine("== Xray options == ");
