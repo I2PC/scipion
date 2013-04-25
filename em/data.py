@@ -79,7 +79,7 @@ class Image(EMObject):
         
         
 class Micrograph(Image):
-    """Represents an EM Image object"""
+    """ Represents an EM Image object """
     def __init__(self, filename=None, **args):
         Image.__init__(self, filename, **args)
         self.ctfModel = None
@@ -98,7 +98,7 @@ class TiltedPair(CsvList):
         
 
 class SetOfImages(EMObject):
-    """Represents a set of Images"""
+    """ Represents a set of Images """
     def __init__(self, filename=None, **args):
         # Use the object value to store the filename
         args['value'] = filename
@@ -139,21 +139,21 @@ class SetOfMicrographs(SetOfImages):
         return self._tiltPairs.get()
     
     def hasCTF(self):
-        """Return True if the SetOfMicrographs has associated a CTF model"""
+        """ Return True if the SetOfMicrographs has associated a CTF model. """
         return self._ctf.get()
     
     def append(self, micrograph):
-        """Add a micrograph to the set"""
+        """ Add a micrograph to the set. """
         micrograph.samplingRate.set(self.samplingRate.get())
         self._micList.append(micrograph)        
     
     def __loadFiles(self):
-        """Read files from text files"""
+        """ Read files from text files. """
         mapper = SqliteMapper(self.getFileName(), globals())
         self._micList = mapper.selectFirst()
         
     def __iter__(self):
-        """Iterate over the set of micrographs in a .txt file"""
+        """ Iterate over the set of micrographs in a .txt file. """
         self.__loadFiles()
         for m in self._micList:
             yield m
@@ -188,7 +188,8 @@ class SetOfMicrographs(SetOfImages):
         
     def copyInfo(self, other):
         """ Copy basic information (voltage, spherical aberration and sampling rate)
-        from other set of micrographs to current one"""
+        from other set of micrographs to current one.
+        """
         self.microscope.voltage.set(other.microscope.voltage.get())
         self.microscope.sphericalAberration.set(other.microscope.sphericalAberration.get())
         self.samplingRate.set(other.samplingRate.get())
@@ -205,27 +206,30 @@ class Coordinate(EMObject):
     
     def __init__(self, **args):
         EMObject.__init__(self, **args)
-        self._micrograph = None
+        self._micrographPointer = Pointer()
     
     def getPosition(self, mode=POS_CENTER):
-        """Return the position of the coordinate as a (x, y) tuple.
+        """ Return the position of the coordinate as a (x, y) tuple.
         mode: select if the position is the center of the box
-          or in the top left corner."""
+        or in the top left corner.
+        """
         pass
     
     def getMicrograph(self):
-        """Return the micrograph object to which
-        this coordinate is associated"""
-        return self._micrograph
+        """ Return the micrograph object to which
+        this coordinate is associated.
+        """
+        return self._micrographPointer.get()
     
     def setMicrograph(self, micrograph):
-        """Set the micrograph to which this coordinate belongs"""
-        self._micrograph = micrograph
+        """ Set the micrograph to which this coordinate belongs. """
+        self._micrographPointer.set(micrograph)
     
     def getPair(self):
-        """It should return the paired coordinate associate to self.
+        """ It should return the paired coordinate associate to self.
         If self is an untilted coordinate, getPaired will return the 
-        tilted one and viceversa"""
+        tilted one and viceversa.
+        """
         pass 
     
     def getBoxSize(self):
@@ -236,9 +240,10 @@ class Coordinate(EMObject):
     
     
 class SetOfCoordinates(EMObject):
-    """Encapsulate the logic of a set of particles coordinates.
+    """ Encapsulate the logic of a set of particles coordinates.
     Each coordinate has a (x,y) position and is related to a Micrograph
-    The SetOfCoordinates can also have information about TiltPairs"""
+    The SetOfCoordinates can also have information about TiltPairs.
+    """
     
     def __init__(self, **args):
         EMObject.__init__(self, **args)
@@ -246,48 +251,52 @@ class SetOfCoordinates(EMObject):
         self.boxSize = Integer()
     
     def getBoxSize(self):
-        """Return the box size of the future particles.
+        """ Return the box size of the future particles.
         This can be None, since when the POS_CENTER mode is used,
-        the box size is only relevant when extraction"""
+        the box size is only relevant when extraction.
+        """
         return self.boxSize.get()
     
     
     def setBoxSize(self, boxSize):
-        """Set the box size of the future particles.
+        """ Set the box size of the future particles.
         This can be None, since when the POS_CENTER mode is used,
-        the box size is only relevant when extraction"""
+        the box size is only relevant when extraction.
+        """
         self.boxSize.set(boxSize)
     
     def iterMicrographs(self):
-        """Iterate over the micrographs set associated with this
-        set of coordinates
+        """ Iterate over the micrographs set associated with this
+        set of coordinates.
         """
         pass
     
     def iterCoordinates(self, micrograph=None):
-        """Itearate over the coordinates associated with a micrograph.
+        """ Itearate over the coordinates associated with a micrograph.
         If micrograph=None, the iteration is performed over the whole set of coordinates.
         If the SetOfMicrographs has tilted pairs, the coordinates
-        should have the information related to its paired coordinate."""
+        should have the information related to its paired coordinate.
+        """
         pass
     
     def hasTiltPairs(self):
-        """Returns True if the SetOfMicrographs has tilted pairs"""
+        """ Returns True if the SetOfMicrographs has tilted pairs"""
         return self.getMicrographs().hasTiltPairs()
     
     def getMicrographs(self):
-        """Returns the SetOfMicrographs associated with 
+        """ Returns the SetOfMicrographs associated with 
         this SetOfCoordinates"""
         return self._micrographsPointer.get()
     
     def setMicrographs(self, micrographs):
         """ Set the SetOfMicrograph associates with 
-        this set of coordinates """
+        this set of coordinates.
+         """
         self._micrographsPointer.set(micrographs)
                 
     
 class CTFModel(EMObject):
-    """Represents a generic CTF model"""
+    """ Represents a generic CTF model. """
 #TODO: See how this can be generic (no pointing to Xmipp labels
 #    ctfParams = {
 #                 "ctfSamplingRate":MDL_CTF_SAMPLING_RATE,
