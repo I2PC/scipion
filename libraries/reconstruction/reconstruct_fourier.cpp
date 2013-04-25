@@ -354,16 +354,21 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     // and compute its Fourier transform
                     proj().setXmippOrigin();
                     size_t localPaddedImgSize=(size_t)(parent->imgSize*parent->padding_factor_proj);
-                    localPaddedImg.initZeros(localPaddedImgSize,localPaddedImgSize);
-                    localPaddedImg.setXmippOrigin();
-                    FOR_ALL_ELEMENTS_IN_ARRAY2D(proj())
-                    A2D_ELEM(localPaddedImg,i,j)=weight*proj(i,j);
-                    CenterFFT(localPaddedImg,true);
+                    if (threadParams->reprocessFlag)
+                    	localPaddedFourier.initZeros(localPaddedImgSize,localPaddedImgSize/2+1);
+                    else
+                    {
+                    	localPaddedImg.initZeros(localPaddedImgSize,localPaddedImgSize);
+                    	localPaddedImg.setXmippOrigin();
+                        FOR_ALL_ELEMENTS_IN_ARRAY2D(proj())
+                    		A2D_ELEM(localPaddedImg,i,j)=weight*proj(i,j);
+                    	CenterFFT(localPaddedImg,true);
 
-                    // Fourier transformer for the images
-                    localTransformerImg.setReal(localPaddedImg);
-                    localTransformerImg.FourierTransform();
-                    localTransformerImg.getFourierAlias(localPaddedFourier);
+                    	// Fourier transformer for the images
+                    	localTransformerImg.setReal(localPaddedImg);
+                    	localTransformerImg.FourierTransform();
+                    	localTransformerImg.getFourierAlias(localPaddedFourier);
+                    }
 
                     // Compute the coordinate axes associated to this image
                     Euler_angles2matrix(rot, tilt, psi, localA);
@@ -765,6 +770,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
             if ( imgIndex <= lastImageIndex )
             {
                 th_args[nt].imageIndex = imgIndex;
+                th_args[nt].reprocessFlag = reprocessFlag;
                 imgIndex++;
             }
             else
@@ -998,7 +1004,7 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
     Vout().initZeros(volPadSizeZ,volPadSizeY,volPadSizeX);
     transformerVol.setReal(Vout());
     transformerVol.enforceHermitianSymmetry();
-	forceWeightSymmetry(preFourierWeights);
+	//forceWeightSymmetry(preFourierWeights);
 
     // Tell threads what to do
     //#define DEBUG_VOL1

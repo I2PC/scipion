@@ -102,7 +102,6 @@ def ctfMicEMXToXmipp(emxData,mode):
     #iterate though emxData
     mdMic = MetaData()
     for micrograph in emxData.iterClasses(mode):
-        print micrograph
         micIndex    = None
         micFileName = None
         #id = micrograph.getValue('id')

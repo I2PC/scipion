@@ -2314,7 +2314,8 @@ void ProgMLF2D::expectation()
     float old_phi = -999., old_theta = -999.;
     double opt_psi, opt_flip, opt_scale, maxcorr, maxweight2;
     double w2, KSprob = 0.;
-    size_t opt_refno, opt_ipsi, opt_iflip, focus = 0;
+    size_t opt_refno, opt_ipsi, opt_iflip;
+    int focus = 0;
     bool apply_ctf;
 
     // Pre-calculate pdfs
@@ -2777,8 +2778,8 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
     if (outputType != OUT_REFS)
     {
         MetaData mdImgs;
-        size_t n = MDref.size();
-        for (size_t ref = 1; ref <= n; ++ref)
+        int n = (int) MDref.size(); //Avoid int and size_t comparison warning
+        for (int ref = 1; ref <= n; ++ref)
         {
             mdImgs.importObjects(MDimg, MDValueEQ(MDL_REF, ref));
             mdImgs.write(FN_CLASS_IMAGES_MD(fn_base, ref), MD_APPEND);
