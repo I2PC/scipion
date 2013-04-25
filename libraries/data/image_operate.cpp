@@ -55,108 +55,139 @@ void divide(Image<double> &op1, const Image<double> &op2)
 
 void min(Image<double> &op1, const Image<double> &op2)
 {
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op1())
+    MultidimArray<double> &mOp1 = op1();
+    const MultidimArray<double> &mOp2 = op2();
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mOp1)
     {
-        dAi(op1(), n) = XMIPP_MIN(dAi(op1(), n), dAi(op2(), n));
+        dAi(mOp1, n) = XMIPP_MIN(dAi(mOp1, n), dAi(mOp2, n));
     }
 }
 
 void max(Image<double> &op1, const Image<double> &op2)
 {
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op1())
+    MultidimArray<double> &mOp1 = op1();
+    const MultidimArray<double> &mOp2 = op2();
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mOp1)
     {
-        dAi(op1(), n) = XMIPP_MAX(dAi(op1(), n), dAi(op2(), n));
+        dAi(mOp1, n) = XMIPP_MAX(dAi(mOp1, n), dAi(mOp2, n));
     }
 }
 
 void compare(Image<double> &op1, const Image<double> &op2)
 {
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op1())
+    MultidimArray<double> &mOp1 = op1();
+    const MultidimArray<double> &mOp2 = op2();
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mOp1)
     {
-        dAi(op1(), n) = dAi(op1(), n) == dAi(op2(), n) ? 0 : (dAi(op1(), n) < dAi(op2(), n) ? -1 : 1 );
+        dAi(mOp1, n) = dAi(mOp1, n) == dAi(mOp2, n) ? 0 : (dAi(mOp1, n) < dAi(mOp2, n) ? -1 : 1 );
     }
 }
 
 ///Be careful with integer images for relational operations...due to double comparisons
 void eq(Image<double> &op1, const Image<double> &op2)
 {
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op1())
+    MultidimArray<double> &mOp1 = op1();
+    const MultidimArray<double> &mOp2 = op2();
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mOp1)
     {
-        dAi(op1(), n) = dAi(op1(), n) == dAi(op2(), n) ? 1 : 0;
+        dAi(mOp1, n) = dAi(mOp1, n) == dAi(mOp2, n) ? 1 : 0;
     }
 }
 
 void ne(Image<double> &op1, const Image<double> &op2)
 {
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op1())
+    MultidimArray<double> &mOp1 = op1();
+    const MultidimArray<double> &mOp2 = op2();
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mOp1)
     {
-        dAi(op1(), n) = dAi(op1(), n) != dAi(op2(), n) ? 1 : 0;
+        dAi(mOp1, n) = dAi(mOp1, n) != dAi(mOp2, n) ? 1 : 0;
     }
 }
 
 void lt(Image<double> &op1, const Image<double> &op2)
 {
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op1())
+    MultidimArray<double> &mOp1 = op1();
+    const MultidimArray<double> &mOp2 = op2();
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mOp1)
     {
-        dAi(op1(), n) = dAi(op1(), n) < dAi(op2(), n) ? 1 : 0;
+        dAi(mOp1, n) = dAi(mOp1, n) < dAi(mOp2, n) ? 1 : 0;
     }
 }
 
 void le(Image<double> &op1, const Image<double> &op2)
 {
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op1())
+    MultidimArray<double> &mOp1 = op1();
+    const MultidimArray<double> &mOp2 = op2();
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mOp1)
     {
-        dAi(op1(), n) = dAi(op1(), n) <= dAi(op2(), n) ? 1 : 0;
+        dAi(mOp1, n) = dAi(mOp1, n) <= dAi(mOp2, n) ? 1 : 0;
     }
 }
 
 void gt(Image<double> &op1, const Image<double> &op2)
 {
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op1())
+    MultidimArray<double> &mOp1 = op1();
+    const MultidimArray<double> &mOp2 = op2();
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mOp1)
     {
-        dAi(op1(), n) = dAi(op1(), n) > dAi(op2(), n) ? 1 : 0;
+        dAi(mOp1, n) = dAi(mOp1, n) > dAi(mOp2, n) ? 1 : 0;
     }
 }
 
 void ge(Image<double> &op1, const Image<double> &op2)
 {
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op1())
+    MultidimArray<double> &mOp1 = op1();
+    const MultidimArray<double> &mOp2 = op2();
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mOp1)
     {
-        dAi(op1(), n) = dAi(op1(), n) >= dAi(op2(), n) ? 1 : 0;
+        dAi(mOp1, n) = dAi(mOp1, n) >= dAi(mOp2, n) ? 1 : 0;
     }
 }
 
 
 void sqrt(Image<double> &op)
 {
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op())
+    MultidimArray<double> &mOp = op();
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mOp)
     {
-        dAi(op(), n) = sqrt(dAi(op(), n));
+        dAi(mOp, n) = sqrt(dAi(mOp, n));
     }
 }
 
 void abs(Image<double> &op)
 {
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op())
+    MultidimArray<double> &mOp = op();
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mOp)
     {
-        dAi(op(), n) = ABS(dAi(op(), n));
+        dAi(mOp, n) = ABS(dAi(mOp, n));
+    }
+}
+
+void log(Image<double> &op)
+{
+    MultidimArray<double> &mOp = op();
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mOp)
+    {
+        dAi(mOp, n) = log(dAi(mOp, n));
     }
 }
 
 void log10(Image<double> &op)
 {
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op())
+    MultidimArray<double> &mOp = op();
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mOp)
     {
-        dAi(op(), n) = log10(dAi(op(), n));
+        dAi(mOp, n) = log10(dAi(mOp, n));
     }
 }
 
 double powerExp = 2;
 void power(Image<double> &op)
 {
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op())
+    MultidimArray<double> &mOp = op();
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mOp)
     {
-        dAi(op(), n) = pow(dAi(op(), n), powerExp);
+        dAi(mOp, n) = pow(dAi(mOp, n), powerExp);
     }
 }
 
@@ -164,26 +195,28 @@ int nSlice;
 char axis;
 void getSlice(Image<double> &op)
 {
+    MultidimArray<double> &mOp = op();
     MultidimArray<double> imAux;
 
-    op().getSlice(nSlice, imAux, axis);
-    op() = imAux;
+    mOp.getSlice(nSlice, imAux, axis);
+    mOp = imAux;
 }
 
 
 FileName fnOut;
 void radialAvg(Image<double> &op)
 {
-    op().setXmippOrigin();
+    MultidimArray<double> &mOp = op();
+    mOp.setXmippOrigin();
     Matrix1D<int> center(3);
     center.initZeros();
     MultidimArray<double> radial_mean;
     MultidimArray<int> radial_count;
-    radialAverage(op(), center, radial_mean, radial_count);
+    radialAverage(mOp, center, radial_mean, radial_count);
     radial_mean.write((fnOut.withoutExtension()).addExtension("txt"));
 
     int my_rad;
-    FOR_ALL_ELEMENTS_IN_ARRAY3D(op())
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(mOp)
     {
         my_rad = (int)floor(sqrt((double)(i * i + j * j + k * k)));
         op(k, i, j) = radial_mean(my_rad);
@@ -213,7 +246,8 @@ void ProgOperate::defineParams()
     addParamsLine("or --ne <file_or_value>      :Returns 1 if the pixels values are equal  less, 0 otherwise (pixel-wise)");
 
     addParamsLine("== Unary operations: ==");
-    addParamsLine("or --log10                   :Computes the logarithm of an image");
+    addParamsLine("or --log                     :Computes the natural logarithm of an image");
+    addParamsLine("or --log10                   :Computes the decimal logarithm of an image");
     addParamsLine("or --sqrt                    :Computes the square root of an image");
     addParamsLine("or --abs                     :Computes the absolute value of an image");
     addParamsLine("or --pow <value=2>           :Computes the power of an image");
@@ -357,6 +391,8 @@ void ProgOperate::readParams()
         fnOut = fn_out;
         unaryOperator = radialAvg;
     }
+    else if (checkParam("--log"))
+        unaryOperator = log;
     else if (checkParam("--log10"))
         unaryOperator = log10;
     else
@@ -388,7 +424,7 @@ void ProgOperate::readParams()
             }
         }
         if (isValue && checkParam("--dot_product"))
-        	REPORT_ERROR(ERR_ARG_INCORRECT,"Dot product can only be computed between two files");
+            REPORT_ERROR(ERR_ARG_INCORRECT,"Dot product can only be computed between two files");
     }
 }
 
