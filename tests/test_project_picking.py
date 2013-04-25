@@ -6,11 +6,21 @@ from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3.protocol_particle_pick import XmippProtParticlePicking
 
 
-projName = sys.argv[1]
-pattern = sys.argv[2]
+projName = "abc"#sys.argv[1]
+#pattern = sys.argv[2]
 
 manager = Manager()
 proj = manager.createProject(projName)  # Now it will be loaded if exists
+
+l = proj.mapper.selectByClass('SetOfCoordinates')
+
+for c in l[1].iterCoordinates():
+    print "%d, %d" % (c.x, c.y) 
+    print " from mic: ", c.getMicrograph().getFileName()
+    
+sys.exit(0)
+
+
 
 from tests.tester import *
 

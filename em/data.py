@@ -204,6 +204,7 @@ class Coordinate(EMObject):
     POS_TOPLEFT = 1
     
     def __init__(self, **args):
+        EMObject.__init__(self, **args)
         self._micrograph = None
     
     def getPosition(self, mode=POS_CENTER):

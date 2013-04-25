@@ -31,7 +31,7 @@ This sub-package contains the XmippParticlePicking protocol
 from pyworkflow.em import *  
 from pyworkflow.utils.path import *  
 from pyworkflow.utils.process import runJob
-from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_ORIGINAL, MDL_MICROGRAPH_TILTED, MDL_MICROGRAPH_TILTED_ORIGINAL
+from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_ORIGINAL, MDL_MICROGRAPH_TILTED, MDL_MICROGRAPH_TILTED_ORIGINAL, MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE
 from pyworkflow.em.packages.xmipp3.data import *
 from xmipp3 import convertSetOfMicrographs
 
@@ -83,11 +83,13 @@ class XmippProtParticlePicking(ProtParticlePicking):
         micFn = self._getPath('micrographs.xmd')
         inputMicsXmipp = convertSetOfMicrographs(self.inputMics, micFn)
 
-        if inputMicsXmipp != self.inputMics: # If distintic, micrographs.xmd should be produced
+        if inputMicsXmipp != self.inputMics:  # If distintic, micrographs.xmd should be produced
             self._insertChild('inputMicsXmipp', inputMicsXmipp)
             return [micFn]
         
     def launchParticlePickGUI(self):
+        # Get the converted input micrographs in Xmipp format
+        # if not exists, means the input was already in Xmipp
         inputMicsXmipp = getattr(self, 'inputMicsXmipp', self.inputMics)
         self._params['inputMicsXmipp'] = inputMicsXmipp.getFileName()
         # Launch the particle picking GUI
@@ -102,12 +104,11 @@ class XmippProtParticlePicking(ProtParticlePicking):
     def _createSetOfCoordinates(self, family, size):
         inputMicsXmipp = getattr(self, 'inputMicsXmipp', self.inputMics)
         print "createSetOfCoordinates for family: ", family, size
-        coords = XmippSetOfCoordinates()
+        coords = XmippSetOfCoordinates(filename=self._getExtraPath())
+        coords.setMicrographs(inputMicsXmipp)
         coords.family.set(family)
         coords.boxSize.set(size)
-        for mic in inputMicsXmipp:
-            fnPos = self._getExtraPath(replaceBaseExt(mic.getFileName(), 'pos'))
-            
+        return coords                    
         
     def createOutput(self):
         fn = self._getExtraPath('families.xmd')
@@ -115,28 +116,6 @@ class XmippProtParticlePicking(ProtParticlePicking):
         for objId in md:
             family = md.getValue(MDL_PICKING_FAMILY, objId)
             size = md.getValue(MDL_PICKING_PARTICLE_SIZE, objId)
-            self._createSetOfCoordinates(family, size)
-            
-        return
-        # Para cada familia crear un SetOfCoordinates.
-        mdOut = self.getPath("micrographs.xmd")                
-        self.outputMicrographs = XmippSetOfMicrographs(value=mdOut)        
-        # Create the set of coordinates        
-          
-        # Create the xmipp metadata micrographs.xmd  
-         
-        md = MetaData()
-           
-        for i, v in IOTable.iteritems():
-            objId = md.addObject()
-            md.setValue(MDL_MICROGRAPH, v, objId)
-            md.setValue(MDL_MICROGRAPH_ORIGINAL, i, objId)
-            # TODO: Handle Tilted micrographs
-#            if tiltPairs:
-#                MD.setValue(xmipp.MDL_MICROGRAPH_TILTED,IOTable[fnMicrographTilted],objId)
-#                MD.setValue(xmipp.MDL_MICROGRAPH_TILTED_ORIGINAL,fnMicrographTilted,objId)
-        md.write("micrographs" + "@" + mdOut)
-        
-        self.outputMicrographs.setFileName(mdOut)
+            coords = self._createSetOfCoordinates(family, size)
+            self._defineOutputs(outputCoordinates=coords)
 
-        self.defineOutputs(micrograph=self.outputMicrographs)

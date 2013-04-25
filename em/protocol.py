@@ -169,19 +169,18 @@ class ProtCTFMicrographs(Protocol):
         """
         # Get pointer to input micrographs 
         self.inputMics = self.inputMicrographs.get() 
-        
-        self._params = {'kV': self.inputMics.microscope.voltage.get(),
-                        'Cs': self.inputMics.microscope.sphericalAberration.get(),
+                                
+        self._params = {'voltage': self.inputMics.microscope.voltage.get(),
+                        'sphericalAberration': self.inputMics.microscope.sphericalAberration.get(),
                         'magnification': self.inputMics.microscope.magnification.get(),
-                        'sampling_rate': self.inputMics.samplingRate.get(),
+                        'samplingRate': self.inputMics.samplingRate.get(),
                         'scannedPixelSize': self.inputMics.scannedPixelSize.get(),
-                        'ctfmodelSize': self.windowSize.get(),
-                        'Q0': self.ampContrast.get(),
-                        'min_freq': self.lowRes.get(),
-                        'max_freq': self.highRes.get(),
-                        'pieceDim': self.windowSize.get(),
-                        'defocus_range': (self.maxDefocus.get()-self.minDefocus.get())*10000/2,
-                        'defocusU': (self.maxDefocus.get()+self.minDefocus.get())*10000/2
+                        'windowSize': self.windowSize.get(),
+                        'ampContrast': self.ampContrast.get(),
+                        'lowRes': self.lowRes.get(),
+                        'highRes': self.highRes.get(),
+                        'minDefocus': self.minDefocus.get(),
+                        'maxDefocus': self.maxDefocus.get()
                        }
         
         self._prepareCommand()

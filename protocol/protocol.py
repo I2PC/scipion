@@ -148,6 +148,10 @@ class FunctionStep(Step):
     
     def __eq__(self, other):
         """Compare with other FunctionStep"""
+        
+        print 'self.funcName', self.funcName, 'other.funcName', other.funcName 
+        print 'self.funcArgs == other.funcArgs', self.funcArgs == other.funcArgs 
+        print 'self.argsStr == other.argsStr', self.argsStr == other.argsStr
         return (self.funcName == other.funcName and
                 self.funcArgs == other.funcArgs and
                 self.argsStr == other.argsStr)
@@ -286,10 +290,15 @@ class Protocol(Step):
             return 0
         
         n = min(len(self._steps), len(self._prevSteps))
+        print "len(steps)", len(self._steps), "len(prevSteps)", len(self._prevSteps)
         
         for i in range(n):
             newStep = self._steps[i]
             oldStep = self._prevSteps[i]
+            print "i: ", i
+            print " oldStep.status: ", str(oldStep.status)
+            print " oldStep!=newStep", oldStep != newStep
+            print " not post: ", not oldStep._postconditions()
             if (oldStep.status.get() != STATUS_FINISHED or
                 newStep != oldStep or 
                 not oldStep._postconditions()):
@@ -304,7 +313,8 @@ class Protocol(Step):
         deleted since is no longer needed"""
         self._steps[:index] = self._prevSteps[:index]
         
-        for oldStep in self._prevSteps[index:]:
+        #for oldStep in self._prevSteps[index:]:
+        for oldStep in self._prevSteps: # This delete all and insert them later
             self.mapper.delete(oldStep)
             
         self._prevSteps = []
@@ -334,6 +344,7 @@ class Protocol(Step):
         self.status.set(STATUS_RUNNING)
         self._store()
         
+        status = STATUS_FINISHED # Just for the case doesn't enter in the loop
         print ">>> Starting at step: ", startIndex
         for step in self._steps[startIndex:]:
             step.run()

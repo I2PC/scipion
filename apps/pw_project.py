@@ -162,7 +162,7 @@ class ProjectWindow(gui.Window):
         leftFrame = tk.Frame(p)
         leftFrame.columnconfigure(0, weight=1)
         leftFrame.rowconfigure(1, weight=1)
-        logo = self.getImage('scipion_logo.gif')
+        logo = self.getImage(self.generalCfg.logo.get())
         label = tk.Label(leftFrame, image=logo, borderwidth=0, 
                          anchor='nw', bg='white')
         label.grid(row=0, column=0, sticky='new', padx=5)
@@ -303,7 +303,7 @@ class ProjectWindow(gui.Window):
             actionsList.insert(0, (ACTION_STOP, 'Stop execution'))
             actionsList.insert(1, (None, None))
         elif status == STATUS_WAITING_APPROVAL:
-            actionsList.insert(0, (ACTION_CONTINUE, 'Continue execution'))
+            actionsList.insert(0, (ACTION_CONTINUE, 'Approve continue'))
             actionsList.insert(1, (None, None))
             
         def addMenuOption(action, label):
