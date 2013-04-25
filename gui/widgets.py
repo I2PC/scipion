@@ -33,6 +33,7 @@ import Tkinter as tk
 import ttk
 import gui
 
+
 class Button(tk.Button):
     _images = {}
     
@@ -51,7 +52,7 @@ class Button(tk.Button):
             #height=28, width=28,
             if not opts.has_key('bg'):
                 del defaults['bg']
-            tk.Button.__init__(self, master, image=btnImage, bd=0,  **defaults)
+            tk.Button.__init__(self, master, text=text, image=btnImage, bd=0,  **defaults)
             self.image = btnImage
         else:
             tk.Button.__init__(self, master, text=text, **defaults)

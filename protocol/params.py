@@ -37,6 +37,7 @@ import re
 LEVEL_NORMAL = 0
 LEVEL_ADVANCED = 1
 LEVEL_EXPERT = 2
+LEVEL_CHOICES = ('Normal', 'Advanced', 'Expert')
 
 
 class FormElement(OrderedObject):
