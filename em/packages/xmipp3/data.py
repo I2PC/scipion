@@ -190,7 +190,14 @@ class XmippSetOfCoordinates(SetOfCoordinates):
     def getFileName(self):
         return self.get()
     
-    def iterCoordinates(self):
+    def iterMicrographs(self):
+        """Iterate over the micrographs set associated with this
+        set of coordinates
+        """
+        return self.getMicrographs()
+        
+    
+    def iterCoordinates(self, micrograph=None):
         """Iterates over the whole set of coordinates.
         If the SetOfMicrographs has tilted pairs, the coordinates
         should have the information related to its paired coordinate."""
@@ -198,21 +205,35 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         path = self.getFileName()
         template = self.family.get() + '@%s'
         
-        for mic in self.getMicrographs():
-            pathPos = join(path, replaceBaseExt(mic.getFileName(), 'pos'))
-            
+        if micrograph is None:
+            for mic in self.getMicrographs():
+                pathPos = join(path, replaceBaseExt(mic.getFileName(), 'pos'))
+                
+                if exists(pathPos):
+                    mdPos = MetaData(template % pathPos)
+                                
+                    for objId in mdPos:
+                        x = mdPos.getValue(MDL_XCOOR, objId)
+                        y = mdPos.getValue(MDL_YCOOR, objId)
+                        coordinate = XmippCoordinate()
+                        coordinate.setPosition(x, y)
+                        coordinate.setMicrograph(mic)
+                        
+                        yield coordinate
+        else:
+            pathPos = join(path, replaceBaseExt(micrograph.getFileName(), 'pos'))
+                
             if exists(pathPos):
                 mdPos = MetaData(template % pathPos)
-                            
+                                
                 for objId in mdPos:
                     x = mdPos.getValue(MDL_XCOOR, objId)
                     y = mdPos.getValue(MDL_YCOOR, objId)
                     coordinate = XmippCoordinate()
                     coordinate.setPosition(x, y)
-                    coordinate.setMicrograph(mic)
-                    
+                    coordinate.setMicrograph(micrograph)
+                        
                     yield coordinate
-
         
 # Group of converter fuctions
 def convertMicrograph(mic):
