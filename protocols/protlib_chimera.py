@@ -43,9 +43,12 @@ class XmippChimeraClient:
     
     def __init__(self, volfile, angulardistfile=None, spheres_color='red', spheres_distance='default', spheres_maxradius='default'):
         
-        if volfile is None or not(exists(volfile)):
+        if volfile is None:
             raise ValueError(volfile)
-        
+        if '@' in volfile:
+            [index, file] = volfile.split('@'); 
+        if not exists(file):
+            raise ValueError(file)
         if not angulardistfile is None:
             if not(exists(angulardistfile)):
                 raise ValueError(angulardistfile)
