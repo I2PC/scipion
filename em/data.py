@@ -360,3 +360,5 @@ class Classification2D(EMObject):
         """ Iterate over all classes. """
         pass    
      
+=======
+>>>>>>> branch 'master' of ssh://delarosatrevin@git.code.sf.net/p/pyworkflow/code
