@@ -48,7 +48,8 @@ HEADER = '''
   #  Please report bugs to: emx@cnb.csic.es
   ##########################################################################
   '''
-
+EMXSCHEMA10 ='http://sourceforge.net/p/emexchange/code/ci/master/tree/trunk/resourcesEmx/schemas/emx.xsd?format=raw'
+EMXSCHEMA11 ='http://sourceforge.net/p/emexchange/code/ci/master/tree/trunk/resourcesEmx/schemas/emx_11.xsd?format=raw'
 from emx import MICROGRAPH, EMX_SEP, CLASSLIST, emxDataTypes
 from emx import Emxmicrograph, Emxparticle
 
@@ -299,13 +300,14 @@ class XmlMapper():
         xmlFile.write("</EMX>")
         xmlFile.close()
 
-def validateSchema(filename, schema_file='http://sourceforge.net/p/emexchange/code/ci/master/tree/trunk/resourcesEmx/schemas/emx.xsd?format=raw'):
+def validateSchema(filename, schema_file=None):
     """
     Code from astropy project released under BSD licence
     Validates an XML file against a schema or DTD.
 
     Functions to do XML schema and DTD validation.  At the moment, this
-    makes a subprocess call to xmllint.  This could use a Python-based
+    makes a subprocess call first to xerces then to  xmllint. 
+    This could use a Python-based
     library at some point in the future, if something appropriate could be
     found. lxml is a possibility but has too many dependences if anyone
     knows about a pure python validator let my know
@@ -321,37 +323,46 @@ def validateSchema(filename, schema_file='http://sourceforge.net/p/emexchange/co
     Returns
     -------
     returncode, stdout, stderr : int, str, str
-        Returns the returncode from xmllint and the stdout and stderr
+        Returns the returncode from validator and the stdout and stderr
         as strings
     """
     import subprocess, os
-
-    print 
-    base, ext = os.path.splitext(schema_file)
-    if ext == '.xsd' or ext ==".xsd?format=raw":
-        schema_part = '--schema ' + schema_file
-    elif ext == '.dtd':
-        schema_part = '--dtdvalid ' + schema_file
+    ###########
+    #try xerces
+    ###########
+    if schema_file is None:
+        _schema = EMXSCHEMA11
     else:
-        raise TypeError("schema_file must be a path to an XML Schema or DTD")
-
-    #print "xmllint", "xmllint --noout %s %s" % (schema_part, filename)
-    p = subprocess.Popen(
-        "xmllint --noout %s %s" % (schema_part, filename),
-        shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        _schema = schema_file
+    p = subprocess.Popen("java jaxp.SourceValidator -a %s -i %s -xsd11" 
+                         % (_schema, filename),
+            shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
-
-    if p.returncode == 127:
-        raise OSError(
-            """xmllint not found, so can not validate schema. 
-Schema validation is based on the xmllint program that belongs to the libxml2-tools package.
-If you want to use this routine install xmmlint""")
-        
-    elif p.returncode < 0:
-        from ..misc import signal_number_to_name
-        raise OSError(
-            "xmllint was terminated by signal '{0}'".format(
-                signal_number_to_name(-p.returncode)))
+    #xerces exists but is error
+    if p.returncode == 0 and (stderr!=""):
+        raise Exception("""Error when validating file %s with schema %s.
+        \nError:%s"""%(filename,_schema,stderr))
+    #######
+    #no xerces available, let us try xmlint
+    ######
+    if p.returncode != 0:
+        if schema_file is None:
+            _schema = EMXSCHEMA10
+        else:
+            _schema = schema_file
+        schema_part = '--schema ' + _schema
+        p = subprocess.Popen(
+            "xmllint --noout %s %s" % (schema_part, filename),
+            shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        if p.returncode == 127:
+            raise Exception(
+                """neither xerces-f nor xmllint could be found,  I cannot validate schema. 
+    Schema validation is based either on the xmllint program that belongs to the libxml2-tools package.
+    or on the xerces-f project""")
+            
+        if p.returncode != 0:
+            raise Exception("""Error when validating file %s with schema %s.
+            \nError:%s"""%(filename,_schema,stderr))
     return p.returncode, stdout, stderr
 
-            
