@@ -29,6 +29,7 @@ class ChimeraServer:
         chimera.triggers.addHandler(chimera.APPQUIT, self.onAppQuit, None)
         self.initListen()
             
+            
     def initListen(self):
         self.listen_thread = Thread(target=self.listen)
         self.listen_thread.daemon = True
@@ -53,6 +54,8 @@ class ChimeraServer:
             self.listener.close()
             runCommand('close all')
             runCommand('stop really')
+            
+            
             
     def openVolume(self):
         try:

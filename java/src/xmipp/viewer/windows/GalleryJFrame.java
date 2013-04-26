@@ -1144,6 +1144,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		((JSpinner.NumberEditor) jsGoToImage.getEditor()).getTextField().setColumns(TEXTWIDTH);
 		((JSpinner.NumberEditor) jsRows.getEditor()).getTextField().setColumns(TEXTWIDTH);
 		((JSpinner.NumberEditor) jsColumns.getEditor()).getTextField().setColumns(TEXTWIDTH);
+		
+		initResliceButtonMenu();
+		toolBar.add(reslicebt);
 
 	}// function createToolbar
 
@@ -1267,8 +1270,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		});
 		cbPanel.add(jcbVolumes);
 		
-		initResliceButtonMenu();
-		cbPanel.add(reslicebt);
+		
+		
 	}
 
 	protected void updateCombos()
