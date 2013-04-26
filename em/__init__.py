@@ -32,6 +32,7 @@ import pyworkflow as pw
 from pyworkflow.utils.reflection import getSubClassesFromPath, getSubclasses
 from data import *
 from protocol import *
+from packages import *
 
 PACKAGES_PATH = os.path.join(pw.HOME, 'em', 'packages')
 
