@@ -316,3 +316,47 @@ class CTFModel(EMObject):
         self.defocusV = Float()
         self.defocusAngle = Float()
         self.ampContrast = Float()
+        
+    
+class ImageClassAssignment(EMObject):
+    """ This class represents the relation of
+    an image assigned to a class. It serve to
+    store additional information like weight, transformation
+    or others. 
+    """
+    def __init__(self, **args):
+        EMObject.__init__(self, **args)
+        self._imagePointer = Pointer() # Pointer to image
+        
+    def setImage(self, image):
+        """ Set associated image. """
+        self._imagePointer.set(image)
+        
+    def getImage(self):
+        """ Get associated image. """
+        return self._imagePointer.get()
+    
+    
+class Class2D(EMObject):
+    """ Represent a Class that group some elements 
+    from a classification. 
+    """
+    def __init__(self, **args):
+        EMObject.__init__(self, **args)
+        
+    def iterImageAssignemts(self):
+        """ Iterate over the assigments of images
+        to this particular class.
+        """
+        pass
+        
+        
+class Classification2D(EMObject):
+    """ Store results from a 2D classification. """
+    def __init__(self, **args):
+        EMObject.__init__(self, **args)
+        
+    def iterClasses(self):
+        """ Iterate over all classes. """
+        pass    
+     
