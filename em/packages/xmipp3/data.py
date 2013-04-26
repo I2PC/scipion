@@ -211,7 +211,10 @@ class XmippCTFModel(CTFModel):
     # Implementar el constructor para crear las variables del modelo usando el params de arriba
     # y leyendo del metadata. No hace falta el __getattr__
     
-    def __init__(self, filename):
+    def __init__(self, filename, **args):
+        # Use the object value to store the filename
+        args['value'] = filename
+        CTFModel.__init__(self, **args)
         md = xmipp.MetaData(filename)
         objId = md.firstObject()
         
@@ -222,7 +225,9 @@ class XmippCTFModel(CTFModel):
             else:
                 getattr(self, key).set(mdVal)
                 
-                
+    def getFileName(self):
+        return self.get()            
+    
 class XmippSetOfCoordinates(SetOfCoordinates):
     """Implementation of SetOfCoordinates for Xmipp"""
     def __init__(self, filename=None, **args):
@@ -278,29 +283,4 @@ class XmippSetOfCoordinates(SetOfCoordinates):
                         
                     yield coordinate
         
-# Group of converter fuctions
-def convertMicrograph(mic):
-    """Convert from Micrograph to XmippMicrograph"""
-    if type(mic) is XmippMicrograph:
-        return mic
-    
-    micXmipp = XmippMicrograph(mic.getFileName())
-    # TODO: copyInfo??
-    # from mic to micXmipp??  
-    return micXmipp
-       
-def convertSetOfMicrographs(setOfMics, filename):
-    """Method to convert from a general SetOfMicrographs to XmippSetOfMicrographs"""
-    if type(setOfMics) is XmippSetOfMicrographs:
-        return setOfMics
-        
-    micsOut = XmippSetOfMicrographs(filename)
-    micsOut.copyInfo(setOfMics)
-
-    for mic in setOfMics:
-        micsOut.append(mic)
-
-    micsOut.write()
-        
-    return micsOut
     

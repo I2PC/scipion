@@ -29,7 +29,8 @@ This sub-package contains the XmippProtExtractParticles protocol
 """
 
 
-from pyworkflow.em import *  
+from pyworkflow.em import * 
+from convert import convertCTFModel 
 from pyworkflow.em.packages.xmipp3.data import *
 from pyworkflow.utils.path import makePath, removeBaseExt, join, exists
 from pyworkflow.utils import runJob
@@ -59,7 +60,7 @@ class XmippDefExtractParticles(Form):
                       'factors are always referred to the original sampling rate, and '
                       'the differences are correctly handled by Xmipp.')        
         self.addParam('inputMicrographs', PointerParam, label="Micrographs", 
-                      condition='downsampleType in (1,2)',
+                      condition='downsampleType != 1',
                       pointerClass='SetOfMicrographs',
                       help='Select the original SetOfMicrographs')
         
@@ -112,7 +113,9 @@ class XmippProtExtractParticles(ProtExtractParticles):
     """Protocol to extract particles from a set of coordinates in the project"""
     
     _definition = XmippDefExtractParticles()
-    
+    ORIGINAL = 0
+    SAME_AS_PICKING = 1
+    OTHER = 2
 #    def __init__(self, **args):
 #        
 #        ProtExtractParticles.__init__(self, **args)
@@ -128,11 +131,11 @@ class XmippProtExtractParticles(ProtExtractParticles):
         
         self.samplingOriginal = self.inputMics.samplingRate.get()
 
-        if self.downsampleType == 1:
+        if self.downsampleType == SAME_AS_PICKING:
             # If 'same as picking' get samplingRate from input micrographs  
             self.inputMics = self.inputCoords.getMicrographs()
             self.samplingFinal = self.inputMics.samplingRate.get()
-        elif self.downsampleType == 0:
+        elif self.downsampleType == ORIGINAL:
             # If 'original' get sampling rate from original micrographs
             self.samplingFinal = self.inputMics.samplingRate.get()
         else:
@@ -145,32 +148,32 @@ class XmippProtExtractParticles(ProtExtractParticles):
             micrographToExtract = fn
         
             # If downsample type is 'other' perform a downsample
-            if self.downsampleType == 2:
+            if self.downsampleType == OTHER:
                 fnDownsampled = self._getTmpPath(removeBaseExt(fn)+"_downsampled.xmp")
                 downFactor = self.downFactor.get()
-                args = "-i %(micrographToExtract)s -o %(fnDownsampled)s --step %(downFactor)f --method fourier" % locals()
-                self._insertRunJobStep("xmipp_transform_downsample",args)
+                args = "-i %(micrographToExtract)s -o %(fnDownsampled)s --step %(downFactor)f --method fourier"
+                self._insertRunJobStep("xmipp_transform_downsample", args % locals())
                 micographToExtract = fnDownsampled
             # If remove dust 
             if self.DoRemoveDust:
                 fnNoDust = self._getTmpPath(removeBaseExt(fn)+"_noDust.xmp")
                 
                 thresholdDust = self.thresholdDust.get() #TODO: remove this extra variable
-                args=" -i %(micrographToExtract)s -o %(fnNoDust)s --bad_pixels outliers %(thresholdDust)f" % locals()
-                self._insertRunJobStep("xmipp_transform_filter", args)
+                args=" -i %(micrographToExtract)s -o %(fnNoDust)s --bad_pixels outliers %(thresholdDust)f"
+                self._insertRunJobStep("xmipp_transform_filter", args % locals())
                 micographToExtract = fnNoDust
                 
-            # Flipping?
+            # Flipping if micrograph has CTF model
             if self.DoFlip:
-                fnFlipped = self._getTmpPath(removeBaseExt(fn)+"_flipped.xmp")
-                #TODO: Y si el ctfmodel no es de xmipp? como saco un fichero ctf.param?
                 if mic.hasCTF():
-                    ctf = mic.ctfModel.filename
-                    args=" -i %(micrographToExtract)s --ctf %(ctf)s -o %(fnFlipped)s"
+                    fnFlipped = self._getTmpPath(removeBaseExt(fn)+"_flipped.xmp")
+                    ctf = convertCTFModel(mic.ctfModel).getFileName()
+                    args = " -i %(micrographToExtract)s --ctf %(ctf)s -o %(fnFlipped)s"
                     # If some downsampling has been performed (either before picking or now) pass the downsampling factor 
-                    if self.downsampleType != 1:
-                        args+=" --downsampling "+str(self.samplingFinal/self.samplingOriginal)
-                        self._insertRunJobStep("xmipp_ctf_phase_flip", args)
+                    if self.downsampleType != SAME_AS_PICKING:
+                        downFactor = self.samplingFinal/self.samplingOriginal
+                        args += " --downsampling %(downFactor)f"
+                        self._insertRunJobStep("xmipp_ctf_phase_flip", args % locals())
                         micographToExtract = fnFlipped
                 else:
                     #TODO: Raise some type of error!!
@@ -185,6 +188,7 @@ class XmippProtExtractParticles(ProtExtractParticles):
                 
         # Insert step to create output objects       
         self._insertFunctionStep('createOutput')
+           
  
     def extractParticles(self, micrographToExtract):
         ''' Extract particles from one micrograph '''
@@ -193,7 +197,7 @@ class XmippProtExtractParticles(ProtExtractParticles):
         
         
         fnExtractList = self._getExtraPath('extract_list.xmd')
-        self.createExtractList(fnExtractList)
+        self._createExtractList(fnExtractList)
         
         posMetadata = removeBaseExt(micrographToExtract) + "@" + fnExtractList
         
@@ -211,7 +215,7 @@ class XmippProtExtractParticles(ProtExtractParticles):
         if self.doNormalize:
             runNormalize(None, outputRoot + '.stk',self.normaType.get(), self.backRadius.get(), 1)          
                                    
-    def createExtractList(self, fnExtractList):
+    def _createExtractList(self, fnExtractList):
         ''' Create xmipp metadata extract_list with the coordinates for all micrographs '''
         
         #Iterate over the micrographs on the SetOfCoordinates

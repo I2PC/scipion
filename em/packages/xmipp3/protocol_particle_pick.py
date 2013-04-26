@@ -33,7 +33,7 @@ from pyworkflow.utils.path import *
 from pyworkflow.utils.process import runJob
 from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_ORIGINAL, MDL_MICROGRAPH_TILTED, MDL_MICROGRAPH_TILTED_ORIGINAL, MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE
 from pyworkflow.em.packages.xmipp3.data import *
-from xmipp3 import convertSetOfMicrographs
+from convert import convertSetOfMicrographs
 
 
 class XmippDefParticlePicking(Form):

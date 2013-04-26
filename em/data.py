@@ -293,21 +293,14 @@ class SetOfCoordinates(EMObject):
     
 class CTFModel(EMObject):
     """Represents a generic CTF model"""
-#TODO: See how this can be generic (no pointing to Xmipp labels
-#    ctfParams = {
-#                 "ctfSamplingRate":MDL_CTF_SAMPLING_RATE,
-#                 "ctfVoltage":MDL_CTF_VOLTAGE,
-#                 "ctfDefocusU":MDL_CTF_DEFOCUSU,
-#                 "ctfDefocusV":MDL_CTF_DEFOCUSV,
-#                 "ctfDefocusAngle":MDL_CTF_DEFOCUS_ANGLE,
-#                 "ctfSphericalAberration":MDL_CTF_CS,
-#                 "ctfQ0":MDL_CTF_Q0,
-#                 "ctfK":MDL_CTF_K
-#                }
+
     def __init__(self, **args):
         EMObject.__init__(self, **args)
         
         self.samplingRate = Float()
+        self.voltage = Float()
+        self.sphericalAberration = Float()
         self.defocusU = Float()
         self.defocusV = Float()
         self.defocusAngle = Float()
+        self.ampContrast = Float()

@@ -32,7 +32,7 @@ This sub-package contains the XmippPreprocessMicrographs protocol
 from pyworkflow.em import *  
 from pyworkflow.utils import *  
 import xmipp
-from pyworkflow.em.packages.xmipp3.data import *
+from data import *
 
 
 class XmippDefPreprocessMicrograph(Form):
