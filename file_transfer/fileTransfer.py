@@ -254,7 +254,10 @@ class FileTransfer():
                                 gatewayHosts = None,
                                 operationId = 1, 
                                 numberTrials = 1,                        
-                                forceOperation = False):       
+                                forceOperation = False):  
+        """
+        TODO: Get the target directories to check it existence and create them only once.
+        """     
         pairParts = self.__getUserAndHosts(userAndHostPairs)
         userAndHost1 = pairParts[0]
         userAndHost2 = pairParts[1]
