@@ -47,6 +47,8 @@ class XmippChimeraClient:
             raise ValueError(volfile)
         if '@' in volfile:
             [index, file] = volfile.split('@'); 
+        else :
+            file = volfile
         if not exists(file):
             raise ValueError(file)
         if not angulardistfile is None:
@@ -164,7 +166,8 @@ class XmippProjectionExplorer(XmippChimeraClient):
         printCmd('initListenThread')
         self.initListenThread()
         printCmd('creating iw')
-        self.iw = ImageWindow(image=self.projection, label="Projection")
+        
+        self.iw = ImageWindow(image=self.projection, dim=100, label="Projection")
         self.iw.root.protocol("WM_DELETE_WINDOW", self.exitClient)
         self.iw.root.mainloop()
                 
