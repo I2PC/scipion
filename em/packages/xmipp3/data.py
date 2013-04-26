@@ -30,34 +30,43 @@ for specific Xmipp3 EM data objects
 
 from pyworkflow.em import *
 from pyworkflow.utils.path import replaceBaseExt, exists
-from xmipp import *
+import xmipp
     
+class _XmippMdRow():
+    """ Store label and value pairs corresponding to a Metadata row """
+    def __init__(self):
+        self._labelDict = {} # Dictionary containing labels and values
     
-class XmippMicrograph(Micrograph):
-    """Xmipp implementation for Micrograph"""
-    def __init__(self, filename=None, **args):
-        Micrograph.__init__(self, filename, **args)
-        self._labelDict = {MDL_MICROGRAPH: filename}
-        
     def setValue(self, *args):
         """args: this list should contains tuples with 
         MetaData Label and the desired value"""
         for label, value in args:
             self._labelDict[label] = value
             
+    def iterItems(self):
+        return self._labelDict.iteritems()
+            
+            
+class XmippMicrograph(Micrograph, _XmippMdRow):
+    """Xmipp implementation for Micrograph"""
+    def __init__(self, filename=None, **args):
+        _XmippMdRow.__init__(self)
+        Micrograph.__init__(self, filename, **args)
+        self.setValue((xmipp.MDL_MICROGRAPH, filename))
+            
         
 class XmippSetOfMicrographs(SetOfMicrographs):
     """Represents a set of Micrographs for Xmipp"""
     def __init__(self, filename=None, **args):
         SetOfMicrographs.__init__(self, filename, **args)
-        self._md = MetaData()
+        self._md = xmipp.MetaData()
         
     def append(self, micrograph):
         """Add a micrograph to the set"""
         objId = self._md.addObject()
         # Convert to xmipp micrograph if necessary
         micXmipp = convertMicrograph(micrograph)
-        for label, value in micXmipp._labelDict.iteritems():
+        for label, value in micXmipp.iterItems():
             # TODO: Check how to handle correctly unicode type
             # in Xmipp and Scipion
             if type(value) is unicode:
@@ -68,22 +77,56 @@ class XmippSetOfMicrographs(SetOfMicrographs):
             
     def sort(self):
         """Sort the set according to MDL_MICROGRAPH"""
-        self._md.sort(MDL_MICROGRAPH)
+        self._md.sort(xmipp.MDL_MICROGRAPH)
         
     def write(self):
         self._md.write(self.getFileName())
         
     def __iter__(self):
         """Iterate over the set of micrographs in the MetaData"""
-        md = MetaData(self.getFileName())
+        md = xmipp.MetaData(self.getFileName())
         
         for objId in md:    
-            m = Micrograph()
-            m.setFileName(md.getValue(MDL_MICROGRAPH, objId))
+            m = Micrograph(md.getValue(xmipp.MDL_MICROGRAPH, objId))
             if self.hasCTF():
-                m.ctfModel = XmippCTFModel(md.getValue(MDL_CTF_MODEL, objId)) 
+                m.ctfModel = XmippCTFModel(md.getValue(xmipp.MDL_CTF_MODEL, objId)) 
             yield m
 
+
+class XmippImage(Image, _XmippMdRow):
+    """Xmipp implementation for Image"""
+    def __init__(self, filename=None, **args):
+        _XmippMdRow.__init__(self)
+        Image.__init__(self, filename, **args)
+        self.setValue((xmipp.MDL_IMAGE, filename))
+        
+        
+class XmippSetOfImages(SetOfImages):
+    """Represents a set of Images for Xmipp"""
+    def __init__(self, filename=None, **args):
+        SetOfImages.__init__(self, filename, **args)
+        self._md = xmipp.MetaData()
+                
+    def __iter__(self):
+        """Iterate over the set of images in the MetaData"""
+        md = xmipp.MetaData(self.getFileName())
+        
+        for objId in md:    
+            m = Image(md.getValue(xmipp.MDL_IMAGE, objId))
+            if self.hasCTF():
+                m.ctfModel = XmippCTFModel(md.getValue(xmipp.MDL_CTF_MODEL, objId)) 
+            yield m
+            
+    def setMd(self, md):
+        self._md = md
+        
+    def sort(self):
+        """Sort the set according to MDL_IMAGE"""
+        self._md.sort(xmipp.MDL_IMAGE)
+        
+    def write(self):
+        self._md.write(self.getFileName())
+                    
 class XmippCoordinate(Coordinate):
     """This class holds the (x,y) position and other information
     associated with a Xmipp coordinate (Xmipp coordinates are POS_CENTER mode)"""
@@ -122,54 +165,57 @@ class XmippCoordinate(Coordinate):
 class XmippCTFModel(CTFModel):
     
     ctfParams = {
-                 "samplingRate":MDL_CTF_SAMPLING_RATE,
-                 "voltage":MDL_CTF_VOLTAGE,
-                 "defocusU":MDL_CTF_DEFOCUSU,
-                 "defocusV":MDL_CTF_DEFOCUSV,
-                 "defocusAngle":MDL_CTF_DEFOCUS_ANGLE,
-                 "sphericalAberration":MDL_CTF_CS,
-                 "chromaticAberration":MDL_CTF_CA,
-                 "energyLoss":MDL_CTF_ENERGY_LOSS,
-                 "lensStability":MDL_CTF_LENS_STABILITY,
-                 "convergenceCone":MDL_CTF_CONVERGENCE_CONE,
-                 "longitudinalDisplacement":MDL_CTF_LONGITUDINAL_DISPLACEMENT,
-                 "transversalDisplacement":MDL_CTF_TRANSVERSAL_DISPLACEMENT,
-                 "q0":MDL_CTF_Q0,
-                 "k":MDL_CTF_K,
-                 "bgGaussianK":MDL_CTF_BG_GAUSSIAN_K,
-                 "bgGaussianSigmaU":MDL_CTF_BG_GAUSSIAN_SIGMAU,
-                 "bgGaussianSigmaV":MDL_CTF_BG_GAUSSIAN_SIGMAV,
-                 "bgGaussianCU":MDL_CTF_BG_GAUSSIAN_CU,
-                 "bgGaussianCV":MDL_CTF_BG_GAUSSIAN_CV,
-                 "bgGaussianAngle":MDL_CTF_BG_GAUSSIAN_ANGLE,
-                 "bgSqrtK":MDL_CTF_BG_SQRT_K,
-                 "bgSqrtU":MDL_CTF_BG_SQRT_U,
-                 "bgSqrtV":MDL_CTF_BG_SQRT_V,
-                 "bgSqrtAngle":MDL_CTF_BG_SQRT_ANGLE,
-                 "bgBaseline":MDL_CTF_BG_BASELINE,
-                 "bgGaussian2K":MDL_CTF_BG_GAUSSIAN2_K,
-                 "bgGaussian2SigmaU":MDL_CTF_BG_GAUSSIAN2_SIGMAU,
-                 "bgGaussian2SigmaV":MDL_CTF_BG_GAUSSIAN2_SIGMAV,
-                 "bgGaussian2CU":MDL_CTF_BG_GAUSSIAN2_CU,
-                 "bgGaussian2CV":MDL_CTF_BG_GAUSSIAN2_CV,
-                 "bgGaussian2Angle":MDL_CTF_BG_GAUSSIAN2_ANGLE,
-#                 "X0":MDL_CTF_X0,
-#                 "XF":MDL_CTF_XF,
-#                 "Y0":MDL_CTF_Y0,
-#                 "YF":MDL_CTF_YF,
-                 "critFitting":MDL_CTF_CRIT_FITTINGSCORE,
-                 "critCorr13":MDL_CTF_CRIT_FITTINGCORR13,
-#                 "downsampleFactor":MDL_CTF_DOWNSAMPLE_PERFORMED,
-                 "critPsdStdQ":MDL_CTF_CRIT_PSDVARIANCE,
-                 "critPsdPCA1":MDL_CTF_CRIT_PSDPCA1VARIANCE,
-                 "critPsdPCARuns":MDL_CTF_CRIT_PSDPCARUNSTEST
+                 "samplingRate":xmipp.MDL_CTF_SAMPLING_RATE,
+                 "voltage":xmipp.MDL_CTF_VOLTAGE,
+                 "defocusU":xmipp.MDL_CTF_DEFOCUSU,
+                 "defocusV":xmipp.MDL_CTF_DEFOCUSV,
+                 "defocusAngle":xmipp.MDL_CTF_DEFOCUS_ANGLE,
+                 "sphericalAberration":xmipp.MDL_CTF_CS,
+                 "chromaticAberration":xmipp.MDL_CTF_CA,
+                 "energyLoss":xmipp.MDL_CTF_ENERGY_LOSS,
+                 "lensStability":xmipp.MDL_CTF_LENS_STABILITY,
+                 "convergenceCone":xmipp.MDL_CTF_CONVERGENCE_CONE,
+                 "longitudinalDisplacement":xmipp.MDL_CTF_LONGITUDINAL_DISPLACEMENT,
+                 "transversalDisplacement":xmipp.MDL_CTF_TRANSVERSAL_DISPLACEMENT,
+                 "q0":xmipp.MDL_CTF_Q0,
+                 "k":xmipp.MDL_CTF_K,
+                 "bgGaussianK":xmipp.MDL_CTF_BG_GAUSSIAN_K,
+                 "bgGaussianSigmaU":xmipp.MDL_CTF_BG_GAUSSIAN_SIGMAU,
+                 "bgGaussianSigmaV":xmipp.MDL_CTF_BG_GAUSSIAN_SIGMAV,
+                 "bgGaussianCU":xmipp.MDL_CTF_BG_GAUSSIAN_CU,
+                 "bgGaussianCV":xmipp.MDL_CTF_BG_GAUSSIAN_CV,
+                 "bgGaussianAngle":xmipp.MDL_CTF_BG_GAUSSIAN_ANGLE,
+                 "bgSqrtK":xmipp.MDL_CTF_BG_SQRT_K,
+                 "bgSqrtU":xmipp.MDL_CTF_BG_SQRT_U,
+                 "bgSqrtV":xmipp.MDL_CTF_BG_SQRT_V,
+                 "bgSqrtAngle":xmipp.MDL_CTF_BG_SQRT_ANGLE,
+                 "bgBaseline":xmipp.MDL_CTF_BG_BASELINE,
+                 "bgGaussian2K":xmipp.MDL_CTF_BG_GAUSSIAN2_K,
+                 "bgGaussian2SigmaU":xmipp.MDL_CTF_BG_GAUSSIAN2_SIGMAU,
+                 "bgGaussian2SigmaV":xmipp.MDL_CTF_BG_GAUSSIAN2_SIGMAV,
+                 "bgGaussian2CU":xmipp.MDL_CTF_BG_GAUSSIAN2_CU,
+                 "bgGaussian2CV":xmipp.MDL_CTF_BG_GAUSSIAN2_CV,
+                 "bgGaussian2Angle":xmipp.MDL_CTF_BG_GAUSSIAN2_ANGLE,
+#                 "X0":xmipp.MDL_CTF_X0,
+#                 "XF":xmipp.MDL_CTF_XF,
+#                 "Y0":xmipp.MDL_CTF_Y0,
+#                 "YF":xmipp.MDL_CTF_YF,
+                 "critFitting":xmipp.MDL_CTF_CRIT_FITTINGSCORE,
+                 "critCorr13":xmipp.MDL_CTF_CRIT_FITTINGCORR13,
+#                 "downsampleFactor":xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,
+                 "critPsdStdQ":xmipp.MDL_CTF_CRIT_PSDVARIANCE,
+                 "critPsdPCA1":xmipp.MDL_CTF_CRIT_PSDPCA1VARIANCE,
+                 "critPsdPCARuns":xmipp.MDL_CTF_CRIT_PSDPCARUNSTEST
                  }
     
     # Implementar el constructor para crear las variables del modelo usando el params de arriba
     # y leyendo del metadata. No hace falta el __getattr__
     
-    def __init__(self, filename):
-        md = MetaData(filename)
+    def __init__(self, filename, **args):
+        # Use the object value to store the filename
+        args['value'] = filename
+        CTFModel.__init__(self, **args)
+        md = xmipp.MetaData(filename)
         objId = md.firstObject()
         
         for key, val in  self.ctfParams.iteritems():
@@ -179,7 +225,9 @@ class XmippCTFModel(CTFModel):
             else:
                 getattr(self, key).set(mdVal)
                 
-                
+    def getFileName(self):
+        return self.get()            
+    
 class XmippSetOfCoordinates(SetOfCoordinates):
     """Implementation of SetOfCoordinates for Xmipp"""
     def __init__(self, filename=None, **args):
@@ -190,7 +238,14 @@ class XmippSetOfCoordinates(SetOfCoordinates):
     def getFileName(self):
         return self.get()
     
-    def iterCoordinates(self):
+    def iterMicrographs(self):
+        """Iterate over the micrographs set associated with this
+        set of coordinates
+        """
+        return self.getMicrographs()
+        
+    
+    def iterCoordinates(self, micrograph=None):
         """Iterates over the whole set of coordinates.
         If the SetOfMicrographs has tilted pairs, the coordinates
         should have the information related to its paired coordinate."""
@@ -198,45 +253,34 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         path = self.getFileName()
         template = self.family.get() + '@%s'
         
-        for mic in self.getMicrographs():
-            pathPos = join(path, replaceBaseExt(mic.getFileName(), 'pos'))
-            
+        if micrograph is None:
+            for mic in self.getMicrographs():
+                pathPos = join(path, replaceBaseExt(mic.getFileName(), 'pos'))
+                
+                if exists(pathPos):
+                    mdPos = xmipp.MetaData(template % pathPos)
+                                
+                    for objId in mdPos:
+                        x = mdPos.getValue(xmipp.MDL_XCOOR, objId)
+                        y = mdPos.getValue(xmipp.MDL_YCOOR, objId)
+                        coordinate = XmippCoordinate()
+                        coordinate.setPosition(x, y)
+                        coordinate.setMicrograph(mic)
+                        
+                        yield coordinate
+        else:
+            pathPos = join(path, replaceBaseExt(micrograph.getFileName(), 'pos'))
+                
             if exists(pathPos):
-                mdPos = MetaData(template % pathPos)
-                            
+                mdPos = xmipp.MetaData(template % pathPos)
+                                
                 for objId in mdPos:
-                    x = mdPos.getValue(MDL_XCOOR, objId)
-                    y = mdPos.getValue(MDL_YCOOR, objId)
+                    x = mdPos.getValue(xmipp.MDL_XCOOR, objId)
+                    y = mdPos.getValue(xmipp.MDL_YCOOR, objId)
                     coordinate = XmippCoordinate()
                     coordinate.setPosition(x, y)
-                    coordinate.setMicrograph(mic)
-                    
+                    coordinate.setMicrograph(micrograph)
+                        
                     yield coordinate
-
         
-# Group of converter fuctions
-def convertMicrograph(mic):
-    """Convert from Micrograph to XmippMicrograph"""
-    if type(mic) is XmippMicrograph:
-        return mic
-    
-    micXmipp = XmippMicrograph(mic.getFileName())
-    # TODO: copyInfo??
-    # from mic to micXmipp??  
-    return micXmipp
-       
-def convertSetOfMicrographs(setOfMics, filename):
-    """Method to convert from a general SetOfMicrographs to XmippSetOfMicrographs"""
-    if type(setOfMics) is XmippSetOfMicrographs:
-        return setOfMics
-        
-    micsOut = XmippSetOfMicrographs(filename)
-    micsOut.copyInfo(setOfMics)
-
-    for mic in setOfMics:
-        micsOut.append(mic)
-
-    micsOut.write()
-        
-    return micsOut
     

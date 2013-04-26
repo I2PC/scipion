@@ -33,6 +33,7 @@ from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3.data import *
 from pyworkflow.utils.path import makePath, basename, join, exists
 from pyworkflow.utils import runJob
+import xmipp
 
 
 class XmippProtCTFMicrographs(ProtCTFMicrographs):
@@ -84,12 +85,12 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
 
     def createOutput(self):
         # Create micrographs metadata with CTF information
-        mdOut = FileName("Micrographs@" + 
+        mdOut = xmipp.FileName("Micrographs@" + 
                          self._getPath(self._getFilename('micrographs')))        
         micSet = XmippSetOfMicrographs(str(mdOut))
         
         # Label to set values in metadata
-        labels = [MDL_PSD, MDL_PSD_ENHANCED, MDL_CTF_MODEL, MDL_IMAGE1, MDL_IMAGE2]
+        labels = [xmipp.MDL_PSD, xmipp.MDL_PSD_ENHANCED, xmipp.MDL_CTF_MODEL, xmipp.MDL_IMAGE1, xmipp.MDL_IMAGE2]
         # Filenames key related to ctf estimation
         keys = ['psd', 'enhanced_psd', 'ctfparam', 'ctfmodel_quadrant', 'ctfmodel_halfplane']
         
@@ -108,7 +109,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         micSet.sort()
         micSet.write()
             
-        auxMdOut = FileName("Micrographs@" + 
+        auxMdOut = xmipp.FileName("Micrographs@" + 
                             self._getTmpPath(self._getFilename('micrographs')))
         runJob(None,"xmipp_ctf_sort_psds","-i %s -o %s" % (mdOut, auxMdOut))
         runJob(None,"mv","-f %s %s" % (auxMdOut.removeBlockName(),

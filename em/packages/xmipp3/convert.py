@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              Laura del Cano (ldelcano@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,13 +25,42 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains Xmipp3.0 specific protocols
+This module contains converter functions 
+from base classes to xmipp classes
 """
 
-from xmipp3 import *
-from data import *
-from convert import *
-from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
-from protocol_ctf_micrographs import XmippProtCTFMicrographs
-from protocol_particle_pick import XmippProtParticlePicking 
-from protocol_extract_particles import XmippProtExtractParticles
+from data import XmippMicrograph, XmippSetOfMicrographs
+import xmipp
+    
+def convertMicrograph(mic):
+    """Convert from Micrograph to XmippMicrograph"""
+    if type(mic) is XmippMicrograph:
+        return mic
+    
+    micXmipp = XmippMicrograph(mic.getFileName())
+    # TODO: copyInfo??
+    # from mic to micXmipp??  
+    return micXmipp
+       
+def convertSetOfMicrographs(setOfMics, filename):
+    """Method to convert from a general SetOfMicrographs to XmippSetOfMicrographs"""
+    if type(setOfMics) is XmippSetOfMicrographs:
+        return setOfMics
+        
+    micsOut = XmippSetOfMicrographs(filename)
+    micsOut.copyInfo(setOfMics)
+
+    for mic in setOfMics:
+        micsOut.append(mic)
+
+    micsOut.write()
+        
+    return micsOut
+    
+    
+def convertCTFModel(setOfMics, filename):
+    """Method to convert from a general SetOfMicrographs to XmippSetOfMicrographs"""
+    if type(setOfMics) is XmippSetOfMicrographs:
+        return setOfMics
+        
+    return None

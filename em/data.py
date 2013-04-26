@@ -57,6 +57,7 @@ class Image(EMObject):
         args['value'] = filename
         EMObject.__init__(self, **args)
         self.samplingRate = Float()
+        self.ctfModel = None
         
     def getFormat(self):
         pass
@@ -77,18 +78,17 @@ class Image(EMObject):
     def setFileName(self, newFileName):
         self._objValue = newFileName
         
+    def hasCTF(self):
+        return self.ctfModel is not None
+        
         
 class Micrograph(Image):
     """ Represents an EM Image object """
     def __init__(self, filename=None, **args):
         Image.__init__(self, filename, **args)
-        self.ctfModel = None
         
     def getMicroscope(self):
         pass
-    
-    def hasCTF(self):
-        return self.ctfModel is not None
 
 
 class TiltedPair(CsvList):
@@ -105,6 +105,7 @@ class SetOfImages(EMObject):
         EMObject.__init__(self, **args)
         self.samplingRate = Float()
         self.scannedPixelSize = Float()
+        self._ctf = Boolean(args.get('ctf', False))
         
     def getSize(self):
         """Return the number of images"""
@@ -115,18 +116,26 @@ class SetOfImages(EMObject):
     
     def setFileName(self, newFileName):
         self._objValue = newFileName
-        
+    
+    def hasCTF(self):
+        """Return True if the SetOfMicrographs has associated a CTF model"""
+        return self._ctf.get()        
         
     def append(self, image):
         """Add an image to the set"""
         pass
-    
+
+    def copyInfo(self, other):
+        """ Copy basic information (sampling rate, scannedPixelSize and ctf)
+        from other set of images to current one"""
+        self.samplingRate.set(other.samplingRate.get())
+        self.scannedPixelSize.set(other.scannedPixelSize.get())
+        self._ctf.set(other._ctf.get())    
     
 class SetOfMicrographs(SetOfImages):
     """Represents a set of Micrographs"""
     def __init__(self, filename=None, **args):
         SetOfImages.__init__(self, filename, **args)
-        self._ctf = Boolean(args.get('ctf', False))
         self._tiltPairs = Boolean(args.get('tiltPairs', False))
         self.microscope = Microscope()
         self._micList = List(objName='Micrographs', objDoStore=False) # The micrograph list will be stored seperately
@@ -297,21 +306,13 @@ class SetOfCoordinates(EMObject):
     
 class CTFModel(EMObject):
     """ Represents a generic CTF model. """
-#TODO: See how this can be generic (no pointing to Xmipp labels
-#    ctfParams = {
-#                 "ctfSamplingRate":MDL_CTF_SAMPLING_RATE,
-#                 "ctfVoltage":MDL_CTF_VOLTAGE,
-#                 "ctfDefocusU":MDL_CTF_DEFOCUSU,
-#                 "ctfDefocusV":MDL_CTF_DEFOCUSV,
-#                 "ctfDefocusAngle":MDL_CTF_DEFOCUS_ANGLE,
-#                 "ctfSphericalAberration":MDL_CTF_CS,
-#                 "ctfQ0":MDL_CTF_Q0,
-#                 "ctfK":MDL_CTF_K
-#                }
     def __init__(self, **args):
         EMObject.__init__(self, **args)
         
         self.samplingRate = Float()
+        self.voltage = Float()
+        self.sphericalAberration = Float()
         self.defocusU = Float()
         self.defocusV = Float()
         self.defocusAngle = Float()
+        self.ampContrast = Float()

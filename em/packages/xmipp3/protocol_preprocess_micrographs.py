@@ -31,8 +31,8 @@ This sub-package contains the XmippPreprocessMicrographs protocol
 
 from pyworkflow.em import *  
 from pyworkflow.utils import *  
-from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_ORIGINAL, MDL_MICROGRAPH_TILTED, MDL_MICROGRAPH_TILTED_ORIGINAL
-from pyworkflow.em.packages.xmipp3.data import *
+import xmipp
+from data import *
 
 
 class XmippDefPreprocessMicrograph(Form):
