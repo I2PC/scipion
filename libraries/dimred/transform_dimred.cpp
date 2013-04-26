@@ -137,6 +137,8 @@ double correlationDistance(const Matrix2D<double> &X, size_t i1, size_t i2)
 	return prog->progCorrelationDistance(i1,i2);
 }
 
+
+
 // Run  ====================================================================
 void ProgTransformDimRed::run()
 {
@@ -166,7 +168,9 @@ void ProgTransformDimRed::run()
     {
     	memcpy(&dimredProj[0],&MAT_ELEM(Y,i,0),outputDim*sizeof(double));
     	SFout.setValue(MDL_DIMRED,dimredProj,__iter.objId);
+    	i++;
     }
+
     if (fnOut=="")
     	fnOut=fnIn;
     SFout.write(fnOut);
