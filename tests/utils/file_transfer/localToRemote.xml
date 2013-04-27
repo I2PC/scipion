@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<fileTransferTest>
+	<fileTransfer name="localToOneRemoteHost" operationId="1" trials="1" forceOperation="False">
+		<hostPasswordList>
+			<hostPassword>
+				<userAndHost>apoza@glassfishdev.cnb.csic.es</userAndHost>
+				<password>BF6fYiFYiYD</password>
+			</hostPassword>
+		</hostPasswordList>
+		<transferList>
+			<transfer>
+				<sourceFilePath>/home/antonio/Documents/Scipion/ScipionTestFiles/1212_00029.xmp</sourceFilePath>
+				<targets>
+					<targetFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/testFileTransfer/localToOneRemoteHost/testFile1.xmp</targetFilePath>
+				</targets>
+			</transfer>
+			<transfer>
+				<sourceFilePath>/home/antonio/Documents/Scipion/ScipionTestFiles/1212_00036.xmp</sourceFilePath>
+				<targets>
+					<targetFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/testFileTransfer/localToOneRemoteHost/testFile2.xmp</targetFilePath>
+				</targets>
+			</transfer>
+			<transfer>
+				<sourceFilePath>antonio@lineo:/home/antonio/Documents/Scipion/ScipionTestFiles/InputData/BPV_1386.mrc</sourceFilePath>
+				<targets>
+					<targetFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/testFileTransfer/localToOneRemoteHost/other/BPV_1386.mrc</targetFilePath>
+				</targets>
+			</transfer>
+			<transfer>
+				<sourceFilePath>antonio@lineo:/home/antonio/Documents/Scipion/ScipionTestFiles/InputData/BPV_1387.mrc</sourceFilePath>
+				<targets>
+					<targetFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/testFileTransfer/localToOneRemoteHost/other/BPV_1387.mrc</targetFilePath>
+				</targets>
+			</transfer>
+			<transfer>
+				<sourceFilePath>antonio@lineo:/home/antonio/Documents/Scipion/ScipionTestFiles/InputData/BPV_1388.mrc</sourceFilePath>
+				<targets>
+					<targetFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/testFileTransfer/localToOneRemoteHost/other/BPV_1388.mrc</targetFilePath>
+				</targets>
+			</transfer>
+			<transfer>
+				<sourceFilePath>/home/antonio/Documents/Scipion/ScipionTestFiles/withSpaces/example 1</sourceFilePath>
+				<targets>
+					<targetFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/testFileTransfer/localToOneRemoteHost/other/example rename 1</targetFilePath>
+				</targets>
+			</transfer>
+			<transfer>
+				<sourceFilePath>/home/antonio/Documents/Scipion/ScipionTestFiles/withSpaces/example 2</sourceFilePath>
+				<targets>
+					<targetFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/testFileTransfer/localToOneRemoteHost/other/example rename 2</targetFilePath>
+				</targets>
+			</transfer>
+			<transfer>
+				<sourceFilePath>/home/antonio/Documents/Scipion/ScipionTestFiles/withSpaces/example 3</sourceFilePath>
+				<targets>
+					<targetFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/testFileTransfer/localToOneRemoteHost/other/example rename 3</targetFilePath>
+				</targets>
+			</transfer>
+			
+		</transferList>
+	</fileTransfer>
+	<fileTransfer name="localToSeveralRemoteHosts" operationId="1" trials="1" forceOperation="False">
+		<hostPasswordList>
+			<hostPassword>
+				<userAndHost>apoza@glassfishdev.cnb.csic.es</userAndHost>
+				<password>BF6fYiFYiYD</password>
+			</hostPassword>
+			<hostPassword>
+				<userAndHost>apoza@glassfishprod.cnb.csic.es</userAndHost>
+				<password>BF6fYiFYiYD</password>
+			</hostPassword>
+		</hostPasswordList>
+		<transferList>
+			<transfer>
+				<sourceFilePath>/home/antonio/Documents/Scipion/ScipionTestFiles/1212_00029.xmp</sourceFilePath>
+				<targets>
+					<targetFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/testFile1.xmp</targetFilePath>
+					<targetFilePath>apoza@glassfishprod.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/testFile1.xmp</targetFilePath>
+				</targets>
+			</transfer>
+			<transfer>
+				<sourceFilePath>/home/antonio/Documents/Scipion/ScipionTestFiles/1212_00036.xmp</sourceFilePath>
+				<targets>
+					<targetFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/testFile2.xmp</targetFilePath>
+					<targetFilePath>apoza@glassfishprod.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/testFile2.xmp</targetFilePath>
+				</targets>
+			</transfer>
+			<transfer>
+				<sourceFilePath>antonio@lineo:/home/antonio/Documents/Scipion/ScipionTestFiles/InputData/BPV_1386.mrc</sourceFilePath>
+				<targets>
+					<targetFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/other/BPV_1386.mrc</targetFilePath>
+					<targetFilePath>apoza@glassfishprod.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/other/BPV_1386.mrc</targetFilePath>
+				</targets>
+			</transfer>
+			<transfer>
+				<sourceFilePath>antonio@lineo:/home/antonio/Documents/Scipion/ScipionTestFiles/InputData/BPV_1387.mrc</sourceFilePath>
+				<targets>
+					<targetFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/other/BPV_1387.mrc</targetFilePath>
+					<targetFilePath>apoza@glassfishprod.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/other/BPV_1387.mrc</targetFilePath>
+				</targets>
+			</transfer>
+			<transfer>
+				<sourceFilePath>antonio@lineo:/home/antonio/Documents/Scipion/ScipionTestFiles/InputData/BPV_1388.mrc</sourceFilePath>
+				<targets>
+					<targetFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/other/BPV_1388.mrc</targetFilePath>
+					<targetFilePath>apoza@glassfishprod.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/other/BPV_1388.mrc</targetFilePath>
+				</targets>
+			</transfer>
+			<transfer>
+				<sourceFilePath>/home/antonio/Documents/Scipion/ScipionTestFiles/withSpaces/example 1</sourceFilePath>
+				<targets>
+					<targetFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/other/example rename 1</targetFilePath>
+					<targetFilePath>apoza@glassfishprod.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/other/example rename 1</targetFilePath>
+				</targets>
+			</transfer>
+			<transfer>
+				<sourceFilePath>/home/antonio/Documents/Scipion/ScipionTestFiles/withSpaces/example 2</sourceFilePath>
+				<targets>
+					<targetFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/other/example rename 2</targetFilePath>
+					<targetFilePath>apoza@glassfishprod.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/other/example rename 2</targetFilePath>
+				</targets>
+			</transfer>
+			<transfer>
+				<sourceFilePath>/home/antonio/Documents/Scipion/ScipionTestFiles/withSpaces/example 3</sourceFilePath>
+				<targets>
+					<targetFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/other/example rename 3</targetFilePath>
+					<targetFilePath>apoza@glassfishprod.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/other/example rename 3</targetFilePath>
+				</targets>
+			</transfer>
+			
+		</transferList>
+	</fileTransfer>
+</fileTransferTest>

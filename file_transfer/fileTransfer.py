@@ -431,8 +431,23 @@ class FileTransfer():
         try:
             sftp.lstat(filePathParentDirectory)
         except IOError:
-            # Directory does not exist
-            sftp.mkdir(filePathParentDirectory)
+            # Directory does not exist            
+            #sftp.mkdir(filePathParentDirectory) this can not be used if it dos not exist folder and subfolder.
+            # self.ssh.exec_command('mkdir -p ' +filePathParentDirectory)
+            self.__mkdirP(filePathParentDirectory, sftp)
+
+    def __mkdirP(self, remoteDirectory, sftp):
+        """
+        Create remote folder structure creating all non-existent folders.
+        remoteDirectory -- Remote directory to create.
+        sftp -- Remote sftp session.
+        """
+        if remoteDirectory != '/':
+            self.__mkdirP(os.path.dirname(remoteDirectory), sftp)
+            try:
+                sftp.lstat(remoteDirectory)
+            except IOError:
+                sftp.mkdir(remoteDirectory) 
             
     def __createLocalFolderForFile(self, filePath):
         """
