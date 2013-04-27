@@ -65,6 +65,7 @@ class XmippSetOfMicrographs(SetOfMicrographs):
         """Add a micrograph to the set"""
         objId = self._md.addObject()
         # Convert to xmipp micrograph if necessary
+        from convert import convertMicrograph
         micXmipp = convertMicrograph(micrograph)
         for label, value in micXmipp.iterItems():
             # TODO: Check how to handle correctly unicode type

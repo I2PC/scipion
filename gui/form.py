@@ -246,7 +246,8 @@ class ParamWidget():
         self.btnFrame.grid_remove()
         
     def set(self, value):
-        self.var.set(value)
+        if value is not None:
+            self.var.set(value)
         
     def get(self):
         return self.var.get()
@@ -285,13 +286,40 @@ class FormWindow(Window):
         self.protocol = protocol
         contentFrame = self.createSections(text)
         
-        btnFrame = tk.Frame(self.root)
+        bottomFrame = tk.Frame(self.root)
+        bottomFrame.columnconfigure(0, weight=1)
+        bottomFrame.grid(row=2, column=0, sticky='sew')
+        
+        expertFrame = tk.Frame(bottomFrame)
+        #expertFrame.columnconfigure(0, weight=1)
+        expertFrame.grid(row=0, column=0, sticky='sw', padx=5, pady=5)
+        expLabel = tk.Label(expertFrame, text="Expert level: ", font=font)
+        expLabel.grid(row=0, column=0)
+        var = tk.StringVar()
+        var.set(LEVEL_CHOICES[0])
+        expCombo = ttk.Combobox(expertFrame, textvariable=var, state='readonly')
+        expCombo['values'] = LEVEL_CHOICES
+        expCombo.grid(row=0, column=1)
+        self.expertVar = var
+        
+        btnFrame = tk.Frame(bottomFrame)
         btnFrame.columnconfigure(0, weight=1)
-        btnFrame.grid(row=2, column=0, sticky='sew')
+        btnFrame.grid(row=1, column=0, sticky='sew')
+        # Save and close buttons
+        def showMsg(msg):
+            print "clicked: ", msg
+        
+        btnClose = tk.Button(btnFrame, text="Close", image=self.getImage('dialog_close.png'), compound=tk.LEFT, font=font,
+                          command=self.close)
+        btnClose.grid(row=0, column=0, padx=5, pady=5, sticky='se')
+        btnClose = tk.Button(btnFrame, text="Save", image=self.getImage('filesave.png'), compound=tk.LEFT, font=font, 
+                          command=lambda : showMsg('Save'))
+        btnClose.grid(row=0, column=1, padx=5, pady=5, sticky='se')
         # Add create project button
-        btn = tk.Button(btnFrame, text='Execute', fg='white', bg='#7D0709', font=font, 
+        
+        btnExecute = Button(btnFrame, text='Execute', fg='white', bg='#7D0709', font=font, 
                         activeforeground='white', activebackground='#A60C0C', command=self.execute)
-        btn.grid(row=0, column=0, padx=(5, 100), pady=5, sticky='se')
+        btnExecute.grid(row=0, column=2, padx=(15, 50), pady=5, sticky='se')
         
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(1, weight=1)
