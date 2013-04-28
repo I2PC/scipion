@@ -24,8 +24,11 @@
 # *
 # **************************************************************************
 """
-Protocols related to EM
+In this module are protocol base classes related to EM.
+Them should be sub-classes in the different sub-packages from
+each EM-software packages.
 """
+
 import os
 import shutil
 from pyworkflow.object import String, Float
@@ -79,8 +82,8 @@ class ProtImportMicrographs(Protocol):
         
     def importMicrographs(self, pattern, tiltPairs, voltage, sphericalAberration, 
                           samplingRate, scannedPixelSize):
-        """Copy micrographs matching the filename pattern
-        Register other parameters
+        """ Copy micrographs matching the filename pattern
+        Register other parameters.
         """
         from glob import glob
         files = glob(pattern)
@@ -107,8 +110,8 @@ class ProtImportMicrographs(Protocol):
 
 
 class DefCTFMicrographs(Form):
-    """Create the definition of parameters for
-    the XmippCtfMicrographs protocol
+    """ Create the definition of parameters for
+    the XmippCtfMicrographs protocol.
     """
     def __init__(self):
         Form.__init__(self)
@@ -153,19 +156,20 @@ class DefCTFMicrographs(Form):
 
 
 class ProtCTFMicrographs(Protocol):
-    """Base class for all protocols that estimates the CTF"""
+    """ Base class for all protocols that estimates the CTF"""
     _definition = DefCTFMicrographs()
     
     def _iterMicrographs(self):
-        """Iterate over micrographs and yield
-        micrograph name and a directory to process """
+        """ Iterate over micrographs and yield
+        micrograph name and a directory to process.
+        """
         for mic in self.inputMics:
             micFn = mic.getFileName()
             micDir = self._getExtraPath(removeBaseExt(micFn)) 
             yield (micFn, micDir, mic)  
         
     def _defineSteps(self):
-        """ insert the steps to perform ctf estimation on a set of micrographs
+        """ Insert the steps to perform ctf estimation on a set of micrographs.
         """
         # Get pointer to input micrographs 
         self.inputMics = self.inputMicrographs.get() 
@@ -192,14 +196,14 @@ class ProtCTFMicrographs(Protocol):
         self._insertFunctionStep('createOutput')
         
     def _prepareCommand(self):
-        """This function should be implemented to prepare the
+        """ This function should be implemented to prepare the
         arguments template if doesn't change for each micrograph
-        After this method self._program and self._args should be set 
+        After this method self._program and self._args should be set. 
         """
         pass
     
     def _estimateCTF(self, micFn, micDir):
-        """Do the CTF estimation with the specific program
+        """ Do the CTF estimation with the specific program
         and the parameters required.
         Params:
          micFn: micrograph filename

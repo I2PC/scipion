@@ -11,7 +11,8 @@ import os
 
 class EmanDefParticlePicking(Form):
     """Create the definition of parameters for
-    the Eman Boxing protocol"""
+    the Eman Boxing protocol.
+    """
     def __init__(self):
         Form.__init__(self)
         
@@ -23,13 +24,19 @@ class EmanProtBoxing(ProtParticlePicking):
     
     _definition = EmanDefParticlePicking()
     
-    def __init__(self, **args):
-        
+    def __init__(self, **args):        
         ProtParticlePicking.__init__(self, **args)
         
+    def _runSteps(self, startIndex):
+        # Redefine run to change to workingDir path
+        # Change to protocol working directory
+        self._enterWorkingDir()
+        Protocol._runSteps(self, startIndex)
+        
     def _defineSteps(self):
-        self._params = {'inputMics': ' '.join([os.path.relpath(mic.getFileName(), self.workingDir.get()) for mic in self.inputMicrographs.get()]),
-                       'boxSize': self.boxSize.get()}      
+        micList = [os.path.relpath(mic.getFileName(), self.workingDir.get()) for mic in self.inputMicrographs.get()]
+        self._params = {'inputMics': ' '.join(micList), 
+                        'boxSize': self.boxSize.get()}      
         # Launch Boxing GUI
         self._insertFunctionStep('launchBoxingGUI', isInteractive=True) 
         # Insert step to create output objects       
@@ -38,7 +45,6 @@ class EmanProtBoxing(ProtParticlePicking):
     def launchBoxingGUI(self):
         # First we go to runs directory (we create if it does not exist)
         #path.makePath("runs")
-        os.chdir(self.workingDir.get())
         # Program to execute and it arguments
         program = "e2boxer.py"
         arguments = "%(inputMics)s --gui --boxsize=%(boxSize)i"
@@ -46,10 +52,10 @@ class EmanProtBoxing(ProtParticlePicking):
         runJob(None, program, arguments % self._params)
         
     def createOutput(self):
-        # Generate .box files with picked coordinates.
-        newBoxSize =  self.__getBoxingBoxSize()
-        self._params['boxSize'] = newBoxSize
-        runJob(None, "e2boxer.py", 
+        # Get the box size store in Eman db
+        print "current dir: ", os.getcwd()
+        self._params['boxSize'] = self.__getBoxingBoxSize()
+        runJob(None, "pwd; e2boxer.py", 
                      "%(inputMics)s --boxsize=%(boxSize)d --write_dbbox" % self._params)   
         # Create the SetOfCoordinates object on the database        
         self.outputCoordinates = EmanSetOfCoordinates()
@@ -58,14 +64,17 @@ class EmanProtBoxing(ProtParticlePicking):
         self._defineOutputs(outputCoordinates=self.outputCoordinates) 
     
     def __getBoxingBoxSize(self):
-        """ Recover the box size from EMAN Berkeley data base. """
+        """ Recover the box size from EMAN Berkeley data base. """        
         command = "e2bdb.py -D bdb:emboxerbase"
         pipe = os.popen(command)
         stOutput = pipe.readlines()
         pipe.close()
+        auxBoxSize = None
         for line in stOutput:
             if ("box_size" in line):
-                auxBoxSize = line.split(" : ")[1]
-        return int(auxBoxSize)
+                auxBoxSize = int(line.split(" : ")[1])
+        if auxBoxSize is None:
+            raise Exception("Error getting the stored boxsize with command: " + command) 
+        return auxBoxSize
 
     

@@ -25,11 +25,12 @@
 # **************************************************************************
 """
 This modules contains basic hierarchy
-for specific Xmipp3 EM data objects
+for specific EMAN2 EM data objects
 """
 
 from pyworkflow.em import *  
 from pyworkflow.utils.path import removeBaseExt
+    
     
 class EmanSetOfMicrographs(SetOfMicrographs):
     
