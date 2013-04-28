@@ -131,24 +131,28 @@ class XmippProtExtractParticles(ProtExtractParticles):
         
         self.samplingOriginal = self.inputMics.samplingRate.get()
 
-        if self.downsampleType == SAME_AS_PICKING:
+        if self.downsampleType == self.SAME_AS_PICKING:
             # If 'same as picking' get samplingRate from input micrographs  
             self.inputMics = self.inputCoords.getMicrographs()
             self.samplingFinal = self.inputMics.samplingRate.get()
-        elif self.downsampleType == ORIGINAL:
+        elif self.downsampleType == self.ORIGINAL:
             # If 'original' get sampling rate from original micrographs
             self.samplingFinal = self.inputMics.samplingRate.get()
         else:
             # IF 'other' multiply the original sampling rate by the factor provided
             self.samplingFinal = self.inputMics.samplingRate.get()*self.downFactor
 
+        # Create extract_list.xmd metadata
+        self.fnExtractList = self._getExtraPath('extract_list.xmd')
+        self.mdExtractList = xmipp.MetaData()
+                
         # For each micrograph insert the steps
         for mic in self.inputMics:
             fn = mic.getFileName()
             micrographToExtract = fn
         
             # If downsample type is 'other' perform a downsample
-            if self.downsampleType == OTHER:
+            if self.downsampleType == self.OTHER:
                 fnDownsampled = self._getTmpPath(removeBaseExt(fn)+"_downsampled.xmp")
                 downFactor = self.downFactor.get()
                 args = "-i %(micrographToExtract)s -o %(fnDownsampled)s --step %(downFactor)f --method fourier"
@@ -167,10 +171,11 @@ class XmippProtExtractParticles(ProtExtractParticles):
             if self.DoFlip:
                 if mic.hasCTF():
                     fnFlipped = self._getTmpPath(removeBaseExt(fn)+"_flipped.xmp")
-                    ctf = convertCTFModel(mic.ctfModel).getFileName()
-                    args = " -i %(micrographToExtract)s --ctf %(ctf)s -o %(fnFlipped)s"
+                    fnCTFTmp = self._getTmpPath("tmp.ctfParam")
+                    fnCTF = convertCTFModel(mic.ctfModel, fnCTFTmp).getFileName()
+                    args = " -i %(micrographToExtract)s --ctf %(fnCTF)s -o %(fnFlipped)s"
                     # If some downsampling has been performed (either before picking or now) pass the downsampling factor 
-                    if self.downsampleType != SAME_AS_PICKING:
+                    if self.downsampleType != self.SAME_AS_PICKING:
                         downFactor = self.samplingFinal/self.samplingOriginal
                         args += " --downsampling %(downFactor)f"
                         self._insertRunJobStep("xmipp_ctf_phase_flip", args % locals())
@@ -180,59 +185,57 @@ class XmippProtExtractParticles(ProtExtractParticles):
                     pass
                 
             # Actually extract
-            self._insertFunctionStep('extractParticles', micrographToExtract)
+            self._insertFunctionStep('extractParticles', micrographToExtract, mic)
                 
-        # Delete temporary files
-        
-        
+        # TODO: Delete temporary files
                 
         # Insert step to create output objects       
         self._insertFunctionStep('createOutput')
            
  
-    def extractParticles(self, micrographToExtract):
+    def extractParticles(self, micrographToExtract, mic):
         ''' Extract particles from one micrograph '''
         # Extract 
         outputRoot = self._getExtraPath(removeBaseExt(micrographToExtract))
+
+        # Add coordinates for this micrograph to extract_list.xmd
+        hasCoords = self._addToExtractList(mic, self.mdExtractList)
         
+        # If it has coordinates extract the particles
+        if hasCoords:
+            posMetadata = removeBaseExt(micrographToExtract) + "@" + self.fnExtractList
+           
+            boxSize = self.boxSize.get()
+            args = "-i %(micrographToExtract)s --pos %(posMetadata)s -o %(outputRoot)s --Xdim %(boxSize)d" % locals()
+            if self.downsampleType != self.SAME_AS_PICKING:
+                args += " --downsampling " + str(self.samplingFinal/self.samplingOriginal)
+            if self.doInvert:
+                args += " --invert"
         
-        fnExtractList = self._getExtraPath('extract_list.xmd')
-        self._createExtractList(fnExtractList)
-        
-        posMetadata = removeBaseExt(micrographToExtract) + "@" + fnExtractList
-        
-        print 'posMetadata' , posMetadata
-        
-        boxSize = self.boxSize.get()
-        args = "-i %(micrographToExtract)s --pos %(posMetadata)s -o %(outputRoot)s --Xdim %(boxSize)d" % locals()
-        if self.downsampleType != 1:
-            args += " --downsampling " + str(self.samplingFinal/self.samplingOriginal)
-        if self.doInvert:
-            args += " --invert"
-    
-        runJob(None,"xmipp_micrograph_scissor", args)
-        # Normalize 
-        if self.doNormalize:
-            runNormalize(None, outputRoot + '.stk',self.normaType.get(), self.backRadius.get(), 1)          
+            runJob(None,"xmipp_micrograph_scissor", args)
+            # Normalize 
+            if self.doNormalize:
+                runNormalize(None, outputRoot + '.stk',self.normaType.get(), self.backRadius.get(), 1)          
                                    
-    def _createExtractList(self, fnExtractList):
-        ''' Create xmipp metadata extract_list with the coordinates for all micrographs '''
+    def _addToExtractList(self, mic, mdExtractList):
+        ''' Create xmipp metadata extract_list with the coordinates for a micrograph '''
         
-        #Iterate over the micrographs on the SetOfCoordinates
-        for mic in self.inputCoords.iterMicrographs():
-            micName = removeBaseExt(mic.getFileName())
-            
-            # Create micrograph datablock
-            coorMD = xmipp.MetaData()
-            #Iterate over the coordinates on that micrograph
-            for coords in self.inputCoords.iterCoordinates(mic):
-                print "%d, %d" % (coords.x, coords.y)        
-                coorId = coorMD.addObject()
-                coorMD.setValue(xmipp.MDL_XCOOR, int(coords.x), coorId)
-                coorMD.setValue(xmipp.MDL_YCOOR, int(coords.y), coorId)
+        micName = removeBaseExt(mic.getFileName())
+
+        #Iterate over the coordinates on that micrograph
+        writeBlock = False
+        for coords in self.inputCoords.iterCoordinates(mic):    
+            coorId = mdExtractList.addObject()
+            mdExtractList.setValue(xmipp.MDL_XCOOR, int(coords.x), coorId)
+            mdExtractList.setValue(xmipp.MDL_YCOOR, int(coords.y), coorId)
+            writeBlock = True
                                 
-            coorMD.write(micName + "@%s" % fnExtractList, xmipp.MD_APPEND)        
+        # Write block only if there are coordinates for this micrograph
+        if writeBlock:
+            mdExtractList.write(micName + "@%s" % self.fnExtractList, xmipp.MD_APPEND)        
         
+        return writeBlock
+    
     def createOutput(self):
         # Create the SetOfImages object on the database
         mdOut = xmipp.FileName(self._getPath('images.xmd'))        

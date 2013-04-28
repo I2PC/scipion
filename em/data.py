@@ -317,6 +317,15 @@ class CTFModel(EMObject):
         self.defocusAngle = Float()
         self.ampContrast = Float()
         
+    def copyInfo(self, other):
+        self.ampContrast = other.ampContrast
+        self.defocusU = other.defocusU
+        self.defocusV = other.defocusV
+        self.defocusAngle = other.defocusAngle
+        self.samplingRate = other.samplingRate
+        self.voltage = other.voltage
+        self.sphericalAberration = other.sphericalAberration
+        
     
 class ImageClassAssignment(EMObject):
     """ This class represents the relation of

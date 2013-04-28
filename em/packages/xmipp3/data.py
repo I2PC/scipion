@@ -208,26 +208,40 @@ class XmippCTFModel(CTFModel):
                  "critPsdPCA1":xmipp.MDL_CTF_CRIT_PSDPCA1VARIANCE,
                  "critPsdPCARuns":xmipp.MDL_CTF_CRIT_PSDPCARUNSTEST
                  }
-    
-    # Implementar el constructor para crear las variables del modelo usando el params de arriba
-    # y leyendo del metadata. No hace falta el __getattr__
-    
-    def __init__(self, filename, **args):
-        # Use the object value to store the filename
+
+    def __init__(self, filename = None, **args):
+
         args['value'] = filename
-        CTFModel.__init__(self, **args)
-        md = xmipp.MetaData(filename)
-        objId = md.firstObject()
-        
-        for key, val in  self.ctfParams.iteritems():
-            mdVal = md.getValue(val, objId)
-            if not hasattr(self, key):
-                setattr(self, key, Float(mdVal))
-            else:
-                getattr(self, key).set(mdVal)
+                    
+        CTFModel.__init__(self, **args)       
+        if filename is not None:
+            # Use the object value to store the filename
+
+            md = xmipp.MetaData(filename)
+            objId = md.firstObject()
+            
+            for key, val in  self.ctfParams.iteritems():
+                mdVal = md.getValue(val, objId)
+                if not hasattr(self, key):
+                    setattr(self, key, Float(mdVal))
+                else:
+                    getattr(self, key).set(mdVal)
                 
     def getFileName(self):
-        return self.get()            
+        return self.get()          
+    
+    def write(self, fn):
+
+        md = xmipp.MetaData()
+        objId = md.addObject()
+        for key, val in  self.ctfParams.iteritems():
+            if hasattr(self, key):
+                md.setValue(val, getattr(self, key).get(), objId)
+                
+        md.write(fn)
+        
+        self.set(fn)
+          
     
 class XmippSetOfCoordinates(SetOfCoordinates):
     """Implementation of SetOfCoordinates for Xmipp"""

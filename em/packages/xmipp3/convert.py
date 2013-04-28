@@ -29,7 +29,8 @@ This module contains converter functions
 from base classes to xmipp classes
 """
 
-from data import XmippMicrograph, XmippSetOfMicrographs
+#from data import XmippMicrograph, XmippSetOfMicrographs, XmippCTFModel
+from em import *
 import xmipp
     
 def convertMicrograph(mic):
@@ -58,9 +59,14 @@ def convertSetOfMicrographs(setOfMics, filename):
     return micsOut
     
     
-def convertCTFModel(setOfMics, filename):
-    """Method to convert from a general SetOfMicrographs to XmippSetOfMicrographs"""
-    if type(setOfMics) is XmippSetOfMicrographs:
-        return setOfMics
+def convertCTFModel(ctfModel, filename):
+    """ Method to convert from a general ctfModel to XmippCtfModel """
+    if type(ctfModel) is XmippCTFModel:
+        return ctfModel
         
-    return None
+    xmippCTFModel = XmippCTFModel()
+    xmippCTFModel.copyInfo(ctfModel)
+    
+    xmippCTFModel.write(filename)
+    
+    return xmippCTFModel
