@@ -1,7 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
-# *            
+# *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
@@ -24,16 +24,35 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains Xmipp3.0 specific protocols
+This module is mainly for the Viewer class, which 
+serve as base for implementing visualization tools(Viewer sub-classes).
 """
 
-import os
+from os.path import join
 
-def getXmippPath(*paths):
-    '''Return the path the the Xmipp installation folder
-    if a subfolder is provided, will be concatenated to the path'''
-    if os.environ.has_key('XMIPP_HOME'):
-        return os.path.join(os.environ['XMIPP_HOME'], *paths)  
-    else:
-        raise Exception('XMIPP_HOME environment variable not set') 
+class Viewer():
+    """ All visualization wrappers should user the Viewer class
+    as base and provide the implementation to launch specific 
+    command line tools in order to visualize objects.
+    
+    The _target class property should contains a list of string
+    with the class names that this viewer is able to visualize.
+    For example: _target = ['Image', 'SetOfImages']
+    """
+    _target = [] 
+    
+    def __init__(self, tmpPath='.', **args):
+        self._tmpPath = tmpPath
+        
+    def _getTmpPath(self, *paths):
+        return join(self._tmpPath, *paths)
+    
+    def visualize(self, obj):
+        """ This method should make the necessary convertions
+        and call the command line utilities to visualize this
+        particular object.
+        """
+        pass
+
+
 

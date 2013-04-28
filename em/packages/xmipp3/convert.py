@@ -29,8 +29,7 @@ This module contains converter functions
 from base classes to xmipp classes
 """
 
-#from data import XmippMicrograph, XmippSetOfMicrographs, XmippCTFModel
-from em import *
+from data import XmippMicrograph, XmippSetOfMicrographs, XmippCTFModel
 import xmipp
     
 def convertMicrograph(mic):
