@@ -48,7 +48,7 @@ class Tree(ttk.Treeview, Scrollable):
         return gui.getImage(img, Tree._images)
     
     def getFirst(self):
-        ''' Return first selected item or None if selection empty'''
+        """ Return first selected item or None if selection empty"""
         selection = self.selection()
         if len(selection):
             return selection[0]
@@ -62,15 +62,15 @@ class Tree(ttk.Treeview, Scrollable):
                 self.selection_set(item)
         
     def moveSelectionUp(self, e=None):
-        ''' change selection to previous item '''
+        """ change selection to previous item """
         self._moveSelection(self.prev)
     
     def moveSelectionDown(self, e=None):
-        ''' change selection to to next item '''
+        """ change selection to to next item """
         self._moveSelection(self.next)
         
     def moveItemUp(self, e=None):
-        '''if selected item is not the first move up one position'''
+        """if selected item is not the first move up one position"""
         item = self.selection_first()
         if item:
             index = self.index(item)
@@ -78,7 +78,7 @@ class Tree(ttk.Treeview, Scrollable):
                 self.move(item, '', index-1)
                 
     def moveItemDown(self, e=None):
-        '''if selected item is not the first move up one position'''
+        """if selected item is not the first move up one position"""
         item = self.selection_first()
         if item:
             index = self.index(item)
@@ -86,7 +86,7 @@ class Tree(ttk.Treeview, Scrollable):
                 self.move(item, '', index+1)
                 
     def clear(self):
-        ''' remove all items '''
+        """ remove all items """
         childs = self.get_children('')
         for c in childs:
             self.delete(c)
@@ -112,12 +112,30 @@ class TreeProvider():
         """ This function will be called by the Tree with each
         object that will be inserted. A dictionary should be 
         returned with the possible following entries:
-        'key': the key value to inserte in the Tree
+        'key': the key value to insert in the Tree
         'text': text of the object to be displayed (if not passed the 'key' will be used)
         'image': image path to be displayed as icon (optional)
         'parent': the object's parent in which insert this object (optional)
         """
         pass
+    
+    def getObjectPreview(self, obj):
+        """ Should return a tuple (img, desc),
+        where img is the preview image and 
+        desc the description string. 
+        """
+        return (None, None)
+    
+    def getObjectActions(self, obj):
+        """ Return a list of tuples (key, action)
+        were keys are the string
+        options that will be display in the context menu
+        and the actions are the functions to call when
+        the specific action is selected.
+        The first action in the list will be taken
+        as the default one when the element is double-clicked.
+        """
+        return []
         
         
 class BoundTree(Tree):
@@ -140,10 +158,50 @@ class BoundTree(Tree):
             self.heading(c, text=c)
         self.grid(row=0, column=0, sticky='news')
         self.provider = provider
+        self.menu = tk.Menu(self, tearoff=0)
         self.update()
         
+        self.bind("<Button-3>", self._onRightClick)
+        # Hide the right-click menu
+        self.bind('<FocusOut>', self._unpostMenu)
+        self.bind("<Key>", self._unpostMenu)
+        self.bind('<Button-1>', self._unpostMenu)
+        self.bind('<<TreeviewSelect>>', self._onClick)
+        
+    def _unpostMenu(self, e=None):
+        self.menu.unpost()
+        
+    def _onClick(self, e=None):
+        if hasattr(self, 'itemClickedCallback'):
+            obj = self._objDict[self.getFirst()]
+            self.itemClickedCallback(obj)
+            
+    def _onRightClick(self, e=None):
+        item = self.identify('item', e.x, e.y)
+        unpost = True
+        if len(item):
+            self.selection_set(item)
+            obj = self._objDict[item]
+            actions = self.provider.getObjectActions(obj)
+            if len(actions):
+                self.menu.delete(0, tk.END)
+                for a in actions:
+                    if a is None: 
+                        self.menu.add_separator()
+                    else:
+                        img = ''
+                        if len(a) > 2: # image for the action
+                            img = self.getImage(a[2])
+                        self.menu.add_command(label=a[0], command=a[1], 
+                                              image=img, compound=tk.LEFT)
+                self.menu.post(e.x_root, e.y_root)
+                unpost = False
+        if unpost:
+            self._unpostMenu()        
+                    
     def update(self):
         self.clear()
+        self._objDict = {} # Store the mapping between Tree ids and objects
         self._objects = self.provider.getObjects()
         for obj in self._objects:
             objDict = self.provider.getObjectInfo(obj)
@@ -166,17 +224,18 @@ class BoundTree(Tree):
             values = objDict.get('values', ())
             obj._treeId = self.insert(parentId, 'end', key,
                         text=text, image=image, values=values)
+            self._objDict[obj._treeId] = obj
 
     def itemConfig(self, obj, **args):
-        """Expand/collapse a previous inserted object"""
+        """ Configure inserted items. """
         self.item(obj._treeId, **args)
         
               
 class ObjectTreeProvider(TreeProvider):
-    """Populate Tree from Objects"""
+    """ Populate Tree from Objects. """
     def __init__(self, objList=None):
         self.objList = objList
-        self.getColumns = lambda: [('Object', 500), ('Id', 70), ('Class', 150)]
+        self.getColumns = lambda: [('Object', 300), ('Id', 70), ('Class', 150)]
     
     def getObjectInfo(self, obj):
         cls = obj.getClassName()
@@ -195,6 +254,27 @@ class ObjectTreeProvider(TreeProvider):
             info['image'] = 'step.gif'
             
         return info
+    
+    def getObjectPreview(self, obj):
+        desc = "<name>: " + obj.getName()
+        
+        return (None, desc)
+    
+    def getObjectActions(self, obj):
+        cls = obj.getClassName()
+        def printStr():
+            print obj
+            
+        def print2():
+            print "="*100
+            print obj
+            print "="*100
+            
+        if cls == 'String':
+            return [('Show', printStr, 'edit.gif'),
+                    ('Open', print2)]
+        
+        return []
         
     def _getObjectList(self):
         """Retrieve the object list"""

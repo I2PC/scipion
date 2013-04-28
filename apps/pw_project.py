@@ -128,7 +128,8 @@ def loadConfig(config, name):
 
 class RunsTreeProvider(TreeProvider):
     """Provide runs info to populate tree"""
-    def __init__(self, mapper):
+    def __init__(self, mapper, actionFunc):
+        self.actionFunc = actionFunc
         self.getObjects = lambda: mapper.selectAll()
         
     def getColumns(self):
@@ -139,6 +140,36 @@ class RunsTreeProvider(TreeProvider):
                 'text': '%s.%s' % (obj.getClassName(), obj.strId()),
                 'values': (obj.status.get(), obj.endTime.get())}
       
+    def getObjectActions(self, obj):
+        prot = obj # Object should be a protocol
+        actionsList = [(ACTION_EDIT, 'Edit     '),
+                       #(ACTION_COPY, 'Duplicate   '),
+                       (ACTION_DELETE, 'Delete    '),
+                       #(None, None),
+                       #(ACTION_STOP, 'Stop'),
+                       (ACTION_STEPS, 'Browse data')
+                       ]
+        status = prot.status.get()
+        if status == STATUS_RUNNING:
+            actionsList.insert(0, (ACTION_STOP, 'Stop execution'))
+            actionsList.insert(1, None)
+        elif status == STATUS_WAITING_APPROVAL:
+            actionsList.insert(0, (ACTION_CONTINUE, 'Approve continue'))
+            actionsList.insert(1, None)
+        
+        actions = []
+        def appendAction(a):
+            v = a
+            if v is not None:
+                action = a[0]
+                text = a[1]
+                v = (text, lambda: self.actionFunc(action), ActionIcons[action])
+            actions.append(v)
+            
+        for a in actionsList:
+            appendAction(a)
+            
+        return actions            
 
 class ProjectWindow(gui.Window):
     def __init__(self, path, master=None):
@@ -189,11 +220,11 @@ class ProjectWindow(gui.Window):
         # Event bindings
         self.root.bind("<F5>", lambda e: self.runsTree.update())
         # Hide the right-click menu
-        self.root.bind('<FocusOut>', self._unpostMenu)
-        self.root.bind("<Key>", self._unpostMenu)
-        self.root.bind('<Button-1>', self._unpostMenu)
+        #self.root.bind('<FocusOut>', self._unpostMenu)
+        #self.root.bind("<Key>", self._unpostMenu)
+        #self.root.bind('<Button-1>', self._unpostMenu)
         
-        self.menuRun = tk.Menu(self.root, tearoff=0)
+        #self.menuRun = tk.Menu(self.root, tearoff=0)
         
     def loadProjectConfig(self):
         self.configMapper = ConfigXmlMapper(getConfigPath('configuration.xml'), globals())
@@ -217,10 +248,11 @@ class ProjectWindow(gui.Window):
         return tree
         
     def createRunsTree(self, parent):
-        tree = BoundTree(parent, RunsTreeProvider(self.project.mapper))
+        provider = RunsTreeProvider(self.project.mapper, self._runActionClicked)
+        tree = BoundTree(parent, provider)
         tree.grid(row=0, column=0, sticky='news')
         tree.bind('<Double-1>', lambda e: self._runActionClicked(ACTION_EDIT))
-        tree.bind("<Button-3>", self._onRightClick)
+        #tree.bind("<Button-3>", self._onRightClick)
         tree.bind('<<TreeviewSelect>>', self._runItemClick)
         return tree
     
@@ -285,39 +317,6 @@ class ProjectWindow(gui.Window):
             elif event == ACTION_CONTINUE:
                 self._continueProtocol(prot)
     
-    def _unpostMenu(self, event=None):
-        self.menuRun.unpost()  
-         
-    def _onRightClick(self, e=None):
-        prot = self.selectedProtocol
-        self.menuRun.delete(0, tk.END)
-        actionsList = [(ACTION_EDIT, 'Edit     '),
-                       #(ACTION_COPY, 'Duplicate   '),
-                       (ACTION_DELETE, 'Delete    '),
-                       #(None, None),
-                       #(ACTION_STOP, 'Stop'),
-                       (ACTION_STEPS, 'Browse data')
-                       ]
-        status = prot.status.get()
-        if status == STATUS_RUNNING:
-            actionsList.insert(0, (ACTION_STOP, 'Stop execution'))
-            actionsList.insert(1, (None, None))
-        elif status == STATUS_WAITING_APPROVAL:
-            actionsList.insert(0, (ACTION_CONTINUE, 'Approve continue'))
-            actionsList.insert(1, (None, None))
-            
-        def addMenuOption(action, label):
-            if action is None: 
-                self.menuRun.add_separator()
-            else:
-                imgName = ActionIcons[action]
-                self.menuRun.add_command(label=" "  + label, command=lambda: self._runActionClicked(action),
-                                         image=self.getImage(imgName), compound=tk.LEFT)
-        
-        for action, label in actionsList:
-            addMenuOption(action, label)
-        self.menuRun.post(e.x_root - 80, e.y_root - 10)
-
     
 if __name__ == '__main__':
     from pyworkflow.manager import Manager

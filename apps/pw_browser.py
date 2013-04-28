@@ -35,52 +35,26 @@ import pyworkflow.gui as gui
 from pyworkflow.object import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
 from pyworkflow.gui.tree import BoundTree, DbTreeProvider
+from pyworkflow.gui.browser import ObjectBrowser
 from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
 from pyworkflow.tests.tester import *
 from pyworkflow.em import *
 
             
-def getMapper(fn, classesDict):
-    """Select what Mapper to use depending on
-    the filename extension"""
-    if fn.endswith('.xml'):
-        return XmlMapper(fn, classesDict)
-    elif fn.endswith('.sqlite'):
-        return SqliteMapper(fn, classesDict)
-    return None
-
-    
 class BrowserWindow(gui.Window):
     def __init__(self, title, provider, master=None, **args):
         if 'minsize' not in args:
             args['minsize'] = (800, 400)
         gui.Window.__init__(self, title, master, **args)
 
-        tree = BoundTree(self.root, provider)
-        #self.populateTree(tree, objList)
-        tree.grid(row=0, column=0, sticky='news')
-        self.itemConfig = tree.itemConfig
-
-    def populateWithObject(self, tree, prefix, obj):
+        browser = ObjectBrowser(self.root, provider)
+        browser.grid(row=0, column=0, sticky='news')
+        self.itemConfig = browser.tree.itemConfig
         
-        sid = obj.getName()
-        if len(sid) == 0:
-            sid = obj.strId()
-        item = tree.insert(prefix, 'end', sid, text=t, values=(cls,))
-        haschilds = False
-
-        if not haschilds:
-            img = self.getImage('step.gif')
-            tree.item(item, image=img)
-            
-        return item
-            
-    def populateTree(self, tree, objList):
-        """Populate a tree from an object list"""
-        for obj in objList:
-            item = self.populateWithObject(tree, '', obj)
-            tree.item(item, open=True)
+#        tree = BoundTree(self.root, provider)
+#        tree.grid(row=0, column=0, sticky='news')
+#        self.itemConfig = tree.itemConfig
     
 if __name__ == '__main__':
     import sys

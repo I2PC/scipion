@@ -64,10 +64,10 @@ class HyperlinkManager:
                 self.links[tag]()
                 return
 
-class XmippText(tk.Text, Scrollable):    
+class Text(tk.Text, Scrollable):    
     """ Base Text widget with some functionalities 
-    that will be used for other extensions """
-     
+    that will be used for other extensions.
+    """
     def __init__(self, master, **opts):  
         defaults = self.getDefaults()
         defaults.update(opts)
@@ -76,7 +76,7 @@ class XmippText(tk.Text, Scrollable):
         self.configureTags()        
 
     def _createWidgets(self, master, **opts):
-        '''This is an internal function to create the Text, the Scrollbar and the Frame'''
+        """This is an internal function to create the Text, the Scrollbar and the Frame"""
         
         # create a popup menu
         self.menu = tk.Menu(master, tearoff=0, postcommand=self.updateMenu)
@@ -87,15 +87,15 @@ class XmippText(tk.Text, Scrollable):
         self.bind("<Button-3>", self.onRightClick)
         
     def getDefaults(self):
-        '''This should be implemented in subclasses to provide defaults'''
+        """This should be implemented in subclasses to provide defaults"""
         return {}
     
     def configureTags(self):
-        '''This should be implemented to create specific tags'''
+        """This should be implemented to create specific tags"""
         pass
     
     def addLine(self, line):
-        '''Should be implemented to add a line '''
+        """Should be implemented to add a line """
         pass
         
     def addNewline(self):
@@ -152,8 +152,8 @@ class XmippText(tk.Text, Scrollable):
         self.config(state=state) 
 
 def configureColorTags(text):
-    ''' Function to configure tag_colorX for all supported colors.
-    It is applicable to an XmippText text '''
+    """ Function to configure tag_colorX for all supported colors.
+    It is applicable to an Text text """
     try:
         from protlib_xmipp import colorMap
         for color in colorMap.keys():
@@ -165,9 +165,9 @@ def configureColorTags(text):
         
         
 def insertColoredLine(text, line, tag=""):
-    ''' Check if the color codes are present in a line
+    """ Check if the color codes are present in a line
     and use the corresponding tags. The colors tags should 
-    be already configured on text object'''
+    be already configured on text object"""
     from protlib_xmipp import findColor
     ctuple = findColor(line)
     if ctuple is None:
@@ -180,16 +180,17 @@ def insertColoredLine(text, line, tag=""):
         text.insert(tk.END, cleanText[idxInitColor:idxFinishColor-1], "tag_" + color)
         text.insert(tk.END, cleanText[idxFinishColor:])
         
-class TaggedText(XmippText):  
-    '''
+        
+class TaggedText(Text):  
+    """
     Implement a Text that will recognized some basic tags
     {some_text} will display some_text in bold
     [some_link] will display some_link as hiperlinnk
     also colors are recognized if set option colors=True
-    '''           
+    """           
     def __init__(self, master, colors=True, **opts):  
         self.colors = colors
-        XmippText.__init__(self, master, **opts)
+        Text.__init__(self, master, **opts)
         # Create regex for tags parsing
         import re
         self.regex = re.compile('((?:\[[^]]+\])|(?:<[^>]+>))')
@@ -205,7 +206,7 @@ class TaggedText(XmippText):
             self.colors = configureColorTags(self) # Color can be unavailable, so disable use of colors    
         
     def getTaggedParts(self, parts):
-        ''' Detect [] as links text and <> as bold text'''
+        """ Detect [] as links text and <> as bold text"""
         tagsDict = {'[': 'link', '<': 'bold'}
         tagged_parts = []
         for p in parts:
@@ -230,21 +231,21 @@ class TaggedText(XmippText):
                     self.insert(tk.END, p, t)
         self.addNewline()       
 
-class OutputText(XmippText):
-    '''
+class OutputText(Text):
+    """
     Implement a Text that will show file content
     and handle console metacharacter for colored output
-    '''
+    """
     def __init__(self, master, filename, colors=True, refresh=0, goEnd=True, **opts):
-        ''' colors flag indicate if try to parse color meta-characters
+        """ colors flag indicate if try to parse color meta-characters
             refresh is the refresh timedeltha in seconds, 0 means no refresh
-        '''
+        """
         self.filename = filename
         self.colors = colors
         self.refresh = refresh
         self.refreshAlarm = None
         self.lineNo = 0
-        XmippText.__init__(self, master, **opts)
+        Text.__init__(self, master, **opts)
         self.doRefresh(refresh)
 
     def getDefaults(self):
@@ -299,8 +300,8 @@ class OutputText(XmippText):
             self.refreshAlarm = None
 
   
-''' Implementation of a simple textfile viewer '''
 class TextfileViewer(tk.Frame):
+    """ Implementation of a simple textfile viewer """
     def __init__(self, master, filelist):
         tk.Frame.__init__(self, master)
         self.searchList = None
@@ -379,7 +380,7 @@ class TextfileViewer(tk.Frame):
             changeFontSize(font, event)
               
     def refreshAll(self, e=None):
-        ''' Refresh all output textareas '''
+        """ Refresh all output textareas. """
         for ta in self.taList:
             ta.readFile(clear=True)
             ta.goEnd()

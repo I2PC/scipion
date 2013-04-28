@@ -130,7 +130,9 @@ IMAGE related variables and functions
 """
 
 def getImage(imageName, imgDict=None):
-    """Search for the image in the RESOURCES path list"""
+    """ Search for the image in the RESOURCES path list. """
+    if imageName is None:
+        return None
     from pyworkflow.utils.path import findResource
     if imgDict is not None and imageName in imgDict:
         return imgDict[imageName]
