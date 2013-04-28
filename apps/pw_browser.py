@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -42,6 +41,29 @@ from pyworkflow.tests.tester import *
 from pyworkflow.em import *
 
             
+class EMTreeProvider(DbTreeProvider):
+    """Retrieve the elements from the database"""
+    def __init__(self, dbName):
+        DbTreeProvider.__init__(self, dbName, globals())
+        self.viewer = XmippViewer()
+        
+    def show(self, obj):
+        self.viewer.visualize(obj)
+        
+    def getObjectPreview(self, obj):
+        desc = "<name>: " + obj.getName()
+        
+        return (None, desc)
+    
+    def getObjectActions(self, obj):
+        cls = type(obj)
+            
+        if issubclass(cls, XmippSetOfMicrographs):
+            return [('Open', lambda: self.viewer.visualize(obj))]
+        
+        return []
+    
+    
 class BrowserWindow(gui.Window):
     def __init__(self, title, provider, master=None, **args):
         if 'minsize' not in args:
@@ -51,17 +73,15 @@ class BrowserWindow(gui.Window):
         browser = ObjectBrowser(self.root, provider)
         browser.grid(row=0, column=0, sticky='news')
         self.itemConfig = browser.tree.itemConfig
-        
-#        tree = BoundTree(self.root, provider)
-#        tree.grid(row=0, column=0, sticky='news')
-#        self.itemConfig = tree.itemConfig
+    
     
 if __name__ == '__main__':
     import sys
     if len(sys.argv) > 1:
         path = sys.argv[1]
-        provider = DbTreeProvider(path, globals())
+        provider = EMTreeProvider(path)
         window = BrowserWindow("Browsing: " + path, provider)    
         window.show()
     else:
         print "usage: pw_browser.py SQLITE_DB"
+

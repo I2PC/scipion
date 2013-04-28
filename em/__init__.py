@@ -32,6 +32,7 @@ import pyworkflow as pw
 from pyworkflow.utils.reflection import getSubClassesFromPath, getSubclasses
 from data import *
 from protocol import *
+from viewer import Viewer
 #from packages import *
 
 PACKAGES_PATH = os.path.join(pw.HOME, 'em', 'packages')
@@ -42,9 +43,12 @@ emProtocolsDict.update(getSubclasses(Protocol, globals()))
 
 # Load all EMObject subclasses found in EM-packages
 emObjectsDict = getSubClassesFromPath(EMObject, PACKAGES_PATH)
-emObjectsDict.update(getSubclasses(Protocol, globals()))
+emObjectsDict.update(getSubclasses(EMObject, globals()))
+
+emViewersDict = getSubClassesFromPath(Viewer, PACKAGES_PATH)
 
 # Update global dictionary with variables found
 globals().update(emProtocolsDict)
 globals().update(emObjectsDict)
+globals().update(emViewersDict)
     

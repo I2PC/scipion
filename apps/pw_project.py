@@ -46,7 +46,7 @@ from pyworkflow.project import Project
 
 import pyworkflow.gui as gui
 from pyworkflow.gui import getImage
-from pyworkflow.gui.tree import Tree, ObjectTreeProvider
+from pyworkflow.gui.tree import Tree, ObjectTreeProvider, DbTreeProvider
 from pyworkflow.gui.form import FormWindow
 from pyworkflow.gui.dialog import askYesNo
 from config import *
@@ -169,7 +169,33 @@ class RunsTreeProvider(TreeProvider):
         for a in actionsList:
             appendAction(a)
             
-        return actions            
+        return actions 
+    
+    
+class EmTreeProvider(ObjectTreeProvider):
+    """Retrieve the elements from the database"""
+    def __init__(self, objList=None):
+        ObjectTreeProvider.__init__(self, objList)
+        self.viewer = XmippViewer()
+        
+    def show(self, obj):
+        self.viewer.visualize(obj)
+        
+    def getObjectPreview(self, obj):
+        desc = "<name>: " + obj.getName()
+        
+        return (None, desc)
+    
+    def getObjectActions(self, obj):
+        cls = type(obj)
+        if cls is Pointer:
+            obj = obj.get()
+            cls = type(obj)            
+            
+        if issubclass(cls, SetOfMicrographs):
+            return [('Open Micrographs with Xmipp', lambda: self.viewer.visualize(obj))]
+        
+        return []           
 
 class ProjectWindow(gui.Window):
     def __init__(self, path, master=None):
@@ -274,7 +300,7 @@ class ProjectWindow(gui.Window):
         w.show(center=True)
         
     def _browseRunData(self):
-        provider = ObjectTreeProvider([self.selectedProtocol])
+        provider = EmTreeProvider([self.selectedProtocol])
         window = BrowserWindow("Protocol data", provider, self,
                                icon=self.icon)
         window.itemConfig(self.selectedProtocol, open=True)  

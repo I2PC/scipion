@@ -23,7 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from protocol.protocol import STATUS_WAITING_APPROVAL, STATUS_FINISHED
 """
 This modules handles the Project management
 """

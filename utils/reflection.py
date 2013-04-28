@@ -34,9 +34,10 @@ from inspect import isclass
 
     
 def getSubClassesFromPath(BaseClass, path):
-    """Try to find possible sub-packages under path
+    """ Try to find possible sub-packages under path
     and find subclasses of BaseClass from them
-    Return a dictionary containing the subclasses"""
+    Return a dictionary containing the subclasses.
+    """
     sys.path.append(path)
     folders = os.listdir(path)
     subclasses = {}
@@ -50,8 +51,9 @@ def getSubClassesFromPath(BaseClass, path):
     return subclasses
     
 def getSubclasses(BaseClass, inputDict):
-    """Iterate over inputDict and find all subclasses
-    of BaseClass, that will be set in outputDict"""
+    """ Iterate over inputDict and find all subclasses
+    of BaseClass, that will be set in outputDict.
+    """
     outputDict = {}
     for k, v in inputDict.iteritems():
         if isclass(v) and issubclass(v, BaseClass):

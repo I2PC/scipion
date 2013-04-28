@@ -91,19 +91,5 @@ def runJavaIJapp(memory, appName, args, batchMode=True):
     
 def runShowJ(inputFiles, memory="1g", extraParams=""):
     runJavaIJapp(memory, "'xmipp.viewer.Viewer'", "-i %s %s" % (inputFiles, extraParams), True)
-   
-   
-from pyworkflow.manager import Manager
-from pyworkflow.project import *
-from pyworkflow.em import *
-from pyworkflow.em.packages.xmipp3 import *
 
-if __name__ == '__main__':
-    projName = 'TestProject'
-    manager = Manager()
-    proj = manager.createProject(projName)
-    l = proj.mapper.selectByClass('SetOfMicrographs')
-    viewer = XmippViewer()
-    viewer.visualize(l[0])
-    viewer.visualize(l[1])
-   
+

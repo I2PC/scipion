@@ -256,24 +256,9 @@ class ObjectTreeProvider(TreeProvider):
         return info
     
     def getObjectPreview(self, obj):
-        desc = "<name>: " + obj.getName()
-        
-        return (None, desc)
+        return (None, None)
     
     def getObjectActions(self, obj):
-        cls = obj.getClassName()
-        def printStr():
-            print obj
-            
-        def print2():
-            print "="*100
-            print obj
-            print "="*100
-            
-        if cls == 'String':
-            return [('Show', printStr, 'edit.gif'),
-                    ('Open', print2)]
-        
         return []
         
     def _getObjectList(self):
