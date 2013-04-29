@@ -1478,11 +1478,23 @@ public:
     /** Get diagonal.
      * It is assumed that the matrix is squared
      */
-    void getDiagonal(Matrix1D<T> &d)
+    void getDiagonal(Matrix1D<T> &d) const
     {
     	d.resizeNoCopy(MAT_XSIZE(*this));
     	for (size_t i=0; i<MAT_XSIZE(*this); ++i)
     		VEC_ELEM(d,i)=MAT_ELEM(*this,i,i);
+    }
+
+    /** Trace
+     * Sum of the values in the diagonal
+     */
+    T trace() const
+    {
+    	size_t d=std::min(MAT_XSIZE(*this),MAT_YSIZE(*this));
+    	T retval=0;
+    	for (size_t i=0; i<d; ++i)
+    		retval+=MAT_ELEM(*this,i,i);
+    	return retval;
     }
 
     /** Determinant of a matrix
