@@ -448,6 +448,27 @@ void lastEigs(const Matrix2D<double> &A, size_t M, Matrix1D<double> &D, Matrix2D
 		MAT_ELEM(P,i,j)=z(i,j);
 }
 
+void eigsBetween(const Matrix2D<double> &A, size_t I1, size_t I2, Matrix1D<double> &D, Matrix2D<double> &P)
+{
+	size_t M = I2 - I1 + 1;
+	int N=(int)MAT_YSIZE(A);
+	alglib::real_2d_array a, z;
+	a.setcontent(N,N,MATRIX2D_ARRAY(A));
+	alglib::real_1d_array d;
+
+	bool ok=smatrixevdi(a, N, true, false, I1, I2, d, z);
+	if (!ok)
+		REPORT_ERROR(ERR_NUMERICAL,"Could not perform eigenvector decomposition");
+
+	D.resizeNoCopy(M);
+	FOR_ALL_ELEMENTS_IN_MATRIX1D(D)
+		VEC_ELEM(D,i)=d(M-1-i);
+	memcpy(&VEC_ELEM(D,0),d.getcontent(),M*sizeof(double));
+	P.resizeNoCopy(N,M);
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(P)
+		MAT_ELEM(P,i,j)=z(i,j);
+}
+
 void connectedComponentsOfUndirectedGraph(const Matrix2D<double> &G, Matrix1D<int> &component)
 {
 	size_t N=MAT_XSIZE(G);

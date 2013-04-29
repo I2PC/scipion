@@ -1812,6 +1812,12 @@ void firstEigs(const Matrix2D<double> &A, size_t M, Matrix1D<double> &D, Matrix2
  */
 void lastEigs(const Matrix2D<double> &A, size_t M, Matrix1D<double> &D, Matrix2D<double> &P);
 
+/** Compute eigenvectors between two indexes of a real, symmetric matrix.
+ * Solves the problem Av=dv.
+ * Only the eigenvectors of the smallest eigenvalues between indexes I1 and I2 are returned as columns of P. Indexes start at 0.
+ */
+void eigsBetween(const Matrix2D<double> &A, size_t I1, size_t I2, Matrix1D<double> &D, Matrix2D<double> &P);
+
 /** Find connected components of a graph.
  * Assuming that the matrix G represents an undirected graph (of size NxN), this function returns a vector (of size N) that indicates
  * for each element which is the number of its connected component.
