@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:    Francisco Sanz Encinas            franciscosanz89@gmail.com (2013)
+ * Authors:    Carlos Oscar Sorzano         coss@cnb.csic.es (2013)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -22,36 +22,18 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-#ifndef _GPLVM
-#define _GPLVM
 
-#include <data/matrix2d.h>
-#include <data/matrix1d.h>
-#include "dimred_tools.h"
 #include "pca.h"
 
-#include <math.h>
-
-/**@defgroup GPLVM Gaussian Process Latent Variable Model
-   @ingroup DimRedLibrary */
-//@{
-/** Class for making a GPLVM dimensionality reduction */
-class GPLVM: public PCA
+void PCA::reduceDimensionality()
 {
-public:
-	double sigma;
-public:
-	/// Set specific parameters
-	void setSpecificParameters(double sigma=1.0);
+	subtractColumnMeans(*X);
 
-	/// Reduce dimensionality
-	void reduceDimensionality();
+	Matrix2D<double> C, M;
+	matrixOperation_AtA(*X,C);
 
-	/// Objective function
-	double objectiveFunction();
-public:
-	Matrix2D<double> K, tmp;
-	Matrix1D<double> sumY2;
-};
-//@}
-#endif
+	Matrix1D<double> lambda;
+	firstEigs(C, outputDim, lambda, M);
+
+	Y=*X*M;
+}
