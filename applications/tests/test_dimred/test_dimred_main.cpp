@@ -4,6 +4,7 @@
 #include <dimred/ltsa.h>
 #include <dimred/gplvm.h>
 #include <dimred/lltsa.h>
+#include <dimred/lltsaSCG.h>
 #include <dimred/kernelPCA.h>
 #include <dimred/hessianLLE.h>
 #include <dimred/diffusionMaps.h>
@@ -110,7 +111,7 @@ TEST_F( DimRedTest, intrinsic_dimensionality)
 	dimred.setSpecificParameters(); \
 	dimred.reduceDimensionality(); \
 	const Matrix2D<double> &Y=dimred.getReducedData();\
-	/* Y.write(file); */ \
+	Y.write(file); \
 	Matrix2D<double> expectedY; \
 	expectedY.resizeNoCopy(Y); \
 	expectedY.read(file); \
@@ -120,7 +121,7 @@ TEST_F( DimRedTest, intrinsic_dimensionality)
 #ifdef NEVERDEFINED
 COMPLETE_TEST(ltsa,               LTSA,             "helix",1000,"dimred/ltsa.txt")
 COMPLETE_TEST(diffusionMaps,      DiffusionMaps,    "helix",1000,"dimred/diffusionMaps.txt")
-COMPLETE_TEST(lltsa,            LLTSA,            "helix",1000,"dimred/lltsa.txt")
+COMPLETE_TEST(lltsa,              LLTSA,            "helix",1000,"dimred/lltsa.txt")
 INCOMPLETE_TEST(lpp,              LPP,              "helix",1000,"dimred/lpp.txt")
 INCOMPLETE_TEST(spe,              SPE,              "helix",1000,"dimred/spe.txt")
 INCOMPLETE_TEST(laplacianEigenmap,LaplacianEigenmap,"helix",1000,"dimred/laplacianEigenmap.txt")
@@ -131,6 +132,7 @@ INCOMPLETE_TEST(chartingmanifold, ChartingManifold, "helix",1000,"dimred/chartin
 INCOMPLETE_TEST(gplvm,            GPLVM,            "helix",1000,"dimred/gplvm.txt")
 INCOMPLETE_TEST(kernelPCA,        KernelPCA,        "helix",1000,"dimred/kernelPCA.txt")
 #endif
+COMPLETE_TEST(lltsaSCG,           LLTSASCG,         "helix",1000,"dimred/lltsaSCG.txt")
 
 GTEST_API_ int main(int argc, char **argv)
 {
