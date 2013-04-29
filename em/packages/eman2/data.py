@@ -35,7 +35,7 @@ from pyworkflow.utils.path import removeBaseExt
 class EmanSetOfMicrographs(SetOfMicrographs):
     
     def __iter__(self):
-        """Iterate over the set of micrographs in the MetaData"""
+        """ Iterate over the set of micrographs in the MetaData. """
         metaDataFile=open(self.getFileName(),"r")
         for line in metaDataFile:
             micrograph = Micrograph()
@@ -43,14 +43,16 @@ class EmanSetOfMicrographs(SetOfMicrographs):
             yield micrograph
         metaDataFile.close()
             
+            
 class EmanCoordinate(Coordinate):
-    """This class holds the (x,y) position and other information
-    associated with a EMAN coordinate (Eman coordinates are POS_TOPLEFT mode)"""    
-    
+    """ This class holds the (x,y) position and other information
+    associated with a EMAN coordinate (Eman coordinates are POS_TOPLEFT mode).
+    """
     def getPosition(self, mode=Coordinate.POS_TOPLEFT):
-        """Return the position of the coordinate.
+        """ Return the position of the coordinate.
         mode: select if the position is the center of the box
-          or in the top left corner."""
+        or in the top left corner.
+        """
         if mode == Coordinate.POS_TOPLEFT:
             return self.x, self.y
         elif mode == Coordinate.POS_CENTER: 
@@ -63,31 +65,35 @@ class EmanCoordinate(Coordinate):
         self.y = y
     
     def getMicrograph(self):
-        """Return the micrograph object to which
-        this coordinate is associated"""
+        """ Return the micrograph object to which
+        this coordinate is associated.
+        """
         return self._micrograph
     
     def setMicrograph(self, micrograph):
-        """Set the micrograph to which this coordinate belongs"""
+        """ Set the micrograph to which this coordinate belongs. """
         self._micrograph = micrograph
     
     def getPair(self):
-        """It should return the paired coordinate associate to self.
+        """ It should return the paired coordinate associate to self.
         If self is an untilted coordinate, getPaired will return the 
-        tilted one and viceversa"""
+        tilted one and viceversa.
+        """
         pass 
     
     
 class EmanSetOfCoordinates(SetOfCoordinates):
-    """Encapsulate the logic of a set of particles coordinates for EMAN.
+    """ Encapsulate the logic of a set of particles coordinates for EMAN.
     Each coordinate has a (x,y) position and is related to a Micrograph
     The SetOfCoordinates can also have information about TiltPairs.
-    EMAN coordinates are taken from top left"""
+    EMAN coordinates are taken from top left. 
+    """
     
     def iterCoordinates(self):
-        """Iterates over the whole set of coordinates.
+        """ Iterates over the whole set of coordinates.
         If the SetOfMicrographs has tilted pairs, the coordinates
-        should have the information related to its paired coordinate."""
+        should have the information related to its paired coordinate. 
+        """
         
         for micrograph in self._micrographsPointer.get():
             micrographFileNameNE = removeBaseExt(micrograph.getFileName())
@@ -108,16 +114,18 @@ class EmanSetOfCoordinates(SetOfCoordinates):
             boxFile.close()
     
     def hasTiltPairs(self):
-        """Returns True if the SetOfMicrographs has tilted pairs"""
+        """ Returns True if the SetOfMicrographs has tilted pairs. """
         return self.getMicrographs().hasTiltPairs()
     
     def getMicrographs(self):
-        """Returns the SetOfMicrographs associated with 
-        this SetOfCoordinates"""
+        """ Returns the SetOfMicrographs associated with 
+        this SetOfCoordinates.
+        """
         return self._micrographsPointer.get()
     
     def setMicrographs(self, micrographs):
         """ Set the SetOfMicrograph associates with 
-        this set of coordinates """
+        this set of coordinates.
+        """
         self._micrographsPointer.set(micrographs)
         
