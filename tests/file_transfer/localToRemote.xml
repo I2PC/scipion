@@ -56,7 +56,30 @@
 					<targetFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/testFileTransfer/localToOneRemoteHost/other/example rename 3</targetFilePath>
 				</targets>
 			</transfer>
-			
+			<transfer>
+				<sourceFilePath>/home/antonio/Documents/Scipion/ScipionTestFiles/InputData/float maps/emd_1648.map.gz</sourceFilePath>
+				<targets>
+					<targetFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/testFileTransfer/localToOneRemoteHost/maps/emd_1648_renamed.map.gz</targetFilePath>
+				</targets>
+			</transfer>
+			<transfer>
+				<sourceFilePath>/home/antonio/Documents/Scipion/ScipionTestFiles/InputData/integer maps/emd_1051.map.gz</sourceFilePath>
+				<targets>
+					<targetFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/testFileTransfer/localToOneRemoteHost/maps/emd_1051_renamed.map.gz</targetFilePath>
+				</targets>
+			</transfer>
+			<transfer>
+				<sourceFilePath>/home/antonio/Documents/Scipion/ScipionTestFiles/InputData/integer maps/emd_1052.map.gz</sourceFilePath>
+				<targets>
+					<targetFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/testFileTransfer/localToOneRemoteHost/maps/emd_1052_renamed.map.gz</targetFilePath>
+				</targets>
+			</transfer>
+			<transfer>
+				<sourceFilePath>/home/antonio/Documents/Scipion/ScipionTestFiles/InputData/integer maps/emd_1053.map.gz</sourceFilePath>
+				<targets>
+					<targetFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/testFileTransfer/localToOneRemoteHost/maps/emd_1053_renamed.map.gz</targetFilePath>
+				</targets>
+			</transfer>			
 		</transferList>
 	</fileTransfer>
 	<fileTransfer name="localToSeveralRemoteHosts" operationId="1" trials="1" forceOperation="False">
@@ -127,7 +150,34 @@
 					<targetFilePath>apoza@glassfishprod.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/other/example rename 3</targetFilePath>
 				</targets>
 			</transfer>
-			
+			<transfer>
+				<sourceFilePath>/home/antonio/Documents/Scipion/ScipionTestFiles/InputData/float maps/emd_1648.map.gz</sourceFilePath>
+				<targets>
+					<targetFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/maps/emd_1648_renamed.map.gz</targetFilePath>
+					<targetFilePath>apoza@glassfishprod.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/maps/emd_1648_renamed.map.gz</targetFilePath>
+				</targets>
+			</transfer>
+			<transfer>
+				<sourceFilePath>/home/antonio/Documents/Scipion/ScipionTestFiles/InputData/integer maps/emd_1051.map.gz</sourceFilePath>
+				<targets>
+					<targetFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/maps/emd_1051_renamed.map.gz</targetFilePath>
+					<targetFilePath>apoza@glassfishprod.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/maps/emd_1051_renamed.map.gz</targetFilePath>
+				</targets>
+			</transfer>
+			<transfer>
+				<sourceFilePath>/home/antonio/Documents/Scipion/ScipionTestFiles/InputData/integer maps/emd_1052.map.gz</sourceFilePath>
+				<targets>
+					<targetFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/maps/emd_1052_renamed.map.gz</targetFilePath>
+					<targetFilePath>apoza@glassfishprod.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/maps/emd_1051_renamed.map.gz</targetFilePath>
+				</targets>
+			</transfer>
+			<transfer>
+				<sourceFilePath>/home/antonio/Documents/Scipion/ScipionTestFiles/InputData/integer maps/emd_1053.map.gz</sourceFilePath>
+				<targets>
+					<targetFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/maps/emd_1053_renamed.map.gz</targetFilePath>
+					<targetFilePath>apoza@glassfishprod.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/maps/emd_1053_renamed.map.gz</targetFilePath>
+				</targets>
+			</transfer>
 		</transferList>
 	</fileTransfer>
 </fileTransferTest>
