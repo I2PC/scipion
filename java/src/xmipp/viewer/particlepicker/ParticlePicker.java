@@ -46,6 +46,8 @@ public abstract class ParticlePicker
 	public static final int defAutoPickPercent = 90;
 	protected int autopickpercent = defAutoPickPercent;
 	
+	
+	
 
 	public static final int fsizemax = 800;
 	private Family dfamily = new Family("DefaultFamily", Color.green, fsizemax/4, 1, getTemplatesFile("DefaultFamily"));
