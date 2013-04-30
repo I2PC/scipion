@@ -35,5 +35,31 @@ def getXmippPath(*paths):
     if os.environ.has_key('XMIPP_HOME'):
         return os.path.join(os.environ['XMIPP_HOME'], *paths)  
     else:
-        raise Exception('XMIPP_HOME environment variable not set') 
+        raise Exception('XMIPP_HOME environment variable not set')
+    
+    
+class XmippProtocol():
+    """ This class groups some common functionalities that
+    share some Xmipp protocols, like converting steps.
+    """
+    
+    def convertInputToXmipp(self, inputName, convertFunc, resultFn):
+        """ This step can be used whenever a convertion is needed.
+        It will receive the inputName and get this attribute from self,
+        invoke the convert function and check the result files if
+        convertion was done (otherwise the input was already in Xmipp format).
+        """
+        inputAttr = getattr(self, inputName)
+        inputXmipp = convertFunc(inputAttr, resultFn)
+        
+        if inputXmipp != inputAttr:
+            self._insertChild(inputName + 'Xmipp', inputXmipp)
+            return [resultFn] # validate resultFn was produced if converted
+        
+    def getConvertedInput(self, inputName):
+        """ Retrieve the converted input, it can be the case that
+        it is the same as input, when not convertion was done. 
+        """
+        return getattr(self, inputName + 'Xmipp', getattr(self, inputName))
+        
 
