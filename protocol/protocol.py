@@ -156,7 +156,7 @@ class FunctionStep(Step):
         print 'self.funcArgs == other.funcArgs', self.funcArgs == other.funcArgs 
         print 'self.argsStr == other.argsStr', self.argsStr == other.argsStr
         return (self.funcName == other.funcName and
-                self.funcArgs == other.funcArgs and
+                #self.funcArgs == other.funcArgs and
                 self.argsStr == other.argsStr)
         
     def __ne__(self, other):
