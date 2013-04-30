@@ -58,7 +58,7 @@ class EmanProtBoxing(ProtParticlePicking):
         runJob(None, "pwd; e2boxer.py", 
                      "%(inputMics)s --boxsize=%(boxSize)d --write_dbbox" % self._params)   
         # Create the SetOfCoordinates object on the database        
-        self.outputCoordinates = EmanSetOfCoordinates()
+        self.outputCoordinates = EmanSetOfCoordinates(filename=os.getcwd())
         self.outputCoordinates.setBoxSize(self._params['boxSize'])
         self.outputCoordinates.setMicrographs(self.inputMicrographs.get())
         self._defineOutputs(outputCoordinates=self.outputCoordinates) 

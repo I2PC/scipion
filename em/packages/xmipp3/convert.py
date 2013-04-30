@@ -29,7 +29,7 @@ This module contains converter functions
 from base classes to xmipp classes
 """
 
-from data import XmippMicrograph, XmippSetOfMicrographs, XmippCTFModel
+from data import XmippMicrograph, XmippSetOfMicrographs, XmippCTFModel, XmippSetOfCoordinates
 import xmipp
     
 def convertMicrograph(mic):
@@ -69,3 +69,7 @@ def convertCTFModel(ctfModel, filename):
     xmippCTFModel.write(filename)
     
     return xmippCTFModel
+
+
+    
+    
