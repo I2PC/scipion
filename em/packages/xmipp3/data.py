@@ -247,55 +247,39 @@ class XmippSetOfCoordinates(SetOfCoordinates):
     """Implementation of SetOfCoordinates for Xmipp"""
     def __init__(self, filename=None, **args):
         # Use object value to store filename
+        # Here filename is the path where pos files can be found
         SetOfCoordinates.__init__(self, value=filename, **args)
         self.family = String()
         
     def getFileName(self):
-        return self.get()
+        return self.get()       
     
-    def iterMicrographs(self):
-        """Iterate over the micrographs set associated with this
-        set of coordinates
-        """
-        return self.getMicrographs()
+    def iterMicrographCoordinates(self, micrograph):
+        """ Iterates over the set of coordinates belonging to that micrograph. """
+        path = self.getFileName()
+        template = self.family.get() + '@%s'
         
-    
-    def iterCoordinates(self, micrograph=None):
+        pathPos = join(path, replaceBaseExt(micrograph.getFileName(), 'pos'))
+            
+        if exists(pathPos):
+            mdPos = xmipp.MetaData(template % pathPos)
+                            
+            for objId in mdPos:
+                x = mdPos.getValue(xmipp.MDL_XCOOR, objId)
+                y = mdPos.getValue(xmipp.MDL_YCOOR, objId)
+                coordinate = XmippCoordinate()
+                coordinate.setPosition(x, y)
+                coordinate.setMicrograph(micrograph)
+                coordinate.setBoxSize(self.boxSize)
+                yield coordinate
+                
+    def iterCoordinates(self):
         """Iterates over the whole set of coordinates.
         If the SetOfMicrographs has tilted pairs, the coordinates
         should have the information related to its paired coordinate."""
         
-        path = self.getFileName()
-        template = self.family.get() + '@%s'
-        
-        if micrograph is None:
-            for mic in self.getMicrographs():
-                pathPos = join(path, replaceBaseExt(mic.getFileName(), 'pos'))
-                
-                if exists(pathPos):
-                    mdPos = xmipp.MetaData(template % pathPos)
-                                
-                    for objId in mdPos:
-                        x = mdPos.getValue(xmipp.MDL_XCOOR, objId)
-                        y = mdPos.getValue(xmipp.MDL_YCOOR, objId)
-                        coordinate = XmippCoordinate()
-                        coordinate.setPosition(x, y)
-                        coordinate.setMicrograph(mic)
-                        
-                        yield coordinate
-        else:
-            pathPos = join(path, replaceBaseExt(micrograph.getFileName(), 'pos'))
-                
-            if exists(pathPos):
-                mdPos = xmipp.MetaData(template % pathPos)
-                                
-                for objId in mdPos:
-                    x = mdPos.getValue(xmipp.MDL_XCOOR, objId)
-                    y = mdPos.getValue(xmipp.MDL_YCOOR, objId)
-                    coordinate = XmippCoordinate()
-                    coordinate.setPosition(x, y)
-                    coordinate.setMicrograph(micrograph)
-                        
-                    yield coordinate
-        
+        for mic in self.getMicrographs():
+            self.iterMicrographCoordinates(mic)
+
+            
     

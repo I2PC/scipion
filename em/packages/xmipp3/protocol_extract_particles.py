@@ -60,7 +60,7 @@ class XmippDefExtractParticles(Form):
                       'factors are always referred to the original sampling rate, and '
                       'the differences are correctly handled by Xmipp.')        
         self.addParam('inputMicrographs', PointerParam, label="Micrographs", 
-                      #condition='downsampleType != 1',
+                      condition='downsampleType != 1',
                       pointerClass='SetOfMicrographs',
                       help='Select the original SetOfMicrographs')
         
@@ -126,7 +126,6 @@ class XmippProtExtractParticles(ProtExtractParticles):
         # Set sampling rate and inputMics according to downsample type
         self.inputCoords = self.inputCoordinates.get() 
 
-        self.samplingOriginal = self.inputMicrographs.get().samplingRate.get()
         self.samplingInput = self.inputCoords.getMicrographs().samplingRate.get()
         
         if self.downsampleType.get() == self.SAME_AS_PICKING:
@@ -134,6 +133,7 @@ class XmippProtExtractParticles(ProtExtractParticles):
             self.inputMics = self.inputCoords.getMicrographs()
             self.samplingFinal = self.samplingInput
         else:
+            self.samplingOriginal = self.inputMicrographs.get().samplingRate.get()
             self.inputMics = self.inputMicrographs.get()
             if self.downsampleType.get() == self.ORIGINAL:
                 # If 'original' get sampling rate from original micrographs
@@ -141,9 +141,6 @@ class XmippProtExtractParticles(ProtExtractParticles):
             else:
                 # IF 'other' multiply the original sampling rate by the factor provided
                 self.samplingFinal = self.samplingOriginal*self.downFactor.get()
-
-        # Create extract_list.xmd metadata
-        self.fnExtractList = self._getExtraPath('extract_list.xmd')
                 
         # For each micrograph insert the steps
         for mic in self.inputMics:
@@ -171,11 +168,12 @@ class XmippProtExtractParticles(ProtExtractParticles):
                 if mic.hasCTF():
                     fnFlipped = self._getTmpPath(removeBaseExt(fn)+"_flipped.xmp")
                     fnCTFTmp = self._getTmpPath("tmp.ctfParam")
-                    fnCTF = convertCTFModel(mic.ctfModel, fnCTFTmp).getFileName()
+                    xmippCTF = convertCTFModel(mic.ctfModel, fnCTFTmp)
+                    fnCTF = xmippCTF.getFileName()
                     args = " -i %(micrographToExtract)s --ctf %(fnCTF)s -o %(fnFlipped)s"
                     # If some downsampling has been performed (either before picking or now) pass the downsampling factor 
                     if self.downsampleType.get() != self.ORIGINAL:
-                        downFactor = self.samplingFinal/self.samplingOriginal
+                        downFactor = self.samplingFinal/xmippCTF.samplingRate.get()
                         args += " --downsampling %(downFactor)f"
                         self._insertRunJobStep("xmipp_ctf_phase_flip", args % locals())
                         micographToExtract = fnFlipped
@@ -196,13 +194,11 @@ class XmippProtExtractParticles(ProtExtractParticles):
         ''' Extract particles from one micrograph '''
         # Extract 
         outputRoot = str(self._getExtraPath(removeBaseExt(micrographToExtract)))
-
-        # Add coordinates for this micrograph to extract_list.xmd
-        hasCoords = self._addToExtractList(mic)
         
+        fnPosFile = self._getExtraPath(removeBaseExt(mic.getFileName()) + '.pos')
         # If it has coordinates extract the particles
-        if hasCoords:
-            posMetadata = removeBaseExt(micrographToExtract) + "@" + self.fnExtractList
+        if self._createPosFile(mic, fnPosFile):
+            posMetadata = removeBaseExt(micrographToExtract) + "@" + fnPosFile
            
             boxSize = self.boxSize.get()
             args = "-i %(micrographToExtract)s --pos %(posMetadata)s -o %(outputRoot)s --Xdim %(boxSize)d" % locals()
@@ -215,27 +211,36 @@ class XmippProtExtractParticles(ProtExtractParticles):
             # Normalize 
             if self.doNormalize:
                 runNormalize(None, outputRoot + '.stk',self.normaType.get(), self.backRadius.get(), 1)          
-                                   
-    def _addToExtractList(self, mic):
+                           
+            #WHY THIS?????        
+            if self.downsampleType.get() == self.OTHER:
+                selfile = outputRoot + ".xmd"
+                md = xmipp.MetaData(selfile)
+                downsamplingFactor=self.samplingFinal/self.samplingInput
+                md.operate("Xcoor=Xcoor*%f"%downsamplingFactor)
+                md.operate("Ycoor=Ycoor*%f"%downsamplingFactor)
+                md.write(selfile)
+            
+    def _createPosFile(self, mic, fnPosFile):
         ''' Create xmipp metadata extract_list with the coordinates for a micrograph '''
         
         micName = removeBaseExt(mic.getFileName())
 
         mdExtractList = xmipp.MetaData()
         #Iterate over the coordinates on that micrograph
-        writeBlock = False
-        for coord in self.inputCoords.iterCoordinates(mic):
+        hasCoords = False
+        for coord in self.inputCoords.iterMicrographCoordinates(mic):
             x, y = coord.getPosition(Coordinate.POS_CENTER)    
             coorId = mdExtractList.addObject()
             mdExtractList.setValue(xmipp.MDL_XCOOR, int(x), coorId)
             mdExtractList.setValue(xmipp.MDL_YCOOR, int(y), coorId)
-            writeBlock = True
+            hasCoords = True
                                 
-        # Write block only if there are coordinates for this micrograph
-        if writeBlock:
-            mdExtractList.write(micName + "@%s" % self.fnExtractList, xmipp.MD_APPEND)        
+        # Write block only if there are coordinates for this micrograph       
+        if hasCoords:
+            mdExtractList.write(micName + "@%s" % fnPosFile, xmipp.MD_OVERWRITE)        
         
-        return writeBlock
+        return hasCoords
     
     def createOutput(self):
         # Create the SetOfImages object on the database

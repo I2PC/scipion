@@ -29,7 +29,7 @@ for specific EMAN2 EM data objects
 """
 
 from pyworkflow.em import *  
-from pyworkflow.utils.path import removeBaseExt
+from pyworkflow.utils.path import replaceBaseExt, exists
     
     
 class EmanSetOfMicrographs(SetOfMicrographs):
@@ -83,16 +83,20 @@ class EmanSetOfCoordinates(SetOfCoordinates):
     Each coordinate has a (x,y) position and is related to a Micrograph
     The SetOfCoordinates can also have information about TiltPairs.
     EMAN coordinates are taken from top left"""
-    
-    def iterCoordinates(self):
-        """Iterates over the whole set of coordinates.
-        If the SetOfMicrographs has tilted pairs, the coordinates
-        should have the information related to its paired coordinate."""
+    def __init__(self, filename=None, **args):
+        # Use object value to store filename
+        # Here filename is the path where pos files can be found
+        SetOfCoordinates.__init__(self, value=filename, **args)
         
-        for micrograph in self._micrographsPointer.get():
-            micrographFileNameNE = removeBaseExt(micrograph.getFileName())
-            boxFileName = micrographFileNameNE + ".box"
-            boxFile =  open (boxFileName,"r")
+    def getFileName(self):
+        return self.get()   
+        
+    def iterMicrographCoordinates(self, micrograph):
+        """ Iterates over the set of coordinates belonging to that micrograph. """
+        path = self.getFileName()
+        pathBox = join(path, replaceBaseExt(micrograph.getFileName(), 'box'))
+        if exists(pathBox):
+            boxFile =  open (pathBox,"r")
             for line in boxFile:
                 if len(line.strip()) > 0:
                     parts = line.strip().split()
@@ -106,18 +110,17 @@ class EmanSetOfCoordinates(SetOfCoordinates):
                 else:
                     pass
             boxFile.close()
+        
+    def iterCoordinates(self):
+        """ Iterates over the whole set of coordinates.
+        If the SetOfMicrographs has tilted pairs, the coordinates
+        should have the information related to its paired coordinate.
+        """
+        for mic in self.getMicrographs():
+            self.iterMicrographCoordinates(mic)
+
+                
     
     def hasTiltPairs(self):
         """Returns True if the SetOfMicrographs has tilted pairs"""
         return self.getMicrographs().hasTiltPairs()
-    
-    def getMicrographs(self):
-        """Returns the SetOfMicrographs associated with 
-        this SetOfCoordinates"""
-        return self._micrographsPointer.get()
-    
-    def setMicrographs(self, micrographs):
-        """ Set the SetOfMicrograph associates with 
-        this set of coordinates """
-        self._micrographsPointer.set(micrographs)
-        

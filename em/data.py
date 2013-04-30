@@ -216,6 +216,7 @@ class Coordinate(EMObject):
     def __init__(self, **args):
         EMObject.__init__(self, **args)
         self._micrographPointer = Pointer()
+        self._boxSize = None
     
     def getPosition(self, mode=POS_CENTER):
         """ Return the position of the coordinate as a (x, y) tuple.
@@ -278,9 +279,12 @@ class SetOfCoordinates(EMObject):
         """ Iterate over the micrographs set associated with this
         set of coordinates.
         """
-        pass
+        return self.getMicrographs()
     
-    def iterCoordinates(self, micrograph=None):
+    def iterMicrographCoordinates(self, micrograph):
+        """ Iterates over the set of coordinates belonging to that micrograph. """
+    
+    def iterCoordinates(self):
         """ Itearate over the coordinates associated with a micrograph.
         If micrograph=None, the iteration is performed over the whole set of coordinates.
         If the SetOfMicrographs has tilted pairs, the coordinates
