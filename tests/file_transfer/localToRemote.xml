@@ -168,7 +168,7 @@
 				<sourceFilePath>/home/antonio/Documents/Scipion/ScipionTestFiles/InputData/integer maps/emd_1052.map.gz</sourceFilePath>
 				<targets>
 					<targetFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/maps/emd_1052_renamed.map.gz</targetFilePath>
-					<targetFilePath>apoza@glassfishprod.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/maps/emd_1051_renamed.map.gz</targetFilePath>
+					<targetFilePath>apoza@glassfishprod.cnb.csic.es:/home/apoza/testFileTransfer/localToSeveralRemoteHost/maps/emd_1052_renamed.map.gz</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>

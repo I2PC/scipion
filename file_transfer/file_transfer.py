@@ -50,9 +50,10 @@ class FileTransfer():
                                          numberTrials,                        
                                          forceOperation)
         
+        
+    def close(self):
         self.sftp.close()
         self.ssh.close()
-    
 
     
                 

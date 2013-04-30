@@ -43,8 +43,9 @@ class TestFileTransfer(unittest.TestCase):
         passTest = transferFiles('allTransfers.xml', self.fileTransfer, "all")
         deleteFiles('allTransfers.xml', self.fileTransfer, "all")
         self.assertTrue(passTest) 
-    
-
+        
+    def tearDown(self):
+        self.fileTransfer.close()
 
 def transferFiles(filesMetadata, fileTransfer, transferOperationName):
     """
