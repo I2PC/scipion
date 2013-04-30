@@ -6,9 +6,9 @@ Created on Apr 9, 2013
 import unittest
 from utils.log import *
 
-class TestScipionLog(unittest.TestCase):
+class TestLog(unittest.TestCase):
       
-    def testSimpleFileScipionLog(self):
+    def testSimpleFileLog(self):
         log = getGeneralLogger('pyworkflow.test.log.test_scipon_log')
         log.info('General info')
         log.debug('General debug')
