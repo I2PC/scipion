@@ -473,7 +473,7 @@ void XRayPSF::generateOTF(MultidimArray<std::complex<double> > &OTF, double Zpos
                 PSFi.initConstant(1/YXSIZE(PSFi));
             else
             {   /* Actually T transform matrix is set to identity, as sampling is the same for both psfVol and phantom
-                                 * It is only missing to set Z shift to select the slice */
+                                                                                                 * It is only missing to set Z shift to select the slice */
                 dMij(T, 2, 3) = zIndexPSF; // Distance from the focal plane
                 applyGeometry(LINEAR, PSFi, mPsfVol, T,
                               IS_INV, DONT_WRAP, dAkij(mPsfVol,0,0,0));
@@ -760,21 +760,22 @@ void XRayPSF::adjustParam()
                 // Calculate the mask to be applied when generating PSFIdealLens
 
                 mask->initZeros(Niy,Nix);
+                mask->setXmippOrigin();
 
-                double Rlens2=Rlens*Rlens;
-                double auxY = dyl*(1 - (int)Niy);
-                double auxX = dxl*(1 - (int)Nix);
+                double Rlens2 = Rlens*Rlens;
+                //                double auxY = dyl*(1 - (int)Niy);
+                //                double auxX = dxl*(1 - (int)Nix);
 
-                for (size_t i=0; i<YSIZE(*mask); i++)
+                for (int i = STARTINGY(*mask); i <= FINISHINGY(*mask); ++i)
                 {
-                    double y = (double) i * dyl + auxY * 0.5;
+                    double y = dyl * i;
                     double y2 = y * y;
-                    for (size_t j=0; j<XSIZE(*mask); j++)// Circular mask
+                    for (int  j = STARTINGX(*mask); j <= FINISHINGX(*mask); ++j)// Circular mask
                     {
                         /// For indices in standard fashion
-                        double x = (double) j * dxl + auxX * 0.5;
+                        double x = dxl * j;
                         if (x*x + y2 <= Rlens2)
-                            dAij(*mask,i,j) = 1;
+                        	A2D_ELEM(*mask,i,j) = 1;
                     }
                 }
 
@@ -801,25 +802,22 @@ void XRayPSF::adjustParam()
 void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambda, double dx, double dy)
 {
 
-    double Lx0 = XSIZE(Im)*dx, Ly0 = YSIZE(Im)*dy, x, y, phase;
+    double x, y, phase;
 
     Im.setXmippOrigin();
 
     double K = (-PI / (lambda * Flens));
 
-    for (size_t i=0; i < YSIZE(Im); ++i)
+    for (int i = STARTINGY(Im); i <= FINISHINGY(Im); ++i)
     {
-        y = (double) i * dy + (dy - Ly0) * 0.5;
+        y = dy * i;
         double y2 =  y * y;
 
-        for (size_t j=0; j < XSIZE(Im); ++j)
+        for (int j = STARTINGX(Im); j <= FINISHINGX(Im); ++j)
         {
-            /// For indices in standard fashion
-            x = (double) j * dx + (dx - Lx0) *0.5;
-
+            x = dx * j;
             phase = K * (x * x + y2);
-
-            dAij(Im,i,j) = std::complex<double>(cos(phase),sin(phase));
+            A2D_ELEM(Im,i,j) = std::complex<double>(cos(phase),sin(phase));
         }
     }
 }
