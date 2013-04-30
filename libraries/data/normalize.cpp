@@ -38,8 +38,8 @@ void normalize_OldXmipp(MultidimArray<double> &I)
     double mean,std;
     I.computeAvgStdev(mean,std);
     double istd=1.0/std;
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(I)
-    DIRECT_A2D_ELEM(I,i,j)=(DIRECT_A2D_ELEM(I,i,j)-mean)*istd;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(I)
+    DIRECT_MULTIDIM_ELEM(I,n)=(DIRECT_MULTIDIM_ELEM(I,n)-mean)*istd;
 }
 
 void normalize_Near_OldXmipp(MultidimArray<double> &I, const MultidimArray<int> &bg_mask)
