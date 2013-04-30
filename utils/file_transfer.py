@@ -8,11 +8,13 @@ import paramiko
 import os
 import shutil
 from pyworkflow.utils.path import *
+from utils.log import *
 
 LOCAL_USER_AND_HOST = ''
 SSH_PORT = '22';
 PAIRS_SEPARATOR = ':'
 
+log = getGeneralLogger('pyworkflow.utils.file_transfer')
 
 class FileTransfer():
     
