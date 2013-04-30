@@ -189,7 +189,7 @@ void insertNeighbour(Matrix2D<int> &idx, Matrix2D<double> &distance, int i1, int
 	}
 }
 
-void kNearestNeighbours(const Matrix2D<double> &X, int K, Matrix2D<int> &idx, Matrix2D<double> &distance, DimRedDistance2* f, bool computeSqrt)
+void kNearestNeighbours(const Matrix2D<double> &X, int K, Matrix2D<int> &idx, Matrix2D<double> &distance, DimRedDistance2 f, bool computeSqrt)
 {
 	idx.initConstant(MAT_YSIZE(X),K,-1);
 	distance.initConstant(MAT_YSIZE(X),K,1e38);
@@ -216,7 +216,7 @@ void kNearestNeighbours(const Matrix2D<double> &X, int K, Matrix2D<int> &idx, Ma
 			MAT_ELEM(distance,i,j)=sqrt(MAT_ELEM(distance,i,j));
 }
 
-void computeDistance(const Matrix2D<double> &X, Matrix2D<double> &distance, DimRedDistance2* f, bool computeSqrt)
+void computeDistance(const Matrix2D<double> &X, Matrix2D<double> &distance, DimRedDistance2 f, bool computeSqrt)
 {
 	distance.initZeros(MAT_YSIZE(X),MAT_YSIZE(X));
 	for (size_t i1=0; i1<MAT_YSIZE(X)-1; ++i1)
@@ -239,7 +239,7 @@ void computeDistance(const Matrix2D<double> &X, Matrix2D<double> &distance, DimR
 		}
 }
 
-void computeDistanceToNeighbours(const Matrix2D<double> &X, int K, Matrix2D<double> &distance, DimRedDistance2* f, bool computeSqrt)
+void computeDistanceToNeighbours(const Matrix2D<double> &X, int K, Matrix2D<double> &distance, DimRedDistance2 f, bool computeSqrt)
 {
 	Matrix2D<int> idx;
 	Matrix2D<double> kDistance;
@@ -283,7 +283,7 @@ void computeGraphLaplacian(const Matrix2D<double> &G, Matrix2D<double> &L)
 			MAT_ELEM(L,i,j)=-MAT_ELEM(G,i,j);
 }
 
-double intrinsicDimensionalityMLE(const Matrix2D<double> &X, DimRedDistance2* f)
+double intrinsicDimensionalityMLE(const Matrix2D<double> &X, DimRedDistance2 f)
 {
 	int k1=5;
 	int k2=12;
@@ -312,7 +312,7 @@ double intrinsicDimensionalityMLE(const Matrix2D<double> &X, DimRedDistance2* f)
 }
 
 // By correlation dimension
-double intrinsicDimensionalityCorrDim(const Matrix2D<double> &X, DimRedDistance2* f)
+double intrinsicDimensionalityCorrDim(const Matrix2D<double> &X, DimRedDistance2 f)
 {
 	int K=5;
 	Matrix2D<int> idx;
@@ -357,7 +357,7 @@ double intrinsicDimensionalityCorrDim(const Matrix2D<double> &X, DimRedDistance2
 	return 2*log(probLessMaxK/probLessMedianK)/log(maxVal/median);
 }
 
-double intrinsicDimensionality(Matrix2D<double> &X, const String &method, bool normalize, DimRedDistance2* f)
+double intrinsicDimensionality(Matrix2D<double> &X, const String &method, bool normalize, DimRedDistance2 f)
 {
 	if (normalize)
 		normalizeColumns(X);
