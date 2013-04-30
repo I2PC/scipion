@@ -139,7 +139,7 @@ class XmippCoordinate(Coordinate):
         if mode == Coordinate.POS_CENTER:
             return self.x, self.y
         elif mode == Coordinate.POS_TOPLEFT: 
-            return (self.x - self.boxSize / 2, self.y - self.boxSize / 2)
+            return (int(self.x) - self._boxSize / 2, int(self.y) - self._boxSize / 2)
         else:
             raise Exception("No coordinate mode registered for : " + str(mode)) 
     
@@ -270,7 +270,7 @@ class XmippSetOfCoordinates(SetOfCoordinates):
                 coordinate = XmippCoordinate()
                 coordinate.setPosition(x, y)
                 coordinate.setMicrograph(micrograph)
-                coordinate.setBoxSize(self.boxSize)
+                coordinate.setBoxSize(self.boxSize.get())
                 yield coordinate
                 
     def iterCoordinates(self):
