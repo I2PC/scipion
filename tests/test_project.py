@@ -18,7 +18,7 @@ from tests.tester import *
 #proj.launchProtocol(prot)
 
 
-prot2 = ProtImportMicrographs(pattern=pattern, samplingRate=1, voltage=200)
+prot2 = ProtImportMicrographs(pattern=pattern, samplingRate=1, voltage=300)
 proj.launchProtocol(prot2, wait=True)
 
 l = proj.mapper.selectByClass('SetOfMicrographs')
@@ -33,23 +33,6 @@ if len(l):
     prot3.inputMicrographs.set(prot2.outputMicrographs)
 
     proj.launchProtocol(prot3)
-    
-    sys.exit(0)
-    
-    prot4 = XmippProtCTFMicrographs(workingDir=proj.getPath('Runs', 'Ctf'))
-        
-    #prot4.inputMicrographs.set(l[0])
-    prot4.inputMicrographs.set(prot3.outputMicrographs)
-
-    proj.launchProtocol(prot4)
-
-    l = proj.mapper.selectByClass('SetOfMicrographs')
-
-    for p in l:
-        if p.hasCTF():
-            for mic in p:
-                if mic.hasCTF():
-                    mic.ctfModel.printAll() 
     
 else:
     print "Not micrographs found"
