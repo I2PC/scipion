@@ -186,7 +186,8 @@ def writeDefaults():
     
     m1.addSubMenu('Align', value='ProtAlign',
                   tag = 'protocol_base')
-    m1.addSubMenu('Classify', value='ProtClassify')
+    m1.addSubMenu('Classify', value='ProtClassify',
+                  tag = 'protocol_base')
     m1.addSubMenu('Align+Classify', value='ProtAlignClassify')
 
     
