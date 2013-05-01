@@ -54,7 +54,7 @@ class XmippProtocol():
         """
         inputAttr = getattr(self, inputName)
         if not isinstance(inputAttr, xmippClass):
-            self._insertFunctionStep('convertInputToXmipp', inputName, resultFn)
+            self._insertFunctionStep('convertInputToXmipp', inputName, xmippClass, resultFn)
             return resultFn
         return inputAttr.getFileName()
         
@@ -137,7 +137,7 @@ class XmippSet():
         
         for objId in self._md:  
             item = self._itemClass()
-            item.readFromMd(self._md, objId)  
+            item.getFromMd(self._md, objId)  
             #m = Image(md.getValue(xmipp.MDL_IMAGE, objId))
             #if self.hasCTF():
             #    m.ctfModel = XmippCTFModel(md.getValue(xmipp.MDL_CTF_MODEL, objId)) 

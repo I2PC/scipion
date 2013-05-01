@@ -32,6 +32,7 @@ from pyworkflow.em import *
 from pyworkflow.utils import *  
 import xmipp
 from data import *
+from xmipp3 import XmippProtocol
 
 
 class XmippDefML2D(Form):
@@ -108,15 +109,20 @@ class XmippDefML2D(Form):
                       help='Expected standard deviation for pixel noise.')               
         self.addParam('stdOffset', FloatParam, default=3.0, expertLevel=LEVEL_EXPERT,
                       label='Std for origin offset',
-                      help='Expected standard deviation for origin offset (pixels).')   
+                      help='Expected standard deviation for origin offset (pixels).') 
+        
+        self.addParam('numberOfThreads', IntParam, default=2, 
+                      label='Maximum number of threads',
+                      help='If the convergence has not been reached after this number'
+                           'of iterations, the process will be stopped.')          
         
         
-class XmippProtML2D(ProtAlign, ProtClassify):
+class XmippProtML2D(ProtAlign, ProtClassify, XmippProtocol):
     """ Protocol to preprocess a set of micrographs in the project. """
     _definition = XmippDefML2D()
     _label = 'Xmipp ML2D'
 
-    def getId(self):
+    def getProgramId(self):
         progId = "ml"
         if self.doMlf:
             progId += "f" 
@@ -124,23 +130,27 @@ class XmippProtML2D(ProtAlign, ProtClassify):
          
     def _defineSteps(self):
         """ Mainly prepare the command line for call ml(f)2d program"""
-        progId = self.getId()
+        progId = self.getProgramId()
         
         program = "xmipp_%s_align2d" % progId
 
         restart = False
         
-        prefix = '%s2d' % progId
+        prefix = '%s2d_' % progId
         oroot = self._getPath(prefix)
-        imgsFn = self._insertConvertStep('inputImages', XmippSetOfImages,
-                                         convertSetOfImages, self._getPath('input_images.xmd'))
+        
+        self.inputImgs = self.inputImages.get()
+        
+        imgsFn = self._insertConvertStep('inputImgs', XmippSetOfImages,
+                                         self._getPath('input_images.xmd'))
         params = ' -i %s --oroot %s' % (imgsFn, oroot)
         # Number of references will be ignored if -ref is passed as expert option
         if self.doGenerateReferences:
             params += ' --nref %d' % self.numberOfReferences.get()
         else:
-            refsFn = self._insertConvertStep('inputReferences', XmippSetOfImages,
-                                             convertSetOfImages, self._getPath('input_references.xmd'))
+            self.inputRefs = self.inputReferences.get()
+            refsFn = self._insertConvertStep('inputRefs', XmippSetOfImages,
+                                             self._getPath('input_references.xmd'))
             params += ' --ref %s' % refsFn
         
         if self.doMlf:
@@ -150,7 +160,7 @@ class XmippProtML2D(ProtAlign, ProtClassify):
                 params += ' --not_phase_flipped'
             if self.highResLimit.get() > 0:
                 params += ' --limit_resolution 0 %f' % self.highResLimit.get()
-            params += ' --sampling_rate %f' % self.inputImages.samplingRate.get()
+            params += ' --sampling_rate %f' % self.inputImages.get().samplingRate.get()
         else:
             if self.doFast:
                 params += ' --fast'
@@ -158,7 +168,7 @@ class XmippProtML2D(ProtAlign, ProtClassify):
                 params += ' --thr %d' % self.numberOfThreads.get()
             
         if self.maxIters.get() != 100:
-            params += " --iter %d" % self.MaxIters
+            params += " --iter %d" % self.maxIters.get()
 
         if self.doMirror:
             params += ' --mirror'
@@ -166,7 +176,7 @@ class XmippProtML2D(ProtAlign, ProtClassify):
         if self.doNorm:
             params += ' --norm'
 
-        self.insertRunJobStep(program, params)
+        self._insertRunJobStep(program, params)
                 
         # TODO: insert createOutput
         

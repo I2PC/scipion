@@ -253,8 +253,11 @@ class Boolean(Scalar):
             return v == 'true' or v == '1'
         return bool(value) 
     
+    def __nonzero__(self):
+        return self.get()
+    
     def __bool__(self):
-        return self.get()   
+        return self.get()  
     
     
 class Pointer(Scalar):

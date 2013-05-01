@@ -194,6 +194,8 @@ class EmTreeProvider(ObjectTreeProvider):
             
         if issubclass(cls, SetOfMicrographs):
             return [('Open Micrographs with Xmipp', lambda: self.viewer.visualize(obj))]
+        if issubclass(cls, SetOfImages):
+            return [('Open Images with Xmipp', lambda: self.viewer.visualize(obj))]
         
         return []           
 

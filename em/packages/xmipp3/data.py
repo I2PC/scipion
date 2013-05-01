@@ -36,7 +36,7 @@ import xmipp
     
       
     
-class XmippImage(Image, XmippMdRow):
+class XmippImage(XmippMdRow, Image):
     """Xmipp implementation for Image"""
     def __init__(self, filename=None, **args):
         self._label = xmipp.MDL_IMAGE
