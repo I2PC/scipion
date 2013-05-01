@@ -9,6 +9,7 @@
 #include "data/ctf.h"
 #include "reconstruction/transform_downsample.h"
 #include "data/filters.h"
+#include "data/geometry.h"
 
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_create(JNIEnv *env, jobject jobj)
@@ -859,7 +860,7 @@ JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_bestShift
         XMIPP_JAVA_CATCH;
 }
 
-    JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_alignImage
+    JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_ImageGeneric_alignImage
     (JNIEnv * env, jobject jobj, jobject jimg, jboolean jupdate)
     {
         XMIPP_JAVA_TRY
@@ -904,6 +905,13 @@ JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_bestShift
     			T+=alignedI;
     			centerImage(T, aux2, aux3, 3);
             }
+            double rot, tilt, psi;
+            Euler_matrix2angles(transformM,rot, tilt, psi);
+            double result[4];
+            result[0] = maxIndex;//template aligned with particle
+            result[1] = rot;
+            result[2] = tilt;
+            result[3] = psi;
 
         }
         XMIPP_JAVA_CATCH;
