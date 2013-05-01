@@ -233,6 +233,8 @@ public class ImageGeneric {
 
     public native double[] alignImage(ImageGeneric img, boolean update) throws Exception;
     
+    public native void removeAlignment(ImageGeneric img, int index, double rot, double tilt, double psi) throws Exception;
+    
     public native Particle bestShift(ImageGeneric img) throws Exception;
 
 

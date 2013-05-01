@@ -37,8 +37,8 @@ public class TemplatesJDialog extends JDialog {
 	public TemplatesJDialog(TrainingPickerJFrame frame) {
 		super(frame);
 		this.frame = frame;
-		if(!frame.getParticlePicker().hasManualParticles())
-			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("Particles"));
+//		if(!frame.getParticlePicker().hasManualParticles())
+//			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("Particles"));
 		initComponents();
 
 		addWindowListener(new WindowAdapter() {
@@ -57,7 +57,6 @@ public class TemplatesJDialog extends JDialog {
 	public void loadTemplates(boolean resize) {
 
 		try {
-			frame.getParticlePicker().updateTemplates();
 			ImageGeneric templates = frame.getFamily().getTemplates();
 			
 			int size = frame.getFamily().getSize();

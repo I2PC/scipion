@@ -20,10 +20,20 @@ public class TrainingParticle extends PickerParticle{
 	protected Family family;
 	protected ImagePlus img;
 	protected double cost = 2;
+	protected double[] lastalign;
 	
 	
 	
-	
+
+	public double[] getLastalign()
+	{
+		return lastalign;
+	}
+
+	public void setLastalign(double[] lastalign)
+	{
+		this.lastalign = lastalign;
+	}
 
 	public TrainingParticle(int x, int y, Family family, Micrograph micrograph)
 	{
@@ -118,6 +128,34 @@ public class TrainingParticle extends PickerParticle{
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e.getMessage());
 		}
+	}
+
+	public double getTemplateRotation()
+	{
+		if(lastalign == null)
+			return -1;
+		return lastalign[1];
+	}
+	
+	public double getTemplateTilt()
+	{
+		if(lastalign == null)
+			return -1;
+		return lastalign[2];
+	}
+	
+	public double getTemplatePsi()
+	{
+		if(lastalign == null)
+			return -1;
+		return lastalign[3];
+	}
+	
+	public int getTemplateIndex()
+	{
+		if(lastalign == null)
+			return -1;
+		return (int)lastalign[0];
 	}
 
 
