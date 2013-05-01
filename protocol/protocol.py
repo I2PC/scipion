@@ -112,6 +112,9 @@ class Step(OrderedObject):
         except Exception, e:
             self.status.set(STATUS_FAILED)
             self.error.set(e)
+            import traceback
+            traceback.print_exc()
+            
             raise #only in development
         finally:
             self.endTime.set(dt.datetime.now())

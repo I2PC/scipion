@@ -32,8 +32,8 @@ import os
 from pyworkflow.em.viewer import Viewer
 from pyworkflow.em import SetOfMicrographs
 from pyworkflow.utils.process import runJob
-from convert import convertSetOfMicrographs
 from xmipp3 import getXmippPath
+from data import XmippSetOfMicrographs
 
 
 class XmippViewer(Viewer):
@@ -50,8 +50,8 @@ class XmippViewer(Viewer):
         
         if issubclass(cls, SetOfMicrographs):
             fn = self._getTmpPath(obj.getName() + '_micrographs.xmd')
-            mics = convertSetOfMicrographs(obj, fn)
-            runShowJ(mics.getFileName())        
+            mics = XmippSetOfMicrographs.convert(obj, fn)
+            runShowJ(mics.getFileName())      
         else:
             raise Exception('XmippViewer.visualize: can not visualize class: %s' % obj.getClassName())
 

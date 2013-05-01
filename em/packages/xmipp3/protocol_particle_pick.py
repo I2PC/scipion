@@ -33,8 +33,8 @@ from pyworkflow.utils.path import *
 from pyworkflow.utils.process import runJob
 from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_ORIGINAL, MDL_MICROGRAPH_TILTED, MDL_MICROGRAPH_TILTED_ORIGINAL, MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE
 from pyworkflow.em.packages.xmipp3.data import *
-from convert import convertSetOfMicrographs
 from xmipp3 import XmippProtocol
+from data import XmippSetOfMicrographs
 
 
 class XmippDefParticlePicking(Form):
@@ -71,8 +71,8 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         
         # Convert input SetOfMicrographs to Xmipp if needed
         #self._insertFunctionStep('convertToXmippSetOfMicrograph')
-        self._insertFunctionStep('convertInputToXmipp', 'inputMics', 
-                                 convertSetOfMicrographs, self._getPath('micrographs.xmd'))
+        self._insertConvertStep('inputMics', XmippSetOfMicrographs, 
+                                 self._getPath('micrographs.xmd'))
         # Launch Particle Picking GUI
         self._insertFunctionStep('launchParticlePickGUI', isInteractive=True)       
         # Insert step to create output objects       

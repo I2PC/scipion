@@ -49,13 +49,19 @@ class Microscope(EMObject):
         self.voltage = Float(300)
         self.sphericalAberration = Float(1.2)
         
+        
+class ImageLocation():
+    """ Store image index and filename. """
+    def __init__(self, index, filename):
+        self.index = index
+        self.filename = filename
+
 
 class Image(EMObject):
     """Represents an EM Image object"""
     def __init__(self, filename=None, **args):
-        # Use the object value to store the filename
-        args['value'] = filename
         EMObject.__init__(self, **args)
+        self.setFileName(filename)
         self.samplingRate = Float()
         self.ctfModel = None
         
@@ -66,17 +72,34 @@ class Image(EMObject):
         pass
         
     def getSamplingRate(self):
-        pass
+        """ Return image sampling rate. (A/pix) """
+        return self.samplingRate.get()
+    
+    def setSamplingRate(self, sampling):
+        self.samplingRate.set(sampling)
     
     def getDim(self):
         """Return image dimensions as tuple: (Ydim, Xdim)"""
         pass
     
     def getFileName(self):
-        return self._objValue
+        """ Use the _objValue attribute to store filename. """
+        return self.get()
     
     def setFileName(self, newFileName):
-        self._objValue = newFileName
+        """ Use the _objValue attribute to store filename. """
+        self.set(newFileName)
+        
+    def getLocation(self):
+        """ This function return the image index and filename.
+        It will only differs from getFileName, when the image
+        is contained in a stack and the index make sense. 
+        """
+        return ImageLocation(None, self.getFileName()) # Return None as default index
+    
+    def setLocation(self, index, filename):
+        """ Set the image location, see getLocation. """
+        self.setFileName(filename) # Index is ignored at this point
         
     def hasCTF(self):
         return self.ctfModel is not None
@@ -101,8 +124,8 @@ class SetOfImages(EMObject):
     """ Represents a set of Images """
     def __init__(self, filename=None, **args):
         # Use the object value to store the filename
-        args['value'] = filename
         EMObject.__init__(self, **args)
+        self.setFileName(filename)
         self.samplingRate = Float()
         self.scannedPixelSize = Float()
         self._ctf = Boolean(args.get('ctf', False))
@@ -112,10 +135,10 @@ class SetOfImages(EMObject):
         pass
     
     def getFileName(self):
-        return self._objValue
+        return self.get()
     
     def setFileName(self, newFileName):
-        self._objValue = newFileName
+        self.set(newFileName)
     
     def hasCTF(self):
         """Return True if the SetOfMicrographs has associated a CTF model"""
@@ -131,6 +154,7 @@ class SetOfImages(EMObject):
         self.samplingRate.set(other.samplingRate.get())
         self.scannedPixelSize.set(other.scannedPixelSize.get())
         self._ctf.set(other._ctf.get())    
+    
     
 class SetOfMicrographs(SetOfImages):
     """Represents a set of Micrographs"""

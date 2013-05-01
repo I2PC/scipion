@@ -162,11 +162,11 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
 #            if tiltPairs:
 #                MD.setValue(xmipp.MDL_MICROGRAPH_TILTED,IOTable[fnMicrographTilted],objId)
 #                MD.setValue(xmipp.MDL_MICROGRAPH_TILTED_ORIGINAL,fnMicrographTilted,objId)
-        micSet.write()
-        # Create the SetOfMicrographs object on the database
+        
         micSet.copyInfo(self.inputMics)
         
         if self.doDownsample.get():
             micSet.samplingRate.set(self.inputMics.samplingRate.get()*self.downFactor.get())
 
+        micSet.write()
         self._defineOutputs(outputMicrographs=micSet)

@@ -29,33 +29,8 @@ This module contains converter functions
 from base classes to xmipp classes
 """
 
-from data import XmippMicrograph, XmippSetOfMicrographs, XmippCTFModel, XmippSetOfCoordinates
-import xmipp
-    
-def convertMicrograph(mic):
-    """Convert from Micrograph to XmippMicrograph"""
-    if type(mic) is XmippMicrograph:
-        return mic
-    
-    micXmipp = XmippMicrograph(mic.getFileName())
-    # TODO: copyInfo??
-    # from mic to micXmipp??  
-    return micXmipp
-       
-def convertSetOfMicrographs(setOfMics, filename):
-    """Method to convert from a general SetOfMicrographs to XmippSetOfMicrographs"""
-    if type(setOfMics) is XmippSetOfMicrographs:
-        return setOfMics
-        
-    micsOut = XmippSetOfMicrographs(filename)
-    micsOut.copyInfo(setOfMics)
+from data import *
 
-    for mic in setOfMics:
-        micsOut.append(mic)
-
-    micsOut.write()
-        
-    return micsOut
     
     
 def convertCTFModel(ctfModel, filename):

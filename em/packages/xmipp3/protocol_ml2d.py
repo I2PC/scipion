@@ -123,19 +123,6 @@ class XmippProtML2D(ProtAlign, ProtClassify):
         return progId   
          
     def _defineSteps(self):
-        """ Define main steps of the ML2D protocol. """
-        self._insertMLStep()
-        
-    def _convertImages(self, attrName):
-        """ Convert from input images (pointed by attrName)
-        to Xmipp set of images """
-        inputImgs = getattr(self, attrName).get() # This should be the pointer to images
-        fn = self._getTmpPath(attrName + '_images.xmd')
-        xmippImgs = convertFromSetOfImages(inputImgs, fn)
-        if xmippImgs != inputImgs:
-            return [fn]
-        
-    def _insertMLStep(self):
         """ Mainly prepare the command line for call ml(f)2d program"""
         progId = self.getId()
         
@@ -145,39 +132,45 @@ class XmippProtML2D(ProtAlign, ProtClassify):
         
         prefix = '%s2d' % progId
         oroot = self._getPath(prefix)
-        params = ' -i %s --oroot %s' % (self.ImgMd, oroot)
+        imgsFn = self._insertConvertStep('inputImages', XmippSetOfImages,
+                                         convertSetOfImages, self._getPath('input_images.xmd'))
+        params = ' -i %s --oroot %s' % (imgsFn, oroot)
         # Number of references will be ignored if -ref is passed as expert option
-        if self.DoGenerateReferences:
-            params += ' --nref %d' % self.NumberOfReferences
+        if self.doGenerateReferences:
+            params += ' --nref %d' % self.numberOfReferences.get()
         else:
-            params += ' --ref %s' % self.RefMd
+            refsFn = self._insertConvertStep('inputReferences', XmippSetOfImages,
+                                             convertSetOfImages, self._getPath('input_references.xmd'))
+            params += ' --ref %s' % refsFn
         
-        if (self.DoFast and not self.DoMlf):
-            params += ' --fast'
-        if (self.NumberOfThreads > 1  and not self.DoMlf):
-            params += ' --thr %i' % self.NumberOfThreads
-        if (self.DoMlf):
-            if not self.DoCorrectAmplitudes:
+        if self.doMlf:
+            if not self.doCorrectAmplitudes:
                 params += ' --no_ctf'                    
-            if (not self.ImagesArePhaseFlipped):
+            if not self.areImagesPhaseFlipped:
                 params += ' --not_phase_flipped'
-            if (self.HighResLimit > 0):
-                params += ' --limit_resolution 0 %f' % self.HighResLimit
-            params += ' --sampling_rate %f' % self.SamplingRate
-        if self.MaxIters != 100:
+            if self.highResLimit.get() > 0:
+                params += ' --limit_resolution 0 %f' % self.highResLimit.get()
+            params += ' --sampling_rate %f' % self.inputImages.samplingRate.get()
+        else:
+            if self.doFast:
+                params += ' --fast'
+            if self.numberOfThreads.get() > 1:
+                params += ' --thr %d' % self.numberOfThreads.get()
+            
+        if self.maxIters.get() != 100:
             params += " --iter %d" % self.MaxIters
 
-        # Dictionary with boolean options and the cmd options
-        booleanDict = {'doMirror': '--mirror', 'doNorm': '--norm'}
-        #Add all boolean options if true
-        for k, v in booleanDict.iteritems():
-            if getattr(self, k):
-                params += " " + v
+        if self.doMirror:
+            params += ' --mirror'
+            
+        if self.doNorm:
+            params += ' --norm'
 
-        self.insertRunJobStep(program, params, 
-                              [self.getFilename(k) for k in ['images', 'classes']])
+        self.insertRunJobStep(program, params)
                 
-    def createOutput(self, IOTable):
+        # TODO: insert createOutput
+        
+    def createOutput(self):
         
         mdOut = "Micrographs@" + self._getPath("micrographs.xmd")    
         micSet = XmippSetOfMicrographs(mdOut)
