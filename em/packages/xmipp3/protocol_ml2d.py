@@ -137,13 +137,13 @@ class XmippProtML2D(ProtAlign, ProtClassify, XmippProtocol):
         restart = False
         
         prefix = '%s2d_' % progId
-        oroot = self._getPath(prefix)
+        self.oroot = self._getPath(prefix)
         
         self.inputImgs = self.inputImages.get()
         
         imgsFn = self._insertConvertStep('inputImgs', XmippSetOfImages,
                                          self._getPath('input_images.xmd'))
-        params = ' -i %s --oroot %s' % (imgsFn, oroot)
+        params = ' -i %s --oroot %s' % (imgsFn, self.oroot)
         # Number of references will be ignored if -ref is passed as expert option
         if self.doGenerateReferences:
             params += ' --nref %d' % self.numberOfReferences.get()
@@ -178,25 +178,8 @@ class XmippProtML2D(ProtAlign, ProtClassify, XmippProtocol):
 
         self._insertRunJobStep(program, params)
                 
-        # TODO: insert createOutput
+        self._insertFunctionStep('createOutput')
         
     def createOutput(self):
-        
-        mdOut = "Micrographs@" + self._getPath("micrographs.xmd")    
-        micSet = XmippSetOfMicrographs(mdOut)
-            
-        # Add micrographs to the set           
-        for i, v in IOTable.iteritems():
-            micSet.append(XmippMicrograph(v))
-            #TODO: Handle Tilted micrographs
-#            if tiltPairs:
-#                MD.setValue(xmipp.MDL_MICROGRAPH_TILTED,IOTable[fnMicrographTilted],objId)
-#                MD.setValue(xmipp.MDL_MICROGRAPH_TILTED_ORIGINAL,fnMicrographTilted,objId)
-        micSet.write()
-        # Create the SetOfMicrographs object on the database
-        micSet.copyInfo(self.inputMics)
-        
-        if self.doDownsample.get():
-            micSet.samplingRate.set(self.inputMics.samplingRate.get()*self.downFactor.get())
-
-        self._defineOutputs(outputMicrographs=micSet)
+        classification = XmippClassification2D(self.oroot + 'classes.xmd')
+        self._defineOutputs(outputClassification=classification)

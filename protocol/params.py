@@ -105,7 +105,17 @@ class Form():
         self._sectionList = [] # Store list of sections
         self._paramsDict = {} # Dictionary to store all params, grouped by sections
         self._lastSection = None
-
+        self.addGeneralSection()
+        
+    def addGeneralSection(self):
+        self.addSection(label='General')
+        self.addParam('runName', StringParam, label="Run name:", important=True, 
+                      help='Select run name label to identify this run.')
+        self.addParam('showComment', BooleanParam, default=False, 
+                      label="Show comment?")
+        self.addParam('comment', StringParam, condition="showComment", 
+                      label="Comment:", help='Make some annotations on this run.')  
+  
     def addSection(self, **args):
         """Add a new section"""
         self.lastSection = Section(self, **args)

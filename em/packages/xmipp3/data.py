@@ -266,4 +266,54 @@ class XmippSetOfCoordinates(SetOfCoordinates):
             self.iterMicrographCoordinates(mic)
 
             
+class XmippImageClassAssignment(ImageClassAssignment, XmippMdRow):
+    """ Image-class assignments in Xmipp are stored in a MetaData row. """
+    def __init__(self, **args):
+        XmippMdRow.__init__(self, **args)
+        ImageClassAssignment.__init__(self, **args)
+        
+    def setImage(self, image):
+        """ Set associated image. """
+        self.setValue(xmipp.MDL_IMAGE, image.getFileName())
+        
+    def getImage(self):
+        """ Get associated image. """
+        return XmippImage(self.getValue(xmipp.MDL_IMAGE))
     
+    
+class XmippClass2D(Class2D):
+    """ Xmipp classes are stored in blocks of the MetaData. """
+    def __init__(self, classNumber, filename, representative=None, **args):
+        Class2D.__init__(self, **args)
+        self._number = classNumber
+        self._filename = filename
+        self._representative = representative
+        
+    def iterImageAssignemts(self):
+        md = xmipp.MetaData('class%06d_images@%s' % 
+                            (self._number, self._filename))
+        for objId in md:
+            imgCA = XmippImageClassAssignment()
+            imgCA.readFromMd(md, objId)
+            yield imgCA
+    
+    def getClassRepresentative(self):
+        return self._representative
+        
+        
+class XmippClassification2D(Classification2D):
+    """ Store results from a 2D classification. """
+    def __init__(self, filename=None, **args):
+        Classification2D.__init__(self, **args)
+        self.getFileName = self.get
+        self.setFileName = self.set
+        self.setFileName(filename)
+        
+    def iterClasses(self):
+        fn = self.getFileName()
+        md = xmipp.MetaData('classes@' + fn)
+        for objId in md:
+            ref = md.getValue(xmipp.MDL_REF, objId)
+            img = md.getValue(xmipp.MDL_IMAGE, objId)
+            yield XmippClass2D(ref, fn, img)
+  

@@ -196,7 +196,8 @@ class EmTreeProvider(ObjectTreeProvider):
             return [('Open Micrographs with Xmipp', lambda: self.viewer.visualize(obj))]
         if issubclass(cls, SetOfImages):
             return [('Open Images with Xmipp', lambda: self.viewer.visualize(obj))]
-        
+        if issubclass(cls, XmippClassification2D):
+            return [('Open Classification2D with Xmipp', lambda: self.viewer.visualize(obj))]
         return []           
 
 class ProjectWindow(gui.Window):

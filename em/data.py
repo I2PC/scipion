@@ -386,6 +386,12 @@ class Class2D(EMObject):
         to this particular class.
         """
         pass
+    
+    def getClassRepresentative(self):
+        """ Usually the representative is an average of 
+        the images assigned to that class.
+        """
+        pass
         
         
 class Classification2D(EMObject):

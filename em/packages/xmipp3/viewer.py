@@ -33,14 +33,14 @@ from pyworkflow.em.viewer import Viewer
 from pyworkflow.em import SetOfImages, SetOfMicrographs
 from pyworkflow.utils.process import runJob
 from xmipp3 import getXmippPath
-from data import XmippSetOfImages, XmippSetOfMicrographs
+from data import XmippSetOfImages, XmippSetOfMicrographs, XmippClassification2D
 
 
 class XmippViewer(Viewer):
     """ Wrapper to visualize different type of objects
     with the Xmipp program xmipp_showj
     """
-    _target = ['SetOfImages', 'SetOfMicrographs'] 
+    _target = ['SetOfImages', 'SetOfMicrographs', 'XmippClassification2D'] 
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
@@ -56,6 +56,8 @@ class XmippViewer(Viewer):
             fn = self._getTmpPath(obj.getName() + '_images.xmd')
             imgs = XmippSetOfImages.convert(obj, fn)
             runShowJ(imgs.getFileName())
+        elif issubclass(cls, XmippClassification2D):
+            runShowJ(obj.getFileName())
         else:
             raise Exception('XmippViewer.visualize: can not visualize class: %s' % obj.getClassName())
 
