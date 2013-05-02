@@ -173,10 +173,13 @@ class RunJobStep(FunctionStep):
         FunctionStep.__init__(self, 'runJob', programName, arguments)
         # Define the function that will do the job and return result files
         self.func = self._runJob
+        self.mpi = 1
+        self.threads = 1
         
     def _runJob(self, programName, arguments):
         """ Wrap around runJob function""" 
-        runJob(None, programName, arguments)
+        runJob(None, programName, arguments, 
+               numberOfMpi=self.mpi, numberOfThreads=self.threads)
         #TODO: Add the option to return resultFiles
              
 
@@ -198,6 +201,11 @@ class Protocol(Step):
         self.workingDir = String(args.get('workingDir', '.')) # All generated files should be inside workingDir
         self.mapper = args.get('mapper', None)
         self._createVarsFromDefinition(**args)
+        # For non-parallel protocols mpi=1 and threads=1
+        if not hasattr(self, 'numberOfMpi'):
+            self.numberOfMpi = Integer(1)
+        if not hasattr(self, 'numberOfThreads'):
+            self.numberOfThreads = Integer(1)
         
     def _createVarsFromDefinition(self, **args):
         """ This function will setup the protocol instance variables
@@ -274,6 +282,8 @@ class Protocol(Step):
         **args: variable dictionary with extra params, NOT USED NOW.
         """
         step = RunJobStep(progName, progArguments, resultFiles)
+        step.mpi = self.numberOfMpi.get()
+        step.threads = self.numberOfThreads.get()
         self.__insertStep(step)
         
     def _enterWorkingDir(self):

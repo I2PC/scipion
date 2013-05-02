@@ -107,15 +107,6 @@ class Form():
         self._lastSection = None
         self.addGeneralSection()
         
-    def addGeneralSection(self):
-        self.addSection(label='General')
-        self.addParam('runName', StringParam, label="Run name:", important=True, 
-                      help='Select run name label to identify this run.')
-        self.addParam('showComment', BooleanParam, default=False, 
-                      label="Show comment?")
-        self.addParam('comment', StringParam, condition="showComment", 
-                      label="Comment:", help='Make some annotations on this run.')  
-  
     def addSection(self, **args):
         """Add a new section"""
         self.lastSection = Section(self, **args)
@@ -175,6 +166,38 @@ class Form():
     def iterParams(self):
         return self._paramsDict.iteritems()
 
+    def addGeneralSection(self):
+        self.addSection(label='General')
+        self.addParam('runName', StringParam, label="Run name:", important=True, 
+                      help='Select run name label to identify this run.')
+        self.addParam('showComment', BooleanParam, default=False, 
+                      label="Show comment?")
+        self.addParam('comment', StringParam, condition="showComment", 
+                      label="Comment:", help='Make some annotations on this run.')  
+  
+    def addParallelSection(self, threads=1, mpi=8, condition="",
+                           hours=72, jobsize=0):
+        self.addSection(label='Parallelization')
+        if threads > 0:
+            self.addParam('numberOfThreads', IntParam, default=threads,
+                          label='Number of threads',
+                          help='This option provides shared-memory parallelization on multi-core machines.'
+                                'It does not require any additional software, other than <Xmipp>' )
+        if mpi > 0:
+            self.addParam('numberOfMpi', IntParam, default=mpi,
+                          label='Number of MPI processes',
+                          help='This option provides the number of independent processes spawned'
+                                'in parallel by <mpirun> command in a cluster, usually throught'
+                                'a queue system. This will require that you have compile <Xmipp>'
+                                'with <mpi> support.')
+        if jobsize > 0:
+            self.addParam('mpiJobSize', IntParam, default=jobsize,
+                          label='MPI job size', condition="numberOfMpi>1",
+                          help='Minimum size of jobs in mpi processes.'
+                               'Set to 1 for large images (e.g. 500x500)'
+                               'and to 10 for small images (e.g. 100x100)')
+
+        
 
 # More Param sub-classes
 

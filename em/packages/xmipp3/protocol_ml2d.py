@@ -111,10 +111,7 @@ class XmippDefML2D(Form):
                       label='Std for origin offset',
                       help='Expected standard deviation for origin offset (pixels).') 
         
-        self.addParam('numberOfThreads', IntParam, default=2, 
-                      label='Maximum number of threads',
-                      help='If the convergence has not been reached after this number'
-                           'of iterations, the process will be stopped.')          
+        self.addParallelSection(threads=2, mpi=2)
         
         
 class XmippProtML2D(ProtAlign, ProtClassify, XmippProtocol):
