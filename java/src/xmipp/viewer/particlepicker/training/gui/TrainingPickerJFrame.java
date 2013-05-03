@@ -1,5 +1,6 @@
 package xmipp.viewer.particlepicker.training.gui;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -85,6 +86,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	private JMenuItem templatesmi;
 	TemplatesJDialog templatesdialog;
 	private JCheckBox centerpickchb;
+	private JButton editfamiliesbt;
 
 	@Override
 	public TrainingPicker getParticlePicker()
@@ -132,14 +134,17 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			setLayout(new GridBagLayout());
 
 			initImagePane();
-			add(imagepn, XmippWindowUtil.getConstraints(constraints, 0, 1, 3));
+			add(imagepn, XmippWindowUtil.getConstraints(constraints, 0, 1));
 
 			initFamilyPane();
-			add(familypn, XmippWindowUtil.getConstraints(constraints, 0, 2, 3));
+			add(familypn, XmippWindowUtil.getConstraints(constraints, 0, 2));
 
 			initMicrographsPane();
-			add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 3, 3));
-
+			add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 3, 1, 1, GridBagConstraints.HORIZONTAL));
+			JPanel actionspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+			actionspn.add(savebt);
+			actionspn.add(saveandexitbt);
+			add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 4, 1, 1, GridBagConstraints.HORIZONTAL));
 			pack();
 			positionx = 0.9f;
 			XmippWindowUtil.setLocation(positionx, 0.2f, this);
@@ -637,7 +642,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		sizetf.setEnabled(step == FamilyState.Manual);
 		editfamiliesmi.setEnabled(step == FamilyState.Manual);
 		manageAction();
-		thresholdpn.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
+		thresholdpn.setVisible(mfd.getState() == MicrographFamilyState.Correct);
 		pack();
 
 	}
@@ -713,6 +718,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	{
 		ppicker.setChanged(changed);
 		savemi.setEnabled(changed);
+		savebt.setEnabled(changed);
 	}
 
 	public void updateMicrographsModel(boolean all)
@@ -808,6 +814,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 				{
 					ppicker.runXmippProgram("xmipp_micrograph_automatic_picking", fargs);
 					ppicker.loadAutomaticParticles(getFamilyData());
+					
 					setState(MicrographFamilyState.Correct);
 					canvas.repaint();
 					canvas.setEnabled(true);
