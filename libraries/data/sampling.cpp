@@ -164,6 +164,7 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     sampling_points_angles.clear();
     sampling_points_vector.clear();
 
+    /* this is wrong, revert to previous code ROB
     if(min_tilt <= 0.)
         min_z= -1.;
     else
@@ -175,6 +176,15 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     	max_z=-fabs(cos(PI * max_tilt / 180.));
     else
         max_z=fabs(cos(PI * max_tilt / 180.));
+    */
+    if(max_tilt >= 90.)
+        max_z=10.;
+    else
+        max_z=sin(PI * max_tilt / 180.);
+    if(min_tilt <= -90.)
+        min_z= -10.;
+    else
+        min_z=sin(PI * min_tilt / 180.);
 
     //01a
     starting_point = vertices_vectors[0];
@@ -1202,6 +1212,8 @@ void Sampling::removeRedundantPointsExhaustive(const int symmetry,
 
     // First call to conventional removeRedundantPoints
     removeRedundantPoints(symmetry, sym_order);
+//    for (int isym = 0; isym < no_redundant_sampling_points_vector.size(); isym++)
+//    	std::cout << "sampling:" << no_redundant_sampling_points_vector[isym];
     std::vector <Matrix1D<double> > old_vector = no_redundant_sampling_points_vector;
     std::vector <Matrix1D<double> > old_angles = no_redundant_sampling_points_angles;
 
