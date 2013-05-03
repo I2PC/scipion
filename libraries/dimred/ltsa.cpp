@@ -23,13 +23,12 @@
 
 #include "ltsa.h"
 
-
 void LTSA::setSpecificParameters(int k)
 {
     this->k = k;
 }
 
-void computeWeightsVector (const Matrix2D<double> &A, Matrix1D<int> &weightVector)
+void computeWeightsVector(const Matrix2D<double> &A, Matrix1D<int> &weightVector)
 {
     weightVector.initZeros(MAT_XSIZE(A));
     for (size_t i = 0; i < MAT_XSIZE(A); ++i)
@@ -41,7 +40,7 @@ void computeWeightsVector (const Matrix2D<double> &A, Matrix1D<int> &weightVecto
     }
 }
 
-void getLessWeightNColumns (const Matrix2D<double> &A, const Matrix1D<int> &weightVector, Matrix2D<double> &B)
+void getLessWeightNColumns(const Matrix2D<double> &A, const Matrix1D<int> &weightVector, Matrix2D<double> &B)
 {
     size_t outputDim = MAT_XSIZE(B) - 1;
     for (size_t index = 0; index < outputDim; ++index)
@@ -54,51 +53,46 @@ void getLessWeightNColumns (const Matrix2D<double> &A, const Matrix1D<int> &weig
             }
 }
 
+void LTSA::computeAlignmentMatrix(Matrix2D<double> &B)
+{
+	subtractColumnMeans(*X);
+
+	size_t n = MAT_YSIZE(*X);
+	Matrix2D<int> ni;
+	Matrix2D<double> D, Xi(MAT_XSIZE(ni), MAT_XSIZE(*X)), W, Vi, Vi2, Si, Gi;
+	kNearestNeighbours(*X, k, ni, D);
+
+	B.initIdentity(n);
+	Matrix1D<int> weightVector;
+	for (size_t iLoop = 0; iLoop < n; ++iLoop)
+	{
+		extractNearestNeighbours(*X, ni, iLoop, Xi);
+		subtractColumnMeans(Xi);
+
+		matrixOperation_AAt(Xi, W); // W=X*X^t
+		schur(W, Vi, Si);           // W=Vi*Si*Vi^t
+
+		computeWeightsVector(Si, weightVector);
+
+		Vi2.resizeNoCopy(MAT_YSIZE(Vi), outputDim + 1);
+		Vi2.setConstantCol(0, 1/sqrt(k)); //Vi2(0,:)=1/sqrt(k)
+		getLessWeightNColumns(Vi, weightVector, Vi2);
+
+		matrixOperation_AAt(Vi2, Gi); // Gi=Vi2*Vi2^t
+		matrixOperation_IminusA(Gi);  // Gi=I-Gi
+
+		// Compute partial B with correlation matrix Gi
+		FOR_ALL_ELEMENTS_IN_MATRIX2D(Gi)
+			MAT_ELEM(B, MAT_ELEM(ni,iLoop,i), MAT_ELEM(ni,iLoop,j)) += MAT_ELEM(Gi, i, j);
+		MAT_ELEM(B, iLoop, iLoop)-=1;
+	}
+}
+
 void LTSA::reduceDimensionality()
 {
-    subtractColumnMeans(*X);
-
-    size_t n = MAT_YSIZE(*X);
-    Matrix2D<int> ni;
-    Matrix2D<double> D, Xi(MAT_XSIZE(ni), MAT_XSIZE(*X)), B(n, n), W, Vi, Vi2, Si, Gi;
-    kNearestNeighbours(*X, k, ni, D);
-
-    B.initIdentity();
-    Matrix1D<int> weightVector;
-    for (size_t iLoop = 0; iLoop < n; ++iLoop)
-    {
-        extractNearestNeighbours(*X, ni, iLoop, Xi);
-        subtractColumnMeans(Xi);
-
-        matrixOperation_AAt(Xi, W); // W=X*X^t
-        schur(W, Vi, Si);           // W=Vi*Si*Vi^t
-
-        if (MAT_XSIZE(Si) < outputDim)
-        {
-            outputDim = MAT_XSIZE(Si);
-            std::cout<<"Target dimensionality reduced to "<<outputDim;
-        }
-
-        computeWeightsVector(Si, weightVector);
-
-        Vi2.resizeNoCopy(MAT_YSIZE(Vi), outputDim + 1);
-        Vi2.setConstantCol(0, 1/sqrt(k)); //Vi2(0,:)=1/sqrt(k)
-        getLessWeightNColumns(Vi, weightVector, Vi2);
-
-        matrixOperation_AAt(Vi2, Gi); // Gi=Vi2*Vi2^t
-        matrixOperation_IminusA(Gi);  // Gi=I-Gi
-
-        // Compute partial B with correlation matrix Gi
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(Gi)
-            MAT_ELEM(B, MAT_ELEM(ni,iLoop,i), MAT_ELEM(ni,iLoop,j)) += MAT_ELEM(Gi, i, j);
-        MAT_ELEM(B, iLoop, iLoop)-=1;
-    }
+	Matrix2D<double> B;
+    computeAlignmentMatrix(B);
 
     Matrix1D<double> DEigs;
-    lastEigs(B,outputDim+1,DEigs,Y);
-
-    if (MAT_XSIZE(Y) < outputDim + 1)
-        outputDim = MAT_XSIZE(Y) - 1;
-
-    eraseFirstColumn(Y);
+    eigsBetween(B, 1, outputDim, DEigs, Y);
 }

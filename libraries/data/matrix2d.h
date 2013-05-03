@@ -1478,11 +1478,23 @@ public:
     /** Get diagonal.
      * It is assumed that the matrix is squared
      */
-    void getDiagonal(Matrix1D<T> &d)
+    void getDiagonal(Matrix1D<T> &d) const
     {
     	d.resizeNoCopy(MAT_XSIZE(*this));
     	for (size_t i=0; i<MAT_XSIZE(*this); ++i)
     		VEC_ELEM(d,i)=MAT_ELEM(*this,i,i);
+    }
+
+    /** Trace
+     * Sum of the values in the diagonal
+     */
+    T trace() const
+    {
+    	size_t d=std::min(MAT_XSIZE(*this),MAT_YSIZE(*this));
+    	T retval=0;
+    	for (size_t i=0; i<d; ++i)
+    		retval+=MAT_ELEM(*this,i,i);
+    	return retval;
     }
 
     /** Determinant of a matrix
@@ -1811,6 +1823,12 @@ void firstEigs(const Matrix2D<double> &A, size_t M, Matrix1D<double> &D, Matrix2
  * Only the eigenvectors of the smallest M eigenvalues are returned as columns of P
  */
 void lastEigs(const Matrix2D<double> &A, size_t M, Matrix1D<double> &D, Matrix2D<double> &P);
+
+/** Compute eigenvectors between two indexes of a real, symmetric matrix.
+ * Solves the problem Av=dv.
+ * Only the eigenvectors of the smallest eigenvalues between indexes I1 and I2 are returned as columns of P. Indexes start at 0.
+ */
+void eigsBetween(const Matrix2D<double> &A, size_t I1, size_t I2, Matrix1D<double> &D, Matrix2D<double> &P);
 
 /** Find connected components of a graph.
  * Assuming that the matrix G represents an undirected graph (of size NxN), this function returns a vector (of size N) that indicates

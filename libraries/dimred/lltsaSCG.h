@@ -22,30 +22,23 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef LTSA_H_
-#define LTSA_H_
+#ifndef LLTSASCG_H_
+#define LLTSASCG_H_
 
 #include <data/matrix2d.h>
 #include <data/matrix1d.h>
 #include "dimred_tools.h"
+#include "ltsa.h"
 
-/**@defgroup LTSA Local Tangent Space Alignment
+/**@defgroup LLTSA Linear Local Tangent Space Alignment
    @ingroup DimRedLibrary */
 //@{
-/** Class for making a LTSA dimensionality reduction */
-class LTSA: public DimRedAlgorithm
+/** Class for making a LLTSA dimensionality reduction */
+class LLTSASCG: public LTSA
 {
 public:
-	int k;
-public:
-	/// Set specific parameters
-	void setSpecificParameters(int k=12);
-
 	/// Reduce dimensionality
-	virtual void reduceDimensionality();
-protected:
-	/// Common part
-	void computeAlignmentMatrix(Matrix2D<double> &B);
+	void reduceDimensionality();
 };
 //@}
 #endif

@@ -24,30 +24,58 @@
  ***************************************************************************/
 
 #include "gplvm.h"
+#include <data/numerical_tools.h>
 
 void GPLVM::setSpecificParameters(double sigma)
 {
 	this->sigma=sigma;
 }
 
-double GPLVM::objectiveFunction(const Matrix2D<double> &Y)
+double GPLVM::objectiveFunction()
 {
-	computeDistance(*X,D2,distance);
-	computeSimilarityMatrix(D2,sigma);
-	return 0;
+	sumY2.initZeros(MAT_YSIZE(Y));
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(Y)
+		VEC_ELEM(sumY2,i)+=MAT_ELEM(Y,i,j)*MAT_ELEM(Y,i,j);
+
+	double aux=1.0/(2*sigma*sigma);
+	K.resizeNoCopy(MAT_YSIZE(Y),MAT_YSIZE(Y));
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(K)
+	{
+		double aux2=0;
+		for (int k=0; k<MAT_XSIZE(Y); k++)
+			aux2+=MAT_ELEM(Y,i,k)*MAT_ELEM(Y,j,k);
+        MAT_ELEM(K,i,j)=exp((2*aux2-VEC_ELEM(sumY2,i)-VEC_ELEM(sumY2,j))*aux);
+	}
+
+	matrixOperation_AAt(*X,tmp);
+	tmp= K.inv() * tmp;
+
+	double d=MAT_YSIZE(*X);
+	double n=MAT_XSIZE(*X);
+	return(-(d*n/2) * log( 2 * M_PI) - (n/2) * log(K.det()+2.2e-308) - 0.5 * tmp.trace());
+}
+
+double gplvmObjectiveFuntion(double *p, void *prm)
+{
+	GPLVM *gpvlm=(GPLVM *)prm;
+	Matrix2D<double> &Y=gpvlm->Y;
+	memcpy(&MAT_ELEM(Y,0,0),&(p[1]),MAT_XSIZE(Y)*MAT_YSIZE(Y)*sizeof(double));
+	double c=gpvlm->objectiveFunction();
+	return c;
 }
 
 void GPLVM::reduceDimensionality()
 {
-	subtractColumnMeans(*X);
+	// Compute the first guess
+	PCA::reduceDimensionality();
+	Y.write("PPPPCA.txt");
 
-	// Pretreat the data with PCA
-	Matrix2D<double> C, M;
-	matrixOperation_AAt(*X,C);
-	Matrix1D<double> lambda;
-	firstEigs(C, outputDim, lambda, M);
-
-	Matrix2D<double> Y=*X*M;
-
-	double c = objectiveFunction(Y);
+	// Refine
+	Matrix1D<double> pY(MAT_XSIZE(Y)*MAT_YSIZE(Y)), steps(MAT_XSIZE(Y)*MAT_YSIZE(Y));
+	steps.initConstant(1);
+	memcpy(&VEC_ELEM(pY,0),&MAT_ELEM(Y,0,0),VEC_XSIZE(pY)*sizeof(double));
+	double goal;
+	int iter;
+	powellOptimizer(pY,1,VEC_XSIZE(pY),&gplvmObjectiveFuntion,this,0.01,goal,iter,steps,true);
+	memcpy(&MAT_ELEM(Y,0,0),&VEC_ELEM(pY,0),VEC_XSIZE(pY)*sizeof(double));
 }

@@ -28,16 +28,15 @@
 #include <data/matrix2d.h>
 #include <data/matrix1d.h>
 #include "dimred_tools.h"
+#include "pca.h"
 
 #include <math.h>
-
-
 
 /**@defgroup GPLVM Gaussian Process Latent Variable Model
    @ingroup DimRedLibrary */
 //@{
 /** Class for making a GPLVM dimensionality reduction */
-class GPLVM: public DimRedAlgorithm
+class GPLVM: public PCA
 {
 public:
 	double sigma;
@@ -49,9 +48,10 @@ public:
 	void reduceDimensionality();
 
 	/// Objective function
-	double objectiveFunction(const Matrix2D<double> &Y);
-private:
-	Matrix2D<double> D2, K;
+	double objectiveFunction();
+public:
+	Matrix2D<double> K, tmp;
+	Matrix1D<double> sumY2;
 };
 //@}
 #endif

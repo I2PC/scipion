@@ -1,7 +1,8 @@
 /***************************************************************************
  *
- * Authors:    Sergio Calvo Gonzalez            sergiocg90@gmail.com (2013)
+ * Authors:    Carlos Oscar Sorzano         coss@cnb.csic.es (2013)
  *
+ * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,31 +22,20 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
+#ifndef _PCA
+#define _PCA
 
-#ifndef LTSA_H_
-#define LTSA_H_
-
-#include <data/matrix2d.h>
-#include <data/matrix1d.h>
 #include "dimred_tools.h"
 
-/**@defgroup LTSA Local Tangent Space Alignment
+/**@defgroup PCA Principal Component Analysis
    @ingroup DimRedLibrary */
 //@{
-/** Class for making a LTSA dimensionality reduction */
-class LTSA: public DimRedAlgorithm
+/** Class for making a PCA dimensionality reduction */
+class PCA: public DimRedAlgorithm
 {
 public:
-	int k;
-public:
-	/// Set specific parameters
-	void setSpecificParameters(int k=12);
-
 	/// Reduce dimensionality
-	virtual void reduceDimensionality();
-protected:
-	/// Common part
-	void computeAlignmentMatrix(Matrix2D<double> &B);
+	void reduceDimensionality();
 };
 //@}
 #endif

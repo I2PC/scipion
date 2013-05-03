@@ -1,7 +1,6 @@
 /***************************************************************************
  *
- * Authors:    Sergio Calvo Gonzalez            sergiocg90@gmail.com (2013)
- *
+ * Authors:    Sergio Calvo Gonzalez       sergiocg90@gmail.com (2013)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,30 +21,27 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef LTSA_H_
-#define LTSA_H_
+#include "lltsaSCG.h"
 
-#include <data/matrix2d.h>
-#include <data/matrix1d.h>
-#include "dimred_tools.h"
-
-/**@defgroup LTSA Local Tangent Space Alignment
-   @ingroup DimRedLibrary */
-//@{
-/** Class for making a LTSA dimensionality reduction */
-class LTSA: public DimRedAlgorithm
+void eraseLastNColumns(Matrix2D<double> &A, int N)
 {
-public:
-	int k;
-public:
-	/// Set specific parameters
-	void setSpecificParameters(int k=12);
+	Matrix2D<double> Ap;
+	Ap.resize(MAT_YSIZE(A),MAT_XSIZE(A)-N);
+    for (size_t i = 0; i < MAT_YSIZE(A); ++i)
+    	memcpy(&MAT_ELEM(Ap,i,0),&MAT_ELEM(A,i,0),MAT_XSIZE(Ap)*sizeof(double));
+    A=Ap;
+}
 
-	/// Reduce dimensionality
-	virtual void reduceDimensionality();
-protected:
-	/// Common part
-	void computeAlignmentMatrix(Matrix2D<double> &B);
-};
-//@}
-#endif
+void LLTSASCG::reduceDimensionality()
+{
+	Matrix2D<double> B, XtBX, XtX;
+	computeAlignmentMatrix(B);
+
+    Matrix1D<double> DEigs;
+    matrixOperation_AtB(*X, B, XtBX);
+    matrixOperation_AtA(*X, XtX);
+    XtBX = XtBX * (*X);
+    generalizedEigs(XtBX, XtX, DEigs, Y);
+    eraseLastNColumns(Y, MAT_XSIZE(Y) - outputDim);
+    Y = *X * Y;
+}
