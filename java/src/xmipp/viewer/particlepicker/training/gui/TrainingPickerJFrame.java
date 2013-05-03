@@ -30,6 +30,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -145,6 +146,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			actionspn.add(savebt);
 			actionspn.add(saveandexitbt);
 			add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 4, 1, 1, GridBagConstraints.HORIZONTAL));
+
 			pack();
 			positionx = 0.9f;
 			XmippWindowUtil.setLocation(positionx, 0.2f, this);
@@ -285,6 +287,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 				templatesdialog.loadTemplates(true);
 				templatesdialog.setVisible(true);
+
 			}
 		}
 		catch (Exception e)
@@ -939,7 +942,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	public void updateTemplates(Family f)
 	{
-		f.setUpdateTemplatesPending(true);
 		if (f.equals(family) && templatesdialog != null)
 			templatesdialog.loadTemplates(true);
 
@@ -956,7 +958,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		{
 			super.updateSize(size);
 			ppicker.resetParticleImages();
-			family.setUpdateTemplatesPending(true);
 			ppicker.updateTemplates();
 			if (templatesdialog != null)
 				loadTemplates();

@@ -96,8 +96,7 @@ public class XmippWindowUtil
 	}
 	
 
-	public static JButton getIconButton(String icon, ActionListener listener)
-	{
+	public static JButton getIconButton(String icon, ActionListener listener){
 		JButton btn = new JButton();
 		btn.setIcon(XmippResource.getIcon(icon));
 		Dimension dim = btn.getPreferredSize();
