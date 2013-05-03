@@ -64,8 +64,9 @@ class ProtCTFFind(ProtCTFMicrographs):
         #print "command: ", self._program, self._args % self._params    
 
     def _parseOutput(self, filename):
-        """Try to find the output estimation parameters
-        from filename. It search for a line containing: Final Values"""
+        """ Try to find the output estimation parameters
+        from filename. It search for a line containing: Final Values.
+        """
         f = open(filename)
         result = None
         for line in f:
@@ -95,8 +96,9 @@ class ProtCTFFind(ProtCTFMicrographs):
             out = join(micDir, 'ctffind.out')
             result = self._parseOutput(out)
             defocusU, defocusV, defocusAngle = result
-            mic.ctfModel = self._getCTFModel(defocusU, defocusV, defocusAngle)
-            micSet.append(mic)
+            micOut = Micrograph(fn)
+            micOut.ctfModel = self._getCTFModel(defocusU, defocusV, defocusAngle)
+            micSet.append(micOut)
             
         micSet.write()
         self._defineOutputs(outputMicrographs=micSet)
