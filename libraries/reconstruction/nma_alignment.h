@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:    Slavica Jonic            slavica.jonic@impmc.jussieu.fr
+ * Authors:    Slavica Jonic            slavica.jonic@impmc.upmc.fr
  *             Carlos Oscar             coss@cnb.uam.es
  *
  * This program is free software; you can redistribute it and/or modify
@@ -46,40 +46,37 @@ public:
     /** Resume computations */
     bool resume;
 
-    /// PDB file
+    /// Reference atomic or pseudo-atomic structure in PDB format
     FileName fnPDB;
 
-    /// File zith a list of modes
+    /// File with a list of mode filenames
     FileName fnModeList;
 
-    /// Output directory
-    FileName fnOutDir;
-
-    /// Scaling factor to scale deformation amplitude
-    double scale_defamp;
+    /// Positive scaling factor to scale the initial trust region radius
+    double trustradius_scale;
     
-    /// Sampling rate
+    /// Pixel size in Angstroms
     double sampling_rate;
     
-    /// Mask file
+    /// Mask file for 2D masking of the projections of the deformed volume
     FileName fnmask;
 
-    /// Center PDB
+    /// Center the PDB structure
     bool do_centerPDB;
 
-    /// ProjMatch
+    /// Real-space projection matching instead of the default combined global (wavelet-space) and local (Fourier central slice) projection matching
     bool projMatch;
 
-    /// Min angular sampling rate
-    double minAngularSampling;
+    /// Angular sampling step for computing the reference projections (this is the minimum step for real-space projection matching while the minimum step does not exist in the default method)
+    double discrAngStep;
 
-    /// Gaussian weight sigma in Fourier space
+    /// Sigma of Gaussian weigthing in Fourier space (parameter of central-slice method)
     double gaussian_DFT_sigma;
 
-    /// Gaussian weight sigma in real space 
+    /// Sigma of Gaussian weigthing in real space for spline interpolation in Fourier space (parameter of central-slice method)
     double gaussian_Real_sigma;
 
-    /// Weight for zero frequency
+    /// Zero-frequency weight (parameter of central-slice method)
     double weight_zero_freq;
 
     /// Low-pass filter the volume from PDB 
@@ -88,10 +85,10 @@ public:
     /// Low-pass cut-off frequency
     double cutoff_LPfilter;
 
-    /// Use fixed Gaussian instead of scattering factors
+    /// Use pseudo-atoms instead of atoms
     bool useFixedGaussian;
 
-    /// Fixed Gaussian standard deviation
+    /// Gaussian standard deviation for pseudo-atoms
     double sigmaGaussian;
  
 public:
