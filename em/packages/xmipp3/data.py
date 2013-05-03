@@ -38,8 +38,8 @@ import xmipp
     
 class XmippImage(XmippMdRow, Image):
     """Xmipp implementation for Image"""
-    def __init__(self, filename=None, **args):
-        self._label = xmipp.MDL_IMAGE
+    def __init__(self, filename=None, label=xmipp.MDL_IMAGE, **args):
+        self._label = label
         XmippMdRow.__init__(self)
         Image.__init__(self, filename, **args)
         
@@ -61,8 +61,8 @@ class XmippImage(XmippMdRow, Image):
         
 class XmippSetOfImages(XmippSet, SetOfImages):
     """Represents a set of Images for Xmipp"""
-    def __init__(self, filename=None, **args):
-        self._label = xmipp.MDL_IMAGE
+    def __init__(self, filename=None, label=xmipp.MDL_IMAGE, **args):
+        self._label = label
         SetOfImages.__init__(self, filename, **args)
         XmippSet.__init__(self)
        
@@ -80,8 +80,7 @@ class XmippSetOfImages(XmippSet, SetOfImages):
 class XmippMicrograph(XmippImage, Micrograph):
     """Xmipp implementation for Micrograph"""
     def __init__(self, filename=None, **args):
-        self._label = xmipp.MDL_MICROGRAPH
-        XmippImage.__init__(self, filename, **args)
+        XmippImage.__init__(self, filename, label=xmipp.MDL_MICROGRAPH, **args)
         Micrograph.__init__(self, filename, **args)
             
     @staticmethod

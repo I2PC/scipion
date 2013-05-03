@@ -73,7 +73,7 @@ class Object(object):
         """Return internal value"""
         return self._objValue
     
-    def getValue(self):
+    def getInternalValue(self):
         """Return the internal value for storage.
         This is a good place to do some update of the
         internal value before been stored"""
@@ -323,7 +323,7 @@ class CsvList(Scalar, list):
         for s in value.split(','):
             self.append(self._pType(s))
             
-    def getValue(self):
+    def getInternalValue(self):
         return ','.join(map(str, self))
     
     def get(self):

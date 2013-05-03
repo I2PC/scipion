@@ -103,7 +103,8 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
                 values = ['NA'] * len(labels)
     
             # Set values to the micrograph
-            mic.setValue(*zip(labels, values))
+            for l, v in zip(labels, values):
+                mic.setValue(l, v)
             micSet.append(mic)
             
         micSet.sort()
