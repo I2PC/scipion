@@ -49,6 +49,9 @@ public:
     /// Reference atomic or pseudo-atomic structure in PDB format
     FileName fnPDB;
 
+    /// Output directory
+    FileName fnOutDir;
+
     /// File with a list of mode filenames
     FileName fnModeList;
 

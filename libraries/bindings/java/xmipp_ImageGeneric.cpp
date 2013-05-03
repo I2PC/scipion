@@ -858,6 +858,7 @@ JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_bestShift
     }
 
         XMIPP_JAVA_CATCH;
+        return NULL;
 }
 
 JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_ImageGeneric_alignImage

@@ -56,6 +56,7 @@ void ProgNmaAlignment::defineParams() {
 	defaultComments["-o"].addComment("Metadata with output Euler angles, shifts, and deformation amplitudes");
 	XmippMetadataProgram::defineParams();
 	addParamsLine("   --pdb <PDB_filename>                : Reference atomic or pseudo-atomic structure in PDB format");
+	addParamsLine("  [--odir <outputDir=\".\">]           : Output directory");
 	addParamsLine("  [--resume]                           : Resume processing");
 	addParamsLine("==Generation of the deformed reference volumes==");
 	addParamsLine("   --modes <filename>                  : File with a list of mode filenames");
@@ -177,7 +178,7 @@ FileName ProgNmaAlignment::createDeformedPDB(int pyramidLevel) const {
 	arguments = formatString(
 			"--pdb %s -o %s_deformedPDB.pdb --nma %s --deformations ",
 			fnPDB.c_str(), randStr, fnModeList.c_str());
-	for (int i = 0; i < VEC_XSIZE(trial) - 5; ++i)
+	for (size_t i = 0; i < VEC_XSIZE(trial) - 5; ++i)
 		arguments += floatToString(trial(i)) + " ";
 	runSystem(program, arguments, false);
 
