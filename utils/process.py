@@ -33,15 +33,15 @@ import sys
 def runJob(log, 
            programname,
            params,           
-           NumberOfMpi = 1,
-           NumberOfThreads = 1,
+           numberOfMpi = 1,
+           numberOfThreads = 1,
            RunInBackground=False):
 
     command = buildRunCommand(log,
                programname,
                params,
-               NumberOfMpi,
-               NumberOfThreads,
+               numberOfMpi,
+               numberOfThreads,
                RunInBackground)
     if log is None:
         #TODO: printLog("Running command: %s" % greenStr(command),log)
