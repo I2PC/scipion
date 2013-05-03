@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:    Slavica Jonic                slavica.jonic@impmc.jussieu.fr
+ * Authors:    Slavica Jonic                slavica.jonic@impmc.upmc.fr
  *             Carlos Oscar Sanchez Sorzano coss.eps@ceu.es
  *
  * This program is free software; you can redistribute it and/or modify
@@ -40,7 +40,7 @@ ProgNmaAlignment::ProgNmaAlignment() {
 	each_image_produces_an_output = false;
 	produces_an_output = true;
 	progVolumeFromPDB = new ProgPdbConverter();
-	projMatch = true;
+	projMatch = false;
 }
 
 ProgNmaAlignment::~ProgNmaAlignment() {
@@ -49,29 +49,31 @@ ProgNmaAlignment::~ProgNmaAlignment() {
 
 // Params definition ============================================================
 void ProgNmaAlignment::defineParams() {
-	addUsageLine("Compute deformation parameters according to a set of NMA modes");
+	addUsageLine("Align images with an atomic or pseudo-atomic (from EM volume) structure by computing deformation amplitudes along normal modes, three Euler angles, and two in-plane shifts");
+        defaultComments["-i"].clear();
+	defaultComments["-i"].addComment("Metadata with image filenames");
 	defaultComments["-o"].clear();
-	defaultComments["-o"].addComment("Metadata with output alignment and deformations");
+	defaultComments["-o"].addComment("Metadata with output Euler angles, shifts, and deformation amplitudes");
 	XmippMetadataProgram::defineParams();
-	addParamsLine("   --pdb <PDB_filename>                : PDB Model to compute NMA");
+	addParamsLine("   --pdb <PDB_filename>                : Reference atomic or pseudo-atomic structure in PDB format");
 	addParamsLine("  [--resume]                           : Resume processing");
-	addParamsLine("==Generation of the deformed volumes==");
+	addParamsLine("==Generation of the deformed reference volumes==");
 	addParamsLine("   --modes <filename>                  : File with a list of mode filenames");
-	addParamsLine("  [--deformation_scale <s=1>]          : Scaling factor to scale NMA deformation amplitudes");
-	addParamsLine("  [--sampling_rate <Ts=1>]             : in Angstroms/pixel");
-	addParamsLine("  [--filterVol <cutoff=15.>]           : Filter the volume after deforming. Default cut-off is 15 A.");
+	addParamsLine("  [--sampling_rate <Ts=1>]             : Pixel size in Angstroms");
+	addParamsLine("  [--filterVol <cutoff=15.>]           : Filter the volume after deforming. If this option is used, the default cut-off is 15 A.");
 	addParamsLine("  [--centerPDB]                        : Center the PDB structure");
-	addParamsLine("  [--fixed_Gaussian <std=-1>]          : For pseudo atoms fixed_Gaussian must be used.");
-	addParamsLine("                                       : Default standard deviation <std> is read from PDB file.");
-	addParamsLine("==Angular assignment and mode detection==");
-	addParamsLine("  [--mask <m=\"\">]                    : 2D Mask applied to the reference images of the deformed volume");
-	addParamsLine("  [--projMatch]                        : Use projection matching in real-space instead of wavelet+splines assignment");
-	addParamsLine("                                       :+Note that wavelet assignment needs the input images to be of a size power of 2");
-	addParamsLine("  [--minAngularSampling <ang=3>]       : Minimum angular sampling rate");
-	addParamsLine("  [--gaussian_Fourier <s=0.5>]         : Weighting sigma in Fourier space");
-	addParamsLine("  [--gaussian_Real    <s=0.5>]         : Weighting sigma in Real space");
-	addParamsLine("  [--zerofreq_weight  <s=0.>]          : Zero-frequency weight");
-	addExampleLine("xmipp_nma_alignment -i images.sel --pdb 2tbv.pdb --modes modelist.xmd --deformation_scale 1000 --sampling_rate 6.4 -o output.xmd --resume");
+	addParamsLine("  [--fixed_Gaussian <std=-1>]          : For pseudo-atoms fixed_Gaussian must be used.");
+	addParamsLine("                                       : Default standard deviation <std> is read from the PDB file.");
+	addParamsLine("==Combined elastic and rigid-body alignment==");
+	addParamsLine("  [--trustradius_scale <s=1>]          : Positive scaling factor to scale the initial trust region radius");
+	addParamsLine("  [--mask <m=\"\">]                    : 2D masking  of the projections of the deformed volume");
+	addParamsLine("  [--projMatch]                        : Real-space projection matching instead of the default combined global (wavelet-space) and local (Fourier central slice) projection matching");
+	addParamsLine("                                       :+Note that wavelet-based method needs the image size to be power of 2");
+	addParamsLine("  [--discrAngStep <ang=10>]            : Angular sampling step for computing the reference projections (this is the minimum step for real-space projection matching while the minimum step does not exist in the default method)");
+	addParamsLine("  [--gaussian_Fourier <s=0.5>]         : Sigma of Gaussian weigthing in Fourier space (parameter of central-slice method)");
+	addParamsLine("  [--gaussian_Real    <s=0.5>]         : Sigma of Gaussian weigthing in real space for spline interpolation in Fourier space (parameter of central-slice method)");
+	addParamsLine("  [--zerofreq_weight  <s=0.>]          : Zero-frequency weight (parameter of central-slice method)");
+	addExampleLine("xmipp_nma_alignment -i images.sel --pdb 2tbv.pdb --modes modelist.xmd --trustradius_scale 1.2 --sampling_rate 3.2 -o output.xmd --resume");
 }
 
 // Read arguments ==========================================================
@@ -80,7 +82,7 @@ void ProgNmaAlignment::readParams() {
 	fnPDB = getParam("--pdb");
 	fnModeList = getParam("--modes");
 	resume = checkParam("--resume");
-	scale_defamp = getDoubleParam("--deformation_scale");
+	trustradius_scale = abs(getDoubleParam("--trustradius_scale"));
 	sampling_rate = getDoubleParam("--sampling_rate");
 	fnmask = getParam("--mask");
 	gaussian_DFT_sigma = getDoubleParam("--gaussian_Fourier");
@@ -94,7 +96,7 @@ void ProgNmaAlignment::readParams() {
 	//if (useFixedGaussian)
 	sigmaGaussian = getDoubleParam("--fixed_Gaussian");
 	projMatch = checkParam("--projMatch");
-	minAngularSampling = getDoubleParam("--minAngularSampling");
+	discrAngStep = getDoubleParam("--discrAngStep");
 }
 
 // Show ====================================================================
@@ -103,16 +105,16 @@ void ProgNmaAlignment::show() {
 	std::cout << "PDB:                  " << fnPDB << std::endl
 			<< "Resume:               " << resume << std::endl
 			<< "Mode list:            " << fnModeList << std::endl
-			<< "Amplitude scale:      " << scale_defamp << std::endl
-			<< "Sampling rate:        " << sampling_rate << std::endl
+			<< "Trust-region scale:   " << trustradius_scale << std::endl
+			<< "Pixel size:           " << sampling_rate << std::endl
 			<< "Mask:                 " << fnmask << std::endl
 			<< "Center PDB:           " << do_centerPDB << std::endl
-			<< "Filter PDB volume     " << do_FilterPDBVol << std::endl
-			<< "Use fixed Gaussian:   " << useFixedGaussian << std::endl
-			<< "Sigma of Gaussian:    " << sigmaGaussian << std::endl
-			<< "Projection  Matching: " << projMatch << std::endl
-			<< "minAngularSampling:   " << minAngularSampling << std::endl
-	        << "Gaussian Fourier:     " << gaussian_DFT_sigma << std::endl
+			<< "Filter PDB volume:    " << do_FilterPDBVol << std::endl
+			<< "Use pseudo-atoms:     " << useFixedGaussian << std::endl
+			<< "Pseudo-atom sigma:    " << sigmaGaussian << std::endl
+			<< "Projection matching:  " << projMatch << std::endl
+			<< "AngularSamplingStep:  " << discrAngStep << std::endl
+	                << "Gaussian Fourier:     " << gaussian_DFT_sigma << std::endl
 			<< "Gaussian Real:        " << gaussian_Real_sigma << std::endl
 			<< "Zero-frequency weight:" << weight_zero_freq << std::endl;
 }
@@ -192,7 +194,7 @@ FileName ProgNmaAlignment::createDeformedPDB(int pyramidLevel) const {
 			"--pdb %s -o deformedPDB_%s.pdb --nma %s --deformations ",
 			fnPDB.c_str(), randStr, fnModeList.c_str());
 	for (int i = 0; i < VEC_XSIZE(trial) - 5; ++i)
-		arguments += floatToString(trial(i) * scale_defamp) + " ";
+		arguments += floatToString(trial(i)) + " ";
 	runSystem(program, arguments, false);
 
 	program = "xmipp_volume_from_pdb";
@@ -252,7 +254,7 @@ void ProgNmaAlignment::performCompleteSearch(const FileName &fnRandom,
 	mkdir(((std::string) "ref" + fnRandom).c_str(), S_IRWXU);
 
 	double angSampling=2*RAD2DEG(atan(1.0/((double) imgSize / pow(2.0, (double) pyramidLevel+1))));
-	angSampling=std::max(angSampling,minAngularSampling);
+	angSampling=std::max(angSampling,discrAngStep);
 	program = "xmipp_angular_project_library";
 	arguments = formatString(
 			"-i deformedPDB_%s.vol -o ref%s/ref%s.stk --sampling_rate %f -v 0",
@@ -318,7 +320,7 @@ double ProgNmaAlignment::performContinuousAssignment(const FileName &fnRandom,
 
 			String program = "xmipp_angular_project_library";
 			double angSampling=RAD2DEG(atan(1.0/((double) imgSize / pow(2.0, (double) pyramidLevel+1))));
-			angSampling=std::max(angSampling,minAngularSampling);
+			angSampling=std::max(angSampling,discrAngStep);
 			String arguments = formatString(
 					"-i deformedPDB_%s.vol -o ref%s/ref%s.stk --sampling_rate %f -v 0",
 					randStr, randStr, randStr,angSampling);
@@ -425,9 +427,10 @@ void ProgNmaAlignment::processImage(const FileName &fnImg,
 	static size_t imageCounter = 0;
 	++imageCounter;
 
-	double rhoStart = 1e-0, rhoEnd = 1e-3;
+	double rhoStart=trustradius_scale*250.;
+        double rhoEnd=trustradius_scale*50.;
 
-	int niter = 1000;
+	int niter=10000;
 
 	ObjectiveFunction *of;
 
@@ -494,7 +497,7 @@ void ProgNmaAlignment::processImage(const FileName &fnImg,
 	of->setSaveFile();
 #endif
 
-	rhoStart = 1e-3, rhoEnd = 1e-4;
+	rhoStart=trustradius_scale*50.-1., rhoEnd=0.5;
 	CONDOR(rhoStart, rhoEnd, niter, of);
 #ifdef DEBUG
 	of->printStats();
@@ -520,7 +523,7 @@ void ProgNmaAlignment::processImage(const FileName &fnImg,
 	}
 
 	for (int i = 0; i < dim; i++) {
-		parameters(5 + i) = trial_best(i) * scale_defamp;
+		parameters(5 + i) = trial_best(i);
 	}
 
 	parameters.resize(VEC_XSIZE(parameters) + 1);
