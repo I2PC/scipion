@@ -1,14 +1,7 @@
 package xmipp.viewer.particlepicker;
 
-import ij.IJ;
 import ij.ImagePlus;
-import ij.ImageStack;
-import ij.io.FileSaver;
-import ij.process.FloatProcessor;
-import ij.process.ImageProcessor;
-
 import java.awt.Color;
-import java.io.File;
 import java.lang.reflect.Field;
 
 import xmipp.ij.commons.XmippImageConverter;
@@ -114,6 +107,7 @@ public class Family {
 			
 			this.templates = new ImageGeneric(ImageGeneric.Float);
 			templates.resize(size, size, 1, templatesNumber);
+			
 			templates.write(templatesfile);
 			templates.setFilename(templatesfile);
 			
