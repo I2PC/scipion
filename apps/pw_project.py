@@ -172,10 +172,16 @@ class RunsTreeProvider(TreeProvider):
         return actions 
     
     
-class EmTreeProvider(ObjectTreeProvider):
-    """Retrieve the elements from the database"""
-    def __init__(self, objList=None):
-        ObjectTreeProvider.__init__(self, objList)
+class ProtocolTreeProvider(ObjectTreeProvider):
+    """Create the tree elements for a Protocol run"""
+    def __init__(self, protocol):
+        self.protocol = protocol
+        # This list is create to group the protocol parameters
+        # in the tree display
+        self.status = List(objName='_status')
+        self.params = List(objName='_params')
+        self.statusList = ['status', 'initTime', 'endTime', 'error', 'isInteractive', 'mode']
+        ObjectTreeProvider.__init__(self, [protocol])
         self.viewer = XmippViewer()
         
     def show(self, obj):
@@ -198,8 +204,36 @@ class EmTreeProvider(ObjectTreeProvider):
             return [('Open Images with Xmipp', lambda: self.viewer.visualize(obj))]
         if issubclass(cls, XmippClassification2D):
             return [('Open Classification2D with Xmipp', lambda: self.viewer.visualize(obj))]
-        return []           
-
+        return []  
+    
+    def getObjectInfo(self, obj):
+        info = ObjectTreeProvider.getObjectInfo(self, obj)
+        attrName = obj.getLastName()
+        if hasattr(self.protocol, attrName):
+            if isinstance(obj, Pointer):
+                info['image'] = 'db_input.gif'
+            else:
+                if (self.protocol._definition.hasParam(attrName) or
+                    attrName in ['numberOfMpi', 'numberOfThreads']):
+                    info['parent'] = self.params
+                elif attrName in self.statusList:
+                    if info['parent'] is self.protocol:
+                        info['parent'] = self.status
+                    
+            if attrName.startswith('output'):# in self.protocol._outputs:
+                info['image'] = 'db_output.gif'
+        if obj is self.params or obj is self.status:
+            info['parent'] = self.protocol
+        return info     
+    
+    def _getChilds(self, obj):
+        childs = ObjectTreeProvider._getChilds(self, obj)
+        if obj is self.protocol:
+            childs.insert(0, self.status)
+            childs.insert(1, self.params)
+        return childs
+    
+    
 class ProjectWindow(gui.Window):
     def __init__(self, path, master=None):
         # Load global configuration
@@ -303,7 +337,7 @@ class ProjectWindow(gui.Window):
         w.show(center=True)
         
     def _browseRunData(self):
-        provider = EmTreeProvider([self.selectedProtocol])
+        provider = ProtocolTreeProvider(self.selectedProtocol)
         window = BrowserWindow("Protocol data", provider, self,
                                icon=self.icon)
         window.itemConfig(self.selectedProtocol, open=True)  

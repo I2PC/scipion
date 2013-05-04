@@ -218,7 +218,7 @@ class BoundTree(Tree):
                     text += '---> Error: parent not Inserted'
             image = objDict.get('image', '')
             if len(image):
-                image = self.getImage('step.gif')
+                image = self.getImage(image)
                 if image is None:
                     image = ''
             values = objDict.get('values', ())
@@ -270,17 +270,17 @@ class ObjectTreeProvider(TreeProvider):
         self._parentDict = {}
         childs = []
         for obj in objList:
-            childs += self.__getChilds(obj)
+            childs += self._getChilds(obj)
         objList += childs
         return objList
         
-    def __getChilds(self, obj):
+    def _getChilds(self, obj):
         childs = []
         grandchilds = []
         for _, v in obj.getAttributesToStore():
             childs.append(v)
             self._parentDict[v.getId()] = obj
-            grandchilds += self.__getChilds(v)
+            grandchilds += self._getChilds(v)
         childs += grandchilds
         return childs
 
