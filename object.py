@@ -97,6 +97,14 @@ class Object(object):
     def getName(self):
         return self._objName
     
+    def getLastName(self):
+        """ If the name contains parent path, remove it
+        and only return the attribute name in its parent. 
+        """
+        if '.' in self._objName:
+            return self._objName.split('.')[-1]
+        return self._objName 
+    
     def setName(self, name):
         self._objName = name
         
@@ -141,6 +149,14 @@ class Object(object):
             print tab, '%s = %s' % (name, self._objValue)
         for k, v in self.getAttributesToStore():
             v.printAll(k, level + 1)
+            
+    def copyAttributes(self, other, *attrNames):
+        """ Copy attributes in attrNames from other to self. 
+        If the name X is in attrNames, it would be equivalent to:
+        self.X.set(other.X.get())
+        """
+        for name in attrNames:
+            getattr(self, name).set(getattr(other, name).get())
     
 
 class OrderedObject(Object):

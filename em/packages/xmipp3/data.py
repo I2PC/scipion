@@ -89,6 +89,13 @@ class XmippMicrograph(XmippImage, Micrograph):
         if isinstance(mic, XmippMicrograph):
             return mic
         micXmipp = XmippMicrograph(mic.getFileName())
+        if mic.hasCTF():
+            ctf = mic.ctfModel
+            micXmipp.setValue(xmipp.MDL_CTF_DEFOCUSU, ctf.defocusU.get())
+            micXmipp.setValue(xmipp.MDL_CTF_DEFOCUSV, ctf.defocusV.get())
+            print "psd: ", mic.ctfModel.getPsdFile()
+            print type(mic.ctfModel.getPsdFile())
+            micXmipp.setValue(xmipp.MDL_IMAGE1, mic.ctfModel.getPsdFile())
         # TODO: copyInfo??
         # from mic to micXmipp??  
         return micXmipp

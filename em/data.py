@@ -49,6 +49,10 @@ class Microscope(EMObject):
         self.voltage = Float(300)
         self.sphericalAberration = Float(1.2)
         
+    def copyInfo(self, other):
+        self.magnification.set(other.magnification.get())
+        self.voltage.set(other.voltage.get())
+        self.sphericalAberration.set(other.sphericalAberration.get())
         
 class ImageLocation():
     """ Store image index and filename. """
@@ -126,9 +130,9 @@ class SetOfImages(EMObject):
         # Use the object value to store the filename
         EMObject.__init__(self, **args)
         self.setFileName(filename)
-        self.samplingRate = Float()
-        self.scannedPixelSize = Float()
+        self.samplingRate = Float()        
         self._ctf = Boolean(args.get('ctf', False))
+        self._tiltPairs = Boolean(args.get('tiltPairs', False))
         
     def getSize(self):
         """Return the number of images"""
@@ -152,16 +156,16 @@ class SetOfImages(EMObject):
         """ Copy basic information (sampling rate, scannedPixelSize and ctf)
         from other set of images to current one"""
         self.samplingRate.set(other.samplingRate.get())
-        self.scannedPixelSize.set(other.scannedPixelSize.get())
         self._ctf.set(other._ctf.get())    
+        self._tiltPairs.set(other._tiltPairs.get())
     
     
 class SetOfMicrographs(SetOfImages):
     """Represents a set of Micrographs"""
     def __init__(self, filename=None, **args):
         SetOfImages.__init__(self, filename, **args)
-        self._tiltPairs = Boolean(args.get('tiltPairs', False))
         self.microscope = Microscope()
+        self.scannedPixelSize = Float()
         self._micList = List(objName='Micrographs', objDoStore=False) # The micrograph list will be stored seperately
         self._pairList = List(objName='TiltPairs', objDoStore=False) 
         
@@ -223,12 +227,25 @@ class SetOfMicrographs(SetOfImages):
         """ Copy basic information (voltage, spherical aberration and sampling rate)
         from other set of micrographs to current one.
         """
-        self.microscope.voltage.set(other.microscope.voltage.get())
-        self.microscope.sphericalAberration.set(other.microscope.sphericalAberration.get())
-        self.samplingRate.set(other.samplingRate.get())
+        SetOfImages.copyInfo(self, other)
+        self.microscope.copyInfo(other.microscope)
         self.scannedPixelSize.set(other.scannedPixelSize.get())
-        self._tiltPairs.set(other._tiltPairs.get())
-        self._ctf.set(other._ctf.get())
+        
+    def setDownsample(self, downFactor):
+        """ Update the values of samplingRate and scannedPixelSize
+        after applying a downsampling factor of downFactor.
+        """
+        self.setSamplingRate(self.samplingRate.get() * downFactor)        
+        
+    def setSamplingRate(self, samplingRate):
+        """ Set the sampling rate and adjust the scannedPixelSize. """
+        self.samplingRate.set(samplingRate)
+        self.scannedPixelSize.set(1e-4 * samplingRate * self.microscope.magnification.get())
+                                  
+    def setScannedPixelSize(self, scannedPixelSize):
+        """ Set scannedPixelSize and update samplingRate. """
+        self.scannedPixelSize.set(scannedPixelSize)
+        self.samplingRate.set((1e+4 * scannedPixelSize) / self.microscope.magnification.get())
     
 
 class Coordinate(EMObject):
@@ -344,16 +361,15 @@ class CTFModel(EMObject):
         self.defocusV = Float()
         self.defocusAngle = Float()
         self.ampContrast = Float()
+        self.psdFile = String()
         
     def copyInfo(self, other):
-        self.ampContrast = other.ampContrast
-        self.defocusU = other.defocusU
-        self.defocusV = other.defocusV
-        self.defocusAngle = other.defocusAngle
-        self.samplingRate = other.samplingRate
-        self.voltage = other.voltage
-        self.sphericalAberration = other.sphericalAberration
-        
+        self.copyAttributes(other, 'ampContrast', 'defocusU', 'defocusV',
+                            'defocusAngle', 'samplingRate', 'voltage', 
+                            'sphericalAberration', 'psdFile')
+
+    def getPsdFile(self):
+        return self.psdFile.get()
     
 class ImageClassAssignment(EMObject):
     """ This class represents the relation of

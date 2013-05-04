@@ -166,7 +166,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         micSet.copyInfo(self.inputMics)
         
         if self.doDownsample.get():
-            micSet.samplingRate.set(self.inputMics.samplingRate.get()*self.downFactor.get())
+            micSet.setDownsample(self.downFactor.get())
 
         micSet.write()
         self._defineOutputs(outputMicrographs=micSet)

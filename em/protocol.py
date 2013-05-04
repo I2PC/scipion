@@ -93,8 +93,10 @@ class ProtImportMicrographs(Protocol):
         micSet = SetOfMicrographs(path, tiltPairs=tiltPairs)
         micSet.microscope.voltage.set(voltage)
         micSet.microscope.sphericalAberration.set(sphericalAberration)
-        micSet.samplingRate.set(samplingRate)
-        micSet.scannedPixelSize.set(scannedPixelSize)
+        if self.samplingRateMode.get() == 0:
+            micSet.setSamplingRate(samplingRate)
+        else:
+            micSet.setScannedPixelSize(scannedPixelSize)
         outFiles = [path]
         
         for f in files:
@@ -107,7 +109,7 @@ class ProtImportMicrographs(Protocol):
         self._defineOutputs(outputMicrographs=micSet)
         
         return outFiles
-
+    
 
 class DefCTFMicrographs(Form):
     """ Create the definition of parameters for
@@ -183,8 +185,9 @@ class ProtCTFMicrographs(Protocol):
                         'ampContrast': self.ampContrast.get(),
                         'lowRes': self.lowRes.get(),
                         'highRes': self.highRes.get(),
-                        'minDefocus': self.minDefocus.get(),
-                        'maxDefocus': self.maxDefocus.get()
+                        # Convert from microns to Amstrongs
+                        'minDefocus': self.minDefocus.get() * 1e+4, 
+                        'maxDefocus': self.maxDefocus.get() * 1e+4
                        }
         
         self._prepareCommand()
