@@ -51,7 +51,10 @@ class XmippViewer(Viewer):
         if issubclass(cls, SetOfMicrographs):
             fn = self._getTmpPath(obj.getName() + '_micrographs.xmd')
             mics = XmippSetOfMicrographs.convert(obj, fn)
-            runShowJ(mics.getFileName())  
+            extra = ''
+            if mics.hasCTF():
+                extra = ' --mode metadata --render first'
+            runShowJ(mics.getFileName(), extraParams=extra)  
         elif issubclass(cls, SetOfImages):
             fn = self._getTmpPath(obj.getName() + '_images.xmd')
             imgs = XmippSetOfImages.convert(obj, fn)
