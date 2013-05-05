@@ -288,6 +288,7 @@ class ProjectWindow(gui.Window):
         #self.root.bind('<Button-1>', self._unpostMenu)
         
         #self.menuRun = tk.Menu(self.root, tearoff=0)
+        self.selectedProtocol = None
         
     def loadProjectConfig(self):
         self.configMapper = ConfigMapper(getConfigPath('configuration.xml'), globals())
@@ -358,6 +359,8 @@ class ProjectWindow(gui.Window):
             self.runsTree.update()
         
     def _runActionClicked(self, event):
+        if self.selectedProtocol is None:
+            return
         prot = self.selectedProtocol
         if prot:
             if event == ACTION_DEFAULT:

@@ -153,7 +153,9 @@ class QueueConfig(OrderedObject):
         
         
 class ExecutionHostMapper(XmlMapper):
-    def __init__(self, filename, dictClasses, **args):
+    def __init__(self, filename, dictClasses=None, **args):
+        if dictClasses is None:
+            dictClasses = globals()
         XmlMapper.__init__(self, filename, dictClasses, **args)
         #self.setClassTag('ExecutionHostConfig.QueueSystemConfig', 'class_name')
         self.setClassTag('ExecutionHostConfig.String', 'attribute')
