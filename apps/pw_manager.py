@@ -118,7 +118,7 @@ def loadConfig(config, name):
     fn = getConfigPath(c.get())
     if not os.path.exists(fn):
         raise Exception('loadMenuConfig: menu file "%s" not found' % fn )
-    mapper = ConfigXmlMapper(getConfigPath(fn), globals())
+    mapper = ConfigMapper(getConfigPath(fn), globals())
     menuConfig = mapper.getConfig()
     return menuConfig
 
@@ -128,7 +128,7 @@ class ManagerWindow(gui.Window):
     def __init__(self, **args):
         gui.Window.__init__(self, "Projets", minsize=(600, 350), icon='scipion_bn.xbm', **args)
         # Load global configuration
-        mapper = ConfigXmlMapper(getConfigPath('configuration.xml'), globals())
+        mapper = ConfigMapper(getConfigPath('configuration.xml'), globals())
         config = mapper.getConfig()
         self.projNameFont = tkFont.Font(size=12, family='verdana', weight='bold')
         self.projDateFont = tkFont.Font(size=8, family='verdana')

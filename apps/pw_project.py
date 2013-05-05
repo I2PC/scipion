@@ -121,7 +121,7 @@ def loadConfig(config, name):
     fn = getConfigPath(c.get())
     if not os.path.exists(fn):
         raise Exception('loadMenuConfig: menu file "%s" not found' % fn )
-    mapper = ConfigXmlMapper(getConfigPath(fn), globals())
+    mapper = ConfigMapper(getConfigPath(fn), globals())
     menuConfig = mapper.getConfig()
     return menuConfig
 
@@ -210,7 +210,7 @@ class ProtocolTreeProvider(ObjectTreeProvider):
         info = ObjectTreeProvider.getObjectInfo(self, obj)
         attrName = obj.getLastName()
         if hasattr(self.protocol, attrName):
-            if isinstance(obj, Pointer):
+            if isinstance(obj, Pointer) and obj.hasValue():
                 info['image'] = 'db_input.gif'
             else:
                 if (self.protocol._definition.hasParam(attrName) or
@@ -290,7 +290,7 @@ class ProjectWindow(gui.Window):
         #self.menuRun = tk.Menu(self.root, tearoff=0)
         
     def loadProjectConfig(self):
-        self.configMapper = ConfigXmlMapper(getConfigPath('configuration.xml'), globals())
+        self.configMapper = ConfigMapper(getConfigPath('configuration.xml'), globals())
         self.project = Project(self.projPath)
         self.project.load()
         self.generalCfg = self.configMapper.getConfig()
