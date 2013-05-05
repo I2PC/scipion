@@ -850,4 +850,11 @@ public abstract class TrainingPicker extends ParticlePicker
 		return hasManualParticles(family);
 	}
 
+	public void setMode(Mode supervised)
+	{
+		if(getManualParticlesNumber(family) < SupervisedParticlePicker.getMinForTraining())
+			throw new IllegalArgumentException(XmippMessage.getIllegalStateForOperationMsg("", ""));
+		
+	}
+
 }

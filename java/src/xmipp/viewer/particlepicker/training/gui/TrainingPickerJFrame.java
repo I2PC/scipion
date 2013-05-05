@@ -105,7 +105,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			initComponents();
 			if (ppicker.getMode() == Mode.ReadOnly)
 				enableEdition(false);
-			setSelectedAutopick(ppicker.getMode() == Mode.Supervised);
+			setSupervised(ppicker.getMode() == Mode.Supervised);
 		}
 		catch (IllegalArgumentException ex)
 		{
@@ -189,7 +189,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			{
 //				if(autopickchb.isSelected())
 //					autopick();
-				setSelectedAutopick(autopickchb.isSelected());
+				setSupervised(autopickchb.isSelected());
 				
 			}
 		});
@@ -228,12 +228,19 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		sppickerpn.add(thresholdpn);
 	}
 	
-	protected void setSelectedAutopick(boolean selected)
+	protected void setSupervised(boolean selected)
 	{
+		if(selected)
+			ppicker.setMode(Mode.Supervised);
 		autopickpercenttf.setEnabled(selected);
 		thresholdsl.setEnabled(selected);
 		thresholdtf.setEnabled(selected);
 		
+	}
+	
+	public boolean isSupervised()
+	{
+		return autopickchb.isSelected();
 	}
 
 	protected void enableEdition(boolean enable)
@@ -547,6 +554,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		setChanged(false);
 		initializeCanvas();
 		iconbt.setIcon(ppicker.getMicrograph().getCTFIcon());
+		if(ppicker.getMode() == Mode.Supervised)
+			autopick();
 		pack();
 
 		if (particlesdialog != null)
