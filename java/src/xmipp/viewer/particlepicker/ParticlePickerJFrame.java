@@ -58,7 +58,7 @@ import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.training.gui.TemplatesJDialog;
-import xmipp.viewer.particlepicker.training.model.FamilyState;
+import xmipp.viewer.particlepicker.training.model.Mode;
 
 public abstract class ParticlePickerJFrame extends JFrame implements ActionListener
 {
@@ -253,7 +253,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		filemn.add(savemi);
 		importffmi = new JMenuItem("Import Particles...", XmippResource.getIcon("import_wiz.gif"));
 		filemn.add(importffmi);
-		if (picker.getFamily().getStep() != FamilyState.Manual)
+		if (picker.getMode() != Mode.Manual)
 			importffmi.setEnabled(false);
 
 		importffmi.addActionListener(new ActionListener()
@@ -281,7 +281,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		filemn.add(exitmi);
 
 		ijmi = new JMenuItem("ImageJ", XmippResource.getIcon("ij.gif"));
-		ijmi.setEnabled(picker.getMode() != FamilyState.ReadOnly);
+		ijmi.setEnabled(picker.getMode() != Mode.ReadOnly);
 		ijmi.addActionListener(new ActionListener()
 		{
 
@@ -415,7 +415,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		if (defaultlistener)
 			mi.addActionListener(this);
 		filtersmn.add(mi);
-		mi.setEnabled(picker.getMode() != FamilyState.ReadOnly);
+		mi.setEnabled(picker.getMode() != Mode.ReadOnly);
 		return mi;
 	}
 
@@ -529,7 +529,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			return false;
 		if (SwingUtilities.isRightMouseButton(e))
 			return false;
-		if (getParticlePicker().getMode() == FamilyState.ReadOnly)
+		if (getParticlePicker().getMode() == Mode.ReadOnly)
 			return false;
 		return true;
 	}
@@ -538,7 +538,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	{
 		if (getCanvas().getTool() != Tool.PICKER)
 			return false;
-		if (getParticlePicker().getMode() == FamilyState.ReadOnly)
+		if (getParticlePicker().getMode() == Mode.ReadOnly)
 			return false;
 
 		return true;

@@ -32,7 +32,7 @@ public class SupervisedParticlePicker extends TrainingPicker {
 	
 	public SupervisedParticlePicker(String selfile, String outputdir, String fname, Integer threads,
 			boolean fastmode, boolean incore) {
-		super(selfile, outputdir, fname, FamilyState.Supervised);
+		super(selfile, outputdir, fname, Mode.Supervised);
 		this.threads = threads;
 		this.fastmode = fastmode;
 		this.incore = incore;
@@ -100,7 +100,7 @@ public class SupervisedParticlePicker extends TrainingPicker {
 			MicrographFamilyData mfd;
 			for (TrainingMicrograph m : micrographs) {
 				mfd = m.getFamilyData(family);
-				if (mfd.getStep() == FamilyState.Supervised)
+				if (mfd.getStep() == Mode.Supervised)
 					resetFamilyData(mfd);
 			}
 			saveData();
@@ -151,6 +151,8 @@ public class SupervisedParticlePicker extends TrainingPicker {
 	
 	public String getTrainCommandLineArgs()
 	{
+		if(getManualParticlesNumber(family) < mintraining)
+			throw new IllegalArgumentException(String.format("You should have at least %s particles to go to %s mode",	mintraining, Mode.Supervised));
 		String args = String.format("-i %s --particleSize %s --model %s --outputRoot %s --mode train",
 				getOutputPath(family.getName()) + "_particle_avg.xmp",//this is temporarily so it works
 				family.getSize(), // --particleSize

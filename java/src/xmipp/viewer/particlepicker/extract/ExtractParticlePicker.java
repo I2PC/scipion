@@ -10,7 +10,7 @@ import xmipp.viewer.particlepicker.ColorHelper;
 import xmipp.viewer.particlepicker.IJCommand;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
-import xmipp.viewer.particlepicker.training.model.FamilyState;
+import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.windows.GalleryJFrame;
 
 public class ExtractParticlePicker extends ParticlePicker
@@ -23,7 +23,7 @@ public class ExtractParticlePicker extends ParticlePicker
 	private ArrayList<ColorHelper> colorby;
 
 
-	public ExtractParticlePicker(String selfile, FamilyState mode)
+	public ExtractParticlePicker(String selfile, Mode mode)
 	{
 		super(selfile, mode);
 		loadParticles();
@@ -31,7 +31,7 @@ public class ExtractParticlePicker extends ParticlePicker
 			filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
 	}
 	
-	public ExtractParticlePicker(String block, String selfile, FamilyState mode)
+	public ExtractParticlePicker(String block, String selfile, Mode mode)
 	{
 		super(block, selfile, ".", null, mode);
 		loadParticles();
@@ -210,7 +210,7 @@ public class ExtractParticlePicker extends ParticlePicker
 
 	public static ExtractPickerJFrame open(String block, String filename, GalleryJFrame galleryfr)
 	{
-		ExtractParticlePicker picker = new ExtractParticlePicker(block, filename, FamilyState.Extract);
+		ExtractParticlePicker picker = new ExtractParticlePicker(block, filename, Mode.Extract);
 		return new ExtractPickerJFrame(picker, galleryfr);
 	}
 

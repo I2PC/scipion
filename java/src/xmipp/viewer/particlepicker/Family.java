@@ -7,7 +7,7 @@ import java.lang.reflect.Field;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.ImageGeneric;
 import xmipp.utils.XmippMessage;
-import xmipp.viewer.particlepicker.training.model.FamilyState;
+import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.viewer.particlepicker.training.model.TrainingPicker;
 
@@ -16,7 +16,6 @@ public class Family {
 	private String name;
 	private Color color;
 	private int size;
-	private FamilyState state;
 	private int templatesNumber;
 	private ImageGeneric templates;
 	private String templatesfile;
@@ -36,10 +35,10 @@ public class Family {
 	}
 
 	public Family(String name, Color color, int size, int templatesNumber, String templatesfile) {
-		this(name, color, size, FamilyState.Manual, null, templatesNumber, templatesfile);
+		this(name, color, size, null, templatesNumber, templatesfile);
 	}
 
-	public Family(String name, Color color, int size, FamilyState state,
+	public Family(String name, Color color, int size, 
 			ParticlePicker ppicker, ImageGeneric templates) {
 		if (size < 0 || size > ParticlePicker.fsizemax)
 			throw new IllegalArgumentException(String.format(
@@ -51,7 +50,6 @@ public class Family {
 		this.name = name;
 		this.color = color;
 		this.size = size;
-		this.state = state;
 		if(templates != null)
 			this.templatesfile = templates.getFilename();
 		else
@@ -74,8 +72,7 @@ public class Family {
 	}
 	
 
-	public Family(String name, Color color, int size, FamilyState state,
-			ParticlePicker ppicker, int templatesNumber, String templatesfile) {
+	public Family(String name, Color color, int size, ParticlePicker ppicker, int templatesNumber, String templatesfile) {
 		if (size < 0 || size >  ParticlePicker.fsizemax)
 			throw new IllegalArgumentException(String.format(
 					"Size should be between 0 and %s, %s not allowed",  ParticlePicker.fsizemax,
@@ -87,14 +84,13 @@ public class Family {
 		this.name = name;
 		this.color = color;
 		this.size = size;
-		this.state = state;
 		this.templatesfile = templatesfile;
 		setTemplatesNumber(templatesNumber);
 	
 	}
 	
 	public Family(String name, Color color) {
-		this(name, color, getDefaultSize(), FamilyState.Manual, null, null);
+		this(name, color, getDefaultSize(), null, null);
 	}
 
 
@@ -138,38 +134,8 @@ public class Family {
 	}
 
 
-	public FamilyState getStep() {
-		return state;
-	}
 
-	public void goToNextStep(TrainingPicker ppicker) {
-		validateNextStep(ppicker);
-		this.state = TrainingPicker.nextStep(state);
-	}
-
-	public void goToPreviousStep() {
-		this.state = TrainingPicker.previousStep(state);
-	}
-
-	public void validateNextStep(TrainingPicker ppicker) {
-		int min = SupervisedParticlePicker.getMinForTraining();
-		FamilyState next = TrainingPicker.nextStep(state);
-		if (next == FamilyState.Supervised
-				&& ppicker.getManualParticlesNumber(this) < min)
-			throw new IllegalArgumentException(String.format(
-					"You should have at least %s particles to go to %s mode",
-					min, FamilyState.Supervised));
-		if (!ppicker.hasEmptyMicrographs(this) && next != FamilyState.Review)
-			throw new IllegalArgumentException(String.format(
-					"There are no available micrographs for %s step",
-					FamilyState.Supervised));
-
-	}
-
-	// public static String getOFilename()
-	// {
-	// return ParticlePicker.getInstance().getOutputPath("families.xmd");
-	// }
+	
 
 	public int getSize() {
 		return size;
@@ -237,10 +203,7 @@ public class Family {
 		return 100;
 	}
 
-	public void setState(FamilyState state) {
-		this.state = state;
 
-	}
 
 	public int getRadius() {
 		return size / 2;

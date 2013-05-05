@@ -10,13 +10,13 @@ import xmipp.viewer.particlepicker.Micrograph;
 	public class ManualParticlePicker extends TrainingPicker {
 		
 		
-		public ManualParticlePicker(String selfile, String outputdir, FamilyState mode) {
+		public ManualParticlePicker(String selfile, String outputdir, Mode mode) {
 
 
 			this(selfile, outputdir, null, mode);
 		}
 		
-		public ManualParticlePicker(String selfile, String outputdir, String fname, FamilyState mode) {
+		public ManualParticlePicker(String selfile, String outputdir, String fname, Mode mode) {
 
 			super(selfile, outputdir, fname, mode);
 			for (TrainingMicrograph m : micrographs)

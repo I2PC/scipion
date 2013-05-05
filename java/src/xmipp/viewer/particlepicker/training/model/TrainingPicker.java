@@ -23,23 +23,23 @@ public abstract class TrainingPicker extends ParticlePicker
 	public static final int defAutoPickPercent = 90;
 	private int autopickpercent = defAutoPickPercent;
 
-	public TrainingPicker(String selfile, String outputdir, String fname, FamilyState mode)
+	public TrainingPicker(String selfile, String outputdir, String fname, Mode mode)
 	{
 		super(selfile, outputdir, fname, mode);
 
 	}
 
-	public TrainingPicker(String selfile, String outputdir, FamilyState mode)
+	public TrainingPicker(String selfile, String outputdir, Mode mode)
 	{
 		super(selfile, outputdir, mode);
 	}
 
-	public static FamilyState previousStep(FamilyState step)
+	public static Mode previousStep(Mode step)
 	{
-		if (step == FamilyState.Manual)
+		if (step == Mode.Manual)
 			return null;
-		if (step == FamilyState.Supervised)
-			return FamilyState.Manual;
+		if (step == Mode.Supervised)
+			return Mode.Manual;
 		return null;
 	}
 
@@ -85,14 +85,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		return false;
 	}
 
-	public static FamilyState nextStep(FamilyState step)
-	{
-		if (step == FamilyState.Manual)
-			return FamilyState.Supervised;
-		if (step == FamilyState.Supervised)
-			return FamilyState.Review;
-		return null;
-	}
+
 
 	public List<TrainingMicrograph> getMicrographs()
 	{
@@ -150,7 +143,7 @@ public abstract class TrainingPicker extends ParticlePicker
 					autopickpercent = 50;// compatibility with previous projects
 				mfd = new MicrographFamilyData(micrograph, family, state, autopickpercent);
 
-				if (getMode() == FamilyState.Review && mfd.getStep() != FamilyState.Review)
+				if (getMode() == Mode.Review && mfd.getStep() != Mode.Review)
 				{
 					mfd.setState(MicrographFamilyState.Review);
 					setChanged(true);
@@ -425,7 +418,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			super.saveData();
 			saveMicrographs();
 		}
-		if (getMode() == FamilyState.Manual)// only changed in manual mode
+		if (getMode() == Mode.Manual)// only changed in manual mode
 			saveTemplates();
 	}
 
@@ -732,7 +725,7 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	public void updateTemplates(Family f)
 	{
-		if (f.getStep() != FamilyState.Manual)
+		if (getMode() != Mode.Manual)
 			return;
 
 		

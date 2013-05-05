@@ -4,7 +4,7 @@ import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
-import xmipp.viewer.particlepicker.training.model.FamilyState;
+import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.MicrographFamilyData;
 import xmipp.viewer.particlepicker.training.model.TrainingMicrograph;
 
@@ -50,11 +50,11 @@ public class MicrographsTableModel extends AbstractTableModel {
 		MicrographFamilyData mfd = m.getFamilyData(frame.getFamily()); 
 		if(columnIndex == 2)
 		{
-			if(mfd.getStep() == FamilyState.Manual)
+			if(mfd.getStep() == Mode.Manual)
 				return Integer.toString(mfd.getManualParticles().size());
-			if(mfd.getStep() == FamilyState.Available)
+			if(mfd.getStep() == Mode.Available)
 				return "0";
-			if(mfd.getStep() == FamilyState.Supervised)
+			if(mfd.getStep() == Mode.Supervised)
 				return String.format("%s + %s", mfd.getManualParticles().size(), mfd.getAutomaticParticlesCount(frame.getThreshold()));
 		}
 		if(columnIndex == 3)

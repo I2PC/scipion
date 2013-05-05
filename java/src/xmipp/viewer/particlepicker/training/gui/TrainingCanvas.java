@@ -11,7 +11,7 @@ import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
 import xmipp.viewer.particlepicker.training.model.AutomaticParticle;
-import xmipp.viewer.particlepicker.training.model.FamilyState;
+import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.MicrographFamilyData;
 import xmipp.viewer.particlepicker.training.model.TrainingMicrograph;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
@@ -74,7 +74,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			else if (SwingUtilities.isLeftMouseButton(e) && micrograph.fits(x, y, frame.getFamily().getSize()))
 			{
 				p = new TrainingParticle(x, y, frame.getFamily(), micrograph);
-				micrograph.addManualParticle(p, ppicker, frame.isCenterPick());
+				micrograph.addManualParticle(p, ppicker, frame.isCenterParticle());
 				active = p;
 				refresh();
 			}
@@ -114,7 +114,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			{
 				micrograph.removeParticle(active, ppicker);
 				active = new TrainingParticle(active.getX(), active.getY(), active.getFamily(), micrograph);
-				micrograph.addManualParticle(active, ppicker, frame.isCenterPick());
+				micrograph.addManualParticle(active, ppicker, frame.isCenterParticle());
 			}
 			else
 			{
@@ -159,7 +159,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			if (activemoved)
 			{
 				frame.updateTemplates();
-				ppicker.addParticleToTemplates(active, frame.isCenterPick());
+				ppicker.addParticleToTemplates(active, frame.isCenterParticle());
 				
 				setActiveMoved(false);
 			}
@@ -180,7 +180,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 
 			micrograph.removeParticle(active, ppicker);
 			active = new TrainingParticle(active.getX(), active.getY(), active.getFamily(), micrograph);
-			micrograph.addManualParticle(active, ppicker, frame.isCenterPick());
+			micrograph.addManualParticle(active, ppicker, frame.isCenterParticle());
 			repaint();
 		}
 		else
@@ -196,7 +196,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 
 	protected void doCustomPaint(Graphics2D g2)
 	{
-		if (frame.getFamily().getStep() == FamilyState.Manual)
+		if (ppicker.getMode() == Mode.Manual)
 			for (MicrographFamilyData mfdata : micrograph.getFamiliesData())
 				drawFamily(g2, mfdata);
 		else

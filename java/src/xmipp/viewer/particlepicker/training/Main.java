@@ -8,7 +8,7 @@ import javax.swing.SwingUtilities;
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.training.gui.TrainingPickerJFrame;
-import xmipp.viewer.particlepicker.training.model.FamilyState;
+import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.ManualParticlePicker;
 import xmipp.viewer.particlepicker.training.model.ReviewParticlePicker;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
@@ -44,21 +44,21 @@ class Main
 					TrainingPicker ppicker = null;
 					String selfile = myargs[0];
 					String outputdir = myargs[1];
-					FamilyState mode;
+					Mode mode;
 					String fname = null;
 					//mode is the third argument except if family is specified, when is fourth
-					if(myargs.length >= 3 && FamilyState.getFamilyState(myargs[2]) != null)
-						mode = FamilyState.getFamilyState(myargs[2]);
+					if(myargs.length >= 3 && Mode.getMode(myargs[2]) != null)
+						mode = Mode.getMode(myargs[2]);
 					else
 					{
 						fname = myargs[2];
-						mode = FamilyState.getFamilyState(myargs[3]);
+						mode = Mode.getMode(myargs[3]);
 					}
 
-					if (mode == FamilyState.Manual)
+					if (mode == Mode.Manual)
 						ppicker = (fname == null)? new ManualParticlePicker(selfile, outputdir, mode): new ManualParticlePicker(selfile, outputdir, fname, mode);
 
-					else if (mode == FamilyState.Supervised)
+					else if (mode == Mode.Supervised)
 					{
 						int index = (fname == null)? 3: 4;
 						int threads = Integer.parseInt(myargs[index]);
@@ -67,12 +67,12 @@ class Main
 						ppicker = (fname == null)? new SupervisedParticlePicker(selfile, outputdir, threads, fastmode, incore): new SupervisedParticlePicker(selfile, outputdir, fname, threads, fastmode, incore);
 					}
 
-					else if (mode == FamilyState.Review)
+					else if (mode == Mode.Review)
 					{
 						String reviewfile = myargs[4];
 						ppicker = new ReviewParticlePicker(selfile, outputdir, fname, reviewfile);
 					}
-					else if (mode == FamilyState.ReadOnly)
+					else if (mode == Mode.ReadOnly)
 						ppicker = new ReadOnlyParticlePicker(selfile, outputdir);
 					tp = new TrainingPickerJFrame(ppicker);
 				}

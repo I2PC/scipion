@@ -24,7 +24,8 @@ import xmipp.jni.MetaData;
 import xmipp.jni.Particle;
 import xmipp.jni.Program;
 import xmipp.utils.XmippMessage;
-import xmipp.viewer.particlepicker.training.model.FamilyState;
+import xmipp.viewer.particlepicker.training.model.AutomaticParticle;
+import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 import xmipp.viewer.particlepicker.training.model.TrainingPicker;
 
@@ -37,7 +38,7 @@ public abstract class ParticlePicker
 	protected String outputdir = ".";
 	protected boolean changed;
 	protected List<Family> families;
-	protected FamilyState mode;
+	protected Mode mode;
 	protected List<IJCommand> filters;
 	protected String selfile;
 	protected String command;
@@ -56,26 +57,26 @@ public abstract class ParticlePicker
 
 	
 
-	public ParticlePicker(String selfile, String outputdir, FamilyState mode)
+	public ParticlePicker(String selfile, String outputdir, Mode mode)
 	{
 		this(null, selfile, outputdir, null, mode);
 
 	}
 	
-	public ParticlePicker(String selfile, FamilyState mode)
+	public ParticlePicker(String selfile, Mode mode)
 	{
 		this(null, selfile, ".", null, mode);
 
 	}
 	
-	public ParticlePicker(String selfile, String outputdir, String fname, FamilyState mode)
+	public ParticlePicker(String selfile, String outputdir, String fname, Mode mode)
 	{
 		this(null, selfile, outputdir, fname, mode);
 	}
 
 
 
-	public ParticlePicker(String block, String selfile, String outputdir, String fname, FamilyState mode)
+	public ParticlePicker(String block, String selfile, String outputdir, String fname, Mode mode)
 	{
 		this.block = block;
 		this.outputdir = outputdir;
@@ -238,7 +239,7 @@ public abstract class ParticlePicker
 		return changed;
 	}
 
-	public FamilyState getMode()
+	public Mode getMode()
 	{
 		return mode;
 	}
@@ -295,7 +296,6 @@ public abstract class ParticlePicker
 				md.setValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, f.getSize(), id);
 				md.setValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, f.getTemplatesNumber(), id);
 
-				md.setValueString(MDLabel.MDL_PICKING_FAMILY_STATE, f.getStep().toString(), id);
 			}
 			md.write(file);
 			md.destroy();
@@ -329,7 +329,7 @@ public abstract class ParticlePicker
 		Family family;
 		int rgb, size;
 		Integer templatesNumber = 1;
-		FamilyState state;
+		Mode state;
 		String name, templatesfile;
 		ImageGeneric templates;
 
@@ -345,19 +345,17 @@ public abstract class ParticlePicker
 				templatesNumber = md.getValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, id);
 				if( templatesNumber == null || templatesNumber == 0)
 					templatesNumber = 1;//for compatibility with previous projects
-				state = FamilyState.valueOf(md.getValueString(MDLabel.MDL_PICKING_FAMILY_STATE, id));
 
-				state = validateState(state);
 				templatesfile = getTemplatesFile(name);
-				if (getMode() != FamilyState.Manual && new File(templatesfile).exists() )
+				if (getMode() != Mode.Manual && new File(templatesfile).exists() )
 				{
 					templates = new ImageGeneric(templatesfile);
-					family = new Family(name, new Color(rgb), size, state, this, templates);
+					family = new Family(name, new Color(rgb), size, this, templates);
 					
 				}
 				else
 				{
-					family = new Family(name, new Color(rgb), size, state, this, templatesNumber, templatesfile);
+					family = new Family(name, new Color(rgb), size, this, templatesNumber, templatesfile);
 				}
 				families.add(family);
 			}
@@ -380,17 +378,17 @@ public abstract class ParticlePicker
 		return getOutputPath(name + "_templates.stk");
 	}
 
-	public FamilyState validateState(FamilyState state) {
+	public Mode validateState(Mode state) {
 
 
-		if (mode == FamilyState.Review && state != FamilyState.Review)
+		if (mode == Mode.Review && state != Mode.Review)
 		{
 			setChanged(true);
-			return FamilyState.Review;
+			return Mode.Review;
 		}
-		if (mode == FamilyState.Manual && !(state == FamilyState.Manual || state == FamilyState.Available))
+		if (mode == Mode.Manual && !(state == Mode.Manual || state == Mode.Available))
 			throw new IllegalArgumentException(String.format("Can not use %s mode on this data", mode));
-		if (mode == FamilyState.Supervised && state == FamilyState.Review)
+		if (mode == Mode.Supervised && state == Mode.Review)
 			throw new IllegalArgumentException(String.format("Can not use %s mode on this data", mode));
 		return state;
 
@@ -629,8 +627,8 @@ public abstract class ParticlePicker
 		{
 			Particle shift = null;
 			Family family = particle.getFamily();
-			if(family.getStep() != FamilyState.Manual)
-				throw new IllegalArgumentException(XmippMessage.getIllegalStateForOperationMsg("family", family.getStep().toString()));
+			if(particle instanceof AutomaticParticle)
+				throw new IllegalArgumentException(XmippMessage.getIllegalStateForOperationMsg("particle", "Automatic"));
 			ImageGeneric igp = particle.getImageGeneric();
 			//will happen only in manual mode
 			if (templateindex < family.getTemplatesNumber())// index starts at one
@@ -646,10 +644,9 @@ public abstract class ParticlePicker
 					particle.setX(particle.getX() + shift.getX());
 					particle.setY(particle.getY() + shift.getY());
 				}
-				double[] align = family.getTemplates().alignImage(igp, getMode() == FamilyState.Manual);
+				double[] align = family.getTemplates().alignImage(igp, getMode() == Mode.Manual);
 				particle.setLastalign(align);
-				System.out.printf("adding: %.2f %.2f %.2f %.2f\n", align[0], align[1], align[2], align[3]);
-				
+//				System.out.printf("adding: %.2f %.2f %.2f %.2f\n", align[0], align[1], align[2], align[3]);
 				
 			}
 			family.saveTemplates();
@@ -669,10 +666,10 @@ public abstract class ParticlePicker
 		{
 			
 			Family family = particle.getFamily();
-			if(family.getStep() != FamilyState.Manual)
-				throw new IllegalArgumentException(XmippMessage.getIllegalStateForOperationMsg("family", family.getStep().toString()));
+			if(particle instanceof AutomaticParticle)
+				throw new IllegalArgumentException(XmippMessage.getIllegalStateForOperationMsg("particle", "Automatic"));
 			ImageGeneric igp = particle.getImageGeneric();
-			System.out.printf("removing: %d %.2f %.2f %.2f\n", particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
+//			System.out.printf("removing: %d %.2f %.2f %.2f\n", particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
 			family.getTemplates().removeAlignment(igp, particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
 			family.saveTemplates();
 		}

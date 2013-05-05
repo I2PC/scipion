@@ -32,7 +32,7 @@ import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
 import xmipp.viewer.particlepicker.ParticlesJDialog;
 import xmipp.viewer.particlepicker.PickerParticle;
-import xmipp.viewer.particlepicker.training.model.FamilyState;
+import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.windows.GalleryJFrame;
 import xmipp.viewer.windows.ImagesWindowFactory;
 
@@ -374,7 +374,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 			if(column == 2)
 				return m.getParticles().size();
 			if(column == 3)
-				return FamilyState.Extract;
+				return Mode.Extract;
 
 			return null;
 			

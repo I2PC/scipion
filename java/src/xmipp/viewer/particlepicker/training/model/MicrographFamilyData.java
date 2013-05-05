@@ -94,16 +94,14 @@ public class MicrographFamilyData
 		manualparticles.add(p);
 		if (state == MicrographFamilyState.Available || state == MicrographFamilyState.Auto)//to put micrograph family data on new state, done only for first particle
 		{
-			if (family.getStep() == FamilyState.Manual)
+			if (ppicker.getMode() == Mode.Manual)
 				state = MicrographFamilyState.Manual;
-//			else if (family.getStep() == FamilyState.Supervised && state == MicrographFamilyState.Autopick)//THIS STATE IS NEVER PERSISTED
-//				state = MicrographFamilyState.Correct;
-			else if (family.getStep() == FamilyState.Review)
+			else if (ppicker.getMode() == Mode.Review)
 				state = MicrographFamilyState.Review;
 			else
 				throw new IllegalArgumentException(String.format("Micrograph %s could not update its state to %s and can't keep previous state %s and have particles", micrograph.getName(), state, MicrographFamilyState.Available));
 		}
-		if(p.getFamily().getStep() == FamilyState.Manual)
+		if(ppicker.getMode() == Mode.Manual)
 			ppicker.addParticleToTemplates(p, center);
 	}
 	
@@ -116,12 +114,12 @@ public class MicrographFamilyData
 			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("particle"));
 		if (p instanceof AutomaticParticle)
 		{
-			if (ppicker.getMode() != FamilyState.Review)
+			if (ppicker.getMode() != Mode.Review)
 				((AutomaticParticle) p).setDeleted(true);
 			else
 				autoparticles.remove(p);
 			//deleting could be the first thing to do after autopick, so I have to mark micrograph on this choice too
-			if (state == MicrographFamilyState.Auto && family.getStep() == FamilyState.Review)//to put micrograph family data on new state, done only for first particle
+			if (state == MicrographFamilyState.Auto && ppicker.getMode() == Mode.Review)//to put micrograph family data on new state, done only for first particle
 				state = MicrographFamilyState.Review;
 		}
 		else
@@ -130,7 +128,7 @@ public class MicrographFamilyData
 			if (manualparticles.size() == 0 && autoparticles.size() - getAutomaticParticlesDeleted() == 0)
 				state = MicrographFamilyState.Available;
 		}
-		if(p.getFamily().getStep() == FamilyState.Manual)
+		if(ppicker.getMode() == Mode.Manual)
 			ppicker.removeParticleFromTemplates(p);
 		
 	}
@@ -173,62 +171,7 @@ public class MicrographFamilyData
 
 	}
 
-	public boolean isPickingAvailable()
-	{
-		if (family.getStep() == FamilyState.Supervised)
-		{
-			if (state == MicrographFamilyState.Available)
-				return false;
-			if (state == MicrographFamilyState.Manual)
-				return false;
-			if (state != MicrographFamilyState.Correct)
-				return false;
-			return true;
-		}
-		if (family.getStep() == FamilyState.Manual)
-		{
-			if (state == MicrographFamilyState.Available)
-				return true;
-			if (state == MicrographFamilyState.Manual)
-				return true;
-			return false;
-		}
-		if (family.getStep() == FamilyState.Review)
-			return true;
-		return false;
-	}
-
-	public boolean isActionVisible()
-	{
-
-		if (family.getStep() != FamilyState.Supervised)
-			return false;
-		if (family.getStep() == FamilyState.Supervised)
-		{
-			if (state == MicrographFamilyState.Available)
-				return true;
-			if (state == MicrographFamilyState.Manual)
-				return false;
-			if (state == MicrographFamilyState.ReadOnly)
-				return false;
-			
-			return true;
-		}
-		return false;
-	}
 	
-	
-
-	public String getAction()
-	{
-		if (family.getStep() != FamilyState.Supervised)
-			return null;
-		if (state == MicrographFamilyState.Manual)
-			return null;
-		if (state == MicrographFamilyState.Available)
-			return MicrographFamilyState.Autopick.toString();
-		return state.toString();
-	}
 
 	public void reset()
 	{
@@ -237,13 +180,13 @@ public class MicrographFamilyData
 		setState(MicrographFamilyState.Available);
 	}
 
-	public FamilyState getStep()
+	public Mode getStep()
 	{
 		if (state == MicrographFamilyState.Manual)
-			return FamilyState.Manual;
+			return Mode.Manual;
 		if (state == MicrographFamilyState.Available)
-			return FamilyState.Available;
-		return FamilyState.Supervised;
+			return Mode.Available;
+		return Mode.Supervised;
 	}
 
 	public int getAutomaticParticlesDeleted()

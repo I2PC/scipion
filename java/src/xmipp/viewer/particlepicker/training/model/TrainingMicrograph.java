@@ -16,17 +16,17 @@ public class TrainingMicrograph extends Micrograph{
 	private String autofilename;
 	
 	
-	public TrainingMicrograph(String filename, String psd, String ctf, List<Family> families, FamilyState mode) {
+	public TrainingMicrograph(String filename, String psd, String ctf, List<Family> families, Mode mode) {
 		this(filename, psd, ctf, families, new ArrayList<MicrographFamilyData>(), mode);
 	}
 	
 
-	public TrainingMicrograph(String file, String psd, String ctf, List<Family> families, List<MicrographFamilyData> mfd, FamilyState mode) {
+	public TrainingMicrograph(String file, String psd, String ctf, List<Family> families, List<MicrographFamilyData> mfd, Mode mode) {
 		super(file, psd, ctf);
 		
 		mfdatas = mfd;
 		autofilename = getName() + "_auto" + ext;
-		MicrographFamilyState state = (mode == FamilyState.Review)? MicrographFamilyState.Review : MicrographFamilyState.Available;
+		MicrographFamilyState state = (mode == Mode.Review)? MicrographFamilyState.Review : MicrographFamilyState.Available;
 		for(Family f: families)
 			mfdatas.add(new MicrographFamilyData(this, f, state));
 	}
@@ -138,9 +138,7 @@ public class TrainingMicrograph extends Micrograph{
 		return false;
 	}
 	
-	public boolean isPickingAvailable(Family f) {
-			return getFamilyData(f).isPickingAvailable();
-	}
+
 	
 	public boolean hasData()
 	{

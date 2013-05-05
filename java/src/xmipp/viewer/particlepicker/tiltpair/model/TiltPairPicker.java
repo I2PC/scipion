@@ -13,7 +13,7 @@ import xmipp.viewer.particlepicker.Family;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
-import xmipp.viewer.particlepicker.training.model.FamilyState;
+import xmipp.viewer.particlepicker.training.model.Mode;
 
 public class TiltPairPicker extends ParticlePicker
 {
@@ -21,7 +21,7 @@ public class TiltPairPicker extends ParticlePicker
 	protected List<UntiltedMicrograph> micrographs;
 	private UntiltedMicrograph micrograph;
 
-	public TiltPairPicker(String selfile, String outputdir, FamilyState state)
+	public TiltPairPicker(String selfile, String outputdir, Mode state)
 	{
 		super(selfile, outputdir, state);
 

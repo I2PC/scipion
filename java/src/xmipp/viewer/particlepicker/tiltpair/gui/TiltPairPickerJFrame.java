@@ -32,7 +32,7 @@ import xmipp.viewer.particlepicker.tiltpair.model.TiltPairPicker;
 import xmipp.viewer.particlepicker.tiltpair.model.TiltedParticle;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedMicrograph;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedParticle;
-import xmipp.viewer.particlepicker.training.model.FamilyState;
+import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 
 
@@ -67,7 +67,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		super(picker);
 		pppicker = picker;
 		initComponents();
-		enableEdition(picker.getMode() != FamilyState.ReadOnly);
+		enableEdition(picker.getMode() != Mode.ReadOnly);
 	}
 
 	private void initComponents()
@@ -100,7 +100,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		mb = new JMenuBar();
 
 		filemn.add(importffmi);
-		if (pppicker.getFamily().getStep() != FamilyState.Manual)
+		if (pppicker.getMode() != Mode.Manual)
 			importffmi.setEnabled(false);
 		importffilesmi = new JMenuItem("Import Particles From Micrograph");
 		importffilesmi.addActionListener(new ActionListener() {

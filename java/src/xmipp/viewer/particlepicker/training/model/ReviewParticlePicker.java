@@ -26,11 +26,10 @@ public class ReviewParticlePicker extends TrainingPicker
 	
 	public ReviewParticlePicker(String selfile, String outputdir, String fname, String reviewfile)
 	{
-		super(selfile, outputdir, fname, FamilyState.Review);
+		super(selfile, outputdir, fname, Mode.Review);
 		if (!new File(reviewfile).exists())
 			throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("review file", reviewfile));
 		this.reviewfile = reviewfile;
-		family.setState(FamilyState.Review);
 		importAllParticles(reviewfile);
 		
 	}
