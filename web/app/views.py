@@ -35,6 +35,33 @@ def projects(request):
     
     return render_to_response('projects.html', context)
 
+class TreeItem():
+    def __init__(self, name, type, protClass=None):
+        self.name = name
+        self.type = type
+        self.protClass = protClass
+        self.childs = []
+        
+def populateTree(self, tree, prefix, obj, level=0):
+    
+    for sub in obj:
+        text = sub.text.get()
+        if text:
+            value = sub.value.get(text)
+            tag = obj.tag.get('')
+        item = TreeItem(text, tag)
+        populateTree(self, item, sub, level+1)
+        # If have tag 'protocol_base', fill dynamically with protocol sub-classes
+        if obj.value.hasValue() and tag == 'protocol_base':
+            protClassName = value.split('.')[-1] # Take last part
+            prot = emProtocolsDict.get(protClassName, None)
+            if prot is not None:
+                for k, v in emProtocolsDict.iteritems():
+                    if not v is prot and issubclass(v, prot):
+                        prot = TreeItem(k, 'protocol_class', protClassName)
+                        item.childs.append(prot)                        
+        
+        
 def project_content(request):
     
     # Resources #
@@ -47,7 +74,8 @@ def project_content(request):
     jquery_treeview = os.path.join(settings.MEDIA_URL, 'libs/jquery.treeview.js')
     launchTreeview = os.path.join(settings.MEDIA_URL, 'libs/launchTreeview.js')
     #############
-    
+    manager = Manager()
+    projects = manager.listProjects()
     
 
     context = {'logo': logo_path,
@@ -57,7 +85,8 @@ def project_content(request):
                'jquery_cokkie': jquery_cookie,
                'jquery_treeview': jquery_treeview,
                'launchTreeview': launchTreeview,
-               'css':css_path}
+               'css':css_path,
+               'projects': projects}
     
     return render_to_response('project_content.html', context)
 

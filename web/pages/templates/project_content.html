@@ -23,46 +23,22 @@
 					<fieldset class="protFieldsetTree">
 
 						<ul id="browser" class="filetree">
-							<li><span class="main">Micrographs</span>
+							{% for project in projects %}
+							<li><span class="section">Micrographs</span>
 								<ul>
-									<li><span class="import"><a href="">Import</a></span></li>
-									<li><span class="protocol">Preprocess</span>
+									<li><span class="protocol"><a href="">Import</a></span></li>
+									<li><span class="protocol_base">Preprocess</span>
 										<ul>
-											<li><span class="typeProtocol"  ><a href="">EmanProtPreprocess</a></span></li>
-											<li><span class="typeProtocol"><a href="">XmippProtPreprocess</a></span></li>
+											<li><span class="protocol_class"><a href="">EmanProtPreprocess</a></span></li>
+											<li><span class="protocol_class"><a href="">XmippProtPreprocess</a></span></li>
 										</ul></li>
-									<li><span class="protocol">CTF estimation</span>
+									<li><span class="protocol_base">CTF estimation</span>
 										<ul>
-											<li><span class="typeProtocol"><a href="">XmippProtCTF</a></span></li>
-											<li><span class="typeProtocol"><a href="">ProtCTFFind</a></span></li>
+											<li><span class="protocol_class"><a href="">XmippProtCTF</a></span></li>
+											<li><span class="protocol_class"><a href="">ProtCTFFind</a></span></li>
 										</ul></li>
 								</ul></li>
-							<li><span class="main">Particles</span>
-								<ul>
-									<li><span class="import"><a href="">Import</a></span></li>
-									<li><span class="protocol">Picking</span>
-										<ul>
-											<li><span class="typeProtocol"><a href="">XmippProtParticlePick</a></span></li>
-											<li><span class="typeProtocol"><a href="">EmanProtBoxing</a></span></li>
-										</ul></li>
-									<li><span class="protocol">Extract</span>
-										<ul>
-											<li><span class="typeProtocol"><a href="">XmippProtExtractPart</a></span></li>
-										</ul></li>
-								</ul></li>
-							<li><span class="main">Particles</span>
-								<ul>
-									<li><span class="import"><a href="">Import</a></span></li>
-									<li><span class="protocol">Picking</span>
-										<ul>
-											<li><span class="typeProtocol"><a href="">XmippProtParticlePick</a></span></li>
-											<li><span class="typeProtocol"><a href="">EmanProtBoxing</a></span></li>
-										</ul></li>
-									<li><span class="protocol">Extract</span>
-										<ul>
-											<li><span class="typeProtocol"><a href="">XmippProtExtractPart</a></span></li>
-										</ul></li>
-								</ul></li>
+							{% endfor %}
 						</ul>
 					</fieldset>
 				</fieldset>

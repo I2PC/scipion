@@ -92,32 +92,32 @@
 	display: block;
 }
 
-.filetree span.main {
+.filetree span.section {
 	font-size: 1.2em;
 	font-weight: bold;
 }
 
-.filetree li.expandable span.main {
+.filetree li.expandable span.section {
 	font-size: 1.2em;
 	font-weight: bold;
+}
+
+.filetree span.protocol_base {
+	background: url(../images/class_obj.gif) 0 0 no-repeat;
+	padding-left: 1em;
+}
+
+.filetree li.expandable span.protocol_base {
+	background: url(../images/class_obj.gif) 0 0 no-repeat;
+	padding-left: 1em;
 }
 
 .filetree span.protocol {
-	background: url(../images/class_obj.gif) 0 0 no-repeat;
-	padding-left: 1em;
-}
-
-.filetree li.expandable span.protocol {
-	background: url(../images/class_obj.gif) 0 0 no-repeat;
-	padding-left: 1em;
-}
-
-.filetree span.import {
 	background: url(../images/bookmark.gif) 0 0 no-repeat;
 	padding-left: 1em;
 }
 
-.filetree span.typeProtocol {
-/* 	background: url(../images/python_file.gif) 0 0 no-repeat; */
+.filetree span.protocol_class {
+	background: url(../images/python_file.gif) 0 0 no-repeat;
 	padding-left: 1em;
 }
