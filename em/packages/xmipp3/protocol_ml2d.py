@@ -136,10 +136,10 @@ class XmippProtML2D(ProtAlign, ProtClassify, XmippProtocol):
         prefix = '%s2d_' % progId
         self.oroot = self._getPath(prefix)
         
-        self.inputImgs = self.inputImages.get()
-        
+        self.inputImgs = self.inputImages.get()       
         imgsFn = self._insertConvertStep('inputImgs', XmippSetOfImages,
                                          self._getPath('input_images.xmd'))
+        
         params = ' -i %s --oroot %s' % (imgsFn, self.oroot)
         # Number of references will be ignored if -ref is passed as expert option
         if self.doGenerateReferences:

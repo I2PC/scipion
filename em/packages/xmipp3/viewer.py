@@ -96,7 +96,7 @@ def getJavaIJappArguments(memory, appName, appArgs):
     
 def runJavaIJapp(memory, appName, args, batchMode=True):
     args = getJavaIJappArguments(memory, appName, args)
-    runJob(None, "java", args, RunInBackground=batchMode)
+    runJob(None, "java", args, runInBackground=batchMode)
     
 def runShowJ(inputFiles, memory="1g", extraParams=""):
     runJavaIJapp(memory, "'xmipp.viewer.Viewer'", "-i %s %s" % (inputFiles, extraParams), True)

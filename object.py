@@ -228,10 +228,19 @@ class Scalar(Object):
     def __eq__(self, other):
         """Comparison for scalars should be by value
         and for other objects by reference"""
-        if issubclass(other.__class__, Object):
-            return Object.__eq__(self, other)
+        if isinstance(other, Object):
+            return self._objValue == other._objValue
         return self._objValue == other
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
     
+    def __cmp__(self, other):
+        """ Comparison implementation for scalars. """
+        if isinstance(other, Object):
+            return cmp(self._objValue, other._objValue)
+        return cmp(self._objValue, other)        
+       
     def get(self, default=None):
         """Get the value, if internal value is None
         the default argument passed is returned"""

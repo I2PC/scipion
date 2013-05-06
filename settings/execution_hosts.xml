@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ALL>
+  <ExecutionHostConfig hostname="localhost" label="localhost">
+    <mpiCommand>mpirun -np %(nodes)d -bynode %(command)s</mpiCommand>
+    <queueSystem mandatory="False" name="PBS/TORQUE">
+      <queues>
+        <QueueConfig allowMPI="True" allowThreads="True" maxCores="4" name="default" />
+      </queues>
+      <submitCommand>qsub %(script)s</submitCommand>
+      <submitTemplate>
+#!/bin/bash
+### Inherit all current environment variables
+#PBS -V
+### Job name
+#PBS -N %(jobName)s
+### Queue name
+###PBS -q %(queueName)s
+### Standard output and standard error messages
+#PBS -k eo
+### Specify the number of nodes and thread (ppn) for your job.
+#PBS -l nodes=%(nodes)d:ppn=%(threads)d
+### Tell PBS the anticipated run-time for your job, where walltime=HH:MM:SS
+#PBS -l walltime=%(hours)d:00:00
+# Use as working dir the path where qsub was launched
+WORKDIR=$PBS_O_WORKDIR
+#################################
+### Set environment varible to know running mode is non interactive
+export XMIPP_IN_QUEUE=1
+### Switch to the working directory;
+cd $WORKDIR
+# Make a copy of PBS_NODEFILE 
+cp $PBS_NODEFILE %(nodesfileBackup)s
+# Calculate the number of processors allocated to this run.
+NPROCS=`wc -l &lt; $PBS_NODEFILE`
+# Calculate the number of nodes allocated.
+NNODES=`uniq $PBS_NODEFILE | wc -l`
+### Display the job context
+echo Running on host `hostname`
+echo Time is `date`
+echo Working directory is `pwd`
+echo Using ${NPROCS} processors across ${NNODES} nodes
+echo PBS_NODEFILE:
+cat $PBS_NODEFILE
+#################################
+
+%(command)s
+</submitTemplate>
+      <checkCommand>qstat %(jobid)d</checkCommand>
+      <cancelCommand>canceljob %(jobid)d</cancelCommand>
+    </queueSystem>
+  </ExecutionHostConfig>
+</ALL>

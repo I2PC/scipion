@@ -239,7 +239,8 @@ def writeProtocols():
                   tag = 'protocol_base')
     m1.addSubMenu('Classify', value='ProtClassify',
                   tag = 'protocol_base')
-    m1.addSubMenu('Align+Classify', value='ProtAlignClassify')
+    m1.addSubMenu('Align+Classify', value='ProtAlignClassify',
+                  tag = 'protocol_base')
 
     writeConfig(menu, 'protocols_default.xml')
     

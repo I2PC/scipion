@@ -33,6 +33,7 @@ from pyworkflow.utils import *
 import xmipp
 from data import *
 from xmipp3 import XmippProtocol
+from glob import glob
 
 # Comparison methods enum
 CMP_CORRELATION = 0
@@ -104,20 +105,33 @@ class XmippProtCL2D(ProtAlign, ProtClassify, XmippProtocol):
     _label = 'Xmipp CL2D'
 
     def _defineSteps(self):
-        """ Mainly prepare the command line for call ml(f)2d program"""
-        progId = self.getProgramId()
+        """ Mainly prepare the command line for call cl2d program"""
         
-        program = "xmipp_%s_align2d" % progId
-
-        restart = False
-        
-        prefix = '%s2d_' % progId
-        self.oroot = self._getPath(prefix)
-        
-        self.inputImgs = self.inputImages.get()
-        
+        # Convert input images if necessary
+        self.inputImgs = self.inputImages.get()        
         imgsFn = self._insertConvertStep('inputImgs', XmippSetOfImages,
                                          self._getPath('input_images.xmd'))
+        # Prepare arguments to call program: xmipp_classify_CL2D
+        self._params = {'imgsFn': imgsFn, 
+                        'workingDir': self.workingDir.get(),
+                        'nref': self.numberOfReferences.get(), 
+                        'nref0': self.numberOfInitialReferences.get(),
+                        'iter': self.numberOfIterations.get(),
+                        'extraParams': self.additionalParameters.get() 
+                      }
+        params= '-i %(imgsFn)s --odir %(workingDir)s --oroot level --nref %(nref)d --iter %(iter)d %(extraParams)s'
+        if self.comparisonMethod == CMP_CORRELATION:
+            params+= ' --distance correlation'
+        if self.clusteringMethod == CL_CLASSICAL:
+            params+= ' --classicalMultiref'
+        if not '--ref0' in self.additionalParameters.get():
+            params += ' --nref0 %(nref0)d'
+    
+        self._insertRunJobStep("xmipp_classify_CL2D", params % paramsDict)
+        self._insertFunctionStep('createOutput')
+        self._insertFunctionStep('evaluateClasses', subset='')
+        
+        
         params = ' -i %s --oroot %s' % (imgsFn, self.oroot)
         # Number of references will be ignored if -ref is passed as expert option
         if self.doGenerateReferences:
@@ -155,6 +169,45 @@ class XmippProtCL2D(ProtAlign, ProtClassify, XmippProtocol):
                 
         self._insertFunctionStep('createOutput')
         
+        
+    def getLevelMdFiles(self, subset=''):
+        """ Grab the metadata class files for each level. """
+        levelMdFiles = glob(self._extraPath("level_??/level_classes%s.xmd" % subset))
+        levelMdFiles.sort()
+        return levelMdFiles
+        
+    
+    def sortClasses(self, subset=''):
+        nproc = self.numberOfMpi.get()
+        if nproc < 2:
+            nproc = 2
+        levelMdFiles = self.getLevelMdFiles(subset)
+        for filename in levelMdFiles:
+            level=int(re.search('level_(\d\d)',filename).group(1))
+            fnRoot=os.path.join(WorkingDir,"level_%02d/level_classes%s_sorted"%(level,suffix))
+            params= "-i classes@"+filename+" --oroot "+fnRoot
+            runJob(log,"xmipp_image_sort",params,Nproc)
+            mD=MetaData(fnRoot+".xmd")
+            mD.write("classes_sorted@"+filename,MD_APPEND)
+            deleteFile(log,fnRoot+".xmd")
+        
+    def evaluateClasses(self, subset=''):
+        """ Calculate the FRC and output the hierarchy for 
+        each level of classes.
+        """
+        levelMdFiles = self.getLevelMdFiles(subset)
+        hierarchyFnOut = self._extraPath("classes%s_hierarchy.txt" % subset)
+        prevMdFn = None
+        for mdFn in levelMdFiles:
+            runJob(log,"xmipp_classify_evaluate_classes","-i " + mdFn)
+            if prevMdFn is not None:
+                args = "--i1 %s --i2 %s -o %s" % (prevMdFn, mdFn, hierarchyFnOut)
+                if os.path.exists(hierarchyFnOut):
+                    args += " --append"
+                runJob(log,"xmipp_classify_compare_classes",args)
+            prevMdFn = mdFn
+            
+                 
     def createOutput(self):
         classification = XmippClassification2D(self.oroot + 'classes.xmd')
         self._defineOutputs(outputClassification=classification)
