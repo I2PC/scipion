@@ -5,6 +5,8 @@ from pyworkflow.manager import Manager
 from pyworkflow.utils.path import findResource
 from pyworkflow.utils.utils import prettyDate
 from pyworkflow.web.pages import settings
+from pyworkflow.apps.config import *
+from pyworkflow.em import *
 
 def getResource(request):
     if request == 'logoScipion':
@@ -36,31 +38,50 @@ def projects(request):
     return render_to_response('projects.html', context)
 
 class TreeItem():
-    def __init__(self, name, type, protClass=None):
+    def __init__(self, name, tag, protClass=None):
         self.name = name
-        self.type = type
+        self.tag = tag
         self.protClass = protClass
         self.childs = []
         
-def populateTree(self, tree, prefix, obj, level=0):
+def populateTree(tree, obj):
     
     for sub in obj:
         text = sub.text.get()
-        if text:
-            value = sub.value.get(text)
-            tag = obj.tag.get('')
+        value = sub.value.get(text)
+        tag = sub.tag.get('')
         item = TreeItem(text, tag)
-        populateTree(self, item, sub, level+1)
+        tree.childs.append(item)
         # If have tag 'protocol_base', fill dynamically with protocol sub-classes
-        if obj.value.hasValue() and tag == 'protocol_base':
+        if sub.value.hasValue() and tag == 'protocol_base':
             protClassName = value.split('.')[-1] # Take last part
             prot = emProtocolsDict.get(protClassName, None)
             if prot is not None:
                 for k, v in emProtocolsDict.iteritems():
                     if not v is prot and issubclass(v, prot):
-                        prot = TreeItem(k, 'protocol_class', protClassName)
-                        item.childs.append(prot)                        
-        
+                        protItem = TreeItem(k, 'protocol_class', protClassName)
+                        item.childs.append(protItem)
+        else:
+            populateTree(item, sub)
+            
+                               
+       
+def loadConfig(config, name):
+    c = getattr(config, name) 
+    fn = getConfigPath(c.get())
+    if not os.path.exists(fn):
+        raise Exception('loadMenuConfig: menu file "%s" not found' % fn )
+    mapper = ConfigMapper(getConfigPath(fn), globals())
+    menuConfig = mapper.getConfig()
+    return menuConfig
+
+def loadProtTree():
+    configMapper = ConfigMapper(getConfigPath('configuration.xml'), globals())
+    generalCfg = configMapper.getConfig()
+    protCfg = loadConfig(generalCfg, 'protocols')    
+    root = TreeItem('root', 'root')
+    populateTree(root, protCfg)
+    return root
         
 def project_content(request):
     
@@ -73,7 +94,10 @@ def project_content(request):
     jquery_cookie = os.path.join(settings.MEDIA_URL, 'libs/jquery.cookie.js')
     jquery_treeview = os.path.join(settings.MEDIA_URL, 'libs/jquery.treeview.js')
     launchTreeview = os.path.join(settings.MEDIA_URL, 'libs/launchTreeview.js')
+    
     #############
+    root = loadProtTree()
+    
     manager = Manager()
     projects = manager.listProjects()
     
@@ -86,7 +110,14 @@ def project_content(request):
                'jquery_treeview': jquery_treeview,
                'launchTreeview': launchTreeview,
                'css':css_path,
-               'projects': projects}
+               'sections': root.childs}
     
     return render_to_response('project_content.html', context)
 
+
+if __name__ == '__main__':
+    root = loadProtTree()    
+    for s in root.childs:
+        print s.name, '-', s.tag
+        for p in s.childs:
+            print p.name, '-', p.tag

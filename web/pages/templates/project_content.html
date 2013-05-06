@@ -23,21 +23,26 @@
 					<fieldset class="protFieldsetTree">
 
 						<ul id="browser" class="filetree">
-							{% for project in projects %}
-							<li><span class="section">Micrographs</span>
+							{% for section in sections %}
+							<li><span class="section">{{section.name}}</span>
 								<ul>
-									<li><span class="protocol"><a href="">Import</a></span></li>
-									<li><span class="protocol_base">Preprocess</span>
-										<ul>
-											<li><span class="protocol_class"><a href="">EmanProtPreprocess</a></span></li>
-											<li><span class="protocol_class"><a href="">XmippProtPreprocess</a></span></li>
-										</ul></li>
-									<li><span class="protocol_base">CTF estimation</span>
-										<ul>
-											<li><span class="protocol_class"><a href="">XmippProtCTF</a></span></li>
-											<li><span class="protocol_class"><a href="">ProtCTFFind</a></span></li>
-										</ul></li>
-								</ul></li>
+							     {% for prot in section.childs %}
+									{% if prot.tag == 'protocol' %}
+										<li><span class="protocol"><a href="">{{prot.name}}</a></span></li>
+									{% elif prot.tag == 'protocol_base' %}
+										<li><span class="protocol_base">{{prot.name}}</span>
+											<ul>
+										     {% for prot2 in prot.childs %}
+												<li><span class="protocol_class"><a href="">{{prot2.name}}</a></span></li>
+											{% endfor %}
+											</ul>
+									    </li>
+									{% else %}
+									    No athletes.
+									{% endif %}
+								{% endfor %}
+                                </ul>								
+							</li>
 							{% endfor %}
 						</ul>
 					</fieldset>
