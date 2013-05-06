@@ -14,7 +14,7 @@
     <ProtocolConfig tag="section" text="2D">
       <ProtocolConfig tag="protocol_base" text="Align" value="ProtAlign" />
       <ProtocolConfig tag="protocol_base" text="Classify" value="ProtClassify" />
-      <ProtocolConfig text="Align+Classify" value="ProtAlignClassify" />
+      <ProtocolConfig tag="protocol_base" text="Align+Classify" value="ProtAlignClassify" />
     </ProtocolConfig>
   </ProtocolConfig>
 </ALL>
