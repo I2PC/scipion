@@ -14,20 +14,14 @@
 		</div>
 		<div class="right">
 			<fieldset class="projFieldset">
-<!-- 				<legend>Current Projects</legend> -->
-				<table cellspacing='0'>
-					<tr>
-						<th>Project Name</th>
-						<th>Modified</th>
-					</tr>
-					{% for project in projects %}
-					<tr>
-						<td><a href="" class="projName">{{project.projName}}</a></td>
-						<td>{{project.pTime}}</td>
-						<td><a href="" class="projRemove">Delete project</a></td>
-					</tr>
-					{% endfor %}
-				</table>
+				<legend>Current Projects</legend>
+				{% for project in projects %}
+				<ul>
+					<li class="projList"><strong><a href=""
+							class="projName">{{project.projName}}</a></strong><br /> Modified
+						{{project.pTime}} <a href="" class="projRemove">Delete project</a></li>
+				</ul>
+				{% endfor %}
 			</fieldset>
 		</div>
 	</div>
