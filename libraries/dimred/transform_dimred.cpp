@@ -44,7 +44,7 @@ void ProgTransformDimRed::show()
         << "Input metadata file:    " 										<< fnIn          << std::endl
         << "Output metadata:        " 										<< fnOut         << std::endl
         << "Dim Red Method:     "     										<< dimRefMethod  << std::endl
-        << "Number of dimensions after dimensionality reduction:     "     << dimRefMethod  << std::endl
+        << "Number of dimensions after dimensionality reduction:     "      << dimRefMethod  << std::endl
         ;
 }
 
