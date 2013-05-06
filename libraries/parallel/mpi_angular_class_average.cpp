@@ -1,5 +1,6 @@
 /***************************************************************************
  * Authors:     AUTHOR_NAME (aerey@cnb.csic.es)
+ *        (jvargas@cnb.csic.es)
  *
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -40,8 +41,9 @@ void MpiProgAngularClassAverage::readParams()
     do_limitR0per = do_limitR0class = do_limitRFclass = do_limit0 = do_limitF = false;
 
     // Read command line
-    DFlib.read(getParam("--lib"));
     fn_out = getParam("-o");
+    fn_ref  = getParam("--lib");
+
     col_select = getParam("--select");
 
     do_limit0 = checkParam("--limit0");
@@ -250,14 +252,25 @@ void MpiProgAngularClassAverage::run()
                 }
                 else
                 {//Unlocked
-
+                    //JV : mirar esto imprimiendo
                     dAij(lockArray,order_index,ref3d_index)=true;
                     // Send the old weight
                     lockWeightIndexes[index_lockIndex] = lockIndex;
-                    lockWeightIndexes[index_weight] = dAij(weightArray,order_index,ref3d_index);
-                    lockWeightIndexes[index_weights1] = dAij(weightArrays1,order_index,ref3d_index);
-                    lockWeightIndexes[index_weights2] = dAij(weightArrays2,order_index,ref3d_index);
+                    lockWeightIndexes[index_weight] = dAkij(weightArray,0,order_index,ref3d_index);
+                    lockWeightIndexes[index_weights1] = dAkij(weightArrays1,0,order_index,ref3d_index);
+                    lockWeightIndexes[index_weights2] = dAkij(weightArrays2,0,order_index,ref3d_index);
                     lockWeightIndexes[index_ref3d] = ref3d_index;
+                    //lockWeightIndexes[index_weight] = dAij(weightArray,order_index,ref3d_index);
+                    //lockWeightIndexes[index_weights1] = dAij(weightArrays1,order_index,ref3d_index);
+                    //lockWeightIndexes[index_weights2] = dAij(weightArrays2,order_index,ref3d_index);
+                    //lockWeightIndexes[index_ref3d] = ref3d_index;
+#ifdef DEBUG_MPI
+
+                    std::cerr << "[" << node->rank << "] TAG_YES_YOU_MAY_WRITE.lockIndex: " << lockIndex <<std::endl;
+                    std::cerr <<  "lockWeightIndexes[index_weight]" << lockWeightIndexes[index_weight]<<std::endl;
+#endif
+#undef  DEBUG_MPI
+
                     MPI_Send(lockWeightIndexes, lockWeightIndexesSize, MPI_DOUBLE, status.MPI_SOURCE,
                              TAG_YES_YOU_MAY_WRITE, MPI_COMM_WORLD);
                 }
@@ -277,9 +290,13 @@ void MpiProgAngularClassAverage::run()
                 mdJobList.getValue(MDL_ORDER, order_index, lockIndex);
                 mdJobList.getValue(MDL_REF3D, ref3d_index, lockIndex);
                 dAij(lockArray,order_index,ref3d_index)=false;
-                dAij(weightArray,order_index,ref3d_index) += lockWeightIndexes[index_weight];
-                dAij(weightArrays1,order_index,ref3d_index) += lockWeightIndexes[index_weights1];
-                dAij(weightArrays2,order_index,ref3d_index) += lockWeightIndexes[index_weights2];
+                //dAij(weightArray,order_index,ref3d_index) += lockWeightIndexes[index_weight];
+                //dAij(weightArrays1,order_index,ref3d_index) += lockWeightIndexes[index_weights1];
+                //dAij(weightArrays2,order_index,ref3d_index) += lockWeightIndexes[index_weights2];
+
+                dAkij(weightArray,0,order_index,ref3d_index) += lockWeightIndexes[index_weight];
+                dAkij(weightArrays1,0,order_index,ref3d_index) += lockWeightIndexes[index_weights1];
+                dAkij(weightArrays2,0,order_index,ref3d_index) += lockWeightIndexes[index_weights2];
                 break;
             default:
                 std::cerr << "WRONG TAG RECEIVED" << std::endl;
@@ -319,8 +336,15 @@ void MpiProgAngularClassAverage::run()
         }
     }
 
+    node->gatherMetadatas(DFscore, "kk.xmd");
+
     if (node->rank == 0)
+    {
+        FileName fn = inFile.withoutExtension()+"_weight."+inFile.getExtension();
+        fn = "all_exp_images@"+fn.removeBlockName();
+        DFscore.write(fn);
         mpi_postprocess();
+    }
 
     //    MPI_Finalize();
 }
@@ -355,7 +379,7 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
 #endif
 #undef DEBUG
 
-    Image<double> img, avg, avg1, avg2;
+    Image<double> img, img_ref, avg, avg1, avg2;
     FileName fn_img, fn_tmp;
     MetaData SFclass, SFclass1, SFclass2;
     MetaData SFclassDiscarded;
@@ -394,7 +418,7 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     //std::cerr << "DEBUG_JM: BEFORE MDValueEQ" <<std::endl;
     MDValueEQ eq1(MDL_REF3D, ref3d);
     MDValueEQ eq2(MDL_DEFGROUP, defGroup);
-    MDValueEQ eq3(MDL_ORDER, order_number);
+    MDValueEQ eq3(MDL_REF, ref_number);
     MDMultiQuery multi;
     multi.addAndQuery(eq1);
     multi.addAndQuery(eq2);
@@ -407,6 +431,27 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     if (_DF.size() == 0)
         REPORT_ERROR(ERR_DEBUG_IMPOSIBLE,
                      "Program should never execute this line, something went wrong");
+
+
+    MetaData _DF_ref((fn_ref.removeAllExtensions()+".doc"));
+    MetaData _DF_temp;
+    MDValueEQ eq4(MDL_REF, ref_number);
+    _DF_temp.importObjects(_DF_ref, eq4);
+    int noRef = 0;
+    if (_DF_temp.size() > 1)
+        REPORT_ERROR(ERR_DEBUG_IMPOSIBLE,
+                     "Program should never execute this line, something went wrong");
+    if (_DF_temp.size() == 0)
+        noRef =1;
+
+    if (noRef!=1)
+    {
+        FOR_ALL_OBJECTS_IN_METADATA(_DF_temp)
+        {
+            _DF_temp.getValue(MDL_IMAGE, fn_img,__iter.objId);
+            img_ref.read(fn_img);
+        }
+    }
 
     Matrix2D<double> A(3, 3);
     std::vector<int> exp_number, exp_split;
@@ -454,6 +499,10 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
         {
             exp_imgs.push_back(img);
             exp_number.push_back(this_image);
+        }
+
+        if ( (nr_iter > 0) || do_pcaSorting)
+        {
             exp_split.push_back(isplit);
         }
 
@@ -468,7 +517,9 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
         DIRECT_MULTIDIM_ELEM(auxImg,n)=(float)DIRECT_MULTIDIM_ELEM(mImg,n);
 
         if (do_pcaSorting)
+        {
             pcaAnalyzer.addVector(auxImg);
+        }
 
         // Add to average
         if (isplit == 0)
@@ -484,8 +535,9 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
             SFclass1.setValue(MDL_DEFGROUP, defGroup, id);
             SFclass1.setValue(MDL_ORDER, order_number, id);
             if (do_pcaSorting)
+            {
                 pcaAnalyzerSplit1.addVector(auxImg);
-
+            }
         }
         else
         {
@@ -500,7 +552,9 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
             SFclass2.setValue(MDL_DEFGROUP, defGroup, id);
             SFclass2.setValue(MDL_ORDER, order_number, id);
             if (do_pcaSorting)
+            {
                 pcaAnalyzerSplit2.addVector(auxImg);
+            }
         }
 
         //#define DEBUG
@@ -527,17 +581,168 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
 
     }
 
+    //this_image = 0;
     if (do_pcaSorting)
     {
-        if (isplit == 0)
+        avg().initZeros();
+        avg1().initZeros();
+        avg2().initZeros();
+        double max_cc = 0;
+
+        w1 = 0;
+        w2 = 0;
+
+        if (do_split == 0)
         {
-            pcaAnalyzer.evaluateZScore(2,20);
+            size_t index = 0;
+            if (_DF.size() <= 5 )
+            {
+                //pcaAnalyzer.evaluateZScore(1,20);
+                FOR_ALL_OBJECTS_IN_METADATA(_DF)
+                {
+                    _DF.getValue(MDL_MAXCC, max_cc, __iter.objId);
+                    _DF.setValue(MDL_WEIGHT,max_cc, __iter.objId);
+                    w1 += max_cc;
+                    avg1() += img()*(max_cc);
+                    index++;
+                }
+            }
+            else
+            {
+                pcaAnalyzer.evaluateZScore(1,20);
+                //We must tour the metadata again:
+                FOR_ALL_OBJECTS_IN_METADATA(_DF)
+                {
+                    _DF.getValue(MDL_IMAGE, fn_img, __iter.objId);
+                    _DF.getValue(MDL_ANGLE_PSI, psi, __iter.objId);
+                    _DF.getValue(MDL_SHIFT_X, xshift, __iter.objId);
+                    _DF.getValue(MDL_SHIFT_Y, yshift, __iter.objId);
+                    if (do_mirrors)
+                        _DF.getValue(MDL_FLIP, mirror, __iter.objId);
+                    _DF.getValue(MDL_SCALE, scale, __iter.objId);
+
+                    _DF.getValue(MDL_MAXCC, max_cc, __iter.objId);
+
+                    img.read(fn_img);
+                    img().setXmippOrigin();
+                    img.setEulerAngles(0., 0., psi);
+                    img.setShifts(-xshift, -yshift);
+
+                    if (do_mirrors)
+                        img.setFlip(mirror);
+                    img.setScale(scale);
+
+                    // Apply in-plane transformation
+                    img.getTransformationMatrix(A);
+                    if (!A.isIdentity())
+                        selfApplyGeometry(BSPLINE3, img(), A, IS_INV, DONT_WRAP);
+
+                    double score = pcaAnalyzer.getZscore(index);
+
+                    if (score < 5)
+                    {
+                        avg1() += img()*(5-score)*max_cc;
+                        w1 +=(5-score)*max_cc;
+                        _DF.setValue(MDL_WEIGHT,(5-score)*max_cc, __iter.objId);
+                    }
+                    else
+                        _DF.setValue(MDL_WEIGHT,0, __iter.objId);
+
+                    index++;
+                }
+            }
         }
         else
         {
-            pcaAnalyzerSplit1.evaluateZScore(2,20);
-            pcaAnalyzerSplit2.evaluateZScore(2,20);
-            pcaAnalyzer.evaluateZScore(2,20);
+            pcaAnalyzerSplit1.evaluateZScore(1,20);
+            pcaAnalyzerSplit2.evaluateZScore(1,20);
+            size_t index = 0;
+            size_t index1 = 0;
+            size_t index2 = 0;
+
+            FOR_ALL_OBJECTS_IN_METADATA(_DF)
+            {
+                isplit = exp_split[index];
+                _DF.getValue(MDL_IMAGE, fn_img, __iter.objId);
+                //this_image++;
+                _DF.getValue(MDL_ANGLE_PSI, psi, __iter.objId);
+                _DF.getValue(MDL_SHIFT_X, xshift, __iter.objId);
+                _DF.getValue(MDL_SHIFT_Y, yshift, __iter.objId);
+                if (do_mirrors)
+                    _DF.getValue(MDL_FLIP, mirror, __iter.objId);
+                _DF.getValue(MDL_SCALE, scale, __iter.objId);
+
+                _DF.getValue(MDL_MAXCC, max_cc, __iter.objId);
+
+                img.read(fn_img);
+                img().setXmippOrigin();
+                img.setEulerAngles(0., 0., psi);
+                img.setShifts(-xshift, -yshift);
+
+                if (do_mirrors)
+                    img.setFlip(mirror);
+                img.setScale(scale);
+
+                // Apply in-plane transformation
+                img.getTransformationMatrix(A);
+                if (!A.isIdentity())
+                    selfApplyGeometry(BSPLINE3, img(), A, IS_INV, DONT_WRAP);
+
+                if (isplit == 0)
+                {
+                    if (pcaAnalyzerSplit1.v.size() > 6 )
+                    {
+                        double score = pcaAnalyzerSplit1.getZscore(index1);
+                        if (score < 5)
+                        {
+                            avg1() += img()*(5-score)*max_cc;
+                            w1 +=(5-score)*max_cc;
+                            index1++;
+                            _DF.setValue(MDL_WEIGHT,(5-score)*max_cc, __iter.objId);
+                        }
+                        else
+                        {
+                            index1++;
+                            _DF.setValue(MDL_WEIGHT,0, __iter.objId);
+                        }
+                    }
+                    else
+                    {
+                        _DF.setValue(MDL_WEIGHT,max_cc, __iter.objId);
+                        w1 += max_cc;
+                        avg1() += img()*(w1);
+                        index++;
+                    }
+
+                }
+                else
+                {
+                    if (pcaAnalyzerSplit2.v.size() > 6 )
+                    {
+                        double score = pcaAnalyzerSplit2.getZscore(index2);
+                        if (score < 5)
+                        {
+                            avg2() += img()*(5-score)*max_cc;
+                            w2 +=(5-score)*max_cc;
+                            index2++;
+                            _DF.setValue(MDL_WEIGHT,(5-score)*max_cc, __iter.objId);
+                        }
+                        else
+                        {
+                            index2++;
+                            _DF.setValue(MDL_WEIGHT,0, __iter.objId);
+                        }
+                    }
+                    else
+                    {
+                        _DF.setValue(MDL_WEIGHT,max_cc, __iter.objId);
+                        w2 += max_cc;
+                        avg2() += img()*(w2);
+                        index++;
+                    }
+                }
+                index++;
+            }
         }
     }
 
@@ -575,13 +780,62 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     SFclass.unionAll(SFclass2);
 
     avg() = avg1() + avg2();
-    w = w1 + w2;
+    w = w1+w2;
+
+    double t1;
+    double t2;
+    double t;
+    if (noRef!=1)
+    {
+        img_ref().setXmippOrigin();
+        if (w1 != 0)
+        {
+            t1 = correlationIndex(img_ref(),avg1()/w1);
+            avg1()*=(t1/w1);
+            w1 = t1;
+        }
+        else
+        {
+            t1 = 0.;
+            w1 = 0.;
+            avg1().initZeros();
+        }
+
+        if (w2 != 0)
+        {
+            t2 = correlationIndex(img_ref(),avg2()/w2);
+            avg2()*=(t2/w2);
+            w2 = t2;
+        }
+        else
+        {
+            t2 = 0.;
+            w2 = 0.;
+            avg2().initZeros();
+
+        }
+
+        if (w != 0)
+        {
+            t = correlationIndex(img_ref(),avg()/w);
+            avg()*=(t/w);
+            w=t;
+        }
+        else
+        {
+            t = 0.;
+            w = 0.;
+            avg().initZeros();
+        }
+    }
+
     avg.setWeight(w);
     avg1.setWeight(w1);
     avg2.setWeight(w2);
 
+    DFscore.unionAll(_DF);
     mpi_writeController(order_number, avg, avg1, avg2, SFclass, SFclass1, SFclass2,
-                        SFclassDiscarded, w1, w2, lockIndex);
+                        SFclassDiscarded,_DF, w1, w2, w, lockIndex);
 
 }
 
@@ -635,14 +889,16 @@ void MpiProgAngularClassAverage::mpi_writeController(
     MetaData SFclass1,
     MetaData SFclass2,
     MetaData SFclassDiscarded,
+    MetaData _DF,
     double w1,
     double w2,
+    double w,
     int lockIndex)
 {
+
     double weight_old, weights1_old, weights2_old;
     double lockWeightIndexes[lockWeightIndexesSize];
     int ref3dIndex;
-
     bool whileLoop = true;
     while (whileLoop)
     {
@@ -665,15 +921,18 @@ void MpiProgAngularClassAverage::mpi_writeController(
                      MPI_COMM_WORLD, &status);
 
             lockIndex = ROUND(lockWeightIndexes[index_lockIndex]);
+
 #ifdef DEBUG_MPI
 
             std::cerr << "[" << node->rank << "] TAG_YES_YOU_MAY_WRITE.lockIndex: " << lockIndex <<std::endl;
+            std::cerr <<  "lockWeightIndexes[index_weight]" << lockWeightIndexes[index_weight]<<std::endl;
 #endif
 
-            weight_old = lockWeightIndexes[index_weight];
+            weight_old   = lockWeightIndexes[index_weight];
             weights1_old = lockWeightIndexes[index_weights1];
             weights2_old = lockWeightIndexes[index_weights2];
             ref3dIndex = ROUND(lockWeightIndexes[index_ref3d]);
+
             mpi_write(dirno, ref3dIndex, avg, avg1, avg2, SFclass, SFclass1, SFclass2,
                       SFclassDiscarded, w1, w2, weight_old, weights1_old, weights2_old);
             whileLoop=false;
@@ -688,7 +947,8 @@ void MpiProgAngularClassAverage::mpi_writeController(
 #endif
 
     lockWeightIndexes[index_lockIndex] = lockIndex;
-    lockWeightIndexes[index_weight]= w1 + w2;
+    //lockWeightIndexes[index_weight]= w1 + w2;
+    lockWeightIndexes[index_weight]=    w;
     lockWeightIndexes[index_weights1] = w1;
     lockWeightIndexes[index_weights2] = w2;
     lockWeightIndexes[index_ref3d] = ref3dIndex;
@@ -710,8 +970,6 @@ void MpiProgAngularClassAverage::mpi_writeFile(
 
     if (w > 0.)
     {
-        if (w != 1.)
-            avg() /= w;
         if (fileNameStk.exists())
         {
 
@@ -722,16 +980,25 @@ void MpiProgAngularClassAverage::mpi_writeFile(
             old.read(fn_tmp);
 
             //w_old = old.weight();
+            //std::cerr << "DEBUG_JM: SECOND Imagew dirno old  new master branch: " <<  fn_tmp << " " << dirno << " "
+            //                                      <<  w_old << " "
+            //                                      << w << " "
+            //                                      << std::endl;
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(old())
             {
-                dAij(old(),i,j) = (w_old * dAij(old(),i,j) + w
-                                   * dAij(avg(),i,j)) / (w_old + w);
+                dAij(old(),i,j) = (w_old * dAij(old(),i,j) + dAij(avg(),i,j)) / (w_old + w);
             }
             old.setWeight(w_old + w);
             old.write(fileNameStk, dirno, true, WRITE_REPLACE);
         }
         else
         {
+            //std::cerr << "DEBUG_JM: FIRST Imagew dirno old  new master branch: " <<  fn_tmp << " " << dirno << " "
+            //                                      <<  w_old << " "
+            //                                      << w << " "
+            //                                      << std::endl;
+            if (w != 1.)
+                avg() /= w;
             avg.write(fileNameStk, dirno, true, WRITE_REPLACE);
         }
     }
@@ -840,7 +1107,6 @@ void MpiProgAngularClassAverage::filterInputMetadata()
 {
     MetaData auxDF,auxF1;
 
-
     //auxDF.read((String)"ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]$@" + inFile);
     //std::cerr << "DEBUG_JM: inFile: " << inFile << std::endl;
     auxDF.read(inFile);
@@ -848,12 +1114,20 @@ void MpiProgAngularClassAverage::filterInputMetadata()
         auxDF.fillConstant(MDL_REF3D, "1");
     if (!auxDF.containsLabel(MDL_DEFGROUP))
         auxDF.fillConstant(MDL_DEFGROUP, "1");
+    //    if (!auxDF.containsLabel(MDL_ORDER))
+    //    {
+    //
+    //        String cmd = formatString("%s=%s+%d", MDL::label2Str(MDL_ORDER).c_str(),
+    //                                  MDL::label2Str(MDL_REF).c_str(), FIRST_IMAGE);
+    //        auxDF.addLabel(MDL_ORDER);
+    //        auxDF.operate(cmd);
+    //    }
     if (!auxDF.containsLabel(MDL_ORDER))
+        auxDF.addLabel(MDL_ORDER);
     {
 
         String cmd = formatString("%s=%s+%d", MDL::label2Str(MDL_ORDER).c_str(),
                                   MDL::label2Str(MDL_REF).c_str(), FIRST_IMAGE);
-        auxDF.addLabel(MDL_ORDER);
         auxDF.operate(cmd);
     }
     //std::cerr << "DEBUG_JM: Read inFile" <<std::endl;
@@ -968,7 +1242,6 @@ void MpiProgAngularClassAverage::saveDiscardedImages()
     FileName fileNameXmd;
     std::stringstream comment;
 
-    //auxDF.read((String)"ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]$@" + inFile);
     auxDF.read(inFile);
 
     comment << "Discarded images";
@@ -1032,10 +1305,11 @@ void MpiProgAngularClassAverage::initDimentions()
 
 void MpiProgAngularClassAverage::initWeights()
 {
-    lockArray.initZeros(Ndim+1,ref3dNum+1);
-    weightArray.initZeros(Ndim+1,ref3dNum+1);
-    weightArrays1.initZeros(Ndim+1,ref3dNum+1);
-    weightArrays2.initZeros(Ndim+1,ref3dNum+1);
+    lockArray.initZeros(Ndim+1,ref3dNum+1);//this should be 3D or 2D is enought ROB
+    weightArray.initZeros(ctfNum+1,Ndim+1,ref3dNum+1);
+    weightArrays1.initZeros(ctfNum+1,Ndim+1,ref3dNum+1);
+    weightArrays2.initZeros(ctfNum+1,Ndim+1,ref3dNum+1);
+
 }
 
 void MpiProgAngularClassAverage::initOutputFiles()
@@ -1071,14 +1345,13 @@ void MpiProgAngularClassAverage::initOutputFiles()
 void MpiProgAngularClassAverage::mpi_postprocess()
 {
     // Write class selfile to disc (even if its empty)
-
     //std::cerr << "DEBUG_JM: mpi_postprocess: " << std::endl;
     FileName imageName, fileNameXmd, blockNameXmd;
     FileName imageNames1, fileNameXmds1, imageNames2, fileNameXmds2;
     MetaData auxMd,auxMd2,auxMd3;
     size_t order_number;
     int ref3d;
-    double weights1, weights2;
+    double weights1, weights2, weights;
 
     MDValueEQ eq1(MDL_REF3D, 0), eq2(MDL_ORDER, (size_t) 0);
     MDMultiQuery multi;
@@ -1090,6 +1363,7 @@ void MpiProgAngularClassAverage::mpi_postprocess()
 
     for (int i=1; i<=ref3dNum; i++)
     {
+
         auxMd.clear();
         auxMd2.clear();
 
@@ -1116,6 +1390,16 @@ void MpiProgAngularClassAverage::mpi_postprocess()
             auxMd2.getValue(MDL_ORDER, order_number,__iter.objId);
             formatStringFast(imageName, "%06lu@%s_Ref3D_%03lu.stk", order_number,  fn_out.c_str(), i);
             auxMd2.setValue(MDL_IMAGE, imageName,__iter.objId);
+            weights = 0.;
+            weights += dAkij(weightArray,0,order_number, i);
+            int enable;
+            if(weights == 0)
+                enable= -1;
+            else
+                enable=  1;
+            auxMd2.setValue(MDL_ENABLED,enable,__iter.objId);
+            auxMd2.setValue(MDL_WEIGHT, weights,__iter.objId);
+
         }
         auxMd2.write(fileNameXmd);
 
@@ -1158,7 +1442,16 @@ void MpiProgAngularClassAverage::mpi_postprocess()
                 auxMds1.getValue(MDL_ORDER, order_number,__iter.objId);
                 auxMds1.getValue(MDL_REF3D, ref3d,__iter.objId);
 
-                weights1 = dAij(weightArrays1,order_number, ref3d);
+                //weights1 = dAij(weightArrays1,order_number, ref3d);
+                weights1 = 0.;
+                weights2 = 0.;
+                //for (size_t var = 0; var < weightArrays1.zdim; ++var)
+                {
+                    weights1 += dAkij(weightArrays1,0,order_number, i);
+                    weights2 += dAkij(weightArrays2,0,order_number, i);
+                }
+
+
                 if(weights1 == 0)
                     auxMds1.setValue(MDL_ENABLED,-1,__iter.objId);
                 else
@@ -1168,7 +1461,7 @@ void MpiProgAngularClassAverage::mpi_postprocess()
                     auxMds1.setValue(MDL_IMAGE, imageName,__iter.objId);
                 }
 
-                weights2 = dAij(weightArrays2,order_number, ref3d);
+                //weights2 = dAij(weightArrays2,order_number, ref3d);
                 if(weights2 == 0)
                     auxMds2.setValue(MDL_ENABLED,-1,__iter2.objId);
                 else
@@ -1177,6 +1470,7 @@ void MpiProgAngularClassAverage::mpi_postprocess()
                     formatStringFast(imageName, "%06lu@%s_Ref3D_%03lu.stk", order_number,  fn_out2.c_str(), i);
                     auxMds2.setValue(MDL_IMAGE, imageName,__iter2.objId);
                 }
+
 
             }
             auxMds1.removeDisabled();
@@ -1195,6 +1489,8 @@ void MpiProgAngularClassAverage::createJobList()
         };
     std::vector<MDLabel> groupbyLabels(myGroupByLabels,myGroupByLabels+6);
     mdJobList.aggregateGroupBy(DF, AGGR_COUNT, groupbyLabels, MDL_ORDER, MDL_COUNT);
+    DF.write("kk_DF.xmd");
+    mdJobList.write("kk_mdJobList.xmd");
     numberOfJobs = mdJobList.size();
 }
 
@@ -1363,17 +1659,6 @@ void MpiProgAngularClassAverage::reAlignClass(Image<double> &avg1,
     }
 }
 
-void MpiProgAngularClassAverage::pcaAnalysis(PCAMahalanobisAnalyzer &pcaAnalyzer,
-        Image<double> &pca1,Image<double> &pca2, MetaData &SFclass1, MetaData &SFclass2,
-        std::vector<Image<double> > imgs, std::vector<int> splits,
-        std::vector<int> numbers, size_t dirno, double * my_output)
-{
-
-    pcaAnalyzer.clear();
-
-
-
-}
 
 void MpiProgAngularClassAverage::applyWienerFilter(MultidimArray<double> &img)
 {
