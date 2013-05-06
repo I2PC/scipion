@@ -42,6 +42,7 @@ def getConfigPath(filename):
     """Return a configuration filename from settings folder"""
     return join(SETTINGS, filename)
 
+
 class ProjectConfig(OrderedObject):
     """A simple base class to store ordered parameters"""
     def __init__(self, menu=None, protocols=None, **args):
@@ -50,6 +51,7 @@ class ProjectConfig(OrderedObject):
         self.protocols = String(protocols)
         self.icon = String('scipion_bn.xbm')
         self.logo = String('scipion_logo.gif')
+
 
 class MenuConfig(OrderedObject):
     """Menu configuration in a tree fashion.
@@ -111,17 +113,62 @@ class MenuConfig(OrderedObject):
         return self._getStr(' ')
     
     
-    
-
 class ProtocolConfig(MenuConfig):
     """Store protocols configuration """
     pass
     
-class ConfigXmlMapper(XmlMapper):
-    """Sub-class of XmlMapper to store configurations"""
+    
+class ExecutionHostConfig(OrderedObject):
+    """ Configuration information for execution hosts. """
+    def __init__(self, **args):
+        OrderedObject.__init__(self, **args)
+        self.label = String()
+        self.hostname = String()
+        self.mpiCommand = String()
+        self.queueSystem = QueueSystemConfig()
+        
+class QueueSystemConfig(OrderedObject):
+    def __init__(self, **args):
+        OrderedObject.__init__(self, **args) 
+        self.name = String()
+        self.mandatory = Boolean()
+        self.queues = List() # List for queue configurations
+        self.submitCommand = String()
+        self.submitTemplate = String()
+        self.checkCommand = String()
+        self.cancelCommand = String()
+        
+    def hasValue(self):
+        return self.name.hasValue() and len(self.queues)
+        
+        
+class QueueConfig(OrderedObject):
+    def __init__(self, **args):
+        OrderedObject.__init__(self, **args) 
+        self.name = String('default')
+        self.maxCores = Integer()
+        self.allowMPI = Boolean()
+        self.allowThreads = Boolean()
+        self.maxHours = Integer()
+        
+        
+class ExecutionHostMapper(XmlMapper):
     def __init__(self, filename, dictClasses=None, **args):
-#        if not exists(filename):
-#            raise Exception('Config file: %s does not exists' % filename)
+        if dictClasses is None:
+            dictClasses = globals()
+        XmlMapper.__init__(self, filename, dictClasses, **args)
+        #self.setClassTag('ExecutionHostConfig.QueueSystemConfig', 'class_name')
+        self.setClassTag('ExecutionHostConfig.String', 'attribute')
+        self.setClassTag('ExecutionHostConfig.mpiCommand', 'name_only')
+        self.setClassTag('QueueSystemConfig.name', 'attribute')
+        self.setClassTag('QueueSystemConfig.mandatory', 'attribute')  
+        self.setClassTag('QueueConfig.ALL', 'attribute')   
+        self.setClassTag('List.QueueConfig', 'class_only')           
+        #self.setClassTag('ProtocolConfig.ProtocolConfig', 'class_only')
+    
+class ConfigMapper(XmlMapper):
+    """Sub-class of XmlMapper to store configurations"""
+    def __init__(self, filename, dictClasses, **args):
         XmlMapper.__init__(self, filename, dictClasses, **args)
         self.setClassTag('MenuConfig.MenuConfig', 'class_only')
         self.setClassTag('MenuConfig.String', 'attribute')
@@ -131,15 +178,18 @@ class ConfigXmlMapper(XmlMapper):
     def getConfig(self):
         return self.selectAll()[0]
 
-def writeConfig(config, fn):
+
+def writeConfig(config, fn, mapperClass=ConfigMapper):
     fn = getConfigPath(fn)
+    print "config file: ", fn
     if exists(fn):
         os.remove(fn)
-    mapper = ConfigXmlMapper(fn, globals())
+    mapper = mapperClass(fn, globals())
     mapper.insert(config)
     mapper.commit()
     
-def writeDefaults():
+    
+def writeMenus():
     """Write default configuration files"""
     # Write menu configuration
     menu = MenuConfig()
@@ -162,7 +212,8 @@ def writeDefaults():
     m1.addSubMenu('PP', icon='folderopen.gif')
     writeConfig(menu, 'menu_test.xml')
     
-    # Write protocols configuration
+def writeProtocols():
+    """ Write protocols configuration. """
     menu = ProtocolConfig()
     m1 = menu.addSubMenu('Micrographs', tag='section')
     
@@ -186,18 +237,91 @@ def writeDefaults():
     
     m1.addSubMenu('Align', value='ProtAlign',
                   tag = 'protocol_base')
-    m1.addSubMenu('Classify', value='ProtClassify')
+    m1.addSubMenu('Classify', value='ProtClassify',
+                  tag = 'protocol_base')
     m1.addSubMenu('Align+Classify', value='ProtAlignClassify')
 
-    
     writeConfig(menu, 'protocols_default.xml')
     
+    
+def writeHosts():
+    host = ExecutionHostConfig()
+    host.label.set('localhost')
+    host.hostname.set('localhost')
+    host.mpiCommand.set('mpirun -np %(nodes)d -bynode %(command)s')
+    
+    queueSys = host.queueSystem
+    #queueSys = QueueSystemConfig()
+    queueSys.name.set('PBS/TORQUE')
+    queueSys.mandatory.set(False)
+    queueSys.submitCommand.set('qsub %(script)s')
+    queueSys.submitTemplate.set("""
+#!/bin/bash
+### Inherit all current environment variables
+#PBS -V
+### Job name
+#PBS -N %(jobName)s
+### Queue name
+###PBS -q %(queueName)s
+### Standard output and standard error messages
+#PBS -k eo
+### Specify the number of nodes and thread (ppn) for your job.
+#PBS -l nodes=%(nodes)d:ppn=%(threads)d
+### Tell PBS the anticipated run-time for your job, where walltime=HH:MM:SS
+#PBS -l walltime=%(hours)d:00:00
+# Use as working dir the path where qsub was launched
+WORKDIR=$PBS_O_WORKDIR
+#################################
+### Set environment varible to know running mode is non interactive
+export XMIPP_IN_QUEUE=1
+### Switch to the working directory;
+cd $WORKDIR
+# Make a copy of PBS_NODEFILE 
+cp $PBS_NODEFILE %(nodesfileBackup)s
+# Calculate the number of processors allocated to this run.
+NPROCS=`wc -l < $PBS_NODEFILE`
+# Calculate the number of nodes allocated.
+NNODES=`uniq $PBS_NODEFILE | wc -l`
+### Display the job context
+echo Running on host `hostname`
+echo Time is `date`
+echo Working directory is `pwd`
+echo Using ${NPROCS} processors across ${NNODES} nodes
+echo PBS_NODEFILE:
+cat $PBS_NODEFILE
+#################################
+
+%(command)s
+""")
+    queueSys.cancelCommand.set('canceljob %(jobid)d')
+    queueSys.checkCommand.set('qstat %(jobid)d')
+    
+    queue = QueueConfig()
+    queue.maxCores.set(4)
+    queue.allowMPI.set(True)
+    queue.allowThreads.set(True)
+    
+    queueSys.queues.append(queue)
+    
+    
+    writeConfig(host, 'execution_hosts.xml', mapperClass=ExecutionHostMapper)
+    
+def writeDefaults():
+    writeMenus()
+    writeProtocols()
+    writeHosts() 
     # Write global configuration
     config = ProjectConfig(menu='menu_default.xml',
                            protocols='protocols_default.xml')
     writeConfig(config, 'configuration.xml')
     
+    
+    
 if __name__ == '__main__':
-    writeDefaults()
     #Write default configurations
+    writeDefaults()
+    fn = getConfigPath('execution_hosts.xml')
+    mapper = ExecutionHostMapper(fn, globals())
+    l = mapper.selectAll()[0]
+    print l.queueSystem.submitTemplate.get()
     

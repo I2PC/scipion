@@ -150,7 +150,7 @@ class XmlMapper(Mapper):
         # Set attributes first
         if not obj.isPointer():
             for k, v in objElem.attrib.iteritems():
-                if k not in ['id', 'classname', 'name']:
+                if k not in ['id', 'classname', 'attrname']:
                     childObj = self.setChildObject(obj, k)
                     childObj.set(v)
         # Set tree childs attributes
@@ -158,8 +158,8 @@ class XmlMapper(Mapper):
             if 'classname' in child.attrib:
                 childName = child.tag
                 childClass = child.attrib['classname']
-            elif 'name' in child.attrib:
-                childName = child.attrib['name']
+            elif 'attrname' in child.attrib:
+                childName = child.attrib['attrname']
                 childClass = child.tag
             else:
                 tagKey = '%s.%s' % (obj.getClassName(), child.tag)
@@ -224,6 +224,8 @@ class XmlMapper(Mapper):
                 objClass = obj.getClassName()
                 allKey = '%s.ALL' % objClass # First try with .ALL
                 tag = self.classTags.get(allKey, '')
+                allKey = 'ALL.%s' % attrClass 
+                tag = self.classTags.get(allKey, tag)
                 allKey = 'ALL.%s' % key # also with ALL.attribute
                 tag = self.classTags.get(allKey, tag)
                 classKey = '%s.%s' % (objClass, attrClass) # Second, with .childClass
@@ -248,7 +250,7 @@ class XmlMapper(Mapper):
                         if tag.endswith('class'):
                             childElem.set('classname', attrClass)
                         elif tag.endswith('name'):
-                            childElem.set('name', key)
+                            childElem.set('attrname', key)
                         
                         
                         self.insertObjectWithChilds(attr, childElem)

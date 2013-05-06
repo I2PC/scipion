@@ -29,104 +29,94 @@ for specific Xmipp3 EM data objects
 """
 
 from pyworkflow.em import *
+from xmipp3 import XmippMdRow, XmippSet
+
 from pyworkflow.utils.path import replaceBaseExt, exists
 import xmipp
     
-class _XmippMdRow():
-    """ Store label and value pairs corresponding to a Metadata row """
-    def __init__(self):
-        self._labelDict = {} # Dictionary containing labels and values
+      
     
-    def setValue(self, *args):
-        """args: this list should contains tuples with 
-        MetaData Label and the desired value"""
-        for label, value in args:
-            self._labelDict[label] = value
+class XmippImage(XmippMdRow, Image):
+    """Xmipp implementation for Image"""
+    def __init__(self, filename=None, label=xmipp.MDL_IMAGE, **args):
+        self._label = label
+        XmippMdRow.__init__(self)
+        Image.__init__(self, filename, **args)
+        
+    def setFileName(self, filename):
+        self.setValue(self._label, filename)
+        
+    def getFileName(self):
+        return self.getValue(self._label)
+        
+    @staticmethod
+    def convert(img):
+        """ Create a XmippImage from a general Image instance. """
+        if isinstance(img, XmippImage):
+            return img
+        imgXmipp = XmippImage(img.getFileName())
+        # TODO: copyInfo??
+        return imgXmipp
+        
+        
+class XmippSetOfImages(XmippSet, SetOfImages):
+    """Represents a set of Images for Xmipp"""
+    def __init__(self, filename=None, label=xmipp.MDL_IMAGE, **args):
+        self._label = label
+        SetOfImages.__init__(self, filename, **args)
+        XmippSet.__init__(self)
+       
+    def _getItemLabel(self):
+        return xmipp.MDL_IMAGE
+    
+    def _getItemClass(self):
+        return XmippImage
             
-    def iterItems(self):
-        return self._labelDict.iteritems()
-            
-            
-class XmippMicrograph(Micrograph, _XmippMdRow):
+    @staticmethod
+    def convert(setOfImgs, filename):
+        return XmippSet.convert(setOfImgs, XmippSetOfImages, filename)
+
+                
+class XmippMicrograph(XmippImage, Micrograph):
     """Xmipp implementation for Micrograph"""
     def __init__(self, filename=None, **args):
-        _XmippMdRow.__init__(self)
+        XmippImage.__init__(self, filename, label=xmipp.MDL_MICROGRAPH, **args)
         Micrograph.__init__(self, filename, **args)
-        self.setValue((xmipp.MDL_MICROGRAPH, filename))
             
-        
-class XmippSetOfMicrographs(SetOfMicrographs):
+    @staticmethod
+    def convert(mic):
+        """Convert from Micrograph to XmippMicrograph"""
+        if isinstance(mic, XmippMicrograph):
+            return mic
+        micXmipp = XmippMicrograph(mic.getFileName())
+        if mic.hasCTF():
+            ctf = mic.ctfModel
+            micXmipp.setValue(xmipp.MDL_CTF_DEFOCUSU, ctf.defocusU.get())
+            micXmipp.setValue(xmipp.MDL_CTF_DEFOCUSV, ctf.defocusV.get())
+            print "psd: ", mic.ctfModel.getPsdFile()
+            print type(mic.ctfModel.getPsdFile())
+            micXmipp.setValue(xmipp.MDL_IMAGE1, mic.ctfModel.getPsdFile())
+        # TODO: copyInfo??
+        # from mic to micXmipp??  
+        return micXmipp
+    
+    
+class XmippSetOfMicrographs(XmippSetOfImages, SetOfMicrographs):
     """Represents a set of Micrographs for Xmipp"""
     def __init__(self, filename=None, **args):
         SetOfMicrographs.__init__(self, filename, **args)
-        self._md = xmipp.MetaData()
+        XmippSetOfImages.__init__(self, filename, **args)
         
-    def append(self, micrograph):
-        """Add a micrograph to the set"""
-        objId = self._md.addObject()
-        # Convert to xmipp micrograph if necessary
-        from convert import convertMicrograph
-        micXmipp = convertMicrograph(micrograph)
-        for label, value in micXmipp.iterItems():
-            # TODO: Check how to handle correctly unicode type
-            # in Xmipp and Scipion
-            if type(value) is unicode:
-                value = str(value)
-#            print "setting label: %s with value: %s" % (label2Str(label), str(value))
-#            print " type(value): ", type(value)
-            self._md.setValue(label, value, objId)
+    def _getItemLabel(self):
+        return xmipp.MDL_MICROGRAPH
+    
+    def _getItemClass(self):
+        return XmippMicrograph
             
-    def sort(self):
-        """Sort the set according to MDL_MICROGRAPH"""
-        self._md.sort(xmipp.MDL_MICROGRAPH)
-        
-    def write(self):
-        self._md.write(self.getFileName())
-        
-    def __iter__(self):
-        """Iterate over the set of micrographs in the MetaData"""
-        md = xmipp.MetaData(self.getFileName())
-        
-        for objId in md:    
-            m = Micrograph(md.getValue(xmipp.MDL_MICROGRAPH, objId))
-            if self.hasCTF():
-                m.ctfModel = XmippCTFModel(md.getValue(xmipp.MDL_CTF_MODEL, objId)) 
-            yield m
+    @staticmethod
+    def convert(setOfMics, filename):
+        return XmippSet.convert(setOfMics, XmippSetOfMicrographs, filename)
 
-
-class XmippImage(Image, _XmippMdRow):
-    """Xmipp implementation for Image"""
-    def __init__(self, filename=None, **args):
-        _XmippMdRow.__init__(self)
-        Image.__init__(self, filename, **args)
-        self.setValue((xmipp.MDL_IMAGE, filename))
-        
-        
-class XmippSetOfImages(SetOfImages):
-    """Represents a set of Images for Xmipp"""
-    def __init__(self, filename=None, **args):
-        SetOfImages.__init__(self, filename, **args)
-        self._md = xmipp.MetaData()
-                
-    def __iter__(self):
-        """Iterate over the set of images in the MetaData"""
-        md = xmipp.MetaData(self.getFileName())
-        
-        for objId in md:    
-            m = Image(md.getValue(xmipp.MDL_IMAGE, objId))
-            if self.hasCTF():
-                m.ctfModel = XmippCTFModel(md.getValue(xmipp.MDL_CTF_MODEL, objId)) 
-            yield m
-            
-    def setMd(self, md):
-        self._md = md
-        
-    def sort(self):
-        """Sort the set according to MDL_IMAGE"""
-        self._md.sort(xmipp.MDL_IMAGE)
-        
-    def write(self):
-        self._md.write(self.getFileName())
                     
 class XmippCoordinate(Coordinate):
     """This class holds the (x,y) position and other information
@@ -139,7 +129,7 @@ class XmippCoordinate(Coordinate):
         if mode == Coordinate.POS_CENTER:
             return self.x, self.y
         elif mode == Coordinate.POS_TOPLEFT: 
-            return (self.x - self.boxSize / 2, self.y - self.boxSize / 2)
+            return (int(self.x) - self._boxSize / 2, int(self.y) - self._boxSize / 2)
         else:
             raise Exception("No coordinate mode registered for : " + str(mode)) 
     
@@ -247,55 +237,89 @@ class XmippSetOfCoordinates(SetOfCoordinates):
     """Implementation of SetOfCoordinates for Xmipp"""
     def __init__(self, filename=None, **args):
         # Use object value to store filename
+        # Here filename is the path where pos files can be found
         SetOfCoordinates.__init__(self, value=filename, **args)
         self.family = String()
         
     def getFileName(self):
-        return self.get()
+        return self.get()       
     
-    def iterMicrographs(self):
-        """Iterate over the micrographs set associated with this
-        set of coordinates
-        """
-        return self.getMicrographs()
+    def iterMicrographCoordinates(self, micrograph):
+        """ Iterates over the set of coordinates belonging to that micrograph. """
+        path = self.getFileName()
+        template = self.family.get() + '@%s'
         
-    
-    def iterCoordinates(self, micrograph=None):
+        pathPos = join(path, replaceBaseExt(micrograph.getFileName(), 'pos'))
+            
+        if exists(pathPos):
+            mdPos = xmipp.MetaData(template % pathPos)
+                            
+            for objId in mdPos:
+                x = mdPos.getValue(xmipp.MDL_XCOOR, objId)
+                y = mdPos.getValue(xmipp.MDL_YCOOR, objId)
+                coordinate = XmippCoordinate()
+                coordinate.setPosition(x, y)
+                coordinate.setMicrograph(micrograph)
+                coordinate.setBoxSize(self.boxSize.get())
+                yield coordinate
+                
+    def iterCoordinates(self):
         """Iterates over the whole set of coordinates.
         If the SetOfMicrographs has tilted pairs, the coordinates
         should have the information related to its paired coordinate."""
         
-        path = self.getFileName()
-        template = self.family.get() + '@%s'
+        for mic in self.getMicrographs():
+            self.iterMicrographCoordinates(mic)
+
+            
+class XmippImageClassAssignment(ImageClassAssignment, XmippMdRow):
+    """ Image-class assignments in Xmipp are stored in a MetaData row. """
+    def __init__(self, **args):
+        XmippMdRow.__init__(self, **args)
+        ImageClassAssignment.__init__(self, **args)
         
-        if micrograph is None:
-            for mic in self.getMicrographs():
-                pathPos = join(path, replaceBaseExt(mic.getFileName(), 'pos'))
-                
-                if exists(pathPos):
-                    mdPos = xmipp.MetaData(template % pathPos)
-                                
-                    for objId in mdPos:
-                        x = mdPos.getValue(xmipp.MDL_XCOOR, objId)
-                        y = mdPos.getValue(xmipp.MDL_YCOOR, objId)
-                        coordinate = XmippCoordinate()
-                        coordinate.setPosition(x, y)
-                        coordinate.setMicrograph(mic)
-                        
-                        yield coordinate
-        else:
-            pathPos = join(path, replaceBaseExt(micrograph.getFileName(), 'pos'))
-                
-            if exists(pathPos):
-                mdPos = xmipp.MetaData(template % pathPos)
-                                
-                for objId in mdPos:
-                    x = mdPos.getValue(xmipp.MDL_XCOOR, objId)
-                    y = mdPos.getValue(xmipp.MDL_YCOOR, objId)
-                    coordinate = XmippCoordinate()
-                    coordinate.setPosition(x, y)
-                    coordinate.setMicrograph(micrograph)
-                        
-                    yield coordinate
+    def setImage(self, image):
+        """ Set associated image. """
+        self.setValue(xmipp.MDL_IMAGE, image.getFileName())
         
+    def getImage(self):
+        """ Get associated image. """
+        return XmippImage(self.getValue(xmipp.MDL_IMAGE))
     
+    
+class XmippClass2D(Class2D):
+    """ Xmipp classes are stored in blocks of the MetaData. """
+    def __init__(self, classNumber, filename, representative=None, **args):
+        Class2D.__init__(self, **args)
+        self._number = classNumber
+        self._filename = filename
+        self._representative = representative
+        
+    def iterImageAssignemts(self):
+        md = xmipp.MetaData('class%06d_images@%s' % 
+                            (self._number, self._filename))
+        for objId in md:
+            imgCA = XmippImageClassAssignment()
+            imgCA.readFromMd(md, objId)
+            yield imgCA
+    
+    def getClassRepresentative(self):
+        return self._representative
+        
+        
+class XmippClassification2D(Classification2D):
+    """ Store results from a 2D classification. """
+    def __init__(self, filename=None, **args):
+        Classification2D.__init__(self, **args)
+        self.getFileName = self.get
+        self.setFileName = self.set
+        self.setFileName(filename)
+        
+    def iterClasses(self):
+        fn = self.getFileName()
+        md = xmipp.MetaData('classes@' + fn)
+        for objId in md:
+            ref = md.getValue(xmipp.MDL_REF, objId)
+            img = md.getValue(xmipp.MDL_IMAGE, objId)
+            yield XmippClass2D(ref, fn, img)
+  

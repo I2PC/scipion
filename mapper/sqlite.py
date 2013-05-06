@@ -37,9 +37,9 @@ class SqliteMapper(Mapper):
         self.db.commit()
         
     def __getObjectValue(self, obj):
-        if obj.isPointer():
+        if obj.isPointer() and obj.hasValue():
             return obj.get().strId() # For pointers store the id of referenced object
-        return obj.getValue()
+        return obj.getInternalValue()
         
     def __insert(self, obj, namePrefix=None):
         obj._objId = self.db.insertObject(obj._objName, obj.getClassName(), 

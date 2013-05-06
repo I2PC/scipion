@@ -49,13 +49,23 @@ class Microscope(EMObject):
         self.voltage = Float(300)
         self.sphericalAberration = Float(1.2)
         
+    def copyInfo(self, other):
+        self.magnification.set(other.magnification.get())
+        self.voltage.set(other.voltage.get())
+        self.sphericalAberration.set(other.sphericalAberration.get())
+        
+class ImageLocation():
+    """ Store image index and filename. """
+    def __init__(self, index, filename):
+        self.index = index
+        self.filename = filename
+
 
 class Image(EMObject):
     """Represents an EM Image object"""
     def __init__(self, filename=None, **args):
-        # Use the object value to store the filename
-        args['value'] = filename
         EMObject.__init__(self, **args)
+        self.setFileName(filename)
         self.samplingRate = Float()
         self.ctfModel = None
         
@@ -66,17 +76,34 @@ class Image(EMObject):
         pass
         
     def getSamplingRate(self):
-        pass
+        """ Return image sampling rate. (A/pix) """
+        return self.samplingRate.get()
+    
+    def setSamplingRate(self, sampling):
+        self.samplingRate.set(sampling)
     
     def getDim(self):
         """Return image dimensions as tuple: (Ydim, Xdim)"""
         pass
     
     def getFileName(self):
-        return self._objValue
+        """ Use the _objValue attribute to store filename. """
+        return self.get()
     
     def setFileName(self, newFileName):
-        self._objValue = newFileName
+        """ Use the _objValue attribute to store filename. """
+        self.set(newFileName)
+        
+    def getLocation(self):
+        """ This function return the image index and filename.
+        It will only differs from getFileName, when the image
+        is contained in a stack and the index make sense. 
+        """
+        return ImageLocation(None, self.getFileName()) # Return None as default index
+    
+    def setLocation(self, index, filename):
+        """ Set the image location, see getLocation. """
+        self.setFileName(filename) # Index is ignored at this point
         
     def hasCTF(self):
         return self.ctfModel is not None
@@ -101,21 +128,21 @@ class SetOfImages(EMObject):
     """ Represents a set of Images """
     def __init__(self, filename=None, **args):
         # Use the object value to store the filename
-        args['value'] = filename
         EMObject.__init__(self, **args)
-        self.samplingRate = Float()
-        self.scannedPixelSize = Float()
+        self.setFileName(filename)
+        self.samplingRate = Float()        
         self._ctf = Boolean(args.get('ctf', False))
+        self._tiltPairs = Boolean(args.get('tiltPairs', False))
         
     def getSize(self):
         """Return the number of images"""
         pass
     
     def getFileName(self):
-        return self._objValue
+        return self.get()
     
     def setFileName(self, newFileName):
-        self._objValue = newFileName
+        self.set(newFileName)
     
     def hasCTF(self):
         """Return True if the SetOfMicrographs has associated a CTF model"""
@@ -129,15 +156,16 @@ class SetOfImages(EMObject):
         """ Copy basic information (sampling rate, scannedPixelSize and ctf)
         from other set of images to current one"""
         self.samplingRate.set(other.samplingRate.get())
-        self.scannedPixelSize.set(other.scannedPixelSize.get())
         self._ctf.set(other._ctf.get())    
+        self._tiltPairs.set(other._tiltPairs.get())
+    
     
 class SetOfMicrographs(SetOfImages):
     """Represents a set of Micrographs"""
     def __init__(self, filename=None, **args):
         SetOfImages.__init__(self, filename, **args)
-        self._tiltPairs = Boolean(args.get('tiltPairs', False))
         self.microscope = Microscope()
+        self.scannedPixelSize = Float()
         self._micList = List(objName='Micrographs', objDoStore=False) # The micrograph list will be stored seperately
         self._pairList = List(objName='TiltPairs', objDoStore=False) 
         
@@ -199,12 +227,25 @@ class SetOfMicrographs(SetOfImages):
         """ Copy basic information (voltage, spherical aberration and sampling rate)
         from other set of micrographs to current one.
         """
-        self.microscope.voltage.set(other.microscope.voltage.get())
-        self.microscope.sphericalAberration.set(other.microscope.sphericalAberration.get())
-        self.samplingRate.set(other.samplingRate.get())
+        SetOfImages.copyInfo(self, other)
+        self.microscope.copyInfo(other.microscope)
         self.scannedPixelSize.set(other.scannedPixelSize.get())
-        self._tiltPairs.set(other._tiltPairs.get())
-        self._ctf.set(other._ctf.get())
+        
+    def setDownsample(self, downFactor):
+        """ Update the values of samplingRate and scannedPixelSize
+        after applying a downsampling factor of downFactor.
+        """
+        self.setSamplingRate(self.samplingRate.get() * downFactor)        
+        
+    def setSamplingRate(self, samplingRate):
+        """ Set the sampling rate and adjust the scannedPixelSize. """
+        self.samplingRate.set(samplingRate)
+        self.scannedPixelSize.set(1e-4 * samplingRate * self.microscope.magnification.get())
+                                  
+    def setScannedPixelSize(self, scannedPixelSize):
+        """ Set scannedPixelSize and update samplingRate. """
+        self.scannedPixelSize.set(scannedPixelSize)
+        self.samplingRate.set((1e+4 * scannedPixelSize) / self.microscope.magnification.get())
     
 
 class Coordinate(EMObject):
@@ -216,6 +257,7 @@ class Coordinate(EMObject):
     def __init__(self, **args):
         EMObject.__init__(self, **args)
         self._micrographPointer = Pointer()
+        self._boxSize = None
     
     def getPosition(self, mode=POS_CENTER):
         """ Return the position of the coordinate as a (x, y) tuple.
@@ -278,9 +320,12 @@ class SetOfCoordinates(EMObject):
         """ Iterate over the micrographs set associated with this
         set of coordinates.
         """
-        pass
+        return self.getMicrographs()
     
-    def iterCoordinates(self, micrograph=None):
+    def iterMicrographCoordinates(self, micrograph):
+        """ Iterates over the set of coordinates belonging to that micrograph. """
+    
+    def iterCoordinates(self):
         """ Itearate over the coordinates associated with a micrograph.
         If micrograph=None, the iteration is performed over the whole set of coordinates.
         If the SetOfMicrographs has tilted pairs, the coordinates
@@ -316,16 +361,15 @@ class CTFModel(EMObject):
         self.defocusV = Float()
         self.defocusAngle = Float()
         self.ampContrast = Float()
+        self.psdFile = String()
         
     def copyInfo(self, other):
-        self.ampContrast = other.ampContrast
-        self.defocusU = other.defocusU
-        self.defocusV = other.defocusV
-        self.defocusAngle = other.defocusAngle
-        self.samplingRate = other.samplingRate
-        self.voltage = other.voltage
-        self.sphericalAberration = other.sphericalAberration
-        
+        self.copyAttributes(other, 'ampContrast', 'defocusU', 'defocusV',
+                            'defocusAngle', 'samplingRate', 'voltage', 
+                            'sphericalAberration', 'psdFile')
+
+    def getPsdFile(self):
+        return self.psdFile.get()
     
 class ImageClassAssignment(EMObject):
     """ This class represents the relation of
@@ -356,6 +400,12 @@ class Class2D(EMObject):
     def iterImageAssignemts(self):
         """ Iterate over the assigments of images
         to this particular class.
+        """
+        pass
+    
+    def getClassRepresentative(self):
+        """ Usually the representative is an average of 
+        the images assigned to that class.
         """
         pass
         

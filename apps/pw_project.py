@@ -121,7 +121,7 @@ def loadConfig(config, name):
     fn = getConfigPath(c.get())
     if not os.path.exists(fn):
         raise Exception('loadMenuConfig: menu file "%s" not found' % fn )
-    mapper = ConfigXmlMapper(getConfigPath(fn), globals())
+    mapper = ConfigMapper(getConfigPath(fn), globals())
     menuConfig = mapper.getConfig()
     return menuConfig
 
@@ -172,10 +172,16 @@ class RunsTreeProvider(TreeProvider):
         return actions 
     
     
-class EmTreeProvider(ObjectTreeProvider):
-    """Retrieve the elements from the database"""
-    def __init__(self, objList=None):
-        ObjectTreeProvider.__init__(self, objList)
+class ProtocolTreeProvider(ObjectTreeProvider):
+    """Create the tree elements for a Protocol run"""
+    def __init__(self, protocol):
+        self.protocol = protocol
+        # This list is create to group the protocol parameters
+        # in the tree display
+        self.status = List(objName='_status')
+        self.params = List(objName='_params')
+        self.statusList = ['status', 'initTime', 'endTime', 'error', 'isInteractive', 'mode']
+        ObjectTreeProvider.__init__(self, [protocol])
         self.viewer = XmippViewer()
         
     def show(self, obj):
@@ -194,9 +200,40 @@ class EmTreeProvider(ObjectTreeProvider):
             
         if issubclass(cls, SetOfMicrographs):
             return [('Open Micrographs with Xmipp', lambda: self.viewer.visualize(obj))]
-        
-        return []           
-
+        if issubclass(cls, SetOfImages):
+            return [('Open Images with Xmipp', lambda: self.viewer.visualize(obj))]
+        if issubclass(cls, XmippClassification2D):
+            return [('Open Classification2D with Xmipp', lambda: self.viewer.visualize(obj))]
+        return []  
+    
+    def getObjectInfo(self, obj):
+        info = ObjectTreeProvider.getObjectInfo(self, obj)
+        attrName = obj.getLastName()
+        if hasattr(self.protocol, attrName):
+            if isinstance(obj, Pointer) and obj.hasValue():
+                info['image'] = 'db_input.gif'
+            else:
+                if (self.protocol._definition.hasParam(attrName) or
+                    attrName in ['numberOfMpi', 'numberOfThreads']):
+                    info['parent'] = self.params
+                elif attrName in self.statusList:
+                    if info['parent'] is self.protocol:
+                        info['parent'] = self.status
+                    
+            if attrName.startswith('output'):# in self.protocol._outputs:
+                info['image'] = 'db_output.gif'
+        if obj is self.params or obj is self.status:
+            info['parent'] = self.protocol
+        return info     
+    
+    def _getChilds(self, obj):
+        childs = ObjectTreeProvider._getChilds(self, obj)
+        if obj is self.protocol:
+            childs.insert(0, self.status)
+            childs.insert(1, self.params)
+        return childs
+    
+    
 class ProjectWindow(gui.Window):
     def __init__(self, path, master=None):
         # Load global configuration
@@ -251,9 +288,10 @@ class ProjectWindow(gui.Window):
         #self.root.bind('<Button-1>', self._unpostMenu)
         
         #self.menuRun = tk.Menu(self.root, tearoff=0)
+        self.selectedProtocol = None
         
     def loadProjectConfig(self):
-        self.configMapper = ConfigXmlMapper(getConfigPath('configuration.xml'), globals())
+        self.configMapper = ConfigMapper(getConfigPath('configuration.xml'), globals())
         self.project = Project(self.projPath)
         self.project.load()
         self.generalCfg = self.configMapper.getConfig()
@@ -300,7 +338,7 @@ class ProjectWindow(gui.Window):
         w.show(center=True)
         
     def _browseRunData(self):
-        provider = EmTreeProvider([self.selectedProtocol])
+        provider = ProtocolTreeProvider(self.selectedProtocol)
         window = BrowserWindow("Protocol data", provider, self,
                                icon=self.icon)
         window.itemConfig(self.selectedProtocol, open=True)  
@@ -321,6 +359,8 @@ class ProjectWindow(gui.Window):
             self.runsTree.update()
         
     def _runActionClicked(self, event):
+        if self.selectedProtocol is None:
+            return
         prot = self.selectedProtocol
         if prot:
             if event == ACTION_DEFAULT:

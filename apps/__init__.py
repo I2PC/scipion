@@ -24,15 +24,6 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains Eman3.0 specific protocols
+Configuration sub-package
 """
-
-
-from pyworkflow.em import ProtPreprocessMicrographs   
-
-
-
-class EmanProtPreprocessMicrographs(ProtPreprocessMicrographs):
-    pass
-
 

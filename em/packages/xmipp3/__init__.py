@@ -35,3 +35,5 @@ from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from protocol_particle_pick import XmippProtParticlePicking 
 from protocol_extract_particles import XmippProtExtractParticles
+from protocol_ml2d import XmippProtML2D
+from protocol_cl2d import XmippProtCL2D

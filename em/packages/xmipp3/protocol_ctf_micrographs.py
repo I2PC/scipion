@@ -66,8 +66,8 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
                 'min_freq': self._params['lowRes'],
                 'max_freq': self._params['highRes'],
                 'pieceDim': self._params['windowSize'],
-                'defocus_range': (self._params['maxDefocus']-self._params['minDefocus'])*10000/2,
-                'defocusU': (self._params['maxDefocus']+self._params['minDefocus'])*10000/2
+                'defocus_range': (self._params['maxDefocus']-self._params['minDefocus'])/2,
+                'defocusU': (self._params['maxDefocus']+self._params['minDefocus'])/2
                 }
         
         for par, val in self.__params.iteritems():
@@ -103,7 +103,8 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
                 values = ['NA'] * len(labels)
     
             # Set values to the micrograph
-            mic.setValue(*zip(labels, values))
+            for l, v in zip(labels, values):
+                mic.setValue(l, v)
             micSet.append(mic)
             
         micSet.sort()

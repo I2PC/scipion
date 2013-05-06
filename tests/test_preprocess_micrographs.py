@@ -28,7 +28,7 @@ l = proj.mapper.selectByClass('SetOfMicrographs')
     
 
 if len(l):
-    print "Continue after import..."
+    print "Downsampling..."
     prot3 = XmippProtPreprocessMicrographs(doDownsample=True, downFactor=3, doCrop=False)
     prot3.inputMicrographs.set(prot2.outputMicrographs)
 

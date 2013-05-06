@@ -58,7 +58,7 @@ class Object(object):
         to anothor object"""
         return self._objIsPointer
     
-    def convert(self, value):
+    def _convertValue(self, value):
         """Convert a value to desired scalar type"""
         return value
     
@@ -66,14 +66,14 @@ class Object(object):
         """Set the internal value, if it is different from None
         call the convert function in subclasses"""
         if not value is None:
-            value = self.convert(value)            
+            value = self._convertValue(value)            
         self._objValue = value
     
     def get(self):
         """Return internal value"""
         return self._objValue
     
-    def getValue(self):
+    def getInternalValue(self):
         """Return the internal value for storage.
         This is a good place to do some update of the
         internal value before been stored"""
@@ -96,6 +96,14 @@ class Object(object):
     
     def getName(self):
         return self._objName
+    
+    def getLastName(self):
+        """ If the name contains parent path, remove it
+        and only return the attribute name in its parent. 
+        """
+        if '.' in self._objName:
+            return self._objName.split('.')[-1]
+        return self._objName 
     
     def setName(self, name):
         self._objName = name
@@ -141,6 +149,14 @@ class Object(object):
             print tab, '%s = %s' % (name, self._objValue)
         for k, v in self.getAttributesToStore():
             v.printAll(k, level + 1)
+            
+    def copyAttributes(self, other, *attrNames):
+        """ Copy attributes in attrNames from other to self. 
+        If the name X is in attrNames, it would be equivalent to:
+        self.X.set(other.X.get())
+        """
+        for name in attrNames:
+            getattr(self, name).set(getattr(other, name).get())
     
 
 class OrderedObject(Object):
@@ -226,32 +242,38 @@ class Scalar(Object):
     
 class Integer(Scalar):
     """Integer object"""
-    def convert(self, value):
+    def _convertValue(self, value):
         return int(value)
     
         
 class String(Scalar):
     """String object"""
-    def convert(self, value):
+    def _convertValue(self, value):
         return str(value)
     
         
 class Float(Scalar):
     """Float object"""
-    def convert(self, value):
+    def _convertValue(self, value):
         return float(value)
     
     
 class Boolean(Scalar):
     """Boolean object"""
-    def convert(self, value):
+    def _convertValue(self, value):
         t = type(value)
         if t is bool:
             return value
         if t is str or t is unicode:
             v = value.strip().lower()
             return v == 'true' or v == '1'
-        return bool(value)    
+        return bool(value) 
+    
+    def __nonzero__(self):
+        return self.get()
+    
+    def __bool__(self):
+        return self.get()  
     
     
 class Pointer(Scalar):
@@ -263,7 +285,7 @@ class Pointer(Scalar):
         """String representation of the scalar value"""
         return '-> %s (%s)' % (self.get().getClassName(), self.get().strId())
     
-    def convert(self, value):
+    def _convertValue(self, value):
         """Avoid storing _objValue and future objects
         obtained from .get()"""
         value.setStore(False)
@@ -312,12 +334,12 @@ class CsvList(Scalar, list):
         list.__init__(self)
         self._pType = pType
         
-    def convert(self, value):
+    def _convertValue(self, value):
         """Value should be a str with comman separated values"""
         for s in value.split(','):
             self.append(self._pType(s))
             
-    def getValue(self):
+    def getInternalValue(self):
         return ','.join(map(str, self))
     
     def get(self):

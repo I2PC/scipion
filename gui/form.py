@@ -216,8 +216,11 @@ class ParamWidget():
         else:
             #v = self.setVarValue(paramName)
             var = tk.StringVar()
-            entry = tk.Entry(content, width=25, textvariable=var)
-            entry.grid(row=0, column=0)
+            entryWidth = 25
+            if t is FloatParam or t is IntParam:
+                entryWidth = 10 # Reduce the entry width for numbers entries
+            entry = tk.Entry(content, width=entryWidth, textvariable=var)
+            entry.grid(row=0, column=0, sticky='w')
             
         self.var = var
         
@@ -303,7 +306,7 @@ class FormWindow(Window):
         self.expertVar = var
         
         btnFrame = tk.Frame(bottomFrame)
-        btnFrame.columnconfigure(0, weight=1)
+        btnFrame.columnconfigure(2, weight=1)
         btnFrame.grid(row=1, column=0, sticky='sew')
         # Save and close buttons
         def showMsg(msg):
@@ -311,13 +314,13 @@ class FormWindow(Window):
         
         btnClose = tk.Button(btnFrame, text="Close", image=self.getImage('dialog_close.png'), compound=tk.LEFT, font=font,
                           command=self.close)
-        btnClose.grid(row=0, column=0, padx=5, pady=5, sticky='se')
-        btnClose = tk.Button(btnFrame, text="Save", image=self.getImage('filesave.png'), compound=tk.LEFT, font=font, 
+        btnClose.grid(row=0, column=0, padx=5, pady=5, sticky='sw')
+        btnSave = tk.Button(btnFrame, text="Save", image=self.getImage('filesave.png'), compound=tk.LEFT, font=font, 
                           command=lambda : showMsg('Save'))
-        btnClose.grid(row=0, column=1, padx=5, pady=5, sticky='se')
+        btnSave.grid(row=0, column=1, padx=5, pady=5, sticky='sw')
         # Add create project button
         
-        btnExecute = Button(btnFrame, text='Execute', fg='white', bg='#7D0709', font=font, 
+        btnExecute = Button(btnFrame, text='   Execute   ', fg='white', bg='#7D0709', font=font, 
                         activeforeground='white', activebackground='#A60C0C', command=self.execute)
         btnExecute.grid(row=0, column=2, padx=(15, 50), pady=5, sticky='se')
         

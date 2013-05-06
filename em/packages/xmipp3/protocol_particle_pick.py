@@ -33,7 +33,8 @@ from pyworkflow.utils.path import *
 from pyworkflow.utils.process import runJob
 from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_ORIGINAL, MDL_MICROGRAPH_TILTED, MDL_MICROGRAPH_TILTED_ORIGINAL, MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE
 from pyworkflow.em.packages.xmipp3.data import *
-from convert import convertSetOfMicrographs
+from xmipp3 import XmippProtocol
+from data import XmippSetOfMicrographs
 
 
 class XmippDefParticlePicking(Form):
@@ -50,7 +51,7 @@ class XmippDefParticlePicking(Form):
                    label='Memory to use (In Gb)', expertLevel=2)        
 
 
-class XmippProtParticlePicking(ProtParticlePicking):
+class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
     """Protocol to pick particles manually of a set of micrographs in the project"""
     _definition = XmippDefParticlePicking()
     
@@ -69,7 +70,9 @@ class XmippProtParticlePicking(ProtParticlePicking):
                         }
         
         # Convert input SetOfMicrographs to Xmipp if needed
-        self._insertFunctionStep('convertToXmippSetOfMicrograph')
+        #self._insertFunctionStep('convertToXmippSetOfMicrograph')
+        self._insertConvertStep('inputMics', XmippSetOfMicrographs, 
+                                 self._getPath('micrographs.xmd'))
         # Launch Particle Picking GUI
         self._insertFunctionStep('launchParticlePickGUI', isInteractive=True)       
         # Insert step to create output objects       
@@ -77,7 +80,7 @@ class XmippProtParticlePicking(ProtParticlePicking):
         
     def convertToXmippSetOfMicrograph(self):
         """ We need to ensure the micrograph.xmd metadata is available
-        to Xmipp picking program before launching it
+        to Xmipp picking program before launching it.
         """
         # Convert from SetOfMicrographs to XmippSetOfMicrographs
         micFn = self._getPath('micrographs.xmd')
@@ -91,7 +94,7 @@ class XmippProtParticlePicking(ProtParticlePicking):
         # Get the converted input micrographs in Xmipp format
         # if not exists, means the input was already in Xmipp
         inputMicsXmipp = getattr(self, 'inputMicsXmipp', self.inputMics)
-        self._params['inputMicsXmipp'] = inputMicsXmipp.getFileName()
+        self._params['inputMicsXmipp'] = self.getConvertedInput('inputMics').getFileName()
         # Launch the particle picking GUI
         program = "xmipp_micrograph_particle_picking"
         arguments = "-i %(inputMicsXmipp)s -o %(extraDir)s --mode %(pickingMode)s --memory %(memory)dg"
