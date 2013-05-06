@@ -56,6 +56,7 @@ void ProgNmaAlignment::defineParams() {
 	defaultComments["-o"].addComment("Metadata with output Euler angles, shifts, and deformation amplitudes");
 	XmippMetadataProgram::defineParams();
 	addParamsLine("   --pdb <PDB_filename>                : Reference atomic or pseudo-atomic structure in PDB format");
+	addParamsLine("  [--odir <outputDir=\".\">]           : Output directory");
 	addParamsLine("  [--resume]                           : Resume processing");
 	addParamsLine("==Generation of the deformed reference volumes==");
 	addParamsLine("   --modes <filename>                  : File with a list of mode filenames");
@@ -80,6 +81,7 @@ void ProgNmaAlignment::defineParams() {
 void ProgNmaAlignment::readParams() {
 	XmippMetadataProgram::readParams();
 	fnPDB = getParam("--pdb");
+	fnOutDir = getParam("--odir");
 	fnModeList = getParam("--modes");
 	resume = checkParam("--resume");
 	trustradius_scale = abs(getDoubleParam("--trustradius_scale"));
@@ -102,7 +104,9 @@ void ProgNmaAlignment::readParams() {
 // Show ====================================================================
 void ProgNmaAlignment::show() {
 	XmippMetadataProgram::show();
-	std::cout << "PDB:                  " << fnPDB << std::endl
+	std::cout
+            << "Output directory:     " << fnOutDir << std::endl
+	        << "PDB:                  " << fnPDB << std::endl
 			<< "Resume:               " << resume << std::endl
 			<< "Mode list:            " << fnModeList << std::endl
 			<< "Trust-region scale:   " << trustradius_scale << std::endl
@@ -120,13 +124,13 @@ void ProgNmaAlignment::show() {
 }
 
 // Produce side information ================================================
-ProgNmaAlignment *global_NMA_prog;
+ProgNmaAlignment *global_nma_prog;
 
 void ProgNmaAlignment::createWorkFiles() {
 	MetaData *pmdIn = getInputMd();
 	MetaData mdTodo, mdDone;
 	mdTodo = *pmdIn;
-	FileName fn("nmaDone.xmd");
+	FileName fn(fnOutDir+"/nmaDone.xmd");
 	if (fn.exists() && resume) {
 		mdDone.read(fn);
 		mdTodo.subtraction(mdDone, MDL_IMAGE);
@@ -150,35 +154,16 @@ void ProgNmaAlignment::preProcess() {
 	MetaData SF(fnModeList);
 	numberOfModes = SF.size();
 	// Get the size of the images in the selfile
-	int ydim, zdim;
-	size_t ndim;
 	imgSize = xdimOut;
-	//getImageSize(mdIn, imgSize, ydim, zdim, ndim);
 	// Set the pointer of the program to this object
-	global_NMA_prog = this;
+	global_nma_prog = this;
 	//create some neededs files
 	createWorkFiles();
 }
 
 void ProgNmaAlignment::finishProcessing() {
 	XmippMetadataProgram::finishProcessing();
-	rename("nmaDone.xmd", fn_out.c_str());
-}
-
-void runSystem(const String &program, const String &arguments, bool useSystem =
-		true) {
-	if (useSystem) {
-		String cmd = formatString("%s %s", program.c_str(), arguments.c_str());
-#ifdef DEBUG
-		std::cerr << std::endl << ">>> RUNNING EXTERNALLY: " << cmd << std::endl;
-#endif
-		system(cmd.c_str());
-	} else {
-#ifdef DEBUG
-		std::cerr << std::endl << ">>> RUNNING INTERNALLY: " << program << std::endl;
-#endif
-		runProgram(program, arguments);
-	}
+	rename((fnOutDir+"/nmaDone.xmd").c_str(), fn_out.c_str());
 }
 
 // Create deformed PDB =====================================================
@@ -186,20 +171,20 @@ FileName ProgNmaAlignment::createDeformedPDB(int pyramidLevel) const {
 	String program;
 	String arguments;
 	FileName fnRandom;
-	fnRandom.initUniqueName(nameTemplate);
+	fnRandom.initUniqueName(nameTemplate,fnOutDir);
 	const char * randStr = fnRandom.c_str();
 
 	program = "xmipp_pdb_nma_deform";
 	arguments = formatString(
-			"--pdb %s -o deformedPDB_%s.pdb --nma %s --deformations ",
+			"--pdb %s -o %s_deformedPDB.pdb --nma %s --deformations ",
 			fnPDB.c_str(), randStr, fnModeList.c_str());
-	for (int i = 0; i < VEC_XSIZE(trial) - 5; ++i)
+	for (size_t i = 0; i < VEC_XSIZE(trial) - 5; ++i)
 		arguments += floatToString(trial(i)) + " ";
 	runSystem(program, arguments, false);
 
 	program = "xmipp_volume_from_pdb";
 	arguments = formatString(
-			"-i deformedPDB_%s.pdb --size %i --sampling %f -v 0", randStr,
+			"-i %s_deformedPDB.pdb --size %i --sampling %f -v 0", randStr,
 			imgSize, sampling_rate);
 
 	if (do_centerPDB)
@@ -216,16 +201,15 @@ FileName ProgNmaAlignment::createDeformedPDB(int pyramidLevel) const {
 
 	if (do_FilterPDBVol) {
 		program = "xmipp_transform_filter";
-		arguments =
-				formatString(
-						"-i deformedPDB_%s.vol --sampling %f --fourier low_pass %f raised_cosine 0.1 -v 0",
+		arguments = formatString(
+						"-i %s_deformedPDB.vol --sampling %f --fourier low_pass %f  -v 0",
 						randStr, sampling_rate, cutoff_LPfilter);
 		runSystem(program, arguments, false);
 	}
 
 	if (pyramidLevel != 0) {
 		Image<double> I;
-		FileName fnDeformed = formatString("deformedPDB_%s.vol", randStr);
+		FileName fnDeformed = formatString("%s_deformedPDB.vol",randStr);
 		I.read(fnDeformed);
 		selfPyramidReduce(BSPLINE3, I(), pyramidLevel);
 		I.write(fnDeformed);
@@ -242,7 +226,7 @@ void ProgNmaAlignment::performCompleteSearch(const FileName &fnRandom,
 	const char * randStr = fnRandom.c_str();
 
 	// Reduce the image
-	FileName fnDown = formatString("downimg_%s.xmp", fnRandom.c_str());
+	FileName fnDown = formatString("%s_downimg.xmp", fnRandom.c_str());
 	if (pyramidLevel != 0) {
 		Image<double> I;
 		I.read(currentImgName);
@@ -251,44 +235,71 @@ void ProgNmaAlignment::performCompleteSearch(const FileName &fnRandom,
 	} else
 		link(currentImgName.c_str(), fnDown.c_str());
 
-	mkdir(((std::string) "ref" + fnRandom).c_str(), S_IRWXU);
+	mkdir((fnRandom+"_ref").c_str(), S_IRWXU);
 
 	double angSampling=2*RAD2DEG(atan(1.0/((double) imgSize / pow(2.0, (double) pyramidLevel+1))));
 	angSampling=std::max(angSampling,discrAngStep);
 	program = "xmipp_angular_project_library";
 	arguments = formatString(
-			"-i deformedPDB_%s.vol -o ref%s/ref%s.stk --sampling_rate %f -v 0",
-			randStr, randStr, randStr, angSampling);
+			"-i %s_deformedPDB.vol -o %s_ref/ref.stk --sampling_rate %f -v 0",
+			randStr, randStr, angSampling);
 	if (projMatch)
 		arguments +=formatString(
-						" --compute_neighbors --angular_distance -1 --experimental_images downimg_%s.xmp",
-						randStr);
+						" --compute_neighbors --angular_distance -1 --experimental_images %s_downimg.xmp", randStr);
 
 	runSystem(program, arguments, false);
 
-	const char * refSelStr = formatString("ref%s/ref%s.doc", randStr, randStr).c_str();
-	const char * refStkStr = formatString("ref%s/ref%s.stk", randStr, randStr).c_str();
+	String refSelStr = formatString("%s_ref/ref.doc", randStr);
 
 	if (fnmask != "") {
 		program = "xmipp_transform_mask";
-		arguments = formatString("-i %s --mask binary_file %s", refSelStr,
+		arguments = formatString("-i %s --mask binary_file %s", refSelStr.c_str(),
 				fnmask.c_str());
 		runSystem(program, arguments, false);
 	}
 
 	// Perform alignment
+	String fnOut=formatString("%s_angledisc.xmd",randStr);
 	if (!projMatch) {
 		program = "xmipp_angular_discrete_assign";
 		arguments = formatString(
-						"-i downimg_%s.xmp --ref %s -o angledisc_%s.xmd --psi_step 5 --max_shift_change %d --search5D -v 0",
-						randStr, refSelStr, randStr, (int)round((double) imgSize / (10.0 * pow(2.0, (double) pyramidLevel))));
+						"-i %s_downimg.xmp --ref %s -o %s --psi_step 5 --max_shift_change %d --search5D -v 0",
+						randStr, refSelStr.c_str(), fnOut.c_str(), (int)round((double) imgSize / (10.0 * pow(2.0, (double) pyramidLevel))));
 	} else {
+		String refStkStr = formatString("%s_ref/ref.stk", randStr);
 		program = "xmipp_angular_projection_matching";
 		arguments =	formatString(
-				        "-i downimg_%s.xmp --ref %s -o angledisc_%s.xmd --search5d_step 1 --max_shift %d -v 0",
-						randStr, refStkStr, randStr, (int)round((double) imgSize / (10.0 * pow(2.0, (double) pyramidLevel))));
+				        "-i %s_downimg.xmp --ref %s -o %s --search5d_step 1 --max_shift %d -v 0",
+				        randStr, refStkStr.c_str(), fnOut.c_str(), (int)round((double) imgSize / (10.0 * pow(2.0, (double) pyramidLevel))));
 	}
 	runSystem(program, arguments, false);
+	if (projMatch)
+	{
+		MetaData MD;
+		MD.read(fnOut);
+		bool flip;
+		size_t id=MD.firstObject();
+		MD.getValue(MDL_FLIP,flip,id);
+		if (flip)
+		{
+			// This is because continuous assignment does not understand flips
+
+			double shiftX, rot, tilt, psi, newrot, newtilt, newpsi;
+			// Change sign in shiftX
+			MD.getValue(MDL_SHIFT_X,shiftX,id);
+			MD.setValue(MDL_SHIFT_X,-shiftX,id);
+
+			// Change Euler angles
+			MD.getValue(MDL_ANGLE_ROT,rot,id);
+			MD.getValue(MDL_ANGLE_TILT,tilt,id);
+			MD.getValue(MDL_ANGLE_PSI,psi,id);
+			Euler_mirrorY(rot,tilt,psi,newrot,newtilt,newpsi);
+			MD.setValue(MDL_ANGLE_ROT,newrot,id);
+			MD.setValue(MDL_ANGLE_TILT,newtilt,id);
+			MD.setValue(MDL_ANGLE_PSI,newpsi,id);
+			MD.write(fnOut);
+		}
+	}
 }
 
 // Continuous assignment ===================================================
@@ -296,47 +307,15 @@ double ProgNmaAlignment::performContinuousAssignment(const FileName &fnRandom,
 		int pyramidLevel) const {
 	// Perform alignment
 	const char * randStr = fnRandom.c_str();
-	String fnResults=formatString("anglecont_%s.xmd", randStr);
+	String fnResults=formatString("%s_anglecont.xmd", randStr);
 	bool costSource=true;
-	if (!projMatch) {
-		String program = "xmipp_angular_continuous_assign";
-		String arguments =
-				formatString(
-						"-i angledisc_%s.xmd --ref deformedPDB_%s.vol -o %s --gaussian_Fourier %f --gaussian_Real %f --zerofreq_weight %f -v 0",
-						randStr, randStr, fnResults.c_str(), gaussian_DFT_sigma,
-						gaussian_Real_sigma, weight_zero_freq);
-		runSystem(program, arguments, false);
-	}
-	else
-	{
-		costSource=false;
-		if (currentStage==1)
-		{
-			fnResults=formatString("angledisc_%s.xmd", randStr);
-		}
-		else
-		{
-			mkdir(((std::string) "ref" + fnRandom).c_str(), S_IRWXU);
-
-			String program = "xmipp_angular_project_library";
-			double angSampling=RAD2DEG(atan(1.0/((double) imgSize / pow(2.0, (double) pyramidLevel+1))));
-			angSampling=std::max(angSampling,discrAngStep);
-			String arguments = formatString(
-					"-i deformedPDB_%s.vol -o ref%s/ref%s.stk --sampling_rate %f -v 0",
-					randStr, randStr, randStr,angSampling);
-			arguments +=formatString(
-							" --compute_neighbors --angular_distance %f --experimental_images angledisc_%s.xmd",
-							2.5*angSampling,randStr);
-			runSystem(program, arguments, false);
-
-			const char * refStkStr = formatString("ref%s/ref%s.stk", randStr, randStr).c_str();
-			program = "xmipp_angular_projection_matching";
-			arguments =	formatString(
-							"-i downimg_%s.xmp --ref %s -o %s --search5d_step 1 --max_shift %d -v 0",
-							randStr, refStkStr, fnResults.c_str(), (int)round((double) imgSize / (10.0 * pow(2.0, (double) pyramidLevel))));
-			runSystem(program, arguments, false);
-		}
-	}
+	String program = "xmipp_angular_continuous_assign";
+	String arguments =
+			formatString(
+					"-i %s_angledisc.xmd --ref %s_deformedPDB.vol -o %s --gaussian_Fourier %f --gaussian_Real %f --zerofreq_weight %f -v 0",
+					randStr, randStr, fnResults.c_str(), gaussian_DFT_sigma,
+					gaussian_Real_sigma, weight_zero_freq);
+	runSystem(program, arguments, false);
 
 	// Pick up results
 	MetaData DF(fnResults);
@@ -367,37 +346,37 @@ void ProgNmaAlignment::updateBestFit(double fitness, int dim) {
 
 // Compute fitness =========================================================
 double ObjFunc_nma_alignment::eval(Vector X, int *nerror) {
-	int dim = global_NMA_prog->numberOfModes;
+	int dim = global_nma_prog->numberOfModes;
 
 	for (int i = 0; i < dim; i++) {
-		global_NMA_prog->trial(i) = X[i];
+		global_nma_prog->trial(i) = X[i];
 	}
 
 	int pyramidLevelDisc = 1;
-	int pyramidLevelCont = (global_NMA_prog->currentStage == 1) ? 1 : 0;
+	int pyramidLevelCont = (global_nma_prog->currentStage == 1) ? 1 : 0;
 
-	FileName fnRandom = global_NMA_prog->createDeformedPDB(pyramidLevelCont);
+	FileName fnRandom = global_nma_prog->createDeformedPDB(pyramidLevelCont);
 	const char * randStr = fnRandom.c_str();
 
-	if (global_NMA_prog->currentStage == 1) {
-		global_NMA_prog->performCompleteSearch(fnRandom, pyramidLevelDisc);
+	if (global_nma_prog->currentStage == 1) {
+		global_nma_prog->performCompleteSearch(fnRandom, pyramidLevelDisc);
 	} else {
 		double rot, tilt, psi, xshift, yshift;
 		MetaData DF;
 
-		rot = global_NMA_prog->bestStage1(
-				VEC_XSIZE(global_NMA_prog->bestStage1) - 5);
-		tilt = global_NMA_prog->bestStage1(
-				VEC_XSIZE(global_NMA_prog->bestStage1) - 4);
-		psi = global_NMA_prog->bestStage1(
-				VEC_XSIZE(global_NMA_prog->bestStage1) - 3);
-		xshift = global_NMA_prog->bestStage1(
-				VEC_XSIZE(global_NMA_prog->bestStage1) - 2);
-		yshift = global_NMA_prog->bestStage1(
-				VEC_XSIZE(global_NMA_prog->bestStage1) - 1);
+		rot = global_nma_prog->bestStage1(
+				VEC_XSIZE(global_nma_prog->bestStage1) - 5);
+		tilt = global_nma_prog->bestStage1(
+				VEC_XSIZE(global_nma_prog->bestStage1) - 4);
+		psi = global_nma_prog->bestStage1(
+				VEC_XSIZE(global_nma_prog->bestStage1) - 3);
+		xshift = global_nma_prog->bestStage1(
+				VEC_XSIZE(global_nma_prog->bestStage1) - 2);
+		yshift = global_nma_prog->bestStage1(
+				VEC_XSIZE(global_nma_prog->bestStage1) - 1);
 
 		size_t objId = DF.addObject();
-		FileName fnDown = formatString("downimg_%s.xmp", randStr);
+		FileName fnDown = formatString("%s_downimg.xmp", randStr);
 		DF.setValue(MDL_IMAGE, fnDown, objId);
 		DF.setValue(MDL_ENABLED, 1, objId);
 		DF.setValue(MDL_ANGLE_ROT, rot, objId);
@@ -406,16 +385,15 @@ double ObjFunc_nma_alignment::eval(Vector X, int *nerror) {
 		DF.setValue(MDL_SHIFT_X, xshift, objId);
 		DF.setValue(MDL_SHIFT_Y, yshift, objId);
 
-		DF.write(formatString("angledisc_%s.xmd", randStr));
-		link(global_NMA_prog->currentImgName.c_str(), fnDown.c_str());
+		DF.write(formatString("%s_angledisc.xmd", randStr));
+		link(global_nma_prog->currentImgName.c_str(), fnDown.c_str());
 	}
-	double fitness = global_NMA_prog->performContinuousAssignment(fnRandom,
+	double fitness = global_nma_prog->performContinuousAssignment(fnRandom,
 			pyramidLevelCont);
 
-	runSystem("rm", formatString("-rf *%s* &", randStr));
+	runSystem("rm", formatString("-rf %s* &", randStr));
 
-	global_NMA_prog->updateBestFit(fitness, dim);
-        std::cout << "Fitness " << fitness << std::endl;
+	global_nma_prog->updateBestFit(fitness, dim);
 	return fitness;
 }
 
@@ -438,7 +416,7 @@ void ProgNmaAlignment::processImage(const FileName &fnImg,
 
 	parameters.initZeros(dim + 5);
 	currentImgName = fnImg;
-	sprintf(nameTemplate, "_node%d_img%ld_XXXXXX", rangen, imageCounter);
+	sprintf(nameTemplate, "_node%d_img%lu_XXXXXX", rangen, (long unsigned int)imageCounter);
 
 	trial.initZeros(dim + 5);
 	trial_best.initZeros(dim + 5);
@@ -470,9 +448,6 @@ void ProgNmaAlignment::processImage(const FileName &fnImg,
 	fprintf(ff,"%s & %i & %i & (%i) & %e \\\\\n", of->name, of->dim(), of->getNFE(), of->getNFE2(), of->valueBest);
 	fclose(ff);
 #endif
-
-	double fitness = of->valueBest;
-	double *dd = of->xBest;
 
 	bestStage1 = trial = parameters = trial_best;
 
@@ -506,8 +481,6 @@ void ProgNmaAlignment::processImage(const FileName &fnImg,
 	fclose(ff);
 #endif
 
-	fitness = of->valueBest;
-	dd = of->xBest;
 #ifdef DEBUG
 	std::cout << "Best fitness = " << fitness << std::endl;
 	for (int i=0; i<dim; i++)
@@ -554,5 +527,5 @@ void ProgNmaAlignment::writeImageParameters(const FileName &fnImg) {
 	md.setValue(MDL_NMA, vectortemp, objId);
 	md.setValue(MDL_COST, parameters(5 + dim), objId);
 
-	md.append("nmaDone.xmd");
+	md.append(fnOutDir+"/nmaDone.xmd");
 }
