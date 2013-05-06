@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang='es'>
+<head>
+<title>Projects</title>
+<meta charset='utf-8'>
+<link rel="icon" type="image/png" href={{favicon}} />
+<link href={{css}} rel="stylesheet" type="text/css">
+</head>
+<body>
+	<div class="box">
+		<div class="left">
+			<img class="logo" src={{logo}} alt="logoScipion" /> <br /> <br />
+			<button class="button" type="button">Create Project</button>
+		</div>
+		<div class="right">
+			<fieldset class="projFieldset">
+				<legend>Current Projects</legend>
+				{% for project in projects %}
+				<ul>
+					<li class="projList"><strong><a href=""
+							class="projName">{{project.projName}}</a></strong><br /> Modified
+						{{project.pTime}} <a href="" class="projRemove">Delete project</a></li>
+				</ul>
+				{% endfor %}
+			</fieldset>
+		</div>
+	</div>
+</body>
+</html>

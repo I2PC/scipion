@@ -1,0 +1,85 @@
+/* CSS Document */
+html,body {
+	width: 60em;
+	height: 35em;
+	margin: 10px auto;
+	padding: 5px 0;
+	text-align: left;
+	background: white;
+}
+
+a {
+	text-decoration: none;
+	color: black;
+}
+
+.logo {
+	width: 14.5em;
+	height: 3.6em;
+	text-align: center;
+}
+
+.box {
+	border: 2px solid black;
+	width: 60em;
+	height: 35em;
+	background: white;
+}
+
+.left {
+	text-align: right;
+	width: 14em;
+	float: left;
+	background: white;
+}
+
+.protTree {
+	height: 30em;
+	width: 16.5em;
+	text-align: left;
+	/* 	background: Gainsboro; */
+	margin-left: 1em;
+}
+
+.protFieldsetTree {
+	height: 27.8em;
+	width: 17em;
+	/* 	background: Gainsboro; */
+	overflow: scroll;
+	margin: -0.5em -1em -1em -1em;
+	border: none;
+	
+}
+
+.right {
+	margin: 1em;
+	width: 38em;
+	float: right;
+	background: Gainsboro;
+	height: 32.8em;
+}
+
+.projFieldset {
+	height: 31.6em;
+}
+
+.projList {
+	list-style: none;
+}
+
+.projName {
+	font-size: 1.2em;
+	font-weight: bold;
+	color: black;
+	text-decoration: none;
+	margin-left: -0.5em;
+}
+
+.projRemove {
+	margin-left: 1em;
+	font-size: 0.9em;
+	font-weight: bold;
+	color: black;
+	text-decoration: none;
+	font-size: 0.9em;
+}
