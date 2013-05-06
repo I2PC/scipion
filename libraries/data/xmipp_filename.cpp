@@ -579,12 +579,7 @@ void FileName::copyFile(const FileName & target) const
 /* Check if a file exists -------------------------------------------------- */
 bool FileName::exists() const
 {
-    // Consider the filename can be an image inside a stack
-    size_t idx;
-    FileName basicName;
-    decompose(idx, basicName);
-
-    return fileExists(basicName.c_str());
+    return fileExists(getDecomposedFileName().removeFileFormat());
 }
 /* Delete  file exists -------------------------------------------------- */
 void FileName::deleteFile() const

@@ -1,5 +1,6 @@
 package xmipp.viewer.particlepicker.training.gui;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -29,6 +30,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -39,6 +41,7 @@ import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
+import xmipp.viewer.ctf.CTFAnalyzerJFrame;
 import xmipp.viewer.particlepicker.Family;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
@@ -84,6 +87,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	private JMenuItem templatesmi;
 	TemplatesJDialog templatesdialog;
 	private JCheckBox centerpickchb;
+	private JButton editfamiliesbt;
 
 	@Override
 	public TrainingPicker getParticlePicker()
@@ -131,13 +135,17 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			setLayout(new GridBagLayout());
 
 			initImagePane();
-			add(imagepn, XmippWindowUtil.getConstraints(constraints, 0, 1, 3));
+			add(imagepn, XmippWindowUtil.getConstraints(constraints, 0, 1));
 
 			initFamilyPane();
-			add(familypn, XmippWindowUtil.getConstraints(constraints, 0, 2, 3));
+			add(familypn, XmippWindowUtil.getConstraints(constraints, 0, 2));
 
 			initMicrographsPane();
-			add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 3, 3));
+			add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 3, 1, 1, GridBagConstraints.HORIZONTAL));
+			JPanel actionspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+			actionspn.add(savebt);
+			actionspn.add(saveandexitbt);
+			add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 4, 1, 1, GridBagConstraints.HORIZONTAL));
 
 			pack();
 			positionx = 0.9f;
@@ -279,6 +287,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 				templatesdialog.loadTemplates(true);
 				templatesdialog.setVisible(true);
+
 			}
 		}
 		catch (Exception e)
@@ -518,7 +527,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 				String psd = getMicrograph().getPSD();
 				String ctf = getMicrograph().getCTF();
 				if (psd != null && ctf != null)
-					ImagesWindowFactory.openCTFWindow(getMicrograph().getPSDImage(), getMicrograph().getCTF(), getMicrograph().getPSD());
+					//ImagesWindowFactory.openCTFWindow(getMicrograph().getPSDImage(), getMicrograph().getCTF(), getMicrograph().getPSD());
+					new CTFAnalyzerJFrame(getMicrograph().getPSDImage(), getMicrograph().getCTF(), getMicrograph().getPSD());
 
 			}
 		});
@@ -635,7 +645,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		sizetf.setEnabled(step == FamilyState.Manual);
 		editfamiliesmi.setEnabled(step == FamilyState.Manual);
 		manageAction();
-		thresholdpn.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
+		thresholdpn.setVisible(mfd.getState() == MicrographFamilyState.Correct);
 		pack();
 
 	}
@@ -711,6 +721,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	{
 		ppicker.setChanged(changed);
 		savemi.setEnabled(changed);
+		savebt.setEnabled(changed);
 	}
 
 	public void updateMicrographsModel(boolean all)
@@ -806,6 +817,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 				{
 					ppicker.runXmippProgram("xmipp_micrograph_automatic_picking", fargs);
 					ppicker.loadAutomaticParticles(getFamilyData());
+					
 					setState(MicrographFamilyState.Correct);
 					canvas.repaint();
 					canvas.setEnabled(true);
@@ -930,7 +942,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	public void updateTemplates(Family f)
 	{
-		f.setUpdateTemplatesPending(true);
 		if (f.equals(family) && templatesdialog != null)
 			templatesdialog.loadTemplates(true);
 
@@ -947,7 +958,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		{
 			super.updateSize(size);
 			ppicker.resetParticleImages();
-			family.setUpdateTemplatesPending(true);
 			ppicker.updateTemplates();
 			if (templatesdialog != null)
 				loadTemplates();

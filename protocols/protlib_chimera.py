@@ -43,9 +43,14 @@ class XmippChimeraClient:
     
     def __init__(self, volfile, angulardistfile=None, spheres_color='red', spheres_distance='default', spheres_maxradius='default'):
         
-        if volfile is None or not(exists(volfile)):
+        if volfile is None:
             raise ValueError(volfile)
-        
+        if '@' in volfile:
+            [index, file] = volfile.split('@'); 
+        else :
+            file = volfile
+        if not exists(file):
+            raise ValueError(file)
         if not angulardistfile is None:
             if not(exists(angulardistfile)):
                 raise ValueError(angulardistfile)
@@ -161,7 +166,8 @@ class XmippProjectionExplorer(XmippChimeraClient):
         printCmd('initListenThread')
         self.initListenThread()
         printCmd('creating iw')
-        self.iw = ImageWindow(image=self.projection, label="Projection")
+        
+        self.iw = ImageWindow(image=self.projection, dim=100, label="Projection")
         self.iw.root.protocol("WM_DELETE_WINDOW", self.exitClient)
         self.iw.root.mainloop()
                 

@@ -23,42 +23,34 @@
  *=================================================================*/
 
 /*xmipp includes */
-#include "ctf_correct_phase.h"
+#include "ctf_phase_flip.h"
 #include "tom_xmipp_helpers.h"
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 {
-    Matrix2D<double> I;
+    MultidimArray<double> I;
     getMatrix2D(prhs[0],I);
     
-    CorrectPhaseParams prm;
-    prm.epsilon = (double) mxGetScalar(prhs[2]);
-    prm.method = (int) mxGetScalar(prhs[1]);
-    
-    prm.ctf.FilterBand = CTF;
-    prm.ctf.ctf.enable_CTFnoise = false;
+    ProgCTFPhaseFlipping prm;
+    CTFDescription ctf;
 
-    prm.ctf.ctf.K = (double) mxGetScalar(prhs[3]);
-    prm.ctf.ctf.Tm = (double) mxGetScalar(prhs[4]);
-    prm.ctf.ctf.kV = (double) mxGetScalar(prhs[5]);
-    prm.ctf.ctf.DeltafU = (double) mxGetScalar(prhs[6]);
-    prm.ctf.ctf.DeltafV = (double) mxGetScalar(prhs[7]);
-    prm.ctf.ctf.azimuthal_angle = (double) mxGetScalar(prhs[8]);    
-    prm.ctf.ctf.Cs = (double) mxGetScalar(prhs[9]);
-    prm.ctf.ctf.Ca = (double) mxGetScalar(prhs[10]);
-    prm.ctf.ctf.espr = (double) mxGetScalar(prhs[11]);
-    prm.ctf.ctf.ispr = (double) mxGetScalar(prhs[12]);
-    prm.ctf.ctf.alpha = (double) mxGetScalar(prhs[13]);
-    prm.ctf.ctf.DeltaF = (double) mxGetScalar(prhs[14]);
-    prm.ctf.ctf.DeltaR = (double) mxGetScalar(prhs[15]);
-    prm.ctf.ctf.Q0 = (double) mxGetScalar(prhs[16]);
-    try 
-    {
-        Matrix2D< complex<double> > fft;
-        FourierTransform(I, fft);
-        prm.ctf.ctf.Produce_Side_Info();
-        prm.correct(fft);
-        InverseFourierTransform(fft, I);
+    ctf.K = (double) mxGetScalar(prhs[3]);
+    ctf.Tm = (double) mxGetScalar(prhs[4]);
+    ctf.kV = (double) mxGetScalar(prhs[5]);
+    ctf.DeltafU = (double) mxGetScalar(prhs[6]);
+    ctf.DeltafV = (double) mxGetScalar(prhs[7]);
+    ctf.azimuthal_angle = (double) mxGetScalar(prhs[8]);
+    ctf.Cs = (double) mxGetScalar(prhs[9]);
+    ctf.Ca = (double) mxGetScalar(prhs[10]);
+    ctf.espr = (double) mxGetScalar(prhs[11]);
+    ctf.ispr = (double) mxGetScalar(prhs[12]);
+    ctf.alpha = (double) mxGetScalar(prhs[13]);
+    ctf.DeltaF = (double) mxGetScalar(prhs[14]);
+    ctf.DeltaR = (double) mxGetScalar(prhs[15]);
+    ctf.Q0 = (double) mxGetScalar(prhs[16]);
+    
+    try {
+    	actualPhaseFlip(I,ctf);
     }
     catch (XmippError Xe)
     {

@@ -23,8 +23,7 @@
  *=================================================================*/
 
 /*xmipp includes */
-#include "image.h"
-#include "volume.h"
+#include "xmipp_image.h"
 #include "tom_xmipp_helpers.h"
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
@@ -34,43 +33,35 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     int levels = (int)mxGetScalar(prhs[2]);
     mwSize ndims = mxGetNumberOfDimensions(prhs[0]);
     
+    MultidimArray<double> result;
     if (ndims == 2)
     {
-        ImageXmipp img;
+        Image<double> img;
         getMatrix2D(prhs[0],img());
-
-        float Xoff, Yoff;
-        img.get_originOffsets(Xoff, Yoff);
-        float scale_factor = (float)(pow(2.0, levels));
-        
-        Matrix2D<double> result;
 
         if (operation == true)
         {
-            img().pyramidExpand(result, levels);
-            img.set_originOffsets(Xoff*scale_factor, Yoff*scale_factor);
+        	pyramidExpand(BSPLINE3,result,img(),levels);
         }
         else 
         {
-            img().pyramidReduce(result, levels);
-            img.set_originOffsets(Xoff / scale_factor, Yoff / scale_factor);
+        	pyramidReduce(BSPLINE3,result,img(),levels);
         }
 
         setMatrix2D(result,plhs[0]);
     }
     else 
     {
-        Volume vol;
+        Image<double> vol;
         getMatrix3D(prhs[0],vol());
-        Matrix3D<double> result; 
        
         if (operation == true)
         {
-            vol().pyramidExpand(result, levels);
+        	pyramidExpand(BSPLINE3,result,vol(),levels);
         }
         else
         {
-            vol().pyramidReduce(result, levels);
+        	pyramidReduce(BSPLINE3,result,vol(),levels);
         }
         
         setMatrix3D(result,plhs[0]);

@@ -1,8 +1,6 @@
 package xmipp.viewer.particlepicker;
 
 import ij.ImagePlus;
-import ij.ImageStack;
-
 import java.awt.Color;
 import java.lang.reflect.Field;
 
@@ -22,7 +20,7 @@ public class Family {
 	private int templatesNumber;
 	private ImageGeneric templates;
 	private String templatesfile;
-	protected boolean updateTemplatesPending;
+	private int index;
 
 	
 	private static Color[] colors = new Color[] { Color.BLUE, Color.CYAN,
@@ -54,17 +52,17 @@ public class Family {
 		this.color = color;
 		this.size = size;
 		this.state = state;
-		this.templatesfile = templates.getFilename();
-		if(templates == null)
-			setTemplatesNumber(1);
+		if(templates != null)
+			this.templatesfile = templates.getFilename();
 		else
+			setTemplatesNumber(1);
+		if(templates != null)
 			try
 			{
-				templates.printShape();
 				templatesNumber = ((int)templates.getNDim());
 				this.templates = templates;
 				for(int i = 0; i < templatesNumber; i ++)//to initialize templates on c part
-					getTemplatesImage(ImageGeneric.FIRST_IMAGE + i);
+					XmippImageConverter.readToImagePlus(templates, ImageGeneric.FIRST_IMAGE + i);
 			}
 			catch (Exception e)
 			{
@@ -103,14 +101,18 @@ public class Family {
 
 	public void initTemplates() {
 
-		if(templatesNumber == 0)
+		if(templatesNumber == 0 )
 			return;
 		try {
+			
 			this.templates = new ImageGeneric(ImageGeneric.Float);
 			templates.resize(size, size, 1, templatesNumber);
+			
 			templates.write(templatesfile);
 			templates.setFilename(templatesfile);
-
+			
+			
+			
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e.getMessage());
 		}
@@ -121,10 +123,12 @@ public class Family {
 		return templates;
 	}
 	
+	
+	
 	public ImagePlus getTemplatesImage(long i) {
 		try
 		{
-			ImagePlus imp = XmippImageConverter.readToImagePlus(templates, i);
+			ImagePlus imp = XmippImageConverter.convertToImagePlus(templates, i);
 			return imp;
 		}
 		catch (Exception e)
@@ -202,7 +206,6 @@ public class Family {
 
 		this.templatesNumber = num;
 		initTemplates();
-		setUpdateTemplatesPending(true);
 	}
 
 	public Color getColor() {
@@ -244,7 +247,7 @@ public class Family {
 	}
 
 	public void setTemplate(int index, ImageGeneric ig) {
-		
+		this.index = index;
 		float[] matrix;
 		try {
 			//TODO getArrayFloat and setArrayFloat must be call from C both in one function
@@ -260,17 +263,21 @@ public class Family {
 	{
 		return templatesfile;
 	}
+
+	public void saveTemplates()
+	{
+		try
+		{
+			if(index == templatesNumber)//already filled all initial templates 
+				templates.write(getTemplatesFile());
+		}
+		catch (Exception e)
+		{
+			throw new IllegalArgumentException(e);
+		}
+		
+	}
 	
-	public void setUpdateTemplatesPending(boolean b)
-	{
-		updateTemplatesPending = b;
-
-	}
-
-	public boolean getUpdateTemplatesPending()
-	{
-		return updateTemplatesPending;
-	}
 
 	
 

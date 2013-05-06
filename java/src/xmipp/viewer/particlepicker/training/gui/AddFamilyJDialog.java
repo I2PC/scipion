@@ -160,7 +160,7 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				int size = sizesl.getValue();
-				sizetf.setText(Integer.toString(size));
+				sizetf.setValue(size);
 			}
 		});
 	}

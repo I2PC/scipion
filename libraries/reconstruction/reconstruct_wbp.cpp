@@ -363,7 +363,8 @@ void ProgRecWbp::getAllMatrices(MetaData &SF)
 void ProgRecWbp::simpleBackprojection(Projection &img,
                                       MultidimArray<double> &vol, int diameter)
 {
-    size_t i, j, k, l, m;
+	//this should be int not size_t ROB
+    int i, j, k, l, m;
     Matrix2D<double> A(3, 3);
     double dim2, x, y, z, xp, yp;
     double value1, value2, scalex, scaley, value;
@@ -385,7 +386,9 @@ void ProgRecWbp::simpleBackprojection(Projection &img,
 
     double dim1 = dim - 1;
     const MultidimArray<double> mImg = img();
-    for (i = 0; i < dim; i++)
+    int idim;
+    idim = dim;//cast to int from size_t
+    for (i = 0; i < idim; i++)
     {
         z = -i + dim2; /*** Z points upwards ***/
         z2 = z * z;
@@ -393,7 +396,7 @@ void ProgRecWbp::simpleBackprojection(Projection &img,
             continue;
         double xpz = z * a20 + dim2;
         double ypz = z * a21 + dim2;
-        for (j = 0; j < dim; j++)
+        for (j = 0; j < idim; j++)
         {
             y = j - dim2;
             y2 = y * y;
@@ -408,7 +411,7 @@ void ProgRecWbp::simpleBackprojection(Projection &img,
             l = (int) yp;
             scaley = yp - l;
             double scale1y = 1. - scaley;
-            for (k = 0; k < dim; k++, xp += a00, yp += a01, x++)
+            for (k = 0; k < idim; k++, xp += a00, yp += a01, x++)
             {
                 x2 = x * x;
                 if (x2 + z2_plus_y2 > radius2)

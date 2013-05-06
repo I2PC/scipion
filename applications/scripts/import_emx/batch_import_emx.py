@@ -22,7 +22,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 """
-#!/usr/bin/env xmipp_python
 
 from os.path import basename, splitext
 from protlib_xmipp import XmippScript
@@ -46,9 +45,12 @@ class ScriptImportEMX(XmippScript):
         self.addParamsLine("             micCTF              : import micrograph ctf")
         self.addParamsLine("     alias -m;")
         self.addParamsLine(' [--notValidate]                 : do not validate xml against schema');
-        self.addParamsLine('                                 : validation requires net connection');
+        self.addParamsLine('                                 : validation may require net connection');
         self.addParamsLine('                                 : and program xmllint installed');
         self.addParamsLine('     alias -n;');
+        self.addParamsLine(' [--schema <schema=default>]                      : validate again this schema ');
+        self.addParamsLine("     alias -s;")
+        self.addExampleLine(' default= http://sourceforge.net/p/emexchange/code/ci/master/tree/trunk/resourcesEmx/schemas/emx.xsd?format=raw>');
         self.addExampleLine("Import information from EMX file to Xmipp", False);
         self.addExampleLine("xmipp_import_emx -i particlePicking.emx -m micCTF ");
       
@@ -63,12 +65,16 @@ class ScriptImportEMX(XmippScript):
         emxFileName  = self.getParam('-i')
         mode         = self.getParam('-m')
         doValidate   = self.checkParam('-n')
+        schema       = self.getParam('-s')
         #validate emx file
         if not doValidate:
             try:
+                if schema == 'default':
                     (code, _out,_err)=validateSchema(emxFileName)
-                    if code !=0:
-                       raise Exception (_err) 
+                else:
+                    (code, _out,_err)=validateSchema(emxFileName,schema)
+                if code !=0:
+                   raise Exception (_err) 
             except Exception, e:
                 print "Error: ", str(e)
                 exit(1)
