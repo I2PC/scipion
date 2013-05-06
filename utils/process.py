@@ -30,19 +30,11 @@ This module handles process execution
 import sys
 
 # The job should be launched from the working directory!
-def runJob(log, 
-           programname,
-           params,           
-           numberOfMpi = 1,
-           numberOfThreads = 1,
-           RunInBackground=False):
+def runJob(log, programname, params,           
+           numberOfMpi=1, numberOfThreads=1, runInBackground=False):
 
-    command = buildRunCommand(log,
-               programname,
-               params,
-               numberOfMpi,
-               numberOfThreads,
-               RunInBackground)
+    command = buildRunCommand(log, programname, params,
+                              numberOfMpi, numberOfThreads, runInBackground)
     if log is None:
         #TODO: printLog("Running command: %s" % greenStr(command),log)
         print "Running command: %s" % command
@@ -63,57 +55,34 @@ def runJob(log,
 
     return retcode
 
-def buildRunCommand(
-               log,
-               programname,
-               params,
-               NumberOfMpi,
-               NumberOfThreads,
-               RunInBackground):
 
-    DoParallel = NumberOfMpi > 1
-    paramsDict={}
-    
-    if not DoParallel:
+def buildRunCommand(log, programname, params,
+                    numberOfMpi, numberOfThreads, runInBackground):
+    if numberOfMpi <= 1:
         command = programname + ' ' + params
     else:
-        paramsDict['nodes'] = NumberOfMpi
-        paramsDict['command'] = "`which %(programname)s` %(params)s" % locals()
-        launch = loadLaunchModule()
-        command = launch.MpiProgram + " " + launch.MpiArgsTemplate % paramsDict
+        if programname.startswith('xmipp'):
+            programname = programname.replace('xmipp', 'xmipp_mpi')
+        paramsDict = {'nodes': numberOfMpi,
+                      'command': "`which %(programname)s` %(params)s" % locals()
+                      }
+        hostConfig = loadHostConfig()
+        command = hostConfig.mpiCommand.get() % paramsDict
 
-    if RunInBackground:
+    if runInBackground:
         command+=" &"
 
     return command
 
-#TODO: Adapt all this from xmipp to general
-# taking into account different configuration for each Execution Host
 
-def loadLaunchModule():
-    ''' Load the launch module containing queue and mpi related parameters
-    the actual configuration should be in [parallel] section of the XMIPP/.xmipp.cfg file
-    '''
-    pass
-#    launchModuleName = os.environ['XMIPP_PARALLEL_LAUNCH']
-#    return loadModule(launchModuleName)
+def loadHostConfig(host='localhost'):
+    """ This function will load the execution host configuration.
+    In there will be information to know how to launch MPI processes
+    and how to submit jobs to the queue system if exists.
+    """
+    from pyworkflow.apps.config import ExecutionHostMapper, getConfigPath
+    fn = getConfigPath('execution_hosts.xml')
+    print 'fn', fn
+    mapper = ExecutionHostMapper(fn)
+    return mapper.selectAll()[0]
 
-#def loadModule(modulePath, report=True):
-#    directory , moduleName = os.path.split(modulePath)
-#    moduleName = moduleName.replace('.py', '')
-#    if directory=='':
-#        sys.path.insert(0, '.')
-#    else:
-#        sys.path.insert(0, directory)
-#    try:
-#        if moduleName in sys.modules:
-#            module = sys.modules[moduleName]
-#            reload(module)
-#        else:
-#            module = __import__(moduleName)
-#    except ImportError, e:
-#        if report:
-#            reportError(str(e))
-#        module = None
-#    del sys.path[0]
-#    return module
