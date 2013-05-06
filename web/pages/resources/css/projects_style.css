@@ -8,7 +8,8 @@ html,body {
 }
 
 fieldset {
-	overflow: scroll;
+	overflow-y: scroll;
+	overflow-x: hidden;
 }
 
 .logo {
@@ -35,7 +36,6 @@ fieldset {
 	margin: 1em;
 	width: 30em;
 	float: right;
-	background: Gainsboro;
 	height: 28em;
 }
 
@@ -67,6 +67,7 @@ fieldset {
 
 .projFieldset {
 	height: 26.6em;
+	border: none;
 }
 
 .projList {
@@ -74,18 +75,85 @@ fieldset {
 }
 
 .projName {
-	font-size: 1.2em;
 	font-weight: bold;
 	color: black;
 	text-decoration: none;
-	margin-left: -0.5em;
 }
 
 .projRemove {
-	margin-left: 1em;
-	font-size: 0.9em;
-	font-weight: bold;
 	color: black;
 	text-decoration: none;
+}
+
+/* CSS for the runtime table */
+table a:link {
+	font-weight: bold;
+	text-decoration: none;
+}
+
+table a:visited {
+	font-weight: bold;
+	text-decoration: none;
+}
+
+table a:active,table a:hover {
+	color: #bd5a35;
+	text-decoration: underline;
+}
+
+table {
+	margin: -0.2em -1.5em 0em -1em;
+	width: 32em;
 	font-size: 0.9em;
+	text-shadow: 1px 1px 0px #fff;
+	background: #eaebec;
+	box-shadow: 0 1px 2px #d1d1d1;
+}
+
+table th {
+	height: 0.2em;
+	border-top: 1px solid #fafafa;
+	border-bottom: 1px solid #e0e0e0;
+	background: #ededed;
+	background: -webkit-gradient(linear, left top, left bottom, from(#ededed),
+		to(#ebebeb));
+	background: -moz-linear-gradient(top, #ededed, #ebebeb);
+}
+
+table th:first-child {
+	text-align: left;
+	padding-left: 20px;
+}
+
+table tr {
+	text-align: center;
+	/* 	padding-left: 20px; */
+}
+
+table tr td:first-child {
+	text-align: left;
+	/* 	padding-left: 20px; */
+	border-left: 0;
+}
+
+table tr td {
+	padding: 0.5em;
+	border-top: 1px solid #ffffff;
+	border-bottom: 1px solid #e0e0e0;
+	border-left: 1px solid #e0e0e0;
+	background: #fafafa;
+	background: -webkit-gradient(linear, left top, left bottom, from(#fbfbfb),
+		to(#fafafa));
+	background: -moz-linear-gradient(top, #fbfbfb, #fafafa);
+}
+
+table tr:last-child td {
+	border-bottom: 0;
+}
+
+table tr:hover td {
+	background: #f2f2f2;
+	background: -webkit-gradient(linear, left top, left bottom, from(#f2f2f2),
+		to(#f0f0f0));
+	background: -moz-linear-gradient(top, #f2f2f2, #f0f0f0);
 }
