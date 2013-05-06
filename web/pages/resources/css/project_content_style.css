@@ -45,7 +45,7 @@ a {
 	width: 17em;
 	overflow-y: scroll;
 	overflow-x: hidden;
-	margin: -0.5em -1em -1em -1em;
+	margin: -0.5em -1em -0.6em -1em;
 	border: none;
 }
 
@@ -53,7 +53,6 @@ a {
 	margin: 1em;
 	width: 38em;
 	float: right;
-	/* 	background: Gainsboro; */
 	height: 32.8em;
 }
 

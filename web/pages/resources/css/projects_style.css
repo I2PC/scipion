@@ -8,7 +8,8 @@ html,body {
 }
 
 fieldset {
-	overflow: scroll;
+	overflow-y: scroll;
+	overflow-x: hidden;
 }
 
 .logo {

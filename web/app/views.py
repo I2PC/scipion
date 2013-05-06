@@ -94,7 +94,6 @@ def project_content(request):
     jquery_cookie = os.path.join(settings.MEDIA_URL, 'libs/jquery.cookie.js')
     jquery_treeview = os.path.join(settings.MEDIA_URL, 'libs/jquery.treeview.js')
     launchTreeview = os.path.join(settings.MEDIA_URL, 'libs/launchTreeview.js')
-    
     #############
     root = loadProtTree()
     
