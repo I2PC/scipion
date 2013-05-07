@@ -100,7 +100,6 @@ TEST_F( DimRedTest, intrinsic_dimensionality)
 	dimred.reduceDimensionality(); \
 	const Matrix2D<double> &Y=dimred.getReducedData(); \
 	Y.write(file); \
-	std::cout << "Writing " << file << std::endl; \
 }
 
 #define COMPLETE_TEST(method,DimredClass,dataset,Npoints,file) \
@@ -133,7 +132,7 @@ INCOMPLETE_TEST(hessianlle,       HessianLLE,       "helix",1000,"dimred/hessian
 INCOMPLETE_TEST(chartingmanifold, ChartingManifold, "helix",1000,"dimred/chartingmanifold.txt")
 INCOMPLETE_TEST(kernelPCA,        KernelPCA,        "helix",1000,"dimred/kernelPCA.txt")
 #endif
-INCOMPLETE_TEST(lpp,              LPP,              "helix",1000,"dimred/lpp.txt")
+COMPLETE_TEST(lpp,                LPP,              "helix",1000,"dimred/lpp.txt")
 
 TEST_F( DimRedTest, nca)
 {
