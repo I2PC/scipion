@@ -25,6 +25,20 @@ public class TrainingParticle extends Particle{
 	protected double cost = 2;
 	protected Micrograph micrograph;
 	private ParticleCanvas canvas;
+	protected double[] lastalign;
+	
+	
+	
+
+	public double[] getLastalign()
+	{
+		return lastalign;
+	}
+
+	public void setLastalign(double[] lastalign)
+	{
+		this.lastalign = lastalign;
+	}
 	
 	
 
@@ -146,6 +160,33 @@ public class TrainingParticle extends Particle{
 	{
 		img = null;
 		
+	}
+	public double getTemplateRotation()
+	{
+		if(lastalign == null)
+			return -1;
+		return lastalign[1];
+	}
+	
+	public double getTemplateTilt()
+	{
+		if(lastalign == null)
+			return -1;
+		return lastalign[2];
+	}
+	
+	public double getTemplatePsi()
+	{
+		if(lastalign == null)
+			return -1;
+		return lastalign[3];
+	}
+	
+	public int getTemplateIndex()
+	{
+		if(lastalign == null)
+			return -1;
+		return (int)lastalign[0];
 	}
 
 	

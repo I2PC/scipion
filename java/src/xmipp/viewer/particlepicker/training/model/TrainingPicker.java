@@ -163,7 +163,7 @@ public abstract class TrainingPicker extends ParticlePicker
 				x = md.getValueInt(MDLabel.MDL_XCOOR, id);
 				y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 				particle = new TrainingParticle(x, y, family, mfd.getMicrograph());
-				mfd.addManualParticle(particle);
+				mfd.addManualParticle(particle, this, false);
 			}
 			md.destroy();
 		}
@@ -602,7 +602,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			}
 			cost = hasCost ? md.getValueDouble(MDLabel.MDL_COST, id) : 0;
 			if (cost == 0 || cost > 1)
-				tm.addManualParticle(new TrainingParticle(x, y, family, tm, cost));
+				tm.addManualParticle(new TrainingParticle(x, y, family, tm, cost), this, false);
 			else
 				tm.addAutomaticParticle(new AutomaticParticle(x, y, family, tm, cost, false), true);
 		}
@@ -776,7 +776,6 @@ public abstract class TrainingPicker extends ParticlePicker
 		
 		if (!hasManualParticles(f))
 			return;
-		System.out.println("update templates");
 		if (!f.getUpdateTemplatesPending())
 			return;// nothing to update
 		f.initTemplates();
@@ -797,11 +796,10 @@ public abstract class TrainingPicker extends ParticlePicker
 					if (i < f.getTemplatesNumber())
 						f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
 					else
-						f.getTemplates().alignImage(igp, true);
+						f.getTemplates().alignImage(igp);
 				}
 			}
-			f.getTemplates().write(f.getTemplatesFile());
-			f.setUpdateTemplatesPending(false);
+			f.saveTemplates();
 		}
 		catch (Exception e)
 		{

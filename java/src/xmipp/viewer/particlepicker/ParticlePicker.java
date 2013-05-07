@@ -49,6 +49,7 @@ public abstract class ParticlePicker {
 	public static final int fsizemax = 800;
 	private Family dfamily = new Family("DefaultFamily", Color.green, fsizemax/4, 1, getTemplatesFile("DefaultFamily"));
 	protected String block;
+	private int templateindex;
 	
 	public ParticlePicker(String selfile, String outputdir, FamilyState mode) {
 		this(selfile, outputdir, null, mode);
@@ -523,28 +524,34 @@ public abstract class ParticlePicker {
 	public abstract void setMicrograph(Micrograph m);
 	
 		
-	public void addParticleToTemplates(TrainingParticle particle, int index, boolean center)
+	public void addParticleToTemplates(TrainingParticle particle, boolean center)
 	{
-		
 		try
 		{
 			Particle shift = null;
 			Family family = particle.getFamily();
+			
 			ImageGeneric igp = particle.getImageGeneric();
 			//will happen only in manual mode
-			if (index < family.getTemplatesNumber())// index starts at one
-				family.setTemplate((int) (ImageGeneric.FIRST_IMAGE + index), igp);
+			if (templateindex < family.getTemplatesNumber())// index starts at one
+			{
+				family.setTemplate((int) (ImageGeneric.FIRST_IMAGE + templateindex), igp);
+				templateindex ++;
+			}
 			else
 			{
-				family.getTemplates().alignImage(igp, getMode() == FamilyState.Manual);
-				shift = family.getTemplates().bestShift(igp);
 				if (center)
 				{
+					shift = family.getTemplates().bestShift(igp);
 					particle.setX(particle.getX() + shift.getX());
 					particle.setY(particle.getY() + shift.getY());
 				}
+				double[] align = family.getTemplates().alignImage(igp);
+				particle.setLastalign(align);
+//				System.out.printf("adding: %.2f %.2f %.2f %.2f\n", align[0], align[1], align[2], align[3]);
+				
 			}
-			family.getTemplates().write(family.getTemplatesFile());
+			family.saveTemplates();
 		}
 		catch (Exception e)
 		{
@@ -554,11 +561,25 @@ public abstract class ParticlePicker {
 
 	}
 	
-
-
-	public void addParticleToTemplates(TrainingParticle particle, boolean center)
+	public void removeParticleFromTemplates(TrainingParticle particle)
 	{
-		addParticleToTemplates(particle, getManualParticlesNumber(particle.getFamily()) - 1, center);
+		
+		try
+		{
+			
+			Family family = particle.getFamily();
+			
+			ImageGeneric igp = particle.getImageGeneric();
+//			System.out.printf("removing: %d %.2f %.2f %.2f\n", particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
+			family.getTemplates().removeAlignment(igp, particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
+			family.saveTemplates();
+		}
+		catch (Exception e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e);
+		}
+
 	}
 
 	public abstract boolean isValidSize(int size);

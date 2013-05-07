@@ -995,7 +995,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		getFamilyData().reset();
 	}
 
-	public boolean isCenterPick()
+	public boolean isCenterParticle()
 	{
 		return centerpickchb.isSelected();
 	}

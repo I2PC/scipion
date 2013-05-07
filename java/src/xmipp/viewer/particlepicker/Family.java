@@ -262,4 +262,17 @@ public class Family {
 		return updateTemplatesPending;
 	}
 
+	public void saveTemplates()
+	{
+		try
+		{
+			templates.write(templatesfile);
+		}
+		catch (Exception e)
+		{
+			throw new IllegalArgumentException(e);
+		}
+		
+	}
+
 }

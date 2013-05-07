@@ -85,7 +85,7 @@ public class MicrographFamilyData
 		return family;
 	}
 
-	public void addManualParticle(TrainingParticle p)
+	public void addManualParticle(TrainingParticle p, ParticlePicker picker, boolean center)
 	{
 		if(!p.getMicrograph().fits(p.getX(), p.getY(), p.getFamily().getSize()))
 			System.err.format("Warning: ignoring particle out of bounds: x=%d, y=%d in micrograph: %s\n", p.getX(), p.getY(), p.getMicrograph());
@@ -102,7 +102,8 @@ public class MicrographFamilyData
 			else
 				throw new IllegalArgumentException(String.format("Micrograph %s could not update its state to %s and can't keep previous state %s and have particles", micrograph.getName(), state, MicrographFamilyState.Available));
 		}
-		
+		if(family.getStep() == FamilyState.Manual)
+			picker.addParticleToTemplates(p, center);
 	}
 	
 	
@@ -128,7 +129,8 @@ public class MicrographFamilyData
 			if (manualparticles.size() == 0 && autoparticles.size() - getAutomaticParticlesDeleted() == 0)
 				state = MicrographFamilyState.Available;
 		}
-		
+		if(family.getStep() == FamilyState.Manual)
+			ppicker.removeParticleFromTemplates(p);
 		
 	}
 
