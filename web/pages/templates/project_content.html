@@ -54,25 +54,17 @@
 				<!-- 				<legend>History</legend> -->
 				<table cellspacing='0'>
 					<tr>
-						<th>Run</th>
-						<th>State</th>
-						<th>Modified</th>
+						{% for colName, colWidth in provider.getColumns %}
+						<th>{{colName}}</th>
+						{% endfor %}
 					</tr>
+					    {% for obj in provider.getObjects %}
 					<tr>
-						<td><a href="">ProtImportMicrograph.1</a></td>
-						<td>finished</td>
-						<td>2013-04-23 17:19:15</td>
+						<td><a href="">{{obj.getName}}</a></td>
+						<td>{{obj.status.get}}</td>
+						<td>{{obj.endTime.get}}</td>
 					</tr>
-					<tr>
-						<td><a href="">ProtImportMicrograph.1</a></td>
-						<td>finished</td>
-						<td>2013-04-23 17:19:15</td>
-					</tr>
-					<tr>
-						<td><a href="">ProtImportMicrograph.1</a></td>
-						<td>finished</td>
-						<td>2013-04-23 17:19:15</td>
-					</tr>
+						{% endfor %}
 				</table>
 			</fieldset>
 		</div>

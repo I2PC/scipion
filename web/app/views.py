@@ -2,6 +2,8 @@
 import os
 from django.shortcuts import render_to_response
 from pyworkflow.manager import Manager
+from pyworkflow.project import Project
+from pyworkflow.gui.tree import TreeProvider
 from pyworkflow.utils.path import findResource
 from pyworkflow.utils.utils import prettyDate
 from pyworkflow.web.pages import settings
@@ -82,6 +84,54 @@ def loadProtTree():
     root = TreeItem('root', 'root')
     populateTree(root, protCfg)
     return root
+
+# to do a module from pw_project
+class RunsTreeProvider(TreeProvider):
+    """Provide runs info to populate tree"""
+    def __init__(self, mapper, actionFunc=None):
+        self.actionFunc = actionFunc
+        self.getObjects = lambda: mapper.selectAll()
+        
+    def getColumns(self):
+        return [('Run', 250), ('State', 100), ('Modified', 100)]
+    
+    def getObjectInfo(self, obj):
+        return {'key': obj.getId(),
+                'text': '%s.%s' % (obj.getClassName(), obj.strId()),
+                'values': (obj.status.get(), obj.endTime.get())}
+      
+    def getObjectActions(self, obj):
+        prot = obj  # Object should be a protocol
+        actionsList = [(ACTION_EDIT, 'Edit     '),
+                       # (ACTION_COPY, 'Duplicate   '),
+                       (ACTION_DELETE, 'Delete    '),
+                       # (None, None),
+                       # (ACTION_STOP, 'Stop'),
+                       (ACTION_STEPS, 'Browse data')
+                       ]
+        status = prot.status.get()
+        if status == STATUS_RUNNING:
+            actionsList.insert(0, (ACTION_STOP, 'Stop execution'))
+            actionsList.insert(1, None)
+        elif status == STATUS_WAITING_APPROVAL:
+            actionsList.insert(0, (ACTION_CONTINUE, 'Approve continue'))
+            actionsList.insert(1, None)
+        
+        actions = []
+        def appendAction(a):
+            v = a
+            if v is not None:
+                action = a[0]
+                text = a[1]
+                v = (text, lambda: self.actionFunc(action), ActionIcons[action])
+            actions.append(v)
+            
+        for a in actionsList:
+            appendAction(a)
+            
+        return actions 
+    
+
         
 def project_content(request):
     
@@ -94,8 +144,13 @@ def project_content(request):
     jquery_treeview = os.path.join(settings.STATIC_URL, 'js/jquery.treeview.js')
     launchTreeview = os.path.join(settings.STATIC_URL, 'js/launchTreeview.js')
     #############
-    
+
+    manager = Manager()
     project_name = request.GET.get('project_name')
+    projPath = manager.getProjectPath(project_name)
+    project = Project(projPath)
+    project.load()
+    provider = RunsTreeProvider(project.mapper)
     
     root = loadProtTree()
     
@@ -107,7 +162,8 @@ def project_content(request):
                'jquery_treeview': jquery_treeview,
                'launchTreeview': launchTreeview,
                'css':css_path,
-               'sections': root.childs}
+               'sections': root.childs,
+               'provider':provider}
     
     return render_to_response('project_content.html', context)
 
