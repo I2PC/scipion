@@ -23,17 +23,19 @@ public class ExtractParticlePicker extends ParticlePicker
 	private ArrayList<ColorHelper> colorby;
 
 
-	public ExtractParticlePicker(String selfile, Mode mode)
+	public ExtractParticlePicker(String selfile, int size, Mode mode)
 	{
 		super(selfile, mode);
+		family.setSize(size);
 		loadParticles();
 		if (filters.isEmpty())
 			filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
 	}
 	
-	public ExtractParticlePicker(String block, String selfile, Mode mode)
+	public ExtractParticlePicker(String block, String selfile, int size, Mode mode)
 	{
 		super(block, selfile, ".", null, mode);
+		family.setSize(size);
 		loadParticles();
 		if (filters.isEmpty())
 			filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
@@ -208,9 +210,9 @@ public class ExtractParticlePicker extends ParticlePicker
 		setMicrograph(micrographs.get(0));
 	}
 
-	public static ExtractPickerJFrame open(String block, String filename, GalleryJFrame galleryfr)
+	public static ExtractPickerJFrame open(String block, String filename, int size, GalleryJFrame galleryfr)
 	{
-		ExtractParticlePicker picker = new ExtractParticlePicker(block, filename, Mode.Extract);
+		ExtractParticlePicker picker = new ExtractParticlePicker(block, filename, size, Mode.Extract);
 		return new ExtractPickerJFrame(picker, galleryfr);
 	}
 

@@ -8,6 +8,7 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -20,9 +21,11 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.AbstractTableModel;
 
+import xmipp.ij.commons.Tool;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.ColorHelper;
 import xmipp.viewer.particlepicker.Format;
@@ -87,6 +90,12 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		float positionx = 0.995f;
 		XmippWindowUtil.setLocation(positionx, 0.25f, this);
 		setVisible(true);
+	}
+	
+	
+	public boolean isPickingAvailable(MouseEvent e)
+	{
+		return false;
 	}
 	
 	private void initParticlesPane()
