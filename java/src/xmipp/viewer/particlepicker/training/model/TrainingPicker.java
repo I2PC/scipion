@@ -776,8 +776,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		
 		if (!hasManualParticles(f))
 			return;
-		if (!f.getUpdateTemplatesPending())
-			return;// nothing to update
+	
 		f.initTemplates();
 		ImageGeneric igp;
 		List<TrainingParticle> particles;
@@ -813,7 +812,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		try
 		{
 			for (Family f : families)
-				updateTemplates(f);
+				f.saveTemplates();
 		}
 		catch (Exception e)
 		{

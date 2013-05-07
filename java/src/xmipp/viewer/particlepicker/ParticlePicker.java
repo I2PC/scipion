@@ -47,7 +47,6 @@ public abstract class ParticlePicker {
 	protected int autopickpercent = defAutoPickPercent;
 	
 	public static final int fsizemax = 800;
-	private Family dfamily = new Family("DefaultFamily", Color.green, fsizemax/4, 1, getTemplatesFile("DefaultFamily"));
 	protected String block;
 	private int templateindex;
 	
@@ -261,7 +260,7 @@ public abstract class ParticlePicker {
 		families.clear();
 		String file = familiesfile;
 		if (!new File(file).exists()) {
-			families.add(dfamily);
+			families.add(new Family("DefaultFamily", Color.green, fsizemax/4, 1, getTemplatesFile("DefaultFamily")));
 			saveFamilies();
 			return;
 		}
@@ -294,7 +293,6 @@ public abstract class ParticlePicker {
 				else
 				{
 					family = new Family(name, new Color(rgb), size, state, this, templatesNumber, templatesfile);
-					family.setUpdateTemplatesPending(true);
 				}
 				families.add(family);
 			}

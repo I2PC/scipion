@@ -22,7 +22,6 @@ public class Family {
 	private int templatesNumber;
 	private ImageGeneric templates;
 	private String templatesfile;
-	protected boolean updateTemplatesPending;
 
 	
 	private static Color[] colors = new Color[] { Color.BLUE, Color.CYAN,
@@ -195,7 +194,6 @@ public class Family {
 			throw new IllegalArgumentException(XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Family must have at least one template"));
 		this.templatesNumber = num;
 		initTemplates();
-		setUpdateTemplatesPending(true);
 	}
 
 	public Color getColor() {
@@ -242,25 +240,19 @@ public class Family {
 		
 		float[] matrix;
 		try {
+			ig.printShape();
 			//TODO getArrayFloat and setArrayFloat must be call from C both in one function
-			matrix = ig.getArrayFloat(ImageGeneric.FIRST_IMAGE,	ImageGeneric.FIRST_SLICE);
-			templates.setArrayFloat(matrix, index, ImageGeneric.FIRST_SLICE);
+			matrix = ig.getArrayFloat(ImageGeneric.FIRST_IMAGE,	ImageGeneric.ALL_SLICES);
+			templates.printShape();
+			templates.setArrayFloat(matrix, index, ImageGeneric.ALL_SLICES);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
 	
-	public void setUpdateTemplatesPending(boolean b)
-	{
-		updateTemplatesPending = b;
 
-	}
 
-	public boolean getUpdateTemplatesPending()
-	{
-		return updateTemplatesPending;
-	}
 
 	public void saveTemplates()
 	{

@@ -960,7 +960,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	
 	public void updateTemplates(Family f)
 	{
-		f.setUpdateTemplatesPending(true);
 		if (f.equals(family) && templatesdialog != null)
 			templatesdialog.loadTemplates(true);
 
@@ -977,7 +976,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		{
 			super.updateSize(size);
 			ppicker.resetParticleImages();
-			family.setUpdateTemplatesPending(true);
 			ppicker.updateTemplates();
 			if (templatesdialog != null)
 				loadTemplates();
