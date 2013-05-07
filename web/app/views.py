@@ -10,9 +10,9 @@ from pyworkflow.em import *
 
 def getResource(request):
     if request == 'logoScipion':
-        img = 'images/logo.png'
+        img = 'scipion_logo.png'
     elif request == 'favicon':
-        img = 'images/scipion_bn.png'
+        img = 'scipion_bn.png'
     path = os.path.join(settings.MEDIA_URL, img)
     return path
 
@@ -23,7 +23,7 @@ def projects(request):
     # Resources #
     logo_path = getResource('logoScipion')
     favicon_path = getResource('favicon')
-    css_path = os.path.join(settings.MEDIA_URL, 'css/projects_style.css')
+    css_path = os.path.join(settings.STATIC_URL, 'css/projects_style.css')
     #############
     
     projects = manager.listProjects()
@@ -54,7 +54,7 @@ def populateTree(tree, obj):
         tree.childs.append(item)
         # If have tag 'protocol_base', fill dynamically with protocol sub-classes
         if sub.value.hasValue() and tag == 'protocol_base':
-            protClassName = value.split('.')[-1] # Take last part
+            protClassName = value.split('.')[-1]  # Take last part
             prot = emProtocolsDict.get(protClassName, None)
             if prot is not None:
                 for k, v in emProtocolsDict.iteritems():
@@ -70,7 +70,7 @@ def loadConfig(config, name):
     c = getattr(config, name) 
     fn = getConfigPath(c.get())
     if not os.path.exists(fn):
-        raise Exception('loadMenuConfig: menu file "%s" not found' % fn )
+        raise Exception('loadMenuConfig: menu file "%s" not found' % fn)
     mapper = ConfigMapper(getConfigPath(fn), globals())
     menuConfig = mapper.getConfig()
     return menuConfig
@@ -88,12 +88,11 @@ def project_content(request):
     # Resources #
     logo_path = getResource('logoScipion')
     favicon_path = getResource('favicon')
-    css_path = os.path.join(settings.MEDIA_URL, 'css/project_content_style.css')
-    treeview_css_path = os.path.join(settings.MEDIA_URL, 'css/treeview.css')
-    jquery_path = os.path.join(settings.MEDIA_URL, 'libs/jquery.js')
-    jquery_cookie = os.path.join(settings.MEDIA_URL, 'libs/jquery.cookie.js')
-    jquery_treeview = os.path.join(settings.MEDIA_URL, 'libs/jquery.treeview.js')
-    launchTreeview = os.path.join(settings.MEDIA_URL, 'libs/launchTreeview.js')
+    css_path = os.path.join(settings.STATIC_URL, 'css/project_content_style.css')
+    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
+    jquery_cookie = os.path.join(settings.STATIC_URL, 'js/jquery.cookie.js')
+    jquery_treeview = os.path.join(settings.STATIC_URL, 'js/jquery.treeview.js')
+    launchTreeview = os.path.join(settings.STATIC_URL, 'js/launchTreeview.js')
     #############
     root = loadProtTree()
     
@@ -103,7 +102,6 @@ def project_content(request):
 
     context = {'logo': logo_path,
                'favicon': favicon_path,
-               'treeview': treeview_css_path,
                'jquery': jquery_path,
                'jquery_cokkie': jquery_cookie,
                'jquery_treeview': jquery_treeview,

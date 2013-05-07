@@ -98,7 +98,7 @@ a {
 }
 
 .treeview .hitarea {
-	background: url(../../../resources/treeview-default.gif) -64px -25px no-repeat;
+	background: url(../images/treeview-default.gif) -64px -25px no-repeat;
 	height: 16px;
 	width: 16px;
 	margin-left: -16px;
@@ -191,22 +191,22 @@ a {
 }
 
 .filetree span.protocol_base {
-	background: url(../../../../resources/class_obj.gif) 0 0 no-repeat;
+	background: url(../images/class_obj.gif) 0 0 no-repeat;
 	padding-left: 1em;
 }
 
 .filetree li.expandable span.protocol_base {
-	background: url(../../../../resources/class_obj.gif) 0 0 no-repeat;
+	background: url(../images/class_obj.gif) 0 0 no-repeat;
 	padding-left: 1em;
 }
 
 .filetree span.protocol {
-	background: url(../../../../resources/bookmark.gif) 0 0 no-repeat;
+	background: url(../images/bookmark.gif) 0 0 no-repeat;
 	padding-left: 1em;
 }
 
 .filetree span.protocol_class {
-	background: url(../../../../resources/python_file.gif) 0 0 no-repeat;
+	background: url(../images/python_file.gif) 0 0 no-repeat;
 	padding-left: 1em;
 }
 
