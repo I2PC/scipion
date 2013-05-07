@@ -44,6 +44,7 @@
 #include <data/xmipp_program.h>
 
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
+#undef SMALLANGLE
 #define SMALLANGLE 2.75
 #define MLTOMO_DATALINELENGTH 10
 #define MLTOMO_BLOCKSIZE 10
