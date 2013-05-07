@@ -794,6 +794,5 @@ void ProgNormalize::processImage(const FileName &fnImg, const FileName &fnImgOut
     case NONE:
     	break;
     }
-
     I.write(fnImgOut);
 }

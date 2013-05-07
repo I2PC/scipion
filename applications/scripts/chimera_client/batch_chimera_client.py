@@ -69,13 +69,13 @@ class ScriptChimeraClient(XmippScript):
 
         serverfile = getXmippPath('libraries/bindings/chimera/xmipp_chimera_server.py')
         system("chimera %s  &" % serverfile)
-        if isprojector:
-			XmippProjectionExplorer(volfile, angulardistfile, spheres_color, spheres_distance, spheres_maxradius, padding_factor, max_freq, spline_degree)
-			print 'created projection explorer'
-        elif mode == 'viewer':
-			client = XmippChimeraClient(volfile, angulardistfile, spheres_color, spheres_distance, spheres_maxradius)
-			client.listen()
-			print 'created chimera client'
+#        if isprojector:
+#			XmippProjectionExplorer(volfile, angulardistfile, spheres_color, spheres_distance, spheres_maxradius, padding_factor, max_freq, spline_degree)
+#			print 'created projection explorer'
+#        elif mode == 'viewer':
+#			client = XmippChimeraClient(volfile, angulardistfile, spheres_color, spheres_distance, spheres_maxradius)
+#			client.listen()
+#			print 'created chimera client'
 
 
 if __name__ == '__main__':

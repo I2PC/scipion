@@ -9,7 +9,7 @@
 
 from xmipp import MetaData, MDL_ITER, MDL_LL, MDL_REF, MDValueEQ, getBlocksInMetaDataFile, \
 MDL_PMAX, MDL_SIGNALCHANGE, AGGR_MAX, MDL_MAX, MDL_MIRRORFRAC, MDL_WEIGHT, MDL_CLASS_COUNT, MD_APPEND,\
-ImgSize, SingleImgSize, MDL_IMAGE, MDL_SAMPLINGRATE
+SingleImgSize, MDL_IMAGE, MDL_SAMPLINGRATE
 from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
 import os

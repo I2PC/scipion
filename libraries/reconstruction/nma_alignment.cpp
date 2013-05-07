@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:    Slavica Jonic                slavica.jonic@impmc.jussieu.fr
+ * Authors:    Slavica Jonic                slavica.jonic@impmc.upmc.fr
  *             Carlos Oscar Sanchez Sorzano coss.eps@ceu.es
  *
  * This program is free software; you can redistribute it and/or modify
@@ -40,7 +40,7 @@ ProgNmaAlignment::ProgNmaAlignment() {
 	each_image_produces_an_output = false;
 	produces_an_output = true;
 	progVolumeFromPDB = new ProgPdbConverter();
-	projMatch = true;
+	projMatch = false;
 }
 
 ProgNmaAlignment::~ProgNmaAlignment() {
@@ -49,30 +49,32 @@ ProgNmaAlignment::~ProgNmaAlignment() {
 
 // Params definition ============================================================
 void ProgNmaAlignment::defineParams() {
-	addUsageLine("Compute deformation parameters according to a set of NMA modes");
+	addUsageLine("Align images with an atomic or pseudo-atomic (from EM volume) structure by computing deformation amplitudes along normal modes, three Euler angles, and two in-plane shifts");
+        defaultComments["-i"].clear();
+	defaultComments["-i"].addComment("Metadata with image filenames");
 	defaultComments["-o"].clear();
-	defaultComments["-o"].addComment("Metadata with output alignment and deformations");
+	defaultComments["-o"].addComment("Metadata with output Euler angles, shifts, and deformation amplitudes");
 	XmippMetadataProgram::defineParams();
-	addParamsLine("   --pdb <PDB_filename>                : PDB Model to compute NMA");
+	addParamsLine("   --pdb <PDB_filename>                : Reference atomic or pseudo-atomic structure in PDB format");
 	addParamsLine("  [--odir <outputDir=\".\">]           : Output directory");
 	addParamsLine("  [--resume]                           : Resume processing");
-	addParamsLine("==Generation of the deformed volumes==");
+	addParamsLine("==Generation of the deformed reference volumes==");
 	addParamsLine("   --modes <filename>                  : File with a list of mode filenames");
-	addParamsLine("  [--deformation_scale <s=1>]          : Scaling factor to scale NMA deformation amplitudes");
-	addParamsLine("  [--sampling_rate <Ts=1>]             : in Angstroms/pixel");
-	addParamsLine("  [--filterVol <cutoff=15.>]           : Filter the volume after deforming. Default cut-off is 15 A.");
+	addParamsLine("  [--sampling_rate <Ts=1>]             : Pixel size in Angstroms");
+	addParamsLine("  [--filterVol <cutoff=15.>]           : Filter the volume after deforming. If this option is used, the default cut-off is 15 A.");
 	addParamsLine("  [--centerPDB]                        : Center the PDB structure");
-	addParamsLine("  [--fixed_Gaussian <std=-1>]          : For pseudo atoms fixed_Gaussian must be used.");
-	addParamsLine("                                       : Default standard deviation <std> is read from PDB file.");
-	addParamsLine("==Angular assignment and mode detection==");
-	addParamsLine("  [--mask <m=\"\">]                    : 2D Mask applied to the reference images of the deformed volume");
-	addParamsLine("  [--projMatch]                        : Use projection matching in real-space instead of wavelet+splines assignment");
-	addParamsLine("                                       :+Note that wavelet assignment needs the input images to be of a size power of 2");
-	addParamsLine("  [--minAngularSampling <ang=3>]       : Minimum angular sampling rate");
-	addParamsLine("  [--gaussian_Fourier <s=0.5>]         : Weighting sigma in Fourier space");
-	addParamsLine("  [--gaussian_Real    <s=0.5>]         : Weighting sigma in Real space");
-	addParamsLine("  [--zerofreq_weight  <s=0.>]          : Zero-frequency weight");
-	addExampleLine("xmipp_nma_alignment -i images.sel --pdb 2tbv.pdb --modes modelist.xmd --deformation_scale 1000 --sampling_rate 6.4 -o output.xmd --resume");
+	addParamsLine("  [--fixed_Gaussian <std=-1>]          : For pseudo-atoms fixed_Gaussian must be used.");
+	addParamsLine("                                       : Default standard deviation <std> is read from the PDB file.");
+	addParamsLine("==Combined elastic and rigid-body alignment==");
+	addParamsLine("  [--trustradius_scale <s=1>]          : Positive scaling factor to scale the initial trust region radius");
+	addParamsLine("  [--mask <m=\"\">]                    : 2D masking  of the projections of the deformed volume");
+	addParamsLine("  [--projMatch]                        : Real-space projection matching instead of the default combined global (wavelet-space) and local (Fourier central slice) projection matching");
+	addParamsLine("                                       :+Note that wavelet-based method needs the image size to be power of 2");
+	addParamsLine("  [--discrAngStep <ang=10>]            : Angular sampling step for computing the reference projections (this is the minimum step for real-space projection matching while the minimum step does not exist in the default method)");
+	addParamsLine("  [--gaussian_Fourier <s=0.5>]         : Sigma of Gaussian weigthing in Fourier space (parameter of central-slice method)");
+	addParamsLine("  [--gaussian_Real    <s=0.5>]         : Sigma of Gaussian weigthing in real space for spline interpolation in Fourier space (parameter of central-slice method)");
+	addParamsLine("  [--zerofreq_weight  <s=0.>]          : Zero-frequency weight (parameter of central-slice method)");
+	addExampleLine("xmipp_nma_alignment -i images.sel --pdb 2tbv.pdb --modes modelist.xmd --trustradius_scale 1.2 --sampling_rate 3.2 -o output.xmd --resume");
 }
 
 // Read arguments ==========================================================
@@ -82,7 +84,7 @@ void ProgNmaAlignment::readParams() {
 	fnOutDir = getParam("--odir");
 	fnModeList = getParam("--modes");
 	resume = checkParam("--resume");
-	scale_defamp = getDoubleParam("--deformation_scale");
+	trustradius_scale = abs(getDoubleParam("--trustradius_scale"));
 	sampling_rate = getDoubleParam("--sampling_rate");
 	fnmask = getParam("--mask");
 	gaussian_DFT_sigma = getDoubleParam("--gaussian_Fourier");
@@ -96,7 +98,7 @@ void ProgNmaAlignment::readParams() {
 	//if (useFixedGaussian)
 	sigmaGaussian = getDoubleParam("--fixed_Gaussian");
 	projMatch = checkParam("--projMatch");
-	minAngularSampling = getDoubleParam("--minAngularSampling");
+	discrAngStep = getDoubleParam("--discrAngStep");
 }
 
 // Show ====================================================================
@@ -107,16 +109,16 @@ void ProgNmaAlignment::show() {
 	        << "PDB:                  " << fnPDB << std::endl
 			<< "Resume:               " << resume << std::endl
 			<< "Mode list:            " << fnModeList << std::endl
-			<< "Amplitude scale:      " << scale_defamp << std::endl
-			<< "Sampling rate:        " << sampling_rate << std::endl
+			<< "Trust-region scale:   " << trustradius_scale << std::endl
+			<< "Pixel size:           " << sampling_rate << std::endl
 			<< "Mask:                 " << fnmask << std::endl
 			<< "Center PDB:           " << do_centerPDB << std::endl
-			<< "Filter PDB volume     " << do_FilterPDBVol << std::endl
-			<< "Use fixed Gaussian:   " << useFixedGaussian << std::endl
-			<< "Sigma of Gaussian:    " << sigmaGaussian << std::endl
-			<< "Projection  Matching: " << projMatch << std::endl
-			<< "minAngularSampling:   " << minAngularSampling << std::endl
-	        << "Gaussian Fourier:     " << gaussian_DFT_sigma << std::endl
+			<< "Filter PDB volume:    " << do_FilterPDBVol << std::endl
+			<< "Use pseudo-atoms:     " << useFixedGaussian << std::endl
+			<< "Pseudo-atom sigma:    " << sigmaGaussian << std::endl
+			<< "Projection matching:  " << projMatch << std::endl
+			<< "AngularSamplingStep:  " << discrAngStep << std::endl
+	                << "Gaussian Fourier:     " << gaussian_DFT_sigma << std::endl
 			<< "Gaussian Real:        " << gaussian_Real_sigma << std::endl
 			<< "Zero-frequency weight:" << weight_zero_freq << std::endl;
 }
@@ -177,7 +179,7 @@ FileName ProgNmaAlignment::createDeformedPDB(int pyramidLevel) const {
 			"--pdb %s -o %s_deformedPDB.pdb --nma %s --deformations ",
 			fnPDB.c_str(), randStr, fnModeList.c_str());
 	for (size_t i = 0; i < VEC_XSIZE(trial) - 5; ++i)
-		arguments += floatToString(trial(i) * scale_defamp) + " ";
+		arguments += floatToString(trial(i)) + " ";
 	runSystem(program, arguments, false);
 
 	program = "xmipp_volume_from_pdb";
@@ -236,7 +238,7 @@ void ProgNmaAlignment::performCompleteSearch(const FileName &fnRandom,
 	mkdir((fnRandom+"_ref").c_str(), S_IRWXU);
 
 	double angSampling=2*RAD2DEG(atan(1.0/((double) imgSize / pow(2.0, (double) pyramidLevel+1))));
-	angSampling=std::max(angSampling,minAngularSampling);
+	angSampling=std::max(angSampling,discrAngStep);
 	program = "xmipp_angular_project_library";
 	arguments = formatString(
 			"-i %s_deformedPDB.vol -o %s_ref/ref.stk --sampling_rate %f -v 0",
@@ -247,29 +249,57 @@ void ProgNmaAlignment::performCompleteSearch(const FileName &fnRandom,
 
 	runSystem(program, arguments, false);
 
-	const char * refSelStr = formatString("%s_ref/ref.doc", randStr).c_str();
-	const char * refStkStr = formatString("%s_ref/ref.stk", randStr).c_str();
+	String refSelStr = formatString("%s_ref/ref.doc", randStr);
 
 	if (fnmask != "") {
 		program = "xmipp_transform_mask";
-		arguments = formatString("-i %s --mask binary_file %s", refSelStr,
+		arguments = formatString("-i %s --mask binary_file %s", refSelStr.c_str(),
 				fnmask.c_str());
 		runSystem(program, arguments, false);
 	}
 
 	// Perform alignment
+	String fnOut=formatString("%s_angledisc.xmd",randStr);
 	if (!projMatch) {
 		program = "xmipp_angular_discrete_assign";
 		arguments = formatString(
-						"-i %s_downimg.xmp --ref %s -o %s_angledisc.xmd --psi_step 5 --max_shift_change %d --search5D -v 0",
-						randStr, refSelStr, randStr, (int)round((double) imgSize / (10.0 * pow(2.0, (double) pyramidLevel))));
+						"-i %s_downimg.xmp --ref %s -o %s --psi_step 5 --max_shift_change %d --search5D -v 0",
+						randStr, refSelStr.c_str(), fnOut.c_str(), (int)round((double) imgSize / (10.0 * pow(2.0, (double) pyramidLevel))));
 	} else {
+		String refStkStr = formatString("%s_ref/ref.stk", randStr);
 		program = "xmipp_angular_projection_matching";
 		arguments =	formatString(
-				        "-i %s_downimg.xmp --ref %s -o %s_angledisc.xmd --search5d_step 1 --max_shift %d -v 0",
-				        randStr, refStkStr, randStr, (int)round((double) imgSize / (10.0 * pow(2.0, (double) pyramidLevel))));
+				        "-i %s_downimg.xmp --ref %s -o %s --search5d_step 1 --max_shift %d -v 0",
+				        randStr, refStkStr.c_str(), fnOut.c_str(), (int)round((double) imgSize / (10.0 * pow(2.0, (double) pyramidLevel))));
 	}
 	runSystem(program, arguments, false);
+	if (projMatch)
+	{
+		MetaData MD;
+		MD.read(fnOut);
+		bool flip;
+		size_t id=MD.firstObject();
+		MD.getValue(MDL_FLIP,flip,id);
+		if (flip)
+		{
+			// This is because continuous assignment does not understand flips
+
+			double shiftX, rot, tilt, psi, newrot, newtilt, newpsi;
+			// Change sign in shiftX
+			MD.getValue(MDL_SHIFT_X,shiftX,id);
+			MD.setValue(MDL_SHIFT_X,-shiftX,id);
+
+			// Change Euler angles
+			MD.getValue(MDL_ANGLE_ROT,rot,id);
+			MD.getValue(MDL_ANGLE_TILT,tilt,id);
+			MD.getValue(MDL_ANGLE_PSI,psi,id);
+			Euler_mirrorY(rot,tilt,psi,newrot,newtilt,newpsi);
+			MD.setValue(MDL_ANGLE_ROT,newrot,id);
+			MD.setValue(MDL_ANGLE_TILT,newtilt,id);
+			MD.setValue(MDL_ANGLE_PSI,newpsi,id);
+			MD.write(fnOut);
+		}
+	}
 }
 
 // Continuous assignment ===================================================
@@ -279,43 +309,13 @@ double ProgNmaAlignment::performContinuousAssignment(const FileName &fnRandom,
 	const char * randStr = fnRandom.c_str();
 	String fnResults=formatString("%s_anglecont.xmd", randStr);
 	bool costSource=true;
-	if (!projMatch) {
-		String program = "xmipp_angular_continuous_assign";
-		String arguments =
-				formatString(
-						"-i %s_angledisc.xmd --ref %s_deformedPDB.vol -o %s --gaussian_Fourier %f --gaussian_Real %f --zerofreq_weight %f -v 0",
-						randStr, randStr, fnResults.c_str(), gaussian_DFT_sigma,
-						gaussian_Real_sigma, weight_zero_freq);
-		runSystem(program, arguments, false);
-	}
-	else
-	{
-		costSource=false;
-		if (currentStage==1)
-			fnResults=formatString("%s_angledisc.xmd", randStr);
-		else
-		{
-			mkdir((fnRandom+"_ref").c_str(), S_IRWXU);
-
-			String program = "xmipp_angular_project_library";
-			double angSampling=RAD2DEG(atan(1.0/((double) imgSize / pow(2.0, (double) pyramidLevel+1))));
-			angSampling=std::max(angSampling,minAngularSampling);
-			String arguments = formatString(
-					"-i %s_deformedPDB.vol -o %s_ref/ref.stk --sampling_rate %f -v 0",
-					randStr, randStr,angSampling);
-			arguments +=formatString(
-							" --compute_neighbors --angular_distance %f --experimental_images %s_angledisc.xmd",
-							2.5*angSampling,randStr);
-			runSystem(program, arguments, false);
-
-			const char * refStkStr = formatString("%s_ref/ref.stk", randStr).c_str();
-			program = "xmipp_angular_projection_matching";
-			arguments =	formatString(
-							"-i %s_downimg.xmp --ref %s -o %s --search5d_step 1 --max_shift %d -v 0",
-							randStr, refStkStr, fnResults.c_str(), (int)round((double) imgSize / (10.0 * pow(2.0, (double) pyramidLevel))));
-			runSystem(program, arguments, false);
-		}
-	}
+	String program = "xmipp_angular_continuous_assign";
+	String arguments =
+			formatString(
+					"-i %s_angledisc.xmd --ref %s_deformedPDB.vol -o %s --gaussian_Fourier %f --gaussian_Real %f --zerofreq_weight %f -v 0",
+					randStr, randStr, fnResults.c_str(), gaussian_DFT_sigma,
+					gaussian_Real_sigma, weight_zero_freq);
+	runSystem(program, arguments, false);
 
 	// Pick up results
 	MetaData DF(fnResults);
@@ -394,7 +394,6 @@ double ObjFunc_nma_alignment::eval(Vector X, int *nerror) {
 	runSystem("rm", formatString("-rf %s* &", randStr));
 
 	global_nma_prog->updateBestFit(fitness, dim);
-
 	return fitness;
 }
 
@@ -406,9 +405,10 @@ void ProgNmaAlignment::processImage(const FileName &fnImg,
 	static size_t imageCounter = 0;
 	++imageCounter;
 
-	double rhoStart = 1e-0, rhoEnd = 1e-3;
+	double rhoStart=trustradius_scale*250.;
+        double rhoEnd=trustradius_scale*50.;
 
-	int niter = 1000;
+	int niter=10000;
 
 	ObjectiveFunction *of;
 
@@ -472,7 +472,7 @@ void ProgNmaAlignment::processImage(const FileName &fnImg,
 	of->setSaveFile();
 #endif
 
-	rhoStart = 1e-3, rhoEnd = 1e-4;
+	rhoStart=trustradius_scale*50.-1., rhoEnd=0.5;
 	CONDOR(rhoStart, rhoEnd, niter, of);
 #ifdef DEBUG
 	of->printStats();
@@ -496,7 +496,7 @@ void ProgNmaAlignment::processImage(const FileName &fnImg,
 	}
 
 	for (int i = 0; i < dim; i++) {
-		parameters(5 + i) = trial_best(i) * scale_defamp;
+		parameters(5 + i) = trial_best(i);
 	}
 
 	parameters.resize(VEC_XSIZE(parameters) + 1);
