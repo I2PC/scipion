@@ -309,17 +309,26 @@ class XmippClass2D(Class2D):
         
 class XmippClassification2D(Classification2D):
     """ Store results from a 2D classification. """
-    def __init__(self, filename=None, **args):
+    def __init__(self, filename=None, classesBlock='classes', **args):
         Classification2D.__init__(self, **args)
         self.getFileName = self.get
         self.setFileName = self.set
         self.setFileName(filename)
+        self.classesBlock = String(classesBlock)
         
     def iterClasses(self):
         fn = self.getFileName()
-        md = xmipp.MetaData('classes@' + fn)
+        block = self.classesBlock.get()
+        md = xmipp.MetaData('%(block)s@%(fn)s' % locals())
         for objId in md:
             ref = md.getValue(xmipp.MDL_REF, objId)
             img = md.getValue(xmipp.MDL_IMAGE, objId)
             yield XmippClass2D(ref, fn, img)
+            
+    def getClassesMdFileName(self):
+        """ Return the filename with block pointing
+        to the classes. 
+        """
+        return "%s@%s" % (self.classesBlock.get(),
+                          self.getFileName())
   
