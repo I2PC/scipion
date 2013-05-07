@@ -70,7 +70,7 @@ void ProgPdbNmaDeform::run()
 	MetaData modes;
 	pdb.read(fn_pdb);
 	modes.read(fn_nma);
-	int i=0;
+	int j=0;
 	FileName fnMode;
 	MultidimArray<double> mode;
 	mode.resizeNoCopy(pdb.getNumberOfAtoms(),3);
@@ -86,7 +86,7 @@ void ProgPdbNmaDeform::run()
 		fhMode.close();
 
 		// Apply mode
-		double lambda=A1D_ELEM(deformations,i);
+		double lambda=A1D_ELEM(deformations,j);
 		for (size_t i=0; i<YSIZE(mode); ++i)
 		{
 			RichAtom& atom_i=pdb.atomList[i];
@@ -94,6 +94,7 @@ void ProgPdbNmaDeform::run()
 			atom_i.y+=lambda*DIRECT_A2D_ELEM(mode,i,1);
 			atom_i.z+=lambda*DIRECT_A2D_ELEM(mode,i,2);
 		}
+                j++;
 	}
 	pdb.write(fn_out);
 }
