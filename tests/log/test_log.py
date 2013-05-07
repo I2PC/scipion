@@ -14,7 +14,7 @@ class TestLog(unittest.TestCase):
         log.debug('General debug')
         log.warning("General warning")
         
-        log = getFileLogger('~/scipionLog/fileLog.log')
+        log = getFileLogger('/home/antonio/scipionLog/fileLog.log')
         log.info('File info!!!!!!')
         log.debug('File debug!!!!!!')
         log.warning("File warning!!!")
@@ -22,8 +22,13 @@ class TestLog(unittest.TestCase):
         log = getGeneralLogger('pyworkflow.test.log.test_scipon_log')
         log.error('General error')
         
-        log = getFileLogger('~/scipionLog/fileLog.log')
+        log = getFileLogger('/home/antonio/scipionLog/fileLog.log')
         log.error('File error!!!!!!')
+        
+        log = getClassAndFileLogger('pyworkflow.test.log.test_scipon_log', '/home/antonio/scipionLog/classAndFileLog.log')
+        log.info('Class and File info!!!!!!')
+        log.debug('Class and File debug!!!!!!')
+        log.warning("Class and File warning!!!")
         
         self.assertTrue(True)  
         

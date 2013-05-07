@@ -101,3 +101,11 @@ def existsPath(*paths):
 def getHomePath(user=''):
     """Return the home path of a give user."""
     return expanduser("~" + user)
+
+def createFolderForFile(filePath):
+    """
+    Create folder for file in local host if it does not exist.
+    filePath -- File path which parent directory we must create (/file path/...).
+    """
+    filePathParentDirectory = os.path.dirname(filePath)
+    makePath(filePathParentDirectory)

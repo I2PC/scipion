@@ -30,6 +30,7 @@ for EM data objects like: Image, SetOfImage and others
 
 from pyworkflow.object import *
 from pyworkflow.mapper.sqlite import SqliteMapper
+from posixpath import join
 
 
 class EMObject(Object):
@@ -39,6 +40,10 @@ class EMObject(Object):
         
     def __str__(self):
         return str(self.get())
+    
+    def _getFiles(self):
+        """ Get all files """
+        return None
 
 
 class Microscope(EMObject):

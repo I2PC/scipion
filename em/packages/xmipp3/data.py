@@ -116,6 +116,14 @@ class XmippSetOfMicrographs(XmippSetOfImages, SetOfMicrographs):
     @staticmethod
     def convert(setOfMics, filename):
         return XmippSet.convert(setOfMics, XmippSetOfMicrographs, filename)
+    
+    def _getFiles(self):
+        files = []
+        path = self.getFileName()
+        files.append(path)
+        for micrograph in self:
+            files.append(micrograph.getFileName())
+        return files
 
                     
 class XmippCoordinate(Coordinate):

@@ -35,6 +35,7 @@ import pickle
 from pyworkflow.object import OrderedObject, String, List, Integer, Boolean
 from pyworkflow.utils.path import replaceExt, makePath, join, existsPath, cleanPath
 from pyworkflow.utils.process import runJob
+from pyworkflow.utils.log import *
 
 STATUS_LAUNCHED = "launched"  # launched to queue system
 STATUS_RUNNING = "running"    # currently executing
@@ -316,7 +317,7 @@ class Protocol(Step):
             return 0
         
         n = min(len(self._steps), len(self._prevSteps))
-        print "len(steps)", len(self._steps), "len(prevSteps)", len(self._prevSteps)
+        self._log.info("len(steps) " + str(len(self._steps)) + " len(prevSteps) " + str(len(self._prevSteps)))
         
         for i in range(n):
             newStep = self._steps[i]
@@ -350,7 +351,7 @@ class Protocol(Step):
         """This function will be called whenever an step
         has started running.
         """
-        print "STARTED: " + step.funcName.get()
+        self._log.info("STARTED: " + step.funcName.get())
         self.status.set(step.status)
         #self.mapper.insertChild(self._steps, self._steps.getIndexStr(self.currentStep),
         #                 step, self.namePrefix)
@@ -365,7 +366,7 @@ class Protocol(Step):
         self.currentStep += 1
         if step.status == STATUS_FAILED:
             raise Exception("Protocol failed: " + step.error.get())
-        print "FINISHED: ", step.funcName.get()
+        self._log.info("FINISHED: " + step.funcName.get())
     
     def _runSteps(self, startIndex):
         """ Run all steps defined in self._steps. """
@@ -374,7 +375,7 @@ class Protocol(Step):
         self._store()
         
         status = STATUS_FINISHED # Just for the case doesn't enter in the loop
-        print ">>> Starting at step: ", startIndex
+        self._log.info(">>> Starting at step: " + str(startIndex))
         for step in self._steps[startIndex:]:
             step.run()
             status = step.status.get()
@@ -402,8 +403,9 @@ class Protocol(Step):
         
 
     def run(self):
-        print 'RUNNING PROTOCOL -----------------'
-        print "   workingDir: ", self.workingDir.get()
+        self._log = self.__getLogger()
+        self._log.info('RUNNING PROTOCOL -----------------')
+        self._log.info('   workingDir: ' + self.workingDir.get())
         self.currentStep = 1
         #self.namePrefix = replaceExt(self._steps.getName(), self._steps.strId()) #keep
         self._currentDir = os.getcwd() 
@@ -411,6 +413,11 @@ class Protocol(Step):
         outputs = [getattr(self, o) for o in self._outputs]
         #self._store(self.status, self.initTime, self.endTime, *outputs)
         self._store()
-        print '------------------- PROTOCOL FINISHED'
+        self._log.info('------------------- PROTOCOL FINISHED')
+        
+    def __getLogger(self):
+        #Initialize log
+        logFile = self._getPath('log', 'protocol.log')
+        return getFileLogger(logFile)
 
 

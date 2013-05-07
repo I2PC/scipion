@@ -41,7 +41,7 @@ class FileTransfer():
         Key is the source file path and value the target file paths.
         """
         classifiedFiles = self.__classifyFilePaths(filePaths)
-        print ('Classified files to transfer: ' + str(classifiedFiles))
+        #print ('Classified files to transfer: ' + str(classifiedFiles))
         
         for userAndHostPairs, cursorFilePaths in classifiedFiles.iteritems():
             self.__sendFilesBetweenPairs(userAndHostPairs, 
@@ -87,13 +87,13 @@ class FileTransfer():
                 hostName = self.__getUserAndHost(userAndHost)[1]
                 hostPassword = hostsPaswords[userAndHost]
                 # Create ssh session to remote host
-                print "Connecting to: " + userName + "@" + hostName
+                log.info("Connecting to: " + userName + "@" + hostName)
                 self.ssh.connect(hostName, SSH_PORT, userName, hostPassword)
                 self.sftp = self.ssh.open_sftp()
                 for resultFilePath in resultFilePaths:
-                    filePath = self.__getLocationAndFilePath(resultFilePath)[1]
-                    print "Deleting " + filePath
-                    self.sftp.remove(filePath)
+                    fileName = self.__getLocationAndFilePath(resultFilePath)[1]
+                    log.info("Deleting file " + fileName)
+                    self.sftp.remove(fileName)
             else:
                 pass
             
@@ -124,11 +124,13 @@ class FileTransfer():
                 hostName = self.__getUserAndHost(userAndHost)[1]
                 hostPassword = hostsPaswords[userAndHost]
                 # Create ssh session to remote host
-                print "Connecting to: " + userName + "@" + hostName
+                log.info("Connecting to: " + userName + "@" + hostName)
                 self.ssh.connect(hostName, SSH_PORT, userName, hostPassword)
                 self.sftp = self.ssh.open_sftp()
                 for resultDirectoryPath in resultDirectoryPaths:
-                    self.sftp.rmdir(self.__getLocationAndFilePath(resultDirectoryPath)[1])
+                    directoryName = self.__getLocationAndFilePath(resultDirectoryPath)[1]
+                    log.info("Deleting directory " + directoryName)
+                    self.sftp.rmdir()
             else:
                 pass
         
@@ -160,13 +162,16 @@ class FileTransfer():
                 hostName = self.__getUserAndHost(userAndHost)[1]
                 hostPassword = hostsPaswords[userAndHost]
                 # Create ssh session to remote host
-                print "Connecting to: " + userName + "@" + hostName
+                log.info("Connecting to: " + userName + "@" + hostName)
                 self.ssh.connect(hostName, SSH_PORT, userName, hostPassword)
                 self.sftp = self.ssh.open_sftp()
                 for resultFilePath in resultFilePaths:
+                    fileName = self.__getLocationAndFilePath(resultFilePath)[1]
+                    log.info("Checking: " + fileName)
                     try:
-                        self.sftp.lstat(self.__getLocationAndFilePath(resultFilePath)[1])                    
+                        self.sftp.lstat(fileName)                    
                     except IOError:
+                        log.info("Check fail!!")
                         returnFilePaths.append(resultFilePath)
             else:
                 pass
@@ -291,7 +296,7 @@ class FileTransfer():
         # If the operation involves local and remote machine we create ssh session to remote host
         if (localAndRemote):
             remoteUserAndHostParts = self.__getUserAndHost(remoteUserAndHost)
-            print "Connecting to: " + remoteUserAndHostParts[0] + "@" + remoteUserAndHostParts[1]
+            log.info("Connecting to: " + remoteUserAndHostParts[0] + "@" + remoteUserAndHostParts[1])
             self.ssh.connect(remoteUserAndHostParts[1], SSH_PORT, remoteUserAndHostParts[0], hostsPaswords[remoteUserAndHost])
             self.sftp = self.ssh.open_sftp()
                 
@@ -408,7 +413,8 @@ class FileTransfer():
         sourceFile -- Source file path (/file path/...).
         targetFile -- Target file path (/file path/...).
         """
-        self.__createLocalFolderForFile(targetFile)
+        log.info("Copying " + sourceFile + " to " + targetFile)
+        createFolderForFile(targetFile)
         shutil.copy2(sourceFile, targetFile)
         
     def __sendLocalFile(self, sourceFile, targetFile, gatewayHosts, sftp):
@@ -418,7 +424,7 @@ class FileTransfer():
         targetFile -- Target file path (/file path/...).
         sftp -- sftp connection.
         """
-        print "Sending " + sourceFile + " to " + targetFile
+        log.info("Sending " + sourceFile + " to " + targetFile)
         self.__createRemoteFolderForFile(targetFile, sftp)
         sftp.put(sourceFile, targetFile)
         
@@ -430,8 +436,8 @@ class FileTransfer():
         targetFile -- Target file path (/file path/...).
         sftp -- sftp connection.
         """
-        print "Getting " + sourceFile + " to " + targetFile
-        self.__createLocalFolderForFile(targetFile)
+        log.info("Getting " + sourceFile + " to " + targetFile)
+        createFolderForFile(targetFile)
         sftp.get(sourceFile, targetFile)
     
     def __createRemoteFolderForFile(self, filePath, sftp):
@@ -465,14 +471,6 @@ class FileTransfer():
         if not exist:
             self.__mkdirP(os.path.dirname(remoteDirectory), sftp)
             sftp.mkdir(remoteDirectory) 
-            
-    def __createLocalFolderForFile(self, filePath):
-        """
-        Create folder for file in local host if it does not exist.
-        filePath -- File path which parent directory we must create (/file path/...).
-        """
-        filePathParentDirectory = os.path.dirname(filePath)
-        makePath(filePathParentDirectory)
     
 ################################################################
 
