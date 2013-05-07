@@ -249,29 +249,57 @@ void ProgNmaAlignment::performCompleteSearch(const FileName &fnRandom,
 
 	runSystem(program, arguments, false);
 
-	const char * refSelStr = formatString("%s_ref/ref.doc", randStr).c_str();
-	const char * refStkStr = formatString("%s_ref/ref.stk", randStr).c_str();
+	String refSelStr = formatString("%s_ref/ref.doc", randStr);
 
 	if (fnmask != "") {
 		program = "xmipp_transform_mask";
-		arguments = formatString("-i %s --mask binary_file %s", refSelStr,
+		arguments = formatString("-i %s --mask binary_file %s", refSelStr.c_str(),
 				fnmask.c_str());
 		runSystem(program, arguments, false);
 	}
 
 	// Perform alignment
+	String fnOut=formatString("%s_angledisc.xmd",randStr);
 	if (!projMatch) {
 		program = "xmipp_angular_discrete_assign";
 		arguments = formatString(
-						"-i %s_downimg.xmp --ref %s -o %s_angledisc.xmd --psi_step 5 --max_shift_change %d --search5D -v 0",
-						randStr, refSelStr, randStr, (int)round((double) imgSize / (10.0 * pow(2.0, (double) pyramidLevel))));
+						"-i %s_downimg.xmp --ref %s -o %s --psi_step 5 --max_shift_change %d --search5D -v 0",
+						randStr, refSelStr.c_str(), fnOut.c_str(), (int)round((double) imgSize / (10.0 * pow(2.0, (double) pyramidLevel))));
 	} else {
+		String refStkStr = formatString("%s_ref/ref.stk", randStr);
 		program = "xmipp_angular_projection_matching";
 		arguments =	formatString(
-				        "-i %s_downimg.xmp --ref %s -o %s_angledisc.xmd --search5d_step 1 --max_shift %d -v 0",
-				        randStr, refStkStr, randStr, (int)round((double) imgSize / (10.0 * pow(2.0, (double) pyramidLevel))));
+				        "-i %s_downimg.xmp --ref %s -o %s --search5d_step 1 --max_shift %d -v 0",
+				        randStr, refStkStr.c_str(), fnOut.c_str(), (int)round((double) imgSize / (10.0 * pow(2.0, (double) pyramidLevel))));
 	}
 	runSystem(program, arguments, false);
+	if (projMatch)
+	{
+		MetaData MD;
+		MD.read(fnOut);
+		bool flip;
+		size_t id=MD.firstObject();
+		MD.getValue(MDL_FLIP,flip,id);
+		if (flip)
+		{
+			// This is because continuous assignment does not understand flips
+
+			double shiftX, rot, tilt, psi, newrot, newtilt, newpsi;
+			// Change sign in shiftX
+			MD.getValue(MDL_SHIFT_X,shiftX,id);
+			MD.setValue(MDL_SHIFT_X,-shiftX,id);
+
+			// Change Euler angles
+			MD.getValue(MDL_ANGLE_ROT,rot,id);
+			MD.getValue(MDL_ANGLE_TILT,tilt,id);
+			MD.getValue(MDL_ANGLE_PSI,psi,id);
+			Euler_mirrorY(rot,tilt,psi,newrot,newtilt,newpsi);
+			MD.setValue(MDL_ANGLE_ROT,newrot,id);
+			MD.setValue(MDL_ANGLE_TILT,newtilt,id);
+			MD.setValue(MDL_ANGLE_PSI,newpsi,id);
+			MD.write(fnOut);
+		}
+	}
 }
 
 // Continuous assignment ===================================================
@@ -281,43 +309,13 @@ double ProgNmaAlignment::performContinuousAssignment(const FileName &fnRandom,
 	const char * randStr = fnRandom.c_str();
 	String fnResults=formatString("%s_anglecont.xmd", randStr);
 	bool costSource=true;
-	if (!projMatch) {
-		String program = "xmipp_angular_continuous_assign";
-		String arguments =
-				formatString(
-						"-i %s_angledisc.xmd --ref %s_deformedPDB.vol -o %s --gaussian_Fourier %f --gaussian_Real %f --zerofreq_weight %f -v 0",
-						randStr, randStr, fnResults.c_str(), gaussian_DFT_sigma,
-						gaussian_Real_sigma, weight_zero_freq);
-		runSystem(program, arguments, false);
-	}
-	else
-	{
-		costSource=false;
-		if (currentStage==1)
-			fnResults=formatString("%s_angledisc.xmd", randStr);
-		else
-		{
-			mkdir((fnRandom+"_ref").c_str(), S_IRWXU);
-
-			String program = "xmipp_angular_project_library";
-			double angSampling=RAD2DEG(atan(1.0/((double) imgSize / pow(2.0, (double) pyramidLevel+1))));
-			angSampling=std::max(angSampling,discrAngStep);
-			String arguments = formatString(
-					"-i %s_deformedPDB.vol -o %s_ref/ref.stk --sampling_rate %f -v 0",
-					randStr, randStr,angSampling);
-			arguments +=formatString(
-							" --compute_neighbors --angular_distance %f --experimental_images %s_angledisc.xmd",
-							2.5*angSampling,randStr);
-			runSystem(program, arguments, false);
-
-			const char * refStkStr = formatString("%s_ref/ref.stk", randStr).c_str();
-			program = "xmipp_angular_projection_matching";
-			arguments =	formatString(
-							"-i %s_downimg.xmp --ref %s -o %s --search5d_step 1 --max_shift %d -v 0",
-							randStr, refStkStr, fnResults.c_str(), (int)round((double) imgSize / (10.0 * pow(2.0, (double) pyramidLevel))));
-			runSystem(program, arguments, false);
-		}
-	}
+	String program = "xmipp_angular_continuous_assign";
+	String arguments =
+			formatString(
+					"-i %s_angledisc.xmd --ref %s_deformedPDB.vol -o %s --gaussian_Fourier %f --gaussian_Real %f --zerofreq_weight %f -v 0",
+					randStr, randStr, fnResults.c_str(), gaussian_DFT_sigma,
+					gaussian_Real_sigma, weight_zero_freq);
+	runSystem(program, arguments, false);
 
 	// Pick up results
 	MetaData DF(fnResults);
@@ -396,7 +394,6 @@ double ObjFunc_nma_alignment::eval(Vector X, int *nerror) {
 	runSystem("rm", formatString("-rf %s* &", randStr));
 
 	global_nma_prog->updateBestFit(fitness, dim);
-
 	return fitness;
 }
 
