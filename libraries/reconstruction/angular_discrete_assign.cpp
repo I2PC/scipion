@@ -32,6 +32,7 @@
 #include <data/wavelet.h>
 #include <data/mask.h>
 #include <data/filters.h>
+#include <algorithm>
 
 // Empty constructor =======================================================
 ProgAngularDiscreteAssign::ProgAngularDiscreteAssign()
@@ -299,12 +300,11 @@ void ProgAngularDiscreteAssign::refine_candidate_list_with_correlation(
     Matrix1D<double> &x_power, std::vector<double> &sumxy,
     double th)
 {
-    Histogram1D hist;
-    hist.init(-1, 1, 201);
-
     int dimp = SBsize(m);
     int imax = rot.size();
     const MultidimArray<double> &library_m = *(library[m]);
+    std::vector<double> sortedCorr;
+    sortedCorr.reserve(imax);
     for (int i = 0; i < imax; i++)
     {
         if (candidate_list[i])
@@ -330,7 +330,7 @@ void ProgAngularDiscreteAssign::refine_candidate_list_with_correlation(
             double corr = sumxy[i] / sqrt(DIRECT_A2D_ELEM(library_power,i, m) *
                                           VEC_ELEM(x_power,m));
             cumulative_corr[i] = corr;
-            INSERT_VALUE(hist,corr);
+            sortedCorr.push_back(corr);
 
             if (tell & TELL_ROT_TILT)
             {
@@ -339,7 +339,10 @@ void ProgAngularDiscreteAssign::refine_candidate_list_with_correlation(
             }
         }
     }
-    double corr_th = hist.percentil(100 - th);
+    std::sort(sortedCorr.begin(),sortedCorr.end());
+    int idx=(int)floor(sortedCorr.size()*(1-th/100.0));
+
+    double corr_th = sortedCorr[idx];
 
     // Remove all those projections below the threshold
     for (int i = 0; i < imax; i++)
@@ -415,6 +418,7 @@ double ProgAngularDiscreteAssign::predict_rot_tilt_angles(Image<double> &I,
     int imax = rot.size();
     for (int i = 0; i < imax; i++)
         if (candidate_list[i])
+        {
             if (first)
             {
                 best_i = i;
@@ -425,6 +429,7 @@ double ProgAngularDiscreteAssign::predict_rot_tilt_angles(Image<double> &I,
                 best_i = i;
             else if (cumulative_corr[i] == cumulative_corr[best_i])
                 N_max++;
+        }
 
     if (N_max == 0)
     {
@@ -510,7 +515,7 @@ void ProgAngularDiscreteAssign::group_views(const std::vector<double> &vrot,
         const std::vector<int> &best_idx, const std::vector<int> &candidate_idx,
         std::vector< std::vector<int> > &groups)
 {
-    for (int j = 0; j < best_idx.size(); j++)
+    for (size_t j = 0; j < best_idx.size(); j++)
     {
         int i = candidate_idx[best_idx[j]];
 #ifdef DEBUG
@@ -523,11 +528,11 @@ void ProgAngularDiscreteAssign::group_views(const std::vector<double> &vrot,
         double psii = vpsi[i];
         // See if there is any suitable group
         bool assigned = false;
-        int g;
+        size_t g;
         for (g = 0; g < groups.size(); g++)
         {
             bool fits = true;
-            for (int jp = 0; jp < groups[g].size(); jp++)
+            for (size_t jp = 0; jp < groups[g].size(); jp++)
             {
                 int ip = candidate_idx[groups[g][jp]];
                 double ang_distance = distance_prm.SL.computeDistance(
@@ -579,7 +584,7 @@ void ProgAngularDiscreteAssign::group_views(const std::vector<double> &vrot,
     {
         groups.clear();
         std::vector<int> group;
-        for (int j = 0; j < best_idx.size(); j++)
+        for (size_t j = 0; j < best_idx.size(); j++)
             group.push_back(best_idx[j]);
         groups.push_back(group);
     }
@@ -596,7 +601,6 @@ int ProgAngularDiscreteAssign::pick_view(int method,
         const std::vector<int> &best_idx,
         const std::vector<int> &candidate_idx, const std::vector<double> &candidate_rate)
 {
-
     if (method == 0)
     {
         // This one returns the most scored image of the first group
@@ -618,10 +622,10 @@ int ProgAngularDiscreteAssign::pick_view(int method,
         group_rate.reserve(groups.size());
         int best_g;
         double best_group_rate = -1e38;
-        for (int g = 0; g < groups.size(); g++)
+        for (size_t g = 0; g < groups.size(); g++)
         {
             double temp_group_rate = 0;
-            for (int j = 0; j < groups[g].size(); j++)
+            for (size_t j = 0; j < groups[g].size(); j++)
                 temp_group_rate += candidate_rate[groups[g][j]];
             group_rate.push_back(temp_group_rate);
             if (temp_group_rate > best_group_rate)
@@ -633,7 +637,7 @@ int ProgAngularDiscreteAssign::pick_view(int method,
 
         // Check that there are not two groups with the same score
         int groups_with_max_rate = 0;
-        for (int g = 0; g < groups.size(); g++)
+        for (size_t g = 0; g < groups.size(); g++)
             if (group_rate[g] == best_group_rate)
                 groups_with_max_rate++;
 #ifdef DEBUG
@@ -647,7 +651,7 @@ int ProgAngularDiscreteAssign::pick_view(int method,
         // Take the best image within that group
         int best_j;
         double best_rate = -1e38;
-        for (int j = 0; j < groups[best_g].size(); j++)
+        for (size_t j = 0; j < groups[best_g].size(); j++)
         {
 #ifdef NEVER_DEFINED
             // Select the best with the rate
@@ -667,7 +671,7 @@ int ProgAngularDiscreteAssign::pick_view(int method,
 
         // Check that there are not two images with the same rate
         int images_with_max_rate = 0;
-        for (int j = 0; j < groups[best_g].size(); j++)
+        for (size_t j = 0; j < groups[best_g].size(); j++)
 #ifdef NEVER_DEFINED
             // Select the best with the rate
             if (candidate_rate[groups[best_g][j]] == best_rate)
@@ -681,7 +685,7 @@ int ProgAngularDiscreteAssign::pick_view(int method,
             // If there are several with the same punctuation take the one
             // with the best scoreelation
             double best_score = -1e38;
-            for (int j = 0; j < groups[best_g].size(); j++)
+            for (size_t j = 0; j < groups[best_g].size(); j++)
             {
                 if (vscore[candidate_idx[groups[best_g][j]]] > best_score &&
                     candidate_rate[groups[best_g][j]] == best_rate)
@@ -693,11 +697,12 @@ int ProgAngularDiscreteAssign::pick_view(int method,
         }
         return groups[best_g][best_j];
     }
+    REPORT_ERROR(ERR_UNCLASSIFIED,"The code should not have reached this point");
 }
 
 // Run ---------------------------------------------------------------------
 // Predict shift and psi ---------------------------------------------------
-//#define DEBUG
+// #define DEBUG
 void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
     // Read the image and take its angles from the Metadata
@@ -746,69 +751,97 @@ void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileNa
     img.write("PPPoriginal.xmp");
 #endif
 
-    for (double shiftX = Xoff - max_shift_change; shiftX <= Xoff + max_shift_change; shiftX += shift_step)
-        for (double shiftY = Yoff - max_shift_change; shiftY <= Yoff + max_shift_change; shiftY += shift_step)
-        {
-            if ((shiftX - Xoff)*(shiftX - Xoff) + (shiftY - Yoff)*(shiftY - Yoff) > R2)
-                continue;
-            for (double psi = psi0; psi <= psiF; psi += psi_step)
-            {
-                N_trials++;
+    double bestCorr=-1e38;
+    for (int flip=0; flip<=1; ++flip)
+		for (double shiftX = Xoff - max_shift_change; shiftX <= Xoff + max_shift_change; shiftX += shift_step)
+			for (double shiftY = Yoff - max_shift_change; shiftY <= Yoff + max_shift_change; shiftY += shift_step)
+			{
+				if ((shiftX - Xoff)*(shiftX - Xoff) + (shiftY - Yoff)*(shiftY - Yoff) > R2)
+					continue;
+				for (double psi = psi0; psi <= psiF; psi += psi_step)
+				{
+					N_trials++;
 
-                // Shift image if necessary
-                if (shiftX == 0 && shiftY == 0)
-                    Ip() = img();
-                else
-                {
-                    VECTOR_R2(shift, shiftX, shiftY);
-                    translate(LINEAR,Ip(),img(),shift,WRAP);
-                }
+					// Flip if necessary
+					Ip()=img();
+					if (flip)
+						Ip().selfReverseX();
 
-                // Rotate image if necessary
-                // Adding 2 is a trick to avoid that the 0, 90, 180 and 270
-                // are treated in a different way
-                selfRotate(LINEAR,Ip(),psi + 2, WRAP);
-                selfRotate(LINEAR,Ip(),-2, WRAP);
+					// Shift image if necessary
+					if (shiftX != 0 || shiftY != 0)
+					{
+						VECTOR_R2(shift, shiftX, shiftY);
+						selfTranslate(LINEAR,Ip(),shift,WRAP);
+					}
 
-                // Project the resulting image onto the visible space
-                double proj_error = 0.0, proj_compact = 0.0;
-                bool   look_for_rot_tilt = true;
-
-                // Search for the best tilt, rot angles
-                double rotp, tiltp;
-                int best_ref_idx;
-                double corrp =
-                    predict_rot_tilt_angles(Ip, rotp, tiltp, best_ref_idx);
-
-                double aux_rot = rotp, aux_tilt = tiltp, aux_psi = psi;
-                double ang_jump = distance_prm.SL.computeDistance(
-                                      img.rot(), img.tilt(), img.psi(),
-                                      aux_rot, aux_tilt, aux_psi,
-                                      false, false, false);
-
-                vshiftX.push_back(shiftX);
-                vshiftY.push_back(shiftY);
-                vrot.push_back(rotp);
-                vtilt.push_back(tiltp);
-                vpsi.push_back(psi);
-                vcorr.push_back(corrp);
-                vproj_error.push_back(proj_error);
-                vproj_compact.push_back(proj_compact);
-                vang_jump.push_back(ang_jump);
-                vref_idx.push_back(best_ref_idx);
-
+					// Rotate image if necessary
+					// Adding 2 is a trick to avoid that the 0, 90, 180 and 270
+					// are treated in a different way
+					selfRotate(LINEAR,Ip(),psi + 2, WRAP);
+					selfRotate(LINEAR,Ip(),-2, WRAP);
 #ifdef DEBUG
-
-                Ip.write("PPPafter_denoising.xmp");
-                Image<double> Iref((std::string)"ref" + integerToString(best_ref_idx + 1, 6) + ".xmp");
-                Iref.write("PPPref.xmp");
-                std::cerr << "corrp=" << corrp << "\nPress any key\n";
-                char c;
-                std::cin >> c;
+					Image<double> Ipsave;
+					Ipsave()=Ip();
 #endif
 
-            }
-        }
+					// Project the resulting image onto the visible space
+					double proj_error = 0.0, proj_compact = 0.0;
+
+					// Search for the best tilt, rot angles
+					double rotp, tiltp;
+					int best_ref_idx;
+					double corrp =
+						predict_rot_tilt_angles(Ip, rotp, tiltp, best_ref_idx);
+
+					double aux_rot = rotp, aux_tilt = tiltp, aux_psi = psi;
+					double ang_jump = distance_prm.SL.computeDistance(
+										  img.rot(), img.tilt(), img.psi(),
+										  aux_rot, aux_tilt, aux_psi,
+										  false, false, false);
+
+					double shiftXp=shiftX;
+					double shiftYp=shiftY;
+					double psip=psi;
+					if (flip)
+					{
+						// std::cout << "       before flipping " << rotp << " " << tiltp << " " << psip << " " << shiftXp << " " << shiftYp << " " << corrp << std::endl;
+						shiftXp=-shiftXp;
+						double newrot, newtilt, newpsi;
+						Euler_mirrorY(rotp,tiltp,psi,newrot,newtilt,newpsi);
+						rotp=newrot;
+						tiltp=newtilt;
+						psip=newpsi;
+					}
+
+					vshiftX.push_back(shiftXp);
+					vshiftY.push_back(shiftYp);
+					vrot.push_back(rotp);
+					vtilt.push_back(tiltp);
+					vpsi.push_back(psip);
+					vcorr.push_back(corrp);
+					vproj_error.push_back(proj_error);
+					vproj_compact.push_back(proj_compact);
+					vang_jump.push_back(ang_jump);
+					vref_idx.push_back(best_ref_idx);
+					// std::cout << flip << " " << rotp << " " << tiltp << " " << psip << " " << shiftXp << " " << shiftYp << " " << corrp << std::endl;
+
+	#ifdef DEBUG
+					if (corrp>bestCorr)
+					{
+						Ipsave.write("PPPafter_denoising.xmp");
+						Image<double> Iref;
+						Iref.read(library_name[best_ref_idx]);
+						Iref.write("PPPref.xmp");
+						std::cerr << "This is index " << vcorr.size()-1 << std::endl;
+						std::cerr << "corrp=" << corrp << "\nPress any key\n";
+						bestCorr=corrp;
+						char c;
+						std::cin >> c;
+					}
+	#endif
+
+				}
+			}
 
     // Compute extrema of all scoring factors
     double max_corr        = vcorr[0],         min_corr        = vcorr[0];
@@ -836,9 +869,6 @@ void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileNa
     }
 
     // Score each projection
-    double corr_step = max_corr - min_corr;
-    double proj_error_step = max_proj_error - min_proj_error;
-    double proj_compact_step = max_proj_compact - min_proj_compact;
     vscore.reserve(vcorr.size());
     for (int i = 0; i < N_trials; i++)
     {
@@ -874,10 +904,12 @@ void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileNa
         if (i == 0 && circular)
             il = N_trials - 1;
         else if (i == N_trials - 1)
+        {
             if (circular)
                 ir = 0;
             else
                 ir = -1;
+        }
 
         // Check if the error is a local minimum of the projection error
         // or a local maxima of the correlation
@@ -945,7 +977,6 @@ void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileNa
         for (int j = 0; j < jmax; j++)
         {
             int jp = idx_score(j) - 1;
-            double score = candidate_rate[jp];
             int i = candidate_local_maxima[jp];
             std::cout << "i= " << i
             << " psi= " << vpsi[i] << " rot= " << vrot[i] << " tilt= "
