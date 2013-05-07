@@ -148,7 +148,7 @@ a {
 }
 
 .treeview li.lastCollapsable,.treeview li.lastExpandable {
-	background-image: url(../images/treeview-default.gif);
+	background-image: url(../../../../resources/treeview-default.gif);
 }
 
 .treeview li.lastCollapsable {
@@ -162,13 +162,6 @@ a {
 .treeview div.lastCollapsable-hitarea,.treeview div.lastExpandable-hitarea
 	{
 	background-position: 0;
-}
-
-.treeview .placeholder {
-	background: url(../images/ajax-loader.gif) 0 0 no-repeat;
-	height: 16px;
-	width: 16px;
-	display: block;
 }
 
 .filetree li {
