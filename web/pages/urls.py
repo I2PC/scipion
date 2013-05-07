@@ -22,6 +22,6 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
     
     url(r'^projects/', 'app.views.projects'),
-    url(r'^project_content/', 'app.views.project_content'),
+    url(r'^project_content/$', 'app.views.project_content'),
     
 )

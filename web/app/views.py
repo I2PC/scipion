@@ -94,13 +94,13 @@ def project_content(request):
     jquery_treeview = os.path.join(settings.STATIC_URL, 'js/jquery.treeview.js')
     launchTreeview = os.path.join(settings.STATIC_URL, 'js/launchTreeview.js')
     #############
+    
+    project_name = request.GET.get('project_name')
+    
     root = loadProtTree()
     
-    manager = Manager()
-    projects = manager.listProjects()
-    
-
-    context = {'logo': logo_path,
+    context = {'project_name':project_name,
+               'logo': logo_path,
                'favicon': favicon_path,
                'jquery': jquery_path,
                'jquery_cokkie': jquery_cookie,
