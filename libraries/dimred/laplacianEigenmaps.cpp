@@ -31,10 +31,29 @@ void LaplacianEigenmap::setSpecificParameters(double sigma, size_t numberOfNeigh
 	this->numberOfNeighbours=numberOfNeighbours;
 }
 
+void deleteLastNColumns(Matrix2D<double> &A, int N)
+{
+	Matrix2D<double> Ap;
+	Ap.resize(MAT_YSIZE(A),MAT_XSIZE(A)-N);
+	for(size_t i=0 ; i<MAT_YSIZE(A);++i)
+		memcpy(&MAT_ELEM(Ap,i,0),&MAT_ELEM(A,i,0),MAT_XSIZE(Ap)*sizeof(double));
+	A=Ap;
+}
+
+
 void LaplacianEigenmap::reduceDimensionality()
 {
-	Matrix2D<double> D2,L;
-	computeDistanceToNeighbours(*X,numberOfNeighbours,D2,distance,false);
-	computeSimilarityMatrix(D2,sigma,true,true);
-	computeGraphLaplacian(D2,L);
+	Matrix2D<double> G,L,D;
+	Matrix1D<double> mappedX;
+	computeDistanceToNeighbours(*X,numberOfNeighbours,G,distance,false);
+	computeSimilarityMatrix(G,sigma,true,true);
+	computeGraphLaplacian(G,L);
+	D.initZeros(MAT_YSIZE(G),MAT_YSIZE(G));
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(D)
+			if (i==j)
+				for(j=0;j<MAT_XSIZE(G);++j)
+					MAT_ELEM(D,i,i)+=MAT_ELEM(G,i,j);
+	generalizedEigs(L,D,mappedX,Y);
+	eraseFirstColumn(Y);
+	deleteLastNColumns(Y,MAT_XSIZE(Y)-outputDim-1);
 }

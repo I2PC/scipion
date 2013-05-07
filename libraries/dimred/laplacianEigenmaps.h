@@ -41,7 +41,7 @@ public:
 	size_t numberOfNeighbours;
 public:
 	/// Set specific parameters
-	void setSpecificParameters(double sigma=1.0, size_t numberOfNeighbours=12);
+	void setSpecificParameters(double sigma=1.0, size_t numberOfNeighbours=7);
 
 	/// Reduce dimensionality
 	void reduceDimensionality();
