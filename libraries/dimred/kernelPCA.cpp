@@ -7,22 +7,22 @@
 #include "kernelPCA.h"
 
 void KernelPCA::setSpecificParameters(double sigma) {
-	this->sigma = sigma;
+	sigma = sigma;
 }
 
 void KernelPCA::reduceDimensionality() {
-	this->M = MAT_XSIZE(*X);						//get M dimension of X
-	this->N = MAT_YSIZE(*X);						//get N dimension of X
+	M = MAT_XSIZE(*X);						//get M dimension of X
+	N = MAT_YSIZE(*X);						//get N dimension of X
 
-	this->euclideanNorm();						//d=(v_1-v_2)^2
-	this->gramMatrix();						    //k(v_1,v_2)=exp(-1/2*(d/sigma)^2)
+	euclideanNorm();						//d=(v_1-v_2)^2
+	gramMatrix();						    //k(v_1,v_2)=exp(-1/2*(d/sigma)^2)
 
-	this->normMatrix();							//Z=1/det(Z)*Z
+	normMatrix();							//Z=1/det(Z)*Z
 
-	this->getGreatestEigen();			//compute Eigen and get greates Eigen
+	getGreatestEigen();			//compute Eigen and get greates Eigen
 
 	Y.initZeros(MAT_YSIZE(U_dR), MAT_XSIZE(U_dR));
-	this->calcMapping();						//compute Mapping
+	calcMapping();						//compute Mapping
 }
 
 void KernelPCA::euclideanNorm() {
@@ -45,7 +45,6 @@ void KernelPCA::gramMatrix() {
 	}
 
 void KernelPCA::normMatrix() {
-	//std::cout << "Entering normMatrix" << std::endl;
 	Matrix2D<double> A;	//A=sums of rows
 	A.initZeros(1, N);
 	double a = 0;
@@ -62,8 +61,6 @@ void KernelPCA::normMatrix() {
 
 	}
 	a /= N;
-	//A.write("dimred/test1_c.txt"); //write A in .txt
-	//std::cout << "a= " << a << std::endl;
 
 	for (i = 0; i < N; i++) {
 		for (j = 0; j < N; j++) {
@@ -78,11 +75,11 @@ void KernelPCA::getGreatestEigen() {
 	//calc Eigen-Value/Vector
 	Z.eigs(U, W, V, index);
 
-	U_dR.initZeros(N, this->outputDim);
-	W_dR.initZeros(this->outputDim);
+	U_dR.initZeros(N, outputDim);
+	W_dR.initZeros(outputDim);
 
 	//search for and get i-th greates eigenvalue and associated eigenvalue
-	for (size_t i = 0; i < this->outputDim; i++) {
+	for (size_t i = 0; i < outputDim; i++) {
 		for (int j = 0; j < N; j++) {
 			if (i == VEC_ELEM(index,j)){
 			VEC_ELEM(W_dR,i)=VEC_ELEM(W,j);
@@ -92,17 +89,11 @@ void KernelPCA::getGreatestEigen() {
 
 			j=N;
 		}}}
-
-			//correction of U[x y] = U[x -y]
-	size_t NN = MAT_YSIZE(U_dR);
-	for (size_t i = 0; i < NN; i++) {
-		MAT_ELEM(U_dR,i,1)=-MAT_ELEM(U_dR,i,1);
-	}
 }
 
 void KernelPCA::calcMapping() {
 	Matrix1D<double> sqrtL(outputDim);
-	for (size_t i = 0; i < this->outputDim; i++)
+	for (size_t i = 0; i < outputDim; i++)
 		VEC_ELEM(sqrtL,i)=sqrt(VEC_ELEM(W_dR,i));
 
 	for (size_t i = 0; i < MAT_YSIZE(U_dR); i++)
