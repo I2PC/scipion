@@ -21,7 +21,7 @@ public:
 	int N,M;
 
 	Matrix2D<double> Z, U, V, U_dR;
-	Matrix1D<double> W, W_dR, e_W_dR, invsqrtL;
+	Matrix1D<double> W, W_dR, e_W_dR;
 	Matrix1D<int> index;
 public:
 	/// Set specific parameters

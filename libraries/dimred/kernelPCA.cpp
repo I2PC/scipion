@@ -101,22 +101,11 @@ void KernelPCA::getGreatestEigen() {
 }
 
 void KernelPCA::calcMapping() {
-	Matrix1D<double> invL;
-	Matrix1D<double> sqrtL;
-
-	invL.initZeros(this->outputDim);
-	sqrtL.initZeros(this->outputDim);
-	invsqrtL.initZeros(this->outputDim);
-
+	Matrix1D<double> sqrtL(outputDim);
 	for (size_t i = 0; i < this->outputDim; i++)
-	{
 		VEC_ELEM(sqrtL,i)=sqrt(VEC_ELEM(W_dR,i));
-		VEC_ELEM(invL,i)=(1/VEC_ELEM(W_dR,i));
-		VEC_ELEM(invsqrtL,i)=(1/VEC_ELEM(sqrtL,i));
-	}
 
-	size_t NN = MAT_YSIZE(U_dR);
-	for (size_t i = 0; i < NN; i++)
+	for (size_t i = 0; i < MAT_YSIZE(U_dR); i++)
 	{
 		MAT_ELEM(Y,i,0)=(MAT_ELEM(U_dR,i,0)*VEC_ELEM(sqrtL,0));
 		MAT_ELEM(Y,i,1)=(MAT_ELEM(U_dR,i,1)*VEC_ELEM(sqrtL,1));
