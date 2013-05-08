@@ -27,9 +27,9 @@
 This sub-package contains wrapper around CL2D Xmipp program
 """
 
-
+from os.path import join, dirname, exists
 from pyworkflow.em import *  
-from pyworkflow.utils import *  
+from pyworkflow.utils import runJob 
 import xmipp
 from data import *
 from xmipp3 import XmippProtocol
@@ -61,7 +61,7 @@ class XmippDefCL2D(Form):
         self.addParam('numberOfInitialReferences', IntParam, default=4, expertLevel=LEVEL_ADVANCED,
                       label='Number of initial references:',
                       help='Initial number of references used in the first level.')
-        self.addParam('numberOfIteration', IntParam, default=4, expertLevel=LEVEL_ADVANCED,
+        self.addParam('numberOfIterations', IntParam, default=4, expertLevel=LEVEL_ADVANCED,
                       label='Number of iterations:',
                       help='Maximum number of iterations within each level.')         
         self.addParam('comparisonMethod', EnumParam, choices=['correlation', 'correntropy'],
@@ -72,7 +72,7 @@ class XmippDefCL2D(Form):
                       label="Clustering method", default=CL_CLASSICAL,
                       display=EnumParam.DISPLAY_COMBO,
                       help='Use the classical clustering criterion or the robust')
-        self.addParam('additionalParams', StringParam, expertLevel=LEVEL_EXPERT,
+        self.addParam('extraParams', StringParam, expertLevel=LEVEL_EXPERT,
               label='Additional parameters',
               help='Additional parameters for classify_CL2D:\n  --verbose, --corrSplit, ...')   
         
@@ -113,101 +113,89 @@ class XmippProtCL2D(ProtAlign, ProtClassify, XmippProtocol):
                                          self._getPath('input_images.xmd'))
         # Prepare arguments to call program: xmipp_classify_CL2D
         self._params = {'imgsFn': imgsFn, 
-                        'workingDir': self.workingDir.get(),
+                        'extraDir': self._getExtraPath(),
                         'nref': self.numberOfReferences.get(), 
                         'nref0': self.numberOfInitialReferences.get(),
                         'iter': self.numberOfIterations.get(),
-                        'extraParams': self.additionalParameters.get() 
+                        'extraParams': self.extraParams.get(''),
+                        'thZscore': self.thZscore.get(),
+                        'thPCAZscore': self.thPCAZscore.get(),
+                        'tolerance': self.tolerance.get()
                       }
-        params= '-i %(imgsFn)s --odir %(workingDir)s --oroot level --nref %(nref)d --iter %(iter)d %(extraParams)s'
+        args = '-i %(imgsFn)s --odir %(extraDir)s --oroot level --nref %(nref)d --iter %(iter)d %(extraParams)s'
         if self.comparisonMethod == CMP_CORRELATION:
-            params+= ' --distance correlation'
+            args += ' --distance correlation'
         if self.clusteringMethod == CL_CLASSICAL:
-            params+= ' --classicalMultiref'
-        if not '--ref0' in self.additionalParameters.get():
-            params += ' --nref0 %(nref0)d'
+            args += ' --classicalMultiref'
+        if not self.extraParams.hasValue() or not '--ref0' in self.extraParams.get():
+            args += ' --nref0 %(nref0)d'
     
-        self._insertRunJobStep("xmipp_classify_CL2D", params % paramsDict)
-        self._insertFunctionStep('createOutput')
-        self._insertFunctionStep('evaluateClasses', subset='')
+        self._defineClassifySteps("xmipp_classify_CL2D", args)
         
+        # Analyze cores and stable cores
+        if self.numberOfReferences > self.numberOfInitialReferences:
+            program = "xmipp_classify_CL2D_core_analysis"
+            args = "--dir %(extraDir)s --root level "
+            # core analysis
+            self._defineClassifySteps(program, args + "--computeCore %(thZscore)f %(thPCAZscore)f", subset='_core')
+            # stable core analysis
+            self._defineClassifySteps(program, args + "--computeStableCore %(tolerance)d", subset='_stable_core')
+            # evaluate classes again
         
-        params = ' -i %s --oroot %s' % (imgsFn, self.oroot)
-        # Number of references will be ignored if -ref is passed as expert option
-        if self.doGenerateReferences:
-            params += ' --nref %d' % self.numberOfReferences.get()
-        else:
-            self.inputRefs = self.inputReferences.get()
-            refsFn = self._insertConvertStep('inputRefs', XmippSetOfImages,
-                                             self._getPath('input_references.xmd'))
-            params += ' --ref %s' % refsFn
+    def _defineClassifySteps(self, program, args, subset=''):
+        """ Defines four steps for the subset:
+        1. Run the main program.
+        2. Evaluate classes
+        3. Sort the classes.
+        4. And create output
+        """
+        self._insertRunJobStep(program, args % self._params)
+        self._insertFunctionStep('evaluateClasses', subset)
+        self._insertFunctionStep('sortClasses', subset)
+        self._insertFunctionStep('createOutput', subset)        
         
-        if self.doMlf:
-            if not self.doCorrectAmplitudes:
-                params += ' --no_ctf'                    
-            if not self.areImagesPhaseFlipped:
-                params += ' --not_phase_flipped'
-            if self.highResLimit.get() > 0:
-                params += ' --limit_resolution 0 %f' % self.highResLimit.get()
-            params += ' --sampling_rate %f' % self.inputImages.get().samplingRate.get()
-        else:
-            if self.doFast:
-                params += ' --fast'
-            if self.numberOfThreads.get() > 1:
-                params += ' --thr %d' % self.numberOfThreads.get()
-            
-        if self.maxIters.get() != 100:
-            params += " --iter %d" % self.maxIters.get()
-
-        if self.doMirror:
-            params += ' --mirror'
-            
-        if self.doNorm:
-            params += ' --norm'
-
-        self._insertRunJobStep(program, params)
-                
-        self._insertFunctionStep('createOutput')
-        
-        
-    def getLevelMdFiles(self, subset=''):
+    def _getLevelMdFiles(self, subset=''):
         """ Grab the metadata class files for each level. """
-        levelMdFiles = glob(self._extraPath("level_??/level_classes%s.xmd" % subset))
+        levelMdFiles = glob(self._getExtraPath("level_??/level_classes%s.xmd" % subset))
         levelMdFiles.sort()
-        return levelMdFiles
-        
+        return levelMdFiles        
     
     def sortClasses(self, subset=''):
+        """ Sort the classes and provided a quality criterion. """
         nproc = self.numberOfMpi.get()
         if nproc < 2:
-            nproc = 2
-        levelMdFiles = self.getLevelMdFiles(subset)
-        for filename in levelMdFiles:
-            level=int(re.search('level_(\d\d)',filename).group(1))
-            fnRoot=os.path.join(WorkingDir,"level_%02d/level_classes%s_sorted"%(level,suffix))
-            params= "-i classes@"+filename+" --oroot "+fnRoot
-            runJob(log,"xmipp_image_sort",params,Nproc)
-            mD=MetaData(fnRoot+".xmd")
-            mD.write("classes_sorted@"+filename,MD_APPEND)
-            deleteFile(log,fnRoot+".xmd")
+            nproc = 2 # Force at leat two processor because only MPI version is available
+        levelMdFiles = self._getLevelMdFiles(subset)
+        for mdFn in levelMdFiles:
+            fnRoot = join(dirname(mdFn), "classes%s_sorted" % subset)
+            params = "-i classes@%s --oroot %s" % (mdFn, fnRoot)
+            runJob(None, "xmipp_image_sort", params, nproc)
+            mdFnOut = fnRoot + ".xmd"
+            md = xmipp.MetaData(mdFnOut)
+            md.write("classes_sorted@" + mdFn, xmipp.MD_APPEND)
+            #deleteFile(log,fnRoot+".xmd")
         
     def evaluateClasses(self, subset=''):
         """ Calculate the FRC and output the hierarchy for 
         each level of classes.
         """
-        levelMdFiles = self.getLevelMdFiles(subset)
-        hierarchyFnOut = self._extraPath("classes%s_hierarchy.txt" % subset)
+        levelMdFiles = self._getLevelMdFiles(subset)
+        hierarchyFnOut = self._getExtraPath("classes%s_hierarchy.txt" % subset)
         prevMdFn = None
         for mdFn in levelMdFiles:
-            runJob(log,"xmipp_classify_evaluate_classes","-i " + mdFn)
+            runJob(None, "xmipp_classify_evaluate_classes","-i " + mdFn)
             if prevMdFn is not None:
                 args = "--i1 %s --i2 %s -o %s" % (prevMdFn, mdFn, hierarchyFnOut)
-                if os.path.exists(hierarchyFnOut):
+                if exists(hierarchyFnOut):
                     args += " --append"
-                runJob(log,"xmipp_classify_compare_classes",args)
+                runJob(None, "xmipp_classify_compare_classes",args)
             prevMdFn = mdFn
             
-                 
-    def createOutput(self):
-        classification = XmippClassification2D(self.oroot + 'classes.xmd')
-        self._defineOutputs(outputClassification=classification)
+    def createOutput(self, subset=''):
+        """ Store the XmippClassification2D object 
+        as result of the protocol. 
+        """
+        levelMdFiles = self._getLevelMdFiles(subset)
+        lastMdFn = levelMdFiles[-1]
+        result = {'outputClassification' + subset: XmippClassification2D(lastMdFn, 'classes_sorted')}
+        self._defineOutputs(**result)

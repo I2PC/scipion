@@ -75,7 +75,6 @@ class XmippSetOfImages(XmippSet, SetOfImages):
     @staticmethod
     def convert(setOfImgs, filename):
         return XmippSet.convert(setOfImgs, XmippSetOfImages, filename)
-
                 
 class XmippMicrograph(XmippImage, Micrograph):
     """Xmipp implementation for Micrograph"""
@@ -231,6 +230,11 @@ class XmippCTFModel(CTFModel):
         md.write(fn)
         
         self.set(fn)
+    
+    def getFiles(self):
+        files = []
+        files.append(self.getFileName())
+        return files
           
     
 class XmippSetOfCoordinates(SetOfCoordinates):
@@ -270,6 +274,14 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         
         for mic in self.getMicrographs():
             self.iterMicrographCoordinates(mic)
+    
+    def getFiles(self):
+        files = []
+        path = self.getFileName()
+        for mic in self.getMicrographs():            
+            filePath = join(path, replaceBaseExt(mic.getFileName(), 'pos'))
+            files.append(filePath)
+        return files
 
             
 class XmippImageClassAssignment(ImageClassAssignment, XmippMdRow):
@@ -309,17 +321,26 @@ class XmippClass2D(Class2D):
         
 class XmippClassification2D(Classification2D):
     """ Store results from a 2D classification. """
-    def __init__(self, filename=None, **args):
+    def __init__(self, filename=None, classesBlock='classes', **args):
         Classification2D.__init__(self, **args)
         self.getFileName = self.get
         self.setFileName = self.set
         self.setFileName(filename)
+        self.classesBlock = String(classesBlock)
         
     def iterClasses(self):
         fn = self.getFileName()
-        md = xmipp.MetaData('classes@' + fn)
+        block = self.classesBlock.get()
+        md = xmipp.MetaData('%(block)s@%(fn)s' % locals())
         for objId in md:
             ref = md.getValue(xmipp.MDL_REF, objId)
             img = md.getValue(xmipp.MDL_IMAGE, objId)
             yield XmippClass2D(ref, fn, img)
+            
+    def getClassesMdFileName(self):
+        """ Return the filename with block pointing
+        to the classes. 
+        """
+        return "%s@%s" % (self.classesBlock.get(),
+                          self.getFileName())
   

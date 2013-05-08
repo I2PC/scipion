@@ -60,7 +60,7 @@ class XmippViewer(Viewer):
             imgs = XmippSetOfImages.convert(obj, fn)
             runShowJ(imgs.getFileName())
         elif issubclass(cls, XmippClassification2D):
-            runShowJ(obj.getFileName())
+            runShowJ(obj.getClassesMdFileName())
         else:
             raise Exception('XmippViewer.visualize: can not visualize class: %s' % obj.getClassName())
 
