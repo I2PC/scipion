@@ -9,6 +9,11 @@ html,body {
 	/* 	background-color: FireBrick; */
 }
 
+.project_name {
+	margin: -0.2em 0 0em 0;
+	text-align: right;
+}
+
 a {
 	text-decoration: none;
 	color: black;
@@ -58,7 +63,7 @@ a {
 }
 
 .projFieldset {
-	height: 31.8em;
+	height: 31em;
 	overflow-y: scroll;
 	overflow-x: hidden;
 	border: none;

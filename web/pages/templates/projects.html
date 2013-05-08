@@ -17,9 +17,10 @@
 				<legend>Current Projects</legend>
 				{% for project in projects %}
 				<ul>
-					<li class="projList"><strong><a href=""
-							class="projName">{{project.projName}}</a></strong><br /> Modified
-						{{project.pTime}} <a href="" class="projRemove">Delete project</a></li>
+					<li class="projList"><strong><a href="/project_content/?project_name={{project.projName}}"
+							class="projName">{{project.projName}}</a></strong> <br /> Modified
+						{{project.pTime}} <a href="" class="projRemove">Delete project</a>
+					</li>
 				</ul>
 				{% endfor %}
 			</fieldset>
