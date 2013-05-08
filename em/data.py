@@ -31,6 +31,7 @@ for EM data objects like: Image, SetOfImage and others
 from pyworkflow.object import *
 from pyworkflow.mapper.sqlite import SqliteMapper
 from posixpath import join
+from pyworkflow.utils.utils import getUniqueItems
 
 
 class EMObject(Object):
@@ -41,7 +42,7 @@ class EMObject(Object):
     def __str__(self):
         return str(self.get())
     
-    def _getFiles(self):
+    def getFiles(self):
         """ Get all files """
         return None
 
@@ -163,6 +164,19 @@ class SetOfImages(EMObject):
         self.samplingRate.set(other.samplingRate.get())
         self._ctf.set(other._ctf.get())    
         self._tiltPairs.set(other._tiltPairs.get())
+        
+    def getFiles(self):
+        files = []
+        files.append(self.getFileName())
+        for item in self:
+            # item is an XmippImage or an Image
+            files.append(item.getFileName())
+            # If it has CTF we must include ctf file
+            if (item.hasCTF()):
+                # ctf is a XMippCTFModel
+                files.append(item.ctfModel.getFiles())
+        #We can have repeated files. We clean repeated ones.
+        return getUniqueItems(files)
     
     
 class SetOfMicrographs(SetOfImages):

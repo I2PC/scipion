@@ -107,12 +107,12 @@ class EmanSetOfCoordinates(SetOfCoordinates):
         for mic in self.getMicrographs():
             self.iterMicrographCoordinates(mic)
 
-    def _getFiles(self):
+    def getFiles(self):
         files = []
         path = self.getFileName()
         for mic in self.getMicrographs():            
-            pathBox = join(path, replaceBaseExt(mic.getFileName(), 'box'))
-            files.append(pathBox)
+            filePath = join(path, replaceBaseExt(mic.getFileName(), 'box'))
+            files.append(filePath)
         return files
     
     def hasTiltPairs(self):
