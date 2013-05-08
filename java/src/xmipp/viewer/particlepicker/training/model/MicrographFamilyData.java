@@ -3,12 +3,14 @@ package xmipp.viewer.particlepicker.training.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import xmipp.jni.ImageGeneric;
+import xmipp.jni.Particle;
 import xmipp.utils.TasksManager;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.Family;
-import xmipp.viewer.particlepicker.ParticleOutOfTemplates;
+import xmipp.viewer.particlepicker.ParticleOutOfTemplatesTask;
 import xmipp.viewer.particlepicker.ParticlePicker;
-import xmipp.viewer.particlepicker.ParticleToTemplates;
+import xmipp.viewer.particlepicker.ParticleToTemplatesTask;
 
 public class MicrographFamilyData
 {
@@ -19,8 +21,6 @@ public class MicrographFamilyData
 	private TrainingMicrograph micrograph;
 	private MicrographFamilyState state;
 	private int autopickpercent;
-	
-	
 
 	public MicrographFamilyData(TrainingMicrograph micrograph, Family family, MicrographFamilyState state, int autopickpercent)
 	{
@@ -38,14 +38,11 @@ public class MicrographFamilyData
 	{
 		this(micrograph, family, MicrographFamilyState.Available);
 	}
-	
+
 	public MicrographFamilyData(TrainingMicrograph micrograph, Family family, MicrographFamilyState state)
 	{
 		this(micrograph, family, state, ParticlePicker.defAutoPickPercent);
 	}
-	
-	
-	
 
 	public int getAutopickpercent()
 	{
@@ -91,28 +88,51 @@ public class MicrographFamilyData
 
 	public void addManualParticle(TrainingParticle p, ParticlePicker picker, boolean center, boolean totemplates)
 	{
-		if(!p.getMicrograph().fits(p.getX(), p.getY(), p.getFamily().getSize()))
-			System.err.format("Warning: ignoring particle out of bounds: x=%d, y=%d in micrograph: %s\n", p.getX(), p.getY(), p.getMicrograph());
-			//throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg("Particle"));
-		manualparticles.add(p);
-		if (state == MicrographFamilyState.Available || state == MicrographFamilyState.Auto)//to put micrograph family data on new state, done only for first particle
+		try
 		{
-			if (family.getStep() == FamilyState.Manual)
-				state = MicrographFamilyState.Manual;
-//			else if (family.getStep() == FamilyState.Supervised && state == MicrographFamilyState.Autopick)//THIS STATE IS NEVER PERSISTED
-//				state = MicrographFamilyState.Correct;
-			else if (family.getStep() == FamilyState.Review)
-				state = MicrographFamilyState.Review;
-			else
-				throw new IllegalArgumentException(String.format("Micrograph %s could not update its state to %s and can't keep previous state %s and have particles", micrograph.getName(), state, MicrographFamilyState.Available));
+			if (!p.getMicrograph().fits(p.getX(), p.getY(), p.getFamily().getSize()))
+				System.err.format("Warning: ignoring particle out of bounds: x=%d, y=%d in micrograph: %s\n", p.getX(), p.getY(), p.getMicrograph());
+			// throw new
+			// IllegalArgumentException(XmippMessage.getOutOfBoundsMsg("Particle"));
+			manualparticles.add(p);
+			if (state == MicrographFamilyState.Available || state == MicrographFamilyState.Auto)// to
+																								// put
+																								// micrograph
+																								// family
+																								// data
+																								// on
+																								// new
+																								// state,
+																								// done
+																								// only
+																								// for
+																								// first
+																								// particle
+			{
+				if (family.getStep() == FamilyState.Manual)
+					state = MicrographFamilyState.Manual;
+				// else if (family.getStep() == FamilyState.Supervised && state
+				// == MicrographFamilyState.Autopick)//THIS STATE IS NEVER
+				// PERSISTED
+				// state = MicrographFamilyState.Correct;
+				else if (family.getStep() == FamilyState.Review)
+					state = MicrographFamilyState.Review;
+				else
+					throw new IllegalArgumentException(
+							String.format("Micrograph %s could not update its state to %s and can't keep previous state %s and have particles", micrograph
+									.getName(), state, MicrographFamilyState.Available));
+			}
+			if (center)
+				family.centerParticle(p);
+			if (totemplates && family.getStep() == FamilyState.Manual)
+				TasksManager.getInstance().addTask(new ParticleToTemplatesTask(p));
 		}
-		if(totemplates && family.getStep() == FamilyState.Manual)
-			TasksManager.getInstance().addTask(new ParticleToTemplates(p, center));
-			
+		catch (Exception e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
-	
-	
-	
 
 	public void removeParticle(TrainingParticle p, TrainingPicker ppicker)
 	{
@@ -124,8 +144,9 @@ public class MicrographFamilyData
 				((AutomaticParticle) p).setDeleted(true);
 			else
 				autoparticles.remove(p);
-			//deleting could be the first thing to do after autopick, so I have to mark micrograph on this choice too
-			if (state == MicrographFamilyState.Auto && family.getStep() == FamilyState.Review)//to put micrograph family data on new state, done only for first particle
+			// deleting could be the first thing to do after autopick, so I have
+			// to mark micrograph on this choice too
+			if (state == MicrographFamilyState.Auto && family.getStep() == FamilyState.Review)
 				state = MicrographFamilyState.Review;
 		}
 		else
@@ -134,9 +155,9 @@ public class MicrographFamilyData
 			if (manualparticles.size() == 0 && autoparticles.size() - getAutomaticParticlesDeleted() == 0)
 				state = MicrographFamilyState.Available;
 		}
-//		if(family.getStep() == FamilyState.Manual)
-//			TasksManager.getInstance().addTask(new ParticleOutOfTemplates(p));
-		
+		// if(family.getStep() == FamilyState.Manual)
+		// TasksManager.getInstance().addTask(new ParticleOutOfTemplates(p));
+
 	}
 
 	public boolean hasManualParticles()
@@ -166,13 +187,15 @@ public class MicrographFamilyData
 		addAutomaticParticle(p, false);
 
 	}
-	
+
 	public void addAutomaticParticle(AutomaticParticle p, boolean imported)
 	{
 		if (state == MicrographFamilyState.Available && !imported)
-			throw new IllegalArgumentException(String.format("Invalid state %s on micrograph %s and family %s for adding automatic particles", state, micrograph.getName(), family.getName()));
+			throw new IllegalArgumentException(
+					String.format("Invalid state %s on micrograph %s and family %s for adding automatic particles", state, micrograph.getName(), family
+							.getName()));
 		autoparticles.add(p);
-		if(state == MicrographFamilyState.Available)
+		if (state == MicrographFamilyState.Available)
 			state = MicrographFamilyState.Auto;
 
 	}
@@ -215,13 +238,11 @@ public class MicrographFamilyData
 				return false;
 			if (state == MicrographFamilyState.ReadOnly)
 				return false;
-			
+
 			return true;
 		}
 		return false;
 	}
-	
-	
 
 	public String getAction()
 	{
@@ -287,32 +308,32 @@ public class MicrographFamilyData
 		result.addAll(autoparticles);
 		return result;
 	}
-	
+
 	public List<TrainingParticle> getAvailableParticles(double threshold)
 	{
 		ArrayList<TrainingParticle> result = new ArrayList<TrainingParticle>();
 		result.addAll(manualparticles);
-		for(AutomaticParticle ap: autoparticles)
-			if(!ap.isDeleted() && ap.getCost() >= threshold)
+		for (AutomaticParticle ap : autoparticles)
+			if (!ap.isDeleted() && ap.getCost() >= threshold)
 				result.add(ap);
 		return result;
 	}
-	
+
 	public TrainingParticle getLastAvailableParticle(double threshold)
 	{
 		AutomaticParticle ap;
-		for(int i = autoparticles.size() - 1; i >= 0; i --)
+		for (int i = autoparticles.size() - 1; i >= 0; i--)
 		{
 			ap = autoparticles.get(i);
-			if(!ap.isDeleted() && ap.getCost() >= threshold)
+			if (!ap.isDeleted() && ap.getCost() >= threshold)
 				return ap;
 		}
-		if(!manualparticles.isEmpty())
+		if (!manualparticles.isEmpty())
 			return manualparticles.get(manualparticles.size() - 1);
 		return null;
-		
+
 	}
-	
+
 	public String toString()
 	{
 		return String.format("Micrograph: %s Family: %s State: %s", micrograph.getName(), family.getName(), state);

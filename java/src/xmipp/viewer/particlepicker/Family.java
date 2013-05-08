@@ -8,9 +8,11 @@ import java.lang.reflect.Field;
 
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.ImageGeneric;
+import xmipp.jni.Particle;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
+import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 import xmipp.viewer.particlepicker.training.model.TrainingPicker;
 
 public class Family {
@@ -238,7 +240,7 @@ public class Family {
 		return size / 2;
 	}
 
-	public void setTemplate(int index, ImageGeneric ig) {
+	public synchronized void setTemplate(int index, ImageGeneric ig) {
 		
 		float[] matrix;
 		try {
@@ -255,7 +257,7 @@ public class Family {
 
 
 
-	public void saveTemplates()
+	public synchronized void saveTemplates()
 	{
 		try
 		{
@@ -271,6 +273,25 @@ public class Family {
 	public int getTemplateIndex()
 	{
 		return templateindex;
+	}
+
+	public synchronized void centerParticle(TrainingParticle p)
+	{
+		Particle shift = null;
+		try
+		{
+			ImageGeneric igp = p.getImageGeneric();
+			shift = templates.bestShift(igp);
+			p.setX(p.getX() + shift.getX());
+			p.setY(p.getY() + shift.getY());
+		}
+		catch (Exception e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
 	}
 
 }

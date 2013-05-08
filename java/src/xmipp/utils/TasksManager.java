@@ -1,13 +1,20 @@
 package xmipp.utils;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class TasksManager
 {
 
-	private List<Runnable> tasks;
 	private static TasksManager tm;
+	private LinkedBlockingQueue<Task> queue;
+	private Thread consumer;
+
+	private TasksManager()
+	{
+		queue = new LinkedBlockingQueue<Task>();
+		consumer = new Thread(new Consumer(queue));
+		consumer.start();
+	}
 
 	public static TasksManager getInstance()
 	{
@@ -16,23 +23,43 @@ public class TasksManager
 		return tm;
 	}
 
-	private TasksManager()
+	public void addTask(Task t)
 	{
-		tasks = new ArrayList<Runnable>();
+		try
+		{
+			queue.put(t);
+		}
+		catch (InterruptedException e)
+		{
+			throw new IllegalArgumentException(e);
+		}
 	}
 
-	public void addTask(Runnable r)
+	public class Consumer implements Runnable
 	{
-		tasks.add(r);
-		new Thread(r).start();
+
+		private LinkedBlockingQueue<Task> queue;
+
+		public Consumer(LinkedBlockingQueue<Task> queue)
+		{
+			this.queue = queue;
+		}
+
+		@Override
+		public void run()
+		{
+			try
+			{
+				while (true)
+					queue.take().doTask();
+			}
+			catch (InterruptedException e)
+			{
+				throw new IllegalArgumentException(e);
+			}
+
+		}
+
 	}
 
-	
-
-	public void removeTask(Runnable r)
-	{
-		tasks.remove(r);
-	}
-
-	
 }

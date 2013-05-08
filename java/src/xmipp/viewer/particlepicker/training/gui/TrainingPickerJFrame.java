@@ -302,7 +302,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		initSizePane();
 		fieldspn.add(sizepn);
 
-		centerpickchb = new JCheckBox("Adjust Center");
+		centerpickchb = new JCheckBox("Center Particle");
 		fieldspn.add(centerpickchb);
 
 		familypn.add(fieldspn, 0);
