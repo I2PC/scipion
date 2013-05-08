@@ -172,17 +172,11 @@ public: // Internal members
     // Fourier transformer for the images
     FourierTransformer transformerImg;
 
-    // An alias to the Fourier transform in transformerVol
+    // An alias to the Fourier transform in transformerVol and also temporary to keep the weights
     MultidimArray< std::complex<double> > VoutFourier;
 
     // Volume of Fourier weights
     MultidimArray<double> FourierWeights;
-
-    // Volume for keeping the weights for different iterations
-    MultidimArray<double> preFourierWeights;
-
-    // Volume of Fourier weights convolved with the kernel
-    MultidimArray<double> FourierWeightsConvolved;
 
     // Padded image
     MultidimArray<double> paddedImg;
