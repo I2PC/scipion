@@ -132,7 +132,7 @@ INCOMPLETE_TEST(probabilisticPCA, ProbabilisticPCA, "helix",1000,"dimred/probabi
 INCOMPLETE_TEST(hessianlle,       HessianLLE,       "helix",1000,"dimred/hessianlle.txt")
 INCOMPLETE_TEST(chartingmanifold, ChartingManifold, "helix",1000,"dimred/chartingmanifold.txt")
 #endif
-INCOMPLETE_TEST(kernelPCA,        KernelPCA,        "helix",1000,"dimred/kernelPCA.txt")
+COMPLETE_TEST(kernelPCA,        KernelPCA,        "helix",1000,"dimred/kernelPCA.txt")
 
 TEST_F( DimRedTest, nca)
 {
