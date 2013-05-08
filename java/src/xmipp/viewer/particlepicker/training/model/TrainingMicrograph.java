@@ -146,9 +146,9 @@ public class TrainingMicrograph extends Micrograph{
 	}
 	
 	
-	public void addManualParticle(TrainingParticle p, TrainingPicker ppicker, boolean center)
+	public void addManualParticle(TrainingParticle p, TrainingPicker ppicker, boolean center, boolean totemplates)
 	{
-		getFamilyData(p.getFamily()).addManualParticle(p, ppicker, center);
+		getFamilyData(p.getFamily()).addManualParticle(p, ppicker, center, totemplates);
 		
 	}
 	

@@ -24,6 +24,7 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.Particle;
 import xmipp.jni.Program;
+import xmipp.utils.TasksManager;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
@@ -48,7 +49,6 @@ public abstract class ParticlePicker {
 	
 	public static final int fsizemax = 800;
 	protected String block;
-	private int templateindex;
 	
 	public ParticlePicker(String selfile, String outputdir, FamilyState mode) {
 		this(selfile, outputdir, null, mode);
@@ -522,63 +522,13 @@ public abstract class ParticlePicker {
 	public abstract void setMicrograph(Micrograph m);
 	
 		
-	public void addParticleToTemplates(TrainingParticle particle, boolean center)
-	{
-		try
-		{
-			Particle shift = null;
-			Family family = particle.getFamily();
-			
-			ImageGeneric igp = particle.getImageGeneric();
-			//will happen only in manual mode
-			if (templateindex < family.getTemplatesNumber())// index starts at one
-			{
-				family.setTemplate((int) (ImageGeneric.FIRST_IMAGE + templateindex), igp);
-				templateindex ++;
-			}
-			else
-			{
-				if (center)
-				{
-					shift = family.getTemplates().bestShift(igp);
-					particle.setX(particle.getX() + shift.getX());
-					particle.setY(particle.getY() + shift.getY());
-				}
-				double[] align = family.getTemplates().alignImage(igp);
-				particle.setLastalign(align);
-//				System.out.printf("adding: %.2f %.2f %.2f %.2f\n", align[0], align[1], align[2], align[3]);
-				
-			}
-			family.saveTemplates();
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
-		}
 
-	}
+
 	
-	public void removeParticleFromTemplates(TrainingParticle particle)
-	{
-		
-		try
-		{
-			
-			Family family = particle.getFamily();
-			
-			ImageGeneric igp = particle.getImageGeneric();
-//			System.out.printf("removing: %d %.2f %.2f %.2f\n", particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
-			family.getTemplates().removeAlignment(igp, particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
-			family.saveTemplates();
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
-		}
-
-	}
+	
+	
 
 	public abstract boolean isValidSize(int size);
+
+
 }

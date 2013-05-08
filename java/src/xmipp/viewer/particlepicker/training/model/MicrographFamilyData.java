@@ -2,9 +2,13 @@ package xmipp.viewer.particlepicker.training.model;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import xmipp.utils.TasksManager;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.Family;
+import xmipp.viewer.particlepicker.ParticleOutOfTemplates;
 import xmipp.viewer.particlepicker.ParticlePicker;
+import xmipp.viewer.particlepicker.ParticleToTemplates;
 
 public class MicrographFamilyData
 {
@@ -85,7 +89,7 @@ public class MicrographFamilyData
 		return family;
 	}
 
-	public void addManualParticle(TrainingParticle p, ParticlePicker picker, boolean center)
+	public void addManualParticle(TrainingParticle p, ParticlePicker picker, boolean center, boolean totemplates)
 	{
 		if(!p.getMicrograph().fits(p.getX(), p.getY(), p.getFamily().getSize()))
 			System.err.format("Warning: ignoring particle out of bounds: x=%d, y=%d in micrograph: %s\n", p.getX(), p.getY(), p.getMicrograph());
@@ -102,8 +106,9 @@ public class MicrographFamilyData
 			else
 				throw new IllegalArgumentException(String.format("Micrograph %s could not update its state to %s and can't keep previous state %s and have particles", micrograph.getName(), state, MicrographFamilyState.Available));
 		}
-		if(family.getStep() == FamilyState.Manual)
-			picker.addParticleToTemplates(p, center);
+		if(totemplates && family.getStep() == FamilyState.Manual)
+			TasksManager.getInstance().addTask(new ParticleToTemplates(p, center));
+			
 	}
 	
 	
@@ -129,8 +134,8 @@ public class MicrographFamilyData
 			if (manualparticles.size() == 0 && autoparticles.size() - getAutomaticParticlesDeleted() == 0)
 				state = MicrographFamilyState.Available;
 		}
-		if(family.getStep() == FamilyState.Manual)
-			ppicker.removeParticleFromTemplates(p);
+//		if(family.getStep() == FamilyState.Manual)
+//			TasksManager.getInstance().addTask(new ParticleOutOfTemplates(p));
 		
 	}
 

@@ -22,6 +22,7 @@ public class Family {
 	private int templatesNumber;
 	private ImageGeneric templates;
 	private String templatesfile;
+	private int templateindex;
 
 	
 	private static Color[] colors = new Color[] { Color.BLUE, Color.CYAN,
@@ -53,16 +54,19 @@ public class Family {
 		this.color = color;
 		this.size = size;
 		this.state = state;
-		this.templatesfile = templates.getFilename();
-		if(templates == null)
-			setTemplatesNumber(1);
+		if(templates != null)
+			this.templatesfile = templates.getFilename();
 		else
+			setTemplatesNumber(1);
+		if(templates != null)
 			try
 			{
 				templatesNumber = ((int)templates.getNDim());
 				this.templates = templates;
-				for(int i = 0; i < templatesNumber; i ++)//to initialize templates on c part
-					getTemplatesImage(ImageGeneric.FIRST_IMAGE + i);
+
+				for(templateindex = 0; templateindex < templatesNumber; templateindex ++)//to initialize templates on c part
+					XmippImageConverter.readToImagePlus(templates, ImageGeneric.FIRST_IMAGE + templateindex);
+				
 			}
 			catch (Exception e)
 			{
@@ -104,9 +108,7 @@ public class Family {
 		try {
 			this.templates = new ImageGeneric(ImageGeneric.Float);
 			templates.resize(size, size, 1, templatesNumber);
-			
 			templates.write(templatesfile);
-			templates.setFilename(templatesfile);
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e.getMessage());
 		}
@@ -119,7 +121,7 @@ public class Family {
 	public ImagePlus getTemplatesImage(long i) {
 		try
 		{
-			ImagePlus imp = XmippImageConverter.readToImagePlus(templates, i);
+			ImagePlus imp = XmippImageConverter.convertToImagePlus(templates, i);
 			return imp;
 		}
 		catch (Exception e)
@@ -240,11 +242,10 @@ public class Family {
 		
 		float[] matrix;
 		try {
-			ig.printShape();
 			//TODO getArrayFloat and setArrayFloat must be call from C both in one function
 			matrix = ig.getArrayFloat(ImageGeneric.FIRST_IMAGE,	ImageGeneric.ALL_SLICES);
-			templates.printShape();
 			templates.setArrayFloat(matrix, index, ImageGeneric.ALL_SLICES);
+			templateindex++;
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new IllegalArgumentException(e.getMessage());
@@ -265,6 +266,11 @@ public class Family {
 			throw new IllegalArgumentException(e);
 		}
 		
+	}
+
+	public int getTemplateIndex()
+	{
+		return templateindex;
 	}
 
 }

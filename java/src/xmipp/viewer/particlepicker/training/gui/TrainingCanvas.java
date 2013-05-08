@@ -7,9 +7,12 @@ import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
 import java.util.List;
 import javax.swing.SwingUtilities;
+
+import xmipp.utils.TasksManager;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
+import xmipp.viewer.particlepicker.ParticleToTemplates;
 import xmipp.viewer.particlepicker.training.model.AutomaticParticle;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
 import xmipp.viewer.particlepicker.training.model.MicrographFamilyData;
@@ -74,7 +77,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			else if (SwingUtilities.isLeftMouseButton(e) && micrograph.fits(x, y, frame.getFamily().getSize()))
 			{
 				p = new TrainingParticle(x, y, frame.getFamily(), micrograph);
-				micrograph.addManualParticle(p, ppicker, frame.isCenterParticle());
+				micrograph.addManualParticle(p, ppicker, frame.isCenterParticle(), true);
 				active = p;
 				refresh();
 			}
@@ -115,10 +118,12 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			{
 				micrograph.removeParticle(active, ppicker);
 				active = new TrainingParticle(active.getX(), active.getY(), active.getFamily(), micrograph);
-				micrograph.addManualParticle(active, ppicker, frame.isCenterParticle());
+				micrograph.addManualParticle(active, ppicker, frame.isCenterParticle(), true);
 			}
 			else
 			{
+//				if(!activemoved)
+//					TasksManager.getInstance().addTask(new ParticleOutOfTemplates(active));
 				setActiveMoved(true);
 				moveActiveParticle(x, y);
 			}
@@ -151,6 +156,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			if (activemoved)
 			{
 				frame.updateTemplates();
+				TasksManager.getInstance().addTask(new ParticleToTemplates(active, frame.isCenterParticle()));
 				setActiveMoved(false);
 			}
 
@@ -170,7 +176,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 
 			micrograph.removeParticle(active, ppicker);
 			active = new TrainingParticle(active.getX(), active.getY(), active.getFamily(), micrograph);
-			micrograph.addManualParticle(active, ppicker, frame.isCenterParticle());
+			micrograph.addManualParticle(active, ppicker, frame.isCenterParticle(), true);
 			repaint();
 		}
 		else

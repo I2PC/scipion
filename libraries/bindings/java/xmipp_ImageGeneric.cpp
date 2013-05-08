@@ -24,6 +24,7 @@ Java_xmipp_jni_ImageGeneric_create(JNIEnv *env, jobject jobj)
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_destroy(JNIEnv *env, jobject jobj)
 {
+
     XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);

@@ -163,7 +163,7 @@ public abstract class TrainingPicker extends ParticlePicker
 				x = md.getValueInt(MDLabel.MDL_XCOOR, id);
 				y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 				particle = new TrainingParticle(x, y, family, mfd.getMicrograph());
-				mfd.addManualParticle(particle, this, false);
+				mfd.addManualParticle(particle, this, false, false);
 			}
 			md.destroy();
 		}
@@ -602,7 +602,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			}
 			cost = hasCost ? md.getValueDouble(MDLabel.MDL_COST, id) : 0;
 			if (cost == 0 || cost > 1)
-				tm.addManualParticle(new TrainingParticle(x, y, family, tm, cost), this, false);
+				tm.addManualParticle(new TrainingParticle(x, y, family, tm, cost), this, false, true);
 			else
 				tm.addAutomaticParticle(new AutomaticParticle(x, y, family, tm, cost, false), true);
 		}
