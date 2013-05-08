@@ -97,6 +97,8 @@ public:
 
     int  sendDataInChunks( double * pointer, int dest, int totalSize, int buffSize, MPI_Comm comm );
 
+    int  allReduceInChunks( double * pointer, int totalSize, int buffSize, MPI_Comm comm );
+
 };
 //@}
 //end of class MPI reconstruct fourier
