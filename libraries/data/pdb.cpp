@@ -326,25 +326,26 @@ void PDBRichPhantom::read(const FileName &fnPDB)
             continue;
         }
         kind = line.substr(0,4);
-        if (kind != "ATOM" && kind != "HETA")
-            continue;
-
-        // Extract atom type and position
-        // Typical line:
-        // ATOM    909  CA  ALA A 161      58.775  31.984 111.803  1.00 34.78
-        atom.name=line.substr(12,4);
-        atom.atomType = line[13];
-        atom.altloc=line[16];
-        atom.resname=line.substr(17,3);
-        atom.chainid=line[21];
-        atom.resseq = textToInteger(line.substr(22,4));
-        atom.icode = line[26];
-        atom.x = textToFloat(line.substr(30,8));
-        atom.y = textToFloat(line.substr(38,8));
-        atom.z = textToFloat(line.substr(46,8));
-        atom.occupancy = textToFloat(line.substr(54,6));
-        atom.bfactor = textToFloat(line.substr(60,6));
-        atomList.push_back(atom);
+        if (kind == "ATOM" || kind == "HETA")
+        {
+			// Extract atom type and position
+			// Typical line:
+			// ATOM    909  CA  ALA A 161      58.775  31.984 111.803  1.00 34.78
+			atom.name=line.substr(12,4);
+			atom.atomType = line[13];
+			atom.altloc=line[16];
+			atom.resname=line.substr(17,3);
+			atom.chainid=line[21];
+			atom.resseq = textToInteger(line.substr(22,4));
+			atom.icode = line[26];
+			atom.x = textToFloat(line.substr(30,8));
+			atom.y = textToFloat(line.substr(38,8));
+			atom.z = textToFloat(line.substr(46,8));
+			atom.occupancy = textToFloat(line.substr(54,6));
+			atom.bfactor = textToFloat(line.substr(60,6));
+			atomList.push_back(atom);
+        } else if (kind == "REMA")
+        	remarks.push_back(line);
     }
 
     // Close files
@@ -357,7 +358,10 @@ void PDBRichPhantom::write(const FileName &fnPDB)
     FILE* fh_out=fopen(fnPDB.c_str(),"w");
     if (!fh_out)
         REPORT_ERROR(ERR_IO_NOWRITE, fnPDB);
-    size_t imax=atomList.size();
+    size_t imax=remarks.size();
+    for (size_t i=0; i<imax; ++i)
+    	fprintf(fh_out,"%s\n",remarks[i].c_str());
+    imax=atomList.size();
     for (size_t i=0; i<imax; ++i)
     {
     	const RichAtom &atom=atomList[i];

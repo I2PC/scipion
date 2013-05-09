@@ -95,8 +95,8 @@ void ProgNmaAlignment::readParams() {
 	if (do_FilterPDBVol)
 		cutoff_LPfilter = getDoubleParam("--filterVol");
 	useFixedGaussian = checkParam("--fixed_Gaussian");
-	//if (useFixedGaussian)
-	sigmaGaussian = getDoubleParam("--fixed_Gaussian");
+	if (useFixedGaussian)
+		sigmaGaussian = getDoubleParam("--fixed_Gaussian");
 	projMatch = checkParam("--projMatch");
 	discrAngStep = getDoubleParam("--discrAngStep");
 }
@@ -191,10 +191,9 @@ FileName ProgNmaAlignment::createDeformedPDB(int pyramidLevel) const {
 		arguments.append(" --centerPDB ");
 
 	if (useFixedGaussian) {
-		arguments.append(" --fixed_Gaussian ");
+		arguments.append(" --intensityColumn Bfactor --fixed_Gaussian ");
 		if (sigmaGaussian >= 0)
-			arguments += formatString("%f --intensityColumn Bfactor",
-					sigmaGaussian);
+			arguments += formatString("%f",sigmaGaussian);
 	}
 	progVolumeFromPDB->read(arguments);
 	progVolumeFromPDB->tryRun();
