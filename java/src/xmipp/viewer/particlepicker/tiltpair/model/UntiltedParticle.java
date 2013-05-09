@@ -3,6 +3,7 @@ package xmipp.viewer.particlepicker.tiltpair.model;
 import xmipp.jni.Particle;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.Family;
+import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 
 
@@ -17,9 +18,9 @@ public class UntiltedParticle extends TrainingParticle{
 		return added;
 	}
 	
-	public UntiltedParticle(int x, int y, UntiltedMicrograph micrograph, Family family)
+	public UntiltedParticle(int x, int y, UntiltedMicrograph micrograph, ParticlePicker picker)
 	{
-		super(x, y, family, micrograph);
+		super(x, y, picker, micrograph);
 		
 	}
 	

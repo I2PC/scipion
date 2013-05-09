@@ -1,15 +1,13 @@
 package xmipp.viewer.particlepicker;
 
 import ij.ImagePlus;
+
 import java.awt.Color;
 import java.lang.reflect.Field;
 
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.ImageGeneric;
 import xmipp.utils.XmippMessage;
-import xmipp.viewer.particlepicker.training.model.Mode;
-import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
-import xmipp.viewer.particlepicker.training.model.TrainingPicker;
 
 public class Family {
 

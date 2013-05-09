@@ -8,7 +8,7 @@ public class TiltedParticle extends TrainingParticle {
 	
 	public TiltedParticle(int x, int y, UntiltedParticle untiltedparticle)
 	{
-		super(x, y, untiltedparticle.getFamily(), ((UntiltedMicrograph)untiltedparticle.getMicrograph()).getTiltedMicrograph());
+		super(x, y, untiltedparticle.getParticlePicker(), ((UntiltedMicrograph)untiltedparticle.getMicrograph()).getTiltedMicrograph());
 		this.untiltedparticle = untiltedparticle;
 	}
 	
@@ -16,5 +16,7 @@ public class TiltedParticle extends TrainingParticle {
 	{
 		return untiltedparticle;
 	}
+
+
 
 }

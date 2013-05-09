@@ -77,7 +77,7 @@ public class TiltedMicrograph extends Micrograph
 	{
 		List<TiltedParticle> particles = new ArrayList<TiltedParticle>();
 		for(TiltedParticle p: getParticles())
-			if (p.contains(x, y, p.getFamily().getSize())) 
+			if (p.contains(x, y, p.getParticlePicker().getSize())) 
 				particles.add(p);
 		for(TiltedParticle p: particles)
 			removeParticle(p);

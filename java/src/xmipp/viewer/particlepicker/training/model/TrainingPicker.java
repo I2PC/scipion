@@ -51,7 +51,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			String file = configfile;
 			md = new MetaData();
 			long id = md.addObject();
-			md.setValueString(MDLabel.MDL_PICKING_FAMILY, family.getName(), id);
+//			md.setValueString(MDLabel.MDL_PICKING_FAMILY, family.getName(), id);
 			md.setValueString(MDLabel.MDL_MICROGRAPH, getMicrograph().getName(), id);
 			md.setValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, getAutopickpercent(), id);
 			md.write(file);

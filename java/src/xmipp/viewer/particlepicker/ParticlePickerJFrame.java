@@ -6,6 +6,9 @@ import ij.WindowManager;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -107,6 +110,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected JButton savebt;
 
 	protected JButton saveandexitbt;
+
+	protected JToolBar tb;
 
 	public ParticlePickerJFrame(ParticlePicker picker)
 	{
@@ -474,10 +479,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		return 100;
 	}
 
-	public Family getFamily()
-	{
-		return getParticlePicker().getFamily();
-	}
+//	public Family getFamily()
+//	{
+//		return getParticlePicker().getFamily();
+//	}
 
 	public abstract ParticlePickerCanvas getCanvas();
 
@@ -576,32 +581,26 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			colorbt.setIcon(new ColorIcon(color));
 		getParticlePicker().setColor(color);
 		getCanvas().repaint();
-		getParticlePicker().saveFamilies();
+//		getParticlePicker().saveFamilies();
+		getParticlePicker().saveConfig();
 	}
 
 	protected void initImagePane()
 	{
-		imagepn = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		imagepn = new JPanel(new GridBagLayout());
+		GridBagConstraints constraints = new GridBagConstraints();
+		constraints.insets = new Insets(0, 5, 0, 5);
+		constraints.anchor = GridBagConstraints.WEST;
 		// imagepn.setBorder(BorderFactory.createTitledBorder("Image"));
 
-		JPanel paintpn = new JPanel();
-		usezoombt = new JToggleButton("-1", XmippResource.getIcon("zoom.png"));
-		usezoombt.setToolTipText("Keep zoom");
-		usezoombt.setFocusable(false);
-		eraserbt = new JToggleButton("Eraser", XmippResource.getIcon("clean.gif"));
-
-		usezoombt.setFocusable(false);
-		JToolBar tb = new JToolBar();
-
-		tb.setFloatable(false);
-		tb.add(usezoombt);
-		tb.add(eraserbt);
+		
+		
 
 		// usezoombt.setBorderPainted(false);
-		paintpn.add(tb);
+		//paintpn.add(tb);
 
 		symbolpn = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		symbolpn.add(new JLabel("Symbol:"));
+		//symbolpn.add(new JLabel("Symbol:"));
 		// symbolpn.setBorder(BorderFactory.createTitledBorder("Symbol"));
 		ShapeItemListener shapelistener = new ShapeItemListener();
 
@@ -621,9 +620,29 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		symbolpn.add(rectanglechb);
 		symbolpn.add(centerchb);
 
-		imagepn.add(symbolpn);
-		imagepn.add(paintpn);
+		
+		//imagepn.add(tb, XmippWindowUtil.getConstraints(constraints, 0, 0, 1, 1, GridBagConstraints.HORIZONTAL));
+		imagepn.add(symbolpn,  XmippWindowUtil.getConstraints(constraints, 0, 1));
 
+	}
+	
+	public void initToolBar()
+	{
+		tb = new JToolBar();
+
+		tb.setFloatable(false);
+		
+		usezoombt = new JToggleButton("-1", XmippResource.getIcon("zoom.png"));
+		usezoombt.setToolTipText("Keep zoom");
+		usezoombt.setFocusable(false);
+		tb.add(usezoombt);
+		
+		initColorPane(getParticlePicker().getColor());
+		tb.add(colorpn);
+		initSizePane();
+		tb.add(sizepn);
+		eraserbt = new JToggleButton("Eraser", XmippResource.getIcon("clean.gif"));
+		tb.add(eraserbt);
 	}
 
 	protected void updateZoom()
@@ -700,6 +719,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		colorbt.setFocusPainted(false);
 		colorbt.setIcon(new ColorIcon(color));
 		colorbt.setBorderPainted(false);
+		colorbt.addActionListener(new ColorActionListener());
 		colorpn.add(colorbt);
 	}
 
@@ -707,7 +727,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	{
 		sizepn = new JPanel();
 
-		int size = getFamily().getSize();
+		int size = getParticlePicker().getSize();
 		sizepn.add(new JLabel("Size:"));
 		sizesl = new JSlider(0, 1000, size);
 		sizesl.setPaintTicks(true);
@@ -735,7 +755,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				int size = ((Number) sizetf.getValue()).intValue();
 				if (!getParticlePicker().isValidSize(size))
 				{
-					int prevsize = getFamily().getSize();
+					int prevsize = getParticlePicker().getSize();
 					JOptionPane.showMessageDialog(ParticlePickerJFrame.this, XmippMessage.getOutOfBoundsMsg("Family size " + size));
 					sizetf.setText(Integer.toString(prevsize));
 					return;
@@ -758,7 +778,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				int size = sizesl.getValue();
 				if (!getParticlePicker().isValidSize(size))
 				{
-					int prevsize = getFamily().getSize();
+					int prevsize = getParticlePicker().getSize();
 					JOptionPane.showMessageDialog(ParticlePickerJFrame.this, XmippMessage.getOutOfBoundsMsg("Family size " + size));
 					sizesl.setValue(prevsize);
 					return;
@@ -775,7 +795,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		sizetf.setValue(size);
 		sizesl.setValue(size);
 		getCanvas().repaint();
-		getFamily().setSize(size);
+		getParticlePicker().setSize(size);
 
 		if (particlesdialog != null)
 		{
@@ -783,7 +803,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				p.resetParticleCanvas();
 			loadParticles();
 		}
-		getParticlePicker().saveFamilies();
+//		getParticlePicker().saveFamilies();
+		getParticlePicker().saveConfig();
 	}
 
 	/** Shortcut function to show messages */
@@ -812,11 +833,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	public abstract String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty);
 
-	public Color getColor()
-	{
-		return getFamily().getColor();
-
-	}
+//	public Color getColor()
+//	{
+//		return getFamily().getColor();
+//
+//	}
 
 	public Map<String, String> getKeyAssist()
 	{

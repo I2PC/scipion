@@ -29,6 +29,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
+import javax.swing.JToggleButton;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
@@ -84,7 +85,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	private JMenuItem templatesmi;
 	TemplatesJDialog templatesdialog;
 	private JButton editfamiliesbt;
-	private JCheckBox centerparticlechb;
+	private JToggleButton centerparticlebt;
 	private JMenuItem exportmi;
 	private JCheckBox autopickchb;
 	private JPanel sppickerpn;
@@ -133,28 +134,30 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			constraints.anchor = GridBagConstraints.WEST;
 			setLayout(new GridBagLayout());
 
+			initToolBar();
+			add(tb, XmippWindowUtil.getConstraints(constraints, 0, 0, 2, 1, GridBagConstraints.HORIZONTAL));
+
+			centerparticlebt = new JToggleButton("Center Particle", XmippResource.getIcon("center.jpg"));
+			tb.add(centerparticlebt);
+			add(new JLabel("Symbol:"), XmippWindowUtil.getConstraints(constraints, 0, 1));
 			initImagePane();
-			
-			centerparticlechb = new JCheckBox("Center Particle");
-			imagepn.add(centerparticlechb);
-			
-			add(imagepn, XmippWindowUtil.getConstraints(constraints, 0, 0));
+			add(imagepn, XmippWindowUtil.getConstraints(constraints, 1, 1));
 
-			
-			
 			initFamilyPane();
-			add(familypn, XmippWindowUtil.getConstraints(constraints, 0, 1, 1, 1, GridBagConstraints.HORIZONTAL));
+			// add(familypn, XmippWindowUtil.getConstraints(constraints, 0, 1,
+			// 1, 1, GridBagConstraints.HORIZONTAL));
 
+			add(new JLabel("Supervised:"), XmippWindowUtil.getConstraints(constraints, 0, 2));
 			initSupervisedPickerPane();
-			add(sppickerpn, XmippWindowUtil.getConstraints(constraints, 0, 2, 1, 1, GridBagConstraints.HORIZONTAL));
-			
+			add(sppickerpn, XmippWindowUtil.getConstraints(constraints, 1, 2, 1, 1, GridBagConstraints.HORIZONTAL));
+
 			initMicrographsPane();
-			add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 3, 1, 1, GridBagConstraints.HORIZONTAL));
+			add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 3, 2, 1, GridBagConstraints.HORIZONTAL));
 			JPanel actionspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-			
+
 			actionspn.add(savebt);
 			actionspn.add(saveandexitbt);
-			add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 4, 1, 1, GridBagConstraints.HORIZONTAL));
+			add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 4, 2, 1, GridBagConstraints.HORIZONTAL));
 			pack();
 			positionx = 0.9f;
 			XmippWindowUtil.setLocation(positionx, 0.2f, this);
@@ -166,36 +169,33 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
-	
+
 	private void initSupervisedPickerPane()
 	{
 		sppickerpn = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		sppickerpn.setBorder(BorderFactory.createTitledBorder("Supervised Picker"));
-		
-		
-		
+		// sppickerpn.setBorder(BorderFactory.createTitledBorder("Supervised Picker"));
+
 		JPanel steppn = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		Mode step = ppicker.getMode();
 
 		index = ppicker.getMicrographIndex();
 
-		
-		autopickchb = new JCheckBox(MicrographFamilyState.Supervised.toString());
-		autopickchb.addChangeListener(new ChangeListener()
+		autopickchb = new JCheckBox();
+		autopickchb.addActionListener(new ActionListener()
 		{
 			
 			@Override
-			public void stateChanged(ChangeEvent arg0)
+			public void actionPerformed(ActionEvent e)
 			{
-//				if(autopickchb.isSelected())
-//					autopick();
+				// if(autopickchb.isSelected())
+				// autopick();
 				setSupervised(autopickchb.isSelected());
 				
 			}
 		});
 		sppickerpn.add(autopickchb);
 		autopickpercentpn = new JPanel();
-		autopickpercentpn.add(new JLabel("Check %"));
+		autopickpercentpn.add(new JLabel("Check (%):"));
 		autopickpercenttf = new JFormattedTextField(NumberFormat.getIntegerInstance());
 		autopickpercenttf.addActionListener(new ActionListener()
 		{
@@ -205,7 +205,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			{
 				if (autopickpercenttf.getValue() == null)
 				{
-					JOptionPane.showMessageDialog(TrainingPickerJFrame.this, XmippMessage.getEmptyFieldMsg("Percent to Check"));
+					JOptionPane.showMessageDialog(TrainingPickerJFrame.this, XmippMessage.getEmptyFieldMsg("Check (%)"));
 					autopickpercenttf.setValue(getFamilyData().getAutopickpercent());
 					return;
 				}
@@ -227,17 +227,25 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		initThresholdPane();
 		sppickerpn.add(thresholdpn);
 	}
-	
+
 	protected void setSupervised(boolean selected)
 	{
-		if(selected)
-			ppicker.setMode(Mode.Supervised);
+		if (selected)
+			try
+			{
+				ppicker.setMode(Mode.Supervised);
+			}
+			catch (Exception e)
+			{
+				XmippDialog.showError(this, e.getMessage());
+				return;
+			}
 		autopickpercenttf.setEnabled(selected);
 		thresholdsl.setEnabled(selected);
 		thresholdtf.setEnabled(selected);
-		
+
 	}
-	
+
 	public boolean isSupervised()
 	{
 		return autopickchb.isSelected();
@@ -367,54 +375,47 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		family = ppicker.getFamily();
 		familiescb.setSelectedItem(family);
 		familiescb.setEnabled(ppicker.getMode() == Mode.Manual || ppicker.getMode() == Mode.ReadOnly);
-		
 
 		fieldspn.add(familiescb);
 
 		// Setting color
-		initColorPane(family.getColor());
-		fieldspn.add(colorpn);
+		// initColorPane(family.getColor());
+		// fieldspn.add(colorpn);
 
 		// Setting slider
-		initSizePane();
-		fieldspn.add(sizepn);
-
+		// initSizePane();
+		// fieldspn.add(sizepn);
 
 		familypn.add(fieldspn, 0);
-		
 
-		colorbt.addActionListener(new ColorActionListener());
-
-
-		familiescb.addActionListener(new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				Family family2 = (Family) familiescb.getSelectedItem();
-				if (family == family2)
-					return;
-				// You can only switch between different states for readonly
-				// mode. Besides switching will be availabe on manual and
-				// readonly modes
-				
-				family = family2;
-				ppicker.setFamily(family);
-				ppicker.saveConfig();
-
-				micrographstb.setRowSelectionInterval(index, index);
-				color = (family.getColor());
-				colorbt.setIcon(new ColorIcon(color));
-				sizesl.setValue(family.getSize());
-				updateMicrographsModel();
-				micrographstb.getColumnModel().getColumn(micrographsmd.getParticlesPosition()).setHeaderValue(family.getName());
-				setThresholdValue(0);
-			}
-		});
+		// familiescb.addActionListener(new ActionListener()
+		// {
+		//
+		// @Override
+		// public void actionPerformed(ActionEvent e)
+		// {
+		// Family family2 = (Family) familiescb.getSelectedItem();
+		// if (family == family2)
+		// return;
+		// // You can only switch between different states for readonly
+		// // mode. Besides switching will be availabe on manual and
+		// // readonly modes
+		//
+		// family = family2;
+		// ppicker.setFamily(family);
+		// ppicker.saveConfig();
+		//
+		// micrographstb.setRowSelectionInterval(index, index);
+		// color = (family.getColor());
+		// colorbt.setIcon(new ColorIcon(color));
+		// sizesl.setValue(family.getSize());
+		// updateMicrographsModel();
+		// micrographstb.getColumnModel().getColumn(micrographsmd.getParticlesPosition()).setHeaderValue(family.getName());
+		// setThresholdValue(0);
+		// }
+		// });
 
 	}
-
 
 	private void initThresholdPane()
 	{
@@ -489,7 +490,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		constraints.insets = new Insets(0, 5, 0, 5);
 		constraints.anchor = GridBagConstraints.NORTHWEST;
 		micrographpn = new JPanel(new GridBagLayout());
-		micrographpn.setBorder(BorderFactory.createTitledBorder("Micrograph"));
+		micrographpn.setBorder(BorderFactory.createTitledBorder("Micrographs"));
 		JScrollPane sp = new JScrollPane();
 		JPanel ctfpn = new JPanel();
 		ctfpn.setBorder(BorderFactory.createTitledBorder(null, "CTF", TitledBorder.CENTER, TitledBorder.BELOW_BOTTOM));
@@ -508,7 +509,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 				String psd = getMicrograph().getPSD();
 				String ctf = getMicrograph().getCTF();
 				if (psd != null && ctf != null)
-					//ImagesWindowFactory.openCTFWindow(getMicrograph().getPSDImage(), getMicrograph().getCTF(), getMicrograph().getPSD());
+					// ImagesWindowFactory.openCTFWindow(getMicrograph().getPSDImage(),
+					// getMicrograph().getCTF(), getMicrograph().getPSD());
 					new CTFAnalyzerJFrame(getMicrograph().getPSDImage(), getMicrograph().getCTF(), getMicrograph().getPSD());
 
 			}
@@ -554,7 +556,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		setChanged(false);
 		initializeCanvas();
 		iconbt.setIcon(ppicker.getMicrograph().getCTFIcon());
-		if(ppicker.getMode() == Mode.Supervised)
+		if (ppicker.getMode() == Mode.Supervised)
 			autopick();
 		pack();
 
@@ -562,8 +564,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			loadParticles();
 
 	}
-
-
 
 	protected void resetMicrograph()
 	{
@@ -583,8 +583,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		updateMicrographsModel();
 		pack();
 	}
-
-
 
 	public MicrographFamilyData getFamilyData()
 	{
@@ -709,7 +707,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	{
 		try
 		{
-			
+
 			// setChanged(true);
 			setStep(Mode.Supervised);// change visual appearance
 			ppicker.saveFamilies();
@@ -772,7 +770,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 				{
 					ppicker.runXmippProgram("xmipp_micrograph_automatic_picking", fargs);
 					ppicker.loadAutomaticParticles(getFamilyData());
-					
+
 					canvas.repaint();
 					canvas.setEnabled(true);
 					XmippWindowUtil.releaseGUI(getRootPane());
@@ -788,7 +786,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		}
 	}
 
-
 	public double getThreshold()
 	{
 		return thresholdsl.getValue() / 100.0;
@@ -799,8 +796,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	{
 		return getFamilyData().getAvailableParticles(getThreshold());
 	}
-
-
 
 	public String importParticlesFromFile(Format format, String file, float scale, boolean invertx, boolean inverty)
 	{
@@ -903,7 +898,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	public boolean isCenterParticle()
 	{
-		return centerparticlechb.isSelected();
+		return centerparticlebt.isSelected();
 	}
 
 	@Override

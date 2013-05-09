@@ -153,7 +153,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		JPanel fieldspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
 		// Setting color
-		initColorPane(pppicker.getFamily().getColor());
+		initColorPane(pppicker.getColor());
 		fieldspn.add(colorbt);
 
 		// Setting slider
@@ -286,11 +286,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		return pppicker.getColor();
 	}
 
-	@Override
-	public Family getFamily()
-	{
-		return pppicker.getFamily();
-	}
 
 	@Override
 	public List<? extends TrainingParticle> getAvailableParticles()
@@ -394,7 +389,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 			getCanvas().repaint();
 			tiltedcanvas.repaint();
 			updateMicrographsModel();
-			updateSize(getFamily().getSize());
+			updateSize(pppicker.getSize());
 			canvas.refreshActive(null);
 	}
 	
