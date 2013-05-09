@@ -1,7 +1,8 @@
 /***************************************************************************
  *
  * Authors:     Jose Roman Bilbao (jrbcast@ace.ual.es)
- *    Roberto Marabini (roberto@cnb.csic.es)
+ *    			Roberto Marabini (roberto@cnb.csic.es)
+ *    			Vahid Abrishami (vabrishami@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
