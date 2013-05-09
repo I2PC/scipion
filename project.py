@@ -106,6 +106,7 @@ class Project(object):
     def runProtocol(self, protocol):
         """Directly execute the protocol"""
         protocol.mapper = self.mapper
+        protocol._stepsExecutor = StepExecutor() 
         protocol.run()
         
     def continueProtocol(self, protocol):

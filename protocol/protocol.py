@@ -391,9 +391,9 @@ class Protocol(Step):
         self._store()
         
         status = STATUS_FINISHED # Just for the case doesn't enter in the loop
-        self._log.info(">>> Starting at step: " + str(startIndex))
-        for step in self._steps[startIndex:]:
-            step.run()
+        
+        self._stepsExecutor.runSteps(self._steps[startIndex:], 
+                                     self._stepStarted, self._stepFinished)
             
         self.status.set(status)
         self._store(self.status)
