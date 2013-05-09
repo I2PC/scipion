@@ -326,6 +326,10 @@ JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_bestShift
 JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_ImageGeneric_alignImage
   (JNIEnv *, jobject, jobject);
 
+
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_applyAlignment
+  (JNIEnv *, jobject, jobject, jint, jdouble, jdouble, jdouble);
+
 JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_removeAlignment
   (JNIEnv *, jobject, jobject, jint, jdouble, jdouble, jdouble);
 

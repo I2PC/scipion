@@ -30,9 +30,9 @@ public class ParticleToTemplatesTask implements Task
 				family.setTemplate((int) (ImageGeneric.FIRST_IMAGE + family.getTemplateIndex()), igp);
 			else
 			{
+				
 				double[] align = family.getTemplates().alignImage(igp);
-				particle.setLastalign(align);
-				System.out.printf("adding particle: %d %.2f %.2f %.2f\n", particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
+				family.applyAlignment(particle, igp, align);
 
 			}
 			family.saveTemplates();
