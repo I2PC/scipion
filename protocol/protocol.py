@@ -36,11 +36,15 @@ from pyworkflow.object import OrderedObject, String, List, Integer, Boolean
 from pyworkflow.utils.path import replaceExt, makePath, join, existsPath, cleanPath
 from pyworkflow.utils.process import runJob
 
-STATUS_LAUNCHED = "launched"  # launched to queue system
+STATUS_LAUNCHED = "launched"  # launched to queue system, only usefull for protocols
 STATUS_RUNNING = "running"    # currently executing
 STATUS_FAILED = "failed"      # it have been failed
 STATUS_FINISHED = "finished"  # successfully finished
 STATUS_WAITING_APPROVAL = "waiting approval"    # waiting for user interaction
+
+# Following steps are only used for steps parallel execution
+STATUS_READY = "ready" # The step is ready for execution, i.e. all requirements are done
+STATUS_WAITING_OTHERS = "waiting_others" # There are some prerequisites steps that are not done yet
 
 
 class Step(OrderedObject):
@@ -52,13 +56,12 @@ class Step(OrderedObject):
         OrderedObject.__init__(self, **args)
         self._inputs = []
         self._outputs = []
+        self._prerequisites = [] # which steps needs to be done first
         self.status = String()
         self.initTime = String()
         self.endTime = String()
         self.error = String()
         self.isInteractive = Boolean(False)
-        self.runStartsCallback = None # Used to monitor the Step Starts(Observer pattern)
-        self.runFinishCallback = None # Used to monitor the Step Finish(Observer pattern)
         
     def _storeAttributes(self, attrList, attrDict):
         """ Store all attributes in attrDict as 
@@ -93,33 +96,42 @@ class Step(OrderedObject):
         It should be override by sub-classes.""" 
         pass
     
-    def run(self):
-        """ Do the job of this step""" 
+    def setRunning(self):
+        """ The the state as STATE_RUNNING and 
+        set the init and end times.
+        """
         self.initTime.set(dt.datetime.now())
         self.endTime.set(None)
+        self.status.set(STATUS_RUNNING)
+        
+    def setFailed(self, msg):
+        """ Set the run failed and store an error message. """
+        self.status.set(STATUS_FAILED)
+        self.error.set(msg)
+        
+    def run(self):
+        """ Do the job of this step"""
+        self.setRunning() 
         try:
-            self.status.set(STATUS_RUNNING)
-            if not self.runStartsCallback is None:
-                self.runStartsCallback(self)
             self._run()
-            if self.isInteractive.get():
-                # If the Step is interactive, after run
-                # it will be waiting for use to mark it as DONE
-                status = STATUS_WAITING_APPROVAL
-            else:
-                status = STATUS_FINISHED
-            self.status.set(status)
+            if self.status == STATUS_RUNNING:
+                if self.isInteractive.get():
+                    # If the Step is interactive, after run
+                    # it will be waiting for use to mark it as DONE
+                    status = STATUS_WAITING_APPROVAL
+                else:
+                    
+                    status = STATUS_FINISHED
+                self.status.set(status)
         except Exception, e:
-            self.status.set(STATUS_FAILED)
-            self.error.set(e)
+            self.setFailed(str(e))
             import traceback
             traceback.print_exc()
             
             raise #only in development
         finally:
             self.endTime.set(dt.datetime.now())
-            if not self.runFinishCallback is None:
-                self.runFinishCallback(self)
+
 
 class FunctionStep(Step):
     """ This is a Step wrapper around a normal function
@@ -252,8 +264,6 @@ class Protocol(Step):
     def __insertStep(self, step):
         """ Insert a new step in the list. """
         self._steps.append(step)
-        step.runStartsCallback = self._stepStarted
-        step.runFinishCallback = self._stepFinished
         
     def _getPath(self, *paths):
         """ Return a path inside the workingDir. """
@@ -363,23 +373,27 @@ class Protocol(Step):
         self.endTime.set(step.endTime.get())
         self._store(self.endTime, step)
         self.currentStep += 1
-        if step.status == STATUS_FAILED:
-            raise Exception("Protocol failed: " + step.error.get())
+        doContinue = True
+        if self.status == STATUS_WAITING_APPROVAL:
+            doContinue = False
+            self.status.set(STATUS_WAITING_APPROVAL)
+        elif self.status == STATUS_FAILED:
+            doContinue = False
+            self.setFailed("Protocol failed: " + step.error.get())
         print "FINISHED: ", step.funcName.get()
+        return doContinue
     
     def _runSteps(self, startIndex):
         """ Run all steps defined in self._steps. """
         self._steps.setStore(True) # Set steps to be stored
-        self.status.set(STATUS_RUNNING)
+        self.setRunning()
         self._store()
         
         status = STATUS_FINISHED # Just for the case doesn't enter in the loop
         print ">>> Starting at step: ", startIndex
         for step in self._steps[startIndex:]:
             step.run()
-            status = step.status.get()
-            if status == STATUS_WAITING_APPROVAL:
-                break
+            
         self.status.set(status)
         self._store(self.status)
             
