@@ -41,7 +41,7 @@ void LLTSASCG::reduceDimensionality()
     matrixOperation_AtB(*X, B, XtBX);
     matrixOperation_AtA(*X, XtX);
     XtBX = XtBX * (*X);
-    generalizedEigs(XtBX, XtX, DEigs, Y);
-    eraseLastNColumns(Y, MAT_XSIZE(Y) - outputDim);
-    Y = *X * Y;
+    generalizedEigs(XtBX, XtX, DEigs, A);
+    eraseLastNColumns(A, MAT_XSIZE(A) - outputDim);
+    Y = *X * A;
 }
