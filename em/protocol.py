@@ -86,9 +86,9 @@ class ProtImportMicrographs(Protocol):
         Register other parameters.
         """
         from glob import glob
-        files = glob(pattern)
-        if len(files) == 0:
-            raise Exception('importMicrographs:There is not files matching pattern')
+        filePaths = glob(pattern)
+        if len(filePaths) == 0:
+            raise Exception('importMicrographs:There is not filePaths matching pattern')
         path = self._getPath('micrographs.sqlite')
         micSet = SetOfMicrographs(path, tiltPairs=tiltPairs)
         micSet.microscope.voltage.set(voltage)
@@ -99,7 +99,7 @@ class ProtImportMicrographs(Protocol):
             micSet.setScannedPixelSize(scannedPixelSize)
         outFiles = [path]
         
-        for f in files:
+        for f in filePaths:
             dst = self._getPath(basename(f))            
             shutil.copyfile(f, dst)
             micSet.append(Micrograph(dst))
@@ -110,6 +110,8 @@ class ProtImportMicrographs(Protocol):
         
         return outFiles
     
+    def getFiles(self):
+        return self.outputMicrographs.getFiles()
 
 class DefCTFMicrographs(Form):
     """ Create the definition of parameters for

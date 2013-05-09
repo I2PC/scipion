@@ -8,10 +8,8 @@ import logging.config
 import os
 from pyworkflow.utils.path import *
 
-SCIPION_GENERAL_LOG = 'scipionLog/scipionLog.log'
-
 """ Get general log file path """
-logPath = getHomePath() + os.sep + SCIPION_GENERAL_LOG
+logPath = join (getHomePath(), 'scipionLog', 'scipionLog.log')
 """ Create the folders path if it does not exist """
 createFolderForFile(logPath)
 """ Config the log """
@@ -55,19 +53,19 @@ def getGeneralLogger(classPath):
     return logging.getLogger(classPath)
     
 
-def getFileLogger(fileName):
+def getFileLogger(filePath):
     """ Method that creates and returns a log for the given file """
     # Create the folders path if it does not exist 
-    createFolderForFile(fileName)
+    createFolderForFile(filePath)
     
-    if fileName not in config['loggers']:
-        config['handlers'][fileName] = {'level': 'INFO',    
+    if filePath not in config['loggers']:
+        config['handlers'][filePath] = {'level': 'INFO',    
                                         'class': 'logging.handlers.RotatingFileHandler',
                                         'formatter': 'fileFormat',
-                                        'filename': fileName,
+                                        'filename': filePath,
                                         'maxBytes': 100000,}
-        config['loggers'][fileName] = {'handlers': ['consoleHandler', fileName],        
+        config['loggers'][filePath] = {'handlers': ['consoleHandler', filePath],        
                                        'level': 'INFO',  
                                        'propagate': False,}
         logging.config.dictConfig(config)
-    return logging.getLogger(fileName)
+    return logging.getLogger(filePath)

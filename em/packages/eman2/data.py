@@ -73,7 +73,7 @@ class EmanSetOfCoordinates(SetOfCoordinates):
     EMAN coordinates are taken from top left"""
     def __init__(self, filename=None, **args):
         # Use object value to store filename
-        # Here filename is the path where pos files can be found
+        # Here filename is the path where pos filePaths can be found
         SetOfCoordinates.__init__(self, value=filename, **args)
         
     def getFileName(self):
@@ -108,12 +108,12 @@ class EmanSetOfCoordinates(SetOfCoordinates):
             self.iterMicrographCoordinates(mic)
 
     def getFiles(self):
-        files = []
+        filePaths = set()
         path = self.getFileName()
         for mic in self.getMicrographs():            
             filePath = join(path, replaceBaseExt(mic.getFileName(), 'box'))
-            files.append(filePath)
-        return files
+            filePaths.add(filePath)
+        return filePaths
     
     def hasTiltPairs(self):
         """Returns True if the SetOfMicrographs has tilted pairs"""
