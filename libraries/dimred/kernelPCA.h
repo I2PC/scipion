@@ -18,31 +18,12 @@ class KernelPCA: public DimRedAlgorithm
 {
 public:
 	double sigma;
-
-	Matrix2D<double> D2, U, V, U_dR;
-	Matrix1D<double> W, W_dR, e_W_dR;
-	Matrix1D<int> index;
 public:
 	/// Set specific parameters
 	void setSpecificParameters(double sigma=1.0);
 
 	/// Reduce dimensionality
 	void reduceDimensionality();
-
-	/// Euclidean Norm
-	void euclideanNorm();
-
-	/// compute gram Matrix
-	void gramMatrix();
-
-	/// Normalize Matrix
-	void normMatrix();
-
-	/// Eigendecomposition and largest Eigen-Value/-Vector
-	void getGreatestEigen();
-
-	// calc Mapping Values
-	void calcMapping();
 };
 //@}
 #endif
