@@ -195,7 +195,8 @@ public abstract class TrainingPicker extends ParticlePicker
 				x = md.getValueInt(MDLabel.MDL_XCOOR, id);
 				y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 				particle = new TrainingParticle(x, y, family, mfd.getMicrograph());
-				mfd.addManualParticle(particle, this, false);
+				mfd.addManualParticle(particle, this, false, false);
+
 			}
 			md.destroy();
 		}
@@ -421,12 +422,10 @@ public abstract class TrainingPicker extends ParticlePicker
 		// System.out.println("Saving data...");
 		if (isChanged())
 		{
-
 			super.saveData();
 			saveMicrographs();
 		}
-		if (getMode() == FamilyState.Manual)// only changed in manual mode
-			saveTemplates();
+
 	}
 
 	public int getAutomaticNumber(Family f, double threshold)
@@ -589,7 +588,8 @@ public abstract class TrainingPicker extends ParticlePicker
 			}
 			cost = hasCost ? md.getValueDouble(MDLabel.MDL_COST, id) : 0;
 			if (cost == 0 || cost > 1)
-				tm.addManualParticle(new TrainingParticle(x, y, family, tm, cost), this, false);
+				tm.addManualParticle(new TrainingParticle(x, y, family, tm, cost), this, false, false);
+
 			else
 				tm.addAutomaticParticle(new AutomaticParticle(x, y, family, tm, cost, false), true);
 		}
@@ -735,11 +735,8 @@ public abstract class TrainingPicker extends ParticlePicker
 		if (f.getStep() != FamilyState.Manual)
 			return;
 
-		
 		if (!hasManualParticles(f))
 			return;
-		System.out.println("update templates");
-		
 
 		f.initTemplates();
 		ImageGeneric igp;
@@ -759,10 +756,12 @@ public abstract class TrainingPicker extends ParticlePicker
 					if (i < f.getTemplatesNumber())
 						f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
 					else
-						f.getTemplates().alignImage(igp, true);
+					{
+						double[] align = family.getTemplates().alignImage(igp);
+						particle.setLastalign(align);
+					}
 				}
 			}
-			
 			f.saveTemplates();
 		}
 		catch (Exception e)
@@ -777,8 +776,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		try
 		{
 			for (Family f : families)
-					f.saveTemplates();
-			System.out.println("Saved templates");
+				f.saveTemplates();
 		}
 		catch (Exception e)
 		{
@@ -839,7 +837,6 @@ public abstract class TrainingPicker extends ParticlePicker
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
-	
 
 
 	@Override
