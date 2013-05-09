@@ -166,17 +166,16 @@ class SetOfImages(EMObject):
         self._tiltPairs.set(other._tiltPairs.get())
         
     def getFiles(self):
-        files = []
-        files.append(self.getFileName())
+        files = set()
+        files.add(self.getFileName())
         for item in self:
             # item is an XmippImage or an Image
-            files.append(item.getFileName())
+            files.add(item.getFileName())
             # If it has CTF we must include ctf file
             if (item.hasCTF()):
                 # ctf is a XMippCTFModel
-                files.append(item.ctfModel.getFiles())
-        #We can have repeated files. We clean repeated ones.
-        return getUniqueItems(files)
+                files.add(item.ctfModel.getFiles())
+        return files
     
     
 class SetOfMicrographs(SetOfImages):

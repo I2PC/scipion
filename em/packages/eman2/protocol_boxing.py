@@ -53,7 +53,6 @@ class EmanProtBoxing(ProtParticlePicking):
         
     def createOutput(self):
         # Get the box size store in Eman db
-        self._log.info("current dir: " + os.getcwd())
         self._params['boxSize'] = self.__getBoxingBoxSize()
         program = "pwd; e2boxer.py"
         arguments = "%(inputMics)s --boxsize=%(boxSize)i --write_dbbox"
@@ -80,5 +79,9 @@ class EmanProtBoxing(ProtParticlePicking):
         if auxBoxSize is None:
             raise Exception("Error getting the stored boxsize with command: " + command) 
         return auxBoxSize
+    
+    def getFiles(self):
+        files = self.inputMicrographs.get().getFiles() | self.outputCoordinates.getFiles()
+        return files
 
     

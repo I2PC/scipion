@@ -110,6 +110,8 @@ class ProtImportMicrographs(Protocol):
         
         return outFiles
     
+    def getFiles(self):
+        return self.outputMicrographs.getFiles()
 
 class DefCTFMicrographs(Form):
     """ Create the definition of parameters for

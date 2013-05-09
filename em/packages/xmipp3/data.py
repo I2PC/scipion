@@ -232,8 +232,8 @@ class XmippCTFModel(CTFModel):
         self.set(fn)
     
     def getFiles(self):
-        files = []
-        files.append(self.getFileName())
+        files = set()
+        files.add(self.getFileName())
         return files
           
     
@@ -276,11 +276,11 @@ class XmippSetOfCoordinates(SetOfCoordinates):
             self.iterMicrographCoordinates(mic)
     
     def getFiles(self):
-        files = []
+        files = set()
         path = self.getFileName()
         for mic in self.getMicrographs():            
             filePath = join(path, replaceBaseExt(mic.getFileName(), 'pos'))
-            files.append(filePath)
+            files.add(filePath)
         return files
 
             
