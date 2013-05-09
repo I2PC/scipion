@@ -75,7 +75,6 @@ class XmippSetOfImages(XmippSet, SetOfImages):
     @staticmethod
     def convert(setOfImgs, filename):
         return XmippSet.convert(setOfImgs, XmippSetOfImages, filename)
-
                 
 class XmippMicrograph(XmippImage, Micrograph):
     """Xmipp implementation for Micrograph"""
@@ -231,6 +230,11 @@ class XmippCTFModel(CTFModel):
         md.write(fn)
         
         self.set(fn)
+    
+    def getFiles(self):
+        files = []
+        files.append(self.getFileName())
+        return files
           
     
 class XmippSetOfCoordinates(SetOfCoordinates):
@@ -270,6 +274,14 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         
         for mic in self.getMicrographs():
             self.iterMicrographCoordinates(mic)
+    
+    def getFiles(self):
+        files = []
+        path = self.getFileName()
+        for mic in self.getMicrographs():            
+            filePath = join(path, replaceBaseExt(mic.getFileName(), 'pos'))
+            files.append(filePath)
+        return files
 
             
 class XmippImageClassAssignment(ImageClassAssignment, XmippMdRow):

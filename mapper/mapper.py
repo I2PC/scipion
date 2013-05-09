@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'xmipp@cnb.csic.es'
+# *  e-mail address 'xmipp@cnb.csic.es' Eso eso ...las quejas a XMIPP
 # *
 # **************************************************************************
 

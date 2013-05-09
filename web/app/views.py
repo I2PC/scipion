@@ -15,6 +15,10 @@ def getResource(request):
         img = 'scipion_logo.png'
     elif request == 'favicon':
         img = 'scipion_bn.png'
+    elif request == 'help':
+        img = 'contents24.png'
+    elif request == 'browse':
+        img = 'zoom.png'    
     path = os.path.join(settings.MEDIA_URL, img)
     return path
 
@@ -158,7 +162,7 @@ def project_content(request):
                'logo': logo_path,
                'favicon': favicon_path,
                'jquery': jquery_path,
-               'jquery_cokkie': jquery_cookie,
+               'jquery_cookie': jquery_cookie,
                'jquery_treeview': jquery_treeview,
                'launchTreeview': launchTreeview,
                'css':css_path,
@@ -166,6 +170,29 @@ def project_content(request):
                'provider':provider}
     
     return render_to_response('project_content.html', context)
+
+def form(request):
+    
+    # Resources #
+    favicon_path = getResource('favicon')
+    logo_help = getResource('help')
+    logo_browse = getResource('browse')
+    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
+    jsForm_path = os.path.join(settings.STATIC_URL, 'js/form.js')
+    css_path = os.path.join(settings.STATIC_URL, 'css/form.css')
+    #############
+    
+    protocol = request.GET.get('protocol')
+    
+    context = {'protocol':protocol,
+               'favicon': favicon_path,
+               'help': logo_help,
+               'form': jsForm_path,
+               'jquery': jquery_path,
+               'browse': logo_browse,
+               'css':css_path}
+    
+    return render_to_response('form.html', context)
 
 
 if __name__ == '__main__':

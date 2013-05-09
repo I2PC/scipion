@@ -20,7 +20,7 @@ from tests.tester import *
 
 prot2 = ProtImportMicrographs(workingDir=proj.getPath('Runs', 'Import1'),
                               pattern=pattern, samplingRate=1, voltage=200)
-proj.launchProtocol(prot2)
+proj.launchProtocol(prot2, wait=True)
 
 l = proj.mapper.selectByClass('SetOfMicrographs')
 # l = proj.mapper.selectAll()
@@ -36,7 +36,7 @@ if len(l):
     protPartPick.inputMicrographs.set(l[0])
     protPartPick.boxSize.set(int(boxSize))
 
-    proj.launchProtocol(protPartPick)
+    proj.launchProtocol(protPartPick, wait=True)
     
     l = proj.mapper.selectByClass('EmanSetOfCoordinates')
 

@@ -30,18 +30,6 @@ for specific EMAN2 EM data objects
 
 from pyworkflow.em import *  
 from pyworkflow.utils.path import replaceBaseExt, exists
-    
-    
-class EmanSetOfMicrographs(SetOfMicrographs):
-    
-    def __iter__(self):
-        """Iterate over the set of micrographs in the MetaData"""
-        metaDataFile=open(self.getFileName(),"r")
-        for line in metaDataFile:
-            micrograph = Micrograph()
-            micrograph.setFileName(line)       
-            yield micrograph
-        metaDataFile.close()
             
 class EmanCoordinate(Coordinate):
     """This class holds the (x,y) position and other information
@@ -119,7 +107,13 @@ class EmanSetOfCoordinates(SetOfCoordinates):
         for mic in self.getMicrographs():
             self.iterMicrographCoordinates(mic)
 
-                
+    def getFiles(self):
+        files = []
+        path = self.getFileName()
+        for mic in self.getMicrographs():            
+            filePath = join(path, replaceBaseExt(mic.getFileName(), 'box'))
+            files.append(filePath)
+        return files
     
     def hasTiltPairs(self):
         """Returns True if the SetOfMicrographs has tilted pairs"""
