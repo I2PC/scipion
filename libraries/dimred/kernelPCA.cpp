@@ -11,8 +11,8 @@ void KernelPCA::setSpecificParameters(double sigma) {
 }
 
 void KernelPCA::reduceDimensionality() {
-	euclideanNorm();						//d=(v_1-v_2)^2
-	gramMatrix();						    //k(v_1,v_2)=exp(-1/2*(d/sigma)^2)
+	computeDistance(*X, D2, distance, false);
+	computeSimilarityMatrix(D2,sigma);
 	normMatrix();							//Z=1/det(Z)*Z
 
 	getGreatestEigen();			//compute Eigen and get greates Eigen
@@ -20,25 +20,6 @@ void KernelPCA::reduceDimensionality() {
 	Y.initZeros(MAT_YSIZE(U_dR), MAT_XSIZE(U_dR));
 	calcMapping();						//compute Mapping
 }
-
-void KernelPCA::euclideanNorm() {
-	//std::cout << "Entering euclideanNorm" << std::endl;
-	Z.initZeros(MAT_YSIZE(*X),MAT_YSIZE(*X));
-	int i, j, m;
-	for (j = 0; j < MAT_YSIZE(*X); j++) {
-		for (i = 0; i < MAT_YSIZE(*X); i++) {
-			for (m = 0; m < MAT_XSIZE(*X); m++) {
-				double diff = MAT_ELEM(*X,i,m)-MAT_ELEM(*X,j,m);
-				MAT_ELEM(Z,i,j)+=diff*diff;
-			}}}
-}
-
-void KernelPCA::gramMatrix() {
-	//std::cout << "Entering gramMatrix" << std::endl;
-	FOR_ALL_ELEMENTS_IN_MATRIX2D(Z)
-		MAT_ELEM(Z,i,j)=exp(-MAT_ELEM(Z,i,j)/(2*sigma*sigma));
-
-	}
 
 void KernelPCA::normMatrix() {
 	Matrix2D<double> A;	//A=sums of rows
@@ -48,7 +29,7 @@ void KernelPCA::normMatrix() {
 	int i, j;
 	for (i = 0; i < MAT_YSIZE(*X); i++) {
 		for (j = 0; j < MAT_YSIZE(*X); j++) {
-			MAT_ELEM(A,0,i)+=MAT_ELEM(Z,j,i);	//sum of vector z_i (row)
+			MAT_ELEM(A,0,i)+=MAT_ELEM(D2,j,i);	//sum of vector z_i (row)
 		}
 		MAT_ELEM(A,0,i)/=MAT_YSIZE(*X); //sum_row/(dimension N)
 
@@ -59,8 +40,8 @@ void KernelPCA::normMatrix() {
 
 	for (i = 0; i < MAT_YSIZE(*X); i++) {
 		for (j = 0; j < MAT_YSIZE(*X); j++) {
-			MAT_ELEM(Z,j,i)=(MAT_ELEM(Z,j,i)-MAT_ELEM(A,0,j)-MAT_ELEM(A,0,i));
-			MAT_ELEM(Z,j,i)=MAT_ELEM(Z,j,i)+a;
+			MAT_ELEM(D2,j,i)=(MAT_ELEM(D2,j,i)-MAT_ELEM(A,0,j)-MAT_ELEM(A,0,i));
+			MAT_ELEM(D2,j,i)=MAT_ELEM(D2,j,i)+a;
 		}
 	}
 }
@@ -68,7 +49,7 @@ void KernelPCA::normMatrix() {
 void KernelPCA::getGreatestEigen() {
 	//std::cout << "Entering getGreatestEigen" << std::endl;
 	//calc Eigen-Value/Vector
-	Z.eigs(U, W, V, index);
+	D2.eigs(U, W, V, index);
 
 	U_dR.initZeros(MAT_YSIZE(*X), outputDim);
 	W_dR.initZeros(outputDim);
