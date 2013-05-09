@@ -106,7 +106,12 @@ class Project(object):
     def runProtocol(self, protocol):
         """Directly execute the protocol"""
         protocol.mapper = self.mapper
-        protocol._stepsExecutor = StepExecutor() 
+        if protocol.numberOfThreads > 1:
+            protocol._stepsExecutor = ThreadStepExecutor() 
+        elif protocol.numberOfMpi > 1:
+            pass # MpiStepExecutor
+        else:
+            protocol._stepsExecutor = StepExecutor()
         protocol.run()
         
     def continueProtocol(self, protocol):

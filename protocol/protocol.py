@@ -262,8 +262,11 @@ class Protocol(Step):
         """ Define all the steps that will be executed. """
         pass
     
-    def __insertStep(self, step):
+    def __insertStep(self, step, prerequisites=[]):
         """ Insert a new step in the list. """
+        if not len(prerequisites) and len(self._steps):
+            prerequisites = [len(self._steps)]
+        step._prerequisites = prerequisites
         self._steps.append(step)
         
     def _getPath(self, *paths):
@@ -363,8 +366,6 @@ class Protocol(Step):
         """
         self._log.info("STARTED: " + step.funcName.get())
         self.status.set(step.status)
-        #self.mapper.insertChild(self._steps, self._steps.getIndexStr(self.currentStep),
-        #                 step, self.namePrefix)
         self._store(step)
     
     def _stepFinished(self, step):
@@ -373,7 +374,6 @@ class Protocol(Step):
         """
         self.endTime.set(step.endTime.get())
         self._store(self.endTime, step)
-        self.currentStep += 1
         doContinue = True
         if self.status == STATUS_WAITING_APPROVAL:
             doContinue = False
@@ -420,7 +420,6 @@ class Protocol(Step):
         self._log = self.__getLogger()
         self._log.info('RUNNING PROTOCOL -----------------')
         self._log.info('   workingDir: ' + self.workingDir.get())
-        self.currentStep = 1
         #self.namePrefix = replaceExt(self._steps.getName(), self._steps.strId()) #keep
         self._currentDir = os.getcwd() 
         self._run()
