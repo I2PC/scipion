@@ -232,16 +232,16 @@ class XmippCTFModel(CTFModel):
         self.set(fn)
     
     def getFiles(self):
-        files = set()
-        files.add(self.getFileName())
-        return files
+        filePaths = set()
+        filePaths.add(self.getFileName())
+        return filePaths
           
     
 class XmippSetOfCoordinates(SetOfCoordinates):
     """Implementation of SetOfCoordinates for Xmipp"""
     def __init__(self, filename=None, **args):
         # Use object value to store filename
-        # Here filename is the path where pos files can be found
+        # Here filename is the path where pos filePaths can be found
         SetOfCoordinates.__init__(self, value=filename, **args)
         self.family = String()
         
@@ -276,12 +276,13 @@ class XmippSetOfCoordinates(SetOfCoordinates):
             self.iterMicrographCoordinates(mic)
     
     def getFiles(self):
-        files = set()
+        filePaths = set()
         path = self.getFileName()
-        for mic in self.getMicrographs():            
-            filePath = join(path, replaceBaseExt(mic.getFileName(), 'pos'))
-            files.add(filePath)
-        return files
+        for mic in self.getMicrographs():   
+            filePath = join(path, replaceBaseExt(mic.getFileName(), 'pos'))            
+            if exists(filePath):         
+                filePaths.add(filePath)
+        return filePaths
 
             
 class XmippImageClassAssignment(ImageClassAssignment, XmippMdRow):

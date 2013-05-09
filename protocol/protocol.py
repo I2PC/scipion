@@ -141,17 +141,17 @@ class FunctionStep(Step):
         if resultFiles and len(resultFiles):
             missingFiles = existsPath(*resultFiles)
             if len(missingFiles):
-                raise Exception('Missing files: ' + ' '.join(missingFiles))
+                raise Exception('Missing filePaths: ' + ' '.join(missingFiles))
             self.resultFiles = String(pickle.dumps(resultFiles))
     
     def _postconditions(self):
         """ This type of Step, will simply check
-        as postconditions that the result files exists""" 
+        as postconditions that the result filePaths exists""" 
         if not hasattr(self, 'resultFiles'):
             return True
-        files = pickle.loads(self.resultFiles.get())
+        filePaths = pickle.loads(self.resultFiles.get())
 
-        return len(existsPath(*files)) == 0
+        return len(existsPath(*filePaths)) == 0
     
     def __eq__(self, other):
         """ Compare with other FunctionStep""" 
@@ -172,7 +172,7 @@ class RunJobStep(FunctionStep):
     for launching specific programs with some parameters""" 
     def __init__(self, programName=None, arguments=None, resultFiles=[], **args):
         FunctionStep.__init__(self, 'runJob', programName, arguments)
-        # Define the function that will do the job and return result files
+        # Define the function that will do the job and return result filePaths
         self.func = self._runJob
         self.mpi = 1
         self.threads = 1
@@ -199,7 +199,7 @@ class Protocol(Step):
         Step.__init__(self, **args)
         self.mode = String(args.get('mode', MODE_RESUME))
         self._steps = List() # List of steps that will be executed
-        self.workingDir = String(args.get('workingDir', '.')) # All generated files should be inside workingDir
+        self.workingDir = String(args.get('workingDir', '.')) # All generated filePaths should be inside workingDir
         self.mapper = args.get('mapper', None)
         self._createVarsFromDefinition(**args)
         # For non-parallel protocols mpi=1 and threads=1

@@ -43,7 +43,7 @@ class EMObject(Object):
         return str(self.get())
     
     def getFiles(self):
-        """ Get all files """
+        """ Get all filePaths """
         return None
 
 
@@ -166,16 +166,16 @@ class SetOfImages(EMObject):
         self._tiltPairs.set(other._tiltPairs.get())
         
     def getFiles(self):
-        files = set()
-        files.add(self.getFileName())
+        filePaths = set()
+        filePaths.add(self.getFileName())
         for item in self:
             # item is an XmippImage or an Image
-            files.add(item.getFileName())
+            filePaths.add(item.getFileName())
             # If it has CTF we must include ctf file
             if (item.hasCTF()):
                 # ctf is a XMippCTFModel
-                files.add(item.ctfModel.getFiles())
-        return files
+                filePaths.add(item.ctfModel.getFiles())
+        return filePaths
     
     
 class SetOfMicrographs(SetOfImages):
@@ -203,7 +203,7 @@ class SetOfMicrographs(SetOfImages):
         self._micList.append(micrograph)        
     
     def __loadFiles(self):
-        """ Read files from text files. """
+        """ Read filePaths from text filePaths. """
         mapper = SqliteMapper(self.getFileName(), globals())
         self._micList = mapper.selectFirst()
         
