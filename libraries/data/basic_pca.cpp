@@ -149,7 +149,8 @@ void PCAMahalanobisAnalyzer::learnPCABasis(size_t NPCA, size_t Niter)
     NPCA=XMIPP_MIN(NPCA,v.size());
     for (size_t n=0; n<NPCA; n++)
     {
-        typeCast(v[n],vPCA);
+    	size_t nRandom=(size_t)round(v.size()*rnd_unif(0,1));
+        typeCast(v[nRandom],vPCA);
         PCAbasis.push_back(vPCA);
     }
 
