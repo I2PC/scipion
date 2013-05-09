@@ -302,7 +302,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		initSizePane();
 		fieldspn.add(sizepn);
 
-		centerpickchb = new JCheckBox("Adjust Center");
+		centerpickchb = new JCheckBox("Center Particle");
 		fieldspn.add(centerpickchb);
 
 		familypn.add(fieldspn, 0);
@@ -960,7 +960,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	
 	public void updateTemplates(Family f)
 	{
-		f.setUpdateTemplatesPending(true);
 		if (f.equals(family) && templatesdialog != null)
 			templatesdialog.loadTemplates(true);
 
@@ -977,7 +976,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		{
 			super.updateSize(size);
 			ppicker.resetParticleImages();
-			family.setUpdateTemplatesPending(true);
 			ppicker.updateTemplates();
 			if (templatesdialog != null)
 				loadTemplates();
@@ -995,7 +993,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		getFamilyData().reset();
 	}
 
-	public boolean isCenterPick()
+	public boolean isCenterParticle()
 	{
 		return centerpickchb.isSelected();
 	}

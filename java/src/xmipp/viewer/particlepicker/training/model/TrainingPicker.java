@@ -163,7 +163,7 @@ public abstract class TrainingPicker extends ParticlePicker
 				x = md.getValueInt(MDLabel.MDL_XCOOR, id);
 				y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 				particle = new TrainingParticle(x, y, family, mfd.getMicrograph());
-				mfd.addManualParticle(particle);
+				mfd.addManualParticle(particle, this, false, false);
 			}
 			md.destroy();
 		}
@@ -602,7 +602,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			}
 			cost = hasCost ? md.getValueDouble(MDLabel.MDL_COST, id) : 0;
 			if (cost == 0 || cost > 1)
-				tm.addManualParticle(new TrainingParticle(x, y, family, tm, cost));
+				tm.addManualParticle(new TrainingParticle(x, y, family, tm, cost), this, false, true);
 			else
 				tm.addAutomaticParticle(new AutomaticParticle(x, y, family, tm, cost, false), true);
 		}
@@ -773,12 +773,10 @@ public abstract class TrainingPicker extends ParticlePicker
 	{
 		if (f.getStep() != FamilyState.Manual)
 			return;
-		
+
 		if (!hasManualParticles(f))
 			return;
-		System.out.println("update templates");
-		if (!f.getUpdateTemplatesPending())
-			return;// nothing to update
+
 		f.initTemplates();
 		ImageGeneric igp;
 		List<TrainingParticle> particles;
@@ -797,11 +795,13 @@ public abstract class TrainingPicker extends ParticlePicker
 					if (i < f.getTemplatesNumber())
 						f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
 					else
-						f.getTemplates().alignImage(igp, true);
+					{
+						double[] align = family.getTemplates().alignImage(igp);
+						particle.setLastalign(align);
+					}
 				}
 			}
-			f.getTemplates().write(f.getTemplatesFile());
-			f.setUpdateTemplatesPending(false);
+			f.saveTemplates();
 		}
 		catch (Exception e)
 		{
@@ -815,7 +815,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		try
 		{
 			for (Family f : families)
-				updateTemplates(f);
+				f.saveTemplates();
 		}
 		catch (Exception e)
 		{
@@ -897,12 +897,12 @@ public abstract class TrainingPicker extends ParticlePicker
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
-	
+
 	public boolean hasManualParticles()
 	{
 		return hasManualParticles(family);
 	}
-	
+
 	public boolean hasManualParticles(Family f)
 	{
 		MicrographFamilyData mfd = null;
@@ -914,7 +914,6 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 		return false;
 	}
-
 
 	@Override
 	public boolean isValidSize(int size)

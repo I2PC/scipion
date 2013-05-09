@@ -24,6 +24,7 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.Particle;
 import xmipp.jni.Program;
+import xmipp.utils.TasksManager;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
@@ -47,7 +48,6 @@ public abstract class ParticlePicker {
 	protected int autopickpercent = defAutoPickPercent;
 	
 	public static final int fsizemax = 800;
-	private Family dfamily = new Family("DefaultFamily", Color.green, fsizemax/4, 1, getTemplatesFile("DefaultFamily"));
 	protected String block;
 	
 	public ParticlePicker(String selfile, String outputdir, FamilyState mode) {
@@ -260,7 +260,7 @@ public abstract class ParticlePicker {
 		families.clear();
 		String file = familiesfile;
 		if (!new File(file).exists()) {
-			families.add(dfamily);
+			families.add(new Family("DefaultFamily", Color.green, fsizemax/4, 1, getTemplatesFile("DefaultFamily")));
 			saveFamilies();
 			return;
 		}
@@ -293,7 +293,6 @@ public abstract class ParticlePicker {
 				else
 				{
 					family = new Family(name, new Color(rgb), size, state, this, templatesNumber, templatesfile);
-					family.setUpdateTemplatesPending(true);
 				}
 				families.add(family);
 			}
@@ -523,43 +522,13 @@ public abstract class ParticlePicker {
 	public abstract void setMicrograph(Micrograph m);
 	
 		
-	public void addParticleToTemplates(TrainingParticle particle, int index, boolean center)
-	{
-		
-		try
-		{
-			Particle shift = null;
-			Family family = particle.getFamily();
-			ImageGeneric igp = particle.getImageGeneric();
-			//will happen only in manual mode
-			if (index < family.getTemplatesNumber())// index starts at one
-				family.setTemplate((int) (ImageGeneric.FIRST_IMAGE + index), igp);
-			else
-			{
-				family.getTemplates().alignImage(igp, getMode() == FamilyState.Manual);
-				shift = family.getTemplates().bestShift(igp);
-				if (center)
-				{
-					particle.setX(particle.getX() + shift.getX());
-					particle.setY(particle.getY() + shift.getY());
-				}
-			}
-			family.getTemplates().write(family.getTemplatesFile());
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
-		}
 
-	}
+
+	
+	
 	
 
-
-	public void addParticleToTemplates(TrainingParticle particle, boolean center)
-	{
-		addParticleToTemplates(particle, getManualParticlesNumber(particle.getFamily()) - 1, center);
-	}
-
 	public abstract boolean isValidSize(int size);
+
+
 }
