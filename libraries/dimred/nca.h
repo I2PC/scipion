@@ -22,14 +22,27 @@ class NeighbourhoodCA: public DimRedAlgorithm
 public:
 	/// Weight factor for regularization
 	double lambda;
+
+	/// Labels
+	Matrix1D<unsigned char> labels;
+
+	/// Number of neighbours
+	int K;
 public:
 	// Auxiliary variables for evaluating the objective function
-	Matrix2D<double> A, Y, P;
-public:
-	/// Set specific parameters
-	void setSpecificParameters(double lambda=0.);
+	Matrix2D<double> D2Y, A;
+	Matrix1D<double> D2YRowSum;
 
-	double objectiveFunction(Matrix2D<double> &A, Matrix2D<double> &cur_X, Matrix1D<double> &cur_labels);
+	// Index of the nearest neighbors to each one of the observations
+	Matrix2D<int> idx;
+public:
+	/// Set labels
+	void setLabels(const Matrix1D<unsigned char> &labels);
+
+	/// Set specific parameters
+	void setSpecificParameters(double lambda=0., int K=12);
+
+	double objectiveFunction();
 
 	/// Reduce dimensionality
 	void reduceDimensionality();

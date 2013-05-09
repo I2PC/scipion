@@ -1941,6 +1941,9 @@ void matrixOperation_IminusA(Matrix2D<double> &A);
 /** Erase first column */
 void eraseFirstColumn(Matrix2D<double> &A);
 
+/** Keep columns between j0 and jF */
+void keepColumns(Matrix2D<double> &A, int j0, int jF);
+
 /** Sparse element.
  *  This class is used to create the SparseMatrices. */
 class SparseElement

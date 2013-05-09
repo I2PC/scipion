@@ -840,12 +840,17 @@ void MDSql::copyTableFromFileDB(const FileName blockname,
     int columns;
     char *Labels;
 
+    String _blockname;
+    if(blockname.empty())
+        _blockname=DEFAULT_BLOCK_NAME;
+    else
+        _blockname=blockname;
     sqlite3 *db1;
-    String sql = (String)"PRAGMA table_info(" + blockname +")";
+    String sql = (String)"PRAGMA table_info(" + _blockname +")";
     if (sqlite3_open(filename.c_str(), &db1))
-        REPORT_ERROR(ERR_MD_SQL,formatString("Error code: %d message: %s",rc,sqlite3_errmsg(db1)));
+        REPORT_ERROR(ERR_MD_SQL,formatString("Error opening database code: %d message: %s",rc,sqlite3_errmsg(db1)));
     if (sqlite3_get_table (db1, sql.c_str(), &results, &rows, &columns, NULL) != SQLITE_OK)
-        REPORT_ERROR(ERR_MD_SQL,formatString("Error code: %d message: %s",rc,sqlite3_errmsg(db1)));
+        REPORT_ERROR(ERR_MD_SQL,formatString("Error accesing table code: %d message: %s. SQL command %s",rc,sqlite3_errmsg(db1),sql.c_str()));
     //This pragma returns one row for each column in the named table.
     //Columns in the result set include the column name,
     //data type, whether or not the column can be NULL, and the default value for the column.
@@ -893,11 +898,6 @@ void MDSql::copyTableFromFileDB(const FileName blockname,
     //tableName(tableId);
     sqlCommitTrans();
 
-    String _blockname;
-    if(blockname.empty())
-        _blockname="nonamed";
-    else
-        _blockname=blockname;
     dropTable();
     createMd();
 
@@ -908,11 +908,12 @@ void MDSql::copyTableFromFileDB(const FileName blockname,
         return;
     }
     sqlCommand = (String)"INSERT INTO " + tableName(tableId).c_str()
-                 +" select " + activeLabel + " from load."+blockname.c_str();
+                 +" select " + activeLabel + " from load."+ _blockname.c_str();
     if (sqlite3_exec(db, sqlCommand.c_str(),NULL,NULL,&errmsg) != SQLITE_OK)
     {
         std::cerr << (String)"Couldn't write table: " << tableName(tableId)
-        << " "                             << errmsg << std::endl;
+        << " "                             << errmsg << std::endl
+        << "sqlcommand " << sqlCommand << std::endl;
         return;
     }
     sqlite3_exec(db, "DETACH load",NULL,NULL,&errmsg);
@@ -923,7 +924,7 @@ void MDSql::copyTableToFileDB(const FileName blockname, const FileName &fileName
     sqlCommitTrans();
     String _blockname;
     if(blockname.empty())
-        _blockname="nonamed";
+        _blockname=DEFAULT_BLOCK_NAME;
     else
         _blockname=blockname;
     String sqlCommand = (String)"ATTACH database '" + fileName+"' as save";

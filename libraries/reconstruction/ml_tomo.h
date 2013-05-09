@@ -107,7 +107,7 @@ public:
     /** Number of iterations to be performed */
     int Niter, Niter2;
     /** dimension of the images */
-    size_t oridim, dim, dim3, hdim;
+    int oridim, dim, dim3, hdim;
     double ddim3;
     /** Number of reference images */
     int nr_ref;
@@ -206,7 +206,7 @@ public:
     // Angular sampling information
     struct AnglesInfo
     {
-        size_t direction;
+        int direction;
         double rot, rot_ori;
         double tilt, tilt_ori;
         double psi, psi_ori;
@@ -346,7 +346,7 @@ public:
                       double &resolution);
 
     /// Apply regularization
-    void regularize(int iter);
+    bool regularize(int iter);
 
     /// check convergence
     bool checkConvergence(std::vector<double> &conv);

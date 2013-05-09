@@ -35,7 +35,7 @@ pthread_mutex_t mltomo_selfile_access_mutex = PTHREAD_MUTEX_INITIALIZER;
 void
 ProgMLTomo::defineParams()
 {
-   addUsageLine(
+    addUsageLine(
         "Align and classify 3D images with missing data regions in Fourier space,");
     addUsageLine(
         "e.g. subtomograms or RCT reconstructions, by a 3D multi-reference refinement");
@@ -381,15 +381,17 @@ ProgMLTomo::readParams()
 
     // Number of threads
     threads = getIntParam("--thr");
+
 }
 
 void
 ProgMLTomo::run()
 {
-    double LL, sumw_allrefs, sumcorr;
+    int c, nn, imgno, opt_refno;
+    double LL, sumw_allrefs, convv, sumcorr;
     bool converged;
     std::vector<double> conv;
-    double wsum_sigma_noise, wsum_sigma_offset;
+    double aux, wsum_sigma_noise, wsum_sigma_offset;
     std::vector<MultidimArray<double> > wsumimgs; //3D
     std::vector<MultidimArray<double> > wsumweds; //3D
     std::vector<MultidimArray<double> > fsc;
@@ -648,7 +650,9 @@ ProgMLTomo::produceSideInfo()
     MultidimArray<std::complex<double> > Faux;
     Matrix1D<int> center(3);
     MultidimArray<int> radial_count;
-    size_t xdim, ydim, zdim, ndim;
+    double av;
+    size_t xdim, ydim, zdim;
+    size_t ndim;
 
 #ifdef  DEBUG
 
@@ -706,7 +710,7 @@ ProgMLTomo::produceSideInfo()
     getImageSize(MDimg, xdim, ydim, zdim, ndim);
     if (xdim != ydim || xdim != zdim)
         REPORT_ERROR(ERR_MULTIDIM_SIZE, "Only cubic volumes are allowed");
-    oridim = xdim;
+    oridim = (int) xdim;
 
     // Downscaled dimension
     if (dim < 0)
@@ -770,25 +774,25 @@ ProgMLTomo::produceSideInfo()
     cosine_mask.setXmippOrigin();
     fourier_mask.resize(dim, dim, hdim + 1);
     fourier_imask.resize(dim, dim, hdim + 1);
-    int r_maxres = std::min(hdim, (size_t)floor(maxres * dim));
+    int r_maxres = XMIPP_MIN(hdim, FLOOR(maxres * dim));
     RaisedCosineMask(cosine_mask, r_maxres - 2, r_maxres, INNER_MASK);
-    size_t yy, zz;
-    size_t dimb = (dim - 1) / 2;
-    for (size_t z = 0, ii = 0; z < dim; z++)
+    int yy, zz;
+    int dimb = (dim - 1) / 2;
+    for (int z = 0, ii = 0; z < dim; z++)
     {
         if (z > dimb)
             zz = z - dim;
         else
             zz = z;
-        for (size_t y = 0; y < dim; y++)
+        for (int y = 0; y < dim; y++)
         {
             if (y > dimb)
                 yy = y - dim;
             else
                 yy = y;
-            for (size_t xx = 0; xx < hdim + 1; xx++, ii++)
+            for (int xx = 0; xx < hdim + 1; xx++, ii++)
             {
-                if ((int)xx <= FINISHINGX(cosine_mask))
+                if (xx <= FINISHINGX(cosine_mask))
                 {
                     DIRECT_MULTIDIM_ELEM(fourier_mask,ii) = A3D_ELEM(cosine_mask,xx,yy,zz);
                     if (A3D_ELEM(cosine_mask,xx,yy,zz) > 0.)
@@ -851,8 +855,7 @@ ProgMLTomo::produceSideInfo()
             psi_sampling = angular_sampling;
 
     }
-
-    readMissingInfo();
+    readMissingInfo();////////////////////////////
     // Get number of references
     if (do_only_average)
     {
@@ -877,9 +880,10 @@ ProgMLTomo::produceSideInfo()
     }
     else
     {
-        if ((do_generate_refs = fn_ref.empty())) //assign bool value and asking at same time
+        if (do_generate_refs = fn_ref.empty()) //assign bool value and asking at same time
             generateInitialReferences();
     }
+
 
 
 } //end of function produceSideInfo
@@ -902,7 +906,7 @@ ProgMLTomo::generateInitialReferences()
     MetaData MDrand;
     std::vector<MetaData> MDtmp(nr_ref);
     int Nsub = ROUND((double)nr_images_global / nr_ref);
-    double my_rot, my_tilt, my_psi, resolution;
+    double my_rot, my_tilt, my_psi, my_xoff, my_yoff, resolution;
     //DocLine DL;
     int missno, c = 0, cc = XMIPP_MAX(1, nr_images_global / 60);
 
@@ -1077,15 +1081,17 @@ ProgMLTomo::produceSideInfo2(int nr_vols)
     std::cerr<<"Start produceSideInfo2"<<std::endl;
 #endif
 
+    int c;
     MetaData DF, DFsub;
+    double DL[10]; //old docfile
     FileName fn_tmp;
     Image<double> img, Vaux;
     std::vector<Matrix1D<double> > Vdm;
 
     setNumberOfLocalImages();
     // Store tomogram angles, offset vectors and missing wedge parameters
-    imgs_optrefno.assign(nr_images_local, 0);
-    imgs_optangno.assign(nr_images_local, 0);
+    imgs_optrefno.assign(nr_images_local, 0.);
+    imgs_optangno.assign(nr_images_local, 0.);
     imgs_optpsi.assign(nr_images_local, 0.);
     imgs_trymindiff.assign(nr_images_local, -1.);
     Matrix1D<double> dum(3);
@@ -1102,7 +1108,7 @@ ProgMLTomo::produceSideInfo2(int nr_vols)
     //--------Setup for Docfile -----------
     docfiledata.initZeros(nr_images_local, MLTOMO_DATALINELENGTH);
     // Read in MetaData with wedge info, optimal angles, etc.
-    size_t count = 0, imgno;
+    size_t id, count = 0, imgno;
     int refno;
     MetaData MDsub;
     MDRow row;
@@ -1173,7 +1179,7 @@ ProgMLTomo::produceSideInfo2(int nr_vols)
         //mysampling.saveSamplingFile("NEW");
         //MDsub.write("NEWexp.xmd");
         convert_refno_to_stack_position.resize(mysampling.numberSamplesAsymmetricUnit, -1);
-        for (size_t i = 0; i < mysampling.no_redundant_sampling_points_index.size(); i++)
+        for (int i = 0; i < mysampling.no_redundant_sampling_points_index.size(); i++)
             convert_refno_to_stack_position[i] =
                 mysampling.no_redundant_sampling_points_index[i];
 
@@ -1217,7 +1223,7 @@ ProgMLTomo::produceSideInfo2(int nr_vols)
         AnglesInfo myinfo;
         all_angle_info.clear();
         nr_ang = 0;
-        for (size_t i = 0; i < mysampling.no_redundant_sampling_points_angles.size();
+        for (int i = 0; i < mysampling.no_redundant_sampling_points_angles.size();
              i++)
         {
             rot = XX(mysampling.no_redundant_sampling_points_angles[i]);
@@ -1433,7 +1439,7 @@ ProgMLTomo::readMissingInfo()
 {
     // Read in MetaData with information about the missing wedges
     nr_miss = 0;
-    if ((do_missing = !fn_missing.empty())) //if provided missing wedges metadata
+    if (do_missing = !fn_missing.empty()) //if provided missing wedges metadata
     {
         MDmissing.read(fn_missing);
 
@@ -1558,26 +1564,26 @@ ProgMLTomo::getMissingRegion(MultidimArray<unsigned char> &Mmissing,
     std::cerr<<"Ainv= "<<Ainv<<" A= "<<A<<std::endl;
 #endif
 
-    size_t zz, yy;
-    size_t dimb = (dim - 1) / 2;
+    int zz, yy;
+    int dimb = (dim - 1) / 2;
     double Ainv_zz_x, Ainv_zz_y, Ainv_zz_z;
     double Ainv_yy_x, Ainv_yy_y, Ainv_yy_z;
 
-    for (size_t z = 0, ii = 0; z < dim; ++z)
+    for (int z = 0, ii = 0; z < dim; ++z)
     {
         zz = (z > dimb ) ? z - dim : z;
         Ainv_zz_x = dMij(Ainv, 0, 2) * zz;
         Ainv_zz_y = dMij(Ainv, 1, 2) * zz;
         Ainv_zz_z = dMij(Ainv, 2, 2) * zz;
 
-        for (size_t y = 0; y < dim; ++y)
+        for (int y = 0; y < dim; ++y)
         {
             yy = (y > dimb ) ? y - dim : y;
             Ainv_yy_x = Ainv_zz_x + dMij(Ainv, 0, 1) * yy;
             Ainv_yy_y = Ainv_zz_y + dMij(Ainv, 1, 1) * yy;
             Ainv_yy_z = Ainv_zz_z + dMij(Ainv, 2, 1) * yy;
 
-            for (size_t xx = 0; xx < hdim + 1; ++xx, ++ii)
+            for (int xx = 0; xx < hdim + 1; ++xx, ++ii)
             {
 
                 unsigned char maskvalue = DIRECT_MULTIDIM_ELEM(fourier_imask,ii);
@@ -1885,7 +1891,7 @@ ProgMLTomo::precalculateA2(std::vector<Image<double> > &Iref)
     std::cerr << "DEBUG_JM: entering ProgMLTomo::precalculateA2" <<std::endl;
 #endif
 
-    double AA, stdAA, corr;
+    double rot, tilt, AA, stdAA, corr;
     Matrix2D<double> A_rot_inv(4, 4), I(4, 4);
     MultidimArray<double> Maux(dim, dim, dim);
     MultidimArray<unsigned char> Mmissing;
@@ -2020,13 +2026,15 @@ ProgMLTomo::expectationSingleImage(MultidimArray<double> &Mimg, int imgno,
     std::vector<MultidimArray<double> > mysumimgs;
     std::vector<MultidimArray<double> > mysumweds;
     MultidimArray<double> refw;
-    double sigma_noise2, aux, pdf, fracpdf, myA2, mycorrAA, myXi2, A2_plus_Xi2, myXA;
+    double sigma_noise2, aux, pdf, fracpdf, myA2, mycorrAA, myXi2, A2_plus_Xi2,
+    myXA;
     double diff, mindiff, my_mindiff;
     double my_sumweight, weight;
     double wsum_sc, wsum_sc2, wsum_offset;
     double wsum_corr, sum_refw, maxweight, my_maxweight;
-    size_t sigdim;
-    int ioptx = 0, iopty = 0, ioptz = 0;
+    double rot, tilt;
+    int irot, irefmir, sigdim, xmax;
+    int ioptpsi = 0, ioptlib = 0, ioptx = 0, iopty = 0, ioptz = 0;
     bool is_ok_trymindiff = false;
     int my_nr_ang, old_optangno = opt_angno, old_optrefno = opt_refno;
     std::vector<double> all_Xi2;
@@ -2150,9 +2158,10 @@ ProgMLTomo::expectationSingleImage(MultidimArray<double> &Mimg, int imgno,
 
                 if (!do_limit_psirange || is_within_psirange)
                 {
-                    for (size_t i = 0; i < mysampling.my_neighbors[imgno].size(); i++)
+                    for (int i = 0; i < mysampling.my_neighbors[imgno].size(); i++)
                     {
-                        if (mysampling.my_neighbors[imgno][i] == (all_angle_info[angno]).direction)
+                        if (mysampling.my_neighbors[imgno][i]
+                            == (all_angle_info[angno]).direction)
                         {
                             is_a_neighbor = true;
                             break;
@@ -2533,7 +2542,7 @@ ProgMLTomo::maxConstrainedCorrSingleImage(MultidimArray<double> &Mimg,
 
                 if (!do_limit_psirange || is_within_psirange)
                 {
-                    for (size_t i = 0; i < mysampling.my_neighbors[imgno].size(); i++)
+                    for (int i = 0; i < mysampling.my_neighbors[imgno].size(); i++)
                     {
                         if (mysampling.my_neighbors[imgno][i]
                             == (all_angle_info[angno]).direction)
@@ -2703,8 +2712,10 @@ threadMLTomoExpectationSingleImage(void * data)
 
     // Variables from above
     int thread_id = thread_data->thread_id;
+    int thread_num = thread_data->thread_num;
     ProgMLTomo *prm = thread_data->prm;
     MetaData *MDimg = thread_data->MDimg;
+    int *iter = thread_data->iter;
     double *wsum_sigma_noise = thread_data->wsum_sigma_noise;
     double *wsum_sigma_offset = thread_data->wsum_sigma_offset;
     double *sumfracweight = thread_data->sumfracweight;
@@ -2728,8 +2739,8 @@ threadMLTomoExpectationSingleImage(void * data)
     FileName fn_img, fn_trans;
     std::vector<MultidimArray<double> > allref_offsets;
     Matrix1D<double> opt_offsets(3);
-    float old_psi = -999.;
-    double fracweight, trymindiff, dLL;
+    float old_phi = -999., old_theta = -999., old_psi = -999.;
+    double fracweight, maxweight2, trymindiff, dLL;
     int opt_refno, opt_angno, missno;
 
     //try
@@ -2829,7 +2840,7 @@ threadMLTomoExpectationSingleImage(void * data)
 
     std::cerr<<"finished threadMLTomoExpectationSingleImage"<<std::endl;
 #endif
-    return NULL;
+
 }
 
 void
@@ -2946,6 +2957,8 @@ ProgMLTomo::maximization(std::vector<MultidimArray<double> > &wsumimgs,
     std::vector<double> refs_resol(nr_ref);
     Image<double> Vaux;
     FileName fn_tmp;
+    double rr, thresh, aux, sumw_allrefs2 = 0., avg_origin = 0.;
+    int c;
 
     // Calculate resolutions
     fsc.clear();
@@ -3186,7 +3199,7 @@ ProgMLTomo::calculateFsc(MultidimArray<double> &M1, MultidimArray<double> &M2,
     }
 
     // Find resolution limit acc. to FSC=0.5 criterion
-    size_t idx;
+    int idx;
     for (idx = 1; idx < XSIZE(freq); idx++)
         if (fsc(idx) < 0.5)
             break;
@@ -3206,7 +3219,8 @@ ProgMLTomo::calculateFsc(MultidimArray<double> &M1, MultidimArray<double> &M2,
 }
 
 // Apply regularization
-void ProgMLTomo::regularize(int iter)
+bool
+ProgMLTomo::regularize(int iter)
 {
 
     // Update regularization constant in a linear manner
@@ -3310,7 +3324,6 @@ void ProgMLTomo::regularize(int iter)
 
     }
 }
-
 // Check convergence
 bool
 ProgMLTomo::checkConvergence(std::vector<double> &conv)
@@ -3458,7 +3471,7 @@ ProgMLTomo::writeOutputFiles(const int iter,
         REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Cannot write file: " + fn_tmp);
 
     fh << "# freq. FSC refno 1-n... \n";
-    for (size_t idx = 1; idx < hdim + 1; idx++)
+    for (int idx = 1; idx < hdim + 1; idx++)
     {
         fh << fsc[0](idx) << " ";
         for (int refno = 0; refno < nr_ref; refno++)

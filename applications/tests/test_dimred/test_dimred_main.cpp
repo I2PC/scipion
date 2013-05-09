@@ -125,16 +125,36 @@ COMPLETE_TEST(ltsa,               LTSA,             "helix",1000,"dimred/ltsa.tx
 COMPLETE_TEST(diffusionMaps,      DiffusionMaps,    "helix",1000,"dimred/diffusionMaps.txt")
 COMPLETE_TEST(lltsa,              LLTSA,            "helix",1000,"dimred/lltsa.txt")
 COMPLETE_TEST(lltsaSCG,           LLTSASCG,         "helix",1000,"dimred/lltsaSCG.txt")
-INCOMPLETE_TEST(lpp,              LPP,              "helix",1000,"dimred/lpp.txt")
+COMPLETE_TEST(lpp,                LPP,              "helix",1000,"dimred/lpp.txt")
+COMPLETE_TEST(laplacianEigenmap,LaplacianEigenmap,  "helix",1000,"dimred/laplacianEigenmap.txt")
+COMPLETE_TEST(kernelPCA,          KernelPCA,        "helix",1000,"dimred/kernelPCA.txt")
 INCOMPLETE_TEST(spe,              SPE,              "helix",1000,"dimred/spe.txt")
-INCOMPLETE_TEST(laplacianEigenmap,LaplacianEigenmap,"helix",1000,"dimred/laplacianEigenmap.txt")
 INCOMPLETE_TEST(probabilisticPCA, ProbabilisticPCA, "helix",1000,"dimred/probabilisticPCA.txt")
-INCOMPLETE_TEST(nca,              NeighbourhoodCA,  "helix",1000,"dimred/nca.txt")
 INCOMPLETE_TEST(hessianlle,       HessianLLE,       "helix",1000,"dimred/hessianlle.txt")
 INCOMPLETE_TEST(chartingmanifold, ChartingManifold, "helix",1000,"dimred/chartingmanifold.txt")
-INCOMPLETE_TEST(kernelPCA,        KernelPCA,        "helix",1000,"dimred/kernelPCA.txt")
 #endif
-INCOMPLETE_TEST(gplvm,            GPLVM,            "helix",10,"dimred/gplvm.txt")
+
+TEST_F( DimRedTest, nca)
+{
+	GenerateData generator;
+	generator.generateNewDataset("helix",1000,0);
+	NeighbourhoodCA dimred;
+	dimred.setInputData(generator.X);
+	dimred.setOutputDimensionality(2);
+	dimred.setSpecificParameters();
+	Matrix1D<unsigned char> labels;
+	labels.resizeNoCopy(1000);
+	FOR_ALL_ELEMENTS_IN_MATRIX1D(labels)
+		VEC_ELEM(labels,i)=(i<500);
+	dimred.setLabels(labels);
+	dimred.reduceDimensionality();
+	const Matrix2D<double> &Y=dimred.getReducedData();
+	// Y.write("dimred/nca.txt");
+	Matrix2D<double> expectedY;
+	expectedY.resizeNoCopy(Y);
+	expectedY.read("dimred/nca.txt");
+	ASSERT_TRUE(expectedY.equal(Y,1e-4));
+}
 
 GTEST_API_ int main(int argc, char **argv)
 {

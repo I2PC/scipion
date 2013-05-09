@@ -33,8 +33,14 @@ void LaplacianEigenmap::setSpecificParameters(double sigma, size_t numberOfNeigh
 
 void LaplacianEigenmap::reduceDimensionality()
 {
-	Matrix2D<double> D2,L;
-	computeDistanceToNeighbours(*X,numberOfNeighbours,D2,distance,false);
-	computeSimilarityMatrix(D2,sigma,true,true);
-	computeGraphLaplacian(D2,L);
+	Matrix2D<double> G,L,D;
+	Matrix1D<double> mappedX;
+	computeDistanceToNeighbours(*X,numberOfNeighbours,G,distance,false);
+	computeSimilarityMatrix(G,sigma,true,true);
+	computeGraphLaplacian(G,L);
+	D.initZeros(MAT_YSIZE(G),MAT_YSIZE(G));
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(G)
+		MAT_ELEM(D,i,i)+=MAT_ELEM(G,i,j);
+	generalizedEigs(L,D,mappedX,Y);
+	keepColumns(Y,2,outputDim+1);
 }

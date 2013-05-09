@@ -16,16 +16,14 @@
 /** Class for making a Kernel PCA dimensionality reduction */
 class KernelPCA: public DimRedAlgorithm
 {
-
 public:
 	double sigma;
 public:
 	/// Set specific parameters
-	void setSpecificParameters(double sigma=1);
+	void setSpecificParameters(double sigma=1.0);
 
 	/// Reduce dimensionality
 	void reduceDimensionality();
 };
-
 //@}
 #endif

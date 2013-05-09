@@ -6,35 +6,31 @@
 
 #include "kernelPCA.h"
 
-void KernelPCA::setSpecificParameters(double sigma)
-{
-    this->sigma=sigma;
+void KernelPCA::setSpecificParameters(double sigma) {
+	this->sigma = sigma;
 }
 
-void KernelPCA::reduceDimensionality()
-{
-    Matrix2D<double> Z;
-    computeDistance(*X,Z,distance,false);
-    computeSimilarityMatrix(Z,sigma);
+void KernelPCA::reduceDimensionality() {
+	// Compute Gram matrix
+	Matrix2D<double> D2;
+	computeDistance(*X, D2, distance, false);
+	computeSimilarityMatrix(D2,sigma);
 
-    // Normalize the graph
-    Matrix1D<double> zi;
-    Z.computeRowMeans(zi);
-    double z=zi.computeMean();
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(Z)
-    	MAT_ELEM(Z,i,j)+=z-VEC_ELEM(zi,i)-VEC_ELEM(zi,j);
+	// Normalize it
+	Matrix1D<double> mean_i;
+	D2.rowSum(mean_i);
+	mean_i/=MAT_XSIZE(D2);
+	double mean=mean_i.computeMean();
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(D2)
+		MAT_ELEM(D2,i,j)+=mean-VEC_ELEM(mean_i,i)-VEC_ELEM(mean_i,j);
 
-    // Get the largest eigenvalues
-    Matrix2D<double> U;
-	Matrix1D<double> W;
-    firstEigs(Z, outputDim, W, U);
+	// Compute the largest eigenvalues
+	Matrix1D<double> lambda;
+	firstEigs(D2,outputDim,lambda,Y);
 
-    // Compute mapping
-    Y.initZeros(MAT_YSIZE(*X),outputDim);
-    Matrix1D<double> sqrtL(outputDim);
-    for(size_t i=0;i<outputDim; i++)
-        VEC_ELEM(sqrtL,i)=sqrt(VEC_ELEM(W,i));
-
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(Y)
-        MAT_ELEM(Y,i,j)=(MAT_ELEM(U,i,j)*VEC_ELEM(sqrtL,j));
+	// Readjust variances
+	FOR_ALL_ELEMENTS_IN_MATRIX1D(lambda)
+		VEC_ELEM(lambda,i)=sqrt(VEC_ELEM(lambda,i));
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(Y)
+		MAT_ELEM(Y,i,j)*=VEC_ELEM(lambda,j);
 }

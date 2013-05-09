@@ -65,45 +65,6 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 	}
 
-	public void loadConfig()
-	{
-		String file = configfile;
-		if (!new File(file).exists())
-		{
-			if (family == null)
-				family = families.get(0);
-			setMicrograph(getMicrographs().get(0));
-
-			return;
-
-		}
-
-		String mname, fname;
-		try
-		{
-			MetaData md = new MetaData(file);
-			boolean hasautopercent = md.containsLabel(MDLabel.MDL_PICKING_AUTOPICKPERCENT);
-			for (long id : md.findObjects())
-			{
-				if (family == null)
-				{
-					fname = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
-					family = getFamily(fname);
-				}
-				mname = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
-				setMicrograph(getMicrograph(mname));
-				if (hasautopercent)
-					autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
-
-			}
-			md.destroy();
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e.getMessage());
-		}
-	}
 
 	public void setAutopickpercent(int autopickpercent)
 	{
@@ -234,7 +195,7 @@ public abstract class TrainingPicker extends ParticlePicker
 				x = md.getValueInt(MDLabel.MDL_XCOOR, id);
 				y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 				particle = new TrainingParticle(x, y, family, mfd.getMicrograph());
-				mfd.addManualParticle(particle);
+				mfd.addManualParticle(particle, this, false);
 			}
 			md.destroy();
 		}
@@ -628,7 +589,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			}
 			cost = hasCost ? md.getValueDouble(MDLabel.MDL_COST, id) : 0;
 			if (cost == 0 || cost > 1)
-				tm.addManualParticle(new TrainingParticle(x, y, family, tm, cost));
+				tm.addManualParticle(new TrainingParticle(x, y, family, tm, cost), this, false);
 			else
 				tm.addAutomaticParticle(new AutomaticParticle(x, y, family, tm, cost, false), true);
 		}
@@ -647,40 +608,6 @@ public abstract class TrainingPicker extends ParticlePicker
 			m.removeFamilyData(family);
 	}
 
-	public static void main(String[] args)
-	{
-		try
-		{
-			String file = "/home/airen/DNABC/ParticlePicking/Auto/run_001/DefaultFamily_extract_list.xmd";
-			MetaData md = new MetaData();
-			long[] ids;
-			int x, y;
-			Double cost;
-			String[] blocksArray = MetaData.getBlocksInMetaDataFile(file);
-			List<String> blocks = Arrays.asList(blocksArray);
-			for (String block : blocksArray)
-			{
-				String blockName = block + "@" + file;
-				md.read(blockName);
-
-				ids = md.findObjects();
-				for (long id : ids)
-				{
-					x = y = 100;
-					cost = 0.0;
-					x = md.getValueInt(MDLabel.MDL_XCOOR, id);
-					y = md.getValueInt(MDLabel.MDL_YCOOR, id);
-					cost = md.getValueDouble(MDLabel.MDL_COST, id);
-				}
-			}
-			md.destroy();
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
-		}
-	}
 
 	public boolean hasManualParticles(Family f)
 	{
@@ -692,7 +619,8 @@ public abstract class TrainingPicker extends ParticlePicker
 				return true;
 		}
 		return false;
-	}
+	}	
+	
 
 	public boolean hasParticles()
 	{
@@ -794,14 +722,25 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 	}
 
+
+	public void updateTemplates()
+	{
+		updateTemplates(family);
+
+	}
+
+
 	public void updateTemplates(Family f)
 	{
 		if (f.getStep() != FamilyState.Manual)
 			return;
+
+		
 		if (!hasManualParticles(f))
 			return;
-		if (!f.getUpdateTemplatesPending())
-			return;// nothing to update
+		System.out.println("update templates");
+		
+
 		f.initTemplates();
 		ImageGeneric igp;
 		List<TrainingParticle> particles;
@@ -823,8 +762,8 @@ public abstract class TrainingPicker extends ParticlePicker
 						f.getTemplates().alignImage(igp, true);
 				}
 			}
-			f.getTemplates().write(f.getTemplatesFile());
-			f.setUpdateTemplatesPending(false);
+			
+			f.saveTemplates();
 		}
 		catch (Exception e)
 		{
@@ -838,7 +777,8 @@ public abstract class TrainingPicker extends ParticlePicker
 		try
 		{
 			for (Family f : families)
-				updateTemplates(f);
+					f.saveTemplates();
+			System.out.println("Saved templates");
 		}
 		catch (Exception e)
 		{
@@ -860,16 +800,47 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 	}
 
-	public void updateTemplates()
-	{
-		updateTemplates(family);
 
-	}
-
-	public void addParticleToTemplates(TrainingParticle particle, boolean center)
+	public void loadConfig()
 	{
-		addParticleToTemplates(particle, getManualParticlesNumber(particle.getFamily()) - 1, center);
+		String file = configfile;
+		if (!new File(file).exists())
+		{
+			if (family == null)
+				family = families.get(0);
+			setMicrograph(getMicrographs().get(0));
+			return;
+
+		}
+
+		String mname, fname;
+		try
+		{
+			MetaData md = new MetaData(file);
+			boolean hasautopercent = md.containsLabel(MDLabel.MDL_PICKING_AUTOPICKPERCENT);
+			for (long id : md.findObjects())
+			{
+				if (family == null)
+				{
+					fname = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
+					family = getFamily(fname);
+				}
+				mname = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
+				setMicrograph(getMicrograph(mname));
+				if (hasautopercent)
+					autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
+
+			}
+			md.destroy();
+		}
+		catch (Exception e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e.getMessage());
+		}
 	}
+	
+
 
 	@Override
 	public boolean isValidSize(int size)
@@ -879,6 +850,7 @@ public abstract class TrainingPicker extends ParticlePicker
 				return false;
 		return true;
 	}
+
 
 	public boolean hasManualParticles()
 	{

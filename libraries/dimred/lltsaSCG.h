@@ -37,6 +37,9 @@
 class LLTSASCG: public LTSA
 {
 public:
+	// Projection matrix
+	Matrix2D<double> A;
+public:
 	/// Reduce dimensionality
 	void reduceDimensionality();
 };

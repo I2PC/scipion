@@ -24,27 +24,18 @@
  ***************************************************************************/
 package xmipp.utils;
 
-import ij.ImagePlus;
-
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
-import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionListener;
-import java.io.File;
 
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JRootPane;
-
-import xmipp.ij.commons.XmippIJUtil;
-import xmipp.jni.Filename;
 
 public class XmippWindowUtil
 {
@@ -95,9 +86,17 @@ public class XmippWindowUtil
 	{
 		return getConstraints(constraints, x, y, columns, 1);
 	}
+	
 
-	public static JButton getIconButton(String icon, ActionListener listener)
+	public static GridBagConstraints getConstraints(GridBagConstraints constraints, int x, int y, int columns, int rows, int fill)
 	{
+		constraints = getConstraints(constraints, x, y, columns, rows);
+		constraints.fill = fill;
+		return constraints;
+	}
+	
+
+	public static JButton getIconButton(String icon, ActionListener listener){
 		JButton btn = new JButton();
 		btn.setIcon(XmippResource.getIcon(icon));
 		Dimension dim = btn.getPreferredSize();
@@ -191,13 +190,6 @@ public class XmippWindowUtil
 		progressPanel.setVisible(false);
 	}
 
-	public static Icon getImageIcon(ImagePlus imp, int width, int height)
-	{
-
-		Image image = imp.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
-		Icon icon = new ImageIcon(image);
-
-		return icon;
-	}
+	
 
 }

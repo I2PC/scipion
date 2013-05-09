@@ -68,7 +68,6 @@ void GPLVM::reduceDimensionality()
 {
 	// Compute the first guess
 	PCA::reduceDimensionality();
-	Y.write("PPPPCA.txt");
 
 	// Refine
 	Matrix1D<double> pY(MAT_XSIZE(Y)*MAT_YSIZE(Y)), steps(MAT_XSIZE(Y)*MAT_YSIZE(Y));

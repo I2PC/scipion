@@ -24,68 +24,92 @@
  ***************************************************************************/
 
 #include "nca.h"
+#include <data/numerical_tools.h>
 
-
-void NeighbourhoodCA::setSpecificParameters(double lambda)
+void NeighbourhoodCA::setLabels(const Matrix1D<unsigned char> &labels)
 {
-	this->lambda=lambda;
+	this->labels=labels;
 }
 
-//double NeighbourhoodCA::objectiveFunction(Matrix1D<double> x){
-double NeighbourhoodCA::objectiveFunction(Matrix2D<double> &A, Matrix2D<double> &X, Matrix1D<double> &labels)
+void NeighbourhoodCA::setSpecificParameters(double lambda, int K)
 {
-	matrixOperation_AB(X,A,Y); // Y= X*A
-	Matrix2D<double> D2;
-	computeDistance(Y,D2,distance,false);
-	computeSimilarityMatrix(D2,1);
+	this->lambda=lambda;
+	this->K=K;
+}
 
-	// Compute the sum of rows, normalize and compute F
-	for (size_t i=0; i<MAT_XSIZE(D2); ++i)
-		MAT_ELEM(D2,i,i)=0.;
-	Matrix1D<double> rowSum;
-	D2.rowSum(rowSum);
-	FOR_ALL_ELEMENTS_IN_MATRIX1D(rowSum)
-		VEC_ELEM(rowSum,i)=1.0/VEC_ELEM(rowSum,i);
-	const double eps=1e-10;
-	double F=0.;
-	FOR_ALL_ELEMENTS_IN_MATRIX2D(D2)
+double NeighbourhoodCA::objectiveFunction()
+{
+	// Project X onto the subspace given by A, Y=X*A
+	matrixOperation_AB(*X,A,Y);
+
+	// Compute the distance between the nearest neighbours of each observation
+	// in this new subspace
+	D2Y.resizeNoCopy(MAT_YSIZE(Y),K);
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(D2Y)
 	{
-		MAT_ELEM(D2,i,j)*=VEC_ELEM(rowSum,i);
-		if (MAT_ELEM(D2,i,j)<eps)
-			MAT_ELEM(D2,i,j)=eps;
-		F+=MAT_ELEM(D2,i,j);
+		double aux=0.;
+		int actualj=MAT_ELEM(idx,i,j);
+		for (int l=0; l<MAT_XSIZE(Y); ++l)
+		{
+			double diff=MAT_ELEM(Y,i,l)-MAT_ELEM(Y,actualj,l);
+			aux+=diff*diff;
+		}
+		MAT_ELEM(D2Y,i,j)=exp(-aux);
+	}
+	D2Y.rowSum(D2YRowSum);
+
+	// Compute F
+	double F=0.;
+	for (int i=0; i<MAT_YSIZE(Y); ++i)
+	{
+		double sumClassi=0.;
+		int labeli=VEC_ELEM(labels,i);
+		for (int j=0; j<K; ++j)
+		{
+			int actualj=MAT_ELEM(idx,i,j);
+			if (VEC_ELEM(labels,actualj)==labeli)
+				sumClassi+=MAT_ELEM(D2Y,i,j);
+		}
+		if (fabs(VEC_ELEM(D2YRowSum,i))>1e-16)
+			F+=sumClassi/VEC_ELEM(D2YRowSum,i);
 	}
 
-	double sumA2=0;
+	// Compute regularization
+	double sumA2=0.0;
 	FOR_ALL_ELEMENTS_IN_MATRIX2D(A)
 		sumA2+=MAT_ELEM(A,i,j)*MAT_ELEM(A,i,j);
-	double avgA2=sumA2/(MAT_XSIZE(A)*MAT_YSIZE(A));
-	return -(F-lambda*avgA2);
+	sumA2/=MAT_XSIZE(A)*MAT_YSIZE(A);
+
+	return -(F-lambda*sumA2);
+}
+
+double ncaObjectiveFuntion(double *p, void *prm)
+{
+	NeighbourhoodCA *nca=(NeighbourhoodCA *)prm;
+	Matrix2D<double> &A=nca->A;
+	memcpy(&MAT_ELEM(A,0,0),&(p[1]),MAT_XSIZE(A)*MAT_YSIZE(A)*sizeof(double));
+	double c=nca->objectiveFunction();
+	return c;
 }
 
 void NeighbourhoodCA::reduceDimensionality()
 {
-	// See drtoolbox/techniques/nca.m
-	size_t d=MAT_XSIZE(*X)-1;
+	Matrix2D<double> D2;
+	subtractColumnMeans(*X);
+	kNearestNeighbours(*X, K, idx, D2, distance, false);
 
-	Matrix2D<double> cur_X;
-	Matrix1D<double> cur_labels;
-	X->getRow(0,cur_labels);
-	cur_X=*X;
-	eraseFirstColumn(cur_X);
-	subtractColumnMeans(cur_X);
-	//cur_X.write("dimred/MatrixcurX.txt");
-
-    Matrix2D<double> A;
+	size_t d=MAT_XSIZE(*X);
     A.initGaussian(d,outputDim,0,0.01);
 
-    //Debug
-	A(0,0)=0.001;
-	A(1,0)=-0.0098;
-	A(0,1)=-0.0014;
-	A(1,1)=-0.0026;
-	double F=objectiveFunction(A,cur_X,cur_labels);
-	std::cout<<F<<std::endl;
+    // Optimize A
+	Matrix1D<double> pA(MAT_XSIZE(A)*MAT_YSIZE(A)), steps(MAT_XSIZE(A)*MAT_YSIZE(A));
+	steps.initConstant(1);
+	memcpy(&VEC_ELEM(pA,0),&MAT_ELEM(A,0,0),VEC_XSIZE(pA)*sizeof(double));
+	double goal;
+	int iter;
+	powellOptimizer(pA,1,VEC_XSIZE(pA),&ncaObjectiveFuntion,this,0.001,goal,iter,steps,true);
+	memcpy(&MAT_ELEM(A,0,0),&VEC_ELEM(pA,0),VEC_XSIZE(pA)*sizeof(double));
 
-	size_t max_iter = 200;
+	// Reduction
+	matrixOperation_AB(*X,A,Y);
 }

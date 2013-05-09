@@ -37,8 +37,10 @@ public class TemplatesJDialog extends JDialog {
 	public TemplatesJDialog(TrainingPickerJFrame frame) {
 		super(frame);
 		this.frame = frame;
+
 		if(!frame.getParticlePicker().hasManualParticles())
 			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("Particles"));
+
 		initComponents();
 
 		addWindowListener(new WindowAdapter() {
@@ -57,13 +59,12 @@ public class TemplatesJDialog extends JDialog {
 	public void loadTemplates(boolean resize) {
 
 		try {
-			frame.getParticlePicker().updateTemplates();
 			ImageGeneric templates = frame.getFamily().getTemplates();
 			
 			int size = frame.getFamily().getSize();
 
+			if (!frame.getParticlePicker().hasManualParticles()) {
 
-			if (!frame.getParticlePicker().hasParticles()) {
 				templatespn.removeAll();
 				templatespn.setPreferredSize(new Dimension(
 						(int) (size * templates.getNDim()), size));
@@ -78,6 +79,7 @@ public class TemplatesJDialog extends JDialog {
 				templatespn.add(new ImageCanvas(template));
 
 			}
+			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -87,7 +89,7 @@ public class TemplatesJDialog extends JDialog {
 	}
 
 	private void initComponents() {
-		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(HIDE_ON_CLOSE);
 		setTitle("Templates");
 		templatespn = new Panel();
 		add(templatespn);

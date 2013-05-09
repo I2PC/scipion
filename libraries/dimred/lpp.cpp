@@ -30,7 +30,10 @@ void LPP::setSpecificParameters(int k, double sigma)
 	this->k=k;
 	this->sigma=sigma;
 }
-
+/** Reduce dimensionality method based on the Locality Preserving Projections (LPP) algorithm.
+ *  These are linear projective maps that arise by solving a variational problem
+ *  that optimally preserves the neighborhood structure of the data set.
+ */
 void LPP::reduceDimensionality()
 {
 	// Compute the distance to the k nearest neighbors
@@ -47,4 +50,25 @@ void LPP::reduceDimensionality()
 	Matrix2D<double> DP, LP;
 	matrixOperation_XtAX_symmetric(*X,D2,DP);
 	matrixOperation_XtAX_symmetric(*X,L,LP);
+
+	// Compute eigenvalues and eigenvectors resolving the generalized eigenvector problem
+	Matrix2D<double> Peigvec, eigvector;
+	Matrix1D<double> Deigval;
+	generalizedEigs(LP, DP, Deigval, Peigvec);
+
+	// Sort the eigenvalues in ascending order
+	Matrix1D<int> idx;
+	Deigval.indexSort(idx);
+
+	// Sort the eigenvalues in descending order and get the smallest eigenvectors
+	eigvector.resizeNoCopy(MAT_YSIZE(Peigvec),outputDim);
+	for (int j=0; j<outputDim; ++j)
+	{
+		int idxj=VEC_ELEM(idx,j)-1;
+		for (int i=0; i<MAT_YSIZE(Peigvec); ++i)
+			MAT_ELEM(eigvector,i,j)=MAT_ELEM(Peigvec,i,idxj);
+	}
+
+	// Compute the result of the reduce dimensionality method
+	Y=*X * eigvector;
 }
