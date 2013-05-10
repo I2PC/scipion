@@ -68,9 +68,9 @@ void ProgNmaAlignment::defineParams() {
 	addParamsLine("==Combined elastic and rigid-body alignment==");
 	addParamsLine("  [--trustradius_scale <s=1>]          : Positive scaling factor to scale the initial trust region radius");
 	addParamsLine("  [--mask <m=\"\">]                    : 2D masking  of the projections of the deformed volume");
-	addParamsLine("  [--projMatch]                        : Real-space projection matching instead of the default combined global (wavelet-space) and local (Fourier central slice) projection matching");
+	addParamsLine("  [--projMatch]                        : Real-space instead of wavelet-space (default) projection matching (global matching) that is refined by local (Fourier central slice) projection matching");
 	addParamsLine("                                       :+Note that wavelet-based method needs the image size to be power of 2");
-	addParamsLine("  [--discrAngStep <ang=10>]            : Angular sampling step for computing the reference projections (this is the minimum step for real-space projection matching while the minimum step does not exist in the default method)");
+	addParamsLine("  [--discrAngStep <ang=10>]            : Angular sampling step for computing the reference projections for global matching");
 	addParamsLine("  [--gaussian_Fourier <s=0.5>]         : Sigma of Gaussian weigthing in Fourier space (parameter of central-slice method)");
 	addParamsLine("  [--gaussian_Real    <s=0.5>]         : Sigma of Gaussian weigthing in real space for spline interpolation in Fourier space (parameter of central-slice method)");
 	addParamsLine("  [--zerofreq_weight  <s=0.>]          : Zero-frequency weight (parameter of central-slice method)");
