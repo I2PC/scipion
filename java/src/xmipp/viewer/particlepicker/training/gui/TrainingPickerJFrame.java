@@ -131,9 +131,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			initImagePane();
 			add(imagepn, XmippWindowUtil.getConstraints(constraints, 1, 1));
 
-//			initFamilyPane();
-			// add(familypn, XmippWindowUtil.getConstraints(constraints, 0, 1,
-			// 1, 1, GridBagConstraints.HORIZONTAL));
 
 			add(new JLabel("Supervised:"), XmippWindowUtil.getConstraints(constraints, 0, 2));
 			initSupervisedPickerPane();
@@ -348,64 +345,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		}
 	}
 
-//	private void initFamilyPane()
-//	{
-//
-//		familypn = new JPanel();
-//		GridLayout gl = new GridLayout(1, 1);
-//		familypn.setLayout(gl);
-//
-//		familypn.setBorder(BorderFactory.createTitledBorder("Family"));
-//
-//		JPanel fieldspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
-//
-//		// Setting combo
-//		fieldspn.add(new JLabel("Name:"));
-//		familiescb = new JComboBox(ppicker.getFamilies().toArray());
-//		family = ppicker.getFamily();
-//		familiescb.setSelectedItem(family);
-//		familiescb.setEnabled(ppicker.getMode() == Mode.Manual || ppicker.getMode() == Mode.ReadOnly);
-//
-//		fieldspn.add(familiescb);
 
-		// Setting color
-		// initColorPane(family.getColor());
-		// fieldspn.add(colorpn);
-
-		// Setting slider
-		// initSizePane();
-		// fieldspn.add(sizepn);
-
-//		familypn.add(fieldspn, 0);
-
-		// familiescb.addActionListener(new ActionListener()
-		// {
-		//
-		// @Override
-		// public void actionPerformed(ActionEvent e)
-		// {
-		// Family family2 = (Family) familiescb.getSelectedItem();
-		// if (family == family2)
-		// return;
-		// // You can only switch between different states for readonly
-		// // mode. Besides switching will be availabe on manual and
-		// // readonly modes
-		//
-		// family = family2;
-		// ppicker.setFamily(family);
-		// ppicker.saveConfig();
-		//
-		// micrographstb.setRowSelectionInterval(index, index);
-		// color = (family.getColor());
-		// colorbt.setIcon(new ColorIcon(color));
-		// sizesl.setValue(family.getSize());
-		// updateMicrographsModel();
-		// micrographstb.getColumnModel().getColumn(micrographsmd.getParticlesPosition()).setHeaderValue(family.getName());
-		// setThresholdValue(0);
-		// }
-		// });
-
-//	}
 
 	private void initThresholdPane()
 	{
@@ -627,36 +567,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		color = ppicker.getColor();
 		colorbt.setIcon(new ColorIcon(color));
 		canvas.repaint();
-//		ppicker.saveFamilies();
 		ppicker.saveConfig();
 	}
-//
-//	void updateFamilyComboBox()
-//	{
-//		Family item = (Family) familiescb.getSelectedItem();
-//		DefaultComboBoxModel model = new DefaultComboBoxModel(ppicker.getFamilies().toArray());
-//		familiescb.setModel(model);
-//		familiescb.setSelectedItem(item);
-//		micrographsmd.fireTableStructureChanged();
-//
-//		formatMicrographsTable();
-//		pack();
-//		ppicker.saveFamilies();
-//	}
-//
-//	public void addFamily(Family g)
-//	{
-//		if (ppicker.existsFamilyName(g.getName()))
-//			throw new IllegalArgumentException(XmippMessage.getAlreadyExistsGroupNameMsg(g.getName()));
-//		ppicker.getFamilies().add(g);
-//		updateFamilyComboBox();
-//	}
-
-//	public void removeFamily(Family family)
-//	{
-//		ppicker.removeFamily(family);
-//		updateFamilyComboBox();
-//	}
 
 	public void setChanged(boolean changed)
 	{

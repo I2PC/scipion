@@ -23,7 +23,8 @@ public class TrainingMicrograph extends Micrograph
 	{
 		super(file, psd, ctf);
 		autofilename = getName() + "_auto" + ext;
-
+		this.manualparticles = new ArrayList<TrainingParticle>();
+		this.autoparticles = new ArrayList<AutomaticParticle>();
 	}
 
 
