@@ -27,7 +27,7 @@ public class ParticleToTemplatesTask implements Task
 			ImageGeneric igp = particle.getImageGeneric();
 			// will happen only in manual mode
 			if (family.getTemplateIndex() < family.getTemplatesNumber())
-				family.setTemplate((int) (ImageGeneric.FIRST_IMAGE + family.getTemplateIndex()), igp);
+				family.setTemplate(igp);
 			else
 			{
 				

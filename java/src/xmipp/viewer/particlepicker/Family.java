@@ -253,7 +253,7 @@ public class Family
 		return size / 2;
 	}
 
-	public synchronized void setTemplate(int index, ImageGeneric ig)
+	public synchronized void setTemplate(ImageGeneric ig)
 	{
 
 		float[] matrix;
@@ -262,7 +262,7 @@ public class Family
 			// TODO getArrayFloat and setArrayFloat must be call from C both in
 			// one function
 			matrix = ig.getArrayFloat(ImageGeneric.FIRST_IMAGE, ImageGeneric.ALL_SLICES);
-			templates.setArrayFloat(matrix, index, ImageGeneric.ALL_SLICES);
+			templates.setArrayFloat(matrix, templateindex, ImageGeneric.ALL_SLICES);
 			templateindex++;
 		}
 		catch (Exception e)

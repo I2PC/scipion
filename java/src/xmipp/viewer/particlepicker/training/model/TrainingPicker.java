@@ -792,8 +792,8 @@ public abstract class TrainingPicker extends ParticlePicker
 					particles = mfd.getManualParticles();
 					particle = particles.get(i);
 					igp = particle.getImageGeneric();
-					if (i < f.getTemplatesNumber())
-						f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
+					if (f.getTemplateIndex() < f.getTemplatesNumber())
+						f.setTemplate(igp);
 					else
 					{
 						double[] align = family.getTemplates().alignImage(igp);
