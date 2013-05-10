@@ -159,6 +159,11 @@ public class TrainingParticle extends PickerParticle{
 		return (int)lastalign[0];
 	}
 
+	public int getSize()
+	{
+		return picker.getSize();
+	}
+
 
 
 	

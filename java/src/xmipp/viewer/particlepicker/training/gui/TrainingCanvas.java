@@ -71,9 +71,9 @@ public class TrainingCanvas extends ParticlePickerCanvas
 				repaint();
 
 			}
-			else if (SwingUtilities.isLeftMouseButton(e) && micrograph.fits(x, y, frame.getFamily().getSize()))
+			else if (SwingUtilities.isLeftMouseButton(e) && micrograph.fits(x, y, frame.getParticlePicker().getSize()))
 			{
-				p = new TrainingParticle(x, y, frame.getFamily(), micrograph);
+				p = new TrainingParticle(x, y, frame.getParticlePicker(), micrograph);
 				micrograph.addManualParticle(p, ppicker, frame.isCenterParticle());
 				active = p;
 				refresh();
@@ -108,12 +108,12 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			if (active == null)
 				return;
 			
-			if (!micrograph.fits(x, y, active.getFamily().getSize()))
+			if (!micrograph.fits(x, y, active.getParticlePicker().getSize()))
 				return;
 			if (active instanceof AutomaticParticle)
 			{
 				micrograph.removeParticle(active, ppicker);
-				active = new TrainingParticle(active.getX(), active.getY(), active.getFamily(), micrograph);
+				active = new TrainingParticle(active.getX(), active.getY(), ppicker, micrograph);
 				micrograph.addManualParticle(active, ppicker, frame.isCenterParticle());
 			}
 			else
@@ -172,14 +172,14 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		if (!activemoved)
 			return;
 
-		if (!micrograph.fits(x, y, active.getFamily().getSize()))
+		if (!micrograph.fits(x, y, active.getSize()))
 			return;
 		
 		if (active instanceof AutomaticParticle && !((AutomaticParticle)active).isDeleted())
 		{
 
 			micrograph.removeParticle(active, ppicker);
-			active = new TrainingParticle(active.getX(), active.getY(), active.getFamily(), micrograph);
+			active = new TrainingParticle(active.getX(), active.getY(), active.getParticlePicker(), micrograph);
 			micrograph.addManualParticle(active, ppicker, frame.isCenterParticle());
 			repaint();
 		}

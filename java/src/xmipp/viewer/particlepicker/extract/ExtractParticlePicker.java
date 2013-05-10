@@ -16,8 +16,6 @@ import xmipp.viewer.windows.GalleryJFrame;
 public class ExtractParticlePicker extends ParticlePicker
 {
 
-	
-
 	private ArrayList<ExtractMicrograph> micrographs;
 	private ExtractMicrograph micrograph;
 	private ArrayList<ColorHelper> colorby;
@@ -26,7 +24,7 @@ public class ExtractParticlePicker extends ParticlePicker
 	public ExtractParticlePicker(String selfile, int size, Mode mode)
 	{
 		super(selfile, mode);
-		family.setSize(size);
+		setSize(size);
 		loadParticles();
 		if (filters.isEmpty())
 			filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
@@ -35,7 +33,7 @@ public class ExtractParticlePicker extends ParticlePicker
 	public ExtractParticlePicker(String block, String selfile, int size, Mode mode)
 	{
 		super(block, selfile, ".", null, mode);
-		family.setSize(size);
+		setSize(size);
 		loadParticles();
 		if (filters.isEmpty())
 			filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));

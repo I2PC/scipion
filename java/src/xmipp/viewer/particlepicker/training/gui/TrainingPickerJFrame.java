@@ -143,7 +143,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			initImagePane();
 			add(imagepn, XmippWindowUtil.getConstraints(constraints, 1, 1));
 
-			initFamilyPane();
+//			initFamilyPane();
 			// add(familypn, XmippWindowUtil.getConstraints(constraints, 0, 1,
 			// 1, 1, GridBagConstraints.HORIZONTAL));
 
@@ -358,25 +358,25 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		}
 	}
 
-	private void initFamilyPane()
-	{
-
-		familypn = new JPanel();
-		GridLayout gl = new GridLayout(1, 1);
-		familypn.setLayout(gl);
-
-		familypn.setBorder(BorderFactory.createTitledBorder("Family"));
-
-		JPanel fieldspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
-
-		// Setting combo
-		fieldspn.add(new JLabel("Name:"));
-		familiescb = new JComboBox(ppicker.getFamilies().toArray());
-		family = ppicker.getFamily();
-		familiescb.setSelectedItem(family);
-		familiescb.setEnabled(ppicker.getMode() == Mode.Manual || ppicker.getMode() == Mode.ReadOnly);
-
-		fieldspn.add(familiescb);
+//	private void initFamilyPane()
+//	{
+//
+//		familypn = new JPanel();
+//		GridLayout gl = new GridLayout(1, 1);
+//		familypn.setLayout(gl);
+//
+//		familypn.setBorder(BorderFactory.createTitledBorder("Family"));
+//
+//		JPanel fieldspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
+//
+//		// Setting combo
+//		fieldspn.add(new JLabel("Name:"));
+//		familiescb = new JComboBox(ppicker.getFamilies().toArray());
+//		family = ppicker.getFamily();
+//		familiescb.setSelectedItem(family);
+//		familiescb.setEnabled(ppicker.getMode() == Mode.Manual || ppicker.getMode() == Mode.ReadOnly);
+//
+//		fieldspn.add(familiescb);
 
 		// Setting color
 		// initColorPane(family.getColor());
@@ -386,7 +386,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		// initSizePane();
 		// fieldspn.add(sizepn);
 
-		familypn.add(fieldspn, 0);
+//		familypn.add(fieldspn, 0);
 
 		// familiescb.addActionListener(new ActionListener()
 		// {
@@ -415,7 +415,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		// }
 		// });
 
-	}
+//	}
 
 	private void initThresholdPane()
 	{
@@ -639,38 +639,39 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	void updateFamilyColor()
 	{
-		color = family.getColor();
+		color = ppicker.getColor();
 		colorbt.setIcon(new ColorIcon(color));
 		canvas.repaint();
-		ppicker.saveFamilies();
+//		ppicker.saveFamilies();
+		ppicker.saveConfig();
 	}
+//
+//	void updateFamilyComboBox()
+//	{
+//		Family item = (Family) familiescb.getSelectedItem();
+//		DefaultComboBoxModel model = new DefaultComboBoxModel(ppicker.getFamilies().toArray());
+//		familiescb.setModel(model);
+//		familiescb.setSelectedItem(item);
+//		micrographsmd.fireTableStructureChanged();
+//
+//		formatMicrographsTable();
+//		pack();
+//		ppicker.saveFamilies();
+//	}
+//
+//	public void addFamily(Family g)
+//	{
+//		if (ppicker.existsFamilyName(g.getName()))
+//			throw new IllegalArgumentException(XmippMessage.getAlreadyExistsGroupNameMsg(g.getName()));
+//		ppicker.getFamilies().add(g);
+//		updateFamilyComboBox();
+//	}
 
-	void updateFamilyComboBox()
-	{
-		Family item = (Family) familiescb.getSelectedItem();
-		DefaultComboBoxModel model = new DefaultComboBoxModel(ppicker.getFamilies().toArray());
-		familiescb.setModel(model);
-		familiescb.setSelectedItem(item);
-		micrographsmd.fireTableStructureChanged();
-
-		formatMicrographsTable();
-		pack();
-		ppicker.saveFamilies();
-	}
-
-	public void addFamily(Family g)
-	{
-		if (ppicker.existsFamilyName(g.getName()))
-			throw new IllegalArgumentException(XmippMessage.getAlreadyExistsGroupNameMsg(g.getName()));
-		ppicker.getFamilies().add(g);
-		updateFamilyComboBox();
-	}
-
-	public void removeFamily(Family family)
-	{
-		ppicker.removeFamily(family);
-		updateFamilyComboBox();
-	}
+//	public void removeFamily(Family family)
+//	{
+//		ppicker.removeFamily(family);
+//		updateFamilyComboBox();
+//	}
 
 	public void setChanged(boolean changed)
 	{
@@ -710,7 +711,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 			// setChanged(true);
 			setStep(Mode.Supervised);// change visual appearance
-			ppicker.saveFamilies();
+//			ppicker.saveFamilies();
 
 			canvas.setEnabled(false);
 			XmippWindowUtil.blockGUI(this, "Training...");

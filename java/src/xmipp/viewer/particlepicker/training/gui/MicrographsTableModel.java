@@ -30,8 +30,7 @@ public class MicrographsTableModel extends AbstractTableModel {
 	@Override
 	public String getColumnName(int c)
 	{
-		if(getParticlesPosition() == c)
-			return frame.getFamily().getName();
+		
 		return columns[c];
 	}
 
@@ -63,9 +62,6 @@ public class MicrographsTableModel extends AbstractTableModel {
 		return null;
 	}
 	
-	public int getParticlesPosition()
-	{
-		return 2;
-	}
+	
 
 }

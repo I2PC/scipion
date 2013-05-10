@@ -224,7 +224,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 
 	protected void drawShape(Graphics2D g2, TrainingParticle p, boolean all, Stroke stroke)
 	{
-		drawShape(g2, p.getX(), p.getY(), p.getFamily().getSize(), all, stroke);
+		drawShape(g2, p.getX(), p.getY(), p.getParticlePicker().getSize(), all, stroke);
 	}
 	
 	protected void drawShape(Graphics2D g2, TrainingParticle p, boolean all)

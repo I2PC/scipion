@@ -149,7 +149,7 @@ public class UntiltedMicrograph extends Micrograph
 	{
 		List<UntiltedParticle> particles = new ArrayList<UntiltedParticle>();
 		for(UntiltedParticle p: getParticles())
-			if (p.contains(x, y, p.getFamily().getSize())) 
+			if (p.contains(x, y, p.getParticlePicker().getSize())) 
 				particles.add(p);
 		for(UntiltedParticle p: particles)
 			removeParticle(p);

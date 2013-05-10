@@ -109,7 +109,7 @@ public class TiltPairPicker extends ParticlePicker
 			id = uIds[i];
 			x = uMd.getValueInt(MDLabel.MDL_XCOOR, id);
 			y = uMd.getValueInt(MDLabel.MDL_YCOOR, id);
-			up = new UntiltedParticle(x, y, um, family);
+			up = new UntiltedParticle(x, y, um, this);
 			um.addParticle(up);
 			// Set tilted pair particle
 			if (i < tIds.length)
@@ -267,9 +267,11 @@ public class TiltPairPicker extends ParticlePicker
 						md2.setValueInt(MDLabel.MDL_YCOOR, tp.getY(), id);
 					}
 				}
-				String template = family.getName() + "@%s";
-				md.write(String.format(template, file));
-				md2.write(String.format(template, getOutputPath(um.getTiltedMicrograph().getPosFile())));
+//				String template = family.getName() + "@%s";
+//				md.write(String.format(template, file));
+//				md2.write(String.format(template, getOutputPath(um.getTiltedMicrograph().getPosFile())));
+				md.write(file);
+				md2.write(getOutputPath(um.getTiltedMicrograph().getPosFile()));
 			}
 
 		}

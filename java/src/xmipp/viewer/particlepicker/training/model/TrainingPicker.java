@@ -765,21 +765,21 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	}
 
-	public void saveTemplates()
-	{
-		try
-		{
-			for (Family f : families)
-					f.saveTemplates();
-			System.out.println("Saved templates");
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
-		}
-
-	}
+//	public void saveTemplates()
+//	{
+//		try
+//		{
+//			for (Family f : families)
+//					f.saveTemplates();
+//			System.out.println("Saved templates");
+//		}
+//		catch (Exception e)
+//		{
+//			getLogger().log(Level.SEVERE, e.getMessage(), e);
+//			throw new IllegalArgumentException(e);
+//		}
+//
+//	}
 
 	public void resetParticleImages()
 	{

@@ -41,7 +41,7 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 		this.frame = frame;
 		this.canvas = (pickerParticle instanceof TiltedParticle) ? ((TiltPairPickerJFrame) frame).getTiltedCanvas() : frame.getCanvas();
 
-		this.size = (int) (frame.getFamily().getSize());
+		this.size = (int) (frame.getParticlePicker().getSize());
 		side = frame.getSide(size);
 		setMagnification((float) side / size);
 		setDrawingSize(side, side);

@@ -51,7 +51,7 @@ public class ParticlesJDialog extends JDialog
 	{
 		int side, rows, columns, width = 0, height = 0;
 		List<? extends PickerParticle> particles = frame.getAvailableParticles();
-		side = frame.getSide(frame.getFamily().getSize());
+		side = frame.getSide(frame.getParticlePicker().getSize());
 
 		if (side == 0)
 			throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg("side"));
