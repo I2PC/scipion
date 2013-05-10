@@ -5,6 +5,7 @@ import java.util.logging.Level;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import xmipp.utils.XmippDialog;
 import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.training.gui.TrainingPickerJFrame;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
@@ -79,7 +80,7 @@ class Main
 				{
 					System.out.println("Error catched on main");
 					ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
-					JOptionPane.showMessageDialog(null, e.getMessage());
+					XmippDialog.showException(null, e);
 					
 					
 				}

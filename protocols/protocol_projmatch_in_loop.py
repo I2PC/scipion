@@ -359,7 +359,9 @@ def angular_class_average(_log
 
     CtfGroupName = CtfGroupDirectory + '/' + CtfGroupRootName
     refname = str(ProjectLibraryRootName)
-
+    baseTxtFile = refname[:-len('.stk')] 
+    neighbFile = baseTxtFile + '.xmd'
+	
     MD = MetaData()
     MD.read(DocFileInputAngles)
     if MD.size() == 0:
@@ -368,7 +370,8 @@ def angular_class_average(_log
 
     parameters = ' -i ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]\$@' + DocFileInputAngles + \
                   ' --lib ' + refname.replace(".stk", ".doc") + \
-                  ' -o ' + OutClasses
+                  ' --pcaSorting ' + \
+		  ' -o ' + OutClasses
     if(DoSaveImagesAssignedToClasses):
         parameters += ' --save_images_assigned_to_classes'  
                   

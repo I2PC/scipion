@@ -147,10 +147,16 @@ void PCAMahalanobisAnalyzer::learnPCABasis(size_t NPCA, size_t Niter)
     // Take the first vectors for the PCA basis
     MultidimArray<double> vPCA;
     NPCA=XMIPP_MIN(NPCA,v.size());
+    std::vector<size_t> used;
     for (size_t n=0; n<NPCA; n++)
     {
-        typeCast(v[n],vPCA);
+    	size_t nRandom;
+    	do {
+    		nRandom=(size_t)round(v.size()*rnd_unif(0,1));
+    	} while (std::find(used.begin(),used.end(),nRandom)!=used.end());
+        typeCast(v[nRandom],vPCA);
         PCAbasis.push_back(vPCA);
+        used.push_back(nRandom);
     }
 
     size_t N=v.size();

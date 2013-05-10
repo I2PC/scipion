@@ -97,16 +97,20 @@ public class TrainingMicrograph extends Micrograph{
 		return mfd;
 	}
 
-	public void addManualParticle(TrainingParticle p)
+	
+	public void addManualParticle(TrainingParticle p, TrainingPicker ppicker, boolean center, boolean totemplates)
 	{
-		getFamilyData(p.getFamily()).addManualParticle(p);
+		getFamilyData(p.getFamily()).addManualParticle(p, ppicker, center, totemplates);
+		
 	}
 	
 	
 	public void removeParticle(PickerParticle p, TrainingPicker ppicker)
 	{
+		TrainingParticle tp = (TrainingParticle)p;
 		MicrographFamilyData mfd = getFamilyData(ppicker.getFamily());
-		mfd.removeParticle((TrainingParticle)p, ppicker);
+		mfd.removeParticle(tp, ppicker);
+		
 	}
 	
 	public void addAutomaticParticle(AutomaticParticle p)
@@ -181,6 +185,8 @@ public class TrainingMicrograph extends Micrograph{
 			for(TrainingParticle p: particles)
 				removeParticle(p, ppicker);
 		}
+		
+		
 		
 	}
 	

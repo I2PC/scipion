@@ -127,9 +127,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 						return;
 				}
 				close();
-//				if (getParticlePicker().getMode() == FamilyState.Supervised)
-//					System.exit(0);// temporarily
-				
+				// if (getParticlePicker().getMode() == FamilyState.Supervised)
+				// System.exit(0);// temporarily
+
 			}
 		});
 
@@ -146,27 +146,31 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 					resetMicrograph();
 			}
 		});
+
 		savebt = XmippWindowUtil.getTextButton("Save", new ActionListener()
 		{
-			
+
 			@Override
 			public void actionPerformed(ActionEvent arg0)
 			{
 				saveChanges();
-				
+
 			}
 		});
+
 		saveandexitbt = XmippWindowUtil.getTextButton("Save and Exit", new ActionListener()
 		{
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e)
+
 			{
 				saveChanges();
 				System.exit(0);
-				
+
 			}
 		});
+
 		micrographstb = new JTable();
 		micrographstb.getSelectionModel().addListSelectionListener(new ListSelectionListener()
 		{
@@ -442,15 +446,15 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 
 			getParticlePicker().saveFilters();
-		} catch (Exception ex) {
-
+		}
+		catch (Exception ex)
+		{
 
 			ex.printStackTrace();
 			showException(ex);
 		}
 
 	}
-
 
 	protected void reloadImage()
 	{
@@ -475,10 +479,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		return getParticlePicker().getFamily();
 	}
 
-	
-
 	public abstract ParticlePickerCanvas getCanvas();
-	
+
 	public abstract ParticlesJDialog initParticlesJDialog();
 
 	public void loadParticles()
@@ -487,7 +489,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		{
 			if (particlesdialog == null)
 				particlesdialog = initParticlesJDialog();
-			else {
+			else
+			{
 
 				particlesdialog.loadParticles(false);
 				particlesdialog.setVisible(true);
@@ -530,10 +533,13 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			return false;
 		return true;
 	}
-	
-	public boolean isPickingAvailable() {
-		if (getCanvas().getTool() != Tool.PICKER) return false;
-		if (getParticlePicker().getMode() == FamilyState.ReadOnly) return false;
+
+	public boolean isPickingAvailable()
+	{
+		if (getCanvas().getTool() != Tool.PICKER)
+			return false;
+		if (getParticlePicker().getMode() == FamilyState.ReadOnly)
+			return false;
 
 		return true;
 	}
@@ -573,17 +579,17 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		getParticlePicker().saveFamilies();
 	}
 
-
-	protected void initImagePane() {
+	protected void initImagePane()
+	{
 		imagepn = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		//imagepn.setBorder(BorderFactory.createTitledBorder("Image"));
+		// imagepn.setBorder(BorderFactory.createTitledBorder("Image"));
 
 		JPanel paintpn = new JPanel();
 		usezoombt = new JToggleButton("-1", XmippResource.getIcon("zoom.png"));
 		usezoombt.setToolTipText("Keep zoom");
 		usezoombt.setFocusable(false);
 		eraserbt = new JToggleButton("Eraser", XmippResource.getIcon("clean.gif"));
-		
+
 		usezoombt.setFocusable(false);
 		JToolBar tb = new JToolBar();
 
@@ -637,12 +643,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		return Double.parseDouble(usezoombt.getText());
 	}
 
-
 	public boolean isEraserMode()
 	{
 		return eraserbt.isSelected();
 	}
-
 
 	protected void displayZoom()
 	{
@@ -723,9 +727,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				if(sizesl.getValue() ==((Number)sizetf.getValue()).intValue())//event from sizesl
+				if (sizesl.getValue() == ((Number) sizetf.getValue()).intValue())// event
+																					// from
+																					// sizesl
 					return;
-				
+
 				int size = ((Number) sizetf.getValue()).intValue();
 				if (!getParticlePicker().isValidSize(size))
 				{
@@ -744,9 +750,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			@Override
 			public void stateChanged(ChangeEvent e)
 			{
-				if(sizesl.getValue() ==((Number)sizetf.getValue()).intValue())//event from sizetf
+				if (sizesl.getValue() == ((Number) sizetf.getValue()).intValue())// event
+																					// from
+																					// sizetf
 					return;
-				
+
 				int size = sizesl.getValue();
 				if (!getParticlePicker().isValidSize(size))
 				{
@@ -769,9 +777,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		getCanvas().repaint();
 		getFamily().setSize(size);
 
-		if (particlesdialog != null) {
+		if (particlesdialog != null)
+		{
 			for (PickerParticle p : getAvailableParticles())
-			p.resetParticleCanvas();
+				p.resetParticleCanvas();
 			loadParticles();
 		}
 		getParticlePicker().saveFamilies();
@@ -792,18 +801,17 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	{
 		setVisible(false);
 		dispose();
-		if(getCanvas() != null)
+		if (getCanvas() != null)
 			getCanvas().getIw().close();
-		if(XmippIJUtil.getXmippImageJ() != null)
+		if (XmippIJUtil.getXmippImageJ() != null)
 			XmippIJUtil.getXmippImageJ().close();
 		XmippApplication.removeInstance();
 	}
 
 	protected abstract void resetData();
 
-
 	public abstract String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty);
-	
+
 	public Color getColor()
 	{
 		return getFamily().getColor();
