@@ -10,7 +10,6 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
-
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JLabel;
@@ -21,15 +20,12 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-
 import xmipp.utils.XmippWindowUtil;
-import xmipp.viewer.particlepicker.Family;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
 import xmipp.viewer.particlepicker.ParticlesJDialog;
 import xmipp.viewer.particlepicker.tiltpair.model.TiltPairPicker;
-import xmipp.viewer.particlepicker.tiltpair.model.TiltedParticle;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedMicrograph;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedParticle;
 import xmipp.viewer.particlepicker.training.model.Mode;

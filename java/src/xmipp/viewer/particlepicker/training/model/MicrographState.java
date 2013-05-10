@@ -1,5 +1,5 @@
 package xmipp.viewer.particlepicker.training.model;
 
-public enum MicrographFamilyState {
+public enum MicrographState {
 	Manual, Supervised, Available, Auto, Review
 }

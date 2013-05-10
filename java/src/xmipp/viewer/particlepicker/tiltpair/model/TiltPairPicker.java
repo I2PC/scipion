@@ -9,7 +9,6 @@ import java.util.logging.Level;
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.viewer.particlepicker.Family;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;

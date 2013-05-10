@@ -4,21 +4,17 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
 import java.io.File;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.logging.Level;
 
 import javax.swing.BorderFactory;
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -42,35 +38,29 @@ import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.ctf.CTFAnalyzerJFrame;
-import xmipp.viewer.particlepicker.Family;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
+import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
 import xmipp.viewer.particlepicker.ParticlesJDialog;
+import xmipp.viewer.particlepicker.SingleParticlePicker;
+import xmipp.viewer.particlepicker.training.model.MicrographState;
 import xmipp.viewer.particlepicker.training.model.Mode;
-import xmipp.viewer.particlepicker.training.model.ManualParticlePicker;
-import xmipp.viewer.particlepicker.training.model.MicrographFamilyData;
-import xmipp.viewer.particlepicker.training.model.MicrographFamilyState;
-import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.viewer.particlepicker.training.model.TrainingMicrograph;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
-import xmipp.viewer.particlepicker.training.model.TrainingPicker;
 
 public class TrainingPickerJFrame extends ParticlePickerJFrame
 {
 
 	private TrainingCanvas canvas;
 	private JMenuBar mb;
-	private JComboBox familiescb;
-	private TrainingPicker ppicker;
-	private JPanel familypn;
+	private SingleParticlePicker ppicker;
 	private JPanel micrographpn;
 	private MicrographsTableModel micrographsmd;
 
 	private float positionx;
 	private JButton iconbt;
-	private JButton actionsbt;
 	private JMenuItem editfamiliesmi;
 	private int index;
 	private JLabel manuallb;
@@ -78,25 +68,23 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	private JSlider thresholdsl;
 	private JPanel thresholdpn;
 	private JFormattedTextField thresholdtf;
-	private Family family;
 	private JFormattedTextField autopickpercenttf;
 	private JPanel autopickpercentpn;
 
 	private JMenuItem templatesmi;
 	TemplatesJDialog templatesdialog;
-	private JButton editfamiliesbt;
 	private JToggleButton centerparticlebt;
 	private JMenuItem exportmi;
 	private JCheckBox autopickchb;
 	private JPanel sppickerpn;
 
 	@Override
-	public TrainingPicker getParticlePicker()
+	public SingleParticlePicker getParticlePicker()
 	{
 		return ppicker;
 	}
 
-	public TrainingPickerJFrame(TrainingPicker picker)
+	public TrainingPickerJFrame(SingleParticlePicker picker)
 	{
 
 		super(picker);
@@ -206,12 +194,12 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 				if (autopickpercenttf.getValue() == null)
 				{
 					JOptionPane.showMessageDialog(TrainingPickerJFrame.this, XmippMessage.getEmptyFieldMsg("Check (%)"));
-					autopickpercenttf.setValue(getFamilyData().getAutopickpercent());
+					autopickpercenttf.setValue(getMicrograph().getAutopickpercent());
 					return;
 				}
 
 				int autopickpercent = ((Number) autopickpercenttf.getValue()).intValue();
-				getFamilyData().setAutopickpercent(autopickpercent);
+				getMicrograph().setAutopickpercent(autopickpercent);
 				ppicker.setAutopickpercent(autopickpercent);
 				ppicker.saveConfig();
 
@@ -245,6 +233,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		thresholdtf.setEnabled(selected);
 
 	}
+	
+
 
 	public boolean isSupervised()
 	{
@@ -280,7 +270,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 					if (returnVal == XmippFileChooser.APPROVE_OPTION)
 					{
 						File file = fc.getSelectedFile();
-						((TrainingPicker) getParticlePicker()).exportParticles(file.getAbsolutePath());
+						ppicker.exportParticles(file.getAbsolutePath());
 						showMessage("Export successful");
 					}
 				}
@@ -524,8 +514,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		micrographpn.add(sp, XmippWindowUtil.getConstraints(constraints, 0, 0, 1));
 		micrographpn.add(ctfpn, XmippWindowUtil.getConstraints(constraints, 1, 0, 1));
 		JPanel infopn = new JPanel();
-		manuallb = new JLabel(Integer.toString(ppicker.getManualParticlesNumber(family)));
-		autolb = new JLabel(Integer.toString(ppicker.getAutomaticNumber(family, getThreshold())));
+		manuallb = new JLabel(Integer.toString(ppicker.getManualParticlesNumber()));
+		autolb = new JLabel(Integer.toString(ppicker.getAutomaticParticlesNumber(getThreshold())));
 		infopn.add(new JLabel("Manual:"));
 		infopn.add(manuallb);
 		infopn.add(new JLabel("Automatic:"));
@@ -552,7 +542,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		ppicker.getMicrograph().releaseImage();
 		ppicker.setMicrograph(ppicker.getMicrographs().get(index));
 
-		ppicker.saveConfig();
+		if(index != 1);
+			ppicker.saveConfig();
 		setChanged(false);
 		initializeCanvas();
 		iconbt.setIcon(ppicker.getMicrograph().getCTFIcon());
@@ -567,16 +558,15 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	protected void resetMicrograph()
 	{
-		ppicker.resetFamilyData(getFamilyData());
+		getMicrograph().reset();
 		canvas.refreshActive(null);
 		updateMicrographsModel();
-		setState(MicrographFamilyState.Available);
+		setState(MicrographState.Available);
 	}
 
-	private void setState(MicrographFamilyState state)
+	private void setState(MicrographState state)
 	{
-		MicrographFamilyData mfd = getFamilyData();
-		mfd.setState(state);
+		getMicrograph().setState(state);
 		ppicker.saveData(getMicrograph());// to keep consistence between files
 											// of automatic picker and mines
 		setChanged(false);
@@ -584,14 +574,9 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		pack();
 	}
 
-	public MicrographFamilyData getFamilyData()
-	{
-		return ppicker.getFamilyData();
-	}
 
 	private void setStep(Mode step)
 	{
-		MicrographFamilyData mfd = getFamilyData();
 		if (micrographsmd != null)
 		{
 			updateMicrographsModel();
@@ -695,8 +680,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			micrographsmd.fireTableRowsUpdated(index, index);
 
 		micrographstb.setRowSelectionInterval(index, index);
-		manuallb.setText(Integer.toString(ppicker.getManualParticlesNumber(family)));
-		autolb.setText(Integer.toString(ppicker.getAutomaticNumber(family, getThreshold())));
+		manuallb.setText(Integer.toString(ppicker.getManualParticlesNumber()));
+		autolb.setText(Integer.toString(ppicker.getAutomaticParticlesNumber(getThreshold())));
 	}
 
 	public ParticlePickerCanvas getCanvas()
@@ -721,20 +706,16 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 				public void run()
 				{
-					MicrographFamilyData mfd;
 					String args;
-					SupervisedParticlePicker sppicker = ((SupervisedParticlePicker) ppicker);
 					for (TrainingMicrograph micrograph : ppicker.getMicrographs())
 					{
-						mfd = micrograph.getFamilyData(family);
-						if (!mfd.isEmpty())
+						if (!micrograph.isEmpty())
 						{
-							args = sppicker.getBuildInvariantCommandLineArgs(mfd);
+							args = ppicker.getBuildInvariantCommandLineArgs(micrograph);
 							ppicker.runXmippProgram("xmipp_micrograph_automatic_picking", args);
-							System.out.println(args);
 						}
 					}
-					args = sppicker.getTrainCommandLineArgs();
+					args = ppicker.getTrainCommandLineArgs();
 					System.out.println(args);
 
 					ppicker.runXmippProgram("xmipp_micrograph_automatic_picking", args);
@@ -748,7 +729,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		}
 		catch (Exception e)
 		{
-			TrainingPicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+			ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
 		}
 
@@ -756,9 +737,9 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	private void autopick()
 	{
-		setState(MicrographFamilyState.Supervised);
+		setState(MicrographState.Supervised);
 
-		final String fargs = ((SupervisedParticlePicker) ppicker).getAutopickCommandLineArgs(getFamilyData());
+		final String fargs = ppicker.getAutopickCommandLineArgs(getMicrograph());
 		System.out.println(fargs);
 		try
 		{
@@ -770,7 +751,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 				public void run()
 				{
 					ppicker.runXmippProgram("xmipp_micrograph_automatic_picking", fargs);
-					ppicker.loadAutomaticParticles(getFamilyData());
+					ppicker.loadAutomaticParticles(getMicrograph());
 
 					canvas.repaint();
 					canvas.setEnabled(true);
@@ -782,7 +763,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		}
 		catch (Exception e)
 		{
-			TrainingPicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+			ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
@@ -795,7 +776,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	@Override
 	public List<? extends TrainingParticle> getAvailableParticles()
 	{
-		return getFamilyData().getAvailableParticles(getThreshold());
+		return getMicrograph().getAvailableParticles(getThreshold());
 	}
 
 	public String importParticlesFromFile(Format format, String file, float scale, boolean invertx, boolean inverty)
@@ -811,7 +792,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		setChanged(false);
 		getCanvas().repaint();
 		updateMicrographsModel();
-		updateSize(family.getSize());
+		updateSize(ppicker.getSize());
 		canvas.refreshActive(null);
 		return result;
 	}
@@ -829,9 +810,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			if (result != JOptionPane.YES_OPTION)
 				return null;
 		}
-		MicrographFamilyData mfd = getFamilyData();
-		mfd.reset();
-		String result = ((ManualParticlePicker) ppicker).importParticlesFromFile(file, format, mfd.getMicrograph(), scale, invertx, inverty);
+		getMicrograph().reset();
+		String result = ppicker.importParticlesFromFile(file, format, getMicrograph(), scale, invertx, inverty);
 		ppicker.saveData(getMicrograph());
 		return result;
 	}
@@ -843,16 +823,11 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	}
 
-	public void updateTemplates(Family f)
-	{
-		if (f.equals(family) && templatesdialog != null)
-			templatesdialog.loadTemplates(true);
-
-	}
-
 	public void updateTemplates()
 	{
-		updateTemplates(family);
+		if (templatesdialog != null)
+			templatesdialog.loadTemplates(true);
+
 	}
 
 	public void updateSize(int size)
@@ -875,7 +850,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	@Override
 	protected void resetData()
 	{
-		getFamilyData().reset();
+		getMicrograph().reset();
 	}
 
 	@Override
@@ -885,7 +860,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 		if (new File(dir).isDirectory())
 		{
-			((ManualParticlePicker) ppicker).importParticlesFromFolder(dir, format, scale, invertx, inverty);
+			ppicker.importParticlesFromFolder(dir, format, scale, invertx, inverty);
 			getCanvas().repaint();
 			updateMicrographsModel(true);
 			getCanvas().refreshActive(null);
@@ -908,12 +883,15 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		return new ParticlesJDialog(this);
 	}
 
-	public void setTemplatesNumber(Family f, int templates)
+	public void setTemplatesNumber(int templates)
 	{
-		f.setTemplatesNumber(templates);
+		ppicker.setTemplatesNumber(templates);
 
-		if (f.equals(family) && templatesdialog != null)
+		if (templatesdialog != null)
 			templatesdialog.loadTemplates(true);
 
 	}
+	
+	
+	
 }

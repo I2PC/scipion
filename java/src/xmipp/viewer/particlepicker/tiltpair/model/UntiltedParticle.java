@@ -1,8 +1,5 @@
 package xmipp.viewer.particlepicker.tiltpair.model;
 
-import xmipp.jni.Particle;
-import xmipp.utils.XmippMessage;
-import xmipp.viewer.particlepicker.Family;
 import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 

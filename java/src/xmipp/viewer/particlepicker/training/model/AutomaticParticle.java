@@ -1,7 +1,6 @@
 package xmipp.viewer.particlepicker.training.model;
 
 import xmipp.utils.XmippMessage;
-import xmipp.viewer.particlepicker.Family;
 import xmipp.viewer.particlepicker.ParticlePicker;
 
 public class AutomaticParticle extends TrainingParticle {

@@ -32,7 +32,7 @@ public class ExtractParticlePicker extends ParticlePicker
 	
 	public ExtractParticlePicker(String block, String selfile, int size, Mode mode)
 	{
-		super(block, selfile, ".", null, mode);
+		super(block, selfile, ".", mode);
 		setSize(size);
 		loadParticles();
 		if (filters.isEmpty())

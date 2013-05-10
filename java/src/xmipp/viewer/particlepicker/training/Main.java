@@ -2,17 +2,13 @@ package xmipp.viewer.particlepicker.training;
 
 import java.util.logging.Level;
 
-import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.particlepicker.ParticlePicker;
+import xmipp.viewer.particlepicker.SingleParticlePicker;
 import xmipp.viewer.particlepicker.training.gui.TrainingPickerJFrame;
 import xmipp.viewer.particlepicker.training.model.Mode;
-import xmipp.viewer.particlepicker.training.model.ManualParticlePicker;
-import xmipp.viewer.particlepicker.training.model.ReviewParticlePicker;
-import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
-import xmipp.viewer.particlepicker.training.model.TrainingPicker;
 
 class Main
 {
@@ -41,39 +37,30 @@ class Main
 				TrainingPickerJFrame tp = null;
 				try
 				{
-					TrainingPicker ppicker = null;
+					SingleParticlePicker ppicker = null;
 					String selfile = myargs[0];
 					String outputdir = myargs[1];
-					Mode mode;
-					String fname = null;
-					//mode is the third argument except if family is specified, when is fourth
-					if(myargs.length >= 3 && Mode.getMode(myargs[2]) != null)
-						mode = Mode.getMode(myargs[2]);
-					else
-					{
-						fname = myargs[2];
-						mode = Mode.getMode(myargs[3]);
-					}
-
-					if (mode == Mode.Manual)
-						ppicker = (fname == null)? new ManualParticlePicker(selfile, outputdir, mode): new ManualParticlePicker(selfile, outputdir, fname, mode);
+					//mode is the third argument 
+					Mode mode = Mode.getMode(myargs[2]);
+					
+					if (mode == Mode.Manual || mode == Mode.ReadOnly)
+						ppicker = new SingleParticlePicker(selfile, outputdir, mode);
 
 					else if (mode == Mode.Supervised)
 					{
-						int index = (fname == null)? 3: 4;
+						int index = 3;
 						int threads = Integer.parseInt(myargs[index]);
 						boolean fastmode = Boolean.parseBoolean(myargs[index + 1]);
 						boolean incore = Boolean.parseBoolean(myargs[index + 2]);
-						ppicker = (fname == null)? new SupervisedParticlePicker(selfile, outputdir, threads, fastmode, incore): new SupervisedParticlePicker(selfile, outputdir, fname, threads, fastmode, incore);
+						ppicker = new SingleParticlePicker(selfile, outputdir, threads, fastmode, incore);
 					}
 
 					else if (mode == Mode.Review)
 					{
 						String reviewfile = myargs[4];
-						ppicker = new ReviewParticlePicker(selfile, outputdir, fname, reviewfile);
+						ppicker = new SingleParticlePicker(selfile, outputdir, reviewfile);
 					}
-					else if (mode == Mode.ReadOnly)
-						ppicker = new ReadOnlyParticlePicker(selfile, outputdir);
+			
 					tp = new TrainingPickerJFrame(ppicker);
 				}
 				catch (Exception e)

@@ -3,12 +3,8 @@ package xmipp.viewer.particlepicker.extract;
 import java.util.ArrayList;
 import java.util.List;
 
-import xmipp.jni.Particle;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
-import xmipp.viewer.particlepicker.training.model.AutomaticParticle;
-import xmipp.viewer.particlepicker.training.model.MicrographFamilyData;
-import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 
 public class ExtractMicrograph extends Micrograph
 {

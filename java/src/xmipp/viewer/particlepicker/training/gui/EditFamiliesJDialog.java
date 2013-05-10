@@ -7,12 +7,10 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -24,8 +22,6 @@ import javax.swing.table.AbstractTableModel;
 import xmipp.utils.ColorEditor;
 import xmipp.utils.ColorRenderer;
 import xmipp.utils.XmippWindowUtil;
-import xmipp.utils.XmippMessage;
-import xmipp.viewer.particlepicker.Family;
 
 public class EditFamiliesJDialog extends JDialog {
 
@@ -113,23 +109,23 @@ public class EditFamiliesJDialog extends JDialog {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				List<Family> families = parent.getParticlePicker()
-						.getFamilies();
-				try {
-
-					int index = familiestb.getSelectedRow();
-					Family f = families.get(index);
-					if (f.equals(parent.getFamily()))
-						throw new IllegalArgumentException(
-								"Can not remove active family");
-					parent.removeFamily(f);
-					model.fireTableStructureChanged();
-					EditFamiliesJDialog.this.deletebt.setEnabled(false);
-				} catch (Exception ex) {
-					JOptionPane.showMessageDialog(EditFamiliesJDialog.this,
-							ex.getMessage());
-
-				}
+//				List<Family> families = parent.getParticlePicker()
+//						.getFamilies();
+//				try {
+//
+//					int index = familiestb.getSelectedRow();
+//					Family f = families.get(index);
+//					if (f.equals(parent.getFamily()))
+//						throw new IllegalArgumentException(
+//								"Can not remove active family");
+//					parent.removeFamily(f);
+//					model.fireTableStructureChanged();
+//					EditFamiliesJDialog.this.deletebt.setEnabled(false);
+//				} catch (Exception ex) {
+//					JOptionPane.showMessageDialog(EditFamiliesJDialog.this,
+//							ex.getMessage());
+//
+//				}
 			}
 		});
 	}
@@ -162,7 +158,8 @@ public class EditFamiliesJDialog extends JDialog {
 
 		@Override
 		public int getRowCount() {
-			return frame.getParticlePicker().getFamilies().size();
+//			return frame.getParticlePicker().getFamilies().size();
+			return 0;
 		}
 
 		@Override
@@ -172,62 +169,62 @@ public class EditFamiliesJDialog extends JDialog {
 
 		@Override
 		public void setValueAt(Object value, int row, int column) {
-			try {
-				if (value == null)
-					throw new IllegalArgumentException(
-							XmippMessage.getEmptyFieldMsg(columns[column]));
-				Family f = frame.getParticlePicker().getFamilies().get(row);
-				if (column == 0) {
-					String name = (String) value;
-					if (name.equals(f.getName()))
-						return;
-					else if (parent.getParticlePicker().existsFamilyName(name)) {
-						JOptionPane
-								.showMessageDialog(
-										EditFamiliesJDialog.this,
-										XmippMessage
-												.getAlreadyExistsGroupNameMsg(name));
-						return;
-					}
-
-					f.setName(name);
-					frame.updateFamilyComboBox();
-				} else if (column == 1) {
-					Color color = (Color) value; 
-					frame.updateColor(color);
-				} else if (column == 2) {
-					int size = (Integer) value;
-					f.setSize(size);
-					frame.updateSize(size);
-
-				} else if (column == 3) {
-					
-					int templates = (Integer)value;
-					if(templates  < 1)
-						throw new IllegalArgumentException(XmippMessage.getIllegalValueMsg("Templates", templates));
-					parent.setTemplatesNumber(f, templates);
-
-				}
-				frame.getParticlePicker().saveFamilies();
-				
-
-			} catch (IllegalArgumentException e) {
-				JOptionPane.showMessageDialog(EditFamiliesJDialog.this,
-						e.getMessage());
-			}
+//			try {
+//				if (value == null)
+//					throw new IllegalArgumentException(
+//							XmippMessage.getEmptyFieldMsg(columns[column]));
+//				Family f = frame.getParticlePicker().getFamilies().get(row);
+//				if (column == 0) {
+//					String name = (String) value;
+//					if (name.equals(f.getName()))
+//						return;
+//					else if (parent.getParticlePicker().existsFamilyName(name)) {
+//						JOptionPane
+//								.showMessageDialog(
+//										EditFamiliesJDialog.this,
+//										XmippMessage
+//												.getAlreadyExistsGroupNameMsg(name));
+//						return;
+//					}
+//
+//					f.setName(name);
+//					frame.updateFamilyComboBox();
+//				} else if (column == 1) {
+//					Color color = (Color) value; 
+//					frame.updateColor(color);
+//				} else if (column == 2) {
+//					int size = (Integer) value;
+//					f.setSize(size);
+//					frame.updateSize(size);
+//
+//				} else if (column == 3) {
+//					
+//					int templates = (Integer)value;
+//					if(templates  < 1)
+//						throw new IllegalArgumentException(XmippMessage.getIllegalValueMsg("Templates", templates));
+//					parent.setTemplatesNumber(f, templates);
+//
+//				}
+//				frame.getParticlePicker().saveFamilies();
+//				
+//
+//			} catch (IllegalArgumentException e) {
+//				JOptionPane.showMessageDialog(EditFamiliesJDialog.this,
+//						e.getMessage());
+//			}
 		}
 
 		@Override
 		public Object getValueAt(int row, int column) {
-			Family f = frame.getParticlePicker().getFamilies().get(row);
-			if (column == 0)
-				return f.getName();
-			if (column == 1)
-				return f.getColor();
-			if (column == 2)
-				return f.getSize();
-			if (column == 3)
-				return f.getTemplatesNumber();
+//			Family f = frame.getParticlePicker().getFamilies().get(row);
+//			if (column == 0)
+//				return f.getName();
+//			if (column == 1)
+//				return f.getColor();
+//			if (column == 2)
+//				return f.getSize();
+//			if (column == 3)
+//				return f.getTemplatesNumber();
 			return null;
 		}
 
@@ -238,11 +235,11 @@ public class EditFamiliesJDialog extends JDialog {
 		return parent;
 	}
 
-	public void addFamily(Family g) {
-
-		parent.addFamily(g);
-		model.fireTableStructureChanged();
-	}
+//	public void addFamily(Family g) {
+//
+////		parent.addFamily(g);
+//		model.fireTableStructureChanged();
+//	}
 
 
 }

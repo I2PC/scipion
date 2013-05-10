@@ -3,15 +3,11 @@ package xmipp.viewer.particlepicker.training.model;
 import ij.ImagePlus;
 import ij.gui.Roi;
 import ij.process.ImageProcessor;
-
 import java.awt.Rectangle;
-
 import javax.swing.ImageIcon;
-
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.ImageGeneric;
 import xmipp.utils.XmippMessage;
-import xmipp.viewer.particlepicker.Family;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.PickerParticle;

@@ -13,18 +13,13 @@ import javax.swing.JColorChooser;
 import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import xmipp.utils.ColorIcon;
-import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.ColorHelper;
-import xmipp.viewer.particlepicker.Family;
 
 public class AddFamilyJDialog extends JDialog implements ActionListener {
 
@@ -99,26 +94,26 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				String name = nametf.getText();
-				if (sizetf.getValue() == null)
-					sizetf.setValue(sizesl.getValue());
-				try {
-					if (templatestf.getValue() == null || templatestf.getText().equals(""))
-						throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("Templates"));
-					int size = ((Number) sizetf.getValue()).intValue();
-					int templatesNumber = ((Number) templatestf.getValue()).intValue();
-					if(templatesNumber < 1)
-						throw new IllegalArgumentException(XmippMessage.getIllegalValueMsg("Templates", templatesNumber));
-					Family g = new Family(name, color, size, templatesNumber, parent.getFrame().getParticlePicker().getTemplatesFile(name));
-
-					AddFamilyJDialog.this.parent.addFamily(g);
-					setVisible(false);
-					dispose();
-				} catch (IllegalArgumentException ex) {
-					ex.printStackTrace();
-					JOptionPane.showMessageDialog(AddFamilyJDialog.this,
-							ex.getMessage());
-				}
+//				String name = nametf.getText();
+//				if (sizetf.getValue() == null)
+//					sizetf.setValue(sizesl.getValue());
+//				try {
+//					if (templatestf.getValue() == null || templatestf.getText().equals(""))
+//						throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("Templates"));
+//					int size = ((Number) sizetf.getValue()).intValue();
+//					int templatesNumber = ((Number) templatestf.getValue()).intValue();
+//					if(templatesNumber < 1)
+//						throw new IllegalArgumentException(XmippMessage.getIllegalValueMsg("Templates", templatesNumber));
+//					Family g = new Family(name, color, size, templatesNumber, parent.getFrame().getParticlePicker().getTemplatesFile(name));
+//
+//					AddFamilyJDialog.this.parent.addFamily(g);
+//					setVisible(false);
+//					dispose();
+//				} catch (IllegalArgumentException ex) {
+//					ex.printStackTrace();
+//					JOptionPane.showMessageDialog(AddFamilyJDialog.this,
+//							ex.getMessage());
+//				}
 
 			}
 		});
@@ -135,34 +130,34 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 	}
 
 	private void initSizePane() {
-		int size = Family.getDefaultSize();
-		sizepn = new JPanel();
-		sizesl = new JSlider(0, 500, size);
-		sizesl.setMajorTickSpacing(250);
-		sizesl.setPaintTicks(true);
-		sizesl.setPaintLabels(true);
-		sizepn.add(sizesl);
-		sizetf = new JFormattedTextField(NumberFormat.getIntegerInstance());
-		
-		sizetf.setValue(size);
-		sizepn.add(sizetf);
-		sizetf.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				int size = Integer.parseInt(sizetf.getText());
-				sizesl.setValue(size);
-			}
-		});
-
-		sizesl.addChangeListener(new ChangeListener() {
-
-			@Override
-			public void stateChanged(ChangeEvent e) {
-				int size = sizesl.getValue();
-				sizetf.setValue(size);
-			}
-		});
+//		int size = Family.getDefaultSize();
+//		sizepn = new JPanel();
+//		sizesl = new JSlider(0, 500, size);
+//		sizesl.setMajorTickSpacing(250);
+//		sizesl.setPaintTicks(true);
+//		sizesl.setPaintLabels(true);
+//		sizepn.add(sizesl);
+//		sizetf = new JFormattedTextField(NumberFormat.getIntegerInstance());
+//		
+//		sizetf.setValue(size);
+//		sizepn.add(sizetf);
+//		sizetf.addActionListener(new ActionListener() {
+//
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+//				int size = Integer.parseInt(sizetf.getText());
+//				sizesl.setValue(size);
+//			}
+//		});
+//
+//		sizesl.addChangeListener(new ChangeListener() {
+//
+//			@Override
+//			public void stateChanged(ChangeEvent e) {
+//				int size = sizesl.getValue();
+//				sizetf.setValue(size);
+//			}
+//		});
 	}
 
 	@Override

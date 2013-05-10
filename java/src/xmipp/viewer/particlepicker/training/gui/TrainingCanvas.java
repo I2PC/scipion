@@ -5,17 +5,17 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
 import java.util.List;
+
 import javax.swing.SwingUtilities;
+
 import xmipp.jni.Particle;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
+import xmipp.viewer.particlepicker.SingleParticlePicker;
 import xmipp.viewer.particlepicker.training.model.AutomaticParticle;
-import xmipp.viewer.particlepicker.training.model.Mode;
-import xmipp.viewer.particlepicker.training.model.MicrographFamilyData;
 import xmipp.viewer.particlepicker.training.model.TrainingMicrograph;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
-import xmipp.viewer.particlepicker.training.model.TrainingPicker;
 
 public class TrainingCanvas extends ParticlePickerCanvas
 {
@@ -23,7 +23,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	private TrainingPickerJFrame frame;
 	private TrainingMicrograph micrograph;
 	private TrainingParticle active;
-	private TrainingPicker ppicker;
+	private SingleParticlePicker ppicker;
 
 
 	public TrainingCanvas(TrainingPickerJFrame frame)
@@ -42,9 +42,9 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	protected TrainingParticle getLastParticle()
 
 	{
-		if (frame.getFamilyData().getParticles().isEmpty())
+		if (micrograph.getParticles().isEmpty())
 			return null;
-		return frame.getFamilyData().getLastAvailableParticle(frame.getThreshold());
+		return micrograph.getLastAvailableParticle(frame.getThreshold());
 	}
 
 	public void mousePressed(MouseEvent e)
@@ -196,40 +196,32 @@ public class TrainingCanvas extends ParticlePickerCanvas
 
 	protected void doCustomPaint(Graphics2D g2)
 	{
-		if (ppicker.getMode() == Mode.Manual)
-			for (MicrographFamilyData mfdata : micrograph.getFamiliesData())
-				drawFamily(g2, mfdata);
-		else
-			drawFamily(g2, micrograph.getFamilyData(frame.getFamily()));
-		if (active != null)
-		{
-			g2.setColor(Color.red);
-			BasicStroke activest = (active instanceof AutomaticParticle) ? activedst : activecst;
-
-			drawShape(g2, active, true, activest);
-		}
-
-	}
-
-	private void drawFamily(Graphics2D g2, MicrographFamilyData mfdata)
-	{
 		List<TrainingParticle> particles;
 		int index;
-		if (!mfdata.isEmpty())
+		if (!micrograph.isEmpty())
 		{
-			particles = mfdata.getManualParticles();
-			g2.setColor(mfdata.getFamily().getColor());
+			particles = micrograph.getManualParticles();
+			g2.setColor(ppicker.getColor());
 
 			for (index = 0; index < particles.size(); index++)
 				drawShape(g2, particles.get(index), index == particles.size() - 1, continuousst);
 
-			List<AutomaticParticle> autoparticles = mfdata.getAutomaticParticles();
+			List<AutomaticParticle> autoparticles = micrograph.getAutomaticParticles();
 			for (int i = 0; i < autoparticles.size(); i++)
 				if (!autoparticles.get(i).isDeleted() && autoparticles.get(i).getCost() >= frame.getThreshold())
 					drawShape(g2, autoparticles.get(i), false, dashedst);
 
 		}
+		if (active != null)
+		{
+			g2.setColor(Color.red);
+			BasicStroke activest = (active instanceof AutomaticParticle) ? activedst : activecst;
+			drawShape(g2, active, true, activest);
+		}
+
 	}
+
+
 
 	@Override
 	public void refreshActive(Particle p)
