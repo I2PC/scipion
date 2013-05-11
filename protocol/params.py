@@ -173,7 +173,15 @@ class Form():
         self.addParam('showComment', BooleanParam, default=False, 
                       label="Show comment?")
         self.addParam('comment', StringParam, condition="showComment", 
-                      label="Comment:", help='Make some annotations on this run.')  
+                      label="Comment:", help='Make some annotations on this run.')
+        self.addParam('runMode', EnumParam, choices=['resume', 'restart'],
+                      label="Run mode", display=EnumParam.DISPLAY_COMBO,
+                      help='The <resume> mode will try to start the execution'
+                           'from the last sucessfully finished step if possible.'
+                           'On the contrary, <restart> will delete all previous results'
+                           'of this particular run and start from the beginning. This option'
+                           'should be used carefully.'
+                      )
   
     def addParallelSection(self, threads=1, mpi=8, condition="",
                            hours=72, jobsize=0):
