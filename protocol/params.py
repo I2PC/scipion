@@ -172,10 +172,10 @@ class Form():
                       help='Select run name label to identify this run.')
         self.addParam('showComment', BooleanParam, default=False, 
                       label="Show comment?")
-        self.addParam('comment', StringParam, condition="showComment", 
+        self.addParam('comment', StringParam, condition="showComment",
                       label="Comment:", help='Make some annotations on this run.')
         self.addParam('runMode', EnumParam, choices=['resume', 'restart'],
-                      label="Run mode", display=EnumParam.DISPLAY_COMBO,
+                      label="Run mode", display=EnumParam.DISPLAY_COMBO, default=0,
                       help='The <resume> mode will try to start the execution'
                            'from the last sucessfully finished step if possible.'
                            'On the contrary, <restart> will delete all previous results'
