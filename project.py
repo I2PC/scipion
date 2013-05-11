@@ -107,7 +107,7 @@ class Project(object):
         """Directly execute the protocol"""
         protocol.mapper = self.mapper
         if protocol.numberOfThreads > 1:
-            protocol._stepsExecutor = ThreadStepExecutor() 
+            protocol._stepsExecutor = ThreadStepExecutor(protocol.numberOfThreads.get()) 
         elif protocol.numberOfMpi > 1:
             pass # MpiStepExecutor
         else:

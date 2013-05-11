@@ -345,8 +345,10 @@ class CsvList(Scalar, list):
         
     def _convertValue(self, value):
         """Value should be a str with comman separated values"""
-        for s in value.split(','):
-            self.append(self._pType(s))
+        v = value.strip()
+        if len(v):
+            for s in v.split(','):
+                self.append(self._pType(s))
             
     def getInternalValue(self):
         return ','.join(map(str, self))

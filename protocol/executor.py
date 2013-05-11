@@ -50,8 +50,10 @@ NO_MORE_STEPS = -2  # all steps were done and nothing else to do.
 
 class ThreadStepExecutor(StepExecutor):
     """ Run steps in parallel using threads. """
+    def __init__(self, nThreads):
+        self.numberOfThreads = nThreads
     
-    def runSteps(self, steps, stepStartedCallback, stepFinishedCallback, n=12):
+    def runSteps(self, steps, stepStartedCallback, stepFinishedCallback):
         """ Create threads and syncronize the steps execution. 
         n: the number of threads.
         """
@@ -70,39 +72,42 @@ class ThreadStepExecutor(StepExecutor):
         self._updateReadySteps()
         
         thList = []
-        for i in range(n):
+        print "main: creating %d threads. " % self.numberOfThreads
+        for i in range(self.numberOfThreads):
             th = Thread(target=self._threadMain, args=(i,))
             thList.append(th)
             th.start()
             
         # On steps completion, notify calling the callback
         while stepsLeft:
-            #print"main: cond2 acquiring...", stepsLeft
+            print "main: cond2 acquiring...", stepsLeft
             self.cond2.acquire()
+            #print "main: cond2 acquired...", stepsLeft
             while stepsLeft and not len(self.stepsDone):
+                #print "main: cond2...waiting..."
                 self.cond2.wait()
             finished = self.stepsDone
             self.stepsDone = []
             self.cond2.release()
-            #print"main: cond2 released...", stepsLeft
+            print "main: cond2 released...", stepsLeft
             n = len(finished)
-            #print"main:  len(finished)", n
+            print "main:  len(finished)", n
             if n > 0:
                 self._reportStepsFinished(finished)
                 
                 stepsLeft -= n
-                #print"main: Steps left: ", stepsLeft
+                print "main: Steps left: ", stepsLeft
             
         self.cond.acquire()
         self.cond.notify_all()
         self.cond.release()
         
-        #print"main: Waiting for threads..."
+        print "main: Waiting for threads..."
         # Wait until all threads finish
         for th in thList:
             th.join()
             
-        #print"main: Exit..."
+        print "main: Exit..."
          
          
     def _reportStepsFinished(self, finished):
@@ -113,7 +118,7 @@ class ThreadStepExecutor(StepExecutor):
         
         self.cond.acquire()
         newReady = self._updateReadySteps()
-        #print"main: reporting finished, new: ", newReady
+        print "main: reporting finished, new: ", newReady
         self.cond.notify(newReady)
                 
         self.cond.release()
@@ -122,7 +127,7 @@ class ThreadStepExecutor(StepExecutor):
         """ Check if a step has all prerequisites done. """
         for i in step._prerequisites:
             if self.steps[i-1].status != STATUS_FINISHED:
-                #print"main: prerequisite ", i, " is not finished!!!"
+                print "main: prerequisite ", i, " is not finished!!!"
                 return False
         return True
             
@@ -163,35 +168,35 @@ class ThreadStepExecutor(StepExecutor):
     def _threadMain(self, thNumber):
         """ Function that will be executed in parallel by each thread. """
         while True:
-            #printthNumber, ": cond acquiring..."
+            print thNumber, ": cond acquiring..."
             self.cond.acquire()
             
-            next = self._getNextStep()
-            #printthNumber, ":     next: ", next
-            while next == NO_READY_STEPS:
+            nextStep = self._getNextStep()
+            print thNumber, ":     next: ", (nextStep + 1)
+            while nextStep == NO_READY_STEPS:
                 self.cond.wait()
-                next = self._getNextStep()
+                nextStep = self._getNextStep()
             
-            if next != NO_MORE_STEPS:
-                step = self.steps[next]
+            if nextStep != NO_MORE_STEPS:
+                step = self.steps[nextStep]
                 step.setRunning()
                 
+            print thNumber, ": cond releasing..."
             self.cond.release()
-            #printthNumber, ": cond released..."
             
-            if next == NO_MORE_STEPS: # No more work to do
+            if nextStep == NO_MORE_STEPS: # No more work to do
                 break
             
             step.run()
             
             # Get lock on done jobs
-            #printthNumber, ": cond2 acquiring..."
+            print thNumber, ": cond2 acquiring..."
             self.cond2.acquire()
             self.stepsDone.append(step)
-            #printthNumber, "        step done."
+            print thNumber, "        step %d done." % (nextStep + 1)
             self.cond2.notify()
             self.cond2.release()
-            #printthNumber, ": cond2 released..."
+            print thNumber, ": cond2 released..."
             
 
             

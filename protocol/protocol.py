@@ -32,7 +32,7 @@ import os
 import datetime as dt
 import pickle
 
-from pyworkflow.object import OrderedObject, String, List, Integer, Boolean
+from pyworkflow.object import OrderedObject, String, List, Integer, Boolean, CsvList
 from pyworkflow.utils.path import replaceExt, makePath, join, existsPath, cleanPath
 from pyworkflow.utils.process import runJob
 from pyworkflow.utils.log import *
@@ -57,7 +57,7 @@ class Step(OrderedObject):
         OrderedObject.__init__(self, **args)
         self._inputs = []
         self._outputs = []
-        self._prerequisites = [] # which steps needs to be done first
+        self._prerequisites = CsvList() # which steps needs to be done first
         self.status = String()
         self.initTime = String()
         self.endTime = String()
@@ -196,9 +196,9 @@ class RunJobStep(FunctionStep):
         #TODO: Add the option to return resultFiles
              
 
-MODE_RESUME = "resume"
-MODE_RESTART = "restart"
-MODE_CONTINUE = "continue"
+MODE_RESUME = 0
+MODE_RESTART = 1
+MODE_CONTINUE = 2
          
                 
 class Protocol(Step):
@@ -208,8 +208,7 @@ class Protocol(Step):
     """
     
     def __init__(self, **args):
-        Step.__init__(self, **args)
-        self.mode = String(args.get('mode', MODE_RESUME))
+        Step.__init__(self, **args)        
         self._steps = List() # List of steps that will be executed
         self.workingDir = String(args.get('workingDir', '.')) # All generated files should be inside workingDir
         self.mapper = args.get('mapper', None)
@@ -262,12 +261,22 @@ class Protocol(Step):
         """ Define all the steps that will be executed. """
         pass
     
-    def __insertStep(self, step, prerequisites=[]):
-        """ Insert a new step in the list. """
-        if not len(prerequisites) and len(self._steps):
-            prerequisites = [len(self._steps)]
-        step._prerequisites = prerequisites
+    def __insertStep(self, step, **args):
+        """ Insert a new step in the list. 
+        Posible values for **args:
+        prerequisites: a list with the steps index that need to be done 
+           previous than the current one."""
+        prerequisites = args.get('prerequisites', None)
+        if prerequisites is None:
+            if len(self._steps):
+                step._prerequisites.append(len(self._steps)) # By default add the previous step as prerequisite
+        else:
+            for i in prerequisites:
+                step._prerequisites.append(i)
+                
         self._steps.append(step)
+        # Return step number
+        return len(self._steps)
         
     def _getPath(self, *paths):
         """ Return a path inside the workingDir. """
@@ -285,20 +294,20 @@ class Protocol(Step):
         """ Input params:
         funcName: the string name of the function to be run in the Step.
         *funcArgs: the variable list of arguments to pass to the function.
-        **args: variable dictionary with extra params, NOT USED NOW.
+        **args: see __insertStep
         """
-        step = FunctionStep(funcName, *funcArgs, **args)
+        step = FunctionStep(funcName, *funcArgs)
         step.func = getattr(self, funcName)
-        self.__insertStep(step)
+        return self.__insertStep(step, **args)
         
     def _insertRunJobStep(self, progName, progArguments, resultFiles=[], **args):
         """ Insert an Step that will simple call runJob function
-        **args: variable dictionary with extra params, NOT USED NOW.
+        **args: see __insertStep
         """
         step = RunJobStep(progName, progArguments, resultFiles)
         step.mpi = self.numberOfMpi.get()
         step.threads = self.numberOfThreads.get()
-        self.__insertStep(step)
+        return self.__insertStep(step, **args)
         
     def _enterWorkingDir(self):
         """ Change to the protocol working dir. """
@@ -326,7 +335,7 @@ class Protocol(Step):
         and not changed steps. Steps that needs to be done, will be deleted
         from the previous run storage.
         """
-        if self.mode.get() == MODE_RESTART:
+        if self.runMode == MODE_RESTART:
             return 0
         
         n = min(len(self._steps), len(self._prevSteps))
@@ -394,31 +403,34 @@ class Protocol(Step):
         
         self._stepsExecutor.runSteps(self._steps[startIndex:], 
                                      self._stepStarted, self._stepFinished)
-            
         self.status.set(status)
         self._store(self.status)
-            
+        
+    def _makePathsAndClean(self):
+        """ Create the necessary path or clean
+        if in RESTART mode. 
+        """
+        # Clean working path if in RESTART mode
+        paths = [self.workingDir.get(), self._getExtraPath(), self._getTmpPath()]
+        if self.runMode == MODE_RESTART:
+            cleanPath(*paths)
+            self.mapper.deleteChilds(self) # Clean old values
+            self.mapper.insertChilds(self)
+        # Create workingDir, extra and tmp paths
+        makePath(*paths)        
     
     def _run(self):
         self.__backupSteps() # Prevent from overriden previous stored steps
         self._defineSteps() # Define steps for execute later
+        self._makePathsAndClean()
         startIndex = self.__findStartingStep() # Find at which step we need to start
         self.__cleanStepsFrom(startIndex) # 
-        
-        paths = [self.workingDir.get(), self._getExtraPath(), self._getTmpPath()]
-        
-        # Clean working path if in RESTART mode
-        if self.mode.get() == MODE_RESTART:
-            cleanPath(*paths)
-        # Create workingDir, extra and tmp paths
-        makePath(*paths)
-        
         self._runSteps(startIndex)
         
-
     def run(self):
         self._log = self.__getLogger()
         self._log.info('RUNNING PROTOCOL -----------------')
+        self._log.info('      runMode: %d' % self.runMode.get())
         self._log.info('   workingDir: ' + self.workingDir.get())
         #self.namePrefix = replaceExt(self._steps.getName(), self._steps.strId()) #keep
         self._currentDir = os.getcwd() 
