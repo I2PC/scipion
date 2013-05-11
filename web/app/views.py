@@ -135,7 +135,6 @@ class RunsTreeProvider(TreeProvider):
             
         return actions 
     
-
         
 def project_content(request):
     
