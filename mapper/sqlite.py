@@ -62,7 +62,7 @@ class SqliteMapper(Mapper):
         attr._objParentId = obj._objId
         self.__insert(attr, namePrefix)
         
-    def insertChilds(self, obj, namePrefix):
+    def insertChilds(self, obj, namePrefix=None):
         """ Insert childs of an object, if namePrefix is None,
         the it will be deduced from obj. """
         # This is also done in insertChild, but avoid 
