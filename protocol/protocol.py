@@ -34,7 +34,6 @@ import pickle
 
 from pyworkflow.object import OrderedObject, String, List, Integer, Boolean, CsvList
 from pyworkflow.utils.path import replaceExt, makePath, join, existsPath, cleanPath
-from pyworkflow.utils.process import runJob
 from pyworkflow.utils.log import *
 
 STATUS_LAUNCHED = "launched"  # launched to queue system, only usefull for protocols
@@ -183,7 +182,7 @@ class RunJobStep(FunctionStep):
     """ This Step will wrapper the commonly used function runJob
     for launching specific programs with some parameters""" 
     def __init__(self, programName=None, arguments=None, resultFiles=[], **args):
-        FunctionStep.__init__(self, 'runJob', programName, arguments)
+        FunctionStep.__init__(self, 'self.runJob', programName, arguments)
         # Define the function that will do the job and return result filePaths
         self.func = self._runJob
         self.mpi = 1
@@ -191,7 +190,7 @@ class RunJobStep(FunctionStep):
         
     def _runJob(self, programName, arguments):
         """ Wrap around runJob function""" 
-        runJob(None, programName, arguments, 
+        self.runJob(None, programName, arguments, 
                numberOfMpi=self.mpi, numberOfThreads=self.threads)
         #TODO: Add the option to return resultFiles
              
@@ -199,6 +198,9 @@ class RunJobStep(FunctionStep):
 MODE_RESUME = 0
 MODE_RESTART = 1
 MODE_CONTINUE = 2
+
+STEPS_SERIAL = 0
+STEPS_PARALLEL = 1
          
                 
 class Protocol(Step):
@@ -218,6 +220,9 @@ class Protocol(Step):
             self.numberOfMpi = Integer(1)
         if not hasattr(self, 'numberOfThreads'):
             self.numberOfThreads = Integer(1)
+        # Maybe this property can be inferred from the 
+        # prerequisites of steps, but is easier to keep it
+        self.stepsExecutionMode = STEPS_SERIAL
         
     def _createVarsFromDefinition(self, **args):
         """ This function will setup the protocol instance variables
@@ -305,8 +310,10 @@ class Protocol(Step):
         **args: see __insertStep
         """
         step = RunJobStep(progName, progArguments, resultFiles)
-        step.mpi = self.numberOfMpi.get()
-        step.threads = self.numberOfThreads.get()
+        step.runJob = self.runJob
+        if self.stepsExecutionMode == STEPS_SERIAL:
+            step.mpi = self.numberOfMpi.get()
+            step.threads = self.numberOfThreads.get()
         return self.__insertStep(step, **args)
         
     def _enterWorkingDir(self):
@@ -420,6 +427,7 @@ class Protocol(Step):
         makePath(*paths)        
     
     def _run(self):
+        self.runJob = self._stepsExecutor.runJob
         self.__backupSteps() # Prevent from overriden previous stored steps
         self._defineSteps() # Define steps for execute later
         self._makePathsAndClean()

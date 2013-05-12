@@ -91,9 +91,9 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     _definition = XmippDefPreprocessMicrograph()
     _label = 'Xmipp Micrographs Preprocessing'
     
-#    def __init__(self, **args):
-#        
-#        ProtPreprocessMicrographs.__init__(self, **args)
+    def __init__(self, **args):        
+        ProtPreprocessMicrographs.__init__(self, **args)
+        self.stepsExecutionMode = STEPS_PARALLEL
         
     def _defineSteps(self):
         '''for each micrograph insert the steps to preprocess it

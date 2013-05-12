@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -27,11 +28,8 @@
 This module is responsible for launching protocol executions.
 """
 import sys
-from os.path import abspath, dirname
-FULLPATH = abspath(__file__)
-sys.path.append(dirname(dirname(dirname(FULLPATH))))
+from os.path import basename
 from pyworkflow.utils import runProtocol
-
 
 
 if __name__ == '__main__':
@@ -44,9 +42,5 @@ if __name__ == '__main__':
         print "protId: ", protId
         
         runProtocol(projName, protId)
-        
-
-        #protocol.run()
-        #protocol.printAll()
     else:
-        print "usage: %s projectName protocolID" % sys.argv[0]
+        print "usage: %s projectId protocolID" % basename(sys.argv[0])

@@ -29,7 +29,6 @@ This sub-package contains wrapper around CL2D Xmipp program
 
 from os.path import join, dirname, exists
 from pyworkflow.em import *  
-from pyworkflow.utils import runJob 
 import xmipp
 from data import *
 from xmipp3 import XmippProtocol
@@ -169,7 +168,7 @@ class XmippProtCL2D(ProtAlign, ProtClassify, XmippProtocol):
         for mdFn in levelMdFiles:
             fnRoot = join(dirname(mdFn), "classes%s_sorted" % subset)
             params = "-i classes@%s --oroot %s" % (mdFn, fnRoot)
-            runJob(None, "xmipp_image_sort", params, nproc)
+            self.runJob(None, "xmipp_image_sort", params, nproc)
             mdFnOut = fnRoot + ".xmd"
             md = xmipp.MetaData(mdFnOut)
             md.write("classes_sorted@" + mdFn, xmipp.MD_APPEND)
@@ -183,12 +182,12 @@ class XmippProtCL2D(ProtAlign, ProtClassify, XmippProtocol):
         hierarchyFnOut = self._getExtraPath("classes%s_hierarchy.txt" % subset)
         prevMdFn = None
         for mdFn in levelMdFiles:
-            runJob(None, "xmipp_classify_evaluate_classes","-i " + mdFn)
+            self.runJob(None, "xmipp_classify_evaluate_classes","-i " + mdFn)
             if prevMdFn is not None:
                 args = "--i1 %s --i2 %s -o %s" % (prevMdFn, mdFn, hierarchyFnOut)
                 if exists(hierarchyFnOut):
                     args += " --append"
-                runJob(None, "xmipp_classify_compare_classes",args)
+                self.runJob(None, "xmipp_classify_compare_classes",args)
             prevMdFn = mdFn
             
     def createOutput(self, subset=''):

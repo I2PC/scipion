@@ -49,7 +49,7 @@ class EmanProtBoxing(ProtParticlePicking):
         arguments = "%(inputMics)s --gui --boxsize=%(boxSize)i"
         # Run the command with formatted parameters
         self._log.info('Launching... ' + program + ' ' + arguments % self._params)
-        runJob(None, program, arguments % self._params)
+        self.runJob(None, program, arguments % self._params)
         
     def createOutput(self):
         # Get the box size store in Eman db
@@ -57,7 +57,7 @@ class EmanProtBoxing(ProtParticlePicking):
         program = "pwd; e2boxer.py"
         arguments = "%(inputMics)s --boxsize=%(boxSize)i --write_dbbox"
         self._log.info('Creating output... ' + program + ' ' + arguments % self._params)
-        runJob(None, program, arguments % self._params) 
+        self.runJob(None, program, arguments % self._params) 
         # As we move to workingDir we must leave it. 
         self._leaveWorkingDir()      
         # Create the SetOfCoordinates object on the database 

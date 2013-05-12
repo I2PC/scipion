@@ -30,10 +30,14 @@ There is one based on threads to execute steps in parallel
 using different threads and the last one with MPI processes.
 """
 from protocol import STATUS_READY, STATUS_WAITING_OTHERS, STATUS_FINISHED
-from threading import Thread, Condition, Event
+from threading import Thread, Condition, Event, current_thread
+from pyworkflow.utils.process import runJob
+
 
 class StepExecutor():
     """ Run a list of Protocol steps. """
+    def __init__(self):
+        self.runJob = runJob
     
     def runSteps(self, steps, stepStartedCallback, stepFinishedCallback):
         """ Simply iterate over the steps and run each one. """
@@ -85,14 +89,15 @@ class StepThread(Thread):
             self.event.clear()
             self.condition.notify()
             self.condition.release()
-        
+            
         
 class ThreadStepExecutor(StepExecutor):
     """ Run steps in parallel using threads. 
     """
     def __init__(self, nThreads):
+        StepExecutor.__init__(self)
         self.numberOfThreads = nThreads
-    
+        
     def runSteps(self, steps, stepStartedCallback, stepFinishedCallback):
         """ Create threads and syncronize the steps execution. 
         n: the number of threads.
@@ -126,11 +131,14 @@ class ThreadStepExecutor(StepExecutor):
         #print "main: Waiting for threads..."
         # Wait until all threads finish
         for th in self.thList:
-            th.setStep(None) # Let thread exit
-            th.join()
+            self.finishThread(th) # Let thread exit
             
         #print "main: Exit..."
          
+    def finishThread(self, th):
+        th.setStep(None)
+        th.join()
+        
     def _getReadyThread(self):
         """ Get the first thread waiting for work. """
         for th in self.thList:
@@ -160,7 +168,7 @@ class ThreadStepExecutor(StepExecutor):
                     
     def _launchThreads(self):
         """ Check ready steps and awake threads to work. """
-        for i, s in enumerate(self.steps):
+        for s in self.steps:
             #print "main, step ", i
             if self._isStepReady(s):
                 #print " step ready."
@@ -173,3 +181,27 @@ class ThreadStepExecutor(StepExecutor):
                 #print "main: ", "awaking thread: ", th.thId
                 th.setStep(s) # Awake thread to work 
 
+
+class MPIStepExecutor(ThreadStepExecutor):
+    """ Run steps in parallel using threads.
+    But execution the runJob statement through MPI workers
+    """
+    def __init__(self, nMPI, comm):
+        ThreadStepExecutor.__init__(self, nMPI)
+        self.runJob = self._runJob
+        #self.runJob = runJob
+        self.comm = comm
+    
+    def _runJob(self, log, programname, params, **args):
+        from pyworkflow.utils.mpi import runJobMPI
+        node = current_thread().thId+1
+        print "==================calling runJobMPI=============================="
+        print " to node: ", node
+        runJobMPI(log, programname, params, self.comm, 
+                  node, **args)
+        
+    def finishThread(self, th):
+        from pyworkflow.utils.mpi import TAG_RUN_JOB
+        th.setStep(None)
+        self.comm.send('None', dest=th.thId+1, tag=TAG_RUN_JOB)
+        th.join()

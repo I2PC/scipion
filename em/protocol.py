@@ -32,7 +32,7 @@ each EM-software packages.
 import os
 import shutil
 from pyworkflow.object import String, Float
-from pyworkflow.protocol import Protocol
+from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
 from pyworkflow.em import Micrograph, SetOfMicrographs
 from pyworkflow.utils.path import removeBaseExt, join, basename
@@ -162,6 +162,10 @@ class DefCTFMicrographs(Form):
 class ProtCTFMicrographs(Protocol):
     """ Base class for all protocols that estimates the CTF"""
     _definition = DefCTFMicrographs()
+
+    def __init__(self, **args):
+        Protocol.__init__(self, **args)
+        self.stepsExecutionMode = STEPS_PARALLEL 
     
     def _iterMicrographs(self):
         """ Iterate over micrographs and yield

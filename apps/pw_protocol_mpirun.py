@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -27,26 +28,24 @@
 This module is responsible for launching protocol executions.
 """
 import sys
-from os.path import abspath, dirname
-FULLPATH = abspath(__file__)
-sys.path.append(dirname(dirname(dirname(FULLPATH))))
 from pyworkflow.utils import runProtocol
-
+from mpi4py import MPI
 
 
 if __name__ == '__main__':
-    if len(sys.argv) > 2:
-        projName = sys.argv[1]
-        protId = int(sys.argv[2])
-        
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+    projName = sys.argv[1]
+    protId = int(sys.argv[2])
+    
+    if rank == 0:
         print "="*100
         print "projName: ", projName
-        print "protId: ", protId
+        print "protId: ", protId        
+        runProtocol(projName, protId, comm)
         
-        runProtocol(projName, protId)
-        
-
-        #protocol.run()
-        #protocol.printAll()
     else:
-        print "usage: %s projectName protocolID" % sys.argv[0]
+        from pyworkflow.manager import Manager
+        project = Manager().createProject(projName) # Create the project to change dir
+        from pyworkflow.utils.mpi import runJobMPISlave
+        runJobMPISlave(comm)
