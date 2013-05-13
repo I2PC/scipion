@@ -9,9 +9,11 @@ import java.util.List;
 import javax.swing.SwingUtilities;
 
 import xmipp.jni.Particle;
+import xmipp.utils.TasksManager;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
+import xmipp.viewer.particlepicker.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.SingleParticlePicker;
 import xmipp.viewer.particlepicker.training.model.AutomaticParticle;
 import xmipp.viewer.particlepicker.training.model.TrainingMicrograph;
@@ -159,8 +161,8 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			if (activemoved)
 			{
 				frame.updateTemplates();
-				ppicker.addParticleToTemplates(active, frame.isCenterParticle());
-				
+				//ppicker.addParticleToTemplates(active, frame.isCenterParticle());
+				TasksManager.getInstance().addTask(new ParticleToTemplatesTask(active));
 				setActiveMoved(false);
 			}
 

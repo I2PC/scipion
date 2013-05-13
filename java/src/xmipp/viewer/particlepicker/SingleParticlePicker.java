@@ -889,4 +889,11 @@ public class SingleParticlePicker extends ParticlePicker
 		loadAutomaticParticles(m, getOutputPath(m.getAutoPosFile()), false);
 	}
 
+	public int getTemplateIndex()
+	{
+		return templateindex;
+	}
+
+	
+
 }
