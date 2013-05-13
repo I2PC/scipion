@@ -1388,7 +1388,7 @@ public:
      * This function returns the index of the minimum element of an matrix1d.
      * Returns -1 if the array is empty
      */
-    void minIndex() const
+    int minIndex() const
     {
         if (vdim == 0)
             return -1;
