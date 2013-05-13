@@ -231,7 +231,12 @@ public class ImageGeneric {
     		int select_slice, long select_image) throws Exception;
     
 
-    public native void alignImage(ImageGeneric img, boolean update) throws Exception;
+    public native double[] alignImage(ImageGeneric img) throws Exception;
+    
+    public native void applyAlignment(ImageGeneric img, int index, double rot, double tilt, double psi) throws Exception;
+
+    
+    public native void removeAlignment(ImageGeneric img, int index, double rot, double tilt, double psi) throws Exception;
     
     public native Particle bestShift(ImageGeneric img) throws Exception;
 

@@ -386,7 +386,7 @@ public:
 
                 size_t myCounter = 0;
                 size_t id;
-
+                int ref;
                 for (double mypsi=0;mypsi<360;mypsi += psi_sampling)
                     //for (int i=0;i<=mysampling.no_redundant_sampling_points_angles.size()-1;i++)
                     FOR_ALL_OBJECTS_IN_METADATA(mySFin)
@@ -399,6 +399,8 @@ public:
                     mySFin.getValue(MDL_X,x,__iter.objId);
                     mySFin.getValue(MDL_Y,y,__iter.objId);
                     mySFin.getValue(MDL_Z,z,__iter.objId);
+                    mySFin.getValue(MDL_REF,ref,__iter.objId);
+
                     //FIXME, do I have order?
                     fn_temp.compose( ++myCounter,output_file);
                     id = mySF.addObject();
@@ -412,6 +414,7 @@ public:
                     mySF.setValue(MDL_Y,y, id);
                     mySF.setValue(MDL_Z,z, id);
                     mySF.setValue(MDL_SCALE,1.0,id);
+                    mySF.setValue(MDL_REF,ref,id);
                 }
                 fn_temp=output_file_root+".doc";
                 mySF.setComment("x,y,z refer to the coordinates of the unitary vector at direction given by the euler angles");

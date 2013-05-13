@@ -231,10 +231,10 @@ class TestEMX(unittest.TestCase):
         fileName2= os.path.join('/tmp','EMXwrite.emx')
         xmlMapper.writeEMXFile(fileName2)
 
-        #print "kdiff3", fileName,dataPath
+        #print "kdiff3", fileName,fileName2
         self.assertTrue(filecmp.cmp(fileName,fileName2))
-        #if os.path.exists(fileName2):
-        #    os.remove(fileName2)
+        if os.path.exists(fileName2):
+            os.remove(fileName2)
 
     def test_50MasiveReadWrite(self):
         """This is not really a test
@@ -321,8 +321,9 @@ class TestEMX(unittest.TestCase):
         (code,_out,_err)=validateSchema(xmlFile)
         self.assertEqual(code,0)
         xmlFile    = join(self.testsPath,'EMX/EMXwrite_badly_formed.emx')
-        (code,_out,_err)=validateSchema(xmlFile)
-        self.assertNotEqual(code,0)
+        with self.assertRaises(Exception) as context:
+            validateSchema(xmlFile)
+        self.assertEqual(context.exception.message, 'Error when validating file /home/roberto/xmipp_master/resources/test/EMX/EMXwrite_badly_formed.emx with schema http://sourceforge.net/p/emexchange/code/ci/master/tree/trunk/resourcesEmx/schemas/emx_11.xsd?format=raw.\n        \nError:[Error] EMXwrite_badly_formed.emx:20:20: cvc-complex-type.2.4.a: Invalid content was found starting with element \'pixelSpacingi\'. One of \'{defocusV, defocusUAngle, cs, activeFlag, amplitudeContrast, fom, pixelSpacing}\' is expected.\n[Fatal Error] EMXwrite_badly_formed.emx:23:7: The element type "pixelSpacingi" must be terminated by the matching end-tag "</pixelSpacingi>".\n')
 
 from  XmippPythonTestResult import XmippPythonTestResult
 

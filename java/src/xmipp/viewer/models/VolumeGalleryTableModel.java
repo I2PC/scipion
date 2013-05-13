@@ -25,18 +25,14 @@
 
 package xmipp.viewer.models;
 
-import javax.swing.JPopupMenu;
-
 import ij.ImagePlus;
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.XmippImageConverter;
-import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.ImageDimension;
-import xmipp.viewer.models.MetadataGalleryTableModel.MdRowImageLoader;
 import xmipp.viewer.windows.ImagesWindowFactory;
 
 

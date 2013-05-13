@@ -3,6 +3,7 @@
  * Authors:     Roberto Marabini (roberto@cnb.csic.es)
  *              Carlos Oscar S. Sorzano (coss@cnb.csic.es)
  *              Jose Roman Bilbao-Castro (jrbcast@ace.ual.es)
+ *              Vahid Abrishami (vabrishami@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -124,8 +125,13 @@ void ProgRecFourier::run()
         pthread_create( (th_ids+nt) , NULL, processImageThread, (void *)(th_args+nt) );
     }
 
+    // Correcting the weights
+    correctWeight();
+
+    //Computing interpolated volume
     processImages(0, SF.size() - 1, !fn_fsc.empty(), false);
 
+    //Saving the volume
     finishComputations(fn_out);
 
     threadOpCode = EXIT_THREAD;
@@ -168,6 +174,12 @@ void ProgRecFourier::produceSideinfo()
     Vout().clear(); // Free the memory so that it is available for FourierWeights
     transformerVol.getFourierAlias(VoutFourier);
     FourierWeights.initZeros(VoutFourier);
+    // Initializing VoutFourier for calculating the weights
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(VoutFourier)
+    {
+        double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, k,i,j));
+        ptrOut[0] = 1;
+    }
 
     // Ask for memory for the padded images
     size_t paddedImgSize=(size_t)(Xdim*padding_factor_proj);
@@ -292,13 +304,13 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
     ApplyGeoParams params;
     params.only_apply_shifts = true;
     MultidimArray<int> zWrapped(3*parent->volPadSizeZ),yWrapped(3*parent->volPadSizeY),xWrapped(3*parent->volPadSizeX),
-    		zNegWrapped, yNegWrapped, xNegWrapped;
+    zNegWrapped, yNegWrapped, xNegWrapped;
     zWrapped.initConstant(-1);
     yWrapped.initConstant(-1);
-	xWrapped.initConstant(-1);
-	zWrapped.setXmippOrigin();
+    xWrapped.initConstant(-1);
+    zWrapped.setXmippOrigin();
     yWrapped.setXmippOrigin();
-	xWrapped.setXmippOrigin();
+    xWrapped.setXmippOrigin();
     zNegWrapped=zWrapped;
     yNegWrapped=yWrapped;
     xNegWrapped=xWrapped;
@@ -354,16 +366,21 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     // and compute its Fourier transform
                     proj().setXmippOrigin();
                     size_t localPaddedImgSize=(size_t)(parent->imgSize*parent->padding_factor_proj);
-                    localPaddedImg.initZeros(localPaddedImgSize,localPaddedImgSize);
-                    localPaddedImg.setXmippOrigin();
-                    FOR_ALL_ELEMENTS_IN_ARRAY2D(proj())
-                    A2D_ELEM(localPaddedImg,i,j)=weight*proj(i,j);
-                    CenterFFT(localPaddedImg,true);
+                    if (threadParams->reprocessFlag)
+                        localPaddedFourier.initZeros(localPaddedImgSize,localPaddedImgSize/2+1);
+                    else
+                    {
+                        localPaddedImg.initZeros(localPaddedImgSize,localPaddedImgSize);
+                        localPaddedImg.setXmippOrigin();
+                        FOR_ALL_ELEMENTS_IN_ARRAY2D(proj())
+                        A2D_ELEM(localPaddedImg,i,j)=weight*proj(i,j);
+                        CenterFFT(localPaddedImg,true);
 
-                    // Fourier transformer for the images
-                    localTransformerImg.setReal(localPaddedImg);
-                    localTransformerImg.FourierTransform();
-                    localTransformerImg.getFourierAlias(localPaddedFourier);
+                        // Fourier transformer for the images
+                        localTransformerImg.setReal(localPaddedImg);
+                        localTransformerImg.FourierTransform();
+                        localTransformerImg.getFourierAlias(localPaddedFourier);
+                    }
 
                     // Compute the coordinate axes associated to this image
                     Euler_angles2matrix(rot, tilt, psi, localA);
@@ -417,7 +434,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                 // Divide by Zdim because of the
                 // the extra dimension added
                 // and padding differences
-                MultidimArray<double> &mFourierWeights=parent->preFourierWeights;
+                MultidimArray<double> &mFourierWeights=parent->FourierWeights;
                 for (int k=threadParams->myThreadID; k<=FINISHINGZ(mFourierWeights); k+=parent->numThreads)
                     for (int i=STARTINGY(mFourierWeights); i<=FINISHINGY(mFourierWeights); i++)
                         for (int j=STARTINGX(mFourierWeights); j<=FINISHINGX(mFourierWeights); j++)
@@ -527,7 +544,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     int zsize_1 = ZSIZE(parent->VoutFourier) - 1;
                     MultidimArray< std::complex<double> > &VoutFourier=parent->VoutFourier;
                     MultidimArray<double> &fourierWeights = parent->FourierWeights;
-                    MultidimArray<double> &prefourierWeights = parent->preFourierWeights;
+                    //                    MultidimArray<double> &prefourierWeights = parent->preFourierWeights;
                     // Get i value for the thread
                     for (int i = minAssignedRow; i <= maxAssignedRow ; i ++ )
                     {
@@ -574,44 +591,44 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                 // Some precalculations
                                 for (int intz = ZZ(corner1); intz <= ZZ(corner2); ++intz)
                                 {
-									double z = intz - ZZ(real_position);
-									A1D_ELEM(z2precalculated,intz)=z*z;
+                                    double z = intz - ZZ(real_position);
+                                    A1D_ELEM(z2precalculated,intz)=z*z;
                                     if (A1D_ELEM(zWrapped,intz)<0)
                                     {
                                         int iz, izneg;
-										fastIntWRAP(iz, intz, 0, zsize_1);
-										A1D_ELEM(zWrapped,intz)=iz;
-										int miz=-iz;
-										fastIntWRAP(izneg, miz,0,zsize_1);
-										A1D_ELEM(zNegWrapped,intz)=izneg;
+                                        fastIntWRAP(iz, intz, 0, zsize_1);
+                                        A1D_ELEM(zWrapped,intz)=iz;
+                                        int miz=-iz;
+                                        fastIntWRAP(izneg, miz,0,zsize_1);
+                                        A1D_ELEM(zNegWrapped,intz)=izneg;
                                     }
                                 }
                                 for (int inty = YY(corner1); inty <= YY(corner2); ++inty)
                                 {
-									double y = inty - YY(real_position);
-									A1D_ELEM(y2precalculated,inty)=y*y;
+                                    double y = inty - YY(real_position);
+                                    A1D_ELEM(y2precalculated,inty)=y*y;
                                     if (A1D_ELEM(yWrapped,inty)<0)
                                     {
-										int iy, iyneg;
-										fastIntWRAP(iy, inty, 0, zsize_1);
-										A1D_ELEM(yWrapped,inty)=iy;
-										int miy=-iy;
-										fastIntWRAP(iyneg, miy,0,zsize_1);
-										A1D_ELEM(yNegWrapped,inty)=iyneg;
+                                        int iy, iyneg;
+                                        fastIntWRAP(iy, inty, 0, zsize_1);
+                                        A1D_ELEM(yWrapped,inty)=iy;
+                                        int miy=-iy;
+                                        fastIntWRAP(iyneg, miy,0,zsize_1);
+                                        A1D_ELEM(yNegWrapped,inty)=iyneg;
                                     }
                                 }
                                 for (int intx = XX(corner1); intx <= XX(corner2); ++intx)
                                 {
-									double x = intx - XX(real_position);
-									A1D_ELEM(x2precalculated,intx)=x*x;
+                                    double x = intx - XX(real_position);
+                                    A1D_ELEM(x2precalculated,intx)=x*x;
                                     if (A1D_ELEM(xWrapped,intx)<0)
                                     {
-                                    	int ix, ixneg;
-										fastIntWRAP(ix, intx, 0, zsize_1);
-										A1D_ELEM(xWrapped,intx)=ix;
-										int mix=-ix;
-										fastIntWRAP(ixneg, mix,0,zsize_1);
-										A1D_ELEM(xNegWrapped,intx)=ixneg;
+                                        int ix, ixneg;
+                                        fastIntWRAP(ix, intx, 0, zsize_1);
+                                        A1D_ELEM(xWrapped,intx)=ix;
+                                        int mix=-ix;
+                                        fastIntWRAP(ixneg, mix,0,zsize_1);
+                                        A1D_ELEM(xNegWrapped,intx)=ixneg;
                                     }
                                 }
 
@@ -682,7 +699,11 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
 
                                             // Add the weighted coefficient
                                             if (reprocessFlag)
-                                                DIRECT_A3D_ELEM(fourierWeights, izp,iyp,ixp) += (w *  DIRECT_A3D_ELEM(prefourierWeights, izp,iyp,ixp));
+                                            {
+                                            	// Use VoutFourier as temporary to save the memory
+                                                double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, izp,iyp,ixp));
+                                                DIRECT_A3D_ELEM(fourierWeights, izp,iyp,ixp) += (w * ptrOut[0]);
+                                            }
                                             else
                                             {
                                                 double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, izp,iyp,ixp));
@@ -765,6 +786,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
             if ( imgIndex <= lastImageIndex )
             {
                 th_args[nt].imageIndex = imgIndex;
+                th_args[nt].reprocessFlag = reprocessFlag;
                 imgIndex++;
             }
             else
@@ -794,7 +816,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
             {
                 processed = true;
                 if (verbose && imgno++%repaint==0)
-                    progress_bar(NiterWeight*imgno);
+                    progress_bar(imgno);
 
                 double weight = th_args[nt].localweight;
                 paddedFourier = th_args[nt].localPaddedFourier;
@@ -958,21 +980,25 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 
 void ProgRecFourier::correctWeight()
 {
-
-    preFourierWeights.initZeros(FourierWeights);
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(preFourierWeights)
-    A3D_ELEM(preFourierWeights,k,i,j) = 1;
     for (int i=0;i<NiterWeight;i++)
     {
-        FourierWeights.initZeros(preFourierWeights);
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(FourierWeights)
+        	A3D_ELEM(FourierWeights,k,i,j)=0;
         processImages(0, SF.size() - 1, !fn_fsc.empty(), true);
         forceWeightSymmetry(FourierWeights);
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(FourierWeights)
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(VoutFourier)
         {
-            double weight_kij=A3D_ELEM(FourierWeights,k,i,j);
-            double preweight_kij=A3D_ELEM(preFourierWeights,k,i,j);
-            A3D_ELEM(preFourierWeights,k,i,j) = preweight_kij/weight_kij;
+            double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, k,i,j));
+            ptrOut[0] /= A3D_ELEM(FourierWeights,k,i,j);
         }
+    }
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(VoutFourier)
+    {
+    	// Put back the weights to FourierWeights from temporary variable VoutFourier
+        double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, k,i,j));
+        A3D_ELEM(FourierWeights,k,i,j) = ptrOut[0];
+        // Set VoutFourier to zero for gridding
+        ptrOut[0] = 0;
     }
 }
 
@@ -991,14 +1017,12 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
     }
 #endif
 
-    // Method for correcting the weights
-    correctWeight();
     // Enforce symmetry in the Fourier values as well as the weights
     // Sjors 19aug10 enforceHermitianSymmetry first checks ndim...
     Vout().initZeros(volPadSizeZ,volPadSizeY,volPadSizeX);
     transformerVol.setReal(Vout());
     transformerVol.enforceHermitianSymmetry();
-	forceWeightSymmetry(preFourierWeights);
+    //forceWeightSymmetry(preFourierWeights);
 
     // Tell threads what to do
     //#define DEBUG_VOL1

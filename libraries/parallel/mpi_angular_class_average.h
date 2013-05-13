@@ -39,6 +39,7 @@
 #include <data/mask.h>
 #include <data/polar.h>
 #include <data/basic_pca.h>
+#include <data/sampling.h>
 
 //Tags already defined in xmipp
 //#define TAG_WORK                     0
@@ -82,11 +83,11 @@ public:
     MetaData mdJobList;
 
     /** Input and library docfiles */
-    MetaData         DF, DFlib;
+    MetaData         DF, DFlib, DFscore;
     /** metadata with classes which have experimental images applied to them */
     MetaData         DFclassesExp;
     /** Output rootnames */
-    FileName         fn_out, fn_out1, fn_out2, fn_wien;
+    FileName         fn_out, fn_out1, fn_out2, fn_wien, fn_ref;
     /** Column numbers */
     std::string      col_select;
     /** Upper and lower absolute and relative selection limits */
@@ -239,8 +240,10 @@ public:
             MetaData SFclass1,
             MetaData SFclass2,
             MetaData SFclassDiscarded,
+            MetaData _DF,
             double w1,
             double w2,
+	    double w,
             int lockIndex);
 
     /** Called by mpi_write does the actual writing
@@ -265,18 +268,6 @@ public:
     void reAlignClass(
     		Image<double> &avg1,
     		Image<double> &avg2,
-    		MetaData &SFclass1,
-    		MetaData &SFclass2,
-    		std::vector<Image<double> > imgs,
-    		std::vector<int> splits,
-    		std::vector<int> numbers,
-    		size_t dirno,
-    		double * my_output);
-
-    void pcaAnalysis(
-    		PCAMahalanobisAnalyzer &pcaAnalyzer,
-    		Image<double> &pca1,
-    		Image<double> &pca2,
     		MetaData &SFclass1,
     		MetaData &SFclass2,
     		std::vector<Image<double> > imgs,
