@@ -45,13 +45,32 @@ public class SingleParticlePicker extends ParticlePicker
 	
 	public SingleParticlePicker(String selfile, String outputdir, Mode mode)
 	{
-		super(selfile, outputdir, mode);
+		this(null, selfile, outputdir, mode);
 		
 	}
 
 	public SingleParticlePicker(String block, String selfile, String outputdir, Mode mode)
 	{
 		super(block, selfile, outputdir, mode);
+		templatesfile = getOutputPath(templatesfile);
+		if(!new File(templatesfile).exists())
+			setTemplatesNumber(1);
+		else
+			try
+			{
+				templatesNumber = ((int) templates.getNDim());
+				this.templates = new ImageGeneric(templatesfile);
+
+				for (templateindex = 0; templateindex < templatesNumber; templateindex++)
+					// to initialize templates on c part
+					XmippImageConverter.readToImagePlus(templates, ImageGeneric.FIRST_IMAGE + templateindex);
+
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+				throw new IllegalArgumentException();
+			}
 		
 	}
 	
@@ -92,9 +111,7 @@ public class SingleParticlePicker extends ParticlePicker
 			
 			this.templates = new ImageGeneric(ImageGeneric.Float);
 			templates.resize(getSize(), getSize(), 1, templatesNumber);
-			
 			templates.write(templatesfile);
-			templates.setFilename(templatesfile);
 			
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e.getMessage());
