@@ -894,6 +894,38 @@ public class SingleParticlePicker extends ParticlePicker
 		return templateindex;
 	}
 
-	
+	public synchronized void centerParticle(TrainingParticle p)
+	{
+		Particle shift = null;
+		try
+		{
+			ImageGeneric igp = p.getImageGeneric();
+			shift = templates.bestShift(igp);
+			p.setX(p.getX() + shift.getX());
+			p.setY(p.getY() + shift.getY());
+		}
+		catch (Exception e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+
+	public synchronized void applyAlignment(TrainingParticle particle, ImageGeneric igp, double[] align)
+	{
+		try
+		{
+			particle.setLastalign(align);
+			templates.applyAlignment(igp, particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
+			//System.out.printf("adding particle: %d %.2f %.2f %.2f\n", particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
+		}
+		catch (Exception e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
 
 }
