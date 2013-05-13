@@ -4,8 +4,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import xmipp.utils.TasksManager;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.Micrograph;
+import xmipp.viewer.particlepicker.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.PickerParticle;
 import xmipp.viewer.particlepicker.SingleParticlePicker;
 
@@ -128,7 +130,7 @@ public class TrainingMicrograph extends Micrograph
 						String.format("Micrograph %s could not update its state to %s and can't keep previous state %s and have particles", getName(), state, MicrographState.Available));
 		}
 		if (ppicker.getMode() == Mode.Manual)
-			ppicker.addParticleToTemplates(p, center);
+			TasksManager.getInstance().addTask(new ParticleToTemplatesTask(p));
 	}
 
 	public void removeParticle(PickerParticle p, SingleParticlePicker ppicker)
