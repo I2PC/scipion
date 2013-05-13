@@ -95,19 +95,7 @@ public class MicrographFamilyData
 			// throw new
 			// IllegalArgumentException(XmippMessage.getOutOfBoundsMsg("Particle"));
 			manualparticles.add(p);
-			if (state == MicrographFamilyState.Available || state == MicrographFamilyState.Auto)// to
-																								// put
-																								// micrograph
-																								// family
-																								// data
-																								// on
-																								// new
-																								// state,
-																								// done
-																								// only
-																								// for
-																								// first
-																								// particle
+			if (state == MicrographFamilyState.Available || state == MicrographFamilyState.Auto)// to put micrograph family data on new state
 			{
 				if (family.getStep() == FamilyState.Manual)
 					state = MicrographFamilyState.Manual;
