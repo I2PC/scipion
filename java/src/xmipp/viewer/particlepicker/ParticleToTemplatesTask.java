@@ -22,7 +22,7 @@ public class ParticleToTemplatesTask implements Task
 	{
 		try
 		{
-			SingleParticlePicker picker = particle.getParticlePicker();
+			SingleParticlePicker picker = (SingleParticlePicker)particle.getParticlePicker();
 
 			ImageGeneric igp = particle.getImageGeneric();
 			// will happen only in manual mode

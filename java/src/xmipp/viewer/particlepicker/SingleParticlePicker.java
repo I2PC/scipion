@@ -83,7 +83,7 @@ public class SingleParticlePicker extends ParticlePicker
 		return threads;
 	}
 	
-	public void initTemplates() {
+	public synchronized void initTemplates() {
 
 		if(templatesNumber == 0 )
 			return;
@@ -94,8 +94,6 @@ public class SingleParticlePicker extends ParticlePicker
 			
 			templates.write(templatesfile);
 			templates.setFilename(templatesfile);
-			
-			
 			
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e.getMessage());
@@ -126,7 +124,7 @@ public class SingleParticlePicker extends ParticlePicker
 		return templates;
 	}
 	
-	public void setTemplate(ImageGeneric ig) {
+	public synchronized void setTemplate(ImageGeneric ig) {
 		float[] matrix;
 		try {
 			//TODO getArrayFloat and setArrayFloat must be call from C both in one function
@@ -180,7 +178,7 @@ public class SingleParticlePicker extends ParticlePicker
 					particle.setX(particle.getX() + shift.getX());
 					particle.setY(particle.getY() + shift.getY());
 				}
-				double[] align = getTemplates().alignImage(igp, getMode() == Mode.Manual);
+				double[] align = getTemplates().alignImage(igp);
 				particle.setLastalign(align);
 //				System.out.printf("adding: %.2f %.2f %.2f %.2f\n", align[0], align[1], align[2], align[3]);
 				
@@ -861,7 +859,7 @@ public class SingleParticlePicker extends ParticlePicker
 					if (i < getTemplatesNumber())
 						setTemplate(igp);
 					else
-						align = getTemplates().alignImage(igp, true);
+						align = getTemplates().alignImage(igp);
 				}
 			}
 			

@@ -78,11 +78,20 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		constraints.anchor = GridBagConstraints.WEST;
 		setLayout(new GridBagLayout());
 
-		initParticlesPane();
-		add(particlespn, XmippWindowUtil.getConstraints(constraints, 0, 1, 3));
+		initToolBar();
+		add(tb);
+		initShapePane();
+		JPanel shapepn2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		shapepn2.add(new JLabel("Shape:"));
+		shapepn2.add(shapepn);
+		add(shapepn2, XmippWindowUtil.getConstraints(constraints, 0, 1, 3));
 		initMicrographsPane();
 		add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 2, 3));
+		JPanel actionspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
+		actionspn.add(savebt);
+		actionspn.add(saveandexitbt);
+		add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 3, 3, 1, GridBagConstraints.HORIZONTAL));
 		pack();
 		position = 0.95f;
 		XmippWindowUtil.setLocation(position, 0.5f, this);
@@ -138,36 +147,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		importffilesjd.showDialog();
 	}
 
-	private void initParticlesPane()
-	{
-		particlespn = new JPanel();
-		GridLayout gl = new GridLayout(2, 1);
-		particlespn.setLayout(gl);
-
-		particlespn.setBorder(BorderFactory.createTitledBorder("Particles"));
-
-		JPanel fieldspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
-
-		// Setting color
-		initColorPane(pppicker.getColor());
-		fieldspn.add(colorbt);
-
-		// Setting slider
-		initSizePane();
-		fieldspn.add(sizepn);
-
-		particlespn.add(fieldspn, 0);
-		initShapePane();
-		particlespn.add(imagepn, 1);
-
-		index = pppicker.getMicrographIndex();
-		System.out.println(index);
-
-		colorbt.addActionListener(new ColorActionListener());
-
-	}
-
-	
 
 	private void initMicrographsPane()
 	{
@@ -223,6 +202,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	{
 		pppicker.setChanged(changed);
 		savemi.setEnabled(changed);
+		savebt.setEnabled(changed);
 	}
 
 	public void updateMicrographsModel(boolean all)

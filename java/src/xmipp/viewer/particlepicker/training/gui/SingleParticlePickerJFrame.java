@@ -61,7 +61,6 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 	private float positionx;
 	private JButton iconbt;
-	private JMenuItem editfamiliesmi;
 	private JLabel manuallb;
 	private JLabel autolb;
 	private JSlider thresholdsl;
@@ -240,13 +239,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		return autopickchb.isSelected();
 	}
 
-	protected void enableEdition(boolean enable)
-	{
-		super.enableEdition(enable);
-
-		editfamiliesmi.setEnabled(enable);
-	}
-
+	
 	public void initMenuBar()
 	{
 		mb = new JMenuBar();
@@ -296,23 +289,9 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		windowmn.add(ijmi);
 
 		templatesmi = new JMenuItem("Templates");
-		editfamiliesmi = new JMenuItem("Edit Families", XmippResource.getIcon("edit.gif"));
-		windowmn.add(editfamiliesmi);
 		windowmn.add(templatesmi);
 
 		// Setting menu item listeners
-
-		editfamiliesmi.addActionListener(new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				new EditFamiliesJDialog(SingleParticlePickerJFrame.this, true);
-
-			}
-		});
-
 		templatesmi.addActionListener(new ActionListener()
 		{
 
@@ -526,7 +505,6 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 		sizesl.setEnabled(step == Mode.Manual);
 		sizetf.setEnabled(step == Mode.Manual);
-		editfamiliesmi.setEnabled(step == Mode.Manual);
 		pack();
 
 	}

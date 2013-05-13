@@ -9,12 +9,13 @@ import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.ImageGeneric;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.Micrograph;
+import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.PickerParticle;
 import xmipp.viewer.particlepicker.SingleParticlePicker;
 
 public class TrainingParticle extends PickerParticle{
 	
-	protected SingleParticlePicker picker;
+	protected ParticlePicker picker;
 	protected ImagePlus img;
 	protected double cost = 2;
 	protected double[] lastalign;
@@ -32,12 +33,12 @@ public class TrainingParticle extends PickerParticle{
 		this.lastalign = lastalign;
 	}
 
-	public TrainingParticle(int x, int y, SingleParticlePicker picker, Micrograph micrograph)
+	public TrainingParticle(int x, int y, ParticlePicker picker, Micrograph micrograph)
 	{
 		this(x, y, picker, micrograph, 2);
 	}
 	
-	public TrainingParticle(int x, int y, SingleParticlePicker picker, Micrograph micrograph, double cost)
+	public TrainingParticle(int x, int y, ParticlePicker picker, Micrograph micrograph, double cost)
 	{
 		super(x, y, micrograph);
 		
@@ -52,7 +53,7 @@ public class TrainingParticle extends PickerParticle{
 	}
 
 
-	public SingleParticlePicker getParticlePicker()
+	public ParticlePicker getParticlePicker()
 	{
 		return picker;
 	}

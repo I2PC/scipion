@@ -136,7 +136,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		fieldspn.add(sizepn);
 		particlespn.add(fieldspn, 0);
 		initShapePane();
-		particlespn.add(imagepn, 1);
+		particlespn.add(shapepn, 1);
 		index = picker.getMicrographIndex();
 
 	}
