@@ -73,7 +73,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected JCheckBox rectanglechb;
 	protected JFormattedTextField sizetf;
 	protected JCheckBox centerchb;
-	protected JPanel symbolpn;
+	protected JPanel shapepn;
 	protected JMenuItem savemi;
 	protected JMenuItem hcontentsmi;
 	protected JMenuItem pmi;
@@ -186,10 +186,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				if (e.getValueIsAdjusting())
 					return;
 				if (micrographstb.getSelectedRow() == -1)
-					return;// Probably
-							// from
-							// fireTableDataChanged
-							// raised
+					return;// Probably from fireTableDataChanged raised
 				loadMicrograph();
 			}
 		});
@@ -479,10 +476,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		return 100;
 	}
 
-//	public Family getFamily()
-//	{
-//		return getParticlePicker().getFamily();
-//	}
+	//	public Family getFamily()
+	//	{
+	//		return getParticlePicker().getFamily();
+	//	}
 
 	public abstract ParticlePickerCanvas getCanvas();
 
@@ -581,27 +578,13 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			colorbt.setIcon(new ColorIcon(color));
 		getParticlePicker().setColor(color);
 		getCanvas().repaint();
-//		getParticlePicker().saveFamilies();
 		getParticlePicker().saveConfig();
 	}
 
-	protected void initImagePane()
+	protected void initShapePane()
 	{
-		imagepn = new JPanel(new GridBagLayout());
-		GridBagConstraints constraints = new GridBagConstraints();
-		constraints.insets = new Insets(0, 5, 0, 5);
-		constraints.anchor = GridBagConstraints.WEST;
-		// imagepn.setBorder(BorderFactory.createTitledBorder("Image"));
 
-		
-		
-
-		// usezoombt.setBorderPainted(false);
-		//paintpn.add(tb);
-
-		symbolpn = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		//symbolpn.add(new JLabel("Symbol:"));
-		// symbolpn.setBorder(BorderFactory.createTitledBorder("Symbol"));
+		shapepn = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		ShapeItemListener shapelistener = new ShapeItemListener();
 
 		circlechb = new JCheckBox(Shape.Circle.toString());
@@ -616,27 +599,23 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		centerchb.setSelected(true);
 		centerchb.addItemListener(shapelistener);
 
-		symbolpn.add(circlechb);
-		symbolpn.add(rectanglechb);
-		symbolpn.add(centerchb);
-
-		
-		//imagepn.add(tb, XmippWindowUtil.getConstraints(constraints, 0, 0, 1, 1, GridBagConstraints.HORIZONTAL));
-		imagepn.add(symbolpn,  XmippWindowUtil.getConstraints(constraints, 0, 1));
+		shapepn.add(circlechb);
+		shapepn.add(rectanglechb);
+		shapepn.add(centerchb);
 
 	}
-	
+
 	public void initToolBar()
 	{
 		tb = new JToolBar();
 
 		tb.setFloatable(false);
-		
+
 		usezoombt = new JToggleButton("-1", XmippResource.getIcon("zoom.png"));
 		usezoombt.setToolTipText("Keep zoom");
 		usezoombt.setFocusable(false);
 		tb.add(usezoombt);
-		
+
 		initColorPane(getParticlePicker().getColor());
 		tb.add(colorpn);
 		initSizePane();
@@ -803,7 +782,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				p.resetParticleCanvas();
 			loadParticles();
 		}
-//		getParticlePicker().saveFamilies();
+		//		getParticlePicker().saveFamilies();
 		getParticlePicker().saveConfig();
 	}
 
@@ -833,11 +812,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	public abstract String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty);
 
-//	public Color getColor()
-//	{
-//		return getFamily().getColor();
-//
-//	}
+	//	public Color getColor()
+	//	{
+	//		return getFamily().getColor();
+	//
+	//	}
 
 	public Map<String, String> getKeyAssist()
 	{

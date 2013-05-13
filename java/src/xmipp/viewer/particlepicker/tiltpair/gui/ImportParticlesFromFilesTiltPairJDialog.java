@@ -24,7 +24,7 @@ import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.ImportParticlesJDialog;
-import xmipp.viewer.particlepicker.training.gui.TrainingPickerJFrame;
+import xmipp.viewer.particlepicker.training.gui.SingleParticlePickerJFrame;
 
 public class ImportParticlesFromFilesTiltPairJDialog extends ImportParticlesJDialog {
 

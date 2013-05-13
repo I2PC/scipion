@@ -1269,9 +1269,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			}
 		});
 		cbPanel.add(jcbVolumes);
-		
-		
-		
 	}
 
 	protected void updateCombos()

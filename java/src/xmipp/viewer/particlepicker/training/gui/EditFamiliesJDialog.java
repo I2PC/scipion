@@ -25,14 +25,14 @@ import xmipp.utils.XmippWindowUtil;
 
 public class EditFamiliesJDialog extends JDialog {
 
-	private TrainingPickerJFrame parent;
+	private SingleParticlePickerJFrame parent;
 	private JTable familiestb;
 	private JButton addbt;
 	private JButton deletebt;
 	private JButton okbt;
 	private FamiliesTableModel model;
 
-	public EditFamiliesJDialog(TrainingPickerJFrame parent, boolean modal) {
+	public EditFamiliesJDialog(SingleParticlePickerJFrame parent, boolean modal) {
 		super(parent, modal);
 		this.parent = parent;
 		initComponents();
@@ -134,9 +134,9 @@ public class EditFamiliesJDialog extends JDialog {
 
 
 		private String[] columns = new String[] { "Name", "Color", "Size", "Templates" };
-		private TrainingPickerJFrame frame;
+		private SingleParticlePickerJFrame frame;
 
-		public FamiliesTableModel(TrainingPickerJFrame frame) {
+		public FamiliesTableModel(SingleParticlePickerJFrame frame) {
 
 			this.frame = frame;
 		}
@@ -230,7 +230,7 @@ public class EditFamiliesJDialog extends JDialog {
 
 	}
 	
-	public TrainingPickerJFrame getFrame()
+	public SingleParticlePickerJFrame getFrame()
 	{
 		return parent;
 	}

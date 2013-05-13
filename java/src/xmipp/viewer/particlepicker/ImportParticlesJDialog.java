@@ -23,7 +23,7 @@ import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.tiltpair.gui.ImportParticlesFromFilesTiltPairJDialog;
-import xmipp.viewer.particlepicker.training.gui.TrainingPickerJFrame;
+import xmipp.viewer.particlepicker.training.gui.SingleParticlePickerJFrame;
 
 public class ImportParticlesJDialog extends XmippDialog {
 
@@ -47,7 +47,7 @@ public class ImportParticlesJDialog extends XmippDialog {
 		super(parent, "Import Particles", true);
 		this.parent = parent;
 		xfc = new XmippFileChooser();
-		if(parent instanceof TrainingPickerJFrame)
+		if(parent instanceof SingleParticlePickerJFrame)
 			xfc.setFileSelectionMode(XmippFileChooser.FILES_AND_DIRECTORIES);
 		else if (this instanceof ImportParticlesFromFilesTiltPairJDialog)
 			xfc.setFileSelectionMode(XmippFileChooser.FILES_ONLY);

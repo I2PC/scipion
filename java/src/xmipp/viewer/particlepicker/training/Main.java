@@ -7,7 +7,7 @@ import javax.swing.SwingUtilities;
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.SingleParticlePicker;
-import xmipp.viewer.particlepicker.training.gui.TrainingPickerJFrame;
+import xmipp.viewer.particlepicker.training.gui.SingleParticlePickerJFrame;
 import xmipp.viewer.particlepicker.training.model.Mode;
 
 class Main
@@ -34,7 +34,7 @@ class Main
 			@Override
 			public void run()
 			{
-				TrainingPickerJFrame tp = null;
+				SingleParticlePickerJFrame tp = null;
 				try
 				{
 					SingleParticlePicker ppicker = null;
@@ -61,7 +61,7 @@ class Main
 						ppicker = new SingleParticlePicker(selfile, outputdir, reviewfile);
 					}
 			
-					tp = new TrainingPickerJFrame(ppicker);
+					tp = new SingleParticlePickerJFrame(ppicker);
 				}
 				catch (Exception e)
 				{

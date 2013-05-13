@@ -30,11 +30,11 @@ import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 
 public class TemplatesJDialog extends JDialog {
 
-	protected TrainingPickerJFrame frame;
+	protected SingleParticlePickerJFrame frame;
 	protected Panel templatespn;
 	protected int width, height;
 
-	public TemplatesJDialog(TrainingPickerJFrame frame) {
+	public TemplatesJDialog(SingleParticlePickerJFrame frame) {
 		super(frame);
 		this.frame = frame;
 

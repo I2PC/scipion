@@ -27,7 +27,6 @@ import xmipp.viewer.particlepicker.training.model.Mode;
 public abstract class ParticlePicker
 {
 
-	protected String familiesfile;
 	protected String macrosfile;
 	protected static Logger logger;
 	protected String outputdir = ".";
@@ -46,7 +45,7 @@ public abstract class ParticlePicker
 	
 	
 
-	public static final int fsizemax = 800;
+	public static final int sizemax = 800;
 	protected String block;
 	
 	
@@ -62,9 +61,6 @@ public abstract class ParticlePicker
 			nextcolor = 0;
 		return next;
 	}
-
-	
-
 	
 	
 	public ParticlePicker(String selfile, Mode mode)
@@ -276,63 +272,6 @@ public abstract class ParticlePicker
 		return getMicrographs().indexOf(getMicrograph());
 	}
 
-//	public void loadFamilies()
-//	{
-//		families.clear();
-//		String file = familiesfile;
-//		if (!new File(file).exists())
-//		{
-//
-//			families.add(dfamily);
-//			saveFamilies();
-//			return;
-//		}
-//
-//		Family family;
-//		int rgb, size;
-//		Integer templatesNumber = 1;
-//		Mode state;
-//		String name, templatesfile;
-//		ImageGeneric templates;
-//
-//		try {
-//
-//			MetaData md = new MetaData(file);
-//			long[] ids = md.findObjects();
-//			for (long id : ids)
-//			{
-//				name = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
-//				rgb = md.getValueInt(MDLabel.MDL_COLOR, id);
-//				size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
-//				templatesNumber = md.getValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, id);
-//				if( templatesNumber == null || templatesNumber == 0)
-//					templatesNumber = 1;//for compatibility with previous projects
-//
-//				templatesfile = getTemplatesFile(name);
-//				if (getMode() != Mode.Manual && new File(templatesfile).exists() )
-//				{
-//					templates = new ImageGeneric(templatesfile);
-//					family = new Family(name, new Color(rgb), size, this, templates);
-//					
-//				}
-//				else
-//				{
-//					family = new Family(name, new Color(rgb), size, this, templatesNumber, templatesfile);
-//				}
-//				families.add(family);
-//			}
-//			md.destroy();
-//			if (families.size() == 0)
-//				throw new IllegalArgumentException(String.format("No families specified on %s", file));
-//		}
-//		catch (Exception e)
-//		{
-//			getLogger().log(Level.SEVERE, e.getMessage(), e);
-//			throw new IllegalArgumentException(e.getMessage());
-//		}
-//	}
-
-
 
 
 	public String getTemplatesFile(String name)
@@ -445,10 +384,7 @@ public abstract class ParticlePicker
 			String file = configfile;
 			md = new MetaData();
 			long id = md.addObject();
-			md.setValueString(MDLabel.MDL_MICROGRAPH, getMicrograph().getName(), id);
-			md.setValueInt(MDLabel.MDL_COLOR, getColor().getRGB(), id);
-			md.setValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, getSize(), id);
-			
+			saveConfig(md, id);
 			md.write(file);
 			md.destroy();
 
@@ -460,6 +396,13 @@ public abstract class ParticlePicker
 		}
 	}
 
+	protected void saveConfig(MetaData md, long id)
+	{
+		md.setValueString(MDLabel.MDL_MICROGRAPH, getMicrograph().getName(), id);
+		md.setValueInt(MDLabel.MDL_COLOR, getColor().getRGB(), id);
+		md.setValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, getSize(), id);
+		
+	}
 
 	void removeFilter(String filter)
 	{
@@ -593,9 +536,9 @@ public abstract class ParticlePicker
 	}
 
 	public void setSize(int size) {
-		if (size >  ParticlePicker.fsizemax)
+		if (size >  ParticlePicker.sizemax)
 			throw new IllegalArgumentException(String.format(
-					"Max size is %s, %s not allowed",  ParticlePicker.fsizemax, size));
+					"Max size is %s, %s not allowed",  ParticlePicker.sizemax, size));
 
 		this.size = size;
 		saveConfig();//size and color will be on config

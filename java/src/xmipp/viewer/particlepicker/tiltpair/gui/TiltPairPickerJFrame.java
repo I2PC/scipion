@@ -157,7 +157,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		fieldspn.add(sizepn);
 
 		particlespn.add(fieldspn, 0);
-		initImagePane();
+		initShapePane();
 		particlespn.add(imagepn, 1);
 
 		index = pppicker.getMicrographIndex();

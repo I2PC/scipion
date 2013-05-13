@@ -14,9 +14,9 @@ public class MicrographsTableModel extends AbstractTableModel {
 	
 	private List<TrainingMicrograph> micrographs;
 	private String[] columns = new String[]{"", "Name", "Particles", "State"};
-	private TrainingPickerJFrame frame;
+	private SingleParticlePickerJFrame frame;
 
-	public MicrographsTableModel(TrainingPickerJFrame frame)
+	public MicrographsTableModel(SingleParticlePickerJFrame frame)
 	{
 		this.micrographs = frame.getParticlePicker().getMicrographs();
 		this.frame = frame;

@@ -20,13 +20,13 @@ import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 public class TrainingCanvas extends ParticlePickerCanvas
 {
 
-	private TrainingPickerJFrame frame;
+	private SingleParticlePickerJFrame frame;
 	private TrainingMicrograph micrograph;
 	private TrainingParticle active;
 	private SingleParticlePicker ppicker;
 
 
-	public TrainingCanvas(TrainingPickerJFrame frame)
+	public TrainingCanvas(SingleParticlePickerJFrame frame)
 	{
 		super(frame.getMicrograph().getImagePlus(frame.getParticlePicker().getFilters()));
 

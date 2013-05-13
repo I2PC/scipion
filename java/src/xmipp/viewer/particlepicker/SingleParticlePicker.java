@@ -37,7 +37,8 @@ public class SingleParticlePicker extends ParticlePicker
 	private boolean fastmode;
 	private boolean incore;
 	
-	private Integer templatesNumber = 1;
+	public static final int dtemplatesnum = 1;
+	private Integer templatesNumber;
 	private ImageGeneric templates;
 	private String templatesfile;
 	private int templateindex;
@@ -103,6 +104,8 @@ public class SingleParticlePicker extends ParticlePicker
 
 	
 	public int getTemplatesNumber() {
+		if(templatesNumber == null)
+			templatesNumber = dtemplatesnum;
 		return templatesNumber;
 	}
 
@@ -358,8 +361,12 @@ public class SingleParticlePicker extends ParticlePicker
 	@Override
 	public void setMicrograph(Micrograph m)
 	{
+		if(m == null)
+			return;
+		if(m.equals(micrograph))
+			return;
 		this.micrograph = (TrainingMicrograph) m;
-
+		saveConfig();
 	}
 
 	@Override
@@ -377,7 +384,7 @@ public class SingleParticlePicker extends ParticlePicker
 		String file = configfile;
 		if (!new File(file).exists())
 			return;
-
+		
 		try
 		{
 			MetaData md = new MetaData(file);
@@ -405,20 +412,14 @@ public class SingleParticlePicker extends ParticlePicker
 		}
 	}
 
-	public void saveConfig()
+	protected void saveConfig(MetaData md, long id)
 	{
 		try
 		{
-			super.saveConfig();
-			if (!new File(configfile).exists())
-				return;
-			MetaData md;
-			md = new MetaData();
-			long id = md.addObject();
+			super.saveConfig(md, id);
 			md.setValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, getAutopickpercent(), id);
+			
 			md.setValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, getTemplatesNumber(), id);
-			md.write(configfile);
-			md.destroy();
 
 		}
 		catch (Exception e)
@@ -427,6 +428,8 @@ public class SingleParticlePicker extends ParticlePicker
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
+	
+	
 
 	public void setAutopickpercent(int autopickpercent)
 	{
