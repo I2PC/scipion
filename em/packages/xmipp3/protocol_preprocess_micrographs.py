@@ -90,9 +90,6 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     _definition = XmippDefPreprocessMicrograph()
     _label = 'Xmipp Micrographs Preprocessing'
     
-#    def __init__(self, **args):
-#        
-#        ProtPreprocessMicrographs.__init__(self, **args)
         
     def _defineSteps(self):
         '''for each micrograph insert the steps to preprocess it
@@ -155,14 +152,16 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         mdOut = "Micrographs@" + self._getPath("micrographs.xmd")    
         micSet = XmippSetOfMicrographs(mdOut)
             
-        # Add micrographs to the set           
-        for i, v in IOTable.iteritems():
-            micSet.append(XmippMicrograph(v))
-            #TODO: Handle Tilted micrographs
-#            if tiltPairs:
-#                MD.setValue(xmipp.MDL_MICROGRAPH_TILTED,IOTable[fnMicrographTilted],objId)
-#                MD.setValue(xmipp.MDL_MICROGRAPH_TILTED_ORIGINAL,fnMicrographTilted,objId)
+        for mic in self.inputMics:
+            xmic = XmippMicrograph.convert(mic)
+            # Updating micrograph name
+            xmic.setFileName(IOTable[mic.getFileName()])
+            micSet.append(xmic)
         
+        # If input micrographs have tilt pairs copy the relation
+        if self.inputMics.hasTiltPairs():
+            micSet.copyTiltPairs(self.inputMics)
+            
         micSet.copyInfo(self.inputMics)
         
         if self.doDownsample.get():

@@ -115,8 +115,21 @@ class XmippSetOfMicrographs(XmippSetOfImages, SetOfMicrographs):
             
     @staticmethod
     def convert(setOfMics, filename):
-        return XmippSet.convert(setOfMics, XmippSetOfMicrographs, filename)
+        if isinstance(setOfMics, XmippSetOfMicrographs):
+            return setOfMics
+        xmippMics = XmippSet.convert(setOfMics, XmippSetOfMicrographs, filename)
+        
+        # If there are tilt pairs add tilt pairs block the the micrograph metadata
+        if setOfMics.hasTiltPairs():
+            mdPairs = 'TiltedPairs@' + filename
+            md = xmipp.MetaData()
+            for micU, micT in setOfMics.iterTiltPairs():
+                objId = md.addObject()
+                md.setValue(xmipp.MDL_MICROGRAPH, str(micU.getFileName()), objId)
+                md.setValue(xmipp.MDL_MICROGRAPH_TILTED, str(micT.getFileName()), objId)
+            md.write(mdPairs, xmipp.MD_APPEND)
 
+        return xmippMics
                     
 class XmippCoordinate(Coordinate):
     """This class holds the (x,y) position and other information
@@ -153,8 +166,8 @@ class XmippCoordinate(Coordinate):
         pass 
     
 
-class XmippCTFModel(CTFModel):
-    
+class XmippCTFModel(CTFModel, XmippMdRow):
+    # Mapping to general CTFModel attributes
     ctfParams = {
                  "samplingRate":xmipp.MDL_CTF_SAMPLING_RATE,
                  "voltage":xmipp.MDL_CTF_VOLTAGE,
@@ -162,75 +175,40 @@ class XmippCTFModel(CTFModel):
                  "defocusV":xmipp.MDL_CTF_DEFOCUSV,
                  "defocusAngle":xmipp.MDL_CTF_DEFOCUS_ANGLE,
                  "sphericalAberration":xmipp.MDL_CTF_CS,
-                 "chromaticAberration":xmipp.MDL_CTF_CA,
-                 "energyLoss":xmipp.MDL_CTF_ENERGY_LOSS,
-                 "lensStability":xmipp.MDL_CTF_LENS_STABILITY,
-                 "convergenceCone":xmipp.MDL_CTF_CONVERGENCE_CONE,
-                 "longitudinalDisplacement":xmipp.MDL_CTF_LONGITUDINAL_DISPLACEMENT,
-                 "transversalDisplacement":xmipp.MDL_CTF_TRANSVERSAL_DISPLACEMENT,
-                 "q0":xmipp.MDL_CTF_Q0,
-                 "k":xmipp.MDL_CTF_K,
-                 "bgGaussianK":xmipp.MDL_CTF_BG_GAUSSIAN_K,
-                 "bgGaussianSigmaU":xmipp.MDL_CTF_BG_GAUSSIAN_SIGMAU,
-                 "bgGaussianSigmaV":xmipp.MDL_CTF_BG_GAUSSIAN_SIGMAV,
-                 "bgGaussianCU":xmipp.MDL_CTF_BG_GAUSSIAN_CU,
-                 "bgGaussianCV":xmipp.MDL_CTF_BG_GAUSSIAN_CV,
-                 "bgGaussianAngle":xmipp.MDL_CTF_BG_GAUSSIAN_ANGLE,
-                 "bgSqrtK":xmipp.MDL_CTF_BG_SQRT_K,
-                 "bgSqrtU":xmipp.MDL_CTF_BG_SQRT_U,
-                 "bgSqrtV":xmipp.MDL_CTF_BG_SQRT_V,
-                 "bgSqrtAngle":xmipp.MDL_CTF_BG_SQRT_ANGLE,
-                 "bgBaseline":xmipp.MDL_CTF_BG_BASELINE,
-                 "bgGaussian2K":xmipp.MDL_CTF_BG_GAUSSIAN2_K,
-                 "bgGaussian2SigmaU":xmipp.MDL_CTF_BG_GAUSSIAN2_SIGMAU,
-                 "bgGaussian2SigmaV":xmipp.MDL_CTF_BG_GAUSSIAN2_SIGMAV,
-                 "bgGaussian2CU":xmipp.MDL_CTF_BG_GAUSSIAN2_CU,
-                 "bgGaussian2CV":xmipp.MDL_CTF_BG_GAUSSIAN2_CV,
-                 "bgGaussian2Angle":xmipp.MDL_CTF_BG_GAUSSIAN2_ANGLE,
-#                 "X0":xmipp.MDL_CTF_X0,
-#                 "XF":xmipp.MDL_CTF_XF,
-#                 "Y0":xmipp.MDL_CTF_Y0,
-#                 "YF":xmipp.MDL_CTF_YF,
-                 "critFitting":xmipp.MDL_CTF_CRIT_FITTINGSCORE,
-                 "critCorr13":xmipp.MDL_CTF_CRIT_FITTINGCORR13,
-#                 "downsampleFactor":xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,
-                 "critPsdStdQ":xmipp.MDL_CTF_CRIT_PSDVARIANCE,
-                 "critPsdPCA1":xmipp.MDL_CTF_CRIT_PSDPCA1VARIANCE,
-                 "critPsdPCARuns":xmipp.MDL_CTF_CRIT_PSDPCARUNSTEST
+                 "ampContrast":xmipp.MDL_CTF_Q0
                  }
 
     def __init__(self, filename = None, **args):
-
-        args['value'] = filename
-                    
-        CTFModel.__init__(self, **args)       
+        CTFModel.__init__(self, **args)
+        XmippMdRow.__init__(self)
+        self.getFileName = self.get
+        self.setFileName = self.set
+        self.setFileName(filename)  
+          
         if filename is not None:
             # Use the object value to store the filename
 
             md = xmipp.MetaData(filename)
             objId = md.firstObject()
+            self.getFromMd(md, objId)
             
-            for key, val in  self.ctfParams.iteritems():
-                mdVal = md.getValue(val, objId)
-                if not hasattr(self, key):
-                    setattr(self, key, Float(mdVal))
-                else:
-                    getattr(self, key).set(mdVal)
-                
-    def getFileName(self):
-        return self.get()          
+            for key, label in  self.ctfParams.iteritems():
+                mdVal = md.getValue(label, objId)
+                getattr(self, key).set(mdVal)
+      
     
     def write(self, fn):
 
+        for key, label in  self.ctfParams.iteritems():
+            self.setValue(label, getattr(self, key).get())
+        
         md = xmipp.MetaData()
+        md.setColumnFormat(False)
         objId = md.addObject()
-        for key, val in  self.ctfParams.iteritems():
-            if hasattr(self, key):
-                md.setValue(val, getattr(self, key).get(), objId)
-                
+        self.setToMd(md, objId)
         md.write(fn)
         
-        self.set(fn)
+        self.setFileName(fn)
           
     
 class XmippSetOfCoordinates(SetOfCoordinates):
@@ -271,6 +249,10 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         for mic in self.getMicrographs():
             self.iterMicrographCoordinates(mic)
 
+    def iterTiltPairs(self):
+        """Iterate over the tilt pairs if is the case"""
+        #TODO: Implement this method
+        pass
             
 class XmippImageClassAssignment(ImageClassAssignment, XmippMdRow):
     """ Image-class assignments in Xmipp are stored in a MetaData row. """

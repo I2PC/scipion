@@ -100,6 +100,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         arguments = "-i %(inputMicsXmipp)s -o %(extraDir)s --mode %(pickingMode)s --memory %(memory)dg"
         # TiltPairs
         if inputMicsXmipp.hasTiltPairs():
+            self._params['inputMicsXmipp'] = "TiltedPairs@" + self.getConvertedInput('inputMics').getFileName()
             program = "xmipp_micrograph_tiltpair_picking"
         # Run the command with formatted parameters
         runJob(None, program, arguments % self._params)
@@ -111,6 +112,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         coords.setMicrographs(inputMicsXmipp)
         coords.family.set(family)
         coords.boxSize.set(size)
+        
         return coords                    
         
     def createOutput(self):
