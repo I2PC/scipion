@@ -345,6 +345,7 @@ class CsvList(Scalar, list):
         
     def _convertValue(self, value):
         """Value should be a str with comman separated values"""
+
         del self[:] # Clear the list before setting new value
         for s in value.split(','):
             self.append(self._pType(s))

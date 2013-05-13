@@ -75,7 +75,6 @@ class XmippSetOfImages(XmippSet, SetOfImages):
     @staticmethod
     def convert(setOfImgs, filename):
         return XmippSet.convert(setOfImgs, XmippSetOfImages, filename)
-
                 
 class XmippMicrograph(XmippImage, Micrograph):
     """Xmipp implementation for Micrograph"""
@@ -209,13 +208,18 @@ class XmippCTFModel(CTFModel, XmippMdRow):
         md.write(fn)
         
         self.setFileName(fn)
+    
+    def getFiles(self):
+        filePaths = set()
+        filePaths.add(self.getFileName())
+        return filePaths
           
     
 class XmippSetOfCoordinates(SetOfCoordinates):
     """Implementation of SetOfCoordinates for Xmipp"""
     def __init__(self, filename=None, **args):
         # Use object value to store filename
-        # Here filename is the path where pos files can be found
+        # Here filename is the path where pos filePaths can be found
         SetOfCoordinates.__init__(self, value=filename, **args)
         self.family = String()
         
@@ -248,6 +252,15 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         
         for mic in self.getMicrographs():
             self.iterMicrographCoordinates(mic)
+    
+    def getFiles(self):
+        filePaths = set()
+        path = self.getFileName()
+        for mic in self.getMicrographs():   
+            filePath = join(path, replaceBaseExt(mic.getFileName(), 'pos'))            
+            if exists(filePath):         
+                filePaths.add(filePath)
+        return filePaths
 
     def iterTiltPairs(self):
         """Iterate over the tilt pairs if is the case"""

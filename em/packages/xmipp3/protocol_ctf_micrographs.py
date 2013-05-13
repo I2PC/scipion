@@ -32,7 +32,6 @@ This sub-package contains the XmippCtfMicrographs protocol
 from pyworkflow.em import *  
 from pyworkflow.em.packages.xmipp3.data import *
 from pyworkflow.utils.path import makePath, basename, join, exists
-from pyworkflow.utils import runJob
 import xmipp
 
 
@@ -81,7 +80,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         self._params['micFn'] = micFn
         self._params['micDir'] = self._getFilename('prefix', micDir=micDir)
         # CTF estimation with Xmipp                
-        runJob(None, self._program, self._args % self._params)    
+        self.runJob(None, self._program, self._args % self._params)    
 
     def createOutput(self):
         # Create micrographs metadata with CTF information
@@ -112,8 +111,8 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
             
         auxMdOut = xmipp.FileName("Micrographs@" + 
                             self._getTmpPath(self._getFilename('micrographs')))
-        runJob(None,"xmipp_ctf_sort_psds","-i %s -o %s" % (mdOut, auxMdOut))
-        runJob(None,"mv","-f %s %s" % (auxMdOut.removeBlockName(),
+        self.runJob(None,"xmipp_ctf_sort_psds","-i %s -o %s" % (mdOut, auxMdOut))
+        self.runJob(None,"mv","-f %s %s" % (auxMdOut.removeBlockName(),
                                        mdOut.removeBlockName()))
 
         # Create the SetOfMicrographs object on the database

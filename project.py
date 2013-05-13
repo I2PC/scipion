@@ -30,7 +30,7 @@ import os
 from os.path import abspath
 
 from pyworkflow.mapper import SqliteMapper
-from pyworkflow.utils.path import cleanPath, makePath, join, exists
+from pyworkflow.utils import cleanPath, makePath, join, exists, runJob
 from pyworkflow.protocol import *
 from pyworkflow.em import *
 
@@ -49,7 +49,11 @@ class Project(object):
         self.pathList = [] # Store all related paths
         self.dbPath = self.addPath(PROJECT_DBNAME)
         self.logsPath = self.addPath(PROJECT_LOGS)
-        self.runsPath = self.addPath(PROJECT_RUNS)    
+        self.runsPath = self.addPath(PROJECT_RUNS)
+        
+    def getId(self):
+        """ Return the unique id assigned to this project. """
+        return os.path.basename(self.path)
     
     def addPath(self, *paths):
         """Store a path needed for the project"""
@@ -92,20 +96,32 @@ class Project(object):
         # handle the communication of remove projects
         # and also the particularities of job submission: mpi, threads, queue, bash
         self.insertProtocol(protocol)        
-        from pyworkflow.protocol.launcher import FULLPATH
-        cmd = "python %s %s %s" % (FULLPATH, os.path.basename(self.path), 
-                                     protocol.strId())
-        
         if wait:
             self.runProtocol(protocol) # This case is mainly for tests
         else:
-            cmd += ' &'
-            print cmd
-            os.system(cmd)
+            if (protocol.stepsExecutionMode == STEPS_PARALLEL and
+                protocol.numberOfMpi > 1):
+                program = 'pw_protocol_mpirun.py'
+                mpi = protocol.numberOfMpi.get() + 1
+            else:
+                program = 'pw_protocol_run.py'
+                mpi = 1
+            
+            runJob(None, program, '%s %s' % (self.getId(), protocol.strId()),
+                   numberOfMpi=mpi, runInBackground=True)
         
-    def runProtocol(self, protocol):
-        """Directly execute the protocol"""
+    def runProtocol(self, protocol, mpiComm=None):
+        """Directly execute the protocol.
+        mpiComm is only used when the protocol steps are execute
+        with several MPI nodes.
+        """
         protocol.mapper = self.mapper
+        protocol._stepsExecutor = StepExecutor()
+        if protocol.stepsExecutionMode == STEPS_PARALLEL:
+            if protocol.numberOfMpi > 1:
+                protocol._stepsExecutor = MPIStepExecutor(protocol.numberOfMpi.get(), mpiComm)
+            elif protocol.numberOfThreads > 1:
+                protocol._stepsExecutor = ThreadStepExecutor(protocol.numberOfThreads.get()) 
         protocol.run()
         
     def continueProtocol(self, protocol):

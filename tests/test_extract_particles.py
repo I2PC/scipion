@@ -16,7 +16,7 @@ from tests.tester import *
 #prot2 = ProtImportMicrographs(pattern=pattern, samplingRate=1, voltage=200)
 #proj.launchProtocol(prot2, wait=True)
 
-coords = proj.mapper.selectByClass('XmippSetOfCoordinates')
+coords = proj.mapper.selectByClass('EmanSetOfCoordinates')
 
 mics = proj.mapper.selectByClass('SetOfMicrographs')
 

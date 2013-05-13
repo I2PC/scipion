@@ -32,7 +32,7 @@ each EM-software packages.
 import os
 import shutil
 from pyworkflow.object import String, Float
-from pyworkflow.protocol import Protocol
+from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
 from pyworkflow.em import Micrograph, SetOfMicrographs, TiltedPair
 from pyworkflow.utils.path import removeBaseExt, join, basename
@@ -86,9 +86,9 @@ class ProtImportMicrographs(Protocol):
         Register other parameters.
         """
         from glob import glob
-        files = glob(pattern)
-        if len(files) == 0:
-            raise Exception('importMicrographs:There is not files matching pattern')
+        filePaths = glob(pattern)
+        if len(filePaths) == 0:
+            raise Exception('importMicrographs:There is not filePaths matching pattern')
         path = self._getPath('micrographs.sqlite')
         micSet = SetOfMicrographs(path, tiltPairs=tiltPairs)
         micSet.microscope.voltage.set(voltage)
@@ -100,7 +100,7 @@ class ProtImportMicrographs(Protocol):
         outFiles = [path]
         
         i = 0
-        for f in files:
+        for f in filePaths:
             dst = self._getPath(basename(f))            
             shutil.copyfile(f, dst)
             mic_dst = Micrograph(dst)
@@ -120,6 +120,8 @@ class ProtImportMicrographs(Protocol):
         
         return outFiles
     
+    def getFiles(self):
+        return self.outputMicrographs.getFiles()
 
 class DefCTFMicrographs(Form):
     """ Create the definition of parameters for
@@ -170,6 +172,10 @@ class DefCTFMicrographs(Form):
 class ProtCTFMicrographs(Protocol):
     """ Base class for all protocols that estimates the CTF"""
     _definition = DefCTFMicrographs()
+
+    def __init__(self, **args):
+        Protocol.__init__(self, **args)
+        self.stepsExecutionMode = STEPS_PARALLEL 
     
     def _iterMicrographs(self):
         """ Iterate over micrographs and yield

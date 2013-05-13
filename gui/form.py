@@ -58,6 +58,7 @@ class BoolVar():
     def get(self):
         return self.tkVar.get() == 1   
     
+    
 class PointerVar():
     """Wrapper around tk.StringVar to hold object pointers"""
     def __init__(self):
@@ -73,7 +74,32 @@ class PointerVar():
         self.tkVar.set(v)   
             
     def get(self):
-        return self.value        
+        return self.value
+    
+    
+class ComboVar():
+    """ Create a variable that display strings (for combobox)
+    but the values are integers (for the underlying EnumParam).
+    """
+    def __init__(self, enum):
+        self.tkVar = tk.StringVar()
+        self.enum = enum
+        self.value = None
+        self.trace = self.tkVar.trace
+        
+    def set(self, value):
+        self.value = value
+        self.tkVar.set(self.enum.choices[value])
+                    
+    def get(self):
+        v = self.tkVar.get()
+        self.value = None
+        for i, c in enumerate(self.enum.choices):
+            if c == v:
+                self.value = i
+            
+        return self.value         
+        
         
 class SectionFrame(tk.Frame):
     """This class will be used to create a section in FormWindow"""
@@ -196,14 +222,14 @@ class ParamWidget():
             rb2.grid(row=0, column=1, padx=2, sticky='w')
             
         elif t is EnumParam:
-            var = tk.IntVar()
+            var = ComboVar(param)
             if param.display == EnumParam.DISPLAY_COMBO:
-                combo = ttk.Combobox(content, textvariable=var, state='readonly')
+                combo = ttk.Combobox(content, textvariable=var.tkVar, state='readonly')
                 combo['values'] = param.choices
                 combo.grid(row=0, column=0)
             elif param.display == EnumParam.DISPLAY_LIST:
                 for i, opt in enumerate(param.choices):
-                    rb = tk.Radiobutton(content, text=opt, variable=var, value=i)
+                    rb = tk.Radiobutton(content, text=opt, variable=var.tkVar, value=opt)
                     rb.grid(row=i, column=0, sticky='w')
             else:
                 raise Exception("Invalid display value '%s' for EnumParam" % str(param.display))

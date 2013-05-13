@@ -8,10 +8,10 @@ import paramiko
 import os
 import shutil
 from pyworkflow.utils.path import *
-from utils.log import *
+from pyworkflow.utils.log import *
 
 LOCAL_USER_AND_HOST = ''
-SSH_PORT = '22';
+SSH_PORT = 22;
 PAIRS_SEPARATOR = ':'
 
 log = getGeneralLogger('pyworkflow.utils.file_transfer')
@@ -31,7 +31,7 @@ class FileTransfer():
         
     def transferFiles(self,
                       filePaths, 
-                      hostsPaswords, 
+                      hostsPasswords, 
                       gatewayHosts = None,
                       operationId = 1, 
                       numberTrials = 1,                        
@@ -41,12 +41,12 @@ class FileTransfer():
         Key is the source file path and value the target file paths.
         """
         classifiedFiles = self.__classifyFilePaths(filePaths)
-        print ('Classified files to transfer: ' + str(classifiedFiles))
+        #print ('Classified files to transfer: ' + str(classifiedFiles))
         
         for userAndHostPairs, cursorFilePaths in classifiedFiles.iteritems():
             self.__sendFilesBetweenPairs(userAndHostPairs, 
                                          cursorFilePaths,
-                                         hostsPaswords, 
+                                         hostsPasswords, 
                                          gatewayHosts,
                                          operationId, 
                                          numberTrials,                        
@@ -62,7 +62,7 @@ class FileTransfer():
         
     def deleteFiles(self, 
                     filePaths,                    
-                    hostsPaswords, 
+                    hostsPasswords, 
                     gatewayHosts=None, 
                     operationId=1, 
                     numberTrials=1, 
@@ -85,21 +85,21 @@ class FileTransfer():
                 # Recover host credentials to remove files
                 userName = self.__getUserAndHost(userAndHost)[0]
                 hostName = self.__getUserAndHost(userAndHost)[1]
-                hostPassword = hostsPaswords[userAndHost]
+                hostPassword = hostsPasswords[userAndHost]
                 # Create ssh session to remote host
-                print "Connecting to: " + userName + "@" + hostName
+                log.info("Connecting to: " + userName + "@" + hostName)
                 self.ssh.connect(hostName, SSH_PORT, userName, hostPassword)
                 self.sftp = self.ssh.open_sftp()
                 for resultFilePath in resultFilePaths:
                     filePath = self.__getLocationAndFilePath(resultFilePath)[1]
-                    print "Deleting " + filePath
+                    log.info("Deleting file " + filePath)
                     self.sftp.remove(filePath)
             else:
                 pass
             
     def deleteDirectories(self, 
                           directoryPaths,                    
-                          hostsPaswords, 
+                          hostsPasswords, 
                           gatewayHosts=None, 
                           operationId=1, 
                           numberTrials=1, 
@@ -122,19 +122,21 @@ class FileTransfer():
                 # Recover host credentials to remove files
                 userName = self.__getUserAndHost(userAndHost)[0]
                 hostName = self.__getUserAndHost(userAndHost)[1]
-                hostPassword = hostsPaswords[userAndHost]
+                hostPassword = hostsPasswords[userAndHost]
                 # Create ssh session to remote host
-                print "Connecting to: " + userName + "@" + hostName
+                log.info("Connecting to: " + userName + "@" + hostName)
                 self.ssh.connect(hostName, SSH_PORT, userName, hostPassword)
                 self.sftp = self.ssh.open_sftp()
                 for resultDirectoryPath in resultDirectoryPaths:
-                    self.sftp.rmdir(self.__getLocationAndFilePath(resultDirectoryPath)[1])
+                    directoryName = self.__getLocationAndFilePath(resultDirectoryPath)[1]
+                    log.info("Deleting directory " + directoryName)
+                    self.sftp.rmdir()
             else:
                 pass
         
     def checkFiles(self, 
                    filePaths,                   
-                   hostsPaswords,
+                   hostsPasswords,
                    gatewayHosts=None,  
                    operationId=1, 
                    numberTrials=1, 
@@ -158,15 +160,18 @@ class FileTransfer():
                 # Recover host credentials
                 userName = self.__getUserAndHost(userAndHost)[0]
                 hostName = self.__getUserAndHost(userAndHost)[1]
-                hostPassword = hostsPaswords[userAndHost]
+                hostPassword = hostsPasswords[userAndHost]
                 # Create ssh session to remote host
-                print "Connecting to: " + userName + "@" + hostName
+                log.info("Connecting to: " + userName + "@" + hostName)
                 self.ssh.connect(hostName, SSH_PORT, userName, hostPassword)
                 self.sftp = self.ssh.open_sftp()
                 for resultFilePath in resultFilePaths:
+                    filePath = self.__getLocationAndFilePath(resultFilePath)[1]
+                    log.info("Checking: " + filePath)
                     try:
-                        self.sftp.lstat(self.__getLocationAndFilePath(resultFilePath)[1])                    
+                        self.sftp.lstat(filePath)                    
                     except IOError:
+                        log.info("Check fail!!")
                         returnFilePaths.append(resultFilePath)
             else:
                 pass
@@ -259,7 +264,7 @@ class FileTransfer():
     def __sendFilesBetweenPairs(self, 
                                 userAndHostPairs, 
                                 filePaths,
-                                hostsPaswords, 
+                                hostsPasswords, 
                                 gatewayHosts = None,
                                 operationId = 1, 
                                 numberTrials = 1,                        
@@ -291,8 +296,8 @@ class FileTransfer():
         # If the operation involves local and remote machine we create ssh session to remote host
         if (localAndRemote):
             remoteUserAndHostParts = self.__getUserAndHost(remoteUserAndHost)
-            print "Connecting to: " + remoteUserAndHostParts[0] + "@" + remoteUserAndHostParts[1]
-            self.ssh.connect(remoteUserAndHostParts[1], SSH_PORT, remoteUserAndHostParts[0], hostsPaswords[remoteUserAndHost])
+            log.info("Connecting to: " + remoteUserAndHostParts[0] + "@" + remoteUserAndHostParts[1])
+            self.ssh.connect(remoteUserAndHostParts[1], SSH_PORT, remoteUserAndHostParts[0], hostsPasswords[remoteUserAndHost])
             self.sftp = self.ssh.open_sftp()
                 
                 
@@ -402,37 +407,38 @@ class FileTransfer():
                 resultFilePaths.append(filePath);
         return resultFilePaths
     
-    def __copyLocalFile(self, sourceFile, targetFile):
+    def __copyLocalFile(self, sourceFilePath, targetFilePath):
         """
         Send local file to remote machine
-        sourceFile -- Source file path (/file path/...).
-        targetFile -- Target file path (/file path/...).
+        sourceFilePath -- Source file path (/file path/...).
+        targetFilePath -- Target file path (/file path/...).
         """
-        self.__createLocalFolderForFile(targetFile)
-        shutil.copy2(sourceFile, targetFile)
+        log.info("Copying " + sourceFilePath + " to " + targetFilePath)
+        createFolderForFile(targetFilePath)
+        shutil.copy2(sourceFilePath, targetFilePath)
         
-    def __sendLocalFile(self, sourceFile, targetFile, gatewayHosts, sftp):
+    def __sendLocalFile(self, sourceFilePath, targetFilePath, gatewayHosts, sftp):
         """
         Send local file to remote machine
-        sourceFile -- Source file path (/file path/...).
-        targetFile -- Target file path (/file path/...).
+        sourceFilePath -- Source file path (/file path/...).
+        targetFilePath -- Target file path (/file path/...).
         sftp -- sftp connection.
         """
-        print "Sending " + sourceFile + " to " + targetFile
-        self.__createRemoteFolderForFile(targetFile, sftp)
-        sftp.put(sourceFile, targetFile)
+        log.info("Sending " + sourceFilePath + " to " + targetFilePath)
+        self.__createRemoteFolderForFile(targetFilePath, sftp)
+        sftp.put(sourceFilePath, targetFilePath)
         
         
-    def __getRemoteFile(self, sourceFile, targetFile, sftp):
+    def __getRemoteFile(self, sourceFilePath, targetFilePath, sftp):
         """
         Send local file to remote machine
-        sourceFile -- Source file path (/file path/...).
-        targetFile -- Target file path (/file path/...).
+        sourceFilePath -- Source file path (/file path/...).
+        targetFilePath -- Target file path (/file path/...).
         sftp -- sftp connection.
         """
-        print "Getting " + sourceFile + " to " + targetFile
-        self.__createLocalFolderForFile(targetFile)
-        sftp.get(sourceFile, targetFile)
+        log.info("Getting " + sourceFilePath + " to " + targetFilePath)
+        createFolderForFile(targetFilePath)
+        sftp.get(sourceFilePath, targetFilePath)
     
     def __createRemoteFolderForFile(self, filePath, sftp):
         """
@@ -465,14 +471,6 @@ class FileTransfer():
         if not exist:
             self.__mkdirP(os.path.dirname(remoteDirectory), sftp)
             sftp.mkdir(remoteDirectory) 
-            
-    def __createLocalFolderForFile(self, filePath):
-        """
-        Create folder for file in local host if it does not exist.
-        filePath -- File path which parent directory we must create (/file path/...).
-        """
-        filePathParentDirectory = os.path.dirname(filePath)
-        makePath(filePathParentDirectory)
     
 ################################################################
 

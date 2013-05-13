@@ -1,0 +1,169 @@
+/* CSS Document */
+html,body {
+	background-color: Gainsboro;
+}
+
+input {
+	background: LightGray;
+}
+
+.box {
+	/* 	border: 2px solid black; */
+	margin: 0.3em;
+	width: 30em;
+	height: 30em;
+	/* 	background: white; */
+	overflow-y: scroll;
+	overflow-x: hidden;
+	padding-right: 0.5em;
+	margin-top: -1.4em
+}
+
+.section {
+	margin-bottom: -0.5em;
+	background: white;
+}
+
+.title {
+	background: DarkRed;
+	color: white;
+	border-left: 2.5px solid FireBrick;
+	border-top: 2.5px solid FireBrick;
+	font-size: 0.9em;
+	font-weight: bold;
+	margin-bottom: 0em;
+}
+
+.element {
+	width: 27em;
+	margin: 0.4em;
+/* 	background: blue; */
+}
+
+.recommended {
+	font-weight: bold;
+/* 	background: red; */
+}
+
+.normal {
+	font-weight: normal;
+}
+
+.boolean {
+	/* 	border: 1px solid lightgray; */
+	width: auto;
+	margin: 0 0.2em 0 0.2em;
+	font-weight: normal;
+}
+
+.option {
+	display: list-item;
+	margin-left: 9em;
+	margin-top: -1em;
+	text-decoration: none;
+	list-style: none;
+	/* 	background: LightGray; */
+	width: 9em;
+/* 	background: green; */
+}
+
+.icoHelp {
+	float: right;
+}
+
+.icoHelp:hover {
+	background-color: FireBrick;
+}
+
+.icoBrowse {
+	float: right;
+	margin-right: -2.5em;
+	margin-top: 0.2em;
+}
+
+.icoBrowse:hover {
+	background-color: FireBrick;
+}
+
+.boxBottom {
+	/* 	border: 1px solid black; */
+	width: 30em;
+	height: 4em;
+}
+
+.left {
+	width: 15em;
+	float: left;
+}
+
+.right {
+	width: 6.5em;
+	float: right;
+}
+
+.expertise {
+	margin-left: 0.7em;
+	width: 10em;
+}
+
+.buttonClose {
+	background: url(../../../resources/dialog_close.png) 0.5em no-repeat;
+	background-size: 20%;
+	margin: 1em 0.5em 0 0;
+	font-size: 0.8em;
+	color: black;
+	width: 6.3em;
+	height: 2em;
+	background-color: LightGray;
+	border: 1px solid #000066;
+	padding: 1px;
+	padding-left: 1.7em;
+	font-weight: bold;
+	letter-spacing: 0.2em;
+	text-align: center;
+	font-weight: bold;
+}
+
+.buttonClose:hover {
+	background-color: white;
+}
+
+.buttonSave {
+	background: url(../../../resources/document_save24.png) 0.5em no-repeat;
+	background-size: 20%;
+	margin: 1em 0.5em 0 0;
+	font-size: 0.8em;
+	color: black;
+	width: 6.3em;
+	height: 2em;
+	background-color: LightGray;
+	border: 1px solid #000066;
+	padding: 1px;
+	padding-left: 2em;
+	font-weight: bold;
+	letter-spacing: 0.2em;
+	text-align: center;
+}
+
+.buttonSave:hover {
+	background-color: white;
+}
+
+.buttonExec {
+	margin-top: 3em;
+	font-size: 0.8em;
+	color: white;
+	width: 8em;
+	height: 2em;
+	background-color: DarkRed;
+	border: 1px solid #000066;
+	padding: 1px;
+	font-weight: bold;
+	letter-spacing: 0.2em;
+	text-align: center;
+	font-size: 0.8em;
+}
+
+.buttonExec:hover {
+	background-color: FireBrick;
+}

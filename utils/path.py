@@ -80,10 +80,11 @@ def joinExt(*extensions):
 def cleanPath(*paths):
     """Remove a list of paths, either folders or files"""
     for p in paths:
-        if isdir(p):
-            shutil.rmtree(p)
-        else:
-            os.remove(p)
+        if exists(p):
+            if isdir(p):
+                shutil.rmtree(p)
+            else:
+                os.remove(p)
             
 def makePath(*paths):
     """Create a list of paths if they don't exists"""
@@ -101,3 +102,11 @@ def existsPath(*paths):
 def getHomePath(user=''):
     """Return the home path of a give user."""
     return expanduser("~" + user)
+
+def createFolderForFile(filePath):
+    """
+    Create folder for file in local host if it does not exist.
+    filePath -- File path which parent directory we must create (/file path/...).
+    """
+    filePathParentDirectory = os.path.dirname(filePath)
+    makePath(filePathParentDirectory)

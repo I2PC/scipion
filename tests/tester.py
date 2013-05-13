@@ -30,9 +30,10 @@ class MyProtocol(Protocol):
         Protocol.__init__(self, **args)
         self.name = String(args.get('name', None))
         self.numberOfSleeps = Integer(args.get('n', 1))
+        self.runMode = Integer(MODE_RESUME)
         
     def sleep(self, t, s):
-        log = self._getPath("step_%02d.txt" % self.currentStep)
+        log = self._getPath("step_%02d.txt" % t)
         import time 
         time.sleep(t)
         f = open(log, 'w+')
@@ -54,9 +55,6 @@ class TestPyworkflow(unittest.TestCase):
         self.seq = range(10)
         # Create reference complex values
         self.cGold = complex(1.0, 1.0)
-        # Some filenames:
-        self.sqliteFile = 'SQLMapper.sqlite'
-        self.xmlFile = 'XMLMapper.xml'
         
     def getTestPath(self, *filenames):
         """Return the path to the pyworkflow/tests dir
@@ -227,6 +225,7 @@ class TestPyworkflow(unittest.TestCase):
         fn = self.getTmpPath("protocol.sqlite")   
         mapper = SqliteMapper(fn, globals())
         prot = MyProtocol(mapper=mapper, n=2, workingDir=self.getTmpPath(''))
+        prot._stepsExecutor = StepExecutor()
         prot.run()
         
         self.assertEqual(prot._steps[0].status, STATUS_FINISHED)

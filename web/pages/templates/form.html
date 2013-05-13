@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang='es'>
+<head>
+<title>Protocol Run: {{protocol}}</title>
+<meta charset='utf-8'>
+<link rel="icon" type="image/png" href={{favicon}} />
+<link href={{css}} rel="stylesheet" type="text/css">
+<!-- JS Libs -->
+<script src={{jquery}} type="text/javascript"></script>
+<script src={{form}} type="text/javascript"></script>
+</head>
+<body>
+	<h3>Protocol: {{protocol}}</h3>
+	<div class="box">
+		<div class="section">
+			<p class="title">General</p>
+			<div class="element">
+				<span class="recommended">Run Name</span><input type="text"
+					name="runName" /> <a href=""><img class="icoHelp" src={{help}} />
+				</a>
+			</div>
+			<div class="element">
+				<span class="normal">Show Comment?</span><span class="boolean">
+					<input type="radio" name="comment" value="Yes"
+					onChange="javascript:alert('prueba');" />Yes
+				</span><span class="boolean"> <input type="radio" name="comment"
+					value="No" onChange="javascript:alert('prueba');" checked />No
+				</span>
+			</div>
+			<div class="element">
+				<span class="normal">Comment:</span> <input type="text"
+					name="comment" /> <a href=""><img class="icoHelp" src={{help}} /></a>
+			</div>
+		</div>
+		<div class="section">
+			<p class="title">Input</p>
+			<div class="element">
+				<span class="normal">Coordinates</span> <input type="text"
+					name="coordinates" /> <a class="icoHelp" href=""><img
+					class="icoHelp" src={{help}} /></a> <a href=""><img
+					class="icoBrowse" src={{browse}} /> </a>
+			</div>
+			<div class="element">
+				<span class="recommended">Downsampling type</span>
+				<div class="option">
+					<input type="radio" name="downsampling" value="original"
+						onChange="javascript:alert('prueba');" checked /> original<br />
+					<input type="radio" name="downsampling" value="sameAsPicking"
+						onChange="javascript:alert('prueba');" /> same as picking<br />
+					<input type="radio" name="downsampling" value="other"
+						onChange="javascript:alert('prueba');" /> other<br />
+				</div>
+				<a href=""><img class="icoHelp" src={{help}} /></a>
+			</div>
+			<div class="element">
+				<span class="normal">Micrographs</span> <input type="text"
+					name="micrographs" /> <a href=""><img class="icoHelp"
+					src={{help}} /></a> <a href=""> <img class="icoBrowse"
+					src={{browse}} />
+				</a>
+			</div>
+			<div class="element">
+				<span class="normal">Family</span> <input type="text" name="family"
+					value="DefaultFamily" /> <a href=""><img class="icoHelp"
+					src={{help}} /></a>
+			</div>
+			<div class="element">
+				<span class="normal">Particle box size</span> <input type="text"
+					name="boxSize" value="0" /> <a href=""><img class="icoHelp"
+					src={{help}} /></a>
+			</div>
+		</div>
+		<div class="section">
+			<p class="title">Preprocess</p>
+			<div class="element">
+				<span class="recommended">Dust Removal (Recomended)</span><span
+					class="boolean"><input type="radio" name="dustRemoval"
+					value="yes" onChange="javascript:evalCondition($(this));"
+					data-ref="threshold" checked />Yes </span><span class="boolean"> <input
+					type="radio" name="dustRemoval" value="no"
+					onChange="javascript:evalCondition($(this));" />No <a href=""><img
+						class="icoHelp" src={{help}} /></a>
+				</span>
+			</div>
+			<div class="element" id="threshold">
+				<span class="normal">Threshold for dust removal</span> <input
+					type="text" name="threshold" /> <a href=""><img
+					class="icoHelp" src={{help}} /></a>
+			</div>
+			<div class="element">
+				<span class="recommended">Phase flipping (Recomended)</span><span
+					class="boolean"><input type="radio" name="phaseFlipping"
+					value="Yes" onChange="javascript:alert('prueba');" checked />Yes </span><span
+					class="boolean"> <input type="radio" name="phaseFlipping"
+					value="No" onChange="javascript:alert('prueba');" />No <a href=""><img
+						class="icoHelp" src={{help}} /></a>
+				</span>
+			</div>
+			<div class="element">
+				<span class="recommended">Invert contrast</span><span
+					class="boolean"><input type="radio" name="invert"
+					value="Yes" onChange="javascript:alert('prueba');" />Yes </span><span
+					class="boolean"> <input type="radio" name="invert"
+					value="No" onChange="javascript:alert('prueba');" checked />No <a
+					href=""><img class="icoHelp" src={{help}} /></a>
+				</span>
+			</div>
+			<div class="element">
+				<span class="recommended">Normalize (Recomended)</span><span
+					class="boolean"><input type="radio" name="normalize"
+					value="Yes" onChange="javascript:alert('prueba');" checked />Yes </span><span
+					class="boolean"> <input type="radio" name="normalize"
+					value="No" onChange="javascript:alert('prueba');" />No <a href=""><img
+						class="icoHelp" src={{help}} /></a>
+				</span>
+			</div>
+			<div class="element">
+				<span class="recommended">Normalization type</span>
+				<div class="option">
+					<input type="radio" name="normalization" value="original"
+						onChange="javascript:alert('prueba');" checked />OldXmipp<br />
+					<input type="radio" name="normalization" value="sameAsPicking"
+						onChange="javascript:alert('prueba');" />NewXmipp<br /> <input
+						type="radio" name="normalization" value="other"
+						onChange="javascript:alert('prueba');" />Ramp<br />
+				</div>
+				<a href=""><img class="icoHelp" src={{help}} /></a>
+			</div>
+			<div class="element">
+				<span class="recommended">Background radius</span> <input
+					type="text" name="backgroundRadius" value="-1" /> <a href=""><img
+					class="icoHelp" src={{help}} /></a>
+			</div>
+		</div>
+	</div>
+	<div class="boxBottom">
+		<div class="left">
+			Expert Level:<select class="expertise" name="expLevel" size=1
+				onChange="javascript:alert('prueba');">
+				<option value="Normal">Normal</option>
+				<option value="Advanced">Advanced</option>
+				<option value="Expert">Expert</option>
+			</select> <a href=""><button class="buttonClose" type="button">Close</button></a>
+			<a href=""><button class="buttonSave" type="button">Save</button></a>
+		</div>
+		<div class="right">
+			<a href=""><button class="buttonExec" type="button">Execute</button></a>
+		</div>
+	</div>
+</body>
+</html>

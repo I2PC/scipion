@@ -30,7 +30,7 @@ import sys
 from os.path import abspath, dirname
 FULLPATH = abspath(__file__)
 sys.path.append(dirname(dirname(dirname(FULLPATH))))
-from pyworkflow.manager import Manager
+from pyworkflow.utils import runProtocol
 
 
 
@@ -43,13 +43,9 @@ if __name__ == '__main__':
         print "projName: ", projName
         print "protId: ", protId
         
+        runProtocol(projName, protId)
         
-        manager = Manager()
-        project = manager.createProject(projName) # Now it will be loaded if exists
-        protocol = project.mapper.selectById(protId)
-        if protocol is None:
-            print "Not protocol found"
-        project.runProtocol(protocol)
+
         #protocol.run()
         #protocol.printAll()
     else:

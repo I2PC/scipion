@@ -14,8 +14,7 @@ class EmanDefParticlePicking(Form):
     the Eman Boxing protocol.
     """
     def __init__(self):
-        Form.__init__(self)
-        
+        Form.__init__(self)        
         self.addSection(label='Input')
         self.addParam('inputMicrographs', PointerParam, label="Micrographs", pointerClass='SetOfMicrographs')
         self.addParam('boxSize', IntParam, label='Box size')
@@ -49,16 +48,20 @@ class EmanProtBoxing(ProtParticlePicking):
         program = "e2boxer.py"
         arguments = "%(inputMics)s --gui --boxsize=%(boxSize)i"
         # Run the command with formatted parameters
-        runJob(None, program, arguments % self._params)
+        self._log.info('Launching... ' + program + ' ' + arguments % self._params)
+        self.runJob(None, program, arguments % self._params)
         
     def createOutput(self):
         # Get the box size store in Eman db
-        print "current dir: ", os.getcwd()
         self._params['boxSize'] = self.__getBoxingBoxSize()
-        runJob(None, "pwd; e2boxer.py", 
-                     "%(inputMics)s --boxsize=%(boxSize)d --write_dbbox" % self._params)   
-        # Create the SetOfCoordinates object on the database        
-        self.outputCoordinates = EmanSetOfCoordinates(filename=os.getcwd())
+        program = "pwd; e2boxer.py"
+        arguments = "%(inputMics)s --boxsize=%(boxSize)i --write_dbbox"
+        self._log.info('Creating output... ' + program + ' ' + arguments % self._params)
+        self.runJob(None, program, arguments % self._params) 
+        # As we move to workingDir we must leave it. 
+        self._leaveWorkingDir()      
+        # Create the SetOfCoordinates object on the database 
+        self.outputCoordinates = EmanSetOfCoordinates(filename=self.workingDir.get())
         self.outputCoordinates.setBoxSize(self._params['boxSize'])
         self.outputCoordinates.setMicrographs(self.inputMicrographs.get())
         self._defineOutputs(outputCoordinates=self.outputCoordinates) 
@@ -76,5 +79,9 @@ class EmanProtBoxing(ProtParticlePicking):
         if auxBoxSize is None:
             raise Exception("Error getting the stored boxsize with command: " + command) 
         return auxBoxSize
+    
+    def getFiles(self):
+        filePaths = self.inputMicrographs.get().getFiles() | self.outputCoordinates.getFiles()
+        return filePaths
 
     

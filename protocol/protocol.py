@@ -32,15 +32,19 @@ import os
 import datetime as dt
 import pickle
 
-from pyworkflow.object import OrderedObject, String, List, Integer, Boolean
+from pyworkflow.object import OrderedObject, String, List, Integer, Boolean, CsvList
 from pyworkflow.utils.path import replaceExt, makePath, join, existsPath, cleanPath
-from pyworkflow.utils.process import runJob
+from pyworkflow.utils.log import *
 
-STATUS_LAUNCHED = "launched"  # launched to queue system
+STATUS_LAUNCHED = "launched"  # launched to queue system, only usefull for protocols
 STATUS_RUNNING = "running"    # currently executing
 STATUS_FAILED = "failed"      # it have been failed
 STATUS_FINISHED = "finished"  # successfully finished
 STATUS_WAITING_APPROVAL = "waiting approval"    # waiting for user interaction
+
+# Following steps are only used for steps parallel execution
+STATUS_READY = "ready" # The step is ready for execution, i.e. all requirements are done
+STATUS_WAITING_OTHERS = "waiting_others" # There are some prerequisites steps that are not done yet
 
 
 class Step(OrderedObject):
@@ -52,13 +56,12 @@ class Step(OrderedObject):
         OrderedObject.__init__(self, **args)
         self._inputs = []
         self._outputs = []
+        self._prerequisites = CsvList() # which steps needs to be done first
         self.status = String()
         self.initTime = String()
         self.endTime = String()
         self.error = String()
         self.isInteractive = Boolean(False)
-        self.runStartsCallback = None # Used to monitor the Step Starts(Observer pattern)
-        self.runFinishCallback = None # Used to monitor the Step Finish(Observer pattern)
         
     def _storeAttributes(self, attrList, attrDict):
         """ Store all attributes in attrDict as 
@@ -93,33 +96,42 @@ class Step(OrderedObject):
         It should be override by sub-classes.""" 
         pass
     
-    def run(self):
-        """ Do the job of this step""" 
+    def setRunning(self):
+        """ The the state as STATE_RUNNING and 
+        set the init and end times.
+        """
         self.initTime.set(dt.datetime.now())
         self.endTime.set(None)
+        self.status.set(STATUS_RUNNING)
+        
+    def setFailed(self, msg):
+        """ Set the run failed and store an error message. """
+        self.status.set(STATUS_FAILED)
+        self.error.set(msg)
+        
+    def run(self):
+        """ Do the job of this step"""
+        self.setRunning() 
         try:
-            self.status.set(STATUS_RUNNING)
-            if not self.runStartsCallback is None:
-                self.runStartsCallback(self)
             self._run()
-            if self.isInteractive.get():
-                # If the Step is interactive, after run
-                # it will be waiting for use to mark it as DONE
-                status = STATUS_WAITING_APPROVAL
-            else:
-                status = STATUS_FINISHED
-            self.status.set(status)
+            if self.status == STATUS_RUNNING:
+                if self.isInteractive.get():
+                    # If the Step is interactive, after run
+                    # it will be waiting for use to mark it as DONE
+                    status = STATUS_WAITING_APPROVAL
+                else:
+                    
+                    status = STATUS_FINISHED
+                self.status.set(status)
         except Exception, e:
-            self.status.set(STATUS_FAILED)
-            self.error.set(e)
+            self.setFailed(str(e))
             import traceback
             traceback.print_exc()
             
             raise #only in development
         finally:
             self.endTime.set(dt.datetime.now())
-            if not self.runFinishCallback is None:
-                self.runFinishCallback(self)
+
 
 class FunctionStep(Step):
     """ This is a Step wrapper around a normal function
@@ -140,17 +152,17 @@ class FunctionStep(Step):
         if resultFiles and len(resultFiles):
             missingFiles = existsPath(*resultFiles)
             if len(missingFiles):
-                raise Exception('Missing files: ' + ' '.join(missingFiles))
+                raise Exception('Missing filePaths: ' + ' '.join(missingFiles))
             self.resultFiles = String(pickle.dumps(resultFiles))
     
     def _postconditions(self):
         """ This type of Step, will simply check
-        as postconditions that the result files exists""" 
+        as postconditions that the result filePaths exists""" 
         if not hasattr(self, 'resultFiles'):
             return True
-        files = pickle.loads(self.resultFiles.get())
+        filePaths = pickle.loads(self.resultFiles.get())
 
-        return len(existsPath(*files)) == 0
+        return len(existsPath(*filePaths)) == 0
     
     def __eq__(self, other):
         """ Compare with other FunctionStep""" 
@@ -170,22 +182,25 @@ class RunJobStep(FunctionStep):
     """ This Step will wrapper the commonly used function runJob
     for launching specific programs with some parameters""" 
     def __init__(self, programName=None, arguments=None, resultFiles=[], **args):
-        FunctionStep.__init__(self, 'runJob', programName, arguments)
-        # Define the function that will do the job and return result files
+        FunctionStep.__init__(self, 'self.runJob', programName, arguments)
+        # Define the function that will do the job and return result filePaths
         self.func = self._runJob
         self.mpi = 1
         self.threads = 1
         
     def _runJob(self, programName, arguments):
         """ Wrap around runJob function""" 
-        runJob(None, programName, arguments, 
+        self.runJob(None, programName, arguments, 
                numberOfMpi=self.mpi, numberOfThreads=self.threads)
         #TODO: Add the option to return resultFiles
              
 
-MODE_RESUME = "resume"
-MODE_RESTART = "restart"
-MODE_CONTINUE = "continue"
+MODE_RESUME = 0
+MODE_RESTART = 1
+MODE_CONTINUE = 2
+
+STEPS_SERIAL = 0
+STEPS_PARALLEL = 1
          
                 
 class Protocol(Step):
@@ -195,10 +210,9 @@ class Protocol(Step):
     """
     
     def __init__(self, **args):
-        Step.__init__(self, **args)
-        self.mode = String(args.get('mode', MODE_RESUME))
+        Step.__init__(self, **args)        
         self._steps = List() # List of steps that will be executed
-        self.workingDir = String(args.get('workingDir', '.')) # All generated files should be inside workingDir
+        self.workingDir = String(args.get('workingDir', '.')) # All generated filePaths should be inside workingDir
         self.mapper = args.get('mapper', None)
         self._createVarsFromDefinition(**args)
         # For non-parallel protocols mpi=1 and threads=1
@@ -206,6 +220,9 @@ class Protocol(Step):
             self.numberOfMpi = Integer(1)
         if not hasattr(self, 'numberOfThreads'):
             self.numberOfThreads = Integer(1)
+        # Maybe this property can be inferred from the 
+        # prerequisites of steps, but is easier to keep it
+        self.stepsExecutionMode = STEPS_SERIAL
         
     def _createVarsFromDefinition(self, **args):
         """ This function will setup the protocol instance variables
@@ -249,11 +266,22 @@ class Protocol(Step):
         """ Define all the steps that will be executed. """
         pass
     
-    def __insertStep(self, step):
-        """ Insert a new step in the list. """
+    def __insertStep(self, step, **args):
+        """ Insert a new step in the list. 
+        Posible values for **args:
+        prerequisites: a list with the steps index that need to be done 
+           previous than the current one."""
+        prerequisites = args.get('prerequisites', None)
+        if prerequisites is None:
+            if len(self._steps):
+                step._prerequisites.append(len(self._steps)) # By default add the previous step as prerequisite
+        else:
+            for i in prerequisites:
+                step._prerequisites.append(i)
+                
         self._steps.append(step)
-        step.runStartsCallback = self._stepStarted
-        step.runFinishCallback = self._stepFinished
+        # Return step number
+        return len(self._steps)
         
     def _getPath(self, *paths):
         """ Return a path inside the workingDir. """
@@ -271,20 +299,22 @@ class Protocol(Step):
         """ Input params:
         funcName: the string name of the function to be run in the Step.
         *funcArgs: the variable list of arguments to pass to the function.
-        **args: variable dictionary with extra params, NOT USED NOW.
+        **args: see __insertStep
         """
-        step = FunctionStep(funcName, *funcArgs, **args)
+        step = FunctionStep(funcName, *funcArgs)
         step.func = getattr(self, funcName)
-        self.__insertStep(step)
+        return self.__insertStep(step, **args)
         
     def _insertRunJobStep(self, progName, progArguments, resultFiles=[], **args):
         """ Insert an Step that will simple call runJob function
-        **args: variable dictionary with extra params, NOT USED NOW.
+        **args: see __insertStep
         """
         step = RunJobStep(progName, progArguments, resultFiles)
-        step.mpi = self.numberOfMpi.get()
-        step.threads = self.numberOfThreads.get()
-        self.__insertStep(step)
+        step.runJob = self.runJob
+        if self.stepsExecutionMode == STEPS_SERIAL:
+            step.mpi = self.numberOfMpi.get()
+            step.threads = self.numberOfThreads.get()
+        return self.__insertStep(step, **args)
         
     def _enterWorkingDir(self):
         """ Change to the protocol working dir. """
@@ -312,11 +342,11 @@ class Protocol(Step):
         and not changed steps. Steps that needs to be done, will be deleted
         from the previous run storage.
         """
-        if self.mode.get() == MODE_RESTART:
+        if self.runMode == MODE_RESTART:
             return 0
         
         n = min(len(self._steps), len(self._prevSteps))
-        print "len(steps)", len(self._steps), "len(prevSteps)", len(self._prevSteps)
+        self._log.info("len(steps) " + str(len(self._steps)) + " len(prevSteps) " + str(len(self._prevSteps)))
         
         for i in range(n):
             newStep = self._steps[i]
@@ -350,10 +380,8 @@ class Protocol(Step):
         """This function will be called whenever an step
         has started running.
         """
-        print "STARTED: " + step.funcName.get()
+        self._log.info("STARTED: " + step.funcName.get())
         self.status.set(step.status)
-        #self.mapper.insertChild(self._steps, self._steps.getIndexStr(self.currentStep),
-        #                 step, self.namePrefix)
         self._store(step)
     
     def _stepFinished(self, step):
@@ -362,55 +390,67 @@ class Protocol(Step):
         """
         self.endTime.set(step.endTime.get())
         self._store(self.endTime, step)
-        self.currentStep += 1
-        if step.status == STATUS_FAILED:
-            raise Exception("Protocol failed: " + step.error.get())
-        print "FINISHED: ", step.funcName.get()
+        doContinue = True
+        if self.status == STATUS_WAITING_APPROVAL:
+            doContinue = False
+            self.status.set(STATUS_WAITING_APPROVAL)
+        elif self.status == STATUS_FAILED:
+            doContinue = False
+            self.setFailed("Protocol failed: " + step.error.get())
+        self._log.info("FINISHED: " + step.funcName.get())
+        return doContinue
     
     def _runSteps(self, startIndex):
         """ Run all steps defined in self._steps. """
         self._steps.setStore(True) # Set steps to be stored
-        self.status.set(STATUS_RUNNING)
+        self.setRunning()
         self._store()
         
         status = STATUS_FINISHED # Just for the case doesn't enter in the loop
-        print ">>> Starting at step: ", startIndex
-        for step in self._steps[startIndex:]:
-            step.run()
-            status = step.status.get()
-            if status == STATUS_WAITING_APPROVAL:
-                break
+        
+        self._stepsExecutor.runSteps(self._steps[startIndex:], 
+                                     self._stepStarted, self._stepFinished)
         self.status.set(status)
         self._store(self.status)
-            
+        
+    def _makePathsAndClean(self):
+        """ Create the necessary path or clean
+        if in RESTART mode. 
+        """
+        # Clean working path if in RESTART mode
+        paths = [self.workingDir.get(), self._getExtraPath(), self._getTmpPath()]
+        if self.runMode == MODE_RESTART:
+            cleanPath(*paths)
+            self.mapper.deleteChilds(self) # Clean old values
+            self.mapper.insertChilds(self)
+        # Create workingDir, extra and tmp paths
+        makePath(*paths)        
     
     def _run(self):
+        self.runJob = self._stepsExecutor.runJob
         self.__backupSteps() # Prevent from overriden previous stored steps
         self._defineSteps() # Define steps for execute later
+        self._makePathsAndClean()
         startIndex = self.__findStartingStep() # Find at which step we need to start
         self.__cleanStepsFrom(startIndex) # 
-        
-        paths = [self.workingDir.get(), self._getExtraPath(), self._getTmpPath()]
-        
-        # Clean working path if in RESTART mode
-        if self.mode.get() == MODE_RESTART:
-            cleanPath(*paths)
-        # Create workingDir, extra and tmp paths
-        makePath(*paths)
-        
         self._runSteps(startIndex)
         
-
     def run(self):
-        print 'RUNNING PROTOCOL -----------------'
-        print "   workingDir: ", self.workingDir.get()
-        self.currentStep = 1
+        self._log = self.__getLogger()
+        self._log.info('RUNNING PROTOCOL -----------------')
+        self._log.info('      runMode: %d' % self.runMode.get())
+        self._log.info('   workingDir: ' + self.workingDir.get())
         #self.namePrefix = replaceExt(self._steps.getName(), self._steps.strId()) #keep
         self._currentDir = os.getcwd() 
         self._run()
         outputs = [getattr(self, o) for o in self._outputs]
         #self._store(self.status, self.initTime, self.endTime, *outputs)
         self._store()
-        print '------------------- PROTOCOL FINISHED'
+        self._log.info('------------------- PROTOCOL FINISHED')
+        
+    def __getLogger(self):
+        #Initialize log
+        logFile = self._getPath('log', 'protocol.log')
+        return getFileLogger(logFile)
 
 

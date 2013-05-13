@@ -87,3 +87,12 @@ def prettySize(size):
     if size == 1:
         return '1 byte'
     
+def getUniqueItems(originalList):
+    """ 
+    Method to remove repeated items from one list 
+    originalList -- Original list with repeated items, or not.
+    returns -- New list with the content of original list without repeated items
+    """  
+    auxDict = {}
+    resultList = [auxDict.setdefault(x,x) for x in originalList if x not in auxDict]
+    return resultList

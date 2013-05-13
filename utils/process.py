@@ -27,35 +27,36 @@
 """
 This module handles process execution
 """
-import sys
+import os, sys
 
 # The job should be launched from the working directory!
 def runJob(log, programname, params,           
-           numberOfMpi=1, numberOfThreads=1, runInBackground=False):
+           numberOfMpi=1, numberOfThreads=1, 
+           runInBackground=False):
 
     command = buildRunCommand(log, programname, params,
                               numberOfMpi, numberOfThreads, runInBackground)
+    
     if log is None:
         #TODO: printLog("Running command: %s" % greenStr(command),log)
         print "Running command: %s" % command
-        pass
 
+    runCommand(command)
+        
+
+def runCommand(command):
     from subprocess import call
     retcode = 1000
     try:
-        #TODO: check differences and possibles improvements by using subprocess Python module
         retcode = call(command, shell=True, stdout=sys.stdout, stderr=sys.stderr)
-        if log:
-            #TODO: printLog("Process returned with code %d" % retcode,log)
-            pass
         if retcode != 0:
             raise Exception("Process returned with code %d, command: %s" % (retcode,command))
     except OSError, e:
         raise Exception("Execution failed %s, command: %s" % (e, command))
 
     return retcode
-
-
+    
+    
 def buildRunCommand(log, programname, params,
                     numberOfMpi, numberOfThreads, runInBackground):
     if numberOfMpi <= 1:
@@ -86,3 +87,16 @@ def loadHostConfig(host='localhost'):
     mapper = ExecutionHostMapper(fn)
     return mapper.selectAll()[0]
 
+
+def runProtocol(projId, protId, mpiComm=None):
+    """ Given a project and a protocol run, execute.
+    This is a factory function to instantiate necessary classes.
+    The protocol run should be previously inserted in the database.
+    """
+    from pyworkflow.manager import Manager
+    manager = Manager()
+    project = manager.createProject(projId) # Now it will be loaded if exists
+    protocol = project.mapper.selectById(protId)
+    if protocol is None:
+        raise Exception("Not protocol found with id: %d" % protId)
+    project.runProtocol(protocol, mpiComm)

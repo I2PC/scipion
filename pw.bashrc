@@ -1,7 +1,0 @@
-PW_HOME=.
-
-export PYTHONPATH=$PW_HOME/..:$PYTHONPATH
-export PATH=$PW_HOME/apps:$PATH
-
-# For XMIPP
-export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$PYTHONPATH

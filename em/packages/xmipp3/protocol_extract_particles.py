@@ -33,7 +33,6 @@ from pyworkflow.em import *
 from convert import convertCTFModel 
 from pyworkflow.em.packages.xmipp3.data import *
 from pyworkflow.utils.path import makePath, removeBaseExt, join, exists
-from pyworkflow.utils import runJob
 from protlib_particles import runNormalize
 from glob import glob
 import xmipp
@@ -74,18 +73,18 @@ class XmippDefExtractParticles(Form):
                       'actual particles may be smaller than this.')
         
         self.addSection(label='Preprocess')
-        self.addParam('DoRemoveDust', BooleanParam, default=True, important=True,
+        self.addParam('doRemoveDust', BooleanParam, default=True, important=True,
                       label='Dust removal (Recommended)', 
                       help='Sets pixels with unusually large values to random values from a Gaussian '
                       'with zero-mean and unity-standard deviation.')
-        self.addParam('thresholdDust', FloatParam, default=3.5, condition='DoRemoveDust',
+        self.addParam('thresholdDust', FloatParam, default=3.5, condition='doRemoveDust',
                       label='Threshold for dust removal',
                       help='Pixels with a signal higher or lower than this value times the standard '
                       'deviation of the image will be affected. For cryo, 3.5 is a good value.'
                       'For high-contrast negative stain, the signal itself may be affected so '
                       'that a higher value may be preferable.',
                       expertLevel=LEVEL_ADVANCED)
-        self.addParam('DoFlip', BooleanParam, default=True, important=True,
+        self.addParam('doFlip', BooleanParam, default=True, important=True,
                       label='Phase flipping (Recommended)', 
                       help='Use the information from the CTF to compensate for phase reversals.')
         self.addParam('doInvert', BooleanParam, default=False, important=True,
@@ -148,14 +147,14 @@ class XmippProtExtractParticles(ProtExtractParticles):
             micrographToExtract = fn
         
             # If downsample type is 'other' perform a downsample
-            if self.downsampleType.get() == self.OTHER:
+            if self.downsampleType == self.OTHER:
                 fnDownsampled = self._getTmpPath(removeBaseExt(fn)+"_downsampled.xmp")
                 downFactor = self.downFactor.get()
                 args = "-i %(micrographToExtract)s -o %(fnDownsampled)s --step %(downFactor)f --method fourier"
                 self._insertRunJobStep("xmipp_transform_downsample", args % locals())
                 micographToExtract = fnDownsampled
             # If remove dust 
-            if self.DoRemoveDust:
+            if self.doRemoveDust:
                 fnNoDust = self._getTmpPath(removeBaseExt(fn)+"_noDust.xmp")
                 
                 thresholdDust = self.thresholdDust.get() #TODO: remove this extra variable
@@ -164,7 +163,7 @@ class XmippProtExtractParticles(ProtExtractParticles):
                 micographToExtract = fnNoDust
                 
             # Flipping if micrograph has CTF model
-            if self.DoFlip:
+            if self.doFlip:
                 if mic.hasCTF():
                     fnFlipped = self._getTmpPath(removeBaseExt(fn)+"_flipped.xmp")
                     fnCTFTmp = self._getTmpPath("tmp.ctfParam")
@@ -172,7 +171,7 @@ class XmippProtExtractParticles(ProtExtractParticles):
                     fnCTF = xmippCTF.getFileName()
                     args = " -i %(micrographToExtract)s --ctf %(fnCTF)s -o %(fnFlipped)s"
                     # If some downsampling has been performed (either before picking or now) pass the downsampling factor 
-                    if self.downsampleType.get() != self.ORIGINAL:
+                    if self.downsampleType != self.ORIGINAL:
                         downFactor = self.samplingFinal/xmippCTF.samplingRate.get()
                         args += " --downsampling %(downFactor)f"
                         self._insertRunJobStep("xmipp_ctf_phase_flip", args % locals())
@@ -207,7 +206,7 @@ class XmippProtExtractParticles(ProtExtractParticles):
             if self.doInvert:
                 args += " --invert"
         
-            runJob(None,"xmipp_micrograph_scissor", args)
+            self.runJob(None,"xmipp_micrograph_scissor", args)
             # Normalize 
             if self.doNormalize:
                 runNormalize(None, outputRoot + '.stk',self.normaType.get(), self.backRadius.get(), 1)          
@@ -249,7 +248,7 @@ class XmippProtExtractParticles(ProtExtractParticles):
         imgSet.copyInfo(self.inputMics)
         
                 
-        if self.downsampleType.get() == self.OTHER:
+        if self.downsampleType == self.OTHER:
             imgSet.samplingRate.set(self.inputMics.samplingRate.get()*self.downFactor.get())
         
         stackFiles = glob(join(self._getExtraPath(),"*.stk"))

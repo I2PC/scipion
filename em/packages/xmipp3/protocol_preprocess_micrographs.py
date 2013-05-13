@@ -84,12 +84,17 @@ class XmippDefPreprocessMicrograph(Form):
                       label='Downsampling factor',
                       help='Non-integer downsample factors are possible. Must be larger than 1.')
     
-
+        self.addParallelSection(threads=2, mpi=1)
+        
 class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     """Protocol to preprocess a set of micrographs in the project"""
     _definition = XmippDefPreprocessMicrograph()
     _label = 'Xmipp Micrographs Preprocessing'
     
+
+    def __init__(self, **args):        
+        ProtPreprocessMicrographs.__init__(self, **args)
+        self.stepsExecutionMode = STEPS_PARALLEL
         
     def _defineSteps(self):
         '''for each micrograph insert the steps to preprocess it
@@ -109,14 +114,16 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                        'stddev': self.mulStddev.get()}
         
         # For each micrograph insert the steps to preprocess it
+        pre = []
         for mic in self.inputMics:
             fn = mic.getFileName()
             fnOut = self._getPath(os.path.basename(fn))
-            self.__insertStepsForMicrograph(fn, fnOut)
+            stepId = self.__insertStepsForMicrograph(fn, fnOut)
+            pre.append(stepId)
             IOTable[fn] = fnOut
         
         # Insert step to create output objects       
-        self._insertFunctionStep('createOutput', IOTable)
+        self._insertFunctionStep('createOutput', IOTable, prerequisites=pre)
         
     def __insertOneStep(self, condition, program, arguments):
         """Insert operation if the condition is met.
@@ -127,13 +134,18 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
             if self.params['inputMic'] != self.params['outputMic']:
                 arguments += " -o %(outputMic)s"
             # Insert the command with the formatted parameters
-            self._insertRunJobStep(program, arguments % self.params)
+            self.lastStepId = self._insertRunJobStep(program, arguments % self.params,
+                                                     prerequisites=self.prerequisites)
+            self.prerequisites = [self.lastStepId] # next should depend on this step
             # Update inputMic for next step as outputMic
             self.params['inputMic'] = self.params['outputMic']
             
     def __insertStepsForMicrograph(self, inputMic, outputMic):
         self.params['inputMic'] = inputMic
         self.params['outputMic'] = outputMic
+        self.lastStepId = None
+        self.prerequisites = [] # First operation should not depend on nothing before
+        
         # Downsample
         self.__insertOneStep(self.doDownsample, "xmipp_transform_downsample",
                             "-i %(inputMic)s --step %(downFactor)f --method fourier")
@@ -147,6 +159,8 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         self.__insertOneStep(self.doRemoveBadPix, "xmipp_transform_filter",
                             " -i %(inputMic)s --bad_pixels outliers %(stddev)f -v 0")
                 
+        return self.lastStepId
+    
     def createOutput(self, IOTable):
         
         mdOut = "Micrographs@" + self._getPath("micrographs.xmd")    
