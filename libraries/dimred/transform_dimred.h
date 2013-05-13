@@ -79,6 +79,9 @@ public:
     /// Correlation distance between two images
     double progCorrelationDistance(size_t i1, size_t i2);
 
+    //Extract a number of random projections well sampled in the projection sphere
+    void extractRandomProjections();
+
 };
 //@}
 #endif
