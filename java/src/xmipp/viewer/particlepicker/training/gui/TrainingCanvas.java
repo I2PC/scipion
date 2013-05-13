@@ -76,7 +76,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			else if (SwingUtilities.isLeftMouseButton(e) && micrograph.fits(x, y, frame.getParticlePicker().getSize()))
 			{
 				p = new TrainingParticle(x, y, frame.getParticlePicker(), micrograph);
-				micrograph.addManualParticle(p, ppicker, frame.isCenterParticle());
+				micrograph.addManualParticle(p, ppicker, frame.isCenterParticle(), true);
 				active = p;
 				refresh();
 			}
@@ -116,12 +116,12 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			{
 				micrograph.removeParticle(active, ppicker);
 				active = new TrainingParticle(active.getX(), active.getY(), ppicker, micrograph);
-				micrograph.addManualParticle(active, ppicker, frame.isCenterParticle());
+				micrograph.addManualParticle(active, ppicker, frame.isCenterParticle(), true);
 			}
 			else
 			{
-				if(!activemoved)
-					ppicker.removeParticleFromTemplates(active);
+//				if(!activemoved)
+//					ppicker.removeParticleFromTemplates(active);
 				setActiveMoved(true);
 				moveActiveParticle(x, y);
 			}
@@ -182,7 +182,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 
 			micrograph.removeParticle(active, ppicker);
 			active = new TrainingParticle(active.getX(), active.getY(), active.getParticlePicker(), micrograph);
-			micrograph.addManualParticle(active, ppicker, frame.isCenterParticle());
+			micrograph.addManualParticle(active, ppicker, frame.isCenterParticle(), true);
 			repaint();
 		}
 		else

@@ -112,7 +112,7 @@ public class TrainingMicrograph extends Micrograph
 		return autoparticles;
 	}
 
-	public void addManualParticle(TrainingParticle p, SingleParticlePicker ppicker, boolean center)
+	public void addManualParticle(TrainingParticle p, SingleParticlePicker ppicker, boolean center, boolean totemplates)
 	{
 		if (!p.getMicrograph().fits(p.getX(), p.getY(), ppicker.getSize()))
 			System.err.format("Warning: ignoring particle out of bounds: x=%d, y=%d in micrograph: %s\n", p.getX(), p.getY(), p.getMicrograph());
@@ -129,7 +129,9 @@ public class TrainingMicrograph extends Micrograph
 				throw new IllegalArgumentException(
 						String.format("Micrograph %s could not update its state to %s and can't keep previous state %s and have particles", getName(), state, MicrographState.Available));
 		}
-		if (ppicker.getMode() == Mode.Manual)
+		if (center)
+			ppicker.centerParticle(p);
+		if (totemplates && ppicker.getMode() == Mode.Manual)
 			TasksManager.getInstance().addTask(new ParticleToTemplatesTask(p));
 	}
 
@@ -154,8 +156,7 @@ public class TrainingMicrograph extends Micrograph
 			if (manualparticles.size() == 0 && autoparticles.size() - getAutomaticParticlesDeleted() == 0)
 				state = MicrographState.Available;
 		}
-		if (ppicker.getMode() == Mode.Manual)
-			ppicker.removeParticleFromTemplates((TrainingParticle) p);
+		
 
 	}
 

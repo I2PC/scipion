@@ -52,6 +52,7 @@ public class SingleParticlePicker extends ParticlePicker
 	public SingleParticlePicker(String block, String selfile, String outputdir, Mode mode)
 	{
 		super(block, selfile, outputdir, mode);
+		
 	}
 	
 	public SingleParticlePicker(String selfile, String outputdir, String reviewfile)
@@ -142,7 +143,7 @@ public class SingleParticlePicker extends ParticlePicker
 		return templatesfile;
 	}
 
-	public void saveTemplates()
+	public synchronized void saveTemplates()
 	{
 		try
 		{
@@ -156,64 +157,7 @@ public class SingleParticlePicker extends ParticlePicker
 		
 	}
 	
-	public void addParticleToTemplates(TrainingParticle particle, boolean center)
-	{
-		try
-		{
-			Particle shift = null;
-//			Family family = particle.getFamily();
-			if(particle instanceof AutomaticParticle)
-				throw new IllegalArgumentException(XmippMessage.getIllegalStateForOperationMsg("particle", "Automatic"));
-			ImageGeneric igp = particle.getImageGeneric();
-			//will happen only in manual mode
-			if (templateindex < getTemplatesNumber())// index starts at one
-			{
-				setTemplate(igp);
-			}
-			else
-			{
-				if (center)
-				{
-					shift = getTemplates().bestShift(igp);
-					particle.setX(particle.getX() + shift.getX());
-					particle.setY(particle.getY() + shift.getY());
-				}
-				double[] align = getTemplates().alignImage(igp);
-				particle.setLastalign(align);
-//				System.out.printf("adding: %.2f %.2f %.2f %.2f\n", align[0], align[1], align[2], align[3]);
-				
-			}
-			saveTemplates();
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
-		}
 
-	}
-	
-	public void removeParticleFromTemplates(TrainingParticle particle)
-	{
-		
-		try
-		{
-			
-//			Family family = particle.getFamily();
-			if(particle instanceof AutomaticParticle)
-				throw new IllegalArgumentException(XmippMessage.getIllegalStateForOperationMsg("particle", "Automatic"));
-			ImageGeneric igp = particle.getImageGeneric();
-//			System.out.printf("removing: %d %.2f %.2f %.2f\n", particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
-			getTemplates().removeAlignment(igp, particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
-			saveTemplates();
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
-		}
-
-	}
 	
 	
 	public ImagePlus getTemplatesImage(long i) {
@@ -708,7 +652,7 @@ public class SingleParticlePicker extends ParticlePicker
 			}
 			cost = hasCost ? md.getValueDouble(MDLabel.MDL_COST, id) : 0;
 			if (cost == 0 || cost > 1)
-				tm.addManualParticle(new TrainingParticle(x, y, this, tm, cost), this, false);
+				tm.addManualParticle(new TrainingParticle(x, y, this, tm, cost), this, false, true);
 			else
 				tm.addAutomaticParticle(new AutomaticParticle(x, y, this, tm, cost, false), true);
 		}
@@ -836,11 +780,8 @@ public class SingleParticlePicker extends ParticlePicker
 		if (getMode() != Mode.Manual)
 			return;
 
-		
 		if (!hasManualParticles())
 			return;
-		System.out.println("update templates");
-		
 
 		initTemplates();
 		ImageGeneric igp;
@@ -856,10 +797,13 @@ public class SingleParticlePicker extends ParticlePicker
 					particles = m.getManualParticles();
 					particle = particles.get(i);
 					igp = particle.getImageGeneric();
-					if (i < getTemplatesNumber())
+					if (templateindex < getTemplatesNumber())
 						setTemplate(igp);
 					else
+					{
 						align = getTemplates().alignImage(igp);
+						applyAlignment(particle, igp, align);
+					}
 				}
 			}
 			

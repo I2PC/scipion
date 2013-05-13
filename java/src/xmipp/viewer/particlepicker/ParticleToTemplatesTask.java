@@ -30,7 +30,6 @@ public class ParticleToTemplatesTask implements Task
 				picker.setTemplate(igp);
 			else
 			{
-				
 				double[] align = picker.getTemplates().alignImage(igp);
 				picker.applyAlignment(particle, igp, align);
 
