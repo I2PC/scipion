@@ -945,10 +945,33 @@ public class SingleParticlePicker extends ParticlePicker
 
 	}
 
-	private void loadManualParticles(TrainingMicrograph micrograph2, String outputPath)
+	public void loadManualParticles(Micrograph micrograph, String file)
 	{
-		// TODO Auto-generated method stub
+		if (!new File(file).exists())
+			return;
 		
+		int x, y;
+		TrainingParticle particle;
+
+		try
+		{
+			MetaData md = new MetaData(file);
+
+			for (long id : md.findObjects())
+			{
+
+				x = md.getValueInt(MDLabel.MDL_XCOOR, id);
+				y = md.getValueInt(MDLabel.MDL_YCOOR, id);
+				particle = new TrainingParticle(x, y, this, micrograph);
+				micrograph.addManualParticle(particle, this, false, false);
+			}
+			md.destroy();
+		}
+		catch (Exception e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e.getMessage());
+		}
 	}
 
 }
