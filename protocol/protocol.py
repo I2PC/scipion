@@ -33,7 +33,7 @@ import datetime as dt
 import pickle
 
 from pyworkflow.object import OrderedObject, String, List, Integer, Boolean
-from pyworkflow.utils.path import replaceExt, makePath, join, existsPath, cleanPath
+from pyworkflow.utils.path import replaceExt, makePath, join, existsPath, cleanPath, getFolderFiles
 from pyworkflow.utils.process import runJob
 from pyworkflow.utils.log import *
 
@@ -365,6 +365,7 @@ class Protocol(Step):
         self._store(self.endTime, step)
         self.currentStep += 1
         if step.status == STATUS_FAILED:
+            self._log.error("Protocol failed: " + step.error.get())
             raise Exception("Protocol failed: " + step.error.get())
         self._log.info("FINISHED: " + step.funcName.get())
     
@@ -375,7 +376,7 @@ class Protocol(Step):
         self._store()
         
         status = STATUS_FINISHED # Just for the case doesn't enter in the loop
-        self._log.info(">>> Starting at step: " + str(startIndex))
+        self._log.info("Starting at step: " + str(startIndex))
         for step in self._steps[startIndex:]:
             step.run()
             status = step.status.get()
@@ -404,8 +405,8 @@ class Protocol(Step):
 
     def run(self):
         self._log = self.__getLogger()
-        self._log.info('RUNNING PROTOCOL -----------------')
-        self._log.info('   workingDir: ' + self.workingDir.get())
+        self._log.info(' ## RUNNING PROTOCOL ## ')
+        self._log.info('    workingDir: ' + self.workingDir.get())
         self.currentStep = 1
         #self.namePrefix = replaceExt(self._steps.getName(), self._steps.strId()) #keep
         self._currentDir = os.getcwd() 
@@ -413,11 +414,12 @@ class Protocol(Step):
         outputs = [getattr(self, o) for o in self._outputs]
         #self._store(self.status, self.initTime, self.endTime, *outputs)
         self._store()
-        self._log.info('------------------- PROTOCOL FINISHED')
+        self._log.info(' ## PROTOCOL FINISHED ## ')
         
     def __getLogger(self):
         #Initialize log
         logFile = self._getPath('log', 'protocol.log')
         return getFileLogger(logFile)
 
-
+    def getFiles(self):
+        return getFolderFiles(self.workingDir)

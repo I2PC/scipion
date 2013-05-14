@@ -7,6 +7,7 @@ import socket
 import paramiko
 import os
 import shutil
+import hashlib
 from pyworkflow.utils.path import *
 from pyworkflow.utils.log import *
 
@@ -414,8 +415,15 @@ class FileTransfer():
         targetFilePath -- Target file path (/file path/...).
         """
         log.info("Copying " + sourceFilePath + " to " + targetFilePath)
-        createFolderForFile(targetFilePath)
-        shutil.copy2(sourceFilePath, targetFilePath)
+        # Check if file already existsFilePath and it is up to date
+        existsFilePath = False
+        if (exists(targetFilePath)):
+            if ( self.__getLocalSHA1(sourceFilePath) ==  self.__getLocalSHA1(targetFilePath)):
+                existsFilePath = True
+                log.info(targetFilePath + " already existed")
+        if (not existsFilePath):                    
+            createFolderForFile(targetFilePath)
+            shutil.copy2(sourceFilePath, targetFilePath)
         
     def __sendLocalFile(self, sourceFilePath, targetFilePath, gatewayHosts, sftp):
         """
@@ -425,8 +433,19 @@ class FileTransfer():
         sftp -- sftp connection.
         """
         log.info("Sending " + sourceFilePath + " to " + targetFilePath)
-        self.__createRemoteFolderForFile(targetFilePath, sftp)
-        sftp.put(sourceFilePath, targetFilePath)
+        # Check if file already existsFilePath and it is up to date
+        existsFilePath = False
+        if (self.__existsRemotePath(targetFilePath, sftp)):
+            if ( self.__getLocalSHA1(sourceFilePath) ==  self.__getRemoteSHA1(targetFilePath, self.ssh)):
+                existsFilePath = True
+                log.info(targetFilePath + " already existed")
+        if (not existsFilePath):        
+            self.__createRemoteFolderForFile(targetFilePath, sftp)
+            try:
+                sftp.put(sourceFilePath, targetFilePath)
+            except IOError as err:
+                log.error("Fail sending local file " + sourceFilePath + " to remote file " + targetFilePath + " - " + str(err))
+                raise
         
         
     def __getRemoteFile(self, sourceFilePath, targetFilePath, sftp):
@@ -437,8 +456,19 @@ class FileTransfer():
         sftp -- sftp connection.
         """
         log.info("Getting " + sourceFilePath + " to " + targetFilePath)
-        createFolderForFile(targetFilePath)
-        sftp.get(sourceFilePath, targetFilePath)
+        # Check if file already existsFilePath and it is up to date
+        existsFilePath = False
+        if (exists(targetFilePath)):
+            if ( self.__getRemoteSHA1(sourceFilePath, self.ssh) ==  self.__getLocalSHA1(targetFilePath)):
+                existsFilePath = True
+                log.info(targetFilePath + " already existed")
+        if (not existsFilePath):        
+            createFolderForFile(targetFilePath)
+            try:
+                sftp.get(sourceFilePath, targetFilePath)
+            except IOError as err:
+                log.error("Fail getting remote file " + sourceFilePath + " to local file " + targetFilePath + " - " + str(err))
+                raise
     
     def __createRemoteFolderForFile(self, filePath, sftp):
         """
@@ -447,14 +477,7 @@ class FileTransfer():
         sftp -- Remote sftp session.
         """
         filePathParentDirectory = os.path.dirname(filePath)
-        # We check if this file path exist
-        try:
-            sftp.lstat(filePathParentDirectory)
-        except IOError:
-            # Directory does not exist            
-            #sftp.mkdir(filePathParentDirectory) this can not be used if it dos not exist folder and subfolder.
-            # self.ssh.exec_command('mkdir -p ' +filePathParentDirectory)
-            self.__mkdirP(filePathParentDirectory, sftp)
+        self.__mkdirP(filePathParentDirectory, sftp)
 
     def __mkdirP(self, remoteDirectory, sftp):
         """
@@ -462,15 +485,35 @@ class FileTransfer():
         remoteDirectory -- Remote directory to create.
         sftp -- Remote sftp session.
         """
-        exist = False
-        try:
-            sftp.lstat(remoteDirectory)
-            exist = True
-        except IOError:
-            exist = False 
-        if not exist:
+        if not self.__existsRemotePath(remoteDirectory, sftp):
             self.__mkdirP(os.path.dirname(remoteDirectory), sftp)
             sftp.mkdir(remoteDirectory) 
+            
+    def __getLocalSHA1(self, filePath):
+        (hashlib.sha1(file(filePath, 'r').read()).hexdigest())
+
+    def __getRemoteSHA1(self, filePath, ssh):
+        stdin, stdout, stderr = ssh.exec_command("sha1sum " + filePath)
+        """
+        print "-----> " + str(stdout.readlines())
+        print "-----> " + str(stdout.readlines())
+        print "-----> " + str(stdout.readlines())
+        """
+        return stdout.readlines()[0].split()[0]
+    
+    def __isRemoteDir(self, sftp, path):
+        try:
+            sftp.chdir(path)
+            return True
+        except IOError:
+            return False 
+    
+    def __existsRemotePath(self, path, sftp):
+        try:
+            sftp.lstat(path)
+            return True            
+        except IOError:
+            return False
     
 ################################################################
 
@@ -490,6 +533,7 @@ def getFilePathList(filePaths):
         for filePath in filePathList:
             resultFilePathList.append(filePath)
     return resultFilePathList
+
 
 if __name__ == '__main__':
     pass

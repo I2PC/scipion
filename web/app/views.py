@@ -30,6 +30,7 @@ def projects(request):
     logo_path = getResource('logoScipion')
     favicon_path = getResource('favicon')
     css_path = os.path.join(settings.STATIC_URL, 'css/projects_style.css')
+    general_css_path = os.path.join(settings.STATIC_URL, 'css/general_style.css')
     #############
     
     projects = manager.listProjects()
@@ -39,7 +40,8 @@ def projects(request):
     context = {'projects': projects,
                'logo': logo_path,
                'favicon': favicon_path,
-               'css':css_path}
+               'css':css_path,
+               'general_css' : general_css_path}
     
     return render_to_response('projects.html', context)
 
@@ -143,6 +145,7 @@ def project_content(request):
     logo_path = getResource('logoScipion')
     favicon_path = getResource('favicon')
     css_path = os.path.join(settings.STATIC_URL, 'css/project_content_style.css')
+    general_css_path = os.path.join(settings.STATIC_URL, 'css/general_style.css')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     jquery_cookie = os.path.join(settings.STATIC_URL, 'js/jquery.cookie.js')
     jquery_treeview = os.path.join(settings.STATIC_URL, 'js/jquery.treeview.js')
@@ -166,6 +169,7 @@ def project_content(request):
                'jquery_treeview': jquery_treeview,
                'launchTreeview': launchTreeview,
                'css':css_path,
+               'general_css' : general_css_path,
                'sections': root.childs,
                'provider':provider}
     

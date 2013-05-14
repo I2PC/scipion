@@ -1,0 +1,82 @@
+/* CSS Document */
+html,body {
+	width: 95%;
+	height: 95%;
+	margin: 10px auto;
+	padding: 5px 0;
+	text-align: left;
+	background: White;
+	/* 	background-color: FireBrick; */
+}
+
+#wrapper {
+	width: 100%;
+	height: 90%;
+	margin: 0 auto;
+	/*border: 2px solid black;*/
+}
+
+
+/* Header
+-----------------------------------------------------------------------------*/
+#header {
+	height: 4em;
+}
+
+
+/* Middle
+-----------------------------------------------------------------------------*/
+#middle {
+	width: 100%;
+	height: 100%;
+	position: relative;
+	/*border: 1px solid black;*/
+	padding: 10px 10px 10px 10px;
+	background: #F5F5F5;
+}
+#middle:after {
+	content: '';
+	clear: both;
+	display: table;
+}
+#container {
+	width: 100%;
+	float: left;
+	overflow: hidden;
+}
+#content {
+	padding: 0 0 0 390px;
+}
+
+
+/* Sidebar Left
+-----------------------------------------------------------------------------*/
+#sideLeft {
+	float: left;
+	width: 350px;
+	height: 97%;
+	margin-left: -100%;
+	position: relative;
+	
+	/*border: 1px solid black;*/
+	padding: 10px 10px 10px 10px;
+	background: #DCDCDC;
+}
+#sideLeft:after {
+	content: '';
+	clear: both;
+	display: table;
+}
+
+
+/* Footer
+-----------------------------------------------------------------------------*/
+#footer {
+	height: 100px;
+}
+
+.tittle {
+	font-size: 1em;
+	font-weight: bold;
+	text-align: center;
+}

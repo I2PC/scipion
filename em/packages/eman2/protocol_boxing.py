@@ -48,7 +48,7 @@ class EmanProtBoxing(ProtParticlePicking):
         program = "e2boxer.py"
         arguments = "%(inputMics)s --gui --boxsize=%(boxSize)i"
         # Run the command with formatted parameters
-        self._log.info('Launching... ' + program + ' ' + arguments % self._params)
+        self._log.info('Launching: ' + program + ' ' + arguments % self._params)
         runJob(None, program, arguments % self._params)
         
     def createOutput(self):
@@ -56,7 +56,7 @@ class EmanProtBoxing(ProtParticlePicking):
         self._params['boxSize'] = self.__getBoxingBoxSize()
         program = "pwd; e2boxer.py"
         arguments = "%(inputMics)s --boxsize=%(boxSize)i --write_dbbox"
-        self._log.info('Creating output... ' + program + ' ' + arguments % self._params)
+        self._log.info('Creating output: ' + program + ' ' + arguments % self._params)
         runJob(None, program, arguments % self._params) 
         # As we move to workingDir we must leave it. 
         self._leaveWorkingDir()      
@@ -81,7 +81,7 @@ class EmanProtBoxing(ProtParticlePicking):
         return auxBoxSize
     
     def getFiles(self):
-        filePaths = self.inputMicrographs.get().getFiles() | self.outputCoordinates.getFiles()
+        filePaths = self.inputMicrographs.get().getFiles() | ProtParticlePicking.getFiles()
         return filePaths
 
     

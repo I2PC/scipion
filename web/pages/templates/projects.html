@@ -5,8 +5,49 @@
 <meta charset='utf-8'>
 <link rel="icon" type="image/png" href={{favicon}} />
 <link href={{css}} rel="stylesheet" type="text/css">
+<link href={{general_css}} rel="stylesheet" type="text/css">
 </head>
 <body>
+
+	<div id="wrapper">
+
+		<div id="header">
+			<img class="logo" src={{logo}} alt="logoScipion" />
+		</div><!-- #header-->
+	
+		<div id="middle">
+			<div id="container">
+				<div id="content">					
+						<div class="tittle">CURRENT PROJECTS</div>
+						{% for project in projects %}
+						<ul>
+							<li class="projList"><strong><a href="/project_content/?project_name={{project.projName}}"
+									class="projName">{{project.projName}}</a></strong> <br /> Modified
+								{{project.pTime}} <a href="" class="projRemove">Delete project</a>
+							</li>
+						</ul>
+						{% endfor %}
+				</div><!-- #content-->
+			</div><!-- #container-->
+	
+			<div id="sideLeft" >	
+				<center>		
+					<button class="button" type="button">Create Project</button>
+				</center>
+			</div><!-- .sidebar#sideLeft -->
+	
+		</div><!-- #middle-->
+	
+		<div id="footer">
+			
+		</div><!-- #footer -->
+	
+	</div><!-- #wrapper -->
+
+
+
+
+<!-- 
 	<div class="box">
 		<div class="left">
 			<img class="logo" src={{logo}} alt="logoScipion" /> <br /> <br />
@@ -26,5 +67,7 @@
 			</fieldset>
 		</div>
 	</div>
+	
+ -->
 </body>
 </html>
