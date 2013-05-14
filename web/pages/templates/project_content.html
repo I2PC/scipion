@@ -26,13 +26,13 @@
 								<ul>
 									{% for prot in section.childs %} {% if prot.tag == 'protocol'%}
 									<li><span class="protocol"><a
-											href="javascript:popup('/form/?protocol={{prot.name}}')">{{prot.name}}</a></span></li>
+											href="javascript:popup('/formTable/?protocol={{prot.name}}')">{{prot.name}}</a></span></li>
 									{% elif prot.tag == 'protocol_base' %}
 									<li><span class="protocol_base">{{prot.name}}</span>
 										<ul>
 											{% for prot2 in prot.childs %}
 											<li><span class="protocol_class"> <a
-													href="javascript:popup('/form/?protocol={{prot2.name}}')">
+													href="javascript:popup('/formTable/?protocol={{prot2.name}}')">
 														{{prot2.name}} </a></span></li> {% endfor %}
 										</ul></li> {% else %} No athletes. {% endif %} {% endfor %}
 								</ul></li> {% endfor %}
@@ -44,7 +44,8 @@
 
 		<div class="right">
 			<h2 class="project_name">Project {{project_name}}</h2>
-			<fieldset class="projFieldset">
+			<!-- 			<fieldset class="projFieldset"> -->
+			<div class="projFieldset">
 				<table cellspacing='0'>
 					<tr>
 						{% for colName, colWidth in provider.getColumns %}
@@ -58,7 +59,8 @@
 					</tr>
 					{% endfor %}
 				</table>
-			</fieldset>
+			</div>
+			<!-- 			</fieldset> -->
 		</div>
 	</div>
 </body>

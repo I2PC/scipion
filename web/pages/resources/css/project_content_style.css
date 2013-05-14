@@ -230,7 +230,7 @@ table a:active,table a:hover {
 }
 
 table {
-	margin: -0.2em -1.5em 0em -1em;
+/* 	margin: -0.2em -1.5em 0em -1em; */
 	width: 41em;
 	font-size: 0.9em;
 	text-shadow: 1px 1px 0px #fff;
