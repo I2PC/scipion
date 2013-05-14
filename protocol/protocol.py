@@ -454,4 +454,4 @@ class Protocol(Step):
         return getFileLogger(logFile)
 
     def getFiles(self):
-        return getFolderFiles(self.workingDir)
+        return getFolderFiles(self.workingDir.get())

@@ -81,7 +81,7 @@ class EmanProtBoxing(ProtParticlePicking):
         return auxBoxSize
     
     def getFiles(self):
-        filePaths = self.inputMicrographs.get().getFiles() | ProtParticlePicking.getFiles()
+        filePaths = self.inputMicrographs.get().getFiles() | ProtParticlePicking.getFiles(self)
         return filePaths
 
     
