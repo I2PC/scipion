@@ -127,7 +127,7 @@ class Step(OrderedObject):
             import traceback
             traceback.print_exc()
             
-            raise #only in development
+            #raise #only in development
         finally:
             self.endTime.set(dt.datetime.now())
 
@@ -392,10 +392,10 @@ class Protocol(Step):
         doContinue = True
         if step.status == STATUS_WAITING_APPROVAL:
             doContinue = False
-            self.status.set(STATUS_WAITING_APPROVAL)
         elif step.status == STATUS_FAILED:
             doContinue = False
             self.setFailed("Protocol failed: " + step.error.get())
+        self.lastStatus = step.status.get()
         self._log.info("FINISHED: " + step.funcName.get())
         return doContinue
     
@@ -409,7 +409,7 @@ class Protocol(Step):
         
         self._stepsExecutor.runSteps(self._steps[startIndex:], 
                                      self._stepStarted, self._stepFinished)
-        #self.status.set(status)
+        self.status.set(self.lastStatus)
         self._store(self.status)
         
     def _makePathsAndClean(self):
