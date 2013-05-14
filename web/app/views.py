@@ -170,7 +170,7 @@ def project_content(request):
                'jquery_treeview': jquery_treeview,
                'launchTreeview': launchTreeview,
                'css':css_path,
-               'general_css' : general_css_path,
+#               'general_css' : general_css_path,
                'sections': root.childs,
                'provider':provider}
     

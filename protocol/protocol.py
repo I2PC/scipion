@@ -410,7 +410,7 @@ class Protocol(Step):
         
         self._stepsExecutor.runSteps(self._steps[startIndex:], 
                                      self._stepStarted, self._stepFinished)
-        self.status.set(self.lastStatus))
+        self.status.set(self.lastStatus)
         self._store(self.status)
         
     def _makePathsAndClean(self):
