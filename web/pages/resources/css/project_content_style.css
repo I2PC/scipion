@@ -35,23 +35,26 @@ a {
 .left {
 	text-align: right;
 	width: 14em;
+	height: 19em;
 	float: left;
 	background: white;
 }
 
 .protTree {
 	height: 30em;
-	width: 16.5em;
+	width: 19em;
 	text-align: left;
 	margin-left: 1em;
+	margin-top: 0em;
 }
 
 .protFieldsetTree {
-	height: 27.8em;
-	width: 17em;
+	border: 2px solid black;
+	height: 29em;
+	width: 18em;
 	overflow-y: scroll;
 	overflow-x: hidden;
-	margin: -0.5em -1em -0.6em -1em;
+	margin: 0em;
 	border: none;
 }
 
@@ -103,7 +106,8 @@ a {
 }
 
 .treeview .hitarea {
-	background: url(../../../resources/treeview-default.gif) -64px -25px no-repeat;
+	background: url(../../../resources/treeview-default.gif) -64px -25px
+		no-repeat;
 	height: 16px;
 	width: 16px;
 	margin-left: -16px;
@@ -136,7 +140,7 @@ a {
 }
 
 .treeview li {
-/* 	background: url(../images/treeview-default-line.gif) 0 0 no-repeat; */
+	/* 	background: url(../images/treeview-default-line.gif) 0 0 no-repeat; */
 	background: 0 0 no-repeat;
 }
 

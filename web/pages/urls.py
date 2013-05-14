@@ -6,13 +6,9 @@ from django.conf import settings
 
 urlpatterns = patterns('',
     (r'^resources/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}),
-    
-#    (r'^resources_web/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_WEB_ROOT}),
-
     (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
                 
     # Examples:
-    # url(r'^$', 'ScipionWeb.views.home', name='home'),
     # url(r'^pages/', include('pages.foo.urls')),
 
     # Uncomment the admin/doc line below to enable admin documentation:

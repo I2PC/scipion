@@ -20,7 +20,7 @@ fieldset {
 }
 
 .box {
-	border: 2px solid black;
+/* 	border: 2px solid black; */
 	width: 45em;
 	height: 30em;
 	background: white;
