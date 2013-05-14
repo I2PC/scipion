@@ -11,55 +11,55 @@
 			<transfer>
 				<sourceFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/ScipionTestFiles/micrographs/KLH_Dataset_I_Test_0001.mrc</sourceFilePath>
 				<targets>
-					<targetFilePath>/home/antonio/Documents/Scipion/testFileTransfer/oneRemoteHostToLocal/KLH_Dataset_I_Test_0001.mrc</targetFilePath>
+					<targetFilePath>/home/antonio/Downloads/Scipion/testFileTransfer/oneRemoteHostToLocal/KLH_Dataset_I_Test_0001.mrc</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/ScipionTestFiles/micrographs/KLH_Dataset_I_Test_0002.mrc</sourceFilePath>
 				<targets>
-					<targetFilePath>/home/antonio/Documents/Scipion/testFileTransfer/oneRemoteHostToLocal/KLH_Dataset_I_Test_0002.mrc</targetFilePath>
+					<targetFilePath>/home/antonio/Downloads/Scipion/testFileTransfer/oneRemoteHostToLocal/KLH_Dataset_I_Test_0002.mrc</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/ScipionTestFiles/micrographs/coordinates_KLH_Dataset_I_Test_Mouche.xml</sourceFilePath>
 				<targets>
-					<targetFilePath>antonio@lineo:/home/antonio/Documents/Scipion/testFileTransfer/oneRemoteHostToLocal/other/coordinates_KLH_Dataset_I_Test_Mouche.xml</targetFilePath>
+					<targetFilePath>antonio@lineo:/home/antonio/Downloads/Scipion/testFileTransfer/oneRemoteHostToLocal/other/coordinates_KLH_Dataset_I_Test_Mouche.xml</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/ScipionTestFiles/micrographs/coordinates_KLH_Dataset_I_Test_Selexon.xml</sourceFilePath>
 				<targets>
-					<targetFilePath>antonio@lineo:/home/antonio/Documents/Scipion/testFileTransfer/oneRemoteHostToLocal/other/coordinates_KLH_Dataset_I_Test_Selexon.xml</targetFilePath>
+					<targetFilePath>antonio@lineo:/home/antonio/Downloads/Scipion/testFileTransfer/oneRemoteHostToLocal/other/coordinates_KLH_Dataset_I_Test_Selexon.xml</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/ScipionTestFiles/images32x.stk</sourceFilePath>
 				<targets>
-					<targetFilePath>antonio@lineo:/home/antonio/Documents/Scipion/testFileTransfer/oneRemoteHostToLocal/other/images32x.stk</targetFilePath>
+					<targetFilePath>antonio@lineo:/home/antonio/Downloads/Scipion/testFileTransfer/oneRemoteHostToLocal/other/images32x.stk</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/ScipionTestFiles/InputData/float maps/emd_1648.map.gz</sourceFilePath>
 				<targets>
-					<targetFilePath>/home/antonio/Documents/Scipion/testFileTransfer/oneRemoteHostToLocal/emd_1648_renamed.map.gz</targetFilePath>
+					<targetFilePath>/home/antonio/Downloads/Scipion/testFileTransfer/oneRemoteHostToLocal/emd_1648_renamed.map.gz</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/ScipionTestFiles/InputData/integer maps/emd_1051.map.gz</sourceFilePath>
 				<targets>
-					<targetFilePath>/home/antonio/Documents/Scipion/testFileTransfer/oneRemoteHostToLocal/emd_1051_renamed.map.gz</targetFilePath>
+					<targetFilePath>/home/antonio/Downloads/Scipion/testFileTransfer/oneRemoteHostToLocal/emd_1051_renamed.map.gz</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/ScipionTestFiles/InputData/integer maps/emd_1052.map.gz</sourceFilePath>
 				<targets>
-					<targetFilePath>/home/antonio/Documents/Scipion/testFileTransfer/oneRemoteHostToLocal/emd_1052_renamed.map.gz</targetFilePath>
+					<targetFilePath>/home/antonio/Downloads/Scipion/testFileTransfer/oneRemoteHostToLocal/emd_1052_renamed.map.gz</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/ScipionTestFiles/InputData/integer maps/emd_1053.map.gz</sourceFilePath>
 				<targets>
-					<targetFilePath>/home/antonio/Documents/Scipion/testFileTransfer/oneRemoteHostToLocal/emd_1053_renamed.map.gz</targetFilePath>
+					<targetFilePath>/home/antonio/Downloads/Scipion/testFileTransfer/oneRemoteHostToLocal/emd_1053_renamed.map.gz</targetFilePath>
 				</targets>
 			</transfer>
 		</transferList>
@@ -79,73 +79,73 @@
 			<transfer>
 				<sourceFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/ScipionTestFiles/micrographs/KLH_Dataset_I_Test_0001.mrc</sourceFilePath>
 				<targets>
-					<targetFilePath>/home/antonio/Documents/Scipion/testFileTransfer/severalRemoteHostToLocal/KLH_Dataset_I_Test_0001.mrc</targetFilePath>
+					<targetFilePath>/home/antonio/Downloads/Scipion/testFileTransfer/severalRemoteHostToLocal/KLH_Dataset_I_Test_0001.mrc</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/ScipionTestFiles/micrographs/KLH_Dataset_I_Test_0002.mrc</sourceFilePath>
 				<targets>
-					<targetFilePath>/home/antonio/Documents/Scipion/testFileTransfer/severalRemoteHostToLocal/KLH_Dataset_I_Test_0002.mrc</targetFilePath>
+					<targetFilePath>/home/antonio/Downloads/Scipion/testFileTransfer/severalRemoteHostToLocal/KLH_Dataset_I_Test_0002.mrc</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/ScipionTestFiles/micrographs/coordinates_KLH_Dataset_I_Test_Mouche.xml</sourceFilePath>
 				<targets>
-					<targetFilePath>antonio@lineo:/home/antonio/Documents/Scipion/testFileTransfer/severalRemoteHostToLocal/other/coordinates_KLH_Dataset_I_Test_Mouche.xml</targetFilePath>
+					<targetFilePath>antonio@lineo:/home/antonio/Downloads/Scipion/testFileTransfer/severalRemoteHostToLocal/other/coordinates_KLH_Dataset_I_Test_Mouche.xml</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/ScipionTestFiles/micrographs/coordinates_KLH_Dataset_I_Test_Selexon.xml</sourceFilePath>
 				<targets>
-					<targetFilePath>antonio@lineo:/home/antonio/Documents/Scipion/testFileTransfer/severalRemoteHostToLocal/other/coordinates_KLH_Dataset_I_Test_Selexon.xml</targetFilePath>
+					<targetFilePath>antonio@lineo:/home/antonio/Downloads/Scipion/testFileTransfer/severalRemoteHostToLocal/other/coordinates_KLH_Dataset_I_Test_Selexon.xml</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/ScipionTestFiles/images32x.stk</sourceFilePath>
 				<targets>
-					<targetFilePath>antonio@lineo:/home/antonio/Documents/Scipion/testFileTransfer/severalRemoteHostToLocal/other/images32x.stk</targetFilePath>
+					<targetFilePath>antonio@lineo:/home/antonio/Downloads/Scipion/testFileTransfer/severalRemoteHostToLocal/other/images32x.stk</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/ScipionTestFiles/InputData/float maps/emd_1648.map.gz</sourceFilePath>
 				<targets>
-					<targetFilePath>/home/antonio/Documents/Scipion/testFileTransfer/severalRemoteHostToLocal/emd_1648_renamed.map.gz</targetFilePath>
+					<targetFilePath>/home/antonio/Downloads/Scipion/testFileTransfer/severalRemoteHostToLocal/emd_1648_renamed.map.gz</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/ScipionTestFiles/InputData/integer maps/emd_1051.map.gz</sourceFilePath>
 				<targets>
-					<targetFilePath>/home/antonio/Documents/Scipion/testFileTransfer/severalRemoteHostToLocal/emd_1051_renamed.map.gz</targetFilePath>
+					<targetFilePath>/home/antonio/Downloads/Scipion/testFileTransfer/severalRemoteHostToLocal/emd_1051_renamed.map.gz</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/ScipionTestFiles/InputData/integer maps/emd_1052.map.gz</sourceFilePath>
 				<targets>
-					<targetFilePath>/home/antonio/Documents/Scipion/testFileTransfer/severalRemoteHostToLocal/emd_1052_renamed.map.gz</targetFilePath>
+					<targetFilePath>/home/antonio/Downloads/Scipion/testFileTransfer/severalRemoteHostToLocal/emd_1052_renamed.map.gz</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>apoza@glassfishdev.cnb.csic.es:/home/apoza/ScipionTestFiles/InputData/integer maps/emd_1053.map.gz</sourceFilePath>
 				<targets>
-					<targetFilePath>/home/antonio/Documents/Scipion/testFileTransfer/severalRemoteHostToLocal/emd_1053_renamed.map.gz</targetFilePath>
+					<targetFilePath>/home/antonio/Downloads/Scipion/testFileTransfer/severalRemoteHostToLocal/emd_1053_renamed.map.gz</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>apoza@glassfishprod.cnb.csic.es:/home/apoza/ScipionTestFiles/tmp2324fe121ec0c0e05e531d7159a8.mrc</sourceFilePath>
 				<targets>
-					<targetFilePath>/home/antonio/Documents/Scipion/testFileTransfer/severalRemoteHostToLocal/other/tmp1.mrc</targetFilePath>
+					<targetFilePath>/home/antonio/Downloads/Scipion/testFileTransfer/severalRemoteHostToLocal/other/tmp1.mrc</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>apoza@glassfishprod.cnb.csic.es:/home/apoza/ScipionTestFiles/micrographs/coordinates_KLH_Dataset_I_Test_Selexon.xml</sourceFilePath>
 				<targets>
-					<targetFilePath>/home/antonio/Documents/Scipion/testFileTransfer/severalRemoteHostToLocal/other/tmp2.xml</targetFilePath>
+					<targetFilePath>/home/antonio/Downloads/Scipion/testFileTransfer/severalRemoteHostToLocal/other/tmp2.xml</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>apoza@glassfishprod.cnb.csic.es:/home/apoza/ScipionTestFiles/BPV_1386.mrc</sourceFilePath>
 				<targets>
-					<targetFilePath>/home/antonio/Documents/Scipion/testFileTransfer/severalRemoteHostToLocal/BPV_1386.mrc</targetFilePath>
+					<targetFilePath>/home/antonio/Downloads/Scipion/testFileTransfer/severalRemoteHostToLocal/BPV_1386.mrc</targetFilePath>
 				</targets>
 			</transfer>
 		</transferList>

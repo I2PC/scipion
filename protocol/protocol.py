@@ -33,7 +33,7 @@ import datetime as dt
 import pickle
 
 from pyworkflow.object import OrderedObject, String, List, Integer, Boolean, CsvList
-from pyworkflow.utils.path import replaceExt, makePath, join, existsPath, cleanPath
+from pyworkflow.utils.path import replaceExt, makePath, join, existsPath, cleanPath, getFolderFiles
 from pyworkflow.utils.log import *
 
 STATUS_LAUNCHED = "launched"  # launched to queue system, only usefull for protocols
@@ -395,6 +395,7 @@ class Protocol(Step):
         elif step.status == STATUS_FAILED:
             doContinue = False
             self.setFailed("Protocol failed: " + step.error.get())
+            self._log.error("Protocol failed: " + step.error.get())
         self.lastStatus = step.status.get()
         self._log.info("FINISHED: " + step.funcName.get())
         return doContinue
@@ -409,7 +410,7 @@ class Protocol(Step):
         
         self._stepsExecutor.runSteps(self._steps[startIndex:], 
                                      self._stepStarted, self._stepFinished)
-        self.status.set(self.lastStatus)
+        self.status.set(self.lastStatus))
         self._store(self.status)
         
     def _makePathsAndClean(self):
@@ -452,4 +453,5 @@ class Protocol(Step):
         logFile = self._getPath('log', 'protocol.log')
         return getFileLogger(logFile)
 
-
+    def getFiles(self):
+        return getFolderFiles(self.workingDir)
