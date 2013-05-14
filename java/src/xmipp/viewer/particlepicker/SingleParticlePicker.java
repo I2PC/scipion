@@ -16,9 +16,6 @@ import xmipp.jni.MetaData;
 import xmipp.jni.Particle;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.training.model.AutomaticParticle;
-import xmipp.viewer.particlepicker.training.model.FamilyState;
-import xmipp.viewer.particlepicker.training.model.MicrographFamilyData;
-import xmipp.viewer.particlepicker.training.model.MicrographFamilyState;
 import xmipp.viewer.particlepicker.training.model.MicrographState;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.TrainingMicrograph;
@@ -75,7 +72,8 @@ public class SingleParticlePicker extends ParticlePicker
 				e.printStackTrace();
 				throw new IllegalArgumentException();
 			}
-		
+		for(TrainingMicrograph m: micrographs)
+			loadMicrographData(m);
 	}
 	
 	public SingleParticlePicker(String selfile, String outputdir, String reviewfile)
@@ -275,7 +273,7 @@ public class SingleParticlePicker extends ParticlePicker
 				id = md.addObject();
 				md.setValueString(MDLabel.MDL_PICKING_MICROGRAPH_FAMILY_STATE, tm.getState().toString(), id);
 				md.setValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, getAutopickpercent(), id);
-
+				md.writeBlock("header@" + file);
 				md = new MetaData();
 				for (TrainingParticle p : tm.getManualParticles())
 				{
@@ -284,7 +282,7 @@ public class SingleParticlePicker extends ParticlePicker
 					md.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
 				}
 
-				md.write(file);
+				md.writeBlock("particles@" + file);//to append
 				md.destroy();
 
 			}
@@ -915,24 +913,18 @@ public class SingleParticlePicker extends ParticlePicker
 			if (!new File(file).exists())
 				return;
 
-			MetaData md = new MetaData(file);
+			MetaData md = new MetaData("header@" + file);
 			boolean hasautopercent = md.containsLabel(MDLabel.MDL_PICKING_AUTOPICKPERCENT);
 			for (long id : md.findObjects())
 			{
-
 				state = MicrographState.valueOf(md.getValueString(MDLabel.MDL_PICKING_MICROGRAPH_FAMILY_STATE, id));
-				
 				if (hasautopercent)
 					autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
 				else
 					autopickpercent = 50;// compatibility with previous projects
-
-				if (getMode() == Mode.Review && micrograph.getStep() != Mode.Review)
-				{
-					micrograph.setState(MicrographState.Review);
-					setChanged(true);
-				}
-				loadManualParticles(micrograph, getOutputPath(micrograph.getPosFile()));
+				micrograph.setState(state);
+				micrograph.setAutopickpercent(autopickpercent);
+				loadManualParticles(micrograph, file);
 				loadAutomaticParticles(micrograph, getOutputPath(micrograph.getAutoPosFile()), false);
 			}
 			md.destroy();
@@ -945,7 +937,7 @@ public class SingleParticlePicker extends ParticlePicker
 
 	}
 
-	public void loadManualParticles(Micrograph micrograph, String file)
+	public void loadManualParticles(TrainingMicrograph micrograph, String file)
 	{
 		if (!new File(file).exists())
 			return;
@@ -955,11 +947,10 @@ public class SingleParticlePicker extends ParticlePicker
 
 		try
 		{
-			MetaData md = new MetaData(file);
+			MetaData md = new MetaData("particles@" + file);
 
 			for (long id : md.findObjects())
 			{
-
 				x = md.getValueInt(MDLabel.MDL_XCOOR, id);
 				y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 				particle = new TrainingParticle(x, y, this, micrograph);

@@ -63,10 +63,11 @@ public abstract class ParticlePicker
 	}
 	
 	
+	
+	
 	public ParticlePicker(String selfile, Mode mode)
 	{
 		this(null, selfile, ".", mode);
-
 	}
 	
 	public ParticlePicker(String selfile, String outputdir, Mode mode)
@@ -89,7 +90,6 @@ public abstract class ParticlePicker
 		initFilters();
 		loadEmptyMicrographs();
 		loadConfig();
-		
 	}
 	
 	

@@ -1,5 +1,6 @@
 package xmipp.viewer.particlepicker.training.gui;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -15,6 +16,7 @@ import java.util.logging.Level;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -71,11 +73,15 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 	private JMenuItem templatesmi;
 	TemplatesJDialog templatesdialog;
-	private JToggleButton centerparticlebt;
+	private JCheckBox centerparticlebt;
 	private JMenuItem exportmi;
 	private JCheckBox autopickchb;
 	private JPanel sppickerpn;
 	private JFormattedTextField templatestf;
+	private JPanel templatespn;
+	private JLabel checkpercentlb;
+	private JButton loadtemplatesbt;
+	private JLabel autopicklb;
 
 	@Override
 	public SingleParticlePicker getParticlePicker()
@@ -122,8 +128,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			setLayout(new GridBagLayout());
 
 			initToolBar();
-			centerparticlebt = new JToggleButton("Center Particle", XmippResource.getIcon("center.jpg"));
-			tb.add(centerparticlebt);
+			
 			add(tb, XmippWindowUtil.getConstraints(constraints, 0, 0, 2, 1, GridBagConstraints.HORIZONTAL));
 
 			
@@ -131,18 +136,24 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			initShapePane();
 			add(shapepn, XmippWindowUtil.getConstraints(constraints, 1, 1));
 
-
-			add(new JLabel("Autopick:"), XmippWindowUtil.getConstraints(constraints, 0, 2));
+			add(new JLabel("Templates:"), XmippWindowUtil.getConstraints(constraints, 0, 2));
+			initTemplatesPane();
+			add(templatespn, XmippWindowUtil.getConstraints(constraints, 1, 2, 1, 1, GridBagConstraints.HORIZONTAL));
+			
+			autopicklb = new JLabel("Autopick:");
+			constraints.insets = new Insets(30, 5, 30, 5);
+			add(autopicklb, XmippWindowUtil.getConstraints(constraints, 0, 3));
+			constraints.insets = new Insets(0, 5, 0, 5);
 			initSupervisedPickerPane();
-			add(sppickerpn, XmippWindowUtil.getConstraints(constraints, 1, 2, 1, 1, GridBagConstraints.HORIZONTAL));
-
+			add(sppickerpn, XmippWindowUtil.getConstraints(constraints, 1, 3, 1, 1, GridBagConstraints.HORIZONTAL));
+			
 			initMicrographsPane();
-			add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 3, 2, 1, GridBagConstraints.HORIZONTAL));
+			add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 4, 2, 1, GridBagConstraints.HORIZONTAL));
 			JPanel actionspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
 			actionspn.add(savebt);
 			actionspn.add(saveandexitbt);
-			add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 4, 2, 1, GridBagConstraints.HORIZONTAL));
+			add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 5, 2, 1, GridBagConstraints.HORIZONTAL));
 			pack();
 			positionx = 0.9f;
 			XmippWindowUtil.setLocation(positionx, 0.2f, this);
@@ -154,10 +165,34 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
+	
+	private void initTemplatesPane()
+	{
+		templatespn = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		templatestf = new JFormattedTextField(NumberFormat.getNumberInstance());
+		templatestf.setColumns(2);
+		templatestf.setValue(ppicker.getTemplatesNumber());
+//		loadtemplatesbt = XmippWindowUtil.getTextButton("View", new ActionListener()
+//		{
+//			
+//			@Override
+//			public void actionPerformed(ActionEvent arg0)
+//			{
+//				loadTemplates();
+//			}
+//		});
+		
+		templatespn.add(templatestf);
+//		templatespn.add(loadtemplatesbt);
+		centerparticlebt = new JCheckBox("Center Particle", true);
+		templatespn.add(centerparticlebt);
+
+	}
 
 	private void initSupervisedPickerPane()
 	{
 		sppickerpn = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		
 		// sppickerpn.setBorder(BorderFactory.createTitledBorder("Supervised Picker"));
 
 		JPanel steppn = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -178,7 +213,8 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		});
 		sppickerpn.add(autopickchb);
 		autopickpercentpn = new JPanel();
-		autopickpercentpn.add(new JLabel("Check (%):"));
+		checkpercentlb = new JLabel("Check (%):");
+		autopickpercentpn.add(checkpercentlb);
 		autopickpercenttf = new JFormattedTextField(NumberFormat.getIntegerInstance());
 		autopickpercenttf.addActionListener(new ActionListener()
 		{
@@ -210,11 +246,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		sppickerpn.add(steppn);
 		initThresholdPane();
 		sppickerpn.add(thresholdpn);
-		templatestf = new JFormattedTextField(NumberFormat.getNumberInstance());
-		templatestf.setColumns(2);
-		templatestf.setValue(ppicker.getTemplatesNumber());
-		sppickerpn.add(new JLabel("Templates:"));
-		sppickerpn.add(templatestf);
+		
 	}
 
 	protected void setSupervised(boolean selected)
@@ -229,9 +261,10 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 				XmippDialog.showError(this, e.getMessage());
 				return;
 			}
-		autopickpercenttf.setEnabled(selected);
-		thresholdsl.setEnabled(selected);
-		thresholdtf.setEnabled(selected);
+		checkpercentlb.setVisible(selected);
+		autopickpercenttf.setVisible(selected);
+		thresholdpn.setVisible(selected);
+		pack();
 	}
 	
 	public boolean isSupervised()
