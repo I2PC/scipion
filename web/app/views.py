@@ -146,6 +146,7 @@ def project_content(request):
     jquery_cookie = os.path.join(settings.STATIC_URL, 'js/jquery.cookie.js')
     jquery_treeview = os.path.join(settings.STATIC_URL, 'js/jquery.treeview.js')
     launchTreeview = os.path.join(settings.STATIC_URL, 'js/launchTreeview.js')
+    popup_path = os.path.join(settings.STATIC_URL, 'js/popup.js')
     #############
 
     manager = Manager()
@@ -161,6 +162,7 @@ def project_content(request):
                'logo': logo_path,
                'favicon': favicon_path,
                'jquery': jquery_path,
+               'popup': popup_path,
                'jquery_cookie': jquery_cookie,
                'jquery_treeview': jquery_treeview,
                'launchTreeview': launchTreeview,
