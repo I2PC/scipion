@@ -105,9 +105,10 @@ CL2DClass::~CL2DClass()
 }
 
 void CL2DClass::updateProjection(const MultidimArray<double> &I,
-                                 const CL2DAssignment &assigned)
+                                 const CL2DAssignment &assigned,
+                                 bool force)
 {
-    if (assigned.corr > 0 && assigned.objId != BAD_OBJID)
+    if (assigned.corr > 0 && assigned.objId != BAD_OBJID || force)
     {
         Pupdate += I;
         nextListImg.push_back(assigned);
@@ -1205,6 +1206,10 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
         // Compute threshold
         corrList.indexSort(idx);
         double corrThreshold = corrList(idx(XSIZE(idx)/2)-1);
+#ifdef DEBUG
+        corrList.printStats();
+        std::cout << " corrThreshold= " << corrThreshold << std::endl;
+#endif
         if (corrThreshold == 0)
         {
             if (firstSplitNode1 != NULL)
@@ -1228,6 +1233,40 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
                     node->fit(I(), assignment);
                     if ((i + 1) % 2 == 0)
                     {
+                        node1->updateProjection(I(), assignment,true);
+                        VEC_ELEM(newAssignment,i) = 1;
+                        node2->updateNonProjection(assignment.corr, true);
+                    }
+                    else
+                    {
+                        node2->updateProjection(I(), assignment,true);
+                        VEC_ELEM(newAssignment,i) = 2;
+                        node1->updateNonProjection(assignment.corr, true);
+                    }
+                }
+                node1->transferUpdate();
+                node2->transferUpdate();
+#ifdef DEBUG
+            std::cout << "Splitting at random " << node1->currentListImg.size() << " " << node2->currentListImg.size() << std::endl;
+#endif
+                success = true;
+                break;
+            }
+        }
+        else
+        {
+            // Split according to corr
+            if (prm->node->rank == 0 && prm->verbose >= 2)
+                std::cerr << "Splitting by corr threshold ..." << std::endl;
+            for (size_t i = 0; i < imax; i++)
+            {
+                if ((i + 1) % (prm->node->size) == prm->node->rank)
+                {
+                    assignment.objId = node->currentListImg[i].objId;
+                    readImage(I, assignment.objId, false);
+                    node->fit(I(), assignment);
+                    if (assignment.corr < corrThreshold)
+                    {
                         node1->updateProjection(I(), assignment);
                         VEC_ELEM(newAssignment,i) = 1;
                         node2->updateNonProjection(assignment.corr);
@@ -1239,40 +1278,13 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
                         node1->updateNonProjection(assignment.corr);
                     }
                 }
-                success = true;
-                break;
+                if (prm->node->rank == 0 && i % 25 == 0 && prm->verbose >= 2)
+                    progress_bar(i);
             }
+            if (prm->node->rank == 0 && prm->verbose >= 2)
+                progress_bar(imax);
+            shareSplitAssignments(newAssignment, node1, node2);
         }
-
-        // Split according to corr
-        if (prm->node->rank == 0 && prm->verbose >= 2)
-            std::cerr << "Splitting by corr threshold ..." << std::endl;
-        for (size_t i = 0; i < imax; i++)
-        {
-            if ((i + 1) % (prm->node->size) == prm->node->rank)
-            {
-                assignment.objId = node->currentListImg[i].objId;
-                readImage(I, assignment.objId, false);
-                node->fit(I(), assignment);
-                if (assignment.corr < corrThreshold)
-                {
-                    node1->updateProjection(I(), assignment);
-                    VEC_ELEM(newAssignment,i) = 1;
-                    node2->updateNonProjection(assignment.corr);
-                }
-                else
-                {
-                    node2->updateProjection(I(), assignment);
-                    VEC_ELEM(newAssignment,i) = 2;
-                    node1->updateNonProjection(assignment.corr);
-                }
-            }
-            if (prm->node->rank == 0 && i % 25 == 0 && prm->verbose >= 2)
-                progress_bar(i);
-        }
-        if (prm->node->rank == 0 && prm->verbose >= 2)
-            progress_bar(imax);
-        shareSplitAssignments(newAssignment, node1, node2);
 
 #ifdef DEBUG
 	std::cout << "After first split Node1: " << node1->currentListImg.size() << " Node2 " << node2->currentListImg.size() << std::endl;
@@ -1294,7 +1306,6 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
         {
             if (prm->node->rank == 0 && prm->verbose >= 2)
             {
-                std::cerr << "Split iteration " << it << std::endl;
                 init_progress_bar(imax);
             }
 
