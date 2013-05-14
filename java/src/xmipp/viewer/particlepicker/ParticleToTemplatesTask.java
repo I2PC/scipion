@@ -1,9 +1,7 @@
 package xmipp.viewer.particlepicker;
 
 import xmipp.jni.ImageGeneric;
-import xmipp.jni.Particle;
 import xmipp.utils.Task;
-import xmipp.utils.TasksManager;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 
 public class ParticleToTemplatesTask implements Task
