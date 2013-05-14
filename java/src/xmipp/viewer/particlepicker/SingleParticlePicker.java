@@ -16,6 +16,10 @@ import xmipp.jni.MetaData;
 import xmipp.jni.Particle;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.training.model.AutomaticParticle;
+import xmipp.viewer.particlepicker.training.model.FamilyState;
+import xmipp.viewer.particlepicker.training.model.MicrographFamilyData;
+import xmipp.viewer.particlepicker.training.model.MicrographFamilyState;
+import xmipp.viewer.particlepicker.training.model.MicrographState;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.TrainingMicrograph;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
@@ -900,5 +904,51 @@ public class SingleParticlePicker extends ParticlePicker
 
 	}
 	
+	
+	public void loadMicrographData(TrainingMicrograph micrograph)
+	{
+		try
+		{
+			String file = getOutputPath(micrograph.getPosFile());
+			MicrographState state;
+			Integer autopickpercent;
+			if (!new File(file).exists())
+				return;
+
+			MetaData md = new MetaData(file);
+			boolean hasautopercent = md.containsLabel(MDLabel.MDL_PICKING_AUTOPICKPERCENT);
+			for (long id : md.findObjects())
+			{
+
+				state = MicrographState.valueOf(md.getValueString(MDLabel.MDL_PICKING_MICROGRAPH_FAMILY_STATE, id));
+				
+				if (hasautopercent)
+					autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
+				else
+					autopickpercent = 50;// compatibility with previous projects
+
+				if (getMode() == Mode.Review && micrograph.getStep() != Mode.Review)
+				{
+					micrograph.setState(MicrographState.Review);
+					setChanged(true);
+				}
+				loadManualParticles(micrograph, getOutputPath(micrograph.getPosFile()));
+				loadAutomaticParticles(micrograph, getOutputPath(micrograph.getAutoPosFile()), false);
+			}
+			md.destroy();
+		}
+		catch (Exception e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e.getMessage());
+		}
+
+	}
+
+	private void loadManualParticles(TrainingMicrograph micrograph2, String outputPath)
+	{
+		// TODO Auto-generated method stub
+		
+	}
 
 }
