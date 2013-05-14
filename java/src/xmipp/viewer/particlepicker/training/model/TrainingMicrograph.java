@@ -21,12 +21,13 @@ public class TrainingMicrograph extends Micrograph
 	private MicrographState state;
 	private int autopickpercent;
 
-	public TrainingMicrograph(String file, String psd, String ctf, Mode mode)
+	public TrainingMicrograph(String file, String psd, String ctf)
 	{
 		super(file, psd, ctf);
 		autofilename = getName() + "_auto" + ext;
 		this.manualparticles = new ArrayList<TrainingParticle>();
 		this.autoparticles = new ArrayList<AutomaticParticle>();
+		state = MicrographState.Available;
 	}
 
 

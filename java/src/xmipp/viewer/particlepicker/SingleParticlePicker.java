@@ -85,10 +85,23 @@ public class SingleParticlePicker extends ParticlePicker
 	public SingleParticlePicker(String selfile, String outputdir, Integer threads,
 			boolean fastmode, boolean incore) {
 		this(selfile, outputdir, Mode.Supervised);
+		
 		this.threads = threads;
 		this.fastmode = fastmode;
 		this.incore = incore;
 		
+	}
+	
+	
+	public void saveData()
+	{
+		if (isChanged())
+		{
+			super.saveData();
+			for(Micrograph m: micrographs)
+				saveData(m);
+		}
+
 	}
 	
 	public boolean isFastMode() {
@@ -221,10 +234,10 @@ public class SingleParticlePicker extends ParticlePicker
 					psd = md.getValueString(MDLabel.MDL_PSD_ENHANCED, id);
 				if (existsctf)
 					ctf = md.getValueString(MDLabel.MDL_CTF_MODEL, id);
-				micrograph = new TrainingMicrograph(filename, psd, ctf, getMode());
+				micrograph = new TrainingMicrograph(filename, psd, ctf);
 				micrographs.add(micrograph);
 			}
-			if (micrographs.size() == 0)
+			if (micrographs.isEmpty())
 				throw new IllegalArgumentException(String.format("No micrographs specified on %s", getMicrographsSelFile()));
 			md.destroy();
 		}
