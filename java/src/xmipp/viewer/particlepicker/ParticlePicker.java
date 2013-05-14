@@ -145,6 +145,7 @@ public abstract class ParticlePicker
 		this.macrosfile = getOutputPath("macros.xmd");
 		filters = new ArrayList<IJCommand>();
 		loadFilters();
+			
 		Recorder.record = true;
 
 		// detecting if a command is thrown by ImageJ
@@ -341,7 +342,10 @@ public abstract class ParticlePicker
 		filters.clear();
 		String file = macrosfile;
 		if (!new File(file).exists())
+		{
+			filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
 			return;
+		}
 
 		String command, options;
 		try

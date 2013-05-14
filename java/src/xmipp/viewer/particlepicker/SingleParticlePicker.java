@@ -14,6 +14,7 @@ import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.Particle;
+import xmipp.utils.TasksManager;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.training.model.AutomaticParticle;
 import xmipp.viewer.particlepicker.training.model.MicrographState;
@@ -153,7 +154,7 @@ public class SingleParticlePicker extends ParticlePicker
 		initTemplates();
 	}
 
-	public ImageGeneric getTemplates() {
+	public synchronized ImageGeneric getTemplates() {
 		return templates;
 	}
 	
@@ -192,7 +193,7 @@ public class SingleParticlePicker extends ParticlePicker
 
 	
 	
-	public ImagePlus getTemplatesImage(long i) {
+	public synchronized ImagePlus getTemplatesImage(long i) {
 		try
 		{
 			ImagePlus imp = XmippImageConverter.convertToImagePlus(templates, i);
@@ -807,45 +808,9 @@ public class SingleParticlePicker extends ParticlePicker
 		}
 	}
 	
-	public void updateTemplates()
+	public synchronized void updateTemplates()
 	{
-		if (getMode() != Mode.Manual)
-			return;
-
-		if (!hasManualParticles())
-			return;
-
-		initTemplates();
-		ImageGeneric igp;
-		List<TrainingParticle> particles;
-		TrainingParticle particle;
-		double[] align;
-		try
-		{
-			for (TrainingMicrograph m : micrographs)
-			{
-				for (int i = 0; i < m.getManualParticles().size(); i++)
-				{
-					particles = m.getManualParticles();
-					particle = particles.get(i);
-					igp = particle.getImageGeneric();
-					if (templateindex < getTemplatesNumber())
-						setTemplate(igp);
-					else
-					{
-						align = getTemplates().alignImage(igp);
-						applyAlignment(particle, igp, align);
-					}
-				}
-			}
-			
-			saveTemplates();
-		}
-		catch (Exception e)
-		{
-			throw new IllegalArgumentException(e.getMessage());
-		}
-
+		TasksManager.getInstance().addTask(new UpdateTemplatesTask(this));
 	}
 	
 	public boolean hasManualParticles()
