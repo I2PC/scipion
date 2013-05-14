@@ -28,8 +28,6 @@ input {
 }
 
 .element {
-	/* 	background: white; */
-	/* 	border-color: white; */
 	
 }
 
@@ -56,7 +54,6 @@ input {
 }
 
 .ico {
-	background-color: White;
 }
 
 .ico:hover {
@@ -145,4 +142,5 @@ input {
 }
 
 .exec {
+	
 }

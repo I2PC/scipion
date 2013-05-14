@@ -4,7 +4,7 @@ function evalCondition(aux) {
 	var value = aux.attr('value')
 	var affected = aux.attr('data-ref')
 
-	var b = document.getElementById(affected);
+//	var b = document.getElementById(affected);
 
 	if (value = 'no') {
 		// b.setAttribute("style", "display:none;");
@@ -18,5 +18,5 @@ function evalCondition(aux) {
 
 	// 
 	// alert(b.getAttribute("data-ref"));
-	// alert(name + " " + value);
+	alert(name + " " + value);
 }

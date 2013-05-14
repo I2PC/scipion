@@ -5,7 +5,7 @@ html,body {
 	padding: 5px 0;
 	text-align: left;
 	background: white;
-	/* 	background-color: FireBrick; */
+/* 		background-color: FireBrick; */
 }
 
 fieldset {
@@ -20,7 +20,7 @@ fieldset {
 }
 
 .box {
-/* 	border: 2px solid black; */
+	border: 2px solid black;
 	width: 45em;
 	height: 30em;
 	background: white;
