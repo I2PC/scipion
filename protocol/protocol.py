@@ -120,7 +120,6 @@ class Step(OrderedObject):
                     # it will be waiting for use to mark it as DONE
                     status = STATUS_WAITING_APPROVAL
                 else:
-                    
                     status = STATUS_FINISHED
                 self.status.set(status)
         except Exception, e:
@@ -301,7 +300,7 @@ class Protocol(Step):
         *funcArgs: the variable list of arguments to pass to the function.
         **args: see __insertStep
         """
-        step = FunctionStep(funcName, *funcArgs)
+        step = FunctionStep(funcName, *funcArgs, **args)
         step.func = getattr(self, funcName)
         return self.__insertStep(step, **args)
         
@@ -391,10 +390,10 @@ class Protocol(Step):
         self.endTime.set(step.endTime.get())
         self._store(self.endTime, step)
         doContinue = True
-        if self.status == STATUS_WAITING_APPROVAL:
+        if step.status == STATUS_WAITING_APPROVAL:
             doContinue = False
             self.status.set(STATUS_WAITING_APPROVAL)
-        elif self.status == STATUS_FAILED:
+        elif step.status == STATUS_FAILED:
             doContinue = False
             self.setFailed("Protocol failed: " + step.error.get())
         self._log.info("FINISHED: " + step.funcName.get())
@@ -406,11 +405,11 @@ class Protocol(Step):
         self.setRunning()
         self._store()
         
-        status = STATUS_FINISHED # Just for the case doesn't enter in the loop
+        #status = STATUS_FINISHED # Just for the case doesn't enter in the loop
         
         self._stepsExecutor.runSteps(self._steps[startIndex:], 
                                      self._stepStarted, self._stepFinished)
-        self.status.set(status)
+        #self.status.set(status)
         self._store(self.status)
         
     def _makePathsAndClean(self):
