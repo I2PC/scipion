@@ -490,15 +490,10 @@ class FileTransfer():
             sftp.mkdir(remoteDirectory) 
             
     def __getLocalSHA1(self, filePath):
-        (hashlib.sha1(file(filePath, 'r').read()).hexdigest())
+        return hashlib.sha1(file(filePath, 'r').read()).hexdigest()
 
     def __getRemoteSHA1(self, filePath, ssh):
         stdin, stdout, stderr = ssh.exec_command("sha1sum " + filePath)
-        """
-        print "-----> " + str(stdout.readlines())
-        print "-----> " + str(stdout.readlines())
-        print "-----> " + str(stdout.readlines())
-        """
         return stdout.readlines()[0].split()[0]
     
     def __isRemoteDir(self, sftp, path):
