@@ -49,12 +49,12 @@ a {
 }
 
 .protFieldsetTree {
-	border: 2px solid black;
-	height: 29em;
-	width: 18em;
+/* 	border: 2px solid black; */
+	height: 28.5em;
+	width: 19em;
 	overflow-y: scroll;
 	overflow-x: hidden;
-	margin: 0em;
+	margin-left: -0.5em;
 	border: none;
 }
 
@@ -175,6 +175,7 @@ a {
 
 .filetree li {
 	padding: 3px 0 2px 16px;
+	margin-left:3px;
 }
 
 .filetree span.folder,.filetree span.file {
