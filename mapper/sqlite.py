@@ -49,17 +49,11 @@ class SqliteMapper(Mapper):
             namePrefix = sid
         else:
             namePrefix = joinExt(namePrefix, sid)
-        self.insertObjectWithChilds(obj, namePrefix)
+        self.insertChilds(obj, namePrefix)
         
     def insert(self, obj):
         """Insert a new object into the system, the id will be set"""
         self.__insert(obj)
-        
-    def delete(self, obj):
-        """Delete an object and all its childs"""
-        namePrefix = self.__getNamePrefix(obj)
-        self.db.deleteChildObjects(namePrefix)
-        self.db.deleteObject(obj.getId())
         
     def insertChild(self, obj, key, attr, namePrefix=None):
         if namePrefix is None:
@@ -67,13 +61,25 @@ class SqliteMapper(Mapper):
         attr._objName = joinExt(namePrefix, key)
         attr._objParentId = obj._objId
         self.__insert(attr, namePrefix)
-        #attr._objId = self.db.insertObject(attr._objName, attr.getClassName(), attr._objValue, attr._objParentId)
-        #self.insertObjectWithChilds(attr, joinExt(namePrefix, attr.strId()))
         
-    def insertObjectWithChilds(self, obj, namePrefix):
+    def insertChilds(self, obj, namePrefix=None):
+        """ Insert childs of an object, if namePrefix is None,
+        the it will be deduced from obj. """
+        # This is also done in insertChild, but avoid 
+        # doing the same for every child element
+        if namePrefix is None:
+            namePrefix = self.__getNamePrefix(obj)
         for key, attr in obj.getAttributesToStore():
             self.insertChild(obj, key, attr, namePrefix)
-        #self.db.commit()        
+        
+    def deleteChilds(self, obj):
+        namePrefix = self.__getNamePrefix(obj)
+        self.db.deleteChildObjects(namePrefix)
+        
+    def delete(self, obj):
+        """Delete an object and all its childs"""
+        self.deleteChilds(obj)
+        self.db.deleteObject(obj.getId())
     
     def __getNamePrefix(self, obj):
         if len(obj._objName) > 0 and '.' in obj._objName:
@@ -183,6 +189,9 @@ class SqliteDb():
     SELECT = "SELECT id, parent_id, name, classname, value FROM Objects WHERE "
     DELETE = "DELETE FROM Objects WHERE "
     
+    def selectCmd(self, whereStr, orderByStr=' ORDER BY id'):
+        return self.SELECT + whereStr + orderByStr
+    
     def __init__(self, dbName, timeout=1000):
         self.__createConnection(dbName, timeout)
         self.__createTables()
@@ -228,7 +237,7 @@ class SqliteDb():
         
     def selectObjectById(self, objId):
         """Select an object give its id"""
-        self.executeCommand(self.SELECT + "id=?", (objId,))  
+        self.executeCommand(self.selectCmd("id=?"), (objId,))  
         return self.cursor.fetchone()
     
     def selectObjectsByParent(self, parent_id=None):
@@ -236,14 +245,14 @@ class SqliteDb():
         if the parent_id is None, all object with parent_id NULL
         will be returned"""
         if parent_id is None:
-            self.executeCommand(self.SELECT + "parent_id is NULL")
+            self.executeCommand(self.selectCmd("parent_id is NULL"))
         else:
-            self.executeCommand(self.SELECT + "parent_id=?", (parent_id,))
+            self.executeCommand(self.selectCmd("parent_id=?"), (parent_id,))
         return self.cursor.fetchall()  
     
     def selectObjectsByAncestor(self, ancestor_namePrefix):
         """Select all objects in the hierachy of ancestor_id"""
-        self.executeCommand(self.SELECT + "name LIKE '%s.%%'" % ancestor_namePrefix)
+        self.executeCommand(self.selectCmd("name LIKE '%s.%%'" % ancestor_namePrefix))
         return self.cursor.fetchall()          
     
     def selectObjectsBy(self, **args):     
@@ -252,11 +261,11 @@ class SqliteDb():
         whereList = ['%s=?' % k for k in args.keys()]
         whereStr = ' AND '.join(whereList)
         whereTuple = tuple(args.values())
-        self.executeCommand(self.SELECT + whereStr, whereTuple)
+        self.executeCommand(self.selectCmd(whereStr), whereTuple)
         return self.cursor.fetchall()
     
     def selectObjectsWhere(self, whereStr):
-        self.executeCommand(self.SELECT + whereStr)
+        self.executeCommand(self.selectCmd(whereStr))
         return self.cursor.fetchall()   
     
     def deleteObject(self, objId):

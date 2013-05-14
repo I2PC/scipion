@@ -1,0 +1,148 @@
+/* CSS Document */
+html,body {
+	background-color: rgb(235, 235, 235);
+}
+
+input {
+	background: LightGray;
+}
+
+.box {
+	background: white;
+	margin: 0.3em;
+	width: 26.5em;
+	height: 30em;
+	overflow-y: scroll;
+	overflow-x: hidden;
+	padding-right: 0.5em;
+	margin-top: -1em
+}
+
+.title {
+	background: DarkRed;
+	color: white;
+	border-left: 2.5px solid FireBrick;
+	border-top: 2.5px solid FireBrick;
+	font-size: 0.9em;
+	font-weight: bold;
+}
+
+.element {
+	/* 	background: white; */
+	/* 	border-color: white; */
+	
+}
+
+.recommended {
+	font-weight: bold;
+}
+
+.normal {
+	font-weight: normal;
+}
+
+.boolean {
+	
+}
+
+.option {
+	display: list-item;
+	margin-left: 12em;
+	margin-top: -1em;
+	text-decoration: none;
+	list-style: none;
+	/* 		background: LightGray; */
+	width: 9em;
+}
+
+.ico {
+	background-color: White;
+}
+
+.ico:hover {
+	background-color: FireBrick;
+}
+
+.boxBottom {
+	/* 	background-color: rgb(235, 235, 235); */
+	
+}
+
+.left {
+	width: 15em;
+	float: left;
+}
+
+.right {
+	width: 6.5em;
+	float: right;
+}
+
+.expertise {
+	margin-left: 0.7em;
+	width: 10em;
+}
+
+.buttonClose {
+	background: url(../../../resources/dialog_close.png) 0.5em no-repeat;
+	background-size: 20%;
+	/* 	margin: 1em 0.5em 0 0; */
+	font-size: 0.8em;
+	color: black;
+	width: 6.3em;
+	height: 2em;
+	background-color: LightGray;
+	border: 1px solid #000066;
+	padding: 1px;
+	padding-left: 1.7em;
+	font-weight: bold;
+	letter-spacing: 0.2em;
+	text-align: center;
+	font-weight: bold;
+}
+
+.buttonClose:hover {
+	background-color: white;
+}
+
+.buttonSave {
+	background: url(../../../resources/document_save24.png) 0.5em no-repeat;
+	background-size: 20%;
+	/* 	margin: 1em 0.5em 0 0; */
+	font-size: 0.8em;
+	color: black;
+	width: 6.3em;
+	height: 2em;
+	background-color: LightGray;
+	border: 1px solid #000066;
+	padding: 1px;
+	padding-left: 2em;
+	font-weight: bold;
+	letter-spacing: 0.2em;
+	text-align: center;
+}
+
+.buttonSave:hover {
+	background-color: white;
+}
+
+.buttonExec {
+	font-size: 0.8em;
+	color: white;
+	width: 8em;
+	height: 2em;
+	background-color: DarkRed;
+	border: 1px solid #000066;
+	/* 	padding: 1px; */
+	font-weight: bold;
+	letter-spacing: 0.2em;
+	text-align: center;
+	font-size: 0.8em;
+}
+
+.buttonExec:hover {
+	background-color: FireBrick;
+}
+
+.exec {
+}

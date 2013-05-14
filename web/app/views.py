@@ -137,7 +137,6 @@ class RunsTreeProvider(TreeProvider):
             
         return actions 
     
-
         
 def project_content(request):
     
@@ -150,6 +149,7 @@ def project_content(request):
     jquery_cookie = os.path.join(settings.STATIC_URL, 'js/jquery.cookie.js')
     jquery_treeview = os.path.join(settings.STATIC_URL, 'js/jquery.treeview.js')
     launchTreeview = os.path.join(settings.STATIC_URL, 'js/launchTreeview.js')
+    popup_path = os.path.join(settings.STATIC_URL, 'js/popup.js')
     #############
 
     manager = Manager()
@@ -165,6 +165,7 @@ def project_content(request):
                'logo': logo_path,
                'favicon': favicon_path,
                'jquery': jquery_path,
+               'popup': popup_path,
                'jquery_cookie': jquery_cookie,
                'jquery_treeview': jquery_treeview,
                'launchTreeview': launchTreeview,
@@ -175,7 +176,8 @@ def project_content(request):
     
     return render_to_response('project_content.html', context)
 
-def form(request):
+
+def formTable(request):
     
     # Resources #
     favicon_path = getResource('favicon')
@@ -183,7 +185,7 @@ def form(request):
     logo_browse = getResource('browse')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     jsForm_path = os.path.join(settings.STATIC_URL, 'js/form.js')
-    css_path = os.path.join(settings.STATIC_URL, 'css/form.css')
+    css_path = os.path.join(settings.STATIC_URL, 'css/formTable.css')
     #############
     
     protocol = request.GET.get('protocol')
@@ -196,7 +198,7 @@ def form(request):
                'browse': logo_browse,
                'css':css_path}
     
-    return render_to_response('form.html', context)
+    return render_to_response('formTable.html', context)
 
 
 if __name__ == '__main__':

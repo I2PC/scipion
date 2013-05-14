@@ -33,7 +33,6 @@ from pyworkflow.em import *
 from convert import convertCTFModel 
 from pyworkflow.em.packages.xmipp3.data import *
 from pyworkflow.utils.path import makePath, removeBaseExt, join, exists
-from pyworkflow.utils import runJob
 from protlib_particles import runNormalize
 from glob import glob
 import xmipp
@@ -207,7 +206,7 @@ class XmippProtExtractParticles(ProtExtractParticles):
             if self.doInvert:
                 args += " --invert"
         
-            runJob(None,"xmipp_micrograph_scissor", args)
+            self.runJob(None,"xmipp_micrograph_scissor", args)
             # Normalize 
             if self.doNormalize:
                 runNormalize(None, outputRoot + '.stk',self.normaType.get(), self.backRadius.get(), 1)          

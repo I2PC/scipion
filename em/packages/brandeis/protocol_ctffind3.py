@@ -30,7 +30,6 @@ This module contains the protocol for CTF estimation with ctffind3
 
 from pyworkflow.em import *  
 from pyworkflow.em.packages.xmipp3.data import *
-from pyworkflow.utils import runJob
 from pyworkflow.utils.which import which
 from pyworkflow.utils.path import makePath, replaceBaseExt, join, basename
 
@@ -67,7 +66,7 @@ class ProtCTFFind(ProtCTFMicrographs):
         self._params['ctffindOut'] = join(micDir, 'ctffind.out')
         self._params['ctffindPSD'] = self._getPsdPath(micDir)
                 
-        runJob(None, self._program, self._args % self._params)
+        self.runJob(None, self._program, self._args % self._params)
         #print "command: ", self._program, self._args % self._params    
 
     def _parseOutput(self, filename):
