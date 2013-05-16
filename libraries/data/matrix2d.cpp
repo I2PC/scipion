@@ -559,6 +559,19 @@ void matrixOperation_AAt(const Matrix2D <double> &A, Matrix2D<double> &C)
 		}
 }
 
+void matrixOperation_ABt(const Matrix2D <double> &A, const Matrix2D <double> &B, Matrix2D<double> &C)
+{
+	C.initZeros(MAT_YSIZE(A), MAT_YSIZE(B));
+	for (size_t i = 0; i < MAT_YSIZE(A); ++i)
+		for (size_t j = 0; j < MAT_YSIZE(B); ++j)
+		{
+			double aux=0.;
+			for (size_t k = 0; k < MAT_XSIZE(A); ++k)
+				aux += MAT_ELEM(A, i, k) * MAT_ELEM(B, j, k);
+			MAT_ELEM(C, i, j)=aux;
+		}
+}
+
 void matrixOperation_AtB(const Matrix2D <double> &A, const Matrix2D<double> &B, Matrix2D<double> &C)
 {
     C.resizeNoCopy(MAT_XSIZE(A), MAT_XSIZE(B));

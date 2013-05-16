@@ -1928,6 +1928,9 @@ void matrixOperation_AAt(const Matrix2D <double> &A, Matrix2D<double> &C);
 /** Matrix operation: C=A*B. */
 void matrixOperation_AB(const Matrix2D <double> &A, const Matrix2D<double> &B, Matrix2D<double> &C);
 
+/** Matrix operation: C=A*B^t. */
+void matrixOperation_ABt(const Matrix2D <double> &A, const Matrix2D <double> &B, Matrix2D<double> &C);
+
 /** Matrix operation: C=A^t*B. */
 void matrixOperation_AtB(const Matrix2D <double> &A, const Matrix2D<double> &B, Matrix2D<double> &C);
 
