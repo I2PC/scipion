@@ -38,6 +38,8 @@ class ProbabilisticPCA: public DimRedAlgorithm
 public:
 	size_t Niters;
 public:
+	Matrix2D<double> A;
+public:
 	/// Set specific parameters
 	void setSpecificParameters(size_t Niters=200);
 
