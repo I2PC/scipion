@@ -157,19 +157,13 @@ void ProbabilisticPCA::reduceDimensionality()
 
 			Matrix2D<double> invCS;
 			matrixOperation_AB(invC,S,invCS);
-			if(iter==2) {
-				std::cout << "N= " << N << "\n";
-				std::cout << "-N*0.5= " << N*(-0.5) << "\n";
-			}
 			Q = (N*(-0.5)) * (D * log (2*PI) + log(detC) + invCS.trace());
 		}
 
 		// Stop condition to detect convergence
 		// Must not apply to the first iteration, because then it will end inmediately
-		if(iter>2)
-		if (abs(oldQ-Q) < 0.001){
+		if (iter>2 && abs(oldQ-Q) < 0.001)
 			converged=true;
-		}
 
 		sigma2=sigma2_nueva;
     }
