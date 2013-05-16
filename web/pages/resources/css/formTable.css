@@ -33,12 +33,18 @@ textarea {
 	font-weight: bold;
 }
 
+.elementHide {
+	display: none;
+}
+
 .recommended {
 	font-weight: bold;
+	text-align: right;
 }
 
 .normal {
 	font-weight: normal;
+	text-align: right;
 }
 
 .option {

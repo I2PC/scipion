@@ -1,19 +1,24 @@
 function evalCondition(aux) {
 	var name = aux.attr('name')
 	var value = aux.attr('value')
-	var affected = aux.attr('data-ref')
-	var array = affected.split(",");
+	var show = aux.attr('data-show')
+	var hide = aux.attr('data-hide')
 
-	if (value == 'no') {
-		for (cont = 0; cont < array.length; cont++) {
-			jQuery("tr#" + array[cont]).hide();
-		}
-	} else if (value == 'yes') {
+	if (show != null) {
+		var array = show.split(",");
+
 		for (cont = 0; cont < array.length; cont++) {
 			jQuery("tr#" + array[cont]).show();
 		}
 	}
-	// alert(b.getAttribute("data-ref"));
+
+	if (hide != null) {
+		var array = hide.split(",");
+
+		for (cont = 0; cont < array.length; cont++) {
+			jQuery("tr#" + array[cont]).hide();
+		}
+	}
 }
 
 // function evalCondition(aux1, aux2) {

@@ -18,7 +18,7 @@ def getResource(request):
     elif request == 'help':
         img = 'contents24.png'
     elif request == 'browse':
-        img = 'zoom.png'    
+        img = 'zoom.png'
     path = os.path.join(settings.MEDIA_URL, img)
     return path
 
@@ -170,7 +170,6 @@ def project_content(request):
                'jquery_treeview': jquery_treeview,
                'launchTreeview': launchTreeview,
                'css':css_path,
-#               'general_css' : general_css_path,
                'sections': root.childs,
                'provider':provider}
     
