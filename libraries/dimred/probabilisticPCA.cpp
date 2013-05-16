@@ -49,7 +49,7 @@ void ProbabilisticPCA::reduceDimensionality()
     double sigma2=rnd_unif()*2;
     double Q=MAXDOUBLE, oldQ;
 
-    Matrix2D<double> S, W, inW, invM, Ez, WtX, Wp1, Wp2, invWp2, Xt,invWt;
+    Matrix2D<double> S, W, inW, invM, Ez, WtX, Wp1, Wp2, invWp2, invWt;
 
     // Compute variance and row energy
     subtractColumnMeans(*X);
@@ -59,10 +59,11 @@ void ProbabilisticPCA::reduceDimensionality()
     X->rowEnergySum(normX);
 
     W.initRandom(D,outputDim,0,2,RND_UNIFORM);
-    Xt=X->transpose();
     matrixOperation_AtA(W,inW);
 
     MultidimArray <double> Ezz(N,outputDim,outputDim);
+	Matrix1D<double> colEz,colX;
+	Matrix2D<double> Ezz_k, Ezz_kinW;
     while (!converged && iter<=Niters)
     {
         ++iter;
@@ -94,13 +95,9 @@ void ProbabilisticPCA::reduceDimensionality()
 		matrixOperation_AB(Wp1,invWp2,W);
 		matrixOperation_AtA(W,inW);
 
-		double sigma2_nueva=0;
-
-		Matrix1D<double> colEz(MAT_YSIZE(Ez)),colX(N);
+		double sigma2_new=0;
 		for (size_t k=0; k<N; ++k){
-
 			Ez.getCol(k,colEz);
-
 			X->getRow(k,colX);
 
 			Matrix1D<double> EzWt(MAT_YSIZE(W));
@@ -112,20 +109,15 @@ void ProbabilisticPCA::reduceDimensionality()
 			FOR_ALL_ELEMENTS_IN_MATRIX1D(EzWt)
 				EzWtX += VEC_ELEM(EzWt,i)*VEC_ELEM(colX,i);
 
-			Matrix2D<double> Ezz_k;
 			Ezz_k.initZeros(outputDim,outputDim);
 			FOR_ALL_ELEMENTS_IN_MATRIX2D(Ezz_k)
 				MAT_ELEM(Ezz_k,i,j) = DIRECT_A3D_ELEM(Ezz,k,i,j);
-			Matrix2D<double> Ezz_kinW;
 			matrixOperation_AB(Ezz_k,inW,Ezz_kinW);
 			double t = Ezz_kinW.trace();
 
-			sigma2_nueva += VEC_ELEM(normX,k) - 2 * EzWtX + t;
+			sigma2_new += VEC_ELEM(normX,k) - 2 * EzWtX + t;
 		}
-		double ND;
-		ND = (double) N * (double) D;
-		sigma2_nueva = (1 / (ND)) * sigma2_nueva;
-
+		sigma2_new/=(double) N * (double) D;
 
 		//Compute likelihood of new model
 		oldQ = Q;
@@ -134,14 +126,14 @@ void ProbabilisticPCA::reduceDimensionality()
 			Matrix2D<double> invC;
 			Matrix2D<double> WinvM,WinvMWt,sigmaI,dimI,sigma_1I,WtSDI,WtSDIW,dimI_WtSDIW;
 
-			sigma_1I=eye(D,1/sigma2_nueva);
+			sigma_1I=eye(D,1/sigma2_new);
 			matrixOperation_AB(W,invM,WinvM);
 			matrixOperation_AB(WinvM,W.transpose(),WinvMWt);
-			WinvMWt = (1/sigma2_nueva)*WinvMWt;
+			WinvMWt = (1/sigma2_new)*WinvMWt;
 			invC = sigma_1I - WinvMWt;
 
 			double detC;
-			sigmaI=eye(D,sigma2_nueva);
+			sigmaI=eye(D,sigma2_new);
 			dimI=eye(outputDim,1);
 
 			matrixOperation_AtB(W,sigma_1I,WtSDI);
@@ -160,7 +152,7 @@ void ProbabilisticPCA::reduceDimensionality()
 		if (iter>2 && abs(oldQ-Q) < 0.001)
 			converged=true;
 
-		sigma2=sigma2_nueva;
+		sigma2=sigma2_new;
     }
 
     //mapping.M = (inW \ W')';
