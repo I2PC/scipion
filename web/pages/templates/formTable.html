@@ -13,37 +13,49 @@
 <body>
 	<h3>Protocol: {{protocol}}</h3>
 	<div class="box">
-		<table class="">
+		<table>
 			<tr class="title">
 				<td colspan="4">General</td>
 			</tr>
-			<tr class="element">
+			<tr class="element" id="runName">
 				<td class="recommended">Run Name</td>
 				<td><input type="text" name="runName" /></td>
 				<td class="ico"><a href=""><img src={{help}} /></a></td>
 			</tr>
-			<tr class="element">
+			<tr class="element" id="showComment">
 				<td class="normal">Show Comment?</td>
-				<td><input type="radio" name="comment" value="Yes"
-					onChange="javascript:alert('prueba');" />Yes <input type="radio"
-					name="comment" value="No" onChange="javascript:alert('prueba');"
+				<td><input type="radio" name="showComment" value="yes"
+					onChange="javascript:evalCondition($(this));" data-ref="comment" />Yes
+					<input type="radio" name="showComment" value="no"
+					onChange="javascript:evalCondition($(this));" data-ref="comment"
 					checked />No</td>
 			</tr>
-			<tr class="element">
+			<tr class="element" id="comment">
 				<td class="normal">Comment:</td>
-				<td><input type="text" name="comment" /></td>
+				<td>
+				<textarea name="comment"></textarea>
+				</td>
+				<td class="ico"><a href=""><img src={{help}} /></a></td>
+			</tr>
+			<tr class="element" id="runMode">
+				<td class="normal">Run Mode</td>
+				<td><select name="runMode" size=1
+					onChange="javascript:alert('prueba');">
+						<option value="Resume">Resume</option>
+						<option value="Restart">Restart</option>
+				</select></td>
 				<td class="ico"><a href=""><img src={{help}} /></a></td>
 			</tr>
 			<tr class="title">
 				<td colspan="4">Input</td>
 			</tr>
-			<tr class="element">
+			<tr class="element" id="coordinates">
 				<td class="normal">Coordinates</td>
 				<td><input type="text" name="coordinates" /></td>
 				<td class="ico"><a href=""><img src={{help}} /></a></td>
 				<td class="ico"><a href=""><img src={{browse}} /></a></td>
 			</tr>
-			<tr class="element">
+			<tr class="element" id="downsampling">
 				<td class="recommended">Downsampling type</td>
 				<td><input type="radio" name="downsampling" value="original"
 					onChange="javascript:alert('prueba');" checked /> original<br />
@@ -53,18 +65,18 @@
 					onChange="javascript:alert('prueba');" /> other<br /></td>
 				<td class="ico"><a href=""><img src={{help}} /></a></td>
 			</tr>
-			<tr class="element">
+			<tr class="element" id="micrographs">
 				<td class="normal">Micrographs</td>
 				<td><input type="text" name="micrographs" /></td>
 				<td class="ico"><a href=""><img src={{help}} /></a></td>
 				<td class="ico"><a href=""><img src={{browse}} /></a></td>
 			</tr>
-			<tr class="element">
+			<tr class="element" id="family">
 				<td class="normal">Family</td>
 				<td><input type="text" name="family" value="DefaultFamily" /></td>
 				<td class="ico"><a href=""><img src={{help}} /></a></td>
 			</tr>
-			<tr class="element">
+			<tr class="element" id="boxSize">
 				<td class="normal">Particle box size</td>
 				<td><input type="text" name="boxSize" value="0" /></td>
 				<td class="ico"><a href=""><img src={{help}} /></a></td>
@@ -72,20 +84,20 @@
 			<tr class="title">
 				<td colspan="4">Preprocess</td>
 			</tr>
-			<tr class="element">
+			<tr class="element" id="dustRemoval">
 				<td class="recommended">Dust Removal (Recomended)</td>
-				<td><input type="radio" name="dustRemoval" value="Yes"
-					onChange="javascript:evalCondition($(this));" checked />Yes <input
-					type="radio" name="dustRemoval" value="No"
-					onChange="javascript:evalCondition($(this));" />No</td>
+				<td><input type="radio" name="dustRemoval" value="yes"
+					onChange="javascript:evalCondition($(this));" data-ref="threshold"
+					checked />Yes <input type="radio" name="dustRemoval" value="no"
+					onChange="javascript:evalCondition($(this));" data-ref="threshold" />No</td>
 				<td class="ico"><a href=""><img src={{help}} /></a></td>
 			</tr>
-			<tr class="element">
+			<tr class="element" id="threshold">
 				<td class="normal">Threshold for dust removal</td>
 				<td><input type="text" name="threshold" /></td>
 				<td class="ico"><a href=""><img src={{help}} /></a></td>
 			</tr>
-			<tr class="element">
+			<tr class="element" id="phaseFlipping">
 				<td class="recommended">Phase flipping (Recomended)</td>
 				<td><input type="radio" name="phaseFlipping" value="Yes"
 					onChange="javascript:alert('prueba');" checked />Yes <input
@@ -93,7 +105,7 @@
 					onChange="javascript:alert('prueba');" />No</td>
 				<td class="ico"><a href=""><img src={{help}} /></a></td>
 			</tr>
-			<tr class="element">
+			<tr class="element" id="invert">
 				<td class="recommended">Invert contrast</td>
 				<td><input type="radio" name="invert" value="Yes"
 					onChange="javascript:alert('prueba');" checked />Yes <input
@@ -101,7 +113,7 @@
 					onChange="javascript:alert('prueba');" checked />No</td>
 				<td class="ico"><a href=""><img src={{help}} /></a></td>
 			</tr>
-			<tr class="element">
+			<tr class="element" id="normalize">
 				<td class="recommended">Normalize (Recomended)</td>
 				<td><input type="radio" name="normalize" value="Yes"
 					onChange="javascript:alert('prueba');" checked />Yes <input
@@ -109,8 +121,8 @@
 					onChange="javascript:alert('prueba');" checked />No</td>
 				<td class="ico"><a href=""><img src={{help}} /></a></td>
 			</tr>
-			<tr class="element">
-				<td class="recommended">Downsampling type</td>
+			<tr class="element" id="normalization">
+				<td class="recommended">Normalization type</td>
 				<td><input type="radio" name="normalization" value="original"
 					onChange="javascript:alert('prueba');" checked />OldXmipp<br /> <input
 					type="radio" name="normalization" value="sameAsPicking"
@@ -119,7 +131,7 @@
 					onChange="javascript:alert('prueba');" />Ramp<br /></td>
 				<td class="ico"><a href=""><img src={{help}} /></a></td>
 			</tr>
-			<tr class="element">
+			<tr class="element" id="backgroundRadius">
 				<td class="recommended">Background radius</td>
 				<td><input type="text" name="backgroundRadius" value="-1" /></td>
 				<td class="ico"><a href=""><img src={{help}} /></a></td>
@@ -130,8 +142,8 @@
 	<div class="boxBottom">
 		<table class="">
 			<tr>
-				<td>Expert Level: <select class="expertise" name="expLevel"
-					size=1 onChange="javascript:alert('prueba');">
+				<td>Expert Level: <select name="expLevel" size=1
+					onChange="javascript:alert('prueba');">
 						<option value="Normal">Normal</option>
 						<option value="Advanced">Advanced</option>
 						<option value="Expert">Expert</option>

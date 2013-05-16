@@ -5,8 +5,7 @@ html,body {
 	margin: 10px auto;
 	padding: 5px 0;
 	text-align: left;
-	background: white;
-	/* 	background-color: FireBrick; */
+	background-color: rgb(240, 245, 230);
 }
 
 .project_name {
