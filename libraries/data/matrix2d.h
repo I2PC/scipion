@@ -1934,6 +1934,9 @@ void matrixOperation_ABt(const Matrix2D <double> &A, const Matrix2D <double> &B,
 /** Matrix operation: C=A^t*B. */
 void matrixOperation_AtB(const Matrix2D <double> &A, const Matrix2D<double> &B, Matrix2D<double> &C);
 
+/** Matrix operation: C=A^t*Bt. */
+void matrixOperation_AtBt(const Matrix2D <double> &A, const Matrix2D<double> &B, Matrix2D<double> &C);
+
 /** Matrix operation: B=X^t*A*X.
  * We know that the result B must be symmetric */
 void matrixOperation_XtAX_symmetric(const Matrix2D<double> &X, const Matrix2D<double> &A, Matrix2D<double> &B);

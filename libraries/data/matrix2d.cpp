@@ -585,6 +585,19 @@ void matrixOperation_AtB(const Matrix2D <double> &A, const Matrix2D<double> &B, 
         }
 }
 
+void matrixOperation_AtBt(const Matrix2D <double> &A, const Matrix2D<double> &B, Matrix2D<double> &C)
+{
+	C.initZeros(MAT_XSIZE(A), MAT_YSIZE(B));
+	for (size_t i = 0; i < MAT_XSIZE(A); ++i)
+		for (size_t j = 0; j < MAT_YSIZE(B); ++j)
+		{
+			double aux=0.;
+			for (size_t k = 0; k < MAT_YSIZE(A); ++k)
+				aux += MAT_ELEM(A, k, i) * MAT_ELEM(B, j, k);
+			MAT_ELEM(C, i, j)=aux;
+		}
+}
+
 void matrixOperation_XtAX_symmetric(const Matrix2D<double> &X, const Matrix2D<double> &A, Matrix2D<double> &B)
 {
 	Matrix2D<double> AX=A*X;
