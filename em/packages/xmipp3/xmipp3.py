@@ -112,28 +112,19 @@ class XmippMdRow():
   
 class XmippSet():
     """ Support class to store sets in Xmipp base on a MetaData. """
-    def __init__(self):
+    def __init__(self, itemClass, fileName):
         """ Create new set, base on a Metadata.
-        itemLabel: main key xmipp label of the items
         itemClass: Class that represent the items.
         A method .getFileName should be available to store the md.
         Items contained in XmippSet are suposed to inherit from XmippMdRow.
         """
-        self._itemLabel = self._getItemLabel()
-        self._itemClass = self._getItemClass()
+        self._itemClass = itemClass 
+        self._fileName = fileName      
         self._md = xmipp.MetaData()
-        
-    def _getItemLabel(self):
-        """ Should be implemented to return items MetaData label. """
-        pass
-    
-    def _getItemClass(self):
-        """ Should be implemented to return items Class. """
-        pass
         
     def __iter__(self):
         """Iterate over the set of images in the MetaData"""
-        self._md.read(self.getFileName())
+        self._md.read(self._fileName)
         
         for objId in self._md:  
             item = self._itemClass()
@@ -142,16 +133,16 @@ class XmippSet():
             #if self.hasCTF():
             #    m.ctfModel = XmippCTFModel(md.getValue(xmipp.MDL_CTF_MODEL, objId)) 
             yield item
-            
+        
+        
+    def setFileName(self, filename):
+        self._fileName = filename
+        
     def setMd(self, md):
         self._md = md
         
-    def sort(self):
-        """Sort the set according to MDL_IMAGE"""
-        self._md.sort(self._itemLabel)
-        
-    def write(self):
-        self._md.write(self.getFileName())
+    def write(self, mode):
+        self._md.write(self._fileName, mode)
         
     def append(self, item):
         """Add a new item to the set"""
@@ -160,21 +151,37 @@ class XmippSet():
         itemXmipp = self._itemClass.convert(item)
         itemXmipp.setToMd(self._md, objId)
         
-    @staticmethod
-    def convert(inputSet, xmippSetClass, filename):
-        """ Convert from a generic set to a XmippSet subclass(xmippSetClass).
+#    @staticmethod
+#    def convert(inputSet, xmippSetClass, filename):
+#        """ Convert from a generic set to a XmippSet subclass(xmippSetClass).
+#        In particular a filename is requiered to store the result MetaData.
+#        It is also asummed that this class have a .copyInfo method.
+#        """
+#        if isinstance(inputSet, xmippSetClass):
+#            return inputSet
+#        
+#        setOut = xmippSetClass(filename)
+#        setOut.copyInfo(inputSet)
+#        
+#        for item in inputSet:
+#            setOut.append(item)
+#        setOut.write()
+#        
+#        return setOut
+
+    def convert(self, xmippSetClass, filename):
+        """ Convert from a generic set to a xmippSetClass.
         In particular a filename is requiered to store the result MetaData.
         It is also asummed that this class have a .copyInfo method.
         """
-        if isinstance(inputSet, xmippSetClass):
-            return inputSet
+        if isinstance(self, xmippSetClass):
+            return self
         
         setOut = xmippSetClass(filename)
-        setOut.copyInfo(inputSet)
+        setOut.copyInfo(self)
         
-        for item in inputSet:
+        for item in self:
             setOut.append(item)
         setOut.write()
         
-        return setOut
-                  
+        return setOut                 

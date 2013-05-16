@@ -115,6 +115,10 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         self.runJob(None,"mv","-f %s %s" % (auxMdOut.removeBlockName(),
                                        mdOut.removeBlockName()))
 
+        # If input micrographs have tilt pairs copy the relation
+        if self.inputMics.hasTiltPairs():
+            micSet.copyTiltPairs(self.inputMics)
+            
         # Create the SetOfMicrographs object on the database
         micSet.copyInfo(self.inputMics)
         # This property should only be set by CTF estimation protocols

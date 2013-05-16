@@ -147,6 +147,7 @@ class SetOfImages(EMObject):
         self.samplingRate = Float()        
         self._ctf = Boolean(args.get('ctf', False))
         self._tiltPairs = Boolean(args.get('tiltPairs', False))
+        self._micList = [] # List with the micrographs
         self._pairList = [] # List with images pairs
         
     def getSize(self):
@@ -159,6 +160,10 @@ class SetOfImages(EMObject):
     def setFileName(self, newFileName):
         self.set(newFileName)
     
+    def getImage(self, index):
+        """ Get the image with the given index. """
+        return self._micList[index]
+        
     def hasCTF(self):
         """Return True if the SetOfImages has associated a CTF model"""
         return self._ctf.get()        
@@ -168,7 +173,10 @@ class SetOfImages(EMObject):
         pass
 
     def appendPair(self, iU, iT):
-        """ Add a tiltedPair to the set. """
+        """ Add a tilted pair relation to the set.
+        Params:
+        iU: index in the set of the untilted image.
+        iT: index in the set of the tilted image. """
         self._pairList.append((iU, iT)) 
 
     def copyInfo(self, other):
@@ -180,16 +188,12 @@ class SetOfImages(EMObject):
         """ Copy tilted pairs relation from other set of images 
         to the current one """
 
-        for uId, tId in other.iterTiltPairs():
-            self.appendPair(uId, tId)
+        for iU, iT in other.iterTiltPairs():
+            self.appendPair(iU, iT)
                 
     def hasTiltPairs(self):
         """ Return True it the SetOFImages has tilt pairs """
         return self._tiltPairs.get()   
-            
-    def iterTiltPairs(self):
-        """Iterate over the tilt pairs if is the case"""
-        return  self._pairList
         
     def getFiles(self):
         filePaths = set()
@@ -210,7 +214,7 @@ class SetOfMicrographs(SetOfImages):
         SetOfImages.__init__(self, filename, **args)
         self.microscope = Microscope()
         self.scannedPixelSize = Float()
-        self._micList = [] # List with the micrographs
+        
         
     def getMicroscope(self, index=0):
         return self.microscope
@@ -241,8 +245,7 @@ class SetOfMicrographs(SetOfImages):
 
         # Convert tilted ids in tilted micrographs tuples
         for tp in pairsId:            
-            self.appendPair(self.__getMicrographByIndex(tp.getUId()),
-                            self.__getMicrographByIndex(tp.getTId()))
+            self.appendPair(tp.getUId(), tp.getTId())
         
     def __iter__(self):
         """ Iterate over the set of micrographs. """
@@ -250,6 +253,11 @@ class SetOfMicrographs(SetOfImages):
         for m in self._micList:
             yield m
         
+    def iterTiltPairs(self):
+        """Iterate over the tilt pairs if is the case"""
+        self.__loadFiles()
+        return  self._pairList
+    
     def write(self):
         """This method will be used to persist in a file the
         list of micrographs path contained in this Set
@@ -261,8 +269,8 @@ class SetOfMicrographs(SetOfImages):
             mapper.insert(mic)
             mic._index = i # set internal index to store pairs values
 
-        for mU, mT in self._pairList:
-            mapper.insert(TiltedPair(uId=mU._index, tId=mT._index))
+        for iU, iT in self._pairList:
+            mapper.insert(TiltedPair(uId=iU, tId=iT))
 
         mapper.commit()
         

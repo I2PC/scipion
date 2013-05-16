@@ -38,8 +38,9 @@ import xmipp
     
 class XmippImage(XmippMdRow, Image):
     """Xmipp implementation for Image"""
-    def __init__(self, filename=None, label=xmipp.MDL_IMAGE, **args):
-        self._label = label
+    _label = xmipp.MDL_IMAGE
+    
+    def __init__(self, filename=None, **args):
         XmippMdRow.__init__(self)
         Image.__init__(self, filename, **args)
         
@@ -59,27 +60,37 @@ class XmippImage(XmippMdRow, Image):
         return imgXmipp
         
         
-class XmippSetOfImages(XmippSet, SetOfImages):
+class XmippSetOfImages(SetOfImages):
     """Represents a set of Images for Xmipp"""
-    def __init__(self, filename=None, label=xmipp.MDL_IMAGE, **args):
-        self._label = label
-        SetOfImages.__init__(self, filename, **args)
-        XmippSet.__init__(self)
-       
-    def _getItemLabel(self):
-        return xmipp.MDL_IMAGE
+    _label = xmipp.MDL_IMAGE
     
-    def _getItemClass(self):
-        return XmippImage
-            
+    def __init__(self, filename=None, **args):
+        self._set = XmippSet(XmippImage, filename)
+        SetOfImages.__init__(self, filename, **args)
+        #XmippSet.__init__(self)
+        
+    def sort(self):
+        """Sort the set according to MDL_IMAGE"""
+        self._md.sort(self._label)
+        
+#    def getImage(self, index):
+#        """ Get the image with the given index. """
+#        for i, item in enumerate(self._set):
+#            if i == index:
+#                imgFn = item.getValue(self._label)
+#                return imgFn
+#        return None
+                    
     @staticmethod
     def convert(setOfImgs, filename):
-        return XmippSet.convert(setOfImgs, XmippSetOfImages, filename)
+        return setOfImgs.convert(XmippSetOfImages, filename)
                 
 class XmippMicrograph(XmippImage, Micrograph):
     """Xmipp implementation for Micrograph"""
+    _label = xmipp.MDL_MICROGRAPH
+    
     def __init__(self, filename=None, **args):
-        XmippImage.__init__(self, filename, label=xmipp.MDL_MICROGRAPH, **args)
+        XmippImage.__init__(self, filename, **args)
         Micrograph.__init__(self, filename, **args)
             
     @staticmethod
@@ -102,34 +113,73 @@ class XmippMicrograph(XmippImage, Micrograph):
     
 class XmippSetOfMicrographs(XmippSetOfImages, SetOfMicrographs):
     """Represents a set of Micrographs for Xmipp"""
+    _label = xmipp.MDL_MICROGRAPH
     def __init__(self, filename=None, **args):
         SetOfMicrographs.__init__(self, filename, **args)
         XmippSetOfImages.__init__(self, filename, **args)
         
-    def _getItemLabel(self):
-        return xmipp.MDL_MICROGRAPH
-    
-    def _getItemClass(self):
-        return XmippMicrograph
-            
+        #TODO: Preguntar a Jose Miguel que pasa cuando se recuperan los objetos del mapper,
+        #ya que el filename esta a None  
+        if filename is not None:     
+            self._set = XmippSet(XmippMicrograph, 'Micrographs@' + filename)    
+            self._setPairs = XmippSet(XmippTiltedPair, 'TiltedPairs@' + filename) 
+        else:   
+            self._set = XmippSet(XmippMicrograph, filename)   
+            self._setPairs = XmippSet(XmippTiltedPair, filename)
+                
     @staticmethod
     def convert(setOfMics, filename):
         if isinstance(setOfMics, XmippSetOfMicrographs):
             return setOfMics
-        xmippMics = XmippSet.convert(setOfMics, XmippSetOfMicrographs, filename)
         
-        # If there are tilt pairs add tilt pairs block the the micrograph metadata
+        xmippMics = XmippSetOfMicrographs(filename)
+        xmippMics.copyInfo(self)
+        
+        for item in setOfMics:
+            xmippMics.append(item)
+        
+        # If there are tilt pairs add tilt pairs metadata
         if setOfMics.hasTiltPairs():
-            mdPairs = 'TiltedPairs@' + filename
-            md = xmipp.MetaData()
-            for micU, micT in setOfMics.iterTiltPairs():
-                objId = md.addObject()
-                md.setValue(xmipp.MDL_MICROGRAPH, str(micU.getFileName()), objId)
-                md.setValue(xmipp.MDL_MICROGRAPH_TILTED, str(micT.getFileName()), objId)
-            md.write(mdPairs, xmipp.MD_APPEND)
-
+            for iU, iT in setOfMics.iterTiltPairs():
+                xmippMics.appendPair(iU, iT)
+    
+        xmippMics.write()
+        
         return xmippMics
-                    
+    
+    def write(self):
+        """ Write metadatas to file """
+        self._set.write(xmipp.MD_OVERWRITE)
+        if self.hasTiltPairs():
+            self._setPairs.write(xmipp.MD_APPEND)   
+         
+    def append(self, xmippMic):
+        """Add a new micrograph to the set"""
+        self._set.append(xmippMic)
+
+        self._micList.append(xmippMic)
+        
+    def appendPair(self, iU, iT):
+        """ Add a new tilted pair to the set"""
+        micUFn = self.getImage(iU).getFileName()
+        micTFn = self.getImage(iT).getFileName()
+        #xmippTiltedPair = XmippTiltedPair.convert((micUFn, micTFn))
+        
+        self._setPairs.append((micUFn, micTFn))
+        
+    def __iter__(self):
+        """ Iterate over the set of micrographs. """
+        self._set.setFileName('Micrographs@' + self.get())
+        for mic in self._set:
+            yield mic
+        
+    def iterTiltPairs(self):
+        """Iterate over the tilt pairs if is the case"""
+        #TODO: PReguntar Jose Miguel si esto es necesario aqui o como hago
+        self._setPairs.setFileName('TiltedPairs@' + self.get())
+        for tp in self._setPairs:
+            yield  (tp.getUntilted(), tp.getTilted())
+        
 class XmippCoordinate(Coordinate):
     """This class holds the (x,y) position and other information
     associated with a Xmipp coordinate (Xmipp coordinates are POS_CENTER mode)"""
@@ -267,6 +317,27 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         #TODO: Implement this method
         pass
             
+class XmippTiltedPair(XmippMdRow):
+    """ Tilted Pairs relations in Xmipp are stored in a MetaData row. """
+    def __init__(self, **args):
+        XmippMdRow.__init__(self, **args)    
+        
+    def getTilted(self):
+        self.getValue(xmipp.MDL_MICROGRAPH_TILTED)
+        
+    def getUntilted(self):
+        self.getValue(xmipp.MDL_MICROGRAPH)
+        
+    @staticmethod
+    def convert((uFn, tFn)):
+        """ Create a XmippTiltedPair from a general TiltedPair instance. """
+        xmippPair = XmippTiltedPair()
+        xmippPair.setValue(xmipp.MDL_MICROGRAPH, uFn)
+        xmippPair.setValue(xmipp.MDL_MICROGRAPH_TILTED, tFn)
+            
+        return xmippPair
+    
+    
 class XmippImageClassAssignment(ImageClassAssignment, XmippMdRow):
     """ Image-class assignments in Xmipp are stored in a MetaData row. """
     def __init__(self, **args):

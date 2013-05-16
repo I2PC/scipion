@@ -163,7 +163,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     
     def createOutput(self, IOTable):
         
-        mdOut = "Micrographs@" + self._getPath("micrographs.xmd")    
+        mdOut = self._getPath("micrographs.xmd")    
         micSet = XmippSetOfMicrographs(mdOut)
             
         for mic in self.inputMics:
