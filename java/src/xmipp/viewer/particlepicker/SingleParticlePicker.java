@@ -56,13 +56,13 @@ public class SingleParticlePicker extends ParticlePicker
 		super(block, selfile, outputdir, mode);
 		templatesfile = getOutputPath(templatesfile);
 		if(!new File(templatesfile).exists())
-			setTemplatesNumber(1);
+			setTemplatesNumber(dtemplatesnum);
 		else
 			try
 			{
-				templatesNumber = ((int) templates.getNDim());
+				
 				this.templates = new ImageGeneric(templatesfile);
-
+				templatesNumber = ((int) templates.getNDim());
 				for (templateindex = 0; templateindex < templatesNumber; templateindex++)
 					// to initialize templates on c part
 					XmippImageConverter.readToImagePlus(templates, ImageGeneric.FIRST_IMAGE + templateindex);
@@ -372,11 +372,7 @@ public class SingleParticlePicker extends ParticlePicker
 				if( templatesNumber == null || templatesNumber == 0)
 					templatesNumber = 1;//for compatibility with previous projects
 
-				templatesfile = "templates.stk";
-				if(new File(templatesfile).exists())
-					templates = new ImageGeneric(templatesfile);
-				else
-					setTemplatesNumber(1);
+			
 			}
 			md.destroy();
 		}
@@ -835,6 +831,8 @@ public class SingleParticlePicker extends ParticlePicker
 
 	public synchronized void centerParticle(TrainingParticle p)
 	{
+		if(templateindex == 0)
+			return;//no particle added yet
 		Particle shift = null;
 		try
 		{
