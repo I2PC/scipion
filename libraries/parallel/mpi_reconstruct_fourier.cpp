@@ -1,8 +1,8 @@
 /***************************************************************************
  *
  * Authors:     Jose Roman Bilbao (jrbcast@ace.ual.es)
- *       Roberto Marabini (roberto@cnb.csic.es)
- *       Vahid Abrishami (vabrishamoi@cnb.csic.es)
+ *       		Roberto Marabini (roberto@cnb.csic.es)
+ *       		Vahid Abrishami (vabrishamoi@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -278,7 +278,7 @@ void ProgMPIRecFourier::run()
             if (iter == NiterWeight)
                 if (verbose > 0)
                 {
-                	std::cout << "\n\nProcessing time: " << total_time_processing << " secs." << std::endl;
+                    std::cout << "\n\nProcessing time: " << total_time_processing << " secs." << std::endl;
                     std::cout << "Transfers time: " << total_time_communicating << " secs." << std::endl;
                     std::cout << "Weighting time: " << total_time_weightening << " secs." << std::endl;
                     std::cout << "Execution completed successfully"<< std::endl;
@@ -432,7 +432,10 @@ void ProgMPIRecFourier::run()
 
                     if (iter != NiterWeight)
                     {
-                        allReduceInChunks(fourierWeights, sizeout, BUFFSIZE, new_comm);
+                        int err;
+                        err = MPI_Allreduce(MPI_IN_PLACE, fourierWeights,
+                                            sizeout, MPI_DOUBLE,
+                                            MPI_SUM, new_comm);
                         forceWeightSymmetry(FourierWeights);
                         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(VoutFourier)
                         {
@@ -656,36 +659,6 @@ int  ProgMPIRecFourier::sendDataInChunks( double * pointer, int dest, int totalS
     return err;
 }
 
-int  ProgMPIRecFourier::allReduceInChunks( double * pointer, int totalSize, int buffSize, MPI_Comm comm )
-{
-    double * localPointer = pointer;
-
-    //    int numChunks =(int)ceil((double)totalSize/(double)buffSize);
-    //    int packetSize;
-    int err=0;
-
-    //    for ( int i = 0 ; i < numChunks ; i ++ )
-    //    {
-    //        if ( i == (numChunks-1))
-    //            packetSize = totalSize-i*buffSize;
-    //        else
-    //            packetSize = buffSize;
-    err = MPI_Allreduce(MPI_IN_PLACE, localPointer,
-                        totalSize, MPI_DOUBLE,
-                        MPI_SUM, comm );
-    //        if ( (err = MPI_Allreduce(MPI_IN_PLACE, localPointer,
-    //                                  packetSize, MPI_DOUBLE,
-    //                                  MPI_SUM, comm ))
-    //             != MPI_SUCCESS )
-    //        {
-    //            break;
-    //        }
-    //
-    //        localPointer += packetSize;
-    //    }
-
-    return err;
-}
 
 
 

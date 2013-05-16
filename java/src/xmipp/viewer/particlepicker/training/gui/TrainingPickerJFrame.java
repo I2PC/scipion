@@ -327,7 +327,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		initSizePane();
 		fieldspn.add(sizepn);
 
-		centerpickchb = new JCheckBox("Adjust Center");
+		centerpickchb = new JCheckBox("Center Particle");
 		fieldspn.add(centerpickchb);
 
 		familypn.add(fieldspn, 0);
@@ -975,6 +975,13 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		getFamilyData().reset();
 	}
 
+
+	public boolean isCenterParticle()
+	{
+		return centerpickchb.isSelected();
+	}
+
+
 	@Override
 	public String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty)
 	{
@@ -994,10 +1001,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	}
 
-	public boolean isCenterPick()
-	{
-		return centerpickchb.isSelected();
-	}
+
 
 	@Override
 	public ParticlesJDialog initParticlesJDialog()

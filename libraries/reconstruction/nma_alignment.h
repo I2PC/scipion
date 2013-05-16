@@ -67,10 +67,10 @@ public:
     /// Center the PDB structure
     bool do_centerPDB;
 
-    /// Real-space projection matching instead of the default combined global (wavelet-space) and local (Fourier central slice) projection matching
+    /// Real-space instead of wavelet-space (default) projection matching (global matching) that is refined by local (Fourier central slice) projection matching
     bool projMatch;
 
-    /// Angular sampling step for computing the reference projections (this is the minimum step for real-space projection matching while the minimum step does not exist in the default method)
+    /// Angular sampling step for computing the reference projections for global matching
     double discrAngStep;
 
     /// Sigma of Gaussian weigthing in Fourier space (parameter of central-slice method)

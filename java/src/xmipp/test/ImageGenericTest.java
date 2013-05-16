@@ -25,6 +25,12 @@
  ***************************************************************************/
 package xmipp.test;
 
+import ij.ImagePlus;
+import ij.gui.Roi;
+import ij.io.FileSaver;
+import ij.process.ImageProcessor;
+
+import java.awt.Rectangle;
 import java.io.File;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -32,6 +38,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MetaData;
@@ -165,6 +172,32 @@ public class ImageGenericTest {
 		for (int i = 0; i < stats.length; i++) {
 			assertEquals(imageStats[i], stats[i], XmippTest.EQUAL_ACCURACY);
 		}
+	}
+	
+	/**
+	 * Test of getStatistics method, of class ImageGeneric.
+	 */
+	@Test
+	public void testSetArrayFloat() throws Exception {
+		//PENDING TO CHANGE IMAGE GENERIC TO ALLOW WRITE MODE ON MEMORY MAPPED TO DISK
+		System.out.println("TestSetArrayFloat");
+		int size = 100;
+		String templatesfile = "imagegeneric.stk";
+		ImageGeneric templates = new ImageGeneric(templatesfile);
+		XmippImageConverter.readToImagePlus(templates);//to load templates on memory
+		
+		
+		String micrographfile = XmippTest.getTestFilename("BPV_1386.mrc");
+		ImagePlus mimage = new ImagePlus(micrographfile);
+		Rectangle r = new Rectangle(0, 0, size, size);
+		mimage.setRoi(r);
+		ImageProcessor processor = mimage.getProcessor().crop();
+		ImagePlus particleimg = new ImagePlus("particle", processor);
+		//new FileSaver(particleimg).save();
+		ImageGeneric particleig = XmippImageConverter.convertToImageGeneric(particleimg);
+		float[] matrix = particleig.getArrayFloat(ImageGeneric.FIRST_IMAGE, ImageGeneric.ALL_SLICES);
+		templates.setArrayFloat(matrix, ImageGeneric.FIRST_IMAGE, ImageGeneric.ALL_SLICES);
+		templates.write(templatesfile);
 	}
 
 	/**
