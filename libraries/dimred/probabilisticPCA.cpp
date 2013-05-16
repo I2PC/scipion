@@ -50,7 +50,7 @@ void ProbabilisticPCA::reduceDimensionality()
     double Q=MAXDOUBLE, oldQ;
 
     Matrix2D<double> S, W, inW, invM, Ez, WtX, Wp1, Wp2, invWp2,
-				     invC, WinvM,WinvMWt,sigmaI,dimI,sigma_1I,WtSDI,WtSDIW,dimI_WtSDIW,invCS;
+				     invC, WinvM,WinvMWt,sigma_1I,WtSDI,WtSDIW,invCS;
 
     // Compute variance and row energy
     subtractColumnMeans(*X);
@@ -121,20 +121,17 @@ void ProbabilisticPCA::reduceDimensionality()
 		{
 			sigma_1I=eye(D,1/sigma2_new);
 			matrixOperation_AB(W,invM,WinvM);
-			matrixOperation_AB(WinvM,W.transpose(),WinvMWt);
-			WinvMWt = (1/sigma2_new)*WinvMWt;
-			invC = sigma_1I - WinvMWt;
-
-			sigmaI=eye(D,sigma2_new);
-			dimI=eye(outputDim,1);
+			matrixOperation_ABt(WinvM,W,WinvMWt);
+			matrixOperation_IminusA(WinvMWt);
+			WinvMWt*=1/sigma2_new;
 
 			matrixOperation_AtB(W,sigma_1I,WtSDI);
 			matrixOperation_AB(WtSDI,W,WtSDIW);
-			dimI_WtSDIW = dimI + WtSDIW;
+			matrixOperation_IplusA(WtSDIW);
 
-			double detC = sigmaI.det() * dimI_WtSDIW.det();
+			double detC = pow(sigma2_new,D)* WtSDIW.det();
 
-			matrixOperation_AB(invC,S,invCS);
+			matrixOperation_AB(WinvMWt,S,invCS);
 			Q = (N*(-0.5)) * (D * log (2*PI) + log(detC) + invCS.trace());
 		}
 
