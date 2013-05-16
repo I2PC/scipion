@@ -187,9 +187,17 @@ def formTable(request):
     css_path = os.path.join(settings.STATIC_URL, 'css/formTable.css')
     #############
     
+    ## Project Id(or Name) should be stored in SESSION
+    manager = Manager()
+    project_name = request.GET.get('project_name')
+    projPath = manager.getProjectPath(project_name)
+    project = Project(projPath)
+    project.load()
+    
     protocolName = request.GET.get('protocol', None)
     if protocolName is None:
         protId = request.GET.get('protocolId', None)
+        protocol = project.mapper.selectById(int(protId))
     else:
         protocolClass = emProtocolsDict.get(protocolName, None)
         protocol = protocolClass()
@@ -212,8 +220,7 @@ def formTable(request):
                'form': jsForm_path,
                'jquery': jquery_path,
                'browse': logo_browse,
-               'css':css_path,
-               'd': d}
+               'css':css_path}
     
     return render_to_response('formTable.html', context)
 

@@ -26,13 +26,13 @@
 								<ul>
 									{% for prot in section.childs %} {% if prot.tag == 'protocol'%}
 									<li><span class="protocol"><a
-											href="javascript:popup('/formTable/?protocol={{prot.name}}')">{{prot.name}}</a></span></li>
+											href="javascript:popup('/formTable/?project_name={{project_name}}&protocol={{prot.name}}')">{{prot.name}}</a></span></li>
 									{% elif prot.tag == 'protocol_base' %}
 									<li><span class="protocol_base">{{prot.name}}</span>
 										<ul>
 											{% for prot2 in prot.childs %}
 											<li><span class="protocol_class"> <a
-													href="javascript:popup('/formTable/?protocol={{prot2.name}}')">
+													href="javascript:popup('/formTable/?project_name={{project_name}}&protocol={{prot2.name}}')">
 														{{prot2.name}} </a></span></li> {% endfor %}
 										</ul></li> {% else %} No athletes. {% endif %} {% endfor %}
 								</ul></li> {% endfor %}
@@ -53,7 +53,7 @@
 					</tr>
 					{% for obj in provider.getObjects %}
 					<tr>
-						<td><a href="javascript:popup('/formTable/?protocolId={{obj.getId}}')">{{obj.getName}}</a></td>
+						<td><a href="javascript:popup('/formTable/?project_name={{project_name}}&protocolId={{obj.getId}}')">{{obj.getName}}</a></td>
 						<td>{{obj.status.get}}</td>
 						<td>{{obj.endTime.get}}</td>
 					</tr>
