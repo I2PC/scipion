@@ -49,10 +49,14 @@ void ProbabilisticPCA::reduceDimensionality()
     double sigma2=rnd_unif()*2;
     double Q=MAXDOUBLE, oldQ;
 
-    Matrix2D<double> S, W, inW, invM, sigma2invM, Ez, WtX, Wp1, Wp2, invWp2, Xt,invWt;
+    Matrix2D<double> S, W, inW, invM, Ez, WtX, Wp1, Wp2, invWp2, Xt,invWt;
+
+    // Compute variance and row energy
     subtractColumnMeans(*X);
     matrixOperation_AtA(*X,S);
     S/=(double)N;
+    Matrix1D<double> normX;
+    X->rowEnergySum(normX);
 
     W.initRandom(D,outputDim,0,2,RND_UNIFORM);
     Xt=X->transpose();
@@ -71,14 +75,9 @@ void ProbabilisticPCA::reduceDimensionality()
         matrixOperation_AtBt(W,*X,WtX);
         matrixOperation_AB(invM,WtX,Ez);
 
-        sigma2invM=invM;
-        sigma2invM*=sigma2;
-
         for (size_t k=0; k<N; ++k)
-        {
-        	FOR_ALL_ELEMENTS_IN_MATRIX2D(sigma2invM)
-        		DIRECT_A3D_ELEM(Ezz,k,i,j)=MAT_ELEM(sigma2invM,i,j)+MAT_ELEM(Ez,i,k)*MAT_ELEM(Ez,j,k);
-        }
+        	FOR_ALL_ELEMENTS_IN_MATRIX2D(invM)
+        		DIRECT_A3D_ELEM(Ezz,k,i,j)=MAT_ELEM(invM,i,j)*sigma2+MAT_ELEM(Ez,i,k)*MAT_ELEM(Ez,j,k);
 
         // Perform M-step (maximize mapping W)
 		Wp1.initZeros(D,outputDim);
@@ -86,7 +85,7 @@ void ProbabilisticPCA::reduceDimensionality()
 		for (size_t k=0; k<N; ++k)
 		{
 			FOR_ALL_ELEMENTS_IN_MATRIX2D(Wp1)
-				MAT_ELEM(Wp1,i,j)+=MAT_ELEM(Xt,i,k)*MAT_ELEM(Ez,j,k);
+				MAT_ELEM(Wp1,i,j)+=MAT_ELEM(*X,k,i)*MAT_ELEM(Ez,j,k);
 			FOR_ALL_ELEMENTS_IN_MATRIX2D(Wp2)
 				MAT_ELEM(Wp2,i,j)+=DIRECT_A3D_ELEM(Ezz,k,i,j);
 		}
@@ -95,11 +94,6 @@ void ProbabilisticPCA::reduceDimensionality()
 		matrixOperation_AB(Wp1,invWp2,W);
 		matrixOperation_AtA(W,inW);
 
-		Matrix1D<double> normX(N,false);
-		normX.initZeros(N);
-		FOR_ALL_ELEMENTS_IN_MATRIX2D(Xt)
-			VEC_ELEM(normX,j)+=pow(MAT_ELEM(Xt,i,j),2);
-
 		double sigma2_nueva=0;
 
 		Matrix1D<double> colEz(MAT_YSIZE(Ez)),colX(N);
@@ -107,7 +101,7 @@ void ProbabilisticPCA::reduceDimensionality()
 
 			Ez.getCol(k,colEz);
 
-			(Xt).getCol(k,colX);
+			X->getRow(k,colX);
 
 			Matrix1D<double> EzWt(MAT_YSIZE(W));
 			EzWt.initZeros(MAT_YSIZE(W));
