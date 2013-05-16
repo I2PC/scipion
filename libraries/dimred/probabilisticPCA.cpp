@@ -42,7 +42,7 @@ void ProbabilisticPCA::reduceDimensionality()
     double Q=MAXDOUBLE, oldQ;
 
     Matrix2D<double> S, W, inW, invM, Ez, WtX, Wp1, Wp2, invWp2,
-				     invC, WinvM,WinvMWt,WtSDI,WtSDIW,invCS;
+				     invC, WinvM,WinvMWt,WtSDIW,invCS;
 
     // Compute variance and row energy
     subtractColumnMeans(*X);
