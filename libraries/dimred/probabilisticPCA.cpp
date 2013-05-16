@@ -97,22 +97,18 @@ void ProbabilisticPCA::reduceDimensionality()
 
 		double sigma2_new=0;
 		for (size_t k=0; k<N; ++k){
-			Ez.getCol(k,colEz);
-			X->getRow(k,colX);
-
-			Matrix1D<double> EzWt(MAT_YSIZE(W));
-			EzWt.initZeros(MAT_YSIZE(W));
-			FOR_ALL_ELEMENTS_IN_MATRIX2D(W)
-				VEC_ELEM(EzWt,i) += VEC_ELEM(colEz,j)*MAT_ELEM(W,i,j);
-
 			double EzWtX=0;
-			FOR_ALL_ELEMENTS_IN_MATRIX1D(EzWt)
-				EzWtX += VEC_ELEM(EzWt,i)*VEC_ELEM(colX,i);
+			FOR_ALL_ELEMENTS_IN_MATRIX2D(W)
+				EzWtX+=MAT_ELEM(*X,k,i)*MAT_ELEM(W,i,j)*MAT_ELEM(Ez,j,k);
 
-			Ezz_k.initZeros(outputDim,outputDim);
-			FOR_ALL_ELEMENTS_IN_MATRIX2D(Ezz_k)
-				MAT_ELEM(Ezz_k,i,j) = DIRECT_A3D_ELEM(Ezz,k,i,j);
-			matrixOperation_AB(Ezz_k,inW,Ezz_kinW);
+			Ezz_kinW.initZeros(outputDim, MAT_XSIZE(inW));
+			for (size_t i = 0; i < outputDim; ++i)
+				{
+					double aux=0.;
+					for (size_t kk = 0; kk < outputDim; ++kk)
+						aux += DIRECT_A3D_ELEM(Ezz,k,i,kk) * MAT_ELEM(inW, kk, i);
+					MAT_ELEM(Ezz_kinW, i, i)=aux;
+				}
 			double t = Ezz_kinW.trace();
 
 			sigma2_new += VEC_ELEM(normX,k) - 2 * EzWtX + t;
