@@ -41,8 +41,7 @@ void ProbabilisticPCA::reduceDimensionality()
     double sigma2=rnd_unif()*2;
     double Q=MAXDOUBLE, oldQ;
 
-    Matrix2D<double> S, W, inW, invM, Ez, WtX, Wp1, Wp2, invWp2,
-				     invC, WinvM,WinvMWt,WtSDIW,invCS;
+    Matrix2D<double> S, W, inW, invM, Ez, WtX, Wp1, Wp2, invWp2, WinvM, WinvMWt, WtSDIW, invCS;
 
     // Compute variance and row energy
     subtractColumnMeans(*X);
@@ -135,11 +134,6 @@ void ProbabilisticPCA::reduceDimensionality()
     }
 
     //mapping.M = (inW \ W')';
-    Matrix2D<double> mappingM,inversa_inW;
-    inW.inv(inversa_inW);
-
-    matrixOperation_ABt(inversa_inW,W,mappingM);
-    mappingM=mappingM.transpose();
-
-    matrixOperation_AB(*X,mappingM,Y);
+    matrixOperation_ABt(W,inW.inv(),A);
+    matrixOperation_AB(*X,A,Y);
 }
