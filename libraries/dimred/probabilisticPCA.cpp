@@ -49,43 +49,29 @@ void ProbabilisticPCA::reduceDimensionality()
     double sigma2=rnd_unif()*2;
     double Q=MAXDOUBLE, oldQ;
 
-
-
     Matrix2D<double> S, W, inW, invM, sigma2invM, Ez, WtX, Wp1, Wp2, invWp2, Xt,invWt;
     subtractColumnMeans(*X);
     matrixOperation_AtA(*X,S);
     S/=(double)N;
 
-
     W.initRandom(D,outputDim,0,2,RND_UNIFORM);
-
-
     Xt=X->transpose();
-
-
     matrixOperation_AtA(W,inW);
-
 
     MultidimArray <double> Ezz(N,outputDim,outputDim);
     while (!converged && iter<=Niters)
     {
         ++iter;
 
-
         // Perform E-step
-
         for (size_t i=0; i<outputDim; ++i)
         	MAT_ELEM(inW,i,i)+=sigma2;
         inW.inv(invM);
-
         matrixOperation_AtB(W,Xt,WtX);
-
         matrixOperation_AB(invM,WtX,Ez);
-
 
         sigma2invM=invM;
         sigma2invM*=sigma2;
-
 
         for (size_t k=0; k<N; ++k)
         {
@@ -104,11 +90,9 @@ void ProbabilisticPCA::reduceDimensionality()
 				MAT_ELEM(Wp2,i,j)+=DIRECT_A3D_ELEM(Ezz,k,i,j);
 		}
 
-
 		Wp2.inv(invWp2);
 		matrixOperation_AB(Wp1,invWp2,W);
 		matrixOperation_AtA(W,inW);
-
 
 		Matrix1D<double> normX(N,false);
 		normX.initZeros(N);
@@ -116,7 +100,6 @@ void ProbabilisticPCA::reduceDimensionality()
 			VEC_ELEM(normX,j)+=pow(MAT_ELEM(Xt,i,j),2);
 
 		double sigma2_nueva=0;
-
 
 		Matrix1D<double> colEz(MAT_YSIZE(Ez)),colX(N);
 		for (size_t k=0; k<N; ++k){
@@ -152,9 +135,7 @@ void ProbabilisticPCA::reduceDimensionality()
 		//Compute likelihood of new model
 		oldQ = Q;
 
-
 		if (iter > 1){
-
 			Matrix2D<double> invC;
 			Matrix2D<double> WinvM,WinvMWt,sigmaI,dimI,sigma_1I,WtSDI,WtSDIW,dimI_WtSDIW;
 
@@ -183,7 +164,6 @@ void ProbabilisticPCA::reduceDimensionality()
 			Q = (N*(-0.5)) * (D * log (2*PI) + log(detC) + invCS.trace());
 		}
 
-
 		// Stop condition to detect convergence
 		// Must not apply to the first iteration, because then it will end inmediately
 		if(iter>2)
@@ -192,7 +172,6 @@ void ProbabilisticPCA::reduceDimensionality()
 		}
 
 		sigma2=sigma2_nueva;
-
     }
 
     //mapping.M = (inW \ W')';
@@ -200,13 +179,9 @@ void ProbabilisticPCA::reduceDimensionality()
     Wt2=W.transpose();
     inW.inv(inversa_inW);
 
-
     matrixOperation_AB(inversa_inW,Wt2,mappingM);
     mappingM=mappingM.transpose();
 
     //mappedX, lo guardamos en Y
     matrixOperation_AB(*X,mappingM,Y);
-    Y.write("dimred/Y.txt");
-
-
 }
