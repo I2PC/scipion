@@ -31,14 +31,6 @@ void ProbabilisticPCA::setSpecificParameters(size_t Niters)
     this->Niters=Niters;
 }
 
-double trace(Matrix2D<double> m)
-{
-	double res=0;
-	FOR_ALL_ELEMENTS_IN_MATRIX2D(m)
-		if(i==j) res+= MAT_ELEM(m,i,j);
-	return res;
-}
-
 Matrix2D<double> eye(size_t dim, double factor){
 	Matrix2D<double> res(dim,dim);
 	res.initZeros(dim,dim);
@@ -46,8 +38,6 @@ Matrix2D<double> eye(size_t dim, double factor){
 		if(i==j) MAT_ELEM(res,i,j)=factor;
 	return res;
 }
-
-
 
 void ProbabilisticPCA::reduceDimensionality()
 {
@@ -150,7 +140,7 @@ void ProbabilisticPCA::reduceDimensionality()
 				MAT_ELEM(Ezz_k,i,j) = DIRECT_A3D_ELEM(Ezz,k,i,j);
 			Matrix2D<double> Ezz_kinW;
 			matrixOperation_AB(Ezz_k,inW,Ezz_kinW);
-			double t = trace(Ezz_kinW);
+			double t = Ezz_kinW.trace();
 
 			sigma2_nueva += VEC_ELEM(normX,k) - 2 * EzWtX + t;
 		}
@@ -190,7 +180,7 @@ void ProbabilisticPCA::reduceDimensionality()
 				std::cout << "N= " << N << "\n";
 				std::cout << "-N*0.5= " << N*(-0.5) << "\n";
 			}
-			Q = (N*(-0.5)) * (D * log (2*PI) + log(detC) + trace(invCS));
+			Q = (N*(-0.5)) * (D * log (2*PI) + log(detC) + invCS.trace());
 		}
 
 
