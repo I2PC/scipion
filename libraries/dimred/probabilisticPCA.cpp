@@ -49,7 +49,8 @@ void ProbabilisticPCA::reduceDimensionality()
     double sigma2=rnd_unif()*2;
     double Q=MAXDOUBLE, oldQ;
 
-    Matrix2D<double> S, W, inW, invM, Ez, WtX, Wp1, Wp2, invWp2, invWt;
+    Matrix2D<double> S, W, inW, invM, Ez, WtX, Wp1, Wp2, invWp2,
+				     invC, WinvM,WinvMWt,sigmaI,dimI,sigma_1I,WtSDI,WtSDIW,dimI_WtSDIW,invCS;
 
     // Compute variance and row energy
     subtractColumnMeans(*X);
@@ -116,17 +117,14 @@ void ProbabilisticPCA::reduceDimensionality()
 		//Compute likelihood of new model
 		oldQ = Q;
 
-		if (iter > 1){
-			Matrix2D<double> invC;
-			Matrix2D<double> WinvM,WinvMWt,sigmaI,dimI,sigma_1I,WtSDI,WtSDIW,dimI_WtSDIW;
-
+		if (iter > 1)
+		{
 			sigma_1I=eye(D,1/sigma2_new);
 			matrixOperation_AB(W,invM,WinvM);
 			matrixOperation_AB(WinvM,W.transpose(),WinvMWt);
 			WinvMWt = (1/sigma2_new)*WinvMWt;
 			invC = sigma_1I - WinvMWt;
 
-			double detC;
 			sigmaI=eye(D,sigma2_new);
 			dimI=eye(outputDim,1);
 
@@ -134,9 +132,8 @@ void ProbabilisticPCA::reduceDimensionality()
 			matrixOperation_AB(WtSDI,W,WtSDIW);
 			dimI_WtSDIW = dimI + WtSDIW;
 
-			detC = sigmaI.det() * dimI_WtSDIW.det();
+			double detC = sigmaI.det() * dimI_WtSDIW.det();
 
-			Matrix2D<double> invCS;
 			matrixOperation_AB(invC,S,invCS);
 			Q = (N*(-0.5)) * (D * log (2*PI) + log(detC) + invCS.trace());
 		}
