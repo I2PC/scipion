@@ -65,7 +65,6 @@ public abstract class ParticlePicker {
 		this.block = block;
 		this.outputdir = outputdir;
 		this.selfile = selfile;
-		this.outputdir = outputdir;
 		this.mode = mode;
 		this.configfile = getOutputPath("config.xmd");
 		initFamilies(fname);
@@ -203,8 +202,8 @@ public abstract class ParticlePicker {
 	public static Logger getLogger() {
 		try {
 			if (logger == null) {
-				FileHandler fh = new FileHandler("PPicker.log", true);
-				fh.setFormatter(new SimpleFormatter());
+//				FileHandler fh = new FileHandler("PPicker.log", true);
+//				fh.setFormatter(new SimpleFormatter());
 				logger = Logger.getLogger("PPickerLogger");
 //				logger.addHandler(fh);
 			}

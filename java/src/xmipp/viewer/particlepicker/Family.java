@@ -292,6 +292,8 @@ public class Family
 
 	public synchronized void centerParticle(TrainingParticle p)
 	{
+		if(templateindex == 0)
+			return;//no template to align
 		Particle shift = null;
 		try
 		{
