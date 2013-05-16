@@ -62,8 +62,6 @@ void ProbabilisticPCA::reduceDimensionality()
     matrixOperation_AtA(W,inW);
 
     MultidimArray <double> Ezz(N,outputDim,outputDim);
-	Matrix1D<double> colEz,colX;
-	Matrix2D<double> Ezz_k, Ezz_kinW;
     while (!converged && iter<=Niters)
     {
         ++iter;
@@ -95,21 +93,21 @@ void ProbabilisticPCA::reduceDimensionality()
 		matrixOperation_AB(Wp1,invWp2,W);
 		matrixOperation_AtA(W,inW);
 
+		// Update sigma2
 		double sigma2_new=0;
 		for (size_t k=0; k<N; ++k){
 			double EzWtX=0;
 			FOR_ALL_ELEMENTS_IN_MATRIX2D(W)
 				EzWtX+=MAT_ELEM(*X,k,i)*MAT_ELEM(W,i,j)*MAT_ELEM(Ez,j,k);
 
-			Ezz_kinW.initZeros(outputDim, MAT_XSIZE(inW));
+			double t=0;
 			for (size_t i = 0; i < outputDim; ++i)
-				{
-					double aux=0.;
-					for (size_t kk = 0; kk < outputDim; ++kk)
-						aux += DIRECT_A3D_ELEM(Ezz,k,i,kk) * MAT_ELEM(inW, kk, i);
-					MAT_ELEM(Ezz_kinW, i, i)=aux;
-				}
-			double t = Ezz_kinW.trace();
+			{
+				double aux=0.;
+				for (size_t kk = 0; kk < outputDim; ++kk)
+					aux += DIRECT_A3D_ELEM(Ezz,k,i,kk) * MAT_ELEM(inW, kk, i);
+				t+=aux;
+			}
 
 			sigma2_new += VEC_ELEM(normX,k) - 2 * EzWtX + t;
 		}
