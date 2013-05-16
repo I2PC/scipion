@@ -64,10 +64,11 @@ void ProbabilisticPCA::reduceDimensionality()
         ++iter;
 
         // Perform E-step
+        // Ez=(W^t*W)^-1*W^t*X^t
         for (size_t i=0; i<outputDim; ++i)
         	MAT_ELEM(inW,i,i)+=sigma2;
         inW.inv(invM);
-        matrixOperation_AtB(W,Xt,WtX);
+        matrixOperation_AtBt(W,*X,WtX);
         matrixOperation_AB(invM,WtX,Ez);
 
         sigma2invM=invM;
