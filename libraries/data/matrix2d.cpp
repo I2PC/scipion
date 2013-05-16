@@ -612,6 +612,12 @@ void matrixOperation_XtAX_symmetric(const Matrix2D<double> &X, const Matrix2D<do
         }
 }
 
+void matrixOperation_IplusA(Matrix2D<double> &A)
+{
+	for (size_t i=0; i<MAT_YSIZE(A); ++i)
+		MAT_ELEM(A,i,i)+=1;
+}
+
 void matrixOperation_IminusA(Matrix2D<double> &A)
 {
     FOR_ALL_ELEMENTS_IN_MATRIX2D(A)
