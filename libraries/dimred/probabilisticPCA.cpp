@@ -31,14 +31,6 @@ void ProbabilisticPCA::setSpecificParameters(size_t Niters)
     this->Niters=Niters;
 }
 
-Matrix2D<double> eye(size_t dim, double factor){
-	Matrix2D<double> res(dim,dim);
-	res.initZeros(dim,dim);
-	FOR_ALL_ELEMENTS_IN_MATRIX2D(res)
-		if(i==j) MAT_ELEM(res,i,j)=factor;
-	return res;
-}
-
 void ProbabilisticPCA::reduceDimensionality()
 {
     size_t N=MAT_YSIZE(*X);  // N= number of rows of X
@@ -50,7 +42,7 @@ void ProbabilisticPCA::reduceDimensionality()
     double Q=MAXDOUBLE, oldQ;
 
     Matrix2D<double> S, W, inW, invM, Ez, WtX, Wp1, Wp2, invWp2,
-				     invC, WinvM,WinvMWt,sigma_1I,WtSDI,WtSDIW,invCS;
+				     invC, WinvM,WinvMWt,WtSDI,WtSDIW,invCS;
 
     // Compute variance and row energy
     subtractColumnMeans(*X);
@@ -119,14 +111,13 @@ void ProbabilisticPCA::reduceDimensionality()
 
 		if (iter > 1)
 		{
-			sigma_1I=eye(D,1/sigma2_new);
 			matrixOperation_AB(W,invM,WinvM);
 			matrixOperation_ABt(WinvM,W,WinvMWt);
 			matrixOperation_IminusA(WinvMWt);
 			WinvMWt*=1/sigma2_new;
 
-			matrixOperation_AtB(W,sigma_1I,WtSDI);
-			matrixOperation_AB(WtSDI,W,WtSDIW);
+			matrixOperation_AtA(W,WtSDIW);
+			WtSDIW*=1/sigma2_new;
 			matrixOperation_IplusA(WtSDIW);
 
 			double detC = pow(sigma2_new,D)* WtSDIW.det();
@@ -144,13 +135,11 @@ void ProbabilisticPCA::reduceDimensionality()
     }
 
     //mapping.M = (inW \ W')';
-    Matrix2D<double> mappingM,Wt2(MAT_YSIZE(W),MAT_XSIZE(W)),auxW,inversa_inW;
-    Wt2=W.transpose();
+    Matrix2D<double> mappingM,inversa_inW;
     inW.inv(inversa_inW);
 
-    matrixOperation_AB(inversa_inW,Wt2,mappingM);
+    matrixOperation_ABt(inversa_inW,W,mappingM);
     mappingM=mappingM.transpose();
 
-    //mappedX, lo guardamos en Y
     matrixOperation_AB(*X,mappingM,Y);
 }
