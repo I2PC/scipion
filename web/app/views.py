@@ -187,15 +187,33 @@ def formTable(request):
     css_path = os.path.join(settings.STATIC_URL, 'css/formTable.css')
     #############
     
-    protocol = request.GET.get('protocol')
+    protocolName = request.GET.get('protocol', None)
+    if protocolName is None:
+        protId = request.GET.get('protocolId', None)
+    else:
+        protocolClass = emProtocolsDict.get(protocolName, None)
+        protocol = protocolClass()
+    
+    #TODO: Add error page validation when protocol is None
+    for section in protocol._definition.iterSections():
+        for paramName, param in section.iterParams():
+            protVar = getattr(protocol, paramName, None)
+            if protVar is None:
+                raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
+                # Create the label
+            param.htmlValue = protVar.get(param.default.get(""))
+            
+    
     
     context = {'protocol':protocol,
+               'definition': protocol._definition,
                'favicon': favicon_path,
                'help': logo_help,
                'form': jsForm_path,
                'jquery': jquery_path,
                'browse': logo_browse,
-               'css':css_path}
+               'css':css_path,
+               'd': d}
     
     return render_to_response('formTable.html', context)
 

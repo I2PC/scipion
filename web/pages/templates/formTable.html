@@ -11,133 +11,79 @@
 <script src={{form}} type="text/javascript"></script>
 </head>
 <body>
-	<h3>Protocol: {{protocol}}</h3>
+	<h3>Protocol: {{protocol.getClassName}}</h3>
 	<div class="box">
 		<table>
+		   {% for section in definition.iterSections %}
 			<tr class="title">
-				<td colspan="4">General</td>
+				<td colspan="4">{{section.label.get}}</td>
 			</tr>
-			<tr id="runName">
-				<td class="recommended">Run Name</td>
-				<td><input type="text" name="runName" /></td>
+			{% for paramName, param in section.iterParams %}
+			<tr id={{paramName}}>
+				<td {% if param.isImportant.get %} class="recommended" 
+				{% else %} class="normal" {% endif %}>{{param.label.get}}</td>
+				{% if param.getClassName == "BooleanParam" %}
+				<td>
+				  <input type="radio" name={{paramName}} value="yes" {% if param.htmlValue %} checked {% endif %}/>Yes 
+				  <input type="radio" name={{paramName}} value="no"  {% if not param.htmlValue %} checked {% endif %} />No
+				</td>
+				{% elif param.getClassName == "EnumParam"  %}
+				<td>
+					{% if param.display == 0 %}
+						{% for choice in param.choices %}
+						  <input type="radio" name={{paramName}} value={{choice}} />{{choice}}<br />
+						{% endfor %}
+					{% elif param.display == 1  %}
+						<select name={{paramName}}  size=1 onChange="javascript:alert('prueba');">
+							{% for choice in param.choices %}
+								<option value={{choice}}>{{choice}}</option>
+							{% endfor %}
+						</select>
+					</td>
+					{% endif %}				
+				{% else %}
+					<td><input type="text" name={{paramName}} value={{param.htmlValue}} ></td>
+				{% endif %}
 				<td class="ico"><a href=""><img src={{help}} /></a></td>
-			</tr>
-			<tr id="showComment">
-				<td class="normal">Show Comment?</td>
-				<td><input type="radio" name="showComment" value="yes"
-					onChange="javascript:evalCondition($(this));" data-show="comment" />Yes
-					<input type="radio" name="showComment" value="no"
-					onChange="javascript:evalCondition($(this));" data-hide="comment"
-					checked />No</td>
-			</tr>
-			<tr class="elementHide" id="comment">
-				<td class="normal">Comment:</td>
-				<td><textarea name="comment"></textarea></td>
-				<td class="ico"><a href=""><img src={{help}} /></a></td>
-			</tr>
-			<tr id="runMode">
-				<td class="normal">Run Mode</td>
-				<td><select name="runMode" size=1
-					onChange="javascript:alert('prueba');">
-						<option value="Resume">Resume</option>
-						<option value="Restart">Restart</option>
-				</select></td>
-				<td class="ico"><a href=""><img src={{help}} /></a></td>
-			</tr>
-			<tr class="title">
-				<td colspan="4">Input</td>
-			</tr>
-			<tr id="coordinates">
-				<td class="normal">Coordinates</td>
-				<td><input type="text" name="coordinates" /></td>
-				<td class="ico"><a href=""><img src={{help}} /></a></td>
+				{% if param.getClassName == "PointerParam" %}
 				<td class="ico"><a href=""><img src={{browse}} /></a></td>
+				{% endif %}
 			</tr>
-			<tr id="downsampling">
-				<td class="recommended">Downsampling type</td>
-				<td><input type="radio" name="downsampling" value="original"
-					onChange="javascript:evalCondition($(this));"
-					data-show="micrographs" data-hide="downFactor" checked /> original<br />
-					<input type="radio" name="downsampling" value="sameAsPicking"
-					onChange="javascript:evalCondition($(this));"
-					data-hide="micrographs,downFactor" /> same as picking<br /> <input
-					type="radio" name="downsampling" value="other"
-					onChange="javascript:evalCondition($(this));"
-					data-show="micrographs,downFactor" /> other<br /></td>
-				<td class="ico"><a href=""><img src={{help}} /></a></td>
-			</tr>
-			<tr class="elementHide" id="downFactor">
-				<td class="normal">Downsampling Factor</td>
-				<td><input type="text" name="downFactor" value="2.0" /></td>
-				<td class="ico"><a href=""><img src={{help}} /></a></td>
-			</tr>
-			<tr id="micrographs">
-				<td class="normal">Micrographs</td>
-				<td><input type="text" name="micrographs" /></td>
-				<td class="ico"><a href=""><img src={{help}} /></a></td>
-				<td class="ico"><a href=""><img src={{browse}} /></a></td>
-			</tr>
-			<tr id="family">
-				<td class="normal">Family</td>
-				<td><input type="text" name="family" value="DefaultFamily" /></td>
-				<td class="ico"><a href=""><img src={{help}} /></a></td>
-			</tr>
-			<tr id="boxSize">
-				<td class="normal">Particle box size</td>
-				<td><input type="text" name="boxSize" value="0" /></td>
-				<td class="ico"><a href=""><img src={{help}} /></a></td>
-			</tr>
-			<tr class="title">
-				<td colspan="4">Preprocess</td>
-			</tr>
-			<tr id="dustRemoval">
-				<td class="recommended">Dust Removal (Recomended)</td>
-				<td><input type="radio" name="dustRemoval" value="yes"
-					onChange="javascript:evalCondition($(this));" data-show="threshold"
-					checked />Yes <input type="radio" name="dustRemoval" value="no"
-					onChange="javascript:evalCondition($(this));" data-hide="threshold" />No</td>
-				<td class="ico"><a href=""><img src={{help}} /></a></td>
-			</tr>
-			<tr id="threshold">
-				<td class="normal">Threshold for dust removal</td>
-				<td><input type="text" name="threshold" /></td>
-				<td class="ico"><a href=""><img src={{help}} /></a></td>
-			</tr>
-			<tr id="phaseFlipping">
-				<td class="recommended">Phase flipping (Recomended)</td>
-				<td><input type="radio" name="phaseFlipping" value="Yes"
-					checked />Yes <input type="radio" name="phaseFlipping" value="No" />No</td>
-				<td class="ico"><a href=""><img src={{help}} /></a></td>
-			</tr>
-			<tr id="invert">
-				<td class="recommended">Invert contrast</td>
-				<td><input type="radio" name="invert" value="Yes" />Yes <input
-					type="radio" name="invert" value="No" checked />No</td>
-				<td class="ico"><a href=""><img src={{help}} /></a></td>
-			</tr>
-			<tr id="normalize">
-				<td class="recommended">Normalize (Recomended)</td>
-				<td><input type="radio" name="normalize" value="Yes"
-					onChange="javascript:evalCondition($(this));"
-					data-show="normalization,backgroundRadius" />Yes <input
-					type="radio" name="normalize" value="No"
-					onChange="javascript:evalCondition($(this));"
-					data-hide="normalization,backgroundRadius" checked />No</td>
-				<td class="ico"><a href=""><img src={{help}} /></a></td>
-			</tr>
-			<tr class="elementHide" id="normalization">
-				<td class="recommended">Normalization type</td>
-				<td><input type="radio" name="normalization" value="original"
-					checked />OldXmipp<br /> <input type="radio" name="normalization"
-					value="sameAsPicking" />NewXmipp<br /> <input type="radio"
-					name="normalization" value="other" />Ramp<br /></td>
-				<td class="ico"><a href=""><img src={{help}} /></a></td>
-			</tr>
-			<tr class="elementHide" id="backgroundRadius">
-				<td class="recommended">Background radius</td>
-				<td><input type="text" name="backgroundRadius" value="-1" /></td>
-				<td class="ico"><a href=""><img src={{help}} /></a></td>
-			</tr>
+			{% endfor %}
+			{% endfor %}
+			
+			
+	
+			
+			
+<!-- 			<tr id="downsampling"> -->
+<!-- 				<td class="recommended">Downsampling type</td> -->
+<!-- 				<td> -->
+				
+<!-- 				<input type="radio" name="downsampling" value="original" -->
+<!-- 					onChange="javascript:evalCondition($(this));" -->
+<!-- 					data-show="micrographs" data-hide="downFactor" checked /> original<br /> -->
+				
+<!-- 				<input type="radio" name="downsampling" value="sameAsPicking" -->
+<!-- 					onChange="javascript:evalCondition($(this));" -->
+<!-- 					data-hide="micrographs,downFactor" /> same as picking<br />  -->
+				
+<!-- 				<input -->
+<!-- 					type="radio" name="downsampling" value="other" -->
+<!-- 					onChange="javascript:evalCondition($(this));" -->
+<!-- 					data-show="micrographs,downFactor" /> other<br /> -->
+				
+<!-- 				</td> -->
+				
+				
+<!-- 			</tr> -->
+<!-- 			<tr class="elementHide" id="downFactor"> -->
+<!-- 				<td class="normal">Downsampling Factor</td> -->
+<!-- 				<td><input type="text" name="downFactor" value="2.0" /></td> -->
+<!-- 			</tr> -->
+		
+			
+			
 		</table>
 	</div>
 	<div class="boxBottom">

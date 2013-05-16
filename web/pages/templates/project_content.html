@@ -53,7 +53,7 @@
 					</tr>
 					{% for obj in provider.getObjects %}
 					<tr>
-						<td><a href="">{{obj.getName}}</a></td>
+						<td><a href="javascript:popup('/formTable/?protocolId={{obj.getId}}')">{{obj.getName}}</a></td>
 						<td>{{obj.status.get}}</td>
 						<td>{{obj.endTime.get}}</td>
 					</tr>

@@ -70,16 +70,6 @@ textarea {
 	
 }
 
-.left {
-	width: 15em;
-	float: left;
-}
-
-.right {
-	width: 6.5em;
-	float: right;
-}
-
 .buttonClose {
 	background: url(../../../resources/dialog_close.png) 0.5em no-repeat;
 	background-size: 20%;
