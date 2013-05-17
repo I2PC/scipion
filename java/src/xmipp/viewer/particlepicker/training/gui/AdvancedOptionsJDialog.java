@@ -33,6 +33,7 @@ import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.ImageGeneric;
+import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
@@ -48,6 +49,7 @@ public class AdvancedOptionsJDialog extends JDialog {
 	private JLabel checkpercentlb;
 	private JFormattedTextField autopickpercenttf;
 	private JButton okbt;
+	private TemplatesJDialog templatesdialog;
 
 	public AdvancedOptionsJDialog(SingleParticlePickerJFrame frame) {
 		super(frame);
@@ -134,6 +136,7 @@ public class AdvancedOptionsJDialog extends JDialog {
 		checkpercentlb = new JLabel("Autopick Check (%):");
 		add(checkpercentlb, XmippWindowUtil.getConstraints(constraints, 0, 1));
 		autopickpercenttf = new JFormattedTextField(NumberFormat.getIntegerInstance());
+		autopickpercenttf.setValue(frame.getParticlePicker().getAutopickpercent());
 		autopickpercenttf.addActionListener(new ActionListener()
 		{
 
@@ -164,13 +167,12 @@ public class AdvancedOptionsJDialog extends JDialog {
 			public void actionPerformed(ActionEvent arg0)
 			{
 				setVisible(false);
-				dispose();
 				
 			}
 		});
 		add(okbt, XmippWindowUtil.getConstraints(constraints, 2, 2));
 		loadTemplates(true);
-		XmippWindowUtil.setLocation(0.6f, 0, this);
+		XmippWindowUtil.setLocation(0.9f, 0, this);
 		setVisible(true);
 		setAlwaysOnTop(true);
 		// this.addComponentListener(new java.awt.event.ComponentAdapter() {
@@ -182,7 +184,24 @@ public class AdvancedOptionsJDialog extends JDialog {
 
 	protected void loadTemplates()
 	{
-		// TODO Auto-generated method stub
+			try
+			{
+				if (templatesdialog == null)
+				{
+					templatesdialog = new TemplatesJDialog(frame);
+				}
+				else
+				{
+
+					templatesdialog.loadTemplates(true);
+					templatesdialog.setVisible(true);
+
+				}
+			}
+			catch (Exception e)
+			{
+				XmippDialog.showError(frame, e.getMessage());
+			}
 		
 	}
 

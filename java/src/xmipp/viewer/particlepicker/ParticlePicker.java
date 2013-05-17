@@ -128,7 +128,33 @@ public abstract class ParticlePicker
 	}
 
 
+	public void saveConfig()
+	{
+		try
+		{
+			MetaData md;
+			String file = configfile;
+			md = new MetaData();
+			long id = md.addObject();
+			saveConfig(md, id);
+			md.write(file);
+			md.destroy();
 
+		}
+		catch (Exception e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e.getMessage());
+		}
+	}
+
+	protected void saveConfig(MetaData md, long id)
+	{
+		md.setValueString(MDLabel.MDL_MICROGRAPH, getMicrograph().getName(), id);
+		md.setValueInt(MDLabel.MDL_COLOR, getColor().getRGB(), id);
+		md.setValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, getSize(), id);
+		
+	}
 
 
 	public String getPosFileFromXmipp24Project(String projectdir, String mname)
@@ -378,35 +404,6 @@ public abstract class ParticlePicker
 		return null;
 	}
 
-
-
-	public void saveConfig()
-	{
-		try
-		{
-			MetaData md;
-			String file = configfile;
-			md = new MetaData();
-			long id = md.addObject();
-			saveConfig(md, id);
-			md.write(file);
-			md.destroy();
-
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e.getMessage());
-		}
-	}
-
-	protected void saveConfig(MetaData md, long id)
-	{
-		md.setValueString(MDLabel.MDL_MICROGRAPH, getMicrograph().getName(), id);
-		md.setValueInt(MDLabel.MDL_COLOR, getColor().getRGB(), id);
-		md.setValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, getSize(), id);
-		
-	}
 
 	void removeFilter(String filter)
 	{
