@@ -112,19 +112,19 @@ class XmippMdRow():
   
 class XmippSet():
     """ Support class to store sets in Xmipp base on a MetaData. """
-    def __init__(self, itemClass, fileName):
+    def __init__(self, itemClass):
         """ Create new set, base on a Metadata.
         itemClass: Class that represent the items.
         A method .getFileName should be available to store the md.
         Items contained in XmippSet are suposed to inherit from XmippMdRow.
         """
         self._itemClass = itemClass 
-        self._fileName = fileName      
+        #self._fileName = fileName      
         self._md = xmipp.MetaData()
         
     def __iter__(self):
         """Iterate over the set of images in the MetaData"""
-        self._md.read(self._fileName)
+        #self._md.read(self._fileName)
         
         for objId in self._md:  
             item = self._itemClass()
@@ -134,22 +134,33 @@ class XmippSet():
             #    m.ctfModel = XmippCTFModel(md.getValue(xmipp.MDL_CTF_MODEL, objId)) 
             yield item
         
-        
-    def setFileName(self, filename):
-        self._fileName = filename
+#        
+#    def setFileName(self, filename):
+#        self._fileName = filename
         
     def setMd(self, md):
         self._md = md
         
-    def write(self, mode):
-        self._md.write(self._fileName, mode)
+    def write(self, filename, mode):
+        self._md.write(filename, mode)
         
     def append(self, item):
-        """Add a new item to the set"""
+        """Add a new item to the set, the item can be of a base class (EM)
+        and will be try to convert it to the respective _itemClass."""
         objId = self._md.addObject()
         # Convert to xmipp micrograph if necessary
-        itemXmipp = self._itemClass.convert(item)
+        if isinstance(item, self._itemClass):
+            itemXmipp = item
+        else:
+            itemXmipp = self._itemClass.convert(item)
         itemXmipp.setToMd(self._md, objId)
+        
+    def sort(self, label):
+        self._md.sort(label)
+        
+    def read(self, filename):
+        self._md.read(filename)
+        
         
 #    @staticmethod
 #    def convert(inputSet, xmippSetClass, filename):

@@ -160,9 +160,16 @@ class SetOfImages(EMObject):
     def setFileName(self, newFileName):
         self.set(newFileName)
     
-    def getImage(self, index):
+    def __getitem__(self, index):
         """ Get the image with the given index. """
         return self._micList[index]
+    
+    def getImageIndex(self, iFn):
+        """ Get the index of the image with the given filename. """
+        for i, img in enumerate(self._micList):
+            if img.get() == iFn:
+                return i
+        return None
         
     def hasCTF(self):
         """Return True if the SetOfImages has associated a CTF model"""

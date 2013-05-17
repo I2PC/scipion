@@ -259,7 +259,7 @@ class XmippProtExtractParticles(ProtExtractParticles):
             md = xmipp.MetaData(fn)
             imagesMd.unionAll(md)
 
-        imgSet.setMd(imagesMd)
+        #imgSet.setMd(imagesMd)
         imgSet.sort()
         imgSet.write()
     
