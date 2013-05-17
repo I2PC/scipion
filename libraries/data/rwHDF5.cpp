@@ -35,9 +35,6 @@ DataType ImageBase::datatypeHDF5(hid_t h5datatype)
     bool sign = (h5sign > H5T_SGN_NONE);
     size_t size = H5Tget_size(h5datatype);
 
-    std::cerr << "DEBUG_XMIPP: size: " << size << std::endl;
-
-    std::cerr << "DEBUG_XMIPP: H5Tget_class(h5datatype): " << H5Tget_class(h5datatype) << std::endl;
     DataType dt;
     switch(H5Tget_class(h5datatype))
     {
@@ -85,8 +82,10 @@ DataType ImageBase::datatypeHDF5(hid_t h5datatype)
     return dt;
 }
 
-int ImageBase::readHDF5(size_t select_img, bool isStack)
+int ImageBase::readHDF5(size_t select_img)
 {
+    int errCode = 0;
+
     hid_t dataset, tid, sid, grp;    /* Dataset and datatype identifiers */
     hid_t filespace;
     hsize_t* dims;
@@ -96,26 +95,24 @@ int ImageBase::readHDF5(size_t select_img, bool isStack)
     /*
      * Open the file and the dataset.
      */
-//    fhdf5 = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+    //    fhdf5 = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
 
     //    H5Fget_info;
 
     //    grp  = H5Gopen2(fhdf5, "/exchange", H5P_DEFAULT);
 
-    dataset = H5Dopen2(fhdf5, "exchange/data", H5P_DEFAULT);
+    String dsname = "exchange/data"; // Dataset name
+
+    dataset = H5Dopen2(fhdf5, dsname.c_str(), H5P_DEFAULT);
     if( dataset < 0)
-        printf(" Dataset 'data' is not found. \n");
-    printf("\"/exchange/data\" dataset is open \n");
+        REPORT_ERROR(ERR_IO_NOTEXIST, formatString("readHDF5: Dataset '%s' not found",dsname.c_str()));
 
-
-    /*
-         * Get dataset rank and dimension.
-         */
-
+    // Get dataset rank and dimension.
     filespace = H5Dget_space(dataset);    /* Get filespace handle first. */
     rank      = H5Sget_simple_extent_ndims(filespace);
     dims = new hsize_t[3];
     status_n  = H5Sget_simple_extent_dims(filespace, dims, NULL);
+    offset = H5Dget_offset(dataset);
 
     //    status = H5Dread(dataset, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, bm_out);
 
@@ -138,22 +135,46 @@ int ImageBase::readHDF5(size_t select_img, bool isStack)
         break;
     }
 
-
     DataType datatype = datatypeHDF5(h5datatype);
     MDMainHeader.setValue(MDL_DATATYPE,(int) datatype);
+
+
+    bool isStack = ( rank > 2 );
+
 
     ArrayDim aDim;
     aDim.xdim = dims[rank-1];
     aDim.ydim = (rank>2)?dims[rank-2]:1;
-    aDim.zdim = (rank>3)?dims[rank-3]:1;
-    aDim.ndim = (rank>3)?dims[rank-4]:1;
-
+    aDim.zdim = (rank == 4)?dims[1]:1;
+    aDim.ndim = (select_img == ALL_IMAGES)? ( (rank>2)?dims[0]:1 ) :1;
+    replaceNsize = aDim.ndim;
     setDimensions(aDim);
 
-    return 0;
 
+    size_t   imgStart = IMG_INDEX(select_img);
+    size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : aDim.ndim;
+
+    MD.clear();
+    MD.resize(imgEnd - imgStart,MDL::emptyHeader);
+
+
+    //Read header only
+    if( dataMode < DATA )
+        return errCode;
+
+
+    readData(fimg, select_img, datatype, 0);
+
+
+    return errCode;
+
+    // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
+    //if memory already allocated use it (no resize allowed)
+    //    mdaBase->coreAllocateReuse();
 
 }
 
 int ImageBase::writeHDF5(size_t select_img, bool isStack, int mode, String bitDepth, CastWriteMode castMode)
-{}
+{
+    REPORT_ERROR(ERR_NOT_IMPLEMENTED, "writeHDF5: Not implemented yet.");
+}

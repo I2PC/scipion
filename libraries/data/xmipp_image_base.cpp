@@ -532,7 +532,16 @@ ImageFHandler* ImageBase::openFile(const FileName &name, int mode) const
     {
         if ((hFile->fhdf5 = H5Fopen(fileName.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT)) == -1 )
             REPORT_ERROR(ERR_IO_NOTOPEN,"ImageBase::openFile: There is a problem opening the HDF5 file.");
-        hFile->fimg = NULL;
+        //        hFile->fimg = NULL;
+
+        if ( (hFile->fimg = fopen(fileName.c_str(), wmChar.c_str())) == NULL )
+        {
+            if (errno == EACCES)
+                REPORT_ERROR(ERR_IO_NOPERM,formatString("Image::openFile: permission denied when opening %s",fileName.c_str()));
+            else
+                REPORT_ERROR(ERR_IO_NOTOPEN,formatString("Image::openFile cannot open: %s", fileName.c_str()));
+        }
+
         hFile->fhed = NULL;
         hFile->tif = NULL;
     }
@@ -637,7 +646,9 @@ void ImageBase::closeFile(ImageFHandler* hFile) const
     }
     else if (ext_name.contains("hdf5"))
     {
-             H5Fclose(fhdf5);
+        H5Fclose(fhdf5);
+        if (fclose(fimg) != 0 )
+            REPORT_ERROR(ERR_IO_NOCLOSED,(String)"Can not close image file "+ filename);
     }
     else
     {

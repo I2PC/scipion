@@ -42,7 +42,7 @@ DataType datatypeHDF5(hid_t dataset);
 
 /** Read Images from HDF5 container files.
   */
-int readHDF5(size_t select_img, bool isStack=false);
+int readHDF5(size_t select_img);
 
 /** Write Images to HDF5 container files.
   */
