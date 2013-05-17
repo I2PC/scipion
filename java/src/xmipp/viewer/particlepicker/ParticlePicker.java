@@ -259,7 +259,7 @@ public abstract class ParticlePicker {
 		families.clear();
 		String file = familiesfile;
 		if (!new File(file).exists()) {
-			families.add(new Family("DefaultFamily", Color.green, fsizemax/4, 1, getTemplatesFile("DefaultFamily")));
+			families.add(new Family("DefaultFamily", Color.green, fsizemax/4, FamilyState.Manual, this, 1));
 			saveFamilies();
 			return;
 		}
@@ -267,9 +267,8 @@ public abstract class ParticlePicker {
 		Family family;
 		int rgb, size;
 		Integer templatesNumber = 1;
+		String name;
 		FamilyState state;
-		String name, templatesfile;
-		ImageGeneric templates;
 		try {
 			MetaData md = new MetaData(file);
 			long[] ids = md.findObjects();
@@ -282,17 +281,7 @@ public abstract class ParticlePicker {
 					templatesNumber = 1;//for compatibility with previous projects
 				state = FamilyState.valueOf(md.getValueString(MDLabel.MDL_PICKING_FAMILY_STATE, id));
 				state = validateState(state);
-				templatesfile = getTemplatesFile(name);
-				if (new File(templatesfile).exists() )
-				{
-					templates = new ImageGeneric(templatesfile);
-					family = new Family(name, new Color(rgb), size, state, this, templates);
-					
-				}
-				else
-				{
-					family = new Family(name, new Color(rgb), size, state, this, templatesNumber, templatesfile);
-				}
+				family = new Family(name, new Color(rgb), size, state, this, templatesNumber);
 				families.add(family);
 			}
 			md.destroy();

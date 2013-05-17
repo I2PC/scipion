@@ -51,7 +51,10 @@ public class UpdateTemplatesTask implements Task
 						particle = particles.get(i);
 						igp = particle.getImageGeneric();
 						if (f.getTemplateIndex() < f.getTemplatesNumber())
+						{
 							f.setTemplate(igp);
+							System.out.println("init template " + f.getTemplateIndex());
+						}
 						else
 						{
 							double[] align = f.getTemplates().alignImage(igp);
@@ -60,6 +63,7 @@ public class UpdateTemplatesTask implements Task
 					}
 				}
 				f.saveTemplates();
+				System.out.println("templates updated");
 			}
 			catch (Exception e)
 			{
