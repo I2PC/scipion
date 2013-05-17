@@ -405,6 +405,7 @@ public class SingleParticlePicker extends ParticlePicker
 	public void setAutopickpercent(int autopickpercent)
 	{
 		this.autopickpercent = autopickpercent;
+		saveConfig();
 	}
 
 	public int getAutopickpercent()
