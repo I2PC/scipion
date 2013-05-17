@@ -203,10 +203,18 @@ chmod a+x $INC_FILE
 INC_FILE=.xmipp.csh
 echo "setenv XMIPP_HOME $PWD" > $INC_FILE
 echo 'setenv PATH $XMIPP_HOME/bin:$PATH' >> $INC_FILE
-echo 'setenv LD_LIBRARY_PATH $XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
+echo 'if($?LD_LIBRARY_PATH) then' >> $INC_FILE
+echo '  setenv LD_LIBRARY_PATH $XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
+echo 'else' >> $INC_FILE
+echo '  setenv LD_LIBRARY_PATH $XMIPP_HOME/lib' >> $INC_FILE
+echo 'endif' >> $INC_FILE
 
 if $IS_MAC; then
-	echo 'setenv DYLD_FALLBACK_LIBRARY_PATH $XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
+  echo 'if($?DYLD_FALLBACK_LIBRARY_PATH) then' >> $INC_FILE
+  echo '  setenv DYLD_FALLBACK_LIBRARY_PATH $XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
+  echo 'else' >> $INC_FILE
+  echo '  setenv DYLD_FALLBACK_LIBRARY_PATH $XMIPP_HOME/lib' >> $INC_FILE
+  echo 'endif' >> $INC_FILE
 fi
 echo 'test -s $XMIPP_HOME/.xmipp.alias && source $XMIPP_HOME/.xmipp.alias || true' >> $INC_FILE
 
