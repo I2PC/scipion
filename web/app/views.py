@@ -27,10 +27,7 @@ def projects(request):
 #    logo_path = findResource('scipion_logo.png')
 
     # Resources #
-    logo_path = getResource('logoScipion')
-    favicon_path = getResource('favicon')
     css_path = os.path.join(settings.STATIC_URL, 'css/projects_style.css')
-    general_css_path = os.path.join(settings.STATIC_URL, 'css/general_style.css')
     #############
     
     projects = manager.listProjects()
@@ -38,10 +35,7 @@ def projects(request):
         p.pTime = prettyDate(p.mTime)
 
     context = {'projects': projects,
-               'logo': logo_path,
-               'favicon': favicon_path,
-               'css':css_path,
-               'general_css' : general_css_path}
+               'css':css_path}
     
     return render_to_response('projects.html', context)
 
@@ -141,10 +135,7 @@ class RunsTreeProvider(TreeProvider):
 def project_content(request):
     
     # Resources #
-    logo_path = getResource('logoScipion')
-    favicon_path = getResource('favicon')
     css_path = os.path.join(settings.STATIC_URL, 'css/project_content_style.css')
-    general_css_path = os.path.join(settings.STATIC_URL, 'css/general_style.css')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     jquery_cookie = os.path.join(settings.STATIC_URL, 'js/jquery.cookie.js')
     jquery_treeview = os.path.join(settings.STATIC_URL, 'js/jquery.treeview.js')
@@ -162,8 +153,6 @@ def project_content(request):
     root = loadProtTree()
     
     context = {'project_name':project_name,
-               'logo': logo_path,
-               'favicon': favicon_path,
                'jquery': jquery_path,
                'popup': popup_path,
                'jquery_cookie': jquery_cookie,
