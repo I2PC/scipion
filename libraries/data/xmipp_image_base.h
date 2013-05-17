@@ -34,6 +34,7 @@
 //
 //// Includes for rwTIFF which cannot be inside it
 #include "../../external/tiff-3.9.4/libtiff/tiffio.h"
+#include "../../external/hdf5-1.8.10/c++/src/H5Cpp.h"
 
 
 /* Minimum size of a TIFF file to be mapped to a tempfile in case of mapping from
@@ -104,7 +105,8 @@ struct ImageFHandler
 {
     FILE*     fimg;       // Image File handler
     FILE*     fhed;       // Image File header handler
-    TIFF*     tif;        // TIFF Image file hander
+    TIFF*     tif;        // TIFF Image file handler
+    hid_t     fhdf5;	  // HDF5 File handler
     FileName  fileName;   // Image file name
     FileName  headName;   // Header file name
     FileName  ext_name;   // Filename extension
@@ -236,6 +238,7 @@ protected:
     FILE*               fimg;        // Image File handler
     FILE*               fhed;        // Image File header handler
     TIFF*               tif;         // TIFF Image file hander
+    hid_t				fhdf5;       // HDF5 File handler
     ImageFHandler*      hFile;       // Image File handler information structure
     ArrayDim        aDimFile;   // Image header file information structure (original info from file)
     DataMode            dataMode;    // Flag to force select what will be read/write from image files
@@ -783,6 +786,7 @@ protected:
 #include "rwTIFF.h"
 #include "rwEM.h"
 #include "rwPIF.h"
+#include "rwHDF5.h"
 
     /// ----------------------------------------------------------
 

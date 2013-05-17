@@ -528,6 +528,14 @@ ImageFHandler* ImageBase::openFile(const FileName &name, int mode) const
         hFile->fimg = NULL;
         hFile->fhed = NULL;
     }
+    else if (ext_name.contains("hdf5"))
+    {
+        if ((hFile->fhdf5 = H5Fopen(fileName.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT)) == -1 )
+            REPORT_ERROR(ERR_IO_NOTOPEN,"ImageBase::openFile: There is a problem opening the HDF5 file.");
+        hFile->fimg = NULL;
+        hFile->fhed = NULL;
+        hFile->tif = NULL;
+    }
     else
     {
         hFile->tif = NULL;
@@ -595,6 +603,7 @@ void ImageBase::closeFile(ImageFHandler* hFile) const
     FileName ext_name, fileName;
     FILE* fimg, *fhed;
     TIFF* tif;
+    hid_t fhdf5;
 
     if (hFile != NULL)
     {
@@ -603,6 +612,7 @@ void ImageBase::closeFile(ImageFHandler* hFile) const
         fimg = hFile->fimg;
         fhed = hFile->fhed;
         tif  = hFile->tif;
+        fhdf5 = hFile->fhdf5;
     }
     else
     {
@@ -611,6 +621,8 @@ void ImageBase::closeFile(ImageFHandler* hFile) const
         fimg = this->fimg;
         fhed = this->fhed;
         tif  = this->tif;
+        fhdf5 = this->fhdf5;
+
     }
 
     if (ext_name.contains("tif"))
@@ -622,6 +634,10 @@ void ImageBase::closeFile(ImageFHandler* hFile) const
         */
         if (fileName.getFileSize() < 9)
             filename.deleteFile();
+    }
+    else if (ext_name.contains("hdf5"))
+    {
+             H5Fclose(fhdf5);
     }
     else
     {
@@ -665,6 +681,7 @@ int ImageBase::_read(const FileName &name, ImageFHandler* hFile, DataMode datamo
     fimg = hFile->fimg;
     fhed = hFile->fhed;
     tif  = hFile->tif;
+    fhdf5 = hFile->fhdf5;
 
     size_t image_num;
     name.decompose(image_num, filename);
@@ -721,6 +738,8 @@ int ImageBase::_read(const FileName &name, ImageFHandler* hFile, DataMode datamo
         err = readSPE(select_img,false);
     else if (ext_name.contains("jpg"))//SPE
         err = readJPEG(select_img);
+    else if (ext_name.contains("hdf5"))//SPE
+        err = readHDF5(select_img);
     else
         err = readSPIDER(select_img);
 
@@ -847,7 +866,7 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
     //    else if (ext_name.contains("mrcs"))
     //        writeMRC(select_img,true,mode,imParam,castMode);
     else if (ext_name.contains("mrc")||ext_name.contains("map")
-    		 ||ext_name.contains("mrcs")||ext_name.contains("st"))
+             ||ext_name.contains("mrcs")||ext_name.contains("st"))
         writeMRC(select_img,isStack,mode,imParam,castMode);
     else if (ext_name.contains("img") || ext_name.contains("hed"))
         writeIMAGIC(select_img,mode,imParam,castMode);
@@ -867,6 +886,8 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
         writeSPE(select_img,isStack,mode);
     else if (ext_name.contains("jpg"))
         writeJPEG(select_img);
+    else if (ext_name.contains("hdf5"))
+        writeHDF5(select_img);
     else
         err = writeSPIDER(select_img,isStack,mode);
 
@@ -929,7 +950,7 @@ std::ostream& operator<<(std::ostream& o, const ImageBase& I)
 
     double sampling;
     I.MDMainHeader.getValue(MDL_SAMPLINGRATE_X, sampling);
-    if (sampling > 0)
+    if (sampling > 1e-300)
     {
         o << "Sampling rate  : " << std::endl;
         o << "                 X-rate (Angstrom/pixel) = " << sampling << std::endl;
