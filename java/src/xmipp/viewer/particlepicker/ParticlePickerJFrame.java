@@ -56,6 +56,7 @@ import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.training.gui.AdvancedOptionsJDialog;
+import xmipp.viewer.particlepicker.training.gui.TemplatesJDialog;
 import xmipp.viewer.particlepicker.training.model.Mode;
 
 public abstract class ParticlePickerJFrame extends JFrame implements ActionListener
@@ -93,7 +94,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected JLabel positionlb;
 	protected JToggleButton usezoombt;
 
-	public AdvancedOptionsJDialog templatesdialog;
+	public TemplatesJDialog templatesdialog;
 
 	private JToggleButton eraserbt;
 

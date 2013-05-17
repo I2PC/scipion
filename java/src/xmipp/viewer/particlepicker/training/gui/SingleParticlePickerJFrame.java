@@ -276,22 +276,16 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		try
 		{
 			if (optionsdialog == null)
-			{
 				optionsdialog = new AdvancedOptionsJDialog(SingleParticlePickerJFrame.this);
-			}
 			else
-			{
-
-				optionsdialog.loadTemplates(true);
 				optionsdialog.setVisible(true);
-
-			}
 		}
 		catch (Exception e)
 		{
 			XmippDialog.showError(this, e.getMessage());
 		}
 	}
+
 
 
 
@@ -527,8 +521,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 	public void updateMicrographsModel(boolean all)
 	{
 
-		if (optionsdialog != null)
-			loadAdvancedOptions();
+		updateTemplates();
 
 		if (particlesdialog != null)
 			loadParticles();
@@ -685,8 +678,9 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 	public void updateTemplates()
 	{
-		if (optionsdialog != null)
-			optionsdialog.loadTemplates(true);
+		if (templatesdialog != null && templatesdialog.isVisible())
+			templatesdialog.loadTemplates(true);
+		
 
 	}
 
@@ -696,9 +690,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		{
 			super.updateSize(size);
 			ppicker.resetParticleImages();
-			ppicker.updateTemplates();
-			if (optionsdialog != null)
-				loadAdvancedOptions();
+			updateTemplates();
 		}
 		catch (Exception e)
 		{
@@ -747,9 +739,14 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 	{
 		ppicker.setTemplatesNumber(templates);
 
-		if (optionsdialog != null)
-			optionsdialog.loadTemplates(true);
+		updateTemplates();
 
+	}
+
+	public void setTemplatesDialog(TemplatesJDialog templatesdialog)
+	{
+		this.templatesdialog = templatesdialog;
+		
 	}
 	
 	

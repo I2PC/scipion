@@ -42,7 +42,6 @@ import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 public class AdvancedOptionsJDialog extends JDialog {
 
 	protected SingleParticlePickerJFrame frame;
-	protected JPanel templatespn;
 	protected int width, height;
 	private JFormattedTextField templatestf;
 	private JButton loadtemplatesbt;
@@ -73,37 +72,7 @@ public class AdvancedOptionsJDialog extends JDialog {
 
 	}
 
-	public void loadTemplates(boolean resize) {
-
-		try {
-			ImageGeneric templates = frame.getParticlePicker().getTemplates();
-			
-			int size = frame.getParticlePicker().getSize();
-
-			if (!frame.getParticlePicker().hasManualParticles()) {
-
-				templatespn.removeAll();
-				templatespn.setPreferredSize(new Dimension(
-						(int) (size * templates.getNDim()), size));
-				pack();
-				return;
-			}
-
-			templatespn.removeAll();
-			ImagePlus template;
-			for (int i = 0; i < frame.getParticlePicker().getTemplatesNumber(); i ++) {
-				template = frame.getParticlePicker().getTemplatesImage(ImageGeneric.FIRST_IMAGE + i);
-				templatespn.add(new ImageCanvas(template));
-
-			}
-			
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		templatespn.repaint();
-		pack();
-	}
+	
 
 	private void initComponents() {
 		setDefaultCloseOperation(HIDE_ON_CLOSE);
@@ -118,6 +87,24 @@ public class AdvancedOptionsJDialog extends JDialog {
 		templatestf = new JFormattedTextField(NumberFormat.getNumberInstance());
 		templatestf.setColumns(3);
 		templatestf.setValue(frame.getParticlePicker().getTemplatesNumber());
+		templatestf.addActionListener(new ActionListener()
+		{
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0)
+			{
+				if (templatestf.getValue() == null)
+				{
+					JOptionPane.showMessageDialog(AdvancedOptionsJDialog.this, XmippMessage.getEmptyFieldMsg("Templates"));
+					templatestf.setValue(frame.getParticlePicker().getTemplatesNumber());
+					return;
+				}
+
+				int templates = ((Number) templatestf.getValue()).intValue();
+				frame.setTemplatesNumber(templates);
+				
+			}
+		});
 		loadtemplatesbt = XmippWindowUtil.getTextButton("View", new ActionListener()
 		{
 			
@@ -130,7 +117,6 @@ public class AdvancedOptionsJDialog extends JDialog {
 		
 		add(templatestf, XmippWindowUtil.getConstraints(constraints, 1, 0));
 		add(templatestf);
-		templatespn = new JPanel();
 		add(loadtemplatesbt, XmippWindowUtil.getConstraints(constraints, 2, 0));
 
 		checkpercentlb = new JLabel("Autopick Check (%):");
@@ -171,15 +157,10 @@ public class AdvancedOptionsJDialog extends JDialog {
 			}
 		});
 		add(okbt, XmippWindowUtil.getConstraints(constraints, 2, 2));
-		loadTemplates(true);
 		XmippWindowUtil.setLocation(0.9f, 0, this);
 		setVisible(true);
 		setAlwaysOnTop(true);
-		// this.addComponentListener(new java.awt.event.ComponentAdapter() {
-		// public void componentResized(ComponentEvent e) {
-		// loadTemplates(false);
-		// }
-		// });
+		pack();
 	}
 
 	protected void loadTemplates()
@@ -189,13 +170,12 @@ public class AdvancedOptionsJDialog extends JDialog {
 				if (templatesdialog == null)
 				{
 					templatesdialog = new TemplatesJDialog(frame);
+					frame.setTemplatesDialog(templatesdialog);
 				}
 				else
 				{
-
 					templatesdialog.loadTemplates(true);
 					templatesdialog.setVisible(true);
-
 				}
 			}
 			catch (Exception e)
