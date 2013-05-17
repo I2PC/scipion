@@ -7,26 +7,35 @@
 	<script src={{jquery_cookie}} type="text/javascript"></script>
 	<script src={{jquery_treeview}} type="text/javascript"></script>
 	<script src={{launchTreeview}} type="text/javascript"></script>
+	<script src={{popup}} type="text/javascript"></script>
 {% endblock %}		
 {% block sideLeft %}			
 	<div class="tittle">PROTOCOLS</div>			
 	<div class="protFieldsetTree">
 		<ul id="browser" class="filetree">
 			{% for section in sections %}
-			<li><span class="section">{{section.name}}</span>
-				<ul>
-					{% for prot in section.childs %} {% if prot.tag == 'protocol'%}
-					<li><span class="protocol"><a
-							href="/form/?protocol={{prot.name}}">{{prot.name}}</a></span></li> 
-							{% elif prot.tag == 'protocol_base' %}
-					<li><span class="protocol_base">{{prot.name}}</span>
-						<ul>
-							{% for prot2 in prot.childs %}
-							<li><span class="protocol_class"><a
-									href="/form/?protocol={{prot2.name}}">{{prot2.name}}</a></span></li> {% endfor %}
-						</ul></li> {% else %} No athletes. {% endif %} {% endfor %}
-				</ul>
-			</li> 
+				<li><span class="section">{{section.name}}</span>
+					<ul>
+						{% for prot in section.childs %} {% if prot.tag == 'protocol'%}
+						<li><span class="protocol"><a
+								href="javascript:popup('/formTable/?project_name={{project_name}}&protocol={{prot.name}}')">{{prot.name}}</a></span></li>
+						{% elif prot.tag == 'protocol_base' %}
+						<li>
+							<span class="protocol_base">{{prot.name}}</span>
+							<ul>
+								{% for prot2 in prot.childs %}
+									<li>
+										<span class="protocol_class"> 
+											<a href="javascript:popup('/formTable/?project_name={{project_name}}&protocol={{prot2.name}}')">
+												{{prot2.name}} 
+											</a>
+										</span>
+									</li> 
+								{% endfor %}
+							</ul>
+						</li> {% else %} No athletes. {% endif %} {% endfor %}
+					</ul>
+				</li>
 			{% endfor %}
 		</ul>
 	</div>
@@ -37,18 +46,16 @@
 		<table cellspacing='0'>
 			<tr>
 				{% for colName, colWidth in provider.getColumns %}
-				<th>{{colName}}</th> {% endfor %}
+					<th>{{colName}}</th> 
+				{% endfor %}
 			</tr>
 			{% for obj in provider.getObjects %}
-			<tr>
-				<td><a href="">{{obj.getName}}</a></td>
-				<td>{{obj.status.get}}</td>
-				<td>{{obj.endTime.get}}</td>
-			</tr>
+				<tr>
+					<td><a href="javascript:popup('/formTable/?project_name={{project_name}}&protocolId={{obj.getId}}')">{{obj.getName}}</a></td>
+					<td>{{obj.status.get}}</td>
+					<td>{{obj.endTime.get}}</td>
+				</tr>
 			{% endfor %}
 		</table>
 	</div>
 {% endblock %}
-
-</body>
-</html>

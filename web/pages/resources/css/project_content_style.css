@@ -6,8 +6,8 @@ a {
 .protFieldsetTree {
 	height: 90%;
 	width: 90%;
-	overflow-y: scroll;
-	overflow-x: scroll;
+	overflow-y: auto;
+	overflow-x: hidden;
 	/*margin: -0.5em -1em -0.6em 1em;*/
 	/*border: 1px solid #d0d0d0;*/
 	margin: 1em 0.5em 1em 1em;

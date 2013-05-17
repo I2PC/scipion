@@ -18,7 +18,7 @@ def getResource(request):
     elif request == 'help':
         img = 'contents24.png'
     elif request == 'browse':
-        img = 'zoom.png'    
+        img = 'zoom.png'
     path = os.path.join(settings.MEDIA_URL, img)
     return path
 
@@ -170,7 +170,6 @@ def project_content(request):
                'jquery_treeview': jquery_treeview,
                'launchTreeview': launchTreeview,
                'css':css_path,
-#               'general_css' : general_css_path,
                'sections': root.childs,
                'provider':provider}
     
@@ -188,9 +187,34 @@ def formTable(request):
     css_path = os.path.join(settings.STATIC_URL, 'css/formTable.css')
     #############
     
-    protocol = request.GET.get('protocol')
+    ## Project Id(or Name) should be stored in SESSION
+    manager = Manager()
+    project_name = request.GET.get('project_name')
+    projPath = manager.getProjectPath(project_name)
+    project = Project(projPath)
+    project.load()
+    
+    protocolName = request.GET.get('protocol', None)
+    if protocolName is None:
+        protId = request.GET.get('protocolId', None)
+        protocol = project.mapper.selectById(int(protId))
+    else:
+        protocolClass = emProtocolsDict.get(protocolName, None)
+        protocol = protocolClass()
+    
+    #TODO: Add error page validation when protocol is None
+    for section in protocol._definition.iterSections():
+        for paramName, param in section.iterParams():
+            protVar = getattr(protocol, paramName, None)
+            if protVar is None:
+                raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
+                # Create the label
+            param.htmlValue = protVar.get(param.default.get(""))
+            
+    
     
     context = {'protocol':protocol,
+               'definition': protocol._definition,
                'favicon': favicon_path,
                'help': logo_help,
                'form': jsForm_path,

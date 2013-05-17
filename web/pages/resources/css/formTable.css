@@ -1,10 +1,16 @@
 /* CSS Document */
 html,body {
-	background-color: rgb(235, 235, 235);
+	background-color: rgb(240, 245, 230);
 }
 
 input {
 	background: LightGray;
+}
+
+textarea {
+	resize: vertical;
+	background: LightGray;
+	max-height: 9em;
 }
 
 .box {
@@ -27,20 +33,18 @@ input {
 	font-weight: bold;
 }
 
-.element {
-	
+.elementHide {
+	display: none;
 }
 
 .recommended {
 	font-weight: bold;
+	text-align: right;
 }
 
 .normal {
 	font-weight: normal;
-}
-
-.boolean {
-	
+	text-align: right;
 }
 
 .option {
@@ -54,6 +58,7 @@ input {
 }
 
 .ico {
+	
 }
 
 .ico:hover {
@@ -65,21 +70,6 @@ input {
 	
 }
 
-.left {
-	width: 15em;
-	float: left;
-}
-
-.right {
-	width: 6.5em;
-	float: right;
-}
-
-.expertise {
-	margin-left: 0.7em;
-	width: 10em;
-}
-
 .buttonClose {
 	background: url(../../../resources/dialog_close.png) 0.5em no-repeat;
 	background-size: 20%;
@@ -89,7 +79,7 @@ input {
 	width: 6.3em;
 	height: 2em;
 	background-color: LightGray;
-	border: 1px solid #000066;
+	/* 	border: 1px solid #000066; */
 	padding: 1px;
 	padding-left: 1.7em;
 	font-weight: bold;
@@ -111,7 +101,7 @@ input {
 	width: 6.3em;
 	height: 2em;
 	background-color: LightGray;
-	border: 1px solid #000066;
+	/* 	border: 1px solid #000066; */
 	padding: 1px;
 	padding-left: 2em;
 	font-weight: bold;
@@ -129,7 +119,7 @@ input {
 	width: 8em;
 	height: 2em;
 	background-color: DarkRed;
-	border: 1px solid #000066;
+	/* 	border: 1px solid #000066; */
 	/* 	padding: 1px; */
 	font-weight: bold;
 	letter-spacing: 0.2em;
@@ -139,8 +129,4 @@ input {
 
 .buttonExec:hover {
 	background-color: FireBrick;
-}
-
-.exec {
-	
 }
