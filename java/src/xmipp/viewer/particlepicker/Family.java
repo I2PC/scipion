@@ -110,19 +110,19 @@ public class Family
 		return templates;
 	}
 
-	public synchronized ImagePlus getTemplatesImage(long i)
-	{
-		try
-		{
-			ImagePlus imp = XmippImageConverter.convertToImagePlus(templates, i);
-
-			return imp;
-		}
-		catch (Exception e)
-		{
-			throw new IllegalArgumentException(e);
-		}
-	}
+//	public synchronized ImagePlus getTemplatesImage(long i)
+//	{
+//		try
+//		{
+//			ImagePlus imp = XmippImageConverter.convertToImagePlus(templates, i);
+//
+//			return imp;
+//		}
+//		catch (Exception e)
+//		{
+//			throw new IllegalArgumentException(e);
+//		}
+//	}
 
 	public FamilyState getStep()
 	{

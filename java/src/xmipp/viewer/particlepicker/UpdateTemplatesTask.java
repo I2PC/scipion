@@ -6,6 +6,7 @@ import xmipp.jni.ImageGeneric;
 import xmipp.jni.Particle;
 import xmipp.utils.Task;
 import xmipp.utils.TasksManager;
+import xmipp.viewer.particlepicker.training.gui.TemplatesJDialog;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
 import xmipp.viewer.particlepicker.training.model.MicrographFamilyData;
 import xmipp.viewer.particlepicker.training.model.TrainingMicrograph;
@@ -16,10 +17,16 @@ public class UpdateTemplatesTask implements Task
 {
 
 	private TrainingPicker picker;
+	private static TemplatesJDialog dialog;
 
 	public UpdateTemplatesTask(TrainingPicker picker)
 	{
 		this.picker = picker;
+	}
+	
+	public static void setTemplatesDialog(TemplatesJDialog d)
+	{
+		dialog = d;
 	}
 
 	@Override
@@ -51,10 +58,7 @@ public class UpdateTemplatesTask implements Task
 						particle = particles.get(i);
 						igp = particle.getImageGeneric();
 						if (f.getTemplateIndex() < f.getTemplatesNumber())
-						{
 							f.setTemplate(igp);
-							System.out.println("init template " + f.getTemplateIndex());
-						}
 						else
 						{
 							double[] align = f.getTemplates().alignImage(igp);
@@ -63,6 +67,8 @@ public class UpdateTemplatesTask implements Task
 					}
 				}
 				f.saveTemplates();
+				if(dialog != null && dialog.isVisible())
+					dialog.loadTemplates(true);
 				System.out.println("templates updated");
 			}
 			catch (Exception e)
