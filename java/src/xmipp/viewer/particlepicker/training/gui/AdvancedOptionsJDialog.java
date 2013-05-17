@@ -86,7 +86,7 @@ public class AdvancedOptionsJDialog extends JDialog {
 				pack();
 				return;
 			}
-			//templates.write("templates.stk");
+
 			templatespn.removeAll();
 			ImagePlus template;
 			for (int i = 0; i < frame.getParticlePicker().getTemplatesNumber(); i ++) {
