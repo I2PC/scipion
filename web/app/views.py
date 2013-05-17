@@ -18,7 +18,7 @@ def getResource(request):
     elif request == 'help':
         img = 'contents24.png'
     elif request == 'browse':
-        img = 'zoom.png'    
+        img = 'zoom.png'
     path = os.path.join(settings.MEDIA_URL, img)
     return path
 
@@ -27,8 +27,6 @@ def projects(request):
 #    logo_path = findResource('scipion_logo.png')
 
     # Resources #
-    logo_path = getResource('logoScipion')
-    favicon_path = getResource('favicon')
     css_path = os.path.join(settings.STATIC_URL, 'css/projects_style.css')
     #############
     
@@ -37,8 +35,6 @@ def projects(request):
         p.pTime = prettyDate(p.mTime)
 
     context = {'projects': projects,
-               'logo': logo_path,
-               'favicon': favicon_path,
                'css':css_path}
     
     return render_to_response('projects.html', context)
@@ -139,13 +135,12 @@ class RunsTreeProvider(TreeProvider):
 def project_content(request):
     
     # Resources #
-    logo_path = getResource('logoScipion')
-    favicon_path = getResource('favicon')
     css_path = os.path.join(settings.STATIC_URL, 'css/project_content_style.css')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     jquery_cookie = os.path.join(settings.STATIC_URL, 'js/jquery.cookie.js')
     jquery_treeview = os.path.join(settings.STATIC_URL, 'js/jquery.treeview.js')
     launchTreeview = os.path.join(settings.STATIC_URL, 'js/launchTreeview.js')
+    popup_path = os.path.join(settings.STATIC_URL, 'js/popup.js')
     #############
 
     manager = Manager()
@@ -158,9 +153,8 @@ def project_content(request):
     root = loadProtTree()
     
     context = {'project_name':project_name,
-               'logo': logo_path,
-               'favicon': favicon_path,
                'jquery': jquery_path,
+               'popup': popup_path,
                'jquery_cookie': jquery_cookie,
                'jquery_treeview': jquery_treeview,
                'launchTreeview': launchTreeview,
@@ -170,7 +164,8 @@ def project_content(request):
     
     return render_to_response('project_content.html', context)
 
-def form(request):
+
+def formTable(request):
     
     # Resources #
     favicon_path = getResource('favicon')
@@ -178,12 +173,37 @@ def form(request):
     logo_browse = getResource('browse')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     jsForm_path = os.path.join(settings.STATIC_URL, 'js/form.js')
-    css_path = os.path.join(settings.STATIC_URL, 'css/form.css')
+    css_path = os.path.join(settings.STATIC_URL, 'css/formTable.css')
     #############
     
-    protocol = request.GET.get('protocol')
+    ## Project Id(or Name) should be stored in SESSION
+    manager = Manager()
+    project_name = request.GET.get('project_name')
+    projPath = manager.getProjectPath(project_name)
+    project = Project(projPath)
+    project.load()
+    
+    protocolName = request.GET.get('protocol', None)
+    if protocolName is None:
+        protId = request.GET.get('protocolId', None)
+        protocol = project.mapper.selectById(int(protId))
+    else:
+        protocolClass = emProtocolsDict.get(protocolName, None)
+        protocol = protocolClass()
+    
+    #TODO: Add error page validation when protocol is None
+    for section in protocol._definition.iterSections():
+        for paramName, param in section.iterParams():
+            protVar = getattr(protocol, paramName, None)
+            if protVar is None:
+                raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
+                # Create the label
+            param.htmlValue = protVar.get(param.default.get(""))
+            
+    
     
     context = {'protocol':protocol,
+               'definition': protocol._definition,
                'favicon': favicon_path,
                'help': logo_help,
                'form': jsForm_path,
@@ -191,7 +211,7 @@ def form(request):
                'browse': logo_browse,
                'css':css_path}
     
-    return render_to_response('form.html', context)
+    return render_to_response('formTable.html', context)
 
 
 if __name__ == '__main__':

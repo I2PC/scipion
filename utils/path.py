@@ -110,3 +110,17 @@ def createFolderForFile(filePath):
     """
     filePathParentDirectory = os.path.dirname(filePath)
     makePath(filePathParentDirectory)
+    
+def getFolderFiles(folderPath):
+    """
+    Gets all files of given folder and it subfolder.
+    folderPath -- Folder path to get files.
+    returns -- Set with all folder files.
+    """
+    filePaths = set()
+    for path, dirs, files in os.walk(folderPath):
+        for file in files:
+            filePaths.add(join(path, file))
+    return filePaths
+
+

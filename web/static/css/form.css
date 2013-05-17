@@ -1,6 +1,6 @@
 /* CSS Document */
 html,body {
-	background-color: Gainsboro;
+	background-color: rgb(235, 235, 235);
 }
 
 input {
@@ -8,11 +8,9 @@ input {
 }
 
 .box {
-	/* 	border: 2px solid black; */
 	margin: 0.3em;
 	width: 30em;
 	height: 30em;
-	/* 	background: white; */
 	overflow-y: scroll;
 	overflow-x: hidden;
 	padding-right: 0.5em;
@@ -37,12 +35,10 @@ input {
 .element {
 	width: 27em;
 	margin: 0.4em;
-/* 	background: blue; */
 }
 
 .recommended {
 	font-weight: bold;
-/* 	background: red; */
 }
 
 .normal {
@@ -50,7 +46,7 @@ input {
 }
 
 .boolean {
-	/* 	border: 1px solid lightgray; */
+	/* 		border: 1px solid lightgray; */
 	width: auto;
 	margin: 0 0.2em 0 0.2em;
 	font-weight: normal;
@@ -58,13 +54,12 @@ input {
 
 .option {
 	display: list-item;
-	margin-left: 9em;
+	margin-left: 12em;
 	margin-top: -1em;
 	text-decoration: none;
 	list-style: none;
-	/* 	background: LightGray; */
+	/* 		background: LightGray; */
 	width: 9em;
-/* 	background: green; */
 }
 
 .icoHelp {

@@ -86,7 +86,7 @@ def populateTree(self, tree, prefix, obj, level=0):
             img = self.getImage(img)
         item = tree.insert(prefix, 'end', key, text=text, image=img, tags=(tag))
         
-        if level < 3:
+        if level < 2:
             tree.item(item, open=True)
         if obj.value.hasValue() and tag == 'protocol_base':
             protClassName = value.split('.')[-1] # Take last part

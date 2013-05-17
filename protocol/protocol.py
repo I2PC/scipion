@@ -33,7 +33,7 @@ import datetime as dt
 import pickle
 
 from pyworkflow.object import OrderedObject, String, List, Integer, Boolean, CsvList
-from pyworkflow.utils.path import replaceExt, makePath, join, existsPath, cleanPath
+from pyworkflow.utils.path import replaceExt, makePath, join, existsPath, cleanPath, getFolderFiles
 from pyworkflow.utils.log import *
 
 STATUS_LAUNCHED = "launched"  # launched to queue system, only usefull for protocols
@@ -120,7 +120,6 @@ class Step(OrderedObject):
                     # it will be waiting for use to mark it as DONE
                     status = STATUS_WAITING_APPROVAL
                 else:
-                    
                     status = STATUS_FINISHED
                 self.status.set(status)
         except Exception, e:
@@ -128,7 +127,7 @@ class Step(OrderedObject):
             import traceback
             traceback.print_exc()
             
-            raise #only in development
+            #raise #only in development
         finally:
             self.endTime.set(dt.datetime.now())
 
@@ -301,7 +300,7 @@ class Protocol(Step):
         *funcArgs: the variable list of arguments to pass to the function.
         **args: see __insertStep
         """
-        step = FunctionStep(funcName, *funcArgs)
+        step = FunctionStep(funcName, *funcArgs, **args)
         step.func = getattr(self, funcName)
         return self.__insertStep(step, **args)
         
@@ -391,12 +390,13 @@ class Protocol(Step):
         self.endTime.set(step.endTime.get())
         self._store(self.endTime, step)
         doContinue = True
-        if self.status == STATUS_WAITING_APPROVAL:
+        if step.status == STATUS_WAITING_APPROVAL:
             doContinue = False
-            self.status.set(STATUS_WAITING_APPROVAL)
-        elif self.status == STATUS_FAILED:
+        elif step.status == STATUS_FAILED:
             doContinue = False
             self.setFailed("Protocol failed: " + step.error.get())
+            self._log.error("Protocol failed: " + step.error.get())
+        self.lastStatus = step.status.get()
         self._log.info("FINISHED: " + step.funcName.get())
         return doContinue
     
@@ -406,11 +406,11 @@ class Protocol(Step):
         self.setRunning()
         self._store()
         
-        status = STATUS_FINISHED # Just for the case doesn't enter in the loop
+        #status = STATUS_FINISHED # Just for the case doesn't enter in the loop
         
         self._stepsExecutor.runSteps(self._steps[startIndex:], 
                                      self._stepStarted, self._stepFinished)
-        self.status.set(status)
+        self.status.set(self.lastStatus)
         self._store(self.status)
         
     def _makePathsAndClean(self):
@@ -453,4 +453,5 @@ class Protocol(Step):
         logFile = self._getPath('log', 'protocol.log')
         return getFileLogger(logFile)
 
-
+    def getFiles(self):
+        return getFolderFiles(self.workingDir.get())
