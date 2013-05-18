@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:    Clara Mejias          clrmejias7@gmail.com (2013)
+ * Authors:    Clara M. Mejias Perez          clrmejias7@gmail.com (2013)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
