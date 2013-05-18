@@ -199,7 +199,6 @@ void vectorInverse(const Matrix1D<double> &A, Matrix1D<double> &I){
 void mppca (const Matrix2D<double> &X, int no_dims, int no_analyzers, double tol, int maxiter, double minstd,
             MultidimArray<double> &LX, Matrix2D<double> &MX, Matrix1D<double> &PX)
 {
-
     double pi=3.141592653589;
 	double m,lik,sr;
 	Matrix1D<double> cc,MM,PII,RS,AUXR,AUXR1,DCC,AUXMAX,MAXR,SUMR,LOGRS,r,AUXT,MCC,srz,srx,RNDM,SAUXPX;
