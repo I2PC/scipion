@@ -43,7 +43,6 @@ public:
     void reduceDimensionality();
 
 private:
-    void modifiedGramSchmidtOrtogonalization(Matrix2D<double> *matrix);
     void completeYt(const Matrix2D<double> &V, const Matrix2D<double> &Yi, Matrix2D<double> &Yt_complete);
     void buildYiHessianEstimator(const Matrix2D<double> &V, Matrix2D<double> &Yi, size_t no_dim, size_t dp);
 };

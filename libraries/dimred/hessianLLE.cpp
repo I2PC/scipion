@@ -23,32 +23,6 @@
 
 #include "hessianLLE.h"
 
-void HessianLLE::modifiedGramSchmidtOrtogonalization(Matrix2D<double> *matrix){
-	size_t n = MAT_XSIZE(*matrix);
-	size_t m = MAT_YSIZE(*matrix);
-	Matrix1D<double> columnJ1, columnJ2;
-
-	for(size_t j1=0; j1<MAT_XSIZE(*matrix); j1++){
-		matrix->getCol(j1,columnJ1);
-
-		double icolumnModule = 1.0/columnJ1.module();
-		for(size_t k = 0; k<MAT_YSIZE(*matrix); k++)
-			MAT_ELEM(*matrix,k,j1) *= icolumnModule;
-
-		if(j1<MAT_XSIZE(*matrix)-1)
-		{
-			matrix->getCol(j1,columnJ1);
-			for(size_t j2=j1+1; j2<MAT_XSIZE(*matrix); j2++)
-			{
-				matrix->getCol(j2,columnJ2);
-				double temp = dotProduct(columnJ1,columnJ2);
-				for (size_t k=0; k<MAT_YSIZE(*matrix); k++)
-					MAT_ELEM(*matrix,k,j2) -= temp*MAT_ELEM(*matrix,k,j1);
-			}
-		}
-	}
-}
-
 void HessianLLE::setSpecificParameters(int kNeighbours)
 {
     this->kNeighbours = kNeighbours;
@@ -68,20 +42,12 @@ void HessianLLE::reduceDimensionality()
 
     weightMatrix.initZeros(dp*sizeY,sizeY);
 
-    std::cout<<"Building Hessian estimator for neighboring points...\n";
     for(size_t index=0; index<MAT_YSIZE(*X);++index)
     {
         extractNearestNeighbours(*X, neighboursMatrix, index, thisX);
         subtractColumnMeans(thisX);
         thisX = thisX.transpose();
         svdcmp(thisX, U, D, Vpr); // thisX = U * D * Vpr^t
-
-        if (MAT_XSIZE(Vpr)<outputDim)
-        {
-            outputDim = MAT_XSIZE(Vpr);
-            dp = outputDim * (outputDim+1)/2;
-            std::cout<<"Target dimensionality reduced to "<<outputDim<<"\n";
-        }
 
         // Copy the first columns of Vpr onto V
         V.resizeNoCopy(MAT_YSIZE(Vpr),outputDim);
@@ -95,7 +61,7 @@ void HessianLLE::reduceDimensionality()
         //Build Hessian estimator
         buildYiHessianEstimator(V,Yi,outputDim,dp);
         completeYt(V, Yi, Yt);
-        modifiedGramSchmidtOrtogonalization(&Yt);
+        orthogonalizeColumnsGramSchmidt(Yt);
 
         //Get the transpose of the last columns
         size_t indexExtra = outputDim+1;
@@ -110,10 +76,7 @@ void HessianLLE::reduceDimensionality()
         	Pii.getRow(j,vector);
         	double sum = vector.sum();
         	if(sum > 0.0001)
-        	{
-        		FOR_ALL_ELEMENTS_IN_MATRIX1D(vector)
-        			VEC_ELEM(vector,i) = VEC_ELEM(vector,i)/sum;
-        	}
+        		vector*=1.0/sum;
 
         	//Fill weight matrix
           	for(int k = 0; k<kNeighbours; k++){
@@ -127,9 +90,7 @@ void HessianLLE::reduceDimensionality()
 
   	Matrix1D<double> v;
   	eigsBetween(G,1,outputDim,v,Y);
-
-  	FOR_ALL_ELEMENTS_IN_MATRIX2D(Y)
-  		MAT_ELEM(Y,i,j) = MAT_ELEM(Y,i,j) * sqrt(sizeY);
+  	Y*=sqrt(sizeY);
 }
 
 void HessianLLE::completeYt(const Matrix2D<double> &V,
