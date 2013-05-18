@@ -71,7 +71,7 @@ void HessianLLE::reduceDimensionality()
         	MAT_ELEM(Pii,i,j) = MAT_ELEM(Yt,j,indexExtra+i);
 
         //Double check weights sum to 1
-        for(size_t j=0; j<dp; j++)
+        for (size_t j=0; j<dp; j++)
         {
         	Pii.getRow(j,vector);
         	double sum = vector.sum();
@@ -111,24 +111,18 @@ void HessianLLE::completeYt(const Matrix2D<double> &V,
 void HessianLLE::buildYiHessianEstimator(const Matrix2D<double> &V,
 		Matrix2D<double> &Yi, size_t no_dim, size_t dp)
 {
-    Matrix1D<double> startp;
-    Matrix1D<double> vector;
-
     size_t ct = 0;
     Yi.resizeNoCopy(MAT_YSIZE(V),dp);
 
     for(size_t mm=0; mm<no_dim; mm++)
     {
-        V.getCol(mm,startp);
-
         size_t length = no_dim-mm;
         size_t indle=mm;
         for(size_t nn=0; nn<length; nn++)
         {
-        	V.getCol(indle,vector);
             size_t column = ct+nn;
             for(size_t element = 0; element<MAT_YSIZE(V); element++)
-                MAT_ELEM(Yi, element, column) = VEC_ELEM(startp, element)*VEC_ELEM(vector, element);
+                MAT_ELEM(Yi, element, column) = MAT_ELEM(V, element, mm)*MAT_ELEM(V, element, indle);
             ++indle;
         }
         ct += length;
