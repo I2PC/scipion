@@ -1,6 +1,7 @@
 /***************************************************************************
  *
  * Authors:    Carlos Oscar Sanchez Sorzano      coss@cnb.csic.es (2013)
+ *             Daniel Albuerne Gonzalez          d.albuerne@usp.ceu.es
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -35,12 +36,17 @@ void LaplacianEigenmap::reduceDimensionality()
 {
 	Matrix2D<double> G,L,D;
 	Matrix1D<double> mappedX;
+	//Construct neighborhood graph
 	computeDistanceToNeighbours(*X,numberOfNeighbours,G,distance,false);
+	//Compute Gaussian kernel(heat kernel based weights)
 	computeSimilarityMatrix(G,sigma,true,true);
+	//Compute Laplacian
 	computeGraphLaplacian(G,L);
+	//Construct diagonal weight matrix
 	D.initZeros(MAT_YSIZE(G),MAT_YSIZE(G));
 	FOR_ALL_ELEMENTS_IN_MATRIX2D(G)
 		MAT_ELEM(D,i,i)+=MAT_ELEM(G,i,j);
+	//Construct eigenmaps
 	generalizedEigs(L,D,mappedX,Y);
-	keepColumns(Y,2,outputDim+1);
+	keepColumns(Y,1,outputDim);
 }
