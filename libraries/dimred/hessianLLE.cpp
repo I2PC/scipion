@@ -24,27 +24,26 @@
 #include "hessianLLE.h"
 
 void HessianLLE::modifiedGramSchmidtOrtogonalization(Matrix2D<double> *matrix){
-	int n = MAT_XSIZE(*matrix);
-	int m = MAT_YSIZE(*matrix);
-	Matrix1D<double> columnI, columnJ, result;
-	result.initZeros(3);
+	size_t n = MAT_XSIZE(*matrix);
+	size_t m = MAT_YSIZE(*matrix);
+	Matrix1D<double> columnJ1, columnJ2;
 
-	for(int i=0; i<n; i++){
-		matrix->getCol(i,columnI);
-		double columnModule = columnI.module();
+	for(size_t j1=0; j1<MAT_XSIZE(*matrix); j1++){
+		matrix->getCol(j1,columnJ1);
 
-		for(int k = 0; k<m; k++){
-			MAT_ELEM(*matrix,k,i) = MAT_ELEM(*matrix,k,i)/columnModule;
-		}
-		if(i<n-1){
-			for(int j=i+1; j<n; j++){
-				matrix->getCol(i,columnI);
-				matrix->getCol(j,columnJ);
-				columnI.setRow();
-				double temp = dotProduct(columnI,columnJ);
-				for(int k=0; k<m; k++){
-					MAT_ELEM(*matrix,k,j) = MAT_ELEM(*matrix,k,j) - temp*MAT_ELEM(*matrix,k,i);
-				}
+		double icolumnModule = 1.0/columnJ1.module();
+		for(size_t k = 0; k<MAT_YSIZE(*matrix); k++)
+			MAT_ELEM(*matrix,k,j1) *= icolumnModule;
+
+		if(j1<MAT_XSIZE(*matrix)-1)
+		{
+			matrix->getCol(j1,columnJ1);
+			for(size_t j2=j1+1; j2<MAT_XSIZE(*matrix); j2++)
+			{
+				matrix->getCol(j2,columnJ2);
+				double temp = dotProduct(columnJ1,columnJ2);
+				for (size_t k=0; k<MAT_YSIZE(*matrix); k++)
+					MAT_ELEM(*matrix,k,j2) -= temp*MAT_ELEM(*matrix,k,j1);
 			}
 		}
 	}
