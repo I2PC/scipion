@@ -53,6 +53,8 @@ class XmippProtocol():
         If not, it will be inputAttr.getFileName()
         """
         inputAttr = getattr(self, inputName)
+        print "inputAttr.getClassName()", inputAttr.getClassName()
+        print "xmippClass", xmippClass
         if not isinstance(inputAttr, xmippClass):
             self._insertFunctionStep('convertInputToXmipp', inputName, xmippClass, resultFn)
             return resultFn
@@ -67,7 +69,8 @@ class XmippProtocol():
         inputAttr = getattr(self, inputName)
         inputXmipp = xmippClass.convert(inputAttr, resultFn)
         
-        if inputXmipp != inputAttr:
+        if inputXmipp is not inputAttr:
+            print "======== CONVERTIN........."
             self._insertChild(inputName + 'Xmipp', inputXmipp)
             return [resultFn] # validate resultFn was produced if converted
         
@@ -160,6 +163,9 @@ class XmippSet():
         
     def read(self, filename):
         self._md.read(filename)
+        
+    def isEmpty(self):
+        return self._md.isEmpty()
         
         
 #    @staticmethod

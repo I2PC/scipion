@@ -42,7 +42,7 @@ class SqliteMapper(Mapper):
         return obj.getInternalValue()
         
     def __insert(self, obj, namePrefix=None):
-        obj._objId = self.db.insertObject(obj._objName, obj.getClassName(), 
+        obj._objId = self.db.insertObject(obj._objName, obj.getClassName(),
                                           self.__getObjectValue(obj), obj._objParentId)
         sid = obj.strId()
         if namePrefix is None:
@@ -87,7 +87,7 @@ class SqliteMapper(Mapper):
         return obj.strId()
     
     def updateTo(self, obj, level=1):
-        self.db.updateObject(obj._objId, obj._objName, obj.getClassName(), 
+        self.db.updateObject(obj._objId, obj._objName, obj.getClassName(),
                              self.__getObjectValue(obj), obj._objParentId)
         for key, attr in obj.getAttributesToStore():
             if attr._objId is None: # Insert new items from the previous state
@@ -97,7 +97,7 @@ class SqliteMapper(Mapper):
                 attr._objName = joinExt(namePrefix, key)
                 self.__insert(attr, namePrefix)
             else:                
-                self.updateTo(attr, level+2)
+                self.updateTo(attr, level + 2)
         
     def updateFrom(self, obj):
         objRow = self.db.selectObjectById(obj._objId)
@@ -148,21 +148,29 @@ class SqliteMapper(Mapper):
             self.fillObjectWithRow(childObj, childRow)  
             childsDict[childObj._objId] = childObj  
               
-    def __objectsFromRows(self, objRows):
-        """Create a set of object from a set of rows"""
-        objs = []
-        for objRow in objRows:
-            obj = self._buildObject(objRow['classname'])
-            self.fillObject(obj, objRow)
-            objs.append(obj)
-        return objs
+    def __objFromRow(self, objRow):
+        obj = self._buildObject(objRow['classname'])
+        self.fillObject(obj, objRow)
+        return obj
         
-    def selectBy(self, **args):
+    def __iterObjectsFromRows(self, objRows):
+        for objRow in objRows:
+            obj = self.__objFromRow(objRow)
+            yield obj
+        
+    def __objectsFromRows(self, objRows, iterate=False):
+        """Create a set of object from a set of rows"""
+        if not iterate:
+            return [self.__objFromRow(objRow) for objRow in objRows]
+        else:
+            return self.__iterObjectsFromRows(objRows)
+                
+    def selectBy(self, iterate=False, **args):
         """Select object meetings some criterias"""
         objRows = self.db.selectObjectsBy(**args)
-        return self.__objectsFromRows(objRows)
+        return self.__objectsFromRows(objRows, iterate)
     
-    def selectByClass(self, className, includeSubclasses=True):
+    def selectByClass(self, className, includeSubclasses=True, iterate=False):
         if includeSubclasses:
             from pyworkflow.utils.reflection import getSubclasses
             whereStr = "classname='%s'" % className
@@ -172,14 +180,14 @@ class SqliteMapper(Mapper):
                 if issubclass(v, base):
                     whereStr += " OR classname='%s'" % k
             objRows = self.db.selectObjectsWhere(whereStr)
-            return self.__objectsFromRows(objRows)
+            return self.__objectsFromRows(objRows, iterate)
         else:
-            return self.selectBy(classname=className)
+            return self.selectBy(iterate=iterate, classname=className)
             
     
-    def selectAll(self):
+    def selectAll(self, iterate=False):
         objRows = self.db.selectObjectsByParent(parent_id=None)
-        return self.__objectsFromRows(objRows)
+        return self.__objectsFromRows(objRows, iterate)
 
 
 class SqliteDb():
@@ -240,7 +248,21 @@ class SqliteDb():
         self.executeCommand(self.selectCmd("id=?"), (objId,))  
         return self.cursor.fetchone()
     
-    def selectObjectsByParent(self, parent_id=None):
+    def _iterResults(self):
+        row = self.cursor.fetch()
+        while row is not None:
+            yield row
+            row = self.cursor.fetch()
+        
+    def _results(self, iterate=False):
+        """ Return the results to which cursor, point to. 
+        If iterates=True, iterate yielding each result independenly"""
+        if not iterate:
+            return self.cursor.fetchall()
+        else:
+            return self._iterResults()
+        
+    def selectObjectsByParent(self, parent_id=None, iterate=False):
         """Select object with a given parent
         if the parent_id is None, all object with parent_id NULL
         will be returned"""
@@ -248,25 +270,25 @@ class SqliteDb():
             self.executeCommand(self.selectCmd("parent_id is NULL"))
         else:
             self.executeCommand(self.selectCmd("parent_id=?"), (parent_id,))
-        return self.cursor.fetchall()  
+        return self._results(iterate)  
     
-    def selectObjectsByAncestor(self, ancestor_namePrefix):
+    def selectObjectsByAncestor(self, ancestor_namePrefix, iterate=False):
         """Select all objects in the hierachy of ancestor_id"""
         self.executeCommand(self.selectCmd("name LIKE '%s.%%'" % ancestor_namePrefix))
-        return self.cursor.fetchall()          
+        return self._results(iterate)          
     
-    def selectObjectsBy(self, **args):     
+    def selectObjectsBy(self, iterate=False, **args):     
         """More flexible select where the constrains can be passed
         as a dictionary, the concatenation is done by an AND"""
         whereList = ['%s=?' % k for k in args.keys()]
         whereStr = ' AND '.join(whereList)
         whereTuple = tuple(args.values())
         self.executeCommand(self.selectCmd(whereStr), whereTuple)
-        return self.cursor.fetchall()
+        return self._results(iterate)
     
-    def selectObjectsWhere(self, whereStr):
+    def selectObjectsWhere(self, whereStr, iterate=False):
         self.executeCommand(self.selectCmd(whereStr))
-        return self.cursor.fetchall()   
+        return self._results(iterate)   
     
     def deleteObject(self, objId):
         """Delete an existing object"""

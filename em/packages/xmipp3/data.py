@@ -66,15 +66,22 @@ class XmippSetOfImages(SetOfImages):
     
     def __init__(self, filename=None, **args):
         SetOfImages.__init__(self, filename, **args)
-        
         self._set = XmippSet(XmippImage)
-        self._setPairs = XmippSet(XmippTiltedPair)
+        if self.hasTiltPairs():
+            self._setPairs = XmippSet(XmippTiltedPair)
            
     def load(self):
+        """ Load extra data from files. """
         if self.getFileName() is None:
             raise Exception("Set filename before calling load()")
-        self._set.read(self._getListBlock())    
-        self._setPairs.read(self._getTiltedBlock()) 
+        self._set.read(self._getListBlock())
+        if self.hasTiltPairs():
+            self._setPairs.read(self._getTiltedBlock())
+        
+    def loadIfEmpty(self):
+        """ Load data only if the main set is empty. """
+        if self._set.isEmpty():
+            self.load()
         
     def sort(self):
         """Sort the set according to MDL_IMAGE"""
@@ -91,6 +98,10 @@ class XmippSetOfImages(SetOfImages):
     def append(self, xmippImg):
         """Add a new image to the set"""
         self._set.append(xmippImg)
+        
+    def appendFromMd(self, md):
+        """ Add all entries found in the md. """
+        self._set._md.unionAll(md)
 
         #FIXME: No deberiamos mantener esta lista sino solo el set
 #        self._micList.append(xmippImg)
@@ -104,13 +115,14 @@ class XmippSetOfImages(SetOfImages):
         
     def __iter__(self):
         """ Iterate over the set of images. """
-        #self.__loadFiles()
+        self.loadIfEmpty()
         for img in self._set:
             yield img
         
     def iterTiltPairs(self):
         """Iterate over the tilt pairs if is the case"""
         #self.__loadFiles()        
+        self.loadIfEmpty()
         for tp in self._setPairs:
             #retrieve index for untilted and tilted micrographs
             iU = self.getImageIndex(tp.getUntilted())
@@ -119,6 +131,7 @@ class XmippSetOfImages(SetOfImages):
             
     def __getitem__(self, index):
         # TODO: Improve the way of accessing element in Xmipp MetaData
+        self.loadIfEmpty()
         for i, item in enumerate(self._set):
             if i == index:
                 return item
@@ -139,7 +152,23 @@ class XmippSetOfImages(SetOfImages):
                     
     @staticmethod
     def convert(setOfImgs, filename):
-        return setOfImgs.convert(XmippSetOfImages, filename)
+        if isinstance(setOfImgs, XmippSetOfImages):
+            return setOfImgs
+        
+        xmippImgs = XmippSetOfImages(filename)
+        xmippImgs.copyInfo(setOfImgs)
+        
+        for item in setOfImgs:
+            xmippImgs.append(item)
+        
+        # If there are tilt pairs add tilt pairs metadata
+        if setOfImgs.hasTiltPairs():
+            for iU, iT in setOfImgs.iterTiltPairs():
+                xmippImgs.appendPair(iU, iT)
+    
+        xmippImgs.write()
+        
+        return xmippImgs
                 
                 
 class XmippMicrograph(XmippImage, Micrograph):

@@ -56,6 +56,8 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
     
     def __init__(self, **args):        
         ProtParticlePicking.__init__(self, **args)
+        # The following attribute is only for testing
+        self.importFolder = args.get('importFolder', None)
         
     def _defineSteps(self):
         """The Particle Picking proccess is realized for a set of micrographs"""
@@ -73,7 +75,10 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         self._insertConvertStep('inputMics', XmippSetOfMicrographs, 
                                  self._getPath('micrographs.xmd'))
         # Launch Particle Picking GUI
-        self._insertFunctionStep('launchParticlePickGUI', isInteractive=True)       
+        if self.importFolder is None:
+            self._insertFunctionStep('launchParticlePickGUI', isInteractive=True)
+        else: # This is only used for test purposes
+            self._insertFunctionStep('_importFromFolder')       
         # Insert step to create output objects       
         self._insertFunctionStep('createOutput')
         
@@ -113,6 +118,17 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         coords.boxSize.set(size)
         
         return coords                    
+        
+    def _importFromFolder(self):
+        """ This function will copy Xmipp .pos files for
+        simulating an particle picking run...this is only
+        for testing purposes.
+        """
+        from pyworkflow.utils.path import getFolderFiles
+        import shutil
+        
+        for f in getFolderFiles(self.importFolder):
+            shutil.copy(f, self._getExtraPath())
         
     def createOutput(self):
         fn = self._getExtraPath('families.xmd')
