@@ -1120,6 +1120,14 @@ public:
     		VEC_ELEM(sum,i)+=MAT_ELEM(*this,i,j);
     }
 
+    /** Get column sum. */
+        void colSum(Matrix1D<T> &sum) const
+        {
+        	sum.initZeros(MAT_XSIZE(*this));
+        	FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
+        		VEC_ELEM(sum,j)+=MAT_ELEM(*this,i,j);
+        }
+
     /** Get row energy sum.
      * Sum of the squared values by row */
     void rowEnergySum(Matrix1D<T> &sum) const
@@ -1460,7 +1468,16 @@ public:
     	Xmr*=1.0/MAT_XSIZE(*this);
     }
 
-    /** Set constant column.
+    /** Compute row means */
+    void computeColMeans(Matrix1D<double> &Xmr) const
+    {
+       	Xmr.initZeros(MAT_YSIZE(*this));
+       	FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
+       		VEC_ELEM(Xmr,j)+=MAT_ELEM(*this,i,j);
+       	Xmr*=1.0/MAT_YSIZE(*this);
+     }
+
+     /** Set constant column.
      * Set a given column to a constant value A(i,j)=val;
      */
     void setConstantCol(size_t j, T v)
