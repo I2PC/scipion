@@ -644,3 +644,28 @@ void keepColumns(Matrix2D<double> &A, int j0, int jF)
     	memcpy(&MAT_ELEM(Ap,i,0),&MAT_ELEM(A,i,j0),MAT_XSIZE(Ap)*sizeof(double));
     A=Ap;
 }
+
+void orthogonalizeColumnsGramSchmidt(Matrix2D<double> &M)
+{
+	for(size_t j1=0; j1<MAT_XSIZE(M); j1++)
+	{
+		// Normalize column j1
+		double norm=0;
+		for (size_t i=0; i<MAT_YSIZE(M); i++)
+			norm+=MAT_ELEM(M,i,j1)*MAT_ELEM(M,i,j1);
+		double K=1.0/sqrt(norm);
+		for(size_t i = 0; i<MAT_YSIZE(M); i++)
+			MAT_ELEM(M,i,j1) *=K;
+
+		// Update rest of columns
+		for(size_t j2=j1+1; j2<MAT_XSIZE(M); j2++)
+		{
+			// Compute the dot product
+			double K = 0;
+			for (size_t i=0; i<MAT_YSIZE(M); i++)
+				K+=MAT_ELEM(M,i,j1)*MAT_ELEM(M,i,j2);
+			for (size_t i=0; i<MAT_YSIZE(M); i++)
+				MAT_ELEM(M,i,j2) -= K*MAT_ELEM(M,i,j1);
+		}
+	}
+}

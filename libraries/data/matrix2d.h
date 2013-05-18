@@ -1883,6 +1883,9 @@ void typeCast(const Matrix2D<T1>& v1,  Matrix2D<T1>& v2)
     v2=v1;
 }
 
+/** Gram Schmidt orthogonalization by columns */
+void orthogonalizeColumnsGramSchmidt(Matrix2D<double> &M);
+
 /** Helper class for solving linear systems */
 class PseudoInverseHelper
 {
