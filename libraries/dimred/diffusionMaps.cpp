@@ -53,7 +53,7 @@ void DiffusionMaps::reduceDimensionality()
             MAT_ELEM(L2distance,i,j)/=pow(VEC_ELEM(p,i)*VEC_ELEM(p,j),t);
     else
         FOR_ALL_ELEMENTS_IN_MATRIX2D(L2distance)
-            MAT_ELEM(L2distance,i,j)/=pow(VEC_ELEM(p,i));
+            MAT_ELEM(L2distance,i,j)/=VEC_ELEM(p,i);
 
     // Normalize L2distance again
     L2distance.rowSum(p);
