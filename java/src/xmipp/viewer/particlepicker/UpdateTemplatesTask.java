@@ -69,7 +69,6 @@ public class UpdateTemplatesTask implements Task
 				f.saveTemplates();
 				if(dialog != null && dialog.isVisible())
 					dialog.loadTemplates(true);
-				System.out.println("templates updated");
 			}
 			catch (Exception e)
 			{

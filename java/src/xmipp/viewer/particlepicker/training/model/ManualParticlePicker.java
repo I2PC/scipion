@@ -82,7 +82,6 @@ import xmipp.viewer.particlepicker.Micrograph;
 			for (TrainingMicrograph m : micrographs)
 			{
 				filename = getImportMicrographName(path, m.getFile(), f);
-				System.out.println("  filename: " + filename);
 				if (Filename.exists(filename))
 					result += importParticlesFromFile(filename, f, m, scale, invertx, inverty);
 			}

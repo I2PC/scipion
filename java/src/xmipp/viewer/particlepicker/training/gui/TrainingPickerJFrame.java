@@ -771,11 +771,9 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 						{
 							args = sppicker.getBuildInvariantCommandLineArgs(mfd);
 							ppicker.runXmippProgram("xmipp_micrograph_automatic_picking", args);
-							System.out.println(args);
 						}
 					}
 					args = sppicker.getTrainCommandLineArgs();
-					System.out.println(args);
 
 					ppicker.runXmippProgram("xmipp_micrograph_automatic_picking", args);
 
@@ -799,7 +797,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		setState(MicrographFamilyState.Autopick);
 
 		final String fargs = ((SupervisedParticlePicker) ppicker).getAutopickCommandLineArgs(getFamilyData());
-		System.out.println(fargs);
 		try
 		{
 			canvas.setEnabled(false);

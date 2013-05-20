@@ -316,9 +316,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		{
 			
 			active.setAdded(false);
-			um.initAligner();
-			System.out.println("init aligner");
-			
+			um.initAligner();			
 		}
 		um.setAlignerTiltedParticle(active);
 		frame.getTiltedCanvas().repaint();
