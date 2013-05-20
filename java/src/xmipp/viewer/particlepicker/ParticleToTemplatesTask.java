@@ -2,17 +2,24 @@ package xmipp.viewer.particlepicker;
 
 import xmipp.jni.ImageGeneric;
 import xmipp.utils.Task;
+import xmipp.viewer.particlepicker.training.gui.TemplatesJDialog;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 
 public class ParticleToTemplatesTask implements Task
 {
 
+	private static TemplatesJDialog dialog;
 	private TrainingParticle particle;
 
 	
 	public ParticleToTemplatesTask(TrainingParticle particle)
 	{
 		this.particle = particle;
+	}
+	
+	public static void setTemplatesDialog(TemplatesJDialog d)
+	{
+		dialog = d;
 	}
 	
 	@Override
@@ -33,6 +40,9 @@ public class ParticleToTemplatesTask implements Task
 
 			}
 			picker.saveTemplates();
+			if(dialog != null && dialog.isVisible())
+				dialog.loadTemplates(true);
+			System.out.println("Templates updated");
 		}
 		catch (Exception e)
 		{

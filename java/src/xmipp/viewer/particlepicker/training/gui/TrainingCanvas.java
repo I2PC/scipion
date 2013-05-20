@@ -153,14 +153,11 @@ public class TrainingCanvas extends ParticlePickerCanvas
 				micrograph.removeParticle(active, ppicker);
 				active = getLastParticle();
 				refresh();
-				if (!(active instanceof AutomaticParticle))
-					frame.updateTemplates();
 			}
 			else
 				manageActive(x, y);
 			if (activemoved)
 			{
-				frame.updateTemplates();
 				//ppicker.addParticleToTemplates(active, frame.isCenterParticle());
 				TasksManager.getInstance().addTask(new ParticleToTemplatesTask(active));
 				setActiveMoved(false);

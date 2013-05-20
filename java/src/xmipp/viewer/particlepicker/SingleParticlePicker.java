@@ -1,13 +1,11 @@
 package xmipp.viewer.particlepicker;
 
 import ij.ImagePlus;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
-
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
@@ -54,7 +52,7 @@ public class SingleParticlePicker extends ParticlePicker
 	public SingleParticlePicker(String block, String selfile, String outputdir, Mode mode)
 	{
 		super(block, selfile, outputdir, mode);
-		templatesfile = getOutputPath(templatesfile);
+		templatesfile = getOutputPath("templates.stk");
 		if (!new File(templatesfile).exists())
 		{
 			templatesNumber = dtemplatesnum;

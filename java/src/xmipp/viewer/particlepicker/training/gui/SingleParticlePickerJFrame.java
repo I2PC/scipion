@@ -521,7 +521,6 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 	public void updateMicrographsModel(boolean all)
 	{
 
-		updateTemplates();
 
 		if (particlesdialog != null)
 			loadParticles();
@@ -676,21 +675,13 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 	}
 
-	public void updateTemplates()
-	{
-		if (templatesdialog != null && templatesdialog.isVisible())
-			templatesdialog.loadTemplates(true);
-		
-
-	}
-
+	
 	public void updateSize(int size)
 	{
 		try
 		{
 			super.updateSize(size);
 			ppicker.resetParticleImages();
-			updateTemplates();
 		}
 		catch (Exception e)
 		{
@@ -735,20 +726,8 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		return new ParticlesJDialog(this);
 	}
 
-	public void setTemplatesNumber(int templates)
-	{
-		ppicker.setTemplatesNumber(templates);
 
-		updateTemplates();
 
-	}
-
-	public void setTemplatesDialog(TemplatesJDialog templatesdialog)
-	{
-		this.templatesdialog = templatesdialog;
-		
-	}
-	
 	
 	
 }
