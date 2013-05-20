@@ -55,8 +55,10 @@ class FileTransfer():
         
         
     def close(self):
-        self.sftp.close()
-        self.ssh.close()
+        if (self.sftp is not None):
+            self.sftp.close()
+        if (self.ssh is not None):
+            self.ssh.close()
 
     
                 

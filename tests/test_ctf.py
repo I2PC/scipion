@@ -14,7 +14,7 @@ proj = manager.createProject(projName) # Now it will be loaded if exists
 
 from tests.tester import *
 
-protImport = ProtImportMicrographs(pattern=pattern, samplingRate=1, voltage=200)
+protImport = ProtImportMicrographs(pattern=pattern, samplingRate=1, voltage=200, tiltPairs=True)
 proj.launchProtocol(protImport, wait=True)
 
 l = proj.mapper.selectByClass('SetOfMicrographs')

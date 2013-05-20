@@ -120,8 +120,8 @@ class XmippProtExtractParticles(ProtExtractParticles):
 #        ProtExtractParticles.__init__(self, **args)
         
     def _defineSteps(self):
-        '''for each micrograph insert the steps to preprocess it
-        '''       
+        """for each micrograph insert the steps to preprocess it
+        """       
         # Set sampling rate and inputMics according to downsample type
         self.inputCoords = self.inputCoordinates.get() 
 
@@ -190,7 +190,7 @@ class XmippProtExtractParticles(ProtExtractParticles):
            
  
     def extractParticles(self, micrographToExtract, mic):
-        ''' Extract particles from one micrograph '''
+        """ Extract particles from one micrograph """
         # Extract 
         outputRoot = str(self._getExtraPath(removeBaseExt(micrographToExtract)))
         
@@ -221,10 +221,8 @@ class XmippProtExtractParticles(ProtExtractParticles):
                 md.write(selfile)
             
     def _createPosFile(self, mic, fnPosFile):
-        ''' Create xmipp metadata extract_list with the coordinates for a micrograph '''
-        
+        """ Create xmipp metadata extract_list with the coordinates for a micrograph """
         micName = removeBaseExt(mic.getFileName())
-
         mdExtractList = xmipp.MetaData()
         #Iterate over the coordinates on that micrograph
         hasCoords = False
@@ -243,24 +241,21 @@ class XmippProtExtractParticles(ProtExtractParticles):
     
     def createOutput(self):
         # Create the SetOfImages object on the database
-        mdOut = xmipp.FileName(self._getPath('images.xmd'))        
-        imgSet = XmippSetOfImages(str(mdOut))
+        imgSet = XmippSetOfImages(self._getPath('images.xmd'))
         imgSet.copyInfo(self.inputMics)
         
-                
         if self.downsampleType == self.OTHER:
             imgSet.samplingRate.set(self.inputMics.samplingRate.get()*self.downFactor.get())
         
         stackFiles = glob(join(self._getExtraPath(),"*.stk"))
         stackFiles.sort()
-        imagesMd = xmipp.MetaData()
+
         for stack in stackFiles:
             fn = stack.replace(".stk",".xmd")
-            md = xmipp.MetaData(fn)
-            imagesMd.unionAll(md)
+            imgSet.appendFromMd(xmipp.MetaData(fn))
 
-        imgSet.setMd(imagesMd)
-        imgSet.sort()
+        #imgSet.setMd(imagesMd)
+        imgSet.sort() # We need sort?
         imgSet.write()
     
         self._defineOutputs(outputImages=imgSet)

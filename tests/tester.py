@@ -160,6 +160,13 @@ class TestPyworkflow(unittest.TestCase):
         
         csv = mapper2.selectByClass('CsvList')[0]
         self.assertTrue(list.__eq__(csv, strList))
+        
+        # Iterate over all objects
+        allObj = mapper2.selectAll()
+        iterAllObj = mapper2.selectAll(iterate=True)
+        
+        for a1, a2 in zip(allObj, iterAllObj):
+            self.assertEqual(a1, a2)
 
         
     def test_XML(self):

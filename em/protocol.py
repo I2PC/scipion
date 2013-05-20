@@ -34,7 +34,7 @@ import shutil
 from pyworkflow.object import String, Float
 from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
-from pyworkflow.em import Micrograph, SetOfMicrographs
+from pyworkflow.em import Micrograph, SetOfMicrographs, TiltedPair
 from pyworkflow.utils.path import removeBaseExt, join, basename
 
 
@@ -99,11 +99,19 @@ class ProtImportMicrographs(Protocol):
             micSet.setScannedPixelSize(scannedPixelSize)
         outFiles = [path]
         
-        for f in filePaths:
+        for i, f in enumerate(filePaths):
             dst = self._getPath(basename(f))            
             shutil.copyfile(f, dst)
-            micSet.append(Micrograph(dst))
+            mic_dst = Micrograph(dst)
+            micSet.append(mic_dst)
             outFiles.append(dst)
+        #REMOVE WHEN TILTED PAIR IS PROPERLY IMPLEMENTED      
+            if self.tiltPairs.get(): 
+                if i%2==0:
+                    j = i
+                else:
+                    micSet.appendPair(j, i)    
+        # END REMOVE                
         
         micSet.write()
         self._defineOutputs(outputMicrographs=micSet)

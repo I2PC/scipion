@@ -13,7 +13,7 @@ class TestFileTransfer(unittest.TestCase):
 
     def setUp(self):
         self.fileTransfer = FileTransfer()
-   
+    """   
     def testLocalFilesToOneRemoteHostTranfer(self):
         print "Local files to one remote host"
         passTest = transferFiles('localToRemote.xml', self.fileTransfer, "localToOneRemoteHost")
@@ -43,7 +43,13 @@ class TestFileTransfer(unittest.TestCase):
         passTest = transferFiles('allTransfers.xml', self.fileTransfer, "all")
         deleteFiles('allTransfers.xml', self.fileTransfer, "all")
         self.assertTrue(passTest) 
-    
+    """
+    def testLocalToLocal(self):
+        print "Local to local"
+        passTest = transferFiles('localToLocal.xml', self.fileTransfer, "localToLocal")
+        deleteFiles('localToLocal.xml', self.fileTransfer, "localToLocal")
+        self.assertTrue(passTest) 
+         
     def tearDown(self):
         self.fileTransfer.close()
 

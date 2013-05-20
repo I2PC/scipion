@@ -125,9 +125,17 @@ class Micrograph(Image):
 
 
 class TiltedPair(CsvList):
-    """Store the id of the untilted and tilted micrographs"""
-    def __init__(self, **args):
+    """Store the id of the untilted and tilted images"""
+    def __init__(self, uId=None, tId=None, **args):
         CsvList.__init__(self, int, **args)
+        self.append(uId)
+        self.append(tId)
+        
+    def getUId(self):
+        return self[0]
+    
+    def getTId(self):
+        return self[1]
         
 
 class SetOfImages(EMObject):
@@ -139,6 +147,8 @@ class SetOfImages(EMObject):
         self.samplingRate = Float()        
         self._ctf = Boolean(args.get('ctf', False))
         self._tiltPairs = Boolean(args.get('tiltPairs', False))
+        self._micList = [] # List with the micrographs
+        self._pairList = [] # List with images pairs
         
     def getSize(self):
         """Return the number of images"""
@@ -150,20 +160,47 @@ class SetOfImages(EMObject):
     def setFileName(self, newFileName):
         self.set(newFileName)
     
+    def __getitem__(self, index):
+        """ Get the image with the given index. """
+        return self._micList[index]
+    
+    def getImageIndex(self, iFn):
+        """ Get the index of the image with the given filename. """
+        for i, img in enumerate(self._micList):
+            if img.get() == iFn:
+                return i
+        return None
+        
     def hasCTF(self):
-        """Return True if the SetOfMicrographs has associated a CTF model"""
+        """Return True if the SetOfImages has associated a CTF model"""
         return self._ctf.get()        
         
     def append(self, image):
         """Add an image to the set"""
         pass
 
+    def appendPair(self, iU, iT):
+        """ Add a tilted pair relation to the set.
+        Params:
+        iU: index in the set of the untilted image.
+        iT: index in the set of the tilted image. """
+        self._pairList.append((iU, iT)) 
+
     def copyInfo(self, other):
         """ Copy basic information (sampling rate, scannedPixelSize and ctf)
         from other set of images to current one"""
-        self.samplingRate.set(other.samplingRate.get())
-        self._ctf.set(other._ctf.get())    
-        self._tiltPairs.set(other._tiltPairs.get())
+        self.copyAttributes(other, 'samplingRate', '_ctf', '_tiltPairs')
+        
+    def copyTiltPairs(self, other):
+        """ Copy tilted pairs relation from other set of images 
+        to the current one """
+
+        for iU, iT in other.iterTiltPairs():
+            self.appendPair(iU, iT)
+                
+    def hasTiltPairs(self):
+        """ Return True it the SetOFImages has tilt pairs """
+        return self._tiltPairs.get()   
         
     def getFiles(self):
         filePaths = set()
@@ -184,14 +221,10 @@ class SetOfMicrographs(SetOfImages):
         SetOfImages.__init__(self, filename, **args)
         self.microscope = Microscope()
         self.scannedPixelSize = Float()
-        self._micList = List(objName='Micrographs', objDoStore=False) # The micrograph list will be stored seperately
-        self._pairList = List(objName='TiltPairs', objDoStore=False) 
+        
         
     def getMicroscope(self, index=0):
         return self.microscope
-    
-    def hasTiltPairs(self):
-        return self._tiltPairs.get()
     
     def hasCTF(self):
         """ Return True if the SetOfMicrographs has associated a CTF model. """
@@ -202,30 +235,36 @@ class SetOfMicrographs(SetOfImages):
         micrograph.samplingRate.set(self.samplingRate.get())
         self._micList.append(micrograph)        
     
+    def __getMicrographByIndex(self, micIndex):
+        """ Retrieve micrograph by index from micList """
+        if micIndex >= 0 and micIndex < len(self._micList):
+            return self._micList[micIndex]
+        #TODO:
+        return None
+        
     def __loadFiles(self):
-        """ Read filePaths from text filePaths. """
+        """ Read files from text files. """
         mapper = SqliteMapper(self.getFileName(), globals())
-        self._micList = mapper.selectFirst()
+        # Retrieve all micrograph stored in our sub-sqlite
+        self._micList = mapper.selectByClass('Micrograph')
+        # Retrieve tilted pairs ids
+        pairsId = mapper.selectByClass('TiltedPair')
+
+        # Convert tilted ids in tilted micrographs tuples
+        for tp in pairsId:            
+            self.appendPair(tp.getUId(), tp.getTId())
         
     def __iter__(self):
-        """ Iterate over the set of micrographs in a .txt file. """
+        """ Iterate over the set of micrographs. """
         self.__loadFiles()
         for m in self._micList:
             yield m
         
-    def iterPairs(self):
+    def iterTiltPairs(self):
         """Iterate over the tilt pairs if is the case"""
-        #FIXME, we need to store the real relation 
-        # between micrographs
-        # TODO: Validate number of micrographs is even for Tilt Pairs
-        n = len(self._micList) / 2
-        for i in range(n):
-            mU = Micrograph()
-            mU.setFileName(self._micList[2*i])
-            mT = Micrograph()
-            mT.setFileName(self._micList[2*i+1])
-            yield (mU, mT)
-        
+        self.__loadFiles()
+        return  self._pairList
+    
     def write(self):
         """This method will be used to persist in a file the
         list of micrographs path contained in this Set
@@ -233,12 +272,13 @@ class SetOfMicrographs(SetOfImages):
         micrographs: list with the micrographs path to be stored
         """
         mapper = SqliteMapper(self.getFileName(), globals())
-        mapper.insert(self._micList)
-        for mic in self._micList:
-            p = TiltedPair()
-            p += [mic.getId(), 1]
-            self._pairList.append(p)
-        mapper.insert(self._pairList)
+        for i, mic in enumerate(self._micList):
+            mapper.insert(mic)
+            mic._index = i # set internal index to store pairs values
+
+        for iU, iT in self._pairList:
+            mapper.insert(TiltedPair(uId=iU, tId=iT))
+
         mapper.commit()
         
     def copyInfo(self, other):
@@ -293,13 +333,6 @@ class Coordinate(EMObject):
     def setMicrograph(self, micrograph):
         """ Set the micrograph to which this coordinate belongs. """
         self._micrographPointer.set(micrograph)
-    
-    def getPair(self):
-        """ It should return the paired coordinate associate to self.
-        If self is an untilted coordinate, getPaired will return the 
-        tilted one and viceversa.
-        """
-        pass 
     
     def getBoxSize(self):
         return self._boxSize
@@ -365,6 +398,10 @@ class SetOfCoordinates(EMObject):
         this set of coordinates.
          """
         self._micrographsPointer.set(micrographs)
+        
+    def iterTiltPairs(self):
+        """Iterate over the tilt pairs if is the case"""
+        pass
                 
     
 class CTFModel(EMObject):

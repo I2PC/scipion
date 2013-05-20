@@ -1,96 +1,19 @@
-/* CSS Document */
-html,body {
-	width: 60em;
-	height: 35em;
-	margin: 10px auto;
-	padding: 5px 0;
-	text-align: left;
-	background-color: rgb(240, 245, 230);
-}
-
-.project_name {
-	margin: -0.2em 0 0em 0;
-	text-align: right;
-}
-
 a {
 	text-decoration: none;
 	color: black;
 }
 
-.logo {
-	width: 14.5em;
-	height: 3.6em;
-	text-align: center;
-}
-
-.box {
-	border: 2px solid black;
-	width: 60em;
-	height: 35em;
-	background: white;
-}
-
-.left {
-	text-align: right;
-	width: 14em;
-	height: 19em;
-	float: left;
-	background: white;
-}
-
-.protTree {
-	height: 30em;
-	width: 19em;
-	text-align: left;
-	margin-left: 1em;
-	margin-top: 0em;
-}
-
 .protFieldsetTree {
-/* 	border: 2px solid black; */
-	height: 28.5em;
-	width: 19em;
-	overflow-y: scroll;
+	height: 90%;
+	width: 90%;
+	overflow-y: auto;
 	overflow-x: hidden;
-	margin-left: -0.5em;
-	border: none;
+	/*margin: -0.5em -1em -0.6em 1em;*/
+	/*border: 1px solid #d0d0d0;*/
+	margin: 1em 0.5em 1em 1em;
+	background: white;
 }
 
-.right {
-	margin: 1em;
-	width: 38em;
-	float: right;
-	height: 32.8em;
-}
-
-.projFieldset {
-	height: 31em;
-	overflow-y: scroll;
-	overflow-x: hidden;
-	border: none;
-}
-
-.projList {
-	list-style: none;
-}
-
-.projName {
-	font-size: 1.2em;
-	font-weight: bold;
-	color: black;
-	text-decoration: none;
-	margin-left: -0.5em;
-}
-
-.projRemove {
-	margin-left: 1em;
-	font-size: 0.9em;
-	font-weight: bold;
-	color: black;
-	text-decoration: none;
-	font-size: 0.9em;
-}
 /* CSS for the treeview */
 .treeview,.treeview ul {
 	padding: 0;
@@ -105,8 +28,7 @@ a {
 }
 
 .treeview .hitarea {
-	background: url(../../../resources/treeview-default.gif) -64px -25px
-		no-repeat;
+	background: url(../../../resources/treeview-default.gif) -64px -25px no-repeat;
 	height: 16px;
 	width: 16px;
 	margin-left: -16px;
@@ -139,7 +61,7 @@ a {
 }
 
 .treeview li {
-	/* 	background: url(../images/treeview-default-line.gif) 0 0 no-repeat; */
+/* 	background: url(../images/treeview-default-line.gif) 0 0 no-repeat; */
 	background: 0 0 no-repeat;
 }
 
@@ -174,7 +96,8 @@ a {
 
 .filetree li {
 	padding: 3px 0 2px 16px;
-	margin-left:3px;
+	margin-left: 0.3em;
+	width: 100%;
 }
 
 .filetree span.folder,.filetree span.file {
@@ -229,8 +152,8 @@ table a:active,table a:hover {
 }
 
 table {
-/* 	margin: -0.2em -1.5em 0em -1em; */
-	width: 41em;
+	margin: 1em -1.5em 0em -1em;
+	width: 100%;
 	font-size: 0.9em;
 	text-shadow: 1px 1px 0px #fff;
 	background: #eaebec;
@@ -244,7 +167,7 @@ table th {
 	background: #ededed;
 	background: -webkit-gradient(linear, left top, left bottom, from(#ededed),
 		to(#ebebeb));
-	background: -moz-linear-gradient(top, #ededed, #ebebeb);
+	background: -moz-linear-gradient(top, #DCDCDC, #ebebeb);
 }
 
 table th:first-child {
@@ -263,6 +186,7 @@ table tr td:first-child {
 
 table tr td {
 	padding: 0.5em;
+	padding-left: 1.5em;
 	border-top: 1px solid #ffffff;
 	border-bottom: 1px solid #e0e0e0;
 	border-left: 1px solid #e0e0e0;
