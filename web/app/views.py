@@ -201,7 +201,9 @@ def formTable(request):
             param.htmlValue = protVar.get(param.default.get(""))
             param.htmlCond = param.condition.get()
             param.htmlDepend = ','.join(param._dependants)
-            
+            param.htmlCondParams =  ','.join(param._conditionParams)
+#            if isinstance(param, EnumParam):
+#                param.htmlChoicesSize = len(param.choices)
     
     
     context = {'protocol':protocol,
