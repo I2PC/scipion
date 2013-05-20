@@ -75,3 +75,14 @@ function evalCondition(itemName) {
 	// alert("condition: " + cond + " eval: " + cond_eval);
 	return eval(cond_eval);
 }
+
+function help(msg) {
+	new Messi(msg, {
+		title : 'Help',
+		buttons : [ {
+			id : 0,
+			label : 'Close',
+			val : 'X'
+		} ]
+	});
+}
