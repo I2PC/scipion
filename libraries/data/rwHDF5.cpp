@@ -159,7 +159,7 @@ int ImageBase::readHDF5(size_t select_img)
 
 
     //Read header only
-    if( dataMode < DATA )
+    if(dataMode == HEADER || (dataMode == _HEADER_ALL && aDim.ndim > 1))
         return errCode;
 
 
