@@ -174,9 +174,12 @@ def formTable(request):
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     jsForm_path = os.path.join(settings.STATIC_URL, 'js/form.js')
     css_path = os.path.join(settings.STATIC_URL, 'css/formTable.css')
+    # Messi Plugin
+    messi_path = os.path.join(settings.STATIC_URL, 'js/messi.js')
+    messi_css_path = os.path.join(settings.STATIC_URL, 'css/messi.css')
     #############
     
-    ## Project Id(or Name) should be stored in SESSION
+    # # Project Id(or Name) should be stored in SESSION
     manager = Manager()
     project_name = request.GET.get('project_name')
     projPath = manager.getProjectPath(project_name)
@@ -191,7 +194,7 @@ def formTable(request):
         protocolClass = emProtocolsDict.get(protocolName, None)
         protocol = protocolClass()
     
-    #TODO: Add error page validation when protocol is None
+    # TODO: Add error page validation when protocol is None
     for section in protocol._definition.iterSections():
         for paramName, param in section.iterParams():
             protVar = getattr(protocol, paramName, None)
@@ -201,7 +204,7 @@ def formTable(request):
             param.htmlValue = protVar.get(param.default.get(""))
             param.htmlCond = param.condition.get()
             param.htmlDepend = ','.join(param._dependants)
-            param.htmlCondParams =  ','.join(param._conditionParams)
+            param.htmlCondParams = ','.join(param._conditionParams)
 #            if isinstance(param, EnumParam):
 #                param.htmlChoicesSize = len(param.choices)
     
@@ -213,7 +216,9 @@ def formTable(request):
                'form': jsForm_path,
                'jquery': jquery_path,
                'browse': logo_browse,
-               'css':css_path}
+               'css':css_path,
+               'messi': messi_path,
+               'messi_css': messi_css_path}
     
     return render_to_response('formTable.html', context)
 

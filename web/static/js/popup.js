@@ -1,6 +1,6 @@
 function popup(URL) {
-	var popup_width = 510
-	var popup_height = 600
+	var popup_width = 470
+	var popup_height = 615
 	day = new Date();
 	id = day.getTime();
 	eval("page"
