@@ -2,7 +2,6 @@ package xmipp.viewer.particlepicker;
 
 import ij.IJ;
 import ij.WindowManager;
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -22,7 +21,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
@@ -47,7 +45,6 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
-
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippApplication;
 import xmipp.ij.commons.XmippIJUtil;
