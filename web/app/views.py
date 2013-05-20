@@ -210,6 +210,8 @@ def formTable(request):
                 raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
                 # Create the label
             param.htmlValue = protVar.get(param.default.get(""))
+            param.htmlCond = param.condition.get()
+            param.htmlDepend = ','.join(param._dependants)
             
     
     
