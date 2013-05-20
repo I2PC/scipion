@@ -5,15 +5,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
-
-import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.jni.Particle;
+import xmipp.utils.TasksManager;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.Family;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
+import xmipp.viewer.particlepicker.UpdateTemplatesTask;
+import xmipp.viewer.particlepicker.tiltpair.model.UntiltedMicrograph;
+import xmipp.viewer.particlepicker.training.gui.TemplatesJDialog;
 
 public abstract class TrainingPicker extends ParticlePicker
 {
@@ -723,52 +724,9 @@ public abstract class TrainingPicker extends ParticlePicker
 	}
 
 
-	public void updateTemplates()
+	public synchronized void updateTemplates()
 	{
-		updateTemplates(family);
-
-	}
-
-
-	public void updateTemplates(Family f)
-	{
-		if (f.getStep() != FamilyState.Manual)
-			return;
-
-		if (!hasManualParticles(f))
-			return;
-
-		f.initTemplates();
-		ImageGeneric igp;
-		List<TrainingParticle> particles;
-		MicrographFamilyData mfd;
-		TrainingParticle particle;
-		try
-		{
-			for (TrainingMicrograph m : micrographs)
-			{
-				mfd = m.getFamilyData(f);
-				for (int i = 0; i < mfd.getManualParticles().size(); i++)
-				{
-					particles = mfd.getManualParticles();
-					particle = particles.get(i);
-					igp = particle.getImageGeneric();
-					if (i < f.getTemplatesNumber())
-						f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
-					else
-					{
-						double[] align = family.getTemplates().alignImage(igp);
-						particle.setLastalign(align);
-					}
-				}
-			}
-			f.saveTemplates();
-		}
-		catch (Exception e)
-		{
-			throw new IllegalArgumentException(e.getMessage());
-		}
-
+		TasksManager.getInstance().addTask(new UpdateTemplatesTask(this));
 	}
 
 	public void saveTemplates()
