@@ -81,8 +81,7 @@ public abstract class ParticlePicker
 		this.selfile = selfile;
 		this.mode = mode;
 		this.configfile = getOutputPath("config.xmd");
-		color = getNextColor();
-		size = getDefaultSize();
+		
 		initFilters();
 		loadEmptyMicrographs();
 		loadConfig();
@@ -95,6 +94,8 @@ public abstract class ParticlePicker
 		String file = configfile;
 		if (!new File(file).exists())
 		{
+			color = getNextColor();
+			size = getDefaultSize();
 			setMicrograph(getMicrographs().get(0));
 			return;
 
@@ -533,12 +534,9 @@ public abstract class ParticlePicker
 
 	public void setSize(int size) {
 		if (size >  ParticlePicker.sizemax)
-			throw new IllegalArgumentException(String.format(
-					"Max size is %s, %s not allowed",  ParticlePicker.sizemax, size));
-
-
+			throw new IllegalArgumentException(String.format("Max size is %s, %s not allowed",  ParticlePicker.sizemax, size));
+		System.out.printf("set size:" + size + "\n");
 		this.size = size;
-		saveConfig();//size and color will be on config
 	}
 	
 
@@ -549,7 +547,6 @@ public abstract class ParticlePicker
 
 	public void setColor(Color color) {
 		this.color = color;
-		saveConfig();
 	}
 	
 	public static Color getColor(String name) {

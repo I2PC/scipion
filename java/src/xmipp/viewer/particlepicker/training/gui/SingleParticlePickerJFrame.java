@@ -678,8 +678,9 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 	{
 		try
 		{
-			super.updateSize(size);
 			ppicker.resetParticleImages();
+			super.updateSize(size);
+			
 		}
 		catch (Exception e)
 		{

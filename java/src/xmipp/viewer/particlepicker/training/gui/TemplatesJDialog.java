@@ -81,12 +81,7 @@ public class TemplatesJDialog extends JDialog {
 		loadTemplates(true);
 		XmippWindowUtil.setLocation(0.6f, 0, this);
 		setVisible(true);
-		setAlwaysOnTop(true);
-		// this.addComponentListener(new java.awt.event.ComponentAdapter() {
-		// public void componentResized(ComponentEvent e) {
-		// loadTemplates(false);
-		// }
-		// });
+
 	}
 
 	public void close() {

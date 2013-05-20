@@ -133,7 +133,7 @@ public class SingleParticlePicker extends ParticlePicker
 			this.templates = new ImageGeneric(ImageGeneric.Float);
 			templates.resize(getSize(), getSize(), 1, templatesNumber);
 			templates.write(templatesfile);
-
+			templateindex = 0;
 		}
 		catch (Exception e)
 		{
@@ -176,8 +176,10 @@ public class SingleParticlePicker extends ParticlePicker
 		{
 			//TODO getArrayFloat and setArrayFloat must be call from C both in one function
 			matrix = ig.getArrayFloat(ImageGeneric.FIRST_IMAGE, ImageGeneric.FIRST_SLICE);
-			templates.setArrayFloat(matrix, templateindex, ImageGeneric.FIRST_SLICE);
+			templates.setArrayFloat(matrix, ImageGeneric.FIRST_IMAGE + templateindex, ImageGeneric.FIRST_SLICE);
+			System.out.printf("setTemplate " + templateindex + "\n");
 			templateindex++;
+			
 		}
 		catch (Exception e)
 		{
@@ -195,8 +197,7 @@ public class SingleParticlePicker extends ParticlePicker
 	{
 		try
 		{
-			if (templateindex == templatesNumber)//already filled all initial templates 
-				templates.write(getTemplatesFile());
+			templates.write(getTemplatesFile());
 		}
 		catch (Exception e)
 		{
@@ -205,18 +206,7 @@ public class SingleParticlePicker extends ParticlePicker
 
 	}
 
-	public synchronized ImagePlus getTemplatesImage(long i)
-	{
-		try
-		{
-			ImagePlus imp = XmippImageConverter.convertToImagePlus(templates, i);
-			return imp;
-		}
-		catch (Exception e)
-		{
-			throw new IllegalArgumentException(e);
-		}
-	}
+
 
 	@Override
 	public void loadEmptyMicrographs()
@@ -354,7 +344,6 @@ public class SingleParticlePicker extends ParticlePicker
 		if (m.equals(micrograph))
 			return;
 		this.micrograph = (TrainingMicrograph) m;
-		saveConfig();
 	}
 
 	@Override
@@ -415,7 +404,6 @@ public class SingleParticlePicker extends ParticlePicker
 	public void setAutopickpercent(int autopickpercent)
 	{
 		this.autopickpercent = autopickpercent;
-		saveConfig();
 	}
 
 	public int getAutopickpercent()
@@ -789,7 +777,7 @@ public class SingleParticlePicker extends ParticlePicker
 
 	}// function importAllParticles
 
-	public void resetParticleImages()
+	public void resetParticleImages()//to update templates with the right particles
 	{
 		for (TrainingMicrograph m : micrographs)
 		{
