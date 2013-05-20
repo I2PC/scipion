@@ -3,7 +3,7 @@ html, body{
 	width: 95%;
 	height: 95%;
 	margin: 10px auto;
-	padding: 5px 0;
+	padding: 0;
 	text-align: left;
 	background: White;
 }
@@ -17,21 +17,22 @@ html, body{
 
 #framecontentLeft{
 position: absolute; 
-top: 110px;
-bottom: 120px; /*Set bottom value to HeightOfBottomFrameDiv*/
+top: 50px;
+bottom: 0; /*Set bottom value to HeightOfBottomFrameDiv*/
 left: 0; 
-width: 390px; /*Width of left frame div*/
+width: 25%; /*Width of left frame div*/
 /*height: 100%;*/
 overflow: hidden; /*Disable scrollbars. Set to "scroll" to enable*/
 background-color: white;
+padding: 10px;
 }
 
 #framecontentTop{
 position: absolute; 
 top: 0; 
-left: 0px; /*Set left value to WidthOfLeftFrameDiv*/
+left: 0; /*Set left value to WidthOfLeftFrameDiv*/
 right: 0;
-height: 110px; /*Height of top frame div*/
+height: 50px; /*Height of top frame div*/
 overflow: hidden; /*Disable scrollbars. Set to "scroll" to enable*/
 background-color: white;
 }
@@ -39,34 +40,36 @@ background-color: white;
 #framecontentBottom{
 position: absolute; 
 top: auto; 
-left: 0px; /*Set left value to WidthOfLeftFrameDiv*/
+left: 0; /*Set left value to WidthOfLeftFrameDiv*/
 bottom: 0;
 right: 0;
-height: 120px; /*Height of bottom frame div*/
+height: 0; /*Height of bottom frame div*/
 overflow: hidden; /*Disable scrollbars. Set to "scroll" to enable*/
 background-color: white;
 }
 
 #maincontent{
 position: absolute; 
-top: 110px; /*Set top value to HeightOfTopFrameDiv*/
-left: 390px; /*Set left value to WidthOfLeftFrameDiv*/
+top: 50px; /*Set top value to HeightOfTopFrameDiv*/
+left: 25%; /*Set left value to WidthOfLeftFrameDiv*/
 right: 0;
-bottom: 120px; /*Set bottom value to HeightOfBottomFrameDiv*/
+bottom: 0; /*Set bottom value to HeightOfBottomFrameDiv*/
 overflow: auto; 
 background: #fff;
-padding-right:20px;
+padding-right:10px;
+padding-left:10px;
+background: white;
 }
 
 .innertube{
-margin: 15px; /*Margins for inner DIV inside each DIV (to provide padding)*/
+margin: 1em; /*Margins for inner DIV inside each DIV (to provide padding)*/
 }
 
 
 
 .logo {
-	width: 14.5em;
-	height: 3.6em;
+	max-height: 50px;
+	height: 50px;
 	text-align: center;
 }
 
