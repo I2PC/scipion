@@ -291,7 +291,7 @@ public class SingleParticlePicker extends ParticlePicker
 
 			}
 			saveAutomaticParticles(tm);
-
+			saveConfig();
 		}
 		catch (Exception e)
 		{
@@ -790,6 +790,7 @@ public class SingleParticlePicker extends ParticlePicker
 	public synchronized void updateTemplates()
 	{
 		TasksManager.getInstance().addTask(new UpdateTemplatesTask(this));
+		saveConfig();
 	}
 
 	public boolean hasManualParticles()

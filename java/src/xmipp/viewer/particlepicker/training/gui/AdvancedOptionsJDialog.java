@@ -121,6 +121,7 @@ public class AdvancedOptionsJDialog extends JDialog {
 				int autopickpercent = ((Number) autopickpercenttf.getValue()).intValue();
 				frame.getMicrograph().setAutopickpercent(autopickpercent);
 				frame.getParticlePicker().setAutopickpercent(autopickpercent);
+				frame.getParticlePicker().saveConfig();
 				
 
 			}

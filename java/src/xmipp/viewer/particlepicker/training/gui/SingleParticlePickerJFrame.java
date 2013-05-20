@@ -423,7 +423,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		index = micrographstb.getSelectedRow();
 		ppicker.getMicrograph().releaseImage();
 		ppicker.setMicrograph(ppicker.getMicrographs().get(index));
-
+		
 		
 		setChanged(false);
 		initializeCanvas();
