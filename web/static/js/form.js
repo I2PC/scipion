@@ -1,78 +1,88 @@
+function evalDependencies(aux) {
+	var name = aux.attr('name');
+	var row = jQuery("tr#" + name);
+	var dependencies = row.attr('data-depen');
+	if (dependencies.length > 0) {
+		var arrayDepends = dependencies.split(",");
+		for ( var cont = 0; cont < arrayDepends.length; cont++) {
+			var res = evalCondition(arrayDepends[cont]);
+			if (res == false) {
+				jQuery("tr#" + arrayDepends[cont]).hide();
+			} else if (res == true) {
+				jQuery("tr#" + arrayDepends[cont]).show();
+			}
+		}
+	}
+}
 
-function evalCondition(aux) {
-	var name = aux.attr('name')
-	var value = aux.attr('value')
-	var affected = aux.attr('data-ref')
+function getValueByName(itemName) {
+	var row = jQuery("tr#" + itemName);
+	/*
+	 * Get the type of the input with the next cases: BooleanParam, StringParam,
+	 * EnumParam (type select or inputs)
+	 */
+	var type = row.attr('data-type');
+	var value = null;
 
-	var b = document.getElementById(affected);
+	if (type == 'BooleanParam') {
+		value = jQuery("input#" + itemName + "_yes").attr('checked')
+	} else if (type == 'StringParam') {
+		value = jQuery("input#" + itemName + "_input").attr('value');
+	} else if (type == 'FloatParam') {
+		value = jQuery("input#" + itemName + "_input").attr('value');
+	} else if (type == 'EnumParam') {
+		var enumType = row.attr('data-enum');
+		if (enumType == '1') {
+			var elm = jQuery("select#" + itemName + "_select");
+			value = elm.attr('value');
+		} else if (enumType == '0') {
+			var cont = 0;
+			var enc = 0;
+			while (!enc) {
+				var opt = jQuery("input#" + itemName + "_" + cont);
+				if (opt.attr('checked') == true) {
+					value = cont;
+					value = opt.attr('value');
+					enc = 1;
+				}
+				cont++;
+			}
+		}
+	}
+	// alert("getValue: " + itemName + "=" + value);
+	return value;
+}
 
-	if (value = 'no') {
-		// b.setAttribute("style", "display:none;");
-		// b.style.visibility = "hidden";
-		jQuery("div#" + affected).hide();
-	} else if (value = 'yes') {
-		// b.setAttribute("style", "display:block;")
-		// b.style.visibility = "visible";
-		jQuery("div#" + affected).show();
+function evalCondition(itemName) {
+	var row = jQuery("tr#" + itemName);
+	var type = row.attr('data-type');
+	var cond = row.attr('data-cond');
+	var params = row.attr('data-params');
+
+	var arrayParams = params.split(",");
+
+	// Get value of the element with name=itenName
+	var param = null;
+	var value = null;
+	var cond_eval = cond;
+
+	for ( var cont = 0; cont < arrayParams.length; cont++) {
+		param = arrayParams[cont];
+		value = getValueByName(param);
+		cond_eval = cond_eval.replace(param, value);
 	}
 
-	// 
-	// alert(b.getAttribute("data-ref"));
-	// alert(name + " " + value);
-
+	// alert("condition: " + cond + " eval: " + cond_eval);
+	return eval(cond_eval);
 }
 
-function invisibleRapida() {
-	var a = document.getElementById("busquedaRapida");
-	a.style.visibility = "hidden";
-}
-
-function invisibleAvanzada() {
-	var b = document.getElementById("busquedaAvanzada");
-	b.setAttribute("style", "display:none;");
-	b.style.visibility = "hidden";
-}
-
-function visibleRapida() {
-	var a = document.getElementById("busquedaRapida");
-	a.style.visibility = "visible";
-}
-
-function visibleAvanzada() {
-	var b = document.getElementById("busquedaAvanzada");
-	b.setAttribute("style", "display:block;")
-	b.style.visibility = "visible";
-}
-
-function cambioRapAv() {
-	invisibleRapida();
-	visibleAvanzada();
-}
-
-function cambioAvRap() {
-	invisibleAvanzada();
-	visibleRapida();
-}
-
-function visibleRapidaHTML() {
-	jQuery('div.form_avanzada').hide();
-	jQuery('div.form_rapida').show();
-
-}
-
-function visibleAvanzadaHTML() {
-	jQuery('div.form_rapida').hide();
-	jQuery('div.form_avanzada').show();
-}
-
-function cambioAvRapHTML() {
-	visibleRapidaHTML();
-}
-
-function cambioRapAvHTML() {
-	visibleAvanzadaHTML();
-}
-
-function invisibleResultado() {
-	jQuery('div.resultado').hide();
+function help(msg) {
+	new Messi(msg, {
+		title : 'Help',
+		buttons : [ {
+			id : 0,
+			label : 'Close',
+			val : 'X'
+		} ]
+	});
 }

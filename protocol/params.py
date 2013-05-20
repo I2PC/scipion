@@ -122,9 +122,11 @@ class Form():
     
     def _analizeCondition(self, paramName, param):
         if param.hasCondition():
-            param._conditionParams = re.split('\W+', param.condition.get())
-            for t in param._conditionParams:
+            param._conditionParams = []
+            tokens = re.split('\W+', param.condition.get())
+            for t in tokens:
                 if self.hasParam(t):
+                    param._conditionParams.append(t)
                     self.getParam(t)._dependants.append(paramName)
                     #print "tokens found: ", self.getParam(t)._dependants
 #                else:
