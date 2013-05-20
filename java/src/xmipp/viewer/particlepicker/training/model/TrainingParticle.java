@@ -18,7 +18,9 @@ public class TrainingParticle extends PickerParticle{
 	protected ParticlePicker picker;
 	protected ImagePlus img;
 	protected double cost = 2;
+
 	protected double[] lastalign;
+
 	
 	
 	
@@ -141,6 +143,8 @@ public class TrainingParticle extends PickerParticle{
 			return -1;
 		return lastalign[2];
 	}
+
+
 	
 	public double getTemplatePsi()
 	{
@@ -160,7 +164,6 @@ public class TrainingParticle extends PickerParticle{
 	{
 		return picker.getSize();
 	}
-
 
 
 	

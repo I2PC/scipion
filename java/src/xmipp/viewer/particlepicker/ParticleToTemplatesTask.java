@@ -43,6 +43,7 @@ public class ParticleToTemplatesTask implements Task
 			if(dialog != null && dialog.isVisible())
 				dialog.loadTemplates(true);
 			System.out.println("Templates updated");
+
 		}
 		catch (Exception e)
 		{

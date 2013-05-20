@@ -40,6 +40,7 @@ import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
+import xmipp.viewer.particlepicker.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.ParticlesJDialog;
 import xmipp.viewer.particlepicker.SingleParticlePicker;
 import xmipp.viewer.particlepicker.training.model.MicrographState;
@@ -288,7 +289,6 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 
 
-
 	private void initThresholdPane()
 	{
 		thresholdpn = new JPanel();
@@ -521,7 +521,6 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 	public void updateMicrographsModel(boolean all)
 	{
 
-
 		if (particlesdialog != null)
 			loadParticles();
 
@@ -568,7 +567,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 						}
 					}
 					args = ppicker.getTrainCommandLineArgs();
-					System.out.println(args);
+
 
 					ppicker.runXmippProgram("xmipp_micrograph_automatic_picking", args);
 
@@ -592,7 +591,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		setState(MicrographState.Supervised);
 
 		final String fargs = ppicker.getAutopickCommandLineArgs(getMicrograph());
-		System.out.println(fargs);
+
 		try
 		{
 			canvas.setEnabled(false);
@@ -675,7 +674,6 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 	}
 
-	
 	public void updateSize(int size)
 	{
 		try
@@ -695,6 +693,8 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 	{
 		getMicrograph().reset();
 	}
+
+
 
 	@Override
 	public String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty)
@@ -727,7 +727,4 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 	}
 
 
-
-	
-	
 }

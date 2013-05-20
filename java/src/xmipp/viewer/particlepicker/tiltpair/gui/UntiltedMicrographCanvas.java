@@ -309,17 +309,17 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 			moveActiveParticle(x, y);
 			um.getTiltedMicrograph().removeParticle(active.getTiltedParticle());
 		}
-		if (active.isAdded())// added particle on matrix has been moved. Matrix
-								// changed
-		// and tilted particle has to be recalculated
+		if (active.isAdded())// added particle on matrix has been moved. Matrix changed and tilted particle has to be recalculated
 		{
 
 			active.setAdded(false);
-			um.initAligner();
+			um.initAligner();			
 		}
 		um.setAlignerTiltedParticle(active);
 		frame.getTiltedCanvas().repaint();
 		setActiveMoved(false);
 	}
+
+
 
 }

@@ -25,6 +25,7 @@ Java_xmipp_jni_ImageGeneric_create(JNIEnv *env, jobject jobj)
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_destroy(JNIEnv *env, jobject jobj)
 {
+
     XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
@@ -862,6 +863,7 @@ JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_bestShift
 }
 
 JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_ImageGeneric_alignImage
+
 (JNIEnv * env, jobject jobj, jobject jimg)
 {
 	double result[4];
@@ -886,6 +888,7 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_ImageGeneric_alignImage
 		double corr,max=-MAXDOUBLE;
 		int maxIndex=0;
 
+
 		for (size_t i=0;i<dim.ndim;++i)
 		{
 			T.aliasImageInStack(*Tp,i);
@@ -901,10 +904,6 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_ImageGeneric_alignImage
 			}
 		}
 
-//		T.aliasImageInStack(*Tp, maxIndex);
-//		T+=alignedI;
-//		centerImage(T, aux2, aux3, 3);
-
 		double rot, tilt, psi;
 		Euler_matrix2angles(transformM, rot, tilt, psi);
 
@@ -912,6 +911,7 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_ImageGeneric_alignImage
 		result[1] = rot;
 		result[2] = tilt;
 		result[3] = psi;
+
 
 
 
@@ -924,6 +924,7 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_ImageGeneric_alignImage
 	return jresult;
 
 }
+
 
 JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_applyAlignment
 (JNIEnv * env, jobject jobj, jobject jimg, jint index, jdouble rot, jdouble tilt, jdouble psi)
@@ -960,6 +961,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_applyAlignment
 
 }
 
+
 JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_removeAlignment
 (JNIEnv * env, jobject jobj, jobject jimg, jint index, jdouble rot, jdouble tilt, jdouble psi)
 {
@@ -994,8 +996,6 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_removeAlignment
 
 
 }
-
-
 
 
 

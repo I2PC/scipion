@@ -9,6 +9,7 @@ public class TasksManager
 	private static TasksManager tm;
 	private LinkedBlockingQueue<Task> queue;
 	private Thread consumer;
+	private boolean stop;
 
 	private TasksManager()
 	{
@@ -36,6 +37,12 @@ public class TasksManager
 		}
 	}
 
+	
+	public void stop()
+	{
+		stop = true;
+	}
+
 	public class Consumer implements Runnable
 	{
 
@@ -51,7 +58,8 @@ public class TasksManager
 		{
 			try
 			{
-				while (true)
+
+				while (!stop)
 					queue.take().doTask();
 			}
 			catch (InterruptedException e)

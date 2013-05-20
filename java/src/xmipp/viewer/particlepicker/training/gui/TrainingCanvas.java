@@ -117,11 +117,13 @@ public class TrainingCanvas extends ParticlePickerCanvas
 				micrograph.removeParticle(active, ppicker);
 				active = new TrainingParticle(active.getX(), active.getY(), ppicker, micrograph);
 				micrograph.addManualParticle(active, ppicker, frame.isCenterParticle(), true);
+
 			}
 			else
 			{
 //				if(!activemoved)
 //					ppicker.removeParticleFromTemplates(active);
+
 				setActiveMoved(true);
 				moveActiveParticle(x, y);
 			}
@@ -153,12 +155,12 @@ public class TrainingCanvas extends ParticlePickerCanvas
 				micrograph.removeParticle(active, ppicker);
 				active = getLastParticle();
 				refresh();
+
 			}
 			else
 				manageActive(x, y);
 			if (activemoved)
 			{
-				//ppicker.addParticleToTemplates(active, frame.isCenterParticle());
 				TasksManager.getInstance().addTask(new ParticleToTemplatesTask(active));
 				setActiveMoved(false);
 			}
@@ -180,6 +182,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			micrograph.removeParticle(active, ppicker);
 			active = new TrainingParticle(active.getX(), active.getY(), active.getParticlePicker(), micrograph);
 			micrograph.addManualParticle(active, ppicker, frame.isCenterParticle(), true);
+
 			repaint();
 		}
 		else
@@ -257,5 +260,8 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		micrograph = (TrainingMicrograph) m;
 
 	}
+
+
+
 
 }

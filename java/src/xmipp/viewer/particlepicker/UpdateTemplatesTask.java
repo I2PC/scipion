@@ -9,6 +9,7 @@ import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.TrainingMicrograph;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 
+
 public class UpdateTemplatesTask implements Task
 {
 
@@ -67,6 +68,7 @@ public class UpdateTemplatesTask implements Task
 		{
 			throw new IllegalArgumentException(e.getMessage());
 		}
+
 
 
 	}

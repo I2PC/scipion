@@ -315,11 +315,13 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_reslice
 JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_getPreview
   (JNIEnv *, jobject, jobject, jint, jint, jint, jlong);
 
-/*
- * Class:     xmipp_ImageGeneric
- * Method:    alignImages
- * Signature: (Z,Z,I)V
- */
+
+
+
+JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_bestShift
+  (JNIEnv *, jobject, jobject);
+
+
 JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_ImageGeneric_alignImage
   (JNIEnv *, jobject, jobject);
 
@@ -332,8 +334,6 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_removeAlignment
   (JNIEnv *, jobject, jobject, jint, jdouble, jdouble, jdouble);
 
 
-JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_bestShift
-  (JNIEnv *, jobject, jobject);
 
 
 #ifdef __cplusplus

@@ -342,6 +342,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		refreshActive(null);
 		
 	}
+
 	
 
 	public abstract Micrograph getMicrograph();

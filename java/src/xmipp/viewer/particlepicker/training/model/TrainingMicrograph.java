@@ -82,6 +82,7 @@ public class TrainingMicrograph extends Micrograph
 		if (getManualParticles().size() > 0)
 			return true;
 		return false;
+
 	}
 
 	public void removeParticles(int x, int y, SingleParticlePicker ppicker)

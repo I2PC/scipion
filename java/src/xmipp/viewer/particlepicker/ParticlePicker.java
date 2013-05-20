@@ -14,15 +14,14 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.Program;
 import xmipp.viewer.particlepicker.training.model.Mode;
+
 
 public abstract class ParticlePicker
 {
@@ -42,11 +41,9 @@ public abstract class ParticlePicker
 	private Color color;
 	private int size;
 
-	
-	
-
 	public static final int sizemax = 800;
 	protected String block;
+
 	
 	
 	private static Color[] colors = new Color[] { Color.BLUE, Color.CYAN,
@@ -82,7 +79,6 @@ public abstract class ParticlePicker
 		this.block = block;
 		this.outputdir = outputdir;
 		this.selfile = selfile;
-		this.outputdir = outputdir;
 		this.mode = mode;
 		this.configfile = getOutputPath("config.xmd");
 		color = getNextColor();
@@ -259,14 +255,12 @@ public abstract class ParticlePicker
 		return mode;
 	}
 
-	public static Logger getLogger()
-	{
-		try
-		{
-			if (logger == null)
-			{
-				FileHandler fh = new FileHandler("PPicker.log", true);
-				fh.setFormatter(new SimpleFormatter());
+
+	public static Logger getLogger() {
+		try {
+			if (logger == null) {
+//				FileHandler fh = new FileHandler("PPicker.log", true);
+//				fh.setFormatter(new SimpleFormatter());
 				logger = Logger.getLogger("PPickerLogger");
 				// logger.addHandler(fh);
 			}
@@ -298,6 +292,7 @@ public abstract class ParticlePicker
 	{
 		return getMicrographs().indexOf(getMicrograph());
 	}
+
 
 
 
@@ -541,6 +536,7 @@ public abstract class ParticlePicker
 			throw new IllegalArgumentException(String.format(
 					"Max size is %s, %s not allowed",  ParticlePicker.sizemax, size));
 
+
 		this.size = size;
 		saveConfig();//size and color will be on config
 	}
@@ -576,6 +572,7 @@ public abstract class ParticlePicker
 	public int getRadius() {
 		return size / 2;
 	}
+
 
 
 }

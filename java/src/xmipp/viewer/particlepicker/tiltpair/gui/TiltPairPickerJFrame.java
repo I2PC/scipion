@@ -184,7 +184,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		micrographstb.getColumnModel().getColumn(4).setPreferredWidth(60);
 		micrographstb.setPreferredScrollableViewportSize(new Dimension(595, 304));
 		micrographstb.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		System.out.println(index);
 		if(index != -1)
 			micrographstb.setRowSelectionInterval(index, index);
 	}

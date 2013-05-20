@@ -45,7 +45,6 @@ public class TemplatesJDialog extends JDialog {
 
 		try {
 			ImageGeneric templates = frame.getParticlePicker().getTemplates();
-			
 			int size = frame.getParticlePicker().getSize();
 
 			if (!frame.getParticlePicker().hasManualParticles()) {
