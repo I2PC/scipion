@@ -475,7 +475,11 @@ public abstract class ParticlePicker
 		if (path.endsWith(".raw.Common.pos"))
 			return Format.Xmipp24;
 		if (path.endsWith(".pos"))
-			return Format.Xmipp30;
+		{
+			if(MetaData.containsBlock(path, getParticlesBlockName(Format.Xmipp30)))
+				return Format.Xmipp30;
+			return Format.Xmipp301;
+		}
 		if (path.endsWith(".box"))
 			return Format.Eman;
 		return Format.Unknown;
@@ -581,7 +585,6 @@ public abstract class ParticlePicker
 	public void setSize(int size) {
 		if (size >  ParticlePicker.sizemax)
 			throw new IllegalArgumentException(String.format("Max size is %s, %s not allowed",  ParticlePicker.sizemax, size));
-		System.out.printf("set size:" + size + "\n");
 		this.size = size;
 	}
 	

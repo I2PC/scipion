@@ -63,7 +63,8 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		super(picker);
 		pppicker = picker;
 		initComponents();
-		enableEdition(picker.getMode() != Mode.ReadOnly);
+		if (picker.getMode() == Mode.ReadOnly)
+			enableEdition(false);
 	}
 
 	private void initComponents()

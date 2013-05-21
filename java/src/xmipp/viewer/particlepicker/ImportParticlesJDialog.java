@@ -140,15 +140,17 @@ public class ImportParticlesJDialog extends XmippDialog {
 				showError(XmippMessage.getPathNotExistsMsg(path));
 			else
 			{
-				String result = parent.importParticles(format, path, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
-				if(result != null && !result.isEmpty())
-					JOptionPane.showMessageDialog(this, result);
+				importParticles();
 			}
 		} catch (Exception e) {
 			XmippDialog.showException(parent, e);
 		}
 	}
 	
+	protected void importParticles()
+	{
+		parent.importParticles(format, path, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
+	}
 	
 	
 	
