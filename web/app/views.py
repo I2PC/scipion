@@ -1,6 +1,7 @@
 # from scipion.models import *
 import os
 from django.shortcuts import render_to_response
+from django.core.context_processors import csrf
 from pyworkflow.manager import Manager
 from pyworkflow.project import Project
 from pyworkflow.gui.tree import TreeProvider
@@ -205,8 +206,6 @@ def formTable(request):
             param.htmlCond = param.condition.get()
             param.htmlDepend = ','.join(param._dependants)
             param.htmlCondParams = ','.join(param._conditionParams)
-#            if isinstance(param, EnumParam):
-#                param.htmlChoicesSize = len(param.choices)
     
     
     context = {'protocol':protocol,
@@ -220,8 +219,26 @@ def formTable(request):
                'messi': messi_path,
                'messi_css': messi_css_path}
     
+    # Cross Site Request Forgery protection is need it
+    context.update(csrf(request))
+    
     return render_to_response('formTable.html', context)
 
+def protocol(request):
+    
+    parameters = request.POST.get("","")
+    
+    
+    # Resources #
+    favicon_path = getResource('favicon')
+    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
+    #############
+    
+    context = {'favicon': favicon_path,
+               'jquery': jquery_path}
+    
+    
+    return render_to_response('protocol.html', context)
 
 if __name__ == '__main__':
     root = loadProtTree()    

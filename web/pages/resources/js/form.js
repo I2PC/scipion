@@ -76,13 +76,19 @@ function evalCondition(itemName) {
 	return eval(cond_eval);
 }
 
-function help(msg) {
+function help(title, msg) {
 	new Messi(msg, {
-		title : 'Help',
+		title : 'Help' + ' ' + title,
 		buttons : [ {
 			id : 0,
 			label : 'Close',
 			val : 'X'
 		} ]
 	});
+}
+
+function filemanager(elm, type, name) {
+	alert(elm + " " + type + " " + name);
+//	document.getElementById(elm).innerText = document
+//			.getElementById('openssme').value
 }

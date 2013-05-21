@@ -10,7 +10,8 @@ a {
 	overflow-x: hidden;
 	/*margin: -0.5em -1em -0.6em 1em;*/
 	/*border: 1px solid #d0d0d0;*/
-	margin: 20px, 20px, 20px, 20px;
+	margin-left: -0.6em;
+	padding-right: 1.5em;
 	background: white;
 }
 
@@ -28,7 +29,8 @@ a {
 }
 
 .treeview .hitarea {
-	background: url(../../../resources/treeview-default.gif) -64px -25px no-repeat;
+	background: url(../../../resources/treeview-default.gif) -64px -25px
+		no-repeat;
 	height: 16px;
 	width: 16px;
 	margin-left: -16px;
@@ -56,7 +58,7 @@ a {
 }
 
 .treeview li {
-/* 	background: url(../images/treeview-default-line.gif) 0 0 no-repeat; */
+	/* 	background: url(../images/treeview-default-line.gif) 0 0 no-repeat; */
 	background: 0 0 no-repeat;
 }
 
@@ -147,7 +149,6 @@ table a:active,table a:hover {
 }
 
 table {
-
 	width: 100%;
 	overflow-x: auto;
 	font-size: 0.9em;
