@@ -35,11 +35,41 @@ AngularSampling = 5
 """
 NRansac = 300
 
+#{expert} Number of grids per dimension 
+""" Number of grids per dimension. The total number of classes used consists in n x n
+"""
+NumGrids = 3
+
 #{expert} correlation value using the estimated initial volume to determine if an experimental projection is an
 #inlier or outlier
-""" Correlation value threshold to determine if an experimental projection is inlier or outlier
+""" Percetentil to determine if an experimental projection is inlier or outlier
 """
-CorrThresh = 0.65
+CorrThresh = 0.8
+
+#{expert} Number of best volumes to refine
+""" Number of best volumes to refine 
+"""
+NumVolumes =3
+
+#{expert} Number of iterations to perform to refine the volumes
+""" Number of iterations to perform to refine the volumes 
+"""
+NumIter = 10
+
+#{file}(*.vol) Initial Volume:
+""" Initial volume to be used 
+"""
+InitialVolume = ''
+
+#{expert} Max frequency of the initial volume
+""" Max frequency of the initial volume in Angstroms
+"""
+MaxFreq = 40
+
+# Sampling Rate
+""" Sampling rate (A/px)
+"""
+Ts = ''
 
 # {eval} expandParallel(threads=0,hours=12)
 
