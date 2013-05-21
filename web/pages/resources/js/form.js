@@ -86,3 +86,21 @@ function help(msg) {
 		} ]
 	});
 }
+
+/* Browse object in the database.
+ * Params:
+ *  objClass: the class to get instances from (also subclasses)
+ */
+function browseObjects(objClass) {
+	$.ajax({
+	    type:"GET",
+	    url:"/browse_objects/?objClass="+objClass,
+	    dataType: "json",
+	    success: function(json)
+	    {
+	        //specifying a dataType of json makes jQuery pre-eval the response for us
+	        alert(json.objects);
+	    }
+	 });	
+}
+

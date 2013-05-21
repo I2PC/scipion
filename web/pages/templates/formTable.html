@@ -52,7 +52,7 @@
 				{% endif %}
 				<td class="ico"><a href="javascript:help('{{param.help.get}}');"><img src={{help}} /></a></td>
 				{% if param.getClassName == "PointerParam" %}
-				<td class="ico"><a href=""><img src={{browse}}/></a></td>
+				<td class="ico"><a href="javascript:browseObjects('{{param.pointerClass.get}}');"><img src={{browse}}/></a></td>
 				{% endif %}
 			</tr>
 			{% endfor %}

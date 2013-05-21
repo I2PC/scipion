@@ -21,5 +21,5 @@ urlpatterns = patterns('',
     url(r'^project_content/$', 'app.views.project_content'),
 #    url(r'^form/$', 'app.views.form'),
     url(r'^formTable/$', 'app.views.formTable'),
-    
+    url(r'^browse_objects/$', 'app.views.browse_objects'),
 )

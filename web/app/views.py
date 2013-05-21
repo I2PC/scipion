@@ -223,6 +223,27 @@ def formTable(request):
     return render_to_response('formTable.html', context)
 
 
+def browse_objects(request):
+    """ Browse objects from the database. """
+    from django.http import HttpResponse
+    import json
+    
+    if request.is_ajax():
+        objClass = request.GET.get('objClass')
+        manager = Manager()
+        project_name = 'TestProject'
+        projPath = manager.getProjectPath(project_name)
+        project = Project(projPath)
+        project.load()
+        
+        objs = []
+        for obj in project.mapper.selectByClass(objClass, iterate=True):
+            objs.append(obj.getName())
+        jsonStr = json.dumps({'objects' : objs},
+                             ensure_ascii=False)
+        return HttpResponse(jsonStr, mimetype='application/javascript')
+
+
 if __name__ == '__main__':
     root = loadProtTree()    
     for s in root.childs:
