@@ -494,8 +494,6 @@ public class MetadataTableModel extends MetadataGalleryTableModel
 			cache.clear();
 			
 			//fireTableDataChanged();
-			
-					
 		}
 	}
 

@@ -90,7 +90,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected JTable micrographstb;
 	protected ImportParticlesJDialog importpjd = null;
 
-	private JMenuItem exitmi;
+	protected JMenuItem exitmi;
 	protected JLabel positionlb;
 	protected JToggleButton usezoombt;
 
@@ -275,7 +275,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				close();
 			}
 		});
-		filemn.add(exitmi);
+		
 
 		ijmi = new JMenuItem("ImageJ", XmippResource.getIcon("ij.gif"));
 		ijmi.setEnabled(picker.getMode() != Mode.ReadOnly);

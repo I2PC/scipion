@@ -42,7 +42,6 @@ public class ParticleToTemplatesTask implements Task
 			picker.saveTemplates();
 			if(dialog != null && dialog.isVisible())
 				dialog.loadTemplates(true);
-			System.out.println("Templates updated");
 
 		}
 		catch (Exception e)

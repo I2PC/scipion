@@ -34,14 +34,14 @@ public class ImportParticlesJDialog extends XmippDialog {
 	public Format format = Format.Auto;
 	protected XmippFileChooser xfc = null;
 	protected String path;
-	private JFormattedTextField scaletf;
-	private JCheckBox invertxcb;
-	private JCheckBox invertycb;
+	protected JFormattedTextField scaletf;
+	protected JCheckBox invertxcb;
+	protected JCheckBox invertycb;
 
 	protected static String[] FormatStrings = { "Automatic", "Xmipp 2.4",
-			"Xmipp 3.0", "Eman" };
+			"Xmipp 3.0", "Xmipp 3.01", "Eman" };
 	protected static Format[] FormatList = { Format.Auto, Format.Xmipp24,
-			Format.Xmipp30, Format.Eman };
+			Format.Xmipp30, Format.Xmipp301, Format.Eman };
 
 	public ImportParticlesJDialog(ParticlePickerJFrame parent) {
 		super(parent, "Import Particles", true);
@@ -92,8 +92,7 @@ public class ImportParticlesJDialog extends XmippDialog {
 		browsebt = XmippWindowUtil.getIconButton("folderopen.gif", this);
 		panel.add(browsebt, XmippWindowUtil.getConstraints(gbc, 2, 1, 1));
 		
-		panel.add(new JLabel("Scale To:"),
-				XmippWindowUtil.getConstraints(gbc, 0, 2, 1));
+		panel.add(new JLabel("Scale To:"),	XmippWindowUtil.getConstraints(gbc, 0, 2, 1));
 		scaletf = new JFormattedTextField(NumberFormat.getNumberInstance());
 		scaletf.setColumns(3);
 		scaletf.setValue(1);

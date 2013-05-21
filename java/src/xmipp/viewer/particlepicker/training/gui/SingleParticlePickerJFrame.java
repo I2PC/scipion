@@ -40,7 +40,6 @@ import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
-import xmipp.viewer.particlepicker.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.ParticlesJDialog;
 import xmipp.viewer.particlepicker.SingleParticlePicker;
 import xmipp.viewer.particlepicker.training.model.MicrographState;
@@ -170,9 +169,17 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				// if(autopickchb.isSelected())
-				// autopick();
-				setSupervised(autopickchb.isSelected());
+				try
+				{
+					setSupervised(autopickchb.isSelected());
+				}
+				catch (Exception ex)
+				{
+					XmippDialog.showError(SingleParticlePickerJFrame.this, ex.getMessage());
+					autopickchb.setSelected(false);
+					return;
+				}
+				
 				
 			}
 		});
@@ -188,15 +195,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 	protected void setSupervised(boolean selected)
 	{
 		if (selected)
-			try
-			{
 				ppicker.setMode(Mode.Supervised);
-			}
-			catch (Exception e)
-			{
-				XmippDialog.showError(this, e.getMessage());
-				return;
-			}
 		
 		thresholdpn.setVisible(selected);
 		pack();
@@ -244,6 +243,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		if (ppicker.getMode() != Mode.Manual)
 			importffmi.setEnabled(false);
 		filemn.add(exportmi);
+		filemn.add(exitmi);
 
 		JMenu windowmn = new JMenu("Window");
 

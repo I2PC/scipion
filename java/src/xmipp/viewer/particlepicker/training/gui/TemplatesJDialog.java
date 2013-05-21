@@ -8,7 +8,9 @@ import java.awt.Panel;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import javax.swing.JDialog;
+import javax.swing.JLabel;
 
+import xmipp.ij.commons.XmippIJUtil;
 import xmipp.jni.ImageGeneric;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
@@ -55,13 +57,16 @@ public class TemplatesJDialog extends JDialog {
 				pack();
 				return;
 			}
-			ImageStack stack = new ImagePlus(frame.getParticlePicker().getTemplatesFile()).getImageStack();
+			ImagePlus templatesimp = new ImagePlus(frame.getParticlePicker().getTemplatesFile()); 
+//			templatesimp.show();
+			ImageStack stack = templatesimp.getImageStack();
+			
 			templatespn.removeAll();
 			ImagePlus template;
 			for (int i = 1; i <= frame.getParticlePicker().getTemplatesNumber(); i ++) {
 				template = new ImagePlus("", stack.getProcessor(i));
-				templatespn.add(new ImageCanvas(template));
-
+//				template.show();
+				templatespn.add(new JLabel(XmippIJUtil.getImageIcon(template, size, size)));
 			}
 			
 		} catch (Exception e) {

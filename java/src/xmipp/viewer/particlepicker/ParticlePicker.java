@@ -17,10 +17,13 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.Program;
+import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.training.model.Mode;
+import xmipp.viewer.particlepicker.training.model.TrainingMicrograph;
 
 
 public abstract class ParticlePicker
@@ -59,8 +62,29 @@ public abstract class ParticlePicker
 		return next;
 	}
 	
+	public static String getParticlesBlock(Format f, String file)
+	{
+		String blockname = getParticlesBlockName(f);
+		if(f == null)
+			return null;
+		return blockname + "@" + file;
+		
+	}
 	
+	public static String getParticlesBlockName(Format f)
+	{
+		if(f == Format.Xmipp301)
+			return "particles";
+		if(f == Format.Xmipp30)
+			return "DefaultFamily";
+		return null;
+	}
 	
+	public static String getParticlesBlock(String file)
+	{
+		return getParticlesBlock(Format.Xmipp301, file);
+		
+	}
 	
 	public ParticlePicker(String selfile, Mode mode)
 	{
@@ -154,6 +178,30 @@ public abstract class ParticlePicker
 	}
 
 
+	public Format detectFormat(String path)
+	{
+		Format[] formats = new Format[]{Format.Xmipp24, Format.Xmipp30, Format.Xmipp301, Format.Eman};
+		String particlesfile;
+		for (Micrograph m : getMicrographs())
+		{
+			for (Format f : formats)
+			{
+				particlesfile = getImportMicrographName(path, m.getFile(), f);
+				if (particlesfile != null && Filename.exists(particlesfile))
+				{
+					if(f != Format.Xmipp30 && f != Format.Xmipp301)
+						return f;
+					if(f == Format.Xmipp30 && Filename.exists(Filename.join(path, "families.xmd")))
+						return f;
+					return Format.Xmipp301;
+				}
+			}
+		}
+		return Format.Unknown;
+	}
+	
+	public abstract String getImportMicrographName(String path, String filename, Format f);
+	
 	public String getPosFileFromXmipp24Project(String projectdir, String mname)
 	{
 		String suffix = ".raw.Common.pos";
@@ -422,11 +470,6 @@ public abstract class ParticlePicker
 
 	
 
-	public Format detectFormat(String path)
-	{
-		return Format.Unknown;
-	}
-
 	public Format detectFileFormat(String path)
 	{
 		if (path.endsWith(".raw.Common.pos"))
@@ -450,12 +493,15 @@ public abstract class ParticlePicker
 		case Xmipp24:
 			md.readPlain(path, "xcoor ycoor");
 			break;
-//		case Xmipp30:
-//			if (!MetaData.containsBlock(path, family.getName()))
-//				throw new IllegalArgumentException(
-//						XmippMessage.getIllegalValueMsgWithInfo("family", family.getName(), "Particles for this family are not defined in file"));
-//			md.read(String.format("%s@%s", family.getName(), path));
-//			break;
+		case Xmipp30:
+			String blockname = getParticlesBlockName(f);
+			if (!MetaData.containsBlock(path, blockname))
+				throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg(blockname));
+			md.read(getParticlesBlock(f, path));
+			break;
+		case Xmipp301:
+			md.read(ParticlePicker.getParticlesBlock(f, path));
+			break;
 		case Eman:
 			fillParticlesMdFromEmanFile(path, m, md, scale);
 			break;

@@ -177,7 +177,7 @@ public class SingleParticlePicker extends ParticlePicker
 			//TODO getArrayFloat and setArrayFloat must be call from C both in one function
 			matrix = ig.getArrayFloat(ImageGeneric.FIRST_IMAGE, ImageGeneric.FIRST_SLICE);
 			templates.setArrayFloat(matrix, ImageGeneric.FIRST_IMAGE + templateindex, ImageGeneric.FIRST_SLICE);
-			System.out.printf("setTemplate " + templateindex + "\n");
+//			System.out.printf("setTemplate " + templateindex + "\n");
 			templateindex++;
 			
 		}
@@ -286,7 +286,7 @@ public class SingleParticlePicker extends ParticlePicker
 					md.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
 				}
 
-				md.writeBlock("particles@" + file);//to append
+				md.writeBlock(getParticlesBlock(file));//to append
 				md.destroy();
 
 			}
@@ -575,6 +575,7 @@ public class SingleParticlePicker extends ParticlePicker
 		}
 	}
 
+	//returns micrograph particles filepath, according to format
 	public String getImportMicrographName(String path, String filename, Format f)
 	{
 
@@ -585,6 +586,8 @@ public class SingleParticlePicker extends ParticlePicker
 			return Filename.join(path, base, base + ".raw.Common.pos");
 		case Xmipp30:
 			return Filename.join(path, base + ".pos");
+		case Xmipp301:
+			return Filename.join(path, base + ".pos");
 		case Eman:
 			return Filename.join(path, base + ".box");
 
@@ -594,19 +597,7 @@ public class SingleParticlePicker extends ParticlePicker
 
 	}
 
-	public Format detectFormat(String path)
-	{
-		Format[] formats = { Format.Xmipp24, Format.Xmipp30, Format.Eman };
-		for (TrainingMicrograph m : micrographs)
-		{
-			for (Format f : formats)
-			{
-				if (Filename.exists(getImportMicrographName(path, m.getFile(), f)))
-					return f;
-			}
-		}
-		return Format.Unknown;
-	}
+
 
 	/** Return the number of particles imported */
 	public String importParticlesFromFolder(String path, Format f, float scale, boolean invertx, boolean inverty)
@@ -614,14 +605,14 @@ public class SingleParticlePicker extends ParticlePicker
 		if (f == Format.Auto)
 			f = detectFormat(path);
 		if (f == Format.Unknown)
-			return "Unknown format";
+			throw new IllegalArgumentException(XmippMessage.getIllegalValueMsg("format", Format.Unknown));
 
 		String filename;
 		String result = "";
 		for (TrainingMicrograph m : micrographs)
 		{
 			filename = getImportMicrographName(path, m.getFile(), f);
-			System.out.println("  filename: " + filename);
+//			System.out.println("  filename: " + filename);
 			if (Filename.exists(filename))
 				result += importParticlesFromFile(filename, f, m, scale, invertx, inverty);
 		}
@@ -883,6 +874,8 @@ public class SingleParticlePicker extends ParticlePicker
 		}
 
 	}
+	
+	
 
 	public void loadManualParticles(TrainingMicrograph micrograph, String file)
 	{
@@ -894,7 +887,7 @@ public class SingleParticlePicker extends ParticlePicker
 
 		try
 		{
-			MetaData md = new MetaData("particles@" + file);
+			MetaData md = new MetaData(getParticlesBlock(file));
 
 			for (long id : md.findObjects())
 			{

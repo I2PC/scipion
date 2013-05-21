@@ -7,6 +7,7 @@ import java.util.logging.Level;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.viewer.particlepicker.ColorHelper;
+import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.IJCommand;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
@@ -242,6 +243,12 @@ public class ExtractParticlePicker extends ParticlePicker
 			if (!getMicrograph().fits(p.getX(), p.getY(), size))
 				return false;
 		return true;
+	}
+
+	@Override
+	public String getImportMicrographName(String path, String filename, Format f)
+	{
+		return null;
 	}
 
 }
