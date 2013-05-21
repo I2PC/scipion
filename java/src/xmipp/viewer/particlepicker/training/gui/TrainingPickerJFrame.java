@@ -935,8 +935,9 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	{
 		try
 		{
-			super.updateSize(size);
 			ppicker.resetParticleImages();
+			super.updateSize(size);
+			ppicker.updateTemplates();
 			
 		}
 		catch (Exception e)

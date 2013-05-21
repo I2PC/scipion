@@ -197,7 +197,6 @@ public class EditFamiliesJDialog extends JDialog {
 					frame.updateColor(color);
 				} else if (column == 2) {
 					int size = (Integer) value;
-					f.setSize(size);
 					frame.updateSize(size);
 
 				} else if (column == 3) {
