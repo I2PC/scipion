@@ -8,6 +8,7 @@ public class TasksManager
 	private static TasksManager tm;
 	private LinkedBlockingQueue<Task> queue;
 	private Thread consumer;
+	private boolean stop;
 
 	private TasksManager()
 	{
@@ -34,6 +35,11 @@ public class TasksManager
 			throw new IllegalArgumentException(e);
 		}
 	}
+	
+	public void stop()
+	{
+		stop = true;
+	}
 
 	public class Consumer implements Runnable
 	{
@@ -50,7 +56,7 @@ public class TasksManager
 		{
 			try
 			{
-				while (true)
+				while (true && !stop)
 					queue.take().doTask();
 			}
 			catch (InterruptedException e)
