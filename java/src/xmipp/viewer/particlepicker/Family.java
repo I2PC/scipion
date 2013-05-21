@@ -161,7 +161,8 @@ public class Family
 		if (size > ParticlePicker.fsizemax)
 			throw new IllegalArgumentException(String.format("Max size is %s, %s not allowed", ParticlePicker.fsizemax, size));
 		this.size = size;
-		((TrainingPicker) picker).updateTemplates();
+		if(picker instanceof TrainingPicker)
+			((TrainingPicker) picker).updateTemplates();
 	}
 
 	public String getName()
@@ -187,7 +188,8 @@ public class Family
 			throw new IllegalArgumentException(
 					XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Family must have at least one template"));
 		this.templatesNumber = num;
-		((TrainingPicker) picker).updateTemplates();
+		if(picker instanceof TrainingPicker)
+			((TrainingPicker) picker).updateTemplates();
 	}
 
 	public Color getColor()

@@ -1,9 +1,5 @@
 package xmipp.viewer.particlepicker.tiltpair.gui;
 
-import ij.IJ;
-import ij.WindowManager;
-import ij.gui.ImageWindow;
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -13,43 +9,30 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.util.List;
 
 import javax.swing.BorderFactory;
-import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JColorChooser;
-import javax.swing.JDialog;
-import xmipp.utils.XmippFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
-import xmipp.utils.ColorIcon;
-import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.Family;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.ImportParticlesJDialog;
-import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
 import xmipp.viewer.particlepicker.ParticlesJDialog;
 import xmipp.viewer.particlepicker.tiltpair.model.TiltPairPicker;
-import xmipp.viewer.particlepicker.tiltpair.model.TiltedParticle;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedMicrograph;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedParticle;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
-import xmipp.viewer.particlepicker.training.model.MicrographFamilyData;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 
 
