@@ -43,6 +43,7 @@ public:
     FileName fnOut;
     String dimRefMethod;
     int outputDim;
+    int numGrids;
 public:
     MetaData SFin;
     Matrix2D<double> X; // Input data

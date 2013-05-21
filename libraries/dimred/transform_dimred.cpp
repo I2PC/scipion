@@ -36,6 +36,7 @@ void ProgTransformDimRed::readParams()
     fnOut = getParam("-o");
     dimRefMethod = getParam("-m");
     outputDim  = getIntParam("-d");
+    numGrids  =  getIntParam("-n");
 }
 
 
@@ -58,6 +59,7 @@ void ProgTransformDimRed::defineParams()
     addParamsLine("  [-o <metadatafile=\"\">]       : output metadata with distances between images");
     addParamsLine("   -m <dimRefMethod>             : Dimensionality Reduction method selected");
     addParamsLine("  [-d <N=2>]               : Number of dimensions after the dimensionality reduction");
+    addParamsLine("  [-n <num=3>]             : Number of grids in one dimension");
     addExampleLine("xmipp_transform_dimred -i images.xmd -i distances.xmd -m LTSA");
 }
 
@@ -143,7 +145,7 @@ double correlationDistance(const Matrix2D<double> &X, size_t i1, size_t i2)
 void ProgTransformDimRed::extractRandomProjections()
 {
     //number of grids in each axis
-    size_t num = 4;
+    size_t num = (int)numGrids;
 
     //Metadata that has the dimrefcoeffs
     MetaData SFin;
