@@ -38,6 +38,8 @@ public:
     double padValue;
     String padType;
     WindowMode mode;
+    FileName tempFn;
+    bool renameTempFn;
 
     void defineParams()
     {
@@ -162,7 +164,7 @@ public:
 
     void show()
     {
-        if (verbose==0)
+        if (verbose == 0)
             return;
         XmippMetadataProgram::show();
         switch (mode)
@@ -180,12 +182,23 @@ public:
             << y0 << "," << x0 << ") to (zF,yF,xF)=(" << zF << "," << yF
             << "," << xF << ")\n"
             << "Physical: " << physical_coords << std::endl;
+            break;
         }
     }
 
     void preProcess()
     {
-        create_empty_stackfile=false;
+        create_empty_stackfile = false;
+        renameTempFn = false;
+
+        /* Since dimensions are usually changed in this program, we cannot reuse the same file
+         * but we can create a temporary file */
+        if (input_is_stack && fn_out.empty())
+        {
+//            tempFn.initUniqueName("temp_XXXXXX");
+            fn_out = fn_in + "xtw_tmpfile" + "." + fn_in.getExtension();
+            renameTempFn = true;
+        }
     }
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
@@ -259,6 +272,18 @@ public:
             }
         Iin.clear(); // Close the input file
         result.write(fnImgOut);
+    }
+
+
+    void postProcess()
+    {
+        /* Since dimensions are usually changed in this program, we cannot reuse the same file
+         * but we can create a temporary file. Now it must be deleted */
+        if (renameTempFn)
+        {
+            if (std::rename(fn_out.c_str(), fn_in.c_str()) != 0)
+                REPORT_ERROR(ERR_IO, formatString("Error renaming file '%s' to '%s'.", fn_out.c_str(), fn_in.c_str()));
+        }
     }
 };
 

@@ -559,6 +559,19 @@ void matrixOperation_AAt(const Matrix2D <double> &A, Matrix2D<double> &C)
 		}
 }
 
+void matrixOperation_ABt(const Matrix2D <double> &A, const Matrix2D <double> &B, Matrix2D<double> &C)
+{
+	C.initZeros(MAT_YSIZE(A), MAT_YSIZE(B));
+	for (size_t i = 0; i < MAT_YSIZE(A); ++i)
+		for (size_t j = 0; j < MAT_YSIZE(B); ++j)
+		{
+			double aux=0.;
+			for (size_t k = 0; k < MAT_XSIZE(A); ++k)
+				aux += MAT_ELEM(A, i, k) * MAT_ELEM(B, j, k);
+			MAT_ELEM(C, i, j)=aux;
+		}
+}
+
 void matrixOperation_AtB(const Matrix2D <double> &A, const Matrix2D<double> &B, Matrix2D<double> &C)
 {
     C.resizeNoCopy(MAT_XSIZE(A), MAT_XSIZE(B));
@@ -570,6 +583,19 @@ void matrixOperation_AtB(const Matrix2D <double> &A, const Matrix2D<double> &B, 
                 aux += MAT_ELEM(A, k, i) * MAT_ELEM(B, k, j);
 			MAT_ELEM(C, i, j)=aux;
         }
+}
+
+void matrixOperation_AtBt(const Matrix2D <double> &A, const Matrix2D<double> &B, Matrix2D<double> &C)
+{
+	C.initZeros(MAT_XSIZE(A), MAT_YSIZE(B));
+	for (size_t i = 0; i < MAT_XSIZE(A); ++i)
+		for (size_t j = 0; j < MAT_YSIZE(B); ++j)
+		{
+			double aux=0.;
+			for (size_t k = 0; k < MAT_YSIZE(A); ++k)
+				aux += MAT_ELEM(A, k, i) * MAT_ELEM(B, j, k);
+			MAT_ELEM(C, i, j)=aux;
+		}
 }
 
 void matrixOperation_XtAX_symmetric(const Matrix2D<double> &X, const Matrix2D<double> &A, Matrix2D<double> &B)
@@ -584,6 +610,12 @@ void matrixOperation_XtAX_symmetric(const Matrix2D<double> &X, const Matrix2D<do
                 aux += MAT_ELEM(X, k, i) * MAT_ELEM(AX, k, j);
             MAT_ELEM(B, j, i) = MAT_ELEM(B, i, j) = aux;
         }
+}
+
+void matrixOperation_IplusA(Matrix2D<double> &A)
+{
+	for (size_t i=0; i<MAT_YSIZE(A); ++i)
+		MAT_ELEM(A,i,i)+=1;
 }
 
 void matrixOperation_IminusA(Matrix2D<double> &A)
@@ -611,4 +643,29 @@ void keepColumns(Matrix2D<double> &A, int j0, int jF)
     for (size_t i = 0; i < MAT_YSIZE(A); ++i)
     	memcpy(&MAT_ELEM(Ap,i,0),&MAT_ELEM(A,i,j0),MAT_XSIZE(Ap)*sizeof(double));
     A=Ap;
+}
+
+void orthogonalizeColumnsGramSchmidt(Matrix2D<double> &M)
+{
+	for(size_t j1=0; j1<MAT_XSIZE(M); j1++)
+	{
+		// Normalize column j1
+		double norm=0;
+		for (size_t i=0; i<MAT_YSIZE(M); i++)
+			norm+=MAT_ELEM(M,i,j1)*MAT_ELEM(M,i,j1);
+		double K=1.0/sqrt(norm);
+		for(size_t i = 0; i<MAT_YSIZE(M); i++)
+			MAT_ELEM(M,i,j1) *=K;
+
+		// Update rest of columns
+		for(size_t j2=j1+1; j2<MAT_XSIZE(M); j2++)
+		{
+			// Compute the dot product
+			double K = 0;
+			for (size_t i=0; i<MAT_YSIZE(M); i++)
+				K+=MAT_ELEM(M,i,j1)*MAT_ELEM(M,i,j2);
+			for (size_t i=0; i<MAT_YSIZE(M); i++)
+				MAT_ELEM(M,i,j2) -= K*MAT_ELEM(M,i,j1);
+		}
+	}
 }

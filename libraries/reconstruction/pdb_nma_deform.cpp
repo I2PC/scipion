@@ -60,7 +60,7 @@ void ProgPdbNmaDeform::show()
 	<< "Deformations: "
 	;
 	FOR_ALL_ELEMENTS_IN_ARRAY1D(deformations)
-	std::cout << deformations(i) << " ";
+		std::cout << deformations(i) << " ";
 	std::cout << std::endl;
 }
 

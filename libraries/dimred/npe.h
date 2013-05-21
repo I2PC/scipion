@@ -1,6 +1,8 @@
 /***************************************************************************
  *
- * Authors:    Emma Sesmero            emmasesmero@gmail.com (2013)
+ * Authors:    Oscar Hueros Fernandez            o.hueros@gmail.com (2013)
+ *
+ * Universidad San Pablo CEU
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,31 +22,24 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-#ifndef _HESSIAN_LLE
-#define _HESSIAN_LLE
+
+#ifndef _NPE
+#define _NPE
 
 #include <data/matrix2d.h>
 #include <data/matrix1d.h>
 #include "dimred_tools.h"
 
-/**@defgroup HessianLLE Hessian Local Linear Embedding
-   @ingroup DimRedLibrary */
-//@{
-/** Class for making a Hessian LLE dimensionality reduction */
-class HessianLLE: public DimRedAlgorithm
+class NPE: public DimRedAlgorithm
 {
 public:
-    int kNeighbours;
+	int k;
 public:
-    /// Set specific parameters
-    void setSpecificParameters(int kNeighbours=12);
+	/// Set specific parameters
+	void setSpecificParameters(int k=12);
 
-    /// Reduce dimensionality
-    void reduceDimensionality();
-
-private:
-    void completeYt(const Matrix2D<double> &V, const Matrix2D<double> &Yi, Matrix2D<double> &Yt_complete);
-    void buildYiHessianEstimator(const Matrix2D<double> &V, Matrix2D<double> &Yi, size_t no_dim, size_t dp);
+	/// Reduce dimensionality
+	void reduceDimensionality();
 };
 //@}
 #endif

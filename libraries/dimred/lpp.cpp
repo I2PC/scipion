@@ -62,7 +62,7 @@ void LPP::reduceDimensionality()
 
 	// Sort the eigenvalues in descending order and get the smallest eigenvectors
 	eigvector.resizeNoCopy(MAT_YSIZE(Peigvec),outputDim);
-	for (int j=0; j<outputDim; ++j)
+	for (size_t j=0; j<outputDim; ++j)
 	{
 		int idxj=VEC_ELEM(idx,j)-1;
 		for (int i=0; i<MAT_YSIZE(Peigvec); ++i)

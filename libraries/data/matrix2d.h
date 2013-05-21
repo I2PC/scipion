@@ -1120,6 +1120,14 @@ public:
     		VEC_ELEM(sum,i)+=MAT_ELEM(*this,i,j);
     }
 
+    /** Get column sum. */
+        void colSum(Matrix1D<T> &sum) const
+        {
+        	sum.initZeros(MAT_XSIZE(*this));
+        	FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
+        		VEC_ELEM(sum,j)+=MAT_ELEM(*this,i,j);
+        }
+
     /** Get row energy sum.
      * Sum of the squared values by row */
     void rowEnergySum(Matrix1D<T> &sum) const
@@ -1460,7 +1468,16 @@ public:
     	Xmr*=1.0/MAT_XSIZE(*this);
     }
 
-    /** Set constant column.
+    /** Compute row means */
+    void computeColMeans(Matrix1D<double> &Xmr) const
+    {
+       	Xmr.initZeros(MAT_YSIZE(*this));
+       	FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
+       		VEC_ELEM(Xmr,j)+=MAT_ELEM(*this,i,j);
+       	Xmr*=1.0/MAT_YSIZE(*this);
+     }
+
+     /** Set constant column.
      * Set a given column to a constant value A(i,j)=val;
      */
     void setConstantCol(size_t j, T v)
@@ -1866,6 +1883,9 @@ void typeCast(const Matrix2D<T1>& v1,  Matrix2D<T1>& v2)
     v2=v1;
 }
 
+/** Gram Schmidt orthogonalization by columns */
+void orthogonalizeColumnsGramSchmidt(Matrix2D<double> &M);
+
 /** Helper class for solving linear systems */
 class PseudoInverseHelper
 {
@@ -1928,12 +1948,21 @@ void matrixOperation_AAt(const Matrix2D <double> &A, Matrix2D<double> &C);
 /** Matrix operation: C=A*B. */
 void matrixOperation_AB(const Matrix2D <double> &A, const Matrix2D<double> &B, Matrix2D<double> &C);
 
+/** Matrix operation: C=A*B^t. */
+void matrixOperation_ABt(const Matrix2D <double> &A, const Matrix2D <double> &B, Matrix2D<double> &C);
+
 /** Matrix operation: C=A^t*B. */
 void matrixOperation_AtB(const Matrix2D <double> &A, const Matrix2D<double> &B, Matrix2D<double> &C);
+
+/** Matrix operation: C=A^t*Bt. */
+void matrixOperation_AtBt(const Matrix2D <double> &A, const Matrix2D<double> &B, Matrix2D<double> &C);
 
 /** Matrix operation: B=X^t*A*X.
  * We know that the result B must be symmetric */
 void matrixOperation_XtAX_symmetric(const Matrix2D<double> &X, const Matrix2D<double> &A, Matrix2D<double> &B);
+
+/** Matrix operation: A=I+A */
+void matrixOperation_IplusA(Matrix2D<double> &A);
 
 /** Matrix operation: A=I-A */
 void matrixOperation_IminusA(Matrix2D<double> &A);
