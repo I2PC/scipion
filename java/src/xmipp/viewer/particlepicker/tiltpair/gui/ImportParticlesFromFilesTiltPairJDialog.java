@@ -33,9 +33,6 @@ public class ImportParticlesFromFilesTiltPairJDialog extends ImportParticlesJDia
 	private JTextField sourcetf2;
 	private JButton browsebt2;
 	private String path2;
-	private JFormattedTextField scaletf;
-	private JCheckBox invertycb;
-	private JCheckBox invertxcb;
 
 	public ImportParticlesFromFilesTiltPairJDialog(TiltPairPickerJFrame parent) {
 		super(parent);
