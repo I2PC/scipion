@@ -5,15 +5,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
-
-import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.jni.Particle;
+import xmipp.utils.TasksManager;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.Family;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
+import xmipp.viewer.particlepicker.UpdateTemplatesTask;
+import xmipp.viewer.particlepicker.tiltpair.model.UntiltedMicrograph;
+import xmipp.viewer.particlepicker.training.gui.TemplatesJDialog;
 
 public abstract class TrainingPicker extends ParticlePicker
 {
@@ -195,7 +196,8 @@ public abstract class TrainingPicker extends ParticlePicker
 				x = md.getValueInt(MDLabel.MDL_XCOOR, id);
 				y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 				particle = new TrainingParticle(x, y, family, mfd.getMicrograph());
-				mfd.addManualParticle(particle, this, false);
+				mfd.addManualParticle(particle, this, false, false);
+
 			}
 			md.destroy();
 		}
@@ -421,12 +423,10 @@ public abstract class TrainingPicker extends ParticlePicker
 		// System.out.println("Saving data...");
 		if (isChanged())
 		{
-
 			super.saveData();
 			saveMicrographs();
 		}
-		if (getMode() == FamilyState.Manual)// only changed in manual mode
-			saveTemplates();
+
 	}
 
 	public int getAutomaticNumber(Family f, double threshold)
@@ -589,7 +589,8 @@ public abstract class TrainingPicker extends ParticlePicker
 			}
 			cost = hasCost ? md.getValueDouble(MDLabel.MDL_COST, id) : 0;
 			if (cost == 0 || cost > 1)
-				tm.addManualParticle(new TrainingParticle(x, y, family, tm, cost), this, false);
+				tm.addManualParticle(new TrainingParticle(x, y, family, tm, cost), this, false, false);
+
 			else
 				tm.addAutomaticParticle(new AutomaticParticle(x, y, family, tm, cost, false), true);
 		}
@@ -723,53 +724,9 @@ public abstract class TrainingPicker extends ParticlePicker
 	}
 
 
-	public void updateTemplates()
+	public synchronized void updateTemplates()
 	{
-		updateTemplates(family);
-
-	}
-
-
-	public void updateTemplates(Family f)
-	{
-		if (f.getStep() != FamilyState.Manual)
-			return;
-
-		
-		if (!hasManualParticles(f))
-			return;
-		System.out.println("update templates");
-		
-
-		f.initTemplates();
-		ImageGeneric igp;
-		List<TrainingParticle> particles;
-		MicrographFamilyData mfd;
-		TrainingParticle particle;
-		try
-		{
-			for (TrainingMicrograph m : micrographs)
-			{
-				mfd = m.getFamilyData(f);
-				for (int i = 0; i < mfd.getManualParticles().size(); i++)
-				{
-					particles = mfd.getManualParticles();
-					particle = particles.get(i);
-					igp = particle.getImageGeneric();
-					if (i < f.getTemplatesNumber())
-						f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
-					else
-						f.getTemplates().alignImage(igp, true);
-				}
-			}
-			
-			f.saveTemplates();
-		}
-		catch (Exception e)
-		{
-			throw new IllegalArgumentException(e.getMessage());
-		}
-
+		TasksManager.getInstance().addTask(new UpdateTemplatesTask(this));
 	}
 
 	public void saveTemplates()
@@ -777,8 +734,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		try
 		{
 			for (Family f : families)
-					f.saveTemplates();
-			System.out.println("Saved templates");
+				f.saveTemplates();
 		}
 		catch (Exception e)
 		{
@@ -839,7 +795,6 @@ public abstract class TrainingPicker extends ParticlePicker
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
-	
 
 
 	@Override

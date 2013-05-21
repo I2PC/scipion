@@ -1,5 +1,7 @@
 package xmipp.ij.commons;
 
+import xmipp.utils.TasksManager;
+
 public class XmippApplication
 {
 	
@@ -23,6 +25,7 @@ public class XmippApplication
 		if (getInstances() == 0)
 		{
 			//System.out.println("exit");
+			TasksManager.getInstance().stop();
 			System.exit(0);
 		}
 	}

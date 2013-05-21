@@ -3,30 +3,17 @@ package xmipp.viewer.particlepicker.training.gui;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.gui.ImageCanvas;
-
 import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Image;
 import java.awt.Panel;
-import java.awt.ScrollPane;
-import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.List;
+import java.io.File;
 
-import javax.swing.ImageIcon;
 import javax.swing.JDialog;
-import javax.swing.JLabel;
 
-import xmipp.ij.commons.ImagePlusLoader;
-import xmipp.ij.commons.XmippImageConverter;
-import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.ImageGeneric;
-import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippMessage;
-import xmipp.viewer.particlepicker.ParticlePickerJFrame;
-import xmipp.viewer.particlepicker.training.model.TrainingParticle;
+import xmipp.utils.XmippWindowUtil;
 
 public class TemplatesJDialog extends JDialog {
 
@@ -59,6 +46,10 @@ public class TemplatesJDialog extends JDialog {
 	public void loadTemplates(boolean resize) {
 
 		try {
+			
+			String file = frame.getFamily().getTemplatesFile();
+			if(!new File(file).exists())
+				return;
 			ImageGeneric templates = frame.getFamily().getTemplates();
 			
 			int size = frame.getFamily().getSize();
@@ -71,11 +62,14 @@ public class TemplatesJDialog extends JDialog {
 				pack();
 				return;
 			}
-			//templates.write("templates.stk");
+			
+			ImageStack stack = new ImagePlus(file).getImageStack();
+			
 			templatespn.removeAll();
 			ImagePlus template;
-			for (int i = 0; i < frame.getFamily().getTemplatesNumber(); i ++) {
-				template = frame.getFamily().getTemplatesImage(ImageGeneric.FIRST_IMAGE + i);
+			for (int i = 1; i <= frame.getFamily().getTemplatesNumber(); i ++) {
+				//template = frame.getFamily().getTemplatesImage(ImageGeneric.FIRST_IMAGE + i);
+				template = new ImagePlus("", stack.getProcessor(i));
 				templatespn.add(new ImageCanvas(template));
 
 			}

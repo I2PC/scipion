@@ -109,7 +109,7 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 					int templatesNumber = ((Number) templatestf.getValue()).intValue();
 					if(templatesNumber < 1)
 						throw new IllegalArgumentException(XmippMessage.getIllegalValueMsg("Templates", templatesNumber));
-					Family g = new Family(name, color, size, templatesNumber, parent.getFrame().getParticlePicker().getTemplatesFile(name));
+					Family g = new Family(name, color, size, parent.getFrame().getParticlePicker(), templatesNumber);
 
 					AddFamilyJDialog.this.parent.addFamily(g);
 					setVisible(false);
