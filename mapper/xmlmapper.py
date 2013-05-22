@@ -114,8 +114,8 @@ class XmlMapper(Mapper):
     
     def _addObjectToDict(self, obj, objDict):
         """Add object if have id"""
-        if obj.hasId():
-            key = self.strId(obj.getId())
+        if obj.hasObjId():
+            key = self.strId(obj.getObjId())
         else:
             self.objCount += 1
             key = '%s_%06d' % (obj.getClassName(), self.objCount)
@@ -206,7 +206,7 @@ class XmlMapper(Mapper):
     def insert(self, obj):
         """Insert a new object into the system"""
         objElem = self.addSubElement(self.root, obj.getClassName(), obj._objValue) 
-        self.setObjectId(objElem, obj.getId())
+        self.setObjectId(objElem, obj.getObjId())
         # Insert object childs
         self.insertObjectWithChilds(obj, objElem )
         
@@ -238,7 +238,7 @@ class XmlMapper(Mapper):
                 else:
                     if attr.isPointer():
                         childElem = self.addSubElement(parentElem, key)
-                        self.setObjectId(childElem, attr.get().getId())
+                        self.setObjectId(childElem, attr.get().getObjId())
                     else:
                         # Select if we want to use the classname or elem name
                         # as element tagname

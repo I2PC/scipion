@@ -243,7 +243,7 @@ class XmippProtExtractParticles(ProtExtractParticles):
         # Create the SetOfImages object on the database
         imgSet = XmippSetOfImages(self._getPath('images.xmd'))
         imgSet.copyInfo(self.inputMics)
-        
+                
         if self.downsampleType == self.OTHER:
             imgSet.samplingRate.set(self.inputMics.samplingRate.get()*self.downFactor.get())
         
@@ -253,6 +253,10 @@ class XmippProtExtractParticles(ProtExtractParticles):
         for stack in stackFiles:
             fn = stack.replace(".stk",".xmd")
             imgSet.appendFromMd(xmipp.MetaData(fn))
+            
+        # TODO: If input coordinates have tilt pairs copy the relation
+#        if self.inputCoords.hasTiltPairs():
+#            imgSet.copyTiltPairs(self.inputCoords)
 
         #imgSet.setMd(imagesMd)
         imgSet.sort() # We need sort?

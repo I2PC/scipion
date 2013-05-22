@@ -51,7 +51,7 @@ class Project(object):
         self.logsPath = self.addPath(PROJECT_LOGS)
         self.runsPath = self.addPath(PROJECT_RUNS)
         
-    def getId(self):
+    def getObjId(self):
         """ Return the unique id assigned to this project. """
         return os.path.basename(self.path)
     
@@ -107,7 +107,7 @@ class Project(object):
                 program = 'pw_protocol_run.py'
                 mpi = 1
             
-            runJob(None, program, '%s %s' % (self.getId(), protocol.strId()),
+            runJob(None, program, '%s %s' % (self.getObjId(), protocol.strId()),
                    numberOfMpi=mpi, runInBackground=True)
         
     def runProtocol(self, protocol, mpiComm=None):

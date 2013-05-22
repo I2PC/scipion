@@ -121,7 +121,7 @@ class TestPyworkflow(unittest.TestCase):
         c = self.createComplex()
         mapper = SqliteMapper(fn)
         mapper.insert(c)
-        cid = c.getId()
+        cid = c.getObjId()
         i = Integer(1)
         mapper.insert(i)
         b = Boolean(False)
@@ -238,7 +238,7 @@ class TestPyworkflow(unittest.TestCase):
         self.assertEqual(prot._steps[0].status, STATUS_FINISHED)
         
         mapper2 = SqliteMapper(fn, globals())
-        prot2 = mapper2.selectById(prot.getId())
+        prot2 = mapper2.selectById(prot.getObjId())
         
         self.assertEqual(prot.endTime, prot2.endTime)
         self.assertEqual(prot._steps[1].status, prot2._steps[1].status)
