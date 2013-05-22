@@ -29,45 +29,11 @@ public class UpdateTemplatesTask implements Task
 	@Override
 	public void doTask()
 	{
-		if (picker.getMode() != Mode.Manual)
-			return;
-
-		if (!picker.hasManualParticles())
-			return;
-
-		picker.initTemplates();
-		ImageGeneric igp;
-		List<TrainingParticle> particles;
-		TrainingParticle particle;
-		double[] align;
-		try
-		{
-			for (TrainingMicrograph m : picker.getMicrographs())
-			{
-				for (int i = 0; i < m.getManualParticles().size(); i++)
-				{
-					particles = m.getManualParticles();
-					particle = particles.get(i);
-					igp = particle.getImageGeneric();
-					if (picker.getTemplateIndex() < picker.getTemplatesNumber())
-						picker.setTemplate(igp);
-					else
-					{
-						align = picker.getTemplates().alignImage(igp);
-						picker.applyAlignment(particle, igp, align);
-					}
-				}
-			}
-			
-			picker.saveTemplates();
+			picker.updateTemplates();
 			if(dialog != null && dialog.isVisible())
 				dialog.loadTemplates(true);
 			System.out.println("Templates updated");
-		}
-		catch (Exception e)
-		{
-			throw new IllegalArgumentException(e.getMessage());
-		}
+		
 
 
 

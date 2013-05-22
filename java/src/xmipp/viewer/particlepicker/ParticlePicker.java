@@ -174,7 +174,6 @@ public abstract class ParticlePicker
 		md.setValueString(MDLabel.MDL_MICROGRAPH, getMicrograph().getName(), id);
 		md.setValueInt(MDLabel.MDL_COLOR, getColor().getRGB(), id);
 		md.setValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, getSize(), id);
-		
 	}
 
 

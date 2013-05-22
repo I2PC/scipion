@@ -29,20 +29,10 @@ public class ParticleToTemplatesTask implements Task
 		{
 			SingleParticlePicker picker = (SingleParticlePicker)particle.getParticlePicker();
 
-			ImageGeneric igp = particle.getImageGeneric();
-			// will happen only in manual mode
-			if (picker.getTemplateIndex() < picker.getTemplatesNumber())
-				picker.setTemplate(igp);
-			else
-			{
-				double[] align = picker.getTemplates().alignImage(igp);
-				picker.applyAlignment(particle, igp, align);
-
-			}
-			picker.saveTemplates();
+			picker.addParticleToTemplates(particle);
 			if(dialog != null && dialog.isVisible())
 				dialog.loadTemplates(true);
-
+			System.out.println("particle added");
 		}
 		catch (Exception e)
 		{

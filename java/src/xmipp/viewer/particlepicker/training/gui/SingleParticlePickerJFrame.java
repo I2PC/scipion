@@ -97,9 +97,186 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		}
 	}
 
+	public boolean isCenterParticle()
+	{
+		return centerparticlebt.isSelected();
+	}
+
+	@Override
+	public ParticlesJDialog initParticlesJDialog()
+	{
+		return new ParticlesJDialog(this);
+	}
+
 	public TrainingMicrograph getMicrograph()
 	{
 		return ppicker.getMicrograph();
+	}
+
+	@Override
+	protected void openHelpURl()
+	{
+		XmippWindowUtil.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Micrograph_particle_picking_v3");
+
+	}
+
+	public double getThreshold()
+	{
+		return thresholdsl.getValue() / 100.0;
+	}
+
+	@Override
+	public List<? extends TrainingParticle> getAvailableParticles()
+	{
+		return getMicrograph().getAvailableParticles(getThreshold());
+	}
+
+	public String importParticlesFromFile(Format format, String file, float scale, boolean invertx, boolean inverty)
+	{
+		String result = "";
+		if (ppicker.isReviewFile(file))
+		{
+			result = ppicker.importAllParticles(file, scale, invertx, inverty);
+			ppicker.saveData();
+		}
+		else
+			result = importMicrographParticles(format, file, scale, invertx, inverty);
+		setChanged(false);
+		getCanvas().repaint();
+		updateMicrographsModel();
+		updateSize(ppicker.getSize());
+		canvas.refreshActive(null);
+		return result;
+	}
+
+	public String importMicrographParticles(Format format, String file, float scale, boolean invertx, boolean inverty)
+	{
+
+		String filename = Micrograph.getName(file, 1);
+		// validating you want use this file for this micrograph with different
+		// name
+		if (!filename.equals(getMicrograph().getName()))
+		{
+			String msg = String.format("Are you sure you want to import data from file\n%s to micrograph %s ?", file, getMicrograph().getName());
+			int result = JOptionPane.showConfirmDialog(this, msg);
+			if (result != JOptionPane.YES_OPTION)
+				return null;
+		}
+		getMicrograph().reset();
+		String result = ppicker.importParticlesFromFile(file, format, getMicrograph(), scale, invertx, inverty);
+		ppicker.saveData(getMicrograph());
+		return result;
+	}
+
+	public void updateSize(int size)
+	{
+		try
+		{
+			ppicker.resetParticleImages();
+			super.updateSize(size);
+
+		}
+		catch (Exception e)
+		{
+			String msg = (e.getMessage() != null) ? e.getMessage() : XmippMessage.getUnexpectedErrorMsg();
+			XmippDialog.showError(this, msg);
+		}
+	}
+
+	@Override
+	protected void resetData()
+	{
+		getMicrograph().reset();
+		ppicker.initUpdateTemplates();
+	}
+
+	@Override
+	public String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty)
+	{
+		String result = "";
+
+		if (new File(dir).isDirectory())
+		{
+			ppicker.importParticlesFromFolder(dir, format, scale, invertx, inverty);
+			getCanvas().repaint();
+			updateMicrographsModel(true);
+			getCanvas().refreshActive(null);
+		}
+		else
+			// only can choose file if TrainingPickerJFrame instance
+			result = importParticlesFromFile(format, dir, scale, invertx, inverty);
+		return result;
+
+	}
+
+	protected void initializeCanvas()
+	{
+
+		if (canvas == null)
+			canvas = new TrainingCanvas(this);
+		else
+			canvas.updateMicrograph();
+
+		canvas.display();
+		updateZoom();
+	}
+
+	private void formatMicrographsTable()
+	{
+		micrographstb.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+		micrographstb.getColumnModel().getColumn(0).setPreferredWidth(35);
+		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(245);
+		micrographstb.getColumnModel().getColumn(2).setPreferredWidth(70);
+		micrographstb.getColumnModel().getColumn(3).setPreferredWidth(70);
+		micrographstb.setPreferredScrollableViewportSize(new Dimension(420, 304));
+		micrographstb.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		int index = ppicker.getMicrographIndex();
+		if (index != -1)
+			micrographstb.setRowSelectionInterval(index, index);
+	}
+
+	protected void saveChanges()
+	{
+
+		ppicker.saveData();
+		setChanged(false);
+	}
+
+	void updateFamilyColor()
+	{
+		color = ppicker.getColor();
+		colorbt.setIcon(new ColorIcon(color));
+		canvas.repaint();
+		ppicker.saveConfig();
+	}
+
+	public void setChanged(boolean changed)
+	{
+		ppicker.setChanged(changed);
+		savemi.setEnabled(changed);
+		savebt.setEnabled(changed);
+	}
+
+	public void updateMicrographsModel(boolean all)
+	{
+
+		if (particlesdialog != null)
+			loadParticles();
+
+		int index = ppicker.getMicrographIndex();
+		if (all)
+			micrographsmd.fireTableRowsUpdated(0, micrographsmd.getRowCount() - 1);
+		else
+			micrographsmd.fireTableRowsUpdated(index, index);
+
+		micrographstb.setRowSelectionInterval(index, index);
+		manuallb.setText(Integer.toString(ppicker.getManualParticlesNumber()));
+		autolb.setText(Integer.toString(ppicker.getAutomaticParticlesNumber(getThreshold())));
+	}
+
+	public ParticlePickerCanvas getCanvas()
+	{
+		return canvas;
 	}
 
 	private void initComponents()
@@ -121,18 +298,17 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			tb.add(centerparticlebt);
 			add(tb, XmippWindowUtil.getConstraints(constraints, 0, 0, 2, 1, GridBagConstraints.HORIZONTAL));
 
-			
 			add(new JLabel("Shape:"), XmippWindowUtil.getConstraints(constraints, 0, 1));
 			initShapePane();
 			add(shapepn, XmippWindowUtil.getConstraints(constraints, 1, 1));
-			
+
 			autopicklb = new JLabel("Autopick:");
 			constraints.insets = new Insets(30, 5, 30, 5);
 			add(autopicklb, XmippWindowUtil.getConstraints(constraints, 0, 3));
 			constraints.insets = new Insets(0, 5, 0, 5);
 			initSupervisedPickerPane();
 			add(sppickerpn, XmippWindowUtil.getConstraints(constraints, 1, 3, 1, 1, GridBagConstraints.HORIZONTAL));
-			
+
 			initMicrographsPane();
 			add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 4, 2, 1, GridBagConstraints.HORIZONTAL));
 			JPanel actionspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -152,61 +328,57 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		}
 	}
 
-
 	private void initSupervisedPickerPane()
 	{
 		sppickerpn = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		
+
 		// sppickerpn.setBorder(BorderFactory.createTitledBorder("Supervised Picker"));
 
 		JPanel steppn = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		Mode step = ppicker.getMode();
-
 		autopickchb = new JCheckBox();
+		autopickchb.setSelected(ppicker.getMode() == Mode.Supervised);
+
 		autopickchb.addActionListener(new ActionListener()
 		{
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				try
-				{
-					setSupervised(autopickchb.isSelected());
-				}
-				catch (Exception ex)
-				{
-					XmippDialog.showError(SingleParticlePickerJFrame.this, ex.getMessage());
-					autopickchb.setSelected(false);
-					return;
-				}
-				
-				
+				setSupervised(autopickchb.isSelected());
 			}
 		});
 		sppickerpn.add(autopickchb);
-		setStep(step);
-
-		sppickerpn.add(steppn);
+		if (ppicker.getMode() == Mode.Supervised)
+			sppickerpn.add(steppn);
 		initThresholdPane();
 		sppickerpn.add(thresholdpn);
-		
+
 	}
 
 	protected void setSupervised(boolean selected)
 	{
-		if (selected)
-				ppicker.setMode(Mode.Supervised);
-		
-		thresholdpn.setVisible(selected);
-		pack();
+		try
+		{
+			if (selected)
+				ppicker.train(this);
+			thresholdpn.setVisible(selected);
+			sizesl.setEnabled(!selected);//not really, if there is some micrograph in sup mode size cannot be changed
+			sizetf.setEnabled(!selected);
+			pack();
+		}
+		catch (Exception ex)
+		{
+			XmippDialog.showError(SingleParticlePickerJFrame.this, ex.getMessage());
+			autopickchb.setSelected(false);
+			return;
+		}
 	}
-	
+
 	public boolean isSupervised()
 	{
 		return autopickchb.isSelected();
 	}
 
-	
 	public void initMenuBar()
 	{
 		mb = new JMenuBar();
@@ -286,8 +458,6 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			XmippDialog.showError(this, e.getMessage());
 		}
 	}
-
-
 
 	private void initThresholdPane()
 	{
@@ -410,7 +580,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 	protected void loadMicrograph()
 	{
-		
+
 		if (micrographstb.getSelectedRow() == -1)
 			return;// Probably from fireTableDataChanged raised
 		// is same micrograph??
@@ -423,13 +593,12 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		index = micrographstb.getSelectedRow();
 		ppicker.getMicrograph().releaseImage();
 		ppicker.setMicrograph(ppicker.getMicrographs().get(index));
-		
-		
+
 		setChanged(false);
 		initializeCanvas();
 		iconbt.setIcon(ppicker.getMicrograph().getCTFIcon());
-		if (ppicker.getMode() == Mode.Supervised)
-			autopick();
+		if (ppicker.getMode() == Mode.Supervised && getMicrograph().getState() == MicrographState.Manual)
+			ppicker.autopick(this);
 		pack();
 
 		if (particlesdialog != null)
@@ -454,278 +623,5 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		updateMicrographsModel();
 		pack();
 	}
-
-
-	private void setStep(Mode step)
-	{
-		if (micrographsmd != null)
-		{
-			updateMicrographsModel();
-			canvas.repaint();// paints only current class in supervised mode
-		}
-
-		sizesl.setEnabled(step == Mode.Manual);
-		sizetf.setEnabled(step == Mode.Manual);
-		pack();
-
-	}
-
-	protected void initializeCanvas()
-	{
-
-		if (canvas == null)
-			canvas = new TrainingCanvas(this);
-		else
-			canvas.updateMicrograph();
-
-		canvas.display();
-		updateZoom();
-	}
-
-	private void formatMicrographsTable()
-	{
-		micrographstb.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-		micrographstb.getColumnModel().getColumn(0).setPreferredWidth(35);
-		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(245);
-		micrographstb.getColumnModel().getColumn(2).setPreferredWidth(70);
-		micrographstb.getColumnModel().getColumn(3).setPreferredWidth(70);
-		micrographstb.setPreferredScrollableViewportSize(new Dimension(420, 304));
-		micrographstb.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		int index = ppicker.getMicrographIndex();
-		if (index != -1)
-			micrographstb.setRowSelectionInterval(index, index);
-	}
-
-	protected void saveChanges()
-	{
-
-		ppicker.saveData();
-		setChanged(false);
-	}
-
-	void updateFamilyColor()
-	{
-		color = ppicker.getColor();
-		colorbt.setIcon(new ColorIcon(color));
-		canvas.repaint();
-		ppicker.saveConfig();
-	}
-
-	public void setChanged(boolean changed)
-	{
-		ppicker.setChanged(changed);
-		savemi.setEnabled(changed);
-		savebt.setEnabled(changed);
-	}
-
-	public void updateMicrographsModel(boolean all)
-	{
-
-		if (particlesdialog != null)
-			loadParticles();
-
-		int index = ppicker.getMicrographIndex();
-		if (all)
-			micrographsmd.fireTableRowsUpdated(0, micrographsmd.getRowCount() - 1);
-		else
-			micrographsmd.fireTableRowsUpdated(index, index);
-
-		micrographstb.setRowSelectionInterval(index, index);
-		manuallb.setText(Integer.toString(ppicker.getManualParticlesNumber()));
-		autolb.setText(Integer.toString(ppicker.getAutomaticParticlesNumber(getThreshold())));
-	}
-
-	public ParticlePickerCanvas getCanvas()
-	{
-		return canvas;
-	}
-
-	private void train()
-	{
-		try
-		{
-
-			// setChanged(true);
-			setStep(Mode.Supervised);// change visual appearance
-//			ppicker.saveFamilies();
-
-			canvas.setEnabled(false);
-			XmippWindowUtil.blockGUI(this, "Training...");
-
-			Thread t = new Thread(new Runnable()
-			{
-
-				public void run()
-				{
-					String args;
-					for (TrainingMicrograph micrograph : ppicker.getMicrographs())
-					{
-						if (!micrograph.isEmpty())
-						{
-							args = ppicker.getBuildInvariantCommandLineArgs(micrograph);
-							ppicker.runXmippProgram("xmipp_micrograph_automatic_picking", args);
-						}
-					}
-					args = ppicker.getTrainCommandLineArgs();
-
-
-					ppicker.runXmippProgram("xmipp_micrograph_automatic_picking", args);
-
-					XmippWindowUtil.releaseGUI(getRootPane());
-					canvas.setEnabled(true);
-				}
-			});
-			t.start();
-
-		}
-		catch (Exception e)
-		{
-			ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e.getMessage());
-		}
-
-	}
-
-	private void autopick()
-	{
-		setState(MicrographState.Supervised);
-
-		final String fargs = ppicker.getAutopickCommandLineArgs(getMicrograph());
-
-		try
-		{
-			canvas.setEnabled(false);
-			XmippWindowUtil.blockGUI(this, "Autopicking...");
-			Thread t = new Thread(new Runnable()
-			{
-
-				public void run()
-				{
-					ppicker.runXmippProgram("xmipp_micrograph_automatic_picking", fargs);
-					ppicker.loadAutomaticParticles(getMicrograph());
-
-					canvas.repaint();
-					canvas.setEnabled(true);
-					XmippWindowUtil.releaseGUI(getRootPane());
-				}
-			});
-			t.start();
-
-		}
-		catch (Exception e)
-		{
-			ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e.getMessage());
-		}
-	}
-
-	public double getThreshold()
-	{
-		return thresholdsl.getValue() / 100.0;
-	}
-
-	@Override
-	public List<? extends TrainingParticle> getAvailableParticles()
-	{
-		return getMicrograph().getAvailableParticles(getThreshold());
-	}
-
-	public String importParticlesFromFile(Format format, String file, float scale, boolean invertx, boolean inverty)
-	{
-		String result = "";
-		if (ppicker.isReviewFile(file))
-		{
-			result = ppicker.importAllParticles(file, scale, invertx, inverty);
-			ppicker.saveData();
-		}
-		else
-			result = importMicrographParticles(format, file, scale, invertx, inverty);
-		setChanged(false);
-		getCanvas().repaint();
-		updateMicrographsModel();
-		updateSize(ppicker.getSize());
-		canvas.refreshActive(null);
-		return result;
-	}
-
-	public String importMicrographParticles(Format format, String file, float scale, boolean invertx, boolean inverty)
-	{
-
-		String filename = Micrograph.getName(file, 1);
-		// validating you want use this file for this micrograph with different
-		// name
-		if (!filename.equals(getMicrograph().getName()))
-		{
-			String msg = String.format("Are you sure you want to import data from file\n%s to micrograph %s ?", file, getMicrograph().getName());
-			int result = JOptionPane.showConfirmDialog(this, msg);
-			if (result != JOptionPane.YES_OPTION)
-				return null;
-		}
-		getMicrograph().reset();
-		String result = ppicker.importParticlesFromFile(file, format, getMicrograph(), scale, invertx, inverty);
-		ppicker.saveData(getMicrograph());
-		return result;
-	}
-
-	@Override
-	protected void openHelpURl()
-	{
-		XmippWindowUtil.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Micrograph_particle_picking_v3");
-
-	}
-
-	public void updateSize(int size)
-	{
-		try
-		{
-			ppicker.resetParticleImages();
-			super.updateSize(size);
-			
-		}
-		catch (Exception e)
-		{
-			String msg = (e.getMessage() != null) ? e.getMessage() : XmippMessage.getUnexpectedErrorMsg();
-			XmippDialog.showError(this, msg);
-		}
-	}
-
-	@Override
-	protected void resetData()
-	{
-		getMicrograph().reset();
-	}
-
-
-
-	@Override
-	public String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty)
-	{
-		String result = "";
-
-		if (new File(dir).isDirectory())
-		{
-			ppicker.importParticlesFromFolder(dir, format, scale, invertx, inverty);
-			getCanvas().repaint();
-			updateMicrographsModel(true);
-			getCanvas().refreshActive(null);
-		}
-		else
-			// only can choose file if TrainingPickerJFrame instance
-			result = importParticlesFromFile(format, dir, scale, invertx, inverty);
-		return result;
-
-	}
-
-	public boolean isCenterParticle()
-	{
-		return centerparticlebt.isSelected();
-	}
-
-	@Override
-	public ParticlesJDialog initParticlesJDialog()
-	{
-		return new ParticlesJDialog(this);
-	}
-
 
 }

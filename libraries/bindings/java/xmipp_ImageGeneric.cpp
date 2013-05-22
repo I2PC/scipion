@@ -863,7 +863,6 @@ JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_bestShift
 }
 
 JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_ImageGeneric_alignImage
-
 (JNIEnv * env, jobject jobj, jobject jimg)
 {
 	double result[4];

@@ -35,10 +35,6 @@ public class AdvancedOptionsJDialog extends JDialog {
 	public AdvancedOptionsJDialog(SingleParticlePickerJFrame frame) {
 		super(frame);
 		this.frame = frame;
-
-		if(!frame.getParticlePicker().hasManualParticles())
-			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("Particles"));
-
 		initComponents();
 
 		addWindowListener(new WindowAdapter() {
