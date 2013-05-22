@@ -130,10 +130,12 @@ INC_FILE=.xmipp.bashrc
 echo "export XMIPP_HOME=$PWD" > $INC_FILE
 echo 'export PATH=$XMIPP_HOME/bin:$PATH' >> $INC_FILE
 echo 'export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
+echo 'if [ "$BASH" != "" ]; then' >> $INC_FILE
 echo '# Load global autocomplete file ' >> $INC_FILE
 echo 'test -s $XMIPP_HOME/.xmipp.autocomplete && . $XMIPP_HOME/.xmipp.autocomplete || true' >> $INC_FILE
 echo '# Load programs autocomplete file ' >> $INC_FILE
 echo 'test -s $XMIPP_HOME/.xmipp_programs.autocomplete && . $XMIPP_HOME/.xmipp_programs.autocomplete || true' >> $INC_FILE
+echo 'fi' >> $INC_FILE
 
 if $IS_MAC; then
 	echo 'export DYLD_FALLBACK_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
@@ -499,8 +501,8 @@ if $DO_TCLTK; then
     compile_library tcl$VTCLTK python win "--disable-xft CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
     compile_library tk$VTCLTK python win "--disable-xft --with-tcl=../../tcl$VTCLTK/win CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
   else
-    compile_library tcl$VTCLTK python unix "--disable-xft"
-    compile_library tk$VTCLTK python unix "--disable-xft"
+    compile_library tcl$VTCLTK python unix "--disable-xft --enable-threads"
+    compile_library tk$VTCLTK python unix "--disable-xft --enable-threads"
   fi
 fi
 
@@ -594,7 +596,7 @@ if $DO_PYTHON; then
     printf 'export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$XMIPP_HOME/applications/tests/pythonlib:$XMIPP_HOME/lib/python2.7/site-packages:$PYTHONPATH \n' >> $PYTHON_BIN
     printf 'export TCL_LIBRARY=$EXT_PYTHON/tcl$VTCLTK/library \n' >> $PYTHON_BIN
     printf 'export TK_LIBRARY=$EXT_PYTHON/tk$VTCLTK/library \n\n' >> $PYTHON_BIN
-    printf 'export DYLD_FALLBACK_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tcl$VTCLTK/unix:$EXT_PYTHON/tk$VTCLTK/unix:$DYLD_FALLBACK_LIBRARY_PATH \n' >> $PYTHON_BIN	
+
     printf '$EXT_PYTHON/$VPYTHON/python "$@"\n' >> $PYTHON_BIN
   fi
   echoExec "chmod a+x $PYTHON_BIN"
