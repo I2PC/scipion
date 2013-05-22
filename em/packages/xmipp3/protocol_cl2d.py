@@ -137,9 +137,9 @@ class XmippProtCL2D(ProtAlign, ProtClassify, XmippProtocol):
             args = "--dir %(extraDir)s --root level "
             # core analysis
             self._defineClassifySteps(program, args + "--computeCore %(thZscore)f %(thPCAZscore)f", subset='_core')
-            # stable core analysis
-            self._defineClassifySteps(program, args + "--computeStableCore %(tolerance)d", subset='_stable_core')
-            # evaluate classes again
+            if self.numberOfReferences > (2 * self.numberOfInitialReferences.get()): # Number of levels should be > 2
+                # stable core analysis
+                self._defineClassifySteps(program, args + "--computeStableCore %(tolerance)d", subset='_stable_core')
         
     def _defineClassifySteps(self, program, args, subset=''):
         """ Defines four steps for the subset:
