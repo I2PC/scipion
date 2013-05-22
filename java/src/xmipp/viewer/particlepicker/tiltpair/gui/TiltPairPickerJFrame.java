@@ -68,6 +68,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		pppicker = picker;
 		initComponents();
 		enableEdition(picker.getMode() != FamilyState.ReadOnly);
+		setChanged(false);
 	}
 
 	private void initComponents()
@@ -86,6 +87,10 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		add(particlespn, XmippWindowUtil.getConstraints(constraints, 0, 1, 3));
 		initMicrographsPane();
 		add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 2, 3));
+		JPanel actionspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		actionspn.add(savebt);
+		actionspn.add(exitbt);
+		add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 3, 3, GridBagConstraints.HORIZONTAL));
 
 		pack();
 		position = 0.95f;
@@ -226,6 +231,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	{
 		pppicker.setChanged(changed);
 		savemi.setEnabled(changed);
+		savebt.setEnabled(changed);
 	}
 
 	public void updateMicrographsModel(boolean all)
