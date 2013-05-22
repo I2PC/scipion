@@ -59,7 +59,6 @@ public class MicrographsTableModel extends AbstractTableModel {
 		}
 		if(columnIndex == 3)
 			return mfd.getState();
-		System.out.println("Refreshed");
 		return null;
 	}
 	

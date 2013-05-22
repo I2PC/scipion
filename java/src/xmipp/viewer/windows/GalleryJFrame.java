@@ -52,6 +52,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.AbstractAction;
@@ -336,7 +337,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		c.gridx = 0;
 		c.gridy = 1;
 		container.add(cbPanel, c);
-		updateCombos();
+		updateVisibleCombos();
 
 		jspContent = new GalleryScroll();
 		// Create table
@@ -876,7 +877,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			createTable();
 
 			menu.update();
-			updateCombos();
+			updateVisibleCombos();
 			if (dlgSave != null && changed)
 				dlgSave.setInitialValues();
 			saved = !changed;
@@ -1252,7 +1253,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		cbPanel.add(jcbVolumes);
 	}
 
-	protected void updateCombos()
+	protected void updateVisibleCombos()
 	{
 		boolean showBlocks = data.getNumberOfBlocks() > 0;
 		boolean showVols = data.getNumberOfVols() > 1 && data.isVolumeMode();
@@ -1261,7 +1262,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		jlBlocks.setVisible(showBlocks);
 		jlVolumes.setVisible(showVols);
 		cbPanel.setVisible(showBlocks || showVols);
-
+		pack();
 	}
 
 	private void jsRowsStateChanged(javax.swing.event.ChangeEvent evt)
@@ -1913,7 +1914,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			if (path == null)
 				throw new IllegalArgumentException();
 
-			boolean overwrite;
+			boolean overwritewithblock;
 			String file;
 			if (path.contains("@"))
 				file = path.substring(path.lastIndexOf("@") + 1, path.length());
@@ -1932,14 +1933,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			}
 			else
 			{
-				overwrite = dlgSave.isOverwrite() && dlgSave.saveActiveMetadataOnly();
-				if (overwrite)
+				overwritewithblock = dlgSave.isOverwrite() && dlgSave.saveActiveMetadataOnly();
+				if (overwritewithblock)
 					data.md.write(path);// overwrite with active block only,
 										// other blocks were dismissed
 				else
-					data.md.writeBlock(path);// either if save active block or
-												// all, save active, other
-												// blocks where already managed
+					data.md.writeBlock(path);// either if save active block or all, save active, other blocks where already managed
 
 			}
 
@@ -1968,10 +1967,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			to = blockto;
 			blockto = getBlock() + "@" + blockto;
 		}
-		if (from != null && !from.equals(to))
-		{// no sense in overwritting or appending
-			MetaData frommd;
-			frommd = new MetaData();
+		if (from != null)
+		{
+			MetaData md;
+			Hashtable<String, MetaData> mds = new Hashtable<String, MetaData>();
+			for (String blockit : data.mdBlocks)
+				mds.put(blockit, new MetaData(blockit + "@" + from));
 			File file = new File(to);
 			if (dlgSave.isOverwrite())
 				file.delete();
@@ -1979,13 +1980,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				file.getParentFile().mkdirs();
 			for (String blockit : data.mdBlocks)
 			{
-				frommd.read(blockit + "@" + from);
+				md = mds.get(blockit);
 				if (blockit.equals(getBlock()))
-					frommd.writeBlock(blockto);// might save active metadata
-												// with other name, updated
-												// later
+					continue;
 				else
-					frommd.writeBlock(blockit + "@" + to);
+					md.writeBlock(blockit + "@" + to);
 			}
 		}
 		saveMd(blockto);
@@ -2031,8 +2030,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		createModel();
 		reloadMd(changed);
 		createCombos();
-		updateCombos();
+		updateVisibleCombos();
 		jcbBlocks.setSelectedItem(gallery.data.selectedBlock);
+		
 	}
 
 	protected void initResliceButtonMenu()

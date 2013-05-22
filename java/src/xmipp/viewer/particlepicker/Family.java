@@ -4,11 +4,13 @@ import ij.ImagePlus;
 import ij.ImageStack;
 
 import java.awt.Color;
+import java.io.File;
 import java.lang.reflect.Field;
 
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.Particle;
+import xmipp.utils.TasksManager;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
@@ -26,6 +28,7 @@ public class Family
 	private ImageGeneric templates;
 	private String templatesfile;
 	private int templateindex;
+	private ParticlePicker picker;
 
 	private static Color[] colors = new Color[] { Color.BLUE, Color.CYAN, Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.YELLOW };
 	private static int nextcolor;
@@ -39,57 +42,45 @@ public class Family
 		return next;
 	}
 
-	public Family(String name, Color color, int size, int templatesNumber, String templatesfile)
+	public Family(String name, Color color, int size, ParticlePicker ppicker, int templatesNumber)
 	{
-		this(name, color, size, FamilyState.Manual, null, templatesNumber, templatesfile);
+		this(name, color, size, FamilyState.Manual, ppicker, templatesNumber);
 	}
+	
 
-	public Family(String name, Color color, int size, FamilyState state, ParticlePicker ppicker, ImageGeneric templates)
+	public Family(String name, Color color, int size, FamilyState state, ParticlePicker ppicker, int templatesNumber)
 	{
 		if (size < 0 || size > ParticlePicker.fsizemax)
 			throw new IllegalArgumentException(String.format("Size should be between 0 and %s, %s not allowed", ParticlePicker.fsizemax, size));
 		if (name == null || name.equals(""))
 			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("name"));
-		this.name = name;
-		this.color = color;
-		this.size = size;
-		this.state = state;
-		if (templates != null)
-			this.templatesfile = templates.getFilename();
-		else
-			setTemplatesNumber(1);
-		if (templates != null)
-			try
+		try
+		{
+			this.picker = ppicker;
+			this.name = name;
+			this.color = color;
+			this.size = size;
+			this.state = state;
+			this.templatesNumber = templatesNumber;
+			this.templatesfile = picker.getTemplatesFile(name);
+			if (new File(templatesfile).exists())
 			{
-				templatesNumber = ((int) templates.getNDim());
-				this.templates = templates;
-
+				this.templates = new ImageGeneric(templatesfile);
 				for (templateindex = 0; templateindex < templatesNumber; templateindex++)
 					// to initialize templates on c part
 					XmippImageConverter.readToImagePlus(templates, ImageGeneric.FIRST_IMAGE + templateindex);
-
 			}
-			catch (Exception e)
-			{
-				e.printStackTrace();
-				throw new IllegalArgumentException();
-			}
+			else
+				initTemplates();
+			
 
-	}
-
-	public Family(String name, Color color, int size, FamilyState state, ParticlePicker ppicker, int templatesNumber, String templatesfile)
-	{
-		if (size < 0 || size > ParticlePicker.fsizemax)
-			throw new IllegalArgumentException(String.format("Size should be between 0 and %s, %s not allowed", ParticlePicker.fsizemax, size));
-		if (name == null || name.equals(""))
-			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("name"));
-		this.name = name;
-		this.color = color;
-		this.size = size;
-		this.state = state;
-		this.templatesfile = templatesfile;
-		setTemplatesNumber(templatesNumber);
-
+			
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+			throw new IllegalArgumentException();
+		}
 	}
 
 	public String getTemplatesFile()
@@ -97,7 +88,7 @@ public class Family
 		return templatesfile;
 	}
 
-	public void initTemplates()
+	public synchronized void initTemplates()
 	{
 		if (templatesNumber == 0)
 			return;
@@ -106,6 +97,7 @@ public class Family
 			this.templates = new ImageGeneric(ImageGeneric.Float);
 			templates.resize(size, size, 1, templatesNumber);
 			templates.write(templatesfile);
+			templateindex = 0;
 		}
 		catch (Exception e)
 		{
@@ -118,18 +110,19 @@ public class Family
 		return templates;
 	}
 
-	public ImagePlus getTemplatesImage(long i)
-	{
-		try
-		{
-			ImagePlus imp = XmippImageConverter.convertToImagePlus(templates, i);
-			return imp;
-		}
-		catch (Exception e)
-		{
-			throw new IllegalArgumentException(e);
-		}
-	}
+//	public synchronized ImagePlus getTemplatesImage(long i)
+//	{
+//		try
+//		{
+//			ImagePlus imp = XmippImageConverter.convertToImagePlus(templates, i);
+//
+//			return imp;
+//		}
+//		catch (Exception e)
+//		{
+//			throw new IllegalArgumentException(e);
+//		}
+//	}
 
 	public FamilyState getStep()
 	{
@@ -158,11 +151,6 @@ public class Family
 
 	}
 
-	// public static String getOFilename()
-	// {
-	// return ParticlePicker.getInstance().getOutputPath("families.xmd");
-	// }
-
 	public int getSize()
 	{
 		return size;
@@ -173,7 +161,8 @@ public class Family
 		if (size > ParticlePicker.fsizemax)
 			throw new IllegalArgumentException(String.format("Max size is %s, %s not allowed", ParticlePicker.fsizemax, size));
 		this.size = size;
-		initTemplates();
+		if(picker instanceof TrainingPicker)
+			((TrainingPicker) picker).updateTemplates();
 	}
 
 	public String getName()
@@ -199,7 +188,8 @@ public class Family
 			throw new IllegalArgumentException(
 					XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Family must have at least one template"));
 		this.templatesNumber = num;
-		initTemplates();
+		if(picker instanceof TrainingPicker)
+			((TrainingPicker) picker).updateTemplates();
 	}
 
 	public Color getColor()
@@ -262,8 +252,9 @@ public class Family
 			// TODO getArrayFloat and setArrayFloat must be call from C both in
 			// one function
 			matrix = ig.getArrayFloat(ImageGeneric.FIRST_IMAGE, ImageGeneric.ALL_SLICES);
-			templates.setArrayFloat(matrix, templateindex, ImageGeneric.ALL_SLICES);
+			templates.setArrayFloat(matrix, ImageGeneric.FIRST_IMAGE + templateindex, ImageGeneric.ALL_SLICES);
 			templateindex++;
+
 		}
 		catch (Exception e)
 		{
@@ -292,7 +283,7 @@ public class Family
 
 	public synchronized void centerParticle(TrainingParticle p)
 	{
-		if(templateindex == 0)
+		if (templateindex == 0)
 			return;//no template to align
 		Particle shift = null;
 		try
@@ -315,7 +306,8 @@ public class Family
 		try
 		{
 			particle.setLastalign(align);
-			templates.applyAlignment(igp, particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
+			templates.applyAlignment(igp, particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle
+					.getTemplatePsi());
 			//System.out.printf("adding particle: %d %.2f %.2f %.2f\n", particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
 		}
 		catch (Exception e)

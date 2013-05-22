@@ -19,6 +19,7 @@ import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.UpdateTemplatesTask;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedMicrograph;
+import xmipp.viewer.particlepicker.training.gui.TemplatesJDialog;
 
 public abstract class TrainingPicker extends ParticlePicker
 {
@@ -764,8 +765,6 @@ public abstract class TrainingPicker extends ParticlePicker
 			return false;
 		}
 	}
-
-	
 
 	public synchronized void updateTemplates()
 	{

@@ -116,7 +116,7 @@ public class SaveJDialog extends XmippDialog
 		// Checkbox to save metadata
 		// chbMd = new JCheckBox("Save metadata", true);
 		// chbMd.addActionListener(this);
-		group.add(new JLabel("Metadata file:"), XmippWindowUtil.getConstraints(gbc, 0, 0));
+		group.add(new JLabel("Metadata path:"), XmippWindowUtil.getConstraints(gbc, 0, 0));
 
 		createMdOptions();
 		group.add(panelMd, XmippWindowUtil.getConstraints(gbc, 0, 1, 2));

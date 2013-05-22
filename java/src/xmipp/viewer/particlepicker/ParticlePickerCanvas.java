@@ -335,6 +335,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		refreshActive(null);
 		
 	}
+
 	
 	public abstract void setMicrograph(Micrograph m);
 
