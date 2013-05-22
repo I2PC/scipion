@@ -12,7 +12,7 @@
 <script src={{form}} type="text/javascript"></script>
 <script src={{messi}} type="text/javascript"></script>
 </head>
-<body>
+<body onload="evalElements();">
 	<h3>Protocol: {{protocol.getClassName}}</h3>
 	<form action="/protocol/" method="POST"> {% csrf_token %}
 		<div class="box">
@@ -23,7 +23,7 @@
 				</tr>
 				{% for paramName, param in section.iterParams %}
 				<tr id={{paramName}} data-type="{{param.getClassName}}" data-cond="{{param.htmlCond}}" data-params="{{param.htmlCondParams}}" 
-				data-enum="{{param.display}}" data-depen="{{param.htmlDepend}}">
+				data-enum="{{param.display}}" data-depen="{{param.htmlDepend}}" >
 					<td {% if param.isImportant.get %} class="recommended" 
 					{% else %} class="normal" {% endif %}>{{param.label.get}}</td>
 					{% if param.getClassName == "BooleanParam" %}

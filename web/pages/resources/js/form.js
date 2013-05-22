@@ -1,4 +1,20 @@
+function evalElements() {
+	var elements = document.getElementsByTagName("tr");
+	var size = elements.length;
+	
+	alert(size);
+	
+
+	for ( var x = 0; x < size; x++) {
+		
+		alert(elements.item(x).attr('name'));
+//		 alert(elements.item(x).textContent);
+//		 evalDependencies(elements.item(x));
+	}
+}
+
 function evalDependencies(aux) {
+	alert(aux);
 	var name = aux.attr('name');
 	var row = jQuery("tr#" + name);
 	var dependencies = row.attr('data-depen');
