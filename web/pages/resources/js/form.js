@@ -79,16 +79,41 @@ function evalCondition(itemName) {
 function help(title, msg) {
 	new Messi(msg, {
 		title : 'Help' + ' ' + title,
+		modal : true,
 		buttons : [ {
 			id : 0,
 			label : 'Close',
-			val : 'X'
+			val : 'X',
+			btnClass : 'btn-close'
 		} ]
+	});
+}
+
+function browse(title, msg) {
+	new Messi('', {
+		title : msg,
+		modal : true,
+		buttons : [ {
+			id : 0,
+			label : 'Choose',
+			val : 'Y',
+			btnClass : 'btn-choose'
+		}, {
+			id : 1,
+			label : 'Cancel',
+			val : 'C',
+			btnClass : 'btn-cancel'
+		} ],
+		callback : function(val) {
+			if (val == 'Y') {
+				alert('You are selected one');
+			}
+		}
 	});
 }
 
 function filemanager(elm, type, name) {
 	alert(elm + " " + type + " " + name);
-//	document.getElementById(elm).innerText = document
-//			.getElementById('openssme').value
+	// document.getElementById(elm).innerText = document
+	// .getElementById('openssme').value
 }

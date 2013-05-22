@@ -228,7 +228,6 @@ def protocol(request):
     
     parameters = request.POST.get("","")
     
-    
     # Resources #
     favicon_path = getResource('favicon')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
