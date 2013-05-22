@@ -51,11 +51,9 @@ function Messi(data, options) {
   
   // preparamos los botones
   if(_this.options.buttons.length > 0) {
-  
-    for (var i = 0; i < _this.options.buttons.length; i++) {
-      
-      var cls = (_this.options.buttons[i]["class"]) ? _this.options.buttons[i]["class"] : '';
-      var btn = jQuery('<div class="btnbox"><button class="btn ' + cls + '" href="#">' + _this.options.buttons[i].label + '</button></div>').data('value', _this.options.buttons[i].val);
+    for (var i = 0; i < _this.options.buttons.length; i++) {      
+      var cls = (_this.options.buttons[i]["btnClass"]) ? _this.options.buttons[i]["btnClass"] : '';
+      var btn = jQuery('<span class="btnbox"><button class="btn ' + cls + '" href="#">' + _this.options.buttons[i].label + '</button></span>').data('value', _this.options.buttons[i].val);
       btn.bind('click', function() {
         var value = jQuery.data(this, 'value');
         var after = (_this.options.callback != null) ? function() { _this.options.callback(value); } : null;

@@ -1,4 +1,20 @@
+function evalElements() {
+	var elements = document.getElementsByTagName("tr");
+	var size = elements.length;
+	
+	alert(size);
+	
+
+	for ( var x = 0; x < size; x++) {
+		
+		alert(elements.item(x).attr('name'));
+//		 alert(elements.item(x).textContent);
+//		 evalDependencies(elements.item(x));
+	}
+}
+
 function evalDependencies(aux) {
+	alert(aux);
 	var name = aux.attr('name');
 	var row = jQuery("tr#" + name);
 	var dependencies = row.attr('data-depen');
@@ -76,13 +92,15 @@ function evalCondition(itemName) {
 	return eval(cond_eval);
 }
 
-function help(msg) {
+function help(title, msg) {
 	new Messi(msg, {
-		title : 'Help',
+		title : 'Help' + ' ' + title,
+		modal : true,
 		buttons : [ {
 			id : 0,
 			label : 'Close',
-			val : 'X'
+			val : 'X',
+			btnClass : 'btn-close'
 		} ]
 	});
 }
@@ -104,3 +122,32 @@ function browseObjects(objClass) {
 	 });	
 }
 
+
+function browse(title, msg) {
+	new Messi('', {
+		title : msg,
+		modal : true,
+		buttons : [ {
+			id : 0,
+			label : 'Choose',
+			val : 'Y',
+			btnClass : 'btn-choose'
+		}, {
+			id : 1,
+			label : 'Cancel',
+			val : 'C',
+			btnClass : 'btn-cancel'
+		} ],
+		callback : function(val) {
+			if (val == 'Y') {
+				alert('You are selected one');
+			}
+		}
+	});
+}
+
+function filemanager(elm, type, name) {
+	alert(elm + " " + type + " " + name);
+	// document.getElementById(elm).innerText = document
+	// .getElementById('openssme').value
+}
