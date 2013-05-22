@@ -239,7 +239,6 @@ protected:
     ImageFHandler*      hFile;       // Image File handler information structure
     ArrayDim        aDimFile;   // Image header file information structure (original info from file)
     DataMode            dataMode;    // Flag to force select what will be read/write from image files
-    bool                stayOpen;    // To maintain the image file open after read/write
     size_t              offset;      // Data offset
     int                 swap;        // Perform byte swapping upon reading
     int                 swapWrite;   // Perform byte swapping upon writing

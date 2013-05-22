@@ -38,7 +38,6 @@ void ImageBase::init()
     hFile = NULL;
     tif = NULL;
     dataMode = DATA;
-    stayOpen = false;
     transform = isComplexT() ? Standard : NoTransform;
     filename.clear();
     offset = 0;
