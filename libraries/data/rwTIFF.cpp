@@ -427,22 +427,14 @@ int ImageBase::writeTIFF(size_t select_img, bool isStack, int mode, String bitDe
 
     if (mmapOnWrite)
     {
-        MDMainHeader.setValue(MDL_DATATYPE,(int) wDType);
-        if (!checkMmapT(wDType))
-        {
-            if (dataMode < DATA ) // This means ImageGeneric wants to know which DataType must use in mapFile2Write
-                return 0;
-            else
-                REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");
-        }
-        else
-            dataMode = DATA;
-
         /* As we cannot mmap a TIFF File, when this option is passed we are going to mmap
          * the multidimarray of Image
          */
         mmapOnWrite = false;
-        if (mdaBase->nzyxdim*gettypesize(wDType) > tiff_map_min_size)
+        dataMode = DATA;
+        MDMainHeader.setValue(MDL_DATATYPE,(int) myTypeID);
+
+        if (mdaBase->nzyxdim*gettypesize(myTypeID) > tiff_map_min_size)
             mdaBase->setMmap(true);
 
         // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
