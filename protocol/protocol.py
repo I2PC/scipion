@@ -406,6 +406,7 @@ class Protocol(Step):
         self.setRunning()
         self._store()
         
+        self.lastStatus = self.status.get()
         #status = STATUS_FINISHED # Just for the case doesn't enter in the loop
         
         self._stepsExecutor.runSteps(self._steps[startIndex:], 
