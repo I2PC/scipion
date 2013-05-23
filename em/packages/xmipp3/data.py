@@ -104,7 +104,7 @@ class XmippSetOfImages(SetOfImages):
 
     def mergeFromMd(self, md):
         """ Join data from other md using _label as guide. """
-        self._set._md.join(md, self._label, xmipp.NATURAL_JOIN)        
+        self._set._md.join(self._set._md, md, self._label, self._label, xmipp.NATURAL_JOIN)        
         
     def appendPair(self, idU, idT):
         """ Add a new tilted pair to the set"""

@@ -14,7 +14,7 @@ class TestXmippPreprocessMicrographs(unittest.TestCase):
     def setUp(self):
         
         # Create or load project
-        projName = 'myproject'
+        projName = 'tests'
         manager = Manager()
         self.proj = manager.createProject(projName) # Now it will be loaded if exists
 
@@ -62,6 +62,20 @@ class TestXmippPreprocessMicrographs(unittest.TestCase):
             
         #self.assertTrue(protCrop.outputMicrographs.samplingRate.get() == self.protImport.outputMicrographs.samplingRate.get()*self.downFactor, "Micrographs uncorrectly downsampled")
 
+    def testCTF(self):
+        # test ctf a set of micrographs
+        protCTF = XmippProtCTFMicrographs()
+        protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
+        self.proj.launchProtocol(protCTF, wait=True)
+        
+        self.assertTrue(self.checkCTFModels(protCTF.outputMicrographs), 'CTF model does not exists')
+        
+    def checkCTFModels(self, micSet):
+        # check that output micrographs have CTF model
+        #TODO: implement a better way to check that CTFModel exists
+        if micSet.hasCTF:
+            return True
+        
     def get_num_pixels(self, fn):
         width, height = Image.open(fn).size
         return width*height
@@ -70,7 +84,7 @@ class TestXmippExtractParticles(unittest.TestCase):
 
     def setUp(self):
         # Create or load project
-        projName = 'myproject'
+        projName = 'tests'
         manager = Manager()
         self.proj = manager.createProject(projName) # Now it will be loaded if exists
 
@@ -95,7 +109,7 @@ class TestXmippTiltedMicrographs(unittest.TestCase):
     
     def setUp(self):
         # Create or load project
-        projName = 'project_tilted'
+        projName = 'tests'
         manager = Manager()
         self.proj = manager.createProject(projName) # Now it will be loaded if exists
 
@@ -120,8 +134,14 @@ class TestXmippTiltedMicrographs(unittest.TestCase):
         
         # Assert true if output micrographs have tiltedPair relationship
         self.assertTrue(protDown.outputMicrographs.hasTiltPairs(), "Downsampled micrographs have tilted pairs")
+        
+        md = xmipp.MetaData()
+        md.readBlock(protDown.outputMicrographs.getFileName(), 'TiltedPairs')
+        
+        # Assert true if output metadata has TiltedPairs block
+        self.assertFalse(md.isEmpty(), 'TiltedPairs block is empty')
 
 if __name__ == "__main__":
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestXmippPreprocessMicrographs)
-    suite = unittest.TestLoader().loadTestsFromName('test_protocols.TestXmippTiltedMicrographs.testPreprocess')
+    suite = unittest.TestLoader().loadTestsFromName('test_protocols.TestXmippPreprocessMicrographs.testCTF')
     unittest.TextTestRunner(verbosity=2).run(suite)

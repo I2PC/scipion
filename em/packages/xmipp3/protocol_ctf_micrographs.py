@@ -126,11 +126,11 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
                             self._getTmpPath(self._getFilename('micrographs')))
         self.runJob(None,"xmipp_ctf_sort_psds","-i %s -o %s" % (mdOut, auxMdOut))
         
-        #self.runJob(None,"mv","-f %s %s" % (auxMdOut.removeBlockName(),
-        #                               mdOut.removeBlockName()))
-        auxMd = xmipp.MetaData()
-        auxMd.read(auxMdOut.removeBlockName())
-        micSet.mergeFromMd(auxMd)         
+        self.runJob(None,"mv","-f %s %s" % (auxMdOut.removeBlockName(),
+                                       mdOut.removeBlockName()))
+        #auxMd = xmipp.MetaData()
+        #auxMd.read(auxMdOut.removeBlockName())
+        #micSet.mergeFromMd(auxMd)         
 
         # This property should only be set by CTF estimation protocols
         micSet.setCTF(True)       

@@ -93,7 +93,21 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
             
         xmippSet.write()
         
-
+    def testMerge(self):
+        
+        mdCtfFn = '/home/laura/Scipion_Projects/tests/micrographs_ctf.xmd'
+        mdCtfOut = '/home/laura/Scipion_Projects/tests/micrographs_out.xmd'
+        
+        mdCtf = xmipp.MetaData(mdCtfFn) 
+        
+        md = xmipp.MetaData('TiltedPairs@' + self.mdFn)
+        
+        xmippSet = XmippSetOfMicrographs(mdCtfOut)
+        
+        xmippSet.appendFromMd(md)
+        
+        xmippSet.write()
+        
     def createSetOfMicrographs(self):
         #Remove sqlite db
         os.remove(self.dbFn)
@@ -138,5 +152,5 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
         return tiltedDict
             
 if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromName('test_xmipp_data.TestXmippSetOfMicrographs.testCopy')
+    suite = unittest.TestLoader().loadTestsFromName('test_xmipp_data.TestXmippSetOfMicrographs.testMerge')
     unittest.TextTestRunner(verbosity=2).run(suite)
