@@ -116,7 +116,7 @@
 	color: black;
 }
 
-.btn-choose {
+.btn-select {
 	background: url(../../../resources/enable.gif) 0.5em no-repeat;
 	background-size: 20%;
 	font-size: 0.8em;
@@ -134,7 +134,7 @@
 	margin: 0 0.5em 0.5em 0.5em;
 }
 
-.btn-choose:hover {
+.btn-select:hover {
 	background-color: white;
 	color: black;
 }
