@@ -36,7 +36,7 @@ class TestXmippPreprocessMicrographs(unittest.TestCase):
         self.proj.launchProtocol(protDown, wait=True)
         
         # check that output micrographs have double sampling rate than input micrographs
-        self.assertTrue(protDown.outputMicrographs.samplingRate.get() == self.protImport.outputMicrographs.samplingRate.get()*self.downFactor, "Micrographs uncorrectly downsampled")
+        self.assertTrue(protDown.outputMicrographs.samplingRate.get() == self.protImport.outputMicrographs.samplingRate.get()*downFactor, "Micrographs uncorrectly downsampled")
         
     def testCrop(self):
         # test crop on a set of micrographs
@@ -143,5 +143,5 @@ class TestXmippTiltedMicrographs(unittest.TestCase):
 
 if __name__ == "__main__":
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestXmippPreprocessMicrographs)
-    suite = unittest.TestLoader().loadTestsFromName('test_protocols.TestXmippPreprocessMicrographs.testCTF')
+    suite = unittest.TestLoader().loadTestsFromName('test_protocols.TestXmippTiltedMicrographs.testPreprocess')
     unittest.TextTestRunner(verbosity=2).run(suite)
