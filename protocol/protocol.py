@@ -223,6 +223,10 @@ class Protocol(Step):
         # prerequisites of steps, but is easier to keep it
         self.stepsExecutionMode = STEPS_SERIAL
         
+    def getDefinition(self):
+        """ Access the protocol definition. """
+        return self._definition
+        
     def _createVarsFromDefinition(self, **args):
         """ This function will setup the protocol instance variables
         from the Protocol Class definition, taking into account
@@ -455,4 +459,11 @@ class Protocol(Step):
         return getFileLogger(logFile)
 
     def getFiles(self):
+        l= []
+        for paramName, _ in self.getDefinition().iterPointerParams():
+            attrPointer = getattr(self, paramName) # Get all self attribute that are pointers
+            obj = attrPointer.get() # Get object pointer by the attribute
+            if hasattr(obj, 'getFiles'):
+                l += obj.getFiles() # Add files if any
+                
         return getFolderFiles(self.workingDir.get())

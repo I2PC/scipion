@@ -26,6 +26,7 @@
 """
 This modules handles the Project management
 """
+
 import os
 from os.path import abspath
 
@@ -33,12 +34,13 @@ from pyworkflow.mapper import SqliteMapper
 from pyworkflow.utils import cleanPath, makePath, join, exists, runJob
 from pyworkflow.protocol import *
 from pyworkflow.em import *
+from pyworkflow.apps.config import ExecutionHostMapper
 
 
 PROJECT_DBNAME = 'project.sqlite'
 PROJECT_LOGS = 'Logs'
 PROJECT_RUNS = 'Runs'
-
+PROJECT_HOSTS = 'execution_hosts.xml'
 
 class Project(object):
     """This class will handle all information 
@@ -50,6 +52,7 @@ class Project(object):
         self.dbPath = self.addPath(PROJECT_DBNAME)
         self.logsPath = self.addPath(PROJECT_LOGS)
         self.runsPath = self.addPath(PROJECT_RUNS)
+        self.hostsPath = self.addPath(PROJECT_HOSTS)
         
     def getObjId(self):
         """ Return the unique id assigned to this project. """
@@ -72,10 +75,13 @@ class Project(object):
         if not exists(self.dbPath):
             raise Exception("Project doesn't exists in '%s'" % self.path)
         self.mapper = SqliteMapper(self.dbPath, globals())
+        self.hostsMapper = ExecutionHostMapper(self.hostsPath, globals())
         
-    def create(self):
-        """Create a new project.
-        Prepare all required paths and files"""
+    def create(self, hosts):
+        """Prepare all required paths and files to create a new project.
+        Params:
+         hosts: a list of configuration hosts associated to this projects (class ExecutionHostConfig)
+        """
         # Create project path if not exists
         makePath(self.path)
         os.chdir(self.path) #Before doing nothing go to project dir
@@ -83,12 +89,17 @@ class Project(object):
         # Create db throught the mapper
         self.mapper = SqliteMapper(self.dbPath, globals())
         self.mapper.commit()
+        # Write hosts configuration to disk
+        self.hostsMapper = ExecutionHostMapper(self.hostsPath, globals())
+        for h in hosts:
+            self.hostsMapper.insert(h)
+        self.hostsMapper.commit()
         # Create other paths inside project
         makePath(*self.pathList)
         
     def clean(self):
         """Clean all project data"""
-        cleanPath(*self.pathList)        
+        cleanPath(*self.pathList)      
                 
     def launchProtocol(self, protocol, wait=False):
         """Launch another scritp to run the protocol."""
@@ -150,5 +161,9 @@ class Project(object):
         protocol.mapper =  self.mapper
         protocol.workingDir.set(self.getPath("Runs", name))
         protocol._store() #FIXME, actually only need to update workingDir and name
+        
+    def getHosts(self):
+        """ Retrieve the hosts associated with the project. (class ExecutionHostConfig) """
+        return self.hostsMapper.selectByAll()
         
         

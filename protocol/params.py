@@ -167,6 +167,11 @@ class Form():
     
     def iterParams(self):
         return self._paramsDict.iteritems()
+    
+    def iterPointerParams(self):
+        for paramName, param in self._paramsDict.iteritems():
+            if isinstance(param, PointerParam):
+                yield paramName, param
 
     def addGeneralSection(self):
         self.addSection(label='General')
