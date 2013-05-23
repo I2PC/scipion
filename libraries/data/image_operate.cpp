@@ -374,12 +374,12 @@ void ProgOperate::readParams()
         {
             isValue = false;
             fn2 = file_or_value;
-            if (fn2.isMetaData())
+            if (fn2.hasStackExtension() || fn2.isMetaData())
             {
                 md2.read(fn2);
                 if (mdInSize != md2.size())
                     REPORT_ERROR(ERR_MD, "Both metadatas operands should be of same size.");
-                md2Iterator = MDIterator(md2);
+                md2Iterator.init(md2);
             }
             else
             {

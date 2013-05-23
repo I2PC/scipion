@@ -159,10 +159,14 @@ protected:
     size_t * objects;
     size_t size;
 
-    /** Internal function to initialize the iterator */
-    void init(const MetaData &md, const MDQuery * pQuery=NULL);
+    /** Clear internal values to be used again*/
+    void clear();
+    /** Initialize internal values to NULL */
+    void reset();
 public:
 
+    /** Internal function to initialize the iterator */
+    void init(const MetaData &md, const MDQuery * pQuery=NULL);
     /** Empty constructor */
     MDIterator();
     /** Empty constructor, creates an iterator from metadata */

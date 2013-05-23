@@ -427,10 +427,10 @@ bool MetaData::keepLabels(const std::vector<MDLabel> &labels)
 {
     for (size_t i = 0; i < activeLabels.size();)
     {
-    	if (!vectorContainsLabel(labels, activeLabels[i]))
-    		removeLabel(activeLabels[i]);
-    	else
-    		++i;
+        if (!vectorContainsLabel(labels, activeLabels[i]))
+            removeLabel(activeLabels[i]);
+        else
+            ++i;
     }
     return true;
 }
@@ -1855,6 +1855,8 @@ std::ostream& operator<<(std::ostream& o, const MetaData & mD)
 
 void MDIterator::init(const MetaData &md, const MDQuery * pQuery)
 {
+    clear();
+
     std::vector<size_t> objectsVector;
     md.myMDSql->selectObjects(objectsVector, pQuery);
     objects = NULL;
@@ -1873,7 +1875,13 @@ void MDIterator::init(const MetaData &md, const MDQuery * pQuery)
     }
 }
 
-MDIterator::MDIterator()
+void MDIterator::clear()
+{
+    delete [] objects;
+    reset();
+}
+
+void MDIterator::reset()
 {
     objects = NULL;
     objId = BAD_OBJID;
@@ -1881,13 +1889,22 @@ MDIterator::MDIterator()
     size = 0;
 }
 
+
+
+MDIterator::MDIterator()
+{
+    reset();
+}
+
 MDIterator::MDIterator(const MetaData &md)
 {
+    reset();
     init(md);
 }
 
 MDIterator::MDIterator(const MetaData &md, const MDQuery &query)
 {
+    reset();
     init(md, &query);
 }
 
