@@ -4,13 +4,14 @@ a {
 }
 
 .protFieldsetTree {
-	height: 90%;
+	height: 95%;
 	width: 90%;
-	overflow-y: auto;
+	overflow-y: scroll;
 	overflow-x: hidden;
 	/*margin: -0.5em -1em -0.6em 1em;*/
 	/*border: 1px solid #d0d0d0;*/
-	margin: 1em 0.5em 1em 1em;
+	margin-left: -0.6em;
+	padding-right: 1.5em;
 	background: white;
 }
 
@@ -28,7 +29,8 @@ a {
 }
 
 .treeview .hitarea {
-	background: url(../../../resources/treeview-default.gif) -64px -25px no-repeat;
+	background: url(../../../resources/treeview-default.gif) -64px -25px
+		no-repeat;
 	height: 16px;
 	width: 16px;
 	margin-left: -16px;
@@ -50,18 +52,13 @@ a {
 	background-color: #eee;
 }
 
-#treecontrol {
-	margin: 1em 0;
-	display: none;
-}
-
 .treeview .hover {
 	color: red;
 	cursor: pointer;
 }
 
 .treeview li {
-/* 	background: url(../images/treeview-default-line.gif) 0 0 no-repeat; */
+	/* 	background: url(../images/treeview-default-line.gif) 0 0 no-repeat; */
 	background: 0 0 no-repeat;
 }
 
@@ -96,7 +93,7 @@ a {
 
 .filetree li {
 	padding: 3px 0 2px 16px;
-	margin-left: 0.3em;
+	margin-left: 10px;
 	width: 100%;
 }
 
@@ -117,22 +114,22 @@ a {
 
 .filetree span.protocol_base {
 	background: url(../../../../resources/class_obj.gif) 0 0 no-repeat;
-	padding-left: 1em;
+	padding-left: 20px;
 }
 
 .filetree li.expandable span.protocol_base {
 	background: url(../../../../resources/class_obj.gif) 0 0 no-repeat;
-	padding-left: 1em;
+	padding-left: 20px;
 }
 
 .filetree span.protocol {
 	background: url(../../../../resources/bookmark.gif) 0 0 no-repeat;
-	padding-left: 1em;
+	padding-left: 20px;
 }
 
 .filetree span.protocol_class {
 	background: url(../../../../resources/python_file.gif) 0 0 no-repeat;
-	padding-left: 1em;
+	padding-left: 20px;
 }
 
 /* CSS for the runtime table */
@@ -152,8 +149,8 @@ table a:active,table a:hover {
 }
 
 table {
-	margin: 1em -1.5em 0em -1em;
 	width: 100%;
+	overflow-x: auto;
 	font-size: 0.9em;
 	text-shadow: 1px 1px 0px #fff;
 	background: #eaebec;

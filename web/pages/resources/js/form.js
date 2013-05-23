@@ -44,7 +44,6 @@ function evalDependencies(row) {
 		var arrayDepends = dependencies.split(",");
 		for ( var cont = 0; cont < arrayDepends.length; cont++) {
 			var res = evalCondition(arrayDepends[cont]);
-			// alert(res);
 			if (res == false) {
 				jQuery("tr#" + arrayDepends[cont]).hide();
 			} else if (res == true) {
@@ -107,11 +106,23 @@ function browseObjects(objClass) {
 		success : function(json) {
 			// specifying a dataType of json makes jQuery pre-eval the response
 			// for us
-			// alert(json.objects);
-			selectObjects('Select ' + objClass, json.objects.toString())
+			var res = getTableFormatted(json.objects);
+
+			selectObjects('Select ' + objClass, res);
 
 		}
 	});
+}
+
+function getTableFormatted(list) {
+	
+	var res = "<div style='overflow:auto'><table class='browse' id='browse' cellspacing='0'>";
+	for ( var x = 0; x < list.length; x++) {
+		res = res + "<tr id='browse'><td id='browse'><a id='browse' href=''>"
+				+ list[x] + "</a></td></tr>";
+	}
+	res = res + "</table></div>";
+	return res;
 }
 
 function selectObjects(title, msg) {
