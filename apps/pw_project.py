@@ -136,8 +136,10 @@ class RunsTreeProvider(TreeProvider):
         return [('Run', 250), ('State', 100), ('Modified', 100)]
     
     def getObjectInfo(self, obj):
-        return {'key': obj.getId(),
-                'text': '%s.%s' % (obj.getClassName(), obj.strId()),
+        default = '%s.%s' % (obj.getClassName(), obj.strId())
+        runName = obj.runName.get(default)
+        return {'key': obj.getObjId(),
+                'text': runName,
                 'values': (obj.status.get(), obj.endTime.get())}
       
     def getObjectActions(self, obj):

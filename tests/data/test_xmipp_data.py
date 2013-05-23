@@ -43,7 +43,7 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
 
         self.assertTrue(self.checkMicrographsMetaData(xmippSet), "micrographs metadata does not exist")
         
-    def testRead(self):
+    def testReadMd(self):
         """ Test reading an XmippSetOfMicrographs from a metadata """
         xmippSet = XmippSetOfMicrographs(self.mdFn, tiltPairs=True)
         
@@ -83,7 +83,7 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
         for mic in setMics:
             xmic = XmippMicrograph(mic.getFileName())
             xmippSet.append(xmic)
-            mapsId[setMics.getId(mic)] = xmippSet.getId(xmic)
+            mapsId[mic.getId()] = xmic.getId()
             
         xmippSet.copyInfo(setMics)
         
@@ -152,5 +152,7 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
         return tiltedDict
             
 if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromName('test_xmipp_data.TestXmippSetOfMicrographs.testMerge')
-    unittest.TextTestRunner(verbosity=2).run(suite)
+#    suite = unittest.TestLoader().loadTestsFromName('test_xmipp_data.TestXmippSetOfMicrographs.testMerge')
+#    unittest.TextTestRunner(verbosity=2).run(suite)
+    
+    unittest.main()

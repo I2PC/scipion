@@ -84,6 +84,7 @@ class XmippDefPreprocessMicrograph(Form):
                       label='Downsampling factor',
                       help='Non-integer downsample factors are possible. Must be larger than 1.')
     
+        #TODO: Solve problem with multiple threads and sqlite mapper
         self.addParallelSection(threads=1, mpi=1)
         
 class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
@@ -173,7 +174,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
             # Updating micrograph name
             xmic.setFileName(IOTable[mic.getFileName()])
             micSet.append(xmic)
-            mapsId[self.inputMics.getId(mic)] = micSet.getId(xmic)
+            mapsId[mic.getId()] = xmic.getId()
         
         # If input micrographs have tilt pairs copy the relation
         if self.inputMics.hasTiltPairs():

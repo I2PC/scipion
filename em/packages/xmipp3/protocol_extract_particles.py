@@ -209,7 +209,7 @@ class XmippProtExtractParticles(ProtExtractParticles):
             self.runJob(None,"xmipp_micrograph_scissor", args)
             # Normalize 
             if self.doNormalize:
-                runNormalize(None, outputRoot + '.stk',self.normaType.get(), self.backRadius.get(), 1)          
+                runNormalize(None, outputRoot + '.stk',self.normType.get(), self.backRadius.get(), 1)          
                            
             #WHY THIS?????        
             if self.downsampleType.get() == self.OTHER:

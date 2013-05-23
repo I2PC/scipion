@@ -106,7 +106,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
             for l, v in zip(labels, values):
                 xmic.setValue(l, v)
             micSet.append(xmic)
-            mapsId[self.inputMics.getId(mic)] = micSet.getId(xmic)
+            mapsId[mic.getId()] = xmic.getId()
          
         #TODO: Verificar con J.M. para que vale este sort
         #micSet.sort()

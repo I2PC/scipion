@@ -179,10 +179,10 @@ class ConfigMapper(XmlMapper):
         return self.selectAll()[0]
 
 
-def writeConfig(config, fn, mapperClass=ConfigMapper):
+def writeConfig(config, fn, mapperClass=ConfigMapper, clean=True):
     fn = getConfigPath(fn)
     print "config file: ", fn
-    if exists(fn):
+    if clean and exists(fn):
         os.remove(fn)
     mapper = mapperClass(fn, globals())
     mapper.insert(config)
@@ -305,7 +305,7 @@ cat $PBS_NODEFILE
     queueSys.queues.append(queue)
     
     
-    writeConfig(host, 'execution_hosts.xml', mapperClass=ExecutionHostMapper)
+    writeConfig(host, 'execution_hosts.xml', mapperClass=ExecutionHostMapper, clean=False)
     
 def writeDefaults():
     writeMenus()
