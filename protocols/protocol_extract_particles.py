@@ -153,7 +153,7 @@ class ProtExtractParticles(ProtParticlesBase):
                             fnMicrographs=self.micrographs)
         else:
             self.insertStep('createImagesMd', verifyfiles=[ImagesFn], ImagesFn=ImagesFn, ExtraDir=self.ExtraDir)
-            self.insertStep('sortImages',ImagesFn=ImagesFn)
+            self.insertStep('sortImages',ImagesFn=ImagesFn,rejectionMethod=self.RejectionMethod, maxZscore=self.MaxZscore, percentage=self.Percentage)
             self.insertStep('avgZscore',WorkingDir=self.WorkingDir, micrographSelfile=self.micrographs)
 
     def validate(self):
@@ -171,6 +171,10 @@ class ProtExtractParticles(ProtParticlesBase):
             errors.append("Downsampling factor must be >=1")
         if self.TiltPairs and self.DoFlip:
             errors.append("Phase cannot be corrected on tilt pairs")
+        if self.RejectionMethod=='MaxZscore' and self.MaxZscore<0:
+            errors.append("MaxZscore must be positive")
+        elif self.RejectionMethod=='Percentage' and (self.Percentage<0 or self.Percentage>100):
+            errors.append("Percentage must be between 0 and 100")
         return errors
 
     def summary(self):
@@ -193,6 +197,11 @@ class ProtExtractParticles(ProtParticlesBase):
             msg += "different sampling)"
         message.append(msg)
     
+        if self.RejectionMethod=='MaxZscore':
+            message.append('Rejecting: Zscore>'+str(self.MaxZscore))
+        elif self.RejectionMethod=='Percentage':
+            message.append('Rejecting: '+str(self.Percentage)+"%")
+
         fn = self.getFilename("images")
         if exists(fn):
             md = MetaData(fn)
