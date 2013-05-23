@@ -84,6 +84,7 @@ class XmippDefPreprocessMicrograph(Form):
                       label='Downsampling factor',
                       help='Non-integer downsample factors are possible. Must be larger than 1.')
     
+        #TODO: Solve problem with multiple threads and sqlite mapper
         self.addParallelSection(threads=1, mpi=1)
         
 class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
