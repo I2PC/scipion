@@ -174,7 +174,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
             # Updating micrograph name
             xmic.setFileName(IOTable[mic.getFileName()])
             micSet.append(xmic)
-            mapsId[self.inputMics.getId(mic)] = micSet.getId(xmic)
+            mapsId[mic.getId()] = xmic.getId()
         
         # If input micrographs have tilt pairs copy the relation
         if self.inputMics.hasTiltPairs():

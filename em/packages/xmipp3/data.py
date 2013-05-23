@@ -43,6 +43,7 @@ class XmippImage(XmippMdRow, Image):
     def __init__(self, filename=None, **args):
         XmippMdRow.__init__(self)
         Image.__init__(self, filename, **args)
+        self.getId = self.getFileName
         
     def setFileName(self, filename):
         self.setValue(self._label, filename)
@@ -140,10 +141,6 @@ class XmippSetOfImages(SetOfImages):
     
     def _getTiltedBlock(self):
         return 'TiltedPairs@' + self.getFileName()
-    
-    def getId(self, img):
-        """ Return the id of the image """
-        return img.getFileName()
                     
     @staticmethod
     def convert(setOfImgs, filename):
