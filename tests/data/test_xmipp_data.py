@@ -83,7 +83,7 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
         for mic in setMics:
             xmic = XmippMicrograph(mic.getFileName())
             xmippSet.append(xmic)
-            mapsId[setMics.getId(mic)] = xmippSet.getId(xmic)
+            mapsId[mic.getId()] = xmic.getId()
             
         xmippSet.copyInfo(setMics)
         
