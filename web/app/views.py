@@ -166,7 +166,7 @@ def project_content(request):
     return render_to_response('project_content.html', context)
 
 
-def formTable(request):
+def form(request):
     
     # Resources #
     favicon_path = getResource('favicon')
@@ -174,7 +174,7 @@ def formTable(request):
     logo_browse = getResource('browse')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     jsForm_path = os.path.join(settings.STATIC_URL, 'js/form.js')
-    css_path = os.path.join(settings.STATIC_URL, 'css/formTable.css')
+    css_path = os.path.join(settings.STATIC_URL, 'css/form.css')
     # Messi Plugin
     messi_path = os.path.join(settings.STATIC_URL, 'js/messi.js')
     messi_css_path = os.path.join(settings.STATIC_URL, 'css/messi.css')
@@ -222,11 +222,12 @@ def formTable(request):
     # Cross Site Request Forgery protection is need it
     context.update(csrf(request))
     
-    return render_to_response('formTable.html', context)
+    return render_to_response('form.html', context)
 
 def protocol(request):
     
-    parameters = request.POST.get("","")
+    protId = request.POST.get("protocolId")
+    protClass = request.POST.get("protocolClass")
     
     # Resources #
     favicon_path = getResource('favicon')
@@ -234,8 +235,9 @@ def protocol(request):
     #############
     
     context = {'favicon': favicon_path,
-               'jquery': jquery_path}
-    
+               'jquery': jquery_path,
+               'protId': protId,
+               'protClass': protClass}
     
     return render_to_response('protocol.html', context)
 

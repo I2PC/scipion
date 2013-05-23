@@ -72,7 +72,7 @@
 	background-image: none
 }
 
-.btn {
+.btn-close {
 	background: url(../../../resources/dialog_close.png) 0.5em no-repeat;
 	background-size: 20%;
 	font-size: 0.8em;
@@ -89,8 +89,64 @@
 	margin-bottom: 0.5em;
 }
 
-.btn:hover {
+.btn-close:hover {
 	background-color: white;
+}
+
+.btn-cancel {
+	background: url(../../../resources/dialog_close.png) 0.5em no-repeat;
+	background-size: 20%;
+	font-size: 0.8em;
+	color: white;
+	width: 7.2em;
+	height: 2em;
+	background-color: FireBrick;
+	padding: 1px;
+	padding-left: 1.7em;
+	font-weight: bold;
+	letter-spacing: 0.2em;
+	text-align: center;
+	font-weight: bold;
+	/* 	margin-bottom: 0.5em; */
+	margin: 0 0.5em 0.5em 0.5em;
+}
+
+.btn-cancel:hover {
+	background-color: white;
+	color: black;
+}
+
+.btn-select {
+	background: url(../../../resources/enable.gif) 0.5em no-repeat;
+	background-size: 20%;
+	font-size: 0.8em;
+	color: white;
+	width: 7.2em;
+	height: 2em;
+	background-color: LimeGreen;
+	padding: 1px;
+	padding-left: 1.7em;
+	font-weight: bold;
+	letter-spacing: 0.2em;
+	text-align: center;
+	font-weight: bold;
+	/* 	margin-bottom: 0.5em; */
+	margin: 0 0.5em 0.5em 0.5em;
+}
+
+.btn-select:hover {
+	background-color: white;
+	color: black;
+}
+
+.messi .btn-success:hover,.messi .btn-success:active,.messi .btn-success.active,.messi .btn-success.disabled,.messi .btn-success[disabled]
+	{
+	background-color: #51a351;
+	*background-color: #499249;
+}
+
+.messi .btn-success:active,.messi .btn-success.active {
+	background-color: #408140 \9;
 }
 
 .messi-content {
@@ -119,7 +175,7 @@
 }
 
 .messi-footbox {
-	width: 100%;
+	width: auto;
 	/* 	height: 55px; */
 	overflow: hidden;
 	background: rgb(240, 245, 230);
