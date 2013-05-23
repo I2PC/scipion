@@ -6,21 +6,12 @@ from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3.protocol_particle_pick import XmippProtParticlePicking
 
 
-projName = 'myproject'#sys.argv[1]
-pattern = '/home/laura/Scipion_Projects/InputData/*.mrc' #sys.argv[2]
+projName = sys.argv[1]
+pattern = sys.argv[2]
+importFolder = sys.argv[3]
 
 manager = Manager()
 proj = manager.createProject(projName)  # Now it will be loaded if exists
-
-#l = proj.mapper.selectByClass('SetOfCoordinates')
-#
-#for c in l[1].iterCoordinates():
-#    print "%d, %d" % (c.x, c.y) 
-#    print " from mic: ", c.getMicrograph().getFileName()
-#    
-#sys.exit(0)
-
-
 
 from tests.tester import *
 
@@ -37,12 +28,12 @@ for p in l:
 
 if len(l):    
     # Particle Picking-------------
-    print "testing Particle Picking XMIPP"
-    protPartPick = XmippProtParticlePicking(workingDir=proj.getPath('Runs', 'ParticlePicking'))
-    #protPartPick.inputMicrographs.set(prot2.outputMicrographs)
-    protPartPick.inputMicrographs.set(p)
-    proj.launchProtocol(protPartPick, wait=True)
-    sys.exit(0)
+    print "Launching particle picking..."   
+    protPP = XmippProtParticlePicking(importFolder=importFolder)
+            
+    protPP.inputMicrographs.set(prot2.outputMicrographs)
+    
+    proj.launchProtocol(protPP, wait=True)
 
 else:
     print "Not micrographs found"
