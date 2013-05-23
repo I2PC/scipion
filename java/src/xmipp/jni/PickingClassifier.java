@@ -2,10 +2,17 @@ package xmipp.jni;
 
 public class PickingClassifier
 {
-	public native void autopick(String micrograph);//generates micrograph pos file
-	
+
+	// Initialize library.
+	static
+	{
+		System.loadLibrary("XmippJNI");
+	}
+
+	public native void autopick(String micrograph);
+
 	public native void correct(String micrograph);
-	
-	
-	
+
+	public native void train();
+
 }

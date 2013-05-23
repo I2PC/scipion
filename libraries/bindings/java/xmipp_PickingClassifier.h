@@ -9,20 +9,19 @@ extern "C" {
 #endif
 
 /*
- * Class:     xmipp_Filename
- * Method:    hasStackExtension
+ * Class:     xmipp_PickingClassifier
+ * Method:    autopick
  * Signature: (Ljava/lang/String;)Z
  */
-JNIEXPORT jboolean JNICALL Java_xmipp_jni_PickingClassifier_autopick
+JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_autopick
   (JNIEnv *, jclass, jstring);
 
-/*
- * Class:     xmipp_Filename
- * Method:    hasVolumeExtension
- * Signature: (Ljava/lang/String;)Z
- */
-JNIEXPORT jboolean JNICALL Java_xmipp_jni_PickingClassifier_correct
+
+JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_correct
   (JNIEnv *, jclass, jstring);
+
+JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_train
+  (JNIEnv *, jclass);
 
 
 #ifdef __cplusplus

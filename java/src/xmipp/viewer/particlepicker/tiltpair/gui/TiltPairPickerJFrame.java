@@ -357,7 +357,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		updateMicrographsModel();
 	}
 	
-	public void importParticlesFromFiles(Format format, String file1, String file2, float scale, boolean invertx, boolean inverty){
+	public String importParticlesFromFiles(Format format, String file1, String file2, float scale, boolean invertx, boolean inverty){
 			
 			getMicrograph().reset();
 			String result = pppicker.importParticlesFromFiles(file1, file2, format, getMicrograph(), scale, invertx, inverty);
@@ -368,6 +368,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 			updateMicrographsModel();
 			updateSize(pppicker.getSize());
 			canvas.refreshActive(null);
+			return result;
 	}
 	
 	@Override

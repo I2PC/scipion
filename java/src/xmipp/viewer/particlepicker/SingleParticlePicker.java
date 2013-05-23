@@ -12,6 +12,7 @@ import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.Particle;
+import xmipp.jni.PickingClassifier;
 import xmipp.utils.TasksManager;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
@@ -44,6 +45,7 @@ public class SingleParticlePicker extends ParticlePicker
 	private ImageGeneric templates;
 	private String templatesfile;
 	private int templateindex;
+	private PickingClassifier classifier;
 
 	public SingleParticlePicker(String selfile, String outputdir, Mode mode)
 	{
@@ -78,6 +80,8 @@ public class SingleParticlePicker extends ParticlePicker
 			}
 		for (TrainingMicrograph m : micrographs)
 			loadMicrographData(m);
+		
+		classifier = new PickingClassifier();
 	}
 
 	public SingleParticlePicker(String selfile, String outputdir, String reviewfile)
@@ -926,6 +930,7 @@ public class SingleParticlePicker extends ParticlePicker
 		{
 			try
 			{
+				classifier.train();
 				String args = "-i %s --particleSize %s --model %s --outputRoot %s --mode buildinv %s --filter_num %s --NPCA %s --NCORR %s";
 				if (isFastMode())
 					args += " --fast";
@@ -966,6 +971,7 @@ public class SingleParticlePicker extends ParticlePicker
 
 				if (getMicrograph().getState() == MicrographState.Manual)//autopick on current micrograph
 				{
+					classifier.autopick(getMicrograph().getName());
 					args = "-i %s --particleSize %s --model %s --outputRoot %s --mode try --thr %s --autoPercent %s";
 					if (isFastMode())
 						args += " --fast";

@@ -524,19 +524,6 @@ public abstract class ParticlePicker
 
 	public void fillParticlesMdFromEmanFile(String file, Micrograph m, MetaData md, float scale)
 	{
-		String line = "";
-		// System.out.println("Importing from EMAN, file: " + file);
-		try
-		{
-			BufferedReader reader = null;
-			reader = new BufferedReader(new FileReader(file));
-			line = reader.readLine();
-			reader.close();
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
 		// inverty = true;
 		md.readPlain(file, "xcoor ycoor particleSize");
 
