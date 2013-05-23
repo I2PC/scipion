@@ -124,6 +124,8 @@ class ExecutionHostConfig(OrderedObject):
         OrderedObject.__init__(self, **args)
         self.label = String()
         self.hostname = String()
+        self.username = String()
+        self.password = String()
         self.mpiCommand = String()
         self.queueSystem = QueueSystemConfig()
         
@@ -304,8 +306,16 @@ cat $PBS_NODEFILE
     
     queueSys.queues.append(queue)
     
-    
     writeConfig(host, 'execution_hosts.xml', mapperClass=ExecutionHostMapper)
+    
+    host = ExecutionHostConfig()
+    host.label.set('glassfishdev')
+    host.hostname.set('glassfishdev.cnb.csic.es')
+    host.username.set('apoza')
+    host.password.set('BF6fYiFYiYD')
+    
+    #writeConfig(host, 'execution_hosts.xml', mapperClass=ExecutionHostMapper)
+    
     
 def writeDefaults():
     writeMenus()
