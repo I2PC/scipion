@@ -93,7 +93,7 @@ class Project(object):
     def launchProtocol(self, protocol, wait=False):
         """Launch another scritp to run the protocol."""
         # TODO: Create a launcher class that will 
-        # handle the communication of remove projects
+        # handle the communication of remote projects
         # and also the particularities of job submission: mpi, threads, queue, bash
         self.insertProtocol(protocol)        
         if wait:

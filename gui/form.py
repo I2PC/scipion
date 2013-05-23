@@ -183,9 +183,9 @@ class ParamWidget():
         
     def _createLabel(self):
         if self.param.isImportant.get():
-            f = fontBold
+            f = self.window.fontBold
         else:
-            f = font
+            f = self.window.font
         self.label = tk.Label(self.parent, text=self.param.label.get(), 
                               bg='white', font=f)
                
@@ -282,31 +282,31 @@ class ParamWidget():
         return self.var.get()
         
 
-# FIXME: Organize this and make it configurable
-fontBig = None
-font = None
-fontBold = None
     
 class FormWindow(Window):
     """This class will create the Protocol params GUI to enter parameters.
     The creaation of compoments will be based on the Protocol Form definition.
     This class will serve as a connection between the GUI variables (tk vars) and 
     the Protocol variables."""
-    def __init__(self, title, protocol, executeCallback, master=None, **args):
+    def __init__(self, title, protocol, callback, master=None, **args):
+        """ Constructor of the Form window. 
+        Params:
+         title: title string of the windows.
+         protocol: protocol from which the form will be generated.
+         callback: callback function to call when Save or Excecute are press.
+        """
         Window.__init__(self, title, master, icon='scipion_bn.xbm', weight=False, **args)
 
-        self.executeCallback = executeCallback
+        self.callback = callback
         self.widgetDict = {} # Store tkVars associated with params
         
-        global fontBig, font, fontBold
-        fontBig = tkFont.Font(size=12, family='verdana', weight='bold')
-        font = tkFont.Font(size=10, family='verdana')#, weight='bold')
-        fontBold = tkFont.Font(size=10, family='verdana', weight='bold')        
-
+        self.fontBig = tkFont.Font(size=12, family='verdana', weight='bold')
+        self.font = tkFont.Font(size=10, family='verdana')#, weight='bold')
+        self.fontBold = tkFont.Font(size=10, family='verdana', weight='bold')        
         
         headerFrame = tk.Frame(self.root)
         headerFrame.grid(row=0, column=0, sticky='new')
-        headerLabel = tk.Label(headerFrame, text='Protocol: ' + protocol.getClassName(), font=fontBig)
+        headerLabel = tk.Label(headerFrame, text='Protocol: ' + protocol.getClassName(), font=self.fontBig)
         headerLabel.grid(row=0, column=0, padx=5, pady=5)
         
         text = TaggedText(self.root, width=40, height=15, bd=0, cursor='arrow')
@@ -322,7 +322,7 @@ class FormWindow(Window):
         expertFrame = tk.Frame(bottomFrame)
         #expertFrame.columnconfigure(0, weight=1)
         expertFrame.grid(row=0, column=0, sticky='sw', padx=5, pady=5)
-        expLabel = tk.Label(expertFrame, text="Expert level: ", font=font)
+        expLabel = tk.Label(expertFrame, text="Expert level: ", font=self.font)
         expLabel.grid(row=0, column=0)
         var = tk.StringVar()
         var.set(LEVEL_CHOICES[0])
@@ -338,15 +338,15 @@ class FormWindow(Window):
         def showMsg(msg):
             print "clicked: ", msg
         
-        btnClose = tk.Button(btnFrame, text="Close", image=self.getImage('dialog_close.png'), compound=tk.LEFT, font=font,
+        btnClose = tk.Button(btnFrame, text="Close", image=self.getImage('dialog_close.png'), compound=tk.LEFT, font=self.font,
                           command=self.close)
         btnClose.grid(row=0, column=0, padx=5, pady=5, sticky='sw')
-        btnSave = tk.Button(btnFrame, text="Save", image=self.getImage('filesave.png'), compound=tk.LEFT, font=font, 
+        btnSave = tk.Button(btnFrame, text="Save", image=self.getImage('filesave.png'), compound=tk.LEFT, font=self.font, 
                           command=lambda : showMsg('Save'))
         btnSave.grid(row=0, column=1, padx=5, pady=5, sticky='sw')
         # Add create project button
         
-        btnExecute = Button(btnFrame, text='   Execute   ', fg='white', bg='#7D0709', font=font, 
+        btnExecute = Button(btnFrame, text='   Execute   ', fg='white', bg='#7D0709', font=self.font, 
                         activeforeground='white', activebackground='#A60C0C', command=self.execute)
         btnExecute.grid(row=0, column=2, padx=(15, 50), pady=5, sticky='se')
         
@@ -373,7 +373,7 @@ class FormWindow(Window):
         
     def execute(self, e=None):
         self.close()
-        self.executeCallback(self.protocol)
+        self.callback(self.protocol)
            
     def _fillSection(self, sectionParam, sectionFrame):
         parent = sectionFrame.contentFrame

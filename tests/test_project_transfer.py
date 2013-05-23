@@ -46,5 +46,4 @@ hostsPasswords = {}
 hostsPasswords[userName + '@' + hostName] = password
 
 fileTransfer = FileTransfer()
-fileTransfer.transferFiles(filePaths, hostsPasswords, gatewayHosts = None, operationId = 1, numberTrials = 1, forceOperation = False)
-fileTransfer.close()
+fileTransfer.transferFiles(filePaths, hostsPasswords, gatewayHosts = None, numberTrials = 1, forceOperation = False, operationId = 1)

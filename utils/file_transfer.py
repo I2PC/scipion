@@ -33,51 +33,119 @@ class FileTransfer():
     def transferFiles(self,
                       filePaths, 
                       hostsPasswords, 
-                      gatewayHosts = None,
-                      operationId = 1, 
+                      gatewayHosts = None, 
                       numberTrials = 1,                        
-                      forceOperation = False):
+                      forceOperation = False,
+                      operationId = 1):
         """
         filePaths -- Files dictionary with this format: "userName@hostName:absolute_file_path": ["userName1@hostName1:absolute_file_path1", "userName2@hostName2:absolute_file_path2"]
         Key is the source file path and value the target file paths.
+        gatewayHosts -- Gateway hosts dictionary with this format: "{userName1@hostName1:userName2@hostName2":["userName3@hostName3","userName4@hostName4"]}
+        hostsPasswords -- Passwords needed to connect to involved hosts with this format: "userName@hostName":"hostPassword"
+        numberTrials -- Number of trials in error cases.
+        forceOperation -- Flag to indicate if, when an error happens and number of trials is exceeded, the operation must continue with the rest of files.        
+        operationId -- Operation identifier.
         """
         classifiedFiles = self.__classifyFilePaths(filePaths)
-        #print ('Classified files to transfer: ' + str(classifiedFiles))
         
         for userAndHostPairs, cursorFilePaths in classifiedFiles.iteritems():
+            gatewayHostsCredentials = None
+            if (gatewayHosts is not None and userAndHostPairs in gatewayHosts):
+                gatewayHostsCredentials = gatewayHosts[userAndHostPairs]
             self.__sendFilesBetweenPairs(userAndHostPairs, 
                                          cursorFilePaths,
                                          hostsPasswords, 
-                                         gatewayHosts,
-                                         operationId, 
+                                         gatewayHostsCredentials, 
                                          numberTrials,                        
-                                         forceOperation)
-        
-        
-    def close(self):
-        if (self.sftp is not None):
-            self.sftp.close()
-        if (self.ssh is not None):
-            self.ssh.close()
-
+                                         forceOperation,
+                                         operationId) 
     
+    
+    def copyFiles(self,
+                  filePaths,                        
+                  numberTrials = 1,                        
+                  forceOperation = False,
+                  operationId = 1):
+        """
+        filePaths -- Files dictionary with this format: "source_file_path": "target_file_path"
+        forceOperation -- Flag to indicate if, when an error happens and number of trials is exceeded, the operation must continue with the rest of files.        
+        operationId -- Operation identifier.
+        """
+        for sourceFilePath, targetFilePath in filePaths.iteritems(): 
+            self.__copyLocalFile(sourceFilePath, targetFilePath)
+    
+    def transferFilesTo(self,
+                        filePaths,
+                        hostName,
+                        userName,
+                        hostPassword,
+                        gatewayHosts = None, 
+                        numberTrials = 1,                        
+                        forceOperation = False,
+                        operationId = 1):
+        """
+        filePaths -- Files dictionary with this format: "source_file_path": "target_file_path"
+        hostName -- Remote host to transfer files.
+        username -- User name for remote host.
+        hostsPassword -- Passwords needed to connect to involved host.
+        gatewayHosts -- Gateway hosts List with this format: ["userName1@hostName1","userName2@hostName2"]
+        numberTrials -- Number of trials in error cases.
+        forceOperation -- Flag to indicate if, when an error happens and number of trials is exceeded, the operation must continue with the rest of files.        
+        operationId -- Operation identifier.
+        """
+        # Create ssh session to remote host
+        log.info("Connecting to: " + userName + "@" + hostName)
+        self.ssh.connect(hostName, SSH_PORT, userName, hostPassword)
+        self.sftp = self.ssh.open_sftp()
+        for sourceFilePath, targetFilePath in filePaths.iteritems():
+            self.__sendLocalFile(sourceFilePath, targetFilePath, gatewayHosts, self.sftp)
+        self.ssh.close()
+        self.sftp.close()  
+            
+    def transferFilesFrom(self,
+                        filePaths,
+                        hostName,
+                        userName,
+                        hostPassword,
+                        gatewayHosts = None, 
+                        numberTrials = 1,                        
+                        forceOperation = False,
+                        operationId = 1):
+        """
+        filePaths -- Files dictionary with this format: "source_file_path": "target_file_path"
+        hostName -- Remote host to transfer files.
+        username -- User name for remote host.
+        hostsPassword -- Passwords needed to connect to involved host.
+        gatewayHosts -- Gateway hosts List with this format: ["userName1@hostName1","userName2@hostName2"]
+        numberTrials -- Number of trials in error cases.
+        forceOperation -- Flag to indicate if, when an error happens and number of trials is exceeded, the operation must continue with the rest of files.        
+        operationId -- Operation identifier.
+        """
+        # Create ssh session to remote host
+        log.info("Connecting to: " + userName + "@" + hostName)
+        self.ssh.connect(hostName, SSH_PORT, userName, hostPassword)
+        self.sftp = self.ssh.open_sftp()
+        for sourceFilePath, targetFilePath in filePaths.iteritems():
+            self.__getRemoteFile(sourceFilePath, targetFilePath, gatewayHosts, self.sftp)
+        self.ssh.close()
+        self.sftp.close()  
                 
         
     def deleteFiles(self, 
                     filePaths,                    
                     hostsPasswords, 
                     gatewayHosts=None, 
-                    operationId=1, 
                     numberTrials=1, 
-                    forceOperation=False):
+                    forceOperation=False, 
+                    operationId=1):
         """
         Delete a list of file paths.
         filepaths -- List of file paths to remove with this format: "userName@hostName:absolute_file_path"
         gatewayHosts -- Gateway hosts dictionary with this format: "userName1@hostName1:userName2@hostName2":"userName@hostName"
         hostsPasswords -- Passwords needed to connect to involved hosts with this format: "userName@hostName":"hostPassword"
-        operationId -- Operation identifier.
         numberTrials -- Number of trials in error cases.
         forceOperation -- Flag to indicate if, when an error happens and number of trials is exceeded, the operation must continue with the rest of files.
+        operationId -- Operation identifier.
         """
         
         # As we are going to create a session for each target host we must get different target hosts.
@@ -97,6 +165,8 @@ class FileTransfer():
                     filePath = self.__getLocationAndFilePath(resultFilePath)[1]
                     log.info("Deleting file " + filePath)
                     self.sftp.remove(filePath)
+                self.ssh.close()
+                self.sftp.close()  
             else:
                 pass
             
@@ -104,17 +174,17 @@ class FileTransfer():
                           directoryPaths,                    
                           hostsPasswords, 
                           gatewayHosts=None, 
-                          operationId=1, 
                           numberTrials=1, 
-                          forceOperation=False):
+                          forceOperation=False, 
+                          operationId=1):
         """
         Delete a list of directory paths.
         directoryPaths -- List of file paths to remove with this format: "userName@hostName:absolute_directory_path"
         gatewayHosts -- Gateway hosts dictionary with this format: "userName1@hostName1:userName2@hostName2":"userName@hostName"
         hostsPasswords -- Passwords needed to connect to involved hosts with this format: "userName@hostName":"hostPassword"
-        operationId -- Operation identifier.
         numberTrials -- Number of trials in error cases.
         forceOperation -- Flag to indicate if, when an error happens and number of trials is exceeded, the operation must continue with the rest of files.
+        operationId -- Operation identifier.
         """
         
         # As we are going to create a session for each target host we must get different target hosts.
@@ -134,25 +204,27 @@ class FileTransfer():
                     directoryName = self.__getLocationAndFilePath(resultDirectoryPath)[1]
                     log.info("Deleting directory " + directoryName)
                     self.sftp.rmdir()
+                self.ssh.close()
+                self.sftp.close()  
             else:
                 pass
         
     def checkFiles(self, 
                    filePaths,                   
                    hostsPasswords,
-                   gatewayHosts=None,  
-                   operationId=1, 
+                   gatewayHosts=None, 
                    numberTrials=1, 
-                   forceOperation = False):
+                   forceOperation = False,  
+                   operationId=1):
         """
         Check if file paths exists.
         filepaths -- List of file paths to remove with this format: "userName@hostName:absolute_file_path"
         gatewayHosts -- Gateway hosts dictionary with this format: "userName1@hostName1:userName2@hostName2":"userName@hostName"
         hostsPasswords -- Passwords needed to connect to involved hosts with this format: "userName@hostName":"hostPassword"
-        operationId -- Operation identifier.
         numberTrials -- Number of trials in error cases.
         forceOperation -- Flag to indicate if, when an error happens and number of trials is exceeded, the operation must continue with the rest of files.
         returns -- List of not located file paths.
+        operationId -- Operation identifier.
         """
         returnFilePaths = []
         # As we are going to create a session for each target host we must get different target hosts.
@@ -176,6 +248,8 @@ class FileTransfer():
                     except IOError:
                         log.info("Check fail!!")
                         returnFilePaths.append(resultFilePath)
+                self.ssh.close()
+                self.sftp.close()  
             else:
                 pass
         return returnFilePaths
@@ -186,7 +260,7 @@ class FileTransfer():
         filePaths -- Files dictionary with this format: "userName@hostName:absolute_file_path": [userName1@hostName1:absolute_file_path1, userName2@hostName2:absolute_file_path2]
         Key is the source file path and value the target file paths.
         returns -- Dictionary with file paths ordered by the two user/host credentials that are involved. The dictionary will have this structure:
-        {"userName1@hostName1:userName2@hostName2" : {"userName@hostName:filePath":["userName3@hostName3:filePath3", "userName4@hostName4:filePath4"]}
+        {"userName1@hostName1:userName2@hostName2" : {"filePath1":"filePath2"}
         """
         result = {}
         
@@ -196,135 +270,51 @@ class FileTransfer():
                 targetParts = self.__getLocationAndFilePath(targetPath) 
                 sourceUserAndHost = sourceParts[0]
                 targetUserAndHost = targetParts[0]
-                tempKey = sourceUserAndHost + PAIRS_SEPARATOR + targetUserAndHost
-                resultKey = self.__getKey(result, tempKey)
+                sourceFilePath = sourceParts[1]
+                targetFilePath = targetParts[1]
+                resultKey = sourceUserAndHost + PAIRS_SEPARATOR + targetUserAndHost
                 auxDict = {}
-                auxList = []
-                if (resultKey is not None):     
+                if (resultKey in result):     
                     auxDict = result[resultKey]
-                    if sourcePath in auxDict:
+                    if sourceFilePath in auxDict:
                         # This will not happen in Scipion because one source path is not going
                         # to be sent to different file paths in the same machine.
-                        auxList = auxDict[sourcePath]
-                else:
-                    resultKey = tempKey
-                auxList.append(targetPath)
-                auxDict[sourcePath] = auxList
+                        msg = 'File ' + sourcePath + 'can not be sent to ' + auxDict[sourcePath] + " and to " + targetPath + ' because they are in the same machine.'
+                        raise Exception(msg)
+                auxDict[sourceFilePath] = targetFilePath
                 result[resultKey] = auxDict
         
         return result
-                   
-    def __equalUserAndHost(self, 
-                         userAndHost,
-                         filePath):
-        """
-        Check if file path has the given credentials.
-        userAndHost -- String with "userName@hostName" format.
-        """
-        fileUserAndHost = self.__getLocationAndFilePath(filePath)
-        if (fileUserAndHost == userAndHost):
-            return True
-        else:
-            return False
-        
-    def __getKey(self,
-               dictionary,
-               userAndHostPair):
-        """
-        Get key for user and host credential in dictionary.
-        dictionary -- Dictionary where make checking operation.
-        userAndHostPair -- User and host pair credential to check with "userName1@hostName1:userName2@hostName2" format.
-        returns -- Key for userAndHost in dictionary if "userName1@hostName1:userName2@hostName2" or "userName2@hostName2:userName1@hostName1" are
-        in given dictionary. None in other cases.
-        """
-        if userAndHostPair in dictionary:
-            return userAndHostPair
-        else:
-            sppliter = self.__getUserAndHosts(userAndHostPair)
-            newUserAndHost = (sppliter[1] + ":" + sppliter[0])
-            if newUserAndHost in dictionary:
-                return newUserAndHost
-            else:
-                return None
-        
-    def __equalUserAndHostPairs(self, userAndHostPair1, userAndHostPair2):
-        """
-        Check if two credentials pairs are equals.
-        userAndHostPair1: Host credential pair with this format: "userName1@hostName1:userName2@hostName2"
-        userAndHostPair2: Host credential pair with this format: "userName1@hostName1:userName2@hostName2"
-        Two credentials pairs are equals if they are identical or if they are in reverse order: 
-                                "userName1@hostName1:userName2@hostName2" == "userName1@hostName1:userName2@hostName2"
-                                "userName1@hostName1:userName2@hostName2" == "userName2@hostName2:userName1@hostName1"
-        """
-        if userAndHostPair1 == userAndHostPair2:
-            return True
-        else:
-            pairParts1 = self.__getUserAndHosts(userAndHostPair1)
-            pairParts2 = self.__getUserAndHosts(userAndHostPair2)
-            return (pairParts1[0] == pairParts2[1] and
-                    pairParts1[1] == pairParts2[0])
             
     def __sendFilesBetweenPairs(self, 
                                 userAndHostPairs, 
                                 filePaths,
                                 hostsPasswords, 
-                                gatewayHosts = None,
-                                operationId = 1, 
+                                gatewayHosts = None, 
                                 numberTrials = 1,                        
-                                forceOperation = False):  
+                                forceOperation = False,
+                                operationId = 1):  
         """
+        filePaths -- Dictionary with this structure: {"filePath1":"filePath2"}
+        gatewayHosts -- Gateway hosts List with this format: ["userName1@hostName1","userName2@hostName2"] 
         TODO: Get the target directories to check it existence and create them only once.
         """     
         pairParts = self.__getUserAndHosts(userAndHostPairs)
-        userAndHost1 = pairParts[0]
-        userAndHost2 = pairParts[1]
-        # We see what type of sending operation is.
-        localAndLocal = False
-        localAndRemote = False
-        remoteAndRemote = False
-        remoteUserAndHost = None        
-        if self.__isLocalCredential(userAndHost1):
-            if self.__isLocalCredential(userAndHost2):
-                localAndLocal = True
+        sourceCredentials = pairParts[0]
+        targetCredentials = pairParts[1]
+        # We see what type of sending operation is.        
+        if self.__isLocalCredential(sourceCredentials):
+            if self.__isLocalCredential(targetCredentials):
+                self.copyFiles(filePaths, numberTrials, forceOperation, operationId)
             else:
-                localAndRemote = True
-                remoteUserAndHost = userAndHost2
+                targetUserAndHost = self.__getUserAndHost(targetCredentials)
+                self.transferFilesTo(filePaths, targetUserAndHost[1], targetUserAndHost[0], hostsPasswords[targetCredentials], gatewayHosts, numberTrials, forceOperation, operationId)
         else:
-            if self.__isLocalCredential(userAndHost2):
-                localAndRemote = True
-                remoteUserAndHost = userAndHost1
+            sourceUserAndHost = self.__getUserAndHost(sourceCredentials)
+            if self.__isLocalCredential(targetCredentials):
+                self.transferFilesFrom(filePaths, sourceUserAndHost[1], sourceUserAndHost[0], hostsPasswords[sourceCredentials], gatewayHosts, numberTrials, forceOperation, operationId)
             else:
-                remoteAndRemote = True
-        
-        # If the operation involves local and remote machine we create ssh session to remote host
-        if (localAndRemote):
-            remoteUserAndHostParts = self.__getUserAndHost(remoteUserAndHost)
-            log.info("Connecting to: " + remoteUserAndHostParts[0] + "@" + remoteUserAndHostParts[1])
-            self.ssh.connect(remoteUserAndHostParts[1], SSH_PORT, remoteUserAndHostParts[0], hostsPasswords[remoteUserAndHost])
-            self.sftp = self.ssh.open_sftp()
-                
-                
-        for sourcePath, targetPaths in filePaths.iteritems():
-            sourceParts = self.__getLocationAndFilePath(sourcePath)
-            sourceUserAndHost = sourceParts[0]
-            sourceFilePath = sourceParts[1]
-            for targetPath in targetPaths:
-                targetParts = self.__getLocationAndFilePath(targetPath)
-                targetUserAndHost = targetParts[0]
-                targetFilePath = targetParts[1]
-                if localAndLocal:
-                    self.__copyLocalFile(sourceFilePath, targetFilePath)
-                elif localAndRemote:                     
-                    # Check if source or target is remote
-                    if self.__isLocalCredential(sourceUserAndHost):
-                        # The source path is local
-                        self.__sendLocalFile(sourceFilePath, targetFilePath, gatewayHosts, self.sftp)                        
-                    else:
-                        self.__getRemoteFile(sourceFilePath, targetFilePath, self.sftp)
-                elif remoteAndRemote:
-                    pass
-                else:
-                    raise Exception("There was a problem with the sending type")          
+                pass            
             
     def __getUserAndHosts(self, userAndHostPairs):
         """
@@ -332,7 +322,7 @@ class FileTransfer():
         userAndHostPairs -- User and host pair: "userName1@hostName1:userName2@hostName2"
         returns -- Spplited pairs: ["userName1@hostName1", "userName2@hostName2"]
         """
-        return userAndHostPairs.split(':')
+        return userAndHostPairs.split(PAIRS_SEPARATOR)
     
     def __getUserAndHost(self, userAndHost):
         """
@@ -450,7 +440,7 @@ class FileTransfer():
                 raise
         
         
-    def __getRemoteFile(self, sourceFilePath, targetFilePath, sftp):
+    def __getRemoteFile(self, sourceFilePath, targetFilePath, gatewayHosts, sftp):
         """
         Send local file to remote machine
         sourceFilePath -- Source file path (/file path/...).

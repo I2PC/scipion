@@ -1,6 +1,7 @@
 # from scipion.models import *
 import os
 from django.shortcuts import render_to_response
+from django.core.context_processors import csrf
 from pyworkflow.manager import Manager
 from pyworkflow.project import Project
 from pyworkflow.gui.tree import TreeProvider
@@ -174,9 +175,12 @@ def formTable(request):
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     jsForm_path = os.path.join(settings.STATIC_URL, 'js/form.js')
     css_path = os.path.join(settings.STATIC_URL, 'css/formTable.css')
+    # Messi Plugin
+    messi_path = os.path.join(settings.STATIC_URL, 'js/messi.js')
+    messi_css_path = os.path.join(settings.STATIC_URL, 'css/messi.css')
     #############
     
-    ## Project Id(or Name) should be stored in SESSION
+    # # Project Id(or Name) should be stored in SESSION
     manager = Manager()
     project_name = request.GET.get('project_name')
     projPath = manager.getProjectPath(project_name)
@@ -191,7 +195,7 @@ def formTable(request):
         protocolClass = emProtocolsDict.get(protocolName, None)
         protocol = protocolClass()
     
-    #TODO: Add error page validation when protocol is None
+    # TODO: Add error page validation when protocol is None
     for section in protocol._definition.iterSections():
         for paramName, param in section.iterParams():
             protVar = getattr(protocol, paramName, None)
@@ -199,7 +203,9 @@ def formTable(request):
                 raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
                 # Create the label
             param.htmlValue = protVar.get(param.default.get(""))
-            
+            param.htmlCond = param.condition.get()
+            param.htmlDepend = ','.join(param._dependants)
+            param.htmlCondParams = ','.join(param._conditionParams)
     
     
     context = {'protocol':protocol,
@@ -209,9 +215,49 @@ def formTable(request):
                'form': jsForm_path,
                'jquery': jquery_path,
                'browse': logo_browse,
-               'css':css_path}
+               'css':css_path,
+               'messi': messi_path,
+               'messi_css': messi_css_path}
+    
+    # Cross Site Request Forgery protection is need it
+    context.update(csrf(request))
     
     return render_to_response('formTable.html', context)
+
+def protocol(request):
+    
+    parameters = request.POST.get("","")
+    
+    # Resources #
+    favicon_path = getResource('favicon')
+    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
+    #############
+    
+    context = {'favicon': favicon_path,
+               'jquery': jquery_path}
+    
+    
+    return render_to_response('protocol.html', context)
+
+def browse_objects(request):
+    """ Browse objects from the database. """
+    from django.http import HttpResponse
+    import json
+    
+    if request.is_ajax():
+        objClass = request.GET.get('objClass')
+        manager = Manager()
+        project_name = 'TestProject'
+        projPath = manager.getProjectPath(project_name)
+        project = Project(projPath)
+        project.load()
+        
+        objs = []
+        for obj in project.mapper.selectByClass(objClass, iterate=True):
+            objs.append(obj.getName())
+        jsonStr = json.dumps({'objects' : objs},
+                             ensure_ascii=False)
+        return HttpResponse(jsonStr, mimetype='application/javascript')
 
 
 if __name__ == '__main__':

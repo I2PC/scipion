@@ -46,6 +46,9 @@ class Object(object):
     def getClassName(self):
         return self.__class__.__name__
     
+    def getClass(self):
+        return type(self)
+    
     def getAttributesToStore(self):
         """Return the list of attributes than are
         subclasses of Object and will be stored"""

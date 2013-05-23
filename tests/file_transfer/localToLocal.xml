@@ -5,73 +5,73 @@
 			<transfer>
 				<sourceFilePath>/home/antonio/Documents/Scipion/ScipionTestFiles/1212_00029.xmp</sourceFilePath>
 				<targets>
-					<targetFilePath>antonio@lineo:/home/antonio/testFileTransfer/localToOneRemoteHost/testFile1.xmp</targetFilePath>
+					<targetFilePath>antonio@lineo:/home/antonio/Downloads/Scipion/testFileTransfer/localToLocal/testFile1.xmp</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>/home/antonio/Documents/Scipion/ScipionTestFiles/1212_00036.xmp</sourceFilePath>
 				<targets>
-					<targetFilePath>/home/antonio/testFileTransfer/localToOneRemoteHost/testFile2.xmp</targetFilePath>
+					<targetFilePath>/home/antonio/Downloads/Scipion/testFileTransfer/localToLocal/testFile2.xmp</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>antonio@lineo:/home/antonio/Documents/Scipion/ScipionTestFiles/InputData/BPV_1386.mrc</sourceFilePath>
 				<targets>
-					<targetFilePath>/home/antonio/testFileTransfer/localToOneRemoteHost/other/BPV_1386.mrc</targetFilePath>
+					<targetFilePath>/home/antonio/Downloads/Scipion/testFileTransfer/localToLocal/other/BPV_1386.mrc</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>antonio@lineo:/home/antonio/Documents/Scipion/ScipionTestFiles/InputData/BPV_1387.mrc</sourceFilePath>
 				<targets>
-					<targetFilePath>antonio@lineo:/home/antonio/testFileTransfer/localToOneRemoteHost/other/BPV_1387.mrc</targetFilePath>
+					<targetFilePath>antonio@lineo:/home/antonio/Downloads/Scipion/testFileTransfer/localToLocal/other/BPV_1387.mrc</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>antonio@lineo:/home/antonio/Documents/Scipion/ScipionTestFiles/InputData/BPV_1388.mrc</sourceFilePath>
 				<targets>
-					<targetFilePath>antonio@lineo:/home/antonio/testFileTransfer/localToOneRemoteHost/other/BPV_1388.mrc</targetFilePath>
+					<targetFilePath>antonio@lineo:/home/antonio/Downloads/Scipion/testFileTransfer/localToLocal/other/BPV_1388.mrc</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>/home/antonio/Documents/Scipion/ScipionTestFiles/withSpaces/example 1</sourceFilePath>
 				<targets>
-					<targetFilePath>/home/antonio/testFileTransfer/localToOneRemoteHost/other/example rename 1</targetFilePath>
+					<targetFilePath>/home/antonio/Downloads/Scipion/testFileTransfer/localToLocal/other/example rename 1</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>/home/antonio/Documents/Scipion/ScipionTestFiles/withSpaces/example 2</sourceFilePath>
 				<targets>
-					<targetFilePath>/home/antonio/testFileTransfer/localToOneRemoteHost/other/example rename 2</targetFilePath>
+					<targetFilePath>/home/antonio/Downloads/Scipion/testFileTransfer/localToLocal/other/example rename 2</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>/home/antonio/Documents/Scipion/ScipionTestFiles/withSpaces/example 3</sourceFilePath>
 				<targets>
-					<targetFilePath>/home/antonio/testFileTransfer/localToOneRemoteHost/other/example rename 3</targetFilePath>
+					<targetFilePath>/home/antonio/Downloads/Scipion/testFileTransfer/localToLocal/other/example rename 3</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>/home/antonio/Documents/Scipion/ScipionTestFiles/InputData/float maps/emd_1648.map.gz</sourceFilePath>
 				<targets>
-					<targetFilePath>/home/antonio/testFileTransfer/localToOneRemoteHost/maps/emd_1648_renamed.map.gz</targetFilePath>
+					<targetFilePath>/home/antonio/Downloads/Scipion/testFileTransfer/localToLocal/maps/emd_1648_renamed.map.gz</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>antonio@lineo:/home/antonio/Documents/Scipion/ScipionTestFiles/InputData/integer maps/emd_1051.map.gz</sourceFilePath>
 				<targets>
-					<targetFilePath>antonio@lineo:/home/antonio/testFileTransfer/localToOneRemoteHost/maps/emd_1051_renamed.map.gz</targetFilePath>
+					<targetFilePath>antonio@lineo:/home/antonio/Downloads/Scipion/testFileTransfer/localToLocal/maps/emd_1051_renamed.map.gz</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>antonio@lineo:/home/antonio/Documents/Scipion/ScipionTestFiles/InputData/integer maps/emd_1052.map.gz</sourceFilePath>
 				<targets>
-					<targetFilePath>antonio@lineo:/home/antonio/testFileTransfer/localToOneRemoteHost/maps/emd_1052_renamed.map.gz</targetFilePath>
+					<targetFilePath>antonio@lineo:/home/antonio/Downloads/Scipion/testFileTransfer/localToLocal/maps/emd_1052_renamed.map.gz</targetFilePath>
 				</targets>
 			</transfer>
 			<transfer>
 				<sourceFilePath>/home/antonio/Documents/Scipion/ScipionTestFiles/InputData/integer maps/emd_1053.map.gz</sourceFilePath>
 				<targets>
-					<targetFilePath>/home/antonio/testFileTransfer/localToOneRemoteHost/maps/emd_1053_renamed.map.gz</targetFilePath>
+					<targetFilePath>/home/antonio/Downloads/Scipion/testFileTransfer/localToLocal/maps/emd_1053_renamed.map.gz</targetFilePath>
 				</targets>
 			</transfer>			
 		</transferList>
