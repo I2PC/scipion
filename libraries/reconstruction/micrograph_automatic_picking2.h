@@ -110,8 +110,9 @@ public:
 
 public:
 
-    /// Empty constructor
-
+    /// Constructor
+    AutoParticlePicking2(int particle_size, int filter_num = 6, int corr_num = 2, int NPCA = 4);
+    AutoParticlePicking2();
     /// Destructor
     ~AutoParticlePicking2();
 

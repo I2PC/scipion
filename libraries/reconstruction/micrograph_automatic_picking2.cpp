@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:    Carlos Oscar            coss@cnb.csic.es (2011)
- * 			   Vahid Abrishami         vabrishami@cnb.csic.es (2012)
+ *       Vahid Abrishami         vabrishami@cnb.csic.es (2012)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -33,6 +33,25 @@
 #include <algorithm>
 #include <classification/uniform.h>
 
+
+AutoParticlePicking2::AutoParticlePicking2()
+{
+
+}
+AutoParticlePicking2::AutoParticlePicking2(int particle_size, int filter_num, int corr_num, int NPCA)
+{
+	NRPCA=20;
+	double t=std::max(0.25,50.0/particle_size);
+    scaleRate=std::min(1.0,t);
+    particle_radius=(int)((particle_size*scaleRate)*0.5);
+    particle_size=particle_radius * 2;
+    NRsteps=particle_size/2-3;
+    NRPCA=20;
+    num_correlation=filter_num+((filter_num-corr_num)*corr_num);
+    num_features=num_correlation*NPCA+NRPCA+12;
+    classifier.setParameters(8.0, 0.125);
+    classifier2.setParameters(1.0, 0.25);
+}
 //Generate filter bank from the micrograph image
 void filterBankGenerator(MultidimArray<double> &inputMicrograph,
                          const FileName &fnFilterBankStack,
