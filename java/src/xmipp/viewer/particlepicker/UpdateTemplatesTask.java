@@ -39,9 +39,6 @@ public class UpdateTemplatesTask implements Task
 			if (f.getStep() != FamilyState.Manual)
 				return;
 
-			if (!picker.hasManualParticles(f))
-				return;
-
 			f.initTemplates();
 			ImageGeneric igp;
 			List<TrainingParticle> particles;
