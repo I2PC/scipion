@@ -105,7 +105,7 @@ class Image(EMObject):
         It will only differs from getFileName, when the image
         is contained in a stack and the index make sense. 
         """
-        return ImageLocation(None, self.getFileName()) # Return None as default index
+        return ImageLocation(None, self.getFileName()) # Return None as default index        
     
     def setLocation(self, index, filename):
         """ Set the image location, see getLocation. """
@@ -147,9 +147,10 @@ class SetOfImages(EMObject):
         self.samplingRate = Float()        
         self._ctf = Boolean(args.get('ctf', False))
         self._tiltPairs = Boolean(args.get('tiltPairs', False))
-        self._micList = [] # List with the micrographs
-        self._pairList = [] # List with images pairs
-        
+        self._mapper = None
+#        self._imgList = [] # List with the micrographs
+#        self._pairList = [] # List with images pairs
+       
     def getSize(self):
         """Return the number of images"""
         pass
@@ -160,43 +161,66 @@ class SetOfImages(EMObject):
     def setFileName(self, newFileName):
         self.set(newFileName)
     
-    def __getitem__(self, index):
-        """ Get the image with the given index. """
-        return self._micList[index]
+    def __getitem__(self, imgId):
+        """ Get the image with the given id. """
+        self.loadIfEmpty()
+        return self._mapper.selectById(imgId)
+
+    def __iter__(self):
+        """ Iterate over the set of images. """
+        self.loadIfEmpty()
+        return self._mapper.selectByClass("Image", iterate=True)
+        
+    def iterTiltPairs(self):
+        """Iterate over the tilt pairs if is the case"""
+        self.loadIfEmpty()
+        for tp in self._mapper.selectByClass("TiltedPair", iterate=True):
+            yield (tp.getUId(), tp.getTId())
     
-    def getImageIndex(self, iFn):
-        """ Get the index of the image with the given filename. """
-        for i, img in enumerate(self._micList):
-            if img.get() == iFn:
-                return i
-        return None
+    def write(self):
+        """This method will be used to persist in a file the
+        list of images path contained in this Set
+        path: output file path
+        images: list with the images path to be stored
+        """
+        #TODO: If mapper is in memory, do commit and dump to disk
+        self._mapper.commit()
         
     def hasCTF(self):
         """Return True if the SetOfImages has associated a CTF model"""
-        return self._ctf.get()        
+        return self._ctf.get()  
+    
+    def setCTF(self, ctf):
+        self._ctf.set(ctf)      
         
     def append(self, image):
-        """Add an image to the set"""
-        pass
+        """ Add a image to the set. """
+        image.samplingRate.set(self.samplingRate.get())
+        self.loadIfEmpty()
+        self._mapper.insert(image)
 
     def appendPair(self, iU, iT):
         """ Add a tilted pair relation to the set.
         Params:
-        iU: index in the set of the untilted image.
-        iT: index in the set of the tilted image. """
-        self._pairList.append((iU, iT)) 
+        iU: id of the untilted image.
+        iT: id of the tilted image. """
+        self.loadIfEmpty()
+        self._mapper.insert(TiltedPair(iU, iT))
 
     def copyInfo(self, other):
         """ Copy basic information (sampling rate, scannedPixelSize and ctf)
         from other set of images to current one"""
         self.copyAttributes(other, 'samplingRate', '_ctf', '_tiltPairs')
         
-    def copyTiltPairs(self, other):
+    def copyTiltPairs(self, other, idMap):
         """ Copy tilted pairs relation from other set of images 
-        to the current one """
+        to the current one.
+        Params:
+        other: set containing tilted pairs.
+        idMap: mapping between other ids to self ids. """
 
         for iU, iT in other.iterTiltPairs():
-            self.appendPair(iU, iT)
+            self.appendPair(idMap[iU], idMap[iT])
                 
     def hasTiltPairs(self):
         """ Return True it the SetOFImages has tilt pairs """
@@ -214,81 +238,21 @@ class SetOfImages(EMObject):
                 filePaths.add(item.ctfModel.getFiles())
         return filePaths
     
+    def getId(self, img):
+        """ Return the id of the image """
+        return self._mapper.selectBy(value= img.get())[0].getObjId()
     
-class SetOfMicrographs(SetOfImages):
-    """Represents a set of Micrographs"""
-    def __init__(self, filename=None, **args):
-        SetOfImages.__init__(self, filename, **args)
-        self.microscope = Microscope()
-        self.scannedPixelSize = Float()
+    def load(self):
+        """ Load extra data from files. """
+        if self.getFileName() is None:
+            raise Exception("Set filename before calling load()")
+        self._mapper = SqliteMapper(self.getFileName(), globals())
         
-        
-    def getMicroscope(self, index=0):
-        return self.microscope
-    
-    def hasCTF(self):
-        """ Return True if the SetOfMicrographs has associated a CTF model. """
-        return self._ctf.get()
-    
-    def append(self, micrograph):
-        """ Add a micrograph to the set. """
-        micrograph.samplingRate.set(self.samplingRate.get())
-        self._micList.append(micrograph)        
-    
-    def __getMicrographByIndex(self, micIndex):
-        """ Retrieve micrograph by index from micList """
-        if micIndex >= 0 and micIndex < len(self._micList):
-            return self._micList[micIndex]
-        #TODO:
-        return None
-        
-    def __loadFiles(self):
-        """ Read files from text files. """
-        mapper = SqliteMapper(self.getFileName(), globals())
-        # Retrieve all micrograph stored in our sub-sqlite
-        self._micList = mapper.selectByClass('Micrograph')
-        # Retrieve tilted pairs ids
-        pairsId = mapper.selectByClass('TiltedPair')
-
-        # Convert tilted ids in tilted micrographs tuples
-        for tp in pairsId:            
-            self.appendPair(tp.getUId(), tp.getTId())
-        
-    def __iter__(self):
-        """ Iterate over the set of micrographs. """
-        self.__loadFiles()
-        for m in self._micList:
-            yield m
-        
-    def iterTiltPairs(self):
-        """Iterate over the tilt pairs if is the case"""
-        self.__loadFiles()
-        return  self._pairList
-    
-    def write(self):
-        """This method will be used to persist in a file the
-        list of micrographs path contained in this Set
-        path: output file path
-        micrographs: list with the micrographs path to be stored
-        """
-        mapper = SqliteMapper(self.getFileName(), globals())
-        for i, mic in enumerate(self._micList):
-            mapper.insert(mic)
-            mic._index = i # set internal index to store pairs values
-
-        for iU, iT in self._pairList:
-            mapper.insert(TiltedPair(uId=iU, tId=iT))
-
-        mapper.commit()
-        
-    def copyInfo(self, other):
-        """ Copy basic information (voltage, spherical aberration and sampling rate)
-        from other set of micrographs to current one.
-        """
-        SetOfImages.copyInfo(self, other)
-        self.microscope.copyInfo(other.microscope)
-        self.scannedPixelSize.set(other.scannedPixelSize.get())
-        
+    def loadIfEmpty(self):
+        """ Load data only if the main set is empty. """
+        if self._mapper is None:
+            self.load()
+            
     def setDownsample(self, downFactor):
         """ Update the values of samplingRate and scannedPixelSize
         after applying a downsampling factor of downFactor.
@@ -304,6 +268,34 @@ class SetOfMicrographs(SetOfImages):
         """ Set scannedPixelSize and update samplingRate. """
         self.scannedPixelSize.set(scannedPixelSize)
         self.samplingRate.set((1e+4 * scannedPixelSize) / self.microscope.magnification.get())
+    
+    
+class SetOfMicrographs(SetOfImages):
+    """Represents a set of Micrographs"""
+    def __init__(self, filename=None, **args):
+        SetOfImages.__init__(self, filename, **args)
+        self.microscope = Microscope()
+        self.scannedPixelSize = Float()
+        
+        
+    def getMicroscope(self, index=0):
+        return self.microscope
+    
+#    def __getMicrographByIndex(self, micIndex):
+#        """ Retrieve micrograph by index from imgList """
+#        if micIndex >= 0 and micIndex < len(self._imgList):
+#            return self._imgList[micIndex]
+#        #TODO:
+#        return None
+        
+    def copyInfo(self, other):
+        """ Copy basic information (voltage, spherical aberration and sampling rate)
+        from other set of micrographs to current one.
+        """
+        SetOfImages.copyInfo(self, other)
+        self.microscope.copyInfo(other.microscope)
+        self.scannedPixelSize.set(other.scannedPixelSize.get())
+
     
 
 class Coordinate(EMObject):

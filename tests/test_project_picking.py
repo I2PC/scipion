@@ -32,7 +32,7 @@ l = proj.mapper.selectByClass('SetOfMicrographs')
 # l = proj.mapper.selectAll()
 
 for p in l:
-    if p.getId() == prot2.outputMicrographs.getId():
+    if p.getObjId() == prot2.outputMicrographs.getObjId():
         break
 
 if len(l):    

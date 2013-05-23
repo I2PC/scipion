@@ -84,8 +84,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
 
     def createOutput(self):
         # Create micrographs metadata with CTF information
-        mdOut = xmipp.FileName("Micrographs@" + 
-                         self._getPath(self._getFilename('micrographs')))        
+        mdOut = xmipp.FileName(self._getPath(self._getFilename('micrographs')))        
         micSet = XmippSetOfMicrographs(str(mdOut))
         
         # Label to set values in metadata
@@ -93,8 +92,10 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         # Filenames key related to ctf estimation
         keys = ['psd', 'enhanced_psd', 'ctfparam', 'ctfmodel_quadrant', 'ctfmodel_halfplane']
         
-        for fn, micDir, _ in self._iterMicrographs():
-            mic = XmippMicrograph(fn)
+        mapsId = {}
+        
+        for fn, micDir, mic in self._iterMicrographs():
+            xmic = XmippMicrograph(fn)
             ctfparam = self._getFilename('ctfparam', micDir=micDir)
             if exists(ctfparam): # Get filenames
                 values = [self._getFilename(key, micDir=micDir) for key in keys]
@@ -103,25 +104,34 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
     
             # Set values to the micrograph
             for l, v in zip(labels, values):
-                mic.setValue(l, v)
-            micSet.append(mic)
-            
-        micSet.sort()
+                xmic.setValue(l, v)
+            micSet.append(xmic)
+            mapsId[self.inputMics.getId(mic)] = micSet.getId(xmic)
+         
+        #TODO: Verificar con J.M. para que vale este sort
+        #micSet.sort()
         
+        #Copy attributes from input to output micrographs
+        micSet.copyInfo(self.inputMics)   
+         
         # If input micrographs have tilt pairs copy the relation
         if self.inputMics.hasTiltPairs():
-            micSet.copyTiltPairs(self.inputMics)
+            
+            #TODO: FILL mapIds
+            micSet.copyTiltPairs(self.inputMics, mapsId)
             
         micSet.write()
             
         auxMdOut = xmipp.FileName("Micrographs@" + 
                             self._getTmpPath(self._getFilename('micrographs')))
         self.runJob(None,"xmipp_ctf_sort_psds","-i %s -o %s" % (mdOut, auxMdOut))
+        
         self.runJob(None,"mv","-f %s %s" % (auxMdOut.removeBlockName(),
                                        mdOut.removeBlockName()))
-            
-        # Create the SetOfMicrographs object on the database
-        micSet.copyInfo(self.inputMics)
+        #auxMd = xmipp.MetaData()
+        #auxMd.read(auxMdOut.removeBlockName())
+        #micSet.mergeFromMd(auxMd)         
+
         # This property should only be set by CTF estimation protocols
-        micSet._ctf.set(True)       
+        micSet.setCTF(True)       
         self._defineOutputs(outputMicrographs=micSet)
