@@ -245,10 +245,9 @@ enum MDLabel
     MDL_PHANTOM_SCALE, ///< Number which will multiply all features (double)
 
     MDL_COLOR, ///< Color for particle picking
-    MDL_PICKING_FAMILY, ///< Family for particle picking
-    MDL_PICKING_FAMILY_TEMPLATES, ///< Number of templates for the family
-    MDL_PICKING_FAMILY_STATE, ///< Family state for particle picking
-    MDL_PICKING_MICROGRAPH_FAMILY_STATE, ///< Micrograph family state for particle picking
+    MDL_PICKING_TEMPLATES, ///< Number of templates
+    MDL_PICKING_STATE, ///< State for particle picking
+    MDL_PICKING_MICROGRAPH_STATE, ///< Micrograph state for particle picking
     MDL_PICKING_AUTOPICKPERCENT,
     MDL_PICKING_PARTICLE_SIZE, ///< Particle size for particle picking
     MDL_PMAX, ///< Maximum value of normalized probability function (now called "Pmax/sumP") (double)
@@ -973,15 +972,13 @@ private:
         MDL::addLabel(MDL_PHANTOM_FEATURE_SPECIFIC, LABEL_VECTOR_DOUBLE, "featureSpecificVector");
         MDL::addLabel(MDL_PHANTOM_FEATURE_TYPE, LABEL_STRING, "featureType");
         MDL::addLabel(MDL_COLOR, LABEL_INT, "color");
-        MDL::addLabel(MDL_PICKING_FAMILY, LABEL_STRING, "pickingFamily");
-        MDL::addLabelAlias(MDL_PICKING_FAMILY, "family");//3.0
-        MDL::addLabel(MDL_PICKING_FAMILY_STATE, LABEL_STRING, "pickingFamilyState");
-        MDL::addLabelAlias(MDL_PICKING_FAMILY_STATE, "family_state");//3.0
-        MDL::addLabel(MDL_PICKING_MICROGRAPH_FAMILY_STATE, LABEL_STRING, "pickingMicrographFamilyState");
-        MDL::addLabelAlias(MDL_PICKING_MICROGRAPH_FAMILY_STATE, "micrograph_family_state");//3.0
+        MDL::addLabel(MDL_PICKING_STATE, LABEL_STRING, "pickingState");
+        MDL::addLabelAlias(MDL_PICKING_STATE, "picking_state");//3.0
+        MDL::addLabel(MDL_PICKING_MICROGRAPH_STATE, LABEL_STRING, "pickingMicrographState");
+        MDL::addLabelAlias(MDL_PICKING_MICROGRAPH_STATE, "micrograph_state");//3.0
         MDL::addLabel(MDL_PICKING_PARTICLE_SIZE, LABEL_INT, "particleSize");
         MDL::addLabel(MDL_PICKING_AUTOPICKPERCENT, LABEL_INT, "autopickPercent");
-        MDL::addLabel(MDL_PICKING_FAMILY_TEMPLATES, LABEL_INT, "templatesNum");
+        MDL::addLabel(MDL_PICKING_TEMPLATES, LABEL_INT, "templatesNum");
         MDL::addLabel(MDL_PMAX, LABEL_DOUBLE, "pMax");
         MDL::addLabelAlias(MDL_PMAX, "Pmax");
         MDL::addLabelAlias(MDL_PMAX, "sumP");

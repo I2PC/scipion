@@ -275,7 +275,7 @@ public class SingleParticlePicker extends ParticlePicker
 			else
 			{
 				id = md.addObject();
-				md.setValueString(MDLabel.MDL_PICKING_MICROGRAPH_FAMILY_STATE, tm.getState().toString(), id);
+				md.setValueString(MDLabel.MDL_PICKING_MICROGRAPH_STATE, tm.getState().toString(), id);
 				md.setValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, getAutopickpercent(), id);
 				md.writeBlock("header@" + file);
 				md = new MetaData();
@@ -370,10 +370,10 @@ public class SingleParticlePicker extends ParticlePicker
 			{
 				if (hasautopercent)
 					autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
-				templatesNumber = md.getValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, id);
+				templatesNumber = md.getValueInt(MDLabel.MDL_PICKING_TEMPLATES, id);
 				if (templatesNumber == null || templatesNumber == 0)
 					templatesNumber = 1;//for compatibility with previous projects
-				mode = Mode.valueOf(md.getValueString(MDLabel.MDL_PICKING_FAMILY_STATE, id));
+				mode = Mode.valueOf(md.getValueString(MDLabel.MDL_PICKING_STATE, id));
 
 			}
 			md.destroy();
@@ -392,8 +392,8 @@ public class SingleParticlePicker extends ParticlePicker
 			super.saveConfig(md, id);
 			md.setValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, getAutopickpercent(), id);
 
-			md.setValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, getTemplatesNumber(), id);
-			md.setValueString(MDLabel.MDL_PICKING_FAMILY_STATE, mode.toString(), id);
+			md.setValueInt(MDLabel.MDL_PICKING_TEMPLATES, getTemplatesNumber(), id);
+			md.setValueString(MDLabel.MDL_PICKING_STATE, mode.toString(), id);
 
 		}
 		catch (Exception e)
@@ -718,8 +718,6 @@ public class SingleParticlePicker extends ParticlePicker
 			if (getMode() != Mode.Manual)
 				return;
 
-			
-
 			initTemplates();
 			ImageGeneric igp;
 			List<TrainingParticle> particles;
@@ -749,6 +747,7 @@ public class SingleParticlePicker extends ParticlePicker
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
+
 	public synchronized void addParticleToTemplates(TrainingParticle particle)
 	{
 		try
@@ -764,7 +763,6 @@ public class SingleParticlePicker extends ParticlePicker
 
 			}
 			saveTemplates();
-			
 
 		}
 		catch (Exception e)
@@ -773,8 +771,6 @@ public class SingleParticlePicker extends ParticlePicker
 		}
 
 	}
-	
-	
 
 	public boolean hasManualParticles()
 	{
@@ -847,7 +843,7 @@ public class SingleParticlePicker extends ParticlePicker
 			boolean hasautopercent = md.containsLabel(MDLabel.MDL_PICKING_AUTOPICKPERCENT);
 			for (long id : md.findObjects())
 			{
-				state = MicrographState.valueOf(md.getValueString(MDLabel.MDL_PICKING_MICROGRAPH_FAMILY_STATE, id));
+				state = MicrographState.valueOf(md.getValueString(MDLabel.MDL_PICKING_MICROGRAPH_STATE, id));
 				if (hasautopercent)
 					autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
 				else
@@ -938,16 +934,20 @@ public class SingleParticlePicker extends ParticlePicker
 				int filternum = 6;
 				int NPCA = 4;
 				int NCORR = 2;
+				String modelroot = getOutputPath(model);
 
 				for (TrainingMicrograph micrograph : getMicrographs())
 				{
 					if (!micrograph.isEmpty())
 					{
-						runXmippProgram("xmipp_micrograph_automatic_picking", String.format(args, micrograph.getFile(),// -i
+						args = String.format(args, micrograph.getFile(),// -i
 								getSize(), // --particleSize
-								getOutputPath(model),// --model
+								modelroot,// --model
 								getOutputPath(micrograph.getName()), // --outputRoot
-								getOutputPath(micrograph.getPosFile()), filternum, NPCA, NCORR));
+								getOutputPath(micrograph.getPosFile()), filternum, NPCA, NCORR);
+						System.out.println(args);
+						runXmippProgram("xmipp_micrograph_automatic_picking", args);
+
 					}
 				}
 				args = "-i %s --particleSize %s --model %s --outputRoot %s --mode train";
@@ -956,14 +956,35 @@ public class SingleParticlePicker extends ParticlePicker
 				if (isIncore())
 					args += " --in_core";
 
-				runXmippProgram("xmipp_micrograph_automatic_picking", String.format(args, getOutputPath(model) + "_particle_avg.xmp",//this is temporarily so it works
+				args = String.format(args, modelroot + "_particle_avg.xmp",//this is temporarily so it works
 						getSize(), // --particleSize
-						getOutputPath(model),// --model
-						getOutputPath(model) // --outputRoot
-						));// train
+						modelroot,// --model
+						modelroot // --outputRoot
+						);// train
+				System.out.println(args);
+				runXmippProgram("xmipp_micrograph_automatic_picking", args);
+
+				if (getMicrograph().getState() == MicrographState.Manual)//autopick on current micrograph
+				{
+					args = "-i %s --particleSize %s --model %s --outputRoot %s --mode try --thr %s --autoPercent %s";
+					if (isFastMode())
+						args += " --fast";
+					if (isIncore())
+						args += " --in_core";
+					args = String.format(args, micrograph.getFile(),// -i
+							getSize(), // --particleSize
+							modelroot,// --model
+							modelroot,// --outputRoot
+							getThreads(),//
+							micrograph.getAutopickpercent()// --thr
+							);
+					runXmippProgram("xmipp_micrograph_automatic_picking", args);
+					loadAutomaticParticles(getMicrograph());
+				}
 
 				XmippWindowUtil.releaseGUI(frame.getRootPane());
 				frame.getCanvas().setEnabled(true);
+				saveConfig();
 			}
 			catch (Exception e)
 			{
@@ -991,13 +1012,18 @@ public class SingleParticlePicker extends ParticlePicker
 				args += " --fast";
 			if (isIncore())
 				args += " --in_core";
-			runXmippProgram("xmipp_micrograph_automatic_picking", String.format(args, micrograph.getFile(),// -i
+			
+			String modelroot = getOutputPath(model);
+			
+			args = String.format(args, micrograph.getFile(),// -i
 					getSize(), // --particleSize
-					getOutputPath(model),// --model
-					getOutputPath(model),// --outputRoot
+					modelroot,// --model
+					modelroot,// --outputRoot
 					getThreads(),//
 					micrograph.getAutopickpercent()// --thr
-					));
+					);
+			
+			runXmippProgram("xmipp_micrograph_automatic_picking", args);
 			loadAutomaticParticles(getMicrograph());
 
 			frame.getCanvas().repaint();
