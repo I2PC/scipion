@@ -106,7 +106,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
             for l, v in zip(labels, values):
                 xmic.setValue(l, v)
             micSet.append(xmic)
-            mapsId[self.inputMics.getId(mic)] = micSet.getId(xmic)
+            mapsId[mic.getId()] = xmic.getId()
          
         #TODO: Verificar con J.M. para que vale este sort
         #micSet.sort()
@@ -122,15 +122,14 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
             
         micSet.write()
             
-        auxMdOut = xmipp.FileName("Micrographs@" + 
-                            self._getTmpPath(self._getFilename('micrographs')))
+        auxMdOut = xmipp.FileName(self._getTmpPath('micrographs.xmd'))
         self.runJob(None,"xmipp_ctf_sort_psds","-i %s -o %s" % (mdOut, auxMdOut))
         
-        self.runJob(None,"mv","-f %s %s" % (auxMdOut.removeBlockName(),
-                                       mdOut.removeBlockName()))
-        #auxMd = xmipp.MetaData()
-        #auxMd.read(auxMdOut.removeBlockName())
-        #micSet.mergeFromMd(auxMd)         
+        md = xmipp.MetaData(auxMdOut)
+        md.write(micSet._getListBlock(), xmipp.MD_APPEND)
+        
+#        self.runJob(None,"mv","-f %s %s" % (auxMdOut.removeBlockName(),
+#                                       mdOut.removeBlockName()))       
 
         # This property should only be set by CTF estimation protocols
         micSet.setCTF(True)       

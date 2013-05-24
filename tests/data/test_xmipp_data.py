@@ -83,7 +83,7 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
         for mic in setMics:
             xmic = XmippMicrograph(mic.getFileName())
             xmippSet.append(xmic)
-            mapsId[setMics.getId(mic)] = xmippSet.getId(xmic)
+            mapsId[mic.getId()] = xmic.getId()
             
         xmippSet.copyInfo(setMics)
         
@@ -91,21 +91,6 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
         if setMics.hasTiltPairs():
             xmippSet.copyTiltPairs(setMics, mapsId)
             
-        xmippSet.write()
-        
-    def testMerge(self):
-        
-        mdCtfFn = '/home/laura/Scipion_Projects/tests/micrographs_ctf.xmd'
-        mdCtfOut = '/home/laura/Scipion_Projects/tests/micrographs_out.xmd'
-        
-        mdCtf = xmipp.MetaData(mdCtfFn) 
-        
-        md = xmipp.MetaData('TiltedPairs@' + self.mdFn)
-        
-        xmippSet = XmippSetOfMicrographs(mdCtfOut)
-        
-        xmippSet.appendFromMd(md)
-        
         xmippSet.write()
         
     def createSetOfMicrographs(self):

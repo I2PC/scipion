@@ -44,7 +44,6 @@ function evalDependencies(row) {
 		var arrayDepends = dependencies.split(",");
 		for ( var cont = 0; cont < arrayDepends.length; cont++) {
 			var res = evalCondition(arrayDepends[cont]);
-			// alert(res);
 			if (res == false) {
 				jQuery("tr#" + arrayDepends[cont]).hide();
 			} else if (res == true) {
@@ -99,7 +98,7 @@ function help(title, msg) {
  * Browse object in the database. Params: objClass: the class to get instances
  * from (also subclasses)
  */
-function browseObjects(objClass) {
+function browseObjects(node, objClass) {
 	$.ajax({
 		type : "GET",
 		url : "/browse_objects/?objClass=" + objClass,
@@ -107,16 +106,27 @@ function browseObjects(objClass) {
 		success : function(json) {
 			// specifying a dataType of json makes jQuery pre-eval the response
 			// for us
-			// alert(json.objects);
-			selectObjects('Select ' + objClass, json.objects.toString())
+			var res = getTableFormatted(node, json.objects, objClass);
+			selectObjects(objClass, res);
 
 		}
 	});
 }
 
-function selectObjects(title, msg) {
+function getTableFormatted(node, list, id) {
+	var res = "<div id='browse' style='overflow:auto' data-node='" + node
+			+ "'>";
+	for ( var x = 0; x < list.length; x++) {
+		res = res + "<input type='radio' id ='" + id + x + "' name='" + id
+				+ "'  value='" + list[x] + "' />" + list[x] + "<br />";
+	}
+	res = res + "</div>";
+	return res;
+}
+
+function selectObjects(objClass, msg) {
 	new Messi(msg, {
-		title : title,
+		title : 'Select' + objClass,
 		modal : true,
 		buttons : [ {
 			id : 0,
@@ -128,13 +138,22 @@ function selectObjects(title, msg) {
 			label : 'Cancel',
 			val : 'C',
 			btnClass : 'btn-cancel'
-		} ],
-		callback : function(val) {
-			if (val == 'Y') {
-				alert('You are selected one');
-			}
+		} ]
+	// callback : function(val) {
+	// if (val == 'Y') {
+	// alert();
+	// }
+	// }
+	});
+}
+
+function processSelection(elm) {
+	elm.children('input').each(function() {
+		if (jQuery(this).attr('checked')) {
+			elm.val(jQuery(this).attr('value'));
 		}
 	});
+	jQuery('input#' + elm.attr('data-node')).val(elm.attr('value'));
 }
 
 function filemanager(elm, type, name) {

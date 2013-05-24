@@ -75,6 +75,9 @@ class Image(EMObject):
         self.samplingRate = Float()
         self.ctfModel = None
         
+    def getId(self):
+        return self.getObjId()
+    
     def getFormat(self):
         pass
     
@@ -237,10 +240,6 @@ class SetOfImages(EMObject):
                 # ctf is a XMippCTFModel
                 filePaths.add(item.ctfModel.getFiles())
         return filePaths
-    
-    def getId(self, img):
-        """ Return the id of the image """
-        return self._mapper.selectBy(value= img.get())[0].getObjId()
     
     def load(self):
         """ Load extra data from files. """

@@ -1,6 +1,45 @@
-function evalDependencies(aux) {
-	var name = aux.attr('name');
-	var row = jQuery("tr#" + name);
+function evalElements() {
+	alert("hola");
+	$("tr").each(function(index) {
+		var value = jQuery(this).attr('data-value');
+		var type = jQuery(this).attr('data-type');
+		var param = jQuery(this).attr('id');
+
+		if (type == "BooleanParam") {
+			onChangeBooleanParam(value, param);
+		} else if (type == "EnumParam") {
+			var typeEnum = jQuery(this).attr('data-enum');
+			if (typeEnum == '0') {
+				onChangeEnumParamList(value, param);
+			} else if (typeEnum == '1') {
+				onChangeEnumParamCombo(param + "_select", param);
+			}
+		}
+	});
+}
+
+/* Differents functions depends on the input type */
+function onChangeBooleanParam(value, paramId) {
+	setParamValue(paramId, value);
+}
+
+function onChangeEnumParamCombo(elemId, paramId) {
+	var elem = document.getElementById(elemId);
+	setParamValue(paramId, elem.selectedIndex);
+}
+
+function onChangeEnumParamList(index, paramId) {
+	setParamValue(paramId, index);
+}
+
+// Put the new value in an attribute of the parent node
+function setParamValue(paramId, value) {
+	var row = jQuery("tr#" + paramId);
+	row.val(value);
+	evalDependencies(row);
+}
+
+function evalDependencies(row) {
 	var dependencies = row.attr('data-depen');
 	if (dependencies.length > 0) {
 		var arrayDepends = dependencies.split(",");
@@ -15,47 +54,8 @@ function evalDependencies(aux) {
 	}
 }
 
-function getValueByName(itemName) {
-	var row = jQuery("tr#" + itemName);
-	/*
-	 * Get the type of the input with the next cases: BooleanParam, StringParam,
-	 * EnumParam (type select or inputs)
-	 */
-	var type = row.attr('data-type');
-	var value = null;
-
-	if (type == 'BooleanParam') {
-		value = jQuery("input#" + itemName + "_yes").attr('checked')
-	} else if (type == 'StringParam') {
-		value = jQuery("input#" + itemName + "_input").attr('value');
-	} else if (type == 'FloatParam') {
-		value = jQuery("input#" + itemName + "_input").attr('value');
-	} else if (type == 'EnumParam') {
-		var enumType = row.attr('data-enum');
-		if (enumType == '1') {
-			var elm = jQuery("select#" + itemName + "_select");
-			value = elm.attr('value');
-		} else if (enumType == '0') {
-			var cont = 0;
-			var enc = 0;
-			while (!enc) {
-				var opt = jQuery("input#" + itemName + "_" + cont);
-				if (opt.attr('checked') == true) {
-					value = cont;
-					value = opt.attr('value');
-					enc = 1;
-				}
-				cont++;
-			}
-		}
-	}
-	// alert("getValue: " + itemName + "=" + value);
-	return value;
-}
-
 function evalCondition(itemName) {
 	var row = jQuery("tr#" + itemName);
-	var type = row.attr('data-type');
 	var cond = row.attr('data-cond');
 	var params = row.attr('data-params');
 
@@ -68,21 +68,94 @@ function evalCondition(itemName) {
 
 	for ( var cont = 0; cont < arrayParams.length; cont++) {
 		param = arrayParams[cont];
-		value = getValueByName(param);
+		// value = getValueByName(param);
+		value = jQuery("tr#" + param).val();
 		cond_eval = cond_eval.replace(param, value);
 	}
-
 	// alert("condition: " + cond + " eval: " + cond_eval);
-	return eval(cond_eval);
+	if (cond_eval == "True") {
+		return true;
+	} else if (cond_eval == "False") {
+		return false;
+	} else {
+		return eval(cond_eval);
+	}
 }
 
-function help(msg) {
+function help(title, msg) {
 	new Messi(msg, {
-		title : 'Help',
+		title : 'Help' + ' ' + title,
+		modal : true,
 		buttons : [ {
 			id : 0,
 			label : 'Close',
-			val : 'X'
+			val : 'X',
+			btnClass : 'btn-close'
 		} ]
 	});
+}
+
+/*
+ * Browse object in the database. Params: objClass: the class to get instances
+ * from (also subclasses)
+ */
+function browseObjects(objClass) {
+	$.ajax({
+		type : "GET",
+		url : "/browse_objects/?objClass=" + objClass,
+		dataType : "json",
+		success : function(json) {
+			// specifying a dataType of json makes jQuery pre-eval the response
+			// for us
+			// alert(json.objects);
+
+			//Generate the list formatted
+			var array = json.objects;
+			var res = getTableFormatted(array);
+
+			selectObjects('Select ' + objClass, res);
+
+		}
+	});
+}
+
+function getTableFormatted(list){
+	var res = "<div style='overflow:auto'>
+	<table class='browse' id='browse' cellspacing='0'>";
+	for(var x=0;x<list.length;x++){
+		res = res + "<tr id='browse'>
+		<td id='browse'><a id='browse' href=''>"+ list[x] + 
+		"</a></td></tr>";
+	}
+	res = res + "</table></div>";
+	return res;
+}
+
+function selectObjects(title, msg) {
+	new Messi(msg, {
+		title : title,
+		modal : true,
+		buttons : [ {
+			id : 0,
+			label : 'Select',
+			val : 'Y',
+			btnClass : 'btn-select'
+		}, {
+			id : 1,
+			label : 'Cancel',
+			val : 'C',
+			btnClass : 'btn-cancel'
+		} ],
+		callback : function(val) {
+			if (val == 'Y') {
+				alert('You are selected one');
+			}
+		}
+	});
+}
+
+function filemanager(elm, type, name) {
+	alert(elm + " " + type + " " + name);
+	// document.getElementById(elm).innerText = document
+	// .getElementById('openssme').value
 }
