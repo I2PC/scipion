@@ -183,12 +183,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		}
 	}
 
-	@Override
-	protected void resetData()
-	{
-		getMicrograph().reset();
-		ppicker.initUpdateTemplates();
-	}
+	
 
 	@Override
 	public String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty)
@@ -612,6 +607,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		canvas.refreshActive(null);
 		updateMicrographsModel();
 		setState(MicrographState.Available);
+		ppicker.initUpdateTemplates();
 	}
 
 	private void setState(MicrographState state)
