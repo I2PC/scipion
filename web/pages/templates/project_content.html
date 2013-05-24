@@ -18,7 +18,7 @@
 					<ul>
 						{% for prot in section.childs %} {% if prot.tag == 'protocol'%}
 						<li><span class="protocol"><a
-								href="javascript:popup('/formTable/?project_name={{project_name}}&protocol={{prot.name}}')">{{prot.name}}</a></span></li>
+								href="javascript:popup('/form/?project_name={{project_name}}&protocol={{prot.name}}')">{{prot.name}}</a></span></li>
 						{% elif prot.tag == 'protocol_base' %}
 						<li>
 							<span class="protocol_base">{{prot.name}}</span>
@@ -26,7 +26,7 @@
 								{% for prot2 in prot.childs %}
 									<li>
 										<span class="protocol_class"> 
-											<a href="javascript:popup('/formTable/?project_name={{project_name}}&protocol={{prot2.name}}')">
+											<a href="javascript:popup('/form/?project_name={{project_name}}&protocol={{prot2.name}}')">
 												{{prot2.name}} 
 											</a>
 										</span>
@@ -51,7 +51,7 @@
 			</tr>
 			{% for obj in provider.getObjects %}
 				<tr>
-					<td><a href="javascript:popup('/formTable/?project_name={{project_name}}&protocolId={{obj.getId}}')">{{obj.getName}}</a></td>
+					<td><a href="javascript:popup('/form/?project_name={{project_name}}&protocolId={{obj.getObjId}}')">{{obj.getName}}</a></td>
 					<td>{{obj.status.get}}</td>
 					<td>{{obj.endTime.get}}</td>
 				</tr>
