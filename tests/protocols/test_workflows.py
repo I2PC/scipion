@@ -45,7 +45,7 @@ class TestNormalWorkflow(unittest.TestCase):
         print "Running fake particle picking..."   
         protPP = XmippProtParticlePicking(importFolder=self.importFolder)
                 
-        protPP.inputMicrographs.set(protDownsampling.outputMicrographs)
+        protPP.inputMicrographs.set(protCTF.outputMicrographs)
         
         self.proj.launchProtocol(protPP, wait=True)
             
