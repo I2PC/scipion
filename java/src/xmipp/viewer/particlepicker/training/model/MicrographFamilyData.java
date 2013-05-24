@@ -88,7 +88,7 @@ public class MicrographFamilyData
 	}
 
 
-	public void addManualParticle(TrainingParticle p, ParticlePicker picker, boolean center, boolean totemplates)
+	public void addManualParticle(TrainingParticle p, TrainingPicker picker, boolean center, boolean totemplates)
 	{
 		try
 		{
@@ -113,7 +113,7 @@ public class MicrographFamilyData
 							String.format("Micrograph %s could not update its state to %s and can't keep previous state %s and have particles", micrograph
 									.getName(), state, MicrographFamilyState.Available));
 			}
-			if (center)
+			if (center && picker.getManualParticlesNumber(family) > family.getTemplatesNumber())
 				family.centerParticle(p);
 			if (totemplates && family.getStep() == FamilyState.Manual)
 				TasksManager.getInstance().addTask(new ParticleToTemplatesTask(p));
