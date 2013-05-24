@@ -62,19 +62,19 @@ class ScriptChimeraClient(XmippScript):
                 spline_degree = BSPLINE3
             elif spline_degree_str.lower() == 'BSPLINE4'.lower():
                 spline_degree = BSPLINE4
-            print spline_degree
+#            print spline_degree
 		              
        
 		
 
         serverfile = getXmippPath('libraries/bindings/chimera/xmipp_chimera_server.py')
         system("chimera %s  &" % serverfile)
-#        if isprojector:
-#			XmippProjectionExplorer(volfile, angulardistfile, spheres_color, spheres_distance, spheres_maxradius, padding_factor, max_freq, spline_degree)
+        if isprojector:
+			XmippProjectionExplorer(volfile, angulardistfile, spheres_color, spheres_distance, spheres_maxradius, padding_factor, max_freq, spline_degree)
 #			print 'created projection explorer'
-#        elif mode == 'viewer':
-#			client = XmippChimeraClient(volfile, angulardistfile, spheres_color, spheres_distance, spheres_maxradius)
-#			client.listen()
+        elif mode == 'viewer':
+			client = XmippChimeraClient(volfile, angulardistfile, spheres_color, spheres_distance, spheres_maxradius)
+			client.listen()
 #			print 'created chimera client'
 
 

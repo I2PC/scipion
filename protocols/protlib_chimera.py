@@ -67,7 +67,7 @@ class XmippChimeraClient:
         self.initVolumeData()
         self.spheres_color = spheres_color
         self.spheres_distance = float(spheres_distance) if not spheres_distance == 'default' else max(self.xdim, self.ydim, self.zdim)
-        print self.spheres_distance
+#        print self.spheres_distance
         self.spheres_maxradius = float(spheres_maxradius) if not spheres_maxradius == 'default' else 0.02 * self.spheres_distance
       
         printCmd('openVolumeOnServer')
@@ -98,7 +98,7 @@ class XmippChimeraClient:
        
     
     def send(self, cmd, data):
-        print cmd
+#        print cmd
         self.client.send(cmd)
         self.client.send(data)
         
@@ -209,5 +209,5 @@ class XmippProjectionExplorer(XmippChimeraClient):
             
 def printCmd(cmd):
         timeformat = "%S.%f" 
-        print datetime.now().strftime(timeformat) + ' %s'%cmd
+        #print datetime.now().strftime(timeformat) + ' %s'%cmd
 

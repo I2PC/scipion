@@ -88,7 +88,7 @@ public class MicrographFamilyData
 	}
 
 
-	public void addManualParticle(TrainingParticle p, ParticlePicker picker, boolean center, boolean totemplates)
+	public void addManualParticle(TrainingParticle p, TrainingPicker picker, boolean center, boolean totemplates)
 	{
 		try
 		{
