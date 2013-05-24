@@ -798,7 +798,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		XmippApplication.removeInstance();
 	}
 
-	protected abstract void resetData();
 
 	public abstract String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty);
 

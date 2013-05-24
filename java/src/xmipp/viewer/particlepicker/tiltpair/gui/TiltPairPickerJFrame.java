@@ -383,13 +383,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		XmippWindowUtil.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Micrograph__picking_v3");
 	}
 
-	@Override
-	protected void resetData(){
-		pppicker.resetAllMicrographs();		
-		canvas.refreshActive(null);
-		updateMicrographsModel();
-		setChanged(true);
-	}
+	
 	
 	public void importParticlesFromFiles(Format format, String file1, String file2, float scale, boolean invertx, boolean inverty){
 			

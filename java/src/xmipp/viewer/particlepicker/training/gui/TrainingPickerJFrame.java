@@ -596,6 +596,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		canvas.refreshActive(null);
 		updateMicrographsModel();
 		setState(MicrographFamilyState.Available);
+		ppicker.updateTemplates();
 	}
 
 	private void setState(MicrographFamilyState state)
@@ -963,12 +964,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		}
 	}
 
-	@Override
-	protected void resetData()
-	{
-		getFamilyData().reset();
-	}
-
+	
 	public boolean isCenterParticle()
 	{
 		return centerpickchb.isSelected();
