@@ -56,7 +56,7 @@
 					<td class="ico"><a href="javascript:help('{{paramName}}','{{param.help.get}}');"><img src={{help}} /></a></td>
 				{% if param.getClassName == "PointerParam" %}
 					<td class="ico">
-					<a href="javascript:browseObjects('{{param.pointerClass.get}}');"><img src={{browse}}/></a>
+					<a href="javascript:browseObjects('{{paramName}}_input','{{param.pointerClass.get}}');"><img src={{browse}}/></a>
 	<!-- 				<input type="image" class="red" src="{{browse}}" id="" value="Open File"> -->
 					</td>
 				{% endif %}

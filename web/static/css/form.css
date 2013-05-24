@@ -1,25 +1,45 @@
 /* CSS Document */
 html,body {
-	background-color: rgb(235, 235, 235);
+	background-color: rgb(240, 245, 230);
 }
 
 input {
 	background: LightGray;
 }
 
+input.hide2 {
+	position: relative;
+	filter: alpha(opacity : 0);
+	width: 9.7em;
+	cursor: pointer;
+}
+
+input.hide {
+	position: fixed;
+	-moz-opacity: 0;
+	filter: alpha(opacity :   0);
+	opacity: 0;
+	margin: 0.5em;
+	width: 1.5em;
+	height: 2em;
+	cursor: pointer;
+}
+
+textarea {
+	resize: vertical;
+	background: LightGray;
+	max-height: 9em;
+}
+
 .box {
+	background: white;
 	margin: 0.3em;
-	width: 30em;
+	width: 26.5em;
 	height: 30em;
 	overflow-y: scroll;
 	overflow-x: hidden;
 	padding-right: 0.5em;
-	margin-top: -1.4em
-}
-
-.section {
-	margin-bottom: -0.5em;
-	background: white;
+	margin-top: -1em
 }
 
 .title {
@@ -29,27 +49,20 @@ input {
 	border-top: 2.5px solid FireBrick;
 	font-size: 0.9em;
 	font-weight: bold;
-	margin-bottom: 0em;
 }
 
-.element {
-	width: 27em;
-	margin: 0.4em;
+.elementHide {
+	display: none;
 }
 
 .recommended {
 	font-weight: bold;
+	text-align: right;
 }
 
 .normal {
 	font-weight: normal;
-}
-
-.boolean {
-	/* 		border: 1px solid lightgray; */
-	width: auto;
-	margin: 0 0.2em 0 0.2em;
-	font-weight: normal;
+	text-align: right;
 }
 
 .option {
@@ -62,55 +75,28 @@ input {
 	width: 9em;
 }
 
-.icoHelp {
-	float: right;
+.ico {
+	
 }
 
-.icoHelp:hover {
-	background-color: FireBrick;
-}
-
-.icoBrowse {
-	float: right;
-	margin-right: -2.5em;
-	margin-top: 0.2em;
-}
-
-.icoBrowse:hover {
+.ico:hover {
 	background-color: FireBrick;
 }
 
 .boxBottom {
-	/* 	border: 1px solid black; */
-	width: 30em;
-	height: 4em;
-}
-
-.left {
-	width: 15em;
-	float: left;
-}
-
-.right {
-	width: 6.5em;
-	float: right;
-}
-
-.expertise {
-	margin-left: 0.7em;
-	width: 10em;
+	/* 	background-color: rgb(235, 235, 235); */
 }
 
 .buttonClose {
 	background: url(../../../resources/dialog_close.png) 0.5em no-repeat;
 	background-size: 20%;
-	margin: 1em 0.5em 0 0;
+	/* 	margin: 1em 0.5em 0 0; */
 	font-size: 0.8em;
 	color: black;
 	width: 6.3em;
 	height: 2em;
 	background-color: LightGray;
-	border: 1px solid #000066;
+	/* 	border: 1px solid #000066; */
 	padding: 1px;
 	padding-left: 1.7em;
 	font-weight: bold;
@@ -126,13 +112,13 @@ input {
 .buttonSave {
 	background: url(../../../resources/document_save24.png) 0.5em no-repeat;
 	background-size: 20%;
-	margin: 1em 0.5em 0 0;
+	/* 	margin: 1em 0.5em 0 0; */
 	font-size: 0.8em;
 	color: black;
 	width: 6.3em;
 	height: 2em;
 	background-color: LightGray;
-	border: 1px solid #000066;
+	/* 	border: 1px solid #000066; */
 	padding: 1px;
 	padding-left: 2em;
 	font-weight: bold;
@@ -145,14 +131,13 @@ input {
 }
 
 .buttonExec {
-	margin-top: 3em;
 	font-size: 0.8em;
 	color: white;
 	width: 8em;
 	height: 2em;
 	background-color: DarkRed;
-	border: 1px solid #000066;
-	padding: 1px;
+	/* 	border: 1px solid #000066; */
+	/* 	padding: 1px; */
 	font-weight: bold;
 	letter-spacing: 0.2em;
 	text-align: center;
@@ -162,3 +147,4 @@ input {
 .buttonExec:hover {
 	background-color: FireBrick;
 }
+
