@@ -104,8 +104,8 @@ def detectJava():
     
 def detectMpi():
     from protlib_filesystem import findFilePath
-    inc_dirs = ['/usr/include', '/usr/local/include']
-    lib_dirs = ['/usr/lib64', '/usr/lib']
+    inc_dirs = ['/usr/include', '/usr/local/include', '/usr/include/openmpi-x86_64']
+    lib_dirs = ['/usr/lib64', '/usr/lib', '/usr/lib/openmpi/lib', '/usr/lib64/openmpi/lib']
     inc_mpi = findFilePath('mpi.h', *(inc_dirs + lib_dirs))
     if sys.platform  == 'darwin':
         lib_mpi = findFilePath('libmpi.dylib', *lib_dirs)
