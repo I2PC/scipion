@@ -222,6 +222,12 @@ class Protocol(Step):
         # Maybe this property can be inferred from the 
         # prerequisites of steps, but is easier to keep it
         self.stepsExecutionMode = STEPS_SERIAL
+        # Host name
+        self.hostName = None
+        
+    def getDefinition(self):
+        """ Access the protocol definition. """
+        return self._definition
         
     def _createVarsFromDefinition(self, **args):
         """ This function will setup the protocol instance variables
@@ -406,6 +412,7 @@ class Protocol(Step):
         self.setRunning()
         self._store()
         
+        self.lastStatus = self.status.get()
         #status = STATUS_FINISHED # Just for the case doesn't enter in the loop
         
         self._stepsExecutor.runSteps(self._steps[startIndex:], 
@@ -454,4 +461,18 @@ class Protocol(Step):
         return getFileLogger(logFile)
 
     def getFiles(self):
-        return getFolderFiles(self.workingDir.get())
+        resultFiles = set()
+        for paramName, _ in self.getDefinition().iterPointerParams():
+            attrPointer = getattr(self, paramName) # Get all self attribute that are pointers
+            obj = attrPointer.get() # Get object pointer by the attribute
+            if hasattr(obj, 'getFiles'):
+                resultFiles.update(obj.getFiles()) # Add files if any
+        return resultFiles | getFolderFiles(self.workingDir.get())
+
+    def getHostName(self):
+        """ Get the execution host name """
+        return self.hostName;
+    
+    def setHostName(self, hostName):
+        """ Set the execution host name """ 
+        self.hostName = hostName;

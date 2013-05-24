@@ -12,37 +12,38 @@
 <script src={{form}} type="text/javascript"></script>
 <script src={{messi}} type="text/javascript"></script>
 </head>
-<body>
+<body onload="evalElements();">
 	<h3>Protocol: {{protocol.getClassName}}</h3>
-	<div class="box">
-		<table>
-		   {% for section in definition.iterSections %}
-			<tr class="title">
-				<td colspan="4">{{section.label.get}}</td>
-			</tr>
-			{% for paramName, param in section.iterParams %}
-			<tr id={{paramName}} data-type="{{param.getClassName}}" data-cond="{{param.htmlCond}}" data-params="{{param.htmlCondParams}}" 
-			data-enum="{{param.display}}" data-depen="{{param.htmlDepend}}">
-				<td {% if param.isImportant.get %} class="recommended" 
-				{% else %} class="normal" {% endif %}>{{param.label.get}}</td>
-				{% if param.getClassName == "BooleanParam" %}
-				<td>
-				  <input type="radio" id="{{paramName}}_yes" name={{paramName}} onChange="javascript:evalDependencies($(this));" value="yes" 
-				  {% if param.htmlValue %} checked {% endif %}/>Yes 
-				  <input type="radio" id="{{paramName}}_no" name={{paramName}} onChange="javascript:evalDependencies($(this));" value="no"  
-				  {% if not param.htmlValue %} checked {% endif %} />No
-				</td>
-				{% elif param.getClassName == "EnumParam"  %}
-				<td>
-					{% if param.display == 0 %}
-						{% for choice in param.choices %}
-						  <input type="radio" id="{{paramName}}_{{forloop.counter0}}" name={{paramName}} onChange="javascript:evalDependencies($(this));" value="{{forloop.counter0}}" 
-						  {% if param.htmlValue == forloop.counter0 %} checked {% endif %} />{{choice}}<br />
-						{% endfor %}
-					{% elif param.display == 1  %}
-						<select id="{{paramName}}_select" name={{paramName}}  size=1 onChange="javascript:evalDependencies($(this));">
+	<form action="/protocol/" method="POST"> {% csrf_token %}
+		<div class="box">
+			<table>
+			   {% for section in definition.iterSections %}
+				<tr class="title">
+					<td colspan="4">{{section.label.get}}</td>
+				</tr>
+				{% for paramName, param in section.iterParams %}
+				<tr id="{{paramName}}" data-type="{{param.getClassName}}" data-cond="{{param.htmlCond}}" data-params="{{param.htmlCondParams}}" 
+				data-depen="{{param.htmlDepend}}" data-enum="{{param.display}}" data-value="{{param.htmlValue}}">
+					<td {% if param.isImportant.get %} class="recommended" 
+					{% else %} class="normal" {% endif %}>{{param.label.get}}</td>
+					{% if param.getClassName == "BooleanParam" %}
+					<td>
+					  <input type="radio" id="{{paramName}}_yes" name={{paramName}} onChange="javascript:onChangeBooleanParam('true','{{paramName}}');" value="yes" 
+					  {% if param.htmlValue %} checked {% endif %}/>Yes 
+					  <input type="radio" id="{{paramName}}_no" name={{paramName}} onChange="javascript:onChangeBooleanParam('false','{{paramName}}');" value="no"  
+					  {% if not param.htmlValue %} checked {% endif %} />No
+					</td>
+					{% elif param.getClassName == "EnumParam"  %}
+					<td>
+						{% if param.display == 0 %}
 							{% for choice in param.choices %}
-								<option value={{choice}} {% if param.htmlValue == forloop.counter0 %} selected="selected" {% endif %}>{{choice}}</option>
+							  <input type="radio" id="" name={{paramName}} onChange="javascript:onChangeEnumParamList('{{forloop.counter0}}', '{{paramName}}');" value="{{forloop.counter0}}" 
+							  {% if param.htmlValue == forloop.counter0 %} checked {% endif %} />{{choice}}<br />
+							{% endfor %}
+						{% elif param.display == 1  %}
+							<select id="{{paramName}}_select" name="{{paramName}}"  size=1 onChange="javascript:onChangeEnumParamCombo('{{paramName}}_select', '{{paramName}}');">
+								{% for choice in param.choices %}
+								<option value="{{choice}}" data-index="{{forloop.counter0}}" {% if param.htmlValue == forloop.counter0 %} selected="selected" {% endif %}>{{choice}}</option>
 							{% endfor %}
 						</select>
 					</td>
@@ -50,9 +51,12 @@
 				{% else %}
 					<td><input type="text" id="{{paramName}}_input" name={{paramName}} value="{{param.htmlValue}}"></td>
 				{% endif %}
-				<td class="ico"><a href="javascript:help('{{param.help.get}}');"><img src={{help}} /></a></td>
+					<td class="ico"><a href="javascript:help('{{paramName}}','{{param.help.get}}');"><img src={{help}} /></a></td>
 				{% if param.getClassName == "PointerParam" %}
-				<td class="ico"><a href=""><img src={{browse}}/></a></td>
+					<td class="ico">
+					<a href="javascript:browse('{{param.pointerClass.get}}');"><img src={{browse}}/></a>
+	<!-- 				<input type="image" class="red" src="{{browse}}" id="" value="Open File"> -->
+					</td>
 				{% endif %}
 			</tr>
 			{% endfor %}
@@ -70,10 +74,9 @@
 				</select></td>
 			</tr>
 			<tr>
-				<td>
-					<a href=""><button class="buttonClose" type="button" onclick="window.close()">Close</button></a>
+				<td><a href=""><button class="buttonClose" type="button" onclick="window.close()">Close</button></a>
 					<a href=""><button class="buttonSave" type="button">Save</button></a>
-					<a href=""><button class="buttonExec" type="button">Execute</button></a></td>
+						<input type="submit" class="buttonExec" value="Execute"></td>
 			</tr>
 		</table>
 	</div>

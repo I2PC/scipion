@@ -223,8 +223,8 @@ class FileTransfer():
         hostsPasswords -- Passwords needed to connect to involved hosts with this format: "userName@hostName":"hostPassword"
         numberTrials -- Number of trials in error cases.
         forceOperation -- Flag to indicate if, when an error happens and number of trials is exceeded, the operation must continue with the rest of files.
-        returns -- List of not located file paths.
         operationId -- Operation identifier.
+        returns -- List of not located file paths.
         """
         returnFilePaths = []
         # As we are going to create a session for each target host we must get different target hosts.

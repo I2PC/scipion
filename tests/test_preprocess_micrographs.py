@@ -8,7 +8,7 @@ from pyworkflow.em.packages.xmipp3 import *
 
 #projName = sys.argv[1]
 #pattern = sys.argv[2]
-projName = "myproject"
+projName = "test_tilted"
 pattern = "/home/laura/Scipion_Projects/TiltedData/*.mrc"
 
 

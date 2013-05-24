@@ -1,6 +1,8 @@
 <?xml version='1.0' encoding='utf-8'?>
 <ALL>
-  <ExecutionHostConfig hostname="localhost" label="localhost">
+  <ExecutionHostConfig label="localhost">
+    <hostName>localhost</hostName>
+    <hostPath>/home/antonio/Scipion_Projects</hostPath>
     <mpiCommand>mpirun -np %(nodes)d -bynode %(command)s</mpiCommand>
     <queueSystem mandatory="False" name="PBS/TORQUE">
       <queues>
@@ -35,7 +37,7 @@ NPROCS=`wc -l &lt; $PBS_NODEFILE`
 # Calculate the number of nodes allocated.
 NNODES=`uniq $PBS_NODEFILE | wc -l`
 ### Display the job context
-echo Running on host `hostname`
+echo Running on host `hostName`
 echo Time is `date`
 echo Working directory is `pwd`
 echo Using ${NPROCS} processors across ${NNODES} nodes
@@ -48,5 +50,11 @@ cat $PBS_NODEFILE
       <checkCommand>qstat %(jobid)d</checkCommand>
       <cancelCommand>canceljob %(jobid)d</cancelCommand>
     </queueSystem>
+  </ExecutionHostConfig>
+  <ExecutionHostConfig label="glassfishdev">
+    <hostName>glassfishdev.cnb.csic.es</hostName>
+    <userName>apoza</userName>
+    <password>BF6fYiFYiYD</password>
+    <hostPath>/home/apoza/Scipion_Projects</hostPath>
   </ExecutionHostConfig>
 </ALL>

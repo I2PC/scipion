@@ -49,7 +49,7 @@ class XmippDefExtractParticles(Form):
                       pointerClass='SetOfCoordinates',
                       help='Select the SetOfCoordinates ')
         self.addParam('downsampleType', EnumParam, choices=['original', 'same as picking', 'other'], 
-                      default=1, important=True, label='Downsampling type', 
+                      default=1, important=True, label='Downsampling type', display=EnumParam.DISPLAY_COMBO, 
                       help='Select the downsampling type.')
         self.addParam('downFactor', FloatParam, default=2, condition='downsampleType==2',
                       label='Downsampling factor',
@@ -94,14 +94,14 @@ class XmippDefExtractParticles(Form):
                       label='Normalize (Recommended)', 
                       help='It subtract a ramp in the gray values and normalizes so that in the '
                       'background there is 0 mean and standard deviation 1.')
-        self.addParam('normaType', EnumParam, choices=['OldXmipp','NewXmipp','Ramp'], 
-                      default=2, important=True, condition='doNormalize',
+        self.addParam('normType', EnumParam, choices=['OldXmipp','NewXmipp','Ramp'], 
+                      default=2, condition='doNormalize', display=EnumParam.DISPLAY_COMBO,
                       label='Normalization type', 
-                      help='OldXmipp (mean(Image)=0, stddev(Image)=1). '
-                      'NewXmipp (mean(background)=0, stddev(background)=1)'
-                      'Ramp (subtract background+NewXmipp).',
+                      help='OldXmipp (mean(Image)=0, stddev(Image)=1).\n'
+                           'NewXmipp (mean(background)=0, stddev(background)=1)\n'
+                           'Ramp (subtract background+NewXmipp).\n',
                       expertLevel=LEVEL_ADVANCED)
-        self.addParam('backRadius', IntParam, default=-1, important=True, condition='doNormalize',
+        self.addParam('backRadius', IntParam, default=-1, condition='doNormalize',
                       label='Background radius',
                       help='Pixels outside this circle are assumed to be noise and their stddev '
                       'is set to 1. Radius for background circle definition (in pix.). '
@@ -209,7 +209,7 @@ class XmippProtExtractParticles(ProtExtractParticles):
             self.runJob(None,"xmipp_micrograph_scissor", args)
             # Normalize 
             if self.doNormalize:
-                runNormalize(None, outputRoot + '.stk',self.normaType.get(), self.backRadius.get(), 1)          
+                runNormalize(None, outputRoot + '.stk',self.normType.get(), self.backRadius.get(), 1)          
                            
             #WHY THIS?????        
             if self.downsampleType.get() == self.OTHER:
@@ -243,7 +243,7 @@ class XmippProtExtractParticles(ProtExtractParticles):
         # Create the SetOfImages object on the database
         imgSet = XmippSetOfImages(self._getPath('images.xmd'))
         imgSet.copyInfo(self.inputMics)
-        
+                
         if self.downsampleType == self.OTHER:
             imgSet.samplingRate.set(self.inputMics.samplingRate.get()*self.downFactor.get())
         
@@ -253,6 +253,10 @@ class XmippProtExtractParticles(ProtExtractParticles):
         for stack in stackFiles:
             fn = stack.replace(".stk",".xmd")
             imgSet.appendFromMd(xmipp.MetaData(fn))
+            
+        # TODO: If input coordinates have tilt pairs copy the relation
+#        if self.inputCoords.hasTiltPairs():
+#            imgSet.copyTiltPairs(self.inputCoords)
 
         #imgSet.setMd(imagesMd)
         imgSet.sort() # We need sort?

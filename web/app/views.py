@@ -1,6 +1,7 @@
 # from scipion.models import *
 import os
 from django.shortcuts import render_to_response
+from django.core.context_processors import csrf
 from pyworkflow.manager import Manager
 from pyworkflow.project import Project
 from pyworkflow.gui.tree import TreeProvider
@@ -96,7 +97,7 @@ class RunsTreeProvider(TreeProvider):
         return [('Run', 250), ('State', 100), ('Modified', 100)]
     
     def getObjectInfo(self, obj):
-        return {'key': obj.getId(),
+        return {'key': obj.getObjId(),
                 'text': '%s.%s' % (obj.getClassName(), obj.strId()),
                 'values': (obj.status.get(), obj.endTime.get())}
       
@@ -205,8 +206,6 @@ def formTable(request):
             param.htmlCond = param.condition.get()
             param.htmlDepend = ','.join(param._dependants)
             param.htmlCondParams = ','.join(param._conditionParams)
-#            if isinstance(param, EnumParam):
-#                param.htmlChoicesSize = len(param.choices)
     
     
     context = {'protocol':protocol,
@@ -220,7 +219,45 @@ def formTable(request):
                'messi': messi_path,
                'messi_css': messi_css_path}
     
+    # Cross Site Request Forgery protection is need it
+    context.update(csrf(request))
+    
     return render_to_response('formTable.html', context)
+
+def protocol(request):
+    
+    parameters = request.POST.get("","")
+    
+    # Resources #
+    favicon_path = getResource('favicon')
+    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
+    #############
+    
+    context = {'favicon': favicon_path,
+               'jquery': jquery_path}
+    
+    
+    return render_to_response('protocol.html', context)
+
+def browse_objects(request):
+    """ Browse objects from the database. """
+    from django.http import HttpResponse
+    import json
+    
+    if request.is_ajax():
+        objClass = request.GET.get('objClass')
+        manager = Manager()
+        project_name = 'TestProject'
+        projPath = manager.getProjectPath(project_name)
+        project = Project(projPath)
+        project.load()
+        
+        objs = []
+        for obj in project.mapper.selectByClass(objClass, iterate=True):
+            objs.append(obj.getName())
+        jsonStr = json.dumps({'objects' : objs},
+                             ensure_ascii=False)
+        return HttpResponse(jsonStr, mimetype='application/javascript')
 
 
 if __name__ == '__main__':

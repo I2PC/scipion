@@ -67,8 +67,7 @@ class XmippSetOfImages(SetOfImages):
     def __init__(self, filename=None, **args):
         SetOfImages.__init__(self, filename, **args)
         self._set = XmippSet(XmippImage)
-        if self.hasTiltPairs():
-            self._setPairs = XmippSet(XmippTiltedPair)
+        self._setPairs = XmippSet(XmippTiltedPair)
            
     def load(self):
         """ Load extra data from files. """
@@ -103,15 +102,13 @@ class XmippSetOfImages(SetOfImages):
         """ Add all entries found in the md. """
         self._set._md.unionAll(md)
 
-        #FIXME: No deberiamos mantener esta lista sino solo el set
-#        self._micList.append(xmippImg)
+    def mergeFromMd(self, md):
+        """ Join data from other md using _label as guide. """
+        self._set._md.join(self._set._md, md, self._label, self._label, xmipp.NATURAL_JOIN)        
         
-    def appendPair(self, iU, iT):
+    def appendPair(self, idU, idT):
         """ Add a new tilted pair to the set"""
-        micUFn = self[iU].getFileName()
-        micTFn = self[iT].getFileName()
-        
-        self._setPairs.append(XmippTiltedPair(micUFn, micTFn))
+        self._setPairs.append(XmippTiltedPair(idU, idT))
         
     def __iter__(self):
         """ Iterate over the set of images. """
@@ -125,30 +122,28 @@ class XmippSetOfImages(SetOfImages):
         self.loadIfEmpty()
         for tp in self._setPairs:
             #retrieve index for untilted and tilted micrographs
-            iU = self.getImageIndex(tp.getUntilted())
-            iT = self.getImageIndex(tp.getTilted())
-            yield  (iU, iT)
+            yield (tp.getUntilted(), tp.getTilted())
             
-    def __getitem__(self, index):
-        # TODO: Improve the way of accessing element in Xmipp MetaData
+    def __getitem__(self, imgId):
+        """ Return an element from the set.
+        Params:
+         imgId: the id of the image (in Xmipp case a Filename)
+        """
         self.loadIfEmpty()
-        for i, item in enumerate(self._set):
-            if i == index:
-                return item
-        return None            
-    
-    def getImageIndex(self, iFn):
-        """ Get the index of the image with the given filename. """
-        for i, item in enumerate(self._set):
-            if item.getValue(self._label) == iFn:
-                return i
-        return None
+        md  = xmipp.MetaData()
+        md.importObjects(xmipp.MDValueEQ(self._label, imgId))
+        # TODO: Make a Md query to get the element with this filename
+        raise Exception("getitem for XmippSetOfImages not implemented")
     
     def _getListBlock(self):
         return 'Images@' + self.getFileName()
     
     def _getTiltedBlock(self):
         return 'TiltedPairs@' + self.getFileName()
+    
+    def getId(self, img):
+        """ Return the id of the image """
+        return img.getFileName()
                     
     @staticmethod
     def convert(setOfImgs, filename):
@@ -222,7 +217,11 @@ class XmippSetOfMicrographs(XmippSetOfImages, SetOfMicrographs):
         # If there are tilt pairs add tilt pairs metadata
         if setOfMics.hasTiltPairs():
             for iU, iT in setOfMics.iterTiltPairs():
-                xmippMics.appendPair(iU, iT)
+                #Transform ids into filenames
+                micU = setOfMics[iU]
+                micT = setOfMics[iT]
+                
+                xmippMics.appendPair(setOfMics[iU].getFileName(), setOfMics[iT].getFileName())
     
         xmippMics.write()
         
@@ -375,10 +374,12 @@ class XmippSetOfCoordinates(SetOfCoordinates):
             
 class XmippTiltedPair(XmippMdRow):
     """ Tilted Pairs relations in Xmipp are stored in a MetaData row. """
-    def __init__(self, uFn, tFn, **args):
+    def __init__(self, uFn=None, tFn=None, **args):
         XmippMdRow.__init__(self, **args)
-        self.setUntilted(uFn)
-        self.setTilted(tFn)            
+        if uFn is not None:
+            self.setUntilted(uFn)
+        if tFn is not None:
+            self.setTilted(tFn)            
         
     def setTilted(self, value):
         self.setValue(xmipp.MDL_MICROGRAPH_TILTED, value)

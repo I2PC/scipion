@@ -26,19 +26,22 @@
 """
 This modules handles the Project management
 """
+
 import os
 from os.path import abspath
 
 from pyworkflow.mapper import SqliteMapper
 from pyworkflow.utils import cleanPath, makePath, join, exists, runJob
+from os.path import split
 from pyworkflow.protocol import *
 from pyworkflow.em import *
-
+from pyworkflow.apps.config import ExecutionHostMapper, ExecutionHostConfig
+from utils.file_transfer import *
 
 PROJECT_DBNAME = 'project.sqlite'
 PROJECT_LOGS = 'Logs'
 PROJECT_RUNS = 'Runs'
-
+PROJECT_HOSTS = 'execution_hosts.xml'
 
 class Project(object):
     """This class will handle all information 
@@ -50,8 +53,9 @@ class Project(object):
         self.dbPath = self.addPath(PROJECT_DBNAME)
         self.logsPath = self.addPath(PROJECT_LOGS)
         self.runsPath = self.addPath(PROJECT_RUNS)
+        self.hostsPath = self.addPath(PROJECT_HOSTS)
         
-    def getId(self):
+    def getObjId(self):
         """ Return the unique id assigned to this project. """
         return os.path.basename(self.path)
     
@@ -72,10 +76,13 @@ class Project(object):
         if not exists(self.dbPath):
             raise Exception("Project doesn't exists in '%s'" % self.path)
         self.mapper = SqliteMapper(self.dbPath, globals())
+        self.hostsMapper = ExecutionHostMapper(self.hostsPath, globals())
         
-    def create(self):
-        """Create a new project.
-        Prepare all required paths and files"""
+    def create(self, hosts):
+        """Prepare all required paths and files to create a new project.
+        Params:
+         hosts: a list of configuration hosts associated to this projects (class ExecutionHostConfig)
+        """
         # Create project path if not exists
         makePath(self.path)
         os.chdir(self.path) #Before doing nothing go to project dir
@@ -83,17 +90,22 @@ class Project(object):
         # Create db throught the mapper
         self.mapper = SqliteMapper(self.dbPath, globals())
         self.mapper.commit()
+        # Write hosts configuration to disk
+        self.hostsMapper = ExecutionHostMapper(self.hostsPath, globals())
+        for h in hosts:
+            self.hostsMapper.insert(h)
+        self.hostsMapper.commit()
         # Create other paths inside project
         makePath(*self.pathList)
         
     def clean(self):
         """Clean all project data"""
-        cleanPath(*self.pathList)        
+        cleanPath(*self.pathList)      
                 
     def launchProtocol(self, protocol, wait=False):
         """Launch another scritp to run the protocol."""
         # TODO: Create a launcher class that will 
-        # handle the communication of remove projects
+        # handle the communication of remote projects
         # and also the particularities of job submission: mpi, threads, queue, bash
         self.insertProtocol(protocol)        
         if wait:
@@ -107,7 +119,7 @@ class Project(object):
                 program = 'pw_protocol_run.py'
                 mpi = 1
             
-            runJob(None, program, '%s %s' % (self.getId(), protocol.strId()),
+            runJob(None, program, '%s %s' % (self.getObjId(), protocol.strId()),
                    numberOfMpi=mpi, runInBackground=True)
         
     def runProtocol(self, protocol, mpiComm=None):
@@ -151,4 +163,34 @@ class Project(object):
         protocol.workingDir.set(self.getPath("Runs", name))
         protocol._store() #FIXME, actually only need to update workingDir and name
         
+    def getHosts(self):
+        """ Retrieve the hosts associated with the project. (class ExecutionHostConfig) """
+        return self.hostsMapper.selectByAll()
+        
+    def sendProtocol(self, protocol):
+        """ Send protocol to an execution host    
+        Params:
+            potocol: Protocol to send to an execution host.
+        """
+        # Fisrt we must recover the execution host credentials.
+        self.hostsMapper = ExecutionHostMapper(self.hostsPath)
+        executionHostConfig = self.hostsMapper.selectByLabel(protocol.getHostName())
+        filePathDict = {}
+        # We are going to create project folder in the remote host
+        projectFolder = split(self.path)[1]
+        # Prepare source and target files
+        for filePath in protocol.getFiles():
+            sourceFilePath = os.path.join(self.path, filePath)
+            targetFilePath = join(executionHostConfig.getHostPath(), projectFolder, filePath)
+            filePathDict[sourceFilePath] = targetFilePath
+        # Transfer files       
+        fileTransfer = FileTransfer()
+        fileTransfer.transferFilesTo(filePathDict,
+                        executionHostConfig.getHostName(),
+                        executionHostConfig.getUserName(),
+                        executionHostConfig.getPassword(),
+                        gatewayHosts = None, 
+                        numberTrials = 1,                        
+                        forceOperation = False,
+                        operationId = 1)
         

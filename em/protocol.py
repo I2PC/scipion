@@ -108,9 +108,9 @@ class ProtImportMicrographs(Protocol):
         #REMOVE WHEN TILTED PAIR IS PROPERLY IMPLEMENTED      
             if self.tiltPairs.get(): 
                 if i%2==0:
-                    j = i
+                    mic_u = mic_dst
                 else:
-                    micSet.appendPair(j, i)    
+                    micSet.appendPair(mic_u.getObjId(), mic_dst.getObjId())    
         # END REMOVE                
         
         micSet.write()

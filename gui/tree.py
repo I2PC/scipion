@@ -248,7 +248,7 @@ class ObjectTreeProvider(TreeProvider):
         if obj.get() is not None:
             t += " = %s" % str(obj)
             
-        info = {'key': obj.getId(), 'parent': self._parentDict.get(obj.getId(), None),
+        info = {'key': obj.getObjId(), 'parent': self._parentDict.get(obj.getObjId(), None),
                 'text': t, 'values': (obj.strId(), cls)}
         if issubclass(obj.__class__, Scalar):
             info['image'] = 'step.gif'
@@ -279,7 +279,7 @@ class ObjectTreeProvider(TreeProvider):
         grandchilds = []
         for _, v in obj.getAttributesToStore():
             childs.append(v)
-            self._parentDict[v.getId()] = obj
+            self._parentDict[v.getObjId()] = obj
             grandchilds += self._getChilds(v)
         childs += grandchilds
         return childs

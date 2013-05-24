@@ -25,11 +25,6 @@ class TestLog(unittest.TestCase):
         log = getFileLogger('/home/antonio/scipionLog/fileLog.log')
         log.error('File error!!!!!!')
         
-        log = getClassAndFileLogger('pyworkflow.test.log.test_scipon_log', '/home/antonio/scipionLog/classAndFileLog.log')
-        log.info('Class and File info!!!!!!')
-        log.debug('Class and File debug!!!!!!')
-        log.warning("Class and File warning!!!")
-        
         self.assertTrue(True)  
         
     """

@@ -30,8 +30,10 @@ import os
 from os.path import abspath, join
 
 from project import Project
+import pyworkflow as pw
 from pyworkflow.mapper import SqliteMapper
 from pyworkflow.utils.path import cleanPath, makePath, getHomePath
+from pyworkflow.apps.config import ExecutionHostMapper
 
 
 PROJECTS_PATH = 'Scipion_Projects'
@@ -75,7 +77,9 @@ class Manager(object):
     def createProject(self, projectName):
         """Create a new project """
         proj = Project(self.getProjectPath(projectName))
-        proj.create()
+        defaultHosts = os.path.join(pw.HOME, 'settings', 'execution_hosts.xml')
+        hosts = ExecutionHostMapper(defaultHosts).selectAll()
+        proj.create(hosts)
         return proj
         
     def deleteProject(self, projectName):

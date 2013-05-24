@@ -7,6 +7,24 @@ input {
 	background: LightGray;
 }
 
+input.hide2 {
+	position: relative;
+	filter: alpha(opacity : 0);
+	width: 9.7em;
+	cursor: pointer;
+}
+
+input.hide {
+	position: fixed;
+	-moz-opacity: 0;
+	filter: alpha(opacity :   0);
+	opacity: 0;
+	margin: 0.5em;
+	width: 1.5em;
+	height: 2em;
+	cursor: pointer;
+}
+
 textarea {
 	resize: vertical;
 	background: LightGray;

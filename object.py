@@ -82,15 +82,15 @@ class Object(object):
         internal value before been stored"""
         return self._objValue
     
-    def getId(self):
+    def getObjId(self):
         """Return object id"""
         return self._objId
     
-    def setId(self, newId):
+    def setObjId(self, newId):
         """Set the object id"""
         self._objId = newId
         
-    def hasId(self):
+    def hasObjId(self):
         return not self._objId is None
     
     def strId(self):
