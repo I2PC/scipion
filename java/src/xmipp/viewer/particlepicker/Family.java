@@ -4,6 +4,7 @@ import ij.ImagePlus;
 import java.awt.Color;
 import java.io.File;
 import java.lang.reflect.Field;
+import java.util.List;
 
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.ImageGeneric;
@@ -11,7 +12,9 @@ import xmipp.jni.Particle;
 import xmipp.utils.TasksManager;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
+import xmipp.viewer.particlepicker.training.model.MicrographFamilyData;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
+import xmipp.viewer.particlepicker.training.model.TrainingMicrograph;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 import xmipp.viewer.particlepicker.training.model.TrainingPicker;
 
@@ -44,7 +47,6 @@ public class Family
 	{
 		this(name, color, size, FamilyState.Manual, ppicker, templatesNumber);
 	}
-	
 
 	public Family(String name, Color color, int size, FamilyState state, ParticlePicker ppicker, int templatesNumber)
 	{
@@ -71,10 +73,7 @@ public class Family
 			}
 			else
 				initTemplates();
-			
 
-
-			
 		}
 		catch (Exception e)
 		{
@@ -82,7 +81,6 @@ public class Family
 			throw new IllegalArgumentException();
 		}
 	}
-
 
 	public String getTemplatesFile()
 	{
@@ -106,25 +104,48 @@ public class Family
 		}
 	}
 
+	public synchronized void updateTemplates(TrainingPicker picker)
+	{
+		if (getStep() != FamilyState.Manual)
+			return;
+
+		initTemplates();
+		ImageGeneric igp;
+		List<TrainingParticle> particles;
+		MicrographFamilyData mfd;
+		TrainingParticle particle;
+		try
+		{
+			for (TrainingMicrograph m : picker.getMicrographs())
+			{
+				mfd = m.getFamilyData(this);
+				for (int i = 0; i < mfd.getManualParticles().size(); i++)
+				{
+					particles = mfd.getManualParticles();
+					particle = particles.get(i);
+					igp = particle.getImageGeneric();
+					if (getTemplateIndex() < getTemplatesNumber())
+						setTemplate(igp);
+					else
+					{
+						double[] align = getTemplates().alignImage(igp);
+						particle.setLastalign(align);
+					}
+				}
+			}
+			saveTemplates();
+
+		}
+		catch (Exception e)
+		{
+			throw new IllegalArgumentException(e.getMessage());
+		}
+	}
 
 	public ImageGeneric getTemplates()
 	{
 		return templates;
 	}
-
-//	public synchronized ImagePlus getTemplatesImage(long i)
-//	{
-//		try
-//		{
-//			ImagePlus imp = XmippImageConverter.convertToImagePlus(templates, i);
-//
-//			return imp;
-//		}
-//		catch (Exception e)
-//		{
-//			throw new IllegalArgumentException(e);
-//		}
-//	}
 
 	public FamilyState getStep()
 	{
@@ -163,10 +184,9 @@ public class Family
 		if (size > ParticlePicker.fsizemax)
 			throw new IllegalArgumentException(String.format("Max size is %s, %s not allowed", ParticlePicker.fsizemax, size));
 		this.size = size;
-		if(picker instanceof TrainingPicker)
+		if (picker instanceof TrainingPicker)
 			((TrainingPicker) picker).updateTemplates();
 	}
-
 
 	public String getName()
 	{
@@ -185,12 +205,14 @@ public class Family
 		return templatesNumber;
 	}
 
-	public void setTemplatesNumber(int num) {
-		if(num <= 0)
-			throw new IllegalArgumentException(XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Family must have at least one template"));
+	public void setTemplatesNumber(int num)
+	{
+		if (num <= 0)
+			throw new IllegalArgumentException(
+					XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Family must have at least one template"));
 
 		this.templatesNumber = num;
-		if(picker instanceof TrainingPicker)
+		if (picker instanceof TrainingPicker)
 			((TrainingPicker) picker).updateTemplates();
 	}
 
@@ -204,7 +226,6 @@ public class Family
 		this.color = color;
 	}
 
-
 	public String toString()
 	{
 		return name;
@@ -214,7 +235,6 @@ public class Family
 	{
 		return colors;
 	}
-
 
 	public static Color getColor(String name)
 	{
@@ -267,7 +287,6 @@ public class Family
 		}
 	}
 
-
 	public synchronized void saveTemplates()
 	{
 		try
@@ -279,8 +298,6 @@ public class Family
 			throw new IllegalArgumentException(e);
 		}
 	}
-
-
 
 	public int getTemplateIndex()
 	{
@@ -323,8 +340,29 @@ public class Family
 		}
 
 	}
-	
 
-	
+	public synchronized void addParticleToTemplates(TrainingParticle particle)
+	{
+		try
+		{
+			ImageGeneric igp = particle.getImageGeneric();
+			// will happen only in manual mode
+			if (getTemplateIndex() < getTemplatesNumber())
+				setTemplate(igp);
+			else
+			{
+
+				double[] align;
+				align = getTemplates().alignImage(igp);
+				applyAlignment(particle, igp, align);
+			}
+			saveTemplates();
+
+		}
+		catch (Exception e)
+		{
+			throw new IllegalArgumentException(e);
+		}
+	}
 
 }
