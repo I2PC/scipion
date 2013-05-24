@@ -43,8 +43,10 @@ class XmippImage(XmippMdRow, Image):
     def __init__(self, filename=None, **args):
         XmippMdRow.__init__(self)
         Image.__init__(self, filename, **args)
-        self.getId = self.getFileName
-        
+    
+    def getId(self):
+        return self.getFileName()
+    
     def setFileName(self, filename):
         self.setValue(self._label, filename)
         
