@@ -47,6 +47,7 @@ public class Family
 	{
 		this(name, color, size, FamilyState.Manual, ppicker, templatesNumber);
 	}
+	
 
 	public Family(String name, Color color, int size, FamilyState state, ParticlePicker ppicker, int templatesNumber)
 	{
@@ -73,7 +74,10 @@ public class Family
 			}
 			else
 				initTemplates();
+			
 
+
+			
 		}
 		catch (Exception e)
 		{
@@ -81,6 +85,7 @@ public class Family
 			throw new IllegalArgumentException();
 		}
 	}
+
 
 	public String getTemplatesFile()
 	{
@@ -103,7 +108,7 @@ public class Family
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
-
+	
 	public synchronized void updateTemplates(TrainingPicker picker)
 	{
 		if (getStep() != FamilyState.Manual)
@@ -134,7 +139,7 @@ public class Family
 				}
 			}
 			saveTemplates();
-
+			
 		}
 		catch (Exception e)
 		{
@@ -142,10 +147,13 @@ public class Family
 		}
 	}
 
+
 	public ImageGeneric getTemplates()
 	{
 		return templates;
 	}
+
+
 
 	public FamilyState getStep()
 	{
@@ -184,9 +192,10 @@ public class Family
 		if (size > ParticlePicker.fsizemax)
 			throw new IllegalArgumentException(String.format("Max size is %s, %s not allowed", ParticlePicker.fsizemax, size));
 		this.size = size;
-		if (picker instanceof TrainingPicker)
+		if(picker instanceof TrainingPicker)
 			((TrainingPicker) picker).updateTemplates();
 	}
+
 
 	public String getName()
 	{
@@ -205,14 +214,12 @@ public class Family
 		return templatesNumber;
 	}
 
-	public void setTemplatesNumber(int num)
-	{
-		if (num <= 0)
-			throw new IllegalArgumentException(
-					XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Family must have at least one template"));
+	public void setTemplatesNumber(int num) {
+		if(num <= 0)
+			throw new IllegalArgumentException(XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Family must have at least one template"));
 
 		this.templatesNumber = num;
-		if (picker instanceof TrainingPicker)
+		if(picker instanceof TrainingPicker)
 			((TrainingPicker) picker).updateTemplates();
 	}
 
@@ -226,6 +233,7 @@ public class Family
 		this.color = color;
 	}
 
+
 	public String toString()
 	{
 		return name;
@@ -235,6 +243,7 @@ public class Family
 	{
 		return colors;
 	}
+
 
 	public static Color getColor(String name)
 	{
@@ -287,6 +296,7 @@ public class Family
 		}
 	}
 
+
 	public synchronized void saveTemplates()
 	{
 		try
@@ -298,6 +308,8 @@ public class Family
 			throw new IllegalArgumentException(e);
 		}
 	}
+
+
 
 	public int getTemplateIndex()
 	{
@@ -340,29 +352,8 @@ public class Family
 		}
 
 	}
+	
 
-	public synchronized void addParticleToTemplates(TrainingParticle particle)
-	{
-		try
-		{
-			ImageGeneric igp = particle.getImageGeneric();
-			// will happen only in manual mode
-			if (getTemplateIndex() < getTemplatesNumber())
-				setTemplate(igp);
-			else
-			{
-
-				double[] align;
-				align = getTemplates().alignImage(igp);
-				applyAlignment(particle, igp, align);
-			}
-			saveTemplates();
-
-		}
-		catch (Exception e)
-		{
-			throw new IllegalArgumentException(e);
-		}
-	}
+	
 
 }
