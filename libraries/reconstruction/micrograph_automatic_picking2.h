@@ -72,6 +72,7 @@ public:
     static const int NangSteps=120;
 
     Micrograph                  *__m;
+    Micrograph                   m;
     Image<double>                microImage;
     PCAMahalanobisAnalyzer       pcaAnalyzer;
     ProgImageRotationalPCA       rotPcaAnalyzer;
@@ -94,6 +95,11 @@ public:
     int                          NRsteps;
 
     MultidimArray<double>        convolveRes;
+    MultidimArray<double>        filterBankStack;
+    MultidimArray<double>        positiveParticleStack;
+    MultidimArray<double>        negativeParticleStack;
+    MultidimArray<double>        positiveInvariatnStack;
+    MultidimArray<double>        negativeInvariatnStack;
     MultidimArray<double>        pcaModel;
     MultidimArray<double>        pcaRotModel;
     MultidimArray<double>        particleAvg;
@@ -108,13 +114,30 @@ public:
     std::vector<Particle2>       accepted_particles;
     Image<double>                micrographStack;
 
+    FileName                     fn_model;
+
 public:
 
     /// Constructor
-    AutoParticlePicking2(int particle_size, int filter_num = 6, int corr_num = 2, int NPCA = 4);
+    AutoParticlePicking2(int particle_size, int filter_num = 6, int corr_num = 2, int NPCA = 4, FileName model_name);
+
     AutoParticlePicking2();
+
     /// Destructor
     ~AutoParticlePicking2();
+
+    /// Read micrograph from the file
+    void readMic(FileName fn_micrograph);
+
+    void filterBankGenerator();
+
+    void buildInvariant(MetaData MD);
+
+    void extractInvariant();
+
+    void extractPositiveInvariant();
+
+    void extractNegativeInvariant();
 
     /// Define the parameters of the main program
     static void defineParams(XmippProgram * program);

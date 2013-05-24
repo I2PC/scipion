@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:    Carlos Oscar            coss@cnb.csic.es (2011)
- *       Vahid Abrishami         vabrishami@cnb.csic.es (2012)
+ *             Vahid Abrishami         vabrishami@cnb.csic.es (2012)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -35,48 +35,163 @@
 
 
 AutoParticlePicking2::AutoParticlePicking2()
+{}
+AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum, int basisPCA, FileName model_name)
 {
 
-}
-AutoParticlePicking2::AutoParticlePicking2(int particle_size, int filter_num, int corr_num, int NPCA)
-{
-	NRPCA=20;
-	double t=std::max(0.25,50.0/particle_size);
+
+    fn_model=model_name.removeDirectories();
+
+    corr_num=corrNum;
+    filter_num=filterNum;
+    NPCA=basisPCA;
+    num_correlation=filterNum+((filterNum-corr_num)*corr_num);
+    num_features=num_correlation*NPCA+NRPCA+12;
+    NRPCA=20;
+
+    double t=std::max(0.25,50.0/pSize);
     scaleRate=std::min(1.0,t);
-    particle_radius=(int)((particle_size*scaleRate)*0.5);
+    particle_radius=(int)((pSize*scaleRate)*0.5);
     particle_size=particle_radius * 2;
     NRsteps=particle_size/2-3;
-    NRPCA=20;
-    num_correlation=filter_num+((filter_num-corr_num)*corr_num);
-    num_features=num_correlation*NPCA+NRPCA+12;
+
+
     classifier.setParameters(8.0, 0.125);
     classifier2.setParameters(1.0, 0.25);
 }
-//Generate filter bank from the micrograph image
-void filterBankGenerator(MultidimArray<double> &inputMicrograph,
-                         const FileName &fnFilterBankStack,
-                         int filter_num)
+
+void AutoParticlePicking2::readMic(FileName fn_micrograph)
 {
-    fnFilterBankStack.deleteFile();
-    Image<double> Iaux;
-    Iaux()=inputMicrograph;
+
+    m.open_micrograph(fn_micrograph);
+    microImage.read(fn_micrograph);
+
+    // Resize the Micrograph
+    selfScaleToSizeFourier((int)((m.Ydim)*scaleRate),
+                           (int)((m.Xdim)*scaleRate),
+                           microImage(),2);
+}
+
+//Generate filter bank from the micrograph image
+void AutoParticlePicking2::filterBankGenerator()
+{
+    MultidimArray<double> inputMicrograph;
+    MultidimArray<double> Iaux;
+
+    inputMicrograph = microImage();
+    filterBankStack.resize(size_t(filter_num), 1,
+                           size_t(YSIZE(inputMicrograph)),
+                           size_t(XSIZE(inputMicrograph)));
     FourierFilter filter;
     filter.raised_w=0.02;
     filter.FilterShape=RAISED_COSINE;
     filter.FilterBand=BANDPASS;
     MultidimArray<std::complex<double> > micrographFourier;
     FourierTransformer transformer;
-    transformer.FourierTransform(Iaux(),micrographFourier,true);
+    transformer.FourierTransform(inputMicrograph,micrographFourier,true);
     for (int i=0;i<filter_num;i++)
     {
         filter.w1=0.025*i;
         filter.w2=(filter.w1)+0.025;
         transformer.setFourier(micrographFourier);
-        filter.applyMaskFourierSpace(inputMicrograph,transformer.fFourier);
+        filter.applyMaskFourierSpace(microImage(),transformer.fFourier);
         transformer.inverseFourierTransform();
-        Iaux.write(fnFilterBankStack,i+1,true,WRITE_APPEND);
+        Iaux.aliasImageInStack(filterBankStack,i);
+        Iaux=inputMicrograph;
     }
 }
+
+void AutoParticlePicking2::buildInvariant(MetaData MD)
+{
+    int x, y;
+    FOR_ALL_OBJECTS_IN_METADATA(MD)
+    {
+        MD.getValue(MDL_XCOOR,x, __iter.objId);
+        MD.getValue(MDL_YCOOR,y, __iter.objId);
+        m.add_coord(x,y,0,1);
+    }
+    extractInvariant();
+}
+
+void AutoParticlePicking2::extractInvariant()
+{
+    extractPositiveInvariant();
+    extractNegativeInvariant();
+}
+
+void AutoParticlePicking2::extractPositiveInvariant()
+{
+    MultidimArray<double> IpolarCorr;
+    MultidimArray<double> pieceImage;
+    MultidimArray<double> invariantImage;
+    MultidimArray<double> polarImage;
+    AlignmentAux aux;
+    CorrelationAux aux2;
+    RotationalCorrelationAux aux3;
+    Matrix2D<double> M;
+    size_t numPosInv = 0;
+    size_t numPosPart = 0;
+    FileName fnPCAModel=fn_model+"_pca_model.stk";
+
+    size_t num_part = m.ParticleNo();
+    Image<double> II;
+    IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
+    if (fnPCAModel.exists())
+    {
+        positiveParticleStack.resize(num_part, 1, particle_size, particle_size);
+        positiveInvariatnStack.resize(num_part*num_correlation, 1, NangSteps, NRsteps);
+    }
+    else
+    {
+        numPosInv = NSIZE(positiveInvariatnStack);
+        numPosPart = NSIZE(positiveParticleStack);
+        positiveParticleStack.resize(numPosPart+num_part, 1, particle_size, particle_size);
+        positiveInvariatnStack.resize(numPosInv+num_part*num_correlation, 1, NangSteps, NRsteps);
+    }
+
+    for (size_t i=0;i<num_part;i++)
+    {
+        double cost = m.coord(i).cost;
+        if (cost == 0)
+            continue;
+        int x=(int)((m.coord(i).X)*scaleRate);
+        int y=(int)((m.coord(i).Y)*scaleRate);
+
+        buildInvariant(IpolarCorr,x,y);
+
+        // Keep the particles to train the classifiers
+        pieceImage.aliasImageInStack(positiveParticleStack,numPosPart+i);
+        extractParticle(x,y,microImage(),pieceImage,false);
+
+        // Put the obtained invariants in the stack
+        for (size_t j=0;j<NSIZE(IpolarCorr);j++)
+        	IpolarCorr.getImage(j,positiveParticleStack,numPosInv+i*num_correlation+j);
+
+        // Compute the average of the manually picked particles after doing aligning
+        // We just do it on manually picked particles and the flag show that if we
+        // are in this step.
+        if (avgFlag==false)
+        {
+            pieceImage.setXmippOrigin();
+            particleAvg.setXmippOrigin();
+            if (particleAvg.computeMax()==0)
+                particleAvg=particleAvg+pieceImage;
+            else
+            {
+                alignImages(particleAvg,pieceImage,M,true,aux,aux2,aux3);
+                particleAvg=particleAvg+pieceImage;
+            }
+        }
+        II()=IpolarCorr;
+        II.write(fnPositiveInvariatn,ALL_IMAGES,true,WRITE_APPEND);
+    }
+    if (avgFlag==false)
+        particleAvg/=num_part;
+
+}
+
+void AutoParticlePicking2::extractNegativeInvariant()
+{}
 
 /*
  *This method do the correlation between two polar images
@@ -1199,7 +1314,7 @@ void ProgMicrographAutomaticPicking2::run()
                                (int)((m.Xdim)*autoPicking->scaleRate),
                                autoPicking->microImage(),2);
         // Generating the filter bank
-        filterBankGenerator(autoPicking->microImage(),fnFilterBank,autoPicking->filter_num);
+        //filterBankGenerator(autoPicking->microImage(),fnFilterBank,autoPicking->filter_num);
         autoPicking->micrographStack.read(fnFilterBank,DATA);
     }
 
