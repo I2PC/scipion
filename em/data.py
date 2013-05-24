@@ -74,8 +74,10 @@ class Image(EMObject):
         self.setFileName(filename)
         self.samplingRate = Float()
         self.ctfModel = None
-        self.getId = self.getObjId
         
+    def getId(self):
+        return self.getObjId()
+    
     def getFormat(self):
         pass
     
