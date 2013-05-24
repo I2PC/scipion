@@ -340,8 +340,15 @@ void ParametersProjectionTomography::calculateProjectionAngles(Projection &P, do
         Euler_another_set(rot, tilt, psi, rot, tilt, psi);
 
     rot  = realWRAP(rot,-180,180);
+    if (XMIPP_EQUAL_ZERO(rot))
+        rot = 0.;
     tilt = realWRAP(tilt,-180,180);
+    if (XMIPP_EQUAL_ZERO(tilt))
+        tilt = 0.;
     psi  = realWRAP(psi,-180,180);
+    if (XMIPP_EQUAL_ZERO(psi))
+        psi = 0.;
+
     P.setAngles(rot, tilt, psi);
 
     // Find displacement because of axis offset and inplane shift

@@ -152,7 +152,7 @@ void PCAMahalanobisAnalyzer::learnPCABasis(size_t NPCA, size_t Niter)
     {
     	size_t nRandom;
     	do {
-    		nRandom=(size_t)round(v.size()*rnd_unif(0,1));
+    		nRandom=(size_t)round((v.size()-1)*rnd_unif(0,1));
     	} while (std::find(used.begin(),used.end(),nRandom)!=used.end());
         typeCast(v[nRandom],vPCA);
         PCAbasis.push_back(vPCA);
@@ -268,7 +268,6 @@ void PCAMahalanobisAnalyzer::learnPCABasis(size_t NPCA, size_t Niter)
         double norm=sqrt(PCAbasis[ii].sum2());
         PCAbasis[ii]/=norm;
     }
-
 }
 
 /** computes the orthonormal basis for a subspace
@@ -386,6 +385,7 @@ void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter)
 #endif
 
     learnPCABasis(NPCA, Niter);
+
 #ifdef DEBUG
 
     std::cout << "\n\nPCA basis\n";

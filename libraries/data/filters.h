@@ -1312,7 +1312,7 @@ void forcePositive(MultidimArray<double> &V);
  *  A boundaries median filter is applied at those pixels given by the mask.
  */
 template <typename T>
-void boundMedianFilter(MultidimArray< T > &V, MultidimArray<char> mask, int n=0)
+void boundMedianFilter(MultidimArray< T > &V, const MultidimArray<char> &mask, int n=0)
 {
     bool badRemaining;
     T neighbours[125];
@@ -1362,7 +1362,7 @@ void boundMedianFilter(MultidimArray< T > &V, MultidimArray<char> mask, int n=0)
                 {
                     //std::sort(neighbours.begin(),neighbours.end());
                     if (N % 2 == 0)
-                        DIRECT_A3D_ELEM(V, k, i, j) = (unsigned char)(0.5*(neighbours[N/2-1]+ neighbours[N/2]));
+                        DIRECT_A3D_ELEM(V, k, i, j) = (T)(0.5*(neighbours[N/2-1]+ neighbours[N/2]));
                     else
                         DIRECT_A3D_ELEM(V, k, i, j) = neighbours[N/2];
                     DIRECT_A3D_ELEM(mask, k, i, j) = false;

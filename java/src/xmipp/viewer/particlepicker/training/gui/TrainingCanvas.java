@@ -7,9 +7,11 @@ import java.awt.event.MouseEvent;
 import java.util.List;
 import javax.swing.SwingUtilities;
 import xmipp.jni.Particle;
+import xmipp.utils.TasksManager;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
+import xmipp.viewer.particlepicker.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.training.model.AutomaticParticle;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
 import xmipp.viewer.particlepicker.training.model.MicrographFamilyData;
@@ -152,16 +154,14 @@ public class TrainingCanvas extends ParticlePickerCanvas
 				micrograph.removeParticle(active, ppicker);
 				active = getLastParticle();
 				refresh();
-				if (!(active instanceof AutomaticParticle))
-					frame.updateTemplates();
+				
 			}
 			else
 				manageActive(x, y);
 			if (activemoved)
 			{
-				frame.updateTemplates();
-				ppicker.addParticleToTemplates(active, frame.isCenterParticle());
 
+				TasksManager.getInstance().addTask(new ParticleToTemplatesTask(active));
 				setActiveMoved(false);
 			}
 
@@ -268,5 +268,8 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		micrograph = (TrainingMicrograph) m;
 
 	}
+
+
+
 
 }

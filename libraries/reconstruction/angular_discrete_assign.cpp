@@ -748,9 +748,9 @@ void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileNa
 #ifdef DEBUG
 
     img.write("PPPoriginal.xmp");
+    double bestCorr=-1e38;
 #endif
 
-    double bestCorr=-1e38;
     for (int flip=0; flip<=1; ++flip)
 		for (double shiftX = Xoff - max_shift_change; shiftX <= Xoff + max_shift_change; shiftX += shift_step)
 			for (double shiftY = Yoff - max_shift_change; shiftY <= Yoff + max_shift_change; shiftY += shift_step)

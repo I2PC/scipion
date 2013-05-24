@@ -104,8 +104,8 @@ def detectJava():
     
 def detectMpi():
     from protlib_filesystem import findFilePath
-    inc_dirs = ['/usr/include', '/usr/local/include']
-    lib_dirs = ['/usr/lib64', '/usr/lib']
+    inc_dirs = ['/usr/include', '/usr/local/include', '/usr/include/openmpi-x86_64']
+    lib_dirs = ['/usr/lib64', '/usr/lib', '/usr/lib/openmpi/lib', '/usr/lib64/openmpi/lib']
     inc_mpi = findFilePath('mpi.h', *(inc_dirs + lib_dirs))
     if sys.platform  == 'darwin':
         lib_mpi = findFilePath('libmpi.dylib', *lib_dirs)
@@ -321,13 +321,28 @@ options = ArgDict(sys.argv)
 
 
 # Output file
-OUTPUT = 'build/scons_output.log'
+OUTPUT = "build/scons_output.log"
+
+if os.path.exists(OUTPUT):
+    found = False
+    log_number = list(range(1,999))
+    i = iter(log_number)
+    item = i.next()
+    while not found:
+        if not os.path.exists("build/scons_output_%03i.log" % item):
+            OUTPUT = "build/scons_output_%03i.log" % item
+            found = True
+        item = i.next()
+    if item >= 999:
+        os.remove("build/scons_output*")
+	
+
 if WINDOWS:
     STDOUT = 'build/scons_output_stdout.log'
 else:
     STDOUT = '/dev/stdout'
-if os.path.exists(OUTPUT):
-    os.remove(OUTPUT)
+#if os.path.exists(OUTPUT):
+#    os.remove(OUTPUT)
 # TRY TO READ CONFIG FILE
 CONFIG = '.xmipp_scons.options'
 
@@ -370,6 +385,13 @@ if GUI:
         answer = raw_input("Do you want to proceed from command line? [Y/n]:")
         if len(answer) and answer.lower() != 'y':
             exit(0)
+else:
+    import subprocess
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+    tee = subprocess.Popen(["tee", OUTPUT], stdin=subprocess.PIPE)
+    os.dup2(tee.stdin.fileno(), sys.stdout.fileno())
+    os.dup2(tee.stdin.fileno(), sys.stderr.fileno())
+
 
 # Run configuration and compile from command line
 nb = ConsoleConfigNotebook(options)
