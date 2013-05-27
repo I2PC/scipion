@@ -89,7 +89,7 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
         
         # If input micrographs have tilt pairs copy the relation
         if setMics.hasTiltPairs():
-            xmippSet.copyTiltPairs(setMics, mapsId)
+            xmippSet.copyTiltPairs(setMics, mapsId.get)
             
         xmippSet.write()
         

@@ -118,7 +118,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         if self.inputMics.hasTiltPairs():
             
             #TODO: FILL mapIds
-            micSet.copyTiltPairs(self.inputMics, mapsId)
+            micSet.copyTiltPairs(self.inputMics, mapsId.get)
             
         micSet.write()
             

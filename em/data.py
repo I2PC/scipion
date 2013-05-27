@@ -215,15 +215,16 @@ class SetOfImages(EMObject):
         from other set of images to current one"""
         self.copyAttributes(other, 'samplingRate', '_ctf', '_tiltPairs')
         
-    def copyTiltPairs(self, other, idMap):
+    def copyTiltPairs(self, other, mapFunc):
         """ Copy tilted pairs relation from other set of images 
         to the current one.
         Params:
         other: set containing tilted pairs.
-        idMap: mapping between other ids to self ids. """
+        mapFunc: function that mapps elements from other ids to self ids. 
+                 usually this function will be the dict.get method. """
 
         for iU, iT in other.iterTiltPairs():
-            self.appendPair(idMap[iU], idMap[iT])
+            self.appendPair(mapFunc(iU), mapFunc(iT))
                 
     def hasTiltPairs(self):
         """ Return True it the SetOFImages has tilt pairs """
