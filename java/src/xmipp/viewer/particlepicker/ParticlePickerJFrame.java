@@ -442,7 +442,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				reloadImage();
 			}
 
-			getParticlePicker().saveFilters();
+			getParticlePicker().saveConfig();
 		}
 		catch (Exception ex)
 		{

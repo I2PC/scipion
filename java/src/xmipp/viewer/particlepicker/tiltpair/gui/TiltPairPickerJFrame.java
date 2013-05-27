@@ -5,7 +5,6 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -39,7 +38,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 
 	private TiltPairPicker pppicker;
 	private JMenuBar mb;
-	private JPanel particlespn;
 	private JPanel micrographpn;
 	private UntiltedMicrographCanvas canvas;
 	private MicrographPairsTableModel micrographsmd;
@@ -63,7 +61,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		super(picker);
 		pppicker = picker;
 		initComponents();
-		enableEdition(picker.getMode() != FamilyState.ReadOnly);
+		enableEdition(picker.getMode() != Mode.ReadOnly);
 		setChanged(false);
 	}
 
