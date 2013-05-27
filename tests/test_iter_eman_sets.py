@@ -8,17 +8,34 @@ import sys
 from pyworkflow.manager import Manager
 from pyworkflow.project import *
 from pyworkflow.em import *
+import unittest
+import argparse
 
-projName = sys.argv[1]
-manager = Manager()
-proj = manager.createProject(projName)  # Now it will be loaded if exists
+projName = None
 
-print ('*************************************************************************************************************************')
-result = proj.mapper.selectByClass('EmanSetOfCoordinates')
-if len(result):    
-    for emanSetOfCoordinates in result:
-        for emanCoordinate in emanSetOfCoordinates.iterCoordinates():
-            print ("Coordinate: " + str(emanCoordinate.getPosition()))
-else:
-    print "Not EmanSetOfCoordinates found"
-print ('*************************************************************************************************************************')
+class TestIterEman(unittest.TestCase):
+    
+    def setUp(self):
+        manager = Manager()
+        self.proj = manager.createProject(projName)
+        
+    def testIterEman(self):   
+        print ('*************************************************************************************************************************')
+        result = self.proj.mapper.selectByClass('EmanSetOfCoordinates')
+        if len(result):    
+            for emanSetOfCoordinates in result:
+                for emanCoordinate in emanSetOfCoordinates.iterCoordinates():
+                    print ("Coordinate: " + str(emanCoordinate.getPosition()))
+        else:
+            print "Not EmanSetOfCoordinates found"
+        print ('*************************************************************************************************************************')
+        self.assertTrue(True)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('projName')
+    parser.add_argument('unittest_args', nargs='*')
+    args = parser.parse_args()
+    projName = args.projName
+    sys.argv[1:] = args.unittest_args
+    unittest.main()
