@@ -752,7 +752,7 @@ public class SingleParticlePicker extends ParticlePicker
 		}
 	}
 
-	public synchronized void addParticleToTemplates(TrainingParticle particle)
+	public void addParticleToTemplates(TrainingParticle particle)
 	{
 		try
 		{

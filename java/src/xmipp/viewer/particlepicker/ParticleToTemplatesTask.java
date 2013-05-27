@@ -1,6 +1,5 @@
 package xmipp.viewer.particlepicker;
 
-import xmipp.jni.ImageGeneric;
 import xmipp.utils.Task;
 import xmipp.viewer.particlepicker.training.gui.TemplatesJDialog;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
@@ -27,6 +26,7 @@ public class ParticleToTemplatesTask implements Task
 	{
 		try
 		{
+			
 			SingleParticlePicker picker = (SingleParticlePicker)particle.getParticlePicker();
 
 			picker.addParticleToTemplates(particle);

@@ -1,13 +1,7 @@
 package xmipp.viewer.particlepicker;
 
-import java.util.List;
-
-import xmipp.jni.ImageGeneric;
 import xmipp.utils.Task;
 import xmipp.viewer.particlepicker.training.gui.TemplatesJDialog;
-import xmipp.viewer.particlepicker.training.model.Mode;
-import xmipp.viewer.particlepicker.training.model.TrainingMicrograph;
-import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 
 
 public class UpdateTemplatesTask implements Task
