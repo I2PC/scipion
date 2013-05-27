@@ -119,6 +119,7 @@ public class Family
 		List<TrainingParticle> particles;
 		MicrographFamilyData mfd;
 		TrainingParticle particle;
+		double[] align;
 		try
 		{
 			for (TrainingMicrograph m : picker.getMicrographs())
@@ -133,7 +134,7 @@ public class Family
 						setTemplate(igp);
 					else
 					{
-						double[] align = getTemplates().alignImage(igp);
+						align = getTemplates().alignImage(igp);
 						particle.setLastalign(align);
 					}
 				}
