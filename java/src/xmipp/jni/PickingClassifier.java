@@ -13,6 +13,6 @@ public class PickingClassifier
 
 	public native void correct(String micrograph);
 
-	public native void train();
+	public native void train(String[] micrographs);
 
 }

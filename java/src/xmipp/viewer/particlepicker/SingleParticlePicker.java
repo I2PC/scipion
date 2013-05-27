@@ -930,63 +930,67 @@ public class SingleParticlePicker extends ParticlePicker
 		{
 			try
 			{
-				classifier.train();
-				String args = "-i %s --particleSize %s --model %s --outputRoot %s --mode buildinv %s --filter_num %s --NPCA %s --NCORR %s";
-				if (isFastMode())
-					args += " --fast";
-				if (isIncore())
-					args += " --in_core";
-				int filternum = 6;
-				int NPCA = 4;
-				int NCORR = 2;
-				String modelroot = getOutputPath(model);
-
-				for (TrainingMicrograph micrograph : getMicrographs())
-				{
-					if (!micrograph.isEmpty())
-					{
-						args = String.format(args, micrograph.getFile(),// -i
-								getSize(), // --particleSize
-								modelroot,// --model
-								getOutputPath(micrograph.getName()), // --outputRoot
-								getOutputPath(micrograph.getPosFile()), filternum, NPCA, NCORR);
-						System.out.println(args);
-						runXmippProgram("xmipp_micrograph_automatic_picking", args);
-
-					}
-				}
-				args = "-i %s --particleSize %s --model %s --outputRoot %s --mode train";
-				if (isFastMode())
-					args += " --fast";
-				if (isIncore())
-					args += " --in_core";
-
-				args = String.format(args, modelroot + "_particle_avg.xmp",//this is temporarily so it works
-						getSize(), // --particleSize
-						modelroot,// --model
-						modelroot // --outputRoot
-						);// train
-				System.out.println(args);
-				runXmippProgram("xmipp_micrograph_automatic_picking", args);
-
-				if (getMicrograph().getState() == MicrographState.Manual)//autopick on current micrograph
-				{
-					classifier.autopick(getMicrograph().getName());
-					args = "-i %s --particleSize %s --model %s --outputRoot %s --mode try --thr %s --autoPercent %s";
-					if (isFastMode())
-						args += " --fast";
-					if (isIncore())
-						args += " --in_core";
-					args = String.format(args, micrograph.getFile(),// -i
-							getSize(), // --particleSize
-							modelroot,// --model
-							modelroot,// --outputRoot
-							getThreads(),//
-							micrograph.getAutopickpercent()// --thr
-							);
-					runXmippProgram("xmipp_micrograph_automatic_picking", args);
-					loadAutomaticParticles(getMicrograph());
-				}
+				ArrayList<String> trainmics = new ArrayList<String>();
+				for(TrainingMicrograph m: micrographs)
+					if(m.hasManualParticles())
+						trainmics.add(m.getName());
+				classifier.train(trainmics.toArray(new String[]{}));
+//				String args = "-i %s --particleSize %s --model %s --outputRoot %s --mode buildinv %s --filter_num %s --NPCA %s --NCORR %s";
+//				if (isFastMode())
+//					args += " --fast";
+//				if (isIncore())
+//					args += " --in_core";
+//				int filternum = 6;
+//				int NPCA = 4;
+//				int NCORR = 2;
+//				String modelroot = getOutputPath(model);
+//
+//				for (TrainingMicrograph micrograph : getMicrographs())
+//				{
+//					if (!micrograph.isEmpty())
+//					{
+//						args = String.format(args, micrograph.getFile(),// -i
+//								getSize(), // --particleSize
+//								modelroot,// --model
+//								getOutputPath(micrograph.getName()), // --outputRoot
+//								getOutputPath(micrograph.getPosFile()), filternum, NPCA, NCORR);
+//						System.out.println(args);
+//						runXmippProgram("xmipp_micrograph_automatic_picking", args);
+//
+//					}
+//				}
+//				args = "-i %s --particleSize %s --model %s --outputRoot %s --mode train";
+//				if (isFastMode())
+//					args += " --fast";
+//				if (isIncore())
+//					args += " --in_core";
+//
+//				args = String.format(args, modelroot + "_particle_avg.xmp",//this is temporarily so it works
+//						getSize(), // --particleSize
+//						modelroot,// --model
+//						modelroot // --outputRoot
+//						);// train
+//				System.out.println(args);
+//				runXmippProgram("xmipp_micrograph_automatic_picking", args);
+//
+//				if (getMicrograph().getState() == MicrographState.Manual)//autopick on current micrograph
+//				{
+//					classifier.autopick(getMicrograph().getName());
+//					args = "-i %s --particleSize %s --model %s --outputRoot %s --mode try --thr %s --autoPercent %s";
+//					if (isFastMode())
+//						args += " --fast";
+//					if (isIncore())
+//						args += " --in_core";
+//					args = String.format(args, micrograph.getFile(),// -i
+//							getSize(), // --particleSize
+//							modelroot,// --model
+//							modelroot,// --outputRoot
+//							getThreads(),//
+//							micrograph.getAutopickpercent()// --thr
+//							);
+//					runXmippProgram("xmipp_micrograph_automatic_picking", args);
+//					loadAutomaticParticles(getMicrograph());
+//				}
 
 				XmippWindowUtil.releaseGUI(frame.getRootPane());
 				frame.getCanvas().setEnabled(true);
@@ -1012,25 +1016,25 @@ public class SingleParticlePicker extends ParticlePicker
 
 		public void run()
 		{
-
-			String args = "-i %s --particleSize %s --model %s --outputRoot %s --mode try --thr %s --autoPercent %s";
-			if (isFastMode())
-				args += " --fast";
-			if (isIncore())
-				args += " --in_core";
-			
-			String modelroot = getOutputPath(model);
-			
-			args = String.format(args, micrograph.getFile(),// -i
-					getSize(), // --particleSize
-					modelroot,// --model
-					modelroot,// --outputRoot
-					getThreads(),//
-					micrograph.getAutopickpercent()// --thr
-					);
-			
-			runXmippProgram("xmipp_micrograph_automatic_picking", args);
-			loadAutomaticParticles(getMicrograph());
+			classifier.autopick(getMicrograph().getName());
+//			String args = "-i %s --particleSize %s --model %s --outputRoot %s --mode try --thr %s --autoPercent %s";
+//			if (isFastMode())
+//				args += " --fast";
+//			if (isIncore())
+//				args += " --in_core";
+//			
+//			String modelroot = getOutputPath(model);
+//			
+//			args = String.format(args, micrograph.getFile(),// -i
+//					getSize(), // --particleSize
+//					modelroot,// --model
+//					modelroot,// --outputRoot
+//					getThreads(),//
+//					micrograph.getAutopickpercent()// --thr
+//					);
+//			
+//			runXmippProgram("xmipp_micrograph_automatic_picking", args);
+//			loadAutomaticParticles(getMicrograph());
 
 			frame.getCanvas().repaint();
 			frame.getCanvas().setEnabled(true);

@@ -21,7 +21,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_correct
   (JNIEnv *, jclass, jstring);
 
 JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_train
-  (JNIEnv *, jclass);
+  (JNIEnv *, jclass, jobjectArray);
 
 
 #ifdef __cplusplus
