@@ -227,6 +227,14 @@ void ProgIDRXrayTomo::run()
             XrayRotateAndProjectVolumeOffCentered(phantom, psf, proj, stdProj, YSIZE(MULTIDIM_ARRAY(phantom.iniVol)),
                                                   XSIZE(MULTIDIM_ARRAY(phantom.iniVol)));
 
+            /* Image normalization to optimize for reconstruction.
+             * To correct for self-attenuation (without considering 3DPSF)
+             * I = -ln(Iab)
+             */
+            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(MULTIDIM_ARRAY(proj))
+            dAi(MULTIDIM_ARRAY(proj),n) = -log(1. - dAi(MULTIDIM_ARRAY(proj),n));
+
+
             fixedProj.read(fnProj);
             mFixedProj.alias(MULTIDIM_ARRAY(fixedProj));
 
@@ -241,8 +249,9 @@ void ProgIDRXrayTomo::run()
 
             // debug stuff //
             if (verbose > 5)
-            {
-                proj.write(fnRootInter + "_debug_proj.stk", imgNo , true, WRITE_REPLACE);
+        {
+            proj.write(fnRootInter + "_debug_proj.stk", imgNo , true, WRITE_REPLACE)
+                ;
                 stdProj.write(fnRootInter + "_debug_std_proj.stk", imgNo , true, WRITE_REPLACE);
 
                 FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mFixedProj)

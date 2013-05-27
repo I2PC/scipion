@@ -67,7 +67,7 @@ class XmippChimeraClient:
         self.initVolumeData()
         self.spheres_color = spheres_color
         self.spheres_distance = float(spheres_distance) if not spheres_distance == 'default' else max(self.xdim, self.ydim, self.zdim)
-        print self.spheres_distance
+#        print self.spheres_distance
         self.spheres_maxradius = float(spheres_maxradius) if not spheres_maxradius == 'default' else 0.02 * self.spheres_distance
       
         printCmd('openVolumeOnServer')
@@ -98,7 +98,7 @@ class XmippChimeraClient:
        
     
     def send(self, cmd, data):
-        print cmd
+#        print cmd
         self.client.send(cmd)
         self.client.send(data)
         
@@ -151,7 +151,7 @@ class XmippChimeraClient:
 
 class XmippProjectionExplorer(XmippChimeraClient):
     
-    def __init__(self, volfile, angulardistfile=None, spheres_color='red', spheres_distance='default', spheres_maxradius='default', padding_factor=1, max_freq=0.5, spline_degree=2):
+    def __init__(self, volfile, angulardistfile=None, spheres_color='red', spheres_distance='default', spheres_maxradius='default', size='default', padding_factor=1, max_freq=0.5, spline_degree=2):
 
         XmippChimeraClient.__init__(self, volfile, angulardistfile, spheres_color, spheres_distance, spheres_maxradius)
         
@@ -166,8 +166,9 @@ class XmippProjectionExplorer(XmippChimeraClient):
         printCmd('initListenThread')
         self.initListenThread()
         printCmd('creating iw')
+        self.size = float(size) if not size == 'default' else self.xdim
         
-        self.iw = ImageWindow(image=self.projection, dim=100, label="Projection")
+        self.iw = ImageWindow(image=self.projection, dim=self.size, label="Projection")
         self.iw.root.protocol("WM_DELETE_WINDOW", self.exitClient)
         self.iw.root.mainloop()
                 
@@ -209,5 +210,5 @@ class XmippProjectionExplorer(XmippChimeraClient):
             
 def printCmd(cmd):
         timeformat = "%S.%f" 
-        print datetime.now().strftime(timeformat) + ' %s'%cmd
+        #print datetime.now().strftime(timeformat) + ' %s'%cmd
 

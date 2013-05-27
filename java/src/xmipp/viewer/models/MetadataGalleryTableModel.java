@@ -337,6 +337,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 
 			wrap = data.wrap;
 			objId = data.ids[index];
+			
 		}
 
 		@Override
@@ -361,6 +362,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 			useGeometry = data.useGeo;
 			wrap = data.wrap;
 			this.label = label;
+			
 		}
 
 		@Override

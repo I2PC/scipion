@@ -322,17 +322,6 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 	}
 
 	
-
-	@Override
-	protected void resetData()
-	{
-		picker.resetAllMicrographs();		
-		canvas.refreshActive(null);
-		updateMicrographsModel();
-		
-
-	}
-
 	@Override
 	public String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty)
 	{
