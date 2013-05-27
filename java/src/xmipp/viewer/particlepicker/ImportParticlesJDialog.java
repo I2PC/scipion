@@ -143,6 +143,7 @@ public class ImportParticlesJDialog extends XmippDialog {
 				String result = importParticles();
 				if(result != null && !result.equals(""))
 					XmippDialog.showInfo(this.parent, result);
+
 			}
 		} catch (Exception e) {
 			XmippDialog.showException(parent, e);
@@ -152,6 +153,7 @@ public class ImportParticlesJDialog extends XmippDialog {
 	protected String importParticles()
 	{
 		return parent.importParticles(format, path, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
+
 	}
 	
 	

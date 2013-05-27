@@ -63,8 +63,8 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		super(picker);
 		pppicker = picker;
 		initComponents();
-		if (picker.getMode() == Mode.ReadOnly)
-			enableEdition(false);
+		enableEdition(picker.getMode() != FamilyState.ReadOnly);
+		setChanged(false);
 	}
 
 	private void initComponents()
@@ -89,6 +89,9 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		initMicrographsPane();
 		add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 2, 3));
 		JPanel actionspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		actionspn.add(savebt);
+		actionspn.add(saveandexitbt);
+		add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 3, 3, GridBagConstraints.HORIZONTAL));
 
 		actionspn.add(savebt);
 		actionspn.add(saveandexitbt);
@@ -350,7 +353,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		XmippWindowUtil.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Micrograph__picking_v3");
 	}
 
-	
+
 	
 	public String importParticlesFromFiles(Format format, String file1, String file2, float scale, boolean invertx, boolean inverty){
 			

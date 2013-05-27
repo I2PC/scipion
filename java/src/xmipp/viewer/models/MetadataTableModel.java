@@ -251,6 +251,8 @@ public class MetadataTableModel extends MetadataGalleryTableModel
 			{
 				//new XmippImageWindow(data.window, new MdRowImageLoader(row, ci.getLabel()));
 				ImagePlusLoader loader = new MdRowImageLoader(row, ci.getLabel());
+				if(getNormalized())
+					loader.setNormalize(normalize_min, normalize_max);
 				ImagesWindowFactory.openXmippImageWindow(data.window, loader, loader.allowsPoll());
 				return true;
 			}

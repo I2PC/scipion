@@ -28,9 +28,6 @@ public class UpdateTemplatesTask implements Task
 				dialog.loadTemplates(true);
 			System.out.println("Templates updated");
 		
-
-
-
 	}
 
 }

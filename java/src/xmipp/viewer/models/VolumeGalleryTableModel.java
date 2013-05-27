@@ -135,7 +135,10 @@ public class VolumeGalleryTableModel extends ImageGalleryTableModel {
 	@Override
 	public ImagePlusLoader getImageLoader() {
 		try {
-			return new VolumeLoader();
+			ImagePlusLoader loader =  new ImagePlusLoader(data.selectedVolFn);
+			if(data.normalize)
+				loader.setNormalize(normalize_min, normalize_max);
+			return loader;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -148,34 +151,6 @@ public class VolumeGalleryTableModel extends ImageGalleryTableModel {
 		return false;
 	}
 
-	// Extension of the ImagePlusLoader, read an entire volume as an ImagePlus
-	public class VolumeLoader extends ImagePlusLoader {
-		boolean normalize;
-
-		public VolumeLoader() {
-			super(data.selectedVolFn);
-			normalize = data.normalize;
-		}
-
-		@Override
-		protected ImagePlus loadSingleImageFromFile() throws Exception {
-			ImagePlus imp = XmippImageConverter.convertToImagePlus(volume);
-			if (normalize) {
-				imp.getProcessor().setMinAndMax(normalize_min, normalize_max);
-				imp.updateImage();
-			}
-			return imp;
-		}
-		@Override
-		public boolean isVolume()
-		{
-			return true;
-		}
-		@Override
-		public boolean allowsGeometry()
-		{
-			return false;
-		}
-	}//class VolumeLoader
+	
 
 }// class VolumeGallery

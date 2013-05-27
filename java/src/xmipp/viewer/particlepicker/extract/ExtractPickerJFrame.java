@@ -332,7 +332,6 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 
 	
 
-
 	@Override
 	public String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty)
 	{
