@@ -1,5 +1,4 @@
 function evalElements() {
-	alert("hola");
 	$("tr").each(function(index) {
 		var value = jQuery(this).attr('data-value');
 		var type = jQuery(this).attr('data-type');
@@ -99,59 +98,63 @@ function help(title, msg) {
  * Browse object in the database. Params: objClass: the class to get instances
  * from (also subclasses)
  */
-function browseObjects(objClass) {
+function browseObjects(node, projName, objClass) {
 	$.ajax({
 		type : "GET",
-		url : "/browse_objects/?objClass=" + objClass,
+		url : "/browse_objects/?projectName=" + projName + "&objClass=" + objClass,
 		dataType : "json",
 		success : function(json) {
 			// specifying a dataType of json makes jQuery pre-eval the response
 			// for us
-			// alert(json.objects);
-
-			//Generate the list formatted
-			var array = json.objects;
-			var res = getTableFormatted(array);
-
-			selectObjects('Select ' + objClass, res);
+			var res = getListFormatted(node, json.objects, objClass);
+			selectDialog(objClass, res, "processSelection");
 
 		}
 	});
 }
 
-function getTableFormatted(list){
-	var res = "<div style='overflow:auto'>
-	<table class='browse' id='browse' cellspacing='0'>";
-	for(var x=0;x<list.length;x++){
-		res = res + "<tr id='browse'>
-		<td id='browse'><a id='browse' href=''>"+ list[x] + 
-		"</a></td></tr>";
+function getListFormatted(node, list, id) {
+	var res = "<div id='content' style='overflow:auto' data-node='" + node
+			+ "'>";
+	for ( var x = 0; x < list.length; x++) {
+		res = res + "<input type='radio' id ='" + id + x + "' name='" + id
+				+ "'  value='" + list[x] + "' />" + list[x] + "<br />";
 	}
-	res = res + "</table></div>";
+	res = res + "</div>";
 	return res;
 }
 
-function selectObjects(title, msg) {
+function selectDialog(objClass, msg, funcName) {
 	new Messi(msg, {
-		title : title,
+		title : 'Select' + objClass,
 		modal : true,
 		buttons : [ {
 			id : 0,
 			label : 'Select',
 			val : 'Y',
-			btnClass : 'btn-select'
+			btnClass : 'btn-select',
+			btnFunc: funcName
 		}, {
 			id : 1,
 			label : 'Cancel',
 			val : 'C',
 			btnClass : 'btn-cancel'
-		} ],
-		callback : function(val) {
-			if (val == 'Y') {
-				alert('You are selected one');
-			}
+		} ]
+	// callback : function(val) {
+	// if (val == 'Y') {
+	// alert();
+	// }
+	// }
+	});
+}
+
+function processSelection(elm) {
+	elm.children('input').each(function() {
+		if (jQuery(this).attr('checked')) {
+			elm.val(jQuery(this).attr('value'));
 		}
 	});
+	jQuery('input#' + elm.attr('data-node') + '_input').val(elm.attr('value'));
 }
 
 function filemanager(elm, type, name) {

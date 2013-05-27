@@ -204,7 +204,10 @@ def form(request):
             if protVar is None:
                 raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
                 # Create the label
-            param.htmlValue = protVar.get(param.default.get(""))
+            if protVar.isPointer():
+                param.htmlValue = protVar.getNameId()
+            else:
+                param.htmlValue = protVar.get(param.default.get(""))
             param.htmlCond = param.condition.get()
             param.htmlDepend = ','.join(param._dependants)
             param.htmlCondParams = ','.join(param._conditionParams)
@@ -249,6 +252,8 @@ def protocol(request):
             value = project.mapper.selectById(int(value))  # Get the object from its id
         attr.set(value)
     # Finally, launch the protocol
+    project.launchProtocol(protocol)
+    
     return project_content(request)
 
 def browse_objects(request):
@@ -263,7 +268,7 @@ def browse_objects(request):
         
         objs = []
         for obj in project.mapper.selectByClass(objClass, iterate=True):
-            objs.append('%s.%s' % (obj.getName(), obj.strId()))
+            objs.append(obj.getNameId())
         jsonStr = json.dumps({'objects' : objs},
                              ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
