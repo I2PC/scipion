@@ -43,7 +43,7 @@
 void FuzzySOM::nSteps(const unsigned long& _nSteps)
 {
     somNSteps = _nSteps;
-};
+}
 
 //-----------------------------------------------------------------------------
 /**
@@ -53,7 +53,7 @@ void FuzzySOM::nSteps(const unsigned long& _nSteps)
 void FuzzySOM::initialFuzzyMembership(const double& _m0)
 {
     m0 = _m0;
-};
+}
 
 
 //-----------------------------------------------------------------------------
@@ -64,7 +64,7 @@ void FuzzySOM::initialFuzzyMembership(const double& _m0)
 void FuzzySOM::finalFuzzyMembership(const double& _m1)
 {
     m1 = _m1;
-};
+}
 
 
 //-----------------------------------------------------------------------------
@@ -75,7 +75,7 @@ void FuzzySOM::finalFuzzyMembership(const double& _m1)
 void FuzzySOM::setAnnSteps(const unsigned long& _annSteps)
 {
     annSteps = _annSteps;
-};
+}
 
 
 //-----------------------------------------------------------------------------
@@ -86,7 +86,7 @@ void FuzzySOM::setAnnSteps(const unsigned long& _annSteps)
 void FuzzySOM::regularization(const double& _reg)
 {
     reg = _reg;
-};
+}
 
 
 //-----------------------------------------------------------------------------
@@ -104,7 +104,7 @@ void FuzzySOM::train(FuzzyMap& _som, const TS& _examples)
     tmpV.resize(dim, 0.);
     tmpDens.resize(numNeurons, 0.);
     tmpMap.resize(numNeurons);
-    for (int i = 0; i < numNeurons; i++)
+    for (size_t i = 0; i < numNeurons; i++)
         tmpMap[i].resize(dim, 0.);
 
     tmpD.resize(numNeurons);
@@ -118,8 +118,8 @@ void FuzzySOM::train(FuzzyMap& _som, const TS& _examples)
     if (annSteps)
     {
 
-        for (int i = 0; i <  _examples.size(); i++)
-            for (int j = 0; j < _som.size(); j++)
+        for (size_t i = 0; i <  _examples.size(); i++)
+            for (size_t j = 0; j < _som.size(); j++)
                 _som.memb[i][j] = 0.;
 
         if (verbosity)
@@ -128,7 +128,7 @@ void FuzzySOM::train(FuzzyMap& _som, const TS& _examples)
             listener->OnInitOperation(annSteps);
 
         double fuzz;
-        for (int iter = 0; iter < annSteps; iter++)
+        for (size_t iter = 0; iter < annSteps; iter++)
         {
 
             fuzz = m0 - iter * (m0 - m1) / (annSteps - 1);
@@ -139,7 +139,7 @@ void FuzzySOM::train(FuzzyMap& _som, const TS& _examples)
             if (verbosity >= 2)
             {
                 char s[100];
-                sprintf(s, "Iteration %d of %d. Code vectors variation: %g\n", iter + 1, annSteps, stopError);
+                sprintf(s, "Iteration %d of %d. Code vectors variation: %g\n", (int)(iter + 1), (int)annSteps, stopError);
                 listener->OnReportOperation((std::string) s);
             }
         }
@@ -151,8 +151,8 @@ void FuzzySOM::train(FuzzyMap& _som, const TS& _examples)
     // Fixed steps
 
 
-    for (int i = 0; i <  _examples.size(); i++)
-        for (int j = 0; j < _som.size(); j++)
+    for (size_t i = 0; i <  _examples.size(); i++)
+        for (size_t j = 0; j < _som.size(); j++)
             _som.memb[i][j] = 0.;
 
 
@@ -174,7 +174,7 @@ void FuzzySOM::train(FuzzyMap& _som, const TS& _examples)
         if (verbosity >= 2)
         {
             char s[100];
-            sprintf(s, "Iteration %d of %d. Code vectors variation: %g\n", t, somNSteps, stopError);
+            sprintf(s, "Iteration %d of %d. Code vectors variation: %g\n", (int)t, (int)somNSteps, stopError);
             listener->OnReportOperation((std::string) s);
         }
     } // while
@@ -187,7 +187,7 @@ void FuzzySOM::train(FuzzyMap& _som, const TS& _examples)
     tmpMap.clear();
     tmpD.clear();
 
-};
+}
 
 
 //-----------------------------------------------------------------------------
@@ -210,7 +210,7 @@ double FuzzySOM::test(const FuzzyMap& _som, const TS& _examples) const
 
     /* Scan all data entries */
     double qerror = 0.0;
-    for (int i = 0; i < _examples.size(); i++)
+    for (size_t i = 0; i < _examples.size(); i++)
     {
         SomIn& theBest = _som.fuzzyTest(i); // get the best
         qerror += euclideanDistance(theBest, _examples.theItems[i]);
@@ -224,7 +224,7 @@ double FuzzySOM::test(const FuzzyMap& _som, const TS& _examples) const
         listener->OnProgress(_examples.size());
     return (qerror / (double) _examples.size());
 
-};
+}
 
 
 //-----------------------------------------------------------------------------
@@ -346,7 +346,7 @@ double FuzzySOM::functional(const TS& _examples, const FuzzyMap& _som, double _m
         for (cc = 0; cc < numNeurons; cc++)
         {
             t = 0;
-            for (int j = 0; j < dim; j++)
+            for (size_t j = 0; j < dim; j++)
                 t += ((double)(_examples.theItems[vv][j]) - (double)(_som.theItems[cc][j])) * ((double)(_examples.theItems[vv][j]) - (double)(_som.theItems[cc][j]));
             t1 = (double) pow((double)_som.memb[vv][cc], (double) _m);
             t2 += t1;
@@ -377,9 +377,9 @@ double FuzzySOM::functional(const TS& _examples, const FuzzyMap& _som, double _m
 void FuzzySOM::showX(const TS& _ts)
 {
     std::cout << "Data (1..nd, 1..nv) "  << std::endl;
-    for (int i = 0; i < _ts.size(); i++)
+    for (size_t i = 0; i < _ts.size(); i++)
     {
-        for (int j = 0; j < _ts.theItems[0].size(); j++)
+        for (size_t j = 0; j < _ts.theItems[0].size(); j++)
         {
             std::cout << i + 1 << "  " << j + 1 << "  " << _ts.theItems[i][j] << std::endl;
         }
@@ -391,11 +391,11 @@ void FuzzySOM::showX(const TS& _ts)
 void FuzzySOM::showV(FuzzyMap& _som)
 {
     std::cout << "Code vectors (1..ni, 1..nj, 1..nv) "  << std::endl;
-    for (int i = 0; i < _som.size(); i++)
+    for (size_t i = 0; i < _som.size(); i++)
     {
         int tmpj = _som.indexToPos(i).first;
         int tmpi = _som.indexToPos(i).second;
-        for (int j = 0; j < _som.theItems[0].size(); j++)
+        for (size_t j = 0; j < _som.theItems[0].size(); j++)
             std::cout << tmpi + 1 << "  " << tmpj + 1 << "  " << j + 1 << "  " << _som.theItems[i][j] << std::endl;
     }
 }
@@ -404,9 +404,9 @@ void FuzzySOM::showV(FuzzyMap& _som)
 void FuzzySOM::showU(FuzzyMap& _som, const TS& _ts)
 {
     std::cout << " Memberships (1..nd,1..ni,1..nj)" << std::endl;
-    for (int i = 0; i <  _ts.size(); i++)
+    for (size_t i = 0; i <  _ts.size(); i++)
     {
-        for (int j = 0; j < _som.size(); j++)
+        for (size_t j = 0; j < _som.size(); j++)
         {
             int tmpj = _som.indexToPos(j).first;
             int tmpi = _som.indexToPos(j).second;

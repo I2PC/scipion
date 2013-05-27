@@ -39,7 +39,7 @@
 // SIMPLY_OPEN_FRINGES, SIMPLY_CLOSED_FRINGES, COMPLEX_OPEN_FRINGES, COMPLEX_CLOSED_FRINGES
 // xdim is the image dimension in x axis
 // ydim is the image dimension in y axis
-void FringeProcessing::simulPattern(MultidimArray<double> & im, enum FP_TYPE type, int xdim, int ydim, double noiseLevel, const double freq, Matrix1D<int> coefs)
+void simulPattern(MultidimArray<double> & im, enum FP_TYPE type, int xdim, int ydim, double noiseLevel, const double freq, Matrix1D<int> coefs)
 {
 
     //FIRST WE TRAVEL ALL ELEMENTS fn im
@@ -108,14 +108,13 @@ void FringeProcessing::simulPattern(MultidimArray<double> & im, enum FP_TYPE typ
 //sd=SPHT(c)=i*exp(i*dir)*b*sin(phi)
 //Ref: Kieran G. Larkin, Donald J. Bone, and Michael A. Oldfield, "Natural
 //demodulation of two-dimensional fringe patterns. I. General background of the spiral phase quadrature transform," J. Opt. Soc. Am. A 18, 1862-1870 (2001)
-void FringeProcessing::SPTH(MultidimArray<double> & im, MultidimArray< std::complex <double> > & imProc)
+void SPTH(FourierTransformer &ftrans, MultidimArray<double> & im, MultidimArray< std::complex <double> > & imProc)
 {
     im.setXmippOrigin();
     MultidimArray<std::complex<double> > H, fftIm, imComplex;
     typeCast(im, imComplex);
 
     // Fourier Transformer
-    FourierTransformer ftrans(FFTW_BACKWARD);
     ftrans.FourierTransform(imComplex, fftIm, false);
 
     H.resizeNoCopy(fftIm);
@@ -124,26 +123,32 @@ void FringeProcessing::SPTH(MultidimArray<double> & im, MultidimArray< std::comp
     //std::complex<double> compTemp(0, 0);
     //i -> for exterior filas o Y
     //j -> for interior columns o X
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
+    for (int i=STARTINGY(H); i<=FINISHINGY(H); i++)
     {
-        A2D_ELEM(H,i,j) = (std::complex<double>(j,i))/std::sqrt(std::pow((double)i,2)+(std::pow((double)j,2)));
-        //We subtract the singular value in i=0, j=0
-        if ( (i==0) && (j==0) )
-            A2D_ELEM(H,i,j) = 0;
+    	double i2=((double)i)*i;
+    	for (int j=STARTINGX(H); j<=FINISHINGX(H); j++)
+    	{
+			double j2=((double)j)*j;
+			double iR;
+			if ( (i!=0) || (j!=0))
+				iR=1.0/std::sqrt(i2+j2);
+			else
+				iR=0.;
+			double *ptr=(double*)&A2D_ELEM(H,i,j);
+			*ptr=j*iR;
+			*(ptr+1)=i*iR;
+    	}
     }
 
-    CenterFFT(H,false);
     fftIm *= H;
     ftrans.inverseFourierTransform();
     //Here in the Matlab code there is a complex conjugate s
     imProc = imComplex;
-
 }
 
-void FringeProcessing::orMinDer(const MultidimArray<double> & im, MultidimArray<double > & orMap, MultidimArray<double > & orModMap, int wSize, MultidimArray<bool > & ROI)
+void orMinDer(const MultidimArray<double> & im, MultidimArray<double > & orMap, MultidimArray<double > & orModMap, int wSize, MultidimArray<bool > & ROI)
 {
-    int NR, NC,NZ;
-    size_t NDim;
+    size_t NR, NC,NZ, NDim;
     im.getDimensions(NC,NR,NZ,NDim);
 
     if ( (NZ!=1) || (NDim!=1) )
@@ -160,23 +165,23 @@ void FringeProcessing::orMinDer(const MultidimArray<double> & im, MultidimArray<
     orn.resizeNoCopy(im);
     ornMod.resizeNoCopy(im);
 
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(im)
     {
         A2D_ELEM(mask,i,j)  = 0;
 
         if ( (i==0) || (i== (NR-1)) || (j == 0) || (j== (NC-1)) )
         {
-            A2D_ELEM(d0,i,j)  = 0;
-            A2D_ELEM(d45,i,j) = 0;
-            A2D_ELEM(d90,i,j) = 0;
-            A2D_ELEM(d135,i,j)= 0;
+            DIRECT_A2D_ELEM(d0,i,j)  = 0;
+            DIRECT_A2D_ELEM(d45,i,j) = 0;
+            DIRECT_A2D_ELEM(d90,i,j) = 0;
+            DIRECT_A2D_ELEM(d135,i,j)= 0;
         }
         else
         {
-            A2D_ELEM(d0,i,j)  = std::sqrt(2)*std::abs(A2D_ELEM(im,i+1,j)-A2D_ELEM(im,i-1,j));
-            A2D_ELEM(d45,i,j) = std::abs(A2D_ELEM(im,i+1,j-1)-A2D_ELEM(im,i-1,j+1));
-            A2D_ELEM(d90,i,j) = std::sqrt(2)*std::abs(A2D_ELEM(im,i,j+1)-A2D_ELEM(im,i,j-1));
-            A2D_ELEM(d135,i,j)= std::abs(A2D_ELEM(im,i+1,j+1)-A2D_ELEM(im,i-1,j-1));
+            DIRECT_A2D_ELEM(d0,i,j)  = std::sqrt(2)*std::abs(A2D_ELEM(im,i+1,j)-A2D_ELEM(im,i-1,j));
+            DIRECT_A2D_ELEM(d45,i,j) = std::abs(A2D_ELEM(im,i+1,j-1)-A2D_ELEM(im,i-1,j+1));
+            DIRECT_A2D_ELEM(d90,i,j) = std::sqrt(2)*std::abs(A2D_ELEM(im,i,j+1)-A2D_ELEM(im,i,j-1));
+            DIRECT_A2D_ELEM(d135,i,j)= std::abs(A2D_ELEM(im,i+1,j+1)-A2D_ELEM(im,i-1,j-1));
         }
     }
 
@@ -225,7 +230,8 @@ void FringeProcessing::orMinDer(const MultidimArray<double> & im, MultidimArray<
     orModMap = ornMod;
 }
 
-void FringeProcessing::normalize(MultidimArray<double> & im, MultidimArray<double > & imN,  MultidimArray<double > & imModMap, double R, double S, MultidimArray<bool> & ROI)
+void normalize(FourierTransformer &ftrans, MultidimArray<double> & im, MultidimArray<double > & imN,  MultidimArray<double > & imModMap,
+		double R, double S, MultidimArray<bool> & ROI)
 {
     // H is an Annular filter with radius=R and sigma=S and a Gaussian DC filter with sigma=1
     MultidimArray< std::complex<double> > H;
@@ -238,18 +244,24 @@ void FringeProcessing::normalize(MultidimArray<double> & im, MultidimArray<doubl
     typeCast(im, imComplex);
 
     //Fourier Transformer
-    FourierTransformer ftrans(FFTW_BACKWARD);
     ftrans.FourierTransform(imComplex, fftIm, false);
 
     double temp = 0;
-    std::complex<double> tempCpx;
-
-
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
+    double K=1.0/(2*S*S);
+    for (int i=STARTINGY(im); i<=FINISHINGY(im); ++i)
     {
-        temp= std::exp(-std::pow((std::sqrt(std::pow((double)i,2)+std::pow((double)j,2))-R),2)/(2*std::pow(S,2)))*(1-(std::exp((-1)*(std::pow(double(i),2) + std::pow(double(j),2)) /(2*1))));
-        tempCpx = std::complex<double>(temp,temp);
-        A2D_ELEM(H,i,j) = tempCpx;
+    	double di=i;
+    	double i2=di*di;
+    	for (int j=STARTINGX(im); j<=FINISHINGX(im); ++j)
+		{
+        	double dj=j;
+        	double j2=dj*dj;
+        	double i2_j2=i2+j2;
+			// temp= std::exp(-std::pow((std::sqrt(std::pow((double)i,2)+std::pow((double)j,2))-R),2)/(2*std::pow(S,2)))*(1-(std::exp((-1)*(std::pow(double(i),2) + std::pow(double(j),2)) /(2*1))));
+			temp= std::exp(-std::pow((std::sqrt(i2_j2)-R),2)*K)*(1-(std::exp(-0.5*(i2_j2))));
+			double *ptr=(double*)&A2D_ELEM(H,i,j);
+			*ptr=*(ptr+1)=temp;
+		}
     }
 
     CenterFFT(H,false);
@@ -261,12 +273,9 @@ void FringeProcessing::normalize(MultidimArray<double> & im, MultidimArray<doubl
     imModMap.setXmippOrigin();
 
     FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
-    {
         A2D_ELEM(imN,i,j) = A2D_ELEM(imComplex,i,j).real();
-    }
 
-    SPTH(imN,H);
-    sph = H;
+    SPTH(ftrans,imN,H);
 
     FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
     {
@@ -286,7 +295,7 @@ void FringeProcessing::normalize(MultidimArray<double> & im, MultidimArray<doubl
     STARTINGX(imN)=STARTINGY(imN)=0;
 }
 
-void FringeProcessing::normalizeWB(MultidimArray<double> & im, MultidimArray<double > & imN,  MultidimArray<double > & imModMap, double rmax, double rmin, MultidimArray<bool> & ROI)
+void normalizeWB(MultidimArray<double> & im, MultidimArray<double > & imN,  MultidimArray<double > & imModMap, double rmax, double rmin, MultidimArray<bool> & ROI)
 {
 
     // H is an Annular bandpass filter.
@@ -329,8 +338,7 @@ void FringeProcessing::normalizeWB(MultidimArray<double> & im, MultidimArray<dou
         A2D_ELEM(imN,i,j) = A2D_ELEM(imComplex,i,j).real();
     }
 
-    SPTH(imN,H);
-    sph = H;
+    SPTH(ftrans,imN,H);
 
     FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
     {
@@ -350,7 +358,7 @@ void FringeProcessing::normalizeWB(MultidimArray<double> & im, MultidimArray<dou
     STARTINGX(imN)=STARTINGY(imN)=0;
 }
 
-void FringeProcessing::normalizeWB2(MultidimArray<double> & im, MultidimArray<double > & imN,  MultidimArray<double > & imModMap, double rmax, double rmin, MultidimArray<bool> & ROI)
+void normalizeWB2(MultidimArray<double> & im, MultidimArray<double > & imN,  MultidimArray<double > & imModMap, double rmax, double rmin, MultidimArray<bool> & ROI)
 {
 
     // H is an Annular bandpass filter.
@@ -393,8 +401,7 @@ void FringeProcessing::normalizeWB2(MultidimArray<double> & im, MultidimArray<do
         A2D_ELEM(imN,i,j) = A2D_ELEM(imComplex,i,j).real();
     }
 
-    SPTH(imN,H);
-    sph = H;
+    SPTH(ftrans,imN,H);
 
     FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
     {
@@ -426,11 +433,9 @@ public:
     }
 };
 
-void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimArray<double> & qualityMap, double lambda, int size, MultidimArray<double> & dirMap, int x, int y)
+void direction(const MultidimArray<double> & orMap, MultidimArray<double> & qualityMap, double lambda, int size, MultidimArray<double> & dirMap, int x, int y)
 {
     //First we perform some setup stuff
-    int nx = XSIZE(orMap);
-    int ny = YSIZE(orMap);
     double minQuality = 0;
     int imax, jmax, max_levels=10;
 
@@ -457,8 +462,8 @@ void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimAr
     processed.initZeros(orMap);
 
     // Process the first point
-    int i=x;
-    int j=y;
+    size_t i=x;
+    size_t j=y;
 
     A2D_ELEM(dirMap,i,j) = std::atan2(A2D_ELEM(ds,i,j),A2D_ELEM(dc,i,j));
     A2D_ELEM(processed,i,j) = true;
@@ -479,26 +484,29 @@ void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimAr
         j=p.j;
         queueToProcess.pop();
 
-        int indi[8] = {i-1,i-1,i-1,i,i,i+1,i+1,i+1};
-        int indj[8] = {j-1,j,j+1,j-1,j+1,j-1,j,j+1};
+        size_t indi[8] = {i-1,i-1,i-1,i,i,i+1,i+1,i+1};
+        size_t indj[8] = {j-1,j,j+1,j-1,j+1,j-1,j,j+1};
 
         for(int k = 0; k< 8 ; k++)
         {
 
-            int ni=indi[k];
-            int nj=indj[k];
+            size_t ni=indi[k];
+            size_t nj=indj[k];
 
-            if ( (!A2D_ELEM(processed,ni,nj)) && (A2D_ELEM(qualityMap,ni,nj) > minQuality) && ((ni-size)>0) && ((nj-size)>0) && ((ni+size)<YSIZE(processed)-1)
-                 && ((nj+size)<XSIZE(processed)-1) )
+            if ( (!A2D_ELEM(processed,ni,nj)) && 
+                  (A2D_ELEM(qualityMap,ni,nj) > minQuality) && 
+                  ((ni-size)>0) && ((nj-size)>0) && 
+                  ((ni+size)<YSIZE(processed)-1) && 
+                  ((nj+size)<XSIZE(processed)-1) )
             {
                 double G11=0, G12=0, G22=0, b1=0, b2=0;
 
                 for (int li=-size; li <= size; li++)
                 {
-                    int nli=ni+li;
+                    size_t nli=ni+li;
                     for (int lj=-size; lj <= size; lj++)
                     {
-                        int nlj=nj+lj;
+                        size_t nlj=nj+lj;
                         if (A2D_ELEM(processed,nli,nlj))
                         {
                             double tempx = A2D_ELEM(ds,nli,nlj);
@@ -541,11 +549,9 @@ void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimAr
 }
 
 
-void FringeProcessing::unwrapping(const MultidimArray<double> & wrappedPhase, MultidimArray<double> & qualityMap, double lambda, int size, MultidimArray<double> & unwrappedPhase)
+void unwrapping(const MultidimArray<double> & wrappedPhase, MultidimArray<double> & qualityMap, double lambda, int size, MultidimArray<double> & unwrappedPhase)
 {
     //First we perform some setup stuff
-    int nx = XSIZE(wrappedPhase);
-    int ny = YSIZE(wrappedPhase);
     double minQuality = 0.05;
 
     int imax, jmax, i, j, max_levels=10;
@@ -581,7 +587,6 @@ void FringeProcessing::unwrapping(const MultidimArray<double> & wrappedPhase, Mu
     double cor = 0;
     double uw = 0;
     double wp = 0;
-    double q = 0;
     double g = 0;
     int n = 0;
     double t = 0;
@@ -595,13 +600,13 @@ void FringeProcessing::unwrapping(const MultidimArray<double> & wrappedPhase, Mu
         j=p.j;
         queueToProcess.pop();
 
-        int indi[8] = {i-1,i-1,i-1,i,i,i+1,i+1,i+1};
-        int indj[8] = {j-1,j,j+1,j-1,j+1,j-1,j,j+1};
+        size_t indi[8] = {i-1,i-1,i-1,i,i,i+1,i+1,i+1};
+        size_t indj[8] = {j-1,j,j+1,j-1,j+1,j-1,j,j+1};
 
         for(int k = 0; k< 8 ; k++)
         {
-            int ni=indi[k];
-            int nj=indj[k];
+            size_t ni=indi[k];
+            size_t nj=indj[k];
             if ( (!A2D_ELEM(processed,ni,nj)) && (A2D_ELEM(qualityMap,ni,nj) > minQuality) && ((ni-size)>0) && ((nj-size)>0) && ((ni+size)<YSIZE(processed)-1)
                  && ((nj+size)<XSIZE(processed)-1))
             {
@@ -609,10 +614,10 @@ void FringeProcessing::unwrapping(const MultidimArray<double> & wrappedPhase, Mu
 
                 for (int li=-size; li <= size; li++)
                 {
-                    int nli=ni+li;
+                    size_t nli=ni+li;
                     for (int lj=-size; lj <= size; lj++)
                     {
-                        int nlj=nj+lj;
+                        size_t nlj=nj+lj;
                         if (A2D_ELEM(processed,nli,nlj))
                         {
                             uw =  A2D_ELEM(unwrappedPhase,nli,nlj);
@@ -622,9 +627,9 @@ void FringeProcessing::unwrapping(const MultidimArray<double> & wrappedPhase, Mu
                             t = (wp - uw);
 
                             if ( t > 0 )
-                                n = std::floor(t+3.14159265)/(2*3.14159265);
+                                n = (int)(std::floor(t+3.14159265)/(2*3.14159265));
                             else
-                                n = std::ceil(t-3.14159265)/(2*3.14159265);
+                                n = (int)(std::ceil(t-3.14159265)/(2*3.14159265));
 
                             up = t - (2*3.14159265)*n;
 
@@ -658,7 +663,7 @@ void FringeProcessing::unwrapping(const MultidimArray<double> & wrappedPhase, Mu
     }
 }
 
-void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int size, int x, int y, int rmin, int rmax,
+void demodulate(MultidimArray<double> & im, double lambda, int size, int x, int y, int rmin, int rmax,
                                   MultidimArray<double> & phase, MultidimArray<double> & mod, Matrix1D<double> & coeffs, int verbose)
 {
     //Initial Setup
@@ -698,7 +703,6 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int
     //Normalized version of im and modulation map
     normalizeWB(im,In,mod, rmax, rmin, ROI);
 
-    double modThr = 0.05;
     int imax, jmax;
     mod.maxIndex(imax,jmax);
     mod = mod/A2D_ELEM(mod,imax,jmax);
@@ -731,7 +735,8 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int
         save.write("PPP2.xmp");
     }
     //Spiral transform of the normalized image
-    SPTH(In,sph);
+    FourierTransformer ftrans(FFTW_BACKWARD);
+    SPTH(ftrans,In,sph);
     STARTINGX(sph)=STARTINGY(sph)=0;
     STARTINGX(In)=STARTINGY(In)=0;
     STARTINGX(ROI)=STARTINGY(ROI)=0;
@@ -752,8 +757,8 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int
             A2D_ELEM(wphase,i,j) = std::atan2(temp.real(),A2D_ELEM(In,i,j));
             A2D_ELEM(orModMap,i,j) = std::sqrt( temp.real()*temp.real() + A2D_ELEM(In,i,j)*A2D_ELEM(In,i,j));
 
-            tempTheta = std::atan2(j-(int)((float) (XSIZE(ROI)) / 2.0), i-(int)((float) (XSIZE(ROI)) / 2.0));
-
+            //tempTheta = std::atan2(j-(int)((float) (XSIZE(ROI)) / 2.0), i-(int)((float) (XSIZE(ROI)) / 2.0));
+            tempTheta = A2D_ELEM(dir,i,j);
             if (  !(((tempTheta > val) | (tempTheta < -val)) && !((tempTheta > PI-val) || (tempTheta < -PI+val)) &&
                     !( !(tempTheta > PI/2+val) && (tempTheta > PI/2-val)) && !( !(tempTheta > -PI/2+val) && (tempTheta > -PI/2-val))) )
             {
@@ -771,6 +776,9 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int
     {
         save()=wphase;
         save.write("PPP3.xmp");
+        Image<bool> saveROI;
+        saveROI() = ROI;
+        saveROI.write("PPP_roi.xmp");
     }
 
     //unwrapping(wphase, orModMap, lambda, size, phase);
@@ -786,7 +794,7 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int
     mod.setXmippOrigin();
     Matrix1D<int> coefsInit(VEC_XSIZE(coeffs));
 
-    for (int i=0; i<VEC_XSIZE(coeffs); i++)
+    for (size_t i=0; i<VEC_XSIZE(coeffs); i++)
         VEC_ELEM(coefsInit,i) = (int)VEC_ELEM(coeffs,i);
 
     PolyZernikes polynom;
@@ -797,7 +805,7 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int
     polynom.fit(coefsInit,phase,mod2,ROI,verbose);
 
     int index = 0;
-    for (int i=0; i<VEC_XSIZE(coeffs); i++)
+    for (size_t i=0; i<VEC_XSIZE(coeffs); i++)
     {
         if ( VEC_ELEM(coeffs,i) != 0)
         {
@@ -837,7 +845,7 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int
     }
 }
 
-void FringeProcessing::demodulate2(MultidimArray<double> & im, double lambda, int size, int x, int y, int rmin, int rmax,
+void demodulate2(MultidimArray<double> & im, double lambda, int size, int x, int y, int rmin, int rmax,
                                    Matrix1D<double> & coeffs, int verbose)
 {
     //Initial Setup :
@@ -901,7 +909,8 @@ void FringeProcessing::demodulate2(MultidimArray<double> & im, double lambda, in
         save.write("PPP2.xmp");
     }
     //Spiral transform of the normalized image
-    SPTH(In,sph);
+    FourierTransformer ftrans(FFTW_BACKWARD);
+    SPTH(ftrans,In,sph);
     STARTINGX(sph)=STARTINGY(sph)=0;
     STARTINGX(In)=STARTINGY(In)=0;
     STARTINGX(ROI)=STARTINGY(ROI)=0;
@@ -954,7 +963,7 @@ void FringeProcessing::demodulate2(MultidimArray<double> & im, double lambda, in
     mod.setXmippOrigin();
     Matrix1D<int> coefsInit(VEC_XSIZE(coeffs));
 
-    for (int i=0; i<VEC_XSIZE(coeffs); i++)
+    for (size_t i=0; i<VEC_XSIZE(coeffs); i++)
         VEC_ELEM(coefsInit,i) = (int)VEC_ELEM(coeffs,i);
 
     PolyZernikes polynom;
@@ -965,7 +974,7 @@ void FringeProcessing::demodulate2(MultidimArray<double> & im, double lambda, in
     polynom.fit(coefsInit,phase,onesMatrix,ROI,verbose);
 
     int index = 0;
-    for (int i=0; i<VEC_XSIZE(coeffs); i++)
+    for (size_t i=0; i<VEC_XSIZE(coeffs); i++)
     {
         if ( VEC_ELEM(coeffs,i) != 0)
         {
@@ -1005,7 +1014,7 @@ void FringeProcessing::demodulate2(MultidimArray<double> & im, double lambda, in
     }
 }
 
-void FringeProcessing::firsPSDZero(MultidimArray<double> & enhancedPSD, Matrix1D<double> & xPoints,Matrix1D<double> & yPoints,
+void firsPSDZero(MultidimArray<double> & enhancedPSD, Matrix1D<double> & xPoints,Matrix1D<double> & yPoints,
                                    double rmin, double rmax, int numAngles, int verbose)
 {
     enhancedPSD.setXmippOrigin();
@@ -1058,8 +1067,7 @@ void FringeProcessing::firsPSDZero(MultidimArray<double> & enhancedPSD, Matrix1D
     //We perform the gradient of enhancedPSD to calculate the external force field (balloon force)
     //Calculation of the external force field normalized to maximum magnitude 1
 
-    int NR, NC,NZ;
-    size_t Ndim;
+    size_t NR, NC,NZ, Ndim;
     enhancedPSD.getDimensions(NR,NC,NZ,Ndim);
     MultidimArray<double > fx, fy;
     fx.resizeNoCopy(enhancedPSD);
@@ -1091,7 +1099,6 @@ void FringeProcessing::firsPSDZero(MultidimArray<double> & enhancedPSD, Matrix1D
     convolutionFFT(fy,mask,fy);
 
     //From the derivatives we calculate kappa:
-    int imax,jmax;
     MultidimArray<double> absFx;
     absFx.resizeNoCopy(fx);
     //absFx= fx.selfABS();
@@ -1124,13 +1131,13 @@ void FringeProcessing::firsPSDZero(MultidimArray<double> & enhancedPSD, Matrix1D
 }
 
 //Obtained from: http://www.mathworks.com/matlabcentral/fileexchange/15125-fitellipse-m/content/fitellipse.m
-void FringeProcessing::fitEllipse(Matrix1D<double> & xPts, Matrix1D<double> & yPts, double & x0, double & y0, double & majorAxis,
+void fitEllipse(Matrix1D<double> & xPts, Matrix1D<double> & yPts, double & x0, double & y0, double & majorAxis,
                                   double & minorAxis, double & ellipseAngle)
 {
     Matrix2D<double> B(VEC_XSIZE(xPts),5), A(2,2);
     Matrix1D<double> V(5), squareXPts(VEC_XSIZE(xPts));
 
-    for (int nRow = 0; nRow < VEC_XSIZE(xPts); nRow++)
+    for (size_t nRow = 0; nRow < VEC_XSIZE(xPts); nRow++)
     {
         double tempX = VEC_ELEM(xPts,nRow);
         double tempY = VEC_ELEM(yPts,nRow);
@@ -1157,11 +1164,13 @@ void FringeProcessing::fitEllipse(Matrix1D<double> & xPts, Matrix1D<double> & yP
 
     double c = VEC_ELEM(V,4);
 
-    Matrix2D<double> u(2,2),v(2,2);
-    Matrix1D<double> w(2);
-    svdcmp(A, u, w, v);
+    Matrix2D<double> Ainv(2,2), u, v;
+    Matrix1D<double> w;
+    SPEED_UP_temps0;
+    M2x2_INV(Ainv,A);
+    svdcmp(A,u,w,v);
 
-    Matrix1D<double> t = -0.5*((A.inv())*bv);
+    Matrix1D<double> t = -0.5*Ainv*bv;
 
     Matrix1D<double> temp1 = (t*(A * t));//c_h = t.transpose() * A * t + bv.transpose() * t + c;
     Matrix1D<double> temp2 = bv.transpose() * t;
@@ -1171,23 +1180,27 @@ void FringeProcessing::fitEllipse(Matrix1D<double> & xPts, Matrix1D<double> & yP
     majorAxis = std::sqrt(-c_h / VEC_ELEM(w,0));
     minorAxis = std::sqrt(-c_h / VEC_ELEM(w,1));
     ellipseAngle = std::atan2(dMij(u,0,0),-dMij(u,1,0));
+    double sEllipseAngle, cEllipseAngle;
+    sincos(-ellipseAngle,&sEllipseAngle,&cEllipseAngle);
 
-    double angle = 0;
-
-    for (int nPoint = 0; nPoint < VEC_XSIZE(xPts); nPoint++)
+    double angle = 0, deltaAngle=(2*PI)/VEC_XSIZE(xPts);
+    for (size_t nPoint = 0; nPoint < VEC_XSIZE(xPts); nPoint++)
     {
+    	double sAngle, cAngle;
+        sincos(angle,&sAngle,&cAngle);
         //We impose that the origin always is zero and because this whe do not sum it
-        VEC_ELEM(xPts,nPoint) = majorAxis*std::cos(-ellipseAngle)*std::cos(angle) - minorAxis*std::sin(-ellipseAngle)*std::sin(angle)+x0;
-        VEC_ELEM(yPts,nPoint) = majorAxis*std::sin(-ellipseAngle)*std::cos(angle) + minorAxis*std::cos(-ellipseAngle)*std::sin(angle)+y0;
-        angle += (2*PI)/VEC_XSIZE(xPts);
+        double K1=majorAxis*cAngle;
+        double K2=minorAxis*sAngle;
+        VEC_ELEM(xPts,nPoint) = K1*cEllipseAngle - K2*sEllipseAngle+x0;
+        VEC_ELEM(yPts,nPoint) = K1*sEllipseAngle + K2*cEllipseAngle+y0;
+        angle += deltaAngle;
     }
-
 }
 
-void FringeProcessing::fitEllipse(MultidimArray<double> & normImag, double & x0, double & y0, double & majorAxis,
-                                  double & minorAxis, double & ellipseAngle, double & area)
+void fitEllipse(MultidimArray<double> & normImag, double & x0, double & y0, double & majorAxis,
+                                  double & minorAxis, double & ellipseAngle, size_t & area)
 {
-    area = normImag.sum();
+    area = (size_t)normImag.sum();
     Matrix1D<double> xPts(area);
     Matrix1D<double> yPts(area);
     int index = 0;
@@ -1206,7 +1219,7 @@ void FringeProcessing::fitEllipse(MultidimArray<double> & normImag, double & x0,
 }
 
 //Equivalent function in JAVA in : xmipp.svn/java/src/xmipp/viewer/ctf/EllipseCTF.java
-void FringeProcessing::calculateDefocus(double & defocusU,double & defocusV, double majorAxis, double minorAxis, double Q0, double lambda,
+void calculateDefocus(double & defocusU,double & defocusV, double majorAxis, double minorAxis, double Q0, double lambda,
                                         double Cs, double imgSize, double Ts)
 {
     double R = majorAxis / (imgSize * Ts);

@@ -61,10 +61,10 @@ void MpiML2DBase::readMpi(int argc, char** argv)
     if (!node->isMaster())
         program->verbose = 0;
     // Read subsequently to avoid problems in restart procedure
-    for (int proc = 0; proc < node->size; ++proc)
+    for (size_t proc = 0; proc < node->size; ++proc)
     {
         if (proc == node->rank)
-            program->read(argc, argv);
+            program->read(argc, (const char **)argv);
         node->barrierWait();
     }
     //Send "master" seed to slaves for same randomization
@@ -94,7 +94,7 @@ void MpiML2DBase::sendDocfile(const MultidimArray<double> &docfiledata)
         size_t first_img, last_img;
         MPI_Status status;
 
-        for (int docCounter = 1; docCounter < node->size; ++docCounter)
+        for (size_t docCounter = 1; docCounter < node->size; ++docCounter)
         {
             // receive in order
             MPI_Recv(&s_size, 1, MPI_INT, docCounter, TAG_DOCFILESIZE,
@@ -340,7 +340,7 @@ void MpiProgMLF2D::expectation()
                       MULTIDIM_SIZE(sumhist), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Vaux)
         DIRECT_MULTIDIM_ELEM(sumhist, n) = DIRECT_MULTIDIM_ELEM(Vaux, n);
-        for (int ires = 0; ires < hdim; ires++)
+        for (size_t ires = 0; ires < hdim; ires++)
         {
             Vaux.resize(sumhist);
             MPI_Allreduce(MULTIDIM_ARRAY(resolhist[ires]), MULTIDIM_ARRAY(Vaux),
@@ -371,9 +371,9 @@ void MpiProgMLF2D::expectation()
         MPI_Allreduce(&sumw_mirror[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         sumw_mirror[refno] = aux;
     }
-    for (int ifocus = 0;ifocus < nr_focus;ifocus++)
+    for (size_t ifocus = 0;ifocus < nr_focus;ifocus++)
     {
-        for (int ii = 0; ii <  Mwsum_sigma2[ifocus].size(); ii++)
+        for (size_t ii = 0; ii <  Mwsum_sigma2[ifocus].size(); ii++)
         {
             MPI_Allreduce(&Mwsum_sigma2[ifocus][ii], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             Mwsum_sigma2[ifocus][ii] = aux;
@@ -457,10 +457,10 @@ void MpiProgMLTomo::read(int argc, char ** argv, bool reportErrors)
     if (!node->isMaster())
         verbose = 0;
     // Read subsequently to avoid problems in restart procedure
-    for (int proc = 0; proc < node->size; ++proc)
+    for (size_t proc = 0; proc < node->size; ++proc)
     {
         if (proc == node->rank)
-            ProgMLTomo::read(argc, argv);
+            ProgMLTomo::read(argc, (const char **)argv);
         node->barrierWait();
     }
 }
@@ -544,7 +544,7 @@ void MpiProgMLTomo::addPartialDocfileData(const MultidimArray<double> &data, siz
         size_t first_img, last_img;
         MPI_Status status;
 
-        for (int docCounter = 1; docCounter < node->size; ++docCounter)
+        for (size_t docCounter = 1; docCounter < node->size; ++docCounter)
         {
             // receive in order
             MPI_Recv(&s_size, 1, MPI_INT, docCounter, TAG_DOCFILESIZE, MPI_COMM_WORLD, &status);

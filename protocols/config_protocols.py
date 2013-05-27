@@ -18,7 +18,9 @@ protocols = {
         'cl2d_align': ('Only align', '2D/Alignment'),
         'kerdensom': ('KerDenSOM',  '2D/KerDenSOM'),
         'rotspectra': ('Rotational Spectra', '2D/RotSpectra'),
+        'screen_classes': ('Screen classes', '2D/Screening'),
         'rct': ('Random Conical Tilt', '3D/RCT'),
+        'symmetric_initial': ('Symmetric Cn/Dn volume', '3D/Symmetric'),
         'projmatch': ('Projection Matching', '3D/ProjMatch'), 
         'ml3d': ('ML3D', '3D/ML3D'),
         'mltomo': ('MLTomo', '3D/MLTomo'),
@@ -36,9 +38,9 @@ sections = [
     ['Particle picking', 'particle_pick', 'particle_pick_supervised', 'particle_pick_auto'], 
     ['Particles', 'extract_particles', 'import_particles', ['Other', 'preprocess_particles', 'screen_particles']]]),
 ('2D', 
-   [['Align+Classify', 'cl2d', 'ml2d', ['Other', 'cl2d_align', 'kerdensom', 'rotspectra']]]),
+   [['Align+Classify', 'cl2d', 'ml2d', ['Other', 'cl2d_align', 'kerdensom', 'rotspectra', 'screen_classes']]]),
 ('3D', 
-   [['Initial Model', 'rct'], 
+   [['Initial Model', 'rct', 'symmetric_initial'], 
     ['Model Refinement', 'projmatch', 'ml3d']])
 ,
 ('Other',
@@ -83,9 +85,11 @@ protDict = ProtocolDictionary()
 #--------------------------------------------------------------------------------
 # Project default settings
 #--------------------------------------------------------------------------------
+PROJECT_DB = '.project.sqlite'
+
 projectDefaults = {
                    'Cfg': '.project.cfg',
-                   'Db': '.project.sqlite',
+                   'Db': PROJECT_DB,
                    'LogsDir': 'Logs',
                    'RunsDir': 'Runs',
                    'TmpDir': 'Tmp',

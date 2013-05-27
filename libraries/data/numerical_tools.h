@@ -372,7 +372,7 @@ public:
     DESolver(int dim, int popSize);
 
     /// Destructor
-    ~DESolver(void);
+    virtual ~DESolver(void);
 
     /// Setup() must be called before solve to set min, max, strategy etc.
     void Setup(double min[],

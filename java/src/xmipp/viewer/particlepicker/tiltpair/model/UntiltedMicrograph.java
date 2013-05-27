@@ -11,6 +11,7 @@ import xmipp.viewer.particlepicker.Micrograph;
 public class UntiltedMicrograph extends Micrograph
 {
 
+	private static int alignmentmin = 4;
 	private TiltedMicrograph tiltedmicrograph;
 	private List<UntiltedParticle> particles;
 	private TiltPairAligner tpa;
@@ -152,7 +153,13 @@ public class UntiltedMicrograph extends Micrograph
 				particles.add(p);
 		for(UntiltedParticle p: particles)
 			removeParticle(p);
-			
 	}
+	
+	public static int getAlignmentMin()
+	{
+		return alignmentmin ;
+	}
+	
+	
 
 }

@@ -128,11 +128,13 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
 
     MRChead* header = new MRChead;
 
+    int errCode = 0;
+
     if ( fread( header, MRCSIZE, 1, fimg ) < 1 )
         return(-2);
 
     // Determine byte order and swap bytes if from little-endian machine
-    if ( swap = (( abs( header->mode ) > SWAPTRIG ) || ( abs(header->nz) > SWAPTRIG )) )
+    if ( (swap = (( abs( header->mode ) > SWAPTRIG ) || ( abs(header->nz) > SWAPTRIG ))) )
     {
 #ifdef DEBUG
         fprintf(stderr, "Warning: Swapping header byte order for 4-byte types\n");
@@ -143,8 +145,8 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
 
     // Convert VAX floating point types if necessary
     if ( header->amin > header->amax )
-        REPORT_ERROR(ERR_UNCLASSIFIED,"readMRC: amin > max: VAX floating point conversion unsupported");
-    int _xDim,_yDim,_zDim;
+        REPORT_ERROR(ERR_IMG_NOREAD,"readMRC: amin > max: VAX floating point conversion unsupported");
+    size_t _xDim,_yDim,_zDim;
     size_t _nDim;
     _xDim = header->nx;
     _yDim = header->ny;
@@ -189,7 +191,8 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
         datatype = DT_CFloat;
         break;
     default:
-        datatype = DT_UChar;
+        datatype = DT_Unknown;
+        errCode = -1;
         break;
     }
     offset = MRCSIZE + header->nsymbt;
@@ -223,7 +226,7 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     if (dataMode==HEADER || (dataMode == _HEADER_ALL && _nDim > 1)) // Stop reading if not necessary
     {
         delete header;
-        return 0;
+        return errCode;
     }
 
     size_t   imgStart = IMG_INDEX(select_img);
@@ -269,11 +272,11 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     delete header;
 
     if ( dataMode < DATA )   // Don't read the individual header and the data if not necessary
-        return 0;
+        return errCode;
 
     readData(fimg, select_img, datatype, 0);
 
-    return(0);
+    return errCode;
 }
 
 /** MRC Writer
@@ -355,8 +358,26 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
         {
             if (dataMode < DATA && castMode == CW_CAST) // This means ImageGeneric wants to know which DataType must use in mapFile2Write
                 return 0;
-            else
-                REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");
+            else //Mapping is an extra. When not available, go on and do not report an error.
+            {
+                /* In this case we cannot map the file because required and feasible datatypes are
+                 * not compatible. Then we denote to MapFile2Write the same incoming datatype to
+                 * keep using this Image object as usual, without mapping on write.
+                 */
+                mmapOnWrite = false;
+                dataMode = DATA;
+                MDMainHeader.setValue(MDL_DATATYPE,(int) myTypeID);
+
+                // In case Image size great then, at least, map the multidimarray
+                if (mdaBase->nzyxdim*gettypesize(wDType) > tiff_map_min_size)
+                    mdaBase->setMmap(true);
+
+                // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
+                //if memory already allocated use it (no resize allowed)
+                mdaBase->coreAllocateReuse();
+
+                return 0;
+            }
         }
         else
             dataMode = DATA;
@@ -388,8 +409,7 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
     //                        machine_stamp[1] = 65;
     //                        break;
 
-    int Xdim, Ydim, Zdim;
-    size_t Ndim;
+    size_t Xdim, Ydim, Zdim, Ndim;
     getDimensions(Xdim, Ydim, Zdim, Ndim);
 
     /* header->a,b,c info is related to sampling rate, so it is
@@ -452,8 +472,10 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
             SET_HEADER_CELL_DIM(c, MDL_SAMPLINGRATE_Z, Zdim);
         }
         else
-            header->nxStart = header->xOrigin = header->nyStart = \
-                                                header->yOrigin = header->nzStart = header->zOrigin = 0;
+        {
+            header->nxStart = header->nyStart = header->nzStart = 0;
+            header->xOrigin = header->yOrigin = header->zOrigin = 0;
+        }
     }
 
     header->nsymbt = 0;
@@ -504,7 +526,7 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
     flock.lock(fimg);
 
     // Write header when needed
-    if(!isStack || replaceNsize < header->nz)
+    if(!isStack || replaceNsize < (size_t)header->nz)
     {
         if ( swapWrite )
             swapPage((char *) header, MRCSIZE - 800, DT_Float);

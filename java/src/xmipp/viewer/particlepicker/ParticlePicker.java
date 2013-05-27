@@ -21,9 +21,12 @@ import java.util.logging.SimpleFormatter;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
+import xmipp.jni.Particle;
 import xmipp.jni.Program;
+import xmipp.utils.TasksManager;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
+import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 import xmipp.viewer.particlepicker.training.model.TrainingPicker;
 
 public abstract class ParticlePicker
@@ -32,7 +35,6 @@ public abstract class ParticlePicker
 	protected String familiesfile;
 	protected String macrosfile;
 	protected static Logger logger;
-	public static final int defAutopickPercent = 90;
 	protected String outputdir = ".";
 	protected boolean changed;
 	protected List<Family> families;
@@ -42,27 +44,57 @@ public abstract class ParticlePicker
 	protected String command;
 	protected Family family;
 	protected String configfile;
+	public static final int defAutoPickPercent = 90;
+	protected int autopickpercent = defAutoPickPercent;
+	
+	
+	
+
+	public static final int fsizemax = 800;
+	protected String block;
 
 	
 
 	public ParticlePicker(String selfile, String outputdir, FamilyState mode)
 	{
-		this(selfile, outputdir, null, mode);
+		this(null, selfile, outputdir, null, mode);
 
 	}
 	
 	public ParticlePicker(String selfile, FamilyState mode)
 	{
-		this(selfile, ".", null, mode);
+		this(null, selfile, ".", null, mode);
 
 	}
-
+	
 	public ParticlePicker(String selfile, String outputdir, String fname, FamilyState mode)
 	{
+		this(null, selfile, outputdir, fname, mode);
+	}
+
+
+
+	public ParticlePicker(String block, String selfile, String outputdir, String fname, FamilyState mode)
+	{
+		this.block = block;
 		this.outputdir = outputdir;
+		this.selfile = selfile;
+		this.mode = mode;
+		this.configfile = getOutputPath("config.xmd");
+		initFamilies(fname);
+		initFilters();
+		loadEmptyMicrographs();
+		loadConfig();
+	}
+	
+	
+	
+	protected void initFamilies(String fname)
+	{
 		this.familiesfile = getOutputPath("families.xmd");
-		configfile = getOutputPath("config.xmd");
+		
 		this.families = new ArrayList<Family>();
+		
 		loadFamilies();
 		if (fname == null)
 			family = families.get(0);
@@ -71,17 +103,11 @@ public abstract class ParticlePicker
 		if (family == null)
 			throw new IllegalArgumentException("Invalid family " + fname);
 
-		this.selfile = selfile;
-		this.outputdir = outputdir;
-		this.mode = mode;
-
-		initializeFilters();
-		loadEmptyMicrographs();
-		loadConfig();
 	}
 	
-	public int getSize()
-	{
+
+	
+	public int getSize() {
 		return family.getSize();
 	}
 
@@ -93,15 +119,16 @@ public abstract class ParticlePicker
 	public void setColor(Color color)
 	{
 		family.setColor(color);
-		persistFamilies();
+		saveFamilies();
 	}
 
 	public void setSize(int size)
 	{
 		family.setSize(size);
-		persistFamilies();
+		saveFamilies();
 	}
 
+	
 	public Family getFamily()
 	{
 		return family;
@@ -121,8 +148,9 @@ public abstract class ParticlePicker
 
 	public abstract void loadEmptyMicrographs();
 
-	private void initializeFilters()
+	private void initFilters()
 	{
+
 		this.macrosfile = getOutputPath("macros.xmd");
 		filters = new ArrayList<IJCommand>();
 		loadFilters();
@@ -175,7 +203,8 @@ public abstract class ParticlePicker
 				for (IJCommand f : filters)
 					if (f.getCommand().equals(command))
 						f.setOptions(options);
-			persistFilters();
+
+			saveFilters();
 			command = null;
 
 		}
@@ -212,14 +241,12 @@ public abstract class ParticlePicker
 		return mode;
 	}
 
-	public static Logger getLogger()
-	{
-		try
-		{
-			if (logger == null)
-			{
-				FileHandler fh = new FileHandler("PPicker.log", true);
-				fh.setFormatter(new SimpleFormatter());
+
+	public static Logger getLogger() {
+		try {
+			if (logger == null) {
+//				FileHandler fh = new FileHandler("PPicker.log", true);
+//				fh.setFormatter(new SimpleFormatter());
 				logger = Logger.getLogger("PPickerLogger");
 				// logger.addHandler(fh);
 			}
@@ -248,7 +275,7 @@ public abstract class ParticlePicker
 		return families;
 	}
 
-	public void persistFamilies()
+	public void saveFamilies()
 	{
 		long id;
 		String file = familiesfile;
@@ -287,19 +314,17 @@ public abstract class ParticlePicker
 	{
 		families.clear();
 		String file = familiesfile;
-		if (!new File(file).exists())
-		{
-			families.add(Family.getDefaultFamily());
-			persistFamilies();
+		if (!new File(file).exists()) {
+			families.add(new Family("DefaultFamily", Color.green, fsizemax/4, FamilyState.Manual, this, 1));
+			saveFamilies();
 			return;
 		}
 
 		Family family;
 		int rgb, size;
 		Integer templatesNumber = 1;
+		String name;
 		FamilyState state;
-		String name, templatesfile;
-		ImageGeneric templates;
 
 		try {
 
@@ -316,15 +341,8 @@ public abstract class ParticlePicker
 				state = FamilyState.valueOf(md.getValueString(MDLabel.MDL_PICKING_FAMILY_STATE, id));
 
 				state = validateState(state);
-				templatesfile = getTemplatesFile(name);
-				if (new File(templatesfile).exists() )
-				{
-					templates = new ImageGeneric(templatesfile);
-					family = new Family(name, new Color(rgb), size, state, this, templates);
-					
-				}
-				else
-					family = new Family(name, new Color(rgb), size, state, this, templatesNumber);
+
+				family = new Family(name, new Color(rgb), size, state, this, templatesNumber);
 				families.add(family);
 			}
 			md.destroy();
@@ -377,31 +395,20 @@ public abstract class ParticlePicker
 		return getFamily(name) != null;
 	}// function existsFamilyName
 
-	protected boolean containsBlock(String file, String block)
-	{
-		try
-		{
-			return Arrays.asList(MetaData.getBlocksInMetaDataFile(file)).contains(block);
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
-		}
-	}// function containsBlock
+	
 
 	public void saveData()
 	{
-		persistFilters();
-		persistFamilies();
+		saveFilters();
+		saveFamilies();
 	}// function saveData
 
 	public abstract void saveData(Micrograph m);
 
 	
 
-	public void persistFilters()
-	{
+
+	public void saveFilters() {
 		long id;
 		String file = macrosfile;
 		if (filters.isEmpty())
@@ -470,9 +477,14 @@ public abstract class ParticlePicker
 
 
 
+
+
 	public abstract void saveConfig();
 
 	public abstract void loadConfig();
+
+
+	
 	
 
 	void removeFilter(String filter)
@@ -481,7 +493,7 @@ public abstract class ParticlePicker
 			if (f.getCommand().equals(filter))
 			{
 				filters.remove(f);
-				persistFilters();
+				saveFilters();
 				break;
 			}
 	}// function removeFilter
@@ -511,7 +523,7 @@ public abstract class ParticlePicker
 			return Format.Eman;
 		return Format.Unknown;
 	}
-	
+
 	/** Return the number of particles imported from a file */
 	public void fillParticlesMdFromFile(String path, Format f, Micrograph m, MetaData md, float scale, boolean invertx, boolean inverty)
 	{
@@ -525,7 +537,7 @@ public abstract class ParticlePicker
 			md.readPlain(path, "xcoor ycoor");
 			break;
 		case Xmipp30:
-			if (!containsBlock(path, family.getName()))
+			if (!MetaData.containsBlock(path, family.getName()))
 				throw new IllegalArgumentException(
 						XmippMessage.getIllegalValueMsgWithInfo("family", family.getName(), "Particles for this family are not defined in file"));
 			md.read(String.format("%s@%s", family.getName(), path));
@@ -593,5 +605,73 @@ public abstract class ParticlePicker
 	public abstract Micrograph getMicrograph();
 
 	public abstract void setMicrograph(Micrograph m);
+	
+		
+
+	public void addParticleToTemplates(TrainingParticle particle, boolean center)
+	{
+		try
+		{
+			Particle shift = null;
+			Family family = particle.getFamily();
+			if(family.getStep() != FamilyState.Manual)
+				throw new IllegalArgumentException(XmippMessage.getIllegalStateForOperationMsg("family", family.getStep().toString()));
+			ImageGeneric igp = particle.getImageGeneric();
+			//will happen only in manual mode
+			if (family.getTemplateIndex() < family.getTemplatesNumber())// index starts at one
+			{
+				family.setTemplate(igp);
+			}
+			else
+			{
+				if (center)
+				{
+					shift = family.getTemplates().bestShift(igp);
+					particle.setX(particle.getX() + shift.getX());
+					particle.setY(particle.getY() + shift.getY());
+				}
+				double[] align = family.getTemplates().alignImage(igp);
+				particle.setLastalign(align);
+				family.getTemplates().applyAlignment(igp, particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
+				System.out.printf("adding: %.2f %.2f %.2f %.2f\n", align[0], align[1], align[2], align[3]);
+				
+				
+			}
+			family.saveTemplates();
+		}
+		catch (Exception e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e);
+		}
+	}
+
+	public void removeParticleFromTemplates(TrainingParticle particle)
+	{
+		
+		try
+		{
+			
+			Family family = particle.getFamily();
+			if(family.getStep() != FamilyState.Manual)
+				throw new IllegalArgumentException(XmippMessage.getIllegalStateForOperationMsg("family", family.getStep().toString()));
+			ImageGeneric igp = particle.getImageGeneric();
+//			System.out.printf("removing: %d %.2f %.2f %.2f\n", particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
+			family.getTemplates().removeAlignment(igp, particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
+			family.saveTemplates();
+		}
+		catch (Exception e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e);
+		}
+
+	}
+	
+
+
+	public abstract boolean isValidSize(int size);
+
+
 
 }

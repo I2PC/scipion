@@ -1,10 +1,7 @@
 package xmipp.viewer.particlepicker.training.model;
 
-import java.util.ArrayList;
-
 import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
-import xmipp.viewer.particlepicker.Family;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.IJCommand;
 import xmipp.viewer.particlepicker.Micrograph;
@@ -15,6 +12,7 @@ import xmipp.viewer.particlepicker.Micrograph;
 		
 		public ManualParticlePicker(String selfile, String outputdir, FamilyState mode) {
 
+
 			this(selfile, outputdir, null, mode);
 		}
 		
@@ -23,15 +21,18 @@ import xmipp.viewer.particlepicker.Micrograph;
 			super(selfile, outputdir, fname, mode);
 			for (TrainingMicrograph m : micrographs)
 				loadMicrographData(m);
+			
 			if(filters.isEmpty())//user just started manual mode and has no filter, I select gaussian blur by default, will be applied when window opens
 			{
 				filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
-				persistFilters();
+				saveFilters();
+
 			}
 
 		}
 
 		
+
 
 		public String getImportMicrographName(String path, String filename, Format f)
 		{
@@ -70,37 +71,35 @@ import xmipp.viewer.particlepicker.Micrograph;
 
 
 		/** Return the number of particles imported */
-		public int importParticlesFromFolder(String path, Format f, float scale, boolean invertx, boolean inverty)
+		public String importParticlesFromFolder(String path, Format f, float scale, boolean invertx, boolean inverty)
 		{
 			if (f == Format.Auto)
 				f = detectFormat(path);
 			if (f == Format.Unknown)
-				return 0;
+				return "Unknown format";
 
 			String filename;
-			int particles = 0;
-
+			String result = "";
 			for (TrainingMicrograph m : micrographs)
 			{
 				filename = getImportMicrographName(path, m.getFile(), f);
-				System.out.println("  filename: " + filename);
 				if (Filename.exists(filename))
-					particles += importParticlesFromFile(filename, f, m, scale, invertx, inverty);
+					result += importParticlesFromFile(filename, f, m, scale, invertx, inverty);
 			}
 			
-			return particles;
+			return result;
 		}// function importParticlesFromFolder
 
 		
 
 		/** Return the number of particles imported from a file */
-		public int importParticlesFromFile(String path, Format f, Micrograph m, float scale, boolean invertx, boolean inverty)
+		public String importParticlesFromFile(String path, Format f, Micrograph m, float scale, boolean invertx, boolean inverty)
 		{
 			MetaData md = new MetaData();
 			fillParticlesMdFromFile(path, f, m, md, scale, invertx, inverty);
-			int particles = (md != null) ? importParticlesFromMd(m, md) : 0;
+			String result = (md != null) ? importParticlesFromMd(m, md) : "";
 			saveData(getMicrograph());
 			md.destroy();
-			return particles;
+			return result;
 		}// function importParticlesFromFile
 	}

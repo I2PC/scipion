@@ -3,6 +3,7 @@
  * Authors:     Roberto Marabini (roberto@cnb.csic.es)
  *              Carlos Oscar S. Sorzano (coss@cnb.csic.es)
  *              Jose Roman Bilbao-Castro (jrbcast@ace.ual.es)
+ *              Vahid Abrishami (vabrishami@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -36,6 +37,7 @@ void ProgRecFourier::defineParams()
     //params
     addParamsLine("   -i <md_file>                : Metadata file with input projections");
     addParamsLine("  [-o <volume_file=\"rec_fourier.vol\">]  : Filename for output volume");
+    addParamsLine("  [--iter <iterations=1>]      : Number of iterations for weight correction");
     addParamsLine("  [--sym <symfile=c1>]              : Enforce symmetry in projections");
     addParamsLine("  [--padding <proj=2.0> <vol=2.0>]  : Padding used for projections and volume");
     addParamsLine("  [--prepare_fsc <fscfile>]      : Filename root for FSC files");
@@ -60,11 +62,12 @@ void ProgRecFourier::readParams()
     padding_factor_proj = getDoubleParam("--padding", 0);
     padding_factor_vol = getDoubleParam("--padding", 1);
     blob.radius   = getDoubleParam("--blob", 0);
-    blob.order    = getDoubleParam("--blob", 1);
+    blob.order    = getIntParam("--blob", 1);
     blob.alpha    = getDoubleParam("--blob", 2);
     maxResolution = getDoubleParam("--max_resolution");
-    numThreads = getDoubleParam("--thr");
-    thrWidth = getDoubleParam("--thr", 1);
+    numThreads = getIntParam("--thr");
+    thrWidth = getIntParam("--thr", 1);
+    NiterWeight = getIntParam("--iter");
 }
 
 // Show ====================================================================
@@ -104,7 +107,7 @@ void ProgRecFourier::run()
     produceSideinfo();
     // Process all images in the selfile
     if (verbose)
-        init_progress_bar(SF.size());
+        init_progress_bar(NiterWeight*SF.size());
     // Create threads stuff
     barrier_init( &barrier, numThreads+1 );
     pthread_mutex_init( &workLoadMutex, NULL );
@@ -122,8 +125,13 @@ void ProgRecFourier::run()
         pthread_create( (th_ids+nt) , NULL, processImageThread, (void *)(th_args+nt) );
     }
 
-    processImages(0, SF.size() - 1, !fn_fsc.empty());
+    // Correcting the weights
+    correctWeight();
 
+    //Computing interpolated volume
+    processImages(0, SF.size() - 1, !fn_fsc.empty(), false);
+
+    //Saving the volume
     finishComputations(fn_out);
 
     threadOpCode = EXIT_THREAD;
@@ -156,7 +164,7 @@ void ProgRecFourier::produceSideinfo()
     if (Ydim!=Xdim)
         REPORT_ERROR(ERR_MULTIDIM_SIZE,"This algorithm only works for squared images");
     imgSize=Xdim;
-    volPadSizeX = volPadSizeY = volPadSizeZ=Xdim*padding_factor_vol;
+    volPadSizeX = volPadSizeY = volPadSizeZ=(int)(Xdim*padding_factor_vol);
     Vout().initZeros(volPadSizeZ,volPadSizeY,volPadSizeX);
 
     //use threads for volume inverse fourier transform, plan is created in setReal()
@@ -166,9 +174,16 @@ void ProgRecFourier::produceSideinfo()
     Vout().clear(); // Free the memory so that it is available for FourierWeights
     transformerVol.getFourierAlias(VoutFourier);
     FourierWeights.initZeros(VoutFourier);
+    // Initializing VoutFourier for calculating the weights
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(VoutFourier)
+    {
+        double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, k,i,j));
+        ptrOut[0] = 1;
+    }
 
     // Ask for memory for the padded images
-    paddedImg.resize(Xdim*padding_factor_proj,Xdim*padding_factor_proj);
+    size_t paddedImgSize=(size_t)(Xdim*padding_factor_proj);
+    paddedImg.resize(paddedImgSize,paddedImgSize);
     paddedImg.setXmippOrigin();
     transformerImg.setReal(paddedImg);
 
@@ -288,7 +303,25 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
     threadParams->selFile->findObjects(objId);
     ApplyGeoParams params;
     params.only_apply_shifts = true;
+    MultidimArray<int> zWrapped(3*parent->volPadSizeZ),yWrapped(3*parent->volPadSizeY),xWrapped(3*parent->volPadSizeX),
+    zNegWrapped, yNegWrapped, xNegWrapped;
+    zWrapped.initConstant(-1);
+    yWrapped.initConstant(-1);
+    xWrapped.initConstant(-1);
+    zWrapped.setXmippOrigin();
+    yWrapped.setXmippOrigin();
+    xWrapped.setXmippOrigin();
+    zNegWrapped=zWrapped;
+    yNegWrapped=yWrapped;
+    xNegWrapped=xWrapped;
 
+    MultidimArray<double> x2precalculated(XSIZE(xWrapped)), y2precalculated(XSIZE(yWrapped)), z2precalculated(XSIZE(zWrapped));
+    x2precalculated.initConstant(-1);
+    y2precalculated.initConstant(-1);
+    z2precalculated.initConstant(-1);
+    x2precalculated.setXmippOrigin();
+    y2precalculated.setXmippOrigin();
+    z2precalculated.setXmippOrigin();
     do
     {
         barrier_wait( barrier );
@@ -303,8 +336,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                 if ( threadParams->imageIndex >= 0 )
                 {
                     // Read input image
-                    double rot, tilt, psi, xoff,yoff,weight;
-                    bool flip;
+                    double rot, tilt, psi, weight;
                     Projection proj;
 
                     //Read projection from selfile, read also angles and shifts if present
@@ -333,17 +365,22 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     // Copy the projection to the center of the padded image
                     // and compute its Fourier transform
                     proj().setXmippOrigin();
-                    localPaddedImg.initZeros(parent->imgSize*parent->padding_factor_proj,
-                                             parent->imgSize*parent->padding_factor_proj);
-                    localPaddedImg.setXmippOrigin();
-                    FOR_ALL_ELEMENTS_IN_ARRAY2D(proj())
-                    A2D_ELEM(localPaddedImg,i,j)=weight*proj(i,j);
-                    CenterFFT(localPaddedImg,true);
+                    size_t localPaddedImgSize=(size_t)(parent->imgSize*parent->padding_factor_proj);
+                    if (threadParams->reprocessFlag)
+                        localPaddedFourier.initZeros(localPaddedImgSize,localPaddedImgSize/2+1);
+                    else
+                    {
+                        localPaddedImg.initZeros(localPaddedImgSize,localPaddedImgSize);
+                        localPaddedImg.setXmippOrigin();
+                        FOR_ALL_ELEMENTS_IN_ARRAY2D(proj())
+                        A2D_ELEM(localPaddedImg,i,j)=weight*proj(i,j);
+                        CenterFFT(localPaddedImg,true);
 
-                    // Fourier transformer for the images
-                    localTransformerImg.setReal(localPaddedImg);
-                    localTransformerImg.FourierTransform();
-                    localTransformerImg.getFourierAlias(localPaddedFourier);
+                        // Fourier transformer for the images
+                        localTransformerImg.setReal(localPaddedImg);
+                        localTransformerImg.FourierTransform();
+                        localTransformerImg.getFourierAlias(localPaddedFourier);
+                    }
 
                     // Compute the coordinate axes associated to this image
                     Euler_angles2matrix(rot, tilt, psi, localA);
@@ -398,19 +435,15 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                 // the extra dimension added
                 // and padding differences
                 MultidimArray<double> &mFourierWeights=parent->FourierWeights;
-                for (size_t k=threadParams->myThreadID; k<=FINISHINGZ(mFourierWeights); k+=parent->numThreads)
-                    for (size_t i=STARTINGY(mFourierWeights); i<=FINISHINGY(mFourierWeights); i++)
-                        for (size_t j=STARTINGX(mFourierWeights); j<=FINISHINGX(mFourierWeights); j++)
+                for (int k=threadParams->myThreadID; k<=FINISHINGZ(mFourierWeights); k+=parent->numThreads)
+                    for (int i=STARTINGY(mFourierWeights); i<=FINISHINGY(mFourierWeights); i++)
+                        for (int j=STARTINGX(mFourierWeights); j<=FINISHINGX(mFourierWeights); j++)
                         {
-                        	double weight_kij=A3D_ELEM(mFourierWeights,k,i,j);
-                            if (weight_kij>ACCURACY)
-                            {
-                            	A3D_ELEM(mFourierWeights,k,i,j)=1/weight_kij;
+                            double weight_kij=A3D_ELEM(mFourierWeights,k,i,j);
+                            if (1.0/weight_kij>ACCURACY)
                                 A3D_ELEM(parent->VoutFourier,k,i,j)*=corr2D_3D*A3D_ELEM(mFourierWeights,k,i,j);
-                            }
                             else
                                 A3D_ELEM(parent->VoutFourier,k,i,j)=0;
-
                         }
                 break;
             }
@@ -418,6 +451,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
             {
 
                 MultidimArray< std::complex<double> > *paddedFourier = threadParams->paddedFourier;
+                bool reprocessFlag = threadParams->reprocessFlag;
                 int * statusArray = parent->statusArray;
 
                 int minAssignedRow;
@@ -442,7 +476,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                             break;
                         }
 
-                        for (int w = 0 ; w < YSIZE(*paddedFourier) ; w++ )
+                        for (size_t w = 0 ; w < YSIZE(*paddedFourier) ; w++ )
                         {
                             if ( statusArray[w]==0 )
                             {
@@ -450,21 +484,21 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                 minAssignedRow = w;
                                 maxAssignedRow = w+minSeparation-1;
 
-                                if ( maxAssignedRow > (YSIZE(*paddedFourier)-1) )
+                                if ( maxAssignedRow > (int)(YSIZE(*paddedFourier)-1) )
                                     maxAssignedRow = YSIZE(*paddedFourier)-1;
 
-                                for ( int in = (minAssignedRow - minSeparation) ; in < minAssignedRow ; in ++ )
+                                for ( int in = (minAssignedRow - minSeparation) ; in < (int)minAssignedRow ; in ++ )
                                 {
-                                    if ( ( in >= 0 ) && ( in < YSIZE(*paddedFourier) ))
+                                    if ( ( in >= 0 ) && ( in < (int)YSIZE(*paddedFourier) ))
                                     {
                                         if ( statusArray[in] > -1 )
                                             statusArray[in]++;
                                     }
                                 }
 
-                                for ( int in = minAssignedRow ; in <= maxAssignedRow ; in ++ )
+                                for ( int in = minAssignedRow ; in <= (int)maxAssignedRow ; in ++ )
                                 {
-                                    if ( ( in >= 0 ) && ( in < YSIZE(*paddedFourier) ))
+                                    if ( ( in >= 0 ) && ( in < (int)YSIZE(*paddedFourier) ))
                                     {
                                         if ( statusArray[in] == 0 )
                                         {
@@ -476,7 +510,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
 
                                 for ( int in = maxAssignedRow+1 ; in <= (maxAssignedRow+minSeparation) ; in ++ )
                                 {
-                                    if ( ( in >= 0 ) && ( in < YSIZE(*paddedFourier) ))
+                                    if ( ( in >= 0 ) && ( in < (int)YSIZE(*paddedFourier) ))
                                     {
                                         if ( statusArray[in] > -1 )
                                             statusArray[in]++;
@@ -507,12 +541,10 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     double iDeltaSqrt = parent->iDeltaSqrt;
                     Matrix1D<double> & blobTableSqrt = parent->blobTableSqrt;
                     int xsize_1 = XSIZE(parent->VoutFourier) - 1;
-                    int ysize_1 = YSIZE(parent->VoutFourier) - 1;
                     int zsize_1 = ZSIZE(parent->VoutFourier) - 1;
                     MultidimArray< std::complex<double> > &VoutFourier=parent->VoutFourier;
                     MultidimArray<double> &fourierWeights = parent->FourierWeights;
-                    double thWeight = threadParams->weight;
-
+                    //                    MultidimArray<double> &prefourierWeights = parent->preFourierWeights;
                     // Get i value for the thread
                     for (int i = minAssignedRow; i <= maxAssignedRow ; i ++ )
                     {
@@ -527,7 +559,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                 ZZ(freq)=0;
                                 if (XX(freq)*XX(freq)+YY(freq)*YY(freq)>parent->maxResolution2)
                                     continue;
-                                SPEED_UP_temps;
+                                SPEED_UP_temps012;
                                 M3x3_BY_V3x1(freq,*A_SL,freq);
 
                                 // Look for the corresponding index in the volume Fourier transform
@@ -551,32 +583,75 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                 << "   Corner1=" << corner1.transpose() << std::endl
                                 << "   Corner2=" << corner2.transpose() << std::endl;
 #endif
-
                                 // Loop within the box
-                                double *ptrIn =(double *)&(A2D_ELEM(*paddedFourier, i,j));
+                                double *ptrIn;
 
-                                for (int intz = ZZ(corner1); intz <= ZZ(corner2); intz++)
+                                ptrIn =(double *)&(A2D_ELEM(*paddedFourier, i,j));
+
+                                // Some precalculations
+                                for (int intz = ZZ(corner1); intz <= ZZ(corner2); ++intz)
                                 {
                                     double z = intz - ZZ(real_position);
-                                    double z2 = z * z;
-                                    int iz = intWRAP(intz, 0, zsize_1);
-                                    int miz=-iz;
-                                    int izneg = intWRAP(miz,0,zsize_1);
-
-                                    for (int inty = YY(corner1); inty <= YY(corner2); inty++)
+                                    A1D_ELEM(z2precalculated,intz)=z*z;
+                                    if (A1D_ELEM(zWrapped,intz)<0)
                                     {
-                                        double y = inty - YY(real_position);
-                                        double y2z2 = y * y + z2;
-                                        int iy = intWRAP(inty, 0, zsize_1);
+                                        int iz, izneg;
+                                        fastIntWRAP(iz, intz, 0, zsize_1);
+                                        A1D_ELEM(zWrapped,intz)=iz;
+                                        int miz=-iz;
+                                        fastIntWRAP(izneg, miz,0,zsize_1);
+                                        A1D_ELEM(zNegWrapped,intz)=izneg;
+                                    }
+                                }
+                                for (int inty = YY(corner1); inty <= YY(corner2); ++inty)
+                                {
+                                    double y = inty - YY(real_position);
+                                    A1D_ELEM(y2precalculated,inty)=y*y;
+                                    if (A1D_ELEM(yWrapped,inty)<0)
+                                    {
+                                        int iy, iyneg;
+                                        fastIntWRAP(iy, inty, 0, zsize_1);
+                                        A1D_ELEM(yWrapped,inty)=iy;
                                         int miy=-iy;
-                                        int iyneg = intWRAP(miy, 0, zsize_1);
+                                        fastIntWRAP(iyneg, miy,0,zsize_1);
+                                        A1D_ELEM(yNegWrapped,inty)=iyneg;
+                                    }
+                                }
+                                for (int intx = XX(corner1); intx <= XX(corner2); ++intx)
+                                {
+                                    double x = intx - XX(real_position);
+                                    A1D_ELEM(x2precalculated,intx)=x*x;
+                                    if (A1D_ELEM(xWrapped,intx)<0)
+                                    {
+                                        int ix, ixneg;
+                                        fastIntWRAP(ix, intx, 0, zsize_1);
+                                        A1D_ELEM(xWrapped,intx)=ix;
+                                        int mix=-ix;
+                                        fastIntWRAP(ixneg, mix,0,zsize_1);
+                                        A1D_ELEM(xNegWrapped,intx)=ixneg;
+                                    }
+                                }
 
-                                        for (int intx = XX(corner1); intx <= XX(corner2); intx++)
+                                // Actually compute
+                                for (int intz = ZZ(corner1); intz <= ZZ(corner2); ++intz)
+                                {
+                                    double z2 = A1D_ELEM(z2precalculated,intz);
+                                    int iz=A1D_ELEM(zWrapped,intz);
+                                    int izneg=A1D_ELEM(zNegWrapped,intz);
+
+                                    for (int inty = YY(corner1); inty <= YY(corner2); ++inty)
+                                    {
+                                        double y2z2 = A1D_ELEM(y2precalculated,inty) + z2;
+                                        if (y2z2 > blobRadiusSquared)
+                                            continue;
+                                        int iy=A1D_ELEM(yWrapped,inty);
+                                        int iyneg=A1D_ELEM(yNegWrapped,inty);
+
+                                        for (int intx = XX(corner1); intx <= XX(corner2); ++intx)
                                         {
-                                            double x = intx - XX(real_position);
                                             // Compute distance to the center of the blob
                                             // Compute blob value at that distance
-                                            double d2 = x * x + y2z2;
+                                            double d2 = A1D_ELEM(x2precalculated,intx) + y2z2;
 
                                             if (d2 > blobRadiusSquared)
                                                 continue;
@@ -594,8 +669,9 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                             << " intz=" << intz << std::endl;
 #endif
 
-                                            int ix=intWRAP(intx,0,zsize_1);
+                                            int ix=A1D_ELEM(xWrapped,intx);
 #ifdef DEBUG
+
                                             std::cout << "   2: ix=" << ix << " iy=" << iy
                                             << " iz=" << iz << std::endl;
 #endif
@@ -606,8 +682,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                             {
                                                 izp = izneg;
                                                 iyp = iyneg;
-                                                int mix=-ix;
-                                                ixp = intWRAP(mix,0,zsize_1);
+                                                ixp = A1D_ELEM(xNegWrapped,intx);
                                                 conjugate=true;
                                             }
                                             else
@@ -623,15 +698,22 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
 #endif
 
                                             // Add the weighted coefficient
-                                            double *ptrOut=(double *)&(A3D_ELEM(VoutFourier, izp,iyp,ixp));
-                                            ptrOut[0] += w * ptrIn[0];
-
-                                            if (conjugate)
-                                                ptrOut[1]-=w*ptrIn[1];
+                                            if (reprocessFlag)
+                                            {
+                                            	// Use VoutFourier as temporary to save the memory
+                                                double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, izp,iyp,ixp));
+                                                DIRECT_A3D_ELEM(fourierWeights, izp,iyp,ixp) += (w * ptrOut[0]);
+                                            }
                                             else
-                                                ptrOut[1]+=w*ptrIn[1];
+                                            {
+                                                double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, izp,iyp,ixp));
+                                                ptrOut[0] += w * ptrIn[0];
 
-                                            A3D_ELEM(fourierWeights, izp,iyp,ixp) += w * thWeight;
+                                                if (conjugate)
+                                                    ptrOut[1]-=w*ptrIn[1];
+                                                else
+                                                    ptrOut[1]+=w*ptrIn[1];
+                                            }
                                         }
                                     }
                                 }
@@ -642,7 +724,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
 
                     for ( int w = (minAssignedRow - minSeparation) ; w < minAssignedRow ; w ++ )
                     {
-                        if ( ( w >= 0 ) && ( w < YSIZE(*paddedFourier) ))
+                        if ( ( w >= 0 ) && ( w < (int)YSIZE(*paddedFourier) ))
                         {
                             if ( statusArray[w] > 0 )
                             {
@@ -653,7 +735,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
 
                     for ( int w = maxAssignedRow+1 ; w <= (maxAssignedRow+minSeparation) ; w ++ )
                     {
-                        if ( ( w >= 0 ) && ( w < YSIZE(*paddedFourier) ))
+                        if ( ( w >= 0 ) && ( w < (int)YSIZE(*paddedFourier) ))
                         {
                             if ( statusArray[w] > 0 )
                             {
@@ -678,18 +760,15 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
 }
 
 //#define DEBUG
-void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, bool saveFSC )
+void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, bool saveFSC, bool reprocessFlag)
 {
     MultidimArray< std::complex<double> > *paddedFourier;
 
-    int repaint = ceil((double)SF.size()/60);
+    int repaint = (int)ceil((double)SF.size()/60);
 
     bool processed;
     int imgno = 0;
     int imgIndex = firstImageIndex;
-    struct timeval start_time, end_time;
-    long int total_usecs;
-    double total_time;
 
     // This index tells when to save work for later FSC usage
     int FSCIndex = (firstImageIndex + lastImageIndex)/2;
@@ -707,6 +786,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
             if ( imgIndex <= lastImageIndex )
             {
                 th_args[nt].imageIndex = imgIndex;
+                th_args[nt].reprocessFlag = reprocessFlag;
                 imgIndex++;
             }
             else
@@ -769,11 +849,11 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
                 // Determine how many rows of the fourier
                 // transform are of interest for us. This is because
                 // the user can avoid to explore at certain resolutions
-                int conserveRows= ceil((double)paddedFourier->ydim * maxResolution * 2.0);
-                conserveRows= ceil((double)conserveRows/2.0);
+                size_t conserveRows=(size_t)ceil((double)paddedFourier->ydim * maxResolution * 2.0);
+                conserveRows=(size_t)ceil((double)conserveRows/2.0);
 
                 // Loop over all symmetries
-                for (int isym = 0; isym < R_repository.size(); isym++)
+                for (size_t isym = 0; isym < R_repository.size(); isym++)
                 {
                     rowsProcessed = 0;
 
@@ -787,10 +867,11 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
                         th_args[th].symmetry = &A_SL;
                         th_args[th].paddedFourier = paddedFourier;
                         th_args[th].weight = weight;
+                        th_args[th].reprocessFlag = reprocessFlag;
                     }
 
                     // Init status array
-                    for (int i = 0 ; i < paddedFourier->ydim ; i ++ )
+                    for (size_t i = 0 ; i < paddedFourier->ydim ; i ++ )
                     {
                         if ( i >= conserveRows && i < (paddedFourier->ydim-conserveRows))
                         {
@@ -897,6 +978,30 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
     }
 }
 
+void ProgRecFourier::correctWeight()
+{
+    for (int i=0;i<NiterWeight;i++)
+    {
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(FourierWeights)
+        	A3D_ELEM(FourierWeights,k,i,j)=0;
+        processImages(0, SF.size() - 1, !fn_fsc.empty(), true);
+        forceWeightSymmetry(FourierWeights);
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(VoutFourier)
+        {
+            double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, k,i,j));
+            ptrOut[0] /= A3D_ELEM(FourierWeights,k,i,j);
+        }
+    }
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(VoutFourier)
+    {
+    	// Put back the weights to FourierWeights from temporary variable VoutFourier
+        double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, k,i,j));
+        A3D_ELEM(FourierWeights,k,i,j) = ptrOut[0];
+        // Set VoutFourier to zero for gridding
+        ptrOut[0] = 0;
+    }
+}
+
 void ProgRecFourier::finishComputations( const FileName &out_name )
 {
     //#define DEBUG_VOL
@@ -912,44 +1017,17 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
     }
 #endif
 
-
     // Enforce symmetry in the Fourier values as well as the weights
     // Sjors 19aug10 enforceHermitianSymmetry first checks ndim...
     Vout().initZeros(volPadSizeZ,volPadSizeY,volPadSizeX);
     transformerVol.setReal(Vout());
     transformerVol.enforceHermitianSymmetry();
-    int yHalf=YSIZE(FourierWeights)/2;
-    if (YSIZE(FourierWeights)%2==0)
-        yHalf--;
-    int zHalf=ZSIZE(FourierWeights)/2;
-    if (ZSIZE(FourierWeights)%2==0)
-        zHalf--;
-    for (int k=0; k<ZSIZE(FourierWeights); k++)
-    {
-        int ksym=intWRAP(-k,0,ZSIZE(FourierWeights)-1);
-        for (int i=1; i<=yHalf; i++)
-        {
-            int isym=intWRAP(-i,0,YSIZE(FourierWeights)-1);
-            double mean=0.5*(
-                            DIRECT_A3D_ELEM(FourierWeights,k,i,0)+
-                            DIRECT_A3D_ELEM(FourierWeights,ksym,isym,0));
-            DIRECT_A3D_ELEM(FourierWeights,k,i,0)=
-                DIRECT_A3D_ELEM(FourierWeights,ksym,isym,0)=mean;
-        }
-    }
-    for (int k=1; k<=zHalf; k++)
-    {
-        int ksym=intWRAP(-k,0,ZSIZE(FourierWeights)-1);
-        double mean=0.5*(
-                        DIRECT_A3D_ELEM(FourierWeights,k,0,0)+
-                        DIRECT_A3D_ELEM(FourierWeights,ksym,0,0));
-        DIRECT_A3D_ELEM(FourierWeights,k,0,0)=
-            DIRECT_A3D_ELEM(FourierWeights,ksym,0,0)=mean;
-    }
+    //forceWeightSymmetry(preFourierWeights);
 
     // Tell threads what to do
     //#define DEBUG_VOL1
 #ifdef DEBUG_VOL1
+
     {
         Image<double> save;
         save().alias( FourierWeights );
@@ -979,16 +1057,19 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
 
     MultidimArray<double> &mVout=Vout();
     double ipad_relation=1.0/pad_relation;
+    double meanFactor2=0;
     FOR_ALL_ELEMENTS_IN_ARRAY3D(mVout)
     {
-			// COSS: *** Avoid the square root
-    	double aux=sqrt((double)(k*k+i*i+j*j))*iDeltaFourier;
+        double radius=sqrt((double)(k*k+i*i+j*j));
+        double aux=radius*iDeltaFourier;
         double factor = Fourier_blob_table(ROUND(aux));
-        //if(k==0 && i==0 && j > 0)
-        // std::cerr << j<<" "<<factor << std::endl;
-        A3D_ELEM(mVout,k,i,j) /= factor*ipad_relation;
+        double factor2=(pow(Sinc(radius/(2*(imgSize))),2));
+        A3D_ELEM(mVout,k,i,j) /= (ipad_relation*factor2*factor);
+        meanFactor2+=factor2;
     }
-
+    meanFactor2/=MULTIDIM_SIZE(mVout);
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(mVout)
+    A3D_ELEM(mVout,k,i,j) *= meanFactor2;
     Vout.write(out_name);
 }
 
@@ -998,3 +1079,37 @@ void ProgRecFourier::setIO(const FileName &fn_in, const FileName &fn_out)
     this->fn_out = fn_out;
 }
 
+void ProgRecFourier::forceWeightSymmetry(MultidimArray<double> &FourierWeights)
+{
+    int yHalf=YSIZE(FourierWeights)/2;
+    if (YSIZE(FourierWeights)%2==0)
+        yHalf--;
+    int zHalf=ZSIZE(FourierWeights)/2;
+    if (ZSIZE(FourierWeights)%2==0)
+        zHalf--;
+    int zsize=(int)ZSIZE(FourierWeights);
+    int zsize_1=zsize-1;
+    int ysize_1=(int)YSIZE(FourierWeights)-1;
+    for (int k=0; k<zsize; k++)
+    {
+        int ksym=intWRAP(-k,0,zsize_1);
+        for (int i=1; i<=yHalf; i++)
+        {
+            int isym=intWRAP(-i,0,ysize_1);
+            double mean=0.5*(
+                            DIRECT_A3D_ELEM(FourierWeights,k,i,0)+
+                            DIRECT_A3D_ELEM(FourierWeights,ksym,isym,0));
+            DIRECT_A3D_ELEM(FourierWeights,k,i,0)=
+                DIRECT_A3D_ELEM(FourierWeights,ksym,isym,0)=mean;
+        }
+    }
+    for (int k=1; k<=zHalf; k++)
+    {
+        int ksym=intWRAP(-k,0,zsize_1);
+        double mean=0.5*(
+                        DIRECT_A3D_ELEM(FourierWeights,k,0,0)+
+                        DIRECT_A3D_ELEM(FourierWeights,ksym,0,0));
+        DIRECT_A3D_ELEM(FourierWeights,k,0,0)=
+            DIRECT_A3D_ELEM(FourierWeights,ksym,0,0)=mean;
+    }
+}

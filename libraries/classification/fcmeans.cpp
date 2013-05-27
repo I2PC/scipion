@@ -29,8 +29,6 @@
 
 #include "fcmeans.h"
 
-#pragma warning(disable:4786)
-
 /**  Ctor from stream
  * Parameter: _is Must have the parameters in the same order than the previous ctor.
    ****** check out this ************
@@ -169,9 +167,7 @@ void FuzzyCMeans::train(FuzzyCodeBook& _xmippDS, TS& _examples) const
     if (verbosity == 1 || verbosity == 3)
         listener->OnProgress(epochs);
 
-}
-; // FuzzyCMeans::train
-
+}// FuzzyCMeans::train
 
 /**
  * Test the Algorithm in a conventional way
@@ -375,7 +371,6 @@ double FuzzyCMeans::S(const FuzzyCodeBook& _xmippDS,
 
 }
 
-
 /// print itself on standard output
 void FuzzyCMeans::printSelf(std::ostream& _os) const
 {
@@ -387,4 +382,4 @@ void FuzzyCMeans::printSelf(std::ostream& _os) const
     _os << "Fuzzy constant m = " << m << std::endl;
     _os << "Epsilon eps = " << epsilon << std::endl;
     _os << "Iterations iter = " << epochs << std::endl << std::endl;
-} ;
+}

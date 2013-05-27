@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
- *              Javier �ngel Vel�zquez Muriel (javi@cnb.csic.es)
+ *              Javier Angel Velazquez Muriel (javi@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -267,8 +267,8 @@ void ARMAFilter(MultidimArray<double> &Img, MultidimArray< double > &Filter,
         MultidimArray<double> aux;
         medianFilter3x3(Filter, aux);
         // Copy all but the borders
-        for (int i = 1; i < YSIZE(Filter) - 1; i++)
-            for (int j = 1; j < XSIZE(Filter) - 1; j++)
+        for (size_t i = 1; i < YSIZE(Filter) - 1; i++)
+            for (size_t j = 1; j < XSIZE(Filter) - 1; j++)
                 DIRECT_A2D_ELEM(Filter, i, j) = DIRECT_A2D_ELEM(aux, i, j);
     }
 }

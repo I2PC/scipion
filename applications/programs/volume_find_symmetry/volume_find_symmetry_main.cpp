@@ -211,7 +211,6 @@ public:
             {
                 if (verbose>0)
                     std::cerr << "Searching symmetry axis ...\n";
-                int i = 0;
                 for (double rot = rot0; rot <= rotF; rot += step_rot)
                     for (double tilt = tilt0; tilt <= tiltF; tilt += step_tilt)
                     {

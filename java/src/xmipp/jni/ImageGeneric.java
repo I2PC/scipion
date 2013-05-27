@@ -1,5 +1,7 @@
 package xmipp.jni;
 
+import java.io.File;
+
 public class ImageGeneric {
 
     //Constants to image selection indexes
@@ -228,7 +230,16 @@ public class ImageGeneric {
     public native void getPreview(ImageGeneric imgOut, int xdim, int ydim, 
     		int select_slice, long select_image) throws Exception;
     
-    public native void alignImages(ImageGeneric img) throws Exception;
+
+    public native double[] alignImage(ImageGeneric img) throws Exception;
+    
+    public native void applyAlignment(ImageGeneric img, int index, double rot, double tilt, double psi) throws Exception;
+
+    
+    public native void removeAlignment(ImageGeneric img, int index, double rot, double tilt, double psi) throws Exception;
+    
+    public native Particle bestShift(ImageGeneric img) throws Exception;
+
 
     //Check if two images have same values to some accuracy
     public native boolean equal(ImageGeneric img, double accuracy) throws Exception;
@@ -266,4 +277,30 @@ public class ImageGeneric {
         super.finalize();
         destroy();
     }
+
+	public static boolean exists(String imagepath)
+	{
+		if(imagepath == null || imagepath.isEmpty())
+			return false;
+		String prefix = Filename.getPrefix(imagepath);
+		if(prefix == null)
+			return new File(imagepath).exists();
+		try
+		{
+		
+			int index = Integer.parseInt(prefix);
+			String file = Filename.getSuffix(imagepath);
+			ImageGeneric ig = new ImageGeneric(file);
+			ig.readHeader(file);
+			if(index < 0 || index > ig.getNDim())
+				return false;
+			return true;
+						
+		}
+		catch (Exception e)
+		{
+			return false;
+		}
+	}
+    
 }

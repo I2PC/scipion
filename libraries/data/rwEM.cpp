@@ -109,7 +109,6 @@ int ImageBase::readEM(size_t select_img)
     for any image when we simulate the file is a stack.*/
     if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
     {
-        double aux;
         for ( size_t i = 0; i < imgEnd - imgStart; ++i )
         {
             MD[i].setValue(MDL_SHIFT_X, 0.);

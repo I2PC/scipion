@@ -111,9 +111,9 @@ void XRayPSF::read(const FileName &fn, bool readVolume)
             std::vector<double> dimV;
             if (!MD.getValue(MDL_CTF_DIMENSIONS,dimV, id))
                 REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_DIMENSIONS) + " argument not present.");
-            Nox = dimV[0];
-            Noy = dimV[1];
-            Noz = dimV[2];
+            Nox = (int)dimV[0];
+            Noy = (int)dimV[1];
+            Noz = (int)dimV[2];
         }
         String typeS;
         if (!MD.getValue(MDL_CTF_XRAY_LENS_TYPE, typeS, id))
@@ -164,7 +164,7 @@ void XRayPSF::read(const FileName &fn, bool readVolume)
                 dzoPSF = dxoPSF;
             DeltaZo = textToFloat(getParameter(fh_param, "z_axis_shift", 0, "0")) *1e-6;
 
-            Nox = textToFloat(getParameter(fh_param, "x_dim", 0, "0"));
+            Nox = textToInteger(getParameter(fh_param, "x_dim", 0, "0"));
 
         }
         catch (XmippError &XE)
@@ -305,9 +305,9 @@ void XRayPSF::calculateParams(double _dxo, double _dzo, double threshold)
 
         MultidimArray<double> &mdaPsfVol = psfVol();
 
-        mdaPsfVol.resize(1, Noz/scaleFactorZ,
-                         Noy/scaleFactor,
-                         Nox/scaleFactor, false);
+        mdaPsfVol.resize(1, (size_t)(Noz/scaleFactorZ),
+                         (size_t)(Noy/scaleFactor),
+                         (size_t)(Nox/scaleFactor), false);
 
         mdaPsfVol.setXmippOrigin();
 
@@ -470,7 +470,7 @@ void XRayPSF::generateOTF(MultidimArray<std::complex<double> > &OTF, double Zpos
 
             if (zIndexPSF < STARTINGZ(mPsfVol) ||
                 zIndexPSF > FINISHINGZ(mPsfVol))
-                PSFi.initZeros();
+                PSFi.initConstant(1/YXSIZE(PSFi));
             else
             {   /* Actually T transform matrix is set to identity, as sampling is the same for both psfVol and phantom
                                  * It is only missing to set Z shift to select the slice */
@@ -529,7 +529,6 @@ void XRayPSF::generatePSF()
 
     init_progress_bar(ZSIZE(mPsfVol));
 
-    int k2;
     for (int k = STARTINGZ(mPsfVol), k2 = 0; k <= FINISHINGZ(mPsfVol); k++, k2++)
     {
         /* We keep sign of Z, Zo and DeltaZo positives in object space for the sake of simplicity in calculations,
@@ -696,8 +695,8 @@ void XRayPSF::adjustParam()
 
                 if (dxi>dxiMax) /// Lens Radius in pixels higher than image
                 {
-                    Nix = ceil(Nox * dxi/dxiMax);
-                    Niy = ceil(Noy * dxi/dxiMax);
+                    Nix = (size_t)ceil(Nox * dxi/dxiMax);
+                    Niy = (size_t)ceil(Noy * dxi/dxiMax);
 
                     dxi *= Nox/Nix;
 
@@ -711,32 +710,32 @@ void XRayPSF::adjustParam()
                 {
                     if (dxi < pupileSizeMin/Nox * dxiMax)
                     {
-                        Nix = ceil(pupileSizeMin * dxiMax/dxi);
+                        Nix = (size_t)ceil(pupileSizeMin * dxiMax/dxi);
                         AdjustType = PSFXR_ZPAD;
                     }
                     if (dxi < pupileSizeMin/Noy * dxiMax)
                     {
-                        Niy = ceil(pupileSizeMin * dxiMax/dxi);
+                        Niy = (size_t)ceil(pupileSizeMin * dxiMax/dxi);
                         AdjustType = PSFXR_ZPAD;
                     }
                     if (DeltaZo + Noz/2*dzo > deltaZMaxX)
                     {
-                        Nix = XMIPP_MAX(Nix,ceil(Zi*Rlens*2*ABS(DeltaZo+Noz/2*dzo)/(Zo*dxi*(Zo+DeltaZo+Noz/2*dzo))));
+                        Nix = std::max(Nix,(size_t)ceil(Zi*Rlens*2*fabs(DeltaZo+Noz/2*dzo)/(Zo*dxi*(Zo+DeltaZo+Noz/2*dzo))));
                         AdjustType = PSFXR_ZPAD;
                     }
                     if (DeltaZo - Noz/2*dzo < deltaZMinX)
                     {
-                        Nix = XMIPP_MAX(Nix,ceil(Zi*Rlens*2*ABS(DeltaZo-Noz/2*dzo)/(Zo*dxi*(Zo+DeltaZo-Noz/2*dzo))));
+                        Nix = std::max(Nix,(size_t)ceil(Zi*Rlens*2*fabs(DeltaZo-Noz/2*dzo)/(Zo*dxi*(Zo+DeltaZo-Noz/2*dzo))));
                         AdjustType = PSFXR_ZPAD;
                     }
                     if (DeltaZo + Noz/2*dzo > deltaZMaxY)
                     {
-                        Niy = XMIPP_MAX(Niy,ceil(Zi*Rlens*2*ABS(DeltaZo+Noz/2*dzo)/(Zo*dxi*(Zo+DeltaZo+Noz/2*dzo))));
+                        Niy = std::max(Niy,(size_t)ceil(Zi*Rlens*2*fabs(DeltaZo+Noz/2*dzo)/(Zo*dxi*(Zo+DeltaZo+Noz/2*dzo))));
                         AdjustType = PSFXR_ZPAD;
                     }
                     if ( DeltaZo - Noz/2*dzo < deltaZMinY)
                     {
-                        Niy = XMIPP_MAX(Niy,ceil(Zi*Rlens*2*ABS(DeltaZo-Noz/2*dzo)/(Zo*dxi*(Zo+DeltaZo-Noz/2*dzo))));
+                        Niy = std::max(Niy,(size_t)ceil(Zi*Rlens*2*fabs(DeltaZo-Noz/2*dzo)/(Zo*dxi*(Zo+DeltaZo-Noz/2*dzo))));
                         AdjustType = PSFXR_ZPAD;
                     }
                 }
@@ -763,14 +762,14 @@ void XRayPSF::adjustParam()
                 mask->initZeros(Niy,Nix);
 
                 double Rlens2=Rlens*Rlens;
-                double auxY = dyl*(1 - Niy);
-                double auxX = dxl*(1 - Nix);
+                double auxY = dyl*(1 - (int)Niy);
+                double auxX = dxl*(1 - (int)Nix);
 
-                for (int i=0; i<YSIZE(*mask); i++)
+                for (size_t i=0; i<YSIZE(*mask); i++)
                 {
                     double y = (double) i * dyl + auxY * 0.5;
                     double y2 = y * y;
-                    for (int j=0; j<XSIZE(*mask); j++)// Circular mask
+                    for (size_t j=0; j<XSIZE(*mask); j++)// Circular mask
                     {
                         /// For indices in standard fashion
                         double x = (double) j * dxl + auxX * 0.5;
@@ -808,12 +807,12 @@ void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambd
 
     double K = (-PI / (lambda * Flens));
 
-    for (int i=0; i < YSIZE(Im); ++i)
+    for (size_t i=0; i < YSIZE(Im); ++i)
     {
         y = (double) i * dy + (dy - Ly0) * 0.5;
         double y2 =  y * y;
 
-        for (int j=0; j < XSIZE(Im); ++j)
+        for (size_t j=0; j < XSIZE(Im); ++j)
         {
             /// For indices in standard fashion
             x = (double) j * dx + (dx - Lx0) *0.5;

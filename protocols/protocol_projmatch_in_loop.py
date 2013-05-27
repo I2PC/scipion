@@ -4,8 +4,9 @@ from os.path import join, exists
 #import launch_job, utils_xmipp
 from distutils.dir_util import mkpath
 from xmipp import *
-from protlib_utils import runJob
+from protlib_utils import runJob, getMemoryAvailable
 from protlib_filesystem import copyFile
+from math import floor
 
 CtfBlockName = 'ctfGroup'
 RefBlockName = 'refGroup'
@@ -63,6 +64,8 @@ def angular_project_library(_log
     ###need one block per reference
     # Project all references
     print '* Create projection library'
+    (Xdim, Ydim, Zdim, Ndim, _) = MetaDataInfo(maskedFileNamesIter)
+    memoryUsed=(Xdim*Xdim*Xdim*8.0)/pow(2,20)
     parameters = ' -i ' + maskedFileNamesIter + \
               ' --experimental_images ' + BlockWithAllExpImages + '@' + DocFileInputAngles + \
               ' -o ' + ProjectLibraryRootName + \
@@ -71,6 +74,7 @@ def angular_project_library(_log
               ' --compute_neighbors' + \
               ' --method ' + ProjectionMethod 
     if ProjectionMethod == 'fourier':
+        memoryUsed=memoryUsed*6
         if FourierMaxFrequencyOfInterest == -1:
                 md = MetaData(ResolutionXmdPrevIterMax)
                 id = md.firstObject()
@@ -105,7 +109,11 @@ def angular_project_library(_log
     if (DoCtfCorrection):
         parameters += \
               ' --groups ' + CtfGroupSubsetFileName
-    if (DoParallel):
+    processorsToUse=NumberOfMpi * NumberOfThreads
+    if processorsToUse>1:
+        memoryAvailable=getMemoryAvailable()
+        processorsToUse=min(processorsToUse,floor(memoryAvailable/memoryUsed))
+    if (DoParallel and processorsToUse>1):
         parameters = parameters + ' --mpi_job_size ' + str(MpiJobSize)
     if (len(SymmetryGroupNeighbourhood) > 1):
         parameters += \
@@ -116,7 +124,7 @@ def angular_project_library(_log
 
     runJob(_log, 'xmipp_angular_project_library',
                          parameters,
-                         NumberOfMpi * NumberOfThreads)
+                         processorsToUse)
     if (not DoCtfCorrection):
         src = ProjectLibraryRootName.replace(".stk", '_sampling.xmd')
         dst = src.replace('sampling.xmd', 'group%06d_sampling.xmd' % 1)
@@ -351,7 +359,9 @@ def angular_class_average(_log
 
     CtfGroupName = CtfGroupDirectory + '/' + CtfGroupRootName
     refname = str(ProjectLibraryRootName)
-
+    baseTxtFile = refname[:-len('.stk')] 
+    neighbFile = baseTxtFile + '.xmd'
+	
     MD = MetaData()
     MD.read(DocFileInputAngles)
     if MD.size() == 0:
@@ -360,7 +370,8 @@ def angular_class_average(_log
 
     parameters = ' -i ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]\$@' + DocFileInputAngles + \
                   ' --lib ' + refname.replace(".stk", ".doc") + \
-                  ' -o ' + OutClasses
+                  ' --pcaSorting ' + \
+		  ' -o ' + OutClasses
     if(DoSaveImagesAssignedToClasses):
         parameters += ' --save_images_assigned_to_classes'  
                   

@@ -119,7 +119,7 @@ void ProgMLF2D::readParams()
         // no restart, just copy argc to argc2 and argv to argv2
         do_restart = false;
         argc2 = argc;
-        argv2 = argv;
+        argv2 = (char **)argv;
         for (int i = 1; i < argc2; i++)
         {
             cline = cline + (String)argv2[i] + " ";
@@ -323,8 +323,7 @@ void ProgMLF2D::produceSideInfo()
     MDimg.findObjects(img_id);
 
     // Get image sizes and total number of images
-    int idum;
-    size_t ndum;
+    size_t idum, ndum;
     getImageSize(MDimg, dim, idum, idum, ndum);
     hdim = dim / 2;
     dim2 = dim * dim;
@@ -337,7 +336,7 @@ void ProgMLF2D::produceSideInfo()
     if (do_kstest)
     {
         resolhist.resize(hdim);
-        for (int ires = 0; ires < hdim; ires++)
+        for (size_t ires = 0; ires < hdim; ires++)
         {
             resolhist[ires].init(HISTMIN, HISTMAX, HISTSTEPS);
         }
@@ -364,7 +363,6 @@ void ProgMLF2D::produceSideInfo()
 
     FileName fnt_img, fnt;
     std::vector<FileName> all_fn_ctfs;
-    int iifocus;
 
     count_defocus.clear();
     Vctf.clear();
@@ -386,7 +384,6 @@ void ProgMLF2D::produceSideInfo()
         nr_focus = 0;
         all_fn_ctfs.clear();
         FileName fn_ctf;
-        bool is_unique;
 
         //CTF info now comes on input metadatas
         MetaData mdCTF;
@@ -866,14 +863,14 @@ void ProgMLF2D::updateWienerFilters(const MultidimArray<double> &spectral_signal
     MultidimArray<double>           Maux;
     MultidimArray<std::complex<double> > Faux;
     std::ofstream                   fh;
-    int                        maxres = 0;
+    size_t                     maxres = 0;
     double                     noise, sum_sumw_defocus = 0.;
-    int                        int_lowres_limit, int_highres_limit, int_ini_highres_limit;
-    int                        current_probres_limit;
+    size_t                     int_lowres_limit, int_highres_limit, int_ini_highres_limit;
+    size_t                     current_probres_limit;
     FileName                   fn_base, fn_tmp;
 
     // integer resolution limits (in shells)
-    int_lowres_limit  = sampling * dim / lowres_limit;
+    int_lowres_limit  = (size_t)(sampling * dim / lowres_limit);
     int_highres_limit = (highres_limit > 0.) ? ROUND(sampling * dim / highres_limit) : hdim;
     int_ini_highres_limit =  (ini_highres_limit > 0.) ? ROUND(sampling * dim / ini_highres_limit) : hdim;
 
@@ -1085,7 +1082,7 @@ void ProgMLF2D::updateWienerFilters(const MultidimArray<double> &spectral_signal
     nr_points_prob = 0;
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Faux)
     {
-        int ires = dAij(Mresol_int, i, j);
+    	size_t ires = dAij(Mresol_int, i, j);
         if (ires > int_lowres_limit &&
             ires <= current_probres_limit &&
             !(i == 0 && j > hdim) ) // exclude first half row in FourierTransformHalf
@@ -1101,7 +1098,7 @@ void ProgMLF2D::updateWienerFilters(const MultidimArray<double> &spectral_signal
     nr_points_2d = nr_points_prob;
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Faux)
     {
-        int ires = dAij(Mresol_int, i, j);
+        size_t ires = dAij(Mresol_int, i, j);
         if ( (ires <= int_lowres_limit || ires > current_probres_limit) &&
              ires <= current_highres_limit &&
              !(i == 0 && j > hdim) ) // exclude first half row in FourierTransformHalf
@@ -1217,14 +1214,14 @@ void ProgMLF2D::generateInitialReferences()
     size_t nsub, first, last;
     size_t id;
 
-    for (size_t refno = 0; refno < model.n_ref; refno++)
+    for (int refno = 0; refno < model.n_ref; refno++)
     {
         nsub = divide_equally(nr_images_global, model.n_ref, refno, first, last);
         //Clear images
         IRef().initZeros(dim, dim);
         IRef().setXmippOrigin();
 
-        for (int imgno = first; imgno <= last; imgno++)
+        for (size_t imgno = first; imgno <= last; imgno++)
         {
             MDimg.getValue(MDL_IMAGE, fn_tmp, img_id[imgno]);
             ITemp.read(fn_tmp);
@@ -1293,7 +1290,7 @@ void ProgMLF2D::appendFTtoVector(const MultidimArray<std::complex<double> > &in,
 
     // First, store the points used in the probability calculations
     std::complex<double> * tmp_in = MULTIDIM_ARRAY(in);
-    for (int ipoint = 0; ipoint < nr_points_2d; ipoint++)
+    for (size_t ipoint = 0; ipoint < nr_points_2d; ipoint++)
     {
         int ii = pointer_2d[ipoint];
         out.push_back(tmp_in[ii].real());
@@ -1312,7 +1309,7 @@ void ProgMLF2D::getFTfromVector(const std::vector<double> &in,
     std::complex<double> * tmp_out = MULTIDIM_ARRAY(out);
     if (only_real)
     {
-        for (int ipoint = 0; ipoint < nr_points_2d; ipoint++)
+        for (size_t ipoint = 0; ipoint < nr_points_2d; ipoint++)
         {
             int ii = pointer_2d[ipoint];
             std::complex<double> aux(in[start_point+ipoint], 0.);
@@ -1321,7 +1318,7 @@ void ProgMLF2D::getFTfromVector(const std::vector<double> &in,
     }
     else
     {
-        for (int ipoint = 0; ipoint < nr_points_2d; ipoint++)
+        for (size_t ipoint = 0; ipoint < nr_points_2d; ipoint++)
         {
             int ii = pointer_2d[ipoint];
             std::complex<double> aux(in[start_point+2*ipoint],in[start_point+2*ipoint+1]);
@@ -1455,11 +1452,10 @@ void ProgMLF2D::fourierTranslate2D(const std::vector<double> &in,
     yyshift = -trans(1) / (double)dim;
     //Not very clean, but very fast
     const double * ptrIn = &(in[point_start]);
-    double * ptrOut = &(out[0]);
     int * ptrJ = &(pointer_j[0]);
     int * ptrI = &(pointer_i[0]);
 
-    for (int i = 0; i < nr_points_2d; i++)
+    for (size_t i = 0; i < nr_points_2d; i++)
     {
         xx = (double)ptrJ[i];
         yy = (double)ptrI[i];
@@ -1590,18 +1586,17 @@ double lcdf_tstudent_mlf30(double t)
 // Exclude translations from the MLF_integration
 // For significantly contributing refno+psi: re-calculate optimal shifts
 void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
-                                const int focus, bool apply_ctf,
+                                const size_t focus, bool apply_ctf,
                                 double &fracweight, double &maxweight2,
                                 double &sum_refw2, double &opt_scale,
-                                int &opt_refno, double &opt_psi,
-                                int &opt_ipsi, int &opt_iflip,
+                                size_t &opt_refno, double &opt_psi,
+                                size_t &opt_ipsi, size_t &opt_iflip,
                                 MultidimArray<double> &opt_offsets,
                                 std::vector<double> &opt_offsets_ref,
                                 std::vector<double > &pdf_directions,
                                 bool do_kstest, bool write_histograms,
                                 FileName fn_img, double &KSprob)
 {
-
     std::vector<double> &Mwsum_sigma2_local = Mwsum_sigma2[focus];
     MultidimArray<double>                             Mweight;
     MultidimArray<int>                                Moffsets, Moffsets_mirror;
@@ -1617,7 +1612,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
     double logsigma2, ldim, ref_scale = 1.;
     double scale_denom, scale_numer, wsum_sc = 0., wsum_sc2 = 0.;
     int    irot, irefmir, opt_irefmir, ix, iy;
-    int    point_trans;
+    size_t point_trans;
     int    opt_itrans, iflip_start, iflip_stop, nr_mir;
     int    img_start, ref_start, wsum_start;
 
@@ -1633,8 +1628,10 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
 
     sum_refw2 = 0.;
     //change std::vectors by arrays
-    double sigma2[nr_points_2d], inv_sigma2[nr_points_2d];
-    double ctf[nr_points_2d], decctf[nr_points_2d];
+    double *sigma2=new double[nr_points_2d];
+    double *inv_sigma2=new double [nr_points_2d];
+    double *ctf=new double[nr_points_2d];
+    double *decctf=new double[nr_points_2d];
 
     const int &ifocus = focus;
     FOR_ALL_POINTS()
@@ -1656,7 +1653,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
     logsigma2 = 0.;
     double factor = (do_student) ? PI * df * 0.5 : PI;
     // Multiply by two because we treat real and imaginary parts!
-    for (int ipoint = 0; ipoint < nr_points_prob; ipoint++)
+    for (size_t ipoint = 0; ipoint < nr_points_prob; ipoint++)
         logsigma2 += 2 * log( sqrt(factor * sigma2[ipoint]));
 
     // Precalculate Fimg_trans, on pruned and expanded offset list
@@ -1673,12 +1670,11 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
 
             FOR_ALL_FLIPS()
             {
-                irefmir = FLOOR(iflip / nr_nomirror_flips) * model.n_ref + refno;
-                ix = ROUND(opt_offsets_ref[2*irefmir]);
-                iy = ROUND(opt_offsets_ref[2*irefmir+1]);
+                irefmir = (int)floor(iflip / nr_nomirror_flips) * model.n_ref + refno;
+                ix = (int)round(opt_offsets_ref[2*irefmir]);
+                iy = (int)round(opt_offsets_ref[2*irefmir+1]);
                 Pmax_refmir[irefmir] = 0.;
-                point_trans = (iflip < nr_nomirror_flips) ? point_trans = A2D_ELEM(Moffsets, iy, ix) :
-                              point_trans = A2D_ELEM(Moffsets_mirror, iy, ix);
+                point_trans = (iflip < nr_nomirror_flips) ? A2D_ELEM(Moffsets, iy, ix) : A2D_ELEM(Moffsets_mirror, iy, ix);
                 if (point_trans < 0 || point_trans > dim2)
                 {
                     std::cerr<<"point_trans = "<<point_trans<<" ix= "<<ix<<" iy= "<<iy<<std::endl;
@@ -1698,7 +1694,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                     ref_start = refno * nr_psi * dnr_points_2d + ipsi * dnr_points_2d;
                     if (do_ctf_correction)
                     {
-                        for (int ii = 0; ii < nr_points_prob; ii++)
+                        for (size_t ii = 0; ii < nr_points_prob; ii++)
                         {
                             tmpr = Fimg_trans[img_start + 2*ii] - ctf[ii] * ref_scale * Fref[ref_start + 2*ii];
                             tmpi = Fimg_trans[img_start + 2*ii+1] - ctf[ii] * ref_scale * Fref[ref_start + 2*ii+1];
@@ -1708,7 +1704,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                     }
                     else
                     {
-                        for (int ii = 0; ii < nr_points_prob; ii++)
+                        for (size_t ii = 0; ii < nr_points_prob; ii++)
                         {
                             tmpr = Fimg_trans[img_start + 2*ii] - ref_scale * Fref[ref_start + 2*ii];
                             tmpi = Fimg_trans[img_start + 2*ii+1] - ref_scale * Fref[ref_start + 2*ii+1];
@@ -1754,9 +1750,9 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
 
             FOR_ALL_FLIPS()
             {
-                irefmir = FLOOR(iflip / nr_nomirror_flips) * model.n_ref + refno;
-                ix = ROUND(opt_offsets_ref[2*irefmir]);
-                iy = ROUND(opt_offsets_ref[2*irefmir+1]);
+                irefmir = (int)floor(iflip / nr_nomirror_flips) * model.n_ref + refno;
+                ix = (int)round(opt_offsets_ref[2*irefmir]);
+                iy = (int)round(opt_offsets_ref[2*irefmir+1]);
                 fracpdf = (iflip < nr_nomirror_flips) ? 1. - mirror_fraction[refno] : mirror_fraction[refno];
                 pdf =  alpha_k[refno] * fracpdf * A2D_ELEM(P_phi, iy, ix);
                 // get the starting point in the Fimg_trans vector
@@ -1816,7 +1812,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                         {
                             // NOTE: scale_denom could be precalculated in
                             // a much cheaper way!!!!
-                            for (int ii = 0; ii < nr_points_prob; ii++)
+                            for (size_t ii = 0; ii < nr_points_prob; ii++)
                             {
                                 scale_numer += Fimg_trans[img_start + 2*ii] * ctf[ii] * Fref[ref_start + 2*ii];
                                 scale_numer += Fimg_trans[img_start + 2*ii+1] * ctf[ii] * Fref[ref_start + 2*ii+1];
@@ -1826,7 +1822,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                         }
                         else
                         {
-                            for (int ii = 0; ii < nr_points_prob; ii++)
+                            for (size_t ii = 0; ii < nr_points_prob; ii++)
                             {
                                 scale_numer += Fimg_trans[img_start + 2*ii] * Fref[ref_start + 2*ii];
                                 scale_numer += Fimg_trans[img_start + 2*ii+1] * Fref[ref_start + 2*ii+1];
@@ -1866,7 +1862,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                 ref_scale = opt_scale / refs_avgscale[refno];
             FOR_ALL_FLIPS()
             {
-                irefmir = FLOOR(iflip / nr_nomirror_flips) * model.n_ref + refno;
+                irefmir = (int)floor(iflip / nr_nomirror_flips) * model.n_ref + refno;
                 fracpdf = (iflip < nr_nomirror_flips) ? 1. - mirror_fraction[refno] : mirror_fraction[refno];
 
                 FOR_ALL_ROTATIONS()
@@ -1884,8 +1880,8 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                         {
                             if (itrans != zero_trans)
                             { // zero_trans has already been calculated!
-                                ix = ROUND(opt_offsets_ref[2*irefmir] + Vtrans[itrans](0));
-                                iy = ROUND(opt_offsets_ref[2*irefmir+1] + Vtrans[itrans](1));
+                                ix = (int)round(opt_offsets_ref[2*irefmir] + Vtrans[itrans](0));
+                                iy = (int)round(opt_offsets_ref[2*irefmir+1] + Vtrans[itrans](1));
                                 ix = intWRAP(ix, Moffsets.startingX(), Moffsets.finishingX());
                                 iy = intWRAP(iy, Moffsets.startingY(), Moffsets.finishingY());
                                 if (iflip < nr_nomirror_flips)
@@ -1905,7 +1901,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                                     diff = 0.;
                                     if (do_ctf_correction)
                                     {
-                                        for (int ii = 0; ii < nr_points_prob; ii++)
+                                        for (size_t ii = 0; ii < nr_points_prob; ii++)
                                         {
                                             tmpr = Fimg_trans[img_start + 2*ii] - ctf[ii] * ref_scale * Fref[ref_start + 2*ii];
                                             tmpi = Fimg_trans[img_start + 2*ii+1] - ctf[ii] * ref_scale * Fref[ref_start + 2*ii+1];
@@ -1914,7 +1910,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                                     }
                                     else
                                     {
-                                        for (int ii = 0; ii < nr_points_prob; ii++)
+                                        for (size_t ii = 0; ii < nr_points_prob; ii++)
                                         {
                                             tmpr = Fimg_trans[img_start + 2*ii] - ref_scale * Fref[ref_start + 2*ii];
                                             tmpi = Fimg_trans[img_start + 2*ii+1] - ref_scale * Fref[ref_start + 2*ii+1];
@@ -1979,7 +1975,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                                         {
                                             // NOTE: scale_denom could be precalculated in
                                             // a much cheaper way!!!!
-                                            for (int ii = 0; ii < nr_points_prob; ii++)
+                                            for (size_t ii = 0; ii < nr_points_prob; ii++)
                                             {
                                                 scale_numer += Fimg_trans[img_start + 2*ii]
                                                                * ctf[ii] * Fref[ref_start + 2*ii];
@@ -1993,7 +1989,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                                         }
                                         else
                                         {
-                                            for (int ii = 0; ii < nr_points_prob; ii++)
+                                            for (size_t ii = 0; ii < nr_points_prob; ii++)
                                             {
                                                 scale_numer += Fimg_trans[img_start + 2*ii]
                                                                * Fref[ref_start + 2*ii];
@@ -2051,7 +2047,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
 
         if (do_norm)
             ref_scale = opt_scale / refs_avgscale[opt_refno];
-        for (int ii = 0; ii < nr_points_prob; ii++)
+        for (size_t ii = 0; ii < nr_points_prob; ii++)
         {
             double inv_sqrt_sigma2 = 1. / sqrt(0.5*sigma2[ii]);
             if (do_ctf_correction)
@@ -2097,9 +2093,9 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
         }
 
         // Compute resolution-dependent histograms
-        for (int ires = 0; ires < hdim; ires++)
+        for (size_t ires = 0; ires < hdim; ires++)
         {
-            for (int j=0; j<res_diff[ires].size(); j++)
+            for (size_t j=0; j<res_diff[ires].size(); j++)
                 resolhist[ires].insert_value(res_diff[ires][j]);
         }
 
@@ -2163,7 +2159,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
             sumw_mirror[refno] += refw_mirror[refno] / sum_refw;
             FOR_ALL_FLIPS()
             {
-                irefmir = FLOOR(iflip / nr_nomirror_flips) * model.n_ref + refno;
+                irefmir = (int)floor(iflip / nr_nomirror_flips) * model.n_ref + refno;
                 FOR_ALL_ROTATIONS()
                 {
                     irot = iflip * nr_psi + ipsi;
@@ -2188,7 +2184,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                             wsum_sigma_offset += weight * (double)(ix * ix + iy * iy);
                             if (do_ctf_correction)
                             {
-                                for (int ii = 0; ii < nr_points_2d; ii++)
+                                for (size_t ii = 0; ii < nr_points_2d; ii++)
                                 {
                                     Fwsum_imgs[wsum_start + 2*ii] += weight
                                                                      * opt_scale * decctf[ii] * Fimg_trans[img_start + 2*ii];
@@ -2207,7 +2203,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                             }
                             else
                             {
-                                for (int ii = 0; ii < nr_points_2d; ii++)
+                                for (size_t ii = 0; ii < nr_points_2d; ii++)
                                 {
                                     Fwsum_imgs[wsum_start + 2*ii] += weight
                                                                      * opt_scale * Fimg_trans[img_start + 2*ii];
@@ -2292,6 +2288,10 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
     //          << " sum_refw: " << sum_refw
     //         << " LL: " << LL << std::endl;
     //    }
+    delete []sigma2;
+    delete []inv_sigma2;
+    delete []ctf;
+    delete []decctf;
 }
 
 void ProgMLF2D::iteration()
@@ -2314,7 +2314,8 @@ void ProgMLF2D::expectation()
     float old_phi = -999., old_theta = -999.;
     double opt_psi, opt_flip, opt_scale, maxcorr, maxweight2;
     double w2, KSprob = 0.;
-    int c, opt_refno, opt_ipsi, opt_iflip, focus = 0;
+    size_t opt_refno, opt_ipsi, opt_iflip;
+    int focus = 0;
     bool apply_ctf;
 
     // Pre-calculate pdfs
@@ -2619,7 +2620,7 @@ void ProgMLF2D::maximization()
             rmean_sigma2.initZeros();
             radialAverage(Maux, center, rmean_sigma2, radial_count, true);
             // Factor 2 here, because the Gaussian distribution is 2D!
-            for (int irr = 0; irr <= current_highres_limit; irr++)
+            for (size_t irr = 0; irr <= current_highres_limit; irr++)
             {
                 aux = dAi(rmean_sigma2, irr) / (2. * sumw_defocus[ifocus]);
                 if (aux > 0.)
@@ -2701,7 +2702,6 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
     size_t id;
     bool write_conv = !do_ML3D;
     //Only override first time
-    static WriteModeMetaData mode = MD_OVERWRITE;
 
     if (iter == 0)
         write_conv = false;
@@ -2724,8 +2724,6 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
     MDRow row;
     MDIterator mdIter(MDref);
     MDo = MDref;
-
-    int ref3d;
 
     for (int refno = 0; refno < model.n_ref; ++refno, mdIter.moveNext())
     {
@@ -2780,7 +2778,7 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
     if (outputType != OUT_REFS)
     {
         MetaData mdImgs;
-        size_t n = MDref.size();
+        int n = (int) MDref.size(); //Avoid int and size_t comparison warning
         for (int ref = 1; ref <= n; ++ref)
         {
             mdImgs.importObjects(MDimg, MDValueEQ(MDL_REF, ref));
@@ -2832,7 +2830,7 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
                 fh_hist << tstudent1D(val, df, 1., 0.)<<" ";
             else
                 fh_hist << gaussian1D(val, 1., 0.)<<" ";
-            for (int ires = 0; ires < hdim; ires++)
+            for (size_t ires = 0; ires < hdim; ires++)
             {
                 if (resolhist[ires].sampleNo() > 0)
                 {

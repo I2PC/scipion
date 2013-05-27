@@ -25,4 +25,4 @@
 
 #include <reconstruction/tomo_extract_subvolume.h>
 
-RUN_XMIPP_PROGRAM(ProgTomoExtractSubvolume);
+RUN_XMIPP_PROGRAM(ProgTomoExtractSubvolume)

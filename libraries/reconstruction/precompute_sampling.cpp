@@ -35,7 +35,7 @@ Prog_Sampling_Parameters::Prog_Sampling_Parameters()
 
 
 /* Read parameters --------------------------------------------------------- */
-void Prog_Sampling_Parameters::read(int argc, char **argv)
+void Prog_Sampling_Parameters::read(int argc, const char **argv)
 {
     sampling_file_root = getParameter(argc, argv, "-o");
     fn_sym = getParameter(argc, argv, "-sym");

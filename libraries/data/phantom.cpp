@@ -350,7 +350,7 @@ void Blob::read_specific(const std::vector<double> &vect)
         REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_PHANTOM_FEATURE_SPECIFIC) + "Error when reading a blob");
     radius = vect[0];
     alpha = vect[1];
-    m = vect[2];
+    m = (int)vect[2];
     prepare();
 }
 
@@ -831,7 +831,7 @@ double Gaussian::density_inside(const Matrix1D<double> &r, Matrix1D<double> &aux
 /* Point inside a cylinder ------------------------------------------------- */
 int Cylinder::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
 {
-    SPEED_UP_temps;
+    SPEED_UP_temps012;
     double tx, ty;
 
     // Express r in the feature coord. system
@@ -841,8 +841,7 @@ int Cylinder::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) con
     // Check if it is inside
     tx = XX(aux) / xradius;
     ty = YY(aux) / yradius;
-    if (tx*tx + ty*ty <= 1.0
-        && ABS(ZZ(aux)) <= height / 2)
+    if (tx*tx + ty*ty <= 1.0 && fabs(ZZ(aux)) <= height / 2)
         return 1;
     return 0;
 }
@@ -850,7 +849,7 @@ int Cylinder::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) con
 /* Point inside a Double cylinder ------------------------------------------ */
 int DCylinder::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
 {
-    SPEED_UP_temps;
+    SPEED_UP_temps012;
 
     // Express r in the feature coord. system
     V3_MINUS_V3(aux, r, Center);
@@ -871,7 +870,7 @@ int DCylinder::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) co
 /* Point inside a cube ----------------------------------------------------- */
 int Cube::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
 {
-    SPEED_UP_temps;
+    SPEED_UP_temps012;
 
     // Express r in the feature coord. system
     V3_MINUS_V3(aux, r, Center);
@@ -887,7 +886,7 @@ int Cube::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
 /* Point inside an ellipsoid ----------------------------------------------- */
 int Ellipsoid::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
 {
-    SPEED_UP_temps;
+    SPEED_UP_temps012;
     double tx, ty, tz;
 
     // Express r in the feature coord. system
@@ -906,7 +905,7 @@ int Ellipsoid::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) co
 /* Point inside a cone ----------------------------------------------------- */
 int Cone::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
 {
-    SPEED_UP_temps;
+    SPEED_UP_temps012;
     double Zradius;
 
     // Express r in the feature coord. system
@@ -1223,7 +1222,7 @@ double Cylinder::intersection(
     Matrix1D<double> &u) const
 {
     double norm = direction.module();
-    SPEED_UP_temps;
+    SPEED_UP_temps012;
 
     // Set the passing point in the cylinder coordinate system
     // and normalise to a unit cylinder
@@ -1262,7 +1261,7 @@ double DCylinder::intersection(
     Matrix1D<double> &u) const
 {
     double norm = direction.module();
-    SPEED_UP_temps;
+    SPEED_UP_temps012;
 
     // Express also the direction in the cylinder coordinate system
     // and normalise to a unit cylinder
@@ -1303,7 +1302,7 @@ double Cube::intersection(
     Matrix1D<double> &u) const
 {
     double norm = direction.module();
-    SPEED_UP_temps;
+    SPEED_UP_temps012;
 
     // Set the passing point in the cube coordinate system
     // and normalise to a unit cube
@@ -1330,7 +1329,7 @@ double Ellipsoid::intersection(
     Matrix1D<double> &u) const
 {
     double norm = direction.module();
-    SPEED_UP_temps;
+    SPEED_UP_temps012;
 
     // Set the passing point in the ellipsoid coordinate system
     // and normalise to a unit sphere
@@ -1380,7 +1379,7 @@ void Feature::project_to(Projection &P, const Matrix2D<double> &VP,
     direction.selfTranspose();
     Matrix1D<double> corner1(3), corner2(3);
     Matrix1D<double> act(3);
-    SPEED_UP_temps;
+    SPEED_UP_temps012;
 
     // Find center of the feature in the projection plane ...................
     // Step 1). Project the center to the plane, the result is in the
@@ -2051,7 +2050,7 @@ void Phantom::clear()
     xdim = ydim = zdim = 0;
     Background_Density = 0;
     fn = "";
-    for (int i = 0; i < VF.size(); i++)
+    for (size_t i = 0; i < VF.size(); i++)
         delete VF[i];
     VF.clear();
 }
@@ -2075,7 +2074,7 @@ Phantom & Phantom::operator = (const Phantom &P)
     Cube       *cub;
     Ellipsoid  *ell;
     Cone       *con;
-    for (int i = 0; i < P.VF.size(); i++)
+    for (size_t i = 0; i < P.VF.size(); i++)
         if (P.VF[i]->Type == "sph")
         {
             sph = new Sphere;
@@ -2130,7 +2129,7 @@ Phantom & Phantom::operator = (const Phantom &P)
 /* Prepare for work -------------------------------------------------------- */
 void Phantom::prepare()
 {
-    for (int i = 0; i < VF.size(); i++)
+    for (size_t i = 0; i < VF.size(); i++)
         VF[i]->prepare();
 }
 
@@ -2138,7 +2137,7 @@ void Phantom::prepare()
 double Phantom::max_distance() const
 {
     double retval = 0;
-    for (int i = 0; i < VF.size(); i++)
+    for (size_t i = 0; i < VF.size(); i++)
         retval = XMIPP_MAX(retval, VF[i]->max_distance + VF[i]->Center.module());
     return retval;
 }
@@ -2147,7 +2146,7 @@ double Phantom::max_distance() const
 double Phantom::volume() const
 {
     double retval = 0;
-    for (int i = 0; i < VF.size(); i++)
+    for (size_t i = 0; i < VF.size(); i++)
         retval += VF[i]->volume();
     return retval;
 }
@@ -2193,9 +2192,9 @@ void Phantom::read(const FileName &fn_phantom, bool apply_scale)
         MD1.getValue(MDL_DIMENSIONS_3D, TempVec, objId);
         if (TempVec.size()<3)
             REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_DIMENSIONS_3D) + " problems with project dimensions");
-        xdim = TempVec[0];
-        ydim = TempVec[1];
-        zdim = TempVec[2];
+        xdim = (int)TempVec[0];
+        ydim = (int)TempVec[1];
+        zdim = (int)TempVec[2];
         if (!MD1.getValue(MDL_PHANTOM_BGDENSITY, Background_Density, objId))
             Background_Density = 0;
         if (!MD1.getValue(MDL_SCALE, scale, objId))
@@ -2415,7 +2414,7 @@ std::ostream& operator << (std::ostream &o, const Phantom &P)
     std::cout << "Dimensions: " << P.xdim << " x " << P.ydim << " x " << P.zdim << std::endl;
     std::cout << "Background density: " << P.Background_Density << std::endl;
     std::cout << "phantom_scale : " << P.phantom_scale << std::endl;
-    for (int i = 0; i < P.VF.size(); i++)
+    for (size_t i = 0; i < P.VF.size(); i++)
         o << P.VF[i];
     return o;
 }
@@ -2444,7 +2443,7 @@ void Phantom::write(const FileName &fn_phantom)
 
     // Write specific parameters
     std::string SAddAssign;  // string variab for feature operation (+/=)
-    for (int i = 0; i < VF.size(); i++)
+    for (size_t i = 0; i < VF.size(); i++)
     {
         id = MD2.addObject();
         SAddAssign = VF[i]->Add_Assign;
@@ -2468,7 +2467,7 @@ int Phantom::voxel_inside_any_feat(const Matrix1D<double> &r,
     double current_density;
     current_i = 0;
     current_density = Background_Density;
-    for (int i = 0; i < VF.size(); i++)
+    for (size_t i = 0; i < VF.size(); i++)
     {
         inside = VF[i]->voxel_inside(r, aux1, aux2);
         if (inside != 0 && VF[i]->Density > current_density)
@@ -2486,7 +2485,7 @@ int Phantom::any_feature_intersects_sphere(const Matrix1D<double> &r,
         Matrix1D<double> &aux3) const
 {
     bool intersects;
-    for (int i = 0; i < VF.size(); i++)
+    for (size_t i = 0; i < VF.size(); i++)
     {
         intersects = VF[i]->intersects_sphere(r, radius, aux1, aux2, aux3);
         if (intersects)
@@ -2502,7 +2501,7 @@ void Phantom::draw_in(MultidimArray<double> &V)
     V.resize(zdim, ydim, xdim);
     V.setXmippOrigin();
     V.initConstant(Background_Density);
-    for (int i = 0; i < VF.size(); i++)
+    for (size_t i = 0; i < VF.size(); i++)
         VF[i]->draw_in(V);
 }
 
@@ -2537,21 +2536,21 @@ void Phantom::sketch_in(MultidimArray<double> &V, int clean, double colour)
         V.resize(zdim, ydim, xdim);
         V.setXmippOrigin();
     }
-    for (int i = 0; i < VF.size(); i++)
+    for (size_t i = 0; i < VF.size(); i++)
         VF[i]->sketch_in(V, colour);
 }
 
 /* Shift a phantom --------------------------------------------------------- */
 void Phantom::shift(double shiftX, double shiftY, double shiftZ)
 {
-    for (int i = 0; i < VF.size(); i++)
+    for (size_t i = 0; i < VF.size(); i++)
         VF[i]->shift(shiftX, shiftY, shiftZ);
 }
 
 /* Rotate a phantom -------------------------------------------------------- */
 void Phantom::rotate(const Matrix2D<double> &E)
 {
-    for (int i = 0; i < VF.size(); i++)
+    for (size_t i = 0; i < VF.size(); i++)
         VF[i]->rotate(E);
 }
 
@@ -2568,7 +2567,7 @@ void Phantom::selfApplyGeometry(const Matrix2D<double> &A, int inv)
     else
         T = A;
 
-    for (int i = 0; i < VF.size(); i++)
+    for (size_t i = 0; i < VF.size(); i++)
         VF[i]->selfApplyGeometry(T);
 }
 
@@ -2593,7 +2592,7 @@ void Phantom::project_to(Projection &P, int Ydim, int Xdim,
         VP = (*A) * VP;
     Matrix2D<double> PV = VP.inv();
     // Project all features
-    for (int i = 0; i < VF.size(); i++)
+    for (size_t i = 0; i < VF.size(); i++)
         VF[i]->project_to(P, VP, PV);
 }
 #undef DEBUG
@@ -2610,7 +2609,7 @@ void Phantom::project_to(Projection &P,
     Matrix2D<double> PV = VP.inv();
 
     // Project all features
-    for (int i = 0; i < VF.size(); i++)
+    for (size_t i = 0; i < VF.size(); i++)
         VF[i]->project_to(P, VP, PV);
 }
 
@@ -2619,7 +2618,7 @@ void Phantom::project_to(Projection &P, const Matrix2D<double> &VP, double    di
     Matrix2D<double> PV = VP.inv();
 
     // Project all features
-    for (int i = 0; i < VF.size(); i++)
+    for (size_t i = 0; i < VF.size(); i++)
     {
         if (rnd_unif(0, 1) < disappearing_th)
             VF[i]->project_to(P, VP, PV);

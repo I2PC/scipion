@@ -30,9 +30,6 @@
 #ifndef XMIPPFUZZYCB_H
 #define XMIPPFUZZYCB_H
 
-// To avoid problems with long template names
-#pragma warning(disable:4786)
-
 #include "code_book.h"
 
 /**@defgroup FuzzyCodeBook Fuzzy code book

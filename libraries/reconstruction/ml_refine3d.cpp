@@ -46,6 +46,7 @@
 //#define DEBUG
 //Macro to obtain the iteration base name
 #define FN_ITER(iter, suffix) formatString("%sextra/iter%03d/%s",fn_root.c_str(), (iter), (suffix))
+#undef FN_ITER_BASE
 #define FN_ITER_BASE(iter) FN_ITER(iter, "vol")
 #define FN_INITIAL_BASE FN_ITER_BASE(0)
 #define FN_PROJECTIONS_MD FN_EXTRA("projections.xmd")
@@ -424,7 +425,7 @@ void ProgMLRefine3D::run()
             if (doProject)// || ml2d->current_block > 0)
             {
                 projectVolumes(ml2d->MDref);
-                size_t refno = 0;
+                int refno = 0;
 
                 // Read new references from disc (I could just as well keep them in memory, maybe...)
                 FOR_ALL_OBJECTS_IN_METADATA(ml2d->MDref)
@@ -499,8 +500,7 @@ void ProgMLRefine3D::run()
 
 void ProgMLRefine3D::createEmptyFiles(int type)
 {
-    int dim, idum;
-    size_t idumLong;
+    size_t dim, idum, idumLong;
     getImageSizeFromFilename(fn_sel, dim, idum, idum, idumLong);
     Image<double> img;
 
@@ -513,7 +513,7 @@ void ProgMLRefine3D::createEmptyFiles(int type)
     else if (type == EMPTY_VOLUMES)
     {
         img().initZeros(dim, dim, dim);
-        for (int i = 0; i < reconsOutFnBase.size(); ++i)
+        for (size_t i = 0; i < reconsOutFnBase.size(); ++i)
             createEmptyFile(reconsOutFnBase[i], dim, dim, dim, Nvols, true);
         //img.write(reconsOutFnBase[i], Nvols, true, WRITE_OVERWRITE);
     }
@@ -530,7 +530,7 @@ void ProgMLRefine3D::projectVolumes(MetaData &mdProj)
     Projection                    proj;
     double                       rot, tilt, psi = 0.;
     size_t                        nl, nr_dir, id, bar_step;
-    int                           volno, dim;
+    int                           volno;
 
     // Here all nodes fill SFlib and DFlib, but each node actually projects
     // only a part of the projections. In this way parallellization is obtained
@@ -554,7 +554,7 @@ void ProgMLRefine3D::projectVolumes(MetaData &mdProj)
 
     //std::cerr << "DEBUG_JM: ProgMLRefine3D::projectVolumes" <<std::endl;
     MDIterator iter(mdVol);
-    for (int i = 0; i < Nvols; ++i)
+    for (size_t i = 0; i < Nvols; ++i)
     //FOR_ALL_OBJECTS_IN_METADATA(mdVol)
     {
         mdVol.getValue(MDL_IMAGE, fn_tmp, iter.objId);
@@ -752,9 +752,9 @@ void ProgMLRefine3D::reconstructVolumes()
 
     createEmptyFiles(EMPTY_VOLUMES);
 
-    for (int i = 0; i < reconsOutFnBase.size(); ++i)
+    for (size_t i = 0; i < reconsOutFnBase.size(); ++i)
     {
-        for (int volno = 1; volno <= Nvols; ++volno)
+        for (int volno = 1; volno <= (int)Nvols; ++volno)
         {
             volno_index = Nvols * i + volno - 1;
             String &fn_base = reconsOutFnBase[i];
@@ -804,9 +804,9 @@ void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
     MultidimArray<double>      alpha_signal, alpha_noise, input_signal, avg_alphaS, avg_alphaN;
     MultidimArray<double>      alpha_T, alpha_N, Msignal, Maux, Mone, mask;
     Projection                  proj;
-    int                         c, dim, idum;
-    size_t                idumLong;
-    double                      ssnr, issnr, alpha, resol, volweight, sum, weight, rot, tilt, psi = 0.;
+    size_t                      c, dim, idum;
+    size_t                      idumLong;
+    double                      volweight, weight, rot, tilt, psi = 0.;
     Matrix1D<int>               center(2);
     MultidimArray<int>          radial_count;
 
@@ -831,7 +831,7 @@ void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
     FileName fn_cref_base = FN_CREF_VOLBASE;
     double inv_dim2 = 1. / (double)(dim * dim);
 
-    for (int volno = 1; volno <= Nvols; ++volno)
+    for (int volno = 1; volno <= (int)Nvols; ++volno)
     {
     	COMPOSE_VOL_FN(fn_tmp, volno, fn_noise_base);
     	COMPOSE_VOL_FN(fn_tmp2, volno, fn_cref_base);
@@ -932,20 +932,20 @@ void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
         fn_tmp = getIterExtraPath(fn_root, iter) + "3dssnr.log";
         std::ofstream out(fn_tmp.c_str(), std::ios::out);
         out  << "#        signal    1/alpha    alpha-S    alpha-N" << std::endl;
-        FOR_ALL_ELEMENTS_IN_ARRAY1D(spectral_signal)
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(spectral_signal)
         {
             if (i > 0 && i < dim / 2)
             {
                 out.width(5);
                 out  << integerToString(i);
                 out.width(10);
-                out <<  floatToString(A1D_ELEM(spectral_signal, i));
+                out <<  floatToString(DIRECT_A1D_ELEM(spectral_signal, i));
                 out.width(10);
-                out <<  floatToString(A1D_ELEM(avg_alphaN, i) / A1D_ELEM(avg_alphaS, i));
+                out <<  floatToString(DIRECT_A1D_ELEM(avg_alphaN, i) / DIRECT_A1D_ELEM(avg_alphaS, i));
                 out.width(10);
-                out <<  floatToString(A1D_ELEM(avg_alphaS, i));
+                out <<  floatToString(DIRECT_A1D_ELEM(avg_alphaS, i));
                 out.width(10);
-                out <<  floatToString(A1D_ELEM(avg_alphaN, i));
+                out <<  floatToString(DIRECT_A1D_ELEM(avg_alphaN, i));
                 out << std::endl;
             }
         }
@@ -1001,8 +1001,7 @@ void ProgMLRefine3D::postProcessVolumes()
     FileName               fn_vol, fn_tmp;
     Image<double>          vol, Vaux, Vsymmask, Vsolv;
     MultidimArray<int>     mask3D;
-    double                 avg, dummy, in, out;
-    int                    dim;
+    double                 in, out;
     Sampling               locsampling;
 
     // Use local sampling because of symmask
@@ -1022,7 +1021,6 @@ void ProgMLRefine3D::postProcessVolumes()
             LOG("   ProgMLRefine3D::postProcessVolumes READING vol");
             vol.read(fn_vol);
             vol().setXmippOrigin();
-            dim = vol().rowNumber();
             // Store the original volume on disc
             fn_tmp = fn_vol;
             fn_tmp.insertBeforeExtension(".original");
@@ -1119,7 +1117,7 @@ void ProgMLRefine3D::postProcessVolumes()
                 }
                 if (do_deblob_solvent)
                 {
-                    int object_no, maxo;
+                    int object_no;
                     double nr_vox, max_vox = 0.;
                     Image<double> label;
                     object_no = labelImage3D(Vsolv(), label());
@@ -1135,7 +1133,6 @@ void ProgMLRefine3D::postProcessVolumes()
                         if (o != 0 && (nr_vox > max_vox))
                         {
                             max_vox = nr_vox;
-                            maxo = o;
                             Vsolv() = Vaux();
                         }
                     }

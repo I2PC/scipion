@@ -80,10 +80,10 @@ protected:
         XmippMetadataProgram::readParams();
         short_format = checkParam("--short_format");
 
-        if (save_mask = checkParam("--save_mask"))
+        if ((save_mask = checkParam("--save_mask")))
             maskFileName = getParam("--save_mask");
 
-        if (save_image_stats = checkParam("--save_image_stats"))
+        if ((save_image_stats = checkParam("--save_image_stats")))
             statsRoot = getParam("--save_image_stats");
 
         show_angles  = checkParam("--show_angles");
@@ -91,7 +91,7 @@ protected:
 
         mask.allowed_data_types = INT_MASK;
 
-        if (apply_mask = checkParam("--mask"))
+        if ((apply_mask = checkParam("--mask")))
             mask.readParams(this);
     }
 
@@ -179,7 +179,7 @@ protected:
 
         size_t id;
         id = DF_stats.addObject();
-        DF_stats.setValue(image_label,fnImg,id);
+        DF_stats.setRow(rowIn,id);
         DF_stats.setValue(MDL_MIN,min_val,id);
         DF_stats.setValue(MDL_MAX,max_val,id);
         DF_stats.setValue(MDL_AVG,avg,id);
@@ -227,7 +227,7 @@ protected:
                     DIRECT_MULTIDIM_ELEM(stdArray,n) = sqrt(fabs(DIRECT_MULTIDIM_ELEM(stdArray,n)));
                 }
                 else
-                    stdArray = 0.;
+                    stdArray.initZeros();
             }
         }
 
@@ -236,7 +236,8 @@ protected:
             mask.write_mask(maskFileName);
         // Save statistics ------------------------------------------------------
         if (fn_out != "")
-            DF_stats.write(fn_out);
+            DF_stats.write(fn_out,MD_APPEND);
+
         //save average and std images
         if(save_image_stats)
         {
@@ -249,5 +250,5 @@ protected:
     }
 };// end of class ProgStatistics
 
-RUN_XMIPP_PROGRAM(ProgStatistics);
+RUN_XMIPP_PROGRAM(ProgStatistics)
 

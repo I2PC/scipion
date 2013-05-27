@@ -17,6 +17,7 @@ DO_STATIC=false
 DO_UPDATE=false
 DO_SETUP=true
 DO_GUI=true
+DO_UNATTENDED=false
 
 export NUMBER_OF_CPU=1
 
@@ -51,7 +52,6 @@ case "$OS_TYPE" in
     IS_LINUX=true
     ;;
 esac
-
 
 for param in $@; do
  if $TAKE_CPU; then
@@ -106,10 +106,16 @@ for param in $@; do
                      TAKE_COMPILE=false;;
         "compile")   TAKE_CONFIGURE=false;
                      TAKE_COMPILE=true;;
+        "unattended=true")  DO_UNATTENDED=true;;
+        "unattended=false") DO_UNATTENDED=false;;
          *)          echo "Unrecognized option $param, exiting..."; exit 1
     esac
  fi 
 done
+
+if $DO_UNATTENDED; then
+  CONFIGURE_ARGS="$CONFIGURE_ARGS unattended"
+fi
 
 #Some path variables
 export XMIPP_HOME=$PWD
@@ -124,10 +130,12 @@ INC_FILE=.xmipp.bashrc
 echo "export XMIPP_HOME=$PWD" > $INC_FILE
 echo 'export PATH=$XMIPP_HOME/bin:$PATH' >> $INC_FILE
 echo 'export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
+echo 'if [ "$BASH" != "" ]; then' >> $INC_FILE
 echo '# Load global autocomplete file ' >> $INC_FILE
-echo "test -s $XMIPP_HOME/.xmipp.autocomplete && . $XMIPP_HOME/.xmipp.autocomplete || true" >> $INC_FILE
+echo 'test -s $XMIPP_HOME/.xmipp.autocomplete && . $XMIPP_HOME/.xmipp.autocomplete || true' >> $INC_FILE
 echo '# Load programs autocomplete file ' >> $INC_FILE
-echo "test -s $XMIPP_HOME/.xmipp_programs.autocomplete && . $XMIPP_HOME/.xmipp_programs.autocomplete || true" >> $INC_FILE
+echo 'test -s $XMIPP_HOME/.xmipp_programs.autocomplete && . $XMIPP_HOME/.xmipp_programs.autocomplete || true' >> $INC_FILE
+echo 'fi' >> $INC_FILE
 
 if $IS_MAC; then
 	echo 'export DYLD_FALLBACK_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
@@ -147,7 +155,7 @@ echo "alias xp='xmipp_protocols'             "    >> $INC_FILE
 echo "alias xmipp='xmipp_protocols'          "    >> $INC_FILE
 echo "alias xs='xmipp_show'                  "    >> $INC_FILE
 echo "alias xsj='xmipp_showj'                "    >> $INC_FILE
-echo "alias xmipp_imagej='java -Xmx512m -jar $XMIPP_HOME/external/imagej/ij.jar'" >> $INC_FILE
+echo "alias xmipp_imagej='$XMIPP_HOME/external/runImageJ'" >> $INC_FILE
 echo "alias xij='xmipp_imagej'               "    >> $INC_FILE
 echo "## Image ##                            "    >> $INC_FILE
 echo "alias xic='xmipp_image_convert'        "    >> $INC_FILE
@@ -197,10 +205,18 @@ chmod a+x $INC_FILE
 INC_FILE=.xmipp.csh
 echo "setenv XMIPP_HOME $PWD" > $INC_FILE
 echo 'setenv PATH $XMIPP_HOME/bin:$PATH' >> $INC_FILE
-echo 'setenv LD_LIBRARY_PATH $XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
+echo 'if($?LD_LIBRARY_PATH) then' >> $INC_FILE
+echo '  setenv LD_LIBRARY_PATH $XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
+echo 'else' >> $INC_FILE
+echo '  setenv LD_LIBRARY_PATH $XMIPP_HOME/lib' >> $INC_FILE
+echo 'endif' >> $INC_FILE
 
 if $IS_MAC; then
-	echo 'setenv DYLD_FALLBACK_LIBRARY_PATH $XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
+  echo 'if($?DYLD_FALLBACK_LIBRARY_PATH) then' >> $INC_FILE
+  echo '  setenv DYLD_FALLBACK_LIBRARY_PATH $XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
+  echo 'else' >> $INC_FILE
+  echo '  setenv DYLD_FALLBACK_LIBRARY_PATH $XMIPP_HOME/lib' >> $INC_FILE
+  echo 'endif' >> $INC_FILE
 fi
 echo 'test -s $XMIPP_HOME/.xmipp.alias && source $XMIPP_HOME/.xmipp.alias || true' >> $INC_FILE
 

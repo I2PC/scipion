@@ -27,7 +27,7 @@
  '''
  
 import os
-from os.path import join, exists, dirname
+from os.path import join, exists, dirname, basename
 import sys
 import shutil
 import ConfigParser
@@ -58,7 +58,10 @@ class XmippProject():
             if not exists(filename):
                 print "Not exists: ", filename
                 return False
-        return True        
+        return True
+    
+    def getName(self):
+        return "Project: %s" % basename(self.projectDir)
     
     def create(self):
         os.chdir(self.projectDir)
@@ -341,7 +344,7 @@ class XmippProject():
         
         #Create special node ROOT
         roots = [k for k, v in runsDict.iteritems() if v.isRoot]
-        ddRoot = DepData(runsDict, 'PROJECT', None)
+        ddRoot = DepData(runsDict, self.getName(), None)
         ddRoot.state = 6
         ddRoot.deps = roots        
 
@@ -373,10 +376,10 @@ class DepData():
         
 _baseProtocolNames = {
         'acquisition':  join('%(WorkingDir)s', 'acquisition_info.xmd'),     
-        'extract_list':  join('%(ExtraDir)s', "extract_list.xmd"),      
+        'extract_list':  join('%(ExtraDir)s', "extract_list.xmd"),    
         'families':     join('%(ExtraDir)s', 'families.xmd'),
         'family':       join('%(WorkingDir)s', '%(family)s.xmd'),
-        'macros':       join('%(WorkingDir)s', 'macros.xmd'), 
+        'macros':       join('%(ExtraDir)s', 'macros.xmd'), 
         'micrographs':  join('%(WorkingDir)s','micrographs.xmd'),
         'microscope':   join('%(WorkingDir)s','microscope.xmd'),
         'tilted_pairs': join('%(WorkingDir)s','tilted_pairs.xmd'),
@@ -384,6 +387,8 @@ _baseProtocolNames = {
         'images_stk':       join('%(WorkingDir)s', 'images.stk'),
         'images_tilted': join("%(WorkingDir)s", 'images_tilted.xmd'),
         'images_untilted': join("%(WorkingDir)s", 'images_untilted.xmd'),
+        'images_tilted_stk': join("%(WorkingDir)s", 'images_tilted.stk'),
+        'images_untilted_stk': join("%(WorkingDir)s", 'images_untilted.stk'),
         'classes':      join('%(WorkingDir)s', 'classes.xmd'),
         'class_block':  'class%(ClassNo)06d_images@%(ClassMd)s'
      }
@@ -546,9 +551,10 @@ class XmippProtocol(object):
         #check if there is a valid project, otherwise abort
         if not self.project.exists():
             errors.append("Not valid project available")
-        # Check if there is runname
-        if self.RunName == "":
-            errors.append("No run name given")
+        # Check if there is valid runname
+        import re
+        if re.match('\w+$', self.RunName) is None:
+            errors.append("Not a valid run name: it should only contain letters, numbers or underscore.")
             
         #Check that number of threads and mpi are int and greater than 0
         if getattr(self, 'NumberOfThreads', 2) < 1:

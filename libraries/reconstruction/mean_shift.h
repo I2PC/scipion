@@ -33,17 +33,6 @@
 #include <data/xmipp_threads.h>
 #include <data/histogram.h>
 
-typedef struct threadProcessPlaneArgs
-{
-    unsigned int myID;
-    unsigned int numThreads;
-    double sigma_s;
-    double sigma_r;
-    MultidimArray<double> *input;
-    MultidimArray<double> *output;
-    bool fast;
-};
-
 /// @defgroup Denoise Image denoising
 /// @ingroup ReconsLibrary
 

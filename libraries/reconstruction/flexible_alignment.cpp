@@ -173,10 +173,7 @@ void ProgFlexibleAlignment::preProcess()
     SF.getColumnValues(MDL_NMA_MODEFILE,modeList);
 
     // Get the size of the images in the selfile
-    int ydim, zdim;
-    size_t ndim;
     imgSize = xdimOut;
-    //getImageSize(mdIn, imgSize, ydim, zdim, ndim);
     // Set the pointer of the program to this object
     global_flexible_prog = this;
     //create some neededs files
@@ -202,7 +199,7 @@ FileName ProgFlexibleAlignment::createDeformedPDB()
     arguments = formatString(
                     "--pdb %s -o %s_deformedPDB.pdb --nma %s --deformations ",
                     fnPDB.c_str(), randStr, fnModeList.c_str());
-    for (int i = 5; i < VEC_XSIZE( trial ); i++)
+    for (size_t i = 5; i < VEC_XSIZE( trial ); i++)
         arguments += floatToString(trial(i)) + " ";
     runSystem(program, arguments, false);
 
@@ -226,8 +223,7 @@ void  ProjectionRefencePoint(Matrix1D<double>  &Parameters,
     double *ro_ksi_v, *ro_coord_img, *ro_coord_gaussian;
     //double S_mu;
     int    psi_max = (int)(sqrt(3)*Ywidth/2);
-    int    i,j,k,kx,ky;
-    int    ksi;
+    int    kx,ky;
     double    a0,a1,a2;
     double centre_Xwidth, centre_Ywidth;
     double sum2,hlp;
@@ -252,7 +248,7 @@ void  ProjectionRefencePoint(Matrix1D<double>  &Parameters,
     arguments = formatString(
                     "--pdb %s -o %s_deformedPDB.pdb --nma %s --deformations ",
                     global_flexible_prog->fnPDB.c_str(), randStr, global_flexible_prog->fnModeList.c_str());
-    for (int i = 5; i < VEC_XSIZE(global_flexible_prog->trial) ; i++){
+    for (size_t i = 5; i < VEC_XSIZE(global_flexible_prog->trial) ; i++){
         float aaa=global_flexible_prog->scdefamp*Parameters(i);
         arguments += floatToString(aaa) + " ";
     }
@@ -265,7 +261,7 @@ void  ProjectionRefencePoint(Matrix1D<double>  &Parameters,
     centre_Ywidth = double(Ywidth-1)/2.0;
     //std::cout << "377  centre_Xwidth = " <<centre_Xwidth  << std::endl;
     Matrix1D<double> limit0(3), limitF(3), centerOfMass(3);
-    char *intensityColumn = " ";
+    const char *intensityColumn = " ";
     computePDBgeometry(global_flexible_prog->fnPDB, centerOfMass, limit0, limitF, intensityColumn);
     centerOfMass = (limit0 + limitF)/2;
     //std::cout << "c383enterOfMass = " <<centerOfMass  << std::endl;
@@ -281,7 +277,6 @@ void  ProjectionRefencePoint(Matrix1D<double>  &Parameters,
         REPORT_ERROR(ERR_UNCLASSIFIED, (std::string)"Prog_PDBPhantom_Parameters::protein_geometry:"
                      "Cannot open " + deformed_pdb + " for reading");
 
-    int col=1;
     //ksi_v    = (double*)malloc( (size_t) 4L * sizeof(double));//02
     ro_ksi_v    = (double*)malloc( (size_t) 4L * sizeof(double));//03
 
@@ -303,7 +298,6 @@ void  ProjectionRefencePoint(Matrix1D<double>  &Parameters,
     std::string kind;
     std::string line;
     std::string atom_type;
-    int statu;
     int ttt =0;
     std::cout << "351 Parameters " << Parameters <<std::endl;
 
@@ -332,7 +326,7 @@ void  ProjectionRefencePoint(Matrix1D<double>  &Parameters,
         for(int ksi=-psi_max;ksi<=psi_max;ksi++)
         {
             ksi_v[2]=(double)ksi;
-            statu = MatrixMultiply( R, ksi_v, ro_ksi_v,4L, 4L, 1L);
+            MatrixMultiply( R, ksi_v, ro_ksi_v,4L, 4L, 1L);
 
             for(ky=0;ky<Ywidth;ky++)
             {
@@ -340,7 +334,7 @@ void  ProjectionRefencePoint(Matrix1D<double>  &Parameters,
                 for(kx=0;kx<Xwidth;kx++)
                 {
                     coord_img[0] = (double)kx - centre_Xwidth;
-                    statu = MatrixMultiply( Tr, coord_img, ro_coord_img,4L, 4L, 1L);
+                    MatrixMultiply( Tr, coord_img, ro_coord_img,4L, 4L, 1L);
 
                     a0 = ro_coord_img[0]+ro_ksi_v[0]+coord_gaussian[0];
                     a1 = ro_coord_img[1]+ro_ksi_v[1]+coord_gaussian[1];
@@ -412,7 +406,7 @@ int partialpfunction(Matrix1D<double>  &Parameters,
                      int               Xwidth,
                      int               Ywidth)
 {
-    int     psi_max = (int)sqrt(3)*128/(global_flexible_prog->sampling_rate);
+    int     psi_max = (int)(sqrt(3)*128/(global_flexible_prog->sampling_rate));
     double  help, a0,a1,a2;
     double  *help_v,*coord_gaussian,*coord_img;
     double  *ModeValues;
@@ -422,8 +416,6 @@ int partialpfunction(Matrix1D<double>  &Parameters,
     double  centre_Xwidth, centre_Ywidth;
     centre_Xwidth = (double)(Xwidth - 1)/2.0;
     centre_Ywidth = (double)(Ywidth - 1)/2.0;
-    int demi_Xwidth   = Xwidth/2;
-    int demi_Ywidth   = Ywidth/2;
 
     DP_Rz1.initZeros(Xwidth,Ywidth);
     DP_Ry. initZeros(Xwidth,Ywidth);
@@ -482,7 +474,6 @@ int partialpfunction(Matrix1D<double>  &Parameters,
         REPORT_ERROR(ERR_UNCLASSIFIED, (std::string)"Prog_PDBPhantom_Parameters::protein_geometry:" "Cannot open " + fnRandom+"_deformedPDB.pdb" + " for reading");
 
     // Process all lines of the file
-    int col=1;
     help_v    = ( double* )malloc( (size_t) 4L * sizeof(double));
     /*if (help_v == (double *)NULL)
 {
@@ -637,9 +628,7 @@ void gradhesscost_atpixel(
     double *helpgr,
     double difference)
 {
-    double   *pt_Pmu, *pt_Pesp, *pt_DP_Rz1,*pt_DP_Ry,*pt_DP_Rz2,*pt_DP_x,*pt_DP_y,*pt_DP_q;
     int      trialSize = VEC_XSIZE(global_flexible_prog->trial);
-
 
     for (int i=0;i<trialSize;i++)
     {
@@ -667,9 +656,7 @@ int return_gradhesscost(
               int    Xwidth,
               int    Ywidth)
           {
-              int     Status = !ERROR;
               double  phi,theta,psi,x0,y0;
-              double  *defamp;
               double  *Rz1,*Ry,*Rz2,*R,*DRz1,*DRy,*DRz2,*DR0,*DR1,*DR2,*Tr;
               double  *hlp,*helpgr;
               int     i,j;
@@ -1208,8 +1195,8 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
               double tol_shift,
               double tol_defamp,
               int    *IteratingStop,
-              int    Xwidth,
-              int    Ywidth)
+              size_t Xwidth,
+              size_t Ywidth)
           {
 
 #ifndef DBL_EPSILON
@@ -1222,7 +1209,7 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
               int      i, j;
               long     ma = (long) VEC_XSIZE(global_flexible_prog->trial);
               double   hlp;
-              double   *costchanged,max_defamp;
+              double   *costchanged=NULL,max_defamp;
               int      dim = global_flexible_prog->numberOfModes;
               double   *a;
               int     Status = !ERROR;
@@ -1497,8 +1484,8 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
               Matrix1D<double>  &Parameters,
               MultidimArray<double>  &cst_P_mu_image,
               MultidimArray<double>  &P_esp_image,
-              double            Xwidth,
-              double            Ywidth)
+              size_t            Xwidth,
+              size_t            Ywidth)
           {
               const double    epsilon = DBL_EPSILON;
               int             Status = !ERROR, DoDesProj, IteratingStop, FlagMaxIter;
@@ -1519,7 +1506,6 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
               SatisfNoSuccess  = (long)(0.7 * MaxNoIter);
               MaxIter  = MaxNoIter;
               MaxIter1 = MaxIter - 1L;
-              MaxIter2 = MaxIter + 1L;
 
               MaxNumberOfFailures     = MaxNoFailure;
               SatisfNumberOfSuccesses = SatisfNoSuccess;
@@ -1554,8 +1540,6 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
                   Parameters(5)=0.5;
                   //Parameters(6)=0;
               }
-
-              time1 = time(tp1);
 
               std::cout << "1819Parameters = " << Parameters << std::endl;
               if (return_gradhesscost(centerOfMass,Gradient, Hessian, Parameters,
@@ -1650,10 +1634,9 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
 
               int       dim = numberOfModes;
               int       ModMaxdeDefamp, ModpowDim,help;
-              double    SinPhi,CosPhi,SinTheta,CosTheta,SinPsi,CosPsi;
+              double    SinPhi,CosPhi,SinPsi,CosPsi;
               double    phi,theta,psi;
               double    *Rz1,*Ry,*Rz2,*hlp;
-              double    *P_esp_image;
               double    S_muMin = 1e30;
 
               double    *R,*Tr;
@@ -1662,7 +1645,7 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
               costfunctionvalue = 0.0;
               Matrix1D<double> Parameters(dim+5);
               Matrix1D<double> limit0(3), limitF(3), centerOfMass(3);
-              char *intensityColumn = "Bfactor";
+              const char *intensityColumn = "Bfactor";
               computePDBgeometry(fnPDB, centerOfMass, limit0, limitF, intensityColumn);
               centerOfMass = (limit0 + limitF)/2;
 
@@ -1700,8 +1683,8 @@ std::cout << "2074" << fnDown << std::endl;
               //command=(std::string)"rm -f "+ fnDown;
               //system(command.c_str());
 
-              ModMaxdeDefamp = floor(maxdefamp/defampsampling) + 1;
-              ModpowDim      = pow(ModMaxdeDefamp,dim);
+              ModMaxdeDefamp = (int)floor(maxdefamp/defampsampling) + 1;
+              ModpowDim      = (int)pow(ModMaxdeDefamp,dim);
 
               Rz1 = (double *)malloc((size_t) 16L * sizeof(double));
               /*if (Rz1 == (double *)NULL)
@@ -1762,7 +1745,7 @@ std::cout << "2074" << fnDown << std::endl;
                   CosPhi = cos(phi/180*PI);
 
 
-                  int statu = GetIdentitySquareMatrix(Ry, 4L);
+                  GetIdentitySquareMatrix(Ry, 4L);
                   /*if (GetIdentitySquareMatrix(Ry, 4L) == ERROR)
               {
                       WRITE_ERROR(performCompleteSearch, "Error returned by GetIdentitySquareMatrix");
@@ -1787,10 +1770,8 @@ std::cout << "2074" << fnDown << std::endl;
                   {
                       Parameters(1) = theta;
                       trial(1)  =  theta;
-                      SinTheta  =  sin(theta/180*PI);
-                      CosTheta  =  cos(theta/180*PI);
 
-                      statu = GetIdentitySquareMatrix(Rz1, 4L);
+                      GetIdentitySquareMatrix(Rz1, 4L);
                       /*if (GetIdentitySquareMatrix(Rz1, 4L) == ERROR)
                   {
                            WRITE_ERROR(performCompleteSearch, "Error returned by GetIdentitySquareMatrix");
@@ -1818,7 +1799,7 @@ std::cout << "2074" << fnDown << std::endl;
                           CosPsi   =  cos(psi/180*PI);
 
 
-                          statu = GetIdentitySquareMatrix(Rz2, 4L);
+                          GetIdentitySquareMatrix(Rz2, 4L);
                           /*if (GetIdentitySquareMatrix(Rz2, 4L) == ERROR)
                       {
                               WRITE_ERROR(performCompleteSearch, "Error returned by GetIdentitySquareMatrix");
@@ -1838,7 +1819,7 @@ std::cout << "2074" << fnDown << std::endl;
                           *hlp = CosPsi;
 
 
-                          statu = multiply_3Matrices(Rz2, Ry, Rz1, R, 4L, 4L, 4L, 4L);
+                          multiply_3Matrices(Rz2, Ry, Rz1, R, 4L, 4L, 4L, 4L);
                           /*if (multiply_3Matrices(Rz2, Ry, Rz1, R, 4L, 4L, 4L, 4L) == ERROR)
                       {
                                WRITE_ERROR(performCompleteSearch, "Error returned by multiply_3Matrices");
@@ -1860,7 +1841,7 @@ std::cout << "2074" << fnDown << std::endl;
                                   trial(4)  =  y0;
 
 
-                                  statu = GetIdentitySquareMatrix(Tr, 4L);
+                                  GetIdentitySquareMatrix(Tr, 4L);
                                   /*if (GetIdentitySquareMatrix(Tr, 4L) == ERROR)
                               {
                                       WRITE_ERROR(performCompleteSearch, "Error returned by GetIdentitySquareMatrix");
@@ -1878,7 +1859,7 @@ std::cout << "2074" << fnDown << std::endl;
                                   *hlp = - y0;
 
 
-                                  statu = MatrixMultiply( R, Tr,Tr,4L, 4L, 4L);
+                                  MatrixMultiply( R, Tr,Tr,4L, 4L, 4L);
                                   /*if (MatrixMultiply( R, Tr,Tr,4L, 4L, 4L) == ERROR)
                               {
                                        WRITE_ERROR(performCompleteSearch, "Error returned by multiply_3Matrices");
@@ -1898,7 +1879,7 @@ std::cout << "2074" << fnDown << std::endl;
                                       {
                                           Parameters(j+5) = (double) (help % ModMaxdeDefamp) * defampsampling;
                                           trial(j+5) = (double) (help % ModMaxdeDefamp) * defampsampling;
-                                          help = floor(help/ModMaxdeDefamp);
+                                          help = (int)floor(help/ModMaxdeDefamp);
 
                                       }
 
@@ -2021,7 +2002,7 @@ std::cout << "2074" << fnDown << std::endl;
               int Ywidth = YSIZE(imgtemp());
               //double P_mu_image[Xwidth*Xwidth];
               Matrix1D<double> limit0(3), limitF(3), centerOfMass(3);
-              char *intensityColumn = "Bfactor";
+              const char *intensityColumn = "Bfactor";
               //Matrix1D<double> test=centerOfMass;
               std::cout << "Bfactor001" << std::endl;
               computePDBgeometry(fnPDB, centerOfMass, limit0, limitF, intensityColumn);
@@ -2094,7 +2075,7 @@ std::cout << "2074" << fnDown << std::endl;
 
               parameters.initZeros(dim + 5);
               currentImgName = fnImg;
-              sprintf(nameTemplate, "_node%d_img%ld_XXXXXX", rangen, imageCounter);
+              sprintf(nameTemplate, "_node%d_img%ld_XXXXXX", rangen, (long int)imageCounter);
 
               trial.initZeros(dim + 5);
               trial_best.initZeros(dim + 5);
@@ -2108,7 +2089,6 @@ std::cout << "2074" << fnDown << std::endl;
 #endif
 
               double fitness=eval();
-
               bestStage1 = trial = parameters = trial_best;
 
               currentStage = 2;

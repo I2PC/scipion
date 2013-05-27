@@ -26,6 +26,8 @@
 package xmipp.jni;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.logging.Level;
 
 /**
  * Protocol for integrating native C++ code - @see ImageDouble.java
@@ -152,6 +154,18 @@ public class MetaData {
 		}
 		return true;
 	}
+	
+	public static boolean containsBlock(String file, String block)
+	{
+		try
+		{
+			return Arrays.asList(MetaData.getBlocksInMetaDataFile(file)).contains(block);
+		}
+		catch (Exception e)
+		{
+			throw new IllegalArgumentException(e);
+		}
+	}// function containsBlock
 
 	public static native String label2Str(int label);
 
@@ -246,6 +260,8 @@ public class MetaData {
 	public String getValueString(int label, long objId, boolean fixPaths) {
 		String value = getValueString(label, objId);
 
+//		if(value == null)
+//			DEBUG.printFormat("label: %d, id: %d", label, objId);
 		// Try to fix paths.
 		if (fixPaths && filename != null && isPathField(label)) {
 			value = fixPath(value);
@@ -274,12 +290,11 @@ public class MetaData {
 	}
 	
 	public void setRow(MetaData mdRow, long objId){
-		int[] labels = getActiveLabels();
+		int[] labels = mdRow.getActiveLabels();
 		String value;
 		long rowId = mdRow.firstObject();
 		for (int l : labels){
 			value = mdRow.getValueString(l, rowId);
-			//DEBUG.printFormat("label: %d, value: %d", l, value);
 			setValueString(l, value, objId);
 		}
 	}
@@ -315,11 +330,11 @@ public class MetaData {
 	// return Arrays.binarySearch(PATHS_FIELDS, label) >= 0;
 	// }
 	public String fixPath(String value) {
-		return Filename.fixPath(value, getBaseDir(), true);
+		return Filename.findImagePath(value, getBaseDir(), true);
 	}
 
 	public String fixPath(String value, String baseDir) {
-		return Filename.fixPath(value, baseDir, false);
+		return Filename.findImagePath(value, baseDir, false);
 	}
 
 	public native boolean getValueBoolean(int label, long objId);
@@ -491,4 +506,5 @@ public class MetaData {
 	
 	
 	
+
 }

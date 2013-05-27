@@ -197,7 +197,6 @@ public class EditFamiliesJDialog extends JDialog {
 					frame.updateColor(color);
 				} else if (column == 2) {
 					int size = (Integer) value;
-					f.setSize(size);
 					frame.updateSize(size);
 
 				} else if (column == 3) {
@@ -205,9 +204,10 @@ public class EditFamiliesJDialog extends JDialog {
 					int templates = (Integer)value;
 					if(templates  < 1)
 						throw new IllegalArgumentException(XmippMessage.getIllegalValueMsg("Templates", templates));
-					f.setTemplatesNumber(templates);
+					parent.setTemplatesNumber(f, templates);
+
 				}
-				frame.getParticlePicker().persistFamilies();
+				frame.getParticlePicker().saveFamilies();
 				
 
 			} catch (IllegalArgumentException e) {
@@ -231,11 +231,17 @@ public class EditFamiliesJDialog extends JDialog {
 		}
 
 	}
+	
+	public TrainingPickerJFrame getFrame()
+	{
+		return parent;
+	}
 
 	public void addFamily(Family g) {
 
 		parent.addFamily(g);
 		model.fireTableStructureChanged();
 	}
+
 
 }

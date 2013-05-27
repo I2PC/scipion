@@ -75,7 +75,7 @@ void ProgResolutionIBW::run()
     //Correction of some flaws produced in the edges of the mask volume
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(Vmask)
     if (k<=4 || i<=4 || j<=4 ||
-        k>=FINISHINGZ(Vmask)-4 || i>=FINISHINGY(Vmask)-4 || j>=FINISHINGX(Vmask)-4)
+        k>=ZSIZE(Vmask)-4 || i>=YSIZE(Vmask)-4 || j>=XSIZE(Vmask)-4)
         DIRECT_A3D_ELEM(Vmask,k,i,j)=1;
 
     aux()=Vmask;

@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='utf-8'?>
+<EMX version="1.0">
+  <!--
+  ##########################################################################
+  #               EMX Exchange file 
+  #               Produced by the emxLibrary module
+  #
+  #
+  #  Information on this file format is available at 
+  #  http://i2pc.cnb.csic.es/emx
+  ##########################################################################
+  #  One of the best ways you can help us to improve this software
+  #  is to let us know about any problems you find with it.
+  #  Please report bugs to: emx@cnb.csic.es
+  ##########################################################################
+  -->
+  <micrograph fileName="mic" index="1">
+    <acceleratingVoltage unit="kV">100.0</acceleratingVoltage>
+    <defocusU unit="nm">1000.0</defocusU>
+    <pixelSpacing>
+      <X unit="A/px">5.6</X>
+      <Y unit="A/px">5.7</Y>
+    </pixelSpacing>
+  </micrograph>
+  <micrograph fileName="mic" index="2">
+    <acceleratingVoltage unit="kV">100.0</acceleratingVoltage>
+    <defocusU unit="nm">1000.0</defocusU>
+    <pixelSpacing>
+      <X unit="A/px">5.6</X>
+      <Y unit="A/px">5.7</Y>
+    </pixelSpacing>
+  </micrograph>
+  <particle fileName="part" index="1">
+    <defocusU unit="nm">1000.1</defocusU>
+    <pixelSpacing>
+      <X unit="A/px">5.66</X>
+      <Y unit="A/px">5.77</Y>
+    </pixelSpacing>
+    <transformationMatrix>
+      <t11>11.0</t11> <t12>12.0</t12> <t13>13.0</t13> <t14 unit="A">14.0</t14>
+      <t21>21.0</t21> <t22>22.0</t22> <t23>23.0</t23> <t24 unit="A">24.0</t24>
+      <t31>31.0</t31> <t32>32.0</t32> <t33>33.0</t33> <t34 unit="A">34.0</t34>
+    </transformationMatrix>
+    <micrograph fileName="mic" index="2"/>
+  </particle>
+</EMX>

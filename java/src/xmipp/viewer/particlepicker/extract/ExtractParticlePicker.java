@@ -16,10 +16,7 @@ import xmipp.viewer.windows.GalleryJFrame;
 public class ExtractParticlePicker extends ParticlePicker
 {
 
-	public static void main(String[] args)
-	{
-		ExtractParticlePicker.open(args[0], null);
-	}
+	
 
 	private ArrayList<ExtractMicrograph> micrographs;
 	private ExtractMicrograph micrograph;
@@ -30,17 +27,26 @@ public class ExtractParticlePicker extends ParticlePicker
 	{
 		super(selfile, mode);
 		loadParticles();
-		if (filters.isEmpty())// user just started manual mode and has no
-								// filter, I select gaussian blur by default,
-								// will be applied when window opens
+		if (filters.isEmpty())
 			filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
 	}
+	
+	public ExtractParticlePicker(String block, String selfile, FamilyState mode)
+	{
+		super(block, selfile, ".", null, mode);
+		loadParticles();
+		if (filters.isEmpty())
+			filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
+	}
+	
+	
 
 	@Override
 	public void loadEmptyMicrographs()
 	{
 		micrographs = new ArrayList<ExtractMicrograph>();
-		MetaData md = new MetaData(selfile);
+		String path = (block == null)? selfile: block + "@" + selfile;
+		MetaData md = new MetaData(path);
 		String fileiter;
 		boolean exists;
 		ExtractMicrograph current = null;
@@ -79,7 +85,8 @@ public class ExtractParticlePicker extends ParticlePicker
 	{
 		colorby = new ArrayList<ColorHelper>();
 		loadColumn(MDLabel.MDL_ZSCORE, "ZScore", md);
-		loadColumn(MDLabel.MDL_ZSCORE_SHAPE, "ZScore-Shape", md);
+		loadColumn(MDLabel.MDL_ZSCORE_SHAPE1, "ZScore-Shape1", md);
+		loadColumn(MDLabel.MDL_ZSCORE_SHAPE2, "ZScore-Shape2", md);
 		loadColumn(MDLabel.MDL_ZSCORE_SNR1, "ZScore-SNR1", md);
 		loadColumn(MDLabel.MDL_ZSCORE_SNR2, "ZScore-SNR2", md);
 		loadColumn(MDLabel.MDL_ZSCORE_HISTOGRAM, "ZScore-Hist", md);
@@ -91,7 +98,6 @@ public class ExtractParticlePicker extends ParticlePicker
 		boolean exists = md.containsLabel(column);
 		if(exists)
 		{
-			
 			colorby.add(new ColorHelper(column, name, md));
 		}
 	}
@@ -100,13 +106,14 @@ public class ExtractParticlePicker extends ParticlePicker
 
 	public void loadParticles()
 	{
-		MetaData md = new MetaData(selfile);
+		String path = (block == null)? selfile: block + "@" + selfile;
+		MetaData md = new MetaData(path);
 		ExtractParticle p;
 		int x, y;
 		String fileiter;
 		boolean enabled;
 		ExtractMicrograph current = null;
-		double zscore, zscore_shape, zscore_snr1, zscore_snr2, zscore_hist;
+		double zscore, zscore_shape1, zscore_shape2, zscore_snr1, zscore_snr2, zscore_hist;
 		for (long id : md.findObjects())
 		{
 			fileiter = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
@@ -121,11 +128,12 @@ public class ExtractParticlePicker extends ParticlePicker
 			y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 			enabled = (md.getValueInt(MDLabel.MDL_ENABLED, id) == 1) ? true : false;
 			zscore = md.getValueDouble(MDLabel.MDL_ZSCORE, id);
-			zscore_shape = md.getValueDouble(MDLabel.MDL_ZSCORE_SHAPE, id);
+			zscore_shape1 = md.getValueDouble(MDLabel.MDL_ZSCORE_SHAPE1, id);
+			zscore_shape2 = md.getValueDouble(MDLabel.MDL_ZSCORE_SHAPE2, id);
 			zscore_snr1 = md.getValueDouble(MDLabel.MDL_ZSCORE_SNR1, id);
 			zscore_snr2 = md.getValueDouble(MDLabel.MDL_ZSCORE_SNR2, id);
 			zscore_hist = md.getValueDouble(MDLabel.MDL_ZSCORE_HISTOGRAM, id);
-			p = new ExtractParticle(id, x, y, current, enabled, zscore, zscore_shape, zscore_snr1, zscore_snr2, zscore_hist);
+			p = new ExtractParticle(id, x, y, current, enabled, zscore, zscore_shape1, zscore_shape2, zscore_snr1, zscore_snr2, zscore_hist);
 			current.addParticle(p);
 
 		}
@@ -152,7 +160,7 @@ public class ExtractParticlePicker extends ParticlePicker
 		micrograph = (ExtractMicrograph)m;
 		try
 		{
-			MetaData md = new MetaData(selfile);
+			MetaData md = new MetaData();
 			
 			for (ExtractParticle p : micrograph.getParticles())
 			{
@@ -161,7 +169,8 @@ public class ExtractParticlePicker extends ParticlePicker
 				md.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
 				md.setValueInt(MDLabel.MDL_ENABLED, p.isEnabled()? 1: -1, id);
 			}
-			md.write(selfile);
+			String path = (block == null)? selfile: block + "@" + selfile;
+			md.write(path);
 			md.destroy();
 
 		}
@@ -199,9 +208,9 @@ public class ExtractParticlePicker extends ParticlePicker
 		setMicrograph(micrographs.get(0));
 	}
 
-	public static ExtractPickerJFrame open(String filename, GalleryJFrame galleryfr)
+	public static ExtractPickerJFrame open(String block, String filename, GalleryJFrame galleryfr)
 	{
-		ExtractParticlePicker picker = new ExtractParticlePicker(filename, FamilyState.Extract);
+		ExtractParticlePicker picker = new ExtractParticlePicker(block, filename, FamilyState.Extract);
 		return new ExtractPickerJFrame(picker, galleryfr);
 	}
 
@@ -224,6 +233,15 @@ public class ExtractParticlePicker extends ParticlePicker
 	public ColorHelper[] getColumns()
 	{
 		return colorby.toArray(new ColorHelper[]{});
+	}
+
+	@Override
+	public boolean isValidSize(int size)
+	{
+		for (ExtractParticle p : getMicrograph().getParticles())
+			if (!getMicrograph().fits(p.getX(), p.getY(), size))
+				return false;
+		return true;
 	}
 
 }

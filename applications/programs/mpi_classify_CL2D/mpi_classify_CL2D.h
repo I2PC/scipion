@@ -289,7 +289,7 @@ public:
     GaussianInterpolator gaussianInterpolator;
 
     // Image dimensions
-    int Ydim, Xdim;
+    size_t Ydim, Xdim;
 
     /// Mask for the background
 	MultidimArray<int> mask;

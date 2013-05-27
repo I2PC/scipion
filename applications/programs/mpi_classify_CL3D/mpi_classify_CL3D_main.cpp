@@ -48,7 +48,7 @@ FILE * _logCL3D = NULL;
 std::ostream & operator <<(std::ostream &out, const CL3DAssignment& assigned)
 {
     out << "(" << assigned.objId << " Angles=" << assigned.rot << "," << assigned.tilt << "," << assigned.psi
-    	<< " Shifts=" << assigned.shiftx << "," << assigned.shifty << "," << assigned.shiftz << " -> " << assigned.score << ")";
+    << " Shifts=" << assigned.shiftx << "," << assigned.shifty << "," << assigned.shiftz << " -> " << assigned.score << ")";
     return out;
 }
 
@@ -104,14 +104,14 @@ void CL3DClass::updateProjection(MultidimArray<double> &I,
                                  const CL3DAssignment &assigned,
                                  bool force)
 {
-    if (assigned.score < 1e37 && assigned.objId != BAD_OBJID || force)
+    if ((assigned.score < 1e37 && assigned.objId != BAD_OBJID) || force)
     {
-    	transformer.FourierTransform(I,Ifourier,false);
+        transformer.FourierTransform(I,Ifourier,false);
 
-    	FFT_magnitude(Ifourier,IfourierMag);
-    	IfourierMag.resize(1,1,1,MULTIDIM_SIZE(IfourierMag));
-    	IfourierMag.sort(IfourierMagSorted);
-    	const double percentage=0.975;
+        FFT_magnitude(Ifourier,IfourierMag);
+        IfourierMag.resize(1,1,1,MULTIDIM_SIZE(IfourierMag));
+        IfourierMag.sort(IfourierMagSorted);
+        const double percentage=0.975;
         double minMagnitude=A1D_ELEM(IfourierMagSorted,(int)(percentage*XSIZE(IfourierMag)));
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Ifourier)
         if (DIRECT_MULTIDIM_ELEM(IfourierMag,n)>minMagnitude)
@@ -129,35 +129,35 @@ void CL3DClass::updateProjection(MultidimArray<double> &I,
 //#define DEBUG
 void CL3DClass::transferUpdate()
 {
-	if (nextListImg.size() > 0)
+    if (nextListImg.size() > 0)
     {
         // Take from Pupdate
-    	double *ptrPupdate=(double*)&DIRECT_MULTIDIM_ELEM(Pupdate,0);
-    	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PupdateMask)
-		{
-    		int maskVal=DIRECT_MULTIDIM_ELEM(PupdateMask,n);
-    		if (maskVal>0)
-    		{
-    			double iMask=1./maskVal;
-    			*(ptrPupdate)*=iMask;
-    			*(ptrPupdate+1)*=iMask;
-    		}
-    		ptrPupdate+=2;
-		}
-    	Pfourier=Pupdate;
-    	transformer.inverseFourierTransform(Pupdate,Paux);
+        double *ptrPupdate=(double*)&DIRECT_MULTIDIM_ELEM(Pupdate,0);
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PupdateMask)
+        {
+            int maskVal=(int)DIRECT_MULTIDIM_ELEM(PupdateMask,n);
+            if (maskVal>0)
+            {
+                double iMask=1./maskVal;
+                *(ptrPupdate)*=iMask;
+                *(ptrPupdate+1)*=iMask;
+            }
+            ptrPupdate+=2;
+        }
+        Pfourier=Pupdate;
+        transformer.inverseFourierTransform(Pupdate,Paux);
 
-    	// Compact support in real space
-    	double mean;
-    	detectBackground(Paux,bgMask,0.01,mean);
-    	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Paux)
+        // Compact support in real space
+        double mean;
+        detectBackground(Paux,bgMask,0.01,mean);
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Paux)
         if (DIRECT_MULTIDIM_ELEM(bgMask,n))
-        	DIRECT_MULTIDIM_ELEM(Paux,n) = 0;
+            DIRECT_MULTIDIM_ELEM(Paux,n) = 0;
 
-    	// Compact support in wavelet space
-    	forceDWTSparsity(Paux,1.0-prm->DWTsparsity);
+        // Compact support in wavelet space
+        forceDWTSparsity(Paux,1.0-prm->DWTsparsity);
 
-    	// Symmetrize
+        // Symmetrize
         symmetrizeVolume(prm->SL,Paux,P,WRAP);
 
         // Normalize and remove outside sphere
@@ -165,7 +165,7 @@ void CL3DClass::transferUpdate()
         const MultidimArray<int> &mask=prm->mask.get_binary_mask();
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(P)
         if (!DIRECT_MULTIDIM_ELEM(mask,n))
-        	DIRECT_MULTIDIM_ELEM(P,n) = 0;
+            DIRECT_MULTIDIM_ELEM(P,n) = 0;
         Pupdate.initZeros();
         PupdateMask.initZeros();
 
@@ -179,11 +179,17 @@ void CL3DClass::transferUpdate()
 
         double deltaAng=atan(2.0/XSIZE(P));
         Matrix1D<double> v(3);
-        XX(v)=0; YY(v)=0; ZZ(v)=1;
+        XX(v)=0;
+        YY(v)=0;
+        ZZ(v)=1;
         volume_convertCartesianToCylindrical(P,PcylZ,3,XSIZE(P)/2,1,0,2*PI,deltaAng,v);
-        XX(v)=0; YY(v)=1; ZZ(v)=0;
+        XX(v)=0;
+        YY(v)=1;
+        ZZ(v)=0;
         volume_convertCartesianToCylindrical(P,PcylY,3,XSIZE(P)/2,1,0,2*PI,deltaAng,v);
-        XX(v)=1; YY(v)=0; ZZ(v)=0;
+        XX(v)=1;
+        YY(v)=0;
+        ZZ(v)=0;
         volume_convertCartesianToCylindrical(P,PcylX,3,XSIZE(P)/2,1,0,2*PI,deltaAng,v);
 
         // Take the list of images
@@ -191,14 +197,14 @@ void CL3DClass::transferUpdate()
         nextListImg.clear();
 
         // Update the histogram of corrs of elements inside and outside the class
-		MultidimArray<double> classCorr, nonClassCorr;
+        MultidimArray<double> classCorr, nonClassCorr;
 
-		classCorr.initZeros(currentListImg.size());
-		FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(classCorr)
-		DIRECT_A1D_ELEM(classCorr,i) = currentListImg[i].score;
+        classCorr.initZeros(currentListImg.size());
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(classCorr)
+        DIRECT_A1D_ELEM(classCorr,i) = currentListImg[i].score;
 
-		double minC, maxC;
-		classCorr.computeDoubleMinMax(minC, maxC);
+        double minC, maxC;
+        classCorr.computeDoubleMinMax(minC, maxC);
     }
     else
     {
@@ -210,93 +216,348 @@ void CL3DClass::transferUpdate()
 
 void CL3DClass::sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK, double &stdK, double &L1distance)
 {
-	transformer.FourierTransform(I,Ifourier,false);
+    transformer.FourierTransform(I,Ifourier,false);
 
-	FFT_magnitude(Ifourier,IfourierMag);
-	IfourierMag.resize(1,1,1,MULTIDIM_SIZE(IfourierMag));
-	IfourierMag.sort(IfourierMagSorted);
+    FFT_magnitude(Ifourier,IfourierMag);
+    IfourierMag.resize(1,1,1,MULTIDIM_SIZE(IfourierMag));
+    IfourierMag.sort(IfourierMagSorted);
     double minMagnitude=A1D_ELEM(IfourierMagSorted,(int)(prm->sparsity*XSIZE(IfourierMag)));
     avgK=stdK=0;
     double N=0;
     double stdAngle=0;
     for (size_t n=1; n<MULTIDIM_SIZE(Ifourier); ++n)
-    if (DIRECT_MULTIDIM_ELEM(IfourierMag,n)>minMagnitude)
-    {
-        double *ptrIfourier=(double*)&DIRECT_MULTIDIM_ELEM(Ifourier,n);
-        double *ptrPfourier=(double*)&DIRECT_MULTIDIM_ELEM(Pfourier,n);
-
-        // Scale factor for the real part
-        // This is the least squares solution of I(w)K=P(w)
-        double auxI=(*ptrIfourier);
-        double auxP=(*ptrPfourier);
-        double num=(auxI*auxP);
-        double den=(auxI*auxI);
-        double normP=auxP*auxP;
-        auxI=(*(ptrIfourier+1));
-        auxP=(*(ptrPfourier+1));
-        num+=(auxI*auxP);
-        den+=(auxI*auxI);
-        normP+=auxP*auxP;
-        double normI=den;
-
-        if (den!=0. && num!=0.)
+        if (DIRECT_MULTIDIM_ELEM(IfourierMag,n)>minMagnitude)
         {
-			double K=fabs(num/den);
-			avgK+=K;
-			stdK+=K*K;
+            double *ptrIfourier=(double*)&DIRECT_MULTIDIM_ELEM(Ifourier,n);
+            double *ptrPfourier=(double*)&DIRECT_MULTIDIM_ELEM(Pfourier,n);
 
-			double normPI=normP*normI;
-			if (normPI>0)
-			{
-				double angle=acos(num/sqrt(fabs(normPI))); // Angle between I(w) and P(w)
-				stdAngle+=angle*angle;
-			}
-	        N+=1;
+            // Scale factor for the real part
+            // This is the least squares solution of I(w)K=P(w)
+            double auxI=(*ptrIfourier);
+            double auxP=(*ptrPfourier);
+            double num=(auxI*auxP);
+            double den=(auxI*auxI);
+            double normP=auxP*auxP;
+            auxI=(*(ptrIfourier+1));
+            auxP=(*(ptrPfourier+1));
+            num+=(auxI*auxP);
+            den+=(auxI*auxI);
+            normP+=auxP*auxP;
+            double normI=den;
+
+            if (den!=0. && num!=0.)
+            {
+                double K=fabs(num/den);
+                avgK+=K;
+                stdK+=K*K;
+
+                double normPI=normP*normI;
+                if (normPI>0)
+                {
+                    double angle=acos(num/sqrt(fabs(normPI))); // Angle between I(w) and P(w)
+                    stdAngle+=angle*angle;
+                }
+                N+=1;
+            }
         }
-    }
     avgK/=N;
-	if (N > 1)
-	{
-		stdK = stdK / N - avgK * avgK;
-		stdK = sqrt(fabs(stdK));
+    if (N > 1)
+    {
+        stdK = stdK / N - avgK * avgK;
+        stdK = sqrt(fabs(stdK));
 
-		stdAngle=sqrt(fabs(stdAngle/N));
-		stdK*=stdAngle;
-	}
-	else
-		stdK = 0;
+        stdAngle=sqrt(fabs(stdAngle/N));
+        stdK*=stdAngle;
+    }
+    else
+        stdK = 0;
 
     L1distance=0;
     for (size_t n=1; n<MULTIDIM_SIZE(Ifourier); ++n)
-    if (DIRECT_MULTIDIM_ELEM(IfourierMag,n)>minMagnitude)
-    {
-        double *ptrIfourier=(double*)&DIRECT_MULTIDIM_ELEM(Ifourier,n);
-        double *ptrPfourier=(double*)&DIRECT_MULTIDIM_ELEM(Pfourier,n);
+        if (DIRECT_MULTIDIM_ELEM(IfourierMag,n)>minMagnitude)
+        {
+            double *ptrIfourier=(double*)&DIRECT_MULTIDIM_ELEM(Ifourier,n);
+            double *ptrPfourier=(double*)&DIRECT_MULTIDIM_ELEM(Pfourier,n);
 
-        // Scale factor for the real part
-        // This is the least squares solution of I(w)K=P(w)
-        double auxI=(*ptrIfourier)*avgK;
-        double auxP=(*ptrPfourier);
-        L1distance+=fabs(auxI-auxP);
-        auxI=(*(ptrIfourier+1))*avgK;
-        auxP=(*(ptrPfourier+1));
-        L1distance+=fabs(auxI-auxP);
-    }
+            // Scale factor for the real part
+            // This is the least squares solution of I(w)K=P(w)
+            double auxI=(*ptrIfourier)*avgK;
+            double auxP=(*ptrPfourier);
+            L1distance+=fabs(auxI-auxP);
+            auxI=(*(ptrIfourier+1))*avgK;
+            auxP=(*(ptrPfourier+1));
+            L1distance+=fabs(auxI-auxP);
+        }
     L1distance/=N;
 }
 
-//#define DEBUG
-const String eulerSeqs[12]={"XZX","XYX","YXY","YZY","ZYZ","ZXZ","XZY","XYZ","YXZ","YZX","ZYX","ZXY"};
+class BestAlignment {
+public:
+	MultidimArray<double> bestI;
+	CL3DAssignment alignment;
+};
 
-//#define DEBUG
+BestAlignment bestAlignment;
+
+class ObjectiveAux {
+public:
+	MultidimArray<double> IS, ISR, I, bestI;
+	Matrix1D<double> v;
+	CL3DClass * parent;
+    CL3DAssignment candidateSR;
+    Matrix2D<double> R;
+};
+
+const String eulerSeqs[12]=
+    {"XZX","XYX","YXY","YZY","ZYZ","ZXZ","XZY","XYZ","YXZ","YZX","ZYX","ZXY"
+    };
+
+#define DEBUG_MORE
+double objectiveCL3DAlignment(double *p, void *vaux)
+{
+	ObjectiveAux *aux=(ObjectiveAux*) vaux;
+	aux->v.resizeNoCopy(3);
+	XX(aux->v)=p[1];
+	YY(aux->v)=p[2];
+	ZZ(aux->v)=p[3];
+    translate(LINEAR,aux->IS,aux->I,aux->v);
+
+    // Look for best rotation
+    MultidimArray<double> &mISR=aux->ISR;
+    double bestScore=1e38;
+    for (int neuler=0; neuler<12; ++neuler)
+    {
+    	aux->ISR=aux->IS;
+        fastBestRotation(aux->parent->PcylZ,aux->parent->PcylY,aux->parent->PcylX,mISR,eulerSeqs[neuler],aux->R,
+        		aux->parent->corrAux2,aux->parent->volAlignmentAux);
+        aux->candidateSR.readAlignment(aux->R);
+        if (fabs(aux->candidateSR.rot)>prm->maxRot || fabs(aux->candidateSR.tilt)>prm->maxTilt || fabs(aux->candidateSR.psi)>prm->maxPsi)
+        	return 1e38;
+
+        // Compute the distance
+        const MultidimArray<int> &imask = prm->mask.get_binary_mask();
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(imask)
+        if (!DIRECT_MULTIDIM_ELEM(imask,n))
+            DIRECT_MULTIDIM_ELEM(mISR,n)=0.;
+        double avgK, stdK, L1;
+        aux->parent->sparseDistanceToCentroid(mISR, avgK, stdK, L1);
+        double score=L1;
+
+        // If it is the best, keep it
+        if (score<bestScore)
+        {
+        	bestScore=score;
+        	if (score<bestAlignment.alignment.score)
+        	{
+				bestAlignment.bestI=mISR;
+        		bestAlignment.alignment.score=score;
+				bestAlignment.alignment.rot=aux->candidateSR.rot;
+				bestAlignment.alignment.tilt=aux->candidateSR.tilt;
+				bestAlignment.alignment.psi=aux->candidateSR.psi;
+				bestAlignment.alignment.shiftx=XX(aux->v);
+				bestAlignment.alignment.shifty=YY(aux->v);
+				bestAlignment.alignment.shiftz=ZZ(aux->v);
+#ifdef DEBUG_MORE
+	std::cout << "(rot,tilt,psi)=(" << aux->candidateSR.rot << "," << aux->candidateSR.tilt << "," << aux->candidateSR.psi
+			  << ") (x,y,z)=(" << XX(aux->v) << "," << YY(aux->v) << "," << ZZ(aux->v) << ") "
+			  << " avgK= " << avgK << " stdK= " << stdK << " L1=" << L1 << " -> bestSoFar= " << score << std::endl;
+	Image<double> save;
+	save()=aux->parent->P;
+	save.write("PPPI1.xmp");
+	save()=aux->ISR;
+	save.write("PPPI2.xmp");
+	std::cout << "Press any key\n";
+	char c;
+	std::cin >> c;
+#endif
+
+        	}
+        }
+    }
+    return bestScore;
+}
+#undef DEBUG_MORE
+
+class AlignmentSolver: public DESolver
+{
+public:
+	  ObjectiveAux aux;
+	  AlignmentSolver(int dim,int pop) : DESolver(dim,pop) {;}
+	  double EnergyFunction(double trial[],bool &bAtSolution) {
+		 double score=objectiveCL3DAlignment(trial-1,&aux);
+         bAtSolution=false;
+         return score;
+      }
+};
+
+#define DEBUG
+void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
+{
+#ifdef DEBUG
+    Image<double> save2;
+    save2()=I;
+    save2.write("PPP0.xmp");
+#endif
+
+    if (currentListImg.size() == 0)
+        return;
+
+    bestAlignment.alignment.score=1e38;
+    Matrix1D<double> shift(3);
+    Matrix1D<double> steps(3);
+    steps.initConstant(1);
+
+    ObjectiveAux aux;
+    aux.parent=this;
+    aux.I=I;
+    double score;
+    int iter;
+    // powellOptimizer(shift,1,3,&objectiveCL3DAlignment,&aux,1e-3,score,iter,steps,true);
+
+    AlignmentSolver solver(3,30);
+    solver.aux.parent=this;
+    solver.aux.I=I;
+    MultidimArray<double> min_allowed(3), max_allowed(3);
+    min_allowed(0)=-prm->maxShiftX;
+    min_allowed(1)=-prm->maxShiftY;
+    min_allowed(2)=-prm->maxShiftZ;
+    max_allowed(0)= prm->maxShiftX;
+    max_allowed(1)= prm->maxShiftY;
+    max_allowed(2)= prm->maxShiftZ;
+    solver.Setup(MULTIDIM_ARRAY(min_allowed),MULTIDIM_ARRAY(max_allowed), stBest2Bin, 0.5, 0.8);
+    solver.Solve(100);
+    score=solver.Energy();
+        if (score<1e37)
+        I=bestAlignment.bestI;
+    else
+        I.initZeros();
+
+#ifdef DEBUG
+
+    Image<double> save;
+    save()=P;
+    save.write("PPPI1.xmp");
+    save()=I;
+    save.write("PPPI2.xmp");
+    save()=P-I;
+    save.write("PPPdiff.xmp");
+    std::cout << "final score=" << result.score << ". Press" << std::endl;
+    char c;
+    std::cin >> c;
+#endif
+}
+#undef DEBUG
+
+#ifdef EXHAUSTIVE_ANGLES
+#define DEBUG
 //#define DEBUG_MORE
 void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
 {
 #ifdef DEBUG
-	Image<double> save2;
+    Image<double> save2;
     save2()=I;
     save2.write("PPP0.xmp");
 #endif
+
+    if (currentListImg.size() == 0)
+        return;
+
+    Matrix2D<double> A, E;
+    MultidimArray<double> Iaux, bestI;
+
+    result.score=1e38;
+    for (double rot=-prm->maxRot; rot<prm->maxRot; rot+=10)
+        for (double tilt=-prm->maxTilt; tilt<prm->maxTilt; tilt+=10)
+            for (double psi=-prm->maxPsi; psi<prm->maxPsi; psi+=10)
+            {
+                // Rotate
+                Euler_angles2matrix(rot,tilt,psi,E,true);
+                applyGeometry(LINEAR, Iaux, I, E, IS_NOT_INV, WRAP);
+
+                // Look for the best shift
+                double shiftX, shiftY, shiftZ;
+                bestShift(P, Iaux, shiftX, shiftY, shiftZ, corrAux);
+                if (fabs(shiftX)>prm->maxShiftX || fabs(shiftY)>prm->maxShiftY || fabs(shiftZ)>prm->maxShiftZ)
+                    continue;
+
+                // Compute the distance
+                const MultidimArray<int> &imask = prm->mask.get_binary_mask();
+                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(imask)
+                if (!DIRECT_MULTIDIM_ELEM(imask,n))
+                    DIRECT_MULTIDIM_ELEM(Iaux,n)=0.;
+                double avgK, stdK, L1;
+                sparseDistanceToCentroid(Iaux, avgK, stdK, L1);
+                double score=L1;
+
+#ifdef DEBUG
+
+                if (score<result.score)
+                    std::cout << "(rot,tilt,psi)=(" << rot << "," << tilt << "," << psi << ") (x,y,z)=(" << shiftX << "," << shiftY << "," << shiftZ << ") "
+                    << " avgK= " << avgK << " stdK= " << stdK << " L1=" << L1 << " -> bestSoFar= " << result.score << std::endl;
+#ifdef DEBUG_MORE
+
+                Image<double> save;
+                save()=P;
+                save.write("PPPI1.xmp");
+                save()=Iaux;
+                save.write("PPPI2.xmp");
+                std::cout << "Press any key\n";
+                char c;
+                std::cin >> c;
+#endif
+#endif
+
+                // If it is the best, keep it
+                if (score<result.score)
+                {
+                    bestI=Iaux;
+                    result.score=score;
+                    result.rot=rot;
+                    result.tilt=tilt;
+                    result.psi=psi;
+                    result.shiftx=shiftX;
+                    result.shifty=shiftY;
+                    result.shiftz=shiftZ;
+                }
+            }
+
+    if (result.score<1e37)
+        I=bestI;
+    else
+        I.initZeros();
+
+#ifdef DEBUG
+
+    Image<double> save;
+    save()=P;
+    save.write("PPPI1.xmp");
+    save()=I;
+    save.write("PPPI2.xmp");
+    save()=P-I;
+    save.write("PPPdiff.xmp");
+    std::cout << "sigma=" << prm->sigma << " score=" << result.score << ". Press" << std::endl;
+    char c;
+    std::cin >> c;
+#endif
+}
+#undef DEBUG
+#endif
+
+#ifdef HEURISTICALIGNMENT
+//#define DEBUG
+//#define DEBUG_MORE
+const String eulerSeqs[12]=
+    {"XZX","XYX","YXY","YZY","ZYZ","ZXZ","XZY","XYZ","YXZ","YZX","ZYX","ZXY"
+    };
+
+void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
+{
+#ifdef DEBUG
+    Image<double> save2;
+    save2()=I;
+    save2.write("PPP0.xmp");
+#endif
+
     if (currentListImg.size() == 0)
         return;
 
@@ -306,107 +567,110 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
     result.score=1e38;
     for (int neuler=0; neuler<12; neuler++)
     {
-		ARS.initIdentity(4);
-		ASR = ARS;
-		IauxSR = IauxRS = I;
+        ARS.initIdentity(4);
+        ASR = ARS;
+        IauxSR = IauxRS = I;
 
-		// Align the image with the node
-		for (int i = 0; i < 3; i++) {
-			double shiftX, shiftY, shiftZ, bestRot;
+        // Align the image with the node
+        for (int i = 0; i < 3; i++)
+        {
+            double shiftX, shiftY, shiftZ;
 
-			// Shift then rotate
-			bestShift(P, IauxSR, shiftX, shiftY, shiftZ, corrAux);
-			MAT_ELEM(ASR,0,3) += shiftX;
-			MAT_ELEM(ASR,1,3) += shiftY;
-			MAT_ELEM(ASR,2,3) += shiftZ;
-			applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
+            // Shift then rotate
+            bestShift(P, IauxSR, shiftX, shiftY, shiftZ, corrAux);
+            MAT_ELEM(ASR,0,3) += shiftX;
+            MAT_ELEM(ASR,1,3) += shiftY;
+            MAT_ELEM(ASR,2,3) += shiftZ;
+            applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
 
-			fastBestRotation(PcylZ,PcylY,PcylX,IauxSR,eulerSeqs[neuler],R,corrAux2,volAlignmentAux);
-			ASR=R*ASR;
+            fastBestRotation(PcylZ,PcylY,PcylX,IauxSR,eulerSeqs[neuler],R,corrAux2,volAlignmentAux);
+            ASR=R*ASR;
 
-			// Rotate then shift
-			fastBestRotation(PcylZ,PcylY,PcylX,IauxRS,eulerSeqs[neuler],R,corrAux2,volAlignmentAux);
-			ARS=R*ARS;
+            // Rotate then shift
+            fastBestRotation(PcylZ,PcylY,PcylX,IauxRS,eulerSeqs[neuler],R,corrAux2,volAlignmentAux);
+            ARS=R*ARS;
 
-			bestShift(P, IauxRS, shiftX, shiftY, shiftZ, corrAux);
-			MAT_ELEM(ARS,0,3) += shiftX;
-			MAT_ELEM(ARS,1,3) += shiftY;
-			MAT_ELEM(ARS,2,3) += shiftZ;
-			applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
-		}
+            bestShift(P, IauxRS, shiftX, shiftY, shiftZ, corrAux);
+            MAT_ELEM(ARS,0,3) += shiftX;
+            MAT_ELEM(ARS,1,3) += shiftY;
+            MAT_ELEM(ARS,2,3) += shiftZ;
+            applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
+        }
 
-		// Compute the distance
-		const MultidimArray<int> &imask = prm->mask.get_binary_mask();
-		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(imask)
-		if (!DIRECT_MULTIDIM_ELEM(imask,n))
-			DIRECT_MULTIDIM_ELEM(IauxRS,n)=DIRECT_MULTIDIM_ELEM(IauxSR,n)=0.;
-		double avgKSR, avgKRS, stdKSR, stdKRS, L1RS, L1SR;
-		sparseDistanceToCentroid(IauxRS,avgKRS, stdKRS, L1RS);
-		sparseDistanceToCentroid(IauxSR,avgKSR, stdKSR, L1SR);
+        // Compute the distance
+        const MultidimArray<int> &imask = prm->mask.get_binary_mask();
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(imask)
+        if (!DIRECT_MULTIDIM_ELEM(imask,n))
+            DIRECT_MULTIDIM_ELEM(IauxRS,n)=DIRECT_MULTIDIM_ELEM(IauxSR,n)=0.;
+        double avgKSR, avgKRS, stdKSR, stdKRS, L1RS, L1SR;
+        sparseDistanceToCentroid(IauxRS,avgKRS, stdKRS, L1RS);
+        sparseDistanceToCentroid(IauxSR,avgKSR, stdKSR, L1SR);
 
-		double corrRS=correlationIndex(P,IauxRS);
-		double corrSR=correlationIndex(P,IauxSR);
-		double scoreRS=L1RS; // stdKRS*(1-corrRS);
-		double scoreSR=L1SR; // stdKSR*(1-corrSR);
+        correlationIndex(P,IauxRS);
+        correlationIndex(P,IauxSR);
+        double scoreRS=L1RS; // stdKRS*(1-corrRS);
+        double scoreSR=L1SR; // stdKSR*(1-corrSR);
 
-		// Prepare result
-		CL3DAssignment candidateRS, candidateSR;
-		candidateRS.readAlignment(ARS);
-		candidateSR.readAlignment(ASR);
-		if (std::abs(candidateRS.shiftx)>prm->maxShiftX ||
-			std::abs(candidateRS.shifty)>prm->maxShiftY ||
-			std::abs(candidateRS.shiftz)>prm->maxShiftZ ||
-			std::abs(candidateRS.rot)>prm->maxRot ||
-			std::abs(candidateRS.tilt)>prm->maxTilt ||
-			std::abs(candidateRS.psi)>prm->maxPsi)
-			candidateRS.score = 1e38;
-		else
-			candidateRS.score = scoreRS;
-		if (std::abs(candidateSR.shiftx)>prm->maxShiftX ||
-			std::abs(candidateSR.shifty)>prm->maxShiftY ||
-			std::abs(candidateSR.shiftz)>prm->maxShiftZ ||
-			std::abs(candidateSR.rot)>prm->maxRot ||
-			std::abs(candidateSR.tilt)>prm->maxTilt ||
-			std::abs(candidateSR.psi)>prm->maxPsi)
-			candidateSR.score = 1e38;
-		else
-			candidateSR.score = scoreSR;
+        // Prepare result
+        CL3DAssignment candidateRS, candidateSR;
+        candidateRS.readAlignment(ARS);
+        candidateSR.readAlignment(ASR);
+        if (std::abs(candidateRS.shiftx)>prm->maxShiftX ||
+            std::abs(candidateRS.shifty)>prm->maxShiftY ||
+            std::abs(candidateRS.shiftz)>prm->maxShiftZ ||
+            std::abs(candidateRS.rot)>prm->maxRot ||
+            std::abs(candidateRS.tilt)>prm->maxTilt ||
+            std::abs(candidateRS.psi)>prm->maxPsi)
+            candidateRS.score = 1e38;
+        else
+            candidateRS.score = scoreRS;
+        if (std::abs(candidateSR.shiftx)>prm->maxShiftX ||
+            std::abs(candidateSR.shifty)>prm->maxShiftY ||
+            std::abs(candidateSR.shiftz)>prm->maxShiftZ ||
+            std::abs(candidateSR.rot)>prm->maxRot ||
+            std::abs(candidateSR.tilt)>prm->maxTilt ||
+            std::abs(candidateSR.psi)>prm->maxPsi)
+            candidateSR.score = 1e38;
+        else
+            candidateSR.score = scoreSR;
 
-		if (candidateRS.score < result.score)
-		{
-			bestI = IauxRS;
-			result.copyAlignment(candidateRS);
-		}
-		if (candidateSR.score < result.score)
-		{
-			bestI = IauxSR;
-			result.copyAlignment(candidateSR);
-		}
+        if (candidateRS.score < result.score)
+        {
+            bestI = IauxRS;
+            result.copyAlignment(candidateRS);
+        }
+        if (candidateSR.score < result.score)
+        {
+            bestI = IauxSR;
+            result.copyAlignment(candidateSR);
+        }
 #ifdef DEBUG
-		std::cout << eulerSeqs[neuler] << " avgRS= " << avgKRS << " stdRS= " << stdKRS << " avgSR= " << avgKSR << " stdSR= " << stdKSR
-				  << " -> bestSoFar= " << result.score << std::endl;
+        std::cout << eulerSeqs[neuler] << " avgRS= " << avgKRS << " stdRS= " << stdKRS << " avgSR= " << avgKSR << " stdSR= " << stdKSR
+        << " -> bestSoFar= " << result.score << std::endl;
 #ifdef DEBUG_MORE
-	    Image<double> save;
-	    save()=P;
-	    save.write("PPPI1.xmp");
-	    save()=IauxRS;
-	    save.write("PPPI2RS.xmp");
-	    save()=IauxSR;
-	    save.write("PPPI2SR.xmp");
-	    std::cout << "    corr  RS=" << corrRS  << " corr  SR=" << corrSR << std::endl;
-	    std::cout << "    L1    RS=" << L1RS    << " L1    SR=" << L1SR << std::endl;
-	    std::cout << "    stdK  RS=" << stdKRS  << " stdK  SR=" << stdKSR << std::endl;
-	    std::cout << "    score RS=" << scoreRS << " score SR=" << scoreSR << std::endl;
-	    char c;
-	    std::cin >> c;
+
+        Image<double> save;
+        save()=P;
+        save.write("PPPI1.xmp");
+        save()=IauxRS;
+        save.write("PPPI2RS.xmp");
+        save()=IauxSR;
+        save.write("PPPI2SR.xmp");
+        std::cout << "    corr  RS=" << corrRS  << " corr  SR=" << corrSR << std::endl;
+        std::cout << "    L1    RS=" << L1RS    << " L1    SR=" << L1SR << std::endl;
+        std::cout << "    stdK  RS=" << stdKRS  << " stdK  SR=" << stdKSR << std::endl;
+        std::cout << "    score RS=" << scoreRS << " score SR=" << scoreSR << std::endl;
+        char c;
+        std::cin >> c;
 #endif
 #endif
+
     }
 
     if (result.score<1e37)
-    	I=bestI;
+        I=bestI;
     else
-    	I.initZeros();
+        I.initZeros();
 
 #ifdef DEBUG
 
@@ -424,6 +688,7 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
 #endif
 }
 #undef DEBUG
+#endif
 
 /* Look for K neighbours in a list ----------------------------------------- */
 //#define DEBUG
@@ -508,7 +773,7 @@ void CL3D::shareAssignments(bool shareAssignment, bool shareUpdates)
             std::vector<double> receivedNonClassCorr;
             std::vector<CL3DAssignment> receivedNextListImage;
             int listSize;
-            for (int rank = 0; rank < prm->node->size; rank++)
+            for (size_t rank = 0; rank < prm->node->size; rank++)
             {
                 if (rank == prm->node->rank)
                 {
@@ -567,7 +832,7 @@ void CL3D::shareSplitAssignments(Matrix1D<int> &assignment, CL3DClass *node1,
         std::vector<double> receivedNonClassCorr;
         std::vector<CL3DAssignment> receivedNextListImage;
         int listSize;
-        for (int rank = 0; rank < prm->node->size; rank++)
+        for (size_t rank = 0; rank < prm->node->size; rank++)
         {
             if (rank == prm->node->rank)
             {
@@ -636,7 +901,7 @@ void CL3D::initialize(MetaData &_SF,
         P.push_back(new CL3DClass());
         if (initialCodesGiven)
         {
-        	P[q]->updateProjection(_codes0[q],assignment,true);
+            P[q]->updateProjection(_codes0[q],assignment,true);
             P[q]->transferUpdate();
         }
     }
@@ -707,50 +972,50 @@ void CL3D::initialize(MetaData &_SF,
     shareAssignments(true, true);
 
     // Now compute the histogram of score values
-	if (prm->node->rank == 0)
-	{
-		std::cout << "Computing histogram of score values\n";
-		init_progress_bar(Nimgs);
-	}
+    if (prm->node->rank == 0)
+    {
+        std::cout << "Computing histogram of score values\n";
+        init_progress_bar(Nimgs);
+    }
 
-	CL3DAssignment inClass, outClass;
-	prm->taskDistributor->reset();
-	while (prm->taskDistributor->getTasks(first, last))
-	{
-		for (size_t idx = first; idx <= last; ++idx)
-		{
-			size_t objId = prm->objId[idx];
-			readImage(I, objId, false);
+    CL3DAssignment inClass, outClass;
+    prm->taskDistributor->reset();
+    while (prm->taskDistributor->getTasks(first, last))
+    {
+        for (size_t idx = first; idx <= last; ++idx)
+        {
+            size_t objId = prm->objId[idx];
+            readImage(I, objId, false);
 
-			int q;
-			SF->getValue(MDL_REF, q, objId);
-			if (q == -1)
-				continue;
-			q -= 1;
+            int q;
+            SF->getValue(MDL_REF, q, objId);
+            if (q == -1)
+                continue;
+            q -= 1;
 
-			outClass.objId = inClass.objId = objId;
-			if (q != -1)
-			{
-				Iaux = I();
-				P[q]->fitBasic(Iaux, inClass);
-				P[q]->updateProjection(Iaux, inClass);
-				if (prm->Ncodes0 > 1)
-					for (int qp = 0; qp < prm->Ncodes0; qp++)
-					{
-						if (qp == q)
-							continue;
-						Iaux = I();
-						P[qp]->fitBasic(Iaux, outClass);
-					}
-			}
-			if (prm->node->rank == 0 && idx % 100 == 0)
-				progress_bar(idx);
-		}
-	}
-	if (prm->node->rank == 0)
-		progress_bar(Nimgs);
+            outClass.objId = inClass.objId = objId;
+            if (q != -1)
+            {
+                Iaux = I();
+                P[q]->fitBasic(Iaux, inClass);
+                P[q]->updateProjection(Iaux, inClass);
+                if (prm->Ncodes0 > 1)
+                    for (int qp = 0; qp < prm->Ncodes0; qp++)
+                    {
+                        if (qp == q)
+                            continue;
+                        Iaux = I();
+                        P[qp]->fitBasic(Iaux, outClass);
+                    }
+            }
+            if (prm->node->rank == 0 && idx % 100 == 0)
+                progress_bar(idx);
+        }
+    }
+    if (prm->node->rank == 0)
+        progress_bar(Nimgs);
 
-	shareAssignments(false, true);
+    shareAssignments(false, true);
 }
 #undef DEBUG
 
@@ -836,20 +1101,22 @@ void CL3D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
         else
             proceed = true;
 
-		if (proceed) {
-			// Try this image
-			Iaux = I;
-			P[q]->fitBasic(Iaux, assignment);
+        if (proceed)
+        {
+            // Try this image
+            Iaux = I;
+            P[q]->fitBasic(Iaux, assignment);
 
-		    VEC_ELEM(corrList,q) = assignment.score;
-			if (assignment.score < bestAssignment.score ||
-				 prm->classifyAllImages) {
-				bestq = q;
-				bestImg = Iaux;
-				bestAssignment = assignment;
-			}
-		}
-	}
+            VEC_ELEM(corrList,q) = assignment.score;
+            if (assignment.score < bestAssignment.score ||
+                prm->classifyAllImages)
+            {
+                bestq = q;
+                bestImg = Iaux;
+                bestAssignment = assignment;
+            }
+        }
+    }
 
     I = bestImg;
     newnode = bestq;
@@ -921,7 +1188,7 @@ void CL3D::run(const FileName &fnOut, int level)
                 LOG(formatString("Analyzing %s oldAssignment=%d newAssignment=%d",I.name().c_str(),oldAssignment[idx], node));
                 SF->setValue(MDL_REF, node + 1, objId);
                 if (assignment.score<1e10)
-                	corrSum += assignment.score;
+                    corrSum += assignment.score;
                 if (prm->node->rank == 0 && idx % progressStep == 0)
                     progress_bar(idx);
             }
@@ -929,11 +1196,11 @@ void CL3D::run(const FileName &fnOut, int level)
         FileName fnAux;
         for (int q=0; q<Q; q++)
         {
-        	for (int n=0; n<P[q]->currentListImg.size(); n++)
-        	{
-        		SF->getValue(MDL_IMAGE,fnAux,P[q]->currentListImg[n].objId);
-        		LOG(formatString("In node %d (%d): %s",q,n,fnAux.c_str()));
-        	}
+            for (size_t n=0; n<P[q]->currentListImg.size(); n++)
+            {
+                SF->getValue(MDL_IMAGE,fnAux,P[q]->currentListImg[n].objId);
+                LOG(formatString("In node %d (%d): %s",q,n,fnAux.c_str()));
+            }
         }
 
         // Gather all pieces computed by nodes
@@ -984,8 +1251,8 @@ void CL3D::run(const FileName &fnOut, int level)
             do
             {
                 smallNodes = false;
-                int largestNode = -1, sizeLargestNode = -1, smallNode = -1,
-                                                        sizeSmallestNode = Nimgs + 1;
+                int largestNode = -1, sizeLargestNode = -1, smallNode = -1;
+                size_t sizeSmallestNode = Nimgs + 1;
                 for (int q = 0; q < Q; q++)
                 {
                     if (P[q]->currentListImg.size() < sizeSmallestNode)
@@ -1000,7 +1267,7 @@ void CL3D::run(const FileName &fnOut, int level)
                     }
                 }
                 if (sizeLargestNode==0)
-                	REPORT_ERROR(ERR_UNCLASSIFIED,"All classes are of size 0: normally this happens when images are too noisy");
+                    REPORT_ERROR(ERR_UNCLASSIFIED,"All classes are of size 0: normally this happens when images are too noisy");
                 if (largestNode == -1 || smallNode == -1)
                     break;
                 if (sizeSmallestNode < prm->PminSize * Nimgs / Q * 0.01 && sizeSmallestNode<0.25*sizeLargestNode)
@@ -1054,7 +1321,7 @@ void CL3D::run(const FileName &fnOut, int level)
         if (prm->node->rank == 0)
             write(fnOut,level);
 
-        if (iter > 1 && Nchanges < 0.005 * Nimgs && Q > 1 || iter >= prm->Niter)
+        if ((iter > 1 && Nchanges < 0.005 * Nimgs && Q > 1) || iter >= prm->Niter)
             goOn = false;
         iter++;
     }
@@ -1083,7 +1350,7 @@ int CL3D::cleanEmptyNodes()
 void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
                      std::vector<size_t> &splitAssignment) const
 {
-	LOG(formatString("Splitting node 0: listsize=%d (volsize=%d)",node->currentListImg.size(),XSIZE(node->P)));
+    LOG(formatString("Splitting node 0: listsize=%d (volsize=%d)",node->currentListImg.size(),XSIZE(node->P)));
     std::vector<CL3DClass *> toDelete;
     Matrix1D<int> newAssignment, oldAssignment, firstSplitAssignment;
     Image<double> I;
@@ -1092,7 +1359,7 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
     CL3DAssignment assignment, assignment1, assignment2;
     CL3DClass *firstSplitNode1 = NULL;
     CL3DClass *firstSplitNode2 = NULL;
-    int minAllowedSize = prm->PminSize * 0.01 * node->currentListImg.size();
+    size_t minAllowedSize = (size_t)(prm->PminSize * 0.01 * node->currentListImg.size());
 
     bool finish;
     bool success = true;
@@ -1103,7 +1370,7 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
         node1->P = node->P;
         node2->P = node->P;
 
-        int imax = node->currentListImg.size();
+        size_t imax = node->currentListImg.size();
         if (imax < minAllowedSize)
         {
             toDelete.push_back(node1);
@@ -1117,7 +1384,7 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
             std::cerr << "Calculating score distribution at split ..."
             << std::endl;
         corrList.initZeros(imax);
-        for (int i = 0; i < imax; i++)
+        for (size_t i = 0; i < imax; i++)
         {
             if ((i + 1) % (prm->node->size) == prm->node->rank)
             {
@@ -1151,7 +1418,7 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
             {
                 LOG(((String)"Splitting at random"));
                 // Split at random
-                for (int i = 0; i < imax; i++)
+                for (size_t i = 0; i < imax; i++)
                 {
                     assignment.objId = node->currentListImg[i].objId;
                     readImage(I, assignment.objId, false);
@@ -1176,7 +1443,7 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
         if (prm->node->rank == 0 && prm->verbose >= 2)
             std::cerr << "Splitting by score threshold ..." << std::endl;
         LOG(((String)"Splitting by threshold"));
-        for (int i = 0; i < imax; i++)
+        for (size_t i = 0; i < imax; i++)
         {
             if ((i + 1) % (prm->node->size) == prm->node->rank)
             {
@@ -1209,8 +1476,8 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
             firstSplitNode2 = new CL3DClass(*node2);
         }
 
-    	LOG(formatString("Splitting node 1: listsize1=%d (volsize1=%d)",node1->currentListImg.size(),XSIZE(node1->P)));
-    	LOG(formatString("Splitting node 1: listsize2=%d (volsize2=%d)",node2->currentListImg.size(),XSIZE(node2->P)));
+        LOG(formatString("Splitting node 1: listsize1=%d (volsize1=%d)",node1->currentListImg.size(),XSIZE(node1->P)));
+        LOG(formatString("Splitting node 1: listsize2=%d (volsize2=%d)",node2->currentListImg.size(),XSIZE(node2->P)));
 
         // Split iterations
         for (int it = 0; it < prm->Niter; it++)
@@ -1223,7 +1490,7 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
 
             oldAssignment = newAssignment;
             newAssignment.initZeros();
-            for (int i = 0; i < imax; i++)
+            for (size_t i = 0; i < imax; i++)
             {
                 if ((i + 1) % (prm->node->size) == prm->node->rank)
                 {
@@ -1264,7 +1531,7 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
                 << std::endl;
 
             // Check if one of the nodes is too small
-        	LOG(formatString("Splitting node 1.5: list1.size=%d list2.size=%d",node1->currentListImg.size(),node2->currentListImg.size()));
+            LOG(formatString("Splitting node 1.5: list1.size=%d list2.size=%d",node1->currentListImg.size(),node2->currentListImg.size()));
             if (node1->currentListImg.size() < minAllowedSize
                 || node2->currentListImg.size() < minAllowedSize
                 || Nchanges < 0.005 * imax)
@@ -1284,7 +1551,7 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
             node = node2;
             node2 = new CL3DClass();
             finish = false;
-        	LOG(formatString("Splitting node 2: Deleting small node 1: listsize1=%d (volsize1=%d)",node1->currentListImg.size(),XSIZE(node1->P)));
+            LOG(formatString("Splitting node 2: Deleting small node 1: listsize1=%d (volsize1=%d)",node1->currentListImg.size(),XSIZE(node1->P)));
         }
         else if (node2->currentListImg.size() < minAllowedSize)
         {
@@ -1299,22 +1566,22 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
             node = node1;
             node1 = new CL3DClass();
             finish = false;
-        	LOG(formatString("Splitting node 2: Deleting small node 2: listsize2=%d (volsize2=%d)",node2->currentListImg.size(),XSIZE(node2->P)));
+            LOG(formatString("Splitting node 2: Deleting small node 2: listsize2=%d (volsize2=%d)",node2->currentListImg.size(),XSIZE(node2->P)));
         }
     }
     while (!finish);
-    for (int i = 0; i < toDelete.size(); i++)
+    for (size_t i = 0; i < toDelete.size(); i++)
         if (toDelete[i] != node)
             delete toDelete[i];
 
     if (success)
     {
-        for (int i = 0; i < node1->currentListImg.size(); i++)
+        for (size_t i = 0; i < node1->currentListImg.size(); i++)
         {
             splitAssignment.push_back(node1->currentListImg[i].objId);
             splitAssignment.push_back(1);
         }
-        for (int i = 0; i < node2->currentListImg.size(); i++)
+        for (size_t i = 0; i < node2->currentListImg.size(); i++)
         {
             splitAssignment.push_back(node2->currentListImg[i].objId);
             splitAssignment.push_back(2);
@@ -1382,37 +1649,38 @@ void ProgClassifyCL3D::readParams()
     maxRot = getDoubleParam("--maxRot");
     maxTilt = getDoubleParam("--maxTilt");
     maxPsi = getDoubleParam("--maxPsi");
-	classifyAllImages = checkParam("--classifyAllImages");
-	fnSym = getParam("--sym");
-	if (checkParam("--mask"))
-		mask.readParams(this);
+    classifyAllImages = checkParam("--classifyAllImages");
+    fnSym = getParam("--sym");
+    if (checkParam("--mask"))
+        mask.readParams(this);
 }
 
-void ProgClassifyCL3D::show() const {
-	if (!verbose)
-		return;
-	std::cout << "Input images:            " << fnSel << std::endl
-			<< "Output images:           " << fnOut << std::endl
-			<< "Iterations:              " << Niter << std::endl;
-	if (fnCodes0!="")
-		std::cout << "CodesSel0:               " << fnCodes0 << std::endl;
-	else
-		std::cout << "Codes0:                  " << Ncodes0 << std::endl;
-  	std::cout << "Codes:                   " << Ncodes << std::endl
-			<< "Neighbours:              " << Nneighbours << std::endl
-			<< "Minimum node size:       " << PminSize << std::endl
-			<< "Sparsity:                " << sparsity << std::endl
-			<< "DWT Sparsity:            " << DWTsparsity << std::endl
-			<< "Maximum shift Z:         " << maxShiftZ << std::endl
-			<< "Maximum shift Y:         " << maxShiftY << std::endl
-			<< "Maximum shift X:         " << maxShiftX << std::endl
-			<< "Maximum rot:             " << maxRot << std::endl
-			<< "Maximum tilt:            " << maxTilt << std::endl
-			<< "Maximum psi:             " << maxPsi << std::endl
-			<< "Classify all images:     " << classifyAllImages << std::endl
-			<< "Symmetry:                " << fnSym << std::endl
-	;
-	mask.show();
+void ProgClassifyCL3D::show() const
+{
+    if (!verbose)
+        return;
+    std::cout << "Input images:            " << fnSel << std::endl
+    << "Output images:           " << fnOut << std::endl
+    << "Iterations:              " << Niter << std::endl;
+    if (fnCodes0!="")
+        std::cout << "CodesSel0:               " << fnCodes0 << std::endl;
+    else
+        std::cout << "Codes0:                  " << Ncodes0 << std::endl;
+    std::cout << "Codes:                   " << Ncodes << std::endl
+    << "Neighbours:              " << Nneighbours << std::endl
+    << "Minimum node size:       " << PminSize << std::endl
+    << "Sparsity:                " << sparsity << std::endl
+    << "DWT Sparsity:            " << DWTsparsity << std::endl
+    << "Maximum shift Z:         " << maxShiftZ << std::endl
+    << "Maximum shift Y:         " << maxShiftY << std::endl
+    << "Maximum shift X:         " << maxShiftX << std::endl
+    << "Maximum rot:             " << maxRot << std::endl
+    << "Maximum tilt:            " << maxTilt << std::endl
+    << "Maximum psi:             " << maxPsi << std::endl
+    << "Classify all images:     " << classifyAllImages << std::endl
+    << "Symmetry:                " << fnSym << std::endl
+    ;
+    mask.show();
 }
 
 void ProgClassifyCL3D::defineParams()
@@ -1447,9 +1715,9 @@ void ProgClassifyCL3D::defineParams()
     addParamsLine("   [--maxRot <d=180>]        : Maximum allowed rotational angle in absolute value");
     addParamsLine("   [--maxTilt <d=180>]       : Maximum allowed tilt angle in absolute value");
     addParamsLine("   [--maxPsi <d=180>]        : Maximum allowed in-plane angle in absolute value");
-	addParamsLine("   [--classifyAllImages]     : By default, some images may not be classified. Use this option to classify them all.");
-	addParamsLine("   [--sym <s=c1>]            : Symmetry of the classes to be reconstructed");
-	Mask::defineParams(this);
+    addParamsLine("   [--classifyAllImages]     : By default, some images may not be classified. Use this option to classify them all.");
+    addParamsLine("   [--sym <s=c1>]            : Symmetry of the classes to be reconstructed");
+    Mask::defineParams(this);
     addExampleLine("mpirun -np 3 `which xmipp_mpi_classify_CL3D` -i images.stk --nref 256 --oroot class --iter 10");
 }
 
@@ -1482,7 +1750,7 @@ void ProgClassifyCL3D::produceSideInfo()
     mMask.setXmippOrigin();
     FOR_ALL_ELEMENTS_IN_ARRAY3D(sphericalMask)
     if (A3D_ELEM(sphericalMask,k,i,j)==0)
-    	A3D_ELEM(mMask,k,i,j)=0;
+        A3D_ELEM(mMask,k,i,j)=0;
 
     // Read input code vectors if available
     std::vector<MultidimArray<double> > codes0;
@@ -1541,7 +1809,7 @@ void ProgClassifyCL3D::run()
         for (int q = 0; q < Q; q++)
         {
             SFq.read(formatString("class%06d_images@%s_classes_level_%02d.xmd", q + 1,
-                             fnOut.c_str(), level));
+                                  fnOut.c_str(), level));
             SFq.fillConstant(MDL_REF, integerToString(q + 1));
             SFq.fillConstant(MDL_ENABLED, "1");
             SFclassified.unionAll(SFq);

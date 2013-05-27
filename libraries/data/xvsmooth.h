@@ -24,7 +24,7 @@ typedef unsigned char byte;
 */
 //@{
 /** Resize of a 8-bit image */
-void SmoothResize(byte *srcpic8, byte *destpic8, int swide, int shigh,
-                   int dwide, int dhigh);
+void SmoothResize(byte *srcpic8, byte *destpic8, size_t swide, size_t shigh,
+		size_t dwide, size_t dhigh);
 //@}
 #endif

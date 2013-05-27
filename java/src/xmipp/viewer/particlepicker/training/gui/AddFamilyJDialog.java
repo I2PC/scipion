@@ -109,7 +109,7 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 					int templatesNumber = ((Number) templatestf.getValue()).intValue();
 					if(templatesNumber < 1)
 						throw new IllegalArgumentException(XmippMessage.getIllegalValueMsg("Templates", templatesNumber));
-					Family g = new Family(name, color, size, templatesNumber);
+					Family g = new Family(name, color, size, parent.getFrame().getParticlePicker(), templatesNumber);
 
 					AddFamilyJDialog.this.parent.addFamily(g);
 					setVisible(false);
@@ -143,8 +143,8 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 		sizesl.setPaintLabels(true);
 		sizepn.add(sizesl);
 		sizetf = new JFormattedTextField(NumberFormat.getIntegerInstance());
-		;
-		sizetf.setText(Integer.toString(size));
+		
+		sizetf.setValue(size);
 		sizepn.add(sizetf);
 		sizetf.addActionListener(new ActionListener() {
 
@@ -160,7 +160,7 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				int size = sizesl.getValue();
-				sizetf.setText(Integer.toString(size));
+				sizetf.setValue(size);
 			}
 		});
 	}

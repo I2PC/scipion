@@ -29,9 +29,6 @@
 
 // Sparse matrices --------------------------------------------------------
 SparseMatrix2D::SparseMatrix2D(){
-	values 	= NULL;
-	iIdx 	= NULL;
-	jIdx 	= NULL;
 	N 		= 0;
 }
 
@@ -50,7 +47,7 @@ SparseMatrix2D::SparseMatrix2D(std::vector<SparseElement> &_elements, int _Nelem
 	int actualRow = -1;
 	int i         =  0; // Iterator for the vectors "values" and "jIdx"
 
-	for (int k=0 ; k< ln ; ++k )// Iterator for vector of SparseElemets
+	for (size_t k=0 ; k< ln ; ++k )// Iterator for vector of SparseElemets
 	{
 		if(_elements.at(k).value != 0.0) // Searching that there isn't any zero value
 		{
@@ -90,7 +87,7 @@ void SparseMatrix2D::sparseMatrix2DFromVector(std::vector<SparseElement> &_eleme
 	int actualRow = -1;
 	int i         =  0;
 
-	for (int k=0 ; k< ln ; ++k )
+	for (size_t k=0 ; k< ln ; ++k )
 	{
 		if(_elements.at(k).value != 0.0) // Seaching that there isn't any zero value
 		{
@@ -159,7 +156,6 @@ void SparseMatrix2D::multMv(double* x, double* y)
  * */
 std::ostream & operator << (std::ostream &out, const SparseMatrix2D &X)
 {
-	double val;
 	int N=X.nrows();
 	for(int i =0 ; i< N ; i++)
 	{
@@ -246,7 +242,6 @@ void SparseMatrix2D::multMM(const SparseMatrix2D &X, SparseMatrix2D &Y)
 void SparseMatrix2D::multMMDiagonal(const MultidimArray<double> &D, SparseMatrix2D &Y)
 {
 	int actualRow = N-1;
-	int Nelems    = N;
 
 	Y=*this;
 

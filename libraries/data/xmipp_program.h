@@ -93,7 +93,7 @@ protected:
 
     ///Original command line arguments
     int argc;
-    char ** argv;
+    const char ** argv;
 
 public:
     /** Flag to check whether to run or not*/
@@ -196,7 +196,13 @@ public:
      * usage of the program showed. So you don't need
      * to do that in readParams();
      * */
+    virtual void read(int argc, const char ** argv, bool reportErrors = true);
+
+    /** Read the command line arguments
+     * A convenience wrapper
+     * */
     virtual void read(int argc, char ** argv, bool reportErrors = true);
+
     /** Read arguments from an string.
      * This function should do the same as reading arguments
      * but first convert the string to arguments.
@@ -242,7 +248,7 @@ public:
     /** Constructor */
     XmippProgram();
     /** Constructor for read params */
-    XmippProgram(int argc, char ** argv);
+    XmippProgram(int argc, const char ** argv);
     /** Destructor */
     virtual ~XmippProgram();
     /** @} */
@@ -282,7 +288,7 @@ public:
     /// Apply geo
     bool apply_geo;
     /// Output dimensions
-    int zdimOut, ydimOut, xdimOut;
+    size_t zdimOut, ydimOut, xdimOut;
     size_t ndimOut;
     DataType datatypeOut;
     /// Number of input elements
@@ -319,6 +325,8 @@ protected:
     bool delete_output_stack; // Default true
     /// Save the associated output metadata when output file is a stack
     bool save_metadata_stack; // Default false
+    /// Include the original input image filename in the output stack
+    bool track_origin; // Default false
     /// Keep input metadata columns
     bool keep_input_columns; // Default false
     /// Remove disabled images from the input selfile
@@ -375,7 +383,7 @@ public:
      * 0 means success
      * and a value greater than 0 represents the error type
      * */
-    virtual int tryRead(int argc, char ** argv, bool reportErrors = true);
+    virtual int tryRead(int argc, const char ** argv, bool reportErrors = true);
 
     /** Initialization of variables should be done here
      */
@@ -402,7 +410,7 @@ public:
     }
 
     /// Prepare rowout
-    void setupRowOut(const MDRow &rowIn, const FileName &fnImgOut, MDRow &rowOut) const;
+    void setupRowOut(const FileName &fnImgIn, const MDRow &rowIn, const FileName &fnImgOut, MDRow &rowOut) const;
 
     virtual void run();
 }
@@ -418,7 +426,7 @@ public:
     ///Constructor
     XmippProgramGeneric();
     void endDefinition();
-    virtual void read(int argc, char ** argv, bool reportErrors = true);
+    virtual void read(int argc, const char ** argv, bool reportErrors = true);
 
 protected:
     void defineParams();

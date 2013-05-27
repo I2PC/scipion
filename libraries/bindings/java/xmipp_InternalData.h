@@ -5,8 +5,6 @@
 #include <data/xmipp_image_generic.h>
 #include <data/ctf.h>
 
-static jfieldID TiltPairAligner_peerId,ProgTomographAlignment_peerId ;
-
 #define IDFIELD "peer"
 
 #define STORE_PEER_ID(jobj, id) (env->SetLongField(jobj, env->GetFieldID(env->GetObjectClass(jobj), IDFIELD, "J"), (long)id))

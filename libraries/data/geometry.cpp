@@ -62,7 +62,7 @@ void Uproject_to_plane(const Matrix1D<double> &r,
 void Uproject_to_plane(const Matrix1D<double> &r,
                        const Matrix2D<double> &euler, Matrix1D<double> &result)
 {
-    SPEED_UP_temps;
+    SPEED_UP_temps012;
     if (VEC_XSIZE(result) != 3)
         result.resize(3);
     M3x3_BY_V3x1(result, euler, r);
@@ -111,7 +111,6 @@ void least_squares_plane_fit(FitPoint *IN_points,
     double  K = 0;
     double  L = 0;
     double  W2 = 0;
-    double  error = 0;
     double  denom = 0;
     const FitPoint * point;
 
@@ -260,7 +259,7 @@ void rectangle_enclosing(const Matrix1D<double> &v0, const Matrix1D<double> &vF,
                          const Matrix2D<double> &V, Matrix1D<double> &corner1,
                          Matrix1D<double> &corner2)
 {
-    SPEED_UP_temps;
+    SPEED_UP_temps01;
     Matrix1D<double> v(2);
     corner1.resize(2);
     corner2.resize(2);
@@ -298,7 +297,7 @@ void box_enclosing(const Matrix1D<double> &v0, const Matrix1D<double> &vF,
                    const Matrix2D<double> &V, Matrix1D<double> &corner1,
                    Matrix1D<double> &corner2)
 {
-    SPEED_UP_temps;
+    SPEED_UP_temps012;
     Matrix1D<double> v(3);
     corner1.resize(3);
     corner2.resize(3);
@@ -349,7 +348,7 @@ void box_enclosing(const Matrix1D<double> &v0, const Matrix1D<double> &vF,
 bool point_inside_polygon(const std::vector< Matrix1D<double> > &polygon,
                           const Matrix1D<double> &point)
 {
-    int i, j;
+    size_t i, j;
     bool retval = false;
     for (i = 0, j = polygon.size() - 1; i < polygon.size(); j = i++)
     {
@@ -552,7 +551,7 @@ void Euler_direction(double alpha, double beta, double gamma,
                      Matrix1D<double> &v)
 {
     double ca, sa, cb, sb;
-    double cc, cs, sc, ss;
+    double sc, ss;
 
     v.resize(3);
     alpha = DEG2RAD(alpha);
@@ -576,7 +575,7 @@ void Euler_direction(double alpha, double beta, double gamma,
 void Euler_direction2angles(Matrix1D<double> &v0,
                             double &alpha, double &beta, double &gamma)
 {
-    double abs_ca, abs_sa, sb, cb;
+    double abs_ca, sb, cb;
     double aux_alpha;
     double aux_beta;
     double error, newerror;
@@ -782,13 +781,9 @@ void Euler_matrix2angles(Matrix2D<double> A, double *alpha, double *beta,
 void Euler_Angles_after_compresion(const double rot, double tilt, double psi,
                                    double &new_rot, double &new_tilt, double &new_psi,  Matrix2D<double> &D)
 {
-    int i;
     Matrix1D<double> w(3);
     Matrix1D<double> new_w(3);
     Matrix2D<double> D_1(3, 3);
-
-    double module;
-    double newrot, newtilt, newpsi;
 
     //if D has not inverse we are not in business
     try
@@ -1034,9 +1029,9 @@ double intersection_unit_cube(
     int found_t = 0;
 
 #define ASSIGN_IF_GOOD_ONE \
-    if (ABS(XX(r)+t*XX(u))-XMIPP_EQUAL_ACCURACY<=0.5 && \
-        ABS(YY(r)+t*YY(u))-XMIPP_EQUAL_ACCURACY<=0.5 && \
-        ABS(ZZ(r)+t*ZZ(u))-XMIPP_EQUAL_ACCURACY<=0.5) {\
+    if (fabs(XX(r)+t*XX(u))-XMIPP_EQUAL_ACCURACY<=0.5 && \
+        fabs(YY(r)+t*YY(u))-XMIPP_EQUAL_ACCURACY<=0.5 && \
+        fabs(ZZ(r)+t*ZZ(u))-XMIPP_EQUAL_ACCURACY<=0.5) {\
         if      (found_t==0) {found_t++; t1=t;} \
         else if (found_t==1) {found_t++; t2=t;} \
     }
@@ -1069,7 +1064,7 @@ double intersection_unit_cube(
     }
 
     if (found_t == 2)
-        return ABS(t1 -t2);
+        return fabs(t1 -t2);
     else
         return 0;
 }

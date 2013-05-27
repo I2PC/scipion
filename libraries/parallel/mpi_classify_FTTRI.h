@@ -59,7 +59,7 @@ public:
 	double fmax;
 
 	/// Maximum frequency in pixels
-	double Rmax;
+	size_t Rmax;
 
 	/// Zoom factor for polar conversion
 	double zoom;
@@ -71,10 +71,10 @@ public:
 	double sigma2;
 
 	/// Desired number of classes
-	int nref;
+	size_t nref;
 
 	/// Minimum number of images in a class
-	int nMinImages;
+	size_t nMinImages;
 
 	/// Number of iterations
 	int Niter;
@@ -153,7 +153,7 @@ public:
     		size_t &currentPointer, size_t remaining);
 
     /// Function to optimize
-    int wrapperFitness(double epsilon);
+    size_t wrapperFitness(double epsilon);
 
     /// Epsilon classification
     void epsilonClassification(double epsilon);

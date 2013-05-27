@@ -55,7 +55,6 @@ TEST_F(SamplingTest, readSymmetryFile)
 TEST_F(SamplingTest, computeDistance)
 {
     XMIPP_TRY
-    int trueSymsNo, spaceGroup;
     FileName fn_sym("i3h");
     SL.readSymmetryFile(fn_sym);
     double rot2=6.;
@@ -70,7 +69,6 @@ TEST_F(SamplingTest, computeDistance)
 TEST_F(SamplingTest, computeDistanceMetadata)
 {
     XMIPP_TRY
-    int trueSymsNo, spaceGroup;
     FileName fn_sym("i3h");
     SL.readSymmetryFile(fn_sym);
     MetaData md,mdOut;

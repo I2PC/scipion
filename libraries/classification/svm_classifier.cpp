@@ -68,19 +68,16 @@ SVMClassifier::~SVMClassifier()
 }
 void SVMClassifier::SVMTrain(MultidimArray<double> &trainSet,MultidimArray<double> &label)
 {
-//    std::ofstream fh_training;
-//    fh_training.open("data.txt");
 
     prob.l = YSIZE(trainSet);
     prob.y = new double[prob.l];
     prob.x = new svm_node *[prob.l+1];
     const char *error_msg;
-    for (int i=0;i<YSIZE(trainSet);i++)
+    for (size_t i=0;i<YSIZE(trainSet);i++)
     {
-//        fh_training<<DIRECT_A1D_ELEM(label,i)<<" ";
         prob.x[i]=new svm_node[XSIZE(trainSet)+1];
         int cnt = 0;
-        for (int j=0;j<XSIZE(trainSet);j++)
+        for (size_t j=0;j<XSIZE(trainSet);j++)
         {
             if (trainSet(i,j)==0)
                 continue;
@@ -88,16 +85,13 @@ void SVMClassifier::SVMTrain(MultidimArray<double> &trainSet,MultidimArray<doubl
             {
                 prob.x[i][cnt].value=DIRECT_A2D_ELEM(trainSet,i,j);
                 prob.x[i][cnt].index=j+1;
-//                fh_training<< prob.x[i][cnt].index<<":"<<prob.x[i][cnt].value<<" ";
                 cnt++;
             }
         }
         prob.x[i][cnt].index=-1;
         prob.x[i][cnt].value=2;
         prob.y[i] = DIRECT_A1D_ELEM(label,i);
-//        fh_training<<std::endl;
     }
-//    fh_training.close();
     error_msg = svm_check_parameter(&prob,&param);
     if(error_msg)
     {
@@ -114,7 +108,7 @@ double SVMClassifier::predict(MultidimArray<double> &featVec,double &score)
     double *prob_estimates=new double[nr_class];
     x_space=new svm_node[XSIZE(featVec)+1];
 
-    for (int i=0;i<XSIZE(featVec);i++)
+    for (size_t i=0;i<XSIZE(featVec);i++)
     {
         if (DIRECT_A1D_ELEM(featVec,i)==0)
             continue;

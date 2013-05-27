@@ -142,14 +142,16 @@ int solve_2nd_degree_eq(double a, double b, double c, double &x1, double &x2,
                         double prec)
 {
     // Degenerate case?
-    if (ABS(a) < prec)
-        if (ABS(b) < prec)
+    if (fabs(a) < prec)
+    {
+        if (fabs(b) < prec)
             return -1;
         else
         {
             x1 = -c / b;
             return 1;
         }
+    }
 
     // Normal case
     double d = b * b - 4 * a * c;
@@ -355,8 +357,6 @@ double cdf_FSnedecor(int d1, int d2, double x)
 double icdf_FSnedecor(int d1, int d2, double p)
 {
     double xl=0, xr=1e6;
-    double pl=cdf_FSnedecor(d1,d2,xl);
-    double pr=cdf_FSnedecor(d1,d2,xr);
     double xm, pm;
     do
     {
@@ -365,15 +365,13 @@ double icdf_FSnedecor(int d1, int d2, double p)
         if (pm>p)
         {
             xr=xm;
-            pr=pm;
         }
         else
         {
             xl=xm;
-            pl=pm;
         }
     }
-    while (ABS(pm-p)/p>0.001);
+    while (fabs(pm-p)/p>0.001);
     return xm;
 }
 
@@ -483,14 +481,12 @@ double gaus_from_x0(double x0, double mean, double stddev)
 double gaus_outside_probb(double p, double mean, double stddev)
 {
     // Make a Bolzano search for the right value
-    double p1, p2, pm, x1, x2, xm;
+    double pm, x1, x2, xm;
     x1 = mean;
     x2 = mean + 5 * stddev;
     do
     {
         xm = (x1 + x2) / 2;
-        p1 = gaus_outside_x0(x1, mean, stddev);
-        p2 = gaus_outside_x0(x2, mean, stddev);
         pm = gaus_outside_x0(xm, mean, stddev);
         if (pm > p)
             x1 = xm;
@@ -529,21 +525,19 @@ double student_from_t0(double t0, double degrees_of_freedom)
 double student_outside_probb(double p, double degrees_of_freedom)
 {
     // Make a Bolzano search for the right value
-    double p1, p2, pm, t1, t2, tm;
+    double pm, t1, t2, tm;
     t1 = 0;
     t2 = 100;
     do
     {
         tm = (t1 + t2) / 2;
-        p1 = student_outside_t0(t1, degrees_of_freedom);
-        p2 = student_outside_t0(t2, degrees_of_freedom);
         pm = student_outside_t0(tm, degrees_of_freedom);
         if (pm > p)
             t1 = tm;
         else
             t2 = tm;
     }
-    while (ABS(pm - p) / p > 0.005);
+    while (fabs(pm - p) / p > 0.005);
     return tm;
 }
 
@@ -566,18 +560,6 @@ double rnd_log(double a, double b)
         return exp(rnd_unif(log(a), log(b)));
 }
 
-/* Log2 -------------------------------------------------------------------- */
-// Does not work with xlc compiler
-#ifndef __xlC__
-double log2(double value)
-{
-    return 3.32192809488736*log10(value);
-    // log10(value)/log10(2)
-}
-#endif
-
-
-
 /* Time managing ----------------------------------------------------------- */
 #ifdef _NO_TIME
 void time_config()
@@ -596,15 +578,17 @@ void progress_bar(long rlen)
 {}
 #else
 #if defined __MINGW32__ || defined __APPLE__
-struct tm* localtime_r (const time_t *clock, struct tm *result) {
-       if (!clock || !result) return NULL;
-       memcpy(result,localtime(clock),sizeof(*result));
-       return result;
+struct tm* localtime_r (const time_t *clock, struct tm *result)
+{
+    if (!clock || !result)
+        return NULL;
+    memcpy(result,localtime(clock),sizeof(*result));
+    return result;
 }
 void sincos(double angle, double * sine, double * cosine)
 {
-	*sine = sin(angle);
-	*cosine = cos(angle);
+    *sine = sin(angle);
+    *cosine = cos(angle);
 }
 #endif
 
@@ -618,6 +602,7 @@ void time_config()
 #ifndef __MINGW32__
     XmippTICKS = sysconf(_SC_CLK_TCK);
 #else
+
     XmippTICKS = CLK_TCK;
 #endif
 }
@@ -741,7 +726,7 @@ void init_progress_bar(long total)
 // routine must be in ascending order, ie, 0, 1, 2, ... No. elements
 void progress_bar(long rlen)
 {
-    static time_t startt, prevt;
+    static time_t startt;
     time_t currt;
     static long totlen;
     long t1, t2;
@@ -756,7 +741,7 @@ void progress_bar(long rlen)
     if (rlen < 0)
     {
         totlen = -rlen;
-        prevt = startt = currt;
+        startt = currt;
         fprintf(stderr, "0000/???? sec. ");
         if (!queue)
             for (i = 0; i < 10; i++)
@@ -808,7 +793,6 @@ void progress_bar(long rlen)
             totlen = 0;
         }
         fflush(stderr);
-        prevt = currt;
     }
 }
 
@@ -845,7 +829,7 @@ void TextualListener::OnProgress(unsigned long _it)
 // Shows a message indicating the operation in progress.
 void TextualListener::OnReportOperation(const std::string& _rsOp)
 {
-    fprintf(stderr, _rsOp.c_str());// std::cout << _rsOp;
+    fprintf(stderr, "%s", _rsOp.c_str());// std::cout << _rsOp;
 }
 
 
@@ -863,11 +847,12 @@ size_t xmippFREAD(void *dest, size_t size, size_t nitems, FILE * &fp, bool rever
         char *ptr = (char *)dest;
         bool end = false;
         retval = 0;
-        for (int n = 0; n < nitems; n++)
+        for (size_t n = 0; n < nitems; n++)
         {
-            for (int i = size - 1; i >= 0; i--)
+            char * ptrp = ptr + size - 1;
+            for (size_t i = 0; i < size; ++i, --ptrp)
             {
-                if (fread(ptr + i, 1, 1, fp) != 1)
+                if (fread(ptrp, 1, 1, fp) != 1)
                 {
                     end = true;
                     break;
@@ -898,11 +883,12 @@ size_t xmippFWRITE(const void *src, size_t size, size_t nitems, FILE * &fp,
         char *ptr = (char *)src;
         bool end = false;
         retval = 0;
-        for (int n = 0; n < nitems; n++)
+        for (size_t n = 0; n < nitems; n++)
         {
-            for (int i = size - 1; i >= 0; i--)
+        	char * ptrp = ptr + size - 1;
+            for (size_t i = 0; i < size; ++i, --ptrp)
             {
-                if (fwrite(ptr + i, 1, 1, fp) != 1)
+                if (fwrite(ptrp, 1, 1, fp) != 1)
                 {
                     end = true;
                     break;
@@ -921,13 +907,13 @@ size_t xmippFWRITE(const void *src, size_t size, size_t nitems, FILE * &fp,
 /* Map file */
 void mapFile(const FileName &filename, char*&map, size_t &size, int &fileDescriptor, bool readOnly)
 {
-	if (size<0)
-	{
-	   struct stat file_status;
-       if(stat(filename.c_str(), &file_status) != 0)
-           REPORT_ERROR(ERR_IO_NOPATH,"Cannot get filesize for file "+filename);
-       size = file_status.st_size;
-	}
+    if (size<0)
+    {
+        struct stat file_status;
+        if(stat(filename.c_str(), &file_status) != 0)
+            REPORT_ERROR(ERR_IO_NOPATH,"Cannot get filesize for file "+filename);
+        size = file_status.st_size;
+    }
 #ifdef XMIPP_MMAP
     struct stat file_status;
     if(stat(filename.c_str(), &file_status) != 0)
@@ -950,13 +936,14 @@ void mapFile(const FileName &filename, char*&map, size_t &size, int &fileDescrip
     if (map == MAP_FAILED)
         REPORT_ERROR(ERR_MEM_BADREQUEST,"Write can not map memory ");
 #else
+
     map = new char[size];
     fileDescriptor = open(filename.data(), O_RDONLY);
     if (fileDescriptor == -1)
         REPORT_ERROR(ERR_IO_NOPATH,(String)"Cannot open file named "+filename);
     int ok=read(fileDescriptor,map,size);
     if (ok==-1)
-    	REPORT_ERROR(ERR_IO_NOREAD,(String)"Cannot read from file named"+filename);
+        REPORT_ERROR(ERR_IO_NOREAD,(String)"Cannot read from file named"+filename);
 #endif
 }
 
@@ -967,9 +954,11 @@ void unmapFile(char *&map, size_t &size, int& fileDescriptor)
     if (munmap(map, size) == -1)
         REPORT_ERROR(ERR_MEM_NOTDEALLOC,"Cannot unmap memory");
 #else
+
     delete []map;
     map=NULL;
 #endif
+
     close(fileDescriptor);
 }
 
@@ -1021,7 +1010,7 @@ void swapbytes(char* v, unsigned long n)
         v[7]=t0;
         break;
     default:
-        for ( int i=0; i<n/2; i++ )
+        for (size_t i=0; i<n/2; i++ )
         {
             t = v[i];
             v[i] = v[n-1-i];

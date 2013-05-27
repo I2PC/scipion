@@ -30,8 +30,6 @@
 #ifndef _XMIPPFKCN_H
 #define _XMIPPFKCN_H
 
-#pragma warning(disable:4786)
-
 #include <iostream>
 #include <vector>
 

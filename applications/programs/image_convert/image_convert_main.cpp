@@ -26,4 +26,4 @@
 
 #include <data/xmipp_image_convert.h>
 
-RUN_XMIPP_PROGRAM(ProgConvImg);
+RUN_XMIPP_PROGRAM(ProgConvImg)

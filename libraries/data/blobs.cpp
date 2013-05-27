@@ -161,6 +161,8 @@ double kaiser_Fourier_value(double w, double a, double alpha, int m)
             return  pow(2.*PI, 3. / 2.)*pow(a, 3)*bessi1_5(sigma)
                     / (bessi0(alpha)*pow(sigma, 1.5));
     }
+    else
+    	REPORT_ERROR(ERR_ARG_INCORRECT,"Invalid blob order");
 }
 
 
@@ -170,7 +172,7 @@ double kaiser_Fourier_value(double w, double a, double alpha, int m)
 double sum_blob_SimpleGrid(const struct blobtype &blob, const SimpleGrid &grid,
                            const Matrix2D<double> *D)
 {
-    SPEED_UP_temps;
+    SPEED_UP_temps012;
     Matrix1D<double> gr(3), ur(3), corner1(3), corner2(3);
     double         actual_radius;
     int          i, j, k;
@@ -305,7 +307,7 @@ double sum_blob_Grid(const struct blobtype &blob, const Grid &grid,
                      const Matrix2D<double> *D)
 {
     double sum = 0;
-    for (int i = 0; i < grid.GridsNo(); i++)
+    for (size_t i = 0; i < grid.GridsNo(); i++)
         sum += sum_blob_SimpleGrid(blob, grid(i), D);
     return sum;
 }
@@ -355,7 +357,7 @@ blobtype best_blob(double alpha_0, double alpha_F, double inc_alpha,
     Image<double> att, ops;
     att().resize(alpha_size, a_size);
     ops().resize(alpha_size, a_size);
-    int i, j, best_i, best_j;
+    int i, j;
     double a, alpha, best_a = -1, best_alpha = -1;
     double best_ops = 1e10, best_att = 0;
     for (i = 0, alpha = alpha_0; i < alpha_size; alpha += inc_alpha, i++)
@@ -374,8 +376,6 @@ blobtype best_blob(double alpha_0, double alpha_F, double inc_alpha,
                         if (A2D_ELEM(ops(), i, j - 1) < best_ops &&
                             A2D_ELEM(att(), i, j - 1) >= best_att)
                         {
-                            best_i = i;
-                            best_j = j - 1;
                             best_alpha = alpha;
                             best_a = a - inc_a;
                             best_ops = A2D_ELEM(ops(), i, j - 1);
@@ -444,11 +444,9 @@ void * blobs2voxels_SimpleGrid( void * data )
     bool FORW = thread_data->FORW;
     int eq_mode = thread_data->eq_mode;
 
-    int thread_id = thread_data->thread_id;
-    int threads_num = thread_data->threads_num;
     int min_separation = thread_data->min_separation;
 
-    int z_planes = (ZZ(grid->highest) - ZZ(grid->lowest) + 1);
+    int z_planes = (int)(ZZ(grid->highest) - ZZ(grid->lowest) + 1);
 
     Matrix2D<double> Dinv;                   // Inverse of D
     Matrix1D<double> act_coord(3);           // Coord: Actual position inside
@@ -478,7 +476,7 @@ void * blobs2voxels_SimpleGrid( void * data )
     // processed
     double         vol_correction;           // Correction to apply to the
     // volume when "projecting" back
-    SPEED_UP_temps;
+    SPEED_UP_temps012;
 
     // Some aliases
 #define x0 STARTINGX(*vol_voxels)
@@ -508,7 +506,7 @@ void * blobs2voxels_SimpleGrid( void * data )
 
     // Compute a blob value table ...........................................
     blob_table.resize((int)(blob->radius*istep + 1));
-    for (i = 0; i < blob_table.xdim; i++)
+    for (size_t i = 0; i < blob_table.xdim; i++)
     {
         A1D_ELEM(blob_table, i) = kaiser_value((double)i/istep, blob->radius, blob->alpha, blob->order);
 
@@ -566,7 +564,7 @@ void * blobs2voxels_SimpleGrid( void * data )
         // Corner of the plane defined by Z. These coordinates are in the
         // universal coord. system
         Matrix1D<double> aux( grid->lowest );
-        k = assigned_slice + ZZ( grid->lowest );
+        k = (int)(assigned_slice + ZZ( grid->lowest ));
         ZZ(aux) = k;
         grid->grid2universe(aux, beginZ);
 
@@ -931,12 +929,12 @@ void blobs2voxels(const GridVolume &vol_blobs,
     ThreadBlobsToVoxels * threads_d = new ThreadBlobsToVoxels [threads];
 
     // Convert each subvolume ...............................................
-    for (int i = 0; i < vol_blobs.VolumesNo(); i++)
+    for (size_t i = 0; i < vol_blobs.VolumesNo(); i++)
     {
-        int min_distance = ceil((2*(vol_blobs.grid(i)).relative_size ) / blob.radius ) + 1;
+        int min_distance = (int)ceil((2*(vol_blobs.grid(i)).relative_size ) / blob.radius ) + 1;
 
-        slices_status = (int *)malloc(sizeof(int)*(ZZ((&(vol_blobs.grid(i)))->highest)-ZZ((&(vol_blobs.grid(i)))->lowest)+1));
-        memset(slices_status,0,sizeof(int)*(ZZ((&(vol_blobs.grid(i)))->highest)-ZZ((&(vol_blobs.grid(i)))->lowest)+1));
+        slices_status = (int *)malloc(sizeof(int)*(int)((ZZ((&(vol_blobs.grid(i)))->highest)-ZZ((&(vol_blobs.grid(i)))->lowest)+1)));
+        memset(slices_status,0,sizeof(int)*(int)((ZZ((&(vol_blobs.grid(i)))->highest)-ZZ((&(vol_blobs.grid(i)))->lowest)+1)));
         slices_processed = 0;
 
         for( int c = 0 ; c < threads ; c++ )
@@ -1030,7 +1028,7 @@ void blobs2space_coefficients(const GridVolume &vol_blobs,
     STARTINGZ(*vol_coefs) = ZZ(corner1);
 
     // Set all blob coefficients at the right position
-    for (int n = 0; n < vol_blobs.VolumesNo(); n++)
+    for (size_t n = 0; n < vol_blobs.VolumesNo(); n++)
     {
         int ZZ_lowest = (int)ZZ(vol_blobs.grid(n).lowest);
         int YY_lowest = (int)YY(vol_blobs.grid(n).lowest);
@@ -1110,15 +1108,14 @@ void ART_voxels2blobs_single_step(
 
     pthread_t * th_ids = (pthread_t *)malloc( threads * sizeof( pthread_t));
     ThreadBlobsToVoxels * threads_d = (ThreadBlobsToVoxels *) malloc ( threads * sizeof( ThreadBlobsToVoxels ) );
-    int slices_processed;
 
     // Translate actual blob volume to voxels ...............................
-    for (int i = 0; i < vol_in.VolumesNo(); i++)
+    for (size_t i = 0; i < vol_in.VolumesNo(); i++)
     {
-        int min_distance = ceil((2*(vol_in.grid(i)).relative_size ) / blob.radius ) + 1;
+        int min_distance = (int)ceil((2*(vol_in.grid(i)).relative_size ) / blob.radius ) + 1;
 
-        slices_status = (int *)malloc(sizeof(int)*(ZZ((&(vol_in.grid(i)))->highest)-ZZ((&(vol_in.grid(i)))->lowest)+1));
-        memset(slices_status,0,sizeof(int)*(ZZ((&(vol_in.grid(i)))->highest)-ZZ((&(vol_in.grid(i)))->lowest)+1));
+        slices_status = (int *)malloc(sizeof(int)*(int)((ZZ((&(vol_in.grid(i)))->highest)-ZZ((&(vol_in.grid(i)))->lowest)+1)));
+        memset(slices_status,0,sizeof(int)*(int)((ZZ((&(vol_in.grid(i)))->highest)-ZZ((&(vol_in.grid(i)))->lowest)+1)));
         slices_processed = 0;
 
         for( int c = 0 ; c < threads ; c++ )
@@ -1246,10 +1243,10 @@ void ART_voxels2blobs_single_step(
     mean_error /= XMIPP_MAX(N, 1); // At worst, divided by 1
 
     // Backprojection of correction volume ..................................
-    for (int i = 0; i < vol_in.VolumesNo(); i++)
+    for (size_t i = 0; i < vol_in.VolumesNo(); i++)
     {
-        slices_status = (int *)malloc(sizeof(int)*(ZZ((&(vol_out->grid(i)))->highest)-ZZ((&(vol_out->grid(i)))->lowest)+1));
-        memset(slices_status,0,sizeof(int)*(ZZ((&(vol_out->grid(i)))->highest)-ZZ((&(vol_out->grid(i)))->lowest)+1));
+        slices_status = (int *)malloc(sizeof(int)*(int)((ZZ((&(vol_out->grid(i)))->highest)-ZZ((&(vol_out->grid(i)))->lowest)+1)));
+        memset(slices_status,0,sizeof(int)*(int)((ZZ((&(vol_out->grid(i)))->highest)-ZZ((&(vol_out->grid(i)))->lowest)+1)));
         slices_processed = 0;
 
         for( int c = 0 ; c < threads ; c++ )

@@ -38,6 +38,8 @@
 #include <data/filters.h>
 #include <data/mask.h>
 #include <data/polar.h>
+#include <data/basic_pca.h>
+#include <data/sampling.h>
 
 //Tags already defined in xmipp
 //#define TAG_WORK                     0
@@ -81,11 +83,11 @@ public:
     MetaData mdJobList;
 
     /** Input and library docfiles */
-    MetaData         DF, DFlib;
+    MetaData         DF, DFlib, DFscore;
     /** metadata with classes which have experimental images applied to them */
     MetaData         DFclassesExp;
     /** Output rootnames */
-    FileName         fn_out, fn_out1, fn_out2, fn_wien;
+    FileName         fn_out, fn_out1, fn_out2, fn_wien, fn_ref;
     /** Column numbers */
     std::string      col_select;
     /** Upper and lower absolute and relative selection limits */
@@ -97,7 +99,7 @@ public:
     /** Flag whether also to write out class averages of random halves of the data */
     bool             do_split;
     /** Image dimensions before and after padding (only for Wiener correction) */
-    int               paddim;
+    size_t           paddim;
     /** Padding factor */
     double           pad;
     /** One empty image with correct dimensions */
@@ -106,6 +108,8 @@ public:
     bool             do_save_images_assigned_to_classes;
     /** Add output to existing files */
     bool             do_add;
+    /** Perform PCA sorting to obtain the average classes */
+    bool             do_pcaSorting;
     /** Wiener filter image */
     MultidimArray<double> Mwien;
     /** Selfiles containing all class averages */
@@ -134,13 +138,11 @@ public:
     int ctfNum;
     /** Number of 3D references */
     int ref3dNum;
-    /** Image dimentions */
-    int Xdim, Ydim, Zdim;
-    /** Number of valid projection directions */
-    size_t Ndim;
+    /** Image dimensions */
+    size_t Xdim, Ydim, Zdim, Ndim;
 
-    /** Dvide the job in this number block with this number of images */
-    int mpi_job_size;
+    /** Divide the job in this number block with this number of images */
+    size_t mpi_job_size;
 
     //Lock structure
     MultidimArray<bool> lockArray;
@@ -238,8 +240,10 @@ public:
             MetaData SFclass1,
             MetaData SFclass2,
             MetaData SFclassDiscarded,
+            MetaData _DF,
             double w1,
             double w2,
+	    double w,
             int lockIndex);
 
     /** Called by mpi_write does the actual writing

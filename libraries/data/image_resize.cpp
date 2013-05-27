@@ -166,10 +166,10 @@ void ProgImageResize::preProcess()
         scale_type = RESIZE_PYRAMID_EXPAND;
         pyramid_level = getIntParam("--pyramid", 0);
         factor = (double)(pow(2.0, pyramid_level));
-        xdimOut *= factor;
-        ydimOut *= factor;
+        xdimOut = (size_t)(xdimOut*factor);
+        ydimOut = (size_t)(ydimOut*factor);
         if (isVol)
-            zdimOut *= factor;
+            zdimOut = (size_t)(zdimOut*factor);
         if (pyramid_level < 0)
         {
             pyramid_level *= -1; //change sign, negative means reduce operation
@@ -217,6 +217,8 @@ void ProgImageResize::processImage(const FileName &fnImg, const FileName &fnImgO
         selfScaleToSizeFourier(zdimOut, ydimOut, xdimOut, img(), fourier_threads);
         img.write(fnImgOut);
         return;
+    case RESIZE_NONE:
+    	break;
     }
     imgOut.write(fnImgOut);
 }

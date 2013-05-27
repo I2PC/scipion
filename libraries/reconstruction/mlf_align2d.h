@@ -34,12 +34,12 @@
 //@{
 
 #define FOR_ALL_MODELS() for (int refno=0;refno<model.n_ref; refno++)
-#define FOR_ALL_ROTATIONS() for (int ipsi=0; ipsi<nr_psi; ipsi++ )
-#define FOR_ALL_FLIPS() for (int iflip=0; iflip<nr_flip; iflip++)
-#define FOR_ALL_LIMITED_TRANSLATIONS() for (int itrans=0; itrans<nr_trans; itrans++)
-#define FOR_ALL_DEFOCUS_GROUPS() for (int ifocus=0; ifocus<nr_focus; ifocus++)
-#define FOR_ALL_DIGITAL_FREQS() for (int irr = 0; irr < hdim; irr++)
-#define FOR_ALL_POINTS() for (int ipoint = 0; ipoint < nr_points_2d; ++ipoint)
+#define FOR_ALL_ROTATIONS() for (size_t ipsi=0; ipsi<nr_psi; ipsi++ )
+#define FOR_ALL_FLIPS() for (size_t iflip=0; iflip<nr_flip; iflip++)
+#define FOR_ALL_LIMITED_TRANSLATIONS() for (size_t itrans=0; itrans<nr_trans; itrans++)
+#define FOR_ALL_DEFOCUS_GROUPS() for (size_t ifocus=0; ifocus<nr_focus; ifocus++)
+#define FOR_ALL_DIGITAL_FREQS() for (size_t irr = 0; irr < hdim; irr++)
+#define FOR_ALL_POINTS() for (size_t ipoint = 0; ipoint < nr_points_2d; ++ipoint)
 
 //Helper macros to define the elements of vectors:
 //Vsig, Vctf and Vsnr indexed by ifocus and irr
@@ -53,7 +53,6 @@
 #define HISTMIN -6.
 #define HISTMAX 6.
 #define HISTSTEPS 120
-#define DATALINELENGTH 11
 
 /** Some filename convetions for output files */
 #define FN_EXTRA(file) formatString("%sextra/%s", fn_root.c_str(), file)
@@ -79,7 +78,7 @@ public:
     /** Vector containing estimated fraction for mirror of each model */
     std::vector<double> mirror_fraction;
     /** Number of steps to sample in-plane rotation in 90 degrees */
-    int max_nr_psi;
+    size_t max_nr_psi;
     /** Vary psi and translational sampling with resolution */
     bool do_variable_psi, do_variable_trans;
     /** Vector for images to hold references (new & old) */
@@ -87,9 +86,9 @@ public:
     /** Limit translational searches */
     bool limit_trans;
     /** Number of limited translations */
-    int nr_trans;
+    size_t nr_trans;
     /** Number for which limited translation is zero */
-    int zero_trans;
+    size_t zero_trans;
     /** Limited search range for origin offsets */
     int search_shift;
     /** Number of subdirectories to keep for unique offsets filenames */
@@ -106,13 +105,13 @@ public:
     /** Flag whether the phases of the experimental images are flipped already */
     bool phase_flipped;
     /** Matrix with resolution shell at each Fourier pixel */
-    MultidimArray<int> Mresol_int;
+    MultidimArray<size_t> Mresol_int;
     /** Vectors with sigma2 (for each defocus group) */
     std::vector<MultidimArray<double> > Vsig, Vctf, Vdec;
     /** Multiplicative factor for SSNR */
     double reduce_snr;
     /** number of defocus groups */
-    int nr_focus;
+    size_t nr_focus;
     /** Overall low and high resolution cutoffs for fourier-mode (in Fourier pixels) */
     double lowres_limit, highres_limit, ini_highres_limit;
     /** Do not multiply signal with CTF in the first iteration */
@@ -125,9 +124,9 @@ public:
     double fix_high;
     /** Pointers to the 2D matrices (in FourierTransformHalf format) */
     std::vector<int> pointer_2d, pointer_i, pointer_j;
-    int nr_points_prob, nr_points_2d, dnr_points_2d;
+    size_t nr_points_prob, nr_points_2d, dnr_points_2d;
     /** Current highest resolution shell */
-    int current_highres_limit;
+    size_t current_highres_limit;
 
     /// IN DEVELOPMENT
 
@@ -254,10 +253,10 @@ public:
 
     /// Perform expectation step for a single image
     void processOneImage(const MultidimArray<double> &Mimg,
-                         const int focus, bool apply_ctf,
+                         size_t focus, bool apply_ctf,
                          double &fracweight,  double &maxweight2, double &sum_refw2,
-                         double &opt_scale, int &opt_refno, double &opt_psi,
-                         int &opt_ipsi, int &opt_iflip,
+                         double &opt_scale, size_t &opt_refno, double &opt_psi,
+                         size_t &opt_ipsi, size_t &opt_iflip,
                          MultidimArray<double> &opt_offsets,
                          std::vector<double> &opt_offsets_ref,
                          std::vector<double > &pdf_directions,

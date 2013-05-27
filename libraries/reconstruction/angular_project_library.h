@@ -37,7 +37,7 @@
 #include <data/xmipp_program.h>
 #include <data/metadata_extension.h>
 #include <reconstruction/project_real_shears.h>
-#include <reconstruction/fourier_projection.h>"
+#include <reconstruction/fourier_projection.h>
 #include <reconstruction/project.h>
 
 /**@name Projection library program */

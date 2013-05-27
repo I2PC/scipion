@@ -100,7 +100,7 @@ public:
     /** Predict angles and shift.
         This function searches in the shift-psi space and for each combination
         it correlates with the whole reference set. */
-    void predict_angles(int i, const FileName &fnImgOut);
+    void predict_angles(size_t i, const FileName &fnImgOut);
 
     /** Run the algorithm over all images */
     void run();

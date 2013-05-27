@@ -193,7 +193,7 @@ void getFourierStatistics(MetaData &MDin, double sam, MetaData &MDout,
     }
 }
 
-void getImageSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim, MDLabel image_label)
+void getImageSize(const MetaData &MD, size_t &Xdim, size_t &Ydim, size_t &Zdim, size_t &Ndim, MDLabel image_label)
 {
     if (!MD.isEmpty())
     {
@@ -206,7 +206,7 @@ void getImageSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &N
         REPORT_ERROR(ERR_MD_NOOBJ, "Can not read image size from empty metadata");
 }
 
-void getImageInfo(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim, DataType &datatype, MDLabel image_label)
+void getImageInfo(const MetaData &MD, size_t &Xdim, size_t &Ydim, size_t &Zdim, size_t &Ndim, DataType &datatype, MDLabel image_label)
 {
     if (!MD.isEmpty())
     {
@@ -231,7 +231,7 @@ void getImageInfo(const MetaData &MD, ImageInfo &imgInfo, MDLabel image_label)
         REPORT_ERROR(ERR_MD_NOOBJ, "Can not read image size from empty metadata");
 }
 
-void getImageSizeFromFilename(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim, MDLabel image_label)
+void getImageSizeFromFilename(const FileName &filename, size_t &Xdim, size_t &Ydim, size_t &Zdim, size_t &Ndim, MDLabel image_label)
 {
     if (filename.hasImageExtension())
         getImageSize(filename, Xdim, Ydim, Zdim, Ndim);
@@ -250,8 +250,7 @@ bool compareImage(const FileName &filename1, const FileName &filename2)
 
 bool compareImageSize(const FileName &filename1, const FileName &filename2)
 {
-    int x,y,z, X, Y, Z;
-    size_t n, N;
+    size_t x,y,z, X, Y, Z, n, N;
     getImageSizeFromFilename(filename1,x,y,z,n);
     getImageSizeFromFilename(filename2,X,Y,Z,N);
     return (x==X && y == Y && z == Z && n == N);
@@ -373,7 +372,7 @@ void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const 
     fnOut.deleteFile();
 
     // Process each block
-    for (int b=0; b<blocks.size(); b++)
+    for (size_t b=0; b<blocks.size(); b++)
     {
         MetaData MD;
         MD.read(blocks[b]+"@"+fn);

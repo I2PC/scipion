@@ -23,9 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-// To avoid problems with long template names
-#pragma warning(disable:4786)
-
 #include <fstream>
 
 #include <data/xmipp_program.h>
@@ -42,8 +39,8 @@ public:
     double         eps;          // Stopping criteria
     unsigned       iter;         // Iteration number
     bool           norm;         // Normalize?
-    int            xdim;         // X-dimension (-->)
-    int            ydim;         // Y-dimension
+    size_t         xdim;         // X-dimension (-->)
+    size_t         ydim;         // Y-dimension
     double         reg0;         // Initial reg
     double         reg1;         // Final reg
     std::string    layout;       // layout (Topology)
@@ -224,7 +221,7 @@ public:
         for (unsigned i = 0; i < myMap->size(); i++)
         {
         	MetaData MD;
-            for (int j = 0; j < myMap->classifAt(i).size(); j++)
+            for (size_t j = 0; j < myMap->classifAt(i).size(); j++)
             {
             	size_t order=myMap->classifAt(i)[j];
             	vectorContentIn.getRow(row,objIds[order]);
@@ -250,7 +247,7 @@ public:
         MetaData vectorHeaderIn, vectorHeaderOut, vectorContentOut;
         vectorHeaderIn.read(formatString("vectorHeader@%s",fn_in.c_str()));
         vectorHeaderOut.setColumnFormat(false);
-        int size, vectorSize;
+        size_t size, vectorSize;
         size_t idIn=vectorHeaderIn.firstObject();
         size_t idOut=vectorHeaderOut.addObject();
         vectorHeaderIn.getValue(MDL_XSIZE,size,idIn);
@@ -259,7 +256,7 @@ public:
         vectorHeaderOut.setValue(MDL_YSIZE,size,idOut);
         vectorHeaderIn.getValue(MDL_ZSIZE,size,idIn);
         vectorHeaderOut.setValue(MDL_ZSIZE,size,idOut);
-        vectorHeaderOut.setValue(MDL_COUNT,(size_t)myMap->size(),idOut);
+        vectorHeaderOut.setValue(MDL_COUNT,myMap->size(),idOut);
         vectorHeaderIn.getValue(MDL_CLASSIFICATION_DATA_SIZE,vectorSize,idIn);
         vectorHeaderOut.setValue(MDL_CLASSIFICATION_DATA_SIZE,vectorSize,idOut);
         vectorHeaderOut.write(formatString("vectorHeader@%s_vectors.xmd",fn_root.c_str()),MD_APPEND);

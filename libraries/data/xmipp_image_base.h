@@ -80,7 +80,7 @@ typedef enum
     HEADER = -1, //Dont read image data, only info from main header(datatype and dimensions)
     _HEADER_ALL = 0, //Read complete header(main and geo), useful for header_extract and header_assign
     DATA = 1, //Read image data and main header, geometrical transformations will be ignored
-    _DATA_ALL = 2, //Read data with complete header(the use of this option is not recommended, all Xmipp
+    _DATA_ALL = 2  //Read data with complete header(the use of this option is not recommended, all Xmipp
     // programs should read and write geo info through metadatas
 }DataMode;
 
@@ -116,7 +116,7 @@ struct ImageInfo
 {
     size_t    offset;
     DataType  datatype;
-    bool   swap;
+    bool      swap;
     ArrayDim  adim;
 };
 
@@ -237,9 +237,8 @@ protected:
     FILE*               fhed;        // Image File header handler
     TIFF*               tif;         // TIFF Image file hander
     ImageFHandler*      hFile;       // Image File handler information structure
-    ArrayDim        aDimFile;   // Image header file information structure (original info from file)
+    ArrayDim        	aDimFile;   // Image header file information structure (original info from file)
     DataMode            dataMode;    // Flag to force select what will be read/write from image files
-    bool                stayOpen;    // To maintain the image file open after read/write
     size_t              offset;      // Data offset
     int                 swap;        // Perform byte swapping upon reading
     int                 swapWrite;   // Perform byte swapping upon writing
@@ -251,7 +250,7 @@ protected:
     int                 mFd;         // Handle the file in reading method and mmap
     size_t              mappedSize;  // Size of the mapped file
     size_t              mappedOffset;// Offset for the mapped file
-    size_t        virtualOffset;// MDA Offset when movePointerTo is used
+    size_t        		virtualOffset;// MDA Offset when movePointerTo is used
 
 public:
 
@@ -331,7 +330,7 @@ public:
      * is created with the given size. Then the image is mapped to this file.
      * The image object must be cleared prior to use this method.
      */
-    void mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &_filename,
+    void mapFile2Write(size_t Xdim, size_t Ydim, size_t Zdim, const FileName &_filename,
                        bool createTempFile = false, size_t select_img = APPEND_IMAGE,
                        bool isStack = false, int mode = WRITE_OVERWRITE);
 
@@ -391,20 +390,20 @@ public:
      * It is also possible to select an specific image from stack or slice from volume.
      * This function is intended for previews of great image files as the image is not copy to memory.
      */
-    virtual int readPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE) = 0;
+    virtual int readPreview(const FileName &name, size_t Xdim, size_t Ydim=0, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE) = 0;
 
     /** Returns an image with a lower resolution as a preview image.
       * If Zdim parameter is not passed, then all slices are rescaled.
       * If Ydim is not passed, then Ydim is rescaled same factor as Xdim.
       */
-    virtual void getPreview(ImageBase *imgOut, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE) = 0;
+    virtual void getPreview(ImageBase *imgOut, size_t Xdim, size_t Ydim=0, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE) = 0;
 
     /** This function allows to read the original image or a preview of it also allowing to select either
      *  a specific image from the stack or a slice from a volume.
      *
      *  In the case of reading images in its real dimensions it is also possible to image map from file.
      */
-    int readOrReadPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE, bool mapData = false);
+    int readOrReadPreview(const FileName &name, size_t Xdim, size_t Ydim, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE, bool mapData = false);
 
     /** General write function
      * select_img= which slice should I replace
@@ -480,7 +479,7 @@ public:
      *  of the image read from file, i.e. aDimFile, and where this is used
      *  should be used the imageBase::mda->getDimensions instead.
      */
-    void getDimensions(int &Xdim, int &Ydim, int &Zdim, size_t &Ndim) const;
+    void getDimensions(size_t &Xdim, size_t &Ydim, size_t &Zdim, size_t &Ndim) const;
     /** Get Image dimensions
      */
     void getDimensions(ArrayDim &aDim)

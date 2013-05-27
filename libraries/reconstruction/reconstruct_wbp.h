@@ -65,7 +65,7 @@ public:
     /** verbosity flag */
     //int verb;
     /** dimensions of the images */
-    int dim;
+    size_t dim;
     /** Number of elements in matrix array */
     int no_mats;
     /** columns of matrices*/

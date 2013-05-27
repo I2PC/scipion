@@ -142,13 +142,13 @@ TEST_F(TransformationTest, geo2TransformationMatrix)
     double y=2.;
     double z=3;
     bool flip = true;
-    double scale2 = -MAXDOUBLE;
-    double rot2 = -MAXDOUBLE;
-    double tilt2=-MAXDOUBLE;
-    double psi2=-MAXDOUBLE;
-    double x2 =-MAXDOUBLE;
-    double y2=-MAXDOUBLE;
-    double z2=-MAXDOUBLE;
+    double scale2 = -1000;
+    double rot2 = -1000;
+    double tilt2=-1000;
+    double psi2=-1000;
+    double x2 =-1000;
+    double y2=-1000;
+    double z2=-1000;
     bool flip2 = false;
 
     MDRow rowIn,rowOut;

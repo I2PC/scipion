@@ -113,7 +113,7 @@ bool XmippProgram::checkBuiltIns()
     else if (checkParam("--xmipp_write_protocol"))
         writeToProtocol();
     else if (checkParam("--xmipp_write_autocomplete"))
-      writeToAutocomplete();
+        writeToAutocomplete();
     else if (checkParam("--gui"))
         createGUI();
     else
@@ -167,7 +167,7 @@ XmippProgram::XmippProgram()
     errorCode = 0;
 }
 
-XmippProgram::XmippProgram(int argc, char ** argv)
+XmippProgram::XmippProgram(int argc, const char ** argv)
 {
     runWithoutArgs = doRun = false;
     errorCode = 0;
@@ -200,7 +200,7 @@ void XmippProgram::readParams()
     REPORT_ERROR(ERR_NOT_IMPLEMENTED, "function 'readParams'");
 }
 
-int XmippMetadataProgram::tryRead(int argc, char ** argv, bool reportErrors )
+int XmippMetadataProgram::tryRead(int argc, const char ** argv, bool reportErrors )
 {
     try
     {
@@ -215,7 +215,7 @@ int XmippMetadataProgram::tryRead(int argc, char ** argv, bool reportErrors )
 }
 
 
-void XmippProgram::read(int argc, char ** argv, bool reportErrors)
+void XmippProgram::read(int argc, const char ** argv, bool reportErrors)
 {
     if (progDef == NULL)
         init();
@@ -267,6 +267,11 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
     }
 }
 
+void XmippProgram::read(int argc, char ** argv, bool reportErrors)
+{
+    read(argc,(const char **)argv,reportErrors);
+}
+
 void XmippProgram::read(const String &argumentsLine)
 {
     int argc;
@@ -274,8 +279,7 @@ void XmippProgram::read(const String &argumentsLine)
     char * copy=NULL;
 
     generateCommandLine(argumentsLine, argc, argv, copy);
-    read(argc, argv);
-
+    read(argc, (const char **)argv);
 }
 
 int XmippProgram::tryRun()
@@ -399,7 +403,7 @@ void XmippProgram::getListParam(const char * param, StringVector &list)
     if (paramDef == NULL)
         REPORT_ERROR(ERR_ARG_INCORRECT, ((String)"Doesn't exists param: " + param));
     list.clear();
-    for (int i = 0; i < paramDef->cmdArguments.size(); ++i)
+    for (size_t i = 0; i < paramDef->cmdArguments.size(); ++i)
         list.push_back(paramDef->cmdArguments[i]);
 }
 
@@ -490,6 +494,7 @@ XmippMetadataProgram::XmippMetadataProgram()
     zdimOut = ydimOut = xdimOut = 0;
     image_label = MDL_IMAGE;
     delete_mdIn = false;
+    track_origin = false;
 }
 
 void XmippMetadataProgram::init()
@@ -539,6 +544,9 @@ void XmippMetadataProgram::defineParams()
         addParamsLine("   alias --output;");
     }
 
+    addParamsLine(" [--track_origin]   : Store the original image filename in the output ");
+    addParamsLine("        			   : metadata in column imageOriginal.");
+
     if (allow_apply_geo)
     {
         addParamsLine("  [--dont_apply_geo]   : for 2D-images: do not apply transformation stored in metadata");
@@ -563,8 +571,11 @@ void XmippMetadataProgram::readParams()
         fn_out = checkParam("-o") ? getParam("-o") : "";
         oroot = getParam("--oroot");
     }
+
     if (allow_apply_geo)
         apply_geo = !checkParam("--dont_apply_geo");
+
+    track_origin = checkParam("--track_origin");
 
     MetaData * md = new MetaData;
     md->read(fn_in, NULL, decompose_stacks);
@@ -708,7 +719,7 @@ bool XmippMetadataProgram::getImageToProcess(size_t &objId, size_t &objIndex)
     return ((objId = iter->objId) != BAD_OBJID);
 }
 
-void XmippMetadataProgram::setupRowOut(const MDRow &rowIn, const FileName &fnImgOut, MDRow &rowOut) const
+void XmippMetadataProgram::setupRowOut(const FileName &fnImgIn, const MDRow &rowIn, const FileName &fnImgOut, MDRow &rowOut) const
 {
     if (keep_input_columns)
         rowOut = rowIn;
@@ -716,12 +727,15 @@ void XmippMetadataProgram::setupRowOut(const MDRow &rowIn, const FileName &fnImg
         rowOut.clear();
     rowOut.setValue(image_label, fnImgOut);
     rowOut.setValue(MDL_ENABLED, 1);
+
+    if (track_origin)
+        rowOut.setValue(MDL_IMAGE_ORIGINAL, fnImgIn);
 }
 
 void XmippMetadataProgram::run()
 {
     FileName fnImg, fnImgOut, baseName, pathBaseName, fullBaseName, oextBaseName;
-    size_t objId , outId;
+    size_t objId;
     MDRow rowIn, rowOut;
     mdOut.clear(); //this allows multiple runs of the same Program object
 
@@ -783,10 +797,10 @@ void XmippMetadataProgram::run()
             }
             else
                 fnImgOut = fnImg;
-            setupRowOut(rowIn, fnImgOut, rowOut);
+            setupRowOut(fnImg, rowIn, fnImgOut, rowOut);
         }
         else if (produces_a_metadata)
-            setupRowOut(rowIn, fnImgOut, rowOut);
+            setupRowOut(fnImg, rowIn, fnImgOut, rowOut);
 
         processImage(fnImg, fnImgOut, rowIn, rowOut);
 
@@ -839,7 +853,7 @@ void XmippProgramGeneric::endDefinition()
     progDef->parse();
 }
 
-void XmippProgramGeneric::read(int argc, char ** argv, bool reportErrors)
+void XmippProgramGeneric::read(int argc, const char ** argv, bool reportErrors)
 {
     if (!definitionComplete)
         endDefinition();

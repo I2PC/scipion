@@ -34,10 +34,10 @@
  */
 
 /** What is the size of an image */
-void getImageSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim,
+void getImageSize(const FileName &filename, size_t &Xdim, size_t &Ydim, size_t &Zdim,
                   size_t &Ndim);
 /** Get basic information from image file */
-void getImageInfo(const FileName &filename, int &Xdim, int &Ydim, int &Zdim,
+void getImageInfo(const FileName &filename, size_t &Xdim, size_t &Ydim, size_t &Zdim,
                   size_t &Ndim, DataType &datatype);
 void getImageInfo(const FileName &name, ImageInfo &imgInfo);
 

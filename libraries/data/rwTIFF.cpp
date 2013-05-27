@@ -115,7 +115,7 @@ DataType ImageBase::datatypeTIFF(TIFFDirHead dHead)
         //                 dHead.imageSampleFormat == SAMPLEFORMAT_IEEEFP ) //Don't know why
         //            datatype = DT_UShort;
         //        //        else if (dHead.imageSampleFormat == 0     ||
-        //        //                 dHead.imageSampleFormat == 32767 ) // Format 0 and 32767 are not declared in TIFF 6.0 specifications ¿?
+        //        //                 dHead.imageSampleFormat == 32767 ) // Format 0 and 32767 are not declared in TIFF 6.0 specifications
         //        else
         //        datatype = DT_UShort;
         break;
@@ -193,8 +193,8 @@ int ImageBase::readTIFF(size_t select_img, bool isStack)
             if (dirHead[0].imageLength != dirHead[i].imageLength || \
                 dirHead[0].imageWidth != dirHead[i].imageWidth)
                 dirHead.resize(i);
-            //REPORT_ERROR(ERR_IMG_NOREAD, formatString("readTIFF: %s file contains %lu images with, at least,"\
-            //             " two of them with different dimensions. Try to read them individually.",filename.c_str(), dirHead.size()));
+            /*REPORT_ERROR(ERR_IMG_NOREAD, formatString("readTIFF: %s file contains %lu images with, at least,"\
+                          " two of them with different dimensions. Try to read them individually.",filename.c_str(), dirHead.size()));*/
         }
     }
 
@@ -427,22 +427,14 @@ int ImageBase::writeTIFF(size_t select_img, bool isStack, int mode, String bitDe
 
     if (mmapOnWrite)
     {
-        MDMainHeader.setValue(MDL_DATATYPE,(int) wDType);
-        if (!checkMmapT(wDType))
-        {
-            if (dataMode < DATA ) // This means ImageGeneric wants to know which DataType must use in mapFile2Write
-                return 0;
-            else
-                REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");
-        }
-        else
-            dataMode = DATA;
-
         /* As we cannot mmap a TIFF File, when this option is passed we are going to mmap
          * the multidimarray of Image
          */
         mmapOnWrite = false;
-        if (mdaBase->nzyxdim*gettypesize(wDType) > tiff_map_min_size)
+        dataMode = DATA;
+        MDMainHeader.setValue(MDL_DATATYPE,(int) myTypeID);
+
+        if (mdaBase->nzyxdim*gettypesize(myTypeID) > tiff_map_min_size)
             mdaBase->setMmap(true);
 
         // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set

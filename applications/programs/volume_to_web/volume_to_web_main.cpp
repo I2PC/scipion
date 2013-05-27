@@ -96,7 +96,7 @@ public:
     			NslicesPerRow=1;
     		else if (NslicesPerRow>Nslices)
     			NslicesPerRow=Nslices;
-    		int Nrows=ceil(((float)Nslices)/NslicesPerRow);
+    		int Nrows=(int)ceil(((float)Nslices)/NslicesPerRow);
     		if (Nrows==0)
     			Nrows=1;
     		I().resizeNoCopy(Nrows*YSIZE(mV)+(Nrows-1)*sep,NslicesPerRow*XSIZE(mV)+(NslicesPerRow-1)*sep);
@@ -108,7 +108,7 @@ public:
     		{
     			int outi=outI*(YSIZE(mV)+sep);
     			int outj=outJ*(XSIZE(mV)+sep);
-    			for (int i=0; i<YSIZE(mV); ++i, ++outi)
+    			for (size_t i=0; i<YSIZE(mV); ++i, ++outi)
     				memcpy(&IMGPIXEL(I,outi,outj),&A3D_ELEM(mV,k,i,0),XSIZE(mV)*sizeof(double));
     			outJ++;
     			if (outJ==NslicesPerRow)
@@ -143,17 +143,17 @@ public:
     		I().resizeNoCopy(XMIPP_MAX(YSIZE(mV),ZSIZE(mV)),2*(XSIZE(mV)+sep)+YSIZE(mV));
     		I().initConstant(maxVal);
     		int outi=0, outj=0;
-			for (int i=0; i<YSIZE(pXY); ++i, ++outi)
+			for (size_t i=0; i<YSIZE(pXY); ++i, ++outi)
 				memcpy(&IMGPIXEL(I,outi,outj),&A2D_ELEM(pXY,i,0),XSIZE(pXY)*sizeof(double));
 
 			outi=0;
 			outj=XSIZE(mV)+sep;
-			for (int i=0; i<YSIZE(pXZ); ++i, ++outi)
+			for (size_t i=0; i<YSIZE(pXZ); ++i, ++outi)
 				memcpy(&IMGPIXEL(I,outi,outj),&A2D_ELEM(pXZ,i,0),XSIZE(pXZ)*sizeof(double));
 
 			outi=0;
 			outj=2*(XSIZE(mV)+sep);
-			for (int i=0; i<YSIZE(pYZ); ++i, ++outi)
+			for (size_t i=0; i<YSIZE(pYZ); ++i, ++outi)
 				memcpy(&IMGPIXEL(I,outi,outj),&A2D_ELEM(pYZ,i,0),XSIZE(pYZ)*sizeof(double));
 
     		I().rangeAdjust(0,255);

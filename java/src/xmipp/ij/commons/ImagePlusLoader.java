@@ -26,7 +26,6 @@
 package xmipp.ij.commons;
 
 import java.io.File;
-
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import ij.ImagePlus;
@@ -41,29 +40,65 @@ public class ImagePlusLoader
 	protected ImagePlus imp;
 	protected ImageGeneric ig;
 	protected long modified;
+	protected boolean wrap;
+	private int index = -1;
+	private boolean normalize;
+	private double normalize_min;
+	private double normalize_max;
 
 	public ImagePlusLoader()
 	{
 		this.imp = null;
+		allowsPoll = existsFile();
 	}
 
 	public ImagePlusLoader(ImagePlus imp)
 	{
 		this.imp = imp;
 		allowsPoll = existsFile();
+		
+	}
+
+	public ImagePlusLoader(int index, ImageGeneric ig)
+	{
+		this(ig);
+		this.index = index;
+
 	}
 
 	public ImagePlusLoader(String fileName)
 	{
 		this.fileName = fileName;
-		this.modified = new File(fileName).lastModified();
 		allowsPoll = existsFile();
+		this.modified = new File(fileName).lastModified();
+		if (allowsPoll && Filename.isVolume(fileName))
+			try
+			{
+				ig = new ImageGeneric(fileName);
+			}
+			catch (Exception e)
+			{
+				throw new IllegalArgumentException(e.getMessage());
+			}
 	}
 
+
+	public void setNormalize(double normalize_min, double normalize_max)
+	{
+		this.normalize = true;
+		this.normalize_min = normalize_min;
+		this.normalize_max = normalize_max;
+		
+	}
+	
+
+	
 	public ImagePlusLoader(ImageGeneric ig)
 	{
 		this.ig = ig;
 		allowsPoll = existsFile();
+		if (allowsPoll)
+			fileName = ig.getFilename();
 	}
 
 	public ImagePlus getImagePlus()
@@ -75,13 +110,23 @@ public class ImagePlusLoader
 
 	public ImagePlus loadImagePlus()
 	{
-		// ImagePlus imp = null;
+		imp = null;
 		try
 		{
-			if (fileName != null && Filename.exists(fileName) && (hasChanged() || imp == null))
-				imp = loadImage();
+			if (fileName != null && Filename.exists(fileName) && ig == null && (hasChanged() || imp == null))
+				imp = loadSingleImageFromFile();
 			else if (ig != null)
-				imp = XmippImageConverter.readToImagePlus(ig);
+			{
+				if (index != -1)
+					imp = XmippImageConverter.convertToImagePlus(ig, ImageGeneric.FIRST_IMAGE, index);
+				else
+					imp = XmippImageConverter.readToImagePlus(ig);
+			}
+			if(normalize)
+			{
+				imp.getProcessor().setMinAndMax(normalize_min, normalize_max);
+				imp.updateImage();
+			}
 			return imp;
 		}
 		catch (Exception e)
@@ -91,13 +136,13 @@ public class ImagePlusLoader
 		return imp;
 	}
 
-	protected ImagePlus loadImage() throws Exception
+	protected ImagePlus loadSingleImageFromFile() throws Exception
 	{
 		ig = new ImageGeneric(fileName);
 		long select_image = Filename.getNimage(fileName);
 		imp = XmippImageConverter.readToImagePlus(ig, ig.getXDim(), ig.getYDim(), select_image);
 		return imp;
-		
+
 	}
 
 	public boolean hasChanged()
@@ -120,26 +165,27 @@ public class ImagePlusLoader
 		return allowsGeometry;
 	}
 
-	public void setAllowsGeometry(boolean useGeometry)
-	{
-		this.useGeometry = useGeometry;
-	}
-
+	
 	public boolean getUseGeometry()
 	{
 		return useGeometry;
 	}
 
-	public void useGeometry()
+	public void setUseGeometry(boolean value)
 	{
-		setAllowsGeometry(true);
-		loadImagePlus();
+		useGeometry = value;
+
 	}
 
-	public void wrap()
+	public void setWrap(boolean value)
 	{
-		// TODO Auto-generated method stub
+		wrap = value;
 
+	}
+
+	public boolean isWrap()
+	{
+		return wrap;
 	}
 
 	public boolean isVolume()
@@ -156,19 +202,19 @@ public class ImagePlusLoader
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
-	
+
 	public boolean existsFile()
 	{
 		String file = null;
-		if(fileName != null && !fileName.equals(""))
+		if (fileName != null && !fileName.equals(""))
 			file = fileName;
-		else if(imp != null && imp.getOriginalFileInfo() != null)
+		else if (imp != null && imp.getOriginalFileInfo() != null)
 			file = imp.getOriginalFileInfo().directory + File.separator + imp.getOriginalFileInfo().fileName;
-		else if (ig!= null && ig.getFilename()!= null)
+		else if (ig != null && ig.getFilename() != null)
 			file = ig.getFilename();
-		if(file == null)
+		if (file == null)
 			return false;
-		if(!new File(file).exists())
+		if (!new File(file).exists())
 			return false;
 		return true;
 	}

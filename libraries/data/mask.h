@@ -430,7 +430,10 @@ public:
     /** Blob parameters
      * For blob_circular and blob_crown masks.
      */
-    double blob_order, blob_radius, blob_alpha;
+    int blob_order;
+    
+    /** Blob parameters */
+    double blob_radius, blob_alpha;
 
     /** Height
      * Height for cylinders.
@@ -522,7 +525,7 @@ public:
     /** Read from command line
      * An exception is thrown if the read mask is not of an allowed type.
      */
-    void read(int argc, char** argv);
+    void read(int argc, const char** argv);
 
     /** Read parameters
          *
@@ -563,15 +566,15 @@ public:
 
     /** Resize and set Xmipp origin
      */
-    void resize(int Xdim);
+    void resize(size_t Xdim);
 
     /** Resize and set Xmipp origin
      */
-    void resize(int Ydim, int Xdim);
+    void resize(size_t Ydim, size_t Xdim);
 
     /** Resize and set Xmipp origin
      */
-    void resize(int Zdim, int Ydim, int Xdim);
+    void resize(size_t Zdim, size_t Ydim, size_t Xdim);
 
     /** Resize after a pattern
      */
@@ -598,7 +601,7 @@ public:
 
     /** Generate mask for an empty signal
      */
-    void generate_mask(int Zdim, int Ydim, int Xdim)
+    void generate_mask(size_t Zdim, size_t Ydim, size_t Xdim)
     {
         resize(Zdim, Ydim, Xdim);
         generate_mask();
@@ -802,7 +805,7 @@ void computeStats_within_binary_mask(const MultidimArray< T1 >& mask,
                                      double& max_val,
                                      double& avg, double& stddev)
 {
-    SPEED_UP_temps;
+	SPEED_UP_tempsInt;
     double sum1 = 0;
     double sum2 = 0;
     int N = 0;
@@ -831,7 +834,7 @@ void computeStats_within_binary_mask(const MultidimArray< T1 >& mask,
     // average and standard deviation
     avg  = sum1 / (double) N;
     if (N > 1)
-        stddev = sqrt(ABS(sum2 / N - avg * avg) * N / (N - 1));
+        stddev = sqrt(fabs(sum2 / N - avg * avg) * N / (N - 1));
     else
         stddev = 0;
 }
@@ -859,7 +862,7 @@ void computeAvgStdev_within_binary_mask(const MultidimArray< int >& mask,
                                         const MultidimArray< T >& m,
                                         double& avg, double& stddev)
 {
-    SPEED_UP_temps;
+    SPEED_UP_tempsInt;
     double sum1 = 0;
     double sum2 = 0;
     int N = 0;
@@ -962,7 +965,7 @@ void compute_hist_within_binary_mask(const MultidimArray< int >& mask,
                                      const MultidimArray< T >& v, Histogram1D& hist,
                                      T min, T max, int no_steps)
 {
-    SPEED_UP_temps;
+    SPEED_UP_tempsInt;
     hist.init(min, max, no_steps);
     FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(mask, v)
     if (A3D_ELEM(mask, k, i, j) != 0)
@@ -1016,7 +1019,7 @@ template<typename T>
 int count_with_mask(const MultidimArray< int >& mask,
                     const MultidimArray< T >& m, int mode, double th1, double th2)
 {
-    SPEED_UP_temps;
+    SPEED_UP_tempsInt;
     int N = 0;
     FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(mask, m)
     if (A3D_ELEM(mask, k, i, j))

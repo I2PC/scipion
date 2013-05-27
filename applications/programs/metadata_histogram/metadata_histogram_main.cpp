@@ -102,10 +102,10 @@ public:
         percentil = getDoubleParam("--percentil");
         readColumn(col, automatic_range, m, M, StepsNo);
 
-        if (do_hist2d = checkParam("--col2"))
+        if ((do_hist2d = checkParam("--col2")))
             readColumn(col2, automatic_range2, m2, M2, StepsNo2, true);
 
-        if (write_img = checkParam("--write_as_image"))
+        if ((write_img = checkParam("--write_as_image")))
             fn_img = getParam("--write_as_image");
     }
 

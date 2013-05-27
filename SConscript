@@ -170,7 +170,8 @@ def AddMPIProgram(name, basedir, sources_pattern='*.cpp', skip_list=[],
         LIBS=libs + [env['LIBS']] + [env['MPI_LIB']],
         CXXFLAGS=cxxflags + [env['CXXFLAGS']],
         LINKFLAGS=linkflags + [env['LINKFLAGS']],
-        LINK=env['MPI_LINKERFORPROGRAMS']
+        LINK=env['MPI_LINKERFORPROGRAMS'],
+        LD_LIBRARY_PATH=[env['LIBPATH']] + [env['MPI_LIBDIR']]
         )
 
     # alias
@@ -572,8 +573,11 @@ INRIASources = Glob('external/inria', '*.cc', [])
 # Condor
 CondorSources = Glob('external/condor', '*.cpp', [])
 
+# AlgLib
+AlglibSources = Glob('external/alglib/src', '*.cpp', [])
+
 AddLibrary('XmippExternal', 'external',
-   INRIASources + BilibSources + CondorSources,
+   INRIASources + BilibSources + CondorSources + AlglibSources,
    ['bilib', 'bilib/headers', 'bilib/types'])
 
 # sqliteExt
@@ -887,26 +891,29 @@ if int(env['arpack']):
 #
 AddBatch('apropos', 'applications/scripts/apropos', '.py')
 AddBatch('compile', 'applications/scripts/compile', '.py')
+AddBatch('export_emx', 'applications/scripts/export_emx', '.py')
 AddBatch('import_box', 'applications/scripts/import_box', '.py')
 AddBatch('import_ctfparam', 'applications/scripts/import_ctfparam', '.py')
 AddBatch('import_ctfdat', 'applications/scripts/import_ctfdat', '.py')
-AddBatch('metadata_selfile_create', 'applications/scripts/metadata_selfile_create', '.py')
-AddBatch('metadata_plot', 'applications/scripts/metadata_plot', '.py')
+AddBatch('import_emx', 'applications/scripts/import_emx', '.py')
 #AddBatch('metadata_operate', 'applications/scripts/metadata_operate','.py')
+AddBatch('metadata_plot', 'applications/scripts/metadata_plot', '.py')
+AddBatch('metadata_selfile_create', 'applications/scripts/metadata_selfile_create', '.py')
 protocols_main = AddBatch('protocols', 'protocols', '.py')
 env.Alias('protocols', protocols_main)
-AddBatch('showj', 'applications/scripts/showj', '.py')
+AddBatch('browser', 'applications/scripts/browser', '.py')
+#AddBatch('browserj', 'applications/scripts/browserj', '.py')
 AddBatch('micrograph_particle_picking', 'applications/scripts/micrograph_particle_picking', '.py')
+AddBatch('chimera_client', 'applications/scripts/chimera_client', '.py')
+#AddBatch('metadata_showj', 'applications/scripts/metadata_showj', '.py')
 AddBatch('micrograph_tiltpair_picking', 'applications/scripts/micrograph_tiltpair_picking', '.py')
+AddBatch('mpi_steps_runner', 'protocols', '.py')
 AddBatch('projections_explorerj', 'applications/scripts/projections_explorerj', '.py')
+#AddBatch('rot_spectraj', 'applications/scripts/rot_spectraj', '.py')
+AddBatch('showj', 'applications/scripts/showj', '.py')
+#AddBatch('stitchingj', 'applications/scripts/stitchingj', '.py')
 AddBatch('tomoj', 'applications/scripts/tomoj', '.py')
 AddBatch('visualize_preprocessing_micrographj', 'applications/scripts/visualize_preprocessing_micrograph', '.py')
-#AddBatch('browserj', 'applications/scripts/browserj', '.py')
-AddBatch('browser', 'applications/scripts/browser', '.py')
-#AddBatch('rot_spectraj', 'applications/scripts/rot_spectraj', '.py')
-#AddBatch('metadata_showj', 'applications/scripts/metadata_showj', '.py')
-#AddBatch('stitchingj', 'applications/scripts/stitchingj', '.py')
-AddBatch('mpi_steps_runner', 'protocols', '.py')
 
 # MPI
 if int(env['mpi']):
@@ -974,6 +981,7 @@ if int(env['gtest']):
      AddXmippCTest('test_sampling')
      AddXmippCTest('test_symmetries')
      AddXmippCTest('test_transformation')
+     AddXmippCTest('test_wavelets')
      #env.Depends('run_tests', [fftw, tiff, sqlite])
      #python tests
      test = AddXmippPythonTest('test_pythoninterface')

@@ -52,7 +52,7 @@ double evaluatePlane(double rot, double tilt,
             return 0;
     }
 
-    int N=XMIPP_MAX(XSIZE(*Vmag),YSIZE(*Vmag)/2);
+    size_t N=XMIPP_MAX(XSIZE(*Vmag),YSIZE(*Vmag)/2);
     N=XMIPP_MAX(N,ZSIZE(*Vmag)/2);
     double df=0.5/N;
     Matrix1D<double> freq(3), freqp(3);
@@ -60,6 +60,7 @@ double evaluatePlane(double rot, double tilt,
     double sumNeg=0, sumPos=0;
     int Nneg=0, Npos=0;
     double maxFreq2=maxFreq*maxFreq;
+    int iPlaneWidth=(int)ceil(planeWidth);
     for (double ix=0; ix<=N; ix++)
     {
         XX(freq)=ix*df;
@@ -70,7 +71,7 @@ double evaluatePlane(double rot, double tilt,
             double fx2fy2=fx2+YY(freq)*YY(freq);
             if (fx2fy2>maxFreq2)
                 continue;
-            for (int iz=-planeWidth; iz<=planeWidth; iz++)
+            for (int iz=-iPlaneWidth; iz<=iPlaneWidth; iz++)
             {
                 if (iz==0 || ix==0 || iy==0)
                     continue;
@@ -79,7 +80,7 @@ double evaluatePlane(double rot, double tilt,
                 ZZ(freq)=iz*df;
 
                 // Frequency in the coordinate system of the volume
-                SPEED_UP_temps;
+                SPEED_UP_temps012;
                 M3x3_BY_V3x1(freqp,Einv,freq);
                 bool inverted=false;
                 if (XX(freqp)<0)

@@ -340,6 +340,7 @@ double readTagDM3(FILE *fimg, DM3head *header, int parentId, int &nodeId, bool i
         }
         delete []info;
     }
+    return 0;
 }
 
 /** DM3 Get DM3 parent
@@ -373,7 +374,7 @@ size_t gotoTagDM3(MetaData &MD, int &nodeId, const std::string &tagsList)
     queries.addAndQuery(queryParentId);
     queries.addAndQuery(queryTagname);
 
-    for (int n = 0; n < vTags.size(); n++)
+    for (size_t n = 0; n < vTags.size(); n++)
     {
         tag = vTags[n];
 
@@ -407,7 +408,7 @@ void printDM3node(MetaData &MD, size_t id)
 
     space += 3;
 
-    for (int i = 0; i < vObjs.size(); i++)
+    for (size_t i = 0; i < vObjs.size(); i++)
         printDM3node(MD, vObjs[i]);
 
     space -= 3;
@@ -423,7 +424,7 @@ void printDM3(MetaData MD)
     space = 0;
     MD.findObjects(vObjs,MDValueEQ(MDL_DM3_PARENTID, 0));
 
-    for (int i = 0; i < vObjs.size(); i++)
+    for (size_t i = 0; i < vObjs.size(); i++)
         printDM3node(MD, vObjs[i]);
 }
 

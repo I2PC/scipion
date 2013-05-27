@@ -331,8 +331,8 @@ void applyGeometry(int SplineDegree,
         double minyp  = -cen_yp;
         double maxxp  = XSIZE(V1) - cen_xp - 1;
         double maxyp  = YSIZE(V1) - cen_yp - 1;
-        int Xdim   = XSIZE(V1);
-        int Ydim   = YSIZE(V1);
+        size_t Xdim   = XSIZE(V1);
+        size_t Ydim   = YSIZE(V1);
 
         if (SplineDegree > 1)
         {
@@ -355,7 +355,7 @@ void applyGeometry(int SplineDegree,
         << "(max_xp,max_yp)=(" << maxxp  << "," << maxyp  << ")\n";
 #endif
 
-        for (int i = 0; i < YSIZE(V2); i++)
+        for (size_t i = 0; i < YSIZE(V2); i++)
         {
             // Calculate position of the beginning of the row in the output image
             double x = -cen_x;
@@ -368,7 +368,7 @@ void applyGeometry(int SplineDegree,
             double xp = x * MAT_ELEM(Aref, 0, 0) + y * MAT_ELEM(Aref, 0, 1) + MAT_ELEM(Aref, 0, 2);
             double yp = x * MAT_ELEM(Aref, 1, 0) + y * MAT_ELEM(Aref, 1, 1) + MAT_ELEM(Aref, 1, 2);
 
-            for (int j = 0; j < XSIZE(V2); j++)
+            for (size_t j = 0; j < XSIZE(V2); j++)
             {
 #ifdef DEBUG_APPLYGEO
 
@@ -419,13 +419,13 @@ void applyGeometry(int SplineDegree,
                         // of the interpolation square. Ie, (0.7,0.7) would give (0,0)
                         // Calculate also weights for point m1+1,n1+1
                         double wx = xp + cen_xp;
-                        int m1 = (int) wx;
+                        size_t m1 = (int) wx;
                         wx = wx - m1;
-                        int m2 = m1 + 1;
+                        size_t m2 = m1 + 1;
                         double wy = yp + cen_yp;
-                        int n1 = (int) wy;
+                        size_t n1 = (int) wy;
                         wy = wy - n1;
-                        int n2 = n1 + 1;
+                        size_t n2 = n1 + 1;
 
                         // m2 and n2 can be out by 1 so wrap must be check here
                         if (wrap)
@@ -488,7 +488,7 @@ void applyGeometry(int SplineDegree,
     else
     {
         // 3D transformation
-        int m1, n1, o1, m2, n2, o2;
+    	size_t m1, n1, o1, m2, n2, o2;
         double x, y, z, xp, yp, zp;
         double minxp, minyp, maxxp, maxyp, minzp, maxzp;
         double cen_x, cen_y, cen_z, cen_xp, cen_yp, cen_zp;
@@ -538,8 +538,8 @@ void applyGeometry(int SplineDegree,
         // this value at the output voxel
 
         // V2 is not initialised to 0 because all its pixels are rewritten
-        for (int k = 0; k < V2.zdim; k++)
-            for (int i = 0; i < V2.ydim; i++)
+        for (size_t k = 0; k < V2.zdim; k++)
+            for (size_t i = 0; i < V2.ydim; i++)
             {
                 // Calculate position of the beginning of the row in the output
                 // MultidimArray
@@ -554,7 +554,7 @@ void applyGeometry(int SplineDegree,
                 yp = x * MAT_ELEM(Aref, 1, 0) + y * MAT_ELEM(Aref, 1, 1) + z * MAT_ELEM(Aref, 1, 2) + MAT_ELEM(Aref, 1, 3);
                 zp = x * MAT_ELEM(Aref, 2, 0) + y * MAT_ELEM(Aref, 2, 1) + z * MAT_ELEM(Aref, 2, 2) + MAT_ELEM(Aref, 2, 3);
 
-                for (int j = 0; j < V2.xdim; j++)
+                for (size_t j = 0; j < V2.xdim; j++)
                 {
                     bool interp;
                     double tmp;
@@ -598,7 +598,7 @@ void applyGeometry(int SplineDegree,
                     {
                         if (SplineDegree==0)
                         {
-                            dAkij(V2, k, i, j)=A3D_ELEM(V1,(int)trunc(zp),(int)trunc(yp),(int)trunc(xp));
+                            dAkij(V2, k, i, j)=(T)A3D_ELEM(V1,(int)trunc(zp),(int)trunc(yp),(int)trunc(xp));
                         }
                         else if (SplineDegree == 1)
                         {
@@ -983,7 +983,7 @@ template<typename T1, typename T>
 void scaleToSize(int SplineDegree,
                  MultidimArray<T> &V2,
                  const MultidimArray<T1> &V1,
-                 int Xdim, int Ydim, int Zdim = 1)
+                 size_t Xdim, size_t Ydim, size_t Zdim = 1)
 {
     if (Xdim == XSIZE(V1) && Ydim == YSIZE(V1) && \
         (!(V1.getDim()==3) || (Zdim == ZSIZE(V1))) )

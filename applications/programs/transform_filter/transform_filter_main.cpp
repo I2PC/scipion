@@ -25,6 +25,4 @@
 
 #include "reconstruction/program_filter.h"
 
-RUN_XMIPP_PROGRAM(ProgFilter);
-
-
+RUN_XMIPP_PROGRAM(ProgFilter)

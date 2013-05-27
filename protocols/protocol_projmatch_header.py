@@ -300,7 +300,7 @@ Tilt0 = -91
 TiltF = 91
 
 # Symmetry group
-""" See [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry]
+""" See [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry]
     for a description of the symmetry groups format
     If no symmetry is present, give c1
 """
@@ -663,8 +663,10 @@ DisplayIterationsNo='1 2 3'
 
 # Show results for reference 3D volumes
 """ 
+   If you want two see the reference volume 2 and 5 write
+   2 5
 """
-DisplayRef3DNo='1 2'
+DisplayRef3DNo='1'
 
 # {expert} Width of projection galleries
 """ 

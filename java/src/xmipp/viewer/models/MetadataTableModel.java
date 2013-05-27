@@ -40,16 +40,23 @@ import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
+import xmipp.utils.XmippDialog;
+import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.FloatRenderer;
+import xmipp.viewer.models.MetadataGalleryTableModel.MdRowImageLoader;
+import xmipp.viewer.windows.ImagesWindowFactory;
 
-public class MetadataTableModel extends MetadataGalleryTableModel {
+
+public class MetadataTableModel extends MetadataGalleryTableModel
+{
 	private static final long serialVersionUID = 1L;
 
 	int sortColumnIndex = -1;
 	boolean ascending = true;
 
-	public MetadataTableModel(GalleryData data) throws Exception {
+	public MetadataTableModel(GalleryData data) throws Exception
+	{
 		super(data);
 		cols = visibleLabels.size();
 		rows = n;
@@ -57,32 +64,39 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	}
 
 	@Override
-	public String getColumnName(int column) {
+	public String getColumnName(int column)
+	{
 		return visibleLabels.get(column).getLabelName();
 	}
 
 	@Override
-	public Class getColumnClass(int column) {
+	public Class getColumnClass(int column)
+	{
 		ColumnInfo ci = visibleLabels.get(column);
 		if (ci.render)
 			return ImageItem.class;
 		else if (ci.getLabel() == MDLabel.MDL_ENABLED)
 			return Boolean.class;
-		try {
+		try
+		{
 			return MetaData.getLabelClass(ci.getLabel());
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			e.printStackTrace();
 			return null;
 		}
 	}
 
 	@Override
-	public int getIndex(int row, int col) {
+	public int getIndex(int row, int col)
+	{
 		return row;
 	}
-	
-	@Override 
-	public int[] getCoords(int index) {
+
+	@Override
+	public int[] getCoords(int index)
+	{
 		int[] coords = new int[2];
 		coords[0] = index;
 		coords[1] = 0;
@@ -90,21 +104,24 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	}
 
 	@Override
-	public Object getValueAt(int row, int column) {
+	public Object getValueAt(int row, int column)
+	{
 		// DEBUG.printMessage(String.format("MetadataTable.getValueAt(%d, %d)",
 		// row, column));
-		try {
+		try
+		{
 			ColumnInfo ci = visibleLabels.get(column);
-			if (ci.render) {
+			if (ci.render)
+			{
 				String key = getItemKey(row, ci.getLabel());
 				ImageItem item;
 				// If the element is on cache, just return it
 				if (cache.containsKey(key))
 					item = cache.get(key);
-				else {
+				else
+				{
 					// If not, create the item and store it for future
-					item = createImageItem(row, ci.getLabel(), ci.getLabel(),
-							key);
+					item = createImageItem(row, ci.getLabel(), ci.getLabel(), key);
 					cache.put(key, item);
 				}
 				setupItem(item, row);
@@ -114,7 +131,8 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			long id = data.ids[row];
 			int type = MetaData.getLabelType(label);
 			MetaData md = data.md;
-			switch (type) {
+			switch (type)
+			{
 			case MetaData.LABEL_INT:
 				int value = md.getValueInt(label, id);
 				// treat special case of MDL_ENABLED
@@ -128,6 +146,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			case MetaData.LABEL_SIZET:
 				return md.getValueLong(label, id);
 			case MetaData.LABEL_STRING:
+				return md.getValueString(ci.getLabel(), data.ids[row]);
 			case MetaData.LABEL_VECTOR_DOUBLE:
 			case MetaData.LABEL_VECTOR_SIZET:
 				return md.getValueString(ci.getLabel(), data.ids[row]);
@@ -135,7 +154,9 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			}
 			return null;
 
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			e.printStackTrace();
 		}
 
@@ -143,13 +164,23 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	}// function getValueAt
 
 	@Override
-	public void setValueAt(Object value, int row, int column) {
-		try {
-			ColumnInfo ci = visibleLabels.get(column);
+	public void setValueAt(Object value, int row, int column)
+	{
+
+		ColumnInfo ci = visibleLabels.get(column);
+		if (value == null || value.equals(""))
+		{
+			XmippDialog.showError(null, XmippMessage.getEmptyFieldMsg(ci.getLabelName()));
+			return;//empty values are not allowed
+		}
+		try
+		{
 			long id = data.ids[row];
 			setMdValueAt(value, row, column, ci, id);
 			data.setMdChanges(true);
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			e.printStackTrace();
 		}
 
@@ -160,20 +191,24 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	 * 
 	 * @throws Exception
 	 */
-	protected void setMdValueAt(Object value, int row, int column,
-			ColumnInfo ci, long id) throws Exception {
-		if (!ci.render) {
+	protected void setMdValueAt(Object value, int row, int column, ColumnInfo ci, long id) throws Exception
+	{
+		if (!ci.render)
+		{
 			int label = ci.getLabel();
 			int type = MetaData.getLabelType(label);
 			MetaData md = data.md;
-			switch (type) {
+			switch (type)
+			{
 			case MetaData.LABEL_BOOL:
 				md.setValueBoolean(label, (Boolean) value, id);
 				break;
 			case MetaData.LABEL_INT:
-				if (label == MDLabel.MDL_ENABLED) {
+				if (label == MDLabel.MDL_ENABLED)
+				{
 					md.setEnabled((Boolean) value, id);
-				} else
+				}
+				else
 					md.setValueInt(label, ((Integer) value).intValue(), id);
 				break;
 			case MetaData.LABEL_DOUBLE:
@@ -194,7 +229,8 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	}
 
 	@Override
-	public boolean isCellEditable(int row, int column) {
+	public boolean isCellEditable(int row, int column)
+	{
 		ColumnInfo ci = visibleLabels.get(column);
 		return ci.allowEdit && !ci.render;
 	}
@@ -206,39 +242,53 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	// ? data.getValueFromCol(row, ci) : null;
 	// }
 	@Override
-	public boolean handleDoubleClick(int row, int col) {
-		try {
+	public boolean handleDoubleClick(int row, int col)
+	{
+		try
+		{
 			ColumnInfo ci = visibleLabels.get(col);
-			if (ci.allowRender && data.isImageFile(ci)) {
-				new XmippImageWindow(data.window, new MdRowImageLoader(row, ci.getLabel()));
+			if (ci.allowRender && data.isImageFile(ci))
+			{
+				//new XmippImageWindow(data.window, new MdRowImageLoader(row, ci.getLabel()));
+				ImagePlusLoader loader = new MdRowImageLoader(row, ci.getLabel());
+				if(getNormalized())
+					loader.setNormalize(normalize_min, normalize_max);
+				ImagesWindowFactory.openXmippImageWindow(data.window, loader, loader.allowsPoll());
 				return true;
 			}
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			e.printStackTrace();
 		}
 		return false;
 	}// function handleDoubleClick
 
 	@Override
-	public void setColumns(int cols) {
+	public void setColumns(int cols)
+	{
 
 	}
 
 	@Override
-	public boolean adjustColumn(int width) {
+	public boolean adjustColumn(int width)
+	{
 		return false;
 	}
 
 	@Override
 	/** Whether to display the labels */
-	public void setRenderImages(boolean value) {
+	public void setRenderImages(boolean value)
+	{
 		boolean changed = false;
 		for (ColumnInfo ci : data.labels)
-			if (ci.allowRender && ci.render != value) {
+			if (ci.allowRender && ci.render != value)
+			{
 				ci.render = value;
 				changed = true;
 			}
-		if (changed) {
+		if (changed)
+		{
 			data.globalRender = value;
 			calculateCellSize();
 			fireTableDataChanged();
@@ -246,37 +296,44 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	}
 
 	@Override
-	public String getLabel(int row, int col) {
-		try {
+	public String getLabel(int row, int col)
+	{
+		try
+		{
 			long objId = data.ids[row];
-			return data.md.getValueString(visibleLabels.get(col).getLabel(),
-					objId);
-		} catch (Exception e) {
+			return data.md.getValueString(visibleLabels.get(col).getLabel(), objId);
+		}
+		catch (Exception e)
+		{
 			e.printStackTrace();
 		}
 		return null;
 	}
 
 	@Override
-	protected void calculateCellSize() {
+	protected void calculateCellSize()
+	{
 		// DEBUG.printMessage(String.format("MetadataTable:calculateSize"));
-		if (data.globalRender) {
+		if (data.globalRender)
+		{
 			super.calculateCellSize();
 			// DEBUG.printMessage(String.format(
 			// "MetadataTable:calculateSize w:%d, h:%d", cellDim.width,
 			// cellDim.height));
 
-		} else {
+		}
+		else
+		{
 			int font_height;
-			font_height = renderer.getFontMetrics(renderer.getFont())
-					.getHeight();
+			font_height = renderer.getFontMetrics(renderer.getFont()).getHeight();
 			font_height += renderer.getIconTextGap(); // Adds the extra gap.
 			cellDim.setSize(100, font_height + 5);
 		}
 	}
 
 	@Override
-	public void setupTable(JTable table) {
+	public void setupTable(JTable table)
+	{
 		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		table.setDefaultRenderer(ImageItem.class, renderer);
 		table.setDefaultRenderer(Double.class, new FloatRenderer());
@@ -289,29 +346,32 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		//header.setReorderingAllowed(true);
 		updateTableSelection(table);
 	}
-	
+
 	@Override
-	public JTableHeader getTableHeaderModel(){
+	public JTableHeader getTableHeaderModel()
+	{
 		return new MetadataTableHeader(columnModel);
 	}
 
 	/** Update the table selection according with data selection */
 	@Override
-	public void updateTableSelection(JTable table) {
+	public void updateTableSelection(JTable table)
+	{
 		table.clearSelection();
 		for (int i = 0; i < n; ++i)
-			if (data.selection[i]) {
-				System.out.println(i);
+			if (data.selection[i])
+			{
 				table.addRowSelectionInterval(i, i);
 			}
 	}
 
 	@Override
-	public boolean handleRightClick(int row, int col,
-			XmippPopupMenuCreator xpopup) {
+	public boolean handleRightClick(int row, int col, XmippPopupMenuCreator xpopup)
+	{
 		xpopup.initItems();
-		
-		if (data.isFile(visibleLabels.get(col))) {
+
+		if (data.isFile(visibleLabels.get(col)))
+		{
 			xpopup.setItemVisible(XmippPopupMenuCreator.OPEN, true);
 			if (!data.isImageFile(visibleLabels.get(col)))
 				xpopup.setItemVisible(XmippPopupMenuCreator.OPEN_ASTEXT, true);
@@ -321,18 +381,23 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 
 	@Override
 	/** Return the column model to be used with this table model */
-	public GalleryColumnModel createColumnModel() {
+	public GalleryColumnModel createColumnModel()
+	{
 		return new MetadataColumnModel();
 	}
 
-	public class MetadataColumnModel extends GalleryColumnModel {
-		public MetadataColumnModel() {
+	public class MetadataColumnModel extends GalleryColumnModel
+	{
+		public MetadataColumnModel()
+		{
 			super(0);
 		}
 
 		@Override
-		public void adjustColumnsWidth(JTable table) {
-			try {
+		public void adjustColumnsWidth(JTable table)
+		{
+			try
+			{
 				if (visibleLabels.size() != getColumnCount())
 					return;
 				calculateCellSize();
@@ -343,17 +408,20 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 				Component comp;
 				boolean non_empty = data.md.size() > 0;
 
-				for (int i = 0; i < visibleLabels.size(); ++i) {
+				for (int i = 0; i < visibleLabels.size(); ++i)
+				{
 					ColumnInfo col = visibleLabels.get(i);
 					width = 0;
 					// Calculate width of the cell
-					if (col.render) {
+					if (col.render)
+					{
 						width = cellDim.width;
-					} else if (non_empty) {
+					}
+					else if (non_empty)
+					{
 						// else {
 						rend = table.getCellRenderer(0, i);
-						comp = rend.getTableCellRendererComponent(table,
-								getValueAt(0, i), false, false, 0, 0);
+						comp = rend.getTableCellRendererComponent(table, getValueAt(0, i), false, false, 0, 0);
 						width = comp.getPreferredSize().width + 10;
 					}
 					// Calculate width of the header
@@ -362,50 +430,60 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 					if (rend == null)
 						rend = table.getTableHeader().getDefaultRenderer();
 					Object value = tc.getHeaderValue();
-					comp = rend.getTableCellRendererComponent(table, value,
-							false, false, 0, i);
+					comp = rend.getTableCellRendererComponent(table, value, false, false, 0, i);
 					// Take max width
 					width = Math.max(width, comp.getPreferredSize().width);
 					getColumn(i).setPreferredWidth(width + 10);
 					// DEBUG.printMessage(String.format("col: %d, width: %d", i,
 					// width));
 				}
-			} catch (Exception e) {
+			}
+			catch (Exception e)
+			{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}// function adjustColumnsWidth
-		
+
 	}// class MetadataColumnModel
-	
-	public class MetadataTableHeader extends JTableHeader {
-		public MetadataTableHeader(TableColumnModel columnModel){
-			super(columnModel);			
+
+	public class MetadataTableHeader extends JTableHeader
+	{
+		public MetadataTableHeader(TableColumnModel columnModel)
+		{
+			super(columnModel);
 		}
+
 		/** Show tooltips on columns header */
-		public String getToolTipText(MouseEvent e) {
-            java.awt.Point p = e.getPoint();
-            int index = columnModel.getColumnIndexAtX(p.x);
-            if (index > -1)
-            	return visibleLabels.get(index).comment;
-            return null;
-        }
+		public String getToolTipText(MouseEvent e)
+		{
+			java.awt.Point p = e.getPoint();
+			int index = columnModel.getColumnIndexAtX(p.x);
+			if (index > -1)
+				return visibleLabels.get(index).comment;
+			return null;
+		}
 	}
 
-	public class MetadataColumnListener extends MouseAdapter {
+	public class MetadataColumnListener extends MouseAdapter
+	{
 		protected JTable table;
 
-		public MetadataColumnListener(JTable t) {
+		public MetadataColumnListener(JTable t)
+		{
 			table = t;
 		}
 
-		public void mouseClicked(MouseEvent e) {
-			
-			TableColumnModel colModel = table.getColumnModel();
-			int columnModelIndex = colModel.getColumnIndexAtX(e.getX());
-			int modelIndex = colModel.getColumn(columnModelIndex)
-					.getModelIndex();
 
+		public void mouseClicked(MouseEvent e)
+		{
+			TableColumnModel colModel = table.getColumnModel();
+			//Get the clicked column index
+			int columnModelIndex = colModel.getColumnIndexAtX(e.getX());
+			//Take into account a possible reordering of columns
+			int modelIndex = colModel.getColumn(columnModelIndex).getModelIndex();
+			//Take into account possible invisible columns indexing
+			modelIndex = data.getVisibleColumnIndex(modelIndex);
 			if (modelIndex < 0)
 				return;
 			if (sortColumnIndex == modelIndex)

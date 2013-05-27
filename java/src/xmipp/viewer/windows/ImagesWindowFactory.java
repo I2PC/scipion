@@ -7,27 +7,23 @@ package xmipp.viewer.windows;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageWindow;
-import ij.gui.Toolbar;
-import ij.io.FileInfo;
 import ij.process.StackConverter;
 import ij3d.Content;
 import ij3d.Image3DUniverse;
 
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Frame;
-import java.awt.Toolkit;
-import java.io.File;
+import java.awt.Window;
 
-import javax.swing.JFrame;
-import javax.swing.JRootPane;
+import javax.swing.SwingUtilities;
 import javax.vecmath.Color3f;
 
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippIJUtil;
 import xmipp.ij.commons.XmippIJWindow;
+import xmipp.ij.commons.XmippImageCanvas;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.ij.commons.XmippImageWindow;
 import xmipp.ij.commons.XmippStackWindow;
@@ -36,9 +32,9 @@ import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
-import xmipp.utils.InfiniteProgressPanel;
 import xmipp.utils.Param;
 import xmipp.utils.XmippDialog;
+import xmipp.viewer.ctf.CTFAnalyzerJFrame;
 import xmipp.viewer.ctf.CTFRecalculateImageWindow;
 import xmipp.viewer.ctf.TasksEngine;
 
@@ -74,7 +70,8 @@ public class ImagesWindowFactory {
 				if (img.isSingleImage()) {
 					openFileAsImage(null, filename, parameters);
 				} else if (img.isStackOrVolume()) {
-					if (parameters.mode.equalsIgnoreCase(Param.OPENING_MODE_IMAGE))
+					if (parameters.mode
+							.equalsIgnoreCase(Param.OPENING_MODE_IMAGE))
 						openFileAsImage(null, filename, parameters);
 					else
 						openMetadata(filename, parameters,
@@ -99,12 +96,14 @@ public class ImagesWindowFactory {
 		openFileAsImage(null, path, new Param());
 	}
 
-	public static void openFileAsImage(Frame pframe, String filename, Param parameters) {
+	public static void openFileAsImage(Frame pframe, String filename,
+			Param parameters) {
 		try {
-			//ImagePlus imp = openFileAsImagePlus(filename, parameters);
+			// ImagePlus imp = openFileAsImagePlus(filename, parameters);
 			ImageGeneric ig = new ImageGeneric(filename);
 			ImagePlusLoader ipl = new ImagePlusLoader(ig);
-			XmippIJWindow xiw = openXmippImageWindow(pframe, ipl, parameters.poll);
+			XmippIJWindow xiw = openXmippImageWindow(pframe, ipl,
+					parameters.poll);
 			if (parameters.mask_toolbar)
 				xiw.openMaskToolbar();
 		} catch (Exception e) {
@@ -129,20 +128,42 @@ public class ImagesWindowFactory {
 		return imp;
 	}
 
-	public static XmippIJWindow openXmippImageWindow(Frame pframe, ImagePlus imp, boolean poll) {
-		return openXmippImageWindow(pframe, new ImagePlusLoader(imp), poll);
+	public static XmippIJWindow openXmippImageWindow(Window window,
+			ImagePlus imp, boolean poll) {
+		return openXmippImageWindow(window, new ImagePlusLoader(imp), poll);
 	}
 
-	public static XmippIJWindow openXmippImageWindow(Frame pframe, ImagePlusLoader impLoader,
-			boolean poll) {
+	public static XmippIJWindow openXmippImageWindow(Window window,
+			ImagePlusLoader impLoader, boolean poll) {
+		return openXmippImageWindow(window, impLoader, null, poll);
+		
+	}
+	public static XmippIJWindow openXmippImageWindow(Window window,
+			ImagePlusLoader impLoader, String title, boolean poll) {
 		ImagePlus imp = impLoader.getImagePlus();
 		XmippIJWindow iw;
+		
 		if (imp.getStackSize() > 1)
-			iw = new XmippStackWindow(pframe, impLoader);
+			iw = (title != null)? new XmippStackWindow(window, impLoader, title): new XmippStackWindow(window, impLoader);
 		else
-			iw = new XmippImageWindow(pframe, impLoader);
-		((ImageWindow) iw).setVisible(true);
+			iw = (title != null )? new XmippImageWindow(window, impLoader, title): new XmippImageWindow(window, impLoader);
+		SwingUtilities.invokeLater(new Worker(iw));
 		return iw;
+	}
+
+	public static class Worker implements Runnable {
+
+		XmippIJWindow iw;
+
+		public Worker(XmippIJWindow iw) {
+			this.iw = iw;
+		}
+
+		@Override
+		public void run() {
+			((XmippImageCanvas)  iw.getCanvas()).adjustMagnification();
+			((ImageWindow) iw).setVisible(true);
+		}
 	}
 
 	/**
@@ -219,7 +240,7 @@ public class ImagesWindowFactory {
 	}
 
 	public static void openFileAsText(String filename, Component parent) {
-		JFrameTextfile frameText = new JFrameTextfile(filename);
+		TextfileJFrame frameText = new TextfileJFrame(filename);
 		if (parent != null)
 			frameText.setLocationRelativeTo(null);
 		frameText.setVisible(true);
@@ -227,9 +248,10 @@ public class ImagesWindowFactory {
 
 	public static void openCTFWindow(ImagePlus imp, String CTFFilename,
 			String PSDFilename) {
-		CTFProfileWindow ctfView = new CTFProfileWindow(imp, CTFFilename,
-				PSDFilename);
-		ctfView.setVisible(true);
+//		CTFProfileWindow ctfView = new CTFProfileWindow(imp, CTFFilename,
+//				PSDFilename);
+//		ctfView.setVisible(true);
+		new CTFAnalyzerJFrame(imp, CTFFilename, PSDFilename);
 	}
 
 	public static String getSortTitle(String title, int width,

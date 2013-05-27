@@ -54,7 +54,7 @@ ClassificationMap::ClassificationMap(const std::string& _layout,  unsigned _widt
         RECTLayout *tmpLayout = new RECTLayout();
         somLayout = tmpLayout;
     }
-};
+}
 
 
 
@@ -83,7 +83,7 @@ ClassificationMap::ClassificationMap(const std::string& _layout,  unsigned _widt
         RECTLayout *tmpLayout = new RECTLayout();
         somLayout = tmpLayout;
     }
-};
+}
 
 
 /**
@@ -115,7 +115,7 @@ ClassificationMap::ClassificationMap(const std::string& _layout,  unsigned _widt
         RECTLayout *tmpLayout = new RECTLayout();
         somLayout = tmpLayout;
     }
-};
+}
 
 
 
@@ -131,7 +131,7 @@ ClassificationMap::ClassificationMap(std::istream& _is, bool _cv) : CodeBook(fal
         readSelf(_is);
     else
         loadObject(_is);
-};
+}
 
 
 /**
@@ -142,7 +142,7 @@ ClassificationMap::ClassificationMap(std::istream& _is, bool _cv) : CodeBook(fal
 void ClassificationMap::add(const FeatureVector& _v, const Label& _l)
 {
     throw std::runtime_error("You can't add vectors to a S.O.M.");
-};
+}
 
 /**
  * Returns the id of layout that som has
@@ -150,7 +150,7 @@ void ClassificationMap::add(const FeatureVector& _v, const Label& _l)
 const std::string& ClassificationMap::layout() const
 {
     return somLayout->id();
-};
+}
 
 /**
  * Returns the neighborhood of a neuron
@@ -160,7 +160,7 @@ const std::string& ClassificationMap::layout() const
 std::vector<unsigned> ClassificationMap::neighborhood(const SomPos& _center, double _radius) const
 {
     return somLayout->neighborhood(this, _center, _radius);
-};
+}
 
 /**
  * Returns the distance between two neurons according to the Layout
@@ -170,7 +170,7 @@ std::vector<unsigned> ClassificationMap::neighborhood(const SomPos& _center, dou
 double ClassificationMap::neighDist(const SomPos& _center, const SomPos& _v) const
 {
     return somLayout->dist(_center, _v);
-};
+}
 
 
 /**
@@ -179,7 +179,7 @@ double ClassificationMap::neighDist(const SomPos& _center, const SomPos& _v) con
 unsigned ClassificationMap::width() const
 {
     return somWidth;
-};
+}
 
 /**
  * Returns the height of the SOM
@@ -187,7 +187,7 @@ unsigned ClassificationMap::width() const
 unsigned ClassificationMap::height() const
 {
     return somHeight;
-};
+}
 
 /**
  * Returns a code vector given its position
@@ -204,7 +204,7 @@ SomIn& ClassificationMap::itemAtPos(const SomPos& _pos)
     }
 
     return itemAt((somWidth * _pos.second) + _pos.first);
-};
+}
 
 
 
@@ -223,7 +223,7 @@ const SomIn& ClassificationMap::itemAtPos(const SomPos& _pos) const
     }
 
     return itemAt((somWidth * _pos.second) + _pos.first);
-};
+}
 
 
 /**
@@ -248,7 +248,7 @@ Label& ClassificationMap::targetAtPos(const SomPos& _pos)
     }
 
     return targetAt((somWidth * _pos.second) + _pos.first);
-};
+}
 
 
 /**
@@ -273,7 +273,7 @@ const Label& ClassificationMap::targetAtPos(const SomPos& _pos) const
     }
 
     return targetAt((somWidth * _pos.second) + _pos.first);
-};
+}
 
 
 
@@ -288,7 +288,7 @@ void ClassificationMap::clear()
         delete somLayout;
     somWidth = 0;
     somHeight = 0;
-};
+}
 
 /**
  * Return the position associated to an index
@@ -306,7 +306,7 @@ SomPos ClassificationMap::indexToPos(const unsigned& _i) const
     }
 
     return SomPos(_i % somWidth, _i / somWidth);
-};
+}
 
 /**
  * Return the index associated to a position
@@ -323,7 +323,7 @@ unsigned ClassificationMap::PosToIndex(const SomPos& _pos) const
     }
 
     return (unsigned)((somWidth * _pos.second) + _pos.first);
-};
+}
 
 
 /**
@@ -333,7 +333,7 @@ unsigned ClassificationMap::PosToIndex(const SomPos& _pos) const
 SomPos ClassificationMap::codVecPos(SomIn& _v)
 {
     return indexToPos(&_v - &(itemAt(0)));
-};
+}
 
 /**
  * Returns the position of the code vector that represents the input in the
@@ -343,7 +343,7 @@ SomPos ClassificationMap::codVecPos(SomIn& _v)
 SomPos ClassificationMap::applyPos(const SomIn& _in)
 {
     return codVecPos(test(_in));
-};
+}
 
 
 /**
@@ -355,7 +355,7 @@ void ClassificationMap::printSelf(std::ostream& _os) const
     _os << itemAt(0).size() << " " <<
     somLayout->id() << " " << somWidth << " " << somHeight << " gaussian" << std::endl;
     writeItems(_os);
-};
+}
 
 
 /**
@@ -405,7 +405,7 @@ void ClassificationMap::readSelf(std::istream& _is)
          while (_is.good())
             ostr.put (_is.get());
          CodeBook::readSelf(ostr);*/
-};
+}
 
 
 /**
@@ -418,7 +418,7 @@ void ClassificationMap::saveObject(std::ostream& _os) const
     _os << somLayout->id() << " " << somWidth << " " << somHeight << std::endl;
     writeClassifVectors(_os);
     ClassificationTrainingSet<FeatureVector, Label>::saveObject(_os);
-};
+}
 
 
 /**
@@ -445,7 +445,7 @@ void ClassificationMap::loadObject(std::istream& _is)
     _is >> somHeight;
     readClassifVectors(_is);
     ClassificationTrainingSet<FeatureVector, Label>::loadObject(_is);
-};
+}
 
 
 /**
@@ -467,7 +467,7 @@ std::vector<unsigned> Layout::neighborhood(const ClassificationMap* _som, const 
     }
 
     return neig;
-};
+}
 
 
 /**
@@ -491,7 +491,7 @@ std::vector<unsigned> Layout::neighborhood(const FuzzyMap* _som, const SomPos& _
     }
 
     return neig;
-};
+}
 
 
 /**
@@ -505,7 +505,7 @@ bool Layout::isIn(const SomPos& _center, const SomPos& _v,
                   double _radius) const
 {
     return (dist(_center, _v) <= _radius);
-};
+}
 
 
 /**
@@ -514,7 +514,7 @@ bool Layout::isIn(const SomPos& _center, const SomPos& _v,
 const std::string& Layout::id() const
 {
     return theId;
-};
+}
 
 
 //---------------------------------------------------------------------------
@@ -530,7 +530,7 @@ double RECTLayout::dist(const SomPos& _center, const SomPos& _v) const
 {
     return ((double) sqrt((double)(_center.first - _v.first)*(_center.first - _v.first) +
                           (_center.second - _v.second)*(_center.second - _v.second)));
-};
+}
 
 /**
  * Returns the local average of a neuron in a non-const reference.
@@ -554,7 +554,7 @@ void RECTLayout::localAve(const FuzzyMap* _som, const SomPos& _center, std::vect
         for (j = 0; j < dim; j++)
         	ptrAveVector[j] += codevector[j];
     }
-    if ((tmpi + 1) < _som->width())
+    if ((tmpi + 1) < (int)_som->width())
     {
         kk++;
         const floatFeature *codevector=&(_som->itemAt(_som->PosToIndex(SomPos(tmpi + 1, tmpj)))[0]);
@@ -568,7 +568,7 @@ void RECTLayout::localAve(const FuzzyMap* _som, const SomPos& _center, std::vect
         for (j = 0; j < dim; j++)
         	ptrAveVector[j] += codevector[j];
     }
-    if ((tmpj + 1) < _som->height())
+    if ((tmpj + 1) < (int)_som->height())
     {
         kk++;
         const floatFeature *codevector=&(_som->itemAt(_som->PosToIndex(SomPos(tmpi, tmpj+1)))[0]);
@@ -589,7 +589,6 @@ void RECTLayout::localAve(const FuzzyMap* _som, const SomPos& _center, std::vect
  */
 double RECTLayout::numNeig(const FuzzyMap* _som, const SomPos& _center) const
 {
-    int dim = _som->itemAt(0).size();
     int tmpi = _center.first;
     int tmpj = _center.second;
     double kk = 0;
@@ -597,7 +596,7 @@ double RECTLayout::numNeig(const FuzzyMap* _som, const SomPos& _center) const
     {
         kk++;
     }
-    if ((tmpi + 1) < _som->width())
+    if ((tmpi + 1) < (int)_som->width())
     {
         kk++;
     }
@@ -605,7 +604,7 @@ double RECTLayout::numNeig(const FuzzyMap* _som, const SomPos& _center) const
     {
         kk++;
     }
-    if ((tmpj + 1) < _som->height())
+    if ((tmpj + 1) < (int)_som->height())
     {
         kk++;
     }
@@ -643,7 +642,7 @@ double HEXALayout::dist(const SomPos& _center, const SomPos& _v) const
     ret += 0.75 * diff * diff;
     ret = (double) sqrt(ret);
     return(ret);
-};
+}
 
 
 /**
@@ -668,7 +667,7 @@ void HEXALayout::localAve(const FuzzyMap* _som, const SomPos& _center, std::vect
         for (j = 0; j < dim; j++)
             _aveVector[j] += (double)(_som->itemAt(_som->PosToIndex(SomPos(tmpi - 1, tmpj)))[j]);
     }
-    if ((tmpi + 1) < _som->width())
+    if ((tmpi + 1) < (int)_som->width())
     {
         kk++;
         for (j = 0; j < dim; j++)
@@ -680,7 +679,7 @@ void HEXALayout::localAve(const FuzzyMap* _som, const SomPos& _center, std::vect
         for (j = 0; j < dim; j++)
             _aveVector[j] += (double)(_som->itemAt(_som->PosToIndex(SomPos(tmpi, tmpj - 1)))[j]);
     }
-    if ((tmpj + 1) < _som->height())
+    if ((tmpj + 1) < (int)_som->height())
     {
         kk++;
         for (j = 0; j < dim; j++)
@@ -692,7 +691,7 @@ void HEXALayout::localAve(const FuzzyMap* _som, const SomPos& _center, std::vect
         for (j = 0; j < dim; j++)
             _aveVector[j] += (double)(_som->itemAt(_som->PosToIndex(SomPos(tmpi - 1, tmpj - 1)))[j]);
     }
-    if (((tmpj + 1) < _som->height()) && ((tmpi - 1) >= 0))
+    if (((tmpj + 1) < (int)_som->height()) && ((tmpi - 1) >= 0))
     {
         kk++;
         for (j = 0; j < dim; j++)
@@ -715,7 +714,6 @@ void HEXALayout::localAve(const FuzzyMap* _som, const SomPos& _center, std::vect
  */
 double HEXALayout::numNeig(const FuzzyMap* _som, const SomPos& _center) const
 {
-    int dim = _som->itemAt(0).size();
     int tmpi = _center.first;
     int tmpj = _center.second;
     double kk = 0;
@@ -723,7 +721,7 @@ double HEXALayout::numNeig(const FuzzyMap* _som, const SomPos& _center) const
     {
         kk++;
     }
-    if ((tmpi + 1) < _som->width())
+    if ((tmpi + 1) < (int)_som->width())
     {
         kk++;
     }
@@ -731,7 +729,7 @@ double HEXALayout::numNeig(const FuzzyMap* _som, const SomPos& _center) const
     {
         kk++;
     }
-    if ((tmpj + 1) < _som->height())
+    if ((tmpj + 1) < (int)_som->height())
     {
         kk++;
     }
@@ -739,7 +737,7 @@ double HEXALayout::numNeig(const FuzzyMap* _som, const SomPos& _center) const
     {
         kk++;
     }
-    if (((tmpj + 1) < _som->height()) && ((tmpi - 1) >= 0))
+    if (((tmpj + 1) < (int)_som->height()) && ((tmpi - 1) >= 0))
     {
         kk++;
     }
@@ -776,7 +774,7 @@ FuzzyMap::FuzzyMap(const std::string& _layout,  unsigned _width,
         RECTLayout *tmpLayout = new RECTLayout();
         somLayout = tmpLayout;
     }
-};
+}
 
 /**
  * Constructs a Fuzzy SOM with initial code vectors taken randomly from
@@ -807,7 +805,7 @@ FuzzyMap::FuzzyMap(const std::string& _layout,  unsigned _width,
         RECTLayout *tmpLayout = new RECTLayout();
         somLayout = tmpLayout;
     }
-};
+}
 
 /**
  * Construct a SOM from the code vectors in a stream
@@ -822,7 +820,7 @@ FuzzyMap::FuzzyMap(std::istream& _is, const unsigned _size, bool _cv) : FuzzyCod
         readSelf(_is, _size);
     else
         loadObject(_is);
-};
+}
 
 
 /**
@@ -833,7 +831,7 @@ FuzzyMap::FuzzyMap(std::istream& _is, const unsigned _size, bool _cv) : FuzzyCod
 void FuzzyMap::add(const FeatureVector& _v, const Label& _l)
 {
     throw std::runtime_error("You can't add vectors to a S.O.M.");
-};
+}
 
 /**
  * Returns the id of layout that som has
@@ -841,7 +839,7 @@ void FuzzyMap::add(const FeatureVector& _v, const Label& _l)
 const std::string& FuzzyMap::layout() const
 {
     return somLayout->id();
-};
+}
 
 /**
  * Returns the neighborhood of a neuron
@@ -851,7 +849,7 @@ const std::string& FuzzyMap::layout() const
 std::vector<unsigned> FuzzyMap::neighborhood(const SomPos& _center, double _radius) const
 {
     return somLayout->neighborhood(this, _center, _radius);
-};
+}
 
 /**
  * Returns the neighborhood of a neuron in a non-const reference.
@@ -861,7 +859,7 @@ std::vector<unsigned> FuzzyMap::neighborhood(const SomPos& _center, double _radi
 void FuzzyMap::neighborhood(const SomPos& _center, double _radius, std::vector<unsigned>& _neig) const
 {
     _neig = somLayout->neighborhood(this, _center, _radius);
-};
+}
 
 /**
  * Returns the local average of a neuron in a non-const reference.
@@ -872,7 +870,7 @@ void FuzzyMap::neighborhood(const SomPos& _center, double _radius, std::vector<u
 void FuzzyMap::localAve(const SomPos& _center, std::vector<double>& _aveVector) const
 {
     somLayout->localAve(this, _center, _aveVector);
-};
+}
 
 
 /**
@@ -883,7 +881,7 @@ void FuzzyMap::localAve(const SomPos& _center, std::vector<double>& _aveVector) 
 double FuzzyMap::neighDist(const SomPos& _center, const SomPos& _v) const
 {
     return somLayout->dist(_center, _v);
-};
+}
 
 
 /**
@@ -892,7 +890,7 @@ double FuzzyMap::neighDist(const SomPos& _center, const SomPos& _v) const
 unsigned FuzzyMap::width() const
 {
     return somWidth;
-};
+}
 
 /**
  * Returns the height of the SOM
@@ -900,7 +898,7 @@ unsigned FuzzyMap::width() const
 unsigned FuzzyMap::height() const
 {
     return somHeight;
-};
+}
 
 /**
  * Returns a code vector given its position
@@ -917,7 +915,7 @@ SomIn& FuzzyMap::itemAtPos(const SomPos& _pos)
     }
 
     return itemAt((somWidth * _pos.second) + _pos.first);
-};
+}
 
 
 /**
@@ -935,7 +933,7 @@ const SomIn& FuzzyMap::itemAtPos(const SomPos& _pos) const
     }
 
     return itemAt((somWidth * _pos.second) + _pos.first);
-};
+}
 
 
 /**
@@ -960,7 +958,7 @@ Label& FuzzyMap::targetAtPos(const SomPos& _pos)
     }
 
     return targetAt((somWidth * _pos.second) + _pos.first);
-};
+}
 
 
 /**
@@ -985,7 +983,7 @@ const Label& FuzzyMap::targetAtPos(const SomPos& _pos) const
     }
 
     return targetAt((somWidth * _pos.second) + _pos.first);
-};
+}
 
 
 
@@ -999,7 +997,7 @@ void FuzzyMap::clear()
         delete somLayout;
     somWidth = 0;
     somHeight = 0;
-};
+}
 
 /**
  * Return the position associated to an index
@@ -1017,7 +1015,7 @@ SomPos FuzzyMap::indexToPos(const unsigned& _i) const
     }
 
     return SomPos(_i % somWidth, _i / somWidth);
-};
+}
 
 
 /**
@@ -1035,7 +1033,7 @@ unsigned FuzzyMap::PosToIndex(const SomPos& _pos) const
     }
 
     return (unsigned)((somWidth * _pos.second) + _pos.first);
-};
+}
 
 
 /**
@@ -1045,7 +1043,7 @@ unsigned FuzzyMap::PosToIndex(const SomPos& _pos) const
 SomPos FuzzyMap::codVecPos(SomIn& _v)
 {
     return indexToPos(&_v - &(itemAt(0)));
-};
+}
 
 /**
  * Returns the position of the code vector that represents the input in the
@@ -1055,7 +1053,7 @@ SomPos FuzzyMap::codVecPos(SomIn& _v)
 SomPos FuzzyMap::applyPos(const unsigned& _in)
 {
     return codVecPos(fuzzyTest(_in));
-};
+}
 
 
 /**
@@ -1067,7 +1065,7 @@ void FuzzyMap::printSelf(std::ostream& _os) const
     _os << itemAt(0).size() << " " <<
     somLayout->id() << " " << somWidth << " " << somHeight << " gaussian" << std::endl;
     writeItems(_os);
-};
+}
 
 
 /**
@@ -1102,7 +1100,7 @@ void FuzzyMap::readSelf(std::istream& _is, const unsigned _size)
             _is.putback((char) str[i]);
     FuzzyCodeBook::readSelf(_is, _size);
 
-};
+}
 
 
 /**
@@ -1116,7 +1114,7 @@ void FuzzyMap::saveObject(std::ostream& _os) const
     writeClassifVectors(_os);
     writeMembership(_os);
     ClassificationTrainingSet<FeatureVector, Label>::saveObject(_os);
-};
+}
 
 
 /**
@@ -1144,4 +1142,4 @@ void FuzzyMap::loadObject(std::istream& _is)
     readClassifVectors(_is);
     readMembership(_is);
     ClassificationTrainingSet<FeatureVector, Label>::loadObject(_is);
-};
+}

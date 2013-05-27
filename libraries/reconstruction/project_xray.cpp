@@ -48,11 +48,11 @@ void ProgXrayProject::defineParams()
     //Example projection file
     addExampleLine("In the following link you can find an example of projection parameter file:",false);
     addExampleLine(" ",false);
-    addExampleLine("http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/tomoProjection.param",false);
+    addExampleLine("http://sourceforge.net/p/testxmipp/code/ci/3.0/tree/input/tomoProjection.param",false);
     addExampleLine(" ",false);
     addExampleLine("In the following link you can find an example of X-ray microscope parameters file:",false);
     addExampleLine(" ",false);
-    addExampleLine("http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/xray_psf.xmd",false);
+    addExampleLine("http://sourceforge.net/p/testxmipp/code/ci/3.0/tree/input/xray_psf.xmd",false);
 }
 
 /* Read from command line ================================================== */
@@ -159,7 +159,7 @@ void ProgXrayProject::run()
         size_t objId = projMD.addObject();
         if (!projParam.only_create_angles)
         {
-            // Here we subtract the differences to the background illumination (at this moment normalized to 1)
+            // Here we subtract the differences to the background illumination (at this moment normalized to 1) //TODO
             MULTIDIM_ARRAY(proj) = 1.0 - MULTIDIM_ARRAY(proj);
             proj.write(fn_proj, ALL_IMAGES, !projParam.singleProjection, WRITE_REPLACE);
 
@@ -200,7 +200,7 @@ void ProgXrayProject::run()
     if (!projParam.singleProjection)
     {
         projMD.setComment("Angles rot,tilt and psi contain noisy projection angles and rot2,tilt2 and psi2 contain actual projection angles");
-        projMD.write(projParam.fnRoot + ".sel");
+        projMD.write(projParam.fnRoot + ".xmd");
     }
 
     postRun();
@@ -212,8 +212,8 @@ void XrayRotateAndProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &ps
         int Ydim, int Xdim)
 {
 
-    int iniXdim, iniYdim, iniZdim, newXdim, newYdim, newZdim, rotXdim, rotYdim, rotZdim;
-    int zinit, zend, yinit, yend, xinit, xend;
+    int iniXdim, iniYdim, iniZdim, newXdim, newYdim, newZdim, rotXdim, rotZdim;
+    int yinit, xinit;
 
     iniXdim = XSIZE(MULTIDIM_ARRAY(phantom.iniVol));
     iniYdim = YSIZE(MULTIDIM_ARRAY(phantom.iniVol));
@@ -253,12 +253,11 @@ void XrayRotateAndProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &ps
     //    else
     {
         rotXdim = iniXdim;
-        rotYdim = iniYdim;
         rotZdim = iniZdim;
     }
 
-    newXdim = rotXdim + 2*ABS(XX(offsetNV));
-    newYdim = iniYdim + 2*ABS(YY(offsetNV));
+    newXdim = (int)(rotXdim + 2*fabs(XX(offsetNV)));
+    newYdim = (int)(iniYdim + 2*fabs(YY(offsetNV)));
     newZdim = rotZdim;
 
     // We set the dimensions only to obtain the values of starting X,Y,Z
@@ -267,18 +266,13 @@ void XrayRotateAndProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &ps
 
     phantom.rotVol.setXmippOrigin();
 
-    zinit = STARTINGZ((phantom.rotVol));
-    zend = zinit + rotZdim - 1;
-
     yinit = STARTINGY((phantom.rotVol));
     if (YY(offsetNV) > 0)
-        yinit -= 2 * YY(offsetNV);
-    yend = yinit + newYdim -1;
+        yinit -= (int)(2 * YY(offsetNV));
 
     xinit = STARTINGX((phantom.rotVol));
     if (XX(offsetNV) > 0)
-        xinit -= 2 * XX(offsetNV);
-    xend = xinit + newXdim - 1;
+        xinit -= (int)(2 * XX(offsetNV));
 
     if (psf.verbose > 1)
     {
@@ -367,11 +361,11 @@ void projectXrayVolume(MultidimArray<double> &muVol,
     std::vector<int> phantomSlabIdx, psfSlicesIdx;
 
     // Search for the PSFslab of the beginning of the volume
-    int firstSlab = STARTINGZ(muVol)*psf.dzo/psf.dzoPSF;
+    int firstSlab = (int)(STARTINGZ(muVol)*psf.dzo/psf.dzoPSF);
 
     if (!XMIPP_EQUAL_ZERO(psf.slabThr))
     {
-        for (int kk = 0; kk < psf.slabIndex.size(); ++kk)
+        for (size_t kk = 0; kk < psf.slabIndex.size(); ++kk)
         {
             if (firstSlab < psf.slabIndex[kk])
             {
@@ -383,21 +377,21 @@ void projectXrayVolume(MultidimArray<double> &muVol,
         // Searching the equivalent index in rotvol for the indexes for the Slabs of PSFVol
         phantomSlabIdx.push_back(STARTINGZ(muVol));
 
-        for (int kk = firstSlab+1; kk < psf.slabIndex.size(); ++kk)
+        for (size_t kk = firstSlab+1; kk < psf.slabIndex.size(); ++kk)
         {
-            int tempK = psf.slabIndex[kk] * psf.dzoPSF / psf.dzo;
+            int tempK = (int)(psf.slabIndex[kk] * psf.dzoPSF / psf.dzo);
 
             if (tempK <= FINISHINGZ(muVol))
             {
                 phantomSlabIdx.push_back(tempK);
                 int tempKK = psf.slabIndex[kk-1];
-                int psfMeanSlice = (tempK + tempKK)*0.5 * psf.dzoPSF / psf.dzo;
+                int psfMeanSlice = (int)((tempK + tempKK)*0.5 * psf.dzoPSF / psf.dzo);
                 psfSlicesIdx.push_back(psfMeanSlice);
             }
             else
             {
                 phantomSlabIdx.push_back(FINISHINGZ(muVol));
-                int psfMeanSlice = (tempK + phantomSlabIdx[kk-1])*0.5;
+                int psfMeanSlice = (tempK + phantomSlabIdx[kk-1])/2;
                 psfSlicesIdx.push_back(psfMeanSlice);
                 continue;
             }
@@ -608,6 +602,9 @@ void threadXrayProject(ThreadArgument &thArg)
 
         switch (psf.AdjustType)
         {
+        case PSFXR_STD:
+            // Do nothing;
+            break;
         case PSFXR_INT:
             selfScaleToSize(LINEAR,imOutGlobal(), psf.Nox, psf.Noy);
             break;
@@ -682,7 +679,7 @@ void calculateIgeoThread(ThreadArgument &thArg)
     {
         //        first--;
         //        last--;
-        for (int i = first; i <= last; ++i)
+        for (size_t i = first; i <= last; ++i)
         {
             //            for (int j=0; j<XSIZE(muVol); ++j)
             //                dAkij(IgeoVol,0,i,j) = dAij(IgeoZb,i,j)*exp(-dAkij(muVol,0,i,j)*sampling);
@@ -691,8 +688,8 @@ void calculateIgeoThread(ThreadArgument &thArg)
             //                for (int j=0; j<XSIZE(muVol); ++j)
             //                    dAkij(IgeoVol,k,i,j) = dAkij(IgeoVol,k-1,i,j)*exp(-dAkij(muVol,k,i,j)*sampling);
 
-            for (int k = 0; k < ZSIZE(muVol); ++k)
-                for (int j=0; j<XSIZE(muVol); ++j)
+            for (size_t k = 0; k < ZSIZE(muVol); ++k)
+                for (size_t j=0; j<XSIZE(muVol); ++j)
                 {
                     dAij(cumMu,i,j) += dAkij(muVol,k,i,j)*sampling;
                     dAkij(IgeoVol,k,i,j) = dAij(IgeoZb,i,j)*exp(-dAij(cumMu,i,j));
@@ -751,10 +748,6 @@ void projectXraySimpleGridThread(ThreadArgument &thArg)
     Projection *proj = (dataThread->projOut);
     MultidimArray<double> &projNorm = *(dataThread->projNorm);
     int forw = dataThread->forw;
-    std::vector<int> &phantomSlabIdx = *(dataThread->phantomSlabIdx);
-    std::vector<int> &psfSlicesIdx = *(dataThread->psfSlicesIdx);
-    ParallelTaskDistributor * td = dataThread->td;
-    Barrier * barrier = dataThread->barrier;
 
     projectXraySimpleGrid(muVol, psf, IgeoVol, proj, projNorm , forw,
                           threadId, thArg.threads);
@@ -800,7 +793,6 @@ void projectXraySimpleGrid(MultidimArray<double> *vol, const XRayPSF &psf,
     // (z0,y0,XX(lowest))
     double XX_footprint_size;                // The footprint is supposed
     double YY_footprint_size;                // to be defined between
-    double ZZ_footprint_size;
     // (-vmax,+vmax) in the Y axis,
     // and (-umax,+umax) in the X axis
     // This footprint size is the
@@ -809,25 +801,12 @@ void projectXraySimpleGrid(MultidimArray<double> *vol, const XRayPSF &psf,
     int XX_corner2, XX_corner1;              // Coord: Corners of the
     int YY_corner2, YY_corner1;              // footprint when it is projected
     // onto the projection plane
-    int           foot_V1, foot_U1;          // Img Coord: coordinate (in
-    // an image fashion, not in an
-    // oversampled image fashion)
-    // inside the blobprint of the
-    // corner1
-    int        foot_V, foot_U;            // Img Coord: coordinate
-    int        foot_W = 0;
-    // corresponding to the blobprint
-    // point which matches with this
-    // pixel position
-    int           Vsampling, Usampling;      // Sampling rate in Y and X
     // directions respectively
     // inside the blobprint
     double        vol_corr;                  // Correction for a volume element
     int           N_eq;                      // Number of equations in which
     // a blob is involved
     int           i, j, k;                   // volume element indexes
-    bool   isVolPSF = false;    // Blob footprint is VolumePSF
-
 
     // Project grid axis ....................................................
     // These vectors ((1,0,0),(0,1,0),...) are referred to the grid
@@ -857,7 +836,6 @@ void projectXraySimpleGrid(MultidimArray<double> *vol, const XRayPSF &psf,
     // stored as real ones to make easier operations with other vectors
     XX_footprint_size = FINISHINGX(psfVol) + XMIPP_EQUAL_ACCURACY;
     YY_footprint_size = FINISHINGY(psfVol) + XMIPP_EQUAL_ACCURACY;
-    ZZ_footprint_size = FINISHINGZ(psfVol) + XMIPP_EQUAL_ACCURACY;
 
     // Project the whole grid ...............................................
     // Corner of the plane defined by Z. These coordinates try to be within
@@ -915,8 +893,6 @@ void projectXraySimpleGrid(MultidimArray<double> *vol, const XRayPSF &psf,
     }
 #endif
 
-    int number_of_basis = 0;
-
     for (k = ZZ_lowest; k <= ZZ_highest; k += numthreads)
     {
         // Corner of the row defined by Y
@@ -929,9 +905,6 @@ void projectXraySimpleGrid(MultidimArray<double> *vol, const XRayPSF &psf,
             {
                 // Ray length interesting
                 bool ray_length_interesting = true;
-                double zCenterDist;
-
-                double kPos = ZZ(actprj); // z = 0 standard value for non 3D blobprints
 
                 //                // Points out of 3DPSF
                 //                ray_length_interesting = (ABS(zCenterDist) <= ZZ_footprint_size);

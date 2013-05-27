@@ -74,6 +74,13 @@ public:
     /// use of samples
     typedef enum { TRAIN = 0, VALIDATION = 1, TEST = 2 } useMode;
 
+protected:
+    bool isCalibrated;
+    splitTS splitTrainingSet;
+    /*  std::vector<Item> theItems;
+      std::vector<Target> theTargets;*/
+    unsigned nTargets;  // Number of targets in the training set
+public:
     std::vector<Item> theItems;
     std::vector<Target> theTargets;
 
@@ -83,7 +90,7 @@ public:
      * Parameter: _n: Number of items that the trained set should contain
      */
     ClassificationTrainingSet(const bool& _calib = true, unsigned _n = 0)
-            :/* splitTrainingSet(), */theItems(_n), /*theTargets(_n), */isCalibrated(_calib), nTargets(0)
+            :isCalibrated(_calib), /* splitTrainingSet(), */nTargets(0), theItems(_n) /*theTargets(_n), */
     {};
 
     /**
@@ -91,7 +98,7 @@ public:
      * Parameter: _is  The input stream
      */
 
-    ClassificationTrainingSet(std::istream & _is) :  splitTrainingSet(), theItems(), theTargets(), isCalibrated(false)
+    ClassificationTrainingSet(std::istream & _is) :  isCalibrated(false), splitTrainingSet(), theItems(), theTargets()
     {
         loadObject(_is);
         computeNumTargets();
@@ -198,7 +205,7 @@ public:
     /**
      * Returns the number of items in the training set
      */
-    unsigned size() const
+    size_t size() const
     {
         return theItems.size();
     };
@@ -321,7 +328,7 @@ public:
     virtual void printSelf(std::ostream& _os) const
     {
         writeItems(_os);
-    };
+    }
 
     /**
      * Standard input for a training set
@@ -330,8 +337,7 @@ public:
      * NOTE: This method is empty, it should be defined.
      */
     virtual void readSelf(std::istream& _is)
-    {};
-
+    {}
 
     /**
      * Saves the class into a stream.
@@ -342,8 +348,7 @@ public:
     {
         writeCalibrated(_os);
         writeItems(_os, true);
-    };
-
+    }
 
     /**
      * Loads the class from a stream.
@@ -357,8 +362,7 @@ public:
         checkCalibrated(_is);
         //afterwards, we have to read the item
         readItems(_is);
-    };
-
+    }
 
     /**
      * Returns the number of different classes in the (calibrated) training set
@@ -369,9 +373,7 @@ public:
         if (!calibrated())
             throw std::runtime_error("TS not calibrated");
         return nTargets;
-    };
-
-
+    }
 
     /**
      * Swaps two items in the vector
@@ -384,9 +386,7 @@ public:
         if (isCalibrated)
             swap(theTargets[_i], theTargets[_j]);
         return true;
-    };
-
-
+    }
 
     /** Standard output for a training set
       * Parameter: _os The output stream
@@ -396,7 +396,7 @@ public:
     {
         _ts.printSelf(_os);
         return _os;
-    };
+    }
 
     /**
      * Standard input for a training set
@@ -408,7 +408,7 @@ public:
     {
         _ts.readSelf(_is);
         return _is;
-    };
+    }
 
 protected:
 
@@ -431,7 +431,6 @@ protected:
         else
             nTargets = 0;
     }
-
 
     /**
      * Checks if the training set is calibrated or not
@@ -569,7 +568,7 @@ protected:
                 _os << *i;
             else
             {
-                for (int d = 0; d < (*i).size(); d++)
+                for (size_t d = 0; d < (*i).size(); d++)
                 {
                     _os << (*i)[d];
                     if (d != (*i).size() - 1) _os << " ";
@@ -651,15 +650,6 @@ protected:
     {
         return theTargets.end();
     }
-
-
-protected:
-
-    splitTS splitTrainingSet;
-    /*  std::vector<Item> theItems;
-      std::vector<Target> theTargets;*/
-    bool isCalibrated;
-    unsigned nTargets;  // Number of targets in the training set
 };
 //@}
 #endif

@@ -25,4 +25,4 @@
 
 #include <reconstruction/ml_align2d.h>
 
-RUN_XMIPP_PROGRAM(ProgML2D);
+RUN_XMIPP_PROGRAM(ProgML2D)

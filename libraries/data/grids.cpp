@@ -145,12 +145,12 @@ void Grid::voxel_corners(Matrix1D<double> &Gcorner1, Matrix1D<double> &Gcorner2,
                          const Matrix2D<double> *V) const
 {
     Matrix1D<double> SGcorner1(3), SGcorner2(3);     // Subgrid corners
-    SPEED_UP_temps;
+    SPEED_UP_temps012;
 
     // Look for the lowest and highest volume coordinate
     Gcorner1.resize(3);  // lowest and highest coord.
     Gcorner2.resize(3);
-    for (int n = 0; n < GridsNo(); n++)
+    for (size_t n = 0; n < GridsNo(); n++)
     {
         // Find box for this grid
         bool first;

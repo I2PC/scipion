@@ -404,7 +404,7 @@ bool MetaData::addLabel(const MDLabel label, int pos)
 {
     if (containsLabel(label))
         return false;
-    if (pos < 0 || pos >= activeLabels.size())
+    if (pos < 0 || pos >= (int)activeLabels.size())
         activeLabels.push_back(label);
     else
         activeLabels.insert(activeLabels.begin() + pos, label);
@@ -428,10 +428,10 @@ bool MetaData::keepLabels(const std::vector<MDLabel> &labels)
 {
     for (size_t i = 0; i < activeLabels.size();)
     {
-    	if (!vectorContainsLabel(labels, activeLabels[i]))
-    		removeLabel(activeLabels[i]);
-    	else
-    		++i;
+        if (!vectorContainsLabel(labels, activeLabels[i]))
+            removeLabel(activeLabels[i]);
+        else
+            ++i;
     }
     return true;
 }
@@ -469,7 +469,7 @@ void MetaData::importObjects(const MetaData &md, const MDQuery &query, bool doCl
     else
     {
         //If not clear, ensure that the have the same labels
-        for (int i = 0; i < md.activeLabels.size(); i++)
+        for (size_t i = 0; i < md.activeLabels.size(); i++)
             addLabel(md.activeLabels[i]);
     }
     md.myMDSql->copyObjects(this, &query);
@@ -719,7 +719,7 @@ void MetaData::_writeRows(std::ostream &os) const
 
     FOR_ALL_OBJECTS_IN_METADATA(*this)
     {
-        for (int i = 0; i < activeLabels.size(); i++)
+        for (size_t i = 0; i < activeLabels.size(); i++)
         {
             if (activeLabels[i] != MDL_COMMENT)
             {
@@ -755,7 +755,7 @@ void MetaData::write(std::ostream &os,const String &blockName, WriteModeMetaData
         //write md columns in 3rd comment line of the header
         os << _szBlockName << std::endl;
         os << "loop_" << std::endl;
-        for (int i = 0; i < activeLabels.size(); i++)
+        for (size_t i = 0; i < activeLabels.size(); i++)
         {
             if (activeLabels.at(i) != MDL_COMMENT)
             {
@@ -775,7 +775,7 @@ void MetaData::write(std::ostream &os,const String &blockName, WriteModeMetaData
         if (id != BAD_OBJID)
         {
             int maxWidth=20;
-            for (int i = 0; i < activeLabels.size(); i++)
+            for (size_t i = 0; i < activeLabels.size(); i++)
             {
                 if (activeLabels.at(i) != MDL_COMMENT)
                 {
@@ -785,7 +785,7 @@ void MetaData::write(std::ostream &os,const String &blockName, WriteModeMetaData
                 }
             }
 
-            for (int i = 0; i < activeLabels.size(); i++)
+            for (size_t i = 0; i < activeLabels.size(); i++)
             {
                 if (activeLabels[i] != MDL_COMMENT)
                 {
@@ -851,7 +851,7 @@ void MetaData::_parseObject(std::istream &is, MDObject &object, size_t id)
  * or those who appears in the IgnoreLabels vector
  * also set the activeLabels (for new STAR files)
  */
-char * MetaData::_readColumnsStar(mdBlock &block,
+void MetaData::_readColumnsStar(mdBlock &block,
                                   std::vector<MDObject*> & columnValues,
                                   const std::vector<MDLabel>* desiredLabels,
                                   bool addColumns,
@@ -984,7 +984,7 @@ void MetaData::_readRowsStar(mdBlock &block, std::vector<MDObject*> & columnValu
         {
             std::stringstream ss(line);
             id = addObject();
-            for (int i = 0; i < nCol; ++i)
+            for (size_t i = 0; i < nCol; ++i)
                 _parseObject(ss, *(columnValues[i]), id);
         }
         iter = newline + 1; //go to next line
@@ -1076,7 +1076,7 @@ void MetaData::readPlain(const FileName &inFile, const String &labelsString, con
         {
             std::stringstream ss(line);
             objId = addObject();
-            for (int i = 0; i < columnsNumber; ++i)
+            for (size_t i = 0; i < columnsNumber; ++i)
             {
                 MDObject obj(labels[i]);
                 _parseObject(ss, obj, objId);
@@ -1132,15 +1132,13 @@ bool MetaData::existsBlock(const FileName &_inFile)
             // Is this a START formatted FILE
             String _szBlockName = (String)("\ndata_") + blockName;
             size_t blockNameSize = _szBlockName.size();
-
-            return _memmem(map, size, _szBlockName.data(), blockNameSize) != NULL;
-
+            close(fd);
+            bool found=_memmem(map, size, _szBlockName.data(), blockNameSize) != NULL;
+            if (munmap(map, size) == -1)
+                REPORT_ERROR(ERR_MEM_NOTDEALLOC,"metadata:write, Can not unmap memory");
+            return found;
         }
-        if (munmap(map, size) == -1)
-        {
-            REPORT_ERROR(ERR_MEM_NOTDEALLOC,"metadata:write, Can not unmap memory");
-        }
-        close(fd);
+        return false;
     }
 #else
     REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
@@ -1543,7 +1541,7 @@ void MetaData::_setOperates(const MetaData &mdIn, const MDLabel label, SetOperat
     if (size() == 0 && mdIn.size() == 0)
         REPORT_ERROR(ERR_MD, "Couldn't perform this operation if both metadata are empty");
     //Add labels to be sure are present
-    for (int i = 0; i < mdIn.activeLabels.size(); i++)
+    for (size_t i = 0; i < mdIn.activeLabels.size(); i++)
         addLabel(mdIn.activeLabels[i]);
 
     mdIn.myMDSql->setOperate(this, label, operation);
@@ -1558,9 +1556,9 @@ void MetaData::_setOperates(const MetaData &mdInLeft,
     if (this == &mdInLeft || this == &mdInRight) //not sense to operate on same metadata
         REPORT_ERROR(ERR_MD, "Couldn't perform this operation on input metadata");
     //Add labels to be sure are present
-    for (int i = 0; i < mdInLeft.activeLabels.size(); i++)
+    for (size_t i = 0; i < mdInLeft.activeLabels.size(); i++)
         addLabel(mdInLeft.activeLabels[i]);
-    for (int i = 0; i < mdInRight.activeLabels.size(); i++)
+    for (size_t i = 0; i < mdInRight.activeLabels.size(); i++)
         if(mdInRight.activeLabels[i]!=labelRight)
             addLabel(mdInRight.activeLabels[i]);
 
@@ -1669,7 +1667,7 @@ void MetaData::sort(MetaData &MDin, const MDLabel sortLabel,bool asc, int limit,
 void MetaData::sort(MetaData &MDin, const String &sortLabel,bool asc, int limit, int offset)
 {
     // Check if the label has semicolon
-    int ipos=sortLabel.find(':');
+	size_t ipos=sortLabel.find(':');
     MDLabelType type = MDL::labelType(sortLabel);
     if (ipos!=String::npos || type == LABEL_VECTOR_DOUBLE || type == LABEL_VECTOR_SIZET)
     {
@@ -1677,7 +1675,7 @@ void MetaData::sort(MetaData &MDin, const String &sortLabel,bool asc, int limit,
             REPORT_ERROR(ERR_ARG_INCORRECT,"Limit and Offset are not implemented for vector sorting.");
 
         MDLabel label;
-        int column;
+        size_t column;
         if (ipos!=String::npos)
         {
             // Check that the label is a vector field
@@ -1729,7 +1727,7 @@ void MetaData::sort(MetaData &MDin, const String &sortLabel,bool asc, int limit,
         sort(MDin, MDL::str2Label(sortLabel),asc, limit, offset);
 }
 
-void MetaData::split(int n, std::vector<MetaData> &results, const MDLabel sortLabel)
+void MetaData::split(size_t n, std::vector<MetaData> &results, const MDLabel sortLabel)
 {
     size_t mdSize = size();
     if (n > mdSize)
@@ -1737,7 +1735,7 @@ void MetaData::split(int n, std::vector<MetaData> &results, const MDLabel sortLa
 
     results.clear();
     results.resize(n);
-    for (int i = 0; i < n; i++)
+    for (size_t i = 0; i < n; i++)
     {
         MetaData &md = results.at(i);
         md._selectSplitPart(*this, n, i, mdSize, sortLabel);
@@ -1755,7 +1753,7 @@ void MetaData::_selectSplitPart(const MetaData &mdIn,
     mdIn.myMDSql->copyObjects(this, new MDQuery(n_images, first, sortLabel));
 }
 
-void MetaData::selectSplitPart(const MetaData &mdIn, int n, int part, const MDLabel sortLabel)
+void MetaData::selectSplitPart(const MetaData &mdIn, size_t n, size_t part, const MDLabel sortLabel)
 {
     size_t mdSize = mdIn.size();
     if (n > mdSize)
@@ -1878,6 +1876,8 @@ std::ostream& operator<<(std::ostream& o, const MetaData & mD)
 
 void MDIterator::init(const MetaData &md, const MDQuery * pQuery)
 {
+    clear();
+
     std::vector<size_t> objectsVector;
     md.myMDSql->selectObjects(objectsVector, pQuery);
     objects = NULL;
@@ -1896,7 +1896,13 @@ void MDIterator::init(const MetaData &md, const MDQuery * pQuery)
     }
 }
 
-MDIterator::MDIterator()
+void MDIterator::clear()
+{
+    delete [] objects;
+    reset();
+}
+
+void MDIterator::reset()
 {
     objects = NULL;
     objId = BAD_OBJID;
@@ -1904,13 +1910,22 @@ MDIterator::MDIterator()
     size = 0;
 }
 
+
+
+MDIterator::MDIterator()
+{
+    reset();
+}
+
 MDIterator::MDIterator(const MetaData &md)
 {
+    reset();
     init(md);
 }
 
 MDIterator::MDIterator(const MetaData &md, const MDQuery &query)
 {
+    reset();
     init(md, &query);
 }
 
@@ -1950,6 +1965,8 @@ inline double MDRandGenerator::getRandValue()
         return rnd_gaus(op1, op2);
     case GTOR_STUDENT:
         return rnd_student_t(op3, op1, op2);
+    default:
+    	REPORT_ERROR(ERR_ARG_INCORRECT,"Unknown random type");
     }
 }
 MDRandGenerator::MDRandGenerator(double op1, double op2, const String &mode, double op3)
@@ -1975,7 +1992,7 @@ MDRandGenerator::MDRandGenerator(double op1, double op2, const String &mode, dou
 
 }
 
-bool MDRandGenerator::fillValue(MetaData &md, size_t objId)
+void MDRandGenerator::fillValue(MetaData &md, size_t objId)
 {
     double aux = getRandValue();
     md.setValue(label, aux, objId);
@@ -1985,7 +2002,7 @@ MDConstGenerator::MDConstGenerator(const String &value)
 {
     this->value = value;
 }
-bool MDConstGenerator::fillValue(MetaData &md, size_t objId)
+void MDConstGenerator::fillValue(MetaData &md, size_t objId)
 {
     md.setValueFromStr(label, value, objId);
 }
@@ -1997,7 +2014,7 @@ MDLinealGenerator::MDLinealGenerator(double initial, double step)
     counter = 0;
 }
 
-bool MDLinealGenerator::fillValue(MetaData &md, size_t objId)
+void MDLinealGenerator::fillValue(MetaData &md, size_t objId)
 {
     double value = initValue + step * counter++;
     if (MDL::isInt(label))
@@ -2019,7 +2036,7 @@ WriteModeMetaData metadataModeConvert (String mode)
 }
 
 /* Class to generate values for columns of a metadata*/
-bool MDValueGenerator::fill(MetaData &md)
+void MDValueGenerator::fill(MetaData &md)
 {
     FOR_ALL_OBJECTS_IN_METADATA(md)
     {
@@ -2028,7 +2045,7 @@ bool MDValueGenerator::fill(MetaData &md)
 }
 
 /* Class to fill columns with another metadata in row format */
-bool MDExpandGenerator::fillValue(MetaData &md, size_t objId)
+void MDExpandGenerator::fillValue(MetaData &md, size_t objId)
 {
     if (md.getValue(label, fn, objId))
     {

@@ -25,4 +25,4 @@
 
 #include <reconstruction/ml_refine3d.h>
 
-RUN_XMIPP_PROGRAM(ProgMLRefine3D);
+RUN_XMIPP_PROGRAM(ProgMLRefine3D)

@@ -40,7 +40,9 @@ class ProtParticlePickingSupervised(XmippProtocol):
                     'pca': join('%(ExtraDir)s', '%(family)s_pca_model.stk'),
                     'rotpca': join('%(ExtraDir)s', '%(family)s_rotpca_model.stk'),
                     'svm': join('%(ExtraDir)s', '%(family)s_svm.txt'),
-                    'average': join('%(ExtraDir)s', '%(family)s_particle_avg.xmp')
+                    'svm2': join('%(ExtraDir)s', '%(family)s_svm2.txt'),
+                    'average': join('%(ExtraDir)s', '%(family)s_particle_avg.xmp'),
+                    'config': join('%(ExtraDir)s','config.xmd')
                 }
 
     def defineSteps(self):

@@ -70,7 +70,7 @@ CodeBook::CodeBook(unsigned _n, unsigned _size, bool _cal)
         v.resize(_size, 0);
         theItems[i] = v;
     }
-};
+}
 
 
 
@@ -99,7 +99,7 @@ CodeBook::CodeBook(unsigned _n, unsigned _size, floatFeature _lower,
         v = randomVector(_size, _lower, _upper);
         theItems[i] = v;
     }
-};
+}
 
 /**
  * Constructor.
@@ -151,7 +151,7 @@ CodeBook::CodeBook(unsigned _n, const ClassicTrainingVectors& _ts, const bool _u
         theItems[i] = v;
     }
 
-};
+}
 
 /**
  * Constructs a code book given a stream
@@ -162,7 +162,7 @@ CodeBook::CodeBook(std::istream& _is) : ClassificationDataSet<FeatureVector, Lab
         ClassificationTrainingSet<FeatureVector, Label>(_is)
 {
     readSelf(_is);
-};
+}
 
 /**
  * Returns the code vector that represents the input in the codebook
@@ -187,7 +187,7 @@ FeatureVector& CodeBook::test(const FeatureVector& _in) const
     }
 
     return (FeatureVector&)*best;
-};
+}
 
 /**
  * Returns the index to the code vector that represents the input in the codebook
@@ -215,7 +215,7 @@ unsigned CodeBook::testIndex(const FeatureVector& _in) const
     }
 
     return bestIndex;
-};
+}
 
 /**
  * Returns the index of the codevector closest to an input.
@@ -226,7 +226,7 @@ unsigned CodeBook::testIndex(const FeatureVector& _in) const
 unsigned CodeBook::winner(const ClassicTrainingVectors& _ts, unsigned _in) const
 {
     return testIndex(_ts.theItems[_in]);
-};
+}
 
 
 /**
@@ -252,7 +252,7 @@ void CodeBook::classify(const ClassicTrainingVectors* _ts)
         aveDistances[i] = (double) aveDist;
     }
 
-};
+}
 
 
 /**
@@ -262,9 +262,9 @@ void CodeBook::classify(const ClassicTrainingVectors* _ts)
 void CodeBook::printHistogram(std::ostream& _os) const
 {
     _os << "1 " << size() << std::endl;
-    for (int j = 0; j < size(); j++)
+    for (size_t j = 0; j < size(); j++)
         _os << j << " " << classifSizeAt(j) << std::endl;
-};
+}
 
 
 /**
@@ -274,9 +274,9 @@ void CodeBook::printHistogram(std::ostream& _os) const
 void CodeBook::printQuantError(std::ostream& _os) const
 {
     _os << "1 " << size() << std::endl;
-    for (int j = 0; j < size(); j++)
+    for (size_t j = 0; j < size(); j++)
         _os << j << " " << aveDistances[j] << std::endl;
-};
+}
 
 /**
  * Returns the list of input vectors associated to this code vector.
@@ -290,7 +290,7 @@ const std::vector< unsigned>& CodeBook::classifAt(const unsigned& _index) const
         throw std::runtime_error(msg.str());
     }
     return classifVectors[_index];
-};
+}
 
 /**
 * Returns the number of input vectors associated to this code vector.
@@ -304,7 +304,7 @@ unsigned CodeBook::classifSizeAt(const unsigned& _index) const
         throw std::runtime_error(msg.str());
     }
     return classifVectors[_index].size();
-};
+}
 
 
 /**
@@ -314,7 +314,7 @@ unsigned CodeBook::classifSizeAt(const unsigned& _index) const
 Label CodeBook::apply(const FeatureVector& _in) const
 {
     return theTargets[testIndex(_in)];
-};
+}
 
 
 /**
@@ -338,7 +338,7 @@ void CodeBook::calibrate(ClassicTrainingVectors& _ts,
     }
     else
         calibrated(false);
-};
+}
 
 /**
 * Returns the index of the codevector closest to an input.
@@ -349,7 +349,7 @@ unsigned CodeBook::output(const FeatureVector& _in)
 const
 {
     return testIndex(_in);
-};
+}
 
 
 /**
@@ -359,7 +359,7 @@ const
 void CodeBook::printSelf(std::ostream& _os) const
 {
     ClassificationTrainingSet<FeatureVector, Label>::printSelf(_os);
-};
+}
 
 /**
  * Standard input for a codebook
@@ -387,7 +387,7 @@ void CodeBook::readSelf(std::istream& _is, long _dim, long _size)
         if (_size == -1)
         {
             _is >> line;
-            if (!sscanf(line.c_str(), "%d", &size))
+            if (!sscanf(line.c_str(), "%ld", &size))
             {
                 int x, y;
                 _is >> x;
@@ -425,7 +425,7 @@ void CodeBook::readSelf(std::istream& _is, long _dim, long _size)
         throw std::runtime_error(msg.str());
     }
 #endif
-};
+}
 
 
 /**
@@ -437,7 +437,7 @@ void CodeBook::readClassifVectors(std::istream& _is)
     int dim;
     _is >> dim;
     classifVectors.resize(dim);
-    for (int i = 0; i < classifVectors.size(); i++)
+    for (size_t i = 0; i < classifVectors.size(); i++)
         _is >> classifVectors[i];
 }
 
@@ -449,7 +449,7 @@ void CodeBook::readClassifVectors(std::istream& _is)
 void CodeBook::writeClassifVectors(std::ostream& _os) const
 {
     _os << classifVectors.size() << std::endl;
-    for (int i = 0; i < classifVectors.size(); i++)
+    for (size_t i = 0; i < classifVectors.size(); i++)
         _os << classifVectors[i] << std::endl;
 }
 
@@ -463,7 +463,7 @@ void CodeBook::saveObject(std::ostream& _os) const
 {
     writeClassifVectors(_os);
     ClassificationTrainingSet<FeatureVector, Label>::saveObject(_os);
-};
+}
 
 
 /**
@@ -476,7 +476,7 @@ void CodeBook::loadObject(std::istream& _is)
     clear();
     readClassifVectors(_is);
     ClassificationTrainingSet<FeatureVector, Label>::loadObject(_is);
-};
+}
 
 
 /**

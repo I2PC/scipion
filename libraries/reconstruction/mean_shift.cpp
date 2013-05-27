@@ -26,9 +26,20 @@
 
 #include "mean_shift.h"
 
+struct ThreadProcessPlaneArgs
+{
+    unsigned int myID;
+    unsigned int numThreads;
+    double sigma_s;
+    double sigma_r;
+    MultidimArray<double> *input;
+    MultidimArray<double> *output;
+    bool fast;
+};
+
 void * thread_process_plane( void * args )
 {
-    threadProcessPlaneArgs * thrParams = (threadProcessPlaneArgs *) args;
+    ThreadProcessPlaneArgs * thrParams = (ThreadProcessPlaneArgs *) args;
 
     unsigned int myID = thrParams->myID;
     unsigned int numThreads = thrParams->numThreads;
@@ -53,7 +64,7 @@ void * thread_process_plane( void * args )
     double inv_2_sigma_s_2 = 1.0/( 2.0* sigma_s * sigma_s);
     double inv_2_sigma_r_2 = 1.0/( 2.0* sigma_r * sigma_r);
     double sigma_r_2 = sigma_r * sigma_r;
-    int _3_sigma_s = 3 * sigma_s;
+    int _3_sigma_s = (int)(3 * sigma_s);
     double _3_sigma_r = 3.0 * sigma_r;
     int y_min = input.startingY();
     int y_max = input.finishingY();
@@ -62,9 +73,8 @@ void * thread_process_plane( void * args )
     int z_min = input.startingZ();
     int z_max = input.finishingZ();
     int curr_x, curr_y, curr_z;
-    int prev_x, prev_y, prev_z, prev_I;
+    int prev_x, prev_y, prev_z;
     double error;
-    int plane=0;
 
     int myFirstY, myLastY;
 
@@ -88,10 +98,12 @@ void * thread_process_plane( void * args )
         for (int k=z_min; k<=z_max; k++)
         {
             if( myID == 0 )
+            {
                 if( z_min < 0 )
                     std::cerr << k - z_min << " ";
                 else
                     std::cerr << k + z_min << " ";
+            }
 
             for (int i=myFirstY; i<=myLastY; i++)
             {
@@ -106,7 +118,7 @@ void * thread_process_plane( void * args )
                     int zc = k;
 
                     int xcOld, ycOld, zcOld;
-                    double YcOld;
+                    double YcOld=0;
                     double Yc = A3D_ELEM( input, k, i, j);
                     int iters =0;
                     double shift;
@@ -125,21 +137,21 @@ void * thread_process_plane( void * args )
                         mY=0;
                         num=0;
 
-                        for( int z_j = -sigma_s ; z_j <=sigma_s ; z_j++ )
+                        for( int z_j = -(int)sigma_s ; z_j <=(int)sigma_s ; z_j++ )
                         {
                             int z2 = zc + z_j;
                             if( z2 >= z_min && z2 <= z_max)
                             {
                                 int z_j_2 = z_j * z_j;  // Speed-up
 
-                                for( int y_j = -sigma_s ; y_j <= sigma_s ; y_j++ )
+                                for( int y_j = -(int)sigma_s ; y_j <= (int)sigma_s ; y_j++ )
                                 {
                                     int y2 = yc + y_j;
                                     if( y2 >= y_min && y2 <= y_max)
                                     {
                                         int y_j_2 = y_j * y_j; // Speed-up
 
-                                        for( int x_j = -sigma_s ; x_j <= sigma_s ; x_j++ )
+                                        for( int x_j = -(int)sigma_s ; x_j <= (int)sigma_s ; x_j++ )
                                         {
                                             int x2 = xc + x_j;
                                             if( x2 >= x_min && x2 <= x_max)
@@ -249,15 +261,14 @@ void * thread_process_plane( void * args )
                             }
                         }
 
-                        prev_x = round(curr_x);
-                        prev_y = round(curr_y);
-                        prev_z = round(curr_z);
-                        prev_I = curr_I;
+                        prev_x = (int)round(curr_x);
+                        prev_y = (int)round(curr_y);
+                        prev_z = (int)round(curr_z);
 
                         double isum_denom=1.0/sum_denom;
-                        curr_x = round(x_sum*isum_denom);
-                        curr_y = round(y_sum*isum_denom);
-                        curr_z = round(z_sum*isum_denom);
+                        curr_x = (int)round(x_sum*isum_denom);
+                        curr_y = (int)round(y_sum*isum_denom);
+                        curr_z = (int)round(z_sum*isum_denom);
                         curr_I = I_sum*isum_denom;
 
                         error = fabs(prev_x - curr_x) + fabs(prev_y - curr_y) + fabs(prev_z - curr_z);
@@ -291,7 +302,7 @@ void MeanShiftFilter::readParams(XmippProgram *program)
 {
     sigma_r = program->getDoubleParam("--mean_shift", 0);//hr
     sigma_s = program->getDoubleParam("--mean_shift", 1);//hs
-    iters = program->getDoubleParam("--mean_shift", 2);//iters
+    iters = program->getIntParam("--mean_shift", 2);//iters
     fast = program->checkParam("--fast");
     numThreads = program->getIntParam("--thr");
     save_iters = program->checkParam("--save_iters");
@@ -303,7 +314,7 @@ void MeanShiftFilter::apply(MultidimArray<double> &input)
     MultidimArray<double> output(input);
 
     pthread_t * th_ids = new pthread_t[numThreads];
-    threadProcessPlaneArgs * th_args = new threadProcessPlaneArgs[numThreads];
+    ThreadProcessPlaneArgs * th_args = new ThreadProcessPlaneArgs[numThreads];
 
     for( int iter = 0 ; iter < iters ; ++iter )
     {

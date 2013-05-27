@@ -125,7 +125,6 @@ public:
         SF.read(fnSel);
         FileName fnImg;
         toClassify.reserve(SF.size());
-        size_t objId;
         FileName fnImageStack;
         CorrelationAux aux;
         RotationalCorrelationAux aux2;
@@ -165,6 +164,8 @@ public:
                 }
             }
         }
+        if (toClassify.size()==0)
+            return;
         stillToDo.resizeNoCopy(toClassify.size());
         stillToDo.initConstant(1);
         VEC_ELEM(stillToDo,0)=0;
@@ -242,7 +243,7 @@ public:
         else
         {
             MPI_Bcast(buffer, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-            bestIdx=buffer[0];
+            bestIdx=(int)buffer[0];
         }
 
         // All compute the best image
@@ -253,7 +254,6 @@ public:
         centerImage(I(),aux2,aux3);
         bestImage()=I();
         lastImage()=bestImage();
-        size_t objId;
 
         if (rank==0)
         {

@@ -25,19 +25,20 @@
 
 package xmipp.viewer.models;
 
-import javax.swing.JPopupMenu;
-
 import ij.ImagePlus;
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.XmippImageConverter;
-import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.ImageDimension;
+import xmipp.viewer.windows.ImagesWindowFactory;
+
+
 
 public class VolumeGalleryTableModel extends ImageGalleryTableModel {
+
 	protected String volFn;
 	protected long volNumber;
 	ImageGeneric volume;
@@ -115,9 +116,9 @@ public class VolumeGalleryTableModel extends ImageGalleryTableModel {
 	public boolean handleDoubleClick(int row, int col) {
 		try {
 			int index = getIndex(row, col);
-			ImagePlus imp = XmippImageConverter.convertToImagePlus(volume,
-					ImageGeneric.FIRST_IMAGE, index + 1);
-			new XmippImageWindow(data.window, new ImagePlusLoader(imp), getLabel(row, col));
+			//ImagePlus imp = XmippImageConverter.convertToImagePlus(volume, ImageGeneric.FIRST_IMAGE, index + 1);
+			ImagePlusLoader loader = new ImagePlusLoader(index + 1, volume);
+			ImagesWindowFactory.openXmippImageWindow(data.window, loader, loader.allowsPoll());
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -134,7 +135,10 @@ public class VolumeGalleryTableModel extends ImageGalleryTableModel {
 	@Override
 	public ImagePlusLoader getImageLoader() {
 		try {
-			return new VolumeLoader();
+			ImagePlusLoader loader =  new ImagePlusLoader(data.selectedVolFn);
+			if(data.normalize)
+				loader.setNormalize(normalize_min, normalize_max);
+			return loader;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -147,34 +151,6 @@ public class VolumeGalleryTableModel extends ImageGalleryTableModel {
 		return false;
 	}
 
-	// Extension of the ImagePlusLoader, read an entire volume as an ImagePlus
-	public class VolumeLoader extends ImagePlusLoader {
-		boolean normalize;
-
-		public VolumeLoader() {
-			super(data.selectedVolFn);
-			normalize = data.normalize;
-		}
-
-		@Override
-		protected ImagePlus loadImage() throws Exception {
-			ImagePlus imp = XmippImageConverter.convertToImagePlus(volume);
-			if (normalize) {
-				imp.getProcessor().setMinAndMax(normalize_min, normalize_max);
-				imp.updateImage();
-			}
-			return imp;
-		}
-		@Override
-		public boolean isVolume()
-		{
-			return true;
-		}
-		@Override
-		public boolean allowsGeometry()
-		{
-			return false;
-		}
-	}//class VolumeLoader
+	
 
 }// class VolumeGallery

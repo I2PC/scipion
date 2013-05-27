@@ -80,7 +80,6 @@ void buildReconsInfo(MetaData &selfile,
             // Filling structure
             imgInfo.fn_proj = fn_proj;
             selfile.getRow(imgInfo.row, __iter.objId);
-            imgInfo.row;
             if (is_ctf_unique)
                 imgInfo.fn_ctf = fn_ctf;
             else if (is_there_ctf)
@@ -139,7 +138,7 @@ void buildReconsInfo(MetaData &selfile,
 void sortPerpendicular(int numIMG, ReconsInfo *IMG_Inf,
                        MultidimArray<int> &ordered_list, int N)
 {
-    int   i, j, k;
+    int   i, j;
     MultidimArray<short> chosen(numIMG);     // 1 if that image has been already
     // chosen
     double min_prod;
@@ -226,7 +225,6 @@ void noSort(int numIMG, MultidimArray<int> &ordered_list)
 /* ------------------------------------------------------------------------- */
 void sortRandomly(int numIMG, MultidimArray<int> &ordered_list)
 {
-    int i;
     MultidimArray<int> chosen;
 
     // Initialisation
@@ -276,9 +274,7 @@ void updateResidualVector(BasicARTParameters &prm, GridVolume &vol_basis,
     GridVolume       residual_vol;
     Projection       read_proj, dummy_proj, new_proj;
     FileName         fn_resi, fn_tmp;
-    double           sqrtweight, dim2, norma, normb, apply_kappa;
-    ImageOver        *footprint = (ImageOver *) & prm.basis.blobprint;
-    ImageOver        *footprint2 = (ImageOver *) & prm.basis.blobprint2;
+    double           sqrtweight, dim2;
     Matrix2D<double> *A = NULL;
     std::vector<MultidimArray<double> > newres_imgs;
     MultidimArray<int>    mask;
@@ -459,7 +455,7 @@ void VariabilityClass::newUpdateVolume(GridVolume *ptr_vol_out,
 }
 #undef DEBUG
 
-#define DEBUG
+//#define DEBUG
 void VariabilityClass::finishAnalysis()
 {
     if (VA.size() == 0)
@@ -474,9 +470,6 @@ void VariabilityClass::finishAnalysis()
     int zsize = ZSIZE(VA[0]) / 2;
     int ysize = YSIZE(VA[0]) / 2;
     int xsize = XSIZE(VA[0]) / 2;
-    int zsize2 = ZSIZE(VA[0]) / 4;
-    int ysize2 = YSIZE(VA[0]) / 4;
-    int xsize2 = XSIZE(VA[0]) / 4;
     SignificantT2().initZeros(zsize, ysize, xsize);
     SignificantMaxRatio().initZeros(zsize, ysize, xsize);
     SignificantMinRatio().initZeros(zsize, ysize, xsize);
@@ -592,7 +585,7 @@ void VariabilityClass::finishAnalysis()
 #ifdef DEBUG
 
         std::cout << "Class 0 is:\n";
-        for (int n = 0; n < idx0.size(); n++)
+        for (size_t n = 0; n < idx0.size(); n++)
         {
             if (idx0(n))
             {
@@ -611,7 +604,7 @@ void VariabilityClass::finishAnalysis()
 #ifdef DEBUG
 
         std::cout << "Class 1 is:\n";
-        for (int n = 0; n < idx1.size(); n++)
+        for (size_t n = 0; n < idx1.size(); n++)
         {
             if (idx1(n))
             {
@@ -653,13 +646,13 @@ void VariabilityClass::finishAnalysis()
         }
 
         // Analysis of the coocurrences
-        for (int n = 0; n < idx0.size(); n++)
-            for (int np = n + 1; np < idx0.size(); np++)
+        for (size_t n = 0; n < idx0.size(); n++)
+            for (size_t np = n + 1; np < idx0.size(); np++)
                 if (idx0(n) && idx0(np))
                     coocurrence(n, np)++;
 
-        for (int n = 0; n < idx1.size(); n++)
-            for (int np = n + 1; np < idx1.size(); np++)
+        for (size_t n = 0; n < idx1.size(); n++)
+            for (size_t np = n + 1; np < idx1.size(); np++)
                 if (idx1(n) && idx1(np))
                     coocurrence(n, np)++;
 
@@ -807,19 +800,20 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
         // Do not allow positivity outside interest region
         // and do not allow negativity inside the interest region
         // if positivity restrictions are to be applied
-        int bg = (int) vol_POCS().sum();
-        int fg = MULTIDIM_SIZE(vol_POCS()) - bg;
+        // int bg = (int) vol_POCS().sum();
+        // int fg = MULTIDIM_SIZE(vol_POCS()) - bg;
         int relax = 0, posi = 0;
-        FOR_ALL_ELEMENTS_IN_ARRAY3D(vol_voxels())
-        if (vol_POCS(k, i, j) == 1 && vol_voxels(k, i, j) < 0)
+        const MultidimArray<double> &mVolVoxels=vol_voxels();
+        const MultidimArray<double> &mVolPOCS=vol_POCS();
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(mVolVoxels)
+        if (DIRECT_A3D_ELEM(mVolPOCS,k, i, j) == 1 && DIRECT_A3D_ELEM(mVolVoxels,k, i, j) < 0)
         {
-            vol_POCS(k, i, j) = 0;
+        	DIRECT_A3D_ELEM(mVolPOCS,k, i, j) = 0;
             relax++;
         }
-        else if (vol_POCS(k, i, j) == 0 && vol_voxels(k, i, j) < 0 &&
-                 prm->positivity)
+        else if (DIRECT_A3D_ELEM(mVolPOCS,k, i, j) == 0 && DIRECT_A3D_ELEM(mVolVoxels,k, i, j) < 0 && prm->positivity)
         {
-            vol_POCS(k, i, j) = 1;
+        	DIRECT_A3D_ELEM(mVolPOCS,k, i, j) = 1;
             posi++;
         }
         // Debugging messages
@@ -871,6 +865,8 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
             }
             POCS_mean_error = -1;
             break;
+        default:
+        	REPORT_ERROR(ERR_ARG_INCORRECT,"This function cannot work with this basis");
         }
         POCS_i = 1;
         POCS_global_mean_error += POCS_mean_error;
@@ -987,6 +983,8 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
                     POCS_state = POCS_measuring;
                 }
                 break;
+            default:
+            	REPORT_ERROR(ERR_ARG_INCORRECT,"Unknown equation mode");
             }
         }
     }

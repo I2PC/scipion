@@ -29,6 +29,7 @@ public class XmippResource {
     public static String PATH_ICONS;
     //Icon names    
     public final static String MISSING = "missing.png";
+    public final static String MISSING2 = "missing2.png";
     public final static String WAIT = "wait.gif";
     public final static String WAIT_MENU = "wait_menu.gif";
     public final static String NORMALIZE = "histogram.png";
@@ -69,7 +70,7 @@ public class XmippResource {
     	VIEW_GALLERY_ICON = getIcon(VIEW_GALLERY);
     	
     	// For missing items.
-    	MISSING_ICON = getIcon(MISSING);
+    	MISSING_ICON = getIcon(MISSING2);
     	MISSING_ITEM = new ImagePlus("X", MISSING_ICON.getImage());
     }
     

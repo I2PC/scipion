@@ -62,11 +62,6 @@ enum MDLabel
     MDL_ANGLE_DIFF, ///< difference between two angles (double,degrees)
     MDL_ANGLE_Y,   ///< Angle between y-axis and tilt-axis (double, degrees) for untilted micrographs
     MDL_ANGLE_Y2,   ///< Angle between y-axis and tilt-axis (double, degrees) for tilted micrographs
-    MDL_IMAGE1, ///< Image associated to this object (std::string)
-    MDL_IMAGE2, ///< Image associated to this object (std::string)
-    MDL_IMAGE3, ///< Image associated to this object (std::string)
-    MDL_IMAGE4, ///< Image associated to this object (std::string)
-    MDL_IMAGE5, ///< Image associated to this object (std::string)
     MDL_AVG, ///< average value (double)
     MDL_BGMEAN, ///< Mean background value for an image
     MDL_BLOCK_NUMBER, ///< Current block number (for incremental EM)
@@ -178,13 +173,23 @@ enum MDLabel
     //End of labels
 
     MDL_ENABLED, ///< Is this image enabled? (int [-1 or 1])
+
+    MDL_DATE,// < timestamp (string)
+    MDL_TIME,// <  time in seconds (double)
+
     MDL_FLIP, ///< Flip the image? (bool)
     MDL_FOM, ///< Figure of Merit in 0-1 range (double)
     MDL_IDX, ///< Index within a list (size_t)
     MDL_IMAGE, ///< Name of an image (std::string)
     MDL_IMAGE_ORIGINAL, ///< Name of an image from which MDL_IMAGE is coming from
+    MDL_IMAGE_REF, ///< Name of of the class image from which MDL_IMAGE is coming from
     MDL_IMAGE_TILTED, ///< Name of the tilted images associated to MDL_IMAGE
     MDL_IMGMD, ///< Name of Metadata file for all images (string)
+    MDL_IMAGE1, ///< Image associated to this object (std::string)
+    MDL_IMAGE2, ///< Image associated to this object (std::string)
+    MDL_IMAGE3, ///< Image associated to this object (std::string)
+    MDL_IMAGE4, ///< Image associated to this object (std::string)
+    MDL_IMAGE5, ///< Image associated to this object (std::string)
     MDL_INTSCALE, ///< Intensity scale for an image
     MDL_ITER, ///< Current iteration number (int)
     MDL_KERDENSOM_FUNCTIONAL, ///< Functional value (double)
@@ -262,6 +267,9 @@ enum MDLabel
     MDL_PRJ_TILT_RANGE, // Vector with the initial and final tilt angle values, and step size
     MDL_PRJ_VOL,        // Volume file name to generate projections from
 
+    MDL_PROGRAM,// <  program name
+    MDL_USER,// <  user name
+
     MDL_DIMENSIONS_3D,  // X,Y,Z dimensions
     MDL_DIMENSIONS_2D,  // X,Y dimensions
     MDL_PSD, ///< A Power Spectrum Density file name (std::string)
@@ -305,6 +313,9 @@ enum MDLabel
     MDL_SUMWEIGHT, ///< Sum of all weights in ML model
     MDL_SYMNO, ///< Symmetry number for a projection (used in ART)
     MDL_TRANSFORMATIONMTRIX, ///< transformation matrix(vector double)
+
+    MDL_TEST_SIZE,// < number of test assigned to a program
+
     MDL_VOLTAGE, ///< microscope voltage (double)
     MDL_WEIGHT, ///< Weight assigned to the image (double)
     MDL_WROBUST, ///< Weight of t-student distribution in robust Maximum likelihood
@@ -319,7 +330,8 @@ enum MDLabel
     MDL_Z, ///< Z component (double)
     MDL_ZCOOR, ///< Z component (int)
     MDL_ZSCORE, ///< Global Z Score (double)
-    MDL_ZSCORE_SHAPE, ///< Z Score (double)
+    MDL_ZSCORE_SHAPE1, ///< Z Score (double)
+    MDL_ZSCORE_SHAPE2, ///< Z Score (double)
     MDL_ZSCORE_SNR1, ///< Z Score (double)
     MDL_ZSCORE_SNR2, ///< Z Score (double)
     MDL_ZSCORE_HISTOGRAM, ///< Z Score (double)
@@ -512,8 +524,9 @@ public:
     ~MDRow();
     /** True if this row contains this label */
     bool containsLabel(MDLabel label) const;
+
     /** Add a new label */
-    bool addLabel(MDLabel label);
+    void addLabel(MDLabel label);
 
     /** Clear elements of the row */
     void clear();
@@ -703,7 +716,7 @@ private:
         MDL::addLabelAlias(MDL_CLASS_COUNT, "class_count"); //3.0
         MDL::addLabel(MDL_CLASSIFICATION_DATA, LABEL_VECTOR_DOUBLE, "classificationData");
         MDL::addLabelAlias(MDL_CLASSIFICATION_DATA, "ClassificationData");
-        MDL::addLabel(MDL_CLASSIFICATION_DATA_SIZE, LABEL_INT, "classificationDatasize");
+        MDL::addLabel(MDL_CLASSIFICATION_DATA_SIZE, LABEL_SIZET, "classificationDatasize");
         MDL::addLabelAlias(MDL_CLASSIFICATION_DATA_SIZE, "ClassificationDataSize");
         MDL::addLabel(MDL_CLASSIFICATION_DPR_05, LABEL_DOUBLE, "classificationDPR05");
         MDL::addLabelAlias(MDL_CLASSIFICATION_DPR_05, "ClassificationDPR05");
@@ -872,6 +885,11 @@ private:
         MDL::addLabel(MDL_DM3_VALUE, LABEL_VECTOR_DOUBLE, "dm3Value");
 
         MDL::addLabel(MDL_ENABLED, LABEL_INT, "enabled");
+
+        //MDL_EXECUTION_DATE so far an string but may change...
+        MDL::addLabel(MDL_DATE, LABEL_STRING, "date");
+        MDL::addLabel(MDL_TIME, LABEL_DOUBLE, "time");
+
         MDL::addLabel(MDL_FLIP, LABEL_BOOL, "flip");
         MDL::addLabelAlias(MDL_FLIP, "Flip");
         MDL::addLabel(MDL_FOM, LABEL_DOUBLE, "fom");
@@ -890,6 +908,7 @@ private:
 
         MDL::addLabel(MDL_IMAGE, LABEL_STRING, "image", TAGLABEL_IMAGE);
         MDL::addLabel(MDL_IMAGE_ORIGINAL, LABEL_STRING, "imageOriginal", TAGLABEL_IMAGE);
+        MDL::addLabel(MDL_IMAGE_REF, LABEL_STRING, "imageRef", TAGLABEL_IMAGE);
         MDL::addLabel(MDL_IMAGE_TILTED, LABEL_STRING, "imageTilted", TAGLABEL_IMAGE);
 
         MDL::addLabelAlias(MDL_IMAGE_ORIGINAL, "original_image"); //3.0
@@ -982,6 +1001,9 @@ private:
         MDL::addLabel(MDL_PRJ_TILT_RANGE, LABEL_VECTOR_DOUBLE, "projTiltRange");
         MDL::addLabel(MDL_PRJ_VOL, LABEL_STRING, "projVolume", TAGLABEL_VOLUME);
 
+        MDL::addLabel(MDL_PROGRAM, LABEL_STRING, "program");
+        MDL::addLabel(MDL_USER, LABEL_STRING, "user");
+
         MDL::addLabel(MDL_PSD_ENHANCED, LABEL_STRING, "psdEnhanced", TAGLABEL_IMAGE);
         MDL::addLabelAlias(MDL_PSD_ENHANCED, "enhancedPowerSpectrum");//3.0
         MDL::addLabel(MDL_PSD, LABEL_STRING, "psd", TAGLABEL_PSD);
@@ -1044,6 +1066,7 @@ private:
         MDL::addLabel(MDL_SUMWEIGHT, LABEL_DOUBLE, "sumWeight");
         MDL::addLabel(MDL_SYMNO, LABEL_INT, "symNo");
         MDL::addLabel(MDL_TRANSFORMATIONMTRIX, LABEL_VECTOR_DOUBLE, "transMat");
+
         MDL::addLabel(MDL_VOLTAGE, LABEL_DOUBLE, "voltage");
         MDL::addLabel(MDL_WEIGHT, LABEL_DOUBLE, "weight");
         MDL::addLabelAlias(MDL_WEIGHT, "Weight");
@@ -1052,19 +1075,20 @@ private:
         MDL::addLabel(MDL_XCOOR_TILT, LABEL_INT, "xcoorTilt");
 
         MDL::addLabel(MDL_X, LABEL_DOUBLE, "x");
-        MDL::addLabel(MDL_XSIZE, LABEL_INT, "xSize");
+        MDL::addLabel(MDL_XSIZE, LABEL_SIZET, "xSize");
         MDL::addLabel(MDL_YCOOR, LABEL_INT, "ycoor");
         MDL::addLabel(MDL_YCOOR_TILT, LABEL_INT, "ycoorTilt");
         MDL::addLabel(MDL_Y, LABEL_DOUBLE, "y");
-        MDL::addLabel(MDL_YSIZE, LABEL_INT, "ySize");
+        MDL::addLabel(MDL_YSIZE, LABEL_SIZET, "ySize");
         MDL::addLabel(MDL_ZCOOR, LABEL_INT, "zcoor");
         MDL::addLabel(MDL_Z, LABEL_DOUBLE, "z");
         MDL::addLabel(MDL_ZSCORE, LABEL_DOUBLE, "zScore");
-        MDL::addLabel(MDL_ZSCORE_SHAPE, LABEL_DOUBLE, "zScoreShape");
+        MDL::addLabel(MDL_ZSCORE_SHAPE1, LABEL_DOUBLE, "zScoreShape1");
+        MDL::addLabel(MDL_ZSCORE_SHAPE2, LABEL_DOUBLE, "zScoreShape2");
         MDL::addLabel(MDL_ZSCORE_SNR1, LABEL_DOUBLE, "zScoreSNR1");
         MDL::addLabel(MDL_ZSCORE_SNR2, LABEL_DOUBLE, "zScoreSNR2");
         MDL::addLabel(MDL_ZSCORE_HISTOGRAM, LABEL_DOUBLE, "zScoreHistogram");
-        MDL::addLabel(MDL_ZSIZE, LABEL_INT, "zSize");
+        MDL::addLabel(MDL_ZSIZE, LABEL_SIZET, "zSize");
 
         MDL::addLabelAlias(MDL_XCOOR, "Xcoor");//3.0
         MDL::addLabelAlias(MDL_XCOOR, "<X position>");

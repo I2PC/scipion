@@ -49,7 +49,6 @@ void powellOptimizer(Matrix1D<double> &p, int i0, int n,
 
     // Form direction matrix
     ask_Tvector(xi, 1, n*n);
-    int ptr;
     for (int i = 1, ptr = 1; i <= n; i++)
         for (int j = 1; j <= n; j++, ptr++)
             xi[ptr] = (i == j) ? steps(i - 1) : 0;
@@ -135,15 +134,15 @@ void evaluateQuadratic(const Matrix1D<double> &x, const Matrix1D<double> &c,
 
     // H*x, store in grad
     grad.initZeros(x.size());
-    for (int i = 0; i < H.Ydim(); i++)
-        for (int j = 0; j < x.size(); j++)
+    for (size_t i = 0; i < H.Ydim(); i++)
+        for (size_t j = 0; j < x.size(); j++)
             grad(i) += H(i, j) * x(j);
 
     // Now, compute c^t*x+1/2*x^t*H*x
     // Add c to the gradient
     double quad = 0;
     val = 0;
-    for (int j = 0; j < x.size(); j++)
+    for (size_t j = 0; j < x.size(); j++)
     {
         quad += grad(j) * grad(j); // quad=x^t*H^t*H*x
         val += c(j) * x(j);  // val=c^t*x
@@ -235,17 +234,17 @@ void quadraticProgramming(const Matrix2D<double> &C, const Matrix1D<double> &d,
 
 
     // Copy Inequalities
-    for (int i = 0; i < A.Ydim(); i++)
+    for (size_t i = 0; i < A.Ydim(); i++)
     {
-        for (int j = 0; j < A.Xdim(); j++)
+        for (size_t j = 0; j < A.Xdim(); j++)
             prm.A(i, j) = A(i, j);
         prm.B(i, 0) = b(i);
     }
 
     // Copy Equalities
-    for (int i = 0; i < Aeq.Ydim(); i++)
+    for (size_t i = 0; i < Aeq.Ydim(); i++)
     {
-        for (int j = 0; j < Aeq.Xdim(); j++)
+        for (size_t j = 0; j < Aeq.Xdim(); j++)
             prm.A(i + A.Ydim(), j) = Aeq(i, j);
         prm.B(i + A.Ydim(), 0) = beq(i);
     }
@@ -340,14 +339,13 @@ void regularizedLeastSquare(const Matrix2D< double >& A,
                             const Matrix1D< double >& d, double lambda,
                             const Matrix2D< double >& G, Matrix1D< double >& x)
 {
-    int Nd=A.Ydim(); // Number of data samples
     int Nx=A.Xdim(); // Number of variables
 
     Matrix2D<double> X(Nx,Nx); // X=(A^t * A +lambda *G^t G)
     // Compute A^t*A
     FOR_ALL_ELEMENTS_IN_MATRIX2D(X)
     // Compute the dot product of the i-th and j-th columns of A
-    for (int k=0; k<A.Ydim(); k++)
+    for (size_t k=0; k<A.Ydim(); k++)
         X(i,j) += A(k,i) * A(k,j);
 
     // Compute lambda*G^t*G
@@ -357,14 +355,14 @@ void regularizedLeastSquare(const Matrix2D< double >& A,
     else
         FOR_ALL_ELEMENTS_IN_MATRIX2D(X)
         // Compute the dot product of the i-th and j-th columns of G
-        for (int k=0; k<G.Ydim(); k++)
+        for (size_t k=0; k<G.Ydim(); k++)
             X(i,j) += G(k,i) * G(k,j);
 
     // Compute A^t*d
     Matrix1D<double> Atd(Nx);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(Atd)
     // Compute the dot product of the i-th column of A and d
-    for (int k=0; k<A.Ydim(); k++)
+    for (size_t k=0; k<A.Ydim(); k++)
         Atd(i) += A(k,i) * d(k);
 
     // Compute the inverse of X

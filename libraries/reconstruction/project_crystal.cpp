@@ -171,7 +171,7 @@ void project_crystal(Phantom &phantom, Projection &P,
                      PROJECT_Side_Info &side, const Crystal_Projection_Parameters &prm_crystal,
                      float rot, float tilt, float psi)
 {
-    SPEED_UP_temps;
+    SPEED_UP_tempsDouble;
     //Scale crystal output
     //   int aux_crystal_Ydim = ROUND(prm_crystal.crystal_Ydim
     //         *phantom.phantom_scale);
@@ -433,7 +433,6 @@ void project_crystal(Phantom &phantom, Projection &P,
         // the phantom is mapped into a surface of different shapes (parabole,cosine, etc)
         Matrix1D<double> normal_vector(3);
         double alpha, beta, gamma;
-        double rota, tilta, psia;
         Matrix2D<double> angles_matrix, inverse_angles_matrix;
         Matrix2D<double> def_cyl_angles_matrix;
         Matrix2D<double> cyl_angles_matrix;
@@ -451,10 +450,8 @@ void project_crystal(Phantom &phantom, Projection &P,
             Euler_angles2matrix(alpha, beta, gamma, angles_matrix);
             inverse_angles_matrix = angles_matrix.inv();
 
-            for (int ii = 0; ii < aux.VF.size(); ii++)
-            {
+            for (size_t ii = 0; ii < aux.VF.size(); ii++)
                 aux.VF[ii]->rotate(angles_matrix);
-            }
         }
 
         cell_shift = cell_shift - ZZ(cell_shift) / ZZ(P.direction) * P.direction;
@@ -505,7 +502,7 @@ void find_crystal_limits(
     double yF = YY(proj_corner2) + YY(cell_corner2);
 
     // Initialize
-    SPEED_UP_temps;
+    SPEED_UP_temps01;
     Matrix2D<double> A(2, 2), Ainv(2, 2);
     A.setCol(0, a);
     A.setCol(1, b);
@@ -904,7 +901,6 @@ void init_shift_matrix(const Crystal_Projection_Parameters &prm_crystal,
 #endif
 #undef DEBUG2
     //fill matrix with docfile data
-    int max_x, max_y, max_z, min_x , min_y, min_z;
 
     FOR_ALL_OBJECTS_IN_METADATA(aux_DF_shift)
     {

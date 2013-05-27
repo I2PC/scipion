@@ -78,9 +78,9 @@ void ProgML2D::readParams()
     int argc2 = 0;
     char ** argv2 = NULL;
 
-    double restart_noise, restart_offset;
+    double restart_noise=0, restart_offset=0;
     FileName restart_imgmd, restart_refmd;
-    int restart_iter, restart_seed;
+    int restart_iter=0, restart_seed=0;
 
     if (!do_ML3D  && checkParam("--restart"))
     {
@@ -152,7 +152,7 @@ void ProgML2D::readParams()
     //testing the thread load in refno
     refno_load_param = getIntParam("--load");
     // Hidden arguments
-    fn_scratch = getParameter(argc2, argv2, "--scratch", "");
+    fn_scratch = getParameter(argc2, (const char **)argv2, "--scratch", "");
     debug = getIntParam("--debug");
     model.do_student_sigma_trick = !checkParam("--no_sigma_trick");
     trymindiff_factor = getDoubleParam("--trymindiff_factor");
@@ -307,8 +307,7 @@ void ProgML2D::produceSideInfo()
     // Create a vector of objectIDs, which may be randomized later on
     MDimg.findObjects(img_id);
     // Get original image size
-    int idum;
-    size_t idumLong;
+    size_t idum, idumLong;
     LOG("      ProgML2D::produceSideInfo: setting dimensions");
     getImageSize(MDimg, dim, idum, idum, idumLong);
     model.dim = dim;
@@ -357,7 +356,6 @@ void ProgML2D::produceSideInfo2()
 {
     Image<double> img;
     FileName fn_tmp;
-    size_t id;
 
     // Read in all reference images in memory
     MDref.read(fn_ref);
@@ -401,7 +399,7 @@ void ProgML2D::produceSideInfo2()
     initSamplingStuff();
 
     // Set sigdim, i.e. the number of pixels that will be considered in the translations
-    sigdim = 2 * CEIL(model.sigma_offset * (save_mem2 ? 3 : 6));
+    sigdim = 2 * (size_t)ceil(model.sigma_offset * (save_mem2 ? 3 : 6));
     ++sigdim; // (to get uneven number)
     sigdim = XMIPP_MIN(dim, sigdim);
 
@@ -730,7 +728,7 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
     // precalculate all flipped versions of the image
     Fimg_flip.clear();
 
-    for (int iflip = 0; iflip < nr_flip; iflip++)
+    for (size_t iflip = 0; iflip < nr_flip; iflip++)
     {
         Maux.setXmippOrigin();
         applyGeometry(LINEAR, Maux, Mimg, F[iflip], IS_INV, WRAP);
@@ -1075,7 +1073,7 @@ void ProgML2D::doThreadRotateReferenceRefno()
     {
         computeStats_within_binary_mask(omask, model.Iref[refno](), dum,
                                         dum, avg, dum);
-        for (int ipsi = 0; ipsi < nr_psi; ipsi++)
+        for (size_t ipsi = 0; ipsi < nr_psi; ipsi++)
         {
             refnoipsi = refno * nr_psi + ipsi;
             // Add arbitrary number (small_angle) to avoid 0-degree rotation (lacking interpolation)
@@ -1133,7 +1131,7 @@ void ProgML2D::doThreadReverseRotateReferenceRefno()
     {
         Maux.initZeros();
         wsum_Mref[refno] = Maux;
-        for (int ipsi = 0; ipsi < nr_psi; ipsi++)
+        for (size_t ipsi = 0; ipsi < nr_psi; ipsi++)
         {
             // Add arbitrary number to avoid 0-degree rotation without interpolation effects
             psi = (double) (ipsi * psi_max / nr_psi) + SMALLANGLE;
@@ -1170,7 +1168,7 @@ void ProgML2D::doThreadPreselectFastSignificantRefno()
     MultidimArray<double> Mtrans, Mflip;
     double ropt, aux, diff, pdf, fracpdf;
     double A2_plus_Xi2;
-    int irot, irefmir, iiflip;
+    int irefmir;
     Matrix1D<double> trans(2);
     double local_mindiff;
     double sigma_noise2 = model.sigma_noise * model.sigma_noise;
@@ -1199,17 +1197,17 @@ void ProgML2D::doThreadPreselectFastSignificantRefno()
                 // Do not trust optimal offsets if they are larger than 3*sigma_offset:
                 if (ropt > 3 * model.sigma_offset)
                 {
-                    for (int iflip = 0; iflip < nr_nomirror_flips; iflip++)
-                        for (int ipsi = 0; ipsi < nr_psi; ipsi++)
+                    for (size_t iflip = 0; iflip < nr_nomirror_flips; iflip++)
+                        for (size_t ipsi = 0; ipsi < nr_psi; ipsi++)
                             MSIGNIFICANT = 1;
                 }
                 else
                 {
                     translate(LINEAR, Mtrans, Mimg, trans, true);
-                    for (int iflip = 0; iflip < nr_nomirror_flips; iflip++)
+                    for (size_t iflip = 0; iflip < nr_nomirror_flips; iflip++)
                     {
                         applyGeometry(LINEAR, Mflip, Mtrans, F[IIFLIP], IS_INV, WRAP);
-                        for (int ipsi = 0; ipsi < nr_psi; ipsi++)
+                        for (size_t ipsi = 0; ipsi < nr_psi; ipsi++)
                         {
                             diff = A2_plus_Xi2;
                             MultidimArray<double> &mref_ref = mref[refno*nr_psi + ipsi];
@@ -1250,8 +1248,8 @@ void ProgML2D::doThreadPreselectFastSignificantRefno()
                 trans(0) = allref_offsets[2 * irefmir];
                 trans(1) = allref_offsets[2 * irefmir + 1];
                 ///Calculate max_weight for this refno-mirror combination
-                for (int iflip = 0; iflip < nr_nomirror_flips; iflip++)
-                    for (int ipsi = 0; ipsi < nr_psi; ipsi++)
+                for (size_t iflip = 0; iflip < nr_nomirror_flips; iflip++)
+                    for (size_t ipsi = 0; ipsi < nr_psi; ipsi++)
                     {
                         if (!MSIGNIFICANT)
                         {
@@ -1276,10 +1274,10 @@ void ProgML2D::doThreadPreselectFastSignificantRefno()
                         }
                     } // close ipsi
                 ///Now we have max_weight, set Msignificant values
-                for (int iflip = 0; iflip < nr_nomirror_flips; iflip++)
-                    for (int ipsi = 0; ipsi < nr_psi; ipsi++)
+                for (size_t iflip = 0; iflip < nr_nomirror_flips; iflip++)
+                    for (size_t ipsi = 0; ipsi < nr_psi; ipsi++)
                         if (!MSIGNIFICANT)
-                            MSIGNIFICANT = (WEIGHT >= C_fast * MAX_WEIGHT) ? 1. : 0.;
+                            MSIGNIFICANT = (WEIGHT >= C_fast * MAX_WEIGHT) ? 1 : 0;
             }//close for imirror
         } //endif limit_rot and pdf_directions
     } //end for_all refno
@@ -1330,7 +1328,7 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
         local_mindiff = 99.e99;
         local_wsum_sc = local_wsum_sc2 = local_wsum_corr = local_wsum_offset = 0;
         // Initialize my weighted sums
-        for (int ipsi = 0; ipsi < nr_psi; ipsi++)
+        for (size_t ipsi = 0; ipsi < nr_psi; ipsi++)
         {
             output_refnoipsi = output_refno * nr_psi + ipsi;
             mysumimgs[output_refnoipsi] = Fzero;
@@ -1346,16 +1344,16 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
             A2_plus_Xi2 = 0.5 * (ref_scale * ref_scale * A2[refno] + Xi2);
 
             maxw_ref = -99.e99;
-            for (int iflip = 0; iflip < nr_flip; iflip++)
+            for (size_t iflip = 0; iflip < nr_flip; iflip++)
             {
                 if (iflip == nr_nomirror_flips)
                     maxw_ref = -99.e99;
-                for (int ipsi = 0; ipsi < nr_psi; ipsi++)
+                for (size_t ipsi = 0; ipsi < nr_psi; ipsi++)
                 {
                     refnoipsi = refno * nr_psi + ipsi;
                     output_refnoipsi = output_refno * nr_psi + ipsi;
                     irot = iflip * nr_psi + ipsi;
-                    output_irefmir  = FLOOR(iflip / nr_nomirror_flips)
+                    output_irefmir  = (int)floor(iflip / nr_nomirror_flips)
                                       * factor_nref * model.n_ref + refno;
 
                     //#define DEBUG_JM2
@@ -1675,7 +1673,7 @@ void ProgML2D::doThreadESIUpdateRefno()
             }
 
             std::complex<double> cscale_dim2_sumw=scale_dim2_sumw;
-            for (int ipsi = 0; ipsi < nr_psi; ipsi++)
+            for (size_t ipsi = 0; ipsi < nr_psi; ipsi++)
             {
                 int refnoipsi = output_refno * nr_psi + ipsi;
                 // Correct weighted sum of images for new bgmean (only first element=origin in Fimg)
@@ -2132,7 +2130,7 @@ void ProgML2D::addPartialDocfileData(const MultidimArray<double> &data,
         MDimg.setValue(MDL_ANGLE_PSI, psi, id);
         MDimg.setValue(MDL_SHIFT_X, dAij(data, index, 3), id);
         MDimg.setValue(MDL_SHIFT_Y, dAij(data, index, 4), id);
-        MDimg.setValue(MDL_REF, ROUND(dAij(data, index, 5)), id);
+        MDimg.setValue(MDL_REF, (int)round(dAij(data, index, 5)), id);
         if (do_mirror)
         {
             MDimg.setValue(MDL_FLIP, dAij(data, index, 6) != 0., id);
@@ -2220,8 +2218,6 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
     fn_base = (fn_prefix == ITER_PREFIX) ? //All intermediate iteration files should go to "extra" folder
               getIterExtraPath(fn_root, iter) : fn_root;
 
-    const char * rootStr = fn_base.c_str(), * prefixStr = fn_prefix.c_str();
-
     if (write_img_xmd)
     {
         //static WriteModeMetaData mode = MD_OVERWRITE;
@@ -2239,7 +2235,6 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
 
     if (write_refs_log)
     {
-        static WriteModeMetaData mode = MD_OVERWRITE;
         // Write out current reference images and fill sel & log-file
         // Re-use the MDref metadata that was read in produceSideInfo2
         // This way. MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_REF etc are treated ok for do_ML3D
@@ -2314,9 +2309,9 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         {
             MetaData mdImgs;
             size_t n = MDref.size();
-            for (int ref = 1; ref <= n; ++ref)
+            for (size_t ref = 1; ref <= n; ++ref)
             {
-                mdImgs.importObjects(MDimg, MDValueEQ(MDL_REF, ref));
+                mdImgs.importObjects(MDimg, MDValueEQ(MDL_REF, (int)ref));
                 mdImgs.write(FN_CLASS_IMAGES_MD(fn_base, ref), MD_APPEND);
             }
         }

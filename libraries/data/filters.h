@@ -316,7 +316,7 @@ double correlationIndex(const MultidimArray< T >& x,
                         const MultidimArray< int >* mask = NULL,
                         MultidimArray< double >* Contributions = NULL)
 {
-    SPEED_UP_temps;
+	SPEED_UP_tempsInt;
 
     double retval = 0, aux;
     double mean_x, mean_y;
@@ -434,14 +434,20 @@ double correntropy(const MultidimArray<T> &x, const MultidimArray<T> &y,
  * will be sought where the mask is 1).
  *
  * To apply these results you must shift I1 by (-shiftX,-shiftY) or
- * I2 by (shiftX, shiftY)
+ * I2 by (shiftX, shiftY).
+ *
+ * You can limit the maximum achievable shift by using maxShift. If it is set to -1,
+ * any shift is valid.
+ *
+ * The function returns the maximum correlation found.
  */
-void bestShift(const MultidimArray< double >& I1,
+double bestShift(const MultidimArray< double >& I1,
                const MultidimArray< double >& I2,
                double& shiftX,
                double& shiftY,
                CorrelationAux &aux,
-               const MultidimArray< int >* mask = NULL);
+               const MultidimArray< int >* mask = NULL,
+               int maxShift=-1);
 
 /** Translational search (3D)
  * @ingroup Filters
@@ -451,7 +457,7 @@ void bestShift(const MultidimArray< double >& I1,
  * will be sought where the mask is 1).
  *
  * To apply these results you must shift I1 by (-shiftX,-shiftY,-shiftZ) or
- * I2 by (shiftX, shiftY,shiftZ)
+ * I2 by (shiftX, shiftY,shiftZ).
  */
 void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
                double &shiftX, double &shiftY, double &shiftZ, CorrelationAux &aux,
@@ -734,7 +740,7 @@ double rms(const MultidimArray< T >& x,
            const MultidimArray< int >* mask = NULL,
            MultidimArray< double >* Contributions = NULL)
 {
-    SPEED_UP_temps;
+    SPEED_UP_tempsInt;
 
     double retval = 0;
     double aux;
@@ -1306,7 +1312,7 @@ void forcePositive(MultidimArray<double> &V);
  *  A boundaries median filter is applied at those pixels given by the mask.
  */
 template <typename T>
-void boundMedianFilter(MultidimArray< T > &V, MultidimArray<char> mask, int n=0)
+void boundMedianFilter(MultidimArray< T > &V, const MultidimArray<char> &mask, int n=0)
 {
     bool badRemaining;
     T neighbours[125];
@@ -1317,30 +1323,30 @@ void boundMedianFilter(MultidimArray< T > &V, MultidimArray<char> mask, int n=0)
     {
         badRemaining=false;
 
-        FOR_ALL_ELEMENTS_IN_ARRAY3D(V)
-        if (A3D_ELEM(mask, k, i, j) != 0)
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(V)
+        if (DIRECT_A3D_ELEM(mask, k, i, j) != 0)
         {
             N = 0;
             for (int kk=-2; kk<=2; kk++)
             {
-                int kkk=k+kk;
+            	size_t kkk=k+kk;
                 if (kkk<0 || kkk>=ZSIZE(V))
                     continue;
                 for (int ii=-2; ii<=2; ii++)
                 {
-                    int iii=i+ii;
+                	size_t iii=i+ii;
                     if (iii<0 || iii>=YSIZE(V))
                         continue;
                     for (int jj=-2; jj<=2; jj++)
                     {
-                        int jjj=j+jj;
+                    	size_t jjj=j+jj;
                         if (jjj<0 || jjj>=XSIZE(V))
                             continue;
 
-                        if (A3D_ELEM(mask, kkk, iii, jjj) == 0)
+                        if (DIRECT_A3D_ELEM(mask, kkk, iii, jjj) == 0)
                         {
                             index = N++;
-                            neighbours[index] = A3D_ELEM(V, kkk,iii,jjj);
+                            neighbours[index] = DIRECT_A3D_ELEM(V, kkk,iii,jjj);
                             //insertion sort
                             while (index > 0 && neighbours[index-1] > neighbours[index])
                             {
@@ -1356,18 +1362,16 @@ void boundMedianFilter(MultidimArray< T > &V, MultidimArray<char> mask, int n=0)
                 {
                     //std::sort(neighbours.begin(),neighbours.end());
                     if (N % 2 == 0)
-                        A3D_ELEM(V, k, i, j) = 0.5*(neighbours[N/2-1]+ neighbours[N/2]);
+                        DIRECT_A3D_ELEM(V, k, i, j) = (T)(0.5*(neighbours[N/2-1]+ neighbours[N/2]));
                     else
-                        A3D_ELEM(V, k, i, j) = neighbours[N/2];
-                    A3D_ELEM(mask, k, i, j) = false;
+                        DIRECT_A3D_ELEM(V, k, i, j) = neighbours[N/2];
+                    DIRECT_A3D_ELEM(mask, k, i, j) = false;
                 }
             }
         }
     }
     while (badRemaining);
 }
-
-
 
 /** Remove bad pixels.
  *  * @ingroup Filters
@@ -1382,7 +1386,6 @@ void pixelDesvFilter(MultidimArray< T > &V, double thresFactor)
     {
         double avg, stddev, high, low;
         T dummy;
-        double size = YXSIZE(V);
         MultidimArray<char> mask(ZSIZE(V), YSIZE(V), XSIZE(V));
         avg = stddev = low = high = 0;
         V.computeStats(avg, stddev, dummy, dummy);//min and max not used

@@ -276,10 +276,10 @@ public:
     String getMessage() const;
 
     /** Get Default message */
-    char * getDefaultMessage() const;
+    String getDefaultMessage() const;
 
     /** Get default message */
-    static char * getDefaultMessage(ErrorType e);
+    static String getDefaultMessage(ErrorType e);
 
 
 };

@@ -25,4 +25,4 @@
 
 #include <reconstruction/ctf_correct_idr.h>
 
-RUN_XMIPP_PROGRAM(ProgCtfCorrectIdr);
+RUN_XMIPP_PROGRAM(ProgCtfCorrectIdr)

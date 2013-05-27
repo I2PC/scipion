@@ -167,6 +167,9 @@ public:
 class PDBRichPhantom
 {
 public:
+	/// List of remarks
+	std::vector<String> remarks;
+public:
     /// List of atoms
     std::vector<RichAtom> atomList;
 

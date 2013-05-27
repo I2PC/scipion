@@ -67,7 +67,7 @@ bool ProgramDb::commitTrans()
 /** Create tables related with programs */
 bool ProgramDb::createProgramTables()
 {
-    char * cmdStr =
+    const char * cmdStr =
         "DROP TABLE IF EXISTS Category;"
         "CREATE TABLE Category ("
         "   id INTEGER PRIMARY KEY ASC AUTOINCREMENT, "

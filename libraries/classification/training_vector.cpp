@@ -55,7 +55,7 @@ ClassicTrainingVectors::ClassicTrainingVectors(std::istream & _is)
         msg << e.what() << std::endl << "Error reading the training vector";
         throw std::runtime_error(msg.str());
     }
-};
+}
 
 
 
@@ -68,7 +68,7 @@ ClassicTrainingVectors::ClassicTrainingVectors(const ClassicTrainingVectors &op1
 
     calibrated(op1.calibrated());
 
-    for (int i = 0; i < op1.size(); i++)
+    for (size_t i = 0; i < op1.size(); i++)
         if (calibrated())
             add(op1.itemAt(i), op1.targetAt(i));
         else
@@ -87,7 +87,7 @@ ClassicTrainingVectors::ClassicTrainingVectors(const ClassicTrainingVectors &op1
 unsigned ClassicTrainingVectors::featureSize() const
 {
     return itemAt(0).size();
-};
+}
 
 /**
  * Returns dimension (the same as above)
@@ -95,7 +95,7 @@ unsigned ClassicTrainingVectors::featureSize() const
 unsigned ClassicTrainingVectors::dimension() const
 {
     return itemAt(0).size();
-};
+}
 
 /**
  * Clears the training set
@@ -105,7 +105,7 @@ void ClassicTrainingVectors::clear()
     ClassificationTrainingSet<FeatureVector, Label>::clear();
     varStats.clear();
     normalized = false;
-};
+}
 
 /**
  * Standard output for a training set
@@ -116,7 +116,7 @@ void ClassicTrainingVectors::printSelf(std::ostream& _os) const
 {
     _os << dimension() << " " << theItems.size() << std::endl;
     ClassificationTrainingSet<FeatureVector, Label>::printSelf(_os);
-};
+}
 
 /**
  * Standard input for a training set
@@ -173,7 +173,7 @@ void ClassicTrainingVectors::readSelf(std::istream& _is)
         throw std::runtime_error(msg.str());
     }
 #endif
-};
+}
 
 void ClassicTrainingVectors::read(const FileName& fnIn)
 {
@@ -183,7 +183,7 @@ void ClassicTrainingVectors::read(const FileName& fnIn)
     MetaData vectorHeader(formatString("vectorHeader@%s",fnIn.c_str()));
     MetaData vectorContent(formatString("vectorContent@%s",fnIn.c_str()));
     size_t Nvectors;
-    int vectorSize;
+    size_t vectorSize;
     size_t id=vectorHeader.firstObject();
     vectorHeader.getValue(MDL_CLASSIFICATION_DATA_SIZE,vectorSize,id);
     vectorHeader.getValue(MDL_COUNT,Nvectors,id);
@@ -212,7 +212,7 @@ void ClassicTrainingVectors::read(const FileName& fnIn)
             REPORT_ERROR(ERR_IO_NOREAD,
                          formatString("Could not read image %lu from %s",
                                       order,fnInRaw.c_str()));
-        for (int i=0; i<vectorSize; ++i)
+        for (size_t i=0; i<vectorSize; ++i)
         	v[i]=buffer[i];
         theTargets.push_back(fnImg);
         theItems.push_back(v);
@@ -230,13 +230,13 @@ void ClassicTrainingVectors::saveObject(std::ostream& _os) const
     _os << dimension() << std::endl;
     _os << normalized << std::endl;
     if (normalized)
-        for (int i = 0; i < varStats.size(); i++)
+        for (size_t i = 0; i < varStats.size(); i++)
         {
             _os << varStats[i].mean << std::endl;
             _os << varStats[i].sd << std::endl;
         }
     ClassificationTrainingSet<FeatureVector, Label>::saveObject(_os);
-};
+}
 
 
 /**
@@ -253,13 +253,13 @@ void ClassicTrainingVectors::loadObject(std::istream& _is)
     if (normalized)
         varStats.clear();
     varStats.resize(dim);
-    for (int i = 0; i < varStats.size(); i++)
+    for (size_t i = 0; i < varStats.size(); i++)
     {
         _is >> varStats[i].mean;
         _is >> varStats[i].sd;
     }
     ClassificationTrainingSet<FeatureVector, Label>::loadObject((std::istream&)_is);
-};
+}
 
 
 
@@ -272,7 +272,7 @@ void ClassicTrainingVectors::deleteVariable(int _var)
 {
     for (unsigned int it = 0; it < size(); it++)
         itemAt(it).erase(itemAt(it).begin() + _var);
-};
+}
 
 
 /**
@@ -288,7 +288,7 @@ ClassicTrainingVectors& ClassicTrainingVectors::operator= (const ClassicTraining
 
         calibrated(op1.calibrated());
 
-        for (int i = 0; i < op1.size(); i++)
+        for (size_t i = 0; i < op1.size(); i++)
             if (calibrated())
                 add(op1.itemAt(i), op1.targetAt(i));
             else
@@ -370,7 +370,7 @@ void ClassicTrainingVectors::normalizeFeature(unsigned _i)
     // first calculates the mean
     floatFeature mean = 0;
     int nn = 0;
-    for (int it = 0; it < size(); it++)
+    for (size_t it = 0; it < size(); it++)
     {
         if (!isnan(itemAt(it)[_i]))
         {
@@ -383,7 +383,7 @@ void ClassicTrainingVectors::normalizeFeature(unsigned _i)
 
     // Then calculates SD
     floatFeature sd = 0;
-    for (int it = 0; it < size(); it++)
+    for (size_t it = 0; it < size(); it++)
     {
         if (!isnan(itemAt(it)[_i]))
             sd += (itemAt(it)[_i] - mean) * (itemAt(it)[_i] - mean);
@@ -393,7 +393,7 @@ void ClassicTrainingVectors::normalizeFeature(unsigned _i)
     // Now normalize the variable
     if (sd != 0)
     {
-        for (int it = 0; it < size(); it++)
+        for (size_t it = 0; it < size(); it++)
         {
             if (!isnan(itemAt(it)[_i]))
                 itemAt(it)[_i] = (itemAt(it)[_i] - mean) / sd;
@@ -489,7 +489,7 @@ bool ClassicTrainingVectors::isNormalized() const
 */
 /*  const std::vector<ClassicTrainingVectors::statsStruct>& ClassicTrainingVectors::getNormalizationInfo() const {
    return varStats;
-  };*/
+  }*/
 
 
 /**
@@ -511,7 +511,7 @@ void ClassicTrainingVectors::getFeatureStats(unsigned _i, floatFeature& _mean, f
     // first calculates the mean
     _mean = 0;
     int nn = 0;
-    for (int it = 0; it < size(); it++)
+    for (size_t it = 0; it < size(); it++)
     {
         if (!isnan(itemAt(it)[_i]))
         {
@@ -524,7 +524,7 @@ void ClassicTrainingVectors::getFeatureStats(unsigned _i, floatFeature& _mean, f
 
     // Then calculates SD
     _sd = 0;
-    for (int it = 0; it < size(); it++)
+    for (size_t it = 0; it < size(); it++)
     {
         if (!isnan(itemAt(it)[_i]))
             _sd += (itemAt(it)[_i] - _mean) * (itemAt(it)[_i] - _mean);

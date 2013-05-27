@@ -445,7 +445,7 @@ void ProgSSNR::estimateSSNR(int dim, Matrix2D<double> &output)
 
         ProgReconsART artRecons;
         artRecons.read(formatString("-i %s.xmd -o %s -l 0.1 -R %i --ray_length 1 -n 5",fn_out_images.c_str(),
-                                    fn_VSSNR.removeLastExtension().c_str(), ROUND(XSIZE(S()) / 3)));
+                                    fn_VSSNR.c_str(), ROUND(XSIZE(S()) / 3)));
         artRecons.run();
 
         remove(fn_out_images.addExtension("xmd").c_str());
@@ -491,7 +491,7 @@ void ProgSSNR::radialAverage(Matrix2D<double> &output)
 
     // Produce output .......................................................
     output.resize(VEC_XSIZE(VSSNR_avg), 3);
-    for (int i = 0; i < VEC_XSIZE(VSSNR_avg); i++)
+    for (size_t i = 0; i < VEC_XSIZE(VSSNR_avg); i++)
     {
         double w;
         FFT_IDX2DIGFREQ(i, XSIZE(VSSNR()), w);

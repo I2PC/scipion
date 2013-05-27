@@ -42,6 +42,7 @@ void Basis::setDefault()
     D           = NULL;
     blobprint.clear();
     blobprint2.clear();
+    aux.resizeNoCopy(3);
 }
 
 // Basis name --------------------------------------------------------------
@@ -58,6 +59,9 @@ String Basis::basisName() const
     case Basis::splines:
         return "splines";
         break;
+    default:
+    	return "Unknown";
+    	break;
     }
 }
 
@@ -90,7 +94,7 @@ void Basis::readParams(XmippProgram * program)
     if (basisType == "blobs")
     {
         blob.radius = program->getDoubleParam("--basis", "blobs", 0);
-        blob.order  = program->getDoubleParam("--basis", "blobs", 1);
+        blob.order  = program->getIntParam("--basis", "blobs", 1);
         blob.alpha  = program->getDoubleParam("--basis", "blobs", 2);
     }
     if (!program->checkParam("--basis")) // Default is for small blobs
@@ -345,12 +349,11 @@ double Basis::projectionAt(const Matrix1D<double> & u, const Matrix1D<double> & 
     const double pStep = 1.0 / PIXEL_SUBSAMPLING;
     const double pAvg = 1.0 / (PIXEL_SUBSAMPLING * PIXEL_SUBSAMPLING);
     double module_r, px, py;
-    Matrix1D<double> aux(3);
     int i, j;
     switch (type)
     {
     case (blobs):
-                    module_r = sqrt(XX(r) * XX(r) + YY(r) * YY(r) + ZZ(r) * ZZ(r));
+        module_r = sqrt(XX(r) * XX(r) + YY(r) * YY(r) + ZZ(r) * ZZ(r));
         return blob_proj(module_r, blob);
         break;
     case (voxels):
@@ -370,7 +373,7 @@ double Basis::projectionAt(const Matrix1D<double> & u, const Matrix1D<double> & 
             break;
         }
     case (splines):
-                    return spatial_Bspline03_proj(r, u);
+        return spatial_Bspline03_proj(r, u);
         break;
     }
     return 0.0;

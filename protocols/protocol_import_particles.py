@@ -10,13 +10,13 @@
 from protlib_base import *
 from protlib_particles import *
 import xmipp
-from xmipp import MetaData, FileName, ImgSize, MDL_IMAGE, MDL_SAMPLINGRATE
+from xmipp import MetaData, FileName, MDL_IMAGE, MDL_SAMPLINGRATE
 import glob
 import os
 from os.path import relpath, dirname
 from protlib_utils import runJob
 from protlib_filesystem import deleteFile, createDir, copyFile, fixPath, \
-findProjectInPathTree, xmippRelpath, splitFilename
+findProjectPath, xmippRelpath, splitFilename
 
 class ProtImportParticles(ProtParticlesBase):
     def __init__(self, scriptname, project):
@@ -106,7 +106,7 @@ def importImages(log, InputFile, WorkingDir, DoCopy, ImportAll, SubsetMode, Nsub
     
     if fnInput.isMetaData():        
         inputRelativePath = dirname(relpath(InputFile, '.'))
-        projectPath = findProjectInPathTree(InputFile)
+        projectPath = findProjectPath(InputFile)
         for id in md:
             imgFn = md.getValue(MDL_IMAGE, id)
             imgNo, imgFn = splitFilename(imgFn)

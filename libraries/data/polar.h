@@ -128,8 +128,8 @@ public:
     {
         Polar<T> result;
         result = *(this);
-        for (int i = 0; i < rings.size(); i++)
-            for (int j = 0; j < XSIZE(rings[i]); j++)
+        for (size_t i = 0; i < rings.size(); i++)
+            for (size_t j = 0; j < XSIZE(rings[i]); j++)
                 result(i,j) -= val;
 
         return result;
@@ -141,8 +141,8 @@ public:
     {
         Polar<T> result;
         result = *(this);
-        for (int i = 0; i < rings.size(); i++)
-            for (int j = 0; j < XSIZE(rings[i]); j++)
+        for (size_t i = 0; i < rings.size(); i++)
+            for (size_t j = 0; j < XSIZE(rings[i]); j++)
                 result(i,j) += val;
 
         return result;
@@ -154,8 +154,8 @@ public:
     {
         Polar<T> result;
         result = *(this);
-        for (int i = 0; i < rings.size(); i++)
-            for (int j = 0; j < XSIZE(rings[i]); j++)
+        for (size_t i = 0; i < rings.size(); i++)
+            for (size_t j = 0; j < XSIZE(rings[i]); j++)
                 result(i,j) *= val;
 
         return result;
@@ -167,8 +167,8 @@ public:
     {
         Polar<T> result;
         result = *(this);
-        for (int i = 0; i < rings.size(); i++)
-            for (int j = 0; j < XSIZE(rings[i]); j++)
+        for (size_t i = 0; i < rings.size(); i++)
+            for (size_t j = 0; j < XSIZE(rings[i]); j++)
                 result(i,j) /= val;
 
         return result;
@@ -178,11 +178,11 @@ public:
      */
     void operator-=(const T val)
     {
-        int imax=rings.size();
-        for (int i = 0; i < imax; i++)
+    	size_t imax=rings.size();
+        for (size_t i = 0; i < imax; i++)
         {
             MultidimArray<T> &rings_i=rings[i];
-            for (int j = 0; j < XSIZE(rings_i); j++)
+            for (size_t j = 0; j < XSIZE(rings_i); j++)
                 DIRECT_A1D_ELEM(rings_i,j) -= val;
         }
     }
@@ -191,8 +191,8 @@ public:
      */
     void operator+=(const T val)
     {
-        int imax=rings.size();
-        for (int i = 0; i < imax; i++)
+    	size_t imax=rings.size();
+        for (size_t i = 0; i < imax; i++)
         {
             MultidimArray<T> &rings_i=rings[i];
             for (int j = 0; j < XSIZE(rings_i); j++)
@@ -204,8 +204,8 @@ public:
      */
     void operator*=(const T val)
     {
-        int imax=rings.size();
-        for (int i = 0; i < imax; i++)
+    	size_t imax=rings.size();
+        for (size_t i = 0; i < imax; i++)
         {
             MultidimArray<T> &rings_i=rings[i];
             for (int j = 0; j < XSIZE(rings_i); j++)
@@ -217,12 +217,12 @@ public:
      */
     void operator/=(const T val)
     {
-        int imax=rings.size();
+    	size_t imax=rings.size();
         double ival=1.0/val;
-        for (int i = 0; i < imax; i++)
+        for (size_t i = 0; i < imax; i++)
         {
             MultidimArray<T> &rings_i=rings[i];
-            for (int j = 0; j < XSIZE(rings_i); j++)
+            for (size_t j = 0; j < XSIZE(rings_i); j++)
                 DIRECT_A1D_ELEM(rings_i,j) *= ival;
         }
     }
@@ -231,8 +231,8 @@ public:
      */
     Polar& operator-=(const Polar<T> in)
     {
-        for (int i = 0; i < rings.size(); i++)
-            for (int j = 0; j < XSIZE(rings[i]); j++)
+        for (size_t i = 0; i < rings.size(); i++)
+            for (size_t j = 0; j < XSIZE(rings[i]); j++)
                 (*(this))(i,j) -= in(i,j);
     }
 
@@ -240,8 +240,8 @@ public:
     */
     Polar& operator+=(const Polar<T> in)
     {
-        for (int i = 0; i < rings.size(); i++)
-            for (int j = 0; j < XSIZE(rings[i]); j++)
+        for (size_t i = 0; i < rings.size(); i++)
+            for (size_t j = 0; j < XSIZE(rings[i]); j++)
                 (*(this))(i,j) += in(i,j);
     }
 
@@ -249,8 +249,8 @@ public:
     */
     Polar& operator*=(const Polar<T> in)
     {
-        for (int i = 0; i < rings.size(); i++)
-            for (int j = 0; j < XSIZE(rings[i]); j++)
+        for (size_t i = 0; i < rings.size(); i++)
+            for (size_t j = 0; j < XSIZE(rings[i]); j++)
                 (*(this))(i,j) *= in(i,j);
     }
 
@@ -258,8 +258,8 @@ public:
     */
     Polar& operator/=(const Polar<T> in)
     {
-        for (int i = 0; i < rings.size(); i++)
-            for (int j = 0; j < XSIZE(rings[i]); j++)
+        for (size_t i = 0; i < rings.size(); i++)
+            for (size_t j = 0; j < XSIZE(rings[i]); j++)
                 (*(this))(i,j) /= in(i,j);
     }
 
@@ -491,14 +491,14 @@ public:
         else
             REPORT_ERROR(ERR_VALUE_INCORRECT,"Incorrect mode for computeAverageAndStddev");
 
-        int imax=rings.size();
+        size_t imax=rings.size();
         const double *ptrRing_radius=&ring_radius[0];
-        for (int i = 0; i < imax; ++i, ++ptrRing_radius)
+        for (size_t i = 0; i < imax; ++i, ++ptrRing_radius)
         {
             // take varying sampling into account
             w = (twopi * (*ptrRing_radius)) / (double) XSIZE(rings[i]);
             const MultidimArray<T> &rings_i=rings[i];
-            for (int j = 0; j < XSIZE(rings_i); j++)
+            for (size_t j = 0; j < XSIZE(rings_i); j++)
             {
                 aux = DIRECT_A1D_ELEM(rings_i,j);
                 double waux=w*aux;
@@ -524,12 +524,12 @@ public:
 
     void normalize(double average, double stddev)
     {
-        int imax=rings.size();
+    	size_t imax=rings.size();
         double istddev=1.0/stddev;
-        for (int i = 0; i < imax; i++)
+        for (size_t i = 0; i < imax; i++)
         {
             MultidimArray<T> &rings_i=rings[i];
-            for (int j = 0; j < XSIZE(rings_i); j++)
+            for (size_t j = 0; j < XSIZE(rings_i); j++)
                 DIRECT_A1D_ELEM(rings_i,j) = (DIRECT_A1D_ELEM(rings_i,j)-average)*istddev;
         }
     }
@@ -624,7 +624,6 @@ public:
                                       double oversample1 = 1., int mode1 = FULL_CIRCLES)
     {
         int nsam;
-        int nring = last_ring - first_ring + 1;
         double radius, twopi, dphi, phi;
         double xp, yp, minxp, maxxp, minyp, maxyp;
 
@@ -698,7 +697,7 @@ public:
     {
         (out.transformers).resize(rings.size());
         (out.arrays).resize(rings.size());
-        for (int iring = 0; iring < rings.size(); iring++)
+        for (size_t iring = 0; iring < rings.size(); iring++)
         {
             (out.arrays)[iring] = rings[iring];
             ((out.transformers)[iring]).setReal((out.arrays)[iring]);

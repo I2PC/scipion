@@ -87,6 +87,8 @@ std::ostream& operator << (std::ostream& o, const SelLine &SFL)
     case (SelLine::COMMENT):
                     o << SFL.text << std::endl;
         break;
+    default:
+    	break;
     }
     return o;
 }
@@ -275,6 +277,8 @@ void SelFile::read(const FileName &sel_name, int overriding)
             case (SelLine::COMMENT):
                             text_line.push_back(temp);
                 break;
+            default:
+            	break;
             }
             line_no++;
             fh_sel.peek();
@@ -671,7 +675,7 @@ FileName SelFile::FileExtension()
 int SelFile::MaxFileNameLength()
 {
     std::vector<SelLine>::iterator aux = current_line;
-    int max_length = 0;
+    size_t max_length = 0;
     go_first_ACTIVE();
     while (!eof())
     {
@@ -683,7 +687,7 @@ int SelFile::MaxFileNameLength()
 }
 
 /* Get current filename ---------------------------------------------------- */
-const std::string& SelFile::get_current_file()
+const std::string SelFile::get_current_file()
 {
     if (current_line == text_line.end())
         return "";
@@ -693,7 +697,7 @@ const std::string& SelFile::get_current_file()
 }
 
 /* Get filename number i --------------------------------------------------- */
-const std::string& SelFile::get_file_number(int i)
+const std::string SelFile::get_file_number(int i)
 {
     if (i < 0)
         return "";
@@ -855,7 +859,7 @@ SelFile SelFile::sort_by_filenames()
 SelFile SelFile::randomize()
 {
     SelFile  result, aux;
-    int      i, j;
+    int      i;
     int      rnd_indx;
 
     randomize_random_generator();
@@ -883,7 +887,7 @@ SelFile SelFile::randomize()
 SelFile SelFile::random_discard(int N)
 {
     SelFile  result;
-    int      i, j, rnd_indx;
+    int      i, rnd_indx;
 
     SelLine::Label label = SelLine::ACTIVE;
     result = *this;
@@ -1002,13 +1006,13 @@ SelFile compare(SelFile &SF1, SelFile &SF2, const int mode)
 	result.text_line.push_back(temp);
 	temp.text = "";
 	result.text_line.push_back(temp);
-	sprintf(str, "%6d", in_both.size());
+	sprintf(str, "%6lu", (unsigned long int)in_both.size());
 	temp.text = (std::string)"# Matching Files: " + str;
 	result.text_line.push_back(temp);
-	sprintf(str, "%6d", only_in_SF1.size());
+	sprintf(str, "%6lu", (unsigned long int)only_in_SF1.size());
 	temp.text = (std::string)"# Only in file 1: " + str;
 	result.text_line.push_back(temp);
-	sprintf(str, "%6d", only_in_SF2.size());
+	sprintf(str, "%6lu", (unsigned long int)only_in_SF2.size());
 	temp.text = (std::string)"# Only in file 2: " + str;
 	result.text_line.push_back(temp);
 	temp.text = "# -------------------------------------------------------------";

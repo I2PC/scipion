@@ -52,7 +52,7 @@ void ProgVolumeToPseudoatoms::readParams()
     fnVol = getParam("-i");
     fnOut = getParam("-o");
     mask_prm.allowed_data_types = INT_MASK;
-    if (useMask = checkParam("--mask"))
+    if ((useMask = checkParam("--mask")))
         mask_prm.readParams(this);
     sigma = getDoubleParam("--sigma");
     targetError = getDoubleParam("--targetError");
@@ -250,7 +250,6 @@ void ProgVolumeToPseudoatoms::placeSeeds(int Nseeds)
     Filter.applyMaskSpace(Vdiff);
 
     // Place all seeds
-    int rmax=3*sigma;
     const MultidimArray<int> &iMask3D=mask_prm.get_binary_mask();
     for (int n=0; n<Nseeds; n++)
     {
@@ -333,7 +332,7 @@ void ProgVolumeToPseudoatoms::removeSeeds(int Nseeds)
     {
         for (double v=vmin+vmin/20; v<0; v-=vmin/20)
         {
-            int oldListSize;
+            size_t oldListSize;
             do
             {
                 oldListSize=atoms.size();
@@ -493,12 +492,12 @@ void ProgVolumeToPseudoatoms::drawApproximation()
 double ProgVolumeToPseudoatoms::computeAverage(int k, int i, int j,
         MultidimArray<double> &V)
 {
-    int k0=XMIPP_MAX(STARTINGZ(V),k-sigma3);
-    int i0=XMIPP_MAX(STARTINGY(V),i-sigma3);
-    int j0=XMIPP_MAX(STARTINGX(V),j-sigma3);
-    int kF=XMIPP_MIN(FINISHINGZ(V),k+sigma3);
-    int iF=XMIPP_MIN(FINISHINGY(V),i+sigma3);
-    int jF=XMIPP_MIN(FINISHINGX(V),j+sigma3);
+    int k0=std::max(STARTINGZ(V),(int)floor(k-sigma3));
+    int i0=std::max(STARTINGY(V),(int)floor(i-sigma3));
+    int j0=std::max(STARTINGX(V),(int)floor(j-sigma3));
+    int kF=std::min(FINISHINGZ(V),(int)ceil(k+sigma3));
+    int iF=std::min(FINISHINGY(V),(int)ceil(i+sigma3));
+    int jF=std::min(FINISHINGX(V),(int)ceil(j+sigma3));
     double sum=0;
     for (int kk=k0; kk<=kF; kk++)
         for (int ii=i0; ii<=iF; ii++)
@@ -814,12 +813,12 @@ void ProgVolumeToPseudoatoms::writeResults()
             for (int j=i+1; j<Natoms; j++)
             {
                 double dist=(atoms[i].location-atoms[j].location).module();
-                int closestSoFar=NclosestToThisAtom.size();
+                size_t closestSoFar=NclosestToThisAtom.size();
                 if (closestSoFar==0)
                     NclosestToThisAtom.push_back(dist);
                 else
                 {
-                    int idx=0;
+                    size_t idx=0;
                     while (idx<closestSoFar && NclosestToThisAtom[idx]<dist)
                         idx++;
                     if (idx<closestSoFar)
@@ -835,7 +834,7 @@ void ProgVolumeToPseudoatoms::writeResults()
                 }
             }
             if (i<Natoms-1)
-                for (int k=0; k<Nclosest; k++)
+                for (size_t k=0; k<Nclosest; k++)
                     NclosestDistances(i*Nclosest+k)=sampling*NclosestToThisAtom[k];
         }
         compute_hist(NclosestDistances, hist, 0, NclosestDistances.computeMax(),

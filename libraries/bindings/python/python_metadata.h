@@ -314,9 +314,6 @@ extern PyMethodDef MetaData_methods[];
 /*MetaData Type */
 extern PyTypeObject MetaDataType;
 
-static PyTypeObject * MetaDataTypePtr = NULL;
-static PyTypeObject * MDQueryTypePtr = NULL;
-
 /*Helper function to create an MDObject from a PyObject */
 MDObject * createMDObject(int label, PyObject *pyValue);
 

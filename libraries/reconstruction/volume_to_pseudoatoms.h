@@ -126,7 +126,7 @@ public:
     double sampling;
     
     /// N closest atoms for the distance histogram
-    int Nclosest;
+    size_t Nclosest;
 
     /// Don't scale the atom weights at the end
     bool dontScale;

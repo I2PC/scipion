@@ -44,7 +44,7 @@ typedef void ImageBinaryOperator(Image<double> &op1, const Image<double> &op2);
 
 /**This define the prototype of unary operations on images
    the result will be left in op */
-typedef double ImageUnaryOperator(Image<double> &op);
+typedef void ImageUnaryOperator(Image<double> &op);
 
 /** Operate program */
 class ProgOperate: public XmippMetadataProgram

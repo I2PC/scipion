@@ -25,7 +25,6 @@
 
 #include "mpi_classify_CL2D_core_analysis.h"
 #include <classification/analyze_cluster.h>
-#include <reconstruction/image_sort_by_statistics.h>
 
 // Show block ==============================================================
 std::ostream & operator << (std::ostream &out, const CL2DBlock &block)
@@ -43,7 +42,7 @@ ProgClassifyCL2DCore::ProgClassifyCL2DCore(int argc, char **argv)
     taskDistributor=NULL;
     maxLevel=-1;
     tolerance=0;
-    thPCAZscore=thZscore=3;
+    thPCAZscore=3;
 }
 
 // MPI destructor
@@ -60,8 +59,8 @@ void ProgClassifyCL2DCore::readParams()
     fnODir = getParam("--dir");
     if (checkParam("--computeCore"))
     {
-        thZscore = getDoubleParam("--computeCore",0);
-        thPCAZscore = getDoubleParam("--computeCore",1);
+        thPCAZscore = getDoubleParam("--computeCore",0);
+        NPCA = getIntParam("--computeCore",1);
         action=COMPUTE_CORE;
     }
     else if (checkParam("--computeStableCore"))
@@ -77,13 +76,12 @@ void ProgClassifyCL2DCore::show()
     if (!verbose)
         return;
     std::cout << "CL2D rootname:        " << fnRoot << std::endl
-    		  << "CL2D output dir:      " << fnODir << std::endl;
-    if (action==COMPUTE_CORE)
-        std::cout
-        << "Tolerance:            " << tolerance << std::endl
-        << "Threshold Zscore:     " << thZscore << std::endl;
+    << "CL2D output dir:      " << fnODir << std::endl;
+    if (action==COMPUTE_STABLE_CORE)
+        std::cout << "Tolerance:                " << tolerance << std::endl;
     else
-        std::cout << "Threshold PCA Zscore: " << thPCAZscore << std::endl ;
+        std::cout << "Threshold PCA Zscore:     " << thPCAZscore << std::endl
+    			  << "Number of PCA dimensions: " << NPCA << std::endl;
 }
 
 // usage ===================================================================
@@ -92,8 +90,8 @@ void ProgClassifyCL2DCore::defineParams()
     addUsageLine("Compute the core of a CL2D clustering");
     addParamsLine("    --root <rootname>          : Rootname of the CL2D");
     addParamsLine("    --dir <dir>                : Output directory of the CL2D");
-    addParamsLine("    --computeCore <thZscore=3> <thPCAZscore=3> : The class cores are computed by thresholding the Zscore of");
-    addParamsLine("                               : the class images and their projections onto a 2D PCA space");
+    addParamsLine("    --computeCore <thPCAZscore=3> <NPCA=2>: The class cores are computed by thresholding the Zscore of");
+    addParamsLine("                               : the class images and their projections onto a nD PCA space (by default, n=2)");
     addParamsLine("or  --computeStableCore <tolerance=1> : The stable core is formed by all the images in the class that have been");
     addParamsLine("                               : in the same class (except in tolerance levels) in the whole hierarchy.");
     addParamsLine("                               : If tolerance=0, then the stable core is formed by the set of images that");
@@ -126,9 +124,10 @@ void ProgClassifyCL2DCore::produceSideInfo()
         block.level=level;
         block.fnLevel=fnLevel;
         block.fnLevelCore=fnLevel.insertBeforeExtension("_core");
-        for (int i=0; i<blocksAux.size(); i++)
+        for (size_t i=0; i<blocksAux.size(); i++)
         {
-            if (blocksAux[i].find("class")!=std::string::npos && blocksAux[i].find("images")!=std::string::npos)
+            if (blocksAux[i].find("class")!=std::string::npos && 
+                blocksAux[i].find("images")!=std::string::npos)
             {
                 block.block=blocksAux[i];
                 blocks.push_back(block);
@@ -143,8 +142,7 @@ void ProgClassifyCL2DCore::produceSideInfo()
     // Get image dimensions
     if (Nblocks>0)
     {
-        int Zdim;
-        size_t Ndim;
+        size_t Zdim, Ndim;
         getImageSizeFromFilename(blocks[0].block+"@"+blocks[0].fnLevel,Xdim,Ydim,Zdim,Ndim);
     }
 }
@@ -156,15 +154,10 @@ void ProgClassifyCL2DCore::computeCores()
         std::cerr << "Computing cores ...\n";
     ProgAnalyzeCluster analyzeCluster;
     analyzeCluster.verbose=0;
-    analyzeCluster.NPCA=2;
+    analyzeCluster.NPCA=NPCA;
     analyzeCluster.Niter=10;
     analyzeCluster.distThreshold=thPCAZscore;
     analyzeCluster.dontMask=false;
-
-    ProgSortByStatistics sortJunk;
-    sortJunk.verbose=0;
-    sortJunk.addToInput=true;
-    sortJunk.cutoff=thZscore;
 
     MetaData MD;
     size_t first, last;
@@ -180,14 +173,10 @@ void ProgClassifyCL2DCore::computeCores()
             analyzeCluster.fnOut=blocks[idx].fnLevel.insertBeforeExtension((String)"_core_"+blocks[idx].block);
             analyzeCluster.run();
 
-            // Remove outliers in the
-            sortJunk.fn = analyzeCluster.fnOut;
-            sortJunk.run();
-
             // Remove outliers from file
-            MD.read(sortJunk.fn);
+            MD.read(analyzeCluster.fnOut);
             MD.removeDisabled();
-            MD.write(sortJunk.fn,MD_APPEND);
+            MD.write(analyzeCluster.fnOut,MD_APPEND);
 
             if (verbose && node->rank==0)
                 progress_bar(idx);
@@ -221,64 +210,74 @@ void ProgClassifyCL2DCore::computeStableCores()
             CL2DBlock &thisBlock=blocks[idx];
             if (thisBlock.level<=tolerance)
                 continue;
+            if (!existsBlockInMetaDataFile(thisBlock.fnLevelCore, thisBlock.block))
+                continue;
             thisClass.read(thisBlock.block+"@"+thisBlock.fnLevelCore);
+            thisClassCore.clear();
 
             // Add MDL_ORDER
-            size_t order=0;
-            thisClassOrder.clear();
-            FOR_ALL_OBJECTS_IN_METADATA(thisClass)
+            if (thisClass.size()>0)
             {
-            	thisClass.getValue(MDL_IMAGE,fnImg,__iter.objId);
-            	thisClassOrder[fnImg]=order++;
-            }
-
-            // Calculate coocurrence within all blocks whose level is inferior to this
-            size_t NthisClass=thisClass.size();
-            coocurrence.initZeros(NthisClass,NthisClass);
-            for (int n=0; n<Nblocks; n++)
-            {
-                CL2DBlock &anotherBlock=blocks[n];
-                if (anotherBlock.level>=thisBlock.level)
-                    break;
-                anotherClass.read(anotherBlock.block+"@"+anotherBlock.fnLevelCore);
-                anotherClass.intersection(thisClass,MDL_IMAGE);
-                commonImages.join(anotherClass,thisClass,MDL_IMAGE,LEFT);
-                commonIdx.resize(commonImages.size());
-                size_t idx=0;
-                FOR_ALL_OBJECTS_IN_METADATA(commonImages)
+                size_t order=0;
+                thisClassOrder.clear();
+                FOR_ALL_OBJECTS_IN_METADATA(thisClass)
                 {
-                	commonImages.getValue(MDL_IMAGE,fnImg,__iter.objId);
-                	commonIdx[idx++]=thisClassOrder[fnImg];
+                    thisClass.getValue(MDL_IMAGE,fnImg,__iter.objId);
+                    thisClassOrder[fnImg]=order++;
                 }
-                size_t Ncommon=commonIdx.size();
-                for (size_t i=0; i<Ncommon; i++)
+
+                // Calculate coocurrence within all blocks whose level is inferior to this
+                size_t NthisClass=thisClass.size();
+                if (NthisClass>0)
                 {
-                	size_t idx_i=commonIdx[i];
-                    for (size_t j=i+1; j<Ncommon; j++)
+                    coocurrence.initZeros(NthisClass,NthisClass);
+                    for (int n=0; n<Nblocks; n++)
                     {
-                    	size_t idx_j=commonIdx[j];
-                        MAT_ELEM(coocurrence,idx_i,idx_j)+=1;
+                        CL2DBlock &anotherBlock=blocks[n];
+                        if (anotherBlock.level>=thisBlock.level)
+                            break;
+                        if (!existsBlockInMetaDataFile(anotherBlock.fnLevelCore, anotherBlock.block))
+                            continue;
+                        anotherClass.read(anotherBlock.block+"@"+anotherBlock.fnLevelCore);
+                        anotherClass.intersection(thisClass,MDL_IMAGE);
+                        commonImages.join(anotherClass,thisClass,MDL_IMAGE,LEFT);
+                        commonIdx.resize(commonImages.size());
+                        size_t idx=0;
+                        FOR_ALL_OBJECTS_IN_METADATA(commonImages)
+                        {
+                            commonImages.getValue(MDL_IMAGE,fnImg,__iter.objId);
+                            commonIdx[idx++]=thisClassOrder[fnImg];
+                        }
+                        size_t Ncommon=commonIdx.size();
+                        for (size_t i=0; i<Ncommon; i++)
+                        {
+                            size_t idx_i=commonIdx[i];
+                            for (size_t j=i+1; j<Ncommon; j++)
+                            {
+                                size_t idx_j=commonIdx[j];
+                                MAT_ELEM(coocurrence,idx_i,idx_j)+=1;
+                            }
+                        }
                     }
                 }
-            }
 
-            // Take only those elements whose coocurrence is maximal
-            maximalCoocurrence.initZeros(NthisClass);
-            int aimedCoocurrence=thisBlock.level-tolerance;
-            FOR_ALL_ELEMENTS_IN_MATRIX2D(coocurrence)
-            if (MAT_ELEM(coocurrence,i,j)==aimedCoocurrence)
-                VEC_ELEM(maximalCoocurrence,i)=VEC_ELEM(maximalCoocurrence,j)=1;
+                // Take only those elements whose coocurrence is maximal
+                maximalCoocurrence.initZeros(NthisClass);
+                int aimedCoocurrence=thisBlock.level-tolerance;
+                FOR_ALL_ELEMENTS_IN_MATRIX2D(coocurrence)
+                if (MAT_ELEM(coocurrence,i,j)==aimedCoocurrence)
+                    VEC_ELEM(maximalCoocurrence,i)=VEC_ELEM(maximalCoocurrence,j)=1;
 
-            // Now compute core
-            thisClassCore.clear();
-            FOR_ALL_OBJECTS_IN_METADATA(thisClass)
-            {
-                thisClass.getValue(MDL_IMAGE,fnImg,__iter.objId);
-                size_t idx=thisClassOrder[fnImg];
-                if (VEC_ELEM(maximalCoocurrence,idx))
+                // Now compute core
+                FOR_ALL_OBJECTS_IN_METADATA(thisClass)
                 {
-                    thisClass.getRow(row,__iter.objId);
-                    thisClassCore.addRow(row);
+                    thisClass.getValue(MDL_IMAGE,fnImg,__iter.objId);
+                    size_t idx=thisClassOrder[fnImg];
+                    if (VEC_ELEM(maximalCoocurrence,idx))
+                    {
+                        thisClass.getRow(row,__iter.objId);
+                        thisClassCore.addRow(row);
+                    }
                 }
             }
             thisClassCore.write(thisBlock.fnLevel.insertBeforeExtension((String)"_stable_core_"+thisBlock.block),MD_APPEND);
@@ -315,12 +314,10 @@ void ProgClassifyCL2DCore::gatherResults(int firstLevel, const String &suffix)
                     size_t classSize=MD.size();
                     fnClass.compose(classNo,fnSummary,"stk");
                     if (classSize>0)
-                    {
                         getAverageApplyGeo(MD, classAverage());
-                        classAverage.write(fnClass);
-                    }
                     else
                         classAverage().initZeros(Ydim,Xdim);
+                    classAverage.write(fnClass);
 
                     size_t id=classes.addObject();
                     classes.setValue(MDL_REF,classNo,id);

@@ -36,9 +36,9 @@ import xmipp.jni.MetaData;
  *
  * @author Juanjo Vega
  */
-public class JFrameFSC extends JFrame {
+public class FSCJFrame extends JFrame {
 
-    public JFrameFSC(GalleryData data) {
+    public FSCJFrame(GalleryData data, MetaData imagesmd) {
         super(XmippLabel.TITLE_FSC + data.md.getFilename());
 
         try {
@@ -46,7 +46,8 @@ public class JFrameFSC extends JFrame {
             setLayout(new BorderLayout());
 
             MetaData mdout = new MetaData();
-            mdout.computeFourierStatistics(data.md, data.getRenderLabel());
+          
+            mdout.computeFourierStatistics(imagesmd, data.getRenderLabel());
 
             double xValues[] = mdout.getColumnValues(MDLabel.MDL_RESOLUTION_FREQ);
             double y1s[] = mdout.getColumnValues(MDLabel.MDL_RESOLUTION_FRC);
@@ -85,6 +86,7 @@ public class JFrameFSC extends JFrame {
             add(createChartPanel(chart), BorderLayout.CENTER);
             pack();
             XmippWindowUtil.centerWindows(this);
+            imagesmd.destroy();
         } catch (Exception e) {
             DEBUG.printException(e);
         }

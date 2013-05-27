@@ -125,13 +125,14 @@ bool ProgAlignTiltPairs::centerTiltedImage(const MultidimArray<double> &imgRefU,
     applyGeometry(LINEAR, imgT2DClass, imgT, A2D, IS_NOT_INV, WRAP);
 
     // Calculate best shift
+    int max_shift_pixels=(int)(max_shift/100.0*XSIZE(imgT));
     CorrelationAux aux;
-    bestShift(imgRefU, imgT2DClass, shiftX, shiftY, auxCorr);
+    double corr=bestShift(imgRefU, imgT2DClass, shiftX, shiftY, auxCorr, NULL, max_shift_pixels);
 
 #ifdef DEBUG
 
     std::cout << "alphaU=" << alphaU << " inplaneU=" << inPlaneU << " tilt=" << tilt << " alphaT=" << alphaT << std::endl;
-    std::cout << "Best shift= " << shiftX << " " << shiftY << std::endl;
+    std::cout << "Best shift= " << shiftX << " " << shiftY << " corr=" << corr << std::endl;
 #endif
 
     Matrix1D<double> vShift(2);
@@ -161,7 +162,7 @@ bool ProgAlignTiltPairs::centerTiltedImage(const MultidimArray<double> &imgRefU,
     char c = getchar();
 #endif
 
-    return (shift < max_shift/100.0*XSIZE(imgT));
+    return (shift < (double)max_shift_pixels) || corr<0;
 }
 //#undef DEBUG
 
@@ -220,9 +221,9 @@ void ProgAlignTiltPairs::run()
             save.write("PPPuntiltedAligned.xmp");
             geo2TransformationMatrix(row, E);
             //rotation2DMatrix(-inPlaneU,E);
-            save() = imgU();
-            applyGeometry(LINEAR, save(), imgU(), E, IS_NOT_INV, WRAP);
-            save.write("PPPuntiltedAligned2.xmp");
+            //save() = imgU();
+            //applyGeometry(LINEAR, save(), imgU(), E, IS_NOT_INV, WRAP);
+            //save.write("PPPuntiltedAligned2.xmp");
         }
 #endif
 

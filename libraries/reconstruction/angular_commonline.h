@@ -97,7 +97,7 @@ public:
     bool tryInitial;
 
     /** Read parameters from command line */
-    void read(int argc, char **argv);
+    void read(int argc, const char **argv);
 
     /** Show parameters */
     void show() const;

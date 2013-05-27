@@ -1,9 +1,9 @@
 package xmipp.viewer.windows;
 
-import ij.IJ;
+//import ij.IJ;
 import ij.ImagePlus;
-import ij.gui.ImageCanvas;
-import ij.gui.ImageWindow;
+//import ij.gui.ImageCanvas;
+//import ij.gui.ImageWindow;
 import ij.gui.Line;
 import ij.gui.ProfilePlot;
 
@@ -14,7 +14,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Point;
-import java.awt.Scrollbar;
+//import java.awt.Scrollbar;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -31,8 +31,11 @@ import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import xmipp.utils.XmippFileChooser;
+
+import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollBar;
 import javax.swing.JTabbedPane;
 import javax.swing.UIManager;
 
@@ -47,12 +50,14 @@ import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import xmipp.ij.commons.XmippIJUtil;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.CTFDescription;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
+import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippLabel;
 import xmipp.utils.XmippWindowUtil;
 
@@ -65,7 +70,7 @@ import xmipp.utils.XmippWindowUtil;
  * @author Juanjo Vega
  */
 @SuppressWarnings("serial")
-public class CTFProfileWindow extends ImageWindow implements ItemListener, ActionListener {
+public class CTFProfileWindow extends JFrame implements ItemListener, ActionListener {
 
     private final static BasicStroke plotsStroke = new BasicStroke(2.0f);
     private final static int MAX_VALUE = 360;
@@ -77,7 +82,7 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
     private final static Color COLOR_DIFFERENCE = Color.orange;
     private final static Color COLOR_DISABLED = UIManager.getColor("ComboBox.disabledForeground");
     private ImagePlus psdimage;
-    private Scrollbar scrollbar;
+    private JScrollBar scrollbar;
     private CTFDescription ctfmodel;
     private Point centerDisplay, centerPSD;
     private int displayLength, samples;
@@ -91,13 +96,13 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
     private JButton bExportProfile, bExportAVG;
     private double xValues[];
     private double Tm;
+	private JButton iconbt;
 
     public CTFProfileWindow(ImagePlus imp, String CTFFilename, String PSDFilename) {
-        super(imp);
 
         try {
-            ImageCanvas imc = imp.getCanvas();
-            imc.setEnabled(false);  // Clicks won't remove selection ;)
+            //ImageCanvas imc = imp.getCanvas();
+            //imc.setEnabled(false);  // Clicks won't remove selection ;)
 
             Tm = getSamplingRate(CTFFilename);
             System.out.println("Tm="+Tm);
@@ -113,7 +118,7 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
             GridBagConstraints gc = new GridBagConstraints();
             setLayout(new GridBagLayout());
 
-            scrollbar = new Scrollbar(Scrollbar.HORIZONTAL);
+            scrollbar = new JScrollBar(JScrollBar.HORIZONTAL);
             scrollbar.setMaximum(MAX_VALUE + scrollbar.getVisibleAmount());
             scrollbar.addAdjustmentListener(new java.awt.event.AdjustmentListener() {
 
@@ -121,9 +126,16 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
                     updatePlots();
                 }
             });
+            
+            iconbt = new JButton(XmippIJUtil.getImageIcon(imp, 300, 300));
+    		iconbt.setToolTipText("Load CTF Profile");
+    		iconbt.setBorderPainted(false);
+    		iconbt.setContentAreaFilled(false);
+    		iconbt.setFocusPainted(false);
+    		iconbt.setOpaque(false);
 
             JPanel panelImage = new JPanel(new BorderLayout());
-            panelImage.add(imc, BorderLayout.CENTER);
+            panelImage.add(iconbt, BorderLayout.CENTER);
             panelImage.add(scrollbar, BorderLayout.SOUTH);
             addMouseWheelListener(new MouseWheelListener() {
 
@@ -172,7 +184,6 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
             bExportAVG = XmippWindowUtil.getTextButton(XmippLabel.BUTTON_EXPORT_RADIAL_AVERAGE, this);
 
             JPanel panelCBoxes = new  JPanel(new GridBagLayout());
-            //layout.
             gc.anchor = GridBagConstraints.WEST;
             panelCBoxes.add(rbCTF, XmippWindowUtil.getConstraints(gc, 0, 0));
             panelCBoxes.add(rbPSD, XmippWindowUtil.getConstraints(gc, 1, 0));
@@ -184,12 +195,11 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
             panelCBoxes.add(bExportProfile, XmippWindowUtil.getConstraints(gc, 0, 4, 2));
             panelCBoxes.add(bExportAVG, XmippWindowUtil.getConstraints(gc, 0, 5, 2));
             // Adds panels.
-            //setLayout(new BorderLayout());
             add(panelImage, XmippWindowUtil.getConstraints(gc, 0, 0));
             add(pCenter, XmippWindowUtil.getConstraints(gc, 1, 0, 2, 2));
             gc.anchor = GridBagConstraints.EAST;
             add(panelCBoxes,XmippWindowUtil.getConstraints(gc, 0, 1));
-            // Store initial values.
+//            // Store initial values.
             centerDisplay = new Point(imp.getWidth() / 2, imp.getHeight() / 2);
             centerPSD = new Point(psdimage.getWidth() / 2, psdimage.getHeight() / 2);
 
@@ -200,7 +210,7 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
 
             setCBEnableStatus();
             updatePlots();
-            updateRadialAverage();
+//            updateRadialAverage();
 
             // Trick: setting no resizable allows to pack properly.
             setResizable(false);
@@ -240,7 +250,7 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
                 }
 
                 if (export(file.getAbsolutePath(), chart)) {
-                    IJ.showMessage("Save", "File saved sucesfully.");
+                    XmippDialog.showInfo(this, "File saved sucesfully.");
                 }
             }
         }
@@ -452,13 +462,13 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
 
         // Over display...
         //IJ.selectWindow();
-        IJ.makeLine(centerDisplay.x, centerDisplay.y, xDisplay, yDisplay);
+        //IJ.makeLine(centerDisplay.x, centerDisplay.y, xDisplay, yDisplay);
 
         // ...and internal PSD.
         Line line = new Line(centerPSD.x, centerPSD.y, xPSD, yPSD);
         psdimage.setRoi(line);
 
-        // Get profile.
+//        // Get profile.
         ProfilePlot profilePlot = new ProfilePlot(psdimage);
         double[] plotProfile = profilePlot.getProfile();
 
@@ -484,8 +494,8 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
             int xPSD = centerPSD.x + (int) (samples * Math.cos(current_angle));
             int yPSD = centerPSD.y + (int) (samples * Math.sin(current_angle));
 
-            Line line = new Line(centerPSD.x, centerPSD.y, xPSD, yPSD);
-            psdimage.setRoi(line);
+//            Line line = new Line(centerPSD.x, centerPSD.y, xPSD, yPSD);
+//            psdimage.setRoi(line);
 
             // Get profile.
             ProfilePlot profilePlot = new ProfilePlot(psdimage);
@@ -541,7 +551,7 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
             return true;
         } catch (Exception ex) {
             //ex.printStackTrace();
-            IJ.error(ex.getMessage());
+            XmippDialog.showError(this, ex.getMessage());
         }
 
         return false;

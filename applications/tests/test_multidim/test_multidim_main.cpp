@@ -8,13 +8,12 @@ TEST( MultidimTest, Size)
 {
     MultidimArray<int> md;
     md.resize(2,3);
-    int x,y,z;
-    size_t n;
+    size_t x,y,z, n;
     md.getDimensions(x,y,z,n);
-    EXPECT_EQ(1, n) << "MultidimArray: wrong n size";
-    EXPECT_EQ(1, z) << "MultidimArray: wrong y size";
-    EXPECT_EQ(2, y) << "MultidimArray: wrong z size";
-    EXPECT_EQ(3, x) << "MultidimArray: wrong x size";
+    EXPECT_EQ((size_t)1, n) << "MultidimArray: wrong n size";
+    EXPECT_EQ((size_t)1, z) << "MultidimArray: wrong y size";
+    EXPECT_EQ((size_t)2, y) << "MultidimArray: wrong z size";
+    EXPECT_EQ((size_t)3, x) << "MultidimArray: wrong x size";
 }
 
 TEST( MultidimTest, Assign)
@@ -179,6 +178,42 @@ TEST( MultidimTest, modulo)
 
 }
 
+
+// check the reslicing is right
+TEST( MultidimTest, getImage)
+{
+    XMIPP_TRY
+    MultidimArray<float> imgTgt, imgRef;
+
+    imgRef.resize(3,1,3,3);
+
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(imgRef)
+    dAi(imgRef, n) = n;
+
+
+    imgRef.getImage(2, imgTgt);
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(imgRef)
+        {
+            EXPECT_EQ(DIRECT_NZYX_ELEM(imgRef,2,k,i,j), DIRECT_ZYX_ELEM(imgTgt,k,i,j));
+        }
+
+
+    imgTgt.resize(6,1,3,3);
+
+    imgRef.getImage(0, imgTgt, 5);
+    imgRef.getImage(1, imgTgt, 3);
+    imgRef.getImage(2, imgTgt, 1);
+
+
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(imgRef)
+    {
+        EXPECT_EQ(DIRECT_NZYX_ELEM(imgRef,0,k,i,j), DIRECT_NZYX_ELEM(imgTgt,5,k,i,j));
+        EXPECT_EQ(DIRECT_NZYX_ELEM(imgRef,1,k,i,j), DIRECT_NZYX_ELEM(imgTgt,3,k,i,j));
+        EXPECT_EQ(DIRECT_NZYX_ELEM(imgRef,2,k,i,j), DIRECT_NZYX_ELEM(imgTgt,1,k,i,j));
+    }
+
+    XMIPP_CATCH
+}
 
 // check the reslicing is right
 TEST( MultidimTest, reslice)

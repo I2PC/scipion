@@ -172,7 +172,7 @@ String integerToString(int I, int _width = 0, char fill_with = '0');
  * truncated and if it is greater the string is right padded with spaces. If
  * width==0 then the same string is returned.
  */
-String stringToString(const String& str, int _width = 0);
+String stringToString(const String& str, size_t _width = 0);
 
 /** Check angle.
  *
@@ -316,7 +316,7 @@ inline char* nextToken()
  * It reads from position i. Returns (in i) the following position to search on.
  * When there are no more tokens. It returns "".
  */
-String nextToken(const String& str, int& i);
+String nextToken(const String& str, size_t& i);
 
 /** Get non empty string (char*).
  *

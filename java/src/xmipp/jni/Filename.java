@@ -1,8 +1,6 @@
 package xmipp.jni;
 
 import java.io.File;
-import java.io.FilenameFilter;
-import java.net.URI;
 
 public class Filename {
 
@@ -21,7 +19,7 @@ public class Filename {
 	public final static String EXT_HED = ".hed";
 	public final static String EXT_SER = ".ser";
 	public final static String EXT_DM3 = ".dm3";
-	public final static String EXT_EM  = ".em";
+	public final static String EXT_EM = ".em";
 	public final static String EXT_PIF = ".pif";
 	public final static String EXT_RAW = ".raw";
 	public final static String EXT_INF = ".inf";
@@ -50,10 +48,12 @@ public class Filename {
 	}
 
 	public final static String[] SINGLE_IMAGES = new String[] { EXT_XMP,
-			EXT_IMG, EXT_HED, EXT_PSD, EXT_SER, EXT_DM3, EXT_EM, EXT_PIF, EXT_RAW, EXT_INF,
-			EXT_SPE, EXT_SPI, EXT_TIF, EXT_MRC, EXT_MRC2 };
-	public final static String[] VOLUMES = new String[] { EXT_MRC, EXT_MRC2, EXT_VOL, EXT_EM, EXT_PIF};
-	public final static String[] STACKS = new String[] { EXT_MRCS, EXT_MRCS2, EXT_STK, EXT_PIF};
+			EXT_IMG, EXT_HED, EXT_PSD, EXT_SER, EXT_DM3, EXT_EM, EXT_PIF,
+			EXT_RAW, EXT_INF, EXT_SPE, EXT_SPI, EXT_TIF, EXT_MRC, EXT_MRC2 };
+	public final static String[] VOLUMES = new String[] { EXT_MRC, EXT_MRC2,
+			EXT_VOL, EXT_EM, EXT_PIF };
+	public final static String[] STACKS = new String[] { EXT_MRCS, EXT_MRCS2,
+			EXT_STK, EXT_PIF };
 
 	public final static String[] METADATAS = new String[] { EXT_XMD, EXT_SEL,
 			EXT_DOC, EXT_CTFPARAM, EXT_CTFDAT, EXT_POS };
@@ -70,25 +70,6 @@ public class Filename {
 	public static boolean isSpiderVolume(String filename) {
 		return filename != null && isFileType(filename, SPIDER);
 	}
-
-	//
-	// public static boolean isSingleImage(String filename) {
-	// return filename != null && (filename.contains(SEPARATOR) ||
-	// isFileType(filename, SINGLE_IMAGES));
-	// }
-	//
-	// public static boolean isVolume(String filename) {
-	// return filename != null && isFileType(filename, VOLUMES);
-	// }
-	//
-	// public static boolean isStack(String filename) {
-	// return filename != null && isFileType(filename, STACKS);
-	// }
-	//
-	// public static boolean isStackOrVolume(String filename) {
-	// return filename != null && (isStack(filename) || isVolume(filename));
-	// }
-	//
 
 	public static native boolean hasStackExtension(String filename)
 			throws Exception;
@@ -179,95 +160,96 @@ public class Filename {
 		return false;
 	}
 
-	// Auxiliary methods.
-	public static String fixPath(String filename, String MDdir,
+	/**
+	 * This function will try to find where the images are located relative to
+	 * the container metadata, the current dir or the project dir. The search
+	 * will be in the following order: 1. From current dir (default behaivour if
+	 * this function is not used) 2. Relative to metadata 3. Relative to the
+	 * project root folder
+	 * 
+	 * @param filename
+	 *            image filename (probably from a metadata)
+	 * @param mdFilename
+	 *            metadata filename, used to check if there are relative to
+	 *            there
+	 * @param shouldExist
+	 * @return The path of the image if found, or null if not exists
+	 */
+	public static String findImagePath(String filename, String mdFilename,
 			boolean shouldExist) {
-		MDdir += !MDdir.endsWith(File.separator) ? File.separator : "";
-		String fixed = filename;
 
-		if (!filename.startsWith(File.separator)) { // Absolute path?
-			String name = Filename.getFilename(filename);
-			String strprefix = "";
-
-			if (filename.contains(Filename.SEPARATOR)) { // Has #image?
-				String prefix = Filename.getPrefix(filename);
-				strprefix = prefix + Filename.SEPARATOR;
-			}
-
-			// Checks if path is absolute...
-			if (!name.startsWith(File.separator)) {
-				// ...if not: tries to build the absolute path:
-				// 1st case: Relative to metadata file (metadata_path + file)
-				String aux = URI.create(MDdir + name).normalize().getPath();
-				File f = new File(aux);
-				if (shouldExist && !f.exists()) {
-					// 2nd case: Relative to current dir.
-					aux = URI
-							.create(System.getProperty("user.dir")
-									+ File.separatorChar + name).normalize()
-							.getPath();
-					f = new File(aux);
-					if (!f.exists()) {
-						// 3rd case: find "project dir" (the one containing a
-						// file called ".project.sqlite")
-						String projectdir = findProjectDir(MDdir,
-								Filename.PROJECT_FILE);
-						if (projectdir != null) {
-							aux = URI.create(projectdir + name).normalize()
-									.getPath();
-						}
-					}
+		String path = Filename.getFilename(filename); // Remove special chars
+		String foundPath = null;
+		File f = new File(path);
+		// 1. Check if exists from current dir
+		if (f.exists()) {
+			foundPath = path;
+		} else if (mdFilename != null) {
+			// 2. Check if exists from mdFilename
+			f = new File(mdFilename);
+			if (!f.isDirectory())
+				f = f.getParentFile();
+			f = new File(f, path);
+			if (f.exists())
+				foundPath = f.getPath();
+			else {
+				// 3. Check if it is relative to project dir
+				File projectDir = findProjectDir(mdFilename);
+				if (projectDir != null) {
+					f = new File(projectDir, path);
+					if (f.exists())
+						foundPath = f.getPath();
 				}
-
-				fixed = strprefix + aux;
 			}
 		}
-
-		return fixed;
+		
+		if (foundPath != null && hasPrefix(filename)){
+			String prefix = getPrefix(filename);
+			foundPath = compose(prefix, foundPath);
+		}
+		return foundPath;
 	}
 
+	/**
+	 * Return if the path exists removing the Xmipp special characters
+	 */
 	public static boolean exists(String path) {
 		File f = new File(Filename.getFilename(path));
-		boolean exists = f.exists();
-
 		return f.exists();
 	}
 
-	public String findProjectDir(String metadata) {
-		File f = new File(metadata);
-		String startingdir = f.isDirectory() ? metadata : f.getParent();
-
-		return findProjectDir(startingdir, PROJECT_FILE);
+	/** Find project path, see findProjectDir function */
+	public static String findProjectPath(String filename) {
+		File dir = findProjectDir(filename);
+		if (dir != null)
+			return dir.getPath();
+		return null;
 	}
 
-	private static String findProjectDir(String current,
-			final String PROJECT_FILE) {
-		FilenameFilter filter = new FilenameFilter() {
-
-			@Override
-			public boolean accept(File dir, String name) {
-				return PROJECT_FILE.compareTo(name) == 0;
-			}
-		};
-
-		File dir = new File(current);
-		String files[] = dir.list(filter);
-
-		if (files == null || files.length == 0) {
-			String parentdir = dir.getParent();
-
-			if (parentdir != null) {
-				return findProjectDir(dir.getParent(), PROJECT_FILE);
-			} else {
-				return null;
-			}
+	/**
+	 * Find in the directory if the PROJECT_FILE is present, or in any of the
+	 * parent directories
+	 */
+	public static File findProjectDir(String filename) {
+		filename = getFilename(filename);
+		File dir = new File(filename).getAbsoluteFile(); // Remove Xmipp special characters
+		if (!dir.isDirectory())
+			dir = dir.getParentFile();
+		while (dir != null) {
+			File f = new File(dir, PROJECT_FILE);
+			if (f.exists())
+				return dir;
+			dir = dir.getParentFile();
 		}
 
-		return dir.toURI().normalize().getPath();
+		return null;
 	}
 
+	/**
+	 * Remove from the filename the Xmipp special characters
+	 */
 	public static String getFilename(String filename) {
-
+		
 		if (filename.contains(SEPARATOR))
 			filename = filename.split(SEPARATOR)[1];
 
@@ -287,6 +269,10 @@ public class Filename {
 
 		return prefix != null ? Long.valueOf(prefix).longValue()
 				: ImageGeneric.ALL_IMAGES;
+	}
+
+	public static String compose(String prefix, String path) {
+		return prefix + SEPARATOR + path;
 	}
 
 	public static boolean hasPrefix(String filename) {
@@ -314,6 +300,14 @@ public class Filename {
 		}
 
 		return null;
+	}
+	
+	public static String getSuffix(String filename) {
+		String prefix = getPrefix(filename);
+		if(prefix == null)
+			return filename;
+		else
+			return filename.replace(prefix + "@", "");
 	}
 
 	/**
@@ -396,26 +390,33 @@ public class Filename {
 	public static String getBaseName(String path) {
 		int index = path.lastIndexOf(File.separatorChar);
 		if (index != -1)
-			path = path.substring(index, path.length());
+			path = path.substring(index + 1, path.length());
 		return path;
 	}
-	
-	public static String removeExtension(String path){
+
+	public static String removeExtension(String path) {
 		int index = path.lastIndexOf(".");
 		if (index != -1)
 			path = path.substring(0, index);
 		return path;
 	}
-	
-	
+
 	/** Join a set of paths */
-	public static String join(String ... paths){
+	public static String join(String... paths) {
 		String joined = paths[0];
-		for (int i = 1; i < paths.length; ++i){
+		for (int i = 1; i < paths.length; ++i) {
 			if (!joined.endsWith(File.separator))
 				joined += File.separator;
 			joined += paths[i];
 		}
 		return joined;
+	}
+	
+	public static String humanReadableByteCount(long bytes) {
+	    int unit = 1024;
+	    if (bytes < unit) return bytes + " B";
+	    int exp = (int) (Math.log(bytes) / Math.log(unit));
+	    String pre = "KMGTPE".charAt(exp-1) +  "i";
+	    return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
 	}
 }

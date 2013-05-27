@@ -217,7 +217,7 @@ double ProgAlignDualTiltSeries::distanceBetweenCommonLines(
     int refi, int dualj, const Matrix2D<double> &E,
     double X, double Y, double Z)
 {
-    SPEED_UP_temps;
+    SPEED_UP_temps012;
 
     // Compute the direction of the common line in the
     // universal coordinate system
@@ -395,7 +395,6 @@ void ProgAlignDualTiltSeries::alignDual()
 */
 
     Euler_angles2matrix(alignment(0),alignment(1),alignment(2),E);
-    int Ndual=imgDual.size();
     Matrix1D<double> shift3D=vectorR3(alignment(3),alignment(4),alignment(5));
     Matrix1D<double> shift2D=vectorR2(alignment(3),alignment(4));
     shift3D/=scaleFactor;
@@ -474,7 +473,7 @@ void ProgAlignDualTiltSeries::shiftProjectionInZ(MultidimArray<double> &I, int d
     transformer.FourierTransform(I,Ifft,false);
     FOR_ALL_ELEMENTS_IN_ARRAY2D(Ifft)
     {
-        SPEED_UP_temps;
+        SPEED_UP_temps012;
         VECTOR_R2(idx,j,i);
         FFT_idx2digfreq(I,idx,w);
         ZZ(w)=0;

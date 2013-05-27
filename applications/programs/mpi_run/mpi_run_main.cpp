@@ -121,7 +121,7 @@ public:
             }
 
             fh_in.close();
-            for (int i = 1; i < node->size; i++)
+            for (size_t i = 1; i < node->size; i++)
                 MPI_Send(0, 0, MPI_INT, i, TAG_STOP, MPI_COMM_WORLD);
         }
         else

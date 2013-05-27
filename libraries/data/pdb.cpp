@@ -326,25 +326,26 @@ void PDBRichPhantom::read(const FileName &fnPDB)
             continue;
         }
         kind = line.substr(0,4);
-        if (kind != "ATOM" && kind != "HETA")
-            continue;
-
-        // Extract atom type and position
-        // Typical line:
-        // ATOM    909  CA  ALA A 161      58.775  31.984 111.803  1.00 34.78
-        atom.name=line.substr(12,4);
-        atom.atomType = line[13];
-        atom.altloc=line[16];
-        atom.resname=line.substr(17,3);
-        atom.chainid=line[21];
-        atom.resseq = textToInteger(line.substr(22,4));
-        atom.icode = line[26];
-        atom.x = textToFloat(line.substr(30,8));
-        atom.y = textToFloat(line.substr(38,8));
-        atom.z = textToFloat(line.substr(46,8));
-        atom.occupancy = textToFloat(line.substr(54,6));
-        atom.bfactor = textToFloat(line.substr(60,6));
-        atomList.push_back(atom);
+        if (kind == "ATOM" || kind == "HETA")
+        {
+			// Extract atom type and position
+			// Typical line:
+			// ATOM    909  CA  ALA A 161      58.775  31.984 111.803  1.00 34.78
+			atom.name=line.substr(12,4);
+			atom.atomType = line[13];
+			atom.altloc=line[16];
+			atom.resname=line.substr(17,3);
+			atom.chainid=line[21];
+			atom.resseq = textToInteger(line.substr(22,4));
+			atom.icode = line[26];
+			atom.x = textToFloat(line.substr(30,8));
+			atom.y = textToFloat(line.substr(38,8));
+			atom.z = textToFloat(line.substr(46,8));
+			atom.occupancy = textToFloat(line.substr(54,6));
+			atom.bfactor = textToFloat(line.substr(60,6));
+			atomList.push_back(atom);
+        } else if (kind == "REMA")
+        	remarks.push_back(line);
     }
 
     // Close files
@@ -357,12 +358,16 @@ void PDBRichPhantom::write(const FileName &fnPDB)
     FILE* fh_out=fopen(fnPDB.c_str(),"w");
     if (!fh_out)
         REPORT_ERROR(ERR_IO_NOWRITE, fnPDB);
-    size_t imax=atomList.size();
+    size_t imax=remarks.size();
+    for (size_t i=0; i<imax; ++i)
+    	fprintf(fh_out,"%s\n",remarks[i].c_str());
+    imax=atomList.size();
     for (size_t i=0; i<imax; ++i)
     {
     	const RichAtom &atom=atomList[i];
     	fprintf (fh_out,"ATOM  %5lu %4s%c%-4s%c%4d%c   %8.3f%8.3f%8.3f%6.2f%6.2f      %4s\n",
-    			i,atom.name.c_str(),atom.altloc,atom.resname.c_str(),atom.chainid,
+    			(unsigned long int)i,atom.name.c_str(),
+    			atom.altloc,atom.resname.c_str(),atom.chainid,
     			atom.resseq,atom.icode,atom.x,atom.y,atom.z,atom.occupancy,atom.bfactor,
     			atom.name.c_str());
     }
@@ -846,7 +851,7 @@ void projectAtom(const Atom &atom, Projection &P,
     direction.selfTranspose();
     Matrix1D<double> corner1(3), corner2(3);
     Matrix1D<double> act(3);
-    SPEED_UP_temps;
+    SPEED_UP_temps012;
 
     // Find center of the feature in the projection plane ...................
     // Step 1). Project the center to the plane, the result is in the
@@ -1001,7 +1006,7 @@ void projectPDB(const PDBPhantom &phantomPDB,
     Matrix2D<double> PV = VP.inv();
 
     // Project all elements
-    for (int i = 0; i < phantomPDB.getNumberOfAtoms(); i++)
+    for (size_t i = 0; i < phantomPDB.getNumberOfAtoms(); i++)
     {
         try
         {

@@ -29,6 +29,74 @@
 /*                            Program                         */
 /**************************************************************/
 
+/* Program methods */
+PyMethodDef Program_methods[] =
+{
+    { "addUsageLine", (PyCFunction) Program_addUsageLine, METH_VARARGS,
+      "Add a line to program usage" },
+    { "addExampleLine", (PyCFunction) Program_addExampleLine, METH_VARARGS,
+      "Add a line to program examples" },
+    { "addParamsLine", (PyCFunction) Program_addParamsLine, METH_VARARGS,
+      "Add a line to program params definition" },
+    { "usage", (PyCFunction) Program_usage, METH_VARARGS,
+      "Print program usage" },
+    { "endDefinition", (PyCFunction) Program_endDefinition, METH_VARARGS,
+      "End definition of params" },
+    { "read", (PyCFunction) Program_read, METH_VARARGS,
+      "read arguments" },
+    { "checkParam", (PyCFunction) Program_checkParam, METH_VARARGS,
+      "Check if a param was passed in arguments" },
+    { "getParam", (PyCFunction) Program_getParam, METH_VARARGS,
+      "Get the value passed of this param" },
+    { "getListParam", (PyCFunction) Program_getListParam, METH_VARARGS,
+      "Get the list of all values passed of this param" },
+    { NULL } /* Sentinel */
+};
+
+/*Program Type */
+PyTypeObject ProgramType =
+{
+    PyObject_HEAD_INIT(NULL)
+    0, /*ob_size*/
+    "xmipp.Program", /*tp_name*/
+    sizeof(ProgramObject), /*tp_basicsize*/
+    0, /*tp_itemsize*/
+    (destructor)Program_dealloc, /*tp_dealloc*/
+    0, /*tp_print*/
+    0, /*tp_getattr*/
+    0, /*tp_setattr*/
+    0, /*tp_compare*/
+    0, /*tp_repr*/
+    0, /*tp_as_number*/
+    0, /*tp_as_sequence*/
+    0, /*tp_as_mapping*/
+    0, /*tp_hash */
+    0, /*tp_call*/
+    0, /*tp_str*/
+    0, /*tp_getattro*/
+    0, /*tp_setattro*/
+    0, /*tp_as_buffer*/
+    Py_TPFLAGS_DEFAULT, /*tp_flags*/
+    "Python wrapper to Xmipp Program class",/* tp_doc */
+    0, /* tp_traverse */
+    0, /* tp_clear */
+    0, /* tp_richcompare */
+    0, /* tp_weaklistoffset */
+    0, /* tp_iter */
+    0, /* tp_iternext */
+    Program_methods, /* tp_methods */
+    0, /* tp_members */
+    0, /* tp_getset */
+    0, /* tp_base */
+    0, /* tp_dict */
+    0, /* tp_descr_get */
+    0, /* tp_descr_set */
+    0, /* tp_dictoffset */
+    0, /* tp_init */
+    0, /* tp_alloc */
+    Program_new, /* tp_new */
+};
+
 /* Destructor */
 void Program_dealloc(ProgramObject* self)
 {
@@ -178,7 +246,6 @@ Program_endDefinition(PyObject *obj, PyObject *args, PyObject *kwargs)
     ProgramObject *self = (ProgramObject*) obj;
     if (self != NULL)
     {
-        int verbose = 1;
         try
         {
             self->program->endDefinition();
@@ -227,7 +294,7 @@ Program_read(PyObject *obj, PyObject *args, PyObject *kwargs)
                         argv[i] = strdup(temp.c_str());
                     }
                 }
-                self->program->read((int)size, argv);
+                self->program->read((int)size, (const char **)argv);
                 if (self->program->doRun)
                     Py_RETURN_TRUE;
                 else
@@ -306,7 +373,7 @@ Program_getListParam(PyObject *obj, PyObject *args, PyObject *kwargs)
                 size_t size = list.size();
                 PyObject * pylist = PyList_New(size);
 
-                for (int i = 0; i < size; ++i)
+                for (size_t i = 0; i < size; ++i)
                     PyList_SetItem(pylist, i, PyString_FromString(list[i].c_str()));
                 return pylist;
             }

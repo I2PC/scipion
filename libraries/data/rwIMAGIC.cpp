@@ -130,7 +130,7 @@ int  ImageBase::readIMAGIC(size_t select_img)
         REPORT_ERROR(ERR_IO_NOREAD,(String)"readIMAGIC: header file of " + filename + " cannot be read");
 
     // Determine byte order and swap bytes if from little-endian machine
-    if ( swap = (( abs(header->nyear) > SWAPTRIG ) || ( header->ixlp > SWAPTRIG )) )
+    if ( (swap = (( abs(header->nyear) > SWAPTRIG ) || ( header->ixlp > SWAPTRIG ))) )
         swapPage((char *) header, IMAGICSIZE - 916, DT_Float); // IMAGICSIZE - 916 is to exclude labels from swapping
 
     DataType datatype;
@@ -188,7 +188,7 @@ int  ImageBase::readIMAGIC(size_t select_img)
     replaceNsize = _nDim;
     setDimensions(_xDim, _yDim, _zDim, _nDim );
 
-    if (dataMode == HEADER || dataMode == _HEADER_ALL && _nDim > 1) // Stop reading if not necessary
+    if (dataMode == HEADER || (dataMode == _HEADER_ALL && _nDim > 1)) // Stop reading if not necessary
     {
         delete header;
         return 0;
@@ -212,11 +212,11 @@ int  ImageBase::readIMAGIC(size_t select_img)
             {
                 MD[i].setValue(MDL_SHIFT_X,  (double)-1. * header->ixold);
                 MD[i].setValue(MDL_SHIFT_Y,  (double)-1. * header->iyold);
-                MD[i].setValue(MDL_SHIFT_Z,  zeroD);
+                MD[i].setValue(MDL_SHIFT_Z,  0.);
                 MD[i].setValue(MDL_ANGLE_ROT, (double)-1. * header->euler_alpha);
                 MD[i].setValue(MDL_ANGLE_TILT,(double)-1. * header->euler_beta);
                 MD[i].setValue(MDL_ANGLE_PSI, (double)-1. * header->euler_gamma);
-                MD[i].setValue(MDL_WEIGHT,   (double)oneD);
+                MD[i].setValue(MDL_WEIGHT,   1.);
                 MD[i].setValue(MDL_SCALE, daux);
             }
         }
@@ -324,17 +324,34 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
         MDMainHeader.setValue(MDL_DATATYPE,(int) wDType);
         if (!checkMmapT(wDType))
         {
-            if (dataMode < DATA) // This means ImageGeneric wants to know which DataType must use in mapFile2Write
+            if (dataMode < DATA && castMode == CW_CAST) // This means ImageGeneric wants to know which DataType must use in mapFile2Write
                 return 0;
-            else
-                REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");
+            else //Mapping is an extra. When not available, go on and do not report an error.
+            {
+                /* In this case we cannot map the file because required and feasible datatypes are
+                 * not compatible. Then we denote to MapFile2Write the same incoming datatype to
+                 * keep using this Image object as usual, without mapping on write.
+                 */
+                mmapOnWrite = false;
+                dataMode = DATA;
+                MDMainHeader.setValue(MDL_DATATYPE,(int) myTypeID);
+
+                // In case Image size great then, at least, map the multidimarray
+                if (mdaBase->nzyxdim*gettypesize(myTypeID) > tiff_map_min_size)
+                    mdaBase->setMmap(true);
+
+                // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
+                //if memory already allocated use it (no resize allowed)
+                mdaBase->coreAllocateReuse();
+
+                return 0;
+            }
         }
         else
             dataMode = DATA;
     }
 
-    int Xdim, Ydim, Zdim;
-    size_t Ndim;
+    size_t Xdim, Ydim, Zdim, Ndim;
     getDimensions(Xdim, Ydim, Zdim, Ndim);
 
     if (Zdim > 1)
@@ -381,7 +398,6 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
 
     header.ifn = replaceNsize - 1 ;
     header.imn = 1;
-    size_t firtIfn = 0;
 
     if ( mode == WRITE_APPEND )
     {
@@ -410,13 +426,13 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
         }
         fwrite( &header, IMAGICSIZE, 1, fhed );
     }
-    else if( header.ifn + 1 > replaceNsize && imgStart > 0 ) // Update number of images when needed
+    else if( header.ifn + 1 > (int)replaceNsize && imgStart > 0 ) // Update number of images when needed
     {
         fseek( fhed, sizeof(int), SEEK_SET);
         if ( swapWrite )
         {
             int ifnswp = header.ifn;
-            swapPage((char *) ifnswp, SIZEOF_INT, DT_Int);
+            swapPage((char *) &ifnswp, SIZEOF_INT, DT_Int);
             fwrite(&(ifnswp),SIZEOF_INT,1,fhed);
         }
         else
@@ -431,18 +447,20 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
 
     for (size_t i = 0; i < Ndim; ++i, ++it)
     {
-        header.iyold=header.ixold=header.euler_alpha=header.euler_beta=header.euler_gamma=0.;
+        header.iyold=header.ixold=0;
+        header.euler_alpha=header.euler_beta=header.euler_gamma=0.;
 
         // Write the individual image header
         if (it != MD.end() && (dataMode == _HEADER_ALL || dataMode == _DATA_ALL))
         {
-#define SET_HEADER_VALUE(field, label)  it->getValueOrDefault((label), (aux), 0.); header.field = -(float)(aux)
+#define SET_HEADER_VALUEInt(field, label)  it->getValueOrDefault((label), (aux), 0); header.field = -(int)(aux)
+#define SET_HEADER_VALUEDouble(field, label)  it->getValueOrDefault((label), (aux), 0.); header.field = -(float)(aux)
 
-            SET_HEADER_VALUE(ixold, MDL_SHIFT_X);
-            SET_HEADER_VALUE(iyold, MDL_SHIFT_Y);
-            SET_HEADER_VALUE(euler_alpha, MDL_ANGLE_ROT);
-            SET_HEADER_VALUE(euler_beta, MDL_ANGLE_TILT);
-            SET_HEADER_VALUE(euler_gamma, MDL_ANGLE_PSI);
+            SET_HEADER_VALUEInt(ixold, MDL_SHIFT_X);
+            SET_HEADER_VALUEInt(iyold, MDL_SHIFT_Y);
+            SET_HEADER_VALUEDouble(euler_alpha, MDL_ANGLE_ROT);
+            SET_HEADER_VALUEDouble(euler_beta, MDL_ANGLE_TILT);
+            SET_HEADER_VALUEDouble(euler_gamma, MDL_ANGLE_PSI);
         }
         // Update index number of image
         header.imn = imgStart + i + 1;

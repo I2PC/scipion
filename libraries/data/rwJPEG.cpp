@@ -40,14 +40,13 @@ int ImageBase::readJPEG(size_t select_img)
     jpeg_stdio_src(&cinfo, fimg);
     jpeg_read_header(&cinfo, TRUE);
 
-
-    MDMainHeader.setValue(MDL_MIN,zeroD);
-    MDMainHeader.setValue(MDL_MAX,zeroD);
-    MDMainHeader.setValue(MDL_AVG,zeroD);
-    MDMainHeader.setValue(MDL_STDDEV,zeroD);
-    MDMainHeader.setValue(MDL_SAMPLINGRATE_X,oneD);
-    MDMainHeader.setValue(MDL_SAMPLINGRATE_Y,oneD);
-    MDMainHeader.setValue(MDL_SAMPLINGRATE_Z,oneD);
+    MDMainHeader.setValue(MDL_MIN,0.);
+    MDMainHeader.setValue(MDL_MAX,0.);
+    MDMainHeader.setValue(MDL_AVG,0.);
+    MDMainHeader.setValue(MDL_STDDEV,0.);
+    MDMainHeader.setValue(MDL_SAMPLINGRATE_X,1.);
+    MDMainHeader.setValue(MDL_SAMPLINGRATE_Y,1.);
+    MDMainHeader.setValue(MDL_SAMPLINGRATE_Z,1.);
     MDMainHeader.setValue(MDL_DATATYPE,(int) DT_UChar);
 
     ArrayDim aDim;
@@ -97,7 +96,7 @@ int ImageBase::readJPEG(size_t select_img)
     while( cinfo.output_scanline < cinfo.image_height )
     {
         jpeg_read_scanlines( &cinfo, row_pointer, 1 );
-        for( int i=0; i<cinfo.image_width;i++)
+        for(size_t i=0; i<cinfo.image_width;i++)
             buffer[i] = row_pointer[0][i*cinfo.num_components];
         setPage2T((cinfo.output_scanline - 1)*cinfo.image_width, buffer, DT_UChar, aDim.xdim);
     }
@@ -127,11 +126,11 @@ void term_buffer(jpeg_compress_struct* cinfo)
 
 int ImageBase::writeJPEG(size_t select_img, bool isStack, int mode, String bitDepth, CastWriteMode castMode)
 {
-	 if (isComplexT())
-	    {
-	        REPORT_ERROR(ERR_TYPE_INCORRECT,"rwJPEG: Complex images are not supported by JPEG format.");
-	        return 0;
-	    }
+    if (isComplexT())
+    {
+        REPORT_ERROR(ERR_TYPE_INCORRECT,"rwJPEG: Complex images are not supported by JPEG format.");
+        return 0;
+    }
 
     ArrayDim aDim;
     mdaBase->getDimensions(aDim);
@@ -141,29 +140,21 @@ int ImageBase::writeJPEG(size_t select_img, bool isStack, int mode, String bitDe
         REPORT_ERROR(ERR_MULTIDIM_DIM, "rwJPEG: volumes are not supported.");
 
     //Selection of output datatype
-    DataType wDType;
+    DataType wDType,myTypeID = myT();
 
     castMode = CW_CONVERT;
     wDType = DT_UChar;
 
     if (mmapOnWrite)
     {
-        MDMainHeader.setValue(MDL_DATATYPE,(int) wDType);
-        if (!checkMmapT(wDType))
-        {
-            if (dataMode < DATA ) // This means ImageGeneric wants to know which DataType must use in mapFile2Write
-                return 0;
-            else
-                REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");
-        }
-        else
-            dataMode = DATA;
-
-        /* As we cannot mmap a TIFF File, when this option is passed we are going to mmap
+        /* As we cannot mmap a JPEG File, when this option is passed we are going to mmap
          * the multidimarray of Image
          */
         mmapOnWrite = false;
-        if (aDim.nzyxdim*gettypesize(wDType) > tiff_map_min_size)
+        dataMode = DATA;
+        MDMainHeader.setValue(MDL_DATATYPE,(int) myTypeID);
+
+        if (aDim.nzyxdim*gettypesize(myTypeID) > tiff_map_min_size)
             mdaBase->setMmap(true);
 
         // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set

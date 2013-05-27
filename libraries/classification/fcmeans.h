@@ -30,8 +30,6 @@
 #ifndef _XMIPPFCMEANS_H
 #define _XMIPPFCMEANS_H
 
-#pragma warning(disable:4786)
-
 #include <iostream>
 #include <vector>
 

@@ -182,8 +182,7 @@ std::vector<T> randomVector(const unsigned& _size, const T& _lower,
     for (i = v.begin() ; i < v.end() ; *i++ = u());
 
     return v;
-};
-
+}
 
 /**
  * += operator. Ref Stroustrup, p 301.
@@ -201,7 +200,7 @@ std::vector<T>& operator += (std::vector<T>& _v1, const std::vector<T>& _v2)
               std::plus<T>());
 
     return _v1;
-};
+}
 
 /**
  * -= operator. Ref Stroustrup, p 301.
@@ -219,7 +218,7 @@ std::vector<T>& operator -= (std::vector<T>& _v1, const std::vector<T>& _v2)
               std::minus<T>());
 
     return _v1;
-};
+}
 
 /**
  * + operator. Ref Stroustrup, p 301.
@@ -239,7 +238,7 @@ std::vector<T> operator + (const std::vector<T>& _v1, const std::vector<T>& _v2)
     transform(_v1.begin(), _v1.end(), _v2.begin(), tmp.begin(),
               std::plus<T>());
     return tmp;
-};
+}
 
 /**
  * - operator. Ref Stroustrup, p 301.
@@ -259,7 +258,7 @@ std::vector<T> operator - (const std::vector<T>& _v1, const std::vector<T>& _v2)
     transform(_v1.begin(), _v1.end(), _v2.begin(), tmp.begin(),
               std::minus<T>());
     return tmp;
-};
+}
 
 /**
  * Dot product. Ref Stroustrup, p 301.
@@ -279,7 +278,7 @@ T operator *(const std::vector<T>& _v1, const std::vector<T>& _v2)
         dotProd += *i * *j;
 
     return dotProd;
-};
+}
 
 /**
  * Multiplies each element times _alpha. Ref Stroustrup, p 301.
@@ -294,8 +293,7 @@ std::vector<T>& operator *= (std::vector<T>& _v, const T _alpha)
         *i *= _alpha;
 
     return _v;
-};
-
+}
 
 /**
  * Divides each element by _alpha. Ref Stroustrup, p 301.
@@ -310,7 +308,7 @@ std::vector<T>& operator /= (std::vector<T>& _v, const T _alpha)
         *i /= _alpha;
 
     return _v;
-};
+}
 
 /**
  * Standard output for a std::vector<T>
@@ -325,7 +323,7 @@ std::ostream& operator << (std::ostream& _os, const std::vector<T>& _v)
     for (i = _v.begin(); i != _v.end(); i++) _os << *i << " ";
     _os << ">";
     return _os;
-};
+}
 
 /**
  * Standard input for a std::vector<T>
@@ -372,7 +370,7 @@ std::istream& operator >> (std::istream& _is, std::vector<T>& _v)
         throw std::runtime_error("Error reading the vector");
 
     return _is;
-};
+}
 
 /** Euclidean distance */
 template <class T>
@@ -390,7 +388,7 @@ double euclideanDistance(const std::vector<T>& _v1, const std::vector<T>& _v2)
     }
 
     return sqrt(dist);
-};
+}
 
 /**
 * Norm: norm of a vector (Euclidean distance to origin)

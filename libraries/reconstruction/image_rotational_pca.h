@@ -70,7 +70,7 @@ public:
     // Number of shifts
     int Nshifts;
     // Image size
-    int Xdim;
+    size_t Xdim;
     // Number of pixels
     int Npixels;
     // Mpi node

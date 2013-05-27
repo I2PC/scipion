@@ -51,7 +51,7 @@ public:
     bool isFlipped;
 public:
     /// Dimensions of the volumes
-    int Zdim, Ydim, Xdim;
+    size_t Zdim, Ydim, Xdim;
 	
     /// Side Info: CTF
     FourierFilter ctf;
@@ -78,7 +78,7 @@ public:
 
     /** Generate 1D CTFs. */
     void generateCTF1D(const FileName &fnCTF, 
-		       const double nr_steps,
+		       size_t nr_steps,
 		       MultidimArray<double> &CTF1D);
 
     /** Generate Wiener filters */

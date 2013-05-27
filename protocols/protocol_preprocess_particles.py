@@ -7,11 +7,12 @@
 #
 from protlib_base import *
 from protlib_particles import *
-from xmipp import MetaData, ImgSize, FileName, MDL_SAMPLINGRATE, MDL_IMAGE, MDL_ZSCORE
+from xmipp import MetaData, MetaDataInfo, FileName, MDL_SAMPLINGRATE, MDL_IMAGE, MDL_ZSCORE, MDL_MICROGRAPH, MDL_XCOOR, MDL_YCOOR, MDL_IMAGE_ORIGINAL, \
+    MDL_IMAGE_TILTED, INNER_JOIN
 import os
 from os.path import exists, split, splitext
 from protlib_utils import runJob, runShowJ
-from protlib_filesystem import deleteFile,findAcquisitionInfo, moveFile, createLink, removeBasenameExt
+from protlib_filesystem import deleteFile,findAcquisitionInfo, createLink, removeBasenameExt
 import glob
 from protlib_gui_ext import showError
 
@@ -23,50 +24,68 @@ class ProtPreprocessParticles(ProtParticlesBase):
         baseFile = removeBasenameExt(file)
         self.OutStack = self.getFilename('images_stk')
         self.OutMetadata = self.getFilename('images')
-        self.TiltPair = exists(getProtocolFilename('tilted_pairs', WorkingDir=self.InputDir))
+        self.TiltPair = exists(getProtocolFilename('tilted_pairs', WorkingDir=self.InputDir)) and self.InSelFile.find('images.xmd')!=-1
+        if self.TiltPair:
+            self.TiltedPairs=os.path.join(self.InputDir,'tilted_pairs.xmd')
+            self.InputUntilted=self.InSelFile.replace(".xmd","_untilted.xmd")
+            self.InputTilted=self.InSelFile.replace(".xmd","_tilted.xmd")
+            self.OutUntiltedStack=self.getFilename('images_untilted_stk')
+            self.OutUntiltedMetadata=self.getFilename('images_untilted')
+            self.OutTiltedStack=self.getFilename('images_tilted_stk')
+            self.OutTiltedMetadata=self.getFilename('images_tilted')
+            self.OutStack=self.OutUntiltedStack
 
     def defineSteps(self):
-        self.insertStep('copyImages',verifyfiles=[self.OutMetadata, self.OutStack],
-                           InputFile=self.InSelFile, OutputStack=self.OutStack,
-                           OutputMetadata=self.OutMetadata)
+        if self.TiltPair:
+            fnTiltedPairs=self.workingDirPath('tilted_pairs.xmd')
+            self.insertStep('copyFile',verifyfiles=[fnTiltedPairs],source=self.TiltedPairs,dest=fnTiltedPairs)
+            self.insertStep('copyImages',verifyfiles=[self.OutUntiltedMetadata, self.OutUntiltedStack],
+                               InputFile=self.InputUntilted, OutputStack=self.OutUntiltedStack)
+            self.insertStep('copyImages',verifyfiles=[self.OutTiltedMetadata, self.OutTiltedStack],
+                               InputFile=self.InputTilted, OutputStack=self.OutTiltedStack)
+            fnImages=self.getFilename('images')
+            self.insertStep('copyFile',verifyfiles=[fnImages],source=self.InSelFile,dest=fnImages)
+            self.insertStep('joinMetaDatas',InputFile=fnImages,UntiltedMetadata=self.OutUntiltedMetadata,TiltedMetadata=self.OutTiltedMetadata)
+        else:
+            self.insertStep('copyImages',verifyfiles=[self.OutMetadata, self.OutStack],
+                               InputFile=self.InSelFile, OutputStack=self.OutStack)
         self.insertStep('createAcquisition',InputFile=self.InSelFile, WorkingDir=self.WorkingDir,
                         DoResize=self.DoResize, NewSize=self.NewSize)
+        
         # Apply filters if selected
         if self.DoFourier:
             self.insertStep('runFourierFilter',stack=self.OutStack,freq_low=self.Freq_low,freq_high=self.Freq_high,freq_decay=self.Freq_decay,Nproc=self.NumberOfMpi)
+            if self.TiltPair:
+                self.insertStep('runFourierFilter',stack=self.OutTiltedStack,freq_low=self.Freq_low,freq_high=self.Freq_high,freq_decay=self.Freq_decay,Nproc=self.NumberOfMpi)
         if self.DoGaussian:
             self.insertStep('runGaussianFilter',stack=self.OutStack,freq_sigma=self.Freq_sigma, Nproc=self.NumberOfMpi)
+            if self.TiltPair:
+                self.insertStep('runGaussianFilter',stack=self.OutTiltedStack,freq_sigma=self.Freq_sigma, Nproc=self.NumberOfMpi)
             
         # Apply mask
         if self.DoMask:
             if self.Substitute == "value":
                 self.Substitute = str(self.SubstituteValue)
-            params = "-i %s --substitute %s --mask %s " % (self.OutStack, self.Substitute, self.MaskType)
+            params = "--substitute %s --mask %s " % (self.Substitute, self.MaskType)
             if self.MaskType == 'raised_cosine':
                 params += "-%d -%d" % (self.MaskRadius, self.MaskRadius + self.MaskRadiusOuter)
             elif self.MaskType == 'circular':
                 params += '-%d' % self.MaskRadius
             else: # from file:
                 params += self.MaskFile
-            self.insertRunJobStep("xmipp_transform_mask", params)
+            self.insertRunJobStep("xmipp_transform_mask", "-i %s"%self.OutStack+" "+params)
+            if self.TiltPair:
+                self.insertRunJobStep("xmipp_transform_mask", "-i %s"%self.OutTiltedStack+" "+params)
             
         # Resize images
         if self.DoCrop:
             self.insertStep('runCrop',stack=self.OutStack, cropSize=self.CropSize, tmpStack=self.tmpPath('tmpCrop.stk'))
+            if self.TiltPair:
+                self.insertStep('runCrop',stack=self.OutTiltedStack, cropSize=self.CropSize, tmpStack=self.tmpPath('tmpCrop.stk'))
         if self.DoResize:
             self.insertStep('runResize',stack=self.OutStack,new_size=self.NewSize,Nproc=self.NumberOfMpi)
-        
-        if self.TiltPair:
-            if self.InSelFile.find("_untilted")!=-1:
-                fnBase=split(self.InSelFile)[1]
-                fnFamily=fnBase.replace("_untilted","")
-                self.insertStep('translateTiltPair',verifyfiles=[self.workingDirPath(fnFamily)],
-                                   WorkingDir=self.WorkingDir,InputDir=self.InputDir,FnFamily=fnFamily,OutStack=self.OutStack)
-                fnTilted=fnBase.replace("_untilted","_tilted")
-                self.insertStep('copyFile',verifyfiles=[self.workingDirPath(fnTilted)],source=self.InSelFile.replace('_untilted','_tilted'),
-                                   dest=self.workingDirPath(fnTilted))
-                self.insertStep('copyFile',verifyfiles=[self.workingDirPath('tilted_pairs.xmd')],source=os.path.join(self.InputDir,'tilted_pairs.xmd'),
-                                   dest=self.workingDirPath('tilted_pairs.xmd'))
+            if self.TiltPair:
+                self.insertStep('runResize',stack=self.OutTiltedStack,new_size=self.NewSize,Nproc=self.NumberOfMpi)
         
     def validate(self):
         errors = []
@@ -91,6 +110,8 @@ class ProtPreprocessParticles(ProtParticlesBase):
         self.addStepsSummary(messages)
         
         messages.append("Output: [%s]" % self.OutMetadata)
+        if self.TiltPair:
+            messages.append("Operations applied to both, untilted and tilted, images")
         
         return messages
 
@@ -106,26 +127,34 @@ def createAcquisition(log,InputFile,WorkingDir,DoResize,NewSize):
             md = MetaData(fnAcqIn)
             id = md.firstObject()
             Ts = md.getValue(MDL_SAMPLINGRATE, id)
-            (Xdim, Ydim, Zdim, Ndim) = ImgSize(InputFile)
+            (Xdim, Ydim, Zdim, Ndim, _) = MetaDataInfo(InputFile)
             downsampling = float(Xdim)/NewSize;
             md.setValue(MDL_SAMPLINGRATE,Ts*downsampling,id)
             md.write(getProtocolFilename('acquisition', WorkingDir=WorkingDir))
 
-def copyImages(log,InputFile,OutputStack,OutputMetadata):
-    runJob(log,"xmipp_image_convert","-i %(InputFile)s -o %(OutputStack)s" % locals())
-    mDstack = MetaData(OutputStack)
-    if FileName(InputFile).isMetaData():
-        mdIn = MetaData(InputFile)
-        mdIn.removeDisabled()
-        mdIn.removeLabel(MDL_IMAGE)
-        mdIn.removeLabel(MDL_ZSCORE)
-        mdAux = MetaData(mdIn)
-        mDstack.merge(mdAux)
-    mDstack.write(OutputMetadata)
+def copyImages(log,InputFile,OutputStack):
+    runJob(log,"xmipp_image_convert","-i %(InputFile)s -o %(OutputStack)s --track_origin --selfile_stack" % locals())
+    fnOutputMetadata=OutputStack.replace(".stk",".xmd")
+    mDstack = MetaData(fnOutputMetadata)
+    mDstack.removeLabel(MDL_ZSCORE)
+    mDstack.write(fnOutputMetadata)
 
-def translateTiltPair(log,WorkingDir,InputDir,FnFamily,OutStack):
-    md = MetaData(OutStack)
-    MDfamily=MetaData(os.path.join(InputDir,FnFamily))
-    MDfamily.merge(md)
-    MDfamily.write(os.path.join(WorkingDir,FnFamily))
+def joinMetaDatas(log,InputFile,UntiltedMetadata,TiltedMetadata):    
+    mDInput=MetaData(InputFile)
+    mDstack = MetaData(UntiltedMetadata)
+    mDstack.removeLabel(MDL_MICROGRAPH)
+    mDstack.removeLabel(MDL_XCOOR)
+    mDstack.removeLabel(MDL_YCOOR)
+    mdPart1=MetaData()
+    mdPart1.join(mDstack,mDInput,MDL_IMAGE_ORIGINAL,MDL_IMAGE,INNER_JOIN)
+    mdPart1.removeLabel(MDL_IMAGE_ORIGINAL)
 
+    mDstack = MetaData(TiltedMetadata)
+    mDstack.removeLabel(MDL_MICROGRAPH)
+    mDstack.removeLabel(MDL_XCOOR)
+    mDstack.removeLabel(MDL_YCOOR)
+    mDstack.renameColumn(MDL_IMAGE,MDL_IMAGE_TILTED)
+    mdJoined=MetaData()
+    mdJoined.join(mDstack,mdPart1,MDL_IMAGE_ORIGINAL,MDL_IMAGE_TILTED,INNER_JOIN)
+    mdJoined.removeLabel(MDL_IMAGE_ORIGINAL)
+    mdJoined.write(InputFile)

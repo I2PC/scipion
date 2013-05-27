@@ -164,7 +164,19 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     sampling_points_angles.clear();
     sampling_points_vector.clear();
 
+    /* this is wrong, revert to previous code ROB
+    if(min_tilt <= 0.)
+        min_z= -1.;
+    else
+        min_z=-fabs(cos(PI * min_tilt / 180.));
 
+    if(max_tilt >= 180.)
+        max_z=1.;
+    else if (max_tilt<=90)
+    	max_z=-fabs(cos(PI * max_tilt / 180.));
+    else
+        max_z=fabs(cos(PI * max_tilt / 180.));
+    */
     if(max_tilt >= 90.)
         max_z=10.;
     else
@@ -361,7 +373,7 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     }
 
     // add edges
-    for (int i = 0;
+    for (size_t i = 0;
          i < edge_vector_start.size();
          i++)
     {
@@ -413,7 +425,7 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     // add in between points
     int j = 0;
     bool j_flag = false;
-    for (int i = 0;
+    for (size_t i = 0;
          i < edge_vector_start.size();
          i++)
     {
@@ -449,13 +461,13 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     //noisify angles
     if(sampling_noise!=0.0)
     {
-        for (int i = 0;
-             i < sampling_points_vector.size();
-             i++)
+        for (size_t n = 0;
+             n < sampling_points_vector.size();
+             n++)
         {
-            FOR_ALL_ELEMENTS_IN_MATRIX1D(sampling_points_vector[i])
-            (sampling_points_vector[i])(i) += rnd_gaus(0., sampling_noise);
-            sampling_points_vector[i].selfNormalize();
+            FOR_ALL_ELEMENTS_IN_MATRIX1D(sampling_points_vector[n])
+            (sampling_points_vector[n])(i) += rnd_gaus(0., sampling_noise);
+            sampling_points_vector[n].selfNormalize();
         }
     }
 
@@ -475,8 +487,7 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     // store sampling points as angles
     Matrix1D<double> aux(3), aux1(3);
     ZZ(aux) = 0.;
-    double rot, tilt, psi;
-    for (int i = 0;
+    for (size_t i = 0;
          i < sampling_points_vector.size();
          i++)
     {
@@ -574,7 +585,7 @@ void Sampling::fillEdge(Matrix1D<double> starting_point,
     double gamma;
     // skip first corener, already computed;
     double upsilon = acos(dotProduct(starting_point, ending_point));
-    for (int i1 = 1; i1 < number_of_samples; i1++)
+    for (size_t i1 = 1; i1 < number_of_samples; i1++)
     {
         gamma  = (double)i1 / (number_of_samples - 1);
         alpha  = sin((1. - gamma) * upsilon) / (sin(upsilon));
@@ -651,21 +662,15 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
     Matrix2D<double>  L(4, 4), R(4, 4);
     Matrix2D<double>  aux(3, 3);
     Matrix1D<double>  row1(3), row2(3);
-    bool valid = true;
-    double rot, tilt, psi = 0;
-    double rotp, tiltp, psip = 0.;
-    double aux1, aux2;
-    bool match = false;
 
     //int j_end=0;
     Matrix1D<double>  row(3);
 
     CLEAR_VECTORS();
 
-    double my_dotProduct;
     if (symmetry == pg_CN)
     {//OK
-        for (int i = 0; i < sampling_points_angles.size(); i++)
+        for (size_t i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >= (-180. / sym_order) &&
                 XX(sampling_points_angles[i]) <= (180. / sym_order))
@@ -678,7 +683,7 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
     else if (symmetry == pg_CI  ||
              symmetry == pg_CS )
     {//OK
-        for (int i = 0; i < sampling_points_angles.size(); i++)
+        for (size_t i = 0; i < sampling_points_angles.size(); i++)
         {
             if (YY(sampling_points_angles[i]) <= 90)
             {
@@ -689,7 +694,7 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
     }
     else if (symmetry  == pg_CNV )
     {//OK
-        for (int i = 0; i < sampling_points_angles.size(); i++)
+        for (size_t i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >=    0. / sym_order &&
                 XX(sampling_points_angles[i]) <=  180. / sym_order)
@@ -701,7 +706,7 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
     }
     else if (symmetry  == pg_CNH )
     {//OK
-        for (int i = 0; i < sampling_points_angles.size(); i++)
+        for (size_t i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >= -180. / sym_order &&
                 XX(sampling_points_angles[i]) <=  180. / sym_order &&
@@ -715,7 +720,7 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
     }
     else if (symmetry  == pg_SN )
     {//OK
-        for (int i = 0; i < sampling_points_angles.size(); i++)
+        for (size_t i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >= -180.*2. / sym_order &&
                 XX(sampling_points_angles[i]) <=  180.*2. / sym_order &&
@@ -729,7 +734,7 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
     }
     else if (symmetry  == pg_DN )
     {
-        for (int i = 0; i < sampling_points_angles.size(); i++)
+        for (size_t i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >= -180. / (sym_order)  + 90. &&
                 XX(sampling_points_angles[i]) <=  180. / (sym_order)  + 90. &&
@@ -743,7 +748,7 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
     }
     else if (symmetry  == pg_DNV )
     {
-        for (int i = 0; i < sampling_points_angles.size(); i++)
+        for (size_t i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >=    0. + 90. &&
                 XX(sampling_points_angles[i]) <=  180. / (sym_order) +90. &&
@@ -757,7 +762,7 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
     }
     else if (symmetry  == pg_DNH )
     {
-        for (int i = 0; i < sampling_points_angles.size(); i++)
+        for (size_t i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >= 0. &&
                 XX(sampling_points_angles[i]) <=  180. / (sym_order) &&
@@ -780,10 +785,10 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         Matrix1D<double>  _3_fold_axis_3_by_3_fold_axis_1(3);
         _3_fold_axis_3_by_3_fold_axis_1 = vectorR3(0.471404, 0.816497, 0.);
         _3_fold_axis_3_by_3_fold_axis_1.selfNormalize();
-        for (int i = 0; i < sampling_points_angles.size(); i++)
+        for (size_t i = 0; i < sampling_points_angles.size(); i++)
         {
-            if (XX(sampling_points_angles[i]) >=     90. &&
-                XX(sampling_points_angles[i]) <=   150. ||
+            if ((XX(sampling_points_angles[i]) >=     90. &&
+                XX(sampling_points_angles[i]) <=   150. )||
                 XX(sampling_points_angles[i]) ==     0
                )
                 if (
@@ -808,7 +813,7 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         Matrix1D<double>  _3_fold_axis_5_by_2_fold_axis_1(3);
         _3_fold_axis_5_by_2_fold_axis_1 = vectorR3(0., 0.471405, -0.666667);
         _3_fold_axis_5_by_2_fold_axis_1.selfNormalize();
-        for (int i = 0; i < sampling_points_angles.size(); i++)
+        for (size_t i = 0; i < sampling_points_angles.size(); i++)
         {
             //           if ( XX(sampling_points_angles[i])>=     120. &&
             //                 XX(sampling_points_angles[i])<=   150. ||
@@ -836,7 +841,7 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         Matrix1D<double>  _2_fold_axis_2_by_3_fold_axis_1(3);
         _2_fold_axis_2_by_3_fold_axis_1 = vectorR3(-0.408248, -0.707107, 0.);
         _2_fold_axis_2_by_3_fold_axis_1.selfNormalize();
-        for (int i = 0; i < sampling_points_angles.size(); i++)
+        for (size_t i = 0; i < sampling_points_angles.size(); i++)
         {
             //           if ( XX(sampling_points_angles[i])>=     120. &&
             //                 XX(sampling_points_angles[i])<=   150. ||
@@ -864,7 +869,7 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         Matrix1D<double>  _4_fold_axis_by_3_fold_axis_1(3);
         _4_fold_axis_by_3_fold_axis_1 = vectorR3(-1., 1., 0.);
         _4_fold_axis_by_3_fold_axis_1.selfNormalize();
-        for (int i = 0; i < sampling_points_angles.size(); i++)
+        for (size_t i = 0; i < sampling_points_angles.size(); i++)
         {
             if ((XX(sampling_points_angles[i]) >=   45. &&
                  XX(sampling_points_angles[i]) <=  135. &&
@@ -893,7 +898,7 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         Matrix1D<double>  _4_fold_axis_by_3_fold_axis_1(3);
         _4_fold_axis_by_3_fold_axis_1 = vectorR3(-1., 1., 0.);
         _4_fold_axis_by_3_fold_axis_1.selfNormalize();
-        for (int i = 0; i < sampling_points_angles.size(); i++)
+        for (size_t i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >=   90. &&
                 XX(sampling_points_angles[i]) <=  135. &&
@@ -924,7 +929,7 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
                                         -0.8090170074556163,
                                         0.3090169861701543);
         _3_fold_axis_by_5_fold_axis_1.selfNormalize();
-        for (int i = 0; i < sampling_points_angles.size(); i++)
+        for (size_t i = 0; i < sampling_points_angles.size(); i++)
         {
             if (
                 dotProduct(sampling_points_vector[i], _5_fold_axis_1_by_5_fold_axis_2) >= 0 &&
@@ -955,7 +960,7 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
                                         0.3090169861701543);
         _3_fold_axis_by_5_fold_axis_1.selfNormalize();
 
-        for (int i = 0; i < sampling_points_angles.size(); i++)
+        for (size_t i = 0; i < sampling_points_angles.size(); i++)
         {
             if (
                 dotProduct(sampling_points_vector[i], _5_fold_axis_1_by_5_fold_axis_2) >= 0 &&
@@ -986,7 +991,7 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
                                         0.3090169861701543);
         _3_fold_axis_by_5_fold_axis_1.selfNormalize();
 
-        for (int i = 0; i < sampling_points_angles.size(); i++)
+        for (size_t i = 0; i < sampling_points_angles.size(); i++)
         {
             if (
                 dotProduct(sampling_points_vector[i], _5_fold_axis_1_by_5_fold_axis_2) >= 0 &&
@@ -1017,7 +1022,7 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
                                         -0.491123477863004);
         _3_fold_axis_by_5_fold_axis_1.selfNormalize();
 
-        for (int i = 0; i < sampling_points_angles.size(); i++)
+        for (size_t i = 0; i < sampling_points_angles.size(); i++)
         {
             if (
                 dotProduct(sampling_points_vector[i],
@@ -1056,7 +1061,7 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         Matrix1D<double>  _3_fold_axis_by_2_fold_axis(3);
         _3_fold_axis_by_2_fold_axis =  vectorR3(1.,0.,0.);
         _3_fold_axis_by_2_fold_axis.selfNormalize();
-        for (int i = 0; i < sampling_points_angles.size(); i++)
+        for (size_t i = 0; i < sampling_points_angles.size(); i++)
         {
             if (
                 dotProduct(sampling_points_vector[i], _5_fold_axis_1_by_5_fold_axis_2) >= 0 &&
@@ -1089,7 +1094,7 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         Matrix1D<double>  _3_fold_axis_by_2_fold_axis(3);
         _3_fold_axis_by_2_fold_axis =  A * vectorR3(1.,0.,0.);
         _3_fold_axis_by_2_fold_axis.selfNormalize();
-        for (int i = 0; i < sampling_points_angles.size(); i++)
+        for (size_t i = 0; i < sampling_points_angles.size(); i++)
         {
             if (
                 dotProduct(sampling_points_vector[i], _5_fold_axis_1_by_5_fold_axis_2) >= 0 &&
@@ -1122,7 +1127,7 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         Matrix1D<double>  _3_fold_axis_by_2_fold_axis(3);
         _3_fold_axis_by_2_fold_axis = vectorR3(0.,1.,0.);
         _3_fold_axis_by_2_fold_axis.selfNormalize();
-        for (int i = 0; i < sampling_points_angles.size(); i++)
+        for (size_t i = 0; i < sampling_points_angles.size(); i++)
         {
             if (
                 dotProduct(sampling_points_vector[i],
@@ -1160,7 +1165,7 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         Matrix1D<double>  _3_fold_axis_by_2_fold_axis(3);
         _3_fold_axis_by_2_fold_axis = vectorR3(0.,1.,0.);
         _3_fold_axis_by_2_fold_axis.selfNormalize();
-        for (int i = 0; i < sampling_points_angles.size(); i++)
+        for (size_t i = 0; i < sampling_points_angles.size(); i++)
         {
             if (
                 dotProduct(sampling_points_vector[i],
@@ -1207,6 +1212,8 @@ void Sampling::removeRedundantPointsExhaustive(const int symmetry,
 
     // First call to conventional removeRedundantPoints
     removeRedundantPoints(symmetry, sym_order);
+//    for (int isym = 0; isym < no_redundant_sampling_points_vector.size(); isym++)
+//    	std::cout << "sampling:" << no_redundant_sampling_points_vector[isym];
     std::vector <Matrix1D<double> > old_vector = no_redundant_sampling_points_vector;
     std::vector <Matrix1D<double> > old_angles = no_redundant_sampling_points_angles;
 
@@ -1216,14 +1223,14 @@ void Sampling::removeRedundantPointsExhaustive(const int symmetry,
     fillLRRepository();
 
     // Then check all points versus each other
-    for (int i = 0; i < old_angles.size(); i++)
+    for (size_t i = 0; i < old_angles.size(); i++)
     {
         //direction1=(old_vector[i]).transpose();
         direction1=old_vector[i];
         bool uniq = true;
-        for (int j = 0; j < R_repository.size(); j++)
+        for (size_t j = 0; j < R_repository.size(); j++)
         {
-            for (int k = 0; k < no_redundant_sampling_points_vector.size(); k++)
+            for (size_t k = 0; k < no_redundant_sampling_points_vector.size(); k++)
             {
                 direction =  L_repository[j] *
                              (no_redundant_sampling_points_vector[k].transpose() *
@@ -1409,6 +1416,7 @@ void Sampling::createAsymUnitFile(const FileName &docfilename)
         ;
 #endif
 
+        row.setValue(MDL_REF, (int)i);
         row.setValue(MDL_NEIGHBOR, no_redundant_sampling_points_index[i]);
         row.setValue(MDL_ANGLE_ROT,XX(no_redundant_sampling_points_angles[i]));
         row.setValue(MDL_ANGLE_TILT,YY(no_redundant_sampling_points_angles[i]));
@@ -1424,6 +1432,7 @@ void Sampling::createAsymUnitFile(const FileName &docfilename)
     #undef CHIMERA
 
     tmp_filename = docfilename + "_angles.doc";
+    DF.setComment("REF refers to the projection directions BEFORE delete those not in a neighborhood, ");
     DF.write(tmp_filename);
 }
 
@@ -1503,6 +1512,7 @@ void Sampling::saveSamplingFile(const FileName &fn_base, bool write_vectors, boo
             row.setValue(MDL_ANGLE_TILT, YY(angles));
             row.setValue(MDL_ANGLE_PSI, ZZ(angles));
 
+
             if (write_vectors)
             {
                 Matrix1D<double> &vectors = sampling_points_vector[i];
@@ -1512,6 +1522,7 @@ void Sampling::saveSamplingFile(const FileName &fn_base, bool write_vectors, boo
             }
             md.addRow(row);
         }
+        md.setComment("NEIGHBOR index points to the slice in a stack file in which the  projection projected in the direction defined by ref is stored");
         md.write(FN_SAMPLING_SPHERE(fn_base), MD_APPEND);
 
     }
@@ -1555,6 +1566,10 @@ void Sampling::readSamplingFile(const FileName &fn_base, bool read_vectors, bool
 
     FOR_ALL_OBJECTS_IN_METADATA(md)
     {
+        /** This is the object ID in the metadata, usually starts at 1 */
+        //size_t objId;
+        /** This is the index of the object, starts at 0 */
+        //size_t objIndex;
         size_t &i = __iter.objIndex;
         size_t &id = __iter.objId;
 
@@ -1610,8 +1625,6 @@ void Sampling::readSamplingFile(const FileName &fn_base, bool read_vectors, bool
 
 void Sampling::computeNeighbors(bool only_winner)
 {
-    double rot,  tilt,  psi;
-    double rotp, tiltp, psip;
     double my_dotProduct;
     double winner_dotProduct;
     Matrix1D<double>  row(3);
@@ -1704,7 +1717,7 @@ void Sampling::computeNeighbors(bool only_winner)
                             //std::cerr << "DEBUG_JM: no_redundant_sampling_points_index[i]: " << no_redundant_sampling_points_index[i] << std::endl;
                             // for (size_t kkk = 0; kkk < aux_neighbors.size(); ++kkk)
                             //   std::cerr << aux_neighbors[kkk] << " ";
-                            for( int l=0;l<  _size;l++)
+                            for( size_t l=0;l<  _size;l++)
                             {
                                 //if (aux_neighbors[l]==i)
                                 if (aux_neighborsArray[l]==no_redundant_sampling_points_index[i])
@@ -1814,14 +1827,13 @@ void Sampling::removePointsFarAwayFromExperimentalData()
     double my_dotProduct;
     Matrix1D<double>  row(3),direction(3);
     Matrix2D<double>  L(4, 4), R(4, 4);
-    double img_tilt,img_rot,img_psi;
 
-    int my_end = no_redundant_sampling_points_vector.size() - 1;
+    size_t my_end = no_redundant_sampling_points_vector.size() - 1;
 
-    for (int i = 0; i <= my_end; i++)
+    for (size_t i = 0; i <= my_end; i++)
     {
         bool my_delete=true;
-        for (int j=0; my_delete && j< exp_data_projection_direction_by_L_R.size();j++)
+        for (size_t j=0; my_delete && j< exp_data_projection_direction_by_L_R.size();j++)
         {
             my_dotProduct = dotProduct(no_redundant_sampling_points_vector[i],
                                        exp_data_projection_direction_by_L_R[j]);
@@ -1881,11 +1893,10 @@ void Sampling::findClosestSamplingPoint(MetaData &DFi,
     Matrix1D<double> docline;
     docline.initZeros(7);//three original angles, one winnir, new angles
     Matrix2D<double>  L(4, 4), R(4, 4);
-    double img_tilt,img_rot,img_psi;
-    double rotp, tiltp, psip,aux_psi;
-    double my_dotProduct_winner=2.;
     int winner_sampling=-1;
+#if defined(CHIMERA) || defined(MYPSI)
     int winner_exp_L_R=-1;
+#endif
 
     MetaData DFo;
     size_t id;
@@ -1901,10 +1912,10 @@ void Sampling::findClosestSamplingPoint(MetaData &DFi,
 #endif
 
     MDIterator iter(DFi);
-    for(int i=0;i< exp_data_projection_direction_by_L_R.size();)
+    for(size_t i=0;i< exp_data_projection_direction_by_L_R.size();)
     {
         my_dotProduct=-2;
-        for (int k = 0; k < R_repository.size(); k++,i++)
+        for (size_t k = 0; k < R_repository.size(); k++,i++)
         {
 #ifdef  DEBUG3
             //experimental points plus symmetry
@@ -1915,7 +1926,7 @@ void Sampling::findClosestSamplingPoint(MetaData &DFi,
                 <<  " .019"      << std::endl;
             }
 #endif
-            for(int j=0;j< no_redundant_sampling_points_vector.size();j++)
+            for(size_t j=0;j< no_redundant_sampling_points_vector.size();j++)
             {
                 my_dotProduct_aux =
                     dotProduct(exp_data_projection_direction_by_L_R[i],
@@ -1925,7 +1936,9 @@ void Sampling::findClosestSamplingPoint(MetaData &DFi,
                 {
                     my_dotProduct = my_dotProduct_aux;
                     winner_sampling = j;
+#if defined(CHIMERA) || defined(MYPSI)
                     winner_exp_L_R  = i;
+#endif
                 }
             }//for j
         }//for k
@@ -1980,9 +1993,7 @@ void Sampling::findClosestExperimentalPoint()
 {
     double my_dotProduct,my_dotProduct_aux;
     Matrix1D<double>  row(3),direction(3);
-    double my_dotProduct_winner=2.;
     int winner_sampling=-1;
-    int winner_exp_L_R=-1;
     int winner_exp=-1;
     //#define CHIMERA
 #ifdef CHIMERA
@@ -1997,12 +2008,12 @@ void Sampling::findClosestExperimentalPoint()
     aux_my_exp_img_per_sampling_point.resize(
         no_redundant_sampling_points_vector.size());
 
-    for(int i=0,l=0;i< exp_data_projection_direction_by_L_R.size();l++)
+    for(size_t i=0,l=0;i< exp_data_projection_direction_by_L_R.size();l++)
     {
         my_dotProduct=-2;
-        for (int k = 0; k < R_repository.size(); k++,i++)
+        for (size_t k = 0; k < R_repository.size(); k++,i++)
         {
-            for(int j=0;j< no_redundant_sampling_points_vector.size();j++)
+            for(size_t j=0;j< no_redundant_sampling_points_vector.size();j++)
             {
                 my_dotProduct_aux =
                     dotProduct(exp_data_projection_direction_by_L_R[i],
@@ -2028,7 +2039,7 @@ void Sampling::findClosestExperimentalPoint()
 #endif
 
     }//for i aux_my_exp_img_per_sampling_point
-    for(int i=0;i< aux_my_exp_img_per_sampling_point.size();i++)
+    for(size_t i=0;i< aux_my_exp_img_per_sampling_point.size();i++)
         if(aux_my_exp_img_per_sampling_point[i].size()!=0)
             my_exp_img_per_sampling_point.push_back(aux_my_exp_img_per_sampling_point[i]);
 #ifdef CHIMERA
@@ -2136,7 +2147,6 @@ void Sampling::fillExpDataProjectionDirectionByLR(MetaData &DFi)
 {
     std::vector <Matrix1D<double> > exp_data_projection_direction;
     Matrix1D<double>  direction(3);
-    double rotp, tiltp, psip;
     DFi.firstObject();
     //#define CHIMERA
 #ifdef CHIMERA
@@ -2166,15 +2176,6 @@ void Sampling::fillExpDataProjectionDirectionByLR(MetaData &DFi)
         DFi.getValue(MDL_IMAGE,imgName,__iter.objId);
         exp_data_fileNames.push_back(imgName);
     }
-    //#define DEBUG
-#ifdef DEBUG
-    std::cerr << "DEBUG_ROB, img_rot:" << img_rot << std::endl;
-    std::cerr << "DEBUG_ROB, img_tilt:" << img_tilt << std::endl;
-    std::cerr << "DEBUG_ROB, img_psi:" << img_psi << std::endl;
-    exit(1);
-
-#endif DEBUG
-#undef DEBUG
 
     exp_data_projection_direction_by_L_R.clear();
 #ifdef MYPSI
@@ -2182,8 +2183,8 @@ void Sampling::fillExpDataProjectionDirectionByLR(MetaData &DFi)
     exp_data_projection_direction_by_L_R_psi.clear();
 #endif
 
-    for (int i = 0; i < exp_data_projection_direction.size(); i++)
-        for (int j = 0; j < R_repository.size(); j++)
+    for (size_t i = 0; i < exp_data_projection_direction.size(); i++)
+        for (size_t j = 0; j < R_repository.size(); j++)
         {
             direction =  L_repository[j] *
                          (exp_data_projection_direction[i].transpose() *

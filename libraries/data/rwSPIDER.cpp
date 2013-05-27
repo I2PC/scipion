@@ -150,8 +150,8 @@ int  ImageBase::readSPIDER(size_t select_img)
                      ". Error message: %s", filename.c_str() ,strerror(errno)));
 
     // Determine byte order and swap bytes if from different-endian machine
-    if ( swap = (( fabs(header->nslice) > SWAPTRIG ) || ( fabs(header->iform) > 1000 ) ||
-                 ( fabs(header->nslice) < 1 )) )
+    if ( (swap = (( fabs(header->nslice) > SWAPTRIG ) || ( fabs(header->iform) > 1000 ) ||
+                 ( fabs(header->nslice) < 1 ))) )
         swapPage((char *) header, SPIDERSIZE - 180, DT_Float);
 
     if(header->labbyt != header->labrec*header->lenbyt)
@@ -175,7 +175,7 @@ int  ImageBase::readSPIDER(size_t select_img)
     _xDim = (int) header->nsam;
     _yDim = (int) header->nrow;
     _zDim = (int) header->nslice;
-    _nDim = (isStack)? header->maxim : 1;
+    _nDim = (isStack)? (size_t)(header->maxim) : 1;
 
     if (_xDim < 1 || _yDim < 1 || _zDim < 1 || _nDim < 1)
         REPORT_ERROR(ERR_IO_NOTFILE,formatString("Invalid Spider file:  %s", filename.c_str()));
@@ -217,7 +217,6 @@ int  ImageBase::readSPIDER(size_t select_img)
     size_t   imgStart = IMG_INDEX(select_img);
     size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : _nDim;
     size_t   img_seek = header_size + imgStart * image_size;
-    char*   hend;
 
     MD.clear();
     MD.resize(imgEnd - imgStart,MDL::emptyHeader);
@@ -312,15 +311,32 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
         {
             if (dataMode < DATA) // This means ImageGeneric wants to know which DataType must use in mapFile2Write
                 return 0;
-            else
-                REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");
+            else //Mapping is an extra. When not available, go on and do not report an error.
+            {
+                /* In this case we cannot map the file because required and feasible datatypes are
+                 * not compatible. Then we denote to MapFile2Write the same incoming datatype to
+                 * keep using this Image object as usual, without mapping on write.
+                 */
+                mmapOnWrite = false;
+                dataMode = DATA;
+                MDMainHeader.setValue(MDL_DATATYPE,(int) myT());
+
+                // In case Image size great then, at least, map the multidimarray
+                if (mdaBase->nzyxdim*gettypesize(wDType) > tiff_map_min_size)
+                    mdaBase->setMmap(true);
+
+                // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
+                //if memory already allocated use it (no resize allowed)
+                mdaBase->coreAllocateReuse();
+
+                return 0;
+            }
         }
         else
             dataMode = DATA;
     }
 
-    int Xdim, Ydim, Zdim;
-    size_t Ndim;
+    size_t Xdim, Ydim, Zdim, Ndim;
     getDimensions(Xdim, Ydim, Zdim, Ndim);
 
     size_t datasize, datasize_n;
@@ -351,7 +367,7 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
     size_t xstore  = Xdim;
     if ( transform == Hermitian )
     {
-        xstore = Xdim * 0.5 + 1;
+        xstore = (size_t)(Xdim * 0.5 + 1);
         header->nsam = 2*xstore;
     }
 

@@ -24,7 +24,10 @@
  ***************************************************************************/
 
 #include <algorithm>
+#include <queue>
 #include "matrix2d.h"
+#include "../../external/alglib/src/ap.h"
+#include "../../external/alglib/src/linalg.h"
 
 /* Cholesky decomposition -------------------------------------------------- */
 void cholesky(const Matrix2D<double> &M, Matrix2D<double> &L)
@@ -103,7 +106,7 @@ void weightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> &resul
 	{
 		double wii=sqrt(VEC_ELEM(w,i));
 		VEC_ELEM(b,i)*=wii;
-		for (int j=0; j<MAT_XSIZE(A); ++j)
+		for (size_t j=0; j<MAT_XSIZE(A); ++j)
 			MAT_ELEM(A,i,j)*=wii;
 	}
 	solveLinearSystem(h,result);
@@ -275,6 +278,7 @@ void * threadRansacWeightedLeastSquares(void * args)
 	ThreadRansacArgs * master = (ThreadRansacArgs *) args;
 	master->error=ransacWeightedLeastSquaresBasic(*(master->h), master->result,
 			master->tol, master->Niter, master->outlierFraction);
+	return NULL;
 }
 
 void ransacWeightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> &result,
@@ -309,4 +313,125 @@ void ransacWeightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> 
     // Threads structures are not needed any more
     delete []th_ids;
     delete []th_args;
+}
+
+void schur(const Matrix2D<double> &M, Matrix2D<double> &O, Matrix2D<double> &T)
+{
+	alglib::real_2d_array a, s;
+	a.setcontent(MAT_YSIZE(M),MAT_XSIZE(M),MATRIX2D_ARRAY(M));
+	bool ok=rmatrixschur(a, MAT_YSIZE(M), s);
+	if (!ok)
+		REPORT_ERROR(ERR_NUMERICAL,"Could not perform Schur decomposition");
+	O.resizeNoCopy(M);
+	T.resizeNoCopy(M);
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(M)
+	{
+		MAT_ELEM(O,i,j)=s(i,j);
+		MAT_ELEM(T,i,j)=a(i,j);
+	}
+}
+
+void generalizedEigs(const Matrix2D<double> &A, const Matrix2D<double> &B, Matrix1D<double> &D, Matrix2D<double> &P)
+{
+	int N=(int)MAT_YSIZE(A);
+	alglib::real_2d_array a, b, z;
+	a.setcontent(N,N,MATRIX2D_ARRAY(A));
+	b.setcontent(N,N,MATRIX2D_ARRAY(B));
+	alglib::real_1d_array d;
+	bool ok=smatrixgevd(a, N, true, b, true, true, 1, d, z);
+	if (!ok)
+		REPORT_ERROR(ERR_NUMERICAL,"Could not perform eigenvector decomposition");
+	D.resizeNoCopy(N);
+	memcpy(&VEC_ELEM(D,0),d.getcontent(),N*sizeof(double));
+	P.resizeNoCopy(A);
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(P)
+		MAT_ELEM(P,i,j)=z(i,j);
+}
+
+void firstEigs(const Matrix2D<double> &A, size_t M, Matrix1D<double> &D, Matrix2D<double> &P)
+{
+	int N=(int)MAT_YSIZE(A);
+	alglib::real_2d_array a, z;
+	a.setcontent(N,N,MATRIX2D_ARRAY(A));
+	alglib::real_1d_array d;
+	bool ok=smatrixevdi(a, N, true, false, N-M, N-1, d, z);
+	if (!ok)
+		REPORT_ERROR(ERR_NUMERICAL,"Could not perform eigenvector decomposition");
+
+	D.resizeNoCopy(M);
+	FOR_ALL_ELEMENTS_IN_MATRIX1D(D)
+		VEC_ELEM(D,i)=d(M-1-i);
+	P.resizeNoCopy(N,M);
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(P)
+		MAT_ELEM(P,i,j)=z(i,M-1-j);
+}
+
+void lastEigs(const Matrix2D<double> &A, size_t M, Matrix1D<double> &D, Matrix2D<double> &P)
+{
+	int N=(int)MAT_YSIZE(A);
+	alglib::real_2d_array a, z;
+	a.setcontent(N,N,MATRIX2D_ARRAY(A));
+	alglib::real_1d_array d;
+	bool ok=smatrixevdi(a, N, true, false, 0, M-1, d, z);
+	if (!ok)
+		REPORT_ERROR(ERR_NUMERICAL,"Could not perform eigenvector decomposition");
+
+	D.resizeNoCopy(M);
+	FOR_ALL_ELEMENTS_IN_MATRIX1D(D)
+		VEC_ELEM(D,i)=d(M-1-i);
+	memcpy(&VEC_ELEM(D,0),d.getcontent(),M*sizeof(double));
+	P.resizeNoCopy(N,M);
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(P)
+		MAT_ELEM(P,i,j)=z(i,j);
+}
+
+void connectedComponentsOfUndirectedGraph(const Matrix2D<double> &G, Matrix1D<int> &component)
+{
+	size_t N=MAT_XSIZE(G);
+	component.resizeNoCopy(N);
+	component.initConstant(-1);
+
+	int nextComponent=0;
+	bool workDone=false;
+	std::queue<size_t> toExplore;
+	do
+	{
+		workDone=false;
+		// Find next unvisited element
+		bool found=false;
+		size_t seed=0;
+		FOR_ALL_ELEMENTS_IN_MATRIX1D(component)
+			if (VEC_ELEM(component,i)<0)
+			{
+				seed=i;
+				found=true;
+				break;
+			}
+
+		// If found, get its connected component
+		if (found)
+		{
+			int currentComponent=nextComponent;
+			nextComponent++;
+
+			VEC_ELEM(component,seed)=currentComponent;
+			toExplore.push(seed);
+			while (toExplore.size()>0)
+			{
+				seed=toExplore.front();
+				toExplore.pop();
+				for (size_t j=seed+1; j<N; ++j)
+					if (MAT_ELEM(G,seed,j)>0)
+					{
+						if (VEC_ELEM(component,j)<0)
+						{
+							VEC_ELEM(component,j)=currentComponent;
+							toExplore.push(j);
+						}
+
+					}
+			}
+			workDone=true;
+		}
+	} while (workDone);
 }

@@ -121,14 +121,14 @@ FileName_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     if (self != NULL)
     {
         PyObject *input = NULL, *pyStr = NULL;
-        char *str = "", *ext = "";
+        char str[1024] = "", ext[1024] = "";
         int number = ALL_IMAGES;
         if (PyArg_ParseTuple(args, "|Ois", &input, &number, &ext))
             //|| PyArg_ParseTuple(args, "|Os", &input, &ext)) FIXME
         {
             pyStr = PyObject_Str(input);
             if (pyStr != NULL)
-                str = PyString_AsString(pyStr);
+            	strcpy(str,PyString_AsString(pyStr));
         }
         if (number != ALL_IMAGES)
             self->filename = new FileName(str, number, ext);
@@ -152,14 +152,14 @@ PyObject *
 FileName_compose(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     FileNameObject *self = (FileNameObject*) obj;
-    int ok;
 
     if (self != NULL)
     {
         PyObject *input = NULL, *pyStr = NULL;
         PyObject *input2 = NULL, *pyStr2 = NULL;
-        char *str = "", *ext = "";
-        char *str2 = "";
+        char str[1024] = "";
+        char * ext = NULL;
+        char str2[1024] = "";
         int number = -1;
         size_t n = PyTuple_Size(args);
         //"kk000001.xmp"
@@ -167,7 +167,7 @@ FileName_compose(PyObject *obj, PyObject *args, PyObject *kwargs)
         {
             pyStr = PyObject_Str(input);
             if (pyStr != NULL)
-                str = PyString_AsString(pyStr);
+                strcpy(str,PyString_AsString(pyStr));
             self->filename->compose(str, number, ext);
         }
         else if (n == 2  && PyArg_ParseTuple(args, "OO", &input, &input2))
@@ -178,9 +178,9 @@ FileName_compose(PyObject *obj, PyObject *args, PyObject *kwargs)
                 pyStr  = PyObject_Str(input);
                 pyStr2 = PyObject_Str(input2);
                 if (pyStr != NULL)
-                    str = PyString_AsString(pyStr);
+                	strcpy(str,PyString_AsString(pyStr));
                 if (pyStr2 != NULL)
-                    str2 = PyString_AsString(pyStr2);
+                	strcpy(str2,PyString_AsString(pyStr2));
                 self->filename->compose(str, str2);
             }
             else if ( PyInt_Check( input ) )
@@ -188,7 +188,7 @@ FileName_compose(PyObject *obj, PyObject *args, PyObject *kwargs)
                 //"1@kk.xmp"
                 number=PyInt_AsLong(input);
                 pyStr2  = PyObject_Str(input2);
-                str2 = PyString_AsString(pyStr2);
+                strcpy(str2,PyString_AsString(pyStr2));
                 self->filename->compose(number, str2);
             }
             else
@@ -196,6 +196,7 @@ FileName_compose(PyObject *obj, PyObject *args, PyObject *kwargs)
         }
         Py_RETURN_NONE;//Return None(similar to void in C)
     }
+    Py_RETURN_NONE;//Return None(similar to void in C)
 }
 /* composeBlock */
 PyObject *
@@ -205,8 +206,7 @@ FileName_composeBlock(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     if (self != NULL)
     {
-        PyObject *input = NULL, *pyStr = NULL;
-        char *root = "", *ext = "", *block ="";
+        char root[1024] = "", ext[32] = "", block[1024] ="";
         int number = 1;
         PyArg_ParseTuple(args, "sis|s", &block, &number, &root, &ext);
         self->filename->composeBlock(block, number, root, ext);

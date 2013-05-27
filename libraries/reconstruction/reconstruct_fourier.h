@@ -3,6 +3,7 @@
  * Authors:     Roberto Marabini (roberto@cnb.csic.es)
  *              Carlos Oscar S. Sorzano (coss@cnb.csic.es)
  *              Jose Roman Bilbao-Castro (jrbcast@ace.ual.es)
+ *              Vahid Abrishami (vabrishami@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -62,7 +63,7 @@
 //@{
 class ProgRecFourier;
 
-static pthread_mutex_t mutexDocFile= PTHREAD_MUTEX_INITIALIZER;
+// static pthread_mutex_t mutexDocFile= PTHREAD_MUTEX_INITIALIZER;
 
 struct ImageThreadParams
 {
@@ -76,6 +77,7 @@ struct ImageThreadParams
     int imageIndex;
     double weight;
     double localweight;
+    bool reprocessFlag;
     MetaData * selFile;
 };
 
@@ -120,7 +122,7 @@ public:
     int threadOpCode;
 
     /// Number of rows already processed on an image
-    int rowsProcessed;
+    size_t rowsProcessed;
 
     /// Defines what a thread should do
     static void * processImageThread( void * threadArgs );
@@ -171,14 +173,11 @@ public: // Internal members
     // Fourier transformer for the images
     FourierTransformer transformerImg;
 
-    // An alias to the Fourier transform in transformerVol
+    // An alias to the Fourier transform in transformerVol and also temporary to keep the weights
     MultidimArray< std::complex<double> > VoutFourier;
 
     // Volume of Fourier weights
     MultidimArray<double> FourierWeights;
-
-    // Volume of Fourier weights convolved with the kernel
-    MultidimArray<double> FourierWeightsConvolved;
 
     // Padded image
     MultidimArray<double> paddedImg;
@@ -209,10 +208,13 @@ public:
     void finishComputations( const FileName &out_name );
 
     /// Process one image
-    void processImages( int firstImageIndex, int lastImageIndex, bool saveFSC=false ); //const FileName &fn_img);
+    void processImages( int firstImageIndex, int lastImageIndex, bool saveFSC=false, bool reprocessFlag=false);
 
-    /// Correct weight
+    /// Method for the correction of the fourier coefficients
     void correctWeight();
+	
+	/// Force the weights to be symmetrized
+    void forceWeightSymmetry(MultidimArray<double> &FourierWeights);
 
     ///Functions of common reconstruction interface
     virtual void setIO(const FileName &fn_in, const FileName &fn_out);

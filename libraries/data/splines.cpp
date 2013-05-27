@@ -39,8 +39,7 @@ double Bspline03LUT(double x)
         table(i) = Bspline03(i * deltax);
         firstCall = false;
     }
-    x = ABS(x);
-    int i = ROUND(x * ideltax);
+    size_t i = (size_t)round(fabs(x) * ideltax);
     if (i >= XSIZE(table)) return 0;
     else return table(i);
 }
@@ -48,9 +47,7 @@ double Bspline03LUT(double x)
 /* Sum spline on a grid ---------------------------------------------------- */
 double sum_spatial_Bspline03_SimpleGrid(const SimpleGrid &grid)
 {
-    SPEED_UP_temps;
     Matrix1D<double> gr(3), ur(3), corner1(3), corner2(3);
-    double         actual_radius;
     int          i, j, k;
     double        sum = 0.0;
 
@@ -75,7 +72,7 @@ double sum_spatial_Bspline03_SimpleGrid(const SimpleGrid &grid)
 double sum_spatial_Bspline03_Grid(const Grid &grid)
 {
     double sum = 0;
-    for (int i = 0; i < grid.GridsNo(); i++)
+    for (size_t i = 0; i < grid.GridsNo(); i++)
         sum += sum_spatial_Bspline03_SimpleGrid(grid(i));
     return sum;
 }
@@ -225,7 +222,6 @@ void spatial_Bspline032voxels_SimpleGrid(const MultidimArray<double> &vol_spline
     int           i, j, k;                   // Index within the blob volume
     bool          process;                   // True if this blob has to be
     // processed
-    SPEED_UP_temps;
     double spline_radius = 2 * sqrt(3.0);
 
     // Some aliases
@@ -403,7 +399,7 @@ void spatial_Bspline032voxels(const GridVolume &vol_splines,
     }
 
     // Convert each subvolume ...............................................
-    for (int i = 0; i < vol_splines.VolumesNo(); i++)
+    for (size_t i = 0; i < vol_splines.VolumesNo(); i++)
     {
         spatial_Bspline032voxels_SimpleGrid(vol_splines(i)(), vol_splines.grid(i),
                                             vol_voxels);

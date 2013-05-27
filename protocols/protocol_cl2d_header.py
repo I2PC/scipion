@@ -32,7 +32,7 @@ NumberOfInitialReferences=4
 # {expert} Number of iterations
 """ Maximum number of iterations within each level
 """
-NumberOfIterations=15
+NumberOfIterations=10
 
 # {expert}{list_combo}(correlation, correntropy) Comparison method
 """ Use correlation or correntropy """
@@ -43,7 +43,7 @@ ComparisonMethod='correlation'
 ClusteringMethod='classical'
 
 # {expert} Additional parameters for classify_CL2D
-""" --verbose, --corrSplit, ...
+""" --verbose, --corrSplit, ... see [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Classify_mpi_cl2d_v3]
 """
 AdditionalParameters=''
 

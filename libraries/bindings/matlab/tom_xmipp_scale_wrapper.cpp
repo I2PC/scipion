@@ -24,13 +24,10 @@
 
 /*xmipp includes */
 #include "xmipp_image.h"
-#include "volume.h"
 #include "tom_xmipp_helpers.h"
-#include "gridding.h"
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 {
-    
     int outsize[3];
     const double *p_outsize=mxGetPr(prhs[1]);
     outsize[0]=(int)p_outsize[0];
@@ -42,49 +39,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     
     if (ndims == 2)
     {
-        Image image;
+        Image<double> image;
         getMatrix2D(prhs[0],image());
-        
-        if (gridding)
-        {
-            Matrix2D<double> A(3, 3);
-            A.initIdentity();
-            KaiserBessel kb;
-            Matrix2D<double> Maux;
-            produceReverseGriddingMatrix2D(image(),Maux,kb);
-            DIRECT_MAT_ELEM(A, 0, 0) = (double) outsize[0] / (double) XSIZE(image());
-            DIRECT_MAT_ELEM(A, 1, 1) = (double) outsize[1] / (double) YSIZE(image());
-            applyGeometryReverseGridding(image(), A, Maux, kb, IS_NOT_INV, WRAP, outsize[0], outsize[1]);
-        }
-        else
-        {
-            image().selfScaleToSizeBSpline(3, outsize[0], outsize[1]);
-	    }
+		selfScaleToSize(BSPLINE3, image(), outsize[0], outsize[1]);
         setMatrix2D(image(),plhs[0]);
     }
     else 
     {
-        Volume volume;
+        Image<double> volume;
         getMatrix3D(prhs[0],volume());
-
-        if (gridding)
-        {
-            Matrix2D<double> B(4, 4);
-            B.initIdentity();
-            KaiserBessel kb;
-            Matrix3D<double> Maux;
-            produceReverseGriddingMatrix3D(volume(),Maux,kb);
-            DIRECT_MAT_ELEM(B, 0, 0) = (double) outsize[0] / (double) XSIZE(volume());
-            DIRECT_MAT_ELEM(B, 1, 1) = (double) outsize[1] / (double) YSIZE(volume());
-            DIRECT_MAT_ELEM(B, 2, 2) = (double) outsize[2] / (double) ZSIZE(volume());
-            applyGeometryReverseGridding(volume(), B, Maux, kb, IS_NOT_INV, WRAP, outsize[0], outsize[1], outsize[2]);
-        }
-        else
-        {
-            volume().selfScaleToSizeBSpline(3, outsize[0], outsize[1], outsize[2]);
-	    }
+		selfScaleToSize(BSPLINE3, volume(), outsize[0], outsize[1], outsize[2]);
         setMatrix3D(volume(),plhs[0]);
     }
-
 }	
 

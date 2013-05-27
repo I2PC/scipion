@@ -38,8 +38,8 @@ void normalize_OldXmipp(MultidimArray<double> &I)
     double mean,std;
     I.computeAvgStdev(mean,std);
     double istd=1.0/std;
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(I)
-    DIRECT_A2D_ELEM(I,i,j)=(DIRECT_A2D_ELEM(I,i,j)-mean)*istd;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(I)
+    DIRECT_MULTIDIM_ELEM(I,n)=(DIRECT_MULTIDIM_ELEM(I,n)-mean)*istd;
 }
 
 void normalize_Near_OldXmipp(MultidimArray<double> &I, const MultidimArray<int> &bg_mask)
@@ -80,9 +80,9 @@ void normalize_tomography(MultidimArray<double> &I, double tilt, double &mui,
     I.setXmippOrigin();
     MultidimArray<int> mask;
     mask.initZeros(I);
-    int Xdimtilt=XMIPP_MIN(FLOOR(0.5*(XSIZE(I)*cos(DEG2RAD(tilt)))),
+    int Xdimtilt=(int)XMIPP_MIN(FLOOR(0.5*(XSIZE(I)*cos(DEG2RAD(tilt)))),
                            0.5*(XSIZE(I)-(2*L+1)));
-    double N=0;
+    int N=0;
     for (int i=STARTINGY(I); i<=FINISHINGY(I); i++)
         for (int j=-Xdimtilt; j<=Xdimtilt;j++)
         {
@@ -259,7 +259,7 @@ void normalize_ramp(MultidimArray<double> &I, MultidimArray<int> &bg_mask)
     // Only 2D ramps implemented
     I.checkDimension(2);
 
-    int Npoints=bg_mask.sum();
+    int Npoints=(int)bg_mask.sum();
     if (Npoints<=1)
         return;
     FitPoint *allpoints=new FitPoint[Npoints];
@@ -322,7 +322,7 @@ void normalize_remove_neighbours(MultidimArray<double> &I,
     I.checkDimension(2);
 
     // Fit a least squares plane through the background pixels
-    int Npoints=bg_mask.sum();
+    int Npoints=(int)bg_mask.sum();
     FitPoint *allpoints=new FitPoint[Npoints];
     I.setXmippOrigin();
 
@@ -634,6 +634,8 @@ void ProgNormalize::preProcess()
         case CIRCLE:
             BinaryCircularMask(bg_mask, r, OUTSIDE_MASK);
             break;
+        case NOBACKGROUND:
+        	break;
         }
     }
     else
@@ -719,7 +721,7 @@ void ProgNormalize::processImage(const FileName &fnImg, const FileName &fnImgOut
         selfApplyGeometry(BSPLINE3, tmp, A, IS_NOT_INV, DONT_WRAP, outside);
 
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(bg_mask)
-        dAi(bg_mask,n)=round(dAi(tmp,n));
+        dAi(bg_mask,n)=(int)round(dAi(tmp,n));
     }
 
     double a, b;
@@ -789,7 +791,8 @@ void ProgNormalize::processImage(const FileName &fnImg, const FileName &fnImgOut
         FOR_ALL_ELEMENTS_IN_ARRAY3D(img)
         A3D_ELEM(img, k, i, j) = a * A3D_ELEM(img, k, i, j) + b;
         break;
+    case NONE:
+    	break;
     }
-
     I.write(fnImgOut);
 }

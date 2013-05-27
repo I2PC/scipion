@@ -205,7 +205,7 @@ void TkPrinter::printProgram(const ProgramDef &program, int v)
         if (program.usageComments.visibility[i] <= v)
             ++numberOfComments;
     //Send number of usage lines
-    fprintf(output, "%d\n", numberOfComments);
+    fprintf(output, "%d\n", (int)numberOfComments);
     if (numberOfComments > 0)
     {
         for (size_t i = 0; i < program.usageComments.size(); ++i)
@@ -260,8 +260,6 @@ void TkPrinter::printParam(const ParamDef &param, int v)
         if (param.independent)
             return;
 
-        int n_args = param.arguments.size();
-
         fprintf(output, "param = ParamWidget(group, \"%s\");\n", param.name.c_str());
         if (param.notOptional)
             fprintf(output, "param.notOptional = True; \n");
@@ -283,7 +281,7 @@ void TkPrinter::printArgument(const ArgumentDef & argument, int v)
 {
     static String paramStr = "param";
     fprintf(output, "%s.addOption(\"%s\", \"%s\", %d);\n",
-            paramStr.c_str(), argument.name.c_str(), argument.argDefault.c_str(), argument.subParams.size());
+            paramStr.c_str(), argument.name.c_str(), argument.argDefault.c_str(), (int)argument.subParams.size());
     if (argument.subParams.size() > 0)
     {
 
@@ -329,7 +327,7 @@ void WikiPrinter::printProgram(const ProgramDef &program, int v)
         *pOut << std::endl << "*See also* %BR%" << std::endl;
         StringVector links;
         splitString(program.seeAlso, ",", links);
-        for (int i = 0; i < links.size(); ++i)
+        for (size_t i = 0; i < links.size(); ++i)
             *pOut << "[[" << links[i] << "_v" << XMIPP_MAJOR << "][" << links[i] <<"]]  ";
         *pOut << "%BR%" << std::endl;
     }
@@ -623,7 +621,7 @@ void ProtPrinter::addCondition(const String &newcondition)
     condition += newcondition;
 }
 
-bool matchArgInList(const String &argName, int n, const char** list)
+bool matchArgInList(const String &argName, size_t n, const char** list)
 {
     for (size_t i = 0; i < n; ++i)
         if (argName.find(list[i]) != String::npos)

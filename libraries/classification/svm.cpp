@@ -1,5 +1,5 @@
 /* This file has been taken from LibSVM 3.12 */
-/* Authors: Chih-Chung Chang and Chih-Jen Lin, LIBSVM :
+/* Authors: Chih-Chung Chang and Chih-Jen Lin, LIBSVM :*/
 /* Software available at http://www.csie.ntu.edu.tw/~cjlin/libsvm */
 
 #include <math.h>

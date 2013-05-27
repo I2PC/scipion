@@ -85,6 +85,64 @@ xmipp_labelType(PyObject *obj, PyObject *args)
     return NULL;
 }
 
+PyObject *
+xmipp_labelHasTag(PyObject *obj, PyObject *args)
+{
+    PyObject * input;
+    int tag;
+
+    if (PyArg_ParseTuple(args, "Oi", &input, &tag))
+    {
+        MDLabel label = MDL_UNDEFINED;
+
+        if (PyString_Check(input))
+          label = MDL::str2Label(PyString_AsString(input));
+        else if (PyInt_Check(input))
+          label = (MDLabel) PyInt_AsLong(input);
+
+        if (label != MDL_UNDEFINED)
+        {
+          if (MDL::hasTag(label, tag))
+            Py_RETURN_TRUE;
+          else
+            Py_RETURN_FALSE;
+        }
+
+        PyErr_SetString(PyExc_TypeError,
+                            "labelHasTag: Input label should be int or string");
+    }
+    return NULL;
+}
+
+PyObject *
+xmipp_labelIsImage(PyObject *obj, PyObject *args)
+{
+    PyObject * input;
+    int tag = TAGLABEL_IMAGE;
+
+    if (PyArg_ParseTuple(args, "O", &input))
+    {
+        MDLabel label = MDL_UNDEFINED;
+
+        if (PyString_Check(input))
+          label = MDL::str2Label(PyString_AsString(input));
+        else if (PyInt_Check(input))
+          label = (MDLabel) PyInt_AsLong(input);
+
+        if (label != MDL_UNDEFINED)
+        {
+          if (MDL::hasTag(label, tag))
+            Py_RETURN_TRUE;
+          else
+            Py_RETURN_FALSE;
+        }
+
+        PyErr_SetString(PyExc_TypeError,
+                            "labelIsImage: Input label should be int or string");
+    }
+    return NULL;
+}
+
 /* isInStack */
 PyObject *
 xmipp_isValidLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -107,8 +165,6 @@ xmipp_isValidLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
 PyObject *
 xmipp_createEmptyFile(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    PyObject *pyValue1, *pyValue2; //Only used to skip label and value
-
     int Xdim,Ydim,Zdim;
     size_t Ndim;
     Zdim=1;
@@ -135,8 +191,7 @@ xmipp_SingleImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
 
             PyObject * pyStr = PyObject_Str(pyValue);
             char * str = PyString_AsString(pyStr);
-            int xdim, ydim, zdim;
-            size_t ndim;
+            size_t xdim, ydim, zdim, ndim;
             getImageSize(str, xdim, ydim, zdim, ndim);
             Py_DECREF(pyStr);
             return Py_BuildValue("iiik", xdim, ydim, zdim, ndim);
@@ -148,9 +203,8 @@ xmipp_SingleImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }
-/* ImgSize (from metadata filename)*/
-PyObject *
-xmipp_ImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
+
+PyObject * xmipp_MetaDataInfo(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     PyObject *pyValue; //Only used to skip label and value
 
@@ -158,29 +212,35 @@ xmipp_ImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
     {
         try
         {
-            MetaData md;
+            MetaData *md = NULL;
+            bool destroyMd=true;
             if (PyString_Check(pyValue))
             {
                 char * str = PyString_AsString(pyValue);
-                md.read(str);
+                md = new MetaData();
+                md->read(str);
             }
             else if (FileName_Check(pyValue))
             {
-                md.read(FileName_Value(pyValue));
+                md = new MetaData();
+                md->read(FileName_Value(pyValue));
             }
             else if (MetaData_Check(pyValue))
             {
-                md = MetaData_Value(pyValue);
+                md = ((MetaDataObject*)pyValue)->metadata;
+                destroyMd=false;
             }
             else
             {
                 PyErr_SetString(PyXmippError, "Invalid argument: expected String, FileName or MetaData");
                 return NULL;
             }
-            int xdim, ydim, zdim;
-            size_t ndim;
-            getImageSize(md, xdim, ydim, zdim, ndim);
-            return Py_BuildValue("iiik", xdim, ydim, zdim, ndim);
+            size_t xdim, ydim, zdim, ndim, Nimgs;
+            Nimgs=md->size();
+            getImageSize(*md, xdim, ydim, zdim, ndim);
+            if (destroyMd)
+            	delete md;
+            return Py_BuildValue("iiikk", xdim, ydim, zdim, ndim, Nimgs);
         }
         catch (XmippError &xe)
         {
@@ -188,7 +248,7 @@ xmipp_ImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
         }
     }
     return NULL;
-}/* ImgSize (from metadata filename)*/
+}/* Metadata info (from metadata filename)*/
 
 PyObject *
 xmipp_CheckImageFileSize(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -489,8 +549,7 @@ ArrayDim idim;\
 data.getDimensions(idim);
 
 #define FILTER_CATCH()\
-int w = dim, h = dim, &x = idim.xdim, &y = idim.ydim;\
-double ddim = dim;\
+size_t w = dim, h = dim, &x = idim.xdim, &y = idim.ydim;\
 if (x > y) h = y * (dim/x);\
 else if (y > x)\
   w = x * (dim/y);\
@@ -603,6 +662,8 @@ xmipp_Euler_angles2matrix(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+
+
 PyObject *
 xmipp_Euler_matrix2angles(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
@@ -623,6 +684,20 @@ xmipp_Euler_matrix2angles(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+
+PyObject *
+xmipp_Euler_direction(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    PyObject * input;
+    double rot, tilt, psi;
+    if (PyArg_ParseTuple(args, "ddd", &rot,&tilt,&psi))
+    {
+    	Matrix1D<double> direction(3);
+        Euler_direction(rot, tilt, psi, direction);
+        return Py_BuildValue("fff", VEC_ELEM(direction, 0), VEC_ELEM(direction, 1), VEC_ELEM(direction, 2));//fff three real
+    }
+    return NULL;
+}
 /* activateMathExtensions */
 PyObject *
 xmipp_activateMathExtensions(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -653,6 +728,10 @@ xmipp_methods[] =
           "Create a string with color characters sequence for print in console" },
         { "labelType", xmipp_labelType, METH_VARARGS,
           "Return the type of a label" },
+        { "labelHasTag", xmipp_labelHasTag, METH_VARARGS,
+          "Return the if the label has a specific tag" },
+        { "labelIsImage", xmipp_labelIsImage, METH_VARARGS,
+            "Return if the label has the TAGLABEL_IMAGE tag" },
         { "str2Label", xmipp_str2Label, METH_VARARGS,
           "Convert an string to MDLabel" },
         { "isValidLabel", (PyCFunction) xmipp_isValidLabel,
@@ -679,8 +758,8 @@ xmipp_methods[] =
           METH_VARARGS, "create empty stack (speed up things)" },
         { "SingleImgSize", (PyCFunction) xmipp_SingleImgSize,
           METH_VARARGS, "Get image dimensions" },
-        { "ImgSize", (PyCFunction) xmipp_ImgSize, METH_VARARGS,
-          "Get image dimensions of first metadata entry" },
+        { "MetaDataInfo", (PyCFunction) xmipp_MetaDataInfo, METH_VARARGS,
+          "Get image dimensions of first metadata entry and the number of entries" },
         { "ImgCompare", (PyCFunction) xmipp_ImgCompare,  METH_VARARGS,
           "return true if both files are identical" },
         { "checkImageFileSize", (PyCFunction) xmipp_CheckImageFileSize,  METH_VARARGS,
@@ -709,6 +788,8 @@ xmipp_methods[] =
           "convert euler angles to transformation matrix" },
         { "Euler_matrix2angles", (PyCFunction) xmipp_Euler_matrix2angles, METH_VARARGS,
           "convert transformation matrix to euler angles" },
+        { "Euler_direction", (PyCFunction) xmipp_Euler_direction, METH_VARARGS,
+                    "converts euler angles to direction" },
         { "activateMathExtensions", (PyCFunction) xmipp_activateMathExtensions,
           METH_VARARGS, "activate math function in metadatas" },
 
@@ -733,9 +814,11 @@ PyMODINIT_FUNC initxmipp(void)
     INIT_TYPE(MetaData);
     INIT_TYPE(Program);
     INIT_TYPE(SymList);
+    INIT_TYPE(FourierProjector);
 
     //Add PyXmippError
-    PyXmippError = PyErr_NewException("xmipp.XmippError", NULL, NULL);
+    char message[32]="xmipp.XmippError";
+    PyXmippError = PyErr_NewException(message, NULL, NULL);
     Py_INCREF(PyXmippError);
     PyModule_AddObject(module, "XmippError", PyXmippError);
 

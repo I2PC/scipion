@@ -105,7 +105,7 @@ public:
             mdPtr->removeObjects(MDValueEQ(MDL_ENABLED, -1));
 
         size_t Num_images = mdPtr->size();
-        int Num_groups = XMIPP_MIN(N, Num_images);
+        size_t Num_groups = XMIPP_MIN(N, Num_images);
         mdPtr->split(Num_groups, mdVector); //Split MD in Num_groups
         //Write splitted groups to disk
         for (size_t i = 0; i < Num_groups; ++i)

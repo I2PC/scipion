@@ -26,4 +26,4 @@
 
 #include <reconstruction/image_rotational_pca.h>
 
-RUN_XMIPP_PROGRAM(ProgImageRotationalPCA);
+RUN_XMIPP_PROGRAM(ProgImageRotationalPCA)

@@ -66,11 +66,6 @@ void ProgCTFPhaseFlipping::run()
     Image<double> M_in;
     M_in.read(fn_in);
 
-    // Perform the Fourier transform
-    FourierTransformer transformer;
-    MultidimArray< std::complex<double> > M_inFourier;
-    transformer.FourierTransform(M_in(),M_inFourier,false);
-
     // Read CTF
     CTFDescription ctf;
     ctf.clear();
@@ -78,15 +73,27 @@ void ProgCTFPhaseFlipping::run()
     ctf.changeSamplingRate(ctf.Tm*downsampling);
     ctf.produceSideInfo();
 
+    actualPhaseFlip(M_in(),ctf);
+
+    M_in.write(fn_out);
+}
+
+void actualPhaseFlip(MultidimArray<double> &I, CTFDescription ctf)
+{
+    // Perform the Fourier transform
+    FourierTransformer transformer;
+    MultidimArray< std::complex<double> > M_inFourier;
+    transformer.FourierTransform(I,M_inFourier,false);
+
     Matrix1D<double> freq(2); // Frequencies for Fourier plane
-    int yDim=YSIZE(M_in());
-    int xDim=XSIZE(M_in());
+    int yDim=YSIZE(I);
+    int xDim=XSIZE(I);
     double iTm=1.0/ctf.Tm;
-    for (int i=0; i<YSIZE(M_inFourier); ++i)
+    for (size_t i=0; i<YSIZE(M_inFourier); ++i)
     {
     	FFT_IDX2DIGFREQ(i, yDim, YY(freq));
     	YY(freq) *= iTm;
-        for (int j=0; j<XSIZE(M_inFourier); ++j)
+        for (size_t j=0; j<XSIZE(M_inFourier); ++j)
         {
         	FFT_IDX2DIGFREQ(j, xDim, XX(freq));
         	XX(freq) *= iTm;
@@ -98,5 +105,4 @@ void ProgCTFPhaseFlipping::run()
 
     // Perform inverse Fourier transform and finish
     transformer.inverseFourierTransform();
-    M_in.write(fn_out);
 }

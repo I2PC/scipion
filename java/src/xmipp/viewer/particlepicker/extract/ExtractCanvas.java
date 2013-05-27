@@ -161,4 +161,16 @@ public class ExtractCanvas extends ParticlePickerCanvas
 		frame.refreshActiveOnGallery(active);
 	}
 
+	@Override
+	protected void manageActive(int x, int y)
+	{
+		if(!activemoved)
+			return;
+		if (!micrograph.fits(x, y, picker.getSize()))
+			return;
+		moveActiveParticle(x, y);
+		setActiveMoved(false);
+		
+	}
+
 }

@@ -81,11 +81,12 @@ void Histogram1D::init(double min_val, double max_val, int n_steps)
 void Histogram1D::insert_value(double val)
 {
     int i;
+    int Xdim=(int)XSIZE(*this);
 
     // The following code is equivalent to val2index(val, i);
     if (val == hmax)
     {
-        i = XSIZE(*this) - 1;
+        i = Xdim - 1;
         ++DIRECT_A1D_ELEM(*this, i);
         ++no_samples;
     }
@@ -94,7 +95,7 @@ void Histogram1D::insert_value(double val)
         double aux = (val - hmin) * istep_size;
         i = (int) aux;
 
-        if (i < 0 || i >= XSIZE(*this))
+        if (i < 0 || i >= Xdim)
             return; // the value is outside our scope
 
         ++DIRECT_A1D_ELEM(*this, i);
@@ -288,10 +289,12 @@ double detectability_error(const Histogram1D &h1, const Histogram1D &h2)
 #endif//;
 
         if (p1 != 0 && p2 != 0)
+        {
             if (p1 > p2)
                 error += p2;
             else
                 error += p1;
+        }
         v += step;
         N++;
     }
@@ -391,7 +394,7 @@ void IrregularHistogram1D::selfNormalize()
 std::ostream & operator <<(std::ostream &_out,
                            const IrregularHistogram1D &_hist)
 {
-    for (int i = 0; i < XSIZE(_hist.__binsRightLimits); i++)
+    for (size_t i = 0; i < XSIZE(_hist.__binsRightLimits); i++)
         _out << "\t" << _hist.__binsRightLimits(i) << "\t\t" << _hist.__hist(i)
         << std::endl;
     return _out;
@@ -467,8 +470,10 @@ void Histogram2D::insert_value(double v, double u)
     val2index(v, u, i, j);
     if (i == -1 || j == -1)
         return; // it is outside our scope
-    i = CLIP(i, 0, YSIZE(*this));
-    j = CLIP(j, 0, XSIZE(*this));
+    int Xdim=(int)XSIZE(*this);
+    int Ydim=(int)YSIZE(*this);
+    i = CLIP(i, 0, Ydim);
+    j = CLIP(j, 0, Xdim);
     A2D_ELEM(*this, i, j)++;
     no_samples++;
 }

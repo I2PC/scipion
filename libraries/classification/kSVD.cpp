@@ -150,14 +150,13 @@ double lasso(const Matrix1D<double> &x,
     const int maxIter, const double tol)
 {
     int K=D.Xdim();
-    int N=D.Ydim();
 
     // Compute the ridge least squares solution
     // Compute D^t*x
     Matrix1D<double> Dtx(K);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(Dtx)
         // Compute the dot product of the i-th column of D and x
-        for (int k=0; k<D.Ydim(); k++)
+        for (size_t k=0; k<D.Ydim(); k++)
             Dtx(i)+= D(k,i)*x(k);
 
     // Now multiply DtdLambdaInv * D^t * x
@@ -178,9 +177,9 @@ double lasso(const Matrix1D<double> &x,
         FOR_ALL_ELEMENTS_IN_MATRIX1D(alpha)
         {
             double S=-Dtx(i);
-            for (int j=0; j<alpha.size(); j++)
+            for (size_t j=0; j<alpha.size(); j++)
                 if (i!=j) S+=DtD(i,j)*alpha(j);
-            if (ABS(S)<lambda)
+            if (fabs(S)<lambda)
                 alpha(i)=0;
             else if (S>lambda)
                 alpha(i)=(lambda-S)/DtD(i,i);
@@ -202,9 +201,9 @@ double lasso(const Matrix1D<double> &x,
     
     // Compute the approximation error
     Matrix1D<double> xp(x.size());
-    for (int j=0; j<D.Xdim(); j++)
+    for (size_t j=0; j<D.Xdim(); j++)
         if (alpha(j)!=0)
-            for (int i=0; i<D.Ydim(); i++)
+            for (size_t i=0; i<D.Ydim(); i++)
                 xp(i)+=D(i,j)*alpha(j);
     double approximationError=0;
     FOR_ALL_ELEMENTS_IN_MATRIX1D(xp)
@@ -225,9 +224,9 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
     bool keepFirstColumn, int maxIter, double minChange,
     int projectionMethod, double lambda)
 {
-    int Nvectors=X.size();
-    int K=D.Xdim(); // Number of atoms
-    int N=D.Ydim(); // Dimension of the atoms
+	size_t Nvectors=X.size();
+	size_t K=D.Xdim(); // Number of atoms
+	size_t N=D.Ydim(); // Dimension of the atoms
 
     // Ask for memory for Alpha if necessary
     if (Alpha.size()!=Nvectors)
@@ -235,13 +234,13 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
         int Nalpha=Alpha.size();
         Matrix1D<double> dummy;
         dummy.initZeros(K);
-        for (int i=0; i<Nvectors-Nalpha; i++)
+        for (size_t i=0; i<Nvectors-Nalpha; i++)
             Alpha.push_back(dummy);
     }
 
     // Ask for memory for which vectors use which atoms
     std::vector< std::vector<int> > listUsers;
-    for (int k=0; k<K; k++)
+    for (size_t k=0; k<K; k++)
     {
         std::vector<int> dummy;
         listUsers.push_back(dummy);
@@ -250,7 +249,7 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
     // Compute the power of the input vectors
     Matrix1D<double> power;
     power.initZeros(Nvectors);
-    for (int n=0; n<Nvectors; n++)
+    for (size_t n=0; n<Nvectors; n++)
         FOR_ALL_ELEMENTS_IN_MATRIX1D(X[n])
             power(n)+=X[n](i)*X[n](i);
     double avgPower=power.sum(true);
@@ -269,16 +268,16 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
             DtD.initZeros(K,K);
             FOR_ALL_ELEMENTS_IN_MATRIX2D(DtD)
                 // Compute the dot product between the columns i and j of D
-                for (int k=0; k<D.Ydim(); k++)
+                for (size_t k=0; k<D.Ydim(); k++)
                     DtD(i,j)+=D(k,i)*D(k,j);
             DtDlambda=DtD;
-            for (int i=0; i<K; i++)
+            for (size_t i=0; i<K; i++)
                 DtDlambda(i,i)+=lambda;
             DtDlambda.inv(DtDlambdaInv);
         }
         std::cout << "Sparse coding\n";
         init_progress_bar(Nvectors);
-        for (int n=0; n<Nvectors; n++)
+        for (size_t n=0; n<Nvectors; n++)
         {
             // Compute alpha
             if (projectionMethod==LASSO_PROJECTION)
@@ -287,7 +286,7 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
                 error(n)=orthogonalMatchingPursuit(X[n],D,S,Alpha[n]);
             
             // Check which are the atoms this vector is using
-            for (int k=0; k<K; k++)
+            for (size_t k=0; k<K; k++)
                 if (Alpha[n](k)!=0)
                     listUsers[k].push_back(n);
             if (n%100==0) progress_bar(n);
@@ -299,7 +298,7 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
         if (projectionMethod==LASSO_PROJECTION)
         {
             int countNonZeros=0;
-            for (int n=0; n<Nvectors; n++)
+            for (size_t n=0; n<Nvectors; n++)
                 FOR_ALL_ELEMENTS_IN_MATRIX1D(Alpha[n])
                     if (Alpha[n](i)!=0) countNonZeros++;
             std::cout << "Average sparsity = " << (double)countNonZeros/
@@ -313,33 +312,33 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
         if (keepFirstColumn) firstKtoUpdate=1;
         std::cout << "Updating codebook\n";
         init_progress_bar(K);
-        for (int k=firstKtoUpdate; k<K; k++)
+        for (size_t k=firstKtoUpdate; k<K; k++)
         {
             // Compute the error that would be commited if the
             // atom k were not used
-            int Nk=listUsers[k].size();
+        	size_t Nk=listUsers[k].size();
             // std::cout << "Atom k=" << k << " is used by " << Nk << " vectors\n";
             if (Nk>1)
             {
                 EkR.initZeros(N,Nk);
-                for (int nk=0; nk<Nk; nk++)
+                for (size_t nk=0; nk<Nk; nk++)
                 {
                     // Select vector nk
                     int n=listUsers[k][nk];
 
                     // Compute the represented vector if atom is not used
                     xp.initZeros(N);
-                    for (int kp=0; kp<K; kp++)
+                    for (size_t kp=0; kp<K; kp++)
                     {
                         double w=Alpha[n](kp);
                         if (kp!=k && w!=0)
-                            for (int j=0; j<N; j++)
+                            for (size_t j=0; j<N; j++)
                                 xp(j)+=w*D(j,kp);
                     }
 
                     // Fill the error matrix EkR
                     const Matrix1D<double> &x=X[n];
-                    for (int j=0; j<N; j++)
+                    for (size_t j=0; j<N; j++)
                         EkR(j,nk)=x(j)-xp(j);
                 }
 
@@ -348,19 +347,19 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
 
                 // Update the dictionary with the first column of U
                 double normU0=0;
-                for (int j=0; j<N; j++)
+                for (size_t j=0; j<N; j++)
                 {
                     double uj0=U(j,0);
                     normU0+=uj0*uj0;
                 }
                 normU0=sqrt(normU0);
                 double inormU0=1/normU0;
-                for (int j=0; j<N; j++)
+                for (size_t j=0; j<N; j++)
                     D(j,k)=U(j,0)*inormU0;
 
                 // Update the coefficients of the users of atom k
                 double W0=W(0)*normU0;
-                for (int nk=0; nk<Nk; nk++)
+                for (size_t nk=0; nk<Nk; nk++)
                 {
                     // Select vector nk
                     int n=listUsers[k][nk];
@@ -383,7 +382,7 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
                 int iworse;
                 error.maxIndex(iworse);
                 error(iworse)=0;
-                for (int j=0; j<N; j++)
+                for (size_t j=0; j<N; j++)
                     D(j,k)=X[iworse](j);
             }
             progress_bar(k);

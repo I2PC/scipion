@@ -26,7 +26,7 @@
 //#include <mpi.h>
 #include <parallel/mpi_ml_align2d.h>
 
-RUN_XMIPP_PROGRAM(MpiProgMLTomo);
+RUN_XMIPP_PROGRAM(MpiProgMLTomo)
 
 /*
 #define TAG_DOCFILE 12

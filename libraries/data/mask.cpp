@@ -389,7 +389,7 @@ void SeparableSincKaiserMask2D(MultidimArray<double> &mask,
         beta = 0;
 
     // "Draw" Separable Kaiser Sinc selfWindow
-    mask.resize(2*M + 1, 2*M + 1);
+    mask.resize((size_t)(2*M + 1),(size_t)(2*M + 1));
     mask.setXmippOrigin();
     double iI0Beta = 1.0 / bessi0(beta);
     FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
@@ -493,9 +493,9 @@ void BinaryConeMask(MultidimArray<int> &mask, double theta, int mode,bool center
     minY = -halfY;
     minZ = -halfZ;
 
-    maxX = (mask.xdim-0.5)/2;
-    maxY = (mask.ydim-0.5)/2;
-    maxZ = (mask.zdim-0.5)/2;
+    maxX = (int)((mask.xdim-0.5)/2);
+    maxY = (int)((mask.ydim-0.5)/2);
+    maxZ = (int)((mask.zdim-0.5)/2);
 
     FOR_ALL_ELEMENTS_IN_ARRAY3D(mask)
     {
@@ -538,12 +538,12 @@ void BinaryWedgeMask(MultidimArray<int> &mask, double theta0, double thetaF,
     minY = -halfY;
     minZ = -halfZ;
 
-    maxX = (mask.xdim-0.5)/2;
-    maxY = (mask.ydim-0.5)/2;
-    maxZ = (mask.zdim-0.5)/2;
+    maxX = (int)((mask.xdim-0.5)/2);
+    maxY = (int)((mask.ydim-0.5)/2);
+    maxZ = (int)((mask.zdim-0.5)/2);
 
 
-    double xp, yp, zp;
+    double xp, zp;
     double tg0, tgF, limx0, limxF;
 
     tg0 = -tan(PI * (-90. - thetaF) / 180.);
@@ -580,19 +580,19 @@ void BinaryWedgeMask(MultidimArray<int> &mask, double theta0, double thetaF,
         {
             if (xp <= limx0 || xp >= limxF)
             {
-                A3D_ELEM(mask, kpp, ipp, jpp) = 1.;
+                A3D_ELEM(mask, kpp, ipp, jpp) = 1;
             }
             else
-                A3D_ELEM(mask, kpp, ipp, jpp) = 0.;
+                A3D_ELEM(mask, kpp, ipp, jpp) = 0;
         }
         else
         {
             if (xp <= limxF || xp >= limx0)
             {
-                A3D_ELEM(mask, kpp, ipp, jpp) = 1.;
+                A3D_ELEM(mask, kpp, ipp, jpp) = 1;
             }
             else
-                A3D_ELEM(mask, kpp, ipp, jpp) = 0.;
+                A3D_ELEM(mask, kpp, ipp, jpp) = 0;
         }
     }
 }
@@ -663,7 +663,7 @@ void Mask::clear()
 }
 
 // Resize ------------------------------------------------------------------
-void Mask::resize(int Xdim)
+void Mask::resize(size_t Xdim)
 {
     switch (datatype())
     {
@@ -678,7 +678,7 @@ void Mask::resize(int Xdim)
     }
 }
 
-void Mask::resize(int Ydim, int Xdim)
+void Mask::resize(size_t Ydim, size_t Xdim)
 {
     switch (datatype())
     {
@@ -693,7 +693,7 @@ void Mask::resize(int Ydim, int Xdim)
     }
 }
 
-void Mask::resize(int Zdim, int Ydim, int Xdim)
+void Mask::resize(size_t Zdim, size_t Ydim, size_t Xdim)
 {
     switch (datatype())
     {
@@ -710,7 +710,7 @@ void Mask::resize(int Zdim, int Ydim, int Xdim)
 
 //#ifdef NEVER
 // Read from command lines -------------------------------------------------
-void Mask::read(int argc, char **argv)
+void Mask::read(int argc, const char **argv)
 {
     int i = paremeterPosition(argc, argv, "--center");
     if (i != -1)
@@ -966,7 +966,7 @@ void Mask::read(int argc, char **argv)
         else
             REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: cannot determine mode for blob_circular");
         type = BLOB_CIRCULAR_MASK;
-        blob_order= textToFloat(getParameter(argc, argv, "-m", "2."));
+        blob_order= textToInteger(getParameter(argc, argv, "-m", "2"));
         blob_alpha= textToFloat(getParameter(argc, argv, "-a", "10.4"));
 
         // Raised crown mask ....................................................
@@ -988,7 +988,7 @@ void Mask::read(int argc, char **argv)
         else
             REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: cannot determine mode for blob_crown");
         type = BLOB_CROWN_MASK;
-        blob_order= textToFloat(getParameter(argc, argv, "-m", "2."));
+        blob_order= textToInteger(getParameter(argc, argv, "-m", "2"));
         blob_alpha= textToFloat(getParameter(argc, argv, "-a", "10.4"));
 
         // Blackman mask ........................................................
@@ -1507,8 +1507,8 @@ void Mask::readParams(XmippProgram * program)
             REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: cannot determine mode for blob_circular");
 
         type = BLOB_CIRCULAR_MASK;
-        blob_order= program->getDoubleParam("-m");
-        blob_alpha= program->getDoubleParam("-a");
+        blob_order= program->getIntParam("-m");
+        blob_alpha= program->getIntParam("-a");
     }
     /*// Raised crown mask ....................................................*/
     else if (mask_type == "blob_crown")
@@ -1529,7 +1529,7 @@ void Mask::readParams(XmippProgram * program)
             REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: cannot determine mode for blob_crown");
 
         type = BLOB_CROWN_MASK;
-        blob_order= program->getDoubleParam("-m");
+        blob_order= program->getIntParam("-m");
         blob_alpha= program->getDoubleParam("-a");
     }
     /*// Blackman mask ........................................................*/
@@ -1696,7 +1696,7 @@ void apply_geo_cont_2D_mask(MultidimArray<double> &mask,
 int count_with_mask(const MultidimArray<int> &mask,
                     const MultidimArray< std::complex<double> > &m, int mode, double th1, double th2)
 {
-    SPEED_UP_temps;
+    SPEED_UP_tempsInt;
     int N = 0;
     FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(mask, m)
     if (A2D_ELEM(mask, i, j))
@@ -1725,7 +1725,7 @@ void rangeAdjust_within_mask(const MultidimArray<double> *mask,
     A.initZeros();
     Matrix1D<double> b(2);
     b.initZeros();
-    SPEED_UP_temps;
+    SPEED_UP_tempsInt;
     // Compute Least squares solution
     if (mask == NULL)
     {

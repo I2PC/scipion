@@ -186,7 +186,7 @@ void ProgTomoExtractSubvolume::preProcess()
         R.resize(3,3);
         newcenter = L * (center_ref.transpose() * R).transpose();
         is_uniq=true;
-        for (int i = 0; i < centers_subvolumes.size(); i++)
+        for (size_t i = 0; i < centers_subvolumes.size(); i++)
         {
             distcenter = centers_subvolumes[i] - newcenter;
             dist = sqrt(distcenter.sum2());
@@ -286,7 +286,8 @@ void ProgTomoExtractSubvolume::processImage(const FileName &fnImg, const FileNam
 
      // Tomo_Extract each of the unique subvolumes
     size_t oId;
-    for (int i = 0; i < centers_subvolumes.size(); i++)
+    SPEED_UP_temps012;
+    for (size_t i = 0; i < centers_subvolumes.size(); i++)
     {
         center=centers_subvolumes[i];
 

@@ -38,8 +38,7 @@ FourierProjector::FourierProjector(const MultidimArray<double> &V, double paddFa
 
 void FourierProjector::project(double rot, double tilt, double psi)
 {
-    double freqz, freqy, freqx;
-    double kx,ky,arg;
+    double freqy, freqx;
     std::complex< double > f;
     Euler_angles2matrix(rot,tilt,psi,E);
 
@@ -48,7 +47,7 @@ void FourierProjector::project(double rot, double tilt, double psi)
     double xxshift = -2 * PI * shift / volumeSize;
     double maxFreq2=maxFrequency*maxFrequency;
     double volumePaddedSize=XSIZE(VfourierRealCoefs);
-    for (int i=0; i<YSIZE(projectionFourier); ++i)
+    for (size_t i=0; i<YSIZE(projectionFourier); ++i)
     {
         FFT_IDX2DIGFREQ(i,volumeSize,freqy);
         double freqy2=freqy*freqy;
@@ -57,7 +56,7 @@ void FourierProjector::project(double rot, double tilt, double psi)
         double freqYvol_X=MAT_ELEM(E,1,0)*freqy;
         double freqYvol_Y=MAT_ELEM(E,1,1)*freqy;
         double freqYvol_Z=MAT_ELEM(E,1,2)*freqy;
-        for (int j=0; j<XSIZE(projectionFourier); ++j)
+        for (size_t j=0; j<XSIZE(projectionFourier); ++j)
         {
             // The frequency of pairs (i,j) in 2D
             FFT_IDX2DIGFREQ(j,volumeSize,freqx);
@@ -76,9 +75,9 @@ void FourierProjector::project(double rot, double tilt, double psi)
             {
                 // 0 order interpolation
                 // Compute corresponding index in the volume
-                int kVolume=round(freqvol_Z*volumePaddedSize);
-                int iVolume=round(freqvol_Y*volumePaddedSize);
-                int jVolume=round(freqvol_X*volumePaddedSize);
+                int kVolume=(int)round(freqvol_Z*volumePaddedSize);
+                int iVolume=(int)round(freqvol_Y*volumePaddedSize);
+                int jVolume=(int)round(freqvol_X*volumePaddedSize);
                 c = A3D_ELEM(VfourierRealCoefs,kVolume,iVolume,jVolume);
                 d = A3D_ELEM(VfourierImagCoefs,kVolume,iVolume,jVolume);
             }
@@ -117,7 +116,8 @@ void FourierProjector::project(double rot, double tilt, double psi)
             *(ptrI_ij+1) = ab_cd - ac - bd;
         }
     }
-
+    //VfourierRealCoefs.clear();
+    //VfourierImagCoefs.clear();
     transformer2D.inverseFourierTransform();
 }
 
@@ -149,6 +149,8 @@ void FourierProjector::produceSideInfo()
         Vfourier.clear();
         produceSplineCoefficients(BSPLINE3,VfourierRealCoefs,VfourierRealAux);
         produceSplineCoefficients(BSPLINE3,VfourierImagCoefs,VfourierImagAux);
+        //VfourierRealAux.clear();
+        //VfourierImagAux.clear();
     }
     else
         Complex2RealImag(Vfourier, VfourierRealCoefs, VfourierImagCoefs);

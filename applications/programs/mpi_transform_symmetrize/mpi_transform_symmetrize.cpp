@@ -26,5 +26,5 @@
 #include <reconstruction/symmetrize.h>
 #include <parallel/xmipp_mpi.h>
 
-CREATE_MPI_METADATA_PROGRAM(ProgSymmetrize, MpiProgSymmetrize);
-RUN_XMIPP_PROGRAM(MpiProgSymmetrize);
+CREATE_MPI_METADATA_PROGRAM(ProgSymmetrize, MpiProgSymmetrize)
+RUN_XMIPP_PROGRAM(MpiProgSymmetrize)

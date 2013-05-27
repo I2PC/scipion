@@ -325,7 +325,7 @@ public:
         \\Ex: Matrix1D<double> uv; sg.grid2universe(vectorR3(-1,2,1),uv); */
     void grid2universe(const Matrix1D<double> &gv, Matrix1D<double> &uv) const
     {
-        SPEED_UP_temps;
+        SPEED_UP_temps012;
         uv.resize(3);
         M3x3_BY_V3x1(uv, basis, gv);
         V3_BY_CT(uv, uv, relative_size);
@@ -356,7 +356,7 @@ public:
         @endcode */
     void universe2grid(const Matrix1D<double> &uv, Matrix1D<double> &gv) const
     {
-        SPEED_UP_temps;
+        SPEED_UP_temps012;
         gv.resize(3);
         V3_MINUS_V3(gv, uv, origin);
         V3_BY_CT(gv, gv, 1 / relative_size);
@@ -509,7 +509,7 @@ public:
         a simple grid beyond the number of actual simple grids inside the
         complex one.
         \\ Ex: std::cout << "The first grid in the BCC grid is " << BCC(0); */
-    const SimpleGrid & operator()(int n) const
+    const SimpleGrid & operator()(size_t n) const
     {
         if (n>LG.size())
             REPORT_ERROR(ERR_VALUE_INCORRECT, "The Grid hasn't got so many Simple Grids");
@@ -524,7 +524,7 @@ public:
         a simple grid beyond the number of actual simple grids inside the
         complex one.
         \\ Ex: BCC(0).origin=vectorR3(1,1,1); */
-    SimpleGrid& operator()(int n)
+    SimpleGrid& operator()(size_t n)
     {
         if (n>LG.size())
             REPORT_ERROR(ERR_VALUE_INCORRECT, "The Grid hasn't got so many Simple Grids");
@@ -541,7 +541,7 @@ public:
         This function returns the number of simple grids inside the complex
         grid.
         \\ Ex: std::cout << "In BCC there are " << BCC.GridsNo() << " grids\n"; */
-    int GridsNo() const
+    size_t GridsNo() const
     {
         return LG.size();
     }
@@ -552,7 +552,7 @@ public:
     friend std::ostream& operator << (std::ostream& o, const Grid &grid)
     {
         o << "Complex Grid -------------------------------------\n";
-        for (int i = 0; i < grid.GridsNo(); i++)
+        for (size_t i = 0; i < grid.GridsNo(); i++)
             o << grid(i);
         return o;
     }
@@ -824,7 +824,7 @@ public:
         {
             clear();
             G = RV.G;
-            for (int i = 0; i < RV.VolumesNo(); i++)
+            for (size_t i = 0; i < RV.VolumesNo(); i++)
             {
                 Image<T>  *V = new Image<T>;
                 *V = RV(i);
@@ -855,7 +855,7 @@ public:
     void adapt_to_grid(const Grid &_grid)
     {
         // Clear old list of volumes
-        for (int i = 0; i < VolumesNo(); i++)
+        for (size_t i = 0; i < VolumesNo(); i++)
             if (LV[i]!=NULL)
                 delete LV[i];
         LV.clear();
@@ -866,7 +866,7 @@ public:
         // Generate a volume for each subgrid
         int                        Zdim, Ydim, Xdim;
         Image<T> *                 Vol_aux;
-        for (int i = 0; i < G.GridsNo(); i++)
+        for (size_t i = 0; i < G.GridsNo(); i++)
         {
             SimpleGrid & grid = G(i);
             grid.getSize(Zdim, Ydim, Xdim);
@@ -891,7 +891,7 @@ public:
         Image<T> *         Vol_aux;
         std::vector<Image<T> * > LV_aux;
 
-        for (int n = 0; n < G.GridsNo(); n++)
+        for (size_t n = 0; n < G.GridsNo(); n++)
         {
             SimpleGrid &grid = G(n);
 
@@ -912,7 +912,7 @@ public:
 
             // Copy values in common
             Image<T> * origin = LV[n];
-            SPEED_UP_temps;
+            SPEED_UP_tempsInt;
             FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(VOLMATRIX(*Vol_aux), VOLMATRIX(*origin))
             {
                 VOLVOXEL(*Vol_aux, k, i, j) = VOLVOXEL(*origin, k, i, j);
@@ -932,7 +932,7 @@ public:
     void resize(const GridVolumeT<T1> &GV)
     {
         clear();
-        for (int n = 0; n < GV.VolumesNo(); n++)
+        for (size_t n = 0; n < GV.VolumesNo(); n++)
         {
             SimpleGrid grid;
             grid = GV.grid(n);
@@ -948,14 +948,14 @@ public:
     /** Set to zero with the actual size and origin. */
     void initZeros()
     {
-        for (int i = 0; i < VolumesNo(); i++)
+        for (size_t i = 0; i < VolumesNo(); i++)
             (*this)(i)().initZeros();
     }
 
     /** Clear the volume */
     void clear()
     {
-        for (int i = 0; i < VolumesNo(); i++)
+        for (size_t i = 0; i < VolumesNo(); i++)
             delete LV[i];
         LV.clear();
         G.clear();
@@ -963,7 +963,7 @@ public:
 
     /** Access to one of the volumes in the list.
         The first volume is the number 0. */
-    Image<T> & operator()(int n)
+    Image<T> & operator()(size_t n)
     {
         if (n>LV.size())
             REPORT_ERROR(ERR_VALUE_INCORRECT, "The Grid Volume hasn't got so many Simple Volumes");
@@ -971,14 +971,14 @@ public:
     }
 
     /** Another function for access to one of the volumes in the list.*/
-    void get_volume(int n, Image<T> &V)
+    void get_volume(size_t n, Image<T> &V)
     {
         V = (*this)(n);
     }
 
     /** Constant access to a volume in the list.
         The first volume is the number 0. */
-    const Image<T> & operator()(int n) const
+    const Image<T> & operator()(size_t n) const
     {
         if (n>LV.size())
             REPORT_ERROR(ERR_VALUE_INCORRECT, "The Grid Volume hasn't got so many Simple Volumes");
@@ -988,13 +988,13 @@ public:
     /** Constant access to a simple grid.
         The grid is the \ref SimpleGrid  associated to the volume which
         occupies position n in the volume list. */
-    const SimpleGrid & grid(int n) const
+    const SimpleGrid & grid(size_t n) const
     {
         return G(n);
     }
 
     /** Get simple grid. */
-    void get_SimpleGrid(int n, SimpleGrid &G)
+    void get_SimpleGrid(size_t n, SimpleGrid &G)
     {
         G = grid(n);
     }
@@ -1013,7 +1013,7 @@ public:
     }
 
     /** Number of volumes inside structure. */
-    int VolumesNo() const
+    size_t VolumesNo() const
     {
         return LV.size();
     }
@@ -1022,7 +1022,7 @@ public:
     GridVolumeT<T> result; \
     result.G = G; \
     result.LV.reserve(VolumesNo()); \
-    for (int i=0; i<VolumesNo(); i++) \
+    for (size_t i=0; i<VolumesNo(); i++) \
         array_by_scalar((*this)(i)(),f,result(i)(),op); \
     return result;
 
@@ -1084,7 +1084,7 @@ public:
     result.G = G;\
     result.LV.reserve(VolumesNo());\
     \
-    for (int i=0; i<VolumesNo(); i++) { \
+    for (size_t i=0; i<VolumesNo(); i++) { \
         try { \
             Vol_aux = new Image<T>; \
             arrayByArray((*this)(i)(),GV(i)(),(*Vol_aux)(),op); \
@@ -1142,7 +1142,7 @@ public:
     if (VolumesNo()!=GV.VolumesNo()) \
         REPORT_ERROR(ERR_GRID_SIZE,(std::string)"GridVolume::"+op+"=: Different number of subvolumes");\
     \
-    for (int i=0; i<VolumesNo(); i++) { \
+    for (size_t i=0; i<VolumesNo(); i++) { \
         try { \
             arrayByArray((*this)(i)(),GV(i)(),(*this)(i)(),op); \
         } catch (XmippError XE) {\
@@ -1222,8 +1222,8 @@ public:
             return;
 
         // Create the writing volume ............................................
-        int Zdim = 0, Ydim = 0, Xdim = 0;
-        for (int v = 0; v < VolumesNo(); v++)
+        size_t Zdim = 0, Ydim = 0, Xdim = 0;
+        for (size_t v = 0; v < VolumesNo(); v++)
         {
             const Image<T> & this_vol = (*this)(v);
             Zdim += ZSIZE(this_vol());
@@ -1248,10 +1248,10 @@ public:
     }
 
         int sli = 0;
-        for (int v = 0; v < VolumesNo(); v++)
+        for (size_t v = 0; v < VolumesNo(); v++)
         {
             int pos, ii, jj;           // Position inside the control slice
-            int k, i, j;               // Auxiliar counters
+            size_t k, i, j;               // Auxiliar counters
 
             // Choose grid and volume
             const SimpleGrid & this_grid = grid(v);
@@ -1339,7 +1339,7 @@ public:
         Image<T>       V;
         Image<T>       * sV;
         SimpleGrid     sG;
-        int            sli = 0;
+        size_t         sli = 0;
 
         float temp_float;
         size_t floatsize;
@@ -1383,9 +1383,9 @@ public:
             while (sli < ZSIZE(V()))
             {
                 int pos, ii, jj;           // Position inside the control slice
-                int k, i, j;               // Auxiliary counters
-                int            Zdim, Ydim, Xdim;
-                int            Zinit, Yinit, Xinit;
+                size_t k, i, j;               // Auxiliary counters
+                size_t Zdim, Ydim, Xdim;
+                int   Zinit, Yinit, Xinit;
 
                 // Read Grid data ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
                 pos = 0;

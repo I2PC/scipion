@@ -125,7 +125,7 @@ void readFloatList(const char* str,
  */
 template <typename T>
 void readFloatList(const std::string& str,
-                   int& i,
+				   size_t& i,
                    int N,
                    std::vector< T >& v)
 {
@@ -164,8 +164,7 @@ void readFloatList(const char* str,
         if (token == NULL)
         {
             // CO: Should not report other error than the required one
-            // std::cout << "Read float list: Number of true parameters doesn't \
-            // coincide\n";
+            // std::cout << "Read float list: Number of true parameters doesn't coincide\n";
             REPORT_ERROR(_errno, errmsg);
         }
 
@@ -217,8 +216,8 @@ void readFloatList(const char* str,
  *
  * @endcode
  */
-char* getParameter(int argc,
-                   char** argv,
+const char* getParameter(int argc,
+                   const char** argv,
                    const char* param,
                    const char* option = NULL);
 
@@ -230,7 +229,7 @@ char* getParameter(int argc,
  * found
  */
 bool getTwoDoubleParams(int argc,
-                        char** argv,
+                        const char** argv,
                         const char* param,
                         double& v1,
                         double& v2,
@@ -245,7 +244,7 @@ bool getTwoDoubleParams(int argc,
  * found
  */
 bool getThreeDoubleParams(int argc,
-                          char** argv,
+                          const char** argv,
                           const char* param,
                           double& v1,
                           double& v2,
@@ -270,7 +269,7 @@ bool getThreeDoubleParams(int argc,
  * // supplied the function returns TRUE (1), otherwise returns FALSE (0)
  * @endcode
  */
-bool checkParameter(int argc, char** argv, const char* param);
+bool checkParameter(int argc, const char** argv, const char* param);
 
 /** Returns the position where the given parameter is in the command line.
  *
@@ -295,7 +294,7 @@ bool checkParameter(int argc, char** argv, const char* param);
  * ang3 = argv[i+3];
  * @endcode
  */
-int paremeterPosition(int argc, char** argv, const char* param);
+int paremeterPosition(int argc, const char** argv, const char* param);
 
 /** Return the number of components of a vector argument.
  *
@@ -321,7 +320,7 @@ int numComponents(const std::string& str);
  * flag then no brackets are needed
  */
 Matrix1D< double > getVectorParameter(int argc,
-                                      char** argv,
+                                      const char** argv,
                                       const char* param,
                                       int dim = 2);
 

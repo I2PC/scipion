@@ -37,7 +37,7 @@
 SOM::SOM(std::istream& _is): ClassificationAlgorithm<ClassificationMap>()
 {
     readSelf(_is);
-};
+}
 
 
 /**
@@ -47,7 +47,7 @@ SOM::SOM(std::istream& _is): ClassificationAlgorithm<ClassificationMap>()
 void SOM::alpha(Descent _alpha)
 {
     somAlpha = _alpha;
-};
+}
 
 /**
  * Sets the radius function
@@ -56,7 +56,7 @@ void SOM::alpha(Descent _alpha)
 void SOM::radius(Descent _radius)
 {
     somRadius = _radius;
-};
+}
 
 /**
  * Sets the number of training steps
@@ -65,7 +65,7 @@ void SOM::radius(Descent _radius)
 void SOM::nSteps(const unsigned long& _nSteps)
 {
     somNSteps = _nSteps;
-};
+}
 
 
 /**
@@ -128,7 +128,7 @@ void SOM::train(ClassificationMap& _som, ClassicTrainingVectors& _ts) const
         {
             char s[100]
             ;
-            sprintf(s, "Iteration %d of %d.\n", t, somNSteps);
+            sprintf(s, "Iteration %d of %d.\n", (int)t, (int)somNSteps);
             listener->OnReportOperation((std::string) s);
         }
     } // while t < somSteps
@@ -137,7 +137,7 @@ void SOM::train(ClassificationMap& _som, ClassicTrainingVectors& _ts) const
     if (verbosity == 1 || verbosity == 3)
         listener->OnProgress(somNSteps);
 
-};
+}
 
 
 /**
@@ -159,7 +159,7 @@ double SOM::test(const ClassificationMap& _som, const TS& _examples) const
 
     /* Scan all data entries */
     double qerror = 0.0;
-    for (int i = 0; i < _examples.size(); i++)
+    for (size_t i = 0; i < _examples.size(); i++)
     {
         SomIn& theBest = _som.test(_examples.theItems[i]); // get the best
         qerror += euclideanDistance(theBest, _examples.theItems[i]);
@@ -177,7 +177,7 @@ double SOM::test(const ClassificationMap& _som, const TS& _examples) const
     if (verbosity)
         listener->OnProgress(_examples.size());
     return (qerror / (double) _examples.size());
-};
+}
 
 /**
 * Clears the Algorithm
@@ -188,7 +188,7 @@ void SOM::clear()
     somNeigh = GAUSSIAN;
     somNSteps = 0;
     listener = NULL; // it can not be deleted here
-};
+}
 
 /**
 * Standard output for a SOM algorithm
@@ -200,7 +200,7 @@ void SOM::printSelf(std::ostream& _os) const
     _os << somNSteps << std::endl;
     somAlpha.printSelf(_os);
     somRadius.printSelf(_os);
-};
+}
 
 /**
 * Standard input for a som algorithm
@@ -226,7 +226,7 @@ void SOM::readSelf(std::istream& _is)
         throw std::runtime_error(msg.str());
     }
 
-};
+}
 
 
 /**
@@ -270,7 +270,7 @@ double Descent::operator()(const unsigned _step, const unsigned _nSteps) const
     else
         return final + ((initial - final) *
                         ((double)(_nSteps - _step) / (double)_nSteps));
-};
+}
 
 
 /**
@@ -281,7 +281,7 @@ void Descent::printSelf(std::ostream& _os) const
 {
     _os << initial << std::endl;
     _os << final << std::endl;
-};
+}
 
 /**
 * Standard input for a Descent class
@@ -303,7 +303,7 @@ void Descent::readSelf(std::istream& _is)
         throw std::runtime_error(msg.str());
     }
 
-};
+}
 
 
 /**

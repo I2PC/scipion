@@ -26,10 +26,10 @@ import xmipp.utils.XmippDialog;
  *
  * @author Juanjo Vega
  */
-public class JFrameTextfile extends JFrame {
+public class TextfileJFrame extends JFrame {
 
     /** Creates new form JFrameTextFile */
-    public JFrameTextfile(String filename) {
+    public TextfileJFrame(String filename) {
     	super(filename);
     	setPreferredSize(new Dimension(600, 400));
     	setDefaultCloseOperation(DISPOSE_ON_CLOSE);

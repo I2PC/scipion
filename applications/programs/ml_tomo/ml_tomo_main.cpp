@@ -25,4 +25,4 @@
 
 #include <reconstruction/ml_tomo.h>
 
-RUN_XMIPP_PROGRAM(ProgMLTomo);
+RUN_XMIPP_PROGRAM(ProgMLTomo)

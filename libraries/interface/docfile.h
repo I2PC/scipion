@@ -107,7 +107,7 @@ public:
      *
      * This function is ignored in the python wrapper. Use "set" instead.
      */
-    double& operator[](int i);
+    double& operator[](size_t i);
 
     /** Constant component access.
      *
@@ -115,14 +115,14 @@ public:
      *
      * This function is renamed as "get" in the python wrapper.
      */
-    double operator[](int i) const;
+    double operator[](size_t i) const;
 
     /** Set an existing or not component.
      *
      * If the Document Line is not large enough to hold the required component,
      * then it is resized
      */
-    void set(int i, double val);
+    void set(size_t i, double val);
 
     /** Set a vector (Matrix1D) as Document line.
      *
@@ -583,7 +583,7 @@ public:
 
     /** Get the column number from a header pattern
      *
-     * If this docfile doesn't have a NewXmipp-style header ç
+     * If this docfile doesn't have a NewXmipp-style header
      * (starting with "Headerinfo"), an error is raised. 
      */
     int getColNumberFromHeader(const char * pattern);

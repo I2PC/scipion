@@ -234,6 +234,7 @@ bool ParallelTaskDistributor::setAssignedTasks(size_t tasks)
     lock();
     assignedTasks = tasks;
     unlock();
+    return true;
 }
 
 void ThreadTaskDistributor::lock()

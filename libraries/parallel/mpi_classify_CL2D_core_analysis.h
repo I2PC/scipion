@@ -58,8 +58,8 @@ public:
 	FileName fnRoot;
 	/** CL2D output dir */
 	FileName fnODir;
-	/** Threshold junk Zscore */
-	double thZscore;
+	/** Number of PCA dimensions */
+	int NPCA;
 	/** Threshold PCA Zscore */
 	double thPCAZscore;
 	/** Tolerance: How many levels before are allowed two images not to coincide */
@@ -76,7 +76,7 @@ public:
     // MaxLevel
     int maxLevel;
     // Projection size
-    int Ydim, Xdim;
+    size_t Ydim, Xdim;
 public:
     /// Empty constructor
     ProgClassifyCL2DCore(int argc, char **argv);

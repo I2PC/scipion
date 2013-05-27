@@ -181,8 +181,8 @@ void ParametersProjectionTomography::read(const FileName &fn_proj_param)
         //        MD.getValue(MDL_PRJ_VOL, fnPhantom, objId);
         std::vector<double> vecD;
         MD.getValue(MDL_PRJ_DIMENSIONS, vecD, objId);
-        proj_Xdim = vecD[0];
-        proj_Ydim = vecD[1];
+        proj_Xdim = (int)vecD[0];
+        proj_Ydim = (int)vecD[1];
         MD.getValue(MDL_ANGLE_ROT, axisRot, objId);
         MD.getValue(MDL_ANGLE_TILT, axisTilt, objId);
 
@@ -340,8 +340,15 @@ void ParametersProjectionTomography::calculateProjectionAngles(Projection &P, do
         Euler_another_set(rot, tilt, psi, rot, tilt, psi);
 
     rot  = realWRAP(rot,-180,180);
+    if (XMIPP_EQUAL_ZERO(rot))
+        rot = 0.;
     tilt = realWRAP(tilt,-180,180);
+    if (XMIPP_EQUAL_ZERO(tilt))
+        tilt = 0.;
     psi  = realWRAP(psi,-180,180);
+    if (XMIPP_EQUAL_ZERO(psi))
+        psi = 0.;
+
     P.setAngles(rot, tilt, psi);
 
     // Find displacement because of axis offset and inplane shift
@@ -372,7 +379,7 @@ void projectVolume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
                    double rot, double tilt, double psi,
                    const Matrix1D<double> *roffset)
 {
-    SPEED_UP_temps;
+    SPEED_UP_temps012;
 
     // Initialise projection
     P.reset(Ydim, Xdim);
@@ -634,16 +641,12 @@ void projectVolumeOffCentered(MultidimArray<double> &V, Projection &P,
 // This routine may give volumes with spurious high frequencies.....
 void singleWBP(MultidimArray<double> &V, Projection &P)
 {
-    SPEED_UP_temps;
+    SPEED_UP_temps012;
 
     // Compute the distance for this line crossing one voxel
     int x_0 = STARTINGX(V), x_F = FINISHINGX(V);
     int y_0 = STARTINGY(V), y_F = FINISHINGY(V);
     int z_0 = STARTINGZ(V), z_F = FINISHINGZ(V);
-
-    // Distances in X and Y between the center of the projection pixel begin
-    // computed and each computed ray
-    double step = 1.0 / 3.0;
 
     // Avoids divisions by zero and allows orthogonal rays computation
     if (XX(P.direction) == 0)
@@ -671,9 +674,6 @@ void singleWBP(MultidimArray<double> &V, Projection &P)
     Matrix1D<int>    idx(3);
     FOR_ALL_ELEMENTS_IN_ARRAY2D(mP)
     {
-        // universal space
-        double ray_sum = 0.0;    // Line integral value
-
         // Computes 4 different rays for each pixel.
         VECTOR_R3(r_p, j, i, 0);
 
@@ -848,11 +848,11 @@ void project_Crystal_SimpleGrid(Image<double> &vol, const SimpleGrid &grid,
     // corresponding to the blobprint
     // point which matches with this
     // pixel position
-    double        vol_corr;                  // Correction for a volum element
+    double        vol_corr;                  // Correction for a volume element
     int           N_eq;                      // Number of equations in which
     // a blob is involved
     int           i, j, k;                   // volume element indexes
-    SPEED_UP_temps;                       // Auxiliar variables for
+    SPEED_UP_temps01;                        // Auxiliary variables for
     // fast multiplications
 
     // Check that it is a blob volume .......................................
@@ -1202,7 +1202,7 @@ void project_Crystal_Volume(
     }
 
     // Project each subvolume
-    for (int i = 0; i < vol.VolumesNo(); i++)
+    for (size_t i = 0; i < vol.VolumesNo(); i++)
     {
         project_Crystal_SimpleGrid(vol(i), vol.grid(i), basis,
                                    proj, norm_proj, shift, aint, bint, D, Dinv, mask, FORW, eq_mode);
@@ -1225,7 +1225,7 @@ void project_Crystal_Volume(
 void count_eqs_in_projection(GridVolumeT<int> &GVNeq,
                              const Basis &basis, Projection &read_proj)
 {
-    for (int i = 0; i < GVNeq.VolumesNo(); i++)
+    for (size_t i = 0; i < GVNeq.VolumesNo(); i++)
         project_SimpleGrid(&(GVNeq(i)), &(GVNeq.grid(i)), &basis,
                            &read_proj, &read_proj, FORWARD, COUNT_EQ, NULL, NULL);
 }

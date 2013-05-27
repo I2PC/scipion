@@ -200,7 +200,7 @@ int ImageBase::readTIA(int select_img,bool isStack)
     MDMainHeader.setValue(MDL_SAMPLINGRATE_Y,(double)dataHeaders[0].PIXEL_HEIGHT);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
-    if (dataMode == HEADER || dataMode == _HEADER_ALL && _nDim > 1) // Stop reading if not necessary
+    if (dataMode == HEADER || (dataMode == _HEADER_ALL && _nDim > 1)) // Stop reading if not necessary
     {
         delete header;
         return 0;

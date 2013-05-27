@@ -27,5 +27,4 @@
 
 #include "data/transform_geometry.h"
 
-RUN_XMIPP_PROGRAM(ProgTransformGeometry);
-
+RUN_XMIPP_PROGRAM(ProgTransformGeometry)

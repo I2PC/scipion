@@ -25,4 +25,4 @@
 
 #include <reconstruction/project.h>
 
-RUN_XMIPP_PROGRAM(ProgProject);
+RUN_XMIPP_PROGRAM(ProgProject)

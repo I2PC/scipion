@@ -63,7 +63,6 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	// Cache class to reuse of already loaded items
 	protected Cache<String, ImageItem> cache = new Cache<String, ImageItem>();
 	// Filename
-	protected String filename;
 	// Hold gallery dimensions
 	protected ImageDimension dimension;
 	// Renderer to display images
@@ -83,7 +82,6 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 
 	// Initiazation function
 	public ImageGalleryTableModel(GalleryData data) throws Exception {
-		filename = data.filename;
 		this.data = data;
 		cols = 0;
 		dimension = loadDimension();
@@ -103,11 +101,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		resizeCache();
 	}
 	
-	//Set filename
-	public void updateFilename(String filename){
-		this.filename = data.filename = Filename.getFilename(filename);
-	}
-
+	
 	// Load initial dimensions
 	protected abstract ImageDimension loadDimension() throws Exception;
 
@@ -170,11 +164,12 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 
 	/** Function to force the refresh of some item */
 	public void refreshAt(int row, int col) {
+		
 		int index = getIndex(row, col);
 
 		if (isValidIndex(index)) {
 			try {
-				String key = getItemKey(index);
+				String key = getItemKey(index, data.getLabelFromCol(col));
 				// Clear cache entry
 				cache.remove(key);
 				fireTableRowsUpdated(row, row);
@@ -536,6 +531,20 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 * Function to create the key of the item knowing the item index
 	 */
 	public abstract String getItemKey(int index) throws Exception;
+	
+	/**
+	 * Return a key string using label
+	 */
+	public String getItemKey(int index, int label) throws Exception {
+		String format = data.getValueFromLabel(index, label) + "_i_(%d,%d)";
+		if (data.useGeo)
+			format += "_geo";
+		if (data.wrap)
+			format += "_wrap";
+		// String key = String.format(format, thumb_width, thumb_height);
+		// DEBUG.printMessage(String.format("key: %s", key));
+		return String.format(format, index, thumb_width, thumb_height);
+	}
 
 	/** Check if the item is busy */
 	public boolean isBusy(int row, int col) {
@@ -647,5 +656,16 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 			return image != null ? image.getFileInfo().fileName : null;
 		}
 	}// class ImageItem
+
+	public int getRows()
+	{
+		return rows;
+	}
+
+
+	public int getColumns()
+	{
+		return cols;
+	}
 
 }

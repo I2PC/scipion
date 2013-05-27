@@ -575,10 +575,6 @@ double interpolatedElementBSplineDiffX(MultidimArray<double> &vol, double x, dou
     y -= STARTINGY(vol);
     x -= STARTINGX(vol);
 
-    int lmax = XSIZE(vol);
-    int mmax = YSIZE(vol);
-    int nmax = ZSIZE(vol);
-
     int l1 = CEIL(x - SplineDegree_1);
     int l2 = l1 + SplineDegree;
 
@@ -589,21 +585,24 @@ double interpolatedElementBSplineDiffX(MultidimArray<double> &vol, double x, dou
     int n2 = n1 + SplineDegree;
 
     double zyxsum = 0.0;
+    int Zdim=(int)ZSIZE(vol);
+    int Ydim=(int)YSIZE(vol);
+    int Xdim=(int)XSIZE(vol);
     for (int n = n1; n <= n2; n++)
     {
         int equivalent_n=n;
         if      (n<0)
             equivalent_n=-n-1;
-        else if (n>=ZSIZE(vol))
-            equivalent_n=2*ZSIZE(vol)-n-1;
+        else if (n>=Zdim)
+            equivalent_n=2*Zdim-n-1;
         double yxsum = 0.0;
         for (int m = m1; m <= m2; m++)
         {
             int equivalent_m=m;
             if      (m<0)
                 equivalent_m=-m-1;
-            else if (m>=YSIZE(vol))
-                equivalent_m=2*YSIZE(vol)-m-1;
+            else if (m>=Ydim)
+                equivalent_m=2*Ydim-m-1;
             double xsum = 0.0;
             for (int l = l1; l <= l2; l++)
             {
@@ -611,8 +610,8 @@ double interpolatedElementBSplineDiffX(MultidimArray<double> &vol, double x, dou
                 int equivalent_l=l;
                 if      (l<0)
                     equivalent_l=-l-1;
-                else if (l>=XSIZE(vol))
-                    equivalent_l=2*XSIZE(vol)-l-1;
+                else if (l>=Xdim)
+                    equivalent_l=2*Xdim-l-1;
                 double Coeff = (double) DIRECT_A3D_ELEM(vol,
                                                         equivalent_n,equivalent_m,equivalent_l);
                 switch (SplineDegree)
@@ -729,10 +728,6 @@ double interpolatedElementBSplineDiffY(MultidimArray<double> &vol, double x, dou
     y -= STARTINGY(vol);
     x -= STARTINGX(vol);
 
-    int lmax = XSIZE(vol);
-    int mmax = YSIZE(vol);
-    int nmax = ZSIZE(vol);
-
     int l1 = CEIL(x - SplineDegree_1);
     int l2 = l1 + SplineDegree;
 
@@ -743,21 +738,24 @@ double interpolatedElementBSplineDiffY(MultidimArray<double> &vol, double x, dou
     int n2 = n1 + SplineDegree;
 
     double zyxsum = 0.0;
+    int Zdim=(int)ZSIZE(vol);
+    int Ydim=(int)YSIZE(vol);
+    int Xdim=(int)XSIZE(vol);
     for (int n = n1; n <= n2; n++)
     {
         int equivalent_n=n;
         if      (n<0)
             equivalent_n=-n-1;
-        else if (n>=ZSIZE(vol))
-            equivalent_n=2*ZSIZE(vol)-n-1;
+        else if (n>=Zdim)
+            equivalent_n=2*Zdim-n-1;
         double yxsum = 0.0;
         for (int m = m1; m <= m2; m++)
         {
             int equivalent_m=m;
             if      (m<0)
                 equivalent_m=-m-1;
-            else if (m>=YSIZE(vol))
-                equivalent_m=2*YSIZE(vol)-m-1;
+            else if (m>=Ydim)
+                equivalent_m=2*Ydim-m-1;
             double xsum = 0.0;
             for (int l = l1; l <= l2; l++)
             {
@@ -765,8 +763,8 @@ double interpolatedElementBSplineDiffY(MultidimArray<double> &vol, double x, dou
                 int equivalent_l=l;
                 if      (l<0)
                     equivalent_l=-l-1;
-                else if (l>=XSIZE(vol))
-                    equivalent_l=2*XSIZE(vol)-l-1;
+                else if (l>=Xdim)
+                    equivalent_l=2*Xdim-l-1;
                 double Coeff = (double) DIRECT_A3D_ELEM(vol,
                                                         equivalent_n,equivalent_m,equivalent_l);
                 double aux;
@@ -884,10 +882,6 @@ double interpolatedElementBSplineDiffZ(MultidimArray<double> &vol, double x, dou
     y -= STARTINGY(vol);
     x -= STARTINGX(vol);
 
-    int lmax = XSIZE(vol);
-    int mmax = YSIZE(vol);
-    int nmax = ZSIZE(vol);
-
     int l1 = CEIL(x - SplineDegree_1);
     int l2 = l1 + SplineDegree;
 
@@ -898,21 +892,24 @@ double interpolatedElementBSplineDiffZ(MultidimArray<double> &vol, double x, dou
     int n2 = n1 + SplineDegree;
 
     double zyxsum = 0.0;
+    int Zdim=(int)ZSIZE(vol);
+    int Ydim=(int)YSIZE(vol);
+    int Xdim=(int)XSIZE(vol);
     for (int n = n1; n <= n2; n++)
     {
         int equivalent_n=n;
         if      (n<0)
             equivalent_n=-n-1;
-        else if (n>=ZSIZE(vol))
-            equivalent_n=2*ZSIZE(vol)-n-1;
+        else if (n>=Zdim)
+            equivalent_n=2*Zdim-n-1;
         double yxsum = 0.0;
         for (int m = m1; m <= m2; m++)
         {
             int equivalent_m=m;
             if      (m<0)
                 equivalent_m=-m-1;
-            else if (m>=YSIZE(vol))
-                equivalent_m=2*YSIZE(vol)-m-1;
+            else if (m>=Ydim)
+                equivalent_m=2*Ydim-m-1;
             double xsum = 0.0;
             for (int l = l1; l <= l2; l++)
             {
@@ -920,8 +917,8 @@ double interpolatedElementBSplineDiffZ(MultidimArray<double> &vol, double x, dou
                 int equivalent_l=l;
                 if      (l<0)
                     equivalent_l=-l-1;
-                else if (l>=XSIZE(vol))
-                    equivalent_l=2*XSIZE(vol)-l-1;
+                else if (l>=Xdim)
+                    equivalent_l=2*Xdim-l-1;
                 double Coeff = (double) DIRECT_A3D_ELEM(vol,
                                                         equivalent_n,equivalent_m,equivalent_l);
                 double aux;

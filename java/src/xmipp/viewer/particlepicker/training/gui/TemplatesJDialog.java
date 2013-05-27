@@ -1,31 +1,19 @@
 package xmipp.viewer.particlepicker.training.gui;
 
 import ij.ImagePlus;
+import ij.ImageStack;
 import ij.gui.ImageCanvas;
-
 import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Image;
 import java.awt.Panel;
-import java.awt.ScrollPane;
-import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.List;
+import java.io.File;
 
-import javax.swing.ImageIcon;
 import javax.swing.JDialog;
-import javax.swing.JLabel;
 
-import xmipp.ij.commons.ImagePlusLoader;
-import xmipp.ij.commons.XmippImageConverter;
-import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.ImageGeneric;
-import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippMessage;
-import xmipp.viewer.particlepicker.ParticlePickerJFrame;
-import xmipp.viewer.particlepicker.training.model.TrainingParticle;
+import xmipp.utils.XmippWindowUtil;
 
 public class TemplatesJDialog extends JDialog {
 
@@ -36,6 +24,10 @@ public class TemplatesJDialog extends JDialog {
 	public TemplatesJDialog(TrainingPickerJFrame frame) {
 		super(frame);
 		this.frame = frame;
+
+		if(!frame.getParticlePicker().hasManualParticles())
+			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("Particles"));
+
 		initComponents();
 
 		addWindowListener(new WindowAdapter() {
@@ -54,29 +46,34 @@ public class TemplatesJDialog extends JDialog {
 	public void loadTemplates(boolean resize) {
 
 		try {
-			frame.updateTemplates();
+			
+			String file = frame.getFamily().getTemplatesFile();
+			if(!new File(file).exists())
+				return;
 			ImageGeneric templates = frame.getFamily().getTemplates();
 			
 			int size = frame.getFamily().getSize();
 
+			if (!frame.getParticlePicker().hasManualParticles()) {
 
-			if (!frame.getParticlePicker().hasParticles()) {
 				templatespn.removeAll();
 				templatespn.setPreferredSize(new Dimension(
 						(int) (size * templates.getNDim()), size));
 				pack();
 				return;
 			}
-
+			
+			ImageStack stack = new ImagePlus(file).getImageStack();
+			
 			templatespn.removeAll();
 			ImagePlus template;
-
-			for (int index = 0; index < templates.getNDim(); index++) {
-				template = XmippImageConverter.convertToImagePlus(templates,
-						ImageGeneric.FIRST_IMAGE + index);
+			for (int i = 1; i <= frame.getFamily().getTemplatesNumber(); i ++) {
+				//template = frame.getFamily().getTemplatesImage(ImageGeneric.FIRST_IMAGE + i);
+				template = new ImagePlus("", stack.getProcessor(i));
 				templatespn.add(new ImageCanvas(template));
 
 			}
+			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -86,7 +83,7 @@ public class TemplatesJDialog extends JDialog {
 	}
 
 	private void initComponents() {
-		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(HIDE_ON_CLOSE);
 		setTitle("Templates");
 		templatespn = new Panel();
 		add(templatespn);

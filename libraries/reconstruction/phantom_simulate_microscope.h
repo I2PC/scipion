@@ -64,9 +64,9 @@ public:
     /// Noise power after CTF
     double   sigma_after_CTF;
     /// Input image Xdim
-    int      Xdim;
+    size_t   Xdim;
     /// Input image Ydim
-    int      Ydim;
+    size_t   Ydim;
     /// Particular reference to mdIn to manipulated
     MetaData * pmdIn;
     /** Downsampling factor */

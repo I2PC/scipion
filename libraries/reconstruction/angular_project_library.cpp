@@ -110,8 +110,8 @@ void ProgAngularProjectLibrary::defineParams()
     addParamsLine("  [--sym_neigh <symmetry>]      : symmetry used to define neighbors, by default");
     addParamsLine("                                : same as sym");
     addParamsLine("  [--psi_sampling <psi=360>]    : sampling in psi, 360 -> no sampling in psi");
-    addParamsLine("  [--max_tilt_angle <tmax=91>]  : maximum tilt angle in degrees");
-    addParamsLine("  [--min_tilt_angle <tmin=-91>] : minimum tilt angle in degrees");
+    addParamsLine("  [--max_tilt_angle <tmax=180>] : maximum tilt angle in degrees");
+    addParamsLine("  [--min_tilt_angle <tmin=0>]   : minimum tilt angle in degrees");
     addParamsLine("  [--experimental_images <docfile=\"\">] : doc file with experimental data");
     addParamsLine("  [--angular_distance <ang=20>]     : Do not search a distance larger than...");
     addParamsLine("  requires --experimental_images;");
@@ -209,7 +209,7 @@ void ProgAngularProjectLibrary::project_angle_vector (int my_init, int my_end, b
     int myCounter=0;
 
 
-    for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
+    for (double mypsi=0;mypsi<360;mypsi += psi_sampling)
         for (int i=0;i<my_init;i++)
             myCounter++;
 
@@ -223,7 +223,7 @@ void ProgAngularProjectLibrary::project_angle_vector (int my_init, int my_end, b
         		                      maxFrequency,
         		                      BSplineDeg);
 
-    for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
+    for (double mypsi=0;mypsi<360;mypsi += psi_sampling)
     {
         for (int i=my_init;i<=my_end;i++)
         {
@@ -369,8 +369,8 @@ void ProgAngularProjectLibrary::run()
     mySFin.read(output_file_root+"_angles.doc");
     size_t myCounter=0;
     size_t id;
-
-    for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
+    int ref;
+    for (double mypsi=0;mypsi<360;mypsi += psi_sampling)
     {
         FOR_ALL_OBJECTS_IN_METADATA(mySFin)
         {
@@ -381,6 +381,7 @@ void ProgAngularProjectLibrary::run()
             mySFin.getValue(MDL_X,x,__iter.objId);
             mySFin.getValue(MDL_Y,y,__iter.objId);
             mySFin.getValue(MDL_Z,z,__iter.objId);
+            mySFin.getValue(MDL_REF,ref,__iter.objId);
             fn_temp.compose( ++myCounter,output_file);
             id = mySFout.addObject();
             mySFout.setValue(MDL_IMAGE,fn_temp,id);
@@ -392,6 +393,7 @@ void ProgAngularProjectLibrary::run()
             mySFout.setValue(MDL_Y,y,id);
             mySFout.setValue(MDL_Z,z,id);
             mySFout.setValue(MDL_SCALE,1.0,id);
+            mySFout.setValue(MDL_REF,ref,id);
         }
     }
     mySFout.setComment("x,y,z refer to the coordinates of the unitary vector at direction given by the euler angles");
@@ -426,7 +428,6 @@ void ProgAngularProjectLibrary::createGroupSamplingFiles(void)
     getBlocksInMetaDataFile(fn_groups,blockList);
     FileName fn_temp, fn_exp;
     FileName my_output_file_root;
-    int bmax=blockList.size();
     MetaData SFBlock;
 
     fn_exp = FnexperimentalImages.removeBlockName();

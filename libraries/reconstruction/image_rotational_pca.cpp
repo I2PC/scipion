@@ -138,11 +138,10 @@ void ProgImageRotationalPCA::produceSideInfo()
     selectPartFromMd(MDin);
 
     Nimg = MDin.size();
-    int Ydim, Zdim;
-    size_t Ndim;
+    size_t Ydim, Zdim, Ndim;
     getImageSize(MDin, Xdim, Ydim, Zdim, Ndim);
-    Nangles = floor(360.0 / psi_step);
-    Nshifts = (2 * max_shift_change + 1) / shift_step;
+    Nangles = (int)floor(360.0 / psi_step);
+    Nshifts = (int)((2 * max_shift_change + 1) / shift_step);
     Nshifts *= Nshifts;
 
     // Construct mask
@@ -313,7 +312,7 @@ void threadApplyT(ThreadArgument &thArg)
                   (*(ptrWnode+6)) +=pixval*(*(ptrHblock+6));
                   (*(ptrWnode+7)) +=pixval*(*(ptrHblock+7));
                 }
-                for (int j=jmax; j<MAT_XSIZE(Wnode); ++j, ptrHblock+=1, ptrWnode+=1)
+                for (size_t j=jmax; j<MAT_XSIZE(Wnode); ++j, ptrHblock+=1, ptrWnode+=1)
                 (*(ptrWnode )) +=pixval*(*ptrHblock );
                 ++i;
               }
@@ -404,7 +403,7 @@ void threadApplyTt(ThreadArgument &thArg)
               applyGeometry(1,Iaux,mI,A,IS_INV,true);
 
               // Update Hblock
-              for (int j=0; j<MAT_XSIZE(Hblock); j++)
+              for (size_t j=0; j<MAT_XSIZE(Hblock); j++)
               {
                 double dotproduct=0;
                 const double *ptrIaux=MULTIDIM_ARRAY(Iaux);
@@ -473,7 +472,7 @@ int ProgImageRotationalPCA::QR()
   Matrix1D<double> qj1, qj2;
   int iBlockMax=MAT_XSIZE(F)/4;
 
-  for (int j1=0; j1<MAT_YSIZE(F); j1++)
+  for (size_t j1=0; j1<MAT_YSIZE(F); j1++)
   {
     F.getRow(j1,qj1);
     // Project twice in the already established subspace
@@ -481,7 +480,7 @@ int ProgImageRotationalPCA::QR()
     // from numerical problems
     for (int it=0; it<2; it++)
     {
-      for (int j2=0; j2<jQ; j2++)
+      for (size_t j2=0; j2<jQ; j2++)
       {
         F.getRow(j2,qj2);
 
@@ -498,7 +497,7 @@ int ProgImageRotationalPCA::QR()
           (*ptr1++)-=s12*(*ptr2++);
           (*ptr1++)-=s12*(*ptr2++);
         }
-        for (int i=iBlockMax*4; i<MAT_XSIZE(F); ++i)
+        for (size_t i=iBlockMax*4; i<MAT_XSIZE(F); ++i)
         (*ptr1++)-=s12*(*ptr2++);
       }
     }

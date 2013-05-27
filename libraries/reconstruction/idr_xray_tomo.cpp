@@ -45,7 +45,7 @@ void ProgIDRXrayTomo::defineParams()
     addParamsLine("[--thr <threads=1>]           : Number of concurrent threads.");
 
     addParamsLine("== Iterations options == ");
-    addParamsLine("  [-l <...>]                  : Relaxation factor, by default 0.01 (recommended range 0.0 - 0.1). ");
+    addParamsLine("  [-l <...>]                  : Relaxation factor, by default 1.8 (recommended range 0.0 - 2.0). ");
     addParamsLine("                              : A list of lambda values is also accepted as \"-l lambda0 lambda1 ...\"");
     addParamsLine("  [-n <noit=1>]               : Number of iterations");
 
@@ -54,7 +54,7 @@ void ProgIDRXrayTomo::defineParams()
     addParamsLine("       where <recons_type>           ");
     addParamsLine("           ART  <params=\"\">        : wlsART parameters");
     addParamsLine("           fourier <params=\"\">     : fourier parameters");
-    addParamsLine("           tomo3d  <params=\"\">     : fourier parameters");
+    addParamsLine("           tomo3d  <params=\"\">     : tomo3d parameters");
 
 
     addParamsLine("== Xray options == ");
@@ -102,6 +102,11 @@ void ProgIDRXrayTomo::readParams()
 
         for (size_t k = 0; k < listSize; k++)
             VEC_ELEM(lambda_list, k) = textToFloat(list[k]);
+    }
+    else
+    {
+        lambda_list.resizeNoCopy(1);
+        VEC_ELEM(lambda_list, 0) = 1.8;
     }
 
     itNum = getIntParam("-n");
@@ -208,7 +213,7 @@ void ProgIDRXrayTomo::run()
         MULTIDIM_ARRAY(phantom.iniVol) *= factor;
 
         initProgress(projMD.size());
-        size_t n = 1; // Image number
+        size_t imgNo = 1; // Image number
         double meanError = 0.;
 
         FOR_ALL_OBJECTS_IN_METADATA(projMD)
@@ -228,20 +233,28 @@ void ProgIDRXrayTomo::run()
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mFixedProj)
             dAi(mFixedProj, n) = (dAi(mFixedProj, n) - dAi(MULTIDIM_ARRAY(proj),n))*lambda +  dAi(MULTIDIM_ARRAY(stdProj),n);
 
-            prevFProj.read(fnInterProjs, DATA, n); // To calculate meanError
+            prevFProj.read(fnInterProjs, DATA, imgNo); // To calculate meanError
             mPrevFProj.alias(MULTIDIM_ARRAY(prevFProj));
 
-            fixedProj.write(fnInterProjs, n, true, WRITE_REPLACE);
+            // Write the refined projection
+            fixedProj.write(fnInterProjs, imgNo, true, WRITE_REPLACE);
 
             // debug stuff //
-            proj.write("idr_debug_proj.vol", n , true, WRITE_REPLACE);
-            stdProj.write("idr_debug_std_proj.vol", n , true, WRITE_REPLACE);
+            if (verbose > 5)
+            {
+                proj.write(fnRootInter + "_debug_proj.stk", imgNo , true, WRITE_REPLACE);
+                stdProj.write(fnRootInter + "_debug_std_proj.stk", imgNo , true, WRITE_REPLACE);
+
+                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mFixedProj)
+                dAi(mFixedProj, n) = dAi(MULTIDIM_ARRAY(stdProj),n) - dAi(MULTIDIM_ARRAY(proj),n)*lambda ;
+
+                fixedProj.write(fnRootInter + "_debug_diff_proj.stk", imgNo , true, WRITE_REPLACE);
+            }
 
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mFixedProj)
-            meanError += abs(dAi(mPrevFProj, n) - dAi(mFixedProj, n));
+            meanError += fabs(dAi(mPrevFProj, n) - dAi(mFixedProj, n));
 
-
-            ++n;
+            ++imgNo;
             // Update progress bar
             setProgress();
         }

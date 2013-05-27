@@ -198,8 +198,7 @@ void ProgRecWbp::produceSideInfo()
                          "there is no input file with weight!=0");
     }
 
-    int zdim;
-    size_t ndim;
+    size_t zdim, ndim;
     getImageSize(SF, dim, dim, zdim, ndim);
     if (fn_sym != "")
         SL.readSymmetryFile(fn_sym);
@@ -239,8 +238,7 @@ void ProgRecWbp::getSampledMatrices(MetaData &SF)
     FileName fn_tmp;
     Matrix2D<double> A(3, 3);
     Matrix2D<double> L(4, 4), R(4, 4);
-    double newrot, newtilt, newpsi, rot, tilt, psi, dum, weight, totimgs = 0.;
-    int optdir;
+    double newrot, newtilt, newpsi, rot, tilt, dum, weight, totimgs = 0.;
     std::vector<double> count_imgs;
 
     if (verbose > 0)
@@ -269,15 +267,15 @@ void ProgRecWbp::getSampledMatrices(MetaData &SF)
     no_mats = 0;
     int SL_SymsNo = SL.symsNo();
     int SL_SymsNo_1 = SL_SymsNo + 1;
-    for (int i = 0; i < NN; i++)
+    for (size_t i = 0; i < NN; i++)
         if (count_imgs[i] > 0.)
             no_mats += SL_SymsNo_1;
     mat_g = (WBPInfo*) malloc(no_mats * sizeof(WBPInfo));
 
     no_mats = 0;
-    for (int i = 0; i < NN; i++)
+    for (size_t i = 0; i < NN; i++)
     {
-        int count_i = count_imgs[i];
+        int count_i = (int)count_imgs[i];
         if (count_i > 0)
         {
             Euler_angles2matrix(rotList[i], -tiltList[i], 0.0, A);
@@ -292,8 +290,8 @@ void ProgRecWbp::getSampledMatrices(MetaData &SF)
             for (int j = 0; j < SL_SymsNo; j++)
             {
                 SL.getMatrices(j, L, R, false);
-                Euler_apply_transf(L, R, newrot, newtilt, 0., rot, tilt, psi);
-                Euler_angles2matrix(rot, -tilt, psi, A);
+                Euler_apply_transf(L, R, rot, tilt, 0., newrot, newtilt, newpsi);
+                Euler_angles2matrix(newrot, -newtilt, newpsi, A);
                 mat_g[no_mats].x = MAT_ELEM(A, 2, 0);
                 mat_g[no_mats].y = MAT_ELEM(A, 2, 1);
                 mat_g[no_mats].z = MAT_ELEM(A, 2, 2);
@@ -365,6 +363,7 @@ void ProgRecWbp::getAllMatrices(MetaData &SF)
 void ProgRecWbp::simpleBackprojection(Projection &img,
                                       MultidimArray<double> &vol, int diameter)
 {
+	//this should be int not size_t ROB
     int i, j, k, l, m;
     Matrix2D<double> A(3, 3);
     double dim2, x, y, z, xp, yp;
@@ -387,7 +386,9 @@ void ProgRecWbp::simpleBackprojection(Projection &img,
 
     double dim1 = dim - 1;
     const MultidimArray<double> mImg = img();
-    for (i = 0; i < dim; i++)
+    int idim;
+    idim = dim;//cast to int from size_t
+    for (i = 0; i < idim; i++)
     {
         z = -i + dim2; /*** Z points upwards ***/
         z2 = z * z;
@@ -395,7 +396,7 @@ void ProgRecWbp::simpleBackprojection(Projection &img,
             continue;
         double xpz = z * a20 + dim2;
         double ypz = z * a21 + dim2;
-        for (j = 0; j < dim; j++)
+        for (j = 0; j < idim; j++)
         {
             y = j - dim2;
             y2 = y * y;
@@ -410,7 +411,7 @@ void ProgRecWbp::simpleBackprojection(Projection &img,
             l = (int) yp;
             scaley = yp - l;
             double scale1y = 1. - scaley;
-            for (k = 0; k < dim; k++, xp += a00, yp += a01, x++)
+            for (k = 0; k < idim; k++, xp += a00, yp += a01, x++)
             {
                 x2 = x * x;
                 if (x2 + z2_plus_y2 > radius2)
@@ -512,7 +513,7 @@ void ProgRecWbp::showProgress()
 // Calculate the filter in 2D and apply ======================================
 void ProgRecWbp::apply2DFilterArbitraryGeometry()
 {
-    double rot, tilt, psi, newrot, newtilt, newpsi, xoff, yoff, flip, weight;
+    double rot, tilt, psi, xoff, yoff, flip, weight;
     Projection proj;
     Matrix2D<double> L(4, 4), R(4, 4), A;
     FileName fn_img;

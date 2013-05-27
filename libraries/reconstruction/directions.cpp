@@ -91,7 +91,7 @@ double distance_directions(double rot1, double tilt1,
                            bool include_mirrors)
 {
 
-    double            rot2p, tilt2p, psi2p, dist, mindist;
+    double            rot2p, tilt2p, psi2p, dist;
     double            diff_rot, diff_tilt;
 
     double aux=rot1 - rot2;
@@ -132,7 +132,7 @@ void make_even_distribution(std::vector<double> &rotList, std::vector<double> &t
 							double sampling, SymList &SL, bool include_mirror)
 {
     int rot_nstep, tilt_nstep = ROUND(180. / sampling) + 1;
-    double rotp, tiltp, psip, rot_sam, tilt, rot, tilt_sam, psi = 0.;
+    double rot_sam, tilt, tilt_sam;
     bool append;
     tilt_sam = (180. / tilt_nstep);
 
@@ -194,7 +194,7 @@ int find_nearest_direction(double rot1, double tilt1,
                            SymList &SL, Matrix2D<double> &Laux, Matrix2D<double> &Raux)
 {
 
-    int               dir, optdir;
+    int               optdir;
     double            dist, mindist;
     double            newrot, newtilt, newpsi;
 

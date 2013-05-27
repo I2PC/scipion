@@ -175,8 +175,7 @@ void ML2DBaseProgram::endIteration()
 void ML2DBaseProgram::run()
 {
     bool converged = false;
-    int rank = 0;
-    CREATE_LOG(LOG_FN(fn_root));
+    //CREATE_LOG(LOG_FN(fn_root));
 
     LOG(" starting produceSideInfo\n");
     produceSideInfo();

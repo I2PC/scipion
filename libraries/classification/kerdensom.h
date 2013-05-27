@@ -55,7 +55,7 @@ public:
      */
     KerDenSOM(double _reg0, double _reg1, unsigned long _annSteps,
                    double _epsilon, unsigned long _nSteps)
-            : ClassificationAlgorithm<FuzzyMap>(), reg0(_reg0), reg1(_reg1), annSteps(_annSteps),
+            : ClassificationAlgorithm<FuzzyMap>(), annSteps(_annSteps), reg0(_reg0), reg1(_reg1),
             epsilon(_epsilon), somNSteps(_nSteps)
     {};
 
@@ -119,17 +119,17 @@ public:
 protected:
 
     double sigma;        // Optimum Kernel Width
-    unsigned long annSteps;    // number of deterministic annealing steps
-    double reg1, reg0;   // Regularization factors
+    size_t annSteps;    // number of deterministic annealing steps
+    double reg0, reg1;   // Regularization factors
     double epsilon;      // Stopping criterion Error < epsilon
-    unsigned long somNSteps;   // number of steps
+    size_t somNSteps;   // number of steps
 
 
     // Internal Scratch
 
-    unsigned numNeurons;
-    unsigned numVectors;
-    unsigned dim;
+    size_t numNeurons;
+    size_t numVectors;
+    size_t dim;
     std::vector < std::vector<double> > tmpMap;
     std::vector<double> tmpD, tmpD1, tmpDens, tmpV;
 

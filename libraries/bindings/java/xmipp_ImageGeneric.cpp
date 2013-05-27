@@ -9,6 +9,7 @@
 #include "data/ctf.h"
 #include "reconstruction/transform_downsample.h"
 #include "data/filters.h"
+#include "data/geometry.h"
 
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_create(JNIEnv *env, jobject jobj)
@@ -24,6 +25,7 @@ Java_xmipp_jni_ImageGeneric_create(JNIEnv *env, jobject jobj)
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_destroy(JNIEnv *env, jobject jobj)
 {
+
     XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
@@ -122,7 +124,8 @@ Java_xmipp_jni_ImageGeneric_readHeader(JNIEnv * env, jobject jobj,
     XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-        const char *fnStr = env->GetStringUTFChars(filename, false);
+        jboolean aux=false;
+        const char *fnStr = env->GetStringUTFChars(filename, &aux);
         image->read(fnStr, HEADER);
     }
     XMIPP_JAVA_CATCH;
@@ -135,7 +138,8 @@ Java_xmipp_jni_ImageGeneric_read(JNIEnv *env, jobject jobj, jstring filename,
     XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-        const char *fn = env->GetStringUTFChars(filename, false);
+        jboolean aux=false;
+        const char *fn = env->GetStringUTFChars(filename, &aux);
         image->readOrReadPreview(fn, jx, jy, jz, jn, true);
     }
     XMIPP_JAVA_CATCH;
@@ -150,7 +154,8 @@ Java_xmipp_jni_ImageGeneric_readApplyGeo_1(JNIEnv *env, jobject jimage,
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jimage);
         MetaData *metadata = GET_INTERNAL_METADATA(jmetadata);
 
-        const char *fnStr = env->GetStringUTFChars(filename, false);
+        jboolean aux=false;
+        const char *fnStr = env->GetStringUTFChars(filename, &aux);
         ApplyGeoParams params;
         params.wrap = wrap;
         image->readApplyGeo(fnStr, *metadata, (size_t) id, params);
@@ -407,6 +412,7 @@ Java_xmipp_jni_ImageGeneric_setArrayByte(JNIEnv *env, jobject jobj,
             break;
         default:
                 {
+#undef CAST_PAGE
 #define CAST_PAGE(type) \
   type *mdarray; \
                 MULTIDIM_ARRAY_GENERIC(*image).getArrayPointer(mdarray); \
@@ -525,22 +531,21 @@ Java_xmipp_jni_ImageGeneric_setArrayFloat(JNIEnv *env, jobject jobj,
 
         // Go to slice.
         image->movePointerTo(nslice, select_image);
-
         size_t size = image->getSize();
+
         //jfloatArray array = env->NewFloatArray(size);
         switch (image->getDatatype())
     {
     case DT_Float:
-        {
-            float *mdarray;
+        	{
+				float *mdarray;
 
-            // Get slice array.
-            MULTIDIM_ARRAY_GENERIC(*image).getArrayPointer(mdarray);
-
-                env->GetFloatArrayRegion(data, 0, size, mdarray);
-            }
-            break;
-        case DT_Double:
+				// Get slice array.
+				MULTIDIM_ARRAY_GENERIC(*image).getArrayPointer(mdarray);
+				env->GetFloatArrayRegion(data, 0, size, mdarray);
+			}
+			break;
+    case DT_Double:
             {
                 // Get slice array.
                 Image<double> *imageAux = (Image<double> *) image->image;
@@ -557,7 +562,7 @@ Java_xmipp_jni_ImageGeneric_setArrayFloat(JNIEnv *env, jobject jobj,
                 delete [] buffer;
             }
             break;
-        default:
+    default:
             {
                 REPORT_ERROR(
                     ERR_IO_NOWRITE,
@@ -603,7 +608,8 @@ Java_xmipp_jni_ImageGeneric_mapFile2Write(JNIEnv *env, jobject jobj, jint w,
     XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-        const char *fnStr = env->GetStringUTFChars(filename, false);
+        jboolean aux=false;
+        const char *fnStr = env->GetStringUTFChars(filename, &aux);
 
         image->mapFile2Write(w, h, z, fnStr, false, (size_t) n);
     }
@@ -616,7 +622,8 @@ Java_xmipp_jni_ImageGeneric_write(JNIEnv *env, jobject jobj, jstring filename)
     XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-        const char *fnStr = env->GetStringUTFChars(filename, false);
+        jboolean aux=false;
+        const char *fnStr = env->GetStringUTFChars(filename, &aux);
         image->write(fnStr);
     }
     XMIPP_JAVA_CATCH;
@@ -643,6 +650,7 @@ Java_xmipp_jni_ImageGeneric_equal(JNIEnv *env, jobject jobj1, jobject jobj2, jdo
         return image1->equal(*image2,accuracy);
     }
     XMIPP_JAVA_CATCH;
+    return false;
 }
 
 JNIEXPORT void JNICALL
@@ -795,50 +803,200 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_getPreview
     XMIPP_JAVA_CATCH;
 }
 
-JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_alignImages
+JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_bestShift
 (JNIEnv * env, jobject jobj, jobject jimg)
 {
     XMIPP_JAVA_TRY
     {
-        MultidimArray<double>* I;
-        MultidimArray<double> tmpI;
-        MultidimArray<double> alignedI;
-        MultidimArray<double>* Tp;
-        MultidimArray<double> T;
-        AlignmentAux aux;
-        CorrelationAux aux2;
-        RotationalCorrelationAux aux3;
-        Matrix2D<double> M;
-        ArrayDim dim;
-        ImageGeneric *templates = GET_INTERNAL_IMAGE_GENERIC(jobj);
-        ImageGeneric *img = GET_INTERNAL_IMAGE_GENERIC(jimg);
-        img->convert2Datatype(DT_Double);
-        templates->convert2Datatype(DT_Double);
+    	ImageGeneric *templates = GET_INTERNAL_IMAGE_GENERIC(jobj);
+    	ImageGeneric *img = GET_INTERNAL_IMAGE_GENERIC(jimg);
+    	img->convert2Datatype(DT_Double);
+    	templates->convert2Datatype(DT_Double);
+
+        MultidimArray<double> *I, tmpI, tmpI2, alignedI, *Tp, T;
+
         MULTIDIM_ARRAY_GENERIC(*img).getMultidimArrayPointer(I);
         MULTIDIM_ARRAY_GENERIC(*templates).getMultidimArrayPointer(Tp);
 
-        templates->getDimensions(dim);
-        double corr,max=0;
-        int maxIndex=0;
+        Matrix2D<double> alignmentM, transformM, bestAlignmentM;
+        alignmentM.initIdentity(3);
 
-        for (int i=0;i<dim.ndim;++i)
+        CorrelationAux aux2;
+        ArrayDim dim;
+
+        templates->getDimensions(dim);
+        double corr, max = -MAXDOUBLE;
+
+        for (size_t i=0; i < dim.ndim; ++i)
         {
-        	T.aliasImageInStack(*Tp,i);
+        	T.aliasImageInStack(*Tp, i);
             tmpI=*I;
+            tmpI2=*I;
             T.setXmippOrigin();
             tmpI.setXmippOrigin();
-            corr = alignImages(T,tmpI,M,true,aux,aux2,aux3);
-            if (corr>max)
+            tmpI2.setXmippOrigin();
+            bestNonwrappingShift(T, tmpI, MAT_ELEM(alignmentM, 0, 2), MAT_ELEM(alignmentM, 1, 2), aux2);
+            applyGeometry(LINEAR, tmpI, tmpI2, alignmentM, IS_NOT_INV, true);
+            corr = correlationIndex(T, tmpI2);
+            if (corr > max)
             {
                 max=corr;
-                maxIndex=i;
-                alignedI=tmpI;
+                bestAlignmentM = alignmentM;
             }
         }
-        T.aliasImageInStack(*Tp,maxIndex);
-        T+=alignedI;
+
+
+
+        int x, y;
+        x = -MAT_ELEM(bestAlignmentM, 0, 2);
+        y = -MAT_ELEM(bestAlignmentM, 1, 2);
+
+        jclass pclass = env->FindClass("xmipp/jni/Particle");
+        jmethodID constructor = env->GetMethodID(pclass, "<init>", "(II)V");
+        jobject particle = env->NewObject(pclass, constructor, x, y);
+
+        return particle;
     }
-    XMIPP_JAVA_CATCH;
+
+        XMIPP_JAVA_CATCH;
+        return NULL;
 }
+
+
+   JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_ImageGeneric_alignImage
+(JNIEnv * env, jobject jobj, jobject jimg)
+{
+	double result[4];
+	XMIPP_JAVA_TRY
+	{
+
+		ImageGeneric *templates = GET_INTERNAL_IMAGE_GENERIC(jobj);
+		ImageGeneric *img = GET_INTERNAL_IMAGE_GENERIC(jimg);
+		img->convert2Datatype(DT_Double);
+		templates->convert2Datatype(DT_Double);
+
+		MultidimArray<double> *I, tmpI, alignedI, *Tp, T;
+		AlignmentAux aux;
+		CorrelationAux aux2;
+		RotationalCorrelationAux aux3;
+		Matrix2D<double> transformM;
+		ArrayDim dim;
+		MULTIDIM_ARRAY_GENERIC(*img).getMultidimArrayPointer(I);
+		MULTIDIM_ARRAY_GENERIC(*templates).getMultidimArrayPointer(Tp);
+
+		templates->getDimensions(dim);
+		double corr,max=-MAXDOUBLE;
+		int maxIndex=0;
+
+
+		for (size_t i=0;i<dim.ndim;++i)
+		{
+			T.aliasImageInStack(*Tp,i);
+			tmpI=*I;
+			T.setXmippOrigin();
+			tmpI.setXmippOrigin();
+			corr = alignImages(T, tmpI, transformM, true, aux, aux2, aux3);
+			if (corr>max)
+			{
+				max=corr;
+				maxIndex=i;
+				alignedI=tmpI;
+			}
+		}
+
+		double rot, tilt, psi;
+		Euler_matrix2angles(transformM, rot, tilt, psi);
+
+		result[0] = maxIndex;//template aligned with particle
+		result[1] = rot;
+		result[2] = tilt;
+		result[3] = psi;
+
+
+
+
+	}
+	XMIPP_JAVA_CATCH;
+
+	// Sets array value
+	jdoubleArray jresult = env->NewDoubleArray(4);
+	env->SetDoubleArrayRegion(jresult, 0, 4, result);
+	return jresult;
+
+}
+
+
+   JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_applyAlignment
+   (JNIEnv * env, jobject jobj, jobject jimg, jint index, jdouble rot, jdouble tilt, jdouble psi)
+   {
+      XMIPP_JAVA_TRY
+      {
+
+   	   ImageGeneric *templates = GET_INTERNAL_IMAGE_GENERIC(jobj);
+   	   ImageGeneric *img = GET_INTERNAL_IMAGE_GENERIC(jimg);
+   	   img->convert2Datatype(DT_Double);
+   	   templates->convert2Datatype(DT_Double);
+
+   	   MultidimArray<double> *Tp, T, *Ip, I;
+   	   MULTIDIM_ARRAY_GENERIC(*img).getMultidimArrayPointer(Ip);
+   	   MULTIDIM_ARRAY_GENERIC(*templates).getMultidimArrayPointer(Tp);
+
+   	   AlignmentAux aux;
+   	   CorrelationAux aux2;
+   	   RotationalCorrelationAux aux3;
+   	   Matrix2D<double> transformM;
+   	   Euler_angles2matrix(rot, tilt, psi, transformM);
+
+   	   T.aliasImageInStack(*Tp, index);
+   	   I=*Ip;
+   	   T.setXmippOrigin();
+   	   I.setXmippOrigin();
+   	   alignImages(T, I, transformM, true, aux, aux2, aux3);
+   	   T+=I;
+   	   centerImage(T, aux2, aux3, 3);
+
+      }
+      XMIPP_JAVA_CATCH;
+
+
+   }
+
+
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_removeAlignment
+(JNIEnv * env, jobject jobj, jobject jimg, jint index, jdouble rot, jdouble tilt, jdouble psi)
+{
+   XMIPP_JAVA_TRY
+   {
+
+	   ImageGeneric *templates = GET_INTERNAL_IMAGE_GENERIC(jobj);
+	   ImageGeneric *img = GET_INTERNAL_IMAGE_GENERIC(jimg);
+	   img->convert2Datatype(DT_Double);
+	   templates->convert2Datatype(DT_Double);
+
+	   MultidimArray<double> *Tp, T, *Ip, I;
+	   MULTIDIM_ARRAY_GENERIC(*img).getMultidimArrayPointer(Ip);
+	   MULTIDIM_ARRAY_GENERIC(*templates).getMultidimArrayPointer(Tp);
+
+	   AlignmentAux aux;
+	   CorrelationAux aux2;
+	   RotationalCorrelationAux aux3;
+	   Matrix2D<double> transformM;
+	   Euler_angles2matrix(rot, tilt, psi, transformM);
+
+	   T.aliasImageInStack(*Tp, index);
+	   I=*Ip;
+	   T.setXmippOrigin();
+	   I.setXmippOrigin();
+	   alignImages(T, I, transformM, true, aux, aux2, aux3);
+	   T-=I;
+
+
+   }
+   XMIPP_JAVA_CATCH;
+
+
+}
+
+
 
 

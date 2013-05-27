@@ -31,7 +31,7 @@
 // crystal symmetry matices from http://cci.lbl.gov/asu_gallery/
 int SymList::readSymmetryFile(FileName fn_sym, double accuracy)
 {
-    int i, j, k, l;
+    int i, j;
     FILE *fpoii;
     char line[80];
     char *auxstr;
@@ -77,7 +77,7 @@ int SymList::readSymmetryFile(FileName fn_sym, double accuracy)
     int no_axis, no_mirror_planes, no_inversion_points;
     no_axis = no_mirror_planes = no_inversion_points = 0;
 
-    for (int n=0; n<fileContent.size(); n++)
+    for (size_t n=0; n<fileContent.size(); n++)
     {
         strcpy(line,fileContent[n].c_str());
         auxstr = firstToken(line);
@@ -122,7 +122,7 @@ int SymList::readSymmetryFile(FileName fn_sym, double accuracy)
     i = 0;
     shift.initZeros();
 
-    for (int n=0; n<fileContent.size(); n++)
+    for (size_t n=0; n<fileContent.size(); n++)
     {
         strcpy(line,fileContent[n].c_str());
         auxstr = firstToken(line);
@@ -435,13 +435,13 @@ bool found_not_tried(const Matrix2D<int> &tried, int &i, int &j,
                      int true_symNo)
 {
     i = j = 0;
-    int n = 0;
+    size_t n = 0;
     while (n != MAT_YSIZE(tried))
     {
         //       if (tried(i, j) == 0 && !(i >= true_symNo && j >= true_symNo))
         if (dMij(tried,i, j) == 0 && !(i >= true_symNo && j >= true_symNo))
             return true;
-        if (i != n)
+        if (i != (int)n)
         {
             // Move downwards
             i++;
@@ -830,7 +830,7 @@ void symmetrizeCrystalVectors(Matrix1D<double> &aint,
 }//symmetrizeCrystalVectors end
 
 #define Symmetrize_Vol(X) {\
-        for (int i=0; i<vol_in.VolumesNo(); i++)\
+        for (size_t i=0; i<vol_in.VolumesNo(); i++)\
             X(vol_in(i),vol_in.grid(i),eprm_aint,eprm_bint,mask,i, \
               grid_type);\
     }
@@ -986,9 +986,8 @@ void symmetry_P2_122(Image<double> &vol, const SimpleGrid &grid,
     XXaint = (int) XX(eprm_aint);
     YYbint = (int)YY(eprm_bint);
 
-    int XXaint_2, YYbint_2;
+    int XXaint_2;
     XXaint_2 = XXaint / 2;
-    YYbint_2 = YYbint / 2;
     int xx, yy, zz;
 
     if (ABS(XX_lowest) > ABS(XX_highest))
@@ -1212,8 +1211,7 @@ void symmetry_P22_12(Image<double> &vol, const SimpleGrid &grid,
     XXaint = (int) XX(eprm_aint);
     YYbint = (int)YY(eprm_bint);
 
-    int XXaint_2, YYbint_2;
-    XXaint_2 = XXaint / 2;
+    int YYbint_2;
     YYbint_2 = YYbint / 2;
     int xx, yy, zz;
 
@@ -1434,9 +1432,6 @@ void symmetry_P4(Image<double> &vol, const SimpleGrid &grid,
     XXaint = (int) XX(eprm_aint);
     YYbint = (int)YY(eprm_bint);
 
-    int XXaint_2, YYbint_2;
-    XXaint_2 = XXaint / 2;
-    YYbint_2 = YYbint / 2;
     int xx, yy, zz;
 
     if (ABS(XX_lowest) > ABS(XX_highest))
@@ -1958,9 +1953,6 @@ void symmetry_P6(Image<double> &vol, const SimpleGrid &grid,
     XXaint = (int) XX(eprm_aint);
     YYbint = (int)YY(eprm_bint);
 
-    int XXaint_2, YYbint_2;
-    XXaint_2 = XXaint / 2;
-    YYbint_2 = YYbint / 2;
     int xx, yy, zz;
 
     if (ABS(XX_lowest) > ABS(XX_highest))
@@ -2678,8 +2670,8 @@ double SymList::nonRedundantProjectionSphere(int pgGroup, int pgOrder)
 }
 
 void SymList::computeDistance(MetaData &md,
-                                bool projdir_mode, bool check_mirrors,
-                                bool object_rotation)
+                              bool projdir_mode, bool check_mirrors,
+                              bool object_rotation)
 {
     MDRow row;
     double rot1, tilt1, psi1;
@@ -2699,9 +2691,9 @@ void SymList::computeDistance(MetaData &md,
         row.getValue(MDL_ANGLE_PSI2,psi2);
 
         angDistance=computeDistance( rot1,  tilt1,  psi1,
-                         rot2,  tilt2,  psi2,
-                         projdir_mode,  check_mirrors,
-                         object_rotation);
+                                     rot2,  tilt2,  psi2,
+                                     projdir_mode,  check_mirrors,
+                                     object_rotation);
 
         md.setValue(MDL_ANGLE_ROT_DIFF,rot1 - rot2,__iter.objId);
         md.setValue(MDL_ANGLE_TILT_DIFF,tilt1 - tilt2,__iter.objId);

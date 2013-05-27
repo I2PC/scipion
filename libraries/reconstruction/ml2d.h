@@ -147,18 +147,18 @@ public:
     /** Number of iterations to be performed */
     int Niter;
     /** dimension of the images */
-    int dim, dim2, hdim;
+    size_t dim, dim2, hdim;
     double ddim2;
     /** Number of steps to sample in-plane rotation in 90 degrees */
-    int nr_psi;
+    size_t nr_psi;
     /** Number of operations in "flip-array" (depending on do_mirror) */
-    int nr_flip;
+    size_t nr_flip;
     /** Sampling rate for in-plane rotation */
     double psi_step;
     /** Total degrees in FOR_ALL_ROTATIONS */
     double psi_max;
     /** Total number of no-mirror rotations in FOR_ALL_FLIPS */
-    int nr_nomirror_flips;
+    size_t nr_nomirror_flips;
     /** Total number of experimental images */
     size_t nr_images_global;
     /** Total number of local mpi images */
@@ -223,9 +223,9 @@ public:
     ModelML2D model, *current_model;
     //Some incremental stuff
     //Number of blocks for IEM
-    int blocks;
+    size_t blocks;
     //Current processing block
-    int current_block;
+    size_t current_block;
 
     //Vector of image IDs in the MetaData object (change order for randomize)
     std::vector<size_t> img_id;

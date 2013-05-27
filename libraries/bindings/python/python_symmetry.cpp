@@ -53,7 +53,8 @@ SymList_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 PyObject *
 SymList_readSymmetryFile(PyObject * obj, PyObject *args, PyObject *kwargs)
 {
-    char *str = "";
+    char * str = NULL;
+
     if (PyArg_ParseTuple(args, "s", &str))
     {
         try

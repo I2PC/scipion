@@ -43,6 +43,17 @@ Family = ''
 actual particles may be smaller than this. """
 ParticleSize = 0
 
+# {expert}{list_combo}(None, MaxZscore, Percentage) Automatic particle rejection
+""" How to automatically reject particles. It can be none (no rejection), maxZscore (reject a particle
+if its Zscore is larger than this value), Percentage (reject a given percentage in each one of the screening criteria). """
+RejectionMethod='None'
+
+# {expert}{condition}(RejectionMethod=="MaxZscore") Maximum Zscore
+MaxZscore=3
+
+# {expert}{condition}(RejectionMethod=="Percentage") Percentage (%)
+Percentage=5
+
 # {eval} expandParticlesPreprocess(allowFlip=True)
 
 # {eval} expandParallel(threads=0, hours=12, mpi=8)

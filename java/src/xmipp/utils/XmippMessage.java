@@ -80,4 +80,9 @@ public class XmippMessage {
 	{
 		return String.format("%s=%s\n%s", field, value, message);
 	}
+
+	public static String getUnexpectedErrorMsg()
+	{
+		return "Unexpected error";
+	}
 }

@@ -26,4 +26,4 @@
 
 #include <reconstruction/ctf_sort_psds.h>
 
-RUN_XMIPP_PROGRAM(ProgPSDSort);
+RUN_XMIPP_PROGRAM(ProgPSDSort)

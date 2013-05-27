@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 {
     Prog_Angular_CommonLine prm;
     try {
-        prm.read(argc,argv);
+        prm.read(argc,(const char **)argv);
     } catch (XmippError XE)
     {
         std::cout << XE << std::endl;

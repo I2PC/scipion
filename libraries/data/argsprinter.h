@@ -38,6 +38,7 @@
 class Printer
 {
 public:
+    virtual ~Printer() {}
     virtual void printProgram(const ProgramDef &program, int v = 0) = 0;
     virtual void printSection(const SectionDef &section, int v = 0) = 0;
     virtual void printParam(const ParamDef &param, int v = 0) = 0;

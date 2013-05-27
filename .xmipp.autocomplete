@@ -60,7 +60,6 @@ _xcompile()
 }
 complete  -o nospace -F _xcompile xcompile
 
-
 _test_programs() 
 {
     local cur prev opts base
@@ -70,18 +69,17 @@ _test_programs()
     
     #  The basic options we'll complete.
     #
-    opts="--outputdirectory --programname --continue --help --more --verbose"
-
+    opts="--outputdir --mail_only_errors --pattern --list --list_buggers --broadcast --program_name --continue --help --more --verbose --list_failed_tests --statistics --timeout"
   #
     #  Complete the arguments to some of the basic commands.
     #
     case "${prev}" in
-        --programname | -p )
+        --program_name | -p )
 	    local names=$(for x in `ls $XMIPP_HOME/bin/xmipp_*`; do echo ${x/\/*\//} ; done )
             COMPREPLY=( $(compgen -W "${names}" -- ${cur}) )
             return 0
             ;;
-	--outputdirectory | -d )
+	--outputdir | -d )
 	    COMPREPLY=( $(compgen -d ${cur}) )
 	    return 0
 	    ;;

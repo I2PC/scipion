@@ -39,12 +39,14 @@
 #include <data/symmetries.h>
 #include <data/projection.h>
 #include <reconstruction/ctf_estimate_from_micrograph.h>
+#include <reconstruction/fourier_projection.h>
 
 #include "python_filename.h"
 #include "python_image.h"
 #include "python_program.h"
 #include "python_metadata.h"
 #include "python_symmetry.h"
+#include "python_fourierprojector.h"
 
 extern PyObject * PyXmippError;
 
@@ -66,6 +68,12 @@ xmipp_colorStr(PyObject *obj, PyObject *args);
 
 PyObject *
 xmipp_labelType(PyObject *obj, PyObject *args);
+
+PyObject *
+xmipp_labelHasTag(PyObject *obj, PyObject *args);
+
+PyObject *
+xmipp_labelIsImage(PyObject *obj, PyObject *args);
 
 /* isInStack */
 PyObject *
@@ -138,6 +146,9 @@ xmipp_dumpToFile(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 PyObject *
 xmipp_Euler_angles2matrix(PyObject *obj, PyObject *args, PyObject *kwargs);
+
+PyObject *
+xmipp_Euler_direction(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 PyObject *
 MetaData_activateMathExtensions(PyObject *obj, PyObject *args, PyObject *kwargs);

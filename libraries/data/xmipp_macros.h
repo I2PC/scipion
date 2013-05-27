@@ -29,6 +29,9 @@
 #ifndef __CYGWIN__
 #ifdef __APPLE__
 #include <limits.h>
+#include <float.h>
+#define MAXDOUBLE DBL_MAX
+#define MINDOUBLE DBL_MIN
 #else
 #include <values.h>
 #endif
@@ -262,6 +265,23 @@
                                ((xF) - (x0) + 1)) : ((x) - (int)(((x) - (xF) - 1) / ((xF) - (x0) + 1) \
                                                                  + 1) * ((xF) - (x0) + 1)))
 
+/** Fast wrapping for integers
+ *
+ * y=intWRAP(x,x0,xF) */
+#define fastIntWRAP(y, x, x0, xF) \
+{ \
+	if (((x) >= (x0) && (x) <= (xF))) \
+		y=x; \
+	else \
+	{ \
+		int range=(xF) - (x0) + 1; \
+		if ((x)<(x0)) \
+			y=((x) - (int)(((x) - (x0) + 1) / range - 1) * range); \
+		else \
+			y=((x) - (int)(((x) - (xF) - 1) / range + 1) * range); \
+	} \
+}
+
 /** Wrapping for real numbers
  *
  * realWRAP is used to keep a floating number between a range with a wrapping
@@ -363,21 +383,35 @@
 /// @name Miscellaneous
 //@{
 
-/** Speed up temporary variables
- *
- * The following variables are provided:
- *
- * @code
- * float spduptmp0, spduptmp1, spduptmp2;
- * int ispduptmp0, ispduptmp1, ispduptmp2, ispduptmp3, ispduptmp4, ispduptmp5;
- * @endcode
- */
-#define SPEED_UP_temps \
-    double spduptmp0, spduptmp1, spduptmp2, \
-    spduptmp3, spduptmp4, spduptmp5, \
-    spduptmp6, spduptmp7, spduptmp8; \
+/** Speed up temporary variables */
+#define SPEED_UP_temps0 \
+    double spduptmp0;
+
+/** Speed up temporary variables */
+#define SPEED_UP_temps01 \
+	SPEED_UP_temps0; \
+    double spduptmp1;
+
+/** Speed up temporary variables */
+#define SPEED_UP_temps012 \
+	SPEED_UP_temps01; \
+    double spduptmp2;
+
+/** Speed up temporary variables */
+#define SPEED_UP_tempsInt \
     int   ispduptmp0, ispduptmp1, ispduptmp2, \
     ispduptmp3, ispduptmp4, ispduptmp5;
+
+/** Speed up temporary variables */
+#define SPEED_UP_tempsDouble \
+    SPEED_UP_temps012; \
+    double spduptmp3, spduptmp4, spduptmp5, \
+    spduptmp6, spduptmp7, spduptmp8; \
+
+/** Speed up temporary variables */
+#define SPEED_UP_temps \
+    SPEED_UP_tempsDouble; \
+    SPEED_UP_tempsInt
 
 /** Swap two values
  *

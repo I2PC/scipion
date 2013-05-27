@@ -101,7 +101,7 @@ int ImageBase::readINF(size_t select_img,bool isStack)
     size_t   imgStart = IMG_INDEX(select_img);
     size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : _nDim;
 
-    if (dataMode == HEADER || dataMode == _HEADER_ALL && _nDim > 1) // Stop reading if not necessary
+    if (dataMode == HEADER || (dataMode == _HEADER_ALL && _nDim > 1)) // Stop reading if not necessary
         return 0;
 
     MD.clear();
@@ -134,8 +134,7 @@ int ImageBase::writeINF(size_t select_img, bool isStack, int mode, String bitDep
 #endif
 #undef DEBUG
 
-    int Xdim, Ydim, Zdim;
-    size_t Ndim;
+    size_t Xdim, Ydim, Zdim, Ndim;
     getDimensions(Xdim, Ydim, Zdim, Ndim);
 
     int _depth;
@@ -194,10 +193,28 @@ int ImageBase::writeINF(size_t select_img, bool isStack, int mode, String bitDep
         MDMainHeader.setValue(MDL_DATATYPE,(int) wDType);
         if (!checkMmapT(wDType))
         {
-            if (dataMode < DATA) // This means ImageGeneric wants to know which DataType must use in mapFile2Write
+            if (dataMode < DATA && castMode == CW_CAST) // This means ImageGeneric wants to know which DataType must use in mapFile2Write
                 return 0;
-            else
-                REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");
+            else //Mapping is an extra. When not available, go on and do not report an error.
+            {
+                /* In this case we cannot map the file because required and feasible datatypes are
+                 * not compatible. Then we denote to MapFile2Write the same incoming datatype to
+                 * keep using this Image object as usual, without mapping on write.
+                 */
+                mmapOnWrite = false;
+                dataMode = DATA;
+                MDMainHeader.setValue(MDL_DATATYPE,(int) myTypeID);
+
+                // In case Image size great then, at least, map the multidimarray
+                if (mdaBase->nzyxdim*gettypesize(myTypeID) > tiff_map_min_size)
+                    mdaBase->setMmap(true);
+
+                // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
+                //if memory already allocated use it (no resize allowed)
+                mdaBase->coreAllocateReuse();
+
+                return 0;
+            }
         }
         else
             dataMode = DATA;
@@ -217,9 +234,9 @@ int ImageBase::writeINF(size_t select_img, bool isStack, int mode, String bitDep
     fprintf(fhed,"# Samples per pixel\n");
     fprintf(fhed,"samplesperpixel= 1\n");
     fprintf(fhed,"# Image width\n");
-    fprintf(fhed,"Xdim= %d\n", Xdim);
+    fprintf(fhed,"Xdim= %d\n", (int)Xdim);
     fprintf(fhed,"# Image length\n");
-    fprintf(fhed,"Ydim= %d\n",Ydim);
+    fprintf(fhed,"Ydim= %d\n",(int)Ydim);
     fprintf(fhed,"# offset in bytes (zero by default)\n");
     fprintf(fhed,"offset= 0\n");
     fprintf(fhed,"# Is a signed or Unsigned int (by default true)\n");

@@ -134,6 +134,8 @@ public abstract class Micrograph {
 	}
 
 	public static String getName(String file, int level) {
+		if(file == null)
+			return null;
 		// level can start at 1 for file name, 2 is for parent directory name
 		String[] tokens = file.split(File.separator);
 		if (tokens.length < level)

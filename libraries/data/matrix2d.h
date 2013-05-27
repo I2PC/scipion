@@ -69,6 +69,11 @@ void svbksb(Matrix2D< double >& u,
  */
 void cholesky(const Matrix2D<double> &M, Matrix2D<double> &L);
 
+/** Schur decomposition.
+ * Given M, this function decomposes M as M = O*T*O' where O is an orthogonal matrix.
+ */
+void schur(const Matrix2D<double> &M, Matrix2D<double> &O, Matrix2D<double> &T);
+
 /** @defgroup Matrices Matrix2D Matrices
  * @ingroup DataLibrary
  */
@@ -96,8 +101,8 @@ void cholesky(const Matrix2D<double> &M, Matrix2D<double> &L);
  * @endcode
  */
 #define FOR_ALL_ELEMENTS_IN_MATRIX2D(m) \
-    for (int i=0; i<(m).mdimy; i++) \
-        for (int j=0; j<(m).mdimx; j++)
+    for (size_t i=0; i<(m).mdimy; i++) \
+        for (size_t j=0; j<(m).mdimx; j++)
 
 /** Access to a matrix element
  * v is the array, i and j define the element v_ij.
@@ -401,13 +406,13 @@ public:
     char* mdataOriginal;
 
     // Number of elements in X
-    int mdimx;
+    size_t mdimx;
 
     // Number of elements in Y
-    int mdimy;
+    size_t mdimy;
 
     // Total number of elements
-    int mdim;
+    size_t mdim;
     //@}
 
     /// @name Constructors
@@ -569,7 +574,7 @@ public:
     //@{
     /** Resize to a given size
      */
-    void resize(int Ydim, int Xdim, bool noCopy=false)
+    void resize(size_t Ydim, size_t Xdim, bool noCopy=false)
     {
 
         if (Xdim == mdimx && Ydim == mdimy)
@@ -582,7 +587,7 @@ public:
         }
 
         T * new_mdata;
-        int YXdim=Ydim*Xdim;
+        size_t YXdim=Ydim*Xdim;
 
         try
         {
@@ -596,17 +601,18 @@ public:
         // Copy needed elements, fill with 0 if necessary
         if (!noCopy)
         {
-            for (int i = 0; i < Ydim; i++)
-                for (int j = 0; j < Xdim; j++)
+        	T zero=0; // Useful for complexes
+            for (size_t i = 0; i < Ydim; i++)
+                for (size_t j = 0; j < Xdim; j++)
                 {
-                    T val;
+                    T *val=NULL;
                     if (i >= mdimy)
-                        val = 0;
+                        val = &zero;
                     else if (j >= mdimx)
-                        val = 0;
+                        val = &zero;
                     else
-                        val = mdata[i*mdimx + j];
-                    new_mdata[i*Xdim+j] = val;
+                        val = &mdata[i*mdimx + j];
+                    new_mdata[i*Xdim+j] = *val;
                 }
         }
         else
@@ -708,7 +714,7 @@ public:
      *
      * Returns X dimension
      */
-    inline int Xdim() const
+    inline size_t Xdim() const
     {
         return mdimx;
     }
@@ -717,7 +723,7 @@ public:
      *
      * Returns Y dimension
      */
-    inline int Ydim() const
+    inline size_t Ydim() const
     {
         return mdimy;
     }
@@ -737,13 +743,13 @@ public:
      */
     void initConstant(T val)
     {
-        for (int j = 0; j < mdim; j++)
+        for (size_t j = 0; j < mdim; j++)
             mdata[j] = val;
     }
 
     /** Initialize to zeros with a given size.
      */
-    void initConstant(int Ydim, int Xdim, T val)
+    void initConstant(size_t Ydim, size_t Xdim, T val)
     {
         if (mdimx!=Xdim || mdimy!=Ydim)
             resizeNoCopy(Ydim, Xdim);
@@ -766,7 +772,7 @@ public:
 
     /** Initialize to zeros with a given size.
      */
-    void initZeros(int Ydim, int Xdim)
+    void initZeros(size_t Ydim, size_t Xdim)
     {
         if (mdimx!=Xdim || mdimy!=Ydim)
             resizeNoCopy(Ydim, Xdim);
@@ -792,11 +798,11 @@ public:
 
     /** Initialize to random random numbers, uniform or gaussian
      */
-    void initRandom(int Ydim, int Xdim, double op1, double op2, RandomMode mode = RND_UNIFORM)
+    void initRandom(size_t Ydim, size_t Xdim, double op1, double op2, RandomMode mode = RND_UNIFORM)
     {
         if (mdimx!=Xdim || mdimy!=Ydim)
             resizeNoCopy(Ydim, Xdim);
-        for (int j = 0; j < mdim; j++)
+        for (size_t j = 0; j < mdim; j++)
            mdata[j] = static_cast< T > (mode == RND_UNIFORM ? rnd_unif(op1, op2) : rnd_gaus(op1, op2));
     }
 
@@ -879,7 +885,7 @@ public:
     Matrix2D<T> operator*(T op1) const
     {
         Matrix2D<T> tmp(*this);
-        for (int i=0; i < mdim; i++)
+        for (size_t i=0; i < mdim; i++)
             tmp.mdata[i] = mdata[i] * op1;
         return tmp;
     }
@@ -889,7 +895,7 @@ public:
     Matrix2D<T> operator/(T op1) const
     {
         Matrix2D<T> tmp(*this);
-        for (int i=0; i < mdim; i++)
+        for (size_t i=0; i < mdim; i++)
             tmp.mdata[i] = mdata[i] / op1;
         return tmp;
     }
@@ -899,7 +905,7 @@ public:
     friend Matrix2D<T> operator*(T op1, const Matrix2D<T>& op2)
     {
         Matrix2D<T> tmp(op2);
-        for (int i=0; i < op2.mdim; i++)
+        for (size_t i=0; i < op2.mdim; i++)
             tmp.mdata[i] = op1 * op2.mdata[i];
         return tmp;
     }
@@ -908,7 +914,7 @@ public:
       */
     void operator*=(T op1)
     {
-        for (int i=0; i < mdim; i++)
+        for (size_t i=0; i < mdim; i++)
             mdata[i] *= op1;
     }
 
@@ -916,7 +922,7 @@ public:
       */
     void operator/=(T op1)
     {
-        for (int i=0; i < mdim; i++)
+        for (size_t i=0; i < mdim; i++)
             mdata[i] /= op1;
     }
 
@@ -930,15 +936,15 @@ public:
     {
         Matrix1D<T> result;
 
-        if (mdimx != op1.size())
+        if (mdimx != VEC_XSIZE(op1))
             REPORT_ERROR(ERR_MATRIX_SIZE, "Not compatible sizes in matrix by vector");
 
         if (!op1.isCol())
             REPORT_ERROR(ERR_MATRIX, "Vector is not a column");
 
         result.initZeros(mdimy);
-        for (int i = 0; i < mdimy; i++)
-            for (int j = 0; j < mdimx; j++)
+        for (size_t i = 0; i < mdimy; i++)
+            for (size_t j = 0; j < mdimx; j++)
                 VEC_ELEM(result,i) += MAT_ELEM(*this,i, j) * VEC_ELEM(op1,j);
 
         result.setCol();
@@ -958,9 +964,9 @@ public:
             REPORT_ERROR(ERR_MATRIX_SIZE, "Not compatible sizes in matrix multiplication");
 
         result.initZeros(mdimy, op1.mdimx);
-        for (int i = 0; i < mdimy; i++)
-            for (int j = 0; j < op1.mdimx; j++)
-                for (int k = 0; k < mdimx; k++)
+        for (size_t i = 0; i < mdimy; i++)
+            for (size_t j = 0; j < op1.mdimx; j++)
+                for (size_t k = 0; k < mdimx; k++)
                     MAT_ELEM(result,i, j) += MAT_ELEM(*this,i, k) * MAT_ELEM(op1, k, j);
         return result;
     }
@@ -978,8 +984,8 @@ public:
             REPORT_ERROR(ERR_MATRIX_SIZE, "operator+: Not same sizes in matrix summation");
 
         result.initZeros(mdimy, mdimx);
-        for (int i = 0; i < mdimy; i++)
-            for (int j = 0; j < mdimx; j++)
+        for (size_t i = 0; i < mdimy; i++)
+            for (size_t j = 0; j < mdimx; j++)
                 result(i, j) = (*this)(i, j) + op1(i, j);
 
         return result;
@@ -996,8 +1002,8 @@ public:
         if (mdimx != op1.mdimx || mdimy != op1.mdimy)
             REPORT_ERROR(ERR_MATRIX_SIZE, "operator+=: Not same sizes in matrix summation");
 
-        for (int i = 0; i < mdimy; i++)
-            for (int j = 0; j < mdimx; j++)
+        for (size_t i = 0; i < mdimy; i++)
+            for (size_t j = 0; j < mdimx; j++)
                 MAT_ELEM(*this,i, j) += MAT_ELEM(op1, i, j);
     }
 
@@ -1014,8 +1020,8 @@ public:
             REPORT_ERROR(ERR_MATRIX_SIZE, "operator-: Not same sizes in matrix summation");
 
         result.initZeros(mdimy, mdimx);
-        for (int i = 0; i < mdimy; i++)
-            for (int j = 0; j < mdimx; j++)
+        for (size_t i = 0; i < mdimy; i++)
+            for (size_t j = 0; j < mdimx; j++)
                 result(i, j) = (*this)(i, j) - op1(i, j);
 
         return result;
@@ -1032,8 +1038,8 @@ public:
         if (mdimx != op1.mdimx || mdimy != op1.mdimy)
             REPORT_ERROR(ERR_MATRIX_SIZE, "operator-=: Not same sizes in matrix summation");
 
-        for (int i = 0; i < mdimy; i++)
-            for (int j = 0; j < mdimx; j++)
+        for (size_t i = 0; i < mdimy; i++)
+            for (size_t j = 0; j < mdimx; j++)
                 MAT_ELEM(*this,i, j) -= MAT_ELEM(op1, i, j);
     }
     /** Equality.
@@ -1046,9 +1052,9 @@ public:
     {
         if (!sameShape(op))
             return false;
-        for (int i = 0; i < mdimy; i++)
-            for (int j = 0; j < mdimx; j++)
-                if (ABS( (*this)(i,j) - op(i,j) ) > accuracy)
+        for (size_t i = 0; i < mdimy; i++)
+            for (size_t j = 0; j < mdimx; j++)
+                if (fabs( MAT_ELEM(*this,i,j) - MAT_ELEM(op,i,j) ) > accuracy)
                     return false;
         return true;
     }
@@ -1066,7 +1072,7 @@ public:
             return static_cast< T >(0);
 
         T maxval = mdata[0];
-        for (int n = 0; n < mdim; n++)
+        for (size_t n = 0; n < mdim; n++)
             if (mdata[n] > maxval)
                 maxval = mdata[n];
         return maxval;
@@ -1082,7 +1088,7 @@ public:
             return static_cast< T >(0);
 
         T minval = mdata[0];
-        for (int n = 0; n < mdim; n++)
+        for (size_t n = 0; n < mdim; n++)
             if (mdata[n] < minval)
                 minval = mdata[n];
         return minval;
@@ -1183,9 +1189,9 @@ public:
             double max_val = v.computeMax();
             int prec = bestPrecision(max_val, 10);
 
-            for (int i = 0; i < v.Ydim(); i++)
+            for (size_t i = 0; i < v.Ydim(); i++)
             {
-                for (int j = 0; j < v.Xdim(); j++)
+                for (size_t j = 0; j < v.Xdim(); j++)
                 {
                     ostrm << floatToString((double) v(i, j), 10, prec) << ' ';
                 }
@@ -1221,7 +1227,7 @@ public:
             if (mdimy!=1 || mdimx!=VEC_XSIZE(op1))
                 resizeNoCopy(1, VEC_XSIZE(op1));
 
-            for (int j = 0; j < VEC_XSIZE(op1); j++)
+            for (size_t j = 0; j < VEC_XSIZE(op1); j++)
                 MAT_ELEM(*this,0, j) = VEC_ELEM(op1,j);
         }
         else
@@ -1229,7 +1235,7 @@ public:
             if (mdimy!=1 || mdimx!=VEC_XSIZE(op1))
                 resizeNoCopy(VEC_XSIZE(op1), 1);
 
-            for (int i = 0; i < VEC_XSIZE(op1); i++)
+            for (size_t i = 0; i < VEC_XSIZE(op1); i++)
                 MAT_ELEM(*this, i, 0) = VEC_ELEM(op1,i);
         }
     }
@@ -1276,7 +1282,7 @@ public:
             if (VEC_XSIZE(op1)!=mdimy)
                 op1.resizeNoCopy(mdimy);
 
-            for (int i = 0; i < mdimy; i++)
+            for (size_t i = 0; i < mdimy; i++)
                 VEC_ELEM(op1,i) = MAT_ELEM(*this,i, 0);
 
             op1.setCol();
@@ -1309,7 +1315,7 @@ public:
      * m.getRow(-2, v);
      * @endcode
      */
-    void getRow(int i, Matrix1D<T>& v) const
+    void getRow(size_t i, Matrix1D<T>& v) const
     {
         if (mdimx == 0 || mdimy == 0)
         {
@@ -1337,7 +1343,7 @@ public:
      * m.getCol(-1, v);
      * @endcode
      */
-    void getCol(int j, Matrix1D<T>& v) const
+    void getCol(size_t j, Matrix1D<T>& v) const
     {
         if (mdimx == 0 || mdimy == 0)
         {
@@ -1350,7 +1356,7 @@ public:
 
         if (VEC_XSIZE(v)!=mdimy)
             v.resizeNoCopy(mdimy);
-        for (int i = 0; i < mdimy; i++)
+        for (size_t i = 0; i < mdimy; i++)
             VEC_ELEM(v,i) = MAT_ELEM(*this,i, j);
 
         v.setCol();
@@ -1364,7 +1370,7 @@ public:
      * m.setRow(-2, m.row(1)); // Copies row 1 in row -2
      * @endcode
      */
-    void setRow(int i, const Matrix1D<T>& v)
+    void setRow(size_t i, const Matrix1D<T>& v)
     {
         if (mdimx == 0 || mdimy == 0)
             REPORT_ERROR(ERR_MATRIX_EMPTY, "setRow: Target matrix is empty");
@@ -1391,7 +1397,7 @@ public:
      * m.setCol(0, (m.row(1)).transpose()); // Copies row 1 in column 0
      * @endcode
      */
-    void setCol(int j, const Matrix1D<T>& v)
+    void setCol(size_t j, const Matrix1D<T>& v)
     {
         if (mdimx == 0 || mdimy == 0)
             REPORT_ERROR(ERR_MATRIX_EMPTY, "setCol: Target matrix is empty");
@@ -1406,7 +1412,7 @@ public:
         if (!v.isCol())
             REPORT_ERROR(ERR_MATRIX_DIM, "setCol: Not a column vector in assignment");
 
-        for (int i = 0; i < mdimy; i++)
+        for (size_t i = 0; i < mdimy; i++)
             MAT_ELEM(*this,i, j) = VEC_ELEM(v,i);
     }
 
@@ -1427,11 +1433,11 @@ public:
         if (mdimx != mdimy)
             REPORT_ERROR(ERR_MATRIX_SIZE, "determinant: Matrix is not squared");
 
-        for (int i = 0; i < mdimy; i++)
+        for (size_t i = 0; i < mdimy; i++)
         {
             bool all_zeros = true;
-            for (int j = 0; j < mdimx; j++)
-                if (ABS(MAT_ELEM((*this),i, j)) > XMIPP_EQUAL_ACCURACY)
+            for (size_t j = 0; j < mdimx; j++)
+                if (fabs(MAT_ELEM((*this),i, j)) > XMIPP_EQUAL_ACCURACY)
                 {
                     all_zeros = false;
                     break;
@@ -1448,7 +1454,7 @@ public:
         ludcmp(*this, LU, indx, d);
 
         // Calculate determinant
-        for (int i = 0; i < mdimx; i++)
+        for (size_t i = 0; i < mdimx; i++)
             d *= (T) MAT_ELEM(LU,i , i);
 
         return d;
@@ -1497,7 +1503,7 @@ public:
         if (mdimx == 0 || mdimy == 0)
             REPORT_ERROR(ERR_MATRIX_EMPTY, "Inverse: Matrix is empty");
         result.initZeros(mdimx, mdimy);
-        SPEED_UP_temps;
+        SPEED_UP_temps0;
         if (mdimx==2)
         {
             M2x2_INV(result,*this);
@@ -1540,9 +1546,9 @@ public:
             MAT_ELEM(v,i,j) *= VEC_ELEM(w,j);
 
             // Compute Inverse
-            for (int i = 0; i < mdimx; i++)
-                for (int j = 0; j < mdimy; j++)
-                    for (int k = 0; k < mdimx; k++)
+            for (size_t i = 0; i < mdimx; i++)
+                for (size_t j = 0; j < mdimy; j++)
+                    for (size_t k = 0; k < mdimx; k++)
                         MAT_ELEM(result,i,j) += MAT_ELEM(v,i,k) * MAT_ELEM(u,j,k);
         }
     }
@@ -1605,8 +1611,8 @@ public:
      */
     bool isIdentity() const
     {
-        for (int i = 0; i < mdimy; i++)
-            for (int j = 0; j < mdimx; j++)
+        for (size_t i = 0; i < mdimy; i++)
+            for (size_t j = 0; j < mdimx; j++)
                 if (i != j)
                 {
                     if (MAT_ELEM(*this,i,j)!=0)
@@ -1705,6 +1711,30 @@ void svdcmp(const Matrix2D< T >& a,
 }
 #undef VIA_NR
 #undef VIA_BILIB
+
+/** Generalized eigenvector decomposition.
+ * Solves the problem Av=dBv.
+ * The decomposition is such that A=B P D P^-1. A and B must be square matrices of the same size.
+ */
+void generalizedEigs(const Matrix2D<double> &A, const Matrix2D<double> &B, Matrix1D<double> &D, Matrix2D<double> &P);
+
+/** First eigenvectors of a real, symmetric matrix.
+ * Solves the problem Av=dv.
+ * Only the eigenvectors of the largest M eigenvalues are returned as columns of P
+ */
+void firstEigs(const Matrix2D<double> &A, size_t M, Matrix1D<double> &D, Matrix2D<double> &P);
+
+/** Last eigenvectors of a real, symmetric matrix.
+ * Solves the problem Av=dv.
+ * Only the eigenvectors of the smallest M eigenvalues are returned as columns of P
+ */
+void lastEigs(const Matrix2D<double> &A, size_t M, Matrix1D<double> &D, Matrix2D<double> &P);
+
+/** Find connected components of a graph.
+ * Assuming that the matrix G represents an undirected graph (of size NxN), this function returns a vector (of size N) that indicates
+ * for each element which is the number of its connected component.
+ */
+void connectedComponentsOfUndirectedGraph(const Matrix2D<double> &G, Matrix1D<int> &component);
 
 /** Conversion from one type to another.
  *
@@ -1807,8 +1837,8 @@ Matrix1D<T> Matrix1D<T>::operator*(const Matrix2D<T>& M)
         REPORT_ERROR(ERR_MATRIX_DIM, "Vector is not a row");
 
     result.initZeros(MAT_XSIZE(M));
-    for (int j = 0; j < MAT_XSIZE(M); j++)
-        for (int i = 0; i < MAT_YSIZE(M); i++)
+    for (size_t j = 0; j < MAT_XSIZE(M); j++)
+        for (size_t i = 0; i < MAT_YSIZE(M); i++)
             VEC_ELEM(result,j) += VEC_ELEM(*this,i) * MAT_ELEM(M,i, j);
 
     result.setRow();

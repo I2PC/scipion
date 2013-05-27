@@ -40,7 +40,7 @@
 void KerDenSOM::nSteps(const unsigned long& _nSteps)
 {
     somNSteps = _nSteps;
-};
+}
 
 /**
  * Gets the sigma (Kernel Width)
@@ -48,7 +48,7 @@ void KerDenSOM::nSteps(const unsigned long& _nSteps)
 double KerDenSOM::getSigma()
 {
     return sigma;
-};
+}
 
 
 //-----------------------------------------------------------------------------
@@ -60,7 +60,7 @@ double KerDenSOM::getSigma()
 void KerDenSOM::setAnnSteps(const unsigned long& _annSteps)
 {
     annSteps = _annSteps;
-};
+}
 
 
 //-----------------------------------------------------------------------------
@@ -84,7 +84,7 @@ double KerDenSOM::test(const FuzzyMap& _som, const TS& _examples) const
 
     /* Scan all data entries */
     double qerror = 0.0;
-    for (int i = 0; i < _examples.size(); i++)
+    for (size_t i = 0; i < _examples.size(); i++)
     {
         SomIn& theBest = _som.fuzzyTest(i); // get the best
         qerror += euclideanDistance(theBest, _examples.theItems[i]);
@@ -103,7 +103,7 @@ double KerDenSOM::test(const FuzzyMap& _som, const TS& _examples) const
         listener->OnProgress(_examples.size());
     return (qerror / (double) _examples.size());
 
-};
+}
 
 
 //-----------------------------------------------------------------------------
@@ -131,7 +131,7 @@ void KerDenSOM::updateV(FuzzyMap* _som, const TS* _examples, const double& _reg)
             double tmpU = (double) _som->memb[vv][cc];
             tmpDens_cc += tmpU;
             const floatFeature * ptrExample=&(_examples->theItems[vv][0]);
-            for (int j = 0; j < dim; j++)
+            for (size_t j = 0; j < dim; j++)
             	ptrTmpMap_cc[j] +=  tmpU * ptrExample[j];
         }
     }
@@ -152,7 +152,7 @@ void KerDenSOM::updateV(FuzzyMap* _som, const TS* _examples, const double& _reg)
         	double *ptrTmpMap_cc=&(tmpMap[cc][0]);
         	double iTmpDens_cc=1.0/tmpDens[cc];
         	floatFeature *ptrCodeVector_cc=&(_som->theItems[cc][0]);
-            for (int j = 0; j < dim; j++)
+            for (size_t j = 0; j < dim; j++)
             {
                 double tmpU = (ptrTmpMap_cc[j] + ptrTmpV[j] * _reg) * iTmpDens_cc;
                 stopError1 += fabs(ptrCodeVector_cc[j] - tmpU);
@@ -171,7 +171,7 @@ double KerDenSOM::mainIterations(FuzzyMap* _som, const TS* _examples, double& _s
 {
     int verbosity = listener->getVerbosity();
     double stopError = 1e10, alpha, ts2;
-    int iter = 0;
+    size_t iter = 0;
     if (somNSteps == 0)
         return stopError;
     if (verbosity == 1 || verbosity == 3)
@@ -189,7 +189,7 @@ double KerDenSOM::mainIterations(FuzzyMap* _som, const TS* _examples, double& _s
         if (verbosity >= 2)
         {
             char s[100];
-            sprintf(s, "Iteration %d of %d. variation: %g\n", iter, somNSteps, stopError);
+            sprintf(s, "Iteration %d of %d. variation: %g\n", (int)iter, (int)somNSteps, stopError);
             listener->OnReportOperation((std::string) s);
         }
     }
@@ -217,7 +217,7 @@ double KerDenSOM::updateSigmaI(FuzzyMap* _som, const TS* _examples)
             double r = 0.0;
         	const floatFeature *ptrExample=ptrExample0;
         	const floatFeature *ptrCodeVector=&(_som->theItems[cc][0]);
-            for (int j = 0; j < dim; j++)
+            for (size_t j = 0; j < dim; j++)
             {
             	double diff=(double)(*ptrExample++) - (double)(*ptrCodeVector++);
                 r += diff*diff;
@@ -253,7 +253,7 @@ void KerDenSOM::updateV1(FuzzyMap* _som, const TS* _examples)
             tmpDens_cc += tmpU;
             const floatFeature *ptrExample=&(_examples->theItems[vv][0]);
             double *ptrTmpMap_cc=ptrTmpMap_cc0;
-            for (int j = 0; j < dim; j++)
+            for (size_t j = 0; j < dim; j++)
             {
             	*ptrTmpMap_cc += tmpU * (*ptrExample);
             	++ptrExample;
@@ -267,7 +267,7 @@ void KerDenSOM::updateV1(FuzzyMap* _som, const TS* _examples)
     	const std::vector<double> &tmpMap_cc=tmpMap[cc];
         double itmpDens_cc=1.0/tmpDens[cc];
     	FeatureVector &codevector=_som->theItems[cc];
-        for (int j = 0; j < dim; j++)
+        for (size_t j = 0; j < dim; j++)
         {
             double tmpU =tmpMap_cc[j] * itmpDens_cc;
             codevector[j] = (floatFeature) tmpU;
@@ -283,7 +283,7 @@ void KerDenSOM::updateU1(FuzzyMap* _som, const TS* _examples)
 {
 
     double auxProd, auxDist, tmp;
-    int k, j, i;
+    size_t k, j, i;
 
     // Update Membership matrix
     for (k = 0; k < numVectors; k++)
@@ -324,7 +324,7 @@ void KerDenSOM::updateU1(FuzzyMap* _som, const TS* _examples)
  */
 void KerDenSOM::initU(FuzzyMap* _som)
 {
-    unsigned j, cc, vv;
+    unsigned cc, vv;
 
     // Take random samples
     randomize_random_generator();
@@ -416,9 +416,9 @@ double KerDenSOM::randApproxGVC(const TS* _examples, const FuzzyMap* _som, doubl
 void KerDenSOM::showX(const TS* _ts)
 {
     std::cout << "Data (1..nd, 1..nv) "  << std::endl;
-    for (int i = 0; i < _ts->size(); i++)
+    for (size_t i = 0; i < _ts->size(); i++)
     {
-        for (int j = 0; j < _ts->theItems[0].size(); j++)
+        for (size_t j = 0; j < _ts->theItems[0].size(); j++)
         {
             std::cout << i + 1 << "  " << j + 1 << "  " << _ts->theItems[i][j] << std::endl;
         }
@@ -434,11 +434,11 @@ void KerDenSOM::showX(const TS* _ts)
 void KerDenSOM::showV(FuzzyMap* _som)
 {
     std::cout << "Code vectors (1..ni, 1..nj, 1..nv) "  << std::endl;
-    for (int i = 0; i < _som->size(); i++)
+    for (size_t i = 0; i < _som->size(); i++)
     {
         int tmpj = _som->indexToPos(i).first;
         int tmpi = _som->indexToPos(i).second;
-        for (int j = 0; j < _som->theItems[0].size(); j++)
+        for (size_t j = 0; j < _som->theItems[0].size(); j++)
             std::cout << tmpi + 1 << "  " << tmpj + 1 << "  " << j + 1 << "  " << _som->theItems[i][j] << std::endl;
     }
 }
@@ -451,9 +451,9 @@ void KerDenSOM::showV(FuzzyMap* _som)
 void KerDenSOM::showU(FuzzyMap* _som, const TS* _ts)
 {
     std::cout << " Memberships (1..nd,1..ni,1..nj)" << std::endl;
-    for (int i = 0; i <  _ts->size(); i++)
+    for (size_t i = 0; i <  _ts->size(); i++)
     {
-        for (int j = 0; j < _som->size(); j++)
+        for (size_t j = 0; j < _som->size(); j++)
         {
             int tmpj = _som->indexToPos(j).first;
             int tmpi = _som->indexToPos(j).second;
@@ -476,7 +476,7 @@ void KerDenSOM::printV(FuzzyMap* _som, const TS* _ts, FileName& _fname)
         return;
     }
 
-    fprintf(F, "%d %s %d %d gaussian\n", dim, _som->layout().c_str(), _som->width(), _som->height());
+    fprintf(F, "%d %s %d %d gaussian\n", (int)dim, _som->layout().c_str(), (int)_som->width(), (int)_som->height());
     if (_ts->isNormalized())
     {
         if (_ts->getNormalizationInfo().size() != _som->theItems[0].size())
@@ -498,9 +498,9 @@ void KerDenSOM::printV(FuzzyMap* _som, const TS* _ts, FileName& _fname)
     }
     else
     {
-        for (int i = 0; i < _som->size(); i++)
+        for (size_t i = 0; i < _som->size(); i++)
         {
-            for (int j = 0; j < _som->theItems[0].size(); j++)
+            for (size_t j = 0; j < _som->theItems[0].size(); j++)
                 fprintf(F, "%g ", _som->theItems[i][j]);
             fprintf(F, "\n");
         }

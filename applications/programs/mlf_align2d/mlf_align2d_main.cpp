@@ -25,8 +25,4 @@
 
 #include <reconstruction/mlf_align2d.h>
 
-RUN_XMIPP_PROGRAM(ProgMLF2D);
-
-
-
-
+RUN_XMIPP_PROGRAM(ProgMLF2D)

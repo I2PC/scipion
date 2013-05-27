@@ -72,7 +72,7 @@ typedef enum {
     TOK_ALIAS,  // 'ALIAS' keyword
     TOK_OR,     // 'OR' keyword
     TOK_REQUIRES,// 'REQUIRES' keyword
-    TOK_SECTION,// section defined by == Section ==
+    TOK_SECTION // section defined by == Section ==
 } ArgTokenType;
 
 class ProgramDef;
@@ -279,15 +279,15 @@ public:
     ParamDef * findParam(const String &param);
     /** Find a param and if not provided in cmd line, fill with its defaults values */
     ParamDef * findAndFillParam(const String &param);
-    const char * getParam(const char * paramName, int paramNumber = 0);
-    const char * getParam(const char * paramName, const char * subParam, int paramNumber = 0);
+    const char * getParam(const char * paramName, size_t paramNumber = 0);
+    const char * getParam(const char * paramName, const char * subParam, size_t paramNumber = 0);
     void addParamName(const String & name, ParamDef *param);
     void addParamRequires(const String &name);
     void addParamExclusiveGroup(ParamDef * param);
     ///clear read arguments
     void clear();
     /// Read and validate commmand line
-    void read(int argc, char ** argv, bool reportErrors = true);
+    void read(int argc, const char ** argv, bool reportErrors = true);
     /// Add a section to the program definition
     /// and return a pointer to it, usefull for manually
     SectionDef * addSection(String sectionName, int visibility = 0);

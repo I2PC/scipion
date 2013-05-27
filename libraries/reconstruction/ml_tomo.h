@@ -44,6 +44,7 @@
 #include <data/xmipp_program.h>
 
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
+#undef SMALLANGLE
 #define SMALLANGLE 2.75
 #define MLTOMO_DATALINELENGTH 10
 #define MLTOMO_BLOCKSIZE 10
@@ -205,7 +206,7 @@ public:
     // Angular sampling information
     struct AnglesInfo
     {
-        int direction;
+        size_t direction;
         double rot, rot_ori;
         double tilt, tilt_ori;
         double psi, psi_ori;
@@ -345,7 +346,7 @@ public:
                       double &resolution);
 
     /// Apply regularization
-    bool regularize(int iter);
+    void regularize(int iter);
 
     /// check convergence
     bool checkConvergence(std::vector<double> &conv);

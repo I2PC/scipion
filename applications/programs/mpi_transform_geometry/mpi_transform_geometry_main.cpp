@@ -27,6 +27,6 @@
 #include <data/transform_geometry.h>
 #include <parallel/xmipp_mpi.h>
 
-CREATE_MPI_METADATA_PROGRAM(ProgTransformGeometry, MpiProgTransformGeometry);
+CREATE_MPI_METADATA_PROGRAM(ProgTransformGeometry, MpiProgTransformGeometry)
 
-RUN_XMIPP_PROGRAM(MpiProgTransformGeometry);
+RUN_XMIPP_PROGRAM(MpiProgTransformGeometry)

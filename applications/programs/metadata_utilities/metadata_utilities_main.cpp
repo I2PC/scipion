@@ -79,6 +79,7 @@ protected:
         addParamsLine("   randomize                            : Randomize elements of metadata");
         addParamsLine("    keep_column <labels>                : Keep some columns(label list) from metadata");
         addParamsLine("    drop_column <labels>                : Drop some columns(label list) from metadata");
+        addParamsLine("    rename_column <labels>              : Rename a column");
         addParamsLine("    modify_values <expression>          : Use an SQLite expression to modify the metadata");
         addParamsLine("                                        : This option requires knowledge of basic SQL syntax(more specific SQLite");
         addParamsLine(":+ Some of the function allowed are,");
@@ -176,13 +177,15 @@ protected:
         addExampleLine ("   xmipp_metadata_utilities -i mD1.doc -q sum defocusGroup count -o out.doc");
         addExampleLine(" Print the metadata Size", false);
         addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --query size");
+        addExampleLine(" Rename Column", false);
+        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --operate rename_column \"weight wRobust\"");
 
     }
 
     void readParams()
     {
         fn_in = getParam("-i");
-        if (!checkParam("--file") || getParam("--file") != "import_txt")
+        if (!checkParam("--file") || strcmp(getParam("--file"),"import_txt")==0)
             mdIn.read(fn_in);
         doWrite = true;
         fn_out = checkParam("-o") ? getParam("-o") : fn_in;
@@ -237,8 +240,13 @@ protected:
         else if ( operation == "drop_column")
                {
                    MDL::str2LabelVector(getParam("--operate", 1), labels);
-                   for (int i = 0; i < labels.size(); ++i)
+                   for (size_t i = 0; i < labels.size(); ++i)
                        mdIn.removeLabel(labels[i]);
+               }
+        else if ( operation == "rename_column")
+               {
+                   MDL::str2LabelVector(getParam("--operate", 1), labels);
+				   mdIn.renameColumn(labels[0],labels[1]);
                }
         else if (operation == "modify_values")// modify_values
         {
@@ -284,7 +292,7 @@ protected:
             generator = new MDLinealGenerator(getDoubleParam("--fill", 2), getDoubleParam("--fill", 3));
 
         //Fill columns
-        for (int i = 0; i < labels.size(); ++i)
+        for (size_t i = 0; i < labels.size(); ++i)
         {
             generator->label = labels[i];
             generator->fill(mdIn);
@@ -329,7 +337,7 @@ protected:
             StringVector blocks;
             std::cout << "Blocks in " << fn_in << ": " << std::endl;
             getBlocksInMetaDataFile(fn_in, blocks);
-            for (int i = 0; i < blocks.size(); ++i)
+            for (size_t i = 0; i < blocks.size(); ++i)
                 std::cout << blocks[i] << std::endl;
         }
     }//end of function doQuery
@@ -444,4 +452,4 @@ public:
 }
 ;//end of class ProgMetaDataUtilities
 
-RUN_XMIPP_PROGRAM(ProgMetadataUtilities);
+RUN_XMIPP_PROGRAM(ProgMetadataUtilities)

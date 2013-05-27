@@ -27,6 +27,6 @@
 #include <data/image_operate.h>
 #include <parallel/xmipp_mpi.h>
 
-CREATE_MPI_METADATA_PROGRAM(ProgOperate, MpiProgOperate);
+CREATE_MPI_METADATA_PROGRAM(ProgOperate, MpiProgOperate)
 
-RUN_XMIPP_PROGRAM(MpiProgOperate);
+RUN_XMIPP_PROGRAM(MpiProgOperate)

@@ -155,9 +155,7 @@ void ProgCtfGroup::produceSideInfo()
     MetaData SF;
     MultidimArray<double> Mctf;
     MultidimArray<std::complex<double> >  ctfmask;
-    int ydim;
-    int zdim;
-    size_t ndim;
+    size_t ydim, zdim, ndim;
     double avgdef;
 
     SF.read(fn_ctfdat);
@@ -174,7 +172,7 @@ void ProgCtfGroup::produceSideInfo()
     if(do1Dctf)
     {
         ypaddim=1;
-        ctfxpaddim =  sqrt(2.) *  xpaddim + 1;
+        ctfxpaddim =  (size_t)(sqrt(2.) *  xpaddim + 1);
     }
     else
     {
@@ -182,7 +180,7 @@ void ProgCtfGroup::produceSideInfo()
         //This is ready for the day in which we use anisotropic ctf
         ypaddim=1;
         //ctfxpaddim = xpaddim;
-        ctfxpaddim =  sqrt(2.) *  xpaddim + 1;
+        ctfxpaddim =  (size_t)(sqrt(2.) *  xpaddim + 1);
     }
     Mctf.resize(ypaddim,ctfxpaddim);
 
@@ -319,9 +317,7 @@ void ProgCtfGroup::produceSideInfo()
         if (counter % c == 0 && verbose!=0)
             progress_bar(counter);
     }
-    int enabled;
     // Precalculate denominator term of the Wiener filter
-    int ii,jj;
     if (do_wiener)
     {
 
@@ -329,9 +325,7 @@ void ProgCtfGroup::produceSideInfo()
             std::cout << "\nPrecalculate denominator term of the Wiener filter" <<std::endl;
 
         double sumimg = 0.;
-        int bar=0;
         double result;
-        double d;
         FOR_ALL_OBJECTS_IN_METADATA(ctfMD)
         {
             ctfMD.getValue(MDL_COUNT,count,__iter.objId);
@@ -405,7 +399,6 @@ void ProgCtfGroup::produceSideInfo()
 // Check whether a CTF is anisotropic
 bool ProgCtfGroup::isIsotropic(CTFDescription &ctf)
 {
-    double xp, yp, xpp, ypp;
     double cosp, sinp, ctfp, diff;
     Matrix1D<double> freq(2);
 
@@ -434,7 +427,7 @@ bool ProgCtfGroup::isIsotropic(CTFDescription &ctf)
 // Do the actual work
 void ProgCtfGroup::autoRun()
 {
-    double diff,mindiff;
+    double diff;
     long int ctfMdSize=sortedCtfMD.size();
     int c = XMIPP_MAX(1, ctfMdSize / 60);
     int counter=0;
@@ -463,7 +456,6 @@ void ProgCtfGroup::autoRun()
     {
         counter++;
         newgroup = true;
-        mindiff = 99999.;
         sortedCtfMD.getValue(MDL_DEFGROUP,defocusGroup,*itOut);
         if(defocusGroup!=-1)
             continue;
@@ -615,7 +607,9 @@ void ProgCtfGroup::writeOutputToDisc()
     FileName imagesInDefoculGroup;
     auxMetaData.clear();
     auxMetaData.setComment("images (particles) per defocus group, block name is defocusgroup No");
-    for(int i=1;i<= ctfInfo.size(); i++)
+    int ctfInfoSize;
+    ctfInfoSize = (int) ctfInfo.size();
+    for(int i=1;i<= ctfInfoSize; i++)
     {
         auxMetaData.importObjects(ctfImagesGroup,MDValueEQ(MDL_DEFGROUP,i));
         imagesInDefoculGroup.assign( formatString("ctfGroup%06d@%s_images.sel", i, fn_root.c_str()) );
@@ -626,14 +620,10 @@ void ProgCtfGroup::writeOutputToDisc()
     int olddefGroup,defGroup;
     size_t order, count;
     double sumimg=0.;
-    bool changeDefocusGroup;
 
     MultidimArray<double> ctf2D(Mwien.xdim,Mwien.ydim);
     Image<double> Ictf2D;
     Ictf2D.data.alias(ctf2D);
-
-    int jj,ii;
-    bool savefile=false;
 
     olddefGroup=1;
     //defGroup=-1;

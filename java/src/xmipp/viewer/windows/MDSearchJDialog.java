@@ -26,20 +26,13 @@
 package xmipp.viewer.windows;
 
 import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.Hashtable;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -47,25 +40,17 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.AbstractTableModel;
 
-import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.utils.DEBUG;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
-import xmipp.viewer.models.ColumnInfo;
-import xmipp.viewer.models.ImageGalleryTableModel;
-import xmipp.viewer.models.MetadataGalleryTableModel;
+
 import xmipp.viewer.models.MetadataTableModel;
-import xmipp.viewer.models.ClassInfo;
+
+
 
 /* This class will serve for find and replace values
  * in a MetadataGallery
@@ -232,7 +217,7 @@ public class MDSearchJDialog extends XmippDialog {
 					index = nextIndex(index, direction);
 			}
 			if (selected_index > -1)
-				parent.selectIndex(selected_index);
+				parent.selectItem(selected_index, 0);
 		} catch (Exception e) {
 			showException(e);
 		}

@@ -83,9 +83,8 @@ void ProgCommonLine::produceSideInfo()
     Nimg = SF.size();
 
 	// Compute the number of images in each block
-	int Ydim, Zdim;
-	size_t Ndim;
-	getImageSize(SF, Ydim, Xdim, Zdim, Ndim);
+	size_t Ydim, Zdim, Ndim;
+	getImageSize(SF, Xdim, Ydim, Zdim, Ndim);
 	Nblock = FLOOR(sqrt(mem*pow(2.0,30.0)/(2*Ydim*(360/stepAng)*sizeof(double))));
 	Nblock = XMIPP_MIN(Nblock,CEIL(((float)Nimg)/Nmpi));
 
@@ -119,15 +118,14 @@ void * threadPrepareImages(void * args)
     ThreadPrepareImages * master = (ThreadPrepareImages *) args;
     ProgCommonLine * parent = master->parent;
     MetaData SFi = *(master->SFi);
-    int Ydim, Xdim, Zdim;
-    size_t Ndim;
+    size_t Ydim, Xdim, Zdim, Ndim;
     getImageSize(SFi, Xdim, Ydim, Zdim, Ndim);
 
     MultidimArray<int> mask;
     mask.resize(Ydim, Xdim);
     mask.setXmippOrigin();
     BinaryCircularMask(mask, Xdim / 2, OUTSIDE_MASK);
-    int NInsideMask = XSIZE(mask) * YSIZE(mask) - mask.sum();
+    int NInsideMask = (int)(XSIZE(mask) * YSIZE(mask) - mask.sum());
 
     FourierFilter Filter;
     Filter.w1 = -1;
@@ -149,7 +147,7 @@ void * threadPrepareImages(void * args)
     }
     Filter.raised_w = Filter.w1 / 3;
 
-	int i = 0;
+	int ii = 0;
 	bool first = true;
 	Image<double> I;
 	FileName fnImg;
@@ -160,7 +158,7 @@ void * threadPrepareImages(void * args)
 	MultidimArray<std::complex<double> > RTFourier;
 	FOR_ALL_OBJECTS_IN_METADATA(SFi)
 	{
-		if ((i + 1) % parent->Nthr == master->myThreadID) {
+		if ((ii + 1) % parent->Nthr == master->myThreadID) {
 			I.readApplyGeo(SFi, __iter.objId);
 			I().setXmippOrigin();
 			MultidimArray<double> &mI = I();
@@ -196,7 +194,7 @@ void * threadPrepareImages(void * args)
 			// Normalize each line in the Radon Transform so that the
 			// multiplication of any two lines is actually their correlation index
 			RTFourier.resize(YSIZE(RT), XSIZE(mlineiFourier));
-			for (int i = 0; i < YSIZE(RT); i++) {
+			for (size_t i = 0; i < YSIZE(RT); i++) {
 				memcpy(&(DIRECT_A1D_ELEM(linei,0)),&DIRECT_A2D_ELEM(RT,i,0),XSIZE(linei)*sizeof(double));
 				linei.statisticsAdjust(0,1);
 				transformer.FourierTransform();
@@ -207,11 +205,12 @@ void * threadPrepareImages(void * args)
 				memcpy(&DIRECT_A2D_ELEM(RT,i,0),&(DIRECT_A1D_ELEM(linei,0)),XSIZE(linei)*sizeof(double));
 			}
 
-			(*(master->blockRTFs))[i] = RTFourier;
-			(*(master->blockRTs))[i] = RT;
+			(*(master->blockRTFs))[ii] = RTFourier;
+			(*(master->blockRTs))[ii] = RT;
 		}
-		i++;
+		ii++;
 	}
+	return NULL;
 }
 
 void ProgCommonLine::getAndPrepareBlock(int i,
@@ -274,11 +273,11 @@ void commonLineTwoImages(
 	MultidimArray<double> linei, linej;
 	MultidimArray<double> correlationFunction;
 	int jmax;
-	for (int ii = 0; ii < YSIZE(RTFi) / 2 + 1; ii++) {
+	for (size_t ii = 0; ii < YSIZE(RTFi) / 2 + 1; ii++) {
 		lineFi.aliasRow(RTFi,ii);
 		linei.aliasRow(RTi,ii);
 
-		for (int jj=0; jj<YSIZE(RTFj); jj++)
+		for (size_t jj=0; jj<YSIZE(RTFj); jj++)
 		{
 			lineFj.aliasRow(RTFj,jj);
 			linej.aliasRow(RTj,jj);
@@ -350,6 +349,7 @@ void * threadCompareImages(void * args)
 			parent->CLmatrix[idx_ji].jmax = -parent->CLmatrix[idx_ij].jmax;
 		}
 	}
+	return NULL;
 }
 
 void ProgCommonLine::processBlock(int i, int j)
@@ -446,8 +446,8 @@ void ProgCommonLine::writeResults()
 		for (int j = 1; j < Nimg; j++)
 			for (int i = 0; i < j; i++) {
 				int ii = i * Nimg + j;
-				MAT_ELEM(CL,i,j)= round(CLmatrix[ii].angi/stepAng);
-				MAT_ELEM(CL,j,i)= round(CLmatrix[ii].angj/stepAng);
+				MAT_ELEM(CL,i,j)= (int)round(CLmatrix[ii].angi/stepAng);
+				MAT_ELEM(CL,j,i)= (int)round(CLmatrix[ii].angj/stepAng);
 			}
 		CL.write(fn_out);
 	} else {
@@ -570,9 +570,7 @@ randomQuaternions(int k, DMatrix &quaternions)
     //quaternions.initRandom(0., 1.);
     saveMatrix("random_numbers.txt", quaternions);
 
-    double l2_norm;
     DVector q(4);
-    int s;
 
     for (int j = 0; j < k; ++j)
     {
@@ -592,9 +590,9 @@ void saveMatrix(const char *fn, DMatrix &matrix)
     fs.open(fn, std::fstream::trunc | std::fstream::out);
     fs.precision(16);
 
-    for (int j = 0; j < MAT_YSIZE(matrix); ++j)
+    for (size_t j = 0; j < MAT_YSIZE(matrix); ++j)
     {
-        for (int i = 0; i < MAT_XSIZE(matrix); ++i)
+        for (size_t i = 0; i < MAT_XSIZE(matrix); ++i)
         {
             fs << std::scientific << dMij(matrix, j, i) << "\t";
             //std::cerr << dAij(matrix, j, i) << " ";
@@ -872,8 +870,8 @@ int tripletRotationMatrix(const DMatrix &clMatrix, size_t nRays,
     Q23.setCol();
 
     DMatrix R1, R2;
-    anglesRotationMatrix(clMatrix, nRays, cl(1, 2), cl(1, 3), Q12, Q13, R1);
-    anglesRotationMatrix(clMatrix, nRays, cl(2, 1), cl(2, 3), Q12, Q23, R2);
+    anglesRotationMatrix(clMatrix, nRays, (int)cl(1, 2), (int)cl(1, 3), Q12, Q13, R1);
+    anglesRotationMatrix(clMatrix, nRays, (int)cl(2, 1), (int)cl(2, 3), Q12, Q23, R2);
     // Compute rotation matrix according to (4.6)
     R = R1.transpose() * R2;
 

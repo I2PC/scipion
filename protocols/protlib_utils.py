@@ -300,7 +300,6 @@ class ProcessManager():
             
             def setHost(p, h):
                 p.host = h
-                print "setting host: ", h
                 
             for h in hosts.keys():
                 newProcs = self.__getProcessFromCmd("ssh %(h)s '%(cmd)s'" % locals() )
@@ -620,7 +619,8 @@ def runChimera(inputFile,extraParams=""):
         if hasSpiderExt(inputFile):
             inputFile = 'spider:%s' % inputFile
         os.system("chimera %s %s&" % (inputFile,extraParams))
-    
+    else:
+        print "Error Chimera not available or inputFile %s does not exits."%inputFile
 """ Return the machine name """
 def getHostname():
     import socket
@@ -885,6 +885,21 @@ def pretty_date(time=False):
         return str(day_diff/30) + " months ago"
     return str(day_diff/365) + " years ago"
 
+def pretty_size(size):
+    """Human friendly file size"""
+    from math import log
+    unit_list = zip(['bytes', 'kB', 'MB', 'GB', 'TB', 'PB'], [0, 0, 1, 2, 2, 2])
+    if size > 1:
+        exponent = min(int(log(size, 1024)), len(unit_list) - 1)
+        quotient = float(size) / 1024**exponent
+        unit, num_decimals = unit_list[exponent]
+        format_string = '{:.%sf} {}' % (num_decimals)
+        return format_string.format(quotient, unit)
+    if size == 0:
+        return '0 bytes'
+    if size == 1:
+        return '1 byte'
+
 def createUniqueFileName(fn):
     '''
     This function creates a file name that is similar to the original 
@@ -938,3 +953,7 @@ def createMetaDataFromPattern(pattern, isStack=False, label="image"):
             mD.setValue(label, fileAux, objId)
             mD.setValue(MDL_ENABLED, 1, objId)
     return mD
+
+def getMemoryAvailable():
+    return int(os.popen("free -m").readlines()[1].split()[1])
+    

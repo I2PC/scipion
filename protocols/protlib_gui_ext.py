@@ -26,15 +26,14 @@
  '''
 
 import os
-from os.path import join, exists, basename, dirname, commonprefix, relpath
+from os.path import join, exists, basename, dirname, commonprefix, relpath, abspath
 import Tkinter as tk
 
 from tkSimpleDialog import Dialog
 import ttk
 from config_protocols import LabelBgColor, ButtonBgColor, ButtonActiveBgColor, SectionTextColor
-from protlib_filesystem import getXmippPath, xmippExists, removeFilenamePrefix
+from protlib_filesystem import getXmippPath, xmippExists, removeFilenamePrefix, fixPath, splitFilename
 from protlib_utils import runChimera
-from protlib_filesystem import splitFilename
 from Tkinter import TclError
 
 RESOURCES = getXmippPath('resources')
@@ -412,7 +411,11 @@ class XmippButton(tk.Button):
             
         if tooltip:
             ToolTip(self, tooltip, 500)
-
+            
+    def setImage(self, imagePath):
+        self.image = getXmippImage(imagePath)
+        self.config(image=self.image)
+        
 '''Implement a Listbox Dialog, it will return
 the index selected in the lisbox or -1 on Cancel'''
 class ListboxDialog(Dialog):
@@ -559,7 +562,6 @@ class XmippText(tk.Text):
     def onRightClick(self, e):
         try:
             self.selection = self.selection_get()
-            #print "right click, selection:", text
             self.menu.post(e.x_root, e.y_root)    
         except TclError, e:
             pass
@@ -1123,8 +1125,8 @@ def chimera(filename):
     runChimera(filename)
     
 def fileInfo(browser):
-    from protlib_utils import pretty_date
-    msg =  "<size:> %d bytes\n" % browser.stat.st_size
+    from protlib_utils import pretty_date, pretty_size
+    msg =  "<size:> %s\n" % pretty_size(browser.stat.st_size)
     msg += "<modified:> %s\n" % pretty_date(int(browser.stat.st_mtime))
     return msg
     
@@ -1134,7 +1136,13 @@ def defaultOnClick(filename, browser):
     mode = browser.stat.st_mode
     if stat.S_ISDIR(mode):
         img = 'folder.png'
-        msg = "<%d items>\n" % len(browser.tree.get_children(filename))
+        files = os.listdir(filename)
+        total = 0
+        for f in files:
+            st = os.stat(join(filename, f))
+            total += st.st_size
+        from protlib_utils import pretty_size
+        msg = "<%d> items: %s\n" % (len(files), pretty_size(total)) 
     else:
         img = 'file.png'
         msg = ''
@@ -1174,15 +1182,17 @@ def textOnDoubleClick(filename, browser):
     showTextfileViewer(filename, filelist, browser.parent)
 
 def getMdString(filename, browser):
-    from xmipp import MetaData, MDL_IMAGE, label2Str
+    from xmipp import MetaData, MDL_IMAGE, label2Str, labelIsImage
     md = MetaData(filename)
     labels = md.getActiveLabels()
     msg =  "  <%d items>\n" % md.size()
     msg += "  <labels:>" + ''.join(["\n   - %s" % label2Str(l) for l in labels])
-    if MDL_IMAGE in labels:
-        img = md.getValue(MDL_IMAGE, md.firstObject())
-    else:
-        img = 'no-image.png'
+    
+    img = 'no-image.png'
+    for label in labels:
+        if labelIsImage(label):
+            img = md.getValue(label, md.firstObject())
+            break
     browser.updatePreview(img)
     return msg
     
@@ -1299,15 +1309,16 @@ class XmippBrowser():
         '''
         self.seltype = seltype
         self.selmode = selmode
-        self.dir = os.path.abspath(initialDir)
+        self.dir = abspath(initialDir)
         self.pattern = filter
         self.allowFilter = allowFilter
         self.allowRefresh = True
         self.selectedFiles = None
+        self.showPath = True
         self.dim = previewDim
         self.commonRoot = "" # this will be used to avoid display of long path names
-        from protlib_filesystem import findProjectInPathTree
-        self.projectDir = findProjectInPathTree('.')
+        from protlib_filesystem import findProjectPath
+        self.projectDir = findProjectPath('.')
         # Check if matplotlib is available
         try: 
             import protlib_gui_figure
@@ -1390,9 +1401,8 @@ class XmippBrowser():
         self.parent = parent   
         self.createFileManagers()
         self.root.withdraw()
-        self.root.columnconfigure(0, weight=1, minsize=100)
-        self.root.columnconfigure(1, weight=1)
-        self.root.rowconfigure(0, weight=1)
+        self.root.columnconfigure(0, weight=4, minsize=120)        
+        self.root.columnconfigure(1, weight=1, minsize=30)
         self.root.minsize(600, 400)
         titleStr = "Xmipp Browser"
         if len(title):
@@ -1401,9 +1411,21 @@ class XmippBrowser():
             titleStr += " - Choose " + self.seltype
         self.root.title(titleStr)
 
+        contentRow = 0
+        if self.showPath:
+            self.pathFrame = ttk.Frame(self.root, padding="2 2 2 2")
+            self.pathFrame.grid(row=contentRow, column=0, columnspan=2, sticky='we')
+            self.root.columnconfigure(contentRow, weight=1)
+            self.pathVar = tk.StringVar()
+            self.pathEntry = tk.Entry(self.pathFrame, textvariable=self.pathVar, 
+                                      state="readonly", bd=0, fg='#7D7979')
+            self.pathEntry.grid(row=0, column=0, sticky="we")
+            self.pathFrame.columnconfigure(0, weight=1)
+            contentRow += 1
+        self.root.rowconfigure(contentRow, weight=1)
         #Create frame for tree
         frame = ttk.Frame(self.root, padding="3 3 12 12")
-        frame.grid(column=0, row=0, sticky="nwes")
+        frame.grid(row=contentRow, column=0, sticky="nwes")
         treeRow = 0
         if self.allowRefresh:
             btn = XmippButton(frame, "Refresh", 'refresh.gif', command=self.refresh, tooltip='Refresh   F5')
@@ -1422,7 +1444,7 @@ class XmippBrowser():
 
         #Create frame for details
         details = ttk.Frame(self.root, padding="3 3 3 3")
-        details.grid(column=1, row=0, sticky="nwes")
+        details.grid(column=1, row=contentRow, sticky="nwes")
         details.columnconfigure(0, weight=1)
         details.rowconfigure(0, weight=1, minsize=100)  
         details.rowconfigure(1, weight=1)
@@ -1436,7 +1458,7 @@ class XmippBrowser():
         
         #Create bottom frame with search bar and buttons
         bottomFrame = ttk.Frame(self.root, padding="3 3 0 0")
-        bottomFrame.grid(column=0, row=1, columnspan=2, sticky='ew')
+        bottomFrame.grid(column=0, row=contentRow+1, columnspan=2, sticky='ew')
         bottomFrame.columnconfigure(0, weight=1)
         bottomFrame.columnconfigure(1, weight=1)
 
@@ -1498,16 +1520,6 @@ class XmippBrowser():
         return self.tree.insert(parent, 'end', join(root, elem), text=elem, image=fm.image)
 
     def insertFiles(self, path):
-#        for root, dirs, files in os.walk(path, followlinks=True):
-#            if dirs:
-#                dirs.sort()
-#            if files:
-#                files.sort()
-#            for d in dirs: 
-#                self.insertElement(root, d, True)
-#            for f in files:
-#                if not (f.startswith('.') or f.endswith('~') or f.endswith('.pyc')):
-#                    self.insertElement(root, f)
         files = os.listdir(path)
         files.sort()
         for f in files:
@@ -1518,6 +1530,7 @@ class XmippBrowser():
         self.filterResults()
         
     def changeDir(self, newDir):
+        self.pathVar.set(abspath(newDir))
         self.dir = newDir
         self.tree.clear()
         self.insertElement(newDir, '..', False)
@@ -1586,10 +1599,19 @@ class XmippBrowser():
                 from protlib_gui_figure import ImagePreview
                 self.preview = ImagePreview(self.detailstop, self.dim)
             
-            from xmipp import FileName
-            fn = FileName(filename)
-           
-            if not fn.exists():
+            if not xmippExists(filename):
+                prefix, suffix = splitFilename(filename)
+                fn = fixPath(suffix, self.dir, self.projectDir)
+                #fn = FileName(filename)
+                if not fn is None:
+                    if prefix:
+                        filename = "%s@%s" % (prefix, fn)
+                    else:
+                        filename = fn
+                else:
+                    filename = None
+                    
+            if filename is None:
                 filename = getXmippPath('resources', 'no-image.png')
                 
             if not filename.endswith('.png'):

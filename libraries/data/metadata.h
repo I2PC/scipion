@@ -46,10 +46,6 @@
  * @{
  */
 
-static double zeroD=0.;
-static double oneD=1.;
-static bool  falseb=false;
-
 #define BAD_OBJID 0
 #define BAD_INDEX -1
 
@@ -61,7 +57,7 @@ static bool  falseb=false;
 typedef enum
 {
     MD_OVERWRITE, //forget about the old file and overwrite it
-    MD_APPEND,    //append a data_ at the file end or replace an existing one
+    MD_APPEND     //append a data_ at the file end or replace an existing one
 } WriteModeMetaData;
 
 /** Iterate over all elements in MetaData
@@ -159,10 +155,14 @@ protected:
     size_t * objects;
     size_t size;
 
-    /** Internal function to initialize the iterator */
-    void init(const MetaData &md, const MDQuery * pQuery=NULL);
+    /** Clear internal values to be used again*/
+    void clear();
+    /** Initialize internal values to NULL */
+    void reset();
 public:
 
+    /** Internal function to initialize the iterator */
+    void init(const MetaData &md, const MDQuery * pQuery=NULL);
     /** Empty constructor */
     MDIterator();
     /** Empty constructor, creates an iterator from metadata */
@@ -336,7 +336,7 @@ public:
     /**Set precision (number of decimal digits) use by operator == when comparing
      * metadatas with double data. "2" is a good value for angles
      */
-    bool setPrecission(int _precision)
+    void setPrecission(int _precision)
     {
         precision = (int)pow (10,_precision);
     }
@@ -384,7 +384,7 @@ public:
     /** Get Metadata labels for the block defined by start
      * and end loop pointers. Return pointer to newline after last label
      */
-    char * _readColumnsStar(mdBlock &block,
+    void _readColumnsStar(mdBlock &block,
                             std::vector<MDObject*> & columnValues,
                             const std::vector<MDLabel>* desiredLabels,
                             bool addColumns = true,
@@ -955,7 +955,7 @@ public:
      *   imageMD.split(10, imagesGroups);
      * @endcode
      */
-    void split(int n, std::vector<MetaData> &results,
+    void split(size_t n, std::vector<MetaData> &results,
                const MDLabel sortLabel=MDL_OBJID);
 
     /** Take a part from MetaData.
@@ -964,7 +964,7 @@ public:
      * The result will be in "calling" MetaData.
      */
     void selectSplitPart(const MetaData &mdIn,
-                         int n, int part,
+    					 size_t n, size_t part,
                          const MDLabel sortLabel=MDL_OBJID);
 
     /** Select some part from Metadata.
@@ -1043,11 +1043,14 @@ class MDValueGenerator
 {
 public:
     MDLabel label; //label to which generate values
+    
+    /* Destructor*/
+    virtual ~MDValueGenerator() {}
 
     /* Method to be implemented in concrete generators */
-    virtual bool fillValue(MetaData &md, size_t objId) = 0;
+    virtual void fillValue(MetaData &md, size_t objId) = 0;
     /* Fill whole metadata */
-    bool fill(MetaData &md);
+    void fill(MetaData &md);
 }
 ;//end of class MDValueGenerator
 
@@ -1064,7 +1067,7 @@ protected:
     inline double getRandValue();
 public:
     MDRandGenerator(double op1, double op2, const String &mode, double op3=0.);
-    bool fillValue(MetaData &md, size_t objId);
+    void fillValue(MetaData &md, size_t objId);
 }
 ;//end of class MDRandGenerator
 
@@ -1075,7 +1078,7 @@ public:
     String value;
 
     MDConstGenerator(const String &value);
-    bool fillValue(MetaData &md, size_t objId);
+    void fillValue(MetaData &md, size_t objId);
 }
 ;//end of class MDConstGenerator
 
@@ -1087,7 +1090,7 @@ public:
     FileName fn;
     MDRow row;
 
-    bool fillValue(MetaData &md, size_t objId);
+    void fillValue(MetaData &md, size_t objId);
 }
 ;//end of class MDExpandGenerator
 
@@ -1099,7 +1102,7 @@ public:
     size_t counter;
 
     MDLinealGenerator(double initial, double step);
-    bool fillValue(MetaData &md, size_t objId);
+    void fillValue(MetaData &md, size_t objId);
 }
 ;//end of class MDExpandGenerator
 /** Convert string to write mode metadata enum.

@@ -362,7 +362,7 @@ void MDSql::aggregateMd(MetaData *mdPtrOut,
     ss2 << aggregateStr;
     //Start iterating on second label, first is the
     //aggregating one
-    for (int i = 0; i < operations.size(); i++)
+    for (size_t i = 0; i < operations.size(); i++)
     {
         ss << ", " << MDL::label2Str(mdPtrOut->activeLabels[i+1]);
         ss2 << ", " ;
@@ -409,7 +409,7 @@ void MDSql::aggregateMdGroupBy(MetaData *mdPtrOut,
     std::stringstream groupByStr;
 
     groupByStr << MDL::label2Str(groupByLabels[0]);
-    for (int i = 1; i < groupByLabels.size(); i++)
+    for (size_t i = 1; i < groupByLabels.size(); i++)
         groupByStr << ", " << MDL::label2Str(groupByLabels[i]);
 
     ss << "INSERT INTO " << tableName(mdPtrOut->myMDSql->tableId) << "("
@@ -518,7 +518,7 @@ void MDSql::indexModify(const std::vector<MDLabel> columns, bool create)
     std::stringstream ss,index_name,index_column;
     std::string sep1=" ";
     std::string sep2=" ";
-    for (int i = 0; i < columns.size(); i++)
+    for (size_t i = 0; i < columns.size(); i++)
     {
         index_name << sep1 << tableName(tableId) << "_"
         << MDL::label2Str(columns.at(i));
@@ -636,6 +636,8 @@ void MDSql::setOperate(MetaData *mdPtrOut, MDLabel column, SetOperation operatio
         ss << " IN (SELECT " << MDL::label2Str(column)
         << " FROM " << tableName(tableId) << ");";
         break;
+    default:
+    	REPORT_ERROR(ERR_ARG_INCORRECT,"Cannot use this operation for a set operation");
     }
     //std::cerr << "ss" << ss.str() <<std::endl;
     if (execStmt)
@@ -696,7 +698,7 @@ void MDSql::setOperate(const MetaData *mdInLeft,
                        SetOperation operation)
 {
     std::stringstream ss, ss2, ss3;
-    int size;
+    size_t size;
     std::string join_type = "", sep = "";
 
     switch (operation)
@@ -715,6 +717,8 @@ void MDSql::setOperate(const MetaData *mdInLeft,
         join_type = " INNER ";
         columnLeft = columnRight = MDL_UNDEFINED;
         break;
+    default:
+    	REPORT_ERROR(ERR_ARG_INCORRECT,"Cannot use this operation for a set operation");
     }
     if(operation==NATURAL_JOIN)
     {
@@ -742,10 +746,9 @@ void MDSql::setOperate(const MetaData *mdInLeft,
         mdInLeft->addIndex(columnLeft);
     }
     size = myMd->activeLabels.size();
-    int sizeLeft;
-    sizeLeft = mdInLeft->activeLabels.size();
+    size_t sizeLeft = mdInLeft->activeLabels.size();
 
-    for (int i = 0; i < size; i++)
+    for (size_t i = 0; i < size; i++)
     {
         ss2 << sep << MDL::label2Str( myMd->activeLabels[i]);
         ss3 << sep;
@@ -769,8 +772,8 @@ void MDSql::setOperate(const MetaData *mdInLeft,
     {
         sep = " ";
         ss << " WHERE ";
-        for (int i = 0; i < mdInRight->activeLabels.size(); i++)
-            for (int j = 0; j < sizeLeft; j++)
+        for (size_t i = 0; i < mdInRight->activeLabels.size(); i++)
+            for (size_t j = 0; j < sizeLeft; j++)
             {
                 if(mdInRight->activeLabels[i] == mdInLeft->activeLabels[j])
                 {
@@ -837,12 +840,17 @@ void MDSql::copyTableFromFileDB(const FileName blockname,
     int columns;
     char *Labels;
 
+    String _blockname;
+    if(blockname.empty())
+        _blockname=DEFAULT_BLOCK_NAME;
+    else
+        _blockname=blockname;
     sqlite3 *db1;
-    String sql = (String)"PRAGMA table_info(" + blockname +")";
+    String sql = (String)"PRAGMA table_info(" + _blockname +")";
     if (sqlite3_open(filename.c_str(), &db1))
-        REPORT_ERROR(ERR_MD_SQL,formatString("Error code: %d message: %s",rc,sqlite3_errmsg(db1)));
+        REPORT_ERROR(ERR_MD_SQL,formatString("Error opening database code: %d message: %s",rc,sqlite3_errmsg(db1)));
     if (sqlite3_get_table (db1, sql.c_str(), &results, &rows, &columns, NULL) != SQLITE_OK)
-        REPORT_ERROR(ERR_MD_SQL,formatString("Error code: %d message: %s",rc,sqlite3_errmsg(db1)));
+        REPORT_ERROR(ERR_MD_SQL,formatString("Error accesing table code: %d message: %s. SQL command %s",rc,sqlite3_errmsg(db1),sql.c_str()));
     //This pragma returns one row for each column in the named table.
     //Columns in the result set include the column name,
     //data type, whether or not the column can be NULL, and the default value for the column.
@@ -890,11 +898,6 @@ void MDSql::copyTableFromFileDB(const FileName blockname,
     //tableName(tableId);
     sqlCommitTrans();
 
-    String _blockname;
-    if(blockname.empty())
-        _blockname="nonamed";
-    else
-        _blockname=blockname;
     dropTable();
     createMd();
 
@@ -905,11 +908,12 @@ void MDSql::copyTableFromFileDB(const FileName blockname,
         return;
     }
     sqlCommand = (String)"INSERT INTO " + tableName(tableId).c_str()
-                 +" select " + activeLabel + " from load."+blockname.c_str();
+                 +" select " + activeLabel + " from load."+ _blockname.c_str();
     if (sqlite3_exec(db, sqlCommand.c_str(),NULL,NULL,&errmsg) != SQLITE_OK)
     {
         std::cerr << (String)"Couldn't write table: " << tableName(tableId)
-        << " "                             << errmsg << std::endl;
+        << " "                             << errmsg << std::endl
+        << "sqlcommand " << sqlCommand << std::endl;
         return;
     }
     sqlite3_exec(db, "DETACH load",NULL,NULL,&errmsg);
@@ -920,7 +924,7 @@ void MDSql::copyTableToFileDB(const FileName blockname, const FileName &fileName
     sqlCommitTrans();
     String _blockname;
     if(blockname.empty())
-        _blockname="nonamed";
+        _blockname=DEFAULT_BLOCK_NAME;
     else
         _blockname=blockname;
     String sqlCommand = (String)"ATTACH database '" + fileName+"' as save";
@@ -961,7 +965,7 @@ bool MDSql::sqlBegin()
     return sqlBeginTrans();
 }
 
-bool MDSql::sqlEnd()
+void MDSql::sqlEnd()
 {
     sqlCommitTrans();
     sqlite3_close(db);
@@ -1009,7 +1013,7 @@ bool MDSql::createTable(const std::vector<MDLabel> * labelsVector, bool withObjI
     }
     if (labelsVector != NULL)
     {
-        for (int i = 0; i < labelsVector->size(); i++)
+        for (size_t i = 0; i < labelsVector->size(); i++)
         {
             ss << sep << MDL::label2SqlColumn(labelsVector->at(i));
             sep = ", ";
@@ -1108,10 +1112,12 @@ int MDSql::bindValue(sqlite3_stmt *stmt, const int position, const MDObject &val
     case LABEL_VECTOR_DOUBLE:
     case LABEL_VECTOR_SIZET:
         return sqlite3_bind_text(stmt, position, valueIn.toString(false, true).c_str(), -1, SQLITE_TRANSIENT);
+    default:
+    	REPORT_ERROR(ERR_ARG_INCORRECT,"Do not know how to handle this type");
     }
 }
 
-int MDSql::extractValue(sqlite3_stmt *stmt, const int position, MDObject &valueOut)
+void MDSql::extractValue(sqlite3_stmt *stmt, const int position, MDObject &valueOut)
 {
     std::stringstream ss;
     switch (valueOut.type)
@@ -1131,12 +1137,15 @@ int MDSql::extractValue(sqlite3_stmt *stmt, const int position, MDObject &valueO
     case LABEL_STRING:
         ss << sqlite3_column_text(stmt, position);
         valueOut.data.stringValue->assign(ss.str());
+
         break;
     case LABEL_VECTOR_DOUBLE:
     case LABEL_VECTOR_SIZET:
         ss << sqlite3_column_text(stmt, position);
         valueOut.fromStream(ss);
         break;
+    default:
+    	REPORT_ERROR(ERR_ARG_INCORRECT,"Do not know how to extract a value from this type");
     }
 }
 

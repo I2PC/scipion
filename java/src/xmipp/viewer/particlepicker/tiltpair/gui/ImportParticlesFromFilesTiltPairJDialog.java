@@ -5,26 +5,19 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.text.NumberFormat;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import xmipp.jni.Filename;
-import xmipp.utils.XmippDialog;
-import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.ImportParticlesJDialog;
-import xmipp.viewer.particlepicker.training.gui.TrainingPickerJFrame;
 
 public class ImportParticlesFromFilesTiltPairJDialog extends ImportParticlesJDialog {
 
@@ -33,9 +26,6 @@ public class ImportParticlesFromFilesTiltPairJDialog extends ImportParticlesJDia
 	private JTextField sourcetf2;
 	private JButton browsebt2;
 	private String path2;
-	private JFormattedTextField scaletf;
-	private JCheckBox invertycb;
-	private JCheckBox invertxcb;
 
 	public ImportParticlesFromFilesTiltPairJDialog(TiltPairPickerJFrame parent) {
 		super(parent);

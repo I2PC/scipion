@@ -10,7 +10,7 @@ import xmipp.viewer.particlepicker.Micrograph;
 
 public class SupervisedParticlePicker extends TrainingPicker {
 	
-	private static int mintraining = 70;
+	private static int mintraining = 15;
 	private static String trainingfn = "training.txt";
 	private static String trainingmaskfn = "mask.xmp";
 	private static String autofeaturesvectorfn = "auto_feature_vectors";
@@ -133,13 +133,13 @@ public class SupervisedParticlePicker extends TrainingPicker {
 	{
 		Family family = mfd.getFamily();
 		Micrograph micrograph = mfd.getMicrograph();
-		//String args = String.format("-i %s --particleSize %s --model %s --outputRoot %s --mode try --thr %s --autoPercent", micrograph.getFile(),// -i
-		String args = String.format("-i %s --particleSize %s --model %s --outputRoot %s --mode try --thr %s", micrograph.getFile(),// -i
+		String args = String.format("-i %s --particleSize %s --model %s --outputRoot %s --mode try --thr %s --autoPercent %s", micrograph.getFile(),// -i
+		//String args = String.format("-i %s --particleSize %s --model %s --outputRoot %s --mode try --thr %s", micrograph.getFile(),// -i
 				family.getSize(), // --particleSize
 				getOutputPath(family.getName()),// --model
 				getOutputPath(micrograph.getName()),// --outputRoot
-				getThreads()//,
-				//mfd.getAutopickpercent()// --thr
+				getThreads(),//
+				mfd.getAutopickpercent()// --thr
 		);
 
 		if (isFastMode())

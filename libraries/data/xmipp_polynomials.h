@@ -36,6 +36,8 @@ class Polynomials
 #define COEFFICIENTS(poly) (poly.fittedCoeffs)
 
 public :
+        // Destructor
+        virtual ~Polynomials() {}
 
 	//Fitted coefficients
 	Matrix1D<double> fittedCoeffs;

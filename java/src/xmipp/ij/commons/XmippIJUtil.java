@@ -1,11 +1,12 @@
 package xmipp.ij.commons;
 
-import java.util.List;
-import java.util.logging.Level;
+import java.awt.Image;
+
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 
 import ij.IJ;
 import ij.ImagePlus;
-import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 
@@ -43,6 +44,15 @@ public class XmippIJUtil {
 			e.printStackTrace();
 			throw new IllegalArgumentException(e.getMessage());
 		}
+	}
+	
+	public static Icon getImageIcon(ImagePlus imp, int width, int height)
+	{
+
+		Image image = imp.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
+		Icon icon = new ImageIcon(image);
+
+		return icon;
 	}
 
 }

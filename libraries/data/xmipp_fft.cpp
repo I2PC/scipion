@@ -53,7 +53,7 @@ void Whole2Half(const MultidimArray<std::complex<double> > &in,
             dAij(out, 0, j) = dAij(in, 0, j);
         // Fill rest
         for (int i = 1; i < ldim; i++)
-            for (int j = 0; j < XSIZE(in); j++)
+            for (size_t j = 0; j < XSIZE(in); j++)
                 dAij(out, i, j) = dAij(in, i, j);
     }
     else
@@ -63,15 +63,15 @@ void Whole2Half(const MultidimArray<std::complex<double> > &in,
 
 /** Convert half -> whole of (centro-symmetric) Fourier transforms 2D. -- */
 void Half2Whole(const MultidimArray<std::complex<double> > &in,
-                MultidimArray<std::complex<double> > &out, int oridim)
+                MultidimArray<std::complex<double> > &out, size_t oridim)
 {
     if (in.getDim() == 1)
     {
         // 1D
         out.resizeNoCopy(oridim);
-        for (int j = 0; j < XSIZE(in); j++)
+        for (size_t j = 0; j < XSIZE(in); j++)
             DIRECT_A1D_ELEM(out,j) = DIRECT_A1D_ELEM(in,j);
-        for (int j = XSIZE(in); j < oridim; j++)
+        for (size_t j = XSIZE(in); j < oridim; j++)
             DIRECT_A1D_ELEM(out,j) = conj(DIRECT_A1D_ELEM(in,oridim - j));
     }
     else if (in.getDim() == 2)
@@ -80,19 +80,19 @@ void Half2Whole(const MultidimArray<std::complex<double> > &in,
         out.resizeNoCopy(oridim, XSIZE(in));
 
         // Old part
-        for (int i = 0; i < YSIZE(in); i++)
-            for (int j = 0; j < XSIZE(in); j++)
+        for (size_t i = 0; i < YSIZE(in); i++)
+            for (size_t j = 0; j < XSIZE(in); j++)
                 dAij(out, i, j) = dAij(in, i, j);
 
         // Complete first column of old part
-        for (int j = YSIZE(in); j < XSIZE(in); j++)
+        for (size_t j = YSIZE(in); j < XSIZE(in); j++)
             dAij(out, 0, j) = conj(dAij(in, 0, XSIZE(in) - j));
 
         // New part
-        for (int i = YSIZE(in); i < oridim; i++)
+        for (size_t i = YSIZE(in); i < oridim; i++)
         {
             dAij(out, i, 0) = conj(dAij(in, oridim - i, 0));
-            for (int j = 1; j < XSIZE(in); j++)
+            for (size_t j = 1; j < XSIZE(in); j++)
                 dAij(out, i, j) = conj(dAij(in, oridim - i, XSIZE(in) - j));
         }
     }
@@ -286,7 +286,7 @@ void centerFFT2(MultidimArray<double> &v)
             double * posB = posA + xhalf;
             double * posC = posA + xsize * yhalf;
             double * posD = posC + xhalf;
-            double  buffer[xhalf];
+            double * buffer=new double[xhalf];
             size_t bytes = xhalf * sizeof(double);
 
             for (int i = 0; i < yhalf; ++i,
@@ -295,6 +295,7 @@ void centerFFT2(MultidimArray<double> &v)
                 SWAP_ARRAY(posA, posD, bytes);
                 SWAP_ARRAY(posB, posC, bytes);
             }
+            delete []buffer;
         }
         else
         {
@@ -355,13 +356,13 @@ void ShiftFFT(MultidimArray< std::complex< double > > & v,
     double xxshift = -2 * PI * xshift / (double)XSIZE(v);
     double yyshift = -2 * PI * yshift / (double)YSIZE(v);
     double zzshift = -2 * PI * zshift / (double)ZSIZE(v);
-    for (int k=0; k<ZSIZE(v); ++k)
+    for (size_t k=0; k<ZSIZE(v); ++k)
     {
     	double zdot=(double)(k) * zzshift;
-        for (int i=0; i<YSIZE(v); ++i)
+        for (size_t i=0; i<YSIZE(v); ++i)
         {
         	double zydot=zdot+(double)(i) * yyshift;
-            for (int j=0; j<XSIZE(v); ++j)
+            for (size_t j=0; j<XSIZE(v); ++j)
             {
             	double *ptrv_kij=(double *)&DIRECT_A3D_ELEM(v,k,i,j);
                 dotp = (double)(j) * xxshift + zydot;

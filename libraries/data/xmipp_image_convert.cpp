@@ -329,6 +329,8 @@ void ProgConvImg::finishProcessing()
         single_image = true;
         progress_bar(time_bar_size);
         break;
+    default:
+    	break;
     }
 
     XmippMetadataProgram::finishProcessing();

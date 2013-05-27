@@ -86,37 +86,10 @@ void ProgProject::readParams()
 /* Usage =================================================================== */
 void ProgProject::defineParams()
 {
-    addUsageLine("Generates projections from a volume xxx");
+    addUsageLine("This program is able to generate a set of projections from a volume. ");
+    addUsageLine("++The projection is done using the information directly or from a file.");
     addSeeAlsoLine("tomo_project, xray_project, phantom_create");
-    addExampleLine("Generating a set of projections using fourier method",false);
-    addExampleLine("xmipp_phantom_project -i volume.vol -o images.stk --method fourier 3 0.25 bspline --params uniformProjection_xmd.param");
-    addExampleLine("Generating a set of projections using shears method",false);
-    addExampleLine("xmipp_phantom_project -i volume.vol -o images.stk --method shears --params uniformProjection_xmd.param");
-    addExampleLine("Generating a top view from Z",false);
-    addExampleLine("xmipp_phantom_project -i volume.vol -o image.xmp --angles 0 0 0");
-    addExampleLine("Generating a side view from Y",false);
-    addExampleLine("xmipp_phantom_project -i volume.vol -o image.xmp --angles 90 90 0");
-    addExampleLine("Generating a side view from X",false);
-    addExampleLine("xmipp_phantom_project -i volume.vol -o image.xmp --angles 0 90 0");
-    addExampleLine("+In the following links you can find some examples of projection parameter files",false);
-    addExampleLine("+ ",false);
-    addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/phantomProject.param",false);
-    addExampleLine("+ ",false);
-    addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/uniformProjection_xmd.param",false);
-    addExampleLine("+ ",false);
-    addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/clusterProjection_xmd.param",false);
-    addExampleLine("+ ",false);
-    addExampleLine("Creating a 2D crystal",false);
-    addExampleLine("In order to create a 2D crystal, you can pass --params as a projection file with a second block for crystal projection.: ",false);
-    addExampleLine(" xmipp_phantom_project   -i cylinder_with_axis.descr --oroot MRCproj --params MRCCrystalProj_xmd.param");
-    addExampleLine("+In the following links you can find some examples of projection parameter files",false);
-    addExampleLine("+ ",false);
-    addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/Crystal/MRCCrystalProj_xmd.param",false);
-    addExampleLine("+ ",false);
-    addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/Crystal/cylinder_with_axis.descr",false);
-    addExampleLine("+ ",false);
-    addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/Crystal/MRC_crystal_projection_xmd.param",false);
-
+   
     addParamsLine("   -i <volume_file>                           : Voxel volume, PDB or description file");
     addParamsLine("   -o <image_file>                            : Output stack or image");
     addParamsLine("  [--sampling_rate <Ts=1>]                    : It is only used for PDB phantoms");
@@ -149,6 +122,46 @@ void ProgProject::defineParams()
     addParamsLine("  [--xdim <size=-1>]                     : Size of the projection");
     addParamsLine("                                         : For geometric descriptions and voxel volumes");
     addParamsLine("                                         : this parameter is not necessary");
+      addExampleLine("Generating a set of projections using fourier method",false);
+    addExampleLine("xmipp_phantom_project -i volume.vol -o images.stk --method fourier 3 0.25 bspline --params uniformProjection_xmd.param");
+    addExampleLine("Generating a set of projections using shears method",false);
+    addExampleLine("xmipp_phantom_project -i volume.vol -o images.stk --method shears --params uniformProjection_xmd.param");
+    addExampleLine("Generating a top view from Z",false);
+    addExampleLine("xmipp_phantom_project -i volume.vol -o image.xmp --angles 0 0 0");
+    addExampleLine("Generating a side view from Y",false);
+    addExampleLine("xmipp_phantom_project -i volume.vol -o image.xmp --angles 90 90 0");
+    addExampleLine("Generating a side view from X",false);
+    addExampleLine("xmipp_phantom_project -i volume.vol -o image.xmp --angles 0 90 0");
+    addExampleLine("+++In the following links you can find some examples of projection parameter files",false);
+    addExampleLine("+++",false);
+    addExampleLine("+++http://sourceforge.net/p/testxmipp/code/ci/3.0/tree/input/phantomProject.param",false);
+    addExampleLine("+++",false);
+    addExampleLine("+++http://sourceforge.net/p/testxmipp/code/ci/3.0/tree/input/uniformProjection_xmd.param",false);
+    addExampleLine("+++",false);
+    addExampleLine("+++http://sourceforge.net/p/testxmipp/code/ci/3.0/tree/input/clusterProjection_xmd.param",false);
+    addExampleLine("+++",false);
+    addExampleLine("+++Creating a 2D crystal",false);
+    addExampleLine("+In order to create a 2D crystal, you can pass --params as a projection file with a second block for crystal projection.: ",false);
+    addExampleLine("+xmipp_phantom_project   -i cylinder_with_axis.descr --oroot MRCproj --params MRCCrystalProj_xmd.param");
+    addExampleLine("+++In the following links you can find some examples of projection parameter files",false);
+    addExampleLine("+++",false);
+    addExampleLine("+++http://sourceforge.net/p/testxmipp/code/ci/3.0/tree/input/Crystal/MRCCrystalProj_xmd.param",false);
+    addExampleLine("+++",false);
+    addExampleLine("+++ http://sourceforge.net/p/testxmipp/code/ci/3.0/tree/input/Crystal/cylinder_with_axis.descr",false);
+    addExampleLine("+++",false);
+    addExampleLine("+++http://sourceforge.net/p/testxmipp/code/ci/3.0/tree/input/Crystal/MRC_crystal_projection_xmd.param",false);
+    addExampleLine("+++",false);
+    addExampleLine("+++Figures (a) and (b) show the achievable resolution for different methods of projection. ",false);
+    addExampleLine("+++",false);
+    addExampleLine("+++<img width='100%' alt='Test_Resolution_Small.jpg' src='%ATTACHURLPATH%/Test_Resolution_Small.jpg' height='100%' />");
+    addExampleLine("+++",false);
+    addExampleLine("+++(a) The achievable resolution for different methods for a volume of size 64*64",false);
+    addExampleLine("+++",false);
+    addExampleLine("+++ <img width='100%' alt='Test_Resolution_Big.jpg' src='%ATTACHURLPATH%/Test_Resolution_Big.jpg' height='100%' />");
+    addExampleLine("+++",false);
+    addExampleLine("+++(b) The achievable resolution for different methods for a volume of size 400*400",false);
+    addExampleLine("+++",false);
+    addExampleLine("+++As it can be seen in these two figures, Fourier method with cubic B-Spline interpolation for both padding two and padding one provides the best resolution. However, there is a preference on padding one because of less memory and time complexity.",false);
 }
 
 /* Run ===================================================================== */
@@ -236,7 +249,7 @@ void ParametersProjection::read(const FileName &fn_proj_param)
             else
             {
                 rot_range.angF = ParamVec[1];
-                rot_range.samples = ParamVec[2];
+                rot_range.samples = (int)ParamVec[2];
                 if (rot_range.ang0 == rot_range.angF)
                     rot_range.samples = 1;
             }
@@ -258,7 +271,7 @@ void ParametersProjection::read(const FileName &fn_proj_param)
             else
             {
                 tilt_range.angF = ParamVec[1];
-                tilt_range.samples = ParamVec[2];
+                tilt_range.samples = (int)ParamVec[2];
                 if (tilt_range.ang0 == tilt_range.angF)
                     tilt_range.samples = 1;
             }
@@ -280,7 +293,7 @@ void ParametersProjection::read(const FileName &fn_proj_param)
             else
             {
                 psi_range.angF = ParamVec[1];
-                psi_range.samples = ParamVec[2];
+                psi_range.samples = (int)ParamVec[2];
                 if (psi_range.ang0 == psi_range.angF)
                     psi_range.samples = 1;
             }
@@ -847,10 +860,12 @@ void PROJECT_Side_Info::produce_Side_Info(ParametersProjection &prm,
         phantomDescr.read(prog_prm.fnPhantom);
         phantomMode = XMIPP;
         if (prog_prm.singleProjection)
+        {
             if (prog_prm.projSize==-1)
                 prm.proj_Xdim=prm.proj_Ydim=phantomDescr.xdim;
             else
                 prm.proj_Xdim=prm.proj_Ydim=prog_prm.projSize;
+        }
     }
     else if (prog_prm.fnPhantom.getExtension()=="pdb")
     {
@@ -860,10 +875,12 @@ void PROJECT_Side_Info::produce_Side_Info(ParametersProjection &prm,
         interpolator.setup(M,prog_prm.samplingRate/M,true);
         phantomMode = PDB;
         if (prog_prm.singleProjection)
+        {
             if (prog_prm.projSize==-1)
                 REPORT_ERROR(ERR_ARG_MISSING,"--xdim");
             else
                 prm.proj_Xdim=prm.proj_Ydim=prog_prm.projSize;
+        }
     }
     else
     {
@@ -871,10 +888,12 @@ void PROJECT_Side_Info::produce_Side_Info(ParametersProjection &prm,
         phantomVol().setXmippOrigin();
         phantomMode = VOXEL;
         if (prog_prm.singleProjection)
+        {
             if (prog_prm.projSize==-1)
                 prm.proj_Xdim=prm.proj_Ydim=XSIZE(phantomVol());
             else
                 prm.proj_Xdim=prm.proj_Ydim=prog_prm.projSize;
+        }
     }
     paddFactor = prog_prm.paddFactor;
     maxFrequency = prog_prm.maxFrequency;
@@ -882,7 +901,7 @@ void PROJECT_Side_Info::produce_Side_Info(ParametersProjection &prm,
 }
 
 /* Effectively project ===================================================== */
-int PROJECT_Effectively_project(const String &fnOut,
+int PROJECT_Effectively_project(const FileName &fnOut,
                                 bool singleProjection,
                                 projectionType projType,
                                 const ParametersProjection &prm,
@@ -892,7 +911,8 @@ int PROJECT_Effectively_project(const String &fnOut,
 {
     int NumProjs = 0;
     SF.clear();
-    FileName(fnOut).deleteFile();
+    if (!fnOut.isInStack())
+    	fnOut.deleteFile();
     std::cerr << "Projecting ...\n";
     init_progress_bar(side.DF.size());
     SF.setComment("First set of angles=actual angles; Second set of angles=noisy angles");
@@ -929,9 +949,9 @@ int PROJECT_Effectively_project(const String &fnOut,
     FourierProjector *Vfourier=NULL;
     if (projType == SHEARS && side.phantomMode==PROJECT_Side_Info::VOXEL)
         Vshears=new RealShearsInfo(side.phantomVol());
-    if (projType == FOURIER && side.phantomMode==PROJECT_Side_Info::VOXEL)
+    if (projType == FOURIER && side.phantomMode==PROJECT_Side_Info::VOXEL)//////////////////////
         Vfourier=new FourierProjector(side.phantomVol(),side.paddFactor,side.maxFrequency,side.BSplineDeg);
-
+                                     ///                   1              .5                        NEAREST
     fn_proj=fnOut;
     if (side.doCrystal)
         createEmptyFile(fn_proj, prm_crystal.crystal_Xdim, prm_crystal.crystal_Ydim,
@@ -987,7 +1007,7 @@ int PROJECT_Effectively_project(const String &fnOut,
             if (projType == SHEARS)
                 projectVolume(*Vshears, proj, prm.proj_Ydim, prm.proj_Xdim,
                               rot, tilt, psi);
-            else if (projType == FOURIER)
+            else if (projType == FOURIER)///////////////////////////////////////
                 projectVolume(*Vfourier, proj, prm.proj_Ydim, prm.proj_Xdim,
                               rot, tilt, psi);
             else if (projType == REALSPACE)

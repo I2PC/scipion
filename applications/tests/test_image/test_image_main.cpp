@@ -316,7 +316,7 @@ TEST_F( ImageTest, movePointerTo)
     {
         img2.read(auxFn, DATA, n);
 
-        for (int k = 1; k <= aDim.zdim; ++k)
+        for (size_t k = 1; k <= aDim.zdim; ++k)
         {
             img1.movePointerTo(k, n);
             img2.movePointerTo(k);

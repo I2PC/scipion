@@ -33,8 +33,6 @@
 #include <ieeefp.h>
 #endif
 
-#pragma warning(disable:4786)
-
 /**
  * Trains the algorithm
  * Parameter: _xmippDS Data structure to train, a codeBook in this case
@@ -63,12 +61,10 @@ void FuzzyKohonenCMeans::train(FuzzyCodeBook& _xmippDS, const TS& _examples) con
     unsigned numVectors = _examples.size();
     unsigned i, j, k, cc, vv;
     double stopError = 0, auxError = 0;
-    double auxDist, auxProd, tmp, auxExp, auxSum;
+    double auxDist, auxProd, auxExp, auxSum;
     unsigned t = 0;  // Iteration index
 
-
     // Initialize auxiliary Codebook
-
     auxCB = _xmippDS;
     std::vector<FeatureVector> alpha;
     alpha.resize(numVectors);
@@ -76,12 +72,9 @@ void FuzzyKohonenCMeans::train(FuzzyCodeBook& _xmippDS, const TS& _examples) con
         alpha[vv].resize(numClusters, 0.);
 
     // Set auxiliar variables
-
     double Deltam = (double)(m - 1.) / (double) epochs;
 
     // This is the main code of the algorithm. Iterates "epochs" times
-
-
     stopError = epsilon + 1; // Initially must be higher
 
     while ((stopError > epsilon) && (t < epochs))
@@ -103,7 +96,7 @@ void FuzzyKohonenCMeans::train(FuzzyCodeBook& _xmippDS, const TS& _examples) con
             for (i = 0; i < numClusters; i ++)
             {
                 auxDist = 0;
-                for (int d = 0; d < _examples.theItems[0].size(); d++)
+                for (size_t d = 0; d < _examples.theItems[0].size(); d++)
                     auxDist += ((double)(_examples.theItems[k][d]) - (double)(_xmippDS.theItems[i][d])) * ((double)(_examples.theItems[k][d]) - (double)(_xmippDS.theItems[i][d]));
                 auxDist = (double) sqrt((double)auxDist);
                 auxDist = (double) pow((double) auxDist, (double) auxExp);
@@ -174,6 +167,5 @@ void FuzzyKohonenCMeans::train(FuzzyCodeBook& _xmippDS, const TS& _examples) con
     if (verbosity == 1 || verbosity == 3)
         listener->OnProgress(epochs);
 
-}
-; // FuzzyKohonenCMeans::train
+} // FuzzyKohonenCMeans::train
 

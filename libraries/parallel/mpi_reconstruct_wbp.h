@@ -37,7 +37,7 @@ public:
     ProgMPIRecWbp()
     {
     }
-    ProgMPIRecWbp(int argc, char *argv[]);
+    ProgMPIRecWbp(int argc, char **argv);
     ProgMPIRecWbp(MpiNode *node);
     void defineParams();
     void readParams();

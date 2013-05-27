@@ -147,4 +147,4 @@ public:
 }
 ;//end of class ProgSpiderTranslate
 
-RUN_XMIPP_PROGRAM(ProgSpiderTranslate);
+RUN_XMIPP_PROGRAM(ProgSpiderTranslate)

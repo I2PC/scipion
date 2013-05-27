@@ -38,14 +38,13 @@ void ImageBase::init()
     hFile = NULL;
     tif = NULL;
     dataMode = DATA;
-    stayOpen = false;
     transform = isComplexT() ? Standard : NoTransform;
     filename.clear();
     offset = 0;
     swap = swapWrite = 0;
     replaceNsize = 0;
     _exists = mmapOnRead = mmapOnWrite = false;
-    mFd        = NULL;
+    mFd        = 0;
     mappedSize = mappedOffset = virtualOffset = 0;
 }
 
@@ -98,12 +97,11 @@ int ImageBase::readOrReadMapped(const FileName &name, size_t select_img, int mod
     }
 }
 
-int ImageBase::readOrReadPreview(const FileName &name, int Xdim, int Ydim, int select_slice, size_t select_img,
+int ImageBase::readOrReadPreview(const FileName &name, size_t Xdim, size_t Ydim, int select_slice, size_t select_img,
                                  bool mapData)
 {
     read(name, HEADER);
-    int imXdim, imYdim, imZdim;
-    size_t imNdim;
+    size_t imXdim, imYdim, imZdim, imNdim;
     getDimensions(imXdim, imYdim, imZdim, imNdim);
 
     if (imXdim != Xdim || imYdim != Ydim)
@@ -119,7 +117,7 @@ int ImageBase::readOrReadPreview(const FileName &name, int Xdim, int Ydim, int s
 }
 
 /** New mapped file */
-void ImageBase::mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &_filename,
+void ImageBase::mapFile2Write(size_t Xdim, size_t Ydim, size_t Zdim, const FileName &_filename,
                               bool createTempFile, size_t select_img, bool isStack, int mode)
 {
     /** If XMIPP_MMAP is not defined this function is supposed to create
@@ -453,7 +451,7 @@ void ImageBase::getShifts(double &xoff, double &yoff, double &zoff, const size_t
     MD[n].getValue(MDL_SHIFT_Z, zoff);
 }
 
-void ImageBase::getDimensions(int &Xdim, int &Ydim, int &Zdim, size_t &Ndim) const
+void ImageBase::getDimensions(size_t &Xdim, size_t &Ydim, size_t &Zdim, size_t &Ndim) const
 {
     Xdim = XSIZE(*mdaBase);
     Ydim = YSIZE(*mdaBase);
@@ -794,10 +792,8 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
     else if (_exists && (mode == WRITE_REPLACE || mode == WRITE_APPEND))
     {
         // CHECK FOR INCONSISTENCIES BETWEEN data.xdim and x, etc???
-        int Xdim, Ydim, Zdim, _Xdim, _Ydim, _Zdim;
-        Xdim = Ydim = Zdim = _Xdim = _Ydim = _Zdim = 0;
-        size_t Ndim, _Ndim;
-        Ndim = _Ndim = 0;
+        size_t Xdim, Ydim, Zdim, _Xdim, _Ydim, _Zdim, Ndim, _Ndim;
+        Xdim = Ydim = Zdim = _Xdim = _Ydim = _Zdim = Ndim = _Ndim = 0;
         Image<char> auxI;
         auxI._read(filNamePlusExt, hFile, HEADER, ALL_IMAGES);
 
@@ -925,8 +921,7 @@ std::ostream& operator<<(std::ostream& o, const ImageBase& I)
     else
         o << "Real-space image" << std::endl;
 
-    int xdim, ydim, zdim;
-    size_t ndim;
+    size_t xdim, ydim, zdim, ndim;
     I.getDimensions(xdim, ydim, zdim, ndim);
     o << "Dimensions     : " << ndim << " x " << zdim << " x " << ydim << " x " << xdim;
     o << "  ((N)Objects x (Z)Slices x (Y)Rows x (X)Columns)" << std::endl;
