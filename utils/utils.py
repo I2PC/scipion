@@ -90,8 +90,7 @@ def prettySize(size):
         return '1 byte'
     
 def getUniqueItems(originalList):
-    """ 
-    Method to remove repeated items from one list 
+    """ Method to remove repeated items from one list 
     originalList -- Original list with repeated items, or not.
     returns -- New list with the content of original list without repeated items
     """  
@@ -100,6 +99,19 @@ def getUniqueItems(originalList):
     return resultList
 
 def executeRemoteX (command, hostName, userName, password):
+    """ Execute a remote command with X11 forwarding.
+    Params:
+        command: Command to execute.
+        hostName: Remote host name.
+        userName: User name.
+        password: Password.
+    Returns: 
+        Tuple with standard output and error output.
+    """
     pswCommand = "echo '" + password + "' | " + "/home/antonio/Desarrollo/Projects/EclipseProjects/Scipion/pyworkflow/utils/sshAskPass.sh" + " ssh -X " + userName + "@" + hostName + " " + command
-    os.system(pswCommand) 
-    print ("FINNNN")   
+    import subprocess
+    p = subprocess.Popen(pswCommand, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    #stdout, stderr = p.communicate()
+    return p.communicate()
+    
+             
