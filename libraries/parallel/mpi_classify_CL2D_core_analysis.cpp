@@ -25,7 +25,6 @@
 
 #include "mpi_classify_CL2D_core_analysis.h"
 #include <classification/analyze_cluster.h>
-#include <reconstruction/image_sort_by_statistics.h>
 
 // Show block ==============================================================
 std::ostream & operator << (std::ostream &out, const CL2DBlock &block)
@@ -43,7 +42,7 @@ ProgClassifyCL2DCore::ProgClassifyCL2DCore(int argc, char **argv)
     taskDistributor=NULL;
     maxLevel=-1;
     tolerance=0;
-    thPCAZscore=thZscore=3;
+    thPCAZscore=3;
 }
 
 // MPI destructor
@@ -60,9 +59,8 @@ void ProgClassifyCL2DCore::readParams()
     fnODir = getParam("--dir");
     if (checkParam("--computeCore"))
     {
-        thZscore = getDoubleParam("--computeCore",0);
-        thPCAZscore = getDoubleParam("--computeCore",1);
-        NPCA = getIntParam("--computeCore",2);
+        thPCAZscore = getDoubleParam("--computeCore",0);
+        NPCA = getIntParam("--computeCore",1);
         action=COMPUTE_CORE;
     }
     else if (checkParam("--computeStableCore"))
@@ -82,8 +80,7 @@ void ProgClassifyCL2DCore::show()
     if (action==COMPUTE_STABLE_CORE)
         std::cout << "Tolerance:                " << tolerance << std::endl;
     else
-        std::cout << "Threshold Zscore:         " << thZscore << std::endl
-                  << "Threshold PCA Zscore:     " << thPCAZscore << std::endl
+        std::cout << "Threshold PCA Zscore:     " << thPCAZscore << std::endl
     			  << "Number of PCA dimensions: " << NPCA << std::endl;
 }
 
@@ -93,7 +90,7 @@ void ProgClassifyCL2DCore::defineParams()
     addUsageLine("Compute the core of a CL2D clustering");
     addParamsLine("    --root <rootname>          : Rootname of the CL2D");
     addParamsLine("    --dir <dir>                : Output directory of the CL2D");
-    addParamsLine("    --computeCore <thZscore=3> <thPCAZscore=3> <NPCA=2>: The class cores are computed by thresholding the Zscore of");
+    addParamsLine("    --computeCore <thPCAZscore=3> <NPCA=2>: The class cores are computed by thresholding the Zscore of");
     addParamsLine("                               : the class images and their projections onto a nD PCA space (by default, n=2)");
     addParamsLine("or  --computeStableCore <tolerance=1> : The stable core is formed by all the images in the class that have been");
     addParamsLine("                               : in the same class (except in tolerance levels) in the whole hierarchy.");
@@ -162,11 +159,6 @@ void ProgClassifyCL2DCore::computeCores()
     analyzeCluster.distThreshold=thPCAZscore;
     analyzeCluster.dontMask=false;
 
-    ProgSortByStatistics sortJunk;
-    sortJunk.verbose=0;
-    sortJunk.addToInput=true;
-    sortJunk.cutoff=thZscore;
-
     MetaData MD;
     size_t first, last;
     size_t Nblocks=blocks.size();
@@ -181,14 +173,10 @@ void ProgClassifyCL2DCore::computeCores()
             analyzeCluster.fnOut=blocks[idx].fnLevel.insertBeforeExtension((String)"_core_"+blocks[idx].block);
             analyzeCluster.run();
 
-            // Remove outliers in the
-            sortJunk.fn = analyzeCluster.fnOut;
-            sortJunk.run();
-
             // Remove outliers from file
-            MD.read(sortJunk.fn);
+            MD.read(analyzeCluster.fnOut);
             MD.removeDisabled();
-            MD.write(sortJunk.fn,MD_APPEND);
+            MD.write(analyzeCluster.fnOut,MD_APPEND);
 
             if (verbose && node->rank==0)
                 progress_bar(idx);

@@ -206,7 +206,7 @@ public:
     // Angular sampling information
     struct AnglesInfo
     {
-        int direction;
+        size_t direction;
         double rot, rot_ori;
         double tilt, tilt_ori;
         double psi, psi_ori;
@@ -346,7 +346,7 @@ public:
                       double &resolution);
 
     /// Apply regularization
-    bool regularize(int iter);
+    void regularize(int iter);
 
     /// check convergence
     bool checkConvergence(std::vector<double> &conv);

@@ -58,8 +58,6 @@ public:
 	FileName fnRoot;
 	/** CL2D output dir */
 	FileName fnODir;
-	/** Threshold junk Zscore */
-	double thZscore;
 	/** Number of PCA dimensions */
 	int NPCA;
 	/** Threshold PCA Zscore */
