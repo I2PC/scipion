@@ -101,7 +101,7 @@ function help(title, msg) {
 function browseObjects(node, projName, objClass) {
 	$.ajax({
 		type : "GET",
-		url : "/browse_objects/?project_name=" + projName + "&objClass=" + objClass,
+		url : "/browse_objects/?projectName=" + projName + "&objClass=" + objClass,
 		dataType : "json",
 		success : function(json) {
 			// specifying a dataType of json makes jQuery pre-eval the response
