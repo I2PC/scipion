@@ -4,7 +4,6 @@ Created on Apr 9, 2013
 @author: antonio
 """
 import unittest
-#from fileTransfer.fileTransfer import FileTransfer
 from utils.file_transfer import *
 import xml.etree.ElementTree as ET
 import time

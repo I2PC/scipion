@@ -367,6 +367,7 @@ class SetOfCoordinates(EMObject):
     
     def iterMicrographCoordinates(self, micrograph):
         """ Iterates over the set of coordinates belonging to that micrograph. """
+        pass
     
     def iterCoordinates(self):
         """ Itearate over the coordinates associated with a micrograph.

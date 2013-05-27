@@ -222,6 +222,8 @@ class Protocol(Step):
         # Maybe this property can be inferred from the 
         # prerequisites of steps, but is easier to keep it
         self.stepsExecutionMode = STEPS_SERIAL
+        # Host name
+        self.hostName = None
         
     def getDefinition(self):
         """ Access the protocol definition. """
@@ -464,11 +466,18 @@ class Protocol(Step):
         return getFileLogger(logFile)
 
     def getFiles(self):
-        l= []
+        resultFiles = set()
         for paramName, _ in self.getDefinition().iterPointerParams():
             attrPointer = getattr(self, paramName) # Get all self attribute that are pointers
             obj = attrPointer.get() # Get object pointer by the attribute
             if hasattr(obj, 'getFiles'):
-                l += obj.getFiles() # Add files if any
-                
-        return getFolderFiles(self.workingDir.get())
+                resultFiles.update(obj.getFiles()) # Add files if any
+        return resultFiles | getFolderFiles(self.workingDir.get())
+
+    def getHostName(self):
+        """ Get the execution host name """
+        return self.hostName;
+    
+    def setHostName(self, hostName):
+        """ Set the execution host name """ 
+        self.hostName = hostName;
