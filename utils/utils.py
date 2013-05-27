@@ -27,6 +27,8 @@
 This module contains utilities functions and classes.
 """
 
+import os
+
 def prettyDate(time=False):
     """
     Get a datetime object or a int() Epoch timestamp and return a
@@ -96,3 +98,8 @@ def getUniqueItems(originalList):
     auxDict = {}
     resultList = [auxDict.setdefault(x,x) for x in originalList if x not in auxDict]
     return resultList
+
+def executeRemoteX (command, hostName, userName, password):
+    pswCommand = "echo '" + password + "' | " + "/home/antonio/Desarrollo/Projects/EclipseProjects/Scipion/pyworkflow/utils/sshAskPass.sh" + " ssh -X " + userName + "@" + hostName + " " + command
+    os.system(pswCommand) 
+    print ("FINNNN")   

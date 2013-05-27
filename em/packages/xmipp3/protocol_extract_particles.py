@@ -239,6 +239,14 @@ class XmippProtExtractParticles(ProtExtractParticles):
         
         return hasCoords
     
+    def getImgIdFromCoord(self, coordId):
+        """ Get the image id from the related coordinate id. """
+        '%s:%06d'
+        parts = coordId.split(':')
+        imgFn = self._getExtraPath(removeBaseExt(os.path.basename(parts[0]))) + ".xmd" 
+        
+        return '%06d@%s' %(int(parts[1]), imgFn)
+        
     def createOutput(self):
         # Create the SetOfImages object on the database
         imgSet = XmippSetOfImages(self._getPath('images.xmd'))
@@ -253,10 +261,13 @@ class XmippProtExtractParticles(ProtExtractParticles):
         for stack in stackFiles:
             fn = stack.replace(".stk",".xmd")
             imgSet.appendFromMd(xmipp.MetaData(fn))
-            
-        # TODO: If input coordinates have tilt pairs copy the relation
-#        if self.inputCoords.hasTiltPairs():
-#            imgSet.copyTiltPairs(self.inputCoords)
+          
+        # Create mapIds
+
+          
+        # If input coordinates have tilt pairs copy the relation
+        if self.inputCoords.hasTiltPairs():
+            imgSet.copyTiltPairs(self.inputCoords, self.getImgIdFromCoord)
 
         #imgSet.setMd(imagesMd)
         imgSet.sort() # We need sort?

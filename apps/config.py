@@ -30,10 +30,12 @@ mainly for project GUI
 
 import os
 from os.path import join, exists
+from pyworkflow.utils.path import getHomePath
 
 import pyworkflow as pw
 from pyworkflow.object import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
+from pyworkflow.manager import *
 
 PATH = os.path.dirname(__file__)
 SETTINGS = join(pw.HOME, 'settings')
@@ -115,17 +117,34 @@ class MenuConfig(OrderedObject):
     
 class ProtocolConfig(MenuConfig):
     """Store protocols configuration """
-    pass
-    
+    pass    
     
 class ExecutionHostConfig(OrderedObject):
     """ Configuration information for execution hosts. """
     def __init__(self, **args):
         OrderedObject.__init__(self, **args)
         self.label = String()
-        self.hostname = String()
+        self.hostName = String()
+        self.userName = String()
+        self.password = String()
+        self.hostPath = String()
         self.mpiCommand = String()
         self.queueSystem = QueueSystemConfig()
+    
+    def getLabel(self):
+        return self.label.get()
+    
+    def getHostName(self):
+        return self.hostName.get()
+    
+    def getUserName(self):
+        return self.userName.get()
+    
+    def getPassword(self):
+        return self.password.get()
+    
+    def getHostPath(self):
+        return self.hostPath.get()
         
 class QueueSystemConfig(OrderedObject):
     def __init__(self, **args):
@@ -159,12 +178,39 @@ class ExecutionHostMapper(XmlMapper):
         XmlMapper.__init__(self, filename, dictClasses, **args)
         #self.setClassTag('ExecutionHostConfig.QueueSystemConfig', 'class_name')
         self.setClassTag('ExecutionHostConfig.String', 'attribute')
+        self.setClassTag('ExecutionHostConfig.hostName', 'name_only')
+        self.setClassTag('ExecutionHostConfig.userName', 'name_only')
+        self.setClassTag('ExecutionHostConfig.password', 'name_only')
+        self.setClassTag('ExecutionHostConfig.hostPath', 'name_only')
         self.setClassTag('ExecutionHostConfig.mpiCommand', 'name_only')
         self.setClassTag('QueueSystemConfig.name', 'attribute')
         self.setClassTag('QueueSystemConfig.mandatory', 'attribute')  
         self.setClassTag('QueueConfig.ALL', 'attribute')   
         self.setClassTag('List.QueueConfig', 'class_only')           
         #self.setClassTag('ProtocolConfig.ProtocolConfig', 'class_only')
+    
+    def selectByLabel(self, objLabel):
+        """
+        hostsList = self.selectAll()
+        for host in hostsList:
+            if host.label.get() == objLabel:
+                return host
+        return None
+        """
+        for child in self.root:
+            if (child.attrib['label']) == objLabel:
+                obj = self._buildObject(child.tag)
+                self.fillObject(obj, child)
+                self._addObjectToDict(obj, self.objDict)
+                break
+        #set properlly primary keys
+        for obj in self.pendingPtrDict.values():
+            for key, attr in obj.getAttributesToStore():
+                if attr.isPointer(): 
+                    ptr = self.selectById(attr._objId)
+                    attr._objId = None
+                    attr.set(ptr)
+        return self.objDict.values()[0]
     
 class ConfigMapper(XmlMapper):
     """Sub-class of XmlMapper to store configurations"""
@@ -248,7 +294,8 @@ def writeProtocols():
 def writeHosts():
     host = ExecutionHostConfig()
     host.label.set('localhost')
-    host.hostname.set('localhost')
+    host.hostName.set('localhost')
+    host.hostPath.set(join (getHomePath(), PROJECTS_PATH))
     host.mpiCommand.set('mpirun -np %(nodes)d -bynode %(command)s')
     
     queueSys = host.queueSystem
@@ -284,7 +331,7 @@ NPROCS=`wc -l < $PBS_NODEFILE`
 # Calculate the number of nodes allocated.
 NNODES=`uniq $PBS_NODEFILE | wc -l`
 ### Display the job context
-echo Running on host `hostname`
+echo Running on host `hostName`
 echo Time is `date`
 echo Working directory is `pwd`
 echo Using ${NPROCS} processors across ${NNODES} nodes
@@ -304,8 +351,17 @@ cat $PBS_NODEFILE
     
     queueSys.queues.append(queue)
     
+    writeConfig(host, 'execution_hosts.xml', mapperClass=ExecutionHostMapper, clean=True)
+    
+    host = ExecutionHostConfig()
+    host.label.set('glassfishdev')
+    host.hostName.set('glassfishdev.cnb.csic.es')
+    host.userName.set('apoza')
+    host.password.set('BF6fYiFYiYD')
+    host.hostPath.set(join ('/home/apoza', PROJECTS_PATH))
     
     writeConfig(host, 'execution_hosts.xml', mapperClass=ExecutionHostMapper, clean=False)
+    
     
 def writeDefaults():
     writeMenus()

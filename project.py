@@ -32,10 +32,10 @@ from os.path import abspath
 
 from pyworkflow.mapper import SqliteMapper
 from pyworkflow.utils import cleanPath, makePath, join, exists, runJob
+from os.path import split
 from pyworkflow.protocol import *
 from pyworkflow.em import *
-from pyworkflow.apps.config import ExecutionHostMapper
-
+from pyworkflow.apps.config import ExecutionHostMapper, ExecutionHostConfig
 
 PROJECT_DBNAME = 'project.sqlite'
 PROJECT_LOGS = 'Logs'
@@ -166,4 +166,31 @@ class Project(object):
         """ Retrieve the hosts associated with the project. (class ExecutionHostConfig) """
         return self.hostsMapper.selectByAll()
         
+    def sendProtocol(self, protocol):
+        """ Send protocol to an execution host    
+        Params:
+            potocol: Protocol to send to an execution host.
+        """
+        from utils.file_transfer import FileTransfer
+        # Fisrt we must recover the execution host credentials.
+        self.hostsMapper = ExecutionHostMapper(self.hostsPath)
+        executionHostConfig = self.hostsMapper.selectByLabel(protocol.getHostName())
+        filePathDict = {}
+        # We are going to create project folder in the remote host
+        projectFolder = split(self.path)[1]
+        # Prepare source and target files
+        for filePath in protocol.getFiles():
+            sourceFilePath = os.path.join(self.path, filePath)
+            targetFilePath = join(executionHostConfig.getHostPath(), projectFolder, filePath)
+            filePathDict[sourceFilePath] = targetFilePath
+        # Transfer files       
+        fileTransfer = FileTransfer()
+        fileTransfer.transferFilesTo(filePathDict,
+                        executionHostConfig.getHostName(),
+                        executionHostConfig.getUserName(),
+                        executionHostConfig.getPassword(),
+                        gatewayHosts = None, 
+                        numberTrials = 1,                        
+                        forceOperation = False,
+                        operationId = 1)
         

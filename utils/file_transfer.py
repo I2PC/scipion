@@ -218,20 +218,26 @@ class FileTransfer():
                    operationId=1):
         """
         Check if file paths exists.
-        filepaths -- List of file paths to remove with this format: "userName@hostName:absolute_file_path"
+        filepaths -- List of file paths to check with this format: "userName@hostName:absolute_file_path"
         gatewayHosts -- Gateway hosts dictionary with this format: "userName1@hostName1:userName2@hostName2":"userName@hostName"
         hostsPasswords -- Passwords needed to connect to involved hosts with this format: "userName@hostName":"hostPassword"
         numberTrials -- Number of trials in error cases.
         forceOperation -- Flag to indicate if, when an error happens and number of trials is exceeded, the operation must continue with the rest of files.
-        returns -- List of not located file paths.
         operationId -- Operation identifier.
+        returns -- List of not located file paths.
         """
         returnFilePaths = []
         # As we are going to create a session for each target host we must get different target hosts.
         userAndHosts = self.__getDiferentHostsFromFilePaths(filePaths)
         for userAndHost in userAndHosts:
-            if (not self.__isLocalCredential(userAndHost)):
-                resultFilePaths = self.__getFilePaths(filePaths, userAndHost)
+            resultFilePaths = self.__getFilePaths(filePaths, userAndHost)
+            if (self.__isLocalCredential(userAndHost)):
+                for resultFilePath in resultFilePaths:
+                    if (len (existsPath(resultFilePath)) != 0):
+                        returnFilePaths.append(resultFilePath)
+                        log.info("Check fail!!")
+            else:
+                
                 # Recover host credentials
                 userName = self.__getUserAndHost(userAndHost)[0]
                 hostName = self.__getUserAndHost(userAndHost)[1]
@@ -246,12 +252,53 @@ class FileTransfer():
                     try:
                         self.sftp.lstat(filePath)                    
                     except IOError:
-                        log.info("Check fail!!")
                         returnFilePaths.append(resultFilePath)
+                        log.info("Check fail!!")
                 self.ssh.close()
                 self.sftp.close()  
+        return returnFilePaths
+    
+    def checkOneHostFiles(self, 
+                   filePaths,
+                   hostName,
+                   userName,                   
+                   hostsPassword,
+                   gatewayHosts=None, 
+                   numberTrials=1, 
+                   forceOperation = False,  
+                   operationId=1):
+        """
+        Check if file paths exists.
+        filepaths -- List of file paths to check with this format: ["absolute_file_path1","absolute_file_path2"]
+        gatewayHosts -- Gateway hosts dictionary with this format: "userName1@hostName1:userName2@hostName2":"userName@hostName"
+        hostsPasswords -- Passwords needed to connect to involved hosts with this format: "userName@hostName":"hostPassword"
+        numberTrials -- Number of trials in error cases.
+        forceOperation -- Flag to indicate if, when an error happens and number of trials is exceeded, the operation must continue with the rest of files.
+        operationId -- Operation identifier.
+        returns -- List of not located file paths.
+        """
+        returnFilePaths = []
+        print("**************************************** CHECKING******************************************")
+        log.info("Connecting to: " + userName + "@" + hostName)
+        self.ssh.connect(hostName, SSH_PORT, userName, hostsPassword)
+        self.sftp = self.ssh.open_sftp()
+        
+        isLocalHost = self.__isLocalHost(hostName)
+        
+        for fileName in filePaths:
+            log.info("Checking: " + fileName)
+            if (isLocalHost):            
+                if (len (existsPath(fileName)) != 0):
+                    returnFilePaths.append(fileName)
+                    log.info("Check fail!!")
             else:
-                pass
+                try:
+                    self.sftp.lstat(fileName)                    
+                except IOError:
+                    returnFilePaths.append(fileName)
+                    log.info("Check fail!!")
+        self.ssh.close()
+        self.sftp.close()
         return returnFilePaths
     
     def __classifyFilePaths(self, filePaths):

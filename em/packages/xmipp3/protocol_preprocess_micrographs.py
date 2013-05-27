@@ -179,7 +179,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         # If input micrographs have tilt pairs copy the relation
         if self.inputMics.hasTiltPairs():
             #TODO: FILL mapIds
-            micSet.copyTiltPairs(self.inputMics, mapsId)
+            micSet.copyTiltPairs(self.inputMics, mapsId.get)
             
         micSet.copyInfo(self.inputMics)
         

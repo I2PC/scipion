@@ -103,11 +103,7 @@ class XmippSetOfImages(SetOfImages):
         
     def appendFromMd(self, md):
         """ Add all entries found in the md. """
-        self._set._md.unionAll(md)
-
-    def mergeFromMd(self, md):
-        """ Join data from other md using _label as guide. """
-        self._set._md.join(self._set._md, md, self._label, self._label, xmipp.NATURAL_JOIN)        
+        self._set._md.unionAll(md)   
         
     def appendPair(self, idU, idT):
         """ Add a new tilted pair to the set"""
@@ -133,9 +129,13 @@ class XmippSetOfImages(SetOfImages):
          imgId: the id of the image (in Xmipp case a Filename)
         """
         self.loadIfEmpty()
-        md  = xmipp.MetaData()
-        md.importObjects(xmipp.MDValueEQ(self._label, imgId))
+#        md  = xmipp.MetaData()
+#        md.importObjects(self._set._md, xmipp.MDValueEQ(self._label, imgId))
         # TODO: Make a Md query to get the element with this filename
+        for item in self._set:
+            if item.getValue(self._label) == imgId:
+                return item
+            
         raise Exception("getitem for XmippSetOfImages not implemented")
     
     def _getListBlock(self):
@@ -238,6 +238,15 @@ class XmippCoordinate(Coordinate):
     """This class holds the (x,y) position and other information
     associated with a Xmipp coordinate (Xmipp coordinates are POS_CENTER mode)"""
     
+    def __init__(self, **args):
+        Coordinate.__init__(self, **args)
+        
+    def setId(self, newId):
+        self.id = newId
+        
+    def getId(self):
+        return self.id
+    
     def getPosition(self, mode=Coordinate.POS_CENTER):
         """Return the position of the coordinate.
         mode: select if the position is the center of the box
@@ -261,12 +270,6 @@ class XmippCoordinate(Coordinate):
     def setMicrograph(self, micrograph):
         """Set the micrograph to which this coordinate belongs"""
         self._micrograph = micrograph
-    
-    def getPair(self):
-        """It should return the paired coordinate associate to self.
-        If self is an untilted coordinate, getPaired will return the 
-        tilted one and viceversa"""
-        pass 
     
 
 class XmippCTFModel(CTFModel, XmippMdRow):
@@ -335,18 +338,20 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         path = self.getFileName()
         template = self.family.get() + '@%s'
         
-        pathPos = join(path, replaceBaseExt(micrograph.getFileName(), 'pos'))
-            
+        pathMic = micrograph.getFileName()
+        pathPos = join(path, replaceBaseExt(pathMic, 'pos'))
+        
         if exists(pathPos):
             mdPos = xmipp.MetaData(template % pathPos)
                             
-            for objId in mdPos:
+            for i, objId in enumerate(mdPos):
                 x = mdPos.getValue(xmipp.MDL_XCOOR, objId)
                 y = mdPos.getValue(xmipp.MDL_YCOOR, objId)
                 coordinate = XmippCoordinate()
                 coordinate.setPosition(x, y)
                 coordinate.setMicrograph(micrograph)
                 coordinate.setBoxSize(self.boxSize.get())
+                coordinate.setId('%s:%06d' % (pathMic, i))
                 yield coordinate
                 
     def iterCoordinates(self):
@@ -365,11 +370,19 @@ class XmippSetOfCoordinates(SetOfCoordinates):
             if exists(filePath):         
                 filePaths.add(filePath)
         return filePaths
+    
+    def hasTiltPairs(self):
+        return self.getMicrographs().hasTiltPairs()
 
     def iterTiltPairs(self):
-        """Iterate over the tilt pairs if is the case"""
-        #TODO: Implement this method
-        pass
+        """Iterate over the tilt pairs if is the case"""     
+        mics = self.getMicrographs()
+        for micUId, micTId in mics.iterTiltPairs():
+            micU = mics[micUId]
+            micT = mics[micTId]
+            for coordU, coordT in zip(self.iterMicrographCoordinates(micU),
+                                      self.iterMicrographCoordinates(micT)):
+                yield (coordU.getId(), coordT.getId())
             
 class XmippTiltedPair(XmippMdRow):
     """ Tilted Pairs relations in Xmipp are stored in a MetaData row. """
