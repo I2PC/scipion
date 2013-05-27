@@ -102,7 +102,9 @@ class Object(object):
     
     def getNameId(self):
         """ Return an unique and readable id that identifies this object. """
-        return '%s.%s' % (self.getName(), self.strId())
+        if self.hasObjId():
+            return '%s.%s' % (self.getName(), self.strId())
+        return ''
     
     def getLastName(self):
         """ If the name contains parent path, remove it
