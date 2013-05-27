@@ -4,6 +4,7 @@ import ij.ImagePlus;
 import java.awt.Color;
 import java.io.File;
 import java.lang.reflect.Field;
+import java.util.List;
 
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.ImageGeneric;
@@ -11,7 +12,9 @@ import xmipp.jni.Particle;
 import xmipp.utils.TasksManager;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
+import xmipp.viewer.particlepicker.training.model.MicrographFamilyData;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
+import xmipp.viewer.particlepicker.training.model.TrainingMicrograph;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 import xmipp.viewer.particlepicker.training.model.TrainingPicker;
 
@@ -105,6 +108,45 @@ public class Family
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
+	
+	public synchronized void updateTemplates(TrainingPicker picker)
+	{
+		if (getStep() != FamilyState.Manual)
+			return;
+
+		initTemplates();
+		ImageGeneric igp;
+		List<TrainingParticle> particles;
+		MicrographFamilyData mfd;
+		TrainingParticle particle;
+		double[] align;
+		try
+		{
+			for (TrainingMicrograph m : picker.getMicrographs())
+			{
+				mfd = m.getFamilyData(this);
+				for (int i = 0; i < mfd.getManualParticles().size(); i++)
+				{
+					particles = mfd.getManualParticles();
+					particle = particles.get(i);
+					igp = particle.getImageGeneric();
+					if (getTemplateIndex() < getTemplatesNumber())
+						setTemplate(igp);
+					else
+					{
+						align = getTemplates().alignImage(igp);
+						particle.setLastalign(align);
+					}
+				}
+			}
+			saveTemplates();
+			
+		}
+		catch (Exception e)
+		{
+			throw new IllegalArgumentException(e.getMessage());
+		}
+	}
 
 
 	public ImageGeneric getTemplates()
@@ -112,19 +154,7 @@ public class Family
 		return templates;
 	}
 
-//	public synchronized ImagePlus getTemplatesImage(long i)
-//	{
-//		try
-//		{
-//			ImagePlus imp = XmippImageConverter.convertToImagePlus(templates, i);
-//
-//			return imp;
-//		}
-//		catch (Exception e)
-//		{
-//			throw new IllegalArgumentException(e);
-//		}
-//	}
+
 
 	public FamilyState getStep()
 	{

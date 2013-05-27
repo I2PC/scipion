@@ -608,65 +608,7 @@ public abstract class ParticlePicker
 	
 		
 
-	public void addParticleToTemplates(TrainingParticle particle, boolean center)
-	{
-		try
-		{
-			Particle shift = null;
-			Family family = particle.getFamily();
-			if(family.getStep() != FamilyState.Manual)
-				throw new IllegalArgumentException(XmippMessage.getIllegalStateForOperationMsg("family", family.getStep().toString()));
-			ImageGeneric igp = particle.getImageGeneric();
-			//will happen only in manual mode
-			if (family.getTemplateIndex() < family.getTemplatesNumber())// index starts at one
-			{
-				family.setTemplate(igp);
-			}
-			else
-			{
-				if (center)
-				{
-					shift = family.getTemplates().bestShift(igp);
-					particle.setX(particle.getX() + shift.getX());
-					particle.setY(particle.getY() + shift.getY());
-				}
-				double[] align = family.getTemplates().alignImage(igp);
-				particle.setLastalign(align);
-				family.getTemplates().applyAlignment(igp, particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
-				System.out.printf("adding: %.2f %.2f %.2f %.2f\n", align[0], align[1], align[2], align[3]);
-				
-				
-			}
-			family.saveTemplates();
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
-		}
-	}
-
-	public void removeParticleFromTemplates(TrainingParticle particle)
-	{
-		
-		try
-		{
-			
-			Family family = particle.getFamily();
-			if(family.getStep() != FamilyState.Manual)
-				throw new IllegalArgumentException(XmippMessage.getIllegalStateForOperationMsg("family", family.getStep().toString()));
-			ImageGeneric igp = particle.getImageGeneric();
-//			System.out.printf("removing: %d %.2f %.2f %.2f\n", particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
-			family.getTemplates().removeAlignment(igp, particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
-			family.saveTemplates();
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
-		}
-
-	}
+	
 	
 
 
