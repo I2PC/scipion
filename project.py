@@ -36,7 +36,6 @@ from os.path import split
 from pyworkflow.protocol import *
 from pyworkflow.em import *
 from pyworkflow.apps.config import ExecutionHostMapper, ExecutionHostConfig
-from utils.file_transfer import *
 
 PROJECT_DBNAME = 'project.sqlite'
 PROJECT_LOGS = 'Logs'
@@ -172,6 +171,7 @@ class Project(object):
         Params:
             potocol: Protocol to send to an execution host.
         """
+        from utils.file_transfer import FileTransfer
         # Fisrt we must recover the execution host credentials.
         self.hostsMapper = ExecutionHostMapper(self.hostsPath)
         executionHostConfig = self.hostsMapper.selectByLabel(protocol.getHostName())
