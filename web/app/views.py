@@ -248,8 +248,11 @@ def protocol(request):
     for paramName, attr in protocol.iterDefinitionAttributes():
         value = request.POST.get(paramName)
         if attr.isPointer():
-            value = value.split('.')[-1]  # Get the id string for last part after .
-            value = project.mapper.selectById(int(value))  # Get the object from its id
+            if len(value.strip()) > 0:
+                value = value.split('.')[-1]  # Get the id string for last part after .
+                value = project.mapper.selectById(int(value))  # Get the object from its id
+            else:
+                value = None
         attr.set(value)
     # Finally, launch the protocol
     project.launchProtocol(protocol)

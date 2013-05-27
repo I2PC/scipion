@@ -100,6 +100,12 @@ class Object(object):
     def getName(self):
         return self._objName
     
+    def getNameId(self):
+        """ Return an unique and readable id that identifies this object. """
+        if self.hasObjId():
+            return '%s.%s' % (self.getName(), self.strId())
+        return ''
+    
     def getLastName(self):
         """ If the name contains parent path, remove it
         and only return the attribute name in its parent. 

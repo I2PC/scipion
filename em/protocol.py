@@ -164,7 +164,9 @@ class DefCTFMicrographs(Form):
                       help='The PSD is estimated from small patches of this size. Bigger patches '
                            'allow identifying more details. However, since there are fewer windows, '
                            'estimations are noisier',
-                      expertLevel=LEVEL_ADVANCED)        
+                      expertLevel=LEVEL_ADVANCED)
+        
+        self.addParallelSection(threads=2, mpi=1)        
 
 
 class ProtCTFMicrographs(Protocol):
@@ -205,12 +207,15 @@ class ProtCTFMicrographs(Protocol):
                        }
         
         self._prepareCommand()
+        deps = [] # Store all steps ids, final step createOutput depends on all of them
         # For each micrograph insert the steps to process it
         for micFn, micDir, _ in self._iterMicrographs():
             # CTF estimation with Xmipp
-            self._insertFunctionStep('_estimateCTF', micFn, micDir)
+            stepId = self._insertFunctionStep('_estimateCTF', micFn, micDir,
+                                              prerequisites=[]) # Make estimation steps indepent between them
+            deps.append(stepId)
         # Insert step to create output objects       
-        self._insertFunctionStep('createOutput')
+        self._insertFunctionStep('createOutput', prerequisites=deps)
         
     def _prepareCommand(self):
         """ This function should be implemented to prepare the
