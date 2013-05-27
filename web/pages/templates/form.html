@@ -36,7 +36,7 @@
 					  <input type="radio" id="{{paramName}}_no" name={{paramName}} onChange="javascript:onChangeBooleanParam('false','{{paramName}}');" value="false"  
 					  {% if not param.htmlValue %} checked {% endif %} />No
 					</td>
-					{% elif param.getClassName == "EnumParam"  %}
+					{% elif param.getClassName == "EnumParam" %}
 					<td>
 						{% if param.display == 0 %}
 							{% for choice in param.choices %}
@@ -52,13 +52,14 @@
 					</td>
 					{% endif %}				
 				{% else %}
-					<td><input type="text" id="{{paramName}}_input" name={{paramName}} value="{{param.htmlValue}}"></td>
+					<td>
+						<input type="text" id="{{paramName}}_input" name={{paramName}} value="{{param.htmlValue}}">
+					</td>
 				{% endif %}
 					<td class="ico"><a href="javascript:help('{{paramName}}','{{param.help.get}}');"><img src={{help}} /></a></td>
 				{% if param.getClassName == "PointerParam" %}
 					<td class="ico">
-					<a href="javascript:browseObjects('{{paramName}}','{{projectName}}','{{param.pointerClass.get}}');"><img src={{browse}}/></a>
-	<!-- 				<input type="image" class="red" src="{{browse}}" id="" value="Open File"> -->
+						<a href="javascript:browseObjects('{{paramName}}','{{projectName}}','{{param.pointerClass.get}}');"><img src={{browse}}/></a>
 					</td>
 				{% endif %}
 			</tr>
@@ -76,9 +77,11 @@
 				</select></td>
 			</tr>
 			<tr>
-				<td><a href=""><button class="buttonClose" type="button" onclick="window.close()">Close</button></a>
+				<td>
+					<a href=""><button class="buttonClose" type="button" onclick="window.close()">Close</button></a>
 					<a href=""><button class="buttonSave" type="button">Save</button></a>
-						<input type="submit" class="buttonExec" value="Execute"></td>
+					<input type="submit" class="buttonExec" value="Execute">
+				</td>
 			</tr>
 		</table>
 	</div>

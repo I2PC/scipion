@@ -230,7 +230,7 @@ class Protocol(Step):
     def iterDefinitionAttributes(self):
         """ Iterate over all the attributes from definition. """
         for paramName, _ in self._definition.iterParams():
-            yield getattr(self, paramName)
+            yield paramName, getattr(self, paramName)
         
     def _createVarsFromDefinition(self, **args):
         """ This function will setup the protocol instance variables

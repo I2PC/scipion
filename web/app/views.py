@@ -10,6 +10,7 @@ from pyworkflow.utils.utils import prettyDate
 from pyworkflow.web.pages import settings
 from pyworkflow.apps.config import *
 from pyworkflow.em import *
+from django.http.request import HttpRequest
 
 def getResource(request):
     if request == 'logoScipion':
@@ -148,16 +149,16 @@ def project_content(request):
     launchTreeview = os.path.join(settings.STATIC_URL, 'js/launchTreeview.js')
     popup_path = os.path.join(settings.STATIC_URL, 'js/popup.js')
     #############
-    projectName = request.GET.get('project_name', None)
+    projectName = request.GET.get('projectName', None)
     if projectName is None:
-        projectName = request.POST.get('project_name', None)
+        projectName = request.POST.get('projectName', None)
         
     project = loadProject(projectName)    
     provider = RunsTreeProvider(project.mapper)
     
     root = loadProtTree()
     
-    context = {'project_name':projectName,
+    context = {'projectName':projectName,
                'jquery': jquery_path,
                'popup': popup_path,
                'jquery_cookie': jquery_cookie,
@@ -185,7 +186,7 @@ def form(request):
     #############
     
     # # Project Id(or Name) should be stored in SESSION
-    projectName = request.GET.get('project_name')
+    projectName = request.GET.get('projectName')
     project = loadProject(projectName)        
     protocolName = request.GET.get('protocol', None)
     
@@ -247,9 +248,7 @@ def protocol(request):
             value = value.split('.')[-1]  # Get the id string for last part after .
             value = project.mapper.selectById(int(value))  # Get the object from its id
         attr.set(value)
-    # Finally, launch the protocol 
-    project.launchProtocol(protocol)        
-    
+    # Finally, launch the protocol
     return project_content(request)
 
 def browse_objects(request):
@@ -259,7 +258,7 @@ def browse_objects(request):
     
     if request.is_ajax():
         objClass = request.GET.get('objClass')
-        projectName = request.GET.get('project_name')
+        projectName = request.GET.get('projectName')
         project = loadProject(projectName)    
         
         objs = []
