@@ -1487,19 +1487,18 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
               size_t            Xwidth,
               size_t            Ywidth)
           {
-              const double    epsilon = DBL_EPSILON;
-              int             Status = !ERROR, DoDesProj, IteratingStop, FlagMaxIter;
-              long            MaxIter, MaxIter1, MaxIter2, iter;
-              long            SizeIm, MaxNumberOfFailures, SatisfNumberOfSuccesses, nSuccess, nFailure;
-              double          *pntr_time, *pntr_FailureIter, *pntr_RedftCompProj, *pntr_ImdftCompProj;
+              int             DoDesProj, IteratingStop, FlagMaxIter;
+              long            MaxIter, MaxIter1, iter;
+              long            MaxNumberOfFailures, SatisfNumberOfSuccesses, nSuccess, nFailure;
+              double          *pntr_FailureIter;
               double          LambdaScale=2., OldCost, tol_angle, tol_shift,tol_defamp;
-              double          OneIterInSeconds,  *Gradient, *Hessian;
+              double          OneIterInSeconds, *Gradient, *Hessian;
               time_t          time1, time2, *tp1 = NULL, *tp2 = NULL;
               long            dim = (long) global_flexible_prog->numberOfModes;
               long            MaxNoIter,MaxNoFailure,SatisfNoSuccess;
 
               double lambda=1000.;
-
+              time1=time(tp1);
               DoDesProj        = 0;
               MaxNoIter        = global_flexible_prog->max_no_iter;
               MaxNoFailure     = (long)(0.3 * MaxNoIter);
@@ -1554,6 +1553,7 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
               std::cout << "1935 cost = " << global_flexible_prog->costfunctionvalue_cst << std::endl;
               time2 = time(tp2);
               OneIterInSeconds = difftime(time2, time1);
+              std::cout << "time diff=" << OneIterInSeconds << std::endl;
               if (DoDesProj && (global_flexible_prog->currentStage == 2))
               {
                   Image<double> Itemp;
@@ -1651,7 +1651,6 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
 
               FileName fnRandom;
               fnRandom.initUniqueName(nameTemplate,fnOutDir);
-              const char * randStr = fnRandom.c_str();
               std::string command;
 
           	// Reduce the image
@@ -1944,7 +1943,6 @@ std::cout << "2074" << fnDown << std::endl;
           // Continuous assignment ===================================================
           double ProgFlexibleAlignment::performContinuousAssignment(int pyramidLevel) 
           {
-              int    dim = numberOfModes;
               //double *cost;
               std::cout << "Bfactor001" << std::endl;
               costfunctionvalue = 0.0;
@@ -1973,7 +1971,6 @@ std::cout << "2074" << fnDown << std::endl;
 
                   FileName fnRandom;
                   fnRandom.initUniqueName(nameTemplate,fnOutDir);
-                  const char * randStr = fnRandom.c_str();
                   fnDown = formatString("%s_downimg.xmp", fnRandom.c_str());
 
                   Image<double> I;
@@ -2040,8 +2037,6 @@ std::cout << "2074" << fnDown << std::endl;
 // Compute fitness =========================================================
           double ProgFlexibleAlignment::eval()
           {
-              int dim = numberOfModes;
-
               int pyramidLevelDisc = 1;
               int pyramidLevelCont = (currentStage == 1) ? 1 : 0;
 
@@ -2068,8 +2063,6 @@ std::cout << "2074" << fnDown << std::endl;
           {
               static size_t imageCounter = 0;
               ++imageCounter;
-
-              double scdefamp = 1000;
 
               int dim = numberOfModes;
 
