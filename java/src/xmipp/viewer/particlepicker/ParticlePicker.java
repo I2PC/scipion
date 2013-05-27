@@ -583,6 +583,7 @@ public abstract class ParticlePicker
 	public void setColor(Color color) {
 		this.color = color;
 	}
+
 	
 	public static Color getColor(String name) {
 		Color color;

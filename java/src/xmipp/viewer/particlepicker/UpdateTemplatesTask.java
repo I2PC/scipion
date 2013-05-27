@@ -23,11 +23,17 @@ public class UpdateTemplatesTask implements Task
 	@Override
 	public void doTask()
 	{
+		try
+		{
 			picker.updateTemplates();
 			if(dialog != null && dialog.isVisible())
 				dialog.loadTemplates(true);
-			System.out.println("Templates updated");
-		
+		}
+		catch (Exception e)
+		{
+			throw new IllegalArgumentException(e);
+		}
+
 	}
 
 }
