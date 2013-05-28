@@ -116,6 +116,10 @@ class Image(EMObject):
         
     def hasCTF(self):
         return self.ctfModel is not None
+    
+    def getCTF(self):
+        """ Return the CTF model """
+        return self.ctfModel
         
         
 class Micrograph(Image):
