@@ -23,6 +23,7 @@ protocols = {
         'symmetric_initial': ('Symmetric Cn/Dn volume', '3D/Symmetric'),
         'projmatch': ('Projection Matching', '3D/ProjMatch'), 
         'ml3d': ('ML3D', '3D/ML3D'),
+        'nma': ('Normal Mode Analysis', '3D/NMA'),
         'mltomo': ('MLTomo', '3D/MLTomo'),
         'subtraction': ('Partial Projection Subtraction', '3D/ProjSub'),
         'custom': ('Custom', 'Custom'),
@@ -41,7 +42,8 @@ sections = [
    [['Align+Classify', 'cl2d', 'ml2d', ['Other', 'cl2d_align', 'kerdensom', 'rotspectra', 'screen_classes']]]),
 ('3D', 
    [['Initial Model', 'rct', 'symmetric_initial'], 
-    ['Model Refinement', 'projmatch', 'ml3d']])
+    ['Model Refinement', 'projmatch', 'ml3d'],
+    ['Analysis', ['Flexibility', 'nma']]])
 ,
 ('Other',
  [['Extra', 'custom','subtraction', 'mltomo']])
