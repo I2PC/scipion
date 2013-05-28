@@ -10,6 +10,7 @@ from pyworkflow.utils.utils import prettyDate
 from pyworkflow.web.pages import settings
 from pyworkflow.apps.config import *
 from pyworkflow.em import *
+from django.http.request import HttpRequest
 
 def getResource(request):
     if request == 'logoScipion':
@@ -47,8 +48,7 @@ class TreeItem():
         self.protClass = protClass
         self.childs = []
         
-def populateTree(tree, obj):
-    
+def populateTree(tree, obj):    
     for sub in obj:
         text = sub.text.get()
         value = sub.value.get(text)
@@ -132,7 +132,13 @@ class RunsTreeProvider(TreeProvider):
             
         return actions 
     
-        
+def loadProject(projectName):
+    manager = Manager()
+    projPath = manager.getProjectPath(projectName)
+    project = Project(projPath)
+    project.load()
+    return project    
+    
 def project_content(request):
     
     # Resources #
@@ -143,17 +149,16 @@ def project_content(request):
     launchTreeview = os.path.join(settings.STATIC_URL, 'js/launchTreeview.js')
     popup_path = os.path.join(settings.STATIC_URL, 'js/popup.js')
     #############
-
-    manager = Manager()
-    project_name = request.GET.get('project_name')
-    projPath = manager.getProjectPath(project_name)
-    project = Project(projPath)
-    project.load()
+    projectName = request.GET.get('projectName', None)
+    if projectName is None:
+        projectName = request.POST.get('projectName', None)
+        
+    project = loadProject(projectName)    
     provider = RunsTreeProvider(project.mapper)
     
     root = loadProtTree()
     
-    context = {'project_name':project_name,
+    context = {'projectName':projectName,
                'jquery': jquery_path,
                'popup': popup_path,
                'jquery_cookie': jquery_cookie,
@@ -181,13 +186,10 @@ def form(request):
     #############
     
     # # Project Id(or Name) should be stored in SESSION
-    manager = Manager()
-    project_name = request.GET.get('project_name')
-    projPath = manager.getProjectPath(project_name)
-    project = Project(projPath)
-    project.load()
-    
+    projectName = request.GET.get('projectName')
+    project = loadProject(projectName)        
     protocolName = request.GET.get('protocol', None)
+    
     if protocolName is None:
         protId = request.GET.get('protocolId', None)
         protocol = project.mapper.selectById(int(protId))
@@ -202,13 +204,17 @@ def form(request):
             if protVar is None:
                 raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
                 # Create the label
-            param.htmlValue = protVar.get(param.default.get(""))
+            if protVar.isPointer():
+                param.htmlValue = protVar.getNameId()
+            else:
+                param.htmlValue = protVar.get(param.default.get(""))
             param.htmlCond = param.condition.get()
             param.htmlDepend = ','.join(param._dependants)
             param.htmlCondParams = ','.join(param._conditionParams)
     
     
-    context = {'protocol':protocol,
+    context = {'projectName':projectName,
+               'protocol':protocol,
                'definition': protocol._definition,
                'favicon': favicon_path,
                'help': logo_help,
@@ -225,21 +231,33 @@ def form(request):
     return render_to_response('form.html', context)
 
 def protocol(request):
-    
+    projectName = request.POST.get('projectName')
     protId = request.POST.get("protocolId")
     protClass = request.POST.get("protocolClass")
     
-    # Resources #
-    favicon_path = getResource('favicon')
-    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
-    #############
+    # Load the project
+    project = loadProject(projectName)
+    # Create the protocol object
+    if protId != 'None':  # Case of new protocol
+        protId = request.POST.get('protocolId', None)
+        protocol = project.mapper.selectById(int(protId))
+    else:
+        protocolClass = emProtocolsDict.get(protClass, None)
+        protocol = protocolClass() 
+    # Update parameter set in the form
+    for paramName, attr in protocol.iterDefinitionAttributes():
+        value = request.POST.get(paramName)
+        if attr.isPointer():
+            if len(value.strip()) > 0:
+                value = value.split('.')[-1]  # Get the id string for last part after .
+                value = project.mapper.selectById(int(value))  # Get the object from its id
+            else:
+                value = None
+        attr.set(value)
+    # Finally, launch the protocol
+    project.launchProtocol(protocol)
     
-    context = {'favicon': favicon_path,
-               'jquery': jquery_path,
-               'protId': protId,
-               'protClass': protClass}
-    
-    return render_to_response('protocol.html', context)
+    return project_content(request)
 
 def browse_objects(request):
     """ Browse objects from the database. """
@@ -248,15 +266,12 @@ def browse_objects(request):
     
     if request.is_ajax():
         objClass = request.GET.get('objClass')
-        manager = Manager()
-        project_name = 'TestProject'
-        projPath = manager.getProjectPath(project_name)
-        project = Project(projPath)
-        project.load()
+        projectName = request.GET.get('projectName')
+        project = loadProject(projectName)    
         
         objs = []
         for obj in project.mapper.selectByClass(objClass, iterate=True):
-            objs.append(obj.getName())
+            objs.append(obj.getNameId())
         jsonStr = json.dumps({'objects' : objs},
                              ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')

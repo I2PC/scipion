@@ -48,10 +48,12 @@ function Messi(data, options) {
   if(_this.options.buttons.length > 0) {
     for (var i = 0; i < _this.options.buttons.length; i++) {      
       var cls = (_this.options.buttons[i]["btnClass"]) ? _this.options.buttons[i]["btnClass"] : '';
+      var funcName = (_this.options.buttons[i]["btnFunc"]) ? _this.options.buttons[i]["btnFunc"] : '';
 // href="javascript:getList(document.getElementsById(""))"
       var addon="href='#'";
       if(cls=="btn-select"){
-    	  var addon = "onClick=javascript:processSelection(jQuery('div#browse'));";
+//    	  var addon = "onClick=javascript:processSelection(jQuery('div#content'));";
+    	  var addon = "onClick=javascript:"+ funcName + "(jQuery('div#content'));";
     	  }
       var btn = jQuery('<span class="btnbox"><button class="btn ' + cls + '"'+ addon +' >' + _this.options.buttons[i].label + '</button></span>').data('value', _this.options.buttons[i].val);
       btn.bind('click', function() {

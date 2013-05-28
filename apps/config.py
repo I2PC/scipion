@@ -35,7 +35,6 @@ from pyworkflow.utils.path import getHomePath
 import pyworkflow as pw
 from pyworkflow.object import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
-from pyworkflow.manager import *
 
 PATH = os.path.dirname(__file__)
 SETTINGS = join(pw.HOME, 'settings')

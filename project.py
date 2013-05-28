@@ -106,7 +106,7 @@ class Project(object):
         # TODO: Create a launcher class that will 
         # handle the communication of remote projects
         # and also the particularities of job submission: mpi, threads, queue, bash
-        self.insertProtocol(protocol)        
+        self._storeProtocol(protocol)        
         if wait:
             self.runProtocol(protocol) # This case is mainly for tests
         else:
@@ -153,7 +153,7 @@ class Project(object):
         cleanPath(protocol.workingDir.get())  
         self.mapper.commit()     
         
-    def insertProtocol(self, protocol):
+    def _storeProtocol(self, protocol):
         """Insert a new protocol instance in the database"""
         self.mapper.store(protocol)
         name = protocol.getClassName() + protocol.strId()

@@ -56,7 +56,7 @@ ACTION_EDIT = 'Edit'
 ACTION_COPY = 'Copy'
 ACTION_DELETE = 'Delete'
 ACTION_REFRESH = 'Refresh'
-ACTION_STEPS = 'Show_Steps'
+ACTION_STEPS = 'Browse'
 ACTION_TREE = 'Show_DepsTree'
 ACTION_STOP = 'Stop'
 ACTION_DEFAULT = 'Default'
@@ -136,8 +136,9 @@ class RunsTreeProvider(TreeProvider):
         return [('Run', 250), ('State', 100), ('Modified', 100)]
     
     def getObjectInfo(self, obj):
-        default = '%s.%s' % (obj.getClassName(), obj.strId())
-        runName = obj.runName.get(default)
+        runName = obj.runName.get()
+        if runName is None or len(runName) <= 0:
+            runName = '%s.%s' % (obj.getClassName(), obj.strId())  
         return {'key': obj.getObjId(),
                 'text': runName,
                 'values': (obj.status.get(), obj.endTime.get())}
@@ -145,11 +146,11 @@ class RunsTreeProvider(TreeProvider):
     def getObjectActions(self, obj):
         prot = obj # Object should be a protocol
         actionsList = [(ACTION_EDIT, 'Edit     '),
-                       #(ACTION_COPY, 'Duplicate   '),
+                       (ACTION_COPY, 'Copy   '),
                        (ACTION_DELETE, 'Delete    '),
                        #(None, None),
                        #(ACTION_STOP, 'Stop'),
-                       (ACTION_STEPS, 'Browse data')
+                       (ACTION_STEPS, 'Browse ')
                        ]
         status = prot.status.get()
         if status == STATUS_RUNNING:
@@ -270,16 +271,30 @@ class ProjectWindow(gui.Window):
         self.protTree = self.createProtocolsTree(protFrame)
         
         # Runs history Pane
-        runsFrame = ttk.Labelframe(p, text=' History ', width=500, height=500)
+        rightFrame = tk.Frame(p)
+        rightFrame.columnconfigure(0, weight=1)
+        rightFrame.rowconfigure(1, weight=1)
+        rightFrame.rowconfigure(1, weight=1)
+        
+        runsToolbar = tk.Frame(rightFrame)
+        runsToolbar.grid(row=0, column=0, sticky='news')
+        runsToolbar.rowconfigure(0, weight=1)
+        rightFrame.rowconfigure(0, minsize=label.winfo_reqheight())
+        self.runsToolbar = runsToolbar
+        self.createActionToolbar()
+
+        
+        runsFrame = ttk.Labelframe(rightFrame, text=' History ', width=500, height=500)
+        runsFrame.grid(row=1, column=0, sticky='news', pady=5)
         self.runsTree = self.createRunsTree(runsFrame)
         
         gui.configureWeigths(runsFrame)
         
         # Add sub-windows to PanedWindows
         p.add(leftFrame, padx=5, pady=5)
-        p.add(runsFrame, padx=5, pady=5)
+        p.add(rightFrame, padx=5, pady=5)
         p.paneconfig(leftFrame, minsize=300)
-        p.paneconfig(runsFrame, minsize=300)        
+        p.paneconfig(rightFrame, minsize=300)        
         p.grid(row=0, column=0, sticky='news')
         
         # Event bindings
@@ -291,6 +306,40 @@ class ProjectWindow(gui.Window):
         
         #self.menuRun = tk.Menu(self.root, tearoff=0)
         self.selectedProtocol = None
+        
+    def createActionToolbar(self):
+        """ Prepare the buttons that will be available for protocol actions. """
+       
+        self.actionList = [ACTION_EDIT, ACTION_COPY, ACTION_DELETE, ACTION_STEPS, ACTION_STOP, ACTION_CONTINUE]
+        self.actionButtons = {}
+        
+        for action in self.actionList:
+            def addButton(action):
+                btn = tk.Label(self.runsToolbar, text=action, image=self.getImage(ActionIcons[action]), 
+                           compound=tk.LEFT, cursor='hand2')
+                btn.bind('<Button-1>', lambda e: self._runActionClicked(action))
+                return btn
+            self.actionButtons[action] = addButton(action)
+            
+    
+        
+    def updateActionToolbar(self):
+        """ Update which action buttons should be visible. """
+        status = self.selectedProtocol.status.get()
+        
+        def displayAction(action, i, cond=True):
+            """ Show/hide the action button if the condition is met. """
+            if cond:
+                self.actionButtons[action].grid(row=0, column=i, sticky='sw', padx=(0, 5), ipadx=0)
+            else:
+                self.actionButtons[action].grid_remove()            
+                
+        for i, action in enumerate(self.actionList[:-2]):
+            displayAction(action, i)            
+            
+        displayAction(ACTION_STOP, 4, status == STATUS_RUNNING)
+        displayAction(ACTION_CONTINUE, 5, status == STATUS_WAITING_APPROVAL)
+            
         
     def loadProjectConfig(self):
         self.configMapper = ConfigMapper(getConfigPath('configuration.xml'), globals())
@@ -314,8 +363,8 @@ class ProjectWindow(gui.Window):
         return tree
         
     def createRunsTree(self, parent):
-        provider = RunsTreeProvider(self.project.mapper, self._runActionClicked)
-        tree = BoundTree(parent, provider)
+        self.provider = RunsTreeProvider(self.project.mapper, self._runActionClicked)
+        tree = BoundTree(parent, self.provider)
         tree.grid(row=0, column=0, sticky='news')
         tree.bind('<Double-1>', lambda e: self._runActionClicked(ACTION_EDIT))
         #tree.bind("<Button-3>", self._onRightClick)
@@ -333,6 +382,7 @@ class ProjectWindow(gui.Window):
         prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))
         prot.mapper = self.project.mapper
         self.selectedProtocol = prot
+        self.updateActionToolbar()
         
     def _openProtocolForm(self, prot):
         """Open the Protocol GUI Form given a Protocol instance"""
@@ -360,29 +410,29 @@ class ProjectWindow(gui.Window):
             self.project.deleteProtocol(prot)
             self.runsTree.update()
         
-    def _runActionClicked(self, event):
+    def _runActionClicked(self, action):
         if self.selectedProtocol is None:
             return
         prot = self.selectedProtocol
         if prot:
-            if event == ACTION_DEFAULT:
+            if action == ACTION_DEFAULT:
                 pass
-            elif event == ACTION_EDIT:
+            elif action == ACTION_EDIT:
                 self._openProtocolForm(prot)
-            elif event == ACTION_COPY:
+            elif action == ACTION_COPY:
                 pass
-            elif event == ACTION_DELETE:
+            elif action == ACTION_DELETE:
                 self._deleteProtocol(prot)
-            elif event == ACTION_STEPS:
+            elif action == ACTION_STEPS:
                 self._browseRunData()
-            elif event == ACTION_TREE:
+            elif action == ACTION_TREE:
                 pass
                 #self.switchRunsView()
-            elif event == ACTION_REFRESH:
+            elif action == ACTION_REFRESH:
                 pass
-            elif event == ACTION_STOP:
+            elif action == ACTION_STOP:
                 pass
-            elif event == ACTION_CONTINUE:
+            elif action == ACTION_CONTINUE:
                 self._continueProtocol(prot)
     
     

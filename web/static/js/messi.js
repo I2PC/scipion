@@ -35,15 +35,10 @@ function Messi(data, options) {
         close.bind('click', function() {
           _this.hide();
         });
-        
         jQuery('.messi-titlebox', this.messi).prepend(close);
-        
       };
-    
     };
-    
     if(_this.options.titleClass != null) jQuery('.messi-titlebox', this.messi).addClass(_this.options.titleClass);
-    
   };
   
   // ajustamos el ancho
@@ -53,38 +48,35 @@ function Messi(data, options) {
   if(_this.options.buttons.length > 0) {
     for (var i = 0; i < _this.options.buttons.length; i++) {      
       var cls = (_this.options.buttons[i]["btnClass"]) ? _this.options.buttons[i]["btnClass"] : '';
-      var btn = jQuery('<span class="btnbox"><button class="btn ' + cls + '" href="#">' + _this.options.buttons[i].label + '</button></span>').data('value', _this.options.buttons[i].val);
+      var funcName = (_this.options.buttons[i]["btnFunc"]) ? _this.options.buttons[i]["btnFunc"] : '';
+// href="javascript:getList(document.getElementsById(""))"
+      var addon="href='#'";
+      if(cls=="btn-select"){
+//    	  var addon = "onClick=javascript:processSelection(jQuery('div#content'));";
+    	  var addon = "onClick=javascript:"+ funcName + "(jQuery('div#content'));";
+    	  }
+      var btn = jQuery('<span class="btnbox"><button class="btn ' + cls + '"'+ addon +' >' + _this.options.buttons[i].label + '</button></span>').data('value', _this.options.buttons[i].val);
       btn.bind('click', function() {
         var value = jQuery.data(this, 'value');
         var after = (_this.options.callback != null) ? function() { _this.options.callback(value); } : null;
         _this.hide(after);
       });
-    
       jQuery('.messi-actions', this.messi).append(btn);
-    
     };
-  
   } else {
-  
     jQuery('.messi-footbox', this.messi).remove();
-  
   };
   
   // preparamos el botón de cerrar automáticamente
   if(_this.options.buttons.length === 0 && _this.options.title == null && !_this.options.autoclose) {
-    
     if(_this.options.closeButton) {
       var close = jQuery('<span class="messi-closebtn"></span>');
       close.bind('click', function() {
         _this.hide();
       });
-      
       jQuery('.messi-content', this.messi).prepend(close);
-      
     };
-    
   };
-  
   // activamos la pantalla modal
   _this.modal = (_this.options.modal) ? jQuery('<div class="messi-modal"></div>').css({opacity: _this.options.modalOpacity, width: jQuery(document).width(), height: jQuery(document).height(), 'z-index': _this.options.zIndex + jQuery('.messi').length}).appendTo(document.body) : null;
   

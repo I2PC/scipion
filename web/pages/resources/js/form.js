@@ -98,23 +98,23 @@ function help(title, msg) {
  * Browse object in the database. Params: objClass: the class to get instances
  * from (also subclasses)
  */
-function browseObjects(node, objClass) {
+function browseObjects(node, projName, objClass) {
 	$.ajax({
 		type : "GET",
-		url : "/browse_objects/?objClass=" + objClass,
+		url : "/browse_objects/?projectName=" + projName + "&objClass=" + objClass,
 		dataType : "json",
 		success : function(json) {
 			// specifying a dataType of json makes jQuery pre-eval the response
 			// for us
-			var res = getTableFormatted(node, json.objects, objClass);
-			selectObjects(objClass, res);
+			var res = getListFormatted(node, json.objects, objClass);
+			selectDialog(objClass, res, "processSelection");
 
 		}
 	});
 }
 
-function getTableFormatted(node, list, id) {
-	var res = "<div id='browse' style='overflow:auto' data-node='" + node
+function getListFormatted(node, list, id) {
+	var res = "<div id='content' style='overflow:auto' data-node='" + node
 			+ "'>";
 	for ( var x = 0; x < list.length; x++) {
 		res = res + "<input type='radio' id ='" + id + x + "' name='" + id
@@ -124,7 +124,7 @@ function getTableFormatted(node, list, id) {
 	return res;
 }
 
-function selectObjects(objClass, msg) {
+function selectDialog(objClass, msg, funcName) {
 	new Messi(msg, {
 		title : 'Select' + objClass,
 		modal : true,
@@ -132,7 +132,8 @@ function selectObjects(objClass, msg) {
 			id : 0,
 			label : 'Select',
 			val : 'Y',
-			btnClass : 'btn-select'
+			btnClass : 'btn-select',
+			btnFunc: funcName
 		}, {
 			id : 1,
 			label : 'Cancel',
@@ -153,7 +154,7 @@ function processSelection(elm) {
 			elm.val(jQuery(this).attr('value'));
 		}
 	});
-	jQuery('input#' + elm.attr('data-node')).val(elm.attr('value'));
+	jQuery('input#' + elm.attr('data-node') + '_input').val(elm.attr('value'));
 }
 
 function filemanager(elm, type, name) {
