@@ -1,6 +1,6 @@
 function evalElements() {
 	$("tr").each(function(index) {
-		var value = jQuery(this).attr('data-value');
+		var value = jQuery(this).attr('value');
 		var type = jQuery(this).attr('data-type');
 		var param = jQuery(this).attr('id');
 
@@ -39,22 +39,28 @@ function setParamValue(paramId, value) {
 }
 
 function evalDependencies(row) {
+	var newLevel = $("select[name=expLevel]").val();
+
 	var dependencies = row.attr('data-depen');
 	if (dependencies.length > 0) {
 		var arrayDepends = dependencies.split(",");
 		for ( var cont = 0; cont < arrayDepends.length; cont++) {
-			var res = evalCondition(arrayDepends[cont]);
-			if (res == false) {
-				jQuery("tr#" + arrayDepends[cont]).hide();
+
+			var row = jQuery("tr#" + arrayDepends[cont]);
+			var res = evalCondition(row);
+			var expLevel = row.attr('data-expert');
+
+			if (res == false || expLevel > newLevel) {
+				row.hide();
 			} else if (res == true) {
-				jQuery("tr#" + arrayDepends[cont]).show();
+				row.show();
 			}
 		}
 	}
 }
 
-function evalCondition(itemName) {
-	var row = jQuery("tr#" + itemName);
+function evalCondition(row) {
+
 	var cond = row.attr('data-cond');
 	var params = row.attr('data-params');
 
@@ -64,21 +70,23 @@ function evalCondition(itemName) {
 	var param = null;
 	var value = null;
 	var cond_eval = cond;
+	// var params = '';
 
 	for ( var cont = 0; cont < arrayParams.length; cont++) {
 		param = arrayParams[cont];
 		// value = getValueByName(param);
 		value = jQuery("tr#" + param).val();
+		// params += "param: " + param + " value: " + value + "\n";
 		cond_eval = cond_eval.replace(param, value);
 	}
+	// if (row.attr("name")=="comment") {
+	// alert("condition: " + cond + " \nparams:\n" + params + "\n eval: " +
+	// cond_eval);
+	// }
+
 	// alert("condition: " + cond + " eval: " + cond_eval);
-	if (cond_eval == "True") {
-		return true;
-	} else if (cond_eval == "False") {
-		return false;
-	} else {
-		return eval(cond_eval);
-	}
+
+	return eval(cond_eval);
 }
 
 function help(title, msg) {
@@ -101,7 +109,8 @@ function help(title, msg) {
 function browseObjects(node, projName, objClass) {
 	$.ajax({
 		type : "GET",
-		url : "/browse_objects/?projectName=" + projName + "&objClass=" + objClass,
+		url : "/browse_objects/?projectName=" + projName + "&objClass="
+				+ objClass,
 		dataType : "json",
 		success : function(json) {
 			// specifying a dataType of json makes jQuery pre-eval the response
@@ -133,7 +142,7 @@ function selectDialog(objClass, msg, funcName) {
 			label : 'Select',
 			val : 'Y',
 			btnClass : 'btn-select',
-			btnFunc: funcName
+			btnFunc : funcName
 		}, {
 			id : 1,
 			label : 'Cancel',
