@@ -154,6 +154,7 @@ public abstract class ParticlePicker
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
 		}
+
 	}
 
 	public void saveConfig()
@@ -184,6 +185,7 @@ public abstract class ParticlePicker
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
 		}
+
 	}
 
 	protected void saveConfig(MetaData md, long id)
@@ -355,6 +357,7 @@ public abstract class ParticlePicker
 		return getMicrographs().indexOf(getMicrograph());
 	}
 
+
 	public String getTemplatesFile(String name)
 	{
 		return getOutputPath(name + "_templates.stk");
@@ -382,9 +385,6 @@ public abstract class ParticlePicker
 	}// function saveData
 
 	public abstract void saveData(Micrograph m);
-
-
-
 
 
 	public Micrograph getMicrograph(String name)

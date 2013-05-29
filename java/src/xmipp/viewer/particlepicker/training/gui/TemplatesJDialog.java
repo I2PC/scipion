@@ -1,18 +1,17 @@
 package xmipp.viewer.particlepicker.training.gui;
 
 import ij.ImagePlus;
-import ij.ImageStack;
 import ij.gui.ImageCanvas;
+
 import java.awt.Dimension;
 import java.awt.Panel;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
 
-import xmipp.ij.commons.XmippIJUtil;
+import javax.swing.JDialog;
+
+import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.ImageGeneric;
-import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
 
 public class TemplatesJDialog extends JDialog {
@@ -53,16 +52,15 @@ public class TemplatesJDialog extends JDialog {
 				pack();
 				return;
 			}
-			ImagePlus templatesimp = new ImagePlus(frame.getParticlePicker().getTemplatesFile()); 
-//			templatesimp.show();
-			ImageStack stack = templatesimp.getImageStack();
+
 			
 			templatespn.removeAll();
 			ImagePlus template;
-			for (int i = 1; i <= frame.getParticlePicker().getTemplatesNumber(); i ++) {
-				template = new ImagePlus("", stack.getProcessor(i));
-//				template.show();
-				templatespn.add(new JLabel(XmippIJUtil.getImageIcon(template, size, size)));
+			for (int i = 0; i < frame.getParticlePicker().getTemplatesNumber(); i ++) {
+				//template = frame.getFamily().getTemplatesImage(ImageGeneric.FIRST_IMAGE + i);
+				template = XmippImageConverter.convertToImagePlus(templates, ImageGeneric.FIRST_IMAGE + i);
+				templatespn.add(new ImageCanvas(template));
+
 			}
 			
 		} catch (Exception e) {
