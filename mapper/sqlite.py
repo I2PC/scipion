@@ -207,7 +207,7 @@ class SqliteDb():
     def __createConnection(self, dbName, timeout):
         """Establish db connection"""
         from sqlite3 import dbapi2 as sqlite
-        self.connection = sqlite.Connection(dbName, timeout)
+        self.connection = sqlite.Connection(dbName, timeout, check_same_thread = False)
         self.connection.row_factory = sqlite.Row
         self.cursor = self.connection.cursor()
         # Define some shortcuts functions
