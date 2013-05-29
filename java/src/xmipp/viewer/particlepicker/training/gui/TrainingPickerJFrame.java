@@ -170,6 +170,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		super.enableEdition(enable);
 
 		editfamiliesmi.setEnabled(enable);
+		actionsbt.setEnabled(enable);
 	}
 
 	public void initMenuBar()
@@ -596,7 +597,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		canvas.refreshActive(null);
 		updateMicrographsModel();
 		setState(MicrographFamilyState.Available);
-		ppicker.updateTemplates();
+		family.initTemplates();
 	}
 
 	private void setState(MicrographFamilyState state)
@@ -933,6 +934,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			if (result != JOptionPane.YES_OPTION)
 				return null;
 		}
+		getFamily().initTemplates();
 		MicrographFamilyData mfd = getFamilyData();
 		mfd.reset();
 		String result = ppicker.importParticlesFromFile(file, format, mfd.getMicrograph(), scale, invertx, inverty);

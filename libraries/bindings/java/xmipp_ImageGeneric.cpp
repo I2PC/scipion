@@ -131,13 +131,13 @@ Java_xmipp_jni_ImageGeneric_readHeader(JNIEnv * env, jobject jobj,
 
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_read(JNIEnv *env, jobject jobj, jstring filename,
-                                 jint jx, jint jy, jint jz, jlong jn)
+                                 jint jx, jint jy, jint jz, jlong jn, jboolean map)
 {
     XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
         const char *fn = env->GetStringUTFChars(filename, false);
-        image->readOrReadPreview(fn, jx, jy, jz, jn, true);
+        image->readOrReadPreview(fn, jx, jy, jz, jn, map);
     }
     XMIPP_JAVA_CATCH;
 }
