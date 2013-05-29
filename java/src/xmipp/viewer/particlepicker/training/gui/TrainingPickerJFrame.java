@@ -1,6 +1,5 @@
 package xmipp.viewer.particlepicker.training.gui;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -30,11 +29,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import xmipp.jni.XmippError;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
@@ -58,7 +55,6 @@ import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.viewer.particlepicker.training.model.TrainingMicrograph;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 import xmipp.viewer.particlepicker.training.model.TrainingPicker;
-import xmipp.viewer.windows.ImagesWindowFactory;
 
 public class TrainingPickerJFrame extends ParticlePickerJFrame
 {
@@ -206,36 +202,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			importffmi.setEnabled(false);
 		filemn.add(exportmi);
 
-		exportmi = new JMenuItem("Export Particles...", XmippResource.getIcon("export_wiz.gif"));
-
-		exportmi.addActionListener(new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				XmippFileChooser fc = new XmippFileChooser();
-				int returnVal = fc.showOpenDialog(TrainingPickerJFrame.this);
-
-				try
-				{
-					if (returnVal == XmippFileChooser.APPROVE_OPTION)
-					{
-						File file = fc.getSelectedFile();
-						((TrainingPicker) getParticlePicker()).exportParticles(file.getAbsolutePath());
-						showMessage("Export successful");
-					}
-				}
-				catch (Exception ex)
-				{
-					showException(ex);
-				}
-			}
-		});
-		filemn.add(importffmi);
-		if (ppicker.getFamily().getStep() != FamilyState.Manual)
-			importffmi.setEnabled(false);
-		filemn.add(exportmi);
+		
+		
 		JMenu windowmn = new JMenu("Window");
 
 		mb.add(filemn);
@@ -906,7 +874,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	public String importMicrographParticles(Format format, String file, float scale, boolean invertx, boolean inverty)
 	{
-
+		family.initTemplates();
 		String filename = Micrograph.getName(file, 1);
 		// validating you want use this file for this micrograph with different
 		// name
@@ -918,7 +886,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 				return null;
 		}
 		MicrographFamilyData mfd = getFamilyData();
-		mfd.reset(ppicker);
+		mfd.reset();
 		String result = ((ManualParticlePicker) ppicker).importParticlesFromFile(file, format, mfd.getMicrograph(), scale, invertx, inverty);
 		ppicker.saveData(getMicrograph());
 		return result;

@@ -250,12 +250,12 @@ public class MicrographFamilyData
 		return state.toString();
 	}
 
-	public void reset(TrainingPicker picker)
+	public void reset()
 	{
 		autoparticles.clear();
 		manualparticles.clear();
 		setState(MicrographFamilyState.Available);
-		picker.updateTemplates();
+		
 	}
 
 	public FamilyState getStep()
