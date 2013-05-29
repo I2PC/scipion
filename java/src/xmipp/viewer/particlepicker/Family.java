@@ -68,9 +68,9 @@ public class Family
 			{
 
 				this.templates = new ImageGeneric(templatesfile);
-				for (templateindex = 0; templateindex < templatesNumber; templateindex++)
-					// to initialize templates on c part
-					XmippImageConverter.readToImagePlus(templates, ImageGeneric.FIRST_IMAGE + templateindex);
+				templates.read(templatesfile, false);
+				templateindex = templatesNumber;//all images read
+				
 			}
 			else
 				initTemplates();
