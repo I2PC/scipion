@@ -51,7 +51,7 @@
 			</tr>
 			{% for obj in provider.getObjects %}
 				<tr>
-					<td onclick='javascript:alert("{{obj.getObjId}}");'><a href="javascript:popup('/form/?projectName={{projectName}}&protocolId={{obj.getObjId}}')">{{obj.getName}}</a></td>
+					<td><a href="javascript:popup('/form/?projectName={{projectName}}&protocolId={{obj.getObjId}}')">{{obj.getName}}</a></td>
 					<td>{{obj.status.get}}</td>
 					<td>{{obj.endTime.get}}</td>
 				</tr>
