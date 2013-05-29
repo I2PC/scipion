@@ -208,9 +208,15 @@ def form(request):
                 param.htmlValue = protVar.get().getNameId()
             else:
                 param.htmlValue = protVar.get(param.default.get(""))
+                if isinstance(protVar, Boolean):
+                    if param.htmlValue:
+                        param.htmlValue = 'true'
+                    else:
+                        param.htmlValue = 'false' 
             param.htmlCond = param.condition.get()
             param.htmlDepend = ','.join(param._dependants)
             param.htmlCondParams = ','.join(param._conditionParams)
+#            param.htmlExpertLevel = param.expertLevel.get()
     
     
     context = {'projectName':projectName,
