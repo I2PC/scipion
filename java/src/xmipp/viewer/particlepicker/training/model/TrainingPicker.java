@@ -406,7 +406,7 @@ public abstract class TrainingPicker extends ParticlePicker
 				block = String.format("%s@%s", mfd.getFamily().getName(), getOutputPath(mfd.getMicrograph().getPosFile()));
 				emptymd.writeBlock(block);
 			}
-			mfd.reset();// Resetting family data
+			mfd.reset(this);// Resetting family data
 			emptymd.destroy();
 
 		}
