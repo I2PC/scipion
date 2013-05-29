@@ -342,7 +342,7 @@ class FormWindow(Window):
                           command=self.close)
         btnClose.grid(row=0, column=0, padx=5, pady=5, sticky='sw')
         btnSave = tk.Button(btnFrame, text="Save", image=self.getImage('filesave.png'), compound=tk.LEFT, font=self.font, 
-                          command=lambda : showMsg('Save'))
+                          command=self.save)
         btnSave.grid(row=0, column=1, padx=5, pady=5, sticky='sw')
         # Add create project button
         
@@ -371,9 +371,16 @@ class FormWindow(Window):
 
         return (width, height)
         
+    def save(self, e=None):
+        self._close(onlySave=True)
+        
     def execute(self, e=None):
-        self.close()
-        self.callback(self.protocol)
+        self._close()
+        
+    def _close(self, onlySave=False):
+        if not onlySave:
+            self.close()
+        self.callback(self.protocol, onlySave)
            
     def _fillSection(self, sectionParam, sectionFrame):
         parent = sectionFrame.contentFrame

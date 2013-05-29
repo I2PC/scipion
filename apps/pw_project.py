@@ -386,7 +386,7 @@ class ProjectWindow(gui.Window):
         
     def _openProtocolForm(self, prot):
         """Open the Protocol GUI Form given a Protocol instance"""
-        w = FormWindow("Protocol Run: " + prot.getClassName(), prot, self._executeProtocol, self)
+        w = FormWindow("Protocol Run: " + prot.getClassName(), prot, self._executeSaveProtocol, self)
         w.show(center=True)
         
     def _browseRunData(self):
@@ -396,8 +396,11 @@ class ProjectWindow(gui.Window):
         window.itemConfig(self.selectedProtocol, open=True)  
         window.show()
         
-    def _executeProtocol(self, prot):
-        self.project.launchProtocol(prot)
+    def _executeSaveProtocol(self, prot, onlySave=False):
+        if onlySave:
+            self.project.saveProtocol(prot)
+        else:
+            self.project.launchProtocol(prot)
         self.runsTree.after(1000, self.runsTree.update)
         
     def _continueProtocol(self, prot):
@@ -420,7 +423,8 @@ class ProjectWindow(gui.Window):
             elif action == ACTION_EDIT:
                 self._openProtocolForm(prot)
             elif action == ACTION_COPY:
-                pass
+                newProt = self.project.copyProtocol(prot)
+                self._openProtocolForm(newProt)
             elif action == ACTION_DELETE:
                 self._deleteProtocol(prot)
             elif action == ACTION_STEPS:

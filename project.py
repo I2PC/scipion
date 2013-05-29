@@ -153,6 +153,18 @@ class Project(object):
         cleanPath(protocol.workingDir.get())  
         self.mapper.commit()     
         
+    def copyProtocol(self, protocol):
+        """ Make a copy of the protocol, return a new one with copied values. """
+        cls = protocol.getClass()
+        newProt = cls() # Create new protocol instance
+        newProt.copyDefinitionAttributes(protocol)
+        
+        return newProt
+    
+    def saveProtocol(self, protocol):
+        protocol.status.set(STATUS_SAVED)
+        self._storeProtocol(protocol)
+        
     def _storeProtocol(self, protocol):
         """Insert a new protocol instance in the database"""
         self.mapper.store(protocol)
