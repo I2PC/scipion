@@ -128,10 +128,10 @@ class DefCTFMicrographs(Form):
     def __init__(self):
         Form.__init__(self)
     
-        self.addSection(label='Input')
-        self.addParam('inputMicrographs', PointerParam, label="Micrographs", pointerClass='SetOfMicrographs')
-        
         self.addSection(label='CTF Estimation')
+        
+        self.addParam('inputMicrographs', PointerParam, important=True,
+                      label="Input Micrographs", pointerClass='SetOfMicrographs')
         self.addParam('ampContrast', FloatParam, default=0.1,
                       label='Amplitude Contrast',
                       help='It should be a positive number, typically between 0.05 and 0.3.')

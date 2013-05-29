@@ -36,6 +36,7 @@ from pyworkflow.object import OrderedObject, String, List, Integer, Boolean, Csv
 from pyworkflow.utils.path import replaceExt, makePath, join, existsPath, cleanPath, getFolderFiles
 from pyworkflow.utils.log import *
 
+STATUS_SAVED = "saved" # Parameters saved for later use
 STATUS_LAUNCHED = "launched"  # launched to queue system, only usefull for protocols
 STATUS_RUNNING = "running"    # currently executing
 STATUS_FAILED = "failed"      # it have been failed
@@ -233,6 +234,11 @@ class Protocol(Step):
         """ Iterate over all the attributes from definition. """
         for paramName, _ in self._definition.iterParams():
             yield paramName, getattr(self, paramName)
+            
+    def copyDefinitionAttributes(self, other):
+        """ Copy definition attributes to other protocol. """
+        for paramName, _ in self.iterDefinitionAttributes():
+            self.copyAttributes(other, paramName)
         
     def _createVarsFromDefinition(self, **args):
         """ This function will setup the protocol instance variables
