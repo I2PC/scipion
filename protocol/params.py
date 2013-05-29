@@ -193,14 +193,17 @@ class Form():
     def addParallelSection(self, threads=1, mpi=8, condition="",
                            hours=72, jobsize=0):
         self.addSection(label='Parallelization')
+        self.addParam('executionHost', StringParam, default="localhost",
+                      label='Execution host',
+                      help='Select in which of the available do you want to launch this protocol.')
         if threads > 0:
             self.addParam('numberOfThreads', IntParam, default=threads,
-                          label='Number of threads',
+                          label='Threads',
                           help='This option provides shared-memory parallelization on multi-core machines.'
                                 'It does not require any additional software, other than <Xmipp>' )
         if mpi > 0:
             self.addParam('numberOfMpi', IntParam, default=mpi,
-                          label='Number of MPI processes',
+                          label='MPI processes',
                           help='This option provides the number of independent processes spawned'
                                 'in parallel by <mpirun> command in a cluster, usually throught'
                                 'a queue system. This will require that you have compile <Xmipp>'
