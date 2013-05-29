@@ -88,7 +88,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			initComponents();
 			if (ppicker.getMode() == Mode.ReadOnly)
 				enableEdition(false);
-			setSupervised(ppicker.getMode() == Mode.Supervised);
+			enableSupervised(ppicker.getMode() == Mode.Supervised);
 		}
 		catch (IllegalArgumentException ex)
 		{
@@ -182,8 +182,6 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			XmippDialog.showError(this, msg);
 		}
 	}
-
-	
 
 	@Override
 	public String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty)
@@ -339,7 +337,29 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				setSupervised(autopickchb.isSelected());
+				try
+				{
+					boolean isautopick = autopickchb.isSelected();
+					
+					if (isautopick)
+					{
+						ppicker.saveData();
+						ppicker.train(SingleParticlePickerJFrame.this);
+						ppicker.autopick(SingleParticlePickerJFrame.this);
+					}
+					if(isautopick)
+						ppicker.setMode(Mode.Supervised);
+					else
+						ppicker.setMode(Mode.Manual);
+					ppicker.saveConfig();
+					enableSupervised(isautopick);
+				}
+				catch (Exception ex)
+				{
+					XmippDialog.showError(SingleParticlePickerJFrame.this, ex.getMessage());
+					autopickchb.setSelected(false);
+					return;
+				}
 			}
 		});
 		sppickerpn.add(autopickchb);
@@ -350,23 +370,14 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 	}
 
-	protected void setSupervised(boolean selected)
+	protected void enableSupervised(boolean selected)
 	{
-		try
-		{
-			if (selected)
-				ppicker.train(this);
-			thresholdpn.setVisible(selected);
-			sizesl.setEnabled(!selected);//not really, if there is some micrograph in sup mode size cannot be changed
-			sizetf.setEnabled(!selected);
-			pack();
-		}
-		catch (Exception ex)
-		{
-			XmippDialog.showError(SingleParticlePickerJFrame.this, ex.getMessage());
-			autopickchb.setSelected(false);
-			return;
-		}
+
+		thresholdpn.setVisible(selected);
+		sizesl.setEnabled(!selected);//not really, if there is some micrograph in sup mode size cannot be changed
+		sizetf.setEnabled(!selected);
+		pack();
+
 	}
 
 	public boolean isSupervised()
@@ -584,7 +595,10 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			return;
 		if (ppicker.isChanged())
 			ppicker.saveData(getMicrograph());// Saving changes when switching
-
+		
+		if(getMicrograph().getState() == MicrographState.Supervised)
+			ppicker.correct();
+		
 		index = micrographstb.getSelectedRow();
 		ppicker.getMicrograph().releaseImage();
 		ppicker.setMicrograph(ppicker.getMicrographs().get(index));

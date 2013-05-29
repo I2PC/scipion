@@ -10,7 +10,8 @@ JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_autopick
 {
     XMIPP_JAVA_TRY
     {
-        std::cout << "autopick "<< filename << std::endl;
+    	jboolean iscopy = false;
+        std::cout << "autopick "<< env->GetStringUTFChars(filename, &iscopy) << std::endl;
     }
     XMIPP_JAVA_CATCH;
 
@@ -21,7 +22,8 @@ JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_correct
 {
     XMIPP_JAVA_TRY
     {
-    	std::cout << "correct "<< filename << std::endl;
+    	jboolean iscopy = false;
+    	std::cout << "correct "<< env->GetStringUTFChars(filename, &iscopy) << std::endl;
     }
     XMIPP_JAVA_CATCH;
 

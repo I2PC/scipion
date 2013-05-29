@@ -894,6 +894,13 @@ public class SingleParticlePicker extends ParticlePicker
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
+	
+	public void correct()
+	{
+
+		new Thread(new CorrectRunnable()).start();
+
+	}
 
 	public void autopick(SingleParticlePickerJFrame frame)
 	{
@@ -908,8 +915,7 @@ public class SingleParticlePicker extends ParticlePicker
 	{
 		if (mode != Mode.Manual)
 			throw new IllegalArgumentException(XmippMessage.getIllegalStateForOperationMsg("picker", this.mode.toString()));
-		setMode(Mode.Supervised);
-		saveData();
+		
 		frame.getCanvas().setEnabled(false);
 		XmippWindowUtil.blockGUI(frame, "Training...");
 		new Thread(new TrainRunnable(frame)).start();
@@ -932,9 +938,14 @@ public class SingleParticlePicker extends ParticlePicker
 			{
 				ArrayList<String> trainmics = new ArrayList<String>();
 				for(TrainingMicrograph m: micrographs)
+				{
 					if(m.hasManualParticles())
 						trainmics.add(m.getName());
-				classifier.train(trainmics.toArray(new String[]{}));
+					m.getAutomaticParticles().clear();
+					new File(m.getAutoPosFile()).delete();
+				}
+				classifier.train(trainmics.toArray(new String[]{}));//should remove training files
+				
 //				String args = "-i %s --particleSize %s --model %s --outputRoot %s --mode buildinv %s --filter_num %s --NPCA %s --NCORR %s";
 //				if (isFastMode())
 //					args += " --fast";
@@ -1016,7 +1027,13 @@ public class SingleParticlePicker extends ParticlePicker
 
 		public void run()
 		{
-			classifier.autopick(getMicrograph().getName());
+			micrograph.getAutomaticParticles().clear();
+			new File(micrograph.getAutoPosFile()).delete();//to remove previously persisted data
+			classifier.autopick(micrograph.getName());
+			micrograph.setState(MicrographState.Supervised);
+			loadAutomaticParticles(micrograph);
+			
+			
 //			String args = "-i %s --particleSize %s --model %s --outputRoot %s --mode try --thr %s --autoPercent %s";
 //			if (isFastMode())
 //				args += " --fast";
@@ -1041,23 +1058,37 @@ public class SingleParticlePicker extends ParticlePicker
 			XmippWindowUtil.releaseGUI(frame.getRootPane());
 		}
 
-		//		public String getCorrectCommandLineArgs(Micrograph micrograph)
-		//		{
-		//			String args = String.format("-i %s --particleSize %s --model %s --outputRoot %s --mode train ", micrograph.getFile(),// -i
-		//					getSize(), // --particleSize
-		//					getOutputPath(model),// --model
-		//					getOutputPath(model)// --outputRoot
-		//					);
-		//
-		//			//		if (mfd.getManualParticles().size() > 0)
-		//			//			args += family.getName() + "@" + getOutputPath(micrograph.getPosFile());
-		//			if (isFastMode())
-		//				args += " --fast";
-		//			if (isIncore())
-		//				args += " --in_core";
-		//			return args;
-		//		}
 
+
+	}
+	
+	public class CorrectRunnable implements Runnable
+	{
+
+		
+		public void run()
+		{
+			
+			classifier.correct(micrograph.getName());
+			
+			
+			//		public String getCorrectCommandLineArgs(Micrograph micrograph)
+			//		{
+			//			String args = String.format("-i %s --particleSize %s --model %s --outputRoot %s --mode train ", micrograph.getFile(),// -i
+			//					getSize(), // --particleSize
+			//					getOutputPath(model),// --model
+			//					getOutputPath(model)// --outputRoot
+			//					);
+			//
+			//			//		if (mfd.getManualParticles().size() > 0)
+			//			//			args += family.getName() + "@" + getOutputPath(micrograph.getPosFile());
+			//			if (isFastMode())
+			//				args += " --fast";
+			//			if (isIncore())
+			//				args += " --in_core";
+			//			return args;
+			//		}
+		}
 	}
 
 }

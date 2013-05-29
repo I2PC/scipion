@@ -117,7 +117,6 @@ public abstract class ParticlePicker
 			setMicrograph(getMicrographs().get(0));
 			filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
 			return;
-
 		}
 
 		String mname;
@@ -166,7 +165,7 @@ public abstract class ParticlePicker
 			md = new MetaData();
 			long id = md.addObject();
 			saveConfig(md, id);
-			md.writeBlock("properties@" + file);
+			md.write("properties@" + file);
 			String options;
 			md = new MetaData();
 			for (IJCommand f : filters)
