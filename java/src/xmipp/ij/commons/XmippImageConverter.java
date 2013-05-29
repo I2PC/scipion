@@ -204,7 +204,7 @@ public class XmippImageConverter {
 		if (useGeo)
 			image.readApplyGeo(fn, md, objId, wrap);
 		else
-			image.read(fn);
+			image.read(fn, true);
 		return convertToImagePlus(image);
 	}
 

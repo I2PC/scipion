@@ -66,9 +66,8 @@ public class Family
 			if (new File(templatesfile).exists())
 			{
 				this.templates = new ImageGeneric(templatesfile);
-				for (templateindex = 0; templateindex < templatesNumber; templateindex++)
-					// to initialize templates on c part
-					XmippImageConverter.readToImagePlus(templates, ImageGeneric.FIRST_IMAGE + templateindex);
+				templates.read(templatesfile, false);
+				templateindex = templatesNumber;
 			}
 			else
 				initTemplates();
@@ -161,8 +160,6 @@ public class Family
 		if (size > ParticlePicker.fsizemax)
 			throw new IllegalArgumentException(String.format("Max size is %s, %s not allowed", ParticlePicker.fsizemax, size));
 		this.size = size;
-		if(picker instanceof TrainingPicker)
-			((TrainingPicker) picker).updateTemplates();
 	}
 
 	public String getName()
@@ -188,8 +185,6 @@ public class Family
 			throw new IllegalArgumentException(
 					XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Family must have at least one template"));
 		this.templatesNumber = num;
-		if(picker instanceof TrainingPicker)
-			((TrainingPicker) picker).updateTemplates();
 	}
 
 	public Color getColor()
