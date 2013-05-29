@@ -151,7 +151,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 	public String importMicrographParticles(Format format, String file, float scale, boolean invertx, boolean inverty)
 	{
-
+	
 		String filename = Micrograph.getName(file, 1);
 		// validating you want use this file for this micrograph with different
 		// name
@@ -162,6 +162,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			if (result != JOptionPane.YES_OPTION)
 				return null;
 		}
+		ppicker.initTemplates();
 		getMicrograph().reset();
 		String result = ppicker.importParticlesFromFile(file, format, getMicrograph(), scale, invertx, inverty);
 		ppicker.saveData(getMicrograph());
@@ -618,10 +619,11 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 	protected void resetMicrograph()
 	{
 		getMicrograph().reset();
+		ppicker.initTemplates();
 		canvas.refreshActive(null);
 		updateMicrographsModel();
 		setState(MicrographState.Available);
-		ppicker.initUpdateTemplates();
+		
 	}
 
 	private void setState(MicrographState state)

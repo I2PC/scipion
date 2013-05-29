@@ -540,6 +540,7 @@ public class SingleParticlePicker extends ParticlePicker
 
 		String filename;
 		String result = "";
+		initTemplates();
 		for (TrainingMicrograph m : micrographs)
 		{
 			filename = getImportMicrographName(path, m.getFile(), f);
@@ -662,6 +663,7 @@ public class SingleParticlePicker extends ParticlePicker
 		// micrographs
 		try
 		{
+			initTemplates();
 			String[] blocksArray = MetaData.getBlocksInMetaDataFile(file);
 			List<String> blocks = Arrays.asList(blocksArray);
 			String block;
