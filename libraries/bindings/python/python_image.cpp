@@ -35,7 +35,6 @@ void Image_dealloc(ImageObject* self)
 
     delete self->image;
     self->ob_type->tp_free((PyObject*) self);
-    std::cerr << "Image dealloc finish" <<std::endl;
 }//function Image_dealloc
 
 

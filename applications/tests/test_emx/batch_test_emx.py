@@ -323,7 +323,7 @@ class TestEMX(unittest.TestCase):
         xmlFile    = join(self.testsPath,'EMX/EMXwrite_badly_formed.emx')
         with self.assertRaises(Exception) as context:
             validateSchema(xmlFile)
-        self.assertEqual(context.exception.message, 'Error when validating file /home/roberto/xmipp_master/resources/test/EMX/EMXwrite_badly_formed.emx with schema http://sourceforge.net/p/emexchange/code/ci/master/tree/trunk/resourcesEmx/schemas/emx_11.xsd?format=raw.\n        \nError:[Error] EMXwrite_badly_formed.emx:20:20: cvc-complex-type.2.4.a: Invalid content was found starting with element \'pixelSpacingi\'. One of \'{defocusV, defocusUAngle, cs, activeFlag, amplitudeContrast, fom, pixelSpacing}\' is expected.\n[Fatal Error] EMXwrite_badly_formed.emx:23:7: The element type "pixelSpacingi" must be terminated by the matching end-tag "</pixelSpacingi>".\n')
+        self.assertTrue(context.exception.message.find('Error when validating ')>=0)
 
 from  XmippPythonTestResult import XmippPythonTestResult
 

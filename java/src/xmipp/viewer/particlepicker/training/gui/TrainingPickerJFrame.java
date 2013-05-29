@@ -47,7 +47,9 @@ import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
+import xmipp.viewer.particlepicker.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.ParticlesJDialog;
+import xmipp.viewer.particlepicker.UpdateTemplatesTask;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
 import xmipp.viewer.particlepicker.training.model.ManualParticlePicker;
 import xmipp.viewer.particlepicker.training.model.MicrographFamilyData;
@@ -268,33 +270,23 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				loadTemplates();
+				if (templatesdialog == null)
+				{
+					templatesdialog = new TemplatesJDialog(TrainingPickerJFrame.this);
+					UpdateTemplatesTask.setTemplatesDialog(templatesdialog);
+					ParticleToTemplatesTask.setTemplatesDialog(templatesdialog);
+				}
+				else
+				{
+
+					templatesdialog.setVisible(true);
+				}
 
 			}
 		});
 	}
 
-	public void loadTemplates()
-	{
-		try
-		{
-			if (templatesdialog == null)
-			{
-				templatesdialog = new TemplatesJDialog(TrainingPickerJFrame.this);
-			}
-			else
-			{
 
-				templatesdialog.loadTemplates(true);
-				templatesdialog.setVisible(true);
-
-			}
-		}
-		catch (Exception e)
-		{
-			XmippDialog.showError(this, e.getMessage());
-		}
-	}
 
 	private void initFamilyPane()
 	{
@@ -328,6 +320,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		fieldspn.add(sizepn);
 
 		centerpickchb = new JCheckBox("Center Particle");
+		centerpickchb.setSelected(true);
 		fieldspn.add(centerpickchb);
 
 		familypn.add(fieldspn, 0);
@@ -602,6 +595,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		canvas.refreshActive(null);
 		updateMicrographsModel();
 		setState(MicrographFamilyState.Available);
+		ppicker.updateTemplates();
 	}
 
 	private void setState(MicrographFamilyState state)
@@ -727,8 +721,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	public void updateMicrographsModel(boolean all)
 	{
 
-		if (templatesdialog != null)
-			loadTemplates();
+		
 
 		if (particlesdialog != null)
 			loadParticles();
@@ -777,11 +770,9 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 						{
 							args = sppicker.getBuildInvariantCommandLineArgs(mfd);
 							ppicker.runXmippProgram("xmipp_micrograph_automatic_picking", args);
-							System.out.println(args);
 						}
 					}
 					args = sppicker.getTrainCommandLineArgs();
-					System.out.println(args);
 
 					ppicker.runXmippProgram("xmipp_micrograph_automatic_picking", args);
 
@@ -805,7 +796,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		setState(MicrographFamilyState.Autopick);
 
 		final String fargs = ((SupervisedParticlePicker) ppicker).getAutopickCommandLineArgs(getFamilyData());
-		System.out.println(fargs);
 		try
 		{
 			canvas.setEnabled(false);
@@ -940,27 +930,16 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	}
 
-	public void updateTemplates(Family f)
-	{
-		if (f.equals(family) && templatesdialog != null)
-			templatesdialog.loadTemplates(true);
 
-	}
-
-	public void updateTemplates()
-	{
-		updateTemplates(family);
-	}
 
 	public void updateSize(int size)
 	{
 		try
 		{
-			super.updateSize(size);
 			ppicker.resetParticleImages();
+			super.updateSize(size);
 			ppicker.updateTemplates();
-			if (templatesdialog != null)
-				loadTemplates();
+			
 		}
 		catch (Exception e)
 		{
@@ -968,13 +947,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			XmippDialog.showError(this, msg);
 		}
 	}
-
-	@Override
-	protected void resetData()
-	{
-		getFamilyData().reset();
-	}
-
 
 	public boolean isCenterParticle()
 	{
@@ -1012,9 +984,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	public void setTemplatesNumber(Family f, int templates)
 	{
 		f.setTemplatesNumber(templates);
-
-		if (f.equals(family) && templatesdialog != null)
-			templatesdialog.loadTemplates(true);
 
 	}
 }

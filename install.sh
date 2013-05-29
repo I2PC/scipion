@@ -130,12 +130,12 @@ INC_FILE=.xmipp.bashrc
 echo "export XMIPP_HOME=$PWD" > $INC_FILE
 echo 'export PATH=$XMIPP_HOME/bin:$PATH' >> $INC_FILE
 echo 'export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
-if [ "$BASH" = "/bin/bash" ]; then
+echo 'if [ "$BASH" != "" ]; then' >> $INC_FILE
 echo '# Load global autocomplete file ' >> $INC_FILE
 echo 'test -s $XMIPP_HOME/.xmipp.autocomplete && . $XMIPP_HOME/.xmipp.autocomplete || true' >> $INC_FILE
 echo '# Load programs autocomplete file ' >> $INC_FILE
 echo 'test -s $XMIPP_HOME/.xmipp_programs.autocomplete && . $XMIPP_HOME/.xmipp_programs.autocomplete || true' >> $INC_FILE
-fi
+echo 'fi' >> $INC_FILE
 
 if $IS_MAC; then
 	echo 'export DYLD_FALLBACK_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE

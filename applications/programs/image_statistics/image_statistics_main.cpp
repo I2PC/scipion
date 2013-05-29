@@ -179,7 +179,7 @@ protected:
 
         size_t id;
         id = DF_stats.addObject();
-        DF_stats.setValue(image_label,fnImg,id);
+        DF_stats.setRow(rowIn,id);
         DF_stats.setValue(MDL_MIN,min_val,id);
         DF_stats.setValue(MDL_MAX,max_val,id);
         DF_stats.setValue(MDL_AVG,avg,id);
@@ -236,7 +236,8 @@ protected:
             mask.write_mask(maskFileName);
         // Save statistics ------------------------------------------------------
         if (fn_out != "")
-            DF_stats.write(fn_out);
+            DF_stats.write(fn_out,MD_APPEND);
+
         //save average and std images
         if(save_image_stats)
         {
