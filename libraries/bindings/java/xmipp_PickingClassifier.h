@@ -16,7 +16,7 @@ Java_xmipp_jni_PickingClassifier_create(JNIEnv *env, jobject jobj, jobject, jint
  * Method:    autopick
  * Signature: (Ljava/lang/String;)Z
  */
-JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_autopick
+JNIEXPORT jobject JNICALL Java_xmipp_jni_PickingClassifier_autopick
   (JNIEnv *, jobject, jstring);
 
 

@@ -959,6 +959,7 @@ public class SingleParticlePicker extends ParticlePicker
 					}
 				}
 				classifier.train(md);//should remove training files
+				classifier.autopick(micrograph.getFile());
 
 				XmippWindowUtil.releaseGUI(frame.getRootPane());
 				frame.getCanvas().setEnabled(true);
@@ -986,7 +987,7 @@ public class SingleParticlePicker extends ParticlePicker
 		{
 			micrograph.getAutomaticParticles().clear();
 			new File(getOutputPath(micrograph.getAutoPosFile())).delete();//to remove previously persisted data
-			classifier.autopick(micrograph.getName());
+			classifier.autopick(micrograph.getFile());
 			micrograph.setState(MicrographState.Supervised);
 			loadAutomaticParticles(micrograph);
 

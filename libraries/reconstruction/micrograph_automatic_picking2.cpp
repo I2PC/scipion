@@ -406,6 +406,7 @@ void AutoParticlePicking2::saveTrainingSet()
 
 MetaData AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph)
 {
+	std::cerr<<fnmicrograph<<std::endl;
     double label, score;
     MetaData md;
     Particle2 p;
