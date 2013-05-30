@@ -1,0 +1,163 @@
+/***************************************************************************
+ * Authors:     Carlos Oscar Sorzano (coss@cnb.csic.es)
+ *
+ *
+ * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.csic.es'
+ ***************************************************************************/
+
+#include "matrix_dimred.h"
+#include <data/matrix2d.h>
+#include "diffusionMaps.h"
+#include "pca.h"
+#include "lpp.h"
+#include "ltsa.h"
+#include "gplvm.h"
+#include "lltsaSCG.h"
+#include "kernelPCA.h"
+#include "hessianLLE.h"
+#include "diffusionMaps.h"
+#include "probabilisticPCA.h"
+#include "laplacianEigenmaps.h"
+
+void ProgMatrixDimRed::readParams()
+{
+    fnIn = getParam("-i");
+    fnOut = getParam("-o");
+    dimRefMethod = getParam("-m");
+    inputDim  = getIntParam("--din");
+    outputDim  = getIntParam("--dout");
+    Nsamples  = getIntParam("--samples");
+
+    if (dimRefMethod=="LTSA" || dimRefMethod=="LLTSASCG" || dimRefMethod=="LPP" || dimRefMethod=="LE" || dimRefMethod=="HLLE")
+    	kNN=getIntParam("-m",1);
+    if (dimRefMethod=="DM" || dimRefMethod=="kPCA")
+    	sigma=getDoubleParam("-m",1);
+    if (dimRefMethod=="LPP" || dimRefMethod=="LE")
+    	sigma=getDoubleParam("-m",2);
+    if (dimRefMethod=="DM")
+    	t=getDoubleParam("-m",2);
+    if (dimRefMethod=="pPCA")
+    	Niter=getIntParam("-m",1);
+}
+
+// Show ====================================================================
+void ProgMatrixDimRed::show()
+{
+    if (verbose>0)
+        std::cerr
+        << "Input metadata file:    " << fnIn          << std::endl
+        << "Output metadata:        " << fnOut         << std::endl
+        << "Dim Red Method:         " << dimRefMethod  << std::endl
+        << "Dimension in:           " << inputDim      << std::endl
+        << "Dimension out:          " << outputDim     << std::endl
+        << "Number of samples:      " << Nsamples      << std::endl
+        ;
+}
+
+// usage ===================================================================
+void ProgMatrixDimRed::defineParams()
+{
+	addUsageLine("This program takes an input matrix, whose rows are individual observations and ");
+	addUsageLine("projects each sample onto a lower dimensional space using the selected method");
+    addParamsLine("   -i <file>             : input matrix with data. Each observation is a row.");
+    addParamsLine("   -o <file>             : output matrix. Each observation is a row");
+    addParamsLine("  [-m <dimRefMethod=PCA>]: Dimensionality Reduction method selected");
+    addParamsLine("      where <dimRefMethod>");
+    addParamsLine("             PCA            : Principal Component Analysis");
+    addParamsLine("             LTSA <k=12>    : Local Tangent Space Alignment, k=number of nearest neighbours");
+    addParamsLine("             DM <s=1> <t=1> : Diffusion map, t=Markov random walk, s=kernel sigma");
+    addParamsLine("             LLTSA <k=12>   : Linear Local Tangent Space Alignment, k=number of nearest neighbours");
+    addParamsLine("             LPP <k=12> <s=1> : Linearity Preserving Projection, k=number of nearest neighbours, s=kernel sigma");
+    addParamsLine("             kPCA <s=1>     : Kernel PCA, s=kernel sigma");
+    addParamsLine("             pPCA <n=200>   : Probabilistic PCA, n=number of iterations");
+    addParamsLine("             LE <k=7> <s=1> : Laplacian Eigenmap, k=number of nearest neighbours, s=kernel sigma");
+    addParamsLine("             HLLE <k=12>    : Hessian Locally Linear Embedding, k=number of nearest neighbours");
+    addParamsLine("   --din <d>             : Input dimension");
+    addParamsLine("   --dout <d>            : Output dimension");
+    addParamsLine("   --samples <N>         : Number of observations in the input matrix");
+    addExampleLine("xmipp_matrix_dimred -i matrixIn.txt -o matrixOut.txt --din 30 --dout 2 --samples 1000");
+}
+
+// Produce side info  ======================================================
+void ProgMatrixDimRed::produceSideInfo()
+{
+	X.resizeNoCopy(Nsamples,inputDim);
+	X.read(fnIn);
+}
+
+// Run  ====================================================================
+void ProgMatrixDimRed::run()
+{
+    show();
+    produceSideInfo();
+    DimRedAlgorithm*  algorithm=NULL;
+    PCA               algorithmPCA;
+    LTSA              algorithmLTSA;
+    DiffusionMaps     algorithmDiffusionMaps;
+    LLTSASCG          algorithmLLTSASCG;
+    LPP               algorithmLPP;
+    KernelPCA         algorithmKernelPCA;
+    ProbabilisticPCA  algorithmProbabilisticPCA;
+    LaplacianEigenmap algorithmLaplacianEigenmap;
+    HessianLLE        algorithmHessianLLE;
+    if (dimRefMethod=="PCA")
+    {
+    	algorithm=&algorithmPCA;
+    } else if (dimRefMethod=="LTSA")
+    {
+    	algorithm=&algorithmLTSA;
+    	algorithmLTSA.setSpecificParameters(kNN);
+    } else if (dimRefMethod=="DM")
+    {
+    	algorithm=&algorithmDiffusionMaps;
+    	algorithmDiffusionMaps.setSpecificParameters(t,sigma);
+    } else if (dimRefMethod=="LLTSA")
+    {
+    	algorithm=&algorithmLLTSASCG;
+    	algorithmLLTSASCG.setSpecificParameters(kNN);
+    } else if (dimRefMethod=="LPP")
+    {
+    	algorithm=&algorithmLPP;
+    	algorithmLPP.setSpecificParameters(kNN,sigma);
+    } else if (dimRefMethod=="kPCA")
+    {
+    	algorithm=&algorithmKernelPCA;
+    	algorithmKernelPCA.setSpecificParameters(sigma);
+    } else if (dimRefMethod=="pPCA")
+    {
+    	algorithm=&algorithmProbabilisticPCA;
+    	algorithmProbabilisticPCA.setSpecificParameters(Niter);
+    } else if (dimRefMethod=="LE")
+    {
+    	algorithm=&algorithmLaplacianEigenmap;
+    	algorithmLaplacianEigenmap.setSpecificParameters(sigma,kNN);
+    } else if (dimRefMethod=="HLLE")
+    {
+    	algorithm=&algorithmHessianLLE;
+    	algorithmHessianLLE.setSpecificParameters(kNN);
+    }
+
+    algorithm->setInputData(X);
+    algorithm->setOutputDimensionality(outputDim);
+    algorithm->reduceDimensionality();
+    algorithm->setInputData(X);
+    algorithm->getReducedData().write(fnOut);
+}
