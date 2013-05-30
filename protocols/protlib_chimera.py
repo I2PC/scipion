@@ -79,7 +79,8 @@ class XmippChimeraClient:
         maxweight = md.aggregateSingle(AGGR_MAX, MDL_WEIGHT)
         minweight = md.aggregateSingle(AGGR_MIN, MDL_WEIGHT)
         interval = maxweight - minweight
-        minweight = minweight - 1
+        minweight = minweight - 1#to avoid 0 on normalized weight
+        
         self.angulardist = []  
         for id in md:
             
@@ -96,14 +97,11 @@ class XmippChimeraClient:
             z = z * self.spheres_distance
             
             command = 'shape sphere radius %s center %s,%s,%s color %s '%(radius, x, y, z, self.spheres_color)
-            printCmd(command)
-            self.angulardist.append(command)  
-            
 
+            self.angulardist.append(command)    
         centercmd = "cofr %d,%d,%d"%(self.xdim/2, self.ydim/2, self.zdim/2)
         printCmd(centercmd)
-        self.angulardist.append(centercmd)  
-       
+        self.angulardist.append(centercmd) 
     
     def send(self, cmd, data):
 #        print cmd
