@@ -36,11 +36,11 @@
 
 AutoParticlePicking2::AutoParticlePicking2()
 {}
-AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum, int basisPCA, const FileName &model_name)
+AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum, int basisPCA, const FileName &model_name, MetaData micrographsMd)
 {
 
-
-    fn_model=model_name.removeDirectories();
+	std::cerr<<model_name<<std::endl;
+    fn_model=model_name;
     fnPCAModel=fn_model+"_pca_model.stk";
     fnPCARotModel=fn_model+"_rotpca_model.stk";
     fnAvgModel=fn_model+"_particle_avg.xmp";
@@ -118,8 +118,8 @@ void AutoParticlePicking2::buildInvariant(MetaData MD)
         MD.getValue(MDL_MICROGRAPH,micFile, __iter.objId);
         readMic(micFile);
         filterBankGenerator();
-        MD.getValue(MDL_POSITION,posFile, __iter.objId);
-        MD2.read(posFile);
+        MD.getValue(MDL_MICROGRAPH_PARTICLES,posFile, __iter.objId);
+        MD2.read("particles@"+posFile);
         FOR_ALL_OBJECTS_IN_METADATA(MD2)
         {
             MD2.getValue(MDL_XCOOR,x, __iter.objId);

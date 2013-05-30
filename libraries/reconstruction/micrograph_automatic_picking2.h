@@ -124,7 +124,7 @@ public:
 public:
 
     /// Constructor
-    AutoParticlePicking2(int particle_size, int filter_num = 6, int corr_num = 2, int NPCA = 4, const FileName &model_name=NULL);
+    AutoParticlePicking2(int particle_size, int filter_num = 6, int corr_num = 2, int NPCA = 4, const FileName &model_name=NULL, MetaData micrographsMd=NULL);
 
     AutoParticlePicking2();
 

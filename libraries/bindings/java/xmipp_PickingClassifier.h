@@ -8,20 +8,23 @@
 extern "C" {
 #endif
 
+
+JNIEXPORT void JNICALL
+Java_xmipp_jni_PickingClassifier_create(JNIEnv *env, jobject jobj, jobject, jint, jstring);
 /*
  * Class:     xmipp_PickingClassifier
  * Method:    autopick
  * Signature: (Ljava/lang/String;)Z
  */
 JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_autopick
-  (JNIEnv *, jclass, jstring);
+  (JNIEnv *, jobject, jstring);
 
 
 JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_correct
-  (JNIEnv *, jclass, jstring);
+  (JNIEnv *, jobject, jobject, jobject);
 
 JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_train
-  (JNIEnv *, jclass, jobjectArray);
+  (JNIEnv *, jobject, jobject);
 
 
 #ifdef __cplusplus

@@ -12,6 +12,7 @@
 
 #define GET_INTERNAL_IMAGE_GENERIC(jobj) ((ImageGeneric *)GET_INTERNAL_POINTER(jobj))
 #define GET_INTERNAL_METADATA(jobj) ((MetaData *)GET_INTERNAL_POINTER(jobj))
+#define GET_INTERNAL_AUTOPARTICLEPICKING2(jobj) ((AutoParticlePicking2 *)GET_INTERNAL_POINTER(jobj))
 #define GET_INTERNAL_CTFDESCRIPTION(jobj) ((CTFDescription *)GET_INTERNAL_POINTER(jobj))
 
 // @TODO Convert this to the way above.
