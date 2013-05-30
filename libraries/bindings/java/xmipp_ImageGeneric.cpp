@@ -138,8 +138,8 @@ Java_xmipp_jni_ImageGeneric_read(JNIEnv *env, jobject jobj, jstring filename,
     XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-        jboolean aux=false;
-        const char *fn = env->GetStringUTFChars(filename, &aux);
+
+        const char *fn = env->GetStringUTFChars(filename, false);
         image->readOrReadPreview(fn, jx, jy, jz, jn, map);
     }
     XMIPP_JAVA_CATCH;
