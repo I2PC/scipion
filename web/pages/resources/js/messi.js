@@ -53,7 +53,7 @@ function Messi(data, options) {
       var addon="href='#'";
       if(cls=="btn-select"){
 //    	  var addon = "onClick=javascript:processSelection(jQuery('div#content'));";
-    	  var addon = "onClick=javascript:"+ funcName + "(jQuery('div#content'));";
+    	  var addon = "onClick=javascript:"+ funcName + "(jQuery('.content'));";
     	  }
       var btn = jQuery('<span class="btnbox"><button class="btn ' + cls + '"'+ addon +' >' + _this.options.buttons[i].label + '</button></span>').data('value', _this.options.buttons[i].val);
       btn.bind('click', function() {

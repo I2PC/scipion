@@ -115,21 +115,37 @@ function browseObjects(node, projName, objClass) {
 		success : function(json) {
 			// specifying a dataType of json makes jQuery pre-eval the response
 			// for us
-			var res = getListFormatted(node, json.objects, objClass);
-			selectDialog(objClass, res, "processSelection");
+			// var res = getListFormatted(node, json.objects, objClass);
+			var res = getTableFormatted(node, json.objects, objClass);
+
+			// selectDialog(objClass, res, "processSelectionList");
+			selectDialog(objClass, res, "processSelectionTable");
 
 		}
 	});
 }
 
 function getListFormatted(node, list, id) {
-	var res = "<div id='content' style='overflow:auto' data-node='" + node
+	var res = "<div class='content' style='overflow:auto' data-node='" + node
 			+ "'>";
 	for ( var x = 0; x < list.length; x++) {
-		res = res + "<input type='radio' id ='" + id + x + "' name='" + id
+		res += "<input type='radio' id ='" + id + x + "' name='" + id
 				+ "'  value='" + list[x] + "' />" + list[x] + "<br />";
 	}
 	res = res + "</div>";
+	return res;
+}
+
+function getTableFormatted(node, list, id) {
+
+	var res = "<table class='content' style='overflow:auto' data-node='" + node
+			+ "'>";
+	for ( var x = 0; x < list.length; x++) {
+		res += "<tr><td id='" + id + x + "' name='" + id + "' value='"
+				+ list[x] + "' onclick=javascript:selTableMessi($(this)); >"
+				+ list[x] + "</td></tr>";
+	}
+	res = res + "</table>";
 	return res;
 }
 
@@ -157,13 +173,20 @@ function selectDialog(objClass, msg, funcName) {
 	});
 }
 
-function processSelection(elm) {
+function processSelectionList(elm) {
 	elm.children('input').each(function() {
 		if (jQuery(this).attr('checked')) {
 			elm.val(jQuery(this).attr('value'));
 		}
 	});
 	jQuery('input#' + elm.attr('data-node') + '_input').val(elm.attr('value'));
+}
+
+function processSelectionTable(elm) {
+	var selected = elm.attr('value');
+	var value = $("td#" + selected).attr('value');
+
+	jQuery('input#' + elm.attr('data-node') + '_input').val(value);
 }
 
 function filemanager(elm, type, name) {

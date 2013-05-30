@@ -162,7 +162,7 @@ def project_content(request):
     jquery_treeview = os.path.join(settings.STATIC_URL, 'js/jquery.treeview.js')
     launchTreeview = os.path.join(settings.STATIC_URL, 'js/launchTreeview.js')
     popup_path = os.path.join(settings.STATIC_URL, 'js/popup.js')
-    toolbar_path = os.path.join(settings.STATIC_URL, 'js/toolbar.js')
+    utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
     #############
     projectName = request.GET.get('projectName', None)
     if projectName is None:
@@ -179,7 +179,7 @@ def project_content(request):
                'deleteTool': delete_tool_path,
                'browseTool': browse_tool_path,
                'jquery': jquery_path,
-               'toolbar': toolbar_path,
+               'toolbar': utils_path,
                'popup': popup_path,
                'jquery_cookie': jquery_cookie,
                'jquery_treeview': jquery_treeview,
@@ -199,6 +199,7 @@ def form(request):
     logo_browse = getResource('browse')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     jsForm_path = os.path.join(settings.STATIC_URL, 'js/form.js')
+    utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
     css_path = os.path.join(settings.STATIC_URL, 'css/form.css')
     # Messi Plugin
     messi_path = os.path.join(settings.STATIC_URL, 'js/messi.js')
@@ -225,7 +226,7 @@ def form(request):
                 raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
                 # Create the label
             if protVar.isPointer():
-                param.htmlValue = protVar.get().getNameId()
+                param.htmlValue = protVar.getNameId()
             else:
                 param.htmlValue = protVar.get(param.default.get(""))
                 if isinstance(protVar, Boolean):
@@ -247,6 +248,7 @@ def form(request):
                'form': jsForm_path,
                'jquery': jquery_path,
                'browse': logo_browse,
+               'utils': utils_path,
                'css':css_path,
                'messi': messi_path,
                'messi_css': messi_css_path}

@@ -31,3 +31,16 @@ function launchToolbar(projName, id, elm) {
 
 	row.show(); // Show toolbar
 }
+
+function selTableMessi(elm) {
+
+	var row = $("table.content");
+	var id = elm.attr('id');
+
+	if (row.attr('value') != undefined && row.attr('value') != id) {
+		var rowOld = $("td#" + row.attr('value'));
+		rowOld.attr('style', '');
+	}
+	row.attr('value', id);
+	elm.attr('style', 'background-color: firebrick; color:white;');
+}
