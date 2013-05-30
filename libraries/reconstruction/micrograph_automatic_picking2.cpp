@@ -404,7 +404,7 @@ void AutoParticlePicking2::saveTrainingSet()
     fhTrain.close();
 }
 
-MetaData AutoParticlePicking2::automaticallySelectParticles()
+MetaData AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph)
 {
     double label, score;
     MetaData md;
@@ -415,6 +415,7 @@ MetaData AutoParticlePicking2::automaticallySelectParticles()
     MultidimArray<double> staticVec, dilatedVec;
     std::vector<Particle2> positionArray;
 
+    readMic(fnmicrograph);
     IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
     buildSearchSpace(positionArray,fast);
     //    pthread_t * th_ids = new pthread_t[Nthreads];
