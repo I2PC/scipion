@@ -8,9 +8,10 @@
 	<script src={{jquery_treeview}} type="text/javascript"></script>
 	<script src={{launchTreeview}} type="text/javascript"></script>
 	<script src={{popup}} type="text/javascript"></script>
+	<script src={{toolbar}} type="text/javascript"></script>
 {% endblock %}		
 {% block sideLeft %}			
-	<div class="tittle">PROTOCOLS</div>			
+	<!-- <div class="tittle">PROTOCOLS</div> -->			
 	<div class="protFieldsetTree">
 		<ul id="browser" class="filetree">
 			{% for section in sections %}
@@ -41,7 +42,13 @@
 	</div>
 {% endblock %}
 {% block content %}
-	<div class="tittle">{{project_name}} EXECUTIONS</div>
+	<!-- <div class="tittle">{{project_name}} EXECUTIONS</div> -->
+	<div id="toolbar" style="display:none">
+		<span><a id="editTool" href=""><img src="{{editTool}}"/> Edit</a></span>
+		<span><a id="copyTool" href=""><img src="{{copyTool}}"/> Copy</a></span>
+		<span><a id="deleteTool" href=""><img src="{{deleteTool}}"/> Delete</a></span>
+		<span><a id="browseTool" href=""><img src="{{browseTool}}"/> Browse</a></span>
+	</div>
 	<div style="overflow:auto">
 		<table cellspacing='0'>
 			<tr>
@@ -50,8 +57,12 @@
 				{% endfor %}
 			</tr>
 			{% for obj in provider.getObjects %}
-				<tr>
-					<td onclick='javascript:alert("{{obj.getObjId}}");'><a href="javascript:popup('/form/?projectName={{projectName}}&protocolId={{obj.getObjId}}')">{{obj.getName}}</a></td>
+				<tr id="{{obj.getObjId}}" style="background-color:#fafafa;">
+					<td onclick='javascript:launchToolbar("{{projectName}}","{{obj.getObjId}}", ($(this)));'>
+						<a href="javascript:popup('/form/?projectName={{projectName}}&protocolId={{obj.getObjId}}')">
+							{{obj.getName}}
+						</a>
+					</td>
 					<td>{{obj.status.get}}</td>
 					<td>{{obj.endTime.get}}</td>
 				</tr>
