@@ -86,7 +86,7 @@ class ProtNMA(XmippProtocol):
         if len(plots):
             self.launchVisualize(plots)
         if self.DisplaySingleMode!="":
-            os.system("vmd -e %s"%self.extraPath("animations/animated_mode_%03d.vmd"%self.DisplaySingleMode))
+            os.system("vmd -e %s"%self.extraPath("animations/animated_mode_%03d.vmd"%int(self.DisplaySingleMode)))
 
     def visualizeVar(self, varName):
         self.launchVisualize([varName])
