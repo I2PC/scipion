@@ -124,8 +124,7 @@ public class MicrographFamilyData
 			e.printStackTrace();
 		}
 
-		if(totemplates && p.getFamily().getStep() == FamilyState.Manual)
-			picker.addParticleToTemplates(p, center);
+		
 
 	}
 
@@ -256,6 +255,7 @@ public class MicrographFamilyData
 		autoparticles.clear();
 		manualparticles.clear();
 		setState(MicrographFamilyState.Available);
+		
 	}
 
 	public FamilyState getStep()
