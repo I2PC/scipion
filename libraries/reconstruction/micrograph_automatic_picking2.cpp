@@ -404,6 +404,131 @@ void AutoParticlePicking2::saveTrainingSet()
     fhTrain.close();
 }
 
+MetaData AutoParticlePicking2::automaticallySelectParticles()
+{
+    double label, score;
+    MetaData md;
+    Particle2 p;
+    MultidimArray<double> IpolarCorr;
+    MultidimArray<double> featVec;
+    MultidimArray<double> pieceImage;
+    MultidimArray<double> staticVec, dilatedVec;
+    std::vector<Particle2> positionArray;
+
+    IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
+    buildSearchSpace(positionArray,fast);
+    //    pthread_t * th_ids = new pthread_t[Nthreads];
+    //    AutoPickThreadParams * th_args =
+    //        new AutoPickThreadParams[Nthreads];
+    //    for (int nt=0;nt<Nthreads;nt++)
+    //    {
+    //        th_args[nt].autoPicking=this;
+    //        th_args[nt].positionArray=positionArray;
+    //        th_args[nt].idThread=nt;
+    //        th_args[nt].use2Classifier=use2Classifier;
+    //        th_args[nt].Nthreads=Nthreads;
+    //        pthread_create(&th_ids[nt],NULL,autoPickThread,
+    //                       &th_args[nt]);
+    //    }
+
+    //    for (int nt=0;nt<Nthreads;nt++)
+    //        pthread_join(th_ids[nt],NULL);
+    int num=(int)(positionArray.size()*(proc_prec/100.0));
+    for (int k=0;k<num;k++)
+    {
+        int j=positionArray[k].x;
+        int i=positionArray[k].y;
+        buildInvariant(IpolarCorr,j,i);
+        extractParticle(j,i,microImage(),pieceImage,false);
+        pieceImage.resize(1,1,1,XSIZE(pieceImage)*YSIZE(pieceImage));
+        extractStatics(pieceImage,staticVec);
+        buildVector(IpolarCorr,staticVec,featVec,pieceImage);
+        double max=featVec.computeMax();
+        double min=featVec.computeMin();
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
+        DIRECT_A1D_ELEM(featVec,i)=0+((1)*((DIRECT_A1D_ELEM(featVec,i)-min)/(max-min)));
+        label= classifier.predict(featVec, score);
+        if (label==1)
+        {
+            if (fnSVMModel2.exists())
+            {
+                label=classifier2.predict(featVec,score);
+                if (label==1)
+                {
+                    p.x=j;
+                    p.y=i;
+                    p.status=1;
+                    p.cost=score;
+                    p.vec=featVec;
+                    auto_candidates.push_back(p);
+                }
+            }
+            else
+            {
+                p.x=j;
+                p.y=i;
+                p.status=1;
+                p.cost=score;
+                p.vec=featVec;
+                auto_candidates.push_back(p);
+            }
+        }
+    }
+
+    if (auto_candidates.size() == 0)
+        return 0;
+    // Remove the occluded particles
+    for (size_t i=0;i<auto_candidates.size();++i)
+        for (size_t j=0;j<auto_candidates.size()-i-1;j++)
+            if (auto_candidates[j].cost<auto_candidates[j+1].cost)
+            {
+                p=auto_candidates[j+1];
+                auto_candidates[j+1]=auto_candidates[j];
+                auto_candidates[j]=p;
+            }
+    for (size_t i=0;i<auto_candidates.size()-1;++i)
+    {
+        if (auto_candidates[i].status==-1)
+            continue;
+        p=auto_candidates[i];
+        for (size_t j=i+1;j<auto_candidates.size();j++)
+        {
+            if (auto_candidates[j].x>p.x-particle_radius
+                && auto_candidates[j].x<p.x+particle_radius
+                && auto_candidates[j].y>p.y-particle_radius
+                && auto_candidates[j].y<p.y+particle_radius)
+            {
+                if (p.cost<auto_candidates[j].cost)
+                {
+                    auto_candidates[i].status=-1;
+                    p=auto_candidates[j];
+                }
+                else
+                    auto_candidates[j].status=-1;
+            }
+        }
+    }
+    saveAutoParticles(md);
+    return md;
+}
+
+void AutoParticlePicking2::saveAutoParticles(MetaData &md)
+{
+    size_t nmax=auto_candidates.size();
+    for (size_t n=0;n<nmax;++n)
+    {
+        const Particle2 &p=auto_candidates[n];
+        if (p.cost>0 && p.status==1)
+        {
+            size_t id=md.addObject();
+            md.setValue(MDL_XCOOR,int(p.x*(1.0/scaleRate)),id);
+            md.setValue(MDL_YCOOR,int(p.y*(1.0/scaleRate)),id);
+            md.setValue(MDL_COST, p.cost,id);
+            md.setValue(MDL_ENABLED,1,id);
+        }
+    }
+}
+
 /*
  *This method do the correlation between two polar images
  *n1 and n2 in mIPolar (Stack) and put it at the nF place

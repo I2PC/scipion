@@ -152,6 +152,10 @@ public:
 
     void saveTrainingSet();
 
+    MetaData automaticallySelectParticles();
+
+    void saveAutoParticles(MetaData &md);
+
     /// Define the parameters of the main program
     static void defineParams(XmippProgram * program);
 
