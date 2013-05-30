@@ -618,9 +618,16 @@ def runChimera(inputFile,extraParams=""):
         from protlib_filesystem import hasSpiderExt
         if hasSpiderExt(inputFile):
             inputFile = 'spider:%s' % inputFile
-        os.system("chimera %s %s&" % (inputFile,extraParams))
+        os.system("chimera %s %s &" % (inputFile,extraParams))
     else:
         print "Error Chimera not available or inputFile %s does not exits."%inputFile
+
+def runVMD(inputFile,extraParams=""):
+    if which("vmd") and os.path.exists(inputFile):
+        os.system("vmd %s %s" % (inputFile,extraParams))
+    else:
+        print "Error VMD not available or inputFile %s does not exits."%inputFile
+
 """ Return the machine name """
 def getHostname():
     import socket
