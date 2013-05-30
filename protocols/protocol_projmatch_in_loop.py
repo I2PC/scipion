@@ -451,9 +451,9 @@ def reconstruction(_log
                    ' --sym ' + SymmetryGroup + \
                    ' --thr ' + str(NumberOfThreads) + \
                    ' --WLS '
-        if len(_ARTLambda) > 1:
-           parameters = parameters + ' -l ' + _ARTLambda + ' '
-        parameters = parameters + _ARTReconstructionExtraCommand
+        if len(ARTLambda) > 1:
+           parameters = parameters + ' -l ' + ARTLambda + ' '
+        parameters = parameters + ARTReconstructionExtraCommand
         
         NumberOfMpi = 1
         NumberOfThreads = 1
