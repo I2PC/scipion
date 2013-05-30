@@ -152,7 +152,7 @@ public:
 
     void saveTrainingSet();
 
-    MetaData automaticallySelectParticles();
+    MetaData automaticallySelectParticles(FileName fnmicrograph);
 
     void saveAutoParticles(MetaData &md);
 
