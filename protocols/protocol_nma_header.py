@@ -90,8 +90,11 @@ DisplayPseudoAtom=True
 # {view} Display pseudoatom approximation
 DisplayPseudoApproximation=True
 
-# {view} Open modes
+# {view} Open list of modes
 DisplayModes=True
+
+# Open specific mode
+DisplaySingleMode="7"
 
 #------------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...

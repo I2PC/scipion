@@ -8,7 +8,7 @@
 import glob,os,re,sys,shutil,time
 from protlib_base import *
 from config_protocols import protDict
-from protlib_utils import runJob, which, runShowJ, runChimera
+from protlib_utils import runJob, which, runShowJ, runChimera, runVMD
 from protlib_filesystem import changeDir, createLink, getExt, moveFile, createDir, deleteFile
 from xmipp import MetaData, MDL_X, MDL_COUNT, MDL_NMA_MODEFILE, MDL_ORDER, MDL_ENABLED, MDL_NMA_COLLECTIVITY, MDL_NMA_SCORE, SingleImgSize
 
@@ -55,7 +55,8 @@ class ProtNMA(XmippProtocol):
             self.insertStep('qualifyModes',WorkingDir=self.WorkingDir,NumberOfModes=self.NumberOfModes)
             self.insertStep('animateModes',WorkingDir=self.WorkingDir,LastMode=self.NumberOfModes,
                             Amplitude=self.Amplitude,NFrames=self.NFrames,Downsample=self.Downsample,
-                            PseudoAtomThreshold=self.PseudoAtomThreshold)
+                            PseudoAtomThreshold=self.PseudoAtomThreshold, PseudoAtomRadius=self.PseudoAtomRadius,
+                            Sampling=self.Sampling)
             if self.StructureType=="EM":
                 self.insertStep('generateChimeraScript',WorkingDir=self.WorkingDir,MaskMode=self.MaskMode,Threshold=self.Threshold, \
                                 InputStructure=self.InputStructure, PseudoAtomRadius=self.PseudoAtomRadius, Sampling=self.Sampling)
@@ -84,6 +85,8 @@ class ProtNMA(XmippProtocol):
                            ] if self.ParamsDict[k]]
         if len(plots):
             self.launchVisualize(plots)
+        if self.DisplaySingleMode!="":
+            os.system("vmd -e %s"%self.extraPath("animations/animated_mode_%03d.vmd"%self.DisplaySingleMode))
 
     def visualizeVar(self, varName):
         self.launchVisualize([varName])
@@ -181,19 +184,32 @@ def qualifyModes(log,WorkingDir,NumberOfModes):
     deleteFile(log,"Chkmod.res")
     changeDir(log,currentDir)
 
-def animateModes(log,WorkingDir,LastMode,Amplitude,NFrames,Downsample,PseudoAtomThreshold):
+def animateModes(log,WorkingDir,LastMode,Amplitude,NFrames,Downsample,PseudoAtomThreshold,PseudoAtomRadius,Sampling):
     createDir(log,os.path.join(WorkingDir,"extra/animations"))
     currentDir=os.getcwd()
     changeDir(log,WorkingDir)
     runJob(log,"nma_animate.py","pseudoatoms.pdb extra/vec_ani.pkl 7 %d %f extra/animations/animated_mode %d %d %f"%\
                   (LastMode,Amplitude,NFrames,Downsample,PseudoAtomThreshold))
+    
+    for mode in range(7,LastMode+1):
+        fnAnimation="extra/animations/animated_mode_%03d"%mode
+        fhCmd=open(fnAnimation+".vmd",'w')
+        fhCmd.write("mol new "+os.path.join(WorkingDir,fnAnimation)+".pdb\n")
+        fhCmd.write("animate style Loop\n")
+        fhCmd.write("display projection Orthographic\n")
+        fhCmd.write("mol modcolor 0 0 Beta\n")
+        fhCmd.write("mol modstyle 0 0 Beads %f 8.000000\n"%(PseudoAtomRadius*Sampling))
+        fhCmd.write("animate speed 0.5\n")
+        fhCmd.write("animate forward\n")
+        fhCmd.close();
+    
     changeDir(log,currentDir)
 
 def generateChimeraScript(log,WorkingDir,MaskMode,Threshold,InputStructure,PseudoAtomRadius,Sampling):
     fhCmd=open(os.path.join(WorkingDir,"chimera.cmd"),'w')
     fhCmd.write("open pseudoatoms.pdb\n")
     fhCmd.write("rangecol bfactor,a 0 white 1 red\n")
-    fhCmd.write("setattr a radius "+str(PseudoAtomRadius)+"\n")
+    fhCmd.write("setattr a radius "+str(PseudoAtomRadius*Sampling)+"\n")
     fhCmd.write("represent sphere\n")
     fhCmd.write("open "+InputStructure+"\n")
     if MaskMode!="Threshold":
