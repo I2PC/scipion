@@ -17,7 +17,7 @@ from datetime import datetime
 class ChimeraServer:
     
     def __init__(self):
-        print 'init'
+        #print 'init'
         self.address = ''
         self.port = 6000
         self.authkey = 'test'
@@ -42,7 +42,7 @@ class ChimeraServer:
                 if self.remote_conn.poll():
                     
                     msg = self.remote_conn.recv()
-                    print msg
+                    #print msg
                     
                     if msg == 'exit_client':
                         break
@@ -63,10 +63,10 @@ class ChimeraServer:
                 if self.remote_conn.poll():
                     
                     msg = self.remote_conn.recv()
-                    print msg
+                    #print msg
                     if msg == 'open_volume':
                         data = self.remote_conn.recv()
-                        print 'volume data'
+                        #print 'volume data'
                         grid = Array_Grid_Data(data)
                         self.volume = volume_from_grid_data(grid)
                     if msg == 'draw_angular_distribution':
@@ -83,7 +83,7 @@ class ChimeraServer:
 
     
     def onMotionStop(self, trigger, extra, userdata):
-        print "Motion stop"
+        #print "Motion stop"
         rx, ry , rz, t = self.volume.openState.xform.getCoordFrame()
         self.motion = array([[rx[0], ry[0], rz[0]], [rx[1], ry[1], rz[1]], [rx[2], ry[2], rz[2]]])
         printCmd('sending motion')
@@ -101,7 +101,8 @@ class ChimeraServer:
         
             
 def printCmd(cmd):
-        timeformat = "%S.%f" 
+        pass
+        #timeformat = "%S.%f" 
       #  print datetime.now().strftime(timeformat)
        # print cmd
 
