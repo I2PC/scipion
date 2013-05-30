@@ -564,7 +564,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		canvas.refreshActive(null);
 		updateMicrographsModel();
 		setState(MicrographFamilyState.Available);
-		
+		family.initTemplates();
 	}
 
 	private void setState(MicrographFamilyState state)
@@ -885,6 +885,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			if (result != JOptionPane.YES_OPTION)
 				return null;
 		}
+		getFamily().initTemplates();
 		MicrographFamilyData mfd = getFamilyData();
 		mfd.reset();
 		String result = ((ManualParticlePicker) ppicker).importParticlesFromFile(file, format, mfd.getMicrograph(), scale, invertx, inverty);

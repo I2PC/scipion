@@ -70,7 +70,7 @@ public class Family
 				this.templates = new ImageGeneric(templatesfile);
 				templates.read(templatesfile, false);
 				templateindex = templatesNumber;//all images read
-				
+
 			}
 			else
 				initTemplates();
@@ -193,7 +193,7 @@ public class Family
 		if (size > ParticlePicker.fsizemax)
 			throw new IllegalArgumentException(String.format("Max size is %s, %s not allowed", ParticlePicker.fsizemax, size));
 		this.size = size;
-		
+
 	}
 
 
@@ -219,7 +219,7 @@ public class Family
 			throw new IllegalArgumentException(XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Family must have at least one template"));
 
 		this.templatesNumber = num;
-		
+
 	}
 
 	public Color getColor()
