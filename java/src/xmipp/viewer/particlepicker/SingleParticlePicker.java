@@ -71,16 +71,8 @@ public class SingleParticlePicker extends ParticlePicker
 				templatesNumber = ((int) templates.getNDim());
 				templates.read(templatesfile, false);
 			}
-			MetaData micrographsmd = new MetaData();
-			long id;
 			for (TrainingMicrograph m : micrographs)
-			{
 				loadMicrographData(m);
-				id = micrographsmd.addObject();
-				micrographsmd.setValueString(MDLabel.MDL_MICROGRAPH, m.getFile(), id);
-			}
-
-			classifier = new PickingClassifier(micrographsmd, getSize(), getOutputPath(model));
 		}
 		catch (Exception e)
 		{
@@ -936,7 +928,25 @@ public class SingleParticlePicker extends ParticlePicker
 
 		public TrainRunnable(SingleParticlePickerJFrame frame)
 		{
-			this.frame = frame;
+			try
+			{
+				this.frame = frame;
+				MetaData micrographsmd = new MetaData();
+				long id;
+				for (TrainingMicrograph m : micrographs)
+				{
+					id = micrographsmd.addObject();
+					micrographsmd.setValueString(MDLabel.MDL_MICROGRAPH, m.getFile(), id);
+				}
+
+				classifier = new PickingClassifier(micrographsmd, getSize(), getOutputPath(model));
+			}
+			catch (Exception e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				throw new IllegalArgumentException(e);
+			}
 		}
 
 		public void run()
