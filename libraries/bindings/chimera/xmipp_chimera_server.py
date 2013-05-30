@@ -73,6 +73,7 @@ class ChimeraServer:
                         angulardist = self.remote_conn.recv()
                         for command in angulardist:
                             runCommand(command)
+                    
                     if msg == 'end':    
                         break
                     else:
@@ -102,7 +103,7 @@ class ChimeraServer:
             
 def printCmd(cmd):
         timeformat = "%S.%f" 
-      #  print datetime.now().strftime(timeformat)
-       # print cmd
+        print datetime.now().strftime(timeformat)
+        print cmd
 
 ChimeraServer()

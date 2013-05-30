@@ -79,6 +79,7 @@ class XmippChimeraClient:
         maxweight = md.aggregateSingle(AGGR_MAX, MDL_WEIGHT)
         minweight = md.aggregateSingle(AGGR_MIN, MDL_WEIGHT)
         interval = maxweight - minweight
+        minweight = minweight - 1
         self.angulardist = []  
         for id in md:
             
@@ -87,14 +88,21 @@ class XmippChimeraClient:
             psi = md.getValue(MDL_ANGLE_PSI, id)
             weight = md.getValue(MDL_WEIGHT, id)
             weight = (weight - minweight)/interval
-
+            
             x, y, z = Euler_direction(rot, tilt, psi)
             radius = weight * self.spheres_maxradius
             x = x * self.spheres_distance
             y = y * self.spheres_distance
             z = z * self.spheres_distance
+            
             command = 'shape sphere radius %s center %s,%s,%s color %s '%(radius, x, y, z, self.spheres_color)
-            self.angulardist.append(command)    
+            printCmd(command)
+            self.angulardist.append(command)  
+            
+
+        centercmd = "cofr %d,%d,%d"%(self.xdim/2, self.ydim/2, self.zdim/2)
+        printCmd(centercmd)
+        self.angulardist.append(centercmd)  
        
     
     def send(self, cmd, data):
@@ -211,5 +219,5 @@ class XmippProjectionExplorer(XmippChimeraClient):
             
 def printCmd(cmd):
         timeformat = "%S.%f" 
-        #print datetime.now().strftime(timeformat) + ' %s'%cmd
+        print datetime.now().strftime(timeformat) + ' %s'%cmd
 
