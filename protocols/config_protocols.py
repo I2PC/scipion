@@ -25,6 +25,7 @@ protocols = {
         'projmatch': ('Projection Matching', '3D/ProjMatch'), 
         'ml3d': ('ML3D', '3D/ML3D'),
         'nma': ('Normal Mode Analysis', '3D/NMA'),
+        'nma_alignment': ('Flexible alignment', '3D/NMA_alignment'),
         'mltomo': ('MLTomo', '3D/MLTomo'),
         'subtraction': ('Partial Projection Subtraction', '3D/ProjSub'),
         'custom': ('Custom', 'Custom'),
@@ -44,7 +45,7 @@ sections = [
 ('3D', 
    [['Initial Model', 'rct', 'initvolume_ransac', 'symmetric_initial'], 
     ['Model Refinement', 'projmatch', 'ml3d'],
-    ['Analysis', ['Flexibility', 'nma']]])
+    ['Analysis', ['Flexibility', 'nma', 'nma_alignment']]])
 ,
 ('Other',
  [['Extra', 'custom','subtraction', 'mltomo']])
