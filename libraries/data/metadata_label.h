@@ -204,6 +204,7 @@ enum MDLabel
     MDL_MAXCC, ///< Maximum cross-correlation for the image (double)
     MDL_MAX, ///< Maximum value (double)
     MDL_MICROGRAPH, ///< Name of a micrograph (std::string)
+    MDL_POSITION, ///< Name of a position file (std::string)
     MDL_MICROGRAPH_ORIGINAL, ///< Name of the original micrograph, MDL_MICROGRAPH is probably a downsampled version of this one (std::string)
     MDL_MICROGRAPH_TILTED, ///< Name of the corresponding tilted micrograph (std::string)
     MDL_MICROGRAPH_TILTED_ORIGINAL, ///< Name of the corresponding original, tilted micrograph (std::string)
@@ -932,6 +933,7 @@ private:
         MDL::addLabel(MDL_MAXCC, LABEL_DOUBLE, "maxCC");
         MDL::addLabel(MDL_MAX, LABEL_DOUBLE, "max");
         MDL::addLabel(MDL_MICROGRAPH, LABEL_STRING, "micrograph", TAGLABEL_MICROGRAPH);
+        MDL::addLabel(MDL_POSITION, LABEL_STRING, "position", TAGLABEL_MICROGRAPH);
         MDL::addLabel(MDL_MICROGRAPH_ORIGINAL, LABEL_STRING, "micrographOriginal", TAGLABEL_MICROGRAPH);
         MDL::addLabel(MDL_MICROGRAPH_TILTED, LABEL_STRING, "micrographTilted", TAGLABEL_MICROGRAPH);
         MDL::addLabel(MDL_MICROGRAPH_TILTED_ORIGINAL, LABEL_STRING, "micrographTiltedOriginal", TAGLABEL_MICROGRAPH);

@@ -115,11 +115,16 @@ public:
     Image<double>                micrographStack;
 
     FileName                     fn_model;
-
+    FileName                     fnPCAModel;
+    FileName                     fnPCARotModel;
+    FileName                     fnAvgModel;
+    FileName                     fnVector;
+    FileName                     fnSVMModel;
+    FileName                     fnSVMModel2;
 public:
 
     /// Constructor
-    AutoParticlePicking2(int particle_size, int filter_num = 6, int corr_num = 2, int NPCA = 4, FileName model_name);
+    AutoParticlePicking2(int particle_size, int filter_num = 6, int corr_num = 2, int NPCA = 4, const FileName &model_name=NULL);
 
     AutoParticlePicking2();
 
@@ -138,6 +143,14 @@ public:
     void extractPositiveInvariant();
 
     void extractNegativeInvariant();
+
+    void trainPCA();
+
+    void add2Dataset(int flagNegPos);
+
+    void train(MetaData MD);
+
+    void saveTrainingSet();
 
     /// Define the parameters of the main program
     static void defineParams(XmippProgram * program);
@@ -277,7 +290,7 @@ public:
     /* Normalize the data of a dataset according to
      * a and b.
      */
-    void normalizeDataset(int a,int b,const FileName &fn);
+    void normalizeDataset(int a,int b);
 
     /// Save automatically selected particles
     int saveAutoParticles(const FileName &fn) const;
