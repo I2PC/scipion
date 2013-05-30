@@ -225,7 +225,7 @@ def form(request):
                 raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
                 # Create the label
             if protVar.isPointer():
-                param.htmlValue = protVar.getNameId()
+                param.htmlValue = protVar.get().getNameId()
             else:
                 param.htmlValue = protVar.get(param.default.get(""))
                 if isinstance(protVar, Boolean):
@@ -275,8 +275,10 @@ def protocol(request):
         value = request.POST.get(paramName)
         if attr.isPointer():
             if len(value.strip()) > 0:
-                value = value.split('.')[-1]  # Get the id string for last part after .
-                value = project.mapper.selectById(int(value))  # Get the object from its id
+                objId = int(value.split('.')[-1])  # Get the id string for last part after .
+                value = project.mapper.selectById(objId)  # Get the object from its id
+                if attr.getObjId() == value.getObjId():
+                    raise Exception("Param: %s is autoreferencing with id: %d" % (paramName, objId))
             else:
                 value = None
         attr.set(value)
