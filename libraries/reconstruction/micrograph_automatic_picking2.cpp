@@ -378,10 +378,14 @@ void AutoParticlePicking2::add2Dataset(int flagNegPos)
 
 void AutoParticlePicking2::train(MetaData MD)
 {
+	std::cerr<<"started train"<<std::endl;
 	buildInvariant(MD);
+	std::cerr<<"built invariants"<<std::endl;
 	if (!fnPCAModel.exists())
 		trainPCA();
+	std::cerr<<"trainPCA done"<<std::endl;
 	add2Dataset(0);
+	std::cerr<<"add2Dataset"<<std::endl;
 	add2Dataset(1);
 
 	saveTrainingSet();

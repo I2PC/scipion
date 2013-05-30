@@ -968,8 +968,9 @@ public class SingleParticlePicker extends ParticlePicker
 						new File(m.getAutoPosFile()).delete();
 					}
 				}
+				md.print();
 				classifier.train(md);//should remove training files
-				classifier.autopick(micrograph.getFile());
+				//classifier.autopick(micrograph.getFile());
 
 				XmippWindowUtil.releaseGUI(frame.getRootPane());
 				frame.getCanvas().setEnabled(true);
