@@ -285,8 +285,13 @@ public class Family
 		{
 			ImageGeneric igp = p.getImageGeneric();
 			shift = templates.bestShift(igp);
-			p.setX(p.getX() + shift.getX());
-			p.setY(p.getY() + shift.getY());
+			double distance = Math.sqrt(Math.pow(shift.getX(),  2) + Math.pow(shift.getY(), 2))/size;
+			//System.out.printf("normalized distance:%.2f\n", distance);
+			if(distance < 0.25)
+			{
+				p.setX(p.getX() + shift.getX());
+				p.setY(p.getY() + shift.getY());
+			}
 		}
 		catch (Exception e)
 		{
