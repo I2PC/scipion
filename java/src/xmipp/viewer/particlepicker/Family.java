@@ -278,8 +278,8 @@ public class Family
 
 	public synchronized void centerParticle(TrainingParticle p)
 	{
-		if (templateindex == 0)
-			return;//no template to align
+		if (((TrainingPicker)picker).getManualParticlesNumber(this) < templatesNumber)
+			return;//missing templates
 		Particle shift = null;
 		try
 		{
