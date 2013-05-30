@@ -357,6 +357,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 				}
 				catch (Exception ex)
 				{
+					ex.printStackTrace();
 					XmippDialog.showError(SingleParticlePickerJFrame.this, ex.getMessage());
 					autopickchb.setSelected(false);
 					return;

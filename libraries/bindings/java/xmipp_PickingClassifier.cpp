@@ -30,6 +30,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_autopick
     XMIPP_JAVA_TRY
     {
     	AutoParticlePicking2 *picker = GET_INTERNAL_AUTOPARTICLEPICKING2(jobj);
+
     }
     XMIPP_JAVA_CATCH;
 
