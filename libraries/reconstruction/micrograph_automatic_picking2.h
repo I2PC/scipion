@@ -72,6 +72,7 @@ public:
     static const int NangSteps=120;
 
     Micrograph                  *__m;
+    Micrograph                   m;
     Image<double>                microImage;
     PCAMahalanobisAnalyzer       pcaAnalyzer;
     ProgImageRotationalPCA       rotPcaAnalyzer;
@@ -94,6 +95,11 @@ public:
     int                          NRsteps;
 
     MultidimArray<double>        convolveRes;
+    MultidimArray<double>        filterBankStack;
+    MultidimArray<double>        positiveParticleStack;
+    MultidimArray<double>        negativeParticleStack;
+    MultidimArray<double>        positiveInvariatnStack;
+    MultidimArray<double>        negativeInvariatnStack;
     MultidimArray<double>        pcaModel;
     MultidimArray<double>        pcaRotModel;
     MultidimArray<double>        particleAvg;
@@ -108,12 +114,43 @@ public:
     std::vector<Particle2>       accepted_particles;
     Image<double>                micrographStack;
 
+    FileName                     fn_model;
+    FileName                     fnPCAModel;
+    FileName                     fnPCARotModel;
+    FileName                     fnAvgModel;
+    FileName                     fnVector;
+    FileName                     fnSVMModel;
+    FileName                     fnSVMModel2;
 public:
 
-    /// Empty constructor
+    /// Constructor
+    AutoParticlePicking2(int particle_size, int filter_num = 6, int corr_num = 2, int NPCA = 4, const FileName &model_name=NULL);
+
+    AutoParticlePicking2();
 
     /// Destructor
     ~AutoParticlePicking2();
+
+    /// Read micrograph from the file
+    void readMic(FileName fn_micrograph);
+
+    void filterBankGenerator();
+
+    void buildInvariant(MetaData MD);
+
+    void extractInvariant();
+
+    void extractPositiveInvariant();
+
+    void extractNegativeInvariant();
+
+    void trainPCA();
+
+    void add2Dataset(int flagNegPos);
+
+    void train(MetaData MD);
+
+    void saveTrainingSet();
 
     /// Define the parameters of the main program
     static void defineParams(XmippProgram * program);
@@ -253,7 +290,7 @@ public:
     /* Normalize the data of a dataset according to
      * a and b.
      */
-    void normalizeDataset(int a,int b,const FileName &fn);
+    void normalizeDataset(int a,int b);
 
     /// Save automatically selected particles
     int saveAutoParticles(const FileName &fn) const;
