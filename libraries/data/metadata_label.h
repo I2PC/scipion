@@ -159,6 +159,7 @@ enum MDLabel
     MDL_CTF_XRAY_ZONES_NUMBER, // Number of zones of the X-ray Fresnel lens
     MDL_DATATYPE, ///< if read from file original image datatype, this is an struct defined in image
     MDL_DEFGROUP, ///< Defocus group
+    MDL_DIMRED, ///< Projection onto a reduced manifold (vector double)
     MDL_DIRECTION, ///< Direction in 3D
 
     MDL_DM3_IDTAG,
@@ -876,6 +877,7 @@ private:
         MDL::addLabel(MDL_DEFGROUP, LABEL_INT, "defocusGroup");
         MDL::addLabel(MDL_DIMENSIONS_2D, LABEL_VECTOR_DOUBLE, "dimensions2D");
         MDL::addLabel(MDL_DIMENSIONS_3D, LABEL_VECTOR_DOUBLE, "dimensions3D");
+        MDL::addLabel(MDL_DIMRED, LABEL_VECTOR_DOUBLE, "dimredCoeffs");
         MDL::addLabel(MDL_DIRECTION, LABEL_VECTOR_DOUBLE, "direction");
         MDL::addLabel(MDL_DM3_IDTAG, LABEL_INT, "dm3IdTag");
         MDL::addLabel(MDL_DM3_NODEID, LABEL_INT, "dm3NodeId");

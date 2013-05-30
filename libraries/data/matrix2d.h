@@ -1094,6 +1094,49 @@ public:
         return minval;
     }
 
+    /** Maximum and minimum of the values in the array. */
+    void computeMaxAndMin(T &maxValue, T &minValue) const
+    {
+    	maxValue=minValue=0;
+        if (mdim <= 0)
+            return;
+
+        maxValue = minValue = mdata[0];
+        for (size_t n = 0; n < mdim; n++)
+        {
+        	T val=mdata[n];
+            if (val < minValue)
+                minValue = val;
+            else if (val > maxValue)
+            	maxValue = val;
+        }
+    }
+
+    /** Get row sum. */
+    void rowSum(Matrix1D<T> &sum) const
+    {
+    	sum.initZeros(MAT_YSIZE(*this));
+    	FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
+    		VEC_ELEM(sum,i)+=MAT_ELEM(*this,i,j);
+    }
+
+    /** Get column sum. */
+        void colSum(Matrix1D<T> &sum) const
+        {
+        	sum.initZeros(MAT_XSIZE(*this));
+        	FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
+        		VEC_ELEM(sum,j)+=MAT_ELEM(*this,i,j);
+        }
+
+    /** Get row energy sum.
+     * Sum of the squared values by row */
+    void rowEnergySum(Matrix1D<T> &sum) const
+    {
+    	sum.initZeros(MAT_YSIZE(*this));
+    	FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
+    		VEC_ELEM(sum,i)+=MAT_ELEM(*this,i,j)*MAT_ELEM(*this,i,j);
+    }
+
     /** Produce a 2D array suitable for working with Numerical Recipes
     *
     * This function must be used only as a preparation for routines which need
@@ -1416,6 +1459,61 @@ public:
             MAT_ELEM(*this,i, j) = VEC_ELEM(v,i);
     }
 
+    /** Compute row means */
+    void computeRowMeans(Matrix1D<double> &Xmr) const
+    {
+    	Xmr.initZeros(MAT_YSIZE(*this));
+    	FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
+    		VEC_ELEM(Xmr,i)+=MAT_ELEM(*this,i,j);
+    	Xmr*=1.0/MAT_XSIZE(*this);
+    }
+
+    /** Compute row means */
+    void computeColMeans(Matrix1D<double> &Xmr) const
+    {
+       	Xmr.initZeros(MAT_YSIZE(*this));
+       	FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
+       		VEC_ELEM(Xmr,j)+=MAT_ELEM(*this,i,j);
+       	Xmr*=1.0/MAT_YSIZE(*this);
+     }
+
+     /** Set constant column.
+     * Set a given column to a constant value A(i,j)=val;
+     */
+    void setConstantCol(size_t j, T v)
+    {
+        if (mdimx == 0 || mdimy == 0)
+            REPORT_ERROR(ERR_MATRIX_EMPTY, "setCol: Target matrix is empty");
+
+        if (j < 0 || j>= mdimx)
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "setCol: Matrix subscript (j) out of range");
+
+        for (size_t i = 0; i < mdimy; i++)
+            MAT_ELEM(*this,i, j) = v;
+    }
+
+    /** Get diagonal.
+     * It is assumed that the matrix is squared
+     */
+    void getDiagonal(Matrix1D<T> &d) const
+    {
+    	d.resizeNoCopy(MAT_XSIZE(*this));
+    	for (size_t i=0; i<MAT_XSIZE(*this); ++i)
+    		VEC_ELEM(d,i)=MAT_ELEM(*this,i,i);
+    }
+
+    /** Trace
+     * Sum of the values in the diagonal
+     */
+    T trace() const
+    {
+    	size_t d=std::min(MAT_XSIZE(*this),MAT_YSIZE(*this));
+    	T retval=0;
+    	for (size_t i=0; i<d; ++i)
+    		retval+=MAT_ELEM(*this,i,i);
+    	return retval;
+    }
+
     /** Determinant of a matrix
      *
      * An exception is thrown if the matrix is not squared or it is empty.
@@ -1459,6 +1557,7 @@ public:
 
         return d;
     }
+
     ///determinat of 3x3 matrix
     T det3x3() const
     {
@@ -1471,6 +1570,19 @@ public:
                                      dMij(*this,1,1)*dMij(*this,0,2) )
                );
     }
+
+    /** Frobenius norm of a matrix */
+    double norm()
+    {
+    	double sum=0.;
+    	FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
+    	{
+    		T aux=MAT_ELEM(*this,i,j);
+    		sum+=aux*aux;
+    	}
+    	return sqrt(sum);
+    }
+
     /** Algebraic transpose of a Matrix
      *
      * You can use the transpose in as complex expressions as you like. The
@@ -1637,7 +1749,6 @@ bool operator==(const Matrix2D<T>& op1, const Matrix2D<T>& op2)
     return op1.equal(op2);
 }
 
-
 /**@name Matrix Related functions
  * These functions are not methods of Matrix2D
  */
@@ -1730,6 +1841,12 @@ void firstEigs(const Matrix2D<double> &A, size_t M, Matrix1D<double> &D, Matrix2
  */
 void lastEigs(const Matrix2D<double> &A, size_t M, Matrix1D<double> &D, Matrix2D<double> &P);
 
+/** Compute eigenvectors between two indexes of a real, symmetric matrix.
+ * Solves the problem Av=dv.
+ * Only the eigenvectors of the smallest eigenvalues between indexes I1 and I2 are returned as columns of P. Indexes start at 0.
+ */
+void eigsBetween(const Matrix2D<double> &A, size_t I1, size_t I2, Matrix1D<double> &D, Matrix2D<double> &P);
+
 /** Find connected components of a graph.
  * Assuming that the matrix G represents an undirected graph (of size NxN), this function returns a vector (of size N) that indicates
  * for each element which is the number of its connected component.
@@ -1765,6 +1882,9 @@ void typeCast(const Matrix2D<T1>& v1,  Matrix2D<T1>& v2)
 {
     v2=v1;
 }
+
+/** Gram Schmidt orthogonalization by columns */
+void orthogonalizeColumnsGramSchmidt(Matrix2D<double> &M);
 
 /** Helper class for solving linear systems */
 class PseudoInverseHelper
@@ -1803,6 +1923,55 @@ void weightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> &resul
  */
 void ransacWeightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> &result,
 		double tol, int Niter=10000, double outlierFraction=0.25, int Nthreads=1);
+
+/** Normalize columns.
+ * So that they have zero mean and unit variance.
+ */
+void normalizeColumns(Matrix2D<double> &A);
+
+/** Normalize columns.
+ * So that the minimum is 0 and the maximum is 1
+ */
+void normalizeColumnsBetween0and1(Matrix2D<double> &A);
+
+/** Subtract mean of columns.
+ * So that they have zero mean.
+ */
+void subtractColumnMeans(Matrix2D<double> &A);
+
+/** Matrix operation: B=A^t*A. */
+void matrixOperation_AtA(const Matrix2D <double> &A, Matrix2D<double> &B);
+
+/** Matrix operation: C=A*A^t. */
+void matrixOperation_AAt(const Matrix2D <double> &A, Matrix2D<double> &C);
+
+/** Matrix operation: C=A*B. */
+void matrixOperation_AB(const Matrix2D <double> &A, const Matrix2D<double> &B, Matrix2D<double> &C);
+
+/** Matrix operation: C=A*B^t. */
+void matrixOperation_ABt(const Matrix2D <double> &A, const Matrix2D <double> &B, Matrix2D<double> &C);
+
+/** Matrix operation: C=A^t*B. */
+void matrixOperation_AtB(const Matrix2D <double> &A, const Matrix2D<double> &B, Matrix2D<double> &C);
+
+/** Matrix operation: C=A^t*Bt. */
+void matrixOperation_AtBt(const Matrix2D <double> &A, const Matrix2D<double> &B, Matrix2D<double> &C);
+
+/** Matrix operation: B=X^t*A*X.
+ * We know that the result B must be symmetric */
+void matrixOperation_XtAX_symmetric(const Matrix2D<double> &X, const Matrix2D<double> &A, Matrix2D<double> &B);
+
+/** Matrix operation: A=I+A */
+void matrixOperation_IplusA(Matrix2D<double> &A);
+
+/** Matrix operation: A=I-A */
+void matrixOperation_IminusA(Matrix2D<double> &A);
+
+/** Erase first column */
+void eraseFirstColumn(Matrix2D<double> &A);
+
+/** Keep columns between j0 and jF */
+void keepColumns(Matrix2D<double> &A, int j0, int jF);
 
 /** Sparse element.
  *  This class is used to create the SparseMatrices. */

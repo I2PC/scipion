@@ -1306,6 +1306,49 @@ public:
         return temp;
     }
 
+    /** Gives a vector with the indexes for a sorted vector
+     *
+     * This function returns the indexes of a sorted vector. The input vector is
+     * not modified at all. For instance, if the input vector is [3 2 -1 0] the
+     * result of this function would be [3 4 2 1] meaning that the lowest value
+     * is at index 3, then comes the element at index 4, ... Note that
+     * indexes start at 1.
+     */
+    void indexSort(Matrix1D<int> &indx) const
+    {
+    	Matrix1D< double > temp;
+        indx.clear();
+
+        if (VEC_XSIZE(*this) == 0)
+            return;
+
+        if (VEC_XSIZE(*this) == 1)
+        {
+            indx.resizeNoCopy(1);
+            VEC_ELEM(indx,0) = 1;
+            return;
+        }
+
+        // Initialise data
+        indx.resizeNoCopy(VEC_XSIZE(*this));
+        typeCast(*this, temp);
+
+        // Sort indexes
+        indexx(VEC_XSIZE(*this), MATRIX1D_ARRAY(temp)-1, MATRIX1D_ARRAY(indx)-1);
+    }
+
+    /** Mean value of the vector */
+    double computeMean() const
+    {
+        if (vdim == 0)
+            return 0;
+
+        double sum = 0;
+        for (size_t j = 0; j < vdim; ++j)
+            sum+=VEC_ELEM(*this,j);
+        return sum/vdim;
+    }
+
     /** Maximum element */
     T computeMax() const
     {
@@ -1324,15 +1367,12 @@ public:
      * This function returns the index of the maximum element of an matrix1d.
      * Returns -1 if the array is empty
      */
-    void maxIndex(int& jmax) const
+    int maxIndex() const
     {
         if (vdim == 0)
-        {
-            jmax = -1;
-            return;
-        }
+            return -1;
 
-        jmax = 0;
+        int jmax = 0;
         T maxval = VEC_ELEM(*this, 0);
         for (size_t j = 0; j < vdim; ++j)
             if (VEC_ELEM(*this,j) > maxval)
@@ -1340,6 +1380,7 @@ public:
                 jmax = j;
                 maxval = VEC_ELEM(*this,j);
             }
+        return jmax;
     }
 
     /** Index for the minimum element.
@@ -1347,15 +1388,12 @@ public:
      * This function returns the index of the minimum element of an matrix1d.
      * Returns -1 if the array is empty
      */
-    void minIndex(int& jmin) const
+    int minIndex() const
     {
         if (vdim == 0)
-        {
-            jmin = -1;
-            return;
-        }
+            return -1;
 
-        jmin = 0;
+        int jmin = 0;
         T minval = VEC_ELEM(*this, 0);
         for (size_t j = 0; j < vdim; ++j)
             if (VEC_ELEM(*this,j) < minval)
@@ -1363,6 +1401,7 @@ public:
                 jmin = j;
                 minval = VEC_ELEM(*this,j);
             }
+        return jmin;
     }
 
     /** Algebraic transpose of vector

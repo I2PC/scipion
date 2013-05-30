@@ -493,6 +493,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		// micrographs
 		try
 		{
+			family.initTemplates();
 			String[] blocksArray = MetaData.getBlocksInMetaDataFile(file);
 			List<String> blocks = Arrays.asList(blocksArray);
 			String block;
@@ -509,6 +510,7 @@ public abstract class TrainingPicker extends ParticlePicker
 					importParticlesFromMd(m, md);
 				}
 			}
+			
 			md.destroy();
 		}
 		catch (Exception e)
@@ -524,6 +526,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		// micrographs
 		try
 		{
+			family.initTemplates();
 			String[] blocksArray = MetaData.getBlocksInMetaDataFile(file);
 			List<String> blocks = Arrays.asList(blocksArray);
 			String block;

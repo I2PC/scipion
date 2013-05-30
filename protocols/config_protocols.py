@@ -19,7 +19,8 @@ protocols = {
         'kerdensom': ('KerDenSOM',  '2D/KerDenSOM'),
         'rotspectra': ('Rotational Spectra', '2D/RotSpectra'),
         'screen_classes': ('Screen classes', '2D/Screening'),
-        'rct': ('Random Conical Tilt', '3D/RCT'),
+        'rct': ('Random Conical Tilt', '3D/InitialVolume/RCT'),
+        'initvolume_ransac': ('RANSAC', '3D/InitialVolume/RANSAC'),
         'symmetric_initial': ('Symmetric Cn/Dn volume', '3D/Symmetric'),
         'projmatch': ('Projection Matching', '3D/ProjMatch'), 
         'ml3d': ('ML3D', '3D/ML3D'),
@@ -41,7 +42,7 @@ sections = [
 ('2D', 
    [['Align+Classify', 'cl2d', 'ml2d', ['Other', 'cl2d_align', 'kerdensom', 'rotspectra', 'screen_classes']]]),
 ('3D', 
-   [['Initial Model', 'rct', 'symmetric_initial'], 
+   [['Initial Model', 'rct', 'initvolume_ransac', 'symmetric_initial'], 
     ['Model Refinement', 'projmatch', 'ml3d'],
     ['Analysis', ['Flexibility', 'nma']]])
 ,

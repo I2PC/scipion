@@ -11,6 +11,7 @@ import java.io.File;
 
 import javax.swing.JDialog;
 
+import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.ImageGeneric;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
@@ -63,13 +64,13 @@ public class TemplatesJDialog extends JDialog {
 				return;
 			}
 			
-			ImageStack stack = new ImagePlus(file).getImageStack();
+			
 			
 			templatespn.removeAll();
 			ImagePlus template;
-			for (int i = 1; i <= frame.getFamily().getTemplatesNumber(); i ++) {
+			for (int i = 0; i < frame.getFamily().getTemplatesNumber(); i ++) {
 				//template = frame.getFamily().getTemplatesImage(ImageGeneric.FIRST_IMAGE + i);
-				template = new ImagePlus("", stack.getProcessor(i));
+				template = XmippImageConverter.convertToImagePlus(templates, ImageGeneric.FIRST_IMAGE + i);
 				templatespn.add(new ImageCanvas(template));
 
 			}
