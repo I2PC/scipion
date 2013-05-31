@@ -90,6 +90,7 @@ class Project(object):
         self.mapper = SqliteMapper(self.dbPath, globals())
         self.mapper.commit()
         # Write hosts configuration to disk
+        os.remove(self.hostsPath)
         self.hostsMapper = ExecutionHostMapper(self.hostsPath, globals())
         for h in hosts:
             self.hostsMapper.insert(h)
@@ -176,17 +177,30 @@ class Project(object):
         
     def getHosts(self):
         """ Retrieve the hosts associated with the project. (class ExecutionHostConfig) """
-        return self.hostsMapper.selectByAll()
+        return self.hostsMapper.selectAll()
+    
+    def launchRemoteProtocol(self, protocol):
+        """ Launch protocol in an execution host    
+        Params:
+            potocol: Protocol to launch in an execution host.
+        """
+        # Fisrt we must recover the execution host credentials.
+        self.hostsMapper = ExecutionHostMapper(self.hostsPath)
+        executionHostConfig = self.hostsMapper.selectByLabel(protocol.getHostName())
+        self.sendProtocol(protocol, executionHostConfig)
+        command = "nohup pw_protocol_run.py " + self.getObjId() + " " + str(protocol.getObjId()) + " > /gpfs/fs1/home/bioinfo/apoza/salida.txt 2> /gpfs/fs1/home/bioinfo/apoza/salida2.txt &"
+        from pyworkflow.utils.utils import executeRemote
+        executeRemote(command,
+                      executionHostConfig.getHostName(),
+                      executionHostConfig.getUserName(),
+                      executionHostConfig.getPassword())
         
-    def sendProtocol(self, protocol):
+    def sendProtocol(self, protocol, executionHostConfig):
         """ Send protocol to an execution host    
         Params:
             potocol: Protocol to send to an execution host.
         """
         from utils.file_transfer import FileTransfer
-        # Fisrt we must recover the execution host credentials.
-        self.hostsMapper = ExecutionHostMapper(self.hostsPath)
-        executionHostConfig = self.hostsMapper.selectByLabel(protocol.getHostName())
         filePathDict = {}
         # We are going to create project folder in the remote host
         projectFolder = split(self.path)[1]
@@ -195,6 +209,9 @@ class Project(object):
             sourceFilePath = os.path.join(self.path, filePath)
             targetFilePath = join(executionHostConfig.getHostPath(), projectFolder, filePath)
             filePathDict[sourceFilePath] = targetFilePath
+            
+        # We add sqlite database file
+        filePathDict[join(self.path, self.dbPath)] = join(executionHostConfig.getHostPath(), projectFolder, self.dbPath)
         # Transfer files       
         fileTransfer = FileTransfer()
         fileTransfer.transferFilesTo(filePathDict,
