@@ -90,7 +90,8 @@ class Project(object):
         self.mapper = SqliteMapper(self.dbPath, globals())
         self.mapper.commit()
         # Write hosts configuration to disk
-        os.remove(self.hostsPath)
+        if (exists(self.hostsPath)):
+            os.remove(self.hostsPath)
         self.hostsMapper = ExecutionHostMapper(self.hostsPath, globals())
         for h in hosts:
             self.hostsMapper.insert(h)
