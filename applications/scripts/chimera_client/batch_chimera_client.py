@@ -76,7 +76,7 @@ class ScriptChimeraClient(XmippScript):
 		              
        
 		
-        port=self.ReturnFreePort()
+        port = self.getFreePort()
         if not port:
             print "ERROR: Port is not available\n"
             sys.exit(1)
@@ -92,7 +92,7 @@ class ScriptChimeraClient(XmippScript):
 #			print 'created chimera client'
 
     
-    def ReturnFreePort(self,basePort=0,host=''):
+    def getFreePort(self,basePort=0,host=''):
         import socket
         port=0
         try:
@@ -101,6 +101,7 @@ class ScriptChimeraClient(XmippScript):
             ipaddr, port = s.getsockname()
             s.close()
         except Exception, e:
+            print e
             return 0
         return port
     
