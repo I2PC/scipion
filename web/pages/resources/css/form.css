@@ -9,7 +9,7 @@ input {
 
 input.hide2 {
 	position: relative;
-	filter: alpha(opacity : 0);
+	filter: alpha(opacity :       0);
 	width: 9.7em;
 	cursor: pointer;
 }
@@ -17,7 +17,7 @@ input.hide2 {
 input.hide {
 	position: fixed;
 	-moz-opacity: 0;
-	filter: alpha(opacity :   0);
+	filter: alpha(opacity :         0);
 	opacity: 0;
 	margin: 0.5em;
 	width: 1.5em;
@@ -85,6 +85,7 @@ textarea {
 
 .boxBottom {
 	/* 	background-color: rgb(235, 235, 235); */
+	
 }
 
 .buttonClose {
@@ -148,3 +149,30 @@ textarea {
 	background-color: FireBrick;
 }
 
+/* CSS for messi selection table */
+table.content {
+	width: 100%;
+	overflow-x: auto;
+	font-size: 0.9em;
+/* 	text-shadow: 1px 1px 0px #fff; */
+/* 	background: #eaebec; */
+/* 	box-shadow: 0 1px 2px #d1d1d1; */
+	
+}
+
+table.content tr {
+	text-align: center;
+}
+
+table.content tr td {
+	padding: 0.4em;
+	padding-left: 0.5em;
+/* 	border-top: 1px solid #ffffff; */
+/* 	border-bottom: 1px solid #e0e0e0; */
+/* 	border-left: 1px solid #e0e0e0; */
+}
+
+table.content tr:hover td {
+	background-color: firebrick;
+	color: white;
+}

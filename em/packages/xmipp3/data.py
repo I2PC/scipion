@@ -39,6 +39,7 @@ import xmipp
 class XmippImage(XmippMdRow, Image):
     """Xmipp implementation for Image"""
     _label = xmipp.MDL_IMAGE
+    _labelCTF = xmipp.MDL_CTF_MODEL
     
     def __init__(self, filename=None, **args):
         XmippMdRow.__init__(self)
@@ -52,6 +53,13 @@ class XmippImage(XmippMdRow, Image):
         
     def getFileName(self):
         return self.getValue(self._label)
+    
+    def hasCTF(self):
+        return self.hasLabel(self._labelCTF)
+    
+    def getCTF(self):
+        """ Return the CTF model """
+        return XmippCTFModel(self.getValue(self._labelCTF))
         
     @staticmethod
     def convert(img):
@@ -113,6 +121,7 @@ class XmippSetOfImages(SetOfImages):
         """ Iterate over the set of images. """
         self.loadIfEmpty()
         for img in self._set:
+            img.setSamplingRate(self.samplingRate.get())
             yield img
         
     def iterTiltPairs(self):
@@ -320,7 +329,19 @@ class XmippCTFModel(CTFModel, XmippMdRow):
         filePaths = set()
         filePaths.add(self.getFileName())
         return filePaths
-          
+
+    @staticmethod
+    def convert(ctfModel, filename):
+        """ Method to convert from a general ctfModel to XmippCtfModel """
+        if isinstance(ctfModel, XmippCTFModel):
+            return ctfModel
+            
+        xmippCTFModel = XmippCTFModel()
+        xmippCTFModel.copyInfo(ctfModel)
+        
+        xmippCTFModel.write(filename)
+        
+        return xmippCTFModel          
     
 class XmippSetOfCoordinates(SetOfCoordinates):
     """Implementation of SetOfCoordinates for Xmipp"""
@@ -351,7 +372,7 @@ class XmippSetOfCoordinates(SetOfCoordinates):
                 coordinate.setPosition(x, y)
                 coordinate.setMicrograph(micrograph)
                 coordinate.setBoxSize(self.boxSize.get())
-                coordinate.setId('%s:%06d' % (pathMic, i))
+                coordinate.setId('%s:%06d' % (pathMic, i+1))
                 yield coordinate
                 
     def iterCoordinates(self):

@@ -89,6 +89,9 @@ class XmippMdRow():
     def __init__(self):
         self._labelDict = {} # Dictionary containing labels and values
     
+    def hasLabel(self, label):
+        return label in self._labelDict
+    
     def setValue(self, label, value):
         """args: this list should contains tuples with 
         MetaData Label and the desired value"""
@@ -166,7 +169,6 @@ class XmippSet():
         
     def isEmpty(self):
         return self._md.isEmpty()
-        
         
 #    @staticmethod
 #    def convert(inputSet, xmippSetClass, filename):

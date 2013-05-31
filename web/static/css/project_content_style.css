@@ -135,17 +135,10 @@ a {
 /* CSS for the runtime table */
 table a:link {
 	font-weight: bold;
-	text-decoration: none;
-}
-
-table a:visited {
-	font-weight: bold;
-	text-decoration: none;
 }
 
 table a:active,table a:hover {
-	color: #bd5a35;
-	text-decoration: underline;
+	color: Firebrick;
 }
 
 table {
@@ -199,7 +192,4 @@ table tr:last-child td {
 
 table tr:hover td {
 	background: #f2f2f2;
-	background: -webkit-gradient(linear, left top, left bottom, from(#f2f2f2),
-		to(#f0f0f0));
-	background: -moz-linear-gradient(top, #f2f2f2, #f0f0f0);
 }

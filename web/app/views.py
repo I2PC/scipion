@@ -21,6 +21,15 @@ def getResource(request):
         img = 'contents24.png'
     elif request == 'browse':
         img = 'zoom.png'
+    elif request == 'edit_toolbar':
+        img = 'edit.gif'
+    elif request == 'copy_toolbar':
+        img = 'copy.gif'
+    elif request == 'delete_toolbar':
+        img = 'delete.gif'
+    elif request == 'browse_toolbar':
+        img = 'run_steps.gif'
+        
     path = os.path.join(settings.MEDIA_URL, img)
     return path
 
@@ -141,12 +150,17 @@ def loadProject(projectName):
     
 def project_content(request):    
     # Resources #
+    edit_tool_path = getResource('edit_toolbar')
+    copy_tool_path = getResource('copy_toolbar')
+    delete_tool_path = getResource('delete_toolbar')
+    browse_tool_path = getResource('browse_toolbar')
+    
     css_path = os.path.join(settings.STATIC_URL, 'css/project_content_style.css')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     jquery_cookie = os.path.join(settings.STATIC_URL, 'js/jquery.cookie.js')
     jquery_treeview = os.path.join(settings.STATIC_URL, 'js/jquery.treeview.js')
     launchTreeview = os.path.join(settings.STATIC_URL, 'js/launchTreeview.js')
-    popup_path = os.path.join(settings.STATIC_URL, 'js/popup.js')
+    utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
     #############
     projectName = request.GET.get('projectName', None)
     if projectName is None:
@@ -158,8 +172,12 @@ def project_content(request):
     root = loadProtTree()
     
     context = {'projectName':projectName,
+               'editTool': edit_tool_path,
+               'copyTool': copy_tool_path,
+               'deleteTool': delete_tool_path,
+               'browseTool': browse_tool_path,
                'jquery': jquery_path,
-               'popup': popup_path,
+               'utils': utils_path,
                'jquery_cookie': jquery_cookie,
                'jquery_treeview': jquery_treeview,
                'launchTreeview': launchTreeview,
@@ -178,6 +196,7 @@ def form(request):
     logo_browse = getResource('browse')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     jsForm_path = os.path.join(settings.STATIC_URL, 'js/form.js')
+    utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
     css_path = os.path.join(settings.STATIC_URL, 'css/form.css')
     # Messi Plugin
     messi_path = os.path.join(settings.STATIC_URL, 'js/messi.js')
@@ -207,9 +226,15 @@ def form(request):
                 param.htmlValue = protVar.getNameId()
             else:
                 param.htmlValue = protVar.get(param.default.get(""))
+                if isinstance(protVar, Boolean):
+                    if param.htmlValue:
+                        param.htmlValue = 'true'
+                    else:
+                        param.htmlValue = 'false' 
             param.htmlCond = param.condition.get()
             param.htmlDepend = ','.join(param._dependants)
             param.htmlCondParams = ','.join(param._conditionParams)
+#            param.htmlExpertLevel = param.expertLevel.get()
     
     
     context = {'projectName':projectName,
@@ -220,6 +245,7 @@ def form(request):
                'form': jsForm_path,
                'jquery': jquery_path,
                'browse': logo_browse,
+               'utils': utils_path,
                'css':css_path,
                'messi': messi_path,
                'messi_css': messi_css_path}
@@ -248,8 +274,10 @@ def protocol(request):
         value = request.POST.get(paramName)
         if attr.isPointer():
             if len(value.strip()) > 0:
-                value = value.split('.')[-1]  # Get the id string for last part after .
-                value = project.mapper.selectById(int(value))  # Get the object from its id
+                objId = int(value.split('.')[-1])  # Get the id string for last part after .
+                value = project.mapper.selectById(objId)  # Get the object from its id
+                if attr.getObjId() == value.getObjId():
+                    raise Exception("Param: %s is autoreferencing with id: %d" % (paramName, objId))
             else:
                 value = None
         attr.set(value)
