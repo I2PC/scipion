@@ -49,6 +49,7 @@ from pyworkflow.gui import getImage
 from pyworkflow.gui.tree import Tree, ObjectTreeProvider, DbTreeProvider
 from pyworkflow.gui.form import FormWindow
 from pyworkflow.gui.dialog import askYesNo
+from pyworkflow.gui.text import TaggedText
 from config import *
 from pw_browser import BrowserWindow
 
@@ -184,7 +185,11 @@ class ProtocolTreeProvider(ObjectTreeProvider):
         self.status = List(objName='_status')
         self.params = List(objName='_params')
         self.statusList = ['status', 'initTime', 'endTime', 'error', 'isInteractive', 'mode']
-        ObjectTreeProvider.__init__(self, [protocol])
+        if protocol is None:
+            objList = []
+        else:
+            objList = [protocol]
+        ObjectTreeProvider.__init__(self, objList)
         self.viewer = XmippViewer()
         
     def show(self, obj):
@@ -244,6 +249,8 @@ class ProjectWindow(gui.Window):
         self.projPath = path
         self.loadProjectConfig()
         self.icon = self.generalCfg.icon.get()
+        self.selectedProtocol = None
+        
         gui.Window.__init__(self, self.projName, master, icon=self.icon, minsize=(900,500))
         
         parent = self.root
@@ -270,12 +277,16 @@ class ProjectWindow(gui.Window):
         gui.configureWeigths(protFrame)
         self.protTree = self.createProtocolsTree(protFrame)
         
-        # Runs history Pane
+        # Create the right Pane that will be composed by:
+        # a Action Buttons TOOLBAR in the top
+        # and another vertical Pane with:
+        # Runs History (at Top)
+        # Sectected run info (at Bottom)
         rightFrame = tk.Frame(p)
         rightFrame.columnconfigure(0, weight=1)
         rightFrame.rowconfigure(1, weight=1)
-        rightFrame.rowconfigure(1, weight=1)
         
+        # Create the Action Buttons TOOLBAR
         runsToolbar = tk.Frame(rightFrame)
         runsToolbar.grid(row=0, column=0, sticky='news')
         runsToolbar.rowconfigure(0, weight=1)
@@ -283,12 +294,46 @@ class ProjectWindow(gui.Window):
         self.runsToolbar = runsToolbar
         self.createActionToolbar()
 
-        
-        runsFrame = ttk.Labelframe(rightFrame, text=' History ', width=500, height=500)
-        runsFrame.grid(row=1, column=0, sticky='news', pady=5)
-        self.runsTree = self.createRunsTree(runsFrame)
-        
+        # Create the Run History tree
+        v = ttk.PanedWindow(rightFrame, orient=tk.VERTICAL)
+        runsFrame = ttk.Labelframe(v, text=' History ', width=500, height=500)
+        #runsFrame.grid(row=1, column=0, sticky='news', pady=5)
+        self.runsTree = self.createRunsTree(runsFrame)        
         gui.configureWeigths(runsFrame)
+        
+        # Create the Selected Run Info
+        infoFrame = tk.Frame(v)
+        #infoFrame.columnconfigure(0, weight=1)
+        gui.configureWeigths(infoFrame)
+        
+        tab = ttk.Notebook(infoFrame)
+        # Data tab
+        dframe = tk.Frame(tab)
+        gui.configureWeigths(dframe)
+        provider = ProtocolTreeProvider(self.selectedProtocol)
+        self.infoTree = BoundTree(dframe, provider) 
+        TaggedText(dframe, width=40, height=15, bg='white')
+        self.infoTree.grid(row=0, column=0, sticky='news')  
+        # Summary tab
+        sframe = tk.Frame(tab)
+        gui.configureWeigths(sframe)
+        self.summaryText = TaggedText(sframe, width=40, height=15, bg='white')
+        self.summaryText.grid(row=0, column=0, sticky='news')        
+        #self.summaryText.addText("\nSummary should go <HERE!!!>\n More info here.")
+        
+        tab.add(dframe, text="Data")
+        tab.add(sframe, text="Summary")     
+        tab.grid(row=0, column=0, sticky='news')
+        
+        v.add(runsFrame, weight=3, 
+              #padx=5, pady=5, 
+              #sticky='news'
+              )
+        v.add(infoFrame, weight=1,
+              #padx=5, pady=5, 
+              #sticky='news'
+              )
+        v.grid(row=1, column=0, sticky='news')
         
         # Add sub-windows to PanedWindows
         p.add(leftFrame, padx=5, pady=5)
@@ -305,7 +350,6 @@ class ProjectWindow(gui.Window):
         #self.root.bind('<Button-1>', self._unpostMenu)
         
         #self.menuRun = tk.Menu(self.root, tearoff=0)
-        self.selectedProtocol = None
         
     def createActionToolbar(self):
         """ Prepare the buttons that will be available for protocol actions. """
@@ -320,8 +364,6 @@ class ProjectWindow(gui.Window):
                 btn.bind('<Button-1>', lambda e: self._runActionClicked(action))
                 return btn
             self.actionButtons[action] = addButton(action)
-            
-    
         
     def updateActionToolbar(self):
         """ Update which action buttons should be visible. """
@@ -339,7 +381,6 @@ class ProjectWindow(gui.Window):
             
         displayAction(ACTION_STOP, 4, status == STATUS_RUNNING)
         displayAction(ACTION_CONTINUE, 5, status == STATUS_WAITING_APPROVAL)
-            
         
     def loadProjectConfig(self):
         self.configMapper = ConfigMapper(getConfigPath('configuration.xml'), globals())
@@ -383,6 +424,8 @@ class ProjectWindow(gui.Window):
         prot.mapper = self.project.mapper
         self.selectedProtocol = prot
         self.updateActionToolbar()
+        self._fillInfoTree()
+        self._fillSummary()
         
     def _openProtocolForm(self, prot):
         """Open the Protocol GUI Form given a Protocol instance"""
@@ -395,6 +438,15 @@ class ProjectWindow(gui.Window):
                                icon=self.icon)
         window.itemConfig(self.selectedProtocol, open=True)  
         window.show()
+        
+    def _fillInfoTree(self):
+        provider = ProtocolTreeProvider(self.selectedProtocol)
+        self.infoTree.setProvider(provider)
+        self.infoTree.itemConfig(self.selectedProtocol, open=True)  
+        
+    def _fillSummary(self):
+        self.summaryText.clear()
+        self.summaryText.addText(self.selectedProtocol.summary())
         
     def _executeSaveProtocol(self, prot, onlySave=False):
         if onlySave:

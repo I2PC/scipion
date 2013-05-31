@@ -38,7 +38,7 @@ import gui
 from gui import configureWeigths, Window
 from text import TaggedText
 from widgets import Button
-from dialog import showInfo
+from dialog import showInfo, showError
 from pyworkflow.protocol.params import *
 
 
@@ -206,7 +206,7 @@ class ParamWidget():
         
     def _showHelpMessage(self, e=None):
         showInfo("Help", self.param.help.get(), self.parent)
-        
+               
     def _createContentWidgets(self, param, content):
         """Create the specific widgets inside the content frame"""
         # Create widgets for each type of param
@@ -371,11 +371,19 @@ class FormWindow(Window):
 
         return (width, height)
         
+        
+    def _showError(self, msg):
+        showError("Protocol validation", msg, self.root) 
+        
     def save(self, e=None):
         self._close(onlySave=True)
         
     def execute(self, e=None):
-        self._close()
+        errors = self.protocol.validate()
+        if len(errors):
+            self._showError(errors)
+        else:
+            self._close()
         
     def _close(self, onlySave=False):
         if not onlySave:

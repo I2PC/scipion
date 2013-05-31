@@ -116,8 +116,12 @@ class Text(tk.Text, Scrollable):
 
     def addText(self, text):
         self.config(state=tk.NORMAL)
-        for line in text.splitlines():
-            self.addLine(line)
+        if isinstance(text, list):
+            for line in text:
+                self.addLine(line)
+        else:
+            for line in text.splitlines():
+                self.addLine(line)
         self.config(state=tk.DISABLED)   
         
     def onClick(self, e=None): 

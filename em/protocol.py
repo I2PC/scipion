@@ -217,6 +217,20 @@ class ProtCTFMicrographs(Protocol):
         # Insert step to create output objects       
         self._insertFunctionStep('createOutput', prerequisites=deps)
         
+    def _validate(self):
+        errors = []
+        if not self.inputMicrographs.hasValue():
+            errors.append("<Input Micrographs> can not be EMPTY.")
+        return errors
+    
+    def _summary(self):
+        summary = []
+        if not self.inputMicrographs.hasValue():
+            summary.append("No <Input Micrographs> selected.")
+        else:
+            summary.append("Input micrographs: " + self.inputMicrographs.get().getNameId())
+        return summary
+                
     def _prepareCommand(self):
         """ This function should be implemented to prepare the
         arguments template if doesn't change for each micrograph

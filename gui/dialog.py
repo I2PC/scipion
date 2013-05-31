@@ -219,7 +219,10 @@ class MessageDialog(Dialog):
             label = tk.Label(bodyFrame, image=self.image, bg='white', bd=0)
             label.grid(row=0, column=0, sticky='nw')
         # Insert lines of text
-        mylines = self.msg.splitlines()
+        if isinstance(self.msg, list):
+            mylines = self.msg
+        else:
+            mylines = self.msg.splitlines()
         m = 0
         for l in mylines:
             m = max(m, len(l))

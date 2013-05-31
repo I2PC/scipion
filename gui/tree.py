@@ -157,9 +157,9 @@ class BoundTree(Tree):
             self.column(c, width=w)
             self.heading(c, text=c)
         self.grid(row=0, column=0, sticky='news')
-        self.provider = provider
+        
         self.menu = tk.Menu(self, tearoff=0)
-        self.update()
+        self.setProvider(provider)
         
         self.bind("<Button-3>", self._onRightClick)
         # Hide the right-click menu
@@ -167,6 +167,12 @@ class BoundTree(Tree):
         self.bind("<Key>", self._unpostMenu)
         self.bind('<Button-1>', self._unpostMenu)
         self.bind('<<TreeviewSelect>>', self._onClick)
+        
+    def setProvider(self, provider):
+        """ Set new provider and updated items. """
+        self.provider = provider
+        self.update()
+        
         
     def _unpostMenu(self, e=None):
         self.menu.unpost()

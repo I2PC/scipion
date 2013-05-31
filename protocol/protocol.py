@@ -81,11 +81,11 @@ class Step(OrderedObject):
         """ This function should be used to specify
         expected outputs""" 
         self._storeAttributes(self._outputs, args)
-    
+           
     def _preconditions(self):
         """ Check if the necessary conditions to
         step execution are met""" 
-        return True
+        return self._validate() == []
     
     def _postconditions(self):
         """ Check if the step have done well its task
@@ -482,8 +482,40 @@ class Protocol(Step):
 
     def getHostName(self):
         """ Get the execution host name """
-        return self.hostName;
+        return self.hostName
     
     def setHostName(self, hostName):
         """ Set the execution host name """ 
-        self.hostName = hostName;
+        self.hostName = hostName
+        
+    # Methods that should be implemented in subclasses
+        
+    def _validate(self):
+        """ This function can be overwritten by subclasses.
+        Used from the public validate function.   
+        """
+        return []
+     
+    def validate(self):
+        """ Check that input parameters are correct.
+        Return a list with errors, if the list is empty, all was ok.         
+        """
+        return self._validate()
+    
+    def _warnings(self):
+        """ Should be implemented in subclasses. See warning. """
+        return []
+    
+    def warnings(self):
+        """ Return some message warnings that can be errors.
+        User should approve to execute a protocol with warnings. """
+        return self._warnings()
+    
+    def _summary(self):
+        """ Should be implemented in subclasses. See summary. """
+        return ["No summary information."]
+    
+    def summary(self):
+        """ Return a summary message to provide some information to users. """
+        return self._summary()
+        
