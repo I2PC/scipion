@@ -186,3 +186,22 @@ table tr:last-child td {
 table tr:hover td {
 	background-color: #f2f2f2;
 }
+
+.buttonHosts {
+	/* 	margin: 1em 0.5em 0 0; */
+	font-size: 0.8em;
+	color: black;
+	width: 12em;
+	height: 2em;
+	background-color: LightGray;
+	/* 	border: 1px solid #000066; */
+	padding: 2px;
+	font-weight: bold;
+	letter-spacing: 0.2em;
+	text-align: center;
+	font-weight: bold;
+}
+
+.buttonHosts:hover {
+	background-color: white;
+}

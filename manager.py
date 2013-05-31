@@ -36,7 +36,8 @@ from pyworkflow.utils.path import cleanPath, makePath, getHomePath
 from pyworkflow.apps.config import ExecutionHostMapper
 
 
-PROJECTS_PATH = 'Scipion_Projects'
+SCIPION_PATH = 'Scipion'
+PROJECTS_PATH = 'projects'
 
 
 class ProjectInfo(object):
@@ -52,7 +53,7 @@ class Manager(object):
     and listing of projects."""
     def __init__(self):
         """For create a Project, the path is required"""
-        self.path = join(getHomePath(), PROJECTS_PATH)
+        self.path = join(getHomePath(), SCIPION_PATH, PROJECTS_PATH)
         makePath(self.path)
         
     def getProjectPath(self, projectName):
