@@ -176,8 +176,8 @@ class XmippProjectionExplorer(XmippChimeraClient):
         self.initListenThread()
         printCmd('creating iw')
         self.size = float(size) if not size == 'default' else self.xdim
-        
-        self.iw = ImageWindow(image=self.projection, dim=self.size, label="Projection")
+        import ntpath
+        self.iw = ImageWindow(filename=ntpath.basename(volfile),image=self.projection, dim=self.size, label="Projection")
         self.iw.root.protocol("WM_DELETE_WINDOW", self.exitClient)
         self.iw.root.mainloop()
 
