@@ -1,6 +1,10 @@
 /* CSS Document */
 html,body {
-	background-color: rgb(240, 245, 230);
+	background-color: #F0F0F0;
+	}
+
+body{
+    /* border: 1px solid black;*/
 }
 
 input {
