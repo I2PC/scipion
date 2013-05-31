@@ -8,8 +8,10 @@ import logging.config
 import os
 from pyworkflow.utils.path import *
 
+PROJECTS_PATH = 'Scipion_Projects'
+
 """ Get general log file path """
-logPath = join (getHomePath(), 'scipionLog', 'scipionLog.log')
+logPath = join (getHomePath(), PROJECTS_PATH, 'scipionLog', 'scipionLog.log')
 """ Create the folders path if it does not exist """
 createFolderForFile(logPath)
 """ Config the log """
