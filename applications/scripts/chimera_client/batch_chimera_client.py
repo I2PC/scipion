@@ -36,10 +36,18 @@ class ScriptChimeraClient(XmippScript):
     def run(self):
     	
     	volfile = self.getParam('-i')
+        if not exists(volfile):
+            print "ERROR: File " + volfile + "does not exist\n"
+            sys.exit(1)
+
     	mode = self.getParam('-m')
     	angulardistfile = self.getParam('-a')
         if angulardistfile == 'none':
             angulardistfile = None
+        else:
+            if not(existsBlockInMetaDataFile(angulardistfile)):
+                print "ERROR: File " + angulardistfile + "does not exist\n"
+                sys.exit(1)
         
         spheres_color = self.getParam('-a', 1)
         spheres_distance = self.getParam('-a', 2)
