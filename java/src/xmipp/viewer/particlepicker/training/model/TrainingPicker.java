@@ -727,7 +727,7 @@ public abstract class TrainingPicker extends ParticlePicker
 	}
 
 
-	public synchronized void updateTemplates()
+	public void updateTemplates()
 	{
 		TasksManager.getInstance().addTask(new UpdateTemplatesTask(this));
 	}
