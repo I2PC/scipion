@@ -139,8 +139,7 @@ def loadProject(projectName):
     project.load()
     return project    
     
-def project_content(request):
-    
+def project_content(request):    
     # Resources #
     css_path = os.path.join(settings.STATIC_URL, 'css/project_content_style.css')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
@@ -276,7 +275,22 @@ def browse_objects(request):
                              ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
 
-
+def hosts(request):
+    # Resources #
+    favicon_path = getResource('favicon')
+    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
+    # # Project Id(or Name) should be stored in SESSION
+    projectName = request.GET.get('projectName')
+    project = loadProject(projectName)
+    context = {'projectName' : projectName,
+               'project' : project,
+               'hosts': project.getHosts(),
+               'favicon': favicon_path,
+               'jquery': jquery_path}
+    
+    return render_to_response('hosts.html', context)
+    
+    
 if __name__ == '__main__':
     root = loadProtTree()    
     for s in root.childs:

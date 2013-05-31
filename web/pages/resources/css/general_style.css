@@ -70,6 +70,7 @@ margin: 1em; /*Margins for inner DIV inside each DIV (to provide padding)*/
 .logo {
 	max-height: 50px;
 	height: 50px;
+	width: 200px;
 	text-align: center;
 }
 

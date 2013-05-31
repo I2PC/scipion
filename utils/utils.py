@@ -111,7 +111,52 @@ def executeRemoteX (command, hostName, userName, password):
     pswCommand = "echo '" + password + "' | " + "/home/antonio/Desarrollo/Projects/EclipseProjects/Scipion/pyworkflow/utils/sshAskPass.sh" + " ssh -X " + userName + "@" + hostName + " " + command
     import subprocess
     p = subprocess.Popen(pswCommand, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    #stdout, stderr = p.communicate()
-    return p.communicate()
+    stdout, stderr = p.communicate()
+    return stdout, stderr
+
+def executeRemote (command, hostName, userName, password):
+    """ Execute a remote command.
+    Params:
+        command: Command to execute.
+        hostName: Remote host name.
+        userName: User name.
+        password: Password.
+    Returns: 
+        Tuple with standard input, standard output and error output.
+    """
+    import paramiko
+    ssh = paramiko.SSHClient()
+    ssh.load_system_host_keys()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(hostName, 22, userName, password)
+    stdin, stdout, stderr = ssh.exec_command(command)
+    ssh.close()
+    return stdin, stdout, stderr
     
+    
+def executeLongRemote (command, hostName, userName, password):
+    """ Execute a remote command.
+    Params:
+        command: Command to execute.
+        hostName: Remote host name.
+        userName: User name.
+        password: Password.
+    Returns: 
+        Tuple with standard input, standard output and error output.
+    """
+    import paramiko
+    import select
+    ssh = paramiko.SSHClient()
+    ssh.load_system_host_keys()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(hostName, 22, userName, password)
+    transport = ssh.get_transport()
+    channel = transport.open_session()
+    channel.exec_command(command)
+    while True:
+        if channel.exit_status_ready():
+            break
+        rl, wl, xl = select.select([channel], [], [], 0.0)
+        if len(rl) > 0:
+            print channel.recv(1024)
              

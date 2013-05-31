@@ -35,13 +35,14 @@ if len(l):
     prot3.inputMicrographs.set(prot2.outputMicrographs)
     proj.launchProtocol(prot3, wait=True)
     
+    """
     prot4 = XmippProtCTFMicrographs()
     prot4.inputMicrographs.set(prot3.outputMicrographs)
     proj.launchProtocol(prot4, wait=True)
-
     prot5 = ProtCTFFind()
     prot5.inputMicrographs.set(prot3.outputMicrographs)
     proj.launchProtocol(prot5, wait=True)
-        
+    """        
+    
 else:
     print "Not micrographs found"

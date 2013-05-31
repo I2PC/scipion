@@ -12,7 +12,8 @@
 	<div id="wrapper"> 	
 
 		<div id="framecontentTop">
-			<img class="logo" src="/resources/scipion_logo.png" alt="Scipion logo" />
+			<img class="logo" src="/resources/scipion_logo.png" alt="Scipion logo" />	
+			{% block menu %}  {% endblock %}					
 		</div><!-- #header-->
 		
 		<div id="framecontentLeft" >			
@@ -23,7 +24,8 @@
 			{% block content %}	{% endblock %}				
 		</div><!-- #middle-->
 	
-		<div id="framecontentBottom">			
+		<div id="framecontentBottom">	
+			{% block footer %} {% endblock %}		
 		</div><!-- #footer -->
 	</div>
 	
