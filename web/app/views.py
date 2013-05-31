@@ -224,7 +224,8 @@ def form(request):
                 raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
                 # Create the label
             if protVar.isPointer():
-                param.htmlValue = protVar.getNameId()
+                if protVar.hasValue():
+                    param.htmlValue = protVar.get().getNameId()
             else:
                 param.htmlValue = protVar.get(param.default.get(""))
                 if isinstance(protVar, Boolean):
@@ -283,6 +284,14 @@ def protocol(request):
                 value = None
         attr.set(value)
     # Finally, launch the protocol
+    pre = protocol.preconditions()
+    if pre == []:
+        pass
+    else:
+        #Errors
+        pass
+    
+    
     project.launchProtocol(protocol)
     
     return project_content(request)

@@ -56,8 +56,8 @@
 				{% endfor %}
 			</tr>
 			{% for obj in provider.getObjects %}
-				<tr id="{{obj.getObjId}}" style="background-color:#fafafa;">
-					<td onclick='javascript:launchToolbar("{{projectName}}","{{obj.getObjId}}", ($(this)));'>
+				<tr id="{{obj.getObjId}}" onclick='javascript:launchToolbar("{{projectName}}","{{obj.getObjId}}", ($(this)));' style="background-color:#fafafa;">
+					<td>
 						<a href="javascript:popup('/form/?projectName={{projectName}}&protocolId={{obj.getObjId}}')">
 							{{obj.getName}}
 						</a>
