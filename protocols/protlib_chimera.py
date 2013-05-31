@@ -49,11 +49,11 @@ class XmippChimeraClient:
             [index, file] = volfile.split('@'); 
         else :
             file = volfile 
-        if not exists(file):
-            raise ValueError(file)
-        if not angulardistfile is None:
-            if not(existsBlockInMetaDataFile(angulardistfile)):
-                raise ValueError(angulardistfile)
+#        if not exists(file):
+#            raise ValueError(file)
+#        if not angulardistfile is None:
+#            if not(existsBlockInMetaDataFile(angulardistfile)):
+#                raise ValueError(angulardistfile)
         
             
         self.volfile = volfile
