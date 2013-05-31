@@ -148,8 +148,7 @@ def loadProject(projectName):
     project.load()
     return project    
     
-def project_content(request):
-    
+def project_content(request):    
     # Resources #
     edit_tool_path = getResource('edit_toolbar')
     copy_tool_path = getResource('copy_toolbar')
@@ -224,7 +223,8 @@ def form(request):
                 raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
                 # Create the label
             if protVar.isPointer():
-                param.htmlValue = protVar.getNameId()
+                if protVar.hasValue():
+                    param.htmlValue = protVar.get().getNameId()
             else:
                 param.htmlValue = protVar.get(param.default.get(""))
                 if isinstance(protVar, Boolean):
@@ -283,6 +283,14 @@ def protocol(request):
                 value = None
         attr.set(value)
     # Finally, launch the protocol
+    pre = protocol.preconditions()
+    if pre == []:
+        pass
+    else:
+        #Errors
+        pass
+    
+    
     project.launchProtocol(protocol)
     
     return project_content(request)
@@ -304,7 +312,22 @@ def browse_objects(request):
                              ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
 
-
+def hosts(request):
+    # Resources #
+    favicon_path = getResource('favicon')
+    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
+    # # Project Id(or Name) should be stored in SESSION
+    projectName = request.GET.get('projectName')
+    project = loadProject(projectName)
+    context = {'projectName' : projectName,
+               'project' : project,
+               'hosts': project.getHosts(),
+               'favicon': favicon_path,
+               'jquery': jquery_path}
+    
+    return render_to_response('hosts.html', context)
+    
+    
 if __name__ == '__main__':
     root = loadProtTree()    
     for s in root.childs:

@@ -9,6 +9,11 @@
 	<script src={{launchTreeview}} type="text/javascript"></script>
 	<script src={{utils}} type="text/javascript"></script>
 {% endblock %}		
+
+{% block menu %}
+	<button onclick="javascript:popup('/hosts/?projectName={{projectName}}')"class="button" type="button" style="position:absolute;margin:10px;right:10px;">Config hosts</button>
+{% endblock %}
+
 {% block sideLeft %}			
 	<!-- <div class="tittle">PROTOCOLS</div> -->			
 	<div class="protFieldsetTree">
@@ -49,15 +54,15 @@
 		<span><a id="browseTool" href=""><img src="{{browseTool}}"/> Browse</a></span>
 	</div>
 	<div style="overflow:auto">
-		<table cellspacing='0'>
+		<table>
 			<tr>
 				{% for colName, colWidth in provider.getColumns %}
 					<th>{{colName}}</th> 
 				{% endfor %}
 			</tr>
 			{% for obj in provider.getObjects %}
-				<tr id="{{obj.getObjId}}" style="background-color:#fafafa;">
-					<td onclick='javascript:launchToolbar("{{projectName}}","{{obj.getObjId}}", ($(this)));'>
+				<tr id="{{obj.getObjId}}" onclick='javascript:launchToolbar("{{projectName}}","{{obj.getObjId}}", ($(this)));' style="background-color:#fafafa;">
+					<td>
 						<a href="javascript:popup('/form/?projectName={{projectName}}&protocolId={{obj.getObjId}}')">
 							{{obj.getName}}
 						</a>

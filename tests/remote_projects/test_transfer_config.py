@@ -24,7 +24,9 @@ class TestTransfer(unittest.TestCase):
         if len(result):    
             for emanProtBoxing in result:
                 emanProtBoxing.setHostName('glassfishdev')
-                self.proj.sendProtocol(emanProtBoxing)
+                hostsMapper = ExecutionHostMapper(self.proj.hostsPath)
+                executionHostConfig = hostsMapper.selectByLabel(emanProtBoxing.getHostName())
+                self.proj.sendProtocol(emanProtBoxing, executionHostConfig)
        
         self.assertTrue(self.checkProtocolFiles(emanProtBoxing))  
 

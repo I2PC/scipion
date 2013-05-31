@@ -23,7 +23,7 @@ function launchToolbar(projName, id, elm) {
 		rowOld.attr('style', 'background-color: #fafafa;');
 	}
 	row.attr('value', id);
-	$("tr#" + id).attr('style', 'background-color: #f2f2f2;');
+	elm.attr('style', 'background-color: LightSteelBlue;');
 
 	// Action Edit Button
 	$("a#editTool").attr(
@@ -59,5 +59,5 @@ function selTableMessi(elm) {
 		rowOld.attr('style', '');
 	}
 	row.attr('value', id);
-	elm.attr('style', 'background-color: firebrick; color:white;');
+	elm.attr('style', 'background-color: LightSteelBlue;');
 }

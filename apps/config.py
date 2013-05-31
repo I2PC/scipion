@@ -31,7 +31,6 @@ mainly for project GUI
 import os
 from os.path import join, exists
 from pyworkflow.utils.path import getHomePath
-
 import pyworkflow as pw
 from pyworkflow.object import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
@@ -289,7 +288,8 @@ def writeProtocols():
 
     writeConfig(menu, 'protocols_default.xml')
     
-    
+PROJECTS_PATH = 'Scipion_Projects'
+  
 def writeHosts():
     host = ExecutionHostConfig()
     host.label.set('localhost')
@@ -358,6 +358,15 @@ cat $PBS_NODEFILE
     host.userName.set('apoza')
     host.password.set('BF6fYiFYiYD')
     host.hostPath.set(join ('/home/apoza', PROJECTS_PATH))
+    
+    writeConfig(host, 'execution_hosts.xml', mapperClass=ExecutionHostMapper, clean=False)
+    
+    host = ExecutionHostConfig()
+    host.label.set('crunchy')
+    host.hostName.set('crunchy.cnb.csic.es')
+    host.userName.set('apoza')
+    host.password.set('nerfyeb4f1v')
+    host.hostPath.set(join ('/gpfs/fs1/home/bioinfo/apoza', PROJECTS_PATH))
     
     writeConfig(host, 'execution_hosts.xml', mapperClass=ExecutionHostMapper, clean=False)
     

@@ -173,6 +173,6 @@ table.content tr td {
 }
 
 table.content tr:hover td {
-	background-color: firebrick;
-	color: white;
+	background-color: #f2f2f2;
+/* 	color: white; */
 }
