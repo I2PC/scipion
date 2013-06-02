@@ -68,6 +68,7 @@ def buildRunCommand(log, programname, params,
                       'command': "`which %(programname)s` %(params)s" % locals()
                       }
         hostConfig = loadHostConfig()
+        hostConfig.printAll()
         command = hostConfig.mpiCommand.get() % paramsDict
 
     if runInBackground:
@@ -95,7 +96,7 @@ def runProtocol(projId, protId, mpiComm=None):
     """
     from pyworkflow.manager import Manager
     manager = Manager()
-    project = manager.createProject(projId) # Now it will be loaded if exists
+    project = manager.loadProject(projId) # Now it will be loaded if exists
     protocol = project.mapper.selectById(protId)
     if protocol is None:
         raise Exception("Not protocol found with id: %d" % protId)

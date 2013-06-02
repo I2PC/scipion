@@ -46,6 +46,6 @@ if __name__ == '__main__':
         
     else:
         from pyworkflow.manager import Manager
-        project = Manager().createProject(projName) # Create the project to change dir
+        project = Manager().loadProject(projName) # Create the project to change dir
         from pyworkflow.utils.mpi import runJobMPISlave
         runJobMPISlave(comm)
