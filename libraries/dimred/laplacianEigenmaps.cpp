@@ -48,5 +48,5 @@ void LaplacianEigenmap::reduceDimensionality()
 		MAT_ELEM(D,i,i)+=MAT_ELEM(G,i,j);
 	//Construct eigenmaps
 	generalizedEigs(L,D,mappedX,Y);
-	keepColumns(Y,1,outputDim);
+	keepColumns(Y,1,(int)outputDim);
 }
