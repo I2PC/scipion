@@ -312,6 +312,14 @@ class TestXmippPythonInterface(unittest.TestCase):
              self.assertEqual(img, expImg)
              i += 1
         
+    def test_Metadata_existsBlockInMetaDataFile(self):
+         mdPath = "b2@"+testFile("testBlock.xmd")
+         self.assertTrue(existsBlockInMetaDataFile(mdPath))
+         mdPath = "nonexisting@"+testFile("testBlock.xmd")
+         self.assertFalse(existsBlockInMetaDataFile(mdPath))
+         mdPath = "gggg@"+testFile("testBlock.xmd")
+         self.assertRaises(Exception,existsBlockInMetaDataFile(mdPath))
+         
     def test_Metadata_operate(self):
         md = MetaData()
         id = md.addObject()

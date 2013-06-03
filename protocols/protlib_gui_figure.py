@@ -85,7 +85,6 @@ class ImagePreview(Preview):
         
     def _update(self, Z, *args):
         self.figureimg.set_data(Z)
-        print Z
         self.figureimg.autoscale()
         self.figureimg.set(extent=[0, Z.shape[1], 0, Z.shape[0]])
         self.canvas.draw()

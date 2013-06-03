@@ -70,7 +70,7 @@ public class Family
 				this.templates = new ImageGeneric(templatesfile);
 				templates.read(templatesfile, false);
 				templateindex = templatesNumber;//all images read
-				
+
 			}
 			else
 				initTemplates();
@@ -193,7 +193,7 @@ public class Family
 		if (size > ParticlePicker.fsizemax)
 			throw new IllegalArgumentException(String.format("Max size is %s, %s not allowed", ParticlePicker.fsizemax, size));
 		this.size = size;
-		
+
 	}
 
 
@@ -219,7 +219,7 @@ public class Family
 			throw new IllegalArgumentException(XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Family must have at least one template"));
 
 		this.templatesNumber = num;
-		
+
 	}
 
 	public Color getColor()
@@ -317,7 +317,7 @@ public class Family
 
 	public synchronized void centerParticle(TrainingParticle p)
 	{
-		
+
 		if (((TrainingPicker)picker).getManualParticlesNumber(this) < templatesNumber)
 			return;//missing templates
 		Particle shift = null;
@@ -325,8 +325,13 @@ public class Family
 		{
 			ImageGeneric igp = p.getImageGeneric();
 			shift = templates.bestShift(igp);
-			p.setX(p.getX() + shift.getX());
-			p.setY(p.getY() + shift.getY());
+			double distance = Math.sqrt(Math.pow(shift.getX(),  2) + Math.pow(shift.getY(), 2))/size;
+			//System.out.printf("normalized distance:%.2f\n", distance);
+			if(distance < 0.25)
+			{
+				p.setX(p.getX() + shift.getX());
+				p.setY(p.getY() + shift.getY());
+			}
 		}
 		catch (Exception e)
 		{
