@@ -378,6 +378,8 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		thresholdpn.setVisible(selected);
 		sizesl.setEnabled(!selected);//not really, if there is some micrograph in sup mode size cannot be changed
 		sizetf.setEnabled(!selected);
+		importmi.setEnabled(!selected);
+		
 		pack();
 
 	}
@@ -419,9 +421,9 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 				}
 			}
 		});
-		filemn.add(importffmi);
+		filemn.add(importmi);
 		if (ppicker.getMode() != Mode.Manual)
-			importffmi.setEnabled(false);
+			importmi.setEnabled(false);
 		filemn.add(exportmi);
 		filemn.add(exitmi);
 

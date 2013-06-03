@@ -40,7 +40,7 @@ Java_xmipp_jni_PickingClassifier_destroy(JNIEnv *env, jobject jobj)
 }
 
 
-JNIEXPORT jobject JNICALL Java_xmipp_jni_PickingClassifier_autopick
+JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_autopick
 (JNIEnv *env, jobject jobj, jstring filename, jstring jautoposfile)
 {
     XMIPP_JAVA_TRY
@@ -50,10 +50,8 @@ JNIEXPORT jobject JNICALL Java_xmipp_jni_PickingClassifier_autopick
     	const FileName micrograph = env->GetStringUTFChars(filename, false);
     	MetaData md = picker->automaticallySelectParticles(micrograph);
     	md.write(env->GetStringUTFChars(jautoposfile, false));
-    	return NULL;
     }
     XMIPP_JAVA_CATCH;
-    return NULL;
 }
 
 JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_correct

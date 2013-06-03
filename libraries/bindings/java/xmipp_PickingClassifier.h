@@ -18,7 +18,7 @@ JNIEXPORT void JNICALL
 Java_xmipp_jni_PickingClassifier_destroy(JNIEnv *env, jobject jobj);
 
 
-JNIEXPORT jobject JNICALL Java_xmipp_jni_PickingClassifier_autopick
+JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_autopick
   (JNIEnv *, jobject, jstring, jstring);
 
 

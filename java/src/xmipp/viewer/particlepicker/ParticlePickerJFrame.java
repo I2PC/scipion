@@ -82,7 +82,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	private List<JCheckBoxMenuItem> mifilters;
 	protected JMenu filemn;
-	protected JMenuItem importffmi;
+	protected JMenuItem importmi;
 	protected JButton colorbt;
 	protected Color color;
 	protected JPanel colorpn;
@@ -248,12 +248,12 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 		filemn.add(savemi);
-		importffmi = new JMenuItem("Import Particles...", XmippResource.getIcon("import_wiz.gif"));
-		filemn.add(importffmi);
+		importmi = new JMenuItem("Import Particles...", XmippResource.getIcon("import_wiz.gif"));
+		filemn.add(importmi);
 		if (picker.getMode() != Mode.Manual)
-			importffmi.setEnabled(false);
+			importmi.setEnabled(false);
 
-		importffmi.addActionListener(new ActionListener()
+		importmi.addActionListener(new ActionListener()
 		{
 			@Override
 			public void actionPerformed(ActionEvent e)
@@ -396,7 +396,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	protected void enableEdition(boolean enable)
 	{
-		importffmi.setEnabled(enable);
+		importmi.setEnabled(enable);
 		savemi.setEnabled(enable);
 		sizesl.setEnabled(enable);
 		colorbt.setEnabled(enable);
