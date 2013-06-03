@@ -47,6 +47,16 @@ ProjMatch=True
 # Minimum angular sampling rate
 MinAngularSampling=10
 
+#{expert}{list_combo}(PCA, LTSA, DM, LLTSA, LPP, kPCA, pPCA, LE, HLLE) Projection method:
+"""Projection methods: Principal Component Analysis, Local Tangent Space Alignment,
+Diffusion map, Linear Local Tangent Space Alignment, Linearity Preserving Projection,
+Kernel PCA, Probabilistic PCA, Laplacian Eigenmap, Hessian Locally Linear Embedding"""
+ProjectionMethod="PCA"
+
+#{expert} Output dimension:
+"""Dimension of the lower dimensional space onto which the deformation coefficients are projected"""
+OutputDim=2
+
 # {eval} expandParallel(threads=0,mpi=2)
 
 #------------------------------------------------------------------------------------------------

@@ -12,6 +12,7 @@ from protlib_base import *
 from config_protocols import protDict
 from protlib_utils import runJob
 from protlib_filesystem import changeDir, createLink, getExt, moveFile, createDir, deleteFile
+from xmipp import MetaData, MDL_NMA
 
 class ProtNMAAlignment(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -28,6 +29,7 @@ class ProtNMAAlignment(XmippProtocol):
                         MinAngularSampling=self.MinAngularSampling,
                         NProc=self.NumberOfMpi)
         self.insertStep("deleteFile",filename=self.workingDirPath("nmaTodo.xmd"))
+        self.insertStep("projectOntoLowerDim",WorkingDir=self.WorkingDir,OutputDim=self.OutputDim)
     
     def summary(self):
         message=[];
@@ -54,3 +56,20 @@ def performNMA(log, WorkingDir, InSelFile, PDBfile, Modesfile, SamplingRate,
         arguments+=" --projMatch"
 
     runJob(log,"xmipp_nma_alignment",arguments,NProc)
+
+def projectOntoLowerDim(log,WorkingDir,OutputDim):
+    MD=MetaData(os.path.join(WorkingDir,"images.xmd"))
+    deformations=MD.getColumnValues(MDL_NMA)
+    fnDef=os.path.join(WorkingDir,"deformations.txt")
+    fhDef=open(fnDef,'w')
+    Ydim=len(deformations)
+    Xdim=-1
+    for deformation in deformations:
+        if Xdim==-1:
+            Xdim=len(deformation)
+        for coef in deformation:
+            fhDef.write("%f "%coef)
+        fhDef.write("\n")
+    fhDef.close()
+    fnDefLow=os.path.join(WorkingDir,"deformationsProjected.txt")
+    runJob(log,"xmipp_matrix_dimred","-i %s -o %s --din %d --dout %d --samples %d"%(fnDef,fnDefLow,Xdim,OutputDim,Ydim))
