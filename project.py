@@ -71,9 +71,12 @@ class Project(object):
     def load(self):
         """Load project data and settings
         from the project dir."""
+        
+        if not exists(self.path):
+            raise Exception("Project doesn't exists in '%s'" % self.path)
         os.chdir(self.path) #Before doing nothing go to project dir
         if not exists(self.dbPath):
-            raise Exception("Project doesn't exists in '%s'" % self.path)
+            raise Exception("Project database not found in '%s'" % self.dbPath)
         self.mapper = SqliteMapper(self.dbPath, globals())
         self.hostsMapper = ExecutionHostMapper(self.hostsPath)
         
