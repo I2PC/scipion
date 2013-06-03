@@ -25,6 +25,8 @@ class EmanProtBoxing(ProtParticlePicking):
     
     def __init__(self, **args):        
         ProtParticlePicking.__init__(self, **args)
+        # The following attribute is only for testing
+        self.importFolder = args.get('importFolder', None)
         
     def _runSteps(self, startIndex):
         # Redefine run to change to workingDir path
@@ -37,7 +39,10 @@ class EmanProtBoxing(ProtParticlePicking):
         self._params = {'inputMics': ' '.join(micList), 
                         'boxSize': self.boxSize.get()}      
         # Launch Boxing GUI
-        self._insertFunctionStep('launchBoxingGUI', isInteractive=True) 
+        if self.importFolder is None:
+            self._insertFunctionStep('launchBoxingGUI', isInteractive=True)
+        else: # This is only used for test purposes
+            self._insertFunctionStep('_importFromFolder')  
         # Insert step to create output objects       
         self._insertFunctionStep('createOutput')
     
@@ -53,7 +58,7 @@ class EmanProtBoxing(ProtParticlePicking):
         
     def createOutput(self):
         # Get the box size store in Eman db
-        self._params['boxSize'] = self.__getBoxingBoxSize()
+        self._params['boxSize'] = int(self.__getEmanParamValue('box_size'))
         program = "pwd; e2boxer.py"
         arguments = "%(inputMics)s --boxsize=%(boxSize)i --write_dbbox"
         self._log.info('Creating output: ' + program + ' ' + arguments % self._params)
@@ -64,24 +69,38 @@ class EmanProtBoxing(ProtParticlePicking):
         self.outputCoordinates = EmanSetOfCoordinates(filename=self.workingDir.get())
         self.outputCoordinates.setBoxSize(self._params['boxSize'])
         self.outputCoordinates.setMicrographs(self.inputMicrographs.get())
+        particlesWritten = bool(self.__getEmanParamValue('write_particles'))
+        if particlesWritten:
+            print 'siiii tenemos particulas'
+            self.outputImages = EmanSetOfImages(filename=self.workingDir.get())
+            
         self._defineOutputs(outputCoordinates=self.outputCoordinates) 
     
-    def __getBoxingBoxSize(self):
-        """ Recover the box size from EMAN Berkeley data base. """        
+    def __getEmanParamValue(self, paramName):
+        """ Recover a parameter value from EMAN Berkeley data base. """        
         command = "e2bdb.py -D bdb:emboxerbase"
         pipe = os.popen(command)
         stOutput = pipe.readlines()
         pipe.close()
-        auxBoxSize = None
+        auxValue = None
         for line in stOutput:
-            if ("box_size" in line):
-                auxBoxSize = int(line.split(" : ")[1])
-        if auxBoxSize is None:
-            raise Exception("Error getting the stored boxsize with command: " + command) 
-        return auxBoxSize
+            if (paramName in line):
+                auxValue = line.split(" : ")[1]
+        if auxValue is None:
+            raise Exception("Error getting the stored paramter with command: " + command) 
+        return auxValue
     
     def getFiles(self):
         filePaths = self.inputMicrographs.get().getFiles() | ProtParticlePicking.getFiles(self)
         return filePaths
+      
+    def _importFromFolder(self):
+        """ This function will copy Eman .box files for
+        simulating an particle picking run...this is only
+        for testing purposes.
+        """
+        from pyworkflow.utils.path import copyTree
 
-    
+        copyTree(self.importFolder, os.getcwd())
+
+
