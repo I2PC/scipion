@@ -129,7 +129,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_readHeader
  * Signature: (Ljava/lang/String;IIIJ)V
  */
 JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_read
-  (JNIEnv *, jobject, jstring, jint, jint, jint, jlong);
+  (JNIEnv *, jobject, jstring, jint, jint, jint, jlong, jboolean map);
 
 /*
  * Class:     xmipp_ImageGeneric

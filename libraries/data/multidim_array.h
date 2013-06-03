@@ -867,6 +867,13 @@ public:
 
     /** Resize with no copy a single 3D image
         */
+    void resizeNoCopy(size_t Ndim, size_t Zdim, size_t Ydim, size_t Xdim)
+    {
+        resize(Ndim, Zdim, Ydim, Xdim, false);
+    }
+
+    /** Resize with no copy a single 3D image
+        */
     void resizeNoCopy(size_t Zdim, size_t Ydim, size_t Xdim)
     {
         resize(1, Zdim, Ydim, Xdim, false);
@@ -1317,19 +1324,20 @@ public:
             mFd = mmapFile(data, nzyxdim);
         else
         {
-        	try {
-				data = new T [nzyxdim];
-				if (data == NULL)
-				{
-					setMmap(true);
-					mFd = mmapFile(data, nzyxdim);
-				}
-        	}
-        	catch (std::bad_alloc &)
-        	{
-        		setMmap(true);
-        		mFd = mmapFile(data, nzyxdim);
-        	}
+            try
+            {
+                data = new T [nzyxdim];
+                if (data == NULL)
+                {
+                    setMmap(true);
+                    mFd = mmapFile(data, nzyxdim);
+                }
+            }
+            catch (std::bad_alloc &)
+            {
+                setMmap(true);
+                mFd = mmapFile(data, nzyxdim);
+            }
         }
         memset(data,0,nzyxdim*sizeof(T));
         nzyxdimAlloc = nzyxdim;
@@ -1381,6 +1389,7 @@ public:
 
         return fMap;
 #else
+
         REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
 #endif
 
@@ -1399,8 +1408,10 @@ public:
                 munmap(data,nzyxdimAlloc*sizeof(T));
                 fclose(mFd);
 #else
-        REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
+
+                REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
 #endif
+
             }
             else
                 delete[] data;
@@ -1568,25 +1579,25 @@ public:
         }
         catch (std::bad_alloc &)
         {
-        	if (!mmapOn)
-        	{
-				setMmap(true);
-				resize(Ndim, Zdim, Ydim, Xdim, copy);
-				return;
-        	}
-        	else
-        	{
-				std::ostringstream sstream;
-				sstream << "Allocate: No space left to allocate ";
-				sstream << (NZYXdim * sizeof(T)/1024/1024/1024) ;
-				sstream << "Gb." ;
-				REPORT_ERROR(ERR_MEM_NOTENOUGH, sstream.str());
-        	}
+            if (!mmapOn)
+            {
+                setMmap(true);
+                resize(Ndim, Zdim, Ydim, Xdim, copy);
+                return;
+            }
+            else
+            {
+                std::ostringstream sstream;
+                sstream << "Allocate: No space left to allocate ";
+                sstream << (NZYXdim * sizeof(T)/1024/1024/1024) ;
+                sstream << "Gb." ;
+                REPORT_ERROR(ERR_MEM_NOTENOUGH, sstream.str());
+            }
         }
         // Copy needed elements, fill with 0 if necessary
         if (copy)
         {
-        	T zero=0; // Very useful for complex matrices
+            T zero=0; // Very useful for complex matrices
             T *val=NULL;
             for (size_t l = 0; l < Ndim; l++)
                 for (size_t k = 0; k < Zdim; k++)
@@ -1912,7 +1923,7 @@ public:
         case 3:
             return A3D_ELEM((*this), ROUND(ZZ(v)), ROUND(YY(v)), ROUND(XX(v)));
         default:
-        	REPORT_ERROR(ERR_ARG_INCORRECT,"Cannot handle indexes with dimension larger than 3");
+            REPORT_ERROR(ERR_ARG_INCORRECT,"Cannot handle indexes with dimension larger than 3");
         }
     }
 
@@ -1929,7 +1940,7 @@ public:
         case 3:
             return A3D_ELEM((*this), ZZ(v), YY(v), XX(v));
         default:
-        	REPORT_ERROR(ERR_ARG_INCORRECT,"Cannot handle indexes with dimension larger than 3");
+            REPORT_ERROR(ERR_ARG_INCORRECT,"Cannot handle indexes with dimension larger than 3");
         }
     }
 
@@ -2002,14 +2013,14 @@ public:
         return A1D_ELEM(*this, i);
     }
 
-    /** Get a single 1,2 or 3D image from a multi-image array
+    /** Copy an image from a stack to another
      *
-     * This function extracts a single-image array from a multi-image one.
+     * Copy image image n from this MDA to image n2 in MDA M.
      * @code
-     * V.getImage(0, m);
+     * V.getImage(0, m, 3);
      * @endcode
      */
-    void getImage(size_t n, MultidimArray<T>& M) const
+    void getImage(size_t n, MultidimArray<T>& M, size_t n2 = 0) const
     {
         if (XSIZE(*this) == 0)
         {
@@ -2020,9 +2031,20 @@ public:
         if (n > NSIZE(*this))
             REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS," Multidimarray getImage: n larger than NSIZE");
 
-        M.resizeNoCopy(1, ZSIZE(*this), YSIZE(*this), XSIZE(*this));
+        if (ZSIZE(*this) != ZSIZE(M) || YSIZE(*this) != YSIZE(M) || XSIZE(*this) != XSIZE(M))
+        {
+            if (n2 == 0)
+                M.resizeNoCopy(*this);
+            else
+                REPORT_ERROR(ERR_MULTIDIM_SIZE, "MultidimArray::getImage: Target dimensions do not match source dimensions.");
+        }
+
+        if (n2 > NSIZE(M))
+                    REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS," Multidimarray getImage: n larger than MultidimArray target NSIZE");
+
+
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(M)
-        DIRECT_ZYX_ELEM(M, k, i, j) = DIRECT_NZYX_ELEM(*this, n, k, i, j);
+        DIRECT_NZYX_ELEM(M, n2, k, i, j) = DIRECT_NZYX_ELEM(*this, n, k, i, j);
 
         STARTINGX(M) = STARTINGX(*this);
         STARTINGY(M) = STARTINGY(*this);
@@ -4783,7 +4805,7 @@ public:
      */
     void selfReverseX()
     {
-    	size_t xsize=XSIZE(*this);
+        size_t xsize=XSIZE(*this);
         size_t halfSizeX = (xsize-2)/2;
         size_t xsize_1=xsize-1;
         for (size_t k = 0; k < ZSIZE(*this); k++)
@@ -4813,7 +4835,7 @@ public:
      */
     void selfReverseY()
     {
-    	size_t ysize=YSIZE(*this);
+        size_t ysize=YSIZE(*this);
         size_t halfSizeY = (ysize-2)/2;
         size_t ysize_1=ysize-1;
         for (size_t k = 0; k < ZSIZE(*this); k++)
@@ -4835,9 +4857,9 @@ public:
      */
     void selfReverseZ()
     {
-    	size_t zsize=ZSIZE(*this);
-    	size_t halfSizeZ = (zsize-2)/2;
-    	size_t zsize_1=zsize-1;
+        size_t zsize=ZSIZE(*this);
+        size_t halfSizeZ = (zsize-2)/2;
+        size_t zsize_1=zsize-1;
         for (size_t k = 0; k <= halfSizeZ; k++)
             for (size_t i = 0; i <YSIZE(*this); i++)
                 for (size_t j = 0; j < XSIZE(*this); j++)

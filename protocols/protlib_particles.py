@@ -123,10 +123,15 @@ def runNormalize(log,stack,normType,bgRadius,Nproc):
 def doMask(log,stack,maskFile,substitute,Nproc):
     runJob(log,"xmipp_transform_mask","-i %(stack)s --mask binary_file %(maskFile)s %(substitute)s" % locals(),Nproc)
 
-def sortImages(log, ImagesFn):    
+def sortImages(log, ImagesFn, rejectionMethod='None', maxZscore=3, percentage=5):    
     md = MetaData(ImagesFn)
     if not md.isEmpty():
-        runJob(log, "xmipp_image_sort_by_statistics","-i %(ImagesFn)s --addToInput" % locals())
+        args=""
+        if rejectionMethod=='MaxZscore':
+            args+=" --zcut "+str(maxZscore)
+        elif rejectionMethod=='Percentage':
+            args+=" --percent "+str(percentage)
+        runJob(log, "xmipp_image_sort_by_statistics","-i %(ImagesFn)s --addToInput" % locals()+args)
         md.read(ImagesFn) # Should have ZScore label after runJob
         md.sort(MDL_ZSCORE)
         md.write(ImagesFn)        

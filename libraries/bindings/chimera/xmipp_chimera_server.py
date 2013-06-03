@@ -102,7 +102,7 @@ class ChimeraServer:
             
 def printCmd(cmd):
         timeformat = "%S.%f" 
-        print datetime.now().strftime(timeformat)
-        print cmd
+      #  print datetime.now().strftime(timeformat)
+       # print cmd
 
 ChimeraServer()

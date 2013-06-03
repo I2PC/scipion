@@ -1,13 +1,17 @@
 package xmipp.viewer.particlepicker.training.gui;
 
 import ij.ImagePlus;
+import ij.ImageStack;
 import ij.gui.ImageCanvas;
 import java.awt.Dimension;
 import java.awt.Panel;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
+
 import javax.swing.JDialog;
 
+import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.ImageGeneric;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
@@ -43,6 +47,10 @@ public class TemplatesJDialog extends JDialog {
 	public void loadTemplates(boolean resize) {
 
 		try {
+			
+			String file = frame.getFamily().getTemplatesFile();
+			if(!new File(file).exists())
+				return;
 			ImageGeneric templates = frame.getFamily().getTemplates();
 			
 			int size = frame.getFamily().getSize();
@@ -55,11 +63,14 @@ public class TemplatesJDialog extends JDialog {
 				pack();
 				return;
 			}
-			//templates.write("templates.stk");
+			
+			
+			
 			templatespn.removeAll();
 			ImagePlus template;
 			for (int i = 0; i < frame.getFamily().getTemplatesNumber(); i ++) {
-				template = frame.getFamily().getTemplatesImage(ImageGeneric.FIRST_IMAGE + i);
+				//template = frame.getFamily().getTemplatesImage(ImageGeneric.FIRST_IMAGE + i);
+				template = XmippImageConverter.convertToImagePlus(templates, ImageGeneric.FIRST_IMAGE + i);
 				templatespn.add(new ImageCanvas(template));
 
 			}

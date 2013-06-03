@@ -126,11 +126,11 @@ void term_buffer(jpeg_compress_struct* cinfo)
 
 int ImageBase::writeJPEG(size_t select_img, bool isStack, int mode, String bitDepth, CastWriteMode castMode)
 {
-	 if (isComplexT())
-	    {
-	        REPORT_ERROR(ERR_TYPE_INCORRECT,"rwJPEG: Complex images are not supported by JPEG format.");
-	        return 0;
-	    }
+    if (isComplexT())
+    {
+        REPORT_ERROR(ERR_TYPE_INCORRECT,"rwJPEG: Complex images are not supported by JPEG format.");
+        return 0;
+    }
 
     ArrayDim aDim;
     mdaBase->getDimensions(aDim);
@@ -140,29 +140,21 @@ int ImageBase::writeJPEG(size_t select_img, bool isStack, int mode, String bitDe
         REPORT_ERROR(ERR_MULTIDIM_DIM, "rwJPEG: volumes are not supported.");
 
     //Selection of output datatype
-    DataType wDType;
+    DataType wDType,myTypeID = myT();
 
     castMode = CW_CONVERT;
     wDType = DT_UChar;
 
     if (mmapOnWrite)
     {
-        MDMainHeader.setValue(MDL_DATATYPE,(int) wDType);
-        if (!checkMmapT(wDType))
-        {
-            if (dataMode < DATA ) // This means ImageGeneric wants to know which DataType must use in mapFile2Write
-                return 0;
-            else
-                REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");
-        }
-        else
-            dataMode = DATA;
-
-        /* As we cannot mmap a TIFF File, when this option is passed we are going to mmap
+        /* As we cannot mmap a JPEG File, when this option is passed we are going to mmap
          * the multidimarray of Image
          */
         mmapOnWrite = false;
-        if (aDim.nzyxdim*gettypesize(wDType) > tiff_map_min_size)
+        dataMode = DATA;
+        MDMainHeader.setValue(MDL_DATATYPE,(int) myTypeID);
+
+        if (aDim.nzyxdim*gettypesize(myTypeID) > tiff_map_min_size)
             mdaBase->setMmap(true);
 
         // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
