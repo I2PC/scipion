@@ -122,7 +122,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 					XmippQuestionDialog qd = new XmippQuestionDialog(ParticlePickerJFrame.this, "Save changes before closing?");
 					boolean save = qd.showDialog();
 					if (save)
-						saveChanges();
+						getParticlePicker().saveData();
 					else if (qd.isCanceled())
 						return;
 				}
@@ -153,7 +153,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			@Override
 			public void actionPerformed(ActionEvent arg0)
 			{
-				saveChanges();
+				getParticlePicker().saveData();
 
 			}
 		});
@@ -165,7 +165,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			public void actionPerformed(ActionEvent e)
 
 			{
-				saveChanges();
+				getParticlePicker().saveData();
 				System.exit(0);
 
 			}
@@ -241,7 +241,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				saveChanges();
+				getParticlePicker().saveData();
 				showMessage("Data saved successfully");
 				((JMenuItem) e.getSource()).setEnabled(false);
 				savebt.setEnabled(false);
@@ -460,11 +460,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		getCanvas().display();
 	}
 
-	protected void saveChanges()
-	{
-		getParticlePicker().saveData();
-		setChanged(false);
-	}
+	
 
 	public int getSide(int size)
 	{

@@ -168,15 +168,10 @@ public class TiltPairPicker extends ParticlePicker
 	public void resetMicrograph(UntiltedMicrograph m)
 	{
 		m.reset();
-		setChanged(true);
+		saveData(m);
 	}
 
-	public void resetAllMicrographs()
-	{
-		for (UntiltedMicrograph um : micrographs)
-			um.reset();
-		setChanged(true);
-	}
+	
 
 	public int getUntiltedNumber()
 	{

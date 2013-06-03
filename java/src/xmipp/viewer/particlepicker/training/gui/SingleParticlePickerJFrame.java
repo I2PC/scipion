@@ -229,12 +229,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			micrographstb.setRowSelectionInterval(index, index);
 	}
 
-	protected void saveChanges()
-	{
 
-		ppicker.saveData();
-		setChanged(false);
-	}
 
 	void updateFamilyColor()
 	{

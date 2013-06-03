@@ -109,13 +109,10 @@ public class SingleParticlePicker extends ParticlePicker
 
 	public void saveData()
 	{
-		if (isChanged())
-		{
-			super.saveData();
-			for (Micrograph m : micrographs)
-				saveData(m);
-		}
-
+		super.saveData();
+		for (Micrograph m : micrographs)
+			saveData(m);
+		setChanged(false);
 	}
 
 	public boolean isFastMode()
@@ -448,7 +445,8 @@ public class SingleParticlePicker extends ParticlePicker
 			long id;
 			for (TrainingMicrograph m : micrographs)
 			{
-
+				if (m.isEmpty())
+					continue;
 				for (TrainingParticle p : m.getParticles())
 				{
 					id = md.addObject();
@@ -563,7 +561,7 @@ public class SingleParticlePicker extends ParticlePicker
 		MetaData md = new MetaData();
 		fillParticlesMdFromFile(path, f, m, md, scale, invertx, inverty);
 		String result = (md != null) ? importParticlesFromMd(m, md) : "";
-		saveData(getMicrograph());
+		saveData(m);
 		md.destroy();
 		return result;
 	}// function importParticlesFromFile
@@ -584,8 +582,7 @@ public class SingleParticlePicker extends ParticlePicker
 		{
 			x = md.getValueInt(MDLabel.MDL_XCOOR, id);
 			y = md.getValueInt(MDLabel.MDL_YCOOR, id);
-			if (!m.fits(x, y, size))// ignore out of
-			// bounds particle
+			if (!m.fits(x, y, size))// ignore out of bounds particle
 			{
 				result += XmippMessage.getOutOfBoundsMsg("Particle") + String.format(" on x:%s y:%s", x, y);
 				continue;
@@ -908,28 +905,10 @@ public class SingleParticlePicker extends ParticlePicker
 		}
 	}
 
-	public void correct()
-	{
-
-		new Thread(new CorrectRunnable()).start();
-
-	}
-
-	public void autopick(SingleParticlePickerJFrame frame)
-	{
-		micrograph.setState(MicrographState.Supervised);
-		saveData(micrograph);
-		frame.getCanvas().setEnabled(false);
-		XmippWindowUtil.blockGUI(frame, "Autopicking...");
-		new Thread(new AutopickRunnable(frame)).start();
-
-	}
-
 	public void train(SingleParticlePickerJFrame frame)
 	{
 		if (mode != Mode.Manual)
 			throw new IllegalArgumentException(XmippMessage.getIllegalStateForOperationMsg("picker", this.mode.toString()));
-		
 
 		frame.getCanvas().setEnabled(false);
 		XmippWindowUtil.blockGUI(frame, "Training...");
@@ -951,7 +930,7 @@ public class SingleParticlePicker extends ParticlePicker
 		saveData();
 		md.print();
 		new Thread(new TrainRunnable(frame, md)).start();
-		
+
 	}
 
 	public PickingClassifier getClassifier()
@@ -995,16 +974,14 @@ public class SingleParticlePicker extends ParticlePicker
 			try
 			{
 				System.out.println("Train started");
-				
-				
-				
+
 				classifier.train(trainmd);//should remove training files
 				classifier.autopick(micrograph.getFile(), getOutputPath(micrograph.getAutoPosFile()));
-				
+
 				loadAutomaticParticles(micrograph);
 				XmippWindowUtil.releaseGUI(frame.getRootPane());
 				frame.getCanvas().setEnabled(true);
-				saveConfig();
+
 				trainmd.destroy();
 			}
 			catch (Exception e)
@@ -1013,6 +990,16 @@ public class SingleParticlePicker extends ParticlePicker
 				throw new IllegalArgumentException(e.getMessage());
 			}
 		}
+	}
+
+	public void autopick(SingleParticlePickerJFrame frame)
+	{
+		micrograph.setState(MicrographState.Supervised);
+		saveData(micrograph);
+		frame.getCanvas().setEnabled(false);
+		XmippWindowUtil.blockGUI(frame, "Autopicking...");
+		new Thread(new AutopickRunnable(frame)).start();
+
 	}
 
 	public class AutopickRunnable implements Runnable
@@ -1030,7 +1017,7 @@ public class SingleParticlePicker extends ParticlePicker
 			String autoposfile = getOutputPath(micrograph.getAutoPosFile());
 			micrograph.getAutomaticParticles().clear();
 			getClassifier().autopick(micrograph.getFile(), autoposfile);
-			
+
 			loadAutomaticParticles(micrograph);
 
 			frame.getCanvas().repaint();
@@ -1040,16 +1027,34 @@ public class SingleParticlePicker extends ParticlePicker
 
 	}
 
+	public void correct()
+	{
+		getMicrograph().setState(MicrographState.Corrected);
+		saveData(micrograph);
+		MetaData manualmd = new MetaData(getOutputPath(micrograph.getPosFile()));
+		MetaData automaticmd = new MetaData(getOutputPath(micrograph.getAutoPosFile()));
+		new Thread(new CorrectRunnable(manualmd, automaticmd)).start();
+
+	}
+
 	public class CorrectRunnable implements Runnable
 	{
 
+		private MetaData manualmd;
+		private MetaData automaticmd;
+
+		public CorrectRunnable(MetaData manualmd, MetaData automaticmd)
+		{
+			this.manualmd = manualmd;
+			this.automaticmd = automaticmd;
+		}
+
 		public void run()
 		{
-			MetaData manualmd = new MetaData(getOutputPath(micrograph.getPosFile()));
-			MetaData automaticmd = new MetaData(getOutputPath(micrograph.getAutoPosFile()));
+
 			getClassifier().correct(manualmd, automaticmd);
-			getMicrograph().setState(MicrographState.Corrected);
-			saveData(micrograph);
+			manualmd.destroy();
+			automaticmd.destroy();
 		}
 	}
 

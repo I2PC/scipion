@@ -307,7 +307,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		pppicker.resetMicrograph(getMicrograph());
 		canvas.refreshActive(null);
 		updateMicrographsModel();
-		setChanged(true);
 		
 	}
 	
@@ -358,7 +357,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 			getMicrograph().reset();
 			String result = pppicker.importParticlesFromFiles(file1, file2, format, getMicrograph(), scale, invertx, inverty);
 			pppicker.saveData(getMicrograph());
-			setChanged(false);
 			getCanvas().repaint();
 			tiltedcanvas.repaint();
 			updateMicrographsModel();
