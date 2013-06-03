@@ -13,8 +13,8 @@ from protlib_filesystem import createLink, deleteFiles, replaceFilenameExt
 from protlib_utils import runJob
 from protocol_particle_pick import launchParticlePickingGUI, getTemplateFiles, PM_READONLY, \
     PM_REVIEW
-from xmipp import MetaData, MD_APPEND, MDL_IMAGE, MDL_PICKING_FAMILY, \
-    MDL_PICKING_MICROGRAPH_FAMILY_STATE, MDL_PICKING_PARTICLE_SIZE, MDL_ENABLED, \
+from xmipp import MetaData, MD_APPEND, MDL_IMAGE, \
+    MDL_PICKING_PARTICLE_SIZE, MDL_ENABLED, \
     MDL_COST, MDL_MICROGRAPH, MDValueRange, getBlocksInMetaDataFile
 import glob
 
@@ -25,45 +25,40 @@ class ProtParticlePickingAuto(XmippProtocol):
         self.Import = "from protocol_particle_pick_auto import *"
         self.setPreviousRun(self.SupervisedRun)
         self.pickingDir = self.PrevRun.WorkingDir
-        self.keysToImport = ['micrographs', 'families', 'acquisition']
-        if xmippExists(self.PrevRun.getFilename('macros')):
-            self.keysToImport.append('macros')
+        self.keysToImport = ['micrographs', 'config', 'acquisition']
+       
         self.inputFilename(*self.keysToImport)
         self.inputProperty('TiltPairs', 'MicrographsMd', 'Fast')
         self.inputProperty('TiltPairs', 'MicrographsMd', 'Family')
         self.micrographs = self.getFilename('micrographs')
-        self.families = self.getFilename('families')
-        self.familiesForAuto = []
         self.particleSizeForAuto = []
         
-    def computeFamilies(self):
-        md = MetaData(self.Input['families'])
-        for objId in md:
-            family = md.getValue(MDL_PICKING_FAMILY, objId)
-            if exists(self.PrevRun.getFilename('training', family=family)):
-                self.familiesForAuto.append(family)
-                particleSize = md.getValue(MDL_PICKING_PARTICLE_SIZE, objId)
-                self.particleSizeForAuto.append(particleSize)
+    def loadConfig(self):
+        md = MetaData(self.Input['config'])
+       
+        if exists(self.PrevRun.getFilename('training', family=family)):
+            particleSize = md.getValue(MDL_PICKING_PARTICLE_SIZE, objId)
+            self.particleSizeForAuto.append(particleSize)
        
     def defineSteps(self):
         self.insertStep("createDir",verifyfiles=[self.ExtraDir],path=self.ExtraDir)
-        self.computeFamilies()
+        self.loadConfig()
         filesToImport = [self.Input[k] for k in self.keysToImport]
         filesToImport += getTemplateFiles(self.PrevRun)
-        for family in self.familiesForAuto:
-            filesToImport.append(self.PrevRun.getFilename('training', family=family))
-            filesToImport.append(self.PrevRun.getFilename('pca', family=family))
-            filesToImport.append(self.PrevRun.getFilename('rotpca', family=family))
-            filesToImport.append(self.PrevRun.getFilename('svm', family=family))
-            filesToImport.append(self.PrevRun.getFilename('svm2', family=family))
-            filesToImport.append(self.PrevRun.getFilename('average', family=family))
-            filesToImport.append(self.PrevRun.getFilename('config', family=family))
+        model="model"
+        filesToImport.append(self.PrevRun.getFilename('training', model=model))
+        filesToImport.append(self.PrevRun.getFilename('pca', model=model))
+        filesToImport.append(self.PrevRun.getFilename('rotpca', model=model))
+        filesToImport.append(self.PrevRun.getFilename('svm', model=model))
+        filesToImport.append(self.PrevRun.getFilename('svm2', model=model))
+        filesToImport.append(self.PrevRun.getFilename('average', model=model))
+        filesToImport.append(self.PrevRun.getFilename('config', model=model))
         self.insertImportOfFiles(filesToImport)
 
         md = MetaData(self.Input['micrographs'])
-        for i, family in enumerate(self.familiesForAuto):
+        for i, model in enumerate(self.familiesForAuto):
             particleSize = self.particleSizeForAuto[i]
-            modelRoot = self.extraPath(family)
+            modelRoot = self.extraPath(model)
             for objId in md:
                 # Get micrograph path and name
                 path = md.getValue(MDL_MICROGRAPH, objId)
@@ -74,7 +69,7 @@ class ProtParticlePickingAuto(XmippProtocol):
                     mdaux = MetaData("families@" + fnPos)
                     for idaux in mdaux:
                         familyAux = mdaux.getValue(MDL_PICKING_FAMILY, idaux)
-                        if family == familyAux:
+                        if model == familyAux:
                             state = mdaux.getValue(MDL_PICKING_MICROGRAPH_FAMILY_STATE, idaux)
                             if state != "Available":
                                 proceed = False
@@ -86,13 +81,13 @@ class ProtParticlePickingAuto(XmippProtocol):
                         cmd += " --fast "
                     self.insertParallelRunJobStep("xmipp_micrograph_automatic_picking", cmd)
                                              
-        for family in self.familiesForAuto:
-            self.insertStep('gatherResults', Family=family, WorkingDir=self.WorkingDir, PickingDir=self.pickingDir)
+        for model in self.familiesForAuto:
+            self.insertStep('gatherResults', Family=model, WorkingDir=self.WorkingDir, PickingDir=self.pickingDir)
         self.insertStep('deleteTempFiles', ExtraDir=self.ExtraDir)
 
     def summary(self):
         if len(self.familiesForAuto) == 0:
-            self.computeFamilies()
+            self.loadConfig()
         summary = ["Supervised picking RUN: <%s> " % self.SupervisedRun,
                    "Input directory: [%s] " % self.pickingDir,
                    "Automatic picking of the following models: " + ",".join(self.familiesForAuto)]

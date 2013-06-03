@@ -15,7 +15,7 @@ from glob import glob
 from os.path import exists, join
 
 # Picking modes
-PM_MANUAL, PM_SUPERVISED, PM_READONLY, PM_REVIEW = ('manual', 'supervised', 'readonly', 'review')
+PM_MANUAL, PM_READONLY, PM_REVIEW = ('manual', 'readonly', 'review')
 
 # Create a GUI automatically from a selfile of micrographs
 class ProtParticlePicking(XmippProtocol):
@@ -138,8 +138,7 @@ def launchParticlePickingGUI(log, InputMicrographs, ExtraDir, PickingMode=PM_MAN
                              TiltPairs=False, Memory=2, Family=""):
     ''' Utility function to launch the Particle Picking application '''
     args = "-i %(InputMicrographs)s -o %(ExtraDir)s --mode %(PickingMode)s --memory %(Memory)dg"
-    if Family!="":
-        args+=" --family %(Family)s"
+   
     if TiltPairs:
         program = "xmipp_micrograph_tiltpair_picking"
     else:
