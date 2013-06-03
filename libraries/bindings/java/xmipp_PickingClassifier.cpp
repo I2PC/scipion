@@ -11,13 +11,15 @@ Java_xmipp_jni_PickingClassifier_create(JNIEnv *env, jobject jobj, jobject jmicr
 {
     XMIPP_JAVA_TRY
     {
+    	std::cerr<<"getting constructor metadata"<< std::endl;
     	MetaData * micrographsmd = GET_INTERNAL_METADATA(jmicrographs);
-
+    	std::cerr<<"reading other parameters"<< std::endl;
     	int size = particle_size, filter_num = 6, corr_num = 2, NPCA = 4;
     	const FileName &model_name = env->GetStringUTFChars(output, false);
-
+    	std::cerr<<"creating AutoParticlePicking2"<< std::endl;
     	AutoParticlePicking2 *picker = new AutoParticlePicking2(size, filter_num, corr_num, NPCA, model_name, *micrographsmd);
         STORE_PEER_ID(jobj, (long)picker);
+        std::cerr<<"constructor ended"<< std::endl;
     }
     XMIPP_JAVA_CATCH;
 }
@@ -73,7 +75,10 @@ JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_train
     XMIPP_JAVA_TRY
     {
     	AutoParticlePicking2 *picker = GET_INTERNAL_AUTOPARTICLEPICKING2(jobj);
+    	std::cerr<<"getting metadata"<< std::endl;
     	MetaData * md = GET_INTERNAL_METADATA(micrographs);
+    	md->print();
+    	std::cerr<<"calling train"<< std::endl;
     	picker->train(*md);
 
     }

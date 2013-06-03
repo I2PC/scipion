@@ -18,7 +18,7 @@ public class PickingClassifier
 	
 	private native void create(MetaData md, int particle_size, String output);
 	
-	public native void destroy();
+	public synchronized native void destroy();
 
 	public native MetaData autopick(String micrograph, String autoposfile);
 

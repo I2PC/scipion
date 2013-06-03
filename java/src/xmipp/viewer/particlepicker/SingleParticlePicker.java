@@ -46,6 +46,7 @@ public class SingleParticlePicker extends ParticlePicker
 	private String templatesfile;
 	private int templateindex;
 	private PickingClassifier classifier;
+	private MetaData micrographsmd;
 
 	public SingleParticlePicker(String selfile, String outputdir, Mode mode)
 	{
@@ -73,6 +74,13 @@ public class SingleParticlePicker extends ParticlePicker
 			}
 			for (TrainingMicrograph m : micrographs)
 				loadMicrographData(m);
+			micrographsmd = new MetaData();
+			long id;
+			for (TrainingMicrograph m : micrographs)
+			{
+				id = micrographsmd.addObject();
+				micrographsmd.setValueString(MDLabel.MDL_MICROGRAPH, m.getFile(), id);
+			}
 		}
 		catch (Exception e)
 		{
@@ -909,7 +917,8 @@ public class SingleParticlePicker extends ParticlePicker
 
 	public void autopick(SingleParticlePickerJFrame frame)
 	{
-
+		micrograph.setState(MicrographState.Supervised);
+		saveData(micrograph);
 		frame.getCanvas().setEnabled(false);
 		XmippWindowUtil.blockGUI(frame, "Autopicking...");
 		new Thread(new AutopickRunnable(frame)).start();
@@ -920,11 +929,29 @@ public class SingleParticlePicker extends ParticlePicker
 	{
 		if (mode != Mode.Manual)
 			throw new IllegalArgumentException(XmippMessage.getIllegalStateForOperationMsg("picker", this.mode.toString()));
+		
 
 		frame.getCanvas().setEnabled(false);
 		XmippWindowUtil.blockGUI(frame, "Training...");
-		new Thread(new TrainRunnable(frame)).start();
+		MetaData md = new MetaData();
+		long id;
+		for (TrainingMicrograph m : micrographs)
+		{
+			if (m.hasManualParticles())
+			{
+				id = md.addObject();
+				md.setValueString(MDLabel.MDL_MICROGRAPH, m.getFile(), id);
+				md.setValueString(MDLabel.MDL_MICROGRAPH_PARTICLES, getOutputPath(m.getPosFile()), id);
 
+				m.getAutomaticParticles().clear();
+				new File(m.getAutoPosFile()).delete();
+			}
+		}
+		micrograph.setState(MicrographState.Supervised);
+		saveData();
+		md.print();
+		new Thread(new TrainRunnable(frame, md)).start();
+		
 	}
 
 	public PickingClassifier getClassifier()
@@ -938,14 +965,6 @@ public class SingleParticlePicker extends ParticlePicker
 	{
 		try
 		{
-			MetaData micrographsmd = new MetaData();
-			long id;
-			for (TrainingMicrograph m : micrographs)
-			{
-				id = micrographsmd.addObject();
-				micrographsmd.setValueString(MDLabel.MDL_MICROGRAPH, m.getFile(), id);
-			}
-
 			classifier = new PickingClassifier(micrographsmd, getSize(), getOutputPath(model));
 		}
 		catch (Exception e)
@@ -960,11 +979,13 @@ public class SingleParticlePicker extends ParticlePicker
 	{
 
 		private SingleParticlePickerJFrame frame;
+		private MetaData trainmd;
 
-		public TrainRunnable(SingleParticlePickerJFrame frame)
+		public TrainRunnable(SingleParticlePickerJFrame frame, MetaData trainmd)
 		{
 
 			this.frame = frame;
+			this.trainmd = trainmd;
 			initClassifier();
 
 		}
@@ -973,30 +994,18 @@ public class SingleParticlePicker extends ParticlePicker
 		{
 			try
 			{
-				saveData();
-				MetaData md = new MetaData();
-				long id;
-				for (TrainingMicrograph m : micrographs)
-				{
-					if (m.hasManualParticles())
-					{
-						id = md.addObject();
-						md.setValueString(MDLabel.MDL_MICROGRAPH, m.getFile(), id);
-						md.setValueString(MDLabel.MDL_MICROGRAPH_PARTICLES, getOutputPath(m.getPosFile()), id);
-
-						m.getAutomaticParticles().clear();
-						new File(m.getAutoPosFile()).delete();
-					}
-				}
-				md.print();
-				classifier.train(md);//should remove training files
+				System.out.println("Train started");
+				
+				
+				
+				classifier.train(trainmd);//should remove training files
 				classifier.autopick(micrograph.getFile(), getOutputPath(micrograph.getAutoPosFile()));
-				micrograph.setState(MicrographState.Supervised);
-				saveData(micrograph);
+				
 				loadAutomaticParticles(micrograph);
 				XmippWindowUtil.releaseGUI(frame.getRootPane());
 				frame.getCanvas().setEnabled(true);
 				saveConfig();
+				trainmd.destroy();
 			}
 			catch (Exception e)
 			{
@@ -1021,8 +1030,7 @@ public class SingleParticlePicker extends ParticlePicker
 			String autoposfile = getOutputPath(micrograph.getAutoPosFile());
 			micrograph.getAutomaticParticles().clear();
 			getClassifier().autopick(micrograph.getFile(), autoposfile);
-			micrograph.setState(MicrographState.Supervised);
-			saveData(micrograph);
+			
 			loadAutomaticParticles(micrograph);
 
 			frame.getCanvas().repaint();
