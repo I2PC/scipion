@@ -4,22 +4,30 @@ Created on May 20, 2013
 @author: laura
 '''
 
-import unittest
-from glob import glob
-from pyworkflow.em.packages.xmipp3 import *
 import os, sys
+from glob import glob
+import unittest
+from pyworkflow.em.packages.xmipp3 import *
+from pyworkflow.tests import *
+
 
 class TestXmippSetOfMicrographs(unittest.TestCase):
     
     def setUp(self):
-        self.mdGold = '/home/laura/Scipion_Projects/tests/micrographs_gold.xmd'
-        self.dbGold = '/home/laura/Scipion_Projects/tests/micrographs_gold.sqlite'
+        self.outputPath = getOutputPath('test_data_xmipp')
+        cleanPath(self.outputPath)
+        makePath(self.outputPath)
         
-        self.micsDir = '/home/laura/Scipion_Projects/TiltedData/*.mrc'
-        self.mdFn = '/home/laura/Scipion_Projects/tests/micrographs.xmd'
-        self.dbFn = '/home/laura/Scipion_Projects/tests/micrographs.sqlite'
+        self.mdGold = getGoldPath('micrographs_gold.xmd')
+        self.dbGold = getGoldPath('micrographs_gold.sqlite')
         
-        self.mics = glob(self.micsDir)
+        self.micsPattern = getInputPath('MicrographsTilted', '*.mrc')
+        
+        self.mdFn = getOutputPath(self.outputPath, 'micrographs.xmd')
+        self.dbFn = getOutputPath(self.outputPath, 'micrographs.sqlite')
+        
+        self.mics = glob(self.micsPattern)
+        
         if len(self.mics) == 0:
             raise Exception('There is not mics matching pattern')
         self.mics.sort()
@@ -47,22 +55,13 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
         """ Test reading an XmippSetOfMicrographs from a metadata """
         xmippSet = XmippSetOfMicrographs(self.mdFn, tiltPairs=True)
         
-        error = False
         #Check that micrographs on metadata corresponds to the input ones (same order too)
         #TODO: Check against gold metadata????
         for i, mic in enumerate(xmippSet):
-            if self.mics[i] != mic.getFileName():
-                error = True
-                break
+            self.assertEqual(self.mics[i], mic.getFileName(), "Micrograph %d in set is different from expected" % i)
 
-        self.assertFalse(error, "Error on Micrographs data block")
-            
         for (iU, iT) in xmippSet.iterTiltPairs():
-            if self.tiltedDict[iU] != iT:
-                error = True
-                break
-            
-        self.assertFalse(error, "Error on TiltedPairs data block")
+            self.assertEqual(self.tiltedDict[iU], iT, "")
             
     def testConvert(self):
         """ Test converting a SetOfMicrographs to a XmippSetOfMicrographs """
@@ -94,9 +93,6 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
         xmippSet.write()
         
     def createSetOfMicrographs(self):
-        #Remove sqlite db
-        os.remove(self.dbFn)
-        
         setMics = SetOfMicrographs(self.dbFn, tiltPairs=True)
         setMics.setSamplingRate(1.2)
         for fn in self.mics:
