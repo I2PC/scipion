@@ -11,13 +11,15 @@ extern "C" {
 
 JNIEXPORT void JNICALL
 Java_xmipp_jni_PickingClassifier_create(JNIEnv *env, jobject jobj, jobject, jint, jstring);
-/*
- * Class:     xmipp_PickingClassifier
- * Method:    autopick
- * Signature: (Ljava/lang/String;)Z
- */
+
+
+
+JNIEXPORT void JNICALL
+Java_xmipp_jni_PickingClassifier_destroy(JNIEnv *env, jobject jobj);
+
+
 JNIEXPORT jobject JNICALL Java_xmipp_jni_PickingClassifier_autopick
-  (JNIEnv *, jobject, jstring);
+  (JNIEnv *, jobject, jstring, jstring);
 
 
 JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_correct

@@ -17,11 +17,21 @@ public class PickingClassifier
     }
 	
 	private native void create(MetaData md, int particle_size, String output);
+	
+	public native void destroy();
 
-	public native MetaData autopick(String micrograph);
+	public native MetaData autopick(String micrograph, String autoposfile);
 
 	public native void correct(MetaData manualmd, MetaData automaticmd);
 
 	public native void train(MetaData micrographs);
+	
+    // Should be called by GarbageCollector before destroying
+    @Override
+    @SuppressWarnings("FinalizeDeclaration")
+    protected void finalize() throws Throwable {
+        super.finalize();
+        destroy();
+    }
 
 }

@@ -22,15 +22,32 @@ Java_xmipp_jni_PickingClassifier_create(JNIEnv *env, jobject jobj, jobject jmicr
     XMIPP_JAVA_CATCH;
 }
 
+
+JNIEXPORT void JNICALL
+Java_xmipp_jni_PickingClassifier_destroy(JNIEnv *env, jobject jobj)
+{
+
+    XMIPP_JAVA_TRY
+    {
+    	AutoParticlePicking2 *picker = GET_INTERNAL_AUTOPARTICLEPICKING2(jobj);
+        delete picker;
+        picker = NULL;
+        STORE_PEER_ID(jobj, (long)picker);
+    }
+    XMIPP_JAVA_CATCH;
+}
+
+
 JNIEXPORT jobject JNICALL Java_xmipp_jni_PickingClassifier_autopick
-(JNIEnv *env, jobject jobj, jstring filename)
+(JNIEnv *env, jobject jobj, jstring filename, jstring jautoposfile)
 {
     XMIPP_JAVA_TRY
     {
     	AutoParticlePicking2 *picker = GET_INTERNAL_AUTOPARTICLEPICKING2(jobj);
+
     	const FileName micrograph = env->GetStringUTFChars(filename, false);
     	MetaData md = picker->automaticallySelectParticles(micrograph);
-    	md.write("autopick.pos");
+    	md.write(env->GetStringUTFChars(jautoposfile, false));
     	return NULL;
     }
     XMIPP_JAVA_CATCH;
