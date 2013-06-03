@@ -46,7 +46,7 @@ void ProgMatrixDimRed::readParams()
     outputDim  = getIntParam("--dout");
     Nsamples  = getIntParam("--samples");
 
-    if (dimRefMethod=="LTSA" || dimRefMethod=="LLTSASCG" || dimRefMethod=="LPP" || dimRefMethod=="LE" || dimRefMethod=="HLLE")
+    if (dimRefMethod=="LTSA" || dimRefMethod=="LLTSA" || dimRefMethod=="LPP" || dimRefMethod=="LE" || dimRefMethod=="HLLE")
     	kNN=getIntParam("-m",1);
     if (dimRefMethod=="DM" || dimRefMethod=="kPCA")
     	sigma=getDoubleParam("-m",1);
