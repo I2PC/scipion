@@ -9,7 +9,7 @@ from numpy import array, ndarray
 import chimera
 from time import sleep
 from threading import Thread
-from os import system
+from os import system,environ
 from chimera import runCommand
 from time import gmtime, strftime
 from datetime import datetime
@@ -19,7 +19,7 @@ class ChimeraServer:
     def __init__(self):
         #print 'init'
         self.address = ''
-        self.port = 6000
+        self.port = int(environ['XMIPP_CHIMERA_PORT'])
         self.authkey = 'test'
         self.listener = Listener((self.address, self.port), authkey=self.authkey) 
         self.remote_conn = self.listener.accept()

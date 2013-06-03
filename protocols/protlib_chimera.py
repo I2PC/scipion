@@ -41,32 +41,33 @@ from decimal import *
 
 class XmippChimeraClient:
     
-    def __init__(self, volfile, angulardistfile=None, spheres_color='red', spheres_distance='default', spheres_maxradius='default'):
+    def __init__(self, volfile, port, angulardistfile=None, spheres_color='red', spheres_distance='default', spheres_maxradius='default'):
         
         if volfile is None:
             raise ValueError(volfile)
         if '@' in volfile:
             [index, file] = volfile.split('@'); 
         else :
-            file = volfile
-        if not exists(file):
-            raise ValueError(file)
-        if not angulardistfile is None:
-            if not(exists(angulardistfile)):
-                raise ValueError(angulardistfile)
+            file = volfile 
+#        if not exists(file):
+#            raise ValueError(file)
+#        if not angulardistfile is None:
+#            if not(existsBlockInMetaDataFile(angulardistfile)):
+#                raise ValueError(angulardistfile)
         
             
         self.volfile = volfile
         self.angulardistfile = angulardistfile
         
         self.address = ''
-        self.port = 6000
+        self.port = port #6000
+        #is port available?
         self.authkey = 'test'
         self.client = Client((self.address, self.port), authkey=self.authkey)
         printCmd('initVolumeData')
         self.initVolumeData()
         self.spheres_color = spheres_color
-        self.spheres_distance = float(spheres_distance) if not spheres_distance == 'default' else max(self.xdim, self.ydim, self.zdim)
+        self.spheres_distance = float(spheres_distance) if not spheres_distance == 'default' else 0.75 * max(self.xdim, self.ydim, self.zdim)
 #        print self.spheres_distance
         self.spheres_maxradius = float(spheres_maxradius) if not spheres_maxradius == 'default' else 0.02 * self.spheres_distance
       
@@ -159,9 +160,9 @@ class XmippChimeraClient:
 
 class XmippProjectionExplorer(XmippChimeraClient):
     
-    def __init__(self, volfile, angulardistfile=None, spheres_color='red', spheres_distance='default', spheres_maxradius='default', size='default', padding_factor=1, max_freq=0.5, spline_degree=2):
+    def __init__(self, volfile, port, angulardistfile=None, spheres_color='red', spheres_distance='default', spheres_maxradius='default', size='default', padding_factor=1, max_freq=0.5, spline_degree=2):
 
-        XmippChimeraClient.__init__(self, volfile, angulardistfile, spheres_color, spheres_distance, spheres_maxradius)
+        XmippChimeraClient.__init__(self, volfile, port,angulardistfile, spheres_color, spheres_distance, spheres_maxradius)
         
         self.projection = Image()
         self.projection.setDataType(DT_DOUBLE)
@@ -175,11 +176,10 @@ class XmippProjectionExplorer(XmippChimeraClient):
         self.initListenThread()
         printCmd('creating iw')
         self.size = float(size) if not size == 'default' else self.xdim
-        
-        self.iw = ImageWindow(image=self.projection, dim=self.size, label="Projection")
+        import ntpath
+        self.iw = ImageWindow(filename=ntpath.basename(volfile),image=self.projection, dim=self.size, label="Projection")
         self.iw.root.protocol("WM_DELETE_WINDOW", self.exitClient)
         self.iw.root.mainloop()
-                
 
     def rotate(self, rot, tilt, psi):
         printCmd('image.projectVolumeDouble')
