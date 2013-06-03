@@ -60,6 +60,22 @@ OutputDim=2
 # {eval} expandParallel(threads=0,mpi=2)
 
 #------------------------------------------------------------------------------------------------
+# {section}{visualize} Visualization
+#------------------------------------------------------------------------------------------------
+
+# Display raw deformation
+""" Type 1 to see the histogram of raw deformation number 1; type 2 to see the histogram of raw deformation number 2, etc.
+Type 1 2 to see the 2D plot of raw deformations number 1 vs 2. Type 1 2 3 to see the 3D plot of raw deformations 1, 2 and 3; etc.
+""" 
+DisplayRawDeformation="1"
+
+# Display combined deformation
+""" Type 1 to see the histogram of combined deformation number 1; type 2 to see the histogram of combined deformation number 2, etc.
+Type 1 2 to see the 2D plot of combined deformations number 1 vs 2. Type 1 2 3 to see the 3D plot of combined deformations 1, 2 and 3; etc.
+""" 
+DisplayCombinedDeformation="1"
+
+#------------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #------------------------------------------------------------------------------------------------
 #		
