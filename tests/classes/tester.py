@@ -245,6 +245,27 @@ class TestPyworkflow(unittest.TestCase):
         self.assertEqual(prot.endTime, prot2.endTime)
         self.assertEqual(prot._steps[1].status, prot2._steps[1].status)
         
+        
+    def testSimpleFileLog(self):
+        log = getGeneralLogger('pyworkflow.test.log.test_scipon_log')
+        log.info('General info')
+        log.debug('General debug')
+        log.warning("General warning")
+        
+        logFn = self.getTmpPath('fileLog.log')
+        log = getFileLogger(logFn)
+        log.info('File info!!!!!!')
+        log.debug('File debug!!!!!!')
+        log.warning("File warning!!!")
+        
+        log = getGeneralLogger('pyworkflow.test.log.test_scipon_log')
+        log.error('General error')
+        
+        log = getFileLogger(logFn)
+        log.error('File error!!!!!!')
+        
+        self.assertTrue(True)  
+        
 if __name__ == '__main__':
     unittest.main()
     

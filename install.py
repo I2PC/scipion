@@ -38,6 +38,7 @@ if __name__ == '__main__':
     f = open(BASHRC, 'w+')
     
     template = """
+export SCIPION_HOME=$HOME/Scipion
 export PW_HOME=%(FULLPATH)s
 
 export PYTHONPATH=$PW_HOME/..:$PYTHONPATH
