@@ -30,6 +30,7 @@ for specific EMAN2 EM data objects
 
 from pyworkflow.em import *  
 from pyworkflow.utils.path import replaceBaseExt, exists
+from glob import glob
             
 class EmanCoordinate(Coordinate):
     """This class holds the (x,y) position and other information
@@ -118,3 +119,36 @@ class EmanSetOfCoordinates(SetOfCoordinates):
     def hasTiltPairs(self):
         """Returns True if the SetOfMicrographs has tilted pairs"""
         return self.getMicrographs().hasTiltPairs()
+
+class EmanImage(Image):
+    """Eman implementation for Image"""
+    
+    def __init__(self, filename=None, **args):
+        Image.__init__(self, filename, **args)
+    
+class EmanSetOfImages(SetOfImages):
+    """Represents a set of Images for Eman"""
+    BDB_FORMAT = 'bdb'
+    HDF_FORMAT = 'hdf'
+    SPI_FORMAT = 'spi'
+    IMG_FORMAT = 'img'
+    
+    _format = BDB_FORMAT
+    
+    def __init__(self, filename=None, **args):
+        SetOfImages.__init__(self, filename, **args)
+        self._format = args['format']
+  
+    def __iter__(self):
+        """ Iterate over the set of images. """
+        if self.format == self.BDB_FORMAT:
+            # TODO: Find out how to iterate over images on bdb
+            pass
+        else:
+            imgPaths = glob('*_ptcls.*')
+            if len(imgPaths) == 0:
+                raise Exception('There are not particles.')
+            for imgFn in imgPaths:
+                yield EmanImage(imgFn)
+                
+            
