@@ -516,11 +516,6 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
         }
     }
     saveAutoParticles(md);
-<<<<<<< HEAD
-=======
-    md.print();
-    return md;
->>>>>>> ca3b0d041d2e9565d21eb1a58c2bcad5700e23c2
 }
 
 void AutoParticlePicking2::saveAutoParticles(MetaData &md)
