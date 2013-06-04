@@ -4,7 +4,7 @@ Created on May 20, 2013
 @author: laura
 '''
 
-from glob import glob
+from glob import glob, iglob
 import unittest
 from pyworkflow.em.packages.xmipp3 import *
 from pyworkflow.tests import *
@@ -18,21 +18,23 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
 #        cleanPath(cls.outputPath)
 #        makePath(cls.outputPath)
         
-        cls.mdGold = getGoldPath('micrographs_gold.xmd')
-        cls.dbGold = getGoldPath('micrographs_gold.sqlite')
+        cls.mdGold = getGoldPath('Micrographs_TiltedPhantom', 'micrographs_gold.xmd')
+        cls.dbGold = getGoldPath('Micrographs_TiltedPhantom', 'micrographs_gold.sqlite')
         
-        cls.micsPattern = getInputPath('MicrographsTilted', '*.mrc')
+        cls.micsPattern = getInputPath('Micrographs_TiltedPhantom', '*.mrc')
         
         cls.mdFn = getOutputPath(cls.outputPath, 'micrographs.xmd')
         cls.dbFn = getOutputPath(cls.outputPath, 'micrographs.sqlite')
         
-        cls.mics = glob(cls.micsPattern)
+        #cls.mics = glob(cls.micsPattern)
+        cls.mics = []
+        for mic in iglob(cls.micsPattern):
+            cls.mics.append(getRelPath(mic))
         
         if len(cls.mics) == 0:
             raise Exception('There are not micrographs matching pattern')
         cls.mics.sort()
     
-        #cls.tiltedDict = cls.createTiltedDict()
         """ Create tilted pairs """
         cls.tiltedDict = {}
         for i, fn in enumerate(cls.mics):
@@ -102,6 +104,13 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
             
         xmippSet.write()
         
+    def testReadBd(self):
+        """ Read micrographs from a SetOfMicrographs """
+        setMics = SetOfMicrographs(self.dbGold)
+
+        for i, mic in enumerate(setMics):
+            self.assertEqual(self.mics[i], mic.getFileName(), "Micrograph %d in set is different from expected" % i)
+        
     def createSetOfMicrographs(self):
         """ Create a SetOfMicrographs from a list of micrographs """
         setMics = SetOfMicrographs(self.dbFn, tiltPairs=True)
@@ -132,20 +141,9 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
         """ Check that a database is equal to the gold one """
         #TODO: Implement how to check that two databases are equal
         return (os.path.getsize(setMics.getFileName()) == os.path.getsize(self.dbGold))    
-    
-    @classmethod
-    def createTiltedDict(cls):
-        """ Create tilted pairs """
-        tiltedDict = {}
-        for i, fn in enumerate(cls.mics):
-            if i%2==0:
-                fn_u = fn
-            else:
-                tiltedDict[fn] = fn_u  
-        return tiltedDict
             
 if __name__ == '__main__':
-#    suite = unittest.TestLoader().loadTestsFromName('test_xmipp_data.TestXmippSetOfMicrographs.testMerge')
+#    suite = unittest.TestLoader().loadTestsFromName('test_data_xmipp.TestXmippSetOfMicrographs.testReadBd')
 #    unittest.TextTestRunner(verbosity=2).run(suite)
     
     unittest.main()

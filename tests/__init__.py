@@ -27,7 +27,7 @@
 # **************************************************************************
 import sys
 import os
-from os.path import join, exists, isdir
+from os.path import join, exists, isdir, relpath
 from pyworkflow.utils.path import cleanPath, makePath
 from pyworkflow.manager import Manager
 
@@ -51,6 +51,10 @@ def getOutputPath(*filenames):
     """Return the path to the SCIPION_HOME/tests/output dir
     joined with filename"""
     return join(TESTS_HOME, "output", *filenames)
+
+def getRelPath(filename):
+    """Return the path relative to SCIPION_HOME/tests"""
+    return relpath(filename, TESTS_HOME)
 
 def setupOutput(test, outputDir):
     """ Define the output path for the calling test and 
