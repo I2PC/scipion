@@ -1362,6 +1362,23 @@ public:
         return maxval;
     }
 
+    /** Minimum and maximum element */
+    void computeMinMax(T &minval, T &maxval) const
+    {
+        if (vdim == 0)
+            return;
+
+        maxval = minval = VEC_ELEM(*this,0);
+        for (size_t j = 0; j < vdim; ++j)
+        {
+        	T val=VEC_ELEM(*this,j);
+            if (val > maxval)
+                maxval = val;
+            else if (val<minval)
+            	minval = val;
+        }
+    }
+
     /** Index for the maximum element.
      *
      * This function returns the index of the maximum element of an matrix1d.
