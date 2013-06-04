@@ -500,7 +500,7 @@ public class SingleParticlePicker extends ParticlePicker
 				particle = new AutomaticParticle(x, y, this, m, cost, deleted);
 				m.addAutomaticParticle(particle, imported);
 			}
-			md.destroy();
+//			md.destroy();
 		}
 		catch (Exception e)
 		{
@@ -941,7 +941,7 @@ public class SingleParticlePicker extends ParticlePicker
 
 	public PickingClassifier getClassifier()
 	{
-		if (classifier == null)
+//		if (classifier == null)
 			initClassifier();
 		return classifier;
 	}
@@ -987,13 +987,13 @@ public class SingleParticlePicker extends ParticlePicker
 				classifier.train(trainmd);//should remove training files
 				classifier.autopick(micrograph.getFile(), outputmd, micrograph.getAutopickpercent());
 				loadAutomaticParticles(micrograph, outputmd, false);
-				outputmd.write(getOutputPath(micrograph.getAutoPosFile()));
+//				outputmd.write(getOutputPath(micrograph.getAutoPosFile()));
 				frame.getCanvas().repaint();
 				XmippWindowUtil.releaseGUI(frame.getRootPane());
 				frame.getCanvas().setEnabled(true);
 
-				trainmd.destroy();
-				outputmd.destroy();
+//				trainmd.destroy();
+//				outputmd.destroy();
 			}
 			catch (Exception e)
 			{
@@ -1031,8 +1031,8 @@ public class SingleParticlePicker extends ParticlePicker
 			micrograph.getAutomaticParticles().clear();
 			getClassifier().autopick(micrograph.getFile(), outputmd, micrograph.getAutopickpercent());
 			loadAutomaticParticles(micrograph, outputmd, false);
-			outputmd.write(getOutputPath(micrograph.getAutoPosFile()));
-			outputmd.destroy();
+//			outputmd.write(getOutputPath(micrograph.getAutoPosFile()));
+//			outputmd.destroy();
 			frame.getCanvas().repaint();
 			frame.getCanvas().setEnabled(true);
 			XmippWindowUtil.releaseGUI(frame.getRootPane());
