@@ -1,5 +1,6 @@
 package xmipp.jni;
 
+
 public class PickingClassifier
 {
 
@@ -20,7 +21,7 @@ public class PickingClassifier
 	
 	public synchronized native void destroy();
 
-	public native void autopick(String micrograph, String autoposfile, int percent);
+	public native void autopick(String micrograph, MetaData outputmd, int percent);
 
 	public native void correct(MetaData manualmd, MetaData automaticmd);
 

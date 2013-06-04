@@ -929,7 +929,8 @@ public class SingleParticlePicker extends ParticlePicker
 		micrograph.setState(MicrographState.Supervised);
 		saveData();
 		md.print();
-		new Thread(new TrainRunnable(frame, md)).start();
+		MetaData outputmd = new MetaData();
+		new Thread(new TrainRunnable(frame, md, outputmd)).start();
 
 	}
 
@@ -959,12 +960,14 @@ public class SingleParticlePicker extends ParticlePicker
 
 		private SingleParticlePickerJFrame frame;
 		private MetaData trainmd;
+		private MetaData outputmd;
 
-		public TrainRunnable(SingleParticlePickerJFrame frame, MetaData trainmd)
+		public TrainRunnable(SingleParticlePickerJFrame frame, MetaData trainmd, MetaData outputmd)
 		{
 
 			this.frame = frame;
 			this.trainmd = trainmd;
+			this.outputmd = outputmd;
 			initClassifier();
 
 		}
@@ -976,13 +979,16 @@ public class SingleParticlePicker extends ParticlePicker
 				System.out.println("Train started");
 
 				classifier.train(trainmd);//should remove training files
-				classifier.autopick(micrograph.getFile(), getOutputPath(micrograph.getAutoPosFile()), micrograph.getAutopickpercent());
-
+				classifier.autopick(micrograph.getFile(), outputmd, micrograph.getAutopickpercent());
+				String autoposfile = getOutputPath(micrograph.getAutoPosFile());
+				outputmd.write(autoposfile);
 				loadAutomaticParticles(micrograph);
+				frame.getCanvas().repaint();
 				XmippWindowUtil.releaseGUI(frame.getRootPane());
 				frame.getCanvas().setEnabled(true);
 
 				trainmd.destroy();
+				outputmd.destroy();
 			}
 			catch (Exception e)
 			{
@@ -996,9 +1002,10 @@ public class SingleParticlePicker extends ParticlePicker
 	{
 		micrograph.setState(MicrographState.Supervised);
 		saveData(micrograph);
+		MetaData outputmd = new MetaData();
 		frame.getCanvas().setEnabled(false);
 		XmippWindowUtil.blockGUI(frame, "Autopicking...");
-		new Thread(new AutopickRunnable(frame)).start();
+		new Thread(new AutopickRunnable(frame, outputmd)).start();
 
 	}
 
@@ -1006,20 +1013,22 @@ public class SingleParticlePicker extends ParticlePicker
 	{
 
 		private SingleParticlePickerJFrame frame;
+		private MetaData outputmd;
 
-		public AutopickRunnable(SingleParticlePickerJFrame frame)
+		public AutopickRunnable(SingleParticlePickerJFrame frame, MetaData outputmd)
 		{
 			this.frame = frame;
+			this.outputmd = outputmd;
 		}
 
 		public void run()
 		{
 			String autoposfile = getOutputPath(micrograph.getAutoPosFile());
 			micrograph.getAutomaticParticles().clear();
-			getClassifier().autopick(micrograph.getFile(), autoposfile, micrograph.getAutopickpercent());
-
+			getClassifier().autopick(micrograph.getFile(), outputmd, micrograph.getAutopickpercent());
+			outputmd.write(autoposfile);
 			loadAutomaticParticles(micrograph);
-
+			outputmd.destroy();
 			frame.getCanvas().repaint();
 			frame.getCanvas().setEnabled(true);
 			XmippWindowUtil.releaseGUI(frame.getRootPane());

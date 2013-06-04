@@ -408,11 +408,10 @@ void AutoParticlePicking2::saveTrainingSet()
     fhTrain.close();
 }
 
-MetaData AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, int proc_prec)
+int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, int proc_prec, MetaData &md)
 {
 	std::cerr<<fnmicrograph<<std::endl;
     double label, score;
-    MetaData md;
     Particle2 p;
     MultidimArray<double> IpolarCorr;
     MultidimArray<double> featVec;
@@ -519,7 +518,6 @@ MetaData AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograp
         }
     }
     saveAutoParticles(md);
-    return md;
 }
 
 void AutoParticlePicking2::saveAutoParticles(MetaData &md)
