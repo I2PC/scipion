@@ -20,7 +20,7 @@ public class PickingClassifier
 	
 	public synchronized native void destroy();
 
-	public native void autopick(String micrograph, String autoposfile);
+	public native void autopick(String micrograph, String autoposfile, int percent);
 
 	public native void correct(MetaData manualmd, MetaData automaticmd);
 

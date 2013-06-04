@@ -976,7 +976,7 @@ public class SingleParticlePicker extends ParticlePicker
 				System.out.println("Train started");
 
 				classifier.train(trainmd);//should remove training files
-				classifier.autopick(micrograph.getFile(), getOutputPath(micrograph.getAutoPosFile()));
+				classifier.autopick(micrograph.getFile(), getOutputPath(micrograph.getAutoPosFile()), micrograph.getAutopickpercent());
 
 				loadAutomaticParticles(micrograph);
 				XmippWindowUtil.releaseGUI(frame.getRootPane());
@@ -1016,7 +1016,7 @@ public class SingleParticlePicker extends ParticlePicker
 		{
 			String autoposfile = getOutputPath(micrograph.getAutoPosFile());
 			micrograph.getAutomaticParticles().clear();
-			getClassifier().autopick(micrograph.getFile(), autoposfile);
+			getClassifier().autopick(micrograph.getFile(), autoposfile, micrograph.getAutopickpercent());
 
 			loadAutomaticParticles(micrograph);
 
