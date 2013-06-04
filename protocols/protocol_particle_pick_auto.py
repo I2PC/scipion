@@ -29,16 +29,13 @@ class ProtParticlePickingAuto(XmippProtocol):
        
         self.inputFilename(*self.keysToImport)
         self.inputProperty('TiltPairs', 'MicrographsMd', 'Fast')
-        self.inputProperty('TiltPairs', 'MicrographsMd', 'Family')
+        self.inputProperty('TiltPairs', 'MicrographsMd')
         self.micrographs = self.getFilename('micrographs')
-        self.particleSizeForAuto = []
+        
         
     def loadConfig(self):
         md = MetaData(self.Input['config'])
-       
-        if exists(self.PrevRun.getFilename('training', family=family)):
-            particleSize = md.getValue(MDL_PICKING_PARTICLE_SIZE, objId)
-            self.particleSizeForAuto.append(particleSize)
+        self.particleSizeForAuto = md.getValue(MDL_PICKING_PARTICLE_SIZE, objId)
        
     def defineSteps(self):
         self.insertStep("createDir",verifyfiles=[self.ExtraDir],path=self.ExtraDir)
@@ -128,6 +125,7 @@ class ProtParticlePickingAuto(XmippProtocol):
     
     def validate(self):
         errors = []
+         if exists(self.PrevRun.getFilename('training', 'model')):
         return errors
     
     def visualize(self):

@@ -3,7 +3,13 @@ package xmipp.ij.commons;
 import ij.IJ;
 import ij.WindowManager;
 import ij.gui.ImageWindow;
+
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Point;
 import java.awt.Window;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -39,7 +45,6 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 			@Override
 			public void windowClosing(WindowEvent arg0)
 			{
-				
 				XmippApplication.removeInstance();
 			}
 		});
@@ -106,7 +111,9 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	{
 		return ((XmippImageCanvas)super.getCanvas());
 	}
-	
+
+
+
 	
 
 }// class XmippImageWindow

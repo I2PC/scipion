@@ -9,6 +9,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
@@ -55,13 +56,16 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 
 		int x = super.offScreenX(e.getX());
 		int y = super.offScreenY(e.getY());
+		
+		if(e.isControlDown())
+			JOptionPane.showMessageDialog(this, String.format("x:%s y:%s, value:%s", x, y, imp.getProcessor().getPixel(x, y)));
 
 		if (isDragImage(e))
 		{
 			setupScroll(x, y);
 			return;
 		}
-
+		
 	}
 
 	protected boolean isDragImage(MouseEvent e)

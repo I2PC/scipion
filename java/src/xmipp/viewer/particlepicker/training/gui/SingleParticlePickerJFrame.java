@@ -50,7 +50,7 @@ import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 {
 
-	private TrainingCanvas canvas;
+	private SingleParticlePickerCanvas canvas;
 	private JMenuBar mb;
 	private SingleParticlePicker ppicker;
 	private JPanel micrographpn;
@@ -207,7 +207,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 	{
 
 		if (canvas == null)
-			canvas = new TrainingCanvas(this);
+			canvas = new SingleParticlePickerCanvas(this);
 		else
 			canvas.updateMicrograph();
 
