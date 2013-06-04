@@ -25,26 +25,19 @@
 
 #include "matrix_dimred.h"
 #include <data/matrix2d.h>
-#include "diffusionMaps.h"
-#include "pca.h"
-#include "lpp.h"
-#include "ltsa.h"
-#include "gplvm.h"
-#include "lltsaSCG.h"
-#include "kernelPCA.h"
-#include "hessianLLE.h"
-#include "diffusionMaps.h"
-#include "probabilisticPCA.h"
-#include "laplacianEigenmaps.h"
 
-void ProgMatrixDimRed::readParams()
+ProgDimRed::ProgDimRed()
+{
+	algorithm=NULL;
+}
+
+void ProgDimRed::readParams()
 {
     fnIn = getParam("-i");
     fnOut = getParam("-o");
     dimRefMethod = getParam("-m");
-    inputDim  = getIntParam("--din");
     outputDim  = getIntParam("--dout");
-    Nsamples  = getIntParam("--samples");
+    dimEstMethod = getParam("--dout",1);
 
     if (dimRefMethod=="LTSA" || dimRefMethod=="LLTSA" || dimRefMethod=="LPP" || dimRefMethod=="LE" || dimRefMethod=="HLLE")
     	kNN=getIntParam("-m",1);
@@ -59,26 +52,30 @@ void ProgMatrixDimRed::readParams()
 }
 
 // Show ====================================================================
-void ProgMatrixDimRed::show()
+void ProgDimRed::show()
 {
     if (verbose>0)
-        std::cerr
+        std::cout
         << "Input metadata file:    " << fnIn          << std::endl
         << "Output metadata:        " << fnOut         << std::endl
         << "Dim Red Method:         " << dimRefMethod  << std::endl
-        << "Dimension in:           " << inputDim      << std::endl
         << "Dimension out:          " << outputDim     << std::endl
-        << "Number of samples:      " << Nsamples      << std::endl
         ;
+    if (dimRefMethod=="LTSA" || dimRefMethod=="LLTSA" || dimRefMethod=="LPP" || dimRefMethod=="LE" || dimRefMethod=="HLLE")
+    	std::cout << "k=" << kNN << std::endl;
+    if (dimRefMethod=="DM" || dimRefMethod=="kPCA" || dimRefMethod=="LPP" || dimRefMethod=="LE")
+    	std::cout << "sigma=" << sigma << std::endl;
+    if (dimRefMethod=="DM")
+    	std::cout << "t=" << t << std::endl;
+    if (dimRefMethod=="pPCA")
+    	std::cout << "Niter=" << Niter << std::endl;
 }
 
 // usage ===================================================================
-void ProgMatrixDimRed::defineParams()
+void ProgDimRed::defineParams()
 {
-	addUsageLine("This program takes an input matrix, whose rows are individual observations and ");
-	addUsageLine("projects each sample onto a lower dimensional space using the selected method");
-    addParamsLine("   -i <file>             : input matrix with data. Each observation is a row.");
-    addParamsLine("   -o <file>             : output matrix. Each observation is a row");
+    processDefaultComment("-i","-i <input>");
+    processDefaultComment("-o","[-o <output=\"\">]");
     addParamsLine("  [-m <dimRefMethod=PCA>]: Dimensionality Reduction method selected");
     addParamsLine("      where <dimRefMethod>");
     addParamsLine("             PCA            : Principal Component Analysis");
@@ -90,34 +87,15 @@ void ProgMatrixDimRed::defineParams()
     addParamsLine("             pPCA <n=200>   : Probabilistic PCA, n=number of iterations");
     addParamsLine("             LE <k=7> <s=1> : Laplacian Eigenmap, k=number of nearest neighbours, s=kernel sigma");
     addParamsLine("             HLLE <k=12>    : Hessian Locally Linear Embedding, k=number of nearest neighbours");
-    addParamsLine("   --din <d>             : Input dimension");
-    addParamsLine("   --dout <d>            : Output dimension");
-    addParamsLine("   --samples <N>         : Number of observations in the input matrix");
-    addExampleLine("xmipp_matrix_dimred -i matrixIn.txt -o matrixOut.txt --din 30 --dout 2 --samples 1000");
+    addParamsLine("  [--dout <d=2> <method=CorrDim>] : Output dimension. Set to -1 for automatic estimation with a specific method");
+    addParamsLine("       where <method>");
+    addParamsLine("                  CorrDim: Correlation dimension");
+    addParamsLine("                  MLE: Maximum Likelihood Estimate");
 }
 
-// Produce side info  ======================================================
-void ProgMatrixDimRed::produceSideInfo()
+// Produce Side info  ====================================================================
+void ProgDimRed::produceSideInfo()
 {
-	X.resizeNoCopy(Nsamples,inputDim);
-	X.read(fnIn);
-}
-
-// Run  ====================================================================
-void ProgMatrixDimRed::run()
-{
-    show();
-    produceSideInfo();
-    DimRedAlgorithm*  algorithm=NULL;
-    PCA               algorithmPCA;
-    LTSA              algorithmLTSA;
-    DiffusionMaps     algorithmDiffusionMaps;
-    LLTSASCG          algorithmLLTSASCG;
-    LPP               algorithmLPP;
-    KernelPCA         algorithmKernelPCA;
-    ProbabilisticPCA  algorithmProbabilisticPCA;
-    LaplacianEigenmap algorithmLaplacianEigenmap;
-    HessianLLE        algorithmHessianLLE;
     if (dimRefMethod=="PCA")
     {
     	algorithm=&algorithmPCA;
@@ -155,9 +133,62 @@ void ProgMatrixDimRed::run()
     	algorithmHessianLLE.setSpecificParameters(kNN);
     }
 
-    algorithm->setInputData(X);
     algorithm->setOutputDimensionality(outputDim);
+}
+
+// Estimate dimension
+void ProgDimRed::estimateDimension()
+{
+	outputDim=intrinsicDimensionality(X, dimEstMethod, false, algorithm->distance);
+}
+
+void ProgMatrixDimRed::readParams()
+{
+	ProgDimRed::readParams();
+    inputDim  = getIntParam("--din");
+    Nsamples  = getIntParam("--samples");
+}
+
+void ProgMatrixDimRed::show()
+{
+    if (verbose>0)
+    {
+    	ProgDimRed::show();
+        std::cerr
+        << "Dimension in:           " << inputDim      << std::endl
+        << "Number of samples:      " << Nsamples      << std::endl
+        ;
+    }
+}
+
+void ProgMatrixDimRed::defineParams()
+{
+	addUsageLine("This program takes an input matrix, whose rows are individual observations and ");
+	addUsageLine("projects each sample onto a lower dimensional space using the selected method");
+	setDefaultComment("-i","Input matrix with data. Each observation is a row.");
+	setDefaultComment("-o","Output matrix with projected data");
+	ProgDimRed::defineParams();
+    addParamsLine("   --din <d>             : Input dimension");
+    addParamsLine("   --samples <N>         : Number of observations in the input matrix");
+    addExampleLine("xmipp_matrix_dimred -i matrixIn.txt -o matrixOut.txt --din 30 --dout 2 --samples 1000");
+}
+
+// Produce side info  ======================================================
+void ProgMatrixDimRed::produceSideInfo()
+{
+	ProgDimRed::produceSideInfo();
+	X.resizeNoCopy(Nsamples,inputDim);
+	X.read(fnIn);
+	algorithm->setInputData(X);
+}
+
+// Run  ====================================================================
+void ProgMatrixDimRed::run()
+{
+    show();
+    produceSideInfo();
+    if (outputDim<0)
+    	estimateDimension();
     algorithm->reduceDimensionality();
-    algorithm->setInputData(X);
     algorithm->getReducedData().write(fnOut);
 }

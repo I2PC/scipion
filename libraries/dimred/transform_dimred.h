@@ -30,23 +30,23 @@
 #include <data/xmipp_program.h>
 #include <data/mask.h>
 #include <data/filters.h>
+#include "matrix_dimred.h"
 
-/**@defgroup ProgTransformDimRed Obtain image distances between images in metada
+/**@defgroup ProgTransformDimRed Obtain image distances between images in metadata
    @ingroup DimRedLibrary */
 //@{
 /** Analyze cluster parameters. */
-class ProgTransformDimRed: public XmippProgram
+class ProgTransformDimRed: public ProgDimRed
 {
 public:
     /** Filename selection file containing the images */
-    FileName fnIn;
-    FileName fnOut;
-    String dimRefMethod;
-    int outputDim;
+    FileName fnRandomSampling;
+    /** Number of grids for the random sampling */
     int numGrids;
+    /** Distance between images */
+    String distance;
 public:
     MetaData SFin;
-    Matrix2D<double> X; // Input data
     Mask mask;
 
     // Auxiliary variables for alignment

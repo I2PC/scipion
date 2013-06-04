@@ -27,26 +27,74 @@
 #define _MATRIX_DIMRED
 
 #include <data/xmipp_program.h>
+#include "pca.h"
+#include "lpp.h"
+#include "ltsa.h"
+#include "gplvm.h"
+#include "lltsaSCG.h"
+#include "kernelPCA.h"
+#include "hessianLLE.h"
+#include "diffusionMaps.h"
+#include "probabilisticPCA.h"
+#include "laplacianEigenmaps.h"
 
-/**@defgroup ProgMatrixDimRed Project a matrix onto a lower dimensionality space
+/**@defgroup ProgDimRed Project a matrix onto a lower dimensionality space
    @ingroup DimRedLibrary */
 //@{
-/** Matrix parameters. */
-class ProgMatrixDimRed: public XmippProgram
+/** Program Dimred. */
+class ProgDimRed: public XmippProgram
 {
 public:
-    /** Filename selection file containing the images */
+    /** Input metadata */
     FileName fnIn;
+    /** Output metadata */
     FileName fnOut;
-    String dimRefMethod;
-    int inputDim, outputDim;
-    int Nsamples;
+    /** Output dimension */
+    int outputDim;
+    /** Method */
+    String dimRefMethod, dimEstMethod;
+    /** Method parameters */
     int kNN; // Number of nearest neighbors
     int Niter; // Number of iterations
     double t; // Markov random walk
     double sigma; // Sigma of kernel
 public:
     Matrix2D<double> X; // Input data
+    DimRedAlgorithm*  algorithm;
+    PCA               algorithmPCA;
+    LTSA              algorithmLTSA;
+    DiffusionMaps     algorithmDiffusionMaps;
+    LLTSASCG          algorithmLLTSASCG;
+    LPP               algorithmLPP;
+    KernelPCA         algorithmKernelPCA;
+    ProbabilisticPCA  algorithmProbabilisticPCA;
+    LaplacianEigenmap algorithmLaplacianEigenmap;
+    HessianLLE        algorithmHessianLLE;
+public:
+    /// Empty constructor
+    ProgDimRed();
+
+    /// Read argument from command line
+    virtual void readParams();
+
+    /// Show
+    virtual void show();
+
+    /// Define parameters
+    virtual void defineParams();
+
+    /// Produce side info
+    virtual void produceSideInfo();
+
+    /// Estimate dimensionality
+    void estimateDimension();
+};
+
+/** Dimensionality reduction for matrices */
+class ProgMatrixDimRed: public ProgDimRed
+{
+public:
+    int inputDim, Nsamples;
 public:
     /// Read argument from command line
     void readParams();
