@@ -4,7 +4,6 @@ Created on May 20, 2013
 @author: laura
 '''
 
-import os, sys
 from glob import glob
 import unittest
 from pyworkflow.em.packages.xmipp3 import *
@@ -12,28 +11,40 @@ from pyworkflow.tests import *
 
 
 class TestXmippSetOfMicrographs(unittest.TestCase):
+        
+    @classmethod
+    def setUpClass(cls):
+        cls.outputPath = getOutputPath('test_data_xmipp')
+#        cleanPath(cls.outputPath)
+#        makePath(cls.outputPath)
+        
+        cls.mdGold = getGoldPath('micrographs_gold.xmd')
+        cls.dbGold = getGoldPath('micrographs_gold.sqlite')
+        
+        cls.micsPattern = getInputPath('MicrographsTilted', '*.mrc')
+        
+        cls.mdFn = getOutputPath(cls.outputPath, 'micrographs.xmd')
+        cls.dbFn = getOutputPath(cls.outputPath, 'micrographs.sqlite')
+        
+        cls.mics = glob(cls.micsPattern)
+        
+        if len(cls.mics) == 0:
+            raise Exception('There are not micrographs matching pattern')
+        cls.mics.sort()
     
+        #cls.tiltedDict = cls.createTiltedDict()
+        """ Create tilted pairs """
+        cls.tiltedDict = {}
+        for i, fn in enumerate(cls.mics):
+            if i%2==0:
+                fn_u = fn
+            else:
+                cls.tiltedDict[fn] = fn_u  
+                
     def setUp(self):
-        self.outputPath = getOutputPath('test_data_xmipp')
         cleanPath(self.outputPath)
         makePath(self.outputPath)
-        
-        self.mdGold = getGoldPath('micrographs_gold.xmd')
-        self.dbGold = getGoldPath('micrographs_gold.sqlite')
-        
-        self.micsPattern = getInputPath('MicrographsTilted', '*.mrc')
-        
-        self.mdFn = getOutputPath(self.outputPath, 'micrographs.xmd')
-        self.dbFn = getOutputPath(self.outputPath, 'micrographs.sqlite')
-        
-        self.mics = glob(self.micsPattern)
-        
-        if len(self.mics) == 0:
-            raise Exception('There is not mics matching pattern')
-        self.mics.sort()
                     
-        self.tiltedDict = self.createTiltedDict()
-                
     def testWriteMd(self):
         """ Test creating and writing a XmippSetOfMicrographs from a list of micrographs """
         
@@ -52,11 +63,10 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
         self.assertTrue(self.checkMicrographsMetaData(xmippSet), "micrographs metadata does not exist")
         
     def testReadMd(self):
-        """ Test reading an XmippSetOfMicrographs from a metadata """
-        xmippSet = XmippSetOfMicrographs(self.mdFn, tiltPairs=True)
+        """ Test reading an XmippSetOfMicrographs from an existing  metadata """
+        xmippSet = XmippSetOfMicrographs(self.mdGold, tiltPairs=True)
         
         #Check that micrographs on metadata corresponds to the input ones (same order too)
-        #TODO: Check against gold metadata????
         for i, mic in enumerate(xmippSet):
             self.assertEqual(self.mics[i], mic.getFileName(), "Micrograph %d in set is different from expected" % i)
 
@@ -93,15 +103,16 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
         xmippSet.write()
         
     def createSetOfMicrographs(self):
+        """ Create a SetOfMicrographs from a list of micrographs """
         setMics = SetOfMicrographs(self.dbFn, tiltPairs=True)
         setMics.setSamplingRate(1.2)
         for fn in self.mics:
             mic = Micrograph(fn)
             setMics.append(mic)
-            if fn in self.tiltedDict:
-                mic_u = mic
+            if fn in self.tiltedDict.values():
+                mic_t = mic
             else:
-                setMics.appendPair(mic_u.getObjId(), mic.getObjId()) 
+                setMics.appendPair(mic.getObjId(), mic_t.getObjId()) 
             
         setMics.write()
         
@@ -122,14 +133,15 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
         #TODO: Implement how to check that two databases are equal
         return (os.path.getsize(setMics.getFileName()) == os.path.getsize(self.dbGold))    
     
-    def createTiltedDict(self):
+    @classmethod
+    def createTiltedDict(cls):
         """ Create tilted pairs """
         tiltedDict = {}
-        for i, fn in enumerate(self.mics):
+        for i, fn in enumerate(cls.mics):
             if i%2==0:
                 fn_u = fn
             else:
-                tiltedDict[fn_u] = fn  
+                tiltedDict[fn] = fn_u  
         return tiltedDict
             
 if __name__ == '__main__':
