@@ -477,18 +477,16 @@ public class SingleParticlePicker extends ParticlePicker
 			count += m.getAutomaticParticlesNumber(threshold);
 		return count;
 	}
-
-	public void loadAutomaticParticles(TrainingMicrograph m, String file, boolean imported)
+	
+	public void loadAutomaticParticles(TrainingMicrograph m, MetaData md, boolean imported)
 	{
-		if (!new File(file).exists())
-			return;
+		
 		int x, y;
 		AutomaticParticle particle;
 		Double cost;
 		boolean deleted;
 		try
 		{
-			MetaData md = new MetaData(file);
 
 			for (long id : md.findObjects())
 			{
@@ -497,7 +495,7 @@ public class SingleParticlePicker extends ParticlePicker
 				y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 				cost = md.getValueDouble(MDLabel.MDL_COST, id);
 				if (cost == null)
-					throw new IllegalArgumentException("Invalid format for " + file);
+					throw new IllegalArgumentException("Invalid format for " + md.getFilename());
 				deleted = (md.getValueInt(MDLabel.MDL_ENABLED, id) == 1) ? false : true;
 				particle = new AutomaticParticle(x, y, this, m, cost, deleted);
 				m.addAutomaticParticle(particle, imported);
@@ -509,6 +507,13 @@ public class SingleParticlePicker extends ParticlePicker
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
 		}
+	}
+
+	public void loadAutomaticParticles(TrainingMicrograph m, String file, boolean imported)
+	{
+		if (!new File(file).exists())
+			return;
+		loadAutomaticParticles(m, new MetaData(file), imported);
 	}
 
 	//returns micrograph particles filepath, according to format
@@ -981,9 +986,8 @@ public class SingleParticlePicker extends ParticlePicker
 
 				classifier.train(trainmd);//should remove training files
 				classifier.autopick(micrograph.getFile(), outputmd, micrograph.getAutopickpercent());
-				String autoposfile = getOutputPath(micrograph.getAutoPosFile());
-				outputmd.write(autoposfile);
-				loadAutomaticParticles(micrograph);
+				loadAutomaticParticles(micrograph, outputmd, false);
+				outputmd.write(getOutputPath(micrograph.getAutoPosFile()));
 				frame.getCanvas().repaint();
 				XmippWindowUtil.releaseGUI(frame.getRootPane());
 				frame.getCanvas().setEnabled(true);
@@ -1024,11 +1028,10 @@ public class SingleParticlePicker extends ParticlePicker
 
 		public void run()
 		{
-			String autoposfile = getOutputPath(micrograph.getAutoPosFile());
 			micrograph.getAutomaticParticles().clear();
 			getClassifier().autopick(micrograph.getFile(), outputmd, micrograph.getAutopickpercent());
-			outputmd.write(autoposfile);
-			loadAutomaticParticles(micrograph);
+			loadAutomaticParticles(micrograph, outputmd, false);
+			outputmd.write(getOutputPath(micrograph.getAutoPosFile()));
 			outputmd.destroy();
 			frame.getCanvas().repaint();
 			frame.getCanvas().setEnabled(true);
