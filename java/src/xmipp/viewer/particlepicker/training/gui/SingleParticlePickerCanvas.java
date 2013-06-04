@@ -19,7 +19,7 @@ import xmipp.viewer.particlepicker.training.model.AutomaticParticle;
 import xmipp.viewer.particlepicker.training.model.TrainingMicrograph;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 
-public class TrainingCanvas extends ParticlePickerCanvas
+public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 {
 
 	private SingleParticlePickerJFrame frame;
@@ -28,7 +28,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	private SingleParticlePicker ppicker;
 
 
-	public TrainingCanvas(SingleParticlePickerJFrame frame)
+	public SingleParticlePickerCanvas(SingleParticlePickerJFrame frame)
 	{
 		super(frame.getMicrograph().getImagePlus(frame.getParticlePicker().getFilters()));
 
@@ -81,6 +81,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 				refresh();
 			}
 		}
+		
 	}
 
 	protected void erase(int x, int y)

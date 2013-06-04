@@ -946,6 +946,7 @@ public class SingleParticlePicker extends ParticlePicker
 		try
 		{
 			classifier = new PickingClassifier(micrographsmd, getSize(), getOutputPath(model));
+			System.out.println("created classifier");
 		}
 		catch (Exception e)
 		{

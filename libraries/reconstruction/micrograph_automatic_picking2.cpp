@@ -410,6 +410,7 @@ void AutoParticlePicking2::saveTrainingSet()
 
 int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, int proc_prec, MetaData &md)
 {
+	std::cerr<<"We are automatic picking"<<std::endl;
 	std::cerr<<fnmicrograph<<std::endl;
     double label, score;
     Particle2 p;
@@ -471,9 +472,6 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
 //            }
 //            else
 //            {
-        	extractParticle(j,i,microImage(),pieceImage,false);
-        	II()=pieceImage;
-        	II.write("mmm.stk",ALL_IMAGES,true,WRITE_APPEND);
                 p.x=j;
                 p.y=i;
                 p.status=1;
@@ -518,6 +516,11 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
         }
     }
     saveAutoParticles(md);
+<<<<<<< HEAD
+=======
+    md.print();
+    return md;
+>>>>>>> ca3b0d041d2e9565d21eb1a58c2bcad5700e23c2
 }
 
 void AutoParticlePicking2::saveAutoParticles(MetaData &md)
