@@ -74,6 +74,7 @@ void AutoParticlePicking2::readMic(FileName fn_micrograph)
     selfScaleToSizeFourier((int)((m.Ydim)*scaleRate),
                            (int)((m.Xdim)*scaleRate),
                            microImage(),2);
+    filterBankGenerator();
 }
 
 //Generate filter bank from the micrograph image
@@ -115,7 +116,6 @@ void AutoParticlePicking2::buildInvariant(MetaData MD)
     {
         MD.getValue(MDL_MICROGRAPH,micFile, __iter.objId);
         readMic(micFile);
-        filterBankGenerator();
         MD.getValue(MDL_MICROGRAPH_PARTICLES,posFile, __iter.objId);
         MD2.read("particles@"+posFile);
         FOR_ALL_OBJECTS_IN_METADATA(MD2)
@@ -419,10 +419,11 @@ MetaData AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograp
     MultidimArray<double> pieceImage;
     MultidimArray<double> staticVec, dilatedVec;
     std::vector<Particle2> positionArray;
+    Image<double> II;
 
     readMic(fnmicrograph);
     IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
-    buildSearchSpace(positionArray,fast);
+    buildSearchSpace(positionArray,true);
     //    pthread_t * th_ids = new pthread_t[Nthreads];
     //    AutoPickThreadParams * th_args =
     //        new AutoPickThreadParams[Nthreads];
@@ -456,28 +457,31 @@ MetaData AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograp
         label= classifier.predict(featVec, score);
         if (label==1)
         {
-            if (fnSVMModel2.exists())
-            {
-                label=classifier2.predict(featVec,score);
-                if (label==1)
-                {
-                    p.x=j;
-                    p.y=i;
-                    p.status=1;
-                    p.cost=score;
-                    p.vec=featVec;
-                    auto_candidates.push_back(p);
-                }
-            }
-            else
-            {
+//            if (fnSVMModel2.exists())
+//            {
+//                label=classifier2.predict(featVec,score);
+//                if (label==1)
+//                {
+//                    p.x=j;
+//                    p.y=i;
+//                    p.status=1;
+//                    p.cost=score;
+//                    p.vec=featVec;
+//                    auto_candidates.push_back(p);
+//                }
+//            }
+//            else
+//            {
+        	extractParticle(j,i,microImage(),pieceImage,false);
+        	II()=pieceImage;
+        	II.write("mmm.stk",ALL_IMAGES,true,WRITE_APPEND);
                 p.x=j;
                 p.y=i;
                 p.status=1;
                 p.cost=score;
                 p.vec=featVec;
                 auto_candidates.push_back(p);
-            }
+//            }
         }
     }
 
