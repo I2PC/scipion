@@ -326,6 +326,22 @@ def hosts(request):
                'jquery': jquery_path}
     
     return render_to_response('hosts.html', context)
+
+def showj(request):
+    #manager = Manager()
+#    logo_path = findResource('scipion_logo.png')
+
+    # Resources #
+    css_path = os.path.join(settings.STATIC_URL, 'css/showj_style.css')
+    favicon_path = getResource('favicon')
+    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
+    #############
+
+    context = {'favicon': favicon_path,
+               'jquery': jquery_path,
+               'css':css_path}
+    
+    return render_to_response('showj.html', context)
     
     
 if __name__ == '__main__':

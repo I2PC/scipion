@@ -123,4 +123,16 @@ def getFolderFiles(folderPath):
             filePaths.add(join(path, file))
     return filePaths
 
+def copyTree(source, dest):
+    if not exists(dest):
+        shutil.copytree(source, dest, symlinks=True)
+    else:
+        for file in os.listdir(source):
+            fnPath = os.path.join(source,file)
+            if os.path.isfile(fnPath):
+                shutil.copy(fnPath, dest)
+            if os.path.isdir(fnPath):
+                shutil.copytree(fnPath, os.path.join(dest, file))
+
+
 

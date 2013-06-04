@@ -18,7 +18,8 @@ class TestHosts(unittest.TestCase):
       
     def testAllProjectHosts(self):
         for executionHostConfig in self.proj.getHosts():
-            print (executionHostConfig.getLabel())     
+            print "=" * 100
+            executionHostConfig.printAll()     
         self.assertTrue(True)  
         
     

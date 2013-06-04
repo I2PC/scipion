@@ -71,27 +71,32 @@ class Project(object):
     def load(self):
         """Load project data and settings
         from the project dir."""
+        
+        if not exists(self.path):
+            raise Exception("Project doesn't exists in '%s'" % self.path)
         os.chdir(self.path) #Before doing nothing go to project dir
         if not exists(self.dbPath):
-            raise Exception("Project doesn't exists in '%s'" % self.path)
+            raise Exception("Project database not found in '%s'" % self.dbPath)
         self.mapper = SqliteMapper(self.dbPath, globals())
-        self.hostsMapper = ExecutionHostMapper(self.hostsPath, globals())
+        self.hostsMapper = ExecutionHostMapper(self.hostsPath)
         
     def create(self, hosts):
         """Prepare all required paths and files to create a new project.
         Params:
          hosts: a list of configuration hosts associated to this projects (class ExecutionHostConfig)
         """
+        #cleanPath(self.hostsPath)
         # Create project path if not exists
         makePath(self.path)
         os.chdir(self.path) #Before doing nothing go to project dir
+        self.clean()
         print abspath(self.dbPath)
         # Create db throught the mapper
         self.mapper = SqliteMapper(self.dbPath, globals())
         self.mapper.commit()
         # Write hosts configuration to disk
-        os.remove(self.hostsPath)
-        self.hostsMapper = ExecutionHostMapper(self.hostsPath, globals())
+        self.hostsMapper = ExecutionHostMapper(self.hostsPath)
+
         for h in hosts:
             self.hostsMapper.insert(h)
         self.hostsMapper.commit()

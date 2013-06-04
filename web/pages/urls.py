@@ -24,4 +24,5 @@ urlpatterns = patterns('',
     url(r'^protocol/$', 'app.views.protocol'), 
     url(r'^browse_objects/$', 'app.views.browse_objects'),
     url(r'^hosts/$', 'app.views.hosts'),
+    url(r'^showj/', 'app.views.showj'),
 )

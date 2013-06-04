@@ -288,13 +288,14 @@ def writeProtocols():
 
     writeConfig(menu, 'protocols_default.xml')
     
-PROJECTS_PATH = 'Scipion_Projects'
+SCIPION_PATH = 'Scipion'
+PROJECTS_PATH = 'projects'
   
 def writeHosts():
     host = ExecutionHostConfig()
     host.label.set('localhost')
     host.hostName.set('localhost')
-    host.hostPath.set(join (getHomePath(), PROJECTS_PATH))
+    host.hostPath.set(join (getHomePath(), SCIPION_PATH, PROJECTS_PATH))
     host.mpiCommand.set('mpirun -np %(nodes)d -bynode %(command)s')
     
     queueSys = host.queueSystem
@@ -357,7 +358,7 @@ cat $PBS_NODEFILE
     host.hostName.set('glassfishdev.cnb.csic.es')
     host.userName.set('apoza')
     host.password.set('BF6fYiFYiYD')
-    host.hostPath.set(join ('/home/apoza', PROJECTS_PATH))
+    host.hostPath.set(join ('/home/apoza', SCIPION_PATH, PROJECTS_PATH))
     
     writeConfig(host, 'execution_hosts.xml', mapperClass=ExecutionHostMapper, clean=False)
     
@@ -366,7 +367,7 @@ cat $PBS_NODEFILE
     host.hostName.set('crunchy.cnb.csic.es')
     host.userName.set('apoza')
     host.password.set('nerfyeb4f1v')
-    host.hostPath.set(join ('/gpfs/fs1/home/bioinfo/apoza', PROJECTS_PATH))
+    host.hostPath.set(join ('/gpfs/fs1/home/bioinfo/apoza', SCIPION_PATH, PROJECTS_PATH))
     
     writeConfig(host, 'execution_hosts.xml', mapperClass=ExecutionHostMapper, clean=False)
     

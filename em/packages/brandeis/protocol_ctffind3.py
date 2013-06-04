@@ -29,7 +29,6 @@ This module contains the protocol for CTF estimation with ctffind3
 
 
 from pyworkflow.em import *  
-from pyworkflow.em.packages.xmipp3.data import *
 from pyworkflow.utils.which import which
 from pyworkflow.utils.path import makePath, replaceBaseExt, join, basename
 
