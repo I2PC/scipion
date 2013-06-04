@@ -408,7 +408,7 @@ void AutoParticlePicking2::saveTrainingSet()
     fhTrain.close();
 }
 
-MetaData AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph)
+MetaData AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, int proc_prec)
 {
 	std::cerr<<fnmicrograph<<std::endl;
     double label, score;
