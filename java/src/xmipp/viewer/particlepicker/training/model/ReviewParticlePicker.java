@@ -8,6 +8,7 @@ import java.util.logging.Level;
 
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.Family;
+import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.jni.Particle;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
@@ -54,6 +55,11 @@ public class ReviewParticlePicker extends TrainingPicker
 		exportParticles(reviewfile);
 	}
 	
+	
+	public void saveData(Micrograph m)
+	{
+		saveMicrographs();// in review mode micrographs data is saved in single file
+	}
 	
 
 	@Override

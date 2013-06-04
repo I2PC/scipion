@@ -38,7 +38,8 @@ void ProgSimulateMicroscope::readParams()
     if (checkParam("--ctf"))
     {
         //Fill the input metadata with the value of 'fn_ctf'
-        MDConstGenerator generator(getParam("--ctf"));
+    	fn_ctf=getParam("--ctf");
+        MDConstGenerator generator(fn_ctf);
         generator.label = MDL_CTF_MODEL;
         generator.fill(*pmdIn);
     }
@@ -262,12 +263,16 @@ void ProgSimulateMicroscope::processImage(const FileName &fnImg, const FileName 
 {
     static Image<double> img;
     static FileName last_ctf;
+    static bool firstImage=true;
     last_ctf = fn_ctf;
     img.readApplyGeo(fnImg, rowIn);
 
     rowIn.getValue(MDL_CTF_MODEL, fn_ctf);
-    if (fn_ctf != last_ctf)
+    if (fn_ctf != last_ctf || firstImage)
+    {
         updateCtfs();
+        firstImage=false;
+    }
 
     if (ZSIZE(img())!=1)
         REPORT_ERROR(ERR_MULTIDIM_DIM,"This process is not intended for volumes");
