@@ -1,7 +1,6 @@
 /***************************************************************************
+ * Authors:     AUTHOR_NAME Carlos Oscar Sorzano (coss@cnb.csic.es)
  *
- * Authors:    Carlos Oscar Sanchez Sorzano      coss@cnb.csic.es (2013)
- *             Daniel Albuerne Gonzalez          d.albuerne@usp.ceu.es
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -24,29 +23,45 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "laplacianEigenmaps.h"
+#ifndef _MATRIX_DIMRED
+#define _MATRIX_DIMRED
 
-void LaplacianEigenmap::setSpecificParameters(double sigma, size_t numberOfNeighbours)
-{
-	this->sigma=sigma;
-	this->numberOfNeighbours=numberOfNeighbours;
-}
+#include <data/xmipp_program.h>
 
-void LaplacianEigenmap::reduceDimensionality()
+/**@defgroup ProgMatrixDimRed Project a matrix onto a lower dimensionality space
+   @ingroup DimRedLibrary */
+//@{
+/** Matrix parameters. */
+class ProgMatrixDimRed: public XmippProgram
 {
-	Matrix2D<double> G,L,D;
-	Matrix1D<double> mappedX;
-	//Construct neighborhood graph
-	computeDistanceToNeighbours(*X,numberOfNeighbours,G,distance,false);
-	//Compute Gaussian kernel(heat kernel based weights)
-	computeSimilarityMatrix(G,sigma,true,true);
-	//Compute Laplacian
-	computeGraphLaplacian(G,L);
-	//Construct diagonal weight matrix
-	D.initZeros(MAT_YSIZE(G),MAT_YSIZE(G));
-	FOR_ALL_ELEMENTS_IN_MATRIX2D(G)
-		MAT_ELEM(D,i,i)+=MAT_ELEM(G,i,j);
-	//Construct eigenmaps
-	generalizedEigs(L,D,mappedX,Y);
-	keepColumns(Y,1,(int)outputDim);
-}
+public:
+    /** Filename selection file containing the images */
+    FileName fnIn;
+    FileName fnOut;
+    String dimRefMethod;
+    int inputDim, outputDim;
+    int Nsamples;
+    int kNN; // Number of nearest neighbors
+    int Niter; // Number of iterations
+    double t; // Markov random walk
+    double sigma; // Sigma of kernel
+public:
+    Matrix2D<double> X; // Input data
+public:
+    /// Read argument from command line
+    void readParams();
+
+    /// Show
+    void show();
+
+    /// Define parameters
+    void defineParams();
+
+    /// Produce side info
+    void produceSideInfo();
+
+    /// Main routine
+    void run();
+};
+//@}
+#endif

@@ -639,7 +639,7 @@ void eraseFirstColumn(Matrix2D<double> &A)
 void keepColumns(Matrix2D<double> &A, int j0, int jF)
 {
 	Matrix2D<double> Ap;
-	Ap.resize(MAT_YSIZE(A),jF-j0-1);
+	Ap.resize(MAT_YSIZE(A),jF-j0+1);
     for (size_t i = 0; i < MAT_YSIZE(A); ++i)
     	memcpy(&MAT_ELEM(Ap,i,0),&MAT_ELEM(A,i,j0),MAT_XSIZE(Ap)*sizeof(double));
     A=Ap;
