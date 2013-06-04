@@ -9,6 +9,7 @@ from pyworkflow.object import *
 from pyworkflow.protocol import *
 from pyworkflow.mapper import *
 
+
 class Complex(Object):
     def __init__(self, imag=0., real=0., **args):
         Object.__init__(self, **args)
@@ -24,6 +25,7 @@ class Complex(Object):
             
     def hasValue(self):
         return True
+
 
 class MyProtocol(Protocol):
     def __init__(self, **args):
@@ -169,7 +171,7 @@ class TestPyworkflow(unittest.TestCase):
             self.assertEqual(a1, a2)
 
         
-    def test_XML(self):
+    def test_XMLMapper(self):
         fn = self.getTmpPath("basic.xml")
         c = self.createComplex()
         mapper = XmlMapper(fn)

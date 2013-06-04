@@ -61,5 +61,12 @@ def setupOutput(test, outputDir):
     
 def setupProject(testClass):
     """ Create and setup a project for this test. """
-    testClass.projName = testClass.__name__
-    testClass.proj = Manager().createProject(testClass.projName) # Now it will be loaded if exists
+    projName = testClass.__name__
+    proj = Manager().createProject(projName) # Now it will be loaded if exists
+    # Check that exists hosts for execution
+    hosts = proj.getHosts()
+    if len(hosts) <= 0:
+        raise Exception("Project: %s can't load host configuration." % projName)
+    
+    testClass.projName = projName
+    testClass.proj = proj
