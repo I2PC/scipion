@@ -12,6 +12,14 @@ class TestXmippWorkflow(unittest.TestCase):
         self.pattern = getInputPath('Micrographs_BPV3', '*.mrc')        
         self.importFolder = getInputPath('Picking_XmippBPV3')
 
+    def validateFiles(self, prot, filesSet):
+        """ Validate if the produced files are the expected ones.
+        Params:
+            prot: the protocol to validate. 
+            filesSet: the known files that should be produced (set)
+        """
+        self.assertEqual(prot.getFiles(), filesSet)
+        
     def testXmippWorkflow(self):
         #First, import a set of micrographs
         protImport = ProtImportMicrographs(pattern=self.pattern, samplingRate=1.237, voltage=300)
