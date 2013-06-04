@@ -72,7 +72,7 @@ def buildRunCommand(log, programname, params,
         command = hostConfig.mpiCommand.get() % paramsDict
 
     if runInBackground:
-        command+=" &"
+        command += " &"
 
     return command
 

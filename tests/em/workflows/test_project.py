@@ -38,6 +38,7 @@ if len(l):
     prot4 = XmippProtCTFMicrographs()
     prot4.inputMicrographs.set(prot3.outputMicrographs)
     proj.launchProtocol(prot4, wait=True)
+    
     prot5 = ProtCTFFind()
     prot5.inputMicrographs.set(prot3.outputMicrographs)
     proj.launchProtocol(prot5, wait=True)

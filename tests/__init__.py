@@ -29,6 +29,7 @@ import sys
 import os
 from os.path import join, exists, isdir
 from pyworkflow.utils.path import cleanPath, makePath
+from pyworkflow.manager import Manager
 
 
 if "SCIPION_HOME" not in os.environ:
@@ -57,3 +58,8 @@ def setupOutput(test, outputDir):
     """
     test.outputPath = getOutputPath(outputDir)
     cleanPath(test.outputPath)
+    
+def setupProject(testClass):
+    """ Create and setup a project for this test. """
+    testClass.projName = testClass.__name__
+    testClass.proj = Manager().createProject(testClass.projName) # Now it will be loaded if exists
