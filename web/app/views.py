@@ -283,8 +283,8 @@ def protocol(request):
                 value = None
         attr.set(value)
     # Finally, launch the protocol
-    pre = protocol.preconditions()
-    if pre == []:
+    error = protocol.validate()
+    if error == []:
         pass
     else:
         #Errors
