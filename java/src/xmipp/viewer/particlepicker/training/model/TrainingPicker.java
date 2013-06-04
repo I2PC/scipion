@@ -498,7 +498,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			List<String> blocks = Arrays.asList(blocksArray);
 			String block;
 			MetaData md = new MetaData();
-
+			family.initTemplates();
 			for (TrainingMicrograph m : micrographs)
 			{
 				m.reset();
@@ -532,7 +532,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			String block;
 			MetaData md = new MetaData();
 			int width, height;
-
+			family.initTemplates();
 			for (TrainingMicrograph m : micrographs)
 			{
 				m.reset();
@@ -727,7 +727,7 @@ public abstract class TrainingPicker extends ParticlePicker
 	}
 
 
-	public synchronized void updateTemplates()
+	public void updateTemplates()
 	{
 		TasksManager.getInstance().addTask(new UpdateTemplatesTask(this));
 	}

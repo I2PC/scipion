@@ -680,18 +680,15 @@ data_noname
                         _InnerRadius = getComponentFromVector(self.InnerRadius, it)
 
                         file_name = self.getFilename('OutClassesXmd', iter=it, ref=ref3d)
+                        file_name_rec_filt = self.getFilename('ReconstructedFilteredFileNamesIters', iter=it, ref=ref3d)
                         if xmippExists(file_name):
-                            file_name_bild = file_name + '.bild'
         
-                            parameters =  ' -i ' + file_name + \
-                                ' -o ' + file_name_bild + \
-                                ' chimera ' + str(float(_OuterRadius) * 1.1)
+                            parameters =  ' -i ' + file_name_rec_filt + \
+                                ' --mode projector 256 -a ' +file_name 
                             runJob(_log,
-                                   'xmipp_angular_distribution_show',
-                                   parameters
-                                   )
-                            file_name_rec_filt = self.getFilename('ReconstructedFilteredFileNamesIters', iter=it, ref=ref3d)
-                            runChimera(file_name_rec_filt,file_name_bild)
+                                   'xmipp_chimera_client',
+                                   parameters,1,1,True
+                                   ) # run in background
             else: #DisplayAngularDistributionWith == '2D'
                 for it in iterations:
                     if(len(ref3Ds) == 1):

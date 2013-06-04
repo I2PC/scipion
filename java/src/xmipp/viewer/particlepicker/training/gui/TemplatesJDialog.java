@@ -64,12 +64,11 @@ public class TemplatesJDialog extends JDialog {
 				return;
 			}
 			
-			
+
 			
 			templatespn.removeAll();
 			ImagePlus template;
 			for (int i = 0; i < frame.getFamily().getTemplatesNumber(); i ++) {
-				//template = frame.getFamily().getTemplatesImage(ImageGeneric.FIRST_IMAGE + i);
 				template = XmippImageConverter.convertToImagePlus(templates, ImageGeneric.FIRST_IMAGE + i);
 				templatespn.add(new ImageCanvas(template));
 
