@@ -15,8 +15,6 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.outputPath = getOutputPath('test_data_xmipp')
-#        cleanPath(cls.outputPath)
-#        makePath(cls.outputPath)
         
         cls.mdGold = getGoldPath('Micrographs_TiltedPhantom', 'micrographs_gold.xmd')
         cls.dbGold = getGoldPath('Micrographs_TiltedPhantom', 'micrographs_gold.sqlite')
@@ -47,7 +45,7 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
         cleanPath(self.outputPath)
         makePath(self.outputPath)
                     
-    def testWriteMd(self):
+    def testWrite(self):
         """ Test creating and writing a XmippSetOfMicrographs from a list of micrographs """
         
         xmippSet = XmippSetOfMicrographs(self.mdFn, tiltPairs=True)
@@ -64,7 +62,7 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
 
         self.assertTrue(self.checkMicrographsMetaData(xmippSet), "micrographs metadata does not exist")
         
-    def testReadMd(self):
+    def testRead(self):
         """ Test reading an XmippSetOfMicrographs from an existing  metadata """
         xmippSet = XmippSetOfMicrographs(self.mdGold, tiltPairs=True)
         
@@ -103,13 +101,14 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
             xmippSet.copyTiltPairs(setMics, mapsId.get)
             
         xmippSet.write()
-        
-    def testReadBd(self):
-        """ Read micrographs from a SetOfMicrographs """
-        setMics = SetOfMicrographs(self.dbGold)
 
-        for i, mic in enumerate(setMics):
-            self.assertEqual(self.mics[i], mic.getFileName(), "Micrograph %d in set is different from expected" % i)
+#    TODO: Move this tests to a generic test_data.py
+#    def testReadBd(self):
+#        """ Read micrographs from a SetOfMicrographs """
+#        setMics = SetOfMicrographs(self.dbGold)
+#
+#        for i, mic in enumerate(setMics):
+#            self.assertEqual(self.mics[i], mic.getFileName(), "Micrograph %d in set is different from expected" % i)
         
     def createSetOfMicrographs(self):
         """ Create a SetOfMicrographs from a list of micrographs """
@@ -140,10 +139,37 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
     def checkMicrographsDb(self, setMics):
         """ Check that a database is equal to the gold one """
         #TODO: Implement how to check that two databases are equal
-        return (os.path.getsize(setMics.getFileName()) == os.path.getsize(self.dbGold))    
+        return (os.path.getsize(setMics.getFileName()) == os.path.getsize(self.dbGold))  
+    
+    
+class TestXmippSetOfCoordinates(unittest.TestCase):  
+    
+    @classmethod
+    def setUpClass(cls):
+        cls.outputPath = getOutputPath('test_data_xmipp')   
+        cls.posGoldDir = getGoldPath('Micrographs_BPV1', 'extra') 
+        cls.micGoldMd = getGoldPath('Micrographs_BPV1', 'micrographs.xmd')
+        
+    def setUp(self):
+        cleanPath(self.outputPath)
+        makePath(self.outputPath)
+        
+    def testRead(self):
+        """ Test reading an XmippSetOfCoordinates from an existing  directory """
+        xmippSetCoords = XmippSetOfCoordinates(self.posGoldDir)
+        xmippSetCoords.family.set('DefaultFamily')
+        #Set micrographs associated to coordinates
+        xmippSetMics = XmippSetOfMicrographs(self.micGoldMd)
+        xmippSetCoords.setMicrographs(xmippSetMics)
+        for coord in xmippSetCoords.iterCoordinates():
+            (x, y) = coord.getPosition()
+            print ("Coordinate: x=%d y=%d" %(x,y))
+            #TODO: How to check coordinates, against what?
+            #self.assertTrue(x = , "micrographs database does not exist")
+    
             
 if __name__ == '__main__':
-#    suite = unittest.TestLoader().loadTestsFromName('test_data_xmipp.TestXmippSetOfMicrographs.testReadBd')
-#    unittest.TextTestRunner(verbosity=2).run(suite)
+    suite = unittest.TestLoader().loadTestsFromName('test_data_xmipp.TestXmippSetOfCoordinates.testRead')
+    unittest.TextTestRunner(verbosity=2).run(suite)
     
-    unittest.main()
+#    unittest.main()
