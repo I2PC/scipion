@@ -140,7 +140,10 @@ void ProgDimRed::produceSideInfo()
 void ProgDimRed::estimateDimension()
 {
 	outputDim=intrinsicDimensionality(X, dimEstMethod, false, algorithm->distance);
+    algorithm->setOutputDimensionality(outputDim);
 	std::cout << "Estimated dimensionality: " << outputDim << std::endl;
+	if (outputDim<=0)
+		REPORT_ERROR(ERR_NUMERICAL,"Cannot proceed without an output dimension");
 }
 
 void ProgMatrixDimRed::readParams()
