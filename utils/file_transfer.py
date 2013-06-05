@@ -326,7 +326,7 @@ class FileTransfer():
                     if sourceFilePath in auxDict:
                         # This will not happen in Scipion because one source path is not going
                         # to be sent to different file paths in the same machine.
-                        msg = 'File ' + sourcePath + 'can not be sent to ' + auxDict[sourcePath] + " and to " + targetPath + ' because they are in the same machine.'
+                        msg = 'File ' + sourcePath + ' can not be sent to ' + auxDict[sourcePath] + " and to " + targetPath + ' because they are in the same machine.'
                         raise Exception(msg)
                 auxDict[sourceFilePath] = targetFilePath
                 result[resultKey] = auxDict
@@ -533,14 +533,7 @@ class FileTransfer():
 
     def __getRemoteSHA1(self, filePath, ssh):
         stdin, stdout, stderr = ssh.exec_command("sha1sum " + filePath)
-        return stdout.readlines()[0].split()[0]
-    
-    def __isRemoteDir(self, sftp, path):
-        try:
-            sftp.chdir(path)
-            return True
-        except IOError:
-            return False 
+        return stdout.readlines()[0].split()[0] 
     
     def __existsRemotePath(self, path, sftp):
         try:
@@ -554,6 +547,85 @@ class FileTransfer():
 #                AUXILIARY FUNCTIONS                           #
 
 ################################################################        
+
+def isRemoteDir(sftp, path):
+    """ Check if one remote directory exists
+    Params:
+        sftp: Sftp session.
+        path: Path to check.
+    Returns: True if the given path is a directory, false if it is not a directory.
+    """
+    try:
+        sftp.chdir(path)
+        return True
+    except (IOError, paramiko.SFTPError):
+        return False
+
+def getRemoteFolderFiles(hostName, userName, password, folderPath):
+    """ Recover all files in the given folder and it subfolders.
+    Params:
+        hostName: Remote host name.
+        userName: User name.
+        password: Password.
+        folderPath: Folder to get files.
+    Returns: List of files.
+    """    
+    # Default ssh session options.
+    ssh = paramiko.SSHClient()
+    ssh.load_system_host_keys()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(hostName, 22, userName, password)
+    sftp = ssh.open_sftp()
+    remoteFiles = getRemoteFiles(sftp, folderPath)
+    sftp.close()
+    ssh.close()
+    return 
+    
+def getRemoteFiles(sftp, folderPath):
+    """ Recover all files in the given folder and it subfolders.
+    Params:
+        sftp: Sftp session.
+        folderPath: Folder to get files.
+    Returns: List of files.
+    """    
+    filePathList = sftp.listdir(folderPath)
+    resultFilePathList = []
+    for filePath in filePathList:
+        if (isRemoteDir(sftp, os.path.join(folderPath, filePath))):
+            resultFilePathList += getRemoteFiles(sftp, os.path.join(folderPath, filePath))
+        else:
+            resultFilePathList.append(os.path.join(folderPath, filePath))
+    return resultFilePathList
+
+def removeRemoteFolder (hostName, userName, password, folderPath):
+    """ Removes a remote folder and all it content.
+    Params:
+        hostName: Remote host name.
+        userName: User name.
+        password: Password.
+        folderPath: Folder to delete.
+    Returns: 
+        Tuple with standard input, standard output and error output.
+    """
+    import paramiko
+    ssh = paramiko.SSHClient()
+    ssh.load_system_host_keys()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(hostName, 22, userName, password)    
+    return removeTree(ssh, folderPath)
+
+
+def removeTree(ssh, folderPath):
+    """ Removes a remote folder and all it content.
+    Params:
+        ssh: Ssh session.
+        folderPath: Folder to delete.
+    Returns: 
+        Tuple with standard input, standard output and error output.
+    """
+    stdin, stdout, stderr = ssh.exec_command("rm -dfr " + folderPath)
+    ssh.close()
+    return stdin, stdout, stderr
 
 
 def getFilePathList(filePaths):

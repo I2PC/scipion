@@ -79,3 +79,102 @@ margin: 1em; /*Margins for inner DIV inside each DIV (to provide padding)*/
 	font-weight: bold;
 	text-align: center;
 }
+
+.generalButton {
+	/* 	margin: 1em 0.5em 0 0; */
+	font-size: 0.8em;
+	color: black;
+	width: 12em;
+	height: 2em;
+	background-color: LightGray;
+	/* 	border: 1px solid #000066; */
+	padding: 2px;
+	font-weight: bold;
+	letter-spacing: 0.2em;
+	text-align: center;
+	font-weight: bold;
+}
+
+.generalButton:hover {
+	background-color: white;
+}
+
+.generalTable a:link {
+	font-weight: bold;
+}
+
+.generalTable a:active,table a:hover {
+	color: Firebrick;
+}
+
+.generalTable {
+	width: 100%;
+	overflow-x: auto;
+	font-size: 0.9em;
+	text-shadow: 1px 1px 0px #fff;
+	background: #eaebec;
+	box-shadow: 0 1px 2px #d1d1d1;
+	border-spacing: 0;
+}
+
+.generalTable th {
+	height: 0.2em;
+	border-top: 1px solid #fafafa;
+	border-bottom: 1px solid #e0e0e0;
+	background: #ededed;
+	background: -webkit-gradient(linear, left top, left bottom, from(#ededed),
+		to(#ebebeb));
+	background: -moz-linear-gradient(top, #DCDCDC, #ebebeb);
+}
+
+.generalTable th:first-child {
+	text-align: left;
+	padding-left: 20px;
+}
+
+.generalTable tr {
+	text-align: center;
+}
+
+.generalTable tr td:first-child {
+	text-align: left;
+	border-left: 0;
+}
+
+.generalTable tr td {
+	padding: 0.5em;
+	padding-left: 1.5em;
+	border-top: 1px solid #ffffff;
+	border-bottom: 1px solid #e0e0e0;
+	border-left: 1px solid #e0e0e0;
+	background: #fafafa;
+	background: -webkit-gradient(linear, left top, left bottom, from(#fbfbfb),
+		to(#fafafa));
+	background: -moz-linear-gradient(top, #fbfbfb, #fafafa);
+}
+
+.generalTable tr:last-child td {
+	border-bottom: 0;
+}
+
+.generalTable tr:hover td {
+	background: #f2f2f2;
+}
+
+.generalInput.hide2 {
+	position: relative;
+	filter: alpha(opacity : 0);
+	width: 9.7em;
+	cursor: pointer;
+}
+
+.generalInput.hide {
+	position: fixed;
+	-moz-opacity: 0;
+	filter: alpha(opacity :   0);
+	opacity: 0;
+	margin: 0.5em;
+	width: 1.5em;
+	height: 2em;
+	cursor: pointer;
+}

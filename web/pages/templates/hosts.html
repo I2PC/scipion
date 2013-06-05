@@ -1,71 +1,113 @@
 <!DOCTYPE html>
 <html lang='es'>
-<head>
-	<title>{{projectName}} hosts config</title>
-	<meta charset='utf-8'>
-	<link rel="icon" type="image/png" href={{favicon}} />
-	<!-- CSS -->
-	
-	<!-- JS -->
-	<script src={{jquery}} type="text/javascript"></script>
-	<script>
-		function addHost(){
-		
-		}
-		function editHost(){
-			 
-		}
-		function removeHost(){
-			 if (confirm("Are you sure you want to remove ths host?")) {
-			 	alert("Host succesfully removed");
-			 } else {
-			 	alert("Remove operation cancelled");
-			 }
-		}
-	</script>
-</head>
-<body>
-	<h3>{{projectName}} hosts config</h3>
-	Project hosts:
-	<table>
-		<tr>
-			<th>Configuration</th> 
-			<th>Host name</th>
-			<th>User name</th>
-			<th>Host path</th>
-		</tr>
-		{% for host in hosts %}
-		<tr>
-			<td>
-				{{host.label}}
-			</td>
-			<td>
-				{{host.hostName}}
-			</td>	
-			<td>
-				{{host.userName}}
-			</td>
-			<td>
-				{{host.hostPath}}
-			</td>
-		</tr>
-		{% endfor %}
-	</table>
-	<br/>
-	<button onclick="addHost()" class="button" type="button" style="">Add</button>
-	<button onclick="removeHost()" class="button" type="button" style="">Remove</button>
-	<button onclick="editHost()" class="button" type="button" style="">Edit</button>
-	<br/>
-	<br/>
-	<form>
-		<label for="label">Nombre: </label>
-		<input type="text" id="label" size="30"><br/>
-		<label for="hostName">Host name: </label>
-		<input type="text" id="hostName" size="30"><br/>
-		<label for="userName">User name: </label>
-		<input type="text" id="label" size="30"><br/>
-		<label for="hostPath">Host path: </label>
-		<input type="text" id="hostPath" size="40"><br/>
-	</form>
-</body>
+	<head>
+		<title>{{projectName}} hosts config</title>
+		<meta charset='utf-8'>
+		<link rel="icon" type="image/png" href={{favicon}} />
+		<!-- CSS -->
+		<link href={{css}} rel="stylesheet" type="text/css">
+		<!-- JS -->
+		<script src={{jquery}} type="text/javascript"></script>
+		<script>
+			function newHost(){
+			
+			}
+			function editHost(){
+				 
+			}
+			function removeHost(){
+				 if (confirm("Are you sure you want to remove ths host?")) {
+				 	alert("Host succesfully removed");
+				 } else {
+				 	alert("Remove operation cancelled");
+				 }
+			}
+		</script>
+	</head>
+	<body>
+		<h3>{{projectName}} hosts config</h3>
+		Project hosts:
+		<table class="generalTable">
+			<tr>
+				<th>Configuration</th> 
+				<th>Host name</th>
+				<th>User name</th>
+				<th>Host path</th>
+			</tr>
+			{% for host in hosts %}
+			<tr>
+				<td>
+					{{host.label}}
+				</td>
+				<td>
+					{{host.hostName}}
+				</td>	
+				<td>
+					{{host.userName}}
+				</td>
+				<td>
+					{{host.hostPath}}
+				</td>
+			</tr>
+			{% endfor %}
+		</table>
+		<br/>
+		<button onclick="newHost()" class="generalButton" type="button" style="">New</button>
+		<button onclick="removeHost()" class="generalButton" type="button" style="">Remove</button>
+		<button onclick="editHost()" class="generalButton" type="button" style="">Edit</button>
+		<br/>
+		<br/>
+		<form>
+		<table>
+			<tr>
+				<td>
+					<label for="label">Scipion hosts: </label>
+				</td>
+				<td>
+					<SELECT NAME="scipionHostsCombo" SIZE=1 onChange="javascript:alert('prueba');"> 
+						<OPTION VALUE="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</OPTION>
+						{% for scipionHost in scipionHosts %}
+							<OPTION VALUE="{{scipionHost.label}}">{{sciponHost.hostName}}</OPTION>						
+						{% endfor %}
+					</SELECT> 
+				</td>
+			</tr>
+			<tr>
+			
+			</tr>
+			<tr>
+				<td>
+					<label for="label">Configuration: </label>
+				</td>
+				<td>
+					<input type="text" class="generalInput" id="label" size="30">
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label for="hostName">Host name: </label>
+				</td>
+				<td>
+					<input type="text" class="generalInput" id="hostName" size="30">
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label for="userName">User name: </label>
+				</td>
+				<td>
+					<input type="text" class="generalInput" id="userName" size="30">
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label for="hostPath">Host path: </label>
+				</td>
+				<td>
+					<input type="text" class="generalInput" id="hostPath" size="40"><br/>
+				</td>
+			</tr>	
+		</table>
+		</form>
+	</body>
 </html>

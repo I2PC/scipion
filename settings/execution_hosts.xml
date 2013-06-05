@@ -57,4 +57,10 @@ cat $PBS_NODEFILE
     <password>BF6fYiFYiYD</password>
     <hostPath>/home/apoza/Scipion_Projects</hostPath>
   </ExecutionHostConfig>
+  <ExecutionHostConfig label="crunchy">
+    <hostName>crunchy.cnb.csic.es</hostName>
+    <userName>apoza</userName>
+    <password>nerfyeb4f1v</password>
+    <hostPath>/gpfs/fs1/home/bioinfo/apoza/Scipion_Projects</hostPath>
+  </ExecutionHostConfig>
 </ALL>
