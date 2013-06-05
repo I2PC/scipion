@@ -78,8 +78,12 @@ class ProtInitVolRANSAC(XmippProtocol):
         for n in range(self.NRansac):
 
             fnRoot=self.workingDirPath("ransac%05d"%n)                        
+            #parent_id = self.insertParallelRunJobStep("xmipp_transform_dimred",
+            #                                          "-i %s.xmd -o %s.xmd -m LTSA -d 2 -n %d"%(fnOutputReducedClass,fnRoot,self.NumGrids),
+            #                                          verifyfiles = [fnRoot+".xmd"],parent_step_id=parent_id)
+
             parent_id = self.insertParallelRunJobStep("xmipp_transform_dimred",
-                                                      "-i %s.xmd -o %s.xmd -m LTSA -d 2 -n %d"%(fnOutputReducedClass,fnRoot,self.NumGrids),
+                                                      "-i %s.xmd --randomSample %s.xmd  %d -m LTSA "%(fnOutputReducedClass,fnRoot,self.NumGrids),
                                                       verifyfiles = [fnRoot+".xmd"],parent_step_id=parent_id)
             
             if (self.InitialVolume != '') :
