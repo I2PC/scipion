@@ -42,14 +42,14 @@ import pyworkflow as pw
 from pyworkflow.object import *
 from pyworkflow.manager import Manager
 from pyworkflow.mapper import SqliteMapper, XmlMapper
-from protocol import *
-from protocol.params import *
+from pyworkflow.protocol import *
+from pyworkflow.protocol.params import *
 from config import *
 from pyworkflow.em import *
-import gui
-from gui.widgets import Button
-from gui.text import TaggedText
-from gui.dialog import askString, askYesNo, showError
+import pyworkflow.gui as gui
+from pyworkflow.gui.widgets import Button
+from pyworkflow.gui.text import TaggedText
+from pyworkflow.gui.dialog import askString, askYesNo, showError
 
 
 def loadSubclasses():
