@@ -113,7 +113,7 @@ def createFolderForFile(filePath):
     
 def getFolderFiles(folderPath):
     """
-    Gets all files of given folder and it subfolder.
+    Gets all files of given folder and it subfolders.
     folderPath -- Folder path to get files.
     returns -- Set with all folder files.
     """
@@ -122,5 +122,3 @@ def getFolderFiles(folderPath):
         for file in files:
             filePaths.add(join(path, file))
     return filePaths
-
-

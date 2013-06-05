@@ -1,4 +1,5 @@
 # from scipion.models import *
+import pyworkflow as pw
 import os
 from django.shortcuts import render_to_response
 from django.core.context_processors import csrf
@@ -11,6 +12,8 @@ from pyworkflow.web.pages import settings
 from pyworkflow.apps.config import *
 from pyworkflow.em import *
 from django.http.request import HttpRequest
+from pyworkflow.apps.config import ExecutionHostMapper
+
 
 def getResource(request):
     if request == 'logoScipion':
@@ -146,7 +149,7 @@ def loadProject(projectName):
     projPath = manager.getProjectPath(projectName)
     project = Project(projPath)
     project.load()
-    return project    
+    return project
     
 def project_content(request):    
     # Resources #
@@ -312,18 +315,29 @@ def browse_objects(request):
                              ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
 
+def getScipionHosts():
+    defaultHosts = os.path.join(pw.HOME, 'settings', 'execution_hosts.xml')
+    return ExecutionHostMapper(defaultHosts).selectAll()
+
 def hosts(request):
     # Resources #
+    css_path = os.path.join(settings.STATIC_URL, 'css/general_style.css')
     favicon_path = getResource('favicon')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     # # Project Id(or Name) should be stored in SESSION
     projectName = request.GET.get('projectName')
     project = loadProject(projectName)
+    scipionHosts = getScipionHosts()
+    projectHosts = project.getHosts()   
+    hostsKeys = [host.getLabel() for host in projectHosts]      
+    availableHosts = [host for host in scipionHosts if host.getLabel() not in hostsKeys]
     context = {'projectName' : projectName,
                'project' : project,
-               'hosts': project.getHosts(),
+               'hosts': projectHosts,
+               'scipionHosts': availableHosts,
                'favicon': favicon_path,
-               'jquery': jquery_path}
+               'jquery': jquery_path,
+               'css':css_path}
     
     return render_to_response('hosts.html', context)
     
