@@ -106,3 +106,4 @@ class ScriptImportEMX(XmippScript):
 
 if __name__ == '__main__':
     ScriptImportEMX().tryRun()
+    exit(0)
