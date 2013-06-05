@@ -161,11 +161,6 @@ void ProgTransformDimRed::extractRandomProjections()
     //number of grids in each axis
     int num = numGrids;
 
-    //Metadata that has the dimrefcoeffs
-    MetaData SFin;
-    SFin.read(fnIn);
-    SFin.removeDisabled();
-
     size_t numParticles = SFin.size();
     std::vector<double> dimredProj;
     std::vector< Matrix1D< double > > coor;
@@ -185,13 +180,14 @@ void ProgTransformDimRed::extractRandomProjections()
     }
 
     // We obtain the max and min coordinate values
-    std::vector<int> minCoor, maxCoor;
+    std::vector<double> minCoor, maxCoor;
     for (int n=0; n<outputDim; ++n)
     {
     	double minval, maxval;
     	coor[n].computeMinMax(minval, maxval);
     	minCoor.push_back(minval);
     	maxCoor.push_back(maxval);
+
     }
 
     Matrix2D <int> squares;
@@ -203,11 +199,17 @@ void ProgTransformDimRed::extractRandomProjections()
     for (size_t i=0; i<numParticles; i++)
     {
     	int index=0;
-    	for (int n=0; n<outputDim; ++n)
+    	for (int n=(outputDim-1); n>=0; --n)
     	{
     		index*=num;
-    		index+=(int)floor(((VEC_ELEM(coor[n],i) - minCoor[n]) / (maxCoor[n] - minCoor[n]))*num);
+    		//std::cout << "minCoor : " << minCoor[n] << std::endl;
+    		//std::cout << "maxCoor : " << maxCoor[n] << std::endl;
+    		//std::cout << "VEC_ELEM(coor[n],i) : " << VEC_ELEM(coor[n],i) << std::endl;
+
+    		index+=(int)floor(( ( VEC_ELEM(coor[n],i) - minCoor[n]) / (maxCoor[n] - minCoor[n]))*num);
     	}
+
+
         MAT_ELEM(squares,VEC_ELEM(numElems,index),index)=i;
         VEC_ELEM(numElems,index)++;
     }
@@ -245,13 +247,15 @@ void ProgTransformDimRed::extractRandomProjections()
         }
     }
 
-    SFout.write(fnOut);
+    std::cout << " fnRandomSampling : " << fnRandomSampling << std::endl;
+    SFout.write(fnRandomSampling);
 }
 
 // Run  ====================================================================
 void ProgTransformDimRed::run()
 {
     show();
+
     produceSideInfo();
     if (outputDim<0)
     	estimateDimension();
