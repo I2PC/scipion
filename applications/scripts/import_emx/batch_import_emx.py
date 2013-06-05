@@ -88,17 +88,21 @@ class ScriptImportEMX(XmippScript):
         emxData   = EmxData()
         #object to read/write emxData
         mapper = XmlMapper(emxData)
-        #read file
-        mapper.readEMXFile(emxFileName)
-#        xmlMapperW.writeEMXFile(fileName)
-        #create xmd files with mic CTF information and auxiliary files
-        if mode == 'micCTF':
-            ctfMicEMXToXmipp(emxData,MICROGRAPH)
-        elif mode == 'coordinates':
-            coorEMXToXmipp(emxData,PARTICLE,emxFileName)
-        elif mode == 'alignment':
-            xmdFileName = emxFileName.replace(".emx",".xmd")
-            alignEMXToXmipp(emxData,PARTICLE,xmdFileName)
+	try:
+		#read file
+		mapper.readEMXFile(emxFileName)
+	#        xmlMapperW.writeEMXFile(fileName)
+		#create xmd files with mic CTF information and auxiliary files
+		if mode == 'micCTF':
+		    ctfMicEMXToXmipp(emxData,MICROGRAPH)
+		elif mode == 'coordinates':
+		    coorEMXToXmipp(emxData,PARTICLE,emxFileName)
+		elif mode == 'alignment':
+		    xmdFileName = emxFileName.replace(".emx",".xmd")
+		    alignEMXToXmipp(emxData,PARTICLE,xmdFileName)
+	except Exception, e:
+                print >> sys.stderr, "XMIPP_ERROR -1:", str(e)
+                exit(-1)
 
 if __name__ == '__main__':
     ScriptImportEMX().tryRun()
