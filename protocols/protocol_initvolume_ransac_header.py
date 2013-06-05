@@ -40,9 +40,9 @@ NRansac = 300
 """
 NumGrids = 3
 
-#{expert} correlation value using the estimated initial volume to determine if an experimental projection is an
-#inlier or outlier
-""" Percetentil to determine if an experimental projection is inlier or outlier
+#{expert} Inlier percentil
+""" correlation value using the estimated initial volume to determine if an experimental projection is an
+inlier or outlier
 """
 CorrThresh = 0.8
 
@@ -69,7 +69,12 @@ MaxFreq = 40
 # Sampling Rate
 """ Sampling rate (A/px)
 """
-Ts = ''
+Ts = '1'
+
+#{expert} Use all images to refine
+""" When refining a RANSAC volume, use all images to refine it instead of only inliers
+"""
+UseAll=False
 
 # {eval} expandParallel(threads=0,hours=12)
 
