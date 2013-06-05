@@ -28,6 +28,8 @@ JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_correct
 JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_train
   (JNIEnv *, jobject, jobject);
 
+JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_setSize
+(JNIEnv *env, jobject jobj, jint psize);
 
 #ifdef __cplusplus
 }

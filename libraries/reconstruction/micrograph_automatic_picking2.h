@@ -131,6 +131,8 @@ public:
     /// Destructor
     ~AutoParticlePicking2();
 
+    void setSize(int pSize);
+
     /// Read micrograph from the file
     void readMic(FileName fn_micrograph);
 

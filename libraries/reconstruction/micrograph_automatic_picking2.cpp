@@ -52,18 +52,20 @@ AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum
     NRPCA=20;
     num_correlation=filterNum+((filterNum-corr_num)*corr_num);
     num_features=num_correlation*NPCA+NRPCA+12;
-
-    double t=std::max(0.25,50.0/pSize);
-    scaleRate=std::min(1.0,t);
-    particle_radius=(int)((pSize*scaleRate)*0.5);
-    particle_size=particle_radius * 2;
-    NRsteps=particle_size/2-3;
-
+    setSize(pSize);
 
     classifier.setParameters(8.0, 0.125);
     classifier2.setParameters(1.0, 0.25);
 }
 
+void AutoParticlePicking2::setSize(int pSize)
+{
+    double t=std::max(0.25,50.0/pSize);
+    scaleRate=std::min(1.0,t);
+    particle_radius=(int)((pSize*scaleRate)*0.5);
+    particle_size=particle_radius * 2;
+    NRsteps=particle_size/2-3;
+}
 
 
 void AutoParticlePicking2::readMic(FileName fn_micrograph)
@@ -326,10 +328,10 @@ void AutoParticlePicking2::add2Dataset(int flagNegPos)
     classLabel.resize(1,1,1,YSIZE(dataSet));
     for (size_t n=yDataSet;n<XSIZE(classLabel);n++)
     {
-    	if (!flagNegPos)
-    		classLabel(n)=1;
-    	else
-    		classLabel(n)=2;
+        if (!flagNegPos)
+            classLabel(n)=1;
+        else
+            classLabel(n)=2;
     }
     // Here we take each channel of the particle and try to project it
     // on related PCA basis. So we first do it for first channel and obtain
@@ -346,9 +348,9 @@ void AutoParticlePicking2::add2Dataset(int flagNegPos)
             {
                 vec.resize(1 , NangSteps, NRsteps);
                 if (!flagNegPos)
-                	positiveInvariatnStack.getImage(k*num_correlation+i, vec);
+                    positiveInvariatnStack.getImage(k*num_correlation+i, vec);
                 else
-                	negativeInvariatnStack.getImage(k*num_correlation+i, vec);
+                    negativeInvariatnStack.getImage(k*num_correlation+i, vec);
                 vec.resize(1, 1, XSIZE(vec)*YSIZE(vec));
                 vec-=avg;
                 DIRECT_A2D_ELEM(dataSet,k+yDataSet,j+(i*NPCA))=PCAProject(pcaBase,vec);
@@ -361,9 +363,9 @@ void AutoParticlePicking2::add2Dataset(int flagNegPos)
     {
         vec.resize(1 , particle_size+1, particle_size+1);
         if (!flagNegPos)
-        	positiveParticleStack.getImage(i, vec);
+            positiveParticleStack.getImage(i, vec);
         else
-        	negativeParticleStack.getImage(i, vec);
+            negativeParticleStack.getImage(i, vec);
         vec.resize(1,1,1,XSIZE(vec)*YSIZE(vec));
         extractStatics(vec,staticVec);
         for (int j=0;j<12;j++)
@@ -380,19 +382,19 @@ void AutoParticlePicking2::add2Dataset(int flagNegPos)
 
 void AutoParticlePicking2::train(MetaData MD)
 {
-	std::cerr<<"started train"<<std::endl;
-	buildInvariant(MD);
-	std::cerr<<"built invariants"<<std::endl;
-	if (!fnPCAModel.exists())
-		trainPCA();
-	std::cerr<<"trainPCA done"<<std::endl;
-	add2Dataset(0);
-	std::cerr<<"add2Dataset"<<std::endl;
-	add2Dataset(1);
+    std::cerr<<"started train"<<std::endl;
+    buildInvariant(MD);
+    std::cerr<<"built invariants"<<std::endl;
+    if (!fnPCAModel.exists())
+        trainPCA();
+    std::cerr<<"trainPCA done"<<std::endl;
+    add2Dataset(0);
+    std::cerr<<"add2Dataset"<<std::endl;
+    add2Dataset(1);
 
-	saveTrainingSet();
-	normalizeDataset(0,1);
-	trainSVM(fnSVMModel,1);
+    saveTrainingSet();
+    normalizeDataset(0,1);
+    trainSVM(fnSVMModel,1);
 }
 
 void AutoParticlePicking2::saveTrainingSet()
@@ -412,8 +414,8 @@ void AutoParticlePicking2::saveTrainingSet()
 
 int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, int proc_prec, MetaData &md)
 {
-	std::cerr<<"We are automatic picking"<<std::endl;
-	std::cerr<<fnmicrograph<<std::endl;
+    std::cerr<<"We are automatic picking"<<std::endl;
+    std::cerr<<fnmicrograph<<std::endl;
     double label, score;
     Particle2 p;
     MultidimArray<double> IpolarCorr;
@@ -459,28 +461,28 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
         label= classifier.predict(featVec, score);
         if (label==1)
         {
-//            if (fnSVMModel2.exists())
-//            {
-//                label=classifier2.predict(featVec,score);
-//                if (label==1)
-//                {
-//                    p.x=j;
-//                    p.y=i;
-//                    p.status=1;
-//                    p.cost=score;
-//                    p.vec=featVec;
-//                    auto_candidates.push_back(p);
-//                }
-//            }
-//            else
-//            {
-                p.x=j;
-                p.y=i;
-                p.status=1;
-                p.cost=score;
-                p.vec=featVec;
-                auto_candidates.push_back(p);
-//            }
+            //            if (fnSVMModel2.exists())
+            //            {
+            //                label=classifier2.predict(featVec,score);
+            //                if (label==1)
+            //                {
+            //                    p.x=j;
+            //                    p.y=i;
+            //                    p.status=1;
+            //                    p.cost=score;
+            //                    p.vec=featVec;
+            //                    auto_candidates.push_back(p);
+            //                }
+            //            }
+            //            else
+            //            {
+            p.x=j;
+            p.y=i;
+            p.status=1;
+            p.cost=score;
+            p.vec=featVec;
+            auto_candidates.push_back(p);
+            //            }
         }
     }
 

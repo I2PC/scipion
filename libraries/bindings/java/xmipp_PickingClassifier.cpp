@@ -82,4 +82,14 @@ JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_train
 
 }
 
+JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_setSize
+(JNIEnv *env, jobject jobj, jint psize)
+{
+    XMIPP_JAVA_TRY
+    {
+    	AutoParticlePicking2 *picker = GET_INTERNAL_AUTOPARTICLEPICKING2(jobj);
+    	picker->setSize(psize);
+    }
+    XMIPP_JAVA_CATCH;
+}
 

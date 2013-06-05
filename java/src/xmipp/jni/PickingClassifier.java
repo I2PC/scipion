@@ -27,6 +27,8 @@ public class PickingClassifier
 
 	public native void train(MetaData micrographs);
 	
+	public native void setSize(int psize);
+	
     // Should be called by GarbageCollector before destroying
     @Override
     @SuppressWarnings("FinalizeDeclaration")
