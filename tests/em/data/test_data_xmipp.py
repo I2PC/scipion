@@ -147,19 +147,19 @@ class TestXmippSetOfCoordinates(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.outputPath = getOutputPath('test_data_xmipp')   
-        cls.posGoldDir = getGoldPath('Micrographs_BPV1', 'extra') 
-        cls.micGoldMd = getGoldPath('Micrographs_BPV1', 'micrographs.xmd')
+        cls.posDir = getInputPath('Picking_XmippBPV1', 'extra') 
+        cls.micMd = getInputPath('Micrographs_BPV1', 'micrographs.xmd')
         
     def setUp(self):
         cleanPath(self.outputPath)
         makePath(self.outputPath)
         
-    def testRead(self):
+    def testIterate(self):
         """ Test reading an XmippSetOfCoordinates from an existing  directory """
-        xmippSetCoords = XmippSetOfCoordinates(self.posGoldDir)
+        xmippSetCoords = XmippSetOfCoordinates(self.posDir)
         xmippSetCoords.family.set('DefaultFamily')
         #Set micrographs associated to coordinates
-        xmippSetMics = XmippSetOfMicrographs(self.micGoldMd)
+        xmippSetMics = XmippSetOfMicrographs(self.micMd)
         xmippSetCoords.setMicrographs(xmippSetMics)
         for coord in xmippSetCoords.iterCoordinates():
             (x, y) = coord.getPosition()
@@ -169,7 +169,7 @@ class TestXmippSetOfCoordinates(unittest.TestCase):
     
             
 if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromName('test_data_xmipp.TestXmippSetOfCoordinates.testRead')
+    suite = unittest.TestLoader().loadTestsFromName('test_data_xmipp.TestXmippSetOfCoordinates.testIterate')
     unittest.TextTestRunner(verbosity=2).run(suite)
     
 #    unittest.main()

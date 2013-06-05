@@ -106,7 +106,8 @@ class EmanSetOfCoordinates(SetOfCoordinates):
         should have the information related to its paired coordinate.
         """
         for mic in self.getMicrographs():
-            self.iterMicrographCoordinates(mic)
+            for coord in self.iterMicrographCoordinates(mic):
+                yield coord
 
     def getFiles(self):
         filePaths = set()
