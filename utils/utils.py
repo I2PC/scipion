@@ -159,4 +159,11 @@ def executeLongRemote (command, hostName, userName, password):
         rl, wl, xl = select.select([channel], [], [], 0.0)
         if len(rl) > 0:
             print channel.recv(1024)
-             
+
+def getLocalUserName():
+    import getpass
+    return getpass.getuser()
+
+def getLocalHostName():
+    import socket
+    return socket.gethostname()

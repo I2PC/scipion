@@ -233,8 +233,10 @@ class FileTransfer():
             resultFilePaths = self.__getFilePaths(filePaths, userAndHost)
             if (self.__isLocalCredential(userAndHost)):
                 for resultFilePath in resultFilePaths:
-                    if (len (existsPath(resultFilePath)) != 0):
-                        returnFilePaths.append(resultFilePath)
+                    filePath = self.__getLocationAndFilePath(resultFilePath)[1]
+                    log.info("Checking: " + filePath)
+                    if (len (existsPath(filePath)) != 0):
+                        returnFilePaths.append(filePath)
                         log.info("Check fail!!")
             else:
                 
@@ -532,9 +534,9 @@ class FileTransfer():
         return hashlib.sha1(file(filePath, 'r').read()).hexdigest()
 
     def __getRemoteSHA1(self, filePath, ssh):
-        stdin, stdout, stderr = ssh.exec_command("sha1sum " + filePath)
+        stdin, stdout, stderr = ssh.exec_command("sha1sum '" + filePath + "'")
         return stdout.readlines()[0].split()[0] 
-    
+            
     def __existsRemotePath(self, path, sftp):
         try:
             sftp.lstat(path)
@@ -579,7 +581,7 @@ def getRemoteFolderFiles(hostName, userName, password, folderPath):
     remoteFiles = getRemoteFiles(sftp, folderPath)
     sftp.close()
     ssh.close()
-    return 
+    return remoteFiles
     
 def getRemoteFiles(sftp, folderPath):
     """ Recover all files in the given folder and it subfolders.
