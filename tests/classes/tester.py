@@ -9,6 +9,7 @@ from pyworkflow.object import *
 from pyworkflow.protocol import *
 from pyworkflow.mapper import *
 
+
 class Complex(Object):
     def __init__(self, imag=0., real=0., **args):
         Object.__init__(self, **args)
@@ -24,6 +25,7 @@ class Complex(Object):
             
     def hasValue(self):
         return True
+
 
 class MyProtocol(Protocol):
     def __init__(self, **args):
@@ -169,7 +171,7 @@ class TestPyworkflow(unittest.TestCase):
             self.assertEqual(a1, a2)
 
         
-    def test_XML(self):
+    def test_XMLMapper(self):
         fn = self.getTmpPath("basic.xml")
         c = self.createComplex()
         mapper = XmlMapper(fn)
@@ -242,6 +244,27 @@ class TestPyworkflow(unittest.TestCase):
         
         self.assertEqual(prot.endTime, prot2.endTime)
         self.assertEqual(prot._steps[1].status, prot2._steps[1].status)
+        
+        
+    def testSimpleFileLog(self):
+        log = getGeneralLogger('pyworkflow.test.log.test_scipon_log')
+        log.info('General info')
+        log.debug('General debug')
+        log.warning("General warning")
+        
+        logFn = self.getTmpPath('fileLog.log')
+        log = getFileLogger(logFn)
+        log.info('File info!!!!!!')
+        log.debug('File debug!!!!!!')
+        log.warning("File warning!!!")
+        
+        log = getGeneralLogger('pyworkflow.test.log.test_scipon_log')
+        log.error('General error')
+        
+        log = getFileLogger(logFn)
+        log.error('File error!!!!!!')
+        
+        self.assertTrue(True)  
         
 if __name__ == '__main__':
     unittest.main()
