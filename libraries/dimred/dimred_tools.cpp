@@ -287,6 +287,11 @@ double intrinsicDimensionalityMLE(const Matrix2D<double> &X, DimRedDistance2 f)
 {
 	int k1=5;
 	int k2=12;
+	if (k2>MAT_YSIZE(X))
+	{
+		k2=MAT_YSIZE(X)-1;
+		k1=k2/2;
+	}
 	Matrix2D<int> idx;
 	Matrix2D<double> distance;
 	kNearestNeighbours(X,k2,idx,distance,f);
