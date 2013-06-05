@@ -11,7 +11,7 @@
 {% endblock %}		
 
 {% block menu %}
-	<button onclick="javascript:popup('/hosts/?projectName={{projectName}}')"class="buttonHosts" type="button" style="position:absolute;margin:10px;right:10px;">Config hosts</button>
+	<button onclick="javascript:customPopup('/hosts/?projectName={{projectName}}', 800, 600)"class="generalButton" type="button" style="position:absolute;margin:10px;right:10px;">Config hosts</button>
 {% endblock %}
 
 {% block sideLeft %}			
@@ -54,7 +54,7 @@
 		<span><a id="browseTool" href=""><img src="{{browseTool}}"/> Browse</a></span>
 	</div>
 	<div style="overflow:auto">
-		<table cellspacing='0'>
+		<table cellspacing="0">
 			<tr>
 				{% for colName, colWidth in provider.getColumns %}
 					<th>{{colName}}</th> 

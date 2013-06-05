@@ -9,10 +9,10 @@ import os
 from pyworkflow.utils.path import *
 
 SCIPION_PATH = 'Scipion'
-LOG_PATH = 'log'
+LOG_PATH = 'logs'
 
 """ Get general log file path """
-logPath = join (getHomePath(), SCIPION_PATH, LOG_PATH, 'scipionLog', 'scipionLog.log')
+logPath = join (getHomePath(), SCIPION_PATH, LOG_PATH, 'scipionLog.log')
 """ Create the folders path if it does not exist """
 createFolderForFile(logPath)
 """ Config the log """

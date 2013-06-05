@@ -352,8 +352,8 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         self.family = String()
         
     def getFileName(self):
-        return self.get()       
-    
+        return self.get()             
+        
     def iterMicrographCoordinates(self, micrograph):
         """ Iterates over the set of coordinates belonging to that micrograph. """
         path = self.getFileName()
@@ -379,9 +379,10 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         """Iterates over the whole set of coordinates.
         If the SetOfMicrographs has tilted pairs, the coordinates
         should have the information related to its paired coordinate."""
-        
+
         for mic in self.getMicrographs():
-            self.iterMicrographCoordinates(mic)
+            for coord in self.iterMicrographCoordinates(mic):
+                yield coord
     
     def getFiles(self):
         filePaths = set()
