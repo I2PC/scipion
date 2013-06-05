@@ -13,11 +13,11 @@ public class PickingClassifier
 		System.loadLibrary("XmippJNI");
 	}
 	
-	public PickingClassifier(MetaData micrographsmd, int particlesize, String output) throws Exception {
-        create(micrographsmd, particlesize, output);
+	public PickingClassifier(int particlesize, String output) throws Exception {
+        create(particlesize, output);
     }
 	
-	private native void create(MetaData md, int particle_size, String output);
+	private native void create(int particle_size, String output);
 	
 	public synchronized native void destroy();
 

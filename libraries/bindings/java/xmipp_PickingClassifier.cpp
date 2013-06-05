@@ -7,14 +7,13 @@
 #include <data/metadata.h>
 
 JNIEXPORT void JNICALL
-Java_xmipp_jni_PickingClassifier_create(JNIEnv *env, jobject jobj, jobject jmicrographs, jint particle_size, jstring output)
+Java_xmipp_jni_PickingClassifier_create(JNIEnv *env, jobject jobj, jint particle_size, jstring output)
 {
     XMIPP_JAVA_TRY
     {
-    	MetaData * micrographsmd = GET_INTERNAL_METADATA(jmicrographs);
     	int size = particle_size, filter_num = 6, corr_num = 2, NPCA = 4;
     	const FileName &model_name = env->GetStringUTFChars(output, false);
-    	AutoParticlePicking2 *picker = new AutoParticlePicking2(size, filter_num, corr_num, NPCA, model_name, *micrographsmd);
+    	AutoParticlePicking2 *picker = new AutoParticlePicking2(size, filter_num, corr_num, NPCA, model_name);
         STORE_PEER_ID(jobj, (long)picker);
     }
     XMIPP_JAVA_CATCH;

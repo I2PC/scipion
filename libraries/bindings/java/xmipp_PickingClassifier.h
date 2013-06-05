@@ -10,7 +10,7 @@ extern "C" {
 
 
 JNIEXPORT void JNICALL
-Java_xmipp_jni_PickingClassifier_create(JNIEnv *env, jobject jobj, jobject, jint, jstring);
+Java_xmipp_jni_PickingClassifier_create(JNIEnv *env, jobject jobj, jint, jstring);
 
 
 

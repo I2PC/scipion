@@ -36,7 +36,7 @@
 
 AutoParticlePicking2::AutoParticlePicking2()
 {}
-AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum, int basisPCA, const FileName &model_name, MetaData micrographsMd)
+AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum, int basisPCA, const FileName &model_name)
 {
     fn_model=model_name;
     fnPCAModel=fn_model+"_pca_model.stk";

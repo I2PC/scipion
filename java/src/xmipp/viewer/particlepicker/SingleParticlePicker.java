@@ -493,7 +493,6 @@ public class SingleParticlePicker extends ParticlePicker
 				particle = new AutomaticParticle(x, y, this, m, cost, deleted);
 				m.addAutomaticParticle(particle, imported);
 			}
-//			md.destroy();
 		}
 		catch (Exception e)
 		{
@@ -724,14 +723,16 @@ public class SingleParticlePicker extends ParticlePicker
 	{
 		try
 		{
-			MetaData micrographsmd = new MetaData();
-			long id;
-			for (TrainingMicrograph m : micrographs)
-			{
-				id = micrographsmd.addObject();
-				micrographsmd.setValueString(MDLabel.MDL_MICROGRAPH, m.getFile(), id);
-			}
-			classifier = new PickingClassifier(micrographsmd, getSize(), "model");
+			if(classifier != null)
+				classifier.destroy();
+//			MetaData micrographsmd = new MetaData();
+//			long id;
+//			for (TrainingMicrograph m : micrographs)
+//			{
+//				id = micrographsmd.addObject();
+//				micrographsmd.setValueString(MDLabel.MDL_MICROGRAPH, m.getFile(), id);
+//			}
+			classifier = new PickingClassifier(getSize(), "model");
 		}
 		catch (Exception e)
 		{
@@ -991,8 +992,8 @@ public class SingleParticlePicker extends ParticlePicker
 				XmippWindowUtil.releaseGUI(frame.getRootPane());
 				frame.getCanvas().setEnabled(true);
 
-//				trainmd.destroy();
-//				outputmd.destroy();
+				trainmd.destroy();
+				outputmd.destroy();
 			}
 			catch (Exception e)
 			{
@@ -1032,7 +1033,7 @@ public class SingleParticlePicker extends ParticlePicker
 			classifier.autopick(micrograph.getFile(), outputmd, micrograph.getAutopickpercent());
 			loadAutomaticParticles(micrograph, outputmd, false);
 //			outputmd.write(getOutputPath(micrograph.getAutoPosFile()));
-//			outputmd.destroy();
+			outputmd.destroy();
 			frame.getCanvas().repaint();
 			frame.getCanvas().setEnabled(true);
 			XmippWindowUtil.releaseGUI(frame.getRootPane());
@@ -1067,8 +1068,8 @@ public class SingleParticlePicker extends ParticlePicker
 		{
 
 			classifier.correct(manualmd, automaticmd);
-//			manualmd.destroy();
-//			automaticmd.destroy();
+			manualmd.destroy();
+			automaticmd.destroy();
 		}
 	}
 
