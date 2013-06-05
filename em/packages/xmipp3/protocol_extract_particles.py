@@ -129,9 +129,16 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     """Protocol to extract particles from a set of coordinates in the project"""
     
     _definition = XmippDefExtractParticles()
+    
+    # Normalization type constants
     ORIGINAL = 0
     SAME_AS_PICKING = 1
     OTHER = 2
+    
+    # Rejection method constants
+    NONE = 0
+    MAXZSCORE = 1
+    PERCENTAGE = 2
     
 #    def __init__(self, **args):
 #        
@@ -303,17 +310,17 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         # If not tilted pairs perform a sort and a avgZscore
         if not self.inputCoords.hasTiltPairs():
             args="-i %(fnImages)s --addToInput"
-            if self.rejectionMethod==1:
+            if self.rejectionMethod==self.MAXZSCORE:
                 maxZscore = self.maxZscore
                 args+=" --zcut "+str(maxZscore)
-            elif self.rejectionMethod==2:
+            elif self.rejectionMethod==self.PERCENTAGE:
                 percentage = self.percentage
                 args+=" --percent "+str(percentage)
     
             runJob(None, "xmipp_image_sort_by_statistics", args % locals())
             md = xmipp.MetaData(fnImages) # Should have ZScore label after runJob
             md.sort(xmipp.MDL_ZSCORE)
-            md.write(fnImages)  
+            md.write(fnImages) 
             
             mdavgZscore = xmipp.MetaData()
             md.read(fnImages)

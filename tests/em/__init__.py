@@ -2,6 +2,7 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+#                Laura del Cano         (ldelcano@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,28 +25,5 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module is responsible for launching protocol executions.
-"""
-import sys
-from pyworkflow.utils import runProtocol
-from mpi4py import MPI
 
 
-if __name__ == '__main__':
-    comm = MPI.COMM_WORLD
-    rank = comm.Get_rank()
-    projName = sys.argv[1]
-    protId = int(sys.argv[2])
-    
-    if rank == 0:
-        print "="*100
-        print "projName: ", projName
-        print "protId: ", protId        
-        runProtocol(projName, protId, comm)
-        
-    else:
-        from pyworkflow.manager import Manager
-        project = Manager().loadProject(projName) # Create the project to change dir
-        from pyworkflow.utils.mpi import runJobMPISlave
-        runJobMPISlave(comm)

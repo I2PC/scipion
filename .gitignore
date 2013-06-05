@@ -57,5 +57,5 @@ lib/
 documentation/
 gmon.out
 *~
-tests/tmp
+tests/classes/tmp
 

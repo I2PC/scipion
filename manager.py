@@ -82,6 +82,12 @@ class Manager(object):
         hosts = ExecutionHostMapper(defaultHosts).selectAll()
         proj.create(hosts)
         return proj
+    
+    def loadProject(self, projId):
+        """ Retrieve a project object, given its id. """
+        proj = Project(self.getProjectPath(projId))
+        proj.load()
+        return proj
         
     def deleteProject(self, projectName):
         cleanPath(self.getProjectPath(projectName))

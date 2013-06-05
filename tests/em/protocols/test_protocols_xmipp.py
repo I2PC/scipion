@@ -6,28 +6,45 @@ Created on May 8, 2013
 import unittest, sys
 from pyworkflow.manager import Manager
 from pyworkflow.em import *
+from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3 import *
 from PIL import Image
 
-class TestXmippPreprocessMicrographs(unittest.TestCase):
 
-    def setUp(self):
-        
-        # Create or load project
-        projName = 'tests'
-        manager = Manager()
-        self.proj = manager.createProject(projName) # Now it will be loaded if exists
-
-        # Parameters required by the import 
-        samplingRate = 1.237
-        voltage = 300
-        pattern = "/home/laura/Scipion_Projects/SmallData/*.mrc"
-                
-        self.protImport = ProtImportMicrographs(pattern=pattern, samplingRate=samplingRate, voltage=voltage)
-        self.proj.launchProtocol(self.protImport, wait=True)
+# Some utility functions to import micrographs that are used
+# in several tests.
+class TestXmippBase(unittest.TestCase):
+    
+    @classmethod
+    def setUpClass(cls):    
+        # Create a new project for the tests
+        setupProject(cls)
+        if hasattr(cls, '_setUpClass'):
+            cls._setupClass()
+    
+    @classmethod
+    def runImportMicrograph(cls, pattern, samplingRate, voltage):
+        """ Run an Import micrograph protocol. """
+        cls.protImport = ProtImportMicrographs(pattern=pattern, samplingRate=samplingRate, voltage=voltage)
+        cls.proj.launchProtocol(cls.protImport, wait=True)
         # check that input micrographs have been imported (a better way to do this?)
-        self.assertFalse(self.protImport.outputMicrographs is None, 'imported micrographs failed')
+        if cls.protImport.outputMicrographs is None:
+            raise Exception('Import of micrograph: %s, failed. outputMicrographs is None.' % pattern)
+        return cls.protImport
         
+    @classmethod
+    def runImportMicrographBPV1(cls):
+        """ Run an Import micrograph protocol. """
+        pattern = getInputPath('Micrographs_BPV1', '*.mrc')
+        return cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300)
+                           
+ 
+class TestXmippPreprocessMicrographs(TestXmippBase):
+
+    @classmethod
+    def _setUpClass(cls):
+        cls.runImportMicrographBPV1()
+
     def testDownsampling(self):
         # test downsampling a set of micrographs
         downFactor = 2
@@ -44,6 +61,25 @@ class TestXmippPreprocessMicrographs(unittest.TestCase):
         protCrop = XmippProtPreprocessMicrographs(doCrop=True, cropPixels=cropPixels)
         protCrop.inputMicrographs.set(self.protImport.outputMicrographs)
         self.proj.launchProtocol(protCrop, wait=True)
+        
+        
+class TestXmippCTFEstimation(TestXmippBase):
+    
+    def doCTF(self, pattern):
+        #First, import a set of micrographs
+        protImport = self.runImportMicrograph(pattern, samplingRate=3.711, voltage=300)
+        
+        # Now estimate CTF on the downsampled micrographs
+        print "Performing CTF..."   
+        protCTF = XmippProtCTFMicrographs()                
+        protCTF.inputMicrographs.set(protImport.outputMicrographs)        
+        self.proj.launchProtocol(protCTF, wait=True)
+        
+    def test_Micrographs_BPV1_Down3(self):
+        self.doCTF(pattern = getInputPath('Micrographs_BPV1_Down3', '*.mrc'))
+        
+    def test_Micrographs_BPV3_Down3(self):
+        self.doCTF(pattern = getInputPath('Micrographs_BPV3_Down3', '*.mrc')) 
         
         # check that output micrographs have been correctly croped
         # FIXME: I DONT KNOW HOW TO CHECK IMAGE SIZE ON PIXELS
@@ -62,48 +98,37 @@ class TestXmippPreprocessMicrographs(unittest.TestCase):
             
         #self.assertTrue(protCrop.outputMicrographs.samplingRate.get() == self.protImport.outputMicrographs.samplingRate.get()*self.downFactor, "Micrographs uncorrectly downsampled")
 
-    def testCTF(self):
-        # test ctf a set of micrographs
-        protCTF = XmippProtCTFMicrographs()
-        protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
-        self.proj.launchProtocol(protCTF, wait=True)
-        
-        self.assertTrue(self.checkCTFModels(protCTF.outputMicrographs), 'CTF model does not exists')
-        
-    def checkCTFModels(self, micSet):
-        # check that output micrographs have CTF model
-        #TODO: implement a better way to check that CTFModel exists
-        if micSet.hasCTF:
-            return True
-        
-    def get_num_pixels(self, fn):
-        width, height = Image.open(fn).size
-        return width*height
+#    def testCTF(self):
+#        # test ctf a set of micrographs
+#        protCTF = XmippProtCTFMicrographs()
+#        protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
+#        self.proj.launchProtocol(protCTF, wait=True)
+#        
+#        self.assertTrue(self.checkCTFModels(protCTF.outputMicrographs), 'CTF model does not exists')
+#        
+#    def checkCTFModels(self, micSet):
+#        # check that output micrographs have CTF model
+#        #TODO: implement a better way to check that CTFModel exists
+#        if micSet.hasCTF:
+#            return True
+#        
+#    def get_num_pixels(self, fn):
+#        width, height = Image.open(fn).size
+#        return width*height
+    
     
 class TestXmippExtractParticles(unittest.TestCase):
 
-    def setUp(self):
-        # Create or load project
-        projName = 'tests'
-        manager = Manager()
-        self.proj = manager.createProject(projName) # Now it will be loaded if exists
-
-        # Parameters required by the import 
-        samplingRate = 1.237
-        voltage = 300
-        pattern = "/home/laura/Scipion_Projects/SmallData/*.mrc"
+    @classmethod
+    def _setUpClass(cls):
+        pattern = getInputPath('Micrographs_BPV3_Down3', '*.mrc')
+        cls.runImportMicrograph(pattern, samplingRate=3.711, voltage=300)
+       
+        #TODO: Perform the import coordinates from fake piking
         
-        # Parameters for the tests
-        self.downFactor = 2
-        self.cropPixels = 100
-        
-        # Perform the import micrographs
-        self.protImport = ProtImportMicrographs(pattern=pattern, samplingRate=samplingRate, voltage=voltage)
-        self.proj.launchProtocol(self.protImport, wait=True)
-        # check that input micrographs have been imported (a better way to do this?)
-        self.assertFalse(self.protImport.outputMicrographs is None, 'imported micrographs failed')
-        
-        # Perform the import coordinates
+    def testExtract(self):
+        pass
+    
 
 class TestXmippTiltedMicrographs(unittest.TestCase):        
     
@@ -127,8 +152,7 @@ class TestXmippTiltedMicrographs(unittest.TestCase):
         
     def testPreprocess(self):
         # test downsampling a set of micrographs
-        downFactor = 2
-        protDown = XmippProtPreprocessMicrographs(doDownsample=True, downFactor=downFactor)
+        protDown = XmippProtPreprocessMicrographs(doDownsample=True, downFactor=2)
         protDown.inputMicrographs.set(self.protImport.outputMicrographs)
         self.proj.launchProtocol(protDown, wait=True)
         
@@ -140,6 +164,9 @@ class TestXmippTiltedMicrographs(unittest.TestCase):
         
         # Assert true if output metadata has TiltedPairs block
         self.assertFalse(md.isEmpty(), 'TiltedPairs block is empty')
+        
+
+        
 
 if __name__ == "__main__":
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestXmippPreprocessMicrographs)
