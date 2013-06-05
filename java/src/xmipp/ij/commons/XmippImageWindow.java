@@ -1,11 +1,16 @@
 package xmipp.ij.commons;
 
 import ij.IJ;
+import ij.ImagePlus;
+import ij.ImageStack;
 import ij.WindowManager;
 import ij.gui.ImageWindow;
+import ij.gui.StackWindow;
+import ij.measure.Calibration;
 
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Window;
 import java.awt.event.MouseEvent;
@@ -113,7 +118,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	}
 
 
-
+    
 	
 
 }// class XmippImageWindow

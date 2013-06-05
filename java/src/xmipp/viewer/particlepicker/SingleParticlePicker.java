@@ -73,7 +73,6 @@ public class SingleParticlePicker extends ParticlePicker
 			for (TrainingMicrograph m : micrographs)
 				loadMicrographData(m);
 			
-			initClassifier();
 		}
 		catch (Exception e)
 		{
@@ -714,34 +713,11 @@ public class SingleParticlePicker extends ParticlePicker
 
 	public void initUpdateTemplates()
 	{
-		initClassifier();
 		TasksManager.getInstance().addTask(new UpdateTemplatesTask(this));
 		saveConfig();
 	}
 
-	private void initClassifier()
-	{
-		try
-		{
-			if(classifier != null)
-				classifier.destroy();
-//			MetaData micrographsmd = new MetaData();
-//			long id;
-//			for (TrainingMicrograph m : micrographs)
-//			{
-//				id = micrographsmd.addObject();
-//				micrographsmd.setValueString(MDLabel.MDL_MICROGRAPH, m.getFile(), id);
-//			}
-			classifier = new PickingClassifier(getSize(), "model");
-		}
-		catch (Exception e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			throw new IllegalArgumentException(e);
-		}
-		
-	}
+
 
 	public synchronized void updateTemplates()
 	{
@@ -954,7 +930,18 @@ public class SingleParticlePicker extends ParticlePicker
 		saveData();
 		md.print();
 		MetaData outputmd = new MetaData();
+//		new Thread(new TrainRunnable(frame, md, outputmd)).start();
+		try
+		{
+			classifier = new PickingClassifier(getSize(), getOutputPath("model"));
+		}
+		catch (Exception e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		new Thread(new TrainRunnable(frame, md, outputmd)).start();
+//		new TrainRunnable(frame, md, outputmd).run();
 
 	}
 
@@ -1009,7 +996,7 @@ public class SingleParticlePicker extends ParticlePicker
 		saveData(micrograph);
 		MetaData outputmd = new MetaData();
 		frame.getCanvas().setEnabled(false);
-		XmippWindowUtil.blockGUI(frame, "Autopicking...");
+//		XmippWindowUtil.blockGUI(frame, "Autopicking...");
 		
 		new Thread(new AutopickRunnable(frame, outputmd)).start();
 
@@ -1036,7 +1023,7 @@ public class SingleParticlePicker extends ParticlePicker
 			outputmd.destroy();
 			frame.getCanvas().repaint();
 			frame.getCanvas().setEnabled(true);
-			XmippWindowUtil.releaseGUI(frame.getRootPane());
+//			XmippWindowUtil.releaseGUI(frame.getRootPane());
 		}
 
 	}

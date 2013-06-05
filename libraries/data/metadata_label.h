@@ -245,6 +245,8 @@ enum MDLabel
     MDL_PHANTOM_FEATURE_TYPE, ///< Type of the feature (Sphere, Blob, ...) (std::string)
     MDL_PHANTOM_SCALE, ///< Number which will multiply all features (double)
 
+    MDL_MACRO_CMD, //ImageJ macro command on picker
+    MDL_MACRO_CMD_ARGS, //ImageJ macro args on picker
     MDL_COLOR, ///< Color for particle picking
     MDL_PICKING_TEMPLATES, ///< Number of templates
     MDL_PICKING_STATE, ///< State for particle picking
@@ -973,6 +975,8 @@ private:
         MDL::addLabel(MDL_PHANTOM_FEATURE_OPERATION, LABEL_STRING, "featureOperation");
         MDL::addLabel(MDL_PHANTOM_FEATURE_SPECIFIC, LABEL_VECTOR_DOUBLE, "featureSpecificVector");
         MDL::addLabel(MDL_PHANTOM_FEATURE_TYPE, LABEL_STRING, "featureType");
+        MDL::addLabel(MDL_MACRO_CMD, LABEL_STRING, "macroCmd");
+        MDL::addLabel(MDL_MACRO_CMD_ARGS, LABEL_STRING, "macroCmdArgs");
         MDL::addLabel(MDL_COLOR, LABEL_INT, "color");
         MDL::addLabel(MDL_PICKING_STATE, LABEL_STRING, "pickingState");
         MDL::addLabelAlias(MDL_PICKING_STATE, "picking_state");//3.0

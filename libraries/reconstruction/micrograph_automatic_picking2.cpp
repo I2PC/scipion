@@ -64,6 +64,8 @@ AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum
     classifier2.setParameters(1.0, 0.25);
 }
 
+
+
 void AutoParticlePicking2::readMic(FileName fn_micrograph)
 {
 

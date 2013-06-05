@@ -133,8 +133,8 @@ public abstract class ParticlePicker
 			long[] ids = md.findObjects();
 			for (long id : ids)
 			{
-				command = md.getValueString(MDLabel.MDL_IMAGE1, id).replace('_', ' ');
-				options = md.getValueString(MDLabel.MDL_IMAGE2, id).replace('_', ' ');
+				command = md.getValueString(MDLabel.MDL_MACRO_CMD, id).replace('_', ' ');
+				options = md.getValueString(MDLabel.MDL_MACRO_CMD_ARGS, id).replace('_', ' ');
 				if (options.equals("NULL"))
 					options = "";
 				filters.add(new IJCommand(command, options));
@@ -166,9 +166,9 @@ public abstract class ParticlePicker
 			for (IJCommand f : filters)
 			{
 				id = md.addObject();
-				md.setValueString(MDLabel.MDL_IMAGE1, f.getCommand().replace(' ', '_'), id);
+				md.setValueString(MDLabel.MDL_MACRO_CMD, f.getCommand().replace(' ', '_'), id);
 				options = (f.getOptions() == null || f.getOptions().equals("")) ? "NULL" : f.getOptions().replace(' ', '_');
-				md.setValueString(MDLabel.MDL_IMAGE2, options, id);
+				md.setValueString(MDLabel.MDL_MACRO_CMD_ARGS, options, id);
 			}
 			md.writeBlock("filters@" + file);
 			md.destroy();

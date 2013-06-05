@@ -154,6 +154,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			public void actionPerformed(ActionEvent arg0)
 			{
 				getParticlePicker().saveData();
+				setChanged(false);
 
 			}
 		});
@@ -243,8 +244,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			{
 				getParticlePicker().saveData();
 				showMessage("Data saved successfully");
-				((JMenuItem) e.getSource()).setEnabled(false);
-				savebt.setEnabled(false);
+				setChanged(false);
 			}
 		});
 		filemn.add(savemi);
