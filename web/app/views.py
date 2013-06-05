@@ -36,7 +36,7 @@ def getResource(request):
 def projects(request):
     manager = Manager()
 #    logo_path = findResource('scipion_logo.png')
-
+    
     # Resources #
     css_path = os.path.join(settings.STATIC_URL, 'css/projects_style.css')
     #############
