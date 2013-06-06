@@ -331,8 +331,8 @@ double correlationIndex(const MultidimArray< T >& x,
     }
     else
     {
-        computeAvgStdev_within_binary_mask(*mask, x, mean_x,stddev_x);
-        computeAvgStdev_within_binary_mask(*mask, y, mean_y,stddev_y);
+        x.computeAvgStdev_within_binary_mask(*mask, mean_x,stddev_x);
+        y.computeAvgStdev_within_binary_mask(*mask, mean_y,stddev_y);
     }
     if (ABS(stddev_x)<XMIPP_EQUAL_ACCURACY ||
         ABS(stddev_y)<XMIPP_EQUAL_ACCURACY)
