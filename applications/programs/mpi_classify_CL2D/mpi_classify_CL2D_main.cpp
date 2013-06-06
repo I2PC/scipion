@@ -711,7 +711,7 @@ void CL2D::initialize(MetaData &_SF,
 
             // Measure the variance of the signal outside a circular mask
             double avg, stddev;
-            computeAvgStdev_within_binary_mask(prm->mask, I(), avg, stddev);
+            I().computeAvgStdev_within_binary_mask(prm->mask, avg, stddev);
             prm->sigma += stddev;
 
             // Put it randomly in one of the classes
