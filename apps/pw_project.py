@@ -24,8 +24,8 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from gui.tree import TreeProvider, BoundTree
-from protocol.protocol import STATUS_WAITING_APPROVAL, STATUS_RUNNING
+from pyworkflow.gui.tree import TreeProvider, BoundTree
+from pyworkflow.protocol.protocol import STATUS_WAITING_APPROVAL, STATUS_RUNNING
 """
 Main project window application
 """

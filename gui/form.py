@@ -23,7 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from protocol.params import PointerParam
 """
 This modules implements the automatic
 creation of protocol form GUI from its
