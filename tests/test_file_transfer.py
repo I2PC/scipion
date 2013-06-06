@@ -6,29 +6,30 @@ Created on Apr 9, 2013
 import unittest
 import argparse
 import sys
+import os
 from utils.path import getFolderFiles, cleanPath
 from os.path import join, basename
 from pyworkflow.utils.file_transfer import *
 from pyworkflow.utils.utils import executeRemote, getLocalUserName, getLocalHostName
 
-remoteHostName1 = None
-remoteUserName1 = None
-remotePassword1 = None
-remoteSourceFolder1 = None
-remoteTargetFolder1 = None
+remoteHostName1 = os.environ['remoteHostName1']
+remoteUserName1 = os.environ['remoteUserName1']
+remotePassword1 = os.environ['remotePassword1']
+remoteSourceFolder1 = os.environ['remoteSourceFolder1']
+remoteTargetFolder1 = os.environ['remoteTargetFolder1']
 
-remoteHostName2 = None
-remoteUserName2 = None
-remotePassword2 = None
-remoteSourceFolder2 = None
-remoteTargetFolder2 = None
+remoteHostName2 = os.environ['remoteHostName2']
+remoteUserName2 = os.environ['remoteUserName2']
+remotePassword2 = os.environ['remotePassword2']
+remoteSourceFolder2 = os.environ['remoteSourceFolder2']
+remoteTargetFolder2 = os.environ['remoteTargetFolder2']
 
-localSourceFolder = None
-localTargetFolder = None
+localSourceFolder = os.environ['localSourceFolder']
+localTargetFolder = os.environ['localTargetFolder']
 
 class TestFileTransfer(unittest.TestCase):  
     
-    def setUp(self):
+    def setUp(self):       
         self.fileTransfer = FileTransfer()
         self.gatewayHosts = None 
         self.numberTrials = 1                      
@@ -178,6 +179,7 @@ class TestFileTransfer(unittest.TestCase):
         return hostRefs
 
 if __name__ == "__main__":
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument('remoteHostName1')
     parser.add_argument('remoteUserName1')
@@ -206,4 +208,5 @@ if __name__ == "__main__":
     localSourceFolder = args.localSourceFolder
     localTargetFolder = args.localTargetFolder 
     sys.argv[1:] = args.unittest_args
+    """
     unittest.main()
