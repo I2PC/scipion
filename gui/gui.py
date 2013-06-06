@@ -147,12 +147,13 @@ def getImage(imageName, imgDict=None, tk=True):
             imgDict[imageName] = image
     return image
 
-def getPILImage(imageXmipp):
+def getPILImage(imageXmipp, dim=None):
     from PIL import Image
     image = Image.fromarray(imageXmipp.getData())
     img = image.convert('RGB')
-    size = 128, 128
-    img.thumbnail(size, Image.ANTIALIAS)
+    if dim:
+        size = int(dim), int(dim)
+        img.thumbnail(size, Image.ANTIALIAS)
     return img
 
 """

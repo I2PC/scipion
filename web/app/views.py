@@ -382,13 +382,22 @@ def showj(request):
     
     return render_to_response('showj.html', context)
 
+AT = '__at__'
 
 class MdObj():
     pass
     
+class MdValue():
+    def __init__(self, md, label, objId, allowRender=True, imageDim=None):
+        self.strValue = str(md.getValue(label, objId))        
+        self.allowRender = (label == xmipp.MDL_IMAGE) and allowRender
+        if self.allowRender and '@' in self.strValue:
+            self.imgValue = self.strValue.replace('@', AT)
+            if imageDim:
+                self.imgValue += '&dim=%s' % imageDim
 
 class MdData():
-    def __init__(self, path):        
+    def __init__(self, path, allowRender=True, imageDim=None):        
         md = xmipp.MetaData(path)
         labels =  md.getActiveLabels()
         self.labels = [xmipp.label2Str(l) for l in labels]
@@ -396,27 +405,20 @@ class MdData():
         for objId in md:
             obj = MdObj()
             obj.id = objId
-            obj.values = [str(md.getValue(l, objId)) for l in labels]        
+            obj.values = [MdValue(md, l, objId, allowRender, imageDim) for l in labels]        
             self.objects.append(obj)
         
         
 
-def loadMetaData(path, block):
+def loadMetaData(path, block, allowRender=True, imageDim=None):
     path = getInputPath('showj', path)    
     if len(block):
         path = '%s@%s' % (block, path)
     #path2 = 'Volumes@' + path1
     
-    return MdData(path)   
+    return MdData(path, allowRender, imageDim)   
      
 def table(request):    
-    # Resources #
-    edit_tool_path = getResource('edit_toolbar')
-    copy_tool_path = getResource('copy_toolbar')
-    delete_tool_path = getResource('delete_toolbar')
-    browse_tool_path = getResource('browse_toolbar')
-    
-    
     css_path = os.path.join(settings.STATIC_URL, 'css/project_content_style.css')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     jquery_cookie = os.path.join(settings.STATIC_URL, 'js/jquery.cookie.js')
@@ -427,12 +429,14 @@ def table(request):
     
     path = request.GET.get('path', 'tux_vol.xmd')
     block = request.GET.get('block', '')
-    md = loadMetaData(path, block)    
+    allowRender = 'render' in request.GET
+    imageDim = request.GET.get('dim', None)
+    
+    md = loadMetaData(path, block, allowRender, imageDim)    
    
     
     context = {
                'jquery': jquery_path,
-               'editTool': edit_tool_path,
                'utils': utils_path,
                'jquery_cookie': jquery_cookie,
                'jquery_treeview': jquery_treeview,
@@ -446,16 +450,24 @@ def table(request):
 def get_image(request):
     from django.http import HttpResponse
     from pyworkflow.gui import getImage, getPILImage
+    imageNo = None
     imagePath = request.GET.get('image')
-    if '_at_' in imagePath:
-        imagePath = imagePath.replace('_at_', '@')
+    imageDim = request.GET.get('dim', None)
+    
+        
     if imagePath.endswith('png') or imagePath.endswith('gif'):
         img = getImage(imagePath, tk=False)
     else:
-        imagePath = '1@' + getInputPath('showj', 'tux.stk')
+        if AT in imagePath:
+            parts = imagePath.split(AT)
+            imageNo = parts[0]
+            imagePath = parts[1]
+        imagePath = getInputPath('showj', imagePath)
+        if imageNo:
+            imagePath = '%s@%s' % (imageNo, imagePath) 
         imgXmipp = xmipp.Image(imagePath)
         #from PIL import Image
-        img = getPILImage(imgXmipp)
+        img = getPILImage(imgXmipp, imageDim)
         
         
         

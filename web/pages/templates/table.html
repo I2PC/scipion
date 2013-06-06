@@ -17,15 +17,19 @@
 			<tr>
 				{% for label in metadata.labels %}
 					<th>{{label}}</th> 
-				{% endfor %}
-				<th>image render</th>
+				{% endfor %}				
 			</tr>
 			{% for obj in metadata.objects %}
 				<tr id="{{obj.id}}" style="background-color:#fafafa;">
 				    {% for value in obj.values %}
-			         <td> {{value}} </td>
-			        {% endfor %}
-			        <td><img src="/get_image/?image=tux.stk"/></td>
+			         <td> 
+			           {% if value.allowRender %} 
+			            <img src="/get_image/?image={{value.imgValue}}"/>
+			           {% else %}
+			           {{value.strValue}}
+			           {% endif %}
+			         </td>
+			        {% endfor %}			        
 				</tr>
 			{% endfor %}
 		</table>
