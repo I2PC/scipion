@@ -9,7 +9,7 @@ from glob import glob
 from pyworkflow.em.packages.eman2 import *
 from pyworkflow.tests import *
 
-class TestEmanSetOfImages(unittest.TestCase):
+class TestEmanUtils(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):        
