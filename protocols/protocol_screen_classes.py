@@ -1,6 +1,6 @@
 #!/usr/bin/env xmipp_python
 #------------------------------------------------------------------------------------------------
-# Protocol for creaing a symmetric initial volume
+# Protocol for exploring classes with a volume
 #
 # Example use:
 # ./xmipp_protocol_rct.py
