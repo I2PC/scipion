@@ -18,7 +18,7 @@
     <acceleratingVoltage unit="kV">100.0</acceleratingVoltage>
     <defocusU unit="nm">1000.0</defocusU>
     <defocusV unit="nm">2000.0</defocusV>
-    <pixelSpacingi>
+    <pixelSpacing>
       <X unit="A/px">55.6</X>
       <Y unit="A/px">5.7</Y>
     </pixelSpacing>
