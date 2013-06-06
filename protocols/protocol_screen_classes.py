@@ -63,8 +63,9 @@ class ProtScreenClasses(XmippProtocol):
         return errors    
 
     def visualize(self):
-        fnAligned='classes_aligned@'+self.workingDirPath('classes.xmd')
-        runShowJ(fnAligned)
+        fnAligned = 'classes_aligned@' + self.workingDirPath('classes.xmd')
+        runShowJ(fnAligned, extraParams="--mode metadata --render first")
+        os.system('xmipp_chimera_client -i '+self.Volume+' --mode projector 256 &')
 
 def substituteReferenceImages(log,fnAngles,fnGallery):
     MD=MetaData(fnAngles)
