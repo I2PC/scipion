@@ -50,5 +50,7 @@
 	border: 1px solid black;
 	background: Gainsboro;
 	height: 97%;
+	overflow-y: auto;
+	overflow-x: hidden;
 	/*width: 99%;*/
 }
