@@ -1,11 +1,17 @@
 {% extends 'base.html' %} 
 {% block title %} - Projects {% endblock %}
-{% block head %}
+{% block head %}	
+	<!-- CSS -->
 	<link href={{css}} rel="stylesheet" type="text/css">
+	<link href={{messi_css}} rel="stylesheet" type="text/css">
+	<!-- JS -->
+	<script src={{jquery}} type="text/javascript"></script>
+	<script src={{messi}} type="text/javascript"></script>
+	<script src={{projectForm}} type="text/javascript"></script>
 {% endblock %}	
 {% block sideLeft %}			
 	<center>		
-		<button class="button" type="button">Create Project</button>
+		<a href="javascript:createProjectForm();" ><button class="button" type="button">Create Project</button></a>
 	</center>
 {% endblock %}		
 {% block content %}
@@ -14,14 +20,9 @@
 			<ul>
 				<li class="projList"><strong><a href="/project_content/?projectName={{project.projName}}"
 						class="projName">{{project.projName}}</a></strong> <br /> Modified
-					{{project.pTime}} <a href="" class="projRemove">Delete project</a>
+					{{project.pTime}} <a href="javascript:deleteProjectForm('{{project.projName}}');" class="projRemove">Delete project</a>
 				</li>
 			</ul>
 		{% endfor %}
 	</div>
 {% endblock %}	
-
-
-
-
-

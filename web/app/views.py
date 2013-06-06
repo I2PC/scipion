@@ -46,15 +46,48 @@ def projects(request):
     # Resources #
     css_path = os.path.join(settings.STATIC_URL, 'css/projects_style.css')
     #############
+    projectForm_path = os.path.join(settings.STATIC_URL, 'js/projectForm.js')
+    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
+    
+    # Messi Plugin #
+    messi_path = os.path.join(settings.STATIC_URL, 'js/messi.js')
+    messi_css_path = os.path.join(settings.STATIC_URL, 'css/messi.css')
+    #############
     
     projects = manager.listProjects()
     for p in projects:
         p.pTime = prettyDate(p.mTime)
 
-    context = {'projects': projects,
-               'css':css_path}
+    context = {'jquery':jquery_path,
+               'projects': projects,
+               'css': css_path,
+               'messi': messi_path,
+               'messi_css': messi_css_path,
+               'projectForm':projectForm_path}
     
     return render_to_response('projects.html', context)
+
+def create_project(request):
+    from django.http import HttpResponse    
+    
+    manager = Manager()
+    
+    if request.is_ajax():
+        projectName = request.GET.get('projectName')
+        manager.createProject(projectName)       
+        
+    return HttpResponse(mimetype='application/javascript')
+
+def delete_project(request):
+    from django.http import HttpResponse    
+    
+    manager = Manager()
+    
+    if request.is_ajax():
+        projectName = request.GET.get('projectName')
+        manager.deleteProject(projectName)       
+        
+    return HttpResponse(mimetype='application/javascript')
 
 class TreeItem():
     def __init__(self, name, tag, protClass=None):
@@ -318,29 +351,18 @@ def browse_objects(request):
                              ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
 
-def getScipionHosts():
-    defaultHosts = os.path.join(pw.HOME, 'settings', 'execution_hosts.xml')
-    return ExecutionHostMapper(defaultHosts).selectAll()
-
 def hosts(request):
     # Resources #
-    css_path = os.path.join(settings.STATIC_URL, 'css/general_style.css')
     favicon_path = getResource('favicon')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     # # Project Id(or Name) should be stored in SESSION
     projectName = request.GET.get('projectName')
     project = loadProject(projectName)
-    scipionHosts = getScipionHosts()
-    projectHosts = project.getHosts()   
-    hostsKeys = [host.getLabel() for host in projectHosts]      
-    availableHosts = [host for host in scipionHosts if host.getLabel() not in hostsKeys]
     context = {'projectName' : projectName,
                'project' : project,
-               'hosts': projectHosts,
-               'scipionHosts': availableHosts,
+               'hosts': project.getHosts(),
                'favicon': favicon_path,
-               'jquery': jquery_path,
-               'css':css_path}
+               'jquery': jquery_path}
     
     return render_to_response('hosts.html', context)
 

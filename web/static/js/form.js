@@ -188,9 +188,3 @@ function processSelectionTable(elm) {
 
 	jQuery('input#' + elm.attr('data-node') + '_input').val(value);
 }
-
-function filemanager(elm, type, name) {
-	alert(elm + " " + type + " " + name);
-	// document.getElementById(elm).innerText = document
-	// .getElementById('openssme').value
-}

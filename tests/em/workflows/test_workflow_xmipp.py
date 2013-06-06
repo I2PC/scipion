@@ -56,7 +56,7 @@ class TestXmippWorkflow(unittest.TestCase):
         #protExtract.inputMicrographs.set(protDownsampling.outputMicrographs)
         self.proj.launchProtocol(protExtract, wait=True)
         
-       
+        self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
         
 if __name__ == "__main__":
     unittest.main()
