@@ -169,7 +169,7 @@ class ProtInitVolRANSAC(XmippProtocol):
         return id
         
     def summary(self):
-        message = []
+        message = ['Initial volume reconstruction by RANSAC using %d iterations and symmetry %s'%(self.NRansac,self.SymmetryGroup) ]
         return message
     
     def validate(self):
@@ -177,7 +177,10 @@ class ProtInitVolRANSAC(XmippProtocol):
         return errors
 
     def visualize(self):
-        runShowJ(self.fnBestVolume)
+        n=0    
+        fnVolumes = self.workingDirPath('proposedVolumes.xmd')
+        runShowJ(fnVolumes)
+
 
 def validateVolume(log,WorkingDir,NRansac):
        
