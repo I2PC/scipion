@@ -170,6 +170,8 @@ class ParamWidget():
         self.param = param
         self.parent = parent
         
+        self.parent.columnconfigure(0, minsize=200)
+        self.parent.columnconfigure(1, minsize=200)
         self._createLabel() # self.label should be set after this 
         self._btnCol = 0
         self._createButtonsFrame() # self.btnFrame should be set after this
@@ -190,7 +192,7 @@ class ParamWidget():
                
     def _createContent(self):
         self.content = tk.Frame(self.parent, bg='white')
-        gui.configureWeigths(self.content)
+        gui.configureWeigths(self.content)        
         self._createContentWidgets(self.param, self.content) # self.var should be set after this
         
     def _addButton(self, text, imgPath, cmd):
@@ -225,7 +227,7 @@ class ParamWidget():
             if param.display == EnumParam.DISPLAY_COMBO:
                 combo = ttk.Combobox(content, textvariable=var.tkVar, state='readonly')
                 combo['values'] = param.choices
-                combo.grid(row=0, column=0)
+                combo.grid(row=0, column=0, sticky='w')
             elif param.display == EnumParam.DISPLAY_LIST:
                 for i, opt in enumerate(param.choices):
                     rb = tk.Radiobutton(content, text=opt, variable=var.tkVar, value=opt)
@@ -323,19 +325,18 @@ class FormWindow(Window):
         expertFrame.grid(row=0, column=0, sticky='sw', padx=5, pady=5)
         expLabel = tk.Label(expertFrame, text="Expert level: ", font=self.font)
         expLabel.grid(row=0, column=0)
-        var = tk.StringVar()
-        var.set(LEVEL_CHOICES[0])
-        expCombo = ttk.Combobox(expertFrame, textvariable=var, state='readonly')
-        expCombo['values'] = LEVEL_CHOICES
+        param = EnumParam(choices=LEVEL_CHOICES)
+        var = ComboVar(param)
+        var.set(self.protocol.expertLevel.get())
+        expCombo = ttk.Combobox(expertFrame, textvariable=var.tkVar, state='readonly')
+        expCombo['values'] = param.choices        
         expCombo.grid(row=0, column=1)
         self.expertVar = var
+        self.expertVar.trace('w', self._onExpertLevelChanged)
         
         btnFrame = tk.Frame(bottomFrame)
         btnFrame.columnconfigure(2, weight=1)
         btnFrame.grid(row=1, column=0, sticky='sew')
-        # Save and close buttons
-        def showMsg(msg):
-            print "clicked: ", msg
         
         btnClose = tk.Button(btnFrame, text="Close", image=self.getImage('dialog_close.png'), compound=tk.LEFT, font=self.font,
                           command=self.close)
@@ -410,7 +411,7 @@ class FormWindow(Window):
         """Check if the condition of a param is statisfied 
         hide or show it depending on the result"""
         widget = self.widgetDict[paramName]
-        v = self.protocol._definition.evalCondition(self.protocol, paramName)
+        v = self.protocol.evalCondition(paramName) and self.protocol.evalExpertLevel(paramName)
         if v:
             widget.grid()
         else:
@@ -420,10 +421,16 @@ class FormWindow(Window):
         """Check the conditions of all params affected
         by this param"""
         self.setParamFromVar(paramName)
-        param = self.protocol._definition.getParam(paramName)
+        param = self.protocol.getDefinitionParam(paramName)
         
         for d in param._dependants:
             self._checkCondition(d)
+            
+    def _onExpertLevelChanged(self, *args):
+        self.protocol.expertLevel.set(self.expertVar.get())
+        
+        for paramName, _ in self.protocol.iterDefinitionAttributes():
+            self._checkChanges(paramName)
         
     def getVarValue(self, varName):
         """This method should retrieve a value from """
@@ -441,7 +448,7 @@ class FormWindow(Window):
             value.set(w.get())
              
     def updateProtocolParams(self):
-        for paramName, _ in self.protocol._definition.iterParams():
+        for paramName, _ in self.protocol.iterDefinitionAttributes():
             self.setParamFromVar(paramName)
                 
     def createSections(self, text):
@@ -450,10 +457,10 @@ class FormWindow(Window):
         parent = tk.Frame(text) 
         parent.columnconfigure(0, weight=1)
         
-        for section in self.protocol._definition.iterSections():
+        for section in self.protocol.iterDefinitionSections():
             frame = SectionFrame(self, parent, section, bg='white')
             frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
-            frame.columnconfigure(0, minsize=300)
+            frame.columnconfigure(0, minsize=400)
             self._fillSection(section, frame)
             r += 1
         
