@@ -19,7 +19,7 @@ class TestXmippBase(unittest.TestCase):
     def setUpClass(cls):    
         # Create a new project for the tests
         setupProject(cls)
-        if hasattr(cls, '_setUpClass'):
+        if hasattr(cls, '_setupClass'):
             cls._setupClass()
     
     @classmethod
@@ -37,13 +37,25 @@ class TestXmippBase(unittest.TestCase):
         """ Run an Import micrograph protocol. """
         pattern = getInputPath('Micrographs_BPV1', '*.mrc')
         return cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300)
-                           
+    
+    @classmethod
+    def runFakedPicking(cls, mics):
+        """ Run a faked particle picking. Coordinates already existing. """
+        coordsFolder = getInputPath('Picking_XmippBPV1')
+        cls.protPP = XmippProtParticlePicking(importFolder=coordsFolder)                
+        cls.protPP.inputMicrographs.set(mics)        
+        cls.proj.launchProtocol(cls.protPP, wait=True)
+        # check that faked picking has run ok
+        if cls.protPP.outputCoordinates is None:
+            raise Exception('Faked particle picking: %s, failed. outputCoordinates is None.' % coordsFolder)
+        return cls.protPP       
+        
  
 class TestXmippPreprocessMicrographs(TestXmippBase):
 
     @classmethod
-    def _setUpClass(cls):
-        cls.runImportMicrographBPV1()
+    def _setupClass(cls):
+        cls.protImport = cls.runImportMicrographBPV1()
 
     def testDownsampling(self):
         # test downsampling a set of micrographs
@@ -75,100 +87,41 @@ class TestXmippCTFEstimation(TestXmippBase):
         protCTF.inputMicrographs.set(protImport.outputMicrographs)        
         self.proj.launchProtocol(protCTF, wait=True)
         
+        self.assertTrue(protCTF.outputMicrographs.hasCTF(), "CTF estimation has not been performed.")
+        
     def test_Micrographs_BPV1_Down3(self):
         self.doCTF(pattern = getInputPath('Micrographs_BPV1_Down3', '*.mrc'))
         
     def test_Micrographs_BPV3_Down3(self):
         self.doCTF(pattern = getInputPath('Micrographs_BPV3_Down3', '*.mrc')) 
-        
-        # check that output micrographs have been correctly croped
-        # FIXME: I DONT KNOW HOW TO CHECK IMAGE SIZE ON PIXELS
-#        for i_mic in self.protImport.outputMicrographs:
-#            i_fn = i_mic.getFileName()
-#            #i_fs = os.path.getsize(i_fn)
-#            i_fnp = self.get_num_pixels(i_fn)
-#            for o_mic in protCrop.outputMicrographs:
-#                o_fn = o_mic.getFileName()
-#                if os.path.basename(o_fn) == os.path.basename(i_fn):
-#                    #o_fs =  os.path.getsize(o_fn)
-#                    o_fnp = self.get_num_pixels(o_fn)
-#                    self.assertTrue((i_fnp - self.cropPixels) == o_fnp, "Micrograph uncorrectly cropped")
-#                    break
-
-            
-        #self.assertTrue(protCrop.outputMicrographs.samplingRate.get() == self.protImport.outputMicrographs.samplingRate.get()*self.downFactor, "Micrographs uncorrectly downsampled")
-
-#    def testCTF(self):
-#        # test ctf a set of micrographs
-#        protCTF = XmippProtCTFMicrographs()
-#        protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
-#        self.proj.launchProtocol(protCTF, wait=True)
-#        
-#        self.assertTrue(self.checkCTFModels(protCTF.outputMicrographs), 'CTF model does not exists')
-#        
-#    def checkCTFModels(self, micSet):
-#        # check that output micrographs have CTF model
-#        #TODO: implement a better way to check that CTFModel exists
-#        if micSet.hasCTF:
-#            return True
-#        
-#    def get_num_pixels(self, fn):
-#        width, height = Image.open(fn).size
-#        return width*height
     
     
-class TestXmippExtractParticles(unittest.TestCase):
-
-    @classmethod
-    def _setUpClass(cls):
-        pattern = getInputPath('Micrographs_BPV3_Down3', '*.mrc')
-        cls.runImportMicrograph(pattern, samplingRate=3.711, voltage=300)
-       
-        #TODO: Perform the import coordinates from fake piking
+class TestXmippExtractParticles(TestXmippBase):
+    
+    SAME_AS_PICKING = 1
         
-    def testExtract(self):
+    def doExtract(self, boxSize, downsampleType):
+        print "Run extract particles"
+        pattern = getInputPath('Micrographs_BPV1', '*.mrc')
+        protImport = self.runImportMicrograph(pattern, samplingRate=1.237, voltage=300)
+        protPP = self.runFakedPicking(protImport.outputMicrographs)
+        protExtract = XmippProtExtractParticles(boxSize=boxSize, downsampleType=downsampleType)
+        protExtract.inputCoordinates.set(protPP.outputCoordinates)
+        self.proj.launchProtocol(protExtract, wait=True)
+        
+        self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
+        
+    def testExtractSameAsPicking(self):
+        print "Run extract particles with Same as picking"
+        self.doExtract(512, self.SAME_AS_PICKING)
+        
+class TestXmippML2D(TestXmippBase):
+    
+    def testML2D(self):
         pass
-    
-
-class TestXmippTiltedMicrographs(unittest.TestCase):        
-    
-    def setUp(self):
-        # Create or load project
-        projName = 'tests'
-        manager = Manager()
-        self.proj = manager.createProject(projName) # Now it will be loaded if exists
-
-        # Parameters required by the import 
-        samplingRate = 1
-        voltage = 200
-        pattern = "/home/laura/Scipion_Projects/TiltedData/*.mrc"        
-
-        # Perform the import micrographs
-        self.protImport = ProtImportMicrographs(pattern=pattern, samplingRate=samplingRate, 
-                                                voltage=voltage, tiltPairs=True)
-        self.proj.launchProtocol(self.protImport, wait=True)
-        # check that input micrographs have been imported (a better way to do this?)
-        self.assertFalse(self.protImport.outputMicrographs is None, 'imported micrographs failed')
-        
-    def testPreprocess(self):
-        # test downsampling a set of micrographs
-        protDown = XmippProtPreprocessMicrographs(doDownsample=True, downFactor=2)
-        protDown.inputMicrographs.set(self.protImport.outputMicrographs)
-        self.proj.launchProtocol(protDown, wait=True)
-        
-        # Assert true if output micrographs have tiltedPair relationship
-        self.assertTrue(protDown.outputMicrographs.hasTiltPairs(), "Downsampled micrographs have tilted pairs")
-        
-        md = xmipp.MetaData()
-        md.readBlock(protDown.outputMicrographs.getFileName(), 'TiltedPairs')
-        
-        # Assert true if output metadata has TiltedPairs block
-        self.assertFalse(md.isEmpty(), 'TiltedPairs block is empty')
-        
-
         
 
 if __name__ == "__main__":
-    #suite = unittest.TestLoader().loadTestsFromTestCase(TestXmippPreprocessMicrographs)
-    suite = unittest.TestLoader().loadTestsFromName('test_protocols.TestXmippTiltedMicrographs.testPreprocess')
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestXmippExtractParticles)
+    #suite = unittest.TestLoader().loadTestsFromName('test_protocols_xmipp.TestXmippTiltedMicrographs.testPreprocess')
     unittest.TextTestRunner(verbosity=2).run(suite)
