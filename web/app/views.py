@@ -391,6 +391,17 @@ def showj(request):
                'jquery': jquery_path,
                'css':css_path}
     
+    from xmipp import MetaData
+    md = MetaData('/home/adrian/WebResources/resourceScipionv2/BPV_1388.xmd');
+    if md.isEmpty():
+        print "Error: Empty Metadata"
+    
+    from xmipp import Image
+    img = Image('/home/adrian/WebResources/resourceScipionv2/aFewProjections.stk');
+        
+       
+        
+    print 'takaka'
     return render_to_response('showj.html', context)
 
 AT = '__at__'
