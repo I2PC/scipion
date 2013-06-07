@@ -4,11 +4,9 @@ Created on May 8, 2013
 @author: laura
 '''
 import unittest, sys
-from pyworkflow.manager import Manager
 from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3 import *
-from PIL import Image
 
 
 # Some utility functions to import micrographs that are used
@@ -49,7 +47,16 @@ class TestXmippBase(unittest.TestCase):
         if cls.protPP.outputCoordinates is None:
             raise Exception('Faked particle picking: %s, failed. outputCoordinates is None.' % coordsFolder)
         return cls.protPP       
-        
+
+    @classmethod
+    def runImportParticles(cls, pattern, samplingRate):
+        """ Run an Import particles protocol. """
+        cls.protImport = ProtImportParticles(pattern=pattern, samplingRate=samplingRate)
+        cls.proj.launchProtocol(cls.protImport, wait=True)
+        # check that input images have been imported (a better way to do this?)
+        if cls.protImport.outputImages is None:
+            raise Exception('Import of images: %s, failed. outputImages is None.' % pattern)
+        return cls.protImport        
  
 class TestXmippPreprocessMicrographs(TestXmippBase):
 
@@ -116,12 +123,41 @@ class TestXmippExtractParticles(TestXmippBase):
         self.doExtract(512, self.SAME_AS_PICKING)
         
 class TestXmippML2D(TestXmippBase):
-    
+
+    @classmethod
+    def _setupClass(cls):
+        #TODO: Find a set of images to make this work, with this it does not
+        pattern = getInputPath('Images_hedimg', '*')
+        cls.protImport = cls.runImportParticles(pattern=pattern, samplingRate=1.327)
+        
     def testML2D(self):
-        pass
+        print "Run ML2D"
+        protML2D = XmippProtML2D(numberOfReferences=1, maxIters=4, numberOfMpi=1)
+        protML2D.inputImages.set(self.protImport.outputImages)
+        self.proj.launchProtocol(protML2D, wait=True)        
+        
+        self.assertIsNotNone(protML2D.outputClassification, "There was a problem with ML2D")  
+        
+class TestXmippCL2D(TestXmippBase):
+
+    @classmethod
+    def _setupClass(cls):
+        #TODO: Find a set of images to make this work, with this it does not
+        pattern = getInputPath('Images_hedimg', '*')
+        cls.protImport = cls.runImportParticles(pattern=pattern, samplingRate=1.327)
+        
+    def testCL2D(self):
+        print "Run CL2D"
+        protCL2D = XmippProtCL2D(numberOfReferences=2, numberOfInitialReferences=1, 
+                                 numberOfIterations=4, numberOfMpi=1)
+        protCL2D.inputImages.set(self.protImport.outputImages)
+        self.proj.launchProtocol(protCL2D, wait=True)        
+        
+        self.assertIsNotNone(protCL2D.outputClassification, "There was a problem with CL2D")  
+
         
 
 if __name__ == "__main__":
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestXmippExtractParticles)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestXmippML2D)
     #suite = unittest.TestLoader().loadTestsFromName('test_protocols_xmipp.TestXmippTiltedMicrographs.testPreprocess')
     unittest.TextTestRunner(verbosity=2).run(suite)

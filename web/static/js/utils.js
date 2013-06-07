@@ -20,9 +20,9 @@ function customPopup(URL, widthValue, heightValue) {
 			+ "', 'toolbar=0,scrollbars=1,location=0,statusbar=0,menubar=0,resizable=0,width='+widthValue+',height='+heightValue+'');");
 }
 
-function closePopup(){
-   opener.location.reload(true);
-   self.close();
+function closePopup() {
+	opener.location.reload(true);
+	self.close();
 }
 
 function launchToolbar(projName, id, elm) {
@@ -44,12 +44,10 @@ function launchToolbar(projName, id, elm) {
 	$("a#copyTool").attr(
 			'href',
 			'javascript:popup("/form/?projectName=' + projName + '&protocolId='
-					+ id + '")');
-	// Action Copy Button
-	$("a#deleteTool").attr(
-			'href',
-			'javascript:popup("/form/?projectName=' + projName + '&protocolId='
-					+ id + '")');
+					+ id + '&action=copy' + '")');
+	// Action Delete Button
+	$("a#deleteTool").attr('href',
+			'javascript:deleteProtocolForm("' + projName + '","' + id + '")');
 	// Action Browse Button
 	$("a#browseTool").attr(
 			'href',
@@ -57,6 +55,51 @@ function launchToolbar(projName, id, elm) {
 					+ id + '")');
 
 	row.show(); // Show toolbar
+}
+
+function deleteProtocolForm(projName, protocolId) {
+
+	var msg = "<table><tr><td><img src='/resources/warning.gif' width='45' height='45' />"
+			+ "</td><td class='content' value='"
+			+ projName
+			+ "-"
+			+ protocolId
+			+ "'><strong>ALL DATA</strong> related to this <strong>protocol run</strong>"
+			+ " will be <strong>DELETED</strong>. Do you really want to continue?</td></tr></table>";
+
+	new Messi(msg, {
+		title : 'Confirm DELETE',
+		// modal : true,
+		buttons : [ {
+			id : 0,
+			label : 'Yes',
+			val : 'Y',
+			btnClass : 'btn-select',
+			btnFunc : 'deleteProtocol'
+		}, {
+			id : 1,
+			label : 'No',
+			val : 'C',
+			btnClass : 'btn-cancel'
+		} ],
+		callback : function(val) {
+			if (val == 'Y') {
+				window.location.href = "/project_content/?projectName="
+						+ projName;
+			}
+		}
+	});
+}
+
+function deleteProtocol(elm) {
+	var value = elm.attr('value').split("-");
+	var projName = value[0];
+	var protId = value[1];
+	$.ajax({
+		type : "GET",
+		url : "/delete_protocol/?projectName=" + projName + "&protocolId="
+				+ protId
+	});
 }
 
 function selTableMessi(elm) {

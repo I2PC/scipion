@@ -266,12 +266,6 @@ class SetOfImages(EMObject):
     def setSamplingRate(self, samplingRate):
         """ Set the sampling rate and adjust the scannedPixelSize. """
         self.samplingRate.set(samplingRate)
-        self.scannedPixelSize.set(1e-4 * samplingRate * self.microscope.magnification.get())
-                                  
-    def setScannedPixelSize(self, scannedPixelSize):
-        """ Set scannedPixelSize and update samplingRate. """
-        self.scannedPixelSize.set(scannedPixelSize)
-        self.samplingRate.set((1e+4 * scannedPixelSize) / self.microscope.magnification.get())
     
     
 class SetOfMicrographs(SetOfImages):
@@ -299,6 +293,16 @@ class SetOfMicrographs(SetOfImages):
         SetOfImages.copyInfo(self, other)
         self.microscope.copyInfo(other.microscope)
         self.scannedPixelSize.set(other.scannedPixelSize.get())
+        
+    def setSamplingRate(self, samplingRate):
+        """ Set the sampling rate and adjust the scannedPixelSize. """
+        self.samplingRate.set(samplingRate)
+        self.scannedPixelSize.set(1e-4 * samplingRate * self.microscope.magnification.get())
+                                  
+    def setScannedPixelSize(self, scannedPixelSize):
+        """ Set scannedPixelSize and update samplingRate. """
+        self.scannedPixelSize.set(scannedPixelSize)
+        self.samplingRate.set((1e+4 * scannedPixelSize) / self.microscope.magnification.get())
 
     
 

@@ -114,9 +114,7 @@ def populateTree(tree, obj):
                         protItem = TreeItem(k, 'protocol_class', protClassName)
                         item.childs.append(protItem)
         else:
-            populateTree(item, sub)
-            
-                               
+            populateTree(item, sub)                
        
 def loadConfig(config, name):
     c = getattr(config, name) 
@@ -202,6 +200,11 @@ def project_content(request):
     launchTreeview = os.path.join(settings.STATIC_URL, 'js/launchTreeview.js')
     utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
     #############
+     # Messi Plugin
+    messi_path = os.path.join(settings.STATIC_URL, 'js/messi.js')
+    messi_css_path = os.path.join(settings.STATIC_URL, 'css/messi.css')
+    #############
+    
     projectName = request.GET.get('projectName', None)
     if projectName is None:
         projectName = request.POST.get('projectName', None)
@@ -223,10 +226,25 @@ def project_content(request):
                'launchTreeview': launchTreeview,
                'css':css_path,
                'sections': root.childs,
-               'provider':provider}
+               'provider':provider,
+               'messi': messi_path,
+               'messi_css': messi_css_path}
     
     return render_to_response('project_content.html', context)
 
+def delete_protocol(request):
+    from django.http import HttpResponse   
+    
+    # Project Id(or Name) should be stored in SESSION
+    if request.is_ajax():
+        projectName = request.GET.get('projectName')
+        project = loadProject(projectName)
+        protId = request.GET.get('protocolId', None)
+        protocol = project.mapper.selectById(int(protId))
+     
+        project.deleteProtocol(protocol)         
+        
+    return HttpResponse(mimetype='application/javascript')
 
 def form(request):
     
@@ -247,6 +265,7 @@ def form(request):
     projectName = request.GET.get('projectName')
     project = loadProject(projectName)        
     protocolName = request.GET.get('protocol', None)
+    action = request.GET.get('action', None)
     
     if protocolName is None:
         protId = request.GET.get('protocolId', None)
@@ -254,6 +273,9 @@ def form(request):
     else:
         protocolClass = emProtocolsDict.get(protocolName, None)
         protocol = protocolClass()
+    
+    if action == 'copy':
+        protocol = project.copyProtocol(protocol)
     
     # TODO: Add error page validation when protocol is None
     for section in protocol._definition.iterSections():
@@ -399,11 +421,44 @@ def showj(request):
     css_path = os.path.join(settings.STATIC_URL, 'css/showj_style.css')
     favicon_path = getResource('favicon')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
+    jquery_cookie = os.path.join(settings.STATIC_URL, 'js/jquery.cookie.js')
+    jquery_treeview = os.path.join(settings.STATIC_URL, 'js/jquery.treeview.js')
+    launchTreeview = os.path.join(settings.STATIC_URL, 'js/launchTreeview.js')
+    utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
     #############
+    
+    path = request.GET.get('path', 'tux_vol.xmd')
+    block = request.GET.get('block', '')
+    allowRender = 'render' in request.GET
+    imageDim = request.GET.get('dim', None)
 
-    context = {'favicon': favicon_path,
-               'jquery': jquery_path,
-               'css':css_path}
+    
+#    from xmipp import MetaData
+#    md = MetaData('/home/adrian/WebResources/resourceScipionv2/PPLocation/BPV_1388.xmd');
+#    if md.isEmpty():
+#        print "Error: Empty Metadata"
+#    
+#    from xmipp import Image
+#    img = Image('/home/adrian/WebResources/resourceScipionv2/aFewProjections.stk');
+#        
+#    context = {'favicon': favicon_path,
+#               'jquery': jquery_path,
+#               'css':css_path}
+#
+#        
+#    print 'takaka'
+#    return render_to_response('showj.html', context)
+
+    md = loadMetaData(path, block, allowRender, imageDim)    
+   
+    
+    context = {'jquery': jquery_path,
+               'utils': utils_path,
+               'jquery_cookie': jquery_cookie,
+               'jquery_treeview': jquery_treeview,
+               'launchTreeview': launchTreeview,
+               'css': css_path,               
+               'metadata': md}
     
     return render_to_response('showj.html', context)
 
@@ -416,6 +471,7 @@ class MdValue():
     def __init__(self, md, label, objId, allowRender=True, imageDim=None):
         self.strValue = str(md.getValue(label, objId))        
         self.allowRender = (label == xmipp.MDL_IMAGE) and allowRender
+        self.label = xmipp.label2Str(label)
         if self.allowRender and '@' in self.strValue:
             self.imgValue = self.strValue.replace('@', AT)
             if imageDim:
@@ -430,7 +486,7 @@ class MdData():
         for objId in md:
             obj = MdObj()
             obj.id = objId
-            obj.values = [MdValue(md, l, objId, allowRender, imageDim) for l in labels]        
+            obj.values = [MdValue(md, l, objId, allowRender, imageDim) for l in labels]
             self.objects.append(obj)
         
         
@@ -440,7 +496,7 @@ def loadMetaData(path, block, allowRender=True, imageDim=None):
     if len(block):
         path = '%s@%s' % (block, path)
     #path2 = 'Volumes@' + path1
-    
+    print path
     return MdData(path, allowRender, imageDim)   
      
 def table(request):    

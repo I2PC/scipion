@@ -1,19 +1,55 @@
 <!DOCTYPE html>
 <html lang='es'>
 <head>
-	<title>{{projectName}} hosts config</title>
+	<title>Showj</title>
 	<meta charset='utf-8'>
 	<link rel="icon" type="image/png" href={{favicon}} />
 	<!-- CSS -->
 	<link href={{css}} rel="stylesheet" type="text/css">
 	<!-- JS -->
 	<script src={{jquery}} type="text/javascript"></script>
+	<script src={{jquery_cookie}} type="text/javascript"></script>
+	<script src={{jquery_treeview}} type="text/javascript"></script>
+	<script src={{launchTreeview}} type="text/javascript"></script>
+	<script src={{utils}} type="text/javascript"></script>
 	<script>
 		
 	</script>
 </head>
 <body>
-	<h3>Showj</h3>
-	Testing purposes...
+	<header>Aqui iria la cabecera de Scipion</header>
+	<nav> <!--  Top Menu -->
+		<ul>
+			<li>File</li>
+			<li>Display</li>
+			<li>Help</li>
+		</ul>
+	</nav>
+	<div id="main_section">
+		<aside id="side_news"> <!-- Main Menu -->
+			<img src="/resources/showj/menu.png">
+		</aside>
+		
+		<section> <!--  Es donde va la informacion princiapl -->
+
+		
+		
+		{% for obj in metadata.objects %}
+			{% for value in obj.values %}
+				{% if value.label == 'image' %}
+					<div id="img_container">
+						<div id="img_title">{{forloop.parentloop.counter}}</div>
+						<img src="/get_image/?image={{value.imgValue}}"/>
+					</div>
+				{% endif %}
+			{% endfor %}
+		{% endfor %}	
+			
+			
+			
+		</section>
+	</div>
+	
+
 </body>
 </html>
