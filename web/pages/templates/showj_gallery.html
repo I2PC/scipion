@@ -1,0 +1,16 @@
+{% extends 'showj_base.html' %} 
+{% block head %}{% endblock %}
+{% block content_view %}	
+		
+		{% for obj in metadata.objects %}
+			{% for value in obj.values %}
+				{% if value.label == 'image' %}
+					<div id="img_container">
+						<div id="img_title">{{forloop.parentloop.counter}}</div> 
+						<img src="/get_image/?image={{value.imgValue}}"/>
+					</div> 
+				{% endif %}
+			{% endfor %}
+		{% endfor %}	
+			
+{% endblock %}

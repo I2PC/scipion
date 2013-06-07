@@ -1,0 +1,32 @@
+{% extends 'showj_base.html' %} 
+{% block head %}{% endblock %}
+{% block content_view %}
+
+
+	
+		<div style="overflow:auto">
+		<table cellspacing="0">
+			<tr>
+				<th> Enabled </th>
+				{% for label in metadata.labels %}
+					<th>{{label}}</th> 
+				{% endfor %}				
+			</tr>
+			{% for obj in metadata.objects %}
+				<tr id="{{obj.id}}" style="background-color:#fafafa;" draggable="true" >
+					<td><input type="checkbox"/></td>
+				    {% for value in obj.values %}
+			         <td> 
+			           {% if value.allowRender %} 
+			            <img src="/get_image/?image={{value.imgValue}}"/>
+			           {% else %}
+			           {{value.strValue}}
+			           {% endif %}
+			         </td>
+			        {% endfor %}			        
+				</tr>
+			{% endfor %}
+		</table>
+	</div>
+			
+{% endblock %}
