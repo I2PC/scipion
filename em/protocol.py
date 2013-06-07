@@ -99,6 +99,7 @@ class ProtImportMicrographs(Protocol):
             micSet.setScannedPixelSize(scannedPixelSize)
         outFiles = [path]
         
+        filePaths.sort()
         for i, f in enumerate(filePaths):
             dst = self._getPath(basename(f))            
             shutil.copyfile(f, dst)
@@ -108,9 +109,9 @@ class ProtImportMicrographs(Protocol):
         #REMOVE WHEN TILTED PAIR IS PROPERLY IMPLEMENTED      
             if self.tiltPairs.get(): 
                 if i%2==0:
-                    mic_u = mic_dst
+                    mic_t = mic_dst
                 else:
-                    micSet.appendPair(mic_u.getObjId(), mic_dst.getObjId())    
+                    micSet.appendPair(mic_dst.getObjId(), mic_t.getObjId())    
         # END REMOVE                
         
         micSet.write()

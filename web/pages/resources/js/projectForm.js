@@ -4,7 +4,7 @@ function createProjectForm() {
 
 	new Messi(html, {
 		title : 'Enter the project name',
-		modal : true,
+		// modal : true,
 		buttons : [ {
 			id : 0,
 			label : 'Ok',
@@ -33,13 +33,16 @@ function createProject(elm) {
 
 function deleteProjectForm(projName) {
 
-	var msg = "<div class='content' value='" + projName
+	var msg = "<table><tr><td><img src='/resources/warning.gif' width='45' height='45' />"
+			+ "</td><td class='content' value='"
+			+ projName
 			+ "'>Are you sure to <strong>DELETE</strong> project <strong>"
-			+ projName + "</strong> and all its <strong>DATA</strong></div>";
+			+ projName
+			+ "</strong> and all its <strong>DATA</strong></td></tr></table>";
 
 	new Messi(msg, {
 		title : 'Confirm project deletion',
-		modal : true,
+		// modal : true,
 		buttons : [ {
 			id : 0,
 			label : 'Yes',

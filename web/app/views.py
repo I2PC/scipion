@@ -113,9 +113,7 @@ def populateTree(tree, obj):
                         protItem = TreeItem(k, 'protocol_class', protClassName)
                         item.childs.append(protItem)
         else:
-            populateTree(item, sub)
-            
-                               
+            populateTree(item, sub)                
        
 def loadConfig(config, name):
     c = getattr(config, name) 
@@ -201,6 +199,11 @@ def project_content(request):
     launchTreeview = os.path.join(settings.STATIC_URL, 'js/launchTreeview.js')
     utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
     #############
+     # Messi Plugin
+    messi_path = os.path.join(settings.STATIC_URL, 'js/messi.js')
+    messi_css_path = os.path.join(settings.STATIC_URL, 'css/messi.css')
+    #############
+    
     projectName = request.GET.get('projectName', None)
     if projectName is None:
         projectName = request.POST.get('projectName', None)
@@ -222,10 +225,25 @@ def project_content(request):
                'launchTreeview': launchTreeview,
                'css':css_path,
                'sections': root.childs,
-               'provider':provider}
+               'provider':provider,
+               'messi': messi_path,
+               'messi_css': messi_css_path}
     
     return render_to_response('project_content.html', context)
 
+def delete_protocol(request):
+    from django.http import HttpResponse   
+    
+    # Project Id(or Name) should be stored in SESSION
+    if request.is_ajax():
+        projectName = request.GET.get('projectName')
+        project = loadProject(projectName)
+        protId = request.GET.get('protocolId', None)
+        protocol = project.mapper.selectById(int(protId))
+     
+        project.deleteProtocol(protocol)         
+        
+    return HttpResponse(mimetype='application/javascript')
 
 def form(request):
     
@@ -246,6 +264,7 @@ def form(request):
     projectName = request.GET.get('projectName')
     project = loadProject(projectName)        
     protocolName = request.GET.get('protocol', None)
+    action = request.GET.get('action', None)
     
     if protocolName is None:
         protId = request.GET.get('protocolId', None)
@@ -253,6 +272,9 @@ def form(request):
     else:
         protocolClass = emProtocolsDict.get(protocolName, None)
         protocol = protocolClass()
+    
+    if action == 'copy':
+        protocol = project.copyProtocol(protocol)
     
     # TODO: Add error page validation when protocol is None
     for section in protocol._definition.iterSections():

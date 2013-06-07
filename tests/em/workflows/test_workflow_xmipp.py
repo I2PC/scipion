@@ -58,5 +58,20 @@ class TestXmippWorkflow(unittest.TestCase):
         
         self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
         
+        print "Run ML2D"
+        protML2D = XmippProtML2D(numberOfReferences=1, maxIters=4, numberOfMpi=1)
+        protML2D.inputImages.set(protExtract.outputImages)
+        self.proj.launchProtocol(protML2D, wait=True)        
+        
+        self.assertIsNotNone(protML2D.outputClassification, "There was a problem with ML2D")  
+        
+        print "Run CL2D"
+        protCL2D = XmippProtCL2D(numberOfReferences=2, numberOfInitialReferences=1, 
+                                 numberOfIterations=4, numberOfMpi=1)
+        protCL2D.inputImages.set(protExtract.outputImages)
+        self.proj.launchProtocol(protCL2D, wait=True)        
+        
+        self.assertIsNotNone(protCL2D.outputClassification, "There was a problem with CL2D")         
+        
 if __name__ == "__main__":
     unittest.main()
