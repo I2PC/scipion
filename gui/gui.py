@@ -129,7 +129,7 @@ def changeFontSize(font, event, minSize=-999, maxSize=999):
 IMAGE related variables and functions 
 """
 
-def getImage(imageName, imgDict=None):
+def getImage(imageName, imgDict=None, tk=True):
     """ Search for the image in the RESOURCES path list. """
     if imageName is None:
         return None
@@ -141,10 +141,20 @@ def getImage(imageName, imgDict=None):
     if imagePath:
         from PIL import Image, ImageTk
         image = Image.open(imagePath)
-        image = ImageTk.PhotoImage(image)
+        if tk:
+            image = ImageTk.PhotoImage(image)
         if imgDict is not None:
             imgDict[imageName] = image
     return image
+
+def getPILImage(imageXmipp, dim=None):
+    from PIL import Image
+    image = Image.fromarray(imageXmipp.getData())
+    img = image.convert('RGB')
+    if dim:
+        size = int(dim), int(dim)
+        img.thumbnail(size, Image.ANTIALIAS)
+    return img
 
 """
 Windows geometry utilities

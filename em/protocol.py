@@ -34,7 +34,7 @@ import shutil
 from pyworkflow.object import String, Float
 from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
-from pyworkflow.em import Micrograph, SetOfMicrographs, TiltedPair
+from pyworkflow.em import Micrograph, SetOfMicrographs, TiltedPair, SetOfImages, Image
 from pyworkflow.utils.path import removeBaseExt, join, basename
 
 
@@ -120,6 +120,72 @@ class ProtImportMicrographs(Protocol):
     
     def getFiles(self):
         return self.outputMicrographs.getFiles()
+
+
+class DefImportParticles(Form):
+    """Create the definition of parameters for
+    the ImportParticles protocol
+    """
+    def __init__(self):
+        Form.__init__(self)
+    
+        self.addSection(label='Input')
+        self.addParam('pattern', StringParam, label="Pattern")
+        self.addParam('tiltPairs', BooleanParam, default=False, important=True,
+                   label='Are images tilt pairs?')
+        
+        self.addParam('samplingRate', FloatParam,
+                   label='Sampling rate (A/px)')
+
+class ProtImportParticles(Protocol):
+    """Protocol to import a set of particles in the project"""
+    _definition = DefImportParticles()
+    _label = 'Import images'
+    _path = join('Images', 'Import')
+    
+    def __init__(self, **args):
+        Protocol.__init__(self, **args)         
+        
+    def _defineSteps(self):
+        self._insertFunctionStep('importParticles', self.pattern.get(), self.tiltPairs.get(),
+                                self.samplingRate.get())
+        
+    def importParticles(self, pattern, tiltPairs, samplingRate):
+        """ Copy images matching the filename pattern
+        Register other parameters.
+        """
+        from glob import glob
+        filePaths = glob(pattern)
+        if len(filePaths) == 0:
+            raise Exception('importParticles:There are not filePaths matching pattern')
+        path = self._getPath('images.sqlite')
+        imgSet = SetOfImages(path, tiltPairs=tiltPairs)
+        imgSet.setSamplingRate(samplingRate)
+
+        outFiles = [path]
+        
+        for i, f in enumerate(filePaths):
+            dst = self._getPath(basename(f))            
+            shutil.copyfile(f, dst)
+            img_dst = Image(dst)
+            imgSet.append(img_dst)
+            outFiles.append(dst)
+        #REMOVE WHEN TILTED PAIR IS PROPERLY IMPLEMENTED      
+            if self.tiltPairs.get(): 
+                if i%2==0:
+                    img_u = img_dst
+                else:
+                    imgSet.appendPair(img_u.getObjId(), img_dst.getObjId())    
+        # END REMOVE                
+        
+        imgSet.write()
+        self._defineOutputs(outputImages=imgSet)
+        
+        return outFiles
+    
+    def getFiles(self):
+        return self.outputImages.getFiles()
+
 
 class DefCTFMicrographs(Form):
     """ Create the definition of parameters for

@@ -202,6 +202,7 @@ MODE_CONTINUE = 2
 STEPS_SERIAL = 0
 STEPS_PARALLEL = 1
          
+LEVEL_NORMAL = 0
                 
 class Protocol(Step):
     """ The Protocol is a higher type of Step.
@@ -225,15 +226,38 @@ class Protocol(Step):
         self.stepsExecutionMode = STEPS_SERIAL
         # Host name
         self.hostName = None
+        # Expert level
+        self.expertLevel = Integer(args.get('expertLevel', LEVEL_NORMAL))
         
     def getDefinition(self):
         """ Access the protocol definition. """
         return self._definition
     
+    def getDefinitionParam(self, paramName):
+        """ Return a _definition param give its name. """
+        return self._definition.getParam(paramName)
+    
+    def evalCondition(self, paramName):
+        """ Eval if the condition of paramName in _definition
+        is satified with the current values of the protocol attributes. 
+        """
+        return self._definition.evalCondition(self, paramName)
+    
+    def evalExpertLevel(self, paramName):
+        """ Return True if the param has an expert level is less than 
+        the one for the whole protocol. 
+        """
+        return self.getDefinitionParam(paramName).expertLevel.get() <= self.expertLevel.get()
+    
     def iterDefinitionAttributes(self):
         """ Iterate over all the attributes from definition. """
         for paramName, _ in self._definition.iterParams():
             yield paramName, getattr(self, paramName)
+            
+    def iterDefinitionSections(self):
+        """ Iterate over all the section of the definition. """
+        for section in self._definition.iterSections():
+            yield section
             
     def copyDefinitionAttributes(self, other):
         """ Copy definition attributes to other protocol. """
