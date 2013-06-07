@@ -25,6 +25,7 @@
 
 #include "idr_xray_tomo.h"
 #include "data/xmipp_image_convert.h"
+#include "data/filters.h"
 #include "reconstruct_fourier.h"
 #include "reconstruct_art.h"
 
@@ -211,6 +212,8 @@ void ProgIDRXrayTomo::run()
         // Fix the reconstructed volume to physical density values
         double factor = 1/sampling;
         MULTIDIM_ARRAY(phantom.iniVol) *= factor;
+        // remove negative values
+        forcePositive(MULTIDIM_ARRAY(phantom.iniVol));
 
         initProgress(projMD.size());
         size_t imgNo = 1; // Image number
@@ -231,15 +234,15 @@ void ProgIDRXrayTomo::run()
              * To correct for self-attenuation (without considering 3DPSF)
              * I = -ln(Iab)
              */
-            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(MULTIDIM_ARRAY(proj))
-            dAi(MULTIDIM_ARRAY(proj),n) = -log(1. - dAi(MULTIDIM_ARRAY(proj),n));
+//            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(MULTIDIM_ARRAY(proj))
+//            dAi(MULTIDIM_ARRAY(proj),n) = -log(1. - dAi(MULTIDIM_ARRAY(proj),n));
 
 
             fixedProj.read(fnProj);
             mFixedProj.alias(MULTIDIM_ARRAY(fixedProj));
 
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mFixedProj)
-            dAi(mFixedProj, n) = (dAi(mFixedProj, n) - dAi(MULTIDIM_ARRAY(proj),n))*lambda +  dAi(MULTIDIM_ARRAY(stdProj),n);
+            dAi(mFixedProj, n) = (log(1. - dAi(MULTIDIM_ARRAY(proj),n)) - log(dAi(mFixedProj, n)))*lambda +  dAi(MULTIDIM_ARRAY(stdProj),n);
 
             prevFProj.read(fnInterProjs, DATA, imgNo); // To calculate meanError
             mPrevFProj.alias(MULTIDIM_ARRAY(prevFProj));
@@ -249,9 +252,8 @@ void ProgIDRXrayTomo::run()
 
             // debug stuff //
             if (verbose > 5)
-        {
-            proj.write(fnRootInter + "_debug_proj.stk", imgNo , true, WRITE_REPLACE)
-                ;
+            {
+                proj.write(fnRootInter + "_debug_proj.stk", imgNo , true, WRITE_REPLACE);
                 stdProj.write(fnRootInter + "_debug_std_proj.stk", imgNo , true, WRITE_REPLACE);
 
                 FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mFixedProj)
