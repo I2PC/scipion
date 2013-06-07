@@ -132,7 +132,7 @@ class TestXmippML2D(TestXmippBase):
         
     def testML2D(self):
         print "Run ML2D"
-        protML2D = XmippProtML2D(numberOfReferences=1, maxIters=4)
+        protML2D = XmippProtML2D(numberOfReferences=1, maxIters=4, numberOfMpi=1)
         protML2D.inputImages.set(self.protImport.outputImages)
         self.proj.launchProtocol(protML2D, wait=True)        
         
@@ -148,7 +148,8 @@ class TestXmippCL2D(TestXmippBase):
         
     def testCL2D(self):
         print "Run CL2D"
-        protCL2D = XmippProtCL2D(numberOfReferences=2, numberOfInitialReferences=1, numberOfIterations=4)
+        protCL2D = XmippProtCL2D(numberOfReferences=2, numberOfInitialReferences=1, 
+                                 numberOfIterations=4, numberOfMpi=1)
         protCL2D.inputImages.set(self.protImport.outputImages)
         self.proj.launchProtocol(protCL2D, wait=True)        
         
@@ -157,6 +158,6 @@ class TestXmippCL2D(TestXmippBase):
         
 
 if __name__ == "__main__":
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestXmippExtractParticles)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestXmippML2D)
     #suite = unittest.TestLoader().loadTestsFromName('test_protocols_xmipp.TestXmippTiltedMicrographs.testPreprocess')
     unittest.TextTestRunner(verbosity=2).run(suite)
