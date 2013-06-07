@@ -99,6 +99,32 @@ margin: 1em; /*Margins for inner DIV inside each DIV (to provide padding)*/
 	background-color: white;
 }
 
+.priorityButton {
+	font-size: 0.8em;
+	color: white;
+	width: 13em;
+	height: 25px;
+	background-color: DarkRed;
+	border: 1px solid #000066;
+	padding: 1px;
+	font-weight: bold;
+	letter-spacing: 0.3em;
+	text-align: center;
+}
+
+.priorityButton:hover {
+	font-size: 0.8em;
+	color: white;
+	width: 13em;
+	height: 25px;
+	background-color: FireBrick;
+	border: 1px solid #000066;
+	padding: 1px;
+	font-weight: bold;
+	letter-spacing: 0.3em;
+	text-align: center;
+}
+
 .generalTable a:link {
 	font-weight: bold;
 }

@@ -8,7 +8,15 @@
 		<link href={{css}} rel="stylesheet" type="text/css">
 		<!-- JS -->
 		<script src={{jquery}} type="text/javascript"></script>
+		<script src={{utils}} type="text/javascript"></script>
 		<script>
+		
+			function selTableTest(elm) {
+				alert (elm)
+			}		
+			function seeHost(){
+				
+			}
 			function newHost(){
 			
 			}
@@ -26,7 +34,8 @@
 	</head>
 	<body>
 		<h3>{{projectName}} hosts config</h3>
-		Project hosts:
+		<br/>
+		
 		<table class="generalTable">
 			<tr>
 				<th>Configuration</th> 
@@ -35,7 +44,7 @@
 				<th>Host path</th>
 			</tr>
 			{% for host in hosts %}
-			<tr>
+			<tr id="{{host.label}}" onclick='selTableTest({{host}});'>
 				<td>
 					{{host.label}}
 				</td>
@@ -52,24 +61,24 @@
 			{% endfor %}
 		</table>
 		<br/>
-		<button onclick="newHost()" class="generalButton" type="button" style="">New</button>
 		<button onclick="removeHost()" class="generalButton" type="button" style="">Remove</button>
-		<button onclick="editHost()" class="generalButton" type="button" style="">Edit</button>
 		<br/>
 		<br/>
-		<form>
+		<form action="hosts" method="post">{% csrf_token %}
+		{{ form.as_p }}
+		<!-- 
 		<table>
 			<tr>
 				<td>
 					<label for="label">Scipion hosts: </label>
 				</td>
 				<td>
-					<SELECT NAME="scipionHostsCombo" SIZE=1 onChange="javascript:alert('prueba');"> 
-						<OPTION VALUE="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</OPTION>
+					<select name="scipionHostsCombo" SIZE=1 onChange="javascript:alert('prueba');"> 
+						<option VALUE="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</option>
 						{% for scipionHost in scipionHosts %}
-							<OPTION VALUE="{{scipionHost.label}}">{{sciponHost.hostName}}</OPTION>						
+							<option VALUE="{{scipionHost.label}}">{{sciponHost.hostName}}</option>						
 						{% endfor %}
-					</SELECT> 
+					</select> 
 				</td>
 			</tr>
 			<tr>
@@ -77,37 +86,40 @@
 			</tr>
 			<tr>
 				<td>
-					<label for="label">Configuration: </label>
+					<label for="labelId">Configuration: </label>
 				</td>
 				<td>
-					<input type="text" class="generalInput" id="label" size="30">
-				</td>
-			</tr>
-			<tr>
-				<td>
-					<label for="hostName">Host name: </label>
-				</td>
-				<td>
-					<input type="text" class="generalInput" id="hostName" size="30">
+					<input type="text" class="generalInput" id="labelId" name="label" size="30">
 				</td>
 			</tr>
 			<tr>
 				<td>
-					<label for="userName">User name: </label>
+					<label for="hostNameId">Host name: </label>
 				</td>
 				<td>
-					<input type="text" class="generalInput" id="userName" size="30">
+					<input type="text" class="generalInput" id="hostNameId" name="hostName" size="30">
 				</td>
 			</tr>
 			<tr>
 				<td>
-					<label for="hostPath">Host path: </label>
+					<label for="userNameId">User name: </label>
 				</td>
 				<td>
-					<input type="text" class="generalInput" id="hostPath" size="40"><br/>
+					<input type="text" class="generalInput" id="userNameId" name="userName" size="30">
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label for="hostPathId">Host path: </label>
+				</td>
+				<td>
+					<input type="text" class="generalInput" id="hostPathId" name="hostPath" size="40"><br/>
 				</td>
 			</tr>	
 		</table>
+		 -->
+		<button onclick="removeHost()" class="generalButton" type="button" style="">Clear</button>
+		<input id="acceptButton" type='submit' value='Create' class="priorityButton" />
 		</form>
 	</body>
 </html>

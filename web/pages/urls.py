@@ -26,7 +26,7 @@ urlpatterns = patterns('',
     url(r'^copy_run/$', 'app.views.copy_run'),
     url(r'^protocol/$', 'app.views.protocol'),
     url(r'^browse_objects/$', 'app.views.browse_objects'),
-    url(r'^hosts/$', 'app.views.hosts'),
+    url(r'^openHostsConfig/$', 'app.views.openHostsConfig'),
     url(r'^showj/', 'app.views.showj'),
     url(r'^table/', 'app.views.table'),
     url(r'^get_image/', 'app.views.get_image'), # Load images dynamically
