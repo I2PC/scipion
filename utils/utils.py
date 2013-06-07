@@ -161,9 +161,48 @@ def executeLongRemote (command, hostName, userName, password):
             print channel.recv(1024)
 
 def getLocalUserName():
+    """ Recover local machine user name.
+    returns: Local machine user name.
+    """
     import getpass
     return getpass.getuser()
 
 def getLocalHostName():
+    """ Recover local machine name.
+    returns: Local machine name.
+    """
     import socket
     return socket.gethostname()
+
+def isInFile(text, filePath):
+    """ Checks if given text is in the given file.
+    params:
+        text: Text to check.
+        filePath : File path to check.
+    returns: True if the given text is in the given file, 
+             False if it is not in the file.
+    """
+    f = open(filePath, 'r')
+    for line in f:
+        if text in line:
+            f.close()
+            return True
+    f.close()
+    return False
+
+def getLineInFile(text, fileName):
+    """ Find the line where the given text is located in the given file.
+    params:
+       text: Text to check.
+       filePath : File path to check.
+    returns: File number where the text was located.
+    """
+    f = open(fileName, 'r')
+    cont = 0
+    for line in f:
+        cont += 1
+        if text in line:
+            f.close()
+            return cont
+    f.close()
+    return None

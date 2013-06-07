@@ -37,7 +37,6 @@ from pyworkflow.gui.tree import BoundTree, DbTreeProvider
 from pyworkflow.gui.browser import ObjectBrowser
 from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
-from pyworkflow.tests.classes.tester import *
 from pyworkflow.em import *
 
             

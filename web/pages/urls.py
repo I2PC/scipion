@@ -18,11 +18,14 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
     
     url(r'^projects/', 'app.views.projects'),
+    url(r'^create_project/$', 'app.views.create_project'),
+    url(r'^delete_project/$', 'app.views.delete_project'),
     url(r'^project_content/$', 'app.views.project_content'),
-#    url(r'^form/$', 'app.views.form'),
     url(r'^form/$', 'app.views.form'),
     url(r'^protocol/$', 'app.views.protocol'), 
     url(r'^browse_objects/$', 'app.views.browse_objects'),
     url(r'^hosts/$', 'app.views.hosts'),
     url(r'^showj/', 'app.views.showj'),
+    url(r'^table/', 'app.views.table'),
+    url(r'^get_image/', 'app.views.get_image'), # Load images dynamically
 )
