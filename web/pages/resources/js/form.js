@@ -151,7 +151,7 @@ function getTableFormatted(node, list, id) {
 
 function selectDialog(objClass, msg, funcName) {
 	new Messi(msg, {
-		title : 'Select' + objClass,
+		title : 'Select ' + objClass,
 		modal : true,
 		buttons : [ {
 			id : 0,
