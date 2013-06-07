@@ -418,23 +418,6 @@ def showj(request):
     allowRender = 'render' in request.GET
     imageDim = request.GET.get('dim', None)
 
-    
-#    from xmipp import MetaData
-#    md = MetaData('/home/adrian/WebResources/resourceScipionv2/PPLocation/BPV_1388.xmd');
-#    if md.isEmpty():
-#        print "Error: Empty Metadata"
-#    
-#    from xmipp import Image
-#    img = Image('/home/adrian/WebResources/resourceScipionv2/aFewProjections.stk');
-#        
-#    context = {'favicon': favicon_path,
-#               'jquery': jquery_path,
-#               'css':css_path}
-#
-#        
-#    print 'takaka'
-#    return render_to_response('showj.html', context)
-
     md = loadMetaData(path, block, allowRender, imageDim)    
    
     
