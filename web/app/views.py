@@ -1,5 +1,7 @@
 # from scipion.models import *
+import pyworkflow as pw
 import os
+import xmipp
 from django.shortcuts import render_to_response
 from django.core.context_processors import csrf
 from pyworkflow.manager import Manager
@@ -11,6 +13,10 @@ from pyworkflow.web.pages import settings
 from pyworkflow.apps.config import *
 from pyworkflow.em import *
 from django.http.request import HttpRequest
+from pyworkflow.apps.config import ExecutionHostMapper
+
+from pyworkflow.tests import getInputPath 
+
 
 def getResource(request):
     if request == 'logoScipion':
@@ -36,7 +42,7 @@ def getResource(request):
 def projects(request):
     manager = Manager()
 #    logo_path = findResource('scipion_logo.png')
-
+    
     # Resources #
     css_path = os.path.join(settings.STATIC_URL, 'css/projects_style.css')
     #############
@@ -179,7 +185,7 @@ def loadProject(projectName):
     projPath = manager.getProjectPath(projectName)
     project = Project(projPath)
     project.load()
-    return project    
+    return project
     
 def project_content(request):    
     # Resources #
@@ -320,7 +326,7 @@ def protocol(request):
     if error == []:
         pass
     else:
-        # Errors
+        #Errors
         pass
     
     
@@ -361,7 +367,7 @@ def hosts(request):
     return render_to_response('hosts.html', context)
 
 def showj(request):
-    # manager = Manager()
+    #manager = Manager()
 #    logo_path = findResource('scipion_logo.png')
 
     # Resources #
@@ -375,7 +381,100 @@ def showj(request):
                'css':css_path}
     
     return render_to_response('showj.html', context)
+
+AT = '__at__'
+
+class MdObj():
+    pass
     
+class MdValue():
+    def __init__(self, md, label, objId, allowRender=True, imageDim=None):
+        self.strValue = str(md.getValue(label, objId))        
+        self.allowRender = (label == xmipp.MDL_IMAGE) and allowRender
+        if self.allowRender and '@' in self.strValue:
+            self.imgValue = self.strValue.replace('@', AT)
+            if imageDim:
+                self.imgValue += '&dim=%s' % imageDim
+
+class MdData():
+    def __init__(self, path, allowRender=True, imageDim=None):        
+        md = xmipp.MetaData(path)
+        labels =  md.getActiveLabels()
+        self.labels = [xmipp.label2Str(l) for l in labels]
+        self.objects = []
+        for objId in md:
+            obj = MdObj()
+            obj.id = objId
+            obj.values = [MdValue(md, l, objId, allowRender, imageDim) for l in labels]        
+            self.objects.append(obj)
+        
+        
+
+def loadMetaData(path, block, allowRender=True, imageDim=None):
+    path = getInputPath('showj', path)    
+    if len(block):
+        path = '%s@%s' % (block, path)
+    #path2 = 'Volumes@' + path1
+    
+    return MdData(path, allowRender, imageDim)   
+     
+def table(request):    
+    css_path = os.path.join(settings.STATIC_URL, 'css/project_content_style.css')
+    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
+    jquery_cookie = os.path.join(settings.STATIC_URL, 'js/jquery.cookie.js')
+    jquery_treeview = os.path.join(settings.STATIC_URL, 'js/jquery.treeview.js')
+    launchTreeview = os.path.join(settings.STATIC_URL, 'js/launchTreeview.js')
+    utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
+    #############
+    
+    path = request.GET.get('path', 'tux_vol.xmd')
+    block = request.GET.get('block', '')
+    allowRender = 'render' in request.GET
+    imageDim = request.GET.get('dim', None)
+    
+    md = loadMetaData(path, block, allowRender, imageDim)    
+   
+    
+    context = {
+               'jquery': jquery_path,
+               'utils': utils_path,
+               'jquery_cookie': jquery_cookie,
+               'jquery_treeview': jquery_treeview,
+               'launchTreeview': launchTreeview,
+               'css': css_path,               
+               'metadata': md}
+    
+    return render_to_response('table.html', context)
+
+
+def get_image(request):
+    from django.http import HttpResponse
+    from pyworkflow.gui import getImage, getPILImage
+    imageNo = None
+    imagePath = request.GET.get('image')
+    imageDim = request.GET.get('dim', None)
+    
+        
+    if imagePath.endswith('png') or imagePath.endswith('gif'):
+        img = getImage(imagePath, tk=False)
+    else:
+        if AT in imagePath:
+            parts = imagePath.split(AT)
+            imageNo = parts[0]
+            imagePath = parts[1]
+        imagePath = getInputPath('showj', imagePath)
+        if imageNo:
+            imagePath = '%s@%s' % (imageNo, imagePath) 
+        imgXmipp = xmipp.Image(imagePath)
+        #from PIL import Image
+        img = getPILImage(imgXmipp, imageDim)
+        
+        
+        
+    #response = HttpResponse(mimetype="image/png")    
+    response = HttpResponse(mimetype="image/png")
+    img.save(response, "PNG")
+    return response
     
 if __name__ == '__main__':
     root = loadProtTree()    
