@@ -914,7 +914,7 @@ public class SingleParticlePicker extends ParticlePicker
 			throw new IllegalArgumentException(XmippMessage.getIllegalStateForOperationMsg("picker", this.mode.toString()));
 
 		frame.getCanvas().setEnabled(false);
-		XmippWindowUtil.blockGUI(frame, "Training...");
+//		XmippWindowUtil.blockGUI(frame, "Training...");
 		if(trainmd == null)
 			trainmd = new MetaData();
 		else
@@ -939,8 +939,8 @@ public class SingleParticlePicker extends ParticlePicker
 			outputmd = new MetaData();
 		else 
 			outputmd.clear();
-		new Thread(new TrainRunnable(frame)).start();
-//		new TrainRunnable(frame).run();
+//		new Thread(new TrainRunnable(frame)).start();
+		new TrainRunnable(frame).run();
 	}
 
 	
@@ -969,7 +969,7 @@ public class SingleParticlePicker extends ParticlePicker
 				loadAutomaticParticles(micrograph, outputmd, false);
 //				outputmd.write(getOutputPath(micrograph.getAutoPosFile()));
 				frame.getCanvas().repaint();
-				XmippWindowUtil.releaseGUI(frame.getRootPane());
+//				XmippWindowUtil.releaseGUI(frame.getRootPane());
 				frame.getCanvas().setEnabled(true);
 
 			}
