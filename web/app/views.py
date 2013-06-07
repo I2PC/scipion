@@ -431,6 +431,7 @@ def showj(request):
     block = request.GET.get('block', '')
     allowRender = 'render' in request.GET
     imageDim = request.GET.get('dim', None)
+    mode = request.GET.get('mode', 'gallery')
 
     md = loadMetaData(path, block, allowRender, imageDim)    
    
@@ -443,7 +444,8 @@ def showj(request):
                'css': css_path,               
                'metadata': md}
     
-    return render_to_response('showj.html', context)
+    return_page = '%s%s%s' % ('showj_',mode,'.html')
+    return render_to_response(return_page, context)
 
 AT = '__at__'
 
