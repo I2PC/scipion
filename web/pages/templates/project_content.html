@@ -2,12 +2,14 @@
 {% block title %} - Project {{project_name}} {% endblock %}
 {% block head %}
 	<link href={{css}} rel="stylesheet" type="text/css">
+	<link href={{messi_css}} rel="stylesheet" type="text/css">
 	<!-- JS Libs -->
 	<script src={{jquery}} type="text/javascript"></script>
 	<script src={{jquery_cookie}} type="text/javascript"></script>
 	<script src={{jquery_treeview}} type="text/javascript"></script>
 	<script src={{launchTreeview}} type="text/javascript"></script>
 	<script src={{utils}} type="text/javascript"></script>
+	<script src={{messi}} type="text/javascript"></script>
 {% endblock %}		
 
 {% block menu %}
@@ -54,7 +56,7 @@
 		<span><a id="browseTool" href=""><img src="{{browseTool}}"/> Browse</a></span>
 	</div>
 	<div style="overflow:auto">
-		<table cellspacing="0">
+		<table id="run" cellspacing="0">
 			<tr>
 				{% for colName, colWidth in provider.getColumns %}
 					<th>{{colName}}</th> 
