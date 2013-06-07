@@ -16,6 +16,7 @@ from django.http.request import HttpRequest
 from pyworkflow.apps.config import ExecutionHostMapper
 
 from pyworkflow.tests import getInputPath 
+from forms import HostForm
 
 
 def getResource(request):
@@ -355,27 +356,40 @@ def getScipionHosts():
     defaultHosts = os.path.join(pw.HOME, 'settings', 'execution_hosts.xml')
     return ExecutionHostMapper(defaultHosts).selectAll()
 
-def hosts(request):
-    # Resources #
-    css_path = os.path.join(settings.STATIC_URL, 'css/general_style.css')
-    favicon_path = getResource('favicon')
-    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
-    # # Project Id(or Name) should be stored in SESSION
-    projectName = request.GET.get('projectName')
-    project = loadProject(projectName)
-    scipionHosts = getScipionHosts()
-    projectHosts = project.getHosts()   
-    hostsKeys = [host.getLabel() for host in projectHosts]      
-    availableHosts = [host for host in scipionHosts if host.getLabel() not in hostsKeys]
-    context = {'projectName' : projectName,
-               'project' : project,
-               'hosts': projectHosts,
-               'scipionHosts': availableHosts,
-               'favicon': favicon_path,
-               'jquery': jquery_path,
-               'css':css_path}
+def openHostsConfig(request):
+    if request.method == 'POST': # If the form has been submitted...
+        pass
+    else:
+        # Resources #
+        css_path = os.path.join(settings.STATIC_URL, 'css/general_style.css')
+        favicon_path = getResource('favicon')
+        jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
+        utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
+        # # Project Id(or Name) should be stored in SESSION
+        projectName = request.GET.get('projectName')
+        project = loadProject(projectName)
+        scipionHosts = getScipionHosts()
+        projectHosts = project.getHosts()   
+#         hostsKeys = [host.getLabel() for host in projectHosts]      
+#         availableHosts = [host for host in scipionHosts if host.getLabel() not in hostsKeys]
+        form = HostForm()
+        scpnHostsChoices = []
+        scpnHostsChoices.append(('',''))
+        for executionHostMapper in scipionHosts:
+            scpnHostsChoices.append((executionHostMapper.getLabel(),executionHostMapper.getHostName()))
+        form.fields['scpnHosts'].choices = scpnHostsChoices
+        context = {'projectName' : projectName,
+                   'project' : project,
+                   'hosts': projectHosts,
+                   'scipionHosts': scipionHosts,
+                   'favicon': favicon_path,
+                   'jquery': jquery_path,
+                   'utils': utils_path,
+                   'css':css_path,
+                   'form': form}
+            
+        return render_to_response('hosts.html', context)
     
-    return render_to_response('hosts.html', context)
 
 def showj(request):
     #manager = Manager()
