@@ -33,6 +33,19 @@ class ProtParticlePickingAuto(XmippProtocol):
         self.micrographs = self.getFilename('micrographs')
         
         
+    def createFilenameTemplates(self):
+        return {
+            'training': join('%(ExtraDir)s', '%(model)s_training.txt'),
+                 'pos': join('%(ExtraDir)s', '%(micrograph)s.pos'),
+#                    'mask': join('%(ExtraDir)s', '%(model)s_mask.xmp'),
+                'pca': join('%(ExtraDir)s', '%(model)s_pca_model.stk'),
+                'rotpca': join('%(ExtraDir)s', '%(model)s_rotpca_model.stk'),
+                'svm': join('%(ExtraDir)s', '%(model)s_svm.txt'),
+                'svm2': join('%(ExtraDir)s', '%(model)s_svm2.txt'),
+                'average': join('%(ExtraDir)s', '%(model)s_particle_avg.xmp'),
+                'config': join('%(ExtraDir)s','config.xmd')
+                }
+        
     def loadConfig(self):
         md = MetaData(self.Input['config'])
         self.particleSizeForAuto = md.getValue(MDL_PICKING_PARTICLE_SIZE, objId)
@@ -53,41 +66,35 @@ class ProtParticlePickingAuto(XmippProtocol):
         self.insertImportOfFiles(filesToImport)
 
         md = MetaData(self.Input['micrographs'])
-        for i, model in enumerate(self.familiesForAuto):
-            particleSize = self.particleSizeForAuto[i]
-            modelRoot = self.extraPath(model)
-            for objId in md:
-                # Get micrograph path and name
-                path = md.getValue(MDL_MICROGRAPH, objId)
-                micrographName = removeBasenameExt(path)
-                proceed = True
-                fnPos = self.PrevRun.getFilename('pos', micrograph=micrographName)
-                if xmippExists(fnPos):
-                    mdaux = MetaData("families@" + fnPos)
-                    for idaux in mdaux:
-                        familyAux = mdaux.getValue(MDL_PICKING_FAMILY, idaux)
-                        if model == familyAux:
-                            state = mdaux.getValue(MDL_PICKING_MICROGRAPH_FAMILY_STATE, idaux)
-                            if state != "Available":
-                                proceed = False
-                                break
-                if proceed:
-                    oroot = self.extraPath(micrographName)
-                    cmd = "-i %(path)s --particleSize %(particleSize)d --model %(modelRoot)s --outputRoot %(oroot)s --mode autoselect" % locals()
-                    if self.Fast:
-                        cmd += " --fast "
-                    self.insertParallelRunJobStep("xmipp_micrograph_automatic_picking", cmd)
+        particleSize = self.particleSizeForAuto[i]
+        modelRoot = self.extraPath(model)
+        for objId in md:
+            # Get micrograph path and name
+            path = md.getValue(MDL_MICROGRAPH, objId)
+            micrographName = removeBasenameExt(path)
+            proceed = True
+            fnPos = self.PrevRun.getFilename('pos', micrograph=micrographName)
+            if xmippExists(fnPos):
+                mdaux = MetaData("header@" + fnPos)
+                state = mdaux.getValue(MDL_PICKING_MICROGRAPH_STATE, idaux)
+                if state != "Available":
+                    proceed = False
+                    break
+            if proceed:
+                oroot = self.extraPath(micrographName)
+                cmd = "-i %(path)s --particleSize %(particleSize)d --model %(modelRoot)s --outputRoot %(oroot)s --mode autoselect" % locals()
+                if self.Fast:
+                    cmd += " --fast "
+                self.insertParallelRunJobStep("xmipp_micrograph_automatic_picking", cmd)
                                              
-        for model in self.familiesForAuto:
-            self.insertStep('gatherResults', Family=model, WorkingDir=self.WorkingDir, PickingDir=self.pickingDir)
+        self.insertStep('gatherResults', Family=model, WorkingDir=self.WorkingDir, PickingDir=self.pickingDir)
         self.insertStep('deleteTempFiles', ExtraDir=self.ExtraDir)
 
     def summary(self):
         if len(self.familiesForAuto) == 0:
             self.loadConfig()
         summary = ["Supervised picking RUN: <%s> " % self.SupervisedRun,
-                   "Input directory: [%s] " % self.pickingDir,
-                   "Automatic picking of the following models: " + ",".join(self.familiesForAuto)]
+                   "Input directory: [%s] " % self.pickingDir]
         autoFiles = glob.glob(self.workingDirPath("extra/*auto.pos"))
         if len(autoFiles) > 0:
             Nparticles = 0
@@ -108,9 +115,9 @@ class ProtParticlePickingAuto(XmippProtocol):
                     maxTime = max(maxTime, t)
             summary.append("<%d> particles automatically picked from <%d> micrographs in <%d> minutes" % (Nparticles, Nmicrographs, int((maxTime - minTime) / 60.0)))
         else:
-            for family in self.familiesForAuto:
-                fnExtractList = self.getFilename('extract_list', family=family)
-                msg = family + ": "
+            
+                fnExtractList = self.getFilename('extract_list', model=model)
+                msg = "model: "
                 if os.path.exists(fnExtractList):
                     MD = MetaData("mic.*@" + fnExtractList)
                     MDauto = MetaData()
@@ -131,14 +138,16 @@ class ProtParticlePickingAuto(XmippProtocol):
     def visualize(self):
         mode = PM_REVIEW + " %s"
         for f in glob.glob(self.extraPath("*extract_list.xmd")):
-            launchParticlePickingGUI(None, self.Input['micrographs'], self.ExtraDir, mode % f, self.TiltPairs, self.Memory, self.Family)
+            launchParticlePickingGUI(None, self.Input['micrographs'], self.ExtraDir, mode % f, self.TiltPairs, self.Memory)
+            
+            
 
-def gatherResults(log, Family, WorkingDir, PickingDir):
-    familyFn = lambda fn: "%s@%s" % (Family, fn)
+def gatherResults(log, WorkingDir, PickingDir):
     md = MetaData(getProtocolFilename("micrographs",WorkingDir=WorkingDir))
     mdpos = MetaData()
     mdposAux = MetaData()
     fnExtractList = getProtocolFilename("extract_list", ExtraDir=join(WorkingDir,"extra"))
+    particlesblock = 'particles@'
     for objId in md:
         fullname = md.getValue(MDL_MICROGRAPH, objId)
         name = os.path.split(replaceFilenameExt(fullname, ''))[1]        
@@ -148,8 +157,8 @@ def gatherResults(log, Family, WorkingDir, PickingDir):
         print "Looking for "+fn
         if exists(fn):
             try:
-                print "Reading: "+familyFn(fn)          
-                mdpos.read(familyFn(fn))
+                print "Reading: "+ fn          
+                mdpos.read(particlesblock + fn)
                 mdpos.setValueCol(MDL_COST, 2.0)
                 print "Found : "+str(mdpos.size())
             except:
@@ -162,8 +171,8 @@ def gatherResults(log, Family, WorkingDir, PickingDir):
             print "Looking for "+fn
             if exists(fn):
                 try:
-                    print "Reading: "+familyFn(fn)          
-                    mdposAux.read(familyFn(fn))
+                    print "Reading: "fn          
+                    mdposAux.read(particlesblock + fn))
                     mdposAux.removeDisabled();
                     mdposAux.removeLabel(MDL_ENABLED)
                     print "Found : "+str(mdposAux.size())

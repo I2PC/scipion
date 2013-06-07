@@ -34,6 +34,23 @@ Java_xmipp_jni_PickingClassifier_destroy(JNIEnv *env, jobject jobj)
     XMIPP_JAVA_CATCH;
 }
 
+JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_train
+(JNIEnv *env, jobject jobj, jobject micrographs)
+{
+    XMIPP_JAVA_TRY
+    {
+    	AutoParticlePicking2 *picker = GET_INTERNAL_AUTOPARTICLEPICKING2(jobj);
+    	std::cout<<"getting metadata"<< std::endl;
+    	MetaData * md = GET_INTERNAL_METADATA(micrographs);
+    	md->print();
+    	std::cout<<"calling train"<< std::endl;
+    	picker->train(*md);
+
+    }
+    XMIPP_JAVA_CATCH;
+
+}
+
 
 JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_autopick
 (JNIEnv *env, jobject jobj, jstring filename, jobject joutputmd, jint percent)
@@ -65,22 +82,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_correct
 
 }
 
-JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_train
-(JNIEnv *env, jobject jobj, jobject micrographs)
-{
-    XMIPP_JAVA_TRY
-    {
-    	AutoParticlePicking2 *picker = GET_INTERNAL_AUTOPARTICLEPICKING2(jobj);
-    	std::cout<<"getting metadata"<< std::endl;
-    	MetaData * md = GET_INTERNAL_METADATA(micrographs);
-    	md->print();
-    	std::cout<<"calling train"<< std::endl;
-    	picker->train(*md);
 
-    }
-    XMIPP_JAVA_CATCH;
-
-}
 
 JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_setSize
 (JNIEnv *env, jobject jobj, jint psize)

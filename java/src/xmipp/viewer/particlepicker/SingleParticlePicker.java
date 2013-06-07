@@ -45,6 +45,8 @@ public class SingleParticlePicker extends ParticlePicker
 	private String templatesfile;
 	private int templateindex;
 	private PickingClassifier classifier;
+	private MetaData trainmd;
+	private MetaData outputmd;
 
 	public SingleParticlePicker(String selfile, String outputdir, Mode mode)
 	{
@@ -161,7 +163,7 @@ public class SingleParticlePicker extends ParticlePicker
 	public void setSize(int size)
 	{
 		super.setSize(size);
-		classifier.setSize(size);
+//		classifier.setSize(size);
 		initUpdateTemplates();
 	}
 
@@ -913,15 +915,18 @@ public class SingleParticlePicker extends ParticlePicker
 
 		frame.getCanvas().setEnabled(false);
 //		XmippWindowUtil.blockGUI(frame, "Training...");
-		MetaData md = new MetaData();
+		if(trainmd == null)
+			trainmd = new MetaData();
+		else
+			trainmd.clear();
 		long id;
 		for (TrainingMicrograph m : micrographs)
 		{
 			if (m.hasManualParticles())
 			{
-				id = md.addObject();
-				md.setValueString(MDLabel.MDL_MICROGRAPH, m.getFile(), id);
-				md.setValueString(MDLabel.MDL_MICROGRAPH_PARTICLES, getOutputPath(m.getPosFile()), id);
+				id = trainmd.addObject();
+				trainmd.setValueString(MDLabel.MDL_MICROGRAPH, m.getFile(), id);
+				trainmd.setValueString(MDLabel.MDL_MICROGRAPH_PARTICLES, getOutputPath(m.getPosFile()), id);
 
 				m.getAutomaticParticles().clear();
 				new File(m.getAutoPosFile()).delete();
@@ -929,10 +934,13 @@ public class SingleParticlePicker extends ParticlePicker
 		}
 		micrograph.setState(MicrographState.Supervised);
 		saveData();
-		md.print();
-		MetaData outputmd = new MetaData();
-//		new Thread(new TrainRunnable(frame, md, outputmd)).start();
-		new TrainRunnable(frame, md, outputmd).run();
+		trainmd.write(getOutputPath("train.xmd"));
+		if(outputmd == null)
+			outputmd = new MetaData();
+		else 
+			outputmd.clear();
+//		new Thread(new TrainRunnable(frame)).start();
+		new TrainRunnable(frame).run();
 	}
 
 	
@@ -942,16 +950,10 @@ public class SingleParticlePicker extends ParticlePicker
 	{
 
 		private SingleParticlePickerJFrame frame;
-		private MetaData trainmd;
-		private MetaData outputmd;
 
-		public TrainRunnable(SingleParticlePickerJFrame frame, MetaData trainmd, MetaData outputmd)
+		public TrainRunnable(SingleParticlePickerJFrame frame)
 		{
-
 			this.frame = frame;
-			this.trainmd = trainmd;
-			this.outputmd = outputmd;
-			
 
 		}
 
@@ -970,8 +972,6 @@ public class SingleParticlePicker extends ParticlePicker
 //				XmippWindowUtil.releaseGUI(frame.getRootPane());
 				frame.getCanvas().setEnabled(true);
 
-				trainmd.destroy();
-				outputmd.destroy();
 			}
 			catch (Exception e)
 			{
