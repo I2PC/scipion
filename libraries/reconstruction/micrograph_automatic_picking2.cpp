@@ -382,6 +382,7 @@ void AutoParticlePicking2::add2Dataset(int flagNegPos)
 
 void AutoParticlePicking2::train(MetaData MD)
 {
+
     std::cerr<<"started train"<<std::endl;
     buildInvariant(MD);
     std::cerr<<"built invariants"<<std::endl;
@@ -1803,3 +1804,5 @@ void ProgMicrographAutomaticPicking2::run()
         fnFilterBank.deleteFile();
     delete autoPicking;
 }
+
+

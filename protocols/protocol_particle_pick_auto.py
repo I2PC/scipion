@@ -86,8 +86,7 @@ class ProtParticlePickingAuto(XmippProtocol):
         if len(self.familiesForAuto) == 0:
             self.loadConfig()
         summary = ["Supervised picking RUN: <%s> " % self.SupervisedRun,
-                   "Input directory: [%s] " % self.pickingDir,
-                   "Automatic picking of the following models: " + ",".join(self.familiesForAuto)]
+                   "Input directory: [%s] " % self.pickingDir]
         autoFiles = glob.glob(self.workingDirPath("extra/*auto.pos"))
         if len(autoFiles) > 0:
             Nparticles = 0
@@ -131,14 +130,30 @@ class ProtParticlePickingAuto(XmippProtocol):
     def visualize(self):
         mode = PM_REVIEW + " %s"
         for f in glob.glob(self.extraPath("*extract_list.xmd")):
-            launchParticlePickingGUI(None, self.Input['micrographs'], self.ExtraDir, mode % f, self.TiltPairs, self.Memory, self.Family)
+            launchParticlePickingGUI(None, self.Input['micrographs'], self.ExtraDir, mode % f, self.TiltPairs, self.Memory)
+            
+            
+            
+            
+    def createFilenameTemplates(self):
+        return {
+            'training': join('%(ExtraDir)s', '%(model)s_training.txt'),
+                 'pos': join('%(ExtraDir)s', '%(micrograph)s.pos'),
+#                    'mask': join('%(ExtraDir)s', '%(model)s_mask.xmp'),
+                'pca': join('%(ExtraDir)s', '%(model)s_pca_model.stk'),
+                'rotpca': join('%(ExtraDir)s', '%(model)s_rotpca_model.stk'),
+                'svm': join('%(ExtraDir)s', '%(model)s_svm.txt'),
+                'svm2': join('%(ExtraDir)s', '%(model)s_svm2.txt'),
+                'average': join('%(ExtraDir)s', '%(model)s_particle_avg.xmp'),
+                'config': join('%(ExtraDir)s','config.xmd')
+                }
 
-def gatherResults(log, Family, WorkingDir, PickingDir):
-    familyFn = lambda fn: "%s@%s" % (Family, fn)
+def gatherResults(log, WorkingDir, PickingDir):
     md = MetaData(getProtocolFilename("micrographs",WorkingDir=WorkingDir))
     mdpos = MetaData()
     mdposAux = MetaData()
     fnExtractList = getProtocolFilename("extract_list", ExtraDir=join(WorkingDir,"extra"))
+    particlesblock = 'particles@'
     for objId in md:
         fullname = md.getValue(MDL_MICROGRAPH, objId)
         name = os.path.split(replaceFilenameExt(fullname, ''))[1]        
@@ -148,8 +163,8 @@ def gatherResults(log, Family, WorkingDir, PickingDir):
         print "Looking for "+fn
         if exists(fn):
             try:
-                print "Reading: "+familyFn(fn)          
-                mdpos.read(familyFn(fn))
+                print "Reading: "+ fn          
+                mdpos.read(particlesblock + fn)
                 mdpos.setValueCol(MDL_COST, 2.0)
                 print "Found : "+str(mdpos.size())
             except:
@@ -162,8 +177,8 @@ def gatherResults(log, Family, WorkingDir, PickingDir):
             print "Looking for "+fn
             if exists(fn):
                 try:
-                    print "Reading: "+familyFn(fn)          
-                    mdposAux.read(familyFn(fn))
+                    print "Reading: "fn          
+                    mdposAux.read(particlesblock + fn))
                     mdposAux.removeDisabled();
                     mdposAux.removeLabel(MDL_ENABLED)
                     print "Found : "+str(mdposAux.size())
