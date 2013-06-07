@@ -1,53 +1,84 @@
 /* CSS Document */
-.button {
-	font-size: 0.8em;
-	color: white;
-	width: 13em;
-	height: 25px;
-	background-color: DarkRed;
-	border: 1px solid #000066;
-	padding: 1px;
-	font-weight: bold;
-	letter-spacing: 0.3em;
+
+/* GENERAL */
+*{
+	margin:0px;
+	padding:0px;
+} /* Reset default margin and padding for all element */
+
+header, section, footer, aside, nav, article, hgroup{
+	display:block;
+}/* For html5 unsupported browsers */
+
+/* HEADER */
+header{
+	height: 100px;
+	text-align:center;
+}
+
+/* NAV (TOP MENU) */
+nav{
+	height: 55px;
+	width: 100%;
+	background-color: #7a0000;
+	color: #fff;
+	font: 16px Tahoma;
+}
+nav ul{
+	padding: 20px 15px 20px 20px;
+}
+
+nav ul li{
+	padding: 5px;
+	display: inline;
+}
+
+/* ASIDE (BOTTOM MENU) */
+aside{
+	height: 30px;
+	background-color: #320101;
+	padding: 20px;
+}
+
+
+/* MAIN SECTION */
+section{
+	width:100%;
+	display:-webkit-box;/* Para indicar que van flexible box dentro */
+	-webkit-box-pack: center;/* Queremos que las cajas vayan centradas. En este caso estamos centrado el unico de la web o sea la web */
+	-webkit-box-orient: horizontal;
+	padding: 20px;
+	-webkit-box-flex:1;
+}
+
+section #img_container{
+	margin: 10px 2px 10px 2px;
+	display:-webkit-box;
+	-webkit-box-orient: vertical;
+}
+
+#img_container img{
+	max-width: 256px;
+	display:-webkit-box;
+	-webkit-box-flex:0;
+}
+
+#img_title{
+	background-color: #dddddd;
+	font: 12px Tahoma;	
 	text-align: center;
+	
+	
+	
+	
 }
 
-.button:hover {
-	font-size: 0.8em;
-	color: white;
-	width: 13em;
-	height: 25px;
-	background-color: FireBrick;
-	border: 1px solid #000066;
-	padding: 1px;
-	font-weight: bold;
-	letter-spacing: 0.3em;
-	text-align: center;
-}
-.projList {
-	list-style: none;
+
+#gallery{
+	margin: 20px 0px;
+	display: -webkit-box;/* Esto es una flexible box */
+	-webkit-box-orient: horizontal;/* Fijas la orientacion de las flexible boxes que contiene */
+	-webkit-box-flex:1; /* 1=Totalmente flexible 0=Fija */
 }
 
-.projName {
-	font-size: 1.2em;
-	font-weight: bold;
-	color: black;
-	text-decoration: none;
-	margin-left: -0.5em;
-}
 
-.projRemove {
-	margin-left: 1em;
-	font-size: 0.9em;
-	font-weight: bold;
-	color: black;
-	text-decoration: none;
-	font-size: 0.9em;
-}
-
-.projectsList {
-	border: 1px solid black;
-	background: Gainsboro;
-	height: 97%;
-	/*width: 99%;*/
-}

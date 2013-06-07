@@ -385,23 +385,45 @@ def showj(request):
     css_path = os.path.join(settings.STATIC_URL, 'css/showj_style.css')
     favicon_path = getResource('favicon')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
+    jquery_cookie = os.path.join(settings.STATIC_URL, 'js/jquery.cookie.js')
+    jquery_treeview = os.path.join(settings.STATIC_URL, 'js/jquery.treeview.js')
+    launchTreeview = os.path.join(settings.STATIC_URL, 'js/launchTreeview.js')
+    utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
     #############
+    
+    path = request.GET.get('path', 'tux_vol.xmd')
+    block = request.GET.get('block', '')
+    allowRender = 'render' in request.GET
+    imageDim = request.GET.get('dim', None)
 
-    context = {'favicon': favicon_path,
-               'jquery': jquery_path,
-               'css':css_path}
     
-    from xmipp import MetaData
-    md = MetaData('/home/adrian/WebResources/resourceScipionv2/BPV_1388.xmd');
-    if md.isEmpty():
-        print "Error: Empty Metadata"
+#    from xmipp import MetaData
+#    md = MetaData('/home/adrian/WebResources/resourceScipionv2/PPLocation/BPV_1388.xmd');
+#    if md.isEmpty():
+#        print "Error: Empty Metadata"
+#    
+#    from xmipp import Image
+#    img = Image('/home/adrian/WebResources/resourceScipionv2/aFewProjections.stk');
+#        
+#    context = {'favicon': favicon_path,
+#               'jquery': jquery_path,
+#               'css':css_path}
+#
+#        
+#    print 'takaka'
+#    return render_to_response('showj.html', context)
+
+    md = loadMetaData(path, block, allowRender, imageDim)    
+   
     
-    from xmipp import Image
-    img = Image('/home/adrian/WebResources/resourceScipionv2/aFewProjections.stk');
-        
-       
-        
-    print 'takaka'
+    context = {'jquery': jquery_path,
+               'utils': utils_path,
+               'jquery_cookie': jquery_cookie,
+               'jquery_treeview': jquery_treeview,
+               'launchTreeview': launchTreeview,
+               'css': css_path,               
+               'metadata': md}
+    
     return render_to_response('showj.html', context)
 
 AT = '__at__'
@@ -413,6 +435,7 @@ class MdValue():
     def __init__(self, md, label, objId, allowRender=True, imageDim=None):
         self.strValue = str(md.getValue(label, objId))        
         self.allowRender = (label == xmipp.MDL_IMAGE) and allowRender
+        self.label = xmipp.label2Str(label)
         if self.allowRender and '@' in self.strValue:
             self.imgValue = self.strValue.replace('@', AT)
             if imageDim:
@@ -427,7 +450,7 @@ class MdData():
         for objId in md:
             obj = MdObj()
             obj.id = objId
-            obj.values = [MdValue(md, l, objId, allowRender, imageDim) for l in labels]        
+            obj.values = [MdValue(md, l, objId, allowRender, imageDim) for l in labels]
             self.objects.append(obj)
         
         
@@ -437,7 +460,7 @@ def loadMetaData(path, block, allowRender=True, imageDim=None):
     if len(block):
         path = '%s@%s' % (block, path)
     #path2 = 'Volumes@' + path1
-    
+    print path
     return MdData(path, allowRender, imageDim)   
      
 def table(request):    
