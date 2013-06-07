@@ -44,6 +44,9 @@ class ProtCTFFind(ProtCTFMicrographs):
         self._params['lowRes'] = sampling / self._params['lowRes']
         self._params['highRes'] = sampling / self._params['highRes']        
         
+        if which('ctffind3.exe') is '':
+            raise Exception('Missing ctffind3.exe')
+         
         self._program = 'export NATIVEMTZ=kk ; ' + which('ctffind3.exe')
         self._args = """   << eof > %(ctffindOut)s
 %(micFn)s
