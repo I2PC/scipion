@@ -351,18 +351,29 @@ def browse_objects(request):
                              ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
 
+def getScipionHosts():
+    defaultHosts = os.path.join(pw.HOME, 'settings', 'execution_hosts.xml')
+    return ExecutionHostMapper(defaultHosts).selectAll()
+
 def hosts(request):
     # Resources #
+    css_path = os.path.join(settings.STATIC_URL, 'css/general_style.css')
     favicon_path = getResource('favicon')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     # # Project Id(or Name) should be stored in SESSION
     projectName = request.GET.get('projectName')
     project = loadProject(projectName)
+    scipionHosts = getScipionHosts()
+    projectHosts = project.getHosts()   
+    hostsKeys = [host.getLabel() for host in projectHosts]      
+    availableHosts = [host for host in scipionHosts if host.getLabel() not in hostsKeys]
     context = {'projectName' : projectName,
                'project' : project,
-               'hosts': project.getHosts(),
+               'hosts': projectHosts,
+               'scipionHosts': availableHosts,
                'favicon': favicon_path,
-               'jquery': jquery_path}
+               'jquery': jquery_path,
+               'css':css_path}
     
     return render_to_response('hosts.html', context)
 
