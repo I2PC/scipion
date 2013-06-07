@@ -260,9 +260,13 @@ MetaData_addLabel(PyObject *obj, PyObject *args, PyObject *kwargs);
 PyObject *
 MetaData_fillConstant(PyObject *obj, PyObject *args, PyObject *kwargs);
 
-/* fillConstant */
+/* fillRandom */
 PyObject *
 MetaData_fillRandom(PyObject *obj, PyObject *args, PyObject *kwargs);
+
+/* fillExpand */
+PyObject *
+MetaData_fillExpand(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 /* copyColumn */
 PyObject *

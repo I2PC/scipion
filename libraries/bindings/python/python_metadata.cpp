@@ -256,6 +256,8 @@ PyMethodDef MetaData_methods[] =
           METH_VARARGS, "Fill a column with constant value" },
         { "fillRandom", (PyCFunction) MetaData_fillRandom,
           METH_VARARGS, "Fill a column with random value" },
+          { "fillExpand", (PyCFunction) MetaData_fillExpand,
+             METH_VARARGS, "Fill several columns expanding a values from a colum with a path to a row metadata" },
         { "copyColumn", (PyCFunction) MetaData_copyColumn,
           METH_VARARGS, "Copy the values of one column to another" },
         { "copyColumnTo", (PyCFunction) MetaData_copyColumnTo,
@@ -1061,6 +1063,28 @@ MetaData_fillConstant(PyObject *obj, PyObject *args, PyObject *kwargs)
                 }
             }
             PyErr_SetString(PyXmippError, "MetaData.fillConstant: couldn't convert second argument to string");
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
+/* fillRandom */
+PyObject *
+MetaData_fillExpand(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int label;
+
+    if (PyArg_ParseTuple(args, "i", &label))
+    {
+        try
+        {
+            MetaDataObject *self = (MetaDataObject*) obj;
+            self->metadata->fillExpand((MDLabel) label);
+            Py_RETURN_NONE;
         }
         catch (XmippError &xe)
         {
