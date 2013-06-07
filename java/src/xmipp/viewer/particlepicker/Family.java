@@ -4,6 +4,7 @@ import ij.ImagePlus;
 import java.awt.Color;
 import java.io.File;
 import java.lang.reflect.Field;
+import java.util.List;
 
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.ImageGeneric;
@@ -11,7 +12,9 @@ import xmipp.jni.Particle;
 import xmipp.utils.TasksManager;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
+import xmipp.viewer.particlepicker.training.model.MicrographFamilyData;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
+import xmipp.viewer.particlepicker.training.model.TrainingMicrograph;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 import xmipp.viewer.particlepicker.training.model.TrainingPicker;
 
@@ -65,9 +68,9 @@ public class Family
 			{
 
 				this.templates = new ImageGeneric(templatesfile);
-				for (templateindex = 0; templateindex < templatesNumber; templateindex++)
-					// to initialize templates on c part
-					XmippImageConverter.readToImagePlus(templates, ImageGeneric.FIRST_IMAGE + templateindex);
+				templates.read(templatesfile, false);
+				templateindex = templatesNumber;//all images read
+
 			}
 			else
 				initTemplates();
@@ -105,6 +108,45 @@ public class Family
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
+	
+	public void updateTemplates(TrainingPicker picker)
+	{
+		if (getStep() != FamilyState.Manual)
+			return;
+
+		initTemplates();
+		ImageGeneric igp;
+		List<TrainingParticle> particles;
+		MicrographFamilyData mfd;
+		TrainingParticle particle;
+		double[] align;
+		try
+		{
+			for (TrainingMicrograph m : picker.getMicrographs())
+			{
+				mfd = m.getFamilyData(this);
+				for (int i = 0; i < mfd.getManualParticles().size(); i++)
+				{
+					particles = mfd.getManualParticles();
+					particle = particles.get(i);
+					igp = particle.getImageGeneric();
+					if (getTemplateIndex() < getTemplatesNumber())
+						setTemplate(igp);
+					else
+					{
+						align = getTemplates().alignImage(igp);
+						particle.setLastalign(align);
+					}
+				}
+			}
+			saveTemplates();
+			
+		}
+		catch (Exception e)
+		{
+			throw new IllegalArgumentException(e.getMessage());
+		}
+	}
 
 
 	public ImageGeneric getTemplates()
@@ -112,19 +154,7 @@ public class Family
 		return templates;
 	}
 
-//	public synchronized ImagePlus getTemplatesImage(long i)
-//	{
-//		try
-//		{
-//			ImagePlus imp = XmippImageConverter.convertToImagePlus(templates, i);
-//
-//			return imp;
-//		}
-//		catch (Exception e)
-//		{
-//			throw new IllegalArgumentException(e);
-//		}
-//	}
+
 
 	public FamilyState getStep()
 	{
@@ -163,7 +193,7 @@ public class Family
 		if (size > ParticlePicker.fsizemax)
 			throw new IllegalArgumentException(String.format("Max size is %s, %s not allowed", ParticlePicker.fsizemax, size));
 		this.size = size;
-		((TrainingPicker) picker).updateTemplates();
+
 	}
 
 
@@ -189,7 +219,7 @@ public class Family
 			throw new IllegalArgumentException(XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Family must have at least one template"));
 
 		this.templatesNumber = num;
-		((TrainingPicker) picker).updateTemplates();
+
 	}
 
 	public Color getColor()
@@ -287,15 +317,21 @@ public class Family
 
 	public synchronized void centerParticle(TrainingParticle p)
 	{
-		if (templateindex == 0)
-			return;//no template to align
+
+		if (((TrainingPicker)picker).getManualParticlesNumber(this) < templatesNumber)
+			return;//missing templates
 		Particle shift = null;
 		try
 		{
 			ImageGeneric igp = p.getImageGeneric();
 			shift = templates.bestShift(igp);
-			p.setX(p.getX() + shift.getX());
-			p.setY(p.getY() + shift.getY());
+			double distance = Math.sqrt(Math.pow(shift.getX(),  2) + Math.pow(shift.getY(), 2))/size;
+			System.out.printf("normalized distance:%.2f\n", distance);
+			if(distance < 0.25)
+			{
+				p.setX(p.getX() + shift.getX());
+				p.setY(p.getY() + shift.getY());
+			}
 		}
 		catch (Exception e)
 		{
@@ -310,8 +346,9 @@ public class Family
 		try
 		{
 			particle.setLastalign(align);
-			templates.applyAlignment(igp, particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle
-					.getTemplatePsi());
+			templates.applyAlignment(igp, particle.getTemplateIndex(), particle.getTemplateRotation(), 
+					particle.getTemplateTilt(), 
+					particle.getTemplatePsi());
 			//System.out.printf("adding particle: %d %.2f %.2f %.2f\n", particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
 		}
 		catch (Exception e)

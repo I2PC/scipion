@@ -26,6 +26,7 @@ import xmipp.utils.ColorRenderer;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.Family;
+import xmipp.viewer.particlepicker.training.model.TrainingPicker;
 
 public class EditFamiliesJDialog extends JDialog {
 
@@ -197,7 +198,6 @@ public class EditFamiliesJDialog extends JDialog {
 					frame.updateColor(color);
 				} else if (column == 2) {
 					int size = (Integer) value;
-					f.setSize(size);
 					frame.updateSize(size);
 
 				} else if (column == 3) {
@@ -205,7 +205,8 @@ public class EditFamiliesJDialog extends JDialog {
 					int templates = (Integer)value;
 					if(templates  < 1)
 						throw new IllegalArgumentException(XmippMessage.getIllegalValueMsg("Templates", templates));
-					parent.setTemplatesNumber(f, templates);
+					f.setTemplatesNumber(templates);
+					frame.getParticlePicker().updateTemplates();
 
 				}
 				frame.getParticlePicker().saveFamilies();

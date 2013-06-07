@@ -34,9 +34,9 @@ public class ImportParticlesJDialog extends XmippDialog {
 	public Format format = Format.Auto;
 	protected XmippFileChooser xfc = null;
 	protected String path;
-	private JFormattedTextField scaletf;
-	private JCheckBox invertxcb;
-	private JCheckBox invertycb;
+	protected JFormattedTextField scaletf;
+	protected JCheckBox invertxcb;
+	protected JCheckBox invertycb;
 
 	protected static String[] FormatStrings = { "Automatic", "Xmipp 2.4",
 			"Xmipp 3.0", "Eman" };
@@ -141,15 +141,16 @@ public class ImportParticlesJDialog extends XmippDialog {
 				showError(XmippMessage.getPathNotExistsMsg(path));
 			else
 			{
-				String result = parent.importParticles(format, path, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
-				if(result != null && !result.isEmpty())
-					JOptionPane.showMessageDialog(this, result);
+				importParticles();
 			}
 		} catch (Exception e) {
 			XmippDialog.showException(parent, e);
 		}
 	}
 	
+	protected void importParticles() {
+		parent.importParticles(format, path, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
+	}
 	
 	
 	

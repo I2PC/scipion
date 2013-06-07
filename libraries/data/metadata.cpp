@@ -56,7 +56,12 @@ void getBlocksInMetaDataFile(const FileName &inFile, StringVector& blockList)
     unmapFile(bufferMap.begin, bufferMap.size, fd);
 }
 
-// Get the blocks available
+// Does the blocks exist
+bool existsBlockInMetaDataFile(const FileName &inFileWithBlock)
+{
+	return existsBlockInMetaDataFile(inFileWithBlock.removeBlockName(),
+			                         inFileWithBlock.getBlockName());
+}
 bool existsBlockInMetaDataFile(const FileName &inFile, const String& inBlock)
 {
     if (!inFile.isMetaData())
@@ -428,10 +433,10 @@ bool MetaData::keepLabels(const std::vector<MDLabel> &labels)
 {
     for (size_t i = 0; i < activeLabels.size();)
     {
-    	if (!vectorContainsLabel(labels, activeLabels[i]))
-    		removeLabel(activeLabels[i]);
-    	else
-    		++i;
+        if (!vectorContainsLabel(labels, activeLabels[i]))
+            removeLabel(activeLabels[i]);
+        else
+            ++i;
     }
     return true;
 }
@@ -852,10 +857,10 @@ void MetaData::_parseObject(std::istream &is, MDObject &object, size_t id)
  * also set the activeLabels (for new STAR files)
  */
 void MetaData::_readColumnsStar(mdBlock &block,
-                                  std::vector<MDObject*> & columnValues,
-                                  const std::vector<MDLabel>* desiredLabels,
-                                  bool addColumns,
-                                  size_t id)
+                                std::vector<MDObject*> & columnValues,
+                                const std::vector<MDLabel>* desiredLabels,
+                                bool addColumns,
+                                size_t id)
 {
     char * end = block.end;
     char * newline = NULL;
@@ -1427,21 +1432,21 @@ void MetaData::aggregateSingleSizeT(MDObject &mdValueOut, AggregateOperation op,
 
 double MetaData::getColumnMax(MDLabel column)
 {
-	double max;
-	MDObject result(column);
-	aggregateSingle(result, AGGR_MAX, column);
-	result.getValue(max);
-	return max;
+    double max;
+    MDObject result(column);
+    aggregateSingle(result, AGGR_MAX, column);
+    result.getValue(max);
+    return max;
 
 }
 
 double MetaData::getColumnMin(MDLabel column)
 {
-	double min;
-	MDObject result(column);
-	aggregateSingle(result, AGGR_MIN, column);
-	result.getValue(min);
-	return min;
+    double min;
+    MDObject result(column);
+    aggregateSingle(result, AGGR_MIN, column);
+    result.getValue(min);
+    return min;
 
 }
 
@@ -1667,7 +1672,7 @@ void MetaData::sort(MetaData &MDin, const MDLabel sortLabel,bool asc, int limit,
 void MetaData::sort(MetaData &MDin, const String &sortLabel,bool asc, int limit, int offset)
 {
     // Check if the label has semicolon
-	size_t ipos=sortLabel.find(':');
+    size_t ipos=sortLabel.find(':');
     MDLabelType type = MDL::labelType(sortLabel);
     if (ipos!=String::npos || type == LABEL_VECTOR_DOUBLE || type == LABEL_VECTOR_SIZET)
     {
@@ -1876,6 +1881,8 @@ std::ostream& operator<<(std::ostream& o, const MetaData & mD)
 
 void MDIterator::init(const MetaData &md, const MDQuery * pQuery)
 {
+    clear();
+
     std::vector<size_t> objectsVector;
     md.myMDSql->selectObjects(objectsVector, pQuery);
     objects = NULL;
@@ -1894,7 +1901,13 @@ void MDIterator::init(const MetaData &md, const MDQuery * pQuery)
     }
 }
 
-MDIterator::MDIterator()
+void MDIterator::clear()
+{
+    delete [] objects;
+    reset();
+}
+
+void MDIterator::reset()
 {
     objects = NULL;
     objId = BAD_OBJID;
@@ -1902,13 +1915,22 @@ MDIterator::MDIterator()
     size = 0;
 }
 
+
+
+MDIterator::MDIterator()
+{
+    reset();
+}
+
 MDIterator::MDIterator(const MetaData &md)
 {
+    reset();
     init(md);
 }
 
 MDIterator::MDIterator(const MetaData &md, const MDQuery &query)
 {
+    reset();
     init(md, &query);
 }
 
@@ -1949,7 +1971,7 @@ inline double MDRandGenerator::getRandValue()
     case GTOR_STUDENT:
         return rnd_student_t(op3, op1, op2);
     default:
-    	REPORT_ERROR(ERR_ARG_INCORRECT,"Unknown random type");
+        REPORT_ERROR(ERR_ARG_INCORRECT,"Unknown random type");
     }
 }
 MDRandGenerator::MDRandGenerator(double op1, double op2, const String &mode, double op3)

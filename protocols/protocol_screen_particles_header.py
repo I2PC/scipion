@@ -17,6 +17,17 @@
 """ Stack file or metadata file with a selection file"""
 InputFile=''
 
+# {expert}{list_combo}(None, MaxZscore, Percentage) Automatic particle rejection
+""" How to automatically reject particles. It can be none (no rejection), maxZscore (reject a particle
+if its Zscore is larger than this value), Percentage (reject a given percentage in each one of the screening criteria). """
+RejectionMethod='None'
+
+# {expert}{condition}(RejectionMethod=="MaxZscore") Maximum Zscore
+MaxZscore=3
+
+# {expert}{condition}(RejectionMethod=="Percentage") Percentage (%)
+Percentage=5
+
 # {eval} expandParallel(mpi=0, threads=0, hours=4)
 # {eval} expandExpert()
 

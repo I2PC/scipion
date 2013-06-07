@@ -42,37 +42,62 @@ public class ImagePlusLoader
 	protected long modified;
 	protected boolean wrap;
 	private int index = -1;
-	
+	private boolean normalize;
+	private double normalize_min;
+	private double normalize_max;
+
 	public ImagePlusLoader()
 	{
 		this.imp = null;
+		allowsPoll = existsFile();
 	}
 
 	public ImagePlusLoader(ImagePlus imp)
 	{
 		this.imp = imp;
 		allowsPoll = existsFile();
+		
 	}
-	
+
 	public ImagePlusLoader(int index, ImageGeneric ig)
 	{
 		this(ig);
-		this.index  = index;
-		
+		this.index = index;
+
 	}
 
 	public ImagePlusLoader(String fileName)
 	{
 		this.fileName = fileName;
-		this.modified = new File(fileName).lastModified();
 		allowsPoll = existsFile();
+		this.modified = new File(fileName).lastModified();
+		if (allowsPoll && Filename.isVolume(fileName))
+			try
+			{
+				ig = new ImageGeneric(fileName);
+			}
+			catch (Exception e)
+			{
+				throw new IllegalArgumentException(e.getMessage());
+			}
 	}
 
+
+	public void setNormalize(double normalize_min, double normalize_max)
+	{
+		this.normalize = true;
+		this.normalize_min = normalize_min;
+		this.normalize_max = normalize_max;
+		
+	}
+	
+
+	
 	public ImagePlusLoader(ImageGeneric ig)
 	{
 		this.ig = ig;
 		allowsPoll = existsFile();
-		if(allowsPoll)
+		if (allowsPoll)
 			fileName = ig.getFilename();
 	}
 
@@ -92,10 +117,15 @@ public class ImagePlusLoader
 				imp = loadSingleImageFromFile();
 			else if (ig != null)
 			{
-				if(index != -1)
+				if (index != -1)
 					imp = XmippImageConverter.convertToImagePlus(ig, ImageGeneric.FIRST_IMAGE, index);
 				else
 					imp = XmippImageConverter.readToImagePlus(ig);
+			}
+			if(normalize)
+			{
+				imp.getProcessor().setMinAndMax(normalize_min, normalize_max);
+				imp.updateImage();
 			}
 			return imp;
 		}
@@ -112,7 +142,7 @@ public class ImagePlusLoader
 		long select_image = Filename.getNimage(fileName);
 		imp = XmippImageConverter.readToImagePlus(ig, ig.getXDim(), ig.getYDim(), select_image);
 		return imp;
-		
+
 	}
 
 	public boolean hasChanged()
@@ -135,11 +165,7 @@ public class ImagePlusLoader
 		return allowsGeometry;
 	}
 
-	public void setAllowsGeometry(boolean useGeometry)
-	{
-		this.useGeometry = useGeometry;
-	}
-
+	
 	public boolean getUseGeometry()
 	{
 		return useGeometry;
@@ -148,7 +174,7 @@ public class ImagePlusLoader
 	public void setUseGeometry(boolean value)
 	{
 		useGeometry = value;
-		
+
 	}
 
 	public void setWrap(boolean value)
@@ -161,7 +187,6 @@ public class ImagePlusLoader
 	{
 		return wrap;
 	}
-
 
 	public boolean isVolume()
 	{
@@ -177,23 +202,21 @@ public class ImagePlusLoader
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
-	
+
 	public boolean existsFile()
 	{
 		String file = null;
-		if(fileName != null && !fileName.equals(""))
+		if (fileName != null && !fileName.equals(""))
 			file = fileName;
-		else if(imp != null && imp.getOriginalFileInfo() != null)
+		else if (imp != null && imp.getOriginalFileInfo() != null)
 			file = imp.getOriginalFileInfo().directory + File.separator + imp.getOriginalFileInfo().fileName;
-		else if (ig!= null && ig.getFilename()!= null)
+		else if (ig != null && ig.getFilename() != null)
 			file = ig.getFilename();
-		if(file == null)
+		if (file == null)
 			return false;
-		if(!new File(file).exists())
+		if (!new File(file).exists())
 			return false;
 		return true;
 	}
-	
-	
 
 }
