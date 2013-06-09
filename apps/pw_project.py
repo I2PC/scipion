@@ -58,7 +58,7 @@ ACTION_COPY = 'Copy'
 ACTION_DELETE = 'Delete'
 ACTION_REFRESH = 'Refresh'
 ACTION_STEPS = 'Browse'
-ACTION_TREE = 'Show_DepsTree'
+ACTION_TREE = 'Tree'
 ACTION_STOP = 'Stop'
 ACTION_DEFAULT = 'Default'
 ACTION_CONTINUE = 'Continue'
@@ -250,6 +250,7 @@ class ProjectWindow(gui.Window):
         self.loadProjectConfig()
         self.icon = self.generalCfg.icon.get()
         self.selectedProtocol = None
+        self.showGraph = False
         
         gui.Window.__init__(self, self.projName, master, icon=self.icon, minsize=(900,500))
         
@@ -285,13 +286,21 @@ class ProjectWindow(gui.Window):
         rightFrame = tk.Frame(p)
         rightFrame.columnconfigure(0, weight=1)
         rightFrame.rowconfigure(1, weight=1)
+        rightFrame.rowconfigure(0, minsize=label.winfo_reqheight())
         
         # Create the Action Buttons TOOLBAR
-        runsToolbar = tk.Frame(rightFrame)
-        runsToolbar.grid(row=0, column=0, sticky='news')
-        runsToolbar.rowconfigure(0, weight=1)
-        rightFrame.rowconfigure(0, minsize=label.winfo_reqheight())
-        self.runsToolbar = runsToolbar
+        toolbar = tk.Frame(rightFrame)
+        toolbar.grid(row=0, column=0, sticky='news')
+        gui.configureWeigths(toolbar)
+        #toolbar.columnconfigure(0, weight=1)
+        toolbar.columnconfigure(1, weight=1)
+        
+        self.runsToolbar = tk.Frame(toolbar)
+        self.runsToolbar.grid(row=0, column=0, sticky='sw')
+        # On the left of the toolbar will be other
+        # actions that can be applied to all runs (refresh, graph view...)
+        self.allToolbar = tk.Frame(toolbar)
+        self.allToolbar.grid(row=0, column=10, sticky='se')
         self.createActionToolbar()
 
         # Create the Run History tree
@@ -300,6 +309,8 @@ class ProjectWindow(gui.Window):
         #runsFrame.grid(row=1, column=0, sticky='news', pady=5)
         self.runsTree = self.createRunsTree(runsFrame)        
         gui.configureWeigths(runsFrame)
+        
+        self.runsGraph = self.createRunsGraph(runsFrame)
         
         # Create the Selected Run Info
         infoFrame = tk.Frame(v)
@@ -343,7 +354,7 @@ class ProjectWindow(gui.Window):
         p.grid(row=0, column=0, sticky='news')
         
         # Event bindings
-        self.root.bind("<F5>", lambda e: self.runsTree.update())
+        self.root.bind("<F5>", self.refreshRuns)
         # Hide the right-click menu
         #self.root.bind('<FocusOut>', self._unpostMenu)
         #self.root.bind("<Key>", self._unpostMenu)
@@ -351,20 +362,30 @@ class ProjectWindow(gui.Window):
         
         #self.menuRun = tk.Menu(self.root, tearoff=0)
         
+    def refreshRuns(self, e=None):
+        """ Refresh the status of diplayed runs. """
+        self.runsTree.update()
+        
     def createActionToolbar(self):
         """ Prepare the buttons that will be available for protocol actions. """
        
         self.actionList = [ACTION_EDIT, ACTION_COPY, ACTION_DELETE, ACTION_STEPS, ACTION_STOP, ACTION_CONTINUE]
         self.actionButtons = {}
         
-        for action in self.actionList:
-            def addButton(action):
-                btn = tk.Label(self.runsToolbar, text=action, image=self.getImage(ActionIcons[action]), 
-                           compound=tk.LEFT, cursor='hand2')
-                btn.bind('<Button-1>', lambda e: self._runActionClicked(action))
-                return btn
-            self.actionButtons[action] = addButton(action)
+        def addButton(action, text, toolbar):
+            btn = tk.Label(toolbar, text=text, image=self.getImage(ActionIcons[action]), 
+                       compound=tk.LEFT, cursor='hand2')
+            btn.bind('<Button-1>', lambda e: self._runActionClicked(action))
+            return btn
         
+        for action in self.actionList:
+            self.actionButtons[action] = addButton(action, action, self.runsToolbar)
+            
+        for i, action in enumerate([ACTION_TREE, ACTION_REFRESH]):
+            btn = addButton(action, action, self.allToolbar)
+            btn.grid(row=0, column=i)
+        
+            
     def updateActionToolbar(self):
         """ Update which action buttons should be visible. """
         status = self.selectedProtocol.status.get()
@@ -411,6 +432,35 @@ class ProjectWindow(gui.Window):
         #tree.bind("<Button-3>", self._onRightClick)
         tree.bind('<<TreeviewSelect>>', self._runItemClick)
         return tree
+    
+    def createRunsGraph(self, parent):
+        from pyworkflow.gui import Canvas
+        canvas = Canvas(parent, width=400, height=400)
+        #canvas.grid(row=0, column=0, sticky='nsew')
+        parent.grid_columnconfigure(0, weight=1)
+        parent.grid_rowconfigure(0, weight=1)
+        
+        tb1 = canvas.createTextbox("Project", 100, 100, "blue")
+        tb2 = canvas.createTextbox("aqui estoy yo\ny tu tb", 200, 200)
+        tb3 = canvas.createTextbox("otro mas\n", 100, 200, "red")
+        e1 = canvas.createEdge(tb1, tb2)
+        e2 = canvas.createEdge(tb1, tb3)
+        
+        return canvas
+    
+    def switchRunsView(self):
+        self.showGraph = not self.showGraph
+        
+        if self.showGraph:
+            show = self.runsGraph
+            hide = self.runsTree
+        else:
+            show = self.runsTree
+            hide = self.runsGraph
+            
+        hide.grid_remove()
+        show.grid(row=0, column=0, sticky='news')
+            #TODO: hide graph
     
     def _protocolItemClick(self, e=None):
         protClassName = self.protTree.getFirst().split('.')[-1]
@@ -466,8 +516,6 @@ class ProjectWindow(gui.Window):
             self.runsTree.update()
         
     def _runActionClicked(self, action):
-        if self.selectedProtocol is None:
-            return
         prot = self.selectedProtocol
         if prot:
             if action == ACTION_DEFAULT:
@@ -481,15 +529,15 @@ class ProjectWindow(gui.Window):
                 self._deleteProtocol(prot)
             elif action == ACTION_STEPS:
                 self._browseRunData()
-            elif action == ACTION_TREE:
-                pass
-                #self.switchRunsView()
-            elif action == ACTION_REFRESH:
-                pass
             elif action == ACTION_STOP:
                 pass
             elif action == ACTION_CONTINUE:
                 self._continueProtocol(prot)
+        # Following actions do not need a select run
+        if action == ACTION_TREE:
+            self.switchRunsView()
+        elif action == ACTION_REFRESH:
+            self.refreshRuns()
     
     
 if __name__ == '__main__':
