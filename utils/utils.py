@@ -27,7 +27,7 @@
 This module contains utilities functions and classes.
 """
 
-import os
+import os, sys
 
 def prettyDate(time=False):
     """
@@ -206,3 +206,20 @@ def getLineInFile(text, fileName):
             return cont
     f.close()
     return None
+
+def getColorStr(text, color, bold=False):
+    """ Add ANSI color codes to the string if there is a terminal sys.stdout.
+    Params:
+     text: text to be colored
+     color: red or green
+     bold: bold the text
+    """
+    if not sys.stdout.isatty():
+        return text
+    
+    colors = {'gray': 30, 'red': 31, 'green': 32, 'yellow': 33, 'blue': 34, 'magenta': 35, 'cyan': 36}
+    attr = [str(colors[color])]
+    
+    if bold:
+        attr.append('1')
+    return '\x1b[%sm%s\x1b[0m' % (';'.join(attr), text)

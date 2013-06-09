@@ -31,6 +31,7 @@ execution and tracking like: Step and Protocol
 import os
 import datetime as dt
 import pickle
+import time
 
 from pyworkflow.object import OrderedObject, String, List, Integer, Boolean, CsvList
 from pyworkflow.utils.path import replaceExt, makePath, join, existsPath, cleanPath, getFolderFiles
@@ -512,8 +513,22 @@ class Protocol(Step):
         """ Set the execution host name """ 
         self.hostName = hostName
         
-    # Methods that should be implemented in subclasses
+    def getElapsedTime(self):
+        """ Return the time that protocols
+        took to run (or the actual running time 
+        if still is running )
+        """
+        f = "%Y-%m-%d %H:%M:%S.%f"
+        t1 = dt.datetime.strptime(self.initTime.get(), f)
+        if self.status == STATUS_RUNNING:
+            t2 = dt.datetime.now()
+        else:
+            t2 = dt.datetime.strptime(self.endTime.get(), f)
+        elapsed = t2 - t1
         
+        return elapsed
+    
+    # Methods that should be implemented in subclasses
     def _validate(self):
         """ This function can be overwritten by subclasses.
         Used from the public validate function.   

@@ -28,6 +28,14 @@
 import sys
 import os
 from os.path import join, exists, isdir, relpath
+from unittest import TestResult
+from pyworkflow.utils.utils import getColorStr
+import time
+
+try:
+   from unittest.runner import _WritelnDecorator # Python 2.7+
+except ImportError:
+   from unittest import _WritelnDecorator # Python <2.6
 from pyworkflow.utils.path import cleanPath, makePath
 from pyworkflow.manager import Manager
 
@@ -74,3 +82,68 @@ def setupProject(testClass):
     
     testClass.projName = projName
     testClass.proj = proj
+    
+    
+def greenStr(msg):
+    return getColorStr(msg, 'green')
+
+def failStr(msg):
+    return getColorStr(msg, 'red')
+
+
+class GTestResult(TestResult):
+    """ Subclass TestResult to ouput tests results with colors (green for success and red for failure)
+    and write a report on an .xml file. 
+    """
+    xml = None
+    testFailed = 0
+    numberTests = 0
+    
+    def __init__(self):
+        TestResult.__init__(self)
+        self.startTimeAll = time.time()
+    
+    def openXmlReport(self, classname, filename):
+        #self.xml = open(filename, 'w')
+        #self.xml.write('<testsuite name="%s">\n' % classname)
+        pass
+        
+    def doReport(self):
+        secs = time.time() - self.startTimeAll
+        print >> sys.stderr, greenStr("\n[==========]") + " run %d tests (%0.3f secs)" % (self.numberTests, secs)
+        if self.testFailed:
+            print >> sys.stderr, failStr("[  FAILED  ]") + " %d tests" % self.testFailed
+        print >> sys.stdout, greenStr("[  PASSED  ]") + " %d tests" % (self.numberTests - self.testFailed)
+        #self.xml.write('</testsuite>\n')
+        #self.xml.close()
+             
+    def tic(self):
+        self.startTime = time.time()
+        
+    def toc(self):
+        return time.time() - self.startTime
+        
+    def startTest(self, test):
+        self.tic()
+        self.numberTests += 1         
+    
+    def getTestName(self, test):
+        parts = str(test).split()
+        name = parts[0]
+        parts = parts[1].split('.')
+        classname = parts[-1].replace(")", "")
+        return "%s.%s" % (classname, name)
+    
+    def addSuccess(self, test):
+        secs = self.toc()
+        sys.stderr.write("%s %s (%0.3f secs)\n" % (greenStr('[ RUN   OK ]'), self.getTestName(test), secs))
+    
+    def reportError(self, test, err):
+        sys.stderr.write("%s %s\n" % (failStr('[   FAILED ]'), self.getTestName(test)))
+        self.testFailed += 1
+                
+    def addError(self, test, err):
+        self.reportError(test, err)
+        
+    def addFailure(self, test, err):
+        self.reportError(test, err)

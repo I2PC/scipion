@@ -134,7 +134,7 @@ class RunsTreeProvider(TreeProvider):
         self.getObjects = lambda: mapper.selectAll()
         
     def getColumns(self):
-        return [('Run', 250), ('State', 100), ('Modified', 100)]
+        return [('Run', 250), ('State', 100), ('Time', 100)]
     
     def getObjectInfo(self, obj):
         runName = obj.runName.get()
@@ -142,7 +142,7 @@ class RunsTreeProvider(TreeProvider):
             runName = '%s.%s' % (obj.getClassName(), obj.strId())  
         return {'key': obj.getObjId(),
                 'text': runName,
-                'values': (obj.status.get(), obj.endTime.get())}
+                'values': (obj.status.get(), obj.getElapsedTime())}
       
     def getObjectActions(self, obj):
         prot = obj # Object should be a protocol

@@ -85,6 +85,10 @@ class Section(FormElement):
         """Return True if a question param was set"""
         return self.questionParam.get() in self._paramList
     
+    def getQuestionName(self):
+        """ Return the name of the question param. """
+        return self.questionParam.get()
+    
     def getQuestion(self):
         """Return the question param"""
         return self._form.getParam(self.questionParam.get())
