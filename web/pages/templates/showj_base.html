@@ -12,9 +12,7 @@
 	<script src={{jquery_treeview}} type="text/javascript"></script>
 	<script src={{launchTreeview}} type="text/javascript"></script>
 	<script src={{utils}} type="text/javascript"></script>
-	<script>
-		
-	</script>
+	{% block head %}  {% endblock %}
 </head>
 <body>
 	<header>Aqui iria la cabecera de Scipion</header>
@@ -32,20 +30,11 @@
 		
 		<section> <!--  Es donde va la informacion princiapl -->
 
+
 		
-		
-		{% for obj in metadata.objects %}
-			{% for value in obj.values %}
-				{% if value.label == 'image' %}
-					<div id="img_container">
-						<div id="img_title">{{forloop.parentloop.counter}}</div>
-						<img src="/get_image/?image={{value.imgValue}}"/>
-					</div>
-				{% endif %}
-			{% endfor %}
-		{% endfor %}	
+		{% block content_view %}	{% endblock %}	
 			
-			
+
 			
 		</section>
 	</div>
