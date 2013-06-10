@@ -15,7 +15,7 @@ from pyworkflow.em import *
 from django.http.request import HttpRequest
 from pyworkflow.apps.config import ExecutionHostMapper
 
-from pyworkflow.tests import getInputPath 
+#from pyworkflow.tests import getInputPath 
 from forms import HostForm
 
 
@@ -412,6 +412,7 @@ def openHostsConfig(request):
 def getHost(request):
     from django.http import HttpResponse
     import json
+    from django.utils import simplejson
     
     if request.is_ajax():
         hostLabel = request.GET.get('hostLabel')
@@ -419,8 +420,9 @@ def getHost(request):
         project = loadProject(projectName)
         hostsMapper = ExecutionHostMapper(project.hostsPath)
         executionHostConfig = hostsMapper.selectByLabel(hostLabel)
-        jsonStr = json.dumps({'hostConfig' : executionHostConfig},
-                             ensure_ascii=False)
+        jsonStr = simplejson.dumps({'host':executionHostConfig.__dict__})
+#         jsonStr = json.dumps({'hostConfig' :  executionHostConfig},
+#                              ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
 
 def showj(request):

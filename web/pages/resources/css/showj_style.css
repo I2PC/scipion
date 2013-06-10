@@ -85,6 +85,17 @@ section #img_container{
 	overflow:auto; 
 	width:95%; 
 }
+
+#zoom{
+	width: 60px;
+	background-color: #000;
+	font: 11px Tahoma;
+	color: #fff;
+	text-align:right;
+	height:25px;
+	border-color: #7a0000;
+	border:1px;
+}
 /* #gallery{
 	margin: 20px 0px;
 	display: -webkit-box;Esto es una flexible box
