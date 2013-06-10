@@ -138,6 +138,8 @@ public:
 
     void filterBankGenerator();
 
+    void batchBuildInvariant(MetaData MD);
+
     void buildInvariant(MetaData MD);
 
     void extractInvariant();
@@ -151,6 +153,8 @@ public:
     void add2Dataset(int flagNegPos);
 
     void train(MetaData MD);
+
+    void correction(MetaData addedParticlesMD,MetaData removedParticlesMD);
 
     void saveTrainingSet();
 

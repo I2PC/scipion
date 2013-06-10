@@ -108,9 +108,24 @@ void AutoParticlePicking2::filterBankGenerator()
         Iaux.aliasImageInStack(filterBankStack,i);
         Iaux=inputMicrograph;
     }
+    Image<double> II;
+    II()=filterBankStack;
+    II.write("filterbank.xmp");
 }
 
 void AutoParticlePicking2::buildInvariant(MetaData MD)
+{
+	int x, y;
+	FOR_ALL_OBJECTS_IN_METADATA(MD)
+    {
+        MD.getValue(MDL_XCOOR,x, __iter.objId);
+        MD.getValue(MDL_YCOOR,y, __iter.objId);
+        m.add_coord(x,y,0,1);
+    }
+    extractInvariant();
+}
+
+void AutoParticlePicking2::batchBuildInvariant(MetaData MD)
 {
     int x, y;
     MetaData MD2;
@@ -385,7 +400,7 @@ void AutoParticlePicking2::train(MetaData MD)
 {
 
     std::cerr<<"started train"<<std::endl;
-    buildInvariant(MD);
+    batchBuildInvariant(MD);
     std::cerr<<"built invariants"<<std::endl;
     if (!fnPCAModel.exists())
         trainPCA();
@@ -543,6 +558,17 @@ void AutoParticlePicking2::saveAutoParticles(MetaData &md)
             md.setValue(MDL_ENABLED,1,id);
         }
     }
+}
+
+void AutoParticlePicking2::correction(MetaData addedParticlesMD,MetaData removedParticlesMD)
+{
+	int enabled;
+	FOR_ALL_OBJECTS_IN_METADATA(removedParticlesMD)
+	{
+		removedParticlesMD.getValue(MDL_ENABLED,enabled, __iter.objId);
+//		if (enabled == -1)
+
+	}
 }
 
 /*
