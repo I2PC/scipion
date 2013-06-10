@@ -224,7 +224,7 @@ class SetOfImages(EMObject):
         to the current one.
         Params:
         other: set containing tilted pairs.
-        mapFunc: function that mapps elements from other ids to self ids. 
+        mapFunc: function that maps elements from other ids to self ids. 
                  usually this function will be the dict.get method. """
 
         for iU, iT in other.iterTiltPairs():

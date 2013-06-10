@@ -12,6 +12,23 @@
 	<script src={{jquery_treeview}} type="text/javascript"></script>
 	<script src={{launchTreeview}} type="text/javascript"></script>
 	<script src={{utils}} type="text/javascript"></script>
+	
+	<script type="text/javascript">
+	$(document).ready(function(){
+		$('#zoom').click(function(){
+		   d = new Date();
+		   $(".tableImages").attr("src", $(".tableImages").attr("src")+"&dim="+$(this).val()+"&"+d.getTime());
+		});
+		
+		$('#zoom').change(function(){
+			$(".tableImages").attr("src", $(".tableImages").attr("src")+"&dim="+$(this).val()+"&"+d.getTime());
+		});
+			
+		$('#zoom').keypress(function(){
+			$(".tableImages").attr("src", $(".tableImages").attr("src")+"&dim="+$(this).val()+"&"+d.getTime());
+		});	
+	});
+	</script>
 	{% block head %}  {% endblock %}
 </head>
 <body>
@@ -25,6 +42,8 @@
 	</nav>
 	<div id="main_section">
 		<aside id="side_news"> <!-- Main Menu -->
+			{% block content_menu %}	{% endblock %}
+			<input type="number" id="zoom" value="150">
 			<img src="/resources/showj/menu.png">
 		</aside>
 		

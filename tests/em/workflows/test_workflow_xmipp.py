@@ -26,6 +26,12 @@ class TestXmippWorkflow(unittest.TestCase):
         protImport = ProtImportMicrographs(pattern=self.pattern, samplingRate=1.237, voltage=300)
         self.proj.launchProtocol(protImport, wait=True)
         
+        print("******** IMPORT MICROGRAPHS ***********")
+        if (protImport.getFiles() is not None):
+            print(str(protImport.getFiles()))
+        else:
+            print ("NONEEEEEEEEEEEEEEEEE")
+        
         self.assertIsNotNone(protImport.outputMicrographs, "There was a problem with the import")
         
         # Perform a downsampling on the micrographs
@@ -35,6 +41,12 @@ class TestXmippWorkflow(unittest.TestCase):
         protDownsampling.inputMicrographs.set(protImport.outputMicrographs)
         self.proj.launchProtocol(protDownsampling, wait=True)
           
+        print("******** DOWNSAMPLING ***********")
+        if (protDownsampling.getFiles() is not None):
+            print(str(protDownsampling.getFiles())) 
+        else:
+            print ("NONEEEEEEEEEEEEEEEEE") 
+          
         self.assertIsNotNone(protDownsampling.outputMicrographs, "There was a problem with the downsampling")
           
         # Now estimate CTF on the downsampled micrographs 
@@ -42,6 +54,12 @@ class TestXmippWorkflow(unittest.TestCase):
         protCTF = XmippProtCTFMicrographs(numberOfThreads=3)                
         protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)        
         self.proj.launchProtocol(protCTF, wait=True)
+        
+        print("******** CTF ***********")
+        if (protCTF.getFiles() is not None):
+            print(str(protCTF.getFiles()))  
+        else:
+            print ("NONEEEEEEEEEEEEEEEEE") 
         
         print "Running fake particle picking..."   
         protPP = XmippProtParticlePicking(importFolder=self.importFolder)                
@@ -56,6 +74,12 @@ class TestXmippWorkflow(unittest.TestCase):
         #protExtract.inputMicrographs.set(protDownsampling.outputMicrographs)
         self.proj.launchProtocol(protExtract, wait=True)
         
+        print("******** EXTRACT ***********")
+        if (protExtract.getFiles() is not None):
+            print(str(protExtract.getFiles()))  
+        else:
+            print ("NONEEEEEEEEEEEEEEEEE") 
+        
         self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
         
         print "Run ML2D"
@@ -64,6 +88,12 @@ class TestXmippWorkflow(unittest.TestCase):
         protML2D.inputImages.set(protExtract.outputImages)
         self.proj.launchProtocol(protML2D, wait=True)        
         
+        print("******** ML2D ***********")
+        if (protML2D.getFiles() is not None):
+            print(str(protML2D.getFiles()))  
+        else:
+            print ("NONEEEEEEEEEEEEEEEEE") 
+        
         self.assertIsNotNone(protML2D.outputClassification, "There was a problem with ML2D")  
         
         print "Run CL2D"
@@ -71,6 +101,12 @@ class TestXmippWorkflow(unittest.TestCase):
                                  numberOfIterations=4, numberOfMpi=2)
         protCL2D.inputImages.set(protExtract.outputImages)
         self.proj.launchProtocol(protCL2D, wait=True)        
+        
+        print("******** CL2D ***********")
+        if (protCL2D.getFiles() is not None):
+            print(str(protCL2D.getFiles()))  
+        else:
+            print ("NONEEEEEEEEEEEEEEEEE") 
         
         self.assertIsNotNone(protCL2D.outputClassification, "There was a problem with CL2D")         
         
