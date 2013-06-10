@@ -38,19 +38,27 @@ aside{
 	height: 30px;
 	background-color: #320101;
 	padding: 20px;
+	display: -moz-flex;
+	display: -webkit-flex;
+	display: flex;
+	-webkit-flex-flow: row;
+	-webkit-flex-wrap: wrap;
+}
+
+aside button{
+	border:0px;
+	cursor: pointer;
+	height: 27px;
 }
 
 
 /* MAIN SECTION */
 section{
-	
 	padding: 20px;
-
-	
 	display: -moz-flex;
 	display: -webkit-flex;
 	display: flex;
--webkit-flex-flow: row;
+	-webkit-flex-flow: row;
 	-webkit-flex-wrap: wrap;
 }
 
@@ -62,13 +70,21 @@ section #img_container{
 }
 
 
-#img_title{
+#column_label{
 	background-color: #dddddd;
 	font: 12px Tahoma;	
 	text-align: center;
 }
 
+#data_table{
+	width: 100%; 
+	border-spacing: 4px;
+}
 
+#table_container{
+	overflow:auto; 
+	width:95%; 
+}
 /* #gallery{
 	margin: 20px 0px;
 	display: -webkit-box;Esto es una flexible box
