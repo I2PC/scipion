@@ -12,9 +12,24 @@
 	<script src={{jquery_treeview}} type="text/javascript"></script>
 	<script src={{launchTreeview}} type="text/javascript"></script>
 	<script src={{utils}} type="text/javascript"></script>
-	<script>
+	
+	<script type="text/javascript">
+	$(document).ready(function(){
+		$('#zoom').click(function(){
+		   d = new Date();
+		   $(".tableImages").attr("src", $(".tableImages").attr("src")+"&dim="+$(this).val()+"&"+d.getTime());
+		});
 		
+		$('#zoom').change(function(){
+			$(".tableImages").attr("src", $(".tableImages").attr("src")+"&dim="+$(this).val()+"&"+d.getTime());
+		});
+			
+		$('#zoom').keypress(function(){
+			$(".tableImages").attr("src", $(".tableImages").attr("src")+"&dim="+$(this).val()+"&"+d.getTime());
+		});	
+	});
 	</script>
+	{% block head %}  {% endblock %}
 </head>
 <body>
 	<header>Aqui iria la cabecera de Scipion</header>
@@ -27,25 +42,18 @@
 	</nav>
 	<div id="main_section">
 		<aside id="side_news"> <!-- Main Menu -->
+			{% block content_menu %}	{% endblock %}
+			<input type="number" id="zoom" value="150">
 			<img src="/resources/showj/menu.png">
 		</aside>
 		
 		<section> <!--  Es donde va la informacion princiapl -->
 
+
 		
-		
-		{% for obj in metadata.objects %}
-			{% for value in obj.values %}
-				{% if value.label == 'image' %}
-					<div id="img_container">
-						<div id="img_title">{{forloop.parentloop.counter}}</div>
-						<img src="/get_image/?image={{value.imgValue}}"/>
-					</div>
-				{% endif %}
-			{% endfor %}
-		{% endfor %}	
+		{% block content_view %}	{% endblock %}	
 			
-			
+
 			
 		</section>
 	</div>

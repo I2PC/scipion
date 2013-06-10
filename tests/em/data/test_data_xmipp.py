@@ -163,7 +163,7 @@ class TestXmippSetOfCoordinates(unittest.TestCase):
         xmippSetCoords.setMicrographs(xmippSetMics)
         for coord in xmippSetCoords.iterCoordinates():
             (x, y) = coord.getPosition()
-            print ("Coordinate: x=%d y=%d" %(x,y))
+            #print ("Coordinate: x=%d y=%d" %(x,y))
             #TODO: How to check coordinates, against what?
             #self.assertTrue(x = , "micrographs database does not exist")
     

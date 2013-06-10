@@ -68,7 +68,6 @@ def buildRunCommand(log, programname, params,
                       'command': "`which %(programname)s` %(params)s" % locals()
                       }
         hostConfig = loadHostConfig()
-        hostConfig.printAll()
         command = hostConfig.mpiCommand.get() % paramsDict
 
     if runInBackground:
@@ -84,9 +83,8 @@ def loadHostConfig(host='localhost'):
     """
     from pyworkflow.apps.config import ExecutionHostMapper, getConfigPath
     fn = getConfigPath('execution_hosts.xml')
-    print 'fn', fn
     mapper = ExecutionHostMapper(fn)
-    return mapper.selectAll()[0]
+    return mapper.selectByLabel(host)
 
 
 def runProtocol(projId, protId, mpiComm=None):

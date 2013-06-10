@@ -66,7 +66,7 @@ class TestEmanSetOfCoordinates(unittest.TestCase):
         emanSetCoords.setMicrographs(emanSetMics)   
         for coord in emanSetCoords.iterCoordinates():
             (x, y) = coord.getPosition()
-            print ("Coordinate: x=%s y=%s" %(x,y))       
+            #print ("Coordinate: x=%s y=%s" %(x,y))       
             
             
 if __name__ == '__main__':

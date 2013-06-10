@@ -1,0 +1,29 @@
+{% extends 'showj_base.html' %} 
+{% block head %}
+{% endblock %}
+
+
+
+
+{% block content_menu %}
+<button onclick="location.href='/showj/?path={{inputParameters.path}}&render&dim={{inputParameters.imageDim}}&mode=table'">
+	<img src="/resources/showj/tableViewOff.gif">
+</button>
+<img src="/resources/showj/galleryViewOn.gif">
+{% endblock %}
+
+
+{% block content_view %}	
+		
+		{% for obj in metadata.objects %}
+			{% for value in obj.values %}
+				{% if value.allowRender %}
+					<div id="img_container">
+						<div id="column_label">{{forloop.parentloop.counter}}</div> 
+						<img class="tableImages" src="/get_image/?image={{value.imgValue}}"/>
+					</div> 
+				{% endif %}
+			{% endfor %}
+		{% endfor %}	
+			
+{% endblock %}

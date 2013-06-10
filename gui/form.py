@@ -100,12 +100,13 @@ class ComboVar():
         return self.value         
         
         
-class SectionFrame(tk.Frame):
+class SectionWidget(tk.Frame):
     """This class will be used to create a section in FormWindow"""
-    def __init__(self, form, master, section, **args):
+    def __init__(self, form, master, section, callback=None, **args):
         tk.Frame.__init__(self, master, **args)
         self.form = form
         self.section = section
+        self.callback = callback
         self.__createHeader()
         self.__createContent()
         
@@ -120,16 +121,17 @@ class SectionFrame(tk.Frame):
         self.headerLabel.grid(row=0, column=0, sticky='nw')
         
         if self.section.hasQuestion():
-            question = self.section.getQuestion()             
-            self.tkVar = BoolVar()
-            self.tkVar.set(question.get())
+            question = self.section.getQuestion() 
+            self.paramName = self.section.getQuestionName()            
+            self.var = BoolVar()
+            self.var.set(question.get())
+            self.var.trace('w', self._onVarChanged)
             
             self.chbLabel = tk.Label(self.headerFrame, text=question.label.get(), fg='white', bg=bgColor)
             self.chbLabel.grid(row=0, column=1, sticky='e', padx=2)
             
-            self.chb = tk.Checkbutton(self.headerFrame, variable=self.tkVar.tkVar, 
-                                      bg=bgColor, activebackground=gui.cfgButtonActiveBgColor, #bd=0,
-                                      command=self.__expandCollapse)
+            self.chb = tk.Checkbutton(self.headerFrame, variable=self.var.tkVar, 
+                                      bg=bgColor, activebackground=gui.cfgButtonActiveBgColor)
             self.chb.grid(row=0, column=2, sticky='e')
                     #bg=SectionBgColor, activebackground=ButtonActiveBgColor)        
     
@@ -139,18 +141,27 @@ class SectionFrame(tk.Frame):
         configureWeigths(self.contentFrame)
         self.columnconfigure(0, weight=1)
         
-    def __expandCollapse(self, e=None):
-        if self.tkVar.get():
-            self.contentFrame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
+    def show(self):
+        self.contentFrame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
+        
+    def hide(self):
+        self.contentFrame.grid_remove()
+        
+    def _onVarChanged(self, *args):
+        if self.get():
+            self.show()
         else:
-            self.contentFrame.grid_remove()
+            self.hide()
+            
+        if self.callback is not None:
+            self.callback(self.paramName) 
             
     def get(self):
         """Return boolean value if is selected"""
-        return self.tkVar.get() == 1
+        return self.var.get()
     
     def set(self, value):
-        pass
+        self.var.set(value)
     
     
 class ParamWidget():
@@ -264,13 +275,13 @@ class ParamWidget():
         if self.callback is not None:
             self.callback(self.paramName)        
         
-    def grid(self):
+    def show(self):
         """Grid the label and content in the specified row"""
         self.label.grid(row=self.row, column=0, sticky='ne', padx=2, pady=2)
         self.content.grid(row=self.row, column=1, padx=2, pady=2, sticky='news')
         self.btnFrame.grid(row=self.row, column=2, padx=2, sticky='nw')
         
-    def grid_remove(self):
+    def hide(self):
         self.label.grid_remove()
         self.content.grid_remove()
         self.btnFrame.grid_remove()
@@ -390,22 +401,26 @@ class FormWindow(Window):
             self.close()
         self.callback(self.protocol, onlySave)
            
-    def _fillSection(self, sectionParam, sectionFrame):
-        parent = sectionFrame.contentFrame
+    def _fillSection(self, sectionParam, sectionWidget):
+        parent = sectionWidget.contentFrame
         r = 0
         for paramName, param in sectionParam.iterParams():
-            if sectionParam.questionParam.get() != paramName: # Skip if questionParam was set in section
-                protVar = getattr(self.protocol, paramName, None)
-                if protVar is None:
-                    raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
+            protVar = getattr(self.protocol, paramName, None)
+            if protVar is None:
+                raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
+            if sectionParam.getQuestionName() == paramName:
+                widget = sectionWidget
+                if not protVar:
+                    widget.hide() # Show only if question var is True
+            else:
                 # Create the label
-                self.widgetDict[paramName] = ParamWidget(r, paramName, param, self, parent, 
+                widget = ParamWidget(r, paramName, param, self, parent, 
                                                          value=protVar.get(param.default.get()),
                                                          callback=self._checkChanges)
-                # Set the value to the variable from Protocol instance or default
-                self._checkCondition(paramName)
+                widget.show() # Show always, conditions will be checked later
                 r += 1         
-            
+            self.widgetDict[paramName] = widget
+            # Set the value to the variable from Protocol instance or default
         
     def _checkCondition(self, paramName):
         """Check if the condition of a param is statisfied 
@@ -413,9 +428,9 @@ class FormWindow(Window):
         widget = self.widgetDict[paramName]
         v = self.protocol.evalCondition(paramName) and self.protocol.evalExpertLevel(paramName)
         if v:
-            widget.grid()
+            widget.show()
         else:
-            widget.grid_remove()
+            widget.hide()
             
     def _checkChanges(self, paramName):
         """Check the conditions of all params affected
@@ -426,11 +441,14 @@ class FormWindow(Window):
         for d in param._dependants:
             self._checkCondition(d)
             
-    def _onExpertLevelChanged(self, *args):
-        self.protocol.expertLevel.set(self.expertVar.get())
-        
+    def _checkAllChanges(self):
         for paramName, _ in self.protocol.iterDefinitionAttributes():
             self._checkChanges(paramName)
+            
+    def _onExpertLevelChanged(self, *args):
+        self.protocol.expertLevel.set(self.expertVar.get())
+        self._checkAllChanges()
+        
         
     def getVarValue(self, varName):
         """This method should retrieve a value from """
@@ -458,11 +476,13 @@ class FormWindow(Window):
         parent.columnconfigure(0, weight=1)
         
         for section in self.protocol.iterDefinitionSections():
-            frame = SectionFrame(self, parent, section, bg='white')
+            frame = SectionWidget(self, parent, section, 
+                                  callback=self._checkChanges, bg='white')
             frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
             frame.columnconfigure(0, minsize=400)
             self._fillSection(section, frame)
             r += 1
+        self._checkAllChanges()
         
         # with Windows OS
         self.root.bind("<MouseWheel>", lambda e: text.scroll(e))

@@ -1,0 +1,66 @@
+{% extends 'showj_base.html' %} 
+{% block head %}
+<script type="text/javascript" src="{{jquery_datatable}}"></script>
+<script type="text/javascript" src="{{jquerydataTables_colreorder}}"></script>
+
+
+<script type="text/javascript">
+	$(document).ready(function(){
+		$('#data_table').dataTable(
+			{
+		        "bPaginate": true,
+		        "bLengthChange": true,
+		        "bFilter": true,
+		        "bSort": true,
+		        "bInfo": true,
+		        "bAutoWidth": true,
+		        "sDom": 'Rlfrtip',
+	        	"oColReorder": {
+	    			"aiOrder": {{metadata.colsOrder}}
+	    		}
+		    }		
+		);
+	});
+</script>
+{% endblock %}
+
+{% block content_menu %}	
+	<img src="/resources/showj/tableViewOn.gif">
+	<button onclick="location.href='/showj/?path={{inputParameters.path}}&render&dim={{inputParameters.imageDim}}&mode=gallery'">
+		<img src="/resources/showj/galleryViewOff.gif">
+	</button>
+{% endblock %}
+			
+{% block content_view %}
+	
+<div id="table_container">
+	<table cellspacing="0" id="data_table">
+		<thead>
+			<tr>
+			{% for label in metadata.labels %}
+				<th id="column_label">{{label}}</th> 
+			{% endfor %}				
+			</tr>
+		</thead>
+		<tbody>
+		{% for obj in metadata.objects %}
+			<tr id="{{obj.id}}" style="background-color:#fafafa;" draggable="true" >
+
+				{% for value in obj.values %}
+			         <td> 
+			         	{% if value.allowRender %} 
+			            	<img class="tableImages" src="/get_image/?image={{value.imgValue}}"/>
+			           	{% elif value.displayCheckbox%}
+			           		<input type="checkbox">
+			           	{% else %}
+			           		{{value.strValue}}
+			           	{% endif %}
+			         </td>
+				{% endfor %}			        
+			</tr>
+		{% endfor %}
+		</tbody>
+	</table>
+</div>
+			
+{% endblock %}
