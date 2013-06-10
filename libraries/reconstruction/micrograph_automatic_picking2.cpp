@@ -56,6 +56,20 @@ AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum
 
     classifier.setParameters(8.0, 0.125);
     classifier2.setParameters(1.0, 0.25);
+
+    if (fnPCAModel.exists())
+    {
+        Image<double> II;
+        II.read(fnPCAModel);
+        pcaModel=II();
+        II.read(fnPCARotModel);
+        pcaRotModel=II();
+        if (fnVector.exists())
+            loadTrainingSet(fnVector);
+        II.read(fnAvgModel);
+        particleAvg=II();
+        classifier.LoadModel(fnSVMModel);
+    }
 }
 
 void AutoParticlePicking2::setSize(int pSize)
@@ -115,8 +129,8 @@ void AutoParticlePicking2::filterBankGenerator()
 
 void AutoParticlePicking2::buildInvariant(MetaData MD)
 {
-	int x, y;
-	FOR_ALL_OBJECTS_IN_METADATA(MD)
+    int x, y;
+    FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
         MD.getValue(MDL_XCOOR,x, __iter.objId);
         MD.getValue(MDL_YCOOR,y, __iter.objId);
@@ -142,7 +156,7 @@ void AutoParticlePicking2::batchBuildInvariant(MetaData MD)
             MD2.getValue(MDL_XCOOR,x, __iter.objId);
             MD2.getValue(MDL_YCOOR,y, __iter.objId);
             m.add_coord(x,y,0,1);
-//            std::cerr<<"x: " << x << " y: " << y <<std::endl;
+            //            std::cerr<<"x: " << x << " y: " << y <<std::endl;
         }
         extractInvariant();
     }
@@ -398,17 +412,28 @@ void AutoParticlePicking2::add2Dataset(int flagNegPos)
 
 void AutoParticlePicking2::train(MetaData MD)
 {
-
-    std::cerr<<"started train"<<std::endl;
+    if (fnPCAModel.exists())
+    {
+        classifier.~SVMClassifier();
+        positiveParticleStack.clear();
+        positiveInvariatnStack.clear();
+        negativeParticleStack.clear();
+        negativeInvariatnStack.clear();
+        pcaModel.clear();
+        pcaRotModel.clear();
+        particleAvg.clear();
+        pcaModel.clear();
+        pcaModel.clear();
+        fnPCAModel.deleteFile();
+        fnPCARotModel.deleteFile();
+        fnAvgModel.deleteFile();
+        fnSVMModel.deleteFile();
+    }
     batchBuildInvariant(MD);
-    std::cerr<<"built invariants"<<std::endl;
     if (!fnPCAModel.exists())
         trainPCA();
-    std::cerr<<"trainPCA done"<<std::endl;
     add2Dataset(0);
-    std::cerr<<"add2Dataset"<<std::endl;
     add2Dataset(1);
-
     saveTrainingSet();
     normalizeDataset(0,1);
     trainSVM(fnSVMModel,1);
@@ -431,8 +456,10 @@ void AutoParticlePicking2::saveTrainingSet()
 
 int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, int proc_prec, MetaData &md)
 {
+    md.clear();
+    auto_candidates.clear();
     std::cerr<<"We are automatic picking"<<std::endl;
-//    std::cerr<<fnmicrograph<<std::endl;
+    //    std::cerr<<fnmicrograph<<std::endl;
     double label, score;
     Particle2 p;
     MultidimArray<double> IpolarCorr;
@@ -499,7 +526,7 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
             p.status=1;
             p.cost=score;
             p.vec=featVec;
-//            std::cerr<<"x: " << j << " y: " << i <<std::endl;
+            //            std::cerr<<"x: " << j << " y: " << i <<std::endl;
             auto_candidates.push_back(p);
             //            }
         }
@@ -539,8 +566,6 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
         }
     }
     saveAutoParticles(md);
-
-
 }
 
 void AutoParticlePicking2::saveAutoParticles(MetaData &md)
@@ -562,13 +587,13 @@ void AutoParticlePicking2::saveAutoParticles(MetaData &md)
 
 void AutoParticlePicking2::correction(MetaData addedParticlesMD,MetaData removedParticlesMD)
 {
-	int enabled;
-	FOR_ALL_OBJECTS_IN_METADATA(removedParticlesMD)
-	{
-		removedParticlesMD.getValue(MDL_ENABLED,enabled, __iter.objId);
-//		if (enabled == -1)
+    int enabled;
+    FOR_ALL_OBJECTS_IN_METADATA(removedParticlesMD)
+    {
+        removedParticlesMD.getValue(MDL_ENABLED,enabled, __iter.objId);
+        //  if (enabled == -1)
 
-	}
+    }
 }
 
 /*
@@ -1499,7 +1524,7 @@ void AutoParticlePicking2::buildSearchSpace(std::vector<Particle2> &positionArra
                 p.cost=DIRECT_A2D_ELEM(convolveRes,i,j);
                 p.status=0;
                 positionArray.push_back(p);
-//                std::cerr<<"buildSearchSpace x: " << p.x << " y: " << p.y <<std::endl;
+                //                std::cerr<<"buildSearchSpace x: " << p.x << " y: " << p.y <<std::endl;
             }
     for (size_t i=0;i<positionArray.size();++i)
         for (size_t j=0;j<positionArray.size()-i-1;j++)
