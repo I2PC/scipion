@@ -611,8 +611,8 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		setChanged(false);
 		initializeCanvas();
 		iconbt.setIcon(ppicker.getMicrograph().getCTFIcon());
-//		if (ppicker.getMode() == Mode.Supervised && getMicrograph().getState() == MicrographState.Available)
-//			ppicker.autopick(this);
+		if (ppicker.getMode() == Mode.Supervised && getMicrograph().getState() == MicrographState.Available)
+			ppicker.autopick(this);
 		pack();
 
 		if (particlesdialog != null)

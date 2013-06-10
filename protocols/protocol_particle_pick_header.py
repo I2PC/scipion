@@ -32,7 +32,7 @@ ImportRun = ""
 # {hidden} launchGUI
 LaunchGUI = True
 
-# {eval} expandJavaMemory()
+
 
 #------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE
