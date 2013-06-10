@@ -46,13 +46,12 @@ class ProtParticlePickingAuto(XmippProtocol):
                 'config': join('%(ExtraDir)s','config.xmd')
                 }
         
-    def loadConfig(self):
-        md = MetaData(self.Input['config'])
-        self.particleSizeForAuto = md.getValue(MDL_PICKING_PARTICLE_SIZE, objId)
+   
        
     def defineSteps(self):
         self.insertStep("createDir",verifyfiles=[self.ExtraDir],path=self.ExtraDir)
-        self.loadConfig()
+        md = MetaData(self.Input['config'])
+        self.particleSizeForAuto = md.getValue(MDL_PICKING_PARTICLE_SIZE, objId)
         filesToImport = [self.Input[k] for k in self.keysToImport]
         filesToImport += getTemplateFiles(self.PrevRun)
         model="model"
@@ -132,7 +131,6 @@ class ProtParticlePickingAuto(XmippProtocol):
     
     def validate(self):
         errors = []
-         if exists(self.PrevRun.getFilename('training', 'model')):
         return errors
     
     def visualize(self):
@@ -171,8 +169,8 @@ def gatherResults(log, WorkingDir, PickingDir):
             print "Looking for "+fn
             if exists(fn):
                 try:
-                    print "Reading: "fn          
-                    mdposAux.read(particlesblock + fn))
+                    print "Reading: %s" % fn          
+                    mdposAux.read(particlesblock + fn)
                     mdposAux.removeDisabled();
                     mdposAux.removeLabel(MDL_ENABLED)
                     print "Found : "+str(mdposAux.size())
