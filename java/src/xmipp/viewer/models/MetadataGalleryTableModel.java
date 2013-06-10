@@ -209,7 +209,8 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		String imageFn = getImageFilename(index, renderLabel);
 		long objId = data.ids[index];
 		ImageItem item = new ImageItem(index);
-		ImagePlus imp = getImage(objId, imageFn, thumb_width, thumb_height, data.useGeo, data.wrap);
+		boolean useGeo = data.useGeo && renderLabel == MDLabel.MDL_IMAGE;
+		ImagePlus imp = getImage(objId, imageFn, thumb_width, thumb_height, useGeo, data.wrap);
 		item.setImagePlus(imp);
 		return item;
 	}
