@@ -63,6 +63,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_autopick
     	const FileName micrograph = env->GetStringUTFChars(filename, false);
     	std::cout<<"autopick"<< std::endl;
     	picker->automaticallySelectParticles(micrograph, percent, *outputmd);
+    	outputmd->print();
 //    	md.write(env->GetStringUTFChars(jautoposfile, false));
     }
     XMIPP_JAVA_CATCH;

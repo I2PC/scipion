@@ -45,8 +45,6 @@ public class SingleParticlePicker extends ParticlePicker
 	private String templatesfile;
 	private int templateindex;
 	private PickingClassifier classifier;
-	private MetaData trainmd;
-	private MetaData outputmd;
 
 	public SingleParticlePicker(String selfile, String outputdir, Mode mode)
 	{
@@ -74,6 +72,7 @@ public class SingleParticlePicker extends ParticlePicker
 			}
 			for (TrainingMicrograph m : micrographs)
 				loadMicrographData(m);
+			System.out.println(getSize());
 			classifier = new PickingClassifier(getSize(), getOutputPath("model"));
 		}
 		catch (Exception e)
@@ -126,12 +125,10 @@ public class SingleParticlePicker extends ParticlePicker
 
 	public synchronized void initTemplates()
 	{
-
 		if (templatesNumber == 0)
 			return;
 		try
 		{
-
 			this.templates = new ImageGeneric(ImageGeneric.Float);
 			templates.resize(getSize(), getSize(), 1, templatesNumber);
 			templates.write(templatesfile);
@@ -154,7 +151,7 @@ public class SingleParticlePicker extends ParticlePicker
 	{
 		if (num <= 0)
 			throw new IllegalArgumentException(
-					XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Family must have at least one template"));
+					XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Must have at least one template"));
 
 		this.templatesNumber = num;
 		initUpdateTemplates();
@@ -163,7 +160,7 @@ public class SingleParticlePicker extends ParticlePicker
 	public void setSize(int size)
 	{
 		super.setSize(size);
-//		classifier.setSize(size);
+		classifier.setSize(size);
 		initUpdateTemplates();
 	}
 
@@ -196,7 +193,7 @@ public class SingleParticlePicker extends ParticlePicker
 		return templatesfile;
 	}
 
-	public synchronized void saveTemplates()
+	public void saveTemplates()
 	{
 		try
 		{
@@ -279,6 +276,7 @@ public class SingleParticlePicker extends ParticlePicker
 				md.setValueString(MDLabel.MDL_PICKING_MICROGRAPH_STATE, tm.getState().toString(), id);
 				md.setValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, getAutopickpercent(), id);
 				md.writeBlock("header@" + file);
+				md.destroy();
 				md = new MetaData();
 				for (TrainingParticle p : tm.getManualParticles())
 				{
@@ -292,7 +290,6 @@ public class SingleParticlePicker extends ParticlePicker
 
 			}
 			saveAutomaticParticles(tm);
-			saveConfig();
 		}
 		catch (Exception e)
 		{
@@ -472,10 +469,10 @@ public class SingleParticlePicker extends ParticlePicker
 			count += m.getAutomaticParticlesNumber(threshold);
 		return count;
 	}
-	
+
 	public void loadAutomaticParticles(TrainingMicrograph m, MetaData md, boolean imported)
 	{
-		
+
 		int x, y;
 		AutomaticParticle particle;
 		Double cost;
@@ -692,8 +689,8 @@ public class SingleParticlePicker extends ParticlePicker
 					importParticlesFromMd(m, md);
 				}
 			}
-			saveData();
 			md.destroy();
+			saveData();
 		}
 		catch (Exception e)
 		{
@@ -719,8 +716,6 @@ public class SingleParticlePicker extends ParticlePicker
 		TasksManager.getInstance().addTask(new UpdateTemplatesTask(this));
 		saveConfig();
 	}
-
-
 
 	public synchronized void updateTemplates()
 	{
@@ -771,9 +766,9 @@ public class SingleParticlePicker extends ParticlePicker
 			{
 				double[] align = getTemplates().alignImage(igp);
 				applyAlignment(particle, igp, align);
-
 			}
 			saveTemplates();
+			//			System.out.println("templates saved");
 
 		}
 		catch (Exception e)
@@ -791,11 +786,6 @@ public class SingleParticlePicker extends ParticlePicker
 				return true;
 		}
 		return false;
-	}
-
-	public void loadAutomaticParticles(TrainingMicrograph m)
-	{
-		loadAutomaticParticles(m, getOutputPath(m.getAutoPosFile()), false);
 	}
 
 	public int getTemplateIndex()
@@ -867,10 +857,11 @@ public class SingleParticlePicker extends ParticlePicker
 					autopickpercent = 50;// compatibility with previous projects
 				micrograph.setState(state);
 				micrograph.setAutopickpercent(autopickpercent);
-				loadManualParticles(micrograph, file);
-				loadAutomaticParticles(micrograph, getOutputPath(micrograph.getAutoPosFile()), false);
+
 			}
 			md.destroy();
+			loadManualParticles(micrograph, file);
+			loadAutomaticParticles(micrograph, getOutputPath(micrograph.getAutoPosFile()), false);
 		}
 		catch (Exception e)
 		{
@@ -912,48 +903,50 @@ public class SingleParticlePicker extends ParticlePicker
 	{
 		if (mode != Mode.Manual)
 			throw new IllegalArgumentException(XmippMessage.getIllegalStateForOperationMsg("picker", this.mode.toString()));
-
 		frame.getCanvas().setEnabled(false);
-//		XmippWindowUtil.blockGUI(frame, "Training...");
-		if(trainmd == null)
-			trainmd = new MetaData();
-		else
-			trainmd.clear();
+		//		XmippWindowUtil.blockGUI(frame, "Training...");
+		MetaData trainmd = new MetaData();
+		MetaData outputmd = new MetaData();
+
+		micrograph.setState(MicrographState.Supervised);
+		saveData();
 		long id;
+		String posfile;
 		for (TrainingMicrograph m : micrographs)
 		{
 			if (m.hasManualParticles())
 			{
+				posfile = getOutputPath(m.getPosFile());
 				id = trainmd.addObject();
 				trainmd.setValueString(MDLabel.MDL_MICROGRAPH, m.getFile(), id);
-				trainmd.setValueString(MDLabel.MDL_MICROGRAPH_PARTICLES, getOutputPath(m.getPosFile()), id);
-
+				trainmd.setValueString(MDLabel.MDL_MICROGRAPH_PARTICLES, posfile, id);
+				MetaData posmd = new MetaData("particles@" + posfile);
+				posmd.print();
+				posmd.destroy();
 				m.getAutomaticParticles().clear();
-				new File(m.getAutoPosFile()).delete();
+				new File(getOutputPath(m.getAutoPosFile())).delete();
+
 			}
 		}
-		micrograph.setState(MicrographState.Supervised);
-		saveData();
+
 		trainmd.write(getOutputPath("train.xmd"));
-		if(outputmd == null)
-			outputmd = new MetaData();
-		else 
-			outputmd.clear();
-//		new Thread(new TrainRunnable(frame)).start();
-		new TrainRunnable(frame).run();
+
+		//		new Thread(new TrainRunnable(frame)).start();
+		new TrainRunnable(frame, trainmd, outputmd).run();
 	}
 
-	
-
-	
 	public class TrainRunnable implements Runnable
 	{
 
 		private SingleParticlePickerJFrame frame;
+		private MetaData trainmd;
+		private MetaData outputmd;
 
-		public TrainRunnable(SingleParticlePickerJFrame frame)
+		public TrainRunnable(SingleParticlePickerJFrame frame, MetaData trainmd, MetaData outputmd)
 		{
 			this.frame = frame;
+			this.trainmd = trainmd;
+			this.outputmd = outputmd;
 
 		}
 
@@ -962,16 +955,16 @@ public class SingleParticlePicker extends ParticlePicker
 			try
 			{
 				System.out.println("Train started");
-
 				classifier.train(trainmd);//should remove training files
 				classifier.autopick(micrograph.getFile(), outputmd, micrograph.getAutopickpercent());
-				outputmd.print();
 				loadAutomaticParticles(micrograph, outputmd, false);
-//				outputmd.write(getOutputPath(micrograph.getAutoPosFile()));
+				//				outputmd.write(getOutputPath(micrograph.getAutoPosFile()));
 				frame.getCanvas().repaint();
-//				XmippWindowUtil.releaseGUI(frame.getRootPane());
+				//				XmippWindowUtil.releaseGUI(frame.getRootPane());
 				frame.getCanvas().setEnabled(true);
-
+				frame.updateMicrographsModel();
+				trainmd.destroy();
+				outputmd.destroy();
 			}
 			catch (Exception e)
 			{
@@ -985,10 +978,11 @@ public class SingleParticlePicker extends ParticlePicker
 	{
 		micrograph.setState(MicrographState.Supervised);
 		saveData(micrograph);
+
 		MetaData outputmd = new MetaData();
 		frame.getCanvas().setEnabled(false);
 		XmippWindowUtil.blockGUI(frame, "Autopicking...");
-		
+
 		new Thread(new AutopickRunnable(frame, outputmd)).start();
 
 	}
@@ -1010,11 +1004,12 @@ public class SingleParticlePicker extends ParticlePicker
 			micrograph.getAutomaticParticles().clear();
 			classifier.autopick(micrograph.getFile(), outputmd, micrograph.getAutopickpercent());
 			loadAutomaticParticles(micrograph, outputmd, false);
-//			outputmd.write(getOutputPath(micrograph.getAutoPosFile()));
-			outputmd.destroy();
+			//			outputmd.write(getOutputPath(micrograph.getAutoPosFile()));
 			frame.getCanvas().repaint();
 			frame.getCanvas().setEnabled(true);
+			frame.updateMicrographsModel();
 			XmippWindowUtil.releaseGUI(frame.getRootPane());
+			outputmd.destroy();
 		}
 
 	}
@@ -1025,7 +1020,7 @@ public class SingleParticlePicker extends ParticlePicker
 		saveData(micrograph);
 		MetaData manualmd = new MetaData(getOutputPath(micrograph.getPosFile()));
 		MetaData automaticmd = new MetaData(getOutputPath(micrograph.getAutoPosFile()));
-		
+
 		new Thread(new CorrectRunnable(manualmd, automaticmd)).start();
 
 	}

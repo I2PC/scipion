@@ -5,9 +5,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
 import java.util.List;
-
 import javax.swing.SwingUtilities;
-
 import xmipp.jni.Particle;
 import xmipp.utils.TasksManager;
 import xmipp.viewer.particlepicker.Micrograph;

@@ -402,6 +402,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		colorbt.setEnabled(enable);
 		resetbt.setEnabled(enable);
 		savebt.setEnabled(enable);
+
 	}
 
 	private JCheckBoxMenuItem addFilterMenuItem(String command, boolean defaultlistener, ParticlePicker picker)

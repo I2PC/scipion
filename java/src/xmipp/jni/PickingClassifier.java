@@ -19,15 +19,15 @@ public class PickingClassifier
 	
 	private native void create(int particle_size, String output);
 	
-	public synchronized native void destroy();
+	public native void destroy();
 
-	public native void autopick(String micrograph, MetaData outputmd, int percent);
+	public synchronized native void autopick(String micrograph, MetaData outputmd, int percent);
 
-	public native void correct(MetaData manualmd, MetaData automaticmd);
+	public synchronized native void correct(MetaData manualmd, MetaData automaticmd);
 
-	public native void train(MetaData micrographs);
+	public synchronized native void train(MetaData micrographs);
 	
-	public native void setSize(int psize);
+	public synchronized native void setSize(int psize);
 	
     // Should be called by GarbageCollector before destroying
     @Override

@@ -521,6 +521,9 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
         }
     }
     saveAutoParticles(md);
+
+    std::cerr << "DEBUG: after automaticallySelectParticles in C++ class" << std::endl;
+    md.print();
 }
 
 void AutoParticlePicking2::saveAutoParticles(MetaData &md)

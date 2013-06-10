@@ -29,6 +29,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import xmipp.utils.ColorIcon;
+import xmipp.utils.TasksManager;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippMessage;
@@ -339,7 +340,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 					
 					if (isautopick)
 					{
-						ppicker.saveData();
+						
 						ppicker.train(SingleParticlePickerJFrame.this);
 						
 					}
@@ -602,11 +603,13 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		ppicker.getMicrograph().releaseImage();
 		ppicker.setMicrograph(ppicker.getMicrographs().get(index));
 
+		if(ppicker.getMode() == Mode.Supervised)
+			resetbt.setEnabled(getMicrograph().getState() != MicrographState.Manual);
 		setChanged(false);
 		initializeCanvas();
 		iconbt.setIcon(ppicker.getMicrograph().getCTFIcon());
-		if (ppicker.getMode() == Mode.Supervised && getMicrograph().getState() == MicrographState.Available)
-			ppicker.autopick(this);
+//		if (ppicker.getMode() == Mode.Supervised && getMicrograph().getState() == MicrographState.Available)
+//			ppicker.autopick(this);
 		pack();
 
 		if (particlesdialog != null)
@@ -621,6 +624,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		canvas.refreshActive(null);
 		updateMicrographsModel();
 		setState(MicrographState.Available);
+		
 		
 	}
 
