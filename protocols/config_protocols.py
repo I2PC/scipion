@@ -6,7 +6,7 @@ protocols = {
         'import_micrographs': ('Import Micrographs', 'Micrographs/Imported'),
         'downsample_micrographs': ('Downsample Micrographs', 'Micrographs/Downsampled'),
         'screen_micrographs': ('Screen Micrographs', 'Micrographs/Screen'),
-        'particle_pick': ('Supervised picking', 'ParticlePicking/Manual'),
+        'particle_pick': ('Supervised picking', 'ParticlePicking/Supervised'),
         'particle_pick_auto': ('Automatic picking', 'ParticlePicking/Auto'),
         'extract_particles': ('Extract Particles', 'Images/Extracted'),
         'import_particles': ('Import Particles', 'Images/Imported'),
