@@ -26,9 +26,7 @@
 # ***************************************************************************
 '''
 
-from xmipp import MDL_CTF_SAMPLING_RATE, MDL_CTF_VOLTAGE, MDL_CTF_DEFOCUSU, MDL_CTF_DEFOCUSV, \
-MDL_CTF_DEFOCUS_ANGLE, MDL_CTF_CS, MDL_CTF_CA, MDL_CTF_Q0, MDL_CTF_K, label2Str, MetaData,\
-MDL_XCOOR, MDL_YCOOR, MDL_PICKING_FAMILY, MDL_PICKING_MICROGRAPH_FAMILY_STATE, MD_APPEND
+from xmipp import *
 
 CTF_BASIC_LABELS = [MDL_CTF_SAMPLING_RATE, 
                     MDL_CTF_VOLTAGE, 
@@ -39,6 +37,18 @@ CTF_BASIC_LABELS = [MDL_CTF_SAMPLING_RATE,
                     MDL_CTF_CA,
                     MDL_CTF_Q0, 
                     MDL_CTF_K]
+
+# Map from Xmipp labels to Relion labels names
+XMIPP_RELION_LABELS = {
+                       MDL_IMAGE: 'rlnImageName',
+                       MDL_MICROGRAPH: 'rlnMicrographName',
+                       MDL_CTF_DEFOCUSU: 'rlnDefocusU', 
+                       MDL_CTF_DEFOCUSV: 'rlnDefocusV', 
+                       MDL_CTF_DEFOCUS_ANGLE: 'rlnDefocusAngle',  
+                       MDL_CTF_VOLTAGE: 'rlnVoltage',
+                       MDL_CTF_CS: 'rlnSphericalAberration',
+                       MDL_CTF_Q0: 'rlnAmplitudeContrast',                                         
+                       }
 
 def convertCtfparam(oldCtf):
     '''Convert the old format (Xmipp2.4) of the CTF 
@@ -156,4 +166,21 @@ def exportEman2Boxes(inputMd, outputFile, dim):
         print >> fOut, "%(x)d  %(y)d  %(dim)d %(dim)d" % locals()
     fOut.close()    
         
+def exportMdToRelion(md, outputRelion):
+    """ This function will receive a Xmipp metadata and will
+    convert to the one expected by Relion.    
+    All labels not recognized by Relion will be dropped.
+    Params:
+     md: input xmipp metadata.
+     outputRelion: output filename to store the Relion star file.
+    """
+    for label in md.getActiveLabels():
+        if not label in XMIPP_RELION_LABELS:
+            md.removeLabel(label)
+    tmpFile = outputRelion + '.tmp'
+    md.write(tmpFile)
+    renameMdLabels(tmpFile, outputRelion, XMIPP_RELION_LABELS)
+    from protlib_filesystem import deleteFile
+    deleteFile(None, tmpFile)
+    
     
