@@ -108,8 +108,8 @@ class ProtCTFFind(ProtCTFMicrographs):
             result = self._parseOutput(out)
             defocusU, defocusV, defocusAngle = result
             micOut = Micrograph(fn)
-            micOut.ctfModel = self._getCTFModel(defocusU, defocusV, defocusAngle, 
-                                                self._getPsdPath(micDir))
+            micOut.setCTF(self._getCTFModel(defocusU, defocusV, defocusAngle, 
+                                                self._getPsdPath(micDir)))
             micSet.append(micOut)
             
         micSet.write()
