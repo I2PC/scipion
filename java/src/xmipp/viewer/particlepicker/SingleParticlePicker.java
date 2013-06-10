@@ -955,7 +955,8 @@ public class SingleParticlePicker extends ParticlePicker
 				micrograph.setAutopickpercent(autopickpercent);
 				classifier.autopick(micrograph.getFile(), outputmd, micrograph.getAutopickpercent());
 				loadAutomaticParticles(micrograph, outputmd, false);
-				outputmd.write(getOutputPath(micrograph.getAutoPosFile()));
+				String path = getParticlesBlock(getOutputPath(micrograph.getAutoPosFile()));
+				outputmd.write(path);
 				frame.getCanvas().repaint();
 				XmippWindowUtil.releaseGUI(frame.getRootPane());
 				frame.getCanvas().setEnabled(true);
@@ -1002,7 +1003,8 @@ public class SingleParticlePicker extends ParticlePicker
 			micrograph.setAutopickpercent(autopickpercent);
 			classifier.autopick(micrograph.getFile(), outputmd, micrograph.getAutopickpercent());
 			loadAutomaticParticles(micrograph, outputmd, false);
-			outputmd.write(getOutputPath(micrograph.getAutoPosFile()));
+			String path = getParticlesBlock(getOutputPath(micrograph.getAutoPosFile()));
+			outputmd.write(path);
 			frame.getCanvas().repaint();
 			frame.getCanvas().setEnabled(true);
 			frame.updateMicrographsModel();

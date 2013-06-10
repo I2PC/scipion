@@ -220,6 +220,5 @@ class XmippProjectionExplorer(XmippChimeraClient):
      
             
 def printCmd(cmd):
-        #timeformat = "%S.%f" 
+        timeformat = "%S.%f" 
         #print datetime.now().strftime(timeformat) + ' %s'%cmd
-
