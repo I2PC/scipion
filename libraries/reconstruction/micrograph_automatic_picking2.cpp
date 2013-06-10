@@ -127,6 +127,7 @@ void AutoParticlePicking2::buildInvariant(MetaData MD)
             MD2.getValue(MDL_XCOOR,x, __iter.objId);
             MD2.getValue(MDL_YCOOR,y, __iter.objId);
             m.add_coord(x,y,0,1);
+//            std::cerr<<"x: " << x << " y: " << y <<std::endl;
         }
         extractInvariant();
     }
@@ -416,7 +417,7 @@ void AutoParticlePicking2::saveTrainingSet()
 int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, int proc_prec, MetaData &md)
 {
     std::cerr<<"We are automatic picking"<<std::endl;
-    std::cerr<<fnmicrograph<<std::endl;
+//    std::cerr<<fnmicrograph<<std::endl;
     double label, score;
     Particle2 p;
     MultidimArray<double> IpolarCorr;
@@ -445,6 +446,7 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
 
     //    for (int nt=0;nt<Nthreads;nt++)
     //        pthread_join(th_ids[nt],NULL);
+    std::cerr<<"percent: " << proc_prec <<std::endl;
     int num=(int)(positionArray.size()*(proc_prec/100.0));
     for (int k=0;k<num;k++)
     {
@@ -482,6 +484,7 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
             p.status=1;
             p.cost=score;
             p.vec=featVec;
+//            std::cerr<<"x: " << j << " y: " << i <<std::endl;
             auto_candidates.push_back(p);
             //            }
         }
@@ -522,8 +525,7 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
     }
     saveAutoParticles(md);
 
-    std::cerr << "DEBUG: after automaticallySelectParticles in C++ class" << std::endl;
-    md.print();
+
 }
 
 void AutoParticlePicking2::saveAutoParticles(MetaData &md)
@@ -1471,6 +1473,7 @@ void AutoParticlePicking2::buildSearchSpace(std::vector<Particle2> &positionArra
                 p.cost=DIRECT_A2D_ELEM(convolveRes,i,j);
                 p.status=0;
                 positionArray.push_back(p);
+//                std::cerr<<"buildSearchSpace x: " << p.x << " y: " << p.y <<std::endl;
             }
     for (size_t i=0;i<positionArray.size();++i)
         for (size_t j=0;j<positionArray.size()-i-1;j++)

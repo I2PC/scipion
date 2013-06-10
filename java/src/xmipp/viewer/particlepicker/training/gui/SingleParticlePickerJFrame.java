@@ -457,7 +457,10 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			if (optionsdialog == null)
 				optionsdialog = new AdvancedOptionsJDialog(SingleParticlePickerJFrame.this);
 			else
+			{
+				optionsdialog.setEditTemplates(ppicker.getMode() == Mode.Manual);
 				optionsdialog.setVisible(true);
+			}
 		}
 		catch (Exception e)
 		{

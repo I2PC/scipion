@@ -40,10 +40,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_train
     XMIPP_JAVA_TRY
     {
     	AutoParticlePicking2 *picker = GET_INTERNAL_AUTOPARTICLEPICKING2(jobj);
-    	std::cout<<"getting metadata"<< std::endl;
     	MetaData * md = GET_INTERNAL_METADATA(micrographs);
-    	md->print();
-    	std::cout<<"calling train"<< std::endl;
     	picker->train(*md);
 
     }
@@ -63,7 +60,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_autopick
     	const FileName micrograph = env->GetStringUTFChars(filename, false);
     	std::cout<<"autopick"<< std::endl;
     	picker->automaticallySelectParticles(micrograph, percent, *outputmd);
-    	outputmd->print();
+//    	outputmd->print();
 //    	md.write(env->GetStringUTFChars(jautoposfile, false));
     }
     XMIPP_JAVA_CATCH;

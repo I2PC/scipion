@@ -19,7 +19,7 @@ public class TrainingMicrograph extends Micrograph
 	private List<TrainingParticle> manualparticles;
 	private List<AutomaticParticle> autoparticles;
 	private MicrographState state;
-	private int autopickpercent;
+	private int autopickpercent = SingleParticlePicker.defAutoPickPercent;
 
 	public TrainingMicrograph(String file, String psd, String ctf)
 	{

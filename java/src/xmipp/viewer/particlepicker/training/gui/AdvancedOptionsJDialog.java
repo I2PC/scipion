@@ -20,6 +20,7 @@ import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.UpdateTemplatesTask;
+import xmipp.viewer.particlepicker.training.model.Mode;
 
 public class AdvancedOptionsJDialog extends JDialog {
 
@@ -65,6 +66,7 @@ public class AdvancedOptionsJDialog extends JDialog {
 		templatestf = new JFormattedTextField(NumberFormat.getNumberInstance());
 		templatestf.setColumns(3);
 		templatestf.setValue(frame.getParticlePicker().getTemplatesNumber());
+		templatestf.setEnabled(frame.getParticlePicker().getMode() == Mode.Manual);
 		templatestf.addActionListener(new ActionListener()
 		{
 			
@@ -107,18 +109,8 @@ public class AdvancedOptionsJDialog extends JDialog {
 			@Override
 			public void actionPerformed(ActionEvent arg0)
 			{
-				if (autopickpercenttf.getValue() == null)
-				{
-					JOptionPane.showMessageDialog(AdvancedOptionsJDialog.this, XmippMessage.getEmptyFieldMsg("Check (%)"));
-					autopickpercenttf.setValue(frame.getMicrograph().getAutopickpercent());
-					return;
-				}
-
-				int autopickpercent = ((Number) autopickpercenttf.getValue()).intValue();
-				frame.getMicrograph().setAutopickpercent(autopickpercent);
-				frame.getParticlePicker().setAutopickpercent(autopickpercent);
-				frame.getParticlePicker().saveConfig();
 				
+				setAutopickPercent();
 
 			}
 		});
@@ -131,6 +123,7 @@ public class AdvancedOptionsJDialog extends JDialog {
 			@Override
 			public void actionPerformed(ActionEvent arg0)
 			{
+				setAutopickPercent();
 				setVisible(false);
 				
 			}
@@ -140,6 +133,26 @@ public class AdvancedOptionsJDialog extends JDialog {
 		setVisible(true);
 		setAlwaysOnTop(true);
 		pack();
+	}
+	
+	void setEditTemplates(boolean value)
+	{
+		templatestf.setEnabled(value);
+	}
+	
+	protected void setAutopickPercent()
+	{
+		if (autopickpercenttf.getValue() == null)
+		{
+			JOptionPane.showMessageDialog(AdvancedOptionsJDialog.this, XmippMessage.getEmptyFieldMsg("Check (%)"));
+			autopickpercenttf.setValue(frame.getMicrograph().getAutopickpercent());
+			return;
+		}
+
+		int autopickpercent = ((Number) autopickpercenttf.getValue()).intValue();
+		frame.getMicrograph().setAutopickpercent(autopickpercent);
+		frame.getParticlePicker().setAutopickpercent(autopickpercent);
+		frame.getParticlePicker().saveConfig();
 	}
 
 	protected void loadTemplates()

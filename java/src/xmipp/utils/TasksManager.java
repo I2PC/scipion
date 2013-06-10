@@ -14,8 +14,8 @@ public class TasksManager
 	private TasksManager()
 	{
 		queue = new LinkedBlockingQueue<Task>();
-//		consumer = new Thread(new Consumer(queue));
-//		consumer.start();
+		consumer = new Thread(new Consumer(queue));
+		consumer.start();
 	}
 
 	public static TasksManager getInstance()
@@ -27,14 +27,14 @@ public class TasksManager
 
 	public void addTask(Task t)
 	{
-//		try
-//		{
-////			queue.put(t);
-//		}
-//		catch (InterruptedException e)
-//		{
-//			throw new IllegalArgumentException(e);
-//		}
+		try
+		{
+			queue.put(t);
+		}
+		catch (InterruptedException e)
+		{
+			throw new IllegalArgumentException(e);
+		}
 	}
 
 	
