@@ -42,7 +42,7 @@ class ChimeraServer:
                 if self.remote_conn.poll():
                     
                     msg = self.remote_conn.recv()
-                    #print msg
+                    print msg
                     
                     if msg == 'exit_client':
                         break
@@ -68,7 +68,6 @@ class ChimeraServer:
                         data = self.remote_conn.recv()
                         #print 'volume data'
                         grid = Array_Grid_Data(data)
-                        self.volume = volume_from_grid_data(grid)
                         self.volume = volume_from_grid_data(grid)
                     if msg == 'draw_angular_distribution':
                         angulardist = self.remote_conn.recv()
