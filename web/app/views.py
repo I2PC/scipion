@@ -379,39 +379,49 @@ def getScipionHosts():
     return ExecutionHostMapper(defaultHosts).selectAll()
 
 def openHostsConfig(request):
-    if request.method == 'POST': # If the form has been submitted...
-        pass
-    else:
-        # Resources #
-        css_path = os.path.join(settings.STATIC_URL, 'css/general_style.css')
-        favicon_path = getResource('favicon')
-        jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
-        utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
-        # # Project Id(or Name) should be stored in SESSION
-        projectName = request.GET.get('projectName')
-        project = loadProject(projectName)
-        scipionHosts = getScipionHosts()
-        projectHosts = project.getHosts()   
+    # Resources #
+    css_path = os.path.join(settings.STATIC_URL, 'css/general_style.css')
+    favicon_path = getResource('favicon')
+    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
+    utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
+    # # Project Id(or Name) should be stored in SESSION
+    projectName = request.GET.get('projectName')
+    project = loadProject(projectName)
+    scipionHosts = getScipionHosts()
+    projectHosts = project.getHosts()   
 #         hostsKeys = [host.getLabel() for host in projectHosts]      
 #         availableHosts = [host for host in scipionHosts if host.getLabel() not in hostsKeys]
-        form = HostForm()
-        scpnHostsChoices = []
-        scpnHostsChoices.append(('',''))
-        for executionHostMapper in scipionHosts:
-            scpnHostsChoices.append((executionHostMapper.getLabel(),executionHostMapper.getHostName()))
-        form.fields['scpnHosts'].choices = scpnHostsChoices
-        context = {'projectName' : projectName,
-                   'project' : project,
-                   'hosts': projectHosts,
-                   'scipionHosts': scipionHosts,
-                   'favicon': favicon_path,
-                   'jquery': jquery_path,
-                   'utils': utils_path,
-                   'css':css_path,
-                   'form': form}
-            
-        return render_to_response('hosts.html', context)
+    form = HostForm()
+    scpnHostsChoices = []
+    scpnHostsChoices.append(('',''))
+    for executionHostMapper in scipionHosts:
+        scpnHostsChoices.append((executionHostMapper.getLabel(),executionHostMapper.getHostName()))
+    form.fields['scpnHosts'].choices = scpnHostsChoices
+    context = {'projectName' : projectName,
+               'project' : project,
+               'hosts': projectHosts,
+               'scipionHosts': scipionHosts,
+               'favicon': favicon_path,
+               'jquery': jquery_path,
+               'utils': utils_path,
+               'css':css_path,
+               'form': form}
+        
+    return render_to_response('hosts.html', context)
+
+def getHost(request):
+    from django.http import HttpResponse
+    import json
     
+    if request.is_ajax():
+        hostLabel = request.GET.get('hostLabel')
+        projectName = request.GET.get('projectName')
+        project = loadProject(projectName)
+        hostsMapper = ExecutionHostMapper(project.hostsPath)
+        executionHostConfig = hostsMapper.selectByLabel(hostLabel)
+        jsonStr = json.dumps({'hostConfig' : executionHostConfig},
+                             ensure_ascii=False)
+        return HttpResponse(jsonStr, mimetype='application/javascript')
 
 def showj(request):
     #manager = Manager()
