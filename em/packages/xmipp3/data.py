@@ -46,13 +46,14 @@ class XmippImage(XmippMdRow, Image):
         Image.__init__(self, filename, **args)
     
     def getId(self):
-        return self.getFileName()
+        return self.getValue(self._label)
     
     def setFileName(self, filename):
         self.setValue(self._label, filename)
         
     def getFileName(self):
-        return self.getValue(self._label)
+        index, fn = xmipp.FileName(self.getId()).decompose()
+        return fn
     
     def hasCTF(self):
         return self.hasLabel(self._labelCTF)
@@ -60,7 +61,11 @@ class XmippImage(XmippMdRow, Image):
     def getCTF(self):
         """ Return the CTF model """
         return XmippCTFModel(self.getValue(self._labelCTF))
-        
+    
+    def setCTF(self, newCTF):
+        # TODO: implement the set of CTF, probably need a conversion step
+        raise Exception("Not implemented setCTF for XmippImage")
+    
     @staticmethod
     def convert(img):
         """ Create a XmippImage from a general Image instance. """
@@ -189,12 +194,12 @@ class XmippMicrograph(XmippImage, Micrograph):
             return mic
         micXmipp = XmippMicrograph(mic.getFileName())
         if mic.hasCTF():
-            ctf = mic.ctfModel
+            ctf = mic.getCTF()
             micXmipp.setValue(xmipp.MDL_CTF_DEFOCUSU, ctf.defocusU.get())
             micXmipp.setValue(xmipp.MDL_CTF_DEFOCUSV, ctf.defocusV.get())
-            print "psd: ", mic.ctfModel.getPsdFile()
-            print type(mic.ctfModel.getPsdFile())
-            micXmipp.setValue(xmipp.MDL_IMAGE1, mic.ctfModel.getPsdFile())
+            #print "psd: ", mic.ctfModel.getPsdFile()
+            #print type(mic.ctfModel.getPsdFile())
+            micXmipp.setValue(xmipp.MDL_IMAGE1, ctf.getPsdFile())
         # TODO: copyInfo??
         # from mic to micXmipp??  
         return micXmipp

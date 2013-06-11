@@ -9,11 +9,21 @@
 		<!-- JS -->
 		<script src={{jquery}} type="text/javascript"></script>
 		<script src={{utils}} type="text/javascript"></script>
-		<script>
-		
-			function selTableTest(elm) {
-				alert (elm)
-			}		
+		<script>	
+			function getHost(hostLabel, projectName) {
+				$.ajax({
+					type : "GET",
+					url : "/getHost/?hostLabel=" + hostLabel + "&projectName=" + projectName,
+					dataType : "json",
+					success : function(json) {
+						// specifying a dataType of json makes jQuery pre-eval the response
+						// for us ExecutionHostConfig
+						host = json.objects;
+						alert (host.hostName)
+
+					}
+				});
+			}
 			function seeHost(){
 				
 			}
@@ -44,7 +54,7 @@
 				<th>Host path</th>
 			</tr>
 			{% for host in hosts %}
-			<tr id="{{host.label}}" onclick='selTableTest({{host}});'>
+			<tr id="{{host.label}}" onclick="getHost('{{host.label}}', '{{projectName}}');">
 				<td>
 					{{host.label}}
 				</td>

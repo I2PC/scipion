@@ -15,20 +15,55 @@
 	
 	<script type="text/javascript">
 	$(document).ready(function(){
-		$('#zoom').click(function(){
-		   d = new Date();
-		   $(".tableImages").attr("src", $(".tableImages").attr("src")+"&dim="+$(this).val()+"&"+d.getTime());
-		});
+		zoomEvents();
+		colRowModeEvents()
 		
-		$('#zoom').change(function(){
-			$(".tableImages").attr("src", $(".tableImages").attr("src")+"&dim="+$(this).val()+"&"+d.getTime());
-		});
-			
-		$('#zoom').keypress(function(){
-			$(".tableImages").attr("src", $(".tableImages").attr("src")+"&dim="+$(this).val()+"&"+d.getTime());
-		});	
+		
 	});
 	</script>
+	<script type="text/javascript">
+	function colRowModeEvents(){
+		$("#colRowMode").click(function(){
+			if ($("#colRowModeImage").attr("src").indexOf("On") != -1){
+				$("#colRowModeImage").attr("src", $("#colRowModeImage").attr("src").replace("On","Off"))
+			}
+			else{
+				$("#colRowModeImage").attr("src", $("#colRowModeImage").attr("src").replace("Off","On"))
+			}
+		});
+	}
+	</script>
+	<script type="text/javascript">
+		function zoomEvents(){
+			$('#zoom').click(function(){
+				updateImageDimByUrl();	
+			});
+			
+			$('#zoom').change(function(){
+				updateImageDimByUrl();
+			});
+				
+	/* 		$('#zoom').keypress(function(){
+				alert("keypress")
+				updateImageDimByUrl();
+			});	 */	
+		}
+		function updateImageDimByUrl(){
+			d = new Date();
+		   $(".tableImages").each(function(){
+			   var newSrc = "";
+			   if ($(this).attr("src").indexOf("&dim") != -1){
+			   	newSrc = $(this).attr("src").substring(0,$(this).attr("src").indexOf("&dim"));
+			   }
+			   else{
+				  newSrc = $(this).attr("src");   
+			   }
+			   $(this).attr("src", newSrc + "&dim="+$('#zoom').val()+"&"+d.getTime());
+		   })
+		}
+	
+	</script>
+	
 	{% block head %}  {% endblock %}
 </head>
 <body>
@@ -43,8 +78,48 @@
 	<div id="main_section">
 		<aside id="side_news"> <!-- Main Menu -->
 			{% block content_menu %}	{% endblock %}
-			<input type="number" id="zoom" value="150">
-			<img src="/resources/showj/menu.png">
+			<div id="modeContainer" class="sectionMenu">
+				<button onclick="{{menuLayoutConfig.tableViewLink}}">
+					<img src="{{menuLayoutConfig.tableViewSrc}}">
+				
+				<button onclick="{{menuLayoutConfig.galleryViewLink}}">
+					<img src="{{menuLayoutConfig.galleryViewSrc}}">
+				
+			</div>
+			
+			<div id="zoomContainer" class="sectionMenu">
+				<img src="/resources/showj/zoom.gif" class="menuIcon">
+				<input type="number" class="menuInputNumber" id="zoom" value="150" min="10">
+			</div>
+			
+			<div id="gotoContainer" class="sectionMenu">
+				<img src="/resources/showj/goto.gif" class="menuIcon">
+				<input type="number" class="menuInputNumber" id="goto" value="1" max="{{metadata.objects|length}}" min="1">
+			</div>
+			
+			<div class="sectionMenu">
+				<img src="/resources/showj/separator.gif" class="menuIcon">
+			</div>	
+			
+			<div id="colRowContainer" class="sectionMenu">
+				<button id="colRowMode">
+					<img src="/resources/showj/colRowModeOn.gif" id="colRowModeImage" />
+				</button>
+				
+				<div class="subSectionMenu">
+					<span class="textMenu">Cols</span>
+					<input type="number" class="menuInputNumber" id="cols" value="" min="1">
+				</div>
+				<div class="subSectionMenu">
+					<span class="textMenu">Rows</span>
+					<input type="number" class="menuInputNumber" id="rows" value="" min="1">
+				</div>
+			</div>
+			
+			<div class="sectionMenu">
+				<img src="/resources/showj/separator.gif" class="menuIcon">
+			</div>	
+
 		</aside>
 		
 		<section> <!--  Es donde va la informacion princiapl -->

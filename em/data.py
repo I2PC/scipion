@@ -73,7 +73,7 @@ class Image(EMObject):
         EMObject.__init__(self, **args)
         self.setFileName(filename)
         self.samplingRate = Float()
-        self.ctfModel = None
+        self._ctfModel = None
         
     def getId(self):
         return self.getObjId()
@@ -115,12 +115,14 @@ class Image(EMObject):
         self.setFileName(filename) # Index is ignored at this point
         
     def hasCTF(self):
-        return self.ctfModel is not None
+        return self._ctfModel is not None
     
     def getCTF(self):
         """ Return the CTF model """
-        return self.ctfModel
-        
+        return self._ctfModel
+    
+    def setCTF(self, newCTF):
+        self._ctfModel = newCTF
         
 class Micrograph(Image):
     """ Represents an EM Image object """
@@ -195,6 +197,7 @@ class SetOfImages(EMObject):
         
     def hasCTF(self):
         """Return True if the SetOfImages has associated a CTF model"""
+        print str(self._ctf.get())
         return self._ctf.get()  
     
     def setCTF(self, ctf):
@@ -224,7 +227,7 @@ class SetOfImages(EMObject):
         to the current one.
         Params:
         other: set containing tilted pairs.
-        mapFunc: function that mapps elements from other ids to self ids. 
+        mapFunc: function that maps elements from other ids to self ids. 
                  usually this function will be the dict.get method. """
 
         for iU, iT in other.iterTiltPairs():
@@ -241,9 +244,9 @@ class SetOfImages(EMObject):
             # item is an XmippImage or an Image
             filePaths.add(item.getFileName())
             # If it has CTF we must include ctf file
-            if (item.hasCTF()):
+            if item.hasCTF():
                 # ctf is a XMippCTFModel
-                filePaths.add(item.ctfModel.getFiles())
+                filePaths.update(item.getCTF().getFiles())
         return filePaths
     
     def load(self):

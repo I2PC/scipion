@@ -2,7 +2,7 @@
 <ALL>
   <ExecutionHostConfig label="localhost">
     <hostName>localhost</hostName>
-    <hostPath>/home/antonio/Scipion_Projects</hostPath>
+    <hostPath>/home/antonio/Scipion</hostPath>
     <mpiCommand>mpirun -np %(nodes)d -bynode %(command)s</mpiCommand>
     <queueSystem mandatory="False" name="PBS/TORQUE">
       <queues>
