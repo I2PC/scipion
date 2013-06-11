@@ -19,10 +19,16 @@ public class ChimeraClient
 		PrintWriter out;
 		try
 		{
+			String var = "XMIPP_CHIMERA_PORT";
+			String value = "6000";
+			
+			int port = Integer.parseInt(value);
 			String volfile = String.format("%1$shome%1$sairen%1$sxprojects%1$sshowj%1$shand.vol", File.separator);
+			System.setProperty(var, value);
 			Runtime.getRuntime().exec("chimera " + Filename.getXmippPath("libraries/bindings/chimera/xmipp_chimera_server.py"));
 			Thread.sleep(3000);
-			client = new Socket("", 6000);
+			
+			client = new Socket("", port);
 			out = new PrintWriter(client.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(client.getInputStream()));
 			ImageGeneric ig = new ImageGeneric(volfile);
