@@ -143,6 +143,14 @@ class ExecutionHostConfig(OrderedObject):
     
     def getHostPath(self):
         return self.hostPath.get()
+    
+    def as_dict(self):
+        dict = {}
+        dict['label'] = self.label.get()
+        dict['hostName'] = self.hostName.get()
+        dict['userName'] = self.userName.get()
+        dict['hostPath'] = self.hostPath.get()
+        return dict
         
 class QueueSystemConfig(OrderedObject):
     def __init__(self, **args):
