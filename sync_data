@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+rsync -av scipion@scipion:Scipion/tests/input/ $SCIPION_HOME/tests/input/

@@ -49,10 +49,10 @@ function launchToolbar(projName, id, elm) {
 	$("a#deleteTool").attr('href',
 			'javascript:deleteProtocolForm("' + projName + '","' + id + '")');
 	// Action Browse Button
-	$("a#browseTool").attr(
-			'href',
-			'javascript:popup("/form/?projectName=' + projName + '&protocolId='
-					+ id + '")');
+//	$("a#browseTool").attr(
+//			'href',
+//			'javascript:popup("/form/?projectName=' + projName + '&protocolId='
+//					+ id + '")');
 
 	row.show(); // Show toolbar
 }
