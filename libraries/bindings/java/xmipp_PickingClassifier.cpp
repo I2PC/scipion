@@ -41,7 +41,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_train
     {
     	AutoParticlePicking2 *picker = GET_INTERNAL_AUTOPARTICLEPICKING2(jobj);
     	MetaData * md = GET_INTERNAL_METADATA(micrographs);
-    	picker->train(*md);
+    	picker->train(*md, false);
 
     }
     XMIPP_JAVA_CATCH;

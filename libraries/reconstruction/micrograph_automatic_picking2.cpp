@@ -410,33 +410,44 @@ void AutoParticlePicking2::add2Dataset(int flagNegPos)
     }
 }
 
-void AutoParticlePicking2::train(MetaData MD)
+void AutoParticlePicking2::train(MetaData MD, bool corrFlag)
 {
     if (fnPCAModel.exists())
     {
-        classifier.~SVMClassifier();
         positiveParticleStack.clear();
         positiveInvariatnStack.clear();
         negativeParticleStack.clear();
         negativeInvariatnStack.clear();
-        pcaModel.clear();
-        pcaRotModel.clear();
-        particleAvg.clear();
-        pcaModel.clear();
-        pcaModel.clear();
-        fnPCAModel.deleteFile();
-        fnPCARotModel.deleteFile();
-        fnAvgModel.deleteFile();
-        fnSVMModel.deleteFile();
+        classLabel1.clear();
+        dataSet1.clear();
+        if (!corrFlag)
+        {
+            classLabel.clear();
+            dataSet.clear();
+            pcaModel.clear();
+            pcaRotModel.clear();
+            particleAvg.clear();
+            pcaModel.clear();
+            fnPCAModel.deleteFile();
+            fnPCARotModel.deleteFile();
+            fnAvgModel.deleteFile();
+            fnSVMModel.deleteFile();
+        }
     }
-    batchBuildInvariant(MD);
+    if (!corrFlag)
+        batchBuildInvariant(MD);
+    else
+        buildInvariant(MD);
     if (!fnPCAModel.exists())
         trainPCA();
     add2Dataset(0);
     add2Dataset(1);
-    saveTrainingSet();
-    normalizeDataset(0,1);
-    trainSVM(fnSVMModel,1);
+    if (!corrFlag)
+    {
+        saveTrainingSet();
+        normalizeDataset(0,1);
+        trainSVM(fnSVMModel,1);
+    }
 }
 
 void AutoParticlePicking2::saveTrainingSet()
@@ -464,6 +475,7 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
     Particle2 p;
     MultidimArray<double> IpolarCorr;
     MultidimArray<double> featVec;
+    MultidimArray<double> featVecNN;
     MultidimArray<double> pieceImage;
     MultidimArray<double> staticVec, dilatedVec;
     std::vector<Particle2> positionArray;
@@ -501,6 +513,7 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
         buildVector(IpolarCorr,staticVec,featVec,pieceImage);
         double max=featVec.computeMax();
         double min=featVec.computeMin();
+        featVecNN=featVec;
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
         DIRECT_A1D_ELEM(featVec,i)=0+((1)*((DIRECT_A1D_ELEM(featVec,i)-min)/(max-min)));
         label= classifier.predict(featVec, score);
@@ -525,7 +538,7 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
             p.y=i;
             p.status=1;
             p.cost=score;
-            p.vec=featVec;
+            p.vec=featVecNN;
             //            std::cerr<<"x: " << j << " y: " << i <<std::endl;
             auto_candidates.push_back(p);
             //            }
@@ -587,12 +600,42 @@ void AutoParticlePicking2::saveAutoParticles(MetaData &md)
 
 void AutoParticlePicking2::correction(MetaData addedParticlesMD,MetaData removedParticlesMD)
 {
+	std::cerr<<"We are doing the correction"<<std::endl;
+    train(addedParticlesMD,true);
+    add2Dataset(removedParticlesMD);
+    saveTrainingSet();
+    normalizeDataset(0,1);
+    generateTrainSet();
+    trainSVM(fnSVMModel,1);
+    trainSVM(fnSVMModel2,2);
+}
+
+void AutoParticlePicking2::add2Dataset(MetaData removedParticlesMD)
+{
+    int cntNeg=0;
     int enabled;
     FOR_ALL_OBJECTS_IN_METADATA(removedParticlesMD)
     {
         removedParticlesMD.getValue(MDL_ENABLED,enabled, __iter.objId);
-        //  if (enabled == -1)
-
+        if (enabled == -1)
+            cntNeg++;
+    }
+    int yDataSet=YSIZE(dataSet);
+    dataSet.resize(1,1,yDataSet+cntNeg,num_features);
+    classLabel.resize(1,1,1,YSIZE(dataSet));
+    int limit = cntNeg + yDataSet;
+    for (int n=yDataSet;n<limit;n++)
+        classLabel(n)=3;
+    int cnt=0;
+    FOR_ALL_OBJECTS_IN_METADATA(removedParticlesMD)
+    {
+        removedParticlesMD.getValue(MDL_ENABLED,enabled, __iter.objId);
+        if (enabled == -1)
+        {
+            for (size_t j=0;j<XSIZE(dataSet);j++)
+                DIRECT_A2D_ELEM(dataSet,cnt+yDataSet,j)=DIRECT_A1D_ELEM(auto_candidates[cnt].vec,j);
+            cnt++;
+        }
     }
 }
 

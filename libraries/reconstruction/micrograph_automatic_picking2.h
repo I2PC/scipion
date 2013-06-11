@@ -152,9 +152,11 @@ public:
 
     void add2Dataset(int flagNegPos);
 
-    void train(MetaData MD);
+    void train(MetaData MD, bool corrFlag);
 
     void correction(MetaData addedParticlesMD,MetaData removedParticlesMD);
+
+    void add2Dataset(MetaData removedParticlesMD);
 
     void saveTrainingSet();
 
