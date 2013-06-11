@@ -490,11 +490,15 @@ class Protocol(Step):
         #self._store(self.status, self.initTime, self.endTime, *outputs)
         self._store()
         self._log.info('------------------- PROTOCOL FINISHED')
+        self.__closeLogger()
         
     def __getLogger(self):
         #Initialize log
-        logFile = self._getPath('log', 'protocol.log')
-        return getFileLogger(logFile)
+        self.logFile = self._getPath('log', 'protocol.log')
+        return getFileLogger(self.logFile)
+    
+    def __closeLogger(self):
+        closeFileLogger(self.logFile)
 
     def getFiles(self):
         resultFiles = set()
