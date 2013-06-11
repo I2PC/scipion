@@ -103,14 +103,16 @@ class TestXmippCTFEstimation(TestXmippBase):
 class TestXmippExtractParticles(TestXmippBase):
     
     SAME_AS_PICKING = 1
+    ORIGINAL = 0
+    OTHER = 2
     
     @classmethod
     def setUpClass(cls):
         setupProject(cls)    
     
-    def doExtract(self, boxSize, downsampleType):
+    def doExtract(self, boxSize, downsampleType, patternDir):
         print "Run extract particles"
-        pattern = getInputPath('Micrographs_BPV1', '*.mrc')
+        pattern = getInputPath(patternDir, '*.mrc')
         protImport = self.runImportMicrograph(pattern, samplingRate=1.237, voltage=300)
         protPP = self.runFakedPicking(protImport.outputMicrographs)
         protExtract = XmippProtExtractParticles(boxSize=boxSize, downsampleType=downsampleType)
@@ -120,8 +122,12 @@ class TestXmippExtractParticles(TestXmippBase):
         self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
         
     def testExtractSameAsPicking(self):
-        print "Run extract particles with Same as picking"
-        self.doExtract(512, self.SAME_AS_PICKING)
+        print "Run extract particles with downsampling factor equal to the one at picking"
+        self.doExtract(512, self.SAME_AS_PICKING, 'Micrographs_BPV1_Down3')
+        
+    def testExtractOriginal(self):
+        print "Run extract particles with downsampling factor equal to the original micrographs"
+        self.doExtract(512, self.ORIGINAL, )
 #        
 #class TestXmippML2D(TestXmippBase):
 #    @classmethod
