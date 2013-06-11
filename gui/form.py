@@ -463,7 +463,10 @@ class FormWindow(Window):
         value = getattr(self.protocol, paramName, None)
         if value is not None:
             w = self.widgetDict[paramName]
-            value.set(w.get())
+            try:
+                value.set(w.get())
+            except ValueError:
+                print "Error setting value for: ", paramName
              
     def updateProtocolParams(self):
         for paramName, _ in self.protocol.iterDefinitionAttributes():
