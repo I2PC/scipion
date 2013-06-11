@@ -4,6 +4,8 @@ import os
 import xmipp
 from django.shortcuts import render_to_response
 from django.core.context_processors import csrf
+from django.http import HttpResponse
+import json
 from pyworkflow.manager import Manager
 from pyworkflow.project import Project
 from pyworkflow.gui.tree import TreeProvider
@@ -344,24 +346,19 @@ def protocol(request):
             else:
                 value = None
         attr.set(value)
-    # Finally, launch the protocol
-    error = protocol.validate()
-    if error == []:
-        pass
-    else:
-        #Errors
-        pass
     
-    
-    project.launchProtocol(protocol)
-    
-    return project_content(request)
+    errors = protocol.validate()
+
+    if len(errors) == 0:
+        # No errors 
+        # Finally, launch the protocol
+        project.launchProtocol(protocol)
+    jsonStr = json.dumps({'errors' : errors},
+                     ensure_ascii=False)
+    return HttpResponse(jsonStr, mimetype='application/javascript')
 
 def browse_objects(request):
     """ Browse objects from the database. """
-    from django.http import HttpResponse
-    import json
-    
     if request.is_ajax():
         objClass = request.GET.get('objClass')
         projectName = request.GET.get('projectName')
@@ -379,7 +376,7 @@ def getScipionHosts():
     return ExecutionHostMapper(defaultHosts).selectAll()
 
 def openHostsConfig(request):
-    if request.method == 'POST': # If the form has been submitted...
+    if request.method == 'POST':  # If the form has been submitted...
         pass
     else:
         # Resources #
@@ -396,9 +393,9 @@ def openHostsConfig(request):
 #         availableHosts = [host for host in scipionHosts if host.getLabel() not in hostsKeys]
         form = HostForm()
         scpnHostsChoices = []
-        scpnHostsChoices.append(('',''))
+        scpnHostsChoices.append(('', ''))
         for executionHostMapper in scipionHosts:
-            scpnHostsChoices.append((executionHostMapper.getLabel(),executionHostMapper.getHostName()))
+            scpnHostsChoices.append((executionHostMapper.getLabel(), executionHostMapper.getHostName()))
         form.fields['scpnHosts'].choices = scpnHostsChoices
         context = {'projectName' : projectName,
                    'project' : project,
@@ -414,7 +411,7 @@ def openHostsConfig(request):
     
 
 def showj(request):
-    #manager = Manager()
+    # manager = Manager()
 #    logo_path = findResource('scipion_logo.png')
 
     # Resources #
@@ -426,15 +423,15 @@ def showj(request):
     launchTreeview = os.path.join(settings.STATIC_URL, 'js/launchTreeview.js')
     utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
     
-    powertable_path = os.path.join(settings.STATIC_URL,'js/jquery-powertable.js')
-    powertable_resources_path = os.path.join(settings.STATIC_URL,'js/jquery-litelighter.js')
+    powertable_path = os.path.join(settings.STATIC_URL, 'js/jquery-powertable.js')
+    powertable_resources_path = os.path.join(settings.STATIC_URL, 'js/jquery-litelighter.js')
     
-    jquerydataTables_path = os.path.join(settings.STATIC_URL,'js/jquery.dataTables.js')
-    jquerydataTables_colreorder_path = os.path.join(settings.STATIC_URL,'js/ColReorder.js')
+    jquerydataTables_path = os.path.join(settings.STATIC_URL, 'js/jquery.dataTables.js')
+    jquerydataTables_colreorder_path = os.path.join(settings.STATIC_URL, 'js/ColReorder.js')
     
     
     #############
-    #WEB INPUT PARAMETERS
+    # WEB INPUT PARAMETERS
     inputParameters = {'path': request.GET.get('path', 'tux_vol.xmd'),
                      'block': request.GET.get('block', ''),
                      'allowRender': 'render' in request.GET,
@@ -455,11 +452,11 @@ def showj(request):
                'jquery_powertable': powertable_path,
                'jquery_datatable': jquerydataTables_path,
                'jquerydataTables_colreorder': jquerydataTables_colreorder_path,
-               'css': css_path,               
+               'css': css_path,
                'metadata': md,
                'inputParameters': inputParameters}
     
-    return_page = '%s%s%s' % ('showj_',inputParameters['mode'],'.html')
+    return_page = '%s%s%s' % ('showj_', inputParameters['mode'], '.html')
     return render_to_response(return_page, context)
 
 AT = '__at__'
@@ -471,7 +468,7 @@ class MdValue():
     def __init__(self, md, label, objId, allowRender=True, imageDim=None):
         self.strValue = str(md.getValue(label, objId))        
         
-        #Habria que ampliarlo para que cogiera todos los renderizables
+        # Habria que ampliarlo para que cogiera todos los renderizables
         self.allowRender = (label == xmipp.MDL_IMAGE) and allowRender
         
         self.displayCheckbox = (label == xmipp.MDL_ENABLED)
@@ -485,7 +482,7 @@ class MdData():
     def __init__(self, path, allowRender=True, imageDim=None):        
         md = xmipp.MetaData(path)
         
-        labels =  md.getActiveLabels()
+        labels = md.getActiveLabels()
         self.labels = [xmipp.label2Str(l) for l in labels]
         self.colsOrder = defineColsLayout(self.labels);
         self.objects = []
@@ -499,14 +496,14 @@ class MdData():
 def defineColsLayout(labels):
     colsOrder = range(len(labels))
     if 'enabled' in labels:
-        colsOrder.insert(0,colsOrder.pop(labels.index('enabled')))
+        colsOrder.insert(0, colsOrder.pop(labels.index('enabled')))
     return colsOrder    
 
 def loadMetaData(path, block, allowRender=True, imageDim=None):
     path = getInputPath('showj', path)    
     if len(block):
         path = '%s@%s' % (block, path)
-    #path2 = 'Volumes@' + path1
+    # path2 = 'Volumes@' + path1
     print path
     return MdData(path, allowRender, imageDim)   
      
@@ -533,7 +530,7 @@ def table(request):
                'jquery_cookie': jquery_cookie,
                'jquery_treeview': jquery_treeview,
                'launchTreeview': launchTreeview,
-               'css': css_path,               
+               'css': css_path,
                'metadata': md}
     
     return render_to_response('table.html', context)
@@ -547,7 +544,7 @@ def get_image(request):
     imageDim = request.GET.get('dim', 150)
     
     
-    #PAJM: Como vamos a gestionar lsa imagen    
+    # PAJM: Como vamos a gestionar lsa imagen    
     if imagePath.endswith('png') or imagePath.endswith('gif'):
         img = getImage(imagePath, tk=False)
     else:
@@ -559,12 +556,12 @@ def get_image(request):
         if imageNo:
             imagePath = '%s@%s' % (imageNo, imagePath) 
         imgXmipp = xmipp.Image(imagePath)
-        #from PIL import Image
+        # from PIL import Image
         img = getPILImage(imgXmipp, imageDim)
         
         
         
-    #response = HttpResponse(mimetype="image/png")    
+    # response = HttpResponse(mimetype="image/png")    
     response = HttpResponse(mimetype="image/png")
     img.save(response, "PNG")
     return response

@@ -518,13 +518,15 @@ class Protocol(Step):
         took to run (or the actual running time 
         if still is running )
         """
-        f = "%Y-%m-%d %H:%M:%S.%f"
-        t1 = dt.datetime.strptime(self.initTime.get(), f)
-        if self.status == STATUS_RUNNING:
-            t2 = dt.datetime.now()
-        else:
-            t2 = dt.datetime.strptime(self.endTime.get(), f)
-        elapsed = t2 - t1
+        elapsed = None
+        if self.initTime.hasValue():
+            f = "%Y-%m-%d %H:%M:%S.%f"
+            t1 = dt.datetime.strptime(self.initTime.get(), f)
+            if self.status == STATUS_RUNNING:
+                t2 = dt.datetime.now()
+            else:
+                t2 = dt.datetime.strptime(self.endTime.get(), f)
+            elapsed = t2 - t1
         
         return elapsed
     
