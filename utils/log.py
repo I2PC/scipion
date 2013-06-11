@@ -13,8 +13,10 @@ LOG_PATH = 'logs'
 
 """ Get general log file path """
 logPath = join (getHomePath(), SCIPION_PATH, LOG_PATH, 'scipionLog.log')
+
 """ Create the folders path if it does not exist """
 createFolderForFile(logPath)
+
 """ Config the log """
 config = {  'version': 1,              
             'disable_existing_loggers': False,
@@ -49,7 +51,9 @@ config = {  'version': 1,
                 },
             }
         }
+
 logging.config.dictConfig(config)
+
 
 def getGeneralLogger(classPath):
     """ Method that returns the general log """
@@ -60,6 +64,7 @@ def getFileLogger(filePath):
     """ Method that creates and returns a log for the given file """
     # Create the folders path if it does not exist 
     createFolderForFile(filePath)
+    print "getFileLogger: ", filePath
     
     if filePath not in config['loggers']:
         config['handlers'][filePath] = {'level': 'INFO',    
@@ -72,3 +77,13 @@ def getFileLogger(filePath):
                                        'propagate': False,}
         logging.config.dictConfig(config)
     return logging.getLogger(filePath)
+
+
+def closeFileLogger(filePath):
+    """ This method should be called to un-register a previous acquired
+    file logger with the method getFileLogger, the same filePath should
+    be used.
+    """
+    if filePath in config['loggers']:
+        del config['handlers'][filePath]
+        del config['loggers'][filePath]

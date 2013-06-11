@@ -41,7 +41,7 @@ class TestXmippWorkflow(unittest.TestCase):
           
         # Now estimate CTF on the downsampled micrographs 
         print "Performing CTF..."   
-        protCTF = XmippProtCTFMicrographs()                
+        protCTF = XmippProtCTFMicrographs(numberOfThreads=3)                
         protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)        
         self.proj.launchProtocol(protCTF, wait=True)
         
@@ -57,7 +57,7 @@ class TestXmippWorkflow(unittest.TestCase):
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
             
         print "Run extract particles with Same as picking"
-        protExtract = XmippProtExtractParticles(boxSize=258, downsampleType=1)
+        protExtract = XmippProtExtractParticles(boxSize=64, downsampleType=1)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         #protExtract.inputMicrographs.set(protDownsampling.outputMicrographs)
         self.proj.launchProtocol(protExtract, wait=True)
@@ -67,7 +67,7 @@ class TestXmippWorkflow(unittest.TestCase):
         
         print "Run ML2D"
         protML2D = XmippProtML2D(numberOfReferences=1, maxIters=4, 
-                                 numberOfMpi=2, numberOfThreads=2)
+                                 numberOfMpi=2, numberOfThreads=1)
         protML2D.inputImages.set(protExtract.outputImages)
         self.proj.launchProtocol(protML2D, wait=True)        
         
@@ -76,7 +76,7 @@ class TestXmippWorkflow(unittest.TestCase):
         
         print "Run CL2D"
         protCL2D = XmippProtCL2D(numberOfReferences=2, numberOfInitialReferences=1, 
-                                 numberOfIterations=4, numberOfMpi=4)
+                                 numberOfIterations=4, numberOfMpi=2)
         protCL2D.inputImages.set(protExtract.outputImages)
         self.proj.launchProtocol(protCL2D, wait=True)        
         
