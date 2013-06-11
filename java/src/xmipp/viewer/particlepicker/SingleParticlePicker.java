@@ -314,7 +314,7 @@ public class SingleParticlePicker extends ParticlePicker
 					md.setValueDouble(MDLabel.MDL_COST, p.getCost(), id);
 					md.setValueInt(MDLabel.MDL_ENABLED, (!p.isDeleted()) ? 1 : -1, id);
 				}
-				md.write(file);
+				md.writeBlock(getParticlesBlock(file));
 				md.destroy();
 			}
 
@@ -923,9 +923,8 @@ public class SingleParticlePicker extends ParticlePicker
 			}
 		}
 
-
 		new Thread(new TrainRunnable(frame, trainmd, outputmd)).start();
-//		new TrainRunnable(frame, trainmd, outputmd).run();
+		//		new TrainRunnable(frame, trainmd, outputmd).run();
 	}
 
 	public class TrainRunnable implements Runnable
@@ -969,16 +968,16 @@ public class SingleParticlePicker extends ParticlePicker
 		}
 	}
 
-	public void autopick(SingleParticlePickerJFrame frame)
+	public void autopick(SingleParticlePickerJFrame frame, TrainingMicrograph next)
 	{
-		micrograph.setState(MicrographState.Supervised);
-		saveData(micrograph);
+		next.setState(MicrographState.Supervised);
+		saveData(next);
 
 		MetaData outputmd = new MetaData();
 		frame.getCanvas().setEnabled(false);
 		XmippWindowUtil.blockGUI(frame, "Autopicking...");
 
-		new Thread(new AutopickRunnable(frame, outputmd)).start();
+		new Thread(new AutopickRunnable(frame, next, outputmd)).start();
 
 	}
 
@@ -987,11 +986,13 @@ public class SingleParticlePicker extends ParticlePicker
 
 		private SingleParticlePickerJFrame frame;
 		private MetaData outputmd;
+		private TrainingMicrograph micrograph;
 
-		public AutopickRunnable(SingleParticlePickerJFrame frame, MetaData outputmd)
+		public AutopickRunnable(SingleParticlePickerJFrame frame, TrainingMicrograph micrograph, MetaData outputmd)
 		{
 			this.frame = frame;
 			this.outputmd = outputmd;
+			this.micrograph = micrograph;
 		}
 
 		public void run()
@@ -1001,6 +1002,7 @@ public class SingleParticlePicker extends ParticlePicker
 			classifier.autopick(micrograph.getFile(), outputmd, micrograph.getAutopickpercent());
 			loadAutomaticParticles(micrograph, outputmd, false);
 			String path = getParticlesBlock(getOutputPath(micrograph.getAutoPosFile()));
+			outputmd.print();
 			outputmd.write(path);
 			frame.getCanvas().repaint();
 			frame.getCanvas().setEnabled(true);
@@ -1011,43 +1013,45 @@ public class SingleParticlePicker extends ParticlePicker
 
 	}
 
-	public void correct()
+	public void correctAndAutopick(SingleParticlePickerJFrame frame, TrainingMicrograph current, TrainingMicrograph next)
 	{
 		getMicrograph().setState(MicrographState.Corrected);
 		saveData(micrograph);
 		MetaData addedmd = new MetaData(getParticlesBlock(getOutputPath(micrograph.getPosFile())));
 		MetaData removedmd = new MetaData();
 		long id;
-		int deletedcount = 0;
-		for(AutomaticParticle ap: micrograph.getAutomaticParticles())
-			if(ap.isDeleted())
+		for (AutomaticParticle ap : micrograph.getAutomaticParticles())
+			if (ap.isDeleted())
 			{
 				id = removedmd.addObject();
 				removedmd.setValueInt(MDLabel.MDL_XCOOR, ap.getX(), id);
 				removedmd.setValueInt(MDLabel.MDL_YCOOR, ap.getY(), id);
 				removedmd.setValueDouble(MDLabel.MDL_COST, ap.getCost(), id);
-				deletedcount ++;
 			}
-		if(micrograph.getManualParticles().size() == 0 && deletedcount == 0)
-		{
-			removedmd.destroy();
-			return;//nothing to correct
-		}
-
-		new Thread(new CorrectRunnable(addedmd, removedmd)).start();
+		MetaData outputmd = new MetaData();
+		frame.getCanvas().setEnabled(false);
+		XmippWindowUtil.blockGUI(frame, "Correcting and Autopicking...");
+		new Thread(new CorrectAndAutopickRunnable(frame, addedmd, removedmd, next, outputmd)).start();
 
 	}
 
-	public class CorrectRunnable implements Runnable
+	public class CorrectAndAutopickRunnable implements Runnable
 	{
 
 		private MetaData addedmd;
 		private MetaData removedmd;
+		private TrainingMicrograph next;
+		private SingleParticlePickerJFrame frame;
+		private MetaData outputmd;
 
-		public CorrectRunnable(MetaData manualmd, MetaData automaticmd)
+		public CorrectAndAutopickRunnable(SingleParticlePickerJFrame frame, MetaData manualmd, MetaData automaticmd, TrainingMicrograph next,
+				MetaData outputmd)
 		{
+			this.frame = frame;
 			this.addedmd = manualmd;
 			this.removedmd = automaticmd;
+			this.next = next;
+			this.outputmd = outputmd;
 		}
 
 		public void run()
@@ -1056,6 +1060,22 @@ public class SingleParticlePicker extends ParticlePicker
 			classifier.correct(addedmd, removedmd);
 			addedmd.destroy();
 			removedmd.destroy();
+			if (getMode() == Mode.Supervised && next.getState() == MicrographState.Available)
+			{
+				next.getAutomaticParticles().clear();
+				next.setAutopickpercent(autopickpercent);
+				classifier.autopick(next.getFile(), outputmd, next.getAutopickpercent());
+				loadAutomaticParticles(next, outputmd, false);
+				String path = getParticlesBlock(getOutputPath(next.getAutoPosFile()));
+				outputmd.write(path);
+				outputmd.print();
+				outputmd.destroy();
+			}
+			frame.getCanvas().repaint();
+			frame.getCanvas().setEnabled(true);
+			frame.updateMicrographsModel();
+			XmippWindowUtil.releaseGUI(frame.getRootPane());
+			
 		}
 	}
 

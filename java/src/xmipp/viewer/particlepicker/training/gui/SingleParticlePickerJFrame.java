@@ -598,30 +598,44 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			return;
 		if (ppicker.isChanged())
 			ppicker.saveData(getMicrograph());// Saving changes when switching
-		
-		if(ppicker.getMode() == Mode.Supervised && getMicrograph().getState() == MicrographState.Supervised)
-		{
-			boolean iscorrect = XmippDialog.showQuestion(this, "Would you like to correct training with added and deleted particles?");
-			if(iscorrect)
-				ppicker.correct();
-		}
-		
 		index = micrographstb.getSelectedRow();
+		TrainingMicrograph next = ppicker.getMicrographs().get(index);
+		
+		tryCorrectAndAutopick(getMicrograph(), next);
+		
+		
 		ppicker.getMicrograph().releaseImage();
-		ppicker.setMicrograph(ppicker.getMicrographs().get(index));
+		ppicker.setMicrograph(next);
 
 		if(ppicker.getMode() == Mode.Supervised)
 			resetbt.setEnabled(getMicrograph().getState() != MicrographState.Manual);
 		setChanged(false);
 		initializeCanvas();
 		iconbt.setIcon(ppicker.getMicrograph().getCTFIcon());
-		if (ppicker.getMode() == Mode.Supervised && getMicrograph().getState() == MicrographState.Available)
-			ppicker.autopick(this);
+		
 		pack();
 
 		if (particlesdialog != null)
 			loadParticles();
 
+	}
+
+	private void tryCorrectAndAutopick(TrainingMicrograph current, TrainingMicrograph next)
+	{
+		boolean iscorrect = current.getManualParticles().size() != 0 || current.getAutomaticParticlesDeleted() != 0;
+		boolean isautopick = ppicker.getMode() == Mode.Supervised && next.getState() == MicrographState.Available;
+		if(ppicker.getMode() == Mode.Supervised && current.getState() == MicrographState.Supervised && iscorrect)
+		{
+				iscorrect = XmippDialog.showQuestion(this, "Would you like to correct training with added and deleted particles?");
+			if(iscorrect)
+			{
+				ppicker.correctAndAutopick(this, current, next);
+				isautopick = false;
+			}
+			
+		}
+		if (isautopick)//if not done before
+			ppicker.autopick(this, next);
 	}
 
 	protected void resetMicrograph()
