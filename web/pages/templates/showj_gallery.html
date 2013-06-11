@@ -1,14 +1,25 @@
 {% extends 'showj_base.html' %} 
+
 {% block head %}
+
 {% endblock %}
 
-{% block content_menu %}{% endblock %}
+{% block content_menu %}
+<div id="metadataSelectorContainer" class="sectionMenu">
+	<span class="textMenu">Select Metadata</span>
+	<select id="metadataComboBox">
+		{% for label in metadata.labelsToRender %}
+        	<option value="{{label}}">{{label}}</option>
+        {% endfor %}	
+	</select>
+</div>
+{% endblock %}
 
 {% block content_view %}	
 		
 		{% for obj in metadata.objects %}
 			{% for value in obj.values %}
-				{% if value.allowRender %}
+				{% if value.allowRender and value.label == inputParameters.metadataComboBox %}
 					<div id="img_container">
 						<div id="column_label">{{forloop.parentloop.counter}}</div> 
 						<img class="tableImages" src="/get_image/?image={{value.imgValue}}"/>

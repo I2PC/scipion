@@ -122,6 +122,9 @@ section #img_container{
 	width:95%; 
 }
 
+.row_selected{
+	border: 2px solid #000;
+}
 
 /* GENERAL */
 

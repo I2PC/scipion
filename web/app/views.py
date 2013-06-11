@@ -451,7 +451,8 @@ def showj(request):
                      'block': request.GET.get('block', ''),
                      'allowRender': 'render' in request.GET,
                      'imageDim' : request.GET.get('dim', None),
-                     'mode': request.GET.get('mode', 'gallery')}
+                     'mode': request.GET.get('mode', 'gallery'),
+                     'metadataComboBox': request.GET.get('metadataComboBox', 'image')}
     
     md = loadMetaData(inputParameters['path'], inputParameters['block'], inputParameters['allowRender'], inputParameters['imageDim'])    
 
@@ -479,17 +480,22 @@ class MdObj():
     pass
     
 class MdValue():
-    def __init__(self, md, label, objId, allowRender=True, imageDim=None):
+    def __init__(self, md, label, objId, allowRender, imageDim=None):
         self.strValue = str(md.getValue(label, objId))        
+
+        self.label = xmipp.label2Str(label)
         
-        # Habria que ampliarlo para que cogiera todos los renderizables
-        self.allowRender = xmipp.labelIsImage(label) and allowRender
         
+        self.allowRender = allowRender
+
+        print self.label,self.allowRender
+
+        #check if enabled label
         self.displayCheckbox = (label == xmipp.MDL_ENABLED)
 
+        #Prepare path for image
         self.imgValue = self.strValue
-        
-        if self.allowRender and '@' in self.strValue:
+        if allowRender and '@' in self.strValue:
             self.imgValue = self.imgValue.replace('@', AT)
 #            if imageDim:
 #                self.imgValue += '&dim=%s' % imageDim
@@ -499,13 +505,21 @@ class MdData():
         md = xmipp.MetaData(path)
         
         labels = md.getActiveLabels()
-        self.labels = [xmipp.label2Str(l) for l in labels]
+        self.labels = []
+        self.labelsToRender=[]
+        for l in labels:
+            labelName = xmipp.label2Str(l)
+            self.labels.append(labelName)
+            if (xmipp.labelIsImage(l) and allowRender):
+                self.labelsToRender.append(labelName)
+            print "taka"    
+                
         self.colsOrder = defineColsLayout(self.labels);
         self.objects = []
         for objId in md:
             obj = MdObj()
             obj.id = objId
-            obj.values = [MdValue(md, l, objId, allowRender, imageDim) for l in labels]
+            obj.values = [MdValue(md, l, objId, (xmipp.labelIsImage(l) and allowRender), imageDim) for l in labels]
             self.objects.append(obj)
 
 class MenuLayoutConfig():        
