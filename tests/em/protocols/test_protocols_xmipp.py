@@ -122,40 +122,43 @@ class TestXmippExtractParticles(TestXmippBase):
     def testExtractSameAsPicking(self):
         print "Run extract particles with Same as picking"
         self.doExtract(512, self.SAME_AS_PICKING)
-#        
-#class TestXmippML2D(TestXmippBase):
-#    @classmethod
-#    def setUpClass(cls):
-#        setupProject(cls)
-#        #TODO: Find a set of images to make this work, with this it does not
-#        pattern = getInputPath('Images_hedimg', '*')
-#        cls.protImport = cls.runImportParticles(pattern=pattern, samplingRate=1.327)
-#        
-#    def testML2D(self):
-#        print "Run ML2D"
-#        protML2D = XmippProtML2D(numberOfReferences=1, maxIters=4, numberOfMpi=1)
-#        protML2D.inputImages.set(self.protImport.outputImages)
-#        self.proj.launchProtocol(protML2D, wait=True)        
-#        
-#        self.assertIsNotNone(protML2D.outputClassification, "There was a problem with ML2D")  
-#        
-#class TestXmippCL2D(TestXmippBase):
-#
-#    @classmethod
-#    def setUpClass(cls):
-#        setupProject(cls)
-#        #TODO: Find a set of images to make this work, with this it does not
-#        pattern = getInputPath('Images_hedimg', '*')
-#        cls.protImport = cls.runImportParticles(pattern=pattern, samplingRate=1.327)
-#        
-#    def testCL2D(self):
-#        print "Run CL2D"
-#        protCL2D = XmippProtCL2D(numberOfReferences=2, numberOfInitialReferences=1, 
-#                                 numberOfIterations=4, numberOfMpi=1)
-#        protCL2D.inputImages.set(self.protImport.outputImages)
-#        self.proj.launchProtocol(protCL2D, wait=True)        
-#        
-#        self.assertIsNotNone(protCL2D.outputClassification, "There was a problem with CL2D")  
+     
+def setupClassification(cls):
+    """ Method to setup classification Test Cases. """
+    setupProject(cls)
+    #TODO: Find a set of images to make this work, with this it does not
+    pattern = getInputPath('images_LTA', '*.xmp')
+    cls.protImport = cls.runImportParticles(pattern=pattern, samplingRate=5.6)
+    
+       
+class TestXmippML2D(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupClassification(cls)
+        
+    def testML2D(self):
+        print "Run ML2D"
+        protML2D = XmippProtML2D(numberOfReferences=2, maxIters=3, 
+                                 numberOfMpi=2, numberOfThreads=2)
+        protML2D.inputImages.set(self.protImport.outputImages)
+        self.proj.launchProtocol(protML2D, wait=True)        
+        
+        self.assertIsNotNone(protML2D.outputClassification, "There was a problem with ML2D")  
+        
+class TestXmippCL2D(TestXmippBase):
+
+    @classmethod
+    def setUpClass(cls):
+        setupClassification(cls)
+        
+    def testCL2D(self):
+        print "Run CL2D"
+        protCL2D = XmippProtCL2D(numberOfReferences=2, numberOfInitialReferences=1, 
+                                 numberOfIterations=3, numberOfMpi=4)
+        protCL2D.inputImages.set(self.protImport.outputImages)
+        self.proj.launchProtocol(protCL2D, wait=True)        
+        
+        self.assertIsNotNone(protCL2D.outputClassification, "There was a problem with CL2D")  
 
         
 
