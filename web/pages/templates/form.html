@@ -15,7 +15,7 @@
 	</head>
 	<body onload="evalElements();">
 		<h3>Protocol: {{protocol.getClassName}}</h3>
-		<form action="/protocol/" method="POST" onsubmit="javascript:closePopup();"> {% csrf_token %}
+		<form id="protocolForm" action="/protocol/" method="POST">{% csrf_token %}
 			<input type="hidden" name="protocolClass" value="{{protocol.getClassName}}"></>
 			<input type="hidden" name="protocolId" value="{{protocol.getObjId}}"></>
 			<input type="hidden" name="projectName" value="{{projectName}}"></>
