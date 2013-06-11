@@ -599,8 +599,12 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		if (ppicker.isChanged())
 			ppicker.saveData(getMicrograph());// Saving changes when switching
 		
-//		if(getMicrograph().getState() == MicrographState.Supervised)
-//			ppicker.correct();
+		if(ppicker.getMode() == Mode.Supervised && getMicrograph().getState() == MicrographState.Supervised)
+		{
+			boolean iscorrect = XmippDialog.showQuestion(this, "Would you like to correct training with added and deleted particles?");
+			if(iscorrect)
+				ppicker.correct();
+		}
 		
 		index = micrographstb.getSelectedRow();
 		ppicker.getMicrograph().releaseImage();
@@ -627,8 +631,6 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		canvas.refreshActive(null);
 		updateMicrographsModel();
 		setState(MicrographState.Available);
-		
-		
 	}
 
 	private void setState(MicrographState state)

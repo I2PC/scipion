@@ -31,10 +31,7 @@ public class SingleParticlePicker extends ParticlePicker
 	private int autopickpercent = defAutoPickPercent;
 
 	private static int mintraining = 15;
-	private static String trainingfn = "training.txt";
-	private static String trainingmaskfn = "mask.xmp";
-	private static String autofeaturesvectorfn = "auto_feature_vectors";
-	private static String model = "model";
+
 	private int threads;
 	private boolean fastmode;
 	private boolean incore;
@@ -1018,31 +1015,47 @@ public class SingleParticlePicker extends ParticlePicker
 	{
 		getMicrograph().setState(MicrographState.Corrected);
 		saveData(micrograph);
-		MetaData manualmd = new MetaData(getOutputPath(micrograph.getPosFile()));
-		MetaData automaticmd = new MetaData(getOutputPath(micrograph.getAutoPosFile()));
+		MetaData addedmd = new MetaData(getParticlesBlock(getOutputPath(micrograph.getPosFile())));
+		MetaData removedmd = new MetaData();
+		long id;
+		int deletedcount = 0;
+		for(AutomaticParticle ap: micrograph.getAutomaticParticles())
+			if(ap.isDeleted())
+			{
+				id = removedmd.addObject();
+				removedmd.setValueInt(MDLabel.MDL_XCOOR, ap.getX(), id);
+				removedmd.setValueInt(MDLabel.MDL_YCOOR, ap.getY(), id);
+				removedmd.setValueDouble(MDLabel.MDL_COST, ap.getCost(), id);
+				deletedcount ++;
+			}
+		if(micrograph.getManualParticles().size() == 0 && deletedcount == 0)
+		{
+			removedmd.destroy();
+			return;//nothing to correct
+		}
 
-		new Thread(new CorrectRunnable(manualmd, automaticmd)).start();
+		new Thread(new CorrectRunnable(addedmd, removedmd)).start();
 
 	}
 
 	public class CorrectRunnable implements Runnable
 	{
 
-		private MetaData manualmd;
-		private MetaData automaticmd;
+		private MetaData addedmd;
+		private MetaData removedmd;
 
 		public CorrectRunnable(MetaData manualmd, MetaData automaticmd)
 		{
-			this.manualmd = manualmd;
-			this.automaticmd = automaticmd;
+			this.addedmd = manualmd;
+			this.removedmd = automaticmd;
 		}
 
 		public void run()
 		{
 
-			classifier.correct(manualmd, automaticmd);
-			manualmd.destroy();
-			automaticmd.destroy();
+			classifier.correct(addedmd, removedmd);
+			addedmd.destroy();
+			removedmd.destroy();
 		}
 	}
 

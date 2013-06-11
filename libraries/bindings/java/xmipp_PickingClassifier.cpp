@@ -67,14 +67,17 @@ JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_autopick
 }
 
 JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_correct
-(JNIEnv *env, jobject jobj, jobject jmanualmd, jobject jautomaticmd)
+(JNIEnv *env, jobject jobj, jobject jaddedmd, jobject jremovedmd)
 {
     XMIPP_JAVA_TRY
     {
-    	MetaData * manualmd = GET_INTERNAL_METADATA(jmanualmd);
-    	MetaData * automaticmd = GET_INTERNAL_METADATA(jautomaticmd);
+    	MetaData * addedmd = GET_INTERNAL_METADATA(jaddedmd);
+    	MetaData * removedmd = GET_INTERNAL_METADATA(jremovedmd);
     	AutoParticlePicking2 *picker = GET_INTERNAL_AUTOPARTICLEPICKING2(jobj);
     	std::cout<<"correct"<< std::endl;
+    	addedmd->print();
+    	removedmd->print();
+    	picker->correction(*addedmd, *removedmd);
     }
     XMIPP_JAVA_CATCH;
 
