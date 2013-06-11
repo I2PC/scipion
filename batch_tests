@@ -1,0 +1,6 @@
+python -m unittest -v tests.em.protocols.test_protocols_xmipp.TestXmippCTFEstimation 
+python -m unittest -v tests.em.protocols.test_protocols_xmipp.
+python -m unittest tests.em.protocols.test_protocols_xmipp.TestXmippCTFEstimation.test_Micrographs_BPV1_Down3 
+python -m unittest tests.em.protocols.test_protocols_xmipp.TestXmippPreprocessMicrographs
+python -m unittest tests.em.workflows.test_workflow_xmipp
+python -m unittest tests.classes.tester
