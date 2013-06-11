@@ -29,13 +29,13 @@ nav ul{
 }
 
 nav ul li{
-	padding: 5px;
+	padding: 5px 10px 5px 0px;
 	display: inline;
 }
 
 /* ASIDE (BOTTOM MENU) */
 aside{
-	height: 30px;
+	height: 50px;
 	background-color: #320101;
 	padding: 20px;
 	display: -moz-flex;
@@ -49,6 +49,42 @@ aside button{
 	border:0px;
 	cursor: pointer;
 	height: 27px;
+}
+
+aside .sectionMenu{
+	margin-right: 20px;
+	/* display: inline-block; */
+	display: -webkit-flex;
+    -webkit-align-items:center; 
+}
+
+aside .subSectionMenu{
+	margin-right: 10px;	
+}
+aside .textMenu{
+	color: #FFF;
+	font: 12px Tahoma;
+	font-weight: bold;
+	margin-right: 2px;
+}
+
+aside #colRowMode{
+	margin-right: 15px;
+}
+
+aside .menuIcon{
+	margin-right: 5px;
+}
+
+aside .menuInputNumber{
+	width: 60px;
+	background-color: #000;
+	font: 11px Tahoma;
+	color: #fff;
+	text-align:right;
+	height:25px;
+	border-color: #7a0000;
+	border:1px;
 }
 
 
@@ -86,21 +122,8 @@ section #img_container{
 	width:95%; 
 }
 
-#zoom{
-	width: 60px;
-	background-color: #000;
-	font: 11px Tahoma;
-	color: #fff;
-	text-align:right;
-	height:25px;
-	border-color: #7a0000;
-	border:1px;
-}
-/* #gallery{
-	margin: 20px 0px;
-	display: -webkit-box;Esto es una flexible box
-	-webkit-box-orient: horizontal;Fijas la orientacion de las flexible boxes que contiene
-	-webkit-box-flex:1; 1=Totalmente flexible 0=Fija
-} */
+
+/* GENERAL */
+
 
 

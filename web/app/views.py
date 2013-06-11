@@ -15,7 +15,7 @@ from pyworkflow.em import *
 from django.http.request import HttpRequest
 from pyworkflow.apps.config import ExecutionHostMapper
 
-#from pyworkflow.tests import getInputPath 
+from pyworkflow.tests import getInputPath 
 from forms import HostForm
 
 
@@ -438,9 +438,6 @@ def showj(request):
     launchTreeview = os.path.join(settings.STATIC_URL, 'js/launchTreeview.js')
     utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
     
-    powertable_path = os.path.join(settings.STATIC_URL,'js/jquery-powertable.js')
-    powertable_resources_path = os.path.join(settings.STATIC_URL,'js/jquery-litelighter.js')
-    
     jquerydataTables_path = os.path.join(settings.STATIC_URL,'js/jquery.dataTables.js')
     jquerydataTables_colreorder_path = os.path.join(settings.STATIC_URL,'js/ColReorder.js')
     
@@ -454,22 +451,21 @@ def showj(request):
                      'mode': request.GET.get('mode', 'gallery')}
     
     md = loadMetaData(inputParameters['path'], inputParameters['block'], inputParameters['allowRender'], inputParameters['imageDim'])    
+
+    menuLayoutConfig = loadMenuLayoutConfig(inputParameters['mode'], inputParameters['path'], inputParameters['block'], inputParameters['allowRender'], inputParameters['imageDim']);
    
-    print 'taka' 
-    print inputParameters['imageDim']
     
     context = {'jquery': jquery_path,
                'utils': utils_path,
                'jquery_cookie': jquery_cookie,
                'jquery_treeview': jquery_treeview,
                'launchTreeview': launchTreeview,
-               'jquery_powertable_resources': powertable_resources_path,
-               'jquery_powertable': powertable_path,
                'jquery_datatable': jquerydataTables_path,
                'jquerydataTables_colreorder': jquerydataTables_colreorder_path,
                'css': css_path,               
                'metadata': md,
-               'inputParameters': inputParameters}
+               'inputParameters': inputParameters,
+               'menuLayoutConfig': menuLayoutConfig}
     
     return_page = '%s%s%s' % ('showj_',inputParameters['mode'],'.html')
     return render_to_response(return_page, context)
@@ -484,12 +480,14 @@ class MdValue():
         self.strValue = str(md.getValue(label, objId))        
         
         #Habria que ampliarlo para que cogiera todos los renderizables
-        self.allowRender = (label == xmipp.MDL_IMAGE) and allowRender
+        self.allowRender = xmipp.labelIsImage(label) and allowRender
         
         self.displayCheckbox = (label == xmipp.MDL_ENABLED)
 
+        self.imgValue = self.strValue
+        
         if self.allowRender and '@' in self.strValue:
-            self.imgValue = self.strValue.replace('@', AT)
+            self.imgValue = self.imgValue.replace('@', AT)
 #            if imageDim:
 #                self.imgValue += '&dim=%s' % imageDim
 
@@ -506,8 +504,31 @@ class MdData():
             obj.id = objId
             obj.values = [MdValue(md, l, objId, allowRender, imageDim) for l in labels]
             self.objects.append(obj)
-        
 
+class MenuLayoutConfig():        
+    def __init__(self, mode, path, block, allowRender, imageDim):
+        link = "location.href='/showj/?path="+path
+        if len(block):
+            link = link + "&block=" + block
+        if allowRender:
+            link = link + "&render"
+        if imageDim is not None:
+            link = link + "&dim=" + imageDim
+                
+
+        if (mode == "table"):
+            self.tableViewLink = "#"
+            self.tableViewSrc = "/resources/showj/tableViewOn.gif"
+            self.galleryViewLink = link + "&mode=gallery'"
+            self.galleryViewSrc = "/resources/showj/galleryViewOff.gif"
+        elif (mode == "gallery"):
+            self.tableViewLink = link + "&mode=table'"
+            self.tableViewSrc = "/resources/showj/tableViewOff.gif"
+            self.galleryViewLink = "#"
+            self.galleryViewSrc = "/resources/showj/galleryViewOn.gif"
+            
+         
+        
 def defineColsLayout(labels):
     colsOrder = range(len(labels))
     if 'enabled' in labels:
@@ -521,6 +542,9 @@ def loadMetaData(path, block, allowRender=True, imageDim=None):
     #path2 = 'Volumes@' + path1
     print path
     return MdData(path, allowRender, imageDim)   
+
+def loadMenuLayoutConfig(mode , path, block, allowRender=True, imageDim=None):
+    return MenuLayoutConfig(mode, path, block, allowRender, imageDim)
      
 def table(request):    
     css_path = os.path.join(settings.STATIC_URL, 'css/project_content_style.css')
