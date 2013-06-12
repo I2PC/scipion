@@ -33,7 +33,7 @@ class ProtExtractParticles(ProtParticlesBase):
         self.inputFilename('acquisition')
         self.inputProperty('TiltPairs', 'MicrographsMd')
         self.micrographs = self.getEquivalentFilename(self.PrevRun, self.MicrographsMd)
-        self.RejectionMethod=getattr(self,'RejectionMethod','None')
+        self.RejectionMethod = getattr(self, 'RejectionMethod', 'none')
         
     def createFilenameTemplates(self):
         _mic_block = 'mic_%(Micrograph)s'

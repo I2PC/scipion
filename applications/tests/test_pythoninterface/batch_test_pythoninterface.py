@@ -5,6 +5,8 @@ import unittest, os, sys
 """
 from unittest import TestResult, _TextTestResult
 from protlib_filesystem import getXmippPath
+from tempfile import NamedTemporaryFile
+
 try:
    from unittest.runner import _WritelnDecorator # Python 2.7+
 except ImportError:
@@ -46,10 +48,25 @@ def binaryFileComparison(nameo, namet):
 
 class TestXmippPythonInterface(unittest.TestCase):
     testsPath = getXmippPath("resources", "test")
+    # Temporary filenames used
+    
+    def getTmpName(self, suffix='.xmd'):
+        """ Get temporary filenames in /tmp' that will be removed 
+        after tests execution. 
+        """
+        ntf = NamedTemporaryFile(dir="/tmp/", suffix=suffix)
+        self.tempNames.append(ntf)        
+        return ntf.name
+    
     def setUp(self):
         """This function performs all the setup stuff.      
         """
         os.chdir(self.testsPath)
+        self.tempNames = []
+        
+    def tearDown(self):
+        for ntf in self.tempNames:
+            ntf.close()
         
     def test_xmipp_Euler_angles2matrix(self):
         from numpy  import array
@@ -665,9 +682,9 @@ class TestXmippPythonInterface(unittest.TestCase):
         try:
             from tempfile import NamedTemporaryFile
             
-            sfn = NamedTemporaryFile(dir="/tmp/", suffix=".xmd")
-            sfn2 = NamedTemporaryFile(dir="/tmp/", suffix=".xmd")
-            sfn3 = NamedTemporaryFile(dir="/tmp/", suffix=".xmd")
+            fn = self.getTmpName()
+            fn2 = self.getTmpName()
+            fn3 = self.getTmpName()
         
             auxMd = MetaData()
             auxMd2 = MetaData()
@@ -675,48 +692,90 @@ class TestXmippPythonInterface(unittest.TestCase):
             auxMd.setValue(MDL_IMAGE, "image_1.xmp", auxMd.addObject())
             auxMd.setValue(MDL_IMAGE, "image_2.xmp", auxMd.addObject())
         
-            auxMd.write("block_000000@" + sfn.name, MD_OVERWRITE)
+            auxMd.write("block_000000@" + fn, MD_OVERWRITE)
             auxMd.clear()
             auxMd.setValue(MDL_IMAGE, "image_data_1_1.xmp", auxMd.addObject())
             auxMd.setValue(MDL_IMAGE, "image_data_1_2.xmp", auxMd.addObject())
-            auxMd.write("block_000001@" + sfn.name, MD_APPEND)
+            auxMd.write("block_000001@" + fn, MD_APPEND)
             auxMd.clear()
             auxMd.setValue(MDL_IMAGE, "image_data_2_1.xmp", auxMd.addObject())
             auxMd.setValue(MDL_IMAGE, "image_data_2_2.xmp", auxMd.addObject())
-            auxMd.write("block_000000@" + sfn2.name, MD_OVERWRITE)
+            auxMd.write("block_000000@" + fn2, MD_OVERWRITE)
             auxMd.clear()
             auxMd.setValue(MDL_IMAGE, "image_data_A_1.xmp", auxMd.addObject())
             auxMd.setValue(MDL_IMAGE, "image_data_A_2.xmp", auxMd.addObject())
-            auxMd.write("block_000001@" + sfn2.name, MD_APPEND)
+            auxMd.write("block_000001@" + fn2, MD_APPEND)
             auxMd.clear()
         
-            self.assertFalse(compareTwoMetadataFiles(sfn.name, sfn2.name))
-            self.assertTrue(compareTwoMetadataFiles(sfn.name, sfn.name))
+            self.assertFalse(compareTwoMetadataFiles(fn, fn2))
+            self.assertTrue(compareTwoMetadataFiles(fn, fn))
 
-            sfnFN = FileName(sfn.name)
-            sfn2FN = FileName(sfn2.name)
+            sfnFN = FileName(fn)
+            sfn2FN = FileName(fn2)
             self.assertFalse(compareTwoMetadataFiles(sfnFN, sfn2FN))
             self.assertTrue(compareTwoMetadataFiles(sfnFN, sfnFN))
                     
             auxMd.setValue(MDL_IMAGE, "image_1.xmpSPACE", auxMd.addObject())
             auxMd.setValue(MDL_IMAGE, "image_2.xmp", auxMd.addObject())
-            auxMd.write("block_000000@" + sfn2.name, MD_OVERWRITE)
+            auxMd.write("block_000000@" + fn2, MD_OVERWRITE)
             auxMd.clear()
             auxMd.setValue(MDL_IMAGE, "image_data_1_1.xmp", auxMd.addObject())
             auxMd.setValue(MDL_IMAGE, "image_data_1_2.xmp", auxMd.addObject())
-            auxMd.write("block_000001@" + sfn2.name, MD_APPEND)
+            auxMd.write("block_000001@" + fn2, MD_APPEND)
         
-            command = "sed 's/SPACE/ /g' " + sfn2.name + ">" + sfn3.name
+            command = "sed 's/SPACE/ /g' " + fn2 + ">" + fn3
             os.system(command)
         
-            self.assertTrue(compareTwoMetadataFiles(sfn.name, sfn3.name))
-        
-            sfn.close()
-            sfn2.close()
-            sfn3.close()
+            self.assertTrue(compareTwoMetadataFiles(fn, fn3))
             
         except Exception, e:
             print str(e)
+            
+            
+    def test_Metadata_fillExpand(self):
+        '''MetaData_fillExpand'''
+        ctf = MetaData()
+        objId = ctf.addObject()
+        ctf.setColumnFormat(False)
+        # Create ctf param metadata 1
+        u1, v1 = 10000.0, 10001.0
+        u2, v2 = 20000.0, 20001.0
+        
+        ctf.setValue(MDL_CTF_DEFOCUSU, u1, objId)
+        ctf.setValue(MDL_CTF_DEFOCUSV, v1, objId)
+        ctfFn1 = self.getTmpName(suffix='_ctf1.param')
+        ctf.write(ctfFn1)
+        # Create ctf param metadata 2
+        ctf.setValue(MDL_CTF_DEFOCUSU, u2, objId)
+        ctf.setValue(MDL_CTF_DEFOCUSV, v2, objId)
+        ctfFn2 = self.getTmpName(suffix='_ctf2.param')
+        ctf.write(ctfFn2)
+        
+        # True values
+        ctfs = [ctfFn1, ctfFn1, ctfFn2]
+        defocusU = [u1, u1, u2]
+        defocusV = [v1, v1, v2]
+        # Create image metadata
+        md1 = MetaData()
+        for i in range(3):
+            objId = md1.addObject() 
+            img = '00000%i@pythoninterface/proj_ctf_1.stk' % (i + 1)
+            md1.setValue(MDL_IMAGE, img, objId)
+            md1.setValue(MDL_CTF_MODEL, ctfs[i], objId)
+            
+        # Create the expected metadata after call fillExpand
+        md2 = MetaData()
+        for i in range(3):
+            objId = md2.addObject() 
+            img = '00000%i@pythoninterface/proj_ctf_1.stk' % (i + 1)
+            md2.setValue(MDL_IMAGE, img, objId)
+            md2.setValue(MDL_CTF_MODEL, ctfs[i], objId)
+            md2.setValue(MDL_CTF_DEFOCUSU, defocusU[i], objId)
+            md2.setValue(MDL_CTF_DEFOCUSV, defocusV[i], objId)            
+        
+        md1.fillExpand(MDL_CTF_MODEL)
+        self.assertEqual(md1, md2)
+
 
     def test_SymList_readSymmetryFile(self):
         '''readSymmetryFile'''
