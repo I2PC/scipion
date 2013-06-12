@@ -1018,16 +1018,8 @@ public class SingleParticlePicker extends ParticlePicker
 		getMicrograph().setState(MicrographState.Corrected);
 		saveData(micrograph);
 		MetaData addedmd = new MetaData(getParticlesBlock(getOutputPath(micrograph.getPosFile())));
-		MetaData removedmd = new MetaData();
-		long id;
-		for (AutomaticParticle ap : micrograph.getAutomaticParticles())
-			if (ap.isDeleted())
-			{
-				id = removedmd.addObject();
-				removedmd.setValueInt(MDLabel.MDL_XCOOR, ap.getX(), id);
-				removedmd.setValueInt(MDLabel.MDL_YCOOR, ap.getY(), id);
-				removedmd.setValueDouble(MDLabel.MDL_COST, ap.getCost(), id);
-			}
+		MetaData removedmd = new MetaData(getParticlesBlock(getOutputPath(micrograph.getAutoPosFile())));
+		
 		MetaData outputmd = new MetaData();
 		frame.getCanvas().setEnabled(false);
 		XmippWindowUtil.blockGUI(frame, "Correcting and Autopicking...");
@@ -1038,8 +1030,8 @@ public class SingleParticlePicker extends ParticlePicker
 	public class CorrectAndAutopickRunnable implements Runnable
 	{
 
-		private MetaData addedmd;
-		private MetaData removedmd;
+		private MetaData manualmd;
+		private MetaData automaticmd;
 		private TrainingMicrograph next;
 		private SingleParticlePickerJFrame frame;
 		private MetaData outputmd;
@@ -1048,8 +1040,8 @@ public class SingleParticlePicker extends ParticlePicker
 				MetaData outputmd)
 		{
 			this.frame = frame;
-			this.addedmd = manualmd;
-			this.removedmd = automaticmd;
+			this.manualmd = manualmd;
+			this.automaticmd = automaticmd;
 			this.next = next;
 			this.outputmd = outputmd;
 		}
@@ -1057,9 +1049,9 @@ public class SingleParticlePicker extends ParticlePicker
 		public void run()
 		{
 
-			classifier.correct(addedmd, removedmd);
-			addedmd.destroy();
-			removedmd.destroy();
+			classifier.correct(manualmd, automaticmd);
+			manualmd.destroy();
+			automaticmd.destroy();
 			if (getMode() == Mode.Supervised && next.getState() == MicrographState.Available)
 			{
 				next.getAutomaticParticles().clear();
