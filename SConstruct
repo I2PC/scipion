@@ -54,17 +54,20 @@ if (ARGUMENTS['mode'] == 'dependencies'):
         print 'Some dependencies unsatisfied, please check the following list and install them all:'
         for k, v in checking.items():
             print u'{0}: {1}'.format(k, v)
-        ans = "y"
+        ans = ""
         if 'unattended' in ARGUMENTS:
             if ARGUMENTS['unattended'] == 'yes':
                 print "Unattended compilation selected, proceeding with the compilation."
-            else:
-                ans = raw_input("Do you still want to proceed with the compilation? (y/n):")
         else:
-            ans = raw_input("Do you still want to proceed with the compilation? (y/n):")
-        if ans == "n" or ans == "N":
-            print "Aborting!"
-            Exit(1)
+            while ans != ("y" or "Y" or "n" or "N"):
+                ans = raw_input("Do you still want to proceed with the compilation? (y/n):")
+                if ans == "n" or ans == "N":
+                    import os
+                    print "You've choosen to abort the installation. Aborting..."
+                    os._exit(os.EX_OSERR)
+                if ans != "y" and ans != "Y":
+                    import os
+                    print "Unknown option, please answer y/Y/n/N"
     env = conf.Finish()
 
 
