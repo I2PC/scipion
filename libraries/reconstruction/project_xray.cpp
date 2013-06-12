@@ -47,11 +47,11 @@ void ProgXrayProject::defineParams()
     //Example projection file
     addExampleLine("In the following link you can find an example of projection parameter file:",false);
     addExampleLine(" ",false);
-    addExampleLine("http://sourceforge.net/p/testxmipp/code/ci/3.0/tree/input/tomoProjection.param",false);
+    addExampleLine("http://sourceforge.net/p/testxmipp/code/ci/3.0/tree/input/tomoProjection.param?format=raw",false);
     addExampleLine(" ",false);
     addExampleLine("In the following link you can find an example of X-ray microscope parameters file:",false);
     addExampleLine(" ",false);
-    addExampleLine("http://sourceforge.net/p/testxmipp/code/ci/3.0/tree/input/xray_psf.xmd",false);
+    addExampleLine("http://sourceforge.net/p/testxmipp/code/ci/3.0/tree/input/xray_psf.xmd?format=raw",false);
 }
 
 /* Read from command line ================================================== */
