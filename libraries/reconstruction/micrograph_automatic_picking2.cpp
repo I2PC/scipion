@@ -184,7 +184,6 @@ void AutoParticlePicking2::extractPositiveInvariant()
     int num_part = m.ParticleNo();
     Image<double> II;
     IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
-    particleAvg.initZeros(particle_size+1,particle_size+1);
     if (fnPCAModel.exists())
     {
         positiveParticleStack.resize(num_part, 1, particle_size+1, particle_size+1);
@@ -192,6 +191,7 @@ void AutoParticlePicking2::extractPositiveInvariant()
     }
     else
     {
+        particleAvg.initZeros(particle_size+1,particle_size+1);
         numPosInv = NSIZE(positiveInvariatnStack);
         numPosPart = NSIZE(positiveParticleStack);
         positiveParticleStack.resize(numPosPart+num_part, 1, particle_size+1, particle_size+1);
@@ -199,9 +199,6 @@ void AutoParticlePicking2::extractPositiveInvariant()
     }
     for (int i=0;i<num_part;i++)
     {
-        double cost = m.coord(i).cost;
-        if (cost == 0)
-            continue;
         int x=(int)((m.coord(i).X)*scaleRate);
         int y=(int)((m.coord(i).Y)*scaleRate);
 
@@ -482,6 +479,8 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
     Image<double> II;
 
     readMic(fnmicrograph);
+    microImage.write("vahidmic.xmp");
+
     IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
     buildSearchSpace(positionArray,true);
     //    pthread_t * th_ids = new pthread_t[Nthreads];
@@ -600,14 +599,19 @@ void AutoParticlePicking2::saveAutoParticles(MetaData &md)
 
 void AutoParticlePicking2::correction(MetaData addedParticlesMD,MetaData removedParticlesMD)
 {
-	std::cerr<<"We are doing the correction"<<std::endl;
+    std::cerr<<"We are doing the correction"<<std::endl;
+    addedParticlesMD.write("addedparticles.xmd");
+    removedParticlesMD.write("removedparticles.xmd");
+    dataSet.clear();
+    classLabel.clear();
+    loadTrainingSet(fnVector);
     train(addedParticlesMD,true);
     add2Dataset(removedParticlesMD);
     saveTrainingSet();
     normalizeDataset(0,1);
     generateTrainSet();
-    trainSVM(fnSVMModel,1);
-    trainSVM(fnSVMModel2,2);
+    classifier.~SVMClassifier();
+    classifier.SVMTrain(dataSet,classLabel);
 }
 
 void AutoParticlePicking2::add2Dataset(MetaData removedParticlesMD)
@@ -624,6 +628,7 @@ void AutoParticlePicking2::add2Dataset(MetaData removedParticlesMD)
     dataSet.resize(1,1,yDataSet+cntNeg,num_features);
     classLabel.resize(1,1,1,YSIZE(dataSet));
     int limit = cntNeg + yDataSet;
+    std::cerr<<limit;
     for (int n=yDataSet;n<limit;n++)
         classLabel(n)=3;
     int cnt=0;
