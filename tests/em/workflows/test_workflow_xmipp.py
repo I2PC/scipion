@@ -57,7 +57,7 @@ class TestXmippWorkflow(unittest.TestCase):
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
             
         print "Run extract particles with Same as picking"
-        protExtract = XmippProtExtractParticles(boxSize=64, downsampleType=1)
+        protExtract = XmippProtExtractParticles(boxSize=171, downsampleType=1)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         #protExtract.inputMicrographs.set(protDownsampling.outputMicrographs)
         self.proj.launchProtocol(protExtract, wait=True)

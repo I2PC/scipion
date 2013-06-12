@@ -30,9 +30,9 @@ class TestXmippBase(unittest.TestCase):
         return cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300)
     
     @classmethod
-    def runFakedPicking(cls, mics):
+    def runFakedPicking(cls, mics, pattern):
         """ Run a faked particle picking. Coordinates already existing. """
-        coordsFolder = getInputPath('Picking_XmippBPV1')
+        coordsFolder = getInputPath(pattern)
         cls.protPP = XmippProtParticlePicking(importFolder=coordsFolder)                
         cls.protPP.inputMicrographs.set(mics)        
         cls.proj.launchProtocol(cls.protPP, wait=True)
@@ -109,64 +109,89 @@ class TestXmippExtractParticles(TestXmippBase):
     @classmethod
     def setUpClass(cls):
         setupProject(cls)    
+        pattern = getInputPath('Micrographs_BPV1_Down3', '*.mrc')
+        protImport = cls.runImportMicrograph(pattern, samplingRate=3.711, voltage=300)
+        pattern = getInputPath('Micrographs_BPV1', '*.mrc')
+        cls.protImport_ori = cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300)        
+        cls.protPP = cls.runFakedPicking(protImport.outputMicrographs, 'Picking_XmippBPV1_Down3')
     
-    def doExtract(self, boxSize, downsampleType, patternDir):
+    def doExtract(self, boxSize, downsampleType):
         print "Run extract particles"
-        pattern = getInputPath(patternDir, '*.mrc')
-        protImport = self.runImportMicrograph(pattern, samplingRate=1.237, voltage=300)
-        protPP = self.runFakedPicking(protImport.outputMicrographs)
         protExtract = XmippProtExtractParticles(boxSize=boxSize, downsampleType=downsampleType)
-        protExtract.inputCoordinates.set(protPP.outputCoordinates)
+        protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
+        protExtract.inputMicrographs.set(self.protImport_ori.outputMicrographs)
         self.proj.launchProtocol(protExtract, wait=True)
         
         self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
         
     def testExtractSameAsPicking(self):
         print "Run extract particles with downsampling factor equal to the one at picking"
-        self.doExtract(512, self.SAME_AS_PICKING, 'Micrographs_BPV1_Down3')
+        protExtract = XmippProtExtractParticles(boxSize=171, downsampleType=self.SAME_AS_PICKING)
+        protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
+        self.proj.launchProtocol(protExtract, wait=True)
+        
+        self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
         
     def testExtractOriginal(self):
         print "Run extract particles with downsampling factor equal to the original micrographs"
-        self.doExtract(512, self.ORIGINAL, )
-#        
-#class TestXmippML2D(TestXmippBase):
-#    @classmethod
-#    def setUpClass(cls):
-#        setupProject(cls)
-#        #TODO: Find a set of images to make this work, with this it does not
-#        pattern = getInputPath('Images_hedimg', '*')
-#        cls.protImport = cls.runImportParticles(pattern=pattern, samplingRate=1.327)
-#        
-#    def testML2D(self):
-#        print "Run ML2D"
-#        protML2D = XmippProtML2D(numberOfReferences=1, maxIters=4, numberOfMpi=1)
-#        protML2D.inputImages.set(self.protImport.outputImages)
-#        self.proj.launchProtocol(protML2D, wait=True)        
-#        
-#        self.assertIsNotNone(protML2D.outputClassification, "There was a problem with ML2D")  
-#        
-#class TestXmippCL2D(TestXmippBase):
-#
-#    @classmethod
-#    def setUpClass(cls):
-#        setupProject(cls)
-#        #TODO: Find a set of images to make this work, with this it does not
-#        pattern = getInputPath('Images_hedimg', '*')
-#        cls.protImport = cls.runImportParticles(pattern=pattern, samplingRate=1.327)
-#        
-#    def testCL2D(self):
-#        print "Run CL2D"
-#        protCL2D = XmippProtCL2D(numberOfReferences=2, numberOfInitialReferences=1, 
-#                                 numberOfIterations=4, numberOfMpi=1)
-#        protCL2D.inputImages.set(self.protImport.outputImages)
-#        self.proj.launchProtocol(protCL2D, wait=True)        
-#        
-#        self.assertIsNotNone(protCL2D.outputClassification, "There was a problem with CL2D")  
+        protExtract = XmippProtExtractParticles(boxSize=512, downsampleType=self.ORIGINAL)
+        protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
+        protExtract.inputMicrographs.set(self.protImport_ori.outputMicrographs)
+        self.proj.launchProtocol(protExtract, wait=True)
+        
+        self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
+
+    def testExtractOther(self):
+        print "Run extract particles with downsampling factor equal to other"
+        protExtract = XmippProtExtractParticles(boxSize=256, downsampleType=self.OTHER, downFactor=2)
+        protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
+        protExtract.inputMicrographs.set(self.protImport_ori.outputMicrographs)
+        self.proj.launchProtocol(protExtract, wait=True)
+        
+        self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
+
+
+     
+def setupClassification(cls):
+    """ Method to setup classification Test Cases. """
+    setupProject(cls)
+    #TODO: Find a set of images to make this work, with this it does not
+    pattern = getInputPath('images_LTA', '*.xmp')
+    cls.protImport = cls.runImportParticles(pattern=pattern, samplingRate=5.6)
+    
+       
+class TestXmippML2D(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupClassification(cls)
+        
+    def testML2D(self):
+        print "Run ML2D"
+        protML2D = XmippProtML2D(numberOfReferences=2, maxIters=3, 
+                                 numberOfMpi=2, numberOfThreads=2)
+        protML2D.inputImages.set(self.protImport.outputImages)
+        self.proj.launchProtocol(protML2D, wait=True)        
+        
+        self.assertIsNotNone(protML2D.outputClassification, "There was a problem with ML2D")  
+        
+class TestXmippCL2D(TestXmippBase):
+
+    @classmethod
+    def setUpClass(cls):
+        setupClassification(cls)
+        
+    def testCL2D(self):
+        print "Run CL2D"
+        protCL2D = XmippProtCL2D(numberOfReferences=2, numberOfInitialReferences=1, 
+                                 numberOfIterations=3, numberOfMpi=4)
+        protCL2D.inputImages.set(self.protImport.outputImages)
+        self.proj.launchProtocol(protCL2D, wait=True)        
+        
+        self.assertIsNotNone(protCL2D.outputClassification, "There was a problem with CL2D")  
 
         
 
 if __name__ == "__main__":
-    #suite = unittest.TestLoader().loadTestsFromTestCase(TestXmippML2D)
-    #suite = unittest.TestLoader().loadTestsFromName('test_protocols_xmipp.TestXmippTiltedMicrographs.testPreprocess')
+    #suite = unittest.TestLoader().loadTestsFromTestCase(TestXmippExtractParticles)
     #unittest.TextTestRunner(verbosity=2).run(suite)
     unittest.main()

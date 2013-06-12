@@ -177,7 +177,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 downFactor = self.downFactor.get()
                 args = "-i %(micrographToExtract)s -o %(fnDownsampled)s --step %(downFactor)f --method fourier"
                 self._insertRunJobStep("xmipp_transform_downsample", args % locals())
-                micographToExtract = fnDownsampled
+                micrographToExtract = fnDownsampled
             # If remove dust 
             if self.doRemoveDust:
                 fnNoDust = self._getTmpPath(removeBaseExt(fn)+"_noDust.xmp")
@@ -185,7 +185,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 thresholdDust = self.thresholdDust.get() #TODO: remove this extra variable
                 args=" -i %(micrographToExtract)s -o %(fnNoDust)s --bad_pixels outliers %(thresholdDust)f"
                 self._insertRunJobStep("xmipp_transform_filter", args % locals())
-                micographToExtract = fnNoDust
+                micrographToExtract = fnNoDust
                 
             # Flipping if micrograph has CTF model
             fnCTF = None
@@ -206,7 +206,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                         downFactor = self.samplingFinal/self.samplingInput
                         args += " --downsampling %(downFactor)f"
                         self._insertRunJobStep("xmipp_ctf_phase_flip", args % locals())
-                        micographToExtract = fnFlipped
+                        micrographToExtract = fnFlipped
                 else:
                     #TODO: Raise some type of error!!
                     pass
@@ -224,12 +224,13 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     def extractParticles(self, micrographToExtract, mic, fnCTF):
         """ Extract particles from one micrograph """
         # Extract 
-        outputRoot = str(self._getExtraPath(removeBaseExt(micrographToExtract)))
+        micName = mic.getFileName()
+        outputRoot = str(self._getExtraPath(removeBaseExt(micName)))
         
-        fnPosFile = self._getExtraPath(removeBaseExt(mic.getFileName()) + '.pos')
+        fnPosFile = self._getExtraPath(removeBaseExt(micName) + '.pos')
         # If it has coordinates extract the particles
-        if self._createPosFile(mic, fnPosFile):
-            posMetadata = removeBaseExt(micrographToExtract) + "@" + fnPosFile
+        if self._createPosFile(micName, fnPosFile):
+            posMetadata = removeBaseExt(micName) + "@" + fnPosFile
            
             boxSize = self.boxSize.get()
             args = "-i %(micrographToExtract)s --pos %(posMetadata)s -o %(outputRoot)s --Xdim %(boxSize)d" % locals()
@@ -260,10 +261,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 md.write(selfile)
                             
             
-    def _createPosFile(self, mic, fnPosFile):
+    def _createPosFile(self, micName, fnPosFile):
         """ Create xmipp metadata extract_list with the coordinates for a micrograph """
-        micName = removeBaseExt(mic.getFileName())
+        micName = removeBaseExt(micName)
         mdExtractList = xmipp.MetaData()
+        mic = XmippMicrograph(micName)
         #Iterate over the coordinates on that micrograph
         hasCoords = False
         for coord in self.inputCoords.iterMicrographCoordinates(mic):
