@@ -55,7 +55,7 @@
 		<span><a id="deleteTool" href=""><img src="{{deleteTool}}"/> Delete</a></span>
 		<span><a id="browseTool" href=""><img src="{{browseTool}}"/> Browse</a></span>
 	</div>
-	<div style="overflow:auto">
+	<div style="overflow:auto;height:70%;">
 		<table id="run" cellspacing="0">
 			<tr>
 				{% for colName, colWidth in provider.getColumns %}
@@ -74,5 +74,8 @@
 				</tr>
 			{% endfor %}
 		</table>
+	</div>
+	<div style="background-color:grey;height:25%;">
+	
 	</div>
 {% endblock %}

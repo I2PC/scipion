@@ -18,9 +18,11 @@
 					success : function(json) {
 						// specifying a dataType of json makes jQuery pre-eval the response
 						// for us ExecutionHostConfig
-						host = json.objects;
-						alert (host.hostName)
-
+						host = json.host;
+						document.getElementById("id_label").value = host.label
+						document.getElementById("id_hostName").value = host.hostName
+						document.getElementById("id_userName").value = host.userName
+						document.getElementById("id_hostPath").value = host.hostPath
 					}
 				});
 			}

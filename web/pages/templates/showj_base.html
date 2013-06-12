@@ -50,7 +50,7 @@
 		}
 		function updateImageDimByUrl(){
 			d = new Date();
-		   $(".tableImages").each(function(){
+		   	$(".tableImages").each(function(){
 			   var newSrc = "";
 			   if ($(this).attr("src").indexOf("&dim") != -1){
 			   	newSrc = $(this).attr("src").substring(0,$(this).attr("src").indexOf("&dim"));
@@ -77,7 +77,7 @@
 	</nav>
 	<div id="main_section">
 		<aside id="side_news"> <!-- Main Menu -->
-			{% block content_menu %}	{% endblock %}
+			
 			<div id="modeContainer" class="sectionMenu">
 				<button onclick="{{menuLayoutConfig.tableViewLink}}">
 					<img src="{{menuLayoutConfig.tableViewSrc}}">
@@ -119,6 +119,8 @@
 			<div class="sectionMenu">
 				<img src="/resources/showj/separator.gif" class="menuIcon">
 			</div>	
+			
+			{% block content_menu %}	{% endblock %}
 
 		</aside>
 		
