@@ -1016,7 +1016,9 @@ public class SingleParticlePicker extends ParticlePicker
 	public void correctAndAutopick(SingleParticlePickerJFrame frame, TrainingMicrograph current, TrainingMicrograph next)
 	{
 		getMicrograph().setState(MicrographState.Corrected);
-		saveData(micrograph);
+		if (getMode() == Mode.Supervised && next.getState() == MicrographState.Available)
+			next.setState(MicrographState.Supervised);
+		saveData();
 		MetaData addedmd = new MetaData(getParticlesBlock(getOutputPath(micrograph.getPosFile())));
 		MetaData removedmd = new MetaData(getParticlesBlock(getOutputPath(micrograph.getAutoPosFile())));
 		
@@ -1059,7 +1061,7 @@ public class SingleParticlePicker extends ParticlePicker
 				classifier.autopick(next.getFile(), outputmd, next.getAutopickpercent());
 				loadAutomaticParticles(next, outputmd, false);
 				String path = getParticlesBlock(getOutputPath(next.getAutoPosFile()));
-				outputmd.write(path);
+				outputmd.writeBlock(path);
 				outputmd.print();
 				outputmd.destroy();
 			}
