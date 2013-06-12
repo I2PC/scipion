@@ -29,13 +29,13 @@ public class ChimeraClient
 			Thread.sleep(3000);
 			
 			client = new Socket("", port);
-			out = new PrintWriter(client.getOutputStream(), true);
-            in = new BufferedReader(new InputStreamReader(client.getInputStream()));
-			ImageGeneric ig = new ImageGeneric(volfile);
-			ig.read(ImageGeneric.ALL_SLICES);
-			//ig.setDataType(ImageGeneric.Double);
-			float[] data = ig.getArrayFloat(ImageGeneric.FIRST_IMAGE, ImageGeneric.ALL_SLICES);
-			out.write("open_volume");
+//			out = new PrintWriter(client.getOutputStream(), true);
+//            in = new BufferedReader(new InputStreamReader(client.getInputStream()));
+//			ImageGeneric ig = new ImageGeneric(volfile);
+//			ig.read(ImageGeneric.ALL_SLICES);
+//			//ig.setDataType(ImageGeneric.Double);
+//			float[] data = ig.getArrayFloat(ImageGeneric.FIRST_IMAGE, ImageGeneric.ALL_SLICES);
+//			out.write("open_volume");
 			//out.wri(data);
 			
 		}

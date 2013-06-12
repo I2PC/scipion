@@ -25,7 +25,7 @@ class ProtParticlePickingAuto(XmippProtocol):
         self.Import = "from protocol_particle_pick_auto import *"
         self.setPreviousRun(self.SupervisedRun)
         self.pickingDir = self.PrevRun.WorkingDir
-        self.keysToImport = ['micrographs', 'config', 'acquisition']
+        self.keysToImport = ['micrographs', 'config', 'acquisition', 'templates']
        
         self.inputFilename(*self.keysToImport)
         self.inputProperty('TiltPairs', 'MicrographsMd', 'Fast')
