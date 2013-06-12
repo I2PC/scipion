@@ -13,13 +13,16 @@ from os import system,environ
 from chimera import runCommand
 from time import gmtime, strftime
 from datetime import datetime
+import sys
 
 class ChimeraServer:
     
     def __init__(self):
         #print 'init'
         self.address = ''
-        self.port = int(environ['XMIPP_CHIMERA_PORT'])
+        #self.port = int(environ['XMIPP_CHIMERA_PORT'])
+        arg = sys.argv[1]
+        self.port = int(arg)
         self.authkey = 'test'
         self.listener = Listener((self.address, self.port), authkey=self.authkey) 
         self.remote_conn = self.listener.accept()

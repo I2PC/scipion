@@ -81,7 +81,9 @@ class ScriptChimeraClient(XmippScript):
             print "ERROR: Port is not available\n"
             sys.exit(1)
         serverfile = getXmippPath('libraries/bindings/chimera/xmipp_chimera_server.py')
-        command = "export XMIPP_CHIMERA_PORT=%d; chimera %s  &" % (port,serverfile)
+        #command = "export XMIPP_CHIMERA_PORT=%d; chimera %s  &" % (port,serverfile)
+        command = "chimera --script '%s %s' &" % (serverfile, port)
+        print command
         system(command)
         if isprojector:
 			XmippProjectionExplorer(volfile, port, angulardistfile, spheres_color, spheres_distance, spheres_maxradius, size, padding_factor, max_freq, spline_degree)
