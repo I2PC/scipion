@@ -26,11 +26,29 @@
 		$("#colRowMode").click(function(){
 			if ($("#colRowModeImage").attr("src").indexOf("On") != -1){
 				$("#colRowModeImage").attr("src", $("#colRowModeImage").attr("src").replace("On","Off"))
+				$("#cols").attr('disabled', 'disabled');
+				$("#rows").attr('disabled', 'disabled');
+				
+				$("section").css("width", "");
+				
 			}
 			else{
 				$("#colRowModeImage").attr("src", $("#colRowModeImage").attr("src").replace("Off","On"))
+				$("#cols").removeAttr('disabled');
+				$("#rows").removeAttr('disabled');
+				
+				if ($("#cols").val()==""){
+					initializeColsRows()
+				}
 			}
 		});
+	}
+	function initializeColsRows(){
+		imgContainerWidth =$(".img_container").width() + (parseInt($(".img_container").css("margin-right")) * 2)
+		colVal = Math.floor($("section").width() / (imgContainerWidth + 5))
+		updateGalleryLayout(colVal,0,"cols")
+		$("#cols").val(colVal)
+		
 	}
 	</script>
 	<script type="text/javascript">
@@ -102,17 +120,19 @@
 			</div>	
 			
 			<div id="colRowContainer" class="sectionMenu">
-				<button id="colRowMode">
-					<img src="/resources/showj/colRowModeOn.gif" id="colRowModeImage" />
+				<button id="colRowMode" 
+				{{menuLayoutConfig.disabledColRowMode}}
+				>
+					<img src="/resources/showj/colRowModeOff.gif" id="colRowModeImage" />
 				</button>
 				
 				<div class="subSectionMenu">
 					<span class="textMenu">Cols</span>
-					<input type="number" class="menuInputNumber" id="cols" value="" min="1">
+					<input type="number" class="menuInputNumber" id="cols" value="" min="1" max="{{metadata.objects|length}}" disabled>
 				</div>
 				<div class="subSectionMenu">
 					<span class="textMenu">Rows</span>
-					<input type="number" class="menuInputNumber" id="rows" value="" min="1">
+					<input type="number" class="menuInputNumber" id="rows" value="" min="1" max="{{metadata.objects|length}}" disabled>
 				</div>
 			</div>
 			

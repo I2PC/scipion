@@ -30,9 +30,9 @@ class TestXmippBase(unittest.TestCase):
         return cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300)
     
     @classmethod
-    def runFakedPicking(cls, mics):
+    def runFakedPicking(cls, mics, pattern):
         """ Run a faked particle picking. Coordinates already existing. """
-        coordsFolder = getInputPath('Picking_XmippBPV1')
+        coordsFolder = getInputPath(pattern)
         cls.protPP = XmippProtParticlePicking(importFolder=coordsFolder)                
         cls.protPP.inputMicrographs.set(mics)        
         cls.proj.launchProtocol(cls.protPP, wait=True)
@@ -103,25 +103,54 @@ class TestXmippCTFEstimation(TestXmippBase):
 class TestXmippExtractParticles(TestXmippBase):
     
     SAME_AS_PICKING = 1
+    ORIGINAL = 0
+    OTHER = 2
     
     @classmethod
     def setUpClass(cls):
         setupProject(cls)    
+        pattern = getInputPath('Micrographs_BPV1_Down3', '*.mrc')
+        protImport = cls.runImportMicrograph(pattern, samplingRate=3.711, voltage=300)
+        pattern = getInputPath('Micrographs_BPV1', '*.mrc')
+        cls.protImport_ori = cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300)        
+        cls.protPP = cls.runFakedPicking(protImport.outputMicrographs, 'Picking_XmippBPV1_Down3')
     
     def doExtract(self, boxSize, downsampleType):
         print "Run extract particles"
-        pattern = getInputPath('Micrographs_BPV1', '*.mrc')
-        protImport = self.runImportMicrograph(pattern, samplingRate=1.237, voltage=300)
-        protPP = self.runFakedPicking(protImport.outputMicrographs)
         protExtract = XmippProtExtractParticles(boxSize=boxSize, downsampleType=downsampleType)
-        protExtract.inputCoordinates.set(protPP.outputCoordinates)
+        protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
+        protExtract.inputMicrographs.set(self.protImport_ori.outputMicrographs)
         self.proj.launchProtocol(protExtract, wait=True)
         
         self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
         
     def testExtractSameAsPicking(self):
-        print "Run extract particles with Same as picking"
-        self.doExtract(512, self.SAME_AS_PICKING)
+        print "Run extract particles with downsampling factor equal to the one at picking"
+        protExtract = XmippProtExtractParticles(boxSize=171, downsampleType=self.SAME_AS_PICKING)
+        protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
+        self.proj.launchProtocol(protExtract, wait=True)
+        
+        self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
+        
+    def testExtractOriginal(self):
+        print "Run extract particles with downsampling factor equal to the original micrographs"
+        protExtract = XmippProtExtractParticles(boxSize=512, downsampleType=self.ORIGINAL)
+        protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
+        protExtract.inputMicrographs.set(self.protImport_ori.outputMicrographs)
+        self.proj.launchProtocol(protExtract, wait=True)
+        
+        self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
+
+    def testExtractOther(self):
+        print "Run extract particles with downsampling factor equal to other"
+        protExtract = XmippProtExtractParticles(boxSize=256, downsampleType=self.OTHER, downFactor=2)
+        protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
+        protExtract.inputMicrographs.set(self.protImport_ori.outputMicrographs)
+        self.proj.launchProtocol(protExtract, wait=True)
+        
+        self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
+
+
      
 def setupClassification(cls):
     """ Method to setup classification Test Cases. """
@@ -163,7 +192,6 @@ class TestXmippCL2D(TestXmippBase):
         
 
 if __name__ == "__main__":
-    #suite = unittest.TestLoader().loadTestsFromTestCase(TestXmippML2D)
-    #suite = unittest.TestLoader().loadTestsFromName('test_protocols_xmipp.TestXmippTiltedMicrographs.testPreprocess')
+    #suite = unittest.TestLoader().loadTestsFromTestCase(TestXmippExtractParticles)
     #unittest.TextTestRunner(verbosity=2).run(suite)
     unittest.main()

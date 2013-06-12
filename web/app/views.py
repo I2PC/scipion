@@ -443,7 +443,7 @@ def showj(request):
     
     jquerydataTables_path = os.path.join(settings.STATIC_URL, 'js/jquery.dataTables.js')
     jquerydataTables_colreorder_path = os.path.join(settings.STATIC_URL, 'js/ColReorder.js')
-    
+        
     
     #############
     # WEB INPUT PARAMETERS
@@ -492,6 +492,7 @@ class MdValue():
 
         #check if enabled label
         self.displayCheckbox = (label == xmipp.MDL_ENABLED)
+        print self.label + self.strValue
 
         #Prepare path for image
         self.imgValue = self.strValue
@@ -538,11 +539,18 @@ class MenuLayoutConfig():
             self.tableViewSrc = "/resources/showj/tableViewOn.gif"
             self.galleryViewLink = link + "&mode=gallery'"
             self.galleryViewSrc = "/resources/showj/galleryViewOff.gif"
+            
+            self.disabledColRowMode = "disabled"
+            
         elif (mode == "gallery"):
             self.tableViewLink = link + "&mode=table'"
             self.tableViewSrc = "/resources/showj/tableViewOff.gif"
             self.galleryViewLink = "#"
             self.galleryViewSrc = "/resources/showj/galleryViewOn.gif"
+            
+            self.disabledColRowMode = ""
+            
+            
             
          
         
