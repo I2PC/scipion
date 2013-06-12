@@ -1,6 +1,6 @@
 /* CSS Document */
-html, body{
-	width: 95%;
+html,body {
+	width: 97%;
 	height: 95%;
 	margin: 10px auto;
 	padding: 0;
@@ -15,57 +15,56 @@ html, body{
 	border: 2px solid black;
 }
 
-#framecontentLeft{
-position: absolute; 
-top: 50px;
-bottom: 0; /*Set bottom value to HeightOfBottomFrameDiv*/
-left: 0; 
-width: 25%; /*Width of left frame div*/
-/*height: 100%;*/
-overflow: hidden; /*Disable scrollbars. Set to "scroll" to enable*/
-background-color: white;
-padding: 10px;
+#framecontentLeft {
+	position: absolute;
+	top: 50px;
+	bottom: 0; /*Set bottom value to HeightOfBottomFrameDiv*/
+	left: 0;
+	width: 25%; /*Width of left frame div*/
+	/*height: 100%;*/
+	overflow: hidden; /*Disable scrollbars. Set to "scroll" to enable*/
+	background-color: white;
+	padding: 10px;
 }
 
-#framecontentTop{
-position: absolute; 
-top: 0; 
-left: 0; /*Set left value to WidthOfLeftFrameDiv*/
-right: 0;
-height: 50px; /*Height of top frame div*/
-overflow: hidden; /*Disable scrollbars. Set to "scroll" to enable*/
-background-color: white;
+#framecontentTop {
+	position: absolute;
+	top: 0;
+	left: 0; /*Set left value to WidthOfLeftFrameDiv*/
+	right: 0;
+	height: 50px; /*Height of top frame div*/
+	overflow: hidden; /*Disable scrollbars. Set to "scroll" to enable*/
+	background-color: white;
 }
 
-#framecontentBottom{
-position: absolute; 
-top: auto; 
-left: 0; /*Set left value to WidthOfLeftFrameDiv*/
-bottom: 0;
-right: 0;
-height: 0; /*Height of bottom frame div*/
-overflow: hidden; /*Disable scrollbars. Set to "scroll" to enable*/
-background-color: white;
+#framecontentBottom {
+	position: absolute;
+	top: auto;
+	left: 0; /*Set left value to WidthOfLeftFrameDiv*/
+	bottom: 0;
+	right: 0;
+	height: 0; /*Height of bottom frame div*/
+	overflow: hidden; /*Disable scrollbars. Set to "scroll" to enable*/
+	background-color: white;
 }
 
-#maincontent{
-position: absolute; 
-top: 50px; /*Set top value to HeightOfTopFrameDiv*/
-left: 25%; /*Set left value to WidthOfLeftFrameDiv*/
-right: 0;
-bottom: 0; /*Set bottom value to HeightOfBottomFrameDiv*/
-overflow: auto; 
-background: #fff;
-padding-right:10px;
-padding-left:10px;
-background: white;
+#maincontent {
+	position: absolute;
+	top: 50px; /*Set top value to HeightOfTopFrameDiv*/
+	left: 25%; /*Set left value to WidthOfLeftFrameDiv*/
+	right: 0;
+	bottom: 0; /*Set bottom value to HeightOfBottomFrameDiv*/
+	overflow: auto;
+	background: #fff;
+	padding-right: 10px;
+	padding-left: 10px;
+	background: white;
 }
 
-.innertube{
-margin: 1em; /*Margins for inner DIV inside each DIV (to provide padding)*/
+.innertube {
+	margin: 1em;
+	/*Margins for inner DIV inside each DIV (to provide padding)*/
 }
-
-
 
 .logo {
 	max-height: 50px;
@@ -187,9 +186,13 @@ margin: 1em; /*Margins for inner DIV inside each DIV (to provide padding)*/
 	background: #f2f2f2;
 }
 
+.generalInput {
+	background: LightGray;
+}
+
 .generalInput.hide2 {
 	position: relative;
-	filter: alpha(opacity : 0);
+	filter: alpha(opacity :     0);
 	width: 9.7em;
 	cursor: pointer;
 }
@@ -197,10 +200,64 @@ margin: 1em; /*Margins for inner DIV inside each DIV (to provide padding)*/
 .generalInput.hide {
 	position: fixed;
 	-moz-opacity: 0;
-	filter: alpha(opacity :   0);
+	filter: alpha(opacity :       0);
 	opacity: 0;
 	margin: 0.5em;
 	width: 1.5em;
 	height: 2em;
 	cursor: pointer;
+}
+
+/**
+* Layout configurations
+* These styles are to create custom resize handles.
+*/
+.ui-resizable-handle {
+	/* 	background-color: rgb(220, 220, 220); */
+	text-align: center;
+}
+
+.ui-resizable-w,.ui-resizable-e {
+	width: 8px;
+	border-left: 3px solid black;
+	/* 	border-right: 3px solid black; */
+}
+
+.ui-resizable-w {
+	left: -6px;
+}
+
+.ui-resizable-e {
+	right: -6px;
+}
+
+.ui-resizable-n,.ui-resizable-s {
+	height: 8px;
+	border-top: 3px solid black;
+	/* 	border-bottom: 3px solid black; */
+}
+
+.ui-resizable-n {
+	top: -6px;
+	/* 	background: */
+}
+
+.ui-resizable-s {
+	bottom: -6px;
+}
+
+.ui-resizable-helper-west {
+	border-right: 3px solid black;
+}
+
+.ui-resizable-helper-east {
+	border-left: 3px solid black;
+}
+
+.ui-resizable-helper-north {
+	border-bottom: 3px solid black;
+}
+
+.ui-resizable-helper-south {
+	border-top: 3px solid black;
 }

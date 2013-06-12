@@ -190,3 +190,9 @@ table#run tr:last-child td {
 table#run tr:hover td {
 	background-color: #f2f2f2;
 }
+
+/* Bottom datatable style */
+div.datatable {
+	background-color: Gainsboro;
+	height: 25%;
+}
