@@ -69,7 +69,6 @@ public class SingleParticlePicker extends ParticlePicker
 			}
 			for (TrainingMicrograph m : micrographs)
 				loadMicrographData(m);
-			System.out.println(getSize());
 			classifier = new PickingClassifier(getSize(), getOutputPath("model"));
 		}
 		catch (Exception e)
@@ -368,7 +367,8 @@ public class SingleParticlePicker extends ParticlePicker
 				templatesNumber = md.getValueInt(MDLabel.MDL_PICKING_TEMPLATES, id);
 				if (templatesNumber == null || templatesNumber == 0)
 					templatesNumber = 1;//for compatibility with previous projects
-				mode = Mode.valueOf(md.getValueString(MDLabel.MDL_PICKING_STATE, id));
+				if(mode != Mode.Review)
+					mode = Mode.valueOf(md.getValueString(MDLabel.MDL_PICKING_STATE, id));
 
 			}
 			md.destroy();

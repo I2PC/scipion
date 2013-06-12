@@ -38,6 +38,7 @@ class ProtParticlePickingAuto(XmippProtocol):
         return {
             'training': join('%(ExtraDir)s', '%(model)s_training.txt'),
                  'pos': join('%(ExtraDir)s', '%(micrograph)s.pos'),
+                 'templates': join('%(ExtraDir)s', 'templates.stk'),
 #                    'mask': join('%(ExtraDir)s', '%(model)s_mask.xmp'),
                 'pca': join('%(ExtraDir)s', '%(model)s_pca_model.stk'),
                 'rotpca': join('%(ExtraDir)s', '%(model)s_rotpca_model.stk'),

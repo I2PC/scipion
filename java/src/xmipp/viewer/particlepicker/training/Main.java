@@ -57,7 +57,7 @@ class Main
 
 					else if (mode == Mode.Review)
 					{
-						String reviewfile = myargs[4];
+						String reviewfile = myargs[3];
 						ppicker = new SingleParticlePicker(selfile, outputdir, reviewfile);
 					}
 			

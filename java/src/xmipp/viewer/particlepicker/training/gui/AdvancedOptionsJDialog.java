@@ -66,7 +66,7 @@ public class AdvancedOptionsJDialog extends JDialog {
 		templatestf = new JFormattedTextField(NumberFormat.getNumberInstance());
 		templatestf.setColumns(3);
 		templatestf.setValue(frame.getParticlePicker().getTemplatesNumber());
-		templatestf.setEnabled(frame.getParticlePicker().getMode() == Mode.Manual);
+	
 		templatestf.addActionListener(new ActionListener()
 		{
 			
@@ -129,15 +129,17 @@ public class AdvancedOptionsJDialog extends JDialog {
 			}
 		});
 		add(okbt, XmippWindowUtil.getConstraints(constraints, 2, 2));
+		enableOptions();
 		XmippWindowUtil.setLocation(0.9f, 0, this);
 		setVisible(true);
 		setAlwaysOnTop(true);
 		pack();
 	}
 	
-	void setEditTemplates(boolean value)
+	void enableOptions()
 	{
-		templatestf.setEnabled(value);
+		templatestf.setEnabled(frame.getParticlePicker().getMode() == Mode.Manual);
+		autopickpercenttf.setEnabled(frame.getParticlePicker().getMode() == Mode.Supervised);
 	}
 	
 	protected void setAutopickPercent()
