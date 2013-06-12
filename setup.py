@@ -358,8 +358,10 @@ if options.hasOption('configure'):
         if options.hasOption('unattended'):
             os.execvp('xmipp_python',('xmipp_python', "%(scons)s" % locals(), "mode=dependencies","unattended=yes"))
         else:
-            os.execvp('xmipp_python',('xmipp_python', "%(scons)s" % locals(), "mode=dependencies"))
-    os.wait()[0]
+            outputval = os.execvp('xmipp_python',('xmipp_python', "%(scons)s" % locals(), "mode=dependencies"))
+    outputval = os.wait()[1]
+    if outputval != 0:
+        exit(1) 
     
     
 GUI = options.hasOption('gui')
