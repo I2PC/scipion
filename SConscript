@@ -915,6 +915,10 @@ AddBatch('showj', 'applications/scripts/showj', '.py')
 AddBatch('tomoj', 'applications/scripts/tomoj', '.py')
 AddBatch('visualize_preprocessing_micrographj', 'applications/scripts/visualize_preprocessing_micrograph', '.py')
 
+# Shell script files
+#
+SymLink('bin/xmipp_imagej', 'external/runImageJ')
+
 # MPI
 if int(env['mpi']):
     AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])
