@@ -27,11 +27,13 @@ $(document).ready(function() {
 			        "bInfo": true,
 			        "bAutoWidth": true,
 			        "sDom": 'Rlfrtip',
-		        	"oColReorder": {
+			        "oColReorder": {
 		    			"aiOrder": {{metadata.colsOrder}}
 		    		}
 			    }		
 			);
+	
+	
 } );
 function initializeGoToEvent(){
 	$('#goto').click(function(){
@@ -50,8 +52,7 @@ function updateRowSelection(){
 		if (nodes[i].id == $("#goto").val()){
 			/* Falta arreglar. El click se ejecuta sobre el tbody no el tr
 			http://datatables.net/extras/tabletools/api#fnSelect */
-			$("#"+nodes[i].id).click();
-			$(nodes[i]).addClass("taka");
+			$("#"+nodes[i].id).children("td").first().click();
 		}    	
         
     }
@@ -118,7 +119,11 @@ function fnGetSelected(oTableLocal)
 			         	{% if value.allowRender %} 
 			            	<img class="tableImages" src="/get_image/?image={{value.imgValue}}"/>
 			           	{% elif value.displayCheckbox%}
-			           		<input type="checkbox">
+			           		<input type="checkbox" 
+			           		{% if value.strValue == '1'%}
+			           		checked
+			           		{% endif %}	
+			           		>
 			           	{% else %}
 			           		{{value.strValue}}
 			           	{% endif %}
