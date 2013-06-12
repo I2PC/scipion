@@ -10,7 +10,6 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.text.NumberFormat;
 import java.util.List;
-import java.util.logging.Level;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -29,7 +28,6 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import xmipp.utils.ColorIcon;
-import xmipp.utils.TasksManager;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippMessage;
@@ -38,7 +36,6 @@ import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.ctf.CTFAnalyzerJFrame;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
-import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
 import xmipp.viewer.particlepicker.ParticlesJDialog;
@@ -87,8 +84,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		{
 			this.ppicker = picker;
 			initComponents();
-			if (ppicker.getMode() == Mode.ReadOnly)
-				enableEdition(false);
+			
 			
 		}
 		catch (IllegalArgumentException ex)
@@ -309,6 +305,8 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			actionspn.add(savebt);
 			actionspn.add(saveandexitbt);
 			add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 5, 2, 1, GridBagConstraints.HORIZONTAL));
+			if (ppicker.getMode() == Mode.ReadOnly)
+				enableEdition(false);
 			pack();
 			positionx = 0.9f;
 			XmippWindowUtil.setLocation(positionx, 0.2f, this);

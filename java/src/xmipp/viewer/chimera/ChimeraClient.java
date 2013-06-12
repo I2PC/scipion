@@ -23,25 +23,44 @@ public class ChimeraClient
 			String volfile = String.format("%1$shome%1$sairen%1$sxprojects%1$sshowj%1$shand.vol", File.separator);
 
 			int port = 6000;
-			String command = String.format("chimera --script '%s %s' &", Filename.getXmippPath("libraries/bindings/chimera/xmipp_chimera_server.py"), port);
+//			String command = String.format("chimera %s %s ", Filename.getXmippPath("libraries/bindings/chimera/xmipp_chimera_server.py"), port);
+			String command = String.format("chimera %s", Filename.getXmippPath("libraries/bindings/chimera/xmipp_chimera_server.py"));
 			System.out.println(command);
 			Runtime.getRuntime().exec(command);
 			Thread.sleep(3000);
 			client = new Socket("", port);
-//			out = new PrintWriter(client.getOutputStream(), true);
-//            in = new BufferedReader(new InputStreamReader(client.getInputStream()));
-//			ImageGeneric ig = new ImageGeneric(volfile);
+			out = new PrintWriter(client.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(client.getInputStream()));
+            
+//            ImageGeneric ig = new ImageGeneric(volfile);
+//			ig.setDataType(ImageGeneric.Double);
 //			ig.read(ImageGeneric.ALL_SLICES);
-//			//ig.setDataType(ImageGeneric.Double);
+//			
 //			float[] data = ig.getArrayFloat(ImageGeneric.FIRST_IMAGE, ImageGeneric.ALL_SLICES);
-//			out.write("open_volume");
-			//out.wri(data);
+            String msg = "open_volume" ;
+			
+            sendMessage(out, msg);
+            while ((msg = in.readLine()) != null) {
+                System.out.println("Server: " + msg);
+               
+
+               
+            }
+			
+			//out.write(data);
 			
 		}
 		catch(Exception e)
 		{
 			e.printStackTrace();
 		}
+	}
+	
+	
+	public static void sendMessage(PrintWriter out, String msg)
+	{
+		out.write(msg);
+		System.out.println(msg);
 	}
 
 }

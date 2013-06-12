@@ -137,7 +137,7 @@ class XmippChimeraClient:
                 #print 'on client loop'
                 msg = self.client.recv()
                 self.answer(msg)
-                    
+                            
         except EOFError:
             print 'Lost connection to server'
         finally:
