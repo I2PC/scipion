@@ -867,7 +867,8 @@ class XmippProjectGUI():
         tree.heading('#0', text='Run')
         tree.bind('<<TreeviewSelect>>', self.selectTreeRun)
         tree.bind('<Double-1>', lambda e:self.runButtonClick(ACTION_DEFAULT))
-        tree.bind("<Button-3>", self.onRightClick)
+        tree.bind("<Button-3>", self.onRightClick) #right button on win and linux
+        tree.bind("<Button-2>", self.onRightClick) #right button on mac
         self.treeHist = tree
         
     def createHistoryGraph(self, parent):
