@@ -420,7 +420,7 @@ def getHost(request):
         project = loadProject(projectName)
         hostsMapper = ExecutionHostMapper(project.hostsPath)
         executionHostConfig = hostsMapper.selectByLabel(hostLabel)
-        jsonStr = simplejson.dumps({'host':executionHostConfig.__dict__})
+        jsonStr = json.dumps({'host':executionHostConfig.as_dict()})
 #         jsonStr = json.dumps({'hostConfig' :  executionHostConfig},
 #                              ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
@@ -443,7 +443,7 @@ def showj(request):
     
     jquerydataTables_path = os.path.join(settings.STATIC_URL, 'js/jquery.dataTables.js')
     jquerydataTables_colreorder_path = os.path.join(settings.STATIC_URL, 'js/ColReorder.js')
-    
+        
     
     #############
     # WEB INPUT PARAMETERS
@@ -451,7 +451,8 @@ def showj(request):
                      'block': request.GET.get('block', ''),
                      'allowRender': 'render' in request.GET,
                      'imageDim' : request.GET.get('dim', None),
-                     'mode': request.GET.get('mode', 'gallery')}
+                     'mode': request.GET.get('mode', 'gallery'),
+                     'metadataComboBox': request.GET.get('metadataComboBox', 'image')}
     
     md = loadMetaData(inputParameters['path'], inputParameters['block'], inputParameters['allowRender'], inputParameters['imageDim'])    
 
@@ -479,17 +480,23 @@ class MdObj():
     pass
     
 class MdValue():
-    def __init__(self, md, label, objId, allowRender=True, imageDim=None):
+    def __init__(self, md, label, objId, allowRender, imageDim=None):
         self.strValue = str(md.getValue(label, objId))        
-        
-        # Habria que ampliarlo para que cogiera todos los renderizables
-        self.allowRender = xmipp.labelIsImage(label) and allowRender
-        
-        self.displayCheckbox = (label == xmipp.MDL_ENABLED)
 
-        self.imgValue = self.strValue
+        self.label = xmipp.label2Str(label)
         
-        if self.allowRender and '@' in self.strValue:
+        
+        self.allowRender = allowRender
+
+        print self.label,self.allowRender
+
+        #check if enabled label
+        self.displayCheckbox = (label == xmipp.MDL_ENABLED)
+        print self.label + self.strValue
+
+        #Prepare path for image
+        self.imgValue = self.strValue
+        if allowRender and '@' in self.strValue:
             self.imgValue = self.imgValue.replace('@', AT)
 #            if imageDim:
 #                self.imgValue += '&dim=%s' % imageDim
@@ -499,13 +506,21 @@ class MdData():
         md = xmipp.MetaData(path)
         
         labels = md.getActiveLabels()
-        self.labels = [xmipp.label2Str(l) for l in labels]
+        self.labels = []
+        self.labelsToRender=[]
+        for l in labels:
+            labelName = xmipp.label2Str(l)
+            self.labels.append(labelName)
+            if (xmipp.labelIsImage(l) and allowRender):
+                self.labelsToRender.append(labelName)
+            print "taka"    
+                
         self.colsOrder = defineColsLayout(self.labels);
         self.objects = []
         for objId in md:
             obj = MdObj()
             obj.id = objId
-            obj.values = [MdValue(md, l, objId, allowRender, imageDim) for l in labels]
+            obj.values = [MdValue(md, l, objId, (xmipp.labelIsImage(l) and allowRender), imageDim) for l in labels]
             self.objects.append(obj)
 
 class MenuLayoutConfig():        
@@ -524,11 +539,18 @@ class MenuLayoutConfig():
             self.tableViewSrc = "/resources/showj/tableViewOn.gif"
             self.galleryViewLink = link + "&mode=gallery'"
             self.galleryViewSrc = "/resources/showj/galleryViewOff.gif"
+            
+            self.disabledColRowMode = "disabled"
+            
         elif (mode == "gallery"):
             self.tableViewLink = link + "&mode=table'"
             self.tableViewSrc = "/resources/showj/tableViewOff.gif"
             self.galleryViewLink = "#"
             self.galleryViewSrc = "/resources/showj/galleryViewOn.gif"
+            
+            self.disabledColRowMode = ""
+            
+            
             
          
         

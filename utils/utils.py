@@ -108,7 +108,8 @@ def executeRemoteX (command, hostName, userName, password):
     Returns: 
         Tuple with standard output and error output.
     """
-    pswCommand = "echo '" + password + "' | " + "/home/antonio/Desarrollo/Projects/EclipseProjects/Scipion/pyworkflow/utils/sshAskPass.sh" + " ssh -X " + userName + "@" + hostName + " " + command
+    scriptPath = os.path.abspath(os.path.join(os.path.dirname( __file__ ), "sshAskPass.sh"))
+    pswCommand = "echo '" + password + "' | " + scriptPath + " ssh -X " + userName + "@" + hostName + " " + command
     import subprocess
     p = subprocess.Popen(pswCommand, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
