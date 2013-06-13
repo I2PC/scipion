@@ -17,6 +17,7 @@ from xmipp import MetaData, MetaDataInfo, MD_APPEND, MDL_MAXCC, MDL_WEIGHT, \
 
 from protlib_base import *
 from math import floor
+from numpy import array, savetxt, sum, zeros
 from protlib_utils import getListFromRangeString, runJob, runShowJ
 from protlib_filesystem import copyFile, deleteFile, removeFilenamePrefix
 
@@ -32,31 +33,24 @@ class ProtInitVolRANSAC(XmippProtocol):
 
         self.insertStep("linkAcquisitionInfo",InputFile=self.Classes,dirDest=self.WorkingDir)
         self.insertStep('copyFile',source=removeFilenamePrefix(self.Classes),dest=fnOutputClass)
-        fnOutputReducedClass = self.workingDirPath("reducedClasses") 
-        
+        fnOutputReducedClass = self.tmpPath("reducedClasses.stk") 
+
+        # Low pass filter and resize        
         self.MaxFreq = float(self.MaxFreq)
         self.Ts = float(self.Ts)
-       
         K = 0.25*(self.MaxFreq/self.Ts)
         Xdim2 = self.Xdim/K
-        
         if (Xdim2 < 32):
             self.Xdim2 = 32
             K = self.Xdim/Xdim2
         else:
             self.Xdim2 = Xdim2
-        
         self.Ts = K*self.Ts
         freq = self.Ts/self.MaxFreq
         
-
-        self.insertRunJobStep("xmipp_image_resize","-i %s -o %s.xmd --dim %d %d --oroot %s" 
-                                                %(fnOutputClass,fnOutputReducedClass,self.Xdim2,self.Xdim2,
-                                                  self.workingDirPath("tmp/reduced")))
-        
-        self.insertRunJobStep("xmipp_transform_filter","-i %s.xmd --fourier low_pass %f"
-                                                %(fnOutputReducedClass,freq))
-
+        self.insertRunJobStep("xmipp_transform_filter","-i %s -o %s --fourier low_pass %f"
+                                                %(fnOutputClass,fnOutputReducedClass,freq*K))
+        self.insertRunJobStep("xmipp_image_resize","-i %s --dim %d %d " %(fnOutputReducedClass,self.Xdim2,self.Xdim2))
 
         if (self.InitialVolume != '') :
             self.fnOutputInitVolume=self.workingDirPath("initialVolume.vol")
@@ -66,39 +60,25 @@ class ProtInitVolRANSAC(XmippProtocol):
             self.insertRunJobStep("xmipp_image_resize","-i %s --dim %d %d" 
                                   %(self.fnOutputInitVolume,self.Xdim2,self.Xdim2 ))
             fnGallery=self.workingDirPath('gallery_InitialVolume.stk')
-        
-            parent_id=self.insertParallelRunJobStep("xmipp_angular_project_library", "-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s.xmd"\
-                                  %(self.fnOutputInitVolume,fnGallery,float(self.AngularSampling),self.SymmetryGroup,fnOutputReducedClass),[fnGallery],parent_step_id=XmippProjectDb.FIRST_STEP)
-            
-        else :
-            
-            parent_id=XmippProjectDb.FIRST_STEP
-                                   
-                
+            self.insertRunJobStep("xmipp_angular_project_library", "-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
+                                  %(self.fnOutputInitVolume,fnGallery,float(self.AngularSampling),self.SymmetryGroup,fnOutputReducedClass),[fnGallery])
+
         for n in range(self.NRansac):
-
             fnRoot=self.workingDirPath("ransac%05d"%n)                        
-            #parent_id = self.insertParallelRunJobStep("xmipp_transform_dimred",
-            #                                          "-i %s.xmd -o %s.xmd -m LTSA -d 2 -n %d"%(fnOutputReducedClass,fnRoot,self.NumGrids),
-            #                                          verifyfiles = [fnRoot+".xmd"],parent_step_id=parent_id)
-
             parent_id = self.insertParallelRunJobStep("xmipp_transform_dimred",
-                                                      "-i %s.xmd --randomSample %s.xmd  %d -m LTSA "%(fnOutputReducedClass,fnRoot,self.NumGrids),
-                                                      verifyfiles = [fnRoot+".xmd"],parent_step_id=parent_id)
+                                                      "-i %s --randomSample %s.xmd  %d -m LTSA "%(fnOutputReducedClass,fnRoot,self.NumGrids),
+                                                      verifyfiles = [fnRoot+".xmd"],parent_step_id=XmippProjectDb.FIRST_STEP)
             
             if (self.InitialVolume != '') :
-                parent_id = self.insertProjMatchInitialVolume(fnRoot,fnGallery,parent_id)
+               parent_id=self.insertParallelRunJobStep("xmipp_angular_projection_matching", "-i %s.xmd -o %s.xmd --ref %s --Ri 0 --Ro %s --max_shift %s --append"\
+                                                       %(fnRoot,fnRoot,fnGallery,str(self.Xdim/2),str(self.Xdim/20)),parent_step_id=parent_id)
                 
-            
-            parent_id=self.insertReconstruction(fnRoot, parent_id)
-            
-            fnRoot = "ransac%05d"%n
-            parent_id = self.insertValidateVol(fnRoot, parent_id)
+            parent_id = self.insertParallelStep('reconstruct',fnRoot=fnRoot,symmetryGroup=self.SymmetryGroup,maskRadius=Xdim2/2)
+            parent_id = self.insertValidateVol("ransac%05d"%n, parent_id)
         
         self.insertStep("getCorrThresh",WorkingDir=self.WorkingDir, NRansac=self.NRansac, CorrThresh=self.CorrThresh)
         self.insertStep("validateVolume",WorkingDir=self.WorkingDir,NRansac=self.NRansac)
-        self.insertStep("getBestVolume",WorkingDir=self.WorkingDir, NRansac=self.NRansac, NumVolumes=self.NumVolumes,
-                        UseAll=self.UseAll)        
+        self.insertStep("getBestVolume",WorkingDir=self.WorkingDir, NRansac=self.NRansac, NumVolumes=self.NumVolumes, UseAll=self.UseAll)        
         
         for n in range(self.NumVolumes):
             
@@ -106,11 +86,11 @@ class ProtInitVolRANSAC(XmippProtocol):
             parent_id=XmippProjectDb.FIRST_STEP
             
             for it in range(self.NumIter):    
-                parent_id = self.insertReconstruction(fnRoot, parent_id)
+                parent_id = self.insertParallelStep('reconstruct',fnRoot=fnRoot,symmetryGroup=self.SymmetryGroup,maskRadius=Xdim2/2)
                 parent_id = self.insertProjMatch(fnRoot,parent_id)
             
-            self.insertRunJobStep("xmipp_image_resize","-i %s.vol -o %s.vol --dim %d %d" 
-                                              %(fnRoot,fnRoot,self.Xdim,self.Xdim))
+            self.insertParallelRunJobStep("xmipp_image_resize","-i %s.vol -o %s.vol --dim %d %d" 
+                                          %(fnRoot,fnRoot,self.Xdim,self.Xdim),parent_step_id=parent_id)
         self.insertStep("scoreFinalVolumes",WorkingDir=self.WorkingDir,NumVolumes=self.NumVolumes)
         
     def insertReconstruction(self,fnRoot, parent_id):
@@ -124,9 +104,9 @@ class ProtInitVolRANSAC(XmippProtocol):
     def insertProjMatch(self,fnRoot, parent_id):
 
         fnGallery=self.workingDirPath('gallery_BestVolume'+'.stk')
-        fnOutputReducedClass = self.workingDirPath("reducedClasses") 
+        fnOutputReducedClass = self.tmpPath("reducedClasses.stk") 
         
-        id=self.insertParallelRunJobStep("xmipp_angular_project_library", "-i %s.vol -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s.xmd"\
+        id=self.insertParallelRunJobStep("xmipp_angular_project_library", "-i %s.vol -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
                               %(fnRoot,fnGallery,float(self.AngularSampling),self.SymmetryGroup,fnOutputReducedClass),[fnGallery],parent_step_id=parent_id)
 
         fnAngles=self.workingDirPath('angles_BestVolume'+'.xmd')
@@ -139,27 +119,18 @@ class ProtInitVolRANSAC(XmippProtocol):
         
         return id
     
-    def insertProjMatchInitialVolume(self,fnRoot, fnGallery, parent_id):
-
-        id=self.insertParallelRunJobStep("xmipp_angular_projection_matching", "-i %s.xmd -o %s.xmd --ref %s --Ri 0 --Ro %s --max_shift %s --append"\
-                              %(fnRoot,fnRoot,fnGallery,str(self.Xdim/2),str(self.Xdim/20)),parent_step_id=parent_id)
-                       
-        return id
-
-        
     def insertValidateVol(self,fnRoot, parent_id):
-        
         fnGallery=self.workingDirPath('gallery_'+fnRoot+'.stk')
         fnVol = self.workingDirPath(fnRoot+'.vol')
-        fnOutputReducedClass = self.workingDirPath("reducedClasses")
+        fnOutputReducedClass = self.tmpPath("reducedClasses.stk")
         
-        id=self.insertParallelRunJobStep("xmipp_angular_project_library", "-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s.xmd"\
+        id=self.insertParallelRunJobStep("xmipp_angular_project_library", "-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
                                   %(fnVol,fnGallery,float(self.AngularSampling),self.SymmetryGroup,fnOutputReducedClass),[fnGallery],parent_step_id=parent_id)
             
         # Assign angles
         fnAngles=self.workingDirPath('angles_'+fnRoot+'.xmd')
         
-        id=self.insertParallelRunJobStep("xmipp_angular_projection_matching", "-i %s.xmd -o %s --ref %s --Ri 0 --Ro %s --max_shift %s --append"\
+        id=self.insertParallelRunJobStep("xmipp_angular_projection_matching", "-i %s -o %s --ref %s --Ri 0 --Ro %s --max_shift %s --append"\
                               %(fnOutputReducedClass,fnAngles,fnGallery,str(self.Xdim/2),str(self.Xdim/20)),[fnAngles],parent_step_id=id)
        
         id = self.insertParallelStep("deleteFile",filename=fnGallery,parent_step_id=id)
@@ -189,10 +160,6 @@ def validateVolume(log,WorkingDir,NRansac):
     mdCorr= MetaData(fnCorr)
     objId = mdCorr.firstObject()    
     CorrThresh = mdCorr.getValue(MDL_WEIGHT,objId)
-    
-    print "Value percentil received (validateVolume): "
-    print CorrThresh    
-    
     for n in range(NRansac):        
         fnRoot=os.path.join("ransac%05d"%n)              
         fnAngles=os.path.join(WorkingDir,"angles_"+fnRoot+".xmd")    
@@ -210,16 +177,11 @@ def validateVolume(log,WorkingDir,NRansac):
         md.write("inliers@"+fnAngles,MD_APPEND)
     
 def getCorrThresh(log,WorkingDir,NRansac,CorrThresh):
-    
-    print "Value percentil received (getCorrThresh): "
-    print CorrThresh
-    
     corrVector = []
     fnCorr=os.path.join(WorkingDir,"corrFile.xmd")               
     mdCorr= MetaData()
 
     for n in range(NRansac):
-        
         fnRoot=os.path.join("ransac%05d"%n)
         fnAngles=os.path.join(WorkingDir,"angles_"+fnRoot+".xmd")
         md=MetaData(fnAngles)
@@ -238,9 +200,7 @@ def getCorrThresh(log,WorkingDir,NRansac,CorrThresh):
     objId = mdCorr.addObject()
     mdCorr.setValue(MDL_WEIGHT,float(CorrThresh),objId)
     mdCorr.write("corrThreshold@"+fnCorr,MD_APPEND)
-    
-    print "Value percentil obtained (getCorrThresh): "
-    print CorrThresh
+    print "Correlation threshold: "+str(CorrThresh)
 
 def getCCThreshold(WorkingDir):
     fnCorr=os.path.join(WorkingDir,"corrFile.xmd")               
@@ -251,24 +211,44 @@ def getBestVolume(log,WorkingDir,NRansac,NumVolumes,UseAll):
     volumes = []
     inliers = []
     
+    Nimgs=MetaData(os.path.join(WorkingDir,"angles_ransac00000.xmd")).size()
+    allCC=zeros((Nimgs,NRansac))
     for n in range(NRansac):
         fnAngles = os.path.join(WorkingDir,"angles_ransac%05d"%n+".xmd")
         md=MetaData("inliers@"+fnAngles)
         numInliers=md.getValue(MDL_WEIGHT,md.firstObject())
         volumes.append(fnAngles)
         inliers.append(numInliers)
+
+        # Get the column of CCs 
+        allCC[:,n]=MetaData(fnAngles).getColumnValues(MDL_MAXCC)
     
+    savetxt(os.path.join(WorkingDir,'allCC.txt'),allCC)
+    
+    # Now each image score each volume
+    for i in range(Nimgs):
+        ccList=allCC[i,:]
+        idx=sorted(range(len(ccList)),key=lambda x:ccList[x])
+        allCC[i,:]=1.0-array(idx)/float(NRansac)
+    savetxt(os.path.join(WorkingDir,'allCCScore.txt'),allCC)
+    
+    # Final volume score
+    volumeRankScores=[]
+    for n in range(NRansac):
+        volumeRankScores.append(sum(allCC[:,n]))
+
+    # index = sorted(range(volumeRankScores.__len__()), key=lambda k: volumeRankScores[k])
     index = sorted(range(inliers.__len__()), key=lambda k: inliers[k])
-    indx = 0
     fnBestAngles = ''
     threshold=getCCThreshold(WorkingDir)
     
     i=NRansac-1
+    indx = 0
     while i>=0 and indx<NumVolumes:
         fnBestAngles = volumes[index[i]]
         fnBestAnglesOut=os.path.join(WorkingDir,"proposedVolume%05d"%indx+".xmd")
         copyFile(log,fnBestAngles,fnBestAnglesOut)
-        
+        print("Best volume "+str(indx)+" = "+fnBestAngles)
         if not UseAll:
             runJob(log,"xmipp_metadata_utilities","-i %s -o %s --query select \"maxCC>%f \" --mode append" %(fnBestAnglesOut,fnBestAnglesOut,threshold))
             md=MetaData(fnBestAnglesOut)
@@ -278,15 +258,14 @@ def getBestVolume(log,WorkingDir,NRansac,NumVolumes,UseAll):
             indx+=1
         i-=1
         
-    #We clean the volumes that are not good
+    # Remove unnecessary files
     for n in range(NRansac):
         fnAngles = os.path.join(WorkingDir,"angles_ransac%05d"%n+".xmd")
         fnRansac = os.path.join(WorkingDir,"ransac%05d"%n)
         deleteFile(log, fnAngles)
         deleteFile(log, fnRansac+".xmd")
-        deleteFile(log, fnRansac+".vol")        
+        deleteFile(log, fnRansac+".vol")
    
-
 def scoreFinalVolumes(log,WorkingDir,NumVolumes):
     threshold=getCCThreshold(WorkingDir)
     mdOut=MetaData()
@@ -297,10 +276,13 @@ def scoreFinalVolumes(log,WorkingDir,NumVolumes):
             sum=0
             thresholdedSum=0
             N=0
+            minCC=2
             for id in MDassignment:
                 cc=MDassignment.getValue(MDL_MAXCC,id)
                 sum+=cc
                 thresholdedSum+=cc-threshold
+                if cc<minCC:
+                    minCC=cc
                 N+=1
             avg=sum/N
             id=mdOut.addObject()
@@ -308,4 +290,9 @@ def scoreFinalVolumes(log,WorkingDir,NumVolumes):
             mdOut.setValue(MDL_VOLUME_SCORE1,float(sum),id)
             mdOut.setValue(MDL_VOLUME_SCORE2,float(thresholdedSum),id)
             mdOut.setValue(MDL_VOLUME_SCORE3,float(avg),id)
+            mdOut.setValue(MDL_VOLUME_SCORE4,float(minCC),id)
     mdOut.write(os.path.join(WorkingDir,"proposedVolumes.xmd"))
+
+def reconstruct(log,fnRoot,symmetryGroup,maskRadius):
+    runJob(log,"xmipp_reconstruct_fourier","-i %s.xmd -o %s.vol --sym %s " %(fnRoot,fnRoot,symmetryGroup))
+    runJob(log,"xmipp_transform_mask","-i %s.vol --mask circular -%d "%(fnRoot,maskRadius))
