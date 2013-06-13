@@ -22,7 +22,8 @@ import xmipp.viewer.particlepicker.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.UpdateTemplatesTask;
 import xmipp.viewer.particlepicker.training.model.Mode;
 
-public class AdvancedOptionsJDialog extends JDialog {
+public class AdvancedOptionsJDialog extends JDialog
+{
 
 	protected SingleParticlePickerJFrame frame;
 	protected int width, height;
@@ -33,60 +34,63 @@ public class AdvancedOptionsJDialog extends JDialog {
 	private JButton okbt;
 	private TemplatesJDialog templatesdialog;
 
-	public AdvancedOptionsJDialog(SingleParticlePickerJFrame frame) {
+	public AdvancedOptionsJDialog(SingleParticlePickerJFrame frame)
+	{
 		super(frame);
 		this.frame = frame;
 		initComponents();
 
-		addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent winEvt) {
+		addWindowListener(new WindowAdapter()
+		{
+			public void windowClosing(WindowEvent winEvt)
+			{
 				resetTemplatesJDialog();
 			}
 
 		});
 	}
 
-	protected void resetTemplatesJDialog() {
+	protected void resetTemplatesJDialog()
+	{
 		frame.optionsdialog = null;
 
 	}
 
-	
-
-	private void initComponents() {
+	private void initComponents()
+	{
 		setDefaultCloseOperation(HIDE_ON_CLOSE);
 		setTitle("Advanced Options");
 		GridBagConstraints constraints = new GridBagConstraints();
 		constraints.insets = new Insets(0, 5, 0, 5);
 		constraints.anchor = GridBagConstraints.WEST;
 		setLayout(new GridBagLayout());
-		
+
 		add(new JLabel("Templates:"), XmippWindowUtil.getConstraints(constraints, 0, 0));
 
 		templatestf = new JFormattedTextField(NumberFormat.getNumberInstance());
 		templatestf.setColumns(3);
 		templatestf.setValue(frame.getParticlePicker().getTemplatesNumber());
-	
+
 		templatestf.addActionListener(new ActionListener()
 		{
-			
+
 			@Override
 			public void actionPerformed(ActionEvent arg0)
 			{
 				setTemplates();
-				
+
 			}
 		});
 		loadtemplatesbt = XmippWindowUtil.getTextButton("Load", new ActionListener()
 		{
-			
+
 			@Override
 			public void actionPerformed(ActionEvent arg0)
 			{
-				loadTemplates();
+				setTemplates();
 			}
 		});
-		
+
 		add(templatestf, XmippWindowUtil.getConstraints(constraints, 1, 0));
 		add(templatestf);
 		add(loadtemplatesbt, XmippWindowUtil.getConstraints(constraints, 2, 0));
@@ -101,23 +105,23 @@ public class AdvancedOptionsJDialog extends JDialog {
 			@Override
 			public void actionPerformed(ActionEvent arg0)
 			{
-				
+
 				setAutopickPercent();
 
 			}
 		});
 		autopickpercenttf.setColumns(3);
 		add(autopickpercenttf, XmippWindowUtil.getConstraints(constraints, 1, 1));
-		
+
 		okbt = XmippWindowUtil.getTextButton("Ok", new ActionListener()
 		{
-			
+
 			@Override
 			public void actionPerformed(ActionEvent arg0)
 			{
 				setAutopickPercent();
 				setVisible(false);
-				
+
 			}
 		});
 		add(okbt, XmippWindowUtil.getConstraints(constraints, 2, 2));
@@ -127,13 +131,13 @@ public class AdvancedOptionsJDialog extends JDialog {
 		setAlwaysOnTop(true);
 		pack();
 	}
-	
+
 	void enableOptions()
 	{
 		templatestf.setEnabled(frame.getParticlePicker().getMode() == Mode.Manual);
 		autopickpercenttf.setEnabled(frame.getParticlePicker().getMode() == Mode.Supervised);
 	}
-	
+
 	protected void setAutopickPercent()
 	{
 		if (autopickpercenttf.getValue() == null)
@@ -148,7 +152,7 @@ public class AdvancedOptionsJDialog extends JDialog {
 		frame.getParticlePicker().setAutopickpercent(autopickpercent);
 		frame.getParticlePicker().saveConfig();
 	}
-	
+
 	protected void setTemplates()
 	{
 		if (templatestf.getValue() == null)
@@ -159,34 +163,38 @@ public class AdvancedOptionsJDialog extends JDialog {
 		}
 
 		int templates = ((Number) templatestf.getValue()).intValue();
-		if(templates != frame.getParticlePicker().getTemplatesNumber())
+		if (templates != frame.getParticlePicker().getTemplatesNumber())
+		{
 			frame.getParticlePicker().setTemplatesNumber(templates);
+			loadTemplates();
+		}
+		else if (templatesdialog == null)
+			loadTemplates();
 	}
 
 	protected void loadTemplates()
 	{
-			try
-			{
-				if (templatesdialog == null)
-				{
-					templatesdialog = new TemplatesJDialog(frame);
-					UpdateTemplatesTask.setTemplatesDialog(templatesdialog);
-					ParticleToTemplatesTask.setTemplatesDialog(templatesdialog);
-				}
-				else
-				{
-					templatesdialog.loadTemplates(true);
-					templatesdialog.setVisible(true);
-				}
-			}
-			catch (Exception e)
-			{
-				XmippDialog.showError(frame, e.getMessage());
-			}
 		
+		try
+		{
+			if (templatesdialog == null)
+			{
+				templatesdialog = new TemplatesJDialog(frame);
+				UpdateTemplatesTask.setTemplatesDialog(templatesdialog);
+				ParticleToTemplatesTask.setTemplatesDialog(templatesdialog);
+			}
+			else
+				templatesdialog.setVisible(true);
+		}
+		catch (Exception e)
+		{
+			XmippDialog.showError(frame, e.getMessage());
+		}
+
 	}
 
-	public void close() {
+	public void close()
+	{
 		setVisible(false);
 		dispose();
 
