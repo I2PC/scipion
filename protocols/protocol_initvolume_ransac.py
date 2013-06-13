@@ -81,16 +81,14 @@ class ProtInitVolRANSAC(XmippProtocol):
         self.insertStep("getBestVolumes",WorkingDir=self.WorkingDir, NRansac=self.NRansac, NumVolumes=self.NumVolumes, UseAll=self.UseAll)        
         
         for n in range(self.NumVolumes):
-            
             fnRoot=self.workingDirPath('proposedVolume%05d'%n)
-            parent_id=XmippProjectDb.FIRST_STEP
-            
             for it in range(self.NumIter):    
-                parent_id = self.insertParallelStep('reconstruct',fnRoot=fnRoot,symmetryGroup=self.SymmetryGroup,maskRadius=Xdim2/2)
-                parent_id = self.insertProjMatch(fnRoot,parent_id)
-            
+                self.insertParallelStep('reconstruct',fnRoot=fnRoot,symmetryGroup=self.SymmetryGroup,maskRadius=Xdim2/2)
+                parent_id = self.insertParallelStep('insertProjMatch',TmpDir=self.TmpDir,fnRoot=fnRoot,AngularSampling=self.AngularSampling,
+                                                    SymmetryGroup=self.SymmetryGroup, Xdim=self.Xdim)
             self.insertParallelRunJobStep("xmipp_image_resize","-i %s.vol -o %s.vol --dim %d %d" 
                                           %(fnRoot,fnRoot,self.Xdim,self.Xdim),parent_step_id=parent_id)
+
         self.insertStep("scoreFinalVolumes",WorkingDir=self.WorkingDir,NumVolumes=self.NumVolumes)
         self.insertStep("deleteFile",filename=fnOutputReducedClass)
         
@@ -291,3 +289,18 @@ def evaluateVolume(log, fnRoot, TmpDir, AngularSampling, SymmetryGroup, Xdim):
     deleteFile(log,os.path.join(TmpDir,'gallery_'+fnRoot+'.doc'))
     deleteFile(log,fnVol)
     deleteFile(log,os.path.join(TmpDir,fnRoot+'.xmd'))
+
+def insertProjMatch(log, TmpDir, fnRoot, AngularSampling, SymmetryGroup, Xdim):
+    fnGallery=os.path.join(Tmpdir,'gallery_'+fnRoot+'.stk')
+    fnOutputReducedClass = os.path.join(Tmpdir,"reducedClasses.stk") 
+    
+    runJob(log,"xmipp_angular_project_library", "-i %s.vol -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
+                          %(fnRoot,fnGallery,float(AngularSampling),SymmetryGroup,fnOutputReducedClass))
+
+    fnAngles=os.path.join(Tmpdir,'angles_BestVolume'+'.xmd')
+    id=self.insertParallelRunJobStep("xmipp_angular_projection_matching", "-i %s.xmd -o %s --ref %s --Ri 0 --Ro %s --max_shift %s --append"\
+                          %(fnRoot,fnAngles,fnGallery,str(Xdim/2),str(Xdim/20)))
+            
+    deleteFile(log,os.path.join(Tmpdir,'gallery_'+fnRoot+'_sampling.xmd'))
+    deleteFile(log,os.path.join(Tmpdir,'gallery_'+fnRoot+'.doc'))
+    deleteFile(log,os.path.join(Tmpdir,'gallery_'+fnRoot+'.stk'))
