@@ -322,6 +322,7 @@ enum MDLabel
     MDL_VOLUME_SCORE1,/// < Score 1 for volumes
     MDL_VOLUME_SCORE2,/// < Score 2 for volumes
     MDL_VOLUME_SCORE3,/// < Score 3 for volumes
+    MDL_VOLUME_SCORE4,/// < Score 4 for volumes
     MDL_VOLTAGE, ///< microscope voltage (double)
     MDL_WEIGHT, ///< Weight assigned to the image (double)
     MDL_WROBUST, ///< Weight of t-student distribution in robust Maximum likelihood
@@ -1080,6 +1081,7 @@ private:
         MDL::addLabel(MDL_VOLUME_SCORE1, LABEL_DOUBLE, "volScore1");
         MDL::addLabel(MDL_VOLUME_SCORE2, LABEL_DOUBLE, "volScore2");
         MDL::addLabel(MDL_VOLUME_SCORE3, LABEL_DOUBLE, "volScore3");
+        MDL::addLabel(MDL_VOLUME_SCORE4, LABEL_DOUBLE, "volScore4");
         MDL::addLabel(MDL_WEIGHT, LABEL_DOUBLE, "weight");
         MDL::addLabelAlias(MDL_WEIGHT, "Weight");
         MDL::addLabel(MDL_WROBUST, LABEL_DOUBLE, "wRobust");
