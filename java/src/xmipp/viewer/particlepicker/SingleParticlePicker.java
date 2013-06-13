@@ -1054,7 +1054,7 @@ public class SingleParticlePicker extends ParticlePicker
 			classifier.correct(manualmd, automaticmd);
 			manualmd.destroy();
 			automaticmd.destroy();
-			if (getMode() == Mode.Supervised && next.getState() == MicrographState.Available)
+			if (getMode() == Mode.Supervised && next.getState() == MicrographState.Supervised)
 			{
 				next.getAutomaticParticles().clear();
 				next.setAutopickpercent(autopickpercent);

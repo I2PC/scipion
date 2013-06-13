@@ -14,21 +14,7 @@ import javax.swing.SwingUtilities;
 
 public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 {
-	protected ImageWindow iw;
 	
-	public void display()
-	{
-		if (iw != null && iw.isVisible())
-		{
-			iw.setImage(getImage());
-			iw.updateImage(getImage());
-		}
-		else
-			this.iw = new ImageWindow(getImage(), this);// if you dont provide
-														// iw, I init mine
-		// iw.maximize();
-		iw.pack();
-	}
 
 
 	public Tool getTool()
@@ -147,13 +133,17 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 
 	public void mouseMoved(MouseEvent e)
 	{
-
-		if (getTool() == Tool.IMAGEJ)
-			super.mouseMoved(e);
 		int x = offScreenX(e.getX());
 		int y = offScreenY(e.getY());
+		int[] pixels = imp.getPixel(x, y);
+		if(getParent() instanceof XmippImageWindow)
+			((XmippImageWindow)getParent()).showPixels(x, y, pixels);
+		if (getTool() == Tool.IMAGEJ)
+			super.mouseMoved(e);
+		
 		imp.mouseMoved(x, y);
 		imp.updateStatusbarValue();
+		
 	}
 
 	public void loadData(XmippIJWindow xiw)

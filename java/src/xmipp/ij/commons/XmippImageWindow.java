@@ -2,48 +2,33 @@ package xmipp.ij.commons;
 
 import ij.IJ;
 import ij.ImagePlus;
-import ij.ImageStack;
 import ij.WindowManager;
 import ij.gui.ImageWindow;
-import ij.gui.StackWindow;
-import ij.measure.Calibration;
-
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Insets;
-import java.awt.Point;
-import java.awt.Window;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.Label;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import xmipp.ij.commons.XmippMenuBar.IJRequirement;
-import xmipp.utils.DEBUG;
-
 
 public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 {
 
 	protected XmippMenuBar menu;
 	private ImagePlusLoader ipl;
-	private Window window;
+	private Label pixelslb;
 
-
-	public XmippImageWindow(Window window, ImagePlusLoader ipl)
+	public XmippImageWindow(ImagePlusLoader ipl)
 	{
-		this(window, ipl, ipl.getFileName());
+		this(ipl, ipl.getFileName());
 	}
 
-
-	public XmippImageWindow(Window window, ImagePlusLoader ipl, String title)
+	public XmippImageWindow(ImagePlusLoader ipl, String title)
 	{
 		super(ipl.getImagePlus(), new XmippImageCanvas(ipl.getImagePlus()));
-		this.window = window;
 		this.ipl = ipl;
 		setTitle(title);
 		menu = new XmippMenuBar(this);
-		setMenuBar(menu);		
+		setMenuBar(menu);
 		XmippApplication.addInstance();
 		addWindowListener(new WindowAdapter()
 		{
@@ -53,15 +38,16 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 				XmippApplication.removeInstance();
 			}
 		});
-
-
-	}
-	
-	public void openMaskToolbar(){
-		menu.runCommand("Masks Tool Bar", new IJRequirement[]{IJRequirement.IMAGEJ});
+		pixelslb = new Label("                                                   ");
+		add(pixelslb);
+		pack();//avoids header bad view
 	}
 
-	
+	public void openMaskToolbar()
+	{
+		menu.runCommand("Masks Tool Bar", new IJRequirement[] { IJRequirement.IMAGEJ });
+	}
+
 	@Override
 	public void loadData()
 	{
@@ -79,14 +65,11 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	{
 		saveDataAs(imp.getTitle());
 	}
-	
 
-	
 	public ImagePlusLoader getImagePlusLoader()
 	{
 		return ipl;
 	}
-
 
 	@Override
 	public boolean isVolume()
@@ -94,31 +77,53 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		return false;
 	}
 
-
 	@Override
 	public boolean isStack()
 	{
 		return false;
 	}
-	
+
 	//overwriting ImageJ event to avoid switching menu
-	public void windowActivated(WindowEvent e) {
-//		if (IJ.isMacintosh())
-//			this.setMenuBar(Menus.getMenuBar());
-		if (IJ.debugMode) IJ.write(imp.getTitle() + ": Activated");
-		if (!closed) {
+	public void windowActivated(WindowEvent e)
+	{
+		//		if (IJ.isMacintosh())
+		//			this.setMenuBar(Menus.getMenuBar());
+		if (IJ.debugMode)
+			IJ.write(imp.getTitle() + ": Activated");
+		if (!closed)
+		{
 			//ic.requestFocus();
 			WindowManager.setCurrentWindow(this);
 		}
 	}
-	
+
 	public XmippImageCanvas getCanvas()
 	{
-		return ((XmippImageCanvas)super.getCanvas());
+		return ((XmippImageCanvas) super.getCanvas());
 	}
 
-
-    
-	
+	public void showPixels(int x, int y, int[] pixels)
+	{
+		String value = "";
+		switch (imp.getType())
+		{
+		case ImagePlus.GRAY8:
+		case ImagePlus.GRAY16:
+			double cValue = imp.getCalibration().getCValue(pixels[0]);
+			if (cValue == pixels[0])
+				value = String.valueOf(pixels[0]);
+			else
+				value = IJ.d2s(cValue) + " (" + pixels[0] + ")";
+		case ImagePlus.GRAY32:
+			value = String.valueOf(Float.intBitsToFloat(pixels[0]));
+		case ImagePlus.COLOR_256:
+			value = pixels[0] + "," + pixels[1] + "," + pixels[2];
+		case ImagePlus.COLOR_RGB:
+			value = pixels[0] + "," + pixels[1] + "," + pixels[2];
+		
+		}
+		String text = String.format("x=%s, y=%s, value=%s", x, y, value);
+		pixelslb.setText(text);
+	}
 
 }// class XmippImageWindow

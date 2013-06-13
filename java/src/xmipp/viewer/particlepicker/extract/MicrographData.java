@@ -1,5 +1,7 @@
 package xmipp.viewer.particlepicker.extract;
 
+import ij.gui.ImageWindow;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,6 +58,8 @@ public class MicrographData
 			mc.display();
 		}
 	}
+	
+
 
 	private void loadData()
 	{

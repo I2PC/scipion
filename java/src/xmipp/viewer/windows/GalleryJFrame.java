@@ -777,10 +777,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		imgAvg.destroy();
 		imgStd.destroy();
 
-		XmippImageWindow winAvg = new XmippImageWindow(this, new ImagePlusLoader(impAvg), "AVG: " + data.getFileName());
+		XmippImageWindow winAvg = new XmippImageWindow(new ImagePlusLoader(impAvg), "AVG: " + data.getFileName());
 		XmippWindowUtil.setLocation(0.2f, 0.5f, winAvg, this);
 		winAvg.setVisible(true);
-		XmippImageWindow winStd = new XmippImageWindow(this, new ImagePlusLoader(impStd), "STD: " + data.getFileName());
+		XmippImageWindow winStd = new XmippImageWindow(new ImagePlusLoader(impStd), "STD: " + data.getFileName());
 
 		XmippWindowUtil.setLocation(0.8f, 0.5f, winStd, this);
 		winStd.setVisible(true);
