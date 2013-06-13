@@ -78,11 +78,9 @@ class ProtParticlePickingAuto(XmippProtocol):
             fnPos = self.PrevRun.getFilename('pos', micrograph=micrographName)
             if xmippExists(fnPos):
                 mdheader = MetaData("header@" + fnPos)
-                for idheader in mdheader:
-                    state = mdheader.getValue(MDL_PICKING_MICROGRAPH_STATE, idheader)
+                state = mdheader.getValue(MDL_PICKING_MICROGRAPH_STATE, mdheader.firstObject())
                 if state != "Available":
                     proceed = False
-                    break
             if proceed:
                 oroot = self.extraPath(micrographName)
                 cmd = "-i %(path)s --particleSize %(particleSize)d --model %(modelRoot)s --outputRoot %(oroot)s --mode autoselect" % locals()
@@ -94,42 +92,18 @@ class ProtParticlePickingAuto(XmippProtocol):
         self.insertStep('deleteTempFiles', ExtraDir=self.ExtraDir)
 
     def summary(self):
-        
-        summary = ["Supervised picking RUN: <%s> " % self.SupervisedRun,
-                   "Input directory: [%s] " % self.pickingDir]
-        autoFiles = glob.glob(self.workingDirPath("extra/*auto.pos"))
-        if len(autoFiles) > 0:
-            Nparticles = 0
-            Nmicrographs = len(autoFiles)
-            first = True
-            maxTime = 0
-            minTime = 0
-            for f in autoFiles:
-                md = MetaData(f)
-                Nparticles += md.size()
-                if first:
-                    first = False
-                    minTime = os.stat(f).st_mtime
-                    maxTime = minTime
-                else:
-                    t = os.stat(f).st_mtime
-                    minTime = min(minTime, t)
-                    maxTime = max(maxTime, t)
-            summary.append("<%d> particles automatically picked from <%d> micrographs in <%d> minutes" % (Nparticles, Nmicrographs, int((maxTime - minTime) / 60.0)))
-        else:
-            
-                fnExtractList = self.getFilename('extract_list', model=self.model)
-                msg = "model: "
-                if os.path.exists(fnExtractList):
-                    MD = MetaData("mic.*@" + fnExtractList)
-                    MDauto = MetaData()
-                    MDauto.importObjects(MD, MDValueRange(MDL_COST, 0., 1.))
-                    Nparticles = MDauto.size()
-                    #minTime = os.stat(self.workingDirPath(family+"_mask.xmp")).st_mtime
-                    #maxTime = os.stat(fnExtractList).st_mtime
-                    #Nmicrographs = len(getBlocksInMetaDataFile(fnExtractList))
-                    #msg += "<%d> particles automatically picked from <%d> micrographs in <%d> minutes"%(Nparticles,Nmicrographs,int((maxTime-minTime)/60.0))
-                summary.append(msg)
+        summary = ["Input directory: [%s] " % self.pickingDir]
+#        fnExtractList = self.getFilename('extract_list', model=self.model)
+#        if os.path.exists(fnExtractList):
+#            MD = MetaData("mic.*@" + fnExtractList)
+#            MDauto = MetaData()
+#            MDauto.importObjects(MD, MDValueRange(MDL_COST, 0., 1.))
+#            Nparticles = MDauto.size()
+#            #minTime = os.stat(self.workingDirPath(family+"_mask.xmp")).st_mtime
+#            #maxTime = os.stat(fnExtractList).st_mtime
+#            #Nmicrographs = len(getBlocksInMetaDataFile(fnExtractList))
+#            #msg += "<%d> particles automatically picked from <%d> micrographs in <%d> minutes"%(Nparticles,Nmicrographs,int((maxTime-minTime)/60.0))
+#        summary.append(msg)
         return summary
     
     def validate(self):
@@ -141,8 +115,6 @@ class ProtParticlePickingAuto(XmippProtocol):
         for f in glob.glob(self.extraPath("*extract_list.xmd")):
             launchParticlePickingGUI(None, self.Input['micrographs'], self.ExtraDir, mode % f, self.TiltPairs, self.Memory)
             
-            
-
 def gatherResults(log, WorkingDir, PickingDir):
     md = MetaData(getProtocolFilename("micrographs",WorkingDir=WorkingDir))
     mdpos = MetaData()

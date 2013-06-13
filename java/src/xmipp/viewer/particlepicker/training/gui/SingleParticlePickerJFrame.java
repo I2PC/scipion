@@ -601,12 +601,12 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			ppicker.saveData(getMicrograph());// Saving changes when switching
 		index = micrographstb.getSelectedRow();
 		TrainingMicrograph next = ppicker.getMicrographs().get(index);
-		initializeCanvas();
+		
 		tryCorrectAndAutopick(getMicrograph(), next);
 
 		ppicker.getMicrograph().releaseImage();
 		ppicker.setMicrograph(next);
-
+		initializeCanvas();
 		if (ppicker.getMode() == Mode.Supervised)
 			resetbt.setEnabled(getMicrograph().getState() != MicrographState.Manual);
 		setChanged(false);
@@ -622,6 +622,8 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 	private void tryCorrectAndAutopick(TrainingMicrograph current, TrainingMicrograph next)
 	{
+		if(current.equals(next))//app just started
+			return;
 		boolean iscorrect = current.getManualParticles().size() != 0 || current.getAutomaticParticlesDeleted() != 0;
 		boolean isautopick = ppicker.getMode() == Mode.Supervised && next.getState() == MicrographState.Available;
 		if (ppicker.getMode() == Mode.Supervised && current.getState() == MicrographState.Supervised && iscorrect)

@@ -114,12 +114,16 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 				value = String.valueOf(pixels[0]);
 			else
 				value = IJ.d2s(cValue) + " (" + pixels[0] + ")";
+			break;
 		case ImagePlus.GRAY32:
 			value = String.valueOf(Float.intBitsToFloat(pixels[0]));
+			break;
 		case ImagePlus.COLOR_256:
 			value = pixels[0] + "," + pixels[1] + "," + pixels[2];
+			break;
 		case ImagePlus.COLOR_RGB:
 			value = pixels[0] + "," + pixels[1] + "," + pixels[2];
+			break;
 		
 		}
 		String text = String.format("x=%s, y=%s, value=%s", x, y, value);

@@ -182,20 +182,6 @@ def wizardBrowseCTF2(gui, var):
     else:
         return results
             
-#Select family from extraction run
-def wizardChooseFamily(gui, var):
-    extractionDir = getWorkingDirFromRunName(gui.getVarValue('PreviousRun'))
-    if not extractionDir:
-        showWarning("Warning", "No previous Run has been found", parent=gui.master)
-        return
-    familyList = []
-    for file in glob(join(extractionDir, "*_sorted.sel")):
-        familyList.append(split(file)[1].replace("_sorted.sel",""))
-    if len(familyList)==1:
-        var.setTkValue(familyList[0])
-    else:
-        gui.selectFromList(var, familyList)        
-
 def wizardHelperFilter(gui, browser, title, **args):
     extra = {'previewLabel': 'Image', 'computingMessage': 'Applying filter...'}
     extra.update(args)
@@ -310,82 +296,42 @@ def wizardTiltPairs(gui, var):
         md.write(resultFilename)
 
 #Select family from extraction run
-def wizardChooseFamilyToExtract(gui, var):
-    from xmipp import MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE, MDL_CTF_MODEL, MDL_SAMPLINGRATE, MDL_SAMPLINGRATE_ORIGINAL
+def wizardChooseSizeToExtract(gui, var):
+    from xmipp import MDL_PICKING_PARTICLE_SIZE, MDL_CTF_MODEL, MDL_SAMPLINGRATE, MDL_SAMPLINGRATE_ORIGINAL
     from protlib_gui_ext import ListboxDialog
     pickingRun = gui.getVarValue('PickingRun')
     pickingProt = gui.project.getProtocolFromRunName(pickingRun)
-    fnFamilies = pickingProt.getFilename("families")  
-    if not exists(fnFamilies):
+    fnConfig = pickingProt.getFilename("config")  
+    if not exists(fnConfig):
         showWarning("Warning", "No elements to select", parent=gui.master)
         return
-    md = MetaData(fnFamilies)
-    families = [md.getValue(MDL_PICKING_FAMILY, objId) for objId in md]
-    if len(families) == 1:
-        d = 0
-    else:  
-        d = ListboxDialog(gui.frame, families, selectmode=tk.SINGLE)
-        if len(d.result) > 0:
-            d = d.result[0]
-        else:
-            d = None
-    if d is not None:
-        selectedFamily = families[d]
-        var.setValue(selectedFamily)
-        for objId in md:
-            if md.getValue(MDL_PICKING_FAMILY, objId) == selectedFamily:
-                particleSize = md.getValue(MDL_PICKING_PARTICLE_SIZE, objId)
-                type = gui.getVarValue("DownsampleType")
-                mdAcquisition = MetaData(pickingProt.getFilename('acquisition'))
-                objId = mdAcquisition.firstObject()
-                tsOriginal = tsPicking = mdAcquisition.getValue(MDL_SAMPLINGRATE, objId)
-                
-                if mdAcquisition.containsLabel(MDL_SAMPLINGRATE_ORIGINAL):
-                    tsOriginal = mdAcquisition.getValue(MDL_SAMPLINGRATE_ORIGINAL, objId)
-                
-                if type == "same as picking":
-                    factor = 1
-                else:
-                    factor = tsPicking / tsOriginal;
-                    if type == "other":
-                        try:
-                            factor /= float(gui.getVarValue("DownsampleFactor"))
-                        except Exception, e:
-                            showWarning("Warning", "Please select valid downsample factor", parent=gui.master)
-                            return
-                particleSize *= factor 
-                gui.setVarValue("ParticleSize", str(int(particleSize)))
-                gui.setVarValue("Family", selectedFamily)
-        if getattr(pickingProt,'TiltPairs', False):
-            gui.setVarValue("DoFlip", str(False))
-        else:
-            md = MetaData(pickingProt.getFilename("micrographs"))
-            gui.setVarValue("DoFlip", str(md.containsLabel(MDL_CTF_MODEL)))
-
-#Select family from extraction run
-def wizardChooseFamilyToExtractSupervised(gui, var):
-    from xmipp import MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE, MDL_CTF_MODEL, MDL_SAMPLINGRATE, MDL_SAMPLINGRATE_ORIGINAL
-    from protlib_gui_ext import ListboxDialog
-    pickingRun = gui.getVarValue('PickingRun')
-    pickingProt = gui.project.getProtocolFromRunName(pickingRun)
-    fnFamilies = pickingProt.getFilename("families")    
-    if not exists(fnFamilies):
-        showWarning("Warning", "No elements to select", parent=gui.master)
-        return
-    md = MetaData(fnFamilies)
-    families = [md.getValue(MDL_PICKING_FAMILY, objId) for objId in md]
-    if len(families) == 1:
-        d = 0
-    else:  
-        d = ListboxDialog(gui.frame, families, selectmode=tk.SINGLE)
-        if len(d.result) > 0:
-            d = d.result[0]
-        else:
-            d = None
-    if d is not None:
-        selectedFamily = families[d]
-        var.setValue(selectedFamily)
-        gui.setVarValue("Family", selectedFamily)
+    md = MetaData(fnConfig)
+    particleSize = md.getValue(MDL_PICKING_PARTICLE_SIZE, md.firstObject())
+    type = gui.getVarValue("DownsampleType")
+    mdAcquisition = MetaData(pickingProt.getFilename('acquisition'))
+    objId = mdAcquisition.firstObject()
+    tsOriginal = tsPicking = mdAcquisition.getValue(MDL_SAMPLINGRATE, objId)
+    
+    if mdAcquisition.containsLabel(MDL_SAMPLINGRATE_ORIGINAL):
+        tsOriginal = mdAcquisition.getValue(MDL_SAMPLINGRATE_ORIGINAL, objId)
+    
+    if type == "same as picking":
+        factor = 1
+    else:
+        factor = tsPicking / tsOriginal;
+        if type == "other":
+            try:
+                factor /= float(gui.getVarValue("DownsampleFactor"))
+            except Exception, e:
+                showWarning("Warning", "Please select valid downsample factor", parent=gui.master)
+                return
+    particleSize *= factor 
+    gui.setVarValue("ParticleSize", str(int(particleSize)))
+    if getattr(pickingProt,'TiltPairs', False):
+        gui.setVarValue("DoFlip", str(False))
+    else:
+        md = MetaData(pickingProt.getFilename("micrographs"))
+        gui.setVarValue("DoFlip", str(md.containsLabel(MDL_CTF_MODEL)))
 
 #This wizard is specific for cl2d protocol
 def wizardCL2DNumberOfClasses(gui, var):
