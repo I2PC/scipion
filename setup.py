@@ -168,19 +168,18 @@ def addTabs(nb):
         addTabOption(tab,'CXXFLAGS', 'The C++ compiler flags', '')
     
     tab = nb.addTab("  MPI  ")
-    addTabOption(tab,'mpi', 'Build the MPI programs?', 'yes')
-    addTabOption(tab,'MPI_CC', 'MPI C compiler', 'mpicc', cond='mpi')
-    addTabOption(tab,'MPI_CXX', 'MPI C++ compiler', 'mpiCC', cond='mpi')
-    addTabOption(tab,'MPI_LINKERFORPROGRAMS', 'MPI Linker for programs', 'mpiCC', cond='mpi')
-    addTabOption(tab,'MPI_INCLUDE', 'MPI headers dir ', '/usr/include', cond='mpi', browse=True, wiz=wizardMpi)
-    addTabOption(tab,'MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib', cond='mpi', browse=True)
-    addTabOption(tab,'MPI_LIB', 'MPI library', 'mpi', cond='mpi')
+#    addTabOption(tab,'mpi', 'Build the MPI programs?', 'yes')
+    addTabOption(tab,'MPI_CC', 'MPI C compiler', 'mpicc')
+    addTabOption(tab,'MPI_CXX', 'MPI C++ compiler', 'mpiCC')
+    addTabOption(tab,'MPI_LINKERFORPROGRAMS', 'MPI Linker for programs', 'mpiCC')
+    addTabOption(tab,'MPI_INCLUDE', 'MPI headers dir ', '/usr/include', browse=True, wiz=wizardMpi)
+    addTabOption(tab,'MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib', browse=True)
+    addTabOption(tab,'MPI_LIB', 'MPI library', 'mpi')
     tab_mpi = tab
     
     tab = nb.addTab("Java")
-    addTabOption(tab,'java', 'Build the java programs?', 'yes')
-    addTabOption(tab,'JAVAC', 'Java compiler', 'javac', cond='java')
-    addTabOption(tab,'JAVA_HOME', 'Java installation directory', '', cond='java', wiz=wizardJava, browse=True)
+    addTabOption(tab,'JAVAC', 'Java compiler', 'javac')
+    addTabOption(tab,'JAVA_HOME', 'Java installation directory', '', wiz=wizardJava, browse=True)
     tab_gui = tab
     
     tab = nb.addTab("Advanced")

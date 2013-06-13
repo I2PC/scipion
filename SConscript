@@ -645,10 +645,9 @@ AddLibrary('XmippClassif', 'libraries/classification', ClassificationSources,
     ['#libraries', '#'], ['lib'], ['XmippExternal', 'XmippData'])
 
 # XmippParallel
-if int(env['mpi']):
-    ParallelSources = Glob('libraries/parallel', '*.cpp', []);
-    AddMPILibrary("XmippParallel", 'libraries/parallel', ParallelSources, ["#", "#libraries", "#external"],
-              ['lib'], ['XmippExternal', 'XmippData', 'XmippRecons', 'XmippClassif'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs)
+ParallelSources = Glob('libraries/parallel', '*.cpp', []);
+AddMPILibrary("XmippParallel", 'libraries/parallel', ParallelSources, ["#", "#libraries", "#external"],
+    ['lib'], ['XmippExternal', 'XmippData', 'XmippRecons', 'XmippClassif'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs)
 
 # Interface
 InterfaceSources = Glob('libraries/interface', '*.cpp', [])
@@ -920,49 +919,48 @@ AddBatch('visualize_preprocessing_micrographj', 'applications/scripts/visualize_
 SymLink('bin/xmipp_imagej', 'external/runImageJ')
 
 # MPI
-if int(env['mpi']):
-    AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_angular_continuous_assign', ['XmippRecons'])
-    if not int(env['release']):
-        AddXmippMPIProgram('mpi_angular_gcar_commonlines', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_classify_CL2D', ['XmippRecons'])
-    AddProgramLink('classify_CL2D', 'mpi_classify_CL2D')
-    if not int(env['release']):
-        AddXmippMPIProgram('mpi_classify_CL3D', ['XmippRecons'])
-        AddProgramLink('classify_CL3D', 'mpi_classify_CL3D')
-    AddXmippMPIProgram('mpi_classify_CL2D_core_analysis', ['XmippRecons'])
-    if not int(env['release']):
-        AddXmippMPIProgram('mpi_classify_FTTRI', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_ctf_correct_idr', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_ctf_sort_psds', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_image_operate')
-    AddXmippMPIProgram('mpi_image_rotational_pca', ['XmippRecons'])
-    # AddXmippMPIProgram('mpi_image_common_lines', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_performance_test', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_image_resize', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_image_sort', ['XmippRecons'])
-    AddProgramLink('image_sort', 'mpi_image_sort')
-    AddXmippMPIProgram('mpi_ml_align2d', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_ml_tomo', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_mlf_align2d', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_ml_refine3d', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_mlf_refine3d', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_nma_alignment', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_xray_project', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_reconstruct_art', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_reconstruct_wbp', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_reconstruct_fourier', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_run', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_tomo_extract_subvolume', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_transform_filter', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_transform_symmetrize', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_transform_geometry', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_transform_mask', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_transform_normalize', ['XmippRecons'])
-    if not int(env['release']):
-        AddXmippMPIProgram('mpi_write_test', ['XmippRecons'])
+AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])
+AddXmippMPIProgram('mpi_angular_continuous_assign', ['XmippRecons'])
+if not int(env['release']):
+    AddXmippMPIProgram('mpi_angular_gcar_commonlines', ['XmippRecons'])
+AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
+AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
+AddXmippMPIProgram('mpi_classify_CL2D', ['XmippRecons'])
+AddProgramLink('classify_CL2D', 'mpi_classify_CL2D')
+if not int(env['release']):
+    AddXmippMPIProgram('mpi_classify_CL3D', ['XmippRecons'])
+    AddProgramLink('classify_CL3D', 'mpi_classify_CL3D')
+AddXmippMPIProgram('mpi_classify_CL2D_core_analysis', ['XmippRecons'])
+if not int(env['release']):
+    AddXmippMPIProgram('mpi_classify_FTTRI', ['XmippRecons'])
+AddXmippMPIProgram('mpi_ctf_correct_idr', ['XmippRecons'])
+AddXmippMPIProgram('mpi_ctf_sort_psds', ['XmippRecons'])
+AddXmippMPIProgram('mpi_image_operate')
+AddXmippMPIProgram('mpi_image_rotational_pca', ['XmippRecons'])
+# AddXmippMPIProgram('mpi_image_common_lines', ['XmippRecons'])
+AddXmippMPIProgram('mpi_performance_test', ['XmippRecons'])
+AddXmippMPIProgram('mpi_image_resize', ['XmippRecons'])
+AddXmippMPIProgram('mpi_image_sort', ['XmippRecons'])
+AddProgramLink('image_sort', 'mpi_image_sort')
+AddXmippMPIProgram('mpi_ml_align2d', ['XmippRecons'])
+AddXmippMPIProgram('mpi_ml_tomo', ['XmippRecons'])
+AddXmippMPIProgram('mpi_mlf_align2d', ['XmippRecons'])
+AddXmippMPIProgram('mpi_ml_refine3d', ['XmippRecons'])
+AddXmippMPIProgram('mpi_mlf_refine3d', ['XmippRecons'])
+AddXmippMPIProgram('mpi_nma_alignment', ['XmippRecons'])
+AddXmippMPIProgram('mpi_xray_project', ['XmippRecons'])
+AddXmippMPIProgram('mpi_reconstruct_art', ['XmippRecons'])
+AddXmippMPIProgram('mpi_reconstruct_wbp', ['XmippRecons'])
+AddXmippMPIProgram('mpi_reconstruct_fourier', ['XmippRecons'])
+AddXmippMPIProgram('mpi_run', ['XmippRecons'])
+AddXmippMPIProgram('mpi_tomo_extract_subvolume', ['XmippRecons'])
+AddXmippMPIProgram('mpi_transform_filter', ['XmippRecons'])
+AddXmippMPIProgram('mpi_transform_symmetrize', ['XmippRecons'])
+AddXmippMPIProgram('mpi_transform_geometry', ['XmippRecons'])
+AddXmippMPIProgram('mpi_transform_mask', ['XmippRecons'])
+AddXmippMPIProgram('mpi_transform_normalize', ['XmippRecons'])
+if not int(env['release']):
+    AddXmippMPIProgram('mpi_write_test', ['XmippRecons'])
 #    AddXmippMPIProgram('template_threads', ['XmippRecons'])
 #    AddXmippMPIProgram('template_mpi', ['XmippRecons'])
 

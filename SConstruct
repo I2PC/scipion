@@ -104,7 +104,7 @@ opts.Add(BoolVariable('arpack', 'Build the arpack programs?', 'no'))
 
 opts.Add(BoolVariable('gtest', 'Build tests?', 'yes'))
 
-opts.Add(BoolVariable('mpi', 'Build the MPI programs?', 'yes'))
+#opts.Add(BoolVariable('mpi', 'Build the MPI programs?', 'yes'))
 
 opts.Add('MPI_CC', 'MPI C compiler', 'mpicc')
 opts.Add('MPI_CXX', 'MPI C++ compiler', 'mpiCC')
@@ -252,22 +252,22 @@ if (ARGUMENTS['mode'] == 'configure'):
     conf = Configure(env, {'CheckMPI' : CheckMPI}, config_dir, config_log)
 
     # MPI
-    if int(env['mpi']):
-        if not conf.CheckMPI(env['MPI_INCLUDE'], env['MPI_LIBDIR'],
+    if not conf.CheckMPI(env['MPI_INCLUDE'], env['MPI_LIBDIR'],
                              env['MPI_LIB'], env['MPI_CC'], env['MPI_CXX'], env['MPI_LINKERFORPROGRAMS']):
-            print '* Did not find MPI library. Disabling ...'
-            env['mpi'] = 0
+        import os
+        print '* ERROR: Did not find MPI library. MPI support is mandatory.'
+        os._exit(os.EX_OSERR)
 
     # Java
-    if int(env['java']) == 1: 
-        import sys
-        sys.path.append("external/scons/ToolsFromWiki")
-        import ConfigureJNI
-        if not ConfigureJNI.ConfigureJNI(env):
-            env['java'] = 0
-            print '* Did not find JNI header. Disabling java support...'
-        else:
-            print '* JNI header found: ', env['JNI_CPPPATH']
+    import sys
+    sys.path.append("external/scons/ToolsFromWiki")
+    import ConfigureJNI
+    if not ConfigureJNI.ConfigureJNI(env):
+        import os
+        print '* ERROR: Did not find JNI header. Java support is mandatory.'
+        os._exit(os.EX_OSERR)
+    else:
+        print '* JNI header found: ', env['JNI_CPPPATH']
 
     # MATLAB
     if int(env['matlab']):
