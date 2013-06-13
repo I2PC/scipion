@@ -48,12 +48,13 @@ def projects(request):
     
     # Resources #
     css_path = os.path.join(settings.STATIC_URL, 'css/projects_style.css')
+    
     #############
     projectForm_path = os.path.join(settings.STATIC_URL, 'js/projectForm.js')
-    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
+#    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     
     # Messi Plugin #
-    messi_path = os.path.join(settings.STATIC_URL, 'js/messi.js')
+#    messi_path = os.path.join(settings.STATIC_URL, 'js/messi.js')
     messi_css_path = os.path.join(settings.STATIC_URL, 'css/messi.css')
     #############
     
@@ -61,10 +62,11 @@ def projects(request):
     for p in projects:
         p.pTime = prettyDate(p.mTime)
 
-    context = {'jquery':jquery_path,
+    context = {
+#              'jquery':jquery_path,
                'projects': projects,
                'css': css_path,
-               'messi': messi_path,
+#               'messi': messi_path,
                'messi_css': messi_css_path,
                'projectForm':projectForm_path}
     
@@ -196,14 +198,14 @@ def project_content(request):
     browse_tool_path = getResource('browse_toolbar')
     
     css_path = os.path.join(settings.STATIC_URL, 'css/project_content_style.css')
-    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
+#    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     jquery_cookie = os.path.join(settings.STATIC_URL, 'js/jquery.cookie.js')
     jquery_treeview = os.path.join(settings.STATIC_URL, 'js/jquery.treeview.js')
     launchTreeview = os.path.join(settings.STATIC_URL, 'js/launchTreeview.js')
     utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
     #############
      # Messi Plugin
-    messi_path = os.path.join(settings.STATIC_URL, 'js/messi.js')
+#    messi_path = os.path.join(settings.STATIC_URL, 'js/messi.js')
     messi_css_path = os.path.join(settings.STATIC_URL, 'css/messi.css')
     #############
     
@@ -221,7 +223,8 @@ def project_content(request):
                'copyTool': copy_tool_path,
                'deleteTool': delete_tool_path,
                'browseTool': browse_tool_path,
-               'jquery': jquery_path,
+#               'jquery': jquery_path,
+#               'jquery_ui':jquery_ui_path,
                'utils': utils_path,
                'jquery_cookie': jquery_cookie,
                'jquery_treeview': jquery_treeview,
@@ -229,7 +232,7 @@ def project_content(request):
                'css':css_path,
                'sections': root.childs,
                'provider':provider,
-               'messi': messi_path,
+#               'messi': messi_path,
                'messi_css': messi_css_path}
     
     return render_to_response('project_content.html', context)
@@ -488,13 +491,13 @@ class MdValue():
         
         self.allowRender = allowRender
 
-        print self.label,self.allowRender
+        print self.label, self.allowRender
 
-        #check if enabled label
+        # check if enabled label
         self.displayCheckbox = (label == xmipp.MDL_ENABLED)
         print self.label + self.strValue
 
-        #Prepare path for image
+        # Prepare path for image
         self.imgValue = self.strValue
         if allowRender and '@' in self.strValue:
             self.imgValue = self.imgValue.replace('@', AT)
@@ -507,7 +510,7 @@ class MdData():
         
         labels = md.getActiveLabels()
         self.labels = []
-        self.labelsToRender=[]
+        self.labelsToRender = []
         for l in labels:
             labelName = xmipp.label2Str(l)
             self.labels.append(labelName)
@@ -525,7 +528,7 @@ class MdData():
 
 class MenuLayoutConfig():        
     def __init__(self, mode, path, block, allowRender, imageDim):
-        link = "location.href='/showj/?path="+path
+        link = "location.href='/showj/?path=" + path
         if len(block):
             link = link + "&block=" + block
         if allowRender:
