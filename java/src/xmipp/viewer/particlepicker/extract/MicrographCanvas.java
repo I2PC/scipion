@@ -26,7 +26,6 @@ public class MicrographCanvas extends XmippImageCanvas
 		this.micdata = loader;
 		this.particles = loader.getParticles();
 		this.size = size;
-		// TODO Auto-generated constructor stub
 	}
 	
 	protected ImageWindow iw;

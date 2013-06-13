@@ -901,7 +901,7 @@ public class SingleParticlePicker extends ParticlePicker
 		if (mode != Mode.Manual)
 			throw new IllegalArgumentException(XmippMessage.getIllegalStateForOperationMsg("picker", this.mode.toString()));
 		frame.getCanvas().setEnabled(false);
-		XmippWindowUtil.blockGUI(frame, "Training...");
+		XmippWindowUtil.blockGUI(frame, "Training and Autopicking...");
 		MetaData trainmd = new MetaData();
 		MetaData outputmd = new MetaData();
 
@@ -946,7 +946,6 @@ public class SingleParticlePicker extends ParticlePicker
 		{
 			try
 			{
-				System.out.println("Train started");
 				classifier.train(trainmd);//should remove training files
 				micrograph.setAutopickpercent(autopickpercent);
 				classifier.autopick(micrograph.getFile(), outputmd, micrograph.getAutopickpercent());

@@ -601,7 +601,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			ppicker.saveData(getMicrograph());// Saving changes when switching
 		index = micrographstb.getSelectedRow();
 		TrainingMicrograph next = ppicker.getMicrographs().get(index);
-
+		initializeCanvas();
 		tryCorrectAndAutopick(getMicrograph(), next);
 
 		ppicker.getMicrograph().releaseImage();
@@ -610,7 +610,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		if (ppicker.getMode() == Mode.Supervised)
 			resetbt.setEnabled(getMicrograph().getState() != MicrographState.Manual);
 		setChanged(false);
-		initializeCanvas();
+		
 		iconbt.setIcon(ppicker.getMicrograph().getCTFIcon());
 
 		pack();
