@@ -43,10 +43,10 @@ public class TemplatesJDialog extends JDialog {
 		try {
 			ImageGeneric templates = frame.getParticlePicker().getTemplates();
 			int size = frame.getParticlePicker().getSize();
-
+			templatespn.removeAll();
 			if (!frame.getParticlePicker().hasManualParticles()) {
 
-				templatespn.removeAll();
+				
 				templatespn.setPreferredSize(new Dimension(
 						(int) (size * templates.getNDim()), size));
 				pack();
@@ -55,7 +55,6 @@ public class TemplatesJDialog extends JDialog {
 
 
 			
-			templatespn.removeAll();
 			ImagePlus template;
 
 			for (int i = 0; i < frame.getParticlePicker().getTemplatesNumber(); i ++) {

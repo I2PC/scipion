@@ -28,8 +28,8 @@ import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 
 public abstract class ParticlePickerCanvas extends XmippImageCanvas
 {
-	public final static BasicStroke dashedst = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
-	public final static BasicStroke continuousst = new BasicStroke();
+	public final static BasicStroke dashedst = new BasicStroke(2.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
+	public final static BasicStroke continuousst = new BasicStroke(2.0f);
 	public final static BasicStroke activedst = new BasicStroke(3.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
 	public final static BasicStroke activecst = new BasicStroke(3.0f);
 	

@@ -7,6 +7,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.text.NumberFormat;
 import java.util.List;
@@ -24,9 +25,12 @@ import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
+import xmipp.ij.commons.Tool;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
@@ -376,7 +380,8 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		sizesl.setEnabled(!selected);//not really, if there is some micrograph in sup mode size cannot be changed
 		sizetf.setEnabled(!selected);
 		importmi.setEnabled(!selected);
-
+		if(optionsdialog != null && optionsdialog.isVisible())
+			optionsdialog.enableOptions();
 		pack();
 
 	}
@@ -643,7 +648,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 	protected void resetMicrograph()
 	{
 		getMicrograph().reset();
-		ppicker.initTemplates();
+		ppicker.initUpdateTemplates();
 		canvas.refreshActive(null);
 		updateMicrographsModel();
 		setState(MicrographState.Available);
@@ -657,6 +662,13 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		setChanged(false);
 		updateMicrographsModel();
 		pack();
+	}
+	
+	public boolean isPickingAvailable(MouseEvent e)
+	{
+		if(!super.isPickingAvailable())
+			return false;
+		return getMicrograph().getState() != MicrographState.Corrected;
 	}
 
 }

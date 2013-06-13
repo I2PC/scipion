@@ -367,7 +367,7 @@ public class SingleParticlePicker extends ParticlePicker
 				templatesNumber = md.getValueInt(MDLabel.MDL_PICKING_TEMPLATES, id);
 				if (templatesNumber == null || templatesNumber == 0)
 					templatesNumber = 1;//for compatibility with previous projects
-				if(mode != Mode.Review)
+				if(mode == Mode.Manual)
 					mode = Mode.valueOf(md.getValueString(MDLabel.MDL_PICKING_STATE, id));
 
 			}

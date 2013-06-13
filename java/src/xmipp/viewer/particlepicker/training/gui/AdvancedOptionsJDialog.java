@@ -73,15 +73,7 @@ public class AdvancedOptionsJDialog extends JDialog {
 			@Override
 			public void actionPerformed(ActionEvent arg0)
 			{
-				if (templatestf.getValue() == null)
-				{
-					JOptionPane.showMessageDialog(AdvancedOptionsJDialog.this, XmippMessage.getEmptyFieldMsg("Templates"));
-					templatestf.setValue(frame.getParticlePicker().getTemplatesNumber());
-					return;
-				}
-
-				int templates = ((Number) templatestf.getValue()).intValue();
-				frame.getParticlePicker().setTemplatesNumber(templates);
+				setTemplates();
 				
 			}
 		});
@@ -155,6 +147,20 @@ public class AdvancedOptionsJDialog extends JDialog {
 		frame.getMicrograph().setAutopickpercent(autopickpercent);
 		frame.getParticlePicker().setAutopickpercent(autopickpercent);
 		frame.getParticlePicker().saveConfig();
+	}
+	
+	protected void setTemplates()
+	{
+		if (templatestf.getValue() == null)
+		{
+			JOptionPane.showMessageDialog(AdvancedOptionsJDialog.this, XmippMessage.getEmptyFieldMsg("Templates"));
+			templatestf.setValue(frame.getParticlePicker().getTemplatesNumber());
+			return;
+		}
+
+		int templates = ((Number) templatestf.getValue()).intValue();
+		if(templates != frame.getParticlePicker().getTemplatesNumber())
+			frame.getParticlePicker().setTemplatesNumber(templates);
 	}
 
 	protected void loadTemplates()
