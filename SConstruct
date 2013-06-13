@@ -54,17 +54,20 @@ if (ARGUMENTS['mode'] == 'dependencies'):
         print 'Some dependencies unsatisfied, please check the following list and install them all:'
         for k, v in checking.items():
             print u'{0}: {1}'.format(k, v)
-        ans = "y"
+        ans = ""
         if 'unattended' in ARGUMENTS:
             if ARGUMENTS['unattended'] == 'yes':
                 print "Unattended compilation selected, proceeding with the compilation."
-            else:
-                ans = raw_input("Do you still want to proceed with the compilation? (y/n):")
         else:
-            ans = raw_input("Do you still want to proceed with the compilation? (y/n):")
-        if ans == "n" or ans == "N":
-            print "Aborting!"
-            Exit(1)
+            while ans != ("y" or "Y" or "n" or "N"):
+                ans = raw_input("Do you still want to proceed with the compilation? (y/n):")
+                if ans == "n" or ans == "N":
+                    import os
+                    print "You've choosen to abort the installation. Aborting..."
+                    os._exit(os.EX_OSERR)
+                if ans != "y" and ans != "Y":
+                    import os
+                    print "Unknown option, please answer y/Y/n/N"
     env = conf.Finish()
 
 
@@ -246,61 +249,6 @@ if (ARGUMENTS['mode'] == 'configure'):
          AppendIfNotExists(CCFLAGS='-f permissive -Ilibraries/data -I/c/MinGW/include')
          AppendIfNotExists(CXXFLAGS='-f permissive -Ilibraries/data -I/c/MinGW/include')
 #         AppendIfNotExists(LINKFLAGS='-pthread')
-
-    # QT
-#    if int(env['qt']):
-#        if int(env['QT4']):
-#            print '* QT4 selected!'
-#            # FIXME /usr/lib/qt4
-#            env['QTDIR'] = ''
-#            env['QT_LIB'] = ''
-#        else:
-#            print '* QT3 selected!'
-
-        # QT3 makes use of QTDIR
-#        if ARGUMENTS.get('QTDIR'):
-#            print '* Trying user-supplied QTDIR: ' + ARGUMENTS.get('QTDIR')
-#            env['QTDIR'] = ARGUMENTS.get('QTDIR')
-#        else:
-#            print '* Trying environment\'s $QTDIR'
-#            if os.environ.has_key('QTDIR'):
-#                env['QTDIR'] = os.environ['QTDIR']
-#            else:
-#                print '* QTDIR not in environment nor supplied' \
-#                     ' (default value won\'t probably work)'
-#                print '  Please set it correctly, i.e.: export ' \
-#                      'QTDIR=/path/to/qt'
-#                print '  or specify one directly in command line: '\
-#                      'QTDIR=/path/to/qt'
-#                print '* Trying default value: ' + env['QTDIR']
-
-        # Create a new environment with Qt tool enabled to see if it works
-#        envQT = env.Clone()
-
-#        if int(env['QT4']):
-            # DBG
-#            try:
-#                envQT.Tool('qt4')
-#                envQT.EnableQt4Modules(['QtCore', 'QtGui', 'Qt3Support'], debug=False)
-#            except:
-#                print "*QT4 not found! Disabling..."
-#                env['qt'] = 0
-#        else:
-#            envQT.Tool('qt')
-
-        # FIXME Copy() does not work well (adds twice the library, 'qt' ...)
-        # envQT.Replace(QT_LIB = env['QT_LIB'])
-#        envQT.Replace(LINK=env['LINKERFORPROGRAMS'])
-
-#        confQT = Configure(envQT, {}, config_dir, config_log)
-
-#        if not confQT.CheckLibWithHeader(env['QT_LIB'], 'qapplication.h',
-#                                         'c++', 'QApplication qapp(0,0);',
-#                                         0):
-#            print '* Did not find QT. Disabling ...'
-#            env['qt'] = 0
-
-#        envQT = confQT.Finish()
 
     # Non-GUI configuration environment
     conf = Configure(env, {'CheckMPI' : CheckMPI}, config_dir, config_log)

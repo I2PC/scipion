@@ -905,6 +905,10 @@ AddBatch('browser', 'applications/scripts/browser', '.py')
 #AddBatch('stitchingj', 'applications/scripts/stitchingj', '.py')
 AddBatch('mpi_steps_runner', 'protocols', '.py')
 
+# Shell script files
+#
+SymLink('bin/xmipp_imagej', 'external/runImageJ')
+
 # MPI
 if int(env['mpi']):
     AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])

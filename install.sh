@@ -153,9 +153,9 @@ echo "alias xa='xmipp_apropos'               "    >> $INC_FILE
 echo "alias xb='xmipp_browser'               "    >> $INC_FILE
 echo "alias xp='xmipp_protocols'             "    >> $INC_FILE
 echo "alias xmipp='xmipp_protocols'          "    >> $INC_FILE
-echo "alias xs='xmipp_show'                  "    >> $INC_FILE
+echo "alias xs='xmipp_showj'                 "    >> $INC_FILE
+echo "alias xmipp_show='xmipp_showj'         "    >> $INC_FILE
 echo "alias xsj='xmipp_showj'                "    >> $INC_FILE
-echo "alias xmipp_imagej='$XMIPP_HOME/external/runImageJ'" >> $INC_FILE
 echo "alias xij='xmipp_imagej'               "    >> $INC_FILE
 echo "## Image ##                            "    >> $INC_FILE
 echo "alias xic='xmipp_image_convert'        "    >> $INC_FILE
@@ -233,7 +233,8 @@ echo "alias xa 'xmipp_apropos'               "    >> $INC_FILE
 echo "alias xb 'xmipp_browser'               "    >> $INC_FILE
 echo "alias xp 'xmipp_protocols'             "    >> $INC_FILE
 echo "alias xmipp 'xmipp_protocols'          "    >> $INC_FILE
-echo "alias xs 'xmipp_show'                  "    >> $INC_FILE
+echo "alias xs 'xmipp_showj'                 "    >> $INC_FILE
+echo "alias xmipp_show 'xmipp_showj'         "    >> $INC_FILE
 echo "alias xsj 'xmipp_showj'                "    >> $INC_FILE
 echo "## Image ##                            "    >> $INC_FILE
 echo "alias xic 'xmipp_image_convert'        "    >> $INC_FILE
