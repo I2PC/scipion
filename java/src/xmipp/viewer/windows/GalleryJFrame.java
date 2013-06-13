@@ -1985,6 +1985,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					continue;
 				else
 					md.writeBlock(blockit + "@" + to);
+				md.destroy();
 			}
 		}
 		saveMd(blockto);
