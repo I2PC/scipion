@@ -1371,7 +1371,7 @@ public:
 
         if (VEC_XSIZE(v)!=mdimx)
             v.resizeNoCopy(mdimx);
-        memcpy(&VEC_ELEM(v,0),&MAT_ELEM(*this,i,0),mdimx*sizeof(double));
+        memcpy(&VEC_ELEM(v,0),&MAT_ELEM(*this,i,0),mdimx*sizeof(T));
 
         v.setRow();
     }
