@@ -85,7 +85,7 @@ def loadHostConfig(host='localhost'):
     In there will be information to know how to launch MPI processes
     and how to submit jobs to the queue system if exists.
     """
-    from pyworkflow.apps.config import ExecutionHostMapper, getConfigPath
+    from pyworkflow.hosts import ExecutionHostMapper, getConfigPath
     fn = getConfigPath('execution_hosts.xml')
     mapper = ExecutionHostMapper(fn)
     return mapper.selectByLabel(host)

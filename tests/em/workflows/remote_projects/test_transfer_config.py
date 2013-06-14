@@ -7,7 +7,7 @@ import sys
 import unittest
 from pyworkflow.manager import Manager
 from utils.file_transfer import *
-from pyworkflow.apps.config import ExecutionHostMapper, ExecutionHostConfig
+from pyworkflow.hosts import ExecutionHostMapper, ExecutionHostConfig
 from os.path import split
 
 projName = "TestProject"
