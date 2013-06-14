@@ -898,8 +898,7 @@ public class SingleParticlePicker extends ParticlePicker
 
 	public void train(SingleParticlePickerJFrame frame)
 	{
-		if (mode != Mode.Manual)
-			throw new IllegalArgumentException(XmippMessage.getIllegalStateForOperationMsg("picker", this.mode.toString()));
+		
 		frame.getCanvas().setEnabled(false);
 		XmippWindowUtil.blockGUI(frame, "Training and Autopicking...");
 		MetaData trainmd = new MetaData();

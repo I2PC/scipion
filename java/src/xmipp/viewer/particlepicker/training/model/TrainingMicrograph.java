@@ -153,11 +153,7 @@ public class TrainingMicrograph extends Micrograph
 				state = MicrographState.Review;
 		}
 		else
-		{
 			manualparticles.remove(p);
-			if (manualparticles.size() == 0 && autoparticles.size() - getAutomaticParticlesDeleted() == 0)
-				state = MicrographState.Available;
-		}
 		
 
 	}

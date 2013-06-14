@@ -342,12 +342,10 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 					if (isautopick)
 					{
-
+						ppicker.setMode(Mode.Supervised);
 						ppicker.train(SingleParticlePickerJFrame.this);
 
 					}
-					if (isautopick)
-						ppicker.setMode(Mode.Supervised);
 					else
 						ppicker.setMode(Mode.Manual);
 					ppicker.saveConfig();
