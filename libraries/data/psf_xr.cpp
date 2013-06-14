@@ -266,6 +266,11 @@ void XRayPSF::clear()
     init();
 }
 
+void XRayPSF::setFocalShift(double zShift)
+{
+    DeltaZo -= zShift;
+}
+
 /* Produce Side Information ------------------------------------------------ */
 void XRayPSF::calculateParams(double _dxo, double _dzo, double threshold)
 {
@@ -473,7 +478,7 @@ void XRayPSF::generateOTF(MultidimArray<std::complex<double> > &OTF, double Zpos
                 PSFi.initConstant(1/YXSIZE(PSFi));
             else
             {   /* Actually T transform matrix is set to identity, as sampling is the same for both psfVol and phantom
-                                                                                                 * It is only missing to set Z shift to select the slice */
+                                                                                                                 * It is only missing to set Z shift to select the slice */
                 dMij(T, 2, 3) = zIndexPSF; // Distance from the focal plane
                 applyGeometry(LINEAR, PSFi, mPsfVol, T,
                               IS_INV, DONT_WRAP, dAkij(mPsfVol,0,0,0));
@@ -775,7 +780,7 @@ void XRayPSF::adjustParam()
                         /// For indices in standard fashion
                         double x = dxl * j;
                         if (x*x + y2 <= Rlens2)
-                        	A2D_ELEM(*mask,i,j) = 1;
+                            A2D_ELEM(*mask,i,j) = 1;
                     }
                 }
 
