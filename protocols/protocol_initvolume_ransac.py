@@ -154,33 +154,13 @@ def getBestVolumes(log,WorkingDir,NRansac,NumVolumes,UseAll):
     volumes = []
     inliers = []
     
-    Nimgs=MetaData(os.path.join(WorkingDir,"tmp/angles_ransac00000.xmd")).size()
-    allCC=zeros((Nimgs,NRansac))
     for n in range(NRansac):
         fnAngles = os.path.join(WorkingDir,"tmp/angles_ransac%05d"%n+".xmd")
         md=MetaData("inliers@"+fnAngles)
         numInliers=md.getValue(MDL_WEIGHT,md.firstObject())
         volumes.append(fnAngles)
         inliers.append(numInliers)
-
-        # Get the column of CCs 
-        allCC[:,n]=MetaData(fnAngles).getColumnValues(MDL_MAXCC)
     
-    savetxt(os.path.join(WorkingDir,'allCC.txt'),allCC)
-    
-    # Now each image score each volume
-    for i in range(Nimgs):
-        ccList=allCC[i,:]
-        idx=sorted(range(len(ccList)),key=lambda x:ccList[x])
-        allCC[i,:]=1.0-array(idx)/float(NRansac)
-    savetxt(os.path.join(WorkingDir,'allCCScore.txt'),allCC)
-    
-    # Final volume score
-    volumeRankScores=[]
-    for n in range(NRansac):
-        volumeRankScores.append(sum(allCC[:,n]))
-
-    # index = sorted(range(volumeRankScores.__len__()), key=lambda k: volumeRankScores[k])
     index = sorted(range(inliers.__len__()), key=lambda k: inliers[k])
     fnBestAngles = ''
     threshold=getCCThreshold(WorkingDir)
