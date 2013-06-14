@@ -96,7 +96,7 @@ class TestXmippCTFEstimation(TestXmippBase):
     def test_Micrographs_BPV1_Down3(self):
         self.doCTF(pattern = getInputPath('Micrographs_BPV1_Down3', '*.mrc'))
         
-    def atest_Micrographs_BPV3_Down3(self):
+    def test_Micrographs_BPV3_Down3(self):
         self.doCTF(pattern = getInputPath('Micrographs_BPV3_Down3', '*.mrc')) 
     
     
@@ -109,11 +109,11 @@ class TestXmippExtractParticles(TestXmippBase):
     @classmethod
     def setUpClass(cls):
         setupProject(cls)    
-        pattern = getInputPath('Micrographs_BPV1_Down3', '*.mrc')
-        protImport = cls.runImportMicrograph(pattern, samplingRate=3.711, voltage=300)
-        pattern = getInputPath('Micrographs_BPV1', '*.mrc')
+        pattern = getInputPath('Micrographs_BPV3_Down3', '*.mrc')
+        protImport = cls.runImportMicrograph(pattern, samplingRate=3.711, voltage=300)       
+        pattern = getInputPath('Micrographs_BPV3', '*.mrc')
         cls.protImport_ori = cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300)        
-        cls.protPP = cls.runFakedPicking(protImport.outputMicrographs, 'Picking_XmippBPV1_Down3')
+        cls.protPP = cls.runFakedPicking(protImport.outputMicrographs, 'Picking_XmippBPV3_Down3')
     
     def doExtract(self, boxSize, downsampleType):
         print "Run extract particles"
@@ -149,7 +149,22 @@ class TestXmippExtractParticles(TestXmippBase):
         self.proj.launchProtocol(protExtract, wait=True)
         
         self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
-
+        
+#    def testExtractCTF(self):
+#        print "Run extract particles with CTF"
+#        
+#        protExtract = XmippProtExtractParticles(boxSize=256, downsampleType=self.OTHER, downFactor=2)
+#        # Update the setofmicrographs associated to the coordinates to set the CTF model
+#        micsXmd = getInputPath('Micrographs_BPV3_Down3', 'micrographs.xmd')
+#        mics = XmippSetOfMicrographs(micsXmd)
+#        mics.samplingRate.set(3.711)
+#        mics.setCTF(True)
+#        self.protPP.outputCoordinates.setMicrographs(mics)
+#        protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
+#        protExtract.inputMicrographs.set(self.protImport_ori.outputMicrographs)
+#        self.proj.launchProtocol(protExtract, wait=True)
+#        
+#        self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles") 
 
      
 def setupClassification(cls):
@@ -192,6 +207,6 @@ class TestXmippCL2D(TestXmippBase):
         
 
 if __name__ == "__main__":
-    #suite = unittest.TestLoader().loadTestsFromTestCase(TestXmippExtractParticles)
-    #unittest.TextTestRunner(verbosity=2).run(suite)
-    unittest.main()
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestXmippExtractParticles)
+    unittest.TextTestRunner(verbosity=2).run(suite)
+    #unittest.main()
