@@ -29,9 +29,15 @@ The basic one will run steps, one by one, after completion.
 There is one based on threads to execute steps in parallel
 using different threads and the last one with MPI processes.
 """
-from protocol import STATUS_READY, STATUS_WAITING_OTHERS, STATUS_FINISHED
 from threading import Thread, Condition, Event, current_thread
 from pyworkflow.utils.process import runJob
+
+STATUS_FINISHED = "finished"  # successfully finished
+STATUS_READY = "ready" # The step is ready for execution, i.e. all requirements are done
+STATUS_WAITING_OTHERS = "waiting_others" # There are some prerequisites steps that are not done yet
+
+NO_READY_STEPS = -1 # no ready steps at this moment, should wait for it
+NO_MORE_STEPS = -2  # all steps were done and nothing else to do.
 
 
 class StepExecutor():
@@ -49,9 +55,6 @@ class StepExecutor():
             if not doContinue:
                 break
 
-
-NO_READY_STEPS = -1 # no ready steps at this moment, should wait for it
-NO_MORE_STEPS = -2  # all steps were done and nothing else to do.
 
 class StepThread(Thread):
     """ Thread to run Steps in parallel. 
@@ -205,3 +208,5 @@ class MPIStepExecutor(ThreadStepExecutor):
         th.setStep(None)
         self.comm.send('None', dest=th.thId+1, tag=TAG_RUN_JOB)
         th.join()
+        
+        

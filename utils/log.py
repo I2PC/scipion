@@ -15,7 +15,7 @@ LOG_PATH = 'logs'
 logPath = join (getHomePath(), SCIPION_PATH, LOG_PATH, 'scipionLog.log')
 
 """ Create the folders path if it does not exist """
-createFolderForFile(logPath)
+makeFilePath(logPath)
 
 """ Config the log """
 config = {  'version': 1,              
@@ -63,7 +63,7 @@ def getGeneralLogger(classPath):
 def getFileLogger(filePath):
     """ Method that creates and returns a log for the given file """
     # Create the folders path if it does not exist 
-    createFolderForFile(filePath)
+    makeFilePath(filePath)
     print "getFileLogger: ", filePath
     
     if filePath not in config['loggers']:

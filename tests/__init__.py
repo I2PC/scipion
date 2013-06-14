@@ -36,7 +36,7 @@ try:
    from unittest.runner import _WritelnDecorator # Python 2.7+
 except ImportError:
    from unittest import _WritelnDecorator # Python <2.6
-from pyworkflow.utils.path import cleanPath, makePath
+from pyworkflow.utils.path import cleanPath, makeFilePath
 from pyworkflow.manager import Manager
 
 

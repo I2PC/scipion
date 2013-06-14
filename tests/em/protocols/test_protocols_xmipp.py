@@ -207,6 +207,13 @@ class TestXmippCL2D(TestXmippBase):
         
 
 if __name__ == "__main__":
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestXmippExtractParticles)
-    unittest.TextTestRunner(verbosity=2).run(suite)
-    #unittest.main()
+    if len(sys.argv) > 1:
+        className = sys.argv[1]
+        cls = globals().get(className, None)
+        if cls:
+            suite = unittest.TestLoader().loadTestsFromTestCase(cls)
+            unittest.TextTestRunner(verbosity=2).run(suite)
+        else:
+            print "Test: '%s' not found." % className
+    else:
+        unittest.main()

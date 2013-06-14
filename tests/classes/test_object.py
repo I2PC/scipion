@@ -47,7 +47,7 @@ class MyProtocol(Protocol):
         
     def _defineSteps(self):
         for i in range(self.numberOfSleeps.get()):
-            self._insertFunctionStep('sleep', i, 'sleeping %d'%i)
+            self._insertFunctionStep('sleep', i+1, 'sleeping %d'%i)
     
     
 class TestPyworkflow(unittest.TestCase):

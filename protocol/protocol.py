@@ -34,8 +34,9 @@ import pickle
 import time
 
 from pyworkflow.object import OrderedObject, String, List, Integer, Boolean, CsvList
-from pyworkflow.utils.path import replaceExt, makePath, join, existsPath, cleanPath, getFolderFiles
+from pyworkflow.utils.path import replaceExt, makeFilePath, join, existsPath, cleanPath, getFolderFiles
 from pyworkflow.utils.log import *
+from pyworkflow.protocol.executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor
 
 STATUS_SAVED = "saved" # Parameters saved for later use
 STATUS_LAUNCHED = "launched"  # launched to queue system, only usefull for protocols
@@ -44,16 +45,13 @@ STATUS_FAILED = "failed"      # it have been failed
 STATUS_FINISHED = "finished"  # successfully finished
 STATUS_WAITING_APPROVAL = "waiting approval"    # waiting for user interaction
 
-# Following steps are only used for steps parallel execution
-STATUS_READY = "ready" # The step is ready for execution, i.e. all requirements are done
-STATUS_WAITING_OTHERS = "waiting_others" # There are some prerequisites steps that are not done yet
-
 
 class Step(OrderedObject):
     """ Basic execution unit.
     It should defines its Input, Output
     and define a run method.
     """
+    
     def __init__(self, **args):
         OrderedObject.__init__(self, **args)
         self._inputs = []
@@ -138,18 +136,29 @@ class FunctionStep(Step):
     """ This is a Step wrapper around a normal function
     This class will ease the insertion of Protocol function steps
     throught the function _insertFunctionStep""" 
-    def __init__(self, funcName=None, *funcArgs, **args):
-        """ Receive the function to execute and the 
-        parameters to call it""" 
+    
+    def __init__(self, func=None, funcName=None, *funcArgs, **args):
+        """ 
+         Params:
+            func: the function that will be executed.
+            funcName: the name assigned to that function (will be stored)
+            *funcArgs: argument list passed to the function (serialized and stored)
+            **args: extra parameters.
+        """ 
         Step.__init__(self)
-        self.func = None # Function should be set before run
+        self._func = func # Function should be set before run
+        self._args = funcArgs
         self.funcName = String(funcName)
-        self.funcArgs = funcArgs
         self.argsStr = String(pickle.dumps(funcArgs))
         self.isInteractive.set(args.get('isInteractive', False))
         
+    def _runFunc(self):
+        """ Return the possible result files after running the function. """
+        return self._func(*self._args)
+    
     def _run(self):
-        resultFiles = self.func(*self.funcArgs)
+        """ Run the function and check the result files if any. """
+        resultFiles = self._runFunc() 
         if resultFiles and len(resultFiles):
             missingFiles = existsPath(*resultFiles)
             if len(missingFiles):
@@ -167,12 +176,7 @@ class FunctionStep(Step):
     
     def __eq__(self, other):
         """ Compare with other FunctionStep""" 
-        
-        print 'self.funcName', self.funcName, 'other.funcName', other.funcName 
-        print 'self.funcArgs == other.funcArgs', self.funcArgs == other.funcArgs 
-        print 'self.argsStr == other.argsStr', self.argsStr == other.argsStr
         return (self.funcName == other.funcName and
-                #self.funcArgs == other.funcArgs and
                 self.argsStr == other.argsStr)
         
     def __ne__(self, other):
@@ -181,17 +185,24 @@ class FunctionStep(Step):
             
 class RunJobStep(FunctionStep):
     """ This Step will wrapper the commonly used function runJob
-    for launching specific programs with some parameters""" 
-    def __init__(self, programName=None, arguments=None, resultFiles=[], **args):
-        FunctionStep.__init__(self, 'self.runJob', programName, arguments)
-        # Define the function that will do the job and return result filePaths
-        self.func = self._runJob
+    for launching specific programs with some parameters.
+    The runJob function should be provided by the protocol
+    when inserting a new RunJobStep"""
+     
+    def __init__(self, runJobFunc=None, programName=None, arguments=None, resultFiles=[], **args):
+        FunctionStep.__init__(self, runJobFunc, 'runJob', programName, arguments)
+        # Number of mpi and threads used to run the program
+        self.__runJob = runJobFunc # Store the current function to run the job
         self.mpi = 1
         self.threads = 1
         
-    def _runJob(self, programName, arguments):
+    def _runFunc(self):
         """ Wrap around runJob function""" 
-        self.runJob(None, programName, arguments, 
+        # We know that:
+        #  _func: is the runJob function
+        #  _args[0]: is the program name
+        #  _args[1]: is the argumets to the program
+        return self._func(None, self._args[0], self._args[1], 
                numberOfMpi=self.mpi, numberOfThreads=self.threads)
         #TODO: Add the option to return resultFiles
              
@@ -226,9 +237,10 @@ class Protocol(Step):
         # prerequisites of steps, but is easier to keep it
         self.stepsExecutionMode = STEPS_SERIAL
         # Host name
-        self.hostName = None
+        self.hostName = String(args.get('hostName', 'localhost'))
         # Expert level
         self.expertLevel = Integer(args.get('expertLevel', LEVEL_NORMAL))
+        self._stepsExecutor = None
         
     def getDefinition(self):
         """ Access the protocol definition. """
@@ -309,10 +321,12 @@ class Protocol(Step):
     
     def __insertStep(self, step, **args):
         """ Insert a new step in the list. 
-        Posible values for **args:
-        prerequisites: a list with the steps index that need to be done 
-           previous than the current one."""
+        Params:
+         **args:
+            prerequisites: a list with the steps index that need to be done 
+                           previous than the current one."""
         prerequisites = args.get('prerequisites', None)
+        
         if prerequisites is None:
             if len(self._steps):
                 step._prerequisites.append(len(self._steps)) # By default add the previous step as prerequisite
@@ -334,27 +348,40 @@ class Protocol(Step):
     
     def _getTmpPath(self, *paths):
         """ Return a path inside the tmp folder. """
-        return self._getPath("tmp", *paths)   
+        return self._getPath("tmp", *paths) 
+    
+    def _getLogsPath(self, *paths):
+        return self._getPath("logs", *paths)   
         
     def _insertFunctionStep(self, funcName, *funcArgs, **args):
-        """ Input params:
-        funcName: the string name of the function to be run in the Step.
-        *funcArgs: the variable list of arguments to pass to the function.
-        **args: see __insertStep
+        """ 
+         Params:
+           funcName: the string name of the function to be run in the Step.
+           *funcArgs: the variable list of arguments to pass to the function.
+           **args: see __insertStep
         """
-        step = FunctionStep(funcName, *funcArgs, **args)
-        step.func = getattr(self, funcName)
+        # Get the function give its name
+        func = getattr(self, funcName, None)
+        # Ensure the protocol instance have it and is callable
+        if not func:
+            raise Exception("Protocol._insertFunctionStep: '%s' function is not member of the protocol" % funcName)
+        if not callable(func):
+            raise Exception("Protocol._insertFunctionStep: '%s' is not callable" % funcName)
+        step = FunctionStep(func, funcName, *funcArgs, **args)
+        
         return self.__insertStep(step, **args)
         
     def _insertRunJobStep(self, progName, progArguments, resultFiles=[], **args):
         """ Insert an Step that will simple call runJob function
         **args: see __insertStep
         """
-        step = RunJobStep(progName, progArguments, resultFiles)
-        step.runJob = self.runJob
+        step = RunJobStep(self.runJob, progName, progArguments, resultFiles)
+
+        #FIXME: Move this logic to Steps executor
         if self.stepsExecutionMode == STEPS_SERIAL:
             step.mpi = self.numberOfMpi.get()
             step.threads = self.numberOfThreads.get()
+            
         return self.__insertStep(step, **args)
         
     def _enterWorkingDir(self):
@@ -470,6 +497,8 @@ class Protocol(Step):
         makePath(*paths)        
     
     def _run(self):
+        if self._stepsExecutor is None:
+            raise Exception('Protocol.run: Steps executor should be set before running protocol')
         self.runJob = self._stepsExecutor.runJob
         self.__backupSteps() # Prevent from overriden previous stored steps
         self._defineSteps() # Define steps for execute later
@@ -500,6 +529,19 @@ class Protocol(Step):
     def __closeLogger(self):
         closeFileLogger(self.logFile)
 
+    def getWorkingDir(self):
+        return self.workingDir.get()
+    
+    def setWorkingDir(self, path):
+        self.workingDir.set(path)
+
+    def setMapper(self, mapper):
+        """ Set a new mapper for the protocol to persist state. """
+        self.mapper = mapper
+        
+    def setStepsExecutor(self, executor):
+        self._stepsExecutor = executor
+                
     def getFiles(self):
         resultFiles = set()
         for paramName, _ in self.getDefinition().iterPointerParams():
@@ -511,11 +553,38 @@ class Protocol(Step):
 
     def getHostName(self):
         """ Get the execution host name """
-        return self.hostName
+        return self.hostName.get()
     
     def setHostName(self, hostName):
         """ Set the execution host name """ 
-        self.hostName = hostName
+        self.hostName.set(hostName)
+        
+    def getHostConfig(self):
+        """ Return the configuration host. """
+        return self.hostConfig
+    
+    def setHostConfig(self, config):
+        self.hostConfig = config
+        
+    def getSubmitDict(self):
+        """ Return a dictionary with the necessary keys to
+        launch the job to a queue system.
+        """
+        script = self._getLogsPath(self.strId() + '.job')
+        d = {'JOB_SCRIPT': script,
+             'JOB_NODEFILE': script.replace('.job', '.nodefile'),
+             'JOB_NAME': self.strId(),
+             'JOB_QUEUE': 'default',
+             'JOB_NODES': self.numberOfMpi.get(),
+             'JOB_THREADS': self.numberOfThreads.get(),
+             'JOB_CORES': self.numberOfMpi.get() * self.numberOfThreads.get(),
+             'JOB_HOURS': 72,
+             }
+        return d
+    
+    def useQueue(self):
+        """ Return True if the protocol should be launched throught a queue. """
+        return False
         
     def getElapsedTime(self):
         """ Return the time that protocols
@@ -563,4 +632,43 @@ class Protocol(Step):
     def summary(self):
         """ Return a summary message to provide some information to users. """
         return self._summary()
+    
+    
+def runProtocolFromDb(dbPath, protId, protDict, mpiComm=None):
+    """ Retrieve a protocol stored in a db and run it. 
+    Params:
+     path: file path to read the mapper
+     protId: the protocolo id in the mapper
+     protDict: the dictionary with protocol classes.
+     mpiComm: MPI connection object (only used when executing with MPI)
+    """
+    from pyworkflow.mapper import SqliteMapper
+    mapper = SqliteMapper(dbPath, protDict)
+    protocol = mapper.selectById(protId)
+    if protocol is None:
+        raise Exception("Not protocol found with id: %d" % protId)
+    protocol.setMapper(mapper)
+    # Create the steps executor
+    executor = None
+    if protocol.stepsExecutionMode == STEPS_PARALLEL:
+        if protocol.numberOfMpi > 1:
+            if mpiComm is None:
+                raise Exception('Trying to create MPIStepExecutor and mpiComm is None')
+            executor = MPIStepExecutor(protocol.numberOfMpi.get(), mpiComm)
+        elif protocol.numberOfThreads > 1:
+            executor = ThreadStepExecutor(protocol.numberOfThreads.get()) 
+    if executor is None:
+        executor = StepExecutor()
+    protocol.setStepsExecutor(executor)
+    # Finally run the protocol
+    protocol.run()        
+
+        
+    
+    
+def runProtocol(dbPath, protId, mpiComm=None):
+    """ Given a project and a protocol run, execute.
+    This is a factory function to instantiate necessary classes.
+    The protocol run should be previously inserted in the database.
+    """
         

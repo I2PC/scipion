@@ -89,6 +89,12 @@ class SqliteMapper(Mapper):
     def updateTo(self, obj, level=1):
         self.db.updateObject(obj._objId, obj._objName, obj.getClassName(),
                              self.__getObjectValue(obj), obj._objParentId)
+        if obj.getObjId() in self.updateDict:
+            for k, v in self.updateDict.iteritems():
+                print "%d -> %s" % (k, v.getName())
+            raise Exception('Circular reference, object: %s found twice' % obj.getName())
+        
+        self.updateDict[obj._objId] = obj
         for key, attr in obj.getAttributesToStore():
             if attr._objId is None: # Insert new items from the previous state
                 attr._objParentId = obj._objId
@@ -96,7 +102,7 @@ class SqliteMapper(Mapper):
                 namePrefix = self.__getNamePrefix(obj)
                 attr._objName = joinExt(namePrefix, key)
                 self.__insert(attr, namePrefix)
-            else:                
+            else:  
                 self.updateTo(attr, level + 2)
         
     def updateFrom(self, obj):

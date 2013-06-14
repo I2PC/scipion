@@ -58,4 +58,5 @@ documentation/
 gmon.out
 *~
 tests/classes/tmp
-
+.directory
+pw.bashrc

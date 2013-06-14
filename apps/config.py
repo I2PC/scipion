@@ -33,6 +33,7 @@ from os.path import join, exists
 from pyworkflow.utils.path import getHomePath
 import pyworkflow as pw
 from pyworkflow.object import *
+from pyworkflow.hosts import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
 
 PATH = os.path.dirname(__file__)
@@ -117,106 +118,6 @@ class ProtocolConfig(MenuConfig):
     """Store protocols configuration """
     pass    
     
-class ExecutionHostConfig(OrderedObject):
-    """ Configuration information for execution hosts. """
-    def __init__(self, **args):
-        OrderedObject.__init__(self, **args)
-        self.label = String()
-        self.hostName = String()
-        self.userName = String()
-        self.password = String()
-        self.hostPath = String()
-        self.mpiCommand = String()
-        self.queueSystem = QueueSystemConfig()
-    
-    def getLabel(self):
-        return self.label.get()
-    
-    def getHostName(self):
-        return self.hostName.get()
-    
-    def getUserName(self):
-        return self.userName.get()
-    
-    def getPassword(self):
-        return self.password.get()
-    
-    def getHostPath(self):
-        return self.hostPath.get()
-    
-    def as_dict(self):
-        dict = {}
-        dict['label'] = self.label.get()
-        dict['hostName'] = self.hostName.get()
-        dict['userName'] = self.userName.get()
-        dict['hostPath'] = self.hostPath.get()
-        return dict
-        
-class QueueSystemConfig(OrderedObject):
-    def __init__(self, **args):
-        OrderedObject.__init__(self, **args) 
-        self.name = String()
-        self.mandatory = Boolean()
-        self.queues = List() # List for queue configurations
-        self.submitCommand = String()
-        self.submitTemplate = String()
-        self.checkCommand = String()
-        self.cancelCommand = String()
-        
-    def hasValue(self):
-        return self.name.hasValue() and len(self.queues)
-        
-        
-class QueueConfig(OrderedObject):
-    def __init__(self, **args):
-        OrderedObject.__init__(self, **args) 
-        self.name = String('default')
-        self.maxCores = Integer()
-        self.allowMPI = Boolean()
-        self.allowThreads = Boolean()
-        self.maxHours = Integer()
-        
-        
-class ExecutionHostMapper(XmlMapper):
-    def __init__(self, filename, dictClasses=None, **args):
-        if dictClasses is None:
-            dictClasses = globals()
-        XmlMapper.__init__(self, filename, dictClasses, **args)
-        #self.setClassTag('ExecutionHostConfig.QueueSystemConfig', 'class_name')
-        self.setClassTag('ExecutionHostConfig.String', 'attribute')
-        self.setClassTag('ExecutionHostConfig.hostName', 'name_only')
-        self.setClassTag('ExecutionHostConfig.userName', 'name_only')
-        self.setClassTag('ExecutionHostConfig.password', 'name_only')
-        self.setClassTag('ExecutionHostConfig.hostPath', 'name_only')
-        self.setClassTag('ExecutionHostConfig.mpiCommand', 'name_only')
-        self.setClassTag('QueueSystemConfig.name', 'attribute')
-        self.setClassTag('QueueSystemConfig.mandatory', 'attribute')  
-        self.setClassTag('QueueConfig.ALL', 'attribute')   
-        self.setClassTag('List.QueueConfig', 'class_only')           
-        #self.setClassTag('ProtocolConfig.ProtocolConfig', 'class_only')
-    
-    def selectByLabel(self, objLabel):
-        """
-        hostsList = self.selectAll()
-        for host in hostsList:
-            if host.label.get() == objLabel:
-                return host
-        return None
-        """
-        for child in self.root:
-            if (child.attrib['label']) == objLabel:
-                obj = self._buildObject(child.tag)
-                self.fillObject(obj, child)
-                self._addObjectToDict(obj, self.objDict)
-                break
-        #set properlly primary keys
-        for obj in self.pendingPtrDict.values():
-            for key, attr in obj.getAttributesToStore():
-                if attr.isPointer(): 
-                    ptr = self.selectById(attr._objId)
-                    attr._objId = None
-                    attr.set(ptr)
-        return self.objDict.values()[0]
     
 class ConfigMapper(XmlMapper):
     """Sub-class of XmlMapper to store configurations"""
@@ -316,15 +217,15 @@ def writeHosts():
 ### Inherit all current environment variables
 #PBS -V
 ### Job name
-#PBS -N %(jobName)s
+#PBS -N %(JOB_NAME)s
 ### Queue name
-###PBS -q %(queueName)s
+###PBS -q %(JOB_QUEUE)s
 ### Standard output and standard error messages
 #PBS -k eo
 ### Specify the number of nodes and thread (ppn) for your job.
-#PBS -l nodes=%(nodes)d:ppn=%(threads)d
+#PBS -l nodes=%(JOB_NODES)d:ppn=%(JOB_THREADS)d
 ### Tell PBS the anticipated run-time for your job, where walltime=HH:MM:SS
-#PBS -l walltime=%(hours)d:00:00
+#PBS -l walltime=%(JOB_HOURS)d:00:00
 # Use as working dir the path where qsub was launched
 WORKDIR=$PBS_O_WORKDIR
 #################################
@@ -333,7 +234,7 @@ export XMIPP_IN_QUEUE=1
 ### Switch to the working directory;
 cd $WORKDIR
 # Make a copy of PBS_NODEFILE 
-cp $PBS_NODEFILE %(nodesfileBackup)s
+cp $PBS_NODEFILE %(JOB_NODEFILE)s
 # Calculate the number of processors allocated to this run.
 NPROCS=`wc -l < $PBS_NODEFILE`
 # Calculate the number of nodes allocated.

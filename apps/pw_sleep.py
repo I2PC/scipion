@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -26,27 +27,10 @@
 """
 This module is responsible for launching protocol executions.
 """
-import sys
-from os.path import abspath, dirname
-FULLPATH = abspath(__file__)
-sys.path.append(dirname(dirname(dirname(FULLPATH))))
-from pyworkflow.utils import runProtocol
-
-
+import os, sys
 
 if __name__ == '__main__':
-    if len(sys.argv) > 2:
-        projName = sys.argv[1]
-        protId = int(sys.argv[2])
-        
-        print "="*100
-        print "projName: ", projName
-        print "protId: ", protId
-        
-        runProtocol(projName, protId)
-        
-
-        #protocol.run()
-        #protocol.printAll()
-    else:
-        print "usage: %s projectName protocolID" % sys.argv[0]
+    seconds = sys.argv[1]
+    print "Sleeper, pid: ", os.getpid()
+    print "Sleeping %s seconds...." % seconds
+    os.system("sleep %s" % seconds)

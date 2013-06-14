@@ -27,7 +27,10 @@
 """
 This module handles process execution
 """
-import os, sys
+import os
+import sys
+import psutil
+from utils import greenStr
 
 # The job should be launched from the working directory!
 def runJob(log, programname, params,           
@@ -39,7 +42,8 @@ def runJob(log, programname, params,
     
     if log is None:
         #TODO: printLog("Running command: %s" % greenStr(command),log)
-        print "Running command: %s" % command
+        
+        print "** Running command: %s" % greenStr(command)
 
     runCommand(command)
         
@@ -81,21 +85,19 @@ def loadHostConfig(host='localhost'):
     In there will be information to know how to launch MPI processes
     and how to submit jobs to the queue system if exists.
     """
-    from pyworkflow.apps.config import ExecutionHostMapper, getConfigPath
+    from pyworkflow.hosts import ExecutionHostMapper, getConfigPath
     fn = getConfigPath('execution_hosts.xml')
     mapper = ExecutionHostMapper(fn)
     return mapper.selectByLabel(host)
 
-
-def runProtocol(projId, protId, mpiComm=None):
-    """ Given a project and a protocol run, execute.
-    This is a factory function to instantiate necessary classes.
-    The protocol run should be previously inserted in the database.
+def killWithChilds(pid):
+    """ Kill the process with given pid and all children processes.
+    Params:
+     pid: the process id to terminate
     """
-    from pyworkflow.manager import Manager
-    manager = Manager()
-    project = manager.loadProject(projId) # Now it will be loaded if exists
-    protocol = project.mapper.selectById(protId)
-    if protocol is None:
-        raise Exception("Not protocol found with id: %d" % protId)
-    project.runProtocol(protocol, mpiComm)
+    proc = psutil.Process(pid)
+    for c in proc.get_children(recursive=True):
+        print "Terminating child pid: %d" % c.pid
+        c.kill()
+    print "Terminating process pid: %d" % pid
+    proc.kill()

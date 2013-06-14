@@ -81,6 +81,7 @@ class Mapper():
         if obj._objId is None:
             self.insert(obj)
         else:
+            self.updateDict = {}
             self.updateTo(obj)
             
     def selectById(self, objId):

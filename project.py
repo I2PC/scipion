@@ -28,14 +28,15 @@ This modules handles the Project management
 """
 
 import os
-from os.path import abspath
+from os.path import abspath, split
 
-from pyworkflow.mapper import SqliteMapper
-from pyworkflow.utils import cleanPath, makePath, join, exists, runJob
-from os.path import split
-from pyworkflow.protocol import *
 from pyworkflow.em import *
-from pyworkflow.apps.config import ExecutionHostMapper, ExecutionHostConfig
+from pyworkflow.apps.config import *
+from pyworkflow.protocol import *
+from pyworkflow.mapper import SqliteMapper
+from pyworkflow.utils import cleanPath, makePath, makeFilePath, join, exists, runJob
+from pyworkflow.hosts import ExecutionHostMapper, ExecutionHostConfig
+from pyworkflow.protocol.launch import launchProtocol
 
 PROJECT_DBNAME = 'project.sqlite'
 PROJECT_LOGS = 'Logs'
@@ -101,7 +102,12 @@ class Project(object):
             self.hostsMapper.insert(h)
         self.hostsMapper.commit()
         # Create other paths inside project
-        makePath(*self.pathList)
+        for p in self.pathList:
+            print "creating file: ", p
+            if '.' in p:
+                makeFilePath(p)
+            else:
+                makePath(p)
         
     def clean(self):
         """Clean all project data"""
@@ -112,20 +118,11 @@ class Project(object):
         # TODO: Create a launcher class that will 
         # handle the communication of remote projects
         # and also the particularities of job submission: mpi, threads, queue, bash
-        self._storeProtocol(protocol)        
+        self._setupProtocol(protocol)
+        jobId = launchProtocol(protocol, wait)
         if wait:
-            self.runProtocol(protocol) # This case is mainly for tests
-        else:
-            if (protocol.stepsExecutionMode == STEPS_PARALLEL and
-                protocol.numberOfMpi > 1):
-                program = 'pw_protocol_mpirun.py'
-                mpi = protocol.numberOfMpi.get() + 1
-            else:
-                program = 'pw_protocol_run.py'
-                mpi = 1
-            
-            runJob(None, program, '%s %s' % (self.getObjId(), protocol.strId()),
-                   numberOfMpi=mpi, runInBackground=True)
+            self.mapper.updateFrom(protocol)
+        
         
     def runProtocol(self, protocol, mpiComm=None):
         """Directly execute the protocol.
@@ -171,14 +168,32 @@ class Project(object):
         protocol.status.set(STATUS_SAVED)
         self._storeProtocol(protocol)
         
+    def _setHostConfig(self, protocol):
+        """ Set the appropiate host config to the protocol
+        give its value of 'hostname'
+        """
+        hostName = protocol.getHostName()
+        print "hostName: ", hostName
+        hostConfig = self.hostsMapper.selectByLabel(hostName)
+        hostConfig.cleanObjId()
+        protocol.setHostConfig(hostConfig)
+    
     def _storeProtocol(self, protocol):
-        """Insert a new protocol instance in the database"""
         self.mapper.store(protocol)
+        self.mapper.commit()
+                
+    def _setupProtocol(self, protocol):
+        """Insert a new protocol instance in the database"""
+        self._storeProtocol(protocol) # Store first to get a proper id
+        # Set important properties of the protocol
         name = protocol.getClassName() + protocol.strId()
         protocol.setName(name)
-        protocol.mapper =  self.mapper
-        protocol.workingDir.set(self.getPath("Runs", name))
-        protocol._store() #FIXME, actually only need to update workingDir and name
+        protocol.setMapper(self.mapper)
+        protocol.dbPath = self.dbPath
+        protocol.setWorkingDir(self.getPath("Runs", name))
+        self._setHostConfig(protocol)
+        # Update with changes
+        self._storeProtocol(protocol)
         
     def getHosts(self):
         """ Retrieve the hosts associated with the project. (class ExecutionHostConfig) """

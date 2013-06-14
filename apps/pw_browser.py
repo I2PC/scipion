@@ -38,7 +38,7 @@ from pyworkflow.gui.browser import ObjectBrowser
 from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
 from pyworkflow.em import *
-
+from pyworkflow.apps.config import *
             
 class EMTreeProvider(DbTreeProvider):
     """Retrieve the elements from the database"""

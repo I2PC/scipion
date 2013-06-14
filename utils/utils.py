@@ -224,3 +224,9 @@ def getColorStr(text, color, bold=False):
     if bold:
         attr.append('1')
     return '\x1b[%sm%s\x1b[0m' % (';'.join(attr), text)
+
+def greenStr(text):
+    return getColorStr(text, color='green')
+
+def redStr(text):
+    return getColorStr(text, color='red')

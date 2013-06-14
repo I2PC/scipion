@@ -29,18 +29,15 @@ This module is responsible for launching protocol executions.
 """
 import sys
 from os.path import basename
-from pyworkflow.utils import runProtocol
+from pyworkflow.protocol import runProtocolFromDb
+from pyworkflow.em import *
+from pyworkflow.apps.config import *
 
 
 if __name__ == '__main__':
     if len(sys.argv) > 2:
-        projName = sys.argv[1]
+        dbPath = sys.argv[1]
         protId = int(sys.argv[2])
-        
-        print "="*100
-        print "projName: ", projName
-        print "protId: ", protId
-        
-        runProtocol(projName, protId)
+        runProtocolFromDb(dbPath, protId, globals())
     else:
-        print "usage: %s projectId protocolID" % basename(sys.argv[0])
+        print "usage: %s dbPath protocolID" % basename(sys.argv[0])
