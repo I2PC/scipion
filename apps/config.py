@@ -33,6 +33,7 @@ from os.path import join, exists
 from pyworkflow.utils.path import getHomePath
 import pyworkflow as pw
 from pyworkflow.object import *
+from pyworkflow.hosts import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
 
 PATH = os.path.dirname(__file__)
@@ -117,115 +118,6 @@ class ProtocolConfig(MenuConfig):
     """Store protocols configuration """
     pass    
     
-class ExecutionHostConfig(OrderedObject):
-    """ Configuration information for execution hosts. """
-    def __init__(self, **args):
-        OrderedObject.__init__(self, **args)
-        self.label = String()
-        self.hostName = String()
-        self.userName = String()
-        self.password = String()
-        self.hostPath = String()
-        self.mpiCommand = String()
-        self.queueSystem = QueueSystemConfig()
-    
-    def getLabel(self):
-        return self.label.get()
-    
-    def getHostName(self):
-        return self.hostName.get()
-    
-    def getUserName(self):
-        return self.userName.get()
-    
-    def getPassword(self):
-        return self.password.get()
-    
-    def getHostPath(self):
-        return self.hostPath.get()
-<<<<<<< HEAD
-    
-    def getSubmitCommand(self):
-        return self.queueSystem.submitCommand.get()
-    
-    def as_dict(self):
-        dict = {}
-        dict['label'] = self.label.get()
-        dict['hostName'] = self.hostName.get()
-        dict['userName'] = self.userName.get()
-        dict['hostPath'] = self.hostPath.get()
-        return dict
-    
-    def isQueueMandatory(self):
-        return self.queueSystem.mandatory.get()
-=======
->>>>>>> 75f30a091107b6a508022dd4ac616e1c8df27405
-        
-class QueueSystemConfig(OrderedObject):
-    def __init__(self, **args):
-        OrderedObject.__init__(self, **args) 
-        self.name = String()
-        self.mandatory = Boolean()
-        self.queues = List() # List for queue configurations
-        self.submitCommand = String()
-        self.submitTemplate = String()
-        self.checkCommand = String()
-        self.cancelCommand = String()
-        
-    def hasValue(self):
-        return self.name.hasValue() and len(self.queues)
-        
-        
-class QueueConfig(OrderedObject):
-    def __init__(self, **args):
-        OrderedObject.__init__(self, **args) 
-        self.name = String('default')
-        self.maxCores = Integer()
-        self.allowMPI = Boolean()
-        self.allowThreads = Boolean()
-        self.maxHours = Integer()
-        
-        
-class ExecutionHostMapper(XmlMapper):
-    def __init__(self, filename, dictClasses=None, **args):
-        if dictClasses is None:
-            dictClasses = globals()
-        XmlMapper.__init__(self, filename, dictClasses, **args)
-        #self.setClassTag('ExecutionHostConfig.QueueSystemConfig', 'class_name')
-        self.setClassTag('ExecutionHostConfig.String', 'attribute')
-        self.setClassTag('ExecutionHostConfig.hostName', 'name_only')
-        self.setClassTag('ExecutionHostConfig.userName', 'name_only')
-        self.setClassTag('ExecutionHostConfig.password', 'name_only')
-        self.setClassTag('ExecutionHostConfig.hostPath', 'name_only')
-        self.setClassTag('ExecutionHostConfig.mpiCommand', 'name_only')
-        self.setClassTag('QueueSystemConfig.name', 'attribute')
-        self.setClassTag('QueueSystemConfig.mandatory', 'attribute')  
-        self.setClassTag('QueueConfig.ALL', 'attribute')   
-        self.setClassTag('List.QueueConfig', 'class_only')           
-        #self.setClassTag('ProtocolConfig.ProtocolConfig', 'class_only')
-    
-    def selectByLabel(self, objLabel):
-        """
-        hostsList = self.selectAll()
-        for host in hostsList:
-            if host.label.get() == objLabel:
-                return host
-        return None
-        """
-        for child in self.root:
-            if (child.attrib['label']) == objLabel:
-                obj = self._buildObject(child.tag)
-                self.fillObject(obj, child)
-                self._addObjectToDict(obj, self.objDict)
-                break
-        #set properlly primary keys
-        for obj in self.pendingPtrDict.values():
-            for key, attr in obj.getAttributesToStore():
-                if attr.isPointer(): 
-                    ptr = self.selectById(attr._objId)
-                    attr._objId = None
-                    attr.set(ptr)
-        return self.objDict.values()[0]
     
 class ConfigMapper(XmlMapper):
     """Sub-class of XmlMapper to store configurations"""

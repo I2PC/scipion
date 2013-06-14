@@ -15,7 +15,7 @@ from pyworkflow.web.pages import settings
 from pyworkflow.apps.config import *
 from pyworkflow.em import *
 from django.http.request import HttpRequest
-from pyworkflow.apps.config import ExecutionHostMapper
+from pyworkflow.hosts import ExecutionHostMapper
 
 from pyworkflow.tests import getInputPath 
 from forms import HostForm

@@ -35,7 +35,7 @@ from pyworkflow.apps.config import *
 from pyworkflow.protocol import *
 from pyworkflow.mapper import SqliteMapper
 from pyworkflow.utils import cleanPath, makePath, makeFilePath, join, exists, runJob
-from pyworkflow.apps.config import ExecutionHostMapper, ExecutionHostConfig
+from pyworkflow.hosts import ExecutionHostMapper, ExecutionHostConfig
 from pyworkflow.protocol.launch import launchProtocol
 
 PROJECT_DBNAME = 'project.sqlite'

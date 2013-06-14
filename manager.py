@@ -33,7 +33,7 @@ from project import Project
 import pyworkflow as pw
 from pyworkflow.mapper import SqliteMapper
 from pyworkflow.utils.path import cleanPath, makePath, getHomePath
-from pyworkflow.apps.config import ExecutionHostMapper
+from pyworkflow.hosts import ExecutionHostMapper
 
 
 SCIPION_PATH = 'Scipion'
