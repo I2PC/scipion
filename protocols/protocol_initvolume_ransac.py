@@ -57,7 +57,8 @@ class ProtInitVolRANSAC(XmippProtocol):
         # RANSAC iterations
         for n in range(self.NRansac):
             self.insertParallelStep('ransacIteration',TmpDir=self.TmpDir,n=n,SymmetryGroup=self.SymmetryGroup,Xdim=self.Xdim,
-                                    Xdim2=self.Xdim2,NumGrids=self.NumGrids,InitialVolume=self.InitialVolume,AngularSampling=self.AngularSampling)
+                                    Xdim2=self.Xdim2,NumGrids=self.NumGrids,InitialVolume=self.InitialVolume,AngularSampling=self.AngularSampling,
+                                    parent_step_id=XmippProjectDb.FIRST_STEP)
         
         # Look for threshold, evaluate volumes and get the best
         if (self.InitialVolume != ''):
@@ -71,9 +72,10 @@ class ProtInitVolRANSAC(XmippProtocol):
             fnBase='proposedVolume%05d'%n
             fnRoot=self.workingDirPath(fnBase)
             for it in range(self.NumIter):    
-                self.insertParallelStep('reconstruct',fnRoot=fnRoot,symmetryGroup=self.SymmetryGroup,maskRadius=Xdim2/2)
+                parent_id = self.insertParallelStep('reconstruct',fnRoot=fnRoot,symmetryGroup=self.SymmetryGroup,maskRadius=Xdim2/2,
+                                                    parent_step_id=XmippProjectDb.FIRST_STEP)
                 parent_id = self.insertParallelStep('projMatch',WorkingDir=self.WorkingDir,fnBase=fnBase,AngularSampling=self.AngularSampling,
-                                                    SymmetryGroup=self.SymmetryGroup, Xdim=self.Xdim)
+                                                    SymmetryGroup=self.SymmetryGroup, Xdim=self.Xdim, parent_step_id=parent_id)
             self.insertParallelRunJobStep("xmipp_image_resize","-i %s.vol -o %s.vol --dim %d %d" 
                                           %(fnRoot,fnRoot,self.Xdim,self.Xdim),parent_step_id=parent_id)
 
