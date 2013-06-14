@@ -420,7 +420,7 @@ def getHost(request):
         project = loadProject(projectName)
         hostsMapper = ExecutionHostMapper(project.hostsPath)
         executionHostConfig = hostsMapper.selectByLabel(hostLabel)
-        jsonStr = json.dumps({'host':executionHostConfig.as_dict()})
+        jsonStr = json.dumps({'host':executionHostConfig.getDictionary()})
 #         jsonStr = json.dumps({'hostConfig' :  executionHostConfig},
 #                              ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')

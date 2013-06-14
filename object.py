@@ -166,7 +166,50 @@ class Object(object):
         """
         for name in attrNames:
             getattr(self, name).set(getattr(other, name).get())
-    
+            
+    def getDictionary(self, name=None):
+        """ Get an attributes dictionary from an Object instance
+        Params:
+            name: Attribute name.
+        """
+        resultDictionary = {}        
+        if name is not None:
+            resultDictionary[name] = self._objValue
+        for k, v in self.getAttributesToStore():
+            resultDictionary.update(v.getDictionary(k)) 
+        return resultDictionary
+         
+#     def __getAuxDictionary(self, obj):
+#         resultDictionary = {}
+#         if type(obj) != list and type(obj) != dict:
+#             for k in obj.__dict__['_attributes']:
+#                 v = getattr(obj, k)
+#                 if v is None:
+#                     resultDictionary[k] = None 
+#                 elif issubclass(v.__class__, Scalar):
+#                     resultDictionary[k] = v.get()  
+#                 elif issubclass(v.__class__, List):
+#                     if (v.get() is not None):
+#                         resultDictionary[k] = self.__getAuxDictionary(v.get())  
+#                     else:
+#                         resultDictionary[k] = None         
+#                 elif issubclass(v.__class__, Object):
+#                     resultDictionary[k] = self.__getAuxDictionary(v)
+#                 elif type(v)== list:
+#                     resultDictionary[k] = self.__getAuxDictionary(v)
+#                 elif type(v)  == dict:
+#                     raise Exception('Not implemented yet for ' + str(type(v)))
+#                 else:
+#                     resultDictionary[k] = v
+#         else: 
+#             if type(obj) == list:
+#                 resultList = []
+#                 for item in obj:
+#                     resultList.append(self.__getAuxDictionary(item))
+#             elif type(obj) == dict:
+#                 raise Exception('Not implemented yet for ' + str(type(k)))
+#         return resultDictionary
+        
 
 class OrderedObject(Object):
     """This is based on Object, but keep the list
