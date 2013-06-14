@@ -30,7 +30,7 @@ inside the utils module
 
 import os
 import shutil
-from os.path import exists, join, splitext, isdir, expanduser, basename
+from os.path import exists, join, splitext, isdir, expanduser, basename, dirname
 import pyworkflow as pw
 
 
@@ -58,7 +58,6 @@ def replaceExt(filename, newExt):
     with a new one. The new one should not contains the ."""
     return splitext(filename)[0] + '.' + newExt
 
-
 def replaceBaseExt(filename, newExt):
     """ Replace the current basename extension(from last .)
     with a new one. The new one should not contains the .
@@ -74,11 +73,11 @@ def removeExt(filename):
     return splitext(filename)[0]
 
 def joinExt(*extensions):
-    """Join several path parts with a ."""
+    """ Join several path parts with a ."""
     return '.'.join(extensions)
 
 def cleanPath(*paths):
-    """Remove a list of paths, either folders or files"""
+    """ Remove a list of paths, either folders or files"""
     for p in paths:
         if exists(p):
             if isdir(p):
@@ -87,13 +86,22 @@ def cleanPath(*paths):
                 os.remove(p)
             
 def makePath(*paths):
-    """Create a list of paths if they don't exists"""
+    """ Create a list of paths if they don't exists.
+    Recursively create all folder needed in a path.
+    If a path passed is a file, only the directory will be created.
+    """
     for p in paths:
-        if not exists(p):
+        print "making path: ", p
+        if not exists(p) and len(p):
+            print "   really creating."
             os.makedirs(p)
+
+def makeFilePath(*files):
+    """ Make the path to ensure that files can be written. """
+    makePath(*[dirname(f) for f in files])    
             
 def existsPath(*paths):
-    """Check if the list of paths exists.
+    """ Check if the list of paths exists.
     Will return the list of missing files,
     if the list is empty means that all path exists
     """
@@ -103,14 +111,6 @@ def getHomePath(user=''):
     """Return the home path of a give user."""
     return expanduser("~" + user)
 
-def createFolderForFile(filePath):
-    """
-    Create folder for file in local host if it does not exist.
-    filePath -- File path which parent directory we must create (/file path/...).
-    """
-    filePathParentDirectory = os.path.dirname(filePath)
-    makePath(filePathParentDirectory)
-    
 def getFolderFiles(folderPath):
     """
     Gets all files of given folder and it subfolders.
@@ -119,21 +119,20 @@ def getFolderFiles(folderPath):
     """
     filePaths = set()
     for path, dirs, files in os.walk(folderPath):
-        for file in files:
-            filePaths.add(join(path, file))
+        for f in files:
+            filePaths.add(join(path, f))
     return filePaths
-
 
 def copyTree(source, dest):
     if not exists(dest):
         shutil.copytree(source, dest, symlinks=True)
     else:
-        for file in os.listdir(source):
-            fnPath = os.path.join(source,file)
+        for f in os.listdir(source):
+            fnPath = os.path.join(source, f)
             if os.path.isfile(fnPath):
                 shutil.copy(fnPath, dest)
             if os.path.isdir(fnPath):
-                shutil.copytree(fnPath, os.path.join(dest, file))
+                shutil.copytree(fnPath, os.path.join(dest, f))
 
 
 

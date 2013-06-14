@@ -17,7 +17,7 @@ class TestXmippBase(unittest.TestCase):
     def runImportMicrograph(cls, pattern, samplingRate, voltage):
         """ Run an Import micrograph protocol. """
         cls.protImport = ProtImportMicrographs(pattern=pattern, samplingRate=samplingRate, voltage=voltage)
-        cls.proj.launchProtocol(cls.protImport, wait=True)
+        cls.proj.launchProtocol(cls.protImport, wait=True)        
         # check that input micrographs have been imported (a better way to do this?)
         if cls.protImport.outputMicrographs is None:
             raise Exception('Import of micrograph: %s, failed. outputMicrographs is None.' % pattern)
@@ -174,6 +174,7 @@ class TestXmippML2D(TestXmippBase):
         
         self.assertIsNotNone(protML2D.outputClassification, "There was a problem with ML2D")  
         
+        
 class TestXmippCL2D(TestXmippBase):
 
     @classmethod
@@ -192,6 +193,13 @@ class TestXmippCL2D(TestXmippBase):
         
 
 if __name__ == "__main__":
-    #suite = unittest.TestLoader().loadTestsFromTestCase(TestXmippExtractParticles)
-    #unittest.TextTestRunner(verbosity=2).run(suite)
-    unittest.main()
+    if len(sys.argv) > 1:
+        className = sys.argv[1]
+        cls = globals().get(className, None)
+        if cls:
+            suite = unittest.TestLoader().loadTestsFromTestCase(cls)
+            unittest.TextTestRunner(verbosity=2).run(suite)
+        else:
+            print "Test: '%s' not found." % className
+    else:
+        unittest.main()

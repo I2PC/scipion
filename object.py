@@ -93,6 +93,16 @@ class Object(object):
     def hasObjId(self):
         return not self._objId is None
     
+    def cleanObjId(self):
+        """ This function will set to None this object id
+        and the id of all its children attributes.
+        This function should be used when retrieving
+        an object from a mapper and storing in a different one.
+        """
+        self.setObjId(None)
+        for _, attr in self.getAttributesToStore():
+            attr.cleanObjId()
+    
     def strId(self):
         """String representation of id"""
         return str(self._objId)

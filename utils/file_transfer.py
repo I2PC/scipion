@@ -463,7 +463,7 @@ class FileTransfer():
                 existsFilePath = True
                 log.info(targetFilePath + " already existed")
         if (not existsFilePath):                    
-            createFolderForFile(targetFilePath)
+            makeFilePath(targetFilePath)
             shutil.copy2(sourceFilePath, targetFilePath)
         
     def __sendLocalFile(self, sourceFilePath, targetFilePath, gatewayHosts, sftp):
@@ -504,7 +504,7 @@ class FileTransfer():
                 existsFilePath = True
                 log.info(targetFilePath + " already existed")
         if (not existsFilePath):        
-            createFolderForFile(targetFilePath)
+            makeFilePath(targetFilePath)
             try:
                 sftp.get(sourceFilePath, targetFilePath)
             except IOError as err:

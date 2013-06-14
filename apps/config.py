@@ -144,6 +144,9 @@ class ExecutionHostConfig(OrderedObject):
     def getHostPath(self):
         return self.hostPath.get()
     
+    def getSubmitCommand(self):
+        return self.queueSystem.submitCommand.get()
+    
     def as_dict(self):
         dict = {}
         dict['label'] = self.label.get()
@@ -151,6 +154,9 @@ class ExecutionHostConfig(OrderedObject):
         dict['userName'] = self.userName.get()
         dict['hostPath'] = self.hostPath.get()
         return dict
+    
+    def isQueueMandatory(self):
+        return self.queueSystem.mandatory.get()
         
 class QueueSystemConfig(OrderedObject):
     def __init__(self, **args):
@@ -316,15 +322,15 @@ def writeHosts():
 ### Inherit all current environment variables
 #PBS -V
 ### Job name
-#PBS -N %(jobName)s
+#PBS -N %(JOB_NAME)s
 ### Queue name
-###PBS -q %(queueName)s
+###PBS -q %(JOB_QUEUE)s
 ### Standard output and standard error messages
 #PBS -k eo
 ### Specify the number of nodes and thread (ppn) for your job.
-#PBS -l nodes=%(nodes)d:ppn=%(threads)d
+#PBS -l nodes=%(JOB_NODES)d:ppn=%(JOB_THREADS)d
 ### Tell PBS the anticipated run-time for your job, where walltime=HH:MM:SS
-#PBS -l walltime=%(hours)d:00:00
+#PBS -l walltime=%(JOB_HOURS)d:00:00
 # Use as working dir the path where qsub was launched
 WORKDIR=$PBS_O_WORKDIR
 #################################
@@ -333,7 +339,7 @@ export XMIPP_IN_QUEUE=1
 ### Switch to the working directory;
 cd $WORKDIR
 # Make a copy of PBS_NODEFILE 
-cp $PBS_NODEFILE %(nodesfileBackup)s
+cp $PBS_NODEFILE %(JOB_NODEFILE)s
 # Calculate the number of processors allocated to this run.
 NPROCS=`wc -l < $PBS_NODEFILE`
 # Calculate the number of nodes allocated.

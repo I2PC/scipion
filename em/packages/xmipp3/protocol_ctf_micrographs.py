@@ -75,7 +75,10 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
     def _estimateCTF(self, micFn, micDir):
         """ Run the estimate CTF program """        
         # Create micrograph dir under extra directory
-        makePath(micDir)            
+        print "creating path micDir=", micDir
+        makePath(micDir)
+        if not exists(micDir):
+            raise Exception("No created dir: %s " % micDir)
         # Update _params dictionary with mic and micDir
         self._params['micFn'] = micFn
         self._params['micDir'] = self._getFilename('prefix', micDir=micDir)

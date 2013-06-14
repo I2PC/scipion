@@ -77,12 +77,6 @@ class Image(EMObject):
         
     def getId(self):
         return self.getObjId()
-    
-    def getFormat(self):
-        pass
-    
-    def getDataType(self):
-        pass
         
     def getSamplingRate(self):
         """ Return image sampling rate. (A/pix) """
@@ -90,6 +84,12 @@ class Image(EMObject):
     
     def setSamplingRate(self, sampling):
         self.samplingRate.set(sampling)
+    
+    def getFormat(self):
+        pass
+    
+    def getDataType(self):
+        pass
     
     def getDim(self):
         """Return image dimensions as tuple: (Ydim, Xdim)"""
@@ -123,6 +123,7 @@ class Image(EMObject):
     
     def setCTF(self, newCTF):
         self._ctfModel = newCTF
+        
         
 class Micrograph(Image):
     """ Represents an EM Image object """
@@ -429,6 +430,7 @@ class CTFModel(EMObject):
 
     def getPsdFile(self):
         return self.psdFile.get()
+    
     
 class ImageClassAssignment(EMObject):
     """ This class represents the relation of

@@ -13,21 +13,29 @@ class TestXmippWorkflow(unittest.TestCase):
         cls.pattern = getInputPath('Micrographs_BPV3', '*.mrc')        
         cls.importFolder = getInputPath('Picking_XmippBPV3')
 
-    def validateFiles(self, prot, filesSet):
+    def validateFiles(self, key, prot):
         """ Validate if the produced files are the expected ones.
         Params:
             prot: the protocol to validate. 
             filesSet: the known files that should be produced (set)
         """
+        self.protDict[key] = prot
+        filesSet = self.getProtocolFiles(key)
         self.assertEqual(prot.getFiles(), filesSet)
         
+    def printSet(self, msg, s):
+        print "============= %s ==========" % msg
+        for i in s:
+            print i
+            
     def testXmippWorkflow(self):
+        self.protDict = {}
         #First, import a set of micrographs
         protImport = ProtImportMicrographs(pattern=self.pattern, samplingRate=1.237, voltage=300)
         self.proj.launchProtocol(protImport, wait=True)
         
         self.assertIsNotNone(protImport.outputMicrographs, "There was a problem with the import")
-        self.assertTrue(protImport.getFiles() == getImportMicrographFiles())
+        self.validateFiles('protImport', protImport)        
         
         # Perform a downsampling on the micrographs
 
@@ -37,7 +45,7 @@ class TestXmippWorkflow(unittest.TestCase):
         self.proj.launchProtocol(protDownsampling, wait=True)
           
         self.assertIsNotNone(protDownsampling.outputMicrographs, "There was a problem with the downsampling")
-        self.assertTrue(protDownsampling.getFiles() == getDownsamplingFiles())
+        self.validateFiles('protDownsampling', protDownsampling)
           
         # Now estimate CTF on the downsampled micrographs 
         print "Performing CTF..."   
@@ -47,12 +55,13 @@ class TestXmippWorkflow(unittest.TestCase):
         
         # After CTF estimation, the output micrograph should have CTF info
         self.assertTrue(protCTF.outputMicrographs.hasCTF())
-        self.assertTrue(protCTF.getFiles() == getCTFFiles())
+        self.validateFiles('protCTF', protCTF)
         
         print "Running fake particle picking..."   
         protPP = XmippProtParticlePicking(importFolder=self.importFolder)                
         protPP.inputMicrographs.set(protCTF.outputMicrographs)        
         self.proj.launchProtocol(protPP, wait=True)
+        self.protDict['protPicking'] = protPP
             
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
             
@@ -63,7 +72,7 @@ class TestXmippWorkflow(unittest.TestCase):
         self.proj.launchProtocol(protExtract, wait=True)
         
         self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
-        self.assertTrue(protExtract.getFiles() == getExtractPrticlesFiles())
+        self.validateFiles('protExtract', protExtract)
         
         print "Run ML2D"
         protML2D = XmippProtML2D(numberOfReferences=1, maxIters=4, 
@@ -72,7 +81,7 @@ class TestXmippWorkflow(unittest.TestCase):
         self.proj.launchProtocol(protML2D, wait=True)        
         
         self.assertIsNotNone(protML2D.outputClassification, "There was a problem with ML2D")  
-        self.assertTrue(protML2D.getFiles() == getML2DFiles())
+        self.validateFiles('protML2D', protML2D)
         
         print "Run CL2D"
         protCL2D = XmippProtCL2D(numberOfReferences=2, numberOfInitialReferences=1, 
@@ -81,125 +90,132 @@ class TestXmippWorkflow(unittest.TestCase):
         self.proj.launchProtocol(protCL2D, wait=True)        
         
         self.assertIsNotNone(protCL2D.outputClassification, "There was a problem with CL2D")
-        self.assertTrue(protCL2D.getFiles() == getCL2DFiles())         
+        self.validateFiles('protCL2D', protCL2D)      
 
-def getImportMicrographFiles():
-    return set(['Runs/ProtImportMicrographs1/BPV_1388.mrc', 
-                'Runs/ProtImportMicrographs1/micrographs.sqlite', 
-                'Runs/ProtImportMicrographs1/BPV_1387.mrc', 
-                'Runs/ProtImportMicrographs1/BPV_1386.mrc'])
 
-def getDownsamplingFiles():
-    return set(['Runs/XmippProtPreprocessMicrographs45/BPV_1388.mrc', 
-                'Runs/XmippProtPreprocessMicrographs45/BPV_1387.mrc', 
-                'Runs/ProtImportMicrographs1/BPV_1386.mrc', 
-                'Runs/XmippProtPreprocessMicrographs45/micrographs.xmd', 
-                'Runs/ProtImportMicrographs1/BPV_1388.mrc', 
-                'Runs/ProtImportMicrographs1/micrographs.sqlite', 
-                'Runs/XmippProtPreprocessMicrographs45/log/protocol.log', 
-                'Runs/XmippProtPreprocessMicrographs45/BPV_1386.mrc', 
-                'Runs/ProtImportMicrographs1/BPV_1387.mrc'])
-
-def getCTFFiles():
-    return set(['Runs/XmippProtCTFMicrographs119/extra/BPV_1387/xmipp_ctf_ctfmodel_quadrant.xmp', 
-                'Runs/XmippProtCTFMicrographs119/log/protocol.log', 
-                'Runs/XmippProtCTFMicrographs119/extra/BPV_1387/xmipp_ctf.psd', 
-                'Runs/XmippProtCTFMicrographs119/extra/BPV_1386/xmipp_ctf_enhanced_psd.xmp', 
-                'Runs/XmippProtCTFMicrographs119/extra/BPV_1386/xmipp_ctf.ctfparam', 
-                'Runs/XmippProtCTFMicrographs119/extra/BPV_1388/xmipp_ctf.ctfparam', 
-                'Runs/XmippProtCTFMicrographs119/extra/BPV_1388/xmipp_ctf.psd', 
-                'Runs/XmippProtCTFMicrographs119/extra/BPV_1388/xmipp_ctf_ctfmodel_halfplane.xmp', 
-                'Runs/XmippProtCTFMicrographs119/extra/BPV_1387/xmipp_ctf.ctfparam', 
-                'Runs/XmippProtCTFMicrographs119/extra/BPV_1388/xmipp_ctf_enhanced_psd.xmp', 
-                'Runs/XmippProtCTFMicrographs119/tmp/micrographs.xmd', 
-                'Runs/XmippProtCTFMicrographs119/extra/BPV_1387/xmipp_ctf_ctfmodel_halfplane.xmp', 
-                'Runs/XmippProtCTFMicrographs119/extra/BPV_1387/xmipp_ctf_enhanced_psd.xmp', 
-                'Runs/XmippProtCTFMicrographs119/extra/BPV_1386/xmipp_ctf_ctfmodel_quadrant.xmp', 
-                'Runs/XmippProtPreprocessMicrographs45/BPV_1388.mrc', 
-                'Runs/XmippProtPreprocessMicrographs45/BPV_1387.mrc', 
-                'Runs/XmippProtPreprocessMicrographs45/micrographs.xmd', 
-                'Runs/XmippProtCTFMicrographs119/extra/BPV_1386/xmipp_ctf.psd', 
-                'Runs/XmippProtCTFMicrographs119/extra/BPV_1386/xmipp_ctf_ctfmodel_halfplane.xmp', 
-                'Runs/XmippProtCTFMicrographs119/micrographs.xmd', 
-                'Runs/XmippProtPreprocessMicrographs45/BPV_1386.mrc', 
-                'Runs/XmippProtCTFMicrographs119/extra/BPV_1388/xmipp_ctf_ctfmodel_quadrant.xmp'])
+    def getProtocolFiles(self, key):
+        fileList = GOLD_FILES[key]
+        fileSet = set([self.__replaceFilename(f) for f in fileList])
+        
+        return fileSet
     
-def getExtractPrticlesFiles():
-    return set(['Runs/XmippProtExtractParticles230/extra/BPV_1387.pos', 
-                'Runs/XmippProtExtractParticles230/tmp/BPV_1388_flipped.xmp', 
-                'Runs/XmippProtExtractParticles230/tmp/BPV_1387_flipped.xmp', 
-                'Runs/XmippProtExtractParticles230/tmp/BPV_1386_noDust.xmp', 
-                'Runs/XmippProtExtractParticles230/extra/BPV_1388.pos', 
-                'Runs/XmippProtParticlePicking189/extra/BPV_1387.pos', 
-                'Runs/XmippProtParticlePicking189/extra/BPV_1386.pos', 
-                'Runs/XmippProtExtractParticles230/extra/BPV_1386.xmd', 
-                'Runs/XmippProtExtractParticles230/extra/BPV_1388.stk', 
-                'Runs/XmippProtParticlePicking189/extra/BPV_1388.pos', 
-                'Runs/XmippProtExtractParticles230/images.xmd', 
-                'Runs/XmippProtExtractParticles230/extra/BPV_1386.stk', 
-                'Runs/XmippProtExtractParticles230/extra/BPV_1388.xmd', 
-                'Runs/XmippProtExtractParticles230/extra/BPV_1386.pos', 
-                'Runs/XmippProtExtractParticles230/extra/BPV_1387.stk', 
-                'Runs/XmippProtExtractParticles230/tmp/BPV_1387_noDust.xmp', 
-                'Runs/XmippProtExtractParticles230/tmp/BPV_1388_noDust.xmp', 
-                'Runs/XmippProtExtractParticles230/log/protocol.log', 
-                'Runs/XmippProtExtractParticles230/extra/BPV_1387.xmd', 
-                'Runs/XmippProtExtractParticles230/tmp/BPV_1386_flipped.xmp'])
-
-def getML2DFiles():
-    return set(['Runs/XmippProtML2D366/ml2d_extra/iter002/iter_classes.xmd', 
-                'Runs/XmippProtML2D366/ml2d_extra/iter001/iter_classes.xmd', 
-                'Runs/XmippProtML2D366/ml2d_extra/iter002/iter_images.xmd', 
-                'Runs/XmippProtML2D366/ml2d_classes.stk', 
-                'Runs/XmippProtML2D366/ml2d_extra/iter003/iter_images.xmd', 
-                'Runs/XmippProtML2D366/ml2d_images.xmd', 
-                'Runs/XmippProtCTFMicrographs119/extra/BPV_1386/xmipp_ctf.ctfparam', 
-                'Runs/XmippProtML2D366/ml2d_extra/iter004/iter_classes.stk', 
-                'Runs/XmippProtCTFMicrographs119/extra/BPV_1388/xmipp_ctf.ctfparam', 
-                'Runs/XmippProtML2D366/ml2d__images_average.xmp', 
-                'Runs/XmippProtExtractParticles230/extra/BPV_1388.stk', 
-                'Runs/XmippProtCTFMicrographs119/extra/BPV_1387/xmipp_ctf.ctfparam', 
-                'Runs/XmippProtML2D366/ml2d_extra/iter001/iter_images.xmd', 
-                'Runs/XmippProtML2D366/ml2d_extra/iter002/iter_classes.stk', 
-                'Runs/XmippProtExtractParticles230/images.xmd', 
-                'Runs/XmippProtML2D366/ml2d_extra/iter004/iter_classes.xmd', 
-                'Runs/XmippProtExtractParticles230/extra/BPV_1386.stk', 
-                'Runs/XmippProtML2D366/ml2d_extra/iter004/iter_images.xmd', 
-                'Runs/XmippProtML2D366/ml2d_extra/iter003/iter_classes.xmd', 
-                'Runs/XmippProtML2D366/log/protocol.log', 
-                'Runs/XmippProtExtractParticles230/extra/BPV_1387.stk', 
-                'Runs/XmippProtML2D366/ml2d_classes.xmd', 
-                'Runs/XmippProtML2D366/ml2d_extra/iter001/iter_classes.stk', 
-                'Runs/XmippProtML2D366/ml2d_extra/iter003/iter_classes.stk'])
-
-def getCL2DFiles():
-    return set(['Runs/XmippProtCL2D420/extra/classes_core_hierarchy.txt', 
-                'Runs/XmippProtCL2D420/extra/level_01/level_classes_core.xmd', 
-                'Runs/XmippProtCL2D420/extra/level_01/level_classes.stk', 
-                'Runs/XmippProtCL2D420/extra/level_01/classes_sorted.stk', 
-                'Runs/XmippProtCL2D420/extra/level_00/level_classes.xmd', 
-                'Runs/XmippProtCL2D420/extra/level_00/classes_sorted.xmd', 
-                'Runs/XmippProtCTFMicrographs119/extra/BPV_1386/xmipp_ctf.ctfparam', 
-                'Runs/XmippProtCTFMicrographs119/extra/BPV_1388/xmipp_ctf.ctfparam', 
-                'Runs/XmippProtCL2D420/extra/level_00/level_classes_core.stk', 
-                'Runs/XmippProtCL2D420/log/protocol.log', 
-                'Runs/XmippProtExtractParticles230/extra/BPV_1388.stk', 
-                'Runs/XmippProtCTFMicrographs119/extra/BPV_1387/xmipp_ctf.ctfparam', 
-                'Runs/XmippProtCL2D420/extra/level_00/classes_core_sorted.xmd', 
-                'Runs/XmippProtCL2D420/extra/level_01/classes_core_sorted.stk', 
-                'Runs/XmippProtExtractParticles230/images.xmd', 
-                'Runs/XmippProtCL2D420/extra/level_00/classes_sorted.stk', 
-                'Runs/XmippProtCL2D420/extra/level_01/classes_sorted.xmd', 
-                'Runs/XmippProtCL2D420/extra/classes_hierarchy.txt', 
-                'Runs/XmippProtCL2D420/extra/images.xmd', 
-                'Runs/XmippProtExtractParticles230/extra/BPV_1386.stk', 
-                'Runs/XmippProtCL2D420/extra/level_01/classes_core_sorted.xmd', 
-                'Runs/XmippProtCL2D420/extra/level_00/classes_core_sorted.stk', 
-                'Runs/XmippProtExtractParticles230/extra/BPV_1387.stk', 
-                'Runs/XmippProtCL2D420/extra/level_00/level_classes_core.xmd', 
-                'Runs/XmippProtCL2D420/extra/level_01/level_classes.xmd', 
-                'Runs/XmippProtCL2D420/extra/level_00/level_classes.stk', 
-                'Runs/XmippProtCL2D420/extra/level_01/level_classes_core.stk'])
+    def __replaceFilename(self, filename):
+        """ Convert list to set and replace the key
+        in the filename by the protocol working dir. 
+        """
+        for k, v in self.protDict.iteritems():
+            if filename.startswith(k):
+                return filename.replace(k, v.getWorkingDir())
+        return filename
+                
+    
+GOLD_FILES = {'protImport': ['protImport/BPV_1388.mrc',
+                    'protImport/micrographs.sqlite', 
+                    'protImport/BPV_1387.mrc',
+                    'protImport/BPV_1386.mrc'],
+              'protDownsampling': ['protDownsampling/BPV_1388.mrc', 
+                    'protDownsampling/BPV_1387.mrc', 
+                    'protImport/BPV_1386.mrc', 
+                    'protDownsampling/micrographs.xmd', 
+                    'protImport/BPV_1388.mrc', 
+                    'protImport/micrographs.sqlite', 
+                    'protDownsampling/log/protocol.log', 
+                    'protDownsampling/BPV_1386.mrc', 
+                    'protImport/BPV_1387.mrc'],
+              'protCTF': ['protCTF/extra/BPV_1387/xmipp_ctf_ctfmodel_quadrant.xmp', 
+                    'protCTF/log/protocol.log', 
+                    'protCTF/extra/BPV_1387/xmipp_ctf.psd', 
+                    'protCTF/extra/BPV_1386/xmipp_ctf_enhanced_psd.xmp', 
+                    'protCTF/extra/BPV_1386/xmipp_ctf.ctfparam', 
+                    'protCTF/extra/BPV_1388/xmipp_ctf.ctfparam', 
+                    'protCTF/extra/BPV_1388/xmipp_ctf.psd', 
+                    'protCTF/extra/BPV_1388/xmipp_ctf_ctfmodel_halfplane.xmp', 
+                    'protCTF/extra/BPV_1387/xmipp_ctf.ctfparam', 
+                    'protCTF/extra/BPV_1388/xmipp_ctf_enhanced_psd.xmp', 
+                    'protCTF/tmp/micrographs.xmd', 
+                    'protCTF/extra/BPV_1387/xmipp_ctf_ctfmodel_halfplane.xmp', 
+                    'protCTF/extra/BPV_1387/xmipp_ctf_enhanced_psd.xmp', 
+                    'protCTF/extra/BPV_1386/xmipp_ctf_ctfmodel_quadrant.xmp', 
+                    'protDownsampling/BPV_1388.mrc', 
+                    'protDownsampling/BPV_1387.mrc', 
+                    'protDownsampling/micrographs.xmd', 
+                    'protCTF/extra/BPV_1386/xmipp_ctf.psd', 
+                    'protCTF/extra/BPV_1386/xmipp_ctf_ctfmodel_halfplane.xmp', 
+                    'protCTF/micrographs.xmd', 
+                    'protDownsampling/BPV_1386.mrc', 
+                    'protCTF/extra/BPV_1388/xmipp_ctf_ctfmodel_quadrant.xmp'],
+              'protExtract':['protExtract/extra/BPV_1387.pos', 
+                    'protExtract/tmp/BPV_1388_flipped.xmp', 
+                    'protExtract/tmp/BPV_1387_flipped.xmp', 
+                    'protExtract/tmp/BPV_1386_noDust.xmp', 
+                    'protExtract/extra/BPV_1388.pos', 
+                    'protPicking/extra/BPV_1387.pos', 
+                    'protPicking/extra/BPV_1386.pos', 
+                    'protExtract/extra/BPV_1386.xmd', 
+                    'protExtract/extra/BPV_1388.stk', 
+                    'protPicking/extra/BPV_1388.pos', 
+                    'protExtract/images.xmd', 
+                    'protExtract/extra/BPV_1386.stk', 
+                    'protExtract/extra/BPV_1388.xmd', 
+                    'protExtract/extra/BPV_1386.pos', 
+                    'protExtract/extra/BPV_1387.stk', 
+                    'protExtract/tmp/BPV_1387_noDust.xmp', 
+                    'protExtract/tmp/BPV_1388_noDust.xmp', 
+                    'protExtract/log/protocol.log', 
+                    'protExtract/extra/BPV_1387.xmd', 
+                    'protExtract/tmp/BPV_1386_flipped.xmp'],
+              'protML2D': ['protML2D/ml2d_extra/iter002/iter_classes.xmd', 
+                    'protML2D/ml2d_extra/iter001/iter_classes.xmd', 
+                    'protML2D/ml2d_extra/iter002/iter_images.xmd', 
+                    'protML2D/ml2d_classes.stk', 
+                    'protML2D/ml2d_extra/iter003/iter_images.xmd', 
+                    'protML2D/ml2d_images.xmd', 
+                    'protCTF/extra/BPV_1386/xmipp_ctf.ctfparam', 
+                    'protML2D/ml2d_extra/iter004/iter_classes.stk', 
+                    'protCTF/extra/BPV_1388/xmipp_ctf.ctfparam', 
+                    'protML2D/ml2d__images_average.xmp', 
+                    'protExtract/extra/BPV_1388.stk', 
+                    'protCTF/extra/BPV_1387/xmipp_ctf.ctfparam', 
+                    'protML2D/ml2d_extra/iter001/iter_images.xmd', 
+                    'protML2D/ml2d_extra/iter002/iter_classes.stk', 
+                    'protExtract/images.xmd', 
+                    'protML2D/ml2d_extra/iter004/iter_classes.xmd', 
+                    'protExtract/extra/BPV_1386.stk', 
+                    'protML2D/ml2d_extra/iter004/iter_images.xmd', 
+                    'protML2D/ml2d_extra/iter003/iter_classes.xmd', 
+                    'protML2D/log/protocol.log', 
+                    'protExtract/extra/BPV_1387.stk', 
+                    'protML2D/ml2d_classes.xmd', 
+                    'protML2D/ml2d_extra/iter001/iter_classes.stk', 
+                    'protML2D/ml2d_extra/iter003/iter_classes.stk'],
+              'protCL2D': ['protCL2D/extra/classes_core_hierarchy.txt', 
+                    'protCL2D/extra/level_01/level_classes_core.xmd', 
+                    'protCL2D/extra/level_01/level_classes.stk', 
+                    'protCL2D/extra/level_01/classes_sorted.stk', 
+                    'protCL2D/extra/level_00/level_classes.xmd', 
+                    'protCL2D/extra/level_00/classes_sorted.xmd', 
+                    'protCTF/extra/BPV_1386/xmipp_ctf.ctfparam', 
+                    'protCTF/extra/BPV_1388/xmipp_ctf.ctfparam', 
+                    'protCL2D/extra/level_00/level_classes_core.stk', 
+                    'protCL2D/log/protocol.log', 
+                    'protExtract/extra/BPV_1388.stk', 
+                    'protCTF/extra/BPV_1387/xmipp_ctf.ctfparam', 
+                    'protCL2D/extra/level_00/classes_core_sorted.xmd', 
+                    'protCL2D/extra/level_01/classes_core_sorted.stk', 
+                    'protExtract/images.xmd', 
+                    'protCL2D/extra/level_00/classes_sorted.stk', 
+                    'protCL2D/extra/level_01/classes_sorted.xmd', 
+                    'protCL2D/extra/classes_hierarchy.txt', 
+                    'protCL2D/extra/images.xmd', 
+                    'protExtract/extra/BPV_1386.stk', 
+                    'protCL2D/extra/level_01/classes_core_sorted.xmd', 
+                    'protCL2D/extra/level_00/classes_core_sorted.stk', 
+                    'protExtract/extra/BPV_1387.stk', 
+                    'protCL2D/extra/level_00/level_classes_core.xmd', 
+                    'protCL2D/extra/level_01/level_classes.xmd', 
+                    'protCL2D/extra/level_00/level_classes.stk', 
+                    'protCL2D/extra/level_01/level_classes_core.stk']
+              }
 
 
 if __name__ == "__main__":
