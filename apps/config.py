@@ -143,6 +143,7 @@ class ExecutionHostConfig(OrderedObject):
     
     def getHostPath(self):
         return self.hostPath.get()
+<<<<<<< HEAD
     
     def getSubmitCommand(self):
         return self.queueSystem.submitCommand.get()
@@ -157,6 +158,8 @@ class ExecutionHostConfig(OrderedObject):
     
     def isQueueMandatory(self):
         return self.queueSystem.mandatory.get()
+=======
+>>>>>>> 75f30a091107b6a508022dd4ac616e1c8df27405
         
 class QueueSystemConfig(OrderedObject):
     def __init__(self, **args):
