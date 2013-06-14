@@ -347,9 +347,14 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 					}
 					else
+					{
 						ppicker.setMode(Mode.Manual);
+						updateMicrographsModel();
+						canvas.repaint();
+					}
 					ppicker.saveConfig();
 					enableSupervised(isautopick);
+					
 				}
 				catch (Exception ex)
 				{
