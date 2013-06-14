@@ -25,12 +25,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-
-import xmipp.ij.commons.Tool;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
@@ -592,6 +589,16 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		micrographpn.add(buttonspn, XmippWindowUtil.getConstraints(constraints, 0, 2, 2));
 
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
 	protected void loadMicrograph()
 	{
@@ -629,11 +636,10 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 	{
 		if(current.equals(next))//app just started
 			return;
-		boolean iscorrect = current.getManualParticles().size() != 0 || current.getAutomaticParticlesDeleted() != 0;
 		boolean isautopick = ppicker.getMode() == Mode.Supervised && next.getState() == MicrographState.Available;
-		if (ppicker.getMode() == Mode.Supervised && current.getState() == MicrographState.Supervised && iscorrect)
+		if (ppicker.getMode() == Mode.Supervised && current.getState() == MicrographState.Supervised)
 		{
-			iscorrect = XmippDialog.showQuestion(this, "Would you like to correct training with added and deleted particles?");
+			boolean iscorrect = XmippDialog.showQuestion(this, "Would you like to correct training with added and deleted particles?");
 			if (iscorrect)
 			{
 				ppicker.correctAndAutopick(this, current, next);

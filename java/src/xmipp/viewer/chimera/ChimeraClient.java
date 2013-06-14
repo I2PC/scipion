@@ -21,10 +21,11 @@ public class ChimeraClient
 		{
 			
 			String volfile = String.format("%1$shome%1$sairen%1$sxprojects%1$sshowj%1$shand.vol", File.separator);
-
+			String serverpy = Filename.getXmippPath("libraries/bindings/chimera/xmipp_chimera_server.py");
 			int port = 6000;
-//			String command = String.format("chimera %s %s ", Filename.getXmippPath("libraries/bindings/chimera/xmipp_chimera_server.py"), port);
-			String command = String.format("chimera %s", Filename.getXmippPath("libraries/bindings/chimera/xmipp_chimera_server.py"));
+//			String command = String.format("chimera %s %s ", serverpy, port);
+//			String command = String.format("xmipp_python %s", "/home/airen/socketserver.py");
+			String command = String.format("chimera %s", serverpy);
 			System.out.println(command);
 			Runtime.getRuntime().exec(command);
 			Thread.sleep(3000);
@@ -59,7 +60,7 @@ public class ChimeraClient
 	
 	public static void sendMessage(PrintWriter out, String msg)
 	{
-		out.write(msg);
+		out.println(msg);
 		System.out.println(msg);
 	}
 
