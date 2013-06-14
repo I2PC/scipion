@@ -1,81 +1,114 @@
-{% extends 'base.html' %} 
-{% block title %} - Project {{project_name}} {% endblock %}
-{% block head %}
-	<link href={{css}} rel="stylesheet" type="text/css">
-	<link href={{messi_css}} rel="stylesheet" type="text/css">
-	<!-- JS Libs -->
-	<script src={{jquery}} type="text/javascript"></script>
-	<script src={{jquery_cookie}} type="text/javascript"></script>
-	<script src={{jquery_treeview}} type="text/javascript"></script>
-	<script src={{launchTreeview}} type="text/javascript"></script>
-	<script src={{utils}} type="text/javascript"></script>
-	<script src={{messi}} type="text/javascript"></script>
-{% endblock %}		
+{% extends 'base.html' %} {% block title %} - Project {{project_name}}
+{% endblock %} {% block head %}
+<link href={{css}} rel="stylesheet" type="text/css">
+<link href={{messi_css}} rel="stylesheet" type="text/css">
+<!-- JS Libs -->
+<script src={{jquery_cookie}} type="text/javascript"></script>
+<script src={{jquery_treeview}} type="text/javascript"></script>
+<script src={{launchTreeview}} type="text/javascript"></script>
+<script src={{utils}} type="text/javascript"></script>
+<script>
+	$(document).ready(function() {
+		$(".tabContents").hide(); // Hide all tab conten divs by default
+		$(".tabContents:first").show(); // Show the first div of tab content by default
 
-{% block menu %}
-	<button onclick="javascript:customPopup('/openHostsConfig/?projectName={{projectName}}', 800, 600)"class="generalButton" type="button" style="position:absolute;margin:10px;right:10px;">Config hosts</button>
-{% endblock %}
+		$("#tabContaier ul li a").click(function() { //Fire the click event
 
-{% block sideLeft %}			
-	<!-- <div class="tittle">PROTOCOLS</div> -->			
-	<div class="protFieldsetTree">
-		<ul id="browser" class="filetree">
-			{% for section in sections %}
-				<li><span class="section">{{section.name}}</span>
+			var activeTab = $(this).attr("href"); // Catch the click link
+			$("#tabContaier ul li a").removeClass("active"); // Remove pre-highlighted link
+			$(this).addClass("active"); // set clicked link to highlight state
+			$(".tabContents").hide(); // hide currently visible tab content div
+			$(activeTab).fadeIn(); // show the target tab content div by matching clicked link.
+		});
+	});
+</script>
+{% endblock %} {% block menu %}
+<button
+	onclick="javascript:customPopup('/openHostsConfig/?projectName={{projectName}}', 800, 600)"
+	class="generalButton" type="button"
+	style="position: absolute; margin: 10px; right: 10px;">Config
+	hosts</button>
+{% endblock %} {% block sideLeft %}
+<!-- <div class="tittle">PROTOCOLS</div> -->
+<div class="protFieldsetTree">
+	<ul id="browser" class="filetree">
+		{% for section in sections %}
+		<li><span class="section">{{section.name}}</span>
+			<ul>
+				{% for prot in section.childs %} {% if prot.tag == 'protocol'%}
+				<li><span class="protocol"><a
+						href="javascript:popup('/form/?projectName={{projectName}}&protocol={{prot.name}}')">{{prot.name}}</a></span></li>
+				{% elif prot.tag == 'protocol_base' %}
+				<li><span class="protocol_base">{{prot.name}}</span>
 					<ul>
-						{% for prot in section.childs %} {% if prot.tag == 'protocol'%}
-						<li><span class="protocol"><a
-								href="javascript:popup('/form/?projectName={{projectName}}&protocol={{prot.name}}')">{{prot.name}}</a></span></li>
-						{% elif prot.tag == 'protocol_base' %}
-						<li>
-							<span class="protocol_base">{{prot.name}}</span>
-							<ul>
-								{% for prot2 in prot.childs %}
-									<li>
-										<span class="protocol_class"> 
-											<a href="javascript:popup('/form/?projectName={{projectName}}&protocol={{prot2.name}}')">
-												{{prot2.name}} 
-											</a>
-										</span>
-									</li> 
-								{% endfor %}
-							</ul>
-						</li> {% else %} No athletes. {% endif %} {% endfor %}
-					</ul>
-				</li>
-			{% endfor %}
-		</ul>
+						{% for prot2 in prot.childs %}
+						<li><span class="protocol_class"> <a
+								href="javascript:popup('/form/?projectName={{projectName}}&protocol={{prot2.name}}')">
+									{{prot2.name}} </a>
+						</span></li> {% endfor %}
+					</ul></li> {% else %} No athletes. {% endif %} {% endfor %}
+			</ul></li> {% endfor %}
+	</ul>
+</div>
+{% endblock %} {% block content %}
+<!-- <div class="tittle">{{project_name}} EXECUTIONS</div> -->
+<div id="toolbar" style="display: none">
+	<span><a id="editTool" href=""><img src="{{editTool}}" />
+			Edit</a></span> <span><a id="copyTool" href=""><img
+			src="{{copyTool}}" /> Copy</a></span> <span><a id="deleteTool" href=""><img
+			src="{{deleteTool}}" /> Delete</a></span> <span><a id="browseTool"
+		href=""><img src="{{browseTool}}" /> Browse</a></span>
+</div>
+<div style="overflow: auto;">
+	<table id="run" cellspacing="0">
+		<tr>
+			{% for colName, colWidth in provider.getColumns %}
+			<th>{{colName}}</th> {% endfor %}
+		</tr>
+		{% for obj in provider.getObjects %}
+		<tr id="{{obj.getObjId}}"
+			onclick='javascript:launchToolbar("{{projectName}}","{{obj.getObjId}}", ($(this)));'
+			style="background-color: #fafafa;">
+			<td><a
+				href="javascript:popup('/form/?projectName={{projectName}}&protocolId={{obj.getObjId}}')">
+					{{obj.getName}} </a></td>
+			<td>{{obj.status.get}}</td>
+			<td>{{obj.endTime.get}}</td>
+		</tr>
+		{% endfor %}
+	</table>
+</div>
+
+<div id="tabContaier">
+	<ul class="listTabs">
+		<li><a id="tabTitle" class="active" href="#tab1">Data</a></li>
+		<li><a id="tabTitle" href="#tab2">Summary</a></li>
+	</ul>
+	<!-- //Tab buttons -->
+	<div class="tabDetails">
+		<!-- //tab1 -->
+		<div id="tab1" class="tabContents">
+			<h3>Data</h3>
+			<p>Sed gravida velit ut lorem dictum vitae venenatis dolor
+				faucibus. In vehicula malesuada mi, vel semper sem porta in. Mauris
+				suscipit lorem eget justo congue semper.</p>
+			<p>Donec et purus eget elit tristique consequat. Integer ut orci
+				eu augue tristique viverra nec vitae odio. Nulla sem nibh, posuere
+				quis condimentum vitae, posuere sit amet lectus. Morbi euismod
+				tincidunt mauris ut scelerisque.</p>
+		</div>
+		<!-- //tab2 -->
+		<div id="tab2" class="tabContents">
+			<h3>Summary</h3>
+			<p>Sed gravida velit ut lorem dictum vitae venenatis dolor
+				faucibus. In vehicula malesuada mi, vel semper sem porta in. Mauris
+				suscipit lorem eget justo congue semper.</p>
+			<p>Donec et purus eget elit tristique consequat. Integer ut orci
+				eu augue tristique viverra nec vitae odio. Nulla sem nibh, posuere
+				quis condimentum vitae, posuere sit amet lectus. Morbi euismod
+				tincidunt mauris ut scelerisque.</p>
+		</div>
 	</div>
-{% endblock %}
-{% block content %}
-	<!-- <div class="tittle">{{project_name}} EXECUTIONS</div> -->
-	<div id="toolbar" style="display:none">
-		<span><a id="editTool" href=""><img src="{{editTool}}"/> Edit</a></span>
-		<span><a id="copyTool" href=""><img src="{{copyTool}}"/> Copy</a></span>
-		<span><a id="deleteTool" href=""><img src="{{deleteTool}}"/> Delete</a></span>
-		<span><a id="browseTool" href=""><img src="{{browseTool}}"/> Browse</a></span>
-	</div>
-	<div style="overflow:auto;height:70%;">
-		<table id="run" cellspacing="0">
-			<tr>
-				{% for colName, colWidth in provider.getColumns %}
-					<th>{{colName}}</th> 
-				{% endfor %}
-			</tr>
-			{% for obj in provider.getObjects %}
-				<tr id="{{obj.getObjId}}" onclick='javascript:launchToolbar("{{projectName}}","{{obj.getObjId}}", ($(this)));' style="background-color:#fafafa;">
-					<td>
-						<a href="javascript:popup('/form/?projectName={{projectName}}&protocolId={{obj.getObjId}}')">
-							{{obj.getName}}
-						</a>
-					</td>
-					<td>{{obj.status.get}}</td>
-					<td>{{obj.endTime.get}}</td>
-				</tr>
-			{% endfor %}
-		</table>
-	</div>
-	<div class="datatable">
-	
-	</div>
+</div>
+
 {% endblock %}
