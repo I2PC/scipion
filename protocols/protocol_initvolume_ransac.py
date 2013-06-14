@@ -71,9 +71,10 @@ class ProtInitVolRANSAC(XmippProtocol):
         for n in range(self.NumVolumes):
             fnBase='proposedVolume%05d'%n
             fnRoot=self.workingDirPath(fnBase)
+            parent_id=XmippProjectDb.FIRST_STEP
             for it in range(self.NumIter):    
                 parent_id = self.insertParallelStep('reconstruct',fnRoot=fnRoot,symmetryGroup=self.SymmetryGroup,maskRadius=Xdim2/2,
-                                                    parent_step_id=XmippProjectDb.FIRST_STEP)
+                                                    parent_step_id=parent_id)
                 parent_id = self.insertParallelStep('projMatch',WorkingDir=self.WorkingDir,fnBase=fnBase,AngularSampling=self.AngularSampling,
                                                     SymmetryGroup=self.SymmetryGroup, Xdim=self.Xdim, parent_step_id=parent_id)
             self.insertParallelRunJobStep("xmipp_image_resize","-i %s.vol -o %s.vol --dim %d %d" 
