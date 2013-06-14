@@ -24,7 +24,7 @@
  ***************************************************************************/
 #include "align_tilt_pairs.h"
 
-//#define DEBUG
+#define DEBUG
 
 //Define Program parameters
 void ProgAlignTiltPairs::defineParams()
@@ -79,8 +79,7 @@ void ProgAlignTiltPairs::show()
 }
 
 // Center one tilted image  =====================================================
-//#define DEBUG
-
+#define DEBUG
 bool ProgAlignTiltPairs::centerTiltedImage(const MultidimArray<double> &imgRefU,
         bool flip,
         double inPlaneU, double shiftXu, double shiftYu,
@@ -147,7 +146,7 @@ bool ProgAlignTiltPairs::centerTiltedImage(const MultidimArray<double> &imgRefU,
     shiftY=MAT_ELEM(Tt,1,2);
     double shift = sqrt(shiftX * shiftX + shiftY * shiftY);
 
-//#define DEBUG_2
+#define DEBUG_2
 #ifdef DEBUG_2
 
     Image<double> save;

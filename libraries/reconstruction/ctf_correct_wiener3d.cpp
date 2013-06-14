@@ -72,7 +72,7 @@ void ProgCtfCorrectAmplitude3D::defineParams()
     addExampleLine("xmipp_ctf_correct_wiener3d -i ctf_correct3d.xmd --oroot volumeCorrected");
     addExampleLine("In the following link you can find an example of input file:",false);
     addExampleLine(" ",false);
-    addExampleLine("http://sourceforge.net/p/testxmipp/code/ci/3.0/tree/input/ctf_correct3d.xmd",false);
+    addExampleLine("http://sourceforge.net/p/testxmipp/code/ci/master/tree/input/ctf_correct3d.xmd?format=raw",false);
 }
 
 /* Produce Side information ------------------------------------------------ */

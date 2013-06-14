@@ -20,9 +20,12 @@ public class ChimeraClient
 		try
 		{
 			String volfile = String.format("%1$shome%1$sairen%1$sxprojects%1$sshowj%1$shand.vol", File.separator);
-			Runtime.getRuntime().exec("chimera " + Filename.getXmippPath("libraries/bindings/chimera/xmipp_chimera_server.py"));
+			int port = 6000;
+			String command = String.format("chimera --script '%s %s' &", Filename.getXmippPath("libraries/bindings/chimera/xmipp_chimera_server.py"), port);
+			System.out.println(command);
+			Runtime.getRuntime().exec(command);
 			Thread.sleep(3000);
-			client = new Socket("", 6000);
+			client = new Socket("", port);
 			out = new PrintWriter(client.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(client.getInputStream()));
 			ImageGeneric ig = new ImageGeneric(volfile);
