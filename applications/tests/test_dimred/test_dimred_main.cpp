@@ -9,7 +9,6 @@
 #include <dimred/kernelPCA.h>
 #include <dimred/hessianLLE.h>
 #include <dimred/diffusionMaps.h>
-#include <dimred/chartingmanifold.h>
 #include <dimred/probabilisticPCA.h>
 #include <dimred/laplacianEigenmaps.h>
 #include <iostream>
