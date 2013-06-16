@@ -178,7 +178,7 @@ data_
                 FourierMaxFrequencyOfInterestSummary = md.getValue(MDL_RESOLUTION_FREQREAL, id)
                 summary += ['Resolution for first reference is <%s> A' % FourierMaxFrequencyOfInterestSummary]
             else:
-                summary += ['<ERROR:> Resolution is not available but iteration number is not 1.\n <Something went wrong>. File=[%s] ' % ResolutionXmdCurrIterMaxSummary]            
+                summary += ['REsolution not available.']            
         else:
             summary += ['Resolution is <%s>' % 'not available']            
         
@@ -855,8 +855,21 @@ data_
             self.reconstructedFilteredFileNamesIters.append([None] + [self.getFilename('ReconstructedFilteredFileNamesIters', iter=iterN, ref=r) for r in range(1, self.numberOfReferences + 1)])
 
         _tmp = self.FourierMaxFrequencyOfInterest
-        self.FourierMaxFrequencyOfInterest = list(-1 for  k in range(0, self.NumberOfIterations + 1 +1))
-        self.FourierMaxFrequencyOfInterest[1] = _tmp
+        #ROB
+#        file = open("datafile.txt", "w")
+        
+        if self.DoComputeResolution=='0' or self.DoComputeResolution==0:
+            self.FourierMaxFrequencyOfInterest = list(_tmp for  k in range(0, self.NumberOfIterations + 1 +1))
+        else:
+            self.FourierMaxFrequencyOfInterest = list(-1 for  k in range(0, self.NumberOfIterations + 1 +1))
+            self.FourierMaxFrequencyOfInterest[1] = _tmp
+
+#        newLine = "\nself.FourierMaxFrequencyOfInterest" + str(self.FourierMaxFrequencyOfInterest)
+#        file.write(newLine)
+#        newLine = "\nself.DoComputeResolution" + str(self.DoComputeResolution)
+#        file.write(newLine)
+#        file.close()
+
         #parameter for projection matching
         self.Align2DIterNr = [-1] + getListFromVector(self.Align2DIterNr, self.NumberOfIterations)
         self.Align2dMaxChangeOffset = [-1] + getListFromVector(self.Align2dMaxChangeOffset, self.NumberOfIterations)
@@ -1131,22 +1144,23 @@ data_
                 insertReconstructStep('ReconstructedFileNamesIters', 'ReconstructionXmd', 'ReconstructedFileNamesIters')                
                     
                 if(self.DoSplitReferenceImages[iterN]):
-                    insertReconstructStep('ReconstructedFileNamesItersSplit1', 'ReconstructionXmdSplit1', 'ReconstructedFileNamesItersSplit1')      
-                    insertReconstructStep('ReconstructedFileNamesItersSplit2', 'ReconstructionXmdSplit2', 'ReconstructedFileNamesItersSplit2')
-                    
-                    _VerifyFiles = [self.getFilename('ResolutionXmdFile', iter=iterN, ref=refN)]
-                    id = _dataBase.insertStep('compute_resolution', verifyfiles=_VerifyFiles
-                                                 , ConstantToAddToFiltration = self.ConstantToAddToMaxReconstructionFrequency[iterN]
-                                                 , FourierMaxFrequencyOfInterest = self.FourierMaxFrequencyOfInterest[iterN]
-                                                 , ReconstructionMethod = self.ReconstructionMethod
-                                                 , ResolutionXmdCurrIter = self.getFilename('ResolutionXmd', iter=iterN, ref=refN)
-                                                 , ResolutionXmdCurrIterMax = self.getFilename('ResolutionXmdMax', iter=iterN, ref=refN)
-                                                 , ResolutionXmdPrevIterMax = self.getFilename('ResolutionXmdMax', iter=iterN-1, ref=refN)
-                                                 , OuterRadius = self.OuterRadius[iterN]
-                                                 , ReconstructedVolumeSplit1 = self.getFilename('ReconstructedFileNamesItersSplit1', iter=iterN, ref=refN)
-                                                 , ReconstructedVolumeSplit2 = self.getFilename('ReconstructedFileNamesItersSplit2', iter=iterN, ref=refN)
-                                                 , ResolSam = self.ResolSam
-                                                  )
+                    if (self.DoComputeResolution[iterN]):
+                        insertReconstructStep('ReconstructedFileNamesItersSplit1', 'ReconstructionXmdSplit1', 'ReconstructedFileNamesItersSplit1')      
+                        insertReconstructStep('ReconstructedFileNamesItersSplit2', 'ReconstructionXmdSplit2', 'ReconstructedFileNamesItersSplit2')
+                        
+                        _VerifyFiles = [self.getFilename('ResolutionXmdFile', iter=iterN, ref=refN)]
+                        id = _dataBase.insertStep('compute_resolution', verifyfiles=_VerifyFiles
+                                                     , ConstantToAddToFiltration = self.ConstantToAddToMaxReconstructionFrequency[iterN]
+                                                     , FourierMaxFrequencyOfInterest = self.FourierMaxFrequencyOfInterest[iterN]
+                                                     , ReconstructionMethod = self.ReconstructionMethod
+                                                     , ResolutionXmdCurrIter = self.getFilename('ResolutionXmd', iter=iterN, ref=refN)
+                                                     , ResolutionXmdCurrIterMax = self.getFilename('ResolutionXmdMax', iter=iterN, ref=refN)
+                                                     , ResolutionXmdPrevIterMax = self.getFilename('ResolutionXmdMax', iter=iterN-1, ref=refN)
+                                                     , OuterRadius = self.OuterRadius[iterN]
+                                                     , ReconstructedVolumeSplit1 = self.getFilename('ReconstructedFileNamesItersSplit1', iter=iterN, ref=refN)
+                                                     , ReconstructedVolumeSplit2 = self.getFilename('ReconstructedFileNamesItersSplit2', iter=iterN, ref=refN)
+                                                     , ResolSam = self.ResolSam
+                                                      )
 
                     id = _dataBase.insertStep('filter_volume', verifyfiles=_VerifyFiles
                                               , FourierMaxFrequencyOfInterest = self.FourierMaxFrequencyOfInterest[iterN+1]
