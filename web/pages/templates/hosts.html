@@ -13,27 +13,24 @@
 			function getHost(hostLabel, projectName) {
 				$.ajax({
 					type : "GET",
-					url : "/getHost/?hostLabel=" + hostLabel + "&projectName=" + projectName,
+					url : "/getHost/?hostLabel=" + hostLabel,
 					dataType : "json",
 					success : function(json) {
 						// specifying a dataType of json makes jQuery pre-eval the response
 						// for us ExecutionHostConfig
 						host = json.host;
-						document.getElementById("id_label").value = host.label
-						document.getElementById("id_hostName").value = host.hostName
-						document.getElementById("id_userName").value = host.userName
-						document.getElementById("id_hostPath").value = host.hostPath
+						document.getElementById("label").value = host.label
+						document.getElementById("hostName").value = host.hostName
+						document.getElementById("userName").value = host.userName
+						document.getElementById("hostPath").value = host.hostPath
 					}
 				});
 			}
-			function seeHost(){
-				
-			}
-			function newHost(){
-			
-			}
-			function editHost(){
-				 
+			function clearForm(){
+				document.getElementById("label").value = ""
+				document.getElementById("hostName").value = ""
+				document.getElementById("userName").value = ""
+				document.getElementById("hostPath").value = ""
 			}
 			function removeHost(){
 				 if (confirm("Are you sure you want to remove ths host?")) {
@@ -72,66 +69,35 @@
 			</tr>
 			{% endfor %}
 		</table>
+		
 		<br/>
-		<button onclick="removeHost()" class="generalButton" type="button" style="">Remove</button>
 		<br/>
-		<br/>
-		<form action="hosts" method="post">{% csrf_token %}
-		{{ form.as_p }}
+		<form action="/updateHostsConfig" method="post">		
+        {% csrf_token %}
 		<!-- 
 		<table>
-			<tr>
-				<td>
-					<label for="label">Scipion hosts: </label>
-				</td>
-				<td>
-					<select name="scipionHostsCombo" SIZE=1 onChange="javascript:alert('prueba');"> 
-						<option VALUE="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</option>
-						{% for scipionHost in scipionHosts %}
-							<option VALUE="{{scipionHost.label}}">{{sciponHost.hostName}}</option>						
-						{% endfor %}
-					</select> 
-				</td>
-			</tr>
-			<tr>
-			
-			</tr>
-			<tr>
-				<td>
-					<label for="labelId">Configuration: </label>
-				</td>
-				<td>
-					<input type="text" class="generalInput" id="labelId" name="label" size="30">
-				</td>
-			</tr>
-			<tr>
-				<td>
-					<label for="hostNameId">Host name: </label>
-				</td>
-				<td>
-					<input type="text" class="generalInput" id="hostNameId" name="hostName" size="30">
-				</td>
-			</tr>
-			<tr>
-				<td>
-					<label for="userNameId">User name: </label>
-				</td>
-				<td>
-					<input type="text" class="generalInput" id="userNameId" name="userName" size="30">
-				</td>
-			</tr>
-			<tr>
-				<td>
-					<label for="hostPathId">Host path: </label>
-				</td>
-				<td>
-					<input type="text" class="generalInput" id="hostPathId" name="hostPath" size="40"><br/>
-				</td>
-			</tr>	
-		</table>
+            {{ form.as_table }}
+        </table>
 		 -->
-		<button onclick="removeHost()" class="generalButton" type="button" style="">Clear</button>
-		<input id="acceptButton" type='submit' value='Create' class="priorityButton" />
+		 
+		<table>			 
+		 	{% for field in form %}
+		 	<tr>
+			    <td>
+			    	<label {% if field.field.required %} class="required" {% endif %} for="{{ field.html_name }}"> {{ field.label }}</label>
+			    </td> 
+			    <td>{{ field }}</td>
+			</tr>    
+			{% endfor %}
+		</table>
+		<br/>
+		{% for field in form %}
+			{{ field.errors }}
+		{% endfor %}
+		<br/>
+		<button onclick="clearForm()" class="generalButton" type="button" style="">Clear</button>
+		<input id="acceptButton" type='submit' value='Save' class="priorityButton" />	
+		<button id="removeButton" onclick="removeHost()" class="priorityButton" type="button" />Remove</button>	
 		</form>
 	</body>
 </html>

@@ -212,7 +212,7 @@ class Project(object):
         self.hostsMapper = ExecutionHostMapper(self.hostsPath)
         executionHostConfig = self.hostsMapper.selectByLabel(protocol.getHostName())
         self.sendProtocol(protocol, executionHostConfig)
-        command = "nohup pw_protocol_run.py " + self.getObjId() + " " + str(protocol.getObjId()) + " > /gpfs/fs1/home/bioinfo/apoza/salida.txt 2> /gpfs/fs1/home/bioinfo/apoza/salida2.txt &"
+        command = "nohup pw_protocol_run.py " + self.getObjId() + " " + str(protocol.getObjId()) #+ " > /gpfs/fs1/home/bioinfo/apoza/salida.txt 2> /gpfs/fs1/home/bioinfo/apoza/salida2.txt &"
         from pyworkflow.utils.utils import executeRemote
         executeRemote(command,
                       executionHostConfig.getHostName(),
@@ -247,3 +247,11 @@ class Project(object):
                         forceOperation = False,
                         operationId = 1)
         
+    def saveHost(self, host):
+        # We check if the host exists to save or update
+        executionHostConfig = self.hostsMapper.selectByLabel(host.getLabel())
+        if executionHostConfig is None:
+            self.hostsMapper.insert(host)
+        else:
+            self.hostsMapper.update(host)
+        self.hostsMapper.commit()

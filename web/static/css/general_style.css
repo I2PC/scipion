@@ -124,6 +124,10 @@ html,body {
 	text-align: center;
 }
 
+.required {
+	font-weight: bold;
+}
+
 .generalTable a:link {
 	font-weight: bold;
 }

@@ -64,6 +64,21 @@ class ExecutionHostConfig(OrderedObject):
     
     def isQueueMandatory(self):
         return self.queueSystem.mandatory.get()
+    
+    def setLabel(self, label):
+        return self.label.set(label)
+    
+    def setHostName(self, hostName):
+        return self.hostName.set(hostName)
+    
+    def setUserName(self, userName):
+        return self.userName.set(userName)
+    
+    def setPassword(self, password):
+        return self.password.set(password)
+    
+    def setHostPath(self, hostPath):
+        return self.hostPath.set(hostPath)
 
         
 class QueueSystemConfig(OrderedObject):
