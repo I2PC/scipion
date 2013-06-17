@@ -53,6 +53,7 @@ void ProgXrayProject::defineParams()
     addExampleLine("In the following link you can find an example of X-ray microscope parameters file:",false);
     addExampleLine(" ",false);
     addExampleLine("http://sourceforge.net/p/testxmipp/code/ci/master/tree/input/xray_psf.xmd?format=raw",false);
+
 }
 
 /* Read from command line ================================================== */
