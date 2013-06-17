@@ -13,7 +13,7 @@
 			function getHost(hostLabel, projectName) {
 				$.ajax({
 					type : "GET",
-					url : "/getHost/?hostLabel=" + hostLabel + "&projectName=" + projectName,
+					url : "/getHost/?hostLabel=" + hostLabel,
 					dataType : "json",
 					success : function(json) {
 						// specifying a dataType of json makes jQuery pre-eval the response
@@ -26,14 +26,11 @@
 					}
 				});
 			}
-			function seeHost(){
-				
-			}
-			function newHost(){
-			
-			}
-			function editHost(){
-				 
+			function clearForm(){
+				document.getElementById("label").value = ""
+				document.getElementById("hostName").value = ""
+				document.getElementById("userName").value = ""
+				document.getElementById("hostPath").value = ""
 			}
 			function removeHost(){
 				 if (confirm("Are you sure you want to remove ths host?")) {
@@ -72,8 +69,7 @@
 			</tr>
 			{% endfor %}
 		</table>
-		<br/>
-		<button onclick="removeHost()" class="generalButton" type="button" style="">Remove</button>
+		
 		<br/>
 		<br/>
 		<form action="/updateHostsConfig" method="post">		
@@ -100,7 +96,8 @@
 		{% endfor %}
 		<br/>
 		<button onclick="clearForm()" class="generalButton" type="button" style="">Clear</button>
-		<input id="acceptButton" type='submit' value='Save' class="priorityButton" />		
+		<input id="acceptButton" type='submit' value='Save' class="priorityButton" />	
+		<button id="removeButton" onclick="removeHost()" class="priorityButton" type="button" />Remove</button>	
 		</form>
 	</body>
 </html>

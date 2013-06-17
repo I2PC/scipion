@@ -406,7 +406,7 @@ def openHostsConfig(request):
     for executionHostMapper in scipionHosts:
         scpnHostsChoices.append((executionHostMapper.getLabel(), executionHostMapper.getHostName()))
     form.fields['scpnHosts'].choices = scpnHostsChoices
-    context = {'project' : project,
+    context = {'projectName' : request.session['projectName'],
                'hosts': projectHosts,
                'scipionHosts': scipionHosts,
                'favicon': favicon_path,
@@ -432,11 +432,14 @@ def getHost(request):
 #         jsonStr = json.dumps({'hostConfig' :  executionHostConfig},
 #                              ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
-    
+
+
 def updateHostsConfig(request):
     form = HostForm(request.POST) # A form bound to the POST data
     if form.is_valid(): # All validation rules pass
-        salvar hosts
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        project.saveHost(form.getHost())
         return openHostsConfig(request)
     else:
         return openHostsConfig(request)
