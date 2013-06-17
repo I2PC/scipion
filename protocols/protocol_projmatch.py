@@ -669,6 +669,7 @@ data_
         if doPlot('DisplayAngularDistribution'):
             self.DisplayAngularDistributionWith = self.parser.getTkValue('DisplayAngularDistributionWith')
             if(self.DisplayAngularDistributionWith == '3D'):
+                (Xdim, Ydim, Zdim, Ndim) = SingleImgSize(self.ReferenceFileNames[0])
                 for ref3d in ref3Ds:
                     for it in iterations:
                         _OuterRadius = getComponentFromVector(self.OuterRadius, it)
@@ -680,7 +681,8 @@ data_
         
                             parameters =  ' -i ' + file_name + \
                                 ' -o ' + file_name_bild + \
-                                ' chimera ' + str(float(_OuterRadius) * 1.1)
+                                ' chimera ' + str(float(_OuterRadius) * 1.1) +\
+                                ' 1.5 %d'%(Xdim/2)
                             runJob(_log,
                                    'xmipp_angular_distribution_show',
                                    parameters
