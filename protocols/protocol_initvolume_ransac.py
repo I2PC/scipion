@@ -30,7 +30,7 @@ class ProtInitVolRANSAC(XmippProtocol):
     def defineSteps(self):
         self.insertStep('createDir',path=self.ExtraDir)
         self.insertStep("linkAcquisitionInfo",InputFile=self.Classes,dirDest=self.WorkingDir)
-        fnOutputReducedClass = self.tmpPath("reducedClasses.stk") 
+        fnOutputReducedClass = self.extraPath("reducedClasses.stk") 
 
         # Low pass filter and resize        
         self.MaxFreq = float(self.MaxFreq)
@@ -56,7 +56,7 @@ class ProtInitVolRANSAC(XmippProtocol):
 
         # RANSAC iterations
         for n in range(self.NRansac):
-            self.insertParallelStep('ransacIteration',TmpDir=self.TmpDir,n=n,SymmetryGroup=self.SymmetryGroup,Xdim=self.Xdim,
+            self.insertParallelStep('ransacIteration',WorkingDir=self.WorkingDir,n=n,SymmetryGroup=self.SymmetryGroup,Xdim=self.Xdim,
                                     Xdim2=self.Xdim2,NumGrids=self.NumGrids,InitialVolume=self.InitialVolume,AngularSampling=self.AngularSampling,
                                     parent_step_id=XmippProjectDb.FIRST_STEP)
         
@@ -82,7 +82,6 @@ class ProtInitVolRANSAC(XmippProtocol):
 
         # Score each of the final volumes
         self.insertStep("scoreFinalVolumes",WorkingDir=self.WorkingDir,NumVolumes=self.NumVolumes)
-        self.insertStep("deleteFile",filename=fnOutputReducedClass)
         
     def summary(self):
         message=[]
@@ -194,7 +193,7 @@ def projectInitialVolume(log,WorkingDir,InitialVolume,Xdim2,AngularSampling,Symm
     runJob(log,'xmipp_image_convert',"-i %s -o %s"%(removeFilenamePrefix(InitialVolume),fnOutputInitVolume))
     runJob(log,"xmipp_image_resize","-i %s --dim %d %d"%(fnOutputInitVolume,Xdim2,Xdim2))
     fnGallery=os.path.join(WorkingDir,'tmp/gallery_InitialVolume.stk')
-    fnOutputReducedClass = os.path.join(WorkingDir,"tmp/reducedClasses.stk") 
+    fnOutputReducedClass = os.path.join(WorkingDir,"extra/reducedClasses.stk") 
     runJob(log,"xmipp_angular_project_library", "-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
                           %(fnOutputInitVolume,fnGallery,float(AngularSampling),SymmetryGroup,fnOutputReducedClass))
 
@@ -202,10 +201,11 @@ def reconstruct(log,fnRoot,symmetryGroup,maskRadius):
     runJob(log,"xmipp_reconstruct_fourier","-i %s.xmd -o %s.vol --sym %s " %(fnRoot,fnRoot,symmetryGroup))
     runJob(log,"xmipp_transform_mask","-i %s.vol --mask circular -%d "%(fnRoot,maskRadius))
 
-def ransacIteration(log,TmpDir,n,SymmetryGroup,Xdim,Xdim2,NumGrids,InitialVolume,AngularSampling):
+def ransacIteration(log,WorkingDir,n,SymmetryGroup,Xdim,Xdim2,NumGrids,InitialVolume,AngularSampling):
     fnBase="ransac%05d"%n
+    TmpDir=os.path.join(WorkingDir,"tmp")
     fnRoot=os.path.join(TmpDir,fnBase)
-    fnOutputReducedClass = os.path.join(TmpDir,"reducedClasses.stk")
+    fnOutputReducedClass = os.path.join(WorkingDir,"extra/reducedClasses.stk")
 
     # Get a random sample of images
     runJob(log,"xmipp_transform_dimred","-i %s --randomSample %s.xmd  %d -m LTSA "%(fnOutputReducedClass,fnRoot,NumGrids))
@@ -240,7 +240,7 @@ def ransacIteration(log,TmpDir,n,SymmetryGroup,Xdim,Xdim2,NumGrids,InitialVolume
 def projMatch(log, WorkingDir, fnBase, AngularSampling, SymmetryGroup, Xdim):
     fnRoot=os.path.join(WorkingDir,fnBase)
     fnGallery=os.path.join(WorkingDir,'tmp/gallery_'+fnBase+'.stk')
-    fnOutputReducedClass = os.path.join(WorkingDir,"tmp/reducedClasses.stk") 
+    fnOutputReducedClass = os.path.join(WorkingDir,"extra/reducedClasses.stk") 
     
     runJob(log,"xmipp_angular_project_library", "-i %s.vol -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
                           %(fnRoot,fnGallery,float(AngularSampling),SymmetryGroup,fnOutputReducedClass))
