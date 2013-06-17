@@ -4,11 +4,13 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import xmipp.jni.Particle;
 import xmipp.utils.TasksManager;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.PickerParticle;
+import java.awt.Rectangle;
 import xmipp.viewer.particlepicker.SingleParticlePicker;
 
 public class TrainingMicrograph extends Micrograph
@@ -296,6 +298,31 @@ public class TrainingMicrograph extends Micrograph
 	public void setAutopickpercent(int autopickpercent)
 	{
 		this.autopickpercent = autopickpercent;
+	}
+	
+	public Rectangle getParticlesRectangle(SingleParticlePicker picker)
+	{
+		double x1 = Double.POSITIVE_INFINITY, y1 = Double.POSITIVE_INFINITY, x2 = Double.NEGATIVE_INFINITY, y2 = Double.NEGATIVE_INFINITY;
+		List<TrainingParticle> particles = getParticles();
+		if(particles.isEmpty())
+			return null;
+		for(Particle p: getParticles())
+		{
+			if(p.getX() < x1)
+				x1 = p.getX();
+			if(p.getY() < y1)
+				y1 = p.getY();
+			if(p.getX() > x2)
+				x2 = p.getX();
+			if(p.getY() > y2)
+				y2 = p.getY();
+		}
+		int x = (int)(x1 - picker.getRadius());
+//		int y = y1 - picker.getRadius();
+//		intx2 = x2 + picker.getRadius();
+//		y2 = y2 + picker.getRadius();
+		return null;
+		
 	}
 
 }
