@@ -101,7 +101,16 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
             xmippSet.copyTiltPairs(setMics, mapsId.get)
             
         xmippSet.write()
+       
+        
+    def testGetItem(self):
+        """ Test to retrieve a micrograph from a XmippSetOfMicrograph """
+        xmippSet = XmippSetOfMicrographs(self.mdGold)
+        micFn = 'input/Micrographs_TiltedPhantom/micrograph002T.mrc'
+        mic = xmippSet[micFn]
 
+        self.assertEqual(micFn, mic.getFileName(), "getting item does not work")
+        
 #    TODO: Move this tests to a generic test_data.py
 #    def testReadBd(self):
 #        """ Read micrographs from a SetOfMicrographs """
@@ -169,7 +178,7 @@ class TestXmippSetOfCoordinates(unittest.TestCase):
     
             
 if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromName('test_data_xmipp.TestXmippSetOfCoordinates.testIterate')
+    suite = unittest.TestLoader().loadTestsFromName('test_data_xmipp.TestXmippSetOfMicrographs.testGetItem')
     unittest.TextTestRunner(verbosity=2).run(suite)
     
 #    unittest.main()

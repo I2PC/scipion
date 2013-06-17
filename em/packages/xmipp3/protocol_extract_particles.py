@@ -170,7 +170,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         for mic in self.inputMics:
             fn = mic.getFileName()
             micrographToExtract = fn
-        
+                    
             # If downsample type is 'other' perform a downsample
             if self.downsampleType == self.OTHER:
                 fnDownsampled = self._getTmpPath(removeBaseExt(fn)+"_downsampled.xmp")
@@ -188,13 +188,15 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 micrographToExtract = fnNoDust
                 
             # Flipping if micrograph has CTF model
-            fnCTF = None
-            if self.doFlip:
-                if mic.hasCTF():
-                    self.micCTF = mic.getCTF()
-                    fnCTF = self._insertConvertStep("micCTF", XmippCTFModel,
-                                         self._getTmpPath("tmp.ctfParam"))
-                    
+#            fnCTF = None
+#            if mic.hasCTF():
+#                self.micCTF = mic.getCTF()
+#                fnCTF = self._insertConvertStep("micCTF", XmippCTFModel,
+#                                         self._getTmpPath("tmp.ctfParam"))
+            fnCTF = self._getCTFModel(fn)
+                 
+            if fnCTF is not None:               
+                if self.doFlip:
                     fnFlipped = self._getTmpPath(removeBaseExt(fn)+"_flipped.xmp")
 #                    fnCTFTmp = self._getTmpPath("tmp.ctfParam")
 #                    xmippCTF = XmippCTFModel.convertCTFModel(mic.getCTF(), fnCTFTmp)
@@ -207,24 +209,21 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                         args += " --downsampling %(downFactor)f"
                         self._insertRunJobStep("xmipp_ctf_phase_flip", args % locals())
                         micrographToExtract = fnFlipped
-                else:
-                    #TODO: Raise some type of error!!
-                    pass
                 
             
             # Actually extract
-            self._insertFunctionStep('extractParticles', micrographToExtract, mic, fnCTF)
+            self._insertFunctionStep('extractParticles', micrographToExtract, fn, fnCTF)
                 
         # TODO: Delete temporary files
                         
         # Insert step to create output objects       
         self._insertFunctionStep('createOutput')
-           
- 
-    def extractParticles(self, micrographToExtract, mic, fnCTF):
+        
+        
+    def extractParticles(self, micrographToExtract, micName, fnCTF):
         """ Extract particles from one micrograph """
         # Extract 
-        micName = mic.getFileName()
+        #micName = mic.getFileName()
         outputRoot = str(self._getExtraPath(removeBaseExt(micName)))
         
         fnPosFile = self._getExtraPath(removeBaseExt(micName) + '.pos')
@@ -245,7 +244,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 runNormalize(None, outputRoot + '.stk',self.normType.get(), self.backRadius.get(), 1)          
                            
             #WHY THIS?????        
-            if self.downsampleType.get() == self.OTHER or mic.hasCTF():
+            if (self.downsampleType.get() == self.OTHER) or (fnCTF is not None):
                 selfile = outputRoot + ".xmd"
                 md = xmipp.MetaData(selfile)
                 if self.downsampleType.get() == self.OTHER:
@@ -253,13 +252,32 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                     md.operate("Xcoor=Xcoor*%f" % downsamplingFactor)
                     md.operate("Ycoor=Ycoor*%f" % downsamplingFactor)
                 # If micrograph has CTF info copy it
-                if mic.hasCTF():
-                    if fnCTF is None:
-                        fnCTF = self._insertConvertStep("micCTF", XmippCTFModel,
-                                         self._getTmpPath("tmp.ctfParam"))
+                if fnCTF is not None:
                     md.setValueCol(xmipp.MDL_CTF_MODEL, fnCTF)
                 md.write(selfile)
-                            
+        
+ 
+    def _getCTFModel(self, micFn):
+        """ 
+        Check if a original micrograph has CTF and 
+        if so return the model 
+        """
+        # Find the associated micrograph from the set of coordinates
+        mics = self.inputCoords.getMicrographs()
+        for mic in mics:
+            if removeBaseExt(mic.getFileName()) == removeBaseExt(micFn):
+                micInput = mic 
+                break
+        
+        # Check if it has CTF and if so return the model
+        fnCTF = None
+        if micInput.hasCTF():
+            self.micCTF = micInput.getCTF()
+            self.micCTF.setStore(False)
+            fnCTF = self._insertConvertStep("micCTF", XmippCTFModel,
+                                         self._getTmpPath("tmp.ctfParam"))     
+        return fnCTF
+                        
             
     def _createPosFile(self, micName, fnPosFile):
         """ Create xmipp metadata extract_list with the coordinates for a micrograph """

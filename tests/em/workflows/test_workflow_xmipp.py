@@ -65,13 +65,15 @@ class TestXmippWorkflow(unittest.TestCase):
             
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
             
-        print "Run extract particles with Same as picking"
-        protExtract = XmippProtExtractParticles(boxSize=171, downsampleType=1)
+        print "Run extract particles with other downsampling factor"
+        protExtract = XmippProtExtractParticles(boxSize=64, downsampleType=2, downFactor=8)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
-        #protExtract.inputMicrographs.set(protDownsampling.outputMicrographs)
+        protExtract.inputMicrographs.set(protImport.outputMicrographs)
         self.proj.launchProtocol(protExtract, wait=True)
         
         self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
+        self.printSet('reference', self.getProtocolFiles('protExtract'))
+        self.printSet('current', protExtract.getFiles())
         self.validateFiles('protExtract', protExtract)
         
         print "Run ML2D"
@@ -90,8 +92,7 @@ class TestXmippWorkflow(unittest.TestCase):
         self.proj.launchProtocol(protCL2D, wait=True)        
         
         self.assertIsNotNone(protCL2D.outputClassification, "There was a problem with CL2D")
-        self.validateFiles('protCL2D', protCL2D)      
-
+        self.validateFiles('protCL2D', protCL2D) 
 
     def getProtocolFiles(self, key):
         fileList = GOLD_FILES[key]
@@ -144,16 +145,21 @@ GOLD_FILES = {'protImport': ['protImport/BPV_1388.mrc',
                     'protCTF/micrographs.xmd', 
                     'protDownsampling/BPV_1386.mrc', 
                     'protCTF/extra/BPV_1388/xmipp_ctf_ctfmodel_quadrant.xmp'],
-              'protExtract':['protExtract/extra/BPV_1387.pos', 
+              'protExtract':[
+                    'protImport/BPV_1386.mrc',
+                    'protImport/BPV_1388.mrc',
+                    'protImport/BPV_1387.mrc',
+                    'protImport/micrographs.sqlite',
+                    'protPicking/extra/BPV_1387.pos', 
+                    'protPicking/extra/BPV_1386.pos', 
+                    'protPicking/extra/BPV_1388.pos', 
+                    'protExtract/extra/BPV_1387.pos', 
                     'protExtract/tmp/BPV_1388_flipped.xmp', 
                     'protExtract/tmp/BPV_1387_flipped.xmp', 
                     'protExtract/tmp/BPV_1386_noDust.xmp', 
                     'protExtract/extra/BPV_1388.pos', 
-                    'protPicking/extra/BPV_1387.pos', 
-                    'protPicking/extra/BPV_1386.pos', 
                     'protExtract/extra/BPV_1386.xmd', 
                     'protExtract/extra/BPV_1388.stk', 
-                    'protPicking/extra/BPV_1388.pos', 
                     'protExtract/images.xmd', 
                     'protExtract/extra/BPV_1386.stk', 
                     'protExtract/extra/BPV_1388.xmd', 
@@ -163,28 +169,34 @@ GOLD_FILES = {'protImport': ['protImport/BPV_1388.mrc',
                     'protExtract/tmp/BPV_1388_noDust.xmp', 
                     'protExtract/log/protocol.log', 
                     'protExtract/extra/BPV_1387.xmd', 
-                    'protExtract/tmp/BPV_1386_flipped.xmp'],
-              'protML2D': ['protML2D/ml2d_extra/iter002/iter_classes.xmd', 
+                    'protExtract/tmp/BPV_1386_flipped.xmp',
+                    'protExtract/tmp/tmp.ctfParam',
+                    'protExtract/tmp/BPV_1387_downsampled.xmp',
+                    'protExtract/tmp/BPV_1386_downsampled.xmp',
+                    'protExtract/tmp/BPV_1388_downsampled.xmp',
+                    ],
+              'protML2D': [
+                    'protExtract/extra/BPV_1386.stk', 
+                    'protExtract/extra/BPV_1387.stk', 
+                    'protExtract/extra/BPV_1388.stk', 
+                    'protExtract/images.xmd', 
+                    'protCTF/extra/BPV_1386/xmipp_ctf.ctfparam',
+                    'protCTF/extra/BPV_1387/xmipp_ctf.ctfparam',
+                    'protCTF/extra/BPV_1388/xmipp_ctf.ctfparam',
+                    'protML2D/ml2d_extra/iter002/iter_classes.xmd', 
                     'protML2D/ml2d_extra/iter001/iter_classes.xmd', 
                     'protML2D/ml2d_extra/iter002/iter_images.xmd', 
                     'protML2D/ml2d_classes.stk', 
                     'protML2D/ml2d_extra/iter003/iter_images.xmd', 
                     'protML2D/ml2d_images.xmd', 
-                    'protCTF/extra/BPV_1386/xmipp_ctf.ctfparam', 
                     'protML2D/ml2d_extra/iter004/iter_classes.stk', 
-                    'protCTF/extra/BPV_1388/xmipp_ctf.ctfparam', 
                     'protML2D/ml2d__images_average.xmp', 
-                    'protExtract/extra/BPV_1388.stk', 
-                    'protCTF/extra/BPV_1387/xmipp_ctf.ctfparam', 
                     'protML2D/ml2d_extra/iter001/iter_images.xmd', 
                     'protML2D/ml2d_extra/iter002/iter_classes.stk', 
-                    'protExtract/images.xmd', 
                     'protML2D/ml2d_extra/iter004/iter_classes.xmd', 
-                    'protExtract/extra/BPV_1386.stk', 
                     'protML2D/ml2d_extra/iter004/iter_images.xmd', 
                     'protML2D/ml2d_extra/iter003/iter_classes.xmd', 
                     'protML2D/log/protocol.log', 
-                    'protExtract/extra/BPV_1387.stk', 
                     'protML2D/ml2d_classes.xmd', 
                     'protML2D/ml2d_extra/iter001/iter_classes.stk', 
                     'protML2D/ml2d_extra/iter003/iter_classes.stk'],
@@ -216,7 +228,6 @@ GOLD_FILES = {'protImport': ['protImport/BPV_1388.mrc',
                     'protCL2D/extra/level_00/level_classes.stk', 
                     'protCL2D/extra/level_01/level_classes_core.stk']
               }
-
 
 if __name__ == "__main__":
     unittest.main()
