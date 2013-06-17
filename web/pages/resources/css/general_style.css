@@ -71,6 +71,12 @@ html,body {
 	height: 50px;
 	width: 200px;
 	text-align: center;
+	float:left;
+}
+.view {
+	float:right;
+	padding-top: 10px;
+	padding-right: 10px;
 }
 
 .tittle {
@@ -117,6 +123,20 @@ html,body {
 	width: 13em;
 	height: 25px;
 	background-color: FireBrick;
+	border: 1px solid #000066;
+	padding: 1px;
+	font-weight: bold;
+	letter-spacing: 0.3em;
+	text-align: center;
+}
+
+.priorityButton[disabled]{
+	font-style:italic;
+	font-size: 0.8em;
+	color: black;
+	width: 13em;
+	height: 25px;
+	background-color: rosybrown;
 	border: 1px solid #000066;
 	padding: 1px;
 	font-weight: bold;
