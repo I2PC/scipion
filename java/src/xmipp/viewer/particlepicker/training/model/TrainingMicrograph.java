@@ -191,6 +191,7 @@ public class TrainingMicrograph extends Micrograph
 	{
 		autoparticles.clear();
 		manualparticles.clear();
+		
 		setState(MicrographState.Available);
 		
 	}

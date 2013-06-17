@@ -576,7 +576,7 @@ public class SingleParticlePicker extends ParticlePicker
 	}// function importParticlesFromFolder
 
 	/** Return the number of particles imported from a file */
-	public String importParticlesFromFile(String path, Format f, Micrograph m, float scale, boolean invertx, boolean inverty)
+	public String importParticlesFromFile(String path, Format f, TrainingMicrograph m, float scale, boolean invertx, boolean inverty)
 	{
 		MetaData md = new MetaData();
 		fillParticlesMdFromFile(path, f, m, md, scale, invertx, inverty);
@@ -586,10 +586,10 @@ public class SingleParticlePicker extends ParticlePicker
 		return result;
 	}// function importParticlesFromFile
 
-	public String importParticlesFromMd(Micrograph m, MetaData md)
+	public String importParticlesFromMd(TrainingMicrograph m, MetaData md)
 	{
 
-		m.reset();
+		resetMicrograph(m);
 		TrainingMicrograph tm = (TrainingMicrograph) m;
 		long[] ids = md.findObjects();
 		int x, y;
@@ -661,7 +661,7 @@ public class SingleParticlePicker extends ParticlePicker
 
 			for (TrainingMicrograph m : micrographs)
 			{
-				m.reset();
+				resetMicrograph(m);
 				block = "mic_" + m.getName();
 				if (blocks.contains(block))
 				{
@@ -679,6 +679,9 @@ public class SingleParticlePicker extends ParticlePicker
 		}
 
 	}// function importAllParticles
+	
+	
+	
 
 	public String importAllParticles(String file, float scale, boolean invertx, boolean inverty)
 	{// Expected a file for all
@@ -694,7 +697,7 @@ public class SingleParticlePicker extends ParticlePicker
 
 			for (TrainingMicrograph m : micrographs)
 			{
-				m.reset();
+				resetMicrograph(m);
 				block = "mic_" + m.getName();
 				if (blocks.contains(block))
 				{
@@ -1110,6 +1113,14 @@ public class SingleParticlePicker extends ParticlePicker
 			XmippWindowUtil.releaseGUI(frame.getRootPane());
 
 		}
+	}
+	
+	public void resetMicrograph(TrainingMicrograph micrograph)
+	{
+		micrograph.reset();
+		new File(getOutputPath(micrograph.getPosFile())).delete();
+		new File(getOutputPath(micrograph.getAutoPosFile())).delete();
+		
 	}
 
 	

@@ -164,7 +164,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 				return null;
 		}
 		ppicker.initTemplates();
-		getMicrograph().reset();
+		resetMicrograph();
 		String result = ppicker.importParticlesFromFile(file, format, getMicrograph(), scale, invertx, inverty);
 		ppicker.saveData(getMicrograph());
 		return result;
@@ -656,11 +656,10 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 	protected void resetMicrograph()
 	{
-		getMicrograph().reset();
-		ppicker.initUpdateTemplates();
+		ppicker.resetMicrograph(getMicrograph());
 		canvas.refreshActive(null);
 		updateMicrographsModel();
-		setState(MicrographState.Available);
+		ppicker.initUpdateTemplates();
 	}
 
 	private void setState(MicrographState state)
