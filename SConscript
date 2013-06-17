@@ -647,11 +647,7 @@ AddLibrary('XmippClassif', 'libraries/classification', ClassificationSources,
 # XmippParallel
 ParallelSources = Glob('libraries/parallel', '*.cpp', []);
 AddMPILibrary("XmippParallel", 'libraries/parallel', ParallelSources, ["#", "#libraries", "#external"],
-<<<<<<< HEAD
-    ['lib'], ['XmippExternal', 'XmippData', 'XmippRecons', 'XmippClassif'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs)
-=======
               ['lib'], ['XmippExternal', 'XmippData', 'XmippRecons', 'XmippClassif'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs)
->>>>>>> 3.0
 
 # Interface
 InterfaceSources = Glob('libraries/interface', '*.cpp', [])
