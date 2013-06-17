@@ -190,10 +190,14 @@ class Project(object):
         protocol.setName(name)
         protocol.setMapper(self.mapper)
         protocol.dbPath = self.dbPath
-        protocol.setWorkingDir(self.getPath("Runs", name))
+        protocol.setWorkingDir(self.getPath(PROJECT_RUNS, name))
         self._setHostConfig(protocol)
         # Update with changes
         self._storeProtocol(protocol)
+        
+    def getRuns(self, iterate=False):
+        """ Return the existing protocol runs in the project. """
+        return self.mapper.selectByClass("Protocol", iterate)
         
     def getHosts(self):
         """ Retrieve the hosts associated with the project. (class ExecutionHostConfig) """

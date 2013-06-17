@@ -328,6 +328,12 @@ class Coordinate(EMObject):
         """
         pass
     
+    def getBoxSize(self):
+        return self._boxSize
+    
+    def setBoxSize(self, boxSize):
+        self._boxSize = boxSize
+
     def getMicrograph(self):
         """ Return the micrograph object to which
         this coordinate is associated.
@@ -338,11 +344,6 @@ class Coordinate(EMObject):
         """ Set the micrograph to which this coordinate belongs. """
         self._micrographPointer.set(micrograph)
     
-    def getBoxSize(self):
-        return self._boxSize
-    
-    def setBoxSize(self, boxSize):
-        self._boxSize = boxSize
     
     
 class SetOfCoordinates(EMObject):
@@ -458,7 +459,7 @@ class Class2D(EMObject):
     def __init__(self, **args):
         EMObject.__init__(self, **args)
         
-    def iterImageAssignemts(self):
+    def __iter__(self):
         """ Iterate over the assigments of images
         to this particular class.
         """
@@ -476,7 +477,7 @@ class Classification2D(EMObject):
     def __init__(self, **args):
         EMObject.__init__(self, **args)
         
-    def iterClasses(self):
+    def __iter__(self):
         """ Iterate over all classes. """
         pass    
      
