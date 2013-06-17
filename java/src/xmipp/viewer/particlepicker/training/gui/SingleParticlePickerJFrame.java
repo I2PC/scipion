@@ -656,22 +656,14 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 	protected void resetMicrograph()
 	{
+		autopickout = null;
 		ppicker.resetMicrograph(getMicrograph());
 		canvas.refreshActive(null);
 		updateMicrographsModel();
 		ppicker.initUpdateTemplates();
 	}
 
-	private void setState(MicrographState state)
-	{
-		getMicrograph().setState(state);
-		ppicker.saveData(getMicrograph());// to keep consistence between files
-											// of automatic picker and mines
-		setChanged(false);
-		updateMicrographsModel();
-		pack();
-	}
-
+	
 	public boolean isPickingAvailable(MouseEvent e)
 	{
 		if (!super.isPickingAvailable())
