@@ -317,11 +317,14 @@ public class TrainingMicrograph extends Micrograph
 			if(p.getY() > y2)
 				y2 = p.getY();
 		}
-		int x = (int)(x1 - picker.getRadius());
-//		int y = y1 - picker.getRadius();
-//		intx2 = x2 + picker.getRadius();
-//		y2 = y2 + picker.getRadius();
-		return null;
+		
+		int radius = picker.getRadius();
+		radius = radius + radius/5;
+		int x = (int)(x1 - radius);
+		int y = (int)(y1 - radius);
+		int width  = (int)(x2 - x + radius);
+		int height = (int)(y2 - y + radius);
+		return new Rectangle(x, y, width, height);
 		
 	}
 

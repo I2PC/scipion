@@ -22,6 +22,8 @@ public class PickingClassifier
 	public native void destroy();
 
 	public synchronized native void autopick(String micrograph, MetaData outputmd, int percent);
+	
+	public synchronized native void autopickOut(String micrograph, MetaData outputmd, int percent, int x, int y, int width, int height);
 
 	public synchronized native void correct(MetaData manualmd, MetaData automaticmd);
 

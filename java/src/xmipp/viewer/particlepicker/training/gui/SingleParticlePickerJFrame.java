@@ -5,6 +5,7 @@ import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -70,6 +71,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 	private JCheckBox autopickchb;
 	private JPanel sppickerpn;
 	private JLabel autopicklb;
+	private Rectangle autopickout;
 
 	@Override
 	public SingleParticlePicker getParticlePicker()
@@ -85,8 +87,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		{
 			this.ppicker = picker;
 			initComponents();
-			
-			
+
 		}
 		catch (IllegalArgumentException ex)
 		{
@@ -120,7 +121,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 	public double getThreshold()
 	{
-		if(thresholdsl == null)
+		if (thresholdsl == null)
 			return 0;
 		return thresholdsl.getValue() / 100.0;
 	}
@@ -339,22 +340,30 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 				try
 				{
 					boolean isautopick = autopickchb.isSelected();
+					if (isautopick)
+						isautopick = isTrain();
 
 					if (isautopick)
 					{
+						
 						ppicker.setMode(Mode.Supervised);
-						ppicker.train(SingleParticlePickerJFrame.this);
+						ppicker.trainAndAutopick(SingleParticlePickerJFrame.this, autopickout);
 
 					}
 					else
 					{
+						if (autopickchb.isSelected())
+						{
+							autopickchb.setSelected(false);
+							canvas.refreshActive(null);
+						}
 						ppicker.setMode(Mode.Manual);
 						updateMicrographsModel();
 						canvas.repaint();
 					}
 					ppicker.saveConfig();
 					enableSupervised(isautopick);
-					
+
 				}
 				catch (Exception ex)
 				{
@@ -380,7 +389,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		sizesl.setEnabled(!selected);//not really, if there is some micrograph in sup mode size cannot be changed
 		sizetf.setEnabled(!selected);
 		importmi.setEnabled(!selected);
-		if(optionsdialog != null && optionsdialog.isVisible())
+		if (optionsdialog != null && optionsdialog.isVisible())
 			optionsdialog.enableOptions();
 		pack();
 
@@ -592,16 +601,6 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		micrographpn.add(buttonspn, XmippWindowUtil.getConstraints(constraints, 0, 2, 2));
 
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 
 	protected void loadMicrograph()
 	{
@@ -616,7 +615,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			ppicker.saveData(getMicrograph());// Saving changes when switching
 		index = micrographstb.getSelectedRow();
 		TrainingMicrograph next = ppicker.getMicrographs().get(index);
-		
+
 		tryCorrectAndAutopick(getMicrograph(), next);
 
 		ppicker.getMicrograph().releaseImage();
@@ -625,19 +624,20 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		if (ppicker.getMode() == Mode.Supervised)
 			resetbt.setEnabled(getMicrograph().getState() != MicrographState.Manual);
 		setChanged(false);
-		
+
 		iconbt.setIcon(ppicker.getMicrograph().getCTFIcon());
 
 		pack();
 
 		if (particlesdialog != null)
 			loadParticles();
+		autopickout = null;
 
 	}
 
 	private void tryCorrectAndAutopick(TrainingMicrograph current, TrainingMicrograph next)
 	{
-		if(current.equals(next))//app just started
+		if (current.equals(next))//app just started
 			return;
 		boolean isautopick = ppicker.getMode() == Mode.Supervised && next.getState() == MicrographState.Available;
 		if (ppicker.getMode() == Mode.Supervised && current.getState() == MicrographState.Supervised)
@@ -645,7 +645,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			boolean iscorrect = XmippDialog.showQuestion(this, "Would you like to correct training with added and deleted particles?");
 			if (iscorrect)
 			{
-				ppicker.correctAndAutopick(this, current, next);
+				ppicker.correctAndAutopick(this, current, next, autopickout);
 				isautopick = false;
 			}
 
@@ -672,12 +672,34 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		updateMicrographsModel();
 		pack();
 	}
-	
+
 	public boolean isPickingAvailable(MouseEvent e)
 	{
-		if(!super.isPickingAvailable())
+		if (!super.isPickingAvailable())
 			return false;
 		return getMicrograph().getState() != MicrographState.Corrected;
+	}
+
+	public boolean isTrain()
+	{
+		
+		if (ppicker.getManualParticlesNumber() < SingleParticlePicker.mintraining)
+		{
+			XmippDialog.showInfo(this, String
+					.format("You should have at least %s particles to go to %s mode", SingleParticlePicker.mintraining, Mode.Supervised));
+			return false;
+		}
+		autopickout = getMicrograph().getParticlesRectangle(ppicker);
+		canvas.repaint();
+		boolean train = XmippDialog
+				.showQuestion(this, "Classifier training for autopick requires that the particles region detected to be fully picked. "
+						+ "Are you sure you want to continue?");
+		return train;
+	}
+
+	public Rectangle getParticlesRectangle()
+	{
+		return autopickout;
 	}
 
 }

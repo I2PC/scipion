@@ -22,6 +22,10 @@ JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_autopick
   (JNIEnv *, jobject, jstring, jobject, jint percent);
 
 
+JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_autopickOut
+  (JNIEnv *, jobject, jstring, jobject, jint percent, jint x, jint y, jint width, jint height);
+
+
 JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_correct
   (JNIEnv *, jobject, jobject, jobject);
 

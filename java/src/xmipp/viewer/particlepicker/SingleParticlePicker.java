@@ -1,5 +1,7 @@
 package xmipp.viewer.particlepicker;
 
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,7 +32,7 @@ public class SingleParticlePicker extends ParticlePicker
 	public static final int defAutoPickPercent = 90;
 	private int autopickpercent = defAutoPickPercent;
 
-	private static int mintraining = 15;
+	public static final int mintraining = 15;
 
 	private int threads;
 	private boolean fastmode;
@@ -434,7 +436,7 @@ public class SingleParticlePicker extends ParticlePicker
 				}
 			}
 			m.getAutomaticParticles().clear();
-			
+			new File(getOutputPath(m.getAutoPosFile())).delete();
 		}
 		saveData();
 	}
@@ -919,7 +921,7 @@ public class SingleParticlePicker extends ParticlePicker
 		}
 	}
 
-	public void train(SingleParticlePickerJFrame frame)
+	public void trainAndAutopick(SingleParticlePickerJFrame frame, Rectangle autopickout)
 	{
 
 		frame.getCanvas().setEnabled(false);
@@ -945,7 +947,7 @@ public class SingleParticlePicker extends ParticlePicker
 			}
 		}
 
-		new Thread(new TrainRunnable(frame, trainmd, outputmd)).start();
+		new Thread(new TrainRunnable(frame, trainmd, autopickout, outputmd)).start();
 		//		new TrainRunnable(frame, trainmd, outputmd).run();
 	}
 
@@ -955,13 +957,14 @@ public class SingleParticlePicker extends ParticlePicker
 		private SingleParticlePickerJFrame frame;
 		private MetaData trainmd;
 		private MetaData outputmd;
+		private Rectangle autopickout;
 
-		public TrainRunnable(SingleParticlePickerJFrame frame, MetaData trainmd, MetaData outputmd)
+		public TrainRunnable(SingleParticlePickerJFrame frame, MetaData trainmd, Rectangle autopickout, MetaData outputmd)
 		{
 			this.frame = frame;
 			this.trainmd = trainmd;
 			this.outputmd = outputmd;
-
+			this.autopickout = autopickout;
 		}
 
 		public void run()
@@ -970,7 +973,7 @@ public class SingleParticlePicker extends ParticlePicker
 			{
 				classifier.train(trainmd);//should remove training files
 				micrograph.setAutopickpercent(autopickpercent);
-				classifier.autopick(micrograph.getFile(), outputmd, micrograph.getAutopickpercent());
+				classifier.autopickOut(micrograph.getFile(), outputmd, micrograph.getAutopickpercent(), (int)autopickout.getX(), (int)autopickout.getY(), (int)autopickout.getWidth(), (int)autopickout.getHeight());
 				loadAutomaticParticles(micrograph, outputmd, false);
 				String path = getParticlesBlock(getOutputPath(micrograph.getAutoPosFile()));
 				outputmd.write(path);
@@ -1034,19 +1037,34 @@ public class SingleParticlePicker extends ParticlePicker
 
 	}
 
-	public void correctAndAutopick(SingleParticlePickerJFrame frame, TrainingMicrograph current, TrainingMicrograph next)
+	public void correctAndAutopick(SingleParticlePickerJFrame frame, TrainingMicrograph current, TrainingMicrograph next, Rectangle correctout)
 	{
 		getMicrograph().setState(MicrographState.Corrected);
 		if (getMode() == Mode.Supervised && next.getState() == MicrographState.Available)
 			next.setState(MicrographState.Supervised);
 		saveData();
-		MetaData addedmd = new MetaData(getParticlesBlock(getOutputPath(micrograph.getPosFile())));
-		MetaData removedmd = new MetaData(getParticlesBlock(getOutputPath(micrograph.getAutoPosFile())));
+		MetaData addedmd;
+		if(correctout == null)
+			addedmd = new MetaData(getParticlesBlock(getOutputPath(micrograph.getPosFile())));
+		else
+		{
+			long id;
+			addedmd = new MetaData();
+			for(TrainingParticle p: current.getManualParticles())
+				if(!correctout.contains(new Point(p.getX(), p.getY())))
+				{
+					id = addedmd.addObject();
+					addedmd.setValueInt(MDLabel.MDL_XCOOR, p.getX(), id);
+					addedmd.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
+				}
+		}
+		addedmd.print();
+		MetaData automd = new MetaData(getParticlesBlock(getOutputPath(micrograph.getAutoPosFile())));
 
 		MetaData outputmd = new MetaData();
 		frame.getCanvas().setEnabled(false);
 		XmippWindowUtil.blockGUI(frame, "Correcting and Autopicking...");
-		new Thread(new CorrectAndAutopickRunnable(frame, addedmd, removedmd, next, outputmd)).start();
+		new Thread(new CorrectAndAutopickRunnable(frame, addedmd, automd, next, outputmd)).start();
 
 	}
 
@@ -1093,6 +1111,7 @@ public class SingleParticlePicker extends ParticlePicker
 
 		}
 	}
+
 	
 	
 

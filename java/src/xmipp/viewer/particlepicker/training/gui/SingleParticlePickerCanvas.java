@@ -3,6 +3,7 @@ package xmipp.viewer.particlepicker.training.gui;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.util.List;
 import javax.swing.SwingUtilities;
@@ -219,9 +220,17 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 			BasicStroke activest = (active instanceof AutomaticParticle) ? activedst : activecst;
 			drawShape(g2, active, true, activest);
 		}
+		Rectangle autopickout = frame.getParticlesRectangle();
+		if(autopickout != null)
+		{
+			g2.setColor(Color.yellow);
+			g2.setStroke(continuousst);
+			g2.drawRect((int)(autopickout.getX() * magnification), (int)(autopickout.getY() * magnification), (int)(autopickout.getWidth() * magnification), (int)(autopickout.getHeight() * magnification));
+		}
 
 	}
-
+	
+	
 
 
 	@Override
@@ -260,7 +269,7 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 
 	}
 
-
+	
 
 
 }
