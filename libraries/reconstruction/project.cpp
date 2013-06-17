@@ -150,6 +150,7 @@ void ProgProject::defineParams()
     addExampleLine("+++ http://sourceforge.net/p/testxmipp/code/ci/master/tree/input/Crystal/cylinder_with_axis.descr?format=raw",false);
     addExampleLine("+++",false);
     addExampleLine("+++http://sourceforge.net/p/testxmipp/code/ci/master/tree/input/Crystal/MRC_crystal_projection_xmd.param?format=raw",false);
+
     addExampleLine("+++",false);
     addExampleLine("+++Figures (a) and (b) show the achievable resolution for different methods of projection. ",false);
     addExampleLine("+++",false);
