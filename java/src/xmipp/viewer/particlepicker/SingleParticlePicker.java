@@ -679,9 +679,6 @@ public class SingleParticlePicker extends ParticlePicker
 		}
 
 	}// function importAllParticles
-	
-	
-	
 
 	public String importAllParticles(String file, float scale, boolean invertx, boolean inverty)
 	{// Expected a file for all
@@ -976,7 +973,8 @@ public class SingleParticlePicker extends ParticlePicker
 			{
 				classifier.train(trainmd);//should remove training files
 				micrograph.setAutopickpercent(autopickpercent);
-				classifier.autopickOut(micrograph.getFile(), outputmd, micrograph.getAutopickpercent(), (int)autopickout.getX(), (int)autopickout.getY(), (int)autopickout.getWidth(), (int)autopickout.getHeight());
+				classifier.autopickOut(micrograph.getFile(), outputmd, micrograph.getAutopickpercent(), (int) autopickout.getX(), (int) autopickout
+						.getY(), (int) autopickout.getWidth(), (int) autopickout.getHeight());
 				loadAutomaticParticles(micrograph, outputmd, false);
 				String path = getParticlesBlock(getOutputPath(micrograph.getAutoPosFile()));
 				outputmd.write(path);
@@ -1047,14 +1045,14 @@ public class SingleParticlePicker extends ParticlePicker
 			next.setState(MicrographState.Supervised);
 		saveData();
 		MetaData addedmd;
-		if(correctout == null)
+		if (correctout == null)
 			addedmd = new MetaData(getParticlesBlock(getOutputPath(micrograph.getPosFile())));
 		else
 		{
 			long id;
 			addedmd = new MetaData();
-			for(TrainingParticle p: current.getManualParticles())
-				if(!correctout.contains(new Point(p.getX(), p.getY())))
+			for (TrainingParticle p : current.getManualParticles())
+				if (!correctout.contains(new Point(p.getX(), p.getY())))
 				{
 					id = addedmd.addObject();
 					addedmd.setValueInt(MDLabel.MDL_XCOOR, p.getX(), id);
@@ -1114,16 +1112,16 @@ public class SingleParticlePicker extends ParticlePicker
 
 		}
 	}
-	
+
 	public void resetMicrograph(TrainingMicrograph micrograph)
 	{
-		micrograph.reset();
+		micrograph.getManualParticles().clear();
+		micrograph.getAutomaticParticles().clear();
+		micrograph.setState(MicrographState.Available);
+
 		new File(getOutputPath(micrograph.getPosFile())).delete();
 		new File(getOutputPath(micrograph.getAutoPosFile())).delete();
-		
-	}
 
-	
-	
+	}
 
 }

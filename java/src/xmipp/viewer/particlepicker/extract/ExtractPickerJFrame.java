@@ -267,7 +267,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 	@Override
 	protected void resetMicrograph()
 	{
-		picker.getMicrograph().reset();
+		picker.getMicrograph().getParticles().clear();
 		canvas.refreshActive(null);
 		updateMicrographsModel();
 

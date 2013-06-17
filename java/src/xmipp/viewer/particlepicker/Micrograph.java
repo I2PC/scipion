@@ -221,6 +221,5 @@ public abstract class Micrograph {
 
 	public abstract boolean hasData();
 
-	public abstract void reset();
 
 }

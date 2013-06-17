@@ -223,13 +223,7 @@ public class ExtractParticlePicker extends ParticlePicker
 		return particles;
 	}
 
-	public void resetAllMicrographs()
-	{
-		for (ExtractMicrograph m : micrographs)
-			m.reset();
-		setChanged(true);
-
-	}
+	
 
 	public ColorHelper[] getColumns()
 	{

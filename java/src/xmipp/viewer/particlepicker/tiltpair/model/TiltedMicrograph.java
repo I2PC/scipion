@@ -23,11 +23,6 @@ public class TiltedMicrograph extends Micrograph
 		return !particles.isEmpty();
 	}
 
-	@Override
-	public void reset()
-	{
-		getParticles().clear();
-	}
 
 	public List<TiltedParticle> getParticles()
 	{

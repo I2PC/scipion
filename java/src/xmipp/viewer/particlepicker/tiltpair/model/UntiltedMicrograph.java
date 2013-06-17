@@ -1,5 +1,6 @@
 package xmipp.viewer.particlepicker.tiltpair.model;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,12 +53,13 @@ public class UntiltedMicrograph extends Micrograph
 		return !particles.isEmpty();
 	}
 
-	@Override
-	public void reset()
+	public void reset(TiltPairPicker picker)
 	{
 		angles = null;
 		getParticles().clear();
-		getTiltedMicrograph().reset();
+		new File(picker.getOutputPath(getPosFile())).delete();
+		getTiltedMicrograph().getParticles().clear();
+		new File(picker.getOutputPath(getTiltedMicrograph().getPosFile())).delete();
 		initAligner();
 	}
 

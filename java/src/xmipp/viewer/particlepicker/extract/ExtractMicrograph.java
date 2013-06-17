@@ -23,12 +23,7 @@ public class ExtractMicrograph extends Micrograph
 		return !particles.isEmpty();
 	}
 
-	@Override
-	public void reset()
-	{
-		particles.clear();
-
-	}
+	
 
 	public void addParticle(ExtractParticle p)
 	{

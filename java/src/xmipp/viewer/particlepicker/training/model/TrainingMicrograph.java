@@ -187,14 +187,7 @@ public class TrainingMicrograph extends Micrograph
 
 	}
 
-	public void reset()
-	{
-		autoparticles.clear();
-		manualparticles.clear();
-		
-		setState(MicrographState.Available);
-		
-	}
+	
 
 	public MicrographState getState()
 	{

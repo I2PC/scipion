@@ -95,7 +95,7 @@ public class TiltPairPicker extends ParticlePicker
 	public String loadMicrographParticles(UntiltedMicrograph um, MetaData uMd, MetaData tMd)
 	{
 		String result = "";
-		um.reset();
+		um.reset(this);
 		UntiltedParticle up;
 		TiltedParticle tp;
 		TiltedMicrograph tm = um.getTiltedMicrograph();
@@ -167,7 +167,7 @@ public class TiltPairPicker extends ParticlePicker
 
 	public void resetMicrograph(UntiltedMicrograph m)
 	{
-		m.reset();
+		m.reset(this);
 		saveData(m);
 	}
 

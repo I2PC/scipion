@@ -1,7 +1,5 @@
 package xmipp.viewer.particlepicker.extract;
 
-import ij.gui.ImageWindow;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,12 +23,7 @@ public class MicrographData
 		this.micrograph = new Micrograph(micfile)
 		{
 
-			@Override
-			public void reset()
-			{
-				// TODO Auto-generated method stub
-
-			}
+			
 
 			@Override
 			public boolean hasData()
