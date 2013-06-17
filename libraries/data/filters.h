@@ -476,6 +476,15 @@ void bestNonwrappingShift(const MultidimArray< double >& I1,
                           double& shiftY,
                           CorrelationAux &aux);
 
+/** Translational search (non-wrapping).
+ * @ingroup Filters
+ *
+ * Search is performed in real-space
+ */
+double bestShiftRealSpace(const MultidimArray<double> &I1, MultidimArray<double> &I2,
+               double &shiftX, double &shiftY,
+               const MultidimArray<int> *mask=NULL, int maxShift=5, double shiftStep=1.0);
+
 /** Auxiliary class for fast image alignment */
 class AlignmentAux
 {
