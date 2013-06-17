@@ -684,7 +684,8 @@ data_noname
                         if xmippExists(file_name):
         
                             parameters =  ' -i ' + file_name_rec_filt + \
-                                ' --mode projector 256 -a ' +file_name 
+                                ' --mode projector 256 -a ' +file_name + " "+\
+                                 str(float(_OuterRadius) * 1.1)
                             runJob(_log,
                                    'xmipp_chimera_client',
                                    parameters,1,1,True
