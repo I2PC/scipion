@@ -21,7 +21,7 @@ function createProjectForm() {
 }
 
 function createProject(elm) {
-	var projName = elm.attr('value');
+	var projName = elm.val();
 	$.ajax({
 		type : "GET",
 		url : "/create_project/?projectName=" + projName,
