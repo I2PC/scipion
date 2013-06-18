@@ -81,13 +81,10 @@ void AutoParticlePicking2::setSize(int pSize)
     NRsteps=particle_size/2-3;
 }
 
-
 void AutoParticlePicking2::readMic(FileName fn_micrograph)
 {
-
     m.open_micrograph(fn_micrograph);
     microImage.read(fn_micrograph);
-
     // Resize the Micrograph
     selfScaleToSizeFourier((int)((m.Ydim)*scaleRate),
                            (int)((m.Xdim)*scaleRate),
@@ -130,6 +127,7 @@ void AutoParticlePicking2::filterBankGenerator()
 void AutoParticlePicking2::buildInvariant(MetaData MD)
 {
     int x, y;
+    m.point1.x=-1;
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
         MD.getValue(MDL_XCOOR,x, __iter.objId);
@@ -145,18 +143,26 @@ void AutoParticlePicking2::batchBuildInvariant(MetaData MD)
     MetaData MD2;
     FileName micFile;
     FileName posFile;
+    MD.print();
+    int aaa=1;
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
         MD.getValue(MDL_MICROGRAPH,micFile, __iter.objId);
         readMic(micFile);
         MD.getValue(MDL_MICROGRAPH_PARTICLES,posFile, __iter.objId);
         MD2.read("particles@"+posFile);
+        if (MD.lastObject()==__iter.objId)
+        {
+            m.point1=p1;
+            m.point2=p2;
+        }
+        else
+            m.point1.x=-1;
         FOR_ALL_OBJECTS_IN_METADATA(MD2)
         {
             MD2.getValue(MDL_XCOOR,x, __iter.objId);
             MD2.getValue(MDL_YCOOR,y, __iter.objId);
             m.add_coord(x,y,0,1);
-            //            std::cerr<<"x: " << x << " y: " << y <<std::endl;
         }
         extractInvariant();
     }
@@ -407,7 +413,7 @@ void AutoParticlePicking2::add2Dataset(int flagNegPos)
     }
 }
 
-void AutoParticlePicking2::train(MetaData MD, bool corrFlag)
+void AutoParticlePicking2::train(MetaData MD, bool corrFlag, int x, int y, int width, int height)
 {
     if (fnPCAModel.exists())
     {
@@ -431,6 +437,14 @@ void AutoParticlePicking2::train(MetaData MD, bool corrFlag)
             fnSVMModel.deleteFile();
         }
     }
+    x*=scaleRate;
+    y*=scaleRate;
+    width*=scaleRate;
+    height*=scaleRate;
+    p1.x=x;
+    p1.y=y;
+    p2.x=x+width;
+    p2.y=y+height;
     if (!corrFlag)
         batchBuildInvariant(MD);
     else
@@ -479,8 +493,6 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
     Image<double> II;
 
     readMic(fnmicrograph);
-    microImage.write("vahidmic.xmp");
-
     IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
     buildSearchSpace(positionArray,true);
     //    pthread_t * th_ids = new pthread_t[Nthreads];
@@ -578,6 +590,7 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
         }
     }
     saveAutoParticles(md);
+    md.write("automaticpick.txt");
 }
 
 void AutoParticlePicking2::saveAutoParticles(MetaData &md)
@@ -605,7 +618,7 @@ void AutoParticlePicking2::correction(MetaData addedParticlesMD,MetaData removed
     dataSet.clear();
     classLabel.clear();
     loadTrainingSet(fnVector);
-    train(addedParticlesMD,true);
+    train(addedParticlesMD,true,0,0,0,0);
     add2Dataset(removedParticlesMD);
     saveTrainingSet();
     normalizeDataset(0,1);
@@ -1270,15 +1283,28 @@ void AutoParticlePicking2::extractParticle(const int x, const int y,
 
 void AutoParticlePicking2::extractNonParticle(std::vector<Particle2> &negativePosition)
 {
-    int endX,endY;
+    int endX,endY,startX,startY;
     int gridStep=particle_radius/2;
     Particle2 negSample;
-    endX = XSIZE(microImage())-particle_radius*2;
-    endY = YSIZE(microImage())-particle_radius*2;
+    if (m.point1.x==-1)
+    {
+        startX = particle_radius*2;
+        startY = particle_radius*2;
+        endX = XSIZE(microImage())-particle_radius*2;
+        endY = YSIZE(microImage())-particle_radius*2;
+    }
+    else
+    {
+        startX = m.point1.x+particle_radius*2;
+        startY = m.point1.y+particle_radius*2;
+        endX = m.point2.x-particle_radius*2;
+        endY = m.point2.y-particle_radius*2;
+    }
     MultidimArray<double> pieceImage;
 
-    for (int i=particle_radius*2;i<endY; i=i+gridStep)
-        for (int j= particle_radius*2;j<endX;j=j+gridStep)
+
+    for (int i=startY;i<endY; i=i+gridStep)
+        for (int j= startX;j<endX;j=j+gridStep)
         {
             negSample.y=i;
             negSample.x=j;
