@@ -176,9 +176,44 @@ class TestXmippSetOfCoordinates(unittest.TestCase):
             #TODO: How to check coordinates, against what?
             #self.assertTrue(x = , "micrographs database does not exist")
     
-            
+class TestXmippCTFModel(unittest.TestCase):
+    
+    @classmethod
+    def setUpClass(cls):
+        cls.outputPath = getOutputPath('test_data_xmipp')   
+        cls.ctfFn = getOutputPath(cls.outputPath, 'xmipp_ctf.ctfparam')
+        
+    def setUp(self):
+        cleanPath(self.outputPath)
+        makePath(self.outputPath)
+                    
+    def testConvertCtfFind(self):
+        """ Test converting a CTFModel to a XmippCTFModel """
+        ctfModel = CTFModel()
+        ctfModel.samplingRate.set(1.237)
+        ctfModel.voltage.set(300)
+        ctfModel.sphericalAberration.set(2.26)
+        ctfModel.defocusU.set(25039.42)
+        ctfModel.defocusV.set(25276.29)
+        ctfModel.defocusAngle.set(27.3)
+        ctfModel.ampContrast.set(0.1)
+        ctfModel.psdFile.set('input/CTF_BPV1/ctffind_psd.mrc')
+                                
+        xmippCTFModel = XmippCTFModel.convert(ctfModel, self.ctfFn)
+        
+        self.assertTrue(xmippCTFModel.getPsdFile() == 'input/CTF_BPV1/ctffind_psd.mrc', "psd file does not exists")
+
+    def testConvertXmippCtf(self):
+        """ Test converting a XmippCTFModel to a XmippCTFModel """
+        ctfParam = getInputPath('CTF_BPV1', 'xmipp_ctf.ctfparam')
+        ctfModel = XmippCTFModel(ctfParam)
+
+        xmippCTFModel = XmippCTFModel.convert(ctfModel, self.ctfFn)
+                
+        self.assertTrue(xmippCTFModel.get() == ctfModel.get(), 'conversion did not work')
+        
 if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromName('test_data_xmipp.TestXmippSetOfMicrographs.testGetItem')
+    suite = unittest.TestLoader().loadTestsFromName('test_data_xmipp.TestXmippCTFModel.testConvertXmippCtf')
     unittest.TextTestRunner(verbosity=2).run(suite)
     
 #    unittest.main()
