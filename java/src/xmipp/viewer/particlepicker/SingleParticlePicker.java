@@ -935,7 +935,7 @@ public class SingleParticlePicker extends ParticlePicker
 		String posfile;
 		for (TrainingMicrograph m : micrographs)
 		{
-			if (m.hasManualParticles())
+			if (m.hasManualParticles() && !m.equals(micrograph))
 			{
 				posfile = getOutputPath(m.getPosFile());
 				id = trainmd.addObject();
@@ -946,7 +946,13 @@ public class SingleParticlePicker extends ParticlePicker
 
 			}
 		}
-
+		posfile = getOutputPath(micrograph.getPosFile());
+		id = trainmd.addObject();
+		trainmd.setValueString(MDLabel.MDL_MICROGRAPH, micrograph.getFile(), id);
+		trainmd.setValueString(MDLabel.MDL_MICROGRAPH_PARTICLES, posfile, id);
+		micrograph.getAutomaticParticles().clear();
+		new File(getOutputPath(micrograph.getAutoPosFile())).delete();
+		trainmd.print();
 		new Thread(new TrainRunnable(frame, trainmd, autopickout, outputmd)).start();
 		//		new TrainRunnable(frame, trainmd, outputmd).run();
 	}
@@ -971,7 +977,7 @@ public class SingleParticlePicker extends ParticlePicker
 		{
 			try
 			{
-				classifier.train(trainmd);//should remove training files
+				classifier.train(trainmd, (int)autopickout.getX(), (int)autopickout.getY(), (int)autopickout.getWidth(), (int)autopickout.getHeight());//should remove training files
 				micrograph.setAutopickpercent(autopickpercent);
 				classifier.autopickOut(micrograph.getFile(), outputmd, micrograph.getAutopickpercent(), (int) autopickout.getX(), (int) autopickout
 						.getY(), (int) autopickout.getWidth(), (int) autopickout.getHeight());

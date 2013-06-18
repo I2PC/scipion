@@ -27,7 +27,7 @@ public class PickingClassifier
 
 	public synchronized native void correct(MetaData manualmd, MetaData automaticmd);
 
-	public synchronized native void train(MetaData micrographs);
+	public synchronized native void train(MetaData micrographs, int x, int y, int width, int height);
 	
 	public synchronized native void setSize(int psize);
 	
