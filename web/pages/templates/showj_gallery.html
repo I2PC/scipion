@@ -4,7 +4,18 @@
 	<script type="text/javascript">
 	$(document).ready(function(){
 		colsRowsEvents()
+		imageEvents()
 	});
+	
+	function imageEvents(){
+		$(".img_container").hover(
+				function(){
+					$(this).find(".enabledGallery").fadeIn('slow')
+					},
+				function(){
+					$(this).find(".enabledGallery").fadeOut('slow')
+					})
+	}
 	
 	function colsRowsEvents(){
 		$("#cols, #rows").click(function(){
@@ -58,7 +69,12 @@
 				{% if value.allowRender and value.label == inputParameters.metadataComboBox %}
 					<div class="img_container">
 						<div id="column_label">{{forloop.parentloop.counter}}</div> 
-						<img class="tableImages" src="/get_image/?image={{value.imgValue}}"/>
+						<div class="img_inner_container">
+							<img class="tableImages" src="/get_image/?image={{value.imgValue}}"/>
+							<img class="enabledGallery" src="/resources/showj/enabled_gallery.png"/>
+						</div>
+						
+						
 					</div> 
 				{% endif %}
 			{% endfor %}
