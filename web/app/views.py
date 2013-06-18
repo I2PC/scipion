@@ -423,22 +423,50 @@ def openHostsConfig(request):
         
     return render_to_response('hosts.html', RequestContext(request, context)) # Form Django forms
 
-def getHost(request):
-    from django.http import HttpResponse
-    import json
-    from django.utils import simplejson
-    
-    if request.is_ajax():
-        hostLabel = request.GET.get('hostLabel')
-        projectName = request.session['projectName']
-        project = loadProject(projectName)
-        hostsMapper = ExecutionHostMapper(project.hostsPath)
-        executionHostConfig = hostsMapper.selectByLabel(hostLabel)
-        jsonStr = json.dumps({'host':executionHostConfig.getDictionary()})
-#         jsonStr = json.dumps({'hostConfig' :  executionHostConfig},
-#                              ensure_ascii=False)
-        return HttpResponse(jsonStr, mimetype='application/javascript')
+# def getHost(request):
+#     from django.http import HttpResponse
+#     import json
+#     from django.utils import simplejson
+#     
+#     if request.is_ajax():
+#         hostLabel = request.GET.get('hostLabel')
+#         projectName = request.session['projectName']
+#         project = loadProject(projectName)
+#         hostsMapper = ExecutionHostMapper(project.hostsPath)
+#         executionHostConfig = hostsMapper.selectByLabel(hostLabel)
+#         jsonStr = json.dumps({'host':executionHostConfig.getDictionary()})
+#         return HttpResponse(jsonStr, mimetype='application/javascript')
 
+def hostForm(request):
+    css_path = os.path.join(settings.STATIC_URL, 'css/general_style.css')
+    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
+    utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
+    hostId = request.GET.get("hostId")
+    form = HostForm(auto_id=True)
+    projectName = request.session['projectName']
+    project = loadProject(projectName)
+    hostsMapper = ExecutionHostMapper(project.hostsPath)
+    scpnHostsChoices = []
+    scpnHostsChoices.append(('', ''))
+    scipionHosts = getScipionHosts()
+    for executionHostMapper in scipionHosts:
+        scpnHostsChoices.append((executionHostMapper.getLabel(), executionHostMapper.getHostName()))
+    form.fields['scpnHosts'].choices = scpnHostsChoices        
+    # We check if we are going to edit a host
+    tittle = None
+    if hostId is not None and hostId != "":
+        executionHostConfig = hostsMapper.selectByLabel(hostId)
+        form.setHost(executionHostConfig)
+        tittle =  executionHostConfig.getLabel() + " host configuration"
+    else:
+        tittle = "New host configuration"  
+            
+    context = {'tittle': tittle,
+               'jquery': jquery_path,
+               'utils': utils_path,
+               'css':css_path,
+               'form': form}
+    return render_to_response('hostForm.html', RequestContext(request, context)) # Form Django forms
 
 def updateHostsConfig(request):
     form = HostForm(request.POST) # A form bound to the POST data

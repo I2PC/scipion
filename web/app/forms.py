@@ -4,7 +4,7 @@ Created on Jun 7, 2013
 @author: antonio
 '''
 from django import forms
-from hosts import ExecutionHostConfig
+from pyworkflow.hosts import ExecutionHostConfig
 
 class HostForm(forms.Form):
     scpnHosts = forms.ChoiceField(label='Scipion hosts', widget = forms.Select(), required = False,)
@@ -32,3 +32,9 @@ class HostForm(forms.Form):
         host.setUserName(self.cleaned_data['userName'])
         host.setHostPath(self.cleaned_data['hostPath'])
         return host
+    
+    def setHost(self, host):
+        self.fields['label'].initial = host.getLabel()
+        self.fields['hostName'].initial = host.getHostName()
+        self.fields['userName'].initial = host.getUserName()
+        self.fields['hostPath'].initial = host.getHostPath()
