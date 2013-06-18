@@ -619,12 +619,14 @@ void AutoParticlePicking2::correction(MetaData addedParticlesMD,MetaData removed
     classLabel.clear();
     loadTrainingSet(fnVector);
     train(addedParticlesMD,true,0,0,0,0);
-    add2Dataset(removedParticlesMD);
+//    add2Dataset(removedParticlesMD);
     saveTrainingSet();
     normalizeDataset(0,1);
     generateTrainSet();
+    std::cerr<<""<<"training has been done"<<std::endl;
     classifier.~SVMClassifier();
     classifier.SVMTrain(dataSet,classLabel);
+    std::cerr<<""<<"train classifier"<<std::endl;
 }
 
 void AutoParticlePicking2::add2Dataset(MetaData removedParticlesMD)
