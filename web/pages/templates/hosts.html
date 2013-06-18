@@ -14,27 +14,23 @@
 	
 		function viewHosts(){
 			selectedHost = ""
-			document.getElementById("hostsTable").style.display = "block";
-			document.getElementById("hostForm").style.display = "none";
 			document.getElementById("editTool").disabled = true;
 			document.getElementById("deleteTool").disabled = true;
 		}
 	
 		function newHost(){
-			document.getElementById("hostsTable").style.display = "none";
-			document.getElementById("hostForm").style.display = "block";
+			document.location = "javascript:popup('/hostForm/')"
 		}
 		
 		function selectHost(hostLabel){
 			selectedHost = hostLabel
-			getHost(selectedHost, "{{projectName}}")
+			
 			document.getElementById("editTool").disabled = false;
 			document.getElementById("deleteTool").disabled = false;
 		}
 		
 		function editHost(){
-			document.getElementById("hostsTable").style.display = "none";
-			document.getElementById("hostForm").style.display = "block";
+			document.location = "javascript:popup('/hostForm/?hostId=" + selectedHost + "')"
 		}
 		
 		function deleteHost(){
@@ -49,7 +45,7 @@
 			}
 		}
 	
-		function getHost(hostLabel, projectName) {
+		/* function getHost(hostLabel, projectName) {
 			$.ajax({
 				type : "GET",
 				url : "/getHost/?hostLabel=" + hostLabel,
@@ -66,7 +62,7 @@
 					document.getElementById("hostPath").value = host.hostPath;
 				}
 			});
-		}
+		} */
 		function clearForm(){
 			document.getElementById("scpnHosts").disabled = false;
 			document.getElementById("label").value = ""
@@ -94,12 +90,12 @@
 {% endblock %}
 
 {% block content %}
-	<div id="hostsTable">
+	<div>
 		<div id="toolbar" style="display: none">
-			<span><a id="newTool" href=""><img src="{{newTool}}" /> New</a></span> 
-			<span><a id="editTool" href=""><img src="{{editTool}}" />Edit</a></span> 
-			<span><a id="deleteTool" href=""><img src="{{deleteTool}}" /> Delete</a></span> 
-			<span><a id="browseTool" href=""><img src="{{browseTool}}" /> Browse</a></span>
+			<span><a id="newTool" href="" style="text-decoration: none;color: black;"><img src="{{newTool}}" /> New</a></span> 
+			<span><a id="editTool" href="" style="text-decoration: none;color: black;"><img src="{{editTool}}" />Edit</a></span> 
+			<span><a id="deleteTool" href="" style="text-decoration: none;color: black;"><img src="{{deleteTool}}" /> Delete</a></span> 
+			<span><a id="browseTool" href="" style="text-decoration: none;color: black;"><img src="{{browseTool}}" /> Browse</a></span>
 		</div>
 		<table class="generalTable">
 			<tr>
@@ -126,26 +122,7 @@
 			{% endfor %}
 		</table>
 	</div>
-	<div id="hostForm" style="display:none;">
 	
-		<form action="/updateHostsConfig" method="post">		
-	        {% csrf_token %}	 
-			<table>			 
-			 	{% for field in form %}
-			 	<tr>
-				    <td>
-				    	<label {% if field.field.required %} class="required" {% endif %} for="{{ field.html_name }}"> {{ field.label }}</label>
-				    </td> 
-				    <td>{{ field }}</td>
-				</tr>    
-				{% endfor %}
-			</table>
-			<br/>
-			{% for field in form %}
-				{{ field.errors }}
-			{% endfor %}
-		</form>	
-	</div>
 {% endblock %}
 
 
