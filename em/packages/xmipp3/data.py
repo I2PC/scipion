@@ -338,6 +338,10 @@ class XmippCTFModel(CTFModel, XmippMdRow):
     @staticmethod
     def convert(ctfModel, filename):
         """ Method to convert from a general ctfModel to XmippCtfModel """
+        print "TYPE DE CTFMODEL ANTES DEL ISINSTANCE"
+        print type(ctfModel)
+        print type(ctfModel).__name__
+        print XmippCTFModel.__name__
         if isinstance(ctfModel, XmippCTFModel):
             return ctfModel
             
