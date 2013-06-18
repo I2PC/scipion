@@ -2098,7 +2098,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		if (blockto.contains("@"))
 			gallery.data.selectBlock(blockto.substring(0, blockto.lastIndexOf("@")));
 		reloadFile(to, false);
-		setTitle(gallery.getTitle());
+		setGalleryTitle();
 	}
 
 	private void save() throws Exception
@@ -2129,7 +2129,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			else
 				saveAll();
 
-			setGalleryTitle();
 			if (dlgSave.doSaveImages())
 				data.md.writeImages(dlgSave.getOutput(), dlgSave.isOutputIndependent(), dlgSave.getImageLabel());
 		}
