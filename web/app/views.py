@@ -21,7 +21,6 @@ from pyworkflow.hosts import ExecutionHostMapper
 from pyworkflow.tests import getInputPath 
 from forms import HostForm
 
-
 def getResource(request):
     if request == 'logoScipion':
         img = 'scipion_logo.png'
@@ -39,9 +38,18 @@ def getResource(request):
         img = 'delete.gif'
     elif request == 'browse_toolbar':
         img = 'run_steps.gif'
+    elif request == 'new_toolbar':
+        img = 'new_object.gif'
         
     path = os.path.join(settings.MEDIA_URL, img)
     return path
+
+# Resources #
+new_tool_path = getResource('new_toolbar')
+edit_tool_path = getResource('edit_toolbar')
+copy_tool_path = getResource('copy_toolbar')
+delete_tool_path = getResource('delete_toolbar')
+browse_tool_path = getResource('browse_toolbar')
 
 def projects(request):
     manager = Manager()
@@ -191,13 +199,7 @@ def loadProject(projectName):
     project.load()
     return project
     
-def project_content(request):    
-    # Resources #
-    edit_tool_path = getResource('edit_toolbar')
-    copy_tool_path = getResource('copy_toolbar')
-    delete_tool_path = getResource('delete_toolbar')
-    browse_tool_path = getResource('browse_toolbar')
-    
+def project_content(request):        
     css_path = os.path.join(settings.STATIC_URL, 'css/project_content_style.css')
 #    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     jquery_cookie = os.path.join(settings.STATIC_URL, 'js/jquery.cookie.js')
@@ -236,7 +238,8 @@ def project_content(request):
                'sections': root.childs,
                'provider':provider,
 #               'messi': messi_path,
-               'messi_css': messi_css_path}
+               'messi_css': messi_css_path,
+               'view': 'protocols'}
     
     return render_to_response('project_content.html', context)
 
@@ -387,7 +390,6 @@ def openHostsConfig(request):
 #     else:
     # Resources #
     css_path = os.path.join(settings.STATIC_URL, 'css/general_style.css')
-    favicon_path = getResource('favicon')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
     # # Project Id(or Name) should be stored in SESSION
@@ -407,13 +409,17 @@ def openHostsConfig(request):
         scpnHostsChoices.append((executionHostMapper.getLabel(), executionHostMapper.getHostName()))
     form.fields['scpnHosts'].choices = scpnHostsChoices
     context = {'projectName' : request.session['projectName'],
+               'editTool': edit_tool_path,
+               'newTool': new_tool_path,
+               'deleteTool': delete_tool_path,
+               'browseTool': browse_tool_path,
                'hosts': projectHosts,
                'scipionHosts': scipionHosts,
-               'favicon': favicon_path,
                'jquery': jquery_path,
                'utils': utils_path,
                'css':css_path,
-               'form': form}
+               'form': form,
+               'view': 'hosts'}
         
     return render_to_response('hosts.html', RequestContext(request, context)) # Form Django forms
 
@@ -504,14 +510,10 @@ class MdValue():
 
         self.label = xmipp.label2Str(label)
         
-        
         self.allowRender = allowRender
-
-        print self.label, self.allowRender
 
         # check if enabled label
         self.displayCheckbox = (label == xmipp.MDL_ENABLED)
-        print self.label + self.strValue
 
         # Prepare path for image
         self.imgValue = self.strValue
@@ -532,7 +534,6 @@ class MdData():
             self.labels.append(labelName)
             if (xmipp.labelIsImage(l) and allowRender):
                 self.labelsToRender.append(labelName)
-            print "taka"    
                 
         self.colsOrder = defineColsLayout(self.labels);
         self.objects = []
@@ -584,7 +585,6 @@ def loadMetaData(path, block, allowRender=True, imageDim=None):
     if len(block):
         path = '%s@%s' % (block, path)
     # path2 = 'Volumes@' + path1
-    print path
     return MdData(path, allowRender, imageDim)   
 
 def loadMenuLayoutConfig(mode , path, block, allowRender=True, imageDim=None):
@@ -618,6 +618,19 @@ def table(request):
     
     return render_to_response('table.html', context)
 
+def get_table(request):
+    from django.http import HttpResponse
+    import json
+    response_data={}
+    response_data["sEcho"]=1
+    response_data["iTotalRecords"]=2
+    response_data["iTotalDisplayRecords"]=2
+    response_data["aaData"]=[["taka","laka","xaka","jaka","raka"],["taka","laka","xaka","jaka","raka"]]
+    
+    
+    print json.dumps(response_data)
+    
+    return HttpResponse(json.dumps(response_data), content_type="application/json")
 
 def get_image(request):
     from django.http import HttpResponse

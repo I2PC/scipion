@@ -3,6 +3,7 @@
 <head>
 <title>Scipion {% block title %} {% endblock %}</title>
 <meta charset='utf-8'>
+<link rel="icon" type="image/png" href="/resources/scipion_bn.png" />
 <link href="/static/css/general_style.css" rel="stylesheet"
 	type="text/css">
 <link type="text/css" href="/static/css/jquery-ui.css" rel="stylesheet" />
@@ -10,6 +11,18 @@
 <script type="text/javascript" src="/static/js/jquery-ui.js"></script>
 <script type="text/javascript" src="/static/js/layouts.js"></script>
 <script type="text/javascript" src="/static/js/messi.js"></script>
+<script>
+	function changeView(){
+		selection = document.getElementById("viewsCombo").value;
+		if (selection == "protocols"){
+			window.location.href = "/project_content/?projectName={{projectName}}"
+		} else if (selection == "data"){
+			alert("Not implemented yet")
+		} else if (selection == "hosts"){
+			window.location.href = "/openHostsConfig"
+		}
+	}
+</script>
 
 {% block head %} {% endblock %}
 </head>
@@ -23,7 +36,20 @@
 
 		<div class="north" id="framecontentTop">
 			<img class="logo" src="/resources/scipion_logo.png"
-				alt="Scipion logo" /> {% block menu %} {% endblock %}
+				alt="Scipion logo" /> 
+				{% if projectName != None %} 
+					<div class="view">
+						<label>View: </label>
+						<select id="viewsCombo" name="viewsCombo" onChange="javascript:changeView();">
+							<option value=""></option>
+							
+								<option value="protocols" {% if view == "protocols" %} selected {% endif %}>Protocols</option>
+								<option value="data" {% if view == "data" %} selected {% endif %}>Data</option>
+								<option value="hosts" {% if view == "hosts" %} selected {% endif %}>Hosts</option>
+							
+						</select>
+					</div> 
+				{% endif %}	
 		</div>
 		<!-- #header-->
 
