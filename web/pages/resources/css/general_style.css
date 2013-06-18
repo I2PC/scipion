@@ -88,10 +88,12 @@ body {
 	padding-right: 10px;
 }
 
-.tittle {
-	font-size: 1em;
+.project_name {
+	font-size: 2em;
 	font-weight: bold;
-	text-align: center;
+	margin-top: 0.2em;
+/* 	margin-left: 5em; */
+ 	float: left; 
 }
 
 .generalButton {

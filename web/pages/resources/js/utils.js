@@ -31,9 +31,11 @@ function launchToolbar(projName, id, elm) {
 	if (row.attr('value') != undefined && row.attr('value') != id) {
 		var rowOld = $("tr#" + row.attr('value'));
 		rowOld.attr('style', 'background-color: #fafafa;');
+		rowOld.attr('class', '');
 	}
 	row.attr('value', id);
 	elm.attr('style', 'background-color: LightSteelBlue;');
+	elm.attr('class', 'selected');
 
 	// Action Edit Button
 	$("a#editTool").attr(

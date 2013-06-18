@@ -36,7 +36,8 @@
 		<div class="north" id="framecontentTop">
 			<a href="/projects"><img class="logo" src="/resources/scipion_logo.png"
 				alt="Scipion logo" /></a>  
-				{% if projectName != None %} 
+				{% if projectName != None %}
+					<span class="project_name">Project {{projectName}}</span> 
 					<div class="view">
 						<label>View: </label>
 						<select id="viewsCombo" name="viewsCombo" onChange="javascript:changeView();">

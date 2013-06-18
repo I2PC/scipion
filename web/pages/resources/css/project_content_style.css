@@ -185,11 +185,11 @@ table#run tr:last-child td {
 }
 
 table#run tr:hover td {
-		background-color: #f2f2f2;
-/* 	border-top: 2px solid black; */
-/* 	border-bottom: 2px solid black; */
-/* 	padding-top: 3px; */
-/* 	padding-bottom: 3px; */
+	background-color: #f2f2f2;
+}
+
+table#run tr.selected:hover td {
+	background-color: LightSteelBlue;
 }
 
 /* Bottom datatable-tabs style */
@@ -262,8 +262,8 @@ div.datatable {
 	background: #fbfbfb;
 	border: 1px solid #fff;
 	margin: 15px 0 0;
-	height:94%;
-	overflow:auto;
+	height: 94%;
+	overflow: auto;
 }
 
 .tabContents {
