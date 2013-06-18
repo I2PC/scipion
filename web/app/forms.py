@@ -4,7 +4,7 @@ Created on Jun 7, 2013
 @author: antonio
 '''
 from django import forms
-from hosts import ExecutionHostConfig
+from pyworkflow.hosts import ExecutionHostConfig
 
 class HostForm(forms.Form):
     scpnHosts = forms.ChoiceField(label='Scipion hosts', widget = forms.Select(), required = False,)

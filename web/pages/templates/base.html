@@ -40,10 +40,10 @@
 					<div class="view">
 						<label>View: </label>
 						<select id="viewsCombo" name="viewsCombo" onChange="javascript:changeView();">
-							<option value=""></option>							
-								<option value="protocols" {% if view == "protocols" %} selected {% endif %}>Protocols</option>
-								<option value="data" {% if view == "data" %} selected {% endif %}>Data</option>
-								<option value="hosts" {% if view == "hosts" %} selected {% endif %}>Hosts</option>							
+							<!-- <option value=""></option> -->							
+							<option value="protocols" {% if view == "protocols" %} selected {% endif %}>Protocols</option>
+							<option value="data" {% if view == "data" %} selected {% endif %}>Data</option>
+							<option value="hosts" {% if view == "hosts" %} selected {% endif %}>Hosts</option>							
 						</select>
 					</div> 
 				{% endif %}	
