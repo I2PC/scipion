@@ -266,6 +266,8 @@ div.datatable {
 	background: #fbfbfb;
 	border: 1px solid #fff;
 	margin: 15px 0 0;
+	height:94%;
+	overflow:auto;
 }
 
 .tabContents {

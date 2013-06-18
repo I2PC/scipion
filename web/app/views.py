@@ -21,7 +21,6 @@ from pyworkflow.hosts import ExecutionHostMapper
 from pyworkflow.tests import getInputPath 
 from forms import HostForm
 
-
 def getResource(request):
     if request == 'logoScipion':
         img = 'scipion_logo.png'
@@ -39,9 +38,18 @@ def getResource(request):
         img = 'delete.gif'
     elif request == 'browse_toolbar':
         img = 'run_steps.gif'
+    elif request == 'new_toolbar':
+        img = 'new_object.gif'
         
     path = os.path.join(settings.MEDIA_URL, img)
     return path
+
+# Resources #
+new_tool_path = getResource('new_toolbar')
+edit_tool_path = getResource('edit_toolbar')
+copy_tool_path = getResource('copy_toolbar')
+delete_tool_path = getResource('delete_toolbar')
+browse_tool_path = getResource('browse_toolbar')
 
 def projects(request):
     manager = Manager()
@@ -191,13 +199,7 @@ def loadProject(projectName):
     project.load()
     return project
     
-def project_content(request):    
-    # Resources #
-    edit_tool_path = getResource('edit_toolbar')
-    copy_tool_path = getResource('copy_toolbar')
-    delete_tool_path = getResource('delete_toolbar')
-    browse_tool_path = getResource('browse_toolbar')
-    
+def project_content(request):        
     css_path = os.path.join(settings.STATIC_URL, 'css/project_content_style.css')
 #    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     jquery_cookie = os.path.join(settings.STATIC_URL, 'js/jquery.cookie.js')
@@ -236,7 +238,8 @@ def project_content(request):
                'sections': root.childs,
                'provider':provider,
 #               'messi': messi_path,
-               'messi_css': messi_css_path}
+               'messi_css': messi_css_path,
+               'view': 'protocols'}
     
     return render_to_response('project_content.html', context)
 
@@ -387,7 +390,6 @@ def openHostsConfig(request):
 #     else:
     # Resources #
     css_path = os.path.join(settings.STATIC_URL, 'css/general_style.css')
-    favicon_path = getResource('favicon')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
     # # Project Id(or Name) should be stored in SESSION
@@ -407,13 +409,17 @@ def openHostsConfig(request):
         scpnHostsChoices.append((executionHostMapper.getLabel(), executionHostMapper.getHostName()))
     form.fields['scpnHosts'].choices = scpnHostsChoices
     context = {'projectName' : request.session['projectName'],
+               'editTool': edit_tool_path,
+               'newTool': new_tool_path,
+               'deleteTool': delete_tool_path,
+               'browseTool': browse_tool_path,
                'hosts': projectHosts,
                'scipionHosts': scipionHosts,
-               'favicon': favicon_path,
                'jquery': jquery_path,
                'utils': utils_path,
                'css':css_path,
-               'form': form}
+               'form': form,
+               'view': 'hosts'}
         
     return render_to_response('hosts.html', RequestContext(request, context)) # Form Django forms
 

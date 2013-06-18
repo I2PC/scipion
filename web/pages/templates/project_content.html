@@ -22,13 +22,8 @@
 		});
 	});
 </script>
-{% endblock %} {% block menu %}
-<button
-	onclick="javascript:customPopup('/openHostsConfig', 800, 600)"
-	class="generalButton" type="button"
-	style="position: absolute; margin: 10px; right: 10px;">Config
-	hosts</button>
-{% endblock %} {% block sideLeft %}
+{% endblock %}
+{% block sideLeft %}
 <!-- <div class="tittle">PROTOCOLS</div> -->
 <div class="protFieldsetTree">
 	<ul id="browser" class="filetree">
@@ -50,7 +45,8 @@
 			</ul></li> {% endfor %}
 	</ul>
 </div>
-{% endblock %} {% block content %}
+{% endblock %} 
+{% block content %}
 <!-- <div class="tittle">{{project_name}} EXECUTIONS</div> -->
 <div id="toolbar" style="display: none">
 	<span><a id="editTool" href=""><img src="{{editTool}}" />
@@ -59,7 +55,7 @@
 			src="{{deleteTool}}" /> Delete</a></span> <span><a id="browseTool"
 		href=""><img src="{{browseTool}}" /> Browse</a></span>
 </div>
-<div style="overflow: auto;">
+<div style="overflow: auto;height:70%">
 	<table id="run" cellspacing="0">
 		<tr>
 			{% for colName, colWidth in provider.getColumns %}
@@ -79,7 +75,7 @@
 	</table>
 </div>
 
-<div id="tabContaier">
+<div id="tabContaier" style="height:30%;">
 	<ul class="listTabs">
 		<li><a id="tabTitle" class="active" href="#tab1">Data</a></li>
 		<li><a id="tabTitle" href="#tab2">Summary</a></li>
@@ -110,5 +106,4 @@
 		</div>
 	</div>
 </div>
-
 {% endblock %}

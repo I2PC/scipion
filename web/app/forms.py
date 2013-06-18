@@ -8,6 +8,8 @@ from hosts import ExecutionHostConfig
 
 class HostForm(forms.Form):
     scpnHosts = forms.ChoiceField(label='Scipion hosts', widget = forms.Select(), required = False,)
+    scpnHosts.widget.attrs.update({'onchange' : 'changeScpnHostSelection()'})
+    
     label = forms.CharField(label='Label', 
                             required=True,
                             error_messages={'required': 'Please, enter label for the configuration'},
