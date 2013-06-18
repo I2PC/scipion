@@ -414,10 +414,9 @@ public class SingleParticlePicker extends ParticlePicker
 	{
 		if (mode == Mode.Supervised && getManualParticlesNumber() < mintraining)
 			throw new IllegalArgumentException(String.format("You should have at least %s particles to go to %s mode", mintraining, Mode.Supervised));
-
+		this.mode = mode;
 		if (mode == Mode.Manual)
 			convertAutomaticToManual();
-		this.mode = mode;
 
 	}
 
@@ -426,7 +425,6 @@ public class SingleParticlePicker extends ParticlePicker
 		TrainingParticle p;
 		for (TrainingMicrograph m : micrographs)
 		{
-			m.setState(MicrographState.Manual);
 			for (AutomaticParticle ap : m.getAutomaticParticles())
 			{
 				if (!ap.isDeleted())
@@ -435,9 +433,15 @@ public class SingleParticlePicker extends ParticlePicker
 					m.addManualParticle(p, this, false, true);
 				}
 			}
+			
 			m.getAutomaticParticles().clear();
 			new File(getOutputPath(m.getAutoPosFile())).delete();
+			if(m.hasManualParticles())
+				m.setState(MicrographState.Manual);
+			else
+				m.setState(MicrographState.Available);
 		}
+
 		saveData();
 	}
 
@@ -977,21 +981,21 @@ public class SingleParticlePicker extends ParticlePicker
 		{
 			try
 			{
-				classifier.train(trainmd, (int)autopickout.getX(), (int)autopickout.getY(), (int)autopickout.getWidth(), (int)autopickout.getHeight());//should remove training files
+				classifier.train(trainmd, (int) autopickout.getX(), (int) autopickout.getY(), (int) autopickout.getWidth(), (int) autopickout
+						.getHeight());//should remove training files
 				micrograph.setAutopickpercent(autopickpercent);
 				classifier.autopick(micrograph.getFile(), outputmd, micrograph.getAutopickpercent());
 				int x, y;
 				double cost;
-				for(long id : outputmd.findObjects())
+				for (long id : outputmd.findObjects())
 				{
 					x = outputmd.getValueInt(MDLabel.MDL_XCOOR, id);
 					y = outputmd.getValueInt(MDLabel.MDL_YCOOR, id);
 					cost = outputmd.getValueDouble(MDLabel.MDL_COST, id);
-					if(!autopickout.contains(new Point(x, y)))
+					if (!autopickout.contains(new Point(x, y)))
 						micrograph.addAutomaticParticle(new AutomaticParticle(x, y, SingleParticlePicker.this, micrograph, cost, false));
 				}
-				
-				
+
 				XmippWindowUtil.releaseGUI(frame.getRootPane());
 				frame.getCanvas().setEnabled(true);
 				frame.getCanvas().repaint();
@@ -1054,7 +1058,7 @@ public class SingleParticlePicker extends ParticlePicker
 
 	public void correctAndAutopick(SingleParticlePickerJFrame frame, TrainingMicrograph current, TrainingMicrograph next, Rectangle correctout)
 	{
-		getMicrograph().setState(MicrographState.Corrected);
+		current.setState(MicrographState.Corrected);
 		if (getMode() == Mode.Supervised && next.getState() == MicrographState.Available)
 			next.setState(MicrographState.Supervised);
 		saveData();

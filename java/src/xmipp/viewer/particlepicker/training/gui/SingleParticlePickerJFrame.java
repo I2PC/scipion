@@ -685,6 +685,11 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		boolean train = XmippDialog
 				.showQuestion(this, "Classifier training for autopick requires that the particles region detected to be fully picked. "
 						+ "Are you sure you want to continue?");
+		if(!train)
+		{
+			autopickout = null;
+			canvas.repaint();
+		}
 		return train;
 	}
 
