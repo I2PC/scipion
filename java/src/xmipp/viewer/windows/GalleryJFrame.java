@@ -124,6 +124,12 @@ import xmipp.viewer.particlepicker.extract.ExtractParticlePicker;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
 import xmipp.viewer.windows.ClassesJDialog;
 
+
+/**
+ * This is the main frame used in showj
+ * @author airen
+ *
+ */
 public class GalleryJFrame extends JFrame implements iCTFGUI
 {
 	private static final long serialVersionUID = -8957336972082018823L;

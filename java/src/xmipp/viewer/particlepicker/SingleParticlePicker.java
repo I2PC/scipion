@@ -980,9 +980,18 @@ public class SingleParticlePicker extends ParticlePicker
 				classifier.train(trainmd, (int)autopickout.getX(), (int)autopickout.getY(), (int)autopickout.getWidth(), (int)autopickout.getHeight());//should remove training files
 				micrograph.setAutopickpercent(autopickpercent);
 				classifier.autopick(micrograph.getFile(), outputmd, micrograph.getAutopickpercent());
-				loadAutomaticParticles(micrograph, outputmd, false);
-				String path = getParticlesBlock(getOutputPath(micrograph.getAutoPosFile()));
-				outputmd.write(path);
+				int x, y;
+				double cost;
+				for(long id : outputmd.findObjects())
+				{
+					x = outputmd.getValueInt(MDLabel.MDL_XCOOR, id);
+					y = outputmd.getValueInt(MDLabel.MDL_YCOOR, id);
+					cost = outputmd.getValueDouble(MDLabel.MDL_COST, id);
+					if(!autopickout.contains(new Point(x, y)))
+						micrograph.addAutomaticParticle(new AutomaticParticle(x, y, SingleParticlePicker.this, micrograph, cost, false));
+				}
+				
+				
 				XmippWindowUtil.releaseGUI(frame.getRootPane());
 				frame.getCanvas().setEnabled(true);
 				frame.getCanvas().repaint();
