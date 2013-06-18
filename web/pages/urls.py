@@ -27,9 +27,11 @@ urlpatterns = patterns('',
     url(r'^protocol/$', 'app.views.protocol'),
     url(r'^browse_objects/$', 'app.views.browse_objects'),
     url(r'^openHostsConfig/$', 'app.views.openHostsConfig'),
-    url(r'^getHost/$', 'app.views.getHost'),
+#     url(r'^getHost/$', 'app.views.getHost'),
     url(r'^updateHostsConfig', 'app.views.updateHostsConfig'),
+    url(r'^hostForm/$', 'app.views.hostForm'),
     url(r'^showj/', 'app.views.showj'),
     url(r'^table/', 'app.views.table'),
     url(r'^get_image/', 'app.views.get_image'), # Load images dynamically
+    url(r'^get_table/', 'app.views.get_table'), # Load table dynamically
 )

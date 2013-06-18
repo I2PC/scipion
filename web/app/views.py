@@ -52,30 +52,21 @@ delete_tool_path = getResource('delete_toolbar')
 browse_tool_path = getResource('browse_toolbar')
 
 def projects(request):
-    manager = Manager()
-#    logo_path = findResource('scipion_logo.png')
-    
-    # Resources #
+    # CSS #
     css_path = os.path.join(settings.STATIC_URL, 'css/projects_style.css')
-    
-    #############
-    projectForm_path = os.path.join(settings.STATIC_URL, 'js/projectForm.js')
-#    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
-    
-    # Messi Plugin #
-#    messi_path = os.path.join(settings.STATIC_URL, 'js/messi.js')
     messi_css_path = os.path.join(settings.STATIC_URL, 'css/messi.css')
-    #############
+    
+    # JS #
+    projectForm_path = os.path.join(settings.STATIC_URL, 'js/projectForm.js')
+    
+    manager = Manager()
     
     projects = manager.listProjects()
     for p in projects:
         p.pTime = prettyDate(p.mTime)
 
-    context = {
-#              'jquery':jquery_path,
-               'projects': projects,
+    context = {'projects': projects,
                'css': css_path,
-#               'messi': messi_path,
                'messi_css': messi_css_path,
                'projectForm':projectForm_path}
     
@@ -200,17 +191,17 @@ def loadProject(projectName):
     return project
     
 def project_content(request):        
+    # CSS #
     css_path = os.path.join(settings.STATIC_URL, 'css/project_content_style.css')
-#    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
+    messi_css_path = os.path.join(settings.STATIC_URL, 'css/messi.css')
+    
+    # JS #
     jquery_cookie = os.path.join(settings.STATIC_URL, 'js/jquery.cookie.js')
     jquery_treeview = os.path.join(settings.STATIC_URL, 'js/jquery.treeview.js')
     launchTreeview = os.path.join(settings.STATIC_URL, 'js/launchTreeview.js')
     utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
-    #############
-     # Messi Plugin
-#    messi_path = os.path.join(settings.STATIC_URL, 'js/messi.js')
-    messi_css_path = os.path.join(settings.STATIC_URL, 'css/messi.css')
-    #############
+    tabs_config = os.path.join(settings.STATIC_URL, 'js/tabsConfig.js')
+    
     
     projectName = request.GET.get('projectName', None)
     if projectName is None:
@@ -223,21 +214,19 @@ def project_content(request):
     
     root = loadProtTree()
     
-    context = {'projectName':projectName,
+    context = {'projectName': projectName,
                'editTool': edit_tool_path,
                'copyTool': copy_tool_path,
                'deleteTool': delete_tool_path,
                'browseTool': browse_tool_path,
-#               'jquery': jquery_path,
-#               'jquery_ui':jquery_ui_path,
                'utils': utils_path,
                'jquery_cookie': jquery_cookie,
                'jquery_treeview': jquery_treeview,
                'launchTreeview': launchTreeview,
+               'tabs_config': tabs_config,
                'css':css_path,
                'sections': root.childs,
                'provider':provider,
-#               'messi': messi_path,
                'messi_css': messi_css_path,
                'view': 'protocols'}
     
@@ -263,17 +252,20 @@ def form(request):
     favicon_path = getResource('favicon')
     logo_help = getResource('help')
     logo_browse = getResource('browse')
+    
+    # CSS #
+    css_path = os.path.join(settings.STATIC_URL, 'css/form.css')
+    messi_css_path = os.path.join(settings.STATIC_URL, 'css/messi.css')
+    
+    # JS #
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     jsForm_path = os.path.join(settings.STATIC_URL, 'js/form.js')
     utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
-    css_path = os.path.join(settings.STATIC_URL, 'css/form.css')
-    # Messi Plugin
     messi_path = os.path.join(settings.STATIC_URL, 'js/messi.js')
-    messi_css_path = os.path.join(settings.STATIC_URL, 'css/messi.css')
-    #############
     
-    # # Project Id(or Name) should be stored in SESSION
-    projectName = request.GET.get('projectName')
+    # Project Id(or Name) should be stored in SESSION
+    projectName = request.session['projectName']
+    # projectName = request.GET.get('projectName')
     project = loadProject(projectName)        
     protocolName = request.GET.get('protocol', None)
     action = request.GET.get('action', None)
@@ -308,8 +300,7 @@ def form(request):
             param.htmlCond = param.condition.get()
             param.htmlDepend = ','.join(param._dependants)
             param.htmlCondParams = ','.join(param._conditionParams)
-#            param.htmlExpertLevel = param.expertLevel.get()
-    
+#            param.htmlExpertLevel = param.expertLevel.get()   
     
     context = {'projectName':projectName,
                'protocol':protocol,
@@ -392,8 +383,10 @@ def openHostsConfig(request):
     css_path = os.path.join(settings.STATIC_URL, 'css/general_style.css')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
+    
     # # Project Id(or Name) should be stored in SESSION
     projectName = request.session['projectName']
+    
     project = loadProject(projectName)
     scipionHosts = getScipionHosts()
     projectHosts = project.getHosts()   
@@ -408,7 +401,7 @@ def openHostsConfig(request):
     for executionHostMapper in scipionHosts:
         scpnHostsChoices.append((executionHostMapper.getLabel(), executionHostMapper.getHostName()))
     form.fields['scpnHosts'].choices = scpnHostsChoices
-    context = {'projectName' : request.session['projectName'],
+    context = {'projectName' : projectName,
                'editTool': edit_tool_path,
                'newTool': new_tool_path,
                'deleteTool': delete_tool_path,
@@ -421,28 +414,56 @@ def openHostsConfig(request):
                'form': form,
                'view': 'hosts'}
         
-    return render_to_response('hosts.html', RequestContext(request, context)) # Form Django forms
+    return render_to_response('hosts.html', RequestContext(request, context))  # Form Django forms
 
-def getHost(request):
-    from django.http import HttpResponse
-    import json
-    from django.utils import simplejson
-    
-    if request.is_ajax():
-        hostLabel = request.GET.get('hostLabel')
-        projectName = request.session['projectName']
-        project = loadProject(projectName)
-        hostsMapper = ExecutionHostMapper(project.hostsPath)
-        executionHostConfig = hostsMapper.selectByLabel(hostLabel)
-        jsonStr = json.dumps({'host':executionHostConfig.getDictionary()})
-#         jsonStr = json.dumps({'hostConfig' :  executionHostConfig},
-#                              ensure_ascii=False)
-        return HttpResponse(jsonStr, mimetype='application/javascript')
+# def getHost(request):
+#     from django.http import HttpResponse
+#     import json
+#     from django.utils import simplejson
+#     
+#     if request.is_ajax():
+#         hostLabel = request.GET.get('hostLabel')
+#         projectName = request.session['projectName']
+#         project = loadProject(projectName)
+#         hostsMapper = ExecutionHostMapper(project.hostsPath)
+#         executionHostConfig = hostsMapper.selectByLabel(hostLabel)
+#         jsonStr = json.dumps({'host':executionHostConfig.getDictionary()})
+#         return HttpResponse(jsonStr, mimetype='application/javascript')
 
+def hostForm(request):
+    css_path = os.path.join(settings.STATIC_URL, 'css/general_style.css')
+    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
+    utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
+    hostId = request.GET.get("hostId")
+    form = HostForm(auto_id=True)
+    projectName = request.session['projectName']
+    project = loadProject(projectName)
+    hostsMapper = ExecutionHostMapper(project.hostsPath)
+    scpnHostsChoices = []
+    scpnHostsChoices.append(('', ''))
+    scipionHosts = getScipionHosts()
+    for executionHostMapper in scipionHosts:
+        scpnHostsChoices.append((executionHostMapper.getLabel(), executionHostMapper.getHostName()))
+    form.fields['scpnHosts'].choices = scpnHostsChoices        
+    # We check if we are going to edit a host
+    tittle = None
+    if hostId is not None and hostId != "":
+        executionHostConfig = hostsMapper.selectByLabel(hostId)
+        form.setHost(executionHostConfig)
+        tittle = executionHostConfig.getLabel() + " host configuration"
+    else:
+        tittle = "New host configuration"  
+            
+    context = {'tittle': tittle,
+               'jquery': jquery_path,
+               'utils': utils_path,
+               'css':css_path,
+               'form': form}
+    return render_to_response('hostForm.html', RequestContext(request, context))  # Form Django forms
 
 def updateHostsConfig(request):
-    form = HostForm(request.POST) # A form bound to the POST data
-    if form.is_valid(): # All validation rules pass
+    form = HostForm(request.POST)  # A form bound to the POST data
+    if form.is_valid():  # All validation rules pass
         projectName = request.session['projectName']
         project = loadProject(projectName)
         project.saveHost(form.getHost())
@@ -510,14 +531,10 @@ class MdValue():
 
         self.label = xmipp.label2Str(label)
         
-        
         self.allowRender = allowRender
-
-        print self.label, self.allowRender
 
         # check if enabled label
         self.displayCheckbox = (label == xmipp.MDL_ENABLED)
-        print self.label + self.strValue
 
         # Prepare path for image
         self.imgValue = self.strValue
@@ -538,7 +555,6 @@ class MdData():
             self.labels.append(labelName)
             if (xmipp.labelIsImage(l) and allowRender):
                 self.labelsToRender.append(labelName)
-            print "taka"    
                 
         self.colsOrder = defineColsLayout(self.labels);
         self.objects = []
@@ -590,7 +606,6 @@ def loadMetaData(path, block, allowRender=True, imageDim=None):
     if len(block):
         path = '%s@%s' % (block, path)
     # path2 = 'Volumes@' + path1
-    print path
     return MdData(path, allowRender, imageDim)   
 
 def loadMenuLayoutConfig(mode , path, block, allowRender=True, imageDim=None):
@@ -624,6 +639,19 @@ def table(request):
     
     return render_to_response('table.html', context)
 
+def get_table(request):
+    from django.http import HttpResponse
+    import json
+    response_data = {}
+    response_data["sEcho"] = 1
+    response_data["iTotalRecords"] = 2
+    response_data["iTotalDisplayRecords"] = 2
+    response_data["aaData"] = [["taka", "laka", "xaka", "jaka", "raka"], ["taka", "laka", "xaka", "jaka", "raka"]]
+    
+    
+    print json.dumps(response_data)
+    
+    return HttpResponse(json.dumps(response_data), content_type="application/json")
 
 def get_image(request):
     from django.http import HttpResponse

@@ -23,7 +23,6 @@
 		}
 	}
 </script>
-
 {% block head %} {% endblock %}
 </head>
 
@@ -35,18 +34,17 @@
 		<!-- #middle-->
 
 		<div class="north" id="framecontentTop">
-			<img class="logo" src="/resources/scipion_logo.png"
-				alt="Scipion logo" /> 
-				{% if projectName != None %} 
+			<a href="/projects"><img class="logo" src="/resources/scipion_logo.png"
+				alt="Scipion logo" /></a>  
+				{% if projectName != None %}
+					<span class="project_name">Project {{projectName}}</span> 
 					<div class="view">
 						<label>View: </label>
 						<select id="viewsCombo" name="viewsCombo" onChange="javascript:changeView();">
-							<option value=""></option>
-							
-								<option value="protocols" {% if view == "protocols" %} selected {% endif %}>Protocols</option>
-								<option value="data" {% if view == "data" %} selected {% endif %}>Data</option>
-								<option value="hosts" {% if view == "hosts" %} selected {% endif %}>Hosts</option>
-							
+							<!-- <option value=""></option> -->							
+							<option value="protocols" {% if view == "protocols" %} selected {% endif %}>Protocols</option>
+							<option value="data" {% if view == "data" %} selected {% endif %}>Data</option>
+							<option value="hosts" {% if view == "hosts" %} selected {% endif %}>Hosts</option>							
 						</select>
 					</div> 
 				{% endif %}	

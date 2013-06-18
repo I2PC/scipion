@@ -1,5 +1,14 @@
 /* CSS Document */
-html,body {
+html{
+	width: 97%;
+	height: 95%;
+	margin: 10px auto;
+	padding: 0;
+	text-align: left;
+	background-color: #F0F0F0;
+}
+
+body {
 	width: 97%;
 	height: 95%;
 	margin: 10px auto;
@@ -79,10 +88,12 @@ html,body {
 	padding-right: 10px;
 }
 
-.tittle {
-	font-size: 1em;
+.project_name {
+	font-size: 2em;
 	font-weight: bold;
-	text-align: center;
+	margin-top: 0.2em;
+/* 	margin-left: 5em; */
+ 	float: left; 
 }
 
 .generalButton {
