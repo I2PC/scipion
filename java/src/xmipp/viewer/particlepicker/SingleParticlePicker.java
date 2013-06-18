@@ -979,8 +979,7 @@ public class SingleParticlePicker extends ParticlePicker
 			{
 				classifier.train(trainmd, (int)autopickout.getX(), (int)autopickout.getY(), (int)autopickout.getWidth(), (int)autopickout.getHeight());//should remove training files
 				micrograph.setAutopickpercent(autopickpercent);
-				classifier.autopickOut(micrograph.getFile(), outputmd, micrograph.getAutopickpercent(), (int) autopickout.getX(), (int) autopickout
-						.getY(), (int) autopickout.getWidth(), (int) autopickout.getHeight());
+				classifier.autopick(micrograph.getFile(), outputmd, micrograph.getAutopickpercent());
 				loadAutomaticParticles(micrograph, outputmd, false);
 				String path = getParticlesBlock(getOutputPath(micrograph.getAutoPosFile()));
 				outputmd.write(path);
