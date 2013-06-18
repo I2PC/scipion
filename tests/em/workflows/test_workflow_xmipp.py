@@ -66,7 +66,7 @@ class TestXmippWorkflow(unittest.TestCase):
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
             
         print "Run extract particles with other downsampling factor"
-        protExtract = XmippProtExtractParticles(boxSize=64, downsampleType=2, downFactor=8)
+        protExtract = XmippProtExtractParticles(boxSize=64, downsampleType=2, downFactor=8, runMode=1)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.inputMicrographs.set(protImport.outputMicrographs)
         self.proj.launchProtocol(protExtract, wait=True)
