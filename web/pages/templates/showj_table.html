@@ -10,12 +10,14 @@ var giRedraw = false;
 $(document).ready(function() {
 	initializeSelectionRowEvent()
 	initializeGoToEvent()
+	initializeTableWidth()
 	
 	/* Add a click handler for the delete row */
 	/* $('#delete').click( function() {
 		var anSelected = fnGetSelected( oTable );
 		oTable.fnDeleteRow( anSelected[0] );
 	} ); */
+	
 	
 	/* Init the table */
 	oTable = $('#data_table').dataTable(
@@ -27,14 +29,30 @@ $(document).ready(function() {
 			        "bInfo": true,
 			        "bAutoWidth": true,
 			        "sDom": 'Rlfrtip',
+			        "sScrollX": "100%",
+			        "bScrollCollapse": true,
 			        "oColReorder": {
 		    			"aiOrder": {{metadata.colsOrder}}
-		    		}
+		    		},
+		    		
+		    		"bProcessing": true,
+		            "bServerSide": true,
+		            "sAjaxSource": "/get_table/"
+		    		/* "bRetrieve": true */
+					
 			    }		
 			);
 	
 	
 } );
+
+function initializeTableWidth(){
+	var tableWidth = $("section").width()
+	if ($("#table_container").width()>tableWidth){
+		$("#table_container").width(tableWidth);
+	}	
+}
+
 function initializeGoToEvent(){
 	$('#goto').click(function(){
 		updateRowSelection();	
@@ -102,7 +120,7 @@ function fnGetSelected(oTableLocal)
 {% block content_view %}
 	
 <div id="table_container">
-	<table cellspacing="0" id="data_table">
+	<table cellspacing="0" id="data_table" width="100%">
 		<thead>
 			<tr>
 			{% for label in metadata.labels %}
@@ -111,26 +129,7 @@ function fnGetSelected(oTableLocal)
 			</tr>
 		</thead>
 		<tbody>
-		{% for obj in metadata.objects %}
-			<tr id="{{obj.id}}" style="background-color:#fafafa;" draggable="true" >
 
-				{% for value in obj.values %}
-			         <td> 
-			         	{% if value.allowRender %} 
-			            	<img class="tableImages" src="/get_image/?image={{value.imgValue}}"/>
-			           	{% elif value.displayCheckbox%}
-			           		<input type="checkbox" 
-			           		{% if value.strValue == '1'%}
-			           		checked
-			           		{% endif %}	
-			           		>
-			           	{% else %}
-			           		{{value.strValue}}
-			           	{% endif %}
-			         </td>
-				{% endfor %}			        
-			</tr>
-		{% endfor %}
 		</tbody>
 	</table>
 </div>
