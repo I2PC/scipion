@@ -987,13 +987,19 @@ public class SingleParticlePicker extends ParticlePicker
 				classifier.autopick(micrograph.getFile(), outputmd, micrograph.getAutopickpercent());
 				int x, y;
 				double cost;
+				AutomaticParticle ap;
 				for (long id : outputmd.findObjects())
 				{
 					x = outputmd.getValueInt(MDLabel.MDL_XCOOR, id);
 					y = outputmd.getValueInt(MDLabel.MDL_YCOOR, id);
 					cost = outputmd.getValueDouble(MDLabel.MDL_COST, id);
-					if (!autopickout.contains(new Point(x, y)))
-						micrograph.addAutomaticParticle(new AutomaticParticle(x, y, SingleParticlePicker.this, micrograph, cost, false));
+					ap = new AutomaticParticle(x, y, SingleParticlePicker.this, micrograph, cost, false);
+					if (autopickout.contains(new Point(x, y)))
+					{
+						ap.setDeleted(true);
+						ap.setCost(-1);
+					}
+					micrograph.addAutomaticParticle(ap);
 				}
 
 				XmippWindowUtil.releaseGUI(frame.getRootPane());
@@ -1077,9 +1083,8 @@ public class SingleParticlePicker extends ParticlePicker
 					addedmd.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
 				}
 		}
-		addedmd.print();
 		MetaData automd = new MetaData(getParticlesBlock(getOutputPath(micrograph.getAutoPosFile())));
-
+		automd.print();
 		MetaData outputmd = new MetaData();
 		frame.getCanvas().setEnabled(false);
 		XmippWindowUtil.blockGUI(frame, "Correcting and Autopicking...");

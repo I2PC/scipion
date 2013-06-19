@@ -11,6 +11,7 @@ import javax.swing.SwingUtilities;
 
 import xmipp.jni.Particle;
 import xmipp.utils.XmippMessage;
+import xmipp.utils.XmippMessageDialog;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
@@ -111,7 +112,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 				if (um.fits(x, y, frame.getParticleSize()))
 					addParticle(x, y);
 				else
-					JOptionPane.showMessageDialog(this, XmippMessage.getOutOfBoundsMsg(String
+					XmippMessageDialog.showInfo(frame, XmippMessage.getOutOfBoundsMsg(String
 							.format("Particle centered at %s, %s with size %s", x, y, frame.getParticlePicker().getSize())));
 			}
 		}

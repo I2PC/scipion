@@ -23,6 +23,12 @@ public class AutomaticParticle extends TrainingParticle {
 	{
 		return deleted;
 	}
+
+	public void setCost(double cost)
+	{
+		this.cost = cost;
+		
+	}
 	
 
 
