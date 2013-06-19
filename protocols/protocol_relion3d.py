@@ -12,7 +12,7 @@ from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
 from xmipp import MetaData, Image, MDL_IMAGE, MDL_ITER, MDL_LL, AGGR_SUM, MDL_REF3D, MDL_WEIGHT, \
 getBlocksInMetaDataFile, MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDValueEQ, MDL_SAMPLINGRATE, MDL_CTF_MODEL
-from protlib_utils import runShowJ, getListFromVector, getListFromRangeString
+from protlib_utils import runShowJ, getListFromVector, getListFromRangeString, runJob
 from protlib_parser import ProtocolParser
 from protlib_xmipp import redStr, cyanStr
 from protlib_gui_ext import showWarning
@@ -84,9 +84,12 @@ class ProtRelion3D(XmippProtocol):
             
     def insertRelionRefine(self):
         args = {'--iter': self.NumberOfIterations,
-                '--tau_fudge': self.RegularisationParamT,
+                '--tau2_fudge': self.RegularisationParamT,
                 '--flatten_solvent': '',
                 '--zero_mask': '',
+                '--norm': '',
+                '--scale': '',
+                '--o': '%s/relion' % self.ExtraDir
                 }
         if len(self.ReferenceMask):
             args['--solvent_mask'] = self.ReferenceMask
@@ -137,10 +140,6 @@ class ProtRelion3D(XmippProtocol):
             
         args['--offset_range'] = self.OffsetSearchRangePix
         args['--offset_step']  = self.OffsetSearchStepPix * pow(2, iover)
-        
-        # Always do
-        args['--norm']  = ''
-        args['--scale']  = ''
 
         args['--j'] = self.NumberOfThreads
         
@@ -148,13 +147,16 @@ class ProtRelion3D(XmippProtocol):
         params = ' '.join(['%s %s' % (k, str(v)) for k, v in args.iteritems()])
         params += self.AdditionalArguments
         
-        self.insertStep('runRelion3D', program=self.program, params=params)
+        self.insertRunJobStep(self.program, params)
+        
             
-            
-
-def runRelion3D(log, program, params):
-    print "program: ", program
-    print "params: ", params
+#            
+#
+#def runRelion3D(log, program, params, mpi, threads):
+#    print "program: ", program
+#    print "params: ", params
+#    runJob(log, program, params, mpi, threads)
+    
       
         
 def convertImagesMd(log, inputMd, outputRelion):
