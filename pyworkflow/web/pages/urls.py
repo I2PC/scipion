@@ -34,5 +34,5 @@ urlpatterns = patterns('',
     url(r'^showj/', 'app.views.showj'),
     url(r'^table/', 'app.views.table'),
     url(r'^get_image/', 'app.views.get_image'), # Load images dynamically
-    url(r'^get_table/', 'app.views.get_table'), # Load table dynamically
+    url(r'^save_showj_table/', 'app.views.save_showj_table'), # Load table dynamically
 )

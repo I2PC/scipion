@@ -37,11 +37,8 @@ from pyworkflow.hosts import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
 
 PATH = os.path.dirname(__file__)
-<<<<<<< HEAD
+
 SETTINGS = join(pw.HOME,'..','settings')
-=======
-SETTINGS = join(pw.HOME, '..', 'settings')
->>>>>>> branch 'master' of ssh://josegutab@git.code.sf.net/p/pyworkflow/code
 
 def getConfigPath(filename):
     """Return a configuration filename from settings folder"""
