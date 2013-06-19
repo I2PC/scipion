@@ -101,7 +101,7 @@ int ImageBase::readHDF5(size_t select_img)
 
     //    grp  = H5Gopen2(fhdf5, "/exchange", H5P_DEFAULT);
 
-    String dsname = "exchange/data"; // Dataset name
+    String dsname = "/NXtomo/instrument/sample/data"; // Dataset name
 
     dataset = H5Dopen2(fhdf5, dsname.c_str(), H5P_DEFAULT);
     if( dataset < 0)
