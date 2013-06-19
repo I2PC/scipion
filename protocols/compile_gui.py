@@ -98,7 +98,7 @@ class OptionsTab(tk.Frame):
                                command=lambda: detectDir(self, wiz))
                 btn.grid(column=4, row=r)
                 
-        self.options.append((name, default, group, var, w, cond))
+        self.options.append((name, default, var, w, cond))
         self.optionsDict[name] = var
         self.lastRow += 1
 
