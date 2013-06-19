@@ -59,26 +59,29 @@ class OptionsTab(tk.Frame):
         self.lastRow = 0
         self.options = []
         self.optionsDict = {}
+	self.optionsGroup = {}
+	self.optionsGroupPanels = {}
         style = ttk.Style()
         style.configure("Name.TLabel", foreground="red")
         self.normal = font.Font(family=FontName, size=FontSize)
         self.bold = font.Font(family=FontName, size=FontSize, weight='bold')
         
-    def addOption(self, name, comment, default='', cond=None, wiz=None, browse=False):
+    def addOption(self, name, comment, default='', group=None, cond=None, wiz=None, browse=False):
         r = self.lastRow
         var = tk.StringVar()
         var.set(default)
-        ttk.Label(self, text=comment, font=self.normal).\
-        grid(column=0, row=r, padx=5, pady=5, sticky='e')
-        ttk.Label(self, text=name, font=self.bold).\
-        grid(column=1, row=r, padx=5, pady=5, sticky='e')
+	selfish = self
+	if group != None:
+	    selfish = self.getGroupPanel(group)
+        l1 = ttk.Label(selfish, text=comment, font=self.normal).grid(column=0, row=r, padx=5, pady=5, sticky='e')
+        l2 = ttk.Label(selfish, text=name, font=self.bold).grid(column=1, row=r, padx=5, pady=5, sticky='e')
         if default in ['yes', 'no']: # Boolean option
-            w = ttk.Checkbutton(self, textvariable=var, variable=var,
+            w = ttk.Checkbutton(selfish, textvariable=var, variable=var,
                             onvalue='yes', offvalue='no',
                             command=lambda:self.checked(name, var))
             w.grid(column=2, row=r, padx=5, pady=5, sticky='w')
         else:
-            w = ttk.Entry(self, width=20, textvariable=var)
+            w = ttk.Entry(selfish, width=20, textvariable=var)
             
             if cond:
                 if self.optionsDict[cond].get() == "no":
@@ -86,25 +89,31 @@ class OptionsTab(tk.Frame):
             w.grid(column=2, row=r, sticky='we', padx=5, pady=5)
             
             if browse:
-                btn = XmippButton(self, 'Browse', 'folderopen.gif',
+                btn = XmippButton(selfish, 'Browse', 'folderopen.gif',
                                command=lambda: browseDir(var, self))
                 btn.grid(column=3, row=r)
                 
             if wiz:
-                btn = XmippButton(self, 'Find', 'wizard.gif',
+                btn = XmippButton(selfish, 'Find', 'wizard.gif',
                                command=lambda: detectDir(self, wiz))
                 btn.grid(column=4, row=r)
                 
-        self.options.append((name, default, var, w, cond))
+        self.options.append((name, default, group, var, w, cond))
         self.optionsDict[name] = var
         self.lastRow += 1
-        
+
     def setValue(self, name, value):
         self.optionsDict[name].set(value)
-        
+
+    def setGroup(self, name, group):
+        self.optionsGroup[name].set(group)
+
     def getValue(self, name):
         return self.optionsDict[name].get()
-        
+
+    def getGroup(self, name):
+        return self.optionsGroup[name].get()
+
     def checked(self, name, var):
         value = var.get()
         if value == 'yes':
@@ -120,7 +129,19 @@ class OptionsTab(tk.Frame):
         grid(column=0, row=self.lastRow, columnspan=3,
              sticky='we', padx=10, pady=5)
         self.lastRow += 1
-        
+
+    def addGroupPanel(self, title):
+        p = tk.LabelFrame(self, text=title)
+	self.optionsGroupPanels[title] = p
+	p.pack()
+
+    def finishGroupPanel(self, title):
+        p = self.getGroupPanel(title)
+	p.pack(fill="both", expand="yes")
+
+    def getGroupPanel(self, title):
+        return self.optionsGroupPanels[title]
+
     def getConfigOptions(self):
         optStr = ""
         for n, d, v, w, cond in self.options:
@@ -217,7 +238,8 @@ class ConfigNotebook(ttk.Notebook):
         leftFrame.grid(column=0, row=0, sticky='nsew', padx=5, pady=5, rowspan=2)
         self.grid(column=1, row=0, sticky='nsew', padx=5, pady=5)
         #bottom panel
-        panel = ttk.Frame(root)
+	panel = ttk.Panedwindow(root)
+        #panel = ttk.Frame(root)
         panel.grid(column=1, row=1, padx=5, pady=5, sticky='we')
         self.progressVar = tk.IntVar()
         self.progressVar.set(0)

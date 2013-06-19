@@ -115,12 +115,14 @@ public:
     ~CL2DClass();
 
     /** Update projection. */
-    void updateProjection(const MultidimArray<double> &I, const CL2DAssignment &assigned);
+    void updateProjection(const MultidimArray<double> &I,
+                          const CL2DAssignment &assigned,
+                          bool force=false);
 
     /** Update non-projection */
-    inline void updateNonProjection(double corr)
+    inline void updateNonProjection(double corr, bool force=false)
     {
-    	if (corr>0)
+    	if (corr>0 || force)
     		nextNonClassCorr.push_back(corr);
     }
 
