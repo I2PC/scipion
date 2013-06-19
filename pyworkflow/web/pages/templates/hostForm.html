@@ -30,13 +30,16 @@
 		<form action="/updateHostsConfig" method="post">		
 	        {% csrf_token %}	 
 			<table>			 
-			 	{% for field in form %}
+			 	{% for field in form.visible_fields %}
 			 	<tr>
 				    <td>
 				    	<label {% if field.field.required %} class="required" {% endif %} for="{{ field.html_name }}"> {{ field.label }}</label>
 				    </td> 
 				    <td>{{ field }}</td>
 				</tr>    
+				{% endfor %}
+				{% for field in form.hidden_fields %}
+					{{ field }}
 				{% endfor %}
 			</table>
 			<br/>

@@ -10,6 +10,7 @@ class HostForm(forms.Form):
 #     scpnHosts = forms.ChoiceField(label='Scipion hosts', widget = forms.Select(), required = False,)
 #     scpnHosts.widget.attrs.update({'onchange' : 'changeScpnHostSelection()'})
     
+    objId = forms.CharField(widget=forms.HiddenInput(), required = False)
     label = forms.CharField(label='Label', 
                             required=True,
                             error_messages={'required': 'Please, enter label for the configuration'},
@@ -30,6 +31,10 @@ class HostForm(forms.Form):
     
     def getHost(self):
         host = HostConfig()
+        if self.cleaned_data['objId'] == '':
+            host.setObjId(None)
+        else:
+            host.setObjId(self.cleaned_data['objId'])
         host.setLabel(self.cleaned_data['label'])
         host.setHostName(self.cleaned_data['hostName'])
         host.setUserName(self.cleaned_data['userName'])
@@ -38,6 +43,7 @@ class HostForm(forms.Form):
         return host
     
     def setHost(self, host):
+        self.fields['objId'].initial = host.getObjId()
         self.fields['label'].initial = host.getLabel()
         self.fields['hostName'].initial = host.getHostName()
         self.fields['userName'].initial = host.getUserName()
