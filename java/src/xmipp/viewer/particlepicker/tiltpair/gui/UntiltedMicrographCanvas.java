@@ -1,24 +1,15 @@
 package xmipp.viewer.particlepicker.tiltpair.gui;
 
-import ij.IJ;
-import ij.ImagePlus;
-import ij.gui.ImageWindow;
-
 import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import xmipp.utils.XmippWindowUtil;
+import xmipp.jni.Particle;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
@@ -28,7 +19,6 @@ import xmipp.viewer.particlepicker.tiltpair.model.TiltedParticle;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedMicrograph;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedParticle;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
-import xmipp.jni.Particle;
 
 public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 {
@@ -37,7 +27,6 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 	private UntiltedParticle active;
 	private TiltPairPicker pppicker;
 	private UntiltedMicrograph um;
-	private boolean reload = false;
 
 	@Override
 	public ParticlePickerJFrame getFrame()
@@ -276,9 +265,10 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 	
 	public void refreshActive(Particle up)
 	{
-		active = (UntiltedParticle) up;
-		if (active != null)
+		
+		if (up != null)
 		{
+			active = (UntiltedParticle) up;
 			TiltedParticle tp = active.getTiltedParticle();
 			if (tp != null)
 			{
@@ -290,6 +280,8 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 					frame.getTiltedCanvas().moveTo(tp);
 			}
 		}
+		else
+			active = null;
 		repaint();
 		frame.getTiltedCanvas().repaint();
 	}
