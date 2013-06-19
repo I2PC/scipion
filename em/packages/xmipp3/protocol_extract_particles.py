@@ -30,7 +30,7 @@ This sub-package contains the XmippProtExtractParticles protocol
 
 
 from pyworkflow.em import * 
-from pyworkflow.em.packages.xmipp3.data import *
+from data import *
 from pyworkflow.utils.path import makePath, removeBaseExt, join, exists
 from protlib_particles import runNormalize
 from xmipp3 import XmippProtocol
@@ -195,9 +195,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 #                self.micCTF = mic.getCTF()
 #                fnCTF = self._insertConvertStep("micCTF", XmippCTFModel,
 #                                         self._getTmpPath("tmp.ctfParam"))
-            
-            print "micrographToExtract antes del getCTF: %s" % micrographToExtract
-            
+                        
             self._insertFunctionStep('getCTF', fn, micrographToExtract)
             
             if self.doFlip:
@@ -220,7 +218,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 #                        self._insertRunJobStep("xmipp_ctf_phase_flip", args % locals())
 #                        micrographToExtract = fnFlipped
 #                
-            print "micrographToExtract despues del getCTF: %s" % micrographToExtract
             # Actually extract
             self._insertFunctionStep('extractParticles', fn, micrographToExtract)
                 
@@ -247,7 +244,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                     downFactor = self.samplingFinal/self.samplingInput
                     args += " --downsampling %(downFactor)f"
                     #self._insertRunJobStep("xmipp_ctf_phase_flip", args % locals())
-                    self.runJob("xmipp_ctf_phase_flip", args % locals())
+                    self.runJob(None, "xmipp_ctf_phase_flip", args % locals())
                 
         self.fnCTF = fnCTF
 
@@ -264,7 +261,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             posMetadata = removeBaseExt(micName) + "@" + fnPosFile
            
             boxSize = self.boxSize.get()
-            print "micrographToExtract dentro del extractParticles: %s" % micrographToExtract
             args = "-i %(micrographToExtract)s --pos %(posMetadata)s -o %(outputRoot)s --Xdim %(boxSize)d" % locals()
             if self.downsampleType.get() != self.SAME_AS_PICKING:
                 args += " --downsampling " + str(self.samplingFinal/self.samplingInput)
@@ -308,7 +304,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             micCTF = micInput.getCTF()
             xmippCTF = XmippCTFModel.convert(micCTF, self._getTmpPath("tmp.ctfParam"))
             fnCTF = xmippCTF.getFileName()
-        print "fnCTF devuelto por el convert %s" % fnCTF
+
         return fnCTF
                         
             
