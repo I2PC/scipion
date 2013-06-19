@@ -10,6 +10,12 @@
 	<script src={{utils}} type="text/javascript"></script>
 	<script>	
 	
+		/* {% if message != None and message != '' %}
+		window.onload = function() {
+			alert("{{message}}")
+		}
+		{% endif %} */
+	
 		var selectedHost = ""
 	
 		function viewHosts(){
@@ -22,14 +28,14 @@
 			document.location = "javascript:popup('/hostForm/')"
 		}
 		
-		function selectHost(hostLabel){
-			selectedHost = hostLabel
+		function selectHost(hostId){
+			selectedHost = hostId
 			document.getElementById("editTool").disabled = false;
 			document.getElementById("deleteTool").disabled = false;
 		}
 		
 		function editHost(){
-			document.location = "javascript:popup('/hostForm/?hostId=" + selectedHost + "')"
+			document.location = "javascript:popup('/hostForm/?hostId=" + selectedHost + "')";
 		}
 		
 		function deleteHost(){
@@ -37,7 +43,8 @@
 				alert("No host has been selected to delete");
 			} else {
 				if (confirm("Are you sure you want to remove this host?")) {
-					alert(selectedHost + " host succesfully removed ");
+					document.location.href = "/deleteHost/?hostId=" + selectedHost;	
+					
 				} else {
 					alert("Remove operation cancelled");
 				}
@@ -96,7 +103,7 @@
 			<span><a id="deleteTool" href="" style="text-decoration: none;color: black;"><img src="{{deleteTool}}" /> Delete</a></span> 
 			<span><a id="browseTool" href="" style="text-decoration: none;color: black;"><img src="{{browseTool}}" /> Browse</a></span>
 		</div>
-		<table class="generalTable">
+		<table class="generalTable" cellspacing="0">
 			<tr>
 				<th>Configuration</th> 
 				<th>Host name</th>
@@ -104,18 +111,27 @@
 				<th>Host path</th>
 			</tr>
 			{% for host in hosts %}
-			<tr id="{{host.label}}" onclick="selectHost('{{host.label}}');launchHostsToolbar('{{projectName}}','{{host.label}}', ($(this)));">
+			<tr id="{{host.label}}" onclick="selectHost('{{host.getObjId}}');launchHostsToolbar('{{projectName}}','{{host.getObjId}}', ($(this)));">
 				<td>
-					{{host.label}}
+					{% if host.getLabel != None %}
+						{{host.getLabel}}
+					{% endif %}
+					
 				</td>
 				<td>
-					{{host.hostName}}
+					{% if host.getHostName != None %}
+						{{host.getHostName}}
+					{% endif %}	
 				</td>	
 				<td>
-					{{host.userName}}
+					{% if host.getUserName != None %}
+						{{host.getUserName}}
+					{% endif %}
 				</td>
 				<td>
-					{{host.hostPath}}
+					{% if host.getHostPath != None %}
+						{{host.getHostPath}}
+					{% endif %}					
 				</td>
 			</tr>
 			{% endfor %}

@@ -31,7 +31,120 @@ from pyworkflow.object import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
 
 
-class ExecutionHostConfig(OrderedObject):
+# class ExecutionHostConfig(OrderedObject):
+#     """ Main store the configuration for execution hosts. """
+#     
+#     def __init__(self, **args):
+#         OrderedObject.__init__(self, **args)
+#         self.label = String()
+#         self.hostName = String()
+#         self.userName = String()
+#         self.password = String()
+#         self.hostPath = String()
+#         self.mpiCommand = String()
+#         self.queueSystem = QueueSystemConfig()
+#     
+#     def getLabel(self):
+#         return self.label.get()
+#     
+#     def getHostName(self):
+#         return self.hostName.get()
+#     
+#     def getUserName(self):
+#         return self.userName.get()
+#     
+#     def getPassword(self):
+#         return self.password.get()
+#     
+#     def getHostPath(self):
+#         return self.hostPath.get()
+#     
+#     def getSubmitCommand(self):
+#         return self.queueSystem.submitCommand.get()
+#     
+#     def isQueueMandatory(self):
+#         return self.queueSystem.mandatory.get()
+#     
+#     def setLabel(self, label):
+#         return self.label.set(label)
+#     
+#     def setHostName(self, hostName):
+#         return self.hostName.set(hostName)
+#     
+#     def setUserName(self, userName):
+#         return self.userName.set(userName)
+#     
+#     def setPassword(self, password):
+#         return self.password.set(password)
+#     
+#     def setHostPath(self, hostPath):
+#         return self.hostPath.set(hostPath)
+
+        
+class QueueSystemConfig(OrderedObject):
+    def __init__(self, **args):
+        OrderedObject.__init__(self, **args) 
+        self.name = String()
+        self.mandatory = Boolean()
+        self.queues = List() # List for queue configurations
+        self.submitCommand = String()
+        self.submitTemplate = String()
+        self.checkCommand = String()
+        self.cancelCommand = String()
+        
+    def hasValue(self):
+        return self.name.hasValue() and len(self.queues)
+        
+        
+class QueueConfig(OrderedObject):
+    def __init__(self, **args):
+        OrderedObject.__init__(self, **args) 
+        self.name = String('default')
+        self.maxCores = Integer()
+        self.allowMPI = Boolean()
+        self.allowThreads = Boolean()
+        self.maxHours = Integer()
+        
+    
+# class ExecutionHostMapper(XmlMapper):
+#     def __init__(self, filename, dictClasses=None, **args):
+#         if dictClasses is None:
+#             dictClasses = globals()
+#         XmlMapper.__init__(self, filename, dictClasses, **args)
+#         #self.setClassTag('ExecutionHostConfig.QueueSystemConfig', 'class_name')
+#         self.setClassTag('ExecutionHostConfig.String', 'attribute')
+#         self.setClassTag('ExecutionHostConfig.hostName', 'name_only')
+#         self.setClassTag('ExecutionHostConfig.userName', 'name_only')
+#         self.setClassTag('ExecutionHostConfig.password', 'name_only')
+#         self.setClassTag('ExecutionHostConfig.hostPath', 'name_only')
+#         self.setClassTag('ExecutionHostConfig.mpiCommand', 'name_only')
+#         self.setClassTag('QueueSystemConfig.name', 'attribute')
+#         self.setClassTag('QueueSystemConfig.mandatory', 'attribute')  
+#         self.setClassTag('QueueConfig.ALL', 'attribute')   
+#         self.setClassTag('List.QueueConfig', 'class_only')           
+#         #self.setClassTag('ProtocolConfig.ProtocolConfig', 'class_only')
+#     
+#     def selectByLabel(self, objLabel):
+#         hostsList = self.selectAll()
+#         for host in hostsList:
+#             if host.label == objLabel:
+#                 return host
+#         return None
+    
+class HostMapper(SqliteMapper):
+    def __init__(self, filename, dictClasses=None):
+        if dictClasses is None:
+            dictClasses = globals()
+        SqliteMapper.__init__(self, filename, dictClasses)
+        
+    def selectByLabel(self, objLabel):
+        hostsList = self.selectAll()
+        for host in hostsList:
+            if host.label == objLabel:
+                return host
+        return None  
+        
+class HostConfig(OrderedObject):
     """ Main store the configuration for execution hosts. """
     
     def __init__(self, **args):
@@ -78,55 +191,4 @@ class ExecutionHostConfig(OrderedObject):
         return self.password.set(password)
     
     def setHostPath(self, hostPath):
-        return self.hostPath.set(hostPath)
-
-        
-class QueueSystemConfig(OrderedObject):
-    def __init__(self, **args):
-        OrderedObject.__init__(self, **args) 
-        self.name = String()
-        self.mandatory = Boolean()
-        self.queues = List() # List for queue configurations
-        self.submitCommand = String()
-        self.submitTemplate = String()
-        self.checkCommand = String()
-        self.cancelCommand = String()
-        
-    def hasValue(self):
-        return self.name.hasValue() and len(self.queues)
-        
-        
-class QueueConfig(OrderedObject):
-    def __init__(self, **args):
-        OrderedObject.__init__(self, **args) 
-        self.name = String('default')
-        self.maxCores = Integer()
-        self.allowMPI = Boolean()
-        self.allowThreads = Boolean()
-        self.maxHours = Integer()
-        
-    
-class ExecutionHostMapper(XmlMapper):
-    def __init__(self, filename, dictClasses=None, **args):
-        if dictClasses is None:
-            dictClasses = globals()
-        XmlMapper.__init__(self, filename, dictClasses, **args)
-        #self.setClassTag('ExecutionHostConfig.QueueSystemConfig', 'class_name')
-        self.setClassTag('ExecutionHostConfig.String', 'attribute')
-        self.setClassTag('ExecutionHostConfig.hostName', 'name_only')
-        self.setClassTag('ExecutionHostConfig.userName', 'name_only')
-        self.setClassTag('ExecutionHostConfig.password', 'name_only')
-        self.setClassTag('ExecutionHostConfig.hostPath', 'name_only')
-        self.setClassTag('ExecutionHostConfig.mpiCommand', 'name_only')
-        self.setClassTag('QueueSystemConfig.name', 'attribute')
-        self.setClassTag('QueueSystemConfig.mandatory', 'attribute')  
-        self.setClassTag('QueueConfig.ALL', 'attribute')   
-        self.setClassTag('List.QueueConfig', 'class_only')           
-        #self.setClassTag('ProtocolConfig.ProtocolConfig', 'class_only')
-    
-    def selectByLabel(self, objLabel):
-        hostsList = self.selectAll()
-        for host in hostsList:
-            if host.label == objLabel:
-                return host
-        return None
+        return self.hostPath.set(hostPath)   

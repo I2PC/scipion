@@ -199,9 +199,13 @@ def writeProtocols():
     
 SCIPION_PATH = 'Scipion'
 PROJECTS_PATH = 'projects'
+SETTINGS_PATH = 'settings.sqlite'
+
+def getSettingsPath():
+    return getConfigPath(join(getHomePath(), SCIPION_PATH, SETTINGS_PATH) )
   
-def writeHosts():
-    host = ExecutionHostConfig()
+def writeHosts(dbPath):
+    host = HostConfig()
     host.label.set('localhost')
     host.hostName.set('localhost')
     host.hostPath.set(join (getHomePath(), SCIPION_PATH, PROJECTS_PATH))
@@ -260,31 +264,31 @@ cat $PBS_NODEFILE
     
     queueSys.queues.append(queue)
     
-    writeConfig(host, 'execution_hosts.xml', mapperClass=ExecutionHostMapper, clean=True)
+    writeConfig(host, dbPath, mapperClass=HostMapper, clean=True)
     
-    host = ExecutionHostConfig()
+    host = HostConfig()
     host.label.set('glassfishdev')
     host.hostName.set('glassfishdev.cnb.csic.es')
     host.userName.set('apoza')
     host.password.set('BF6fYiFYiYD')
     host.hostPath.set(join ('/home/apoza', SCIPION_PATH, PROJECTS_PATH))
     
-    writeConfig(host, 'execution_hosts.xml', mapperClass=ExecutionHostMapper, clean=False)
+    writeConfig(host, dbPath, mapperClass=HostMapper, clean=False)
     
-    host = ExecutionHostConfig()
+    host = HostConfig()
     host.label.set('crunchy')
     host.hostName.set('crunchy.cnb.csic.es')
     host.userName.set('apoza')
     host.password.set('nerfyeb4f1v')
     host.hostPath.set(join ('/gpfs/fs1/home/bioinfo/apoza', SCIPION_PATH, PROJECTS_PATH))
     
-    writeConfig(host, 'execution_hosts.xml', mapperClass=ExecutionHostMapper, clean=False)
+    writeConfig(host, dbPath, mapperClass=HostMapper, clean=False)
     
     
 def writeDefaults():
     writeMenus()
     writeProtocols()
-    writeHosts() 
+    writeHosts(join(getHomePath(), SCIPION_PATH, SETTINGS_PATH) ) 
     # Write global configuration
     config = ProjectConfig(menu='menu_default.xml',
                            protocols='protocols_default.xml')
@@ -295,8 +299,8 @@ def writeDefaults():
 if __name__ == '__main__':
     #Write default configurations
     writeDefaults()
-    fn = getConfigPath('execution_hosts.xml')
-    mapper = ExecutionHostMapper(fn, globals())
+    fn = getSettingsPath()
+    mapper = HostMapper(fn, globals())
     l = mapper.selectAll()[0]
     print l.queueSystem.submitTemplate.get()
     
