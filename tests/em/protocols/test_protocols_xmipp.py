@@ -115,7 +115,7 @@ class TestXmippExtractParticles(TestXmippBase):
         cls.protImport_ori = cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300)        
         cls.protPP = cls.runFakedPicking(protImport.outputMicrographs, 'Picking_XmippBPV3_Down3')
 
-    def atestExtractSameAsPicking(self):
+    def testExtractSameAsPicking(self):
         print "Run extract particles with downsampling factor equal to the one at picking"
         protExtract = XmippProtExtractParticles(boxSize=171, downsampleType=self.SAME_AS_PICKING, doFlip=False)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
@@ -123,7 +123,7 @@ class TestXmippExtractParticles(TestXmippBase):
         
         self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
         
-    def atestExtractOriginal(self):
+    def testExtractOriginal(self):
         print "Run extract particles with downsampling factor equal to the original micrographs"
         protExtract = XmippProtExtractParticles(boxSize=512, downsampleType=self.ORIGINAL, doFlip=False)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)

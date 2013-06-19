@@ -139,12 +139,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     NONE = 0
     MAXZSCORE = 1
     PERCENTAGE = 2
-    
-    micToExtractFn = ""
-    
-#    def __init__(self, **args):
-#        
-#        ProtExtractParticles.__init__(self, **args)
         
     def _defineSteps(self):
         """for each micrograph insert the steps to preprocess it
@@ -189,35 +183,12 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 self._insertRunJobStep("xmipp_transform_filter", args % locals())
                 micrographToExtract = fnNoDust
                 
-            # Flipping if micrograph has CTF model
-#            fnCTF = None
-#            if mic.hasCTF():
-#                self.micCTF = mic.getCTF()
-#                fnCTF = self._insertConvertStep("micCTF", XmippCTFModel,
-#                                         self._getTmpPath("tmp.ctfParam"))
                         
             self._insertFunctionStep('getCTF', fn, micrographToExtract)
             
             if self.doFlip:
                 micrographToExtract = self._getTmpPath(removeBaseExt(fn)+"_flipped.xmp")
-            
-#            fnCTF = self._getCTFModel(fn)
-#                 
-#            if fnCTF is not None:               
-#                if self.doFlip:
-#                    fnFlipped = self._getTmpPath(removeBaseExt(fn)+"_flipped.xmp")
-##                    fnCTFTmp = self._getTmpPath("tmp.ctfParam")
-##                    xmippCTF = XmippCTFModel.convertCTFModel(mic.getCTF(), fnCTFTmp)
-##                    fnCTF = xmippCTF.getFileName()
-#                    args = " -i %(micrographToExtract)s --ctf %(fnCTF)s -o %(fnFlipped)s"
-#                    # If some downsampling has been performed (either before picking or now) pass the downsampling factor 
-#                    if self.downsampleType != self.ORIGINAL:
-#                        #downFactor = self.samplingFinal/xmippCTF.samplingRate.get()
-#                        downFactor = self.samplingFinal/self.samplingInput
-#                        args += " --downsampling %(downFactor)f"
-#                        self._insertRunJobStep("xmipp_ctf_phase_flip", args % locals())
-#                        micrographToExtract = fnFlipped
-#                
+                
             # Actually extract
             self._insertFunctionStep('extractParticles', fn, micrographToExtract)
                 
