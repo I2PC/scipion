@@ -224,6 +224,8 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 	{
 		try
 		{
+			if(active != null && active.getTiltedParticle() == null)
+				XmippMessageDialog.showInfo(frame, "Remember to pick tilted particle for each particle");
 			Particle tp = um.getAlignerTiltedParticle(x, y);
 			if (um.getAddedCount() > UntiltedMicrograph.getAlignmentMin()
 					&& !um.getTiltedMicrograph().fits(tp.getX(), tp.getY(), pppicker.getSize()))

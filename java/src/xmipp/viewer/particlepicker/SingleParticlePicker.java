@@ -1051,7 +1051,6 @@ public class SingleParticlePicker extends ParticlePicker
 			classifier.autopick(micrograph.getFile(), outputmd, micrograph.getAutopickpercent());
 			loadAutomaticParticles(micrograph, outputmd, false);
 			String path = getParticlesBlock(getOutputPath(micrograph.getAutoPosFile()));
-			outputmd.print();
 			outputmd.write(path);
 			frame.getCanvas().repaint();
 			frame.getCanvas().setEnabled(true);
@@ -1084,7 +1083,6 @@ public class SingleParticlePicker extends ParticlePicker
 				}
 		}
 		MetaData automd = new MetaData(getParticlesBlock(getOutputPath(micrograph.getAutoPosFile())));
-		automd.print();
 		MetaData outputmd = new MetaData();
 		frame.getCanvas().setEnabled(false);
 		XmippWindowUtil.blockGUI(frame, "Correcting and Autopicking...");
