@@ -108,11 +108,13 @@ class OptionsTab(tk.Frame):
     def setGroup(self, name, group):
         self.optionsGroup[name].set(group)
 
-    def getValue(self, name):
-        return self.optionsDict[name].get()
+    def getValue(self, name, group=None):
+        if group != None:
+            return self.optionsDict[name].get()
+        return self.optionsGroupPanels[group].optionsDict[name].get()
 
-    def getGroup(self, name):
-        return self.optionsGroup[name].get()
+#    def getGroup(self, name):
+#        return self.optionsGroup[name].get()
 
     def checked(self, name, var):
         value = var.get()
@@ -162,7 +164,10 @@ class ConfigNotebook(ttk.Notebook):
         self.add(tab, text=text)
         self.tabs[text] = tab
         return tab
-    
+
+    def getTab(self, text):
+        return self.tabs[text]
+
     def getConfigOptions(self):
         '''return string with configs settings '''
         return ' '.join([t.getConfigOptions() for t in self.tabs.values()])
@@ -170,9 +175,9 @@ class ConfigNotebook(ttk.Notebook):
     def setValue(self, tab, option, value):
         self.tabs[tab].setValue(option, value)
         
-    def getValue(self, tab, option):
-        return self.tabs[tab].getValue(option)
-    
+    def getValue(self, tab, option, group=None):
+        return self.tabs[tab].getValue(option, group)
+
     def notifyRun(self, process):
         self.proc = process
         self.text.readFile()
