@@ -352,13 +352,12 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 					}
 					else
 					{
-						if (autopickchb.isSelected())
-						{
-							autopickchb.setSelected(false);
-							canvas.refreshActive(null);
-						}
+						
 						ppicker.setMode(Mode.Manual);
 						updateMicrographsModel();
+						if (autopickchb.isSelected())
+							autopickchb.setSelected(false);
+						canvas.refreshActive(null);
 						canvas.repaint();
 					}
 					ppicker.saveConfig();

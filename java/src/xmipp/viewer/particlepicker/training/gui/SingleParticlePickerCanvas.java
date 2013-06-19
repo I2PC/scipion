@@ -239,7 +239,7 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 		if (p == null)
 			active = null;
 		else
-			active =  (TrainingParticle)p;
+			active = (TrainingParticle)p;
 		repaint();
 
 	}

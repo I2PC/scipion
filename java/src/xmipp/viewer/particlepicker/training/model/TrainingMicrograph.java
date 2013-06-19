@@ -314,10 +314,10 @@ public class TrainingMicrograph extends Micrograph
 		
 		int radius = picker.getRadius();
 		radius = radius + radius/5;
-		int x = (int)(x1 - radius);
-		int y = (int)(y1 - radius);
-		int width  = (int)(x2 - x + radius);
-		int height = (int)(y2 - y + radius);
+		int x = Math.max(0, (int)(x1 - radius));
+		int y = Math.max(0, (int)(y1 - radius));
+		int width  = Math.min((int)(x2 - x + radius), this.width - 1);
+		int height = Math.min((int)(y2 - y + radius), this.height - 1);
 		return new Rectangle(x, y, width, height);
 		
 	}
