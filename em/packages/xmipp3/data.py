@@ -466,7 +466,7 @@ class XmippClass2D(Class2D):
         self._filename = filename
         self._representative = representative
         
-    def iterImageAssignemts(self):
+    def __iter__(self):
         md = xmipp.MetaData('class%06d_images@%s' % 
                             (self._number, self._filename))
         for objId in md:
@@ -487,7 +487,7 @@ class XmippClassification2D(Classification2D):
         self.setFileName(filename)
         self.classesBlock = String(classesBlock)
         
-    def iterClasses(self):
+    def __iter__(self):
         fn = self.getFileName()
         block = self.classesBlock.get()
         md = xmipp.MetaData('%(block)s@%(fn)s' % locals())

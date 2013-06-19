@@ -35,7 +35,7 @@ from pyworkflow.apps.config import *
 from pyworkflow.protocol import *
 from pyworkflow.mapper import SqliteMapper
 from pyworkflow.utils import cleanPath, makePath, makeFilePath, join, exists, runJob
-from pyworkflow.hosts import HostMapper, HostConfig
+from pyworkflow.hosts import ExecutionHostMapper, ExecutionHostConfig
 from pyworkflow.protocol.launch import launchProtocol
 
 PROJECT_DBNAME = 'project.sqlite'
@@ -190,10 +190,14 @@ class Project(object):
         protocol.setName(name)
         protocol.setMapper(self.mapper)
         protocol.dbPath = self.dbPath
-        protocol.setWorkingDir(self.getPath("Runs", name))
+        protocol.setWorkingDir(self.getPath(PROJECT_RUNS, name))
         self._setHostConfig(protocol)
         # Update with changes
         self._storeProtocol(protocol)
+        
+    def getRuns(self, iterate=False):
+        """ Return the existing protocol runs in the project. """
+        return self.mapper.selectByClass("Protocol", iterate=iterate)
         
     def getHosts(self):
         """ Retrieve the hosts associated with the project. (class ExecutionHostConfig) """

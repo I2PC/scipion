@@ -91,9 +91,7 @@ def makePath(*paths):
     If a path passed is a file, only the directory will be created.
     """
     for p in paths:
-        print "making path: ", p
         if not exists(p) and len(p):
-            print "   really creating."
             os.makedirs(p)
 
 def makeFilePath(*files):

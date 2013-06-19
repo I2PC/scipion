@@ -272,6 +272,22 @@ class Protocol(Step):
         for section in self._definition.iterSections():
             yield section
             
+    def iterInputAttributes(self):
+        """ Iterate over the main input parameters
+        of this protocol. Now the input are assumed to be these attribute
+        which are pointers and have no condition.
+        """
+        for paramName, param in self._definition.iterParams():
+            attr = getattr(self, paramName)
+            if attr.isPointer() and not param.hasCondition():
+                yield paramName, attr
+                
+    def iterOutputAttributes(self, outputClass):
+        """ Iterate over the outputs produced by this protocol. """
+        for key, attr in self.getAttributesToStore():
+            if isinstance(attr, outputClass):
+                yield key, attr
+            
     def copyDefinitionAttributes(self, other):
         """ Copy definition attributes to other protocol. """
         for paramName, _ in self.iterDefinitionAttributes():
@@ -671,4 +687,4 @@ def runProtocol(dbPath, protId, mpiComm=None):
     This is a factory function to instantiate necessary classes.
     The protocol run should be previously inserted in the database.
     """
-        
+    pass   
