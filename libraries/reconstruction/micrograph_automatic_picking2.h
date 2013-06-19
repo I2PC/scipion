@@ -93,6 +93,7 @@ public:
     int 						 fast;
     double                       scaleRate;
     int                          NRsteps;
+    Point                        p1,p2;
 
     MultidimArray<double>        convolveRes;
     MultidimArray<double>        filterBankStack;
@@ -152,7 +153,7 @@ public:
 
     void add2Dataset(int flagNegPos);
 
-    void train(MetaData MD, bool corrFlag);
+    void train(MetaData MD, bool corrFlag, int x, int y, int width, int height);
 
     void correction(MetaData addedParticlesMD,MetaData removedParticlesMD);
 
