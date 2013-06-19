@@ -16,10 +16,12 @@ from pyworkflow.web.pages import settings
 from pyworkflow.apps.config import *
 from pyworkflow.em import *
 from django.http.request import HttpRequest
-from pyworkflow.hosts import ExecutionHostMapper
+from pyworkflow.hosts import HostMapper
 
 from pyworkflow.tests import getInputPath 
 from forms import HostForm
+from django.core.urlresolvers import reverse
+from django.http import HttpResponseRedirect
 
 def getResource(request):
     if request == 'logoScipion':
@@ -372,49 +374,36 @@ def browse_objects(request):
         return HttpResponse(jsonStr, mimetype='application/javascript')
 
 def getScipionHosts():
-    defaultHosts = os.path.join(pw.HOME, 'settings', 'execution_hosts.xml')
-    return ExecutionHostMapper(defaultHosts).selectAll()
+    from pyworkflow.apps.config import getSettingsPath
+    defaultHosts = getSettingsPath()
+    return HostMapper(defaultHosts).selectAll()
 
-def openHostsConfig(request):
-#     if request.method == 'POST':  # If the form has been submitted...
-#         pass
-#     else:
+def viewHosts(request):  
     # Resources #
     css_path = os.path.join(settings.STATIC_URL, 'css/general_style.css')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
     
-    # # Project Id(or Name) should be stored in SESSION
-    projectName = request.session['projectName']
-    
+    projectName = request.session['projectName']    
     project = loadProject(projectName)
-    scipionHosts = getScipionHosts()
     projectHosts = project.getHosts()   
-#         hostsKeys = [host.getLabel() for host in projectHosts]      
-#         availableHosts = [host for host in scipionHosts if host.getLabel() not in hostsKeys]
-    if request.method == 'POST':
-        form = HostForm(request.POST)
-    else:       
-        form = HostForm(auto_id=True)
     scpnHostsChoices = []
     scpnHostsChoices.append(('', ''))
-    for executionHostMapper in scipionHosts:
-        scpnHostsChoices.append((executionHostMapper.getLabel(), executionHostMapper.getHostName()))
-    form.fields['scpnHosts'].choices = scpnHostsChoices
+
+    message = request.GET.get("message")
     context = {'projectName' : projectName,
                'editTool': edit_tool_path,
                'newTool': new_tool_path,
                'deleteTool': delete_tool_path,
                'browseTool': browse_tool_path,
                'hosts': projectHosts,
-               'scipionHosts': scipionHosts,
                'jquery': jquery_path,
                'utils': utils_path,
                'css':css_path,
-               'form': form,
-               'view': 'hosts'}
-        
-    return render_to_response('hosts.html', RequestContext(request, context))  # Form Django forms
+                'message': message,
+               'view': 'hosts'}    
+      
+    return render_to_response('hosts.html', context)
 
 # def getHost(request):
 #     from django.http import HttpResponse
@@ -425,32 +414,40 @@ def openHostsConfig(request):
 #         hostLabel = request.GET.get('hostLabel')
 #         projectName = request.session['projectName']
 #         project = loadProject(projectName)
-#         hostsMapper = ExecutionHostMapper(project.hostsPath)
-#         executionHostConfig = hostsMapper.selectByLabel(hostLabel)
-#         jsonStr = json.dumps({'host':executionHostConfig.getDictionary()})
+#         hostsMapper = HostMapper(project.settingsPath)
+#         HostConfig = hostsMapper.selectByLabel(hostLabel)
+#         jsonStr = json.dumps({'host':HostConfig.getDictionary()})
 #         return HttpResponse(jsonStr, mimetype='application/javascript')
 
-def hostForm(request):
+
+def getHostFormContext(request, initialContext = None):
     css_path = os.path.join(settings.STATIC_URL, 'css/general_style.css')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
     hostId = request.GET.get("hostId")
-    form = HostForm(auto_id=True)
+    if hostId is None or hostId == "":
+        if initialContext is not None:
+            hostId = initialContext['hostId']
+    form = None
+    if request.method == 'GET':        
+        form = HostForm(auto_id=True)
+    else:
+        form = HostForm(request.POST)
     projectName = request.session['projectName']
     project = loadProject(projectName)
-    hostsMapper = ExecutionHostMapper(project.hostsPath)
-    scpnHostsChoices = []
-    scpnHostsChoices.append(('', ''))
-    scipionHosts = getScipionHosts()
-    for executionHostMapper in scipionHosts:
-        scpnHostsChoices.append((executionHostMapper.getLabel(), executionHostMapper.getHostName()))
-    form.fields['scpnHosts'].choices = scpnHostsChoices        
+    hostsMapper = HostMapper(project.settingsPath)
+#     scpnHostsChoices = []
+#     scpnHostsChoices.append(('', ''))
+#     scipionHosts = getScipionHosts()
+#     for hostConfig in scipionHosts:
+#         scpnHostsChoices.append((hostConfig.getLabel(), hostConfig.getHostName()))
+#     form.fields['scpnHosts'].choices = scpnHostsChoices        
     # We check if we are going to edit a host
     tittle = None
     if hostId is not None and hostId != "":
-        executionHostConfig = hostsMapper.selectByLabel(hostId)
-        form.setHost(executionHostConfig)
-        tittle = executionHostConfig.getLabel() + " host configuration"
+        hostConfig = hostsMapper.selectById(hostId)
+        form.setHost(hostConfig)
+        tittle = hostConfig.getLabel() + " host configuration"
     else:
         tittle = "New host configuration"  
             
@@ -459,18 +456,35 @@ def hostForm(request):
                'utils': utils_path,
                'css':css_path,
                'form': form}
-    return render_to_response('hostForm.html', RequestContext(request, context))  # Form Django forms
+     
+    if initialContext is not None:
+        context.update(initialContext)
+        
+    return context
+
+def hostForm(request):
+    return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request)))  # Form Django forms
 
 def updateHostsConfig(request):
     form = HostForm(request.POST)  # A form bound to the POST data
     if form.is_valid():  # All validation rules pass
         projectName = request.session['projectName']
         project = loadProject(projectName)
-        project.saveHost(form.getHost())
-        return openHostsConfig(request)
+        host = project.saveHost(form.getHost())      
+        context = {'hostId' : host.getObjId(),
+                   'message': "Project hosts config sucesfully updated"}
+        return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request, context)))  # Form Django forms
     else:
-        return openHostsConfig(request)
+        return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request)))  # Form Django forms
 
+def deleteHost(request):
+    hostId = request.GET.get("hostId")    
+    projectName = request.session['projectName']
+    project = loadProject(projectName)
+    project.deleteHost(hostId)
+#     context = {'message': "Host succesfully deleted"}
+    return HttpResponseRedirect('/viewHosts')
+    
 def showj(request):
     # manager = Manager()
 #    logo_path = findResource('scipion_logo.png')

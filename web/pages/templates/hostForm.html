@@ -9,6 +9,12 @@
 <script src={{jquery}} type="text/javascript"></script>
 <script src={{utils}} type="text/javascript"></script>
 <script>
+	{% if message != None and message != '' %}
+	window.onload = function() {
+		alert("{{message}}")
+		closePopup()
+	}
+	{% endif %}
 	function changeScpnHostSelection(){
 		if (document.getElementById("scpnHosts").value != ""){
 			alert ("Not implemented yet");
@@ -20,6 +26,7 @@
 	<div>
 		<h3>{{tittle}}</h3>
 		<br/>
+		
 		<form action="/updateHostsConfig" method="post">		
 	        {% csrf_token %}	 
 			<table>			 
@@ -38,7 +45,7 @@
 			{% endfor %}
 			<br/>
 			<input type="submit" value="Accept" class="priorityButton"/>
-			<button id="cancelButton"  onclick="window.close()" class="generalButton">Cancel</button>
+			<button id="cancelButton"  onclick="closePopup()" class="generalButton">Cancel</button>
 		</form>	
 	</div>
 </body>

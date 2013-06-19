@@ -85,10 +85,10 @@ def loadHostConfig(host='localhost'):
     In there will be information to know how to launch MPI processes
     and how to submit jobs to the queue system if exists.
     """
-    from pyworkflow.hosts import ExecutionHostMapper
-    from pyworkflow.apps.config import getConfigPath
-    fn = getConfigPath('execution_hosts.xml')
-    mapper = ExecutionHostMapper(fn)
+    from pyworkflow.hosts import HostMapper
+    from pyworkflow.apps.config import getSettingsPath
+    fn = getSettingsPath()
+    mapper = HostMapper(fn)
     return mapper.selectByLabel(host)
 
 def killWithChilds(pid):

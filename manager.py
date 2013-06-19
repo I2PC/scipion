@@ -32,8 +32,9 @@ from os.path import abspath, join
 from project import Project
 import pyworkflow as pw
 from pyworkflow.mapper import SqliteMapper
-from pyworkflow.utils.path import cleanPath, makePath, getHomePath
-from pyworkflow.hosts import ExecutionHostMapper
+from pyworkflow.utils.path import cleanPath, makePath, getHomePath, existsPath
+from pyworkflow.hosts import HostMapper
+from pyworkflow.apps.config import writeHosts, getSettingsPath
 
 
 SCIPION_PATH = 'Scipion'
@@ -55,6 +56,9 @@ class Manager(object):
         """For create a Project, the path is required"""
         self.path = join(getHomePath(), SCIPION_PATH, PROJECTS_PATH)
         makePath(self.path)
+        settingsPath = getSettingsPath() 
+        if not existsPath(settingsPath):
+            writeHosts(settingsPath)
         
     def getProjectPath(self, projectName):
         """Return the project path given the name"""
@@ -78,8 +82,7 @@ class Manager(object):
     def createProject(self, projectName):
         """Create a new project """
         proj = Project(self.getProjectPath(projectName))
-        defaultHosts = os.path.join(pw.HOME, 'settings', 'execution_hosts.xml')
-        hosts = ExecutionHostMapper(defaultHosts).selectAll()
+        hosts = HostMapper(getSettingsPath()).selectAll()
         proj.create(hosts)
         return proj
     
