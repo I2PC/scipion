@@ -680,6 +680,18 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 					.format("You should have at least %s particles to go to %s mode", SingleParticlePicker.mintraining, Mode.Supervised));
 			return false;
 		}
+		if(!getMicrograph().hasManualParticles())
+		{
+			int index = micrographstb.getSelectedRow() - 1;
+			while(index >= 0)
+			{
+				if(ppicker.getMicrographs().get(index).hasManualParticles())
+				{
+					micrographstb.getSelectionModel().setSelectionInterval(index, index);
+					break;
+				}
+			}
+		}
 		autopickout = getMicrograph().getParticlesRectangle(ppicker);
 		canvas.repaint();
 		boolean train = XmippDialog
