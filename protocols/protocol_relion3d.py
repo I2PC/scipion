@@ -51,19 +51,21 @@ class ProtRelion3D(XmippProtocol):
         if md.containsLabel(MDL_IMAGE):
             # Check that have same size as images:
             from protlib_xmipp import validateInputSize
-            mdRef = MetaData(self.RefMd)
-            references = mdRef.getColumnValues(MDL_IMAGE)
-            for ref in references:
-                if not xmippExists(ref):
-                    errors.append("Reference: <%s> doesn't exists" % ref)
+            if not xmippExists(self.Ref3D):
+               errors.append("Reference: <%s> doesn't exists" % ref)
             if len(errors) == 0:
-                validateInputSize(references, self.ImgMd, errors)
+                validateInputSize([self.Ref3D], self.ImgMd, md, errors)
         else:
             errors.append("Input metadata <%s> doesn't contains image label" % self.ImgMd)
             
+        if self.DoCTFCorrection and not md.containsLabel(MDL_CTF_MODEL):
+            errors.append("CTF correction selected and input metadata <%s> doesn't contains CTF information" % self.ImgMd)
+            
         return errors 
     
-    def defineSteps(self):        
+    def defineSteps(self): 
+        self.doContinue = len(self.ContinueFrom) > 0
+               
         restart = False
         if restart:            #Not yet implemented
             pass
@@ -74,15 +76,88 @@ class ProtRelion3D(XmippProtocol):
 #            self.restart_MLrefine3D(RestartIter)
         else:
             self.ImgStar = self.workingDirPath(replaceBasenameExt(self.ImgMd, '.star'))
-            self.insertStep('convertImagesMd', [self.ImgStar],
-                            inputMd=self.ImgMd, outputRelion=self.ImgStar                            
+            self.insertStep('convertImagesMd', verifyfiles=[self.ImgStar],
+                            inputMd=self.ImgMd, 
+                            outputRelion=self.ImgStar                            
                             )
+            self.insertRelionRefine()
             
     def insertRelionRefine(self):
-        pass
-
+        args = {'--iter': self.NumberOfIterations,
+                '--tau_fudge': self.RegularisationParamT,
+                '--flatten_solvent': '',
+                '--zero_mask': '',
+                }
+        if len(self.ReferenceMask):
+            args['--solvent_mask'] = self.ReferenceMask
+            
+        if self.doContinue:
+            args['--continue'] = self.ContinueFrom
+        else: # Not continue
+            args.update({'--i': self.ImgStar,
+                         '-- particle_diameter': self.MaskDiameterA,
+                         '--angpix': self.SamplingRate,
+                         '--ref': self.Ref3D,
+                         '--oversampling': '1'
+                         })
+            
+            if not self.IsMapAbsoluteGreyScale:
+                args[' --firstiter_cc'] = '' 
+                
+            if self.InitialLowPassFilterA > 0:
+                args['--ini_high'] = self.InitialLowPassFilterA
+                
+            # CTF stuff
+            if self.DoCTFCorrection:
+                args['--ctf'] = ''
+            
+            if self.HasReferenceCTFCorrected:
+                args['--ctf_corrected_ref'] = ''
+                
+            if self.HaveDataPhaseFlipped:
+                args['--ctf_phase_flipped'] = ''
+                
+            if self.IgnoreCTFUntilFirstPeak:
+                args['--ctf_intact_first_peak'] = ''
+                
+            args['--sym'] = self.SymmetryGroup.upper()
+            
+            args['--K'] = self.NumberOfClasses
+            
+        # Sampling stuff
+        # Find the index(starting at 0) of the selected
+        # sampling rate, as used in relion program
+        iover = 1 #TODO: check this
+        index = ['30','15','7.5','3.7','1.8',
+                 '0.9','0.5','0.2','0.1'].index(self.AngularSamplingDeg)
+        args['--healpix_order'] = float(index + 1 - iover)
         
-def convertImagesMd(inputMd, outputRelion):
+        if self.PerformLocalAngularSearch:
+            args['--sigma_ang'] = self.LocalAngularSearchRange / 3.
+            
+        args['--offset_range'] = self.OffsetSearchRangePix
+        args['--offset_step']  = self.OffsetSearchStepPix * pow(2, iover)
+        
+        # Always do
+        args['--norm']  = ''
+        args['--scale']  = ''
+
+        args['--j'] = self.NumberOfThreads
+        
+        # Join in a single line all key, value pairs of the args dict    
+        params = ' '.join(['%s %s' % (k, str(v)) for k, v in args.iteritems()])
+        params += self.AdditionalArguments
+        
+        self.insertStep('runRelion3D', program=self.program, params=params)
+            
+            
+
+def runRelion3D(log, program, params):
+    print "program: ", program
+    print "params: ", params
+      
+        
+def convertImagesMd(log, inputMd, outputRelion):
     """ Convert the Xmipp style MetaData to one ready for Relion.
     Main differences are: STAR labels are named different and
     in Xmipp the images rows contains a path to the CTFModel, 
@@ -91,6 +166,8 @@ def convertImagesMd(inputMd, outputRelion):
      input: input filename with the Xmipp images metadata
      output: output filename for the Relion metadata
     """
+    from protlib_import import exportMdToRelion
+    
     md = MetaData(inputMd)
     # Get the values (defocus, magnification, etc) from each 
     # ctfparam files and put values in the row

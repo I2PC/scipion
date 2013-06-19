@@ -118,13 +118,15 @@ def convertBox(boxFile, posFile, ysize, family='DefaultFamily', particleSize=Non
 def renameMdLabels(inputMd, outputMd, labelsDict):
     '''Change the labels' name on inputMd and write as outputMd
     The change will be made using the labelsDict, changing
-    key by value '''
+    key by value 
+    If dictString is False, the keys in the dictionary are Xmipp MDL_* labels
+    '''
     fIn = open(inputMd)
     fOut = open(outputMd, 'w+')
-    for l in fIn:
-        if l.strip() in labelsDict:
-            l = l.strip()
-            l = labelsDict.get(l, l) + '\n'
+    for l in fIn:        
+        label = l.split()[0].strip()[1:] # remove starting _ character
+        if label in labelsDict:
+            l = l.replace(label, labelsDict[label])
         fOut.write(l)
     fIn.close()
     fOut.close()
@@ -179,7 +181,14 @@ def exportMdToRelion(md, outputRelion):
             md.removeLabel(label)
     tmpFile = outputRelion + '.tmp'
     md.write(tmpFile)
-    renameMdLabels(tmpFile, outputRelion, XMIPP_RELION_LABELS)
+    # Create a dict with the names
+    d = {}
+    for k, v in XMIPP_RELION_LABELS.iteritems():
+        d[label2Str(k)] = v
+        
+    print "dict: ", d
+        
+    renameMdLabels(tmpFile, outputRelion, d)
     from protlib_filesystem import deleteFile
     deleteFile(None, tmpFile)
     
