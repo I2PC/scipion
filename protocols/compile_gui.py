@@ -113,8 +113,8 @@ class OptionsTab(tk.Frame):
             return self.optionsDict[name].get()
         return self.optionsGroupPanels[group].optionsDict[name].get()
 
-    def getGroup(self, name):
-        return self.optionsGroup[name].get()
+#    def getGroup(self, name):
+#        return self.optionsGroup[name].get()
 
     def checked(self, name, var):
         value = var.get()
