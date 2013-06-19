@@ -41,8 +41,8 @@ if __name__ == '__main__':
 export SCIPION_HOME=$HOME/Scipion
 export PW_HOME=%(FULLPATH)s
 
-export PYTHONPATH=$PW_HOME/..:$PYTHONPATH
-export PATH=$PW_HOME/apps:$PATH
+export PYTHONPATH=$PW_HOME:$PYTHONPATH
+export PATH=$PW_HOME/pyworkflow/apps:$PATH
 
 # For XMIPP
 export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$PYTHONPATH
