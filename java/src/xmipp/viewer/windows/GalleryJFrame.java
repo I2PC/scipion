@@ -1057,7 +1057,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			public void stateChanged(javax.swing.event.ChangeEvent evt)
 			{
 				Integer zoom = (Integer) jsZoom.getValue();
-				if( zoom < 10 || gallery.getCellSize().getHeight() < 30)
+				if (zoom < 10 || gallery.getCellSize().getHeight() < 30)
 				{
 					jsZoom.setValue(gallery.data.zoom);//keep previous zoom
 					return;
@@ -2008,10 +2008,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	private void saveMd() throws Exception
 	{
-		saveMd(dlgSave.getMdFilename());
+		saveMd(dlgSave.getMdFilename(), false);
 	}
 
-	private void saveMd(String path) throws Exception
+	private void saveMd(String path, boolean saveall) throws Exception
 	{
 		try
 		{
@@ -2045,13 +2045,15 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					data.md.writeBlock(path);// either if save active block or all, save active, other blocks where already managed
 
 			}
-
-			data.setMdChanges(false);
-			gallery.data.setFileName(file);
-			if (path.contains("@"))
-				gallery.data.selectBlock(path.substring(0, path.lastIndexOf("@")));
-			reloadFile(file, false);
-			setTitle(gallery.getTitle());
+			if (!saveall)
+			{
+				data.setMdChanges(false);
+				gallery.data.setFileName(file);
+				if (path.contains("@"))
+					gallery.data.selectBlock(path.substring(0, path.lastIndexOf("@")));
+				reloadFile(file, false);
+				setTitle(gallery.getTitle());
+			}
 		}
 		catch (Exception e)
 		{
@@ -2086,12 +2088,19 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			{
 				md = mds.get(blockit);
 				if (blockit.equals(getBlock()))
-					continue;
+					saveMd(blockto, true);
 				else
 					md.writeBlock(blockit + "@" + to);
+				md.destroy();
 			}
 		}
-		saveMd(blockto);
+
+		data.setMdChanges(false);
+		gallery.data.setFileName(to);
+		if (blockto.contains("@"))
+			gallery.data.selectBlock(blockto.substring(0, blockto.lastIndexOf("@")));
+		reloadFile(to, false);
+		setTitle(gallery.getTitle());
 	}
 
 	private void save() throws Exception
@@ -2099,7 +2108,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		if (!saved)
 			saveAs();
 		else
-			saveMd(dlgSave.getMdFilename());
+		{
+			if (dlgSave.saveActiveMetadataOnly())
+				saveMd();
+			else
+				saveAll();
+		}
 	}// function save
 
 	private void saveAs() throws Exception
