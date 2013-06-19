@@ -58,7 +58,7 @@ class ConsoleOptionsTab():
     def setGroup(self, name, group):
         self.optionsGroup[name] = group
 
-    def getValue(self, name):
+    def getValue(self, name, group=None):
         return self.optionsValue[name]
         
     def getGroup(self, name):
@@ -78,6 +78,15 @@ class ConsoleOptionsTab():
     def addGroup(self, title):
         pass
 
+    def getGroupPanel(self, name):
+        pass
+
+    def addGroupPanel(self, name):
+        pass
+
+    def finishGroupPanel(self, name):
+        pass
+
 class ConsoleConfigNotebook():
     def __init__(self, options):
         self.tabs = {}
@@ -95,8 +104,8 @@ class ConsoleConfigNotebook():
     def setValue(self, tab, option, value):
         self.tabs[tab].setValue(option, value)
         
-    def getValue(self, tab, option):
-        return self.tabs[tab].getValue(option)
+    def getValue(self, tab, option, group=None):
+        return self.tabs[tab].getValue(option, group)
     
     def notifyRun(self, process):
         self.proc = process
@@ -226,7 +235,7 @@ def run(notebook):
         scons = "external/scons/scons.py"
     else:
         scons = os.path.join("external", "scons", "scons.py")
-    os.environ['JAVA_HOME'] = notebook.getValue('Java', 'JAVA_HOME')
+    os.environ['JAVA_HOME'] = notebook.getValue('Compilers', 'JAVA_HOME', 'Java')
     cmd = ''   
     if out != STDOUT and os.path.exists(out):
         os.remove(out)
