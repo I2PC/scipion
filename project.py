@@ -197,7 +197,7 @@ class Project(object):
         
     def getRuns(self, iterate=False):
         """ Return the existing protocol runs in the project. """
-        return self.mapper.selectByClass("Protocol", iterate)
+        return self.mapper.selectByClass("Protocol", iterate=iterate)
         
     def getHosts(self):
         """ Retrieve the hosts associated with the project. (class ExecutionHostConfig) """

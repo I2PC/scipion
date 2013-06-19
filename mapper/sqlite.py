@@ -32,6 +32,7 @@ class SqliteMapper(Mapper):
     def __init__(self, dbName, dictClasses=None):
         Mapper.__init__(self, dictClasses)
         self.db = SqliteDb(dbName)
+        self.__initObjDict()
     
     def commit(self):
         self.db.commit()
@@ -111,12 +112,15 @@ class SqliteMapper(Mapper):
             
     def selectById(self, objId):
         """Build the object which id is objId"""
-        objRow = self.db.selectObjectById(objId)
-        if objRow is None:
-            obj = None
+        if objId in self.objDict:
+            obj = self.objDict[objId]
         else:
-            obj = self._buildObject(objRow['classname'])
-            self.fillObject(obj, objRow)
+            objRow = self.db.selectObjectById(objId)
+            if objRow is None:
+                obj = None
+            else:
+                obj = self._buildObject(objRow['classname'])
+                self.fillObject(obj, objRow)
         return obj
     
     def fillObjectWithRow(self, obj, objRow):
@@ -170,13 +174,19 @@ class SqliteMapper(Mapper):
             return [self.__objFromRow(objRow) for objRow in objRows]
         else:
             return self.__iterObjectsFromRows(objRows)
-                
+               
+    def __initObjDict(self):
+        """ Clear the objDict cache """        
+        self.objDict = {}
+         
     def selectBy(self, iterate=False, **args):
         """Select object meetings some criterias"""
+        self.__initObjDict()
         objRows = self.db.selectObjectsBy(**args)
         return self.__objectsFromRows(objRows, iterate)
     
     def selectByClass(self, className, includeSubclasses=True, iterate=False):
+        self.__initObjDict()
         if includeSubclasses:
             from pyworkflow.utils.reflection import getSubclasses
             whereStr = "classname='%s'" % className
@@ -192,6 +202,7 @@ class SqliteMapper(Mapper):
             
     
     def selectAll(self, iterate=False):
+        self.__initObjDict()
         objRows = self.db.selectObjectsByParent(parent_id=None)
         return self.__objectsFromRows(objRows, iterate)
 
