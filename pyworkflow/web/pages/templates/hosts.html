@@ -18,12 +18,6 @@
 	
 		var selectedHost = ""
 	
-		function viewHosts(){
-			selectedHost = ""
-			document.getElementById("editTool").disabled = true;
-			document.getElementById("deleteTool").disabled = true;
-		}
-	
 		function newHost(){
 			document.location = "javascript:popup('/hostForm/')"
 		}
@@ -86,9 +80,6 @@
 {% endblock %}
 {% block sideLeft %}
 	<center>
-	<button id="viewHostsButton" onclick="viewHosts()" class="generalButton" type="button" >View hosts</button>	
-	<br/>
-	<br/>
 	<button id="newHostButton" onclick="newHost()" class="priorityButton" type="button">New host</button>
 	<br/>
 	<br/>		
