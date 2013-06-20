@@ -25,6 +25,9 @@ function closePopup() {
 	self.close();
 }
 
+/*
+ * Toolbar used in the project content template
+ */
 function launchToolbar(projName, id, elm) {
 	var row = $("div#toolbar");
 
@@ -50,6 +53,41 @@ function launchToolbar(projName, id, elm) {
 	// Action Delete Button
 	$("a#deleteTool").attr('href',
 			'javascript:deleteProtocolForm("' + projName + '","' + id + '")');
+	// Action Browse Button
+	// $("a#browseTool").attr(
+	// 'href',
+	// 'javascript:popup("/form/?projectName=' + projName + '&protocolId='
+	// + id + '")');
+
+	row.show(); // Show toolbar
+}
+
+/*
+ * Toolbar used in the view host template
+ */
+function launchHostsToolbar(projName, hostId, elm) {
+	var row = $("div#toolbarHost");
+
+	if (row.attr('value') != undefined && row.attr('value') != hostId) {
+		var rowOld = $("tr#" + row.attr('value'));
+		rowOld.attr('style', 'background-color: #fafafa;');
+		rowOld.attr('class', '');
+	}
+	row.attr('value', hostId);
+	elm.attr('style', 'background-color: LightSteelBlue;');
+	elm.attr('class', 'selected');
+
+	// Action Edit Button
+	$("a#editTool").attr(
+			'href',
+			'javascript:editHost()');
+	// Action Copy Button
+	$("a#newTool").attr(
+			'href',
+			'javascript:newHost()');
+	// Action Delete Button
+	$("a#deleteTool").attr('href',
+			'javascript:deleteHost()');
 	// Action Browse Button
 	// $("a#browseTool").attr(
 	// 'href',
@@ -115,34 +153,4 @@ function selTableMessi(elm) {
 	}
 	row.attr('value', id);
 	elm.attr('style', 'background-color: LightSteelBlue;');
-}
-
-function launchHostsToolbar(projName, hostId, elm) {
-	var row = $("div#toolbar");
-
-	if (row.attr('value') != undefined && row.attr('value') != hostId) {
-		var rowOld = $("tr#" + row.attr('value'));
-		rowOld.attr('style', 'background-color: #fafafa;');
-	}
-	row.attr('value', hostId);
-	elm.attr('style', 'background-color: LightSteelBlue;');
-
-	// Action Edit Button
-	$("a#editTool").attr(
-			'href',
-			'javascript:editHost()');
-	// Action Copy Button
-	$("a#newTool").attr(
-			'href',
-			'javascript:newHost()');
-	// Action Delete Button
-	$("a#deleteTool").attr('href',
-			'javascript:deleteHost()');
-	// Action Browse Button
-	// $("a#browseTool").attr(
-	// 'href',
-	// 'javascript:popup("/form/?projectName=' + projName + '&protocolId='
-	// + id + '")');
-
-	row.show(); // Show toolbar
 }

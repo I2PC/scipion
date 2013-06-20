@@ -8,75 +8,7 @@
 	<!-- JS -->
 	<script src={{jquery}} type="text/javascript"></script>
 	<script src={{utils}} type="text/javascript"></script>
-	<script>	
-	
-		/* {% if message != None and message != '' %}
-		window.onload = function() {
-			alert("{{message}}")
-		}
-		{% endif %} */
-	
-		var selectedHost = ""
-	
-		function newHost(){
-			document.location = "javascript:popup('/hostForm/')"
-		}
-		
-		function selectHost(hostId){
-			selectedHost = hostId
-			document.getElementById("editTool").disabled = false;
-			document.getElementById("deleteTool").disabled = false;
-		}
-		
-		function editHost(){
-			document.location = "javascript:popup('/hostForm/?hostId=" + selectedHost + "')";
-		}
-		
-		function deleteHost(){
-			if (selectedHost == ""){
-				alert("No host has been selected to delete");
-			} else {
-				if (confirm("Are you sure you want to remove this host?")) {
-					document.location.href = "/deleteHost/?hostId=" + selectedHost;	
-					
-				} else {
-					alert("Remove operation cancelled");
-				}
-			}
-		}
-	
-		/* function getHost(hostLabel, projectName) {
-			$.ajax({
-				type : "GET",
-				url : "/getHost/?hostLabel=" + hostLabel,
-				dataType : "json",
-				success : function(json) {
-					// specifying a dataType of json makes jQuery pre-eval the response
-					// for us ExecutionHostConfig
-					host = json.host;
-					document.getElementById("scpnHosts").disabled = true;
-					document.getElementById("label").value = host.label;
-					document.getElementById("label").disabled = true;
-					document.getElementById("hostName").value = host.hostName;
-					document.getElementById("userName").value = host.userName;
-					document.getElementById("hostPath").value = host.hostPath;
-				}
-			});
-		} */
-		function clearForm(){
-			document.getElementById("scpnHosts").disabled = false;
-			document.getElementById("label").value = ""
-			document.getElementById("label").disabled = false;
-			document.getElementById("hostName").value = ""
-			document.getElementById("userName").value = ""
-			document.getElementById("hostPath").value = ""
-		}
-		function changeScpnHostSelection(){
-			if (document.getElementById("scpnHosts").value != ""){
-				alert ("Not implemented yet")
-			}
-		}
-	</script>
+	<script src={{hostUtils}} type="text/javascript"></script>
 {% endblock %}
 {% block sideLeft %}
 	<center>
@@ -88,13 +20,13 @@
 
 {% block content %}
 	<div>
-		<div id="toolbar" style="display: none">
+		<div id="toolbarHost" style="display: none">
 			<span><a id="newTool" href="" style="text-decoration: none;color: black;"><img src="{{newTool}}" /> New</a></span> 
 			<span><a id="editTool" href="" style="text-decoration: none;color: black;"><img src="{{editTool}}" />Edit</a></span> 
 			<span><a id="deleteTool" href="" style="text-decoration: none;color: black;"><img src="{{deleteTool}}" /> Delete</a></span> 
 			<span><a id="browseTool" href="" style="text-decoration: none;color: black;"><img src="{{browseTool}}" /> Browse</a></span>
 		</div>
-		<table class="generalTable" cellspacing="0">
+		<table id="data" cellspacing="0">
 			<tr>
 				<th>Configuration</th> 
 				<th>Host name</th>
@@ -102,12 +34,12 @@
 				<th>Host path</th>
 			</tr>
 			{% for host in hosts %}
-			<tr id="{{host.label}}" onclick="selectHost('{{host.getObjId}}');launchHostsToolbar('{{projectName}}','{{host.getObjId}}', ($(this)));">
+			<tr id="{{host.getObjId}}" class="" onclick="selectHost('{{host.getObjId}}');launchHostsToolbar('{{projectName}}','{{host.getObjId}}', ($(this)));"
+			style="background-color: #fafafa;">
 				<td>
 					{% if host.getLabel != None %}
 						{{host.getLabel}}
 					{% endif %}
-					
 				</td>
 				<td>
 					{% if host.getHostName != None %}
@@ -128,9 +60,7 @@
 			{% endfor %}
 		</table>
 	</div>
-	
 {% endblock %}
-
 
 <!-- <!DOCTYPE html>
 <html lang='es'>
