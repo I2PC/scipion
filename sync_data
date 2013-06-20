@@ -1,2 +1,3 @@
 #!/usr/bin/env bash
 rsync -av scipion@scipion:Scipion/tests/input/ $SCIPION_HOME/tests/input/
+rsync -av scipion@scipion:Scipion/tests/gold/ $SCIPION_HOME/tests/gold/
