@@ -8,8 +8,7 @@
 <script src={{launchTreeview}} type="text/javascript"></script>
 <script src={{tabs_config}} type="text/javascript"></script>
 <script src={{utils}} type="text/javascript"></script>
-{% endblock %}
-{% block sideLeft %}
+{% endblock %} {% block sideLeft %}
 <div class="protFieldsetTree">
 	<ul id="browser" class="filetree">
 		{% for section in sections %}
@@ -30,15 +29,15 @@
 			</ul></li> {% endfor %}
 	</ul>
 </div>
-{% endblock %} 
-{% block content %}
+{% endblock %} {% block content %}
 <div id="toolbar" style="display: none">
-	<span><a id="editTool" href=""><img src="{{editTool}}" />Edit</a></span> 
-	<span><a id="copyTool" href=""><img	src="{{copyTool}}" /> Copy</a></span> 
-	<span><a id="deleteTool" href=""><img src="{{deleteTool}}" /> Delete</a></span> 
-	<span><a id="browseTool" href=""><img src="{{browseTool}}" /> Browse</a></span>
+	<span><a id="editTool" href=""><img src="{{editTool}}" />Edit</a></span>
+	<span><a id="copyTool" href=""><img src="{{copyTool}}" />
+			Copy</a></span> <span><a id="deleteTool" href=""><img
+			src="{{deleteTool}}" /> Delete</a></span> <span><a id="browseTool"
+		href=""><img src="{{browseTool}}" /> Browse</a></span>
 </div>
-<div style="overflow:auto;height:65%">
+<div style="overflow: auto; height: 65%">
 	<table id="data" cellspacing="0">
 		<tr>
 			{% for colName, colWidth in provider.getColumns %}
@@ -58,7 +57,7 @@
 	</table>
 </div>
 
-<div id="tabContaier" style="height:30%;">
+<div id="tabContaier" style="overflow: auto; height: 30%;">
 	<ul class="listTabs">
 		<li><a id="tabTitle" class="active" href="#tab1">Data</a></li>
 		<li><a id="tabTitle" href="#tab2">Summary</a></li>
@@ -67,14 +66,20 @@
 	<div class="tabDetails">
 		<!-- //tab1 -->
 		<div id="tab1" class="tabContents">
-			<h3>Data</h3>
-			<p>Sed gravida velit ut lorem dictum vitae venenatis dolor
-				faucibus. In vehicula malesuada mi, vel semper sem porta in. Mauris
-				suscipit lorem eget justo congue semper.</p>
-			<p>Donec et purus eget elit tristique consequat. Integer ut orci
-				eu augue tristique viverra nec vitae odio. Nulla sem nibh, posuere
-				quis condimentum vitae, posuere sit amet lectus. Morbi euismod
-				tincidunt mauris ut scelerisque.</p>
+
+			<div id="listEx">
+				<ul>
+					<li>
+					<li>Input
+						<ul>
+							<li>Input</li>
+							<li>Input</li>
+						</ul>
+					</li>
+					<li>Input</li>
+				</ul>
+			</div>
+
 		</div>
 		<!-- //tab2 -->
 		<div id="tab2" class="tabContents">
