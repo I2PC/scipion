@@ -19,6 +19,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+
+import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
@@ -64,7 +66,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	private void initComponents()
 	{
 		setResizable(false);
-		setTitle("Xmipp Particle Pair Picker");
+		setTitle("Xmipp Tilt Pair Picker - " + tppicker.getMode());
 		initMenuBar();
 		setJMenuBar(mb);
 
@@ -132,13 +134,15 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		mb.add(helpmn);
 
 		anglesmi = new JCheckBoxMenuItem("Angles");
-		anglesmi.setEnabled(false);
+//		anglesmi.setEnabled(false);
 		anglesmi.addActionListener(new ActionListener()
 		{
 
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
+				if(anglesmi.isSelected() && !tppicker.getMicrograph().anglesAvailable())
+					XmippDialog.showInfo(TiltPairPickerJFrame.this, "Very few particles. Angles might not be accurate");
 				canvas.repaint();
 				tiltedcanvas.repaint();
 			}
@@ -218,7 +222,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 			micrographsmd.fireTableRowsUpdated(index, index);
 		micrographstb.setRowSelectionInterval(index, index);
 		upslb.setText(Integer.toString(tppicker.getUntiltedNumber()));
-		anglesmi.setEnabled(tppicker.getMicrograph().getAddedCount() >= 4);
+//		anglesmi.setEnabled(tppicker.getMicrograph().getAddedCount() >= 4);
 	}
 
 	void initializeCanvas()
@@ -333,7 +337,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		tppicker.setMicrograph(tppicker.getMicrographs().get(index));
 		tppicker.saveConfig();
 		setChanged(false);
-		anglesmi.setEnabled(getMicrograph().getAddedCount() >= 4);
+//		anglesmi.setEnabled(getMicrograph().getAddedCount() >= 4);
 		initializeCanvas();
 
 		pack();

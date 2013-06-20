@@ -103,7 +103,7 @@ public class UntiltedMicrograph extends Micrograph
 
 	public boolean anglesAvailable()
 	{
-		return !(added < 10);
+		return !(added < 4);
 	}
 
 //	public double[] getAngles()
@@ -114,14 +114,14 @@ public class UntiltedMicrograph extends Micrograph
 	public double getUntiltedAngle()
 	{
 		if(angles == null)
-			return 0;
+			return 90;
 		return angles[0];
 	}
 	
 	public double getTiltedAngle()
 	{
 		if(angles == null)
-			return 0;
+			return 90;
 		return angles[1];
 	}
 	
