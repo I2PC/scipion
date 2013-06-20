@@ -96,6 +96,19 @@
 		}
 	
 	</script>
+	<script type="text/javascript">
+		function saveShowjTable(elementId, value){
+			$.ajax({
+				type : "GET",
+				url : "/save_showj_table/?element_id=" + elementId + "&element_value=" + value,
+				dataType : "json",
+				success : function(json) {
+					message = json.message;
+					alert(message)
+				}
+			});
+		}
+	</script>
 	
 	{% block head %}  {% endblock %}
 </head>
@@ -153,16 +166,26 @@
 			
 			<div class="sectionMenu">
 				<img src="/resources/showj/separator.gif" class="menuIcon">
-			</div>	
+			</div>
+	
 			
 			{% block content_menu %}	{% endblock %}
+
+	
+			<div class="sectionMenu">
+				<img src="/resources/showj/separator.gif" class="menuIcon">
+			</div>
+			
+			<div id="saveContainer" class="sectionMenu">
+				<button id="saveButton">
+					<img src="/resources/showj/save.gif" id="saveButtonImage" />
+				</button>
+			</div>
 
 		</aside>
 		
 		<section> <!--  Es donde va la informacion princiapl -->
-		<button id="saveButton">
-			<img src="/resources/showj/colRowModeOff.gif" id="saveButtonImage" />
-		</button>
+		
 
 		
 		{% block content_view %}	{% endblock %}	

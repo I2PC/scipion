@@ -137,15 +137,9 @@ function valueChange(element){
 		element_value = $(element).val()
 	}
 	
-	$.ajax({
-		type : "GET",
-		url : "/save_showj_table/?element_id=" + $(element).attr("id") + "&element_value=" + element_value,
-		dataType : "json",
-		success : function(json) {
-			message = json.message;
-			alert(message)
-		}
-	});
+	saveShowjTable($(element).attr("id"), element_value)
+	
+	
 }
 
 function initializeTableWidth(){
