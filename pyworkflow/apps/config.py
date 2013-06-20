@@ -37,6 +37,7 @@ from pyworkflow.hosts import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
 
 PATH = os.path.dirname(__file__)
+
 SETTINGS = join(pw.HOME,'..','settings')
 
 def getConfigPath(filename):
