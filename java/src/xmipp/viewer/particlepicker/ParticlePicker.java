@@ -119,13 +119,13 @@ public abstract class ParticlePicker
 	public void setColor(Color color)
 	{
 		family.setColor(color);
-		saveFamilies();
+		
 	}
 
 	public void setSize(int size)
 	{
 		family.setSize(size);
-		saveFamilies();
+		
 	}
 
 	
@@ -316,7 +316,6 @@ public abstract class ParticlePicker
 		String file = familiesfile;
 		if (!new File(file).exists()) {
 			families.add(new Family("DefaultFamily", Color.green, fsizemax/4, FamilyState.Manual, this, 1));
-			saveFamilies();
 			return;
 		}
 

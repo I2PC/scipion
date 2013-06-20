@@ -332,6 +332,7 @@ class Emxparticle(EmxObject):
                 ,'defocusU'
                 ,'defocusV'
                 ,'defocusUAngle'
+		,'fom'
                 ,'pixelSpacing__X'
                 ,'pixelSpacing__Y'
                 ,'pixelSpacing__Z'

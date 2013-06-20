@@ -100,7 +100,7 @@ class ProtML3D(XmippProtocol):
                 if not xmippExists(ref):
                     errors.append("Reference: <%s> doesn't exists" % ref)
             if len(errors) == 0:
-                validateInputSize(references, self.ImgMd, errors)
+                validateInputSize(references, self.ImgMd, md, errors)
         else:
             errors.append("Input metadata <%s> doesn't contains image label" % self.ImgMd)
             
@@ -206,7 +206,7 @@ class ProtML3D(XmippProtocol):
             outputVol = "%(index)d@%(volStack)s" % locals()
             self.mdVols.setValue(MDL_IMAGE, outputVol, idx)
             index += 1
-        self.ParamsStr = '-i %(InitialVols)s -o %(FilteredVols)s --fourier low_pass %(LowPassFilter) --sampling %(SamplingRate)f'
+        self.ParamsStr = '-i %(InitialVols)s -o %(FilteredVols)s --fourier low_pass %(LowPassFilter)f --sampling %(SamplingRate)f'
         self.insertRunJob('xmipp_transform_filter', ['FilteredVols'], useProcs=False)
         self.ParamsDict['InitialVols'] = self.ParamsDict['FilteredVols']
             

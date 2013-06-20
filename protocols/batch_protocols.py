@@ -867,7 +867,8 @@ class XmippProjectGUI():
         tree.heading('#0', text='Run')
         tree.bind('<<TreeviewSelect>>', self.selectTreeRun)
         tree.bind('<Double-1>', lambda e:self.runButtonClick(ACTION_DEFAULT))
-        tree.bind("<Button-3>", self.onRightClick)
+        tree.bind("<Button-3>", self.onRightClick) #right button on win and linux
+        tree.bind("<Button-2>", self.onRightClick) #right button on mac
         self.treeHist = tree
         
     def createHistoryGraph(self, parent):
@@ -985,6 +986,7 @@ class ScriptProtocols(XmippScript):
         self.addParamsLine("   alias -d;");
         self.addParamsLine("[ --clean  ]                        : Clean ALL project data");
         self.addParamsLine("   alias -c;"); 
+        self.addParamsLine("[ --update_project]                 : Update project db with new protocosl from 3.0 to 3.1")
         
     def confirm(self, msg, defaultYes=True):
         if defaultYes:
@@ -1080,8 +1082,11 @@ class ScriptProtocols(XmippScript):
             if self.launch:
                 self.project.clean()
             else:
-                print cyanStr("CLEAN aborted.") 
-                       
+                print cyanStr("CLEAN aborted.")
+                 
+        elif self.checkParam('--update_project'):
+            self.loadProjectFromCli()
+            self.project.updateProtocolTables()
         else: #lauch project     
             if not self.project.exists():    
                 print 'You are in directory: %s' % greenStr(self.proj_dir)

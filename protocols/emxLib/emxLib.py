@@ -184,6 +184,8 @@ def coorrXmippToEmx(emxData,xmdFileName):
     m1 = Emxmicrograph(fileName=micrographName)
     emxData.addObject(m1)
     counter = FIRSTIMAGE
+    #check if MDL_XCOOR column exists if not 
+    #print error no coordenates found. did you rememebr to include the block name in the filename
     for objId in md:
 
         coorX = md.getValue(MDL_XCOOR, objId)

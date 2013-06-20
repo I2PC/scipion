@@ -255,6 +255,7 @@ public class MicrographFamilyData
 		autoparticles.clear();
 		manualparticles.clear();
 		setState(MicrographFamilyState.Available);
+		
 	}
 
 	public FamilyState getStep()

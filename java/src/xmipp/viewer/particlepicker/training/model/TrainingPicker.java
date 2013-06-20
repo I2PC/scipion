@@ -493,11 +493,12 @@ public abstract class TrainingPicker extends ParticlePicker
 		// micrographs
 		try
 		{
+			family.initTemplates();
 			String[] blocksArray = MetaData.getBlocksInMetaDataFile(file);
 			List<String> blocks = Arrays.asList(blocksArray);
 			String block;
 			MetaData md = new MetaData();
-
+			family.initTemplates();
 			for (TrainingMicrograph m : micrographs)
 			{
 				m.reset();
@@ -509,6 +510,7 @@ public abstract class TrainingPicker extends ParticlePicker
 					importParticlesFromMd(m, md);
 				}
 			}
+			
 			md.destroy();
 		}
 		catch (Exception e)
@@ -524,12 +526,13 @@ public abstract class TrainingPicker extends ParticlePicker
 		// micrographs
 		try
 		{
+			family.initTemplates();
 			String[] blocksArray = MetaData.getBlocksInMetaDataFile(file);
 			List<String> blocks = Arrays.asList(blocksArray);
 			String block;
 			MetaData md = new MetaData();
 			int width, height;
-
+			family.initTemplates();
 			for (TrainingMicrograph m : micrographs)
 			{
 				m.reset();
@@ -724,7 +727,7 @@ public abstract class TrainingPicker extends ParticlePicker
 	}
 
 
-	public synchronized void updateTemplates()
+	public void updateTemplates()
 	{
 		TasksManager.getInstance().addTask(new UpdateTemplatesTask(this));
 	}

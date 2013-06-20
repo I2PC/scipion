@@ -68,9 +68,9 @@ public class Family
 			{
 
 				this.templates = new ImageGeneric(templatesfile);
-				for (templateindex = 0; templateindex < templatesNumber; templateindex++)
-					// to initialize templates on c part
-					XmippImageConverter.readToImagePlus(templates, ImageGeneric.FIRST_IMAGE + templateindex);
+				templates.read(templatesfile, false);
+				templateindex = templatesNumber;//all images read
+
 			}
 			else
 				initTemplates();
@@ -109,7 +109,7 @@ public class Family
 		}
 	}
 	
-	public synchronized void updateTemplates(TrainingPicker picker)
+	public void updateTemplates(TrainingPicker picker)
 	{
 		if (getStep() != FamilyState.Manual)
 			return;
@@ -193,8 +193,7 @@ public class Family
 		if (size > ParticlePicker.fsizemax)
 			throw new IllegalArgumentException(String.format("Max size is %s, %s not allowed", ParticlePicker.fsizemax, size));
 		this.size = size;
-		if(picker instanceof TrainingPicker)
-			((TrainingPicker) picker).updateTemplates();
+
 	}
 
 
@@ -220,8 +219,7 @@ public class Family
 			throw new IllegalArgumentException(XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Family must have at least one template"));
 
 		this.templatesNumber = num;
-		if(picker instanceof TrainingPicker)
-			((TrainingPicker) picker).updateTemplates();
+
 	}
 
 	public Color getColor()
@@ -319,15 +317,21 @@ public class Family
 
 	public synchronized void centerParticle(TrainingParticle p)
 	{
-		if (templateindex == 0)
-			return;//no template to align
+
+		if (((TrainingPicker)picker).getManualParticlesNumber(this) < templatesNumber)
+			return;//missing templates
 		Particle shift = null;
 		try
 		{
 			ImageGeneric igp = p.getImageGeneric();
 			shift = templates.bestShift(igp);
-			p.setX(p.getX() + shift.getX());
-			p.setY(p.getY() + shift.getY());
+			double distance = Math.sqrt(Math.pow(shift.getX(),  2) + Math.pow(shift.getY(), 2))/size;
+			System.out.printf("normalized distance:%.2f\n", distance);
+			if(distance < 0.25)
+			{
+				p.setX(p.getX() + shift.getX());
+				p.setY(p.getY() + shift.getY());
+			}
 		}
 		catch (Exception e)
 		{
@@ -342,8 +346,9 @@ public class Family
 		try
 		{
 			particle.setLastalign(align);
-			templates.applyAlignment(igp, particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle
-					.getTemplatePsi());
+			templates.applyAlignment(igp, particle.getTemplateIndex(), particle.getTemplateRotation(), 
+					particle.getTemplateTilt(), 
+					particle.getTemplatePsi());
 			//System.out.printf("adding particle: %d %.2f %.2f %.2f\n", particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
 		}
 		catch (Exception e)
