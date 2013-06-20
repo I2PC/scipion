@@ -31,10 +31,12 @@ urlpatterns = patterns('',
     url(r'^updateHostsConfig', 'app.views.updateHostsConfig'),
     url(r'^deleteHost/$', 'app.views.deleteHost'),
     url(r'^hostForm/$', 'app.views.hostForm'),
-    url(r'^showj/', 'app.views.showj'),
-    url(r'^table/', 'app.views.table'),
-    url(r'^get_image/', 'app.views.get_image'), # Load images dynamically
-    url(r'^save_showj_table/', 'app.views.save_showj_table'), # Load table dynamically
-    url(r'^save_showj_metadata/', 'app.views.save_showj_metadata'), # Load metadata dynamically
+#    url(r'^table/', 'app.views.table'),
+    
+
+    url(r'^showj/', 'app.views_showj.showj'), #Load web
+    url(r'^get_image/', 'app.views_showj.get_image'), # Load images dynamically
+    url(r'^save_showj_table/', 'app.views_showj.save_showj_table'), # Save table to session variable dynamically
+    url(r'^save_showj_metadata/', 'app.views_showj.save_showj_metadata'), # Save metadata to file dynamically
 
 )

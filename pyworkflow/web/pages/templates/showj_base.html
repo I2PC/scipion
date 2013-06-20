@@ -22,6 +22,7 @@
 	});
 	</script>
 	<script type="text/javascript">
+	//Initialize save buttons events. Ajax call for saving metadata to file
 	function initializeSaveButtonEvents(){
 		$("#saveButton").click(function(){
 			$.ajax({
@@ -37,6 +38,9 @@
 	}
 	</script>
 	<script type="text/javascript">
+	//Initialize events for columns and row mode. 
+	//Automatic mode => disable cols & rows textfields
+	//Manual mode => enable cols & rows textfields and initialize value
 	function initializeColRowModeEvents(){
 		$("#colRowMode").click(function(){
 			if ($("#colRowModeImage").attr("src").indexOf("On") != -1){
@@ -58,6 +62,8 @@
 			}
 		});
 	}
+	
+	//Initialize Columns and Rows textfields. Execute when changing to manual mode
 	function initializeColsRows(){
 		imgContainerWidth =$(".img_container").width() + (parseInt($(".img_container").css("margin-right")) * 2)
 		colVal = Math.floor($("section").width() / (imgContainerWidth + 5))
@@ -67,6 +73,7 @@
 	}
 	</script>
 	<script type="text/javascript">
+		//Initialize events for zoom change
 		function initializeZoomEvents(){
 			$('#zoom').click(function(){
 				updateImageDimByUrl();	
@@ -81,6 +88,8 @@
 				updateImageDimByUrl();
 			});	 */	
 		}
+		
+		//Update image dimensions by url due to zoom change
 		function updateImageDimByUrl(){
 			d = new Date();
 		   	$(".tableImages").each(function(){
@@ -97,6 +106,7 @@
 	
 	</script>
 	<script type="text/javascript">
+		//Save table change in metadata
 		function saveShowjTable(elementId, value){
 			$.ajax({
 				type : "GET",
