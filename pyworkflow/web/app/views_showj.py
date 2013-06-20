@@ -6,21 +6,25 @@ from django.shortcuts import render_to_response
 from pyworkflow.tests import getInputPath
     
 def showj(request):
-    # manager = Manager()
-#    logo_path = findResource('scipion_logo.png')
-
     # Resources #
+    # Style Sheets
     css_path = os.path.join(settings.STATIC_URL, 'css/showj_style.css')
+
+    #Favicon
 #    favicon_path = getResource('favicon')
+    
+    #General jquery libs
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     jquery_cookie = os.path.join(settings.STATIC_URL, 'js/jquery.cookie.js')
     jquery_treeview = os.path.join(settings.STATIC_URL, 'js/jquery.treeview.js')
     launchTreeview = os.path.join(settings.STATIC_URL, 'js/launchTreeview.js')
     utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
     
+    #Table View jquery libs
     jquerydataTables_path = os.path.join(settings.STATIC_URL, 'js/jquery.dataTables.js')
     jquerydataTables_colreorder_path = os.path.join(settings.STATIC_URL, 'js/ColReorder.js')
-    jeditable_path = os.path.join(settings.STATIC_URL, 'js/jquery.jeditable.js')        
+    jeditable_path = os.path.join(settings.STATIC_URL, 'js/jquery.jeditable.js')
+    jquery_ui_path = os.path.join(settings.STATIC_URL, 'js/jquery-ui.js')        
     
     #############
     # WEB INPUT PARAMETERS
@@ -31,8 +35,6 @@ def showj(request):
                      'mode': request.GET.get('mode', 'gallery'),
                      'metadataComboBox': request.GET.get('metadataComboBox', 'image')}
     
-#    md = loadMetaData(inputParameters['path'], inputParameters['block'], inputParameters['allowRender'], inputParameters['imageDim'])
-
     mdXmipp = loadMetaDataXmipp(inputParameters['path'], inputParameters['block'])
     
     md = MdData(mdXmipp, inputParameters['allowRender'], inputParameters['imageDim'])
@@ -48,6 +50,7 @@ def showj(request):
                'jquery_datatable': jquerydataTables_path,
                'jquerydataTables_colreorder': jquerydataTables_colreorder_path,
                'jeditable': jeditable_path,
+               'jquery_ui': jquery_ui_path,
                'css': css_path,
                'metadata': md,
                'inputParameters': inputParameters,
