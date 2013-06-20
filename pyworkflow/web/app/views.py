@@ -498,12 +498,9 @@ def showj(request):
     launchTreeview = os.path.join(settings.STATIC_URL, 'js/launchTreeview.js')
     utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
     
-    powertable_path = os.path.join(settings.STATIC_URL, 'js/jquery-powertable.js')
-    powertable_resources_path = os.path.join(settings.STATIC_URL, 'js/jquery-litelighter.js')
-    
     jquerydataTables_path = os.path.join(settings.STATIC_URL, 'js/jquery.dataTables.js')
     jquerydataTables_colreorder_path = os.path.join(settings.STATIC_URL, 'js/ColReorder.js')
-        
+    jeditable_path = os.path.join(settings.STATIC_URL, 'js/jquery.jeditable.js')        
     
     #############
     # WEB INPUT PARAMETERS
@@ -516,8 +513,7 @@ def showj(request):
     
     md = loadMetaData(inputParameters['path'], inputParameters['block'], inputParameters['allowRender'], inputParameters['imageDim'])    
 
-    menuLayoutConfig = loadMenuLayoutConfig(inputParameters['mode'], inputParameters['path'], inputParameters['block'], inputParameters['allowRender'], inputParameters['imageDim']);
-   
+    menuLayoutConfig = MenuLayoutConfig(inputParameters['mode'], inputParameters['path'], inputParameters['block'], inputParameters['allowRender'], inputParameters['imageDim'])
     
     context = {'jquery': jquery_path,
                'utils': utils_path,
@@ -526,12 +522,14 @@ def showj(request):
                'launchTreeview': launchTreeview,
                'jquery_datatable': jquerydataTables_path,
                'jquerydataTables_colreorder': jquerydataTables_colreorder_path,
+               'jeditable': jeditable_path,
                'css': css_path,
                'metadata': md,
                'inputParameters': inputParameters,
                'menuLayoutConfig': menuLayoutConfig}
     
     return_page = '%s%s%s' % ('showj_', inputParameters['mode'], '.html')
+
     return render_to_response(return_page, context)
 
 AT = '__at__'
@@ -540,19 +538,25 @@ class MdObj():
     pass
     
 class MdValue():
-    def __init__(self, md, label, objId, allowRender, imageDim=None):
-        self.strValue = str(md.getValue(label, objId))        
+    def __init__(self, md, label, objId, typeOfColumn):
+             
 
         self.label = xmipp.label2Str(label)
         
-        self.allowRender = allowRender
+#        self.allowRender = allowRender
 
         # check if enabled label
-        self.displayCheckbox = (label == xmipp.MDL_ENABLED)
+#        self.displayCheckbox = (label == xmipp.MDL_ENABLED)
 
+        
+        self.strValue = str(md.getValue(label, objId))   
+        
         # Prepare path for image
         self.imgValue = self.strValue
-        if allowRender and '@' in self.strValue:
+        
+        self.typeOfColumn = typeOfColumn
+        
+        if typeOfColumn=="image" and '@' in self.strValue:
             self.imgValue = self.imgValue.replace('@', AT)
 #            if imageDim:
 #                self.imgValue += '&dim=%s' % imageDim
@@ -562,21 +566,22 @@ class MdData():
         md = xmipp.MetaData(path)
         
         labels = md.getActiveLabels()
-        self.labels = []
-        self.labelsToRender = []
-        for l in labels:
-            labelName = xmipp.label2Str(l)
-            self.labels.append(labelName)
-            if (xmipp.labelIsImage(l) and allowRender):
-                self.labelsToRender.append(labelName)
-                
-        self.colsOrder = defineColsLayout(self.labels);
+        
+        self.tableLayoutConfiguration = TableLayoutConfiguration(labels, allowRender)
+        
         self.objects = []
         for objId in md:
             obj = MdObj()
             obj.id = objId
-            obj.values = [MdValue(md, l, objId, (xmipp.labelIsImage(l) and allowRender), imageDim) for l in labels]
+            obj.values = [MdValue(md, l, objId, typeOfColumn) for l, typeOfColumn in zip(labels, self.tableLayoutConfiguration.typeOfColumns)]
             self.objects.append(obj)
+            
+class TableLayoutConfiguration():
+    def __init__(self, labels, allowRender=True): 
+        self.labels = [xmipp.label2Str(l) for l in labels]
+        self.typeOfColumns = getTypeOfColumns(labels, allowRender)
+        self.colsOrder = defineColsLayout(labels)
+        self.labels_typeOfColumns= zip(self.labels,self.typeOfColumns)
 
 class MenuLayoutConfig():        
     def __init__(self, mode, path, block, allowRender, imageDim):
@@ -604,10 +609,18 @@ class MenuLayoutConfig():
             self.galleryViewSrc = "/resources/showj/galleryViewOn.gif"
             
             self.disabledColRowMode = ""
-            
-            
-            
          
+def getTypeOfColumns(label, allowRender):
+    typeOfColumns = []
+    for l in label:
+        if (xmipp.labelIsImage(l) and allowRender):
+            typeOfColumns.append("image")
+        elif (l == xmipp.MDL_ENABLED):
+            typeOfColumns.append("checkbox")
+        else:
+            typeOfColumns.append("text")    
+    
+    return typeOfColumns
         
 def defineColsLayout(labels):
     colsOrder = range(len(labels))
@@ -620,52 +633,28 @@ def loadMetaData(path, block, allowRender=True, imageDim=None):
     if len(block):
         path = '%s@%s' % (block, path)
     # path2 = 'Volumes@' + path1
-    return MdData(path, allowRender, imageDim)   
+#    return MdData(path, allowRender, imageDim)   
+    return MdData(path, allowRender, imageDim)
 
-def loadMenuLayoutConfig(mode , path, block, allowRender=True, imageDim=None):
-    return MenuLayoutConfig(mode, path, block, allowRender, imageDim)
-     
-def table(request):    
-    css_path = os.path.join(settings.STATIC_URL, 'css/project_content_style.css')
-    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
-    jquery_cookie = os.path.join(settings.STATIC_URL, 'js/jquery.cookie.js')
-    jquery_treeview = os.path.join(settings.STATIC_URL, 'js/jquery.treeview.js')
-    launchTreeview = os.path.join(settings.STATIC_URL, 'js/launchTreeview.js')
-    utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
-    #############
+def save_showj_table(request):
     
-    path = request.GET.get('path', 'tux_vol.xmd')
-    block = request.GET.get('block', '')
-    allowRender = 'render' in request.GET
-    imageDim = request.GET.get('dim', None)
-    
-    md = loadMetaData(path, block, allowRender, imageDim)    
-   
-    
-    context = {
-               'jquery': jquery_path,
-               'utils': utils_path,
-               'jquery_cookie': jquery_cookie,
-               'jquery_treeview': jquery_treeview,
-               'launchTreeview': launchTreeview,
-               'css': css_path,
-               'metadata': md}
-    
-    return render_to_response('table.html', context)
-
-def get_table(request):
     from django.http import HttpResponse
     import json
-    response_data = {}
-    response_data["sEcho"] = 1
-    response_data["iTotalRecords"] = 2
-    response_data["iTotalDisplayRecords"] = 2
-    response_data["aaData"] = [["taka", "laka", "xaka", "jaka", "raka"], ["taka", "laka", "xaka", "jaka", "raka"]]
+    from django.utils import simplejson
     
     
-    print json.dumps(response_data)
-    
-    return HttpResponse(json.dumps(response_data), content_type="application/json")
+    if request.is_ajax():
+        print request.GET.get('element_id')
+        print request.GET.get('element_value')
+        
+#        md = xmipp.MetaData(path)
+        
+        jsonStr = json.dumps({'host':5})
+#         jsonStr = json.dumps({'hostConfig' :  executionHostConfig},
+#                              ensure_ascii=False)
+        return HttpResponse(jsonStr, mimetype='application/javascript')
+
+#    request.get.get('value')
 
 def get_image(request):
     from django.http import HttpResponse

@@ -2,6 +2,8 @@
 {% block head %}
 <script type="text/javascript" src="{{jquery_datatable}}"></script>
 <script type="text/javascript" src="{{jquerydataTables_colreorder}}"></script>
+<script type="text/javascript" src="{{jeditable}}"></script>
+
 
 <script type="text/javascript">
 var oTable;
@@ -11,6 +13,14 @@ $(document).ready(function() {
 	initializeSelectionRowEvent()
 	initializeGoToEvent()
 	initializeTableWidth()
+	
+	
+	
+	/* $("#form").submit(function() {
+		var sData = $('input', oTable.fnGetNodes()).serialize();
+		alert( "The following data would have been submitted to the server: \n\n"+sData );
+		return false;
+	} ) */
 	
 	/* Add a click handler for the delete row */
 	/* $('#delete').click( function() {
@@ -32,19 +42,110 @@ $(document).ready(function() {
 			        "sScrollX": "100%",
 			        "bScrollCollapse": true,
 			        "oColReorder": {
-		    			"aiOrder": {{metadata.colsOrder}}
-		    		},
+		    			"aiOrder": {{metadata.tableLayoutConfiguration.colsOrder}}
+		    		}, 
 		    		
 		    		"bProcessing": true,
-		            "bServerSide": true,
-		            "sAjaxSource": "/get_table/"
+/* 		            "bServerSide": true, */
+/* 		            "sAjaxSource": "/get_table/", */
+		            
+		            "fnServerParams": function ( aoData ) {
+		                aoData.push( {
+		                	"path": "{{inputParameters.path}}",
+		                	"block": "{{inputParameters.block}}",
+		                	"allowRender": "{{inputParameters.allowRender}}",
+		                	"imageDim": "{{inputParameters.imageDim}}"
+		                		} );
+		            },
+		            "bDeferRender": true,
 		    		/* "bRetrieve": true */
+/* 		    		"aaData":{% autoescape off %}
+		             {{ metadata.objects }}
+		            		{% endautoescape %}
+		    			, */
+		    		"aaData": generateDataForTable(),	
+			        "aoColumns": [
+			        		{% for label, typeOfColumn in metadata.tableLayoutConfiguration.labels_typeOfColumns %}
+				        		{ 
+				        			{% if typeOfColumn == "text" %}
+				        			"sClass": "editable",
+				        			{% endif %}
+				        			"sTitle": '{{label}}'
+				        		},
+			    			{% endfor %}				
+			        ] 
 					
 			    }		
 			);
 	
+	$('.editable', oTable.fnGetNodes()).editable(
+			/* '../examples_support/editable_ajax.php', */
+			function(value, settings) { 
+			     console.log(this);
+			     console.log(value);
+			     console.log(settings);
+			     return(value);
+			  },
+			{
+			"callback": function( sValue, y ) {
+				var aPos = oTable.fnGetPosition( this );
+				oTable.fnUpdate( sValue, aPos[0], aPos[1] );
+			},
+			"submitdata": function ( value, settings ) {
+				return {
+					"row_id": this.parentNode.getAttribute('id'),
+					"column": oTable.fnGetPosition( this )[2]
+				};
+			},
+			"height": "14px"
+		} );
+	
 	
 } );
+
+
+function generateDataForTable(){
+	dataForTable = new Array();
+	{% for obj in metadata.objects %}
+		dataRowForTable = new Array()
+		{% for value in obj.values %}
+			{% if value.typeOfColumn == "image" %} 
+				dataRowForTable.push("<img class=\"tableImages\" id=\"{{value.label}}_{{forloop.parentloop.counter0}}\" src=\"/get_image/?image={{value.imgValue}}\"/>")
+		   	{% elif value.typeOfColumn == "checkbox" and value.strValue == '1' %}
+				dataRowForTable.push("<input type=\"checkbox\" onclick=\"valueChange(this);\" id=\"{{value.label}}_{{forloop.parentloop.counter0}}\" checked>")
+			{% elif value.typeOfColumn == "checkbox" and value.strValue != '1' %}
+				dataRowForTable.push("<input type=\"checkbox\" onclick=\"valueChange(this);\" id=\"{{value.label}}_{{forloop.parentloop.counter0}}\">")
+		   	{% else %}
+				dataRowForTable.push("{{value.strValue}}")
+		   	{% endif %}	
+		{% endfor %}
+		/* dataRowForTable.push("DT_RowId: \"{{forloop.counter0}}\"") */
+		dataForTable.push(dataRowForTable)
+	{% endfor %}
+	console.log(dataForTable)
+	return dataForTable;
+}
+
+function valueChange(element){
+	
+	$.ajax({
+		type : "GET",
+		url : "/save_showj_table/?element_id=" + $(element).attr("id") + "&element_value=" + $(element).val(),
+		dataType : "json",
+		success : function(json) {
+			// specifying a dataType of json makes jQuery pre-eval the response
+			// for us ExecutionHostConfig
+			host = json.host;
+			alert(host)
+			/* document.getElementById("scpnHosts").disabled = true;
+			document.getElementById("label").value = host.label;
+			document.getElementById("label").disabled = true;
+			document.getElementById("hostName").value = host.hostName;
+			document.getElementById("userName").value = host.userName;
+			document.getElementById("hostPath").value = host.hostPath; */
+		}
+	});
+}
 
 function initializeTableWidth(){
 	var tableWidth = $("section").width()
@@ -63,8 +164,6 @@ function initializeGoToEvent(){
 	});
 }
 function updateRowSelection(){
-
-	
 	var nodes = oTable.fnGetNodes();
     for (var i=0; i<nodes.length; i++){
 		if (nodes[i].id == $("#goto").val()){
@@ -120,18 +219,11 @@ function fnGetSelected(oTableLocal)
 {% block content_view %}
 	
 <div id="table_container">
-	<table cellspacing="0" id="data_table" width="100%">
-		<thead>
-			<tr>
-			{% for label in metadata.labels %}
-				<th id="column_label">{{label}}</th> 
-			{% endfor %}				
-			</tr>
-		</thead>
-		<tbody>
-
-		</tbody>
-	</table>
+	<form id="showjTableSave" action="/showjTableSubmit/" method="POST">
+		<button type="submit">Submit</button>
+		<table cellspacing="0" id="data_table" width="100%">
+		</table>
+	</form>
 </div>
 			
 {% endblock %}
