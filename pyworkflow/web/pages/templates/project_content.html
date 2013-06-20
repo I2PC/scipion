@@ -10,7 +10,6 @@
 <script src={{utils}} type="text/javascript"></script>
 {% endblock %}
 {% block sideLeft %}
-<!-- <div class="tittle">PROTOCOLS</div> -->
 <div class="protFieldsetTree">
 	<ul id="browser" class="filetree">
 		{% for section in sections %}
@@ -33,15 +32,14 @@
 </div>
 {% endblock %} 
 {% block content %}
-<!-- <div class="tittle">{{projectName}} EXECUTIONS</div> -->
 <div id="toolbar" style="display: none">
 	<span><a id="editTool" href=""><img src="{{editTool}}" />Edit</a></span> 
 	<span><a id="copyTool" href=""><img	src="{{copyTool}}" /> Copy</a></span> 
 	<span><a id="deleteTool" href=""><img src="{{deleteTool}}" /> Delete</a></span> 
 	<span><a id="browseTool" href=""><img src="{{browseTool}}" /> Browse</a></span>
 </div>
-<div style="overflow: auto;height:65%">
-	<table id="run" cellspacing="0">
+<div style="overflow:auto;height:65%">
+	<table id="data" cellspacing="0">
 		<tr>
 			{% for colName, colWidth in provider.getColumns %}
 			<th>{{colName}}</th> {% endfor %}

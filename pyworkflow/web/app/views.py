@@ -383,6 +383,7 @@ def viewHosts(request):
     css_path = os.path.join(settings.STATIC_URL, 'css/general_style.css')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
+    host_utils_path = os.path.join(settings.STATIC_URL, 'js/hostUtils.js')
     
     projectName = request.session['projectName']    
     project = loadProject(projectName)
@@ -399,8 +400,9 @@ def viewHosts(request):
                'hosts': projectHosts,
                'jquery': jquery_path,
                'utils': utils_path,
+               'hostUtils': host_utils_path,
                'css':css_path,
-                'message': message,
+               'message': message,
                'view': 'hosts'}    
       
     return render_to_response('hosts.html', context)
