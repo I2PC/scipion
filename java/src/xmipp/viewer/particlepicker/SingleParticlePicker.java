@@ -100,6 +100,7 @@ public class SingleParticlePicker extends ParticlePicker
 
 	public void saveData()
 	{
+		
 		super.saveData();
 		for (Micrograph m : micrographs)
 			saveData(m);
@@ -386,6 +387,7 @@ public class SingleParticlePicker extends ParticlePicker
 	{
 		try
 		{
+			
 			super.saveConfig(md, id);
 			md.setValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, getAutopickpercent(), id);
 
@@ -954,7 +956,6 @@ public class SingleParticlePicker extends ParticlePicker
 		trainmd.setValueString(MDLabel.MDL_MICROGRAPH_PARTICLES, posfile, id);
 		micrograph.getAutomaticParticles().clear();
 		new File(getOutputPath(micrograph.getAutoPosFile())).delete();
-		trainmd.print();
 		new Thread(new TrainRunnable(frame, trainmd, autopickout, outputmd)).start();
 		//		new TrainRunnable(frame, trainmd, outputmd).run();
 	}

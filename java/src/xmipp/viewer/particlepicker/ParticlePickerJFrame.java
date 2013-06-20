@@ -164,7 +164,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			public void actionPerformed(ActionEvent e)
 
 			{
-				getParticlePicker().saveData();
+				if(getParticlePicker().getMode() != Mode.ReadOnly)
+					getParticlePicker().saveData();
 				System.exit(0);
 
 			}
