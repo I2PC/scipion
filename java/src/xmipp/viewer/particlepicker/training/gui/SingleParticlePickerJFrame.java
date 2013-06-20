@@ -230,7 +230,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			micrographstb.setRowSelectionInterval(index, index);
 	}
 
-	void updateFamilyColor()
+	void updateColor()
 	{
 		color = ppicker.getColor();
 		colorbt.setIcon(new ColorIcon(color));
@@ -397,6 +397,18 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 	public boolean isSupervised()
 	{
 		return autopickchb.isSelected();
+	}
+	
+	
+	protected void enableEdition(boolean enable)
+	{
+		super.enableEdition(enable);
+		centerparticlebt.setEnabled(enable);
+		if(ppicker.getMode() != Mode.Review)
+		{
+			autopickchb.setEnabled(enable);
+			thresholdpn.setEnabled(enable);
+		}
 	}
 
 	public void initMenuBar()

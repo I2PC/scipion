@@ -127,8 +127,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 						return;
 				}
 				close();
-				// if (getParticlePicker().getMode() == FamilyState.Supervised)
-				// System.exit(0);// temporarily
 
 			}
 		});
@@ -399,9 +397,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		importmi.setEnabled(enable);
 		savemi.setEnabled(enable);
 		sizesl.setEnabled(enable);
+		sizetf.setEnabled(enable);
 		colorbt.setEnabled(enable);
 		resetbt.setEnabled(enable);
 		savebt.setEnabled(enable);
+		eraserbt.setEnabled(enable);
 
 	}
 
@@ -468,10 +468,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		return 100;
 	}
 
-	//	public Family getFamily()
-	//	{
-	//		return getParticlePicker().getFamily();
-	//	}
+
 
 	public abstract ParticlePickerCanvas getCanvas();
 
@@ -727,7 +724,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				if (!getParticlePicker().isValidSize(size))
 				{
 					int prevsize = getParticlePicker().getSize();
-					JOptionPane.showMessageDialog(ParticlePickerJFrame.this, XmippMessage.getOutOfBoundsMsg("Family size " + size));
+					XmippDialog.showInfo(ParticlePickerJFrame.this, XmippMessage.getOutOfBoundsMsg("Size " + size));
 					sizetf.setText(Integer.toString(prevsize));
 					return;
 				}
@@ -750,7 +747,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				if (!getParticlePicker().isValidSize(size))
 				{
 					int prevsize = getParticlePicker().getSize();
-					JOptionPane.showMessageDialog(ParticlePickerJFrame.this, XmippMessage.getOutOfBoundsMsg("Family size " + size));
+					XmippDialog.showInfo(ParticlePickerJFrame.this, XmippMessage.getOutOfBoundsMsg("Size " + size));
 					sizesl.setValue(prevsize);
 					return;
 				}
@@ -803,11 +800,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	public abstract String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty);
 
-	//	public Color getColor()
-	//	{
-	//		return getFamily().getColor();
-	//
-	//	}
+
 
 	public Map<String, String> getKeyAssist()
 	{

@@ -469,7 +469,6 @@ public abstract class ParticlePicker
 		long fid = md.firstObject();
 		int size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, fid);
 		if (size > 0)
-			//			family.setSize(Math.round(size * scale));
 			setSize(Math.round(size * scale));
 		int half = size / 2;
 		md.operate(String.format("xcoor=xcoor+%d,ycoor=ycoor+%d", half, half));
