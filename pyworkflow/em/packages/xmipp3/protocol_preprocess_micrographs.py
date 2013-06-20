@@ -170,9 +170,10 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         mapsId = {}
             
         for mic in self.inputMics:
-            xmic = XmippMicrograph.convert(mic)
+            xmicFn = IOTable[mic.getFileName()]
+            xmic = XmippMicrograph.convert(mic, replaceExt(xmicFn, 'ctfparam'))
             # Updating micrograph name
-            xmic.setFileName(IOTable[mic.getFileName()])
+            xmic.setFileName(xmicFn)
             micSet.append(xmic)
             mapsId[mic.getId()] = xmic.getId()
         

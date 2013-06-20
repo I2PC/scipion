@@ -114,6 +114,6 @@ class ProtCTFFind(ProtCTFMicrographs):
             
         micSet.write()
         # This property should only be set by CTF estimation protocols
-        micSet._ctf.set(True)    
+        micSet.setCTF(True)     
         self._defineOutputs(outputMicrographs=micSet)
             

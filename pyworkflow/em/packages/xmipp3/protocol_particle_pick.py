@@ -71,7 +71,6 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
                         }
         
         # Convert input SetOfMicrographs to Xmipp if needed
-        #self._insertFunctionStep('convertToXmippSetOfMicrograph')
         self._insertConvertStep('inputMics', XmippSetOfMicrographs, 
                                  self._getPath('micrographs.xmd'))
         # Launch Particle Picking GUI
@@ -82,17 +81,6 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         # Insert step to create output objects       
         self._insertFunctionStep('createOutput')
         
-    def convertToXmippSetOfMicrograph(self):
-        """ We need to ensure the micrograph.xmd metadata is available
-        to Xmipp picking program before launching it.
-        """
-        # Convert from SetOfMicrographs to XmippSetOfMicrographs
-        micFn = self._getPath('micrographs.xmd')
-        inputMicsXmipp = convertSetOfMicrographs(self.inputMics, micFn)
-
-        if inputMicsXmipp != self.inputMics:  # If distintic, micrographs.xmd should be produced
-            self._insertChild('inputMicsXmipp', inputMicsXmipp)
-            return [micFn]
         
     def launchParticlePickGUI(self):
         # Get the converted input micrographs in Xmipp format

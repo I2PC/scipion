@@ -111,7 +111,7 @@ class XmippSetOfImages(SetOfImages):
             self._setPairs.write(self._getTiltedBlock(), xmipp.MD_APPEND)   
          
     def append(self, xmippImg):
-        """Add a new image to the set"""
+        """Add a new image to the set"""           
         self._set.append(xmippImg)
         
     def appendFromMd(self, md):
@@ -188,18 +188,19 @@ class XmippMicrograph(XmippImage, Micrograph):
         Micrograph.__init__(self, filename, **args)
             
     @staticmethod
-    def convert(mic):
+    def convert(mic, ctfFn):
         """Convert from Micrograph to XmippMicrograph"""
         if isinstance(mic, XmippMicrograph):
             return mic
         micXmipp = XmippMicrograph(mic.getFileName())
         if mic.hasCTF():
             ctf = mic.getCTF()
+            ctfXmipp = XmippCTFModel.convert(ctf, ctfFn)
             micXmipp.setValue(xmipp.MDL_CTF_DEFOCUSU, ctf.defocusU.get())
             micXmipp.setValue(xmipp.MDL_CTF_DEFOCUSV, ctf.defocusV.get())
-            #print "psd: ", mic.ctfModel.getPsdFile()
-            #print type(mic.ctfModel.getPsdFile())
+
             micXmipp.setValue(xmipp.MDL_IMAGE1, ctf.getPsdFile())
+            micXmipp.setValue(xmipp.MDL_CTF_MODEL, ctfFn)
         # TODO: copyInfo??
         # from mic to micXmipp??  
         return micXmipp
@@ -215,7 +216,17 @@ class XmippSetOfMicrographs(XmippSetOfImages, SetOfMicrographs):
         self._set = XmippSet(XmippMicrograph)
 #        if filename is not None:
 #            self.__loadFiles()
-                
+
+    def append(self, xmippMic):
+        """Add a new micrograph to the set"""          
+        if not isinstance(xmippMic, XmippMicrograph):
+            dir = os.path.dirname(self.getFileName())
+            name = replaceBaseExt(xmippMic.getFileName(), 'ctfparam')
+            ctfFn = os.path.join(dir, 'extra', name)
+            xmippMic = XmippMicrograph.convert(xmippMic, ctfFn)
+        
+        self._set.append(xmippMic)
+                       
     @staticmethod
     def convert(setOfMics, filename):
         if isinstance(setOfMics, XmippSetOfMicrographs):
@@ -294,8 +305,7 @@ class XmippCTFModel(CTFModel, XmippMdRow):
                  "defocusU":xmipp.MDL_CTF_DEFOCUSU,
                  "defocusV":xmipp.MDL_CTF_DEFOCUSV,
                  "defocusAngle":xmipp.MDL_CTF_DEFOCUS_ANGLE,
-                 "sphericalAberration":xmipp.MDL_CTF_CS,
-                 "ampContrast":xmipp.MDL_CTF_Q0
+                 "sphericalAberration":xmipp.MDL_CTF_CS
                  }
 
     def __init__(self, filename = None, **args):

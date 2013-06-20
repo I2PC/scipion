@@ -425,7 +425,7 @@ class CTFModel(EMObject):
         self.psdFile = String()
         
     def copyInfo(self, other):
-        self.copyAttributes(other, 'ampContrast', 'defocusU', 'defocusV',
+        self.copyAttributes(other, 'defocusU', 'defocusV',
                             'defocusAngle', 'samplingRate', 'voltage', 
                             'sphericalAberration', 'psdFile')
 
