@@ -10,6 +10,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import xmipp.jni.Particle;
+import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippMessageDialog;
 import xmipp.viewer.particlepicker.Micrograph;
@@ -242,7 +243,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		}
 		catch (Exception e)
 		{
-			JOptionPane.showMessageDialog(this, e.getMessage());
+			XmippDialog.showInfo(frame, e.getMessage());
 		}
 
 	}

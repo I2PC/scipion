@@ -142,7 +142,7 @@ public class AdvancedOptionsJDialog extends JDialog
 	{
 		if (autopickpercenttf.getValue() == null)
 		{
-			JOptionPane.showMessageDialog(AdvancedOptionsJDialog.this, XmippMessage.getEmptyFieldMsg("Check (%)"));
+			XmippDialog.showInfo(frame, XmippMessage.getEmptyFieldMsg("Check (%)"));
 			autopickpercenttf.setValue(frame.getMicrograph().getAutopickpercent());
 			return;
 		}
@@ -157,7 +157,7 @@ public class AdvancedOptionsJDialog extends JDialog
 	{
 		if (templatestf.getValue() == null)
 		{
-			JOptionPane.showMessageDialog(AdvancedOptionsJDialog.this, XmippMessage.getEmptyFieldMsg("Templates"));
+			XmippDialog.showInfo(frame, XmippMessage.getEmptyFieldMsg("Templates"));
 			templatestf.setValue(frame.getParticlePicker().getTemplatesNumber());
 			return;
 		}

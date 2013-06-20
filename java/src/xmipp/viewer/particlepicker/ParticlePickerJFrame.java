@@ -302,8 +302,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				catch (Exception ex)
 				{
 					showException(ex);
-					// JOptionPane.showMessageDialog(ParticlePickerJFrame.this,
-					// ex.getMessage());
+					
 				}
 			}
 		});

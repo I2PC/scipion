@@ -13,6 +13,7 @@ import java.awt.event.MouseMotionListener;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import xmipp.utils.XmippDialog;
 import xmipp.viewer.particlepicker.tiltpair.gui.TiltPairPickerJFrame;
 import xmipp.viewer.particlepicker.tiltpair.gui.UntiltedMicrographCanvas;
 import xmipp.viewer.particlepicker.tiltpair.model.TiltedMicrograph;
@@ -79,7 +80,7 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 			{
 				canvas.repaint();
 				repaint();
-				JOptionPane.showMessageDialog(this, ex.getMessage());
+				XmippDialog.showInfo(this, ex.getMessage());
 				
 			}
 		}

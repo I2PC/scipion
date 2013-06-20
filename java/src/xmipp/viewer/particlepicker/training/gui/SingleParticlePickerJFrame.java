@@ -159,8 +159,8 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		if (!filename.equals(getMicrograph().getName()))
 		{
 			String msg = String.format("Are you sure you want to import data from file\n%s to micrograph %s ?", file, getMicrograph().getName());
-			int result = JOptionPane.showConfirmDialog(this, msg);
-			if (result != JOptionPane.YES_OPTION)
+			boolean importdata = XmippDialog.showQuestion(this, msg);
+			if (importdata)
 				return null;
 		}
 		ppicker.initTemplates();
