@@ -197,10 +197,7 @@ public abstract class Micrograph {
 	public void runImageJFilters(List<IJCommand> filters) {
 		for (IJCommand f : filters)
 			if (!f.getCommand().equals("Smooth Filter")) // this filter was applied
-			{
 				IJ.run(imp, f.getCommand(), f.getOptions());
-				System.out.println(f.getCommand());
-			}
 	}
 
 	public void releaseImage() {

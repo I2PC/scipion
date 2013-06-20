@@ -80,7 +80,7 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 			{
 				canvas.repaint();
 				repaint();
-				XmippDialog.showInfo(this, ex.getMessage());
+				XmippDialog.showInfo(frame, ex.getMessage());
 				
 			}
 		}

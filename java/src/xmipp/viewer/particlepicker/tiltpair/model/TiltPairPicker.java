@@ -355,10 +355,7 @@ public class TiltPairPicker extends ParticlePicker
 				return false;
 		for(TiltedParticle p: um.getTiltedMicrograph().getParticles())
 			if(!um.getTiltedMicrograph().fits(p.getX(), p.getY(), size))
-			{
-				System.out.println(p);
 				return false;
-			}
 		return true;
 	}
 

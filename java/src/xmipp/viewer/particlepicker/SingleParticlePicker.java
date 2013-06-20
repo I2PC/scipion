@@ -571,7 +571,6 @@ public class SingleParticlePicker extends ParticlePicker
 		for (TrainingMicrograph m : micrographs)
 		{
 			filename = getImportMicrographName(path, m.getFile(), f);
-			//			System.out.println("  filename: " + filename);
 			if (Filename.exists(filename))
 				result += importParticlesFromFile(filename, f, m, scale, invertx, inverty);
 		}
@@ -794,7 +793,6 @@ public class SingleParticlePicker extends ParticlePicker
 				applyAlignment(particle, igp, align);
 			}
 			saveTemplates();
-			//			System.out.println("templates saved");
 
 		}
 		catch (Exception e)
@@ -829,7 +827,7 @@ public class SingleParticlePicker extends ParticlePicker
 			ImageGeneric igp = p.getImageGeneric();
 			shift = templates.bestShift(igp);
 			double distance = Math.sqrt(Math.pow(shift.getX(), 2) + Math.pow(shift.getY(), 2)) / getSize();
-			System.out.printf("normalized distance:%.2f\n", distance);
+//			System.out.printf("normalized distance:%.2f\n", distance);
 			if (distance < 0.25)
 			{
 				p.setX(p.getX() + shift.getX());

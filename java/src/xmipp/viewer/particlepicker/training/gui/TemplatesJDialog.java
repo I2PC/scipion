@@ -39,7 +39,6 @@ public class TemplatesJDialog extends JDialog {
 	}
 
 	public synchronized void loadTemplates(boolean resize) {
-		System.out.println("load Templates");
 		try {
 			ImageGeneric templates = frame.getParticlePicker().getTemplates();
 			int size = frame.getParticlePicker().getSize();
