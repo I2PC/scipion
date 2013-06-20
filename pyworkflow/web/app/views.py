@@ -17,7 +17,6 @@ from pyworkflow.apps.config import *
 from pyworkflow.em import *
 from django.http.request import HttpRequest
 from pyworkflow.hosts import HostMapper
-
 from pyworkflow.tests import getInputPath 
 from forms import HostForm
 from django.core.urlresolvers import reverse
