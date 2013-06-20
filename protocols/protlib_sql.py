@@ -135,6 +135,29 @@ class XmippProjectDb(SqliteDb):
     FIRST_ITER = 1
     BIGGEST_STEP = 99999
             
+    def createProtocolTables(self):
+        """Create protocol related tables:
+           protocols
+           groups
+           protocol_group
+        """
+        self.execSqlCommand('pragma foreign_keys=ON',"Foreing key activation failed")
+        
+        _sqlCommand = """CREATE TABLE IF NOT EXISTS %(TableGroups)s
+             (group_name TEXT PRIMARY KEY);""" % self.sqlDict
+        self.execSqlCommand(_sqlCommand, "Error creating '%(TableGroups)s' table: " % self.sqlDict)
+
+        _sqlCommand = """CREATE TABLE IF NOT EXISTS %(TableProtocols)s
+                     (protocol_name TEXT PRIMARY KEY);""" % self.sqlDict
+        self.execSqlCommand(_sqlCommand, "Error creating '%(TableProtocols)s' table: " % self.sqlDict)
+        
+        _sqlCommand = """CREATE TABLE IF NOT EXISTS %(TableProtocolsGroups)s
+                     (protocol_name TEXT,
+                      group_name TEXT,
+                      PRIMARY KEY(protocol_name, group_name));""" % self.sqlDict
+        self.execSqlCommand(_sqlCommand, "Error creating '%(TableProtocolsGroups)s' table: " % self.sqlDict)        
+              
+        
     def __init__(self, dbName):
         try:
             self.dbName = dbName
@@ -147,21 +170,8 @@ class XmippProjectDb(SqliteDb):
             self.sqlDict['execution_always'] = SqliteDb.EXEC_ALWAYS
             #enable foreign keys must be executed BEFORE table creation
             self.execSqlCommand('pragma foreign_keys=ON',"Foreing key activation failed")
-            
-            _sqlCommand = """CREATE TABLE IF NOT EXISTS %(TableGroups)s
-                 (group_name TEXT PRIMARY KEY);""" % self.sqlDict
-            self.execSqlCommand(_sqlCommand, "Error creating '%(TableGroups)s' table: " % self.sqlDict)
-    
-            _sqlCommand = """CREATE TABLE IF NOT EXISTS %(TableProtocols)s
-                         (protocol_name TEXT PRIMARY KEY);""" % self.sqlDict
-            self.execSqlCommand(_sqlCommand, "Error creating '%(TableProtocols)s' table: " % self.sqlDict)
-            
-            _sqlCommand = """CREATE TABLE IF NOT EXISTS %(TableProtocolsGroups)s
-                         (protocol_name TEXT,
-                          group_name TEXT,
-                          PRIMARY KEY(protocol_name, group_name));""" % self.sqlDict
-            self.execSqlCommand(_sqlCommand, "Error creating '%(TableProtocolsGroups)s' table: " % self.sqlDict)        
-                    
+            self.createProtocolTables()
+                            
             _sqlCommand = """CREATE TABLE IF NOT EXISTS %(TableRuns)s
                          (run_id INTEGER PRIMARY KEY AUTOINCREMENT,
                           run_name TEXT,  -- label 
@@ -220,7 +230,7 @@ class XmippProjectDb(SqliteDb):
             
     def insertGroup(self, groupName):
         self.sqlDict['group'] = groupName
-        _sqlCommand = "INSERT INTO %(TableGroups)s VALUES('%(group)s');" % self.sqlDict
+        _sqlCommand = "INSERT OR IGNORE INTO %(TableGroups)s VALUES('%(group)s');" % self.sqlDict
         self.cur.execute(_sqlCommand)
         
     def insertProtocol(self, groupName, protName):
@@ -230,9 +240,9 @@ class XmippProjectDb(SqliteDb):
         _sqlCommand = "SELECT COUNT(*) FROM %(TableProtocols)s WHERE protocol_name = '%(protocol_name)s'" % self.sqlDict
         self.cur.execute(_sqlCommand)
         if self.cur.fetchone()[0] == 0:
-            _sqlCommand = "INSERT INTO %(TableProtocols)s VALUES('%(protocol_name)s')" % self.sqlDict
+            _sqlCommand = "INSERT OR IGNORE INTO %(TableProtocols)s VALUES('%(protocol_name)s')" % self.sqlDict
             self.cur.execute(_sqlCommand)
-        _sqlCommand = "INSERT INTO %(TableProtocolsGroups)s VALUES('%(protocol_name)s', '%(group)s')" % self.sqlDict
+        _sqlCommand = "INSERT OR IGNORE INTO %(TableProtocolsGroups)s VALUES('%(protocol_name)s', '%(group)s')" % self.sqlDict
         self.cur.execute(_sqlCommand)
           
     def insertRun(self, run):#run_name, script, comment=''):
