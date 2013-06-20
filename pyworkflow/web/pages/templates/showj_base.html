@@ -15,14 +15,29 @@
 	
 	<script type="text/javascript">
 	$(document).ready(function(){
-		zoomEvents();
-		colRowModeEvents()
-		
+		initializeZoomEvents();
+		initializeColRowModeEvents()
+		initializeSaveButtonEvents()
 		
 	});
 	</script>
 	<script type="text/javascript">
-	function colRowModeEvents(){
+	function initializeSaveButtonEvents(){
+		$("#saveButton").click(function(){
+			$.ajax({
+				type : "GET",
+				url : "/save_showj_metadata/?path=\"/home/adrian/taka.xmd\"",
+				dataType : "json",
+				success : function(json) {
+					message = json.message;
+					alert(message)
+				}
+			});
+		});
+	}
+	</script>
+	<script type="text/javascript">
+	function initializeColRowModeEvents(){
 		$("#colRowMode").click(function(){
 			if ($("#colRowModeImage").attr("src").indexOf("On") != -1){
 				$("#colRowModeImage").attr("src", $("#colRowModeImage").attr("src").replace("On","Off"))
@@ -52,7 +67,7 @@
 	}
 	</script>
 	<script type="text/javascript">
-		function zoomEvents(){
+		function initializeZoomEvents(){
 			$('#zoom').click(function(){
 				updateImageDimByUrl();	
 			});
@@ -145,7 +160,9 @@
 		</aside>
 		
 		<section> <!--  Es donde va la informacion princiapl -->
-
+		<button id="saveButton">
+			<img src="/resources/showj/colRowModeOff.gif" id="saveButtonImage" />
+		</button>
 
 		
 		{% block content_view %}	{% endblock %}	

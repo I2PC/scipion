@@ -515,18 +515,9 @@ def showj(request):
 #    md = loadMetaData(inputParameters['path'], inputParameters['block'], inputParameters['allowRender'], inputParameters['imageDim'])
 
     mdXmipp = loadMetaDataXmipp(inputParameters['path'], inputParameters['block'])
-    print "mak"
-    print mdXmipp
-    
-    
-    request.session['mdXmipp'] = mdXmipp
-    
-    print "mak2"
-    print request.session['mdXmipp'] 
-    
-    request.session['taka'] = "kuaka"
     
     md = MdData(mdXmipp, inputParameters['allowRender'], inputParameters['imageDim'])
+    request.session['md'] = md
 
     menuLayoutConfig = MenuLayoutConfig(inputParameters['mode'], inputParameters['path'], inputParameters['block'], inputParameters['allowRender'], inputParameters['imageDim'])
     
@@ -651,7 +642,20 @@ def loadMetaDataXmipp(path, block):
         
     # path2 = 'Volumes@' + path1
 #    return MdData(path, allowRender, imageDim)   
+
+def save_showj_metadata(request):    
+    from django.http import HttpResponse
+    import json
+    from django.utils import simplejson
     
+    if request.is_ajax():
+        path = request.GET.get('path')
+        
+#        md = request.session['md']
+#        mdXmipp = xmipp.MetaData()
+#        mdXmipp.write(path)
+        
+        return HttpResponse(json.dumps({'message':'Ok'}), mimetype='application/javascript')
 
 def save_showj_table(request):
     
@@ -662,30 +666,27 @@ def save_showj_table(request):
     
     if request.is_ajax():
         element_id = request.GET.get('element_id')
-        element_id_split = element_id.split("___")
-        if len(element_id_split)!=2: 
-            print "esto peto y hay que hacer alguna movidita"
-            
-            
+        try:
+            label, idRow = element_id.split("___")
+        except ValueError:
+            return HttpResponse(json.dumps({'message':'Error'}), mimetype='application/javascript')
+        
+#        if len(element_id_split)!=2: 
+#            print "esto peto y hay que hacer alguna movidita"
         element_value= request.GET.get('element_value')
-        print element_value
+        #conversion for checkbox element
+        if (element_value == 'true'): element_value = 1
+        else: element_value = 0
         
+        md = request.session['md']
+
+        for index, mdObject in enumerate(md.objects[int(idRow)].values):
+            if label in mdObject.label:
+                md.objects[int(idRow)].values[index].strValue=element_value
         
-        print "taka"
-        print request.session['taka']
-        
-        mdXmipp = request.session['mdXmipp']
-        print mdXmipp
-        print mdXmipp.getActiveLabels()
-        
-        
-        
+        request.session['md']=md
 #        mdXmipp.setValue(element_id_split[0], False, mdXmipp[element_id_split[1]])
-        
-        jsonStr = json.dumps({'host':5})
-#         jsonStr = json.dumps({'hostConfig' :  executionHostConfig},
-#                              ensure_ascii=False)
-        return HttpResponse(jsonStr, mimetype='application/javascript')
+        return HttpResponse(json.dumps({'message':'Ok'}), mimetype='application/javascript')
 
 #    request.get.get('value')
 

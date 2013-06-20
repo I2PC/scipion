@@ -15,7 +15,6 @@ $(document).ready(function() {
 	initializeTableWidth()
 	
 	
-	
 	/* $("#form").submit(function() {
 		var sData = $('input', oTable.fnGetNodes()).serialize();
 		alert( "The following data would have been submitted to the server: \n\n"+sData );
@@ -78,6 +77,12 @@ $(document).ready(function() {
 			    }		
 			);
 	
+	
+} );
+
+
+
+function setTableEditable(){
 	$('.editable', oTable.fnGetNodes()).editable(
 			/* '../examples_support/editable_ajax.php', */
 			function(value, settings) { 
@@ -99,10 +104,7 @@ $(document).ready(function() {
 			},
 			"height": "14px"
 		} );
-	
-	
-} );
-
+}
 
 function generateDataForTable(){
 	dataForTable = new Array();
@@ -140,16 +142,8 @@ function valueChange(element){
 		url : "/save_showj_table/?element_id=" + $(element).attr("id") + "&element_value=" + element_value,
 		dataType : "json",
 		success : function(json) {
-			// specifying a dataType of json makes jQuery pre-eval the response
-			// for us ExecutionHostConfig
-			host = json.host;
-			alert(host)
-			/* document.getElementById("scpnHosts").disabled = true;
-			document.getElementById("label").value = host.label;
-			document.getElementById("label").disabled = true;
-			document.getElementById("hostName").value = host.hostName;
-			document.getElementById("userName").value = host.userName;
-			document.getElementById("hostPath").value = host.hostPath; */
+			message = json.message;
+			alert(message)
 		}
 	});
 }
@@ -226,11 +220,14 @@ function fnGetSelected(oTableLocal)
 {% block content_view %}
 	
 <div id="table_container">
-	<form id="showjTableSave" action="/showjTableSubmit/" method="POST">
+<!-- 	<form id="showjTableSave" action="/showjTableSubmit/" method="POST">
 		<button type="submit">Submit</button>
+ -->		
+ 		
+		
 		<table cellspacing="0" id="data_table" width="100%">
 		</table>
-	</form>
+<!-- 	</form> -->
 </div>
 			
 {% endblock %}
