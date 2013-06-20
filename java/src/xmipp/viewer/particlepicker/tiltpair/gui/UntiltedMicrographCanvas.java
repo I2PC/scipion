@@ -230,7 +230,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 			Particle tp = um.getAlignerTiltedParticle(x, y);
 			if (um.getAddedCount() > UntiltedMicrograph.getAlignmentMin()
 					&& !um.getTiltedMicrograph().fits(tp.getX(), tp.getY(), pppicker.getSize()))
-				throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg("Tilted Pair Coordinates"));
+				throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg("Tilted particle"));
 			UntiltedParticle p = new UntiltedParticle(x, y, um, pppicker);
 
 			um.addParticle(p);
