@@ -171,6 +171,18 @@ div.datatable {
 	list-style: none;
 }
 
+#listEx li{
+	float:none;
+	list-style: none;
+	
+}
+
+#listEx ul{
+	position:inherit;
+	margin-left:-1.2em;
+	font-size: 0.9em;
+}
+
 #tabContaier li a {
 	background: #ddd;
 	border: 1px solid #fcfcfc;
