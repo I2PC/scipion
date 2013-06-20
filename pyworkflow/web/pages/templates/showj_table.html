@@ -110,11 +110,11 @@ function generateDataForTable(){
 		dataRowForTable = new Array()
 		{% for value in obj.values %}
 			{% if value.typeOfColumn == "image" %} 
-				dataRowForTable.push("<img class=\"tableImages\" id=\"{{value.label}}_{{forloop.parentloop.counter0}}\" src=\"/get_image/?image={{value.imgValue}}\"/>")
+				dataRowForTable.push("<img class=\"tableImages\" id=\"{{value.label}}___{{forloop.parentloop.counter0}}\" src=\"/get_image/?image={{value.imgValue}}\"/>")
 		   	{% elif value.typeOfColumn == "checkbox" and value.strValue == '1' %}
-				dataRowForTable.push("<input type=\"checkbox\" onclick=\"valueChange(this);\" id=\"{{value.label}}_{{forloop.parentloop.counter0}}\" checked>")
+				dataRowForTable.push("<input type=\"checkbox\" onclick=\"valueChange(this);\" id=\"{{value.label}}___{{forloop.parentloop.counter0}}\" checked>")
 			{% elif value.typeOfColumn == "checkbox" and value.strValue != '1' %}
-				dataRowForTable.push("<input type=\"checkbox\" onclick=\"valueChange(this);\" id=\"{{value.label}}_{{forloop.parentloop.counter0}}\">")
+				dataRowForTable.push("<input type=\"checkbox\" onclick=\"valueChange(this);\" id=\"{{value.label}}___{{forloop.parentloop.counter0}}\">")
 		   	{% else %}
 				dataRowForTable.push("{{value.strValue}}")
 		   	{% endif %}	
@@ -127,10 +127,17 @@ function generateDataForTable(){
 }
 
 function valueChange(element){
+	element_value = ""
+	if ($(element).is("input:checkbox")){
+		element_value = $(element).is(":checked")
+	}
+	else{
+		element_value = $(element).val()
+	}
 	
 	$.ajax({
 		type : "GET",
-		url : "/save_showj_table/?element_id=" + $(element).attr("id") + "&element_value=" + $(element).val(),
+		url : "/save_showj_table/?element_id=" + $(element).attr("id") + "&element_value=" + element_value,
 		dataType : "json",
 		success : function(json) {
 			// specifying a dataType of json makes jQuery pre-eval the response

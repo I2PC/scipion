@@ -511,7 +511,21 @@ def showj(request):
                      'mode': request.GET.get('mode', 'gallery'),
                      'metadataComboBox': request.GET.get('metadataComboBox', 'image')}
     
-    md = loadMetaData(inputParameters['path'], inputParameters['block'], inputParameters['allowRender'], inputParameters['imageDim'])    
+#    md = loadMetaData(inputParameters['path'], inputParameters['block'], inputParameters['allowRender'], inputParameters['imageDim'])
+
+    mdXmipp = loadMetaDataXmipp(inputParameters['path'], inputParameters['block'])
+    print "mak"
+    print mdXmipp
+    
+    
+    request.session['mdXmipp'] = mdXmipp
+    
+    print "mak2"
+    print request.session['mdXmipp'] 
+    
+    request.session['taka'] = "kuaka"
+    
+    md = MdData(mdXmipp, inputParameters['allowRender'], inputParameters['imageDim'])
 
     menuLayoutConfig = MenuLayoutConfig(inputParameters['mode'], inputParameters['path'], inputParameters['block'], inputParameters['allowRender'], inputParameters['imageDim'])
     
@@ -562,9 +576,7 @@ class MdValue():
 #                self.imgValue += '&dim=%s' % imageDim
 
 class MdData():
-    def __init__(self, path, allowRender=True, imageDim=None):        
-        md = xmipp.MetaData(path)
-        
+    def __init__(self, md, allowRender=True, imageDim=None):        
         labels = md.getActiveLabels()
         
         self.tableLayoutConfiguration = TableLayoutConfiguration(labels, allowRender)
@@ -572,6 +584,7 @@ class MdData():
         self.objects = []
         for objId in md:
             obj = MdObj()
+            #PAJM que es este objId
             obj.id = objId
             obj.values = [MdValue(md, l, objId, typeOfColumn) for l, typeOfColumn in zip(labels, self.tableLayoutConfiguration.typeOfColumns)]
             self.objects.append(obj)
@@ -581,6 +594,7 @@ class TableLayoutConfiguration():
         self.labels = [xmipp.label2Str(l) for l in labels]
         self.typeOfColumns = getTypeOfColumns(labels, allowRender)
         self.colsOrder = defineColsLayout(labels)
+        #Esto es un napeidus que habria que arreglar
         self.labels_typeOfColumns= zip(self.labels,self.typeOfColumns)
 
 class MenuLayoutConfig():        
@@ -628,13 +642,15 @@ def defineColsLayout(labels):
         colsOrder.insert(0, colsOrder.pop(labels.index('enabled')))
     return colsOrder    
 
-def loadMetaData(path, block, allowRender=True, imageDim=None):
+def loadMetaDataXmipp(path, block):
     path = getInputPath('showj', path)    
     if len(block):
         path = '%s@%s' % (block, path)
+    return xmipp.MetaData(path)
+        
     # path2 = 'Volumes@' + path1
 #    return MdData(path, allowRender, imageDim)   
-    return MdData(path, allowRender, imageDim)
+    
 
 def save_showj_table(request):
     
@@ -644,10 +660,26 @@ def save_showj_table(request):
     
     
     if request.is_ajax():
-        print request.GET.get('element_id')
-        print request.GET.get('element_value')
+        element_id = request.GET.get('element_id')
+        element_id_split = element_id.split("___")
+        if len(element_id_split)!=2: 
+            print "esto peto y hay que hacer alguna movidita"
+            
+            
+        element_value= request.GET.get('element_value')
+        print element_value
         
-#        md = xmipp.MetaData(path)
+        
+        print "taka"
+        print request.session['taka']
+        
+        mdXmipp = request.session['mdXmipp']
+        print mdXmipp
+        print mdXmipp.getActiveLabels()
+        
+        
+        
+#        mdXmipp.setValue(element_id_split[0], False, mdXmipp[element_id_split[1]])
         
         jsonStr = json.dumps({'host':5})
 #         jsonStr = json.dumps({'hostConfig' :  executionHostConfig},
