@@ -132,66 +132,6 @@ a {
 	padding-left: 20px;
 }
 
-/* CSS for the runtime table */
-table a:link {
-	font-weight: bold;
-}
-
-table a:active,table a:hover {
-	color: Firebrick;
-}
-
-table#run {
-	width: 100%;
-	overflow-x: auto;
-	font-size: 0.9em;
-	/* 		text-shadow: 1px 1px 0px #fff; */
-	background: #eaebec;
-	/* 		box-shadow: 0 1px 2px #d1d1d1; */
-	border-spacing: 0;
-	overflow-x: auto;
-}
-
-table#run th {
-	height: 0.2em;
-	border-top: 1px solid #fafafa;
-	border-bottom: 1px solid #e0e0e0;
-}
-
-table#run th:first-child {
-	text-align: left;
-	padding-left: 20px;
-}
-
-table#run tr {
-	text-align: center;
-}
-
-table#run tr td:first-child {
-	text-align: left;
-	border-left: 0;
-}
-
-table#run tr td {
-	padding: 0.3em;
-	padding-left: 1.5em;
-	border-top: 1px solid #ffffff;
-	border-bottom: 1px solid #e0e0e0;
-	border-left: 1px solid #e0e0e0;
-}
-
-table#run tr:last-child td {
-	border-bottom: 0;
-}
-
-table#run tr:hover td {
-	background-color: #f2f2f2;
-}
-
-table#run tr.selected:hover td {
-	background-color: LightSteelBlue;
-}
-
 /* Bottom datatable-tabs style */
 div.datatable {
 	background-color: white;
@@ -229,6 +169,18 @@ div.datatable {
 #tabContaier li {
 	float: left;
 	list-style: none;
+}
+
+#listEx li{
+	float:none;
+	list-style: none;
+	
+}
+
+#listEx ul{
+	position:inherit;
+	margin-left:-1.2em;
+	font-size: 0.9em;
 }
 
 #tabContaier li a {
