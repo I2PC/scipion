@@ -652,11 +652,7 @@ AddLibrary('XmippDimred', 'libraries/dimred', DimRedSources,
 # XmippParallel
 ParallelSources = Glob('libraries/parallel', '*.cpp', []);
 AddMPILibrary("XmippParallel", 'libraries/parallel', ParallelSources, ["#", "#libraries", "#external"],
-<<<<<<< HEAD
     ['lib'], ['XmippExternal', 'XmippData', 'XmippRecons', 'XmippClassif'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs)
-=======
-              ['lib'], ['XmippExternal', 'XmippData', 'XmippRecons', 'XmippClassif'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs)
->>>>>>> 3.0
 
 # Interface
 InterfaceSources = Glob('libraries/interface', '*.cpp', [])
@@ -952,10 +948,6 @@ AddXmippMPIProgram('mpi_ctf_correct_idr', ['XmippRecons'])
 AddXmippMPIProgram('mpi_ctf_sort_psds', ['XmippRecons'])
 AddXmippMPIProgram('mpi_image_operate')
 AddXmippMPIProgram('mpi_image_rotational_pca', ['XmippRecons'])
-<<<<<<< HEAD
-# AddXmippMPIProgram('mpi_image_common_lines', ['XmippRecons'])
-=======
->>>>>>> 3.0
 AddXmippMPIProgram('mpi_performance_test', ['XmippRecons'])
 AddXmippMPIProgram('mpi_image_resize', ['XmippRecons'])
 AddXmippMPIProgram('mpi_image_sort', ['XmippRecons'])
