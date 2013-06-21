@@ -114,6 +114,9 @@ section .enabledGallery {
 	z-index: 999;
 	display: none;
 }
+section .selected{
+	display: inline;
+}
 
 #column_label {
 	background-color: #dddddd;

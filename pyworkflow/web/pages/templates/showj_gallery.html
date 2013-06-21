@@ -10,10 +10,14 @@
 	function imageEvents(){
 		$(".img_container").hover(
 				function(){
-					$(this).find(".enabledGallery").fadeIn('slow')
+						if (!$(this).find(".enabledGallery").hasClass("selected")){
+							$(this).find(".enabledGallery").fadeIn('slow')
+						}
 					},
 				function(){
-					$(this).find(".enabledGallery").fadeOut('slow')
+						if (!$(this).find(".enabledGallery").hasClass("selected")){
+							$(this).find(".enabledGallery").fadeOut('slow')
+						}	
 					})
 	}
 	
@@ -48,6 +52,15 @@
 		sectionWidth = colVal * (imgContainerWidth + 10)
 		$("section").width(sectionWidth)
 	}
+	function valueChange(element){
+		$(element).toggleClass("selected")
+		element_value="false"
+		if ($(element).hasClass("selected")){
+			element_value="true"
+		}
+		
+		saveShowjTable($(element).attr("id"), element_value)
+	}
 	</script>
 {% endblock %}
 
@@ -55,9 +68,11 @@
 <div id="metadataSelectorContainer" class="sectionMenu">
 	<span class="textMenu">Select Metadata</span>
 	<select id="metadataComboBox">
-		{% for label in metadata.labelsToRender %}
-        	<option value="{{label}}">{{label}}</option>
-        {% endfor %}	
+		{% for label, typeOfColumn in metadata.tableLayoutConfiguration.labels_typeOfColumns %}
+			{% if typeOfColumn == "image" %}
+				<option value="{{label}}">{{label}}</option>
+			{% endif %}
+		{% endfor %}
 	</select>
 </div>
 {% endblock %}
@@ -71,7 +86,7 @@
 						<div id="column_label">{{forloop.parentloop.counter}}</div> 
 						<div class="img_inner_container">
 							<img class="tableImages" src="/get_image/?image={{value.imgValue}}"/>
-							<img class="enabledGallery" src="/resources/showj/enabled_gallery.png"/>
+							<img class="enabledGallery" src="/resources/showj/enabled_gallery.png" id="{{value.label}}___{{forloop.parentloop.counter0}}" onclick="valueChange(this);"/>
 						</div>
 						
 						
