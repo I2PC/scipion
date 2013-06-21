@@ -100,7 +100,7 @@ class ProtML3D(XmippProtocol):
                 if not xmippExists(ref):
                     errors.append("Reference: <%s> doesn't exists" % ref)
             if len(errors) == 0:
-                validateInputSize(references, self.ImgMd, errors)
+                validateInputSize(references, self.ImgMd, md, errors)
         else:
             errors.append("Input metadata <%s> doesn't contains image label" % self.ImgMd)
             
