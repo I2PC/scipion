@@ -16,7 +16,7 @@ class TestMixedWorkflow_1(TestWorkflow):
         cls.pattern = getInputPath('Micrographs_BPV1', '*.mrc')        
         cls.importFolder = getInputPath('Picking_XmippBPV1')
         
-    def testXmippWorkflow(self):
+    def atestWorkflow(self):
         #First, import a set of micrographs
         protImport = ProtImportMicrographs(pattern=self.pattern, samplingRate=1.237, voltage=300)
         self.proj.launchProtocol(protImport, wait=True)
@@ -53,6 +53,54 @@ class TestMixedWorkflow_1(TestWorkflow):
         self.proj.launchProtocol(protExtract, wait=True)
         
         self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
+        
+class TestMixedWorkflow_2(TestWorkflow):
+    
+    @classmethod
+    def setUpClass(cls):    
+        # Create a new project
+        setupProject(cls)
+        cls.pattern = getInputPath('Micrographs_BPV3', '*.mrc')        
+        cls.importFolder = getInputPath('EmanTestProject')
+        
+    def testWorkflow(self):
+        #First, import a set of micrographs
+        protImport = ProtImportMicrographs(pattern=self.pattern, samplingRate=1.237, voltage=300)
+        self.proj.launchProtocol(protImport, wait=True)
+        
+        self.assertIsNotNone(protImport.outputMicrographs, "There was a problem with the import")
+        
+        # Perform a downsampling on the micrographs
+        print "Downsampling..."
+        protDownsampling = XmippProtPreprocessMicrographs(doDownsample=True, downFactor=5, doCrop=False)
+        protDownsampling.inputMicrographs.set(protImport.outputMicrographs)
+        self.proj.launchProtocol(protDownsampling, wait=True)
+          
+        self.assertIsNotNone(protDownsampling.outputMicrographs, "There was a problem with the downsampling")
+
+#
+#        # Now estimate CTF on the downsampled micrographs 
+#        print "Performing CTF estimation..."   
+#        protCTF = XmippProtCTFMicrographs(numberOfThreads=3, runMode=1)         
+#        protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)        
+#        self.proj.launchProtocol(protCTF, wait=True)
+        
+        print "Running Eman fake particle picking..."   
+        protPP = EmanProtBoxing(importFolder=self.importFolder, runMode=1)                
+#        protPP.inputMicrographs.set(protCTF.outputMicrographs)        
+        protPP.inputMicrographs.set(protDownsampling.outputMicrographs)
+        self.proj.launchProtocol(protPP, wait=True)
+            
+        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
+            
+        print "Run extract particles with Same as picking"
+        protExtract = XmippProtExtractParticles(boxSize=110, downsampleType=1, runMode=1)
+        protExtract.inputCoordinates.set(protPP.outputCoordinates)
+        #protExtract.inputMicrographs.set(protDownsampling.outputMicrographs)
+        self.proj.launchProtocol(protExtract, wait=True)
+        
+        self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
+               
                
         
 if __name__ == "__main__":
