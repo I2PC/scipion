@@ -26,7 +26,6 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 	private TrainingParticle active;
 	private SingleParticlePicker ppicker;
 
-
 	public SingleParticlePickerCanvas(SingleParticlePickerJFrame frame)
 	{
 		super(frame.getMicrograph().getImagePlus(frame.getParticlePicker().getFilters()));
@@ -38,7 +37,6 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 		active = getLastParticle();
 
 	}
-
 
 	protected TrainingParticle getLastParticle()
 
@@ -53,7 +51,6 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 		super.mousePressed(e);
 		int x = super.offScreenX(e.getX());
 		int y = super.offScreenY(e.getY());
-
 
 		if (frame.isPickingAvailable(e))
 		{
@@ -80,7 +77,7 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 				refresh();
 			}
 		}
-		
+
 	}
 
 	protected void erase(int x, int y)
@@ -98,42 +95,43 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 	{
 
 		super.mouseDragged(e);
-		int x = super.offScreenX(e.getX());
-		int y = super.offScreenY(e.getY());
-		if (frame.isPickingAvailable(e))
+		if (SwingUtilities.isLeftMouseButton(e))
 		{
-			if (frame.isEraserMode())
+			int x = super.offScreenX(e.getX());
+			int y = super.offScreenY(e.getY());
+			if (frame.isPickingAvailable(e))
 			{
-				erase(x, y);
-				return;
-			}
-			if (active == null)
-				return;
-			
-			if (!micrograph.fits(x, y, active.getParticlePicker().getSize()))
-				return;
-			if (active instanceof AutomaticParticle)
-			{
-				micrograph.removeParticle(active, ppicker);
-				active = new TrainingParticle(active.getX(), active.getY(), ppicker, micrograph);
-				micrograph.addManualParticle(active, ppicker, frame.isCenterParticle(), true);
+				if (frame.isEraserMode())
+				{
+					erase(x, y);
+					return;
+				}
+				if (active == null)
+					return;
+
+				if (!micrograph.fits(x, y, active.getParticlePicker().getSize()))
+					return;
+				if (active instanceof AutomaticParticle)
+				{
+					micrograph.removeParticle(active, ppicker);
+					active = new TrainingParticle(active.getX(), active.getY(), ppicker, micrograph);
+					micrograph.addManualParticle(active, ppicker, frame.isCenterParticle(), true);
+
+				}
+				else
+				{
+					//				if(!activemoved)
+					//					ppicker.removeParticleFromTemplates(active);
+
+					setActiveMoved(true);
+					moveActiveParticle(x, y);
+				}
+
+				manageActive(x, y);
 
 			}
-			else
-			{
-//				if(!activemoved)
-//					ppicker.removeParticleFromTemplates(active);
-
-				setActiveMoved(true);
-				moveActiveParticle(x, y);
-			}
-
-			manageActive(x, y);
-
 		}
 	}
-
-
 
 	@Override
 	public void mouseReleased(MouseEvent e)
@@ -167,7 +165,7 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 
 		}
 	}
-	
+
 	public void manageActive(int x, int y)
 	{
 		if (!activemoved)
@@ -175,8 +173,8 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 
 		if (!micrograph.fits(x, y, active.getSize()))
 			return;
-		
-		if (active instanceof AutomaticParticle && !((AutomaticParticle)active).isDeleted())
+
+		if (active instanceof AutomaticParticle && !((AutomaticParticle) active).isDeleted())
 		{
 
 			micrograph.removeParticle(active, ppicker);
@@ -194,7 +192,6 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 		}
 		frame.setChanged(true);
 	}
-
 
 	protected void doCustomPaint(Graphics2D g2)
 	{
@@ -221,17 +218,15 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 			drawShape(g2, active, true, activest);
 		}
 		Rectangle autopickout = frame.getParticlesRectangle();
-		if(autopickout != null)
+		if (autopickout != null)
 		{
 			g2.setColor(Color.yellow);
 			g2.setStroke(continuousst);
-			g2.drawRect((int)(autopickout.getX() * magnification), (int)(autopickout.getY() * magnification), (int)(autopickout.getWidth() * magnification), (int)(autopickout.getHeight() * magnification));
+			g2.drawRect((int) (autopickout.getX() * magnification), (int) (autopickout.getY() * magnification), (int) (autopickout.getWidth() * magnification), (int) (autopickout
+					.getHeight() * magnification));
 		}
 
 	}
-	
-	
-
 
 	@Override
 	public void refreshActive(Particle p)
@@ -239,11 +234,11 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 		if (p == null)
 			active = null;
 		else
-			active = (TrainingParticle)p;
+			active = (TrainingParticle) p;
 		repaint();
 
 	}
-	
+
 	@Override
 	public ParticlePickerJFrame getFrame()
 	{
@@ -268,8 +263,5 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 		micrograph = (TrainingMicrograph) m;
 
 	}
-
-	
-
 
 }
