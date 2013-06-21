@@ -142,7 +142,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 			public void actionPerformed(ActionEvent e)
 			{
 				if(anglesmi.isSelected() && !tppicker.getMicrograph().anglesAvailable())
-					XmippDialog.showInfo(TiltPairPickerJFrame.this, "Very few particles. Angles might not be accurate");
+					XmippDialog.showInfo(TiltPairPickerJFrame.this, "Angles will not be accurate until more than 10 pairs are registered");
 				canvas.repaint();
 				tiltedcanvas.repaint();
 			}

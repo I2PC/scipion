@@ -117,9 +117,10 @@ public class TiltPairPicker extends ParticlePicker
 				id = tIds[i];
 				x = tMd.getValueInt(MDLabel.MDL_XCOOR, id);
 				y = tMd.getValueInt(MDLabel.MDL_YCOOR, id);
-				if(x <= 0 || y <= 0)
+				if (x <= 0 || y <= 0)
 				{
-					result += String.format("Tilted particle at %s centered on %s,%s with negative coordinates dismissed.\n", getMicrograph().getName(), x, y);
+					result += String.format("Tilted particle at %s centered on %s,%s with negative coordinates dismissed.\n", getMicrograph()
+							.getName(), x, y);
 					continue;
 				}
 				tp = new TiltedParticle(x, y, up);
@@ -171,8 +172,6 @@ public class TiltPairPicker extends ParticlePicker
 		saveData(m);
 	}
 
-	
-
 	public int getUntiltedNumber()
 	{
 		int count = 0;
@@ -205,16 +204,12 @@ public class TiltPairPicker extends ParticlePicker
 
 			for (UntiltedMicrograph m : micrographs)
 			{
-				if (m.hasData())
-				{
+				id = micrographsDict.get(m.getFile());
+				anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y, (double) m.getUntiltedAngle(), id);
+				anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y2, (double) m.getTiltedAngle(), id);
+				anglesmd.setValueDouble(MDLabel.MDL_ANGLE_TILT, (double) m.getTiltAngle(), id);
 
-					id = micrographsDict.get(m.getFile());
-					anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y, (double) m.getUntiltedAngle(), id);
-					anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y2, (double) m.getTiltedAngle(), id);
-					anglesmd.setValueDouble(MDLabel.MDL_ANGLE_TILT, (double) m.getTiltAngle(), id);
-
-					anglesmd.write(selfile);
-				}
+				anglesmd.write(selfile);
 				saveData(m);
 
 			}
@@ -277,14 +272,9 @@ public class TiltPairPicker extends ParticlePicker
 
 	}
 
-	
-
-	
-
-
-	
-	public String importParticlesFromFolder(String path, Format f, float scale, boolean invertx, boolean inverty) {
-		if (f == Format.Auto) 
+	public String importParticlesFromFolder(String path, Format f, float scale, boolean invertx, boolean inverty)
+	{
+		if (f == Format.Auto)
 			f = detectFormat(path);
 		if (f == Format.Unknown)
 			throw new IllegalArgumentException(XmippMessage.getIllegalValueMsg("format", Format.Unknown));
@@ -346,18 +336,18 @@ public class TiltPairPicker extends ParticlePicker
 		this.micrograph = (UntiltedMicrograph) m;
 
 	}
-	
+
 	@Override
-	public boolean isValidSize(int size) {
+	public boolean isValidSize(int size)
+	{
 		UntiltedMicrograph um = getMicrograph();
-		for(UntiltedParticle p: um.getParticles())
-			if(!getMicrograph().fits(p.getX(), p.getY(), size))
+		for (UntiltedParticle p : um.getParticles())
+			if (!getMicrograph().fits(p.getX(), p.getY(), size))
 				return false;
-		for(TiltedParticle p: um.getTiltedMicrograph().getParticles())
-			if(!um.getTiltedMicrograph().fits(p.getX(), p.getY(), size))
+		for (TiltedParticle p : um.getTiltedMicrograph().getParticles())
+			if (!um.getTiltedMicrograph().fits(p.getX(), p.getY(), size))
 				return false;
 		return true;
 	}
-
 
 }// class TiltPairPicker
