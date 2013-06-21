@@ -28,9 +28,17 @@
 
 <body>
 	<div class="layout" id="wrapper">
-
-		<div class="center" id="maincontent">{% block content %}
-			{%endblock %}</div>
+		<div class="center" id="maincontent">
+			<div id="north" style="overflow: auto; height: 65%">
+				{% block content %}
+				{%endblock %}
+			</div>
+			<div style="overflow: auto; height: 30%;">
+				{% block contentDown %}	
+				{%endblock %}
+			</div>
+		</div>
+		
 		<!-- #middle-->
 
 		<div class="north" id="framecontentTop">

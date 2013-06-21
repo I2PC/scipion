@@ -29,7 +29,8 @@
 			</ul></li> {% endfor %}
 	</ul>
 </div>
-{% endblock %} {% block content %}
+{% endblock %} 
+{% block content %}
 <div id="toolbar" style="display: none">
 	<span><a id="editTool" href=""><img src="{{editTool}}" />Edit</a></span>
 	<span><a id="copyTool" href=""><img src="{{copyTool}}" />
@@ -37,7 +38,7 @@
 			src="{{deleteTool}}" /> Delete</a></span> <span><a id="browseTool"
 		href=""><img src="{{browseTool}}" /> Browse</a></span>
 </div>
-<div style="overflow: auto; height: 65%">
+<div>
 	<table id="data" cellspacing="0">
 		<tr>
 			{% for colName, colWidth in provider.getColumns %}
@@ -56,8 +57,9 @@
 		{% endfor %}
 	</table>
 </div>
-
-<div id="tabContaier" style="overflow: auto; height: 30%;">
+{% endblock %}
+{% block contentDown %}
+<div id="tabContaier">
 	<ul class="listTabs">
 		<li><a id="tabTitle" class="active" href="#tab1">Data</a></li>
 		<li><a id="tabTitle" href="#tab2">Summary</a></li>
