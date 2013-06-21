@@ -213,7 +213,7 @@ class TestXmippCTFModel(unittest.TestCase):
         self.assertTrue(xmippCTFModel.get() == ctfModel.get(), 'conversion did not work')
         
 if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromName('test_data_xmipp.TestXmippCTFModel.testConvertXmippCtf')
-    unittest.TextTestRunner(verbosity=2).run(suite)
+#    suite = unittest.TestLoader().loadTestsFromName('test_data_xmipp.TestXmippCTFModel.testConvertXmippCtf')
+#    unittest.TextTestRunner(verbosity=2).run(suite)
     
-#    unittest.main()
+    unittest.main()
