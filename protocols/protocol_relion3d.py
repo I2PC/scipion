@@ -75,11 +75,15 @@ class ProtRelion3D(XmippProtocol):
 #            os.chdir(self.WorkingDir)
 #            self.restart_MLrefine3D(RestartIter)
         else:
-            self.ImgStar = self.workingDirPath(replaceBasenameExt(self.ImgMd, '.star'))
+            #create extra output directory
+            self.insertStep('createDir', verifyfiles=[self.ExtraDir], path=self.ExtraDir)
+            # convert input metadata to relion model
+            self.ImgStar = self.extraPath(replaceBasenameExt(self.ImgMd, '.star'))
             self.insertStep('convertImagesMd', verifyfiles=[self.ImgStar],
                             inputMd=self.ImgMd, 
                             outputRelion=self.ImgStar                            
                             )
+            # launch relion program
             self.insertRelionRefine()
             
     def insertRelionRefine(self):
@@ -98,7 +102,7 @@ class ProtRelion3D(XmippProtocol):
             args['--continue'] = self.ContinueFrom
         else: # Not continue
             args.update({'--i': self.ImgStar,
-                         '-- particle_diameter': self.MaskDiameterA,
+                         '--particle_diameter': self.MaskDiameterA,
                          '--angpix': self.SamplingRate,
                          '--ref': self.Ref3D,
                          '--oversampling': '1'
