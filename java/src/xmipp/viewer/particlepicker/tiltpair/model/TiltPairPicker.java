@@ -15,6 +15,12 @@ import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.training.model.Mode;
 
+
+/**
+ * Business object for Tilt Pair Picker GUI. Inherits from ParticlePicker 
+ * @author airen
+ *
+ */
 public class TiltPairPicker extends ParticlePicker
 {
 

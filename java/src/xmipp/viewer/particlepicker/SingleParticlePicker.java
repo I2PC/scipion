@@ -24,6 +24,13 @@ import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.TrainingMicrograph;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 
+
+
+/**
+ * Business object for Single Particle Picker GUI. Inherits from ParticlePicker 
+ * @author airen
+ *
+ */
 public class SingleParticlePicker extends ParticlePicker
 {
 

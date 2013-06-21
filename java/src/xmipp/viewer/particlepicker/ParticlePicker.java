@@ -19,6 +19,12 @@ import xmipp.jni.Program;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.training.model.Mode;
 
+
+/**
+ * Business object for ParticlePicker common GUI. SingleParticlePicker and TiltPairPicker inherit from this class.
+ * @author airen
+ *
+ */
 public abstract class ParticlePicker
 {
 
