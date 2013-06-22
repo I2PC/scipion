@@ -43,6 +43,7 @@ STATUS_LAUNCHED = "launched"  # launched to queue system, only usefull for proto
 STATUS_RUNNING = "running"    # currently executing
 STATUS_FAILED = "failed"      # it have been failed
 STATUS_FINISHED = "finished"  # successfully finished
+STATUS_ABORTED = "aborted"
 STATUS_WAITING_APPROVAL = "waiting approval"    # waiting for user interaction
 
 

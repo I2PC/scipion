@@ -198,10 +198,48 @@ class Project(object):
     def getRuns(self, iterate=False):
         """ Return the existing protocol runs in the project. """
         return self.mapper.selectByClass("Protocol", iterate=iterate)
+    
+    def getRunsGraph(self):
+        """ Build a graph taking into account the dependencies between
+        different runs, ie. which outputs serves as inputs of other protocols. 
+        """
+        #import datetime as dt # TIME PROFILE
+        #t = dt.datetime.now()
+        outputDict = {} # Store the output dict
+        runs = self.getRuns()
+        from pyworkflow.utils.graph import Graph
+        g = Graph(rootName='PROJECT')
+        
+        for r in runs:
+            key = r.getName()
+            n = g.addNode(key)
+            n.run = r
+            for key, attr in r.iterOutputAttributes(EMObject):
+                outputDict[attr.getName()] = n # mark this output as produced by r
+                #print "   %s: %s" % (key, attr.getName())
+            
+        for r in runs:
+            node = g.getNode(r.getName())
+            #print '\n=========================\n', r.getName()
+            #print "> Inputs:"
+            for key, attr in r.iterInputAttributes():
+                attrName = attr.get().getName()
+                if attrName in outputDict:
+                    parentNode = outputDict[attrName]
+                    parentNode.addChild(node)
+                    
+        rootNode = g.getRoot()
+        rootNode.run = None
+        for n in g.getNodes():
+            if n.isRoot() and not n is rootNode:
+                rootNode.addChild(n)
+        #print ">>>>>>> Graph building: ", dt.datetime.now() - t
+        return g
         
     def getHosts(self):
         """ Retrieve the hosts associated with the project. (class ExecutionHostConfig) """
         return self.hostsMapper.selectAll()
+    
     
     def launchRemoteProtocol(self, protocol):
         """ Launch protocol in an execution host    

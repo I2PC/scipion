@@ -24,8 +24,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.gui.tree import TreeProvider, BoundTree
-from pyworkflow.protocol.protocol import STATUS_WAITING_APPROVAL, STATUS_RUNNING
 """
 Main project window application
 """
@@ -35,6 +33,9 @@ from os.path import join, exists, basename
 import Tkinter as tk
 import ttk
 import tkFont
+
+from pyworkflow.gui.tree import TreeProvider, BoundTree
+from pyworkflow.protocol.protocol import *
 
 import pyworkflow as pw
 from pyworkflow.object import *
@@ -50,6 +51,9 @@ from pyworkflow.gui.tree import Tree, ObjectTreeProvider, DbTreeProvider
 from pyworkflow.gui.form import FormWindow
 from pyworkflow.gui.dialog import askYesNo
 from pyworkflow.gui.text import TaggedText
+from pyworkflow.gui import Canvas
+from pyworkflow.gui.graph import LevelTree
+
 from config import *
 from pw_browser import BrowserWindow
 
@@ -310,7 +314,7 @@ class ProjectWindow(gui.Window):
         self.runsTree = self.createRunsTree(runsFrame)        
         gui.configureWeigths(runsFrame)
         
-        self.runsGraph = self.createRunsGraph(runsFrame)
+        self.createRunsGraph(runsFrame)
         
         # Create the Selected Run Info
         infoFrame = tk.Frame(v)
@@ -365,6 +369,7 @@ class ProjectWindow(gui.Window):
     def refreshRuns(self, e=None):
         """ Refresh the status of diplayed runs. """
         self.runsTree.update()
+        self.updateRunsGraph()
         
     def createActionToolbar(self):
         """ Prepare the buttons that will be available for protocol actions. """
@@ -428,25 +433,58 @@ class ProjectWindow(gui.Window):
         self.provider = RunsTreeProvider(self.project.mapper, self._runActionClicked)
         tree = BoundTree(parent, self.provider)
         tree.grid(row=0, column=0, sticky='news')
-        tree.bind('<Double-1>', lambda e: self._runActionClicked(ACTION_EDIT))
+        tree.bind('<Double-1>', self._runItemDoubleClick)
         #tree.bind("<Button-3>", self._onRightClick)
         tree.bind('<<TreeviewSelect>>', self._runItemClick)
         return tree
     
     def createRunsGraph(self, parent):
-        from pyworkflow.gui import Canvas
-        canvas = Canvas(parent, width=400, height=400)
-        #canvas.grid(row=0, column=0, sticky='nsew')
+        self.runsGraph = Canvas(parent, width=400, height=400)
+        self.runsGraph.onClickCallback = self._runItemClick
+        self.runsGraph.onDoubleClickCallback = self._runItemDoubleClick
+        #self.runsGraph.onRightClickCallback = self.rightClickGraph
+        #self.runsGraph.grid(row=0, column=0, sticky='nsew')
         parent.grid_columnconfigure(0, weight=1)
         parent.grid_rowconfigure(0, weight=1)
         
-        tb1 = canvas.createTextbox("Project", 100, 100, "blue")
-        tb2 = canvas.createTextbox("aqui estoy yo\ny tu tb", 200, 200)
-        tb3 = canvas.createTextbox("otro mas\n", 100, 200, "red")
-        e1 = canvas.createEdge(tb1, tb2)
-        e2 = canvas.createEdge(tb1, tb3)
+#        tb1 = canvas.createTextbox("Project", 100, 100, "blue")
+#        tb2 = canvas.createTextbox("aqui estoy yo\ny tu tb", 200, 200)
+#        tb3 = canvas.createTextbox("otro mas\n", 100, 200, "red")
+#        e1 = canvas.createEdge(tb1, tb2)
+#        e2 = canvas.createEdge(tb1, tb3)
+        self.updateRunsGraph()
+
+    def updateRunsGraph(self):      
+        g = self.project.getRunsGraph()
+        lt = LevelTree(g)
+        self.runsGraph.clear()
+        lt.paint(self.runsGraph, self.createRunItem)
         
-        return canvas
+    def createRunItem(self, node, y):
+        """ If not nodeBuildFunc is specified, this one will be used
+        by default. 
+        """
+        self.colors = {
+                       STATUS_SAVED: '#D9F1FA', 
+                       STATUS_LAUNCHED: '#D9F1FA', 
+                       STATUS_RUNNING: '#FCCE62', 
+                       STATUS_FINISHED: '#D2F5CB', 
+                       STATUS_FAILED: '#F5CCCB', 
+                       STATUS_SAVED: '#F3F5CB', 
+                       STATUS_SAVED: '#124EB0'
+                       }
+        
+        nodeText = node.getName()
+        textColor = 'black'
+        color = 'light blue'
+            
+        if node.run:
+            status = node.run.status.get()
+            nodeText += '\n' + status
+            color = self.colors[status]
+        
+        return self.runsGraph.createTextbox(nodeText, 100, y, bgColor=color, textColor=textColor)
+        
     
     def switchRunsView(self):
         self.showGraph = not self.showGraph
@@ -470,12 +508,16 @@ class ProjectWindow(gui.Window):
         self._openProtocolForm(prot)
         
     def _runItemClick(self, e=None):
+        # Get last selected item for tree or graph
         prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))
         prot.mapper = self.project.mapper
         self.selectedProtocol = prot
         self.updateActionToolbar()
         self._fillInfoTree()
         self._fillSummary()
+        
+    def _runItemDoubleClick(self, e=None):
+        self._runActionClicked(ACTION_EDIT)
         
     def _openProtocolForm(self, prot):
         """Open the Protocol GUI Form given a Protocol instance"""
