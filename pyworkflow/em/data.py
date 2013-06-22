@@ -61,10 +61,42 @@ class Microscope(EMObject):
         self.sphericalAberration.set(other.sphericalAberration.get())
         
 class ImageLocation():
-    """ Store image index and filename. """
-    def __init__(self, index, filename):
-        self.index = index
-        self.filename = filename
+    """ This class represents the unique location of an image.
+    If the image is an stack, the location composed by index and filename.
+    Otherwise, only the filename of the image."""
+    
+    def __init__(self, index=0, filename=None, locStr=None, loc=None):
+        """ Two ways of build the location:
+        1) From index and filename
+        2) Parsing from the string representation of the location.
+        """
+        if not filename is None:
+            self._index = index
+            self._filename = filename
+        elif not locStr is None:
+            self.parse(locStr)
+        elif not loc is None:
+            self._index = loc.getIndex()
+            self._filename = loc.getFileName()
+        else:
+            raise Exception("ImageLocation: all parameter to __init__ are None")
+        
+    def getIndex(self):
+        return self._index
+    
+    def getFileName(self):
+        return self._filename
+    
+    def __str__(self):
+        """ This should be implemented in subclasses """
+        pass
+    
+    def parse(self, locStr):
+        """ This method should parse index and filename
+        from the string representation of the ImageLocation.
+        It should be the opposite of __str__
+        """
+        pass
 
 
 class Image(EMObject):
@@ -425,7 +457,7 @@ class CTFModel(EMObject):
         self.psdFile = String()
         
     def copyInfo(self, other):
-        self.copyAttributes(other, 'ampContrast', 'defocusU', 'defocusV',
+        self.copyAttributes(other, 'defocusU', 'defocusV',
                             'defocusAngle', 'samplingRate', 'voltage', 
                             'sphericalAberration', 'psdFile')
 

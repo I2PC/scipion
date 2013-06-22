@@ -31,11 +31,22 @@ for specific Xmipp3 EM data objects
 from pyworkflow.em import *
 from xmipp3 import XmippMdRow, XmippSet
 
-from pyworkflow.utils.path import replaceBaseExt, exists
+from pyworkflow.utils.path import replaceBaseExt, exists, dirname, join
 import xmipp
     
       
+class XmippImageLocation(ImageLocation):
     
+    def __str__(self):
+        if self._index:
+            return "%d@%s" % (self._index, self._filename)
+        else:
+            return self._filename
+    
+    def parse(self, locStr):
+        self._index, self._filename = xmipp.FileName(locStr).decompose()        
+
+
 class XmippImage(XmippMdRow, Image):
     """Xmipp implementation for Image"""
     _label = xmipp.MDL_IMAGE
@@ -45,15 +56,22 @@ class XmippImage(XmippMdRow, Image):
         XmippMdRow.__init__(self)
         Image.__init__(self, filename, **args)
     
-    def getId(self):
-        return self.getValue(self._label)
+    def getLabelValue(self):
+        return 
     
+    def getLocation(self):
+        return XmippImageLocation(locStr=self.getValue(self._label))
+    
+    def setLocation(self, loc):
+        locStr = str(XmippImageLocation(loc=loc))
+        self.setValue(self._label, locStr)
+        
     def setFileName(self, filename):
-        self.setValue(self._label, filename)
+        if filename is not None:
+            self.setLocation(XmippImageLocation(filename=filename))
         
     def getFileName(self):
-        index, fn = xmipp.FileName(self.getId()).decompose()
-        return fn
+        return self.getLocation().getFileName()
     
     def hasCTF(self):
         return self.hasLabel(self._labelCTF)
@@ -67,13 +85,28 @@ class XmippImage(XmippMdRow, Image):
         raise Exception("Not implemented setCTF for XmippImage")
     
     @staticmethod
-    def convert(img):
-        """ Create a XmippImage from a general Image instance. """
-        if isinstance(img, XmippImage):
+    def _convert(itemClass, img, ctfFn):
+        """Convert from Micrograph to XmippMicrograph"""
+        if isinstance(img, itemClass):
             return img
-        imgXmipp = XmippImage(img.getFileName())
+        imgXmipp = itemClass(img.getFileName())
+        if img.hasCTF():
+            ctf = img.getCTF()
+            ctfXmipp = XmippCTFModel.convert(ctf, ctfFn)
+            imgXmipp.setValue(xmipp.MDL_CTF_DEFOCUSU, ctf.defocusU.get())
+            imgXmipp.setValue(xmipp.MDL_CTF_DEFOCUSV, ctf.defocusV.get())
+
+            imgXmipp.setValue(xmipp.MDL_IMAGE1, ctf.getPsdFile())
+            imgXmipp.setValue(xmipp.MDL_CTF_MODEL, ctfFn)
         # TODO: copyInfo??
+        # from img to imgXmipp??  
         return imgXmipp
+    
+    @staticmethod
+    def convert(img, ctfFn):
+        return XmippImage._convert(XmippImage, img, ctfFn)
+        
+        
         
         
 class XmippSetOfImages(SetOfImages):
@@ -110,8 +143,16 @@ class XmippSetOfImages(SetOfImages):
         if self.hasTiltPairs():
             self._setPairs.write(self._getTiltedBlock(), xmipp.MD_APPEND)   
          
-    def append(self, xmippImg):
-        """Add a new image to the set"""
+    def append(self, img):
+        """Add a new micrograph to the set"""          
+        if not isinstance(img, XmippImage):
+            path = dirname(self.getFileName())
+            name = replaceBaseExt(img.getFileName(), 'ctfparam')
+            ctfFn = join(path, 'extra', name) # TODO: check later if we want the 'extra' logic here
+            xmippImg = self._set.getItemClass().convert(img, ctfFn)
+        else:
+            xmippImg = img
+        
         self._set.append(xmippImg)
         
     def appendFromMd(self, md):
@@ -188,21 +229,8 @@ class XmippMicrograph(XmippImage, Micrograph):
         Micrograph.__init__(self, filename, **args)
             
     @staticmethod
-    def convert(mic):
-        """Convert from Micrograph to XmippMicrograph"""
-        if isinstance(mic, XmippMicrograph):
-            return mic
-        micXmipp = XmippMicrograph(mic.getFileName())
-        if mic.hasCTF():
-            ctf = mic.getCTF()
-            micXmipp.setValue(xmipp.MDL_CTF_DEFOCUSU, ctf.defocusU.get())
-            micXmipp.setValue(xmipp.MDL_CTF_DEFOCUSV, ctf.defocusV.get())
-            #print "psd: ", mic.ctfModel.getPsdFile()
-            #print type(mic.ctfModel.getPsdFile())
-            micXmipp.setValue(xmipp.MDL_IMAGE1, ctf.getPsdFile())
-        # TODO: copyInfo??
-        # from mic to micXmipp??  
-        return micXmipp
+    def convert(img, ctfFn):
+        return XmippImage._convert(XmippMicrograph, img, ctfFn)
     
     
 class XmippSetOfMicrographs(XmippSetOfImages, SetOfMicrographs):
@@ -215,7 +243,9 @@ class XmippSetOfMicrographs(XmippSetOfImages, SetOfMicrographs):
         self._set = XmippSet(XmippMicrograph)
 #        if filename is not None:
 #            self.__loadFiles()
-                
+
+
+                       
     @staticmethod
     def convert(setOfMics, filename):
         if isinstance(setOfMics, XmippSetOfMicrographs):
@@ -294,8 +324,7 @@ class XmippCTFModel(CTFModel, XmippMdRow):
                  "defocusU":xmipp.MDL_CTF_DEFOCUSU,
                  "defocusV":xmipp.MDL_CTF_DEFOCUSV,
                  "defocusAngle":xmipp.MDL_CTF_DEFOCUS_ANGLE,
-                 "sphericalAberration":xmipp.MDL_CTF_CS,
-                 "ampContrast":xmipp.MDL_CTF_Q0
+                 "sphericalAberration":xmipp.MDL_CTF_CS
                  }
 
     def __init__(self, filename = None, **args):

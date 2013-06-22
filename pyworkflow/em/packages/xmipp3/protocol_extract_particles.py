@@ -263,6 +263,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         if so return the model 
         """
         # Find the associated micrograph from the set of coordinates
+        #TODO: This needs to be changed once the object ids on sets are implemented ok
         mics = self.inputCoords.getMicrographs()
         for mic in mics:
             if removeBaseExt(mic.getFileName()) == removeBaseExt(micFn):

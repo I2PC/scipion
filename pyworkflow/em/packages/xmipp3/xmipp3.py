@@ -169,6 +169,10 @@ class XmippSet():
         
     def isEmpty(self):
         return self._md.isEmpty()
+    
+    def getItemClass(self):
+        """ Return the Class of the items in the Set. """
+        return self._itemClass
         
 #    @staticmethod
 #    def convert(inputSet, xmippSetClass, filename):
