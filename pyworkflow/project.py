@@ -212,7 +212,7 @@ class Project(object):
         
         for r in runs:
             key = r.getName()
-            n = g.addNode(key)
+            n = g.createNode(key)
             n.run = r
             for key, attr in r.iterOutputAttributes(EMObject):
                 outputDict[attr.getName()] = n # mark this output as produced by r

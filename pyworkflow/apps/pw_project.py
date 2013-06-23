@@ -509,7 +509,10 @@ class ProjectWindow(gui.Window):
         
     def _runItemClick(self, e=None):
         # Get last selected item for tree or graph
-        prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))
+        if self.showGraph:
+            prot = e.node.run
+        else:
+            prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))
         prot.mapper = self.project.mapper
         self.selectedProtocol = prot
         self.updateActionToolbar()

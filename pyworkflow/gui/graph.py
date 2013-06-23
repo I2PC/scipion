@@ -122,9 +122,11 @@ class LevelTree(object):
         node.width, node.height = item.getDimensions()
         node.half = node.width / 2
         node.hLimits = [[-node.half, node.half]]
-        node.item = item
         node.y = y
         node.offset = 0
+        # Create link from both sides to reach
+        node.item = item 
+        item.node = node
         
         return item
     
@@ -192,4 +194,25 @@ class LevelTree(object):
         for c in node.getChilds():
             self._createEdges(c, nx)
             self.canvas.createEdge(node.item, c.item)
-                
+
+
+if __name__ == '__main__':
+    from canvas import Canvas
+    from pyworkflow.utils.graph import Graph
+    
+    root = tk.Tk()
+    canvas = Canvas(root, width=400, height=400)
+    canvas.grid(row=0, column=0, sticky='nsew')
+    root.grid_columnconfigure(0, weight=1)
+    root.grid_rowconfigure(0, weight=1)
+    
+    g = Graph(rootName='A')
+    a = g.getRoot()
+    b = g.createNode('B')
+    c = g.createNode('C')
+    a.addChild(b, c)
+    
+    lt = LevelTree(g)
+    lt.paint(canvas)
+    
+    root.mainloop()             
