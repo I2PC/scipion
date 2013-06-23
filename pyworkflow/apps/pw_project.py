@@ -513,11 +513,15 @@ class ProjectWindow(gui.Window):
             prot = e.node.run
         else:
             prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))
-        prot.mapper = self.project.mapper
-        self.selectedProtocol = prot
-        self.updateActionToolbar()
-        self._fillInfoTree()
-        self._fillSummary()
+        
+        if prot is not None:
+            prot.mapper = self.project.mapper
+            self.selectedProtocol = prot
+            self.updateActionToolbar()
+            self._fillInfoTree()
+            self._fillSummary()
+        else:
+            pass #TODO: implement what to do
         
     def _runItemDoubleClick(self, e=None):
         self._runActionClicked(ACTION_EDIT)

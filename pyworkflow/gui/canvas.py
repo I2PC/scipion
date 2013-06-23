@@ -70,7 +70,7 @@ class Canvas(tk.Frame):
         yc = self.canvas.canvasy(event.y)
         return (xc, yc)
     
-    def onClick(self, event):
+    def _handleMouseEvent(self, event, callback):
         xc, yc = self.getCoordinates(event)
         items = self.canvas.find_overlapping(xc-1, yc-1,  xc+1, yc+1)
         if self.lastItem:
@@ -81,40 +81,32 @@ class Canvas(tk.Frame):
             if i in self.items:
                 self.lastItem = self.items[i]
                 self.lastItem.setSelected(True)
-                if self.onClickCallback:
-                    self.onClickCallback(self.lastItem)
+                if callback:
+                    callback(self.lastItem)
                 self.lastPos = (xc, yc)
                 break
+        
+    def onClick(self, event):
+        self._handleMouseEvent(event, self.onClickCallback)
             
     def onRightClick(self, event):
-        xc, yc = self.getCoordinates(event)
-        items = self.canvas.find_overlapping(xc - 1, yc - 1,  xc + 1, yc + 1)
-        if self.lastItem:
-            self.lastItem.setSelected(False)
-            self.lastItem = None
-        self.lastPos = (0, 0)
-        for i in items:
-            if i in self.items:
-                self.lastItem = self.items[i]
-                self.lastItem.setSelected(True)
-                if self.onRightClickCallback:
-                    event.text = self.lastItem.text
-                    self.onRightClickCallback(event)
-                self.lastPos = (xc, yc)
-                break
+        # RightClick callback will not work not, as it need
+        # the event information to know the coordinates
+        self._handleMouseEvent(event, self.onRightClickCallback)
     
     def onDoubleClick(self, event):
-        xc, yc = self.getCoordinates(event)
-        items = self.canvas.find_overlapping(xc - 1, yc - 1,  xc + 1, yc + 1)
-        self.lastItem = None
-        self.lastPos = (0, 0)
-        for i in items:
-            if i in self.items:
-                self.lastItem = self.items[i]
-                if self.onDoubleClickCallback:
-                    self.onDoubleClickCallback(self.lastItem)
-                self.lastPos = (xc, yc)
-                break
+        self._handleMouseEvent(event, self.onDoubleClickCallback)
+#        xc, yc = self.getCoordinates(event)
+#        items = self.canvas.find_overlapping(xc - 1, yc - 1,  xc + 1, yc + 1)
+#        self.lastItem = None
+#        self.lastPos = (0, 0)
+#        for i in items:
+#            if i in self.items:
+#                self.lastItem = self.items[i]
+#                if self.onDoubleClickCallback:
+#                    self.onDoubleClickCallback(self.lastItem)
+#                self.lastPos = (xc, yc)
+#                break
 
     def onDrag(self, event):
         if self.lastItem:
