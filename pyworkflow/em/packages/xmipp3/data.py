@@ -269,7 +269,7 @@ class XmippSetOfMicrographs(XmippSetOfImages, SetOfMicrographs):
 
     @staticmethod
     def convert(setOfImgs, filename):
-        XmippSetOfMicrographs._convert(XmippSetOfMicrographs, setOfImgs, filename)
+        return XmippSetOfMicrographs._convert(XmippSetOfMicrographs, setOfImgs, filename)
 #                       
 #    @staticmethod
 #    def convert(setOfMics, filename):
