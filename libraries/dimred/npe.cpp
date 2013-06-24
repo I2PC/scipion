@@ -51,14 +51,12 @@ void NPE::reduceDimensionality()
 	Matrix1D<double> wi;
 
 	PseudoInverseHelper h;
-
 	h.b.resizeNoCopy(k);
 	h.b.initConstant(1);
 
 	double tol=1e-5;
 	for (int ip=0; ip<n; ++ip)
 	{
-
 		extractNearestNeighbours(*X, idx, ip, Xi);
 
 		// Move the origin to observation ip
@@ -80,7 +78,7 @@ void NPE::reduceDimensionality()
 	}
 
 	//Find the sparse cost matrix
-	M.initIdentity(1000);
+	M.initIdentity(n);
 	Matrix1D<int> neighboursi;
 
 	for(int i=0;i<n; ++i)
@@ -119,7 +117,6 @@ void NPE::reduceDimensionality()
 	generalizedEigs(WP,DP,Deigval,Peigvec);
 
 	//Sort eigenvalues
-
 	Matrix1D<int> idx2;
 	Deigval.indexSort(idx2);
 
@@ -129,8 +126,6 @@ void NPE::reduceDimensionality()
 		for(size_t i=0;i<MAT_YSIZE(Peigvec);++i)
 			MAT_ELEM(eigvector, i, j)=MAT_ELEM(Peigvec,i,idxj);
 	}
-
-	eigvector.operator *=(-1);
 
 	//Compute results
 	Y=*X*eigvector;
