@@ -130,7 +130,6 @@ function generateDataForTable(){
 		/* dataRowForTable.push("DT_RowId: \"{{forloop.counter0}}\"") */
 		dataForTable.push(dataRowForTable)
 	{% endfor %}
-	console.log(dataForTable)
 	return dataForTable;
 }
 
@@ -220,14 +219,8 @@ function fnGetSelected(oTableLocal)
 {% block content_view %}
 	
 <div id="table_container">
-<!-- 	<form id="showjTableSave" action="/showjTableSubmit/" method="POST">
-		<button type="submit">Submit</button>
- -->		
- 		
-		
 		<table cellspacing="0" id="data_table" width="100%">
 		</table>
-<!-- 	</form> -->
 </div>
 			
 {% endblock %}
