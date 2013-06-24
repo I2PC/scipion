@@ -24,12 +24,11 @@ import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.TrainingMicrograph;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 
-
-
 /**
- * Business object for Single Particle Picker GUI. Inherits from ParticlePicker 
+ * Business object for Single Particle Picker GUI. Inherits from ParticlePicker
+ * 
  * @author airen
- *
+ * 
  */
 public class SingleParticlePicker extends ParticlePicker
 {
@@ -45,8 +44,7 @@ public class SingleParticlePicker extends ParticlePicker
 	private boolean fastmode = true;
 	private boolean incore = false;
 
-	public static final int dtemplatesnum = 1;
-	private Integer templatesNumber;
+	public static int dtemplatesnum = 1;
 	private ImageGeneric templates;
 	private String templatesfile;
 	private int templateindex;
@@ -66,14 +64,11 @@ public class SingleParticlePicker extends ParticlePicker
 		{
 			templatesfile = getOutputPath("templates.stk");
 			if (!new File(templatesfile).exists())
-			{
-				templatesNumber = dtemplatesnum;
-				initTemplates();
-			}
+
+				initTemplates(dtemplatesnum);
 			else
 			{
 				this.templates = new ImageGeneric(templatesfile);
-				templatesNumber = ((int) templates.getNDim());
 				templates.read(templatesfile, false);
 			}
 			for (TrainingMicrograph m : micrographs)
@@ -107,7 +102,7 @@ public class SingleParticlePicker extends ParticlePicker
 
 	public void saveData()
 	{
-		
+
 		super.saveData();
 		for (Micrograph m : micrographs)
 			saveData(m);
@@ -131,12 +126,16 @@ public class SingleParticlePicker extends ParticlePicker
 
 	public synchronized void initTemplates()
 	{
-		if (templatesNumber == 0)
+		initTemplates(getTemplatesNumber());
+	}
+	public synchronized void initTemplates(int num)
+	{
+		if (num == 0)
 			return;
 		try
 		{
 			this.templates = new ImageGeneric(ImageGeneric.Float);
-			templates.resize(getSize(), getSize(), 1, templatesNumber);
+			templates.resize(getSize(), getSize(), 1, num);
 			templates.write(templatesfile);
 			templateindex = 0;
 		}
@@ -146,28 +145,36 @@ public class SingleParticlePicker extends ParticlePicker
 		}
 	}
 
-	public int getTemplatesNumber()
+	public synchronized int getTemplatesNumber()
 	{
-		if (templatesNumber == null)
-			templatesNumber = dtemplatesnum;
-		return templatesNumber;
+		if (templates == null)
+			return dtemplatesnum;
+		try
+		{
+			return (int) templates.getNDim();
+		}
+		catch (Exception e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return dtemplatesnum;
 	}
 
-	public void setTemplatesNumber(int num)
+	public synchronized void setTemplatesNumber(int num)
 	{
 		if (num <= 0)
 			throw new IllegalArgumentException(
 					XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Must have at least one template"));
 
-		this.templatesNumber = num;
-		initUpdateTemplates();
+		initUpdateTemplates(num);
 	}
 
 	public void setSize(int size)
 	{
 		super.setSize(size);
 		classifier.setSize(size);
-		initUpdateTemplates();
+		initUpdateTemplates(getTemplatesNumber());
 	}
 
 	public synchronized ImageGeneric getTemplates()
@@ -375,14 +382,12 @@ public class SingleParticlePicker extends ParticlePicker
 			{
 				if (hasautopercent)
 					autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
-				templatesNumber = md.getValueInt(MDLabel.MDL_PICKING_TEMPLATES, id);
-				if (templatesNumber == null || templatesNumber == 0)
-					templatesNumber = 1;//for compatibility with previous projects
+				dtemplatesnum = md.getValueInt(MDLabel.MDL_PICKING_TEMPLATES, id);
+				if (dtemplatesnum == 0)
+					dtemplatesnum = 1;//for compatibility with previous projects
 				configmode = Mode.valueOf(md.getValueString(MDLabel.MDL_PICKING_STATE, id));
 				if (mode == Mode.Supervised && configmode == Mode.Manual)
 					throw new IllegalArgumentException("Cannot switch to Supervised mode from the command line");
-				
-					
 
 			}
 			md.destroy();
@@ -444,10 +449,10 @@ public class SingleParticlePicker extends ParticlePicker
 					m.addManualParticle(p, this, false, true);
 				}
 			}
-			
+
 			m.getAutomaticParticles().clear();
 			new File(getOutputPath(m.getAutoPosFile())).delete();
-			if(m.hasManualParticles())
+			if (m.hasManualParticles())
 				m.setState(MicrographState.Manual);
 			else
 				m.setState(MicrographState.Available);
@@ -746,21 +751,26 @@ public class SingleParticlePicker extends ParticlePicker
 
 		}
 	}
-
+	
 	public void initUpdateTemplates()
 	{
-		TasksManager.getInstance().addTask(new UpdateTemplatesTask(this));
+		initUpdateTemplates(getTemplatesNumber());
+	}
+
+	public void initUpdateTemplates(int num)
+	{
+		TasksManager.getInstance().addTask(new UpdateTemplatesTask(this, num));
 		saveConfig();
 	}
 
-	public synchronized void updateTemplates()
+	public synchronized void updateTemplates(int num)
 	{
 		try
 		{
 			if (getMode() != Mode.Manual)
 				return;
 
-			initTemplates();
+			initTemplates(num);
 			ImageGeneric igp;
 			List<TrainingParticle> particles;
 			TrainingParticle particle;
@@ -830,7 +840,7 @@ public class SingleParticlePicker extends ParticlePicker
 
 	public synchronized void centerParticle(TrainingParticle p)
 	{
-		if (getManualParticlesNumber() <= templatesNumber)
+		if (getManualParticlesNumber() <= getTemplatesNumber())
 			return;//templates not ready
 		Particle shift = null;
 		try
@@ -838,7 +848,7 @@ public class SingleParticlePicker extends ParticlePicker
 			ImageGeneric igp = p.getImageGeneric();
 			shift = templates.bestShift(igp);
 			double distance = Math.sqrt(Math.pow(shift.getX(), 2) + Math.pow(shift.getY(), 2)) / getSize();
-//			System.out.printf("normalized distance:%.2f\n", distance);
+			System.out.printf("normalized distance:%.2f\n", distance);
 			if (distance < 0.25)
 			{
 				p.setX(p.getX() + shift.getX());

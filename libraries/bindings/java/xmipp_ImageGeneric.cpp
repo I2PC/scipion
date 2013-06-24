@@ -888,18 +888,18 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_ImageGeneric_alignImage
 		int maxIndex=0;
 
 
-		for (size_t i=0;i<dim.ndim;++i)
+		for (size_t i = 0; i < dim.ndim; ++i)
 		{
 			T.aliasImageInStack(*Tp,i);
-			tmpI=*I;
+			tmpI = *I;
 			T.setXmippOrigin();
 			tmpI.setXmippOrigin();
 			corr = alignImages(T, tmpI, transformM, true, aux, aux2, aux3);
-			if (corr>max)
+			if (corr > max)
 			{
-				max=corr;
-				maxIndex=i;
-				alignedI=tmpI;
+				max = corr;
+				maxIndex = i;
+				alignedI = tmpI;
 			}
 		}
 
@@ -910,8 +910,6 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_ImageGeneric_alignImage
 		result[1] = rot;
 		result[2] = tilt;
 		result[3] = psi;
-
-
 
 
 	}

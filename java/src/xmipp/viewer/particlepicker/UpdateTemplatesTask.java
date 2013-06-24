@@ -9,10 +9,12 @@ public class UpdateTemplatesTask implements Task
 
 	private static TemplatesJDialog dialog;
 	private SingleParticlePicker picker;
+	private int num;
 
-	public UpdateTemplatesTask(SingleParticlePicker picker)
+	public UpdateTemplatesTask(SingleParticlePicker picker, int num)
 	{
 		this.picker = picker;
+		this.num = num;
 	}
 	
 	public static void setTemplatesDialog(TemplatesJDialog d)
@@ -25,7 +27,7 @@ public class UpdateTemplatesTask implements Task
 	{
 		try
 		{
-			picker.updateTemplates();
+			picker.updateTemplates(num);
 			if(dialog != null && dialog.isVisible())
 				dialog.loadTemplates(true);
 		}

@@ -52,8 +52,6 @@ public class TemplatesJDialog extends JDialog {
 				return;
 			}
 
-
-			
 			ImagePlus template;
 
 			for (int i = 0; i < frame.getParticlePicker().getTemplatesNumber(); i ++) {
