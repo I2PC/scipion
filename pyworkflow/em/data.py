@@ -106,7 +106,7 @@ class Image(EMObject):
         self.setFileName(filename)
         self.samplingRate = Float()
         self._ctfModel = None
-        self._id = Integer()
+        self._id = Integer(0) # By default value 0 means no Id
         
     def getId(self):
         return self._id.get()
@@ -213,7 +213,11 @@ class SetOfImages(EMObject):
     def __getitem__(self, imgId):
         """ Get the image with the given id. """
         self.loadIfEmpty()
-        return self._mapper.selectBy(_id=imgId)
+        # FIXME: This should be changed and query to the mapper
+        for mic in self._mapper.selectAll(iterate=True):
+            if mic.getId() == imgId:
+                return mic
+        return None
 
     def __iter__(self):
         """ Iterate over the set of images. """
