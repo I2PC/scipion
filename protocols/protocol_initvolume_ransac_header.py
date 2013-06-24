@@ -64,7 +64,7 @@ InitialVolume = ''
 #{expert} Max frequency of the initial volume
 """ Max frequency of the initial volume in Angstroms
 """
-MaxFreq = 40
+MaxFreq = 10
 
 # Sampling Rate
 """ Sampling rate (A/px)
