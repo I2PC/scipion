@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:    Carlos Oscar            coss@cnb.csic.es (2013)
- * 			   Alejandro Góme Rodríguez
+ * 			   Alejandro Gomez Rodriguez
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
