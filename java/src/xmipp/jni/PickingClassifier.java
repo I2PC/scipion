@@ -23,7 +23,7 @@ public class PickingClassifier
 
 	public synchronized native void autopick(String micrograph, MetaData outputmd, int percent);
 	
-	public synchronized native void correct(MetaData manualmd, MetaData automaticmd);
+	public synchronized native void correct(MetaData manualmd, MetaData automaticmd, double threshold);
 
 	public synchronized native void train(MetaData micrographs, int x, int y, int width, int height);
 	

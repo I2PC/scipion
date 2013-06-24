@@ -22,6 +22,19 @@ public class TrainingMicrograph extends Micrograph
 	private List<AutomaticParticle> autoparticles;
 	private MicrographState state;
 	private int autopickpercent = SingleParticlePicker.defAutoPickPercent;
+	private double threshold = 0.0;
+
+	public double getThreshold() {
+		return threshold;
+	}
+
+
+
+	public void setThreshold(double threshold) {
+		this.threshold = threshold;
+	}
+
+
 
 	public TrainingMicrograph(String file, String psd, String ctf)
 	{
@@ -219,10 +232,7 @@ public class TrainingMicrograph extends Micrograph
 		return count;
 	}
 
-	public int getAutomaticParticlesCount(double threshold)
-	{
-		return autoparticles.size() - getAutomaticParticlesDeleted(threshold);
-	}
+	
 
 	public int getAutomaticParticlesDeleted(double threshold)
 	{
@@ -233,12 +243,7 @@ public class TrainingMicrograph extends Micrograph
 		return count;
 	}
 
-	public void deleteBelowThreshold(double threshold)
-	{
-		for (AutomaticParticle p : autoparticles)
-			if (p.getCost() < threshold)
-				p.setDeleted(true);
-	}
+	
 
 	public List<TrainingParticle> getParticles()
 	{
@@ -320,6 +325,12 @@ public class TrainingMicrograph extends Micrograph
 		int height = Math.min((int)(y2 - y + radius), this.height - 1);
 		return new Rectangle(x, y, width, height);
 		
+	}
+	
+	public void deleteBelowThreshold() {
+		// TODO Auto-generated method stub
+		for (AutomaticParticle p : autoparticles) 
+			p.setDeleted(p.getCost() < getThreshold());
 	}
 
 }

@@ -52,7 +52,7 @@ public class MicrographsTableModel extends AbstractTableModel {
 			if(m.getStep() == Mode.Available)
 				return "0";
 			if(m.getStep() == Mode.Supervised)
-				return String.format("%s + %s", m.getManualParticles().size(), m.getAutomaticParticlesCount(frame.getThreshold()));
+				return String.format("%s + %s", m.getManualParticles().size(), m.getAutomaticParticlesNumber(frame.getThreshold()));
 		}
 		if(columnIndex == 3)
 			return m.getState();

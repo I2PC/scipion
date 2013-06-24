@@ -71,7 +71,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_autopick
 
 
 JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_correct
-(JNIEnv *env, jobject jobj, jobject jmanualmd, jobject jautomaticmd)
+(JNIEnv *env, jobject jobj, jobject jmanualmd, jobject jautomaticmd, jdouble threshold)
 {
     XMIPP_JAVA_TRY
     {
