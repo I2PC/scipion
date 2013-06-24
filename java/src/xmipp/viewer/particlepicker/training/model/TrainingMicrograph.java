@@ -330,7 +330,8 @@ public class TrainingMicrograph extends Micrograph
 	public void deleteBelowThreshold() {
 		// TODO Auto-generated method stub
 		for (AutomaticParticle p : autoparticles) 
-			p.setDeleted(p.getCost() < getThreshold());
+			if(!p.isDeleted())
+				p.setDeleted(p.getCost() < getThreshold());
 	}
 
 }
