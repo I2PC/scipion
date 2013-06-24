@@ -1364,7 +1364,7 @@ class XmippBrowser():
                             imgFillMenu, imgOnClick, imgOnDoubleClick)
         addFm('vol', 'vol.gif', ['.vol', '.mrc', '.map', '.em', '.pif'], 
                             volFillMenu, imgOnClick, volOnDoubleClick)
-        addFm('text', 'fileopen.gif', ['.txt', '.c', '.h', '.cpp', '.java', '.sh'],
+        addFm('text', 'fileopen.gif', ['.txt', '.c', '.h', '.cpp', '.java', '.sh', '.star'],
               textFillMenu, defaultOnClick, textOnDoubleClick)
         addFm('pyfile', 'python_file.gif', ['.py'],textFillMenu, defaultOnClick, textOnDoubleClick)
         addFm('out', 'out.gif', ['.out'],textFillMenu, defaultOnClick, textOnDoubleClick)
