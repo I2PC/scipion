@@ -352,7 +352,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 						ppicker.trainAndAutopick(SingleParticlePickerJFrame.this, autopickout);
 
 					}
-					else
+					else if(!autopickchb.isSelected())
 					{
 						boolean ismanual = XmippDialog
 								.showQuestion(SingleParticlePickerJFrame.this, "After this operation automatic particles will be converted to manual and classfier training lost. Are you sure you want to continue? ");
