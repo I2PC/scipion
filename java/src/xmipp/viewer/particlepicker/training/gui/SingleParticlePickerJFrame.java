@@ -1,5 +1,7 @@
 package xmipp.viewer.particlepicker.training.gui;
 
+import ij.io.SaveDialog;
+
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -357,6 +359,9 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 						if (ismanual)
 						{
 							ppicker.setMode(Mode.Manual);
+							resetbt.setEnabled(true);
+							ppicker.saveData();
+							setChanged(false);
 							updateMicrographsModel();
 							if (autopickchb.isSelected())
 								autopickchb.setSelected(false);

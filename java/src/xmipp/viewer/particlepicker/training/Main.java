@@ -42,17 +42,22 @@ class Main
 					String outputdir = myargs[1];
 					//mode is the third argument 
 					Mode mode = Mode.getMode(myargs[2]);
-					
-					if (mode == Mode.Manual || mode == Mode.ReadOnly)
+
+					if (mode == Mode.ReadOnly)
 						ppicker = new SingleParticlePicker(selfile, outputdir, mode);
 
-					else if (mode == Mode.Supervised)
+					else if (mode == Mode.Manual)
 					{
-						int index = 3;
-						int threads = Integer.parseInt(myargs[index]);
-						boolean fastmode = Boolean.parseBoolean(myargs[index + 1]);
-						boolean incore = Boolean.parseBoolean(myargs[index + 2]);
-						ppicker = new SingleParticlePicker(selfile, outputdir, threads, fastmode, incore);
+						if (myargs.length > 3)
+						{
+							int index = 3;
+							int threads = Integer.parseInt(myargs[index]);
+							boolean fastmode = Boolean.parseBoolean(myargs[index + 1]);
+							boolean incore = Boolean.parseBoolean(myargs[index + 2]);
+							ppicker = new SingleParticlePicker(selfile, outputdir, threads, fastmode, incore);
+						}
+						else
+							ppicker = new SingleParticlePicker(selfile, outputdir, Mode.Manual);
 					}
 
 					else if (mode == Mode.Review)
@@ -60,7 +65,7 @@ class Main
 						String reviewfile = myargs[3];
 						ppicker = new SingleParticlePicker(selfile, outputdir, reviewfile);
 					}
-			
+
 					tp = new SingleParticlePickerJFrame(ppicker);
 				}
 				catch (Exception e)
@@ -68,8 +73,7 @@ class Main
 					System.out.println("Error catched on main");
 					ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
 					XmippDialog.showException(null, e);
-					
-					
+
 				}
 			}
 		});

@@ -28,7 +28,7 @@ public class AdvancedOptionsJDialog extends JDialog
 	protected SingleParticlePickerJFrame frame;
 	protected int width, height;
 	private JFormattedTextField templatestf;
-	private JButton loadtemplatesbt;
+	private JButton viewtemplatesbt;
 	private JLabel checkpercentlb;
 	private JFormattedTextField autopickpercenttf;
 	private JButton okbt;
@@ -53,7 +53,6 @@ public class AdvancedOptionsJDialog extends JDialog
 	protected void resetTemplatesJDialog()
 	{
 		frame.optionsdialog = null;
-
 	}
 
 	private void initComponents()
@@ -81,7 +80,7 @@ public class AdvancedOptionsJDialog extends JDialog
 
 			}
 		});
-		loadtemplatesbt = XmippWindowUtil.getTextButton("Load", new ActionListener()
+		viewtemplatesbt = XmippWindowUtil.getTextButton("View", new ActionListener()
 		{
 
 			@Override
@@ -93,7 +92,7 @@ public class AdvancedOptionsJDialog extends JDialog
 
 		add(templatestf, XmippWindowUtil.getConstraints(constraints, 1, 0));
 		add(templatestf);
-		add(loadtemplatesbt, XmippWindowUtil.getConstraints(constraints, 2, 0));
+		add(viewtemplatesbt, XmippWindowUtil.getConstraints(constraints, 2, 0));
 
 		checkpercentlb = new JLabel("Autopick Check (%):");
 		add(checkpercentlb, XmippWindowUtil.getConstraints(constraints, 0, 1));

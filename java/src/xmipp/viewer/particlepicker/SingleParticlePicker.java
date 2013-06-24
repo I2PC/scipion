@@ -41,9 +41,9 @@ public class SingleParticlePicker extends ParticlePicker
 
 	public static final int mintraining = 15;
 
-	private int threads;
-	private boolean fastmode;
-	private boolean incore;
+	private int threads = 2;
+	private boolean fastmode = true;
+	private boolean incore = false;
 
 	public static final int dtemplatesnum = 1;
 	private Integer templatesNumber;
@@ -97,7 +97,7 @@ public class SingleParticlePicker extends ParticlePicker
 
 	public SingleParticlePicker(String selfile, String outputdir, Integer threads, boolean fastmode, boolean incore)
 	{
-		this(selfile, outputdir, Mode.Supervised);
+		this(selfile, outputdir, Mode.Manual);
 
 		this.threads = threads;
 		this.fastmode = fastmode;
@@ -369,6 +369,7 @@ public class SingleParticlePicker extends ParticlePicker
 		try
 		{
 			MetaData md = new MetaData(file);
+			Mode configmode;
 			boolean hasautopercent = md.containsLabel(MDLabel.MDL_PICKING_AUTOPICKPERCENT);
 			for (long id : md.findObjects())
 			{
@@ -377,8 +378,11 @@ public class SingleParticlePicker extends ParticlePicker
 				templatesNumber = md.getValueInt(MDLabel.MDL_PICKING_TEMPLATES, id);
 				if (templatesNumber == null || templatesNumber == 0)
 					templatesNumber = 1;//for compatibility with previous projects
-				if (mode == Mode.Manual)
-					mode = Mode.valueOf(md.getValueString(MDLabel.MDL_PICKING_STATE, id));
+				configmode = Mode.valueOf(md.getValueString(MDLabel.MDL_PICKING_STATE, id));
+				if (mode == Mode.Supervised && configmode == Mode.Manual)
+					throw new IllegalArgumentException("Cannot switch to Supervised mode from the command line");
+				
+					
 
 			}
 			md.destroy();
@@ -394,10 +398,8 @@ public class SingleParticlePicker extends ParticlePicker
 	{
 		try
 		{
-			
 			super.saveConfig(md, id);
 			md.setValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, getAutopickpercent(), id);
-
 			md.setValueInt(MDLabel.MDL_PICKING_TEMPLATES, getTemplatesNumber(), id);
 			md.setValueString(MDLabel.MDL_PICKING_STATE, mode.toString(), id);
 
