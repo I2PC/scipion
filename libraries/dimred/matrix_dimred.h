@@ -28,6 +28,8 @@
 
 #include <data/xmipp_program.h>
 #include "pca.h"
+#include "npe.h"
+#include "spe.h"
 #include "lpp.h"
 #include "ltsa.h"
 #include "gplvm.h"
@@ -58,6 +60,7 @@ public:
     int Niter; // Number of iterations
     double t; // Markov random walk
     double sigma; // Sigma of kernel
+    bool global; // Global for SPE
 public:
     Matrix2D<double> X; // Input data
     DimRedAlgorithm*  algorithm;
@@ -70,6 +73,8 @@ public:
     ProbabilisticPCA  algorithmProbabilisticPCA;
     LaplacianEigenmap algorithmLaplacianEigenmap;
     HessianLLE        algorithmHessianLLE;
+    NPE               algorithmNPE;
+    SPE               algorithmSPE;
 public:
     /// Empty constructor
     ProgDimRed();

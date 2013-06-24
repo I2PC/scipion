@@ -39,7 +39,8 @@ void ProgDimRed::readParams()
     outputDim  = getIntParam("--dout");
     dimEstMethod = getParam("--dout",1);
 
-    if (dimRefMethod=="LTSA" || dimRefMethod=="LLTSA" || dimRefMethod=="LPP" || dimRefMethod=="LE" || dimRefMethod=="HLLE")
+    if (dimRefMethod=="LTSA" || dimRefMethod=="LLTSA" || dimRefMethod=="LPP" || dimRefMethod=="LE" || dimRefMethod=="HLLE" ||
+    	dimRefMethod=="NPE" || dimRefMethod=="SPE")
     	kNN=getIntParam("-m",1);
     if (dimRefMethod=="DM" || dimRefMethod=="kPCA")
     	sigma=getDoubleParam("-m",1);
@@ -49,6 +50,8 @@ void ProgDimRed::readParams()
     	t=getDoubleParam("-m",2);
     if (dimRefMethod=="pPCA")
     	Niter=getIntParam("-m",1);
+    if (dimRefMethod=="SPE")
+    	global=getIntParam("-m",2)==1;
 }
 
 // Show ====================================================================
@@ -61,7 +64,8 @@ void ProgDimRed::show()
         << "Dim Red Method:         " << dimRefMethod  << std::endl
         << "Dimension out:          " << outputDim     << std::endl
         ;
-    if (dimRefMethod=="LTSA" || dimRefMethod=="LLTSA" || dimRefMethod=="LPP" || dimRefMethod=="LE" || dimRefMethod=="HLLE")
+    if (dimRefMethod=="LTSA" || dimRefMethod=="LLTSA" || dimRefMethod=="LPP" || dimRefMethod=="LE" || dimRefMethod=="HLLE" ||
+    	dimRefMethod=="SPE" || dimRefMethod=="NPE")
     	std::cout << "k=" << kNN << std::endl;
     if (dimRefMethod=="DM" || dimRefMethod=="kPCA" || dimRefMethod=="LPP" || dimRefMethod=="LE")
     	std::cout << "sigma=" << sigma << std::endl;
@@ -69,6 +73,8 @@ void ProgDimRed::show()
     	std::cout << "t=" << t << std::endl;
     if (dimRefMethod=="pPCA")
     	std::cout << "Niter=" << Niter << std::endl;
+    if (dimRefMethod=="SPE")
+    	std::cout << "Global=" << global << std::endl;
 }
 
 // usage ===================================================================
@@ -87,6 +93,8 @@ void ProgDimRed::defineParams()
     addParamsLine("             pPCA <n=200>   : Probabilistic PCA, n=number of iterations");
     addParamsLine("             LE <k=7> <s=1> : Laplacian Eigenmap, k=number of nearest neighbours, s=kernel sigma");
     addParamsLine("             HLLE <k=12>    : Hessian Locally Linear Embedding, k=number of nearest neighbours");
+    addParamsLine("             SPE <k=12> <global=1> : Stochastic Proximity Embedding, k=number of nearest neighbours, global embedding or not");
+    addParamsLine("             NPE <k=12>     : Neighborhood Preserving Embedding, k=number of nearest neighbours");
     addParamsLine("  [--dout <d=2> <method=CorrDim>] : Output dimension. Set to -1 for automatic estimation with a specific method");
     addParamsLine("       where <method>");
     addParamsLine("                  CorrDim: Correlation dimension");
@@ -131,6 +139,14 @@ void ProgDimRed::produceSideInfo()
     {
     	algorithm=&algorithmHessianLLE;
     	algorithmHessianLLE.setSpecificParameters(kNN);
+    } else if (dimRefMethod=="NPE")
+    {
+    	algorithm=&algorithmNPE;
+    	algorithmNPE.setSpecificParameters(kNN);
+    } else if (dimRefMethod=="SPE")
+    {
+    	algorithm=&algorithmSPE;
+    	algorithmSPE.setSpecificParameters(kNN,global);
     }
 
     algorithm->setOutputDimensionality(outputDim);
