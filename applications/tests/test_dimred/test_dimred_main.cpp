@@ -120,8 +120,6 @@ TEST_F( DimRedTest, intrinsic_dimensionality)
 	ASSERT_TRUE(expectedY.equal(Y,1e-5)); \
 }
 
-COMPLETE_TEST(spe,                SPE,              "helix",1000,"dimred/spe.txt")
-
 #ifdef NEVERDEFINED
 COMPLETE_TEST(ltsa,               LTSA,             "helix",1000,"dimred/ltsa.txt")
 COMPLETE_TEST(diffusionMaps,      DiffusionMaps,    "helix",1000,"dimred/diffusionMaps.txt")
@@ -132,8 +130,9 @@ COMPLETE_TEST(kernelPCA,          KernelPCA,        "helix",1000,"dimred/kernelP
 COMPLETE_TEST(probabilisticPCA,   ProbabilisticPCA, "helix",1000,"dimred/probabilisticPCA.txt")
 COMPLETE_TEST(laplacianEigenmap,LaplacianEigenmap,  "helix",1000,"dimred/laplacianEigenmap.txt")
 COMPLETE_TEST(hessianlle,         HessianLLE,       "helix",1000,"dimred/hessianlle.txt")
-INCOMPLETE_TEST(npe,              NPE,              "helix",1000,"dimred/npe.txt")
+COMPLETE_TEST(spe,                SPE,              "helix",1000,"dimred/spe.txt")
 #endif
+COMPLETE_TEST(npe,              NPE,              "helix",1000,"dimred/npe.txt")
 
 TEST_F( DimRedTest, nca)
 {
