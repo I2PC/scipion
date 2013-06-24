@@ -222,8 +222,9 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 		{
 			g2.setColor(Color.yellow);
 			g2.setStroke(continuousst);
-			g2.drawRect((int) (autopickout.getX() * magnification), (int) (autopickout.getY() * magnification), (int) (autopickout.getWidth() * magnification), (int) (autopickout
-					.getHeight() * magnification));
+			int x = getXOnImage((int)autopickout.getX());
+			int y = getYOnImage((int)autopickout.getY());
+			g2.drawRect(x, y, (int) (autopickout.getWidth() * magnification), (int) (autopickout.getHeight() * magnification));
 		}
 
 	}
