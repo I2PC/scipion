@@ -30,8 +30,6 @@
 #include <data/metadata.h>
 #include <data/xmipp_image.h>
 #include "volume_from_pdb.h"
-#include "../../external/condor/ObjectiveFunction.h"
-#include "../../external/condor/Vector.h"
 
 /**@defgroup NMAAlignment Alignment with Normal modes
    @ingroup ReconsLibrary */
@@ -61,8 +59,11 @@ public:
     /// Deformation sampling
     double defampsampling;
 
-    /// Scaling factor to scale deformation amplitude
+    /// Temporary
     double scale_defamp;
+
+    /// Scaling factor to scale deformation amplitude
+    double scdefamp;
 
     /// Translation sampling
     double translsampling;
@@ -106,6 +107,9 @@ public:
     // value of cost function
     double costfunctionvalue;
 
+    // value of cost function in angular continuous assignment
+    double costfunctionvalue_cst;
+
     /// Sigma
     double sigma;
 
@@ -122,16 +126,12 @@ public:
     // All estimated parameters (with the cost)
     Matrix1D<double> parameters;
 
-
-
     // Trial parameters
     Matrix1D<double> trial;
 
     // Best trial parameters
     Matrix1D<double> trial_best;
 
-    // Best fitness
-    Matrix1D<double> fitness_min;
 
     // Number of modes
     int numberOfModes;
@@ -154,8 +154,8 @@ public:
     // Template for temporal filename generation
     char nameTemplate[256];
 
-    // Volume from PDB
-    ProgPdbConverter* progVolumeFromPDB;
+    //File name of reduced image
+    FileName fnDown;
 
 public:
     /// Empty constructor
@@ -174,24 +174,20 @@ public:
     void show();
 
    /** Create deformed PDB */
-    FileName createDeformedPDB(int pyramidLevel) const;
+    FileName createDeformedPDB();
 
     /** Perform a complete search with the given image and reference
         volume at the given level of pyramid. Return the values
     in the last five positions of trial. */
-    void performCompleteSearch(const FileName &fnRandom,
-        int pyramidLevel) const;
+    void performCompleteSearch(int pyramidLevel);
 
     /** Perform a continuous search with the given image and reference
         volume at the given pyramid level. Return the values
     in the last five positions of trial. */
-    double performContinuousAssignment(const FileName &fnRandom, int pyramidLevel) const;
+    double performContinuousAssignment(int pyramidLevel);
 
-    /** Computes the fitness of a set of trial parameters */
-    double computeFitness(Matrix1D<double> &trial) const;
-
-    /** Update the best fitness and the corresponding best trial*/
-    void updateBestFit(double fitness, int dim);
+    /** Alignment */
+    double eval();
 
     /** Create the processing working files.
      * The working files are:
@@ -211,15 +207,9 @@ public:
 
     /** Write the parameters found for one image */
     virtual void writeImageParameters(const FileName &fnImg);
+
 };
 
-class ObjFunc_flexible_alignment: public UnconstrainedObjectiveFunction
-{
-  public:
-    ObjFunc_flexible_alignment(int _t, int _n=0);
-    ~ObjFunc_flexible_alignment(){};
-    double eval(Vector v, int *nerror=NULL);
-};
 
 //@}
 #endif

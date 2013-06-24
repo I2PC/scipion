@@ -172,6 +172,10 @@ Image_setHeaderValue(PyObject *obj, PyObject *args, PyObject *kwargs);
 PyObject *
 Image_computeStats(PyObject *obj, PyObject *args, PyObject *kwargs);
 
+/* I1-adjusted(I2) */
+PyObject *
+Image_adjustAndSubtract(PyObject *obj, PyObject *args, PyObject *kwargs);
+
 PyObject *
 Image_add(PyObject *obj1, PyObject *obj2);
 PyObject *

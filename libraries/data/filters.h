@@ -331,8 +331,8 @@ double correlationIndex(const MultidimArray< T >& x,
     }
     else
     {
-        computeAvgStdev_within_binary_mask(*mask, x, mean_x,stddev_x);
-        computeAvgStdev_within_binary_mask(*mask, y, mean_y,stddev_y);
+        x.computeAvgStdev_within_binary_mask(*mask, mean_x,stddev_x);
+        y.computeAvgStdev_within_binary_mask(*mask, mean_y,stddev_y);
     }
     if (ABS(stddev_x)<XMIPP_EQUAL_ACCURACY ||
         ABS(stddev_y)<XMIPP_EQUAL_ACCURACY)
@@ -475,6 +475,15 @@ void bestNonwrappingShift(const MultidimArray< double >& I1,
                           double& shiftX,
                           double& shiftY,
                           CorrelationAux &aux);
+
+/** Translational search (non-wrapping).
+ * @ingroup Filters
+ *
+ * Search is performed in real-space
+ */
+double bestShiftRealSpace(const MultidimArray<double> &I1, MultidimArray<double> &I2,
+               double &shiftX, double &shiftY,
+               const MultidimArray<int> *mask=NULL, int maxShift=5, double shiftStep=1.0);
 
 /** Auxiliary class for fast image alignment */
 class AlignmentAux

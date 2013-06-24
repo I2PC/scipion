@@ -159,6 +159,7 @@ enum MDLabel
     MDL_CTF_XRAY_ZONES_NUMBER, // Number of zones of the X-ray Fresnel lens
     MDL_DATATYPE, ///< if read from file original image datatype, this is an struct defined in image
     MDL_DEFGROUP, ///< Defocus group
+    MDL_DIMRED, ///< Projection onto a reduced manifold (vector double)
     MDL_DIRECTION, ///< Direction in 3D
 
     MDL_DM3_IDTAG,
@@ -228,6 +229,8 @@ enum MDLabel
     MDL_NEIGHBORHOOD_RADIUS, ///< Radius of the neigborhood (radians)
     MDL_NMA, ///< Normal mode displacements (vector double)
     MDL_NMA_MODEFILE, ///< File with an NMA mode
+    MDL_NMA_COLLECTIVITY, ///< NMA Collectivity of a given mode
+    MDL_NMA_SCORE, ///< NMA Score of a given mode
     MDL_NOISE_ANGLES, ///< Noise description for projected angles
     MDL_NOISE_PARTICLE_COORD, ///< Noise description for particle's center coordenates (when projecting)
     MDL_NOISE_COORD,  //Use instead of MDL_NOISE_PARTICLE_COORD in future
@@ -317,6 +320,10 @@ enum MDLabel
 
     MDL_TEST_SIZE,// < number of test assigned to a program
 
+    MDL_VOLUME_SCORE1,/// < Score 1 for volumes
+    MDL_VOLUME_SCORE2,/// < Score 2 for volumes
+    MDL_VOLUME_SCORE3,/// < Score 3 for volumes
+    MDL_VOLUME_SCORE4,/// < Score 4 for volumes
     MDL_VOLTAGE, ///< microscope voltage (double)
     MDL_WEIGHT, ///< Weight assigned to the image (double)
     MDL_WROBUST, ///< Weight of t-student distribution in robust Maximum likelihood
@@ -875,6 +882,7 @@ private:
         MDL::addLabel(MDL_DEFGROUP, LABEL_INT, "defocusGroup");
         MDL::addLabel(MDL_DIMENSIONS_2D, LABEL_VECTOR_DOUBLE, "dimensions2D");
         MDL::addLabel(MDL_DIMENSIONS_3D, LABEL_VECTOR_DOUBLE, "dimensions3D");
+        MDL::addLabel(MDL_DIMRED, LABEL_VECTOR_DOUBLE, "dimredCoeffs");
         MDL::addLabel(MDL_DIRECTION, LABEL_VECTOR_DOUBLE, "direction");
         MDL::addLabel(MDL_DM3_IDTAG, LABEL_INT, "dm3IdTag");
         MDL::addLabel(MDL_DM3_NODEID, LABEL_INT, "dm3NodeId");
@@ -961,6 +969,8 @@ private:
         MDL::addLabelAlias(MDL_NMA, "NMADisplacements");//3.0
         MDL::addLabel(MDL_NMA_MODEFILE, LABEL_STRING, "nmaModefile", TAGLABEL_TEXTFILE);
         MDL::addLabelAlias(MDL_NMA_MODEFILE, "NMAModefile");//3.0
+        MDL::addLabel(MDL_NMA_COLLECTIVITY, LABEL_DOUBLE, "nmaCollectivity");
+        MDL::addLabel(MDL_NMA_SCORE, LABEL_DOUBLE, "nmaScore");
         MDL::addLabel(MDL_NOISE_ANGLES, LABEL_VECTOR_DOUBLE, "noiseAngles");
         MDL::addLabel(MDL_NOISE_COORD, LABEL_VECTOR_DOUBLE, "noiseCoord");
         MDL::addLabel(MDL_NOISE_PARTICLE_COORD, LABEL_VECTOR_DOUBLE, "noiseParticleCoord");
@@ -1071,6 +1081,10 @@ private:
         MDL::addLabel(MDL_TRANSFORMATIONMTRIX, LABEL_VECTOR_DOUBLE, "transMat");
 
         MDL::addLabel(MDL_VOLTAGE, LABEL_DOUBLE, "voltage");
+        MDL::addLabel(MDL_VOLUME_SCORE1, LABEL_DOUBLE, "volScore1");
+        MDL::addLabel(MDL_VOLUME_SCORE2, LABEL_DOUBLE, "volScore2");
+        MDL::addLabel(MDL_VOLUME_SCORE3, LABEL_DOUBLE, "volScore3");
+        MDL::addLabel(MDL_VOLUME_SCORE4, LABEL_DOUBLE, "volScore4");
         MDL::addLabel(MDL_WEIGHT, LABEL_DOUBLE, "weight");
         MDL::addLabelAlias(MDL_WEIGHT, "Weight");
         MDL::addLabel(MDL_WROBUST, LABEL_DOUBLE, "wRobust");

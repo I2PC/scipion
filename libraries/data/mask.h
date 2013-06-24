@@ -852,40 +852,6 @@ computeStats_within_binary_mask(mask,*((MultidimArray<type>*)m.im),min_val,max_v
 #undef COMPUTESTATS
 }
 
-/** Compute statistics in the active area
- *
- * Only the statistics for values in the overlapping between the mask and the
- * volume for those the mask is not 0 are computed.
- */
-template<typename T>
-void computeAvgStdev_within_binary_mask(const MultidimArray< int >& mask,
-                                        const MultidimArray< T >& m,
-                                        double& avg, double& stddev)
-{
-    SPEED_UP_tempsInt;
-    double sum1 = 0;
-    double sum2 = 0;
-    int N = 0;
-
-    FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(mask, m)
-    {
-        if (A3D_ELEM(mask, k, i, j) != 0)
-        {
-            ++N;
-            double aux=A3D_ELEM(m, k, i, j);
-            sum1 += aux;
-            sum2 += aux*aux;
-        }
-    }
-
-    // average and standard deviation
-    avg  = sum1 / (double) N;
-    if (N > 1)
-        stddev = sqrt(fabs(sum2 / N - avg * avg) * N / (N - 1));
-    else
-        stddev = 0;
-}
-
 /** Apply mask to a MultidimArray
  *
  * The volume values for which the input mask is 0 are set to 0. The input and
