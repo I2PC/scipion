@@ -191,6 +191,7 @@ enum MDLabel
     MDL_IMAGE4, ///< Image associated to this object (std::string)
     MDL_IMAGE5, ///< Image associated to this object (std::string)
     MDL_INTSCALE, ///< Intensity scale for an image
+    MDL_ITEM_ID, ///< Unique identifier for items inside a list or set (std::size_t)
     MDL_ITER, ///< Current iteration number (int)
     MDL_KERDENSOM_FUNCTIONAL, ///< Functional value (double)
     MDL_KERDENSOM_REGULARIZATION, ///< Regularization value (double)
@@ -916,6 +917,8 @@ private:
 
         MDL::addLabel(MDL_IMGMD, LABEL_STRING, "imageMetaData", TAGLABEL_METADATA);
         MDL::addLabel(MDL_INTSCALE, LABEL_DOUBLE, "intScale");
+
+        MDL::addLabel(MDL_ITEM_ID, LABEL_SIZET, "itemId");
         MDL::addLabel(MDL_ITER, LABEL_INT, "iterationNumber");
 
         MDL::addLabel(MDL_KERDENSOM_FUNCTIONAL, LABEL_DOUBLE, "kerdensomFunctional");
