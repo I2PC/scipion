@@ -132,7 +132,7 @@ COMPLETE_TEST(laplacianEigenmap,LaplacianEigenmap,  "helix",1000,"dimred/laplaci
 COMPLETE_TEST(hessianlle,         HessianLLE,       "helix",1000,"dimred/hessianlle.txt")
 COMPLETE_TEST(spe,                SPE,              "helix",1000,"dimred/spe.txt")
 #endif
-COMPLETE_TEST(npe,              NPE,              "helix",1000,"dimred/npe.txt")
+COMPLETE_TEST(npe,                NPE,              "helix",1000,"dimred/npe.txt")
 
 TEST_F( DimRedTest, nca)
 {

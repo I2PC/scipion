@@ -1,7 +1,32 @@
+/***************************************************************************
+ *
+ * Authors:    Carlos Oscar            coss@cnb.csic.es (2013)
+ * 			   Javier Gamas
+ *
+ * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.csic.es'
+ ***************************************************************************/
+
 #include "npe.h"
 #include <data/matrix2d.h>
 #include <data/matrix1d.h>
-
 
 void NPE::setSpecificParameters(int k){
 	this->k=k;
@@ -12,8 +37,6 @@ void NPE::setSpecificParameters(int k){
  */
 void NPE::reduceDimensionality()
 {
-
-	X->write("dimred/X.txt");
 	if (MAT_YSIZE(*X) <= MAT_XSIZE(*X))
 			REPORT_ERROR(ERR_MATRIX_DIM, "Number of samples should be higher than number of dimensions.");
 
@@ -23,7 +46,6 @@ void NPE::reduceDimensionality()
 	Matrix2D<double> D;
 	Matrix2D<int> idx;
 	kNearestNeighbours(*X,k,idx,D,distance,false);
-	D.write("dimred/D.txt");
 
 	Matrix2D<double> W(k,n), Xi, C, M;
 	Matrix1D<double> wi;
@@ -57,16 +79,9 @@ void NPE::reduceDimensionality()
 		W.setCol(ip,wi);
 	}
 
-
-	W.write("dimred/W.txt");
-	std::cout << "Finished loop" << std::endl;
-	idx.write("dimred/idx.txt");
-	Xi.write("dimred/Xi.txt");
-
 	//Find the sparse cost matrix
 	M.initIdentity(1000);
 	Matrix1D<int> neighboursi;
-
 
 	for(int i=0;i<n; ++i)
 	{
@@ -90,22 +105,13 @@ void NPE::reduceDimensionality()
 
 		}
 	}
-	M.write("dimred/M.txt");
-	std::cout << "Finished sparse cost matrix" << std::endl;
 
 	//Check symmetry
 	Matrix2D<double> DP, WP;
-	M.write("dimred/MFinal.txt");
 
 	X->transpose();
 	matrixOperation_XtAX_symmetric(*X,M,WP);
-	std::cout << "WP-> " << MAT_YSIZE(WP) << "x" << MAT_XSIZE(WP) << std::endl;
 	matrixOperation_AtA(*X, DP);
-
-	std::cout << "Symmetry checked" << std::endl;
-	DP.write("dimred/DP.txt");
-	WP.write("dimred/WP.txt");
-
 
 	//Solve eigenvector problem
 	Matrix2D<double> Peigvec, eigvector;
@@ -125,10 +131,7 @@ void NPE::reduceDimensionality()
 	}
 
 	eigvector.operator *=(-1);
+
 	//Compute results
 	Y=*X*eigvector;
-
-	Y.write("dimred/Y.txt");
-	std::cout << "Reduction completed" << std::endl;
-
 }
