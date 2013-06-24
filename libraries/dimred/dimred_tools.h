@@ -75,6 +75,11 @@ typedef double (*DimRedDistance2)  (const Matrix2D<double> &X, size_t i1, size_t
  */
 void computeDistance(const Matrix2D<double> &X, Matrix2D<double> &distance, DimRedDistance2 f=NULL, bool computeSqrt=true);
 
+/**
+ * Compute the distance of the elements said by the arrays ind1 and ind2
+ */
+void computeRandomPointsDistance(const Matrix2D<double> &X, Matrix1D<double> &distance, Matrix1D<int> ind1, Matrix1D<int> ind2, DimRedDistance2 f, bool computeSqrt);
+
 /** Compute the distance of each observation to its K nearest neighbours.
  * Each observation is a row of the matrix X.
  * If there are N observations, the size of distance is NxN.

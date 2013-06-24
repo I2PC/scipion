@@ -132,9 +132,8 @@ COMPLETE_TEST(hessianlle,         HessianLLE,       "helix",1000,"dimred/hessian
 
 #ifdef NEVERDEFINED
 INCOMPLETE_TEST(npe,              NPE,              "helix",1000,"dimred/npe.txt")
-INCOMPLETE_TEST(chartingmanifold, ChartingManifold, "helix",1000,"dimred/chartingmanifold.txt")
-INCOMPLETE_TEST(spe,              SPE,              "helix",1000,"dimred/spe.txt")
 #endif
+INCOMPLETE_TEST(spe,              SPE,              "helix",1000,"dimred/spe.txt")
 
 TEST_F( DimRedTest, nca)
 {

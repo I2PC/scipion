@@ -1,6 +1,7 @@
 /***************************************************************************
  *
  * Authors:    Carlos Oscar            coss@cnb.csic.es (2013)
+ * 			   Alejandro Góme Rodríguez
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -41,7 +42,6 @@ public:
 public:
 	/// Set specific parameters
 	void setSpecificParameters(bool global=true, int k=12);
-
 	/// Reduce dimensionality
 	void reduceDimensionality();
 };

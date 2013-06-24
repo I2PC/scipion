@@ -216,6 +216,33 @@ void kNearestNeighbours(const Matrix2D<double> &X, int K, Matrix2D<int> &idx, Ma
 			MAT_ELEM(distance,i,j)=sqrt(MAT_ELEM(distance,i,j));
 }
 
+void computeRandomPointsDistance(const Matrix2D<double> &X, Matrix1D<double> &distance, Matrix1D<int> ind1, Matrix1D<int> ind2, DimRedDistance2 f, bool computeSqrt)
+{
+	distance.initZeros();
+	int ii=0;
+	for (size_t i1=0; i1<VEC_XSIZE(ind1); ++i1)
+	{
+		// Compute the distance between ind1[i] and ind2[i]
+		double d=0;
+		if (f==NULL){
+			for (size_t j=0; j<MAT_XSIZE(X); ++j)
+			{
+			double diff=MAT_ELEM(X,ind1(i1),j)-MAT_ELEM(X,ind2(i1),j);
+			d+=diff*diff;
+			}
+		}
+		else
+			d=(*f)(X,ind1(i1),ind2(i1));
+
+		if (computeSqrt){
+			d=sqrt(d);
+		}
+
+		distance(ii) = d;
+		ii++;
+	}
+}
+
 void computeDistance(const Matrix2D<double> &X, Matrix2D<double> &distance, DimRedDistance2 f, bool computeSqrt)
 {
 	distance.initZeros(MAT_YSIZE(X),MAT_YSIZE(X));
@@ -235,7 +262,7 @@ void computeDistance(const Matrix2D<double> &X, Matrix2D<double> &distance, DimR
 
 			if (computeSqrt)
 				d=sqrt(d);
-			MAT_ELEM(distance,i2,i1)=MAT_ELEM(distance,i1,i2)=sqrt(d);
+			MAT_ELEM(distance,i2,i1)=MAT_ELEM(distance,i1,i2)=d;
 		}
 }
 
