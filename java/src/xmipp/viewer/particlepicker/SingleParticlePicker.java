@@ -41,7 +41,7 @@ public class SingleParticlePicker extends ParticlePicker
 
 	public static final int mintraining = 15;
 
-	private int threads = 2;
+	private int threads = 1;
 	private boolean fastmode = true;
 	private boolean incore = false;
 

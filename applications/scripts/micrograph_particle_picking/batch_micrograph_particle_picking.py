@@ -14,8 +14,7 @@ class ScriptTrainingPicking(ScriptAppIJ):
         self.addParamsLine("    alias --output;                                   ");
         self.addParamsLine(" --mode <pick_mode=manual>                            : Mode in wich Particle Picker will be used");
         self.addParamsLine("    where <pick_mode>");
-        self.addParamsLine("       manual                                         : Enables manual mode. User will pick particles manually.");
-        self.addParamsLine("       supervised <thr=1> <fast=True> <incore=False>  : Enables supervised mode. User will use autopicking. Then review/correct particles selected."); 
+        self.addParamsLine("       manual  <thr=1> <fast=True> <incore=False>     : Enables manual mode. User will pick particles manually and can switch to supervised mode if desired.");
         self.addParamsLine("                                                      : Particles from manual mode will be used to train software and switch to supervised mode");
         self.addParamsLine("                                                      : Autopicker will use number of threads, fast and incore modes provided");
         self.addParamsLine("       review <file>                                  : Enables review mode. User reviews/corrects particles set provided on specified file");
@@ -29,8 +28,8 @@ class ScriptTrainingPicking(ScriptAppIJ):
 
         if (not os.path.exists(output)):
             os.makedirs(output)
-        supervised = (mode == 'supervised')
-        if supervised:
+        manual = (mode == 'manual')
+        if manual:
             
             numberOfThreads = self.getIntParam('--mode', 1)
             fastMode = self.getParam('--mode', 2)
@@ -41,7 +40,7 @@ class ScriptTrainingPicking(ScriptAppIJ):
             file = self.getParam('--mode', 1)
 
         self.args = "%(input)s %(output)s %(mode)s" %locals()
-        if supervised:
+        if manual:
             self.args += " %(numberOfThreads)d %(fastMode)s %(incore)s" %locals()
         if review:
             self.args += " %(file)s" %locals()
