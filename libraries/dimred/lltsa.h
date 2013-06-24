@@ -1,8 +1,7 @@
 /***************************************************************************
  *
- * Authors:    Pablo Perez Tirador            p.perez44@usp.ceu.es (2013)
+ * Authors:    Sergio Calvo Gonzalez            sergiocg90@gmail.com (2013)
  *
- * Escuela Politecnica Superior, Universidad San Pablo - CEU
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,26 +21,25 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-#ifndef _LLTSA
-#define _LLTSA
 
-#include <data/multidim_array.h>
+#ifndef LLTSA_H_
+#define LLTSA_H_
+
 #include <data/matrix2d.h>
 #include <data/matrix1d.h>
 #include "dimred_tools.h"
+#include "ltsa.h"
 
-/**@defgroup Lltsa Linear Local Tangent Space Alignment
+/**@defgroup LLTSA Linear Local Tangent Space Alignment
    @ingroup DimRedLibrary */
 //@{
-/** Class for making a Linear Local Tangent Space Alignment dimensionality reduction */
-class LLTSA: public DimRedAlgorithm
+/** Class for making a LLTSA dimensionality reduction */
+class LLTSA: public LTSA
 {
 public:
-	int neighbourNumber;
+	// Projection matrix
+	Matrix2D<double> A;
 public:
-	/// Set specific parameters
-	void setSpecificParameters(int neighbourNumber=12);
-
 	/// Reduce dimensionality
 	void reduceDimensionality();
 };

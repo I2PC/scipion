@@ -117,8 +117,8 @@ void ProgDimRed::produceSideInfo()
     	algorithmDiffusionMaps.setSpecificParameters(t,sigma);
     } else if (dimRefMethod=="LLTSA")
     {
-    	algorithm=&algorithmLLTSASCG;
-    	algorithmLLTSASCG.setSpecificParameters(kNN);
+    	algorithm=&algorithmLLTSA;
+    	algorithmLLTSA.setSpecificParameters(kNN);
     } else if (dimRefMethod=="LPP")
     {
     	algorithm=&algorithmLPP;

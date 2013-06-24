@@ -5,7 +5,6 @@
 #include <dimred/ltsa.h>
 #include <dimred/gplvm.h>
 #include <dimred/lltsa.h>
-#include <dimred/lltsaSCG.h>
 #include <dimred/kernelPCA.h>
 #include <dimred/hessianLLE.h>
 #include <dimred/diffusionMaps.h>
@@ -123,7 +122,6 @@ TEST_F( DimRedTest, intrinsic_dimensionality)
 COMPLETE_TEST(ltsa,               LTSA,             "helix",1000,"dimred/ltsa.txt")
 COMPLETE_TEST(diffusionMaps,      DiffusionMaps,    "helix",1000,"dimred/diffusionMaps.txt")
 COMPLETE_TEST(lltsa,              LLTSA,            "helix",1000,"dimred/lltsa.txt")
-COMPLETE_TEST(lltsaSCG,           LLTSASCG,         "helix",1000,"dimred/lltsaSCG.txt")
 COMPLETE_TEST(lpp,                LPP,              "helix",1000,"dimred/lpp.txt")
 COMPLETE_TEST(kernelPCA,          KernelPCA,        "helix",1000,"dimred/kernelPCA.txt")
 COMPLETE_TEST(probabilisticPCA,   ProbabilisticPCA, "helix",1000,"dimred/probabilisticPCA.txt")

@@ -33,7 +33,7 @@
 #include "lpp.h"
 #include "ltsa.h"
 #include "gplvm.h"
-#include "lltsaSCG.h"
+#include "lltsa.h"
 #include "kernelPCA.h"
 #include "hessianLLE.h"
 #include "diffusionMaps.h"
@@ -67,7 +67,7 @@ public:
     PCA               algorithmPCA;
     LTSA              algorithmLTSA;
     DiffusionMaps     algorithmDiffusionMaps;
-    LLTSASCG          algorithmLLTSASCG;
+    LLTSA             algorithmLLTSA;
     LPP               algorithmLPP;
     KernelPCA         algorithmKernelPCA;
     ProbabilisticPCA  algorithmProbabilisticPCA;
