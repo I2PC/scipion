@@ -289,12 +289,14 @@ class RunIOTreeProvider(TreeProvider):
         else:
             image = 'db_output.gif'
             parent = self.outputStr
+            name = obj.getLastName()
+            
             if isinstance(obj, Pointer):
                 obj = obj.get()
                 image = 'db_input.gif'
                 parent = self.inputStr
-            parentObj = self.mapper.getParent(obj)
-            name = '%s.%s' % (parentObj.getLastName(), obj.getLastName())
+                parentObj = self.mapper.getParent(obj)
+                name += '   (from %s.%s)' % (parentObj.getLastName(), obj.getLastName())
             info = {'key': obj.getObjId(), 'parent': parent, 'image': image,
                     'text': name, 'values': (obj.getClassName())}
         return info     
