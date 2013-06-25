@@ -30,8 +30,6 @@
 #include <iostream>
 #include <unistd.h>
 #include <sys/stat.h>
-#include "../../external/condor/Solver.h"
-#include "../../external/condor/tools.h"
 #include "../../external/bilib/headers/messagedisplay.h"
 #include "../../external/bilib/headers/error.h"
 #include "../../external/bilib/configs.h"
@@ -44,13 +42,11 @@ ProgFlexibleAlignment::ProgFlexibleAlignment()
     currentImgName = "";
     each_image_produces_an_output = false;
     produces_an_output = true;
-    progVolumeFromPDB = new ProgPdbConverter();
-    projMatch = true;
 }
 
 ProgFlexibleAlignment::~ProgFlexibleAlignment()
 {
-    delete progVolumeFromPDB;
+    //delete progVolumeFromPDB;
 }
 
 // Params definition ============================================================
@@ -65,7 +61,6 @@ void ProgFlexibleAlignment::defineParams()
     addParamsLine("  [--resume]                           : Resume processing");
     addParamsLine("==Generation of the deformed volumes==");
     addParamsLine("   --modes <filename>                  : File with a list of mode filenames");
-    addParamsLine("  [--deformation_scale <s=1>]          : Scaling factor to scale NMA deformation amplitudes");
     addParamsLine("  [--defampsampling <s=200>]           : Deformation sampling");
     addParamsLine("  [--maxdefamp <s=2000>]               : Maximum deformation amplitude");
     addParamsLine("  [--translsampling <s=2>]             : Translational sampling");
@@ -77,14 +72,13 @@ void ProgFlexibleAlignment::defineParams()
     addParamsLine("                                       : Default standard deviation <std> is read from PDB file.");
     addParamsLine("==Angular assignment and mode detection==");
     addParamsLine("  [--mask <m=\"\">]                    : 2D Mask applied to the reference images of the deformed volume");
-    addParamsLine("  [--projMatch]                        : Use projection matching in real-space instead of wavelet+splines assignment");
     addParamsLine("                                       :+Note that wavelet assignment needs the input images to be of a size power of 2");
     addParamsLine("  [--minAngularSampling <ang=3>]       : Minimum angular sampling rate");
     addParamsLine("  [--gaussian_Real    <s=0.5>]         : Weighting sigma in Real space");
     addParamsLine("  [--zerofreq_weight  <s=0.>]          : Zero-frequency weight");
     addParamsLine("  [--sigma    <s=10>]                  : Sigma");
     addParamsLine("  [--max_iter  <N=60>]                 : Maximum number of iterations");
-    addExampleLine("xmipp_nma_alignment -i images.sel --pdb 2tbv.pdb --modes modelist.xmd --deformation_scale 1000 --sampling_rate 6.4 -o output.xmd --resume");
+    addExampleLine("xmipp_nma_alignment -i images.sel --pdb 2tbv.pdb --modes modelist.xmd --sampling_rate 6.4 -o output.xmd --resume");
 }
 
 // Read arguments ==========================================================
@@ -95,7 +89,6 @@ void ProgFlexibleAlignment::readParams()
     fnOutDir = getParam("--odir");
     fnModeList = getParam("--modes");
     resume = checkParam("--resume");
-    scale_defamp = getDoubleParam("--deformation_scale");
     maxdefamp = getDoubleParam("--maxdefamp");
     defampsampling = getDoubleParam("--defampsampling");
     translsampling = getDoubleParam("--translsampling");
@@ -111,7 +104,6 @@ void ProgFlexibleAlignment::readParams()
     useFixedGaussian = checkParam("--fixed_Gaussian");
     //if (useFixedGaussian)
     sigmaGaussian = getDoubleParam("--fixed_Gaussian");
-    projMatch = checkParam("--projMatch");
     minAngularSampling = getDoubleParam("--minAngularSampling");
     sigma = getDoubleParam("--sigma");
     max_no_iter = getIntParam("--max_iter");
@@ -126,7 +118,6 @@ void ProgFlexibleAlignment::show()
     << "PDB:                  " << fnPDB << std::endl
     << "Resume:               " << resume << std::endl
     << "Mode list:            " << fnModeList << std::endl
-    << "Amplitude scale:      " << scale_defamp << std::endl
     << "Deformation sampling: " << defampsampling << std::endl
     << "Maximum amplitude:    " << maxdefamp << std::endl
     << "Transl. sampling:     " << translsampling << std::endl
@@ -137,7 +128,6 @@ void ProgFlexibleAlignment::show()
     << "Filter PDB volume     " << do_FilterPDBVol << std::endl
     << "Use fixed Gaussian:   " << useFixedGaussian << std::endl
     << "Sigma of Gaussian:    " << sigmaGaussian << std::endl
-    << "Projection  Matching: " << projMatch << std::endl
     << "minAngularSampling:   " << minAngularSampling << std::endl
     << "Gaussian Real:        " << gaussian_Real_sigma << std::endl
     << "Zero-frequency weight:" << weight_zero_freq << std::endl
@@ -197,7 +187,7 @@ void ProgFlexibleAlignment::finishProcessing()
 }
 
 // Create deformed PDB =====================================================
-FileName ProgFlexibleAlignment::createDeformedPDB(int pyramidLevel) const
+FileName ProgFlexibleAlignment::createDeformedPDB()
 {
     String program;
     String arguments;
@@ -209,45 +199,10 @@ FileName ProgFlexibleAlignment::createDeformedPDB(int pyramidLevel) const
     arguments = formatString(
                     "--pdb %s -o %s_deformedPDB.pdb --nma %s --deformations ",
                     fnPDB.c_str(), randStr, fnModeList.c_str());
-    for (size_t i = 0; i < VEC_XSIZE( trial ) - 5; ++i)
-        arguments += floatToString(trial(i) * scale_defamp) + " ";
+    for (size_t i = 5; i < VEC_XSIZE( trial ); i++)
+        arguments += floatToString(trial(i)) + " ";
     runSystem(program, arguments, false);
 
-    program = "xmipp_volume_from_pdb";
-    arguments = formatString(
-                    "-i %s_deformedPDB.pdb --size %i --sampling %f -v 0", randStr,
-                    imgSize, sampling_rate);
-
-    if (do_centerPDB)
-        arguments.append(" --centerPDB ");
-
-    if (useFixedGaussian)
-    {
-        arguments.append(" --fixed_Gaussian ");
-        if (sigmaGaussian >= 0)
-            arguments += formatString("%f --intensityColumn Bfactor",
-                                      sigmaGaussian);
-    }
-    progVolumeFromPDB->read(arguments);
-    progVolumeFromPDB->tryRun();
-
-    if (do_FilterPDBVol)
-    {
-        program = "xmipp_transform_filter";
-        arguments = formatString(
-                        "-i %s_deformedPDB.vol --sampling %f --fourier low_pass %f  -v 0",
-                        randStr, sampling_rate, cutoff_LPfilter);
-        runSystem(program, arguments, false);
-    }
-
-    if (pyramidLevel != 0)
-    {
-        Image<double> I;
-        FileName fnDeformed = formatString("%s_deformedPDB.vol",randStr);
-        I.read(fnDeformed);
-        selfPyramidReduce(BSPLINE3, I(), pyramidLevel);
-        I.write(fnDeformed);
-    }
 
     return fnRandom;
 }
@@ -274,7 +229,7 @@ void  ProjectionRefencePoint(Matrix1D<double>  &Parameters,
     double sum2,hlp;
 
     proj_help_test.initZeros(Xwidth,Ywidth);
-    ksi_v    = (double*)malloc( (size_t) Xwidth*Ywidth * sizeof(double));//01
+    ksi_v    = (double*)malloc( (size_t) 4L * sizeof(double));//01
     for (int i=0; i<dim+5; i++)
     {
         global_flexible_prog->trial(i) = Parameters(i);
@@ -288,12 +243,15 @@ void  ProjectionRefencePoint(Matrix1D<double>  &Parameters,
     fnRandom.initUniqueName(global_flexible_prog->nameTemplate,global_flexible_prog->fnOutDir);
     const char * randStr = fnRandom.c_str();
     //std::cout << 312 << randStr <<std::endl;
+
     program = "xmipp_pdb_nma_deform";
     arguments = formatString(
                     "--pdb %s -o %s_deformedPDB.pdb --nma %s --deformations ",
                     global_flexible_prog->fnPDB.c_str(), randStr, global_flexible_prog->fnModeList.c_str());
-    for (size_t i = 5; i < VEC_XSIZE(global_flexible_prog->trial) ; ++i)
-        arguments += floatToString(Parameters(i) * global_flexible_prog->scale_defamp) + " ";
+    for (size_t i = 5; i < VEC_XSIZE(global_flexible_prog->trial) ; i++){
+        float aaa=global_flexible_prog->scdefamp*Parameters(i);
+        arguments += floatToString(aaa) + " ";
+    }
     runSystem(program, arguments, false);
     std::cout << "304 arguments " << arguments << std::endl;
 
@@ -396,8 +354,8 @@ void  ProjectionRefencePoint(Matrix1D<double>  &Parameters,
 
     // Close file
     fh_deformedPDB.close();
-    command=(std::string)"rm -f deformedPDB_"+ fnRandom+".pdb";
-    system(command.c_str());
+    /*command=(std::string)"rm -f deformedPDB_"+ fnRandom+".pdb";
+    system(command.c_str());*/
     std::cout << "409 Parameters " << Parameters <<std::endl;
     // To calculate the value of cost function
     for(sum2 = 0.0, kx=0;kx<Xwidth;kx++)
@@ -454,7 +412,7 @@ int partialpfunction(Matrix1D<double>  &Parameters,
     double  *ModeValues;
     int     Line_number = 0;
     int     kx,ky;
-    long    dim = global_flexible_prog-> modeList.size();
+    int    dim = global_flexible_prog-> numberOfModes;
     double  centre_Xwidth, centre_Ywidth;
     centre_Xwidth = (double)(Xwidth - 1)/2.0;
     centre_Ywidth = (double)(Ywidth - 1)/2.0;
@@ -509,7 +467,7 @@ int partialpfunction(Matrix1D<double>  &Parameters,
         std::cout << "partialpfunctionParameters(" << i << ")" << Parameters(i) << std::endl;
     }
 
-    FileName fnRandom = global_flexible_prog->createDeformedPDB(0);
+    FileName fnRandom = global_flexible_prog->createDeformedPDB();
     std::ifstream fh_deformedPDB;
     fh_deformedPDB.open((fnRandom+ "_deformedPDB.pdb").c_str());
     if (!fh_deformedPDB)
@@ -640,11 +598,11 @@ int partialpfunction(Matrix1D<double>  &Parameters,
                         return(ERROR);
                     }
                     DP_Rz2(kx,ky) += help * (a0*help_v[0]+a1*help_v[1]+a2*help_v[2]);
-                    DP_x(kx,ky)   += help * (a0*R[0]+a1*R[1]+a2*R[2]);
-                    DP_y(kx,ky)   += help * (a0*R[4]+a1*R[5]+a2*R[6]);
+                    DP_x(kx,ky)   += help * (a0*R[0]+a1*R[1]+a2*R[2]); //global_flexible_prog->sctrans * DP_x(kx,ky)
+                    DP_y(kx,ky)   += help * (a0*R[4]+a1*R[5]+a2*R[6]); //global_flexible_prog->sctrans * DP_y(kx,ky)
                     for(int i = 0; i < dim; i++)
                     {
-                        DP_q(i,kx,ky) += help * (a0*ModeValues[i*3*Line_number +  k*3] + a1*ModeValues[i*3*Line_number + k*3 + 1] + a2*ModeValues[i*3*Line_number + k*3 + 2]);
+                        DP_q(i,kx,ky) += global_flexible_prog->scdefamp * help * (a0*ModeValues[i*3*Line_number +  k*3] + a1*ModeValues[i*3*Line_number + k*3 + 1] + a2*ModeValues[i*3*Line_number + k*3 + 2]);
                     }
                 }
             }
@@ -653,10 +611,10 @@ int partialpfunction(Matrix1D<double>  &Parameters,
     }
     std::cout << " 714 help = " << help << std::endl;
     fh_deformedPDB.close();
-    std::string command=(std::string)"rm -f deformedPDB_"+ fnRandom+".pdb";
+    /*std::string command=(std::string)"rm -f deformedPDB_"+ fnRandom+".pdb";
     system(command.c_str());
     command=(std::string)"rm -f downimg_"+fnRandom+".xmp";
-    system(command.c_str());
+    system(command.c_str());*/
     return(!ERROR);
 }/*end of partialpfunction*/
 
@@ -704,17 +662,17 @@ int return_gradhesscost(
               int     i,j;
               double  difference;
               double  SinPhi,CosPhi,SinPsi,CosPsi,SinTheta,CosTheta;
-              long    trialSize = VEC_XSIZE(global_flexible_prog->trial);
+              int     trialSize = VEC_XSIZE(global_flexible_prog->trial);
               double  lambda = 1000.0;
               double  sigmalocal = global_flexible_prog->sigma;
               int     half_Xwidth = Xwidth/2;
               int     half_Ywidth = Ywidth/2;
 
-              global_flexible_prog->costfunctionvalue = 0.0;
+              //global_flexible_prog->costfunctionvalue = 0.0;
 
 
               helpgr = (double *)malloc((size_t)(dim +5) * sizeof(double));
-              for (int i = 1; i < dim + 5; i++)
+              for (int i = 0; i < dim + 5; i++)
               {
                   global_flexible_prog->trial(i) = Parameters(i);
               }
@@ -1043,9 +1001,9 @@ int return_gradhesscost(
               std::cout << " 1256 phi = " << phi << std::endl;
               hlp  =  Tr;
               hlp  += (std::ptrdiff_t)3L;
-              *hlp =  - x0;
+              *hlp =  - x0; //global_flexible_prog->sctrans * x0
               hlp  += (std::ptrdiff_t)5L;
-              *hlp =  - y0;
+              *hlp =  - y0; //global_flexible_prog->sctrans * y0
 std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_prog->costfunctionvalue << std::endl;
               ProjectionRefencePoint(Parameters,dim,R,Tr,rg_projimage,P_esp_image,Xwidth,Ywidth,sigmalocal);
               std::cout << "1062 Parameters =" << Parameters << std::endl;
@@ -1093,7 +1051,7 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
                   return(ERROR);
               }
 
-              helpgr = (double *)malloc((size_t)trialSize * sizeof(double));
+              helpgr = (double *)malloc((size_t)((long)trialSize) * sizeof(double));
               if (helpgr == (double *)NULL)
               {
                   WRITE_ERROR(return_gradhesscost, "ERROR - Not enough memory for helpgr");
@@ -1229,8 +1187,7 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
               double *alpha,
               //double *cost,
               Matrix1D<double>  &Parameters,
-              int    DoDesProj,
-              double *OldCost,
+              double OldCost,
               double *lambda,
               double LambdaScale,
               long   *iter,
@@ -1249,21 +1206,24 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
               double   *u,   *v, *w;
               double   *t;
               double   wmax, thresh;
-              long     i, j, ma = VEC_XSIZE(global_flexible_prog->trial);
+              int      i, j;
+              long     ma = (long) VEC_XSIZE(global_flexible_prog->trial);
               double   hlp;
               double   *costchanged=NULL,max_defamp;
-              int      dim=global_flexible_prog->modeList.size();
+              int      dim = global_flexible_prog->numberOfModes;
               double   *a;
               int     Status = !ERROR;
               std::cout << "1563 *lambda =" << *lambda << "  lambda ="<<*lambda<<"  LambdaScale ="<<LambdaScale<< std::endl;
               std::cout << "1470 Parameters" << Parameters << std::endl;
               std::cout << tol_angle<<tol_shift<<tol_defamp<<Xwidth<<Ywidth <<std::endl;
+
+              costchanged  = (double *)malloc((size_t)(1L) * sizeof(double));
               a  = (double *)malloc((size_t)ma * sizeof(double));
-              if (a == (double *)NULL)
+              /*if (a == (double *)NULL)
               {
                   WRITE_ERROR(levenberg_cst2, "ERROR - Not enough memory for a in levenberg_cst2");
                   return(ERROR);
-              }
+              }*/
               for(i=0;i<ma;i++)
               {
                   a[i]=Parameters(i);
@@ -1272,31 +1232,31 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
 
 
               da = (double *)malloc((size_t)ma * sizeof(double));
-              if (da == (double *)NULL)
+              /*if (da == (double *)NULL)
               {
                   WRITE_ERROR(levenberg_cst2, "ERROR - Not enough memory for da in levenberg_cst2");
                   free(a);
                   return(ERROR);
-              }
+              }*/
               u = (double *)malloc((size_t)(ma * ma) * sizeof(double));
-              if (u == (double *)NULL)
+              /*if (u == (double *)NULL)
               {
                   free(a);
                   free(da);
                   WRITE_ERROR(levenberg_cst2, "ERROR - Not enough memory for u in levenberg_cst2");
                   return(ERROR);
-              }
+              }*/
               v = (double *)malloc((size_t)(ma * ma) * sizeof(double));
-              if (v == (double *)NULL)
+              /*if (v == (double *)NULL)
               {
                   free(a);
                   free(u);
                   free(da);
                   WRITE_ERROR(levenberg_cst2, "ERROR - Not enough memory for v in levenberg_cst2");
                   return(ERROR);
-              }
+              }*/
               w = (double *)malloc((size_t)ma * sizeof(double));
-              if (w == (double *)NULL)
+              /*if (w == (double *)NULL)
               {
                   free(a);
                   free(v);
@@ -1304,9 +1264,9 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
                   free(da);
                   WRITE_ERROR(levenberg_cst2, "ERROR - Not enough memory for w in levenberg_cst2");
                   return(ERROR);
-              }
+              }*/
 
-              std::cout << "1547 cost" << global_flexible_prog->costfunctionvalue << std::endl;
+              std::cout << "1547 cost" << global_flexible_prog->costfunctionvalue_cst << std::endl;
               t = u;
               for (i = 0L; (i < ma); t += (std::ptrdiff_t)(ma + 1L), i++)
               {
@@ -1323,7 +1283,11 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
               {
                   std::cout <<",  u"<<i<< " = " << u[i] ;
               }
-              if (SingularValueDecomposition(u, ma, ma, w, v, SVDMAXITER, &Status) == ERROR)
+              
+
+              SingularValueDecomposition(u, ma, ma, w, v, SVDMAXITER, &Status);
+
+              /*if (SingularValueDecomposition(u, ma, ma, w, v, SVDMAXITER, &Status) == ERROR)
               {
                   free(a);
                   std::cout << "1571" << std::endl;
@@ -1337,7 +1301,7 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
                   std::cout << "1575" << std::endl;
                   WRITE_ERROR(levenberg_cst2, "ERROR - Unable to perform svdcmp in levenberg_cst2");
                   return(ERROR);
-              }
+              }*/
               wmax = 0.0;
               std::cout << "1571" << std::endl;
               t = w + (std::ptrdiff_t)ma;
@@ -1359,7 +1323,11 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
                       }
                   }
               }
-              if (SingularValueBackSubstitution(u, w, v, ma, ma, beta, da, &Status) == ERROR)
+              
+
+              SingularValueBackSubstitution(u, w, v, ma, ma, beta, da, &Status);
+
+              /*if (SingularValueBackSubstitution(u, w, v, ma, ma, beta, da, &Status) == ERROR)
               {
                   free(a);
                   free(w);
@@ -1368,7 +1336,7 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
                   free(da);
                   WRITE_ERROR(levenberg_cst2, "ERROR - Unable to perform svbksb in levenberg_cst2");
                   return(ERROR);
-              }
+              }*/
               std::cout << "1600" << std::endl;
 
               v  =  (double *)memcpy(v, a, (size_t)ma * sizeof(double));
@@ -1386,7 +1354,10 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
               for(i=0;i<ma;i++)
                   Parameters(i) = v[i];
 
-              if (return_gradhesscost(centerOfMass,w, u,  Parameters,dim,lc_P_mu_image,P_esp_image,Xwidth,Ywidth) == ERROR)
+              return_gradhesscost(centerOfMass,w, u,  Parameters,dim,lc_P_mu_image,P_esp_image,Xwidth,Ywidth);
+              costchanged[0]=global_flexible_prog->costfunctionvalue;
+
+              /*if (return_gradhesscost(centerOfMass,w, u,  Parameters,dim,lc_P_mu_image,P_esp_image,Xwidth,Ywidth) == ERROR)
               {
                   WRITE_ERROR(levenberg_cst2, "Error returned by total_gradhesscost");
                   free(a);
@@ -1395,7 +1366,7 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
                   free(u);
                   free(da);
                   return(ERROR);
-              }
+              }*/
 
               std::cout << "1633 Parameters" << Parameters<<std::endl;
               std::cout << "w" << w[0] << "||" << w[1] << "||" << w[2] << "||" << w[3] << "||" << w[4] << "||" << w[5] << "||" << w[6] << "||" << std::endl;
@@ -1415,7 +1386,7 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
               }
 
               (*iter)++;
-              if (*costchanged < *OldCost)
+              if (costchanged[0] < OldCost)
               {
                   if ((fabs(a[0] - v[0]) < tol_angle) && (fabs(a[1] - v[1]) < tol_angle) && (fabs(a[2] - v[2]) < tol_angle))
                   {
@@ -1429,8 +1400,26 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
                   }
               }
 
+              if (global_flexible_prog->costfunctionvalue_cst == -1.0)
+              {
+                  if (costchanged[0] < OldCost)
+                  {
+                      for (i = 0L; (i < ma); i++)
+                      {
+                          for (j = 0L; (j < ma); j++)
+                              alpha[i * ma + j] = u[i * ma + j];
+                          beta[i] = w[i];
+                          a[i] = v[i];
+                      }
+                      global_flexible_prog->costfunctionvalue_cst = costchanged[0];
+                  }
 
-
+                 /* free(w);
+                  free(u);
+                  free(da);
+                  free(v);*/
+                  return(!ERROR);
+              }
 
               for (i = 0L; (i < ma); i++)
               {
@@ -1439,7 +1428,7 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
                   beta[i] = w[i];
                   a[i] = v[i];
               }
-              global_flexible_prog->costfunctionvalue = *costchanged;
+              global_flexible_prog->costfunctionvalue_cst = costchanged[0];
 
 
 #ifndef DBL_MIN
@@ -1449,9 +1438,9 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
 #define DBL_MAX 1e+26
 #endif
 
-              std::cout << "1774 cost" << global_flexible_prog->costfunctionvalue<<std::endl;
+              std::cout << "1774 cost" << global_flexible_prog->costfunctionvalue_cst<<std::endl;
 
-              if (*costchanged < *OldCost)
+              if (costchanged[0] < OldCost)
               {
                   if (*lambda > DBL_MIN)
                   {
@@ -1473,15 +1462,15 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
                       *IteratingStop = 1;
                   }
               }
-              std::cout << "1797 *cost" << global_flexible_prog->costfunctionvalue<<std::endl;
-              free(w);
-              std::cout << "1798 *cost" << global_flexible_prog->costfunctionvalue<<std::endl;
+              std::cout << "1797 *cost" << global_flexible_prog->costfunctionvalue_cst<<std::endl;
+              /*free(w);
+              std::cout << "1798 *cost" << global_flexible_prog->costfunctionvalue_cst<<std::endl;
               free(v);
-              std::cout << "1799 cost" << global_flexible_prog->costfunctionvalue<<std::endl;
+              std::cout << "1799 cost" << global_flexible_prog->costfunctionvalue_cst<<std::endl;
               free(u);
-              std::cout << "1800 cost" << global_flexible_prog->costfunctionvalue<<std::endl;
+              std::cout << "1800 cost" << global_flexible_prog->costfunctionvalue_cst<<std::endl;
               free(da);
-              std::cout << "1801 cost" << global_flexible_prog->costfunctionvalue<<std::endl;
+              std::cout << "1801 cost" << global_flexible_prog->costfunctionvalue_cst<<std::endl;*/
               return(!ERROR);
           } /* End of levenberg_cst2 */
 
@@ -1502,14 +1491,15 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
               long            MaxIter, MaxIter1, iter;
               long            MaxNumberOfFailures, SatisfNumberOfSuccesses, nSuccess, nFailure;
               double          *pntr_FailureIter;
-              double          LambdaScale=2., lambda,  *OldCost=NULL, tol_angle, tol_shift,tol_defamp;
-              double          *Gradient, *Hessian;
-              time_t          time2, *tp2 = NULL;
-              long             dim = global_flexible_prog->modeList.size();
+              double          LambdaScale=2., OldCost, tol_angle, tol_shift,tol_defamp;
+              double          OneIterInSeconds, *Gradient, *Hessian;
+              time_t          time1, time2, *tp1 = NULL, *tp2 = NULL;
+              long            dim = (long) global_flexible_prog->numberOfModes;
               long            MaxNoIter,MaxNoFailure,SatisfNoSuccess;
 
+              double lambda=1000.;
+              time1=time(tp1);
               DoDesProj        = 0;
-              lambda           = 2000;
               MaxNoIter        = global_flexible_prog->max_no_iter;
               MaxNoFailure     = (long)(0.3 * MaxNoIter);
               SatisfNoSuccess  = (long)(0.7 * MaxNoIter);
@@ -1522,11 +1512,7 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
               tol_shift  = 0.0;
               tol_defamp = 0.0;
 
-              MultidimArray<double> output_pose(5, MaxNoIter + 1);
-              int ny_OutputParameters = 5;
-
-              std::cout << "ny_OutputParameters = " << ny_OutputParameters << std::endl;
-              std::cout << "cost = " << global_flexible_prog->costfunctionvalue << std::endl;
+              std::cout << "cost = " << global_flexible_prog->costfunctionvalue_cst << std::endl;
 
               Gradient = (double *)malloc((size_t) (dim + 5L) * sizeof(double));
               if (Gradient == (double *)NULL)
@@ -1543,6 +1529,16 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
                   return(ERROR);
               }
 
+              if (DoDesProj && (global_flexible_prog->currentStage == 2))
+              {
+		  Parameters(0)=10;
+                  Parameters(1)=0;
+                  Parameters(2)=0;
+                  Parameters(3)=0;
+                  Parameters(4)=0;
+                  Parameters(5)=0.5;
+                  //Parameters(6)=0;
+              }
 
               std::cout << "1819Parameters = " << Parameters << std::endl;
               if (return_gradhesscost(centerOfMass,Gradient, Hessian, Parameters,
@@ -1554,10 +1550,17 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
                   free(Hessian);
                   return(ERROR);
               }
-              std::cout << "1935 cost = " << global_flexible_prog->costfunctionvalue << std::endl;
+              std::cout << "1935 cost = " << global_flexible_prog->costfunctionvalue_cst << std::endl;
               time2 = time(tp2);
-              if (DoDesProj)
+              OneIterInSeconds = difftime(time2, time1);
+              std::cout << "time diff=" << OneIterInSeconds << std::endl;
+              if (DoDesProj && (global_flexible_prog->currentStage == 2))
               {
+                  Image<double> Itemp;
+                  //Itemp().setXmippOrigin();
+                  Itemp()=cst_P_mu_image;
+          	  Itemp.write("test_refimage.spi");
+
                   free(Gradient);
                   free(Hessian);
                   return(!ERROR);
@@ -1571,19 +1574,21 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
               }
               nSuccess = 0L;
               nFailure = 0L;
-              *OldCost   = global_flexible_prog->costfunctionvalue;
+              OldCost   = global_flexible_prog->costfunctionvalue_cst;
               iter = - 1L;
               IteratingStop = 0;
               FlagMaxIter = (MaxIter != 1L);
               if (!FlagMaxIter)
-            	  global_flexible_prog->costfunctionvalue = - 1.0;
-              std::cout << "1984 *cost = " << global_flexible_prog->costfunctionvalue << std::endl;
+            	  global_flexible_prog->costfunctionvalue_cst = - 1.0;
+              std::cout << "1984 *cost = " << global_flexible_prog->costfunctionvalue_cst << std::endl;
 
               do
               {
-                  std::cout << "1992 *cost = " << global_flexible_prog->costfunctionvalue << " cost = " << global_flexible_prog->costfunctionvalue << std::endl;
-                  std::cout << "cost = " << global_flexible_prog->costfunctionvalue << std::endl;
-                  if (levenberg_cst2(cst_P_mu_image,P_esp_image,centerOfMass,Gradient, Hessian,  Parameters,DoDesProj,  OldCost, &lambda, LambdaScale, &iter, tol_angle, tol_shift, tol_defamp,&IteratingStop,Xwidth,Ywidth) == ERROR)
+                  time1 = time(tp1);
+
+                  std::cout << "1992 *cost = " << global_flexible_prog->costfunctionvalue_cst << " cost = " << global_flexible_prog->costfunctionvalue_cst << std::endl;
+                  std::cout << "cost = " << global_flexible_prog->costfunctionvalue_cst << std::endl;
+                  if (levenberg_cst2(cst_P_mu_image,P_esp_image,centerOfMass,Gradient, Hessian,  Parameters,OldCost, &lambda, LambdaScale, &iter, tol_angle, tol_shift, tol_defamp,&IteratingStop,Xwidth,Ywidth) == ERROR)
                   {
                       WRITE_ERROR(cstregistrationcontinuous, "Error returned by levenberg_cst2");
                       //free(Parameters);
@@ -1591,12 +1596,12 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
                       free(Hessian);
                       return(ERROR);
                   }
-                  std::cout << "2002 *cost = " << global_flexible_prog->costfunctionvalue  << " cost = " << global_flexible_prog->costfunctionvalue  << std::endl;
+                  std::cout << "2002 *cost = " << global_flexible_prog->costfunctionvalue_cst  << " cost = " << global_flexible_prog->costfunctionvalue_cst  << std::endl;
                   time2 = time(tp2);
 
-                  if (global_flexible_prog->costfunctionvalue < *OldCost)
+                  if (global_flexible_prog->costfunctionvalue_cst < OldCost)
                   {
-                      *OldCost = global_flexible_prog->costfunctionvalue;
+                      OldCost = global_flexible_prog->costfunctionvalue_cst;
                       nSuccess++;
                       pntr_FailureIter++;
                       if (nSuccess >= SatisfNumberOfSuccesses)
@@ -1616,7 +1621,7 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
 
               }
               while ((nFailure <= MaxNumberOfFailures) && (iter < MaxIter1) && FlagMaxIter);
-              std::cout << "1950 *OldCost = " << *OldCost << std::endl;
+              std::cout << "1950 OldCost = " << OldCost << std::endl;
 
               free(Gradient);
               free(Hessian);
@@ -1624,10 +1629,10 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
               return(!ERROR);
           }
 
-          void ProgFlexibleAlignment::performCompleteSearch(const FileName &fnRandom, int pyramidLevel) const
+          void ProgFlexibleAlignment::performCompleteSearch(int pyramidLevel)
           {
 
-              int       dim=modeList.size();
+              int       dim = numberOfModes;
               int       ModMaxdeDefamp, ModpowDim,help;
               double    SinPhi,CosPhi,SinPsi,CosPsi;
               double    phi,theta,psi;
@@ -1637,24 +1642,27 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
               double    *R,*Tr;
               double    x0,y0;
               //double    *cost;
-              //costfunctionvalue = 0.0;
+              costfunctionvalue = 0.0;
               Matrix1D<double> Parameters(dim+5);
               Matrix1D<double> limit0(3), limitF(3), centerOfMass(3);
               const char *intensityColumn = "Bfactor";
-              computePDBgeometry(global_flexible_prog->fnPDB, centerOfMass, limit0, limitF, intensityColumn);
+              computePDBgeometry(fnPDB, centerOfMass, limit0, limitF, intensityColumn);
               centerOfMass = (limit0 + limitF)/2;
 
+              FileName fnRandom;
+              fnRandom.initUniqueName(nameTemplate,fnOutDir);
               std::string command;
 
           	// Reduce the image
-          	FileName fnDown = formatString("%s_downimg.xmp", fnRandom.c_str());
+          	fnDown = formatString("%s_downimg.xmp", fnRandom.c_str());
           	if (pyramidLevel != 0) {
           		Image<double> I;
           		I.read(currentImgName);
           		selfPyramidReduce(BSPLINE3, I(), pyramidLevel);
           		I.write(fnDown);
-          	} else
-          		link(currentImgName.c_str(), fnDown.c_str());
+          	} 
+                /*else
+          		link(currentImgName.c_str(), fnDown.c_str());*/
 
 std::cout << "2074" << fnDown << std::endl;
 
@@ -1909,6 +1917,7 @@ std::cout << "2074" << fnDown << std::endl;
               std::cout << "trial_best" << trial_best <<S_muMin <<std::endl;
               for (int i=0; i<dim+5; i++)
               {
+                  trial(i)=trial_best(i);
                   parameters(i)=trial_best(i);
               }
 
@@ -1932,41 +1941,55 @@ std::cout << "2074" << fnDown << std::endl;
           }
 
           // Continuous assignment ===================================================
-          double ProgFlexibleAlignment::performContinuousAssignment(const FileName &fnRandom, int pyramidLevel) const
+          double ProgFlexibleAlignment::performContinuousAssignment(int pyramidLevel) 
           {
-              int    dim=modeList.size();
               //double *cost;
               std::cout << "Bfactor001" << std::endl;
-              //costfunctionvalue = 0.0;
-              std::cout << "cost = " << costfunctionvalue << std::endl;
+              costfunctionvalue = 0.0;
+              costfunctionvalue_cst = 0.0;
+              //std::cout << "cost = " << costfunctionvalue << std::endl;
 
               Matrix1D<double> Parameters;
-              Parameters.initZeros(dim+5);
 
-              for (int i=0; i<dim+5; i++)
+              /*for (int i=0; i<dim+5; i++)
               {
-                  Parameters(i) = parameters(i);
-                  trial(i) = parameters(i);
+                  Parameters(i) = trial(i);
                   std::cout << "performContinuousAssignment_Parameters(" << i << ")" << Parameters(i) << std::endl;
-              }
+              }*/
+              Parameters = trial_best;
 
-              FileName fnDown = formatString("%s_downimg.xmp", fnRandom.c_str());
+              std::cout << "pyramidLevel  " << pyramidLevel << std::endl;
+              
+
               std::string command;
               if (pyramidLevel==0)
               {
                   // Make links
-                  command=formatString(
+                  /*command=formatString(
                 		  "ln -sf %s %s",
-                		  currentImgName.c_str(), fnDown.c_str());
-                  system(command.c_str());
+                		  currentImgName.c_str(), fnDown.c_str());*/
+
+                  FileName fnRandom;
+                  fnRandom.initUniqueName(nameTemplate,fnOutDir);
+                  fnDown = formatString("%s_downimg.xmp", fnRandom.c_str());
+
+                  Image<double> I;
+          	  I.read(currentImgName);
+                  selfPyramidReduce(BSPLINE3, I(), pyramidLevel);
+                  I.write(fnDown);
+          	
+
+                  //std::cout << "command.c_str()  " << command.c_str() << std::endl;
+                  //system(command.c_str());
+                  std::cout << "1986  " <<pyramidLevel<< std::endl;
               }
-              std::cout << "1986  " << fnDown <<"  "<<pyramidLevel<< std::endl;
+              std::cout << "19860  " <<pyramidLevel<< std::endl;
 
               //std::string arguments;
               //arguments = formatString("%s_downimg.xmp",fnRandom.c_str());
               Image<double> imgtemp;
               imgtemp.read(fnDown);
-              std::cout << "1991"<<command << std::endl;
+              std::cout << "1991" << std::endl;
 
               imgtemp().setXmippOrigin();
               MultidimArray<double>  P_mu_image,P_esp_image;
@@ -1977,9 +2000,9 @@ std::cout << "2074" << fnDown << std::endl;
               //double P_mu_image[Xwidth*Xwidth];
               Matrix1D<double> limit0(3), limitF(3), centerOfMass(3);
               const char *intensityColumn = "Bfactor";
-              //Matrix1D<double> test=global_flexible_prog->centerOfMass;
+              //Matrix1D<double> test=centerOfMass;
               std::cout << "Bfactor001" << std::endl;
-              computePDBgeometry(global_flexible_prog->fnPDB, centerOfMass, limit0, limitF, intensityColumn);
+              computePDBgeometry(fnPDB, centerOfMass, limit0, limitF, intensityColumn);
 
               std::cout << "Bfactor" << std::endl;
               centerOfMass = (limit0 + limitF)/2;
@@ -1988,93 +2011,58 @@ std::cout << "2074" << fnDown << std::endl;
               std::cout << "centerOfMass_Bfactor003" << std::endl;
               /* Insert code for continious alignment */
 
-              command=(std::string)"rm -f "+fnRandom+"downimg.xmp";
-              system(command.c_str());
-              double outcost = costfunctionvalue;
+              std::cout << "trial " << trial << std::endl;
+
+              trial(3) *= pow(2.0, (double) pyramidLevel);
+	      trial(4) *= pow(2.0, (double) pyramidLevel);
+
+              trial_best=trial;
+
+              std::cout << "trial_best " << trial_best << std::endl;
+
+
+              /*command=formatString("rm -f %s ", fnDown.c_str());
+              system(command.c_str());*/
+
+              std::cout << "rm fndown " << std::endl;
+
+              double outcost = costfunctionvalue_cst;
+              
+              std::cout << "outcost" << outcost << std::endl;
+
               return outcost;
           }
 
-          void ProgFlexibleAlignment::updateBestFit(double fitness, int dim)
-          {
-              if (fitness < fitness_min(0))
-              {
-                  fitness_min(0) = fitness;
-                  trial_best = trial;
-              }
-          }
 
 // Compute fitness =========================================================
-          double ObjFunc_flexible_alignment::eval(Vector X, int *nerror)
+          double ProgFlexibleAlignment::eval()
           {
-              int dim = global_flexible_prog->numberOfModes;
-
-              for (int i = 0; i < dim; i++)
-              {
-                  global_flexible_prog->trial(i) = X[i];
-              }
-
               int pyramidLevelDisc = 1;
-              int pyramidLevelCont = (global_flexible_prog->currentStage == 1) ? 1 : 0;
+              int pyramidLevelCont = (currentStage == 1) ? 1 : 0;
 
-              FileName fnRandom = global_flexible_prog->createDeformedPDB(pyramidLevelCont);
-              const char * randStr = fnRandom.c_str();
-
-              if (global_flexible_prog->currentStage == 1)
+              if (currentStage == 1)
               {
-                  global_flexible_prog->performCompleteSearch(fnRandom, pyramidLevelDisc);
+                  performCompleteSearch(pyramidLevelDisc);
               }
               else
               {
-                  double rot, tilt, psi, xshift, yshift;
-                  MetaData DF;
 
-                  rot = global_flexible_prog->bestStage1(
-                            VEC_XSIZE(global_flexible_prog->bestStage1) - 5);
-                  tilt = global_flexible_prog->bestStage1(
-                             VEC_XSIZE(global_flexible_prog->bestStage1) - 4);
-                  psi = global_flexible_prog->bestStage1(
-                            VEC_XSIZE(global_flexible_prog->bestStage1) - 3);
-                  xshift = global_flexible_prog->bestStage1(
-                               VEC_XSIZE(global_flexible_prog->bestStage1) - 2);
-                  yshift = global_flexible_prog->bestStage1(
-                               VEC_XSIZE(global_flexible_prog->bestStage1) - 1);
-
-                  size_t objId = DF.addObject();
-                  FileName fnDown = formatString("%s_downimg.xmp", randStr);
-                  DF.setValue(MDL_IMAGE, fnDown, objId);
-                  DF.setValue(MDL_ENABLED, 1, objId);
-                  DF.setValue(MDL_ANGLE_ROT, rot, objId);
-                  DF.setValue(MDL_ANGLE_TILT, tilt, objId);
-                  DF.setValue(MDL_ANGLE_PSI, psi, objId);
-                  DF.setValue(MDL_SHIFT_X, xshift, objId);
-                  DF.setValue(MDL_SHIFT_Y, yshift, objId);
-
-                  DF.write(formatString("%s_angledisc.xmd", randStr));
-                  link(global_flexible_prog->currentImgName.c_str(), fnDown.c_str());
+                  //link(currentImgName.c_str(), fnDown.c_str());
               }
-              double fitness = global_flexible_prog->performContinuousAssignment(fnRandom,
-                               pyramidLevelCont);
+              double fitness = performContinuousAssignment(pyramidLevelCont);
 
-              runSystem("rm", formatString("-rf %s* &", randStr));
+              //std::cout << "Trial=" << trial_best.transpose() << " ---> " << fitness << std::endl;
 
-              global_flexible_prog->updateBestFit(fitness, dim);
+              std::cout << "Fitness" << std::endl;
               return fitness;
           }
 
-          ObjFunc_flexible_alignment::ObjFunc_flexible_alignment(int _t, int _n)
-          {}
 
           void ProgFlexibleAlignment::processImage(const FileName &fnImg,
                   const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
           {
               static size_t imageCounter = 0;
               ++imageCounter;
-
-              double rhoStart = 1e-0, rhoEnd = 1e-3;
-
-              int niter = 1000;
-
-              ObjectiveFunction *of;
 
               int dim = numberOfModes;
 
@@ -2085,9 +2073,6 @@ std::cout << "2074" << fnDown << std::endl;
               trial.initZeros(dim + 5);
               trial_best.initZeros(dim + 5);
 
-              fitness_min.initZeros(1);
-              fitness_min(0) = 1000000.0;
-
               currentStage = 1;
 #ifdef DEBUG
 
@@ -2096,30 +2081,8 @@ std::cout << "2074" << fnDown << std::endl;
               << " at stage: " << currentStage << std::endl;
 #endif
 
-              of = new ObjFunc_flexible_alignment(1, dim);
-
-              of->xStart.setSize(dim);
-              for (int i = 0; i < dim; i++)
-                  of->xStart[i] = 0.;
-
-#ifdef DEBUG
-
-              strcpy(of->name,("OF1_"+integerToString(rangen)).c_str());
-              of->setSaveFile();
-#endif
-
-              CONDOR(rhoStart, rhoEnd, niter, of);
-#ifdef DEBUG
-
-              of->printStats();
-              FILE *ff = fopen(("res1_"+integerToString(rangen)+".xmd").c_str(),"w");
-              fprintf(ff,"%s & %i & %i & (%i) & %e \\\\\n", of->name, of->dim(), of->getNFE(), of->getNFE2(), of->valueBest);
-              fclose(ff);
-#endif
-
+              double fitness=eval();
               bestStage1 = trial = parameters = trial_best;
-
-              delete of;
 
               currentStage = 2;
 #ifdef DEBUG
@@ -2129,59 +2092,33 @@ std::cout << "2074" << fnDown << std::endl;
               << " at stage: " << currentStage << std::endl;
 #endif
 
-              fitness_min(0) = 1000000.0;
+              fitness=eval();
 
-              of = new ObjFunc_flexible_alignment(1, dim);
-
-              of->xStart.setSize(dim);
-              for (int i = 0; i < dim; i++)
-                  of->xStart[i] = parameters(i);
-#ifdef DEBUG
-
-              strcpy(of->name,("OF2_"+integerToString(rangen)).c_str());
-              of->setSaveFile();
-#endif
-
-              rhoStart = 1e-3, rhoEnd = 1e-4;
-              CONDOR(rhoStart, rhoEnd, niter, of);
-#ifdef DEBUG
-
-              of->printStats();
-              ff=fopen(("res2_"+integerToString(rangen)+".xmd").c_str(),"w");
-              fprintf(ff,"%s & %i & %i & (%i) & %e \\\\\n", of->name, of->dim(), of->getNFE(), of->getNFE2(), of->valueBest);
-              fclose(ff);
-#endif
-
-#ifdef DEBUG
-
-              std::cout << "Best fitness = " << fitness << std::endl;
-              for (int i=0; i<dim; i++)
-              {
-                  std::cout << "Best deformations = " << dd[i] << std::endl;
-              }
-#endif
+std::cout << "step1" << std::endl;
 
               trial = trial_best;
+              parameters = trial_best;
 
-              for (int i = dim; i < dim + 5; i++)
-              {
-                  parameters(i - dim) = trial_best(i);
-              }
-
-              for (int i = 0; i < dim; i++)
-              {
-                  parameters(5 + i) = trial_best(i) * scale_defamp;
-              }
+std::cout << "step2" << std::endl;
 
               parameters.resize(VEC_XSIZE(parameters) + 1);
-              parameters(VEC_XSIZE(parameters) - 1) = fitness_min(0);
+              parameters(VEC_XSIZE(parameters) - 1) = fitness;
+
+std::cout << "step3" << std::endl;
 
               writeImageParameters(fnImg);
-              delete of;
+
           }
 
           void ProgFlexibleAlignment::writeImageParameters(const FileName &fnImg)
           {
+              
+std::cout << "parameters0" << parameters(0) << std::endl;
+std::cout << "parameters1" << parameters(1) << std::endl;
+std::cout << "parameters2" << parameters(2) << std::endl;
+std::cout << "parameters3" << parameters(3) << std::endl;
+std::cout << "parameters4" << parameters(4) << std::endl;
+
               MetaData md;
               size_t objId = md.addObject();
               md.setValue(MDL_IMAGE, fnImg, objId);
@@ -2195,13 +2132,24 @@ std::cout << "2074" << fnDown << std::endl;
               int dim = numberOfModes;
               std::vector<double> vectortemp;
 
+std::cout << "step4" << std::endl;
+
               for (int j = 5; j < 5 + dim; j++)
               {
                   vectortemp.push_back(parameters(j));
               }
 
+std::cout << "step5" << std::endl;
+
               md.setValue(MDL_NMA, vectortemp, objId);
+
+std::cout << "step6" << std::endl;
+
               md.setValue(MDL_COST, parameters(5 + dim), objId);
 
+std::cout << "step7" << std::endl;
+
               md.append(fnOutDir+"/nmaDone.xmd");
+
+std::cout << "step8" << std::endl;
           }

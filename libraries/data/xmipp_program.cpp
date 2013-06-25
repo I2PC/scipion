@@ -42,6 +42,12 @@ void XmippProgram::processDefaultComment(const char *param, const char *left)
         addParamsLine(((String)":"+defaultComments[param].comments[i]).c_str());
 }
 
+void XmippProgram::setDefaultComment(const char *param, const char *comment)
+{
+	defaultComments[param].clear();
+	defaultComments[param].addComment(comment);
+}
+
 void XmippProgram::defineCommons()
 {
     ///Add some common definitions to all Xmipp programs

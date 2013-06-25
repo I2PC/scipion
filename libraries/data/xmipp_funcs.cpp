@@ -396,7 +396,9 @@ unsigned int  randomize_random_generator()
 {
     static  unsigned int seed;
     int rand_return;
-    srand(rand()+clock()+time(NULL));
+    struct timespec highresTime;
+    clock_gettime(CLOCK_REALTIME, &highresTime);
+    srand(rand()+clock()+time(NULL)+highresTime.tv_nsec);
     rand_return = rand();
 
     time_t t;

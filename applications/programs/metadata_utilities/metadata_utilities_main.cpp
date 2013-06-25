@@ -41,7 +41,7 @@ private:
     MetaData mdIn, md2;
     MDLabel label;
     std::vector<MDLabel> labels;
-    String operation;
+    String operation, order;
     bool doWrite;
 
 protected:
@@ -72,10 +72,11 @@ protected:
 
         addParamsLine("or --operate <operation>     : Operations on the metadata structure");
         addParamsLine("         where <operation>");
-        addParamsLine("   sort <label=image>       : Sort metadata using a label as identifier");
-        addParamsLine("                            : for sorting according to a component of a vector label");
-        addParamsLine("                            : use label:col, e.g., NMADisplacements:0");
-        addParamsLine("                            : The first column is column number 0");
+        addParamsLine("   sort <label=image> <order=asc>: Sort metadata using a label as identifier");
+        addParamsLine("                                 : for sorting according to a component of a vector label");
+        addParamsLine("                                 : use label:col, e.g., NMADisplacements:0");
+        addParamsLine("                                 : The first column is column number 0.");
+        addParamsLine("                                 : order can be asc (ascending) or desc (descending)");
         addParamsLine("   randomize                            : Randomize elements of metadata");
         addParamsLine("    keep_column <labels>                : Keep some columns(label list) from metadata");
         addParamsLine("    drop_column <labels>                : Drop some columns(label list) from metadata");
@@ -256,7 +257,10 @@ protected:
         {
             MetaData md(mdIn);
             if (operation == "sort")
-                mdIn.sort(md, getParam("--operate", 1));
+            {
+            	String order=getParam("--operate",2);
+                mdIn.sort(md, getParam("--operate", 1),order=="asc");
+            }
             else if (operation == "randomize")
                 mdIn.randomize(md);
         }

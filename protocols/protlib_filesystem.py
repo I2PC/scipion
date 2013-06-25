@@ -146,6 +146,10 @@ def uniqueRandomFilename(file_name,randomLength=5):
         counter += 1
     return file_name 
 
+def getExt(filename):
+    ''' Returns the extension of a file'''
+    return splitext(filename)[1]
+
 def replaceBasenameExt(filename, new_ext):
     '''Take the basename of the filename 
     and replace the extension by a new one'''

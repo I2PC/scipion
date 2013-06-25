@@ -142,8 +142,10 @@ PyMethodDef Image_methods[] =
      "Return value from Header" },
    { "setHeaderValue", (PyCFunction) Image_setHeaderValue, METH_VARARGS,
      "Set value to Header" },
-                             { "computeStats", (PyCFunction) Image_computeStats, METH_VARARGS,
+   { "computeStats", (PyCFunction) Image_computeStats, METH_VARARGS,
      "Compute image statistics, return mean, dev, min and max" },
+   { "adjustAndSubtract", (PyCFunction) Image_adjustAndSubtract, METH_VARARGS,
+       "I1=I1-adjusted(I2)" },
    { NULL } /* Sentinel */
 };//Image_methods
 
@@ -977,9 +979,6 @@ Image_setHeaderValue(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
-
-
-
 /* Return image dimensions as a tuple */
 PyObject *
 Image_computeStats(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -1003,6 +1002,34 @@ Image_computeStats(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }//function Image_computeStats
+
+/* Return image dimensions as a tuple */
+PyObject *
+Image_adjustAndSubtract(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
+    PyObject *pimg2 = NULL;
+    ImageObject * result = PyObject_New(ImageObject, &ImageType);
+    if (self != NULL)
+    {
+        try
+        {
+        	if (PyArg_ParseTuple(args, "O", &pimg2))
+        	{
+        		ImageObject *img2=(ImageObject *)pimg2;
+                result->image = new ImageGeneric(Image_Value(img2));
+        		MULTIDIM_ARRAY_GENERIC(*result->image).rangeAdjust(MULTIDIM_ARRAY_GENERIC(*self->image));
+        		MULTIDIM_ARRAY_GENERIC(*result->image) *=-1;
+        		MULTIDIM_ARRAY_GENERIC(*result->image) += MULTIDIM_ARRAY_GENERIC(*self->image);
+        	}
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return (PyObject *)result;
+}//function Image_adjustAndSubtract
 
 /* Add two images, operator + */
 PyObject *
