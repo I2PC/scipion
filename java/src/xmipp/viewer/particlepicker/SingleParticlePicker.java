@@ -988,6 +988,8 @@ public class SingleParticlePicker extends ParticlePicker
 				int x, y;
 				double cost;
 				AutomaticParticle ap;
+				System.out.println("Number of automatic particles in java");
+				System.out.println(outputmd.size());
 				for (long id : outputmd.findObjects())
 				{
 					x = outputmd.getValueInt(MDLabel.MDL_XCOOR, id);
@@ -1001,7 +1003,6 @@ public class SingleParticlePicker extends ParticlePicker
 					}
 					micrograph.addAutomaticParticle(ap);
 				}
-
 				XmippWindowUtil.releaseGUI(frame.getRootPane());
 				frame.getCanvas().setEnabled(true);
 				frame.getCanvas().repaint();

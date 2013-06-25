@@ -122,6 +122,8 @@ public:
     FileName                     fnVector;
     FileName                     fnSVMModel;
     FileName                     fnSVMModel2;
+    FileName 				     fnInvariant;
+    FileName 					 fnParticles;
 public:
 
     /// Constructor
