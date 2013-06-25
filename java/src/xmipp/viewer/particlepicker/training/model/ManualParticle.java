@@ -11,7 +11,6 @@ import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.PickerParticle;
-import xmipp.viewer.particlepicker.SingleParticlePicker;
 
 public class ManualParticle extends PickerParticle{
 	

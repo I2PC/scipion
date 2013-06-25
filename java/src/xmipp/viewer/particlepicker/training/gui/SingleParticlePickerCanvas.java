@@ -13,8 +13,8 @@ import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
 import xmipp.viewer.particlepicker.ParticleToTemplatesTask;
-import xmipp.viewer.particlepicker.SingleParticlePicker;
 import xmipp.viewer.particlepicker.training.model.AutomaticParticle;
+import xmipp.viewer.particlepicker.training.model.SingleParticlePicker;
 import xmipp.viewer.particlepicker.training.model.SingleParticlePickerMicrograph;
 import xmipp.viewer.particlepicker.training.model.ManualParticle;
 

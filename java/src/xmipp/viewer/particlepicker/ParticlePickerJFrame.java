@@ -2,6 +2,7 @@ package xmipp.viewer.particlepicker;
 
 import ij.IJ;
 import ij.WindowManager;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -21,6 +22,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
@@ -31,7 +33,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JTable;
@@ -45,6 +46,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
+
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippApplication;
 import xmipp.ij.commons.XmippIJUtil;
@@ -55,7 +57,6 @@ import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
-import xmipp.viewer.particlepicker.training.gui.AdvancedOptionsJDialog;
 import xmipp.viewer.particlepicker.training.gui.TemplatesJDialog;
 import xmipp.viewer.particlepicker.training.model.Mode;
 
@@ -94,7 +95,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected JLabel positionlb;
 	protected JToggleButton usezoombt;
 
-	public TemplatesJDialog templatesdialog;
+	
 
 	private JToggleButton eraserbt;
 

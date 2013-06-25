@@ -1,4 +1,4 @@
-package xmipp.viewer.particlepicker;
+package xmipp.viewer.particlepicker.training.model;
 
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -17,12 +17,11 @@ import xmipp.jni.PickingClassifier;
 import xmipp.utils.TasksManager;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
+import xmipp.viewer.particlepicker.Format;
+import xmipp.viewer.particlepicker.Micrograph;
+import xmipp.viewer.particlepicker.ParticlePicker;
+import xmipp.viewer.particlepicker.UpdateTemplatesTask;
 import xmipp.viewer.particlepicker.training.gui.SingleParticlePickerJFrame;
-import xmipp.viewer.particlepicker.training.model.AutomaticParticle;
-import xmipp.viewer.particlepicker.training.model.MicrographState;
-import xmipp.viewer.particlepicker.training.model.Mode;
-import xmipp.viewer.particlepicker.training.model.SingleParticlePickerMicrograph;
-import xmipp.viewer.particlepicker.training.model.ManualParticle;
 
 /**
  * Business object for Single Particle Picker GUI. Inherits from ParticlePicker

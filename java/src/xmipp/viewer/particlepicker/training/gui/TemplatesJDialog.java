@@ -25,18 +25,9 @@ public class TemplatesJDialog extends JDialog {
 		this.frame = frame;
 		initComponents();
 
-		addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent winEvt) {
-				resetTemplatesJDialog();
-			}
-
-		});
+		
 	}
 
-	protected void resetTemplatesJDialog() {
-		frame.templatesdialog = null;
-
-	}
 
 	public synchronized void loadTemplates(boolean resize) {
 		try {

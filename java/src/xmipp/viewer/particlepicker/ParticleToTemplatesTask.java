@@ -3,6 +3,7 @@ package xmipp.viewer.particlepicker;
 import xmipp.utils.Task;
 import xmipp.viewer.particlepicker.training.gui.TemplatesJDialog;
 import xmipp.viewer.particlepicker.training.model.ManualParticle;
+import xmipp.viewer.particlepicker.training.model.SingleParticlePicker;
 
 public class ParticleToTemplatesTask implements Task
 {

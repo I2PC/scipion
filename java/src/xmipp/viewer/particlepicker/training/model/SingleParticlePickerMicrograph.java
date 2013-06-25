@@ -11,7 +11,6 @@ import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.PickerParticle;
 import java.awt.Rectangle;
-import xmipp.viewer.particlepicker.SingleParticlePicker;
 
 public class SingleParticlePickerMicrograph extends Micrograph
 {

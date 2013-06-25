@@ -6,9 +6,9 @@ import javax.swing.SwingUtilities;
 
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.particlepicker.ParticlePicker;
-import xmipp.viewer.particlepicker.SingleParticlePicker;
 import xmipp.viewer.particlepicker.training.gui.SingleParticlePickerJFrame;
 import xmipp.viewer.particlepicker.training.model.Mode;
+import xmipp.viewer.particlepicker.training.model.SingleParticlePicker;
 
 class Main
 {
