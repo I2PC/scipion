@@ -999,20 +999,7 @@ public class SingleParticlePicker extends ParticlePicker {
 				&& next.getState() == MicrographState.Available)
 			next.setState(MicrographState.Supervised);
 		saveData();
-		MetaData addedmd;
-		if (correctout == null)
-			addedmd = new MetaData(
-					getParticlesBlock(getOutputPath(micrograph.getPosFile())));
-		else {
-			long id;
-			addedmd = new MetaData();
-			for (TrainingParticle p : current.getManualParticles())
-				if (!correctout.contains(new Point(p.getX(), p.getY()))) {
-					id = addedmd.addObject();
-					addedmd.setValueInt(MDLabel.MDL_XCOOR, p.getX(), id);
-					addedmd.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
-				}
-		}
+		MetaData addedmd = getAddedMetaData(current, correctout);
 		MetaData automd = new MetaData(
 				getParticlesBlock(getOutputPath(micrograph.getAutoPosFile())));
 		MetaData outputmd = new MetaData();
@@ -1021,6 +1008,25 @@ public class SingleParticlePicker extends ParticlePicker {
 		new Thread(new CorrectAndAutopickRunnable(frame, addedmd, automd, next,
 				outputmd)).start();
 
+	}
+	
+	private MetaData getAddedMetaData(TrainingMicrograph m, Rectangle correctout)
+	{
+		MetaData addedmd;
+		if (correctout == null)
+			addedmd = new MetaData(
+					getParticlesBlock(getOutputPath(micrograph.getPosFile())));
+		else {
+			long id;
+			addedmd = new MetaData();
+			for (TrainingParticle p : m.getManualParticles())
+				if (!correctout.contains(new Point(p.getX(), p.getY()))) {
+					id = addedmd.addObject();
+					addedmd.setValueInt(MDLabel.MDL_XCOOR, p.getX(), id);
+					addedmd.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
+				}
+		}
+		return addedmd;
 	}
 
 	public class CorrectAndAutopickRunnable implements Runnable {
@@ -1054,8 +1060,7 @@ public class SingleParticlePicker extends ParticlePicker {
 				classifier.autopick(next.getFile(), outputmd,
 						next.getAutopickpercent());
 				loadAutomaticParticles(next, outputmd, false);
-				String path = getParticlesBlock(getOutputPath(next
-						.getAutoPosFile()));
+				String path = getParticlesBlock(getOutputPath(next.getAutoPosFile()));
 				outputmd.writeBlock(path);
 				outputmd.print();
 				outputmd.destroy();
@@ -1067,6 +1072,9 @@ public class SingleParticlePicker extends ParticlePicker {
 
 		}
 	}
+	
+	
+
 
 	public void resetMicrograph(TrainingMicrograph micrograph) {
 		micrograph.getManualParticles().clear();
@@ -1076,6 +1084,17 @@ public class SingleParticlePicker extends ParticlePicker {
 		new File(getOutputPath(micrograph.getPosFile())).delete();
 		new File(getOutputPath(micrograph.getAutoPosFile())).delete();
 
+	}
+
+	public void correct(Rectangle correctout)
+	{
+		micrograph.setState(MicrographState.Corrected);
+		saveData();
+		MetaData addedmd = getAddedMetaData(micrograph, correctout);
+		MetaData automd = new MetaData(getParticlesBlock(getOutputPath(micrograph.getAutoPosFile())));
+		classifier.correct(addedmd, automd, micrograph.getThreshold());
+		addedmd.destroy();
+		automd.destroy();
 	}
 
 }
