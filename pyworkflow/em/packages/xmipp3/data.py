@@ -239,7 +239,7 @@ class XmippSetOfImages(SetOfImages):
     
     @staticmethod
     def convert(setOfImgs, filename):
-        XmippSetOfImages._convert(XmippSetOfImages, setOfImgs, filename)
+        return XmippSetOfImages._convert(XmippSetOfImages, setOfImgs, filename)
     
                 
                 

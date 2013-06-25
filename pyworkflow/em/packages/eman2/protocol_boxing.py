@@ -60,20 +60,24 @@ class EmanProtBoxing(ProtParticlePicking):
     def createOutput(self):
         # Get the box size store in Eman db
         self._params['boxSize'] = int(self.__getEmanParamValue('box_size'))
-        program = "pwd; e2boxer.py"
-        arguments = "%(inputMics)s --boxsize=%(boxSize)i --write_dbbox"
-        self._log.info('Creating output: ' + program + ' ' + arguments % self._params)
-        self.runJob(None, program, arguments % self._params) 
-        # As we move to workingDir we must leave it. 
-        self._leaveWorkingDir()      
+        if not self.importFolder.hasValue():
+            program = "pwd; e2boxer.py"
+            arguments = "%(inputMics)s --boxsize=%(boxSize)i --write_dbbox"
+            self._log.info('Creating output: ' + program + ' ' + arguments % self._params)
+            self.runJob(None, program, arguments % self._params) 
+  
         # Create the SetOfCoordinates object on the database 
         self.outputCoordinates = EmanSetOfCoordinates(filename=self.workingDir.get())
         self.outputCoordinates.setBoxSize(self._params['boxSize'])
         self.outputCoordinates.setMicrographs(self.inputMicrographs.get())
         particlesWritten = bool(self.__getEmanParamValue('write_particles'))
+        particlesFormat = str(self.__getEmanParamValue('format'))
+        # As we move to workingDir we must leave it. 
+        self._leaveWorkingDir()    
+        
         if particlesWritten:
-            print 'siiii tenemos particulas'
-            self.outputImages = EmanSetOfImages(filename=self.workingDir.get())
+            print 'siiii tenemos particulas con format %s ' % particlesFormat.strip()
+            self.outputImages = EmanSetOfImages(filename=self.workingDir.get(), format=particlesFormat.strip())
             
         self._defineOutputs(outputCoordinates=self.outputCoordinates) 
     
@@ -103,6 +107,8 @@ class EmanProtBoxing(ProtParticlePicking):
         """
         from pyworkflow.utils.path import copyTree
 
+        print "COPYTREE from %s TO %s" % (self.importFolder.get(), os.getcwd())
+        
         copyTree(self.importFolder.get(), os.getcwd())
 
 
