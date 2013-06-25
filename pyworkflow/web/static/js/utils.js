@@ -21,8 +21,10 @@ function customPopup(URL, widthValue, heightValue) {
 }
 
 function closePopup() {
-	opener.location.reload(true);
-	self.close();
+//	opener.location.reload(true);
+//	self.close();
+	window.opener.location.reload(true);
+	window.close();
 }
 
 /*
