@@ -42,6 +42,7 @@ class Object(object):
         self._objDoStore =  args.get('objDoStore', True) # True if this object will be stored from his parent
         self._objIsPointer =  args.get('objIsPointer', False) # True if will be treated as a reference for storage
         self._objCreationTime = None
+        self._objParent = None # Reference to parent object
         
     def getClassName(self):
         return self.__class__.__name__

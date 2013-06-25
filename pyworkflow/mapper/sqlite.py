@@ -123,9 +123,14 @@ class SqliteMapper(Mapper):
                 self.fillObject(obj, objRow)
         return obj
     
+    def getParent(self, obj):
+        """ Retrieve the parent object of another. """
+        return self.selectById(obj._objParentId)
+    
     def fillObjectWithRow(self, obj, objRow):
         """Fill the object with row data"""
         obj._objId = objRow['id']
+        self.objDict[obj._objId] = obj
         name = objRow['name']
         if name is None or len(name) <= 0:
             obj._objName = ''#obj.strId()
@@ -134,14 +139,17 @@ class SqliteMapper(Mapper):
         objValue = objRow['value']
         obj._objParentId = objRow['parent_id']
         if obj.isPointer():
-            objValue = self.selectById(objValue)
+            if objValue is not None:
+                objValue = self.selectById(int(objValue))
+            else:
+                objValue = None
         obj.set(objValue)
         
     def fillObject(self, obj, objRow):
         self.fillObjectWithRow(obj, objRow)
         namePrefix = self.__getNamePrefix(obj)
         childs = self.db.selectObjectsByAncestor(namePrefix)
-        childsDict = {obj._objId: obj}
+        #childsDict = {obj._objId: obj}
         
         for childRow in childs:
             childParts = childRow['name'].split('.')
@@ -149,14 +157,14 @@ class SqliteMapper(Mapper):
             parentId = int(childParts[-2])
             # Here we are assuming that always the parent have
             # been processed first, so it will be in the dictiorary
-            parentObj = childsDict[parentId]
+            parentObj = self.objDict[parentId]
             
             childObj = getattr(parentObj, childName, None)
             if childObj is None:
                 childObj = self._buildObject(childRow['classname'])
                 setattr(parentObj, childName, childObj)
             self.fillObjectWithRow(childObj, childRow)  
-            childsDict[childObj._objId] = childObj  
+            #childsDict[childObj._objId] = childObj  
               
     def __objFromRow(self, objRow):
         obj = self._buildObject(objRow['classname'])
@@ -230,10 +238,6 @@ class SqliteDb():
         # Define some shortcuts functions
         self.executeCommand = self.cursor.execute
         self.commit = self.connection.commit
-        
-#    def executeCommand(self, cmd, *args, **kargs):
-#        print "executing: ", cmd
-#        self.cursor.execute(cmd, *args, **kargs)
         
     def __createTables(self):
         """Create requiered tables if don't exists"""

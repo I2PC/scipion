@@ -223,10 +223,11 @@ class Project(object):
             #print '\n=========================\n', r.getName()
             #print "> Inputs:"
             for key, attr in r.iterInputAttributes():
-                attrName = attr.get().getName()
-                if attrName in outputDict:
-                    parentNode = outputDict[attrName]
-                    parentNode.addChild(node)
+                if attr.hasValue():
+                    attrName = attr.get().getName()
+                    if attrName in outputDict:
+                        parentNode = outputDict[attrName]
+                        parentNode.addChild(node)
                     
         rootNode = g.getRoot()
         rootNode.run = None

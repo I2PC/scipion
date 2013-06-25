@@ -57,6 +57,7 @@ lib/
 documentation/
 gmon.out
 *~
-tests/classes/tmp
+pyworkflow/tests/classes/tmp
+pyworkflow/web/scipion.db
 .directory
 pw.bashrc
