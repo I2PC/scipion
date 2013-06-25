@@ -35,6 +35,10 @@ def showj(request):
                      'mode': request.GET.get('mode', 'gallery'),
                      'metadataComboBox': request.GET.get('metadataComboBox', 'image')}
     
+    print "takarrrry"
+    print inputParameters
+         
+    
     mdXmipp = loadMetaDataXmipp(inputParameters['path'], inputParameters['block'])
     
     md = MdData(mdXmipp, inputParameters['allowRender'], inputParameters['imageDim'])
@@ -114,6 +118,7 @@ class TableLayoutConfiguration():
 class MenuLayoutConfig():        
     def __init__(self, mode, path, block, allowRender, imageDim):
         link = "location.href='/showj/?path=" + path
+        longPath = getInputPath('showj', path)
         if len(block):
             link = link + "&block=" + block
         if allowRender:
@@ -137,6 +142,8 @@ class MenuLayoutConfig():
             self.galleryViewSrc = "/resources/showj/galleryViewOn.gif"
             
             self.disabledColRowMode = ""
+            
+        self.blocks = xmipp.getBlocksInMetaDataFile(str(longPath))    
          
 def getTypeOfColumns(label, allowRender):
     typeOfColumns = []
@@ -157,7 +164,7 @@ def defineColsLayout(labels):
     return colsOrder    
 
 def loadMetaDataXmipp(path, block):
-    path = getInputPath('showj', path)    
+    path= getInputPath('showj', path)
     if len(block):
         path = '%s@%s' % (block, path)
     return xmipp.MetaData(path)
