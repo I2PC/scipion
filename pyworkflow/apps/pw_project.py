@@ -135,17 +135,14 @@ class RunsTreeProvider(TreeProvider):
     """Provide runs info to populate tree"""
     def __init__(self, mapper, actionFunc):
         self.actionFunc = actionFunc
-        self.getObjects = lambda: mapper.selectAll()
+        self.getObjects = lambda: mapper.selectByClass('Protocol')
         
     def getColumns(self):
         return [('Run', 250), ('State', 100), ('Time', 100)]
     
     def getObjectInfo(self, obj):
-        runName = obj.runName.get()
-        if runName is None or len(runName) <= 0:
-            runName = '%s.%s' % (obj.getClassName(), obj.strId())  
         return {'key': obj.getObjId(),
-                'text': runName,
+                'text': obj.getRunName(),
                 'values': (obj.status.get(), obj.getElapsedTime())}
       
     def getObjectActions(self, obj):
@@ -205,18 +202,16 @@ class ProtocolTreeProvider(ObjectTreeProvider):
         return (None, desc)
     
     def getObjectActions(self, obj):
-        cls = type(obj)
-        if cls is Pointer:
+        if isinstance(obj, Pointer):
             obj = obj.get()
-            cls = type(obj)            
             
-        if issubclass(cls, SetOfMicrographs):
+        if isinstance(obj, SetOfMicrographs):
             return [('Open Micrographs with Xmipp', lambda: self.viewer.visualize(obj))]
-        if issubclass(cls, SetOfImages):
+        if isinstance(obj, SetOfImages):
             return [('Open Images with Xmipp', lambda: self.viewer.visualize(obj))]
-        if issubclass(cls, XmippClassification2D):
+        if isinstance(obj, XmippClassification2D):
             return [('Open Classification2D with Xmipp', lambda: self.viewer.visualize(obj))]
-        return []  
+        return []   
     
     def getObjectInfo(self, obj):
         info = ObjectTreeProvider.getObjectInfo(self, obj)
@@ -244,6 +239,67 @@ class ProtocolTreeProvider(ObjectTreeProvider):
             childs.insert(0, self.status)
             childs.insert(1, self.params)
         return childs
+    
+
+class RunIOTreeProvider(TreeProvider):
+    """Create the tree elements from a Protocol Run input/output childs"""
+    def __init__(self, protocol, mapper):
+        #TreeProvider.__init__(self)
+        self.protocol = protocol
+        self.mapper = mapper
+        self.viewer = XmippViewer()
+
+    def getColumns(self):
+        return [('Attribute', 200), ('Class', 100)]
+    
+    def getObjects(self):
+        objs = []
+        if self.protocol:
+            inputs = [attr for n, attr in self.protocol.iterInputAttributes()]
+            outputs = [attr for n, attr in self.protocol.iterOutputAttributes(EMObject)]
+            self.inputStr = String('Input')
+            self.outputStr = String('Output')
+            objs = [self.inputStr, self.outputStr] + inputs + outputs                
+        return objs
+    
+    def show(self, obj):
+        self.viewer.visualize(obj)
+        
+    def getObjectPreview(self, obj):
+        desc = "<name>: " + obj.getName()
+        
+        return (None, desc)
+    
+    def getObjectActions(self, obj):
+        if isinstance(obj, Pointer):
+            obj = obj.get()
+            
+        if isinstance(obj, SetOfMicrographs):
+            return [('Open Micrographs with Xmipp', lambda: self.viewer.visualize(obj))]
+        if isinstance(obj, SetOfImages):
+            return [('Open Images with Xmipp', lambda: self.viewer.visualize(obj))]
+        if isinstance(obj, XmippClassification2D):
+            return [('Open Classification2D with Xmipp', lambda: self.viewer.visualize(obj))]
+        return []  
+    
+    def getObjectInfo(self, obj):
+        if isinstance(obj, String):
+            value = obj.get()
+            info = {'key': value, 'text': value, 'values': (''), 'open': True}
+        else:
+            image = 'db_output.gif'
+            parent = self.outputStr
+            name = obj.getLastName()
+            
+            if isinstance(obj, Pointer):
+                obj = obj.get()
+                image = 'db_input.gif'
+                parent = self.inputStr
+                parentObj = self.mapper.getParent(obj)
+                name += '   (from %s.%s)' % (parentObj.getLastName(), obj.getLastName())
+            info = {'key': obj.getObjId(), 'parent': parent, 'image': image,
+                    'text': name, 'values': (obj.getClassName())}
+        return info     
     
     
 class ProjectWindow(gui.Window):
@@ -325,7 +381,7 @@ class ProjectWindow(gui.Window):
         # Data tab
         dframe = tk.Frame(tab)
         gui.configureWeigths(dframe)
-        provider = ProtocolTreeProvider(self.selectedProtocol)
+        provider = RunIOTreeProvider(self.selectedProtocol, self.project.mapper)
         self.infoTree = BoundTree(dframe, provider) 
         TaggedText(dframe, width=40, height=15, bg='white')
         self.infoTree.grid(row=0, column=0, sticky='news')  
@@ -509,12 +565,19 @@ class ProjectWindow(gui.Window):
         
     def _runItemClick(self, e=None):
         # Get last selected item for tree or graph
-        prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))
-        prot.mapper = self.project.mapper
-        self.selectedProtocol = prot
-        self.updateActionToolbar()
-        self._fillInfoTree()
-        self._fillSummary()
+        if self.showGraph:
+            prot = e.node.run
+        else:
+            prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))
+        
+        if prot is not None:
+            prot.mapper = self.project.mapper
+            self.selectedProtocol = prot
+            self.updateActionToolbar()
+            self._fillData()
+            self._fillSummary()
+        else:
+            pass #TODO: implement what to do
         
     def _runItemDoubleClick(self, e=None):
         self._runActionClicked(ACTION_EDIT)
@@ -531,10 +594,10 @@ class ProjectWindow(gui.Window):
         window.itemConfig(self.selectedProtocol, open=True)  
         window.show()
         
-    def _fillInfoTree(self):
-        provider = ProtocolTreeProvider(self.selectedProtocol)
+    def _fillData(self):
+        provider = RunIOTreeProvider(self.selectedProtocol, self.project.mapper)
         self.infoTree.setProvider(provider)
-        self.infoTree.itemConfig(self.selectedProtocol, open=True)  
+        #self.infoTree.itemConfig(self.selectedProtocol, open=True)  
         
     def _fillSummary(self):
         self.summaryText.clear()

@@ -4,7 +4,6 @@ import os
 import xmipp
 from django.shortcuts import render_to_response
 from django.core.context_processors import csrf
-from django.http import HttpResponse
 from django.template import RequestContext
 import json
 from pyworkflow.manager import Manager
@@ -15,12 +14,11 @@ from pyworkflow.utils.utils import prettyDate
 from pyworkflow.web.pages import settings
 from pyworkflow.apps.config import *
 from pyworkflow.em import *
-from django.http.request import HttpRequest
 from pyworkflow.hosts import HostMapper
 from pyworkflow.tests import getInputPath 
 from forms import HostForm
 from django.core.urlresolvers import reverse
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse, HttpRequest
 
 def getResource(request):
     if request == 'logoScipion':
@@ -75,8 +73,6 @@ def projects(request):
     return render_to_response('projects.html', context)
 
 def create_project(request):
-    from django.http import HttpResponse    
-    
     manager = Manager()
     
     if request.is_ajax():
@@ -86,7 +82,6 @@ def create_project(request):
     return HttpResponse(mimetype='application/javascript')
 
 def delete_project(request):
-    from django.http import HttpResponse    
     
     manager = Manager()
     
@@ -236,8 +231,6 @@ def project_content(request):
     return render_to_response('project_content.html', context)
 
 def delete_protocol(request):
-    from django.http import HttpResponse   
-    
     # Project Id(or Name) should be stored in SESSION
     if request.is_ajax():
         projectName = request.GET.get('projectName')
@@ -249,6 +242,20 @@ def delete_protocol(request):
         
     return HttpResponse(mimetype='application/javascript')
 
+def protocol_io(request):
+    # Project Id(or Name) should be stored in SESSION
+    if request.is_ajax():
+        projectName = request.GET.get('projectName')
+        project = loadProject(projectName)
+        protId = request.GET.get('protocolId', None)
+        protocol = project.mapper.selectById(int(protId))
+        print "======================= in protocol_io...."
+        ioDict = {'inputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterInputAttributes()],
+                  'outputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterOutputAttributes(EMObject)]}
+        jsonStr = json.dumps(ioDict, ensure_ascii=False)
+        
+        return HttpResponse(jsonStr, mimetype='application/javascript')
+    
 def form(request):
     
     # Resources #

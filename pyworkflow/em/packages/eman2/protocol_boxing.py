@@ -23,10 +23,11 @@ class EmanProtBoxing(ProtParticlePicking):
     
     _definition = EmanDefParticlePicking()
     
-    def __init__(self, **args):        
+    def __init__(self, **args):     
         ProtParticlePicking.__init__(self, **args)
         # The following attribute is only for testing
-        self.importFolder = args.get('importFolder', None)
+        self.importFolder = String(args.get('importFolder', None))
+        
         
     def _runSteps(self, startIndex):
         # Redefine run to change to workingDir path
@@ -39,7 +40,7 @@ class EmanProtBoxing(ProtParticlePicking):
         self._params = {'inputMics': ' '.join(micList), 
                         'boxSize': self.boxSize.get()}      
         # Launch Boxing GUI
-        if self.importFolder is None:
+        if not self.importFolder.hasValue():
             self._insertFunctionStep('launchBoxingGUI', isInteractive=True)
         else: # This is only used for test purposes
             self._insertFunctionStep('_importFromFolder')  
@@ -59,20 +60,24 @@ class EmanProtBoxing(ProtParticlePicking):
     def createOutput(self):
         # Get the box size store in Eman db
         self._params['boxSize'] = int(self.__getEmanParamValue('box_size'))
-        program = "pwd; e2boxer.py"
-        arguments = "%(inputMics)s --boxsize=%(boxSize)i --write_dbbox"
-        self._log.info('Creating output: ' + program + ' ' + arguments % self._params)
-        self.runJob(None, program, arguments % self._params) 
-        # As we move to workingDir we must leave it. 
-        self._leaveWorkingDir()      
+        if not self.importFolder.hasValue():
+            program = "pwd; e2boxer.py"
+            arguments = "%(inputMics)s --boxsize=%(boxSize)i --write_dbbox"
+            self._log.info('Creating output: ' + program + ' ' + arguments % self._params)
+            self.runJob(None, program, arguments % self._params) 
+  
         # Create the SetOfCoordinates object on the database 
         self.outputCoordinates = EmanSetOfCoordinates(filename=self.workingDir.get())
         self.outputCoordinates.setBoxSize(self._params['boxSize'])
         self.outputCoordinates.setMicrographs(self.inputMicrographs.get())
         particlesWritten = bool(self.__getEmanParamValue('write_particles'))
+        particlesFormat = str(self.__getEmanParamValue('format'))
+        # As we move to workingDir we must leave it. 
+        self._leaveWorkingDir()    
+        
         if particlesWritten:
-            print 'siiii tenemos particulas'
-            self.outputImages = EmanSetOfImages(filename=self.workingDir.get())
+            print 'siiii tenemos particulas con format %s ' % particlesFormat.strip()
+            self.outputImages = EmanSetOfImages(filename=self.workingDir.get(), format=particlesFormat.strip())
             
         self._defineOutputs(outputCoordinates=self.outputCoordinates) 
     
@@ -94,13 +99,16 @@ class EmanProtBoxing(ProtParticlePicking):
         filePaths = self.inputMicrographs.get().getFiles() | ProtParticlePicking.getFiles(self)
         return filePaths
       
+        
     def _importFromFolder(self):
-        """ This function will copy Eman .box files for
+        """ This function will copy Xmipp .pos files for
         simulating an particle picking run...this is only
         for testing purposes.
         """
         from pyworkflow.utils.path import copyTree
 
-        copyTree(self.importFolder, os.getcwd())
+        print "COPYTREE from %s TO %s" % (self.importFolder.get(), os.getcwd())
+        
+        copyTree(self.importFolder.get(), os.getcwd())
 
 
