@@ -49,3 +49,58 @@ class HostForm(forms.Form):
         self.fields['userName'].initial = host.getUserName()
         self.fields['hostPath'].initial = host.getHostPath()
         self.fields['password'].initial = host.getPassword()
+        
+        
+class ShowjForm(forms.Form):
+    
+    zoom = forms.IntegerField(required=True,
+                              max_value=512,
+                              min_value=10,
+                              localize=False,
+                              widget=forms.TextInput(attrs={'class' : 'menuInputNumber'}))
+    gotoContainer = forms.IntegerField(required=True,
+                              max_value=100,
+                              min_value=1,
+                              localize=False,
+                              widget=forms.TextInput(attrs={'class' : 'menuInputNumber'}))
+    cols = forms.IntegerField(required=False,
+                              max_value=100,
+                              min_value=1,
+                              localize=False,
+                              widget=forms.TextInput(attrs={'class' : 'menuInputNumber'}))
+
+    rows = forms.IntegerField(required=False,
+                              max_value=100,
+                              min_value=1,
+                              localize=False,
+                              widget=forms.TextInput(attrs={'class' : 'menuInputNumber'}))
+    blockComboBox = forms.ChoiceField(required=False)
+    
+    metadataComBox = forms.ChoiceField(required=False)
+    
+    path = forms.CharField(widget=forms.HiddenInput())
+    block = forms.CharField(required=False, widget=forms.HiddenInput())
+    allowRender = forms.BooleanField(widget=forms.HiddenInput())
+    #imageDim = forms.IntegerField(widget=forms.HiddenInput())#Se puede quitar
+    mode = forms.CharField(widget=forms.HiddenInput())
+
+    
+    def setShowj(self, path, block, render, dim, mode):
+#        self.fields['path'].initial = path
+#        self.fields['block'].initial = block
+#        self.fields['allowRender'].initial = render
+#        self.fields['zoom'].initial = dim
+#        self.fields['mode'].initial = mode
+        
+        self.fields['gotoContainer'].initial = 1
+#        
+#        print "bound"
+#        print self.is_bound
+#        print "valid"
+#        print self.is_valid()
+#        print "error"
+#        print self.errors
+#        print "cleaned"
+#        print self.cleaned_data
+    
+    
