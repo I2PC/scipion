@@ -2307,15 +2307,14 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
         }
     }
 
-    int maxInd;
-    arrayError.maxIndex(maxInd);
+    int maxInd=arrayError.maxIndex();
 
     while ( (VEC_ELEM(arrayDefocusAvg,maxInd) < 3000) || ((VEC_ELEM(arrayDefocusAvg,maxInd) > 50000) && VEC_ELEM(arrayError,maxInd)>-1e3 ))
     {
         VEC_ELEM(arrayError,maxInd) = -1e3;
         VEC_ELEM(arrayDefocusAvg,maxInd) = global_prm->initial_ctfmodel.DeltafU;
         VEC_ELEM(arrayDefocusDiff,maxInd) = global_prm->initial_ctfmodel.DeltafV;
-        arrayError.maxIndex(maxInd);
+        maxInd=arrayError.maxIndex();
     }
     if (VEC_ELEM(arrayError,maxInd)<=-1e3)
     {
@@ -2382,7 +2381,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     VEC_ELEM(arrayError2,2) = (-1)*fitness;
 
     //Here we select the best one
-    arrayError2.maxIndex(maxInd);
+    maxInd=arrayError2.maxIndex();
     defocusU = VEC_ELEM(arrayDefocusU,maxInd);
     defocusV = VEC_ELEM(arrayDefocusV,maxInd);
 
@@ -2398,7 +2397,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
         VEC_ELEM(arrayDefocusU,maxInd) = global_prm->initial_ctfmodel.DeltafU;
         VEC_ELEM(arrayDefocusV,maxInd) = global_prm->initial_ctfmodel.DeltafV;
 
-        arrayError2.maxIndex(maxInd);
+        maxInd=arrayError2.maxIndex();
         defocusU = VEC_ELEM(arrayDefocusU,maxInd);
         defocusV = VEC_ELEM(arrayDefocusV,maxInd);
         (*global_adjust)(0) = defocusU;

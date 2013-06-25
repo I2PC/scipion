@@ -107,6 +107,8 @@ public:
      */
     /** Add the comments for a given default parameter */
     void processDefaultComment(const char *param, const char *left);
+    /** Set default comment */
+    void setDefaultComment(const char *param, const char *comment);
     /** Initialize comments for -v, ...*/
     virtual void initComments();
     /** Function in which the param of each Program are defined. */

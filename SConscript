@@ -223,7 +223,7 @@ def AddXmippTest(name, testprog, command):
 
 
 def AddXmippCTest(name):
-    testprog = AddXmippProgram(name, ['gtest', 'XmippRecons'], 'tests')
+    testprog = AddXmippProgram(name, ['gtest', 'XmippRecons','XmippDimred'], 'tests')
     AddXmippTest(name, testprog, "$SOURCE --gtest_output=xml:$TARGET")
 
 def AddXmippPythonTest(name):
@@ -595,10 +595,10 @@ if MINGW:
     sys.setrecursionlimit(22500)
     libraries.append(env['MINGW_PATHS'])
     AddLibrary('XmippData', '', DataSources, libraries, 
-               ['lib'], ['XmippExternal','regex'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs)
+               ['lib'], ['XmippExternal','regex','rt'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs)
 else:
     AddLibrary('XmippData', 'libraries/data', DataSources, libraries,
-               ['lib'], ['XmippExternal'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs)  
+               ['lib'], ['XmippExternal','rt'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs)  
 
 
 #Xmipp Python Extension
@@ -644,10 +644,15 @@ ClassificationSources = Glob('libraries/classification', '*.cpp', [])
 AddLibrary('XmippClassif', 'libraries/classification', ClassificationSources,
     ['#libraries', '#'], ['lib'], ['XmippExternal', 'XmippData'])
 
+# Dimensionality reduction
+DimRedSources = Glob('libraries/dimred', '*.cpp', [])
+AddLibrary('XmippDimred', 'libraries/dimred', DimRedSources,
+    ['#libraries', '#'], ['lib'], ['XmippExternal', 'XmippData'])
+
 # XmippParallel
 ParallelSources = Glob('libraries/parallel', '*.cpp', []);
 AddMPILibrary("XmippParallel", 'libraries/parallel', ParallelSources, ["#", "#libraries", "#external"],
-              ['lib'], ['XmippExternal', 'XmippData', 'XmippRecons', 'XmippClassif'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs)
+    ['lib'], ['XmippExternal', 'XmippData', 'XmippRecons', 'XmippClassif'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs)
 
 # Interface
 InterfaceSources = Glob('libraries/interface', '*.cpp', [])
@@ -806,6 +811,7 @@ AddXmippProgram('image_sort_by_statistics', ['XmippRecons'])
 AddXmippProgram('image_separate_objects')
 AddXmippProgram('image_statistics')
 AddXmippProgram('image_vectorize')
+AddXmippProgram('matrix_dimred', ['XmippDimred'])
 #AddXmippProgram('mean_shift')
 AddXmippProgram('metadata_convert_to_spider', ['XmippInterface'])
 AddXmippProgram('metadata_histogram')
@@ -841,6 +847,7 @@ AddXmippProgram('resolution_ssnr', ['XmippRecons'])
 AddXmippProgram('transform_add_noise')
 AddXmippProgram('transform_adjust_volume_grey_levels', ['XmippRecons'])
 AddXmippProgram('transform_center_image')
+AddXmippProgram('transform_dimred', ['XmippDimred'])
 AddXmippProgram('transform_downsample', ['XmippRecons'])
 AddXmippProgram('transform_filter', ['XmippRecons'])
 AddXmippProgram('transform_geometry')
@@ -941,7 +948,6 @@ AddXmippMPIProgram('mpi_ctf_correct_idr', ['XmippRecons'])
 AddXmippMPIProgram('mpi_ctf_sort_psds', ['XmippRecons'])
 AddXmippMPIProgram('mpi_image_operate')
 AddXmippMPIProgram('mpi_image_rotational_pca', ['XmippRecons'])
-
 AddXmippMPIProgram('mpi_performance_test', ['XmippRecons'])
 AddXmippMPIProgram('mpi_image_resize', ['XmippRecons'])
 AddXmippMPIProgram('mpi_image_sort', ['XmippRecons'])
@@ -987,6 +993,7 @@ if int(env['gtest']):
      AddXmippCTest('test_sampling')
      AddXmippCTest('test_symmetries')
      AddXmippCTest('test_transformation')
+     AddXmippCTest('test_dimred')
      AddXmippCTest('test_wavelets')
      #env.Depends('run_tests', [fftw, tiff, sqlite])
      #python tests
