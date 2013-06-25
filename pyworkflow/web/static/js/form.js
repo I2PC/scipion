@@ -23,13 +23,20 @@ $(document).ready(
 								label : 'Ok',
 								val : 'Y',
 								btnClass : 'btn-select'
-									}]
+								}],
+								callback : function(val) {
+									if (val == 'Y') {
+										window.opener.location.reload(true);
+										window.close();
+										}
+									}
 								});
 							}
 						}, "json");
 						// Important. Stop the normal POST
 						return false;
-					});
+					}	
+			);
 		});
 
 function showErrorValidation(json) {
