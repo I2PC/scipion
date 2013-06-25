@@ -323,6 +323,40 @@ def form(request):
     
     return render_to_response('form.html', context)
 
+def save_protocol(request):
+    projectName = request.POST.get('projectName')
+    protId = request.POST.get("protocolId")
+    protClass = request.POST.get("protocolClass")
+    
+    # Load the project
+    project = loadProject(projectName)
+    
+    # Create the protocol object
+    if protId != 'None':  # Case of new protocol
+        protId = request.POST.get('protocolId', None)
+        protocol = project.mapper.selectById(int(protId))
+    else:
+        protocolClass = emProtocolsDict.get(protClass, None)
+        protocol = protocolClass() 
+    
+    # Update parameter set in the form
+    for paramName, attr in protocol.iterDefinitionAttributes():
+        value = request.POST.get(paramName)
+        if attr.isPointer():
+            if len(value.strip()) > 0:
+                objId = int(value.split('.')[-1])  # Get the id string for last part after .
+                value = project.mapper.selectById(objId)  # Get the object from its id
+                if attr.getObjId() == value.getObjId():
+                    raise Exception("Param: %s is autoreferencing with id: %d" % (paramName, objId))
+            else:
+                value = None
+        attr.set(value)
+        
+    project.saveProtocol(protocol)
+    
+    return HttpResponse(mimetype='application/javascript')
+
+
 def protocol(request):
     projectName = request.POST.get('projectName')
     protId = request.POST.get("protocolId")
