@@ -69,7 +69,8 @@ def projects(request):
     context = {'projects': projects,
                'css': css_path,
                'messi_css': messi_css_path,
-               'projectForm':projectForm_path}
+               'projectForm':projectForm_path,
+               'contentConfig': "full"}
     
     return render_to_response('projects.html', context)
 
@@ -229,7 +230,8 @@ def project_content(request):
                'sections': root.childs,
                'provider':provider,
                'messi_css': messi_css_path,
-               'view': 'protocols'}
+               'view': 'protocols',
+               'contentConfig': "divided"}
     
     return render_to_response('project_content.html', context)
 
@@ -402,7 +404,8 @@ def viewHosts(request):
                'hostUtils': host_utils_path,
                'css':css_path,
                'message': message,
-               'view': 'hosts'}    
+               'view': 'hosts',
+               'contentConfig': "full"}    
       
     return render_to_response('hosts.html', context)
 

@@ -43,7 +43,7 @@ class Node(object):
     def getChilds(self):
         return self._childs
     
-    def addChilds(self, *nodes):
+    def addChild(self, *nodes):
         for n in nodes:
             self._childs.append(n)
             n._parents.append(self)
@@ -63,10 +63,10 @@ class Graph(object):
     Implemented using adjacency lists.
     """
     
-    def __init__(self):
+    def __init__(self, rootName='ROOT'):
         self._nodes = []
         self._nodesDict = {} # To retrieve nodes from name
-        self._root = self.addNode('ROOT')
+        self._root = self.addNode(rootName)
         
     def getRoot(self):
         return self._root
@@ -81,4 +81,12 @@ class Graph(object):
     
     def getNode(self, nodeName):
         return self._nodesDict.get(nodeName, None)
+    
+    def getNodes(self):
+        return self._nodes
+    
+    def printNodes(self):
+        for node in self.getNodes():
+            print "Node: ", node
+            print " Childs: ", ','.join([str(c) for c in node.getChilds()])
         

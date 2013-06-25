@@ -28,16 +28,28 @@
 
 <body>
 	<div class="layout" id="wrapper">
-		<div class="center" id="maincontent">
-			<div id="north" style="overflow: auto; height: 65%">
+		{% if contentConfig == 'divided' %}
+			<div class="center" id="maincontent">
+				<div id="north" style="overflow: auto; height: 65%">
+		{% endif %}
+		{% if contentConfig == 'full' %}
+			<div class="center" id="maincontent">
+		{% endif %}
+		
 				{% block content %}
 				{%endblock %}
+				
+		{% if contentConfig == 'divided' %}		
 			</div>
 			<div style="overflow: auto; height: 30%;">
 				{% block contentDown %}	
 				{%endblock %}
 			</div>
 		</div>
+		{% endif %}		
+		{% if contentConfig == 'full' %}
+			</div>
+		{% endif %}	
 		
 		<!-- #middle-->
 

@@ -1,11 +1,40 @@
-#!/usr/bin/env xmipp_python
+# **************************************************************************
+# *
+# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *
+# **************************************************************************
+"""
+This module extends the functionalities of a normal Tkinter Canvas.
+The new Canvas class allows to easily display Texboxes and Edges
+that can be interactively dragged and clicked.
+"""
 
 import Tkinter as tk
 
 
 class Canvas(tk.Frame):
-    '''Canvas to draw some objects.
-    It will really contains a Frame, a Canvas and scrollbars'''
+    """Canvas to draw some objects.
+    It will really contains a Frame, a Canvas and scrollbars"""
     def __init__(self, parent, **args):
         tk.Frame.__init__(self, parent)        
         h = tk.Scrollbar(self, orient=tk.HORIZONTAL)
@@ -35,7 +64,7 @@ class Canvas(tk.Frame):
         #self.canvas.bind("<MouseWheel>", self.onScroll)
     
     def getCoordinates(self, event):
-        '''Converts the events coordinates to canvas coordinates'''
+        """Converts the events coordinates to canvas coordinates"""
         # Convert screen coordinates to canvas coordinates
         xc = self.canvas.canvasx(event.x)
         yc = self.canvas.canvasy(event.y)
@@ -110,11 +139,15 @@ class Canvas(tk.Frame):
         edge = Edge(self.canvas, src, dst)
         #self.items[edge.id] = edge
         return edge
+    
+    def clear(self):
+        """Clear all items from the canvas"""
+        self.canvas.delete(tk.ALL)
        
         
 class TextBox():
-    '''This class will serve to paint and store
-    rectange boxes with some text'''
+    """This class will serve to paint and store
+    rectange boxes with some text"""
     def __init__(self, canvas, text, x, y, bgColor, textColor='black'):
         self.bgColor = bgColor
         self.textColor = textColor
@@ -127,7 +160,7 @@ class TextBox():
         self.listeners = []
         
     def paint(self):
-        '''Paint the object in a specific position.'''
+        """Paint the object in a specific position."""
         self.id_text = self.canvas.create_text(self.x, self.y, text=self.text, 
                                                justify=tk.CENTER, fill=self.textColor)
         xr, yr, w, h = self.canvas.bbox(self.id_text)
@@ -144,8 +177,8 @@ class TextBox():
         return (x2-x, y2-y)
         
     def move(self, dx, dy):
-        '''Move TextBox to new position
-        dx and y are differences to current position'''
+        """Move TextBox to new position
+        dx and y are differences to current position"""
         self.canvas.move(self.id_text, dx, dy)
         self.canvas.move(self.id, dx, dy)
         self.x += dx
@@ -154,8 +187,8 @@ class TextBox():
             listenerFunc(dx, dy)
             
     def moveTo(self, x, y):
-        '''Move TextBox to new position
-        dx and dy are the new position'''
+        """Move TextBox to new position
+        dx and dy are the new position"""
         self.move(x-self.x, y-self.y)
         
     def addPositionListener(self, listenerFunc):
@@ -169,7 +202,7 @@ class TextBox():
         
 
 class Edge():
-    '''Edge between two objects'''
+    """Edge between two objects"""
     def __init__(self, canvas, source, dest):
         self.srcX, self.srcY = source.x, source.y
         self.dstX, self.dstY = dest.x, dest.y
