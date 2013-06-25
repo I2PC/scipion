@@ -5,14 +5,14 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 
 import xmipp.viewer.particlepicker.training.model.Mode;
-import xmipp.viewer.particlepicker.training.model.TrainingMicrograph;
+import xmipp.viewer.particlepicker.training.model.SingleParticlePickerMicrograph;
 
 
 public class MicrographsTableModel extends AbstractTableModel {
 	
 	
 	
-	private List<TrainingMicrograph> micrographs;
+	private List<SingleParticlePickerMicrograph> micrographs;
 	private String[] columns = new String[]{"", "Name", "Particles", "State"};
 	private SingleParticlePickerJFrame frame;
 
@@ -40,7 +40,7 @@ public class MicrographsTableModel extends AbstractTableModel {
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		TrainingMicrograph m = micrographs.get(rowIndex);
+		SingleParticlePickerMicrograph m = micrographs.get(rowIndex);
 		if(columnIndex == 0)
 			return rowIndex + 1;
 		if(columnIndex == 1)

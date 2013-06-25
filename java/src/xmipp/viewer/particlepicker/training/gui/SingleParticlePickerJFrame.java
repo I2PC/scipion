@@ -49,8 +49,8 @@ import xmipp.viewer.particlepicker.ParticlesJDialog;
 import xmipp.viewer.particlepicker.SingleParticlePicker;
 import xmipp.viewer.particlepicker.training.model.MicrographState;
 import xmipp.viewer.particlepicker.training.model.Mode;
-import xmipp.viewer.particlepicker.training.model.TrainingMicrograph;
-import xmipp.viewer.particlepicker.training.model.TrainingParticle;
+import xmipp.viewer.particlepicker.training.model.SingleParticlePickerMicrograph;
+import xmipp.viewer.particlepicker.training.model.ManualParticle;
 
 public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 {
@@ -112,7 +112,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		return new ParticlesJDialog(this);
 	}
 
-	public TrainingMicrograph getMicrograph()
+	public SingleParticlePickerMicrograph getMicrograph()
 	{
 		return ppicker.getMicrograph();
 	}
@@ -132,7 +132,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 	}
 
 	@Override
-	public List<? extends TrainingParticle> getAvailableParticles()
+	public List<? extends ManualParticle> getAvailableParticles()
 	{
 		return getMicrograph().getAvailableParticles(getThreshold());
 	}
@@ -646,7 +646,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		if (ppicker.isChanged())
 			ppicker.saveData(getMicrograph());// Saving changes when switching
 		index = micrographstb.getSelectedRow();
-		TrainingMicrograph next = ppicker.getMicrographs().get(index);
+		SingleParticlePickerMicrograph next = ppicker.getMicrographs().get(index);
 
 		tryCorrectAndAutopick(getMicrograph(), next);
 
@@ -671,7 +671,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 	}
 
-	private void tryCorrectAndAutopick(TrainingMicrograph current, TrainingMicrograph next)
+	private void tryCorrectAndAutopick(SingleParticlePickerMicrograph current, SingleParticlePickerMicrograph next)
 	{
 		if (current.equals(next))// app just started
 			return;

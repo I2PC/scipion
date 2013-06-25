@@ -2,16 +2,16 @@ package xmipp.viewer.particlepicker;
 
 import xmipp.utils.Task;
 import xmipp.viewer.particlepicker.training.gui.TemplatesJDialog;
-import xmipp.viewer.particlepicker.training.model.TrainingParticle;
+import xmipp.viewer.particlepicker.training.model.ManualParticle;
 
 public class ParticleToTemplatesTask implements Task
 {
 
 	private static TemplatesJDialog dialog;
-	private TrainingParticle particle;
+	private ManualParticle particle;
 
 	
-	public ParticleToTemplatesTask(TrainingParticle particle)
+	public ParticleToTemplatesTask(ManualParticle particle)
 	{
 		this.particle = particle;
 	}

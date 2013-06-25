@@ -20,7 +20,7 @@ import xmipp.viewer.particlepicker.tiltpair.model.TiltPairPicker;
 import xmipp.viewer.particlepicker.tiltpair.model.TiltedParticle;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedMicrograph;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedParticle;
-import xmipp.viewer.particlepicker.training.model.TrainingParticle;
+import xmipp.viewer.particlepicker.training.model.ManualParticle;
 
 public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 {
@@ -198,7 +198,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		g2.setColor(frame.getColor());
 		int index = 0;
 
-		for (TrainingParticle p : um.getParticles())
+		for (ManualParticle p : um.getParticles())
 		{
 			drawShape(g2, p, index == (um.getParticles().size() - 1));
 			index++;
@@ -291,7 +291,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 	}
 
 	@Override
-	public TrainingParticle getActive()
+	public ManualParticle getActive()
 	{
 		return active;
 	}

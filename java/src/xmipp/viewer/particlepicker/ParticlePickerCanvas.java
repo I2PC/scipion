@@ -23,7 +23,7 @@ import xmipp.jni.Particle;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
-import xmipp.viewer.particlepicker.training.model.TrainingParticle;
+import xmipp.viewer.particlepicker.training.model.ManualParticle;
 
 
 public abstract class ParticlePickerCanvas extends XmippImageCanvas
@@ -233,12 +233,12 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	public abstract ParticlePickerJFrame getFrame();
 
 
-	protected void drawShape(Graphics2D g2, TrainingParticle p, boolean all, Stroke stroke)
+	protected void drawShape(Graphics2D g2, ManualParticle p, boolean all, Stroke stroke)
 	{
 		drawShape(g2, p.getX(), p.getY(), p.getParticlePicker().getSize(), all, stroke);
 	}
 	
-	protected void drawShape(Graphics2D g2, TrainingParticle p, boolean all)
+	protected void drawShape(Graphics2D g2, ManualParticle p, boolean all)
 	{
 		drawShape(g2, p, all, continuousst);
 	}

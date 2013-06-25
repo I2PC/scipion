@@ -30,7 +30,7 @@ import xmipp.viewer.particlepicker.tiltpair.model.TiltPairPicker;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedMicrograph;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedParticle;
 import xmipp.viewer.particlepicker.training.model.Mode;
-import xmipp.viewer.particlepicker.training.model.TrainingParticle;
+import xmipp.viewer.particlepicker.training.model.ManualParticle;
 
 public class TiltPairPickerJFrame extends ParticlePickerJFrame
 {
@@ -270,7 +270,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	}
 
 	@Override
-	public List<? extends TrainingParticle> getAvailableParticles()
+	public List<? extends ManualParticle> getAvailableParticles()
 	{
 		return getMicrograph().getParticles();
 	}

@@ -14,7 +14,7 @@ import javax.swing.JDialog;
 
 import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippMessage;
-import xmipp.viewer.particlepicker.training.model.TrainingParticle;
+import xmipp.viewer.particlepicker.training.model.ManualParticle;
 
 public class ParticlesJDialog extends JDialog
 {

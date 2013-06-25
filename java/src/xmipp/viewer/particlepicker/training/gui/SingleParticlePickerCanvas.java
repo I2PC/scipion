@@ -15,15 +15,15 @@ import xmipp.viewer.particlepicker.ParticlePickerJFrame;
 import xmipp.viewer.particlepicker.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.SingleParticlePicker;
 import xmipp.viewer.particlepicker.training.model.AutomaticParticle;
-import xmipp.viewer.particlepicker.training.model.TrainingMicrograph;
-import xmipp.viewer.particlepicker.training.model.TrainingParticle;
+import xmipp.viewer.particlepicker.training.model.SingleParticlePickerMicrograph;
+import xmipp.viewer.particlepicker.training.model.ManualParticle;
 
 public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 {
 
 	private SingleParticlePickerJFrame frame;
-	private TrainingMicrograph micrograph;
-	private TrainingParticle active;
+	private SingleParticlePickerMicrograph micrograph;
+	private ManualParticle active;
 	private SingleParticlePicker ppicker;
 
 	public SingleParticlePickerCanvas(SingleParticlePickerJFrame frame)
@@ -38,7 +38,7 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 
 	}
 
-	protected TrainingParticle getLastParticle()
+	protected ManualParticle getLastParticle()
 
 	{
 		if (micrograph.getParticles().isEmpty())
@@ -60,7 +60,7 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 				return;
 			}
 
-			TrainingParticle p = micrograph.getParticle(x, y);
+			ManualParticle p = micrograph.getParticle(x, y);
 			if (p == null)
 				p = micrograph.getAutomaticParticle(x, y, frame.getThreshold());
 			if (p != null && SwingUtilities.isLeftMouseButton(e))
@@ -71,7 +71,7 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 			}
 			else if (SwingUtilities.isLeftMouseButton(e) && micrograph.fits(x, y, frame.getParticlePicker().getSize()))
 			{
-				p = new TrainingParticle(x, y, frame.getParticlePicker(), micrograph);
+				p = new ManualParticle(x, y, frame.getParticlePicker(), micrograph);
 				micrograph.addManualParticle(p, ppicker, frame.isCenterParticle(), true);
 				active = p;
 				refresh();
@@ -114,7 +114,7 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 				if (active instanceof AutomaticParticle)
 				{
 					micrograph.removeParticle(active, ppicker);
-					active = new TrainingParticle(active.getX(), active.getY(), ppicker, micrograph);
+					active = new ManualParticle(active.getX(), active.getY(), ppicker, micrograph);
 					micrograph.addManualParticle(active, ppicker, frame.isCenterParticle(), true);
 
 				}
@@ -178,7 +178,7 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 		{
 
 			micrograph.removeParticle(active, ppicker);
-			active = new TrainingParticle(active.getX(), active.getY(), active.getParticlePicker(), micrograph);
+			active = new ManualParticle(active.getX(), active.getY(), active.getParticlePicker(), micrograph);
 			micrograph.addManualParticle(active, ppicker, frame.isCenterParticle(), true);
 
 			repaint();
@@ -195,7 +195,7 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 
 	protected void doCustomPaint(Graphics2D g2)
 	{
-		List<TrainingParticle> particles;
+		List<ManualParticle> particles;
 		int index;
 		if (!micrograph.isEmpty())
 		{
@@ -235,7 +235,7 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 		if (p == null)
 			active = null;
 		else
-			active = (TrainingParticle) p;
+			active = (ManualParticle) p;
 		repaint();
 
 	}
@@ -253,7 +253,7 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 	}
 
 	@Override
-	public TrainingParticle getActive()
+	public ManualParticle getActive()
 	{
 		return active;
 	}
@@ -261,7 +261,7 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 	@Override
 	public void setMicrograph(Micrograph m)
 	{
-		micrograph = (TrainingMicrograph) m;
+		micrograph = (SingleParticlePickerMicrograph) m;
 
 	}
 
