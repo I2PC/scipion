@@ -138,7 +138,7 @@ class EmanSetOfImages(SetOfImages):
     
     def __init__(self, filename=None, **args):
         SetOfImages.__init__(self, filename, **args)
-        self._format = args['format']
+        self._format = args.get('format')
   
     def __iter__(self):
         """ Iterate over the set of images. """
