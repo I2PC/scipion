@@ -73,6 +73,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		setTitle("Xmipp Particle Picker - " + picker.getMode());
 		initMenuBar();
 		setJMenuBar(mb);
+		savemi.setEnabled(false);
 
 		GridBagConstraints constraints = new GridBagConstraints();
 		constraints.insets = new Insets(0, 5, 0, 5);
@@ -80,7 +81,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		setLayout(new GridBagLayout());
 
 		initToolBar();
-		add(tb, XmippWindowUtil.getConstraints(constraints, 0, 1, 2));
+		add(tb, XmippWindowUtil.getConstraints(constraints, 0, 1, 2, 1, GridBagConstraints.NONE));
 		add(new JLabel("Shape:"), XmippWindowUtil.getConstraints(constraints, 0, 2));
 		initShapePane();
 		add(shapepn, XmippWindowUtil.getConstraints(constraints, 1, 2));
