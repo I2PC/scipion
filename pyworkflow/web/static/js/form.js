@@ -1,4 +1,4 @@
-/*
+/*	
  * Method to execute a protocol.
  * Overray the post simple method in the html. 
  */
@@ -6,30 +6,73 @@ $(document).ready(
 		function() {
 			$("#protocolForm").submit(
 				function() {
-					// Do the AJAX post
-					$.post($("#protocolForm").attr("action"), 
-					$("#protocolForm").serialize(), 
-					function(json) {
-						if (json.errors.length > 0) {
-						// Show errors in the validation
-						showErrorValidation(json.errors);
-						} else {
-							// No errors in the validation
-							new Messi('The protocol was launched successfuly', {
-								title : 'Success',
-								modal : true,
-								buttons : [ {
-								id : 0,
-								label : 'Ok',
-								val : 'Y',
-								btnClass : 'btn-select'
-									}]
-								});
-							}
-						}, "json");
-						// Important. Stop the normal POST
-						return false;
-					});
+					var mode = $("#protocolForm").attr('data-mode');
+					
+					if(mode=='execute'){
+						/* Execute the protocol */
+						var action =  $("#protocolForm").attr("action");
+						var msg = "The protocol was launched successfuly";
+						
+						$.post(
+							action, 
+							$("#protocolForm").serialize(), 
+							function(json) {
+								if (json.errors.length > 0) {
+								// Show errors in the validation
+								showErrorValidation(json.errors);
+								} else {
+									// No errors in the validation
+									new Messi(msg, {
+										title : 'Success',
+										modal : true,
+										buttons : [ {
+										id : 0,
+										label : 'Ok',
+										val : 'Y',
+										btnClass : 'btn-select'
+										}],
+										callback : function(val) {
+											if (val == 'Y') {
+												window.opener.location.reload(true);
+												window.close();
+												}
+											}
+										});
+									}
+							}, "json");
+
+					}
+					else if(mode=='save') {
+						/*  Save the protocol */
+						var action =  "/save_protocol/";
+						var msg = "The protocol was saved successfuly";
+						
+						$.post(
+							action, 
+							$("#protocolForm").serialize(), 
+							function() {
+								new Messi(msg, {
+									title : 'Success',
+									modal : true,
+									buttons : [ {
+									id : 0,
+									label : 'Ok',
+									val : 'Y',
+									btnClass : 'btn-select'
+									}],
+									callback : function(val) {
+										if (val == 'Y') {
+											window.opener.location.reload(true);
+											window.close();
+											}
+										}
+									});
+						});
+					}
+					// Important. Stop the normal POST
+					return false;
+				}	
+			);
 		});
 
 function showErrorValidation(json) {

@@ -18,11 +18,13 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
         
         cls.mdGold = getGoldPath('Micrographs_TiltedPhantom', 'micrographs_gold.xmd')
         cls.dbGold = getGoldPath('Micrographs_TiltedPhantom', 'micrographs_gold.sqlite')
+        cls.dbGoldTilted = getGoldPath('Micrographs_TiltedPhantom', 'micrographs_tilted_gold.sqlite')
         
         cls.micsPattern = getInputPath('Micrographs_TiltedPhantom', '*.mrc')
         
         cls.mdFn = getOutputPath(cls.outputPath, 'micrographs.xmd')
         cls.dbFn = getOutputPath(cls.outputPath, 'micrographs.sqlite')
+        cls.dbFnTilted = getOutputPath(cls.outputPath, 'micrographs_tilted.sqlite')
         
         #cls.mics = glob(cls.micsPattern)
         cls.mics = []
@@ -48,30 +50,31 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
     def testWrite(self):
         """ Test creating and writing a XmippSetOfMicrographs from a list of micrographs """
         
-        xmippSet = XmippSetOfMicrographs(self.mdFn, tiltPairs=True)
+        xmippSet = XmippSetOfMicrographs(self.mdFn, tiltPairs=False)
         xmippSet.setSamplingRate(1.2)
         for fn in self.mics:
             mic = XmippMicrograph(fn)
             xmippSet.append(mic)
             
-        for u, t in self.tiltedDict.iteritems():
-            xmippSet.appendPair(u, t)  
+#        for u, t in self.tiltedDict.iteritems():
+#            xmippSet.appendPair(u, t)  
         
         # Write the metadata
         xmippSet.write()
+        
+        self.checkXmippSet(xmippSet)
 
-        self.assertTrue(self.checkMicrographsMetaData(xmippSet), "micrographs metadata does not exist")
         
     def testRead(self):
         """ Test reading an XmippSetOfMicrographs from an existing  metadata """
-        xmippSet = XmippSetOfMicrographs(self.mdGold, tiltPairs=True)
+        xmippSet = XmippSetOfMicrographs(self.mdGold, tiltPairs=False)
         
         #Check that micrographs on metadata corresponds to the input ones (same order too)
         for i, mic in enumerate(xmippSet):
             self.assertEqual(self.mics[i], mic.getFileName(), "Micrograph %d in set is different from expected" % i)
 
-        for (iU, iT) in xmippSet.iterTiltPairs():
-            self.assertEqual(self.tiltedDict[iU], iT, "")
+#        for (iU, iT) in xmippSet.iterTiltPairs():
+#            self.assertEqual(self.tiltedDict[iU], iT, "")
             
     def testConvert(self):
         """ Test converting a SetOfMicrographs to a XmippSetOfMicrographs """
@@ -79,7 +82,8 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
                 
         xmippSet = XmippSetOfMicrographs.convert(setMics, self.mdFn)
         
-        self.assertTrue(self.checkMicrographsMetaData(xmippSet), "micrographs metadata does not exist")
+        self.checkXmippSet(xmippSet)
+        
         
     def testCopy(self):
         """ Test copying from a SetOfMicrographs to a XmippSetOFMicrographs """
@@ -102,34 +106,30 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
             
         xmippSet.write()
        
+        self.checkXmippSet(xmippSet)
         
-    def testGetItem(self):
-        """ Test to retrieve a micrograph from a XmippSetOfMicrograph """
-        xmippSet = XmippSetOfMicrographs(self.mdGold)
-        micFn = 'input/Micrographs_TiltedPhantom/micrograph002T.mrc'
-        mic = xmippSet[micFn]
-
-        self.assertEqual(micFn, mic.getFileName(), "getting item does not work")
+    def checkXmippSet(self, setMics):
+        idCount = 1
         
-#    TODO: Move this tests to a generic test_data.py
-#    def testReadBd(self):
-#        """ Read micrographs from a SetOfMicrographs """
-#        setMics = SetOfMicrographs(self.dbGold)
-#
-#        for i, mic in enumerate(setMics):
-#            self.assertEqual(self.mics[i], mic.getFileName(), "Micrograph %d in set is different from expected" % i)
+        for fn, mic in zip(self.mics, setMics):            
+            self.assertEqual(fn, mic.getFileName(), "micrograph name in the set is wrong")
+            self.assertEqual(idCount, mic.getId(), "micrograph id in the set is wrong")
+            mic2 = setMics[idCount] # Test getitem
+            self.assertTrue(((mic.getFileName() == mic2.getFileName()) and (mic.getId() == mic2.getId())), "micrograph got from id is wrong")
+            idCount += 1     
+        
         
     def createSetOfMicrographs(self):
         """ Create a SetOfMicrographs from a list of micrographs """
-        setMics = SetOfMicrographs(self.dbFn, tiltPairs=True)
+        setMics = SetOfMicrographs(self.dbFn, tiltPairs=False)
         setMics.setSamplingRate(1.2)
         for fn in self.mics:
             mic = Micrograph(fn)
             setMics.append(mic)
-            if fn in self.tiltedDict.values():
-                mic_t = mic
-            else:
-                setMics.appendPair(mic.getObjId(), mic_t.getObjId()) 
+#            if fn in self.tiltedDict.values():
+#                mic_t = mic
+#            else:
+#                setMics.appendPair(mic.getObjId(), mic_t.getObjId()) 
             
         setMics.write()
         
@@ -213,7 +213,7 @@ class TestXmippCTFModel(unittest.TestCase):
         self.assertTrue(xmippCTFModel.get() == ctfModel.get(), 'conversion did not work')
         
 if __name__ == '__main__':
-#    suite = unittest.TestLoader().loadTestsFromName('test_data_xmipp.TestXmippCTFModel.testConvertXmippCtf')
+#    suite = unittest.TestLoader().loadTestsFromName('test_data_xmipp.TestXmippSetOfMicrographs.testCopy')
 #    unittest.TextTestRunner(verbosity=2).run(suite)
     
     unittest.main()

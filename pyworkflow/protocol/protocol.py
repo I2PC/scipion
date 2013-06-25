@@ -583,6 +583,15 @@ class Protocol(Step):
     def setHostConfig(self, config):
         self.hostConfig = config
         
+    def getRunName(self):
+        if self.runName.hasValue() and len(self.runName.get()):
+            return self.runName.get()
+        else:
+            return self.getDefaultRunName()
+    
+    def getDefaultRunName(self):
+        return '%s.%s' % (self.getClassName(), self.strId())  
+        
     def getSubmitDict(self):
         """ Return a dictionary with the necessary keys to
         launch the job to a queue system.

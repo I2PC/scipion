@@ -66,12 +66,12 @@ class Graph(object):
     def __init__(self, rootName='ROOT'):
         self._nodes = []
         self._nodesDict = {} # To retrieve nodes from name
-        self._root = self.addNode(rootName)
+        self._root = self.createNode(rootName)
         
     def getRoot(self):
         return self._root
     
-    def addNode(self, nodeName):
+    def createNode(self, nodeName):
         """ Add a node to the graph """
         node = Node(nodeName)
         self._nodes.append(node)

@@ -214,6 +214,8 @@ class BoundTree(Tree):
             key = objDict.get('key')
             text = objDict.get('text', key)
             parent = objDict.get('parent', None)
+            open = objDict.get('open', False)
+            
             if parent is None:
                 parentId = ''
             else:
@@ -231,6 +233,8 @@ class BoundTree(Tree):
             obj._treeId = self.insert(parentId, 'end', key,
                         text=text, image=image, values=values)
             self._objDict[obj._treeId] = obj
+            if open:
+                self.itemConfig(obj, open=open)
 
     def itemConfig(self, obj, **args):
         """ Configure inserted items. """
@@ -242,6 +246,7 @@ class ObjectTreeProvider(TreeProvider):
     def __init__(self, objList=None):
         self.objList = objList
         self.getColumns = lambda: [('Object', 300), ('Id', 70), ('Class', 150)]
+        self._parentDict = {}
     
     def getObjectInfo(self, obj):
         cls = obj.getClassName()

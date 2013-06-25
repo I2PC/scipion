@@ -51,9 +51,12 @@ class XmippImage(XmippMdRow, Image):
     """Xmipp implementation for Image"""
     _label = xmipp.MDL_IMAGE
     _labelCTF = xmipp.MDL_CTF_MODEL
+    _labelId = xmipp.MDL_ITEM_ID
     
     def __init__(self, filename=None, **args):
         XmippMdRow.__init__(self)
+        
+        self.setId(0) # By default value 0 means no Id
         Image.__init__(self, filename, **args)
     
     def getLabelValue(self):
@@ -84,6 +87,13 @@ class XmippImage(XmippMdRow, Image):
         # TODO: implement the set of CTF, probably need a conversion step
         raise Exception("Not implemented setCTF for XmippImage")
     
+    def getId(self):
+        return self.getValue(self._labelId)
+        
+    def setId(self, imgId):
+        """ This id identifies the element inside a set """
+        self.setValue(self._labelId, long(imgId))
+                
     @staticmethod
     def _convert(itemClass, img, ctfFn):
         """Convert from Micrograph to XmippMicrograph"""
@@ -98,6 +108,11 @@ class XmippImage(XmippMdRow, Image):
 
             imgXmipp.setValue(xmipp.MDL_IMAGE1, ctf.getPsdFile())
             imgXmipp.setValue(xmipp.MDL_CTF_MODEL, ctfFn)
+            
+        if img.hasId():
+            imgXmipp.setId(img.getId())
+        else:
+            raise Exception("XmippImage conversion failed: Image id not found.")
         # TODO: copyInfo??
         # from img to imgXmipp??  
         return imgXmipp
@@ -152,6 +167,9 @@ class XmippSetOfImages(SetOfImages):
             xmippImg = self._set.getItemClass().convert(img, ctfFn)
         else:
             xmippImg = img
+            if not img.hasId():
+                self._idCount += 1
+                xmippImg.setId(self._idCount)
         
         self._set.append(xmippImg)
         
@@ -188,7 +206,7 @@ class XmippSetOfImages(SetOfImages):
 #        md.importObjects(self._set._md, xmipp.MDValueEQ(self._label, imgId))
         # TODO: Make a Md query to get the element with this filename
         for item in self._set:
-            if item.getValue(self._label) == imgId:
+            if item.getId() == imgId:
                 return item
             
         raise Exception("getitem for XmippSetOfImages not implemented")
@@ -200,11 +218,11 @@ class XmippSetOfImages(SetOfImages):
         return 'TiltedPairs@' + self.getFileName()
                     
     @staticmethod
-    def convert(setOfImgs, filename):
-        if isinstance(setOfImgs, XmippSetOfImages):
+    def _convert(setClass, setOfImgs, filename):
+        if isinstance(setOfImgs, setClass):
             return setOfImgs
         
-        xmippImgs = XmippSetOfImages(filename)
+        xmippImgs = setClass(filename)
         xmippImgs.copyInfo(setOfImgs)
         
         for item in setOfImgs:
@@ -218,6 +236,11 @@ class XmippSetOfImages(SetOfImages):
         xmippImgs.write()
         
         return xmippImgs
+    
+    @staticmethod
+    def convert(setOfImgs, filename):
+        return XmippSetOfImages._convert(XmippSetOfImages, setOfImgs, filename)
+    
                 
                 
 class XmippMicrograph(XmippImage, Micrograph):
@@ -244,31 +267,33 @@ class XmippSetOfMicrographs(XmippSetOfImages, SetOfMicrographs):
 #        if filename is not None:
 #            self.__loadFiles()
 
-
-                       
     @staticmethod
-    def convert(setOfMics, filename):
-        if isinstance(setOfMics, XmippSetOfMicrographs):
-            return setOfMics
-        
-        xmippMics = XmippSetOfMicrographs(filename)
-        xmippMics.copyInfo(setOfMics)
-        
-        for item in setOfMics:
-            xmippMics.append(item)
-        
-        # If there are tilt pairs add tilt pairs metadata
-        if setOfMics.hasTiltPairs():
-            for iU, iT in setOfMics.iterTiltPairs():
-                #Transform ids into filenames
-                micU = setOfMics[iU]
-                micT = setOfMics[iT]
-                
-                xmippMics.appendPair(setOfMics[iU].getFileName(), setOfMics[iT].getFileName())
-    
-        xmippMics.write()
-        
-        return xmippMics
+    def convert(setOfImgs, filename):
+        return XmippSetOfMicrographs._convert(XmippSetOfMicrographs, setOfImgs, filename)
+#                       
+#    @staticmethod
+#    def convert(setOfMics, filename):
+#        if isinstance(setOfMics, XmippSetOfMicrographs):
+#            return setOfMics
+#        
+#        xmippMics = XmippSetOfMicrographs(filename)
+#        xmippMics.copyInfo(setOfMics)
+#        
+#        for item in setOfMics:
+#            xmippMics.append(item)
+#        
+#        # If there are tilt pairs add tilt pairs metadata
+#        if setOfMics.hasTiltPairs():
+#            for iU, iT in setOfMics.iterTiltPairs():
+#                #Transform ids into filenames
+#                micU = setOfMics[iU]
+#                micT = setOfMics[iT]
+#                
+#                xmippMics.appendPair(setOfMics[iU].getFileName(), setOfMics[iT].getFileName())
+#    
+#        xmippMics.write()
+#        
+#        return xmippMics
         
     def _getListBlock(self):
         return 'Micrographs@' + self.getFileName()
