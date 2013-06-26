@@ -166,7 +166,10 @@ class Project(object):
     
     def saveProtocol(self, protocol):
         protocol.status.set(STATUS_SAVED)
-        self._storeProtocol(protocol)
+        if protocol.hasObjId():
+            self._storeProtocol(protocol)
+        else:
+            self._setupProtocol(protocol)
         
     def _setHostConfig(self, protocol):
         """ Set the appropiate host config to the protocol
