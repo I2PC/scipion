@@ -301,7 +301,10 @@ class RunIOTreeProvider(TreeProvider):
                     'text': name, 'values': (obj.getClassName())}
         return info     
     
-    
+VIEW_PROTOCOLS = 'Protocols'
+VIEW_DATA = 'Data'
+VIEW_HOSTS = 'Hosts'
+   
 class ProjectWindow(gui.Window):
     def __init__(self, path, master=None):
         # Load global configuration
@@ -314,23 +317,104 @@ class ProjectWindow(gui.Window):
         
         gui.Window.__init__(self, self.projName, master, icon=self.icon, minsize=(900,500))
         
-        parent = self.root
-
+        content = tk.Frame(self.root)
+        content.columnconfigure(0, weight=1)
+        content.rowconfigure(1, weight=1)
+        content.grid(row=0, column=0, sticky='news')
+        self.content = content
+        
         self.createMainMenu(self.menuCfg)
         
-        # The main layout will be two panes, 
-        # At the left containing the Protocols
-        # and the right containing the Runs
+        header = self.createHeaderFrame(content)
+        header.grid(row=0, column=0, sticky='new')
+        
+        self.view, self.viewWidget = None, None
+        self.viewFuncs = {VIEW_PROTOCOLS: self.createProtocolsView,
+                          VIEW_DATA: self.createDataView,
+                          VIEW_HOSTS: self.createHostsView
+                          }
+        
+        self.switchView(VIEW_PROTOCOLS)
+        # Event bindings
+        self.root.bind("<F5>", self.refreshRuns)
+        # Hide the right-click menu
+        #self.root.bind('<FocusOut>', self._unpostMenu)
+        #self.root.bind("<Key>", self._unpostMenu)
+        #self.root.bind('<Button-1>', self._unpostMenu)
+        
+        #self.menuRun = tk.Menu(self.root, tearoff=0)
+        
+    def createHeaderFrame(self, parent):
+        """ Create the Header frame at the top of the windows.
+        It has (from left to right):
+            - Main application Logo
+            - Project Name
+            - View selection combobox
+        """
+        header = tk.Frame(parent, bg='white')        
+        header.columnconfigure(1, weight=1)
+        header.columnconfigure(2, weight=1)
+        # Create the SCIPION logo label
+        logoImg = self.getImage(self.generalCfg.logo.get())
+        logoLabel = tk.Label(header, image=logoImg, 
+                             borderwidth=0, anchor='nw', bg='white')
+        logoLabel.grid(row=0, column=0, sticky='nw', padx=5)
+        # Create the Project Name label
+        self.projNameFont = tkFont.Font(size=12, family='verdana', weight='bold')
+        projLabel = tk.Label(header, text=self.projName, font=self.projNameFont,
+                             borderwidth=0, anchor='nw', bg='white')
+        projLabel.grid(row=0, column=1, sticky='sw', padx=(20, 5), pady=10)
+        # Create view selection frame
+        viewFrame = tk.Frame(header, bg='white')
+        viewFrame.grid(row=0, column=2, sticky='se', padx=5, pady=10)
+        viewLabel = tk.Label(viewFrame, text='View:', bg='white')
+        viewLabel.grid(row=0, column=0, padx=5)
+        self.viewVar = tk.StringVar()
+        self.viewVar.set(VIEW_PROTOCOLS)
+        viewCombo = ttk.Combobox(viewFrame, textvariable=self.viewVar, state='readonly')
+        viewCombo['values'] = [VIEW_PROTOCOLS, VIEW_DATA, VIEW_HOSTS]
+        viewCombo.grid(row=0, column=1)
+        viewCombo.bind('<<ComboboxSelected>>', self._viewComboSelected)
+        
+        return header
+    
+    def _viewComboSelected(self, e=None):
+        if self.viewVar.get() != self.view:
+            self.switchView(self.viewVar.get())
+        
+    def switchView(self, newView):
+        # Destroy the previous view if existing:
+        if self.viewWidget:
+            self.viewWidget.grid_forget()
+            self.viewWidget.destroy()
+        # Create the new view
+        self.viewWidget = self.viewFuncs[newView](self.content)
+        # Grid in the second row (1)
+        self.viewWidget.grid(row=1, column=0, sticky='news')
+        self.view = newView
+        
+    def createHostsView(self, parent):
+        return tk.Frame(parent, bg='blue')
+    
+    def createDataView(self, parent):
+        dataFrame = tk.Frame(parent)
+        dataLabel = tk.Label(dataFrame, text='DATA VIEW not implemented.',
+                             font=self.projNameFont)
+        dataLabel.grid(row=0, column=0, padx=50, pady=50)
+        return dataFrame
+    
+    def createProtocolsView(self, parent):
+        """ Create the Protocols View for the Project.
+        It has two panes:
+            Left: containing the Protocol classes tree
+            Right: containing the Runs list
+        """
         p = tk.PanedWindow(parent, orient=tk.HORIZONTAL)
         
-        # Left pane, contains SCIPION Logo and Protocols Pane
+        # Left pane, contains Protocols Pane
         leftFrame = tk.Frame(p)
         leftFrame.columnconfigure(0, weight=1)
         leftFrame.rowconfigure(1, weight=1)
-        logo = self.getImage(self.generalCfg.logo.get())
-        label = tk.Label(leftFrame, image=logo, borderwidth=0, 
-                         anchor='nw', bg='white')
-        label.grid(row=0, column=0, sticky='new', padx=5)
 
         # Protocols Tree Pane        
         protFrame = ttk.Labelframe(leftFrame, text=' Protocols ', width=300, height=500)
@@ -346,7 +430,7 @@ class ProjectWindow(gui.Window):
         rightFrame = tk.Frame(p)
         rightFrame.columnconfigure(0, weight=1)
         rightFrame.rowconfigure(1, weight=1)
-        rightFrame.rowconfigure(0, minsize=label.winfo_reqheight())
+        #rightFrame.rowconfigure(0, minsize=label.winfo_reqheight())
         
         # Create the Action Buttons TOOLBAR
         toolbar = tk.Frame(rightFrame)
@@ -410,17 +494,10 @@ class ProjectWindow(gui.Window):
         p.add(leftFrame, padx=5, pady=5)
         p.add(rightFrame, padx=5, pady=5)
         p.paneconfig(leftFrame, minsize=300)
-        p.paneconfig(rightFrame, minsize=300)        
-        p.grid(row=0, column=0, sticky='news')
+        p.paneconfig(rightFrame, minsize=400)        
         
-        # Event bindings
-        self.root.bind("<F5>", self.refreshRuns)
-        # Hide the right-click menu
-        #self.root.bind('<FocusOut>', self._unpostMenu)
-        #self.root.bind("<Key>", self._unpostMenu)
-        #self.root.bind('<Button-1>', self._unpostMenu)
+        return p
         
-        #self.menuRun = tk.Menu(self.root, tearoff=0)
         
     def refreshRuns(self, e=None):
         """ Refresh the status of diplayed runs. """
@@ -461,6 +538,7 @@ class ProjectWindow(gui.Window):
         for i, action in enumerate(self.actionList[:-2]):
             displayAction(action, i)            
             
+        displayAction(ACTION_DELETE, 2, status != STATUS_RUNNING)     
         displayAction(ACTION_STOP, 4, status == STATUS_RUNNING)
         displayAction(ACTION_CONTINUE, 5, status == STATUS_WAITING_APPROVAL)
         
