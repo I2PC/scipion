@@ -26,6 +26,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.AbstractTableModel;
 
 import xmipp.ij.commons.Tool;
+import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.ColorHelper;
 import xmipp.viewer.particlepicker.Format;
@@ -260,8 +261,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 	@Override
 	protected void openHelpURl()
 	{
-		// TODO Auto-generated method stub
-
+		XmippDialog.showInfo(this, "Not available yet");
 	}
 
 	@Override
