@@ -134,7 +134,8 @@ public class AdvancedOptionsJDialog extends JDialog
 	void enableOptions()
 	{
 		templatestf.setEnabled(frame.getParticlePicker().getMode() == Mode.Manual);
-		autopickpercenttf.setEnabled(frame.getParticlePicker().getMode() == Mode.Supervised);
+		autopickpercenttf.setEnabled(frame.getParticlePicker().getMode() == Mode.Supervised || 
+				frame.getParticlePicker().getMode() == Mode.Manual);
 	}
 
 	protected void setAutopickPercent()
