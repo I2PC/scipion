@@ -30,13 +30,13 @@
 	</ul>
 </div>
 {% endblock %} {% block content %}
-<div id="toolbar" style="display: none">
+<div id="toolbar" style="float:left;display: none">
 	<span><a id="editTool" href=""><img src="{{editTool}}" />Edit</a></span>
-	<span><a id="copyTool" href=""><img src="{{copyTool}}" />
-			Copy</a></span> <span><a id="deleteTool" href=""><img
-			src="{{deleteTool}}" /> Delete</a></span> <span><a id="browseTool"
-		href=""><img src="{{browseTool}}" /> Browse</a></span>
+	<span><a id="copyTool" href=""><img src="{{copyTool}}" />Copy</a></span> 
+	<span><a id="deleteTool" href=""><img src="{{deleteTool}}" /> Delete</a></span> 
+	<span><a id="browseTool"href=""><img src="{{browseTool}}" /> Browse</a></span>
 </div>
+<span style="float:right;"><a id="treeTool"href=""><img src="{{treeTool}}" /> Tree</a></span>
 <div>
 	<table id="data" cellspacing="0">
 		<tr>
