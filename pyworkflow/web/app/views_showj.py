@@ -39,27 +39,48 @@ def showj(request):
     
          
     if request.method == 'POST': # If the form has been submitted...
-        showjForm = ShowjForm(request.POST) # A form bound to the POST data
+        print "request.POST.get('path')"
+        print request.POST.get('path')
+        print request.POST.get('blockComboBox')
+        mdXmipp = loadMetaDataXmipp(request.POST.get('path'), request.POST.get('blockComboBox'))
+        showjForm = ShowjForm(mdXmipp, request.POST) # A form bound to the POST data
         print "POST Method"
         print showjForm.data
-        if showjForm.is_valid(): # All validation rules pass
-            print "taka"
-            print showjForm.data
-            print showjForm.data["select_mode"] 
+            
             
     else:
-        print "Get MEthod"
+        
         inputParameters = {'path': request.GET.get('path', 'tux_vol.xmd'),
-                     'block': request.GET.get('block', ''),
+                     'blockComboBox': request.GET.get('block', ''),
                      'allowRender': 'render' in request.GET,
                      'zoom' : request.GET.get('dim', 150),
                      'mode': request.GET.get('mode', 'gallery'),
                      'gotoContainer': 1}
-        showjForm = ShowjForm(inputParameters) # An unbound form
-#        showjForm.setShowj()
-        if showjForm.is_valid() is False:
-            print "error"
-            print showjForm.errors
+        mdXmipp = loadMetaDataXmipp(request.GET.get('path', 'tux_vol.xmd'), request.GET.get('block', ''))
+        showjForm = ShowjForm(mdXmipp, inputParameters) # An unbound form
+        
+    if showjForm.is_valid() is False:
+        print showjForm.errors
+    
+    print "data after valid"
+    print showjForm.data
+    print showjForm.cleaned_data
+    print "data blockcombobox"
+    print showjForm.data['blockComboBox']
+    
+    
+    
+    if showjForm.is_valid() is False:
+        print showjForm.errors
+    else:
+        print "topapi"    
+        
+               
+    
+#    showjForm.setShowj(mdXmipp)
+    if showjForm.is_valid() is False:
+        print showjForm.errors
+    
     
     if "select_mode" in showjForm.data: 
         if showjForm.data["select_mode"] == "table":    
@@ -68,21 +89,16 @@ def showj(request):
         elif showjForm.data["select_mode"] == "gallery":
             print "set to gallery"
             showjForm.fields['mode'].initial = "gallery"        
-#        showjForm.setShowj(request.GET.get('path', 'tux_vol.xmd'),
-#                           request.GET.get('block', ''),
-#                           'render' in request.GET,
-#                           request.GET.get('dim', None),
-#                           request.GET.get('mode', 'gallery'))
+      
         
         
         
-        
-    mdXmipp = loadMetaDataXmipp(showjForm.cleaned_data['path'], showjForm.cleaned_data['block'])
     
-    md = MdData(mdXmipp, showjForm.cleaned_data['allowRender'], showjForm.cleaned_data['zoom'])
+    
+    md = MdData(mdXmipp, showjForm.data['allowRender'], showjForm.data['zoom'])
     request.session['md'] = md
 
-    menuLayoutConfig = MenuLayoutConfig(showjForm.cleaned_data['mode'], showjForm.cleaned_data['path'], showjForm.cleaned_data['block'], showjForm.cleaned_data['allowRender'], showjForm.cleaned_data['zoom'])
+    menuLayoutConfig = MenuLayoutConfig(showjForm.data['mode'], showjForm.data['path'], showjForm.data['blockComboBox'], showjForm.data['allowRender'], showjForm.data['zoom'])
     
     context = {'jquery': jquery_path,
                'utils': utils_path,
@@ -101,9 +117,12 @@ def showj(request):
 #               'menuLayoutConfig': menuLayoutConfig,
                'form': showjForm}
     
-    return_page = '%s%s%s' % ('showj_', showjForm.cleaned_data['mode'], '.html')
+    return_page = '%s%s%s' % ('showj_', showjForm.data['mode'], '.html')
 
     return render_to_response(return_page, RequestContext(request, context))
+
+#class InitialValuesShowj():
+#    def __init__(self, md, path, allowRender
 
 AT = '__at__'
 
