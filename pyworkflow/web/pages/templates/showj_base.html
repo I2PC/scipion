@@ -142,8 +142,114 @@
 	<div id="main_section">
 		<aside id="side_news"> <!-- Main Menu -->
 
-			<!-- <form id="showjForm" action="/showj/" method="post"> -->
+			<form id="showjForm" action="/showj/" method="post"> {% csrf_token %}
+				<div id="modeContainer" class="sectionMenu">
+				taka{{form.mode.value}}
+					<input type="submit" value="table" name="select_mode" class="submitButton
+					 {% if form.mode.value == 'gallery' %}
+					  tableOn
+					 {% endif %}
+					 {% if form.mode.value == 'table' %}
+					 tableOff
+					 {% endif %}	
+					  "/>
+					<input type="submit" value="gallery" name="select_mode" class="submitButton
+					{% if form.mode.value == 'gallery' %}
+					  galleryOff
+					 {% endif %}
+					 {% if form.mode.value == 'table' %}
+					 galleryOn
+					 {% endif %}
+					 " />
+					<!-- <button onclick="{{menuLayoutConfig.tableViewLink}}">
+						<img src="{{menuLayoutConfig.tableViewSrc}}">
+					
+					<button onclick="{{menuLayoutConfig.galleryViewLink}}">
+						<img src="{{menuLayoutConfig.galleryViewSrc}}"> -->
+					
+				</div>
+				
+				<div id="zoomContainer" class="sectionMenu">
+					<img src="/resources/showj/zoom.gif" class="menuIcon">
+					{{ form.zoom }}
+					<!-- <input type="number" class="menuInputNumber" id="zoom" value="150" min="10"> -->
+				</div>
+				
+				<div id="gotoContainer" class="sectionMenu">
+					<img src="/resources/showj/goto.gif" class="menuIcon">
+					{{ form.gotoContainer }}
+					<!-- <input type="number" class="menuInputNumber" id="goto" value="1" max="{{metadata.objects|length}}" min="1"> -->
+				</div>
+				
+				<div class="sectionMenu">
+					<img src="/resources/showj/separator.gif" class="menuIcon">
+				</div>	
+				
+				<div id="colRowContainer" class="sectionMenu">
+					<button id="colRowMode" 
+					{{menuLayoutConfig.disabledColRowMode}}
+					>
+						<img src="/resources/showj/colRowModeOff.gif" id="colRowModeImage" />
+					</button>
+					
+					<div class="subSectionMenu">
+						<span class="textMenu">Cols</span>
+						{{ form.cols }}
+						<!-- <input type="number" class="menuInputNumber" id="cols" value="" min="1" max="{{metadata.objects|length}}" disabled> -->
+					</div>
+					<div class="subSectionMenu">
+						<span class="textMenu">Rows</span>
+						{{ form.rows }}
+						<!-- <input type="number" class="menuInputNumber" id="rows" value="" min="1" max="{{metadata.objects|length}}" disabled> -->
+					</div>
+				</div>
+				
+				<div class="sectionMenu">
+					<img src="/resources/showj/separator.gif" class="menuIcon">
+				</div>
+		
+				<div id="blockSelectorContainer" class="sectionMenu">
+					<span class="textMenu">Select Block</span>
+					{{ form.blockComboBox }} 
+					<!-- <select id="blockComboBox">
+						{% for block in menuLayoutConfig.blocks %}
 							
+							
+								<option value="{{block}}"
+								{% if inputParameters.block == block %}
+								selected
+								{% endif %}	
+								>{{block}}</option>
+							
+						{% endfor %}
+					</select> -->
+				</div>
+				
+				<div id="metadataSelectorContainer" class="sectionMenu">
+					<span class="textMenu">Select Metadata</span>
+					{{ form.metadataComboBox }}
+				</div>
+				
+			
+		
+				<div class="sectionMenu">
+					<img src="/resources/showj/separator.gif" class="menuIcon">
+				</div>
+				
+				<div id="saveContainer" class="sectionMenu">
+					<button id="saveButton">
+						<img src="/resources/showj/saveOff.png" id="saveButtonImage" />
+					</button>
+				</div> 
+				 
+				{% for hidden in form.hidden_fields %}
+			    {{ hidden }}
+			    {% endfor %} 
+				 
+				 
+				<!--CAMbiamus  --> 
+				 
+				 			
 				<div id="modeContainer" class="sectionMenu">
 					<button onclick="{{menuLayoutConfig.tableViewLink}}">
 						<img src="{{menuLayoutConfig.tableViewSrc}}">
@@ -213,11 +319,11 @@
 				
 				<div id="saveContainer" class="sectionMenu">
 					<button id="saveButton">
-						<img src="/resources/showj/save.gif" id="saveButtonImage" />
+						<img src="/resources/showj/saveOff.png" id="saveButtonImage" />
 					</button>
 				</div>
 			
-			<!-- </form> -->
+			</form>
 		</aside>
 		
 		<section> <!--  Es donde va la informacion princiapl -->

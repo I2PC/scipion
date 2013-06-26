@@ -4,6 +4,8 @@ from django.http import HttpResponse
 from pyworkflow.web.pages import settings
 from django.shortcuts import render_to_response
 from pyworkflow.tests import getInputPath
+from pyworkflow.web.app.forms import ShowjForm
+from django.template import RequestContext
     
 def showj(request):
     # Resources #
@@ -28,23 +30,59 @@ def showj(request):
     
     #############
     # WEB INPUT PARAMETERS
-    inputParameters = {'path': request.GET.get('path', 'tux_vol.xmd'),
+#    inputParameters = {'path': request.GET.get('path', 'tux_vol.xmd'),
+#                     'block': request.GET.get('block', ''),
+#                     'allowRender': 'render' in request.GET,
+#                     'imageDim' : request.GET.get('dim', None),
+#                     'mode': request.GET.get('mode', 'gallery'),
+#                     'metadataComboBox': request.GET.get('metadataComboBox', 'image')}
+    
+         
+    if request.method == 'POST': # If the form has been submitted...
+        showjForm = ShowjForm(request.POST) # A form bound to the POST data
+        print "POST Method"
+        print showjForm.data
+        if showjForm.is_valid(): # All validation rules pass
+            print "taka"
+            print showjForm.data
+            print showjForm.data["select_mode"] 
+            
+    else:
+        print "Get MEthod"
+        inputParameters = {'path': request.GET.get('path', 'tux_vol.xmd'),
                      'block': request.GET.get('block', ''),
                      'allowRender': 'render' in request.GET,
-                     'imageDim' : request.GET.get('dim', None),
+                     'zoom' : request.GET.get('dim', 150),
                      'mode': request.GET.get('mode', 'gallery'),
-                     'metadataComboBox': request.GET.get('metadataComboBox', 'image')}
+                     'gotoContainer': 1}
+        showjForm = ShowjForm(inputParameters) # An unbound form
+#        showjForm.setShowj()
+        if showjForm.is_valid() is False:
+            print "error"
+            print showjForm.errors
     
-    print "takarrrry"
-    print inputParameters
-         
+    if "select_mode" in showjForm.data: 
+        if showjForm.data["select_mode"] == "table":    
+            print "set to table"
+            showjForm.fields['mode'].initial = "table"        
+        elif showjForm.data["select_mode"] == "gallery":
+            print "set to gallery"
+            showjForm.fields['mode'].initial = "gallery"        
+#        showjForm.setShowj(request.GET.get('path', 'tux_vol.xmd'),
+#                           request.GET.get('block', ''),
+#                           'render' in request.GET,
+#                           request.GET.get('dim', None),
+#                           request.GET.get('mode', 'gallery'))
+        
+        
+        
+        
+    mdXmipp = loadMetaDataXmipp(showjForm.cleaned_data['path'], showjForm.cleaned_data['block'])
     
-    mdXmipp = loadMetaDataXmipp(inputParameters['path'], inputParameters['block'])
-    
-    md = MdData(mdXmipp, inputParameters['allowRender'], inputParameters['imageDim'])
+    md = MdData(mdXmipp, showjForm.cleaned_data['allowRender'], showjForm.cleaned_data['zoom'])
     request.session['md'] = md
 
-    menuLayoutConfig = MenuLayoutConfig(inputParameters['mode'], inputParameters['path'], inputParameters['block'], inputParameters['allowRender'], inputParameters['imageDim'])
+    menuLayoutConfig = MenuLayoutConfig(showjForm.cleaned_data['mode'], showjForm.cleaned_data['path'], showjForm.cleaned_data['block'], showjForm.cleaned_data['allowRender'], showjForm.cleaned_data['zoom'])
     
     context = {'jquery': jquery_path,
                'utils': utils_path,
@@ -56,13 +94,16 @@ def showj(request):
                'jeditable': jeditable_path,
                'jquery_ui': jquery_ui_path,
                'css': css_path,
+               
                'metadata': md,
-               'inputParameters': inputParameters,
-               'menuLayoutConfig': menuLayoutConfig}
+               
+#               'inputParameters': inputParameters,
+#               'menuLayoutConfig': menuLayoutConfig,
+               'form': showjForm}
     
-    return_page = '%s%s%s' % ('showj_', inputParameters['mode'], '.html')
+    return_page = '%s%s%s' % ('showj_', showjForm.cleaned_data['mode'], '.html')
 
-    return render_to_response(return_page, context)
+    return render_to_response(return_page, RequestContext(request, context))
 
 AT = '__at__'
 
@@ -124,7 +165,7 @@ class MenuLayoutConfig():
         if allowRender:
             link = link + "&render"
         if imageDim is not None:
-            link = link + "&dim=" + imageDim
+            link = link + "&dim=" + str(imageDim)
                 
 
         if (mode == "table"):
