@@ -242,9 +242,10 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 
 		}
 		canvas.display();
-		tiltedcanvas.display(0.7f, 0);
+		
+		tiltedcanvas.display();
 		updateZoom();
-
+		tiltedcanvas.getIw().setLocation(canvas.getIw().getWidth(), 0);
 		if (usezoombt.isSelected())
 			tiltedcanvas.setZoom(getZoom());
 	}
