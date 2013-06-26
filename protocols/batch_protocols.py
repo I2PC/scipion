@@ -986,6 +986,7 @@ class ScriptProtocols(XmippScript):
         self.addParamsLine("   alias -d;");
         self.addParamsLine("[ --clean  ]                        : Clean ALL project data");
         self.addParamsLine("   alias -c;"); 
+        self.addParamsLine("[ --update_project]                 : Update project db with new protocosl from 3.0 to 3.1")
         
     def confirm(self, msg, defaultYes=True):
         if defaultYes:
@@ -1081,8 +1082,11 @@ class ScriptProtocols(XmippScript):
             if self.launch:
                 self.project.clean()
             else:
-                print cyanStr("CLEAN aborted.") 
-                       
+                print cyanStr("CLEAN aborted.")
+                 
+        elif self.checkParam('--update_project'):
+            self.loadProjectFromCli()
+            self.project.updateProtocolTables()
         else: #lauch project     
             if not self.project.exists():    
                 print 'You are in directory: %s' % greenStr(self.proj_dir)

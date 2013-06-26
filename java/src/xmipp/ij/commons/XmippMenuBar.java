@@ -106,7 +106,7 @@ public class XmippMenuBar extends MenuBar
 				catch (Exception ex)
 				{
 					ex.printStackTrace();
-					JOptionPane.showMessageDialog(null, ex.getMessage());
+					XmippDialog.showInfo(null, ex.getMessage());
 				}
 
 			}
@@ -134,7 +134,7 @@ public class XmippMenuBar extends MenuBar
 			{
 				ImagePlus imp = XmippMenuBar.this.xw.getImagePlusLoader().getImagePlus();
 				if (imp.getImageStackSize() == 1)
-					JOptionPane.showMessageDialog(null, "Only for Stack");
+					XmippDialog.showInfo(null, "Only for Stack");
 				else
 					openImagePlusAs3D(imp);
 				
@@ -386,7 +386,7 @@ public class XmippMenuBar extends MenuBar
 		}
 		catch (Exception ex)
 		{
-			JOptionPane.showMessageDialog(null, ex.getMessage());
+			XmippDialog.showInfo(null, ex.getMessage());
 		}
 	}
 	
@@ -464,7 +464,7 @@ public class XmippMenuBar extends MenuBar
 				}
 				catch (Exception ex)
 				{
-					JOptionPane.showMessageDialog(null, ex.getMessage());
+					XmippDialog.showInfo(null, ex.getMessage());
 				}
 			}
 		});
@@ -481,19 +481,19 @@ public class XmippMenuBar extends MenuBar
 					break;
 				case BINARY:
 					IJ.run("Make Binary");
-					JOptionPane.showMessageDialog(null, "make binary applied");
+					XmippDialog.showInfo(null, "make binary applied");
 					break;
 				case EIGHTBIT:
 					IJ.run("8-bit");
-					JOptionPane.showMessageDialog(null, "8-bit applied");
+					XmippDialog.showInfo(null, "8-bit applied");
 					break;
 				case THIRTYTWOBIT:
 					IJ.run("32-bit");
-					JOptionPane.showMessageDialog(null, "32-bit applied");
+					XmippDialog.showInfo(null, "32-bit applied");
 					break;
 				case RGB:
 					IJ.run("RGB Color");
-					JOptionPane.showMessageDialog(null, "RGB color applied");
+					XmippDialog.showInfo(null, "RGB color applied");
 					break;
 				
 				}

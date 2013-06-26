@@ -40,7 +40,15 @@ class ProtParticlePicking(XmippProtocol):
             self.insertStep('launchParticlePickingGUI',execution_mode=SqliteDb.EXEC_ALWAYS,
                            InputMicrographs=self.MicrographsMd, ExtraDir=self.ExtraDir,
                            TiltPairs=self.TiltPairs, Memory=self.Memory)       
-        
+    
+    def createFilenameTemplates(self):
+        return {
+                 'pos': join('%(ExtraDir)s', '%(micrograph)s.pos'),
+                 'templates': join('%(ExtraDir)s', 'templates.stk'),
+#      
+                'config': join('%(ExtraDir)s','config.xmd')
+                }  
+          
     def summary(self):
         md = xmipp.MetaData(self.MicrographsMd)
         micrographs, particles,  = countParticles(self)

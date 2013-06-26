@@ -838,6 +838,7 @@ JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_bestShift
             bestNonwrappingShift(T, tmpI, MAT_ELEM(alignmentM, 0, 2), MAT_ELEM(alignmentM, 1, 2), aux2);
             applyGeometry(LINEAR, tmpI, tmpI2, alignmentM, IS_NOT_INV, true);
             corr = correlationIndex(T, tmpI2);
+            std::cout << "corr:" << corr << std::endl;
             if (corr > max)
             {
                 max=corr;
@@ -888,18 +889,18 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_ImageGeneric_alignImage
 		int maxIndex=0;
 
 
-		for (size_t i=0;i<dim.ndim;++i)
+		for (size_t i = 0; i < dim.ndim; ++i)
 		{
 			T.aliasImageInStack(*Tp,i);
-			tmpI=*I;
+			tmpI = *I;
 			T.setXmippOrigin();
 			tmpI.setXmippOrigin();
 			corr = alignImages(T, tmpI, transformM, true, aux, aux2, aux3);
-			if (corr>max)
+			if (corr > max)
 			{
-				max=corr;
-				maxIndex=i;
-				alignedI=tmpI;
+				max = corr;
+				maxIndex = i;
+				alignedI = tmpI;
 			}
 		}
 
@@ -910,8 +911,6 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_ImageGeneric_alignImage
 		result[1] = rot;
 		result[2] = tilt;
 		result[3] = psi;
-
-
 
 
 	}
@@ -952,7 +951,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_applyAlignment
 	   I.setXmippOrigin();
 	   alignImages(T, I, transformM, true, aux, aux2, aux3);
 	   T+=I;
-	   centerImage(T, aux2, aux3, 3);
+//	   centerImage(T, aux2, aux3, 3); //call centerImage without using rotation in implementation
 
    }
    XMIPP_JAVA_CATCH;

@@ -25,21 +25,11 @@ public class TemplatesJDialog extends JDialog {
 		this.frame = frame;
 		initComponents();
 
-		addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent winEvt) {
-				resetTemplatesJDialog();
-			}
-
-		});
+		
 	}
 
-	protected void resetTemplatesJDialog() {
-		frame.templatesdialog = null;
-
-	}
 
 	public synchronized void loadTemplates(boolean resize) {
-		System.out.println("load Templates");
 		try {
 			ImageGeneric templates = frame.getParticlePicker().getTemplates();
 			int size = frame.getParticlePicker().getSize();
@@ -53,8 +43,6 @@ public class TemplatesJDialog extends JDialog {
 				return;
 			}
 
-
-			
 			ImagePlus template;
 
 			for (int i = 0; i < frame.getParticlePicker().getTemplatesNumber(); i ++) {

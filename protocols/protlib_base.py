@@ -63,19 +63,12 @@ class XmippProject():
     def getName(self):
         return "Project: %s" % basename(self.projectDir)
     
-    def create(self):
-        os.chdir(self.projectDir)
-        self.createConfig()
-        
-        #===== CREATE LOG AND RUN directories
-        if not exists(self.logsDir):
-            os.mkdir(self.logsDir)
-        if not exists(self.runsDir):
-            os.mkdir(self.runsDir)
-        if not exists(self.tmpDir):
-            os.mkdir(self.tmpDir)
-        #===== CREATE DATABASE
-        self.projectDb  = XmippProjectDb(self.dbName)
+    def updateProtocolTables(self):
+        """ Create or update the tables:
+           protocols
+           groups
+           protocol_group
+         with the current protocols and grouping. """
         #===== POPULATE SOME TABLES
         groupName = ""
         for section, groupList in sections:
@@ -93,7 +86,24 @@ class XmippProject():
         #this is an special case of protocols
         self.projectDb.insertProtocol(protDict.xmipp.title, protDict.xmipp.name)
         # commit changes
-        self.projectDb.connection.commit()
+        self.projectDb.connection.commit()         
+         
+         
+    def create(self):
+        os.chdir(self.projectDir)
+        self.createConfig()
+        
+        #===== CREATE LOG AND RUN directories
+        if not exists(self.logsDir):
+            os.mkdir(self.logsDir)
+        if not exists(self.runsDir):
+            os.mkdir(self.runsDir)
+        if not exists(self.tmpDir):
+            os.mkdir(self.tmpDir)
+        #===== CREATE DATABASE
+        self.projectDb  = XmippProjectDb(self.dbName)
+        #===== POPULATE SOME TABLES
+        self.updateProtocolTables()
         
     def load(self):
         #Check if project exists

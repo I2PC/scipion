@@ -2,6 +2,7 @@ package xmipp.viewer.particlepicker;
 
 import ij.IJ;
 import ij.WindowManager;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -21,6 +22,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
@@ -31,7 +33,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JTable;
@@ -45,6 +46,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
+
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippApplication;
 import xmipp.ij.commons.XmippIJUtil;
@@ -55,8 +57,7 @@ import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
-import xmipp.viewer.particlepicker.training.gui.AdvancedOptionsJDialog;
-import xmipp.viewer.particlepicker.training.gui.TemplatesJDialog;
+import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
 import xmipp.viewer.particlepicker.training.model.Mode;
 
 public abstract class ParticlePickerJFrame extends JFrame implements ActionListener
@@ -94,8 +95,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected JLabel positionlb;
 	protected JToggleButton usezoombt;
 
-	public TemplatesJDialog templatesdialog;
-
 	private JToggleButton eraserbt;
 
 	private JMenuItem keyassistmi;
@@ -127,8 +126,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 						return;
 				}
 				close();
-				// if (getParticlePicker().getMode() == FamilyState.Supervised)
-				// System.exit(0);// temporarily
 
 			}
 		});
@@ -166,7 +163,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			public void actionPerformed(ActionEvent e)
 
 			{
-				getParticlePicker().saveData();
+				if (getParticlePicker().getMode() != Mode.ReadOnly)
+					getParticlePicker().saveData();
 				System.exit(0);
 
 			}
@@ -275,7 +273,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				close();
 			}
 		});
-		
 
 		ijmi = new JMenuItem("ImageJ", XmippResource.getIcon("ij.gif"));
 		ijmi.setEnabled(picker.getMode() != Mode.ReadOnly);
@@ -304,8 +301,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				catch (Exception ex)
 				{
 					showException(ex);
-					// JOptionPane.showMessageDialog(ParticlePickerJFrame.this,
-					// ex.getMessage());
+
 				}
 			}
 		});
@@ -399,9 +395,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		importmi.setEnabled(enable);
 		savemi.setEnabled(enable);
 		sizesl.setEnabled(enable);
+		sizetf.setEnabled(enable);
 		colorbt.setEnabled(enable);
 		resetbt.setEnabled(enable);
 		savebt.setEnabled(enable);
+		eraserbt.setEnabled(enable);
 
 	}
 
@@ -461,17 +459,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		getCanvas().display();
 	}
 
-	
-
 	public int getSide(int size)
 	{
 		return 100;
 	}
-
-	//	public Family getFamily()
-	//	{
-	//		return getParticlePicker().getFamily();
-	//	}
 
 	public abstract ParticlePickerCanvas getCanvas();
 
@@ -607,13 +598,17 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		usezoombt.setToolTipText("Keep zoom");
 		usezoombt.setFocusable(false);
 		tb.add(usezoombt);
-
-		initColorPane(getParticlePicker().getColor());
-		tb.add(colorpn);
 		initSizePane();
 		tb.add(sizepn);
-		eraserbt = new JToggleButton("Eraser", XmippResource.getIcon("clean.gif"));
-		tb.add(eraserbt);
+		if (!(this instanceof ExtractPickerJFrame))
+		{
+			initColorPane(getParticlePicker().getColor());
+			tb.add(colorpn);
+			eraserbt = new JToggleButton("Eraser", XmippResource.getIcon("clean.gif"));
+			tb.add(eraserbt);
+		}
+		
+		
 	}
 
 	protected void updateZoom()
@@ -635,6 +630,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	public boolean isEraserMode()
 	{
+		if (eraserbt == null)
+			return false;
 		return eraserbt.isSelected();
 	}
 
@@ -727,7 +724,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				if (!getParticlePicker().isValidSize(size))
 				{
 					int prevsize = getParticlePicker().getSize();
-					JOptionPane.showMessageDialog(ParticlePickerJFrame.this, XmippMessage.getOutOfBoundsMsg("Family size " + size));
+					XmippDialog.showInfo(ParticlePickerJFrame.this, XmippMessage.getOutOfBoundsMsg("Size " + size));
 					sizetf.setText(Integer.toString(prevsize));
 					return;
 				}
@@ -750,7 +747,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				if (!getParticlePicker().isValidSize(size))
 				{
 					int prevsize = getParticlePicker().getSize();
-					JOptionPane.showMessageDialog(ParticlePickerJFrame.this, XmippMessage.getOutOfBoundsMsg("Family size " + size));
+					XmippDialog.showInfo(ParticlePickerJFrame.this, XmippMessage.getOutOfBoundsMsg("Size " + size));
 					sizesl.setValue(prevsize);
 					return;
 				}
@@ -800,14 +797,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		XmippApplication.removeInstance();
 	}
 
-
 	public abstract String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty);
-
-	//	public Color getColor()
-	//	{
-	//		return getFamily().getColor();
-	//
-	//	}
 
 	public Map<String, String> getKeyAssist()
 	{

@@ -96,7 +96,7 @@ public class UntiltedMicrograph extends Micrograph
 		added = 0;
 		for (UntiltedParticle p : particles)
 			if (p.getTiltedParticle() != null)
-				addParticleToAligner(p,false);
+				addParticleToAligner(p, false);
 		if (anglesAvailable())
 			angles = tpa.computeAngles();
 	}
@@ -106,34 +106,36 @@ public class UntiltedMicrograph extends Micrograph
 		return !(added < 10);
 	}
 
-//	public double[] getAngles()
-//	{
-//		return angles;
-//	}
-	
+	//	public double[] getAngles()
+	//	{
+	//		return angles;
+	//	}
+
 	public double getUntiltedAngle()
 	{
-		if(angles == null)
-			return 0;
+		if (angles == null)
+			return 90;
 		return angles[0];
 	}
-	
+
 	public double getTiltedAngle()
 	{
-		if(angles == null)
-			return 0;
+		if (angles == null)
+			return 90;
 		return angles[1];
 	}
-	
+
 	public double getTiltAngle()
 	{
-		if(angles == null)
+		if (angles == null)
 			return 0;
 		return angles[2];
 	}
 
 	public Particle getAlignerTiltedParticle(int x, int y)
 	{
+		if (getAddedCount() < getAlignmentMin())
+			return null;
 		Particle p = tpa.getTiltedParticle(x, y);
 		return p;
 	}
@@ -141,27 +143,27 @@ public class UntiltedMicrograph extends Micrograph
 	public void setAlignerTiltedParticle(UntiltedParticle up)
 	{
 		Particle p = getAlignerTiltedParticle(up.getX(), up.getY());
-
-		TiltedParticle tp = new TiltedParticle(p.getX(), p.getY(), up);
-		getTiltedMicrograph().addParticle(tp);
-		up.setTiltedParticle(tp);
+		if (p != null)
+		{
+			TiltedParticle tp = new TiltedParticle(p.getX(), p.getY(), up);
+			getTiltedMicrograph().addParticle(tp);
+			up.setTiltedParticle(tp);
+		}
 	}
 
 	public void removeParticles(int x, int y)
 	{
 		List<UntiltedParticle> particles = new ArrayList<UntiltedParticle>();
-		for(UntiltedParticle p: getParticles())
-			if (p.contains(x, y, p.getParticlePicker().getSize())) 
+		for (UntiltedParticle p : getParticles())
+			if (p.contains(x, y, p.getParticlePicker().getSize()))
 				particles.add(p);
-		for(UntiltedParticle p: particles)
+		for (UntiltedParticle p : particles)
 			removeParticle(p);
 	}
-	
+
 	public static int getAlignmentMin()
 	{
-		return alignmentmin ;
+		return alignmentmin;
 	}
-	
-	
 
 }

@@ -11,12 +11,12 @@ from os.path import join, exists
 from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
 from xmipp import MetaData, Image, MDL_IMAGE, MDL_ITER, MDL_LL, AGGR_SUM, MDL_REF3D, MDL_WEIGHT, \
-getBlocksInMetaDataFile, MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDValueEQ, MDL_SAMPLINGRATE
-from protlib_utils import runShowJ, getListFromVector, getListFromRangeString
+getBlocksInMetaDataFile, MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDValueEQ, MDL_SAMPLINGRATE, MDL_CTF_MODEL
+from protlib_utils import runShowJ, getListFromVector, getListFromRangeString, runJob
 from protlib_parser import ProtocolParser
 from protlib_xmipp import redStr, cyanStr
 from protlib_gui_ext import showWarning
-from protlib_filesystem import xmippExists, findAcquisitionInfo, moveFile
+from protlib_filesystem import xmippExists, findAcquisitionInfo, moveFile, replaceBasenameExt
 from protocol_ml2d import lastIteration
 
 
@@ -51,19 +51,21 @@ class ProtRelion3D(XmippProtocol):
         if md.containsLabel(MDL_IMAGE):
             # Check that have same size as images:
             from protlib_xmipp import validateInputSize
-            mdRef = MetaData(self.RefMd)
-            references = mdRef.getColumnValues(MDL_IMAGE)
-            for ref in references:
-                if not xmippExists(ref):
-                    errors.append("Reference: <%s> doesn't exists" % ref)
+            if not xmippExists(self.Ref3D):
+               errors.append("Reference: <%s> doesn't exists" % ref)
             if len(errors) == 0:
-                validateInputSize(references, self.ImgMd, errors)
+                validateInputSize([self.Ref3D], self.ImgMd, md, errors)
         else:
             errors.append("Input metadata <%s> doesn't contains image label" % self.ImgMd)
             
+        if self.DoCTFCorrection and not md.containsLabel(MDL_CTF_MODEL):
+            errors.append("CTF correction selected and input metadata <%s> doesn't contains CTF information" % self.ImgMd)
+            
         return errors 
     
-    def defineSteps(self):        
+    def defineSteps(self): 
+        self.doContinue = len(self.ContinueFrom) > 0
+               
         restart = False
         if restart:            #Not yet implemented
             pass
@@ -73,200 +75,95 @@ class ProtRelion3D(XmippProtocol):
 #            os.chdir(self.WorkingDir)
 #            self.restart_MLrefine3D(RestartIter)
         else:
-            initVols = self.ParamsDict['InitialVols'] = self.getFilename('initial_vols')
-            self.mdVols = MetaData(self.RefMd)
-            
-            
-            self.insertStep('createDir', [self.ExtraDir], path=self.ExtraDir)
-            
-            self.insertStep('copyVolumes', [initVols], 
-                               inputMd=self.RefMd, outputStack=initVols)
-            
-            if self.DoCorrectGreyScale:
-                self.insertCorrectGreyScaleSteps()
-                
-            if self.DoLowPassFilterReference:
-                self.insertFilterStep()
-                
-            if self.NumberOfReferences > 1:
-                self.insertGenerateRefSteps()
-                
-            
-            self.insertML3DStep(self.ImgMd, self.ORoot, self.ParamsDict['InitialVols'], 
-                                    self.NumberOfIterations, self.SeedsAreAmplitudeCorrected)
-            
-            self.insertStep('renameOutput', WorkingDir=self.WorkingDir, ProgId=self.progId)
+            #create extra output directory
+            self.insertStep('createDir', verifyfiles=[self.ExtraDir], path=self.ExtraDir)
+            # convert input metadata to relion model
+            self.ImgStar = self.extraPath(replaceBasenameExt(self.ImgMd, '.star'))
+            self.insertStep('convertImagesMd', verifyfiles=[self.ImgStar],
+                            inputMd=self.ImgMd, 
+                            outputRelion=self.ImgStar                            
+                            )
+            # launch relion program
+            self.insertRelionRefine()
             
     def insertRelionRefine(self):
-        pass
-
-
-    
-    def insertML3DStep(self, inputImg, oRoot, initialVols, numberOfIters, amplitudCorrected):
-        self.ParamsDict.update({
-                         '_ImgMd': inputImg,
-                         '_ORoot': oRoot,
-                         '_InitialVols': initialVols,
-                         '_NumberOfIterations': numberOfIters       
-                                })
-        self.ParamsStr = "-i %(_ImgMd)s --oroot %(_ORoot)s --ref %(_InitialVols)s --iter %(_NumberOfIterations)d " + \
-                         "--sym %(Symmetry)s --ang %(AngularSampling)s %(ExtraParams)s"
-#        if self.NumberOfReferences > 1:
-#            self.ParamsStr += " --nref %(NumberOfReferences)s"
-        if self.NumberOfThreads > 1:
-            self.ParamsStr += " --thr %(NumberOfThreads)d"
-        if self.DoNorm:
-            self.ParamsStr += " --norm"
-        
-        if self.DoMlf:
-            if not self.DoCorrectAmplitudes:
-                self.ParamsStr += " --no_ctf"
-            if not self.ImagesArePhaseFlipped:
-                self.ParamsStr += " --not_phase_flipped"
-            if not amplitudCorrected:
-                self.ParamsStr += " --ctf_affected_refs"
-            if self.HighResLimit > 0:
-                self.ParamsStr += " --limit_resolution 0 %(HighResLimit)f"
-            self.ParamsStr += ' --sampling_rate %(SamplingRate)f'
-
-        self.ParamsStr += " --recons %(ReconstructionMethod)s "
-        
-        if self.ReconstructionMethod == 'wslART':
-            self.ParamsStr += " %(ARTExtraParams)s"
-        else:
-            self.ParamsStr += " %(FourierExtraParams)s" 
+        args = {'--iter': self.NumberOfIterations,
+                '--tau2_fudge': self.RegularisationParamT,
+                '--flatten_solvent': '',
+                '--zero_mask': '',
+                '--norm': '',
+                '--scale': '',
+                '--o': '%s/relion' % self.ExtraDir
+                }
+        if len(self.ReferenceMask):
+            args['--solvent_mask'] = self.ReferenceMask
             
-        self.insertRunJob('xmipp_%s_refine3d' % self.progId, [])
-        
-    def setVisualizeIterations(self):
-        '''Validate and set the set of iterations to visualize.
-        If not set is selected, only use the last iteration'''
-        self.lastIter = lastIter = lastIteration(self)
-        self.VisualizeIter = self.parser.getTkValue('VisualizeIter')
-        
-        if self.VisualizeIter == 'last':
-            self.visualizeIters = [lastIter]
-        elif self.VisualizeIter == 'all':
-            self.visualizeIters = range(1, lastIter+1)
-        elif self.VisualizeIter == 'selection':
-            selection = getListFromRangeString(self.parser.getTkValue('SelectedIters'))
-            self.visualizeIters = [it for it in selection if (it > 0 and it <= lastIter)]
-            invalidIters = [it for it in selection if (it <= 0 or it > lastIter)]
-            if len(invalidIters):
-                print cyanStr("Following iterations are invalid: %s" % str(invalidIters))
-        
-    def visualize(self):
-        self.setVisualizeIterations()
-        self.xplotter = None
-        for k, v in self.ParamsDict.iteritems():
-            if self.parser.hasVariable(k):
-                var = self.parser.getVariable(k)
-                if var.isVisualize() and v and var.satisfiesCondition():
-                    self._visualizeVar(k)
-        self.showPlot()
+        if self.doContinue:
+            args['--continue'] = self.ContinueFrom
+        else: # Not continue
+            args.update({'--i': self.ImgStar,
+                         '--particle_diameter': self.MaskDiameterA,
+                         '--angpix': self.SamplingRate,
+                         '--ref': self.Ref3D,
+                         '--oversampling': '1'
+                         })
             
-    def visualizeVar(self, varName):
-        self.xplotter = None
-        self.setVisualizeIterations()
-        self._visualizeVar(varName)
-        self.showPlot()
-        
-    def _visualizeVar(self, varName):        
-        if len(self.visualizeIters) > 0:
-            iter = self.visualizeIters[0]
-            inputVolVar = {'VisualizeCRVolume': self.getFilename('corrected_vols'), 
-                               'VisualizeFRVolume': self.getFilename('filtered_vols'),
-                               'VisualizeGSVolume':self.getFilename( 'generated_vols')
-                            }
-            iterShowVar = { 'VisualizeML3DAvgs': 'iter_refs', 'VisualizeML3DReferences': 'iter_vols'}                          
-
-            if varName in inputVolVar:
-                runShowJ(inputVolVar[varName])
-            elif varName == 'DoShowStats':
-                from protocol_ml2d import launchML2DPlots
-                xplotter = launchML2DPlots(self, ['DoShowLL', 'DoShowPmax'])
-                self.drawPlot(xplotter)
-            elif varName == 'VisualizeClassDistribution':
-                for it in self.visualizeIters:
-                    self.plotClassDistribution(it)
-            elif varName == 'VisualizeAngDistribution':
-                for it in self.visualizeIters:
-                    self.plotAngularDistribution(it)
-            elif varName in iterShowVar:
-                for it in self.visualizeIters:
-                    runShowJ(self.getFilename(iterShowVar[varName], iter=it))
-                    
-    def getRefsMd(self, iteration):
-        ''' Read the references metadata for a give iteration. '''
-        fn = self.getFilename('iter_refs', iter=iteration)        
-        return MetaData(fn)
-        
-    def drawPlot(self, xplotter):
-        self.xplotter = xplotter
-        
-    def showPlot(self):
-        if self.xplotter is not None:
-            self.xplotter.show()
-            
-    def plotClassDistribution(self, iteration):
-        from numpy import arange
-        from protlib_gui_figure import XmippPlotter
-        from matplotlib.ticker import FormatStrFormatter
-        
-        xplotter = XmippPlotter(1, 1, figsize=(4,4),
-                                windowTitle="Images distribution - iteration %d" % iteration)
-        md = self.getRefsMd(iteration)
-        md2 = MetaData()    
-        md2.aggregate(md, AGGR_SUM, MDL_REF3D, MDL_WEIGHT, MDL_WEIGHT)
-        weights = [md2.getValue(MDL_WEIGHT, objId) for objId in md2]
-        nrefs = len(weights)
-        refs3d = arange(1, nrefs + 1)
-        width = 0.85
-        a = xplotter.createSubPlot('3D references weights on last iteration', 'references', 'weight')
-        a.set_xticks(refs3d + 0.45)
-        a.xaxis.set_major_formatter(FormatStrFormatter('%1.0f'))
-        a.set_xlim([0.8, nrefs + 1])
-        a.bar(refs3d, weights, width, color='b')
-        self.drawPlot(xplotter)
-
-    def plotAngularDistribution(self, iteration): 
-        from protlib_gui_figure import XmippPlotter
-        md = self.getRefsMd(iteration)
-        md2 = MetaData()
-        md2.aggregate(md, AGGR_SUM, MDL_REF3D, MDL_WEIGHT, MDL_WEIGHT)
-        nrefs = md2.size()
-        figsize = None
-        if nrefs == 1:
-            gridsize = [1, 1]
-            figsize = (4, 4)
-        elif nrefs == 2:
-            gridsize = [1, 2]
-            figsize = (8, 4)
-        else:
-            gridsize = [(nrefs+1)/2, 2]
-            figsize = (8, 12)
-
-        xplotter = XmippPlotter(*gridsize, figsize=figsize, 
-                                windowTitle="Angular distribution - iteration %d" % iteration)
-        
-        for r in range(1, nrefs+1):
-            md2.importObjects(md, MDValueEQ(MDL_REF3D, r))  
-            plot_title = 'ref %d' % r
-            xplotter.plotAngularDistribution(plot_title, md2)
-        self.drawPlot(xplotter)
-        
+            if not self.IsMapAbsoluteGreyScale:
+                args[' --firstiter_cc'] = '' 
                 
-''' This function will copy input references into a stack in working directory'''
-def copyVolumes(log, inputMd, outputStack):
-    from protlib_filesystem import deleteFile
-    deleteFile(log, outputStack)
-    md = MetaData(inputMd)
-    img = Image()
-    for i, idx in enumerate(md):
-        img.read(md.getValue(MDL_IMAGE, idx))
-        img.write('%d@%s' % (i + 1, outputStack))
+            if self.InitialLowPassFilterA > 0:
+                args['--ini_high'] = self.InitialLowPassFilterA
+                
+            # CTF stuff
+            if self.DoCTFCorrection:
+                args['--ctf'] = ''
+            
+            if self.HasReferenceCTFCorrected:
+                args['--ctf_corrected_ref'] = ''
+                
+            if self.HaveDataPhaseFlipped:
+                args['--ctf_phase_flipped'] = ''
+                
+            if self.IgnoreCTFUntilFirstPeak:
+                args['--ctf_intact_first_peak'] = ''
+                
+            args['--sym'] = self.SymmetryGroup.upper()
+            
+            args['--K'] = self.NumberOfClasses
+            
+        # Sampling stuff
+        # Find the index(starting at 0) of the selected
+        # sampling rate, as used in relion program
+        iover = 1 #TODO: check this
+        index = ['30','15','7.5','3.7','1.8',
+                 '0.9','0.5','0.2','0.1'].index(self.AngularSamplingDeg)
+        args['--healpix_order'] = float(index + 1 - iover)
         
-def convertImagesMetaData(inputMd, outputRelion):
+        if self.PerformLocalAngularSearch:
+            args['--sigma_ang'] = self.LocalAngularSearchRange / 3.
+            
+        args['--offset_range'] = self.OffsetSearchRangePix
+        args['--offset_step']  = self.OffsetSearchStepPix * pow(2, iover)
+
+        args['--j'] = self.NumberOfThreads
+        
+        # Join in a single line all key, value pairs of the args dict    
+        params = ' '.join(['%s %s' % (k, str(v)) for k, v in args.iteritems()])
+        params += self.AdditionalArguments
+        
+        self.insertRunJobStep(self.program, params)
+        
+            
+#            
+#
+#def runRelion3D(log, program, params, mpi, threads):
+#    print "program: ", program
+#    print "params: ", params
+#    runJob(log, program, params, mpi, threads)
+    
+      
+        
+def convertImagesMd(log, inputMd, outputRelion):
     """ Convert the Xmipp style MetaData to one ready for Relion.
     Main differences are: STAR labels are named different and
     in Xmipp the images rows contains a path to the CTFModel, 
@@ -274,10 +171,17 @@ def convertImagesMetaData(inputMd, outputRelion):
     Params:
      input: input filename with the Xmipp images metadata
      output: output filename for the Relion metadata
-     """
-     md = MetaData(inputMd)
-     
-        
+    """
+    from protlib_import import exportMdToRelion
+    
+    md = MetaData(inputMd)
+    # Get the values (defocus, magnification, etc) from each 
+    # ctfparam files and put values in the row
+    md.fillExpand(MDL_CTF_MODEL)
+    # Create the mapping between relion labels and xmipp labels
+    exportMdToRelion(md, outputRelion)
+    
+             
 def renameOutput(log, WorkingDir, ProgId):
     ''' Remove ml2d prefix from:
         ml2dclasses.stk, ml2dclasses.xmd and ml2dimages.xmd'''

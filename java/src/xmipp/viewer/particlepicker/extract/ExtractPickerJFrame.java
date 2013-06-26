@@ -48,7 +48,6 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 	private JButton iconbt;
 	private ExtractMicrographsTableModel micrographsmd;
 	private JLabel particleslb;
-	private JPanel particlespn;
 	private int index;
 	private ExtractCanvas canvas;
 	private ColorHelper[] colorby;
@@ -57,6 +56,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 	private JLabel minlb;
 	private JLabel maxlb;
 	private ExtractParticle active;
+	private JPanel colorlegendpn;
 
 	public ExtractPickerJFrame(ParticlePicker picker, GalleryJFrame galleryfr)
 	{
@@ -73,18 +73,25 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		setTitle("Xmipp Particle Picker - " + picker.getMode());
 		initMenuBar();
 		setJMenuBar(mb);
+		savemi.setEnabled(false);
 
 		GridBagConstraints constraints = new GridBagConstraints();
 		constraints.insets = new Insets(0, 5, 0, 5);
 		constraints.anchor = GridBagConstraints.WEST;
 		setLayout(new GridBagLayout());
 
-		initParticlesPane();
-		add(particlespn, XmippWindowUtil.getConstraints(constraints, 0, 1, 3));
+		initToolBar();
+		add(tb, XmippWindowUtil.getConstraints(constraints, 0, 1, 2, 1, GridBagConstraints.NONE));
+		add(new JLabel("Shape:"), XmippWindowUtil.getConstraints(constraints, 0, 2));
+		initShapePane();
+		add(shapepn, XmippWindowUtil.getConstraints(constraints, 1, 2));
+		add(new JLabel("Color By:"), XmippWindowUtil.getConstraints(constraints, 0, 3));
+		initColorLegendPane();
+		add(colorlegendpn, XmippWindowUtil.getConstraints(constraints, 1, 3));
 		initMicrographsPane();
 
 		initMicrographsPane();
-		add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 3, 3));
+		add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 4, 3));
 
 		pack();
 		float positionx = 0.995f;
@@ -98,17 +105,12 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		return false;
 	}
 	
-	private void initParticlesPane()
+	private void initColorLegendPane()
 	{
-		particlespn = new JPanel();
-		GridLayout gl = new GridLayout(2, 1);
-		particlespn.setLayout(gl);
 
-		particlespn.setBorder(BorderFactory.createTitledBorder("Particles"));
+		colorlegendpn = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
-		JPanel fieldspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
-
-		fieldspn.add(new JLabel("Color by:"));
+		colorlegendpn.add(new JLabel("Color by:"));
 		colorby = picker.getColumns();
 		scorescb = new JComboBox(colorby);
 		scorescb.addActionListener(new ActionListener()
@@ -122,21 +124,17 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 				maxlb.setText(String.format("%.2f", getColorHelper().getMax()));
 			}
 		});
-		fieldspn.add(scorescb);
+		colorlegendpn.add(scorescb);
 		minlb = new JLabel(String.format("%.2f", getColorHelper().getMin()));
 		maxlb = new JLabel(String.format("%.2f", getColorHelper().getMax()));
 		
 		
-		fieldspn.add(minlb);
-		fieldspn.add(ColorHelper.getColorMap());
-		fieldspn.add(maxlb);
+		colorlegendpn.add(minlb);
+		colorlegendpn.add(ColorHelper.getColorMap());
+		colorlegendpn.add(maxlb);
 		
-		// Setting slider
-		initSizePane();
-		fieldspn.add(sizepn);
-		particlespn.add(fieldspn, 0);
-		initShapePane();
-		particlespn.add(shapepn, 1);
+		
+		
 		index = picker.getMicrographIndex();
 
 	}

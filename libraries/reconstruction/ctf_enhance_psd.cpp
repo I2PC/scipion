@@ -180,7 +180,7 @@ void ProgCTFEnhancePSD::applyFilter(MultidimArray<double> &PSD)
     }
 
     double avg, stddev;
-    computeAvgStdev_within_binary_mask(tighterMask, PSD, avg, stddev);
+    PSD.computeAvgStdev_within_binary_mask(tighterMask, avg, stddev);
     double istddev = 1.0 / stddev;
     FOR_ALL_ELEMENTS_IN_ARRAY2D(PSD)
     if (A2D_ELEM(mask, i, j))

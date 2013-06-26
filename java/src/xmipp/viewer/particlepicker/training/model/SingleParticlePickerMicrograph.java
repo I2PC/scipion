@@ -11,23 +11,35 @@ import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.PickerParticle;
 import java.awt.Rectangle;
-import xmipp.viewer.particlepicker.SingleParticlePicker;
 
-public class TrainingMicrograph extends Micrograph
+public class SingleParticlePickerMicrograph extends Micrograph
 {
 
 	private boolean autopicking = false;
 	private String autofilename;
-	private List<TrainingParticle> manualparticles;
+	private List<ManualParticle> manualparticles;
 	private List<AutomaticParticle> autoparticles;
 	private MicrographState state;
 	private int autopickpercent = SingleParticlePicker.defAutoPickPercent;
+	private double threshold = 0.0;
 
-	public TrainingMicrograph(String file, String psd, String ctf)
+	public double getThreshold() {
+		return threshold;
+	}
+
+
+
+	public void setThreshold(double threshold) {
+		this.threshold = threshold;
+	}
+
+
+
+	public SingleParticlePickerMicrograph(String file, String psd, String ctf)
 	{
 		super(file, psd, ctf);
 		autofilename = getName() + "_auto" + ext;
-		this.manualparticles = new ArrayList<TrainingParticle>();
+		this.manualparticles = new ArrayList<ManualParticle>();
 		this.autoparticles = new ArrayList<AutomaticParticle>();
 		state = MicrographState.Available;
 	}
@@ -57,9 +69,9 @@ public class TrainingMicrograph extends Micrograph
 		return autofilename;
 	}
 
-	public TrainingParticle getParticle(int x, int y)
+	public ManualParticle getParticle(int x, int y)
 	{
-		for (TrainingParticle p : getManualParticles())
+		for (ManualParticle p : getManualParticles())
 			if (p.contains(x, y))
 				return p;
 
@@ -89,24 +101,24 @@ public class TrainingMicrograph extends Micrograph
 
 	public void removeParticles(int x, int y, SingleParticlePicker ppicker)
 	{
-		List<TrainingParticle> particles = new ArrayList<TrainingParticle>();
+		List<ManualParticle> particles = new ArrayList<ManualParticle>();
 
-		for (TrainingParticle p : getManualParticles())
+		for (ManualParticle p : getManualParticles())
 			if (p.contains(x, y))
 				particles.add(p);
-		for (TrainingParticle p : particles)
+		for (ManualParticle p : particles)
 			removeParticle(p, ppicker);
 		particles.clear();
 		for (AutomaticParticle p : getAutomaticParticles())
 			if (p.contains(x, y))
 				particles.add(p);
 
-		for (TrainingParticle p : particles)
+		for (ManualParticle p : particles)
 			removeParticle(p, ppicker);
 
 	}
 
-	public List<TrainingParticle> getManualParticles()
+	public List<ManualParticle> getManualParticles()
 	{
 		return manualparticles;
 	}
@@ -116,7 +128,7 @@ public class TrainingMicrograph extends Micrograph
 		return autoparticles;
 	}
 
-	public void addManualParticle(TrainingParticle p, SingleParticlePicker ppicker, boolean center, boolean totemplates)
+	public void addManualParticle(ManualParticle p, SingleParticlePicker ppicker, boolean center, boolean totemplates)
 	{
 		if (!p.getMicrograph().fits(p.getX(), p.getY(), ppicker.getSize()))
 			System.err.format("Warning: ignoring particle out of bounds: x=%d, y=%d in micrograph: %s\n", p.getX(), p.getY(), p.getMicrograph());
@@ -219,10 +231,7 @@ public class TrainingMicrograph extends Micrograph
 		return count;
 	}
 
-	public int getAutomaticParticlesCount(double threshold)
-	{
-		return autoparticles.size() - getAutomaticParticlesDeleted(threshold);
-	}
+	
 
 	public int getAutomaticParticlesDeleted(double threshold)
 	{
@@ -233,24 +242,19 @@ public class TrainingMicrograph extends Micrograph
 		return count;
 	}
 
-	public void deleteBelowThreshold(double threshold)
-	{
-		for (AutomaticParticle p : autoparticles)
-			if (p.getCost() < threshold)
-				p.setDeleted(true);
-	}
+	
 
-	public List<TrainingParticle> getParticles()
+	public List<ManualParticle> getParticles()
 	{
-		ArrayList<TrainingParticle> result = new ArrayList<TrainingParticle>();
+		ArrayList<ManualParticle> result = new ArrayList<ManualParticle>();
 		result.addAll(manualparticles);
 		result.addAll(autoparticles);
 		return result;
 	}
 
-	public List<TrainingParticle> getAvailableParticles(double threshold)
+	public List<ManualParticle> getAvailableParticles(double threshold)
 	{
-		ArrayList<TrainingParticle> result = new ArrayList<TrainingParticle>();
+		ArrayList<ManualParticle> result = new ArrayList<ManualParticle>();
 		result.addAll(manualparticles);
 		for (AutomaticParticle ap : autoparticles)
 			if (!ap.isDeleted() && ap.getCost() >= threshold)
@@ -258,7 +262,7 @@ public class TrainingMicrograph extends Micrograph
 		return result;
 	}
 
-	public TrainingParticle getLastAvailableParticle(double threshold)
+	public ManualParticle getLastAvailableParticle(double threshold)
 	{
 		AutomaticParticle ap;
 		for (int i = autoparticles.size() - 1; i >= 0; i--)
@@ -297,7 +301,7 @@ public class TrainingMicrograph extends Micrograph
 	public Rectangle getParticlesRectangle(SingleParticlePicker picker)
 	{
 		double x1 = Double.POSITIVE_INFINITY, y1 = Double.POSITIVE_INFINITY, x2 = Double.NEGATIVE_INFINITY, y2 = Double.NEGATIVE_INFINITY;
-		List<TrainingParticle> particles = getParticles();
+		List<ManualParticle> particles = getParticles();
 		if(particles.isEmpty())
 			return null;
 		for(Particle p: getParticles())
@@ -314,12 +318,19 @@ public class TrainingMicrograph extends Micrograph
 		
 		int radius = picker.getRadius();
 		radius = radius + radius/5;
-		int x = (int)(x1 - radius);
-		int y = (int)(y1 - radius);
-		int width  = (int)(x2 - x + radius);
-		int height = (int)(y2 - y + radius);
+		int x = Math.max(0, (int)(x1 - radius));
+		int y = Math.max(0, (int)(y1 - radius));
+		int width  = Math.min((int)(x2 - x + radius), this.width - 1);
+		int height = Math.min((int)(y2 - y + radius), this.height - 1);
 		return new Rectangle(x, y, width, height);
 		
+	}
+	
+	public void deleteBelowThreshold() {
+		// TODO Auto-generated method stub
+		for (AutomaticParticle p : autoparticles) 
+			if(!p.isDeleted())
+				p.setDeleted(p.getCost() < getThreshold());
 	}
 
 }

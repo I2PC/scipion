@@ -1,8 +1,8 @@
 package xmipp.viewer.particlepicker.tiltpair.model;
 
-import xmipp.viewer.particlepicker.training.model.TrainingParticle;
+import xmipp.viewer.particlepicker.training.model.ManualParticle;
 
-public class TiltedParticle extends TrainingParticle {
+public class TiltedParticle extends ManualParticle {
 	
 	private UntiltedParticle untiltedparticle;
 	

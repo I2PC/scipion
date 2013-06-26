@@ -236,7 +236,7 @@ void normalize_Michael(MultidimArray<double> &I, const MultidimArray<int> &bg_ma
 void normalize_NewXmipp(MultidimArray<double> &I, const MultidimArray<int> &bg_mask)
 {
     double avgbg, stddevbg;
-    computeAvgStdev_within_binary_mask(bg_mask, I, avgbg, stddevbg);
+    I.computeAvgStdev_within_binary_mask(bg_mask, avgbg, stddevbg);
     double istddevbg=1.0/stddevbg;
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(I)
     DIRECT_MULTIDIM_ELEM(I,n)=(DIRECT_MULTIDIM_ELEM(I,n)-avgbg)*istddevbg;
