@@ -231,7 +231,10 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		try
 		{
 			if (active != null && active.getTiltedParticle() == null)
+			{
 				XmippMessageDialog.showInfo(frame, "Remember to pick tilted particle for each particle");
+				return;
+			}
 			Particle tp = um.getAlignerTiltedParticle(x, y);
 			if (um.getAddedCount() > UntiltedMicrograph.getAlignmentMin() && !um.getTiltedMicrograph().fits(tp.getX(), tp.getY(), pppicker.getSize()))
 				throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg("Tilted particle"));
@@ -302,6 +305,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 	{
 		if (!activemoved)
 			return;
+		boolean hadtilted = active.getTiltedParticle() != null;
 		if (um.fits(x, y, frame.getParticleSize()))
 		{
 			moveActiveParticle(x, y);
@@ -316,6 +320,8 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 			um.initAligner();
 		}
 		um.setAlignerTiltedParticle(active);
+		if(active.getTiltedParticle() == null && hadtilted)
+			XmippDialog.showInfo(frame, "Tilted particle will be dismissed");
 		frame.getTiltedCanvas().repaint();
 		setActiveMoved(false);
 	}
