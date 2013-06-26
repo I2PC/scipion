@@ -1066,7 +1066,7 @@ public class SingleParticlePicker extends ParticlePicker {
 			}
 			frame.getCanvas().repaint();
 			frame.getCanvas().setEnabled(true);
-			frame.updateMicrographsModel();
+			frame.updateMicrographsModel(true);
 			XmippWindowUtil.releaseGUI(frame.getRootPane());
 
 		}
