@@ -8,7 +8,7 @@ from pyworkflow.tests import GTestResult
 
 
 def discoverTests(path='.'):
-    return unittest.defaultTestLoader.discover(join('pyworkflow','tests', path), top_level_dir=pw.HOME)
+    return unittest.defaultTestLoader.discover(join('tests', path), top_level_dir=pw.HOME)
 
 def printTests(tests):
     for t in tests:
