@@ -30,14 +30,14 @@
 	</ul>
 </div>
 {% endblock %} {% block content %}
-<div id="toolbar" style="float:left;display: none">
-	<span><a id="editTool" href=""><img src="{{editTool}}" />Edit</a></span>
-	<span><a id="copyTool" href=""><img src="{{copyTool}}" />Copy</a></span> 
-	<span><a id="deleteTool" href=""><img src="{{deleteTool}}" /> Delete</a></span> 
-	<span><a id="browseTool"href=""><img src="{{browseTool}}" /> Browse</a></span>
-</div>
-<span style="float:right;"><a id="treeTool"href=""><img src="{{treeTool}}" /> Tree</a></span>
-<div>
+<span style="float:right;"><a id="treeTool" href="javascript:switchGraph();"><img src="{{treeTool}}"/> Tree</a></span>
+<div id="runTable">
+	<div id="toolbar" style="float:left;display:none;">
+		<span><a id="editTool" href=""><img src="{{editTool}}" />Edit</a></span>
+		<span><a id="copyTool" href=""><img src="{{copyTool}}" />Copy</a></span> 
+		<span><a id="deleteTool" href=""><img src="{{deleteTool}}" /> Delete</a></span> 
+		<span><a id="browseTool"href=""><img src="{{browseTool}}" /> Browse</a></span>
+	</div>
 	<table id="data" cellspacing="0">
 		<tr>
 			{% for colName, colWidth in provider.getColumns %}
@@ -56,6 +56,10 @@
 		{% endfor %}
 	</table>
 </div>
+<div id="graphActiv" style="display:none;" data-mode="inactive">
+	<h1>Graph</h1>
+</div>
+
 {% endblock %} {% block contentDown %}
 <div id="tabContaier">
 	<ul class="listTabs">
