@@ -52,12 +52,11 @@ class HostForm(forms.Form):
         
         
 class ShowjForm(forms.Form):
-    
     zoom = forms.IntegerField(required=True,
-                              max_value=512,
-                              min_value=10,
-                              localize=False,
-                              widget=forms.TextInput(attrs={'class' : 'menuInputNumber'}))
+                                  max_value=512,
+                                  min_value=10,
+                                  localize=False,
+                                  widget=forms.TextInput(attrs={'class' : 'menuInputNumber'}))
     gotoContainer = forms.IntegerField(required=True,
                               max_value=100,
                               min_value=1,
@@ -74,33 +73,46 @@ class ShowjForm(forms.Form):
                               min_value=1,
                               localize=False,
                               widget=forms.TextInput(attrs={'class' : 'menuInputNumber'}))
-    blockComboBox = forms.ChoiceField(required=False)
     
-    metadataComBox = forms.ChoiceField(required=False)
     
     path = forms.CharField(widget=forms.HiddenInput())
-    block = forms.CharField(required=False, widget=forms.HiddenInput())
+#    block = forms.CharField(required=False, widget=forms.HiddenInput())
     allowRender = forms.BooleanField(widget=forms.HiddenInput())
     #imageDim = forms.IntegerField(widget=forms.HiddenInput())#Se puede quitar
     mode = forms.CharField(widget=forms.HiddenInput())
-
     
-    def setShowj(self, path, block, render, dim, mode):
-#        self.fields['path'].initial = path
-#        self.fields['block'].initial = block
-#        self.fields['allowRender'].initial = render
-#        self.fields['zoom'].initial = dim
-#        self.fields['mode'].initial = mode
+    blockComboBox = forms.ChoiceField(required=False)
+    
+    metadataComboBox = forms.ChoiceField(required=False)
+    
+    def __init__(self, mdXmipp, *args, **kwargs):
+        super(ShowjForm, self).__init__(*args, **kwargs)
         
-        self.fields['gotoContainer'].initial = 1
-#        
-#        print "bound"
-#        print self.is_bound
-#        print "valid"
-#        print self.is_valid()
-#        print "error"
-#        print self.errors
-#        print "cleaned"
-#        print self.cleaned_data
+        print "joselerelele"
+        print self.data["path"]
+        print kwargs
+        
+        self.fields['blockComboBox'].choices = self.getBlockComboBoxValues()
+        
+        self.fields['metadataComboBox'].choices = self.getMetadataComboBoxValues(mdXmipp)
     
     
+
+    def getBlockComboBoxValues(self):    
+        import xmipp
+        from pyworkflow.tests import getInputPath
+        blocks = xmipp.getBlocksInMetaDataFile(str(getInputPath('showj', self.data["path"])))
+        print "zip(blocks, blocks)"
+        print tuple(zip(blocks, blocks))
+        return zip(blocks, blocks)
+   
+    def getMetadataComboBoxValues(self, mdXmipp):
+        import xmipp
+        from pyworkflow.web.app.views_showj import getTypeOfColumns
+        labels = mdXmipp.getActiveLabels()
+        labelsToRender = [xmipp.label2Str(l) for l in labels if (xmipp.labelIsImage(l) and self.data["allowRender"])]
+        #self.fields['metadataComboBox'].choices = zip(labelsToRender,labelsToRender)
+        return zip(labelsToRender,labelsToRender)
+   
+   
+ 
