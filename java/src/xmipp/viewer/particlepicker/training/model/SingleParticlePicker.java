@@ -133,7 +133,7 @@ public class SingleParticlePicker extends ParticlePicker {
 		}
 	}
 
-	public synchronized int getTemplatesNumber() {
+	public int getTemplatesNumber() {
 		if (templates == null)
 			return dtemplatesnum;
 		try {
