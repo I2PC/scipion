@@ -129,6 +129,12 @@ class ProtImportMicrographs(Protocol):
         summary.append("Sampling rate : %f" % self.samplingRate.get())
         
         return summary
+    
+    def _validate(self):
+        validateMsgs = []
+        if self.pattern.get() == "":
+            validateMsgs.append('Pattern cannot be EMPTY.')
+        return validateMsgs
 
 class DefImportParticles(Form):
     """Create the definition of parameters for
@@ -290,13 +296,7 @@ class ProtCTFMicrographs(Protocol):
             deps.append(stepId)
         # Insert step to create output objects       
         self._insertFunctionStep('createOutput', prerequisites=deps)
-        
-    def _validate(self):
-        errors = []
-        if not self.inputMicrographs.hasValue():
-            errors.append("<Input Micrographs> can not be EMPTY.")
-        return errors
-    
+            
     def _summary(self):
         summary = []
         if not self.inputMicrographs.hasValue():

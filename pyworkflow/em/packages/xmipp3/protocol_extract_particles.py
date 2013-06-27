@@ -365,5 +365,13 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             summary.append("Particle size %d" % self.boxSize.get())
             summary.append("Particles extracted: %d" % (self.outputImages.getSize()))
         return summary
+    
+    def _validate(self):
+        validateMsgs = []
+        # doFlip can only be True if CTF information is available on picked micrographs
+        if self.doFlip.get() and not self.inputCoordinates.get().getMicrographs().hasCTF():
+            validateMsgs.append('Phase flipping cannot be performed unless CTF information is provided.')
+        return validateMsgs
+            
         
 
