@@ -39,66 +39,33 @@ def showj(request):
     
          
     if request.method == 'POST': # If the form has been submitted...
-        print "request.POST.get('path')"
-        print request.POST.get('path')
-        print request.POST.get('blockComboBox')
         mdXmipp = loadMetaDataXmipp(request.POST.get('path'), request.POST.get('blockComboBox'))
         showjForm = ShowjForm(mdXmipp, request.POST) # A form bound to the POST data
-        print "POST Method"
-        print showjForm.data
-            
-            
     else:
-        
+        mdXmipp = loadMetaDataXmipp(request.GET.get('path', 'tux_vol.xmd'), request.GET.get('block', ''))
         inputParameters = {'path': request.GET.get('path', 'tux_vol.xmd'),
-                     'blockComboBox': request.GET.get('block', ''),
+#                     'blockComboBox': request.GET.get('block', ''),
                      'allowRender': 'render' in request.GET,
                      'zoom' : request.GET.get('dim', 150),
                      'mode': request.GET.get('mode', 'gallery'),
                      'gotoContainer': 1}
-        mdXmipp = loadMetaDataXmipp(request.GET.get('path', 'tux_vol.xmd'), request.GET.get('block', ''))
         showjForm = ShowjForm(mdXmipp, inputParameters) # An unbound form
         
     if showjForm.is_valid() is False:
         print showjForm.errors
+    else:
+        print "topapi"    
+
     
     print "data after valid"
     print showjForm.data
-    print showjForm.cleaned_data
-    print "data blockcombobox"
-    print showjForm.data['blockComboBox']
-    
-    
-    
-    if showjForm.is_valid() is False:
-        print showjForm.errors
-    else:
-        print "topapi"    
-        
                
-    
-#    showjForm.setShowj(mdXmipp)
-    if showjForm.is_valid() is False:
-        print showjForm.errors
-    
-    
-    if "select_mode" in showjForm.data: 
-        if showjForm.data["select_mode"] == "table":    
-            print "set to table"
-            showjForm.fields['mode'].initial = "table"        
-        elif showjForm.data["select_mode"] == "gallery":
-            print "set to gallery"
-            showjForm.fields['mode'].initial = "gallery"        
-      
-        
-        
-        
     
     
     md = MdData(mdXmipp, showjForm.data['allowRender'], showjForm.data['zoom'])
     request.session['md'] = md
 
-    menuLayoutConfig = MenuLayoutConfig(showjForm.data['mode'], showjForm.data['path'], showjForm.data['blockComboBox'], showjForm.data['allowRender'], showjForm.data['zoom'])
+#    menuLayoutConfig = MenuLayoutConfig(showjForm.data['mode'], showjForm.data['path'], showjForm.data['blockComboBox'], showjForm.data['allowRender'], showjForm.data['zoom'])
     
     context = {'jquery': jquery_path,
                'utils': utils_path,

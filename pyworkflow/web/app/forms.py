@@ -76,35 +76,52 @@ class ShowjForm(forms.Form):
     
     
     path = forms.CharField(widget=forms.HiddenInput())
-#    block = forms.CharField(required=False, widget=forms.HiddenInput())
     allowRender = forms.BooleanField(widget=forms.HiddenInput())
-    #imageDim = forms.IntegerField(widget=forms.HiddenInput())#Se puede quitar
     mode = forms.CharField(widget=forms.HiddenInput())
     
-    blockComboBox = forms.ChoiceField(required=False)
-    
-    metadataComboBox = forms.ChoiceField(required=False)
+#    blockComboBox = forms.ChoiceField(required=False)
+#    blockComboBox = forms.ChoiceField(required=False, choices=[('1','1'),('2','2'),('3','3')], initial = ('3','3'))
+
+#    metadataComboBox = forms.ChoiceField(required=False)
     
     def __init__(self, mdXmipp, *args, **kwargs):
         super(ShowjForm, self).__init__(*args, **kwargs)
         
-        print "joselerelele"
-        print self.data["path"]
-        print kwargs
+#        self.fields['blockComboBox'].choices = self.getBlockComboBoxValues()
         
-        self.fields['blockComboBox'].choices = self.getBlockComboBoxValues()
+        blockComboBoxValues = self.getBlockComboBoxValues()
         
-        self.fields['metadataComboBox'].choices = self.getMetadataComboBoxValues(mdXmipp)
+        self.fields['blockComboBox'] = forms.ChoiceField(required=False, choices=blockComboBoxValues, initial = blockComboBoxValues[1][0])
+        print tuple(self.getBlockComboBoxValues())[1][0]
+        print tuple(self.getBlockComboBoxValues())
+        print "self.fields['blockComboBox']"
+        print self.fields['blockComboBox'] 
+        print self.fields['blockComboBox'].initial
+        
+
+        metadataComboBoxValues = self.getMetadataComboBoxValues(mdXmipp)
+        self.fields['metadataComboBox'] = forms.ChoiceField(required=False, choices=metadataComboBoxValues, initial = metadataComboBoxValues[1][0])
     
-    
+        print "self.data['blockComboBox']"
+#        print self.data['blockComboBox']
+        print self.data
+        
+        
+        
+#        if self.data['blockComboBox'] is '':
+#            print "aki"
+#            self.initial['blockComboBox'] = 'Volumes'
+
+        if "metadataComboBox" not in self.data or self.data['metadataComboBox'] is '':
+            print "aki"
+            self.fields['metadataComboBox'].initial =[1]
+
 
     def getBlockComboBoxValues(self):    
         import xmipp
         from pyworkflow.tests import getInputPath
         blocks = xmipp.getBlocksInMetaDataFile(str(getInputPath('showj', self.data["path"])))
-        print "zip(blocks, blocks)"
-        print tuple(zip(blocks, blocks))
-        return zip(blocks, blocks)
+        return tuple(zip(blocks, blocks))
    
     def getMetadataComboBoxValues(self, mdXmipp):
         import xmipp
@@ -112,7 +129,7 @@ class ShowjForm(forms.Form):
         labels = mdXmipp.getActiveLabels()
         labelsToRender = [xmipp.label2Str(l) for l in labels if (xmipp.labelIsImage(l) and self.data["allowRender"])]
         #self.fields['metadataComboBox'].choices = zip(labelsToRender,labelsToRender)
-        return zip(labelsToRender,labelsToRender)
+        return tuple(zip(labelsToRender,labelsToRender))
    
    
  
