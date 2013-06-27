@@ -424,10 +424,8 @@ void AutoParticlePicking2::add2Dataset(int flagNegPos)
 
 void AutoParticlePicking2::train(MetaData MD, bool corrFlag, int x, int y, int width, int height)
 {
-    std::cerr<<"We are doing training"<<std::endl;
     if (width!=0)
     {
-        std::cerr<<"width is not zero"<<std::endl;
         x*=scaleRate;
         y*=scaleRate;
         width*=scaleRate;
@@ -487,52 +485,6 @@ void AutoParticlePicking2::train(MetaData MD, bool corrFlag, int x, int y, int w
         normalizeDataset(0,1);
         trainSVM(fnSVMModel,1);
     }
-
-
-    //    if (fnPCAModel.exists())
-    //    {
-    //        positiveParticleStack.clear();
-    //        positiveInvariatnStack.clear();
-    //        negativeParticleStack.clear();
-    //        negativeInvariatnStack.clear();
-    //        classLabel1.clear();
-    //        dataSet1.clear();
-    //        if (!corrFlag)
-    //        {
-    //            classLabel.clear();
-    //            dataSet.clear();
-    //            pcaModel.clear();
-    //            pcaRotModel.clear();
-    //            particleAvg.clear();
-    //            pcaModel.clear();
-    //            fnPCAModel.deleteFile();
-    //            fnPCARotModel.deleteFile();
-    //            fnAvgModel.deleteFile();
-    //            fnSVMModel.deleteFile();
-    //        }
-    //    }
-    //    x*=scaleRate;
-    //    y*=scaleRate;
-    //    width*=scaleRate;
-    //    height*=scaleRate;
-    //    p1.x=x;
-    //    p1.y=y;
-    //    p2.x=x+width;
-    //    p2.y=y+height;
-    //    if (!corrFlag)
-    //        batchBuildInvariant(MD);
-    //    else
-    //        buildInvariant(MD);
-    //    if (!fnPCAModel.exists())
-    //        trainPCA();
-    //    add2Dataset(0);
-    //    add2Dataset(1);
-    //    if (!corrFlag)
-    //    {
-    //        saveTrainingSet();
-    //        normalizeDataset(0,1);
-    //        trainSVM(fnSVMModel,1);
-    //    }
 }
 
 void AutoParticlePicking2::saveTrainingSet()
@@ -552,16 +504,6 @@ void AutoParticlePicking2::saveTrainingSet()
 
 int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, int proc_prec, MetaData &md)
 {
-    std::cerr<<"We are doing the automatic picking"<<std::endl;
-    //    Image<double> II;
-    //    II.read(fnPCAModel);
-    //    pcaModel=II();
-    //    // Read rotational PCA model
-    //    II.read(fnPCARotModel);
-    //    pcaRotModel=II();
-    //    // Read the average of the particles for convolution
-    //    II.read(fnAvgModel);
-    //    particleAvg=II();
     // Read the SVM model
     classifier.LoadModel(fnSVMModel);
     // If we have generated the second SVM model then we use
@@ -697,7 +639,6 @@ void AutoParticlePicking2::correction(MetaData addedParticlesMD,MetaData removed
 {
     addedParticlesMD.print();
     removedParticlesMD.print();
-    std::cerr<<"We are performing correction"<<std::endl;
     dataSet.clear();
     classLabel.clear();
     loadTrainingSet(fnVector);
@@ -1365,7 +1306,6 @@ void AutoParticlePicking2::extractNegativeInvariant(const FileName &fnInvariantF
         numNegatives=15;
     else
         numNegatives=num_part*2;
-    std::cerr<<"Picking the non particles randomly"<<std::endl;
     for (int i=0;i<numNegatives;i++)
     {
         int x=negativeSamples[DIRECT_A1D_ELEM(randomIndexes,i)-1].x;
@@ -1377,18 +1317,14 @@ void AutoParticlePicking2::extractNegativeInvariant(const FileName &fnInvariantF
         II()=IpolarCorr;
         II.write(fnNegativeInvariatn,ALL_IMAGES,true,WRITE_APPEND);
     }
-    std::cerr<<"End of picking the non particles randomly"<<std::endl;
 }
 
 void AutoParticlePicking2::extractInvariant(const FileName &fnInvariantFeat,
         const FileName &fnParticles,
         bool avgFlag)
 {
-    std::cerr<<"starting extract positive invariants"<<std::endl;
     extractPositiveInvariant(fnInvariantFeat,fnParticles,avgFlag);
-    std::cerr<<"end of extract positive invariants"<<std::endl;
     extractNegativeInvariant(fnInvariantFeat,fnParticles);
-    std::cerr<<"end of extract negative invariants"<<std::endl;
 }
 
 void AutoParticlePicking2::extractParticle(const int x, const int y,
@@ -1421,12 +1357,10 @@ void AutoParticlePicking2::extractNonParticle(std::vector<Particle2> &negativePo
     }
     else
     {
-        std::cerr<<"A rectangle has been specified by the user"<<std::endl;
         startX = p1.x+particle_radius*2;
         startY = p1.y+particle_radius*2;
         endX = p2.x-particle_radius*2;
         endY = p2.y-particle_radius*2;
-        std::cerr<<"the dimensions of the rectangle is "<<startX<<" "<<startY<<endX<<" "<<endY<<std::endl;
     }
     MultidimArray<double> pieceImage;
 
@@ -1442,7 +1376,6 @@ void AutoParticlePicking2::extractNonParticle(std::vector<Particle2> &negativePo
                 negativePosition.push_back(negSample);
             }
         }
-    std::cerr<<"The size of the negatives is equal to"<<negativePosition.size()<<std::endl;
 }
 void AutoParticlePicking2::convert2Polar(MultidimArray<double> &particleImage,
         MultidimArray<double> &polar)
