@@ -202,7 +202,8 @@ class SetOfImages(EMObject):
        
     def getSize(self):
         """Return the number of images"""
-        pass
+        self.loadIfEmpty()
+        return len(self._mapper.selectByClass("Image", iterate=False))
     
     def getFileName(self):
         return self.get()

@@ -198,3 +198,13 @@ class XmippProtCL2D(ProtAlign, ProtClassify, XmippProtocol):
         lastMdFn = levelMdFiles[-1]
         result = {'outputClassification' + subset: XmippClassification2D(lastMdFn, 'classes_sorted')}
         self._defineOutputs(**result)
+
+    def _summary(self):
+        summary = []
+        if not self.inputImages.hasValue():
+            summary.append("No <Input Images> selected.")
+        else:
+            summary.append("Input Images: %s" % self.inputImages.get().getNameId())
+            summary.append("Number of references: %d" % self.numberOfReferences.get())
+            summary.append("Output classes: %s" % self.outputClassification.get())
+        return summary

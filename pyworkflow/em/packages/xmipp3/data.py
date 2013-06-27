@@ -133,6 +133,11 @@ class XmippSetOfImages(SetOfImages):
         self._set = XmippSet(XmippImage)
         self._setPairs = XmippSet(XmippTiltedPair)
            
+    def getSize(self):
+        """Return the number of images"""
+        self.loadIfEmpty()
+        return self._set.getSize()
+    
     def load(self):
         """ Load extra data from files. """
         if self.getFileName() is None:
@@ -409,21 +414,29 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         # Use object value to store filename
         # Here filename is the path where pos filePaths can be found
         SetOfCoordinates.__init__(self, value=filename, **args)
-        self.family = String()
         
     def getFileName(self):
-        return self.get()             
+        return self.get()       
+    
+    def getSize(self):
+        """ Return the number of coordinates on the set """
+        from glob import glob
+        size = 0
+        posDir = glob(join(self.getFileName(), '*.pos'))
+        for posFn in posDir:
+            mdPos = xmipp.MetaData('particles@%s' % posFn)
+            size += mdPos.size()
+        return size      
         
     def iterMicrographCoordinates(self, micrograph):
         """ Iterates over the set of coordinates belonging to that micrograph. """
         path = self.getFileName()
-        template = self.family.get() + '@%s'
         
         pathMic = micrograph.getFileName()
         pathPos = join(path, replaceBaseExt(pathMic, 'pos'))
         
         if exists(pathPos):
-            mdPos = xmipp.MetaData(template % pathPos)
+            mdPos = xmipp.MetaData('particles@%s' % pathPos)
                             
             for i, objId in enumerate(mdPos):
                 x = mdPos.getValue(xmipp.MDL_XCOOR, objId)
