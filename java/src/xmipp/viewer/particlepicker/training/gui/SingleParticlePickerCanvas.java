@@ -74,6 +74,7 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 				p = new ManualParticle(x, y, frame.getParticlePicker(), micrograph);
 				micrograph.addManualParticle(p, ppicker, frame.isCenterParticle());
 				active = p;
+				TasksManager.getInstance().addTask(new ParticleToTemplatesTask(active));
 				refresh();
 			}
 		}
@@ -116,6 +117,7 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 					micrograph.removeParticle(active, ppicker);
 					active = new ManualParticle(active.getX(), active.getY(), ppicker, micrograph);
 					micrograph.addManualParticle(active, ppicker, frame.isCenterParticle());
+					
 				}
 				else
 				{
