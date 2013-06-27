@@ -283,7 +283,7 @@ public class TiltPairPicker extends ParticlePicker
 		if (f == Format.Auto)
 			f = detectFormat(path);
 		if (f == Format.Unknown)
-			throw new IllegalArgumentException(XmippMessage.getIllegalValueMsg("format", Format.Unknown));
+			throw new IllegalArgumentException("Unable to detect format");
 
 		String uFn, tFn;
 		String result = "";
