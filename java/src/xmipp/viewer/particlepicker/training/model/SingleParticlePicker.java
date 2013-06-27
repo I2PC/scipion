@@ -409,7 +409,7 @@ public class SingleParticlePicker extends ParticlePicker {
 			for (AutomaticParticle ap : m.getAutomaticParticles()) {
 				if (!ap.isDeleted()) {
 					p = new ManualParticle(ap.getX(), ap.getY(), this, m);
-					m.addManualParticle(p, this, false, true);
+					m.addManualParticle(p, this, false, false);
 				}
 			}
 
@@ -422,6 +422,7 @@ public class SingleParticlePicker extends ParticlePicker {
 		}
 
 		saveData();
+		initUpdateTemplates();
 	}
 
 	public int getManualParticlesNumber() {

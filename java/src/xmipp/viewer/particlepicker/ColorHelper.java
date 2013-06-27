@@ -23,7 +23,6 @@ public class ColorHelper
 {
 	int id;
 	String name;
-	private MetaData md;
 	private double max;
 	private double min;
 	private double range;
@@ -41,7 +40,6 @@ public class ColorHelper
 	{
 		this.id = id;
 		this.name = name;
-		this.md = md;
 		max = Math.rint(md.getColumnMax(id) * 100)/100;
 		min = Math.rint(md.getColumnMin(id) * 100)/100;
 		range = max - min;
