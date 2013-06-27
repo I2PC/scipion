@@ -334,7 +334,7 @@ class ProjectWindow(gui.Window):
                           VIEW_DATA: self.createDataView,
                           VIEW_HOSTS: self.createHostsView
                           }
-        self.switchView(VIEW_HOSTS)
+        self.switchView(VIEW_PROTOCOLS)
 
     def createHeaderFrame(self, parent):
         """ Create the Header frame at the top of the windows.

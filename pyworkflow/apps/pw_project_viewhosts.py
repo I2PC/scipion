@@ -24,6 +24,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.hosts import HostConfig
 """
 Main project window application
 """
@@ -49,7 +50,7 @@ import pyworkflow.gui as gui
 from pyworkflow.gui import getImage
 from pyworkflow.gui.tree import Tree, ObjectTreeProvider, DbTreeProvider
 from pyworkflow.gui.form import FormWindow
-from pyworkflow.gui.dialog import askYesNo
+from pyworkflow.gui.dialog import askYesNo, showInfo, showError
 from pyworkflow.gui.text import TaggedText
 from pyworkflow.gui import Canvas
 from pyworkflow.gui.graph import LevelTree
@@ -90,8 +91,7 @@ class HostsView(tk.Frame):
     def __init__(self, parent, windows, **args):
         tk.Frame.__init__(self, parent, **args)
         # Load global configuration
-        self.selectedProtocol = None
-        self.showGraph = False
+        self.selectedHost = None
         self.windows = windows
         self.hostsMapper = windows.getHostsMapper()
         self.getImage = windows.getImage
@@ -121,8 +121,7 @@ class HostsView(tk.Frame):
         
     def refresh(self, e=None):
         """ Refresh the hosts lists. """
-        self.runsTree.update()
-        self.updateRunsGraph()
+        self.hostsTree.update()
         
     def createActionToolbar(self, toolbar):
         """ Prepare the buttons that will be available for protocol actions. """
@@ -158,49 +157,54 @@ class HostsView(tk.Frame):
         
     def _openHostForm(self, host):
         """Open the Protocol GUI Form given a Protocol instance"""
-        w = HostWindow(host, self.windows)
+        w = HostWindow(host, self.windows, saveCallback=self._saveHost)
         w.show(center=True)
         
-    def _executeSaveProtocol(self, prot, onlySave=False):
-        if onlySave:
-            self.project.saveProtocol(prot)
-        else:
-            self.project.launchProtocol(prot)
-        self.runsTree.after(1000, self.runsTree.update)
+    def _saveHost(self, host):
+        self.hostsMapper.store(host)
+        self.hostsMapper.commit()
+        self.hostsTree.after(1000, self.refresh)
         
-    def _deleteProtocol(self, prot):
-        if askYesNo("Confirm DELETE", "<ALL DATA> related to this <protocol run> will be <DELETED>. \n"
-                    "Do you really want to continue?", self.root):
-            self.project.deleteProtocol(prot)
-            self.runsTree.update()
+    def _deleteHost(self, host):
+        if askYesNo("Confirm DELETE", "<ALL CONFIGURATION> related to host <%s> will be <DELETED>. \n" % host.getLabel() + \
+                    "Do you really want to continue?", self.windows.root):
+            self.hostsMapper.delete(host)
+            self.hostsMapper.commit()
+            self.refresh()
         
     def _hostActionClick(self, action):
         host = self.selectedHost
-        if host:
-            if action == ACTION_EDIT:
-                self._openHostForm(host)
-            elif action == ACTION_COPY:
-                #TODO Copy host config
-                newHost = host.copy() # This not work!!!! is just a guide
-                self._openHostForm(newHost)
-            elif action == ACTION_DELETE:
+        if host or action == ACTION_NEW:
+            if action == ACTION_DELETE:
                 self._deleteHost(host)
+            else:                
+                if action == ACTION_NEW:
+                    newHost = HostConfig()
+                elif action == ACTION_COPY:
+                    newHost = host.clone()
+                elif action == ACTION_EDIT:
+                    newHost = host
+                self._openHostForm(newHost)
                 
                 
 class HostWindow(gui.Window):
     """ Form Windows to edit a host config. """
     
-    def __init__(self, host, master=None):
+    def __init__(self, host, master=None, saveCallback=None):
         
         gui.Window.__init__(self, "host window", master, icon=master.icon, minsize=(700,500))
         self.host = host
+        self.font = tkFont.Font(size=10, family='verdana')#, weight='bold')
+        self.varsDict = []
+        self.saveCallback = saveCallback
         
         frame = tk.Frame(self.root)
         frame.grid(row=0, column=0, sticky='news')
         frame.columnconfigure(0, weight=1)
         frame.rowconfigure(1, weight=1)
         self._createHeader(frame)
-        self._createContent(frame)      
+        self._createContent(frame)
+        self._createButtons(frame)    
         
         
     def _createHeader(self, parent):
@@ -237,13 +241,24 @@ class HostWindow(gui.Window):
             if isinstance(attr, String):
                 self._addLabelValue(self.contentFrame, attr, name, i)
                 i += 1
+                
+    def _createButtons(self, parent):
+        self.buttonsFrame = tk.Frame(parent, bd=0)
+        self.buttonsFrame.grid(row=2, column=0, sticky='news', padx=5, pady=5)
+        #self.buttonsFrame.columnconfigure(0, weight=1)
+        #self.buttonsFrame.columnconfigure(1, weight=4)
+        
+        btnClose = tk.Button(self.buttonsFrame, text="Close", image=self.getImage('dialog_close.png'), compound=tk.LEFT, font=self.font,
+                          command=self.close)
+        btnClose.grid(row=0, column=0, padx=5, pady=5, sticky='sw')
+        btnSave = tk.Button(self.buttonsFrame, text="Save", image=self.getImage('filesave.png'), compound=tk.LEFT, font=self.font, 
+                          command=self._save)
+        btnSave.grid(row=0, column=1, padx=5, pady=5, sticky='sw')
         
     def _addLabelValue(self, parent, attr, key, row):
         label = tk.Label(parent, text=key, bg='white')
         label.grid(row=row, column=0, sticky='ne', padx=5, pady=3)
         value = attr.get('')
-        var = tk.StringVar()
-        var.set(value)
         args = {}
         tag = self.tags.get(key, '')
         if  tag == 'text':
@@ -253,10 +268,28 @@ class HostWindow(gui.Window):
             entry.setReadOnly(False)
             entry.tag_configure("red", foreground="#ff0000")
             entry.highlight("%\(\w+\)\w", "red", '1.0', 'end', regexp=True)
+            self.queueText = entry
         else:
             if tag == 'pass':
                 args['show'] = '*'
             if key.endswith('Command') or key.endswith('Path'):
                 args['width'] = 60
+            var = tk.StringVar()
+            var.set(value)
             entry = tk.Entry(parent, textvariable=var, **args)
+            self.varsDict.append((attr, var))
         entry.grid(row=row, column=1, sticky='nw', padx=5, pady=3)
+        
+    def _save(self, e=None):
+        for attr, var in self.varsDict:
+            attr.set(var.get())
+        self.host.queueSystem.submitTemplate.set(self.queueText.getText())
+        if self.saveCallback:
+            try:
+                self.saveCallback(self.host)                
+                showInfo("Action DELETE", "Host sucessfully saved. \n", self.root)
+            except Exception, ex:
+                showError("Action DELETE", "Error saving host: <%s>. \n" % str(ex), self.root)
+
+        
+        
