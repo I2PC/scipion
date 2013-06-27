@@ -111,4 +111,3 @@ class EmanProtBoxing(ProtParticlePicking):
         
         copyTree(self.importFolder.get(), os.getcwd())
 
-

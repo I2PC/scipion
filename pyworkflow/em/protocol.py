@@ -332,7 +332,15 @@ class ProtExtractParticles(Protocol):
 
 
 class ProtParticlePicking(Protocol):
-    pass
+
+    def _summary(self):
+        summary = []
+        if not self.inputMicrographs.hasValue():
+            summary.append("No <Input Micrographs> selected.")
+        else:
+            summary.append("Input micrographs: " + self.inputMicrographs.get().getNameId())
+            summary.append("Number of particles manually picked: %d (from %d micrographs)" % (self.outputCoordinates.getSize(), self.inputMicrographs.get().getSize()))
+        return summary
 
 
 class ProtAlign(Protocol):
