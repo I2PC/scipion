@@ -1,18 +1,11 @@
 package xmipp.viewer.particlepicker.training.gui;
 
 import ij.ImagePlus;
-import ij.gui.ImageCanvas;
-
 import java.awt.Dimension;
-import java.awt.Panel;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-
 import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.ImageGeneric;
 import xmipp.utils.XmippWindowUtil;
@@ -29,7 +22,6 @@ public class TemplatesJDialog extends JDialog
 		super(frame);
 		this.frame = frame;
 		initComponents();
-
 	}
 
 	public synchronized void loadTemplates(boolean resize)

@@ -72,13 +72,10 @@ public class AdvancedOptionsJDialog extends JDialog
 			public void actionPerformed(ActionEvent arg0)
 			{
 				setTemplates();
-
 			}
 		});
 	
-
 		add(templatestf, XmippWindowUtil.getConstraints(constraints, 1, 0));
-
 		checkpercentlb = new JLabel("Autopick Check (%):");
 		add(checkpercentlb, XmippWindowUtil.getConstraints(constraints, 0, 1));
 		autopickpercenttf = new JFormattedTextField(NumberFormat.getIntegerInstance());
@@ -104,6 +101,7 @@ public class AdvancedOptionsJDialog extends JDialog
 			@Override
 			public void actionPerformed(ActionEvent arg0)
 			{
+				setTemplates();
 				setAutopickPercent();
 				setVisible(false);
 
