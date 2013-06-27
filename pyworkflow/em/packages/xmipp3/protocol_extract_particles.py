@@ -350,11 +350,18 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         self._defineOutputs(outputImages=imgSet)
     
     def _summary(self):
+        downsampleTypeText = {
+                              self.ORIGINAL:'Original micrographs',
+                              self.SAME_AS_PICKING:'Same as picking',
+                              self.OTHER: 'Other downsampling factor'}
         summary = []
         if not self.inputCoordinates.hasValue():
             summary.append("No <Input Coordinates> selected.")
         else:
-            summary.append("Input coordinates: " + self.inputCoordinates.get().getNameId())
+            summary.append("Input coordinates: %s" % self.inputCoordinates.get().getNameId())
+            summary.append("Downsample type: %s" % downsampleTypeText.get(self.downsampleType.get()))
+            if self.downsampleType.get() == self.OTHER:
+                summary.append("Downsampling factor: %d" % self.downFactor.get())
             summary.append("Particle size %d" % self.boxSize.get())
             summary.append("Particles extracted: %d" % (self.outputImages.getSize()))
         return summary

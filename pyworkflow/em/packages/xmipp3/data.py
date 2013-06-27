@@ -424,7 +424,7 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         size = 0
         posDir = glob(join(self.getFileName(), '*.pos'))
         for posFn in posDir:
-            mdPos = xmipp.MetaData(posFn)
+            mdPos = xmipp.MetaData('particles@%s' % posFn)
             size += mdPos.size()
         return size      
         

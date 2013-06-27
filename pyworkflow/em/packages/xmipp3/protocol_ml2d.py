@@ -180,3 +180,13 @@ class XmippProtML2D(ProtAlign, ProtClassify, XmippProtocol):
     def createOutput(self):
         classification = XmippClassification2D(self.oroot + 'classes.xmd')
         self._defineOutputs(outputClassification=classification)
+
+    def _summary(self):
+        summary = []
+        if not self.inputImages.hasValue():
+            summary.append("No <Input Images> selected.")
+        else:
+            summary.append("Input Images: %s" % self.inputImages.get().getNameId())
+            summary.append("Number of references: %d" % self.numberOfReferences.get())
+            summary.append("Output classes: %s" % self.outputClassification.get())
+        return summary
