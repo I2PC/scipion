@@ -189,7 +189,25 @@ class Object(object):
         for k, v in self.getAttributesToStore():
             resultDictionary.update(v.getDictionary(k)) 
         return resultDictionary
-         
+    
+    def copy(self, other):
+        """ This method will recursively clone all attributes
+        from one object to the other.
+        Attributes must be present in both.
+        NOTE: This implementation can be extended to add or remove mismatching attributes.
+        """
+        for name, attr in other.getAttributesToStore():
+            myAttr = getattr(self, name, None)
+            if myAttr is None:
+                setattr(self, name, attr.clone())
+            else:
+                myAttr.copy(attr)
+    
+    def clone(self):
+        clone = self.getClass()()
+        clone.copy(self)
+        
+        return clone    
 #     def __getAuxDictionary(self, obj):
 #         resultDictionary = {}
 #         if type(obj) != list and type(obj) != dict:
@@ -310,6 +328,9 @@ class Scalar(Object):
         if self.hasValue():
             return self._objValue
         return default
+    
+    def copy(self, other):
+        self.set(other.get())
         
     
 class Integer(Scalar):

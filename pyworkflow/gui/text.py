@@ -81,7 +81,7 @@ class Text(tk.Text, Scrollable):
         # create a popup menu
         self.menu = tk.Menu(master, tearoff=0, postcommand=self.updateMenu)
         self.menu.add_command(label="Copy to clipboard", command=self.copyToClipboard)
-        self.menu.add_command(label="Open", command=self.openFile)
+        #self.menu.add_command(label="Open", command=self.openFile)
         # Associate with right click
         self.bind("<Button-1>", self.onClick)
         self.bind("<Button-3>", self.onRightClick)
@@ -114,6 +114,9 @@ class Text(tk.Text, Scrollable):
         self.config(state=tk.NORMAL)
         self.delete(0.0, tk.END)
 
+    def getText(self):
+        return self.get(0.0, tk.END)
+        
     def addText(self, text):
         self.config(state=tk.NORMAL)
         if isinstance(text, list):
@@ -145,8 +148,8 @@ class Text(tk.Text, Scrollable):
         
     def updateMenu(self, e=None):
         state = 'normal'
-        if not xmippExists(self.selection):
-            state = 'disabled'#self.menu.entryconfig(1, background="green")
+        #if not xmippExists(self.selection):
+        #    state = 'disabled'#self.menu.entryconfig(1, background="green")
         self.menu.entryconfig(1, state=state)
         
     def setReadOnly(self, value):
