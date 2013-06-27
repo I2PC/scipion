@@ -97,12 +97,10 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         # Run the command with formatted parameters
         self.runJob(None, program, arguments % self._params)
         
-    def _createSetOfCoordinates(self, family, size):
+    def _createSetOfCoordinates(self, size):
         inputMicsXmipp = getattr(self, 'inputMicsXmipp', self.inputMics)
-        print "createSetOfCoordinates for family: ", family, size
         coords = XmippSetOfCoordinates(filename=self._getExtraPath())
         coords.setMicrographs(inputMicsXmipp)
-        coords.family.set(family)
         coords.boxSize.set(size)
         
         return coords                    
@@ -119,13 +117,11 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
             shutil.copy(f, self._getExtraPath())
         
     def createOutput(self):
-        fn = self._getExtraPath('families.xmd')
-        md = MetaData(fn)
-        for objId in md:
-            family = md.getValue(MDL_PICKING_FAMILY, objId)
-            size = md.getValue(MDL_PICKING_PARTICLE_SIZE, objId)
-            coords = self._createSetOfCoordinates(family, size)
-            self._defineOutputs(outputCoordinates=coords)
+        fn = self._getExtraPath('config.xmd')
+        md = MetaData('properties@%s' % fn)
+        size = md.getValue(MDL_PICKING_PARTICLE_SIZE, md.firstObject())
+        coords = self._createSetOfCoordinates(size)
+        self._defineOutputs(outputCoordinates=coords)
 
     def _summary(self):
         summary = []

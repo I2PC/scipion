@@ -62,10 +62,6 @@ class XmippDefExtractParticles(Form):
                       condition='downsampleType != 1',
                       pointerClass='SetOfMicrographs',
                       help='Select the original SetOfMicrographs')
-        
-        self.addParam('family', StringParam, default='DefaultFamily',
-                      label='Family',
-                      help='For Xmipp coordinates specify the family.')
 
         self.addParam('boxSize', IntParam, default=0,
                       label='Particle box size',
@@ -359,7 +355,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             summary.append("No <Input Coordinates> selected.")
         else:
             summary.append("Input coordinates: " + self.inputCoordinates.get().getNameId())
-            summary.append("Family: %s with size %d" % (self.family, self.boxSize.get()))
+            summary.append("Particle size %d" % self.boxSize.get())
             summary.append("Particles extracted: %d" % (self.outputImages.getSize()))
         return summary
         

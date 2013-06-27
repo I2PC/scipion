@@ -166,7 +166,6 @@ class TestXmippSetOfCoordinates(unittest.TestCase):
     def testIterate(self):
         """ Test reading an XmippSetOfCoordinates from an existing  directory """
         xmippSetCoords = XmippSetOfCoordinates(self.posDir)
-        xmippSetCoords.family.set('DefaultFamily')
         #Set micrographs associated to coordinates
         xmippSetMics = XmippSetOfMicrographs(self.micMd)
         xmippSetCoords.setMicrographs(xmippSetMics)
