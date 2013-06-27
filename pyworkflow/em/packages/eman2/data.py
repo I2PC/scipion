@@ -79,6 +79,15 @@ class EmanSetOfCoordinates(SetOfCoordinates):
         
     def getFileName(self):
         return self.get()   
+    
+    def getSize(self):
+        """ Return the number of coordinates on the set """
+        from glob import glob
+        size = 0
+        boxDir = glob(join(self.getFileName(), '*.box'))
+        for boxFn in boxDir:
+            size += sum(1 for line in open(boxFn))
+        return size      
         
     def iterMicrographCoordinates(self, micrograph):
         """ Iterates over the set of coordinates belonging to that micrograph. """

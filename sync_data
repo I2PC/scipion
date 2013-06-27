@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
-rsync -av scipion@scipion:Scipion/tests/input/ $SCIPION_HOME/tests/input/
-rsync -av scipion@scipion:Scipion/tests/gold/ $SCIPION_HOME/tests/gold/
+SRC=scipion@scipion.cnb.csic.es:Scipion
+rsync -av ${SRC}/tests/input/ $SCIPION_HOME/tests/input/
+rsync -av ${SRC}/tests/gold/ $SCIPION_HOME/tests/gold/
