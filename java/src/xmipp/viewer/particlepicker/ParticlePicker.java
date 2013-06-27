@@ -8,6 +8,8 @@ import ij.ImageListener;
 import ij.ImagePlus;
 import ij.plugin.frame.Recorder;
 import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -16,7 +18,10 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JOptionPane;
+
+import com.sun.net.httpserver.Filter;
 
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
@@ -46,6 +51,8 @@ public abstract class ParticlePicker
 	protected String configfile;
 	public static final int defAutoPickPercent = 90;
 	protected int autopickpercent = defAutoPickPercent;
+	String[] commonfilters = new String[]{"Install...", "Duplicate", "Bandpass Filter...", "Anisotropic Diffusion...", "Mean Shift", "Subtract Background...", "Gaussian Blur...", "Brightness/Contrast...", "Invert LUT"};
+	static String xmippsmoothfilter = "Xmipp Smooth Filter";
 
 	private Color color;
 	private int size;
@@ -246,8 +253,8 @@ public abstract class ParticlePicker
 		{
 			public String commandExecuting(String command)
 			{
-				String[] exclude = new String[]{"Install...", "Duplicate"};
-				if(IJ.getInstance() != null && !Arrays.asList(exclude).contains(command))
+				
+				if(IJ.getInstance() != null && !Arrays.asList(commonfilters).contains(command) && !isRegisteredFilter(command))
 				{
 					String msg = String.format("Would you like to add filter: %s to preprocess micrographs?", command);
 					int result = JOptionPane.showConfirmDialog(null, msg);
@@ -281,6 +288,14 @@ public abstract class ParticlePicker
 
 			}
 		});
+	}
+
+	protected boolean isRegisteredFilter(String command2)
+	{
+		for(IJCommand f: filters)
+			if(f.getCommand().equals(command))
+				return true;
+		return false;
 	}
 
 	private void updateFilters()

@@ -363,7 +363,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 
-		addFilterMenuItem("Smooth Filter", true, picker);
+		addFilterMenuItem(ParticlePicker.xmippsmoothfilter, true, picker);
 		addFilterMenuItem("Bandpass Filter...", true, picker);
 
 		JCheckBoxMenuItem admi = addFilterMenuItem("Anisotropic Diffusion...", false, picker);
@@ -424,9 +424,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			activefilter = item.getText();
 			if (item.isSelected())// filter added, will be registered by picker
 									// with options if needed
-				if (activefilter.equals("Smooth Filter"))
+				if (activefilter.equals(ParticlePicker.xmippsmoothfilter))
 				{
-					getParticlePicker().addFilter("Smooth Filter", "xmipp");
+					getParticlePicker().addFilter(ParticlePicker.xmippsmoothfilter, "xmipp");
 					reloadImage();
 				}
 				else
