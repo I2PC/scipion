@@ -34,7 +34,6 @@ class Main
 			@Override
 			public void run()
 			{
-				SingleParticlePickerJFrame tp = null;
 				try
 				{
 					SingleParticlePicker ppicker = null;
@@ -66,7 +65,7 @@ class Main
 						ppicker = new SingleParticlePicker(selfile, outputdir, reviewfile);
 					}
 
-					tp = new SingleParticlePickerJFrame(ppicker);
+					new SingleParticlePickerJFrame(ppicker);
 				}
 				catch (Exception e)
 				{

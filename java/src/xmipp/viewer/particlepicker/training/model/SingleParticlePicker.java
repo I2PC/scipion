@@ -786,7 +786,7 @@ public class SingleParticlePicker extends ParticlePicker {
 			double distance = Math.sqrt(Math.pow(shift.getX(), 2)
 					+ Math.pow(shift.getY(), 2))
 					/ getSize();
-			System.out.printf("normalized distance:%.2f\n", distance);
+//			System.out.printf("normalized distance:%.2f\n", distance);
 			if (distance < 0.25) {
 				p.setX(p.getX() + shift.getX());
 				p.setY(p.getY() + shift.getY());
@@ -806,9 +806,9 @@ public class SingleParticlePicker extends ParticlePicker {
 			templates.applyAlignment(igp, particle.getTemplateIndex(),
 					particle.getTemplateRotation(), particle.getTemplateTilt(),
 					particle.getTemplatePsi());
-			System.out.printf("adding particle: %d %.2f %.2f %.2f\n",
-			particle.getTemplateIndex(), particle.getTemplateRotation(),
-			particle.getTemplateTilt(), particle.getTemplatePsi());
+//			System.out.printf("adding particle: %d %.2f %.2f %.2f\n",
+//			particle.getTemplateIndex(), particle.getTemplateRotation(),
+//			particle.getTemplateTilt(), particle.getTemplatePsi());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
