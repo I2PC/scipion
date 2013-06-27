@@ -122,6 +122,13 @@ class ProtImportMicrographs(Protocol):
     def getFiles(self):
         return self.outputMicrographs.getFiles()
 
+    def _summary(self):
+        summary = []
+
+        summary.append("Import of %d micrographs from %s" % (self.outputMicrographs.getSize(), self.pattern.get()))
+        summary.append("Sampling rate : %f" % self.samplingRate.get())
+        
+        return summary
 
 class DefImportParticles(Form):
     """Create the definition of parameters for
@@ -295,6 +302,7 @@ class ProtCTFMicrographs(Protocol):
         if not self.inputMicrographs.hasValue():
             summary.append("No <Input Micrographs> selected.")
         else:
+            summary.append("CTF estimation of %d micrographs." % self.inputMicrographs.get().getSize())
             summary.append("Input micrographs: " + self.inputMicrographs.get().getNameId())
         return summary
                 
