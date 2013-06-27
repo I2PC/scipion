@@ -128,7 +128,7 @@ public class SingleParticlePickerMicrograph extends Micrograph
 		return autoparticles;
 	}
 
-	public void addManualParticle(ManualParticle p, SingleParticlePicker ppicker, boolean center, boolean totemplates)
+	public void addManualParticle(ManualParticle p, SingleParticlePicker ppicker, boolean center)
 	{
 		if (!p.getMicrograph().fits(p.getX(), p.getY(), ppicker.getSize()))
 			System.err.format("Warning: ignoring particle out of bounds: x=%d, y=%d in micrograph: %s\n", p.getX(), p.getY(), p.getMicrograph());
@@ -147,8 +147,7 @@ public class SingleParticlePickerMicrograph extends Micrograph
 		}
 		if (center)
 			ppicker.centerParticle(p);
-		if (totemplates && ppicker.getMode() == Mode.Manual)
-			TasksManager.getInstance().addTask(new ParticleToTemplatesTask(p));
+		
 	}
 
 	public void removeParticle(PickerParticle p, SingleParticlePicker ppicker)

@@ -838,15 +838,12 @@ JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_bestShift
             bestNonwrappingShift(T, tmpI, MAT_ELEM(alignmentM, 0, 2), MAT_ELEM(alignmentM, 1, 2), aux2);
             applyGeometry(LINEAR, tmpI, tmpI2, alignmentM, IS_NOT_INV, true);
             corr = correlationIndex(T, tmpI2);
-            std::cout << "corr:" << corr << std::endl;
             if (corr > max)
             {
                 max=corr;
                 bestAlignmentM = alignmentM;
             }
         }
-
-
 
         int x, y;
         x = -MAT_ELEM(bestAlignmentM, 0, 2);

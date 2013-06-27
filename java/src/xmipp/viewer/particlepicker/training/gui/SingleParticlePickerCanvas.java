@@ -72,7 +72,7 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 			else if (SwingUtilities.isLeftMouseButton(e) && micrograph.fits(x, y, frame.getParticlePicker().getSize()))
 			{
 				p = new ManualParticle(x, y, frame.getParticlePicker(), micrograph);
-				micrograph.addManualParticle(p, ppicker, frame.isCenterParticle(), true);
+				micrograph.addManualParticle(p, ppicker, frame.isCenterParticle());
 				active = p;
 				refresh();
 			}
@@ -115,14 +115,10 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 				{
 					micrograph.removeParticle(active, ppicker);
 					active = new ManualParticle(active.getX(), active.getY(), ppicker, micrograph);
-					micrograph.addManualParticle(active, ppicker, frame.isCenterParticle(), true);
-
+					micrograph.addManualParticle(active, ppicker, frame.isCenterParticle());
 				}
 				else
 				{
-					//				if(!activemoved)
-					//					ppicker.removeParticleFromTemplates(active);
-
 					setActiveMoved(true);
 					moveActiveParticle(x, y);
 				}
@@ -159,10 +155,9 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 				manageActive(x, y);
 			if (activemoved)
 			{
-				TasksManager.getInstance().addTask(new ParticleToTemplatesTask(active));
 				setActiveMoved(false);
+				TasksManager.getInstance().addTask(new ParticleToTemplatesTask(active));
 			}
-
 		}
 	}
 
@@ -179,8 +174,7 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 
 			micrograph.removeParticle(active, ppicker);
 			active = new ManualParticle(active.getX(), active.getY(), active.getParticlePicker(), micrograph);
-			micrograph.addManualParticle(active, ppicker, frame.isCenterParticle(), true);
-
+			micrograph.addManualParticle(active, ppicker, frame.isCenterParticle());
 			repaint();
 		}
 		else
@@ -222,8 +216,8 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 		{
 			g2.setColor(Color.yellow);
 			g2.setStroke(continuousst);
-			int x = getXOnImage((int)autopickout.getX());
-			int y = getYOnImage((int)autopickout.getY());
+			int x = getXOnImage((int) autopickout.getX());
+			int y = getYOnImage((int) autopickout.getY());
 			g2.drawRect(x, y, (int) (autopickout.getWidth() * magnification), (int) (autopickout.getHeight() * magnification));
 		}
 

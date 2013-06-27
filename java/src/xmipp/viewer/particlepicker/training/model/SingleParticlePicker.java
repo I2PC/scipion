@@ -421,7 +421,7 @@ public class SingleParticlePicker extends ParticlePicker {
 			for (AutomaticParticle ap : m.getAutomaticParticles()) {
 				if (!ap.isDeleted()) {
 					p = new ManualParticle(ap.getX(), ap.getY(), this, m);
-					m.addManualParticle(p, this, false, false);
+					m.addManualParticle(p, this, false);
 				}
 			}
 
@@ -594,7 +594,7 @@ public class SingleParticlePicker extends ParticlePicker {
 			if (cost == 0 || cost > 1)
 				tm.addManualParticle(
 						new ManualParticle(x, y, this, tm, cost), this,
-						false, true);
+						false);
 			else
 				tm.addAutomaticParticle(new AutomaticParticle(x, y, this, tm,
 						cost, false), true);
@@ -787,7 +787,7 @@ public class SingleParticlePicker extends ParticlePicker {
 					+ Math.pow(shift.getY(), 2))
 					/ getSize();
 			System.out.printf("normalized distance:%.2f\n", distance);
-			if (distance < 0.25) {
+			if (distance < 0.5) {
 				p.setX(p.getX() + shift.getX());
 				p.setY(p.getY() + shift.getY());
 			}
@@ -865,7 +865,7 @@ public class SingleParticlePicker extends ParticlePicker {
 				x = md.getValueInt(MDLabel.MDL_XCOOR, id);
 				y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 				particle = new ManualParticle(x, y, this, micrograph);
-				micrograph.addManualParticle(particle, this, false, false);
+				micrograph.addManualParticle(particle, this, false);
 			}
 			md.destroy();
 		} catch (Exception e) {
