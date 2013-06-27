@@ -2,6 +2,8 @@ package xmipp.viewer.particlepicker;
 
 import ij.CommandListener;
 import ij.Executer;
+import ij.IJ;
+import ij.ImageJ;
 import ij.ImageListener;
 import ij.ImagePlus;
 import ij.plugin.frame.Recorder;
@@ -9,13 +11,18 @@ import java.awt.Color;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.swing.JOptionPane;
+
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.Program;
+import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.training.model.Mode;
 
@@ -239,6 +246,14 @@ public abstract class ParticlePicker
 		{
 			public String commandExecuting(String command)
 			{
+				String[] exclude = new String[]{"Install...", "Duplicate"};
+				if(IJ.getInstance() != null && !Arrays.asList(exclude).contains(command))
+				{
+					String msg = String.format("Would you like to add filter: %s to preprocess micrographs?", command);
+					int result = JOptionPane.showConfirmDialog(null, msg);
+					if(result != JOptionPane.YES_OPTION)
+						return command;
+				}
 				ParticlePicker.this.command = command;
 				return command;
 
@@ -275,6 +290,7 @@ public abstract class ParticlePicker
 			String options = "";
 			if (Recorder.getCommandOptions() != null)
 				options = Recorder.getCommandOptions();
+			
 			if (!isFilterSelected(command))
 				addFilter(command, options);
 			else if (!(options == null || options.equals("")))
