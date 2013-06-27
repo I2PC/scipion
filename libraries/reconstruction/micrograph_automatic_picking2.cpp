@@ -148,7 +148,6 @@ void AutoParticlePicking2::batchBuildInvariant(MetaData MD)
     MetaData MD2;
     FileName micFile;
     FileName posFile;
-    MD.print();
 
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
@@ -156,7 +155,6 @@ void AutoParticlePicking2::batchBuildInvariant(MetaData MD)
         readMic(micFile);
         MD.getValue(MDL_MICROGRAPH_PARTICLES,posFile, __iter.objId);
         MD2.read("particles@"+posFile);
-        MD2.print();
         if (MD.lastObject()==__iter.objId)
         {
             m.point1=p1;
@@ -637,8 +635,6 @@ void AutoParticlePicking2::saveAutoParticles(MetaData &md)
 
 void AutoParticlePicking2::correction(MetaData addedParticlesMD,MetaData removedParticlesMD)
 {
-    addedParticlesMD.print();
-    removedParticlesMD.print();
     dataSet.clear();
     classLabel.clear();
     loadTrainingSet(fnVector);
@@ -678,7 +674,6 @@ void AutoParticlePicking2::correction(MetaData addedParticlesMD,MetaData removed
 
 void AutoParticlePicking2::add2Dataset(MetaData removedParticlesMD)
 {
-    removedParticlesMD.print();
     int cntNeg=0;
     int enabled;
     double cost;
