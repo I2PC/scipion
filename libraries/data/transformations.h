@@ -1458,7 +1458,7 @@ void radialAveragePrecomputeDistance(const MultidimArray< T >& m,
 
         // Determine distance to the center
         if (rounding)
-            A3D_ELEM(distance,k,i,j) = (int) ROUND(idx.module());
+            A3D_ELEM(distance,k,i,j) = (int) round(idx.module());
         else
             A3D_ELEM(distance,k,i,j) = (int) floor(idx.module());
     }
@@ -1489,6 +1489,8 @@ void fastRadialAverage(const MultidimArray< T >& m,
       if (DIRECT_MULTIDIM_ELEM(radial_count,i) > 0)
         DIRECT_MULTIDIM_ELEM(radial_mean,i) /= DIRECT_MULTIDIM_ELEM(radial_count,i);
 }
+
+void radiallySymmetrize(const MultidimArray< double >& img, MultidimArray<double> &radialImg);
 
 /** Interpolates the value of the 3D matrix M at the point (x,y,z) knowing
 * that this image is a set of B-spline coefficients. And making the diff

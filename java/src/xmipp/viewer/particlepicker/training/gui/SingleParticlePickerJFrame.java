@@ -45,7 +45,9 @@ import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
+import xmipp.viewer.particlepicker.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.ParticlesJDialog;
+import xmipp.viewer.particlepicker.UpdateTemplatesTask;
 import xmipp.viewer.particlepicker.training.model.MicrographState;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.SingleParticlePicker;
@@ -77,6 +79,8 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 	private JPanel sppickerpn;
 	private JLabel autopicklb;
 	private Rectangle autopickout;
+	private JMenuItem templatesmi;
+	TemplatesJDialog templatesdialog;
 
 	@Override
 	public SingleParticlePicker getParticlePicker()
@@ -280,7 +284,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			setTitle("Xmipp Particle Picker - " + ppicker.getMode());
 			initMenuBar();
 			setJMenuBar(mb);
-
+			
 			GridBagConstraints constraints = new GridBagConstraints();
 			constraints.insets = new Insets(0, 5, 0, 5);
 			constraints.anchor = GridBagConstraints.WEST;
@@ -325,6 +329,28 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
+	
+	void loadTemplates()
+	{
+		
+		try
+		{
+			if (templatesdialog == null)
+			{
+				templatesdialog = new TemplatesJDialog(this);
+				UpdateTemplatesTask.setTemplatesDialog(templatesdialog);
+				ParticleToTemplatesTask.setTemplatesDialog(templatesdialog);
+			}
+			else
+				templatesdialog.setVisible(true);
+		}
+		catch (Exception e)
+		{
+			XmippDialog.showError(this, e.getMessage());
+		}
+
+	}
+
 
 	private void initSupervisedPickerPane()
 	{
@@ -491,6 +517,18 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 			}
 		});
+		templatesmi = new JMenuItem("Templates");
+		templatesmi.addActionListener(new ActionListener()
+		{
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0)
+			{
+				loadTemplates();
+			}
+		});
+		windowmn.add(templatesmi);
+
 	}
 
 	public void loadAdvancedOptions()

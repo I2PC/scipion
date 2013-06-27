@@ -138,8 +138,8 @@ Java_xmipp_jni_ImageGeneric_read(JNIEnv *env, jobject jobj, jstring filename,
     XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-
-        const char *fn = env->GetStringUTFChars(filename, false);
+        jboolean aux=false;
+        const char *fn = env->GetStringUTFChars(filename, &aux);
         image->readOrReadPreview(fn, jx, jy, jz, jn, map);
     }
     XMIPP_JAVA_CATCH;
@@ -880,10 +880,10 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_ImageGeneric_alignImage
 		CorrelationAux aux2;
 		RotationalCorrelationAux aux3;
 		Matrix2D<double> transformM;
-		ArrayDim dim;
 		MULTIDIM_ARRAY_GENERIC(*img).getMultidimArrayPointer(I);
 		MULTIDIM_ARRAY_GENERIC(*templates).getMultidimArrayPointer(Tp);
 
+		ArrayDim dim;
 		templates->getDimensions(dim);
 		double corr,max=-MAXDOUBLE;
 		int maxIndex=0;
@@ -951,7 +951,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_applyAlignment
 	   I.setXmippOrigin();
 	   alignImages(T, I, transformM, true, aux, aux2, aux3);
 	   T+=I;
-//	   centerImage(T, aux2, aux3, 3); //call centerImage without using rotation in implementation
+	   centerImage(T, aux2, aux3, 3); //call centerImage without using rotation in implementation
 
    }
    XMIPP_JAVA_CATCH;
@@ -995,6 +995,31 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_removeAlignment
 
 }
 
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_getRadialAvg
+(JNIEnv * env, jobject jimg, jobject jradialavg)
+{
+    XMIPP_JAVA_TRY
+    {
+ 	   ImageGeneric *img = GET_INTERNAL_IMAGE_GENERIC(jimg);
+ 	   ImageGeneric *radialAvg = GET_INTERNAL_IMAGE_GENERIC(jradialavg);
+ 	   img->convert2Datatype(DT_Double);
+ 	   radialAvg->convert2Datatype(DT_Double);
 
+	   MultidimArray<double> *imgP, *radialAvgP, imgn, radialAvgn;
+	   MULTIDIM_ARRAY_GENERIC(*img).getMultidimArrayPointer(imgP);
+	   MULTIDIM_ARRAY_GENERIC(*radialAvg).getMultidimArrayPointer(radialAvgP);
+	   ArrayDim dim;
+       img->getDimensions(dim);
+	   for (size_t n = 0; n < dim.ndim; ++n)
+	   {
+		   imgn.aliasImageInStack(*imgP,n);
+		   radialAvgn.aliasImageInStack(*radialAvgP,n);
+		   imgn.setXmippOrigin();
+		   radialAvgn.setXmippOrigin();
+	 	   radiallySymmetrize(imgn, radialAvgn);
+       }
+    }
+    XMIPP_JAVA_CATCH;
+}
 
 

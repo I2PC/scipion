@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 
+import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
@@ -44,6 +45,7 @@ public class SingleParticlePicker extends ParticlePicker {
 
 	public static int dtemplatesnum = 1;
 	private ImageGeneric templates;
+	private ImageGeneric radialtemplates;
 	private String templatesfile;
 	private int templateindex;
 	private PickingClassifier classifier;
@@ -65,7 +67,11 @@ public class SingleParticlePicker extends ParticlePicker {
 			else {
 				this.templates = new ImageGeneric(templatesfile);
 				templates.read(templatesfile, false);
+				radialtemplates = new ImageGeneric(ImageGeneric.Float);
+				radialtemplates.resize(getSize(), getSize(), 1, getTemplatesNumber());
 			}
+			
+			templates.getRadialAvg(radialtemplates);
 			for (SingleParticlePickerMicrograph m : micrographs)
 				loadMicrographData(m);
 			classifier = new PickingClassifier(getSize(),
@@ -75,6 +81,8 @@ public class SingleParticlePicker extends ParticlePicker {
 			throw new IllegalArgumentException();
 		}
 	}
+	
+	
 
 	public SingleParticlePicker(String selfile, String outputdir,
 			String reviewfile) {
@@ -96,6 +104,8 @@ public class SingleParticlePicker extends ParticlePicker {
 
 	}
 
+	
+	
 	public void saveData() {
 
 		super.saveData();
@@ -128,6 +138,8 @@ public class SingleParticlePicker extends ParticlePicker {
 			templates.resize(getSize(), getSize(), 1, num);
 			templates.write(templatesfile);
 			templateindex = 0;
+			radialtemplates = new ImageGeneric(ImageGeneric.Float);
+			radialtemplates.resize(getSize(), getSize(), 1, num);
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e.getMessage());
 		}
@@ -725,6 +737,7 @@ public class SingleParticlePicker extends ParticlePicker {
 					}
 				}
 			}
+			templates.getRadialAvg(radialtemplates);
 			saveTemplates();
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e.getMessage());
@@ -741,6 +754,7 @@ public class SingleParticlePicker extends ParticlePicker {
 				double[] align = getTemplates().alignImage(igp);
 				applyAlignment(particle, igp, align);
 			}
+			templates.getRadialAvg(radialtemplates);
 			saveTemplates();
 
 		} catch (Exception e) {
@@ -767,7 +781,8 @@ public class SingleParticlePicker extends ParticlePicker {
 		Particle shift = null;
 		try {
 			ImageGeneric igp = p.getImageGeneric();
-			shift = templates.bestShift(igp);
+			
+			shift = radialtemplates.bestShift(igp);
 			double distance = Math.sqrt(Math.pow(shift.getX(), 2)
 					+ Math.pow(shift.getY(), 2))
 					/ getSize();

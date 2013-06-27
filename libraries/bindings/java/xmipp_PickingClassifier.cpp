@@ -12,7 +12,8 @@ Java_xmipp_jni_PickingClassifier_create(JNIEnv *env, jobject jobj, jint particle
     XMIPP_JAVA_TRY
     {
     	int size = particle_size, filter_num = 6, corr_num = 2, NPCA = 4;
-    	const FileName &model_name = env->GetStringUTFChars(output, false);
+    	jboolean aux=false;
+    	const FileName &model_name = env->GetStringUTFChars(output, &aux);
     	AutoParticlePicking2 *picker = new AutoParticlePicking2(size, filter_num, corr_num, NPCA, model_name);
         STORE_PEER_ID(jobj, (long)picker);
     }
@@ -56,8 +57,8 @@ JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_autopick
     {
     	AutoParticlePicking2 *picker = GET_INTERNAL_AUTOPARTICLEPICKING2(jobj);
     	MetaData * outputmd = GET_INTERNAL_METADATA(joutputmd);
-
-    	const FileName micrograph = env->GetStringUTFChars(filename, false);
+    	jboolean aux=false;
+    	const FileName micrograph = env->GetStringUTFChars(filename, &aux);
     	picker->automaticallySelectParticles(micrograph, percent, *outputmd);
 //    	md.write(env->GetStringUTFChars(jautoposfile, false));
     }

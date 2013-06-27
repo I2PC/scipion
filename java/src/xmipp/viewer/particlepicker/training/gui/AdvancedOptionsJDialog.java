@@ -13,13 +13,10 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
-import xmipp.viewer.particlepicker.ParticleToTemplatesTask;
-import xmipp.viewer.particlepicker.UpdateTemplatesTask;
 import xmipp.viewer.particlepicker.training.model.Mode;
 
 public class AdvancedOptionsJDialog extends JDialog
@@ -28,11 +25,9 @@ public class AdvancedOptionsJDialog extends JDialog
 	protected SingleParticlePickerJFrame frame;
 	protected int width, height;
 	private JFormattedTextField templatestf;
-	private JButton viewtemplatesbt;
 	private JLabel checkpercentlb;
 	private JFormattedTextField autopickpercenttf;
 	private JButton okbt;
-	private TemplatesJDialog templatesdialog;
 
 	public AdvancedOptionsJDialog(SingleParticlePickerJFrame frame)
 	{
@@ -80,23 +75,14 @@ public class AdvancedOptionsJDialog extends JDialog
 
 			}
 		});
-		viewtemplatesbt = XmippWindowUtil.getTextButton("View", new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent arg0)
-			{
-				setTemplates();
-			}
-		});
+	
 
 		add(templatestf, XmippWindowUtil.getConstraints(constraints, 1, 0));
-		add(templatestf);
-		add(viewtemplatesbt, XmippWindowUtil.getConstraints(constraints, 2, 0));
 
 		checkpercentlb = new JLabel("Autopick Check (%):");
 		add(checkpercentlb, XmippWindowUtil.getConstraints(constraints, 0, 1));
 		autopickpercenttf = new JFormattedTextField(NumberFormat.getIntegerInstance());
+		autopickpercenttf.setColumns(3);
 		autopickpercenttf.setValue(frame.getParticlePicker().getAutopickpercent());
 		autopickpercenttf.addActionListener(new ActionListener()
 		{
@@ -109,7 +95,7 @@ public class AdvancedOptionsJDialog extends JDialog
 
 			}
 		});
-		autopickpercenttf.setColumns(3);
+		
 		add(autopickpercenttf, XmippWindowUtil.getConstraints(constraints, 1, 1));
 
 		okbt = XmippWindowUtil.getTextButton("Ok", new ActionListener()
@@ -123,9 +109,9 @@ public class AdvancedOptionsJDialog extends JDialog
 
 			}
 		});
-		add(okbt, XmippWindowUtil.getConstraints(constraints, 2, 2));
+		add(okbt, XmippWindowUtil.getConstraints(constraints, 1, 2));
 		enableOptions();
-		XmippWindowUtil.setLocation(0.9f, 0, this);
+		XmippWindowUtil.setLocation(0.5f, 0.5f, this);
 		setVisible(true);
 		setAlwaysOnTop(true);
 		pack();
@@ -166,32 +152,13 @@ public class AdvancedOptionsJDialog extends JDialog
 		if (templates != frame.getParticlePicker().getTemplatesNumber())
 		{
 			frame.getParticlePicker().setTemplatesNumber(templates);
-			loadTemplates();
+			frame.loadTemplates();
 		}
-		else if (templatesdialog == null)
-			loadTemplates();
+		else if (frame.templatesdialog == null)
+			frame.loadTemplates();
 	}
 
-	protected void loadTemplates()
-	{
-		
-		try
-		{
-			if (templatesdialog == null)
-			{
-				templatesdialog = new TemplatesJDialog(frame);
-				UpdateTemplatesTask.setTemplatesDialog(templatesdialog);
-				ParticleToTemplatesTask.setTemplatesDialog(templatesdialog);
-			}
-			else
-				templatesdialog.setVisible(true);
-		}
-		catch (Exception e)
-		{
-			XmippDialog.showError(frame, e.getMessage());
-		}
 
-	}
 
 	public void close()
 	{
