@@ -23,8 +23,8 @@
 	</script>
 	<script type="text/javascript">
 	function initializeComboBoxEvents(){
-		$("#blockComboBox").change(function(){
-			alert('takaruus')
+		$("#id_blockComboBox , #id_metadataComboBox").change(function(){
+			alert('submiting form')
 			$('form#showjForm').submit();
 		})
 	}
@@ -241,6 +241,8 @@
 					</button>
 				</div> 
 				 
+				{% block content_menu %}	{% endblock %}
+				 
 				{% for hidden in form.hidden_fields %}
 			    {{ hidden }}
 			    {% endfor %} 
@@ -309,7 +311,7 @@
 					</select>
 				</div>
 				
-				{% block content_menu %}	{% endblock %}
+				
 	
 		
 				<div class="sectionMenu">
