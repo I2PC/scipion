@@ -101,5 +101,6 @@ class Manager(object):
             if projectName == projInfo.projName:
                 return True
         return False
+    
         
         
