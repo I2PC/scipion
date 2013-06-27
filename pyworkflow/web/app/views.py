@@ -37,6 +37,8 @@ def getResource(request):
         img = 'delete.gif'
     elif request == 'browse_toolbar':
         img = 'run_steps.gif'
+    elif request == 'tree_toolbar':
+        img = 'tree2.gif'
     elif request == 'new_toolbar':
         img = 'new_object.gif'
         
@@ -49,6 +51,7 @@ edit_tool_path = getResource('edit_toolbar')
 copy_tool_path = getResource('copy_toolbar')
 delete_tool_path = getResource('delete_toolbar')
 browse_tool_path = getResource('browse_toolbar')
+tree_tool_path = getResource('tree_toolbar')
 
 def projects(request):
     # CSS #
@@ -216,6 +219,7 @@ def project_content(request):
                'copyTool': copy_tool_path,
                'deleteTool': delete_tool_path,
                'browseTool': browse_tool_path,
+               'treeTool': tree_tool_path,
                'utils': utils_path,
                'jquery_cookie': jquery_cookie,
                'jquery_treeview': jquery_treeview,

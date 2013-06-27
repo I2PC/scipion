@@ -144,8 +144,7 @@
 
 			<form id="showjForm" action="/showj/" method="post"> {% csrf_token %}
 				<div id="modeContainer" class="sectionMenu">
-				taka{{form.mode.value}}
-					<input type="submit" value="table" name="select_mode" class="submitButton
+					<input type="submit" value="table" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='table';" class="submitButton
 					 {% if form.mode.value == 'gallery' %}
 					  tableOn
 					 {% endif %}
@@ -153,7 +152,7 @@
 					 tableOff
 					 {% endif %}	
 					  "/>
-					<input type="submit" value="gallery" name="select_mode" class="submitButton
+					<input type="submit" value="gallery" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='gallery';" class="submitButton
 					{% if form.mode.value == 'gallery' %}
 					  galleryOff
 					 {% endif %}
@@ -249,7 +248,7 @@
 				 
 				<!--CAMbiamus  --> 
 				 
-				 			
+				 <!-- 			
 				<div id="modeContainer" class="sectionMenu">
 					<button onclick="{{menuLayoutConfig.tableViewLink}}">
 						<img src="{{menuLayoutConfig.tableViewSrc}}">
@@ -321,7 +320,7 @@
 					<button id="saveButton">
 						<img src="/resources/showj/saveOff.png" id="saveButtonImage" />
 					</button>
-				</div>
+				</div> -->
 			
 			</form>
 		</aside>

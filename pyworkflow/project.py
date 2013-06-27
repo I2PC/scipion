@@ -243,7 +243,8 @@ class Project(object):
     def getHosts(self):
         """ Retrieve the hosts associated with the project. (class ExecutionHostConfig) """
         return self.hostsMapper.selectAll()
-    
+
+
     
     def launchRemoteProtocol(self, protocol):
         """ Launch protocol in an execution host    
