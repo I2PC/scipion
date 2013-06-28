@@ -138,7 +138,7 @@ class TableLayoutConfiguration():
     def __init__(self, labels, allowRender=True): 
         self.labels = [xmipp.label2Str(l) for l in labels]
         self.typeOfColumns = getTypeOfColumns(labels, allowRender)
-        self.colsOrder = defineColsLayout(labels)
+        self.colsOrder = defineColsLayout(self.labels)
         #Esto es un napeidus que habria que arreglar
         self.labels_typeOfColumns= zip(self.labels,self.typeOfColumns)
 
@@ -185,6 +185,8 @@ def getTypeOfColumns(label, allowRender):
     return typeOfColumns
         
 def defineColsLayout(labels):
+    print "labels"
+    print labels
     colsOrder = range(len(labels))
     if 'enabled' in labels:
         colsOrder.insert(0, colsOrder.pop(labels.index('enabled')))
