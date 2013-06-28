@@ -3,16 +3,18 @@ Created on Apr 8, 2013
 
 @author: antonio
 '''
+import os
+from os.path import join
+import shutil
 import socket
 import paramiko
-import os
-import shutil
 import hashlib
+
 from pyworkflow.utils.path import *
 from pyworkflow.utils.log import *
 
 LOCAL_USER_AND_HOST = ''
-SSH_PORT = 22;
+SSH_PORT = 22
 PAIRS_SEPARATOR = ':'
 
 log = getGeneralLogger('pyworkflow.utils.file_transfer')
@@ -563,13 +565,14 @@ def isRemoteDir(sftp, path):
     except (IOError, paramiko.SFTPError):
         return False
 
-def getRemoteFolderFiles(hostName, userName, password, folderPath):
-    """ Recover all files in the given folder and it subfolders.
+def getRemoteFolderFiles(hostName, userName, password, folderPath, recursive=True):
+    """ Recover all files in the given folder.
     Params:
         hostName: Remote host name.
         userName: User name.
         password: Password.
         folderPath: Folder to get files.
+        recursive: if True go recursively inside other subfolders.
     Returns: List of files.
     """    
     # Default ssh session options.
@@ -578,25 +581,26 @@ def getRemoteFolderFiles(hostName, userName, password, folderPath):
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(hostName, 22, userName, password)
     sftp = ssh.open_sftp()
-    remoteFiles = getRemoteFiles(sftp, folderPath)
+    remoteFiles = getRemoteFiles(sftp, folderPath, recursive)
     sftp.close()
     ssh.close()
     return remoteFiles
     
-def getRemoteFiles(sftp, folderPath):
-    """ Recover all files in the given folder and it subfolders.
+def getRemoteFiles(sftp, folderPath, recursive=True):
+    """ Recover all files in the given folder.
     Params:
         sftp: Sftp session.
         folderPath: Folder to get files.
+        recursive: if True go recursively inside other subfolders.
     Returns: List of files.
     """    
     filePathList = sftp.listdir(folderPath)
     resultFilePathList = []
     for filePath in filePathList:
-        if (isRemoteDir(sftp, os.path.join(folderPath, filePath))):
-            resultFilePathList += getRemoteFiles(sftp, os.path.join(folderPath, filePath))
+        if isRemoteDir(sftp, join(folderPath, filePath)) and recursive:
+            resultFilePathList += getRemoteFiles(sftp, join(folderPath, filePath))
         else:
-            resultFilePathList.append(os.path.join(folderPath, filePath))
+            resultFilePathList.append(join(folderPath, filePath))
     return resultFilePathList
 
 def removeRemoteFolder (hostName, userName, password, folderPath):
@@ -609,7 +613,6 @@ def removeRemoteFolder (hostName, userName, password, folderPath):
     Returns: 
         Tuple with standard input, standard output and error output.
     """
-    import paramiko
     ssh = paramiko.SSHClient()
     ssh.load_system_host_keys()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -643,5 +646,84 @@ def getFilePathList(filePaths):
     return resultFilePathList
 
 
+def testHostConnection(hostName, userName, password):
+    """ Test the connection to a remote host.
+    Params:
+        hostName: Remote host name.
+        userName: User name.
+        password: Password.
+    Returns: True if the host could be reached.
+    """    
+    try:
+        rpath = RemotePath.fromCredentials(hostName, userName, password)
+        rpath.listdir('.')
+        rpath.close()
+        return True
+    except Exception, ex:
+        raise 
+        return False
+
+def sshConnect(hostName, userName, password, port=SSH_PORT, **args):
+    """ Common way to create a ssh connection.
+    Params:
+        hostName: Remote host name.
+        userName: User name.
+        password: Password.
+        port: port to establish connection (usually 22)
+    Returns: ssh connection handler.
+    """
+    ssh = paramiko.SSHClient()
+    ssh.load_system_host_keys()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(hostName, port, userName, password, **args)
+    return ssh
+
+
+class RemotePath(object):
+    """ This class will server as a Wrapper to the
+    paramiko sftp protocol througth a ssh connection.
+    This class will implement useful methods for remote
+    path handling such as: creating files, deleting folders...
+    """
+    
+    @classmethod
+    def fromCredentials(cls, hostName, userName, password, port=SSH_PORT, **args):
+        ssh = sshConnect(hostName, userName, password, port, **args)
+        rpath = RemotePath(ssh)        
+        return rpath
+    
+    def __init__(self, ssh):
+        self.ssh = ssh
+        self.sftp = ssh.open_sftp()
+        # Shortcut some of the sftp methods
+        self.listdir = self.sftp.listdir
+        
+    def getFile(self, remoteFile, localFile):
+        """ Wrapper around sftp.get that ensures
+        path exists for localFile.
+        """
+        makeFilePath(localFile)
+        self.sftp.get(remoteFile, localFile)
+        
+    def putFile(self, localFile, remoteFile):
+        """ Wrapper around sftp.put that ensures
+        the remote path exists for put the file.
+        """
+        self.makeFilePath(remoteFile)
+        self.sftp.put(localFile, remoteFile)
+        
+    def makeFilePath(self, **remoteFiles):
+        """ Create the remote folder path for remoteFiles. """
+        self.makePath(*[dirname(r) for r in remoteFiles])
+        
+    def makePath(self, **remoteFolders):
+        pass
+        
+    def close(self):
+        """ Close both ssh and sftp connections. """
+        self.sftp.close()
+        self.ssh.close()
+    
+    
 if __name__ == '__main__':
     pass

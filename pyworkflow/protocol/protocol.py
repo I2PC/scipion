@@ -126,8 +126,7 @@ class Step(OrderedObject):
         except Exception, e:
             self.setFailed(str(e))
             import traceback
-            traceback.print_exc()
-            
+            traceback.print_exc()            
             #raise #only in development
         finally:
             self.endTime.set(dt.datetime.now())
