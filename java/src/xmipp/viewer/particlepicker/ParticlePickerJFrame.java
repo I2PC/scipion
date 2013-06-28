@@ -749,9 +749,13 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				if (!getParticlePicker().isValidSize(size))
 				{
 					XmippDialog.showInfo(ParticlePickerJFrame.this, XmippMessage.getOutOfBoundsMsg("Size " + size));
+					sizesl.dispatchEvent(
+                            new MouseEvent(sizesl, 
+                            MouseEvent.MOUSE_RELEASED,
+                            0,0,0,0,1,false));
 					int prevsize = getParticlePicker().getSize();
-					
 					sizesl.setValue(prevsize);
+					
 					return;
 					
 				}
