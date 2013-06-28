@@ -205,3 +205,10 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
             if self.doRemoveBadPix.get():
                 summary.append("Number of pixels removed: %d" % self.mulStddev.get())
         return summary
+    
+    def _validate(self):
+        validateMsgs = []
+        # Some prepocessing option need to be marked
+        if not(self.doCrop or self.doDownsample or self.doLog or self.doRemoveBadPix):
+            validateMsgs.append('Some preprocessing option need to be selected.')
+        return validateMsgs

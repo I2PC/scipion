@@ -639,7 +639,18 @@ class Protocol(Step):
         """ Check that input parameters are correct.
         Return a list with errors, if the list is empty, all was ok.         
         """
-        return self._validate()
+        validateMsgs = []
+        # Validate that all input pointer parameters have a value
+        for paramName, _ in self.getDefinition().iterPointerParams():
+            attrPointer = getattr(self, paramName) # Get all self attribute that are pointers
+            obj = attrPointer.get()
+            if self.evalCondition(paramName) and obj is None:
+                validateMsgs.append('%s cannot be EMPTY.' % _.label)
+                
+        if len(validateMsgs) !=0:
+            return validateMsgs
+        else:
+            return self._validate()
     
     def _warnings(self):
         """ Should be implemented in subclasses. See warning. """
