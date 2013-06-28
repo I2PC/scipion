@@ -1475,6 +1475,7 @@ int AutoParticlePicking2::saveAutoParticles(const FileName &fn) const
             MD.setValue(MDL_ENABLED,1,id);
         }
     }
+    std::cerr<<"We are writing the position here"<<fn<<std::endl;
     MD.write(fn,MD_OVERWRITE);
     return MD.size();
 }
@@ -1850,7 +1851,7 @@ void ProgMicrographAutomaticPicking2::run()
     m.open_micrograph(fn_micrograph);
 
     FileName fnFilterBank=fn_root+"_filterbank.stk";
-    FileName familyName=fn_model.removeDirectories();
+    FileName familyName="particles";
     FileName fnAutoParticles=familyName+"@"+fn_root+"_auto.pos";
     FileName fnInvariant=fn_model+"_invariant";
     FileName fnParticles=fn_model+"_particle";
@@ -1952,6 +1953,7 @@ void ProgMicrographAutomaticPicking2::run()
             MetaData MD;
             MD.read(fn_model.beforeLastOf("/")+"/config.xmd");
             MD.getValue( MDL_PICKING_AUTOPICKPERCENT,autoPicking->proc_prec,MD.firstObject());
+            std::cerr<<"number of pekas to pick"<<autoPicking->proc_prec<<std::endl;
         }
         autoPicking->micrographStack.read(fnFilterBank, DATA);
 //        autoPicking->filterBankStack=autoPicking->micrographStack();
@@ -1959,12 +1961,15 @@ void ProgMicrographAutomaticPicking2::run()
         Image<double> II;
         II.read(fnPCAModel);
         autoPicking->pcaModel=II();
+        II.write("pcamodel.stk");
         // Read rotational PCA model
         II.read(fnPCARotModel);
         autoPicking->pcaRotModel=II();
+        II.write("rotpcamodel.stk");
         // Read the average of the particles for convolution
         II.read(fnAvgModel);
         autoPicking->particleAvg=II();
+        II.write("particleavg.xmp");
         // Read the SVM model
         autoPicking->classifier.LoadModel(fnSVMModel);
         // If we have generated the second SVM model then we use
@@ -1975,8 +1980,13 @@ void ProgMicrographAutomaticPicking2::run()
             autoPicking->automaticallySelectParticles(true);
         }
         else
-            autoPicking->automaticallySelectParticles(false);
-        autoPicking->saveAutoParticles(fnAutoParticles);
+        {
+            int num=autoPicking->automaticallySelectParticles(false);
+            std::cerr<<"the number of automatically selected particles is equal to"<<num<<std::endl;
+        }
+        std::cerr<<"the name of the file is"<<fnAutoParticles<<std::endl;
+        int num2=autoPicking->saveAutoParticles(fnAutoParticles);
+        std::cerr<<"size of the automatically picked particles is equal to"<<num2<<std::endl;
         if (mode=="try")
             if (autoPicking->auto_candidates.size()!=0)
                 autoPicking->saveAutoVectors(fnAutoVectors);
