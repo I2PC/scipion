@@ -19,6 +19,14 @@
 		initializeColRowModeEvents()
 		initializeSaveButtonEvents()
 		initializeComboBoxEvents()
+		$('.menuInputNumber').keypress(function(e) {
+		  var code = e.keyCode || e.which; 
+		  if (code  == 13) {               
+		    e.preventDefault();
+		    return false;
+		  }
+		});
+		
 	});
 	</script>
 	<script type="text/javascript">
@@ -53,18 +61,18 @@
 		$("#colRowMode").click(function(){
 			if ($("#colRowModeImage").attr("src").indexOf("On") != -1){
 				$("#colRowModeImage").attr("src", $("#colRowModeImage").attr("src").replace("On","Off"))
-				$("#cols").attr('disabled', 'disabled');
-				$("#rows").attr('disabled', 'disabled');
+				$("#id_cols").attr('disabled', 'disabled');
+				$("#id_rows").attr('disabled', 'disabled');
 				
 				$("section").css("width", "");
 				
 			}
 			else{
 				$("#colRowModeImage").attr("src", $("#colRowModeImage").attr("src").replace("Off","On"))
-				$("#cols").removeAttr('disabled');
-				$("#rows").removeAttr('disabled');
+				$("#id_cols").removeAttr('disabled');
+				$("#id_rows").removeAttr('disabled');
 				
-				if ($("#cols").val()==""){
+				if ($("#id_cols").val()==""){
 					initializeColsRows()
 				}
 			}
@@ -75,26 +83,28 @@
 	function initializeColsRows(){
 		imgContainerWidth =$(".img_container").width() + (parseInt($(".img_container").css("margin-right")) * 2)
 		colVal = Math.floor($("section").width() / (imgContainerWidth + 5))
-		updateGalleryLayout(colVal,0,"cols")
-		$("#cols").val(colVal)
+		updateGalleryLayout(colVal,0,"id_cols")
+		$("#id_cols").val(colVal)
 		
 	}
 	</script>
 	<script type="text/javascript">
 		//Initialize events for zoom change
 		function initializeZoomEvents(){
-			$('#zoom').click(function(){
+			$('#id_zoom').click(function(){
 				updateImageDimByUrl();	
 			});
 			
-			$('#zoom').change(function(){
+			$('#id_zoom').change(function(){
 				updateImageDimByUrl();
 			});
 				
-	/* 		$('#zoom').keypress(function(){
-				alert("keypress")
-				updateImageDimByUrl();
-			});	 */	
+	 		$('#id_zoom').keypress(function(e){
+	 			var code = e.keyCode || e.which; 
+ 			  	if (code  == 13) {               
+ 					 updateImageDimByUrl();
+ 			  	}
+			});	 
 		}
 		
 		//Update image dimensions by url due to zoom change
@@ -108,7 +118,7 @@
 			   else{
 				  newSrc = $(this).attr("src");   
 			   }
-			   $(this).attr("src", newSrc + "&dim="+$('#zoom').val()+"&"+d.getTime());
+			   $(this).attr("src", newSrc + "&dim="+$('#id_zoom').val()+"&"+d.getTime());
 		   })
 		}
 	
