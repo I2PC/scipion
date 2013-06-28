@@ -313,6 +313,7 @@ class ProtocolsView(tk.Frame):
         self.root = windows.root
         self.getImage = windows.getImage
         self.protCfg = windows.protCfg
+        self.icon = windows.icon 
         
         self.root.bind("<F5>", self.refreshRuns)
         # Hide the right-click menu
@@ -582,7 +583,7 @@ class ProtocolsView(tk.Frame):
         
     def _browseRunData(self):
         provider = ProtocolTreeProvider(self.selectedProtocol)
-        window = BrowserWindow("Protocol data", provider, self,
+        window = BrowserWindow("Protocol data", provider, self.windows,
                                icon=self.icon)
         window.itemConfig(self.selectedProtocol, open=True)  
         window.show()
