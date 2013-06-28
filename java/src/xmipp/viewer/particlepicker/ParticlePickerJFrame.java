@@ -753,6 +753,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 					
 					sizesl.setValue(prevsize);
 					return;
+					
 				}
 				updateSize(size);
 			}
