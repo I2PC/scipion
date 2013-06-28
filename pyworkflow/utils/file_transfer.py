@@ -237,7 +237,7 @@ class FileTransfer():
                 for resultFilePath in resultFilePaths:
                     filePath = self.__getLocationAndFilePath(resultFilePath)[1]
                     log.info("Checking: " + filePath)
-                    if (len (existsPath(filePath)) != 0):
+                    if (len (missingPaths(filePath)) != 0):
                         returnFilePaths.append(filePath)
                         log.info("Check fail!!")
             else:
@@ -292,7 +292,7 @@ class FileTransfer():
         for fileName in filePaths:
             log.info("Checking: " + fileName)
             if (isLocalHost):            
-                if (len (existsPath(fileName)) != 0):
+                if (len (missingPaths(fileName)) != 0):
                     returnFilePaths.append(fileName)
                     log.info("Check fail!!")
             else:
@@ -646,84 +646,5 @@ def getFilePathList(filePaths):
     return resultFilePathList
 
 
-def testHostConnection(hostName, userName, password):
-    """ Test the connection to a remote host.
-    Params:
-        hostName: Remote host name.
-        userName: User name.
-        password: Password.
-    Returns: True if the host could be reached.
-    """    
-    try:
-        rpath = RemotePath.fromCredentials(hostName, userName, password)
-        rpath.listdir('.')
-        rpath.close()
-        return True
-    except Exception, ex:
-        raise 
-        return False
-
-def sshConnect(hostName, userName, password, port=SSH_PORT, **args):
-    """ Common way to create a ssh connection.
-    Params:
-        hostName: Remote host name.
-        userName: User name.
-        password: Password.
-        port: port to establish connection (usually 22)
-    Returns: ssh connection handler.
-    """
-    ssh = paramiko.SSHClient()
-    ssh.load_system_host_keys()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(hostName, port, userName, password, **args)
-    return ssh
-
-
-class RemotePath(object):
-    """ This class will server as a Wrapper to the
-    paramiko sftp protocol througth a ssh connection.
-    This class will implement useful methods for remote
-    path handling such as: creating files, deleting folders...
-    """
-    
-    @classmethod
-    def fromCredentials(cls, hostName, userName, password, port=SSH_PORT, **args):
-        ssh = sshConnect(hostName, userName, password, port, **args)
-        rpath = RemotePath(ssh)        
-        return rpath
-    
-    def __init__(self, ssh):
-        self.ssh = ssh
-        self.sftp = ssh.open_sftp()
-        # Shortcut some of the sftp methods
-        self.listdir = self.sftp.listdir
-        
-    def getFile(self, remoteFile, localFile):
-        """ Wrapper around sftp.get that ensures
-        path exists for localFile.
-        """
-        makeFilePath(localFile)
-        self.sftp.get(remoteFile, localFile)
-        
-    def putFile(self, localFile, remoteFile):
-        """ Wrapper around sftp.put that ensures
-        the remote path exists for put the file.
-        """
-        self.makeFilePath(remoteFile)
-        self.sftp.put(localFile, remoteFile)
-        
-    def makeFilePath(self, **remoteFiles):
-        """ Create the remote folder path for remoteFiles. """
-        self.makePath(*[dirname(r) for r in remoteFiles])
-        
-    def makePath(self, **remoteFolders):
-        pass
-        
-    def close(self):
-        """ Close both ssh and sftp connections. """
-        self.sftp.close()
-        self.ssh.close()
-    
-    
 if __name__ == '__main__':
     pass
