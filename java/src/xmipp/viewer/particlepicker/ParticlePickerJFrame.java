@@ -165,7 +165,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			{
 				if (getParticlePicker().getMode() != Mode.ReadOnly)
 					getParticlePicker().saveData();
-				System.exit(0);
+				close();
 
 			}
 		});
@@ -697,7 +697,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 		int size = getParticlePicker().getSize();
 		sizepn.add(new JLabel("Size:"));
-		sizesl = new JSlider(0, 1000, size);
+		sizesl = new JSlider(0, ParticlePicker.sizemax, size);
 		sizesl.setPaintTicks(true);
 		sizesl.setMajorTickSpacing(100);
 		int height = (int) sizesl.getPreferredSize().getHeight();
@@ -748,8 +748,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				int size = sizesl.getValue();
 				if (!getParticlePicker().isValidSize(size))
 				{
-					int prevsize = getParticlePicker().getSize();
 					XmippDialog.showInfo(ParticlePickerJFrame.this, XmippMessage.getOutOfBoundsMsg("Size " + size));
+					int prevsize = getParticlePicker().getSize();
+					
 					sizesl.setValue(prevsize);
 					return;
 				}
@@ -761,7 +762,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	public void updateSize(int size)
 	{
-
+		
 		sizetf.setValue(size);
 		sizesl.setValue(size);
 		getCanvas().repaint();
