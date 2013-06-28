@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
-
-import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
@@ -168,7 +166,6 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public synchronized void setSize(int size) {
-		System.out.println("set size");
 		super.setSize(size);
 		classifier.setSize(size);
 		initUpdateTemplates(getTemplatesNumber());

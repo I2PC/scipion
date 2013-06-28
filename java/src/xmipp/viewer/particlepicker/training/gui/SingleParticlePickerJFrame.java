@@ -573,6 +573,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
+				
 				double threshold = Double.parseDouble(thresholdtf.getText()) * 100;
 				setThresholdValue(threshold);
 
@@ -585,6 +586,8 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			@Override
 			public void stateChanged(ChangeEvent e)
 			{
+				if(thresholdsl.getValueIsAdjusting())
+					return;
 				double threshold = (double) thresholdsl.getValue() / 100;
 				if (getMicrograph().getThreshold() != threshold)
 				{
