@@ -14,6 +14,7 @@ import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
 import xmipp.viewer.particlepicker.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.training.model.AutomaticParticle;
+import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.SingleParticlePicker;
 import xmipp.viewer.particlepicker.training.model.SingleParticlePickerMicrograph;
 import xmipp.viewer.particlepicker.training.model.ManualParticle;
@@ -74,7 +75,8 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 				p = new ManualParticle(x, y, frame.getParticlePicker(), micrograph);
 				micrograph.addManualParticle(p, ppicker, frame.isCenterParticle());
 				active = p;
-				TasksManager.getInstance().addTask(new ParticleToTemplatesTask(active));
+				if(ppicker.getMode() == Mode.Manual)
+					TasksManager.getInstance().addTask(new ParticleToTemplatesTask(active));
 				refresh();
 			}
 		}
@@ -158,7 +160,8 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 			if (activemoved)
 			{
 				setActiveMoved(false);
-				TasksManager.getInstance().addTask(new ParticleToTemplatesTask(active));
+				if(ppicker.getMode() == Mode.Manual)
+					TasksManager.getInstance().addTask(new ParticleToTemplatesTask(active));
 			}
 		}
 	}

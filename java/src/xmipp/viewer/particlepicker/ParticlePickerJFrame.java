@@ -738,6 +738,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			@Override
 			public void stateChanged(ChangeEvent e)
 			{
+				if (sizesl.getValueIsAdjusting()) 
+					return;
 				if (sizesl.getValue() == ((Number) sizetf.getValue()).intValue())// event
 																					// from
 																					// sizetf

@@ -167,7 +167,8 @@ public class SingleParticlePicker extends ParticlePicker {
 		initUpdateTemplates(num);
 	}
 
-	public void setSize(int size) {
+	public synchronized void setSize(int size) {
+		System.out.println("set size");
 		super.setSize(size);
 		classifier.setSize(size);
 		initUpdateTemplates(getTemplatesNumber());
@@ -338,9 +339,10 @@ public class SingleParticlePicker extends ParticlePicker {
 
 	@Override
 	public boolean isValidSize(int size) {
-		for (ManualParticle p : micrograph.getParticles())
-			if (!micrograph.fits(p.getX(), p.getY(), size))
-				return false;
+		for(SingleParticlePickerMicrograph m: micrographs)
+			for (ManualParticle p : m.getParticles())
+				if (!micrograph.fits(p.getX(), p.getY(), size))
+					return false;
 		return true;
 	}
 
