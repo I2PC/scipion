@@ -98,7 +98,7 @@ def makeFilePath(*files):
     """ Make the path to ensure that files can be written. """
     makePath(*[dirname(f) for f in files])    
             
-def existsPath(*paths):
+def missingPaths(*paths):
     """ Check if the list of paths exists.
     Will return the list of missing files,
     if the list is empty means that all path exists

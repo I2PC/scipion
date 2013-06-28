@@ -243,17 +243,22 @@ class HostWindow(gui.Window):
                 i += 1
                 
     def _createButtons(self, parent):
-        self.buttonsFrame = tk.Frame(parent, bd=0)
+        self.buttonsFrame = tk.Frame(parent)
         self.buttonsFrame.grid(row=2, column=0, sticky='news', padx=5, pady=5)
-        #self.buttonsFrame.columnconfigure(0, weight=1)
+        self.buttonsFrame.columnconfigure(2, weight=1)
         #self.buttonsFrame.columnconfigure(1, weight=4)
         
         btnClose = tk.Button(self.buttonsFrame, text="Close", image=self.getImage('dialog_close.png'), compound=tk.LEFT, font=self.font,
                           command=self.close)
-        btnClose.grid(row=0, column=0, padx=5, pady=5, sticky='sw')
+        btnClose.grid(row=0, column=0, padx=5, sticky='sw')
         btnSave = tk.Button(self.buttonsFrame, text="Save", image=self.getImage('filesave.png'), compound=tk.LEFT, font=self.font, 
                           command=self._save)
-        btnSave.grid(row=0, column=1, padx=5, pady=5, sticky='sw')
+        btnSave.grid(row=0, column=1, padx=5, sticky='sw')
+        
+        btnTest = tk.Button(self.buttonsFrame, text='Test configuration', fg='white', bg='#7D0709', font=self.font, 
+                        activeforeground='white', activebackground='#A60C0C', command=self._testConfig)
+        btnTest.grid(row=0, column=2, padx=5, sticky='se')
+        
         
     def _addLabelValue(self, parent, attr, key, row):
         label = tk.Label(parent, text=key, bg='white')
@@ -291,5 +296,11 @@ class HostWindow(gui.Window):
             except Exception, ex:
                 showError("Action DELETE", "Error saving host: <%s>. \n" % str(ex), self.root)
 
-        
+    def _testConfig(self, e=None):
+        from pyworkflow.utils.remote import testHostConfig
+        if testHostConfig(self.host):
+            msg = "Connection SUCCEEDED to host <%s>"
+        else:
+            msg = "Connection to host <%s> FAILED"
+        showInfo("Connection TEST", msg % self.host.getLabel(), self.root) 
         

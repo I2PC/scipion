@@ -34,7 +34,7 @@ import pickle
 import time
 
 from pyworkflow.object import OrderedObject, String, List, Integer, Boolean, CsvList
-from pyworkflow.utils.path import replaceExt, makeFilePath, join, existsPath, cleanPath, getFolderFiles
+from pyworkflow.utils.path import replaceExt, makeFilePath, join, missingPaths, cleanPath, getFolderFiles
 from pyworkflow.utils.log import *
 from pyworkflow.protocol.executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor
 
@@ -126,8 +126,7 @@ class Step(OrderedObject):
         except Exception, e:
             self.setFailed(str(e))
             import traceback
-            traceback.print_exc()
-            
+            traceback.print_exc()            
             #raise #only in development
         finally:
             self.endTime.set(dt.datetime.now())
@@ -161,7 +160,7 @@ class FunctionStep(Step):
         """ Run the function and check the result files if any. """
         resultFiles = self._runFunc() 
         if resultFiles and len(resultFiles):
-            missingFiles = existsPath(*resultFiles)
+            missingFiles = missingPaths(*resultFiles)
             if len(missingFiles):
                 raise Exception('Missing filePaths: ' + ' '.join(missingFiles))
             self.resultFiles = String(pickle.dumps(resultFiles))
@@ -173,7 +172,7 @@ class FunctionStep(Step):
             return True
         filePaths = pickle.loads(self.resultFiles.get())
 
-        return len(existsPath(*filePaths)) == 0
+        return len(missingPaths(*filePaths)) == 0
     
     def __eq__(self, other):
         """ Compare with other FunctionStep""" 
