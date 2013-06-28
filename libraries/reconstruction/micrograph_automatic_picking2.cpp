@@ -95,6 +95,32 @@ void AutoParticlePicking2::readMic(FileName fn_micrograph)
                            microImage(),2);
     m.point1.x=-1;
     filterBankGenerator();
+    micrographStack()=filterBankStack;
+}
+
+void filterBankGenerator(MultidimArray<double> &inputMicrograph,
+                         const FileName &fnFilterBankStack,
+                         int filter_num)
+{
+    fnFilterBankStack.deleteFile();
+    Image<double> Iaux;
+    Iaux()=inputMicrograph;
+    FourierFilter filter;
+    filter.raised_w=0.02;
+    filter.FilterShape=RAISED_COSINE;
+    filter.FilterBand=BANDPASS;
+    MultidimArray<std::complex<double> > micrographFourier;
+    FourierTransformer transformer;
+    transformer.FourierTransform(Iaux(),micrographFourier,true);
+    for (int i=0;i<filter_num;i++)
+    {
+        filter.w1=0.025*i;
+        filter.w2=(filter.w1)+0.025;
+        transformer.setFourier(micrographFourier);
+        filter.applyMaskFourierSpace(inputMicrograph,transformer.fFourier);
+        transformer.inverseFourierTransform();
+        Iaux.write(fnFilterBankStack,i+1,true,WRITE_APPEND);
+    }
 }
 
 //Generate filter bank from the micrograph image
@@ -124,9 +150,6 @@ void AutoParticlePicking2::filterBankGenerator()
         Iaux.aliasImageInStack(filterBankStack,i);
         Iaux=inputMicrograph;
     }
-    Image<double> II;
-    II()=filterBankStack;
-    II.write("filterbank.xmp");
 }
 
 void AutoParticlePicking2::buildInvariant(MetaData MD)
@@ -924,7 +947,7 @@ void AutoParticlePicking2::buildInvariant(MultidimArray<double> &invariantChanne
     // First put the polar channels in a stack
     for (int j=0;j<filter_num;++j)
     {
-        filter.aliasImageInStack(filterBankStack,j);
+        filter.aliasImageInStack(micrographStack(),j);
         extractParticle(x,y,filter,pieceImage,true);
         mIpolar.aliasImageInStack(Ipolar,j);
         convert2Polar(pieceImage,mIpolar);
@@ -1045,6 +1068,7 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier)
         int j=positionArray[k].x;
         int i=positionArray[k].y;
         buildInvariant(IpolarCorr,j,i);
+        std::cerr<<"build inavariant has been done"<<std::endl;
         extractParticle(j,i,microImage(),pieceImage,false);
         pieceImage.resize(1,1,1,XSIZE(pieceImage)*YSIZE(pieceImage));
         extractStatics(pieceImage,staticVec);
@@ -1805,6 +1829,7 @@ void ProgMicrographAutomaticPicking2::defineParams()
 
 void AutoParticlePicking2::produceSideInfo(Micrograph *_m)
 {
+	std::cerr<<"produce side info has been called"<<std::endl;
     __m=_m;
     microImage.read(fn_micrograph);
     double t=std::max(0.25,50.0/particle_size);
@@ -1846,7 +1871,7 @@ void ProgMicrographAutomaticPicking2::run()
                                (int)((m.Xdim)*autoPicking->scaleRate),
                                autoPicking->microImage(),2);
         // Generating the filter bank
-        //filterBankGenerator(autoPicking->microImage(),fnFilterBank,autoPicking->filter_num);
+        filterBankGenerator(autoPicking->microImage(),fnFilterBank,autoPicking->filter_num);
         autoPicking->micrographStack.read(fnFilterBank,DATA);
     }
 
@@ -1929,6 +1954,7 @@ void ProgMicrographAutomaticPicking2::run()
             MD.getValue( MDL_PICKING_AUTOPICKPERCENT,autoPicking->proc_prec,MD.firstObject());
         }
         autoPicking->micrographStack.read(fnFilterBank, DATA);
+//        autoPicking->filterBankStack=autoPicking->micrographStack();
         // Read the PCA Model
         Image<double> II;
         II.read(fnPCAModel);
@@ -1988,7 +2014,10 @@ void ProgMicrographAutomaticPicking2::run()
         autoPicking->trainSVM(fnSVMModel2,2);
     }
     if (mode!="train")
+    {
         fnFilterBank.deleteFile();
+        std::cerr<<"We have deleted the file"<<std::endl;
+    }
     delete autoPicking;
 }
 

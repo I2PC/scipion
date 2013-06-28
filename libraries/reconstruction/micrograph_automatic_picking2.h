@@ -141,6 +141,10 @@ public:
 
     void filterBankGenerator();
 
+    void filterBankGenerator(MultidimArray<double> &inputMicrograph,
+                             const FileName &fnFilterBankStack,
+                             int filter_num);
+
     void batchBuildInvariant(MetaData MD);
 
     void buildInvariant(MetaData MD);
