@@ -521,7 +521,7 @@ class ProtocolsView(tk.Frame):
                        STATUS_FINISHED: '#D2F5CB', 
                        STATUS_FAILED: '#F5CCCB', 
                        STATUS_SAVED: '#F3F5CB', 
-                       STATUS_SAVED: '#124EB0'
+                       STATUS_SAVED: '#124EB0',
                        }
         
         nodeText = node.getName()
@@ -529,7 +529,7 @@ class ProtocolsView(tk.Frame):
         color = 'light blue'
             
         if node.run:
-            status = node.run.status.get()
+            status = node.run.status.get(STATUS_FAILED)
             nodeText += '\n' + status
             color = self.colors[status]
         
