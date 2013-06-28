@@ -131,7 +131,11 @@ public class SingleParticlePickerMicrograph extends Micrograph
 	public void addManualParticle(ManualParticle p, SingleParticlePicker ppicker, boolean center)
 	{
 		if (!p.getMicrograph().fits(p.getX(), p.getY(), ppicker.getSize()))
+		{
 			System.err.format("Warning: ignoring particle out of bounds: x=%d, y=%d in micrograph: %s\n", p.getX(), p.getY(), p.getMicrograph());
+			return;
+		}
+		
 		// throw new
 		// IllegalArgumentException(XmippMessage.getOutOfBoundsMsg("Particle"));
 		manualparticles.add(p);

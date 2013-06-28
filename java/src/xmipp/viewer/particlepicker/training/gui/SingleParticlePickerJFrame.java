@@ -1,7 +1,5 @@
 package xmipp.viewer.particlepicker.training.gui;
 
-import ij.io.SaveDialog;
-
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -22,7 +20,6 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
@@ -31,9 +28,6 @@ import javax.swing.ListSelectionModel;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-
-import xmipp.ij.commons.XmippApplication;
-import xmipp.ij.commons.XmippIJUtil;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
@@ -48,11 +42,11 @@ import xmipp.viewer.particlepicker.ParticlePickerJFrame;
 import xmipp.viewer.particlepicker.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.ParticlesJDialog;
 import xmipp.viewer.particlepicker.UpdateTemplatesTask;
+import xmipp.viewer.particlepicker.training.model.ManualParticle;
 import xmipp.viewer.particlepicker.training.model.MicrographState;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.SingleParticlePicker;
 import xmipp.viewer.particlepicker.training.model.SingleParticlePickerMicrograph;
-import xmipp.viewer.particlepicker.training.model.ManualParticle;
 
 public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 {
@@ -579,6 +573,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
+				
 				double threshold = Double.parseDouble(thresholdtf.getText()) * 100;
 				setThresholdValue(threshold);
 
@@ -591,6 +586,8 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			@Override
 			public void stateChanged(ChangeEvent e)
 			{
+				if(thresholdsl.getValueIsAdjusting())
+					return;
 				double threshold = (double) thresholdsl.getValue() / 100;
 				if (getMicrograph().getThreshold() != threshold)
 				{
