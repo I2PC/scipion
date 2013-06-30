@@ -77,7 +77,7 @@ class Object(object):
         """Return internal value"""
         return self._objValue
     
-    def getInternalValue(self):
+    def getObjValue(self):
         """Return the internal value for storage.
         This is a good place to do some update of the
         internal value before been stored"""
@@ -434,8 +434,9 @@ class CsvList(Scalar, list):
         for s in value.split(','):
             self.append(self._pType(s))
             
-    def getInternalValue(self):
-        return ','.join(map(str, self))
+    def getObjValue(self):
+        self._objValue = ','.join(map(str, self))
+        return self._objValue
     
     def get(self):
         return self
