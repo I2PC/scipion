@@ -100,24 +100,33 @@ class RemotePath(object):
         # Shortcut some of the sftp methods
         self.listdir = self.sftp.listdir
         
-    def exists(self, remoteFile):
-        """ Check if a remote file exists(like os.path.exists remotely). """
+    def exists(self, path):
+        """ Check if a remote path exists(like os.path.exists remotely). """
         try:
-            self.sftp.stat(remoteFile)
+            self.sftp.stat(path)
         except IOError, e:
             if e.errno == errno.ENOENT:
                 return False
         else:
             return True
         
+    def isdir(self, path):
+        """ Check if a remote path is a directory (like os.path.isdir remotely). """
+        try:
+            from stat import S_ISDIR
+            return S_ISDIR(self.sftp.stat(path).st_mode)
+        except IOError:
+            #Path does not exist, so by definition not a directory
+            return False
+        
     def makedirs(self, remoteFolder):
         """ Like os.makedirs remotely. """
-        if not self.exists(remoteFolder):
+        if len(remoteFolder) and not self.exists(remoteFolder):
             parent = dirname(remoteFolder)
-            if self.exists(parent): # if parent exist, create the folder with sftp
-                self.sftp.makedir(remoteFolder)
-            else: # if not, recursively create needed parents
+            # if have parent and it doen't exist, create it recursively
+            if len(parent) and not self.exists(parent): 
                 self.makedirs(parent)
+            self.sftp.mkdir(remoteFolder)
         
     def getFile(self, remoteFile, localFile):
         """ Wrapper around sftp.get that ensures
@@ -133,11 +142,11 @@ class RemotePath(object):
         self.makeFilePath(remoteFile)
         self.sftp.put(localFile, remoteFile)
         
-    def makeFilePath(self, **remoteFiles):
+    def makeFilePath(self, *remoteFiles):
         """ Create the remote folder path for remoteFiles. """
         self.makePath(*[dirname(r) for r in remoteFiles])
         
-    def makePath(self, **remoteFolders):
+    def makePath(self, *remoteFolders):
         """ Make all path in remoteFolders list. """
         for p in remoteFolders:
             if len(p):

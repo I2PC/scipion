@@ -191,7 +191,8 @@ class Project(object):
         # Set important properties of the protocol
         name = protocol.getClassName() + protocol.strId()
         protocol.setName(name)
-        protocol.setMapper(self.mapper)
+        #protocol.setMapper(self.mapper)
+        # The dbPath is need for launching the protocol
         protocol.dbPath = self.dbPath
         protocol.setWorkingDir(self.getPath(PROJECT_RUNS, name))
         self._setHostConfig(protocol)
