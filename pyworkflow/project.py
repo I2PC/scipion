@@ -23,11 +23,12 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.protocol.protocol import getProtocolFromDb
 """
 This modules handles the Project management
 """
 
-import os
+import os, shutil
 from os.path import abspath, split
 
 from pyworkflow.em import *
@@ -114,29 +115,28 @@ class Project(object):
         cleanPath(*self.pathList)      
                 
     def launchProtocol(self, protocol, wait=False):
-        """Launch another scritp to run the protocol."""
-        # TODO: Create a launcher class that will 
-        # handle the communication of remote projects
-        # and also the particularities of job submission: mpi, threads, queue, bash
+        """ In this function the action of launching a protocol
+        will be initiated. Actions done here are:
+        1. Store the protocol and assign name and working dir
+        2. Create the working dir and also the protocol independent db
+        3. Call the launch method in protocol.job to handle submition: mpi, thread, queue,
+        and also take care if the execution is remotely."""
         self._setupProtocol(protocol)
-        jobId = launchProtocol(protocol, wait)
+        protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
+        protocol.makePathsAndClean() # Create working dir if necessary
+        self.mapper.commit()
+        # Prepare a separate db for this run
+        # NOTE: now we are simply copying the entire project db, this can be changed later
+        # to only create a subset of the db need for the run
+        protocol.dbPath = protocol._getLogsPath('run.db')
+        shutil.copy(self.dbPath, protocol.dbPath)
+        launchProtocol(protocol, wait)
         if wait:
-            self.mapper.updateFrom(protocol)
+            prot2 = getProtocolFromDb(protocol.dbPath, protocol.getObjId(), globals())
+            protocol.copy(prot2)
+            self.mapper.store(protocol)
+            self.mapper.commit()
         
-        
-    def runProtocol(self, protocol, mpiComm=None):
-        """Directly execute the protocol.
-        mpiComm is only used when the protocol steps are execute
-        with several MPI nodes.
-        """
-        protocol.mapper = self.mapper
-        protocol._stepsExecutor = StepExecutor()
-        if protocol.stepsExecutionMode == STEPS_PARALLEL:
-            if protocol.numberOfMpi > 1:
-                protocol._stepsExecutor = MPIStepExecutor(protocol.numberOfMpi.get(), mpiComm)
-            elif protocol.numberOfThreads > 1:
-                protocol._stepsExecutor = ThreadStepExecutor(protocol.numberOfThreads.get()) 
-        protocol.run()
         
     def continueProtocol(self, protocol):
         """ This function should be called 
@@ -191,9 +191,6 @@ class Project(object):
         # Set important properties of the protocol
         name = protocol.getClassName() + protocol.strId()
         protocol.setName(name)
-        #protocol.setMapper(self.mapper)
-        # The dbPath is need for launching the protocol
-        protocol.dbPath = self.dbPath
         protocol.setWorkingDir(self.getPath(PROJECT_RUNS, name))
         self._setHostConfig(protocol)
         # Update with changes
@@ -244,8 +241,6 @@ class Project(object):
     def getHosts(self):
         """ Retrieve the hosts associated with the project. (class ExecutionHostConfig) """
         return self.hostsMapper.selectAll()
-
-
     
     def launchRemoteProtocol(self, protocol):
         """ Launch protocol in an execution host    

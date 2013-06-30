@@ -196,6 +196,11 @@ class Object(object):
         Attributes must be present in both.
         NOTE: This implementation can be extended to add or remove mismatching attributes.
         """
+        # Copy basic object data
+        self._objName = other._objName
+        self._objValue = other._objValue
+        
+        # Copy attributes recursively
         for name, attr in other.getAttributesToStore():
             myAttr = getattr(self, name, None)
             if myAttr is None:
@@ -437,9 +442,9 @@ class CsvList(Scalar, list):
     def getObjValue(self):
         self._objValue = ','.join(map(str, self))
         return self._objValue
-    
-    def get(self):
-        return self
+#    
+#    def get(self):
+#        return self
     
     def __str__(self):
         return list.__str__(self)

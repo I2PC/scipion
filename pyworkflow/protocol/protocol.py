@@ -499,12 +499,12 @@ class Protocol(Step):
         self.status.set(self.lastStatus)
         self._store(self.status)
         
-    def _makePathsAndClean(self):
+    def makePathsAndClean(self):
         """ Create the necessary path or clean
         if in RESTART mode. 
         """
         # Clean working path if in RESTART mode
-        paths = [self.workingDir.get(), self._getExtraPath(), self._getTmpPath()]
+        paths = [self._getPath(), self._getExtraPath(), self._getTmpPath(), self._getLogsPath()]
         if self.runMode == MODE_RESTART:
             cleanPath(*paths)
             self.mapper.deleteChilds(self) # Clean old values
@@ -518,18 +518,21 @@ class Protocol(Step):
         self.runJob = self._stepsExecutor.runJob
         self.__backupSteps() # Prevent from overriden previous stored steps
         self._defineSteps() # Define steps for execute later
-        self._makePathsAndClean()
+        #self._makePathsAndClean() This is done now in project
         startIndex = self.__findStartingStep() # Find at which step we need to start
         self.__cleanStepsFrom(startIndex) # 
         self._runSteps(startIndex)
         
     def run(self):
+        """ Before calling this method, the working dir for the protocol
+        to run should exists. 
+        """
         self._log = self.__getLogger()
         self._log.info('RUNNING PROTOCOL -----------------')
         self._log.info('      runMode: %d' % self.runMode.get())
         self._log.info('   workingDir: ' + self.workingDir.get())
         #self.namePrefix = replaceExt(self._steps.getName(), self._steps.strId()) #keep
-        self._currentDir = os.getcwd() 
+        self._currentDir = os.getcwd()
         self._run()
         outputs = [getattr(self, o) for o in self._outputs]
         #self._store(self.status, self.initTime, self.endTime, *outputs)
@@ -539,7 +542,7 @@ class Protocol(Step):
         
     def __getLogger(self):
         #Initialize log
-        self.logFile = self._getPath('log', 'protocol.log')
+        self.logFile = self._getLogsPath('run.log')
         return getFileLogger(self.logFile)
     
     def __closeLogger(self):
@@ -669,6 +672,14 @@ class Protocol(Step):
         """ Return a summary message to provide some information to users. """
         return self._summary()
     
+def getProtocolFromDb(dbPath, protId, protDict):
+    from pyworkflow.mapper import SqliteMapper
+    mapper = SqliteMapper(dbPath, protDict)
+    protocol = mapper.selectById(protId)
+    if protocol is None:
+        raise Exception("Not protocol found with id: %d" % protId)
+    protocol.setMapper(mapper)
+    return protocol
     
 def runProtocolFromDb(dbPath, protId, protDict, mpiComm=None):
     """ Retrieve a protocol stored in a db and run it. 
@@ -678,12 +689,7 @@ def runProtocolFromDb(dbPath, protId, protDict, mpiComm=None):
      protDict: the dictionary with protocol classes.
      mpiComm: MPI connection object (only used when executing with MPI)
     """
-    from pyworkflow.mapper import SqliteMapper
-    mapper = SqliteMapper(dbPath, protDict)
-    protocol = mapper.selectById(protId)
-    if protocol is None:
-        raise Exception("Not protocol found with id: %d" % protId)
-    protocol.setMapper(mapper)
+    protocol = getProtocolFromDb(dbPath, protId, protDict)
     # Create the steps executor
     executor = None
     if protocol.stepsExecutionMode == STEPS_PARALLEL:
