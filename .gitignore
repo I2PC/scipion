@@ -61,3 +61,4 @@ pyworkflow/tests/classes/tmp
 pyworkflow/web/scipion.db
 .directory
 pw.bashrc
+pw.cshrc

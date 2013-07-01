@@ -23,7 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.protocol.protocol import getProtocolFromDb
 """
 This modules handles the Project management
 """
@@ -133,15 +132,20 @@ class Project(object):
         # Prepare a separate db for this run
         # NOTE: now we are simply copying the entire project db, this can be changed later
         # to only create a subset of the db need for the run
-        protocol.dbPath = protocol._getLogsPath('run.db')
-        shutil.copy(self.dbPath, protocol.dbPath)
+        protocol.setDbPath('run.db')
+        shutil.copy(self.dbPath, protocol.getDbPath())
         launchProtocol(protocol, wait)
-        if wait:
-            prot2 = getProtocolFromDb(protocol.dbPath, protocol.getObjId(), globals())
-            protocol.copy(prot2)
+        if wait: # This is only useful for launching tests...
+            self._updateProtocol(protocol)
+        else:
+            protocol.setStatus(STATUS_LAUNCHED)
             self.mapper.store(protocol)
-            self.mapper.commit()
+        self.mapper.commit()
         
+    def _updateProtocol(self, protocol):
+        prot2 = getProtocolFromDb(protocol.getDbPath(), protocol.getObjId(), globals())
+        protocol.copy(prot2)
+        self.mapper.store(protocol)
         
     def continueProtocol(self, protocol):
         """ This function should be called 
@@ -166,6 +170,7 @@ class Project(object):
         cls = protocol.getClass()
         newProt = cls() # Create new protocol instance
         newProt.copyDefinitionAttributes(protocol)
+        newProt.setMapper(self.mapper)
         
         return newProt
     
@@ -181,9 +186,11 @@ class Project(object):
         give its value of 'hostname'
         """
         hostName = protocol.getHostName()
-        print "hostName: ", hostName
         hostConfig = self.hostsMapper.selectByLabel(hostName)
         hostConfig.cleanObjId()
+        # Add the project name to the hostPath in remote execution host
+        hostRoot = hostConfig.getHostPath()
+        hostConfig.setHostPath(join(hostRoot, os.path.basename(self.path)))
         protocol.setHostConfig(hostConfig)
     
     def _storeProtocol(self, protocol):
@@ -203,7 +210,16 @@ class Project(object):
         
     def getRuns(self, iterate=False):
         """ Return the existing protocol runs in the project. """
-        return self.mapper.selectByClass("Protocol", iterate=iterate)
+        runs = self.mapper.selectByClass("Protocol", iterate=False)
+        print "Project.getRuns:"
+        for r in runs:
+            print "runName; ", r.getName()
+            if r.isActive():
+                print "    updating...."
+                self._updateProtocol(r)
+        self.mapper.commit()
+        
+        return runs
     
     def getRunsGraph(self):
         """ Build a graph taking into account the dependencies between
@@ -262,34 +278,6 @@ class Project(object):
                       executionHostConfig.getHostName(),
                       executionHostConfig.getUserName(),
                       executionHostConfig.getPassword())
-        
-    def sendProtocol(self, protocol, executionHostConfig):
-        """ Send protocol to an execution host    
-        Params:
-            potocol: Protocol to send to an execution host.
-        """
-        from utils.file_transfer import FileTransfer
-        filePathDict = {}
-        # We are going to create project folder in the remote host
-        projectFolder = split(self.path)[1]
-        # Prepare source and target files
-        for filePath in protocol.getFiles():
-            sourceFilePath = os.path.join(self.path, filePath)
-            targetFilePath = join(executionHostConfig.getHostPath(), projectFolder, filePath)
-            filePathDict[sourceFilePath] = targetFilePath
-            
-        # We add sqlite database file
-        filePathDict[join(self.path, self.dbPath)] = join(executionHostConfig.getHostPath(), projectFolder, self.dbPath)
-        # Transfer files       
-        fileTransfer = FileTransfer()
-        fileTransfer.transferFilesTo(filePathDict,
-                        executionHostConfig.getHostName(),
-                        executionHostConfig.getUserName(),
-                        executionHostConfig.getPassword(),
-                        gatewayHosts = None, 
-                        numberTrials = 1,                        
-                        forceOperation = False,
-                        operationId = 1)
         
     def saveHost(self, host):
         """ Save a host for project settings.

@@ -110,10 +110,10 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         simulating an particle picking run...this is only
         for testing purposes.
         """
-        from pyworkflow.utils.path import getFolderFiles
+        from pyworkflow.utils.path import getFiles
         import shutil
         
-        for f in getFolderFiles(self.importFolder.get()):
+        for f in getFiles(self.importFolder.get()):
             shutil.copy(f, self._getExtraPath())
         
     def createOutput(self):

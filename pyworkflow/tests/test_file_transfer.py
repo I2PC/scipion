@@ -7,7 +7,7 @@ import unittest
 import argparse
 import sys
 import os
-from utils.path import getFolderFiles, cleanPath
+from utils.path import getFiles, cleanPath
 from os.path import join, basename
 from pyworkflow.utils.file_transfer import *
 from pyworkflow.utils.utils import executeRemote, getLocalUserName, getLocalHostName
@@ -41,7 +41,7 @@ class TestFileTransfer(unittest.TestCase):
     def testLocalToSeveralRemoteHosts(self):
         tempFolder = "localToSeveralRemote"
         filePaths = {}
-        sourceFilesPathList = getFolderFiles(localSourceFolder)
+        sourceFilesPathList = getFiles(localSourceFolder)
         for sourceFilePath in sourceFilesPathList:
             sourceFileName = basename(sourceFilePath)
             targetFilePath1 = join(remoteTargetFolder1, tempFolder, sourceFileName)
@@ -81,7 +81,7 @@ class TestFileTransfer(unittest.TestCase):
     def testLocalToLocal(self):
         tempFolder = "localToLocal"
         filePaths = {}
-        sourceFilesPathList = getFolderFiles(localSourceFolder)
+        sourceFilesPathList = getFiles(localSourceFolder)
         for sourceFilePath in sourceFilesPathList:
             sourceFileName = basename(sourceFilePath)
             targetFilePath = join(localTargetFolder, tempFolder, sourceFileName)
@@ -99,7 +99,7 @@ class TestFileTransfer(unittest.TestCase):
         tempFolder = "localToOneRemote"
         filePaths = {}
         checkPathList = []
-        sourceFilesPathList = getFolderFiles(localSourceFolder)
+        sourceFilesPathList = getFiles(localSourceFolder)
         for sourceFilePath in sourceFilesPathList:
             sourceFileName = basename(sourceFilePath)
             targetFilePath = join(remoteTargetFolder1, tempFolder, sourceFileName)
@@ -130,7 +130,7 @@ class TestFileTransfer(unittest.TestCase):
         tempFolder = "allTransfer"
         filePaths = {}
         
-        sourceFilesPathList = getFolderFiles(localSourceFolder)
+        sourceFilesPathList = getFiles(localSourceFolder)
         remoteSourceFilePathList1 = getRemoteFolderFiles(remoteHostName1, remoteUserName1, remotePassword1, remoteSourceFolder1)
         remoteSourceFilePathList2 = getRemoteFolderFiles(remoteHostName2, remoteUserName2, remotePassword2, remoteSourceFolder2)
         
