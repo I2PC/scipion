@@ -42,6 +42,7 @@ from pyworkflow.protocol.launch import launchProtocol
 PROJECT_DBNAME = 'project.sqlite'
 PROJECT_LOGS = 'Logs'
 PROJECT_RUNS = 'Runs'
+PROJECT_TMP = 'Tmp'
 PROJECT_SETTINGS = 'settings.sqlite'
 
 class Project(object):
@@ -54,6 +55,7 @@ class Project(object):
         self.dbPath = self.addPath(PROJECT_DBNAME)
         self.logsPath = self.addPath(PROJECT_LOGS)
         self.runsPath = self.addPath(PROJECT_RUNS)
+        self.tmpPath = self.addPath(PROJECT_TMP)
         self.settingsPath = self.addPath(PROJECT_SETTINGS)
         
     def getObjId(self):
@@ -69,6 +71,9 @@ class Project(object):
     def getPath(self, *paths):
         """Return path from the project root"""
         return join(*paths)
+    
+    def getTmpPath(self, *paths):
+        return self.getPath(PROJECT_TMP, *paths)
     
     def load(self):
         """Load project data and settings

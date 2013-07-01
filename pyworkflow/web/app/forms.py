@@ -91,8 +91,8 @@ class ShowjForm(forms.Form):
         
         blockComboBoxValues = self.getBlockComboBoxValues()
         
-        self.fields['blockComboBox'] = forms.ChoiceField(required=False, choices=blockComboBoxValues, initial = blockComboBoxValues[1][0])
-        print tuple(self.getBlockComboBoxValues())[1][0]
+        self.fields['blockComboBox'] = forms.ChoiceField(required=False, choices=blockComboBoxValues, initial = blockComboBoxValues[0][0])
+        print tuple(self.getBlockComboBoxValues())[0][0]
         print tuple(self.getBlockComboBoxValues())
         print "self.fields['blockComboBox']"
         print self.fields['blockComboBox'] 
@@ -100,7 +100,10 @@ class ShowjForm(forms.Form):
         
 
         metadataComboBoxValues = self.getMetadataComboBoxValues(mdXmipp)
-        self.fields['metadataComboBox'] = forms.ChoiceField(required=False, choices=metadataComboBoxValues, initial = metadataComboBoxValues[1][0])
+        print "metadataComboBoxValues"
+        print metadataComboBoxValues
+        if len(metadataComboBoxValues) > 0:
+            self.fields['metadataComboBox'] = forms.ChoiceField(required=False, choices=metadataComboBoxValues, initial = metadataComboBoxValues[0][0])
     
         print "self.data['blockComboBox']"
 #        print self.data['blockComboBox']
@@ -111,10 +114,10 @@ class ShowjForm(forms.Form):
 #        if self.data['blockComboBox'] is '':
 #            print "aki"
 #            self.initial['blockComboBox'] = 'Volumes'
-
-        if "metadataComboBox" not in self.data or self.data['metadataComboBox'] is '':
-            print "aki"
-            self.fields['metadataComboBox'].initial =[1]
+#
+#        if "metadataComboBox" not in self.data or self.data['metadataComboBox'] is '':
+#            print "aki"
+#            self.fields['metadataComboBox'].initial =[1]
 
 
     def getBlockComboBoxValues(self):    

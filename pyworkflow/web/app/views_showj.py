@@ -6,27 +6,32 @@ from django.shortcuts import render_to_response
 from pyworkflow.tests import getInputPath
 from pyworkflow.web.app.forms import ShowjForm
 from django.template import RequestContext
+from os.path import join    
     
-def showj(request):
+def showj(request, inputParameters=None):
+    
+    print "mak"
+    print inputParameters
+    
     # Resources #
     # Style Sheets
-    css_path = os.path.join(settings.STATIC_URL, 'css/showj_style.css')
+    css_path = join(settings.STATIC_URL, 'css/showj_style.css')
 
     #Favicon
 #    favicon_path = getResource('favicon')
     
     #General jquery libs
-    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
-    jquery_cookie = os.path.join(settings.STATIC_URL, 'js/jquery.cookie.js')
-    jquery_treeview = os.path.join(settings.STATIC_URL, 'js/jquery.treeview.js')
-    launchTreeview = os.path.join(settings.STATIC_URL, 'js/launchTreeview.js')
-    utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
+    jquery_path = join(settings.STATIC_URL, 'js/jquery.js')
+    jquery_cookie = join(settings.STATIC_URL, 'js/jquery.cookie.js')
+    jquery_treeview = join(settings.STATIC_URL, 'js/jquery.treeview.js')
+    launchTreeview = join(settings.STATIC_URL, 'js/launchTreeview.js')
+    utils_path = join(settings.STATIC_URL, 'js/utils.js')
     
     #Table View jquery libs
-    jquerydataTables_path = os.path.join(settings.STATIC_URL, 'js/jquery.dataTables.js')
-    jquerydataTables_colreorder_path = os.path.join(settings.STATIC_URL, 'js/ColReorder.js')
-    jeditable_path = os.path.join(settings.STATIC_URL, 'js/jquery.jeditable.js')
-    jquery_ui_path = os.path.join(settings.STATIC_URL, 'js/jquery-ui.js')        
+    jquerydataTables_path = join(settings.STATIC_URL, 'js/jquery.dataTables.js')
+    jquerydataTables_colreorder_path = join(settings.STATIC_URL, 'js/ColReorder.js')
+    jeditable_path = join(settings.STATIC_URL, 'js/jquery.jeditable.js')
+    jquery_ui_path = join(settings.STATIC_URL, 'js/jquery-ui.js')        
     
     #############
     # WEB INPUT PARAMETERS
@@ -39,16 +44,21 @@ def showj(request):
     
          
     if request.method == 'POST': # If the form has been submitted...
+        print "POST METHOD"
         mdXmipp = loadMetaDataXmipp(request.POST.get('path'), request.POST.get('blockComboBox'))
         showjForm = ShowjForm(mdXmipp, request.POST) # A form bound to the POST data
     else:
-        mdXmipp = loadMetaDataXmipp(request.GET.get('path', 'tux_vol.xmd'), request.GET.get('block', ''))
-        inputParameters = {'path': request.GET.get('path', 'tux_vol.xmd'),
-#                     'blockComboBox': request.GET.get('block', ''),
-                     'allowRender': 'render' in request.GET,
-                     'zoom' : request.GET.get('dim', 150),
-                     'mode': request.GET.get('mode', 'gallery'),
-                     'gotoContainer': 1}
+        print "GET METHOD"
+        if inputParameters == None:
+            inputParameters = {'path': request.GET.get('path', 'tux_vol.xmd'),
+    #                     'blockComboBox': request.GET.get('block', ''),
+                         'allowRender': 'render' in request.GET,
+                         'zoom' : request.GET.get('dim', 150),
+                         'mode': request.GET.get('mode', 'gallery'),
+                         'gotoContainer': 1}
+        
+            
+        mdXmipp = loadMetaDataXmipp(inputParameters['path'], inputParameters['block'])
         showjForm = ShowjForm(mdXmipp, inputParameters) # An unbound form
         
     if showjForm.is_valid() is False:
@@ -194,6 +204,8 @@ def defineColsLayout(labels):
 
 def loadMetaDataXmipp(path, block):
     path= getInputPath('showj', path)
+    print "path carajo"
+    print path
     if len(block):
         path = '%s@%s' % (block, path)
     return xmipp.MetaData(path)
@@ -255,7 +267,6 @@ def get_image(request):
     imagePath = request.GET.get('image')
     imageDim = request.GET.get('dim', 150)
     
-    
     # PAJM: Como vamos a gestionar lsa imagen    
     if imagePath.endswith('png') or imagePath.endswith('gif'):
         img = getImage(imagePath, tk=False)
@@ -264,7 +275,11 @@ def get_image(request):
             parts = imagePath.split(AT)
             imageNo = parts[0]
             imagePath = parts[1]
-        imagePath = getInputPath('showj', imagePath)
+        if request.session['projectPath'] == None:
+            imagePath = getInputPath('showj', imagePath)
+        else:
+            imagePath = join(request.session['projectPath'],imagePath)
+                
         if imageNo:
             imagePath = '%s@%s' % (imageNo, imagePath) 
         imgXmipp = xmipp.Image(imagePath)

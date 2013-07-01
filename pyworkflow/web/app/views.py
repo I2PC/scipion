@@ -538,44 +538,69 @@ def visualizeObject(request):
     objectId = request.GET.get("objectId")    
     projectName = request.session['projectName']
     
-#    manager = Manager()
-#    manager.getObject(projectName, objectId)
-#    
 #    project = loadProject(projectName)
     manager = Manager()
     projPath = manager.getProjectPath(projectName)
+    request.session['projectPath']= projPath
     project = Project(projPath)
     project.load()
     
     object = project.mapper.selectById(int(objectId))
-    type_object = type(object)
-    
-    if issubclass(type_object, SetOfMicrographs):
-#        print "SetofMicrographs"
-#        print object.getName()
-#        print os.path.dirname(os.path.abspath(object.getFileName()))
-#        print object.getFiles()
+    if object.isPointer():
+        object = object.get()
         
-        fn = join(os.path.dirname(os.path.abspath(object.getFileName())), object.getName() + '_micrographs.xmd')
-        from pyworkflow.em.packages.xmipp3.data import XmippSetOfMicrographs
+    if isinstance(object, SetOfMicrographs):
+        fn = project.getTmpPath(object.getName() + '_micrographs.xmd')
+        print "fn"
+        print fn
         mics = XmippSetOfMicrographs.convert(object, fn)
-#        extra = ''
-#        if mics.hasCTF():
-#            extra = ' --mode metadata --render first'
-#        runShowJ(mics.getFileName(), extraParams=extra)  
-    elif issubclass(type_object, SetOfImages):
-        print object.getName
-#        fn = self._getTmpPath(obj.getName() + '_images.xmd')
-#        imgs = XmippSetOfImages.convert(obj, fn)
-#        runShowJ(imgs.getFileName())
-    elif issubclass(type_object, Classification2D):
+        print "mics.getFileName()"
+        print mics.getFileName()
+        inputParameters = {'path': join(request.session['projectPath'], mics.getFileName()),
+                       'block': '',
+                       'allowRender': True,
+                       'mode': 'table',
+                       'zoom': 150,
+                       'gotoContainer': 1}
+  
+    elif isinstance(object, SetOfImages):
+        fn = project.getTmpPath(object.getName() + '_images.xmd')
+        print "fn"
+        print fn
+        imgs = XmippSetOfImages.convert(object, fn)
+        print "imgs.getFileName()"
+        print imgs.getFileName()
+        
+        inputParameters = {'path': join(request.session['projectPath'], imgs.getFileName()),
+               'block': '',
+               'allowRender': True,
+               'mode': 'gallery',
+               'zoom': 150,
+               'gotoContainer': 1}
+
+    elif isinstance(object, Classification2D):
         print object.getName
 #        runShowJ(obj.getClassesMdFileName())
     else:
-        raise Exception('Showj visualizer: can not visualize class: %s' % object.getClassName())
+        raise Exception('Showj Web visualizer: can not visualize class: %s' % object.getClassName())
 
     
-    return HttpResponseRedirect('/showj')
+    
+    from views_showj import showj 
+    return showj(request, inputParameters)
+    
+    
+    
+#    url2 = reverse('app.views_showj.showj', kwargs={'path': path})
+#    print "url"
+#    print url2
+#    return HttpResponseRedirect(url2)
+
+#    from django.shortcuts import redirect
+
+    #return redirect('/showj', args=inputParameters)
+
+#    return HttpResponseRedirect('/showj', inputParameters)
     
 if __name__ == '__main__':
     root = loadProtTree()    
