@@ -77,7 +77,7 @@ class Object(object):
         """Return internal value"""
         return self._objValue
     
-    def getInternalValue(self):
+    def getObjValue(self):
         """Return the internal value for storage.
         This is a good place to do some update of the
         internal value before been stored"""
@@ -196,6 +196,11 @@ class Object(object):
         Attributes must be present in both.
         NOTE: This implementation can be extended to add or remove mismatching attributes.
         """
+        # Copy basic object data
+        self._objName = other._objName
+        self._objValue = other._objValue
+        
+        # Copy attributes recursively
         for name, attr in other.getAttributesToStore():
             myAttr = getattr(self, name, None)
             if myAttr is None:
@@ -434,11 +439,12 @@ class CsvList(Scalar, list):
         for s in value.split(','):
             self.append(self._pType(s))
             
-    def getInternalValue(self):
-        return ','.join(map(str, self))
-    
-    def get(self):
-        return self
+    def getObjValue(self):
+        self._objValue = ','.join(map(str, self))
+        return self._objValue
+#    
+#    def get(self):
+#        return self
     
     def __str__(self):
         return list.__str__(self)

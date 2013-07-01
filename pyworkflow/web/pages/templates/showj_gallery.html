@@ -25,12 +25,12 @@
 	}
 	
 	function colsRowsEvents(){
-		$("#cols, #rows").click(function(){
-			updateGalleryLayout($("#cols").val(),$("#rows").val(), $(this).attr("id"))
+		$("#id_cols, #id_rows").click(function(){
+			updateGalleryLayout($("#id_cols").val(),$("#id_rows").val(), $(this).attr("id"))
 		});
 		
-		$("#cols, #rows").change(function(){
-			updateGalleryLayout($("#cols").val(),$("#rows").val(), $(this).attr("id"))
+		$("#id_cols, #id_rows").change(function(){
+			updateGalleryLayout($("#id_cols").val(),$("#id_rows").val(), $(this).attr("id"))
 		});
 	}
 	
@@ -41,11 +41,11 @@
 	
 	function recalculateColsRows(cols, rows, setElement){
 		
-		if (setElement == "cols"){
-			$("#rows").val(Math.ceil($(".img_container").length/cols))
+		if (setElement == "id_cols"){
+			$("#id_rows").val(Math.ceil($(".img_container").length/cols))
 		}
 		else{
-			$("#cols").val(Math.ceil($(".img_container").length/rows))
+			$("#id_cols").val(Math.ceil($(".img_container").length/rows))
 		}
 			
 		

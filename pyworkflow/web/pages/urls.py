@@ -34,8 +34,9 @@ urlpatterns = patterns('',
     url(r'^deleteHost/$', 'app.views.deleteHost'),
     url(r'^hostForm/$', 'app.views.hostForm'),
 #    url(r'^table/', 'app.views.table'),
-    
+    url(r'^visualize_object/$', 'app.views.visualizeObject'),
 
+    #SHOWJ
     url(r'^showj/', 'app.views_showj.showj'), #Load web
     url(r'^get_image/', 'app.views_showj.get_image'), # Load images dynamically
     url(r'^save_showj_table/', 'app.views_showj.save_showj_table'), # Save table to session variable dynamically

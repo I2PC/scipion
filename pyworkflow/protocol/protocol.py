@@ -34,7 +34,7 @@ import pickle
 import time
 
 from pyworkflow.object import OrderedObject, String, List, Integer, Boolean, CsvList
-from pyworkflow.utils.path import replaceExt, makeFilePath, join, existsPath, cleanPath, getFolderFiles
+from pyworkflow.utils.path import replaceExt, makeFilePath, join, missingPaths, cleanPath, getFolderFiles
 from pyworkflow.utils.log import *
 from pyworkflow.protocol.executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor
 
@@ -126,8 +126,7 @@ class Step(OrderedObject):
         except Exception, e:
             self.setFailed(str(e))
             import traceback
-            traceback.print_exc()
-            
+            traceback.print_exc()            
             #raise #only in development
         finally:
             self.endTime.set(dt.datetime.now())
@@ -161,7 +160,7 @@ class FunctionStep(Step):
         """ Run the function and check the result files if any. """
         resultFiles = self._runFunc() 
         if resultFiles and len(resultFiles):
-            missingFiles = existsPath(*resultFiles)
+            missingFiles = missingPaths(*resultFiles)
             if len(missingFiles):
                 raise Exception('Missing filePaths: ' + ' '.join(missingFiles))
             self.resultFiles = String(pickle.dumps(resultFiles))
@@ -173,7 +172,7 @@ class FunctionStep(Step):
             return True
         filePaths = pickle.loads(self.resultFiles.get())
 
-        return len(existsPath(*filePaths)) == 0
+        return len(missingPaths(*filePaths)) == 0
     
     def __eq__(self, other):
         """ Compare with other FunctionStep""" 
@@ -500,12 +499,12 @@ class Protocol(Step):
         self.status.set(self.lastStatus)
         self._store(self.status)
         
-    def _makePathsAndClean(self):
+    def makePathsAndClean(self):
         """ Create the necessary path or clean
         if in RESTART mode. 
         """
         # Clean working path if in RESTART mode
-        paths = [self.workingDir.get(), self._getExtraPath(), self._getTmpPath()]
+        paths = [self._getPath(), self._getExtraPath(), self._getTmpPath(), self._getLogsPath()]
         if self.runMode == MODE_RESTART:
             cleanPath(*paths)
             self.mapper.deleteChilds(self) # Clean old values
@@ -519,18 +518,21 @@ class Protocol(Step):
         self.runJob = self._stepsExecutor.runJob
         self.__backupSteps() # Prevent from overriden previous stored steps
         self._defineSteps() # Define steps for execute later
-        self._makePathsAndClean()
+        #self._makePathsAndClean() This is done now in project
         startIndex = self.__findStartingStep() # Find at which step we need to start
         self.__cleanStepsFrom(startIndex) # 
         self._runSteps(startIndex)
         
     def run(self):
+        """ Before calling this method, the working dir for the protocol
+        to run should exists. 
+        """
         self._log = self.__getLogger()
         self._log.info('RUNNING PROTOCOL -----------------')
         self._log.info('      runMode: %d' % self.runMode.get())
         self._log.info('   workingDir: ' + self.workingDir.get())
         #self.namePrefix = replaceExt(self._steps.getName(), self._steps.strId()) #keep
-        self._currentDir = os.getcwd() 
+        self._currentDir = os.getcwd()
         self._run()
         outputs = [getattr(self, o) for o in self._outputs]
         #self._store(self.status, self.initTime, self.endTime, *outputs)
@@ -540,7 +542,7 @@ class Protocol(Step):
         
     def __getLogger(self):
         #Initialize log
-        self.logFile = self._getPath('log', 'protocol.log')
+        self.logFile = self._getLogsPath('run.log')
         return getFileLogger(self.logFile)
     
     def __closeLogger(self):
@@ -670,6 +672,14 @@ class Protocol(Step):
         """ Return a summary message to provide some information to users. """
         return self._summary()
     
+def getProtocolFromDb(dbPath, protId, protDict):
+    from pyworkflow.mapper import SqliteMapper
+    mapper = SqliteMapper(dbPath, protDict)
+    protocol = mapper.selectById(protId)
+    if protocol is None:
+        raise Exception("Not protocol found with id: %d" % protId)
+    protocol.setMapper(mapper)
+    return protocol
     
 def runProtocolFromDb(dbPath, protId, protDict, mpiComm=None):
     """ Retrieve a protocol stored in a db and run it. 
@@ -679,12 +689,7 @@ def runProtocolFromDb(dbPath, protId, protDict, mpiComm=None):
      protDict: the dictionary with protocol classes.
      mpiComm: MPI connection object (only used when executing with MPI)
     """
-    from pyworkflow.mapper import SqliteMapper
-    mapper = SqliteMapper(dbPath, protDict)
-    protocol = mapper.selectById(protId)
-    if protocol is None:
-        raise Exception("Not protocol found with id: %d" % protId)
-    protocol.setMapper(mapper)
+    protocol = getProtocolFromDb(dbPath, protId, protDict)
     # Create the steps executor
     executor = None
     if protocol.stepsExecutionMode == STEPS_PARALLEL:

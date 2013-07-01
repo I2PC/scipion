@@ -534,6 +534,48 @@ def deleteHost(request):
 #     context = {'message': "Host succesfully deleted"}
     return HttpResponseRedirect('/viewHosts')
 
+def visualizeObject(request):
+    objectId = request.GET.get("objectId")    
+    projectName = request.session['projectName']
+    
+#    manager = Manager()
+#    manager.getObject(projectName, objectId)
+#    
+#    project = loadProject(projectName)
+    manager = Manager()
+    projPath = manager.getProjectPath(projectName)
+    project = Project(projPath)
+    project.load()
+    
+    object = project.mapper.selectById(int(objectId))
+    type_object = type(object)
+    
+    if issubclass(type_object, SetOfMicrographs):
+#        print "SetofMicrographs"
+#        print object.getName()
+#        print os.path.dirname(os.path.abspath(object.getFileName()))
+#        print object.getFiles()
+        
+        fn = join(os.path.dirname(os.path.abspath(object.getFileName())), object.getName() + '_micrographs.xmd')
+        from pyworkflow.em.packages.xmipp3.data import XmippSetOfMicrographs
+        mics = XmippSetOfMicrographs.convert(object, fn)
+#        extra = ''
+#        if mics.hasCTF():
+#            extra = ' --mode metadata --render first'
+#        runShowJ(mics.getFileName(), extraParams=extra)  
+    elif issubclass(type_object, SetOfImages):
+        print object.getName
+#        fn = self._getTmpPath(obj.getName() + '_images.xmd')
+#        imgs = XmippSetOfImages.convert(obj, fn)
+#        runShowJ(imgs.getFileName())
+    elif issubclass(type_object, Classification2D):
+        print object.getName
+#        runShowJ(obj.getClassesMdFileName())
+    else:
+        raise Exception('Showj visualizer: can not visualize class: %s' % object.getClassName())
+
+    
+    return HttpResponseRedirect('/showj')
     
 if __name__ == '__main__':
     root = loadProtTree()    
