@@ -126,7 +126,7 @@ def loadConfig(config, name):
 class ManagerWindow(gui.Window):
     """Windows to manage projects"""
     def __init__(self, **args):
-        gui.Window.__init__(self, "Projets", minsize=(600, 350), icon='scipion_bn.xbm', **args)
+        gui.Window.__init__(self, "Projects", minsize=(750, 500), icon='scipion_bn.xbm', **args)
         # Load global configuration
         mapper = ConfigMapper(getConfigPath('configuration.xml'), globals())
         config = mapper.getConfig()

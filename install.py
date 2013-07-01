@@ -28,14 +28,14 @@
 This script will generate the pw.bashrc file to include
 """
 import sys
-from os.path import abspath, dirname
+from os.path import abspath, dirname, join
 FULLPATH = dirname(abspath(__file__))
 BASHRC = 'pw.bashrc'
 
 if __name__ == '__main__':
     print "Installing Scipion in : ", FULLPATH
     print " - Creating file: ", BASHRC
-    f = open(BASHRC, 'w+')
+    f = open(join(FULLPATH, BASHRC), 'w+')
     
     template = """
 export SCIPION_HOME=$HOME/Scipion

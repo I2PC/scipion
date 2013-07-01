@@ -21,8 +21,8 @@ function customPopup(URL, widthValue, heightValue) {
 }
 
 function closePopup() {
-//	opener.location.reload(true);
-//	self.close();
+	// opener.location.reload(true);
+	// self.close();
 	window.opener.location.reload(true);
 	window.close();
 }
@@ -60,8 +60,49 @@ function launchToolbar(projName, id, elm) {
 	// 'href',
 	// 'javascript:popup("/form/?projectName=' + projName + '&protocolId='
 	// + id + '")');
+	// alert('launchToolbar')
 
 	row.show(); // Show toolbar
+
+	$.ajax({
+		type : "GET",
+		url : '/protocol_io/?projectName=' + projName + '&protocolId=' + id,
+		dataType : "json",
+		success : function(json) {
+			fillUL(json.inputs, "protocol_input", "db_input.gif", projName)
+			fillUL(json.outputs, "protocol_output", "db_output.gif", projName)
+
+			// ul_output = $("#protocol_output")
+			// ul_output.empty()
+			// for (var i = 0; i < json.outputs.length; i++) {
+			// ul_output.append(
+			// '<li><a href=""><img src="../../../../resources/db_output.gif" />
+			// ' + json.outputs[i].name
+			// + '</a></li>');
+			// }
+			// '<li><a href="/user/messages"><span class="tab">Message
+			// Center</span></a></li>');
+			// for ( var x = 0; x < list.length; x++) {
+			// res += "<input type='radio' id ='" + id + x + "' name='" + id
+			// + "' value='" + list[x] + "' />" + list[x] + "<br />";
+			// }
+		}
+	});
+}
+
+/*
+ * Fill an UL element with items from a list items should contains id and name
+ * properties
+ */
+function fillUL(list, ulId, icon, projName) {
+	ul = $("#" + ulId)
+	ul.empty()
+	for ( var i = 0; i < list.length; i++) {
+		ul.append('<li><a href="/visualize_object/?projectName=' + projName
+				+ '&objectId=' + list[i].id
+				+ '"><img src="../../../../resources/' + icon + '" /> '
+				+ list[i].name + '</a></li>');
+	}
 }
 
 /*
@@ -80,16 +121,11 @@ function launchHostsToolbar(projName, hostId, elm) {
 	elm.attr('class', 'selected');
 
 	// Action Edit Button
-	$("a#editTool").attr(
-			'href',
-			'javascript:editHost()');
+	$("a#editTool").attr('href', 'javascript:editHost()');
 	// Action Copy Button
-	$("a#newTool").attr(
-			'href',
-			'javascript:newHost()');
+	$("a#newTool").attr('href', 'javascript:newHost()');
 	// Action Delete Button
-	$("a#deleteTool").attr('href',
-			'javascript:deleteHost()');
+	$("a#deleteTool").attr('href', 'javascript:deleteHost()');
 	// Action Browse Button
 	// $("a#browseTool").attr(
 	// 'href',
@@ -155,4 +191,19 @@ function selTableMessi(elm) {
 	}
 	row.attr('value', id);
 	elm.attr('style', 'background-color: LightSteelBlue;');
+}
+
+function switchGraph() {
+	var status = $("div#graphActiv").attr("data-mode");
+	if (status == 'inactive') {
+		$("div#graphActiv").attr("data-mode", "active");
+		$("div#graphActiv").attr("style", "");
+		$("div#runTable").attr("data-mode", "inactive");
+		$("div#runTable").attr("style", "display:none;");
+	} else if (status == 'active') {
+		$("div#runTable").attr("data-mode", "active");
+		$("div#runTable").attr("style", "");
+		$("div#graphActiv").attr("data-mode", "inactive");
+		$("div#graphActiv").attr("style", "display:none;");
+	}
 }

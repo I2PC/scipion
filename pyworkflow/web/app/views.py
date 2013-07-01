@@ -4,7 +4,6 @@ import os
 import xmipp
 from django.shortcuts import render_to_response
 from django.core.context_processors import csrf
-from django.http import HttpResponse
 from django.template import RequestContext
 import json
 from pyworkflow.manager import Manager
@@ -15,12 +14,11 @@ from pyworkflow.utils.utils import prettyDate
 from pyworkflow.web.pages import settings
 from pyworkflow.apps.config import *
 from pyworkflow.em import *
-from django.http.request import HttpRequest
 from pyworkflow.hosts import HostMapper
 from pyworkflow.tests import getInputPath 
 from forms import HostForm
 from django.core.urlresolvers import reverse
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse, HttpRequest
 
 def getResource(request):
     if request == 'logoScipion':
@@ -39,6 +37,8 @@ def getResource(request):
         img = 'delete.gif'
     elif request == 'browse_toolbar':
         img = 'run_steps.gif'
+    elif request == 'tree_toolbar':
+        img = 'tree2.gif'
     elif request == 'new_toolbar':
         img = 'new_object.gif'
         
@@ -51,6 +51,7 @@ edit_tool_path = getResource('edit_toolbar')
 copy_tool_path = getResource('copy_toolbar')
 delete_tool_path = getResource('delete_toolbar')
 browse_tool_path = getResource('browse_toolbar')
+tree_tool_path = getResource('tree_toolbar')
 
 def projects(request):
     # CSS #
@@ -75,8 +76,6 @@ def projects(request):
     return render_to_response('projects.html', context)
 
 def create_project(request):
-    from django.http import HttpResponse    
-    
     manager = Manager()
     
     if request.is_ajax():
@@ -86,7 +85,6 @@ def create_project(request):
     return HttpResponse(mimetype='application/javascript')
 
 def delete_project(request):
-    from django.http import HttpResponse    
     
     manager = Manager()
     
@@ -221,6 +219,7 @@ def project_content(request):
                'copyTool': copy_tool_path,
                'deleteTool': delete_tool_path,
                'browseTool': browse_tool_path,
+               'treeTool': tree_tool_path,
                'utils': utils_path,
                'jquery_cookie': jquery_cookie,
                'jquery_treeview': jquery_treeview,
@@ -236,8 +235,6 @@ def project_content(request):
     return render_to_response('project_content.html', context)
 
 def delete_protocol(request):
-    from django.http import HttpResponse   
-    
     # Project Id(or Name) should be stored in SESSION
     if request.is_ajax():
         projectName = request.GET.get('projectName')
@@ -249,6 +246,20 @@ def delete_protocol(request):
         
     return HttpResponse(mimetype='application/javascript')
 
+def protocol_io(request):
+    # Project Id(or Name) should be stored in SESSION
+    if request.is_ajax():
+        projectName = request.GET.get('projectName')
+        project = loadProject(projectName)
+        protId = request.GET.get('protocolId', None)
+        protocol = project.mapper.selectById(int(protId))
+        print "======================= in protocol_io...."
+        ioDict = {'inputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterInputAttributes()],
+                  'outputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterOutputAttributes(EMObject)]}
+        jsonStr = json.dumps(ioDict, ensure_ascii=False)
+        
+        return HttpResponse(jsonStr, mimetype='application/javascript')
+    
 def form(request):
     
     # Resources #
@@ -322,6 +333,40 @@ def form(request):
     context.update(csrf(request))
     
     return render_to_response('form.html', context)
+
+def save_protocol(request):
+    projectName = request.POST.get('projectName')
+    protId = request.POST.get("protocolId")
+    protClass = request.POST.get("protocolClass")
+    
+    # Load the project
+    project = loadProject(projectName)
+    
+    # Create the protocol object
+    if protId != 'None':  # Case of new protocol
+        protId = request.POST.get('protocolId', None)
+        protocol = project.mapper.selectById(int(protId))
+    else:
+        protocolClass = emProtocolsDict.get(protClass, None)
+        protocol = protocolClass() 
+    
+    # Update parameter set in the form
+    for paramName, attr in protocol.iterDefinitionAttributes():
+        value = request.POST.get(paramName)
+        if attr.isPointer():
+            if len(value.strip()) > 0:
+                objId = int(value.split('.')[-1])  # Get the id string for last part after .
+                value = project.mapper.selectById(objId)  # Get the object from its id
+                if attr.getObjId() == value.getObjId():
+                    raise Exception("Param: %s is autoreferencing with id: %d" % (paramName, objId))
+            else:
+                value = None
+        attr.set(value)
+        
+    project.saveProtocol(protocol)
+    
+    return HttpResponse(mimetype='application/javascript')
+
 
 def protocol(request):
     projectName = request.POST.get('projectName')
@@ -489,6 +534,48 @@ def deleteHost(request):
 #     context = {'message': "Host succesfully deleted"}
     return HttpResponseRedirect('/viewHosts')
 
+def visualizeObject(request):
+    objectId = request.GET.get("objectId")    
+    projectName = request.session['projectName']
+    
+#    manager = Manager()
+#    manager.getObject(projectName, objectId)
+#    
+#    project = loadProject(projectName)
+    manager = Manager()
+    projPath = manager.getProjectPath(projectName)
+    project = Project(projPath)
+    project.load()
+    
+    object = project.mapper.selectById(int(objectId))
+    type_object = type(object)
+    
+    if issubclass(type_object, SetOfMicrographs):
+#        print "SetofMicrographs"
+#        print object.getName()
+#        print os.path.dirname(os.path.abspath(object.getFileName()))
+#        print object.getFiles()
+        
+        fn = join(os.path.dirname(os.path.abspath(object.getFileName())), object.getName() + '_micrographs.xmd')
+        from pyworkflow.em.packages.xmipp3.data import XmippSetOfMicrographs
+        mics = XmippSetOfMicrographs.convert(object, fn)
+#        extra = ''
+#        if mics.hasCTF():
+#            extra = ' --mode metadata --render first'
+#        runShowJ(mics.getFileName(), extraParams=extra)  
+    elif issubclass(type_object, SetOfImages):
+        print object.getName
+#        fn = self._getTmpPath(obj.getName() + '_images.xmd')
+#        imgs = XmippSetOfImages.convert(obj, fn)
+#        runShowJ(imgs.getFileName())
+    elif issubclass(type_object, Classification2D):
+        print object.getName
+#        runShowJ(obj.getClassesMdFileName())
+    else:
+        raise Exception('Showj visualizer: can not visualize class: %s' % object.getClassName())
+
+    
+    return HttpResponseRedirect('/showj')
     
 if __name__ == '__main__':
     root = loadProtTree()    

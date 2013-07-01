@@ -189,3 +189,26 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
 
         micSet.write()
         self._defineOutputs(outputMicrographs=micSet)
+
+    def _summary(self):
+        summary = []
+        if not self.inputMicrographs.hasValue():
+            summary.append("No <Input Micrographs> selected.")
+        else:
+            summary.append("Input micrographs: " + self.inputMicrographs.get().getNameId())
+            if self.doDownsample.get():
+                summary.append("Downsampling factor: %d" % self.downFactor.get())
+            if self.doCrop.get():
+                summary.append("Number of pixels cropped: %d" % self.cropPixels.get())
+            if self.doLog.get():
+                summary.append("Formula applied: %f - %f ln(x + %f)" % (self.logA.get(), self.logB.get(), self.logC.get(),))
+            if self.doRemoveBadPix.get():
+                summary.append("Number of pixels removed: %d" % self.mulStddev.get())
+        return summary
+    
+    def _validate(self):
+        validateMsgs = []
+        # Some prepocessing option need to be marked
+        if not(self.doCrop or self.doDownsample or self.doLog or self.doRemoveBadPix):
+            validateMsgs.append('Some preprocessing option need to be selected.')
+        return validateMsgs

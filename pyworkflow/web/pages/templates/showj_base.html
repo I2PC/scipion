@@ -18,8 +18,24 @@
 		initializeZoomEvents();
 		initializeColRowModeEvents()
 		initializeSaveButtonEvents()
+		initializeComboBoxEvents()
+		$('.menuInputNumber').keypress(function(e) {
+		  var code = e.keyCode || e.which; 
+		  if (code  == 13) {               
+		    e.preventDefault();
+		    return false;
+		  }
+		});
 		
 	});
+	</script>
+	<script type="text/javascript">
+	function initializeComboBoxEvents(){
+		$("#id_blockComboBox , #id_metadataComboBox").change(function(){
+			alert('submiting form')
+			$('form#showjForm').submit();
+		})
+	}
 	</script>
 	<script type="text/javascript">
 	//Initialize save buttons events. Ajax call for saving metadata to file
@@ -45,18 +61,18 @@
 		$("#colRowMode").click(function(){
 			if ($("#colRowModeImage").attr("src").indexOf("On") != -1){
 				$("#colRowModeImage").attr("src", $("#colRowModeImage").attr("src").replace("On","Off"))
-				$("#cols").attr('disabled', 'disabled');
-				$("#rows").attr('disabled', 'disabled');
+				$("#id_cols").attr('disabled', 'disabled');
+				$("#id_rows").attr('disabled', 'disabled');
 				
 				$("section").css("width", "");
 				
 			}
 			else{
 				$("#colRowModeImage").attr("src", $("#colRowModeImage").attr("src").replace("Off","On"))
-				$("#cols").removeAttr('disabled');
-				$("#rows").removeAttr('disabled');
+				$("#id_cols").removeAttr('disabled');
+				$("#id_rows").removeAttr('disabled');
 				
-				if ($("#cols").val()==""){
+				if ($("#id_cols").val()==""){
 					initializeColsRows()
 				}
 			}
@@ -67,26 +83,28 @@
 	function initializeColsRows(){
 		imgContainerWidth =$(".img_container").width() + (parseInt($(".img_container").css("margin-right")) * 2)
 		colVal = Math.floor($("section").width() / (imgContainerWidth + 5))
-		updateGalleryLayout(colVal,0,"cols")
-		$("#cols").val(colVal)
+		updateGalleryLayout(colVal,0,"id_cols")
+		$("#id_cols").val(colVal)
 		
 	}
 	</script>
 	<script type="text/javascript">
 		//Initialize events for zoom change
 		function initializeZoomEvents(){
-			$('#zoom').click(function(){
+			$('#id_zoom').click(function(){
 				updateImageDimByUrl();	
 			});
 			
-			$('#zoom').change(function(){
+			$('#id_zoom').change(function(){
 				updateImageDimByUrl();
 			});
 				
-	/* 		$('#zoom').keypress(function(){
-				alert("keypress")
-				updateImageDimByUrl();
-			});	 */	
+	 		$('#id_zoom').keypress(function(e){
+	 			var code = e.keyCode || e.which; 
+ 			  	if (code  == 13) {               
+ 					 updateImageDimByUrl();
+ 			  	}
+			});	 
 		}
 		
 		//Update image dimensions by url due to zoom change
@@ -100,7 +118,7 @@
 			   else{
 				  newSrc = $(this).attr("src");   
 			   }
-			   $(this).attr("src", newSrc + "&dim="+$('#zoom').val()+"&"+d.getTime());
+			   $(this).attr("src", newSrc + "&dim="+$('#id_zoom').val()+"&"+d.getTime());
 		   })
 		}
 	
@@ -133,65 +151,190 @@
 	</nav>
 	<div id="main_section">
 		<aside id="side_news"> <!-- Main Menu -->
-			
-			<div id="modeContainer" class="sectionMenu">
-				<button onclick="{{menuLayoutConfig.tableViewLink}}">
-					<img src="{{menuLayoutConfig.tableViewSrc}}">
-				
-				<button onclick="{{menuLayoutConfig.galleryViewLink}}">
-					<img src="{{menuLayoutConfig.galleryViewSrc}}">
-				
-			</div>
-			
-			<div id="zoomContainer" class="sectionMenu">
-				<img src="/resources/showj/zoom.gif" class="menuIcon">
-				<input type="number" class="menuInputNumber" id="zoom" value="150" min="10">
-			</div>
-			
-			<div id="gotoContainer" class="sectionMenu">
-				<img src="/resources/showj/goto.gif" class="menuIcon">
-				<input type="number" class="menuInputNumber" id="goto" value="1" max="{{metadata.objects|length}}" min="1">
-			</div>
-			
-			<div class="sectionMenu">
-				<img src="/resources/showj/separator.gif" class="menuIcon">
-			</div>	
-			
-			<div id="colRowContainer" class="sectionMenu">
-				<button id="colRowMode" 
-				{{menuLayoutConfig.disabledColRowMode}}
-				>
-					<img src="/resources/showj/colRowModeOff.gif" id="colRowModeImage" />
-				</button>
-				
-				<div class="subSectionMenu">
-					<span class="textMenu">Cols</span>
-					<input type="number" class="menuInputNumber" id="cols" value="" min="1" max="{{metadata.objects|length}}" disabled>
-				</div>
-				<div class="subSectionMenu">
-					<span class="textMenu">Rows</span>
-					<input type="number" class="menuInputNumber" id="rows" value="" min="1" max="{{metadata.objects|length}}" disabled>
-				</div>
-			</div>
-			
-			<div class="sectionMenu">
-				<img src="/resources/showj/separator.gif" class="menuIcon">
-			</div>
-	
-			
-			{% block content_menu %}	{% endblock %}
 
-	
-			<div class="sectionMenu">
-				<img src="/resources/showj/separator.gif" class="menuIcon">
-			</div>
+			<form id="showjForm" action="/showj/" method="post"> {% csrf_token %}
+				<div id="modeContainer" class="sectionMenu">
+					<input type="submit" value="table" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='table';" class="submitButton
+					 {% if form.mode.value == 'gallery' %}
+					  tableOn
+					 {% endif %}
+					 {% if form.mode.value == 'table' %}
+					 tableOff
+					 {% endif %}	
+					  "/>
+					<input type="submit" value="gallery" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='gallery';" class="submitButton
+					{% if form.mode.value == 'gallery' %}
+					  galleryOff
+					 {% endif %}
+					 {% if form.mode.value == 'table' %}
+					 galleryOn
+					 {% endif %}
+					 " />
+					<!-- <button onclick="{{menuLayoutConfig.tableViewLink}}">
+						<img src="{{menuLayoutConfig.tableViewSrc}}">
+					
+					<button onclick="{{menuLayoutConfig.galleryViewLink}}">
+						<img src="{{menuLayoutConfig.galleryViewSrc}}"> -->
+					
+				</div>
+				
+				<div id="zoomContainer" class="sectionMenu">
+					<img src="/resources/showj/zoom.gif" class="menuIcon">
+					{{ form.zoom }}
+					<!-- <input type="number" class="menuInputNumber" id="zoom" value="150" min="10"> -->
+				</div>
+				
+				<div id="gotoContainer" class="sectionMenu">
+					<img src="/resources/showj/goto.gif" class="menuIcon">
+					{{ form.gotoContainer }}
+					<!-- <input type="number" class="menuInputNumber" id="goto" value="1" max="{{metadata.objects|length}}" min="1"> -->
+				</div>
+				
+				<div class="sectionMenu">
+					<img src="/resources/showj/separator.gif" class="menuIcon">
+				</div>	
+				
+				<div id="colRowContainer" class="sectionMenu">
+					<button id="colRowMode" 
+					{{menuLayoutConfig.disabledColRowMode}}
+					>
+						<img src="/resources/showj/colRowModeOff.gif" id="colRowModeImage" />
+					</button>
+					
+					<div class="subSectionMenu">
+						<span class="textMenu">Cols</span>
+						{{ form.cols }}
+						<!-- <input type="number" class="menuInputNumber" id="cols" value="" min="1" max="{{metadata.objects|length}}" disabled> -->
+					</div>
+					<div class="subSectionMenu">
+						<span class="textMenu">Rows</span>
+						{{ form.rows }}
+						<!-- <input type="number" class="menuInputNumber" id="rows" value="" min="1" max="{{metadata.objects|length}}" disabled> -->
+					</div>
+				</div>
+				
+				<div class="sectionMenu">
+					<img src="/resources/showj/separator.gif" class="menuIcon">
+				</div>
+		
+				<div id="blockSelectorContainer" class="sectionMenu">
+					<span class="textMenu">Select Block</span>
+					{{ form.blockComboBox }} 
+					<!-- <select id="blockComboBox">
+						{% for block in menuLayoutConfig.blocks %}
+							
+							
+								<option value="{{block}}"
+								{% if inputParameters.block == block %}
+								selected
+								{% endif %}	
+								>{{block}}</option>
+							
+						{% endfor %}
+					</select> -->
+				</div>
+				
+				<div id="metadataSelectorContainer" class="sectionMenu">
+					<span class="textMenu">Select Metadata</span>
+					{{ form.metadataComboBox }}
+				</div>
+				
 			
-			<div id="saveContainer" class="sectionMenu">
-				<button id="saveButton">
-					<img src="/resources/showj/save.gif" id="saveButtonImage" />
-				</button>
-			</div>
-
+		
+				<div class="sectionMenu">
+					<img src="/resources/showj/separator.gif" class="menuIcon">
+				</div>
+				
+				<div id="saveContainer" class="sectionMenu">
+					<button id="saveButton">
+						<img src="/resources/showj/saveOff.png" id="saveButtonImage" />
+					</button>
+				</div> 
+				 
+				{% block content_menu %}	{% endblock %}
+				 
+				{% for hidden in form.hidden_fields %}
+			    {{ hidden }}
+			    {% endfor %} 
+				 
+				 
+				<!--CAMbiamus  --> 
+				 
+				 <!-- 			
+				<div id="modeContainer" class="sectionMenu">
+					<button onclick="{{menuLayoutConfig.tableViewLink}}">
+						<img src="{{menuLayoutConfig.tableViewSrc}}">
+					
+					<button onclick="{{menuLayoutConfig.galleryViewLink}}">
+						<img src="{{menuLayoutConfig.galleryViewSrc}}">
+					
+				</div>
+				
+				<div id="zoomContainer" class="sectionMenu">
+					<img src="/resources/showj/zoom.gif" class="menuIcon">
+					<input type="number" class="menuInputNumber" id="zoom" value="150" min="10">
+				</div>
+				
+				<div id="gotoContainer" class="sectionMenu">
+					<img src="/resources/showj/goto.gif" class="menuIcon">
+					<input type="number" class="menuInputNumber" id="goto" value="1" max="{{metadata.objects|length}}" min="1">
+				</div>
+				
+				<div class="sectionMenu">
+					<img src="/resources/showj/separator.gif" class="menuIcon">
+				</div>	
+				
+				<div id="colRowContainer" class="sectionMenu">
+					<button id="colRowMode" 
+					{{menuLayoutConfig.disabledColRowMode}}
+					>
+						<img src="/resources/showj/colRowModeOff.gif" id="colRowModeImage" />
+					</button>
+					
+					<div class="subSectionMenu">
+						<span class="textMenu">Cols</span>
+						<input type="number" class="menuInputNumber" id="cols" value="" min="1" max="{{metadata.objects|length}}" disabled>
+					</div>
+					<div class="subSectionMenu">
+						<span class="textMenu">Rows</span>
+						<input type="number" class="menuInputNumber" id="rows" value="" min="1" max="{{metadata.objects|length}}" disabled>
+					</div>
+				</div>
+				
+				<div class="sectionMenu">
+					<img src="/resources/showj/separator.gif" class="menuIcon">
+				</div>
+		
+				<div id="blockSelectorContainer" class="sectionMenu">
+					<span class="textMenu">Select Block</span>
+					<select id="blockComboBox">
+						{% for block in menuLayoutConfig.blocks %}
+							
+							
+								<option value="{{block}}"
+								{% if inputParameters.block == block %}
+								selected
+								{% endif %}	
+								>{{block}}</option>
+							
+						{% endfor %}
+					</select>
+				</div>
+				
+				
+	
+		
+				<div class="sectionMenu">
+					<img src="/resources/showj/separator.gif" class="menuIcon">
+				</div>
+				
+				<div id="saveContainer" class="sectionMenu">
+					<button id="saveButton">
+						<img src="/resources/showj/saveOff.png" id="saveButtonImage" />
+					</button>
+				</div> -->
+			
+			</form>
 		</aside>
 		
 		<section> <!--  Es donde va la informacion princiapl -->

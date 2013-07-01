@@ -81,7 +81,7 @@ class Text(tk.Text, Scrollable):
         # create a popup menu
         self.menu = tk.Menu(master, tearoff=0, postcommand=self.updateMenu)
         self.menu.add_command(label="Copy to clipboard", command=self.copyToClipboard)
-        self.menu.add_command(label="Open", command=self.openFile)
+        #self.menu.add_command(label="Open", command=self.openFile)
         # Associate with right click
         self.bind("<Button-1>", self.onClick)
         self.bind("<Button-3>", self.onRightClick)
@@ -96,7 +96,7 @@ class Text(tk.Text, Scrollable):
     
     def addLine(self, line):
         """Should be implemented to add a line """
-        pass
+        self.insert(tk.END, line + '\n')
         
     def addNewline(self):
         self.insert(tk.END, '\n')
@@ -114,6 +114,9 @@ class Text(tk.Text, Scrollable):
         self.config(state=tk.NORMAL)
         self.delete(0.0, tk.END)
 
+    def getText(self):
+        return self.get(0.0, tk.END)
+        
     def addText(self, text):
         self.config(state=tk.NORMAL)
         if isinstance(text, list):
@@ -145,8 +148,8 @@ class Text(tk.Text, Scrollable):
         
     def updateMenu(self, e=None):
         state = 'normal'
-        if not xmippExists(self.selection):
-            state = 'disabled'#self.menu.entryconfig(1, background="green")
+        #if not xmippExists(self.selection):
+        #    state = 'disabled'#self.menu.entryconfig(1, background="green")
         self.menu.entryconfig(1, state=state)
         
     def setReadOnly(self, value):
@@ -154,6 +157,28 @@ class Text(tk.Text, Scrollable):
         if value:
             state = tk.DISABLED
         self.config(state=state) 
+        
+    def highlight(self, pattern, tag, start="1.0", end="end", regexp=False):
+        """ Apply the given tag to all text that matches the given pattern
+
+        If 'regexp' is set to True, pattern will be treated as a regular expression
+        Taken from: 
+            http://stackoverflow.com/questions/3781670/tkinter-text-highlighting-in-python
+        """
+        start = self.index(start)
+        end = self.index(end)
+        self.mark_set("matchStart",start)
+        self.mark_set("matchEnd",start)
+        self.mark_set("searchLimit", end)
+
+        count = tk.IntVar()
+        while True:
+            index = self.search(pattern, "matchEnd","searchLimit",
+                                count=count, regexp=regexp)
+            if index == "": break
+            self.mark_set("matchStart", index)
+            self.mark_set("matchEnd", "%s+%sc" % (index,count.get()))
+            self.tag_add(tag, "matchStart","matchEnd")
 
 def configureColorTags(text):
     """ Function to configure tag_colorX for all supported colors.

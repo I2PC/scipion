@@ -128,6 +128,7 @@ class XmippSet():
         #self._fileName = fileName      
         self._md = xmipp.MetaData()
         
+        
     def __iter__(self):
         """Iterate over the set of images in the MetaData"""
         #self._md.read(self._fileName)
@@ -173,6 +174,9 @@ class XmippSet():
     def getItemClass(self):
         """ Return the Class of the items in the Set. """
         return self._itemClass
+    
+    def getSize(self):
+        return self._md.size()
         
 #    @staticmethod
 #    def convert(inputSet, xmippSetClass, filename):

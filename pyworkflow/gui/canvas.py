@@ -1,11 +1,40 @@
-#!/usr/bin/env xmipp_python
+# **************************************************************************
+# *
+# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *
+# **************************************************************************
+"""
+This module extends the functionalities of a normal Tkinter Canvas.
+The new Canvas class allows to easily display Texboxes and Edges
+that can be interactively dragged and clicked.
+"""
 
 import Tkinter as tk
 
 
 class Canvas(tk.Frame):
-    '''Canvas to draw some objects.
-    It will really contains a Frame, a Canvas and scrollbars'''
+    """Canvas to draw some objects.
+    It will really contains a Frame, a Canvas and scrollbars"""
     def __init__(self, parent, **args):
         tk.Frame.__init__(self, parent)        
         h = tk.Scrollbar(self, orient=tk.HORIZONTAL)
@@ -35,15 +64,15 @@ class Canvas(tk.Frame):
         #self.canvas.bind("<MouseWheel>", self.onScroll)
     
     def getCoordinates(self, event):
-        '''Converts the events coordinates to canvas coordinates'''
+        """Converts the events coordinates to canvas coordinates"""
         # Convert screen coordinates to canvas coordinates
         xc = self.canvas.canvasx(event.x)
         yc = self.canvas.canvasy(event.y)
         return (xc, yc)
     
-    def onClick(self, event):
+    def _handleMouseEvent(self, event, callback):
         xc, yc = self.getCoordinates(event)
-        items = self.canvas.find_overlapping(xc - 1, yc - 1,  xc + 1, yc + 1)
+        items = self.canvas.find_overlapping(xc-1, yc-1,  xc+1, yc+1)
         if self.lastItem:
             self.lastItem.setSelected(False)
             self.lastItem = None
@@ -52,40 +81,32 @@ class Canvas(tk.Frame):
             if i in self.items:
                 self.lastItem = self.items[i]
                 self.lastItem.setSelected(True)
-                if self.onClickCallback:
-                    self.onClickCallback(self.lastItem.text)
+                if callback:
+                    callback(self.lastItem)
                 self.lastPos = (xc, yc)
                 break
+        
+    def onClick(self, event):
+        self._handleMouseEvent(event, self.onClickCallback)
             
     def onRightClick(self, event):
-        xc, yc = self.getCoordinates(event)
-        items = self.canvas.find_overlapping(xc - 1, yc - 1,  xc + 1, yc + 1)
-        if self.lastItem:
-            self.lastItem.setSelected(False)
-            self.lastItem = None
-        self.lastPos = (0, 0)
-        for i in items:
-            if i in self.items:
-                self.lastItem = self.items[i]
-                self.lastItem.setSelected(True)
-                if self.onRightClickCallback:
-                    event.text = self.lastItem.text
-                    self.onRightClickCallback(event)
-                self.lastPos = (xc, yc)
-                break
+        # RightClick callback will not work not, as it need
+        # the event information to know the coordinates
+        self._handleMouseEvent(event, self.onRightClickCallback)
     
     def onDoubleClick(self, event):
-        xc, yc = self.getCoordinates(event)
-        items = self.canvas.find_overlapping(xc - 1, yc - 1,  xc + 1, yc + 1)
-        self.lastItem = None
-        self.lastPos = (0, 0)
-        for i in items:
-            if i in self.items:
-                self.lastItem = self.items[i]
-                if self.onDoubleClickCallback:
-                    self.onDoubleClickCallback(self.lastItem.text)
-                self.lastPos = (xc, yc)
-                break
+        self._handleMouseEvent(event, self.onDoubleClickCallback)
+#        xc, yc = self.getCoordinates(event)
+#        items = self.canvas.find_overlapping(xc - 1, yc - 1,  xc + 1, yc + 1)
+#        self.lastItem = None
+#        self.lastPos = (0, 0)
+#        for i in items:
+#            if i in self.items:
+#                self.lastItem = self.items[i]
+#                if self.onDoubleClickCallback:
+#                    self.onDoubleClickCallback(self.lastItem)
+#                self.lastPos = (xc, yc)
+#                break
 
     def onDrag(self, event):
         if self.lastItem:
@@ -110,11 +131,16 @@ class Canvas(tk.Frame):
         edge = Edge(self.canvas, src, dst)
         #self.items[edge.id] = edge
         return edge
+    
+    def clear(self):
+        """Clear all items from the canvas"""
+        self.canvas.delete(tk.ALL)
        
+      
         
-class TextBox():
-    '''This class will serve to paint and store
-    rectange boxes with some text'''
+class TextItem():
+    """This class will serve to paint and store
+    rectange boxes with some text"""
     def __init__(self, canvas, text, x, y, bgColor, textColor='black'):
         self.bgColor = bgColor
         self.textColor = textColor
@@ -126,17 +152,27 @@ class TextBox():
         self.paint()
         self.listeners = []
         
+    def _paintBounds(self, x, y, w, h, fillColor):
+        """ Subclasses should implement this method 
+        to paint the bounds to the text.
+        Normally the bound are: rectangle or circles.
+        Params:
+            x, y: top left corner of the bounding box
+            w, h: width and height of the box
+            fillColor: color to fill the background
+        Returns:
+            should return the id of the created shape
+        """
+        pass
+        
     def paint(self):
-        '''Paint the object in a specific position.'''
+        """Paint the object in a specific position."""
         self.id_text = self.canvas.create_text(self.x, self.y, text=self.text, 
                                                justify=tk.CENTER, fill=self.textColor)
         xr, yr, w, h = self.canvas.bbox(self.id_text)
         m = self.margin
-        xr -= m
-        yr -= m
 
-        self.id = self.canvas.create_rectangle(xr, yr, w+m, h+m, 
-                                               fill=self.bgColor)
+        self.id = self._paintBounds(xr-m, yr-m, w+m, h+m, fillColor=self.bgColor)
         self.canvas.tag_raise(self.id_text)
         
     def getDimensions(self):
@@ -144,8 +180,8 @@ class TextBox():
         return (x2-x, y2-y)
         
     def move(self, dx, dy):
-        '''Move TextBox to new position
-        dx and y are differences to current position'''
+        """Move TextBox to new position
+        dx and y are differences to current position"""
         self.canvas.move(self.id_text, dx, dy)
         self.canvas.move(self.id, dx, dy)
         self.x += dx
@@ -154,8 +190,8 @@ class TextBox():
             listenerFunc(dx, dy)
             
     def moveTo(self, x, y):
-        '''Move TextBox to new position
-        dx and dy are the new position'''
+        """Move TextBox to new position
+        dx and dy are the new position"""
         self.move(x-self.x, y-self.y)
         
     def addPositionListener(self, listenerFunc):
@@ -166,10 +202,19 @@ class TextBox():
         if value:
             bw = 2
         self.canvas.itemconfig(self.id, width=bw)
+   
         
-
+class TextBox(TextItem):
+    def _paintBounds(self, x, y, w, h, fillColor):
+        return self.canvas.create_rectangle(x, y, w, h, fill=fillColor) 
+    
+class TextCircle(TextItem):
+    def _paintBounds(self, x, y, w, h, fillColor):
+        return self.canvas.create_oval(x, y, w, h, fill=fillColor) 
+        
+        
 class Edge():
-    '''Edge between two objects'''
+    """Edge between two objects"""
     def __init__(self, canvas, source, dest):
         self.srcX, self.srcY = source.x, source.y
         self.dstX, self.dstY = dest.x, dest.y
@@ -197,36 +242,6 @@ class Edge():
         self.dstY += dy
         self.paint()
         
-#class MouseMover():
-#
-#  def __init__(self):
-#    self.unselect()
-#    #self.item = 0; self.previous = (0, 0)
-#
-#  def unselect(self):
-#    self.item = None
-#    self.previous = None
-#
-#  def select(self, event):
-#    widget = event.widget                       # Get handle to canvas 
-#    # Convert screen coordinates to canvas coordinates
-#    xc = widget.canvasx(event.x)
-#    yc = widget.canvasx(event.y)
-#    rect = (xc - 1, yc - 1,  xc + 1, yc + 1)
-#    items = widget.find_overlapping(xc - 1, yc - 1,  xc + 1, yc + 1)
-#    if len(items):
-#      self.item = items[0]        # ID for closest
-#      self.previous = (xc, yc)
-#      print((xc, yc, self.item))
-#    else:
-#      self.unselect()
-#
-#  def drag(self, event):
-#    if self.item:
-#      widget = event.widget
-#      xc = widget.canvasx(event.x); yc = widget.canvasx(event.y)
-#      canvas.move(self.item, xc-self.previous[0], yc-self.previous[1])
-#      self.previous = (xc, yc)
  
 if __name__ == '__main__':
     root = tk.Tk()

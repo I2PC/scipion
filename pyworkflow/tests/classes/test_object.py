@@ -11,7 +11,6 @@ from pyworkflow.mapper import *
 from pyworkflow.utils.log import *
 from pyworkflow.utils.utils import getLineInFile, isInFile
 
-
 class Complex(Object):
     def __init__(self, imag=0., real=0., **args):
         Object.__init__(self, **args)

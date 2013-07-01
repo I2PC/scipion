@@ -51,6 +51,11 @@ aside button {
 	height: 27px;
 }
 
+aside form{
+	display: -webkit-flex;
+	display: flex;
+}
+
 aside .sectionMenu {
 	margin-right: 20px;
 	/* display: inline-block; */
@@ -86,6 +91,33 @@ aside .menuInputNumber {
 	height: 25px;
 	border-color: #7a0000;
 	border: 1px;
+}
+
+aside .submitButton{
+    background-position:  0px 0px;
+    background-repeat: no-repeat;
+    width: 27px;
+    height: 27px; 
+	border: 0px;
+	font-size: 0px;
+	line-height: 0px
+}
+
+aside .tableOn{
+	background-image: url(/resources/showj/tableViewOn.gif);
+}
+
+aside .tableOff{
+	background-image: url(/resources/showj/tableViewOff.gif);
+}
+
+aside .galleryOn{
+	background-image: url(/resources/showj/galleryViewOn.gif);
+}
+
+aside .galleryOff{
+	background-image: url(/resources/showj/galleryViewOff.gif);
+	
 }
 
 /* MAIN SECTION */

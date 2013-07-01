@@ -122,6 +122,19 @@ class ProtImportMicrographs(Protocol):
     def getFiles(self):
         return self.outputMicrographs.getFiles()
 
+    def _summary(self):
+        summary = []
+
+        summary.append("Import of %d micrographs from %s" % (self.outputMicrographs.getSize(), self.pattern.get()))
+        summary.append("Sampling rate : %f" % self.samplingRate.get())
+        
+        return summary
+    
+    def _validate(self):
+        validateMsgs = []
+        if self.pattern.get() == "":
+            validateMsgs.append('Pattern cannot be EMPTY.')
+        return validateMsgs
 
 class DefImportParticles(Form):
     """Create the definition of parameters for
@@ -283,18 +296,13 @@ class ProtCTFMicrographs(Protocol):
             deps.append(stepId)
         # Insert step to create output objects       
         self._insertFunctionStep('createOutput', prerequisites=deps)
-        
-    def _validate(self):
-        errors = []
-        if not self.inputMicrographs.hasValue():
-            errors.append("<Input Micrographs> can not be EMPTY.")
-        return errors
-    
+            
     def _summary(self):
         summary = []
         if not self.inputMicrographs.hasValue():
             summary.append("No <Input Micrographs> selected.")
         else:
+            summary.append("CTF estimation of %d micrographs." % self.inputMicrographs.get().getSize())
             summary.append("Input micrographs: " + self.inputMicrographs.get().getNameId())
         return summary
                 
@@ -324,7 +332,15 @@ class ProtExtractParticles(Protocol):
 
 
 class ProtParticlePicking(Protocol):
-    pass
+
+    def _summary(self):
+        summary = []
+        if not self.inputMicrographs.hasValue():
+            summary.append("No <Input Micrographs> selected.")
+        else:
+            summary.append("Input micrographs: " + self.inputMicrographs.get().getNameId())
+            summary.append("Number of particles manually picked: %d (from %d micrographs)" % (self.outputCoordinates.getSize(), self.inputMicrographs.get().getSize()))
+        return summary
 
 
 class ProtAlign(Protocol):

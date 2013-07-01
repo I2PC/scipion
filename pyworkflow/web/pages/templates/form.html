@@ -12,10 +12,15 @@
 	<script src={{form}} type="text/javascript"></script>
 	<script src={{messi}} type="text/javascript"></script>
 	<script src={{utils}} type="text/javascript"></script>
+	<script>
+	function putMode(mode){
+		$("#protocolForm").attr('data-mode', mode)
+	}
+	</script>
 	</head>
 	<body onload="evalElements();">
 		<h3>Protocol: {{protocol.getClassName}}</h3>
-		<form id="protocolForm" action="/protocol/" method="POST">{% csrf_token %}
+		<form id="protocolForm" action="/protocol/" method="POST" data-mode="">{% csrf_token %}
 			<input type="hidden" name="protocolClass" value="{{protocol.getClassName}}"></>
 			<input type="hidden" name="protocolId" value="{{protocol.getObjId}}"></>
 			<input type="hidden" name="projectName" value="{{projectName}}"></>
@@ -82,8 +87,9 @@
 					<tr>
 						<td>
 							<a href=""><button class="buttonClose" type="button" onclick="window.close()">Close</button></a>
-							<a href=""><button class="buttonSave" type="button">Save</button></a>
-							<input type="submit" class="buttonExec" value="Execute">
+							<!-- <a href=""><button class="buttonSave" type="button">Save</button></a> -->
+							<input type="submit" class="buttonSave" value="Save" onclick="javascript:putMode('save');">
+							<input type="submit" class="buttonExec" value="Execute" onclick="javascript:putMode('execute');">
 						</td>
 					</tr>
 				</table>

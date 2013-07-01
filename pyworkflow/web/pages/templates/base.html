@@ -30,7 +30,7 @@
 	<div class="layout" id="wrapper">
 		{% if contentConfig == 'divided' %}
 			<div class="center" id="maincontent">
-				<div id="north" style="overflow: auto; height: 65%">
+				<div id="north" style="overflow:auto;height:60%;padding-right:1em;">
 		{% endif %}
 		{% if contentConfig == 'full' %}
 			<div class="center" id="maincontent">
@@ -41,7 +41,7 @@
 				
 		{% if contentConfig == 'divided' %}		
 			</div>
-			<div style="overflow: auto; height: 30%;">
+			<div style="overflow:auto;">
 				{% block contentDown %}	
 				{%endblock %}
 			</div>

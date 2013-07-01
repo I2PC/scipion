@@ -106,9 +106,17 @@ class Image(EMObject):
         self.setFileName(filename)
         self.samplingRate = Float()
         self._ctfModel = None
+        self._id = Integer(0) # By default value 0 means no Id
         
     def getId(self):
-        return self.getObjId()
+        return self._id.get()
+        
+    def setId(self, imgId):
+        """ This id identifies the element inside a set """
+        self._id.set(imgId)
+        
+    def hasId(self):
+        return self.getId() != 0
         
     def getSamplingRate(self):
         """ Return image sampling rate. (A/pix) """
@@ -190,12 +198,12 @@ class SetOfImages(EMObject):
         self._ctf = Boolean(args.get('ctf', False))
         self._tiltPairs = Boolean(args.get('tiltPairs', False))
         self._mapper = None
-#        self._imgList = [] # List with the micrographs
-#        self._pairList = [] # List with images pairs
+        self._idCount = 0
        
     def getSize(self):
         """Return the number of images"""
-        pass
+        self.loadIfEmpty()
+        return len(self._mapper.selectByClass("Image", iterate=False))
     
     def getFileName(self):
         return self.get()
@@ -206,7 +214,11 @@ class SetOfImages(EMObject):
     def __getitem__(self, imgId):
         """ Get the image with the given id. """
         self.loadIfEmpty()
-        return self._mapper.selectById(imgId)
+        # FIXME: This should be changed and query to the mapper
+        for mic in self._mapper.selectAll(iterate=True):
+            if mic.getId() == imgId:
+                return mic
+        return None
 
     def __iter__(self):
         """ Iterate over the set of images. """
@@ -238,6 +250,9 @@ class SetOfImages(EMObject):
         
     def append(self, image):
         """ Add a image to the set. """
+        if not image.hasId():
+            self._idCount += 1
+            image.setId(self._idCount)
         image.samplingRate.set(self.samplingRate.get())
         self.loadIfEmpty()
         self._mapper.insert(image)

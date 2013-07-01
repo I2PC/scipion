@@ -4,6 +4,8 @@ from django.http import HttpResponse
 from pyworkflow.web.pages import settings
 from django.shortcuts import render_to_response
 from pyworkflow.tests import getInputPath
+from pyworkflow.web.app.forms import ShowjForm
+from django.template import RequestContext
     
 def showj(request):
     # Resources #
@@ -28,19 +30,42 @@ def showj(request):
     
     #############
     # WEB INPUT PARAMETERS
-    inputParameters = {'path': request.GET.get('path', 'tux_vol.xmd'),
-                     'block': request.GET.get('block', ''),
+#    inputParameters = {'path': request.GET.get('path', 'tux_vol.xmd'),
+#                     'block': request.GET.get('block', ''),
+#                     'allowRender': 'render' in request.GET,
+#                     'imageDim' : request.GET.get('dim', None),
+#                     'mode': request.GET.get('mode', 'gallery'),
+#                     'metadataComboBox': request.GET.get('metadataComboBox', 'image')}
+    
+         
+    if request.method == 'POST': # If the form has been submitted...
+        mdXmipp = loadMetaDataXmipp(request.POST.get('path'), request.POST.get('blockComboBox'))
+        showjForm = ShowjForm(mdXmipp, request.POST) # A form bound to the POST data
+    else:
+        mdXmipp = loadMetaDataXmipp(request.GET.get('path', 'tux_vol.xmd'), request.GET.get('block', ''))
+        inputParameters = {'path': request.GET.get('path', 'tux_vol.xmd'),
+#                     'blockComboBox': request.GET.get('block', ''),
                      'allowRender': 'render' in request.GET,
-                     'imageDim' : request.GET.get('dim', None),
+                     'zoom' : request.GET.get('dim', 150),
                      'mode': request.GET.get('mode', 'gallery'),
-                     'metadataComboBox': request.GET.get('metadataComboBox', 'image')}
+                     'gotoContainer': 1}
+        showjForm = ShowjForm(mdXmipp, inputParameters) # An unbound form
+        
+    if showjForm.is_valid() is False:
+        print showjForm.errors
+    else:
+        print "topapi"    
+
     
-    mdXmipp = loadMetaDataXmipp(inputParameters['path'], inputParameters['block'])
+    print "data after valid"
+    print showjForm.data
+               
     
-    md = MdData(mdXmipp, inputParameters['allowRender'], inputParameters['imageDim'])
+    
+    md = MdData(mdXmipp, showjForm.data['allowRender'], showjForm.data['zoom'])
     request.session['md'] = md
 
-    menuLayoutConfig = MenuLayoutConfig(inputParameters['mode'], inputParameters['path'], inputParameters['block'], inputParameters['allowRender'], inputParameters['imageDim'])
+#    menuLayoutConfig = MenuLayoutConfig(showjForm.data['mode'], showjForm.data['path'], showjForm.data['blockComboBox'], showjForm.data['allowRender'], showjForm.data['zoom'])
     
     context = {'jquery': jquery_path,
                'utils': utils_path,
@@ -52,13 +77,19 @@ def showj(request):
                'jeditable': jeditable_path,
                'jquery_ui': jquery_ui_path,
                'css': css_path,
+               
                'metadata': md,
-               'inputParameters': inputParameters,
-               'menuLayoutConfig': menuLayoutConfig}
+               
+#               'inputParameters': inputParameters,
+#               'menuLayoutConfig': menuLayoutConfig,
+               'form': showjForm}
     
-    return_page = '%s%s%s' % ('showj_', inputParameters['mode'], '.html')
+    return_page = '%s%s%s' % ('showj_', showjForm.data['mode'], '.html')
 
-    return render_to_response(return_page, context)
+    return render_to_response(return_page, RequestContext(request, context))
+
+#class InitialValuesShowj():
+#    def __init__(self, md, path, allowRender
 
 AT = '__at__'
 
@@ -107,19 +138,20 @@ class TableLayoutConfiguration():
     def __init__(self, labels, allowRender=True): 
         self.labels = [xmipp.label2Str(l) for l in labels]
         self.typeOfColumns = getTypeOfColumns(labels, allowRender)
-        self.colsOrder = defineColsLayout(labels)
+        self.colsOrder = defineColsLayout(self.labels)
         #Esto es un napeidus que habria que arreglar
         self.labels_typeOfColumns= zip(self.labels,self.typeOfColumns)
 
 class MenuLayoutConfig():        
     def __init__(self, mode, path, block, allowRender, imageDim):
         link = "location.href='/showj/?path=" + path
+        longPath = getInputPath('showj', path)
         if len(block):
             link = link + "&block=" + block
         if allowRender:
             link = link + "&render"
         if imageDim is not None:
-            link = link + "&dim=" + imageDim
+            link = link + "&dim=" + str(imageDim)
                 
 
         if (mode == "table"):
@@ -137,6 +169,8 @@ class MenuLayoutConfig():
             self.galleryViewSrc = "/resources/showj/galleryViewOn.gif"
             
             self.disabledColRowMode = ""
+            
+        self.blocks = xmipp.getBlocksInMetaDataFile(str(longPath))    
          
 def getTypeOfColumns(label, allowRender):
     typeOfColumns = []
@@ -151,13 +185,15 @@ def getTypeOfColumns(label, allowRender):
     return typeOfColumns
         
 def defineColsLayout(labels):
+    print "labels"
+    print labels
     colsOrder = range(len(labels))
     if 'enabled' in labels:
         colsOrder.insert(0, colsOrder.pop(labels.index('enabled')))
     return colsOrder    
 
 def loadMetaDataXmipp(path, block):
-    path = getInputPath('showj', path)    
+    path= getInputPath('showj', path)
     if len(block):
         path = '%s@%s' % (block, path)
     return xmipp.MetaData(path)

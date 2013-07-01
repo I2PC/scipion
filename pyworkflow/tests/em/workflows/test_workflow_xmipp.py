@@ -11,17 +11,21 @@ class TestXmippWorkflow(TestWorkflow):
                     'protImport/micrographs.sqlite', 
                     'protImport/BPV_1387.mrc',
                     'protImport/BPV_1386.mrc'],
-              'protDownsampling': ['protDownsampling/BPV_1388.mrc', 
-                    'protDownsampling/BPV_1387.mrc', 
+              'protDownsampling': [
                     'protImport/BPV_1386.mrc', 
-                    'protDownsampling/micrographs.xmd', 
                     'protImport/BPV_1388.mrc', 
+                    'protImport/BPV_1387.mrc',
                     'protImport/micrographs.sqlite', 
-                    'protDownsampling/log/protocol.log', 
                     'protDownsampling/BPV_1386.mrc', 
-                    'protImport/BPV_1387.mrc'],
+                    'protDownsampling/BPV_1387.mrc', 
+                    'protDownsampling/BPV_1388.mrc', 
+                    'protDownsampling/micrographs.xmd', 
+                    'protDownsampling/logs/run.log',
+                    'protDownsampling/logs/run.db', 
+                    ],
               'protCTF': ['protCTF/extra/BPV_1387/xmipp_ctf_ctfmodel_quadrant.xmp', 
-                    'protCTF/log/protocol.log', 
+                    'protCTF/logs/run.log', 
+                    'protCTF/logs/run.db', 
                     'protCTF/extra/BPV_1387/xmipp_ctf.psd', 
                     'protCTF/extra/BPV_1386/xmipp_ctf_enhanced_psd.xmp', 
                     'protCTF/extra/BPV_1386/xmipp_ctf.ctfparam', 
@@ -69,6 +73,8 @@ class TestXmippWorkflow(TestWorkflow):
                     'protExtract/tmp/BPV_1387_downsampled.xmp',
                     'protExtract/tmp/BPV_1386_downsampled.xmp',
                     'protExtract/tmp/BPV_1388_downsampled.xmp',
+                    'protExtract/logs/run.log',
+                    'protExtract/logs/run.db',
                     ],
               'protML2D': [
                     'protExtract/extra/BPV_1386.stk', 
@@ -91,7 +97,8 @@ class TestXmippWorkflow(TestWorkflow):
                     'protML2D/ml2d_extra/iter004/iter_classes.xmd', 
                     'protML2D/ml2d_extra/iter004/iter_images.xmd', 
                     'protML2D/ml2d_extra/iter003/iter_classes.xmd', 
-                    'protML2D/log/protocol.log', 
+                    'protML2D/logs/run.log', 
+                    'protML2D/logs/run.db',
                     'protML2D/ml2d_classes.xmd', 
                     'protML2D/ml2d_extra/iter001/iter_classes.stk', 
                     'protML2D/ml2d_extra/iter003/iter_classes.stk'],
@@ -104,7 +111,8 @@ class TestXmippWorkflow(TestWorkflow):
                     'protCTF/extra/BPV_1386/xmipp_ctf.ctfparam', 
                     'protCTF/extra/BPV_1388/xmipp_ctf.ctfparam', 
                     'protCL2D/extra/level_00/level_classes_core.stk', 
-                    'protCL2D/log/protocol.log', 
+                    'protCL2D/logs/run.log', 
+                    'protCL2D/logs/run.db', 
                     'protExtract/extra/BPV_1388.stk', 
                     'protCTF/extra/BPV_1387/xmipp_ctf.ctfparam', 
                     'protCL2D/extra/level_00/classes_core_sorted.xmd', 
@@ -142,7 +150,7 @@ class TestXmippWorkflow(TestWorkflow):
         # Perform a downsampling on the micrographs
 
         print "Downsampling..."
-        protDownsampling = XmippProtPreprocessMicrographs(doDownsample=True, downFactor=3, doCrop=False)
+        protDownsampling = XmippProtPreprocessMicrographs(doDownsample=True, downFactor=3, doCrop=False, runMode=1)
         protDownsampling.inputMicrographs.set(protImport.outputMicrographs)
         self.proj.launchProtocol(protDownsampling, wait=True)
           
@@ -174,8 +182,6 @@ class TestXmippWorkflow(TestWorkflow):
         self.proj.launchProtocol(protExtract, wait=True)
         
         self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
-        self.printSet('reference', self.getProtocolFiles('protExtract'))
-        self.printSet('current', protExtract.getFiles())
         self.validateFiles('protExtract', protExtract)
         
         print "Run ML2D"

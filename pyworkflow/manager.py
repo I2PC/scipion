@@ -32,7 +32,7 @@ from os.path import abspath, join
 from project import Project
 import pyworkflow as pw
 from pyworkflow.mapper import SqliteMapper
-from pyworkflow.utils.path import cleanPath, makePath, getHomePath, existsPath
+from pyworkflow.utils.path import cleanPath, makePath, getHomePath, missingPaths
 from pyworkflow.hosts import HostMapper
 from pyworkflow.apps.config import writeHosts, getSettingsPath
 
@@ -57,7 +57,7 @@ class Manager(object):
         self.path = join(getHomePath(), SCIPION_PATH, PROJECTS_PATH)
         makePath(self.path)
         settingsPath = getSettingsPath() 
-        if not existsPath(settingsPath):
+        if not missingPaths(settingsPath):
             writeHosts(settingsPath)
         
     def getProjectPath(self, projectName):
@@ -101,5 +101,6 @@ class Manager(object):
             if projectName == projInfo.projName:
                 return True
         return False
+    
         
         

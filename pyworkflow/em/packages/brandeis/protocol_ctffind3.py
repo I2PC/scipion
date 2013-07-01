@@ -116,4 +116,10 @@ class ProtCTFFind(ProtCTFMicrographs):
         # This property should only be set by CTF estimation protocols
         micSet.setCTF(True)     
         self._defineOutputs(outputMicrographs=micSet)
+	
+    def _validate(self):
+        errors = []
+        if which('ctffind3.exe') is '':
+            errors.append('Missing ctffind3.exe')
+	return errors
             

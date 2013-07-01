@@ -30,7 +30,7 @@ This sub-package contains the XmippParticlePicking protocol
 
 from pyworkflow.em import *  
 from pyworkflow.utils.path import *  
-from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_ORIGINAL, MDL_MICROGRAPH_TILTED, MDL_MICROGRAPH_TILTED_ORIGINAL, MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE
+from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_ORIGINAL, MDL_MICROGRAPH_TILTED, MDL_MICROGRAPH_TILTED_ORIGINAL, MDL_PICKING_PARTICLE_SIZE
 from pyworkflow.em.packages.xmipp3.data import *
 from xmipp3 import XmippProtocol
 from data import XmippSetOfMicrographs
@@ -97,12 +97,10 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         # Run the command with formatted parameters
         self.runJob(None, program, arguments % self._params)
         
-    def _createSetOfCoordinates(self, family, size):
+    def _createSetOfCoordinates(self, size):
         inputMicsXmipp = getattr(self, 'inputMicsXmipp', self.inputMics)
-        print "createSetOfCoordinates for family: ", family, size
         coords = XmippSetOfCoordinates(filename=self._getExtraPath())
         coords.setMicrographs(inputMicsXmipp)
-        coords.family.set(family)
         coords.boxSize.set(size)
         
         return coords                    
@@ -119,11 +117,9 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
             shutil.copy(f, self._getExtraPath())
         
     def createOutput(self):
-        fn = self._getExtraPath('families.xmd')
-        md = MetaData(fn)
-        for objId in md:
-            family = md.getValue(MDL_PICKING_FAMILY, objId)
-            size = md.getValue(MDL_PICKING_PARTICLE_SIZE, objId)
-            coords = self._createSetOfCoordinates(family, size)
-            self._defineOutputs(outputCoordinates=coords)
+        fn = self._getExtraPath('config.xmd')
+        md = MetaData('properties@%s' % fn)
+        size = md.getValue(MDL_PICKING_PARTICLE_SIZE, md.firstObject())
+        coords = self._createSetOfCoordinates(size)
+        self._defineOutputs(outputCoordinates=coords)
 

@@ -5,6 +5,9 @@
 	$(document).ready(function(){
 		colsRowsEvents()
 		imageEvents()
+		
+
+		
 	});
 	
 	function imageEvents(){
@@ -22,12 +25,12 @@
 	}
 	
 	function colsRowsEvents(){
-		$("#cols, #rows").click(function(){
-			updateGalleryLayout($("#cols").val(),$("#rows").val(), $(this).attr("id"))
+		$("#id_cols, #id_rows").click(function(){
+			updateGalleryLayout($("#id_cols").val(),$("#id_rows").val(), $(this).attr("id"))
 		});
 		
-		$("#cols, #rows").change(function(){
-			updateGalleryLayout($("#cols").val(),$("#rows").val(), $(this).attr("id"))
+		$("#id_cols, #id_rows").change(function(){
+			updateGalleryLayout($("#id_cols").val(),$("#id_rows").val(), $(this).attr("id"))
 		});
 	}
 	
@@ -38,11 +41,11 @@
 	
 	function recalculateColsRows(cols, rows, setElement){
 		
-		if (setElement == "cols"){
-			$("#rows").val(Math.ceil($(".img_container").length/cols))
+		if (setElement == "id_cols"){
+			$("#id_rows").val(Math.ceil($(".img_container").length/cols))
 		}
 		else{
-			$("#cols").val(Math.ceil($(".img_container").length/rows))
+			$("#id_cols").val(Math.ceil($(".img_container").length/rows))
 		}
 			
 		
@@ -65,7 +68,7 @@
 {% endblock %}
 
 {% block content_menu %}
-<div id="metadataSelectorContainer" class="sectionMenu">
+<!-- <div id="metadataSelectorContainer" class="sectionMenu">
 	<span class="textMenu">Select Metadata</span>
 	<select id="metadataComboBox">
 		{% for label, typeOfColumn in metadata.tableLayoutConfiguration.labels_typeOfColumns %}
@@ -74,14 +77,14 @@
 			{% endif %}
 		{% endfor %}
 	</select>
-</div>
+</div> -->
 {% endblock %}
 
 {% block content_view %}	
-		
+takarrus{{form.metadataComboBox.value}}
 		{% for obj in metadata.objects %}
 			{% for value in obj.values %}
-				{% if value.typeOfColumn == "image" and value.label == inputParameters.metadataComboBox %}
+				{% if value.typeOfColumn == "image" and value.label == form.metadataComboBox.value %}
 					<div class="img_container">
 						<div id="column_label">{{forloop.parentloop.counter}}</div> 
 						<div class="img_inner_container">

@@ -62,10 +62,6 @@ class XmippDefExtractParticles(Form):
                       condition='downsampleType != 1',
                       pointerClass='SetOfMicrographs',
                       help='Select the original SetOfMicrographs')
-        
-        self.addParam('family', StringParam, default='DefaultFamily',
-                      label='Family',
-                      help='For Xmipp coordinates specify the family.')
 
         self.addParam('boxSize', IntParam, default=0,
                       label='Particle box size',
@@ -352,5 +348,30 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             imgSet.copyTiltPairs(self.inputCoords, self.getImgIdFromCoord)
         
         self._defineOutputs(outputImages=imgSet)
+    
+    def _summary(self):
+        downsampleTypeText = {
+                              self.ORIGINAL:'Original micrographs',
+                              self.SAME_AS_PICKING:'Same as picking',
+                              self.OTHER: 'Other downsampling factor'}
+        summary = []
+        if not self.inputCoordinates.hasValue():
+            summary.append("No <Input Coordinates> selected.")
+        else:
+            summary.append("Input coordinates: %s" % self.inputCoordinates.get().getNameId())
+            summary.append("Downsample type: %s" % downsampleTypeText.get(self.downsampleType.get()))
+            if self.downsampleType.get() == self.OTHER:
+                summary.append("Downsampling factor: %d" % self.downFactor.get())
+            summary.append("Particle size %d" % self.boxSize.get())
+            summary.append("Particles extracted: %d" % (self.outputImages.getSize()))
+        return summary
+    
+    def _validate(self):
+        validateMsgs = []
+        # doFlip can only be True if CTF information is available on picked micrographs
+        if self.doFlip.get() and not self.inputCoordinates.get().getMicrographs().hasCTF():
+            validateMsgs.append('Phase flipping cannot be performed unless CTF information is provided.')
+        return validateMsgs
+            
         
 

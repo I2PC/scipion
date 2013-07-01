@@ -221,7 +221,8 @@
 				}
 
 				return {
-					'width' : width + insets.left + insets.right,
+//					'width' : width + insets.left + insets.right,
+					'width' : 'auto',
 					'height' : height + insets.top + insets.bottom
 				};
 			};
@@ -476,11 +477,17 @@ jQuery(function($) {
 		});
 	}
 
-	// $('.north').resizable({
-	// handles : 's',
-	// stop : layout,
-	// helper : 'ui-resizable-helper-north'
-	// });
+	 $('#north').resizable({
+	 handles : 's',
+	 stop : layout,
+	 helper : 'ui-resizable-helper-north'
+	 });
+	 
+//	 $('.north').resizable({
+//	 handles : 's',
+//	 stop : layout,
+//	 helper : 'ui-resizable-helper-north'
+//	 });
 
 	$('.south').resizable({
 		handles : 'n',

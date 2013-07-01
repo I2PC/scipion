@@ -24,8 +24,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.gui.tree import TreeProvider, BoundTree
-from pyworkflow.protocol.protocol import STATUS_WAITING_APPROVAL, STATUS_RUNNING
 """
 Main project window application
 """
@@ -35,6 +33,9 @@ from os.path import join, exists, basename
 import Tkinter as tk
 import ttk
 import tkFont
+
+from pyworkflow.gui.tree import TreeProvider, BoundTree
+from pyworkflow.protocol.protocol import *
 
 import pyworkflow as pw
 from pyworkflow.object import *
@@ -50,6 +51,9 @@ from pyworkflow.gui.tree import Tree, ObjectTreeProvider, DbTreeProvider
 from pyworkflow.gui.form import FormWindow
 from pyworkflow.gui.dialog import askYesNo
 from pyworkflow.gui.text import TaggedText
+from pyworkflow.gui import Canvas
+from pyworkflow.gui.graph import LevelTree
+
 from config import *
 from pw_browser import BrowserWindow
 
@@ -131,17 +135,14 @@ class RunsTreeProvider(TreeProvider):
     """Provide runs info to populate tree"""
     def __init__(self, mapper, actionFunc):
         self.actionFunc = actionFunc
-        self.getObjects = lambda: mapper.selectAll()
+        self.getObjects = lambda: mapper.selectByClass('Protocol')
         
     def getColumns(self):
         return [('Run', 250), ('State', 100), ('Time', 100)]
     
     def getObjectInfo(self, obj):
-        runName = obj.runName.get()
-        if runName is None or len(runName) <= 0:
-            runName = '%s.%s' % (obj.getClassName(), obj.strId())  
         return {'key': obj.getObjId(),
-                'text': runName,
+                'text': obj.getRunName(),
                 'values': (obj.status.get(), obj.getElapsedTime())}
       
     def getObjectActions(self, obj):
@@ -201,18 +202,16 @@ class ProtocolTreeProvider(ObjectTreeProvider):
         return (None, desc)
     
     def getObjectActions(self, obj):
-        cls = type(obj)
-        if cls is Pointer:
+        if isinstance(obj, Pointer):
             obj = obj.get()
-            cls = type(obj)            
             
-        if issubclass(cls, SetOfMicrographs):
+        if isinstance(obj, SetOfMicrographs):
             return [('Open Micrographs with Xmipp', lambda: self.viewer.visualize(obj))]
-        if issubclass(cls, SetOfImages):
+        if isinstance(obj, SetOfImages):
             return [('Open Images with Xmipp', lambda: self.viewer.visualize(obj))]
-        if issubclass(cls, XmippClassification2D):
+        if isinstance(obj, XmippClassification2D):
             return [('Open Classification2D with Xmipp', lambda: self.viewer.visualize(obj))]
-        return []  
+        return []   
     
     def getObjectInfo(self, obj):
         info = ObjectTreeProvider.getObjectInfo(self, obj)
@@ -241,12 +240,77 @@ class ProtocolTreeProvider(ObjectTreeProvider):
             childs.insert(1, self.params)
         return childs
     
+
+class RunIOTreeProvider(TreeProvider):
+    """Create the tree elements from a Protocol Run input/output childs"""
+    def __init__(self, protocol, mapper):
+        #TreeProvider.__init__(self)
+        self.protocol = protocol
+        self.mapper = mapper
+        self.viewer = XmippViewer()
+
+    def getColumns(self):
+        return [('Attribute', 200), ('Class', 100)]
     
+    def getObjects(self):
+        objs = []
+        if self.protocol:
+            inputs = [attr for n, attr in self.protocol.iterInputAttributes()]
+            outputs = [attr for n, attr in self.protocol.iterOutputAttributes(EMObject)]
+            self.inputStr = String('Input')
+            self.outputStr = String('Output')
+            objs = [self.inputStr, self.outputStr] + inputs + outputs                
+        return objs
+    
+    def show(self, obj):
+        self.viewer.visualize(obj)
+        
+    def getObjectPreview(self, obj):
+        desc = "<name>: " + obj.getName()
+        
+        return (None, desc)
+    
+    def getObjectActions(self, obj):
+        if isinstance(obj, Pointer):
+            obj = obj.get()
+            
+        if isinstance(obj, SetOfMicrographs):
+            return [('Open Micrographs with Xmipp', lambda: self.viewer.visualize(obj))]
+        if isinstance(obj, SetOfImages):
+            return [('Open Images with Xmipp', lambda: self.viewer.visualize(obj))]
+        if isinstance(obj, XmippClassification2D):
+            return [('Open Classification2D with Xmipp', lambda: self.viewer.visualize(obj))]
+        return []  
+    
+    def getObjectInfo(self, obj):
+        if isinstance(obj, String):
+            value = obj.get()
+            info = {'key': value, 'text': value, 'values': (''), 'open': True}
+        else:
+            image = 'db_output.gif'
+            parent = self.outputStr
+            name = obj.getLastName()
+            
+            if isinstance(obj, Pointer):
+                obj = obj.get()
+                image = 'db_input.gif'
+                parent = self.inputStr
+                parentObj = self.mapper.getParent(obj)
+                name += '   (from %s.%s)' % (parentObj.getLastName(), obj.getLastName())
+            info = {'key': obj.getObjId(), 'parent': parent, 'image': image,
+                    'text': name, 'values': (obj.getClassName())}
+        return info     
+    
+VIEW_PROTOCOLS = 'Protocols'
+VIEW_DATA = 'Data'
+VIEW_HOSTS = 'Hosts'
+   
 class ProjectWindow(gui.Window):
     def __init__(self, path, master=None):
         # Load global configuration
         self.projName = 'Project: ' + basename(path)
         self.projPath = path
+        self.loadProject()
         self.loadProjectConfig()
         self.icon = self.generalCfg.icon.get()
         self.selectedProtocol = None
@@ -254,292 +318,108 @@ class ProjectWindow(gui.Window):
         
         gui.Window.__init__(self, self.projName, master, icon=self.icon, minsize=(900,500))
         
-        parent = self.root
-
+        content = tk.Frame(self.root)
+        content.columnconfigure(0, weight=1)
+        content.rowconfigure(1, weight=1)
+        content.grid(row=0, column=0, sticky='news')
+        self.content = content
+        
         self.createMainMenu(self.menuCfg)
         
-        # The main layout will be two panes, 
-        # At the left containing the Protocols
-        # and the right containing the Runs
-        p = tk.PanedWindow(parent, orient=tk.HORIZONTAL)
+        header = self.createHeaderFrame(content)
+        header.grid(row=0, column=0, sticky='new')
         
-        # Left pane, contains SCIPION Logo and Protocols Pane
-        leftFrame = tk.Frame(p)
-        leftFrame.columnconfigure(0, weight=1)
-        leftFrame.rowconfigure(1, weight=1)
-        logo = self.getImage(self.generalCfg.logo.get())
-        label = tk.Label(leftFrame, image=logo, borderwidth=0, 
-                         anchor='nw', bg='white')
-        label.grid(row=0, column=0, sticky='new', padx=5)
+        self.view, self.viewWidget = None, None
+        self.viewFuncs = {VIEW_PROTOCOLS: self.createProtocolsView,
+                          VIEW_DATA: self.createDataView,
+                          VIEW_HOSTS: self.createHostsView
+                          }
+        self.switchView(VIEW_PROTOCOLS)
 
-        # Protocols Tree Pane        
-        protFrame = ttk.Labelframe(leftFrame, text=' Protocols ', width=300, height=500)
-        protFrame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
-        gui.configureWeigths(protFrame)
-        self.protTree = self.createProtocolsTree(protFrame)
+    def createHeaderFrame(self, parent):
+        """ Create the Header frame at the top of the windows.
+        It has (from left to right):
+            - Main application Logo
+            - Project Name
+            - View selection combobox
+        """
+        header = tk.Frame(parent, bg='white')        
+        header.columnconfigure(1, weight=1)
+        header.columnconfigure(2, weight=1)
+        # Create the SCIPION logo label
+        logoImg = self.getImage(self.generalCfg.logo.get())
+        logoLabel = tk.Label(header, image=logoImg, 
+                             borderwidth=0, anchor='nw', bg='white')
+        logoLabel.grid(row=0, column=0, sticky='nw', padx=5)
+        # Create the Project Name label
+        self.projNameFont = tkFont.Font(size=12, family='verdana', weight='bold')
+        projLabel = tk.Label(header, text=self.projName, font=self.projNameFont,
+                             borderwidth=0, anchor='nw', bg='white')
+        projLabel.grid(row=0, column=1, sticky='sw', padx=(20, 5), pady=10)
+        # Create view selection frame
+        viewFrame = tk.Frame(header, bg='white')
+        viewFrame.grid(row=0, column=2, sticky='se', padx=5, pady=10)
+        viewLabel = tk.Label(viewFrame, text='View:', bg='white')
+        viewLabel.grid(row=0, column=0, padx=5)
+        self.viewVar = tk.StringVar()
+        self.viewVar.set(VIEW_PROTOCOLS)
+        viewCombo = ttk.Combobox(viewFrame, textvariable=self.viewVar, state='readonly')
+        viewCombo['values'] = [VIEW_PROTOCOLS, VIEW_DATA, VIEW_HOSTS]
+        viewCombo.grid(row=0, column=1)
+        viewCombo.bind('<<ComboboxSelected>>', self._viewComboSelected)
         
-        # Create the right Pane that will be composed by:
-        # a Action Buttons TOOLBAR in the top
-        # and another vertical Pane with:
-        # Runs History (at Top)
-        # Sectected run info (at Bottom)
-        rightFrame = tk.Frame(p)
-        rightFrame.columnconfigure(0, weight=1)
-        rightFrame.rowconfigure(1, weight=1)
-        rightFrame.rowconfigure(0, minsize=label.winfo_reqheight())
+        return header
+    
+    def getHostsMapper(self):
+        return self.project.hostsMapper
+    
+    def _viewComboSelected(self, e=None):
+        if self.viewVar.get() != self.view:
+            self.switchView(self.viewVar.get())
         
-        # Create the Action Buttons TOOLBAR
-        toolbar = tk.Frame(rightFrame)
-        toolbar.grid(row=0, column=0, sticky='news')
-        gui.configureWeigths(toolbar)
-        #toolbar.columnconfigure(0, weight=1)
-        toolbar.columnconfigure(1, weight=1)
+    def switchView(self, newView):
+        # Destroy the previous view if existing:
+        if self.viewWidget:
+            self.viewWidget.grid_forget()
+            self.viewWidget.destroy()
+        # Create the new view
+        self.viewWidget = self.viewFuncs[newView](self.content)
+        # Grid in the second row (1)
+        self.viewWidget.grid(row=1, column=0, sticky='news')
+        self.view = newView
         
-        self.runsToolbar = tk.Frame(toolbar)
-        self.runsToolbar.grid(row=0, column=0, sticky='sw')
-        # On the left of the toolbar will be other
-        # actions that can be applied to all runs (refresh, graph view...)
-        self.allToolbar = tk.Frame(toolbar)
-        self.allToolbar.grid(row=0, column=10, sticky='se')
-        self.createActionToolbar()
+    def createProtocolsView(self, parent):
+        """ Create the Protocols View for the Project.
+        It has two panes:
+            Left: containing the Protocol classes tree
+            Right: containing the Runs list
+        """
+        from pw_project_viewprotocols import ProtocolsView
+        p = ProtocolsView(parent, self)
+        return p
+        
+    def createDataView(self, parent):
+        dataFrame = tk.Frame(parent)
+        dataLabel = tk.Label(dataFrame, text='DATA VIEW not implemented.',
+                             font=self.projNameFont)
+        dataLabel.grid(row=0, column=0, padx=50, pady=50)
+        return dataFrame
 
-        # Create the Run History tree
-        v = ttk.PanedWindow(rightFrame, orient=tk.VERTICAL)
-        runsFrame = ttk.Labelframe(v, text=' History ', width=500, height=500)
-        #runsFrame.grid(row=1, column=0, sticky='news', pady=5)
-        self.runsTree = self.createRunsTree(runsFrame)        
-        gui.configureWeigths(runsFrame)
-        
-        self.runsGraph = self.createRunsGraph(runsFrame)
-        
-        # Create the Selected Run Info
-        infoFrame = tk.Frame(v)
-        #infoFrame.columnconfigure(0, weight=1)
-        gui.configureWeigths(infoFrame)
-        
-        tab = ttk.Notebook(infoFrame)
-        # Data tab
-        dframe = tk.Frame(tab)
-        gui.configureWeigths(dframe)
-        provider = ProtocolTreeProvider(self.selectedProtocol)
-        self.infoTree = BoundTree(dframe, provider) 
-        TaggedText(dframe, width=40, height=15, bg='white')
-        self.infoTree.grid(row=0, column=0, sticky='news')  
-        # Summary tab
-        sframe = tk.Frame(tab)
-        gui.configureWeigths(sframe)
-        self.summaryText = TaggedText(sframe, width=40, height=15, bg='white')
-        self.summaryText.grid(row=0, column=0, sticky='news')        
-        #self.summaryText.addText("\nSummary should go <HERE!!!>\n More info here.")
-        
-        tab.add(dframe, text="Data")
-        tab.add(sframe, text="Summary")     
-        tab.grid(row=0, column=0, sticky='news')
-        
-        v.add(runsFrame, weight=3, 
-              #padx=5, pady=5, 
-              #sticky='news'
-              )
-        v.add(infoFrame, weight=1,
-              #padx=5, pady=5, 
-              #sticky='news'
-              )
-        v.grid(row=1, column=0, sticky='news')
-        
-        # Add sub-windows to PanedWindows
-        p.add(leftFrame, padx=5, pady=5)
-        p.add(rightFrame, padx=5, pady=5)
-        p.paneconfig(leftFrame, minsize=300)
-        p.paneconfig(rightFrame, minsize=300)        
-        p.grid(row=0, column=0, sticky='news')
-        
-        # Event bindings
-        self.root.bind("<F5>", self.refreshRuns)
-        # Hide the right-click menu
-        #self.root.bind('<FocusOut>', self._unpostMenu)
-        #self.root.bind("<Key>", self._unpostMenu)
-        #self.root.bind('<Button-1>', self._unpostMenu)
-        
-        #self.menuRun = tk.Menu(self.root, tearoff=0)
-        
-    def refreshRuns(self, e=None):
-        """ Refresh the status of diplayed runs. """
-        self.runsTree.update()
-        
-    def createActionToolbar(self):
-        """ Prepare the buttons that will be available for protocol actions. """
-       
-        self.actionList = [ACTION_EDIT, ACTION_COPY, ACTION_DELETE, ACTION_STEPS, ACTION_STOP, ACTION_CONTINUE]
-        self.actionButtons = {}
-        
-        def addButton(action, text, toolbar):
-            btn = tk.Label(toolbar, text=text, image=self.getImage(ActionIcons[action]), 
-                       compound=tk.LEFT, cursor='hand2')
-            btn.bind('<Button-1>', lambda e: self._runActionClicked(action))
-            return btn
-        
-        for action in self.actionList:
-            self.actionButtons[action] = addButton(action, action, self.runsToolbar)
-            
-        for i, action in enumerate([ACTION_TREE, ACTION_REFRESH]):
-            btn = addButton(action, action, self.allToolbar)
-            btn.grid(row=0, column=i)
-        
-            
-    def updateActionToolbar(self):
-        """ Update which action buttons should be visible. """
-        status = self.selectedProtocol.status.get()
-        
-        def displayAction(action, i, cond=True):
-            """ Show/hide the action button if the condition is met. """
-            if cond:
-                self.actionButtons[action].grid(row=0, column=i, sticky='sw', padx=(0, 5), ipadx=0)
-            else:
-                self.actionButtons[action].grid_remove()            
-                
-        for i, action in enumerate(self.actionList[:-2]):
-            displayAction(action, i)            
-            
-        displayAction(ACTION_STOP, 4, status == STATUS_RUNNING)
-        displayAction(ACTION_CONTINUE, 5, status == STATUS_WAITING_APPROVAL)
-        
-    def loadProjectConfig(self):
-        self.configMapper = ConfigMapper(getConfigPath('configuration.xml'), globals())
+    def createHostsView(self, parent):
+        from pw_project_viewhosts import HostsView
+        return HostsView(parent, self)
+    
+    def loadProject(self):
         self.project = Project(self.projPath)
         self.project.load()
+                
+    def loadProjectConfig(self):
+        self.configMapper = ConfigMapper(getConfigPath('configuration.xml'), globals())
         self.generalCfg = self.configMapper.getConfig()
         self.menuCfg = loadConfig(self.generalCfg, 'menu')
         self.protCfg = loadConfig(self.generalCfg, 'protocols')
-        
-    def createProtocolsTree(self, parent):
-        """Create the protocols Tree displayed in left panel"""
-        tree = Tree(parent, show='tree')
-        tree.column('#0', minwidth=300)
-        tree.tag_configure('protocol', image=self.getImage('python_file.gif'))
-        tree.tag_bind('protocol', '<Double-1>', self._protocolItemClick)
-        tree.tag_configure('protocol_base', image=self.getImage('class_obj.gif'))
-        f = tkFont.Font(family='verdana', size='10', weight='bold')
-        tree.tag_configure('section', font=f)
-        populateTree(self, tree, '', self.protCfg)
-        tree.grid(row=0, column=0, sticky='news')
-        return tree
-        
-    def createRunsTree(self, parent):
-        self.provider = RunsTreeProvider(self.project.mapper, self._runActionClicked)
-        tree = BoundTree(parent, self.provider)
-        tree.grid(row=0, column=0, sticky='news')
-        tree.bind('<Double-1>', lambda e: self._runActionClicked(ACTION_EDIT))
-        #tree.bind("<Button-3>", self._onRightClick)
-        tree.bind('<<TreeviewSelect>>', self._runItemClick)
-        return tree
-    
-    def createRunsGraph(self, parent):
-        from pyworkflow.gui import Canvas
-        canvas = Canvas(parent, width=400, height=400)
-        #canvas.grid(row=0, column=0, sticky='nsew')
-        parent.grid_columnconfigure(0, weight=1)
-        parent.grid_rowconfigure(0, weight=1)
-        
-        tb1 = canvas.createTextbox("Project", 100, 100, "blue")
-        tb2 = canvas.createTextbox("aqui estoy yo\ny tu tb", 200, 200)
-        tb3 = canvas.createTextbox("otro mas\n", 100, 200, "red")
-        e1 = canvas.createEdge(tb1, tb2)
-        e2 = canvas.createEdge(tb1, tb3)
-        
-        return canvas
-    
-    def switchRunsView(self):
-        self.showGraph = not self.showGraph
-        
-        if self.showGraph:
-            show = self.runsGraph
-            hide = self.runsTree
-        else:
-            show = self.runsTree
-            hide = self.runsGraph
-            
-        hide.grid_remove()
-        show.grid(row=0, column=0, sticky='news')
-            #TODO: hide graph
-    
-    def _protocolItemClick(self, e=None):
-        protClassName = self.protTree.getFirst().split('.')[-1]
-        protClass = emProtocolsDict.get(protClassName)
-        prot = protClass()
-        prot.mapper = self.project.mapper
-        self._openProtocolForm(prot)
-        
-    def _runItemClick(self, e=None):
-        prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))
-        prot.mapper = self.project.mapper
-        self.selectedProtocol = prot
-        self.updateActionToolbar()
-        self._fillInfoTree()
-        self._fillSummary()
-        
-    def _openProtocolForm(self, prot):
-        """Open the Protocol GUI Form given a Protocol instance"""
-        w = FormWindow("Protocol Run: " + prot.getClassName(), prot, self._executeSaveProtocol, self)
-        w.show(center=True)
-        
-    def _browseRunData(self):
-        provider = ProtocolTreeProvider(self.selectedProtocol)
-        window = BrowserWindow("Protocol data", provider, self,
-                               icon=self.icon)
-        window.itemConfig(self.selectedProtocol, open=True)  
-        window.show()
-        
-    def _fillInfoTree(self):
-        provider = ProtocolTreeProvider(self.selectedProtocol)
-        self.infoTree.setProvider(provider)
-        self.infoTree.itemConfig(self.selectedProtocol, open=True)  
-        
-    def _fillSummary(self):
-        self.summaryText.clear()
-        self.summaryText.addText(self.selectedProtocol.summary())
-        
-    def _executeSaveProtocol(self, prot, onlySave=False):
-        if onlySave:
-            self.project.saveProtocol(prot)
-        else:
-            self.project.launchProtocol(prot)
-        self.runsTree.after(1000, self.runsTree.update)
-        
-    def _continueProtocol(self, prot):
-        self.project.continueProtocol(prot)
-        self.runsTree.after(1000, self.runsTree.update)        
-        
-    def _deleteProtocol(self, prot):
-        if askYesNo("Confirm DELETE", "<ALL DATA> related to this <protocol run> will be <DELETED>. \n"
-                    "Do you really want to continue?", self.root):
-            self.project.deleteProtocol(prot)
-            self.runsTree.update()
-        
-    def _runActionClicked(self, action):
-        prot = self.selectedProtocol
-        if prot:
-            if action == ACTION_DEFAULT:
-                pass
-            elif action == ACTION_EDIT:
-                self._openProtocolForm(prot)
-            elif action == ACTION_COPY:
-                newProt = self.project.copyProtocol(prot)
-                self._openProtocolForm(newProt)
-            elif action == ACTION_DELETE:
-                self._deleteProtocol(prot)
-            elif action == ACTION_STEPS:
-                self._browseRunData()
-            elif action == ACTION_STOP:
-                pass
-            elif action == ACTION_CONTINUE:
-                self._continueProtocol(prot)
-        # Following actions do not need a select run
-        if action == ACTION_TREE:
-            self.switchRunsView()
-        elif action == ACTION_REFRESH:
-            self.refreshRuns()
-    
-    
+
+
 if __name__ == '__main__':
     from pyworkflow.manager import Manager
     if len(sys.argv) > 1:

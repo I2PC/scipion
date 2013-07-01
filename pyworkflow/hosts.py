@@ -88,9 +88,9 @@ class QueueSystemConfig(OrderedObject):
         self.mandatory = Boolean()
         self.queues = List() # List for queue configurations
         self.submitCommand = String()
-        self.submitTemplate = String()
         self.checkCommand = String()
         self.cancelCommand = String()
+        self.submitTemplate = String()
         
     def hasValue(self):
         return self.name.hasValue() and len(self.queues)
