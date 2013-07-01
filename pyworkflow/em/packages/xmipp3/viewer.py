@@ -34,6 +34,7 @@ from pyworkflow.em import SetOfImages, SetOfMicrographs
 from pyworkflow.utils.process import runJob
 from xmipp3 import getXmippPath
 from data import XmippSetOfImages, XmippSetOfMicrographs, XmippClassification2D
+from pyworkflow.em.protocol import ProtImportMicrographs
 from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from protocol_extract_particles import XmippProtExtractParticles
@@ -65,6 +66,13 @@ class XmippViewer(Viewer):
             runShowJ(imgs.getFileName())
         elif issubclass(cls, XmippClassification2D):
             runShowJ(obj.getClassesMdFileName())
+        elif issubclass(cls, ProtImportMicrographs):
+            fn = self._getTmpPath(obj.getName() + '_micrographs.xmd')
+            mics = XmippSetOfMicrographs.convert(obj.outputMicrographs, fn)
+            extra = ''
+            if mics.hasCTF():
+                extra = ' --mode metadata --render first'
+            runShowJ(mics.getFileName(), extraParams=extra)  
         elif issubclass(cls, XmippProtPreprocessMicrographs):
             runShowJ(obj.outputMicrographs.getFileName())
         elif issubclass(cls, XmippProtCTFMicrographs):
