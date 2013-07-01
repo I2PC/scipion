@@ -88,7 +88,7 @@ void  ProgConvImg::defineParams()
     addParamsLine("         img : Imagic (Data types: uint8, int16, float* and cfloat).");
     addParamsLine("         inf : RAW file with header INF file (Data types: (u)int8, (u)int16 and float*).");
     addParamsLine("         raw : RAW file with header INF file (Data types: (u)int8, (u)int16 and float*).");
-    addParamsLine("         mrc : CCP4 (Data types: uint8, int16, float* and cfloat).");
+    addParamsLine("         mrc : CCP4 (Data types: uint8, (u)int16, float* and cfloat).");
     addParamsLine("         spi : Spider (Data types: float* and cfloat).");
     addParamsLine("         xmp : Spider (Data types: float* and cfloat).");
     addParamsLine("         tif : TIFF (Data types: uint8*, uint16, uint32 and float).");
@@ -96,7 +96,7 @@ void  ProgConvImg::defineParams()
     addParamsLine("         custom <ext> : Custom extension name, the real format will be Spider.");
     addParamsLine("  [--type <output_type=auto>] : Force output file type.");
     addParamsLine("          where <output_type>");
-    addParamsLine("          auto: Autodetect output type according to output extension and wheter --oroot is passed or not.");
+    addParamsLine("          auto: Autodetect output type according to output extension and whether --oroot is passed or not.");
     addParamsLine("          img : Image");
     addParamsLine("          vol : Volume");
     addParamsLine("          stk : Stack ");

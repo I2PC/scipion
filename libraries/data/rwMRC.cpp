@@ -82,13 +82,13 @@ struct MRChead
     int nx;              //  0   0       image size
     int ny;              //  1   4
     int nz;              //  2   8
-    int mode;            //  3           0=char,1=short,2=float
+    int mode;            //  3           0=char,1=short,2=float,6=uint16
     int nxStart;         //  4           unit cell offset
     int nyStart;         //  5
     int nzStart;         //  6
     int mx;              //  7           unit cell size in voxels
     int my;              //  8
-    int mz;              //  9
+    int mz;              //  9    1=Image or images stack, if volume mz=nz. If ispg=401 then mz=number of volumes in stack
     float a;             // 10   40      cell dimensions in A
     float b;             // 11
     float c;             // 12
@@ -101,7 +101,7 @@ struct MRChead
     float amin;          // 19           minimum density value
     float amax;          // 20   80      maximum density value
     float amean;         // 21           average density value
-    int ispg;            // 22           space group number
+    int ispg;            // 22           space group number   0=Image/stack,1=Volume,401=volumes stack
     int nsymbt;          // 23           bytes used for sym. ops. table
     float extra[25];     // 24           user-defined info
     float xOrigin;       // 49           phase origin in pixels FIXME: is in pixels or [L] units?
@@ -146,22 +146,35 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     // Convert VAX floating point types if necessary
     if ( header->amin > header->amax )
         REPORT_ERROR(ERR_IMG_NOREAD,"readMRC: amin > max: VAX floating point conversion unsupported");
-    size_t _xDim,_yDim,_zDim;
-    size_t _nDim;
+
+    size_t _xDim,_yDim,_zDim,_nDim;
+
     _xDim = header->nx;
     _yDim = header->ny;
     _zDim = header->nz;
 
-    if (!filename.contains(":")) // If format is forced through ":" flag suffix, then ignore the stack behavior in header
-        isStack = ((header->ispg == 0) && (header->nsymbt == 0));
+    bool isVolStk = (header->ispg == 401);
+
+    if (isVolStk || !filename.contains(":")) // If format is forced through ":" flag suffix, then ignore the stack behavior in header
+    {
+        isStack = ((header->ispg == 0 || isVolStk ) && (header->nsymbt == 0));
+    }
 
     if(isStack)
     {
-        if ( select_img > _zDim ) // When isStack slices in Z are supposed to be a stack of images
-            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readMRC: %s Image number %lu exceeds stack size %lu", this->filename.c_str(), select_img, _zDim));
+        if (isVolStk)
+            _nDim = header->mz;
+        else
+        {
+            _nDim = _zDim;// When isStack slices in Z are supposed to be a stack of images
+            _zDim = 1;
+        }
 
-        _nDim = (select_img == ALL_IMAGES) ? (size_t) _zDim : 1;
-        _zDim = 1;
+        if ( select_img > _nDim )
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readMRC: %s Image number %lu exceeds stack size %lu", this->filename.c_str(), select_img, _nDim));
+
+        if (select_img > ALL_IMAGES)
+            _nDim = 1;
     }
     else // If the reading is not like a stack, then the select_img is not taken into account and must be selected the only image
     {
@@ -173,7 +186,7 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     setDimensions(_xDim, _yDim, _zDim, _nDim);
 
     DataType datatype;
-    switch ( header->mode % 5 )
+    switch ( header->mode )
     {
     case 0:
         datatype = DT_UChar;
@@ -190,6 +203,9 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     case 4:
         datatype = DT_CFloat;
         break;
+    case 6:
+        datatype = DT_UShort;
+        break;
     default:
         datatype = DT_Unknown;
         errCode = -1;
@@ -199,7 +215,7 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     size_t datasize_n;
     datasize_n = _xDim*_yDim*_zDim;
 
-    if ( header->mode%5 > 2 && header->mode%5 < 5 )
+    if ( header->mode > 2 && header->mode < 5 )
     {
         transform = CentHerm;
         fseek(fimg, 0, SEEK_END);
@@ -303,8 +319,9 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
             header->mode = 2;
             break;
         case DT_UShort:
-            castMode = CW_CONVERT;
-            /* no break */
+            wDType = DT_UShort;
+            header->mode = 6;
+            break;
         case DT_Short:
             wDType = DT_Short;
             header->mode = 1;
@@ -338,6 +355,9 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
             break;
         case DT_UChar:
             header->mode = 0;
+            break;
+        case DT_UShort:
+            header->mode = 6;
             break;
         case DT_Short:
             header->mode = 1;
@@ -419,9 +439,9 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
     header->b = 0;
     header->c = 0;
 
-    header->mx =header->nx = Xdim;
-    header->my =header->ny = Ydim;
-    header->mz =header->nz = Zdim;
+    header->mx = header->nx = Xdim;
+    header->my = header->ny = Ydim;
+    header->mz = header->nz = Zdim;
 
     if ( transform == CentHerm )
         header->nx = Xdim/2 + 1;        // If a transform, physical storage is nx/2 + 1
@@ -495,28 +515,39 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
 
     size_t imgStart = 0;
 
-    if (filename.contains(":mrcs")) // If format is forced through ":" flag suffix, then ignore the stack behavior in header
+    if (Ndim > 1 || filename.contains(":mrcs")) // If format is forced through ":" flag suffix, then ignore the stack behavior in header
         isStack = true;
+
+    bool isVolStk = isStack && Zdim > 1;
+    size_t nDimHeader = Ndim;
 
     if (isStack)
     {
         imgStart = IMG_INDEX(select_img);
-        header->nz = replaceNsize;
-
 
         if( mode == WRITE_APPEND )
         {
             imgStart = replaceNsize;
-            header->nz = replaceNsize + Ndim;
+            nDimHeader = replaceNsize + Ndim;
         }
         else if( mode == WRITE_REPLACE && select_img + Ndim - 1 > replaceNsize)
         {
-            header->nz = select_img + Ndim - 1;
+            nDimHeader = select_img + Ndim - 1;
         }
-        else if (Ndim > replaceNsize)
-            header->nz = Ndim;
+        //        else if (Ndim > replaceNsize)
+        //            nDimHeader = Ndim;
 
-        header->ispg = 0;
+
+        if (isVolStk)
+        {
+            header->ispg = 401;
+            header->mz = nDimHeader;
+        }
+        else
+        {
+            header->ispg = 0;
+            header->nz = nDimHeader;
+        }
     }
     else // To set in the header that the file is a volume not a stack
         header->ispg = 1;
@@ -526,7 +557,7 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
     flock.lock(fimg);
 
     // Write header when needed
-    if(!isStack || replaceNsize < (size_t)header->nz)
+    if(!isStack || replaceNsize < nDimHeader)
     {
         if ( swapWrite )
             swapPage((char *) header, MRCSIZE - 800, DT_Float);
