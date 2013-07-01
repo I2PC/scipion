@@ -2,6 +2,7 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              Josue Gomez Blanco     (jgomez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -25,13 +26,31 @@
 # *
 # **************************************************************************
 """
-This script will generate the pw.bashrc file to include
+This script will generate the pw.bashrc and pw.cshrc file to include
 """
 import sys
 from os.path import abspath, dirname, join
 FULLPATH = dirname(abspath(__file__))
-BASHRC = 'pw.bashrc'
+BASHRC = '.bashrc'
+CSHRC = '.cshrc'
 
+def config(shell, varList, shellVar):  
+    shellFile = 'pw' + shell
+    print " - Creating file: ", shellFile
+    f = open(shell, 'w+')
+    for name, value in varList:
+    	line = shellVar(name, value)
+	print >> f, line
+    f.close()
+    print " - Include: \n      source %(shellFile)s in your %(shell)s file" % locals()
+
+
+def bashVar(name, value):
+    return "export %(name)s=%(value)s" % locals()
+
+def tcshVar(name, value):
+    return "setenv %(name)s %(value)s" % locals()    
+    
 if __name__ == '__main__':
     print "Installing Scipion in : ", FULLPATH
     print " - Creating file: ", BASHRC
@@ -51,3 +70,10 @@ export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$PYTHONPATH
     f.close()
     
     print " - Include: \n      source %s \n   in your .bashrc file" % BASHRC
+    VARS = [('SCIPION_HOME', '$HOME/Scipion'),
+            ('PW_HOME', FULLPATH),
+	    ('PYTHONPATH', '$PW_HOME:$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$PYTHONPATH'),
+            ('PATH', '$PW_HOME/pyworkflow/apps:$PATH')]
+	    
+    config(BASHRC, VARS, bashVar)    
+    config(CSHRC, VARS, tcshVar)
