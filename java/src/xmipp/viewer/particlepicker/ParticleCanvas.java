@@ -13,15 +13,16 @@ import java.awt.event.MouseMotionListener;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import xmipp.utils.XmippDialog;
 import xmipp.viewer.particlepicker.tiltpair.gui.TiltPairPickerJFrame;
 import xmipp.viewer.particlepicker.tiltpair.gui.UntiltedMicrographCanvas;
 import xmipp.viewer.particlepicker.tiltpair.model.TiltedMicrograph;
 import xmipp.viewer.particlepicker.tiltpair.model.TiltedParticle;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedMicrograph;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedParticle;
-import xmipp.viewer.particlepicker.training.gui.TrainingPickerJFrame;
-import xmipp.viewer.particlepicker.training.model.TrainingMicrograph;
-import xmipp.viewer.particlepicker.training.model.TrainingParticle;
+import xmipp.viewer.particlepicker.training.gui.SingleParticlePickerJFrame;
+import xmipp.viewer.particlepicker.training.model.SingleParticlePickerMicrograph;
+import xmipp.viewer.particlepicker.training.model.ManualParticle;
 
 public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, MouseListener
 {
@@ -41,7 +42,7 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 		this.frame = frame;
 		this.canvas = (pickerParticle instanceof TiltedParticle) ? ((TiltPairPickerJFrame) frame).getTiltedCanvas() : frame.getCanvas();
 
-		this.size = (int) (frame.getFamily().getSize());
+		this.size = (int) (frame.getParticlePicker().getSize());
 		side = frame.getSide(size);
 		setMagnification((float) side / size);
 		setDrawingSize(side, side);
@@ -79,7 +80,7 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 			{
 				canvas.repaint();
 				repaint();
-				JOptionPane.showMessageDialog(this, ex.getMessage());
+				XmippDialog.showInfo(frame, ex.getMessage());
 				
 			}
 		}
@@ -98,8 +99,8 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 
 			if (SwingUtilities.isLeftMouseButton(e) && e.isShiftDown())
 			{
-				if (frame instanceof TrainingPickerJFrame)
-					((TrainingMicrograph) frame.getMicrograph()).removeParticle(particle, ((TrainingPickerJFrame) frame).getParticlePicker());
+				if (frame instanceof SingleParticlePickerJFrame)
+					((SingleParticlePickerMicrograph) frame.getMicrograph()).removeParticle(particle, ((SingleParticlePickerJFrame) frame).getParticlePicker());
 				else if (frame instanceof TiltPairPickerJFrame)
 				{
 					if (frame.getMicrograph() instanceof UntiltedMicrograph)

@@ -233,6 +233,8 @@ public class ImageGeneric {
 
     public native double[] alignImage(ImageGeneric img) throws Exception;
     
+    public native void getRadialAvg(ImageGeneric radialimg) throws Exception;
+    
     public native void applyAlignment(ImageGeneric img, int index, double rot, double tilt, double psi) throws Exception;
 
     

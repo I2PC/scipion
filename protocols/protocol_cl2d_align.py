@@ -61,7 +61,6 @@ class ProtCL2DAlignment(XmippProtocol):
 
 def gatherResults(log, WorkingDir):
     wdPath = lambda path: os.path.join(WorkingDir, path)
-    renameFile(log, wdPath("level_images.xmd"), wdPath("images.xmd"))
     fnStack=wdPath("level_00/level_classes.stk")
     I=Image("1@"+fnStack)
     I.write(wdPath("average.xmp"))

@@ -678,6 +678,7 @@ class ProtocolGUI(BasicGUI):
             return
         prot = self.getProtocol()        
         if self.visualize_mode:
+            prot.master = self.master
             prot.visualize()
         else:
             if self.validateProtocol(prot):

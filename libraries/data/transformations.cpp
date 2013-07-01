@@ -25,6 +25,7 @@
  ***************************************************************************/
 
 #include "transformations.h"
+#include "filters.h"
 
 void geo2TransformationMatrix(const MDRow &imageGeo, Matrix2D<double> &A,
                               bool only_apply_shifts)
@@ -1015,4 +1016,22 @@ double interpolatedElementBSplineDiffZ(MultidimArray<double> &vol, double x, dou
     }
 
     return zyxsum;
+}
+
+void radiallySymmetrize(const MultidimArray<double>& img, MultidimArray<double> &radialImg)
+{
+	Matrix1D<int> center(2);
+	center.initZeros();
+	MultidimArray<int> distance, radial_count;
+	MultidimArray<double> radial_mean;
+	int dim;
+	radialAveragePrecomputeDistance(img, center, distance, dim);
+	fastRadialAverage(img, distance, dim, radial_mean, radial_count);
+
+	radialImg.initZeros(img);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(radialImg)
+    {
+        int d=DIRECT_MULTIDIM_ELEM(distance,n);
+        DIRECT_MULTIDIM_ELEM(radialImg,n)=A1D_ELEM(radial_mean,d);
+    }
 }

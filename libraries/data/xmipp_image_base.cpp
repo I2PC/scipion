@@ -959,8 +959,8 @@ std::ostream& operator<<(std::ostream& o, const ImageBase& I)
     o << "  ((N)Objects x (Z)Slices x (Y)Rows x (X)Columns)" << std::endl;
 
     double sampling;
-    I.MDMainHeader.getValue(MDL_SAMPLINGRATE_X, sampling);
-    if (sampling > 1e-300)
+    I.MDMainHeader.getValueOrDefault(MDL_SAMPLINGRATE_X, sampling, 0);
+    if (sampling > 0)
     {
         o << "Sampling rate  : " << std::endl;
         o << "                 X-rate (Angstrom/pixel) = " << sampling << std::endl;

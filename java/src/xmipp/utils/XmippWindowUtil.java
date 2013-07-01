@@ -47,7 +47,7 @@ public class XmippWindowUtil
 	 * This function will be used to place the location of a windows relative to
 	 * another windows or screen
 	 */
-	private static void setLocation(float positionx, float positiony, Container w, Dimension dim, Point offset)
+	private static void setLocation(double positionx, double positiony, Container w, Dimension dim, Point offset)
 	{
 		Rectangle abounds = w.getBounds();
 		int x = (int) (positionx * (dim.width - abounds.width) + offset.x);
@@ -55,7 +55,7 @@ public class XmippWindowUtil
 		w.setLocation(x, y);
 	}
 
-	public static void setLocation(float positionx, float positiony, Container w)
+	public static void setLocation(double positionx, double positiony, Container w)
 	{
 		setLocation(positionx, positiony, w, w.getToolkit().getScreenSize(), new Point(0, 0));
 	}

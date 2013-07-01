@@ -117,11 +117,9 @@
  /* Destructor */
   void FourierProjector_dealloc(FourierProjectorObject* self)
  {
-	 std::cerr << "Proj dealloc init" <<std::endl;
      delete self->fourier_projector;
      delete self->dims;
      self->ob_type->tp_free((PyObject*) self);
-     std::cerr << "Proj dealloc finish" <<std::endl;
  }
 
 /* projectVolume */
@@ -140,7 +138,6 @@
         	  Projection P;
               projectVolume(FourierProjector_Value(self), P, self->dims->xdim, self->dims->ydim, rot, tilt, psi);
               Image_Value(projection_image).data->setImage(MULTIDIM_ARRAY(P));
-
           }
           catch (XmippError &xe)
           {

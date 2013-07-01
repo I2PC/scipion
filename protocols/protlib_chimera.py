@@ -83,6 +83,7 @@ class XmippChimeraClient:
         if interval < 1:
             interval = 1
         minweight = minweight - 1#to avoid 0 on normalized weight
+        
         self.angulardist = []  
         x2=self.xdim/2
         y2=self.ydim/2
@@ -96,13 +97,15 @@ class XmippChimeraClient:
             psi = md.getValue(MDL_ANGLE_PSI, id)
             weight = md.getValue(MDL_WEIGHT, id)
             weight = (weight - minweight)/interval
-
+            
             x, y, z = Euler_direction(rot, tilt, psi)
             radius = weight * self.spheres_maxradius
-            x = x * self.spheres_distance+x2
-            y = y * self.spheres_distance+y2
-            z = z * self.spheres_distance+z2
+
+            x = x * self.spheres_distance + x2
+            y = y * self.spheres_distance + y2
+            z = z * self.spheres_distance + z2
             command = 'shape sphere radius %s center %s,%s,%s color %s '%(radius, x, y, z, self.spheres_color)
+
             self.angulardist.append(command)    
             printCmd(command)
             
@@ -134,7 +137,7 @@ class XmippChimeraClient:
                 #print 'on client loop'
                 msg = self.client.recv()
                 self.answer(msg)
-                    
+                            
         except EOFError:
             print 'Lost connection to server'
         finally:
@@ -217,7 +220,5 @@ class XmippProjectionExplorer(XmippChimeraClient):
      
             
 def printCmd(cmd):
-        pass
-        #timeformat = "%S.%f" 
+        timeformat = "%S.%f" 
         #print datetime.now().strftime(timeformat) + ' %s'%cmd
-

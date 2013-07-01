@@ -2,17 +2,20 @@ package xmipp.viewer.particlepicker;
 
 import xmipp.utils.Task;
 import xmipp.viewer.particlepicker.training.gui.TemplatesJDialog;
-import xmipp.viewer.particlepicker.training.model.TrainingPicker;
+import xmipp.viewer.particlepicker.training.model.SingleParticlePicker;
+
 
 public class UpdateTemplatesTask implements Task
 {
 
-	private TrainingPicker picker;
 	private static TemplatesJDialog dialog;
+	private SingleParticlePicker picker;
+	private int num;
 
-	public UpdateTemplatesTask(TrainingPicker picker)
+	public UpdateTemplatesTask(SingleParticlePicker picker, int num)
 	{
 		this.picker = picker;
+		this.num = num;
 	}
 	
 	public static void setTemplatesDialog(TemplatesJDialog d)
@@ -25,11 +28,9 @@ public class UpdateTemplatesTask implements Task
 	{
 		try
 		{
-			picker.getFamily().updateTemplates(picker);
+			picker.updateTemplates(num);
 			if(dialog != null && dialog.isVisible())
 				dialog.loadTemplates(true);
-			
-
 		}
 		catch (Exception e)
 		{

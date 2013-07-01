@@ -1231,6 +1231,42 @@ void bestNonwrappingShift(const MultidimArray<double> &I1,
 }
 #undef DEBUG
 
+/* Best shift -------------------------------------------------------------- */
+double bestShiftRealSpace(const MultidimArray<double> &I1, MultidimArray<double> &I2,
+               double &shiftX, double &shiftY,
+               const MultidimArray<int> *mask, int maxShift, double shiftStep)
+{
+    I1.checkDimension(2);
+    I2.checkDimension(2);
+
+    double bestCorr=-1e38;
+
+    MultidimArray<double> alignedI2, bestI2;
+    int maxShift2=maxShift*maxShift;
+    Matrix1D<double> shift(2);
+    for (double y=-maxShift; y<=maxShift; y+=shiftStep)
+    	for (double x=-maxShift; x<=maxShift; x+=shiftStep)
+    	{
+    		if (y*y+x*x>maxShift2)
+    			continue;
+    		YY(shift)=y;
+    		XX(shift)=x;
+    		translate(LINEAR,alignedI2,I2,shift,DONT_WRAP,0.0);
+
+    		double corr=correlationIndex(I1,alignedI2,mask);
+    		if (corr>bestCorr)
+    		{
+    			bestI2=alignedI2;
+    			bestCorr=corr;
+    			shiftY=y;
+    			shiftX=x;
+    		}
+    	}
+    I2=bestI2;
+
+    return bestCorr;
+}
+
 /* Align two images -------------------------------------------------------- */
 AlignmentAux::AlignmentAux()
 {
