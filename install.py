@@ -29,7 +29,7 @@
 This script will generate the pw.bashrc and pw.cshrc file to include
 """
 import sys
-from os.path import abspath, dirname
+from os.path import abspath, dirname, join
 FULLPATH = dirname(abspath(__file__))
 BASHRC = '.bashrc'
 CSHRC = '.cshrc'
@@ -53,6 +53,23 @@ def tcshVar(name, value):
     
 if __name__ == '__main__':
     print "Installing Scipion in : ", FULLPATH
+    print " - Creating file: ", BASHRC
+    f = open(join(FULLPATH, BASHRC), 'w+')
+    
+    template = """
+export SCIPION_HOME=$HOME/Scipion
+export PW_HOME=%(FULLPATH)s
+
+export PYTHONPATH=$PW_HOME:$PYTHONPATH
+export PATH=$PW_HOME/pyworkflow/apps:$PATH
+
+# For XMIPP
+export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$PYTHONPATH
+"""
+    f.write(template % locals())
+    f.close()
+    
+    print " - Include: \n      source %s \n   in your .bashrc file" % BASHRC
     VARS = [('SCIPION_HOME', '$HOME/Scipion'),
             ('PW_HOME', FULLPATH),
 	    ('PYTHONPATH', '$PW_HOME:$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$PYTHONPATH'),

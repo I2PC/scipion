@@ -26,8 +26,40 @@ class HostForm(forms.Form):
     password.widget.attrs.update({'class' : 'generalInput', 'size' : 20})
     hostPath = forms.CharField(label='Host path', required=True, error_messages={'required': 'Please, enter your host path'},
                                 widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 30}))
+    mpiCommand = forms.CharField(label='MPI command', required=False,
+                                 widget=forms.Textarea(attrs={'cols': 35, 'rows': 5}))
     
     #label.widget.attrs.update({'class' : 'generalInput'})
+    
+    # Queue system
+    queueSystemName = forms.CharField(label='Name', 
+                                      required=False,
+                                      error_messages={'required': 'Please, enter label for the configuration'},
+                                      widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
+    queusSystemMandatory = forms.BooleanField(label='Mandatory',
+                                              required=False,
+                                              error_messages={'required': 'Please, select if queue is mandatory'})
+    queusSystemSubmitCommand = forms.CharField(label='Submit command', 
+                                      required=False,
+                                      error_messages={'required': 'Please, insert submit command'},
+                                      widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
+    queueSystemSubmitTemplate = forms.CharField(label='Submit template', 
+                                      required=False,
+                                      error_messages={'required': 'Please, insert submit template'},
+                                      widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
+    queueSystemSubmitTemplate = forms.CharField(label='Submit template', 
+                                      required=False,
+                                      error_messages={'required': 'Please, insert submit template'},
+                                      widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
+    queueSystemCheckCommand = forms.CharField(label='Check command', 
+                                      required=False,
+                                      error_messages={'required': 'Please, insert check command'},
+                                      widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
+    queueSystemCheckCommand = forms.CharField(label='Cancel command', 
+                                      required=False,
+                                      error_messages={'required': 'Please, insert cancel command'},
+                                      widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
+    
     
     def getHost(self):
         host = HostConfig()
@@ -40,6 +72,8 @@ class HostForm(forms.Form):
         host.setUserName(self.cleaned_data['userName'])
         host.setHostPath(self.cleaned_data['hostPath'])
         host.setPassword(self.cleaned_data['password'])
+        host.setPassword(self.cleaned_data['mpiCommand'])
+        
         return host
     
     def setHost(self, host):
@@ -49,6 +83,7 @@ class HostForm(forms.Form):
         self.fields['userName'].initial = host.getUserName()
         self.fields['hostPath'].initial = host.getHostPath()
         self.fields['password'].initial = host.getPassword()
+        self.fields['mpiCommand'].initial = host.getPassword()   
         
         
 class ShowjForm(forms.Form):
@@ -130,6 +165,3 @@ class ShowjForm(forms.Form):
         labelsToRender = [xmipp.label2Str(l) for l in labels if (xmipp.labelIsImage(l) and self.data["allowRender"])]
         #self.fields['metadataComboBox'].choices = zip(labelsToRender,labelsToRender)
         return tuple(zip(labelsToRender,labelsToRender))
-   
-   
- 
