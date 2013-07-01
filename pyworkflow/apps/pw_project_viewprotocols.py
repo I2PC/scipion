@@ -133,9 +133,12 @@ def loadConfig(config, name):
 
 class RunsTreeProvider(TreeProvider):
     """Provide runs info to populate tree"""
-    def __init__(self, mapper, actionFunc):
+    def __init__(self, project, actionFunc):
         self.actionFunc = actionFunc
-        self.getObjects = lambda: mapper.selectByClass('Protocol')
+        self.project = project
+    
+    def getObjects(self):
+        return self.project.getRuns() 
         
     def getColumns(self):
         return [('Run', 250), ('State', 100), ('Time', 100)]
@@ -480,7 +483,7 @@ class ProtocolsView(tk.Frame):
         return tree
         
     def createRunsTree(self, parent):
-        self.provider = RunsTreeProvider(self.project.mapper, self._runActionClicked)
+        self.provider = RunsTreeProvider(self.project, self._runActionClicked)
         tree = BoundTree(parent, self.provider)
         tree.grid(row=0, column=0, sticky='news')
         tree.bind('<Double-1>', self._runItemDoubleClick)

@@ -34,7 +34,7 @@ import pickle
 import time
 
 from pyworkflow.object import OrderedObject, String, List, Integer, Boolean, CsvList
-from pyworkflow.utils.path import replaceExt, makeFilePath, join, missingPaths, cleanPath, getFolderFiles
+from pyworkflow.utils.path import replaceExt, makeFilePath, join, missingPaths, cleanPath, getFiles
 from pyworkflow.utils.log import *
 from pyworkflow.protocol.executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor
 
@@ -46,6 +46,7 @@ STATUS_FINISHED = "finished"  # successfully finished
 STATUS_ABORTED = "aborted"
 STATUS_WAITING_APPROVAL = "waiting approval"    # waiting for user interaction
 
+ACTIVE_STATUS = [STATUS_LAUNCHED, STATUS_RUNNING, STATUS_WAITING_APPROVAL]
 
 class Step(OrderedObject):
     """ Basic execution unit.
@@ -558,6 +559,21 @@ class Protocol(Step):
         """ Set a new mapper for the protocol to persist state. """
         self.mapper = mapper
         
+    def setDbPath(self, path):
+        self._dbPath = String(self._getLogsPath(path))
+        
+    def getDbPath(self):
+        return self._dbPath.get()
+    
+    def getStatus(self):
+        return self.status.get()
+    
+    def setStatus(self, value):
+        return self.status.set(value)
+    
+    def isActive(self):
+        return self.getStatus() in ACTIVE_STATUS
+        
     def setStepsExecutor(self, executor):
         self._stepsExecutor = executor
                 
@@ -568,7 +584,7 @@ class Protocol(Step):
             obj = attrPointer.get() # Get object pointer by the attribute
             if hasattr(obj, 'getFiles'):
                 resultFiles.update(obj.getFiles()) # Add files if any
-        return resultFiles | getFolderFiles(self.workingDir.get())
+        return resultFiles | getFiles(self.workingDir.get())
 
     def getHostName(self):
         """ Get the execution host name """

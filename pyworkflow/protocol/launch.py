@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.utils.remote import RemotePath
 """
 This module is responsible for launching protocol executions.
 There are two main scenarios: local execution and remote execution.
@@ -41,7 +42,7 @@ B. Remote execution:
 """
 import re
 from subprocess import Popen, PIPE
-from pyworkflow.utils import buildRunCommand, redStr, greenStr, makeFilePath
+from pyworkflow.utils import buildRunCommand, redStr, greenStr, makeFilePath, join
 from pyworkflow.protocol import STEPS_PARALLEL
 
 UNKNOWN_JOBID = -1
@@ -68,7 +69,7 @@ def _launchLocalProtocol(protocol, wait):
         program = 'pw_protocol_run.py'
         mpi = 1
     protStrId = protocol.strId()
-    params = '%s %s' % (protocol.dbPath, protStrId)
+    params = '%s %s' % (protocol.getDbPath(), protStrId)
     command = buildRunCommand(None, program, params, 
                               mpi, protocol.numberOfThreads.get(), bg)
     # Check if need to submit to queue
@@ -86,7 +87,34 @@ def _launchLocalProtocol(protocol, wait):
 
     
 def _launchRemoteProtocol(protocol, wait):
-    raise Exception("Not yet implemented")
+    from pyworkflow.utils.remote import sshConnectFromHost
+    # Establish connection
+    ssh = sshConnectFromHost(protocol.getHostConfig())
+    # Copy protocol files
+    _copyProtocolFiles(protocol, ssh)
+    # Run remote program to launch the protocol
+    cmd  = 'pw_protocol_launch.py %s %s' % (protocol.getDbPath(), protocol.strId(), wait)
+    stdin, stdout, stderr = ssh.exec_command(cmd)
+    jobId = int(stdout.readlines()[0])
+    
+    return jobId
+
+def _copyProtocolFiles(protocol, ssh):
+    """ Copy all required files for protocol to run
+    in a remote execution host.
+    NOTE: this function should always be execute with 
+    the current working dir pointing to the project dir.
+    And the remotePath is assumed to be in protocol.getHostConfig().getHostPath()
+    Params:
+        protocol: protocol to copy files
+        ssh: an ssh connection to copy the files.
+    """
+    remotePath = protocol.getHostConfig().getHostPath()
+    rpath = RemotePath(ssh)
+    
+    for f in protocol.getFiles():
+        remoteFile = join(remotePath, f)
+        rpath.putFile(f, remoteFile)
 
 
 def _submitProtocol(hostConfig, submitDict):
