@@ -66,6 +66,7 @@ ACTION_TREE = 'Tree'
 ACTION_STOP = 'Stop'
 ACTION_DEFAULT = 'Default'
 ACTION_CONTINUE = 'Continue'
+ACTION_RESULTS = 'Analyze results'
 
 ActionIcons = {
     ACTION_EDIT:  'edit.gif',
@@ -75,7 +76,8 @@ ActionIcons = {
     ACTION_STEPS:  'run_steps.gif',
     ACTION_TREE:  'tree2.gif',
     ACTION_STOP: 'stop.gif',
-    ACTION_CONTINUE: 'play.png'
+    ACTION_CONTINUE: 'play.png',
+    ACTION_RESULTS: 'visualize.gif'
                }
 
 
@@ -329,6 +331,7 @@ class ProtocolsView(tk.Frame):
         gui.configureWeigths(self)
         c.grid(row=0, column=0, sticky='news')
         
+        self.viewer = XmippViewer()
         
     def createContent(self):
         """ Create the Protocols View for the Project.
@@ -434,7 +437,8 @@ class ProtocolsView(tk.Frame):
     def createActionToolbar(self):
         """ Prepare the buttons that will be available for protocol actions. """
        
-        self.actionList = [ACTION_EDIT, ACTION_COPY, ACTION_DELETE, ACTION_STEPS, ACTION_STOP, ACTION_CONTINUE]
+        self.actionList = [ACTION_EDIT, ACTION_COPY, ACTION_DELETE, ACTION_STEPS, 
+                           ACTION_STOP, ACTION_CONTINUE, ACTION_RESULTS]
         self.actionButtons = {}
         
         def addButton(action, text, toolbar):
@@ -468,6 +472,7 @@ class ProtocolsView(tk.Frame):
         displayAction(ACTION_DELETE, 2, status != STATUS_RUNNING)     
         displayAction(ACTION_STOP, 4, status == STATUS_RUNNING)
         displayAction(ACTION_CONTINUE, 5, status == STATUS_WAITING_APPROVAL)
+        displayAction(ACTION_RESULTS, 6, status != STATUS_RUNNING)
         
     def createProtocolsTree(self, parent):
         """Create the protocols Tree displayed in left panel"""
@@ -616,7 +621,11 @@ class ProtocolsView(tk.Frame):
                     "Do you really want to continue?", self.root):
             self.project.deleteProtocol(prot)
             self.runsTree.update()
+
+    def _analyzeResults(self, prot):
+        self.viewer.visualize(prot)
         
+                
     def _runActionClicked(self, action):
         prot = self.selectedProtocol
         if prot:
@@ -635,6 +644,9 @@ class ProtocolsView(tk.Frame):
                 pass
             elif action == ACTION_CONTINUE:
                 self._continueProtocol(prot)
+            elif action == ACTION_RESULTS:
+                self._analyzeResults(prot)
+ 
         # Following actions do not need a select run
         if action == ACTION_TREE:
             self.switchRunsView()
