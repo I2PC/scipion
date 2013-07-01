@@ -626,7 +626,7 @@ UseFscForFilter = True
     <Note:> if there are less values than iterations the last value is reused
     <Note:> if there are more values than iterations the extra value are ignored
 """
-ConstantToAddToFiltration ='-0.05'
+ConstantToAddToFiltration ='0.1'
 
 # Constant to be added to the reconstruction maximum frequency
 """ The meaning of this field depends on the UseFscForFilter flag.
