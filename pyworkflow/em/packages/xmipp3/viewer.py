@@ -34,7 +34,11 @@ from pyworkflow.em import SetOfImages, SetOfMicrographs
 from pyworkflow.utils.process import runJob
 from xmipp3 import getXmippPath
 from data import XmippSetOfImages, XmippSetOfMicrographs, XmippClassification2D
-
+from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
+from protocol_ctf_micrographs import XmippProtCTFMicrographs
+from protocol_extract_particles import XmippProtExtractParticles
+import xmipp
+from plotter import XmippPlotter
 
 class XmippViewer(Viewer):
     """ Wrapper to visualize different type of objects
@@ -61,6 +65,21 @@ class XmippViewer(Viewer):
             runShowJ(imgs.getFileName())
         elif issubclass(cls, XmippClassification2D):
             runShowJ(obj.getClassesMdFileName())
+        elif issubclass(cls, XmippProtPreprocessMicrographs):
+            runShowJ(obj.outputMicrographs.getFileName())
+        elif issubclass(cls, XmippProtCTFMicrographs):
+            runShowJ(obj.outputMicrographs.getFileName())
+        elif issubclass(cls, XmippProtExtractParticles):
+            runShowJ(obj.outputImages.getFileName())
+            # If Zscore on output images plot Zscore particle sorting            
+            md = xmipp.MetaData(obj.outputImages.getFileName()) 
+            print "MD=%s" % obj.outputImages.getFileName()
+            if md.containsLabel(xmipp.MDL_ZSCORE):
+                print "MD contains ZSCORE"
+                xplotter = XmippPlotter(windowTitle="Zscore particles sorting")
+                xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
+                xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_ZSCORE)
+                xplotter.show()      
         else:
             raise Exception('XmippViewer.visualize: can not visualize class: %s' % obj.getClassName())
 
