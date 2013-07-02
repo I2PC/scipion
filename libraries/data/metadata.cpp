@@ -1046,7 +1046,7 @@ void MetaData::read(const FileName &_filename,
     else if(extFile=="sqlite")
         readDB(inFile, desiredLabels, blockName, decomposeStack);
     else
-        readStar(inFile, desiredLabels, blockName, decomposeStack);
+        readStar(_filename, desiredLabels, blockName, decomposeStack);
 
     //_read(filename,desiredLabels,BlockName,decomposeStack);
     //_read calls clean so I cannot use eFilename as filename ROB
@@ -1176,7 +1176,9 @@ void MetaData::readStar(const FileName &filename,
 
     size_t id;
 
-    if (!(isMetadataFile = filename.isMetaData()))//if not a metadata, try to read as image or stack
+    FileName inFile = filename.removeBlockName();
+
+    if (!(isMetadataFile = inFile.isMetaData()))//if not a metadata, try to read as image or stack
     {
         Image<char> image;
         image.read(filename, HEADER);
@@ -1200,7 +1202,7 @@ void MetaData::readStar(const FileName &filename,
         return;
     }
 
-    std::ifstream is(filename.c_str(), std::ios_base::in);
+    std::ifstream is(inFile.c_str(), std::ios_base::in);
     std::stringstream ss;
     String line, token,_comment;
     std::vector<MDObject*> columnValues;
@@ -1209,11 +1211,11 @@ void MetaData::readStar(const FileName &filename,
 
     if (is.fail())
     {
-        REPORT_ERROR(ERR_IO_NOTEXIST, formatString("MetaData::read: File doesn't exists: %s", filename.c_str()) );
+        REPORT_ERROR(ERR_IO_NOTEXIST, formatString("MetaData::read: File doesn't exists: %s", inFile.c_str()) );
     }
 
     bool useCommentAsImage = false;
-    this->inFile = filename;
+    this->inFile = inFile;
     bool oldFormat=true;
 
     is.seekg(0, std::ios::beg);//reset the stream position to the beginning to start parsing
@@ -1249,14 +1251,14 @@ void MetaData::readStar(const FileName &filename,
         //map file
         int fd;
         BUFFER_CREATE(bufferMap);
-        mapFile(filename, bufferMap.begin, bufferMap.size, fd);
+        mapFile(inFile, bufferMap.begin, bufferMap.size, fd);
 
         BLOCK_CREATE(block);
         regex_t re;
         int rc = regcomp(&re, (blockRegExp+"$").c_str(), REG_EXTENDED|REG_NOSUB);
         if (blockRegExp.size() && rc != 0)
             REPORT_ERROR(ERR_ARG_INCORRECT, formatString("Pattern '%s' cannot be parsed: %s",
-                         blockRegExp.c_str(), filename.c_str()));
+                         blockRegExp.c_str(), inFile.c_str()));
         BUFFER_COPY(bufferMap, buffer);
         bool firstBlock = true;
         bool singleBlock = blockRegExp.find_first_of(".[*+")==String::npos;
@@ -1295,7 +1297,7 @@ void MetaData::readStar(const FileName &filename,
         regfree(&re);
         if (firstBlock)
             REPORT_ERROR(ERR_MD_BADBLOCK, formatString("Block: '%s': %s",
-                         blockRegExp.c_str(), filename.c_str()));
+                         blockRegExp.c_str(), inFile.c_str()));
     }
     else if (line.find("Headerinfo columns:") != String::npos)
     {

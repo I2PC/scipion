@@ -156,7 +156,7 @@ void ProgIDRXrayTomo::preRun()
     projMD.getValue(MDL_IMAGE, fnProjs, projMD.firstObject());
     // We generate the MD of temporary projections to be used for further reconstructions
     interProjMD = projMD;
-    interProjMD.replace(MDL_IMAGE, fnProjs.removeSliceNumber(), fnInterProjs);
+    interProjMD.replace(MDL_IMAGE, fnProjs.removePrefixNumber(), fnInterProjs);
     interProjMD.write(fnInterProjsMD);
 
     String arguments = formatString("-i %s -o %s -s",
@@ -297,7 +297,7 @@ void ProgIDRXrayTomo::reconstruct(const FileName &fnProjsMD, const FileName &fnV
         FileName fnProjs;
         MD.getValue(MDL_IMAGE, fnProjs, MD.firstObject());
 
-        reconsTomo3D(fnInterAngles, fnProjs.removeSliceNumber(), fnVol);
+        reconsTomo3D(fnInterAngles, fnProjs.removePrefixNumber(), fnVol);
         phantom.read(fnVol);
         MULTIDIM_ARRAY(phantom.iniVol).resetOrigin();
         MULTIDIM_ARRAY(phantom.iniVol).reslice(VIEW_Y_NEG);
@@ -333,7 +333,7 @@ int reconsTomo3D(const MetaData& MD, const FileName& fnOut, const String& params
         REPORT_ERROR(ERR_IMG_NOREAD, "reconsTromo3D: Image format cannot be read by tomo3D.");
     }
 
-    return reconsTomo3D(fnAngles, fnProjs.removeSliceNumber(), fnOut, params);
+    return reconsTomo3D(fnAngles, fnProjs.removePrefixNumber(), fnOut, params);
 }
 
 int reconsTomo3D(const FileName& fnAngles, const FileName& fnProjs,
