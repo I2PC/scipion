@@ -36,26 +36,22 @@ class HostForm(forms.Form):
                                       required=False,
                                       error_messages={'required': 'Please, enter label for the configuration'},
                                       widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
-    queusSystemMandatory = forms.BooleanField(label='Mandatory',
+    queueSystemMandatory = forms.BooleanField(label='Mandatory',
                                               required=False,
                                               error_messages={'required': 'Please, select if queue is mandatory'})
-    queusSystemSubmitCommand = forms.CharField(label='Submit command', 
+    queueSystemSubmitTemplate = forms.CharField(label='Submit template', 
+                                      required=False,
+                                      error_messages={'required': 'Please, insert submit template'},
+                                      widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
+    queueSystemSubmitCommand = forms.CharField(label='Submit command', 
                                       required=False,
                                       error_messages={'required': 'Please, insert submit command'},
-                                      widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
-    queueSystemSubmitTemplate = forms.CharField(label='Submit template', 
-                                      required=False,
-                                      error_messages={'required': 'Please, insert submit template'},
-                                      widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
-    queueSystemSubmitTemplate = forms.CharField(label='Submit template', 
-                                      required=False,
-                                      error_messages={'required': 'Please, insert submit template'},
                                       widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
     queueSystemCheckCommand = forms.CharField(label='Check command', 
                                       required=False,
                                       error_messages={'required': 'Please, insert check command'},
                                       widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
-    queueSystemCheckCommand = forms.CharField(label='Cancel command', 
+    queueSystemCancelCommand = forms.CharField(label='Cancel command', 
                                       required=False,
                                       error_messages={'required': 'Please, insert cancel command'},
                                       widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
@@ -72,7 +68,7 @@ class HostForm(forms.Form):
         host.setUserName(self.cleaned_data['userName'])
         host.setHostPath(self.cleaned_data['hostPath'])
         host.setPassword(self.cleaned_data['password'])
-        host.setPassword(self.cleaned_data['mpiCommand'])
+        host.setMpiCommand(self.cleaned_data['mpiCommand'])
         
         return host
     
@@ -83,7 +79,27 @@ class HostForm(forms.Form):
         self.fields['userName'].initial = host.getUserName()
         self.fields['hostPath'].initial = host.getHostPath()
         self.fields['password'].initial = host.getPassword()
-        self.fields['mpiCommand'].initial = host.getPassword()   
+        self.fields['mpiCommand'].initial = host.getMpiCommand() 
+        
+    def getHostsBasic(self):
+        list = []
+        list.append(label)
+        list.append(hostName)
+        list.append(userName)
+        list.append(password)
+        list.append(hostPath)
+        list.append(mpiCommand)
+        return list
+        
+    def getQueueSystem(self):
+        list = []
+        list.append(queueSystemName)
+        list.append(queueSystemMandatory)
+        list.append(queueSystemSubmitTemplate)
+        list.append(queueSystemSubmitCommand)
+        list.append(queueSystemCheckCommand)
+        list.append(queueSystemCancelCommand)
+        return list
         
         
 class ShowjForm(forms.Form):
