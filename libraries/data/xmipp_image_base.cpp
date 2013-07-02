@@ -487,9 +487,8 @@ ImageFHandler* ImageBase::openFile(const FileName &name, int mode) const
     FileName fileName, headName = "";
     FileName ext_name = name.getFileFormat();
 
-    // Remove image number
-    size_t dump;
-    name.decompose(dump, fileName);
+    // Remove image number and block name
+    fileName = name.removeBlockNameOrSliceNumber();
 
     fileName = fileName.removeFileFormat();
 
@@ -693,8 +692,7 @@ int ImageBase::_read(const FileName &name, ImageFHandler* hFile, DataMode datamo
     tif  = hFile->tif;
     fhdf5 = hFile->fhdf5;
 
-    size_t image_num;
-    name.decompose(image_num, filename);
+    size_t image_num = name.getPrefixNumber();
     filename = name;
     dataFName = hFile->fileName;
 
@@ -952,6 +950,8 @@ std::ostream& operator<<(std::ostream& o, const ImageBase& I)
         o << "Fourier-space image" << std::endl;
     else
         o << "Real-space image" << std::endl;
+
+    delete fileDT;
 
     size_t xdim, ydim, zdim, ndim;
     I.getDimensions(xdim, ydim, zdim, ndim);
