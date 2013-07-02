@@ -81,24 +81,24 @@ class HostForm(forms.Form):
         self.fields['password'].initial = host.getPassword()
         self.fields['mpiCommand'].initial = host.getMpiCommand() 
         
-    def getHostsBasic(self):
+    def getHostBasicFields(self):
         list = []
-        list.append(label)
-        list.append(hostName)
-        list.append(userName)
-        list.append(password)
-        list.append(hostPath)
-        list.append(mpiCommand)
+        list.append(self['label'])
+        list.append(self['hostName'])
+        list.append(self['userName'])
+        list.append(self['password'])
+        list.append(self['hostPath'])
+        list.append(self['mpiCommand'])
         return list
         
-    def getQueueSystem(self):
+    def getQueueSystemFields(self):
         list = []
-        list.append(queueSystemName)
-        list.append(queueSystemMandatory)
-        list.append(queueSystemSubmitTemplate)
-        list.append(queueSystemSubmitCommand)
-        list.append(queueSystemCheckCommand)
-        list.append(queueSystemCancelCommand)
+        list.append(self['queueSystemName'])
+        list.append(self['queueSystemMandatory'])
+        list.append(self['queueSystemSubmitTemplate'])
+        list.append(self['queueSystemSubmitCommand'])
+        list.append(self['queueSystemCheckCommand'])
+        list.append(self['queueSystemCancelCommand'])
         return list
         
         

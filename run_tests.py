@@ -18,6 +18,10 @@ def runTests(tests):
     result = GTestResult()
     tests.run(result)
     result.doReport()
+    if result.testFailed > 0:
+        sys.exit(1)
+    else:
+        sys.exit(0)
        
        
 if __name__ == '__main__':
