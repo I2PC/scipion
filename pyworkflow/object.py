@@ -191,58 +191,43 @@ class Object(object):
         return resultDictionary
     
     def copy(self, other):
+        self.copy2(other, {})
+        
+    def copy2(self, other, copyDict):
         """ This method will recursively clone all attributes
         from one object to the other.
         Attributes must be present in both.
         NOTE: This implementation can be extended to add or remove mismatching attributes.
+        copyDict: this dict is used to store ids of attr to pointers inside the object
+        this will only work if the id has been properly set
         """
         # Copy basic object data
-        self._objName = other._objName
+        #self._objName = other._objName
         self._objValue = other._objValue
         
         # Copy attributes recursively
         for name, attr in other.getAttributesToStore():
             myAttr = getattr(self, name, None)
             if myAttr is None:
-                setattr(self, name, attr.clone())
-            else:
-                myAttr.copy(attr)
+                myAttr = attr.getClass()()
+                setattr(self, name, myAttr)
+            myAttr.copy2(attr, copyDict)
+                
+            # Store the attr in the copyDict
+            if attr.hasObjId():
+                copyDict[attr.getObjId()] = myAttr
+            # Use the copyDict to fix the reference in the copying object
+            # if the pointed one is inside the same object
+            if myAttr.isPointer() and myAttr.hasValue():
+                pointedId = attr.get().getObjId()
+                if pointedId in copyDict:
+                    myAttr.set(copyDict[pointedId])
     
     def clone(self):
         clone = self.getClass()()
         clone.copy(self)
         
         return clone    
-#     def __getAuxDictionary(self, obj):
-#         resultDictionary = {}
-#         if type(obj) != list and type(obj) != dict:
-#             for k in obj.__dict__['_attributes']:
-#                 v = getattr(obj, k)
-#                 if v is None:
-#                     resultDictionary[k] = None 
-#                 elif issubclass(v.__class__, Scalar):
-#                     resultDictionary[k] = v.get()  
-#                 elif issubclass(v.__class__, List):
-#                     if (v.get() is not None):
-#                         resultDictionary[k] = self.__getAuxDictionary(v.get())  
-#                     else:
-#                         resultDictionary[k] = None         
-#                 elif issubclass(v.__class__, Object):
-#                     resultDictionary[k] = self.__getAuxDictionary(v)
-#                 elif type(v)== list:
-#                     resultDictionary[k] = self.__getAuxDictionary(v)
-#                 elif type(v)  == dict:
-#                     raise Exception('Not implemented yet for ' + str(type(v)))
-#                 else:
-#                     resultDictionary[k] = v
-#         else: 
-#             if type(obj) == list:
-#                 resultList = []
-#                 for item in obj:
-#                     resultList.append(self.__getAuxDictionary(item))
-#             elif type(obj) == dict:
-#                 raise Exception('Not implemented yet for ' + str(type(k)))
-#         return resultDictionary
         
 
 class OrderedObject(Object):

@@ -125,8 +125,11 @@ class ProtImportMicrographs(Protocol):
     def _summary(self):
         summary = []
 
-        summary.append("Import of %d micrographs from %s" % (self.outputMicrographs.getSize(), self.pattern.get()))
-        summary.append("Sampling rate : %f" % self.samplingRate.get())
+        if not hasattr(self, 'outputMicrographs'):
+            summary.append("Output micrographs not ready yet.") 
+        else:
+            summary.append("Import of %d micrographs from %s" % (self.outputMicrographs.getSize(), self.pattern.get()))
+            summary.append("Sampling rate : %f" % self.samplingRate.get())
         
         return summary
     
@@ -335,8 +338,8 @@ class ProtParticlePicking(Protocol):
 
     def _summary(self):
         summary = []
-        if not self.inputMicrographs.hasValue():
-            summary.append("No <Input Micrographs> selected.")
+        if not hasattr(self, 'outputCoordinates'):
+            summary.append("Output coordinates not ready yet.") 
         else:
             summary.append("Input micrographs: " + self.inputMicrographs.get().getNameId())
             summary.append("Number of particles manually picked: %d (from %d micrographs)" % (self.outputCoordinates.getSize(), self.inputMicrographs.get().getSize()))

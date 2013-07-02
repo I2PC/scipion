@@ -147,7 +147,9 @@ class Project(object):
         # FIXME: this will not work for a real remote host
         dbPath = join(protocol.getHostConfig().getHostPath(), protocol.getDbPath())
         prot2 = getProtocolFromDb(dbPath, protocol.getObjId(), globals())
+        # Copy is only working for db restored objects
         protocol.copy(prot2)
+                 
         self.mapper.store(protocol)
         
     def continueProtocol(self, protocol):
