@@ -355,8 +355,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                               self.SAME_AS_PICKING:'Same as picking',
                               self.OTHER: 'Other downsampling factor'}
         summary = []
-        if not self.inputCoordinates.hasValue():
-            summary.append("No <Input Coordinates> selected.")
+        if not hasattr(self, 'outputImages'):
+            summary.append("Output images not ready yet.") 
         else:
             summary.append("Input coordinates: %s" % self.inputCoordinates.get().getNameId())
             summary.append("Downsample type: %s" % downsampleTypeText.get(self.downsampleType.get()))
