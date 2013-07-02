@@ -50,7 +50,7 @@ class EMTreeProvider(DbTreeProvider):
         self.viewer.visualize(obj)
         
     def getObjectPreview(self, obj):
-        desc = "<name>: " + obj.getName()
+        desc = "<name>: " + obj.getName() + "\n " + str(obj)
         
         return (None, desc)
     
