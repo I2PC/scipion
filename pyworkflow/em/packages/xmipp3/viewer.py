@@ -66,17 +66,11 @@ class XmippViewer(Viewer):
             runShowJ(imgs.getFileName())
         elif issubclass(cls, XmippClassification2D):
             runShowJ(obj.getClassesMdFileName())
-        elif issubclass(cls, ProtImportMicrographs):
-            fn = self._getTmpPath(obj.getName() + '_micrographs.xmd')
-            mics = XmippSetOfMicrographs.convert(obj.outputMicrographs, fn)
-            extra = ''
-            if mics.hasCTF():
-                extra = ' --mode metadata --render first'
-            runShowJ(mics.getFileName(), extraParams=extra)  
-        elif issubclass(cls, XmippProtPreprocessMicrographs):
-            runShowJ(obj.outputMicrographs.getFileName())
-        elif issubclass(cls, XmippProtCTFMicrographs):
-            runShowJ(obj.outputMicrographs.getFileName())
+        elif (issubclass(cls, ProtImportMicrographs) or
+              issubclass(cls, XmippProtPreprocessMicrographs) or
+              issubclass(cls, XmippProtCTFMicrographs)):
+            self.visualize(obj.outputMicrographs)
+            
         elif issubclass(cls, XmippProtExtractParticles):
             runShowJ(obj.outputImages.getFileName())
             # If Zscore on output images plot Zscore particle sorting            
