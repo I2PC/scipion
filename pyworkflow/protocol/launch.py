@@ -52,6 +52,7 @@ def launchProtocol(protocol, wait=False):
     """ This is the entry point to launch a protocol
     This function will decide wich case, A or B will be used.
     """
+    print "launchProtocol: hostname: ", protocol.getHostName()
     if protocol.getHostName() == 'localhost':
         return _launchLocalProtocol(protocol, wait)
     else:
@@ -89,17 +90,24 @@ def _launchLocalProtocol(protocol, wait):
 def _launchRemoteProtocol(protocol, wait):
     from pyworkflow.utils.remote import sshConnectFromHost
     # Establish connection
-    ssh = sshConnectFromHost(protocol.getHostConfig())
+    host = protocol.getHostConfig()
+    ssh = sshConnectFromHost(host)
+    rpath = RemotePath(ssh)
     # Copy protocol files
-    _copyProtocolFiles(protocol, ssh)
+    _copyProtocolFiles(protocol, rpath)
     # Run remote program to launch the protocol
-    cmd  = 'pw_protocol_launch.py %s %s' % (protocol.getDbPath(), protocol.strId(), wait)
+    cmd  = 'cd %s; pw_protocol_launch.py %s %s %s' % (host.getHostPath(), 
+                                                   protocol.getDbPath(), 
+                                                   protocol.strId(), str(wait))
+    print "Running remote %s" % greenStr(cmd)
     stdin, stdout, stderr = ssh.exec_command(cmd)
-    jobId = int(stdout.readlines()[0])
-    
+    for l in stdout.readlines():
+        if l.startswith('OUTPUT jobId'):
+            jobId = int(l.split()[2])
+            break
     return jobId
 
-def _copyProtocolFiles(protocol, ssh):
+def _copyProtocolFiles(protocol, rpath):
     """ Copy all required files for protocol to run
     in a remote execution host.
     NOTE: this function should always be execute with 
@@ -110,7 +118,7 @@ def _copyProtocolFiles(protocol, ssh):
         ssh: an ssh connection to copy the files.
     """
     remotePath = protocol.getHostConfig().getHostPath()
-    rpath = RemotePath(ssh)
+    
     
     for f in protocol.getFiles():
         remoteFile = join(remotePath, f)

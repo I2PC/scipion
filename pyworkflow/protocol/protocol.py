@@ -46,7 +46,7 @@ STATUS_FINISHED = "finished"  # successfully finished
 STATUS_ABORTED = "aborted"
 STATUS_WAITING_APPROVAL = "waiting approval"    # waiting for user interaction
 
-ACTIVE_STATUS = [STATUS_LAUNCHED, STATUS_RUNNING, STATUS_WAITING_APPROVAL]
+ACTIVE_STATUS = [STATUS_SAVED, STATUS_LAUNCHED, STATUS_RUNNING, STATUS_WAITING_APPROVAL]
 
 class Step(OrderedObject):
     """ Basic execution unit.
@@ -234,11 +234,12 @@ class Protocol(Step):
             self.numberOfMpi = Integer(1)
         if not hasattr(self, 'numberOfThreads'):
             self.numberOfThreads = Integer(1)
+        if not hasattr(self, 'hostName'):
+            self.hostName = String(args.get('hostName', 'localhost'))
+        
         # Maybe this property can be inferred from the 
         # prerequisites of steps, but is easier to keep it
         self.stepsExecutionMode = STEPS_SERIAL
-        # Host name
-        self.hostName = String(args.get('hostName', 'localhost'))
         # Expert level
         self.expertLevel = Integer(args.get('expertLevel', LEVEL_NORMAL))
         self._stepsExecutor = None
@@ -530,8 +531,9 @@ class Protocol(Step):
         """
         self._log = self.__getLogger()
         self._log.info('RUNNING PROTOCOL -----------------')
-        self._log.info('      runMode: %d' % self.runMode.get())
+        self._log.info('   currentDir: %s' % os.getcwd())
         self._log.info('   workingDir: ' + self.workingDir.get())
+        self._log.info('      runMode: %d' % self.runMode.get())
         #self.namePrefix = replaceExt(self._steps.getName(), self._steps.strId()) #keep
         self._currentDir = os.getcwd()
         self._run()

@@ -129,16 +129,19 @@ class Project(object):
         # to only create a subset of the db need for the run
         protocol.setDbPath('run.db')
         shutil.copy(self.dbPath, protocol.getDbPath())
-        launchProtocol(protocol, wait)
+        jobId = launchProtocol(protocol, wait)
         if wait: # This is only useful for launching tests...
             self._updateProtocol(protocol)
         else:
             protocol.setStatus(STATUS_LAUNCHED)
             self.mapper.store(protocol)
+        print jobId
         self.mapper.commit()
         
     def _updateProtocol(self, protocol):
-        prot2 = getProtocolFromDb(protocol.getDbPath(), protocol.getObjId(), globals())
+        # FIXME: this will not work for a real remote host
+        dbPath = join(protocol.getHostConfig().getHostPath(), protocol.getDbPath())
+        prot2 = getProtocolFromDb(dbPath, protocol.getObjId(), globals())
         protocol.copy(prot2)
         self.mapper.store(protocol)
         
@@ -206,11 +209,11 @@ class Project(object):
     def getRuns(self, iterate=False):
         """ Return the existing protocol runs in the project. """
         runs = self.mapper.selectByClass("Protocol", iterate=False)
-        print "Project.getRuns:"
+        #print "Project.getRuns:"
         for r in runs:
-            print "runName; ", r.getName()
+            #print "runName; ", r.getName()
             if r.isActive():
-                print "    updating...."
+                #print "    updating...."
                 self._updateProtocol(r)
         self.mapper.commit()
         
