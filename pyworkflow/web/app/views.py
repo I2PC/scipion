@@ -473,6 +473,7 @@ def getHostFormContext(request, initialContext = None):
     css_path = os.path.join(settings.STATIC_URL, 'css/general_style.css')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
+    expand_path = os.path.join(settings.STATIC_URL, 'js/expand.js')
     hostId = request.GET.get("hostId")
     if hostId is None or hostId == "":
         if initialContext is not None:
@@ -503,6 +504,7 @@ def getHostFormContext(request, initialContext = None):
     context = {'tittle': tittle,
                'jquery': jquery_path,
                'utils': utils_path,
+               'expand': expand_path,
                'css':css_path,
                'form': form}
      

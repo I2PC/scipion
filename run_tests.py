@@ -8,7 +8,7 @@ from pyworkflow.tests import GTestResult
 
 
 def discoverTests(path='.'):
-    return unittest.defaultTestLoader.discover(join('tests', path), top_level_dir=pw.HOME)
+    return unittest.defaultTestLoader.discover(join('pyworkflow','tests', path), top_level_dir=pw.HOME)
 
 def printTests(tests):
     for t in tests:
@@ -18,6 +18,10 @@ def runTests(tests):
     result = GTestResult()
     tests.run(result)
     result.doReport()
+    if result.testFailed > 0:
+        sys.exit(1)
+    else:
+        sys.exit(0)
        
        
 if __name__ == '__main__':

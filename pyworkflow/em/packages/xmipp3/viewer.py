@@ -33,10 +33,11 @@ from pyworkflow.em.viewer import Viewer
 from pyworkflow.em import SetOfImages, SetOfMicrographs
 from pyworkflow.utils.process import runJob
 from xmipp3 import getXmippPath
-from data import XmippSetOfImages, XmippSetOfMicrographs, XmippClassification2D
+from data import XmippSetOfImages, XmippSetOfMicrographs, XmippClassification2D, XmippSetOfCoordinates
 from pyworkflow.em.protocol import ProtImportMicrographs
 from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
+from protocol_particle_pick import XmippProtParticlePicking
 from protocol_extract_particles import XmippProtExtractParticles
 import xmipp
 from plotter import XmippPlotter
@@ -60,6 +61,8 @@ class XmippViewer(Viewer):
             if mics.hasCTF():
                 extra = ' --mode metadata --render first'
             runShowJ(mics.getFileName(), extraParams=extra)  
+        elif issubclass(cls, XmippSetOfCoordinates):
+            runParticlePicker(obj.getMicrographs().getFileName(), obj.getFileName(), extraParams='readonly')
         elif issubclass(cls, SetOfImages):
             fn = self._getTmpPath(obj.getName() + '_images.xmd')
             imgs = XmippSetOfImages.convert(obj, fn)
@@ -70,7 +73,8 @@ class XmippViewer(Viewer):
               issubclass(cls, XmippProtPreprocessMicrographs) or
               issubclass(cls, XmippProtCTFMicrographs)):
             self.visualize(obj.outputMicrographs)
-            
+        elif issubclass(cls, XmippProtParticlePicking):
+            self.visualize(obj.outputCoordinates)
         elif issubclass(cls, XmippProtExtractParticles):
             runShowJ(obj.outputImages.getFileName())
             # If Zscore on output images plot Zscore particle sorting            
@@ -122,4 +126,6 @@ def runJavaIJapp(memory, appName, args, batchMode=True):
 def runShowJ(inputFiles, memory="1g", extraParams=""):
     runJavaIJapp(memory, "'xmipp.viewer.Viewer'", "-i %s %s" % (inputFiles, extraParams), True)
 
+def runParticlePicker(inputMics, inputCoords, memory="1g", extraParams=""):
+    runJavaIJapp(memory, "''xmipp.viewer.particlepicker.training.Main''", "%s %s %s" % (inputMics, inputCoords, extraParams), True)
 

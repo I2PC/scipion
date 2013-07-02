@@ -46,7 +46,7 @@ STATUS_FINISHED = "finished"  # successfully finished
 STATUS_ABORTED = "aborted"
 STATUS_WAITING_APPROVAL = "waiting approval"    # waiting for user interaction
 
-ACTIVE_STATUS = [STATUS_SAVED, STATUS_LAUNCHED, STATUS_RUNNING, STATUS_WAITING_APPROVAL]
+ACTIVE_STATUS = [STATUS_LAUNCHED, STATUS_RUNNING, STATUS_WAITING_APPROVAL]
 
 class Step(OrderedObject):
     """ Basic execution unit.
@@ -522,6 +522,7 @@ class Protocol(Step):
         self._defineSteps() # Define steps for execute later
         #self._makePathsAndClean() This is done now in project
         startIndex = self.__findStartingStep() # Find at which step we need to start
+        self._log.info(" Starting at index: %d" % startIndex)
         self.__cleanStepsFrom(startIndex) # 
         self._runSteps(startIndex)
         
@@ -536,7 +537,8 @@ class Protocol(Step):
         self._log.info('      runMode: %d' % self.runMode.get())
         #self.namePrefix = replaceExt(self._steps.getName(), self._steps.strId()) #keep
         self._currentDir = os.getcwd()
-        self._run()
+        #self._run()
+        Step.run(self)
         outputs = [getattr(self, o) for o in self._outputs]
         #self._store(self.status, self.initTime, self.endTime, *outputs)
         self._store()

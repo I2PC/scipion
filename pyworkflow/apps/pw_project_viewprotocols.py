@@ -281,6 +281,8 @@ class RunIOTreeProvider(TreeProvider):
             
         if isinstance(obj, SetOfMicrographs):
             return [('Open Micrographs with Xmipp', lambda: self.viewer.visualize(obj))]
+        if isinstance(obj, XmippSetOfCoordinates):
+            return [('Open Coordinates with Xmipp', lambda: self.viewer.visualize(obj))]
         if isinstance(obj, SetOfImages):
             return [('Open Images with Xmipp', lambda: self.viewer.visualize(obj))]
         if isinstance(obj, XmippClassification2D):
@@ -528,8 +530,8 @@ class ProtocolsView(tk.Frame):
                        STATUS_RUNNING: '#FCCE62', 
                        STATUS_FINISHED: '#D2F5CB', 
                        STATUS_FAILED: '#F5CCCB', 
-                       STATUS_SAVED: '#F3F5CB', 
-                       STATUS_SAVED: '#124EB0',
+                       STATUS_WAITING_APPROVAL: '#F3F5CB', 
+                       #STATUS_SAVED: '#124EB0',
                        }
         
         nodeText = node.getName()
