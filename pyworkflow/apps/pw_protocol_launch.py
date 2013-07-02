@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -24,17 +25,29 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains Xmipp3.0 specific protocols
+This module will be executed in remote host in order
+to launch a protocol remotely. 
+It will receive as params:
+    - path to mapper to read protocol
+    - id of the protocol object in the mapper
+    - wait True force to wait until protocol has finished 
 """
+import sys
+from os.path import basename
+from pyworkflow.protocol import getProtocolFromDb
+from pyworkflow.em import *
+from pyworkflow.apps.config import *
+from pyworkflow.protocol.launch import _launchLocalProtocol
 
-from xmipp3 import *
-from data import *
-from convert import *
-from viewer import XmippViewer
-from plotter import XmippPlotter
-from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
-from protocol_ctf_micrographs import XmippProtCTFMicrographs
-from protocol_particle_pick import XmippProtParticlePicking 
-from protocol_extract_particles import XmippProtExtractParticles
-from protocol_ml2d import XmippProtML2D
-from protocol_cl2d import XmippProtCL2D
+
+if __name__ == '__main__':
+    if len(sys.argv) > 3:
+        dbPath = sys.argv[1]
+        protId = int(sys.argv[2])
+        wait = bool(sys.argv[3])
+        protocol = getProtocolFromDb(dbPath, protId, globals())
+        jobId = _launchLocalProtocol(protocol, wait)
+        # Print the status to be read 
+        print "OUTPUT jobId %s" % jobId
+    else:
+        print "usage: %s dbPath protocolID wait" % basename(sys.argv[0])

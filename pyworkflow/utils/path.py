@@ -30,7 +30,7 @@ inside the utils module
 
 import os
 import shutil
-from os.path import exists, join, splitext, isdir, expanduser, basename, dirname
+from os.path import exists, join, splitext, isdir, isfile, expanduser, basename, dirname
 import pyworkflow as pw
 
 
@@ -109,7 +109,7 @@ def getHomePath(user=''):
     """Return the home path of a give user."""
     return expanduser("~" + user)
 
-def getFolderFiles(folderPath):
+def getFiles(folderPath):
     """
     Gets all files of given folder and it subfolders.
     folderPath -- Folder path to get files.
@@ -122,15 +122,18 @@ def getFolderFiles(folderPath):
     return filePaths
 
 def copyTree(source, dest):
+    """
+    Wrapper arount the shutil.copytree, but allowing
+    that the dest folder also exists.
+    """
     if not exists(dest):
         shutil.copytree(source, dest, symlinks=True)
     else:
         for f in os.listdir(source):
             fnPath = os.path.join(source, f)
-            if os.path.isfile(fnPath):
+            if isfile(fnPath):
                 shutil.copy(fnPath, dest)
-            if os.path.isdir(fnPath):
-                shutil.copytree(fnPath, os.path.join(dest, f))
-
+            elif os.path.isdir(fnPath):
+                copyTree(fnPath, join(dest, f))
 
 

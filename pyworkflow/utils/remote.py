@@ -45,7 +45,7 @@ LOCAL_USER_AND_HOST = ''
 SSH_PORT = 22
 PAIRS_SEPARATOR = ':'
 
-log = getGeneralLogger('pyworkflow.utils.file_transfer')
+log = getGeneralLogger('pyworkflow.utils.remote')
 
 
 
@@ -56,9 +56,8 @@ def testHostConfig(host):
     Returns: True if the host could be reached.
     """    
     try:
-        rpath = RemotePath.fromCredentials(host.getHostName(), 
-                                           host.getUserName(), 
-                                           host.getPassword())
+        ssh = sshConnectFromHost(host)
+        rpath = RemotePath(ssh)
         rpath.listdir('.')
         rpath.close()
         return True
@@ -80,7 +79,10 @@ def sshConnect(hostName, userName, password, port=SSH_PORT, **args):
     ssh.connect(hostName, port, userName, password, **args)
     return ssh
 
-
+def sshConnectFromHost(host):
+    """ Establish a connection receiving a HostConfig class. """
+    return sshConnect(host.getHostName(), host.getUserName(), host.getPassword())
+    
 class RemotePath(object):
     """ This class will server as a Wrapper to the
     paramiko sftp protocol througth a ssh connection.
@@ -122,6 +124,7 @@ class RemotePath(object):
     def makedirs(self, remoteFolder):
         """ Like os.makedirs remotely. """
         if len(remoteFolder) and not self.exists(remoteFolder):
+            log.info('RemotePath.makedirs, path: %s' % remoteFolder)
             parent = dirname(remoteFolder)
             # if have parent and it doen't exist, create it recursively
             if len(parent) and not self.exists(parent): 
@@ -140,6 +143,7 @@ class RemotePath(object):
         the remote path exists for put the file.
         """
         self.makeFilePath(remoteFile)
+        log.info('RemotePath.putFile, local=%s, remote=%s' % (localFile, remoteFile))
         self.sftp.put(localFile, remoteFile)
         
     def makeFilePath(self, *remoteFiles):
@@ -156,7 +160,40 @@ class RemotePath(object):
         """ Close both ssh and sftp connections. """
         self.sftp.close()
         self.ssh.close()
-    
+        
+    def copyTree(self, localFolder, remoteFolder):
+        """
+        Same as shutil.copytree, but allowing
+        that the dest folder also exists.
+        dest is a remote folder.
+        """
+        if not self.exists(remoteFolder):
+            self.makePath(remoteFolder)
+            
+        for path in os.listdir(localFolder):
+            localPath = join(localFolder, path)
+            remotePath = join(remoteFolder, path)
+            # Create folders
+            if isdir(localPath):
+                self.copyTree(localPath, remotePath)
+            elif isfile(localPath):
+                self.putFile(localPath, remotePath)
+                
+    def cleanPath(self, *remotePaths):
+        """
+        Same as pyworkflow.utils.path.cleanPath but for remote folders or files.
+        """
+        for path in remotePaths:
+            if self.exists(path):
+                # Create folders
+                if self.isdir(path):
+                    files = [join(path, f) for f in self.sftp.listdir(path)]
+                    self.cleanPath(*files)
+                    log.info('RemotePath.cleanPath, rmdir path: %s' % path)
+                    self.sftp.rmdir(path)
+                else:# isfile(path):
+                    log.info('RemotePath.cleanPath, remove path: %s' % path)
+                    self.sftp.remove(path)
     
 if __name__ == '__main__':
     pass

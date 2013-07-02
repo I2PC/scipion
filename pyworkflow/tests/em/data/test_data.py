@@ -17,13 +17,11 @@ class TestSetOfMicrographs(unittest.TestCase):
     def setUpClass(cls):
         cls.outputPath = getOutputPath('test_data')
         
-        cls.dbGold = getGoldPath('Micrographs_TiltedPhantom', 'micrographs_gold.sqlite')
-        cls.dbGoldTilted = getGoldPath('Micrographs_TiltedPhantom', 'micrographs_tilted_gold.sqlite')
+        cls.dbGold = getGoldPath('Micrographs_BPV3', 'micrographs_gold.sqlite')
         
-        cls.micsPattern = getInputPath('Micrographs_TiltedPhantom', '*.mrc')
+        cls.micsPattern = getInputPath('Micrographs_BPV3', '*.mrc')
         
         cls.dbFn = getOutputPath(cls.outputPath, 'micrographs.sqlite')
-        cls.dbFnTilted = getOutputPath(cls.outputPath, 'micrographs_tilted.sqlite')
         
         #cls.mics = glob(cls.micsPattern)
         cls.mics = []
@@ -33,14 +31,6 @@ class TestSetOfMicrographs(unittest.TestCase):
         if len(cls.mics) == 0:
             raise Exception('There are not micrographs matching pattern')
         cls.mics.sort()
-    
-        """ Create tilted pairs """
-        cls.tiltedDict = {}
-        for i, fn in enumerate(cls.mics):
-            if i%2==0:
-                fn_u = fn
-            else:
-                cls.tiltedDict[fn] = fn_u
                   
         cleanPath(cls.outputPath)
         makePath(cls.outputPath)
@@ -72,24 +62,6 @@ class TestSetOfMicrographs(unittest.TestCase):
         setMics = SetOfMicrographs(self.dbGold)
         self.checkSet(setMics)
 
-        
-    def atestCreateTilted(self):
-        """ Create a SetOfMicrographs from a list of micrographs """
-        setMics = SetOfMicrographs(self.dbFnTilted, tiltPairs=True)
-        setMics.setSamplingRate(1.2)
-        for fn in self.mics:
-            mic = Micrograph(fn)
-            setMics.append(mic)
-            if fn in self.tiltedDict.values():
-                mic_t = mic
-            else:
-                setMics.appendPair(mic.getObjId(), mic_t.getObjId()) 
-            
-        setMics.write()
-        
-        self.assertTrue(self.checkMicrographsDb(setMics), "micrographs database does not exist")
-        
-        return setMics
     
        
 if __name__ == '__main__':

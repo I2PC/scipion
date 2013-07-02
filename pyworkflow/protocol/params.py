@@ -197,7 +197,7 @@ class Form():
     def addParallelSection(self, threads=1, mpi=8, condition="",
                            hours=72, jobsize=0):
         self.addSection(label='Parallelization')
-        self.addParam('executionHost', StringParam, default="localhost",
+        self.addParam('hostName', StringParam, default="localhost",
                       label='Execution host',
                       help='Select in which of the available do you want to launch this protocol.')
         if threads > 0:

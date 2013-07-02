@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.utils.remote import RemotePath
 """
 This module is responsible for launching protocol executions.
 There are two main scenarios: local execution and remote execution.
@@ -41,7 +42,7 @@ B. Remote execution:
 """
 import re
 from subprocess import Popen, PIPE
-from pyworkflow.utils import buildRunCommand, redStr, greenStr, makeFilePath
+from pyworkflow.utils import buildRunCommand, redStr, greenStr, makeFilePath, join
 from pyworkflow.protocol import STEPS_PARALLEL
 
 UNKNOWN_JOBID = -1
@@ -51,6 +52,7 @@ def launchProtocol(protocol, wait=False):
     """ This is the entry point to launch a protocol
     This function will decide wich case, A or B will be used.
     """
+    print "launchProtocol: hostname: ", protocol.getHostName()
     if protocol.getHostName() == 'localhost':
         return _launchLocalProtocol(protocol, wait)
     else:
@@ -68,7 +70,7 @@ def _launchLocalProtocol(protocol, wait):
         program = 'pw_protocol_run.py'
         mpi = 1
     protStrId = protocol.strId()
-    params = '%s %s' % (protocol.dbPath, protStrId)
+    params = '%s %s' % (protocol.getDbPath(), protStrId)
     command = buildRunCommand(None, program, params, 
                               mpi, protocol.numberOfThreads.get(), bg)
     # Check if need to submit to queue
@@ -86,7 +88,41 @@ def _launchLocalProtocol(protocol, wait):
 
     
 def _launchRemoteProtocol(protocol, wait):
-    raise Exception("Not yet implemented")
+    from pyworkflow.utils.remote import sshConnectFromHost
+    # Establish connection
+    host = protocol.getHostConfig()
+    ssh = sshConnectFromHost(host)
+    rpath = RemotePath(ssh)
+    # Copy protocol files
+    _copyProtocolFiles(protocol, rpath)
+    # Run remote program to launch the protocol
+    cmd  = 'cd %s; pw_protocol_launch.py %s %s %s' % (host.getHostPath(), 
+                                                   protocol.getDbPath(), 
+                                                   protocol.strId(), str(wait))
+    print "Running remote %s" % greenStr(cmd)
+    stdin, stdout, stderr = ssh.exec_command(cmd)
+    for l in stdout.readlines():
+        if l.startswith('OUTPUT jobId'):
+            jobId = int(l.split()[2])
+            break
+    return jobId
+
+def _copyProtocolFiles(protocol, rpath):
+    """ Copy all required files for protocol to run
+    in a remote execution host.
+    NOTE: this function should always be execute with 
+    the current working dir pointing to the project dir.
+    And the remotePath is assumed to be in protocol.getHostConfig().getHostPath()
+    Params:
+        protocol: protocol to copy files
+        ssh: an ssh connection to copy the files.
+    """
+    remotePath = protocol.getHostConfig().getHostPath()
+    
+    
+    for f in protocol.getFiles():
+        remoteFile = join(remotePath, f)
+        rpath.putFile(f, remoteFile)
 
 
 def _submitProtocol(hostConfig, submitDict):
