@@ -183,8 +183,8 @@ class XmippProtML2D(ProtAlign, ProtClassify, XmippProtocol):
 
     def _summary(self):
         summary = []
-        if not self.inputImages.hasValue():
-            summary.append("No <Input Images> selected.")
+        if not hasattr(self, 'outputClassification'):
+            summary.append("Output classes not ready yet.")
         else:
             summary.append("Input Images: %s" % self.inputImages.get().getNameId())
             summary.append("Number of references: %d" % self.numberOfReferences.get())

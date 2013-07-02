@@ -281,6 +281,8 @@ class RunIOTreeProvider(TreeProvider):
             
         if isinstance(obj, SetOfMicrographs):
             return [('Open Micrographs with Xmipp', lambda: self.viewer.visualize(obj))]
+        if isinstance(obj, XmippSetOfCoordinates):
+            return [('Open Coordinates with Xmipp', lambda: self.viewer.visualize(obj))]
         if isinstance(obj, SetOfImages):
             return [('Open Images with Xmipp', lambda: self.viewer.visualize(obj))]
         if isinstance(obj, XmippClassification2D):
