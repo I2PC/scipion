@@ -4,14 +4,11 @@ from django.http import HttpResponse
 from pyworkflow.web.pages import settings
 from django.shortcuts import render_to_response
 from pyworkflow.tests import getInputPath
-from pyworkflow.web.app.forms import ShowjForm
+from pyworkflow.web.app.forms import ShowjForm, getBlockComboBoxValues, getMetadataComboBoxValues
 from django.template import RequestContext
 from os.path import join    
     
 def showj(request, inputParameters=None):
-    
-    print "mak"
-    print inputParameters
     
     # Resources #
     # Style Sheets
@@ -35,42 +32,33 @@ def showj(request, inputParameters=None):
     
     #############
     # WEB INPUT PARAMETERS
-#    inputParameters = {'path': request.GET.get('path', 'tux_vol.xmd'),
-#                     'block': request.GET.get('block', ''),
-#                     'allowRender': 'render' in request.GET,
-#                     'imageDim' : request.GET.get('dim', None),
-#                     'mode': request.GET.get('mode', 'gallery'),
-#                     'metadataComboBox': request.GET.get('metadataComboBox', 'image')}
-    
-         
     if request.method == 'POST': # If the form has been submitted...
         print "POST METHOD"
         mdXmipp = loadMetaDataXmipp(request.POST.get('path'), request.POST.get('blockComboBox'))
         showjForm = ShowjForm(mdXmipp, request.POST) # A form bound to the POST data
     else:
         print "GET METHOD"
+        
         if inputParameters == None:
+            mdXmipp = loadMetaDataXmipp(request.GET.get('path', 'tux_vol.xmd'), request.GET.get('block',''))
             inputParameters = {'path': request.GET.get('path', 'tux_vol.xmd'),
-    #                     'blockComboBox': request.GET.get('block', ''),
+                         'blockComboBox': request.GET.get('block', getBlockComboBoxValues(request.GET.get('path', 'tux_vol.xmd'))[0][0]),
+                         'metadataComboBox': getMetadataComboBoxValues(mdXmipp, 'render' in request.GET)[0][0],
                          'allowRender': 'render' in request.GET,
                          'zoom' : request.GET.get('dim', 150),
                          'mode': request.GET.get('mode', 'gallery'),
                          'gotoContainer': 1}
-        
-            
-        mdXmipp = loadMetaDataXmipp(inputParameters['path'], inputParameters['block'])
+        else:
+            mdXmipp = loadMetaDataXmipp(inputParameters['path'], inputParameters['blockComboBox'] if ('blockComboBox' in inputParameters) else '')
+            if 'blockComboBox' not in inputParameters:
+                inputParameters['blockComboBox']=getBlockComboBoxValues(inputParameters['path'])[0][0]
+            if 'metadataComboBox' not in inputParameters:
+                inputParameters['metadataComboBox']=getMetadataComboBoxValues(mdXmipp, inputParameters['allowRender'])[0][0]
+
         showjForm = ShowjForm(mdXmipp, inputParameters) # An unbound form
         
     if showjForm.is_valid() is False:
         print showjForm.errors
-    else:
-        print "topapi"    
-
-    
-    print "data after valid"
-    print showjForm.data
-               
-    
     
     md = MdData(mdXmipp, showjForm.data['allowRender'], showjForm.data['zoom'])
     request.session['md'] = md
@@ -152,35 +140,7 @@ class TableLayoutConfiguration():
         #Esto es un napeidus que habria que arreglar
         self.labels_typeOfColumns= zip(self.labels,self.typeOfColumns)
 
-class MenuLayoutConfig():        
-    def __init__(self, mode, path, block, allowRender, imageDim):
-        link = "location.href='/showj/?path=" + path
-        longPath = getInputPath('showj', path)
-        if len(block):
-            link = link + "&block=" + block
-        if allowRender:
-            link = link + "&render"
-        if imageDim is not None:
-            link = link + "&dim=" + str(imageDim)
-                
-
-        if (mode == "table"):
-            self.tableViewLink = "#"
-            self.tableViewSrc = "/resources/showj/tableViewOn.gif"
-            self.galleryViewLink = link + "&mode=gallery'"
-            self.galleryViewSrc = "/resources/showj/galleryViewOff.gif"
-            
-            self.disabledColRowMode = "disabled"
-            
-        elif (mode == "gallery"):
-            self.tableViewLink = link + "&mode=table'"
-            self.tableViewSrc = "/resources/showj/tableViewOff.gif"
-            self.galleryViewLink = "#"
-            self.galleryViewSrc = "/resources/showj/galleryViewOn.gif"
-            
-            self.disabledColRowMode = ""
-            
-        self.blocks = xmipp.getBlocksInMetaDataFile(str(longPath))    
+  
          
 def getTypeOfColumns(label, allowRender):
     typeOfColumns = []
@@ -195,8 +155,6 @@ def getTypeOfColumns(label, allowRender):
     return typeOfColumns
         
 def defineColsLayout(labels):
-    print "labels"
-    print labels
     colsOrder = range(len(labels))
     if 'enabled' in labels:
         colsOrder.insert(0, colsOrder.pop(labels.index('enabled')))
@@ -204,8 +162,6 @@ def defineColsLayout(labels):
 
 def loadMetaDataXmipp(path, block):
     path= getInputPath('showj', path)
-    print "path carajo"
-    print path
     if len(block):
         path = '%s@%s' % (block, path)
     return xmipp.MetaData(path)
@@ -275,10 +231,20 @@ def get_image(request):
             parts = imagePath.split(AT)
             imageNo = parts[0]
             imagePath = parts[1]
-        if request.session['projectPath'] == None:
-            imagePath = getInputPath('showj', imagePath)
-        else:
-            imagePath = join(request.session['projectPath'],imagePath)
+            
+        if 'projectPath' in request.session:
+            print request.session['projectPath']
+            imagePathTmp = join(request.session['projectPath'],imagePath)
+            if not os.path.isfile(imagePathTmp):
+                imagePath = getInputPath('showj', imagePath)      
+            
+
+        print "imagePath"
+        print imagePath
+
+#        imagePath = join(request.session['projectPath'],imagePath)
+        
+        print imagePath
                 
         if imageNo:
             imagePath = '%s@%s' % (imageNo, imagePath) 

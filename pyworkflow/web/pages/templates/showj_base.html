@@ -58,14 +58,15 @@
 	//Automatic mode => disable cols & rows textfields
 	//Manual mode => enable cols & rows textfields and initialize value
 	function initializeColRowModeEvents(){
-		$("#colRowMode").click(function(){
+		$("#colRowMode").click(function(e){
 			if ($("#colRowModeImage").attr("src").indexOf("On") != -1){
 				$("#colRowModeImage").attr("src", $("#colRowModeImage").attr("src").replace("On","Off"))
 				$("#id_cols").attr('disabled', 'disabled');
 				$("#id_rows").attr('disabled', 'disabled');
 				
 				$("section").css("width", "");
-				
+
+				e.preventDefault();
 			}
 			else{
 				$("#colRowModeImage").attr("src", $("#colRowModeImage").attr("src").replace("Off","On"))
@@ -75,6 +76,10 @@
 				if ($("#id_cols").val()==""){
 					initializeColsRows()
 				}
+				else{
+					updateMainContainerDim($("#id_cols").val())
+				}
+				e.preventDefault();
 			}
 		});
 	}
@@ -195,19 +200,21 @@
 				</div>	
 				
 				<div id="colRowContainer" class="sectionMenu">
-					<button id="colRowMode" 
-					{{menuLayoutConfig.disabledColRowMode}}
-					>
+					<button id="colRowMode"
+					{% if form.mode.value == 'table' %}
+					  disabled
+					 {% endif %}
+					> 
 						<img src="/resources/showj/colRowModeOff.gif" id="colRowModeImage" />
 					</button>
 					
 					<div class="subSectionMenu">
-						<span class="textMenu">Cols</span>
+						<span class="textMenu">{{ form.cols.label_tag }}</span>
 						{{ form.cols }}
 						<!-- <input type="number" class="menuInputNumber" id="cols" value="" min="1" max="{{metadata.objects|length}}" disabled> -->
 					</div>
 					<div class="subSectionMenu">
-						<span class="textMenu">Rows</span>
+						<span class="textMenu">{{ form.rows.label_tag }}</span>
 						{{ form.rows }}
 						<!-- <input type="number" class="menuInputNumber" id="rows" value="" min="1" max="{{metadata.objects|length}}" disabled> -->
 					</div>
@@ -218,7 +225,7 @@
 				</div>
 		
 				<div id="blockSelectorContainer" class="sectionMenu">
-					<span class="textMenu">Select Block</span>
+					<span class="textMenu"> {{ form.blockComboBox.label_tag }} </span>
 					{{ form.blockComboBox }} 
 					<!-- <select id="blockComboBox">
 						{% for block in menuLayoutConfig.blocks %}
@@ -235,7 +242,11 @@
 				</div>
 				
 				<div id="metadataSelectorContainer" class="sectionMenu">
-					<span class="textMenu">Select Metadata</span>
+					<span class="textMenu">
+					{% if not form.metadataComboBox.is_hidden %}
+					{{ form.metadataComboBox.label_tag }}
+					{% endif %}
+					</span>
 					{{ form.metadataComboBox }}
 				</div>
 				

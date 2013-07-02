@@ -149,7 +149,14 @@ def getImage(imageName, imgDict=None, tk=True):
 
 def getPILImage(imageXmipp, dim=None):
     from PIL import Image
-    image = Image.fromarray(imageXmipp.getData())
+    imageData = imageXmipp.getData()
+
+    imageDataMax=imageData.max()
+    imageDataMin=imageData.min()
+    
+    imageData = (imageData-imageDataMin)*(255.0/(imageDataMax-imageDataMin))
+
+    image = Image.fromarray(imageData)
     img = image.convert('RGB')
     if dim:
         size = int(dim), int(dim)
