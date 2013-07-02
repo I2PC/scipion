@@ -557,7 +557,6 @@ def visualizeObject(request):
         print "mics.getFileName()"
         print mics.getFileName()
         inputParameters = {'path': join(request.session['projectPath'], mics.getFileName()),
-                       'block': '',
                        'allowRender': True,
                        'mode': 'table',
                        'zoom': 150,
@@ -572,7 +571,6 @@ def visualizeObject(request):
         print imgs.getFileName()
         
         inputParameters = {'path': join(request.session['projectPath'], imgs.getFileName()),
-               'block': '',
                'allowRender': True,
                'mode': 'gallery',
                'zoom': 150,
