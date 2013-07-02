@@ -178,17 +178,23 @@ class HostConfig(OrderedObject):
     def isQueueMandatory(self):
         return self.queueSystem.mandatory.get()
     
+    def getMpiCommand(self):
+        return self.mpiCommand.get()
+    
     def setLabel(self, label):
-        return self.label.set(label)
+        self.label.set(label)
     
     def setHostName(self, hostName):
-        return self.hostName.set(hostName)
+        self.hostName.set(hostName)
     
     def setUserName(self, userName):
-        return self.userName.set(userName)
+        self.userName.set(userName)
     
     def setPassword(self, password):
-        return self.password.set(password)
+        self.password.set(password)
     
     def setHostPath(self, hostPath):
-        return self.hostPath.set(hostPath)   
+        self.hostPath.set(hostPath)
+    
+    def setMpiCommand(self, mpiCommand):
+        self.mpiCommand.set(mpiCommand)   
