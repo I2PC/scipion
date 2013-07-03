@@ -551,25 +551,16 @@ def visualizeObject(request):
         
     if isinstance(object, SetOfMicrographs):
         fn = project.getTmpPath(object.getName() + '_micrographs.xmd')
-        print "fn"
-        print fn
         mics = XmippSetOfMicrographs.convert(object, fn)
-        print "mics.getFileName()"
-        print mics.getFileName()
         inputParameters = {'path': join(request.session['projectPath'], mics.getFileName()),
                        'allowRender': True,
-                       'mode': 'table',
+                       'mode': 'gallery',
                        'zoom': 150,
                        'gotoContainer': 1}
   
     elif isinstance(object, SetOfImages):
         fn = project.getTmpPath(object.getName() + '_images.xmd')
-        print "fn"
-        print fn
         imgs = XmippSetOfImages.convert(object, fn)
-        print "imgs.getFileName()"
-        print imgs.getFileName()
-        
         inputParameters = {'path': join(request.session['projectPath'], imgs.getFileName()),
                'allowRender': True,
                'mode': 'gallery',
