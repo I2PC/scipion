@@ -94,6 +94,48 @@ class QueueSystemConfig(OrderedObject):
         
     def hasValue(self):
         return self.name.hasValue() and len(self.queues)
+    
+    def getName(self):
+        return self.name.get()
+    
+    def getMandatory(self):
+        return self.mandatory.get()
+    
+    def getSubmitTemplate(self):
+        return self.submitTemplate.get()
+    
+    def getSubmitCommand(self):
+        return self.submitCommand.get()
+    
+    def getCheckCommand(self):
+        return self.checkCommand.get()
+    
+    def getCancelCommand(self):
+        return self.cancelCommand.get()
+    
+    def getQueues(self):
+        return self.queues
+    
+    def setName(self, name):
+        self.name.set(name)
+    
+    def setMandatory(self, mandatory):
+        self.mandatory.set(mandatory)
+    
+    def setSubmitTemplate(self, submitTemplate):
+        self.submitTemplate.set(submitTemplate)
+    
+    def setSubmitCommand(self, submitCommand):
+        self.submitCommand.set(submitCommand)
+    
+    def setCheckCommand(self, checkCommand):
+        self.checkCommand.set(checkCommand)
+    
+    def setCancelCommand(self, cancelCommand):
+        self.cancelCommand.set(cancelCommand)
+    
+    def setQueues(self, queues):
+        self.queues = queues
         
         
 class QueueConfig(OrderedObject):
@@ -104,6 +146,36 @@ class QueueConfig(OrderedObject):
         self.allowMPI = Boolean()
         self.allowThreads = Boolean()
         self.maxHours = Integer()
+        
+    def getName(self):
+        return self.name.get()
+    
+    def getMaxCores(self):
+        return self.maxCores.get()
+    
+    def getAllowMPI(self):
+        return self.allowMPI.get()
+    
+    def getAllowThreads(self):
+        return self.allowThreads.get()
+    
+    def getMaxHours(self):
+        return self.maxHours.get()
+    
+    def setName(self, name):
+        self.name.set(name)
+    
+    def setMaxCores(self, maxCores):
+        self.maxCores.set(maxCores)
+        
+    def setAllowMPI(self, allowMPI):
+        self.allowMPI.set(allowMPI)
+    
+    def setAllowThreads(self, allowThreads):
+        self.allowThreads.set(allowThreads)
+    
+    def setMaxHours(self, maxHours):
+        self.maxHours.set(maxHours)
         
     
 # class ExecutionHostMapper(XmlMapper):
@@ -181,6 +253,9 @@ class HostConfig(OrderedObject):
     def getMpiCommand(self):
         return self.mpiCommand.get()
     
+    def getQueueSystem(self):
+        return self.queueSystem
+    
     def setLabel(self, label):
         self.label.set(label)
     
@@ -197,4 +272,7 @@ class HostConfig(OrderedObject):
         self.hostPath.set(hostPath)
     
     def setMpiCommand(self, mpiCommand):
-        self.mpiCommand.set(mpiCommand)   
+        self.mpiCommand.set(mpiCommand)  
+        
+    def setQueueSystem(self, queueSystem):
+        self.queueSystem = queueSystem 

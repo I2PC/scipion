@@ -6,17 +6,22 @@
 <!-- CSS -->
 <link href={{css}} rel="stylesheet" type="text/css">
 <style>
-.collapse p {padding:0 10px 1em}
+.queueSystemConfig{
+	border-width: 1px;
+	border-style:solid;
+	border-color:black;
+	background-color: white;
+}
+.collapse {
+	padding:0 10px 1em;
+	padding-bottom:.75em;
+	}
 .top{font-size:.9em; text-align:right}
 #switch, .switch {margin-bottom:5px; text-align:right}
 
 
 h2{
 	font-size:1em;
-}
-
-.expand{
- 	padding-bottom:.75em;
 }
 
 /* --- Links  --- */
@@ -56,7 +61,6 @@ a:active, a:focus {
 <!-- JS -->
 <script src={{jquery}} type="text/javascript"></script>
 <script src={{utils}} type="text/javascript"></script>
-<script src={{expand}} type="text/javascript"></script>
 <script>
 
 	{% if message != None and message != '' %}
@@ -82,6 +86,8 @@ a:active, a:focus {
 	    //$("h2.expand").toggler({method: "slideFadeToggle"});    
 	    $("#content").expandAll({trigger: "h2.expand", ref: "div.demo", localLinks: "p.top a"});
 	});
+	
+	
 </script>
 </head>
 <body>
@@ -92,7 +98,7 @@ a:active, a:focus {
 		<form action="/updateHostsConfig" method="post">		
 	        {% csrf_token %}	 
 			<table>			 
-			 	{% for field in form.getHostBasicFields %}
+			 	{% for field in form.visible_fields %}
 			 	<tr>
 				    <td>
 				    	<label {% if field.field.required %} class="required" {% endif %} for="{{ field.html_name }}"> {{ field.label }}</label>
@@ -104,30 +110,63 @@ a:active, a:focus {
 					{{ field }}
 				{% endfor %}
 			</table>
-			 <h2 class="expand">Queue config</h2>
-			 <div class="collapse">
-			 
-				 <table>			 
-				 	{% for field in form.getQueueSystemFields %}
-				 	<tr>
-					    <td>
-					    	<label {% if field.field.required %} class="required" {% endif %} for="{{ field.html_name }}"> {{ field.label }}</label>
-					    </td> 
-					    <td>{{ field }}</td>
-					</tr>    
-					{% endfor %}
-				</table>
-			 
-			 </div>
-			
+			<button type="button" id="addQueueSystemConfig" class="generalButton">Add system config</button>
+			<div id="queueSystemConfig" class="queueSystemConfig" style="display:none">
+			 	<h2>Queue sytem</h2>				 
+			 	<br/>
+			 	<div id="subQueueSystemConfig">
+			 	</div>
+			 	<div id="queueConfig">
+				</div>
+				<button type="button" id="addQueueConfig" class="generalButton">Add config</button>				
+		 	</div>
 			<br/>
 			{% for field in form %}
 				{{ field.errors }}
 			{% endfor %}
 			<br/>
 			<input type="submit" value="Accept" class="priorityButton"/>
-			<button id="cancelButton"  onclick="closePopup()" class="generalButton">Cancel</button>
+			<button type="button" id="cancelButton"  onclick="closePopup()" class="generalButton">Cancel</button>
 		</form>	
 	</div>
 </body>
+<script>
+//form_count = $("[name=extra_field_count");
+queueSystemConfigCount = 0;
+$("#addQueueSystemConfig").click(function() {
+	$("#queueSystemConfig").toggle();
+	elementString = '';
+	elementString += '<table>';
+	elementString += '<tr><td> Name </td><td><input type="text" name="name" class="generalInput"/></td></tr>';
+	elementString += '<tr><td> Mandatory </td><td><input type="checkbox" name="mandatory"/></td></tr>';
+	elementString += '<tr><td> Submit template </td><td><input type="text" name="submitTemplate" class="generalInput"/></td></tr>';
+	elementString += '<tr><td> Submit command </td><td><input type="text" name="submitCommand" class="generalInput"/></td></tr>';
+	elementString += '<tr><td> Check command </td><td><input type="text" name="checkCommand" class="generalInput"/></td></tr>';
+	elementString += '<tr><td> Cancel command </td><td><input type="text" name="cancelCommand" class="generalInput"/></td></tr>';	
+	elementString += '</table>';
+	elementString += '<br/>';
+    element = $(elementString);
+    $("#subQueueSystemConfig").append(element);
+    queueSystemConfigCount ++;
+    $("[name=queueSystemConfigCount]").val(queueSystemConfigCount);
+})
+
+queueConfigCount = 0;
+$("#addQueueConfig").click(function() {
+	elementString = '';
+	elementString += '<table>';
+	elementString += '<tr><th align="center" colspan="2">Queue config ' + form_count + '</th></tr>'
+	elementString += '<tr><td> Name </td><td><input type="text" name="name_' + form_count + '" class="generalInput"/></td></tr>';
+	elementString += '<tr><td> Max. cores </td><td><input type="number" name="maxCores_' + form_count + '" class="generalInput"/></td></tr>';
+	elementString += '<tr><td> Allow MPI </td><td><input type="checkbox" name="allowMPI_' + form_count + '" /></td></tr>';
+	elementString += '<tr><td> Allow threads </td><td><input type="checkbox" name="allowThreads_' + form_count + '" /></td></tr>';
+	elementString += '<tr><td> Max. hours </td><td><input type="number" name="maxHours_' + form_count + '" class="generalInput"/></td></tr>';
+	elementString += '</table>';
+	elementString += '<br/>';
+    element = $(elementString);
+    $("#queueConfig").append(element);
+    queueConfigCount ++;
+    $("[name=queueConfigCount]").val(queueConfigCount);
+})
+</script>
 </html>
