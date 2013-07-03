@@ -8,6 +8,9 @@
 <script src={{launchTreeview}} type="text/javascript"></script>
 <script src={{tabs_config}} type="text/javascript"></script>
 <script src={{utils}} type="text/javascript"></script>
+<script>
+	
+</script>
 {% endblock %} {% block sideLeft %}
 <div class="protFieldsetTree">
 	<ul id="browser" class="filetree">
@@ -30,13 +33,14 @@
 	</ul>
 </div>
 {% endblock %} {% block content %}
-<span style="float:right;"><a id="treeTool" href="javascript:switchGraph();"><img src="{{treeTool}}"/> Tree</a></span>
+<span style="float: right;"><a id="treeTool"
+	href="javascript:switchGraph();"><img src="{{treeTool}}" /> Tree</a></span>
 <div id="runTable">
-	<div id="toolbar" style="float:left;display:none;">
+	<div id="toolbar" style="float: left; display: none;">
 		<span><a id="editTool" href=""><img src="{{editTool}}" />Edit</a></span>
-		<span><a id="copyTool" href=""><img src="{{copyTool}}" />Copy</a></span> 
-		<span><a id="deleteTool" href=""><img src="{{deleteTool}}" /> Delete</a></span> 
-		<span><a id="browseTool"href=""><img src="{{browseTool}}" /> Browse</a></span>
+		<span><a id="copyTool" href=""><img src="{{copyTool}}" />Copy</a></span>
+		<span><a id="deleteTool" href=""><img src="{{deleteTool}}" />Delete</a></span> 
+		<span><a id="browseTool" href=""><img src="{{browseTool}}" /> Browse</a></span>
 	</div>
 	<table id="data" cellspacing="0">
 		<tr>
@@ -56,10 +60,18 @@
 		{% endfor %}
 	</table>
 </div>
-<div id="graphActiv" style="display:none;" data-mode="inactive">
-	<h1>Graph</h1>
+<div id="graphActiv" style="display: none;" data-mode="inactive"
+	data-time="first">
+	<h3>History</h3>
+	<div class="window" style="top:3em;" id="container0">Project</div>
+	<div class="window" style="top:5em;" id="container1">ProtImportMicrographs1<br/>finished</div>
+	<div class="window" style="top:9em;" id="container2">XmippProtPreprocessMicrographs73<br/>finished</div>
+	<div class="window" style="top:13em;" id="container3">XmippProtCTFMicrographs222<br/>finished</div>
+	<div class="window" style="top:17em;" id="container4">XmippProtParticlePicking319<br/>finished</div>
+	<div class="window" style="top:21em;" id="container5">XmippProtExtractParticles388<br/>finished</div>
+	<div class="window" style="top:25em;left: 7em;" id="container6">XmippProtML2D621<br/>finished</div>
+	<div class="window" style="top:25em;left: 17em;" id="container7">XmippProtCL2D702<br/>finished</div>
 </div>
-
 {% endblock %} {% block contentDown %}
 <div id="tabContaier">
 	<ul class="listTabs">
@@ -75,12 +87,12 @@
 					<li>
 					<li>Input
 						<ul id='protocol_input'>
-							
+
 						</ul>
 					</li>
 					<li>Output
 						<ul id='protocol_output'>
-							
+
 						</ul>
 					</li>
 				</ul>
@@ -88,14 +100,7 @@
 		</div>
 		<!-- //tab2 -->
 		<div id="tab2" class="tabContents">
-			<h3>Summary</h3>
-			<p>Sed gravida velit ut lorem dictum vitae venenatis dolor
-				faucibus. In vehicula malesuada mi, vel semper sem porta in. Mauris
-				suscipit lorem eget justo congue semper.</p>
-			<p>Donec et purus eget elit tristique consequat. Integer ut orci
-				eu augue tristique viverra nec vitae odio. Nulla sem nibh, posuere
-				quis condimentum vitae, posuere sit amet lectus. Morbi euismod
-				tincidunt mauris ut scelerisque.</p>
+			<p>No summary information.</p>
 		</div>
 	</div>
 </div>

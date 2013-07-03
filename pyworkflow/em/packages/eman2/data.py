@@ -31,6 +31,7 @@ for specific EMAN2 EM data objects
 from pyworkflow.em import *  
 from pyworkflow.utils.path import replaceBaseExt, exists
 from glob import glob
+import os
             
 class EmanCoordinate(Coordinate):
     """This class holds the (x,y) position and other information
@@ -144,7 +145,24 @@ class EmanSetOfImages(SetOfImages):
     IMG_FORMAT = 'img'
     
     _format = BDB_FORMAT
-    
+
+    def load(self):
+        """ Load extra data from bdb. """
+        if self.getFileName() is None:
+            raise Exception("Set filename before calling load()")
+        
+        print "CURRENT PATH: %s" % os.getcwd()
+        print "FILENAME: %s" % self.getFileName()
+        os.chdir(os.path.join(os.getcwd(), self.getFileName()))
+        self._format = str(EmanDbd.getEmanParamValue('format'))
+        os.chdir(os.getcwd())
+        print "FORMAT TRAS EL LOAD=%s" % self._format
+        
+    def loadIfEmpty(self):
+        """ Load format only if None. """
+        if self._format is None:
+            self.load()
+                
     def __init__(self, filename=None, **args):
         SetOfImages.__init__(self, filename, **args)
         self._format = args.get('format')
@@ -152,6 +170,7 @@ class EmanSetOfImages(SetOfImages):
   
     def __iter__(self):
         """ Iterate over the set of images. """
+        self.loadIfEmpty()
         if self._format == self.BDB_FORMAT:
             # TODO: Find out how to iterate over images on bdb
             pass
@@ -162,4 +181,21 @@ class EmanSetOfImages(SetOfImages):
             for imgFn in imgPaths:
                 yield EmanImage(imgFn)
                 
-            
+    
+class EmanDbd():
+    """ Utility class to access the Eman dbd database """
+
+    @staticmethod    
+    def getEmanParamValue(paramName):
+        """ Recover a parameter value from EMAN Berkeley data base. """        
+        command = "e2bdb.py -D bdb:emboxerbase"
+        pipe = os.popen(command)
+        stOutput = pipe.readlines()
+        pipe.close()
+        auxValue = None
+        for line in stOutput:
+            if (paramName in line):
+                auxValue = line.split(" : ")[1]
+        if auxValue is None:
+            raise Exception("Error getting the stored paramter with command: " + command) 
+        return auxValue
