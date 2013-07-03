@@ -14,9 +14,16 @@ from pyworkflow.em.packages.xmipp3 import *
 class TestXmippBase(unittest.TestCase):
     
     @classmethod
-    def runImportMicrograph(cls, pattern, samplingRate, voltage):
+    def runImportMicrograph(cls, pattern, samplingRate, voltage, scannedPixelSize, magnification, sphericalAberration):
         """ Run an Import micrograph protocol. """
-        cls.protImport = ProtImportMicrographs(pattern=pattern, samplingRate=samplingRate, voltage=voltage)
+        # We have two options: passe the SamplingRate or the ScannedPixelSize + microscope magnification
+        if not samplingRate is None:
+            cls.protImport = ProtImportMicrographs(samplingRateMode=0, pattern=pattern, samplingRate=samplingRate, magnification=magnification, 
+                                                   voltage=voltage, sphericalAberration=sphericalAberration)
+        else:
+            cls.protImport = ProtImportMicrographs(samplingRateMode=1, pattern=pattern, scannedPixelSize=scannedPixelSize, 
+                                                   voltage=voltage, magnification=magnification, sphericalAberration=sphericalAberration)
+            
         cls.proj.launchProtocol(cls.protImport, wait=True)
         # check that input micrographs have been imported (a better way to do this?)
         if cls.protImport.outputMicrographs is None:
@@ -27,14 +34,14 @@ class TestXmippBase(unittest.TestCase):
     def runImportMicrographBPV1(cls):
         """ Run an Import micrograph protocol. """
         pattern = getInputPath('Micrographs_BPV1', '*.mrc')
-        return cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300)
+        return cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300, sphericalAberration=2, scannedPixelSize=None, magnification=56000)
     
     @classmethod
     def runFakedPicking(cls, mics, pattern):
         """ Run a faked particle picking. Coordinates already existing. """
         coordsFolder = getInputPath(pattern)
-        cls.protPP = XmippProtParticlePicking(importFolder=coordsFolder)                
-        cls.protPP.inputMicrographs.set(mics)        
+        cls.protPP = XmippProtParticlePicking(importFolder=coordsFolder, runMode=1)                
+        cls.protPP.inputMicrographs.set(mics)               
         cls.proj.launchProtocol(cls.protPP, wait=True)
         # check that faked picking has run ok
         if cls.protPP.outputCoordinates is None:
@@ -51,6 +58,44 @@ class TestXmippBase(unittest.TestCase):
             raise Exception('Import of images: %s, failed. outputImages is None.' % pattern)
         return cls.protImport        
  
+class TestImportMicrographs(TestXmippBase):
+    
+    @classmethod
+    def setUpClass(cls):
+        setupProject(cls)
+    
+    def testImport_1(self):
+        pattern = getInputPath('Micrographs_BPV1', '*.mrc')
+        samplingRate=None
+        scannedPixelSize=7
+        magnification=56000
+        voltage=300
+        sphericalAberration=2
+        
+        protImport = self.runImportMicrograph(pattern, samplingRate=samplingRate, scannedPixelSize=scannedPixelSize, magnification=magnification, voltage=voltage, sphericalAberration=sphericalAberration)
+        
+        # Check that sampling rate on output micrographs is equal to 
+        self.assertTrue(protImport.outputMicrographs.scannedPixelSize.get() == scannedPixelSize, "Incorrect ScannedPixelSize on output micrographs.")
+        self.assertTrue(protImport.outputMicrographs.getMicroscope().magnification.get() == magnification, "Incorrect Magnification on output micrographs.")
+        self.assertTrue(protImport.outputMicrographs.getMicroscope().voltage.get() == voltage, "Incorrect Voltage on output micrographs.")
+        self.assertTrue(protImport.outputMicrographs.getMicroscope().sphericalAberration.get() == sphericalAberration, "Incorrect SphericalAberration on output micrographs.")
+
+    def testImport_2(self):
+        pattern = getInputPath('Micrographs_BPV1', '*.mrc')
+        samplingRate=2.56
+        scannedPixelSize=7
+        magnification=56000
+        voltage=400
+        sphericalAberration=2.5
+        
+        protImport = self.runImportMicrograph(pattern, samplingRate=samplingRate, scannedPixelSize=scannedPixelSize, magnification=magnification, voltage=voltage, sphericalAberration=sphericalAberration)
+        
+        # Check that sampling rate on output micrographs is equal to 
+        self.assertTrue(protImport.outputMicrographs.samplingRate.get() == samplingRate, "Incorrect SamplingRate on output micrographs.")
+        self.assertTrue(protImport.outputMicrographs.getMicroscope().voltage.get() == voltage, "Incorrect Voltage on output micrographs.")
+        self.assertTrue(protImport.outputMicrographs.getMicroscope().sphericalAberration.get() == sphericalAberration, "Incorrect Spherical aberration on output micrographs.")
+
+    
 class TestXmippPreprocessMicrographs(TestXmippBase):
 
     @classmethod
@@ -83,7 +128,7 @@ class TestXmippCTFEstimation(TestXmippBase):
             
     def doCTF(self, pattern):
         #First, import a set of micrographs
-        protImport = self.runImportMicrograph(pattern, samplingRate=3.711, voltage=300)
+        protImport = self.runImportMicrograph(pattern, samplingRate=3.711, voltage=300, sphericalAberration=2, scannedPixelSize=None, magnification=56000)
         
         # Now estimate CTF on the downsampled micrographs
         print "Performing CTF..."   
@@ -110,9 +155,9 @@ class TestXmippExtractParticles(TestXmippBase):
     def setUpClass(cls):
         setupProject(cls)    
         pattern = getInputPath('Micrographs_BPV3_Down3', '*.mrc')
-        protImport = cls.runImportMicrograph(pattern, samplingRate=3.711, voltage=300)       
+        protImport = cls.runImportMicrograph(pattern, samplingRate=3.711, voltage=300, sphericalAberration=2, scannedPixelSize=None, magnification=56000)       
         pattern = getInputPath('Micrographs_BPV3', '*.mrc')
-        cls.protImport_ori = cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300)        
+        cls.protImport_ori = cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300, sphericalAberration=2, scannedPixelSize=None, magnification=56000)        
         cls.protPP = cls.runFakedPicking(protImport.outputMicrographs, 'Picking_XmippBPV3_Down3')
 
     def testExtractSameAsPicking(self):
