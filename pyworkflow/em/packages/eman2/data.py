@@ -148,10 +148,11 @@ class EmanSetOfImages(SetOfImages):
     def __init__(self, filename=None, **args):
         SetOfImages.__init__(self, filename, **args)
         self._format = args.get('format')
+        print 'FORMAT=%s' % self._format
   
     def __iter__(self):
         """ Iterate over the set of images. """
-        if self.format == self.BDB_FORMAT:
+        if self._format == self.BDB_FORMAT:
             # TODO: Find out how to iterate over images on bdb
             pass
         else:
