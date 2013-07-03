@@ -113,6 +113,8 @@ class ShowjForm(forms.Form):
                               min_value=1,
                               localize=False,
                               widget=forms.TextInput(attrs={'class' : 'menuInputNumber'}))
+    
+    
     cols = forms.IntegerField(label='Cols',
                               required=False,
                               max_value=100,
@@ -152,7 +154,10 @@ class ShowjForm(forms.Form):
                                                             required=False,
                                                             choices = metadataComboBoxValues)
             if self.data['mode'] != 'gallery':
-                self.fields['metadataComboBox'].widget=forms.HiddenInput()    
+                self.fields['metadataComboBox'].widget=forms.HiddenInput()
+                self.fields['cols'].widget.attrs['readonly'] = True
+                self.fields['rows'].widget.attrs['readonly'] = True
+                    
 
 def getBlockComboBoxValues(path):    
     import xmipp

@@ -5,25 +5,26 @@
 	$(document).ready(function(){
 		colsRowsEvents()
 		imageEvents()
-		
-
-		
 	});
-	
+
+	//Show enabled/disabled image and title on hover
 	function imageEvents(){
 		$(".img_container").hover(
-				function(){
-						if (!$(this).find(".enabledGallery").hasClass("selected")){
-							$(this).find(".enabledGallery").fadeIn('slow')
-						}
-					},
-				function(){
-						if (!$(this).find(".enabledGallery").hasClass("selected")){
-							$(this).find(".enabledGallery").fadeOut('slow')
-						}	
-					})
+			function(){
+					if (!$(this).find(".enabledGallery").hasClass("selected")){
+						$(this).find(".enabledGallery").fadeIn('slow')
+					}
+					$(this).find(".imageTitle").slideToggle('slow')
+				},
+			function(){
+					if (!$(this).find(".enabledGallery").hasClass("selected")){
+						$(this).find(".enabledGallery").fadeOut('slow')
+					}
+					$(this).find(".imageTitle").slideToggle('slow')
+				})
 	}
 	
+	//Change gallery layout when cols and rows textfield change
 	function colsRowsEvents(){
 		$("#id_cols, #id_rows").click(function(){
 			updateGalleryLayout($("#id_cols").val(),$("#id_rows").val(), $(this).attr("id"))
@@ -40,15 +41,12 @@
 	}
 	
 	function recalculateColsRows(cols, rows, setElement){
-		
 		if (setElement == "id_cols"){
 			$("#id_rows").val(Math.ceil($(".img_container").length/cols))
 		}
 		else{
 			$("#id_cols").val(Math.ceil($(".img_container").length/rows))
 		}
-			
-		
 	}
 	function updateMainContainerDim(colVal){
 		imgContainerWidth =$(".img_container").width() + (parseInt($(".img_container").css("margin-right")) * 2)
@@ -78,10 +76,9 @@
 						<div id="column_label">{{forloop.parentloop.counter}}</div> 
 						<div class="img_inner_container">
 							<img class="tableImages" src="/get_image/?image={{value.imgValue}}"/>
+							<div class="imageTitle">{{value.strValue}}</div>
 							<img class="enabledGallery" src="/resources/showj/enabled_gallery.png" id="{{value.label}}___{{forloop.parentloop.counter0}}" onclick="valueChange(this);"/>
 						</div>
-						
-						
 					</div> 
 				{% endif %}
 			{% endfor %}
