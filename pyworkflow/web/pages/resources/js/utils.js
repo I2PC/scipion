@@ -52,15 +52,14 @@ function launchToolbar(projName, id, elm) {
 			'href',
 			'javascript:popup("/form/?projectName=' + projName + '&protocolId='
 					+ id + '&action=copy' + '")');
+	
 	// Action Delete Button
 	$("a#deleteTool").attr('href',
 			'javascript:deleteProtocolForm("' + projName + '","' + id + '")');
+	
 	// Action Browse Button
-	// $("a#browseTool").attr(
-	// 'href',
-	// 'javascript:popup("/form/?projectName=' + projName + '&protocolId='
-	// + id + '")');
-	// alert('launchToolbar')
+	var aux = "javascript:alert('Not implemented yet')";
+	$("a#browseTool").attr('href',aux);
 
 	row.show(); // Show toolbar
 
@@ -206,4 +205,73 @@ function switchGraph() {
 		$("div#graphActiv").attr("data-mode", "inactive");
 		$("div#graphActiv").attr("style", "display:none;");
 	}
+	if ($("div#graphActiv").attr("data-time") == 'first') {
+		callPlumb();
+		$("div#graphActiv").attr("data-time", "not");
+	}
+
 }
+function callPlumb() {
+	
+	// Setting up drop options
+    var targetDropOptions = {
+            tolerance:'touch',
+            hoverClass:'dropHover',
+            activeClass:'dragActive'
+    };
+    
+    // Setting up a Target endPoint
+//    var targetColor = "red";
+    var targetColor = "black";
+    var targetEndpoint = {
+       endpoint:["Dot", { radius:5 }],
+       paintStyle:{ fillStyle:targetColor},
+       // isSource:true,
+       scope:"green dot",
+       connectorStyle:{ strokeStyle:targetColor, lineWidth:2 },
+       connector: ["Bezier", { curviness:5 } ],
+       maxConnections:10,
+       isTarget:true,
+       dropOptions : targetDropOptions
+    };
+    
+    // Setting up a Source endPoint
+//    var sourceColor = "blue";
+    var sourceColor = "black";
+    var sourceEndpoint = {
+       endpoint:["Dot", { radius:5 }],
+       paintStyle:{ fillStyle:sourceColor},
+       isSource:true,
+       scope:"green dot",
+       connectorStyle:{ strokeStyle:sourceColor, lineWidth:2},
+       connector: ["Bezier", { curviness:5 } ],
+       maxConnections:10
+       // isTarget:true,
+       // dropOptions : targetDropOptions
+    };
+    
+    // Set up endpoints on the divs
+    // jsPlumb.addEndpoint($("#container0") , { anchor:"TopCenter" },targetEndpoint);
+    connectNodes("#container0","#container1",sourceEndpoint,targetEndpoint);
+    connectNodes("#container1","#container2",sourceEndpoint,targetEndpoint);
+    connectNodes("#container2","#container3",sourceEndpoint,targetEndpoint);
+    connectNodes("#container3","#container4",sourceEndpoint,targetEndpoint);
+    connectNodes("#container4","#container5",sourceEndpoint,targetEndpoint);
+    connectNodes("#container5","#container6",sourceEndpoint,targetEndpoint);
+    connectNodes("#container5","#container7",sourceEndpoint,targetEndpoint);
+    
+    jsPlumb.draggable($(".window"));
+//    jsPlumb.animate($("#a"), {"left": 50,"top": 100},{duration:"slow"});
+ 
+}
+
+function connectNodes(elm1, elm2, source, target){
+	var a = jsPlumb.addEndpoint($(elm1) , { anchor:"Center" }, source);
+    var b = jsPlumb.addEndpoint($(elm2) , { anchor:"Center" }, target);
+    
+    jsPlumb.connect({
+	 source : a,
+	 target : b
+	 });
+}
+
