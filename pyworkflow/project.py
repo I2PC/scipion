@@ -140,7 +140,6 @@ class Project(object):
         else:
             protocol.setStatus(STATUS_LAUNCHED)
             self.mapper.store(protocol)
-        print jobId
         self.mapper.commit()
         
     def _updateProtocol(self, protocol):

@@ -62,7 +62,7 @@ class DefImportMicrographs(Form):
                    label='Sampling rate (A/px)', condition='samplingRateMode==0')
         self.addParam('magnification', IntParam, default=60000,
                    label='Magnification rate', condition='samplingRateMode==1')
-        self.addParam('scannedPixelSize', FloatParam, default=1.2,
+        self.addParam('scannedPixelSize', FloatParam, default=7.0,
                    label='Scanned pixel size', condition='samplingRateMode==1')
         
 
@@ -78,10 +78,11 @@ class ProtImportMicrographs(Protocol):
     def _defineSteps(self):
         self._insertFunctionStep('importMicrographs', self.pattern.get(), self.tiltPairs.get(),
                                 self.voltage.get(), self.sphericalAberration.get(),
-                                self.samplingRate.get(), self.scannedPixelSize.get())
+                                self.samplingRate.get(), self.scannedPixelSize.get(),
+                                self.magnification.get())
         
     def importMicrographs(self, pattern, tiltPairs, voltage, sphericalAberration, 
-                          samplingRate, scannedPixelSize):
+                          samplingRate, scannedPixelSize, magnification):
         """ Copy micrographs matching the filename pattern
         Register other parameters.
         """
@@ -91,6 +92,8 @@ class ProtImportMicrographs(Protocol):
             raise Exception('importMicrographs:There is not filePaths matching pattern')
         path = self._getPath('micrographs.sqlite')
         micSet = SetOfMicrographs(path, tiltPairs=tiltPairs)
+        # Setting microscope properties
+        micSet.microscope.magnification.set(magnification)
         micSet.microscope.voltage.set(voltage)
         micSet.microscope.sphericalAberration.set(sphericalAberration)
         if self.samplingRateMode.get() == 0:

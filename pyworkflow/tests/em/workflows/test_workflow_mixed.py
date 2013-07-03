@@ -17,13 +17,17 @@ class TestMixedWorkflow_1(TestWorkflow):
                     'protImport/BPV_1386.mrc',
                     'protDownsampling/micrographs.xmd', 
                     'protImport/micrographs.sqlite', 
-                    'protDownsampling/log/protocol.log'],
+                    'protDownsampling/logs/run.log',
+                    'protDownsampling/logs/run.db'
+                    ],
               'protCTF': [
                     'protCTF/extra/BPV_1386/ctffind_psd.mrc', 
                     'protCTF/extra/BPV_1386/ctffind.out', 
                     'protCTF/micrographs.sqlite',
                     'protDownsampling/micrographs.xmd', 
-                    'protDownsampling/BPV_1386.mrc'],
+                    'protDownsampling/BPV_1386.mrc',
+                    'protCTF/logs/run.log', 
+                    'protCTF/logs/run.db'],
               'protExtract':[
                     'protPicking/extra/BPV_1386.pos', 
                     'protExtract/tmp/BPV_1386_noDust.xmp', 
@@ -31,7 +35,9 @@ class TestMixedWorkflow_1(TestWorkflow):
                     'protExtract/images.xmd', 
                     'protExtract/extra/BPV_1386.stk', 
                     'protExtract/extra/BPV_1386.pos', 
-                    'protExtract/tmp/BPV_1386_flipped.xmp'],
+                    'protExtract/tmp/BPV_1386_flipped.xmp',
+                    'protExtract/logs/run.log',
+                    'protExtract/logs/run.db'],
               }
     
     @classmethod
@@ -98,9 +104,10 @@ class TestMixedWorkflow_2(TestWorkflow):
                     'protDownsampling/micrographs.xmd', 
                     'protImport/BPV_1388.mrc', 
                     'protImport/micrographs.sqlite', 
-                    'protDownsampling/log/protocol.log', 
                     'protDownsampling/BPV_1386.mrc', 
-                    'protImport/BPV_1387.mrc'],
+                    'protImport/BPV_1387.mrc',
+                    'protDownsampling/logs/run.log',
+                    'protDownsampling/logs/run.db'],
               'protCTF': [
                     'protCTF/extra/BPV_1387/xmipp_ctf_ctfmodel_quadrant.xmp', 
                     'protCTF/extra/BPV_1387/xmipp_ctf.psd', 
@@ -122,7 +129,9 @@ class TestMixedWorkflow_2(TestWorkflow):
                     'protCTF/extra/BPV_1386/xmipp_ctf_ctfmodel_halfplane.xmp', 
                     'protCTF/micrographs.xmd', 
                     'protDownsampling/BPV_1386.mrc', 
-                    'protCTF/extra/BPV_1388/xmipp_ctf_ctfmodel_quadrant.xmp'],
+                    'protCTF/extra/BPV_1388/xmipp_ctf_ctfmodel_quadrant.xmp',
+                    'protCTF/logs/run.log', 
+                    'protCTF/logs/run.db'],
               'protExtract':[
                     'protPicking/BPV_1387.box', 
                     'protPicking/BPV_1386.box', 
@@ -142,7 +151,9 @@ class TestMixedWorkflow_2(TestWorkflow):
                     'protExtract/tmp/BPV_1387_noDust.xmp', 
                     'protExtract/tmp/BPV_1388_noDust.xmp', 
                     'protExtract/extra/BPV_1387.xmd', 
-                    'protExtract/tmp/BPV_1386_flipped.xmp'
+                    'protExtract/tmp/BPV_1386_flipped.xmp',
+                    'protExtract/logs/run.log',
+                    'protExtract/logs/run.db',
                     ],
                 'protML2D': [
                     'protExtract/extra/BPV_1386.stk', 
@@ -164,8 +175,9 @@ class TestMixedWorkflow_2(TestWorkflow):
                     'protML2D/ml2d_extra/iter002/iter_classes.stk', 
                     'protML2D/ml2d_extra/iter004/iter_classes.xmd', 
                     'protML2D/ml2d_extra/iter004/iter_images.xmd', 
-                    'protML2D/ml2d_extra/iter003/iter_classes.xmd', 
-                    'protML2D/log/protocol.log', 
+                    'protML2D/ml2d_extra/iter003/iter_classes.xmd',  
+                    'protML2D/logs/run.log',
+                    'protML2D/logs/run.db',
                     'protML2D/ml2d_classes.xmd', 
                     'protML2D/ml2d_extra/iter001/iter_classes.stk', 
                     'protML2D/ml2d_extra/iter003/iter_classes.stk'],
@@ -224,6 +236,7 @@ class TestMixedWorkflow_2(TestWorkflow):
         print "Run ML2D"
         protML2D = XmippProtML2D(numberOfReferences=1, maxIters=4, 
                                  numberOfMpi=2, numberOfThreads=1)
+#        protML2D.inputImages.set(protExtract.outputImages)
         protML2D.inputImages.set(protExtract.outputImages)
         self.proj.launchProtocol(protML2D, wait=True)        
         

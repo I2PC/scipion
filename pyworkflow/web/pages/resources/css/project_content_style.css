@@ -232,3 +232,18 @@ div.datatable {
 	background-color: #fbfbfb;
 	margin-left: -3em;
 }
+
+/* jsPlumb */
+.window {
+	background-color: #EEEEEF;
+	border: 1px solid black;
+	border-radius: 0.5em;
+	box-shadow: 2px 2px 19px #AAAAAA;
+	color: black;
+	height: auto;
+	text-align: center;
+	width: auto;
+	position: absolute;
+	left: 7em;
+	z-index: 5;
+}

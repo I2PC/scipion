@@ -141,7 +141,7 @@ class TestXmippTiltedWorkflow(TestWorkflow):
         cls.pattern = getInputPath('Micrographs_TiltedPhantom', '*.mrc')        
         cls.importFolder = getInputPath('Picking_TiltedPhantom')
 
-    def testXmippTiltedWorkflow(self):
+    def atestXmippTiltedWorkflow(self):
         #First, import a set of micrographs
         protImport = ProtImportMicrographs(pattern=self.pattern, samplingRate=1.237, 
                                            voltage=300, tiltPairs=True)

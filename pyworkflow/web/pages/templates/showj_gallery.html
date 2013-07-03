@@ -71,7 +71,6 @@
 {% endblock %}
 
 {% block content_view %}	
-takarrus{{form.metadataComboBox.value}}
 		{% for obj in metadata.objects %}
 			{% for value in obj.values %}
 				{% if value.typeOfColumn == "image" and value.label == form.metadataComboBox.value %}
