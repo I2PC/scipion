@@ -488,7 +488,7 @@ ImageFHandler* ImageBase::openFile(const FileName &name, int mode) const
     FileName ext_name = name.getFileFormat();
 
     // Remove image number and block name
-    fileName = name.removeBlockNameOrSliceNumber();
+    fileName = name.removeAllPrefixes();
 
     fileName = fileName.removeFileFormat();
 

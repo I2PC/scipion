@@ -334,7 +334,7 @@ public:
     * filename=removeBlockNameOrSliceNumber();//filename="md1.doc"
     * @endcode
     */
-    FileName removeBlockNameOrSliceNumber() const;
+    FileName removeAllPrefixes() const;
 
     /** Random name
      *

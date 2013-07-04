@@ -517,7 +517,7 @@ FileName FileName::removePrefixNumber() const
     return *this;
 }
 
-FileName FileName::removeBlockNameOrSliceNumber() const
+FileName FileName::removeAllPrefixes() const
 {
     size_t first = rfind("@");
     if (first != npos)
@@ -547,13 +547,13 @@ bool FileName::isMetaData(bool failIfNotExists) const
 
 bool FileName::isStar1(bool failIfNotExists) const
 {
-    std::ifstream infile( this->removeBlockNameOrSliceNumber().c_str(), std::ios_base::in);
+    std::ifstream infile( this->removeAllPrefixes().c_str(), std::ios_base::in);
     String line;
 
     if (infile.fail())
     {
         if (failIfNotExists)
-            REPORT_ERROR( ERR_IO_NOTEXIST, formatString("File '%s' does not exist.", this->removeBlockNameOrSliceNumber().c_str()));
+            REPORT_ERROR( ERR_IO_NOTEXIST, formatString("File '%s' does not exist.", this->removeAllPrefixes().c_str()));
         else
             return false;
     }
@@ -633,7 +633,7 @@ bool FileName::exists() const
 /* Delete  file exists -------------------------------------------------- */
 void FileName::deleteFile() const
 {
-    FileName temp = this->removeFileFormat().removeBlockNameOrSliceNumber();
+    FileName temp = this->removeFileFormat().removeAllPrefixes();
     if (temp.exists())
         unlink(temp.c_str());
 }

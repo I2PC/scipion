@@ -339,7 +339,7 @@ int reconsTomo3D(const MetaData& MD, const FileName& fnOut, const String& params
 int reconsTomo3D(const FileName& fnAngles, const FileName& fnProjs,
                  const FileName& fnOut, const String& params)
 {
-    String exec("tomo3d -n -f -v 0 -a "+fnAngles+" -i "+fnProjs.removeBlockNameOrSliceNumber()+" -o "+fnOut+" "+params);
+    String exec("tomo3d -n -f -v 0 -a "+fnAngles+" -i "+fnProjs.removeAllPrefixes()+" -o "+fnOut+" "+params);
     return system(exec.c_str());
 }
 
