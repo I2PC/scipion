@@ -14,7 +14,7 @@ TIFFLibs = ['tiff']
 JPEGDir = "external/jpeg-8c"
 JPEGLibs = ['jpeg']
 HDF5Dir = "external/hdf5-1.8.10/src/"
-HDF5Libs = ['hdf5']
+HDF5Libs = ['hdf5', 'hdf5_cpp']
 CYGWIN = env['PLATFORM'] == 'cygwin'
 MACOSX = env['PLATFORM'] == 'darwin'
 MINGW = env['PLATFORM'] == 'win32'
