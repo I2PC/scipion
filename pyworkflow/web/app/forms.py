@@ -195,7 +195,7 @@ class ShowjForm(forms.Form):
         
         metadataComboBoxValues = getMetadataComboBoxValues(mdXmipp, self.data["allowRender"])
         if len(metadataComboBoxValues) > 0:
-            self.fields['metadataComboBox'] = forms.ChoiceField(label='Select Metadata',
+            self.fields['metadataComboBox'] = forms.ChoiceField(label='Select Label',
                                                             required=False,
                                                             choices = metadataComboBoxValues)
             if self.data['mode'] != 'gallery':

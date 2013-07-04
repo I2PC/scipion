@@ -179,6 +179,7 @@ function updateRowSelection(){
 function initializeSelectionRowEvent(){
 	/* Add a click handler to the rows - this could be used as a callback */
 	$("#data_table tbody").click(function(event) {
+		alert('taka')
 		$(oTable.fnSettings().aoData).each(function (){
 			$(this.nTr).removeClass('row_selected');
 		});
