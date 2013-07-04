@@ -304,4 +304,24 @@ class DbTreeProvider(ObjectTreeProvider):
     
     def _getObjectList(self):
         return self.mapper.selectAll()
+    
+    
+class ProjectRunsTreeProvider(TreeProvider):
+    """ Provide run list from a project
+    to populate a tree.
+    """
+    def __init__(self, project):
+        self.project = project
+    
+    def getObjects(self):
+        return self.project.getRuns() 
+        
+    def getColumns(self):
+        return [('Run', 250), ('State', 100), ('Time', 100)]
+    
+    def getObjectInfo(self, obj):
+        return {'key': obj.getObjId(),
+                'text': obj.getRunName(),
+                'values': (obj.status.get(), obj.getElapsedTime())}
+      
 
