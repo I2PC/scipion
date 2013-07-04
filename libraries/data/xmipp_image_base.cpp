@@ -526,7 +526,7 @@ ImageFHandler* ImageBase::openFile(const FileName &name, int mode) const
         hFile->fimg = NULL;
         hFile->fhed = NULL;
     }
-    else if (ext_name.contains("hdf5"))
+    else if (ext_name.contains("hdf"))
     {
         if ((hFile->fhdf5 = H5Fopen(fileName.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT)) == -1 )
             REPORT_ERROR(ERR_IO_NOTOPEN,"ImageBase::openFile: There is a problem opening the HDF5 file.");
@@ -642,7 +642,7 @@ void ImageBase::closeFile(ImageFHandler* hFile) const
         if (fileName.getFileSize() < 9)
             filename.deleteFile();
     }
-    else if (ext_name.contains("hdf5"))
+    else if (ext_name.contains("hdf"))
     {
         H5Fclose(fhdf5);
         if (fclose(fimg) != 0 )
@@ -746,7 +746,7 @@ int ImageBase::_read(const FileName &name, ImageFHandler* hFile, DataMode datamo
         err = readSPE(select_img,false);
     else if (ext_name.contains("jpg"))//SPE
         err = readJPEG(select_img);
-    else if (ext_name.contains("hdf5"))//SPE
+    else if (ext_name.contains("hdf"))//SPE
         err = readHDF5(select_img);
     else
         err = readSPIDER(select_img);
