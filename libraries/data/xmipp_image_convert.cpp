@@ -48,7 +48,6 @@ void ProgConvImg::init()
     type = "auto";
     // Set default write mode
     writeMode = WRITE_OVERWRITE;
-    delete_output_stack = false;
     depth = "";
     swap = false;
 }

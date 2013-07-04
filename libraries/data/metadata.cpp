@@ -59,8 +59,8 @@ void getBlocksInMetaDataFile(const FileName &inFile, StringVector& blockList)
 // Does the blocks exist
 bool existsBlockInMetaDataFile(const FileName &inFileWithBlock)
 {
-	return existsBlockInMetaDataFile(inFileWithBlock.removeBlockName(),
-			                         inFileWithBlock.getBlockName());
+    return existsBlockInMetaDataFile(inFileWithBlock.removeBlockName(),
+                                     inFileWithBlock.getBlockName());
 }
 bool existsBlockInMetaDataFile(const FileName &inFile, const String& inBlock)
 {
@@ -1181,8 +1181,9 @@ void MetaData::readStar(const FileName &filename,
     if (!(isMetadataFile = inFile.isMetaData()))//if not a metadata, try to read as image or stack
     {
         Image<char> image;
-        image.read(filename, HEADER);
-        if (image().ndim == 1 || !decomposeStack) //single image
+        if (decomposeStack) // If not decomposeStack it is no neccesary to read the image header
+            image.read(filename, HEADER);
+        if ( !decomposeStack || image().ndim == 1 ) //single image // !decomposeStack must be first
         {
             id = addObject();
             setValue(MDL_IMAGE, filename, id);
