@@ -524,8 +524,14 @@ def visualizeObject(request):
                'zoom': 150,
                'gotoContainer': 1}
 
-    elif isinstance(object, Classification2D):
-        print object.getName
+    elif isinstance(object, XmippClassification2D):
+        mdPath = object.getClassesMdFileName()
+        block, path = mdPath.split('@')
+        inputParameters = {'path': join(request.session['projectPath'], path),
+               'allowRender': True,
+               'mode': 'gallery',
+               'zoom': 150,
+               'gotoContainer': 1}
 #        runShowJ(obj.getClassesMdFileName())
     else:
         raise Exception('Showj Web visualizer: can not visualize class: %s' % object.getClassName())
