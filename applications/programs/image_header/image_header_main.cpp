@@ -44,6 +44,8 @@ protected:
     void defineParams()
     {
         produces_an_output = true;
+        get_image_info = false;
+
         XmippMetadataProgram::defineParams();
         addUsageLine("Operate with image files headers. By default in Xmipp, geometrical transformations");
         addUsageLine("comming in images files headers are ignored. Instead this information is read from");
@@ -210,7 +212,7 @@ protected:
             break;
         case HEADER_TREE:
             XmippH5File H5File;
-            H5File.openFile(fnImg, H5F_ACC_RDONLY);
+            H5File.openFile(fnImg.removeAllPrefixes().removeFileFormat(), H5F_ACC_RDONLY);
             H5File.showTree();
             break;
         }

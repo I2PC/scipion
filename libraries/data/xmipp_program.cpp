@@ -44,8 +44,8 @@ void XmippProgram::processDefaultComment(const char *param, const char *left)
 
 void XmippProgram::setDefaultComment(const char *param, const char *comment)
 {
-	defaultComments[param].clear();
-	defaultComments[param].addComment(comment);
+    defaultComments[param].clear();
+    defaultComments[param].addComment(comment);
 }
 
 void XmippProgram::defineCommons()
@@ -493,11 +493,12 @@ XmippMetadataProgram::XmippMetadataProgram()
     save_metadata_stack = false;
     keep_input_columns = false;
     delete_output_stack = true;
+    get_image_info = true;
     remove_disabled = true;
     single_image = input_is_metadata = input_is_stack = output_is_stack = false;
     mdInSize = 0;
     iter = NULL;
-    zdimOut = ydimOut = xdimOut = 0;
+    ndimOut = zdimOut = ydimOut = xdimOut = 0;
     image_label = MDL_IMAGE;
     delete_mdIn = false;
     track_origin = false;
@@ -551,7 +552,7 @@ void XmippMetadataProgram::defineParams()
     }
 
     addParamsLine(" [--track_origin]   : Store the original image filename in the output ");
-    addParamsLine("        			   : metadata in column imageOriginal.");
+    addParamsLine("              : metadata in column imageOriginal.");
 
     if (allow_apply_geo)
     {
@@ -644,7 +645,8 @@ void XmippMetadataProgram::setup(MetaData *md, const FileName &out, const FileNa
     create_empty_stackfile = (each_image_produces_an_output && output_is_stack && !fn_out.empty());
 
     // if create, then we need to read the dimensions of the input stack
-    getImageInfo(*mdIn, xdimOut, ydimOut, zdimOut, ndimOut, datatypeOut, image_label);
+    if (get_image_info || create_empty_stackfile)
+        getImageInfo(*mdIn, xdimOut, ydimOut, zdimOut, ndimOut, datatypeOut, image_label);
 
     // if input is volume do not apply geo
     if (zdimOut > 1)
