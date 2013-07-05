@@ -57,8 +57,9 @@ class Manager(object):
         self.path = join(getHomePath(), SCIPION_PATH, PROJECTS_PATH)
         makePath(self.path)
         settingsPath = getSettingsPath() 
-        if not missingPaths(settingsPath):
-            writeHosts(settingsPath)
+        # TODO: Initial settings creation for Scipion must be done in a install step, not here.
+        if missingPaths(settingsPath):
+           writeHosts(settingsPath)
         
     def getProjectPath(self, projectName):
         """Return the project path given the name"""

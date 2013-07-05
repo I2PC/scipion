@@ -151,12 +151,9 @@ class EmanSetOfImages(SetOfImages):
         if self.getFileName() is None:
             raise Exception("Set filename before calling load()")
         
-        print "CURRENT PATH: %s" % os.getcwd()
-        print "FILENAME: %s" % self.getFileName()
         os.chdir(os.path.join(os.getcwd(), self.getFileName()))
         self._format = str(EmanDbd.getEmanParamValue('format'))
         os.chdir(os.getcwd())
-        print "FORMAT TRAS EL LOAD=%s" % self._format
         
     def loadIfEmpty(self):
         """ Load format only if None. """
@@ -166,7 +163,6 @@ class EmanSetOfImages(SetOfImages):
     def __init__(self, filename=None, **args):
         SetOfImages.__init__(self, filename, **args)
         self._format = args.get('format')
-        print 'FORMAT=%s' % self._format
   
     def __iter__(self):
         """ Iterate over the set of images. """
@@ -199,3 +195,12 @@ class EmanDbd():
         if auxValue is None:
             raise Exception("Error getting the stored paramter with command: " + command) 
         return auxValue
+    
+def getBoxSize():
+    """Method to read boxsize from EMANDB"""
+    from EMAN2db import db_open_dict,db_check_dict,db_close_dict
+
+    EMBOXERBASE_DB = "bdb:emboxerbase"
+    db = db_open_dict(EMBOXERBASE_DB)
+    boxsize = db.get("box_size",dfl=128)
+    return boxsize

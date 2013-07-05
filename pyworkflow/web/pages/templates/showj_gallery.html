@@ -14,13 +14,13 @@
 					if (!$(this).find(".enabledGallery").hasClass("selected")){
 						$(this).find(".enabledGallery").fadeIn('slow')
 					}
-					$(this).find(".imageTitle").slideToggle('slow')
+					/* $(this).find(".imageTitle").slideToggle('slow') */
 				},
 			function(){
 					if (!$(this).find(".enabledGallery").hasClass("selected")){
 						$(this).find(".enabledGallery").fadeOut('slow')
 					}
-					$(this).find(".imageTitle").slideToggle('slow')
+					/* $(this).find(".imageTitle").slideToggle('slow') */
 				})
 	}
 	
@@ -73,12 +73,12 @@
 			{% for value in obj.values %}
 				{% if value.typeOfColumn == "image" and value.label == form.metadataComboBox.value %}
 					<div class="img_container">
-						<div id="column_label">{{forloop.parentloop.counter}}</div> 
 						<div class="img_inner_container">
-							<img class="tableImages" src="/get_image/?image={{value.imgValue}}"/>
-							<div class="imageTitle">{{value.strValue}}</div>
+							<img class="tableImages" title="{{value.strValue}}" src="/get_image/?image={{value.imgValue}}"/>
 							<img class="enabledGallery" src="/resources/showj/enabled_gallery.png" id="{{value.label}}___{{forloop.parentloop.counter0}}" onclick="valueChange(this);"/>
 						</div>
+						<div class="imageTitle">{{value.strValue}}</div>
+						<div id="column_label">{{forloop.parentloop.counter}}</div> 
 					</div> 
 				{% endif %}
 			{% endfor %}

@@ -33,13 +33,15 @@
 	<script type="text/javascript">
 	function initializeArrowEvents(){
 		$(".arrowImage").click(function(){
-			if ($(this).attr("src").indexOf("up") != -1){
-				$(this).closest(".sectionMenu, .subSectionMenu").find(".menuInputNumber").val(+$(this).closest(".sectionMenu, .subSectionMenu").find(".menuInputNumber").val()+1)
-			}
-			else{
-				$(this).closest(".sectionMenu, .subSectionMenu").find(".menuInputNumber").val(+$(this).closest(".sectionMenu, .subSectionMenu").find(".menuInputNumber").val()-1)
-			}
-			$(this).closest(".sectionMenu, .subSectionMenu").find(".menuInputNumber").change();			
+			if ($(this).closest(".sectionMenu, .subSectionMenu").find(".menuInputNumber").is("[readonly]")==false){
+				if ($(this).attr("src").indexOf("up") != -1){
+					$(this).closest(".sectionMenu, .subSectionMenu").find(".menuInputNumber").val(+$(this).closest(".sectionMenu, .subSectionMenu").find(".menuInputNumber").val()+1)
+				}
+				else{
+					$(this).closest(".sectionMenu, .subSectionMenu").find(".menuInputNumber").val(+$(this).closest(".sectionMenu, .subSectionMenu").find(".menuInputNumber").val()-1)
+				}
+				$(this).closest(".sectionMenu, .subSectionMenu").find(".menuInputNumber").change();
+			}	
 		});	
 	}
 	
@@ -76,8 +78,8 @@
 		$("#colRowMode").click(function(e){
 			if ($("#colRowModeImage").attr("src").indexOf("On") != -1){
 				$("#colRowModeImage").attr("src", $("#colRowModeImage").attr("src").replace("On","Off"))
-				$("#id_cols").attr('disabled', 'disabled');
-				$("#id_rows").attr('disabled', 'disabled');
+				$("#id_cols").attr('readonly', 'True');
+				$("#id_rows").attr('readonly', 'True');
 				
 				$("section").css("width", "");
 
@@ -85,8 +87,8 @@
 			}
 			else{
 				$("#colRowModeImage").attr("src", $("#colRowModeImage").attr("src").replace("Off","On"))
-				$("#id_cols").removeAttr('disabled');
-				$("#id_rows").removeAttr('disabled');
+				$("#id_cols").removeAttr('readonly');
+				$("#id_rows").removeAttr('readonly');
 				
 				if ($("#id_cols").val()==""){
 					initializeColsRows()
@@ -224,12 +226,9 @@
 					<img src="/resources/showj/separator.gif" class="menuIcon">
 				</div>	
 				
+				{% if form.mode.value == 'gallery' %}
 				<div id="colRowContainer" class="sectionMenu">
-					<button id="colRowMode"
-					{% if form.mode.value == 'table' %}
-					  disabled
-					 {% endif %}
-					> 
+					<button id="colRowMode"> 
 						<img src="/resources/showj/colRowModeOff.gif" id="colRowModeImage" />
 					</button>
 					
@@ -254,6 +253,7 @@
 						<!-- <input type="number" class="menuInputNumber" id="rows" value="" min="1" max="{{metadata.objects|length}}" disabled> -->
 					</div>
 				</div>
+				{% endif %}
 				
 				<div class="sectionMenu">
 					<img src="/resources/showj/separator.gif" class="menuIcon">

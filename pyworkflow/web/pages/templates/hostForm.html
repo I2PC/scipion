@@ -73,21 +73,7 @@ a:active, a:focus {
 		if (document.getElementById("scpnHosts").value != ""){
 			alert ("Not implemented yet");
 		}
-	}
-	
-	$(function() {
-	    // --- Using the default options:
-	    $("h2.expand").toggler();
-	    // --- Other options:
-	    //$("h2.expand").toggler({method: "toggle", speed: 0});
-	    //$("h2.expand").toggler({method: "toggle"});
-	    //$("h2.expand").toggler({speed: "fast"});
-	    //$("h2.expand").toggler({method: "fadeToggle"});
-	    //$("h2.expand").toggler({method: "slideFadeToggle"});    
-	    $("#content").expandAll({trigger: "h2.expand", ref: "div.demo", localLinks: "p.top a"});
-	});
-	
-	
+	}	
 </script>
 </head>
 <body>
@@ -98,7 +84,7 @@ a:active, a:focus {
 		<form action="/updateHostsConfig" method="post">		
 	        {% csrf_token %}	 
 			<table>			 
-			 	{% for field in form.visible_fields %}
+			 	{% for field in form.getBasicHostFields %}
 			 	<tr>
 				    <td>
 				    	<label {% if field.field.required %} class="required" {% endif %} for="{{ field.html_name }}"> {{ field.label }}</label>
@@ -111,12 +97,39 @@ a:active, a:focus {
 				{% endfor %}
 			</table>
 			<button type="button" id="addQueueSystemConfig" class="generalButton">Add system config</button>
+			{% if form.queueSystemConfigCount.value != None and form.queueSystemConfigCount.value != 0 and form.queueSystemConfigCount.value != '0' %}
+			<div id="queueSystemConfig" class="queueSystemConfig">
+			{% else %}
 			<div id="queueSystemConfig" class="queueSystemConfig" style="display:none">
+			{% endif %}
 			 	<h2>Queue sytem</h2>				 
 			 	<br/>
 			 	<div id="subQueueSystemConfig">
+			 	<table>	
+			 		{% for field in form.getQueueSystemConfigFields %}
+				 	<tr>
+					    <td>
+					    	<label {% if field.field.required %} class="required" {% endif %} for="{{ field.html_name }}"> {{ field.label }}</label>
+					    </td> 
+					    <td>{{ field }}</td>
+					</tr>    
+					{% endfor %}
+				</table>
 			 	</div>
 			 	<div id="queueConfig">
+			 	{% for fieldList in form.getQueueConfigFields %}
+				 	<table>	
+				 		<tr><th align="center" colspan="2">Queue config </th></tr>
+				 		{% for field in fieldList %}
+					 	<tr>
+						    <td>
+						    	<label {% if field.field.required %} class="required" {% endif %} for="{{ field.html_name }}"> {{ field.label }}</label>
+						    </td> 
+						    <td>{{ field }}</td>
+						</tr>    
+						{% endfor %}
+					</table>
+				{% endfor %}
 				</div>
 				<button type="button" id="addQueueConfig" class="generalButton">Add config</button>				
 		 	</div>
@@ -132,17 +145,20 @@ a:active, a:focus {
 </body>
 <script>
 //form_count = $("[name=extra_field_count");
-queueSystemConfigCount = 0;
+queueSystemConfigCount = document.getElementById("queueSystemConfigCount").value;
+if (queueSystemConfigCount > 0){
+	queueSystemConfigCount += 1;
+}
 $("#addQueueSystemConfig").click(function() {
 	$("#queueSystemConfig").toggle();
 	elementString = '';
 	elementString += '<table>';
-	elementString += '<tr><td> Name </td><td><input type="text" name="name" class="generalInput"/></td></tr>';
-	elementString += '<tr><td> Mandatory </td><td><input type="checkbox" name="mandatory"/></td></tr>';
-	elementString += '<tr><td> Submit template </td><td><input type="text" name="submitTemplate" class="generalInput"/></td></tr>';
-	elementString += '<tr><td> Submit command </td><td><input type="text" name="submitCommand" class="generalInput"/></td></tr>';
-	elementString += '<tr><td> Check command </td><td><input type="text" name="checkCommand" class="generalInput"/></td></tr>';
-	elementString += '<tr><td> Cancel command </td><td><input type="text" name="cancelCommand" class="generalInput"/></td></tr>';	
+	elementString += '<tr><td> <label class="required" for="name">Name</label> </td><td><input type="text" name="name" class="generalInput"/></td></tr>';
+	elementString += '<tr><td> <label class="required" for="mandatory"> Mandatory </label> </td><td><input type="checkbox" name="mandatory" value="True" checked/></td></tr>';
+	elementString += '<tr><td> <label class="required" for="submitTemplate"> Submit template </label> </td><td><input type="text" name="submitTemplate" class="generalInput"/></td></tr>';
+	elementString += '<tr><td> <label class="required" for="submitCommand"> Submit command </label> </td><td><input type="text" name="submitCommand" class="generalInput"/></td></tr>';
+	elementString += '<tr><td> <label class="required" for="checkCommand"> Check command </label> </td><td><input type="text" name="checkCommand" class="generalInput"/></td></tr>';
+	elementString += '<tr><td> <label class="required" for="cancelCommand"> Cancel command </label> </td><td><input type="text" name="cancelCommand" class="generalInput"/></td></tr>';	
 	elementString += '</table>';
 	elementString += '<br/>';
     element = $(elementString);
@@ -151,16 +167,19 @@ $("#addQueueSystemConfig").click(function() {
     $("[name=queueSystemConfigCount]").val(queueSystemConfigCount);
 })
 
-queueConfigCount = 0;
+queueConfigCount = document.getElementById("queueConfigCount").value;
+if (queueConfigCount > 0){
+	queueConfigCount += 1;
+}
 $("#addQueueConfig").click(function() {
 	elementString = '';
 	elementString += '<table>';
-	elementString += '<tr><th align="center" colspan="2">Queue config ' + form_count + '</th></tr>'
-	elementString += '<tr><td> Name </td><td><input type="text" name="name_' + form_count + '" class="generalInput"/></td></tr>';
-	elementString += '<tr><td> Max. cores </td><td><input type="number" name="maxCores_' + form_count + '" class="generalInput"/></td></tr>';
-	elementString += '<tr><td> Allow MPI </td><td><input type="checkbox" name="allowMPI_' + form_count + '" /></td></tr>';
-	elementString += '<tr><td> Allow threads </td><td><input type="checkbox" name="allowThreads_' + form_count + '" /></td></tr>';
-	elementString += '<tr><td> Max. hours </td><td><input type="number" name="maxHours_' + form_count + '" class="generalInput"/></td></tr>';
+	elementString += '<tr><th align="center" colspan="2">Queue config ' + queueConfigCount + '</th></tr>'
+	elementString += '<tr><td> <label class="required" for="name_' + queueConfigCount + '"> Name </label> </td><td><input type="text" name="name_' + queueConfigCount + '" class="generalInput"/></td></tr>';
+	elementString += '<tr><td> <label class="required" for="maxCores_' + queueConfigCount + '"> Max. cores </label> </td><td><input type="number" name="maxCores_' + queueConfigCount + '" class="generalInput"/></td></tr>';
+	elementString += '<tr><td> <label> Allow MPI </label> </td><td><input type="checkbox" name="allowMPI_' + queueConfigCount + '" /></td></tr>';
+	elementString += '<tr><td> <label> Allow threads </label> </td><td><input type="checkbox" name="allowThreads_' + queueConfigCount + '" /></td></tr>';
+	elementString += '<tr><td> <label class="required" for="maxHours_' + queueConfigCount + '"> Max. hours </label> </td><td><input type="number" name="maxHours_' + queueConfigCount + '" class="generalInput"/></td></tr>';
 	elementString += '</table>';
 	elementString += '<br/>';
     element = $(elementString);
