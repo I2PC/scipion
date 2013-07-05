@@ -138,7 +138,9 @@ public class ImageGeneric {
     }
 
     public void read(int width, int height, int slice, long image) throws Exception {
-        read(Filename.getFilename(filename), width, height, slice, image, true);
+        read(filename, width, height, slice, image, true);
+        // At this moment we don't know why
+//        read(Filename.getFilename(filename), width, height, slice, image, true);
     }
     
     public void read(String filename, boolean map) throws Exception {
@@ -291,7 +293,7 @@ public class ImageGeneric {
 		{
 		
 			int index = Integer.parseInt(prefix);
-			String file = Filename.getSuffix(imagepath);
+			String file = Filename.removePrefix(imagepath);
 			ImageGeneric ig = new ImageGeneric(file);
 			ig.readHeader(file);
 			if(index < 0 || index > ig.getNDim())
