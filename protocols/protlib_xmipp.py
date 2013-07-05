@@ -120,12 +120,13 @@ class ScriptIJBase(XmippScript):
         missingFiles = []
         for f in self.inputFiles:
             if xmippExists(f):
-                files.append(f)
+                files.append('"%s"' % f) # Escape with " for filenames containing spaces
             else:
                 missingFiles.append(f)
         self.inputFiles = files
         if len(missingFiles):
-            print "Missing files: \n %s" % '  \n'.join(missingFiles) 
+            print "Missing files: \n %s" % '  \n'.join(missingFiles)
+        
         self.args = "-i %s" % ' '.join(self.inputFiles)
         self.readOtherParams()
  
