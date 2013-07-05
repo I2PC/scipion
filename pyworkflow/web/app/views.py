@@ -8,7 +8,7 @@ from django.template import RequestContext
 import json
 from pyworkflow.manager import Manager
 from pyworkflow.project import Project
-from pyworkflow.gui.tree import TreeProvider
+from pyworkflow.gui.tree import TreeProvider, ProjectRunsTreeProvider
 from pyworkflow.utils.path import findResource
 from pyworkflow.utils.utils import prettyDate
 from pyworkflow.web.pages import settings
@@ -129,6 +129,7 @@ def loadConfig(config, name):
     menuConfig = mapper.getConfig()
     return menuConfig
 
+
 def loadProtTree():
     configMapper = ConfigMapper(getConfigPath('configuration.xml'), globals())
     generalCfg = configMapper.getConfig()
@@ -137,51 +138,6 @@ def loadProtTree():
     populateTree(root, protCfg)
     return root
 
-# to do a module from pw_project
-class RunsTreeProvider(TreeProvider):
-    """Provide runs info to populate tree"""
-    def __init__(self, mapper, actionFunc=None):
-        self.actionFunc = actionFunc
-        self.getObjects = lambda: mapper.selectAll()
-        
-    def getColumns(self):
-        return [('Run', 250), ('State', 100), ('Modified', 100)]
-    
-    def getObjectInfo(self, obj):
-        return {'key': obj.getObjId(),
-                'text': '%s.%s' % (obj.getClassName(), obj.strId()),
-                'values': (obj.status.get(), obj.endTime.get())}
-      
-    def getObjectActions(self, obj):
-        prot = obj  # Object should be a protocol
-        actionsList = [(ACTION_EDIT, 'Edit     '),
-                       # (ACTION_COPY, 'Duplicate   '),
-                       (ACTION_DELETE, 'Delete    '),
-                       # (None, None),
-                       # (ACTION_STOP, 'Stop'),
-                       (ACTION_STEPS, 'Browse data')
-                       ]
-        status = prot.status.get()
-        if status == STATUS_RUNNING:
-            actionsList.insert(0, (ACTION_STOP, 'Stop execution'))
-            actionsList.insert(1, None)
-        elif status == STATUS_WAITING_APPROVAL:
-            actionsList.insert(0, (ACTION_CONTINUE, 'Approve continue'))
-            actionsList.insert(1, None)
-        
-        actions = []
-        def appendAction(a):
-            v = a
-            if v is not None:
-                action = a[0]
-                text = a[1]
-                v = (text, lambda: self.actionFunc(action), ActionIcons[action])
-            actions.append(v)
-            
-        for a in actionsList:
-            appendAction(a)
-            
-        return actions 
     
 def loadProject(projectName):
     manager = Manager()
@@ -189,6 +145,7 @@ def loadProject(projectName):
     project = Project(projPath)
     project.load()
     return project
+    
     
 def project_content(request):        
     # CSS #
@@ -210,7 +167,7 @@ def project_content(request):
     request.session['projectName'] = projectName
         
     project = loadProject(projectName)    
-    provider = RunsTreeProvider(project.mapper)
+    provider = ProjectRunsTreeProvider(project)
     
     root = loadProtTree()
     
@@ -554,33 +511,30 @@ def visualizeObject(request):
         
     if isinstance(object, SetOfMicrographs):
         fn = project.getTmpPath(object.getName() + '_micrographs.xmd')
-        print "fn"
-        print fn
         mics = XmippSetOfMicrographs.convert(object, fn)
-        print "mics.getFileName()"
-        print mics.getFileName()
         inputParameters = {'path': join(request.session['projectPath'], mics.getFileName()),
                        'allowRender': True,
-                       'mode': 'table',
+                       'mode': 'gallery',
                        'zoom': 150,
                        'gotoContainer': 1}
   
     elif isinstance(object, SetOfImages):
         fn = project.getTmpPath(object.getName() + '_images.xmd')
-        print "fn"
-        print fn
         imgs = XmippSetOfImages.convert(object, fn)
-        print "imgs.getFileName()"
-        print imgs.getFileName()
-        
         inputParameters = {'path': join(request.session['projectPath'], imgs.getFileName()),
                'allowRender': True,
                'mode': 'gallery',
                'zoom': 150,
                'gotoContainer': 1}
 
-    elif isinstance(object, Classification2D):
-        print object.getName
+    elif isinstance(object, XmippClassification2D):
+        mdPath = object.getClassesMdFileName()
+        block, path = mdPath.split('@')
+        inputParameters = {'path': join(request.session['projectPath'], path),
+               'allowRender': True,
+               'mode': 'gallery',
+               'zoom': 150,
+               'gotoContainer': 1}
 #        runShowJ(obj.getClassesMdFileName())
     else:
         raise Exception('Showj Web visualizer: can not visualize class: %s' % object.getClassName())

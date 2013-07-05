@@ -40,6 +40,7 @@ from pyworkflow.protocol.params import *
 from pyworkflow.em import *
 from pyworkflow.apps.config import *
             
+            
 class EMTreeProvider(DbTreeProvider):
     """Retrieve the elements from the database"""
     def __init__(self, dbName):

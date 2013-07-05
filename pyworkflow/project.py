@@ -128,6 +128,7 @@ class Project(object):
         self._setupProtocol(protocol)
         protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
         protocol.makePathsAndClean() # Create working dir if necessary
+        protocol.setStatus(STATUS_LAUNCHED)
         self.mapper.commit()
         # Prepare a separate db for this run
         # NOTE: now we are simply copying the entire project db, this can be changed later
@@ -138,7 +139,6 @@ class Project(object):
         if wait: # This is only useful for launching tests...
             self._updateProtocol(protocol)
         else:
-            protocol.setStatus(STATUS_LAUNCHED)
             self.mapper.store(protocol)
         self.mapper.commit()
         

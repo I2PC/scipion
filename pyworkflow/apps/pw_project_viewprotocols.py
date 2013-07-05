@@ -47,7 +47,7 @@ from pyworkflow.project import Project
 
 import pyworkflow.gui as gui
 from pyworkflow.gui import getImage
-from pyworkflow.gui.tree import Tree, ObjectTreeProvider, DbTreeProvider
+from pyworkflow.gui.tree import Tree, ObjectTreeProvider, DbTreeProvider, ProjectRunsTreeProvider
 from pyworkflow.gui.form import FormWindow
 from pyworkflow.gui.dialog import askYesNo
 from pyworkflow.gui.text import TaggedText
@@ -133,23 +133,12 @@ def loadConfig(config, name):
     return menuConfig
 
 
-class RunsTreeProvider(TreeProvider):
+class RunsTreeProvider(ProjectRunsTreeProvider):
     """Provide runs info to populate tree"""
     def __init__(self, project, actionFunc):
+        ProjectRunsTreeProvider.__init__(self, project)
         self.actionFunc = actionFunc
-        self.project = project
     
-    def getObjects(self):
-        return self.project.getRuns() 
-        
-    def getColumns(self):
-        return [('Run', 250), ('State', 100), ('Time', 100)]
-    
-    def getObjectInfo(self, obj):
-        return {'key': obj.getObjId(),
-                'text': obj.getRunName(),
-                'values': (obj.status.get(), obj.getElapsedTime())}
-      
     def getObjectActions(self, obj):
         prot = obj # Object should be a protocol
         actionsList = [(ACTION_EDIT, 'Edit     '),

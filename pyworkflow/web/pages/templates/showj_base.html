@@ -19,6 +19,7 @@
 		initializeColRowModeEvents()
 		initializeSaveButtonEvents()
 		initializeComboBoxEvents()
+		initializeArrowEvents()
 		$('.menuInputNumber').keypress(function(e) {
 		  var code = e.keyCode || e.which; 
 		  if (code  == 13) {               
@@ -30,9 +31,25 @@
 	});
 	</script>
 	<script type="text/javascript">
+	function initializeArrowEvents(){
+		$(".arrowImage").click(function(){
+			if ($(this).closest(".sectionMenu, .subSectionMenu").find(".menuInputNumber").is("[readonly]")==false){
+				if ($(this).attr("src").indexOf("up") != -1){
+					$(this).closest(".sectionMenu, .subSectionMenu").find(".menuInputNumber").val(+$(this).closest(".sectionMenu, .subSectionMenu").find(".menuInputNumber").val()+1)
+				}
+				else{
+					$(this).closest(".sectionMenu, .subSectionMenu").find(".menuInputNumber").val(+$(this).closest(".sectionMenu, .subSectionMenu").find(".menuInputNumber").val()-1)
+				}
+				$(this).closest(".sectionMenu, .subSectionMenu").find(".menuInputNumber").change();
+			}	
+		});	
+	}
+	
+	</script>
+	<script type="text/javascript">
+	//Initialize block and metadata combobox to reload the web when changing
 	function initializeComboBoxEvents(){
 		$("#id_blockComboBox , #id_metadataComboBox").change(function(){
-			alert('submiting form')
 			$('form#showjForm').submit();
 		})
 	}
@@ -61,8 +78,8 @@
 		$("#colRowMode").click(function(e){
 			if ($("#colRowModeImage").attr("src").indexOf("On") != -1){
 				$("#colRowModeImage").attr("src", $("#colRowModeImage").attr("src").replace("On","Off"))
-				$("#id_cols").attr('disabled', 'disabled');
-				$("#id_rows").attr('disabled', 'disabled');
+				$("#id_cols").attr('readonly', 'True');
+				$("#id_rows").attr('readonly', 'True');
 				
 				$("section").css("width", "");
 
@@ -70,8 +87,8 @@
 			}
 			else{
 				$("#colRowModeImage").attr("src", $("#colRowModeImage").attr("src").replace("Off","On"))
-				$("#id_cols").removeAttr('disabled');
-				$("#id_rows").removeAttr('disabled');
+				$("#id_cols").removeAttr('readonly');
+				$("#id_rows").removeAttr('readonly');
 				
 				if ($("#id_cols").val()==""){
 					initializeColsRows()
@@ -186,12 +203,22 @@
 				<div id="zoomContainer" class="sectionMenu">
 					<img src="/resources/showj/zoom.gif" class="menuIcon">
 					{{ form.zoom }}
+					
+					<div id="arrowContainer" class="arrowSectionMenu">
+						<img src="/resources/showj/arrow_up.png" class="arrowImage">
+						<img src="/resources/showj/arrow_down.png" class="arrowImage">
+					</div>
 					<!-- <input type="number" class="menuInputNumber" id="zoom" value="150" min="10"> -->
 				</div>
 				
 				<div id="gotoContainer" class="sectionMenu">
 					<img src="/resources/showj/goto.gif" class="menuIcon">
 					{{ form.gotoContainer }}
+					
+					<div id="arrowContainer" class="arrowSectionMenu">
+						<img src="/resources/showj/arrow_up.png" class="arrowImage">
+						<img src="/resources/showj/arrow_down.png" class="arrowImage">
+					</div>
 					<!-- <input type="number" class="menuInputNumber" id="goto" value="1" max="{{metadata.objects|length}}" min="1"> -->
 				</div>
 				
@@ -199,26 +226,34 @@
 					<img src="/resources/showj/separator.gif" class="menuIcon">
 				</div>	
 				
+				{% if form.mode.value == 'gallery' %}
 				<div id="colRowContainer" class="sectionMenu">
-					<button id="colRowMode"
-					{% if form.mode.value == 'table' %}
-					  disabled
-					 {% endif %}
-					> 
+					<button id="colRowMode"> 
 						<img src="/resources/showj/colRowModeOff.gif" id="colRowModeImage" />
 					</button>
 					
 					<div class="subSectionMenu">
 						<span class="textMenu">{{ form.cols.label_tag }}</span>
 						{{ form.cols }}
+						
+						<div id="arrowContainer" class="arrowSectionMenu">
+							<img src="/resources/showj/arrow_up.png" class="arrowImage">
+							<img src="/resources/showj/arrow_down.png" class="arrowImage">
+						</div>
 						<!-- <input type="number" class="menuInputNumber" id="cols" value="" min="1" max="{{metadata.objects|length}}" disabled> -->
 					</div>
 					<div class="subSectionMenu">
 						<span class="textMenu">{{ form.rows.label_tag }}</span>
 						{{ form.rows }}
+						
+						<div id="arrowContainer" class="arrowSectionMenu">
+							<img src="/resources/showj/arrow_up.png" class="arrowImage">
+							<img src="/resources/showj/arrow_down.png" class="arrowImage">
+						</div>
 						<!-- <input type="number" class="menuInputNumber" id="rows" value="" min="1" max="{{metadata.objects|length}}" disabled> -->
 					</div>
 				</div>
+				{% endif %}
 				
 				<div class="sectionMenu">
 					<img src="/resources/showj/separator.gif" class="menuIcon">
@@ -268,83 +303,6 @@
 			    {{ hidden }}
 			    {% endfor %} 
 				 
-				 
-				<!--CAMbiamus  --> 
-				 
-				 <!-- 			
-				<div id="modeContainer" class="sectionMenu">
-					<button onclick="{{menuLayoutConfig.tableViewLink}}">
-						<img src="{{menuLayoutConfig.tableViewSrc}}">
-					
-					<button onclick="{{menuLayoutConfig.galleryViewLink}}">
-						<img src="{{menuLayoutConfig.galleryViewSrc}}">
-					
-				</div>
-				
-				<div id="zoomContainer" class="sectionMenu">
-					<img src="/resources/showj/zoom.gif" class="menuIcon">
-					<input type="number" class="menuInputNumber" id="zoom" value="150" min="10">
-				</div>
-				
-				<div id="gotoContainer" class="sectionMenu">
-					<img src="/resources/showj/goto.gif" class="menuIcon">
-					<input type="number" class="menuInputNumber" id="goto" value="1" max="{{metadata.objects|length}}" min="1">
-				</div>
-				
-				<div class="sectionMenu">
-					<img src="/resources/showj/separator.gif" class="menuIcon">
-				</div>	
-				
-				<div id="colRowContainer" class="sectionMenu">
-					<button id="colRowMode" 
-					{{menuLayoutConfig.disabledColRowMode}}
-					>
-						<img src="/resources/showj/colRowModeOff.gif" id="colRowModeImage" />
-					</button>
-					
-					<div class="subSectionMenu">
-						<span class="textMenu">Cols</span>
-						<input type="number" class="menuInputNumber" id="cols" value="" min="1" max="{{metadata.objects|length}}" disabled>
-					</div>
-					<div class="subSectionMenu">
-						<span class="textMenu">Rows</span>
-						<input type="number" class="menuInputNumber" id="rows" value="" min="1" max="{{metadata.objects|length}}" disabled>
-					</div>
-				</div>
-				
-				<div class="sectionMenu">
-					<img src="/resources/showj/separator.gif" class="menuIcon">
-				</div>
-		
-				<div id="blockSelectorContainer" class="sectionMenu">
-					<span class="textMenu">Select Block</span>
-					<select id="blockComboBox">
-						{% for block in menuLayoutConfig.blocks %}
-							
-							
-								<option value="{{block}}"
-								{% if inputParameters.block == block %}
-								selected
-								{% endif %}	
-								>{{block}}</option>
-							
-						{% endfor %}
-					</select>
-				</div>
-				
-				
-	
-		
-				<div class="sectionMenu">
-					<img src="/resources/showj/separator.gif" class="menuIcon">
-				</div>
-				
-				<div id="saveContainer" class="sectionMenu">
-					<button id="saveButton">
-						<img src="/resources/showj/saveOff.png" id="saveButtonImage" />
-					</button>
-				</div> -->
-			
 			</form>
 		</aside>
 		

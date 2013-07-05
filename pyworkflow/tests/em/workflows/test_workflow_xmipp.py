@@ -84,24 +84,38 @@ class TestXmippWorkflow(TestWorkflow):
                     'protCTF/extra/BPV_1386/xmipp_ctf.ctfparam',
                     'protCTF/extra/BPV_1387/xmipp_ctf.ctfparam',
                     'protCTF/extra/BPV_1388/xmipp_ctf.ctfparam',
-                    'protML2D/ml2d_extra/iter002/iter_classes.xmd', 
-                    'protML2D/ml2d_extra/iter001/iter_classes.xmd', 
-                    'protML2D/ml2d_extra/iter002/iter_images.xmd', 
-                    'protML2D/ml2d_classes.stk', 
-                    'protML2D/ml2d_extra/iter003/iter_images.xmd', 
-                    'protML2D/ml2d_images.xmd', 
-                    'protML2D/ml2d_extra/iter004/iter_classes.stk', 
-                    'protML2D/ml2d__images_average.xmp', 
-                    'protML2D/ml2d_extra/iter001/iter_images.xmd', 
-                    'protML2D/ml2d_extra/iter002/iter_classes.stk', 
-                    'protML2D/ml2d_extra/iter004/iter_classes.xmd', 
-                    'protML2D/ml2d_extra/iter004/iter_images.xmd', 
-                    'protML2D/ml2d_extra/iter003/iter_classes.xmd', 
+                    'protML2D/mlf2d_extra/iter002/iter_classes.xmd', 
+                    'protML2D/mlf2d_extra/iter001/iter_classes.xmd', 
+                    'protML2D/mlf2d_extra/iter002/iter_images.xmd', 
+                    'protML2D/mlf2d_classes.stk', 
+                    'protML2D/mlf2d_extra/iter003/iter_images.xmd', 
+                    'protML2D/mlf2d_images.xmd', 
+                    'protML2D/mlf2d_extra/iter004/iter_classes.stk', 
+                    'protML2D/mlf2d_extra/iter001/iter_images.xmd', 
+                    'protML2D/mlf2d_extra/iter002/iter_classes.stk', 
+                    'protML2D/mlf2d_extra/iter004/iter_classes.xmd', 
+                    'protML2D/mlf2d_extra/iter004/iter_images.xmd', 
+                    'protML2D/mlf2d_extra/iter003/iter_classes.xmd', 
+                    'protML2D/mlf2d_extra/iter001/iter_noise.xmd',
+                    'protML2D/mlf2d_extra/iter002/iter_noise.xmd',
+                    'protML2D/mlf2d_extra/iter002/iter_ssnr.xmd',
+                    'protML2D/mlf2d_extra/iter000/iter_classes.xmd',
+                    'protML2D/mlf2d_extra/iter001/iter_ssnr.xmd',
+                    'protML2D/mlf2d_extra/iter003/iter_noise.xmd',
+                    'protML2D/mlf2d_extra/iter000/iter_noise.xmd',
+                    'protML2D/mlf2d_extra/iter004/iter_ssnr.xmd',
+                    'protML2D/mlf2d_noise.xmd',
+                    'protML2D/mlf2d_extra/iter000/iter_classes.stk',
+                    'protML2D/mlf2d_extra/iter003/iter_ssnr.xmd',
+                    'protML2D/mlf2d_extra/cref_classes.stk',
+                    'protML2D/mlf2d_extra/iter000/iter_ssnr.xmd',
+                    'protML2D/mlf2d_extra/cref_classes.xmd',
+                    'protML2D/mlf2d_extra/iter004/iter_noise.xmd',
                     'protML2D/logs/run.log', 
                     'protML2D/logs/run.db',
-                    'protML2D/ml2d_classes.xmd', 
-                    'protML2D/ml2d_extra/iter001/iter_classes.stk', 
-                    'protML2D/ml2d_extra/iter003/iter_classes.stk'],
+                    'protML2D/mlf2d_classes.xmd', 
+                    'protML2D/mlf2d_extra/iter001/iter_classes.stk', 
+                    'protML2D/mlf2d_extra/iter003/iter_classes.stk'],
               'protCL2D': ['protCL2D/extra/classes_core_hierarchy.txt', 
                     'protCL2D/extra/level_01/level_classes_core.xmd', 
                     'protCL2D/extra/level_01/level_classes.stk', 
@@ -185,12 +199,18 @@ class TestXmippWorkflow(TestWorkflow):
         self.validateFiles('protExtract', protExtract)
         
         print "Run ML2D"
-        protML2D = XmippProtML2D(numberOfReferences=1, maxIters=4, 
+        protML2D = XmippProtML2D(numberOfReferences=1, maxIters=4, doMlf=True,
                                  numberOfMpi=2, numberOfThreads=1)
         protML2D.inputImages.set(protExtract.outputImages)
         self.proj.launchProtocol(protML2D, wait=True)        
         
-        self.assertIsNotNone(protML2D.outputClassification, "There was a problem with ML2D")  
+        self.assertIsNotNone(protML2D.outputClassification, "There was a problem with ML2D") 
+        # Check that images related to each class have ctf model
+        for class2D in protML2D.outputClassification:
+            for imgCA in class2D:
+                xmippImg = imgCA.getImage()
+                self.assertTrue(imgCA.getImage().hasCTF(), "Image class has not CTF information.")
+             
         self.validateFiles('protML2D', protML2D)
         
         print "Run CL2D"
@@ -200,6 +220,11 @@ class TestXmippWorkflow(TestWorkflow):
         self.proj.launchProtocol(protCL2D, wait=True)        
         
         self.assertIsNotNone(protCL2D.outputClassification, "There was a problem with CL2D")
+        # Check that images related to each class have ctf model
+        for class2D in protCL2D.outputClassification:
+            for imgCA in class2D:
+                xmippImg = imgCA.getImage()
+                self.assertTrue(imgCA.getImage().hasCTF(), "Image class has not CTF information.")
         self.validateFiles('protCL2D', protCL2D) 
                 
 

@@ -522,7 +522,9 @@ class XmippImageClassAssignment(ImageClassAssignment, XmippMdRow):
         
     def getImage(self):
         """ Get associated image. """
-        return XmippImage(self.getValue(xmipp.MDL_IMAGE))
+        xmippImg = XmippImage(self.getValue(xmipp.MDL_IMAGE))
+        xmippImg.setValue(xmipp.MDL_CTF_MODEL, self.getValue(xmipp.MDL_CTF_MODEL))
+        return xmippImg
     
     
 class XmippClass2D(Class2D):
@@ -538,7 +540,7 @@ class XmippClass2D(Class2D):
                             (self._number, self._filename))
         for objId in md:
             imgCA = XmippImageClassAssignment()
-            imgCA.readFromMd(md, objId)
+            imgCA.getFromMd(md, objId)
             yield imgCA
     
     def getClassRepresentative(self):
