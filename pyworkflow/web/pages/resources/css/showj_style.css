@@ -160,12 +160,12 @@ section .enabledGallery {
 }
 
 section .imageTitle{
-	position: absolute;
+	/* position: absolute;
 	bottom: 0px;
 	left: 0;
 	z-index: 998;
-	display:none;
-	width: 100%;
+	display:none; 
+	width: 100%;*/
 	background-color: rgb(50, 1, 1);
 	height: 20px;
 	color: #FFF;

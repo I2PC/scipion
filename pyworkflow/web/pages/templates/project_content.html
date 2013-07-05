@@ -55,7 +55,7 @@
 				href="javascript:popup('/form/?protocolId={{obj.getObjId}}')">
 					{{obj.getName}} </a></td>
 			<td>{{obj.status.get}}</td>
-			<td>{{obj.endTime.get}}</td>
+			<td>{{obj.getElapsedTime}}</td>
 		</tr>
 		{% endfor %}
 	</table>
