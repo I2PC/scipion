@@ -513,7 +513,8 @@ def visualizeObject(request):
                        'allowRender': True,
                        'mode': 'gallery',
                        'zoom': 150,
-                       'gotoContainer': 1}
+                       'goto': 1,
+                       'colRowMode': 'Off'}
   
     elif isinstance(object, SetOfImages):
         fn = project.getTmpPath(object.getName() + '_images.xmd')
@@ -522,7 +523,8 @@ def visualizeObject(request):
                'allowRender': True,
                'mode': 'gallery',
                'zoom': 150,
-               'gotoContainer': 1}
+               'goto': 1,
+               'colRowMode': 'Off'}
 
     elif isinstance(object, XmippClassification2D):
         mdPath = object.getClassesMdFileName()
@@ -531,7 +533,8 @@ def visualizeObject(request):
                'allowRender': True,
                'mode': 'gallery',
                'zoom': 150,
-               'gotoContainer': 1}
+               'goto': 1,
+               'colRowMode': 'Off'}
 #        runShowJ(obj.getClassesMdFileName())
     else:
         raise Exception('Showj Web visualizer: can not visualize class: %s' % object.getClassName())

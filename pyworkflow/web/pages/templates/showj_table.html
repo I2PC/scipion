@@ -155,18 +155,18 @@ function initializeTableWidth(){
 }
 
 function initializeGoToEvent(){
-	$('#goto').click(function(){
+	$('#id_goto').click(function(){
 		updateRowSelection();	
 	});
 	
-	$('#goto').change(function(){
+	$('#id_goto').change(function(){
 		updateRowSelection();
 	});
 }
 function updateRowSelection(){
 	var nodes = oTable.fnGetNodes();
     for (var i=0; i<nodes.length; i++){
-		if (nodes[i].id == $("#goto").val()){
+		if (nodes[i].id == $("#id_goto").val()){
 			/* Falta arreglar. El click se ejecuta sobre el tbody no el tr
 			http://datatables.net/extras/tabletools/api#fnSelect */
 			$("#"+nodes[i].id).children("td").first().click();
@@ -189,10 +189,10 @@ function initializeSelectionRowEvent(){
 		selectedRows = fnGetSelected(oTable)
 
 		if (selectedRows.length == 1) {
-			$("#goto").val(selectedRows[0].id)
+			$("#id_goto").val(selectedRows[0].id)
 		}
 		else{
-			$("#goto").val(0)
+			$("#id_goto").val(0)
 		}
 	});
 }

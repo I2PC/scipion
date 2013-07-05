@@ -20,6 +20,9 @@
 		initializeSaveButtonEvents()
 		initializeComboBoxEvents()
 		initializeArrowEvents()
+		initializeColsRowsEvents()
+		
+		/* Avoid enter key submit form */
 		$('.menuInputNumber').keypress(function(e) {
 		  var code = e.keyCode || e.which; 
 		  if (code  == 13) {               
@@ -30,6 +33,8 @@
 		
 	});
 	</script>
+
+	
 	<script type="text/javascript">
 	function initializeArrowEvents(){
 		$(".arrowImage").click(function(){
@@ -77,23 +82,37 @@
 	function initializeColRowModeEvents(){
 		$("#colRowMode").click(function(e){
 			if ($("#colRowModeImage").attr("src").indexOf("On") != -1){
+				/* Change image */
 				$("#colRowModeImage").attr("src", $("#colRowModeImage").attr("src").replace("On","Off"))
+				
+				/* Update hidden variable  */
+				$("#id_colRowMode").val("Off");
+				
+				/* Set textfield to readonly */
 				$("#id_cols").attr('readonly', 'True');
 				$("#id_rows").attr('readonly', 'True');
 				
+				/* Allow section div to adjust automatically*/
 				$("section").css("width", "");
 
 				e.preventDefault();
 			}
 			else{
+				/* Change image */
 				$("#colRowModeImage").attr("src", $("#colRowModeImage").attr("src").replace("Off","On"))
+				
+				/* Set textfield to editable */
 				$("#id_cols").removeAttr('readonly');
 				$("#id_rows").removeAttr('readonly');
+				
+				/* Update hidden variable  */
+				$("#id_colRowMode").val("On");
 				
 				if ($("#id_cols").val()==""){
 					initializeColsRows()
 				}
 				else{
+					/* Set section div width automatically */
 					updateMainContainerDim($("#id_cols").val())
 				}
 				e.preventDefault();
@@ -105,9 +124,50 @@
 	function initializeColsRows(){
 		imgContainerWidth =$(".img_container").width() + (parseInt($(".img_container").css("margin-right")) * 2)
 		colVal = Math.floor($("section").width() / (imgContainerWidth + 5))
-		updateGalleryLayout(colVal,0,"id_cols")
 		$("#id_cols").val(colVal)
+		updateGalleryLayout(colVal,0,"id_cols")
+	}
+	</script>
+	<script type="text/javascript">
+	//Change gallery layout when cols and rows textfield change
+	function initializeColsRowsEvents(){
+		$("#id_cols, #id_rows").click(function(){
+			updateGalleryLayout($("#id_cols").val(),$("#id_rows").val(), $(this).attr("id"))
+		});
 		
+		$("#id_cols, #id_rows").change(function(){
+			alert("por change")
+			updateGalleryLayout($("#id_cols").val(),$("#id_rows").val(), $(this).attr("id"))
+		});
+		$("#id_cols, #id_rows").keyup(function(){
+			alert("por keypress")
+			updateGalleryLayout($("#id_cols").val(),$("#id_rows").val(), $(this).attr("id"))
+		});
+	}
+	
+	function updateGalleryLayout(cols, rows, setElement){
+		alert("cols"+cols)
+		alert("rows"+rows)
+		recalculateColsRows(cols,rows, setElement)
+		alert("cols"+cols)
+		alert("rows"+rows)
+		alert("$(#id_cols).val()"+$("#id_cols").val())
+		updateMainContainerDim($("#id_cols").val())
+	}
+	
+	function recalculateColsRows(cols, rows, setElement){
+		if (setElement == "id_cols"){
+			$("#id_rows").val(Math.ceil($(".img_container").length/cols))
+		}
+		else{
+			$("#id_cols").val(Math.ceil($(".img_container").length/rows))
+		}
+	}
+	function updateMainContainerDim(colVal){
+		imgContainerWidth =$(".img_container").width() + (parseInt($(".img_container").css("margin-right")) * 2)
+		alert("imgContainerWidth"+imgContainerWidth)
+		sectionWidth = colVal * (imgContainerWidth + 10)
+		$("section").width(sectionWidth)
 	}
 	</script>
 	<script type="text/javascript">
@@ -121,7 +181,7 @@
 				updateImageDimByUrl();
 			});
 				
-	 		$('#id_zoom').keypress(function(e){
+	 		$('#id_zoom').keyup(function(e){
 	 			var code = e.keyCode || e.which; 
  			  	if (code  == 13) {               
  					 updateImageDimByUrl();
@@ -213,7 +273,7 @@
 				
 				<div id="gotoContainer" class="sectionMenu">
 					<img src="/resources/showj/goto.gif" class="menuIcon">
-					{{ form.gotoContainer }}
+					{{ form.goto }}
 					
 					<div id="arrowContainer" class="arrowSectionMenu">
 						<img src="/resources/showj/arrow_up.png" class="arrowImage">
@@ -229,7 +289,7 @@
 				{% if form.mode.value == 'gallery' %}
 				<div id="colRowContainer" class="sectionMenu">
 					<button id="colRowMode"> 
-						<img src="/resources/showj/colRowModeOff.gif" id="colRowModeImage" />
+						<img src="/resources/showj/colRowMode{{form.colRowMode.value}}.gif" id="colRowModeImage" />
 					</button>
 					
 					<div class="subSectionMenu">
@@ -262,18 +322,6 @@
 				<div id="blockSelectorContainer" class="sectionMenu">
 					<span class="textMenu"> {{ form.blockComboBox.label_tag }} </span>
 					{{ form.blockComboBox }} 
-					<!-- <select id="blockComboBox">
-						{% for block in menuLayoutConfig.blocks %}
-							
-							
-								<option value="{{block}}"
-								{% if inputParameters.block == block %}
-								selected
-								{% endif %}	
-								>{{block}}</option>
-							
-						{% endfor %}
-					</select> -->
 				</div>
 				
 				<div id="metadataSelectorContainer" class="sectionMenu">
