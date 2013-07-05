@@ -214,8 +214,23 @@ def protocol_io(request):
         ioDict = {'inputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterInputAttributes()],
                   'outputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterOutputAttributes(EMObject)]}
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
+        print jsonStr
         
-        return HttpResponse(jsonStr, mimetype='application/javascript')
+    return HttpResponse(jsonStr, mimetype='application/javascript')
+
+def protocol_summary(request):
+    # Project Id(or Name) should be stored in SESSION
+    if request.is_ajax():
+        projectName = request.GET.get('projectName')
+        project = loadProject(projectName)
+        protId = request.GET.get('protocolId', None)
+        protocol = project.mapper.selectById(int(protId))
+        summary = protocol.summary()
+        print "======================= in protocol_summary...."
+        jsonStr = json.dumps(summary, ensure_ascii=False)
+        print jsonStr
+        
+    return HttpResponse(jsonStr, mimetype='application/javascript')
     
 def form(request):
     
@@ -426,22 +441,19 @@ def viewHosts(request):
 #         return HttpResponse(jsonStr, mimetype='application/javascript')
 
 
-def getHostFormContext(request, initialContext = None):
+def getHostFormContext(request, initialContext=None):
     css_path = os.path.join(settings.STATIC_URL, 'css/general_style.css')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
     hostId = request.GET.get("hostId")
     if hostId is None or hostId == "":
-        if initialContext is not None:
+        if initialContext is not None and 'hostId' in initialContext:
             hostId = initialContext['hostId']
     form = None
-    if request.method == 'GET':        
-        form = HostForm(auto_id=True)
+    if request.method == 'GET':      
+        form = HostForm()
     else:
-        form = HostForm(request.POST, queueConfCont=request.POST.get('queueConfigCount'), queueSystemConfCont=request.POST.get('queueSystemConfigCount'))
-    projectName = request.session['projectName']
-    project = loadProject(projectName)
-    hostsMapper = HostMapper(project.settingsPath)
+        form = initialContext['form']
 #     scpnHostsChoices = []
 #     scpnHostsChoices.append(('', ''))
 #     scipionHosts = getScipionHosts()
@@ -451,6 +463,9 @@ def getHostFormContext(request, initialContext = None):
     # We check if we are going to edit a host
     tittle = None
     if hostId is not None and hostId != "":
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        hostsMapper = HostMapper(project.settingsPath)
         hostConfig = hostsMapper.selectById(hostId)
         form.setHost(hostConfig)
         tittle = hostConfig.getLabel() + " host configuration"
@@ -471,17 +486,20 @@ def getHostFormContext(request, initialContext = None):
 def hostForm(request):
     return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request)))  # Form Django forms
 
-def updateHostsConfig(request):
-    form = HostForm(request.POST)  # A form bound to the POST data
+def updateHostsConfig(request):    
+    form = HostForm(request.POST, queueSystemConfCont=request.POST.get('queueSystemConfigCount'), queueConfCont=request.POST.get('queueConfigCount'))  # A form bound to the POST data
+    context = {'form': form}
     if form.is_valid():  # All validation rules pass
         projectName = request.session['projectName']
         project = loadProject(projectName)
-        host = project.saveHost(form.getHost())      
-        context = {'hostId' : host.getObjId(),
-                   'message': "Project hosts config sucesfully updated"}
-        return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request, context)))  # Form Django forms
-    else:
-        return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request)))  # Form Django forms
+        hostId = request.POST.get('objId')
+        hostsMapper = HostMapper(project.settingsPath)
+        hostConfig = hostsMapper.selectById(hostId)
+        form.host = hostConfig
+        host = form.getHost()
+        host = project.saveHost(form.getHost())
+        context['message'] = "Project hosts config sucesfully updated"    
+    return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request, context)))  # Form Django forms
 
 def deleteHost(request):
     hostId = request.GET.get("hostId")    
@@ -498,7 +516,7 @@ def visualizeObject(request):
 #    project = loadProject(projectName)
     manager = Manager()
     projPath = manager.getProjectPath(projectName)
-    request.session['projectPath']= projPath
+    request.session['projectPath'] = projPath
     project = Project(projPath)
     project.load()
     
@@ -553,7 +571,7 @@ def visualizeObject(request):
 
 #    from django.shortcuts import redirect
 
-    #return redirect('/showj', args=inputParameters)
+    # return redirect('/showj', args=inputParameters)
 
 #    return HttpResponseRedirect('/showj', inputParameters)
     
