@@ -57,26 +57,26 @@ from pyworkflow.gui.graph import LevelTree
 from config import *
 from pw_browser import BrowserWindow
 
-ACTION_EDIT = 'Edit'
-ACTION_COPY = 'Copy'
-ACTION_DELETE = 'Delete'
-ACTION_REFRESH = 'Refresh'
-ACTION_STEPS = 'Browse'
-ACTION_TREE = 'Tree'
-ACTION_STOP = 'Stop'
-ACTION_DEFAULT = 'Default'
-ACTION_CONTINUE = 'Continue'
-
-ActionIcons = {
-    ACTION_EDIT:  'edit.gif',
-    ACTION_COPY:  'copy.gif',
-    ACTION_DELETE:  'delete.gif',
-    ACTION_REFRESH:  'refresh.gif',
-    ACTION_STEPS:  'run_steps.gif',
-    ACTION_TREE:  'tree2.gif',
-    ACTION_STOP: 'stop.gif',
-    ACTION_CONTINUE: 'play.png'
-               }
+#ACTION_EDIT = 'Edit'
+#ACTION_COPY = 'Copy'
+#ACTION_DELETE = 'Delete'
+#ACTION_REFRESH = 'Refresh'
+#ACTION_STEPS = 'Browse'
+#ACTION_TREE = 'Tree'
+#ACTION_STOP = 'Stop'
+#ACTION_DEFAULT = 'Default'
+#ACTION_CONTINUE = 'Continue'
+#
+#ActionIcons = {
+#    ACTION_EDIT:  'edit.gif',
+#    ACTION_COPY:  'copy.gif',
+#    ACTION_DELETE:  'delete.gif',
+#    ACTION_REFRESH:  'refresh.gif',
+#    ACTION_STEPS:  'run_steps.gif',
+#    ACTION_TREE:  'tree2.gif',
+#    ACTION_STOP: 'stop.gif',
+#    ACTION_CONTINUE: 'play.png'
+#               }
 
 
 def populateTree(self, tree, prefix, obj, level=0):
@@ -131,175 +131,175 @@ def loadConfig(config, name):
     return menuConfig
 
 
-class RunsTreeProvider(TreeProvider):
-    """Provide runs info to populate tree"""
-    def __init__(self, mapper, actionFunc):
-        self.actionFunc = actionFunc
-        self.getObjects = lambda: mapper.selectByClass('Protocol')
-        
-    def getColumns(self):
-        return [('Run', 250), ('State', 100), ('Time', 100)]
-    
-    def getObjectInfo(self, obj):
-        return {'key': obj.getObjId(),
-                'text': obj.getRunName(),
-                'values': (obj.status.get(), obj.getElapsedTime())}
-      
-    def getObjectActions(self, obj):
-        prot = obj # Object should be a protocol
-        actionsList = [(ACTION_EDIT, 'Edit     '),
-                       (ACTION_COPY, 'Copy   '),
-                       (ACTION_DELETE, 'Delete    '),
-                       #(None, None),
-                       #(ACTION_STOP, 'Stop'),
-                       (ACTION_STEPS, 'Browse ')
-                       ]
-        status = prot.status.get()
-        if status == STATUS_RUNNING:
-            actionsList.insert(0, (ACTION_STOP, 'Stop execution'))
-            actionsList.insert(1, None)
-        elif status == STATUS_WAITING_APPROVAL:
-            actionsList.insert(0, (ACTION_CONTINUE, 'Approve continue'))
-            actionsList.insert(1, None)
-        
-        actions = []
-        def appendAction(a):
-            v = a
-            if v is not None:
-                action = a[0]
-                text = a[1]
-                v = (text, lambda: self.actionFunc(action), ActionIcons[action])
-            actions.append(v)
-            
-        for a in actionsList:
-            appendAction(a)
-            
-        return actions 
-    
-    
-class ProtocolTreeProvider(ObjectTreeProvider):
-    """Create the tree elements for a Protocol run"""
-    def __init__(self, protocol):
-        self.protocol = protocol
-        # This list is create to group the protocol parameters
-        # in the tree display
-        self.status = List(objName='_status')
-        self.params = List(objName='_params')
-        self.statusList = ['status', 'initTime', 'endTime', 'error', 'isInteractive', 'mode']
-        if protocol is None:
-            objList = []
-        else:
-            objList = [protocol]
-        ObjectTreeProvider.__init__(self, objList)
-        self.viewer = XmippViewer()
-        
-    def show(self, obj):
-        self.viewer.visualize(obj)
-        
-    def getObjectPreview(self, obj):
-        desc = "<name>: " + obj.getName()
-        
-        return (None, desc)
-    
-    def getObjectActions(self, obj):
-        if isinstance(obj, Pointer):
-            obj = obj.get()
-            
-        if isinstance(obj, SetOfMicrographs):
-            return [('Open Micrographs with Xmipp', lambda: self.viewer.visualize(obj))]
-        if isinstance(obj, SetOfImages):
-            return [('Open Images with Xmipp', lambda: self.viewer.visualize(obj))]
-        if isinstance(obj, XmippClassification2D):
-            return [('Open Classification2D with Xmipp', lambda: self.viewer.visualize(obj))]
-        return []   
-    
-    def getObjectInfo(self, obj):
-        info = ObjectTreeProvider.getObjectInfo(self, obj)
-        attrName = obj.getLastName()
-        if hasattr(self.protocol, attrName):
-            if isinstance(obj, Pointer) and obj.hasValue():
-                info['image'] = 'db_input.gif'
-            else:
-                if (self.protocol._definition.hasParam(attrName) or
-                    attrName in ['numberOfMpi', 'numberOfThreads']):
-                    info['parent'] = self.params
-                elif attrName in self.statusList:
-                    if info['parent'] is self.protocol:
-                        info['parent'] = self.status
-                    
-            if attrName.startswith('output'):# in self.protocol._outputs:
-                info['image'] = 'db_output.gif'
-        if obj is self.params or obj is self.status:
-            info['parent'] = self.protocol
-        return info     
-    
-    def _getChilds(self, obj):
-        childs = ObjectTreeProvider._getChilds(self, obj)
-        if obj is self.protocol:
-            childs.insert(0, self.status)
-            childs.insert(1, self.params)
-        return childs
-    
-
-class RunIOTreeProvider(TreeProvider):
-    """Create the tree elements from a Protocol Run input/output childs"""
-    def __init__(self, protocol, mapper):
-        #TreeProvider.__init__(self)
-        self.protocol = protocol
-        self.mapper = mapper
-        self.viewer = XmippViewer()
-
-    def getColumns(self):
-        return [('Attribute', 200), ('Class', 100)]
-    
-    def getObjects(self):
-        objs = []
-        if self.protocol:
-            inputs = [attr for n, attr in self.protocol.iterInputAttributes()]
-            outputs = [attr for n, attr in self.protocol.iterOutputAttributes(EMObject)]
-            self.inputStr = String('Input')
-            self.outputStr = String('Output')
-            objs = [self.inputStr, self.outputStr] + inputs + outputs                
-        return objs
-    
-    def show(self, obj):
-        self.viewer.visualize(obj)
-        
-    def getObjectPreview(self, obj):
-        desc = "<name>: " + obj.getName()
-        
-        return (None, desc)
-    
-    def getObjectActions(self, obj):
-        if isinstance(obj, Pointer):
-            obj = obj.get()
-            
-        if isinstance(obj, SetOfMicrographs):
-            return [('Open Micrographs with Xmipp', lambda: self.viewer.visualize(obj))]
-        if isinstance(obj, SetOfImages):
-            return [('Open Images with Xmipp', lambda: self.viewer.visualize(obj))]
-        if isinstance(obj, XmippClassification2D):
-            return [('Open Classification2D with Xmipp', lambda: self.viewer.visualize(obj))]
-        return []  
-    
-    def getObjectInfo(self, obj):
-        if isinstance(obj, String):
-            value = obj.get()
-            info = {'key': value, 'text': value, 'values': (''), 'open': True}
-        else:
-            image = 'db_output.gif'
-            parent = self.outputStr
-            name = obj.getLastName()
-            
-            if isinstance(obj, Pointer):
-                obj = obj.get()
-                image = 'db_input.gif'
-                parent = self.inputStr
-                parentObj = self.mapper.getParent(obj)
-                name += '   (from %s.%s)' % (parentObj.getLastName(), obj.getLastName())
-            info = {'key': obj.getObjId(), 'parent': parent, 'image': image,
-                    'text': name, 'values': (obj.getClassName())}
-        return info     
+#class RunsTreeProvider(TreeProvider):
+#    """Provide runs info to populate tree"""
+#    def __init__(self, mapper, actionFunc):
+#        self.actionFunc = actionFunc
+#        self.getObjects = lambda: mapper.selectByClass('Protocol')
+#        
+#    def getColumns(self):
+#        return [('Run', 250), ('State', 100), ('Time', 100)]
+#    
+#    def getObjectInfo(self, obj):
+#        return {'key': obj.getObjId(),
+#                'text': obj.getRunName(),
+#                'values': (obj.status.get(), obj.getElapsedTime())}
+#      
+#    def getObjectActions(self, obj):
+#        prot = obj # Object should be a protocol
+#        actionsList = [(ACTION_EDIT, 'Edit     '),
+#                       (ACTION_COPY, 'Copy   '),
+#                       (ACTION_DELETE, 'Delete    '),
+#                       #(None, None),
+#                       #(ACTION_STOP, 'Stop'),
+#                       (ACTION_STEPS, 'Browse ')
+#                       ]
+#        status = prot.status.get()
+#        if status == STATUS_RUNNING:
+#            actionsList.insert(0, (ACTION_STOP, 'Stop execution'))
+#            actionsList.insert(1, None)
+#        elif status == STATUS_WAITING_APPROVAL:
+#            actionsList.insert(0, (ACTION_CONTINUE, 'Approve continue'))
+#            actionsList.insert(1, None)
+#        
+#        actions = []
+#        def appendAction(a):
+#            v = a
+#            if v is not None:
+#                action = a[0]
+#                text = a[1]
+#                v = (text, lambda: self.actionFunc(action), ActionIcons[action])
+#            actions.append(v)
+#            
+#        for a in actionsList:
+#            appendAction(a)
+#            
+#        return actions 
+#    
+#    
+#class ProtocolTreeProvider(ObjectTreeProvider):
+#    """Create the tree elements for a Protocol run"""
+#    def __init__(self, protocol):
+#        self.protocol = protocol
+#        # This list is create to group the protocol parameters
+#        # in the tree display
+#        self.status = List(objName='_status')
+#        self.params = List(objName='_params')
+#        self.statusList = ['status', 'initTime', 'endTime', 'error', 'isInteractive', 'mode']
+#        if protocol is None:
+#            objList = []
+#        else:
+#            objList = [protocol]
+#        ObjectTreeProvider.__init__(self, objList)
+#        self.viewer = XmippViewer()
+#        
+#    def show(self, obj):
+#        self.viewer.visualize(obj)
+#        
+#    def getObjectPreview(self, obj):
+#        desc = "<name>: " + obj.getName()
+#        
+#        return (None, desc)
+#    
+#    def getObjectActions(self, obj):
+#        if isinstance(obj, Pointer):
+#            obj = obj.get()
+#            
+#        if isinstance(obj, SetOfMicrographs):
+#            return [('Open Micrographs with Xmipp', lambda: self.viewer.visualize(obj))]
+#        if isinstance(obj, SetOfImages):
+#            return [('Open Images with Xmipp', lambda: self.viewer.visualize(obj))]
+#        if isinstance(obj, XmippClassification2D):
+#            return [('Open Classification2D with Xmipp', lambda: self.viewer.visualize(obj))]
+#        return []   
+#    
+#    def getObjectInfo(self, obj):
+#        info = ObjectTreeProvider.getObjectInfo(self, obj)
+#        attrName = obj.getLastName()
+#        if hasattr(self.protocol, attrName):
+#            if isinstance(obj, Pointer) and obj.hasValue():
+#                info['image'] = 'db_input.gif'
+#            else:
+#                if (self.protocol._definition.hasParam(attrName) or
+#                    attrName in ['numberOfMpi', 'numberOfThreads']):
+#                    info['parent'] = self.params
+#                elif attrName in self.statusList:
+#                    if info['parent'] is self.protocol:
+#                        info['parent'] = self.status
+#                    
+#            if attrName.startswith('output'):# in self.protocol._outputs:
+#                info['image'] = 'db_output.gif'
+#        if obj is self.params or obj is self.status:
+#            info['parent'] = self.protocol
+#        return info     
+#    
+#    def _getChilds(self, obj):
+#        childs = ObjectTreeProvider._getChilds(self, obj)
+#        if obj is self.protocol:
+#            childs.insert(0, self.status)
+#            childs.insert(1, self.params)
+#        return childs
+#    
+#
+#class RunIOTreeProvider(TreeProvider):
+#    """Create the tree elements from a Protocol Run input/output childs"""
+#    def __init__(self, protocol, mapper):
+#        #TreeProvider.__init__(self)
+#        self.protocol = protocol
+#        self.mapper = mapper
+#        self.viewer = XmippViewer()
+#
+#    def getColumns(self):
+#        return [('Attribute', 200), ('Class', 100)]
+#    
+#    def getObjects(self):
+#        objs = []
+#        if self.protocol:
+#            inputs = [attr for n, attr in self.protocol.iterInputAttributes()]
+#            outputs = [attr for n, attr in self.protocol.iterOutputAttributes(EMObject)]
+#            self.inputStr = String('Input')
+#            self.outputStr = String('Output')
+#            objs = [self.inputStr, self.outputStr] + inputs + outputs                
+#        return objs
+#    
+#    def show(self, obj):
+#        self.viewer.visualize(obj)
+#        
+#    def getObjectPreview(self, obj):
+#        desc = "<name>: " + obj.getName()
+#        
+#        return (None, desc)
+#    
+#    def getObjectActions(self, obj):
+#        if isinstance(obj, Pointer):
+#            obj = obj.get()
+#            
+#        if isinstance(obj, SetOfMicrographs):
+#            return [('Open Micrographs with Xmipp', lambda: self.viewer.visualize(obj))]
+#        if isinstance(obj, SetOfImages):
+#            return [('Open Images with Xmipp', lambda: self.viewer.visualize(obj))]
+#        if isinstance(obj, XmippClassification2D):
+#            return [('Open Classification2D with Xmipp', lambda: self.viewer.visualize(obj))]
+#        return []  
+#    
+#    def getObjectInfo(self, obj):
+#        if isinstance(obj, String):
+#            value = obj.get()
+#            info = {'key': value, 'text': value, 'values': (''), 'open': True}
+#        else:
+#            image = 'db_output.gif'
+#            parent = self.outputStr
+#            name = obj.getLastName()
+#            
+#            if isinstance(obj, Pointer):
+#                obj = obj.get()
+#                image = 'db_input.gif'
+#                parent = self.inputStr
+#                parentObj = self.mapper.getParent(obj)
+#                name += '   (from %s.%s)' % (parentObj.getLastName(), obj.getLastName())
+#            info = {'key': obj.getObjId(), 'parent': parent, 'image': image,
+#                    'text': name, 'values': (obj.getClassName())}
+#        return info     
     
 VIEW_PROTOCOLS = 'Protocols'
 VIEW_DATA = 'Data'

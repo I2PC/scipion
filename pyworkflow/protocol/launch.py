@@ -43,23 +43,51 @@ B. Remote execution:
 import re
 from subprocess import Popen, PIPE
 from pyworkflow.utils import buildRunCommand, redStr, greenStr, makeFilePath, join
+from pyworkflow.utils import process
 from pyworkflow.protocol import STEPS_PARALLEL
 
 UNKNOWN_JOBID = -1
+LOCALHOST = 'localhost'
 
 
-def launchProtocol(protocol, wait=False):
-    """ This is the entry point to launch a protocol
+# ******************************************************************
+# *         Public functions provided by the module
+# ******************************************************************
+
+def launch(protocol, wait=False):
+    """ This function should be used to launch a protocol
     This function will decide wich case, A or B will be used.
     """
-    print "launchProtocol: hostname: ", protocol.getHostName()
-    if protocol.getHostName() == 'localhost':
-        return _launchLocalProtocol(protocol, wait)
+    if _isLocal(protocol):
+        jobId = _launchLocal(protocol, wait)
     else:
-        return _launchRemoteProtocol(protocol, wait)
+        jobId = _launchRemote(protocol, wait)
+    
+    protocol.setJobId(jobId)
     
     
-def _launchLocalProtocol(protocol, wait):
+def stop(protocol):
+    """ 
+    """
+    if _isLocal(protocol):
+        return _stopLocal(protocol)
+    else:
+        return _stopRemote(protocol)
+
+
+
+# ******************************************************************
+# *         Internal utility functions
+# ******************************************************************
+
+def _isLocal(protocol):
+    return protocol.getHostName() == LOCALHOST
+    
+# ******************************************************************
+# *                 Function related to LAUNCH
+# ******************************************************************
+
+def _launchLocal(protocol, wait):
     bg = not wait
     # Check first if we need to launch with MPI or not
     if (protocol.stepsExecutionMode == STEPS_PARALLEL and
@@ -70,31 +98,30 @@ def _launchLocalProtocol(protocol, wait):
         program = 'pw_protocol_run.py'
         mpi = 1
     protStrId = protocol.strId()
+    threads = protocol.numberOfThreads.get()
     params = '%s %s' % (protocol.getDbPath(), protStrId)
-    command = buildRunCommand(None, program, params, 
-                              mpi, protocol.numberOfThreads.get(), bg)
+    command = process.buildRunCommand(None, program, params, mpi, threads, bg)
     # Check if need to submit to queue
     hostConfig = protocol.getHostConfig()
-    submitToQueue = hostConfig.isQueueMandatory() or protocol.useQueue()
+    useQueue = hostConfig.isQueueMandatory() or protocol.useQueue()
     
-    if submitToQueue:        
+    if useQueue:        
         submitDict = protocol.getSubmitDict()
         submitDict['JOB_COMMAND'] = command
-        jobId = _submitProtocol(hostConfig, submitDict)
+        jobId = _submit(hostConfig, submitDict)
     else:
-        jobId = _runProtocol(command, wait)
+        jobId = _run(command, wait)
 
     return jobId
-
     
-def _launchRemoteProtocol(protocol, wait):
+def _launchRemote(protocol, wait):
     from pyworkflow.utils.remote import sshConnectFromHost
     # Establish connection
     host = protocol.getHostConfig()
     ssh = sshConnectFromHost(host)
     rpath = RemotePath(ssh)
     # Copy protocol files
-    _copyProtocolFiles(protocol, rpath)
+    _copyFiles(protocol, rpath)
     # Run remote program to launch the protocol
     cmd  = 'cd %s; pw_protocol_launch.py %s %s %s' % (host.getHostPath(), 
                                                    protocol.getDbPath(), 
@@ -107,7 +134,7 @@ def _launchRemoteProtocol(protocol, wait):
             break
     return jobId
 
-def _copyProtocolFiles(protocol, rpath):
+def _copyFiles(protocol, rpath):
     """ Copy all required files for protocol to run
     in a remote execution host.
     NOTE: this function should always be execute with 
@@ -124,8 +151,7 @@ def _copyProtocolFiles(protocol, rpath):
         remoteFile = join(remotePath, f)
         rpath.putFile(f, remoteFile)
 
-
-def _submitProtocol(hostConfig, submitDict):
+def _submit(hostConfig, submitDict):
     """ Submit a protocol to a queue system. 
     """
     # Create forst the submission script to be launched
@@ -155,14 +181,10 @@ def _submitProtocol(hostConfig, submitDict):
         
     return jobId 
     
-    
-def _runProtocol(command, wait):
-    """Directly execute the protocol.
-    mpiComm is only used when the protocol steps are execute
-    with several MPI nodes.
-    """
+def _run(command, wait):
+    """ Execute a command in a subprocess and return the pid. """
     gcmd = greenStr(command)
-    print "** Running protocol: '%s'" % gcmd
+    print "** Running command: '%s'" % gcmd
     p = Popen(command, shell=True)
     jobId = p.pid
     if wait:
@@ -170,3 +192,38 @@ def _runProtocol(command, wait):
         
     return jobId
 
+# ******************************************************************
+# *                 Function related to STOP
+# ******************************************************************
+
+def _stopLocal(protocol):
+    
+    if protocol.useQueue():     
+        jobId = protocol.getJobId()
+        raise Exception("_stopLocal for queue not implemented yet")   
+        host = protocol.getHostConfig()
+        cancelCmd = host.getCancelCommand() % {'JOB_ID': jobId}
+        _run(cancelCmd, wait=True)
+    else:
+        process.killWithChilds(protocol.getPid())
+    
+def _stopRemote(protocol):
+    raise Exception("_stopRemote not implemented yet")
+    from pyworkflow.utils.remote import sshConnectFromHost
+    # Establish connection
+    host = protocol.getHostConfig()
+    ssh = sshConnectFromHost(host)
+    rpath = RemotePath(ssh)
+    # Copy protocol files
+    _copyFiles(protocol, rpath)
+    # Run remote program to launch the protocol
+    cmd  = 'cd %s; pw_protocol_launch.py %s %s %s' % (host.getHostPath(), 
+                                                   protocol.getDbPath(), 
+                                                   protocol.strId(), str(wait))
+    print "Running remote %s" % greenStr(cmd)
+    stdin, stdout, stderr = ssh.exec_command(cmd)
+    for l in stdout.readlines():
+        if l.startswith('OUTPUT jobId'):
+            jobId = int(l.split()[2])
+            break
+    return jobId
