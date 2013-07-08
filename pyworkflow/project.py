@@ -148,18 +148,22 @@ class Project(object):
         self.mapper.commit()
         
     def _updateProtocol(self, protocol):
-        # FIXME: this will not work for a real remote host
-        jobId = protocol.getJobId() # Preserve the jobId before copy
-        
-        dbPath = join(protocol.getHostConfig().getHostPath(), protocol.getDbPath())
-        prot2 = getProtocolFromDb(dbPath, protocol.getObjId(), globals())
-        # Copy is only working for db restored objects
-        protocol.copy(prot2)
-        
-        # Restore jobId
-        protocol.setJobId(jobId)
-        
-        self.mapper.store(protocol)
+        try:
+            # FIXME: this will not work for a real remote host
+            jobId = protocol.getJobId() # Preserve the jobId before copy
+            
+            dbPath = join(protocol.getHostConfig().getHostPath(), protocol.getDbPath())
+            prot2 = getProtocolFromDb(dbPath, protocol.getObjId(), globals())
+            # Copy is only working for db restored objects
+            protocol.copy(prot2)
+            
+            # Restore jobId
+            protocol.setJobId(jobId)
+            
+            self.mapper.store(protocol)
+        except Exception, ex:
+            print "Error trying to update protocol: %s\n %s" % (jobId, ex)
+            
         
     def stopProtocol(self, protocol):
         """ Stop a running protocol """
