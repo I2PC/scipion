@@ -100,9 +100,9 @@ std::string ImageBase::getDefaultDataset(hid_t fhdf5)
 
     len = H5Gget_objname_by_idx(gid, 0, memName, maxSize);
 
-    if ( strcmp(memName,"NXtomo") == 0 )
+    if ( strcmp(memName,"NXtomo") == 0 ) // Nexus Mistral
         return (std::string) "/NXtomo/instrument/sample/data";
-    else if ( strcmp(memName,"MDF") == 0)
+    else if ( strcmp(memName,"MDF") == 0) // Eman
         return (std::string) "/MDF/images/0/image";
     else
         REPORT_ERROR(ERR_IO, "rwHDF5: Unknown file provider. Default dataset unknown.");
@@ -206,60 +206,41 @@ int ImageBase::readHDF5(size_t select_img)
     if (dataMode < DATA)   // Don't read  data if not necessary but read the header
         return errCode;
 
-    if (H5D_CHUNKED == H5Pget_layout(cparms))
+    if ( H5Pget_layout(cparms) == H5D_CONTIGUOUS ) //We can read it directly
+        readData(fimg, select_img, datatype, 0);
+    else // We read it by hyperslabs
     {
         // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
         //if memory already allocated use it (no resize allowed)
         mdaBase->coreAllocateReuse();
 
-        /*
-         * Get chunking information: rank and dimensions
-         */
-        rank_chunk = H5Pget_chunk(cparms, rank, chunk_dims);
-
-        /*
-         * Define the memory space to read a chunk.
-         */
-        memspace = H5Screate_simple(rank_chunk,chunk_dims,NULL);
-
-        /*
-         * Define chunk in the file (hyperslab) to read.
-         */
+        // Define hyperslab to read.
         offset[0] = imgStart;
         offset[1] = 0;
         offset[2] = 0;
         count[0]  = 1;
-        count[1]  = chunk_dims[1];
-        count[2]  = chunk_dims[2];
+        count[1]  = dims[1];
+        count[2]  = dims[2];
+
+        /*
+         * Define the memory space to read a hyperslab.
+         */
+        memspace = H5Screate_simple(rank,count,NULL);
+
         status = H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offset, NULL,
                                      count, NULL);
-        /*
-         * Read chunk back and display.
-         */
-
+        // Read
         status = H5Dread(dataset, h5datatype, memspace, filespace,
                          H5P_DEFAULT, this->mdaBase->getArrayPointer());
 
-        /*
-         * Close/release resources.
-         */
         H5Sclose(memspace);
     }
-    else
-        readData(fimg, select_img, datatype, 0);
-
 
     H5Pclose(cparms);
     H5Sclose(filespace);
     H5Dclose(dataset);
 
-
     return errCode;
-
-    // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
-    //if memory already allocated use it (no resize allowed)
-    //    mdaBase->coreAllocateReuse();
-
 }
 
 int ImageBase::writeHDF5(size_t select_img, bool isStack, int mode, String bitDepth, CastWriteMode castMode)
