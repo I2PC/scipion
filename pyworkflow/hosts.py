@@ -188,17 +188,47 @@ class HostConfig(OrderedObject):
         
     def toString(self):
         string = ''
-        string += str(self.label.getObjId()) + " - " + str(self.label.get()) + "\n"
-        string += str(self.hostName.getObjId()) + " - " + str(self.hostName.get()) + "\n"   
-        string += str(self.hostPath.getObjId()) + " - " + str(self.hostPath.get()) + "\n"   
-        string += "QUEUE" + "\n"
-        string += str(self.queueSystem.name.getObjId()) + " - " + str(self.queueSystem.name.get()) + "\n"  
-        string += str(self.queueSystem.mandatory.getObjId()) + " - " + str(self.queueSystem.mandatory.get()) + "\n"  
-        string += str(self.queueSystem.submitCommand.getObjId()) + " - " + str(self.queueSystem.submitCommand.get()) + "\n"  
-        string += str(self.queueSystem.checkCommand.getObjId()) + " - " + str(self.queueSystem.checkCommand.get()) + "\n"  
-        string += str(self.queueSystem.cancelCommand.getObjId()) + " - " + str(self.queueSystem.cancelCommand.get()) + "\n" 
-        string += str(self.queueSystem.submitTemplate.getObjId()) + " - " + str(self.queueSystem.submitTemplate.get()) + "\n"
-        string += str(self.queueSystem.queues) + "\n" 
+        string += 'HOST CONFIG '+ str(self.getObjId()) + "\n"
+        if (self.label is not None):
+            string += str(self.label.getObjId()) + " - " + str(self.label.get()) + "\n"
+        if (self.hostName is not None):
+            string += str(self.hostName.getObjId()) + " - " + str(self.hostName.get()) + "\n" 
+        if (self.userName is not None):  
+            string += str(self.userName.getObjId()) + " - " + str(self.userName.get()) + "\n"
+        if (self.password is not None):
+            string += str(self.password.getObjId()) + " - " + str(self.password.get()) + "\n"  
+        if (self.hostPath is not None): 
+            string += str(self.hostPath.getObjId()) + " - " + str(self.hostPath.get()) + "\n" 
+        if (self.mpiCommand is not None):
+            string += str(self.mpiCommand.getObjId()) + " - " + str(self.mpiCommand.get()) + "\n"  
+        if self.queueSystem is not None:
+            string += "QUEUE SYSTEM " + str(self.queueSystem.getObjId()) + "\n"
+            if (self.queueSystem.name is not None):
+                string += str(self.queueSystem.name.getObjId()) + " - " + str(self.queueSystem.name.get()) + "\n"  
+            if (self.queueSystem.mandatory is not None):
+                string += str(self.queueSystem.mandatory.getObjId()) + " - " + str(self.queueSystem.mandatory.get()) + "\n"  
+            if (self.queueSystem.submitCommand is not None):
+                string += str(self.queueSystem.submitCommand.getObjId()) + " - " + str(self.queueSystem.submitCommand.get()) + "\n" 
+            if (self.queueSystem.checkCommand is not None): 
+                string += str(self.queueSystem.checkCommand.getObjId()) + " - " + str(self.queueSystem.checkCommand.get()) + "\n" 
+            if (self.queueSystem.cancelCommand is not None):  
+                string += str(self.queueSystem.cancelCommand.getObjId()) + " - " + str(self.queueSystem.cancelCommand.get()) + "\n" 
+            if (self.queueSystem.submitTemplate is not None):
+                string += str(self.queueSystem.submitTemplate.getObjId()) + " - " + str(self.queueSystem.submitTemplate.get()) + "\n"
+            if self.queueSystem.queues is not None:
+                string += str(len(self.queueSystem.queues)) + " QUEUES " +  str(self.queueSystem.queues.getObjId()) + "\n" 
+                for queue in self.queueSystem.queues:
+                    string += "QUEUE " + str(queue.getObjId()) + "\n" 
+                    if queue.name is not None:
+                        string += str(queue.name.getObjId()) + " - " + str(queue.name.get()) + "\n"
+                    if queue.maxCores is not None:
+                        string += str(queue.maxCores.getObjId()) + " - " + str(queue.maxCores.get()) + "\n"
+                    if queue.allowMPI is not None:
+                        string += str(queue.allowMPI.getObjId()) + " - " + str(queue.allowMPI.get()) + "\n"
+                    if queue.allowThreads is not None:
+                        string += str(queue.allowThreads.getObjId()) + " - " + str(queue.allowThreads.get()) + "\n"
+                    if queue.maxHours is not None:
+                        string += str(queue.maxHours.getObjId()) + " - " + str(queue.maxHours.get()) + "\n"
         return string
         
         
@@ -259,9 +289,10 @@ class QueueSystemConfig(OrderedObject):
         self.queues = queues
         
     def getQueueConfig(self, objId):
-        for queueConfig in self.queues:
-            if objId == queueConfig.getObjId():
-                return queueConfig
+        if objId is not None and self.queues is not None:
+            for queueConfig in self.queues:
+                if objId == queueConfig.getObjId():
+                    return queueConfig
         return None
         
         

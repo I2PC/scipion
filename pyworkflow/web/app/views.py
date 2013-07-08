@@ -482,7 +482,7 @@ def hostForm(request):
         hostsMapper = HostMapper(project.settingsPath)
         hostConfig = hostsMapper.selectById(hostId)
         form = HostForm()
-        form.setHost(hostConfig)
+        form.setFormHost(hostConfig)
         context = {'form': form}
     return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request, hostConfig, context)))  # Form Django forms
 
@@ -496,10 +496,7 @@ def updateHostsConfig(request):
         hostsMapper = HostMapper(project.settingsPath)
         hostConfig = hostsMapper.selectById(hostId)
         form.host = hostConfig
-        host = form.getHost()
-#         print ("SE VAAAA", len(host.getQueueSystem().getQueues()))
-#         for que in host.getQueueSystem().getQueues():
-#             print que.getObjId()
+        host = form.getFormHost()
         host = project.saveHost(host)
         context['message'] = "Project hosts config sucesfully updated"
         return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request, initialContext = context))) 

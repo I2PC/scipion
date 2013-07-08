@@ -1,5 +1,7 @@
-{% extends 'base.html' %} {% block title %} - Project {{project_name}}
-{% endblock %} {% block head %}
+{% extends 'base.html' %} 
+{% block title %} - Project {{project_name}}
+{% endblock %} 
+{% block head %}
 <link href={{css}} rel="stylesheet" type="text/css">
 <link href={{messi_css}} rel="stylesheet" type="text/css">
 <!-- JS Libs -->
@@ -11,7 +13,8 @@
 <script>
 	
 </script>
-{% endblock %} {% block sideLeft %}
+{% endblock %} 
+{% block sideLeft %}
 <div class="protFieldsetTree">
 	<ul id="browser" class="filetree">
 		{% for section in sections %}
@@ -32,7 +35,8 @@
 			</ul></li> {% endfor %}
 	</ul>
 </div>
-{% endblock %} {% block content %}
+{% endblock %} 
+{% block content %}
 <span style="float: right;"><a id="treeTool"
 	href="javascript:switchGraph();"><img src="{{treeTool}}" /> Tree</a></span>
 <div id="runTable">
@@ -72,7 +76,8 @@
 	<div class="window" style="top:25em;left: 7em;" id="container6">XmippProtML2D621<br/>finished</div>
 	<div class="window" style="top:25em;left: 17em;" id="container7">XmippProtCL2D702<br/>finished</div>
 </div>
-{% endblock %} {% block contentDown %}
+{% endblock %} 
+{% block contentDown %}
 <div id="tabContaier">
 	<ul class="listTabs">
 		<li><a id="tabTitle" class="active" href="#tab1">Data</a></li>

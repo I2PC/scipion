@@ -93,13 +93,10 @@ class HostForm(forms.Form):
                                                                                          widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))                
                 self.fields['queueConfigId_{index}'.format(index=index)] = forms.CharField(widget=forms.HiddenInput(), required = False)
     
-    def getHost(self):
+    def getFormHost(self):
         if self.host is None:
             self.host = HostConfig()
-        #if self.cleaned_data['objId'] == '':
             self.host.setObjId(None)
-#         else:
-#             self.host.setObjId(self.cleaned_data['objId'])
         self.host.setLabel(self.cleaned_data['label'])
         self.host.setHostName(self.cleaned_data['hostName'])
         self.host.setUserName(self.cleaned_data['userName'])
@@ -118,34 +115,34 @@ class HostForm(forms.Form):
             queueSystemConfig.setCheckCommand(self.cleaned_data['checkCommand'])
             queueSystemConfig.setCancelCommand(self.cleaned_data['cancelCommand'])
             if int(self.cleaned_data['queueConfigCount']) > 0:
-#                 if self.host.getQueueSystem() is None or self.host.getQueueSystem().getQueues() is None:
-#                     queuesList = List()
-#                 else:
-#                     queuesList = self.host.getQueueSystem().getQueues()
                 queuesList = List()
-                if self.host.getQueueSystem() is not None and self.host.getQueueSystem().getQueues() is not None:
-#                     queuesList = self.host.getQueueSystem().getQueues()
-                      queuesList.setObjId(self.host.getQueueSystem().getQueues().getObjId())
                 for index in range(int(self.cleaned_data['queueConfigCount'])):
-                    queueConfig = None
-                    if self.cleaned_data['queueConfigId_{index}'.format(index=index)] == '':
-                        queueConfig = QueueConfig()
-                        queueConfig.setObjId(None)
-                    else:                        
-                        objId = int(self.cleaned_data['queueConfigId_{index}'.format(index=index)])
-                        queueConfig = queueSystemConfig.getQueueConfig(objId)                            
-                    queueConfig.setName(self.cleaned_data['name_{index}'.format(index=index)])
-                    queueConfig.setMaxCores(self.cleaned_data['maxCores_{index}'.format(index=index)])
-                    queueConfig.setAllowMPI(self.cleaned_data['allowMPI_{index}'.format(index=index)])
-                    queueConfig.setAllowThreads(self.cleaned_data['allowThreads_{index}'.format(index=index)])
-                    queueConfig.setMaxHours(self.cleaned_data['maxHours_{index}'.format(index=index)])
-                    queuesList.append(queueConfig)
-                    print("ANADIENDOOOOOOOO", queueConfig.getObjId())
+                    if ('queueConfigId_{index}'.format(index=index)) in self.cleaned_data:
+                        queueConfig = None
+                        if self.cleaned_data['queueConfigId_{index}'.format(index=index)] == '':
+                            queueConfig = QueueConfig()
+                            queueConfig.setObjId(None)
+                        else:                        
+                            objId = int(self.cleaned_data['queueConfigId_{index}'.format(index=index)])
+                            queueConfig = queueSystemConfig.getQueueConfig(objId)                            
+                        queueConfig.setName(self.cleaned_data['name_{index}'.format(index=index)])
+                        queueConfig.setMaxCores(self.cleaned_data['maxCores_{index}'.format(index=index)])
+                        queueConfig.setAllowMPI(self.cleaned_data['allowMPI_{index}'.format(index=index)])
+                        queueConfig.setAllowThreads(self.cleaned_data['allowThreads_{index}'.format(index=index)])
+                        queueConfig.setMaxHours(self.cleaned_data['maxHours_{index}'.format(index=index)])
+                        queuesList.append(queueConfig)
+                        
+                if self.host.getQueueSystem() is not None and self.host.getQueueSystem().getQueues() is not None:
+                    self.host.getQueueSystem().getQueues().clear()
+                    for queue in queuesList:
+                        self.host.getQueueSystem().getQueues().append(queue)
+                else:
+                    self.host.getQueueSystem().setQueues(queuesList)
                 queueSystemConfig.setQueues(queuesList)
             self.host.setQueueSystem(queueSystemConfig)                    
         return self.host
     
-    def setHost(self, host):
+    def setFormHost(self, host):
         self.host = host
         self.fields['objId'].initial = host.getObjId()
         self.fields['label'].initial = host.getLabel()
