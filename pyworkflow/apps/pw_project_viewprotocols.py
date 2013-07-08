@@ -507,7 +507,8 @@ class ProtocolsView(tk.Frame):
         g = self.project.getRunsGraph()
         lt = LevelTree(g)
         self.runsGraph.clear()
-        lt.paint(self.runsGraph, self.createRunItem)
+        lt.setCanvas(self.runsGraph)
+        lt.paint(self.createRunItem)
         
     def createRunItem(self, node, y):
         """ If not nodeBuildFunc is specified, this one will be used
