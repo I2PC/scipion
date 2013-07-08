@@ -85,8 +85,8 @@ DataType ImageBase::datatypeHDF5(hid_t h5datatype)
 std::string ImageBase::getDefaultDataset(hid_t fhdf5)
 {
     size_t maxSize = 1024;
-    char groupName[maxSize];
-    char memName[maxSize];
+    char groupName[1024];
+    char memName[1024];
 
     hid_t gid;
     ssize_t len;
@@ -116,8 +116,7 @@ int ImageBase::readHDF5(size_t select_img)
     hid_t dataset;    /* Dataset and datatype identifiers */
     hid_t filespace;
     hsize_t dims[4]; // We are not going to support more than 4 dimensions, at this moment.
-    herr_t status, status_n;
-    hid_t       cparms;
+    hid_t cparms;
     int rank;
 
     String dsname = filename.getBlockName();
@@ -135,8 +134,8 @@ int ImageBase::readHDF5(size_t select_img)
 
     // Get dataset rank and dimension.
     filespace = H5Dget_space(dataset);    /* Get filespace handle first. */
-    rank      = H5Sget_simple_extent_ndims(filespace);
-    status_n  = H5Sget_simple_extent_dims(filespace, dims, NULL);
+    //    rank      = H5Sget_simple_extent_ndims(filespace);
+    rank  = H5Sget_simple_extent_dims(filespace, dims, NULL);
 
     // Offset only set when it is possible to access to data directly
     offset = (H5D_CONTIGUOUS == H5Pget_layout(cparms))? H5Dget_offset(dataset) : 0;
@@ -166,9 +165,7 @@ int ImageBase::readHDF5(size_t select_img)
     DataType datatype = datatypeHDF5(h5datatype);
     MDMainHeader.setValue(MDL_DATATYPE,(int) datatype);
 
-
-    bool isStack = ( rank > 2 );
-
+    //    bool isStack = ( rank > 2 );
 
     ArrayDim aDim;
     aDim.xdim = dims[rank-1];
@@ -194,15 +191,6 @@ int ImageBase::readHDF5(size_t select_img)
     MD.clear();
     MD.resize(imgEnd - imgStart,MDL::emptyHeader);
 
-
-    hid_t       memspace;
-    hsize_t     chunk_dims[4];
-    hsize_t     count[4];
-    hsize_t     offset[4];
-
-    int         rank_chunk;
-
-
     if (dataMode < DATA)   // Don't read  data if not necessary but read the header
         return errCode;
 
@@ -213,6 +201,10 @@ int ImageBase::readHDF5(size_t select_img)
         // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
         //if memory already allocated use it (no resize allowed)
         mdaBase->coreAllocateReuse();
+
+        hid_t       memspace;
+        hsize_t     count[4];
+        hsize_t     offset[4];
 
         // Define hyperslab to read.
         offset[0] = imgStart;
@@ -227,11 +219,15 @@ int ImageBase::readHDF5(size_t select_img)
          */
         memspace = H5Screate_simple(rank,count,NULL);
 
-        status = H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offset, NULL,
-                                     count, NULL);
+        if ( H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offset, NULL,
+                                 count, NULL) < 0 )
+            REPORT_ERROR(ERR_IO_NOREAD, formatString("readHDF5: Error selecting hyperslab %d from filename %s",
+                         imgStart, filename.c_str()));
         // Read
-        status = H5Dread(dataset, h5datatype, memspace, filespace,
-                         H5P_DEFAULT, this->mdaBase->getArrayPointer());
+        if ( H5Dread(dataset, h5datatype, memspace, filespace,
+                     H5P_DEFAULT, this->mdaBase->getArrayPointer()) < 0 )
+            REPORT_ERROR(ERR_IO_NOREAD,formatString("readHDF5: Error reading hyperslab %d from filename %s",
+                                                    imgStart, filename.c_str()));
 
         H5Sclose(memspace);
     }
