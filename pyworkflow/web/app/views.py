@@ -8,6 +8,7 @@ from django.template import RequestContext
 import json
 from pyworkflow.manager import Manager
 from pyworkflow.project import Project
+import pyworkflow.gui.graph as gg
 from pyworkflow.gui.tree import TreeProvider, ProjectRunsTreeProvider
 from pyworkflow.utils.path import findResource
 from pyworkflow.utils.utils import prettyDate
@@ -96,18 +97,43 @@ def delete_project(request):
     return HttpResponse(mimetype='application/javascript')
 
 ######    Project Content template    #####
+def createNode(node, y):
+    item = gg.TNode(node.getName(), y=y)
+    item.width = node.w
+    item.height = node.h
+    return item
+    
+def createEdge(srcItem, dstItem):
+    pass
+    
 def project_graph (request):
     if request.is_ajax():
         boxList = request.GET.get('list')
+        # Project Id(or Name) should be stored in SESSION
+        projectName = request.session['projectName']
+        # projectName = request.GET.get('projectName')
+        project = loadProject(projectName)
+        g = project.getRunsGraph()
+        root = g.getRoot()
+        root.w = 100
+        root.h = 40
+        
+        for box in boxList.split(','):
+            i, w, h = box.split('-')
+            node = g.getNode(i)
+            print node.getName()
+            node.w = float(w)
+            node.h = float(h)
+            
+        lt = gg.LevelTree(g)
+        lt.paint(createNode, createEdge)
         nodeList = []
-        x = 50
-        y = 50
-        sep = 20
-        for node in boxList.split(','):
-            i, w, h = node.split('-')
-            nodeList.append({'id': i, 'x': x, 'y': y})
-            x += int(w) + sep
-        jsonStr = json.dumps(nodeList, ensure_ascii=False)    
+        
+        nodeList = [{'id': node.getName(), 'x': node.item.x, 'y': node.item.y} 
+                    for node in g.getNodes()]
+        print nodeList
+        jsonStr = json.dumps(nodeList, ensure_ascii=False)   
+         
         return HttpResponse(jsonStr, mimetype='application/javascript')
 
 class TreeItem():

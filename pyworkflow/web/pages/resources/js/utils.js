@@ -303,9 +303,11 @@ function callPlumb() {
 		url : '/project_graph/?list=' + aux,
 		dataType : "json",
 		success : function(json) {
+			coords = '';
 			for ( var i = 0; i < json.length; i++) {
-				alert(json[i].x);
+				coords += 'id: ' + json[i].id + ', x=' + json[i].x + ', y=' + json[i].y + '\n';
 			}
+			alert(coords);
 		}
 	});
 

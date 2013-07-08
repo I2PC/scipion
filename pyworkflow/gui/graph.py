@@ -217,9 +217,10 @@ class TNode(object):
     def __init__(self, text, x=0, y=0):
         self.text = text
         self.moveTo(x, y)
+        self.width, self.height = 0, 0
         
     def getDimensions(self):
-        return (len(self.text) + 5, 5)
+        return (self.width, self.height)
     
     def moveTo(self, x, y):
         self.x = x

@@ -257,15 +257,14 @@ class Project(object):
         g = Graph(rootName='PROJECT')
         
         for r in runs:
-            key = r.getName()
-            n = g.createNode(key)
+            n = g.createNode(r.strId())
             n.run = r
             for key, attr in r.iterOutputAttributes(EMObject):
                 outputDict[attr.getName()] = n # mark this output as produced by r
                 #print "   %s: %s" % (key, attr.getName())
             
         for r in runs:
-            node = g.getNode(r.getName())
+            node = g.getNode(r.strId())
             #print '\n=========================\n', r.getName()
             #print "> Inputs:"
             for key, attr in r.iterInputAttributes():
