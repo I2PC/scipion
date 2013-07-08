@@ -10,6 +10,7 @@ DO_PYMOD=true
 DO_FFTW=true
 DO_TIFF=true
 DO_JPEG=true
+DO_HDF5=true
 DO_ARPACK=false
 
 DO_CLEAN=true
@@ -74,6 +75,7 @@ for param in $@; do
 			    DO_FFTW=false
 			    DO_TIFF=false
 			    DO_JPEG=false
+			    DO_HDF5=false
 			    DO_ARPACK=false
 			    DO_SETUP=false;;			
         "-j")               TAKE_CPU=true;;
@@ -93,6 +95,8 @@ for param in $@; do
         "tiff=false")       DO_TIFF=false;;
         "jpeg=true")        DO_JPEG=true;;
         "jpeg=false")       DO_JPEG=false;;
+        "hdf5=true")        DO_HDF5=true;;
+        "hdf5=false")       DO_HDF5=false;;
         "arpack=true")      DO_ARPACK=true;;
         "arpack=false")     DO_ARPACK=false;;
         "clean=true")       DO_CLEAN=true;;
@@ -293,6 +297,7 @@ VPYTHON=Python-2.7.2
 VFFTW=fftw-3.3.1
 VTIFF=tiff-3.9.4
 VJPEG=jpeg-8c
+VHDF5=hdf5-1.8.10
 VARPACK=arpack++-2.3
 VNUMPY=numpy-1.6.1
 VMATLIBPLOT=matplotlib-1.1.0
@@ -492,6 +497,13 @@ fi
 if $DO_TIFF; then
   compile_library $VTIFF "." "." "CPPFLAGS=-w --with-jpeg-include-dir=$EXT_PATH/$VJPEG --with-jpeg-lib-dir=$XMIPP_HOME/lib"
   install_libs $VTIFF/libtiff/.libs libtiff 3
+fi
+
+#################### HDF5 ###########################
+if $DO_HDF5; then
+compile_library $VHDF5 "." "." "CPPFLAGS=-w --enable-cxx"
+install_libs $VHDF5/src/.libs libhdf5 7
+install_libs $VHDF5/c++/src/.libs libhdf5_cpp 7
 fi
 
 #################### TCL/TK ###########################
