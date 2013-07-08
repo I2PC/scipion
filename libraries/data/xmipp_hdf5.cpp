@@ -30,8 +30,6 @@ struct H5TreeInfo
 {
     std::string rootname;
     std::ostream * out;
-    size_t      level;
-    XmippH5File* h5File;
 };
 
 herr_t showObjectInfo(hid_t objId, const char *name, void *op_data)
@@ -39,36 +37,16 @@ herr_t showObjectInfo(hid_t objId, const char *name, void *op_data)
     H5TreeInfo &h5Info = *((H5TreeInfo*)op_data);
     std::ostream &out = *(h5Info.out);
 
-
-    int i;
-    size_t maxSize = 1024;
-    ssize_t len;
     hsize_t nobj;
     herr_t err;
-    int otype;
-    hid_t grpid, idType, dsid;
-    char group_name[maxSize];
-    char memb_name[maxSize];
+    hid_t grpid, dsid;
 
     H5G_stat_t statbuf;
 
-    /*
-     *  process the attributes of the group, if any.
-     */
-    //            scan_attrs(gid);
-
-    /*
-     *  Get all the members of the groups, one at a time.
-     */
-    //    for (int k = 0; k < h5Info.level; ++k)
-    //        out << "    ";
-
-
-    out <<  formatString("%s/%s - ", h5Info.rootname.c_str(), name);
-
+    // Print the object name
+    out <<  formatString("%s%s - ", h5Info.rootname.c_str(), name);
 
     H5Gget_objinfo(objId, name, 0, &statbuf);
-
     /*
      * process each object according to its type
      */
@@ -81,15 +59,13 @@ herr_t showObjectInfo(hid_t objId, const char *name, void *op_data)
     case H5G_GROUP:
         {
             String rootname = h5Info.rootname;
-            h5Info.rootname += "/" + (String)name;
+            h5Info.rootname += (String)name + "/";
 
             grpid = H5Gopen(objId,name, H5P_DEFAULT);
             err = H5Gget_num_objs(grpid, &nobj);
             out <<  formatString("Group {%d elements}\n", nobj);
 
-            h5Info.level++;
             H5Giterate(objId, name, NULL, showObjectInfo, &h5Info);
-            h5Info.level--;
             h5Info.rootname = rootname;
             break;
         }
@@ -106,8 +82,6 @@ herr_t showObjectInfo(hid_t objId, const char *name, void *op_data)
             out << dims[k] << ", ";
 
         out << dims[rank-1] << "}\n";
-
-
         H5Dclose(dsid);
         break;
     case H5G_TYPE:
@@ -119,10 +93,7 @@ herr_t showObjectInfo(hid_t objId, const char *name, void *op_data)
             out << " unknown?\n";
         break;
     }
-
-
-    return 0;
-
+    return err;
 }
 
 void XmippH5File::showTree(std::ostream &out)
@@ -130,8 +101,6 @@ void XmippH5File::showTree(std::ostream &out)
     H5TreeInfo h5Info;
 
     h5Info.out = &out;
-    h5Info.level = 0;
-    h5Info.h5File = this;
     h5Info.rootname = "";
 
     this->iterateElems("/", NULL, showObjectInfo, &h5Info);
