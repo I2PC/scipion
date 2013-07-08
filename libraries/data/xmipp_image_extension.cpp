@@ -78,7 +78,7 @@ bool checkImageFileSize(const FileName &name, const ImageInfo &imgInfo, bool err
         dataFname = name.removeLastExtension().addExtension("img");
     else if (ext.contains("inf"))
         dataFname = name.removeLastExtension();
-    else if (ext.contains("tif") || ext.contains("jpg"))
+    else if (ext.contains("tif") || ext.contains("jpg") || ext.contains("hdf"))
         return true;
     else
         dataFname = name;
