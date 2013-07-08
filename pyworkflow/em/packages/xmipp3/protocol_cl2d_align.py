@@ -117,8 +117,8 @@ class XmippProtCL2DAlign(ProtAlign, XmippProtocol):
     def _summary(self):
         summary = []
         if not hasattr(self, 'outputClassification'):
-            summary.append("Output classes not ready yet.")
+            summary.append("Output alignment not ready yet.")
         else:
             summary.append("Input Images: %s" % self.inputImages.get().getNameId())
-            summary.append("Output classes: %s" % self.outputClassification.get())
+            summary.append("Output Aligned Images: %s" % self.outputClassification.get())
         return summary
