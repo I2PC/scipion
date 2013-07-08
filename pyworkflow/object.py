@@ -417,13 +417,15 @@ class List(Object, list):
         """
         return int(strIndex.split(self.ITEM_PREFIX)[1]) - 1
             
-    
     #TODO: check if needed
     def __len__(self):
         return list.__len__(self)
     
     def isEmpty(self):
         return len(self) > 0
+    
+    def clear(self):
+        del self[:]
     
             
 class CsvList(Scalar, list):

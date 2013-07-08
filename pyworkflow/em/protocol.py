@@ -34,7 +34,7 @@ import shutil
 from pyworkflow.object import String, Float
 from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
-from pyworkflow.em import Micrograph, SetOfMicrographs, TiltedPair, SetOfImages, Image
+from pyworkflow.em import Micrograph, SetOfMicrographs, TiltedPair, SetOfImages, Image, SetOfParticles
 from pyworkflow.utils.path import removeBaseExt, join, basename
 
 
@@ -179,7 +179,7 @@ class ProtImportParticles(Protocol):
         if len(filePaths) == 0:
             raise Exception('importParticles:There are not filePaths matching pattern')
         path = self._getPath('images.sqlite')
-        imgSet = SetOfImages(path, tiltPairs=tiltPairs)
+        imgSet = SetOfParticles(path, tiltPairs=tiltPairs)
         imgSet.setSamplingRate(samplingRate)
 
         outFiles = [path]

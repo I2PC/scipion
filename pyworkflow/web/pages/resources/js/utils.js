@@ -68,8 +68,8 @@ function launchToolbar(projName, id, elm) {
 		url : '/protocol_io/?projectName=' + projName + '&protocolId=' + id,
 		dataType : "json",
 		success : function(json) {
-			fillUL(json.inputs, "protocol_input", "db_input.gif", projName)
-			fillUL(json.outputs, "protocol_output", "db_output.gif", projName)
+			fillUL(json.inputs, "protocol_input", "db_input.gif", projName);
+			fillUL(json.outputs, "protocol_output", "db_output.gif", projName);
 
 			// ul_output = $("#protocol_output")
 			// ul_output.empty()
@@ -222,10 +222,12 @@ function switchGraph() {
 		callPlumb();
 		$("div#graphActiv").attr("data-time", "not");
 	}
-
 }
-function callPlumb() {
 
+/*
+ * Functions to use the jsPlumb plugin
+ */
+function callPlumb() {
 	// Setting up drop options
 	var targetDropOptions = {
 		tolerance : 'touch',
@@ -281,20 +283,59 @@ function callPlumb() {
 	// dropOptions : targetDropOptions
 	};
 
+	// Draw the boxes
+	var nodeSource = $("div#graphActiv");
+	var status = "finished";
+	var aux = [];
+	$("tr.runtr").each(function(index) {
+		var id = jQuery(this).attr('id');
+		var name = jQuery(this).attr('data-name');
+		paintBox(nodeSource, id, name, status);
+
+		var width = $("div#" + id + ".window").width();
+		var height = $("div#" + id + ".window").height();
+
+		aux.push(id + "-" + width + "-" + height);
+	});
+
+	$.ajax({
+		type : "GET",
+		url : '/project_graph/?list=' + aux,
+		dataType : "json",
+		success : function(json) {
+			for ( var i = 0; i < json.length; i++) {
+				alert(json[i].x);
+			}
+		}
+	});
+
 	// Set up endpoints on the divs
 	// jsPlumb.addEndpoint($("#container0") , { anchor:"TopCenter"
 	// },targetEndpoint);
-	connectNodes("#container0", "#container1", sourceEndpoint, targetEndpoint);
-	connectNodes("#container1", "#container2", sourceEndpoint, targetEndpoint);
-	connectNodes("#container2", "#container3", sourceEndpoint, targetEndpoint);
-	connectNodes("#container3", "#container4", sourceEndpoint, targetEndpoint);
-	connectNodes("#container4", "#container5", sourceEndpoint, targetEndpoint);
-	connectNodes("#container5", "#container6", sourceEndpoint, targetEndpoint);
-	connectNodes("#container5", "#container7", sourceEndpoint, targetEndpoint);
+	// connectNodes("#container0", "#container1", sourceEndpoint,
+	// targetEndpoint);
+	// connectNodes("#container1", "#container2", sourceEndpoint,
+	// targetEndpoint);
+	// connectNodes("#container2", "#container3", sourceEndpoint,
+	// targetEndpoint);
+	// connectNodes("#container3", "#container4", sourceEndpoint,
+	// targetEndpoint);
+	// connectNodes("#container4", "#container5", sourceEndpoint,
+	// targetEndpoint);
+	// connectNodes("#container5", "#container6", sourceEndpoint,
+	// targetEndpoint);
+	// connectNodes("#container5", "#container7", sourceEndpoint,
+	// targetEndpoint);
 
 	jsPlumb.draggable($(".window"));
 	// jsPlumb.animate($("#a"), {"left": 50,"top": 100},{duration:"slow"});
 
+}
+
+function paintBox(nodeSource, id, msg, status) {
+	var aux = '<div class="window" style="" id="' + id + '">' + msg + '<br />'
+			+ status + '</div>';
+	nodeSource.append(aux);
 }
 
 function connectNodes(elm1, elm2, source, target) {

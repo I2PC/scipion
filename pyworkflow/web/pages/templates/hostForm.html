@@ -101,7 +101,9 @@ a:active, a:focus {
 					{{ field }}
 				{% endfor %}
 			</table>
+			<br/>
 			<button type="button" id="addQueueSystemConfig" class="generalButton">Add system config</button>
+			<br/>
 			{% if form.queueSystemConfigCount.value != None and form.queueSystemConfigCount.value != 0 and form.queueSystemConfigCount.value != '0' %}
 			<div id="queueSystemConfig" class="queueSystemConfig">
 			{% else %}
@@ -136,7 +138,8 @@ a:active, a:focus {
 					</table>
 				{% endfor %}
 				</div>
-				<button type="button" id="addQueueConfig" class="generalButton">Add config</button>				
+				<button type="button" id="addQueueConfig" class="generalButton">Add config</button>	
+				<br/>			
 		 	</div>
 			<br/>
 			{% for field in form %}
@@ -182,7 +185,8 @@ $("#addQueueConfig").click(function() {
 	elementString += '</table>';
 	elementString += '<br/>';
 	elementString += '<button type="button" id="removeQueueConf_' + queueConfigCount + '"  onclick="removeQueueConfig(\'queueConfig_' + queueConfigCount + '\')" class="generalButton">Remove queue config</button>';
-    element = $(elementString);
+	elementString += '<br/>';
+	element = $(elementString);
     $("#queueConfig").append(element);
     queueConfigCount ++;
     $("[name=queueConfigCount]").val(queueConfigCount);

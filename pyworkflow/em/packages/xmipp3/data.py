@@ -306,7 +306,13 @@ class XmippSetOfMicrographs(XmippSetOfImages, SetOfMicrographs):
 #    def __loadFiles(self):
 #        self._set.setFileName()    
 #        self._setPairs.setFileName() 
-    
+
+class XmippSetOfParticles(XmippSetOfImages, SetOfParticles):
+    """Represents a set of Micrographs for Xmipp"""
+    def __init__(self, filename=None, **args):
+        SetOfParticles.__init__(self, filename, **args)
+        XmippSetOfImages.__init__(self, filename, **args)
+        
         
 class XmippCoordinate(Coordinate):
     """This class holds the (x,y) position and other information

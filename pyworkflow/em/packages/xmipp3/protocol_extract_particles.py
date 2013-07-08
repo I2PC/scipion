@@ -306,7 +306,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         
     def createOutput(self):
         # Create the SetOfImages object on the database
-        imgSet = XmippSetOfImages(self._getPath('images.xmd'))
+        imgSet = XmippSetOfParticles(self._getPath('images.xmd'))
         imgSet.copyInfo(self.inputMics)
         imgSet.setCTF(self.fnCTF is not None)       
                  
