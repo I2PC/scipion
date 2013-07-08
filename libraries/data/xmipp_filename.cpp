@@ -472,7 +472,10 @@ String FileName::getBlockName() const
         std::vector<String> prefixes;
         int nPref = splitString(substr(0, first),",",prefixes, false);
 
-        if (isalpha(prefixes[nPref-1].at(0)))
+        /* using isdigit instead of isalpha allows to
+         * detect as blockname rootnames starting by "/"
+         */
+        if (!isdigit(prefixes[nPref-1].at(0)))
             result = prefixes[nPref-1];
     }
     return result;
@@ -488,7 +491,7 @@ FileName FileName::removeBlockName() const
         std::vector<String> prefixes;
         int nPref = splitString(substr(0, first),",",prefixes, false);
 
-        if (isalpha(prefixes[nPref-1].at(0)))
+        if (!isdigit(prefixes[nPref-1].at(0)))
         {
             if (nPref == 1)
                 return substr(first + 1);
