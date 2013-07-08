@@ -179,7 +179,7 @@ class ProtImportParticles(Protocol):
         if len(filePaths) == 0:
             raise Exception('importParticles:There are not filePaths matching pattern')
         path = self._getPath('images.sqlite')
-        imgSet = SetOfImages(path, tiltPairs=tiltPairs)
+        imgSet = SetOfParticles(path, tiltPairs=tiltPairs)
         imgSet.setSamplingRate(samplingRate)
 
         outFiles = [path]

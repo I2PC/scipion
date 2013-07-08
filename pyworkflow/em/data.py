@@ -355,7 +355,16 @@ class SetOfMicrographs(SetOfImages):
         self.scannedPixelSize.set(scannedPixelSize)
         self.samplingRate.set((1e+4 * scannedPixelSize) / self.microscope.magnification.get())
 
-    
+
+class SetOfParticles(SetOfImages):
+    """ Represents a set of Particles.
+    The purpose of this class is to separate the
+    concepts of Micrographs and Particles, even if
+    both are considered Images
+    """
+    def __init__(self, filename=None, **args):
+        SetOfImages.__init__(self, filename, **args)
+
 
 class Coordinate(EMObject):
     """This class holds the (x,y) position and other information
