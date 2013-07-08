@@ -65,13 +65,15 @@ aside .sectionMenu {
 
 aside .subSectionMenu {
 	margin-right: 10px;
+	display: -webkit-flex;
+	-webkit-align-items: center;
 }
 
 aside .textMenu {
 	color: #FFF;
 	font: 12px Tahoma;
 	font-weight: bold;
-	margin-right: 2px;
+	margin-right: 3px;
 }
 
 aside #colRowMode {
@@ -88,9 +90,9 @@ aside .menuInputNumber {
 	font: 11px Tahoma;
 	color: #fff;
 	text-align: right;
-	height: 25px;
-	border-color: #7a0000;
-	border: 1px;
+	height: 20px;
+	border-color: #9c0101;
+	padding-right: 3px;
 }
 
 aside .submitButton{
@@ -120,6 +122,16 @@ aside .galleryOff{
 	
 }
 
+aside .arrowSectionMenu{
+	display: -webkit-flex;
+	-webkit-align-items: center;
+	-webkit-flex-flow: column;
+	margin: 4px;
+}
+aside .arrowImage{
+	margin: 1px;
+}
+
 /* MAIN SECTION */
 section {
 	padding: 20px;
@@ -145,6 +157,18 @@ section .enabledGallery {
 	bottom: 0;
 	z-index: 999;
 	display: none;
+}
+
+section .imageTitle{
+	/* position: absolute;
+	bottom: 0px;
+	left: 0;
+	z-index: 998;
+	display:none; 
+	width: 100%;*/
+	background-color: rgb(50, 1, 1);
+	height: 20px;
+	color: #FFF;
 }
 
 #column_label {
