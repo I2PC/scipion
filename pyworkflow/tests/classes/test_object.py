@@ -235,7 +235,7 @@ class TestPyworkflow(unittest.TestCase):
         fn = self.getTmpPath("protocol.sqlite")   
         mapper = SqliteMapper(fn, globals())
         prot = MyProtocol(mapper=mapper, n=2, workingDir=self.getTmpPath(''))
-        prot._stepsExecutor = StepExecutor()
+        prot._stepsExecutor = StepExecutor(hostConfig=None)
         prot.run()
         
         self.assertEqual(prot._steps[0].status, STATUS_FINISHED)

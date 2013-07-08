@@ -30,7 +30,7 @@ There is one based on threads to execute steps in parallel
 using different threads and the last one with MPI processes.
 """
 from threading import Thread, Condition, Event, current_thread
-from pyworkflow.utils.process import runJob
+import pyworkflow.utils.process as process
 
 STATUS_FINISHED = "finished"  # successfully finished
 STATUS_READY = "ready" # The step is ready for execution, i.e. all requirements are done
@@ -42,8 +42,18 @@ NO_MORE_STEPS = -2  # all steps were done and nothing else to do.
 
 class StepExecutor():
     """ Run a list of Protocol steps. """
-    def __init__(self):
-        self.runJob = runJob
+    def __init__(self, hostConfig):
+        self.hostConfig = hostConfig 
+    
+    def runJob(self, log, programName, params,           
+           numberOfMpi=1, numberOfThreads=1, 
+           runInBackground=False):
+        """ This function is a wrapper around runJob, 
+        providing the host configuration. 
+        """
+        process.runJob(log, programName, params,
+                       numberOfMpi, numberOfThreads, 
+                       runInBackground, self.hostConfig)
     
     def runSteps(self, steps, stepStartedCallback, stepFinishedCallback):
         """ Simply iterate over the steps and run each one. """
@@ -97,8 +107,8 @@ class StepThread(Thread):
 class ThreadStepExecutor(StepExecutor):
     """ Run steps in parallel using threads. 
     """
-    def __init__(self, nThreads):
-        StepExecutor.__init__(self)
+    def __init__(self, hostConfig, nThreads):
+        StepExecutor.__init__(self, hostConfig)
         self.numberOfThreads = nThreads
         
     def runSteps(self, steps, stepStartedCallback, stepFinishedCallback):
@@ -189,19 +199,21 @@ class MPIStepExecutor(ThreadStepExecutor):
     """ Run steps in parallel using threads.
     But execution the runJob statement through MPI workers
     """
-    def __init__(self, nMPI, comm):
-        ThreadStepExecutor.__init__(self, nMPI)
-        self.runJob = self._runJob
+    def __init__(self, hostConfig, nMPI, comm):
+        ThreadStepExecutor.__init__(self, hostConfig, nMPI)
         #self.runJob = runJob
         self.comm = comm
     
-    def _runJob(self, log, programname, params, **args):
+    def runJob(self, log, programName, params,           
+           numberOfMpi=1, numberOfThreads=1, 
+           runInBackground=False):
         from pyworkflow.utils.mpi import runJobMPI
-        node = current_thread().thId+1
+        node = current_thread().thId + 1
         print "==================calling runJobMPI=============================="
         print " to node: ", node
-        runJobMPI(log, programname, params, self.comm, 
-                  node, **args)
+        runJobMPI(log, programName, params, self.comm, node,
+                  numberOfMpi, numberOfThreads, 
+                  runInBackground, self.hostConfig)
         
     def finishThread(self, th):
         from pyworkflow.utils.mpi import TAG_RUN_JOB

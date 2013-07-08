@@ -376,11 +376,20 @@ class Pointer(Scalar):
     
     
 class List(Object, list):
+    ITEM_PREFIX = '__item__'
+    
     """Class to store a list of objects"""
     def __init__(self, **args):
         Object.__init__(self, **args)
         list.__init__(self)
         
+    def __getattr__(self, name):
+        if name.startswith(self.ITEM_PREFIX):
+            i = self._stringToIndex(name)
+            if i < len(self):
+                return self[i]
+        raise AttributeError("List object has not attribute: " + name)
+            
     def __setattr__(self, name, value):
         if name.startswith('__item__') or len(name)==0:
             self.append(value)
@@ -388,24 +397,35 @@ class List(Object, list):
             object.__setattr__(self, name, value)
 
     def getAttributesToStore(self):
-        for key, attr in self.__dict__.iteritems():
-            if issubclass(attr.__class__, Object) and attr._objDoStore:
-                yield (key, attr)
-        
+        # First yield all attributes not contained in the list
+        for name, attr in Object.getAttributesToStore(self):
+            yield (name, attr)
+        # Now yield elements contained in the list
         for i, item in enumerate(self):
-            yield (self.getIndexStr(i+1), item)
+            yield (self._indexToString(i), item)
             
-    def getIndexStr(self, i):
-        """Return the way the string index is generated"""
-        return "__item__%06d" % i
-            
+    def _indexToString(self, i):
+        """Return the way the string index is generated.
+        String indexes will start in 1, that's why i+1
+        """
+        return "%s%06d" % (self.ITEM_PREFIX, i+1)
     
+    def _stringToIndex(self, strIndex):
+        """ From the string index representation obtain the index.
+        For simetry the number in the index string will be 
+        decreased in 1.
+        """
+        return int(strIndex.split(self.ITEM_PREFIX)[1]) - 1
+            
     #TODO: check if needed
     def __len__(self):
         return list.__len__(self)
     
     def isEmpty(self):
         return len(self) > 0
+    
+    def clear(self):
+        del self[:]
     
             
 class CsvList(Scalar, list):

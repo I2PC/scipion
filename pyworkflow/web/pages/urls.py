@@ -46,5 +46,5 @@ urlpatterns = patterns('',
     url(r'^get_image/', 'app.views_showj.get_image'), # Load images dynamically
     url(r'^save_showj_table/', 'app.views_showj.save_showj_table'), # Save table to session variable dynamically
     url(r'^save_showj_metadata/', 'app.views_showj.save_showj_metadata'), # Save metadata to file dynamically
-
+    url(r'^visualizeVolTest/', 'app.views_showj.save_showj_metadata'),
 )

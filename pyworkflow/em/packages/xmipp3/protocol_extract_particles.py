@@ -306,7 +306,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         
     def createOutput(self):
         # Create the SetOfImages object on the database
-        imgSet = XmippSetOfImages(self._getPath('images.xmd'))
+        imgSet = XmippSetOfParticles(self._getPath('images.xmd'))
         imgSet.copyInfo(self.inputMics)
         imgSet.setCTF(self.fnCTF is not None)       
                  
@@ -335,7 +335,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 percentage = self.percentage
                 args+=" --percent "+str(percentage)
     
-            runJob(None, "xmipp_image_sort_by_statistics", args % locals())
+            self.runJob(None, "xmipp_image_sort_by_statistics", args % locals())
             md = xmipp.MetaData(fnImages) # Should have ZScore label after runJob
             md.sort(xmipp.MDL_ZSCORE)
             md.write(fnImages) 

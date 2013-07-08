@@ -458,19 +458,11 @@ def viewHosts(request):
 #         return HttpResponse(jsonStr, mimetype='application/javascript')
 
 
-def getHostFormContext(request, initialContext=None):
+def getHostFormContext(request, host = None, initialContext = None):
     css_path = os.path.join(settings.STATIC_URL, 'css/general_style.css')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
-    hostId = request.GET.get("hostId")
-    if hostId is None or hostId == "":
-        if initialContext is not None and 'hostId' in initialContext:
-            hostId = initialContext['hostId']
     form = None
-    if request.method == 'GET':      
-        form = HostForm()
-    else:
-        form = initialContext['form']
 #     scpnHostsChoices = []
 #     scpnHostsChoices.append(('', ''))
 #     scipionHosts = getScipionHosts()
@@ -479,14 +471,11 @@ def getHostFormContext(request, initialContext=None):
 #     form.fields['scpnHosts'].choices = scpnHostsChoices        
     # We check if we are going to edit a host
     tittle = None
-    if hostId is not None and hostId != "":
-        projectName = request.session['projectName']
-        project = loadProject(projectName)
-        hostsMapper = HostMapper(project.settingsPath)
-        hostConfig = hostsMapper.selectById(hostId)
-        form.setHost(hostConfig)
-        tittle = hostConfig.getLabel() + " host configuration"
+    if host is not None:
+        form = initialContext['form']
+        tittle = host.getLabel() + " host configuration"
     else:
+        form = HostForm()
         tittle = "New host configuration"  
             
     context = {'tittle': tittle,
@@ -501,7 +490,18 @@ def getHostFormContext(request, initialContext=None):
     return context
 
 def hostForm(request):
-    return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request)))  # Form Django forms
+    hostId = request.GET.get('hostId')
+    context = None
+    hostConfig = None
+    if hostId != None and hostId != '':
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        hostsMapper = HostMapper(project.settingsPath)
+        hostConfig = hostsMapper.selectById(hostId)
+        form = HostForm()
+        form.setFormHost(hostConfig)
+        context = {'form': form}
+    return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request, hostConfig, context)))  # Form Django forms
 
 def updateHostsConfig(request):    
     form = HostForm(request.POST, queueSystemConfCont=request.POST.get('queueSystemConfigCount'), queueConfCont=request.POST.get('queueConfigCount'))  # A form bound to the POST data
@@ -513,10 +513,12 @@ def updateHostsConfig(request):
         hostsMapper = HostMapper(project.settingsPath)
         hostConfig = hostsMapper.selectById(hostId)
         form.host = hostConfig
-        host = form.getHost()
-        host = project.saveHost(form.getHost())
-        context['message'] = "Project hosts config sucesfully updated"    
-    return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request, context)))  # Form Django forms
+        host = form.getFormHost()
+        host = project.saveHost(host)
+        context['message'] = "Project hosts config sucesfully updated"
+        return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request, initialContext = context))) 
+    else:   
+        return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request, None, context)))  # Form Django forms
 
 def deleteHost(request):
     hostId = request.GET.get("hostId")    
@@ -548,7 +550,8 @@ def visualizeObject(request):
                        'allowRender': True,
                        'mode': 'gallery',
                        'zoom': 150,
-                       'gotoContainer': 1}
+                       'goto': 1,
+                       'colRowMode': 'Off'}
   
     elif isinstance(object, SetOfImages):
         fn = project.getTmpPath(object.getName() + '_images.xmd')
@@ -557,7 +560,8 @@ def visualizeObject(request):
                'allowRender': True,
                'mode': 'gallery',
                'zoom': 150,
-               'gotoContainer': 1}
+               'goto': 1,
+               'colRowMode': 'Off'}
 
     elif isinstance(object, XmippClassification2D):
         mdPath = object.getClassesMdFileName()
@@ -566,7 +570,8 @@ def visualizeObject(request):
                'allowRender': True,
                'mode': 'gallery',
                'zoom': 150,
-               'gotoContainer': 1}
+               'goto': 1,
+               'colRowMode': 'Off'}
 #        runShowJ(obj.getClassesMdFileName())
     else:
         raise Exception('Showj Web visualizer: can not visualize class: %s' % object.getClassName())

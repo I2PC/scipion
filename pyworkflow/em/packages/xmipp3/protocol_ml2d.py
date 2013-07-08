@@ -43,7 +43,7 @@ class XmippDefML2D(Form):
     
         self.addSection(label='Input')
         self.addParam('inputImages', PointerParam, label="Input images", important=True, 
-                      pointerClass='SetOfImages',
+                      pointerClass='SetOfParticles',
                       help='Select the input images from the project.'
                            'It should be a SetOfImages class')        
         self.addParam('doGenerateReferences', BooleanParam, default=True,

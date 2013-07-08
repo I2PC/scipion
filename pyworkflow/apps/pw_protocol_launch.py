@@ -37,7 +37,7 @@ from os.path import basename
 from pyworkflow.protocol import getProtocolFromDb
 from pyworkflow.em import *
 from pyworkflow.apps.config import *
-from pyworkflow.protocol.launch import _launchLocalProtocol
+from pyworkflow.protocol.launch import _launchLocal
 
 
 if __name__ == '__main__':
@@ -46,7 +46,7 @@ if __name__ == '__main__':
         protId = int(sys.argv[2])
         wait = bool(sys.argv[3])
         protocol = getProtocolFromDb(dbPath, protId, globals())
-        jobId = _launchLocalProtocol(protocol, wait)
+        jobId = _launchLocal(protocol, wait)
         # Print the status to be read 
         print "OUTPUT jobId %s" % jobId
     else:

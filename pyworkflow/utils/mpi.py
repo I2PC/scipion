@@ -32,11 +32,13 @@ from process import buildRunCommand, runCommand
 TAG_RUN_JOB = 1000
 
 def runJobMPI(log, programname, params, mpiComm, mpiDest,        
-           numberOfMpi=1, numberOfThreads=1, runInBackground=False):
+           numberOfMpi=1, numberOfThreads=1, 
+           runInBackground=False, hostConfig=None):
     """ Send the command to the MPI node in which will be executed. """
     
     command = buildRunCommand(log, programname, params,
-                              numberOfMpi, numberOfThreads, runInBackground)
+                              numberOfMpi, numberOfThreads, 
+                              runInBackground, hostConfig)
     
     print "Sending command: %s to %d" % (command, mpiDest)
     mpiComm.send(command, dest=mpiDest, tag=TAG_RUN_JOB)

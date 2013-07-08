@@ -60,7 +60,7 @@ class HostForm(forms.Form):
             self.fields['submitTemplate'] = forms.CharField(label='Submit template', 
                                               required=True,
                                               error_messages={'required': 'Please, insert submit template'},
-                                              widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
+                                              widget=forms.Textarea(attrs={'cols': 35, 'rows': 5}))
             self.fields['submitCommand'] = forms.CharField(label='Submit command', 
                                               required=True,
                                               error_messages={'required': 'Please, insert submit command'},
@@ -72,11 +72,7 @@ class HostForm(forms.Form):
             self.fields['cancelCommand'] = forms.CharField(label='Cancel command', 
                                               required=True,
                                               error_messages={'required': 'Please, insert cancel command'},
-                                              widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))            
-            self.fields['queueSystemConfigId'] = forms.CharField(widget=forms.HiddenInput(), required = False)
-        
-            if (extra_queueConfigCount > 0):
-                self.fields['queueConfigListId'] = forms.CharField(widget=forms.HiddenInput(), required = False)
+                                              widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))   
         
             for index in range(extra_queueConfigCount):
                 self.fields['name_{index}'.format(index=index)] = forms.CharField(label='Name',
@@ -97,13 +93,10 @@ class HostForm(forms.Form):
                                                                                          widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))                
                 self.fields['queueConfigId_{index}'.format(index=index)] = forms.CharField(widget=forms.HiddenInput(), required = False)
     
-    def getHost(self):
+    def getFormHost(self):
         if self.host is None:
             self.host = HostConfig()
-        if self.cleaned_data['objId'] == '':
             self.host.setObjId(None)
-        else:
-            self.host.setObjId(self.cleaned_data['objId'])
         self.host.setLabel(self.cleaned_data['label'])
         self.host.setHostName(self.cleaned_data['hostName'])
         self.host.setUserName(self.cleaned_data['userName'])
@@ -115,10 +108,6 @@ class HostForm(forms.Form):
                 queueSystemConfig = QueueSystemConfig()
             else:
                 queueSystemConfig = self.host.getQueueSystem()
-            if self.cleaned_data['queueSystemConfigId'] == '':
-                queueSystemConfig.setObjId(None)
-            else:
-                queueSystemConfig.setObjId(self.cleaned_data['queueSystemConfigId'])
             queueSystemConfig.setName(self.cleaned_data['name'])
             queueSystemConfig.setMandatory(self.cleaned_data['mandatory'])
             queueSystemConfig.setSubmitTemplate(self.cleaned_data['submitTemplate'])
@@ -126,31 +115,34 @@ class HostForm(forms.Form):
             queueSystemConfig.setCheckCommand(self.cleaned_data['checkCommand'])
             queueSystemConfig.setCancelCommand(self.cleaned_data['cancelCommand'])
             if int(self.cleaned_data['queueConfigCount']) > 0:
-                if self.host.getQueueSystem() is None:
-                    queuesList = List()
-                else:
-                    queuesList = self.host.getQueueSystem().queues
-                if self.cleaned_data['queueConfigListId'] == '':
-                    queuesList.setObjId(None)
-                else:
-                    queuesList.setObjId(self.cleaned_data['queueConfigListId'])
+                queuesList = List()
                 for index in range(int(self.cleaned_data['queueConfigCount'])):
-                    queueConfig = QueueConfig()
-                    if self.cleaned_data['queueConfigId_{index}'.format(index=index)] == '':
-                        queueConfig.setObjId(None)
-                    else:
-                        queueConfig.setObjId(self.cleaned_data['queueConfigId_{index}'.format(index=index)])
-                    queueConfig.setName(self.cleaned_data['name_{index}'.format(index=index)])
-                    queueConfig.setMaxCores(self.cleaned_data['maxCores_{index}'.format(index=index)])
-                    queueConfig.setAllowMPI(self.cleaned_data['allowMPI_{index}'.format(index=index)])
-                    queueConfig.setAllowThreads(self.cleaned_data['allowThreads_{index}'.format(index=index)])
-                    queueConfig.setMaxHours(self.cleaned_data['maxHours_{index}'.format(index=index)])
-                    queuesList.append(queueConfig)
+                    if ('queueConfigId_{index}'.format(index=index)) in self.cleaned_data:
+                        queueConfig = None
+                        if self.cleaned_data['queueConfigId_{index}'.format(index=index)] == '':
+                            queueConfig = QueueConfig()
+                            queueConfig.setObjId(None)
+                        else:                        
+                            objId = int(self.cleaned_data['queueConfigId_{index}'.format(index=index)])
+                            queueConfig = queueSystemConfig.getQueueConfig(objId)                            
+                        queueConfig.setName(self.cleaned_data['name_{index}'.format(index=index)])
+                        queueConfig.setMaxCores(self.cleaned_data['maxCores_{index}'.format(index=index)])
+                        queueConfig.setAllowMPI(self.cleaned_data['allowMPI_{index}'.format(index=index)])
+                        queueConfig.setAllowThreads(self.cleaned_data['allowThreads_{index}'.format(index=index)])
+                        queueConfig.setMaxHours(self.cleaned_data['maxHours_{index}'.format(index=index)])
+                        queuesList.append(queueConfig)
+                        
+                if self.host.getQueueSystem() is not None and self.host.getQueueSystem().getQueues() is not None:
+                    self.host.getQueueSystem().getQueues().clear()
+                    for queue in queuesList:
+                        self.host.getQueueSystem().getQueues().append(queue)
+                else:
+                    self.host.getQueueSystem().setQueues(queuesList)
                 queueSystemConfig.setQueues(queuesList)
             self.host.setQueueSystem(queueSystemConfig)                    
         return self.host
     
-    def setHost(self, host):
+    def setFormHost(self, host):
         self.host = host
         self.fields['objId'].initial = host.getObjId()
         self.fields['label'].initial = host.getLabel()
@@ -168,7 +160,6 @@ class HostForm(forms.Form):
                 lenQueues = len(queueSystem.getQueues())
             self.createDynamicFields(1, lenQueues)
             queueSystem = host.getQueueSystem()
-            self.fields['queueSystemConfigId'].initial = queueSystem.getObjId()
             self.fields['name'].initial = queueSystem.getName()
             self.fields['mandatory'].initial = queueSystem.getMandatory()
             self.fields['submitTemplate'].initial = queueSystem.getSubmitTemplate()
@@ -181,7 +172,6 @@ class HostForm(forms.Form):
             else:
                 self.fields['queueConfigCount'].initial = len(queueSystem.getQueues())
             if self.fields['queueConfigCount'].initial > 0:
-                self.fields['queueConfigListId'].initial = queueSystem.getQueues().getObjId()
                 for queueConfig in queueSystem.getQueues():
                     self.fields['queueConfigId_{index}'.format(index=index)].initial = queueConfig.getObjId()
                     self.fields['name_{index}'.format(index=index)].initial = queueConfig.getName()
@@ -236,7 +226,7 @@ class ShowjForm(forms.Form):
                                   min_value=10,
                                   localize=False,
                                   widget=forms.TextInput(attrs={'class' : 'menuInputNumber'}))
-    gotoContainer = forms.IntegerField(required=True,
+    goto = forms.IntegerField(required=True,
                               max_value=100,
                               min_value=1,
                               localize=False,
@@ -262,10 +252,8 @@ class ShowjForm(forms.Form):
     allowRender = forms.BooleanField(widget=forms.HiddenInput())
     mode = forms.CharField(widget=forms.HiddenInput())
     
-#    blockComboBox = forms.ChoiceField(required=False)
-#    blockComboBox = forms.ChoiceField(required=False, choices=[('1','1'),('2','2'),('3','3')], initial = ('3','3'))
-
-#    metadataComboBox = forms.ChoiceField(required=False)
+    colRowMode = forms.CharField(widget=forms.HiddenInput()) 
+    
     
     def __init__(self, mdXmipp, *args, **kwargs):
         super(ShowjForm, self).__init__(*args, **kwargs)
@@ -283,8 +271,14 @@ class ShowjForm(forms.Form):
                                                             choices = metadataComboBoxValues)
             if self.data['mode'] != 'gallery':
                 self.fields['metadataComboBox'].widget=forms.HiddenInput()
-                self.fields['cols'].widget.attrs['readonly'] = True
-                self.fields['rows'].widget.attrs['readonly'] = True
+        
+        if self.data['mode'] != 'gallery': 
+            self.fields['cols'].widget=forms.HiddenInput()
+            self.fields['rows'].widget=forms.HiddenInput()
+        
+        if self.data['colRowMode'] == 'Off':
+            self.fields['cols'].widget.attrs['readonly'] = True
+            self.fields['rows'].widget.attrs['readonly'] = True
                     
 
 def getBlockComboBoxValues(path):    
@@ -298,5 +292,8 @@ def getMetadataComboBoxValues(mdXmipp, allowRender):
     from pyworkflow.web.app.views_showj import getTypeOfColumns
     labels = mdXmipp.getActiveLabels()
     labelsToRender = [xmipp.label2Str(l) for l in labels if (xmipp.labelIsImage(l) and allowRender)]
-    #self.fields['metadataComboBox'].choices = zip(labelsToRender,labelsToRender)
     return tuple(zip(labelsToRender,labelsToRender))
+
+#def getInitialZoom(mdXmipp):
+    
+    
