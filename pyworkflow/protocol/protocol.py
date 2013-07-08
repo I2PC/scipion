@@ -242,6 +242,8 @@ class Protocol(Step):
         self.stepsExecutionMode = STEPS_SERIAL
         # Expert level
         self.expertLevel = Integer(args.get('expertLevel', LEVEL_NORMAL))
+        self._jobId = String() # Store queue job id
+        self._pid = Integer()
         self._stepsExecutor = None
         
     def getDefinition(self):
@@ -532,6 +534,10 @@ class Protocol(Step):
         """
         self._log = self.__getLogger()
         self._log.info('RUNNING PROTOCOL -----------------')
+#        self._log.info('        jobId: %s' % self.getJobId())
+#        self._log.info('          pid: %s' % os.getpid())
+#        self._log.info('         ppid: %s' % os.getppid())
+        self._pid.set(os.getpid())
         self._log.info('   currentDir: %s' % os.getcwd())
         self._log.info('   workingDir: ' + self.workingDir.get())
         self._log.info('      runMode: %d' % self.runMode.get())
@@ -605,6 +611,16 @@ class Protocol(Step):
     def setHostConfig(self, config):
         self.hostConfig = config
         
+    def getJobId(self):
+        """ Return the jobId associated to a running protocol. """
+        return self._jobId.get()
+    
+    def setJobId(self, jobId):
+        self._jobId.set(jobId)
+        
+    def getPid(self):
+        return self._pid.get()
+        
     def getRunName(self):
         if self.runName.hasValue() and len(self.runName.get()):
             return self.runName.get()
@@ -643,10 +659,10 @@ class Protocol(Step):
         if self.initTime.hasValue():
             f = "%Y-%m-%d %H:%M:%S.%f"
             t1 = dt.datetime.strptime(self.initTime.get(), f)
-            if self.status == STATUS_RUNNING:
-                t2 = dt.datetime.now()
-            else:
+            if self.endTime.hasValue():
                 t2 = dt.datetime.strptime(self.endTime.get(), f)
+            else:
+                t2 = dt.datetime.now()
             elapsed = t2 - t1
         
         return elapsed
@@ -710,17 +726,20 @@ def runProtocolFromDb(dbPath, protId, protDict, mpiComm=None):
      mpiComm: MPI connection object (only used when executing with MPI)
     """
     protocol = getProtocolFromDb(dbPath, protId, protDict)
+    hostConfig = protocol.getHostConfig()
     # Create the steps executor
     executor = None
     if protocol.stepsExecutionMode == STEPS_PARALLEL:
         if protocol.numberOfMpi > 1:
             if mpiComm is None:
                 raise Exception('Trying to create MPIStepExecutor and mpiComm is None')
-            executor = MPIStepExecutor(protocol.numberOfMpi.get(), mpiComm)
+            executor = MPIStepExecutor(hostConfig,
+                                       protocol.numberOfMpi.get(), mpiComm)
         elif protocol.numberOfThreads > 1:
-            executor = ThreadStepExecutor(protocol.numberOfThreads.get()) 
+            executor = ThreadStepExecutor(hostConfig,
+                                          protocol.numberOfThreads.get()) 
     if executor is None:
-        executor = StepExecutor()
+        executor = StepExecutor(hostConfig)
     protocol.setStepsExecutor(executor)
     # Finally run the protocol
     protocol.run()        

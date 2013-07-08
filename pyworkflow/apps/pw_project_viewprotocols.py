@@ -519,7 +519,8 @@ class ProtocolsView(tk.Frame):
                        STATUS_RUNNING: '#FCCE62', 
                        STATUS_FINISHED: '#D2F5CB', 
                        STATUS_FAILED: '#F5CCCB', 
-                       STATUS_WAITING_APPROVAL: '#F3F5CB', 
+                       STATUS_WAITING_APPROVAL: '#F3F5CB',
+                       STATUS_ABORTED: '#F5CCCB',
                        #STATUS_SAVED: '#124EB0',
                        }
         
@@ -612,6 +613,11 @@ class ProtocolsView(tk.Frame):
                     "Do you really want to continue?", self.root):
             self.project.deleteProtocol(prot)
             self.runsTree.update()
+            
+    def _stopProtocol(self, prot):
+        if askYesNo("Confirm STOP", "Do you really want to <STOP> this run?", self.root):
+            self.project.stopProtocol(prot)
+            self.runsTree.update()        
 
     def _analyzeResults(self, prot):
         self.viewer.visualize(prot)
@@ -632,7 +638,7 @@ class ProtocolsView(tk.Frame):
             elif action == ACTION_STEPS:
                 self._browseRunData()
             elif action == ACTION_STOP:
-                pass
+                self._stopProtocol(prot)
             elif action == ACTION_CONTINUE:
                 self._continueProtocol(prot)
             elif action == ACTION_RESULTS:

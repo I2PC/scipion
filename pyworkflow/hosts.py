@@ -153,6 +153,9 @@ class HostConfig(OrderedObject):
     def getSubmitCommand(self):
         return self.queueSystem.submitCommand.get()
     
+    def getCancelCommand(self):
+        return self.queueSystem.cancelCommand.get()
+    
     def isQueueMandatory(self):
         return self.queueSystem.mandatory.get()
     

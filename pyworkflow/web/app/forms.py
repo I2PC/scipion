@@ -229,7 +229,7 @@ class ShowjForm(forms.Form):
                                   min_value=10,
                                   localize=False,
                                   widget=forms.TextInput(attrs={'class' : 'menuInputNumber'}))
-    gotoContainer = forms.IntegerField(required=True,
+    goto = forms.IntegerField(required=True,
                               max_value=100,
                               min_value=1,
                               localize=False,
@@ -255,10 +255,8 @@ class ShowjForm(forms.Form):
     allowRender = forms.BooleanField(widget=forms.HiddenInput())
     mode = forms.CharField(widget=forms.HiddenInput())
     
-#    blockComboBox = forms.ChoiceField(required=False)
-#    blockComboBox = forms.ChoiceField(required=False, choices=[('1','1'),('2','2'),('3','3')], initial = ('3','3'))
-
-#    metadataComboBox = forms.ChoiceField(required=False)
+    colRowMode = forms.CharField(widget=forms.HiddenInput()) 
+    
     
     def __init__(self, mdXmipp, *args, **kwargs):
         super(ShowjForm, self).__init__(*args, **kwargs)
@@ -276,8 +274,14 @@ class ShowjForm(forms.Form):
                                                             choices = metadataComboBoxValues)
             if self.data['mode'] != 'gallery':
                 self.fields['metadataComboBox'].widget=forms.HiddenInput()
-                self.fields['cols'].widget.attrs['readonly'] = True
-                self.fields['rows'].widget.attrs['readonly'] = True
+        
+        if self.data['mode'] != 'gallery': 
+            self.fields['cols'].widget=forms.HiddenInput()
+            self.fields['rows'].widget=forms.HiddenInput()
+        
+        if self.data['colRowMode'] == 'Off':
+            self.fields['cols'].widget.attrs['readonly'] = True
+            self.fields['rows'].widget.attrs['readonly'] = True
                     
 
 def getBlockComboBoxValues(path):    
@@ -291,5 +295,8 @@ def getMetadataComboBoxValues(mdXmipp, allowRender):
     from pyworkflow.web.app.views_showj import getTypeOfColumns
     labels = mdXmipp.getActiveLabels()
     labelsToRender = [xmipp.label2Str(l) for l in labels if (xmipp.labelIsImage(l) and allowRender)]
-    #self.fields['metadataComboBox'].choices = zip(labelsToRender,labelsToRender)
     return tuple(zip(labelsToRender,labelsToRender))
+
+#def getInitialZoom(mdXmipp):
+    
+    

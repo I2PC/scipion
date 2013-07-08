@@ -214,8 +214,23 @@ def protocol_io(request):
         ioDict = {'inputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterInputAttributes()],
                   'outputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterOutputAttributes(EMObject)]}
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
+        print jsonStr
         
-        return HttpResponse(jsonStr, mimetype='application/javascript')
+    return HttpResponse(jsonStr, mimetype='application/javascript')
+
+def protocol_summary(request):
+    # Project Id(or Name) should be stored in SESSION
+    if request.is_ajax():
+        projectName = request.GET.get('projectName')
+        project = loadProject(projectName)
+        protId = request.GET.get('protocolId', None)
+        protocol = project.mapper.selectById(int(protId))
+        summary = protocol.summary()
+        print "======================= in protocol_summary...."
+        jsonStr = json.dumps(summary, ensure_ascii=False)
+        print jsonStr
+        
+    return HttpResponse(jsonStr, mimetype='application/javascript')
     
 def form(request):
     
@@ -506,7 +521,7 @@ def visualizeObject(request):
 #    project = loadProject(projectName)
     manager = Manager()
     projPath = manager.getProjectPath(projectName)
-    request.session['projectPath']= projPath
+    request.session['projectPath'] = projPath
     project = Project(projPath)
     project.load()
     
@@ -521,7 +536,8 @@ def visualizeObject(request):
                        'allowRender': True,
                        'mode': 'gallery',
                        'zoom': 150,
-                       'gotoContainer': 1}
+                       'goto': 1,
+                       'colRowMode': 'Off'}
   
     elif isinstance(object, SetOfImages):
         fn = project.getTmpPath(object.getName() + '_images.xmd')
@@ -530,7 +546,8 @@ def visualizeObject(request):
                'allowRender': True,
                'mode': 'gallery',
                'zoom': 150,
-               'gotoContainer': 1}
+               'goto': 1,
+               'colRowMode': 'Off'}
 
     elif isinstance(object, XmippClassification2D):
         mdPath = object.getClassesMdFileName()
@@ -539,7 +556,8 @@ def visualizeObject(request):
                'allowRender': True,
                'mode': 'gallery',
                'zoom': 150,
-               'gotoContainer': 1}
+               'goto': 1,
+               'colRowMode': 'Off'}
 #        runShowJ(obj.getClassesMdFileName())
     else:
         raise Exception('Showj Web visualizer: can not visualize class: %s' % object.getClassName())
@@ -558,7 +576,7 @@ def visualizeObject(request):
 
 #    from django.shortcuts import redirect
 
-    #return redirect('/showj', args=inputParameters)
+    # return redirect('/showj', args=inputParameters)
 
 #    return HttpResponseRedirect('/showj', inputParameters)
     

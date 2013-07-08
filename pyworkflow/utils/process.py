@@ -35,10 +35,11 @@ from utils import greenStr
 # The job should be launched from the working directory!
 def runJob(log, programname, params,           
            numberOfMpi=1, numberOfThreads=1, 
-           runInBackground=False):
+           runInBackground=False, hostConfig=None):
 
     command = buildRunCommand(log, programname, params,
-                              numberOfMpi, numberOfThreads, runInBackground)
+                              numberOfMpi, numberOfThreads, runInBackground,
+                              hostConfig)
     
     if log is None:
         #TODO: printLog("Running command: %s" % greenStr(command),log)
@@ -62,16 +63,18 @@ def runCommand(command):
     
     
 def buildRunCommand(log, programname, params,
-                    numberOfMpi, numberOfThreads, runInBackground):
+                    numberOfMpi, numberOfThreads, runInBackground,
+                    hostConfig=None):
     if numberOfMpi <= 1:
         command = programname + ' ' + params
     else:
         if programname.startswith('xmipp'):
             programname = programname.replace('xmipp', 'xmipp_mpi')
-        paramsDict = {'nodes': numberOfMpi,
-                      'command': "`which %(programname)s` %(params)s" % locals()
+        paramsDict = {'JOB_NODES': numberOfMpi,
+                      'COMMAND': "`which %(programname)s` %(params)s" % locals()
                       }
-        hostConfig = loadHostConfig()
+        if hostConfig is None:
+            hostConfig = loadHostConfig()
         command = hostConfig.mpiCommand.get() % paramsDict
 
     if runInBackground:
@@ -90,6 +93,7 @@ def loadHostConfig(host='localhost'):
     fn = getSettingsPath()
     mapper = HostMapper(fn)
     return mapper.selectByLabel(host)
+
 
 def killWithChilds(pid):
     """ Kill the process with given pid and all children processes.

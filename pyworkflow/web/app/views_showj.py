@@ -47,7 +47,8 @@ def showj(request, inputParameters=None):
                          'allowRender': 'render' in request.GET,
                          'zoom' : request.GET.get('dim', 150),
                          'mode': request.GET.get('mode', 'gallery'),
-                         'gotoContainer': 1}
+                         'goto': 1,
+                         'colRowMode': request.GET.get('colRowMode', 'Off')}
         else:
             mdXmipp = loadMetaDataXmipp(inputParameters['path'], inputParameters['blockComboBox'] if ('blockComboBox' in inputParameters) else '')
             if 'blockComboBox' not in inputParameters:
@@ -233,19 +234,13 @@ def get_image(request):
             imagePath = parts[1]
             
         if 'projectPath' in request.session:
-            print request.session['projectPath']
             imagePathTmp = join(request.session['projectPath'],imagePath)
             if not os.path.isfile(imagePathTmp):
                 imagePath = getInputPath('showj', imagePath)      
             
 
-        print "imagePath"
-        print imagePath
-
 #        imagePath = join(request.session['projectPath'],imagePath)
         
-        print imagePath
-                
         if imageNo:
             imagePath = '%s@%s' % (imageNo, imagePath) 
         imgXmipp = xmipp.Image(imagePath)

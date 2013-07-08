@@ -36,7 +36,7 @@ from pyworkflow.protocol import *
 from pyworkflow.mapper import SqliteMapper
 from pyworkflow.utils import cleanPath, makePath, makeFilePath, join, exists, runJob
 from pyworkflow.hosts import HostMapper, HostConfig
-from pyworkflow.protocol.launch import launchProtocol
+import pyworkflow.protocol.launch as jobs
 
 PROJECT_DBNAME = 'project.sqlite'
 PROJECT_LOGS = 'Logs'
@@ -125,17 +125,22 @@ class Project(object):
         2. Create the working dir and also the protocol independent db
         3. Call the launch method in protocol.job to handle submition: mpi, thread, queue,
         and also take care if the execution is remotely."""
+        protocol.setStatus(STATUS_LAUNCHED)
         self._setupProtocol(protocol)
         protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
         protocol.makePathsAndClean() # Create working dir if necessary
-        protocol.setStatus(STATUS_LAUNCHED)
-        self.mapper.commit()
+        #self.mapper.commit()
+        
         # Prepare a separate db for this run
         # NOTE: now we are simply copying the entire project db, this can be changed later
         # to only create a subset of the db need for the run
         protocol.setDbPath('run.db')
         shutil.copy(self.dbPath, protocol.getDbPath())
-        jobId = launchProtocol(protocol, wait)
+        
+        # Launch the protocol, the jobId should be set after this call
+        jobs.launch(protocol, wait)
+        
+        # Commit changes
         if wait: # This is only useful for launching tests...
             self._updateProtocol(protocol)
         else:
@@ -144,12 +149,23 @@ class Project(object):
         
     def _updateProtocol(self, protocol):
         # FIXME: this will not work for a real remote host
+        jobId = protocol.getJobId() # Preserve the jobId before copy
+        
         dbPath = join(protocol.getHostConfig().getHostPath(), protocol.getDbPath())
         prot2 = getProtocolFromDb(dbPath, protocol.getObjId(), globals())
         # Copy is only working for db restored objects
         protocol.copy(prot2)
-                 
+        
+        # Restore jobId
+        protocol.setJobId(jobId)
+        
         self.mapper.store(protocol)
+        
+    def stopProtocol(self, protocol):
+        """ Stop a running protocol """
+        jobs.stop(protocol)
+        protocol.status.set(STATUS_ABORTED)
+        self._storeProtocol(protocol)
         
     def continueProtocol(self, protocol):
         """ This function should be called 
@@ -267,21 +283,21 @@ class Project(object):
         """ Retrieve the hosts associated with the project. (class ExecutionHostConfig) """
         return self.hostsMapper.selectAll()
     
-    def launchRemoteProtocol(self, protocol):
-        """ Launch protocol in an execution host    
-        Params:
-            potocol: Protocol to launch in an execution host.
-        """
-        # First we must recover the execution host credentials.
-        self.hostsMapper = HostMapper(self.settingsPath)
-        executionHostConfig = self.hostsMapper.selectByLabel(protocol.getHostName())
-        self.sendProtocol(protocol, executionHostConfig)
-        command = "nohup pw_protocol_run.py " + self.getObjId() + " " + str(protocol.getObjId()) #+ " > /gpfs/fs1/home/bioinfo/apoza/salida.txt 2> /gpfs/fs1/home/bioinfo/apoza/salida2.txt &"
-        from pyworkflow.utils.utils import executeRemote
-        executeRemote(command,
-                      executionHostConfig.getHostName(),
-                      executionHostConfig.getUserName(),
-                      executionHostConfig.getPassword())
+#    def launchRemoteProtocol(self, protocol):
+#        """ Launch protocol in an execution host    
+#        Params:
+#            potocol: Protocol to launch in an execution host.
+#        """
+#        # First we must recover the execution host credentials.
+#        self.hostsMapper = HostMapper(self.settingsPath)
+#        executionHostConfig = self.hostsMapper.selectByLabel(protocol.getHostName())
+#        self.sendProtocol(protocol, executionHostConfig)
+#        command = "nohup pw_protocol_run.py " + self.getObjId() + " " + str(protocol.getObjId()) #+ " > /gpfs/fs1/home/bioinfo/apoza/salida.txt 2> /gpfs/fs1/home/bioinfo/apoza/salida2.txt &"
+#        from pyworkflow.utils.utils import executeRemote
+#        executeRemote(command,
+#                      executionHostConfig.getHostName(),
+#                      executionHostConfig.getUserName(),
+#                      executionHostConfig.getPassword())
         
     def saveHost(self, host):
         """ Save a host for project settings.
