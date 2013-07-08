@@ -48,7 +48,7 @@
 			<th>{{colName}}</th> {% endfor %}
 		</tr>
 		{% for obj in provider.getObjects %}
-		<tr id="{{obj.getObjId}}" class=""
+		<tr id="{{obj.getObjId}}" class="runtr" data-name="{{obj.getName}}"
 			onclick='javascript:launchToolbar("{{projectName}}","{{obj.getObjId}}", ($(this)));'
 			style="background-color: #fafafa;">
 			<td><a
@@ -63,14 +63,14 @@
 <div id="graphActiv" style="display: none;" data-mode="inactive"
 	data-time="first">
 	<h3>History</h3>
-	<div class="window" style="top:3em;" id="container0">Project</div>
-	<div class="window" style="top:5em;" id="container1">ProtImportMicrographs1<br/>finished</div>
-	<div class="window" style="top:9em;" id="container2">XmippProtPreprocessMicrographs73<br/>finished</div>
-	<div class="window" style="top:13em;" id="container3">XmippProtCTFMicrographs222<br/>finished</div>
-	<div class="window" style="top:17em;" id="container4">XmippProtParticlePicking319<br/>finished</div>
-	<div class="window" style="top:21em;" id="container5">XmippProtExtractParticles388<br/>finished</div>
-	<div class="window" style="top:25em;left: 7em;" id="container6">XmippProtML2D621<br/>finished</div>
-	<div class="window" style="top:25em;left: 17em;" id="container7">XmippProtCL2D702<br/>finished</div>
+<!-- 	<div class="window" style="top:3em;" id="container0">Project</div> -->
+<!-- 	<div class="window" style="top:5em;" id="container1">ProtImportMicrographs1<br/>finished</div> -->
+<!-- 	<div class="window" style="top:9em;" id="container2">XmippProtPreprocessMicrographs73<br/>finished</div> -->
+<!-- 	<div class="window" style="top:13em;" id="container3">XmippProtCTFMicrographs222<br/>finished</div> -->
+<!-- 	<div class="window" style="top:17em;" id="container4">XmippProtParticlePicking319<br/>finished</div> -->
+<!-- 	<div class="window" style="top:21em;" id="container5">XmippProtExtractParticles388<br/>finished</div> -->
+<!-- 	<div class="window" style="top:25em;left: 7em;" id="container6">XmippProtML2D621<br/>finished</div> -->
+<!-- 	<div class="window" style="top:25em;left: 17em;" id="container7">XmippProtCL2D702<br/>finished</div> -->
 </div>
 {% endblock %} {% block contentDown %}
 <div id="tabContaier">
