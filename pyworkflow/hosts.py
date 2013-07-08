@@ -255,6 +255,12 @@ class QueueSystemConfig(OrderedObject):
     def setQueues(self, queues):
         self.queues = queues
         
+    def getQueueConfig(self, objId):
+        for queueConfig in self.queues:
+            if objId == queueConfig.getObjId():
+                return queueConfig
+        return None
+        
         
 class QueueConfig(OrderedObject):
     def __init__(self, **args):

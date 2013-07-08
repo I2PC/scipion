@@ -62,7 +62,6 @@ a:active, a:focus {
 <script src={{jquery}} type="text/javascript"></script>
 <script src={{utils}} type="text/javascript"></script>
 <script>
-
 	{% if message != None and message != '' %}
 	window.onload = function() {
 		alert("{{message}}")
@@ -74,6 +73,12 @@ a:active, a:focus {
 			alert ("Not implemented yet");
 		}
 	}	
+	function removeQueueConfig(queueConfigId){
+		$("#" + queueConfigId).remove();
+	}
+	function removeQueueSystemConfig(queueSystemConfigId){
+		$("#" + queueSystemConfigId).remove();
+	}
 </script>
 </head>
 <body>
@@ -146,16 +151,13 @@ a:active, a:focus {
 <script>
 //form_count = $("[name=extra_field_count");
 queueSystemConfigCount = document.getElementById("queueSystemConfigCount").value;
-if (queueSystemConfigCount > 0){
-	queueSystemConfigCount += 1;
-}
 $("#addQueueSystemConfig").click(function() {
 	$("#queueSystemConfig").toggle();
 	elementString = '';
 	elementString += '<table>';
 	elementString += '<tr><td> <label class="required" for="name">Name</label> </td><td><input type="text" name="name" class="generalInput"/></td></tr>';
 	elementString += '<tr><td> <label class="required" for="mandatory"> Mandatory </label> </td><td><input type="checkbox" name="mandatory" value="True" checked/></td></tr>';
-	elementString += '<tr><td> <label class="required" for="submitTemplate"> Submit template </label> </td><td><input type="text" name="submitTemplate" class="generalInput"/></td></tr>';
+	elementString += '<tr><td> <label class="required" for="submitTemplate"> Submit template </label> </td><td><textarea rows="5" cols="35" name="submitTemplate"/></td></tr>';
 	elementString += '<tr><td> <label class="required" for="submitCommand"> Submit command </label> </td><td><input type="text" name="submitCommand" class="generalInput"/></td></tr>';
 	elementString += '<tr><td> <label class="required" for="checkCommand"> Check command </label> </td><td><input type="text" name="checkCommand" class="generalInput"/></td></tr>';
 	elementString += '<tr><td> <label class="required" for="cancelCommand"> Cancel command </label> </td><td><input type="text" name="cancelCommand" class="generalInput"/></td></tr>';	
@@ -168,12 +170,9 @@ $("#addQueueSystemConfig").click(function() {
 })
 
 queueConfigCount = document.getElementById("queueConfigCount").value;
-if (queueConfigCount > 0){
-	queueConfigCount += 1;
-}
 $("#addQueueConfig").click(function() {
 	elementString = '';
-	elementString += '<table>';
+	elementString += '<table id="queueConfig_' + queueConfigCount + '">';
 	elementString += '<tr><th align="center" colspan="2">Queue config ' + queueConfigCount + '</th></tr>'
 	elementString += '<tr><td> <label class="required" for="name_' + queueConfigCount + '"> Name </label> </td><td><input type="text" name="name_' + queueConfigCount + '" class="generalInput"/></td></tr>';
 	elementString += '<tr><td> <label class="required" for="maxCores_' + queueConfigCount + '"> Max. cores </label> </td><td><input type="number" name="maxCores_' + queueConfigCount + '" class="generalInput"/></td></tr>';
@@ -182,6 +181,7 @@ $("#addQueueConfig").click(function() {
 	elementString += '<tr><td> <label class="required" for="maxHours_' + queueConfigCount + '"> Max. hours </label> </td><td><input type="number" name="maxHours_' + queueConfigCount + '" class="generalInput"/></td></tr>';
 	elementString += '</table>';
 	elementString += '<br/>';
+	elementString += '<button type="button" id="removeQueueConf_' + queueConfigCount + '"  onclick="removeQueueConfig(\'queueConfig_' + queueConfigCount + '\')" class="generalButton">Remove queue config</button>';
     element = $(elementString);
     $("#queueConfig").append(element);
     queueConfigCount ++;
