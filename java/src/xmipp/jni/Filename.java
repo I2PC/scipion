@@ -202,11 +202,14 @@ public class Filename {
 				}
 			}
 		}
-		
-		if (foundPath != null && hasPrefix(filename)){
-			String prefix = getPrefix(filename);
-			foundPath = compose(prefix, foundPath);
+
+		if (foundPath != null && hasPrefix(filename)) {
+			foundPath = compose(getPrefix(filename), foundPath);
 		}
+		if (foundPath != null && hasSuffix(filename)) {
+			foundPath += getSuffix(filename);
+		}
+		
 		return foundPath;
 	}
 
@@ -232,7 +235,8 @@ public class Filename {
 	 */
 	public static File findProjectDir(String filename) {
 		filename = getFilename(filename);
-		File dir = new File(filename).getAbsoluteFile(); // Remove Xmipp special characters
+		File dir = new File(filename).getAbsoluteFile(); // Remove Xmipp special
+															// characters
 		if (!dir.isDirectory())
 			dir = dir.getParentFile();
 		while (dir != null) {
@@ -249,12 +253,14 @@ public class Filename {
 	 * Remove from the filename the Xmipp special characters
 	 */
 	public static String getFilename(String filename) {
-		
+
 		if (filename.contains(SEPARATOR))
 			filename = filename.split(SEPARATOR)[1];
 
 		if (filename.contains(":"))
 			filename = filename.split(":")[0];
+		if (filename.contains("#"))
+			filename = filename.split("#")[0];
 
 		return filename;
 	}
@@ -279,35 +285,50 @@ public class Filename {
 		return filename.contains(SEPARATOR);
 	}
 
+	public static boolean hasSuffix(String filename) {
+		return filename.contains(":") || filename.contains("#");
+	}
+
 	public static String getPrefix(String filename) {
 		if (hasPrefix(filename)) {
 			String prefix = "";
 			String str = filename.split(SEPARATOR)[0];
-			if (!str.isEmpty()) {
-				// str may have a string prefix before the number, so
-				// grab the leftmost part
-				int i = str.length() - 1;
-				while (i >= 0) {
-					if (str.charAt(i) == File.separatorChar) {
-						break;
-					}
-					i--;
-				}
-
-				prefix = str.substring(i + 1, str.length());
-			}
-			return prefix;
+			// if (!str.isEmpty()) {
+			// // str may have a string prefix before the number, so
+			// // grab the leftmost part
+			// int i = str.length() - 1;
+			// while (i >= 0) {
+			// if (str.charAt(i) == File.separatorChar) {
+			// break;
+			// }
+			// i--;
+			// }
+			//
+			// prefix = str.substring(i + 1, str.length());
+			// }
+			// return prefix;
+			return str;
 		}
 
 		return null;
 	}
-	
+
 	public static String getSuffix(String filename) {
+		if (filename.contains(":")) {
+			return ":" + filename.split(":")[1];
+		} else if (filename.contains("#")) {
+			return "#" + filename.split("#")[1];
+		}
+
+		return null;
+	}
+
+	public static String removePrefix(String filename) {
 		String prefix = getPrefix(filename);
-		if(prefix == null)
+		if (prefix == null)
 			return filename;
 		else
-			return filename.replace(prefix + "@", "");
+			return filename.split(SEPARATOR)[1];
 	}
 
 	/**
@@ -411,12 +432,13 @@ public class Filename {
 		}
 		return joined;
 	}
-	
+
 	public static String humanReadableByteCount(long bytes) {
-	    int unit = 1024;
-	    if (bytes < unit) return bytes + " B";
-	    int exp = (int) (Math.log(bytes) / Math.log(unit));
-	    String pre = "KMGTPE".charAt(exp-1) +  "i";
-	    return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
+		int unit = 1024;
+		if (bytes < unit)
+			return bytes + " B";
+		int exp = (int) (Math.log(bytes) / Math.log(unit));
+		String pre = "KMGTPE".charAt(exp - 1) + "i";
+		return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
 	}
 }

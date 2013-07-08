@@ -138,24 +138,26 @@ public class ImageGeneric {
     }
 
     public void read(int width, int height, int slice, long image) throws Exception {
-        read(Filename.getFilename(filename), width, height, slice, image);
+        read(filename, width, height, slice, image, true);
+        // At this moment we don't know why
+//        read(Filename.getFilename(filename), width, height, slice, image, true);
     }
     
-    public void read(String filename) throws Exception {
+    public void read(String filename, boolean map) throws Exception {
     	setFilename(filename);
-    	read(filename, getXDim(), getYDim(), MID_SLICE, ALL_IMAGES);//image in filename will be used    	
+    	read(filename, getXDim(), getYDim(), MID_SLICE, ALL_IMAGES, map);//image in filename will be used    	
     }
     
     public void read(String filename, int width, int height) throws Exception {
         this.filename = filename;
-    	read(filename, width, height, MID_SLICE, ALL_IMAGES);//image in filename will be used
+    	read(filename, width, height, MID_SLICE, ALL_IMAGES, true);//image in filename will be used
     }
     
     public void read(int width, int height) throws Exception {
-        read(filename, width, height, MID_SLICE, ALL_IMAGES);//image in filename will be used
+        read(filename, width, height, MID_SLICE, ALL_IMAGES, true);//image in filename will be used
     }
     
-    private native void read(String filename, int width, int height, int slice, long nimage) throws Exception;
+    private native void read(String filename, int width, int height, int slice, long nimage, boolean map) throws Exception;
 
     public void readApplyGeo(String filename, MetaData metadata, long id) throws Exception {
         readApplyGeo(filename, metadata, id, true);
@@ -233,6 +235,8 @@ public class ImageGeneric {
 
     public native double[] alignImage(ImageGeneric img) throws Exception;
     
+    public native void getRadialAvg(ImageGeneric radialimg) throws Exception;
+    
     public native void applyAlignment(ImageGeneric img, int index, double rot, double tilt, double psi) throws Exception;
 
     
@@ -289,7 +293,7 @@ public class ImageGeneric {
 		{
 		
 			int index = Integer.parseInt(prefix);
-			String file = Filename.getSuffix(imagepath);
+			String file = Filename.removePrefix(imagepath);
 			ImageGeneric ig = new ImageGeneric(file);
 			ig.readHeader(file);
 			if(index < 0 || index > ig.getNDim())

@@ -26,9 +26,7 @@
 # ***************************************************************************
 '''
 
-from xmipp import MDL_CTF_SAMPLING_RATE, MDL_CTF_VOLTAGE, MDL_CTF_DEFOCUSU, MDL_CTF_DEFOCUSV, \
-MDL_CTF_DEFOCUS_ANGLE, MDL_CTF_CS, MDL_CTF_CA, MDL_CTF_Q0, MDL_CTF_K, label2Str, MetaData,\
-MDL_XCOOR, MDL_YCOOR, MDL_PICKING_FAMILY, MDL_PICKING_MICROGRAPH_FAMILY_STATE, MD_APPEND
+from xmipp import *
 
 CTF_BASIC_LABELS = [MDL_CTF_SAMPLING_RATE, 
                     MDL_CTF_VOLTAGE, 
@@ -39,6 +37,18 @@ CTF_BASIC_LABELS = [MDL_CTF_SAMPLING_RATE,
                     MDL_CTF_CA,
                     MDL_CTF_Q0, 
                     MDL_CTF_K]
+
+# Map from Xmipp labels to Relion labels names
+XMIPP_RELION_LABELS = {
+                       MDL_IMAGE: 'rlnImageName',
+                       MDL_MICROGRAPH: 'rlnMicrographName',
+                       MDL_CTF_DEFOCUSU: 'rlnDefocusU', 
+                       MDL_CTF_DEFOCUSV: 'rlnDefocusV', 
+                       MDL_CTF_DEFOCUS_ANGLE: 'rlnDefocusAngle',  
+                       MDL_CTF_VOLTAGE: 'rlnVoltage',
+                       MDL_CTF_CS: 'rlnSphericalAberration',
+                       MDL_CTF_Q0: 'rlnAmplitudeContrast',                                         
+                       }
 
 def convertCtfparam(oldCtf):
     '''Convert the old format (Xmipp2.4) of the CTF 
@@ -108,13 +118,15 @@ def convertBox(boxFile, posFile, ysize, family='DefaultFamily', particleSize=Non
 def renameMdLabels(inputMd, outputMd, labelsDict):
     '''Change the labels' name on inputMd and write as outputMd
     The change will be made using the labelsDict, changing
-    key by value '''
+    key by value 
+    If dictString is False, the keys in the dictionary are Xmipp MDL_* labels
+    '''
     fIn = open(inputMd)
     fOut = open(outputMd, 'w+')
-    for l in fIn:
-        if l.strip() in labelsDict:
-            l = l.strip()
-            l = labelsDict.get(l, l) + '\n'
+    for l in fIn:        
+        label = l.split()[0].strip()[1:] # remove starting _ character
+        if label in labelsDict:
+            l = l.replace(label, labelsDict[label])
         fOut.write(l)
     fIn.close()
     fOut.close()
@@ -156,4 +168,28 @@ def exportEman2Boxes(inputMd, outputFile, dim):
         print >> fOut, "%(x)d  %(y)d  %(dim)d %(dim)d" % locals()
     fOut.close()    
         
+def exportMdToRelion(md, outputRelion):
+    """ This function will receive a Xmipp metadata and will
+    convert to the one expected by Relion.    
+    All labels not recognized by Relion will be dropped.
+    Params:
+     md: input xmipp metadata.
+     outputRelion: output filename to store the Relion star file.
+    """
+    for label in md.getActiveLabels():
+        if not label in XMIPP_RELION_LABELS:
+            md.removeLabel(label)
+    tmpFile = outputRelion + '.tmp'
+    md.write(tmpFile)
+    # Create a dict with the names
+    d = {}
+    for k, v in XMIPP_RELION_LABELS.iteritems():
+        d[label2Str(k)] = v
+        
+    print "dict: ", d
+        
+    renameMdLabels(tmpFile, outputRelion, d)
+    from protlib_filesystem import deleteFile
+    deleteFile(None, tmpFile)
+    
     

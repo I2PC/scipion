@@ -177,7 +177,7 @@ public abstract class Micrograph {
 				// Smooth filter should be the first one
 				// because it is applied in Xmipp
 				for (IJCommand f : filters)
-					if (f.getCommand().equals("Smooth Filter")) {
+					if (f.getCommand().equals(ParticlePicker.xmippsmoothfilter)) {
 						ig.convert2Datatype(ImageGeneric.UChar);
 						ImageGeneric igsmooth = new ImageGeneric(ImageGeneric.UChar);
 						igsmooth.resize(ig.getXDim(), ig.getYDim());
@@ -196,11 +196,8 @@ public abstract class Micrograph {
 
 	public void runImageJFilters(List<IJCommand> filters) {
 		for (IJCommand f : filters)
-			if (!f.getCommand().equals("Smooth Filter")) // this filter was applied
-			{
+			if (!f.getCommand().equals(ParticlePicker.xmippsmoothfilter)) // this filter was applied
 				IJ.run(imp, f.getCommand(), f.getOptions());
-				System.out.println(f.getCommand());
-			}
 	}
 
 	public void releaseImage() {
@@ -221,6 +218,5 @@ public abstract class Micrograph {
 
 	public abstract boolean hasData();
 
-	public abstract void reset();
 
 }

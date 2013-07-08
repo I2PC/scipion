@@ -123,7 +123,6 @@ class Canvas(tk.Frame):
             self.lastPos = (xc, yc)  
             
     def onScroll(self, event):
-        print "scrolling"
         if event.num == 5 or event.delta < 0:
             count = 1
         if event.num == 4 or event.delta > 0:

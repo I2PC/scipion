@@ -379,8 +379,7 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
             else if (Nk==0)
             {
                 // Pick the vector that is worse represented
-                int iworse;
-                error.maxIndex(iworse);
+                int iworse=error.maxIndex();
                 error(iworse)=0;
                 for (size_t j=0; j<N; j++)
                     D(j,k)=X[iworse](j);

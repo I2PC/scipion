@@ -315,6 +315,69 @@ void ransacWeightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> 
     delete []th_args;
 }
 
+void normalizeColumns(Matrix2D<double> &A)
+{
+	if (MAT_YSIZE(A)<=1)
+		return;
+
+	// Compute the mean and standard deviation of each column
+	Matrix1D<double> avg, stddev;
+	avg.initZeros(MAT_XSIZE(A));
+	stddev.initZeros(MAT_XSIZE(A));
+
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(A)
+	{
+		double x=MAT_ELEM(A,i,j);
+		VEC_ELEM(avg,j)+=x;
+		VEC_ELEM(stddev,j)+=x*x;
+	}
+
+	double iN=1.0/MAT_YSIZE(A);
+	FOR_ALL_ELEMENTS_IN_MATRIX1D(avg)
+	{
+        VEC_ELEM(avg,i)*=iN;
+        VEC_ELEM(stddev,i)=sqrt(fabs(VEC_ELEM(stddev,i)*iN - VEC_ELEM(avg,i)*VEC_ELEM(avg,i)));
+        if (VEC_ELEM(stddev,i)>XMIPP_EQUAL_ACCURACY)
+        	VEC_ELEM(stddev,i)=1.0/VEC_ELEM(stddev,i);
+        else
+        	VEC_ELEM(stddev,i)=0.0;
+	}
+
+	// Now normalize
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(A)
+		MAT_ELEM(A,i,j)=(MAT_ELEM(A,i,j)-VEC_ELEM(avg,j))*VEC_ELEM(stddev,j);
+}
+
+void normalizeColumnsBetween0and1(Matrix2D<double> &A)
+{
+	double maxValue,minValue;
+	A.computeMaxAndMin(maxValue,minValue);
+	double iMaxValue=1.0/(maxValue-minValue);
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(A)
+		MAT_ELEM(A,i,j)=(MAT_ELEM(A,i,j)-minValue)*iMaxValue;
+}
+
+void subtractColumnMeans(Matrix2D<double> &A)
+{
+	if (MAT_YSIZE(A)<1)
+		return;
+
+	// Compute the mean and standard deviation of each column
+	Matrix1D<double> avg;
+	avg.initZeros(MAT_XSIZE(A));
+
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(A)
+		VEC_ELEM(avg,j)+=MAT_ELEM(A,i,j);
+
+	double iN=1.0/MAT_YSIZE(A);
+	FOR_ALL_ELEMENTS_IN_MATRIX1D(avg)
+        VEC_ELEM(avg,i)*=iN;
+
+	// Now normalize
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(A)
+		MAT_ELEM(A,i,j)=MAT_ELEM(A,i,j)-VEC_ELEM(avg,j);
+}
+
 void schur(const Matrix2D<double> &M, Matrix2D<double> &O, Matrix2D<double> &T)
 {
 	alglib::real_2d_array a, s;
@@ -385,6 +448,27 @@ void lastEigs(const Matrix2D<double> &A, size_t M, Matrix1D<double> &D, Matrix2D
 		MAT_ELEM(P,i,j)=z(i,j);
 }
 
+void eigsBetween(const Matrix2D<double> &A, size_t I1, size_t I2, Matrix1D<double> &D, Matrix2D<double> &P)
+{
+	size_t M = I2 - I1 + 1;
+	int N=(int)MAT_YSIZE(A);
+	alglib::real_2d_array a, z;
+	a.setcontent(N,N,MATRIX2D_ARRAY(A));
+	alglib::real_1d_array d;
+
+	bool ok=smatrixevdi(a, N, true, false, I1, I2, d, z);
+	if (!ok)
+		REPORT_ERROR(ERR_NUMERICAL,"Could not perform eigenvector decomposition");
+
+	D.resizeNoCopy(M);
+	FOR_ALL_ELEMENTS_IN_MATRIX1D(D)
+		VEC_ELEM(D,i)=d(M-1-i);
+	memcpy(&VEC_ELEM(D,0),d.getcontent(),M*sizeof(double));
+	P.resizeNoCopy(N,M);
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(P)
+		MAT_ELEM(P,i,j)=z(i,j);
+}
+
 void connectedComponentsOfUndirectedGraph(const Matrix2D<double> &G, Matrix1D<int> &component)
 {
 	size_t N=MAT_XSIZE(G);
@@ -434,4 +518,154 @@ void connectedComponentsOfUndirectedGraph(const Matrix2D<double> &G, Matrix1D<in
 			workDone=true;
 		}
 	} while (workDone);
+}
+
+void matrixOperation_AB(const Matrix2D <double> &A, const Matrix2D<double> &B, Matrix2D<double> &C)
+{
+	C.initZeros(MAT_YSIZE(A), MAT_XSIZE(B));
+	for (size_t i = 0; i < MAT_YSIZE(A); ++i)
+		for (size_t j = 0; j < MAT_XSIZE(B); ++j)
+		{
+			double aux=0.;
+			for (size_t k = 0; k < MAT_XSIZE(A); ++k)
+				aux += MAT_ELEM(A, i, k) * MAT_ELEM(B, k, j);
+			MAT_ELEM(C, i, j)=aux;
+		}
+}
+
+void matrixOperation_AtA(const Matrix2D <double> &A, Matrix2D<double> &B)
+{
+    B.resizeNoCopy(MAT_XSIZE(A), MAT_XSIZE(A));
+    for (size_t i = 0; i < MAT_XSIZE(A); ++i)
+        for (size_t j = i; j < MAT_XSIZE(A); ++j)
+        {
+            double aux=0.;
+            for (size_t k = 0; k < MAT_YSIZE(A); ++k)
+                aux += MAT_ELEM(A, k, i) * MAT_ELEM(A, k, j);
+            MAT_ELEM(B, j, i) = MAT_ELEM(B, i, j) = aux;
+        }
+}
+
+void matrixOperation_AAt(const Matrix2D <double> &A, Matrix2D<double> &C)
+{
+	C.initZeros(MAT_YSIZE(A), MAT_YSIZE(A));
+	for (size_t i = 0; i < MAT_YSIZE(A); ++i)
+		for (size_t j = i; j < MAT_YSIZE(A); ++j)
+		{
+			double aux=0.;
+			for (size_t k = 0; k < MAT_XSIZE(A); ++k)
+				aux += MAT_ELEM(A, i, k) * MAT_ELEM(A, j, k);
+			MAT_ELEM(C, j, i)=MAT_ELEM(C, i, j)=aux;
+		}
+}
+
+void matrixOperation_ABt(const Matrix2D <double> &A, const Matrix2D <double> &B, Matrix2D<double> &C)
+{
+	C.initZeros(MAT_YSIZE(A), MAT_YSIZE(B));
+	for (size_t i = 0; i < MAT_YSIZE(A); ++i)
+		for (size_t j = 0; j < MAT_YSIZE(B); ++j)
+		{
+			double aux=0.;
+			for (size_t k = 0; k < MAT_XSIZE(A); ++k)
+				aux += MAT_ELEM(A, i, k) * MAT_ELEM(B, j, k);
+			MAT_ELEM(C, i, j)=aux;
+		}
+}
+
+void matrixOperation_AtB(const Matrix2D <double> &A, const Matrix2D<double> &B, Matrix2D<double> &C)
+{
+    C.resizeNoCopy(MAT_XSIZE(A), MAT_XSIZE(B));
+    for (size_t i = 0; i < MAT_XSIZE(A); ++i)
+        for (size_t j = 0; j < MAT_XSIZE(B); ++j)
+        {
+            double aux=0.;
+            for (size_t k = 0; k < MAT_YSIZE(A); ++k)
+                aux += MAT_ELEM(A, k, i) * MAT_ELEM(B, k, j);
+			MAT_ELEM(C, i, j)=aux;
+        }
+}
+
+void matrixOperation_AtBt(const Matrix2D <double> &A, const Matrix2D<double> &B, Matrix2D<double> &C)
+{
+	C.initZeros(MAT_XSIZE(A), MAT_YSIZE(B));
+	for (size_t i = 0; i < MAT_XSIZE(A); ++i)
+		for (size_t j = 0; j < MAT_YSIZE(B); ++j)
+		{
+			double aux=0.;
+			for (size_t k = 0; k < MAT_YSIZE(A); ++k)
+				aux += MAT_ELEM(A, k, i) * MAT_ELEM(B, j, k);
+			MAT_ELEM(C, i, j)=aux;
+		}
+}
+
+void matrixOperation_XtAX_symmetric(const Matrix2D<double> &X, const Matrix2D<double> &A, Matrix2D<double> &B)
+{
+	Matrix2D<double> AX=A*X;
+    B.resizeNoCopy(MAT_XSIZE(X), MAT_XSIZE(X));
+    for (size_t i = 0; i < MAT_XSIZE(X); ++i)
+        for (size_t j = i; j < MAT_XSIZE(X); ++j)
+        {
+            double aux=0.;
+            for (size_t k = 0; k < MAT_YSIZE(X); ++k)
+                aux += MAT_ELEM(X, k, i) * MAT_ELEM(AX, k, j);
+            MAT_ELEM(B, j, i) = MAT_ELEM(B, i, j) = aux;
+        }
+}
+
+void matrixOperation_IplusA(Matrix2D<double> &A)
+{
+	for (size_t i=0; i<MAT_YSIZE(A); ++i)
+		MAT_ELEM(A,i,i)+=1;
+}
+
+void matrixOperation_IminusA(Matrix2D<double> &A)
+{
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(A)
+        if (i == j)
+            MAT_ELEM(A, i, j) = 1 - MAT_ELEM(A, i, j);
+        else
+            MAT_ELEM(A, i, j) = -MAT_ELEM(A, i, j);
+}
+
+void eraseFirstColumn(Matrix2D<double> &A)
+{
+	Matrix2D<double> Ap;
+	Ap.resize(MAT_YSIZE(A),MAT_XSIZE(A)-1);
+    for (size_t i = 0; i < MAT_YSIZE(A); ++i)
+    	memcpy(&MAT_ELEM(Ap,i,0),&MAT_ELEM(A,i,1),MAT_XSIZE(Ap)*sizeof(double));
+    A=Ap;
+}
+
+void keepColumns(Matrix2D<double> &A, int j0, int jF)
+{
+	Matrix2D<double> Ap;
+	Ap.resize(MAT_YSIZE(A),jF-j0+1);
+    for (size_t i = 0; i < MAT_YSIZE(A); ++i)
+    	memcpy(&MAT_ELEM(Ap,i,0),&MAT_ELEM(A,i,j0),MAT_XSIZE(Ap)*sizeof(double));
+    A=Ap;
+}
+
+void orthogonalizeColumnsGramSchmidt(Matrix2D<double> &M)
+{
+	for(size_t j1=0; j1<MAT_XSIZE(M); j1++)
+	{
+		// Normalize column j1
+		double norm=0;
+		for (size_t i=0; i<MAT_YSIZE(M); i++)
+			norm+=MAT_ELEM(M,i,j1)*MAT_ELEM(M,i,j1);
+		double K=1.0/sqrt(norm);
+		for(size_t i = 0; i<MAT_YSIZE(M); i++)
+			MAT_ELEM(M,i,j1) *=K;
+
+		// Update rest of columns
+		for(size_t j2=j1+1; j2<MAT_XSIZE(M); j2++)
+		{
+			// Compute the dot product
+			double K = 0;
+			for (size_t i=0; i<MAT_YSIZE(M); i++)
+				K+=MAT_ELEM(M,i,j1)*MAT_ELEM(M,i,j2);
+			for (size_t i=0; i<MAT_YSIZE(M); i++)
+				MAT_ELEM(M,i,j2) -= K*MAT_ELEM(M,i,j1);
+		}
+	}
 }

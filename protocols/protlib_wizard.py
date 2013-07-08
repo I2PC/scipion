@@ -36,7 +36,8 @@ from xmipp import MetaData
 from protlib_base import getWorkingDirFromRunName, getExtendedRunName,\
     XmippProject
 from protlib_utils import loadModule, which, runShowJ,\
-    runImageJPluginWithResponse, runMaskToolbar
+    runImageJPluginWithResponse, runMaskToolbar, \
+    getComponentFromVector
 from protlib_gui_ext import centerWindows, changeFontSize, askYesNo, Fonts, registerCommonFonts, \
     showError, showInfo, showBrowseDialog, showWarning, AutoScrollbar, FlashMessage,\
     TaggedText
@@ -73,47 +74,66 @@ def wizardSelectFromList(master, frame, list):
     else:
         return None
 
-def wizardNotFound(self, var):
+def postSelectRunProjmatch(gui):
+    #get projection matching dir
+    runName = gui.getVarValue('ImportRun')
+    prot = gui.project.getProtocolFromRunName(runName)
+    #get last iteration in projection matching
+    iterationNo       = int(prot.NumberOfIterations)
+    gui.setVarValue('iterationNo', prot.NumberOfIterations)
+    #gui.setVarValue('doMask',prot.DoMask)
+    gui.setVarValue('InnerRadius',prot.InnerRadius)
+    gui.setVarValue('OuterRadius',prot.OuterRadius)
+    angSamplingRateDeg = getComponentFromVector(prot.AngSamplingRateDeg,iterationNo - 1)
+    gui.setVarValue('AngSamplingRateDeg',angSamplingRateDeg)
+    MaxChangeInAngles = getComponentFromVector(prot.MaxChangeInAngles,iterationNo - 1)
+    gui.setVarValue('MaxChangeInAngles',MaxChangeInAngles)
+    gui.setVarValue('SymmetryGroup',prot.SymmetryGroup)
+    gui.setVarValue('CTFDatName',prot.CTFDatName)
+    #gui.setVarValue('doCTFCorrection',prot.DoCtfCorrection)
+    
+
+def wizardNotFound(gui, var):
     showError("Wizard not found", "The wizard <%s> for this parameter has not been found" % var.tags['wizard']
-                           , parent=self.master)
+                           , parent=gui.master)
     
-def wizardDummy(self, var):
-    showInfo("Wizard test", "This is only a test on wizards setup", parent=self.master)
+def wizardDummy(gui, var):
+    showInfo("Wizard test", "This is only a test on wizards setup", parent=gui.master)
     
-def wizardShowJ(self, var):
+def wizardShowJ(gui, var):
     value = var.getTkValue().strip()
     if len(value):
         runShowJ(var.getTkValue())
     else:
-        showWarning("Empty file", "Please select a file to visualize", parent=self.master)
+        showWarning("Empty file", "Please select a file to visualize", parent=gui.master)
     
-def wizardBrowse(self, var):
+def wizardBrowse(gui, var):
     if 'file' in var.tags.keys():
         seltype="file"
         filterExt = var.tags['file']
     else:
         seltype="folder"
         filterExt = ''
-    files = showBrowseDialog(parent=self.master, seltype=seltype, filter=filterExt)
+    files = showBrowseDialog(parent=gui.master, seltype=seltype, filter=filterExt)
     if files:
         var.setTkValue(', '.join([xmippRelpath(f) for f in files]))
 
 #Helper function to select Downsampling wizards
-def wizardHelperSetDownsampling(self, var, path, filterExt, value, freqs=None, md=None):  
+def wizardHelperSetDownsampling(gui, var, path, filterExt, value, freqs=None, md=None):  
     from protlib_gui_ext import XmippBrowserCTF
-    results = showBrowseDialog(path=path, parent=self.master, browser=XmippBrowserCTF,title="Select Downsampling", 
+    results = showBrowseDialog(path=path, parent=gui.master, browser=XmippBrowserCTF,title="Select Downsampling", 
                                     seltype="file", selmode="browse", filter=filterExt, previewDim=256, 
                                     extra={'freqs':freqs, 'downsampling':value, 'previewLabel': 'Micrograph', \
                                            'computingMessage': 'Estimating PSD...', 'md':md}) # a list is returned
     if results:
-        self.setVarValue('DownsampleFactor', results[0])
+        gui.setVarValue('DownsampleFactor', results[0])
     return results
       
 #This wizard is specific for import_micrographs protocol
-def wizardBrowseCTF(self, var):    
-    importRunName = self.getVarValue('ImportRun')
-    downsample = self.getVarValue('DownsampleFactor')
-    prot = self.project.getProtocolFromRunName(importRunName)
+def wizardBrowseCTF(gui, var):    
+    importRunName = gui.getVarValue('ImportRun')
+    downsample = gui.getVarValue('DownsampleFactor')
+    prot = gui.project.getProtocolFromRunName(importRunName)
     path = prot.WorkingDir
     md = MetaData()
     fnMicrographs = join(path, "micrographs.xmd")
@@ -122,16 +142,16 @@ def wizardBrowseCTF(self, var):
     fnMicrographs = join(path, "tilted_pairs.xmd")
     if exists(fnMicrographs):
         md.read(fnMicrographs)
-    wizardHelperSetDownsampling(self, var, '.', None, downsample, md=md)
+    wizardHelperSetDownsampling(gui, var, '.', None, downsample, md=md)
     
 #This wizard is specific for screen_micrographs protocol
 #it will help to select downsampling, and frequencies cutoffs
-def wizardBrowseCTF2(self, var):
+def wizardBrowseCTF2(gui, var):
     error = None
     vList = ['LowResolCutoff', 'HighResolCutoff']
-    freqs = self.getVarlistValue(vList)
-    importRunName = self.getVarValue('ImportRun')
-    prot = self.project.getProtocolFromRunName(importRunName)
+    freqs = gui.getVarlistValue(vList)
+    importRunName = gui.getVarValue('ImportRun')
+    prot = gui.project.getProtocolFromRunName(importRunName)
     path = prot.WorkingDir
     if path and exists(path):
         mdPath = prot.getFilename('micrographs')
@@ -142,14 +162,14 @@ def wizardBrowseCTF2(self, var):
                 image = md.getValue(MDL_MICROGRAPH, md.firstObject())     
                 if image:         
                     filterExt = "*" + splitext(image)[1]
-                    value = self.getVarValue('DownsampleFactor')
-                    results = wizardHelperSetDownsampling(self, var, path, filterExt, value, freqs, md)
+                    value = gui.getVarValue('DownsampleFactor')
+                    results = wizardHelperSetDownsampling(gui, var, path, filterExt, value, freqs, md)
                     if results:
-                        self.setVarlistValue(vList, results[1:])
+                        gui.setVarlistValue(vList, results[1:])
                 else:
                     error = "Not micrograph found in metadata <%s>" % mdPath
-                    #self.setVarValue('LowResolCutoff', results[1])
-                    #self.setVarValue('HighResolCutoff', results[2])
+                    #gui.setVarValue('LowResolCutoff', results[1])
+                    #gui.setVarValue('HighResolCutoff', results[2])
             else:
                 error = "Micrograph metadata <%s> is empty" % mdPath
         else:
@@ -157,70 +177,56 @@ def wizardBrowseCTF2(self, var):
     else:
         error = "Import run <%s> doesn't exists" % str(path)
     if error:
-        showWarning("Select Downsampling Wizard", error, self.master)
+        showWarning("Select Downsampling Wizard", error, gui.master)
         return None
     else:
         return results
             
-#Select family from extraction run
-def wizardChooseFamily(self, var):
-    extractionDir = getWorkingDirFromRunName(self.getVarValue('PreviousRun'))
-    if not extractionDir:
-        showWarning("Warning", "No previous Run has been found", parent=self.master)
-        return
-    familyList = []
-    for file in glob(join(extractionDir, "*_sorted.sel")):
-        familyList.append(split(file)[1].replace("_sorted.sel",""))
-    if len(familyList)==1:
-        var.setTkValue(familyList[0])
-    else:
-        self.selectFromList(var, familyList)        
-
-def wizardHelperFilter(self, browser, title, **args):
+def wizardHelperFilter(gui, browser, title, **args):
     extra = {'previewLabel': 'Image', 'computingMessage': 'Applying filter...'}
     extra.update(args)
-    selfile = self.getVarValue('InSelFile')
+    selfile = gui.getVarValue('InSelFile')
     path, filename = split(selfile)
     if not exists(selfile):
-        showWarning("Warning", "The input selfile is not a valid file", parent=self.master)
+        showWarning("Warning", "The input selfile is not a valid file", parent=gui.master)
         return
-    return showBrowseDialog(path=path, parent=self.master, browser=browser,title=title, 
+    return showBrowseDialog(path=path, parent=gui.master, browser=browser,title=title, 
                             seltype="file", selmode="browse", filter=filename, previewDim=256, extra=extra)        
     
-def wizardChooseBandPassFilter(self, var):
+def wizardChooseBandPassFilter(gui, var):
     '''Wizard dialog to help choosing Bandpass filter parameters (used in protocol_preprocess_particles) '''
     vList = ['Freq_low','Freq_high','Freq_decay']
     from protlib_gui_ext import XmippBrowserBandpassFilter
-    results = wizardHelperFilter(self, XmippBrowserBandpassFilter, "Bandpass Filter", freqs=self.getVarlistValue(vList))
+    results = wizardHelperFilter(gui, XmippBrowserBandpassFilter, "Bandpass Filter", freqs=gui.getVarlistValue(vList))
     if results:
-        self.setVarlistValue(vList, results)
+        gui.setVarlistValue(vList, results)
         
 #Choose Gaussian Filter
-def wizardChooseGaussianFilter(self, var):
+def wizardChooseGaussianFilter(gui, var):
     '''Wizard dialog to help choosing Gaussian filter(in Fourier space) parameters (used in protocol_preprocess_particles) '''
     from protlib_gui_ext import XmippBrowserGaussianFilter
-    results = wizardHelperFilter(self, XmippBrowserGaussianFilter, "Gaussian Filter", freqSigma=self.getVarValue('Freq_sigma'))
+    results = wizardHelperFilter(gui, XmippBrowserGaussianFilter, "Gaussian Filter", freqSigma=gui.getVarValue('Freq_sigma'))
     if results:
         var.setTkValue(results) #expecting single result            
 
 #Choose Bad pixels wizard
-def wizardChooseBadPixelsFilter(self, var):
+def wizardChooseBadPixelsFilter(gui, var):
     from protlib_gui_ext import XmippBrowserBadpixelFilter
-    results = wizardHelperFilter(self, XmippBrowserBadpixelFilter, "Gaussian Filter", dustRemovalThreshold=self.getVarValue('DustRemovalThreshold'))
+    results = wizardHelperFilter(gui, XmippBrowserBadpixelFilter, "Gaussian Filter", dustRemovalThreshold=gui.getVarValue('DustRemovalThreshold'))
     if results:
         var.setTkValue(results) #expecting single result            
 
 #Design mask wizard
-def wizardDesignMask(self, var):
-    selfile = self.getVarValue('InSelFile')
-    ##workingDir = getWorkingDirFromRunName(self.getVarValue('RunName'))
+def wizardDesignMask(gui, var):
+    selfile = gui.getVarValue('InSelFile')
+    ##workingDir = getWorkingDirFromRunName(gui.getVarValue('RunName'))
     from xmipp import MetaData, MDL_IMAGE
     md = MetaData(selfile)
     fnImg = md.getValue(MDL_IMAGE, md.firstObject())
     #runShowJ(fnImg, extraParams="--mask_toolbar")
     runMaskToolbar(fnImg)
     #fnMask=os.path.join(workingDir,"mask.xmp")
-#    fnMask = self.project.projectTmpPath("mask.xmp")
+#    fnMask = gui.project.projectTmpPath("mask.xmp")
 #    from protlib_utils import runJavaIJapp
 #    msg = runImageJPluginWithResponse("1g", "Masks Tool Bar", "-i %(selfile)s -mask %(fnMask)s" % locals())
 #    msg = msg.strip().splitlines()
@@ -228,11 +234,11 @@ def wizardDesignMask(self, var):
 #        var.setTkValue(fnMask)            
 
 #Select micrograph extension
-def wizardMicrographExtension(self,var):
+def wizardMicrographExtension(gui,var):
     import fnmatch
     imgExt=['.raw','.tif','.tiff','.mrc','.dm3','.em','.ser','.spi', '.xmp']
     files = []
-    currentDir=self.getVarValue('DirMicrographs')
+    currentDir=gui.getVarValue('DirMicrographs')
     if currentDir=="":
         currentDir="."
 
@@ -241,16 +247,16 @@ def wizardMicrographExtension(self,var):
         for root, dirnames, filenames in os.walk(currentDir):
             if len(fnmatch.filter(filenames, '*'+ext))>0:
                 possibleLocations.append(join(root, '*'+ext))
-    selected=wizardSelectFromList(self.master, self.frame, possibleLocations)
+    selected=wizardSelectFromList(gui.master, gui.frame, possibleLocations)
     if selected is not None:
         dir,ext = split(selected)
-        self.setVarValue('DirMicrographs',dir)
-        self.setVarValue('ExtMicrographs',ext)
+        gui.setVarValue('DirMicrographs',dir)
+        gui.setVarValue('ExtMicrographs',ext)
                 
 #Select Tilt pairs
-def wizardTiltPairs(self, var):
-    dirMicrographs = self.getVarValue('DirMicrographs')
-    extMicrographs = self.getVarValue('ExtMicrographs')
+def wizardTiltPairs(gui, var):
+    dirMicrographs = gui.getVarValue('DirMicrographs')
+    extMicrographs = gui.getVarValue('ExtMicrographs')
     resultFilename = var.getTkValue()
     uList = []
     tList = []
@@ -278,7 +284,7 @@ def wizardTiltPairs(self, var):
         prefix = dirMicrographs
     
     from protlib_gui_ext import showTiltPairsDialog
-    results = showTiltPairsDialog((uList, tList), self.master)
+    results = showTiltPairsDialog((uList, tList), gui.master)
     if results:
         var.setTkValue(resultFilename)
         uList, tList = results
@@ -290,113 +296,72 @@ def wizardTiltPairs(self, var):
         md.write(resultFilename)
 
 #Select family from extraction run
-def wizardChooseFamilyToExtract(self, var):
-    from xmipp import MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE, MDL_CTF_MODEL, MDL_SAMPLINGRATE, MDL_SAMPLINGRATE_ORIGINAL
+def wizardChooseSizeToExtract(gui, var):
+    from xmipp import MDL_PICKING_PARTICLE_SIZE, MDL_CTF_MODEL, MDL_SAMPLINGRATE, MDL_SAMPLINGRATE_ORIGINAL
     from protlib_gui_ext import ListboxDialog
-    pickingRun = self.getVarValue('PickingRun')
-    pickingProt = self.project.getProtocolFromRunName(pickingRun)
-    fnFamilies = pickingProt.getFilename("families")  
-    if not exists(fnFamilies):
-        showWarning("Warning", "No elements to select", parent=self.master)
+    pickingRun = gui.getVarValue('PickingRun')
+    pickingProt = gui.project.getProtocolFromRunName(pickingRun)
+    fnConfig = pickingProt.getFilename("config")  
+    if not exists(fnConfig):
+        showWarning("Warning", "No elements to select", parent=gui.master)
         return
-    md = MetaData(fnFamilies)
-    families = [md.getValue(MDL_PICKING_FAMILY, objId) for objId in md]
-    if len(families) == 1:
-        d = 0
-    else:  
-        d = ListboxDialog(self.frame, families, selectmode=tk.SINGLE)
-        if len(d.result) > 0:
-            d = d.result[0]
-        else:
-            d = None
-    if d is not None:
-        selectedFamily = families[d]
-        var.setValue(selectedFamily)
-        for objId in md:
-            if md.getValue(MDL_PICKING_FAMILY, objId) == selectedFamily:
-                particleSize = md.getValue(MDL_PICKING_PARTICLE_SIZE, objId)
-                type = self.getVarValue("DownsampleType")
-                mdAcquisition = MetaData(pickingProt.getFilename('acquisition'))
-                objId = mdAcquisition.firstObject()
-                tsOriginal = tsPicking = mdAcquisition.getValue(MDL_SAMPLINGRATE, objId)
-                
-                if mdAcquisition.containsLabel(MDL_SAMPLINGRATE_ORIGINAL):
-                    tsOriginal = mdAcquisition.getValue(MDL_SAMPLINGRATE_ORIGINAL, objId)
-                
-                if type == "same as picking":
-                    factor = 1
-                else:
-                    factor = tsPicking / tsOriginal;
-                    if type == "other":
-                        try:
-                            factor /= float(self.getVarValue("DownsampleFactor"))
-                        except Exception, e:
-                            showWarning("Warning", "Please select valid downsample factor", parent=self.master)
-                            return
-                particleSize *= factor 
-                self.setVarValue("ParticleSize", str(int(particleSize)))
-                self.setVarValue("Family", selectedFamily)
-        if getattr(pickingProt,'TiltPairs', False):
-            self.setVarValue("DoFlip", str(False))
-        else:
-            md = MetaData(pickingProt.getFilename("micrographs"))
-            self.setVarValue("DoFlip", str(md.containsLabel(MDL_CTF_MODEL)))
-
-#Select family from extraction run
-def wizardChooseFamilyToExtractSupervised(self, var):
-    from xmipp import MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE, MDL_CTF_MODEL, MDL_SAMPLINGRATE, MDL_SAMPLINGRATE_ORIGINAL
-    from protlib_gui_ext import ListboxDialog
-    pickingRun = self.getVarValue('PickingRun')
-    pickingProt = self.project.getProtocolFromRunName(pickingRun)
-    fnFamilies = pickingProt.getFilename("families")    
-    if not exists(fnFamilies):
-        showWarning("Warning", "No elements to select", parent=self.master)
-        return
-    md = MetaData(fnFamilies)
-    families = [md.getValue(MDL_PICKING_FAMILY, objId) for objId in md]
-    if len(families) == 1:
-        d = 0
-    else:  
-        d = ListboxDialog(self.frame, families, selectmode=tk.SINGLE)
-        if len(d.result) > 0:
-            d = d.result[0]
-        else:
-            d = None
-    if d is not None:
-        selectedFamily = families[d]
-        var.setValue(selectedFamily)
-        self.setVarValue("Family", selectedFamily)
+    md = MetaData(fnConfig)
+    particleSize = md.getValue(MDL_PICKING_PARTICLE_SIZE, md.firstObject())
+    type = gui.getVarValue("DownsampleType")
+    mdAcquisition = MetaData(pickingProt.getFilename('acquisition'))
+    objId = mdAcquisition.firstObject()
+    tsOriginal = tsPicking = mdAcquisition.getValue(MDL_SAMPLINGRATE, objId)
+    
+    if mdAcquisition.containsLabel(MDL_SAMPLINGRATE_ORIGINAL):
+        tsOriginal = mdAcquisition.getValue(MDL_SAMPLINGRATE_ORIGINAL, objId)
+    
+    if type == "same as picking":
+        factor = 1
+    else:
+        factor = tsPicking / tsOriginal;
+        if type == "other":
+            try:
+                factor /= float(gui.getVarValue("DownsampleFactor"))
+            except Exception, e:
+                showWarning("Warning", "Please select valid downsample factor", parent=gui.master)
+                return
+    particleSize *= factor 
+    gui.setVarValue("ParticleSize", str(int(particleSize)))
+    if getattr(pickingProt,'TiltPairs', False):
+        gui.setVarValue("DoFlip", str(False))
+    else:
+        md = MetaData(pickingProt.getFilename("micrographs"))
+        gui.setVarValue("DoFlip", str(md.containsLabel(MDL_CTF_MODEL)))
 
 #This wizard is specific for cl2d protocol
-def wizardCL2DNumberOfClasses(self, var):
-    fnSel = self.getVarValue('InSelFile')
+def wizardCL2DNumberOfClasses(gui, var):
+    fnSel = gui.getVarValue('InSelFile')
     if exists(fnSel):
         md = MetaData(fnSel)
-        self.setVarValue("NumberOfReferences", int(round(md.size()/200.0)))
+        gui.setVarValue("NumberOfReferences", int(round(md.size()/200.0)))
 
 #Select micrograph extension
-def wizardHelperSetRadii(self, inputVarName, outerVarName, innerVarName=None, ):
-    fileList = self.getVarValue(inputVarName).split()
+def wizardHelperSetRadii(gui, inputVarName, outerVarName, innerVarName=None, ):
+    fileList = gui.getVarValue(inputVarName).split()
     showInner = innerVarName is not None
     innerRadius = 0
     try:
         if showInner:
-            innerRadius = int(self.getVarValue(innerVarName))
-        outerRadius = int(self.getVarValue(outerVarName))
+            innerRadius = int(gui.getVarValue(innerVarName))
+        outerRadius = int(gui.getVarValue(outerVarName))
     except Exception, e:
         showError("Conversion error", "Error trying to parse integer value from \ninnerRadius: <%(innerVarName)s> or\n outerRadius: <%(outerVarName)s>" % locals() 
-                  ,parent=self.master)
+                  ,parent=gui.master)
         return
-    
     from xmipp import Image, FileName, HEADER, MDL_IMAGE
     
     def getFilename():
         if len(fileList) == 0:
-            showError("Input error", "File list is empty", parent=self.master)
+            showError("Input error", "File list is empty", parent=gui.master)
             return None
         fn = FileName(fileList[0])  
         if not xmippExists(fn):
-            showError("Input error", "Filename <%s> doesn't exists" % str(fn),parent=self.master)
+            showError("Input error", "Filename <%s> doesn't exists" % str(fn),parent=gui.master)
             return None
         return fn
     
@@ -421,24 +386,24 @@ def wizardHelperSetRadii(self, inputVarName, outerVarName, innerVarName=None, ):
             img.read(fn, HEADER)
             xdim = img.getDimensions()[0]
             outerRadius = xdim / 2 
-            self.setVarValue(outerVarName, outerRadius)
+            gui.setVarValue(outerVarName, outerRadius)
     from protlib_gui_ext import XmippBrowserMask
-    results = showBrowseDialog(parent=self.master, browser=XmippBrowserMask, title="Select mask radius", allowFilter=False, 
+    results = showBrowseDialog(parent=gui.master, browser=XmippBrowserMask, title="Select mask radius", allowFilter=False, 
                                     extra={'fileList': fileList, 'outerRadius': outerRadius, 
                                            'innerRadius': innerRadius, 'showInner': showInner})
     if results:
-        self.setVarValue(outerVarName, int(results[1]))
+        gui.setVarValue(outerVarName, int(results[1]))
         if showInner:
-            self.setVarValue(innerVarName, int(results[0]))
+            gui.setVarValue(innerVarName, int(results[0]))
         
-def wizardSetMaskRadius(self, var):
-    wizardHelperSetRadii(self, 'ReferenceFileNames', 'MaskRadius')
+def wizardSetMaskRadius(gui, var):
+    wizardHelperSetRadii(gui, 'ReferenceFileNames', 'MaskRadius')
     
-def wizardSetAlignRadii(self, var):
-    wizardHelperSetRadii(self, 'ReferenceFileNames', 'OuterRadius', 'InnerRadius')
-    
-def wizardSetBackgroundRadius(self, var):
-    wizardHelperSetRadii(self, 'InSelFile', var.name)
+def wizardSetAlignRadii(gui, var):
+    wizardHelperSetRadii(gui, 'ReferenceFileNames', 'OuterRadius', 'InnerRadius')
+
+def wizardSetBackgroundRadius(gui, var):
+    wizardHelperSetRadii(gui, 'InSelFile', var.name)
 
 # This group of functions are called Validator, and should serve
 # for validation of user input for each variable

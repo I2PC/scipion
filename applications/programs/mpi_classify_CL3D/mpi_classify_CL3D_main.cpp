@@ -927,7 +927,7 @@ void CL3D::initialize(MetaData &_SF,
 
             // Measure the variance of the signal outside a circular mask
             double avg, stddev;
-            computeAvgStdev_within_binary_mask(prm->mask.get_binary_mask(), I(), avg, stddev);
+            I().computeAvgStdev_within_binary_mask(prm->mask.get_binary_mask(), avg, stddev);
             prm->sigma += stddev;
 
             // Put it randomly in one of the classes

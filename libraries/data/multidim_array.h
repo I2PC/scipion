@@ -746,6 +746,10 @@ public:
     virtual void coreAllocateReuse() = 0;
     virtual void coreDeallocate()= 0;
 
+    /* return the value of the data pointer
+     */
+    virtual void * getArrayPointer() const = 0;
+
     /// @name Size
     //@{
 
@@ -2013,6 +2017,15 @@ public:
         return A1D_ELEM(*this, i);
     }
 
+
+    /** Return the void pointer to the internal data array
+     */
+    void* getArrayPointer() const
+    {
+    	return (void*) data;
+
+    }
+
     /** Copy an image from a stack to another
      *
      * Copy image image n from this MDA to image n2 in MDA M.
@@ -2040,7 +2053,7 @@ public:
         }
 
         if (n2 > NSIZE(M))
-                    REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS," Multidimarray getImage: n larger than MultidimArray target NSIZE");
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS," Multidimarray getImage: n larger than MultidimArray target NSIZE");
 
 
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(M)
@@ -2149,6 +2162,13 @@ public:
             REPORT_ERROR(ERR_VALUE_INCORRECT,
                          formatString("Slice: not supported axis %c", axis));
         }
+    }
+
+    /** Get Z slice as matrix */
+    void getSliceAsMatrix(size_t k, Matrix2D<T> &m) const
+    {
+    	m.resizeNoCopy(YSIZE(*this),XSIZE(*this));
+    	memcpy(&MAT_ELEM(m,0,0),&A3D_ELEM(*this,k,0,0),YSIZE(*this),XSIZE(*this)*sizeof(double));
     }
 
     /** Slice access for writing.
@@ -3059,7 +3079,6 @@ public:
         }
     }
 
-
     /** Minimum and maximum of the values in the array.
      *
      * As doubles.
@@ -3243,6 +3262,38 @@ public:
             stddev = 0;
     }
 
+    /** Compute statistics in the active area
+     *
+     * Only the statistics for values in the overlapping between the mask and the
+     * volume for those the mask is not 0 are computed.
+     */
+    void computeAvgStdev_within_binary_mask(const MultidimArray< int >& mask,
+                                            double& avg, double& stddev) const
+    {
+        SPEED_UP_tempsInt;
+        double sum1 = 0;
+        double sum2 = 0;
+        int N = 0;
+
+        FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(mask, *this)
+        {
+            if (A3D_ELEM(mask, k, i, j) != 0)
+            {
+                ++N;
+                double aux=A3D_ELEM(*this, k, i, j);
+                sum1 += aux;
+                sum2 += aux*aux;
+            }
+        }
+
+        // average and standard deviation
+        avg  = sum1 / (double) N;
+        if (N > 1)
+            stddev = sqrt(fabs(sum2 / N - avg * avg) * N / (N - 1));
+        else
+            stddev = 0;
+    }
+
     /** Compute statistics within 2D region of 2D image.
      *
      * The 2D region is specified by two corners.
@@ -3422,14 +3473,14 @@ public:
     void rangeAdjust(const MultidimArray<T> &example,
                      const MultidimArray<int> *mask=NULL)
     {
-        if (NZYXSIZE(*this) <= 0)
+    	if (NZYXSIZE(*this) <= 0)
             return;
 
         double avgExample, stddevExample, avgThis, stddevThis;
         if (mask!=NULL)
         {
-            computeAvgStdev_within_binary_mask(*mask,example,avgExample,stddevExample);
-            computeAvgStdev_within_binary_mask(*mask,*this,avgThis,stddevThis);
+            example.computeAvgStdev_within_binary_mask(*mask,avgExample,stddevExample);
+            computeAvgStdev_within_binary_mask(*mask,avgThis,stddevThis);
         }
         else
         {

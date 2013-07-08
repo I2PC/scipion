@@ -546,14 +546,8 @@ FourierReconstructionExtraCommand =''
 # Compute resolution?
 """ For details see:
     [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Resolution]
-    You may specify this option for each iteration. 
-    This can be done by a sequence of 0 or 1 numbers (for instance, "1 1 0 0" 
-    specifies 4 iterations, the first two applied alig2d while the last 2
-    dont. an alternative compact notation is 
-    is ("2x1 2x0", i.e.,
-    2 iterations with value 1, and 2 with value 0).
-    <Note:> if there are less values than iterations the last value is reused
-    <Note:> if there are more values than iterations the extra value are ignored
+    Set to 1 to compute resolution and to 0 if you do not want to compute it.
+
 """
 DoComputeResolution ='1'
 
@@ -626,7 +620,7 @@ UseFscForFilter = True
     <Note:> if there are less values than iterations the last value is reused
     <Note:> if there are more values than iterations the extra value are ignored
 """
-ConstantToAddToFiltration ='-0.05'
+ConstantToAddToFiltration ='0.1'
 
 # Constant to be added to the reconstruction maximum frequency
 """ The meaning of this field depends on the UseFscForFilter flag.

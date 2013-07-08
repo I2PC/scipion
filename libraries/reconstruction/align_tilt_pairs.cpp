@@ -80,7 +80,6 @@ void ProgAlignTiltPairs::show()
 
 // Center one tilted image  =====================================================
 //#define DEBUG
-
 bool ProgAlignTiltPairs::centerTiltedImage(const MultidimArray<double> &imgRefU,
         bool flip,
         double inPlaneU, double shiftXu, double shiftYu,
@@ -128,6 +127,7 @@ bool ProgAlignTiltPairs::centerTiltedImage(const MultidimArray<double> &imgRefU,
     int max_shift_pixels=(int)(max_shift/100.0*XSIZE(imgT));
     CorrelationAux aux;
     double corr=bestShift(imgRefU, imgT2DClass, shiftX, shiftY, auxCorr, NULL, max_shift_pixels);
+    // double corr=bestShiftRealSpace(imgRefU, imgT2DClass, shiftX, shiftY, NULL, max_shift_pixels, 0.5);
 
 #ifdef DEBUG
 
@@ -235,13 +235,13 @@ void ProgAlignTiltPairs::run()
         row.getValue(MDL_SHIFT_X, shiftXu);
         row.getValue(MDL_SHIFT_Y, shiftYu);
 
-        minusInPlaneU = -inPlaneU;
-
         if (flip)
         {
-          tilt += 180;
-          minusInPlaneU = inPlaneU;
+            tilt += 180;
+            minusInPlaneU = inPlaneU+alphaU;
         }
+        else
+        	minusInPlaneU=-(inPlaneU+alphaU);
 
         // Correct untilted alignment
         Euler_angles2matrix( minusInPlaneU, tilt, alphaT, E, true);

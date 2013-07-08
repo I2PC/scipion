@@ -23,12 +23,7 @@ public class MicrographData
 		this.micrograph = new Micrograph(micfile)
 		{
 
-			@Override
-			public void reset()
-			{
-				// TODO Auto-generated method stub
-
-			}
+			
 
 			@Override
 			public boolean hasData()
@@ -56,6 +51,8 @@ public class MicrographData
 			mc.display();
 		}
 	}
+	
+
 
 	private void loadData()
 	{
@@ -75,7 +72,6 @@ public class MicrographData
 				particles.add(p);
 			}
 		}
-
 	}
 
 	public List<Particle> getParticles()
@@ -117,16 +113,13 @@ public class MicrographData
 			y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 			p = new Particle(x, y);
 			data.addParticle(p);
-
 		}
 		return loaders;
-
 	}
 
 	private void addParticle(Particle p)
 	{
 		particles.add(p);
-
 	}
 
 }

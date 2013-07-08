@@ -13,6 +13,8 @@ TIFFDir = "external/tiff-3.9.4"
 TIFFLibs = ['tiff']
 JPEGDir = "external/jpeg-8c"
 JPEGLibs = ['jpeg']
+HDF5Dir = "external/hdf5-1.8.10/src/"
+HDF5Libs = ['hdf5', 'hdf5_cpp']
 CYGWIN = env['PLATFORM'] == 'cygwin'
 MACOSX = env['PLATFORM'] == 'darwin'
 MINGW = env['PLATFORM'] == 'win32'
@@ -185,9 +187,9 @@ def AddXmippProgram(name, libs=[], folder='programs', incPaths=[], libPaths=[],
                     useCudaEnvironment=False):
     finalLibPath = ['lib']
     finalLibPath.append(libPaths)
-    finalIncludePath = ['libraries', '#']
+    finalIncludePath = ['libraries', '#', '#'+HDF5Dir]
     finalIncludePath.append(incPaths)
-    finalLibs = libs + ['XmippData', 'XmippExternal'] + FFTWLibs + SQLiteLibs + TIFFLibs + JPEGLibs
+    finalLibs = libs + ['XmippData', 'XmippExternal'] + FFTWLibs + SQLiteLibs + TIFFLibs + JPEGLibs + HDF5Libs
     if useCudaEnvironment:
     	finalLibs += ['cudart', 'cutil', 'shrutil_x86_64' ]
     	finalIncludePath += [env['CUDA_SDK_PATH'] + "/CUDALibraries/common/inc",
@@ -223,7 +225,7 @@ def AddXmippTest(name, testprog, command):
 
 
 def AddXmippCTest(name):
-    testprog = AddXmippProgram(name, ['gtest', 'XmippRecons'], 'tests')
+    testprog = AddXmippProgram(name, ['gtest', 'XmippRecons','XmippDimred'], 'tests')
     AddXmippTest(name, testprog, "$SOURCE --gtest_output=xml:$TARGET")
 
 def AddXmippPythonTest(name):
@@ -244,8 +246,8 @@ def AddXmippJavaTest(name):
 
 def AddXmippMPIProgram(name, libs=[]):
     finalLibPath = ['lib']
-    finalIncludePath = ['libraries', '#']
-    finalLibs = libs + ['XmippData', 'XmippExternal', 'XmippParallel'] + FFTWLibs + SQLiteLibs + TIFFLibs + JPEGLibs
+    finalIncludePath = ['libraries', '#', '#'+HDF5Dir]
+    finalLibs = libs + ['XmippData', 'XmippExternal', 'XmippParallel'] + FFTWLibs + SQLiteLibs + TIFFLibs + JPEGLibs + HDF5Libs
     if int(env["arpack"]):
         finalLibs += ['arpack++', 'arpack', 'lapack', 'blas']
     if 'XmippRecons' in finalLibs and not 'XmippClassif' in finalLibs:
@@ -589,16 +591,16 @@ AddLibrary('XmippSqliteExt', 'external',
 # XmippData
 DataSources = Glob('libraries/data', '*.cpp', [])
 
-libraries=['#']
+libraries=['#', '#'+HDF5Dir]
 if MINGW:
     import sys
     sys.setrecursionlimit(22500)
     libraries.append(env['MINGW_PATHS'])
     AddLibrary('XmippData', '', DataSources, libraries, 
-               ['lib'], ['XmippExternal','regex'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs)
+               ['lib'], ['XmippExternal','regex','rt'] + FFTWLibs + TIFFLibs + JPEGLibs + HDF5Libs + SQLiteLibs)
 else:
     AddLibrary('XmippData', 'libraries/data', DataSources, libraries,
-               ['lib'], ['XmippExternal'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs)  
+               ['lib'], ['XmippExternal','rt'] + FFTWLibs + TIFFLibs + JPEGLibs + HDF5Libs + SQLiteLibs)  
 
 
 #Xmipp Python Extension
@@ -609,13 +611,13 @@ pythonIncludes = ["#" + join(PythonDir, dir) for dir in [".", "Include"]]
 pythonIncludes.append("#lib/python2.7/site-packages/numpy/core/include") 
 
 libpath = ['lib']
-libraries = ['XmippData', 'XmippRecons', 'XmippExternal'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs
+libraries = ['XmippData', 'XmippRecons', 'XmippExternal'] + FFTWLibs + TIFFLibs + JPEGLibs + HDF5Libs + SQLiteLibs
 if CYGWIN or MACOSX:
     libpath.append(PythonDir)
     libraries.append("python2.7")
 
 pythonbinding = AddLibrary(pythonLibName, 'libraries/bindings/python', PyExtSources,
-           ['#libraries', "#"] + pythonIncludes,
+           ['#libraries', "#", '#'+HDF5Dir] + pythonIncludes,
            libpath, libraries, '')
 
 # in MACOSX Python requires module libraries as .so instead of .dylib
@@ -625,8 +627,8 @@ if MACOSX:
 
 # Reconstruction
 ReconsSources = Glob('libraries/reconstruction', '*.cpp', ["angular_gcar.cpp"])
-ReconsLib = ['XmippExternal', 'XmippData', 'pthread', 'XmippClassif'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs
-ReconsIncDir = ['#libraries', '#external', '#']
+ReconsLib = ['XmippExternal', 'XmippData', 'pthread', 'XmippClassif'] + FFTWLibs + TIFFLibs + JPEGLibs + HDF5Libs + SQLiteLibs
+ReconsIncDir = ['#libraries', '#external', '#', '#'+HDF5Dir]
 ReconsLibDir = ['lib']
 if int(env['arpack']):
     ReconsSources.append("angular_gcar.cpp")
@@ -642,18 +644,22 @@ if int(env['cuda']):
 # Classification
 ClassificationSources = Glob('libraries/classification', '*.cpp', [])
 AddLibrary('XmippClassif', 'libraries/classification', ClassificationSources,
+    ['#libraries', '#', '#'+HDF5Dir], ['lib'], ['XmippExternal', 'XmippData'])
+
+# Dimensionality reduction
+DimRedSources = Glob('libraries/dimred', '*.cpp', [])
+AddLibrary('XmippDimred', 'libraries/dimred', DimRedSources,
     ['#libraries', '#'], ['lib'], ['XmippExternal', 'XmippData'])
 
 # XmippParallel
-if int(env['mpi']):
-    ParallelSources = Glob('libraries/parallel', '*.cpp', []);
-    AddMPILibrary("XmippParallel", 'libraries/parallel', ParallelSources, ["#", "#libraries", "#external"],
-              ['lib'], ['XmippExternal', 'XmippData', 'XmippRecons', 'XmippClassif'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs)
+ParallelSources = Glob('libraries/parallel', '*.cpp', []);
+AddMPILibrary("XmippParallel", 'libraries/parallel', ParallelSources, ["#", "#libraries", "#external", '#'+HDF5Dir],
+              ['lib'], ['XmippExternal', 'XmippData', 'XmippRecons', 'XmippClassif'] + FFTWLibs + TIFFLibs + JPEGLibs + HDF5Libs + SQLiteLibs)
 
 # Interface
 InterfaceSources = Glob('libraries/interface', '*.cpp', [])
 AddLibrary('XmippInterface', 'libraries/interface', InterfaceSources,
-    ['#libraries', '#external', '#'], ['lib'], ['XmippExternal', 'XmippData', 'pthread'])
+    ['#libraries', '#external', '#', '#'+HDF5Dir], ['lib'], ['XmippExternal', 'XmippData', 'pthread'])
 
 # Recons Interface
 #AddLibrary('XmippRecons_Interface', '#libraries/reconstruction',
@@ -736,7 +742,7 @@ if int(env['java']):
     if int(env['arpack']):
         JavaDependLibraries += ['arpack++', 'arpack', 'lapack', 'blas']
     # Compilation of the c code needed for java jni binding
-    javaJniC = AddLibrary('XmippJNI', 'libraries/bindings/java', JavaInterfaceSources, ['#libraries', '#external', '#'] + env['JNI_CPPPATH'], ['lib'],JavaDependLibraries)
+    javaJniC = AddLibrary('XmippJNI', 'libraries/bindings/java', JavaInterfaceSources, ['#libraries', '#external', '#', '#'+HDF5Dir] + env['JNI_CPPPATH'], ['lib'],JavaDependLibraries)
 
     # Create some jar links
     cmd = env.Command(join(libDir, 'ij.jar'), 'external/imagej/ij.jar', SymLink)
@@ -807,6 +813,7 @@ AddXmippProgram('image_sort_by_statistics', ['XmippRecons'])
 AddXmippProgram('image_separate_objects')
 AddXmippProgram('image_statistics')
 AddXmippProgram('image_vectorize')
+AddXmippProgram('matrix_dimred', ['XmippDimred'])
 #AddXmippProgram('mean_shift')
 AddXmippProgram('metadata_convert_to_spider', ['XmippInterface'])
 AddXmippProgram('metadata_histogram')
@@ -842,6 +849,7 @@ AddXmippProgram('resolution_ssnr', ['XmippRecons'])
 AddXmippProgram('transform_add_noise')
 AddXmippProgram('transform_adjust_volume_grey_levels', ['XmippRecons'])
 AddXmippProgram('transform_center_image')
+AddXmippProgram('transform_dimred', ['XmippDimred'])
 AddXmippProgram('transform_downsample', ['XmippRecons'])
 AddXmippProgram('transform_filter', ['XmippRecons'])
 AddXmippProgram('transform_geometry')
@@ -915,50 +923,56 @@ AddBatch('showj', 'applications/scripts/showj', '.py')
 AddBatch('tomoj', 'applications/scripts/tomoj', '.py')
 AddBatch('visualize_preprocessing_micrographj', 'applications/scripts/visualize_preprocessing_micrograph', '.py')
 
+# Shell script files
+#
+SymLink('bin/xmipp_imagej', 'external/runImageJ')
+
+# Shell script files
+#
+SymLink('bin/xmipp_imagej', 'external/runImageJ')
+
 # MPI
-if int(env['mpi']):
-    AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_angular_continuous_assign', ['XmippRecons'])
-    if not int(env['release']):
-        AddXmippMPIProgram('mpi_angular_gcar_commonlines', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_classify_CL2D', ['XmippRecons'])
-    AddProgramLink('classify_CL2D', 'mpi_classify_CL2D')
-    if not int(env['release']):
-        AddXmippMPIProgram('mpi_classify_CL3D', ['XmippRecons'])
-        AddProgramLink('classify_CL3D', 'mpi_classify_CL3D')
-    AddXmippMPIProgram('mpi_classify_CL2D_core_analysis', ['XmippRecons'])
-    if not int(env['release']):
-        AddXmippMPIProgram('mpi_classify_FTTRI', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_ctf_correct_idr', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_ctf_sort_psds', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_image_operate')
-    AddXmippMPIProgram('mpi_image_rotational_pca', ['XmippRecons'])
-    # AddXmippMPIProgram('mpi_image_common_lines', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_performance_test', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_image_resize', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_image_sort', ['XmippRecons'])
-    AddProgramLink('image_sort', 'mpi_image_sort')
-    AddXmippMPIProgram('mpi_ml_align2d', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_ml_tomo', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_mlf_align2d', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_ml_refine3d', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_mlf_refine3d', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_nma_alignment', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_xray_project', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_reconstruct_art', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_reconstruct_wbp', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_reconstruct_fourier', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_run', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_tomo_extract_subvolume', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_transform_filter', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_transform_symmetrize', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_transform_geometry', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_transform_mask', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_transform_normalize', ['XmippRecons'])
-    if not int(env['release']):
-        AddXmippMPIProgram('mpi_write_test', ['XmippRecons'])
+AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])
+AddXmippMPIProgram('mpi_angular_continuous_assign', ['XmippRecons'])
+if not int(env['release']):
+    AddXmippMPIProgram('mpi_angular_gcar_commonlines', ['XmippRecons'])
+AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
+AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
+AddXmippMPIProgram('mpi_classify_CL2D', ['XmippRecons'])
+AddProgramLink('classify_CL2D', 'mpi_classify_CL2D')
+if not int(env['release']):
+    AddXmippMPIProgram('mpi_classify_CL3D', ['XmippRecons'])
+    AddProgramLink('classify_CL3D', 'mpi_classify_CL3D')
+AddXmippMPIProgram('mpi_classify_CL2D_core_analysis', ['XmippRecons'])
+if not int(env['release']):
+    AddXmippMPIProgram('mpi_classify_FTTRI', ['XmippRecons'])
+AddXmippMPIProgram('mpi_ctf_correct_idr', ['XmippRecons'])
+AddXmippMPIProgram('mpi_ctf_sort_psds', ['XmippRecons'])
+AddXmippMPIProgram('mpi_image_operate')
+AddXmippMPIProgram('mpi_image_rotational_pca', ['XmippRecons'])
+AddXmippMPIProgram('mpi_performance_test', ['XmippRecons'])
+AddXmippMPIProgram('mpi_image_resize', ['XmippRecons'])
+AddXmippMPIProgram('mpi_image_sort', ['XmippRecons'])
+AddProgramLink('image_sort', 'mpi_image_sort')
+AddXmippMPIProgram('mpi_ml_align2d', ['XmippRecons'])
+AddXmippMPIProgram('mpi_ml_tomo', ['XmippRecons'])
+AddXmippMPIProgram('mpi_mlf_align2d', ['XmippRecons'])
+AddXmippMPIProgram('mpi_ml_refine3d', ['XmippRecons'])
+AddXmippMPIProgram('mpi_mlf_refine3d', ['XmippRecons'])
+AddXmippMPIProgram('mpi_nma_alignment', ['XmippRecons'])
+AddXmippMPIProgram('mpi_xray_project', ['XmippRecons'])
+AddXmippMPIProgram('mpi_reconstruct_art', ['XmippRecons'])
+AddXmippMPIProgram('mpi_reconstruct_wbp', ['XmippRecons'])
+AddXmippMPIProgram('mpi_reconstruct_fourier', ['XmippRecons'])
+AddXmippMPIProgram('mpi_run', ['XmippRecons'])
+AddXmippMPIProgram('mpi_tomo_extract_subvolume', ['XmippRecons'])
+AddXmippMPIProgram('mpi_transform_filter', ['XmippRecons'])
+AddXmippMPIProgram('mpi_transform_symmetrize', ['XmippRecons'])
+AddXmippMPIProgram('mpi_transform_geometry', ['XmippRecons'])
+AddXmippMPIProgram('mpi_transform_mask', ['XmippRecons'])
+AddXmippMPIProgram('mpi_transform_normalize', ['XmippRecons'])
+if not int(env['release']):
+    AddXmippMPIProgram('mpi_write_test', ['XmippRecons'])
 #    AddXmippMPIProgram('template_threads', ['XmippRecons'])
 #    AddXmippMPIProgram('template_mpi', ['XmippRecons'])
 
@@ -981,6 +995,7 @@ if int(env['gtest']):
      AddXmippCTest('test_sampling')
      AddXmippCTest('test_symmetries')
      AddXmippCTest('test_transformation')
+     AddXmippCTest('test_dimred')
      AddXmippCTest('test_wavelets')
      #env.Depends('run_tests', [fftw, tiff, sqlite])
      #python tests

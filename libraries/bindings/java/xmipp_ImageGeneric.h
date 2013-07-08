@@ -129,7 +129,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_readHeader
  * Signature: (Ljava/lang/String;IIIJ)V
  */
 JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_read
-  (JNIEnv *, jobject, jstring, jint, jint, jint, jlong);
+  (JNIEnv *, jobject, jstring, jint, jint, jint, jlong, jboolean);
 
 /*
  * Class:     xmipp_ImageGeneric
@@ -329,11 +329,13 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_ImageGeneric_alignImage
 JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_applyAlignment
   (JNIEnv *, jobject, jobject, jint, jdouble, jdouble, jdouble);
 
+
 JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_removeAlignment
   (JNIEnv *, jobject, jobject, jint, jdouble, jdouble, jdouble);
 
 
-
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_getRadialAvg
+(JNIEnv * env, jobject jimg, jobject jradialavg);
 
 #ifdef __cplusplus
 }

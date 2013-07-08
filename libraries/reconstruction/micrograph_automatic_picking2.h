@@ -72,6 +72,7 @@ public:
     static const int NangSteps=120;
 
     Micrograph                  *__m;
+    Micrograph                   m;
     Image<double>                microImage;
     PCAMahalanobisAnalyzer       pcaAnalyzer;
     ProgImageRotationalPCA       rotPcaAnalyzer;
@@ -92,8 +93,14 @@ public:
     int 						 fast;
     double                       scaleRate;
     int                          NRsteps;
+    Point                        p1,p2;
 
     MultidimArray<double>        convolveRes;
+    MultidimArray<double>        filterBankStack;
+    MultidimArray<double>        positiveParticleStack;
+    MultidimArray<double>        negativeParticleStack;
+    MultidimArray<double>        positiveInvariatnStack;
+    MultidimArray<double>        negativeInvariatnStack;
     MultidimArray<double>        pcaModel;
     MultidimArray<double>        pcaRotModel;
     MultidimArray<double>        particleAvg;
@@ -108,12 +115,61 @@ public:
     std::vector<Particle2>       accepted_particles;
     Image<double>                micrographStack;
 
+    FileName                     fn_model;
+    FileName                     fnPCAModel;
+    FileName                     fnPCARotModel;
+    FileName                     fnAvgModel;
+    FileName                     fnVector;
+    FileName                     fnSVMModel;
+    FileName                     fnSVMModel2;
+    FileName 				     fnInvariant;
+    FileName 					 fnParticles;
 public:
 
-    /// Empty constructor
+    /// Constructor
+    AutoParticlePicking2(int particle_size, int filter_num = 6, int corr_num = 2, int NPCA = 4, const FileName &model_name=NULL);
+
+    AutoParticlePicking2();
 
     /// Destructor
     ~AutoParticlePicking2();
+
+    void setSize(int pSize);
+
+    /// Read micrograph from the file
+    void readMic(FileName fn_micrograph);
+
+    void filterBankGenerator();
+
+    void filterBankGenerator(MultidimArray<double> &inputMicrograph,
+                             const FileName &fnFilterBankStack,
+                             int filter_num);
+
+    void batchBuildInvariant(MetaData MD);
+
+    void buildInvariant(MetaData MD);
+
+    void extractInvariant();
+
+    void extractPositiveInvariant();
+
+    void extractNegativeInvariant();
+
+    void trainPCA();
+
+    void add2Dataset(int flagNegPos);
+
+    void train(MetaData MD, bool corrFlag, int x, int y, int width, int height);
+
+    void correction(MetaData addedParticlesMD,MetaData removedParticlesMD);
+
+    void add2Dataset(MetaData removedParticlesMD);
+
+    void saveTrainingSet();
+
+    int automaticallySelectParticles(FileName fnmicrograph, int proc_prec, MetaData &md);
+
+    void saveAutoParticles(MetaData &md);
 
     /// Define the parameters of the main program
     static void defineParams(XmippProgram * program);
@@ -253,7 +309,7 @@ public:
     /* Normalize the data of a dataset according to
      * a and b.
      */
-    void normalizeDataset(int a,int b,const FileName &fn);
+    void normalizeDataset(int a,int b);
 
     /// Save automatically selected particles
     int saveAutoParticles(const FileName &fn) const;

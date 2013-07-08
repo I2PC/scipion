@@ -33,6 +33,7 @@ class ProtExtractParticles(ProtParticlesBase):
         self.inputFilename('acquisition')
         self.inputProperty('TiltPairs', 'MicrographsMd')
         self.micrographs = self.getEquivalentFilename(self.PrevRun, self.MicrographsMd)
+        self.RejectionMethod = getattr(self, 'RejectionMethod', 'none')
         
     def createFilenameTemplates(self):
         _mic_block = 'mic_%(Micrograph)s'
@@ -79,7 +80,7 @@ class ProtExtractParticles(ProtParticlesBase):
         # Create or look for the extract list
         destFnExtractList = self.getFilename('extract_list')
         if self.TiltPairs:
-            self.insertStep("createExtractListTiltPairs", family=self.Family,
+            self.insertStep("createExtractListTiltPairs", 
                                fnMicrographs=self.MicrographsMd, pickingDir=self.pickingDir,
                                fnExtractList=destFnExtractList)
             micrographs = self.createBlocksInExtractFile(self.MicrographsMd)
@@ -89,7 +90,7 @@ class ProtExtractParticles(ProtParticlesBase):
                 self.insertCopyFile(srcFnExtractList, destFnExtractList)
                 micrographs = getBlocksInMetaDataFile(srcFnExtractList)
             else:
-                self.insertStep("createExtractList",Family=self.Family,fnMicrographsSel=self.MicrographsMd,pickingDir=self.pickingDir,
+                self.insertStep("createExtractList", fnMicrographsSel=self.MicrographsMd,pickingDir=self.pickingDir,
                                    fnExtractList=destFnExtractList)
                 micrographs = self.createBlocksInExtractFile(self.MicrographsMd)
 
@@ -184,7 +185,7 @@ class ProtExtractParticles(ProtParticlesBase):
             part1 = "Tilt pairs"
             part2 = "Particle pairs"
         else:
-            part1 = "Family: <%s>" % self.Family
+            part1 = "Particles"
             part2 = "Particles"
         message.append("%s with size  <%d>" % (part1, self.ParticleSize))
 
@@ -263,7 +264,7 @@ def getMicBlockFilename(micrograph, extractList):
     '''Shortcut to getProtocolFilename('mic_block_fn'...)'''
     return getProtocolFilename('mic_block_fn', Micrograph=micrograph, ExtractList=extractList)
     
-def createExtractList(log,Family,fnMicrographsSel,pickingDir,fnExtractList):
+def createExtractList(log,fnMicrographsSel,pickingDir,fnExtractList):
     md=MetaData(fnMicrographsSel)
     mdpos=MetaData()
     mdposAux=MetaData()
@@ -276,12 +277,12 @@ def createExtractList(log,Family,fnMicrographsSel,pickingDir,fnExtractList):
         mdpos.clear()
         if exists(fnManual):
             try:            
-                mdpos.read(Family+"@"+fnManual)
+                mdpos.read("particles@"+fnManual)
             except:
                 pass
         if exists(fnAuto1):
             try:
-                mdposAux.read(Family+"@"+fnAuto1)
+                mdposAux.read("particles@"+fnAuto1)
                 mdposAux.removeDisabled();
                 mdposAux.removeLabel(MDL_ENABLED)
                 mdpos.unionAll(mdposAux) 
@@ -291,7 +292,7 @@ def createExtractList(log,Family,fnMicrographsSel,pickingDir,fnExtractList):
         fn = getMicBlockFilename(micName, fnExtractList)
         mdpos.write(fn, MD_APPEND)
 
-def createExtractListTiltPairs(log, family, fnMicrographs, pickingDir, fnExtractList):
+def createExtractListTiltPairs(log, fnMicrographs, pickingDir, fnExtractList):
     md = MetaData(fnMicrographs)
     mdUntiltedPos = MetaData()
     mdTiltedPos = MetaData()
@@ -306,8 +307,8 @@ def createExtractListTiltPairs(log, family, fnMicrographs, pickingDir, fnExtract
         mdTiltedPos.clear()
         if exists(fnUntilted) and exists(fnTilted):
             try:            
-                mdUntiltedPos.read("%s@%s"%(family,fnUntilted))
-                mdTiltedPos.read("%s@%s"%(family,fnTilted))
+                mdUntiltedPos.read("particles@%s"%fnUntilted)
+                mdTiltedPos.read("particles@%s"%fnTilted)
             except:
                 pass
         # Append alphanumeric prefix to help identifying the block 

@@ -85,7 +85,6 @@ class ImagePreview(Preview):
         
     def _update(self, Z, *args):
         self.figureimg.set_data(Z)
-        print Z
         self.figureimg.autoscale()
         self.figureimg.set(extent=[0, Z.shape[1], 0, Z.shape[0]])
         self.canvas.draw()
@@ -459,3 +458,87 @@ class XmippPlotter():
         plt.tight_layout()
         plt.draw()
         
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import matplotlib.path as path
+import mpl_toolkits.mplot3d.axes3d as p3
+
+class XmippArrayPlotter1D():
+    # Plot column number col from fnArray
+    def __init__(self, fnArray, col, mainTitle="", xlabel="", ylabel="", figsize=None, dpi=100):
+        import numpy
+        a=numpy.loadtxt(fnArray)
+        data=a[:,col]
+        
+        if figsize is None: # Set some defaults values
+            figsize = (6, 5)
+        fig = plt.figure(figsize=figsize, dpi=dpi)
+
+        ax = fig.add_subplot(111)
+        ax.set_title(mainTitle)
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+        
+        # histogram our data with numpy
+        n, bins = np.histogram(data, 50)
+        
+        # get the corners of the rectangles for the histogram
+        left = np.array(bins[:-1])
+        right = np.array(bins[1:])
+        bottom = np.zeros(len(left))
+        top = bottom + n
+        
+        # we need a (numrects x numsides x 2) numpy array for the path helper
+        # function to build a compound path
+        XY = np.array([[left,left,right,right], [bottom,top,top,bottom]]).T
+        
+        # get the Path object
+        barpath = path.Path.make_compound_path_from_polys(XY)
+        
+        # make a patch out of it
+        patch = patches.PathPatch(barpath, facecolor='blue', edgecolor='gray', alpha=0.8)
+        ax.add_patch(patch)
+        
+        # update the view limits
+        ax.set_xlim(left[0], right[-1])
+        ax.set_ylim(bottom.min(), top.max())
+        
+        # plt.show()
+        fig.show()
+
+class XmippArrayPlotter2D():
+    # 2D plot of columns X and Y from fnArray
+    def __init__(self, fnArray, colX, colY, mainTitle="", xlabel="", ylabel="", figsize=None, dpi=100):
+        import numpy
+        a=numpy.loadtxt(fnArray)
+        
+        if figsize is None: # Set some defaults values
+            figsize = (5, 5)
+        fig = plt.figure(figsize=figsize, dpi=dpi)
+
+        ax = fig.add_subplot(111)
+        ax.set_title(mainTitle)
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+        
+        ax.plot(a[:,colX], a[:,colY], '.')
+        fig.show()
+
+class XmippArrayPlotter3D():
+    # 2D plot of columns X and Y from fnArray
+    def __init__(self, fnArray, colX, colY, colZ, mainTitle="", xlabel="", ylabel="", zlabel="", figsize=None, dpi=100):
+        import numpy
+        a=numpy.loadtxt(fnArray)
+        
+        if figsize is None: # Set some defaults values
+            figsize = (5, 5)
+        fig = plt.figure(figsize=figsize, dpi=dpi)
+
+        ax = p3.Axes3D(fig)
+        ax.set_title(mainTitle)
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+        ax.set_zlabel(zlabel)
+        
+        ax.scatter3D(a[:,colX], a[:,colY], a[:,colZ])
+        fig.show()

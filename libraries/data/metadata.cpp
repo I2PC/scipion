@@ -56,7 +56,12 @@ void getBlocksInMetaDataFile(const FileName &inFile, StringVector& blockList)
     unmapFile(bufferMap.begin, bufferMap.size, fd);
 }
 
-// Get the blocks available
+// Does the blocks exist
+bool existsBlockInMetaDataFile(const FileName &inFileWithBlock)
+{
+    return existsBlockInMetaDataFile(inFileWithBlock.removeBlockName(),
+                                     inFileWithBlock.getBlockName());
+}
 bool existsBlockInMetaDataFile(const FileName &inFile, const String& inBlock)
 {
     if (!inFile.isMetaData())
@@ -852,10 +857,10 @@ void MetaData::_parseObject(std::istream &is, MDObject &object, size_t id)
  * also set the activeLabels (for new STAR files)
  */
 void MetaData::_readColumnsStar(mdBlock &block,
-                                  std::vector<MDObject*> & columnValues,
-                                  const std::vector<MDLabel>* desiredLabels,
-                                  bool addColumns,
-                                  size_t id)
+                                std::vector<MDObject*> & columnValues,
+                                const std::vector<MDLabel>* desiredLabels,
+                                bool addColumns,
+                                size_t id)
 {
     char * end = block.end;
     char * newline = NULL;
@@ -1041,7 +1046,7 @@ void MetaData::read(const FileName &_filename,
     else if(extFile=="sqlite")
         readDB(inFile, desiredLabels, blockName, decomposeStack);
     else
-        readStar(inFile, desiredLabels, blockName, decomposeStack);
+        readStar(_filename, desiredLabels, blockName, decomposeStack);
 
     //_read(filename,desiredLabels,BlockName,decomposeStack);
     //_read calls clean so I cannot use eFilename as filename ROB
@@ -1171,11 +1176,14 @@ void MetaData::readStar(const FileName &filename,
 
     size_t id;
 
-    if (!(isMetadataFile = filename.isMetaData()))//if not a metadata, try to read as image or stack
+    FileName inFile = filename.removeBlockName();
+
+    if (!(isMetadataFile = inFile.isMetaData()))//if not a metadata, try to read as image or stack
     {
         Image<char> image;
-        image.read(filename, HEADER);
-        if (image().ndim == 1 || !decomposeStack) //single image
+        if (decomposeStack) // If not decomposeStack it is no neccesary to read the image header
+            image.read(filename, HEADER);
+        if ( !decomposeStack || image().ndim == 1 ) //single image // !decomposeStack must be first
         {
             id = addObject();
             setValue(MDL_IMAGE, filename, id);
@@ -1195,7 +1203,7 @@ void MetaData::readStar(const FileName &filename,
         return;
     }
 
-    std::ifstream is(filename.c_str(), std::ios_base::in);
+    std::ifstream is(inFile.c_str(), std::ios_base::in);
     std::stringstream ss;
     String line, token,_comment;
     std::vector<MDObject*> columnValues;
@@ -1204,11 +1212,11 @@ void MetaData::readStar(const FileName &filename,
 
     if (is.fail())
     {
-        REPORT_ERROR(ERR_IO_NOTEXIST, formatString("MetaData::read: File doesn't exists: %s", filename.c_str()) );
+        REPORT_ERROR(ERR_IO_NOTEXIST, formatString("MetaData::read: File doesn't exists: %s", inFile.c_str()) );
     }
 
     bool useCommentAsImage = false;
-    this->inFile = filename;
+    this->inFile = inFile;
     bool oldFormat=true;
 
     is.seekg(0, std::ios::beg);//reset the stream position to the beginning to start parsing
@@ -1244,14 +1252,14 @@ void MetaData::readStar(const FileName &filename,
         //map file
         int fd;
         BUFFER_CREATE(bufferMap);
-        mapFile(filename, bufferMap.begin, bufferMap.size, fd);
+        mapFile(inFile, bufferMap.begin, bufferMap.size, fd);
 
         BLOCK_CREATE(block);
         regex_t re;
         int rc = regcomp(&re, (blockRegExp+"$").c_str(), REG_EXTENDED|REG_NOSUB);
         if (blockRegExp.size() && rc != 0)
             REPORT_ERROR(ERR_ARG_INCORRECT, formatString("Pattern '%s' cannot be parsed: %s",
-                         blockRegExp.c_str(), filename.c_str()));
+                         blockRegExp.c_str(), inFile.c_str()));
         BUFFER_COPY(bufferMap, buffer);
         bool firstBlock = true;
         bool singleBlock = blockRegExp.find_first_of(".[*+")==String::npos;
@@ -1290,7 +1298,7 @@ void MetaData::readStar(const FileName &filename,
         regfree(&re);
         if (firstBlock)
             REPORT_ERROR(ERR_MD_BADBLOCK, formatString("Block: '%s': %s",
-                         blockRegExp.c_str(), filename.c_str()));
+                         blockRegExp.c_str(), inFile.c_str()));
     }
     else if (line.find("Headerinfo columns:") != String::npos)
     {
@@ -1427,21 +1435,21 @@ void MetaData::aggregateSingleSizeT(MDObject &mdValueOut, AggregateOperation op,
 
 double MetaData::getColumnMax(MDLabel column)
 {
-	double max;
-	MDObject result(column);
-	aggregateSingle(result, AGGR_MAX, column);
-	result.getValue(max);
-	return max;
+    double max;
+    MDObject result(column);
+    aggregateSingle(result, AGGR_MAX, column);
+    result.getValue(max);
+    return max;
 
 }
 
 double MetaData::getColumnMin(MDLabel column)
 {
-	double min;
-	MDObject result(column);
-	aggregateSingle(result, AGGR_MIN, column);
-	result.getValue(min);
-	return min;
+    double min;
+    MDObject result(column);
+    aggregateSingle(result, AGGR_MIN, column);
+    result.getValue(min);
+    return min;
 
 }
 
@@ -1667,7 +1675,7 @@ void MetaData::sort(MetaData &MDin, const MDLabel sortLabel,bool asc, int limit,
 void MetaData::sort(MetaData &MDin, const String &sortLabel,bool asc, int limit, int offset)
 {
     // Check if the label has semicolon
-	size_t ipos=sortLabel.find(':');
+    size_t ipos=sortLabel.find(':');
     MDLabelType type = MDL::labelType(sortLabel);
     if (ipos!=String::npos || type == LABEL_VECTOR_DOUBLE || type == LABEL_VECTOR_SIZET)
     {
@@ -1966,7 +1974,7 @@ inline double MDRandGenerator::getRandValue()
     case GTOR_STUDENT:
         return rnd_student_t(op3, op1, op2);
     default:
-    	REPORT_ERROR(ERR_ARG_INCORRECT,"Unknown random type");
+        REPORT_ERROR(ERR_ARG_INCORRECT,"Unknown random type");
     }
 }
 MDRandGenerator::MDRandGenerator(double op1, double op2, const String &mode, double op3)

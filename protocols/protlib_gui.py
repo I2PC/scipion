@@ -457,11 +457,15 @@ class ProtocolGUI(BasicGUI):
                             entries.append(p)
                 return entries
             
+            wiz = loadModule('protlib_wizard')
+            viewFunc = None
+
             def getRuns(var):
                 return self.project.getFinishedRunList(var.getTagValues('run'))
 
-            wiz = loadModule('protlib_wizard')
-            viewFunc = None
+            def getWizardFunc(wizName, default=wiz.wizardNotFound):
+                return getattr(wiz, wizName, default)
+                
             if 'file' in keys:
                 viewFunc = wiz.wizardShowJ
                 entry.setBuildListFunction(lambda: getEntries(var), refreshOnTab=True)
@@ -472,18 +476,22 @@ class ProtocolGUI(BasicGUI):
             elif 'run' in keys:
                 entry.setBuildListFunction(lambda: getRuns(var))
                 runList = getRuns(var)
+                func = None
+                if 'post_run' in keys:
+                    func = getWizardFunc(var.tags['post_run'], None)
                 if len(runList) == 1:
                     var.setTkValue(runList[0])
-                args = ['Select Run', lambda: self.selectFromList(var, runList), 'wizard.gif', 'Select run']
+                    if func is not None:
+                        func(self)
+                args = ['Select Run', lambda: self.selectFromList(var, runList, func), 'wizard.gif', 'Select run']
                 # Run are always input variables and should not be empty
                 var.validators.append('validatorNonEmpty')
             elif 'blocks' in keys:
                 #md = self.varsDict[var.tags['blocks']].getValue()
                 args = ['Select Blocks', lambda: self.selectFromList(var, ['block1', 'block2', 'block3']), 'wizard.gif', 'Select blocks']
             elif 'wizard' in keys:
-                func = wiz.wizardNotFound
-                funcName = var.tags['wizard']                
-                func = getattr(wiz, funcName, func)
+                funcName = var.tags['wizard']
+                func = getWizardFunc(funcName)
                 args = [funcName, lambda:func(self, var), 'wizard.gif', funcName]
             if args:
                 btn = self.addButton(args[0], args[1], -1, label_row, var_column+2, 'nw', args[2], frame, args[3])
@@ -670,6 +678,7 @@ class ProtocolGUI(BasicGUI):
             return
         prot = self.getProtocol()        
         if self.visualize_mode:
+            prot.master = self.master
             prot.visualize()
         else:
             if self.validateProtocol(prot):
@@ -683,11 +692,13 @@ class ProtocolGUI(BasicGUI):
                     Popen(args, shell=True)
                     self.master.destroy()
     
-    def selectFromList(self, var, list):
+    def selectFromList(self, var, list, callback=None):
         from protlib_wizard import wizardSelectFromList
         selected=wizardSelectFromList(self.master,self.frame, list)
         if selected is not None:
             var.setTkValue(selected)
+            if callback is not None:
+                callback(self)
         
     def showHelp(self, helpmsg):
         showInfo("Help", helpmsg, parent=self.master)

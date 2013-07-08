@@ -150,7 +150,7 @@ void ProgMPIRecFourier::run()
 
     // Generate a new group to do all reduce without the master
     ranks = new int [nProcs];
-    for (int i=0;i<nProcs;i++)
+    for (int i=0;i<(int)nProcs;i++)
         ranks[i]=i+1;
     MPI_Comm_group(MPI_COMM_WORLD, &orig_group);
     MPI_Group_incl(orig_group, nProcs, ranks, &new_group);
@@ -432,8 +432,7 @@ void ProgMPIRecFourier::run()
 
                     if (iter != NiterWeight)
                     {
-                        int err;
-                        err = MPI_Allreduce(MPI_IN_PLACE, fourierWeights,
+                        MPI_Allreduce(MPI_IN_PLACE, fourierWeights,
                                             sizeout, MPI_DOUBLE,
                                             MPI_SUM, new_comm);
                         forceWeightSymmetry(FourierWeights);

@@ -33,7 +33,7 @@ from tkSimpleDialog import Dialog
 import ttk
 from config_protocols import LabelBgColor, ButtonBgColor, ButtonActiveBgColor, SectionTextColor
 from protlib_filesystem import getXmippPath, xmippExists, removeFilenamePrefix, fixPath, splitFilename
-from protlib_utils import runChimera
+from protlib_utils import runChimera, runVMD
 from Tkinter import TclError
 
 RESOURCES = getXmippPath('resources')
@@ -1124,6 +1124,9 @@ def showj(filename, mode="default"):
 def chimera(filename):
     runChimera(filename)
     
+def vmd(filename):
+    runVMD(filename)
+    
 def fileInfo(browser):
     from protlib_utils import pretty_date, pretty_size
     msg =  "<size:> %s\n" % pretty_size(browser.stat.st_size)
@@ -1290,6 +1293,16 @@ def volFillMenu( filename, browser):
 def volOnDoubleClick(filename, browser):
     showj(filename, 'gallery')
     
+def pdbFillMenu( filename, browser):
+    menu = browser.menu
+    menu.add_command(label="Open as text", command=lambda: showTextfileViewer(filename, [filename], browser.parent))
+    menu.add_command(label="Open with Chimera", command=lambda:chimera(filename))
+    menu.add_command(label="Open with VMD", command=lambda:vmd(filename))
+    return True
+        
+def pdbOnDoubleClick(filename, browser):
+    chimera(filename)
+    
 class FileManager():
     ''' Class to handle different types of files '''
     def __init__(self, **attributes):
@@ -1343,7 +1356,7 @@ class XmippBrowser():
         self.managers = {}
         self.extSet = {}
         addFm = self.addFileManager
-        addFm('md', 'md.gif', ['.xmd', '.sel', '.doc', '.ctfparam', '.ctfdat', '.pos', '.descr', '.param'], 
+        addFm('md', 'md.gif', ['.xmd', '.sel', '.doc', '.ctfparam', '.ctfdat', '.pos', '.descr', '.param', '.hist'], 
                             mdFillMenu, mdOnClick, mdOnDoubleClick)
         addFm('stk', 'stack.gif', ['.stk', '.mrcs', '.st', '.pif'],
                             stackFillMenu, imgOnClick, stackOnDoubleClick)
@@ -1351,7 +1364,7 @@ class XmippBrowser():
                             imgFillMenu, imgOnClick, imgOnDoubleClick)
         addFm('vol', 'vol.gif', ['.vol', '.mrc', '.map', '.em', '.pif'], 
                             volFillMenu, imgOnClick, volOnDoubleClick)
-        addFm('text', 'fileopen.gif', ['.txt', '.c', '.h', '.cpp', '.java', '.sh'],
+        addFm('text', 'fileopen.gif', ['.txt', '.c', '.h', '.cpp', '.java', '.sh', '.star'],
               textFillMenu, defaultOnClick, textOnDoubleClick)
         addFm('pyfile', 'python_file.gif', ['.py'],textFillMenu, defaultOnClick, textOnDoubleClick)
         addFm('out', 'out.gif', ['.out'],textFillMenu, defaultOnClick, textOnDoubleClick)
@@ -1360,6 +1373,7 @@ class XmippBrowser():
         addFm('folder', 'folderopen.gif', [])
         addFm('default', 'generic_file.gif', [])
         addFm('up', 'up.gif', [])
+        addFm('pdb', 'pdbSmall.gif', ['.pdb'], pdbFillMenu, defaultOnClick, pdbOnDoubleClick)
         
     def createDetailsTop(self, parent):
         self.detailstop = tk.Frame(parent)

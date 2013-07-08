@@ -14,7 +14,7 @@ import javax.swing.JDialog;
 
 import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippMessage;
-import xmipp.viewer.particlepicker.training.model.TrainingParticle;
+import xmipp.viewer.particlepicker.training.model.ManualParticle;
 
 public class ParticlesJDialog extends JDialog
 {
@@ -51,7 +51,7 @@ public class ParticlesJDialog extends JDialog
 	{
 		int side, rows, columns, width = 0, height = 0;
 		List<? extends PickerParticle> particles = frame.getAvailableParticles();
-		side = frame.getSide(frame.getFamily().getSize());
+		side = frame.getSide(frame.getParticlePicker().getSize());
 
 		if (side == 0)
 			throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg("side"));

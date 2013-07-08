@@ -10,6 +10,7 @@ DO_PYMOD=true
 DO_FFTW=true
 DO_TIFF=true
 DO_JPEG=true
+DO_HDF5=true
 DO_ARPACK=false
 
 DO_CLEAN=true
@@ -18,6 +19,7 @@ DO_UPDATE=false
 DO_SETUP=true
 DO_GUI=true
 DO_UNATTENDED=false
+DO_MATLAB=false
 
 export NUMBER_OF_CPU=1
 
@@ -65,47 +67,50 @@ for param in $@; do
  else
     case $param in
         "disable_all")
-			DO_UNTAR=false
-			DO_SQLITE=false
-			DO_TCLTK=false
-			DO_PYTHON=false
-			DO_PYMOD=false
-			DO_FFTW=false
-			DO_TIFF=false
-			DO_JPEG=false
-			DO_ARPACK=false
-			DO_SETUP=false;;			
-        "-j")             TAKE_CPU=true;;
-        "untar=true")   DO_UNTAR=true;;
-        "untar=false")   DO_UNTAR=false;;
-        "sqlite=true")   DO_SQLITE=true;;
-        "sqlite=false")   DO_SQLITE=false;;
-        "tcltk=true")   DO_TCLTK=true;;
-        "tcltk=false")   DO_TCLTK=false;;
-        "python=true")   DO_PYTHON=true;DO_PYMOD=true;;
-        "python=false")   DO_PYTHON=false;DO_PYMOD=false;;
+			    DO_UNTAR=false
+			    DO_SQLITE=false
+			    DO_TCLTK=false
+			    DO_PYTHON=false
+			    DO_PYMOD=false
+			    DO_FFTW=false
+			    DO_TIFF=false
+			    DO_JPEG=false
+			    DO_HDF5=false
+			    DO_ARPACK=false
+			    DO_SETUP=false;;			
+        "-j")               TAKE_CPU=true;;
+        "untar=true")       DO_UNTAR=true;;
+        "untar=false")      DO_UNTAR=false;;
+        "sqlite=true")      DO_SQLITE=true;;
+        "sqlite=false")     DO_SQLITE=false;;
+        "tcltk=true")       DO_TCLTK=true;;
+        "tcltk=false")      DO_TCLTK=false;;
+        "python=true")      DO_PYTHON=true;DO_PYMOD=true;;
+        "python=false")     DO_PYTHON=false;DO_PYMOD=false;;
         "pymodules=true")   DO_PYMOD=true;;
-        "pymodules=false")   DO_PYMOD=false;;
-        "fftw=true")   DO_FFTW=true;;
-        "fftw=false")   DO_FFTW=false;;
-        "tiff=true")   DO_TIFF=true;;
-        "tiff=false")   DO_TIFF=false;;
-        "jpeg=true")   DO_JPEG=true;;
-        "jpeg=false")   DO_JPEG=false;;
-        "arpack=true")   DO_ARPACK=true;;
-        "arpack=false")   DO_ARPACK=false;;
-        "clean=true")   DO_CLEAN=true;;
-        "clean=false")   DO_CLEAN=false;;
-        "static=true")   DO_STATIC=true;;
-        "static=false")   DO_STATIC=false;;
-        "gui=false")   GUI_ARGS="";;
-	"setup=true")   DO_SETUP=true;;
+        "pymodules=false")  DO_PYMOD=false;;
+        "fftw=true")        DO_FFTW=true;;
+        "fftw=false")       DO_FFTW=false;;
+        "tiff=true")        DO_TIFF=true;;
+        "tiff=false")       DO_TIFF=false;;
+        "jpeg=true")        DO_JPEG=true;;
+        "jpeg=false")       DO_JPEG=false;;
+        "hdf5=true")        DO_HDF5=true;;
+        "hdf5=false")       DO_HDF5=false;;
+        "arpack=true")      DO_ARPACK=true;;
+        "arpack=false")     DO_ARPACK=false;;
+        "clean=true")       DO_CLEAN=true;;
+        "clean=false")      DO_CLEAN=false;;
+        "static=true")      DO_STATIC=true;;
+        "static=false")     DO_STATIC=false;;
+        "gui=false")        GUI_ARGS="";;
+	"setup=true")       DO_SETUP=true;;
         # This two if passed should be at the end and 
         # will setup arguments for configure and compilation steps
-        "configure") TAKE_CONFIGURE=true;
-                     TAKE_COMPILE=false;;
-        "compile")   TAKE_CONFIGURE=false;
-                     TAKE_COMPILE=true;;
+        "configure")        TAKE_CONFIGURE=true;
+                            TAKE_COMPILE=false;;
+        "compile")          TAKE_CONFIGURE=false;
+                            TAKE_COMPILE=true;;
         "unattended=true")  DO_UNATTENDED=true;;
         "unattended=false") DO_UNATTENDED=false;;
          *)          echo "Unrecognized option $param, exiting..."; exit 1
@@ -153,9 +158,9 @@ echo "alias xa='xmipp_apropos'               "    >> $INC_FILE
 echo "alias xb='xmipp_browser'               "    >> $INC_FILE
 echo "alias xp='xmipp_protocols'             "    >> $INC_FILE
 echo "alias xmipp='xmipp_protocols'          "    >> $INC_FILE
-echo "alias xs='xmipp_show'                  "    >> $INC_FILE
+echo "alias xs='xmipp_showj'                 "    >> $INC_FILE
+echo "alias xmipp_show='xmipp_showj'         "    >> $INC_FILE
 echo "alias xsj='xmipp_showj'                "    >> $INC_FILE
-echo "alias xmipp_imagej='$XMIPP_HOME/external/runImageJ'" >> $INC_FILE
 echo "alias xij='xmipp_imagej'               "    >> $INC_FILE
 echo "## Image ##                            "    >> $INC_FILE
 echo "alias xic='xmipp_image_convert'        "    >> $INC_FILE
@@ -233,7 +238,8 @@ echo "alias xa 'xmipp_apropos'               "    >> $INC_FILE
 echo "alias xb 'xmipp_browser'               "    >> $INC_FILE
 echo "alias xp 'xmipp_protocols'             "    >> $INC_FILE
 echo "alias xmipp 'xmipp_protocols'          "    >> $INC_FILE
-echo "alias xs 'xmipp_show'                  "    >> $INC_FILE
+echo "alias xs 'xmipp_showj'                 "    >> $INC_FILE
+echo "alias xmipp_show 'xmipp_showj'         "    >> $INC_FILE
 echo "alias xsj 'xmipp_showj'                "    >> $INC_FILE
 echo "## Image ##                            "    >> $INC_FILE
 echo "alias xic 'xmipp_image_convert'        "    >> $INC_FILE
@@ -291,6 +297,7 @@ VPYTHON=Python-2.7.2
 VFFTW=fftw-3.3.1
 VTIFF=tiff-3.9.4
 VJPEG=jpeg-8c
+VHDF5=hdf5-1.8.10
 VARPACK=arpack++-2.3
 VNUMPY=numpy-1.6.1
 VMATLIBPLOT=matplotlib-1.1.0
@@ -490,6 +497,13 @@ fi
 if $DO_TIFF; then
   compile_library $VTIFF "." "." "CPPFLAGS=-w --with-jpeg-include-dir=$EXT_PATH/$VJPEG --with-jpeg-lib-dir=$XMIPP_HOME/lib"
   install_libs $VTIFF/libtiff/.libs libtiff 3
+fi
+
+#################### HDF5 ###########################
+if $DO_HDF5; then
+compile_library $VHDF5 "." "." "CPPFLAGS=-w --enable-cxx"
+install_libs $VHDF5/src/.libs libhdf5 7
+install_libs $VHDF5/c++/src/.libs libhdf5_cpp 7
 fi
 
 #################### TCL/TK ###########################

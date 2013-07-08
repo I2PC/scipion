@@ -44,15 +44,16 @@ typedef enum
     DT_Short = 4,              // Signed integer (2-byte)
     DT_UInt = 5,               // Unsigned integer (4-byte)
     DT_Int = 6,                // Signed integer (4-byte)
-    DT_Long = 7,               // Signed integer (4 or 8 byte, depending on system)
-    DT_Float = 8,              // Floating point (4-byte)
-    DT_Double = 9,             // DT_Double precision floating point (8-byte)
-    DT_CShort = 10,      // Complex two-byte integer (4-byte)
-    DT_CInt = 11,        // Complex integer (8-byte)
-    DT_CFloat = 12,      // Complex floating point (8-byte)
-    DT_CDouble = 13,     // Complex floating point (16-byte)
-    DT_Bool = 14,              // Boolean (1-byte?)
-    DT_LastEntry = 15          // This must be the last entry
+    DT_ULong = 7,               // Unsigned integer (4 or 8 byte, depending on system)
+    DT_Long = 8,               //  Signed integer (4 or 8 byte, depending on system)
+    DT_Float = 9,              // Floating point (4-byte)
+    DT_Double = 10,             // DT_Double precision floating point (8-byte)
+    DT_CShort = 11,      // Complex two-byte integer (4-byte)
+    DT_CInt = 12,        // Complex integer (8-byte)
+    DT_CFloat = 13,      // Complex floating point (8-byte)
+    DT_CDouble = 14,     // Complex floating point (16-byte)
+    DT_Bool = 15,              // Boolean (1-byte?)
+    DT_LastEntry = 16          // This must be the last entry
 } DataType;
 
 

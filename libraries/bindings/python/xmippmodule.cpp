@@ -96,20 +96,20 @@ xmipp_labelHasTag(PyObject *obj, PyObject *args)
         MDLabel label = MDL_UNDEFINED;
 
         if (PyString_Check(input))
-          label = MDL::str2Label(PyString_AsString(input));
+            label = MDL::str2Label(PyString_AsString(input));
         else if (PyInt_Check(input))
-          label = (MDLabel) PyInt_AsLong(input);
+            label = (MDLabel) PyInt_AsLong(input);
 
         if (label != MDL_UNDEFINED)
         {
-          if (MDL::hasTag(label, tag))
-            Py_RETURN_TRUE;
-          else
-            Py_RETURN_FALSE;
+            if (MDL::hasTag(label, tag))
+                Py_RETURN_TRUE;
+            else
+                Py_RETURN_FALSE;
         }
 
         PyErr_SetString(PyExc_TypeError,
-                            "labelHasTag: Input label should be int or string");
+                        "labelHasTag: Input label should be int or string");
     }
     return NULL;
 }
@@ -125,20 +125,20 @@ xmipp_labelIsImage(PyObject *obj, PyObject *args)
         MDLabel label = MDL_UNDEFINED;
 
         if (PyString_Check(input))
-          label = MDL::str2Label(PyString_AsString(input));
+            label = MDL::str2Label(PyString_AsString(input));
         else if (PyInt_Check(input))
-          label = (MDLabel) PyInt_AsLong(input);
+            label = (MDLabel) PyInt_AsLong(input);
 
         if (label != MDL_UNDEFINED)
         {
-          if (MDL::hasTag(label, tag))
-            Py_RETURN_TRUE;
-          else
-            Py_RETURN_FALSE;
+            if (MDL::hasTag(label, tag))
+                Py_RETURN_TRUE;
+            else
+                Py_RETURN_FALSE;
         }
 
         PyErr_SetString(PyExc_TypeError,
-                            "labelIsImage: Input label should be int or string");
+                        "labelIsImage: Input label should be int or string");
     }
     return NULL;
 }
@@ -239,7 +239,7 @@ PyObject * xmipp_MetaDataInfo(PyObject *obj, PyObject *args, PyObject *kwargs)
             Nimgs=md->size();
             getImageSize(*md, xdim, ydim, zdim, ndim);
             if (destroyMd)
-            	delete md;
+                delete md;
             return Py_BuildValue("iiikk", xdim, ydim, zdim, ndim, Nimgs);
         }
         catch (XmippError &xe)
@@ -249,6 +249,38 @@ PyObject * xmipp_MetaDataInfo(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }/* Metadata info (from metadata filename)*/
+/* check if block exists in file*/
+
+PyObject *
+xmipp_existsBlockInMetaDataFile(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+
+    PyObject *input = NULL, *pyStr = NULL;
+    char *str = NULL, *strBlock = NULL;
+    if (PyArg_ParseTuple(args, "O", &input))
+    {
+        try
+        {
+            if ((pyStr = PyObject_Str(input)) != NULL )
+            {
+                str = PyString_AsString(pyStr);
+                if (existsBlockInMetaDataFile( (std::string) str))
+                    Py_RETURN_TRUE;
+                else
+                    Py_RETURN_FALSE;
+            }
+            else
+                return NULL;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+            return NULL;
+        }
+    }
+
+    return NULL;
+}
 
 PyObject *
 xmipp_CheckImageFileSize(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -692,7 +724,7 @@ xmipp_Euler_direction(PyObject *obj, PyObject *args, PyObject *kwargs)
     double rot, tilt, psi;
     if (PyArg_ParseTuple(args, "ddd", &rot,&tilt,&psi))
     {
-    	Matrix1D<double> direction(3);
+        Matrix1D<double> direction(3);
         Euler_direction(rot, tilt, psi, direction);
         return Py_BuildValue("fff", VEC_ELEM(direction, 0), VEC_ELEM(direction, 1), VEC_ELEM(direction, 2));//fff three real
     }
@@ -731,7 +763,7 @@ xmipp_methods[] =
         { "labelHasTag", xmipp_labelHasTag, METH_VARARGS,
           "Return the if the label has a specific tag" },
         { "labelIsImage", xmipp_labelIsImage, METH_VARARGS,
-            "Return if the label has the TAGLABEL_IMAGE tag" },
+          "Return if the label has the TAGLABEL_IMAGE tag" },
         { "str2Label", xmipp_str2Label, METH_VARARGS,
           "Convert an string to MDLabel" },
         { "isValidLabel", (PyCFunction) xmipp_isValidLabel,
@@ -760,6 +792,8 @@ xmipp_methods[] =
           METH_VARARGS, "Get image dimensions" },
         { "MetaDataInfo", (PyCFunction) xmipp_MetaDataInfo, METH_VARARGS,
           "Get image dimensions of first metadata entry and the number of entries" },
+        { "existsBlockInMetaDataFile", (PyCFunction) xmipp_existsBlockInMetaDataFile, METH_VARARGS,
+          "Does block exists in file" },
         { "ImgCompare", (PyCFunction) xmipp_ImgCompare,  METH_VARARGS,
           "return true if both files are identical" },
         { "checkImageFileSize", (PyCFunction) xmipp_CheckImageFileSize,  METH_VARARGS,
@@ -789,7 +823,7 @@ xmipp_methods[] =
         { "Euler_matrix2angles", (PyCFunction) xmipp_Euler_matrix2angles, METH_VARARGS,
           "convert transformation matrix to euler angles" },
         { "Euler_direction", (PyCFunction) xmipp_Euler_direction, METH_VARARGS,
-                    "converts euler angles to direction" },
+          "converts euler angles to direction" },
         { "activateMathExtensions", (PyCFunction) xmipp_activateMathExtensions,
           METH_VARARGS, "activate math function in metadatas" },
 

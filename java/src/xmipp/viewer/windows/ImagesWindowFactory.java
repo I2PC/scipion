@@ -146,7 +146,7 @@ public class ImagesWindowFactory {
 		if (imp.getStackSize() > 1)
 			iw = (title != null)? new XmippStackWindow(window, impLoader, title): new XmippStackWindow(window, impLoader);
 		else
-			iw = (title != null )? new XmippImageWindow(window, impLoader, title): new XmippImageWindow(window, impLoader);
+			iw = (title != null )? new XmippImageWindow(impLoader, title): new XmippImageWindow(impLoader);
 		SwingUtilities.invokeLater(new Worker(iw));
 		return iw;
 	}
