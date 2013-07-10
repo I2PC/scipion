@@ -92,6 +92,7 @@ protected:
         {
             operation = HEADER_SAMPLINGRATE;
             sampling = getDoubleParam("--sampling_rate");
+            allow_time_bar = false;
         }
         else if (checkParam("--tree"))
         {
@@ -198,8 +199,9 @@ protected:
             img.read(fnImg, _HEADER_ALL);
             if (sampling < 0)
             {
-                img.MDMainHeader.getValue(MDL_SAMPLINGRATE_X, sampling);
-                std::cout << sampling << std::endl;
+                double samplingRead;
+                img.MDMainHeader.getValue(MDL_SAMPLINGRATE_X, samplingRead);
+                std::cout << samplingRead << std::endl;
             }
             else
             {
