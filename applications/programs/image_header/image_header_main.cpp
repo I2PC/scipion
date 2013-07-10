@@ -211,9 +211,18 @@ protected:
             }
             break;
         case HEADER_TREE:
-            XmippH5File H5File;
-            H5File.openFile(fnImg.removeAllPrefixes().removeFileFormat(), H5F_ACC_RDONLY);
-            H5File.showTree();
+            {
+                XmippH5File H5File;
+                FileName filename = fnImg.removeAllPrefixes().removeFileFormat();
+
+                if (H5File.isHdf5(filename.c_str()))
+                {
+                    H5File.openFile(fnImg.removeAllPrefixes().removeFileFormat(), H5F_ACC_RDONLY);
+                    H5File.showTree();
+                }
+                else
+                    REPORT_ERROR(ERR_IMG_UNKNOWN, "Unknown file format to display its data structure.");
+            }
             break;
         }
     }
