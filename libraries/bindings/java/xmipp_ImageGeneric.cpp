@@ -564,9 +564,8 @@ Java_xmipp_jni_ImageGeneric_setArrayFloat(JNIEnv *env, jobject jobj,
             break;
     default:
             {
-                REPORT_ERROR(
-                    ERR_IO_NOWRITE,
-                    (String)"Not supported conversion From jfloat to dataType: " + datatype2Str(image->getDatatype()));
+                REPORT_ERROR(ERR_IO_NOWRITE, formatString("Not supported conversion from jfloat to dataType: %s, enum value: %d",
+                    datatype2Str(image->getDatatype()).c_str(), image->getDatatype()));
             }
             break;
         }
