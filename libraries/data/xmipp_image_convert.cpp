@@ -198,7 +198,7 @@ void ProgConvImg::preProcess()
                 type = "stk";
             else if (( mdInSize > 1 || zdimOut > 1 ) && fn_out.hasVolumeExtension()) // if it is volume
                 type = "vol";
-            else if (mdInSize > 1)
+            else if (mdInSize > 1 || appendToStack) // If --append we suppose output is stack
                 type = "stk";
             else if (zdimOut > 1) // if it is volume
                 type = "vol";
