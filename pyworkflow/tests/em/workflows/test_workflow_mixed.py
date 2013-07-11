@@ -253,6 +253,15 @@ class TestMixedWorkflow_2(TestWorkflow):
         self.assertIsNotNone(protML2D.outputClassification, "There was a problem with ML2D")  
         self.validateFiles('protML2D', protML2D)
 
+        print "Run kerdensom"
+        XmippProtKerdensom = XmippProtKerdensom()
+
+        protOnlyalign.inputImages.set(protExtract.outputImages)
+        self.proj.launchProtocol(XmippProtKerdensom, wait=True)        
+        
+        self.assertIsNotNone(XmippProtKerdensom.outputClassification, "There was a problem with kerdensom")  
+        self.validateFiles('XmippProtKerdensom', XmippProtKerdensom)
+
 class TestOnlyAlign (TestWorkflow):
 
     def setUpClass(cls):    

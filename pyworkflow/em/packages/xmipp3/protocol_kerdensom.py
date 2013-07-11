@@ -67,7 +67,7 @@ class XmippDefKerdensom(Form):
         self.addParam('SomSteps', IntParam, default=5, expertLevel=LEVEL_ADVANCED,
                       label='Regularization steps:',
                       help='Number of steps to lower the regularization factor')
-        self.addParam('KerdensomExtraCommand', StringParam,
+        self.addParam('extraParams', StringParam,
                       label="Additional kerdenSOM parameters:", 
                       help='For a complete description'
                       'See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM')
@@ -83,64 +83,68 @@ class XmippProtKerdensom(ProtClassify, XmippProtocol):
         self.inputImgs = self.inputImages.get()        
         imgsFn = self._insertConvertStep('inputImgs', XmippSetOfParticles,
                                          self._getPath('input_images.xmd'))
-        self._params = {'extraDir': self._getExtraPath(),
-                        'mask': self.Mask.get(), 
+        mask = self.Mask.get()
+        self._params = {'oroot': self._getExtraPath("kerdensom"),
+                        'imgsFn': imgsFn,
+                        'mask': mask, 
                         'SomXdim': self.SomXdim.get(),
                         'SomYdim': self.SomYdim.get(),
                         'SomReg0': self.SomReg0.get(),
                         'SomReg1': self.SomReg1.get(),
                         'SomSteps': self.SomSteps.get(),
-                        'KerdensomExtraCommand': self.KerdensomExtraCommand.get()
+                        'extraParams': self.extraParams.get(),
+                        'vectors': self._getExtraPath("vectors.xmd"),
+                        'classes': self._getExtraPath("classes.stk"),
+                        'kvectors': self._getExtraPath("kerdensom_vectors.xmd"),
+                        'kclasses': self._getExtraPath("kerdensom_classes.xmd")
                        }
-        args1 = '-i ' + self._getExtraPath("vectors.xmd") + ' --oroot ' + self._getExtraPath("kerdensom") + ' --xdim %(SomXdim)d --ydim %(SomYdim)d' + \
-                ' --deterministic_annealing %(SomSteps)f %(SomReg0)f %(SomReg1)f '
-        if self.KerdensomExtraCommand != '':
-            args1 += '%(KerdensomExtraCommand)s'
        
-        self._insertFunctionStep('img2vector', imgsFn)
-        self._insertFunctionStep('kerdensom', args1 % self._params)
-        self._insertFunctionStep('vector2img')
+        #self._insertFunctionStep('img2vector', imgsFn, mask)
+        self._insertImgToVector()
+        self._insertKerdensom()
+        self._insertVectorToImg()
         self._insertFunctionStep('rewriteClassBlock')
         self._insertFunctionStep('createOutput')
         
-    def img2vector(self, imgsFn):
-        """convert into a vector Md """
-        mask = self._params['mask']
-        args = ' -i ' + imgsFn + ' -o ' + self._getExtraPath("vectors.xmd")
-        if mask != '':
-            args += ' --mask binary_file ' + mask
-        self.runJob(None,"xmipp_image_vectorize", args)
+    def _insertImgToVector(self):
+        """ Insert runJob for convert into a vector Md """
+        args = ' -i %(imgsFn)s -o %(vectors)s '
+        if self._params['mask'] != '':
+            args += ' --mask binary_file %(mask)s'
+        
+        self._insertRunJobStep("xmipp_image_vectorize", args % self._params)
 
-    def kerdensom(self, args1):
-        self.runJob(None,"xmipp_classify_kerdensom", args1)
+    def _insertKerdensom(self):
+        args = '-i %(vectors)s --oroot %(oroot)s --xdim %(SomXdim)d --ydim %(SomYdim)d' + \
+               ' --deterministic_annealing %(SomSteps)f %(SomReg0)f %(SomReg1)f %(extraParams)s'
+        self._insertRunJobStep("xmipp_classify_kerdensom", args % self._params)
 #        deleteFiles([self._getExtraPath("vectors.xmd"),self._getExtraPath("vectors.vec")], True)
    
-    def vector2img(self):
-        mask = self._params['mask']
-        args = ' -i ' + self._getExtraPath("kerdensom_vectors.xmd") + ' -o ' + self._getExtraPath("classes.stk")
-        if mask != '':
-            args += ' --mask binary_file ' + mask
-        self.runJob(None,"xmipp_image_vectorize", args)
+    def _insertVectorToImg(self):
+        args = ' -i %(kvectors)s -o %(classes)s' 
+        if self._params['mask'] != '':
+            args += ' --mask binary_file %(mask)s'
+        self._insertRunJobStep("xmipp_image_vectorize", args % self._params)
 #        deleteFiles([self._getExtraPath("kerdensom_vectors.xmd"),self._getExtraPath("kerdensom_vectors.vec")], True)
 
-def rewriteClassBlock(self):
-    fnClassMetadata = self._getExtraPath("kerdensom_classes.xmd")
-    fnClass = "classes@%s" %fnClassMetadata
-    fnClassStack = self._getExtraPath("classes.stk")
-    mD = MetaData(fnClass)
-    counter = 1
-    for id in mD:
-        mD.setValue(MDL_IMAGE,"%06d@%s"%(counter,fnClassStack),id)
-        counter += 1
-    mD.write(fnClass, xmipp.MD_APPEND)
-    createLink(Log, fnClassMetadata, self.getPath("classes.xmd"))
-    createLink(Log, self._getExtraPath("kerdensom_images.xmd"), self.getPath("images.xmd"))
+    def rewriteClassBlock(self):
+        fnClass = "classes@%(kclasses)s" % self._params
+        fnClassStack = self._params['classes']
+        md = xmipp.MetaData(fnClass)
+        # TODO: Check if following is necessary
+        counter = 1
+        for id in md:
+            md.setValue(xmipp.MDL_IMAGE,"%06d@%s"%(counter,fnClassStack),id)
+            counter += 1
+        md.write(fnClass, xmipp.MD_APPEND)
+        #createLink(Log, fnClassMetadata, self.getPath("classes.xmd"))
+        #createLink(Log, self._getExtraPath("kerdensom_images.xmd"), self.getPath("images.xmd"))
     
     def createOutput(self):
         """ Store the kenserdom object 
         as result of the protocol. 
         """
-        classification = XmippClassification2D(self.oroot + 'classes.xmd')
+        classification = XmippClassification2D(self._params['kclasses'])
         self._defineOutputs(outputClassification=classification)
 
     def validate(self):
