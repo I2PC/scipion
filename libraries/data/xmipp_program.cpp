@@ -483,6 +483,7 @@ int XmippProgram::version() const
 XmippMetadataProgram::XmippMetadataProgram()
 {
     oroot = oext = fn_out = fn_in = "";
+    mode = MD_OVERWRITE;
     apply_geo=false;
     allow_apply_geo = false;
     produces_an_output = false;
@@ -490,8 +491,6 @@ XmippMetadataProgram::XmippMetadataProgram()
     each_image_produces_an_output = false;
     allow_time_bar = true;
     decompose_stacks = true;
-    save_metadata_stack = false;
-    keep_input_columns = false;
     delete_output_stack = true;
     get_image_info = true;
     remove_disabled = true;
@@ -501,6 +500,9 @@ XmippMetadataProgram::XmippMetadataProgram()
     ndimOut = zdimOut = ydimOut = xdimOut = 0;
     image_label = MDL_IMAGE;
     delete_mdIn = false;
+    //Flags to store metadata when -o is stack
+    save_metadata_stack = false;
+    keep_input_columns = false;
     track_origin = false;
 }
 
@@ -551,8 +553,13 @@ void XmippMetadataProgram::defineParams()
         addParamsLine("   alias --output;");
     }
 
-    addParamsLine(" [--track_origin]   : Store the original image filename in the output ");
-    addParamsLine("              : metadata in column imageOriginal.");
+    addParamsLine("  [--save_metadata_stack+ <output_md=\"\">]  : Create a metadata when the output (-o) is an stack");
+    addParamsLine("                             : if --oroot is used, the metadata can be saved in -o param.");
+    addParamsLine("                             : if output_md is empty, the name of the stack will be used, changing the extension to xmd.");
+    addParamsLine(" [--track_origin+]   : Store the original image filename in the output ");
+    addParamsLine("                     : metadata in column imageOriginal.");
+    addParamsLine(" [--keep_input_columns+]   : Preserve the columns from the input metadata.");
+    addParamsLine("                     : Some of the column values can be changed by the program.");
 
     if (allow_apply_geo)
     {
@@ -582,7 +589,12 @@ void XmippMetadataProgram::readParams()
     if (allow_apply_geo)
         apply_geo = !checkParam("--dont_apply_geo");
 
-    track_origin = checkParam("--track_origin");
+    // The following flags are an "advanced" options to allow save metadata
+    // when the -o is an stack, each program can define its default value
+    // that's why the || construct before checkParam call
+    save_metadata_stack = save_metadata_stack || checkParam("--save_metadata_stack");
+    track_origin = track_origin || checkParam("--track_origin");
+    keep_input_columns = keep_input_columns || checkParam("--keep_input_columns");
 
     MetaData * md = new MetaData;
     md->read(fn_in, NULL, decompose_stacks);
@@ -701,9 +713,9 @@ void XmippMetadataProgram::finishProcessing()
             mdOut.write(fn_out);
         else if (save_metadata_stack) // Output is stack and also save its associated metadata
         {
-            FileName outFileName;
-
-            outFileName = fn_out.withoutExtension().addExtension("xmd");
+            FileName outFileName = getParam("--save_metadata_stack");
+            if (outFileName.empty())
+                outFileName = fn_out.replaceExtension("xmd");
             mdOut.write(outFileName);
         }
     }

@@ -125,9 +125,6 @@ void  ProgConvImg::defineParams()
     addParamsLine("or --dont_convert : Do not apply any conversion to gray levels when writing");
     addParamsLine("                  : in a lower bit depth or changing the sign");
     addParamsLine("== Stack options == ");
-    addParamsLine("  [--selfile_stack]    : Create a selfile with the images of the output stack,");
-    addParamsLine("                       : keeping the rest of columns of the input selfile");
-    addParamsLine("  alias -s;");
     addParamsLine("  [--append]           : Append the input to the output stack instead of overwriting it");
     addParamsLine("  alias -a;");
 
@@ -164,7 +161,6 @@ void ProgConvImg::readParams()
     castMode = (checkParam("--range_adjust"))? CW_ADJUST: \
                (checkParam("--dont_convert"))? CW_CAST: CW_CONVERT;
 
-    save_metadata_stack = checkParam("--selfile_stack");
     appendToStack = checkParam("--append");
 
     // output extension
