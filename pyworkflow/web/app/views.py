@@ -577,6 +577,11 @@ def visualizeObject(request):
 
 #    return HttpResponseRedirect('/showj', inputParameters)
     
+    
+def showVolVisualizer(request):
+    context = {'MEDIA_URL' : settings.MEDIA_URL}
+    return render_to_response('showVolVisualizer.html', context)   
+    
 if __name__ == '__main__':
     root = loadProtTree()    
     for s in root.childs:
