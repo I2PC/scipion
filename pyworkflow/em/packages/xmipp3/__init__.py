@@ -39,3 +39,4 @@ from protocol_extract_particles import XmippProtExtractParticles
 from protocol_ml2d import XmippProtML2D
 from protocol_cl2d import XmippProtCL2D
 from protocol_cl2d_align import XmippProtCL2DAlign
+from protocol_kerdensom_SC import XmippProtKerdensom
