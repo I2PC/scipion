@@ -23,11 +23,13 @@
 		closePopup()
 	}
 	{% endif %}
+	
 	function changeScpnHostSelection(){
 		if (document.getElementById("scpnHosts").value != ""){
 			alert ("Not implemented yet");
 		}
 	}	
+	
 	function removeQueueConfigAction(queueConfigId){
 		if(confirm('You are going to remove queue configuration from the queue system. \n Are you sure?')){
 			$("#" + queueConfigId).remove();
@@ -75,17 +77,19 @@
 	
 	function addQueueConfigAction() {
 		elementString = '';
-		elementString += '<div id="queueConfig_' + queueConfigCount + '">'
+		elementString += '<div id="queueConfig_' + queueConfigCount + '">';
+		elementString += '<br/>';
 		elementString += '<table>';
 		elementString += '<tr><th align="center" colspan="2">Queue config ' + queueConfigCount + '</th></tr>'
 		elementString += '<tr><td> <label class="required" for="name_' + queueConfigCount + '"> Name </label> </td><td><input type="text" name="name_' + queueConfigCount + '" class="generalInput"/></td></tr>';
 		elementString += '<tr><td> <label class="required" for="maxCores_' + queueConfigCount + '"> Max. cores </label> </td><td><input type="number" name="maxCores_' + queueConfigCount + '" class="generalInput"/></td></tr>';
 		elementString += '<tr><td> <label> Allow MPI </label> </td><td><input type="checkbox" name="allowMPI_' + queueConfigCount + '" /></td></tr>';
 		elementString += '<tr><td> <label> Allow threads </label> </td><td><input type="checkbox" name="allowThreads_' + queueConfigCount + '" /></td></tr>';
-		elementString += '<tr><td> <label class="required" for="maxHours_' + queueConfigCount + '"> Max. hours </label> </td><td><input type="number" name="maxHours_' + queueConfigCount + '" class="generalInput"/></td></tr>';
+		elementString += '<tr><td> <label class="required" for="maxHours_' + queueConfigCount + '"> Max. hours </label> </td><td><input type="number" name="maxHours_' + queueConfigCount + '" class="generalInput"/></td></tr>';	
 		elementString += '</table>';
 		elementString += '<br/>';
 		elementString += '<button type="button" id="removeQueueConf_' + queueConfigCount + '"  onclick="removeQueueConfigAction(\'queueConfig_' + queueConfigCount + '\')" class="generalButton">Remove queue config</button>';
+		elementString += '<br/>';
 		elementString += '<br/>';
 		elementString += '</div>';
 		element = $(elementString);
@@ -137,19 +141,26 @@
 							</table>
 					 	</div>
 					 	<div id="queueConfig">
-					 	{% for fieldList in form.getQueueConfigFields %}
-						 	<table>	
-						 		<tr><th align="center" colspan="2">Queue config </th></tr>
-						 		{% for field in fieldList %}
-							 	<tr>
-								    <td>
-								    	<label {% if field.field.required %} class="required" {% endif %} for="{{ field.html_name }}"> {{ field.label }}</label>
-								    </td> 
-								    <td>{{ field }}</td>
-								</tr>    
-								{% endfor %}
-							</table>
-						{% endfor %}
+						 	{% for fieldList in form.getQueueConfigFields %}
+					 		<div id="queueConfig_{{forloop.counter}}">
+					 		<br/>
+							 	<table>	
+							 		<tr><th align="center" colspan="2">Queue config {{forloop.counter}}</th></tr>
+							 		{% for field in fieldList %}
+								 	<tr>
+									    <td>
+									    	<label {% if field.field.required %} class="required" {% endif %} for="{{ field.html_name }}"> {{ field.label }}</label>
+									    </td> 
+									    <td>{{ field }}</td>
+									</tr>    
+									{% endfor %}
+								</table>
+								<br/>
+								<button type="button" id="removeQueueConf_{{forloop.counter}}"  onclick="removeQueueConfigAction('queueConfig_{{forloop.counter}}')" class="generalButton">Remove queue config</button>
+								<br/>
+								<br/>
+							</div>
+							{% endfor %}
 						</div>
 						<button type="button" id="addQueueConfig" class="generalButton" onclick="addQueueConfigAction()">Add config</button>	
 						<br/>
