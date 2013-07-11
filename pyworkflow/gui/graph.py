@@ -37,16 +37,26 @@ class LevelTree(object):
         self.FONT = "sans-serif"
         self.FONTSIZE = 9
         self.graph = graph
+        self.canvas = None
         
-    def paint(self, canvas, createNodeItem=None):
+    def setCanvas(self, canvas):
+        self.canvas = canvas
+        
+    def paint(self, createNode=None, createEdge=None):
         """ Paint the Graph.
         Params:
             canvas: the canvas object to paint the graph.
-            createNodeItem: function to build the item in the canvas to represent the node.
-                if not function is passed, a default one will be used.  
+            createNode: function to build the Item that represents a Node.
+                    the Item created should have the following methods:
+                        getDimensions: return the width and height
+                        moveTo: change the position of the Item
+            createEdge: function to build an Edge connection two Nodes
+            
+            If createNode and createEdge are None, the default ones will be used,
+            that requires the setCanvas method had to be called first.
         """
-        self.canvas = canvas
-        self.createNodeItem = createNodeItem or self._defaultNodeItem
+        self.createNode = createNode or self._defaultCreateNode
+        self.createEdge = createEdge or self._defaultCreateEdge
         rootNode = self.graph.getRoot()
         self._paintNodeWithChilds(rootNode, 1)
         m = 9999
@@ -97,10 +107,12 @@ class LevelTree(object):
 #            for l, r in node.hLimits:
 #                print "[%d, %d]" % (l, r)
         
-    def _defaultNodeItem(self, node, y):
-        """ If not createNodeItem is specified, this one will be used
+    def _defaultCreateNode(self, node, y):
+        """ If not createNode is specified, this one will be used
         by default. 
         """
+        if self.canvas is None:
+            raise Exception("method setCanvas should be called before using _defaultCreateNode")
         nodeText = node.getName()
         textColor = 'black'
         if nodeText.startswith('Project'):
@@ -108,6 +120,10 @@ class LevelTree(object):
         
         return self.canvas.createTextbox(nodeText, 100, y, bgColor='light blue', textColor=textColor)
         
+    def _defaultCreateEdge(self, srcItem, dstItem):
+        if self.canvas is None:
+            raise Exception("method setCanvas should be called before using _defaultCreateEdge")
+        self.canvas.createEdge(srcItem, dstItem)
         
     def _paintNode(self, node, y):
         """ Paint a node of the graph.
@@ -118,7 +134,7 @@ class LevelTree(object):
         Returns:
            the create item in the canvas.
         """
-        item = self.createNodeItem(node, y)
+        item = self.createNode(node, y)
         node.width, node.height = item.getDimensions()
         node.half = node.width / 2
         node.hLimits = [[-node.half, node.half]]
@@ -193,9 +209,31 @@ class LevelTree(object):
         #print "node: ", node.t.text, " x:", nx
         for c in node.getChilds():
             self._createEdges(c, nx)
-            self.canvas.createEdge(node.item, c.item)
+            self.createEdge(node.item, c.item)
+            
 
 
+class TNode(object):
+    def __init__(self, text, x=0, y=0):
+        self.text = text
+        self.moveTo(x, y)
+        self.width, self.height = 0, 0
+        
+    def getDimensions(self):
+        return (self.width, self.height)
+    
+    def moveTo(self, x, y):
+        self.x = x
+        self.y = y
+    
+def createNode(node, y):
+    return TNode(node.getName(), y=y)
+    
+def createEdge(srcItem, dstItem):
+    pass
+    
+    
+    
 if __name__ == '__main__':
     from canvas import Canvas
     from pyworkflow.utils.graph import Graph
@@ -213,6 +251,7 @@ if __name__ == '__main__':
     a.addChild(b, c)
     
     lt = LevelTree(g)
-    lt.paint(canvas)
+    lt.setCanvas(canvas)
+    lt.paint(createNode, createEdge)
     
     root.mainloop()             

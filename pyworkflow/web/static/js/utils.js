@@ -52,14 +52,14 @@ function launchToolbar(projName, id, elm) {
 			'href',
 			'javascript:popup("/form/?projectName=' + projName + '&protocolId='
 					+ id + '&action=copy' + '")');
-	
+
 	// Action Delete Button
 	$("a#deleteTool").attr('href',
 			'javascript:deleteProtocolForm("' + projName + '","' + id + '")');
-	
+
 	// Action Browse Button
 	var aux = "javascript:alert('Not implemented yet')";
-	$("a#browseTool").attr('href',aux);
+	$("a#browseTool").attr('href', aux);
 
 	row.show(); // Show toolbar
 
@@ -85,6 +85,19 @@ function launchToolbar(projName, id, elm) {
 			// res += "<input type='radio' id ='" + id + x + "' name='" + id
 			// + "' value='" + list[x] + "' />" + list[x] + "<br />";
 			// }
+		}
+	});
+
+	$.ajax({
+		type : "GET",
+		url : '//?projectName=' + projName + '&protocolId='
+				+ id,
+		dataType : "json",
+		success : function(json) {
+			$("#tab2").empty();
+			for ( var i = 0; i < json.length; i++) {
+				$("#tab2").append('<p>' + json[i] + '</p>');
+			}
 		}
 	});
 }
@@ -147,7 +160,7 @@ function deleteProtocolForm(projName, protocolId) {
 	new Messi(msg, {
 		title : 'Confirm DELETE',
 		// modal : true,
-		buttons : [ {
+		buttons : [ {HttpResponse(jsonStr, mimetype='application/javascript'
 			id : 0,
 			label : 'Yes',
 			val : 'Y',
@@ -209,69 +222,131 @@ function switchGraph() {
 		callPlumb();
 		$("div#graphActiv").attr("data-time", "not");
 	}
-
 }
+
+/*
+ * Functions to use the jsPlumb plugin
+ */
 function callPlumb() {
-	
 	// Setting up drop options
-    var targetDropOptions = {
-            tolerance:'touch',
-            hoverClass:'dropHover',
-            activeClass:'dragActive'
-    };
-    
-    // Setting up a Target endPoint
-//    var targetColor = "red";
-    var targetColor = "black";
-    var targetEndpoint = {
-       endpoint:["Dot", { radius:5 }],
-       paintStyle:{ fillStyle:targetColor},
-       // isSource:true,
-       scope:"green dot",
-       connectorStyle:{ strokeStyle:targetColor, lineWidth:2 },
-       connector: ["Bezier", { curviness:5 } ],
-       maxConnections:10,
-       isTarget:true,
-       dropOptions : targetDropOptions
-    };
-    
-    // Setting up a Source endPoint
-//    var sourceColor = "blue";
-    var sourceColor = "black";
-    var sourceEndpoint = {
-       endpoint:["Dot", { radius:5 }],
-       paintStyle:{ fillStyle:sourceColor},
-       isSource:true,
-       scope:"green dot",
-       connectorStyle:{ strokeStyle:sourceColor, lineWidth:2},
-       connector: ["Bezier", { curviness:5 } ],
-       maxConnections:10
-       // isTarget:true,
-       // dropOptions : targetDropOptions
-    };
-    
-    // Set up endpoints on the divs
-    // jsPlumb.addEndpoint($("#container0") , { anchor:"TopCenter" },targetEndpoint);
-    connectNodes("#container0","#container1",sourceEndpoint,targetEndpoint);
-    connectNodes("#container1","#container2",sourceEndpoint,targetEndpoint);
-    connectNodes("#container2","#container3",sourceEndpoint,targetEndpoint);
-    connectNodes("#container3","#container4",sourceEndpoint,targetEndpoint);
-    connectNodes("#container4","#container5",sourceEndpoint,targetEndpoint);
-    connectNodes("#container5","#container6",sourceEndpoint,targetEndpoint);
-    connectNodes("#container5","#container7",sourceEndpoint,targetEndpoint);
-    
-    jsPlumb.draggable($(".window"));
-//    jsPlumb.animate($("#a"), {"left": 50,"top": 100},{duration:"slow"});
- 
+	var targetDropOptions = {
+		tolerance : 'touch',
+		hoverClass : 'dropHover',
+		activeClass : 'dragActive'
+	};
+
+	// Setting up a Target endPoint
+	// var targetColor = "red";
+	var targetColor = "black";
+	var targetEndpoint = {
+		endpoint : [ "Dot", {
+			radius : 5
+		} ],
+		paintStyle : {
+			fillStyle : targetColor
+		},
+		// isSource:true,
+		scope : "green dot",
+		connectorStyle : {
+			strokeStyle : targetColor,
+			lineWidth : 2
+		},
+		connector : [ "Bezier", {
+			curviness : 5
+		} ],
+		maxConnections : 10,
+		isTarget : true,
+		dropOptions : targetDropOptions
+	};
+
+	// Setting up a Source endPoint
+	// var sourceColor = "blue";
+	var sourceColor = "black";
+	var sourceEndpoint = {
+		endpoint : [ "Dot", {
+			radius : 5
+		} ],
+		paintStyle : {
+			fillStyle : sourceColor
+		},
+		isSource : true,
+		scope : "green dot",
+		connectorStyle : {
+			strokeStyle : sourceColor,
+			lineWidth : 2
+		},
+		connector : [ "Bezier", {
+			curviness : 5
+		} ],
+		maxConnections : 10
+	// isTarget:true,
+	// dropOptions : targetDropOptions
+	};
+
+	// Draw the boxes
+	var nodeSource = $("div#graphActiv");
+	var status = "finished";
+	var aux = [];
+	$("tr.runtr").each(function(index) {
+		var id = jQuery(this).attr('id');
+		var name = jQuery(this).attr('data-name');
+		paintBox(nodeSource, id, name, status);
+
+		var width = $("div#" + id + ".window").width();
+		var height = $("div#" + id + ".window").height();
+
+		aux.push(id + "-" + width + "-" + height);
+	});
+	alert(aux);
+
+//	$.ajax({
+//		type : "GET",
+//		url : '/project_graph/?list=' + aux,
+//		dataType : "json",
+//		success : function(json) {
+//			alert("");
+//		}
+//	});
+
+	// Set up endpoints on the divs
+	// jsPlumb.addEndpoint($("#container0") , { anchor:"TopCenter"
+	// },targetEndpoint);
+	// connectNodes("#container0", "#container1", sourceEndpoint,
+	// targetEndpoint);
+	// connectNodes("#container1", "#container2", sourceEndpoint,
+	// targetEndpoint);
+	// connectNodes("#container2", "#container3", sourceEndpoint,
+	// targetEndpoint);
+	// connectNodes("#container3", "#container4", sourceEndpoint,
+	// targetEndpoint);
+	// connectNodes("#container4", "#container5", sourceEndpoint,
+	// targetEndpoint);
+	// connectNodes("#container5", "#container6", sourceEndpoint,
+	// targetEndpoint);
+	// connectNodes("#container5", "#container7", sourceEndpoint,
+	// targetEndpoint);
+
+	jsPlumb.draggable($(".window"));
+	// jsPlumb.animate($("#a"), {"left": 50,"top": 100},{duration:"slow"});
+
 }
 
-function connectNodes(elm1, elm2, source, target){
-	var a = jsPlumb.addEndpoint($(elm1) , { anchor:"Center" }, source);
-    var b = jsPlumb.addEndpoint($(elm2) , { anchor:"Center" }, target);
-    
-    jsPlumb.connect({
-	 source : a,
-	 target : b
-	 });
+function paintBox(nodeSource, id, msg, status) {
+	var aux = '<div class="window" style="" id="' + id + '">' + msg + '<br />'
+			+ status + '</div>';
+	nodeSource.append(aux);
 }
 
+function connectNodes(elm1, elm2, source, target) {
+	var a = jsPlumb.addEndpoint($(elm1), {
+		anchor : "Center"
+	}, source);
+	var b = jsPlumb.addEndpoint($(elm2), {
+		anchor : "Center"
+	}, target);
+
+	jsPlumb.connect({
+		source : a,
+		target : b
+	});
+}

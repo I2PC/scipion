@@ -33,12 +33,18 @@ from pyworkflow.em.viewer import Viewer
 from pyworkflow.em import SetOfImages, SetOfMicrographs
 from pyworkflow.utils.process import runJob
 from xmipp3 import getXmippPath
-from data import XmippSetOfImages, XmippSetOfMicrographs, XmippClassification2D, XmippSetOfCoordinates
+from data import XmippSetOfImages, XmippSetOfMicrographs, XmippClassification2D, XmippSetOfCoordinates, XmippSetOfParticles
 from pyworkflow.em.protocol import ProtImportMicrographs
 from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from protocol_particle_pick import XmippProtParticlePicking
-from protocol_extract_particles import XmippProtExtractParticles
+from protocol_extract_particles import XmippProtExtractParticles, ProtImportParticles
+from protocol_cl2d_align import XmippProtCL2DAlign
+from protocol_ml2d import XmippProtML2D
+from protocol_cl2d import XmippProtCL2D
+
+
+
 import xmipp
 from plotter import XmippPlotter
 
@@ -75,8 +81,9 @@ class XmippViewer(Viewer):
             self.visualize(obj.outputMicrographs)
         elif issubclass(cls, XmippProtParticlePicking):
             self.visualize(obj.outputCoordinates)
-        elif issubclass(cls, XmippProtExtractParticles):
-            runShowJ(obj.outputImages.getFileName())
+        elif (issubclass(cls, ProtImportParticles) or
+              issubclass(cls, XmippProtExtractParticles)):
+            self.visualize(obj.outputImages)
             # If Zscore on output images plot Zscore particle sorting            
             md = xmipp.MetaData(obj.outputImages.getFileName()) 
             print "MD=%s" % obj.outputImages.getFileName()
@@ -86,6 +93,10 @@ class XmippViewer(Viewer):
                 xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
                 xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_ZSCORE)
                 xplotter.show()      
+        elif (issubclass(cls, XmippProtCL2DAlign) or
+              issubclass(cls, XmippProtML2D) or
+              issubclass(cls, XmippProtCL2D)):
+            self.visualize(obj.outputClassification)
         else:
             raise Exception('XmippViewer.visualize: can not visualize class: %s' % obj.getClassName())
 

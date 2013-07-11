@@ -507,7 +507,8 @@ class ProtocolsView(tk.Frame):
         g = self.project.getRunsGraph()
         lt = LevelTree(g)
         self.runsGraph.clear()
-        lt.paint(self.runsGraph, self.createRunItem)
+        lt.setCanvas(self.runsGraph)
+        lt.paint(self.createRunItem)
         
     def createRunItem(self, node, y):
         """ If not nodeBuildFunc is specified, this one will be used
@@ -530,7 +531,7 @@ class ProtocolsView(tk.Frame):
             
         if node.run:
             status = node.run.status.get(STATUS_FAILED)
-            nodeText += '\n' + status
+            nodeText = node.run.getName() + '\n' + status
             color = self.colors[status]
         
         return self.runsGraph.createTextbox(nodeText, 100, y, bgColor=color, textColor=textColor)

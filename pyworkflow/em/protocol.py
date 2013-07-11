@@ -34,7 +34,7 @@ import shutil
 from pyworkflow.object import String, Float
 from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
-from pyworkflow.em import Micrograph, SetOfMicrographs, TiltedPair, SetOfImages, Image
+from pyworkflow.em import Micrograph, SetOfMicrographs, TiltedPair, SetOfImages, Image, SetOfParticles
 from pyworkflow.utils.path import removeBaseExt, join, basename
 
 

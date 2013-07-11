@@ -8,6 +8,7 @@ from django.template import RequestContext
 import json
 from pyworkflow.manager import Manager
 from pyworkflow.project import Project
+import pyworkflow.gui.graph as gg
 from pyworkflow.gui.tree import TreeProvider, ProjectRunsTreeProvider
 from pyworkflow.utils.path import findResource
 from pyworkflow.utils.utils import prettyDate
@@ -53,6 +54,7 @@ delete_tool_path = getResource('delete_toolbar')
 browse_tool_path = getResource('browse_toolbar')
 tree_tool_path = getResource('tree_toolbar')
 
+######    Projects template    #####
 def projects(request):
     # CSS #
     css_path = os.path.join(settings.STATIC_URL, 'css/projects_style.css')
@@ -94,6 +96,46 @@ def delete_project(request):
         
     return HttpResponse(mimetype='application/javascript')
 
+######    Project Content template    #####
+def createNode(node, y):
+    item = gg.TNode(node.getName(), y=y)
+    item.width = node.w
+    item.height = node.h
+    return item
+    
+def createEdge(srcItem, dstItem):
+    pass
+    
+def project_graph (request):
+    if request.is_ajax():
+        boxList = request.GET.get('list')
+        # Project Id(or Name) should be stored in SESSION
+        projectName = request.session['projectName']
+        # projectName = request.GET.get('projectName')
+        project = loadProject(projectName)
+        g = project.getRunsGraph()
+        root = g.getRoot()
+        root.w = 100
+        root.h = 40
+        
+        for box in boxList.split(','):
+            i, w, h = box.split('-')
+            node = g.getNode(i)
+            print node.getName()
+            node.w = float(w)
+            node.h = float(h)
+            
+        lt = gg.LevelTree(g)
+        lt.paint(createNode, createEdge)
+        nodeList = []
+        
+        nodeList = [{'id': node.getName(), 'x': node.item.x, 'y': node.item.y} 
+                    for node in g.getNodes()]
+        print nodeList
+        jsonStr = json.dumps(nodeList, ensure_ascii=False)   
+         
+        return HttpResponse(jsonStr, mimetype='application/javascript')
+
 class TreeItem():
     def __init__(self, name, tag, protClass=None):
         self.name = name
@@ -119,7 +161,7 @@ def populateTree(tree, obj):
                         item.childs.append(protItem)
         else:
             populateTree(item, sub)                
-       
+
 def loadConfig(config, name):
     c = getattr(config, name) 
     fn = getConfigPath(c.get())
@@ -151,14 +193,13 @@ def project_content(request):
     # CSS #
     css_path = os.path.join(settings.STATIC_URL, 'css/project_content_style.css')
     messi_css_path = os.path.join(settings.STATIC_URL, 'css/messi.css')
-    
+
     # JS #
     jquery_cookie = os.path.join(settings.STATIC_URL, 'js/jquery.cookie.js')
     jquery_treeview = os.path.join(settings.STATIC_URL, 'js/jquery.treeview.js')
     launchTreeview = os.path.join(settings.STATIC_URL, 'js/launchTreeview.js')
     utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
     tabs_config = os.path.join(settings.STATIC_URL, 'js/tabsConfig.js')
-    
     
     projectName = request.GET.get('projectName', None)
     if projectName is None:
@@ -231,7 +272,8 @@ def protocol_summary(request):
         print jsonStr
         
     return HttpResponse(jsonStr, mimetype='application/javascript')
-    
+
+######    Project Form template    #####
 def form(request):
     
     # Resources #
@@ -262,7 +304,6 @@ def form(request):
     else:
         protocolClass = emProtocolsDict.get(protocolName, None)
         protocol = protocolClass()
-    
     if action == 'copy':
         protocol = project.copyProtocol(protocol)
     
@@ -339,7 +380,7 @@ def save_protocol(request):
     
     return HttpResponse(mimetype='application/javascript')
 
-
+# Method to launch a protocol #
 def protocol(request):
     projectName = request.POST.get('projectName')
     protId = request.POST.get("protocolId")
@@ -391,6 +432,8 @@ def browse_objects(request):
                              ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
 
+
+######    Hosts template    #####
 def getScipionHosts():
     from pyworkflow.apps.config import getSettingsPath
     defaultHosts = getSettingsPath()
