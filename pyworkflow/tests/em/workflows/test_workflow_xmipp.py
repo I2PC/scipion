@@ -226,7 +226,25 @@ class TestXmippWorkflow(TestWorkflow):
                 xmippImg = imgCA.getImage()
                 self.assertTrue(imgCA.getImage().hasCTF(), "Image class has not CTF information.")
         self.validateFiles('protCL2D', protCL2D) 
-                
+
+        print "Run Only Align2d"
+        protOnlyalign = XmippProtCL2DAlign(maximumShift=5, numberOfIterations=5, 
+                                 numberOfMpi=2, numberOfThreads=1, useReferenceImage=False)
+
+        protOnlyalign.inputImages.set(protExtract.outputImages)
+        self.proj.launchProtocol(protOnlyalign, wait=True)        
+        
+        self.assertIsNotNone(protOnlyalign.outputClassification, "There was a problem with Only align2d")  
+        self.validateFiles('protOnlyalign', protOnlyalign)
+
+        print "Run kerdensom"
+        XmippProtKerdensom = XmippProtKerdensom()
+
+        protOnlyalign.inputImages.set(protExtract.outputImages)
+        self.proj.launchProtocol(XmippProtKerdensom, wait=True)        
+        
+        self.assertIsNotNone(XmippProtKerdensom.outputClassification, "There was a problem with kerdensom")  
+        self.validateFiles('XmippProtKerdensom', XmippProtKerdensom)
 
 if __name__ == "__main__":
     unittest.main()
