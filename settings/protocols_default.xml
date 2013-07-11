@@ -10,6 +10,7 @@
       <ProtocolConfig icon="bookmark.png" tag="protocol" text="Import" value="ProtImportParticles" />
       <ProtocolConfig tag="protocol_base" text="Picking" value="ProtParticlePicking" />
       <ProtocolConfig tag="protocol_base" text="Extract" value="ProtExtractParticles" />
+      <ProtocolConfig tag="protocol_base" text="Process" value="ProtProcessParticles" />
     </ProtocolConfig>
     <ProtocolConfig tag="section" text="2D">
       <ProtocolConfig tag="protocol_base" text="Align" value="ProtAlign" />
