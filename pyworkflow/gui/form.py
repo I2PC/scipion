@@ -467,6 +467,7 @@ class FormWindow(Window):
                 value.set(w.get())
             except ValueError:
                 print "Error setting value for: ", paramName
+                value.set(None)
              
     def updateProtocolParams(self):
         for paramName, _ in self.protocol.iterDefinitionAttributes():

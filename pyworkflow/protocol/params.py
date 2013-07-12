@@ -285,6 +285,7 @@ class FolderParam(PathParam):
 class IntParam(Param):
     def __init__(self, **args):
         Param.__init__(self, paramClass=Integer, **args)
+        self.addValidator(Format(int, error="should have a integer format"))
         
         
 class EnumParam(IntParam):
@@ -302,7 +303,8 @@ class EnumParam(IntParam):
 class FloatParam(Param):
     def __init__(self, **args):
         Param.__init__(self, paramClass=Float, **args)
-        
+        self.addValidator(Format(float, error="should have a float format"))
+
         
 class BooleanParam(Param):
     def __init__(self, **args):
@@ -323,6 +325,7 @@ class PointerParam(Param):
 class Validator(object):
     pass
 
+
 class Conditional(Validator):
     """ Simple validation based on a condition. 
     If the value doesn't meet the condition,
@@ -335,8 +338,21 @@ class Conditional(Validator):
         errors = []
         if not self._condition(value):
             errors.append(self.error)
-        return errors    
+        return errors   
     
+class Format(Conditional):
+    """ Check if the format is right. """
+    def __init__(self, valueType, error='Value have not a correct format'):
+        Conditional.__init__(self, error)
+        self.valueType = valueType
+        
+    def _condition(self, value):
+        try:
+            self.valueType(value)
+            return True
+        except Exception:
+            return False
+
 class LT(Conditional):
     def __init__(self, thresold, error='Value should be less than the thresold'):
         Conditional.__init__(self, error)
