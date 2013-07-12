@@ -40,3 +40,6 @@ from protocol_ml2d import XmippProtML2D
 from protocol_cl2d import XmippProtCL2D
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_ml3d import XmippProtML3D
+from protocol_filters import XmippProtFourierFilter
+from protocol_filters import XmippProtGaussianFilter
+from protocol_kerdensom import XmippProtKerdensom

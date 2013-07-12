@@ -26,7 +26,7 @@ class HostForm(forms.Form):
     userName = forms.CharField(label='User name', required=False,
                                 widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
     password = forms.CharField(label='Password', required=False,
-                                widget=forms.PasswordInput())
+                                widget=forms.PasswordInput(render_value = True))
     password.widget.attrs.update({'class' : 'generalInput', 'size' : 20})
     hostPath = forms.CharField(label='Host path', required=True, error_messages={'required': 'Please, enter your host path'},
                                 widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 30}))

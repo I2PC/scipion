@@ -143,7 +143,19 @@ class TestXmippWorkflow(TestWorkflow):
                     'protCL2D/extra/level_00/level_classes_core.xmd', 
                     'protCL2D/extra/level_01/level_classes.xmd', 
                     'protCL2D/extra/level_00/level_classes.stk', 
-                    'protCL2D/extra/level_01/level_classes_core.stk']
+                    'protCL2D/extra/level_01/level_classes_core.stk'],
+              'protOnlyalign': ['protOnlyalign/extra/images.xmd', 
+                    'protOnlyalign/extra/level_00/class_classes.stk', 
+                    'protOnlyalign/extra/level_00/class_classes.xmd', 
+                    'protCTF/extra/BPV_1386/xmipp_ctf.ctfparam', 
+                    'protCTF/extra/BPV_1388/xmipp_ctf.ctfparam', 
+                    'protOnlyalign/logs/run.log', 
+                    'protOnlyalign/logs/run.db', 
+                    'protExtract/extra/BPV_1388.stk', 
+                    'protCTF/extra/BPV_1387/xmipp_ctf.ctfparam', 
+                    'protExtract/images.xmd', 
+                    'protExtract/extra/BPV_1386.stk', 
+                    'protExtract/extra/BPV_1387.stk']
               }
 
     @classmethod
@@ -226,7 +238,26 @@ class TestXmippWorkflow(TestWorkflow):
                 xmippImg = imgCA.getImage()
                 self.assertTrue(imgCA.getImage().hasCTF(), "Image class has not CTF information.")
         self.validateFiles('protCL2D', protCL2D) 
-                
+
+        print "Run Only Align2d"
+        protOnlyalign = XmippProtCL2DAlign(maximumShift=5, numberOfIterations=2, 
+                                 numberOfMpi=2, numberOfThreads=1, useReferenceImage=False)
+
+        protOnlyalign.inputImages.set(protExtract.outputImages)
+        self.proj.launchProtocol(protOnlyalign, wait=True)        
+        
+        self.assertIsNotNone(protOnlyalign.outputClassification, "There was a problem with Only align2d")  
+        self.validateFiles('protOnlyalign', protOnlyalign)
+
+        print "Run kerdensom"
+        ProtKerdensom = XmippProtKerdensom(useMask=False, SomXdim=2, SomYdim=2,
+                                 SomReg0=800, SomReg1=400, SomSteps=2, extraParams='')
+
+        ProtKerdensom.inputImages.set(protExtract.outputImages)
+        self.proj.launchProtocol(ProtKerdensom, wait=True)        
+        
+        self.assertIsNotNone(ProtKerdensom.outputClassification, "There was a problem with kerdensom")  
+        #self.validateFiles('ProtKerdensom', ProtKerdensom)
 
 if __name__ == "__main__":
     unittest.main()
