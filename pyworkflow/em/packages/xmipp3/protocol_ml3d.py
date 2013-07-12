@@ -65,7 +65,7 @@ class XmippDefML3D(Form):
                       help='Angular sampling for a quick projection matching '
                       'to obtain right grey scale. As the resolution of the intial reference '
                       'should be low, this sampling can be relatively crude, e.g. 15')          
-        self.addParam('doLowPassFilterRef', BooleanParam, default=True,
+        self.addParam('doLowPassFilter', BooleanParam, default=True,
                       label="Low-pass filter initial references?", 
                       help='It is highly recommended to low-pass filter your initial reference '
                       'volume as much as you can.')   
@@ -131,11 +131,11 @@ class XmippDefML3D(Form):
                       expertLevel=LEVEL_ADVANCED, 
                       help='Choose between wslART or fourier.')
         self.addParam('aRTExtraParams', TextParam,
-                      condition='reconstructionMethod=1', expertLevel=LEVEL_ADVANCED,
+                      condition='reconstructionMethod==1', expertLevel=LEVEL_ADVANCED,
                       label='Extra parameters',
                       help='Additional reconstruction parameters for ART.')  
         self.addParam('fourierExtraParams', TextParam, 
-                      condition='reconstructionMethod=0', expertLevel=LEVEL_ADVANCED,
+                      condition='reconstructionMethod==0', expertLevel=LEVEL_ADVANCED,
                       label='Extra parameters',
                       help='The Fourier-interpolation reconstruction method is much faster than wlsART '
                       'and may give similar results. It however is not guaranteed to optimize the '
