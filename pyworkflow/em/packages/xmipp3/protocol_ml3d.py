@@ -185,7 +185,7 @@ class XmippProtML3D(XmippProtocol, ProtRefine3D, ProtClassify3D):
         if self.doCorrectGreyScale.get():
             self.insertCorrectGreyScaleSteps()
                     
-        if self.doLowPassFilterRef.get():
+        if self.doLowPassFilter.get():
             self.insertFilterStep()
             
         if self.numberOfSeedsPerRef.get() > 1:
