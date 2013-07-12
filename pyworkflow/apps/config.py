@@ -216,13 +216,14 @@ def writeHosts(dbPath):
     host.label.set('localhost')
     host.hostName.set('localhost')
     host.hostPath.set(join (getHomePath(), SCIPION_PATH, PROJECTS_PATH))
-    host.mpiCommand.set('mpirun -np %(nodes)d -bynode %(command)s')
+    host.mpiCommand.set('mpirun -np %(JOB_NODES)d -bynode %(COMMAND)s')
     
+    host.queueSystem = QueueSystemConfig()
     queueSys = host.queueSystem
     #queueSys = QueueSystemConfig()
     queueSys.name.set('PBS/TORQUE')
     queueSys.mandatory.set(False)
-    queueSys.submitCommand.set('qsub %(script)s')
+    queueSys.submitCommand.set('qsub %(JOB_SCRIPT)s')
     queueSys.submitTemplate.set("""
 #!/bin/bash
 ### Inherit all current environment variables
@@ -261,14 +262,15 @@ cat $PBS_NODEFILE
 
 %(command)s
 """)
-    queueSys.cancelCommand.set('canceljob %(jobid)d')
-    queueSys.checkCommand.set('qstat %(jobid)d')
+    queueSys.cancelCommand.set('canceljob %(JOB_ID)d')
+    queueSys.checkCommand.set('qstat %(JOB_ID)d')
     
     queue = QueueConfig()
     queue.maxCores.set(4)
     queue.allowMPI.set(True)
     queue.allowThreads.set(True)
     
+    queueSys.queues = List()
     queueSys.queues.append(queue)
     
     writeConfig(host, dbPath, mapperClass=HostMapper, clean=True)

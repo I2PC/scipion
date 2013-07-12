@@ -56,6 +56,7 @@ class Project(object):
         self.runsPath = self.addPath(PROJECT_RUNS)
         self.tmpPath = self.addPath(PROJECT_TMP)
         self.settingsPath = self.addPath(PROJECT_SETTINGS)
+        self.runs = None
         
     def getObjId(self):
         """ Return the unique id assigned to this project. """
@@ -232,27 +233,26 @@ class Project(object):
         # Update with changes
         self._storeProtocol(protocol)
         
-    def getRuns(self, iterate=False):
-        """ Return the existing protocol runs in the project. """
-        runs = self.mapper.selectByClass("Protocol", iterate=False)
-        #print "Project.getRuns:"
-        for r in runs:
-            #print "runName; ", r.getName()
-            if r.isActive():
-                #print "    updating...."
-                self._updateProtocol(r)
-        self.mapper.commit()
+    def getRuns(self, iterate=False, refresh=True):
+        """ Return the existing protocol runs in the project. 
+        """
+        if self.runs is None or refresh:
+            self.runs = self.mapper.selectByClass("Protocol", iterate=False)
+            for r in self.runs:
+                if r.isActive():
+                    self._updateProtocol(r)
+            self.mapper.commit()
         
-        return runs
+        return self.runs
     
-    def getRunsGraph(self):
+    def getRunsGraph(self, refresh=True):
         """ Build a graph taking into account the dependencies between
         different runs, ie. which outputs serves as inputs of other protocols. 
         """
         #import datetime as dt # TIME PROFILE
         #t = dt.datetime.now()
         outputDict = {} # Store the output dict
-        runs = self.getRuns()
+        runs = self.getRuns(refresh=refresh)
         from pyworkflow.utils.graph import Graph
         g = Graph(rootName='PROJECT')
         

@@ -504,7 +504,7 @@ class ProtocolsView(tk.Frame):
         self.updateRunsGraph()
 
     def updateRunsGraph(self):      
-        g = self.project.getRunsGraph()
+        g = self.project.getRunsGraph(refresh=False)
         lt = LevelTree(g)
         self.runsGraph.clear()
         lt.setCanvas(self.runsGraph)
@@ -584,8 +584,7 @@ class ProtocolsView(tk.Frame):
         
     def _browseRunData(self):
         provider = ProtocolTreeProvider(self.selectedProtocol)
-        window = BrowserWindow("Protocol data", provider, self.windows,
-                               icon=self.icon)
+        window = BrowserWindow("Protocol data", provider, self.windows, icon=self.icon)
         window.itemConfig(self.selectedProtocol, open=True)  
         window.show()
         
