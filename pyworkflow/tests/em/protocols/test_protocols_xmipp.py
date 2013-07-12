@@ -274,7 +274,25 @@ class TestXmippRotSpectra(TestXmippBase):
         self.proj.launchProtocol(xmippProtRotSpectra, wait=True)        
         
         self.assertIsNotNone(xmippProtRotSpectra.outputClassification, "There was a problem with Rotational Spectra")  
+
+    
+class TestXmippML3D(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupProject(cls)
+        #TODO: Find a set of images to make this work, with this it does not
+        images = getInputPath('ml3dData/phantom_images', '*.xmp')
+        cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1)
+        cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
         
+    def testML3D(self):
+        print "Run ML3D"
+        protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2)
+        protML3D.inputImages.set(self.protImport.outputImages)
+        protML3D.ini3DrefVolumes.set(self.iniVol)
+        self.proj.launchProtocol(protML3D, wait=True)        
+        
+        #self.assertIsNotNone(protML3D.outputClassification, "There was a problem with ML2D")          
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

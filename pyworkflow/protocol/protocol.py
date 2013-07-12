@@ -217,6 +217,7 @@ STEPS_PARALLEL = 1
          
 LEVEL_NORMAL = 0
                 
+                
 class Protocol(Step):
     """ The Protocol is a higher type of Step.
     It also have the inputs, outputs and other Steps properties,
@@ -246,6 +247,14 @@ class Protocol(Step):
         self._pid = Integer()
         self._stepsExecutor = None
         
+    @staticmethod
+    def hasDefinition(cls):
+        """ Check if the protocol has some definition.
+        This can help to detect "abstract" protocol that 
+        only serve as base for other, not to be instantiated. 
+        """
+        return hasattr(cls, '_definition')
+    
     def getDefinition(self):
         """ Access the protocol definition. """
         return self._definition
@@ -253,6 +262,17 @@ class Protocol(Step):
     def getDefinitionParam(self, paramName):
         """ Return a _definition param give its name. """
         return self._definition.getParam(paramName)
+    
+    def getEnumText(self, paramName):
+        """ This function will retrieve the text value
+        of an enum parameter in the definition, taking the actual value in the protocol.
+        Params:
+            paramName: the name of the enum param.
+        Returns:
+            the string value corresponding to the enum choice.
+        """
+        index = getattr(self, paramName).get() # self.getAttributeValue(paramName)
+        return self.getDefinitionParam(paramName).choices[index]
     
     def evalCondition(self, paramName):
         """ Eval if the condition of paramName in _definition
@@ -678,18 +698,25 @@ class Protocol(Step):
         """ Check that input parameters are correct.
         Return a list with errors, if the list is empty, all was ok.         
         """
-        validateMsgs = []
+        errors = []
         # Validate that all input pointer parameters have a value
-        for paramName, _ in self.getDefinition().iterPointerParams():
-            attrPointer = getattr(self, paramName) # Get all self attribute that are pointers
-            obj = attrPointer.get()
-            if self.evalCondition(paramName) and obj is None:
-                validateMsgs.append('%s cannot be EMPTY.' % _.label)
-                
-        if len(validateMsgs) !=0:
-            return validateMsgs
-        else:
-            return self._validate()
+        for paramName, param in self.getDefinition().iterParams():
+            attr = getattr(self, paramName) # Get all self attribute that are pointers
+            paramErrors = []
+            print "protocol: validating ", paramName
+            if attr.isPointer():
+                obj = attr.get()
+                if self.evalCondition(paramName) and obj is None:
+                    paramErrors.append('cannot be EMPTY.')
+            else:
+                print "calling param.validate"
+                paramErrors = param.validate(attr.get())
+            label = param.label.get()
+            errors += ['<%s> %s' % (label, err) for err in paramErrors]                
+        # Validate specific for the subclass
+        errors += self._validate()
+        
+        return errors 
     
     def _warnings(self):
         """ Should be implemented in subclasses. See warning. """

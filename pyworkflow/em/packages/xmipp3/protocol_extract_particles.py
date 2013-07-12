@@ -329,10 +329,10 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         if not self.inputCoords.hasTiltPairs():
             args="-i %(fnImages)s --addToInput"
             if self.rejectionMethod==self.MAXZSCORE:
-                maxZscore = self.maxZscore
+                maxZscore = self.maxZscore.get()
                 args+=" --zcut "+str(maxZscore)
             elif self.rejectionMethod==self.PERCENTAGE:
-                percentage = self.percentage
+                percentage = self.percentage.get()
                 args+=" --percent "+str(percentage)
     
             self.runJob(None, "xmipp_image_sort_by_statistics", args % locals())

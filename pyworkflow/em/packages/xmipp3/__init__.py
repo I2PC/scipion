@@ -41,3 +41,6 @@ from protocol_cl2d import XmippProtCL2D
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_rotational_spectra import XmippProtRotSpectra 
+from protocol_ml3d import XmippProtML3D
+from protocol_filters import XmippProtFourierFilter
+from protocol_filters import XmippProtGaussianFilter

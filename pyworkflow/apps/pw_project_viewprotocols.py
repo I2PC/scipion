@@ -101,7 +101,7 @@ def populateTree(self, tree, prefix, obj, level=0):
             if prot is not None:
                 tree.item(item, image=self.getImage('class_obj.gif'))
                 for k, v in emProtocolsDict.iteritems():
-                    if not v is prot and issubclass(v, prot):
+                    if not v is prot and issubclass(v, prot) and Protocol.hasDefinition(v):
                         key = '%s.%s' % (item, k)
                         tree.insert(item, 'end', key, text=k, tags=('protocol'))
                         
@@ -504,7 +504,7 @@ class ProtocolsView(tk.Frame):
         self.updateRunsGraph()
 
     def updateRunsGraph(self):      
-        g = self.project.getRunsGraph()
+        g = self.project.getRunsGraph(refresh=False)
         lt = LevelTree(g)
         self.runsGraph.clear()
         lt.setCanvas(self.runsGraph)
@@ -584,8 +584,7 @@ class ProtocolsView(tk.Frame):
         
     def _browseRunData(self):
         provider = ProtocolTreeProvider(self.selectedProtocol)
-        window = BrowserWindow("Protocol data", provider, self.windows,
-                               icon=self.icon)
+        window = BrowserWindow("Protocol data", provider, self.windows, icon=self.icon)
         window.itemConfig(self.selectedProtocol, open=True)  
         window.show()
         
