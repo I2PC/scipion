@@ -185,54 +185,54 @@ class ProtocolTreeProvider(ObjectTreeProvider):
         else:
             objList = [protocol]
         ObjectTreeProvider.__init__(self, objList)
-        self.viewer = XmippViewer()
-        
-    def show(self, obj):
-        self.viewer.visualize(obj)
-        
-    def getObjectPreview(self, obj):
-        desc = "<name>: " + obj.getName()
-        
-        return (None, desc)
-    
-    def getObjectActions(self, obj):
-        if isinstance(obj, Pointer):
-            obj = obj.get()
-            
-        if isinstance(obj, SetOfMicrographs):
-            return [('Open Micrographs with Xmipp', lambda: self.viewer.visualize(obj))]
-        if isinstance(obj, SetOfImages):
-            return [('Open Images with Xmipp', lambda: self.viewer.visualize(obj))]
-        if isinstance(obj, XmippClassification2D):
-            return [('Open Classification2D with Xmipp', lambda: self.viewer.visualize(obj))]
-        return []   
-    
-    def getObjectInfo(self, obj):
-        info = ObjectTreeProvider.getObjectInfo(self, obj)
-        attrName = obj.getLastName()
-        if hasattr(self.protocol, attrName):
-            if isinstance(obj, Pointer) and obj.hasValue():
-                info['image'] = 'db_input.gif'
-            else:
-                if (self.protocol._definition.hasParam(attrName) or
-                    attrName in ['numberOfMpi', 'numberOfThreads']):
-                    info['parent'] = self.params
-                elif attrName in self.statusList:
-                    if info['parent'] is self.protocol:
-                        info['parent'] = self.status
-                    
-            if attrName.startswith('output'):# in self.protocol._outputs:
-                info['image'] = 'db_output.gif'
-        if obj is self.params or obj is self.status:
-            info['parent'] = self.protocol
-        return info     
-    
-    def _getChilds(self, obj):
-        childs = ObjectTreeProvider._getChilds(self, obj)
-        if obj is self.protocol:
-            childs.insert(0, self.status)
-            childs.insert(1, self.params)
-        return childs
+#        self.viewer = XmippViewer()
+#        
+#    def show(self, obj):
+#        self.viewer.visualize(obj)
+#        
+#    def getObjectPreview(self, obj):
+#        desc = "<name>: " + obj.getName()
+#        
+#        return (None, desc)
+#    
+#    def getObjectActions(self, obj):
+#        if isinstance(obj, Pointer):
+#            obj = obj.get()
+#            
+#        if isinstance(obj, SetOfMicrographs):
+#            return [('Open Micrographs with Xmipp', lambda: self.viewer.visualize(obj))]
+#        if isinstance(obj, SetOfImages):
+#            return [('Open Images with Xmipp', lambda: self.viewer.visualize(obj))]
+#        if isinstance(obj, XmippClassification2D):
+#            return [('Open Classification2D with Xmipp', lambda: self.viewer.visualize(obj))]
+#        return []   
+#    
+#    def getObjectInfo(self, obj):
+#        info = ObjectTreeProvider.getObjectInfo(self, obj)
+#        attrName = obj.getLastName()
+#        if hasattr(self.protocol, attrName):
+#            if isinstance(obj, Pointer) and obj.hasValue():
+#                info['image'] = 'db_input.gif'
+#            else:
+#                if (self.protocol._definition.hasParam(attrName) or
+#                    attrName in ['numberOfMpi', 'numberOfThreads']):
+#                    info['parent'] = self.params
+#                elif attrName in self.statusList:
+#                    if info['parent'] is self.protocol:
+#                        info['parent'] = self.status
+#                    
+#            if attrName.startswith('output'):# in self.protocol._outputs:
+#                info['image'] = 'db_output.gif'
+#        if obj is self.params or obj is self.status:
+#            info['parent'] = self.protocol
+#        return info     
+#    
+#    def _getChilds(self, obj):
+#        childs = ObjectTreeProvider._getChilds(self, obj)
+#        if obj is self.protocol:
+#            childs.insert(0, self.status)
+#            childs.insert(1, self.params)
+#        return childs
     
 
 class RunIOTreeProvider(TreeProvider):
