@@ -359,3 +359,9 @@ class ProtClassify(Protocol):
 
 class ProtAlignClassify(Protocol):
     pass
+
+class ProtRefine3D(Protocol):
+    pass
+
+class ProtClassify3D(Protocol):
+    pass
