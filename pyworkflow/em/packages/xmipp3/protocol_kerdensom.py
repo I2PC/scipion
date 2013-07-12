@@ -61,7 +61,7 @@ class XmippDefKerdensom(Form):
                       'to a final lower one, in a user-defined number of steps.'
                       'If the output map is too smooth, lower the regularization factors'
                       'If the output map is not organized, higher the regularization factors'
-                      'See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM')
+                      'See [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM]')
         self.addParam('SomReg1', IntParam, default=200, expertLevel=LEVEL_ADVANCED,
                       label='Final regularization factor:')
         self.addParam('SomSteps', IntParam, default=5, expertLevel=LEVEL_ADVANCED,
@@ -86,7 +86,7 @@ class XmippProtKerdensom(ProtClassify, XmippProtocol):
         mask = self.Mask.get()
         self._params = {'oroot': self._getExtraPath("kerdensom"),
                         'imgsFn': imgsFn,
-                        'mask': mask, 
+                        'mask': mask,
                         'SomXdim': self.SomXdim.get(),
                         'SomYdim': self.SomYdim.get(),
                         'SomReg0': self.SomReg0.get(),
@@ -99,7 +99,6 @@ class XmippProtKerdensom(ProtClassify, XmippProtocol):
                         'kclasses': self._getExtraPath("kerdensom_classes.xmd")
                        }
        
-        #self._insertFunctionStep('img2vector', imgsFn, mask)
         self._insertImgToVector()
         self._insertKerdensom()
         self._insertVectorToImg()
@@ -109,7 +108,7 @@ class XmippProtKerdensom(ProtClassify, XmippProtocol):
     def _insertImgToVector(self):
         """ Insert runJob for convert into a vector Md """
         args = ' -i %(imgsFn)s -o %(vectors)s '
-        if self._params['mask'] != '':
+        if self.useMask:
             args += ' --mask binary_file %(mask)s'
         
         self._insertRunJobStep("xmipp_image_vectorize", args % self._params)
@@ -122,7 +121,7 @@ class XmippProtKerdensom(ProtClassify, XmippProtocol):
    
     def _insertVectorToImg(self):
         args = ' -i %(kvectors)s -o %(classes)s' 
-        if self._params['mask'] != '':
+        if self.useMask:
             args += ' --mask binary_file %(mask)s'
         self._insertRunJobStep("xmipp_image_vectorize", args % self._params)
 #        deleteFiles([self._getExtraPath("kerdensom_vectors.xmd"),self._getExtraPath("kerdensom_vectors.vec")], True)
@@ -147,18 +146,25 @@ class XmippProtKerdensom(ProtClassify, XmippProtocol):
         classification = XmippClassification2D(self._params['kclasses'])
         self._defineOutputs(outputClassification=classification)
 
-    def validate(self):
+    def _validate(self):
         errors = []
+        mask = self.Mask.get()
         if self.SomReg0 < self.SomReg1:
             errors.append("Regularization must decrease over iterations:")
             errors.append("    Initial regularization must be larger than final")
+        if self.useMask:
+            if len(mask) > 0:
+                if not exists(mask):
+                    errors.append("Cannot find the file " + mask)
+            else:
+                errors.append("Please, enter a mask file")
         return errors
         
     def _summary(self):
         summary = []
         if not hasattr(self, 'outputClassification'):
-            summary.append("Output alignment not ready yet.")
+            summary.append("Output classification not ready yet.")
         else:
             summary.append("Input Images: %s" % self.inputImages.get().getNameId())
-            summary.append("Output Aligned Images: %s" % self.outputClassification.get())
+            summary.append("Output Classified Images: %s" % self.outputClassification.get())
         return summary
