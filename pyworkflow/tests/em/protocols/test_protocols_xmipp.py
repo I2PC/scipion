@@ -256,6 +256,7 @@ class TestXmippML3D(TestXmippBase):
         protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2)
         protML3D.inputImages.set(self.protImport.outputImages)
         protML3D.ini3DrefVolumes.set(self.iniVol)
+        #protML3D.doCorrectGreyScale.set(True)
         self.proj.launchProtocol(protML3D, wait=True)        
         
         #self.assertIsNotNone(protML3D.outputClassification, "There was a problem with ML2D")          

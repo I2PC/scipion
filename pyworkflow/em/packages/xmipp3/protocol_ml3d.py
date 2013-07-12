@@ -95,7 +95,7 @@ class XmippDefML3D(Form):
                       'Note that all flags about grey-scale correction, filtering and '
                       'seed generation will be ignored if a value larger than 0 is given, '
                       'since this option only concerns the ML3D classification part.')   
-        self.addParam('extraParams', TextParam, default='',
+        self.addParam('extraParams', TextParam,
                       expertLevel=LEVEL_ADVANCED,
                       label='Additional parameters',
                       help='Additional xmipp_ml(f)_refine3d parameters.')                  
@@ -130,11 +130,11 @@ class XmippDefML3D(Form):
                       default=0, label='Reconstruction method', display=EnumParam.DISPLAY_LIST,
                       expertLevel=LEVEL_ADVANCED, 
                       help='Choose between wslART or fourier.')
-        self.addParam('aRTExtraParams', TextParam, default='',
+        self.addParam('aRTExtraParams', TextParam,
                       condition='reconstructionMethod=1', expertLevel=LEVEL_ADVANCED,
                       label='Extra parameters',
                       help='Additional reconstruction parameters for ART.')  
-        self.addParam('fourierExtraParams', TextParam, default='', 
+        self.addParam('fourierExtraParams', TextParam, 
                       condition='reconstructionMethod=0', expertLevel=LEVEL_ADVANCED,
                       label='Extra parameters',
                       help='The Fourier-interpolation reconstruction method is much faster than wlsART '
@@ -196,7 +196,7 @@ class XmippProtML3D(XmippProtocol, ProtRefine3D, ProtClassify3D):
         
         self._insertFunctionStep('renameOutput', self.workingDir.get(), self.getProgramId())
                 
-#        self._insertFunctionStep('createOutput')
+        self._insertFunctionStep('createOutput')
 
     def copyVolumes(self, inputMd, outputStack):
         ''' This function will copy input references into a stack in working directory'''
@@ -246,7 +246,6 @@ class XmippProtML3D(XmippProtocol, ProtRefine3D, ProtClassify3D):
             self.ParamsStr = '-i %(ImgMd)s -o %(projMatch)s --ref %(projRefs)s' 
             self._insertRunJobStep('xmipp_angular_projection_matching', self.ParamsStr % self.ParamsDict)
  
-#FIXME: COMMENTED THIS STEP UNTIL COMPLETION BY ROBERTO    
             self.ParamsStr = '-i %(projMatch)s --lib %(docRefs)s -o %(corrRefsRoot)s'
             self._insertRunJobStep('xmipp_angular_class_average', self.ParamsStr % self.ParamsDict)
 
@@ -320,7 +319,8 @@ class XmippProtML3D(XmippProtocol, ProtRefine3D, ProtClassify3D):
                          'fourierExtraParams': self.fourierExtraParams.get()
                         })
         self.ParamsStr = "-i %(_ImgMd)s --oroot %(_ORoot)s --ref %(_InitialVols)s --iter %(_NumberOfIterations)d " + \
-                         "--sym %(symmetry)s --ang %(angularSampling)s %(extraParams)s"
+                         "--sym %(symmetry)s --ang %(angularSampling)s"
+        if self.aRTExtraParams.hasValue(): self.ParamsStr += " %(extraParams)s"
 #        if self.NumberOfReferences > 1:
 #            self.ParamsStr += " --nref %(NumberOfReferences)s"
         if self.numberOfThreads.get() > 1:
@@ -341,10 +341,10 @@ class XmippProtML3D(XmippProtocol, ProtRefine3D, ProtClassify3D):
 
         self.ParamsStr += " --recons %(reconstructionMethod)s "
         
-        if self.reconstructionMethod.get() == 1:
-            self.ParamsStr += " %(aRTExtraParams)s"
+        if self.reconstructionMethod.get() == self.WLSART:
+            if self.aRTExtraParams.hasValue(): self.ParamsStr += " %(aRTExtraParams)s"
         else:
-            self.ParamsStr += " %(fourierExtraParams)s" 
+            if self.fourierExtraParams.hasValue(): self.ParamsStr += " %(fourierExtraParams)s" 
             
         self._insertRunJobStep('xmipp_%s_refine3d' % self.getProgramId(), self.ParamsStr % self.ParamsDict)
         
@@ -358,7 +358,7 @@ class XmippProtML3D(XmippProtocol, ProtRefine3D, ProtClassify3D):
             shutil.move(f, nf)
                                                     
     def createOutput(self):
-        classification = XmippClassification2D(self.oroot + 'classes.xmd')
+        classification = XmippClassification2D(self._getPath('classes.xmd'))
         self._defineOutputs(outputClassification=classification)
 
     def _summary(self):
@@ -367,6 +367,5 @@ class XmippProtML3D(XmippProtocol, ProtRefine3D, ProtClassify3D):
             summary.append("Output classes not ready yet.")
         else:
             summary.append("Input Images: %s" % self.inputImages.get().getNameId())
-            summary.append("Number of references: %d" % self.numberOfReferences.get())
             summary.append("Output classes: %s" % self.outputClassification.get())
         return summary

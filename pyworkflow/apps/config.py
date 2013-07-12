@@ -195,6 +195,13 @@ def writeProtocols():
     m1.addSubMenu('Align+Classify', value='ProtAlignClassify',
                   tag = 'protocol_base')
 
+    m1 = menu.addSubMenu('3D', tag='section')
+    
+    m1.addSubMenu('Refine', value='ProtRefine3D',
+                  tag = 'protocol_base')
+    m1.addSubMenu('Classify', value='ProtClassify3D',
+                  tag = 'protocol_base')
+    
     writeConfig(menu, 'protocols_default.xml')
     
 SCIPION_PATH = 'Scipion'
