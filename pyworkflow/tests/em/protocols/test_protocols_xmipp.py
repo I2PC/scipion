@@ -240,6 +240,40 @@ class TestXmippCL2D(TestXmippBase):
         
         self.assertIsNotNone(protCL2D.outputClassification, "There was a problem with CL2D")  
 
+class TestXmippProtCL2DAlign(TestXmippBase):
+
+    @classmethod
+    def setUpClass(cls):
+        setupClassification(cls)
+        
+    def testXmippProtCL2DAlign(self):
+        print "Run Only Align"
+        xmippProtCL2DAlign = launchXmippProtCL2DAlign(self)
+        
+        self.assertIsNotNone(xmippProtCL2DAlign.outputClassification, "There was a problem with Only align2d")    
+
+def launchXmippProtCL2DAlign(test): 
+    xmippProtCL2DAlign = XmippProtCL2DAlign(maximumShift=5, numberOfIterations=5, 
+                             numberOfMpi=2, numberOfThreads=1, useReferenceImage=False)
+    
+    xmippProtCL2DAlign.inputImages.set(test.protImport.outputImages)
+    test.proj.launchProtocol(xmippProtCL2DAlign, wait=True)
+    return xmippProtCL2DAlign
+
+class TestXmippRotSpectra(TestXmippBase):
+
+    @classmethod
+    def setUpClass(cls):
+        setupClassification(cls)
+        
+    def testRotSpectra(self):
+        print "Run Rotational Spectra"
+        xmippProtCL2DAlign = launchXmippProtCL2DAlign(self)
+        xmippProtRotSpectra = XmippProtRotSpectra()
+        xmippProtRotSpectra.inputImages.set(xmippProtCL2DAlign.outputClassification)
+        self.proj.launchProtocol(xmippProtRotSpectra, wait=True)        
+        
+        self.assertIsNotNone(xmippProtRotSpectra.outputClassification, "There was a problem with Rotational Spectra")  
         
 
 if __name__ == "__main__":

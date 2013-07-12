@@ -40,3 +40,4 @@ from protocol_ml2d import XmippProtML2D
 from protocol_cl2d import XmippProtCL2D
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_kerdensom import XmippProtKerdensom
+from protocol_rotational_spectra import XmippProtRotSpectra 
