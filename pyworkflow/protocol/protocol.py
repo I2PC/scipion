@@ -263,6 +263,17 @@ class Protocol(Step):
         """ Return a _definition param give its name. """
         return self._definition.getParam(paramName)
     
+    def getEnumText(self, paramName):
+        """ This function will retrieve the text value
+        of an enum parameter in the definition, taking the actual value in the protocol.
+        Params:
+            paramName: the name of the enum param.
+        Returns:
+            the string value corresponding to the enum choice.
+        """
+        index = getattr(self, paramName).get() # self.getAttributeValue(paramName)
+        return self.getDefinitionParam(paramName).choices[index]
+    
     def evalCondition(self, paramName):
         """ Eval if the condition of paramName in _definition
         is satified with the current values of the protocol attributes. 
