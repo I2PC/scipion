@@ -443,7 +443,7 @@ class FormWindow(Window):
             
     def _checkAllChanges(self):
         for paramName, _ in self.protocol.iterDefinitionAttributes():
-            self._checkChanges(paramName)
+            self._checkCondition(paramName)
             
     def _onExpertLevelChanged(self, *args):
         self.protocol.expertLevel.set(self.expertVar.get())
