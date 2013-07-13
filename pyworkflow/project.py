@@ -154,7 +154,8 @@ class Project(object):
             # FIXME: this will not work for a real remote host
             jobId = protocol.getJobId() # Preserve the jobId before copy
             
-            dbPath = join(protocol.getHostConfig().getHostPath(), protocol.getDbPath())
+            dbPath = self.getPath(protocol.getDbPath())
+            #join(protocol.getHostConfig().getHostPath(), protocol.getDbPath())
             prot2 = getProtocolFromDb(dbPath, protocol.getObjId(), globals())
             # Copy is only working for db restored objects
             protocol.copy(prot2)
@@ -212,7 +213,7 @@ class Project(object):
         give its value of 'hostname'
         """
         hostName = protocol.getHostName()
-        hostConfig = self.hostsMapper.selectByLabel(hostName)
+        hostConfig = self.settings.getHostByLabel(hostName)
         hostConfig.cleanObjId()
         # Add the project name to the hostPath in remote execution host
         hostRoot = hostConfig.getHostPath()

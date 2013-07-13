@@ -31,8 +31,11 @@ class SqliteMapper(Mapper):
     """Specific Mapper implementation using Sqlite database"""
     def __init__(self, dbName, dictClasses=None):
         Mapper.__init__(self, dictClasses)
-        self.db = SqliteDb(dbName)
         self.__initObjDict()
+        try:
+            self.db = SqliteDb(dbName)
+        except Exception, ex:
+            raise Exception('Error creating SqliteMapper, dbName: %s\n error: %s' % (dbName, ex))
     
     def commit(self):
         self.db.commit()

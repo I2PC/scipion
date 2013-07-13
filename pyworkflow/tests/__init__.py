@@ -72,7 +72,7 @@ def setupProject(testClass):
     projName = testClass.__name__
     proj = Manager().createProject(projName) # Now it will be loaded if exists
     # Check that exists hosts for execution
-    hosts = proj.getHosts()
+    hosts = proj.getSettings().getHosts()
     if len(hosts) <= 0:
         raise Exception("Project: %s can't load host configuration." % projName)
     

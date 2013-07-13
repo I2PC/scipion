@@ -100,6 +100,12 @@ class ProjectSettings(OrderedObject):
     def getHostById(self, hostId):
         return self.mapper.selectById(hostId)
     
+    def getHostByLabel(self, hostLabel):
+        for host in self.hostList:
+            if host.label == hostLabel:
+                return host
+        return None
+    
     def saveHost(self, host, commit=False):
         """ Save a host for project settings.
             If the hosts exists it is updated, else it is created.
@@ -146,11 +152,11 @@ class ProjectSettings(OrderedObject):
         self.setName('ProjectSettings')
         if dbPath is not None:
             self.mapper = SqliteMapper(dbPath, globals())
+            self.mapper.deleteAll()
             self.mapper.insert(self)
         else:
             if self.mapper is None:
                 raise Exception("Can't write ProjectSettings without mapper or dbPath")
-            self.mapper.deleteAll()
             self.mapper.store(self)
         
         self.mapper.commit()
