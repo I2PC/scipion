@@ -236,9 +236,10 @@ def addMenus(settings):
 def addProtocols(settings):
     """ Write protocols configuration. """
     menu = ProtocolConfig()
+    
+    # ------------------- Micrographs ----------------------------
     m1 = menu.addSubMenu('Micrographs', tag='section')
     
-    #m2 = m1.addSubMenu('Micrographs')
     m1.addSubMenu(' Import', value='ProtImportMicrographs', 
                   tag='protocol', icon='bookmark.png')
     m1.addSubMenu('Preprocess', value='ProtPreprocessMicrographs',
@@ -246,14 +247,19 @@ def addProtocols(settings):
     m1.addSubMenu('CTF estimation', value='ProtCTFMicrographs',
                   tag='protocol_base')
     
+    # ------------------- Particles ----------------------------
     m1 = menu.addSubMenu('Particles', tag='section')
+    
     m1.addSubMenu('Import', value='ProtImportParticles', 
                   tag='protocol', icon='bookmark.png')
     m1.addSubMenu('Picking', value='ProtParticlePicking',
                   tag='protocol_base')
     m1.addSubMenu('Extract', value='ProtExtractParticles',
                   tag='protocol_base')    
-
+    m1.addSubMenu('Process', value='ProtProcessParticles',
+                  tag='protocol_base')   
+    
+    # ------------------- 2D ----------------------------
     m1 = menu.addSubMenu('2D', tag='section')
     
     m1.addSubMenu('Align', value='ProtAlign',
@@ -262,10 +268,16 @@ def addProtocols(settings):
                   tag = 'protocol_base')
     m1.addSubMenu('Align+Classify', value='ProtAlignClassify',
                   tag = 'protocol_base')
-
-    #writeConfig(menu, 'protocols_default.xml')
-    settings.addProtocolMenu(menu)
     
+    # ------------------- 3D ----------------------------
+    m1 = menu.addSubMenu('3D', tag='section')
+    
+    m1.addSubMenu('Refine', value='ProtRefine3D',
+                  tag = 'protocol_base')
+    m1.addSubMenu('Classify', value='ProtClassify3D',
+                  tag = 'protocol_base')
+    
+    settings.addProtocolMenu(menu)
     
 def getScipionHome(userHome):
     """ Returns default SCIPION_HOME from HOME. """
