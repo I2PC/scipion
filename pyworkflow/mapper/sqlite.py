@@ -77,6 +77,10 @@ class SqliteMapper(Mapper):
         namePrefix = self.__getNamePrefix(obj)
         self.db.deleteChildObjects(namePrefix)
         
+    def deleteAll(self):
+        """ Delete all objects stored """
+        self.db.deleteAll()
+                
     def delete(self, obj):
         """Delete an object and all its childs"""
         self.deleteChilds(obj)
@@ -208,7 +212,6 @@ class SqliteMapper(Mapper):
         else:
             return self.selectBy(iterate=iterate, classname=className)
             
-    
     def selectAll(self, iterate=False):
         self.__initObjDict()
         objRows = self.db.selectObjectsByParent(parent_id=None)
@@ -319,6 +322,10 @@ class SqliteDb():
         """ Delete from db all objects that are childs 
         of an ancestor, now them will have the same starting prefix"""
         self.executeCommand(self.DELETE + "name LIKE '%s.%%'" % ancestor_namePrefix)
+        
+    def deleteAll(self):
+        """ Delete all objects from the db. """
+        self.executeCommand(self.DELETE + "1")
         
 
 

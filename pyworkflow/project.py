@@ -75,6 +75,9 @@ class Project(object):
     def getTmpPath(self, *paths):
         return self.getPath(PROJECT_TMP, *paths)
     
+    def getSettings(self):
+        return self.settings
+    
     def load(self):
         """Load project data and settings
         from the project dir."""
@@ -85,9 +88,10 @@ class Project(object):
         if not exists(self.dbPath):
             raise Exception("Project database not found in '%s'" % self.dbPath)
         self.mapper = SqliteMapper(self.dbPath, globals())
-        self.hostsMapper = HostMapper(self.settingsPath)
+        self.settings = loadSettings(self.settingsPath)
+        #self.hostsMapper = HostMapper(self.settingsPath)
         
-    def create(self, hosts):
+    def create(self, defaultSettings):
         """Prepare all required paths and files to create a new project.
         Params:
          hosts: a list of configuration hosts associated to this projects (class ExecutionHostConfig)
@@ -101,15 +105,12 @@ class Project(object):
         # Create db throught the mapper
         self.mapper = SqliteMapper(self.dbPath, globals())
         self.mapper.commit()
-        # Write hosts configuration to disk
-        self.hostsMapper = HostMapper(self.settingsPath)
-
-        for h in hosts:
-            self.hostsMapper.insert(h)
-        self.hostsMapper.commit()
+        # Write settings to disk
+        self.settings = defaultSettings
+        self.settings.write(self.settingsPath)
+        
         # Create other paths inside project
         for p in self.pathList:
-            print "creating file: ", p
             if '.' in p:
                 makeFilePath(p)
             else:
@@ -282,41 +283,3 @@ class Project(object):
         #print ">>>>>>> Graph building: ", dt.datetime.now() - t
         return g
         
-    def getHosts(self):
-        """ Retrieve the hosts associated with the project. (class ExecutionHostConfig) """
-        return self.hostsMapper.selectAll()
-    
-#    def launchRemoteProtocol(self, protocol):
-#        """ Launch protocol in an execution host    
-#        Params:
-#            potocol: Protocol to launch in an execution host.
-#        """
-#        # First we must recover the execution host credentials.
-#        self.hostsMapper = HostMapper(self.settingsPath)
-#        executionHostConfig = self.hostsMapper.selectByLabel(protocol.getHostName())
-#        self.sendProtocol(protocol, executionHostConfig)
-#        command = "nohup pw_protocol_run.py " + self.getObjId() + " " + str(protocol.getObjId()) #+ " > /gpfs/fs1/home/bioinfo/apoza/salida.txt 2> /gpfs/fs1/home/bioinfo/apoza/salida2.txt &"
-#        from pyworkflow.utils.utils import executeRemote
-#        executeRemote(command,
-#                      executionHostConfig.getHostName(),
-#                      executionHostConfig.getUserName(),
-#                      executionHostConfig.getPassword())
-        
-    def saveHost(self, host):
-        """ Save a host for project settings.
-            If the hosts exists it is updated, else it is created.
-        params:
-            host: The host to update or create.
-        """
-        self.hostsMapper.store(host)
-        self.hostsMapper.commit()
-        return host;
-    
-    def deleteHost(self, hostId):
-        """ Delete a host of project settings.
-        params:
-            hostId: The host id to delete.
-        """
-        host = self.hostsMapper.selectById(hostId)
-        self.hostsMapper.delete(host)
-        self.hostsMapper.commit()
