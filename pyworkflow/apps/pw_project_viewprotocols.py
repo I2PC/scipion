@@ -113,25 +113,6 @@ def populateTree(self, tree, prefix, obj, level=0):
     for sub in obj:
         populateTree(self, tree, key, sub, level+1)
     
-#def getMapper(fn, classesDict):
-#    """Select what Mapper to use depending on
-#    the filename extension"""
-#    if fn.endswith('.xml'):
-#        return XmlMapper(fn, classesDict)
-#    elif fn.endswith('.sqlite'):
-#        return SqliteMapper(fn, classesDict)
-#    return None
-
-#    
-#def loadConfig(config, name):
-#    c = getattr(config, name) 
-#    fn = getConfigPath(c.get())
-#    if not os.path.exists(fn):
-#        raise Exception('loadMenuConfig: menu file "%s" not found' % fn )
-#    mapper = ConfigMapper(getConfigPath(fn), globals())
-#    menuConfig = mapper.getConfig()
-#    return menuConfig
-
 
 class RunsTreeProvider(ProjectRunsTreeProvider):
     """Provide runs info to populate tree"""
