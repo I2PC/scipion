@@ -60,6 +60,9 @@ class FormElement(OrderedObject):
     def hasCondition(self):
         return self.condition.hasValue()
     
+    def getLabel(self):
+        return self.label.get()
+    
         
 class Param(FormElement):
     """Definition of a protocol parameter"""
@@ -124,7 +127,7 @@ class Form():
         self._sectionList = [] # Store list of sections
         self._paramsDict = collections.OrderedDict() #{} # Dictionary to store all params, grouped by sections
         self._lastSection = None
-        self.addGeneralSection()
+        #self.addGeneralSection()
         
     def addSection(self, **args):
         """Add a new section"""
@@ -223,6 +226,7 @@ class Form():
   
     def addParallelSection(self, threads=1, mpi=8, condition="",
                            hours=72, jobsize=0):
+        return
         self.addSection(label='Parallelization')
         self.addParam('hostName', StringParam, default="localhost",
                       label='Execution host',

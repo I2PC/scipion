@@ -50,11 +50,17 @@ class Object(object):
     def getClass(self):
         return type(self)
     
-    def getAttributeValue(self, attrName):
+    def getAttributeValue(self, attrName, defaultValue=None):
         """ Get the attribute value given its name.
         Equivalent to getattr(self, name).get() 
         """
-        return getattr(self, attrName).get()
+        return getattr(self, attrName).get(defaultValue)
+    
+    def setAttributeValue(self, attrName, value):
+        """ Get the attribute value given its name.
+        Equivalent to getattr(self, name).get() 
+        """
+        getattr(self, attrName).set(value)
         
     def getAttributesToStore(self):
         """Return the list of attributes than are
