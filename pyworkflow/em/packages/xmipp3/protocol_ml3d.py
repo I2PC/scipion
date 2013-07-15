@@ -384,3 +384,15 @@ class XmippProtML3D(XmippProtocol, ProtRefine3D, ProtClassify3D):
         else:
             summary.append("Output volumes: %s" % self.outputVolumes.get())
         return summary
+    
+    def _validate(self):
+        validateMsgs = []
+        # Volume references cannot be empty (REMOVE this when we use a pointer to a set instead of a path)
+        if not self.ini3DrefVolumes.hasValue():
+            validateMsgs.append('Please provide an initial reference volume(s).')
+        # Correct grey scale needs mpi to b e run
+        if self.doCorrectGreyScale.get() and self.numberOfMpi < 2:
+            validateMsgs.append('Correct grey scale needs mpi to be run.')
+            
+        #TODO: Check images dimension when it is implemented on SetOFImages class
+        return validateMsgs
