@@ -80,7 +80,16 @@ ActionIcons = {
     ACTION_RESULTS: 'visualize.gif'
                }
 
-
+STATUS_COLORS = {
+               STATUS_SAVED: '#D9F1FA', 
+               STATUS_LAUNCHED: '#D9F1FA', 
+               STATUS_RUNNING: '#FCCE62', 
+               STATUS_FINISHED: '#D2F5CB', 
+               STATUS_FAILED: '#F5CCCB', 
+               STATUS_WAITING_APPROVAL: '#F3F5CB',
+               STATUS_ABORTED: '#F5CCCB',
+               #STATUS_SAVED: '#124EB0',
+               }
 def populateTree(self, tree, prefix, obj, level=0):
     text = obj.text.get()
     if text:
@@ -495,25 +504,14 @@ class ProtocolsView(tk.Frame):
         """ If not nodeBuildFunc is specified, this one will be used
         by default. 
         """
-        self.colors = {
-                       STATUS_SAVED: '#D9F1FA', 
-                       STATUS_LAUNCHED: '#D9F1FA', 
-                       STATUS_RUNNING: '#FCCE62', 
-                       STATUS_FINISHED: '#D2F5CB', 
-                       STATUS_FAILED: '#F5CCCB', 
-                       STATUS_WAITING_APPROVAL: '#F3F5CB',
-                       STATUS_ABORTED: '#F5CCCB',
-                       #STATUS_SAVED: '#124EB0',
-                       }
-        
         nodeText = node.getName()
         textColor = 'black'
-        color = 'light blue'
+        color = '#ADD8E6' #Lightblue
             
         if node.run:
             status = node.run.status.get(STATUS_FAILED)
             nodeText = node.run.getName() + '\n' + status
-            color = self.colors[status]
+            color = STATUS_COLORS[status]
         
         return self.runsGraph.createTextbox(nodeText, 100, y, bgColor=color, textColor=textColor)
         

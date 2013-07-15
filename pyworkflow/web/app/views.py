@@ -14,6 +14,7 @@ from pyworkflow.utils.path import findResource
 from pyworkflow.utils.utils import prettyDate
 from pyworkflow.web.pages import settings
 from pyworkflow.apps.config import *
+from pyworkflow.apps.pw_project_viewprotocols import STATUS_COLORS
 from pyworkflow.em import *
 from pyworkflow.hosts import HostMapper
 from pyworkflow.tests import getInputPath 
@@ -98,14 +99,28 @@ def delete_project(request):
 
 ######    Project Content template    #####
 def createNode(node, y):
-    item = gg.TNode(node.getName(), y=y)
-    item.width = node.w
-    item.height = node.h
+    try:
+        item = gg.TNode(node.getName(), y=y)
+        item.width = node.w
+        item.height = node.h
+    except Exception:
+        print "Error with node: ", node.getName()
+        raise
     return item
     
 def createEdge(srcItem, dstItem):
     pass
     
+
+def getNodeStateColor(node):
+    color = '#ADD8E6'; #Lightblue
+    status = ''
+    if node.run:
+        status = node.run.status.get(STATUS_FAILED)
+        color = STATUS_COLORS[status]
+        
+    return status, color
+
 def project_graph (request):
     if request.is_ajax():
         boxList = request.GET.get('list')
@@ -117,11 +132,13 @@ def project_graph (request):
         root = g.getRoot()
         root.w = 100
         root.h = 40
+        root.item = gg.TNode('project', x=0, y=0)
+        
         
         for box in boxList.split(','):
             i, w, h = box.split('-')
             node = g.getNode(i)
-            print node.getName()
+#            print node.getName()
             node.w = float(w)
             node.h = float(h)
             
@@ -129,8 +146,21 @@ def project_graph (request):
         lt.paint(createNode, createEdge)
         nodeList = []
         
-        nodeList = [{'id': node.getName(), 'x': node.item.x, 'y': node.item.y} 
-                    for node in g.getNodes()]
+#        nodeList = [{'id': node.getName(), 'x': node.item.x, 'y': node.item.y} 
+#                    for node in g.getNodes()]
+        for node in g.getNodes():
+            try:
+                hx = node.w / 2
+                hy = node.h / 2
+                childs = [c.getName() for c in node.getChilds()]
+                status, color = getNodeStateColor(node)
+                nodeList.append({'id': node.getName(), 'x': node.item.x - hx, 'y': node.item.y - hy,
+                                 'color': color, 'status': status,
+                                 'childs': childs})
+            except Exception:
+                print "Error with node: ", node.getName()
+                raise
+        
         print nodeList
         jsonStr = json.dumps(nodeList, ensure_ascii=False)   
          
@@ -484,7 +514,7 @@ def viewHosts(request):
 #         return HttpResponse(jsonStr, mimetype='application/javascript')
 
 
-def getHostFormContext(request, host = None, initialContext = None):
+def getHostFormContext(request, host=None, initialContext=None):
     css_path = os.path.join(settings.STATIC_URL, 'css/general_style.css')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
@@ -531,7 +561,6 @@ def hostForm(request):
 
 def updateHostsConfig(request):    
     form = HostForm(request.POST, queueSystemConfCont=request.POST.get('queueSystemConfigCount'), queueConfCont=request.POST.get('queueConfigCount'))  # A form bound to the POST data
-    print ("Form initialized!!!!")
     context = {'form': form}
     if form.is_valid():  # All validation rules pass
         print ("Form is valid")
@@ -547,6 +576,7 @@ def updateHostsConfig(request):
         print (host.toString())
         savedHost = project.saveHost(host)
         context['message'] = "Project hosts config sucesfully updated"
+        return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request, initialContext=context))) 
         print("Salvado")
         print (savedHost.toString())
         form.setFormHost(savedHost)
