@@ -24,10 +24,20 @@
 # *
 # **************************************************************************
 
+import os
 import os.path
 
 HOME = os.path.dirname(__file__)
 RESOURCES = [os.path.join(HOME, 'resources')]
+
+if "SCIPION_HOME" not in os.environ:
+    raise Exception("SCIPION_HOME is not defined as environment variable")
+
+SCIPION_HOME = os.environ["SCIPION_HOME"]
+
+PROJECTS = os.path.join(SCIPION_HOME, 'projects')
+SETTINGS = os.path.join(SCIPION_HOME, 'settings.sqlite')
+TESTS = os.path.join(SCIPION_HOME, 'tests')
 
 from utils.path import findResource
 

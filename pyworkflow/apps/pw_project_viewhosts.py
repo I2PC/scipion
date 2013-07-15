@@ -73,8 +73,8 @@ ActionIcons = {
 
 class HostsTreeProvider(TreeProvider):
     """Provide runs info to populate tree"""
-    def __init__(self, hostsMapper):
-        self.getObjects = lambda: hostsMapper.selectAll()
+    def __init__(self, settings):
+        self.getObjects = lambda: settings.getHosts()
         
     def getColumns(self):
         return [('Label', 100), ('Hostname', 200), ('User', 60), ('Path', 200)]
@@ -93,7 +93,8 @@ class HostsView(tk.Frame):
         # Load global configuration
         self.selectedHost = None
         self.windows = windows
-        self.hostsMapper = windows.getHostsMapper()
+        #self.hostsMapper = windows.getHostsMapper()
+        self.settings = windows.getSettings()
         self.getImage = windows.getImage
         
         self.createContent()
@@ -140,7 +141,7 @@ class HostsView(tk.Frame):
             
        
     def createHostsTree(self, parent):
-        self.provider = HostsTreeProvider(self.hostsMapper) 
+        self.provider = HostsTreeProvider(self.settings) 
         tree = BoundTree(parent, self.provider)
         tree.grid(row=0, column=0, sticky='news')
         tree.bind('<Double-1>', self._hostItemDoubleClick)
@@ -150,7 +151,7 @@ class HostsView(tk.Frame):
         
     def _hostItemClick(self, e=None):
         # Get last selected item for tree or graph
-        self.selectedHost = self.hostsMapper.selectById(int(self.hostsTree.getFirst()))
+        self.selectedHost = self.settings.getHostById(int(self.hostsTree.getFirst()))
         
     def _hostItemDoubleClick(self, e=None):
         self._hostActionClick(ACTION_EDIT)
@@ -161,15 +162,13 @@ class HostsView(tk.Frame):
         w.show(center=True)
         
     def _saveHost(self, host):
-        self.hostsMapper.store(host)
-        self.hostsMapper.commit()
+        self.settings.saveHost(host, commit=True)
         self.hostsTree.after(1000, self.refresh)
         
     def _deleteHost(self, host):
         if askYesNo("Confirm DELETE", "<ALL CONFIGURATION> related to host <%s> will be <DELETED>. \n" % host.getLabel() + \
                     "Do you really want to continue?", self.windows.root):
-            self.hostsMapper.delete(host)
-            self.hostsMapper.commit()
+            self.setting.delete(host, commit=True)
             self.refresh()
         
     def _hostActionClick(self, action):

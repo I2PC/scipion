@@ -30,7 +30,7 @@ mainly for project GUI
 
 import os
 from os.path import join, exists
-from pyworkflow.utils.path import getHomePath
+from pyworkflow.utils.path import getHomePath, makeFilePath
 import pyworkflow as pw
 from pyworkflow.object import *
 from pyworkflow.hosts import *
@@ -43,13 +43,129 @@ def getConfigPath(filename):
     """Return a configuration filename from settings folder"""
     return join(SETTINGS, filename)
 
+        
+def loadSettings(dbPath):
+    """ Load a ProjectSettings from dbPath. """
+    mapper = SqliteMapper(dbPath, globals())
+    settingList = mapper.selectByClass('ProjectSettings')
+    n = len(settingList)
+    if n == 0:
+        raise Exception("Can't load ProjectSettings from %s" % dbPath)
+    elif n > 1:
+        raise Exception("Only one ProjectSettings is expected in db, found %d in %s" % (n, dbPath))
+    
+    settings = settingList[0]
+    settings.mapper = mapper
+    
+    return settings
+
+
+class SettingList(List):
+    """ Basically a list that also store an index of the last selection. """
+    def __init__(self, **args):
+        List.__init__(self, **args)
+        self.currentIndex = Integer(0)
+        
+    def getIndex(self):
+        return self.currentIndex.get()
+    
+    def setIndex(self, i):
+        self.currentIndex.set(i)
+        
+    def getItem(self):
+        """ Get the item corresponding to current index. """
+        return self[self.getIndex()]
+    
+    
+class ProjectSettings(OrderedObject):
+    """ This class will store settings related to a project. """
+    def __init__(self, **args):
+        OrderedObject.__init__(self, **args)
+        self.config = ProjectConfig()
+        self.hostList = SettingList() # List to store different protocol configurations
+        self.menuList = SettingList() # Store different menus
+        self.protMenuList = SettingList() # Store different protocol configurations
+        self.mapper = None # This should be set when load, or write 
+        
+    def commit(self):
+        """ Commit changes made. """
+        self.mapper.commit()
+        
+    def addHost(self, hostConfig):
+        self.hostList.append(hostConfig)
+        
+    def getHosts(self):
+        return self.hostList
+    
+    def getHostById(self, hostId):
+        return self.mapper.selectById(hostId)
+    
+    def getHostByLabel(self, hostLabel):
+        for host in self.hostList:
+            if host.label == hostLabel:
+                return host
+        return None
+    
+    def saveHost(self, host, commit=False):
+        """ Save a host for project settings.
+            If the hosts exists it is updated, else it is created.
+        params:
+            host: The host to update or create.
+        """
+        if not host in self.hostList:
+            self.addHost(host)
+        self.mapper.store(host)
+        if commit:
+            self.commit()
+    
+    def deleteHost(self, host, commit=False):
+        """ Delete a host of project settings.
+        params:
+            hostId: The host id to delete.
+        """
+        if not host in self.hostList:
+            raise Exception('Deleting host not from host list.')
+        self.hostList.remove(host)
+        self.mapper.delete(host)
+        if commit:
+            self.commit()
+        
+    def addMenu(self, menuConfig):
+        self.menuList.append(menuConfig)
+        
+    def addProtocolMenu(self, protMenuConfig):
+        self.protMenuList.append(protMenuConfig)
+        
+    def getConfig(self):
+        return self.config
+    
+    def getCurrentMenu(self):
+        """ Now by default return element at index 0,
+        later should be stored the current index. 
+        """
+        return self.menuList.getItem()
+    
+    def getCurrentProtocolMenu(self):
+        return self.protMenuList.getItem()
+    
+    def write(self, dbPath=None):
+        self.setName('ProjectSettings')
+        if dbPath is not None:
+            self.mapper = SqliteMapper(dbPath, globals())
+            self.mapper.deleteAll()
+            self.mapper.insert(self)
+        else:
+            if self.mapper is None:
+                raise Exception("Can't write ProjectSettings without mapper or dbPath")
+            self.mapper.store(self)
+        
+        self.mapper.commit()
+
 
 class ProjectConfig(OrderedObject):
     """A simple base class to store ordered parameters"""
-    def __init__(self, menu=None, protocols=None, **args):
+    def __init__(self, **args):
         OrderedObject.__init__(self, **args)
-        self.menu = String(menu)
-        self.protocols = String(protocols)
         self.icon = String('scipion_bn.xbm')
         self.logo = String('scipion_logo.gif')
 
@@ -74,75 +190,30 @@ class MenuConfig(OrderedObject):
         self.value = String(value)
         self.icon = String(icon)
         self.tag = String(tag)
-        self.childCount = 0
-        
-    def _getSubMenuName(self):
-        self.childCount += 1
-        return '_child_%03d' % self.childCount
+        self.childs = List()
         
     def addSubMenu(self, text, value=None, **args):
         subMenu = type(self)(text, value, **args)
-        name = self._getSubMenuName()
-        setattr(self, name, subMenu)
+        self.childs.append(subMenu)
         return subMenu
     
     def __iter__(self):
-        for v in self._getChilds():
-            yield v        
+        for v in self.childs:
+            yield v
                 
-    def __setattr__(self, name, value):
-        if len(name) == 0:
-            name = self._getSubMenuName()
-        OrderedObject.__setattr__(self, name, value)
-                
-    def _getStr(self, prefix):
-        s = prefix + "%s text = %s, icon = %s\n" % (self.getClassName(), self.text.get(), self.icon.get())
-        for sub in self:
-            s += sub._getStr(prefix + "  ")
-        return s
-    
-    def _getChilds(self):
-        return [v for k, v in self.__dict__.iteritems() if k.startswith('_child_')]
-    
     def __len__(self):
-        return len(self._getChilds())
+        return len(self.childs)
     
     def isEmpty(self):
-        return len(self._getChilds()) == 0
+        return len(self.childs) == 0
             
-    def __str__(self):
-        return self._getStr(' ')
-    
     
 class ProtocolConfig(MenuConfig):
     """Store protocols configuration """
     pass    
     
     
-class ConfigMapper(XmlMapper):
-    """Sub-class of XmlMapper to store configurations"""
-    def __init__(self, filename, dictClasses, **args):
-        XmlMapper.__init__(self, filename, dictClasses, **args)
-        self.setClassTag('MenuConfig.MenuConfig', 'class_only')
-        self.setClassTag('MenuConfig.String', 'attribute')
-        self.setClassTag('ProtocolConfig.ProtocolConfig', 'class_only')
-        self.setClassTag('ProtocolConfig.String', 'attribute')
-        
-    def getConfig(self):
-        return self.selectAll()[0]
-
-
-def writeConfig(config, fn, mapperClass=ConfigMapper, clean=True):
-    fn = getConfigPath(fn)
-    print "config file: ", fn
-    if clean and exists(fn):
-        os.remove(fn)
-    mapper = mapperClass(fn, globals())
-    mapper.insert(config)
-    mapper.commit()
-    
-    
-def writeMenus():
+def addMenus(settings):
     """Write default configuration files"""
     # Write menu configuration
     menu = MenuConfig()
@@ -156,21 +227,25 @@ def writeMenus():
     helpMenu.addSubMenu('Online help', 'online_help', icon='online_help.gif')
     helpMenu.addSubMenu('About', 'about')
     
-    writeConfig(menu, 'menu_default.xml')
+    #writeConfig(menu, 'menu_default.xml')
+    settings.addMenu(menu)
     
     # Write another test menu
     menu = MenuConfig()
     m1 = menu.addSubMenu('Test')
     m1.addSubMenu('KK', icon='tree.gif')
     m1.addSubMenu('PP', icon='folderopen.gif')
-    writeConfig(menu, 'menu_test.xml')
     
-def writeProtocols():
+    #writeConfig(menu, 'menu_test.xml')
+    settings.addMenu(menu)
+    
+def addProtocols(settings):
     """ Write protocols configuration. """
     menu = ProtocolConfig()
+    
+    # ------------------- Micrographs ----------------------------
     m1 = menu.addSubMenu('Micrographs', tag='section')
     
-    #m2 = m1.addSubMenu('Micrographs')
     m1.addSubMenu(' Import', value='ProtImportMicrographs', 
                   tag='protocol', icon='bookmark.png')
     m1.addSubMenu('Preprocess', value='ProtPreprocessMicrographs',
@@ -178,14 +253,19 @@ def writeProtocols():
     m1.addSubMenu('CTF estimation', value='ProtCTFMicrographs',
                   tag='protocol_base')
     
+    # ------------------- Particles ----------------------------
     m1 = menu.addSubMenu('Particles', tag='section')
+    
     m1.addSubMenu('Import', value='ProtImportParticles', 
                   tag='protocol', icon='bookmark.png')
     m1.addSubMenu('Picking', value='ProtParticlePicking',
                   tag='protocol_base')
     m1.addSubMenu('Extract', value='ProtExtractParticles',
                   tag='protocol_base')    
-
+    m1.addSubMenu('Process', value='ProtProcessParticles',
+                  tag='protocol_base')   
+    
+    # ------------------- 2D ----------------------------
     m1 = menu.addSubMenu('2D', tag='section')
     
     m1.addSubMenu('Align', value='ProtAlign',
@@ -194,7 +274,8 @@ def writeProtocols():
                   tag = 'protocol_base')
     m1.addSubMenu('Align+Classify', value='ProtAlignClassify',
                   tag = 'protocol_base')
-
+    
+    # ------------------- 3D ----------------------------
     m1 = menu.addSubMenu('3D', tag='section')
     
     m1.addSubMenu('Refine', value='ProtRefine3D',
@@ -202,22 +283,14 @@ def writeProtocols():
     m1.addSubMenu('Classify', value='ProtClassify3D',
                   tag = 'protocol_base')
     
-    writeConfig(menu, 'protocols_default.xml')
+    settings.addProtocolMenu(menu)
     
-SCIPION_PATH = 'Scipion'
-PROJECTS_PATH = 'projects'
-SETTINGS_PATH = 'settings.sqlite'
-
-def getSettingsPath():
-    return getConfigPath(join(getHomePath(), SCIPION_PATH, SETTINGS_PATH) )
+def getScipionHome(userHome):
+    """ Returns default SCIPION_HOME from HOME. """
+    return join(userHome, 'Scipion')
   
-def writeHosts(dbPath):
-    host = HostConfig()
-    host.label.set('localhost')
-    host.hostName.set('localhost')
-    host.hostPath.set(join (getHomePath(), SCIPION_PATH, PROJECTS_PATH))
+def setQueueSystem(host, maxCores):
     host.mpiCommand.set('mpirun -np %(JOB_NODES)d -bynode %(COMMAND)s')
-    
     host.queueSystem = QueueSystemConfig()
     queueSys = host.queueSystem
     #queueSys = QueueSystemConfig()
@@ -266,50 +339,67 @@ cat $PBS_NODEFILE
     queueSys.checkCommand.set('qstat %(JOB_ID)d')
     
     queue = QueueConfig()
-    queue.maxCores.set(4)
+    queue.maxCores.set(maxCores)
     queue.allowMPI.set(True)
     queue.allowThreads.set(True)
     
     queueSys.queues = List()
     queueSys.queues.append(queue)
     
-    writeConfig(host, dbPath, mapperClass=HostMapper, clean=True)
+    
+    
+    
+def addHosts(settings):
+    host = HostConfig()
+    host.label.set('localhost')
+    host.hostName.set('localhost')
+    host.hostPath.set(pw.SCIPION_HOME)   
+    setQueueSystem(host, maxCores=4)
+    
+    #writeConfig(host, dbPath, mapperClass=HostMapper, clean=True)
+    settings.addHost(host)
     
     host = HostConfig()
     host.label.set('glassfishdev')
     host.hostName.set('glassfishdev.cnb.csic.es')
     host.userName.set('apoza')
     host.password.set('BF6fYiFYiYD')
-    host.hostPath.set(join ('/home/apoza', SCIPION_PATH, PROJECTS_PATH))
+    host.hostPath.set(getScipionHome('/home/apoza'))
     
-    writeConfig(host, dbPath, mapperClass=HostMapper, clean=False)
+    #writeConfig(host, dbPath, mapperClass=HostMapper, clean=False)
+    settings.addHost(host)
     
     host = HostConfig()
     host.label.set('crunchy')
     host.hostName.set('crunchy.cnb.csic.es')
     host.userName.set('apoza')
     host.password.set('nerfyeb4f1v')
-    host.hostPath.set(join ('/gpfs/fs1/home/bioinfo/apoza', SCIPION_PATH, PROJECTS_PATH))
+    host.hostPath.set(getScipionHome('/gpfs/fs1/home/bioinfo/apoza'))
+    setQueueSystem(host, maxCores=64)
     
-    writeConfig(host, dbPath, mapperClass=HostMapper, clean=False)
-    
+    #writeConfig(host, dbPath, mapperClass=HostMapper, clean=False)
+    settings.addHost(host)
     
 def writeDefaults():
-    writeMenus()
-    writeProtocols()
-    writeHosts(join(getHomePath(), SCIPION_PATH, SETTINGS_PATH) ) 
-    # Write global configuration
-    config = ProjectConfig(menu='menu_default.xml',
-                           protocols='protocols_default.xml')
-    writeConfig(config, 'configuration.xml')
+    settings = ProjectSettings()
+    addMenus(settings)
+    addProtocols(settings)
+    addHosts(settings)
+    
+    #writeHosts(join(getHomePath(), SCIPION_PATH, SETTINGS_PATH) ) 
+    
+    
+    #writeConfig(config, 'configuration.xml')
+    dbPath = pw.SETTINGS
+    print "Writing default settings to: ", dbPath
+    settings.write(dbPath)
     
     
     
 if __name__ == '__main__':
     #Write default configurations
     writeDefaults()
-    fn = getSettingsPath()
-    mapper = HostMapper(fn, globals())
-    l = mapper.selectAll()[0]
-    print l.queueSystem.submitTemplate.get()
+    # Read and print to check
+    settings = loadSettings(pw.SETTINGS)
+    settings.printAll()
     
