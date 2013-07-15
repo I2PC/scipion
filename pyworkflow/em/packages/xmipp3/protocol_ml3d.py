@@ -364,9 +364,23 @@ class XmippProtML3D(XmippProtocol, ProtRefine3D, ProtClassify3D):
 
     def _summary(self):
         summary = []
+        summary.append("Input images:  %s" % self.inputImages.get().getNameId())
+        if self.doMlf.get():
+            if self.doCorrectAmplitudes.get():
+                suffix = "with CTF correction "
+            else:
+                suffix = "ignoring CTF effects "
+            summary.append("Using a ML in <Fourier-space> " + suffix)
+         
+        summary.append("Reference volumes(s): [%s]" % self.ini3DrefVolumes.get())
+
+        if self.numberOfSeedsPerRef.get() > 1:
+            summary.append("Number of references per volume: <%d>" % self.numberOfSeedsPerRef.get())
+           
+        # TODO: Add information at info@iter_classes.xmd from last iteration
+        
         if not hasattr(self, 'outputVolumes'):
             summary.append("Output volumes not ready yet.")
         else:
-            summary.append("Input Images: %s" % self.inputImages.get().getNameId())
             summary.append("Output volumes: %s" % self.outputVolumes.get())
         return summary
