@@ -279,7 +279,7 @@ class XmippProtML3D(XmippProtocol, ProtRefine3D, ProtClassify3D):
         sroot = self.ParamsDict['SplitRoot'] = join(grDir, 'images')
         self.ParamsStr = '-i %(ImgMd)s -n %(NumberOfVols)d --oroot %(SplitRoot)s'
         files = ['%s%06d.xmd' % (sroot, i) for i in range(1, nvols+1)]        
-        self._insertRunJobStep('xmipp_metadata_split', self.ParamsStr % self.ParamsDict)
+        self._insertRunJobStep('xmipp_metadata_split', self.ParamsStr % self.ParamsDict, numberOfMpi=1)
         
         volStack = self.ParamsDict['InitialVols'] = self._getExtraPath('generated_volumes.stk') 
         index = 1
@@ -297,7 +297,7 @@ class XmippProtML3D(XmippProtocol, ProtRefine3D, ProtClassify3D):
         for outVol, genVol in copyVols:
             self.ParamsDict.update({'outVol': outVol, 'genVol':genVol})
             self.ParamsStr = '-i %(genVol)s -o %(outVol)s'
-            self._insertRunJobStep('xmipp_image_convert', self.ParamsStr % self.ParamsDict)
+            self._insertRunJobStep('xmipp_image_convert', self.ParamsStr % self.ParamsDict, numberOfMpi=1)
             
         # Seed generation with MLF always does amplitude correction
         self.seedsAreAmplitudeCorrected.set(True)
