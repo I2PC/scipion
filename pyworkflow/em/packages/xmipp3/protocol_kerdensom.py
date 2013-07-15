@@ -70,7 +70,7 @@ class XmippDefKerdensom(Form):
         self.addParam('SomSteps', IntParam, default=5, expertLevel=LEVEL_ADVANCED,
                       label='Regularization steps:',
                       help='Number of steps to lower the regularization factor')
-        self.addParam('extraParams', StringParam,
+        self.addParam('extraParams', StringParam, default='',
                       label="Additional kerdenSOM parameters:", 
                       help='For a complete description'
                       'See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM')

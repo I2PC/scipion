@@ -268,9 +268,15 @@ class TestXmippRotSpectra(TestXmippBase):
         
     def testRotSpectra(self):
         print "Run Rotational Spectra"
-        xmippProtCL2DAlign = launchXmippProtCL2DAlign(self)
+#         xmippProtCL2DAlign = launchXmippProtCL2DAlign(self)
+#         xmippProtRotSpectra = XmippProtRotSpectra()
+#         xmippProtRotSpectra.inputImages.set(xmippProtCL2DAlign.outputClassification)
+#         Now we can not use the only align output because we must create tools to get the correct 
+#         format for Rotational Spectra
+
         xmippProtRotSpectra = XmippProtRotSpectra()
-        xmippProtRotSpectra.inputImages.set(xmippProtCL2DAlign.outputClassification)
+        xmippProtRotSpectra.inputImages.set(self.protImport.outputImages)
+
         self.proj.launchProtocol(xmippProtRotSpectra, wait=True)        
         
         self.assertIsNotNone(xmippProtRotSpectra.outputClassification, "There was a problem with Rotational Spectra")  
@@ -281,19 +287,20 @@ class TestXmippML3D(TestXmippBase):
     def setUpClass(cls):
         setupProject(cls)
         #TODO: Find a set of images to make this work, with this it does not
-        images = getInputPath('ml3dData/phantom_images', '*.xmp')
+        images = getInputPath('Images_Vol_ML3D/phantom_images', '*.xmp')
         cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1)
         cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
         
     def testML3D(self):
         print "Run ML3D"
-        protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2)
+        protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2, runMode=1)
         protML3D.inputImages.set(self.protImport.outputImages)
         protML3D.ini3DrefVolumes.set(self.iniVol)
-        #protML3D.doCorrectGreyScale.set(True)
+        protML3D.doCorrectGreyScale.set(True)
+        protML3D.numberOfSeedsPerRef.set(2)
         self.proj.launchProtocol(protML3D, wait=True)        
         
-        #self.assertIsNotNone(protML3D.outputClassification, "There was a problem with ML2D")          
+        self.assertIsNotNone(protML3D.outputVolumes, "There was a problem with ML3D")          
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
