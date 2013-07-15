@@ -192,20 +192,9 @@ def populateTree(tree, obj):
         else:
             populateTree(item, sub)                
 
-def loadConfig(config, name):
-    c = getattr(config, name) 
-    fn = getConfigPath(c.get())
-    if not os.path.exists(fn):
-        raise Exception('loadMenuConfig: menu file "%s" not found' % fn)
-    mapper = ConfigMapper(getConfigPath(fn), globals())
-    menuConfig = mapper.getConfig()
-    return menuConfig
 
-
-def loadProtTree():
-    configMapper = ConfigMapper(getConfigPath('configuration.xml'), globals())
-    generalCfg = configMapper.getConfig()
-    protCfg = loadConfig(generalCfg, 'protocols')    
+def loadProtTree(project):
+    protCfg = project.getSettings().getCurrentProtocolMenu()
     root = TreeItem('root', 'root')
     populateTree(root, protCfg)
     return root
@@ -240,7 +229,7 @@ def project_content(request):
     project = loadProject(projectName)    
     provider = ProjectRunsTreeProvider(project)
     
-    root = loadProtTree()
+    root = loadProtTree(project)
     
     context = {'projectName': projectName,
                'editTool': edit_tool_path,
