@@ -350,7 +350,6 @@ function paintBox(nodeSource, id, msg) {
 }
 
 function addStatusBox(nodeSource, id, status) {
-//	alert(status);
 	$("div#"+id+".window").append(status);
 }
 
