@@ -268,9 +268,15 @@ class TestXmippRotSpectra(TestXmippBase):
         
     def testRotSpectra(self):
         print "Run Rotational Spectra"
-        xmippProtCL2DAlign = launchXmippProtCL2DAlign(self)
+#         xmippProtCL2DAlign = launchXmippProtCL2DAlign(self)
+#         xmippProtRotSpectra = XmippProtRotSpectra()
+#         xmippProtRotSpectra.inputImages.set(xmippProtCL2DAlign.outputClassification)
+#         Now we can not use the only align output because we must create tools to get the correct 
+#         format for Rotational Spectra
+
         xmippProtRotSpectra = XmippProtRotSpectra()
-        xmippProtRotSpectra.inputImages.set(xmippProtCL2DAlign.outputClassification)
+        xmippProtRotSpectra.inputImages.set(self.protImport.outputImages)
+
         self.proj.launchProtocol(xmippProtRotSpectra, wait=True)        
         
         self.assertIsNotNone(xmippProtRotSpectra.outputClassification, "There was a problem with Rotational Spectra")  

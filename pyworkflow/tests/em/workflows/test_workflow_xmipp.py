@@ -251,13 +251,21 @@ class TestXmippWorkflow(TestWorkflow):
 
         print "Run kerdensom"
         ProtKerdensom = XmippProtKerdensom(useMask=False, SomXdim=2, SomYdim=2,
-                                 SomReg0=800, SomReg1=400, SomSteps=2, extraParams='')
+                                 SomReg0=800, SomReg1=400, SomSteps=2)
 
         ProtKerdensom.inputImages.set(protExtract.outputImages)
         self.proj.launchProtocol(ProtKerdensom, wait=True)        
         
         self.assertIsNotNone(ProtKerdensom.outputClassification, "There was a problem with kerdensom")  
         #self.validateFiles('ProtKerdensom', ProtKerdensom)
+        
+        print "Run Rotational Spectra"
+        xmippProtRotSpectra = XmippProtRotSpectra()
+        xmippProtRotSpectra.inputImages.set(protExtract.outputImages)
+
+        self.proj.launchProtocol(xmippProtRotSpectra, wait=True)        
+        
+        self.assertIsNotNone(xmippProtRotSpectra.outputClassification, "There was a problem with Rotational Spectra")
 
 if __name__ == "__main__":
     unittest.main()

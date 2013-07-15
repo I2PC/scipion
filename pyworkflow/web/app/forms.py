@@ -11,7 +11,6 @@ from pyworkflow.object import List
 class HostForm(forms.Form):
 #     scpnHosts = forms.ChoiceField(label='Scipion hosts', widget = forms.Select(), required = False,)
 #     scpnHosts.widget.attrs.update({'onchange' : 'changeScpnHostSelection()'})
-
     host = None
     
     objId = forms.CharField(widget=forms.HiddenInput(), required = False)
@@ -38,60 +37,74 @@ class HostForm(forms.Form):
     #label.widget.attrs.update({'class' : 'generalInput'})
 
     def __init__(self, *args, **kwargs):
+        print ("Init form")
         self.host = None
         extra_queueSystemConfigCount = int(kwargs.pop('queueSystemConfCont', 0))
         extra_queueConfigCount = int(kwargs.pop('queueConfCont', 0))
         super(HostForm, self).__init__(*args, auto_id=True, **kwargs)
         self.fields['queueSystemConfigCount'].initial = extra_queueSystemConfigCount
         self.fields['queueConfigCount'].initial = extra_queueConfigCount
-        self.createDynamicFields(extra_queueSystemConfigCount, extra_queueConfigCount)
+        indexes = None
+        if args is not None and len(args)>0:
+            indexes = self.getQueueConfigIndexes(args[0], extra_queueConfigCount)
+        self.createDynamicFields(extra_queueSystemConfigCount, extra_queueConfigCount, queueConfigIndexes=indexes)
         
                 
-    def createDynamicFields(self, extra_queueSystemConfigCount, extra_queueConfigCount):
+    def createDynamicFields(self, extra_queueSystemConfigCount, extra_queueConfigCount, queueConfigIndexes = None):
+        print ("Creating dynamic form with", extra_queueSystemConfigCount, extra_queueConfigCount, "configs")
         if extra_queueSystemConfigCount > 0:
-            
-            self.fields['name'] = forms.CharField(label='Name', 
-                                      required=True,
-                                      error_messages={'required': 'Please, enter name for the queue system'},
-                                      widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
-            self.fields['mandatory'] = forms.BooleanField(label='Mandatory',
+            self.createQueueSystemConfigFields()            
+            if queueConfigIndexes is None:
+                for index in range(1, extra_queueConfigCount + 1):
+                    self.createQueueConfigFields(index)
+            else:
+                for index in queueConfigIndexes:
+                    print ("Checking ", index, "with", queueConfigIndexes)
+                    self.createQueueConfigFields(index)   
+                    
+    def createQueueSystemConfigFields(self):
+        self.fields['name'] = forms.CharField(label='Name', 
+                                              required=True,
+                                              error_messages={'required': 'Please, enter name for the queue system'},
+                                              widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
+        self.fields['mandatory'] = forms.BooleanField(label='Mandatory',
                                                       required=True,
                                                       error_messages={'required': 'Please, select if queue is mandatory'})
-            self.fields['submitTemplate'] = forms.CharField(label='Submit template', 
-                                              required=True,
-                                              error_messages={'required': 'Please, insert submit template'},
-                                              widget=forms.Textarea(attrs={'cols': 35, 'rows': 5}))
-            self.fields['submitCommand'] = forms.CharField(label='Submit command', 
-                                              required=True,
-                                              error_messages={'required': 'Please, insert submit command'},
-                                              widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
-            self.fields['checkCommand'] = forms.CharField(label='Check command', 
-                                              required=True,
-                                              error_messages={'required': 'Please, insert check command'},
-                                              widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
-            self.fields['cancelCommand'] = forms.CharField(label='Cancel command', 
-                                              required=True,
-                                              error_messages={'required': 'Please, insert cancel command'},
-                                              widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))   
-        
-            for index in range(extra_queueConfigCount):
-                self.fields['name_{index}'.format(index=index)] = forms.CharField(label='Name',
-                                                                                  required=True,
-                                                                                  error_messages={'required': 'Please, enter name for the queue configuration'},
-                                                                                  widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
-                self.fields['maxCores_{index}'.format(index=index)] = forms.IntegerField(label='Max. cores',
-                                                                                         required=True,
-                                                                                         error_messages={'required': 'Please, enter the maximum cores number'},
-                                                                                         widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
-                self.fields['allowMPI_{index}'.format(index=index)] = forms.BooleanField(label='Allow MPI',
-                                                                                         required=False)
-                self.fields['allowThreads_{index}'.format(index=index)] = forms.BooleanField(label='Allow threads',
-                                                                                             required=False)
-                self.fields['maxHours_{index}'.format(index=index)] = forms.IntegerField(label='Max hours',
-                                                                                         required=True,
-                                                                                         error_messages={'required': 'Please, enter the maximum hours number'},
-                                                                                         widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))                
-                self.fields['queueConfigId_{index}'.format(index=index)] = forms.CharField(widget=forms.HiddenInput(), required = False)
+        self.fields['submitTemplate'] = forms.CharField(label='Submit template', 
+                                                        required=True,
+                                                        error_messages={'required': 'Please, insert submit template'},
+                                                        widget=forms.Textarea(attrs={'cols': 35, 'rows': 5}))
+        self.fields['submitCommand'] = forms.CharField(label='Submit command', 
+                                                       required=True,
+                                                       error_messages={'required': 'Please, insert submit command'},
+                                                       widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
+        self.fields['checkCommand'] = forms.CharField(label='Check command', 
+                                                      required=True,
+                                                      error_messages={'required': 'Please, insert check command'},
+                                                      widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
+        self.fields['cancelCommand'] = forms.CharField(label='Cancel command', 
+                                                       required=True,
+                                                       error_messages={'required': 'Please, insert cancel command'},
+                                                       widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))   
+                    
+    def createQueueConfigFields(self, index):
+        self.fields['name_{index}'.format(index=index)] = forms.CharField(label='Name',
+                                                                          required=True,
+                                                                          error_messages={'required': 'Please, enter name for the queue configuration'},
+                                                                          widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
+        self.fields['maxCores_{index}'.format(index=index)] = forms.IntegerField(label='Max. cores',
+                                                                                 required=True,
+                                                                                 error_messages={'required': 'Please, enter the maximum cores number'},
+                                                                                 widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
+        self.fields['allowMPI_{index}'.format(index=index)] = forms.BooleanField(label='Allow MPI',
+                                                                                 required=False)
+        self.fields['allowThreads_{index}'.format(index=index)] = forms.BooleanField(label='Allow threads',
+                                                                                     required=False)
+        self.fields['maxHours_{index}'.format(index=index)] = forms.IntegerField(label='Max hours',
+                                                                                 required=True,
+                                                                                 error_messages={'required': 'Please, enter the maximum hours number'},
+                                                                                 widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))                
+        self.fields['queueConfigId_{index}'.format(index=index)] = forms.CharField(widget=forms.HiddenInput(), required = False)
     
     def getFormHost(self):
         if self.host is None:
@@ -114,9 +127,13 @@ class HostForm(forms.Form):
             queueSystemConfig.setSubmitCommand(self.cleaned_data['submitCommand'])
             queueSystemConfig.setCheckCommand(self.cleaned_data['checkCommand'])
             queueSystemConfig.setCancelCommand(self.cleaned_data['cancelCommand'])
-            if int(self.cleaned_data['queueConfigCount']) > 0:
+            queueConfigCount = int(self.cleaned_data['queueConfigCount'])
+            if queueConfigCount > 0:
                 queuesList = List()
-                for index in range(int(self.cleaned_data['queueConfigCount'])):
+                index = 1
+                cont = 0
+                while cont < queueConfigCount:
+#                 for index in range(1, int(self.cleaned_data['queueConfigCount'])+1):
                     if ('queueConfigId_{index}'.format(index=index)) in self.cleaned_data:
                         queueConfig = None
                         if self.cleaned_data['queueConfigId_{index}'.format(index=index)] == '':
@@ -131,14 +148,15 @@ class HostForm(forms.Form):
                         queueConfig.setAllowThreads(self.cleaned_data['allowThreads_{index}'.format(index=index)])
                         queueConfig.setMaxHours(self.cleaned_data['maxHours_{index}'.format(index=index)])
                         queuesList.append(queueConfig)
+                        cont += 1
+                    index += 1
                         
-                if self.host.getQueueSystem() is not None and self.host.getQueueSystem().getQueues() is not None:
-                    self.host.getQueueSystem().getQueues().clear()
+                if queueSystemConfig.getQueues() is not None:
+                    queueSystemConfig.getQueues().clear()
                     for queue in queuesList:
-                        self.host.getQueueSystem().getQueues().append(queue)
+                        queueSystemConfig.getQueues().append(queue)
                 else:
-                    self.host.getQueueSystem().setQueues(queuesList)
-                queueSystemConfig.setQueues(queuesList)
+                    queueSystemConfig.setQueues(queuesList)
             self.host.setQueueSystem(queueSystemConfig)                    
         return self.host
     
@@ -166,7 +184,7 @@ class HostForm(forms.Form):
             self.fields['submitCommand'].initial = queueSystem.getSubmitCommand()
             self.fields['checkCommand'].initial = queueSystem.getCheckCommand()
             self.fields['cancelCommand'].initial = queueSystem.getCancelCommand() 
-            index = 0
+            index = 1
             if queueSystem.getQueues() is None:
                 self.fields['queueConfigCount'].initial = 0
             else:
@@ -209,7 +227,7 @@ class HostForm(forms.Form):
         if 'queueConfigCount' in self.fields and self.fields['queueConfigCount'].initial != '':
             queueConfigCount = int(self.fields['queueConfigCount'].initial)
             if queueConfigCount > 0:
-                for index in range(queueConfigCount):
+                for index in range(1, queueConfigCount+1):
                     list = []
                     list.append(BoundField(self,self.fields['name_{index}'.format(index=index)], 'name_{index}'.format(index=index)))
                     list.append(BoundField(self,self.fields['maxCores_{index}'.format(index=index)], 'maxCores_{index}'.format(index=index)))
@@ -218,6 +236,20 @@ class HostForm(forms.Form):
                     list.append(BoundField(self,self.fields['maxHours_{index}'.format(index=index)], 'maxHours_{index}'.format(index=index)))
                     resultList.append(list)
         return resultList
+    
+    def getQueueConfigIndexes(self, post, number):
+        indexes = []
+        index = 1
+        cont = 0        
+        while cont < number:
+            field = post.get('queueConfigId_{index}'.format(index=index))
+            if field is not None:
+                indexes.append(index)
+                cont += 1
+            index +=1
+        print("Queue config indexes", str(indexes))
+        return indexes
+        
         
         
 class ShowjForm(forms.Form):
