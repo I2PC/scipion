@@ -194,7 +194,7 @@ class Align2D_class:
             fnOut=self.WorkingDir+'/preprocessedImages.stk'
             self.selFileToUse=fnOut
             if not self.doStep1 and os.path.exists(fnOut):
-                numberOfImages=xmipp.SingleImgSize(fnOut)[3]
+                numberOfImages=xmipp.getImageSize(fnOut)[3]
                 MD=xmipp.MetaData(self.InSelFile)
                 if MD.size()!=numberOfImages:
                     self.doStep1=True

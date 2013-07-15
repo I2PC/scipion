@@ -1251,7 +1251,7 @@ def mdOnDoubleClick(filename, browser):
 
 def imgOnClick(filename, browser):
     import xmipp
-    x, y, z, n = xmipp.SingleImgSize(filename)
+    x, y, z, n = xmipp.getImageSize(filename)
     dimMsg = "<Image>\n  <dimensions:> %(x)d x %(y)d" 
     expMsg = "Columns x Rows "
     if z > 1: 

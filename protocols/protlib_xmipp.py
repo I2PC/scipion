@@ -426,7 +426,7 @@ def estimateImageSize(input):
     input = FileName(input)
     
     if input.exists() and input.isImage():
-        (Xdim, Ydim, Zdim, Ndim) = xmipp.SingleImgSize(input)
+        (Xdim, Ydim, Zdim, Ndim) = xmipp.getImageSize(input)
         memory = Xdim * Ydim * Zdim * Ndim * 8
     
     return memory
@@ -460,7 +460,7 @@ def estimateMemory(input):
             fnImg = MD.getValue(xmipp.MDL_IMAGE, id)
         elif  MD.containsLabel(xmipp.MDL_MICROGRAPH):
             fnImg = MD.getValue(xmipp.MDL_MICROGRAPH, id)
-        (Xdim, Ydim, Zdim, Ndim) = xmipp.SingleImgSize(fnImg)
+        (Xdim, Ydim, Zdim, Ndim) = xmipp.getImageSize(fnImg)
         memory = max(memory, Xdim * Ydim * 8)
     memoryMb = int((2 ** ceil(log(memory, 2))) / (2 ** 20)); # Memory size in megabytes
     return memoryMb
@@ -500,10 +500,10 @@ def validateSameSize(fileList, errors, errorPrefix='References'):
     '''Validate if a list of images(or volumes) have
     the same dimensions. 
     The dimensions tuple is returned'''
-    from xmipp import SingleImgSize
-    (xdim, ydim, zdim, ndim) = SingleImgSize(fileList[0])
+    from xmipp import getImageSize
+    (xdim, ydim, zdim, ndim) = getImageSize(fileList[0])
     for filename in fileList[1:]:
-        (xdim2, ydim2, zdim2, ndim2) = SingleImgSize(filename)
+        (xdim2, ydim2, zdim2, ndim2) = getImageSize(filename)
         if (xdim2, ydim2, zdim2, ndim2) != (xdim, ydim, zdim, ndim):
             errors.append("%s: %s and %s have not the same size" % \
                            (errorPrefix, fileList[0], filename)) 

@@ -178,9 +178,9 @@ xmipp_createEmptyFile(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }
-/* SingleImgSize */
+/* getImageSize */
 PyObject *
-xmipp_SingleImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
+xmipp_getImageSize(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     PyObject *pyValue; //Only used to skip label and value
 
@@ -194,7 +194,7 @@ xmipp_SingleImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
             size_t xdim, ydim, zdim, ndim;
             getImageSize(str, xdim, ydim, zdim, ndim);
             Py_DECREF(pyStr);
-            return Py_BuildValue("iiik", xdim, ydim, zdim, ndim);
+            return Py_BuildValue("kkkk", xdim, ydim, zdim, ndim);
         }
         catch (XmippError &xe)
         {
@@ -788,7 +788,7 @@ xmipp_methods[] =
           METH_VARARGS, "Construct a range query" },
         { "createEmptyFile", (PyCFunction) xmipp_createEmptyFile,
           METH_VARARGS, "create empty stack (speed up things)" },
-        { "SingleImgSize", (PyCFunction) xmipp_SingleImgSize,
+        { "getImageSize", (PyCFunction) xmipp_getImageSize,
           METH_VARARGS, "Get image dimensions" },
         { "MetaDataInfo", (PyCFunction) xmipp_MetaDataInfo, METH_VARARGS,
           "Get image dimensions of first metadata entry and the number of entries" },
