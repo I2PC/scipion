@@ -531,18 +531,26 @@ def hostForm(request):
 
 def updateHostsConfig(request):    
     form = HostForm(request.POST, queueSystemConfCont=request.POST.get('queueSystemConfigCount'), queueConfCont=request.POST.get('queueConfigCount'))  # A form bound to the POST data
+    print ("Form initialized!!!!")
     context = {'form': form}
     if form.is_valid():  # All validation rules pass
+        print ("Form is valid")
         projectName = request.session['projectName']
         project = loadProject(projectName)
         hostId = request.POST.get('objId')
         hostsMapper = HostMapper(project.settingsPath)
         hostConfig = hostsMapper.selectById(hostId)
         form.host = hostConfig
+        print ("Recovering host from form")
         host = form.getFormHost()
-        host = project.saveHost(host)
+        print("A salvar")
+        print (host.toString())
+        savedHost = project.saveHost(host)
         context['message'] = "Project hosts config sucesfully updated"
-        return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request, initialContext = context))) 
+        print("Salvado")
+        print (savedHost.toString())
+        form.setFormHost(savedHost)
+        return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request, host, context))) 
     else:   
         return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request, None, context)))  # Form Django forms
 
@@ -622,7 +630,8 @@ def visualizeObject(request):
     
     
 def showVolVisualizer(request):
-    context = {'MEDIA_URL' : settings.MEDIA_URL}
+    context = {'MEDIA_URL' : settings.MEDIA_URL, 'STATIC_URL' :settings.STATIC_URL}
+    
     return render_to_response('showVolVisualizer.html', context)   
     
 if __name__ == '__main__':
