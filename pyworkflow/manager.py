@@ -27,18 +27,13 @@
 This modules handles the System management
 """
 import os
-from os.path import abspath, join
+from os.path import abspath, join, basename
 
-from project import Project
 import pyworkflow as pw
+from project import Project
 from pyworkflow.mapper import SqliteMapper
-from pyworkflow.utils.path import cleanPath, makePath, getHomePath, missingPaths
+from pyworkflow.utils.path import cleanPath, makePath, getHomePath, missingPaths, copyFile
 from pyworkflow.hosts import HostMapper
-from pyworkflow.apps.config import writeHosts, getSettingsPath
-
-
-SCIPION_PATH = 'Scipion'
-PROJECTS_PATH = 'projects'
 
 
 class ProjectInfo(object):
@@ -54,23 +49,18 @@ class Manager(object):
     and listing of projects."""
     def __init__(self):
         """For create a Project, the path is required"""
-        self.path = join(getHomePath(), SCIPION_PATH, PROJECTS_PATH)
-        makePath(self.path)
-        settingsPath = getSettingsPath() 
-        # TODO: Initial settings creation for Scipion must be done in a install step, not here.
-        if missingPaths(settingsPath):
-           writeHosts(settingsPath)
+        pass
         
     def getProjectPath(self, projectName):
         """Return the project path given the name"""
-        return join(self.path, projectName)
+        return join(pw.PROJECTS, projectName)
         
     def listProjects(self, sortByDate=True):
         """Return a list with all existing projects
         And some other project info
         If sortByData is True, recently modified projects will be first"""
         projList = []
-        for f in os.listdir(self.path):
+        for f in os.listdir(pw.PROJECTS):
             p = self.getProjectPath(f)
             if os.path.isdir(p):
                 stat = os.stat(p)
@@ -82,9 +72,12 @@ class Manager(object):
     
     def createProject(self, projectName):
         """Create a new project """
+        from pyworkflow.apps.config import loadSettings
+        defaultSettings = loadSettings(pw.SETTINGS)
         proj = Project(self.getProjectPath(projectName))
-        hosts = HostMapper(getSettingsPath()).selectAll()
-        proj.create(hosts)
+        proj.create(defaultSettings)
+        # Copy default settings
+        #copyFile(pw.SETTINGS, proj.settingsPath)
         return proj
     
     def loadProject(self, projId):

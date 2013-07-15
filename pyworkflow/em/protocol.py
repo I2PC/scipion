@@ -252,7 +252,7 @@ class DefCTFMicrographs(Form):
                            'estimations are noisier',
                       expertLevel=LEVEL_ADVANCED)
         
-        self.addParallelSection(threads=2, mpi=1)        
+        self.addParallelSection(threads=2, mpi=1)       
 
 
 class ProtCTFMicrographs(Protocol):
@@ -337,6 +337,42 @@ class ProtExtractParticles(Protocol):
     pass
 
 
+class DefProcessParticles(Form):
+    """ Create the definition of parameters for
+    the ProtProcessParticles protocol.
+    """
+    def __init__(self):
+        Form.__init__(self)
+    
+        self.addSection(label='Input')
+        
+        self.addParam('inputParticles', PointerParam, important=True,
+                      label="Input Particles", pointerClass='SetOfParticles')
+        
+        self._addProcessParam()
+        
+        self.addParallelSection(threads=2, mpi=1)
+        
+    def _addProcessParam(self):
+        """ This method should be implemented by subclasses
+        to add other parameter relatives to the specific operation."""
+        pass  
+        
+        
+class ProtProcessParticles(Protocol):
+    """ This class will serve as a base for all protocol
+    that performs some operation on Partices (i.e. filters, mask, resize, etc)
+    It is mainly defined by an inputParticles and outputParticles.
+    """
+    pass
+
+
+class ProtFilterParticles(ProtProcessParticles):
+    """ This is the base for the branch of filters, 
+    between the ProtPreprocessParticles """
+    pass
+
+
 class ProtParticlePicking(Protocol):
 
     def _summary(self):
@@ -358,4 +394,10 @@ class ProtClassify(Protocol):
 
 
 class ProtAlignClassify(Protocol):
+    pass
+
+class ProtRefine3D(Protocol):
+    pass
+
+class ProtClassify3D(Protocol):
     pass

@@ -259,7 +259,13 @@ class XmippMicrograph(XmippImage, Micrograph):
     @staticmethod
     def convert(img, ctfFn):
         return XmippImage._convert(XmippMicrograph, img, ctfFn)
+
+class XmippVolume(XmippImage, Volume):
+    """Xmipp implementation for Volume"""
     
+    def __init__(self, filename=None, **args):
+        XmippImage.__init__(self, filename, **args)
+        Volume.__init__(self, filename, **args)    
     
 class XmippSetOfMicrographs(XmippSetOfImages, SetOfMicrographs):
     """Represents a set of Micrographs for Xmipp"""
@@ -312,7 +318,14 @@ class XmippSetOfParticles(XmippSetOfImages, SetOfParticles):
     def __init__(self, filename=None, **args):
         SetOfParticles.__init__(self, filename, **args)
         XmippSetOfImages.__init__(self, filename, **args)
-        
+
+
+class XmippSetOfVolumes(XmippSetOfImages, SetOfVolumes):
+    """Represents a set of Volumes for Xmipp"""
+    def __init__(self, filename=None, **args):
+        SetOfVolumes.__init__(self, filename, **args)
+        XmippSetOfImages.__init__(self, filename, **args)
+                
         
 class XmippCoordinate(Coordinate):
     """This class holds the (x,y) position and other information

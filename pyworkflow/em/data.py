@@ -173,6 +173,11 @@ class Micrograph(Image):
     def getMicroscope(self):
         pass
 
+class Volume(Image):
+    """ Represents an EM Volume object """
+    def __init__(self, filename=None, **args):
+        Image.__init__(self, filename, **args)
+
 
 class TiltedPair(CsvList):
     """Store the id of the untilted and tilted images"""
@@ -365,6 +370,12 @@ class SetOfParticles(SetOfImages):
     def __init__(self, filename=None, **args):
         SetOfImages.__init__(self, filename, **args)
 
+
+class SetOfVolumes(SetOfImages):
+    """Represents a set of Volumes"""
+    def __init__(self, filename=None, **args):
+        SetOfImages.__init__(self, filename, **args)
+        
 
 class Coordinate(EMObject):
     """This class holds the (x,y) position and other information

@@ -135,5 +135,9 @@ def copyTree(source, dest):
                 shutil.copy(fnPath, dest)
             elif os.path.isdir(fnPath):
                 copyTree(fnPath, join(dest, f))
+                
+def copyFile(source, dest):
+    """ Shortcut to shutil.copy. """
+    shutil.copy(source, dest)
 
 

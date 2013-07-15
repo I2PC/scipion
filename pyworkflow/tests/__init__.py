@@ -25,44 +25,40 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-import sys
-import os
+import os, sys, time
 from os.path import join, exists, isdir, relpath
 from unittest import TestResult
+
+import pyworkflow as pw
 from pyworkflow.utils.utils import getColorStr
-import time
+from pyworkflow.utils.path import cleanPath, makeFilePath
+from pyworkflow.manager import Manager
 
 try:
    from unittest.runner import _WritelnDecorator # Python 2.7+
 except ImportError:
    from unittest import _WritelnDecorator # Python <2.6
-from pyworkflow.utils.path import cleanPath, makeFilePath
-from pyworkflow.manager import Manager
+   
 
-
-if "SCIPION_HOME" not in os.environ:
-    raise Exception("SCIPION_HOME is not defined as environment variable")
-
-TESTS_HOME = join(os.environ['SCIPION_HOME'], 'tests')
 
 def getInputPath(*filenames):
     """Return the path to the SCIPION_HOME/tests/input dir
     joined with filename"""
-    return join(TESTS_HOME, "input", *filenames)
+    return join(pw.TESTS, "input", *filenames)
 
 def getGoldPath(*filenames):
     """Return the path to the SCIPION_HOME/tests/gold dir
     joined with filename"""
-    return join(TESTS_HOME, "gold", *filenames)
+    return join(pw.TESTS, "gold", *filenames)
 
 def getOutputPath(*filenames):
     """Return the path to the SCIPION_HOME/tests/output dir
     joined with filename"""
-    return join(TESTS_HOME, "output", *filenames)
+    return join(pw.TESTS, "output", *filenames)
 
 def getRelPath(filename):
     """Return the path relative to SCIPION_HOME/tests"""
-    return relpath(filename, TESTS_HOME)
+    return relpath(filename, pw.TESTS)
 
 def setupOutput(test, outputDir):
     """ Define the output path for the calling test and 
@@ -76,7 +72,7 @@ def setupProject(testClass):
     projName = testClass.__name__
     proj = Manager().createProject(projName) # Now it will be loaded if exists
     # Check that exists hosts for execution
-    hosts = proj.getHosts()
+    hosts = proj.getSettings().getHosts()
     if len(hosts) <= 0:
         raise Exception("Project: %s can't load host configuration." % projName)
     

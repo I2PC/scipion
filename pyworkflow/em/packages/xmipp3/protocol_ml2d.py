@@ -137,7 +137,7 @@ class XmippProtML2D(ProtAlign, ProtClassify, XmippProtocol):
         self.oroot = self._getPath(prefix)
         
         self.inputImgs = self.inputImages.get()       
-        imgsFn = self._insertConvertStep('inputImgs', XmippSetOfImages,
+        imgsFn = self._insertConvertStep('inputImgs', XmippSetOfParticles,
                                          self._getPath('input_images.xmd'))
         
         params = ' -i %s --oroot %s' % (imgsFn, self.oroot)
@@ -146,7 +146,7 @@ class XmippProtML2D(ProtAlign, ProtClassify, XmippProtocol):
             params += ' --nref %d' % self.numberOfReferences.get()
         else:
             self.inputRefs = self.inputReferences.get()
-            refsFn = self._insertConvertStep('inputRefs', XmippSetOfImages,
+            refsFn = self._insertConvertStep('inputRefs', XmippSetOfParticles,
                                              self._getPath('input_references.xmd'))
             params += ' --ref %s' % refsFn
         
