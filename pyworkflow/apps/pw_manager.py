@@ -27,6 +27,7 @@
 # **************************************************************************
 from inspect import isclass
 from pyworkflow.utils.utils import prettyDate
+from pyworkflow.apps.config import loadSettings
 """
 Main project window application
 """
@@ -44,7 +45,7 @@ from pyworkflow.manager import Manager
 from pyworkflow.mapper import SqliteMapper, XmlMapper
 from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
-from config import *
+import config
 from pyworkflow.em import *
 import pyworkflow.gui as gui
 from pyworkflow.gui.widgets import Button
@@ -102,25 +103,25 @@ def populateTree(tree, prefix, obj, level=0):
     for sub in obj:
         populateTree(tree, key, sub, level+1)
     
-def getMapper(fn, classesDict):
-    """Select what Mapper to use depending on
-    the filename extension"""
-    if fn.endswith('.xml'):
-        return XmlMapper(fn, classesDict)
-    elif fn.endswith('.sqlite'):
-        return SqliteMapper(fn, classesDict)
-    return None
-
-
-    
-def loadConfig(config, name):
-    c = getattr(config, name) 
-    fn = getConfigPath(c.get())
-    if not os.path.exists(fn):
-        raise Exception('loadMenuConfig: menu file "%s" not found' % fn )
-    mapper = ConfigMapper(getConfigPath(fn), globals())
-    menuConfig = mapper.getConfig()
-    return menuConfig
+#def getMapper(fn, classesDict):
+#    """Select what Mapper to use depending on
+#    the filename extension"""
+#    if fn.endswith('.xml'):
+#        return XmlMapper(fn, classesDict)
+#    elif fn.endswith('.sqlite'):
+#        return SqliteMapper(fn, classesDict)
+#    return None
+#
+#
+#    
+#def loadConfig(config, name):
+#    c = getattr(config, name) 
+#    fn = getConfigPath(c.get())
+#    if not os.path.exists(fn):
+#        raise Exception('loadMenuConfig: menu file "%s" not found' % fn )
+#    mapper = ConfigMapper(getConfigPath(fn), globals())
+#    menuConfig = mapper.getConfig()
+#    return menuConfig
 
 
 class ManagerWindow(gui.Window):
@@ -128,15 +129,14 @@ class ManagerWindow(gui.Window):
     def __init__(self, **args):
         gui.Window.__init__(self, "Projects", minsize=(750, 500), icon='scipion_bn.xbm', **args)
         # Load global configuration
-        mapper = ConfigMapper(getConfigPath('configuration.xml'), globals())
-        config = mapper.getConfig()
+        settings = loadSettings(pw.SETTINGS)
         self.projNameFont = tkFont.Font(size=12, family='verdana', weight='bold')
         self.projDateFont = tkFont.Font(size=8, family='verdana')
         self.projDelFont = tkFont.Font(size=8, family='verdana', weight='bold')
         self.manager = Manager()
         parent = self.root
 
-        menuConfig = loadConfig(config, 'menu')
+        menuConfig = settings.getCurrentMenu()
         self.createMainMenu(menuConfig)
         
         f = tk.Frame(parent, bg='white')

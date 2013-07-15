@@ -417,10 +417,9 @@ class Protocol(Step):
         """
         step = RunJobStep(self.runJob, progName, progArguments, resultFiles)
 
-        #FIXME: Move this logic to Steps executor
         if self.stepsExecutionMode == STEPS_SERIAL:
-            step.mpi = self.numberOfMpi.get()
-            step.threads = self.numberOfThreads.get()
+            step.mpi = args.get('numberOfMpi', self.numberOfMpi.get())
+            step.threads = args.get('numberOfThreads', self.numberOfThreads.get())
             
         return self.__insertStep(step, **args)
         
