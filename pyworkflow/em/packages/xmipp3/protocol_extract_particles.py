@@ -347,7 +347,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         else:
             imgSet.copyTiltPairs(self.inputCoords, self.getImgIdFromCoord)
         
-        self._defineOutputs(outputImages=imgSet)
+        self._defineOutputs(outputParticles=imgSet)
     
     def _summary(self):
         downsampleTypeText = {
@@ -355,7 +355,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                               self.SAME_AS_PICKING:'Same as picking',
                               self.OTHER: 'Other downsampling factor'}
         summary = []
-        if not hasattr(self, 'outputImages'):
+        if not hasattr(self, 'outputParticles'):
             summary.append("Output images not ready yet.") 
         else:
             summary.append("Input coordinates: %s" % self.inputCoordinates.get().getNameId())
@@ -363,7 +363,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             if self.downsampleType.get() == self.OTHER:
                 summary.append("Downsampling factor: %d" % self.downFactor.get())
             summary.append("Particle size %d" % self.boxSize.get())
-            summary.append("Particles extracted: %d" % (self.outputImages.getSize()))
+            summary.append("Particles extracted: %d" % (self.outputParticles.getSize()))
         return summary
     
     def _validate(self):

@@ -83,10 +83,10 @@ class XmippViewer(Viewer):
             self.visualize(obj.outputCoordinates)
         elif (issubclass(cls, ProtImportParticles) or
               issubclass(cls, XmippProtExtractParticles)):
-            self.visualize(obj.outputImages)
+            self.visualize(obj.outputParticles)
             # If Zscore on output images plot Zscore particle sorting            
-            md = xmipp.MetaData(obj.outputImages.getFileName()) 
-            print "MD=%s" % obj.outputImages.getFileName()
+            md = xmipp.MetaData(obj.outputParticles.getFileName()) 
+            print "MD=%s" % obj.outputParticles.getFileName()
             if md.containsLabel(xmipp.MDL_ZSCORE):
                 print "MD contains ZSCORE"
                 xplotter = XmippPlotter(windowTitle="Zscore particles sorting")

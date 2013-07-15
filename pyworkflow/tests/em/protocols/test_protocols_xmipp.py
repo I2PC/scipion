@@ -54,8 +54,8 @@ class TestXmippBase(unittest.TestCase):
         cls.protImport = ProtImportParticles(pattern=pattern, samplingRate=samplingRate)
         cls.proj.launchProtocol(cls.protImport, wait=True)
         # check that input images have been imported (a better way to do this?)
-        if cls.protImport.outputImages is None:
-            raise Exception('Import of images: %s, failed. outputImages is None.' % pattern)
+        if cls.protImport.outputParticles is None:
+            raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
         return cls.protImport        
  
 class TestImportMicrographs(TestXmippBase):
@@ -166,7 +166,7 @@ class TestXmippExtractParticles(TestXmippBase):
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         self.proj.launchProtocol(protExtract, wait=True)
         
-        self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
+        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
         
     def testExtractOriginal(self):
         print "Run extract particles with downsampling factor equal to the original micrographs"
@@ -175,7 +175,7 @@ class TestXmippExtractParticles(TestXmippBase):
         protExtract.inputMicrographs.set(self.protImport_ori.outputMicrographs)
         self.proj.launchProtocol(protExtract, wait=True)
         
-        self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
+        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
 
     def testExtractOther(self):
         print "Run extract particles with downsampling factor equal to other"
@@ -184,7 +184,7 @@ class TestXmippExtractParticles(TestXmippBase):
         protExtract.inputMicrographs.set(self.protImport_ori.outputMicrographs)
         self.proj.launchProtocol(protExtract, wait=True)
         
-        self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
+        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
         
 #    def testExtractCTF(self):
 #        print "Run extract particles with CTF"
@@ -200,7 +200,7 @@ class TestXmippExtractParticles(TestXmippBase):
 #        protExtract.inputMicrographs.set(self.protImport_ori.outputMicrographs)
 #        self.proj.launchProtocol(protExtract, wait=True)
 #        
-#        self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles") 
+#        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles") 
 
      
 def setupClassification(cls):
@@ -220,7 +220,7 @@ class TestXmippML2D(TestXmippBase):
         print "Run ML2D"
         protML2D = XmippProtML2D(numberOfReferences=2, maxIters=3, 
                                  numberOfMpi=2, numberOfThreads=2)
-        protML2D.inputImages.set(self.protImport.outputImages)
+        protML2D.inputImages.set(self.protImport.outputParticles)
         self.proj.launchProtocol(protML2D, wait=True)        
         
         self.assertIsNotNone(protML2D.outputClassification, "There was a problem with ML2D")  
@@ -235,7 +235,7 @@ class TestXmippCL2D(TestXmippBase):
         print "Run CL2D"
         protCL2D = XmippProtCL2D(numberOfReferences=2, numberOfInitialReferences=1, 
                                  numberOfIterations=3, numberOfMpi=4)
-        protCL2D.inputImages.set(self.protImport.outputImages)
+        protCL2D.inputImages.set(self.protImport.outputParticles)
         self.proj.launchProtocol(protCL2D, wait=True)        
         
         self.assertIsNotNone(protCL2D.outputClassification, "There was a problem with CL2D")  
@@ -250,13 +250,13 @@ class TestXmippProtCL2DAlign(TestXmippBase):
         print "Run Only Align"
         xmippProtCL2DAlign = launchXmippProtCL2DAlign(self)
         
-        self.assertIsNotNone(xmippProtCL2DAlign.outputClassification, "There was a problem with Only align2d")    
+        self.assertIsNotNone(xmippProtCL2DAlign.outputParticles, "There was a problem with Only align2d")    
 
 def launchXmippProtCL2DAlign(test): 
     xmippProtCL2DAlign = XmippProtCL2DAlign(maximumShift=5, numberOfIterations=5, 
                              numberOfMpi=2, numberOfThreads=1, useReferenceImage=False)
     
-    xmippProtCL2DAlign.inputImages.set(test.protImport.outputImages)
+    xmippProtCL2DAlign.inputImages.set(test.protImport.outputParticles)
     test.proj.launchProtocol(xmippProtCL2DAlign, wait=True)
     return xmippProtCL2DAlign
 
@@ -270,16 +270,16 @@ class TestXmippRotSpectra(TestXmippBase):
         print "Run Rotational Spectra"
 #         xmippProtCL2DAlign = launchXmippProtCL2DAlign(self)
 #         xmippProtRotSpectra = XmippProtRotSpectra()
-#         xmippProtRotSpectra.inputImages.set(xmippProtCL2DAlign.outputClassification)
+#         xmippProtRotSpectra.inputImages.set(xmippProtCL2DAlign.outputParticles)
 #         Now we can not use the only align output because we must create tools to get the correct 
 #         format for Rotational Spectra
 
         xmippProtRotSpectra = XmippProtRotSpectra()
-        xmippProtRotSpectra.inputImages.set(self.protImport.outputImages)
+        xmippProtRotSpectra.inputImages.set(self.protImport.outputParticles)
 
         self.proj.launchProtocol(xmippProtRotSpectra, wait=True)        
         
-        self.assertIsNotNone(xmippProtRotSpectra.outputClassification, "There was a problem with Rotational Spectra")  
+        self.assertIsNotNone(xmippProtRotSpectra.outputParticles, "There was a problem with Rotational Spectra")  
 
     
 class TestXmippML3D(TestXmippBase):
@@ -294,7 +294,7 @@ class TestXmippML3D(TestXmippBase):
     def testML3D(self):
         print "Run ML3D"
         protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2, runMode=1)
-        protML3D.inputImages.set(self.protImport.outputImages)
+        protML3D.inputImages.set(self.protImport.outputParticles)
         protML3D.ini3DrefVolumes.set(self.iniVol)
         protML3D.doCorrectGreyScale.set(True)
         protML3D.numberOfSeedsPerRef.set(2)

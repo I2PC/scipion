@@ -314,7 +314,10 @@ class BooleanParam(Param):
 class PointerParam(Param):
     def __init__(self, **args):
         Param.__init__(self, paramClass=Pointer, **args)
+        # This will be the class to be pointed
         self.pointerClass = String(args.get('pointerClass'))
+        # Some conditions on the pointed candidates
+        self.pointerCondition = String(args.get('pointerCondition'))
         
         
 

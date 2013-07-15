@@ -180,11 +180,11 @@ class TestXmippTiltedWorkflow(TestWorkflow):
         self.proj.launchProtocol(protExtract, wait=True)
         
         self.validateFiles('protExtract', protExtract)  
-        self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
+        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
         
         print "Run ML2D"
         protML2D = XmippProtML2D(numberOfReferences=1, maxIters=4, numberOfMpi=1)
-        protML2D.inputImages.set(protExtract.outputImages)
+        protML2D.inputImages.set(protExtract.outputParticles)
         self.proj.launchProtocol(protML2D, wait=True)        
         
         self.validateFiles('protML2D', protML2D)  
@@ -193,7 +193,7 @@ class TestXmippTiltedWorkflow(TestWorkflow):
         print "Run CL2D"
         protCL2D = XmippProtCL2D(numberOfReferences=2, numberOfInitialReferences=1, 
                                  numberOfIterations=4, numberOfMpi=1)
-        protCL2D.inputImages.set(protExtract.outputImages)
+        protCL2D.inputImages.set(protExtract.outputParticles)
         self.proj.launchProtocol(protCL2D, wait=True)        
         
         self.printSet('current', protCL2D.getFiles())

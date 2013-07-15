@@ -207,13 +207,13 @@ class TestXmippWorkflow(TestWorkflow):
         protExtract.inputMicrographs.set(protImport.outputMicrographs)
         self.proj.launchProtocol(protExtract, wait=True)
         
-        self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
+        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
         self.validateFiles('protExtract', protExtract)
         
         print "Run ML2D"
         protML2D = XmippProtML2D(numberOfReferences=1, maxIters=4, doMlf=True,
                                  numberOfMpi=2, numberOfThreads=1)
-        protML2D.inputImages.set(protExtract.outputImages)
+        protML2D.inputImages.set(protExtract.outputParticles)
         self.proj.launchProtocol(protML2D, wait=True)        
         
         self.assertIsNotNone(protML2D.outputClassification, "There was a problem with ML2D") 
@@ -228,7 +228,7 @@ class TestXmippWorkflow(TestWorkflow):
         print "Run CL2D"
         protCL2D = XmippProtCL2D(numberOfReferences=2, numberOfInitialReferences=1, 
                                  numberOfIterations=4, numberOfMpi=2)
-        protCL2D.inputImages.set(protExtract.outputImages)
+        protCL2D.inputImages.set(protExtract.outputParticles)
         self.proj.launchProtocol(protCL2D, wait=True)        
         
         self.assertIsNotNone(protCL2D.outputClassification, "There was a problem with CL2D")
@@ -243,17 +243,17 @@ class TestXmippWorkflow(TestWorkflow):
         protOnlyalign = XmippProtCL2DAlign(maximumShift=5, numberOfIterations=2, 
                                  numberOfMpi=2, numberOfThreads=1, useReferenceImage=False)
 
-        protOnlyalign.inputImages.set(protExtract.outputImages)
+        protOnlyalign.inputImages.set(protExtract.outputParticles)
         self.proj.launchProtocol(protOnlyalign, wait=True)        
         
-        self.assertIsNotNone(protOnlyalign.outputClassification, "There was a problem with Only align2d")  
+        self.assertIsNotNone(protOnlyalign.outputParticles, "There was a problem with Only align2d")  
         self.validateFiles('protOnlyalign', protOnlyalign)
 
         print "Run kerdensom"
         ProtKerdensom = XmippProtKerdensom(useMask=False, SomXdim=2, SomYdim=2,
                                  SomReg0=800, SomReg1=400, SomSteps=2)
 
-        ProtKerdensom.inputImages.set(protExtract.outputImages)
+        ProtKerdensom.inputImages.set(protExtract.outputParticles)
         self.proj.launchProtocol(ProtKerdensom, wait=True)        
         
         self.assertIsNotNone(ProtKerdensom.outputClassification, "There was a problem with kerdensom")  
@@ -261,7 +261,9 @@ class TestXmippWorkflow(TestWorkflow):
         
         print "Run Rotational Spectra"
         xmippProtRotSpectra = XmippProtRotSpectra()
-        xmippProtRotSpectra.inputImages.set(protExtract.outputImages)
+        xmippProtRotSpectra.inputImages.set(protExtract.outputParticles)
+        xmippProtRotSpectra.SomXdim.set(2)
+        xmippProtRotSpectra.SomYdim.set(2)
 
         self.proj.launchProtocol(xmippProtRotSpectra, wait=True)        
         
