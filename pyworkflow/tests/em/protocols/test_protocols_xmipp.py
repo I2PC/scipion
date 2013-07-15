@@ -281,7 +281,7 @@ class TestXmippML3D(TestXmippBase):
     def setUpClass(cls):
         setupProject(cls)
         #TODO: Find a set of images to make this work, with this it does not
-        images = getInputPath('ml3dData/phantom_images', '*.xmp')
+        images = getInputPath('Images_Vol_ML3D/phantom_images', '*.xmp')
         cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1)
         cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
         
