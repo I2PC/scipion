@@ -151,7 +151,7 @@ class Form():
 #                else:
 #                    raise Exception("Invalid token '%s' used in param '%s' condition" 
 #                                    % (t, paramName))
-    def evalCondition(self, protocol, paramName):
+    def evalParamCondition(self, protocol, paramName):
         """Evaluate if a condition is True for a give param
         with the values of a particular Protocol"""
         param = self.getParam(paramName)
