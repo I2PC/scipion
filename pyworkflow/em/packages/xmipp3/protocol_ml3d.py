@@ -192,7 +192,7 @@ class XmippProtML3D(XmippProtocol, ProtRefine3D, ProtClassify3D):
             self.insertGenerateRefSteps()
             
         self.insertML3DStep(self.imgMd, self.workingDir.get() + '/', self.ParamsDict['InitialVols'], 
-                            self.numberOfIterations.get(), self.seedsAreAmplitudeCorrected)
+                            self.numberOfIterations.get(), self.seedsAreAmplitudeCorrected.get())
         
         self._insertFunctionStep('renameOutput', self.workingDir.get(), self.getProgramId())
                 
@@ -215,7 +215,7 @@ class XmippProtML3D(XmippProtocol, ProtRefine3D, ProtClassify3D):
         makePath(cgsDir)
         volStack = self.ParamsDict['InitialVols'] = self._getExtraPath('corrected_volumes.stk')
         # Grey-scale correction always leads to an amplitude uncorrected map
-        self.initialMapIsAmplitudeCorrected = False
+        self.initialMapIsAmplitudeCorrected.set(False)
         index = 1
         outputVol = ''
         for idx in self.mdVols:
@@ -275,17 +275,17 @@ class XmippProtML3D(XmippProtocol, ProtRefine3D, ProtClassify3D):
         # Create dir for seeds generation
         makePath(grDir)
         # Split images metadata
-        nvols = self.ParamsDict['NumberOfVols'] = self.mdVols.size() * self.NumberOfReferences
+        nvols = self.ParamsDict['NumberOfVols'] = self.mdVols.size() * self.numberOfSeedsPerRef.get()
         sroot = self.ParamsDict['SplitRoot'] = join(grDir, 'images')
         self.ParamsStr = '-i %(ImgMd)s -n %(NumberOfVols)d --oroot %(SplitRoot)s'
         files = ['%s%06d.xmd' % (sroot, i) for i in range(1, nvols+1)]        
         self._insertRunJobStep('xmipp_metadata_split', self.ParamsStr % self.ParamsDict)
         
-        volStack = self.ParamsDict['InitialVols'] = self.getFilename('generated_vols') 
+        volStack = self.ParamsDict['InitialVols'] = self._getExtraPath('generated_volumes.stk') 
         index = 1
         copyVols = []
         for idx in self.mdVols:
-            for i in range(self.NumberOfReferences):
+            for i in range(self.numberOfSeedsPerRef.get()):
                 outputVol = "%d@%s" % (index, volStack)
                 generatedVol = join(grDir, "vol%03dextra/iter%03d/vol%06d.vol" % (index, 1, 1))
                 copyVols.append((outputVol, generatedVol))
@@ -300,7 +300,7 @@ class XmippProtML3D(XmippProtocol, ProtRefine3D, ProtClassify3D):
             self._insertRunJobStep('xmipp_image_convert', self.ParamsStr % self.ParamsDict)
             
         # Seed generation with MLF always does amplitude correction
-        self.seedsAreAmplitudeCorrected = True
+        self.seedsAreAmplitudeCorrected.set(True)
 
     def insertML3DStep(self, inputImg, oRoot, initialVols, numberOfIters, amplitudCorrected):
         self.ParamsDict.update({
@@ -358,14 +358,15 @@ class XmippProtML3D(XmippProtocol, ProtRefine3D, ProtClassify3D):
             shutil.move(f, nf)
                                                     
     def createOutput(self):
-        classification = XmippClassification2D(self._getPath('classes.xmd'))
-        self._defineOutputs(outputClassification=classification)
+        lastIter = 'iter%03d' % self.numberOfIterations.get()
+        volumes = XmippSetOfVolumes(self._getExtraPath(lastIter + '/' + 'iter_volumes.xmd'))
+        self._defineOutputs(outputVolumes=volumes)
 
     def _summary(self):
         summary = []
-        if not hasattr(self, 'outputClassification'):
-            summary.append("Output classes not ready yet.")
+        if not hasattr(self, 'outputVolumes'):
+            summary.append("Output volumes not ready yet.")
         else:
             summary.append("Input Images: %s" % self.inputImages.get().getNameId())
-            summary.append("Output classes: %s" % self.outputClassification.get())
+            summary.append("Output volumes: %s" % self.outputVolumes.get())
         return summary
