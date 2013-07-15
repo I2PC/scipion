@@ -287,13 +287,14 @@ class TestXmippML3D(TestXmippBase):
         
     def testML3D(self):
         print "Run ML3D"
-        protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2)
+        protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2, runMode=1)
         protML3D.inputImages.set(self.protImport.outputImages)
         protML3D.ini3DrefVolumes.set(self.iniVol)
-        #protML3D.doCorrectGreyScale.set(True)
+        protML3D.doCorrectGreyScale.set(True)
+        protML3D.numberOfSeedsPerRef.set(2)
         self.proj.launchProtocol(protML3D, wait=True)        
         
-        #self.assertIsNotNone(protML3D.outputClassification, "There was a problem with ML2D")          
+        self.assertIsNotNone(protML3D.outputVolumes, "There was a problem with ML3D")          
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
