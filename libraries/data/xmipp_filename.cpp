@@ -66,7 +66,19 @@ void FileName::compose(size_t no, const String &str)
         REPORT_ERROR(ERR_DEBUG_TEST, "Don't compose with 0 or -1 index, now images index start at 1");
 
     if (no != ALL_IMAGES)
-        formatStringFast(*this, "%06lu@%s", no, str.c_str());
+    {
+        size_t first = str.rfind("@");
+        if (first != npos)
+        {
+            std::vector<String> prefixes;
+            int nPref = splitString(str.substr(0, first),",",prefixes, false);
+
+            if (isalpha(prefixes[nPref-1].at(0)))
+                formatStringFast(*this, "%06lu,%s", no, str.c_str());
+        }
+        else
+            formatStringFast(*this, "%06lu@%s", no, str.c_str());
+    }
     else
         *this = str;
 }
@@ -271,36 +283,6 @@ bool FileName::hasMetadataExtension() const
             ext == "sqlite" || ext == "xml");
 }
 
-
-// Get number from file ....................................................
-int FileName::getNumber() const
-{
-    size_t skip_directories = find_last_of("/") + 1;
-    size_t point = find_first_of(".", skip_directories);
-    if (point == npos)
-        point = length();
-    size_t root_end = find_last_not_of("0123456789", point - 1);
-    if (root_end + 1 != point)
-    {
-        if (point - root_end > FILENAMENUMBERLENGTH)
-            root_end = point - FILENAMENUMBERLENGTH - 1;
-        String aux = substr(root_end + 1, point - root_end + 1);
-        return atoi(aux.c_str());
-    }
-    else
-        return -1;
-}
-
-// Get number from file ....................................................
-size_t FileName::getStackNumber() const
-{
-    size_t no;
-    String str(*this);
-    decompose(no, str);
-
-    return no;
-}
-
 // Init random .............................................................
 void FileName::initRandom(int length)
 {
@@ -318,9 +300,9 @@ void FileName::initUniqueName(const char *templateStr, const String &fnDir)
     const int len=512;
     char filename[len];
     if (fnDir!="")
-    	strcpy(filename,(fnDir+"/").c_str());
+        strcpy(filename,(fnDir+"/").c_str());
     else
-    	filename[0]=0;
+        filename[0]=0;
     strcat(filename, templateStr);
     filename[len - 1] = 0;
     if ((fd = mkstemp(filename)) == -1)
@@ -442,12 +424,60 @@ FileName FileName::removeFileFormat() const
     return *this;
 }
 
+// Get number from file base name ....................................................
+int FileName::getNumber() const
+{
+    size_t skip_directories = find_last_of("/") + 1;
+    size_t point = find_first_of(".", skip_directories);
+    if (point == npos)
+        point = length();
+    size_t root_end = find_last_not_of("0123456789", point - 1);
+    if (root_end + 1 != point)
+    {
+        if (point - root_end > FILENAMENUMBERLENGTH)
+            root_end = point - FILENAMENUMBERLENGTH - 1;
+        String aux = substr(root_end + 1, point - root_end + 1);
+        return atoi(aux.c_str());
+    }
+    else
+        return -1;
+}
+
+// Get number from file ....................................................
+size_t FileName::getPrefixNumber(size_t pos) const
+{
+    size_t first = rfind("@");
+    size_t result = ALL_IMAGES;
+    if (first != npos)
+    {
+        std::vector<String> prefixes;
+        size_t nPref = splitString(substr(0, first),",",prefixes, false);
+
+        if (pos > nPref-1)
+            REPORT_ERROR(ERR_ARG_INCORRECT, formatString("getPrefixNumber: Selected %lu position greater than %lu positions \n"
+                         " detected in %s filename.",pos+1, nPref, this->c_str()));
+
+        if (isdigit(prefixes[pos].at(0)))
+            result = textToSizeT(prefixes[pos].c_str());
+    }
+    return result;
+}
+
 String FileName::getBlockName() const
 {
     size_t first = rfind("@");
     String result = "";
-    if (first != npos && isalpha(this->at(0)))
-        result = substr(0, first);
+    if (first != npos)
+    {
+        std::vector<String> prefixes;
+        int nPref = splitString(substr(0, first),",",prefixes, false);
+
+        /* using isdigit instead of isalpha allows to
+         * detect as blockname rootnames starting by "/"
+         */
+        if (!isdigit(prefixes[nPref-1].at(0)))
+            result = prefixes[nPref-1];
+    }
     return result;
 
 }
@@ -455,20 +485,42 @@ String FileName::getBlockName() const
 FileName FileName::removeBlockName() const
 {
     size_t first = rfind("@");
-    if (first != npos && isalpha(this->at(0)))
-        return substr(first + 1);
+
+    if (first != npos)
+    {
+        std::vector<String> prefixes;
+        int nPref = splitString(substr(0, first),",",prefixes, false);
+
+        if (!isdigit(prefixes[nPref-1].at(0)))
+        {
+            if (nPref == 1)
+                return substr(first + 1);
+            else
+                return substr(0,first - prefixes[nPref-1].size() - 1) +
+                       substr(first);
+        }
+    }
     return *this;
 }
 
-FileName FileName::removeSliceNumber() const
+FileName FileName::removePrefixNumber() const
 {
     size_t first = rfind("@");
-    if (first != npos && isdigit(this->at(0)))
-        return substr(first + 1);
+
+    if (first != npos)
+    {
+        std::vector<String> prefixes;
+        int nPref = splitString(substr(0, first),",",prefixes, false);
+
+        if (isdigit(prefixes[nPref-1].at(0)))
+            return substr(first + 1);
+        else if (nPref > 1) // isalpha and we remove the ","
+            return substr(first - prefixes[nPref-1].size());
+    }
     return *this;
 }
 
-FileName FileName::removeBlockNameOrSliceNumber() const
+FileName FileName::removeAllPrefixes() const
 {
     size_t first = rfind("@");
     if (first != npos)
@@ -498,13 +550,13 @@ bool FileName::isMetaData(bool failIfNotExists) const
 
 bool FileName::isStar1(bool failIfNotExists) const
 {
-    std::ifstream infile( this->removeBlockNameOrSliceNumber().c_str(), std::ios_base::in);
+    std::ifstream infile( this->removeAllPrefixes().c_str(), std::ios_base::in);
     String line;
 
     if (infile.fail())
     {
         if (failIfNotExists)
-            REPORT_ERROR( ERR_IO_NOTEXIST, formatString("File '%s' does not exist.", this->removeBlockNameOrSliceNumber().c_str()));
+            REPORT_ERROR( ERR_IO_NOTEXIST, formatString("File '%s' does not exist.", this->removeAllPrefixes().c_str()));
         else
             return false;
     }
@@ -584,7 +636,7 @@ bool FileName::exists() const
 /* Delete  file exists -------------------------------------------------- */
 void FileName::deleteFile() const
 {
-    FileName temp = this->removeFileFormat().removeBlockNameOrSliceNumber();
+    FileName temp = this->removeFileFormat().removeAllPrefixes();
     if (temp.exists())
         unlink(temp.c_str());
 }

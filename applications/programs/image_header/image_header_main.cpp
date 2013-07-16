@@ -27,8 +27,10 @@
 #include <data/xmipp_image.h>
 #include <data/metadata.h>
 #include <data/xmipp_program.h>
+#include <data/xmipp_hdf5.h>
 
-typedef enum { HEADER_PRINT, HEADER_EXTRACT, HEADER_ASSIGN, HEADER_RESET, HEADER_SAMPLINGRATE } HeaderOperation;
+
+typedef enum { HEADER_PRINT, HEADER_EXTRACT, HEADER_ASSIGN, HEADER_RESET, HEADER_SAMPLINGRATE, HEADER_TREE } HeaderOperation;
 
 class ProgHeader: public XmippMetadataProgram
 {
@@ -42,6 +44,8 @@ protected:
     void defineParams()
     {
         produces_an_output = true;
+        get_image_info = false;
+
         XmippMetadataProgram::defineParams();
         addUsageLine("Operate with image files headers. By default in Xmipp, geometrical transformations");
         addUsageLine("comming in images files headers are ignored. Instead this information is read from");
@@ -57,6 +61,8 @@ protected:
         addParamsLine("       alias -a;");
         addParamsLine("or --reset      : Reset the geometrical transformations in image file headers.");
         addParamsLine("       alias -r;");
+        addParamsLine("or --tree      : Print the tree scheme from file containers as hdf5 files.");
+        addParamsLine("       alias -t;");
         addParamsLine("or --sampling_rate <Ts=-1>  : Change the sampling rate (in Angstrom units) in the image file header.");
         addParamsLine("          : If no value is passed then current value in header is print.");
         addParamsLine("       alias -s;");
@@ -86,6 +92,12 @@ protected:
         {
             operation = HEADER_SAMPLINGRATE;
             sampling = getDoubleParam("--sampling_rate");
+            allow_time_bar = false;
+        }
+        else if (checkParam("--tree"))
+        {
+            operation = HEADER_TREE;
+            decompose_stacks = false;
         }
         else
         {
@@ -125,6 +137,9 @@ protected:
                 msg = "Setting sampling rate into headers...";
             else
                 msg = "Showing sampling rate from headers...";
+            break;
+        case HEADER_TREE:
+            msg = "Printing tree structure...";
             break;
         }
         std::cout << msg << std::endl << "Input: " << fn_in << std::endl;
@@ -184,8 +199,9 @@ protected:
             img.read(fnImg, _HEADER_ALL);
             if (sampling < 0)
             {
-                img.MDMainHeader.getValue(MDL_SAMPLINGRATE_X, sampling);
-                std::cout << sampling << std::endl;
+                double samplingRead;
+                img.MDMainHeader.getValue(MDL_SAMPLINGRATE_X, samplingRead);
+                std::cout << samplingRead << std::endl;
             }
             else
             {
@@ -195,7 +211,20 @@ protected:
                 img.write(fnImg, ALL_IMAGES, fnImg.isInStack(), WRITE_REPLACE);
                 std::cout << "New sampling rate (Angstrom) = " << sampling << std::endl;
             }
+            break;
+        case HEADER_TREE:
+            {
+                XmippH5File H5File;
+                FileName filename = fnImg.removeAllPrefixes().removeFileFormat();
 
+                if (H5File.isHdf5(filename.c_str()))
+                {
+                    H5File.openFile(fnImg.removeAllPrefixes().removeFileFormat(), H5F_ACC_RDONLY);
+                    H5File.showTree();
+                }
+                else
+                    REPORT_ERROR(ERR_IMG_UNKNOWN, "Unknown file format to display its data structure.");
+            }
             break;
         }
     }

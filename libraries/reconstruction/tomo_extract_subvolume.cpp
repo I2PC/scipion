@@ -249,7 +249,7 @@ void ProgTomoExtractSubvolume::processImage(const FileName &fnImg, const FileNam
     {
         if (oroot.empty())
         {
-            fn_aux = fnImg.removeSliceNumber().removeLastExtension()+ "_sub";
+            fn_aux = fnImg.removePrefixNumber().removeLastExtension()+ "_sub";
 
             if  (fnImg.isInStack())
             {

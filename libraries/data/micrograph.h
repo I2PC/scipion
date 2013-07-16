@@ -66,6 +66,11 @@ struct Particle_coords
     double cost;
 };
 
+struct Point
+{
+    double x,y;
+};
+
 /** Micrography class.
     This class manages a large micrograph on disk. The image is not loaded
     into memory, that should avoid memory problems
@@ -83,6 +88,7 @@ public:
     int                      X_window_size;
     int                      Y_window_size;
     size_t                   Xdim,Ydim,Zdim,Ndim;
+    Point				     point1, point2;
     int                      datatype;
     int                      swapbyte;
     int                      __offset;

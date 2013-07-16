@@ -618,9 +618,16 @@ def runChimera(inputFile,extraParams=""):
         from protlib_filesystem import hasSpiderExt
         if hasSpiderExt(inputFile):
             inputFile = 'spider:%s' % inputFile
-        os.system("chimera %s %s&" % (inputFile,extraParams))
+        os.system("chimera %s %s &" % (inputFile,extraParams))
     else:
         print "Error Chimera not available or inputFile %s does not exits."%inputFile
+
+def runVMD(inputFile,extraParams=""):
+    if which("vmd") and os.path.exists(inputFile):
+        os.system("vmd %s %s" % (inputFile,extraParams))
+    else:
+        print "Error VMD not available or inputFile %s does not exits."%inputFile
+
 """ Return the machine name """
 def getHostname():
     import socket
@@ -927,7 +934,7 @@ def createMetaDataFromPattern(pattern, isStack=False, label="image"):
     files = glob.glob(pattern)
     files.sort()
 
-    from xmipp import MetaData, FileName, SingleImgSize, MDL_ENABLED, str2Label
+    from xmipp import MetaData, FileName, getImageSize, MDL_ENABLED, str2Label
     label = str2Label(label) #Check for label value
     
     mD = MetaData()
@@ -939,7 +946,7 @@ def createMetaDataFromPattern(pattern, isStack=False, label="image"):
         if isStack:
             if file.endswith(".mrc"):
                 fileAux=file+":mrcs"
-            x, x, x, nSize = SingleImgSize(fileAux)
+            x, x, x, nSize = getImageSize(fileAux)
         if nSize != 1:
             counter = 1
             for jj in range(nSize):

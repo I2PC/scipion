@@ -68,8 +68,14 @@
         case DT_UChar:\
             {OP(unsigned char)};\
             break;\
-        default:\
-			REPORT_ERROR(ERR_ARG_INCORRECT,"Do not know how to handle this type at this point");\
+        case DT_Long:\
+            {OP(long)};\
+            break;\
+        case DT_ULong:\
+            {OP(unsigned long)};\
+            break;\
+            default:\
+   REPORT_ERROR(ERR_ARG_INCORRECT,"Do not know how to handle this type at this point");\
         }
 
 /// @addtogroup MultidimensionalArrays
@@ -383,6 +389,16 @@ public:
 
     }
 
+    /**
+     *  Range adjust using an example
+     */
+    void rangeAdjust(const MultidimArrayGeneric &example, const MultidimArray<int> *mask=NULL)
+    {
+#define RANGEADJUST(type) ((MultidimArray<type>*)(im))->rangeAdjust(*(MultidimArray<type>*)(example.im),mask);
+        SWITCHDATATYPE(datatype,RANGEADJUST)
+#undef RANGEADJUST
+    }
+
     /** Assignment **/
     MultidimArrayGeneric& operator=(const MultidimArrayGeneric& input)
     {
@@ -392,6 +408,22 @@ public:
             *im = *input.im;
         }
         return *this;
+    }
+
+    /** *= **/
+    void operator*=(double op1)
+    {
+#define OPERATORTIMESEQUAL(type) *((MultidimArray<type>*)(im)) *= (type)op1;
+        SWITCHDATATYPE(datatype,OPERATORTIMESEQUAL)
+#undef OPERATORTIMESEQUAL
+    }
+
+    /** += **/
+    void operator+=(const MultidimArrayGeneric& op1)
+    {
+#define OPERATORPLUSEQUAL(type) *((MultidimArray<type>*)(im)) += *((MultidimArray<type>*)(op1.im));
+        SWITCHDATATYPE(datatype,OPERATORPLUSEQUAL)
+#undef OPERATORPLUSEQUAL
     }
 
     /** Get constant access */

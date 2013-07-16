@@ -213,7 +213,7 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
                 {
                     FileName fn_noise;
                     MDRow row;
-                    fn_noise.compose(read_proj.name().getStackNumber(),artPrm.fn_root+"_noise_proj.stk");
+                    fn_noise.compose(read_proj.name().getPrefixNumber(),artPrm.fn_root+"_noise_proj.stk");
 
                     noisy_projection.write(fn_noise);
                     row.setValue(MDL_IMAGE, fn_noise);

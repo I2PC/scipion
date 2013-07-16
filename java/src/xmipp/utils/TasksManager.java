@@ -1,3 +1,4 @@
+
 package xmipp.utils;
 
 import java.util.concurrent.LinkedBlockingQueue;
@@ -35,6 +36,7 @@ public class TasksManager
 			throw new IllegalArgumentException(e);
 		}
 	}
+
 	
 	public void stop()
 	{
@@ -56,7 +58,8 @@ public class TasksManager
 		{
 			try
 			{
-				while (true && !stop)
+
+				while (!stop)
 					queue.take().doTask();
 			}
 			catch (InterruptedException e)

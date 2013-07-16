@@ -19,6 +19,7 @@ import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.ImportParticlesJDialog;
 
+
 public class ImportParticlesFromFilesTiltPairJDialog extends ImportParticlesJDialog {
 
 	
@@ -105,7 +106,7 @@ public class ImportParticlesFromFilesTiltPairJDialog extends ImportParticlesJDia
 	
 	
 	
-	protected void importParticles() {
+	protected String importParticles() {
 		path = sourcetf.getText().trim();
 
 		if (path == null || path.equals("") )
@@ -114,7 +115,7 @@ public class ImportParticlesFromFilesTiltPairJDialog extends ImportParticlesJDia
 
 		if (path2 == null || path2.equals("") )
 			showError(XmippMessage.getEmptyFieldMsg("Tilted Source"));
-		((TiltPairPickerJFrame)parent).importParticlesFromFiles(format, path, path2, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
+		return ((TiltPairPickerJFrame)parent).importParticlesFromFiles(format, path, path2, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
 		
 	}
 	

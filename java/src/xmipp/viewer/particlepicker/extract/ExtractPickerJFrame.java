@@ -8,6 +8,7 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -20,9 +21,12 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.AbstractTableModel;
 
+import xmipp.ij.commons.Tool;
+import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.ColorHelper;
 import xmipp.viewer.particlepicker.Format;
@@ -32,7 +36,7 @@ import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
 import xmipp.viewer.particlepicker.ParticlesJDialog;
 import xmipp.viewer.particlepicker.PickerParticle;
-import xmipp.viewer.particlepicker.training.model.FamilyState;
+import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.windows.GalleryJFrame;
 import xmipp.viewer.windows.ImagesWindowFactory;
 
@@ -45,7 +49,6 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 	private JButton iconbt;
 	private ExtractMicrographsTableModel micrographsmd;
 	private JLabel particleslb;
-	private JPanel particlespn;
 	private int index;
 	private ExtractCanvas canvas;
 	private ColorHelper[] colorby;
@@ -54,6 +57,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 	private JLabel minlb;
 	private JLabel maxlb;
 	private ExtractParticle active;
+	private JPanel colorlegendpn;
 
 	public ExtractPickerJFrame(ParticlePicker picker, GalleryJFrame galleryfr)
 	{
@@ -70,18 +74,25 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		setTitle("Xmipp Particle Picker - " + picker.getMode());
 		initMenuBar();
 		setJMenuBar(mb);
+		savemi.setEnabled(false);
 
 		GridBagConstraints constraints = new GridBagConstraints();
 		constraints.insets = new Insets(0, 5, 0, 5);
 		constraints.anchor = GridBagConstraints.WEST;
 		setLayout(new GridBagLayout());
 
-		initParticlesPane();
-		add(particlespn, XmippWindowUtil.getConstraints(constraints, 0, 1, 3));
+		initToolBar();
+		add(tb, XmippWindowUtil.getConstraints(constraints, 0, 1, 2, 1, GridBagConstraints.NONE));
+		add(new JLabel("Shape:"), XmippWindowUtil.getConstraints(constraints, 0, 2));
+		initShapePane();
+		add(shapepn, XmippWindowUtil.getConstraints(constraints, 1, 2));
+		add(new JLabel("Color By:"), XmippWindowUtil.getConstraints(constraints, 0, 3));
+		initColorLegendPane();
+		add(colorlegendpn, XmippWindowUtil.getConstraints(constraints, 1, 3));
 		initMicrographsPane();
 
 		initMicrographsPane();
-		add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 3, 3));
+		add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 4, 3));
 
 		pack();
 		float positionx = 0.995f;
@@ -89,17 +100,18 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		setVisible(true);
 	}
 	
-	private void initParticlesPane()
+	
+	public boolean isPickingAvailable(MouseEvent e)
 	{
-		particlespn = new JPanel();
-		GridLayout gl = new GridLayout(2, 1);
-		particlespn.setLayout(gl);
+		return false;
+	}
+	
+	private void initColorLegendPane()
+	{
 
-		particlespn.setBorder(BorderFactory.createTitledBorder("Particles"));
+		colorlegendpn = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
-		JPanel fieldspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
-
-		fieldspn.add(new JLabel("Color by:"));
+		colorlegendpn.add(new JLabel("Color by:"));
 		colorby = picker.getColumns();
 		scorescb = new JComboBox(colorby);
 		scorescb.addActionListener(new ActionListener()
@@ -113,21 +125,17 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 				maxlb.setText(String.format("%.2f", getColorHelper().getMax()));
 			}
 		});
-		fieldspn.add(scorescb);
+		colorlegendpn.add(scorescb);
 		minlb = new JLabel(String.format("%.2f", getColorHelper().getMin()));
 		maxlb = new JLabel(String.format("%.2f", getColorHelper().getMax()));
 		
 		
-		fieldspn.add(minlb);
-		fieldspn.add(ColorHelper.getColorMap());
-		fieldspn.add(maxlb);
+		colorlegendpn.add(minlb);
+		colorlegendpn.add(ColorHelper.getColorMap());
+		colorlegendpn.add(maxlb);
 		
-		// Setting slider
-		initSizePane();
-		fieldspn.add(sizepn);
-		particlespn.add(fieldspn, 0);
-		initImagePane();
-		particlespn.add(imagepn, 1);
+		
+		
 		index = picker.getMicrographIndex();
 
 	}
@@ -251,14 +259,13 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 	@Override
 	protected void openHelpURl()
 	{
-		// TODO Auto-generated method stub
-
+		XmippDialog.showInfo(this, "Not available yet");
 	}
 
 	@Override
 	protected void resetMicrograph()
 	{
-		picker.getMicrograph().reset();
+		picker.getMicrograph().getParticles().clear();
 		canvas.refreshActive(null);
 		updateMicrographsModel();
 
@@ -322,6 +329,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 	}
 
 	
+
 	@Override
 	public String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty)
 	{
@@ -363,7 +371,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 			if(column == 2)
 				return m.getParticles().size();
 			if(column == 3)
-				return FamilyState.Extract;
+				return Mode.Extract;
 
 			return null;
 			

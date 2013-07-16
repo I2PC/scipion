@@ -9,19 +9,25 @@ import java.util.logging.Level;
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.viewer.particlepicker.Family;
+import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
-import xmipp.viewer.particlepicker.training.model.FamilyState;
+import xmipp.viewer.particlepicker.training.model.Mode;
 
+
+/**
+ * Business object for Tilt Pair Picker GUI. Inherits from ParticlePicker 
+ * @author airen
+ *
+ */
 public class TiltPairPicker extends ParticlePicker
 {
 
 	protected List<UntiltedMicrograph> micrographs;
 	private UntiltedMicrograph micrograph;
 
-	public TiltPairPicker(String selfile, String outputdir, FamilyState state)
+	public TiltPairPicker(String selfile, String outputdir, Mode state)
 	{
 		super(selfile, outputdir, state);
 
@@ -95,7 +101,7 @@ public class TiltPairPicker extends ParticlePicker
 	public String loadMicrographParticles(UntiltedMicrograph um, MetaData uMd, MetaData tMd)
 	{
 		String result = "";
-		um.reset();
+		um.reset(this);
 		UntiltedParticle up;
 		TiltedParticle tp;
 		TiltedMicrograph tm = um.getTiltedMicrograph();
@@ -109,7 +115,7 @@ public class TiltPairPicker extends ParticlePicker
 			id = uIds[i];
 			x = uMd.getValueInt(MDLabel.MDL_XCOOR, id);
 			y = uMd.getValueInt(MDLabel.MDL_YCOOR, id);
-			up = new UntiltedParticle(x, y, um, family);
+			up = new UntiltedParticle(x, y, um, this);
 			um.addParticle(up);
 			// Set tilted pair particle
 			if (i < tIds.length)
@@ -117,9 +123,10 @@ public class TiltPairPicker extends ParticlePicker
 				id = tIds[i];
 				x = tMd.getValueInt(MDLabel.MDL_XCOOR, id);
 				y = tMd.getValueInt(MDLabel.MDL_YCOOR, id);
-				if(x <= 0 || y <= 0)
+				if (x <= 0 || y <= 0)
 				{
-					result += String.format("Tilted particle at %s centered on %s,%s with negative coordinates dismissed.\n", getMicrograph().getName(), x, y);
+					result += String.format("Tilted particle at %s centered on %s,%s with negative coordinates dismissed.\n", getMicrograph()
+							.getName(), x, y);
 					continue;
 				}
 				tp = new TiltedParticle(x, y, up);
@@ -139,7 +146,7 @@ public class TiltPairPicker extends ParticlePicker
 	{
 		try
 		{
-			loadMicrographParticles(um, new MetaData(uPosFile), new MetaData(tPosFile));
+			loadMicrographParticles(um, new MetaData(getParticlesBlock(uPosFile)), new MetaData(getParticlesBlock(tPosFile)));
 		}
 		catch (Exception e)
 		{
@@ -167,15 +174,8 @@ public class TiltPairPicker extends ParticlePicker
 
 	public void resetMicrograph(UntiltedMicrograph m)
 	{
-		m.reset();
-		setChanged(true);
-	}
-
-	public void resetAllMicrographs()
-	{
-		for (UntiltedMicrograph um : micrographs)
-			um.reset();
-		setChanged(true);
+		m.reset(this);
+		saveData(m);
 	}
 
 	public int getUntiltedNumber()
@@ -210,16 +210,12 @@ public class TiltPairPicker extends ParticlePicker
 
 			for (UntiltedMicrograph m : micrographs)
 			{
-				if (m.hasData())
-				{
+				id = micrographsDict.get(m.getFile());
+				anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y, (double) m.getUntiltedAngle(), id);
+				anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y2, (double) m.getTiltedAngle(), id);
+				anglesmd.setValueDouble(MDLabel.MDL_ANGLE_TILT, (double) m.getTiltAngle(), id);
 
-					id = micrographsDict.get(m.getFile());
-					anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y, (double) m.getUntiltedAngle(), id);
-					anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y2, (double) m.getTiltedAngle(), id);
-					anglesmd.setValueDouble(MDLabel.MDL_ANGLE_TILT, (double) m.getTiltAngle(), id);
-
-					anglesmd.write(selfile);
-				}
+				anglesmd.write(selfile);
 				saveData(m);
 
 			}
@@ -267,9 +263,10 @@ public class TiltPairPicker extends ParticlePicker
 						md2.setValueInt(MDLabel.MDL_YCOOR, tp.getY(), id);
 					}
 				}
-				String template = family.getName() + "@%s";
-				md.write(String.format(template, file));
-				md2.write(String.format(template, getOutputPath(um.getTiltedMicrograph().getPosFile())));
+
+				md.write(getParticlesBlock(file));
+				file = getOutputPath(um.getTiltedMicrograph().getPosFile());
+				md2.write(getParticlesBlock(file));
 			}
 
 		}
@@ -281,25 +278,12 @@ public class TiltPairPicker extends ParticlePicker
 
 	}
 
-	
-
-	
-	public Format detectFormat(String path) {
-		Format[] formats = { Format.Xmipp24, Format.Xmipp30, Format.Eman };
-
-		for (UntiltedMicrograph um : micrographs)
-		{
-			for (Format f : formats)
-				if (Filename.exists(getImportMicrographName(path, um.getFile(), f)))
-					return f;
-		}
-		return Format.Unknown;
-	}// function detectFormat
-
-	
-	public String importParticlesFromFolder(String path, Format f, float scale, boolean invertx, boolean inverty) {
-		if (f == Format.Auto) f = detectFormat(path);
-		if (f == Format.Unknown) return "Unknown format";
+	public String importParticlesFromFolder(String path, Format f, float scale, boolean invertx, boolean inverty)
+	{
+		if (f == Format.Auto)
+			f = detectFormat(path);
+		if (f == Format.Unknown)
+			throw new IllegalArgumentException("Unable to detect format");
 
 		String uFn, tFn;
 		String result = "";
@@ -337,6 +321,8 @@ public class TiltPairPicker extends ParticlePicker
 			return Filename.join(path, base, base + ".raw.Common.pos");
 		case Xmipp30:
 			return Filename.join(path, base + ".pos");
+		case Xmipp301:
+			return Filename.join(path, base + ".pos");
 		case Eman:
 			return Filename.join(path, base + "_ptcls.box");
 
@@ -357,66 +343,17 @@ public class TiltPairPicker extends ParticlePicker
 
 	}
 
-
-	public void loadConfig() {
-		String file = configfile;
-		if (!new File(file).exists())
-		{
-			setMicrograph(getMicrographs().get(0));
-			return;
-
-		}
-
-		String mname;
-		try
-		{
-			MetaData md = new MetaData(file);
-			for (long id : md.findObjects())
-			{
-				mname = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
-				setMicrograph(getMicrograph(mname));
-			}
-			md.destroy();
-
-		} catch (Exception e) {
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e.getMessage());
-		}
-	}
-
-	
-	public void saveConfig() {
-		try {
-			MetaData md;
-			String file = configfile;
-			md = new MetaData();
-			long id = md.addObject();
-			md.setValueString(MDLabel.MDL_MICROGRAPH, getMicrograph().getName(), id);
-			md.write(file);
-			md.destroy();
-
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e.getMessage());
-		}
-	}
-	
 	@Override
-	public boolean isValidSize(int size) {
+	public boolean isValidSize(int size)
+	{
 		UntiltedMicrograph um = getMicrograph();
-		for(UntiltedParticle p: um.getParticles())
-			if(!getMicrograph().fits(p.getX(), p.getY(), size))
+		for (UntiltedParticle p : um.getParticles())
+			if (!getMicrograph().fits(p.getX(), p.getY(), size))
 				return false;
-		for(TiltedParticle p: um.getTiltedMicrograph().getParticles())
-			if(!um.getTiltedMicrograph().fits(p.getX(), p.getY(), size))
-			{
-				System.out.println(p);
+		for (TiltedParticle p : um.getTiltedMicrograph().getParticles())
+			if (!um.getTiltedMicrograph().fits(p.getX(), p.getY(), size))
 				return false;
-			}
 		return true;
 	}
-
 
 }// class TiltPairPicker

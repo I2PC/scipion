@@ -67,7 +67,7 @@ import xmipp.utils.XmippWindowUtil;
  */
 /**
  *
- * @author Juanjo Vega
+ * This is the CTF Frame
  */
 @SuppressWarnings("serial")
 public class CTFProfileWindow extends JFrame implements ItemListener, ActionListener {

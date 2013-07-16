@@ -15,7 +15,7 @@ from glob import glob
 from os.path import exists, join
 
 # Picking modes
-PM_MANUAL, PM_SUPERVISED, PM_READONLY, PM_REVIEW = ('manual', 'supervised', 'readonly', 'review')
+PM_MANUAL, PM_READONLY, PM_REVIEW = ('manual', 'readonly', 'review')
 
 # Create a GUI automatically from a selfile of micrographs
 class ProtParticlePicking(XmippProtocol):
@@ -40,10 +40,18 @@ class ProtParticlePicking(XmippProtocol):
             self.insertStep('launchParticlePickingGUI',execution_mode=SqliteDb.EXEC_ALWAYS,
                            InputMicrographs=self.MicrographsMd, ExtraDir=self.ExtraDir,
                            TiltPairs=self.TiltPairs, Memory=self.Memory)       
-        
+    
+    def createFilenameTemplates(self):
+        return {
+                 'pos': join('%(ExtraDir)s', '%(micrograph)s.pos'),
+                 'templates': join('%(ExtraDir)s', 'templates.stk'),
+#      
+                'config': join('%(ExtraDir)s','config.xmd')
+                }  
+          
     def summary(self):
         md = xmipp.MetaData(self.MicrographsMd)
-        micrographs, particles, familiesDict = countParticles(self)
+        micrographs, particles,  = countParticles(self)
         if self.TiltPairs: 
             suffix = "tilt pairs"
             items = "pairs"
@@ -56,15 +64,6 @@ class ProtParticlePicking(XmippProtocol):
         summary = ["Input: [%s] with <%u> %s" % (self.importDir, md.size(), suffix),         
                    "Number of %(items)s manually picked: <%(particles)d> (from <%(micrographs)d> micrographs)" % locals()]
         
-        families = len(familiesDict)
-        if families > 1:
-            summary.append("Number of families: <%u>" % families)
-        
-        for family, particles in familiesDict.iteritems():
-            if self.TiltPairs:
-                particles /= 2
-            summary.append("Family <%(family)s>: <%(particles)u> %(items)s" % locals())
-
         return summary
     
     def validate(self):
@@ -110,36 +109,28 @@ def validateMicrographs(inputMicrographs, tiltPairs=False):
     return errors    
 
 def countParticles(prot, pattern=''):
-    '''Return the number of picked micrographs, particles and 
-    a dictionary with particles per family'''
+    '''Return the number of picked micrographs and particles '''
     particles = 0
     micrographs = 0
-    familiesDict = {}
     
     for posfile in getPosFiles(prot, pattern):
-        blockList = xmipp.getBlocksInMetaDataFile(posfile)
         pos_particles = 0
-        for block in blockList:
-            if block != 'families':
-                md = xmipp.MetaData("%(block)s@%(posfile)s" % locals());
-                md.removeDisabled();
-                block_particles = md.size()
-                pos_particles += block_particles
-                if block in familiesDict:
-                    familiesDict[block] += block_particles
-                else:
-                    familiesDict[block] = block_particles
+        block = 'particles'
+        md = xmipp.MetaData("%(block)s@%(posfile)s" % locals());
+        md.removeDisabled();
+        block_particles = md.size()
+        pos_particles += block_particles
+               
         if pos_particles > 0:
             particles += pos_particles
             micrographs += 1
-    return micrographs, particles, familiesDict
+    return micrographs, particles
 
 def launchParticlePickingGUI(log, InputMicrographs, ExtraDir, PickingMode=PM_MANUAL,
-                             TiltPairs=False, Memory=2, Family=""):
+                             TiltPairs=False, Memory=2):
     ''' Utility function to launch the Particle Picking application '''
     args = "-i %(InputMicrographs)s -o %(ExtraDir)s --mode %(PickingMode)s --memory %(Memory)dg"
-    if Family!="":
-        args+=" --family %(Family)s"
+   
     if TiltPairs:
         program = "xmipp_micrograph_tiltpair_picking"
     else:

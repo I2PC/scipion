@@ -915,7 +915,6 @@ TEST_F( MetadataTest, ExistsBlock)
     mkstemp(sfn);
     FileName tmpFileName((String) "kk@" + sfn);
     mDsource.write(tmpFileName);
-    //std::cout << "Writing " << tmpFileName << std::endl;
     MetaData auxMetadata;
     bool result1 = auxMetadata.existsBlock(tmpFileName);
     EXPECT_EQ(result1,true);

@@ -140,10 +140,9 @@ int ImageBase::writeJPEG(size_t select_img, bool isStack, int mode, String bitDe
         REPORT_ERROR(ERR_MULTIDIM_DIM, "rwJPEG: volumes are not supported.");
 
     //Selection of output datatype
-    DataType wDType,myTypeID = myT();
+    DataType myTypeID = myT();
 
     castMode = CW_CONVERT;
-    wDType = DT_UChar;
 
     if (mmapOnWrite)
     {
