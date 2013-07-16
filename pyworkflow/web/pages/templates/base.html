@@ -33,7 +33,8 @@
 	<div class="layout" id="wrapper">
 		{% if contentConfig == 'divided' %}
 			<div class="center" id="maincontent">
-				<div id="north" style="overflow:auto;height:60%;padding-right:1em;">
+					<div id="north" style="overflow:auto;height:60%;">
+				
 		{% endif %}
 		{% if contentConfig == 'full' %}
 			<div class="center" id="maincontent">
@@ -73,7 +74,7 @@
 		<!-- #header-->
 
 		<div class="west" id="framecontentLeft">{% block sideLeft %} {%endblock %}</div>
-		<!-- .sidebar#sideLeft -->
+		<!-- sidebar#sideLeft -->
 
 		<div class="south" id="framecontentBottom">{% block footer %} {%endblock %}</div>
 		<!-- #footer -->

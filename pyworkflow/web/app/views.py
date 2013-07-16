@@ -336,6 +336,8 @@ def form(request):
             if protVar.isPointer():
                 if protVar.hasValue():
                     param.htmlValue = protVar.get().getNameId()
+                else:
+                    param.htmlValue = ""
             else:
                 param.htmlValue = protVar.get(param.default.get(""))
                 if isinstance(protVar, Boolean):
@@ -367,7 +369,8 @@ def form(request):
     return render_to_response('form.html', context)
 
 def save_protocol(request):
-    projectName = request.POST.get('projectName')
+#    projectName = request.POST.get('projectName')
+    projectName = request.session['projectName']
     protId = request.POST.get("protocolId")
     protClass = request.POST.get("protocolClass")
     
@@ -401,7 +404,8 @@ def save_protocol(request):
 
 # Method to launch a protocol #
 def protocol(request):
-    projectName = request.POST.get('projectName')
+#    projectName = request.POST.get('projectName')
+    projectName = request.session['projectName']
     protId = request.POST.get("protocolId")
     protClass = request.POST.get("protocolClass")
     
