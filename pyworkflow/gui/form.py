@@ -266,7 +266,7 @@ class ParamWidget():
         """Select an object from DB
         This function is suppose to be used only for PointerParam"""
         from pyworkflow.gui.dialog import SubclassesTreeProvider, ListDialog
-        tp = SubclassesTreeProvider(self.window.protocol.mapper, self.param.pointerClass.get())
+        tp = SubclassesTreeProvider(self.window.protocol.mapper, self.param)
         dlg = ListDialog(self.parent, "Select object", tp)
         if dlg.value is not None:
             self.set(dlg.value)

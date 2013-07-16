@@ -253,10 +253,10 @@ class SetOfImages(EMObject):
     def setCTF(self, value):
         self._ctf.set(value)
         
-    def hasAligment(self):
+    def hasAlignment(self):
         return self._alignment.get()
     
-    def setAligment(self, value):
+    def setAlignment(self, value):
         self._alignment.set(value)  
         
     def append(self, image):
