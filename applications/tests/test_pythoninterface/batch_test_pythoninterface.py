@@ -365,6 +365,67 @@ class TestXmippPythonInterface(unittest.TestCase):
             md2.setValue(MDL_ANGLE_PSI, md2.getValue(MDL_ANGLE_PSI, id) * 2., id);
         self.assertEqual(md, md2)
 
+    def test_xmipp_addTmpLabelAlias(self):
+        tmpFileName = '/tmp/test_pythoninterface_readPlain1.xmd'
+        line1="""# XMIPP_STAR_1 * 
+# 
+data_images
+
+loop_
+_rlnVoltage #1
+_rlnDefocusU #2
+  200.0 10000.0
+  201.0 10000.0"""
+        #createTestImage
+        f = open(tmpFileName,'w')
+        f.write(line1)
+        f.flush()
+        f.close()
+        AddTmpLabelAlias(MDL_CTF_VOLTAGE,"rlnVoltage")
+        AddTmpLabelAlias(MDL_CTF_DEFOCUSU,"rlnDefocusU")
+        md=MetaData(tmpFileName)
+        md2=MetaData()
+        id = md2.addObject()
+        md2.setValue(MDL_CTF_VOLTAGE, 200.0, id)
+        md2.setValue(MDL_CTF_DEFOCUSU, 10000.0, id)
+        id = md2.addObject()
+        md2.setValue(MDL_CTF_VOLTAGE, 201.0, id)
+        md2.setValue(MDL_CTF_DEFOCUSU, 10000.0, id)
+        self.assertEqual(md, md2)
+        os.remove(tmpFileName)
+
+    def test_xmipp_exportReliontoMetadataFile(self):
+        from protlib_import import exportReliontoMetadataFile
+
+        tmpFileNameRe = '/tmp/exportReliontoMetadataFile.star'
+        tmpFileNameXm = '/tmp/exportReliontoMetadataFile.xmd'
+        line1="""data_images
+
+loop_
+_rlnVoltage #1
+_rlnDefocusU #2
+  200.0 10000.0
+  201.0 10000.0"""
+        #createR
+        f = open(tmpFileNameRe,'w')
+        f.write(line1)
+        f.flush()
+        f.close()
+        exportReliontoMetadataFile(tmpFileNameRe,tmpFileNameXm)
+        md = MetaData(tmpFileNameXm)
+        md2=MetaData()
+        id = md2.addObject()
+        md2.setValue(MDL_CTF_VOLTAGE, 200.0, id)
+        md2.setValue(MDL_CTF_DEFOCUSU, 10000.0, id)
+        id = md2.addObject()
+        md2.setValue(MDL_CTF_VOLTAGE, 201.0, id)
+        md2.setValue(MDL_CTF_DEFOCUSU, 10000.0, id)
+
+        self.assertEqual(md, md2)
+        os.remove(tmpFileNameRe)
+        os.remove(tmpFileNameXm)
+        #print tmpFileNameRe,tmpFileNameXm
+        
     def test_Metadata_renameColumn(self):
         '''test_Metadata_renameColumn'''
         md = MetaData()
