@@ -30,16 +30,19 @@ serve as base for implementing visualization tools(Viewer sub-classes).
 
 from os.path import join
 
+DESKTOP_TKINTER = 'tkinter'
+
 class Viewer():
     """ All visualization wrappers should user the Viewer class
     as base and provide the implementation to launch specific 
     command line tools in order to visualize objects.
     
-    The _target class property should contains a list of string
+    The _targets class property should contains a list of string
     with the class names that this viewer is able to visualize.
-    For example: _target = ['Image', 'SetOfImages']
+    For example: _targets = ['Image', 'SetOfImages']
     """
-    _target = [] 
+    _targets = []
+    _environment = DESKTOP_TKINTER
     
     def __init__(self, tmpPath='.', **args):
         self._tmpPath = tmpPath
