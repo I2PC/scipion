@@ -67,19 +67,21 @@ class EmanProtBoxing(ProtParticlePicking):
             self.runJob(None, program, arguments % self._params) 
   
         # Create the SetOfCoordinates object on the database 
-        self.outputCoordinates = EmanSetOfCoordinates(filename=self.workingDir.get())
-        self.outputCoordinates.setBoxSize(self._params['boxSize'])
-        self.outputCoordinates.setMicrographs(self.inputMicrographs.get())
+        outputCoordinates = EmanSetOfCoordinates(filename=self.workingDir.get())
+        outputCoordinates.setBoxSize(self._params['boxSize'])
+        outputCoordinates.setMicrographs(self.inputMicrographs.get())
         particlesWritten = bool(EmanDbd.getEmanParamValue('write_particles'))
         particlesFormat = str(EmanDbd.getEmanParamValue('format'))
         # As we move to workingDir we must leave it. 
         self._leaveWorkingDir()    
         
+        self._defineOutputs(outputCoordinates=outputCoordinates) 
+        
         if particlesWritten:
             print 'siiii tenemos particulas con format %s ' % particlesFormat.strip()
-            self.outputImages = EmanSetOfImages(filename=self.workingDir.get(), format=particlesFormat.strip())
-            
-        self._defineOutputs(outputCoordinates=self.outputCoordinates) 
+            outputParticles = EmanSetOfParticles(filename=self.workingDir.get(), format=particlesFormat.strip())
+            self._defineOutputs(outputParticles=outputParticles) 
+
     
     def getFiles(self):
         filePaths = self.inputMicrographs.get().getFiles() | ProtParticlePicking.getFiles(self)

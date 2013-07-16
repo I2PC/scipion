@@ -176,7 +176,22 @@ class EmanSetOfImages(SetOfImages):
                 raise Exception('There are not particles.')
             for imgFn in imgPaths:
                 yield EmanImage(imgFn)
+
+
+class EmanSetOfMicrographs(EmanSetOfImages, SetOfMicrographs):
+    """Represents a set of particles for eman2"""
+    def __init__(self, filename=None, **args):
+        EmanSetOfImages.__init__(self, filename, **args)
+        SetOfMicrographs.__init__(self, filename, **args)
+
                 
+class EmanSetOfParticles(EmanSetOfImages, SetOfParticles):
+    """Represents a set of particles for eman2"""
+    def __init__(self, filename=None, **args):
+        EmanSetOfImages.__init__(self, filename, **args)
+        SetOfParticles.__init__(self, filename, **args)
+
+
     
 class EmanDbd():
     """ Utility class to access the Eman dbd database """
