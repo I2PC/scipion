@@ -166,6 +166,7 @@ class BoundTree(Tree):
         self.bind('<FocusOut>', self._unpostMenu)
         self.bind("<Key>", self._unpostMenu)
         self.bind('<Button-1>', self._unpostMenu)
+        self.bind('<Double-1>', self._onDoubleClick)
         self.bind('<<TreeviewSelect>>', self._onClick)
         
     def setProvider(self, provider):
@@ -178,9 +179,18 @@ class BoundTree(Tree):
         self.menu.unpost()
         
     def _onClick(self, e=None):
-        if hasattr(self, 'itemClickedCallback'):
+        if hasattr(self, 'itemClick'):
             obj = self._objDict[self.getFirst()]
-            self.itemClickedCallback(obj)
+            self.itemClick(obj)
+            
+    def _onDoubleClick(self, e=None):  
+        obj = self._objDict[self.getFirst()]
+        if hasattr(self, 'itemDoubleClick'):
+            self.itemDoubleClick(obj)
+        else: # If not callback, use default action
+            actions = self.provider.getObjectActions(obj)
+            if len(actions):
+                actions[0][1](obj) # actions[0] = first Action, [1] = the action callback
             
     def _onRightClick(self, e=None):
         item = self.identify('item', e.x, e.y)
