@@ -181,10 +181,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 
                         
             self._insertFunctionStep('getCTF', fn, micrographToExtract)
-            
-            if self.doFlip:
-                micrographToExtract = self._getTmpPath(removeBaseExt(fn)+"_flipped.xmp")
-                
+                           
             # Actually extract
             self._insertFunctionStep('extractParticles', fn, micrographToExtract)
                 
@@ -220,6 +217,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         """ Extract particles from one micrograph """
         # Extract 
         #micName = mic.getFileName()
+        if self.doFlip and self.fnCTF:
+            micrographToExtract = self._getTmpPath(removeBaseExt(micName)+"_flipped.xmp")
+                
         outputRoot = str(self._getExtraPath(removeBaseExt(micName)))
         
         fnPosFile = self._getExtraPath(removeBaseExt(micName) + '.pos')
