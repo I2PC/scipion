@@ -120,7 +120,15 @@ TEST_F( MetadataTest, AddRow)
 
     EXPECT_EQ(md, mDsource);
 }
-
+TEST_F( MetadataTest, addTmpLabelAlias)
+{
+	//metada with no xmipp labels
+    FileName fnNonXmippSTAR =(String)"metadata/noXmipp.xmd";
+    MDL::addTmpLabelAlias(MDL_Y,(String)"noExixtingLabel");
+    MetaData md = MetaData(fnNonXmippSTAR);
+    std::cerr << "2md" << md <<std::endl;
+    EXPECT_EQ(mDsource,md);
+}
 TEST_F( MetadataTest, Aggregate1)
 {
     //simple agregation
@@ -907,7 +915,7 @@ TEST_F( MetadataTest, ExistsBlock)
     mkstemp(sfn);
     FileName tmpFileName((String) "kk@" + sfn);
     mDsource.write(tmpFileName);
-    std::cout << "Writing " << tmpFileName << std::endl;
+    //std::cout << "Writing " << tmpFileName << std::endl;
     MetaData auxMetadata;
     bool result1 = auxMetadata.existsBlock(tmpFileName);
     EXPECT_EQ(result1,true);
