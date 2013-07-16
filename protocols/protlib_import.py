@@ -47,7 +47,20 @@ XMIPP_RELION_LABELS = {
                        MDL_CTF_DEFOCUS_ANGLE: 'rlnDefocusAngle',  
                        MDL_CTF_VOLTAGE: 'rlnVoltage',
                        MDL_CTF_CS: 'rlnSphericalAberration',
-                       MDL_CTF_Q0: 'rlnAmplitudeContrast',                                         
+                       MDL_CTF_Q0: 'rlnAmplitudeContrast',
+                       MDL_IMAGE: 'rlnImageName',
+                       MDL_REF3D: 'rlnGroupNumber',#CHECK
+                       MDL_ANGLE_ROT: 'rlnAngleRot',
+                       MDL_ANGLE_TILT: 'rlnAngleTilt',
+                       MDL_ANGLE_PSI: 'rlnAnglePsi',
+                       MDL_SHIFT_X: 'rlnOriginX',
+                       MDL_SHIFT_Y: 'rlnOriginY',
+                       MDL_REF: 'rlnClassNumber',
+#                       MDL_SHIFT_X2: 'rlnNormCorrection',#dummy name I should create a label for yhis
+                       MDL_SCALE: 'rlnMagnificationCorrection',
+                       MDL_LL: 'rlnLogLikeliContribution',
+                       MDL_PMAX: 'rlnMaxValueProbDistribution',
+                       MDL_WEIGHT: 'rlnNrOfSignificantSamples'
                        }
 
 def convertCtfparam(oldCtf):
@@ -186,10 +199,42 @@ def exportMdToRelion(md, outputRelion):
     for k, v in XMIPP_RELION_LABELS.iteritems():
         d[label2Str(k)] = v
         
-    print "dict: ", d
+    #print "dict: ", d
         
     renameMdLabels(tmpFile, outputRelion, d)
     from protlib_filesystem import deleteFile
     deleteFile(None, tmpFile)
+    
+def addRelionLabels():
+    '''Add relion labels as aliases
+    '''
+    from xmipp import AddTmpLabelAlias
+    for k, v in XMIPP_RELION_LABELS.iteritems():
+        AddTmpLabelAlias(k,v)
+        
+def exportReliontoMetadataFile(inputRelion,outputXmipp):
+    """ This function will receive a relion file and will
+    convert to the one xmipp metadata file.    
+    """
+    if str2Label('rlnImageName')== -1:
+       addRelionLabels()
+    #add xmipp header
+    line1="""# XMIPP_STAR_1 * 
+# 
+"""
+    tmpFile = inputRelion + '.tmp'
+    fOut = open(tmpFile,'w')
+    fOut.write(line1)
+    #copy and paste relion file
+    fIn = open(inputRelion,'r')
+    fOut.write(fIn.read())
+    fOut.flush()
+    fOut.close()
+    #addRelionLabels MUST BE CALLED FROM CODE 
+    md = MetaData(tmpFile)
+    md.write(outputXmipp)
+        
+    from protlib_filesystem import deleteFile
+    deleteFile(None, tmpFile,False)
     
     

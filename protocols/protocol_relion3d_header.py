@@ -66,6 +66,15 @@ This procedure is relatively quick and typically does not negatively affect the 
 subsequent MAP refinement. Therefore, if in doubt it is recommended to set this option to No."""
 IsMapAbsoluteGreyScale = True
 
+#normalize input images
+""" 
+Normalize input images ?
+average background value must be 0 and a stddev value must be 1. 
+Note that the average and stddev values for the background are
+ calculated outside a circle with the particle diameter 
+"""
+DoNormalizeInputImage = False
+
 # {expert} Padding factor:
 """
 The padding factor used for oversampling of the Fourier transform. The default is 3x padding, 
@@ -95,7 +104,7 @@ SymmetryGroup = 'c1'
 # {section}{has_question} CTF
 #------------------------------------------------------------------------------------------------
 
-# Use CTF-amplitude correction inside MLF?
+# Use CTF-amplitude correction?
 """
 If set to Yes, CTFs will be corrected inside the MAP refinement. 
 The resulting algorithm intrinsically implements the optimal linear, 
