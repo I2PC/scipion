@@ -173,6 +173,11 @@ class Micrograph(Image):
     def getMicroscope(self):
         pass
 
+class Volume(Image):
+    """ Represents an EM Volume object """
+    def __init__(self, filename=None, **args):
+        Image.__init__(self, filename, **args)
+
 
 class TiltedPair(CsvList):
     """Store the id of the untilted and tilted images"""
@@ -196,6 +201,7 @@ class SetOfImages(EMObject):
         self.setFileName(filename)
         self.samplingRate = Float()        
         self._ctf = Boolean(args.get('ctf', False))
+        self._alignment = Boolean(args.get('alignmet', False))
         self._tiltPairs = Boolean(args.get('tiltPairs', False))
         self._mapper = None
         self._idCount = 0
@@ -242,11 +248,16 @@ class SetOfImages(EMObject):
         
     def hasCTF(self):
         """Return True if the SetOfImages has associated a CTF model"""
-        print str(self._ctf.get())
         return self._ctf.get()  
     
-    def setCTF(self, ctf):
-        self._ctf.set(ctf)      
+    def setCTF(self, value):
+        self._ctf.set(value)
+        
+    def hasAligment(self):
+        return self._alignment.get()
+    
+    def setAligment(self, value):
+        self._alignment.set(value)  
         
     def append(self, image):
         """ Add a image to the set. """
@@ -365,6 +376,12 @@ class SetOfParticles(SetOfImages):
     def __init__(self, filename=None, **args):
         SetOfImages.__init__(self, filename, **args)
 
+
+class SetOfVolumes(SetOfImages):
+    """Represents a set of Volumes"""
+    def __init__(self, filename=None, **args):
+        SetOfImages.__init__(self, filename, **args)
+        
 
 class Coordinate(EMObject):
     """This class holds the (x,y) position and other information

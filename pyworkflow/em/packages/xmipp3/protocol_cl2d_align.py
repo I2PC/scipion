@@ -81,7 +81,7 @@ class XmippProtCL2DAlign(ProtAlign, XmippProtocol):
                         'extraDir': self._getExtraPath(),
                         'maxshift': self.maximumShift.get(),
                         'iter': self.numberOfIterations.get(),
-                      }
+                        }
         args = '-i %(imgsFn)s --odir %(extraDir)s --nref 1 --iter %(iter)d --maxShift %(maxshift)d'
         if self.useReferenceImage:
             args += " --ref0 " + self.ReferenceImage.get()
@@ -101,7 +101,8 @@ class XmippProtCL2DAlign(ProtAlign, XmippProtocol):
         lastMdFn = self._getExtraPath("images.xmd")
         
         imgs = XmippSetOfParticles(lastMdFn)
-        self._defineOutputs(outputClassification=imgs)
+        imgs.setAligment(True)
+        self._defineOutputs(outputParticles=imgs)
 
     def validate(self):
         errors = []
@@ -116,9 +117,9 @@ class XmippProtCL2DAlign(ProtAlign, XmippProtocol):
         
     def _summary(self):
         summary = []
-        if not hasattr(self, 'outputClassification'):
+        if not hasattr(self, 'outputParticles'):
             summary.append("Output alignment not ready yet.")
         else:
             summary.append("Input Images: %s" % self.inputImages.get().getNameId())
-            summary.append("Output Aligned Images: %s" % self.outputClassification.get())
+            summary.append("Output Aligned Images: %s" % self.outputParticles.get())
         return summary

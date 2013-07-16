@@ -227,6 +227,9 @@ class XmippSetOfImages(SetOfImages):
         if isinstance(setOfImgs, setClass):
             return setOfImgs
         
+        print "CONVERTING: ", type(setOfImgs), setClass
+        print "   ", type(setOfImgs) is setClass
+        
         xmippImgs = setClass(filename)
         xmippImgs.copyInfo(setOfImgs)
         
@@ -259,7 +262,13 @@ class XmippMicrograph(XmippImage, Micrograph):
     @staticmethod
     def convert(img, ctfFn):
         return XmippImage._convert(XmippMicrograph, img, ctfFn)
+
+class XmippVolume(XmippImage, Volume):
+    """Xmipp implementation for Volume"""
     
+    def __init__(self, filename=None, **args):
+        XmippImage.__init__(self, filename, **args)
+        Volume.__init__(self, filename, **args)    
     
 class XmippSetOfMicrographs(XmippSetOfImages, SetOfMicrographs):
     """Represents a set of Micrographs for Xmipp"""
@@ -269,50 +278,32 @@ class XmippSetOfMicrographs(XmippSetOfImages, SetOfMicrographs):
         XmippSetOfImages.__init__(self, filename, **args)
         
         self._set = XmippSet(XmippMicrograph)
-#        if filename is not None:
-#            self.__loadFiles()
 
     @staticmethod
     def convert(setOfImgs, filename):
-        return XmippSetOfMicrographs._convert(XmippSetOfMicrographs, setOfImgs, filename)
-#                       
-#    @staticmethod
-#    def convert(setOfMics, filename):
-#        if isinstance(setOfMics, XmippSetOfMicrographs):
-#            return setOfMics
-#        
-#        xmippMics = XmippSetOfMicrographs(filename)
-#        xmippMics.copyInfo(setOfMics)
-#        
-#        for item in setOfMics:
-#            xmippMics.append(item)
-#        
-#        # If there are tilt pairs add tilt pairs metadata
-#        if setOfMics.hasTiltPairs():
-#            for iU, iT in setOfMics.iterTiltPairs():
-#                #Transform ids into filenames
-#                micU = setOfMics[iU]
-#                micT = setOfMics[iT]
-#                
-#                xmippMics.appendPair(setOfMics[iU].getFileName(), setOfMics[iT].getFileName())
-#    
-#        xmippMics.write()
-#        
-#        return xmippMics
+        return XmippSetOfImages._convert(XmippSetOfMicrographs, setOfImgs, filename)
         
     def _getListBlock(self):
         return 'Micrographs@' + self.getFileName()
     
-#    def __loadFiles(self):
-#        self._set.setFileName()    
-#        self._setPairs.setFileName() 
 
 class XmippSetOfParticles(XmippSetOfImages, SetOfParticles):
     """Represents a set of Micrographs for Xmipp"""
     def __init__(self, filename=None, **args):
         SetOfParticles.__init__(self, filename, **args)
         XmippSetOfImages.__init__(self, filename, **args)
-        
+
+    @staticmethod
+    def convert(setOfImgs, filename):
+        return XmippSetOfImages._convert(XmippSetOfParticles, setOfImgs, filename)
+    
+
+class XmippSetOfVolumes(XmippSetOfImages, SetOfVolumes):
+    """Represents a set of Volumes for Xmipp"""
+    def __init__(self, filename=None, **args):
+        SetOfVolumes.__init__(self, filename, **args)
+        XmippSetOfImages.__init__(self, filename, **args)
+                
         
 class XmippCoordinate(Coordinate):
     """This class holds the (x,y) position and other information

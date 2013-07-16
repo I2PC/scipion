@@ -45,6 +45,9 @@ class XmippDefKerdensom(Form):
                       pointerClass='SetOfParticles',
                       help='Select the input images from the project.'
                            'It should be a SetOfParticles class')
+        self._addParams()
+        
+    def _addParams(self):
         self.addParam('useMask', BooleanParam, default=False,
                       label='Use a Mask ?', 
                       help='If you set to <Yes>, you should provide a mask')
@@ -67,7 +70,7 @@ class XmippDefKerdensom(Form):
         self.addParam('SomSteps', IntParam, default=5, expertLevel=LEVEL_ADVANCED,
                       label='Regularization steps:',
                       help='Number of steps to lower the regularization factor')
-        self.addParam('extraParams', StringParam,
+        self.addParam('extraParams', StringParam, default='',
                       label="Additional kerdenSOM parameters:", 
                       help='For a complete description'
                       'See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM')
@@ -79,7 +82,12 @@ class XmippProtKerdensom(ProtClassify, XmippProtocol):
     _label = 'Xmipp KerDenSom'
 
     def _defineSteps(self):
-        # Convert input images if necessary
+        self._prepareDefinition()       
+        self._insertSteps()
+    
+    
+    def _prepareDefinition(self):
+         # Convert input images if necessary
         self.inputImgs = self.inputImages.get()        
         imgsFn = self._insertConvertStep('inputImgs', XmippSetOfParticles,
                                          self._getPath('input_images.xmd'))
@@ -97,8 +105,9 @@ class XmippProtKerdensom(ProtClassify, XmippProtocol):
                         'classes': self._getExtraPath("classes.stk"),
                         'kvectors': self._getExtraPath("kerdensom_vectors.xmd"),
                         'kclasses': self._getExtraPath("kerdensom_classes.xmd")
-                       }
-       
+                       }    
+        
+    def _insertSteps(self):
         self._insertImgToVector()
         self._insertKerdensom()
         self._insertVectorToImg()

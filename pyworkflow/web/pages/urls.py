@@ -30,7 +30,8 @@ urlpatterns = patterns('',
     url(r'^save_protocol/$', 'app.views.save_protocol'),
     url(r'^protocol/$', 'app.views.protocol'),
     url(r'^browse_objects/$', 'app.views.browse_objects'),
-    url(r'^viewHosts', 'app.views.viewHosts', name='viewHosts'),
+    url(r'^viewHosts', 'app.views.viewHosts', name='viewHosts'),    
+    
 #     url(r'^getHost/$', 'app.views.getHost'),
     url(r'^updateHostsConfig', 'app.views.updateHostsConfig'),
     url(r'^deleteHost/$', 'app.views.deleteHost'),
@@ -46,5 +47,5 @@ urlpatterns = patterns('',
     url(r'^get_image/', 'app.views_showj.get_image'), # Load images dynamically
     url(r'^save_showj_table/', 'app.views_showj.save_showj_table'), # Save table to session variable dynamically
     url(r'^save_showj_metadata/', 'app.views_showj.save_showj_metadata'), # Save metadata to file dynamically
-    url(r'^visualizeVolTest/', 'app.views_showj.save_showj_metadata'),
+    url(r'^showVolVisualizer/', 'app.views.showVolVisualizer'),
 )

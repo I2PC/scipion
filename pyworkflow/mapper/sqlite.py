@@ -31,8 +31,11 @@ class SqliteMapper(Mapper):
     """Specific Mapper implementation using Sqlite database"""
     def __init__(self, dbName, dictClasses=None):
         Mapper.__init__(self, dictClasses)
-        self.db = SqliteDb(dbName)
         self.__initObjDict()
+        try:
+            self.db = SqliteDb(dbName)
+        except Exception, ex:
+            raise Exception('Error creating SqliteMapper, dbName: %s\n error: %s' % (dbName, ex))
     
     def commit(self):
         self.db.commit()
@@ -77,6 +80,10 @@ class SqliteMapper(Mapper):
         namePrefix = self.__getNamePrefix(obj)
         self.db.deleteChildObjects(namePrefix)
         
+    def deleteAll(self):
+        """ Delete all objects stored """
+        self.db.deleteAll()
+                
     def delete(self, obj):
         """Delete an object and all its childs"""
         self.deleteChilds(obj)
@@ -171,29 +178,36 @@ class SqliteMapper(Mapper):
         self.fillObject(obj, objRow)
         return obj
         
-    def __iterObjectsFromRows(self, objRows):
+    def __iterObjectsFromRows(self, objRows, objectFilter=None):
         for objRow in objRows:
             obj = self.__objFromRow(objRow)
-            yield obj
+            if objectFilter is None or objectFilter(obj):
+                yield obj
         
-    def __objectsFromRows(self, objRows, iterate=False):
-        """Create a set of object from a set of rows"""
+    def __objectsFromRows(self, objRows, iterate=False, objectFilter=None):
+        """Create a set of object from a set of rows
+        Params:
+            objRows: rows result from a db select.
+            iterate: if True, iterates over all elements, if False the whole list is returned
+            objectFilter: function to filter some of the objects of the results. 
+        """
         if not iterate:
-            return [self.__objFromRow(objRow) for objRow in objRows]
+            #return [self.__objFromRow(objRow) for objRow in objRows]
+            return [obj for obj in self.__iterObjectsFromRows(objRows, objectFilter)]
         else:
-            return self.__iterObjectsFromRows(objRows)
+            return self.__iterObjectsFromRows(objRows, objectFilter)
                
     def __initObjDict(self):
         """ Clear the objDict cache """        
         self.objDict = {}
          
-    def selectBy(self, iterate=False, **args):
+    def selectBy(self, iterate=False, objectFilter=None, **args):
         """Select object meetings some criterias"""
         self.__initObjDict()
         objRows = self.db.selectObjectsBy(**args)
-        return self.__objectsFromRows(objRows, iterate)
+        return self.__objectsFromRows(objRows, iterate, objectFilter)
     
-    def selectByClass(self, className, includeSubclasses=True, iterate=False):
+    def selectByClass(self, className, includeSubclasses=True, iterate=False, objectFilter=None):
         self.__initObjDict()
         if includeSubclasses:
             from pyworkflow.utils.reflection import getSubclasses
@@ -204,15 +218,14 @@ class SqliteMapper(Mapper):
                 if issubclass(v, base):
                     whereStr += " OR classname='%s'" % k
             objRows = self.db.selectObjectsWhere(whereStr)
-            return self.__objectsFromRows(objRows, iterate)
+            return self.__objectsFromRows(objRows, iterate, objectFilter)
         else:
             return self.selectBy(iterate=iterate, classname=className)
             
-    
-    def selectAll(self, iterate=False):
+    def selectAll(self, iterate=False, objectFilter=None):
         self.__initObjDict()
         objRows = self.db.selectObjectsByParent(parent_id=None)
-        return self.__objectsFromRows(objRows, iterate)
+        return self.__objectsFromRows(objRows, iterate, objectFilter)
 
 
 class SqliteDb():
@@ -319,6 +332,10 @@ class SqliteDb():
         """ Delete from db all objects that are childs 
         of an ancestor, now them will have the same starting prefix"""
         self.executeCommand(self.DELETE + "name LIKE '%s.%%'" % ancestor_namePrefix)
+        
+    def deleteAll(self):
+        """ Delete all objects from the db. """
+        self.executeCommand(self.DELETE + "1")
         
 
 

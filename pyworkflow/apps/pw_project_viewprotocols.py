@@ -80,7 +80,16 @@ ActionIcons = {
     ACTION_RESULTS: 'visualize.gif'
                }
 
-
+STATUS_COLORS = {
+               STATUS_SAVED: '#D9F1FA', 
+               STATUS_LAUNCHED: '#D9F1FA', 
+               STATUS_RUNNING: '#FCCE62', 
+               STATUS_FINISHED: '#D2F5CB', 
+               STATUS_FAILED: '#F5CCCB', 
+               STATUS_WAITING_APPROVAL: '#F3F5CB',
+               STATUS_ABORTED: '#F5CCCB',
+               #STATUS_SAVED: '#124EB0',
+               }
 def populateTree(self, tree, prefix, obj, level=0):
     text = obj.text.get()
     if text:
@@ -113,25 +122,6 @@ def populateTree(self, tree, prefix, obj, level=0):
     for sub in obj:
         populateTree(self, tree, key, sub, level+1)
     
-def getMapper(fn, classesDict):
-    """Select what Mapper to use depending on
-    the filename extension"""
-    if fn.endswith('.xml'):
-        return XmlMapper(fn, classesDict)
-    elif fn.endswith('.sqlite'):
-        return SqliteMapper(fn, classesDict)
-    return None
-
-    
-def loadConfig(config, name):
-    c = getattr(config, name) 
-    fn = getConfigPath(c.get())
-    if not os.path.exists(fn):
-        raise Exception('loadMenuConfig: menu file "%s" not found' % fn )
-    mapper = ConfigMapper(getConfigPath(fn), globals())
-    menuConfig = mapper.getConfig()
-    return menuConfig
-
 
 class RunsTreeProvider(ProjectRunsTreeProvider):
     """Provide runs info to populate tree"""
@@ -185,54 +175,54 @@ class ProtocolTreeProvider(ObjectTreeProvider):
         else:
             objList = [protocol]
         ObjectTreeProvider.__init__(self, objList)
-        self.viewer = XmippViewer()
-        
-    def show(self, obj):
-        self.viewer.visualize(obj)
-        
-    def getObjectPreview(self, obj):
-        desc = "<name>: " + obj.getName()
-        
-        return (None, desc)
-    
-    def getObjectActions(self, obj):
-        if isinstance(obj, Pointer):
-            obj = obj.get()
-            
-        if isinstance(obj, SetOfMicrographs):
-            return [('Open Micrographs with Xmipp', lambda: self.viewer.visualize(obj))]
-        if isinstance(obj, SetOfImages):
-            return [('Open Images with Xmipp', lambda: self.viewer.visualize(obj))]
-        if isinstance(obj, XmippClassification2D):
-            return [('Open Classification2D with Xmipp', lambda: self.viewer.visualize(obj))]
-        return []   
-    
-    def getObjectInfo(self, obj):
-        info = ObjectTreeProvider.getObjectInfo(self, obj)
-        attrName = obj.getLastName()
-        if hasattr(self.protocol, attrName):
-            if isinstance(obj, Pointer) and obj.hasValue():
-                info['image'] = 'db_input.gif'
-            else:
-                if (self.protocol._definition.hasParam(attrName) or
-                    attrName in ['numberOfMpi', 'numberOfThreads']):
-                    info['parent'] = self.params
-                elif attrName in self.statusList:
-                    if info['parent'] is self.protocol:
-                        info['parent'] = self.status
-                    
-            if attrName.startswith('output'):# in self.protocol._outputs:
-                info['image'] = 'db_output.gif'
-        if obj is self.params or obj is self.status:
-            info['parent'] = self.protocol
-        return info     
-    
-    def _getChilds(self, obj):
-        childs = ObjectTreeProvider._getChilds(self, obj)
-        if obj is self.protocol:
-            childs.insert(0, self.status)
-            childs.insert(1, self.params)
-        return childs
+#        self.viewer = XmippViewer()
+#        
+#    def show(self, obj):
+#        self.viewer.visualize(obj)
+#        
+#    def getObjectPreview(self, obj):
+#        desc = "<name>: " + obj.getName()
+#        
+#        return (None, desc)
+#    
+#    def getObjectActions(self, obj):
+#        if isinstance(obj, Pointer):
+#            obj = obj.get()
+#            
+#        if isinstance(obj, SetOfMicrographs):
+#            return [('Open Micrographs with Xmipp', lambda: self.viewer.visualize(obj))]
+#        if isinstance(obj, SetOfImages):
+#            return [('Open Images with Xmipp', lambda: self.viewer.visualize(obj))]
+#        if isinstance(obj, XmippClassification2D):
+#            return [('Open Classification2D with Xmipp', lambda: self.viewer.visualize(obj))]
+#        return []   
+#    
+#    def getObjectInfo(self, obj):
+#        info = ObjectTreeProvider.getObjectInfo(self, obj)
+#        attrName = obj.getLastName()
+#        if hasattr(self.protocol, attrName):
+#            if isinstance(obj, Pointer) and obj.hasValue():
+#                info['image'] = 'db_input.gif'
+#            else:
+#                if (self.protocol._definition.hasParam(attrName) or
+#                    attrName in ['numberOfMpi', 'numberOfThreads']):
+#                    info['parent'] = self.params
+#                elif attrName in self.statusList:
+#                    if info['parent'] is self.protocol:
+#                        info['parent'] = self.status
+#                    
+#            if attrName.startswith('output'):# in self.protocol._outputs:
+#                info['image'] = 'db_output.gif'
+#        if obj is self.params or obj is self.status:
+#            info['parent'] = self.protocol
+#        return info     
+#    
+#    def _getChilds(self, obj):
+#        childs = ObjectTreeProvider._getChilds(self, obj)
+#        if obj is self.protocol:
+#            childs.insert(0, self.status)
+#            childs.insert(1, self.params)
+#        return childs
     
 
 class RunIOTreeProvider(TreeProvider):
@@ -504,7 +494,7 @@ class ProtocolsView(tk.Frame):
         self.updateRunsGraph()
 
     def updateRunsGraph(self):      
-        g = self.project.getRunsGraph()
+        g = self.project.getRunsGraph(refresh=False)
         lt = LevelTree(g)
         self.runsGraph.clear()
         lt.setCanvas(self.runsGraph)
@@ -514,25 +504,14 @@ class ProtocolsView(tk.Frame):
         """ If not nodeBuildFunc is specified, this one will be used
         by default. 
         """
-        self.colors = {
-                       STATUS_SAVED: '#D9F1FA', 
-                       STATUS_LAUNCHED: '#D9F1FA', 
-                       STATUS_RUNNING: '#FCCE62', 
-                       STATUS_FINISHED: '#D2F5CB', 
-                       STATUS_FAILED: '#F5CCCB', 
-                       STATUS_WAITING_APPROVAL: '#F3F5CB',
-                       STATUS_ABORTED: '#F5CCCB',
-                       #STATUS_SAVED: '#124EB0',
-                       }
-        
         nodeText = node.getName()
         textColor = 'black'
-        color = 'light blue'
+        color = '#ADD8E6' #Lightblue
             
         if node.run:
             status = node.run.status.get(STATUS_FAILED)
             nodeText = node.run.getName() + '\n' + status
-            color = self.colors[status]
+            color = STATUS_COLORS[status]
         
         return self.runsGraph.createTextbox(nodeText, 100, y, bgColor=color, textColor=textColor)
         
@@ -584,8 +563,7 @@ class ProtocolsView(tk.Frame):
         
     def _browseRunData(self):
         provider = ProtocolTreeProvider(self.selectedProtocol)
-        window = BrowserWindow("Protocol data", provider, self.windows,
-                               icon=self.icon)
+        window = BrowserWindow("Protocol data", provider, self.windows, icon=self.icon)
         window.itemConfig(self.selectedProtocol, open=True)  
         window.show()
         

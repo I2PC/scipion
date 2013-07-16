@@ -10,12 +10,15 @@
       <ProtocolConfig icon="bookmark.png" tag="protocol" text="Import" value="ProtImportParticles" />
       <ProtocolConfig tag="protocol_base" text="Picking" value="ProtParticlePicking" />
       <ProtocolConfig tag="protocol_base" text="Extract" value="ProtExtractParticles" />
-      <ProtocolConfig tag="protocol_base" text="Process" value="ProtProcessParticles" />
     </ProtocolConfig>
     <ProtocolConfig tag="section" text="2D">
       <ProtocolConfig tag="protocol_base" text="Align" value="ProtAlign" />
       <ProtocolConfig tag="protocol_base" text="Classify" value="ProtClassify" />
       <ProtocolConfig tag="protocol_base" text="Align+Classify" value="ProtAlignClassify" />
+    </ProtocolConfig>
+    <ProtocolConfig tag="section" text="3D">
+      <ProtocolConfig tag="protocol_base" text="Refine" value="ProtRefine3D" />
+      <ProtocolConfig tag="protocol_base" text="Classify" value="ProtClassify3D" />
     </ProtocolConfig>
   </ProtocolConfig>
 </ALL>
