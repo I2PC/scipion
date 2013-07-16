@@ -151,7 +151,7 @@ class Form():
 #                else:
 #                    raise Exception("Invalid token '%s' used in param '%s' condition" 
 #                                    % (t, paramName))
-    def evalCondition(self, protocol, paramName):
+    def evalParamCondition(self, protocol, paramName):
         """Evaluate if a condition is True for a give param
         with the values of a particular Protocol"""
         param = self.getParam(paramName)
@@ -314,7 +314,10 @@ class BooleanParam(Param):
 class PointerParam(Param):
     def __init__(self, **args):
         Param.__init__(self, paramClass=Pointer, **args)
+        # This will be the class to be pointed
         self.pointerClass = String(args.get('pointerClass'))
+        # Some conditions on the pointed candidates
+        self.pointerCondition = String(args.get('pointerCondition'))
         
         
 

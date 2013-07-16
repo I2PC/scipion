@@ -2,7 +2,7 @@ from pyworkflow.em import *
 import xmipp
 from data import *
 from xmipp3 import XmippProtocol
-from pyworkflow.em.packages.xmipp3.protocol_kerdensom import *
+from protocol_kerdensom import *
 
 CENTER_MIDDLE = 0
 CENTER_FIRST_HARMONIC = 1

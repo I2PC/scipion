@@ -77,7 +77,7 @@ class EmanProtBoxing(ProtParticlePicking):
         
         if particlesWritten:
             print 'siiii tenemos particulas con format %s ' % particlesFormat.strip()
-            self.outputImages = EmanSetOfImages(filename=self.workingDir.get(), format=particlesFormat.strip())
+            self.outputParticles = EmanSetOfImages(filename=self.workingDir.get(), format=particlesFormat.strip())
             
         self._defineOutputs(outputCoordinates=self.outputCoordinates) 
     

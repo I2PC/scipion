@@ -245,5 +245,10 @@ div.datatable {
 	width: auto;
 	position: absolute;
 	left: 7em;
-	z-index: 5;
+/* 	z-index: 5; */
+	padding: 1.5px;
+}
+
+.dragActive {
+	border: 3px solid #346789;
 }

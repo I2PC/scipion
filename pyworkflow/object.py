@@ -50,12 +50,20 @@ class Object(object):
     def getClass(self):
         return type(self)
     
+    def hasAttribute(self, attrName):
+        return hasattr(self, attrName)
+    
     def getAttributeValue(self, attrName):
         """ Get the attribute value given its name.
         Equivalent to getattr(self, name).get() 
         """
-        return getattr(self, attrName).get()
-        
+        attr = getattr(self, attrName)
+        if callable(attr):
+            value = attr()
+        else:
+            value = attr.get()
+        return value
+    
     def getAttributesToStore(self):
         """Return the list of attributes than are
         subclasses of Object and will be stored"""
@@ -234,6 +242,27 @@ class Object(object):
         clone.copy(self)
         
         return clone    
+    
+    def evalCondition(self, condition):
+        """ Check if condition is meet.
+        Params:
+            condition: the condition string, it can contains variables
+                or methods without arguments to be evaluated.
+            Examples:
+                hasCTF
+                hasCTF and not hasAligment
+        Return:
+            The value of the condition evaluated with values
+        """
+        # Split in possible tokens
+        import re
+        tokens = re.split('\W+', condition)
+        condStr = condition 
+    
+        for t in tokens:
+            if self.hasAttribute(t):
+                condStr = condStr.replace(t, str(self.getAttributeValue(t)))
+        return eval(condStr)
         
 
 class OrderedObject(Object):

@@ -88,7 +88,7 @@ class TestMixedWorkflow_1(TestWorkflow):
         #protExtract.inputMicrographs.set(protDownsampling.outputMicrographs)
         self.proj.launchProtocol(protExtract, wait=True)
         
-        self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
+        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
         self.validateFiles('protExtract', protExtract)
         
 class TestMixedWorkflow_2(TestWorkflow):
@@ -230,24 +230,24 @@ class TestMixedWorkflow_2(TestWorkflow):
         #protExtract.inputMicrographs.set(protDownsampling.outputMicrographs)
         self.proj.launchProtocol(protExtract, wait=True)
         
-        self.assertIsNotNone(protExtract.outputImages, "There was a problem with the extract particles")
+        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
         self.validateFiles('protExtract', protExtract)
         
         print "Run Only Align2d"
         protOnlyalign = XmippProtCL2DAlign(maximumShift=5, numberOfIterations=5, 
                                  numberOfMpi=2, numberOfThreads=1, useReferenceImage=False)
 
-        protOnlyalign.inputImages.set(protExtract.outputImages)
+        protOnlyalign.inputImages.set(protExtract.outputParticles)
         self.proj.launchProtocol(protOnlyalign, wait=True)        
         
-        self.assertIsNotNone(protOnlyalign.outputClassification, "There was a problem with Only align2d")  
+        self.assertIsNotNone(protOnlyalign.outputParticles, "There was a problem with Only align2d")  
         self.validateFiles('protOnlyalign', protOnlyalign)
         
         print "Run ML2D"
         protML2D = XmippProtML2D(numberOfReferences=1, maxIters=4, 
                                  numberOfMpi=2, numberOfThreads=1)
-#        protML2D.inputImages.set(protExtract.outputImages)
-        protML2D.inputImages.set(protExtract.outputImages)
+#        protML2D.inputImages.set(protExtract.outputParticles)
+        protML2D.inputImages.set(protExtract.outputParticles)
         self.proj.launchProtocol(protML2D, wait=True)        
         
         self.assertIsNotNone(protML2D.outputClassification, "There was a problem with ML2D")  
@@ -256,7 +256,7 @@ class TestMixedWorkflow_2(TestWorkflow):
         print "Run kerdensom"
         XmippProtKerdensom = XmippProtKerdensom()
 
-        protOnlyalign.inputImages.set(protExtract.outputImages)
+        protOnlyalign.inputImages.set(protExtract.outputParticles)
         self.proj.launchProtocol(XmippProtKerdensom, wait=True)        
         
         self.assertIsNotNone(XmippProtKerdensom.outputClassification, "There was a problem with kerdensom")  
@@ -275,16 +275,16 @@ class TestOnlyAlign (TestWorkflow):
         Partimport = ProtImportParticles(patern=self.patern, samplingRate=1.237, tiltPairs=False)
         self.proj.launchProtocol(Partimport, wait=True)
 
-        self.assertIsNotNone(Partimport.outputImages, "There was a problem with the import")
+        self.assertIsNotNone(Partimport.outputParticles, "There was a problem with the import")
 
         print "Run Only Align2d"
         protOnlyalign = XmippProtCL2DAlign(maximumShift=5, numberOfIterations=5, 
                                  numberOfMpi=2, numberOfThreads=1, useReferenceImage=False)
 
-        protOnlyalign.inputImages.set(Partimport.outputImages)
+        protOnlyalign.inputImages.set(Partimport.outputParticles)
         self.proj.launchProtocol(protOnlyalign, wait=True)        
         
-        self.assertIsNotNone(protOnlyalign.outputClassification, "There was a problem with Only align2d")  
+        self.assertIsNotNone(protOnlyalign.outputParticles, "There was a problem with Only align2d")  
         self.validateFiles('protOnlyalign', protOnlyalign)
         
  
