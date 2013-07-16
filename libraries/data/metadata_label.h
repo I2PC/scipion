@@ -665,6 +665,11 @@ private:
     static void addLabelAlias(MDLabel label, const String &alias);
 
     friend class MDLabelStaticInit;
+public:
+    /** public acces to addLabelAlias, add alias in running time,
+      useful to read non xmipp star files
+      */
+    static void addTmpLabelAlias(MDLabel label, const String &alias);
 }
 ;//close class MLD definition
 
