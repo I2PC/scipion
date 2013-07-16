@@ -113,7 +113,7 @@ def createEdge(srcItem, dstItem):
     
 
 def getNodeStateColor(node):
-    color = '#ADD8E6'; #Lightblue
+    color = '#ADD8E6';  # Lightblue
     status = ''
     if node.run:
         status = node.run.status.get(STATUS_FAILED)
@@ -161,7 +161,7 @@ def project_graph (request):
                 print "Error with node: ", node.getName()
                 raise
         
-        print nodeList
+#        print nodeList
         jsonStr = json.dumps(nodeList, ensure_ascii=False)   
          
         return HttpResponse(jsonStr, mimetype='application/javascript')
