@@ -270,11 +270,11 @@ def protocol_io(request):
         project = loadProject(projectName)
         protId = request.GET.get('protocolId', None)
         protocol = project.mapper.selectById(int(protId))
-        print "======================= in protocol_io...."
+#        print "======================= in protocol_io...."
         ioDict = {'inputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterInputAttributes()],
                   'outputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterOutputAttributes(EMObject)]}
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
-        print jsonStr
+#        print jsonStr
         
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
@@ -286,9 +286,9 @@ def protocol_summary(request):
         protId = request.GET.get('protocolId', None)
         protocol = project.mapper.selectById(int(protId))
         summary = protocol.summary()
-        print "======================= in protocol_summary...."
+#        print "======================= in protocol_summary...."
         jsonStr = json.dumps(summary, ensure_ascii=False)
-        print jsonStr
+#        print jsonStr
         
     return HttpResponse(jsonStr, mimetype='application/javascript')
 

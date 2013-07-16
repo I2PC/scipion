@@ -30,7 +30,7 @@ function closePopup() {
 /*
  * Toolbar used in the project content template
  */
-function launchToolbar(projName, id, elm) {
+function launchToolbar(projName, id, elm) {	
 	var row = $("div#toolbar");
 
 	if (row.attr('value') != undefined && row.attr('value') != id) {
@@ -63,6 +63,7 @@ function launchToolbar(projName, id, elm) {
 	row.show(); // Show toolbar
 
 	fillTabsSummary(projName, id);
+	row.repaint();
 }
 
 function fillTabsSummary(projName, id) {
