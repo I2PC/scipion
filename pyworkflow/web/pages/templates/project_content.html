@@ -1,7 +1,5 @@
-{% extends 'base.html' %} 
-{% block title %} - Project {{project_name}}
-{% endblock %} 
-{% block head %}
+{% extends 'base.html' %} {% block title %} - Project {{project_name}}
+{% endblock %} {% block head %}
 <link href={{css}} rel="stylesheet" type="text/css">
 <link href={{messi_css}} rel="stylesheet" type="text/css">
 <!-- JS Libs -->
@@ -10,11 +8,7 @@
 <script src={{launchTreeview}} type="text/javascript"></script>
 <script src={{tabs_config}} type="text/javascript"></script>
 <script src={{utils}} type="text/javascript"></script>
-<script>
-	
-</script>
-{% endblock %} 
-{% block sideLeft %}
+{% endblock %} {% block sideLeft %}
 <div class="protFieldsetTree">
 	<ul id="browser" class="filetree">
 		{% for section in sections %}
@@ -35,16 +29,16 @@
 			</ul></li> {% endfor %}
 	</ul>
 </div>
-{% endblock %} 
-{% block content %}
+{% endblock %} {% block content %}
 <span style="float: right;"><a id="treeTool"
 	href="javascript:switchGraph();"><img src="{{treeTool}}" /> Tree</a></span>
 <div id="runTable">
 	<div id="toolbar" style="float: left; display: none;">
 		<span><a id="editTool" href=""><img src="{{editTool}}" />Edit</a></span>
 		<span><a id="copyTool" href=""><img src="{{copyTool}}" />Copy</a></span>
-		<span><a id="deleteTool" href=""><img src="{{deleteTool}}" />Delete</a></span> 
-		<span><a id="browseTool" href=""><img src="{{browseTool}}" /> Browse</a></span>
+		<span><a id="deleteTool" href=""><img src="{{deleteTool}}" />Delete</a></span>
+		<span><a id="browseTool" href=""><img src="{{browseTool}}" />
+				Browse</a></span>
 	</div>
 	<table id="data" cellspacing="0">
 		<tr>
@@ -65,19 +59,10 @@
 	</table>
 </div>
 <div id="graphActiv" style="display: none;" data-mode="inactive"
-	data-time="first">
+	data-time="first" data-project="{{projectName}}" data-option="">
 	<h3>History</h3>
-<!-- 	<div class="window" style="top:3em;" id="container0">Project</div> -->
-<!-- 	<div class="window" style="top:5em;" id="container1">ProtImportMicrographs1<br/>finished</div> -->
-<!-- 	<div class="window" style="top:9em;" id="container2">XmippProtPreprocessMicrographs73<br/>finished</div> -->
-<!-- 	<div class="window" style="top:13em;" id="container3">XmippProtCTFMicrographs222<br/>finished</div> -->
-<!-- 	<div class="window" style="top:17em;" id="container4">XmippProtParticlePicking319<br/>finished</div> -->
-<!-- 	<div class="window" style="top:21em;" id="container5">XmippProtExtractParticles388<br/>finished</div> -->
-<!-- 	<div class="window" style="top:25em;left: 7em;" id="container6">XmippProtML2D621<br/>finished</div> -->
-<!-- 	<div class="window" style="top:25em;left: 17em;" id="container7">XmippProtCL2D702<br/>finished</div> -->
 </div>
-{% endblock %} 
-{% block contentDown %}
+{% endblock %} {% block contentDown %}
 <div id="tabContaier">
 	<ul class="listTabs">
 		<li><a id="tabTitle" class="active" href="#tab1">Data</a></li>

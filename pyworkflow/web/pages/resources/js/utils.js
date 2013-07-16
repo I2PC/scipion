@@ -30,28 +30,27 @@ function closePopup() {
 /*
  * Toolbar used in the project content template
  */
-function launchToolbar(projName, id, elm) {
+function launchToolbar(projName, id, elm) {	
 	var row = $("div#toolbar");
 
 	if (row.attr('value') != undefined && row.attr('value') != id) {
 		var rowOld = $("tr#" + row.attr('value'));
 		rowOld.attr('style', 'background-color: #fafafa;');
-		rowOld.attr('class', '');
+		rowOld.attr('class', 'runtr');
 	}
 	row.attr('value', id);
 	elm.attr('style', 'background-color: LightSteelBlue;');
 	elm.attr('class', 'selected');
 
 	// Action Edit Button
-	$("a#editTool").attr(
-			'href',
-			'javascript:popup("/form/?projectName=' + projName + '&protocolId='
-					+ id + '")');
+	$("a#editTool").attr('href',
+	// 'javascript:popup("/form/?projectName=' + projName + '&protocolId='
+	'javascript:popup("/form/?=&protocolId=' + id + '")');
 	// Action Copy Button
-	$("a#copyTool").attr(
-			'href',
-			'javascript:popup("/form/?projectName=' + projName + '&protocolId='
-					+ id + '&action=copy' + '")');
+	$("a#copyTool").attr('href',
+	// 'javascript:popup("/form/?projectName=' + projName + '&protocolId='
+	// + id + '&action=copy' + '")');
+	'javascript:popup("/form/?&protocolId=' + id + '&action=copy' + '")');
 
 	// Action Delete Button
 	$("a#deleteTool").attr('href',
@@ -63,6 +62,11 @@ function launchToolbar(projName, id, elm) {
 
 	row.show(); // Show toolbar
 
+	fillTabsSummary(projName, id);
+	row.repaint();
+}
+
+function fillTabsSummary(projName, id) {
 	$.ajax({
 		type : "GET",
 		url : '/protocol_io/?projectName=' + projName + '&protocolId=' + id,
@@ -70,21 +74,6 @@ function launchToolbar(projName, id, elm) {
 		success : function(json) {
 			fillUL(json.inputs, "protocol_input", "db_input.gif", projName);
 			fillUL(json.outputs, "protocol_output", "db_output.gif", projName);
-
-			// ul_output = $("#protocol_output")
-			// ul_output.empty()
-			// for (var i = 0; i < json.outputs.length; i++) {
-			// ul_output.append(
-			// '<li><a href=""><img src="../../../../resources/db_output.gif" />
-			// ' + json.outputs[i].name
-			// + '</a></li>');
-			// }
-			// '<li><a href="/user/messages"><span class="tab">Message
-			// Center</span></a></li>');
-			// for ( var x = 0; x < list.length; x++) {
-			// res += "<input type='radio' id ='" + id + x + "' name='" + id
-			// + "' value='" + list[x] + "' />" + list[x] + "<br />";
-			// }
 		}
 	});
 
@@ -126,7 +115,7 @@ function launchHostsToolbar(projName, hostId, elm) {
 	if (row.attr('value') != undefined && row.attr('value') != hostId) {
 		var rowOld = $("tr#" + row.attr('value'));
 		rowOld.attr('style', 'background-color: #fafafa;');
-		rowOld.attr('class', '');
+		rowOld.attr('class', 'runtr');
 	}
 	row.attr('value', hostId);
 	elm.attr('style', 'background-color: LightSteelBlue;');
@@ -141,8 +130,7 @@ function launchHostsToolbar(projName, hostId, elm) {
 	// Action Browse Button
 	// $("a#browseTool").attr(
 	// 'href',
-	// 'javascript:popup("/form/?projectName=' + projName + '&protocolId='
-	// + id + '")');
+	// 'javascript:popup("/form/?&protocolId="'+ id + '")');
 
 	row.show(); // Show toolbar
 }
@@ -219,81 +207,93 @@ function switchGraph() {
 		$("div#graphActiv").attr("style", "display:none;");
 	}
 	if ($("div#graphActiv").attr("data-time") == 'first') {
-		callPlumb();
+		callPaintGraph();
 		$("div#graphActiv").attr("data-time", "not");
 	}
 }
 
 /*
- * Functions to use the jsPlumb plugin
+ * Graph methods Functions to use the jsPlumb plugin
  */
-function callPlumb() {
-	// Setting up drop options
-	var targetDropOptions = {
-		tolerance : 'touch',
-		hoverClass : 'dropHover',
-		activeClass : 'dragActive'
-	};
 
-	// Setting up a Target endPoint
-	// var targetColor = "red";
-	var targetColor = "black";
-	var targetEndpoint = {
-		endpoint : [ "Dot", {
-			radius : 5
-		} ],
-		paintStyle : {
-			fillStyle : targetColor
-		},
-		// isSource:true,
-		scope : "green dot",
-		connectorStyle : {
-			strokeStyle : targetColor,
-			lineWidth : 2
-		},
-		connector : [ "Bezier", {
-			curviness : 5
-		} ],
-		maxConnections : 10,
-		isTarget : true,
-		dropOptions : targetDropOptions
-	};
+/** **** Settings to connect nodes *********** */
+// Setting up drop options
+var targetDropOptions = {
+	tolerance : 'touch',
+	hoverClass : 'dropHover',
+	activeClass : 'dragActive'
+};
 
-	// Setting up a Source endPoint
-	// var sourceColor = "blue";
-	var sourceColor = "black";
-	var sourceEndpoint = {
-		endpoint : [ "Dot", {
-			radius : 5
-		} ],
-		paintStyle : {
-			fillStyle : sourceColor
-		},
-		isSource : true,
-		scope : "green dot",
-		connectorStyle : {
-			strokeStyle : sourceColor,
-			lineWidth : 2
-		},
-		connector : [ "Bezier", {
-			curviness : 5
-		} ],
-		maxConnections : 10
-	// isTarget:true,
-	// dropOptions : targetDropOptions
-	};
+// Setting up a Target endPoint
+var targetColor = "black";
+// var targetColor = "black";
+var targetEndpoint = {
+	endpoint : [ "Dot", {
+		radius : 5
+	} ],
+	paintStyle : {
+		fillStyle : targetColor
+	},
+	// isSource:true,
+	scope : "green dot",
+	connectorStyle : {
+		strokeStyle : targetColor,
+		lineWidth : 2
+	},
+	connector : [ "Bezier", {
+		curviness : 5
+	} ],
+	maxConnections : 10,
+	isTarget : true,
+	dropOptions : targetDropOptions
+};
 
+// Setting up a Source endPoint
+var sourceColor = "black";
+// var sourceColor = "black";
+var sourceEndpoint = {
+	endpoint : [ "Dot", {
+		radius : 5
+	} ],
+	paintStyle : {
+		fillStyle : sourceColor
+	},
+	isSource : true,
+	scope : "green dot",
+	connectorStyle : {
+		strokeStyle : sourceColor,
+		lineWidth : 2
+	},
+	connector : [ "Bezier", {
+		curviness : 5
+	} ],
+	maxConnections : 10
+// isTarget:true,
+// dropOptions : targetDropOptions
+};
+
+function callPaintGraph() {
 	// Draw the boxes
 	var nodeSource = $("div#graphActiv");
 	var status = "finished";
 	var aux = [];
-	$("tr.runtr").each(function(index) {
-		var id = jQuery(this).attr('id');
-		var name = jQuery(this).attr('data-name');
-		paintBox(nodeSource, id, name, status);
 
-		var width = $("div#" + id + ".window").width();
-		var height = $("div#" + id + ".window").height();
+	// Paint the first node
+	paintBox(nodeSource, "graph_PROJECT", "PROJECT", "");
+	var width = $("div#" + "graph_PROJECT" + ".window").width();
+	var height = $("div#" + "graph_PROJECT" + ".window").height();
+	aux.push("PROJECT" + "-" + width + "-" + height);
+
+	// Paint the other nodes (selected include)
+	$("tr.runtr,tr.selected").each(function() {
+		var id = jQuery(this).attr('id');
+		var idNew = "graph_" + id;
+
+		var name = jQuery(this).attr('data-name');
+
+		paintBox(nodeSource, idNew, name, status);
+		var width = $("div#" + idNew + ".window").width();
+		var height = $("div#" + idNew + ".window").height();
 
 		aux.push(id + "-" + width + "-" + height);
 	});
@@ -303,53 +303,99 @@ function callPlumb() {
 		url : '/project_graph/?list=' + aux,
 		dataType : "json",
 		success : function(json) {
-			coords = '';
+			// Iterate over the nodes and position in the screen
+			// coordinates should come in the json response
 			for ( var i = 0; i < json.length; i++) {
-				coords += 'id: ' + json[i].id + ', x=' + json[i].x + ', y=' + json[i].y + '\n';
+				var top = json[i].y * 1.2;
+				var left = json[i].x;
+				addStatusBox(nodeSource, "graph_" + json[i].id,
+						json[i].status);
+				$("div#graph_" + json[i].id + ".window").attr(
+						"style",
+						"top:" + top + "px;left:" + left
+								+ "px;background-color:"
+								+ json[i].color + ";");
 			}
-			alert(coords);
+			// After all nodes are positioned, then create the edges
+			// between
+			// them
+
+			for ( var i = 0; i < json.length; i++) {
+				for ( var j = 0; j < json[i].childs.length; j++) {
+					var source = $("div#graph_" + json[i].id
+							+ ".window");
+					var target = $("div#graph_" + json[i].childs[j]
+							+ ".window");
+					connectNodes(source, target);
+				}
+			}
 		}
 	});
 
-	// Set up endpoints on the divs
-	// jsPlumb.addEndpoint($("#container0") , { anchor:"TopCenter"
-	// },targetEndpoint);
-	// connectNodes("#container0", "#container1", sourceEndpoint,
-	// targetEndpoint);
-	// connectNodes("#container1", "#container2", sourceEndpoint,
-	// targetEndpoint);
-	// connectNodes("#container2", "#container3", sourceEndpoint,
-	// targetEndpoint);
-	// connectNodes("#container3", "#container4", sourceEndpoint,
-	// targetEndpoint);
-	// connectNodes("#container4", "#container5", sourceEndpoint,
-	// targetEndpoint);
-	// connectNodes("#container5", "#container6", sourceEndpoint,
-	// targetEndpoint);
-	// connectNodes("#container5", "#container7", sourceEndpoint,
-	// targetEndpoint);
-
 	jsPlumb.draggable($(".window"));
-	// jsPlumb.animate($("#a"), {"left": 50,"top": 100},{duration:"slow"});
-
 }
 
-function paintBox(nodeSource, id, msg, status) {
-	var aux = '<div class="window" style="" id="' + id + '">' + msg + '<br />'
-			+ status + '</div>';
+function paintBox(nodeSource, id, msg) {
+
+	if (id != "graph_PROJECT") {
+		var objId = id.replace("graph_", "");
+		var href = "javascript:popup('/form/?protocolId=" + objId + "')";
+		var projName = $("div#graphActiv").attr("data-project");
+		var onclick = "updateTabs('" + projName + "', '" + objId
+				+ "',($(this)))";
+		var aux = '<div class="window" style="" onclick="' + onclick + '" id="'
+				+ id + '"><a href="' + href + '"><strong>' + msg
+				+ '</strong></a><br /></div>';
+	} else {
+		var aux = '<div class="window" style="" id="' + id + '"><strong>' + msg
+				+ '</strong><br />' + "" + '</div>';
+	}
+
 	nodeSource.append(aux);
 }
 
-function connectNodes(elm1, elm2, source, target) {
+function updateTabs(projName, id, elm) {
+	var oldSelect = $("div#graphActiv").attr("data-option");
+	
+	if (oldSelect != "") {
+		var aux = "div#"+oldSelect+".window";
+		aux = $(aux).attr("style");
+		aux = aux.replace("border:2.5px solid Firebrick;", "border: 1px solid black;");
+		$("#"+oldSelect).attr("style", aux);
+	}
+	var selected = "graph_" + id;
+	$("div#graphActiv").attr("data-option", selected);
+	var aux = elm.attr("style");
+	aux += "border:2.5px solid Firebrick;"
+	elm.attr("style", aux);
+
+	fillTabsSummary(projName, id);
+}
+
+function addStatusBox(nodeSource, id, status) {
+	$("div#" + id + ".window").append(status);
+}
+
+function connectNodes(elm1, elm2) {
+	// alert($(elm1).attr('id') + " - " + $(elm2).attr('id'));
 	var a = jsPlumb.addEndpoint($(elm1), {
 		anchor : "Center"
-	}, source);
+	}, sourceEndpoint);
 	var b = jsPlumb.addEndpoint($(elm2), {
 		anchor : "Center"
-	}, target);
+	}, targetEndpoint);
 
 	jsPlumb.connect({
 		source : a,
 		target : b
 	});
 }
+
+// function putEndPoints(elm) {
+// jsPlumb.addEndpoint($(elm + ".window"), {
+// anchor : "TopCenter"
+// }, targetEndpoint);
+// jsPlumb.addEndpoint($(elm + ".window"), {
+// anchor : "BottomCenter"
+// }, sourceEndpoint);
+// }

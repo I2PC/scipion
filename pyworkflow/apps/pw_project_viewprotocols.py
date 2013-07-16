@@ -80,7 +80,16 @@ ActionIcons = {
     ACTION_RESULTS: 'visualize.gif'
                }
 
-
+STATUS_COLORS = {
+               STATUS_SAVED: '#D9F1FA', 
+               STATUS_LAUNCHED: '#D9F1FA', 
+               STATUS_RUNNING: '#FCCE62', 
+               STATUS_FINISHED: '#D2F5CB', 
+               STATUS_FAILED: '#F5CCCB', 
+               STATUS_WAITING_APPROVAL: '#F3F5CB',
+               STATUS_ABORTED: '#F5CCCB',
+               #STATUS_SAVED: '#124EB0',
+               }
 def populateTree(self, tree, prefix, obj, level=0):
     text = obj.text.get()
     if text:
@@ -237,8 +246,8 @@ class RunIOTreeProvider(TreeProvider):
             objs = [self.inputStr, self.outputStr] + inputs + outputs                
         return objs
     
-    def show(self, obj):
-        self.viewer.visualize(obj)
+    def visualize(self, Viewer, obj):
+        Viewer().visualize(obj)
         
     def getObjectPreview(self, obj):
         desc = "<name>: " + obj.getName()
@@ -249,15 +258,20 @@ class RunIOTreeProvider(TreeProvider):
         if isinstance(obj, Pointer):
             obj = obj.get()
             
-        if isinstance(obj, SetOfMicrographs):
-            return [('Open Micrographs with Xmipp', lambda: self.viewer.visualize(obj))]
-        if isinstance(obj, XmippSetOfCoordinates):
-            return [('Open Coordinates with Xmipp', lambda: self.viewer.visualize(obj))]
-        if isinstance(obj, SetOfImages):
-            return [('Open Images with Xmipp', lambda: self.viewer.visualize(obj))]
-        if isinstance(obj, XmippClassification2D):
-            return [('Open Classification2D with Xmipp', lambda: self.viewer.visualize(obj))]
-        return []  
+        actions = []    
+        viewers = findViewers(obj.getClassName(), 'tkinter')
+        for v in viewers:
+            actions.append(('Open with %s' % v.__name__, lambda o: self.visualize(v, o)))
+            
+#        if isinstance(obj, SetOfMicrographs):
+#            return [('Open Micrographs with Xmipp', lambda: self.viewer.visualize(obj))]
+#        if isinstance(obj, XmippSetOfCoordinates):
+#            return [('Open Coordinates with Xmipp', lambda: self.viewer.visualize(obj))]
+#        if isinstance(obj, SetOfImages):
+#            return [('Open Images with Xmipp', lambda: self.viewer.visualize(obj))]
+#        if isinstance(obj, XmippClassification2D):
+#            return [('Open Classification2D with Xmipp', lambda: self.viewer.visualize(obj))]
+        return actions
     
     def getObjectInfo(self, obj):
         if isinstance(obj, String):
@@ -464,9 +478,8 @@ class ProtocolsView(tk.Frame):
         self.provider = RunsTreeProvider(self.project, self._runActionClicked)
         tree = BoundTree(parent, self.provider)
         tree.grid(row=0, column=0, sticky='news')
-        tree.bind('<Double-1>', self._runItemDoubleClick)
-        #tree.bind("<Button-3>", self._onRightClick)
-        tree.bind('<<TreeviewSelect>>', self._runItemClick)
+        tree.itemDoubleClick = self._runItemDoubleClick
+        tree.itemClick = self._runItemClick
         return tree
     
     def createRunsGraph(self, parent):
@@ -496,25 +509,14 @@ class ProtocolsView(tk.Frame):
         """ If not nodeBuildFunc is specified, this one will be used
         by default. 
         """
-        self.colors = {
-                       STATUS_SAVED: '#D9F1FA', 
-                       STATUS_LAUNCHED: '#D9F1FA', 
-                       STATUS_RUNNING: '#FCCE62', 
-                       STATUS_FINISHED: '#D2F5CB', 
-                       STATUS_FAILED: '#F5CCCB', 
-                       STATUS_WAITING_APPROVAL: '#F3F5CB',
-                       STATUS_ABORTED: '#F5CCCB',
-                       #STATUS_SAVED: '#124EB0',
-                       }
-        
         nodeText = node.getName()
         textColor = 'black'
-        color = 'light blue'
+        color = '#ADD8E6' #Lightblue
             
         if node.run:
             status = node.run.status.get(STATUS_FAILED)
             nodeText = node.run.getName() + '\n' + status
-            color = self.colors[status]
+            color = STATUS_COLORS[status]
         
         return self.runsGraph.createTextbox(nodeText, 100, y, bgColor=color, textColor=textColor)
         

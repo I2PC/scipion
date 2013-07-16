@@ -274,11 +274,11 @@ class Protocol(Step):
         index = getattr(self, paramName).get() # self.getAttributeValue(paramName)
         return self.getDefinitionParam(paramName).choices[index]
     
-    def evalCondition(self, paramName):
+    def evalParamCondition(self, paramName):
         """ Eval if the condition of paramName in _definition
         is satified with the current values of the protocol attributes. 
         """
-        return self._definition.evalCondition(self, paramName)
+        return self._definition.evalParamCondition(self, paramName)
     
     def evalExpertLevel(self, paramName):
         """ Return True if the param has an expert level is less than 
@@ -417,10 +417,9 @@ class Protocol(Step):
         """
         step = RunJobStep(self.runJob, progName, progArguments, resultFiles)
 
-        #FIXME: Move this logic to Steps executor
         if self.stepsExecutionMode == STEPS_SERIAL:
-            step.mpi = self.numberOfMpi.get()
-            step.threads = self.numberOfThreads.get()
+            step.mpi = args.get('numberOfMpi', self.numberOfMpi.get())
+            step.threads = args.get('numberOfThreads', self.numberOfThreads.get())
             
         return self.__insertStep(step, **args)
         
@@ -703,13 +702,11 @@ class Protocol(Step):
         for paramName, param in self.getDefinition().iterParams():
             attr = getattr(self, paramName) # Get all self attribute that are pointers
             paramErrors = []
-            print "protocol: validating ", paramName
             if attr.isPointer():
                 obj = attr.get()
-                if self.evalCondition(paramName) and obj is None:
+                if self.evalParamCondition(paramName) and obj is None:
                     paramErrors.append('cannot be EMPTY.')
             else:
-                print "calling param.validate"
                 paramErrors = param.validate(attr.get())
             label = param.label.get()
             errors += ['<%s> %s' % (label, err) for err in paramErrors]                

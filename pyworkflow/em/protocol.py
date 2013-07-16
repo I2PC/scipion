@@ -199,12 +199,12 @@ class ProtImportParticles(Protocol):
         # END REMOVE                
         
         imgSet.write()
-        self._defineOutputs(outputImages=imgSet)
+        self._defineOutputs(outputParticles=imgSet)
         
         return outFiles
     
     def getFiles(self):
-        return self.outputImages.getFiles()
+        return self.outputParticles.getFiles()
 
 
 class DefCTFMicrographs(Form):

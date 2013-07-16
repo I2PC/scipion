@@ -225,7 +225,7 @@ table#data tr.selected:hover td {
 
 .generalInput.hide2 {
 	position: relative;
-	filter: alpha(opacity :                     0);
+	filter: alpha(opacity : 0);
 	width: 9.7em;
 	cursor: pointer;
 }
@@ -233,7 +233,7 @@ table#data tr.selected:hover td {
 .generalInput.hide {
 	position: fixed;
 	-moz-opacity: 0;
-	filter: alpha(opacity :                       0);
+	filter: alpha(opacity : 0);
 	opacity: 0;
 	margin: 0.5em;
 	width: 1.5em;
@@ -241,7 +241,7 @@ table#data tr.selected:hover td {
 	cursor: pointer;
 }
 
-/**
+/*
 * Layout configurations
 * These styles are to create custom resize handles.
 */

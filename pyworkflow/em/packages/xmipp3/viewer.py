@@ -52,7 +52,10 @@ class XmippViewer(Viewer):
     """ Wrapper to visualize different type of objects
     with the Xmipp program xmipp_showj
     """
-    _target = ['SetOfImages', 'SetOfMicrographs', 'XmippClassification2D'] 
+    _targets = [SetOfImages, XmippSetOfCoordinates, XmippClassification2D, 
+                ProtImportMicrographs, XmippProtPreprocessMicrographs, XmippProtCTFMicrographs,
+                XmippProtParticlePicking, ProtImportParticles, XmippProtExtractParticles,
+                XmippProtCL2DAlign, XmippProtML2D, XmippProtCL2D]
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
@@ -67,36 +70,44 @@ class XmippViewer(Viewer):
             if mics.hasCTF():
                 extra = ' --mode metadata --render first'
             runShowJ(mics.getFileName(), extraParams=extra)  
+        
         elif issubclass(cls, XmippSetOfCoordinates):
             runParticlePicker(obj.getMicrographs().getFileName(), obj.getFileName(), extraParams='readonly')
+        
         elif issubclass(cls, SetOfImages):
             fn = self._getTmpPath(obj.getName() + '_images.xmd')
             imgs = XmippSetOfImages.convert(obj, fn)
             runShowJ(imgs.getFileName())
+        
         elif issubclass(cls, XmippClassification2D):
             runShowJ(obj.getClassesMdFileName())
+        
         elif (issubclass(cls, ProtImportMicrographs) or
               issubclass(cls, XmippProtPreprocessMicrographs) or
               issubclass(cls, XmippProtCTFMicrographs)):
             self.visualize(obj.outputMicrographs)
+        
         elif issubclass(cls, XmippProtParticlePicking):
             self.visualize(obj.outputCoordinates)
+        
         elif (issubclass(cls, ProtImportParticles) or
               issubclass(cls, XmippProtExtractParticles)):
-            self.visualize(obj.outputImages)
+            self.visualize(obj.outputParticles)
             # If Zscore on output images plot Zscore particle sorting            
-            md = xmipp.MetaData(obj.outputImages.getFileName()) 
-            print "MD=%s" % obj.outputImages.getFileName()
+            md = xmipp.MetaData(obj.outputParticles.getFileName()) 
+            print "MD=%s" % obj.outputParticles.getFileName()
             if md.containsLabel(xmipp.MDL_ZSCORE):
                 print "MD contains ZSCORE"
                 xplotter = XmippPlotter(windowTitle="Zscore particles sorting")
                 xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
                 xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_ZSCORE)
                 xplotter.show()      
+        
         elif (issubclass(cls, XmippProtCL2DAlign) or
               issubclass(cls, XmippProtML2D) or
               issubclass(cls, XmippProtCL2D)):
             self.visualize(obj.outputClassification)
+        
         else:
             raise Exception('XmippViewer.visualize: can not visualize class: %s' % obj.getClassName())
 

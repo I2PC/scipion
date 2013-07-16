@@ -501,7 +501,7 @@ class FormWindow(Window):
         """Check if the condition of a param is statisfied 
         hide or show it depending on the result"""
         widget = self.widgetDict[paramName]
-        v = self.protocol.evalCondition(paramName) and self.protocol.evalExpertLevel(paramName)
+        v = self.protocol.evalParamCondition(paramName) and self.protocol.evalExpertLevel(paramName)
         if v:
             widget.show()
         else:

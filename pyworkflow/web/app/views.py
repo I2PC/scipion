@@ -14,6 +14,7 @@ from pyworkflow.utils.path import findResource
 from pyworkflow.utils.utils import prettyDate
 from pyworkflow.web.pages import settings
 from pyworkflow.apps.config import *
+from pyworkflow.apps.pw_project_viewprotocols import STATUS_COLORS
 from pyworkflow.em import *
 from pyworkflow.hosts import HostMapper
 from pyworkflow.tests import getInputPath 
@@ -98,14 +99,28 @@ def delete_project(request):
 
 ######    Project Content template    #####
 def createNode(node, y):
-    item = gg.TNode(node.getName(), y=y)
-    item.width = node.w
-    item.height = node.h
+    try:
+        item = gg.TNode(node.getName(), y=y)
+        item.width = node.w
+        item.height = node.h
+    except Exception:
+        print "Error with node: ", node.getName()
+        raise
     return item
     
 def createEdge(srcItem, dstItem):
     pass
     
+
+def getNodeStateColor(node):
+    color = '#ADD8E6';  # Lightblue
+    status = ''
+    if node.run:
+        status = node.run.status.get(STATUS_FAILED)
+        color = STATUS_COLORS[status]
+        
+    return status, color
+
 def project_graph (request):
     if request.is_ajax():
         boxList = request.GET.get('list')
@@ -117,11 +132,13 @@ def project_graph (request):
         root = g.getRoot()
         root.w = 100
         root.h = 40
+        root.item = gg.TNode('project', x=0, y=0)
+        
         
         for box in boxList.split(','):
             i, w, h = box.split('-')
             node = g.getNode(i)
-            print node.getName()
+#            print node.getName()
             node.w = float(w)
             node.h = float(h)
             
@@ -129,9 +146,22 @@ def project_graph (request):
         lt.paint(createNode, createEdge)
         nodeList = []
         
-        nodeList = [{'id': node.getName(), 'x': node.item.x, 'y': node.item.y} 
-                    for node in g.getNodes()]
-        print nodeList
+#        nodeList = [{'id': node.getName(), 'x': node.item.x, 'y': node.item.y} 
+#                    for node in g.getNodes()]
+        for node in g.getNodes():
+            try:
+                hx = node.w / 2
+                hy = node.h / 2
+                childs = [c.getName() for c in node.getChilds()]
+                status, color = getNodeStateColor(node)
+                nodeList.append({'id': node.getName(), 'x': node.item.x - hx, 'y': node.item.y - hy,
+                                 'color': color, 'status': status,
+                                 'childs': childs})
+            except Exception:
+                print "Error with node: ", node.getName()
+                raise
+        
+#        print nodeList
         jsonStr = json.dumps(nodeList, ensure_ascii=False)   
          
         return HttpResponse(jsonStr, mimetype='application/javascript')
@@ -162,20 +192,9 @@ def populateTree(tree, obj):
         else:
             populateTree(item, sub)                
 
-def loadConfig(config, name):
-    c = getattr(config, name) 
-    fn = getConfigPath(c.get())
-    if not os.path.exists(fn):
-        raise Exception('loadMenuConfig: menu file "%s" not found' % fn)
-    mapper = ConfigMapper(getConfigPath(fn), globals())
-    menuConfig = mapper.getConfig()
-    return menuConfig
 
-
-def loadProtTree():
-    configMapper = ConfigMapper(getConfigPath('configuration.xml'), globals())
-    generalCfg = configMapper.getConfig()
-    protCfg = loadConfig(generalCfg, 'protocols')    
+def loadProtTree(project):
+    protCfg = project.getSettings().getCurrentProtocolMenu()
     root = TreeItem('root', 'root')
     populateTree(root, protCfg)
     return root
@@ -210,7 +229,7 @@ def project_content(request):
     project = loadProject(projectName)    
     provider = ProjectRunsTreeProvider(project)
     
-    root = loadProtTree()
+    root = loadProtTree(project)
     
     context = {'projectName': projectName,
                'editTool': edit_tool_path,
@@ -251,11 +270,11 @@ def protocol_io(request):
         project = loadProject(projectName)
         protId = request.GET.get('protocolId', None)
         protocol = project.mapper.selectById(int(protId))
-        print "======================= in protocol_io...."
+#        print "======================= in protocol_io...."
         ioDict = {'inputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterInputAttributes()],
                   'outputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterOutputAttributes(EMObject)]}
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
-        print jsonStr
+#        print jsonStr
         
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
@@ -267,9 +286,9 @@ def protocol_summary(request):
         protId = request.GET.get('protocolId', None)
         protocol = project.mapper.selectById(int(protId))
         summary = protocol.summary()
-        print "======================= in protocol_summary...."
+#        print "======================= in protocol_summary...."
         jsonStr = json.dumps(summary, ensure_ascii=False)
-        print jsonStr
+#        print jsonStr
         
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
@@ -317,6 +336,8 @@ def form(request):
             if protVar.isPointer():
                 if protVar.hasValue():
                     param.htmlValue = protVar.get().getNameId()
+                else:
+                    param.htmlValue = ""
             else:
                 param.htmlValue = protVar.get(param.default.get(""))
                 if isinstance(protVar, Boolean):
@@ -348,7 +369,8 @@ def form(request):
     return render_to_response('form.html', context)
 
 def save_protocol(request):
-    projectName = request.POST.get('projectName')
+#    projectName = request.POST.get('projectName')
+    projectName = request.session['projectName']
     protId = request.POST.get("protocolId")
     protClass = request.POST.get("protocolClass")
     
@@ -382,7 +404,8 @@ def save_protocol(request):
 
 # Method to launch a protocol #
 def protocol(request):
-    projectName = request.POST.get('projectName')
+#    projectName = request.POST.get('projectName')
+    projectName = request.session['projectName']
     protId = request.POST.get("protocolId")
     protClass = request.POST.get("protocolClass")
     
@@ -484,7 +507,7 @@ def viewHosts(request):
 #         return HttpResponse(jsonStr, mimetype='application/javascript')
 
 
-def getHostFormContext(request, host = None, initialContext = None):
+def getHostFormContext(request, host=None, initialContext=None):
     css_path = os.path.join(settings.STATIC_URL, 'css/general_style.css')
     jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
     utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
@@ -533,16 +556,24 @@ def updateHostsConfig(request):
     form = HostForm(request.POST, queueSystemConfCont=request.POST.get('queueSystemConfigCount'), queueConfCont=request.POST.get('queueConfigCount'))  # A form bound to the POST data
     context = {'form': form}
     if form.is_valid():  # All validation rules pass
+        print ("Form is valid")
         projectName = request.session['projectName']
         project = loadProject(projectName)
         hostId = request.POST.get('objId')
         hostsMapper = HostMapper(project.settingsPath)
         hostConfig = hostsMapper.selectById(hostId)
         form.host = hostConfig
+        print ("Recovering host from form")
         host = form.getFormHost()
-        host = project.saveHost(host)
+        print("A salvar")
+        print (host.toString())
+        savedHost = project.saveHost(host)
         context['message'] = "Project hosts config sucesfully updated"
-        return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request, initialContext = context))) 
+        return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request, initialContext=context))) 
+        print("Salvado")
+        print (savedHost.toString())
+        form.setFormHost(savedHost)
+        return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request, host, context))) 
     else:   
         return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request, None, context)))  # Form Django forms
 
@@ -622,7 +653,8 @@ def visualizeObject(request):
     
     
 def showVolVisualizer(request):
-    context = {'MEDIA_URL' : settings.MEDIA_URL}
+    context = {'MEDIA_URL' : settings.MEDIA_URL, 'STATIC_URL' :settings.STATIC_URL}
+    
     return render_to_response('showVolVisualizer.html', context)   
     
 if __name__ == '__main__':
