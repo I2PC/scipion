@@ -786,6 +786,8 @@ xmipp_methods[] =
           METH_VARARGS, "Construct a relational query" },
         { "MDValueRange", (PyCFunction) xmipp_MDValueRange,
           METH_VARARGS, "Construct a range query" },
+        { "AddTmpLabelAlias", (PyCFunction) xmipp_addTmpLabelAlias,
+          METH_VARARGS, "Add lable alias dinamically in run time. Use for reading non xmipp star files" },
         { "createEmptyFile", (PyCFunction) xmipp_createEmptyFile,
           METH_VARARGS, "create empty stack (speed up things)" },
         { "SingleImgSize", (PyCFunction) xmipp_SingleImgSize,
