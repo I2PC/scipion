@@ -186,7 +186,39 @@ xmipp_MDValueRange(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }
+/* add alias for label in run time */
+PyObject *
+xmipp_addTmpLabelAlias(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
 
+
+    int label;
+    PyObject *input = NULL;
+    PyObject *pyStr = NULL;
+    char *str = NULL;
+
+    if (PyArg_ParseTuple(args, "iO", &label, &input))
+    {
+        try
+        {
+            if ((pyStr = PyObject_Str(input)) != NULL )
+            {
+                str = PyString_AsString(pyStr);
+                MDL::addTmpLabelAlias((MDLabel)label,(String)str);
+                Py_RETURN_NONE;
+            }
+            else
+                return NULL;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+            return NULL;
+        }
+    }
+
+    return NULL;
+}
 
 /***************************************************************/
 /*                            MetaData                         */
@@ -256,8 +288,8 @@ PyMethodDef MetaData_methods[] =
           METH_VARARGS, "Fill a column with constant value" },
         { "fillRandom", (PyCFunction) MetaData_fillRandom,
           METH_VARARGS, "Fill a column with random value" },
-          { "fillExpand", (PyCFunction) MetaData_fillExpand,
-             METH_VARARGS, "Fill several columns expanding a values from a colum with a path to a row metadata" },
+        { "fillExpand", (PyCFunction) MetaData_fillExpand,
+          METH_VARARGS, "Fill several columns expanding a values from a colum with a path to a row metadata" },
         { "copyColumn", (PyCFunction) MetaData_copyColumn,
           METH_VARARGS, "Copy the values of one column to another" },
         { "copyColumnTo", (PyCFunction) MetaData_copyColumnTo,
@@ -1736,7 +1768,7 @@ MetaData_operate(PyObject *obj, PyObject *args, PyObject *kwargs)
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
     }
-   // free(str);
+    // free(str);
     return NULL;
 }
 
@@ -1977,15 +2009,15 @@ getMDObjectValue(MDObject * obj)
         return PyString_FromString(obj->data.stringValue->c_str());
     case LABEL_VECTOR_DOUBLE:
         {
-        std::vector<double> & vector = *(obj->data.vectorValue);
-        int size = vector.size();
-        PyObject * list = PyList_New(size);
-        for (int i = 0; i < size; ++i)
-            PyList_SetItem(list, i, PyFloat_FromDouble(vector[i]));
-        return list;
+            std::vector<double> & vector = *(obj->data.vectorValue);
+            int size = vector.size();
+            PyObject * list = PyList_New(size);
+            for (int i = 0; i < size; ++i)
+                PyList_SetItem(list, i, PyFloat_FromDouble(vector[i]));
+            return list;
         }
     default:
-    	return NULL;
+            return NULL;
     }//close switch
     return NULL;
 }
