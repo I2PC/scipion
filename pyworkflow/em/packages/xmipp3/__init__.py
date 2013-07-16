@@ -44,3 +44,6 @@ from protocol_rotational_spectra import XmippProtRotSpectra
 from protocol_ml3d import XmippProtML3D
 from protocol_filters import XmippProtFourierFilter
 from protocol_filters import XmippProtGaussianFilter
+
+# Wizards
+from viewer import XmippWizardCTF

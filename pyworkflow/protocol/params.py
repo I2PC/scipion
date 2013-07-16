@@ -118,13 +118,17 @@ class Section(FormElement):
             yield (name, self._form.getParam(name))
 
                     
-class Form():
+class Form(object):
     """Store all sections and parameters"""
     def __init__(self):
+        object.__init__(self)
         self._sectionList = [] # Store list of sections
         self._paramsDict = collections.OrderedDict() #{} # Dictionary to store all params, grouped by sections
         self._lastSection = None
         self.addGeneralSection()
+        
+    def getClass(self):
+        return type(self)
         
     def addSection(self, **args):
         """Add a new section"""

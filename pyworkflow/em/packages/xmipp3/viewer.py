@@ -29,8 +29,8 @@ visualization program.
 """
 
 import os
-from pyworkflow.em.viewer import Viewer
-from pyworkflow.em import SetOfImages, SetOfMicrographs
+from pyworkflow.em.viewer import Viewer, Wizard
+from pyworkflow.em import SetOfImages, SetOfMicrographs, DefCTFMicrographs
 from pyworkflow.utils.process import runJob
 from xmipp3 import getXmippPath
 from data import XmippSetOfImages, XmippSetOfMicrographs, XmippClassification2D, XmippSetOfCoordinates, XmippSetOfParticles
@@ -111,6 +111,14 @@ class XmippViewer(Viewer):
         else:
             raise Exception('XmippViewer.visualize: can not visualize class: %s' % obj.getClassName())
 
+class XmippWizardCTF(Wizard):
+    """ Wrapper to visualize different type of objects
+    with the Xmipp program xmipp_showj
+    """
+    _targets = [(DefCTFMicrographs, ['lowRes', 'highRes'])]
+    
+    def __init__(self, **args):
+        Viewer.__init__(self, **args)
 
 # ------------- Xmipp utilities function to launch Java applications ------------
 
