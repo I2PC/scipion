@@ -331,7 +331,7 @@ class XmippProtML3D(XmippProtocol, ProtRefine3D, ProtClassify3D):
         if self.doMlf.get():
             if not self.doCorrectAmplitudes.get():
                 self.ParamsStr += " --no_ctf"
-            if not self.areImagesArePhaseFlipped:
+            if not self.areImagesPhaseFlipped.get():
                 self.ParamsStr += " --not_phase_flipped"
             if not amplitudCorrected:
                 self.ParamsStr += " --ctf_affected_refs"
