@@ -45,7 +45,39 @@ emProtocolsDict.update(getSubclasses(Protocol, globals()))
 emObjectsDict = getSubClassesFromPath(EMObject, PACKAGES_PATH)
 emObjectsDict.update(getSubclasses(EMObject, globals()))
 
+# Load all subclasses of Viewer of different packages
 emViewersDict = getSubClassesFromPath(Viewer, PACKAGES_PATH)
+## Get for which objects are viewers registered
+#emViewerTargets = {}
+#
+#for viewer in emViewersDict.values():
+#    print "viewer: ", viewer
+#    for t in viewer._targets:
+#        print "   target: ", t
+#        if not t in emViewerTargets:
+#            emViewerTargets[t] = []
+#        emViewerTargets[t].append(viewer)
+        
+        
+def findClass(className):
+    if className in emProtocolsDict:
+        return emProtocolsDict[className]
+    if className in emObjectsDict:
+        return emObjectsDict[className]
+    raise Exception("findClass: class '%s' not found." % className)
+    
+def findViewers(className, environment):
+    """ Find the available viewers for this class. """
+    viewers = []
+    cls = findClass(className)
+    baseClasses = cls.mro()
+    for viewer in emViewersDict.values():
+        if viewer._environment == environment:
+            for t in viewer._targets:
+                if t in baseClasses:
+                    viewers.append(viewer)
+                    break
+    return viewers
 
 # Update global dictionary with variables found
 globals().update(emProtocolsDict)
