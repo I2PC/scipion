@@ -33,6 +33,12 @@ class EmanProtBoxing(ProtParticlePicking):
         # Redefine run to change to workingDir path
         # Change to protocol working directory
         self._enterWorkingDir()
+
+        if not 'EMAN2DIR' in os.environ:
+            raise Exception('EMAN2DIR should be defined before running EMAN2 protocols.')
+        EMAN2DIR = os.environ['EMAN2DIR']
+        os.environ['PATH'] += os.pathsep + "%(EMAN2DIR)s/bin" % locals()
+        os.environ['PYTHONPATH'] += os.pathsep + '%(EMAN2DIR)s/lib:%(EMAN2DIR)s/bin:%(EMAN2DIR)s/extlib/site-packages' %locals()
         Protocol._runSteps(self, startIndex)
         
     def _defineSteps(self):
