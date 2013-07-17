@@ -266,7 +266,7 @@ class Object(object):
         import re
         tokens = re.split('\W+', condition)
         condStr = condition 
-    
+        
         for t in tokens:
             if self.hasAttribute(t):
                 condStr = condStr.replace(t, str(self.getAttributeValue(t)))

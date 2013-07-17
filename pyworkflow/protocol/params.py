@@ -121,13 +121,17 @@ class Section(FormElement):
             yield (name, self._form.getParam(name))
 
                     
-class Form():
+class Form(object):
     """Store all sections and parameters"""
     def __init__(self):
+        object.__init__(self)
         self._sectionList = [] # Store list of sections
         self._paramsDict = collections.OrderedDict() #{} # Dictionary to store all params, grouped by sections
         self._lastSection = None
         #self.addGeneralSection()
+        
+    def getClass(self):
+        return type(self)
         
     def addSection(self, **args):
         """Add a new section"""
@@ -321,7 +325,7 @@ class PointerParam(Param):
         # This will be the class to be pointed
         self.pointerClass = String(args.get('pointerClass'))
         # Some conditions on the pointed candidates
-        self.pointerCondition = String(args.get('pointerCondition'))
+        self.pointerCondition = String(args.get('pointerCondition', None))
         
         
 
@@ -385,9 +389,7 @@ class Range(Conditional):
         Conditional.__init__(self, error)
         self._condition = lambda value: value >= minValue and value <= maxValue
         
-class Positive(GT):
-    def __init__(self, error='Value should be greater than zero'):
-        GT.__init__(self, 0.0, error)
+Positive = GT(0.0, error='Value should be greater than zero') 
 
             
 
