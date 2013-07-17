@@ -45,106 +45,160 @@ class XmippDefProjMatch(Form):
         self.addSection(label='Input')
         
         #SelFileName
-        self.addParam('inputImages', PointerParam, label="Input images", important=True, 
-                      pointerClass='SetOfParticles',
-                      help='Select the input images from the project.'
-                           'It should be a SetOfImages class')  
+        self.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
+                      pointerClass='SetOfParticles', 
+                      help='Select the input particles.\n'
+                           'If you want perform <CTF> correction the input particles\n'
+                           'should have information about the CTF (hasCTF=True)')  
+        self.addParam('useInitialAngles', BooleanParam, default=False,
+                      label="Use initial angles/shifts ? ", 
+                      help='Set to <Yes> if you want to use the projection assignment (angles/shifts)\n'
+                      'associated with the input particles (hasProjectionAssigment=True)')
+
+        # ReferenceFileNames
         #TODO: the following parameter should be a Pointer to a Volume and not a string containing the path      
-        self.addParam('ini3DrefVolumes', TextParam,
+        self.addParam('input3DReferences', StringParam,
                       label='Initial 3D reference volumes', 
-                      help='Initial 3D density maps with the same dimensions as your particles.')
-        self.addParam('numberOfSeedsPerRef', IntParam, default=1,
-                      label='Number of seeds per reference',
-                      help='The total number of seeds generated will be the number of provided '
-                      'reference volumes times the number of seeds per reference. '
-                      'If you provide 2 initial volumes and 3 seeds per referece you will '
-                      'produce 6 3D maps.')
-        self.addParam('doCorrectGreyScale', BooleanParam, default=False,
-                      label="Correct the absolute grey-scale of initial references?", 
-                      help='The probabilities are based on squared differences, so that the '
-                      'absolute grey scale is important.')
-        self.addParam('projMatchSampling', FloatParam, default=15.0, condition='doCorrectGreyScale',
-                      label='Sampling for projection matching',
-                      help='Angular sampling for a quick projection matching '
-                      'to obtain right grey scale. As the resolution of the intial reference '
-                      'should be low, this sampling can be relatively crude, e.g. 15')          
-        self.addParam('doLowPassFilter', BooleanParam, default=True,
-                      label="Low-pass filter initial references?", 
-                      help='It is highly recommended to low-pass filter your initial reference '
-                      'volume as much as you can.')   
-        self.addParam('lowPassFilter', IntParam, default=50, condition='doLowPassFilter',
-                      label='Resolution of the low-pass filter (Ang)',
-                      help='Resolution of the low-pass filter in Angstroms.')       
-        self.addSection(label='ProjMatch classification')
-        self.addParam('angularSampling', IntParam, default=10,
-                      label='Angular sampling for classification',
-                      help='Fine samplings take huge amounts of CPU and memory. '
-                      'Therefore, in general, dont use samplings finer than 10 degrees.')    
-        self.addParam('numberOfIterations', IntParam, default=25,
-                      label='Number of ML(F)3D iterations to perform',
-                      help='Number of ML(F)3D iterations to perform.')
-        self.addParam('symmetry', TextParam, default='c1',
-                      label='Point group symmetry',
-                      help='Number of ML(F)3D iterations to perform.')        
-        self.addParam('doNorm', BooleanParam, default=False,
-                      label="Refine the normalization for each image?", 
-                      help='This variant of the algorithm deals with normalization errors.')    
-        self.addParam('restartIter', IntParam, default=0,
-                      expertLevel=LEVEL_ADVANCED,
-                      label='Restart after iteration',
-                      help='For previous runs that stopped before convergence, '
-                      'resume the calculations after the completely finished iteration, '
-                      'i.e. including all 3D reconstructions. '
-                      'Note that all flags about grey-scale correction, filtering and '
-                      'seed generation will be ignored if a value larger than 0 is given, '
-                      'since this option only concerns the ProjMatch classification part.')   
-        self.addParam('extraParams', TextParam,
-                      expertLevel=LEVEL_ADVANCED,
-                      label='Additional parameters',
-                      help='Additional xmipp_ml(f)_refine3d parameters.')                  
-        self.addSection(label='MLF parameters', questionParam='doMlf')        
-        self.addParam('doMlf', BooleanParam, default=False,
-                      label='Use MLF2D instead of ML2D')
-        self.addParam('doCorrectAmplitudes', BooleanParam, default=True,
-                      label='Use CTF-amplitude correction inside MLF?',
-                      help='If set to <Yes>, the input images file should contain '
-                           'the CTF information for each image.')
-        self.addParam('highResLimit', IntParam, default=20,
-                      label='High-resolution limit (in Angstroms)',
-                      help='No frequencies higher than this limit will be taken into account. '
-                      'If zero is given, no limit is imposed.')     
-        self.addParam('areImagesPhaseFlipped', BooleanParam, default=True,
-                      label='Are the images CTF phase flipped?',
-                      help='You can run MLF with or without having phase flipped the images.')     
-        self.addParam('initialMapIsAmplitudeCorrected', BooleanParam, default=False,
-                      label='Are initial references CTF-amplitude corrected?',
-                      help='If coming from programs other than xmipp_mlf_refine3d this is '
-                      'usually not the case. If you will perform a grey-scale correction, '
-                      'this parameter becomes irrelevant as the output maps never have the '
-                      'CTF-amplitudes corrected.')     
-        self.addParam('seedsAreAmplitudeCorrected', BooleanParam, default=False,
-                      expertLevel=LEVEL_ADVANCED,
-                      label='Are the seeds CTF-amplitude corrected?',
-                      help='This option is only relevant if you provide your own seeds! '
-                      'If the seeds are generated automatically, this parameter becomes '
-                      'irrelevant as they will always be amplitude-corrected.') 
-        self.addSection(label='3D Reconstruction', expertLevel=LEVEL_ADVANCED)    
-        self.addParam('reconstructionMethod', EnumParam, choices=['fourier', 'wlsART'], 
-                      default=0, label='Reconstruction method', display=EnumParam.DISPLAY_LIST,
-                      expertLevel=LEVEL_ADVANCED, 
-                      help='Choose between wslART or fourier.')
-        self.addParam('aRTExtraParams', TextParam,
-                      condition='reconstructionMethod==1', expertLevel=LEVEL_ADVANCED,
-                      label='Extra parameters',
-                      help='Additional reconstruction parameters for ART.')  
-        self.addParam('fourierExtraParams', TextParam, 
-                      condition='reconstructionMethod==0', expertLevel=LEVEL_ADVANCED,
-                      label='Extra parameters',
-                      help='The Fourier-interpolation reconstruction method is much faster than wlsART '
-                      'and may give similar results. It however is not guaranteed to optimize the '
-                      'likelihood function. This is an experimental feature. One may limit the '
-                      'maximum resolution of the fourier-interpolation using -max_resolution 0.3 '
-                      '(to 0.3 digital frequency). Use the extra parameter entry below for that.')  
+                      help='Initial 3D density maps with the same dimensions as your particles.\n'
+                           'For example: reference1.vol reference2.vol\n'
+                           'specifies two references.')
+        self.addParam('numberOfIterations', IntParam, default=4,
+                      label='Number of iterations',
+                      help='Number of iterations to perform.')
+        self.addParam('cleanUpFiles', BooleanParam, default=False,
+                      label="Clean up intermediate files?",  expertLevel=LEVEL_EXPERT,
+                      help='Save disc space by cleaning up intermediate files.\n'
+                           'Be careful, many options of the visualization protocol will not work anymore,\n'
+                           'since all class averages, selfiles etc will be deleted. ')
+        
+        self.addSection(label='CTF correction')
+        
+        self.addParam('doCTFCorrection', BooleanParam, default=True,
+                      label="Perform CTF correction?", 
+                      help='If set to true, a CTF (amplitude and phase) corrected map will be refined,\n'
+                           'and the data will be processed in CTF groups.\n'
+                           'Note that you cannot combine CTF-correction with re-alignment of the classes.\n'
+                           'Remember that CTF information should be provided in the images input file.\n')    
+              
+        self.addParam('doAutoCTFGroup', BooleanParam, default=True, condition='doCTFCorrection',
+                      label="Make CTF groups automatically?", 
+                      help='Make CTF groups based on a maximum differences at a given resolution limit.\n'
+                           'If this option is set to false, a docfile with the defocus values where to \n'
+                           'split the images in distinct defocus group has to be provided (see expert option below)\n')             
+              
+        self.addParam('ctfGroupMaxDiff', FloatParam, default=0.1, condition='doCTFCorrection and doAutoCTFGroup',
+                      label='Maximum difference for grouping', validators=[Positive],
+                      help='If the difference between the CTF-values up to the resolution limit specified\n'
+                      'below is larger than the value given here, two images will be placed in\n'
+                      'distinct CTF groups.')          
+        
+        self.addParam('ctfGroupMaxResol', FloatParam, default=5.6, condition='doCTFCorrection and doAutoCTFGroup',
+                      label='Resolution limit (Ang) for grouping', validators=[Positive],
+                      help='Maximum resolution where to consider CTF-differences among different groups.\n'
+                            'One should use somewhat higher resolutions than those aimed for in the refinement.')       
+        
+        # SplitDefocusDocFile
+        self.addParam('setOfDefocus', StringParam,
+                      label='Set of defocus', default='', condition='doCTFCorrection and not doAutoCTFGroup',
+                      help='Set with defocus values where to split into groups.\n'
+                           'This field is compulsory if you do not want to make the CTF groups automatically.\n'
+                           'Note that the requested docfile can be made initially with the <xmipp_ctf_group> program,\n'
+                           'and then it can be edited manually to suit your needs.')
+        
+        self.addParam('paddingFactor', FloatParam, default=2, condition='doCTFCorrection',
+                      label='Padding factor', validators=[GE(1)],
+                      help='Application of CTFs to reference projections and of Wiener filter\n'
+                            'to class averages will be done using padded images.\n'
+                            'Use values larger than one to pad the images.')        
+        
+        self.addParam('wienerConstant', FloatParam, default=-1, condition='doCTFCorrection',
+                      label='Wiener constant',  expertLevel=LEVEL_EXPERT,
+                      help='Term that will be added to the denominator of the Wiener filter.\n'
+                            'In theory, this value is the inverse of the signal-to-noise ratio\n'
+                            'If a negative value is taken, the program will use a default value as in FREALIGN\n'
+                            '(i.e. 10% of average sum terms over entire space) \n'
+                            'see Grigorieff JSB 157 (2006) pp117-125')        
+        
+        # DataArePhaseFlipped , now taken from inputParticles.isPhaseFlipped()
+        # ReferenceIsCtfCorrected, now taken from input3DReferences.isAmplitudeCorrected()
+        
+        
+#        
+#        self.addSection(label='ML3D copy')       
+#        
+#        self.addParam('numberOfSeedsPerRef', IntParam, default=1,
+#                      label='Number of seeds per reference',
+#                      help='The total number of seeds generated will be the number of provided '
+#                      'reference volumes times the number of seeds per reference. '
+#                      'If you provide 2 initial volumes and 3 seeds per referece you will '
+#                      'produce 6 3D maps.')
+#        self.addParam('lowPassFilter', IntParam, default=50, condition='doLowPassFilter',
+#                      label='Resolution of the low-pass filter (Ang)',
+#                      help='Resolution of the low-pass filter in Angstroms.')       
+#        self.addSection(label='ProjMatch classification')
+#        self.addParam('angularSampling', IntParam, default=10,
+#                      label='Angular sampling for classification',
+#                      help='Fine samplings take huge amounts of CPU and memory. '
+#                      'Therefore, in general, dont use samplings finer than 10 degrees.')    
+#        self.addParam('symmetry', TextParam, default='c1',
+#                      label='Point group symmetry',
+#                      help='Number of ML(F)3D iterations to perform.')        
+#        self.addParam('restartIter', IntParam, default=0,
+#                      expertLevel=LEVEL_ADVANCED,
+#                      label='Restart after iteration',
+#                      help='For previous runs that stopped before convergence, '
+#                      'resume the calculations after the completely finished iteration, '
+#                      'i.e. including all 3D reconstructions. '
+#                      'Note that all flags about grey-scale correction, filtering and '
+#                      'seed generation will be ignored if a value larger than 0 is given, '
+#                      'since this option only concerns the ProjMatch classification part.')   
+#        self.addParam('extraParams', TextParam,
+#                      expertLevel=LEVEL_ADVANCED,
+#                      label='Additional parameters',
+#                      help='Additional xmipp_ml(f)_refine3d parameters.')                  
+#        self.addSection(label='MLF parameters', questionParam='doMlf')        
+#        self.addParam('doMlf', BooleanParam, default=False,
+#                      label='Use MLF2D instead of ML2D')
+#        self.addParam('doCorrectAmplitudes', BooleanParam, default=True,
+#                      label='Use CTF-amplitude correction inside MLF?',
+#                      help='If set to <Yes>, the input images file should contain '
+#                           'the CTF information for each image.')
+#        self.addParam('highResLimit', IntParam, default=20,
+#                      label='High-resolution limit (in Angstroms)',
+#                      help='No frequencies higher than this limit will be taken into account. '
+#                      'If zero is given, no limit is imposed.')     
+#        self.addParam('areImagesPhaseFlipped', BooleanParam, default=True,
+#                      label='Are the images CTF phase flipped?',
+#                      help='You can run MLF with or without having phase flipped the images.')     
+#        self.addParam('initialMapIsAmplitudeCorrected', BooleanParam, default=False,
+#                      label='Are initial references CTF-amplitude corrected?',
+#                      help='If coming from programs other than xmipp_mlf_refine3d this is '
+#                      'usually not the case. If you will perform a grey-scale correction, '
+#                      'this parameter becomes irrelevant as the output maps never have the '
+#                      'CTF-amplitudes corrected.')     
+#        self.addParam('seedsAreAmplitudeCorrected', BooleanParam, default=False,
+#                      expertLevel=LEVEL_ADVANCED,
+#                      label='Are the seeds CTF-amplitude corrected?',
+#                      help='This option is only relevant if you provide your own seeds! '
+#                      'If the seeds are generated automatically, this parameter becomes '
+#                      'irrelevant as they will always be amplitude-corrected.') 
+#        self.addSection(label='3D Reconstruction', expertLevel=LEVEL_ADVANCED)    
+#        self.addParam('reconstructionMethod', EnumParam, choices=['fourier', 'wlsART'], 
+#                      default=0, label='Reconstruction method', display=EnumParam.DISPLAY_LIST,
+#                      expertLevel=LEVEL_ADVANCED, 
+#                      help='Choose between wslART or fourier.')
+#        self.addParam('aRTExtraParams', TextParam,
+#                      condition='reconstructionMethod==1', expertLevel=LEVEL_ADVANCED,
+#                      label='Extra parameters',
+#                      help='Additional reconstruction parameters for ART.')  
+#        self.addParam('fourierExtraParams', TextParam, 
+#                      condition='reconstructionMethod==0', expertLevel=LEVEL_ADVANCED,
+#                      label='Extra parameters',
+#                      help='The Fourier-interpolation reconstruction method is much faster than wlsART '
+#                      'and may give similar results. It however is not guaranteed to optimize the '
+#                      'likelihood function. This is an experimental feature. One may limit the '
+#                      'maximum resolution of the fourier-interpolation using -max_resolution 0.3 '
+#                      '(to 0.3 digital frequency). Use the extra parameter entry below for that.')  
         
         self.addParallelSection(threads=1, mpi=8)
         

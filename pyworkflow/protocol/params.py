@@ -385,9 +385,7 @@ class Range(Conditional):
         Conditional.__init__(self, error)
         self._condition = lambda value: value >= minValue and value <= maxValue
         
-class Positive(GT):
-    def __init__(self, error='Value should be greater than zero'):
-        GT.__init__(self, 0.0, error)
+Positive = GT(0.0, error='Value should be greater than zero') 
 
             
 
