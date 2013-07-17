@@ -37,7 +37,6 @@ class HostForm(forms.Form):
     #label.widget.attrs.update({'class' : 'generalInput'})
 
     def __init__(self, *args, **kwargs):
-        print ("Init form")
         self.host = None
         extra_queueSystemConfigCount = int(kwargs.pop('queueSystemConfCont', 0))
         extra_queueConfigCount = int(kwargs.pop('queueConfCont', 0))
@@ -51,7 +50,6 @@ class HostForm(forms.Form):
         
                 
     def createDynamicFields(self, extra_queueSystemConfigCount, extra_queueConfigCount, queueConfigIndexes = None):
-        print ("Creating dynamic form with", extra_queueSystemConfigCount, extra_queueConfigCount, "configs")
         if extra_queueSystemConfigCount > 0:
             self.createQueueSystemConfigFields()            
             if queueConfigIndexes is None:
@@ -59,7 +57,6 @@ class HostForm(forms.Form):
                     self.createQueueConfigFields(index)
             else:
                 for index in queueConfigIndexes:
-                    print ("Checking ", index, "with", queueConfigIndexes)
                     self.createQueueConfigFields(index)   
                     
     def createQueueSystemConfigFields(self):
@@ -247,7 +244,6 @@ class HostForm(forms.Form):
                 indexes.append(index)
                 cont += 1
             index +=1
-        print("Queue config indexes", str(indexes))
         return indexes
         
         
@@ -328,4 +324,14 @@ def getMetadataComboBoxValues(mdXmipp, allowRender):
 
 #def getInitialZoom(mdXmipp):
     
-    
+
+class VolVisualizationForm(forms.Form):   
+    volPath = forms.CharField(label='Volume path', 
+                            required=True,
+                            error_messages={'required': 'Please, enter a volume path'})
+    volumeTypes = ((0, "Byte"),(1, "Integer"),(2, "Float"))
+    volType = forms.ChoiceField(label='Volume data type',
+                             required=True,
+                             choices = volumeTypes)
+    threshold = forms.DecimalField(label='Threshold', required=True,
+                                widget=forms.TextInput(attrs={'size' : 10})) 

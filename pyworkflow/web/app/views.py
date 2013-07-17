@@ -18,7 +18,7 @@ from pyworkflow.apps.pw_project_viewprotocols import STATUS_COLORS
 from pyworkflow.em import *
 from pyworkflow.hosts import HostMapper
 from pyworkflow.tests import getInputPath 
-from forms import HostForm
+from forms import HostForm, VolVisualizationForm
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponse, HttpRequest
 
@@ -471,7 +471,7 @@ def viewHosts(request):
     
     projectName = request.session['projectName']    
     project = loadProject(projectName)
-    projectHosts = project.getHosts()   
+    projectHosts = project.getSettings().getHosts()   
     scpnHostsChoices = []
     scpnHostsChoices.append(('', ''))
 
@@ -652,10 +652,27 @@ def visualizeObject(request):
 #    return HttpResponseRedirect('/showj', inputParameters)
     
     
-def showVolVisualizer(request):
-    context = {'MEDIA_URL' : settings.MEDIA_URL, 'STATIC_URL' :settings.STATIC_URL}
-    
-    return render_to_response('showVolVisualizer.html', context)   
+def showVolVisualization(request):
+    form = None
+    volLinkPath = None
+    volLink = None
+    if (request.POST.get('operation') == 'visualize'):
+        form = VolVisualizationForm(request.POST, request.FILES)
+        if form.is_valid():
+            volPath = form.cleaned_data['volPath']
+            from random import randint
+            linkName = 'test_link_' + str(randint(0, 10000)) + '.map'
+            volLinkPath = os.path.join(pw.HOME, 'web', 'pages', 'resources', 'astex', 'tmp', linkName)
+            from os.path import exists
+            if exists(volLinkPath):
+                os.remove(volLinkPath)
+            print "Ejecutar " + "ln -s " + str(volPath) + " " + volLinkPath
+            os.system("ln -s " + str(volPath) + " " + volLinkPath)
+            volLink = os.path.join('/', 'static', 'astex', 'tmp', linkName)
+    else:
+        form = VolVisualizationForm()
+    context = {'MEDIA_URL' : settings.MEDIA_URL, 'STATIC_URL' :settings.STATIC_URL, 'form': form, 'volLink': volLink}    
+    return render_to_response('showVolVisualization.html',  RequestContext(request, context))   
     
 if __name__ == '__main__':
     root = loadProtTree()    
