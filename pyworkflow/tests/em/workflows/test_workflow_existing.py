@@ -20,7 +20,7 @@ class TestXmippWorkflow(unittest.TestCase):
             print "hasCTF: ", p.evalCondition('hasCTF and samplingRate > 4.0')
             
         print "=" * 100
-        f = ConditionFilter('hasCTF and samplingRate > 4.0')
+        f = ConditionFilter('hasAlignment and samplingRate > 4.0')
         for p in project.mapper.selectByClass('SetOfParticles', iterate=True, objectFilter=f):
             p.printAll()
             

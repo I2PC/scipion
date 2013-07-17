@@ -30,17 +30,9 @@
 		}
 	}	
 	
-	function removeQueueConfigAction(index){
-		divId = 'queueConfig_' + index;
-		queueConfigId = 'queueConfigId_' + index;
-		if(confirm('You are going to remove queue configuration from the queue system. \n Are you sure?')){
-			$("#" + divId).remove();
-			$("#" + queueConfigId).remove();
-			queueConfigCount --;
-		    $("[name=queueConfigCount]").val(queueConfigCount);
-		}
-	}
-	
+	/**
+	Funtion to add or remove system queue config.
+	*/
 	function systemQueueConfigAction() {
 		if (queueSystemConfigCount > 0 && queueSystemConfigCount !=''){
 			if(confirm('You are going to remove all queue system configuration from the form. \n Are you sure?')){
@@ -80,6 +72,9 @@
 	    $("[name=queueSystemConfigCount]").val(queueSystemConfigCount);
 	}
 	
+	/**
+	Funtion to add queue config.
+	*/
 	function addQueueConfigAction() {
 		elementString = '';
 		elementString += '<div id="queueConfig_' + (queueConfigCount + 1) + '">';
@@ -101,6 +96,20 @@
 	    $("#queueConfig").append(element);
 	    queueConfigCount ++;
 	    $("[name=queueConfigCount]").val(queueConfigCount);
+	}
+	
+	/**
+	Fucntion to remove uqe config
+	*/
+	function removeQueueConfigAction(index){
+		divId = 'queueConfig_' + index;
+		queueConfigId = 'queueConfigId_' + index;
+		if(confirm('You are going to remove queue configuration from the queue system. \n Are you sure?')){
+			$("#" + divId).remove();
+			$("#" + queueConfigId).remove();
+			queueConfigCount --;
+		    $("[name=queueConfigCount]").val(queueConfigCount);
+		}
 	}
 	
 </script>

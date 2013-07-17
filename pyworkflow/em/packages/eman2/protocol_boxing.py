@@ -17,7 +17,7 @@ class EmanDefParticlePicking(Form):
         Form.__init__(self)        
         self.addSection(label='Input')
         self.addParam('inputMicrographs', PointerParam, label="Micrographs", pointerClass='SetOfMicrographs')
-        self.addParam('boxSize', IntParam, label='Box size', validators=[Positive()])
+        self.addParam('boxSize', IntParam, label='Box size', validators=[Positive])
 
 class EmanProtBoxing(ProtParticlePicking):
     

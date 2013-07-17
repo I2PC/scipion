@@ -31,8 +31,9 @@ serve as base for implementing visualization tools(Viewer sub-classes).
 from os.path import join
 
 DESKTOP_TKINTER = 'tkinter'
+WEB_DJANGO = 'django'
 
-class Viewer():
+class Viewer(object):
     """ All visualization wrappers should user the Viewer class
     as base and provide the implementation to launch specific 
     command line tools in order to visualize objects.
@@ -58,4 +59,25 @@ class Viewer():
         pass
 
 
-
+class Wizard(object):
+    """ This is a special case of GUI to help the user
+    selecting important parameters.
+    The _targets will serve to define to which Definition and 
+    parameters the Wizard is defined, it will be a list of tuples such as:
+    _targets = [(DefImportMicrographs, ['voltage', sphericalAberration']),
+                (DefCTFMicrographs, ['lowRes', 'highRes'])]
+    """
+    _targets = []
+    _environment = DESKTOP_TKINTER
+    
+    def show(self, form, *params):
+        """ This will show up the wizard to select parametes.
+        Params:
+            form: the protocol form, given access to to all parameters.
+                Some times the same wizard will modifify several elements
+                in the form.
+            *params: a list of params to modify, sometimes the wizard can 
+                be generic and can be used for different parameters in the
+                same form.
+        """
+        pass

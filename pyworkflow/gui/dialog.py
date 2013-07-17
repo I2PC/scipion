@@ -294,8 +294,16 @@ def askString(title, label, parent, entryWidth=20):
 class SubclassesTreeProvider(TreeProvider):
     """Will implement the methods to provide the object info
     of subclasses objects(of className) found by mapper"""
-    def __init__(self, mapper, className):
-        self.getObjects = lambda: mapper.selectByClass(className)
+    def __init__(self, mapper, pointerParam):
+        className = pointerParam.pointerClass.get()
+        self.condition = pointerParam.pointerCondition.get()
+        self.getObjects = lambda: mapper.selectByClass(className, objectFilter=self.objFilter)
+        
+    def objFilter(self, obj):
+        result = True
+        if self.condition:
+            result = obj.evalCondition(self.condition)
+        return result
         
     def getColumns(self):
         return [('Object', 250), ('Id', 50), ('Class', 200)]

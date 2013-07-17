@@ -190,7 +190,7 @@ class BoundTree(Tree):
         else: # If not callback, use default action
             actions = self.provider.getObjectActions(obj)
             if len(actions):
-                actions[0][1](obj) # actions[0] = first Action, [1] = the action callback
+                actions[0][1]() # actions[0] = first Action, [1] = the action callback
             
     def _onRightClick(self, e=None):
         item = self.identify('item', e.x, e.y)

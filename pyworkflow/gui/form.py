@@ -208,16 +208,19 @@ class ParamWidget():
         
     def _addButton(self, text, imgPath, cmd):
         btn = Button(self.btnFrame, text, imgPath, bg='white', command=cmd)
-        btn.grid(row=0, column=self._btnCol, sticky='w', padx=2)
+        btn.grid(row=0, column=self._btnCol, sticky='e', padx=2)
+        self.btnFrame.columnconfigure(self._btnCol, weight=1)
         self._btnCol += 1
         
     def _createButtonsFrame(self):
         self.btnFrame = tk.Frame(self.parent, bg='white')
-        if self.param.help.hasValue():
-            self._addButton('Help', 'contents24.png', self._showHelpMessage)
         
     def _showHelpMessage(self, e=None):
         showInfo("Help", self.param.help.get(), self.parent)
+        
+    def _showWizard(self, e=None):
+        wizClass = self.window.wizards[self.paramName]
+        wizClass().show(self.window)
                
     def _createContentWidgets(self, param, content):
         """Create the specific widgets inside the content frame"""
@@ -260,13 +263,17 @@ class ParamWidget():
             entry = tk.Entry(content, width=entryWidth, textvariable=var)
             entry.grid(row=0, column=0, sticky='w')
             
+        if self.paramName in self.window.wizards:
+            self._addButton('Wizard', 'tools_wizard.png', self._showWizard)
+        if param.help.hasValue():
+            self._addButton('Help', 'contents24.png', self._showHelpMessage)
         self.var = var
         
     def _browseObject(self, e=None):
         """Select an object from DB
         This function is suppose to be used only for PointerParam"""
         from pyworkflow.gui.dialog import SubclassesTreeProvider, ListDialog
-        tp = SubclassesTreeProvider(self.window.protocol.mapper, self.param.pointerClass.get())
+        tp = SubclassesTreeProvider(self.window.protocol.mapper, self.param)
         dlg = ListDialog(self.parent, "Select object", tp)
         if dlg.value is not None:
             self.set(dlg.value)
@@ -279,7 +286,7 @@ class ParamWidget():
         """Grid the label and content in the specified row"""
         self.label.grid(row=self.row, column=0, sticky='ne', padx=2, pady=2)
         self.content.grid(row=self.row, column=1, padx=2, pady=2, sticky='news')
-        self.btnFrame.grid(row=self.row, column=2, padx=2, sticky='nw')
+        self.btnFrame.grid(row=self.row, column=2, padx=2, sticky='new')
         
     def hide(self):
         self.label.grid_remove()
@@ -311,6 +318,9 @@ class FormWindow(Window):
 
         self.callback = callback
         self.widgetDict = {} # Store tkVars associated with params
+        self.protocol = protocol
+        from pyworkflow.em import findWizards
+        self.wizards = findWizards(protocol.getDefinition(), 'tkinter')
         
         self.fontBig = tkFont.Font(size=12, family='verdana', weight='bold')
         self.font = tkFont.Font(size=10, family='verdana')#, weight='bold')
@@ -324,7 +334,6 @@ class FormWindow(Window):
         text = TaggedText(self.root, width=40, height=15, bd=0, cursor='arrow')
         text.grid(row=1, column=0, sticky='news')
         text.config(state=tk.DISABLED)
-        self.protocol = protocol
         contentFrame = self.createSections(text)
         
         bottomFrame = tk.Frame(self.root)
@@ -474,7 +483,7 @@ class FormWindow(Window):
             self.setParamFromVar(paramName)
                 
     def createSections(self, text):
-        """Load the list of projects"""
+        """Create section widgets"""
         r = 0
         parent = tk.Frame(text) 
         parent.columnconfigure(0, weight=1)
