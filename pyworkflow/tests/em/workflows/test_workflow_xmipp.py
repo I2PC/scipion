@@ -163,7 +163,7 @@ class TestXmippWorkflow(TestWorkflow):
         # Create a new project
         setupProject(cls)
         cls.pattern = getInputPath('Micrographs_BPV3', '*.mrc')        
-        cls.importFolder = getInputPath('Picking_XmippBPV3')
+        cls.importFolder = getInputPath('Picking_XmippBPV3_Down3')
             
     def testXmippWorkflow(self):
         #First, import a set of micrographs
@@ -268,6 +268,18 @@ class TestXmippWorkflow(TestWorkflow):
         self.proj.launchProtocol(xmippProtRotSpectra, wait=True)        
         
         self.assertIsNotNone(xmippProtRotSpectra.outputClassification, "There was a problem with Rotational Spectra")
+
+#        print "ML3D"
+#        protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2, runMode=1)
+#        protML3D.inputImages.set(protExtract.outputParticles)
+#        protML3D.ini3DrefVolumes.set(self.iniVol)
+#        protML3D.doCorrectGreyScale.set(True)
+#        protML3D.numberOfSeedsPerRef.set(2)
+#
+#        self.proj.launchProtocol(protML3D, wait=True)        
+#        
+#        self.assertIsNotNone(protML3D.outputClassification, "There was a problem with ML3D")
+
 
 if __name__ == "__main__":
     unittest.main()
