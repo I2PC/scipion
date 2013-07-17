@@ -74,7 +74,7 @@ class ObjectBrowser(tk.Frame):
             p.paneconfig(rightPanel, minsize=200)    
         
             # Register a callback when the item is clicked
-            self.tree.itemClickedCallback = self._itemClicked
+            self.tree.itemClick = self._itemClicked
         
     def _fillLeftPanel(self, frame):
         self.tree = BoundTree(frame, self.treeProvider)

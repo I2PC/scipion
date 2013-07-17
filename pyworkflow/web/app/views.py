@@ -113,7 +113,7 @@ def createEdge(srcItem, dstItem):
     
 
 def getNodeStateColor(node):
-    color = '#ADD8E6'; #Lightblue
+    color = '#ADD8E6';  # Lightblue
     status = ''
     if node.run:
         status = node.run.status.get(STATUS_FAILED)
@@ -161,7 +161,7 @@ def project_graph (request):
                 print "Error with node: ", node.getName()
                 raise
         
-        print nodeList
+#        print nodeList
         jsonStr = json.dumps(nodeList, ensure_ascii=False)   
          
         return HttpResponse(jsonStr, mimetype='application/javascript')
@@ -270,11 +270,11 @@ def protocol_io(request):
         project = loadProject(projectName)
         protId = request.GET.get('protocolId', None)
         protocol = project.mapper.selectById(int(protId))
-        print "======================= in protocol_io...."
+#        print "======================= in protocol_io...."
         ioDict = {'inputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterInputAttributes()],
                   'outputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterOutputAttributes(EMObject)]}
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
-        print jsonStr
+#        print jsonStr
         
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
@@ -286,9 +286,9 @@ def protocol_summary(request):
         protId = request.GET.get('protocolId', None)
         protocol = project.mapper.selectById(int(protId))
         summary = protocol.summary()
-        print "======================= in protocol_summary...."
+#        print "======================= in protocol_summary...."
         jsonStr = json.dumps(summary, ensure_ascii=False)
-        print jsonStr
+#        print jsonStr
         
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
@@ -336,6 +336,8 @@ def form(request):
             if protVar.isPointer():
                 if protVar.hasValue():
                     param.htmlValue = protVar.get().getNameId()
+                else:
+                    param.htmlValue = ""
             else:
                 param.htmlValue = protVar.get(param.default.get(""))
                 if isinstance(protVar, Boolean):
@@ -367,7 +369,8 @@ def form(request):
     return render_to_response('form.html', context)
 
 def save_protocol(request):
-    projectName = request.POST.get('projectName')
+#    projectName = request.POST.get('projectName')
+    projectName = request.session['projectName']
     protId = request.POST.get("protocolId")
     protClass = request.POST.get("protocolClass")
     
@@ -401,7 +404,8 @@ def save_protocol(request):
 
 # Method to launch a protocol #
 def protocol(request):
-    projectName = request.POST.get('projectName')
+#    projectName = request.POST.get('projectName')
+    projectName = request.session['projectName']
     protId = request.POST.get("protocolId")
     protClass = request.POST.get("protocolClass")
     
