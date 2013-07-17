@@ -217,6 +217,10 @@ class ParamWidget():
         
     def _showHelpMessage(self, e=None):
         showInfo("Help", self.param.help.get(), self.parent)
+        
+    def _showWizard(self, e=None):
+        wizClass = self.window.wizards[self.paramName]
+        wizClass().show(self.window)
                
     def _createContentWidgets(self, param, content):
         """Create the specific widgets inside the content frame"""
@@ -260,7 +264,7 @@ class ParamWidget():
             entry.grid(row=0, column=0, sticky='w')
             
         if self.paramName in self.window.wizards:
-            self._addButton('Wizard', 'tools_wizard.png', self._showHelpMessage)
+            self._addButton('Wizard', 'tools_wizard.png', self._showWizard)
         if param.help.hasValue():
             self._addButton('Help', 'contents24.png', self._showHelpMessage)
         self.var = var

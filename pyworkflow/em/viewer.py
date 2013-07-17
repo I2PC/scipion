@@ -70,9 +70,6 @@ class Wizard(object):
     _targets = []
     _environment = DESKTOP_TKINTER
     
-    def __init__(self):
-        pass
-    
     def show(self, form, *params):
         """ This will show up the wizard to select parametes.
         Params:

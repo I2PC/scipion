@@ -111,15 +111,6 @@ class XmippViewer(Viewer):
         else:
             raise Exception('XmippViewer.visualize: can not visualize class: %s' % obj.getClassName())
 
-class XmippWizardCTF(Wizard):
-    """ Wrapper to visualize different type of objects
-    with the Xmipp program xmipp_showj
-    """
-    _targets = [(DefCTFMicrographs, ['lowRes', 'highRes'])]
-    
-    def __init__(self, **args):
-        Viewer.__init__(self, **args)
-
 # ------------- Xmipp utilities function to launch Java applications ------------
 
 def getArchitecture():

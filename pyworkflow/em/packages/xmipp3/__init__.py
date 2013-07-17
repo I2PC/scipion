@@ -46,4 +46,4 @@ from protocol_filters import XmippProtFourierFilter
 from protocol_filters import XmippProtGaussianFilter
 
 # Wizards
-from viewer import XmippWizardCTF
+from wizard import *
