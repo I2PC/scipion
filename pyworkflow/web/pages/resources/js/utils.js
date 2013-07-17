@@ -30,7 +30,7 @@ function closePopup() {
 /*
  * Toolbar used in the project content template
  */
-function launchToolbar(projName, id, elm) {
+function launchToolbar(projName, id, elm) {	
 	var row = $("div#toolbar");
 
 	if (row.attr('value') != undefined && row.attr('value') != id) {
@@ -43,15 +43,14 @@ function launchToolbar(projName, id, elm) {
 	elm.attr('class', 'selected');
 
 	// Action Edit Button
-	$("a#editTool").attr(
-			'href',
-			'javascript:popup("/form/?projectName=' + projName + '&protocolId='
-					+ id + '")');
+	$("a#editTool").attr('href',
+	// 'javascript:popup("/form/?projectName=' + projName + '&protocolId='
+	'javascript:popup("/form/?=&protocolId=' + id + '")');
 	// Action Copy Button
-	$("a#copyTool").attr(
-			'href',
-			'javascript:popup("/form/?projectName=' + projName + '&protocolId='
-					+ id + '&action=copy' + '")');
+	$("a#copyTool").attr('href',
+	// 'javascript:popup("/form/?projectName=' + projName + '&protocolId='
+	// + id + '&action=copy' + '")');
+	'javascript:popup("/form/?&protocolId=' + id + '&action=copy' + '")');
 
 	// Action Delete Button
 	$("a#deleteTool").attr('href',
@@ -64,11 +63,9 @@ function launchToolbar(projName, id, elm) {
 	row.show(); // Show toolbar
 
 	fillTabsSummary(projName, id);
+	row.repaint();
 }
 
-/*
- * 
- */
 function fillTabsSummary(projName, id) {
 	$.ajax({
 		type : "GET",
@@ -133,8 +130,7 @@ function launchHostsToolbar(projName, hostId, elm) {
 	// Action Browse Button
 	// $("a#browseTool").attr(
 	// 'href',
-	// 'javascript:popup("/form/?projectName=' + projName + '&protocolId='
-	// + id + '")');
+	// 'javascript:popup("/form/?&protocolId="'+ id + '")');
 
 	row.show(); // Show toolbar
 }
@@ -343,18 +339,37 @@ function paintBox(nodeSource, id, msg) {
 
 	if (id != "graph_PROJECT") {
 		var objId = id.replace("graph_", "");
-		var href = "javascript:popup('/form/?protocolId="+objId+"')";
+		var href = "javascript:popup('/form/?protocolId=" + objId + "')";
 		var projName = $("div#graphActiv").attr("data-project");
-		var onclick = "fillTabsSummary('"+ projName +"', '" + objId +"')";
-		var aux = '<div class="window" style="" onclick="'+ onclick +'" id="' + id
-				+ '"><a href="' + href
-				+ '"><strong>' + msg + '</strong></a><br /></div>';
+		var onclick = "updateTabs('" + projName + "', '" + objId
+				+ "',($(this)))";
+		var aux = '<div class="window" style="" onclick="' + onclick + '" id="'
+				+ id + '"><a href="' + href + '"><strong>' + msg
+				+ '</strong></a><br /></div>';
 	} else {
 		var aux = '<div class="window" style="" id="' + id + '"><strong>' + msg
 				+ '</strong><br />' + "" + '</div>';
 	}
 
 	nodeSource.append(aux);
+}
+
+function updateTabs(projName, id, elm) {
+	var oldSelect = $("div#graphActiv").attr("data-option");
+	
+	if (oldSelect != "") {
+		var aux = "div#"+oldSelect+".window";
+		aux = $(aux).attr("style");
+		aux = aux.replace("border:2.5px solid Firebrick;", "border: 1px solid black;");
+		$("#"+oldSelect).attr("style", aux);
+	}
+	var selected = "graph_" + id;
+	$("div#graphActiv").attr("data-option", selected);
+	var aux = elm.attr("style");
+	aux += "border:2.5px solid Firebrick;"
+	elm.attr("style", aux);
+
+	fillTabsSummary(projName, id);
 }
 
 function addStatusBox(nodeSource, id, status) {

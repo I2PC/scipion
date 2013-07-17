@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+mkdir -p $SCIPION_HOME/tests
 SRC=scipion@scipion.cnb.csic.es:Scipion
 rsync -av ${SRC}/tests/input/ $SCIPION_HOME/tests/input/
 rsync -av ${SRC}/tests/gold/ $SCIPION_HOME/tests/gold/

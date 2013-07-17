@@ -235,7 +235,7 @@ div.datatable {
 
 /* jsPlumb */
 .window {
-	background-color: #EEEEEF;
+/* 	background-color: #EEEEEF; */
 	border: 1px solid black;
 	border-radius: 0.5em;
 	box-shadow: 2px 2px 19px #AAAAAA;
@@ -245,8 +245,13 @@ div.datatable {
 	width: auto;
 	position: absolute;
 	left: 7em;
-/* 	z-index: 5; */
+	z-index: 5;
 	padding: 1.5px;
+	font-size: 0.9em;
+}
+
+.window a:hover {
+	color: Firebrick;
 }
 
 .dragActive {
