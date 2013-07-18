@@ -203,6 +203,9 @@ class SetOfImages(EMObject):
         self._ctf = Boolean(args.get('ctf', False))
         self._alignment = Boolean(args.get('alignmet', False))
         self._tiltPairs = Boolean(args.get('tiltPairs', False))
+        self._projectionMatrix = Boolean(False)
+        self._phaseFlip = Boolean(False)
+        self._amplitudeCorrect = Boolean(False)
         self._mapper = None
         self._idCount = 0
        
@@ -253,11 +256,29 @@ class SetOfImages(EMObject):
     def setCTF(self, value):
         self._ctf.set(value)
         
-    def hasAligment(self):
+    def hasAlignment(self):
         return self._alignment.get()
     
-    def setAligment(self, value):
-        self._alignment.set(value)  
+    def setAlignment(self, value):
+        self._alignment.set(value)
+        
+    def hasProjectionMatrix(self):
+        return self._projectionMatrix
+    
+    def setProjectionMatrix(self, value):
+        self._projectionMatrix.set(value)
+        
+    def isPhaseFlipped(self):
+        return self._phaseFlip
+    
+    def setPhaseFlipped(self, value):
+        self._phaseFlip.set(value)
+        
+    def isAmplitudeCorrected(self):
+        return self._amplitudeCorrect
+    
+    def setAmplitudeCorrected(self, value):
+        self._amplitudeCorrect.set(value)
         
     def append(self, image):
         """ Add a image to the set. """

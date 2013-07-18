@@ -32,7 +32,7 @@ import pyworkflow as pw
 from pyworkflow.utils.reflection import getSubClassesFromPath, getSubclasses
 from data import *
 from protocol import *
-from viewer import Viewer
+from viewer import Viewer, Wizard
 #from packages import *
 
 PACKAGES_PATH = os.path.join(pw.HOME, 'em', 'packages')
@@ -47,16 +47,9 @@ emObjectsDict.update(getSubclasses(EMObject, globals()))
 
 # Load all subclasses of Viewer of different packages
 emViewersDict = getSubClassesFromPath(Viewer, PACKAGES_PATH)
-## Get for which objects are viewers registered
-#emViewerTargets = {}
-#
-#for viewer in emViewersDict.values():
-#    print "viewer: ", viewer
-#    for t in viewer._targets:
-#        print "   target: ", t
-#        if not t in emViewerTargets:
-#            emViewerTargets[t] = []
-#        emViewerTargets[t].append(viewer)
+
+# Load all subclasses of Wizards
+emWizardsDict = getSubClassesFromPath(Wizard, PACKAGES_PATH)
         
         
 def findClass(className):
@@ -78,6 +71,21 @@ def findViewers(className, environment):
                     viewers.append(viewer)
                     break
     return viewers
+
+def findWizards(definition, environment):
+    """ Find availables wizards for this class. 
+    Returns:
+        a dict with the paramName and wizards for this class."""
+    wizards = {}
+    baseClasses = definition.getClass().mro()
+    for wiz in emWizardsDict.values():
+        if wiz._environment == environment:
+            for t in wiz._targets:
+                cls, params = t
+                if cls in baseClasses:
+                    for p in params:
+                        wizards[p] = wiz
+    return wizards    
 
 # Update global dictionary with variables found
 globals().update(emProtocolsDict)

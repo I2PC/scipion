@@ -1,0 +1,40 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns:pages="http://dummy1">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+</head>
+<body>
+<form action="/showVolVisualization/" method="post">		
+	{% csrf_token %}
+	<table>
+	{{form.as_table}}
+	</table>
+	<input type="hidden" name="operation" value="visualize"/>
+	<input type="submit" value="Submit">	 
+</form>
+<br/>
+<!-- <applet
+	width="500px" height="500px" name="av"
+	archive="{{ STATIC_URL }}astex/OpenAstexViewer.jar"
+	codebase=".."
+	code="MoleculeViewerApplet.class">
+	<param name="scriptFile" value="{{ STATIC_URL }}astex/test.script">
+</applet> -->
+{% if volLink != None and volLink != '' %}
+	<applet
+		width="600px" height="600px" name="av"
+		archive="{{ STATIC_URL }}astex/OpenAstexViewer.jar"
+		codebase=".."
+		code="MoleculeViewerApplet.class">
+		<param name="script" value="map load volMap '{{volLink}}' {{form.volType.value}} {{form.threshold.value}};
+	map volMap contour 0 solid on;
+	radius 50;
+	center map volMap;
+	view -background lightgrey;
+	map volMap -reread true;">
+	</applet>
+{% endif %}
+</body>
+
+</html>

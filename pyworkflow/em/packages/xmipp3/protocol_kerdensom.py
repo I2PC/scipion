@@ -42,7 +42,7 @@ class XmippDefKerdensom(Form):
 
         self.addSection(label='Input')
         self.addParam('inputImages', PointerParam, label="Input images", important=True, 
-                      pointerClass='SetOfParticles',
+                      pointerClass='SetOfParticles', pointerCondition='hasAlignment',
                       help='Select the input images from the project.'
                            'It should be a SetOfParticles class')
         self._addParams()
