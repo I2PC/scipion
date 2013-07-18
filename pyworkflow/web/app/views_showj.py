@@ -28,7 +28,10 @@ def showj(request, inputParameters=None):
     jquerydataTables_path = join(settings.STATIC_URL, 'js/jquery.dataTables.js')
     jquerydataTables_colreorder_path = join(settings.STATIC_URL, 'js/ColReorder.js')
     jeditable_path = join(settings.STATIC_URL, 'js/jquery.jeditable.js')
-    jquery_ui_path = join(settings.STATIC_URL, 'js/jquery-ui.js')        
+    jquery_ui_path = join(settings.STATIC_URL, 'js/jquery-ui.js')
+    jquery_waypoints_path = join(settings.STATIC_URL, 'js/waypoints.min.js')    
+    jquery_tabletools_path = join(settings.STATIC_URL, 'js/TableTools.min.js')
+        
     
     #############
     # WEB INPUT PARAMETERS
@@ -75,6 +78,8 @@ def showj(request, inputParameters=None):
                'jquerydataTables_colreorder': jquerydataTables_colreorder_path,
                'jeditable': jeditable_path,
                'jquery_ui': jquery_ui_path,
+               'jquery_waypoints':jquery_waypoints_path,
+#               'jquery_tabletools':jquery_tabletools_path,
                'css': css_path,
                
                'metadata': md,
