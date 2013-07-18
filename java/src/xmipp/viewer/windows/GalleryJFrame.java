@@ -560,9 +560,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				{
 					int newRow = table.getSelectedRow() + vdir;
 					int col = table.getSelectedColumn() + hdir;
-					
+
 					selectItem(newRow, col);
-						
+
 				}
 			}// function keyPressed
 		});
@@ -745,20 +745,20 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	/** Function to create and launch the worker, blocking the gui */
 	public void runInBackground(int operation)
 	{
-		
+
 		MetaData imagesmd = data.getImagesMd();
 		Worker w = new Worker(operation, imagesmd);
 		XmippWindowUtil.blockGUI(this, w.getMessage());
 		Thread thr = new Thread(w);
 		thr.start();
-		
+
 	}
 
 	private void computeStatsImages(MetaData imagesmd) throws Exception
 	{
 		ImageGeneric imgAvg = new ImageGeneric();
 		ImageGeneric imgStd = new ImageGeneric();
-		
+
 		imagesmd.getStatsImages(imgAvg, imgStd, data.useGeo, data.getRenderLabel());
 		ImagePlus impAvg = XmippImageConverter.convertToImagePlus(imgAvg);
 		ImagePlus impStd = XmippImageConverter.convertToImagePlus(imgStd);
@@ -882,9 +882,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				dlgSave.setInitialValues();
 			saved = !changed;
 			setGalleryTitle();
-			if(rows != null)
+			if (rows != null)
 				gallery.setRows(rows);
-			if(columns != null)
+			if (columns != null)
 				gallery.setColumns(columns);
 
 		}
@@ -1044,7 +1044,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			public void stateChanged(javax.swing.event.ChangeEvent evt)
 			{
 				Integer zoom = (Integer) jsZoom.getValue();
-				if( zoom < 10 || gallery.getCellSize().getHeight() < 30)
+				if (zoom < 10 || gallery.getCellSize().getHeight() < 30)
 				{
 					jsZoom.setValue(gallery.data.zoom);//keep previous zoom
 					return;
@@ -1282,7 +1282,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			columns = (Integer) jsColumns.getValue();
 			rows = null;
 			gallery.setColumns(getLastColums());
-			
+
 		}
 	}
 
@@ -1318,24 +1318,22 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		}
 	}
 
-	
-	
 	public void selectItem(int row, int col)
 	{
 		if (row < 0 || row > table.getRowCount() - 1 || col < 0 || col > table.getColumnCount() - 1)
 			return;
-		if(row * table.getColumnCount() + col + 1 > gallery.getSize())
+		if (row * table.getColumnCount() + col + 1 > gallery.getSize())
 		{
 			int[] coords = gallery.getCoords(gallery.getSize() - 1);
 			row = coords[0];
 			col = coords[1];
-			
+
 		}
-		
+
 		gallery.clearSelection();
 		gallery.touchItem(row, col);
 		makeVisible(row);
-		
+
 	}
 
 	private void tableMouseClicked(MouseEvent evt)
@@ -1904,10 +1902,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	private void saveMd() throws Exception
 	{
-		saveMd(dlgSave.getMdFilename());
+		saveMd(dlgSave.getMdFilename(), false);
 	}
 
-	private void saveMd(String path) throws Exception
+	private void saveMd(String path, boolean saveall) throws Exception
 	{
 		try
 		{
@@ -1927,7 +1925,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			File iofile = new File(file);
 			if (!iofile.exists())// overwrite or append, save active
 			{
-				if(iofile.getParentFile() != null)
+				if (iofile.getParentFile() != null)
 					iofile.getParentFile().mkdirs();
 				data.md.write(path);
 			}
@@ -1941,13 +1939,15 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					data.md.writeBlock(path);// either if save active block or all, save active, other blocks where already managed
 
 			}
-
-			data.setMdChanges(false);
-			gallery.data.setFileName(file);
-			if (path.contains("@"))
-				gallery.data.selectBlock(path.substring(0, path.lastIndexOf("@")));
-			reloadFile(file, false);
-			setTitle(gallery.getTitle());
+			if (!saveall)
+			{
+				data.setMdChanges(false);
+				gallery.data.setFileName(file);
+				if (path.contains("@"))
+					gallery.data.selectBlock(path.substring(0, path.lastIndexOf("@")));
+				reloadFile(file, false);
+				setTitle(gallery.getTitle());
+			}
 		}
 		catch (Exception e)
 		{
@@ -1982,12 +1982,19 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			{
 				md = mds.get(blockit);
 				if (blockit.equals(getBlock()))
-					continue;
+					saveMd(blockto, true);
 				else
 					md.writeBlock(blockit + "@" + to);
+				md.destroy();
 			}
 		}
-		saveMd(blockto);
+
+		data.setMdChanges(false);
+		gallery.data.setFileName(to);
+		if (blockto.contains("@"))
+			gallery.data.selectBlock(blockto.substring(0, blockto.lastIndexOf("@")));
+		reloadFile(to, false);
+		setTitle(gallery.getTitle());
 	}
 
 	public String getBlock()
@@ -2000,7 +2007,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		if (!saved)
 			saveAs();
 		else
-			saveMd(dlgSave.getMdFilename());
+		{
+			if (dlgSave.saveActiveMetadataOnly())
+				saveMd();
+			else
+				saveAll();
+		}
 	}// function save
 
 	private void saveAs() throws Exception
@@ -2032,7 +2044,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		createCombos();
 		updateVisibleCombos();
 		jcbBlocks.setSelectedItem(gallery.data.selectedBlock);
-		
+
 	}
 
 	protected void initResliceButtonMenu()
@@ -2106,7 +2118,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		map.put("Ctrl + R", "Render images");
 		map.put("Ctrl + G", "Apply geometry");
 		map.put("Ctrl + W", "Wrap");
-		
+
 		return map;
 	}
 

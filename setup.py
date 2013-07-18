@@ -45,17 +45,25 @@ class ConsoleOptionsTab():
         self.name = text
         self.optionsDict = {}
         self.optionsValue = {}
+	self.optionsGroup = {}
         
-    def addOption(self, name, comment, default='', cond=None, wiz=None, browse=False):
+    def addOption(self, name, comment, default='', group=None, cond=None, wiz=None, browse=False):
         self.optionsDict[name] = (name, comment, default, cond)
         self.optionsValue[name] = default
+	self.optionsGroup[name] = group
         
     def setValue(self, name, value):
         self.optionsValue[name] = value
-        
-    def getValue(self, name):
+
+    def setGroup(self, name, group):
+        self.optionsGroup[name] = group
+
+    def getValue(self, name, group=None):
         return self.optionsValue[name]
         
+    def getGroup(self, name):
+        return self.optionsGroup[name]
+
     def getConfigOptions(self):
         optStr = ""
         for key, comment, default, cond in self.optionsDict.values():
@@ -65,6 +73,18 @@ class ConsoleOptionsTab():
         return optStr
 	
     def addSeparator(self):
+        pass
+
+    def addGroup(self, title):
+        pass
+
+    def getGroupPanel(self, name):
+        pass
+
+    def addGroupPanel(self, name):
+        pass
+
+    def finishGroupPanel(self, name):
         pass
 
 class ConsoleConfigNotebook():
@@ -84,8 +104,8 @@ class ConsoleConfigNotebook():
     def setValue(self, tab, option, value):
         self.tabs[tab].setValue(option, value)
         
-    def getValue(self, tab, option):
-        return self.tabs[tab].getValue(option)
+    def getValue(self, tab, option, group=None):
+        return self.tabs[tab].getValue(option, group)
     
     def notifyRun(self, process):
         self.proc = process
@@ -114,7 +134,7 @@ def detectMpi():
     
     return (inc_mpi, lib_mpi)
 
-def addTabOption(tab, option, comment, default, cond=None, wiz=None, browse=False):
+def addTabOption(tab, option, comment, default, group=None, cond=None, wiz=None, browse=False):
     defaultsDic = globals()
     if defaultsDic.has_key(option):
         value = defaultsDic[option]
@@ -126,7 +146,7 @@ def addTabOption(tab, option, comment, default, cond=None, wiz=None, browse=Fals
             default = ' '.join(value)
         else:
             default = value
-    tab.addOption(option, comment, default, cond, wiz, browse) 
+    tab.addOption(option, comment, default, group, cond, wiz, browse) 
    
 ''' Following wizards functions will try to detect
 some values automatically, and return a list with
@@ -153,34 +173,41 @@ def wizardJava(tab_java):
     return "JAVA_HOME could not be found."  
     
 def addTabs(nb):
-    tab = nb.addTab("Compiler")
-    addTabOption(tab,'CC', 'The C compiler', 'gcc')
-    addTabOption(tab,'CXX', 'The C++ compiler', 'g++')
-    addTabOption(tab,'LINKERFORPROGRAMS', 'Linker for programs', 'g++')
+    tab = nb.addTab("Compilers")
+    tab.addGroupPanel("C/C++")
+    addTabOption(tab,'CC', 'The C compiler', 'gcc', 'C/C++')
+    addTabOption(tab,'CXX', 'The C++ compiler', 'g++', 'C/C++')
+    addTabOption(tab,'LINKERFORPROGRAMS', 'Linker for programs', 'g++', 'C/C++')
     if sys.platform  == 'darwin':
-        addTabOption(tab,'CCFLAGS', 'The C compiler flags', '-I/usr/include/malloc')
-        addTabOption(tab,'CXXFLAGS', 'The C++ compiler flags', '-I/usr/include/malloc')
+        addTabOption(tab,'CCFLAGS', 'The C compiler flags', '-I/usr/include/malloc', 'C/C++')
+        addTabOption(tab,'CXXFLAGS', 'The C++ compiler flags', '-I/usr/include/malloc', 'C/C++')
     elif sys.platform == 'win32':
-        addTabOption(tab,'CCFLAGS', 'The C compiler flags', '-fpermissive -I/c/MinGW/include')
-        addTabOption(tab,'CXXFLAGS', 'The C++ compiler flags', '-fpermissive -I/c/MinGW/include')
+        addTabOption(tab,'CCFLAGS', 'The C compiler flags', '-fpermissive -I/c/MinGW/include', 'C/C++')
+        addTabOption(tab,'CXXFLAGS', 'The C++ compiler flags', '-fpermissive -I/c/MinGW/include', 'C/C++')
     else:
-        addTabOption(tab,'CCFLAGS', 'The C compiler flags', '')
-        addTabOption(tab,'CXXFLAGS', 'The C++ compiler flags', '')
+        addTabOption(tab,'CCFLAGS', 'The C compiler flags', '', 'C/C++')
+        addTabOption(tab,'CXXFLAGS', 'The C++ compiler flags', '', 'C/C++')
+    tab.finishGroupPanel("C/C++")
     
-    tab = nb.addTab("  MPI  ")
-    addTabOption(tab,'mpi', 'Build the MPI programs?', 'yes')
-    addTabOption(tab,'MPI_CC', 'MPI C compiler', 'mpicc', cond='mpi')
-    addTabOption(tab,'MPI_CXX', 'MPI C++ compiler', 'mpiCC', cond='mpi')
-    addTabOption(tab,'MPI_LINKERFORPROGRAMS', 'MPI Linker for programs', 'mpiCC', cond='mpi')
-    addTabOption(tab,'MPI_INCLUDE', 'MPI headers dir ', '/usr/include', cond='mpi', browse=True, wiz=wizardMpi)
-    addTabOption(tab,'MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib', cond='mpi', browse=True)
-    addTabOption(tab,'MPI_LIB', 'MPI library', 'mpi', cond='mpi')
+#    tab = nb.addTab("  MPI  ")
+#    addTabOption(tab,'mpi', 'Build the MPI programs?', 'yes')
+#    tab.addSeparator()
+    tab.addGroupPanel("MPI")
+    addTabOption(tab,'MPI_CC', 'MPI C compiler', 'mpicc', 'MPI')
+    addTabOption(tab,'MPI_CXX', 'MPI C++ compiler', 'mpiCC', 'MPI')
+    addTabOption(tab,'MPI_LINKERFORPROGRAMS', 'MPI Linker for programs', 'mpiCC', 'MPI')
+    addTabOption(tab,'MPI_INCLUDE', 'MPI headers dir ', '/usr/include', 'MPI', browse=True, wiz=wizardMpi)
+    addTabOption(tab,'MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib', 'MPI', browse=True)
+    addTabOption(tab,'MPI_LIB', 'MPI library', 'mpi', 'MPI')
     tab_mpi = tab
+    tab.finishGroupPanel("MPI")
     
-    tab = nb.addTab("Java")
-    addTabOption(tab,'java', 'Build the java programs?', 'yes')
-    addTabOption(tab,'JAVAC', 'Java compiler', 'javac', cond='java')
-    addTabOption(tab,'JAVA_HOME', 'Java installation directory', '', cond='java', wiz=wizardJava, browse=True)
+#    tab = nb.addTab("Java")
+#    tab.addSeparator()
+    tab.addGroupPanel("Java")
+    addTabOption(tab,'JAVAC', 'Java compiler', 'javac', 'Java')
+    addTabOption(tab,'JAVA_HOME', 'Java installation directory', '', 'Java', wiz=wizardJava, browse=True)
+    tab.finishGroupPanel("Java")
     tab_gui = tab
     
     tab = nb.addTab("Advanced")
@@ -193,10 +220,7 @@ def addTabs(nb):
     addTabOption(tab, 'gtest', 'Build tests?', 'yes')
     addTabOption(tab, 'cuda', 'Build CUDA support?', 'no')
     addTabOption(tab, 'release', 'Release mode', 'yes')
-   
-
-    defaultsDic = globals()
-    
+    defaultsDic = globals()    
     if not defaultsDic.has_key('JAVA_HOME'):
         wizardJava(tab_gui)
     
@@ -211,7 +235,7 @@ def run(notebook):
         scons = "external/scons/scons.py"
     else:
         scons = os.path.join("external", "scons", "scons.py")
-    os.environ['JAVA_HOME'] = notebook.getValue('Java', 'JAVA_HOME')
+    os.environ['JAVA_HOME'] = notebook.getValue('Compilers', 'JAVA_HOME', 'Java')
     cmd = ''   
     if out != STDOUT and os.path.exists(out):
         os.remove(out)
