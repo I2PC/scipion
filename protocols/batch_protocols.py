@@ -664,8 +664,8 @@ class XmippProjectGUI():
                 update_summary = (run_state == SqliteDb.RUN_STARTED or
                                   not exists(run_summary_cache))
                 
+                prot = self.project.getProtocolFromModule(run['script'])
                 if update_summary:
-                    prot = self.project.getProtocolFromModule(run['script'])
                     comment = ""
                     if not prot.Comment == None:
                         if prot.Comment.find("Describe your run here...") < 0:
@@ -688,6 +688,8 @@ class XmippProjectGUI():
                     f = open(run_summary_cache, 'w')
                     f.write(labels)
                 else:
+                    if exists(prot.WorkingDir):
+                        showButtons = True
                     f = open(run_summary_cache)
                     labels = f.read()
                 f.close()
