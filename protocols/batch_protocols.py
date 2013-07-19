@@ -585,9 +585,9 @@ class XmippProjectGUI():
                         break
             else:
                 self.updateHistoryGraph()
-            #Generate an automatic refresh after x ms, with x been 1, 2, 4 increasing until 32
+            #Generate an automatic refresh after x ms, with x been 10, 100, 1000... increasing until 3600 (1h)
+            self.historyRefreshRate = min(10*self.historyRefreshRate, 3600)
             self.historyRefresh = tree.after(self.historyRefreshRate*1000, self.updateRunHistory, protGroup, False)
-            self.historyRefreshRate = min(2*self.historyRefreshRate, 32)
         else:
             self.updateRunSelection(-1)
 
@@ -658,26 +658,42 @@ class XmippProjectGUI():
             try:
                 if not exists(run['script']):
                     return
-                prot = self.project.getProtocolFromModule(run['script'])
-                comment = ""
-                if not prot.Comment == None:
-                    if prot.Comment.find("Describe your run here...") < 0:
-                        comment = prot.Comment
-                        comment = comment.strip(' \t\n\r')
-                        if len(comment) > 128:
-                            comment = comment[0:128]+"..."
-                if exists(prot.WorkingDir):
-                    summary = '\n'.join(prot.summary())
-                    showButtons = True
-                    wd = "[%s]" % prot.WorkingDir # If exists, create a link to open folder
-                else:
-                    wd = prot.WorkingDir
-                    summary = "This protocol run has not been executed yet"
                 
-                labels = '<Run>: ' + getExtendedRunName(run) + \
-                          '\n<Created>: ' + run['init'] + '   <Modified>: ' + run['last_modified'] + \
-                          '\n<Script>: ' + run['script'] + '\n<Directory>: ' + wd + \
-                          '\n<Comment>: ' + comment + '\n\n<Summary>:\n' + summary   
+                run_state = run['run_state']
+                run_summary_cache = run['script'].replace('.py', '_summary.txt')
+                update_summary = (run_state == SqliteDb.RUN_STARTED or
+                                  not exists(run_summary_cache))
+                
+                prot = self.project.getProtocolFromModule(run['script'])
+                if update_summary:
+                    comment = ""
+                    if not prot.Comment == None:
+                        if prot.Comment.find("Describe your run here...") < 0:
+                            comment = prot.Comment
+                            comment = comment.strip(' \t\n\r')
+                            if len(comment) > 128:
+                                comment = comment[0:128]+"..."
+                    if exists(prot.WorkingDir):
+                        summary = '\n'.join(prot.summary())
+                        showButtons = True
+                        wd = "[%s]" % prot.WorkingDir # If exists, create a link to open folder
+                    else:
+                        wd = prot.WorkingDir
+                        summary = "This protocol run has not been executed yet"
+                    
+                    labels = '<Run>: ' + getExtendedRunName(run) + \
+                              '\n<Created>: ' + run['init'] + '   <Modified>: ' + run['last_modified'] + \
+                              '\n<Script>: ' + run['script'] + '\n<Directory>: ' + wd + \
+                              '\n<Comment>: ' + comment + '\n\n<Summary>:\n' + summary
+                    f = open(run_summary_cache, 'w')
+                    f.write(labels)
+                else:
+                    if exists(prot.WorkingDir):
+                        showButtons = True
+                    f = open(run_summary_cache)
+                    labels = f.read()
+                f.close()
+                
             except Exception, e:
                 labels = 'Error creating protocol: <%s>' % str(e)
                 import traceback

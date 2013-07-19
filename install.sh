@@ -18,6 +18,7 @@ DO_UPDATE=false
 DO_SETUP=true
 DO_GUI=true
 DO_UNATTENDED=false
+DO_MATLAB=false
 
 export NUMBER_OF_CPU=1
 
@@ -65,47 +66,47 @@ for param in $@; do
  else
     case $param in
         "disable_all")
-			DO_UNTAR=false
-			DO_SQLITE=false
-			DO_TCLTK=false
-			DO_PYTHON=false
-			DO_PYMOD=false
-			DO_FFTW=false
-			DO_TIFF=false
-			DO_JPEG=false
-			DO_ARPACK=false
-			DO_SETUP=false;;			
-        "-j")             TAKE_CPU=true;;
-        "untar=true")   DO_UNTAR=true;;
-        "untar=false")   DO_UNTAR=false;;
-        "sqlite=true")   DO_SQLITE=true;;
-        "sqlite=false")   DO_SQLITE=false;;
-        "tcltk=true")   DO_TCLTK=true;;
-        "tcltk=false")   DO_TCLTK=false;;
-        "python=true")   DO_PYTHON=true;DO_PYMOD=true;;
-        "python=false")   DO_PYTHON=false;DO_PYMOD=false;;
+			    DO_UNTAR=false
+			    DO_SQLITE=false
+			    DO_TCLTK=false
+			    DO_PYTHON=false
+			    DO_PYMOD=false
+			    DO_FFTW=false
+			    DO_TIFF=false
+			    DO_JPEG=false
+			    DO_ARPACK=false
+			    DO_SETUP=false;;			
+        "-j")               TAKE_CPU=true;;
+        "untar=true")       DO_UNTAR=true;;
+        "untar=false")      DO_UNTAR=false;;
+        "sqlite=true")      DO_SQLITE=true;;
+        "sqlite=false")     DO_SQLITE=false;;
+        "tcltk=true")       DO_TCLTK=true;;
+        "tcltk=false")      DO_TCLTK=false;;
+        "python=true")      DO_PYTHON=true;DO_PYMOD=true;;
+        "python=false")     DO_PYTHON=false;DO_PYMOD=false;;
         "pymodules=true")   DO_PYMOD=true;;
-        "pymodules=false")   DO_PYMOD=false;;
-        "fftw=true")   DO_FFTW=true;;
-        "fftw=false")   DO_FFTW=false;;
-        "tiff=true")   DO_TIFF=true;;
-        "tiff=false")   DO_TIFF=false;;
-        "jpeg=true")   DO_JPEG=true;;
-        "jpeg=false")   DO_JPEG=false;;
-        "arpack=true")   DO_ARPACK=true;;
-        "arpack=false")   DO_ARPACK=false;;
-        "clean=true")   DO_CLEAN=true;;
-        "clean=false")   DO_CLEAN=false;;
-        "static=true")   DO_STATIC=true;;
-        "static=false")   DO_STATIC=false;;
-        "gui=false")   GUI_ARGS="";;
-	"setup=true")   DO_SETUP=true;;
+        "pymodules=false")  DO_PYMOD=false;;
+        "fftw=true")        DO_FFTW=true;;
+        "fftw=false")       DO_FFTW=false;;
+        "tiff=true")        DO_TIFF=true;;
+        "tiff=false")       DO_TIFF=false;;
+        "jpeg=true")        DO_JPEG=true;;
+        "jpeg=false")       DO_JPEG=false;;
+        "arpack=true")      DO_ARPACK=true;;
+        "arpack=false")     DO_ARPACK=false;;
+        "clean=true")       DO_CLEAN=true;;
+        "clean=false")      DO_CLEAN=false;;
+        "static=true")      DO_STATIC=true;;
+        "static=false")     DO_STATIC=false;;
+        "gui=false")        GUI_ARGS="";;
+	"setup=true")       DO_SETUP=true;;
         # This two if passed should be at the end and 
         # will setup arguments for configure and compilation steps
-        "configure") TAKE_CONFIGURE=true;
-                     TAKE_COMPILE=false;;
-        "compile")   TAKE_CONFIGURE=false;
-                     TAKE_COMPILE=true;;
+        "configure")        TAKE_CONFIGURE=true;
+                            TAKE_COMPILE=false;;
+        "compile")          TAKE_CONFIGURE=false;
+                            TAKE_COMPILE=true;;
         "unattended=true")  DO_UNATTENDED=true;;
         "unattended=false") DO_UNATTENDED=false;;
          *)          echo "Unrecognized option $param, exiting..."; exit 1
