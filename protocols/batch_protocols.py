@@ -350,7 +350,7 @@ class XmippProjectGUI():
         searchEntry.bind('<Return>', searchByKeywords)
         centerWindows(root, refWindows=self.root)
         root.deiconify()
-        root.mainloop() 
+        root.mainloop()
 
     def stopRun(self):        
         if askYesNo("Confirm action", "Are you sure to <STOP> run execution?" , parent=self.root):
@@ -425,7 +425,6 @@ class XmippProjectGUI():
             else:
                 updateAndClose()
                 
-		
         detailsSection = ProjectSection(root, 'Process monitor')
         detailsSection.addButton("Stop run", command=stopRun)
         cols = ('pid', '%cpu', '%mem', 'command')
@@ -667,6 +666,7 @@ class XmippProjectGUI():
                 prot = self.project.getProtocolFromModule(run['script'])
                 if update_summary:
                     comment = ""
+
                     if not prot.Comment == None:
                         if prot.Comment.find("Describe your run here...") < 0:
                             comment = prot.Comment
@@ -688,6 +688,7 @@ class XmippProjectGUI():
                     f = open(run_summary_cache, 'w')
                     f.write(labels)
                 else:
+                    
                     if exists(prot.WorkingDir):
                         showButtons = True
                     f = open(run_summary_cache)

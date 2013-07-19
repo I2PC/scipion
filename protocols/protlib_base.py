@@ -36,7 +36,8 @@ from protlib_sql import SqliteDb, XmippProjectDb, XmippProtocolDb, getRunDict
 from protlib_utils import XmippLog, loadModule, reportError, getScriptPrefix,\
     which
 from protlib_xmipp import failStr
-from protlib_filesystem import deleteFiles, xmippExists, removeBasenameExt
+from protlib_filesystem import deleteFiles, xmippExists, removeBasenameExt, deleteFile
+import time
 
 class XmippProject():
     def __init__(self, projectDir=None):
@@ -139,11 +140,12 @@ class XmippProject():
         ''' Return file paths inside the temporal folder
             Path are relative to ProjectDir '''
         return join(self.tmpDir, *paths)           
-    
+
     def cleanRun(self, run):
         script = run['script']
         toDelete = [script.replace(self.runsDir, self.logsDir).replace(".py", ext) for ext in ['.log', '.err', '.out']]
         deleteFiles(None, toDelete, False)
+        cleanRunSummaryCache(script)
         workingDir = self.getWorkingDir(run['protocol_name'], run['run_name'])
         from distutils.dir_util import remove_tree
         if exists(workingDir):
@@ -391,6 +393,11 @@ CommonTemplates = {
         'classes':      join('%(WorkingDir)s', 'classes.xmd'),
         'class_block':  'class%(ClassNo)06d_images@%(ClassMd)s'
      }
+
+def cleanRunSummaryCache(script):
+    toDelete = script.replace('.py', '_summary.txt')
+    deleteFile(None, toDelete, False)
+
 
 def getProtocolFilename(key, **params):
     """Use the CommonTemplates to retrieve filenames passing key arguments """
@@ -672,7 +679,6 @@ class XmippProtocol(object):
         finally:
             self.fOut.close()
             self.fErr.close()  
-                            
         return retcode
     
     def insertParallelStep(self, command, **args):
@@ -969,4 +975,7 @@ def protocolMain(ProtocolClass, script=None):
             # Update run's process info in DB
             project.projectDb.updateRunPid(_run)
             os.environ['PROTOCOL_SCRIPT'] = absolute_script
-            return p.run()
+            result = p.run()
+            cleanRunSummaryCache(absolute_script)
+            return result
+
