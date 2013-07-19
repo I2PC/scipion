@@ -8,6 +8,14 @@
 <script src={{launchTreeview}} type="text/javascript"></script>
 <script src={{tabs_config}} type="text/javascript"></script>
 <script src={{utils}} type="text/javascript"></script>
+<script>
+    $(document).ready(
+            function() {
+                setInterval(function() {
+                    var randomnumber = Math.floor(Math.random() * 100);
+                }, 2000);
+            });
+</script>
 {% endblock %} {% block sideLeft %}
 <div class="protFieldsetTree">
 	<ul id="browser" class="filetree">
