@@ -47,6 +47,7 @@ public class SingleParticlePicker extends ParticlePicker {
 	private String templatesfile;
 	private int templateindex;
 	private PickingClassifier classifier;
+	private String reviewfile;
 
 	public SingleParticlePicker(String selfile, String outputdir, Mode mode) {
 		this(null, selfile, outputdir, mode);
@@ -89,6 +90,7 @@ public class SingleParticlePicker extends ParticlePicker {
 			throw new IllegalArgumentException(
 					XmippMessage.getNoSuchFieldValueMsg("review file",
 							reviewfile));
+		this.reviewfile = reviewfile;
 		importAllParticles(reviewfile);
 	}
 
@@ -107,8 +109,11 @@ public class SingleParticlePicker extends ParticlePicker {
 	public void saveData() {
 
 		super.saveData();
-		for (Micrograph m : micrographs)
-			saveData(m);
+		if(mode != Mode.Review)
+			for (Micrograph m : micrographs)
+				saveData(m);
+		else
+			exportParticles(reviewfile);
 		setChanged(false);
 	}
 
@@ -259,6 +264,11 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public void saveData(Micrograph m) {
+		if(mode == Mode.Review)
+		{
+			exportParticles(reviewfile);
+			return;
+		}
 		SingleParticlePickerMicrograph tm = (SingleParticlePickerMicrograph) m;
 		long id;
 		try {
@@ -539,14 +549,23 @@ public class SingleParticlePicker extends ParticlePicker {
 	/** Return the number of particles imported */
 	public String importParticlesFromFolder(String path, Format f, float scale,
 			boolean invertx, boolean inverty) {
+			
 		if (f == Format.Auto)
 			f = detectFormat(path);
 		if (f == Format.Unknown)
 			throw new IllegalArgumentException("Unable to detect format");
+		
 
 		String filename;
 		String result = "";
 		initTemplates();
+		String particlesfile = getExportFile(path);
+		if(particlesfile != null)
+		{
+			importAllParticles(particlesfile);
+			saveData();
+			return "";
+		}
 		for (SingleParticlePickerMicrograph m : micrographs) {
 			filename = getImportMicrographName(path, m.getFile(), f);
 			if (Filename.exists(filename))

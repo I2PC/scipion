@@ -3,13 +3,11 @@ package xmipp.viewer.particlepicker;
 import ij.CommandListener;
 import ij.Executer;
 import ij.IJ;
-import ij.ImageJ;
 import ij.ImageListener;
 import ij.ImagePlus;
 import ij.plugin.frame.Recorder;
+
 import java.awt.Color;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -18,24 +16,21 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JOptionPane;
-
-import com.sun.net.httpserver.Filter;
 
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.Program;
-import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.training.model.Mode;
 
-
 /**
- * Business object for ParticlePicker common GUI. SingleParticlePicker and TiltPairPicker inherit from this class.
+ * Business object for ParticlePicker common GUI. SingleParticlePicker and
+ * TiltPairPicker inherit from this class.
+ * 
  * @author airen
- *
+ * 
  */
 public abstract class ParticlePicker
 {
@@ -51,7 +46,8 @@ public abstract class ParticlePicker
 	protected String configfile;
 	public static final int defAutoPickPercent = 90;
 	protected int autopickpercent = defAutoPickPercent;
-	String[] commonfilters = new String[]{"Install...", "Duplicate", "Bandpass Filter...", "Anisotropic Diffusion...", "Mean Shift", "Subtract Background...", "Gaussian Blur...", "Brightness/Contrast...", "Invert LUT"};
+	String[] commonfilters = new String[] { "Install...", "Duplicate", "Bandpass Filter...", "Anisotropic Diffusion...", "Mean Shift",
+			"Subtract Background...", "Gaussian Blur...", "Brightness/Contrast...", "Invert LUT" };
 	static String xmippsmoothfilter = "Xmipp Smooth Filter";
 
 	private Color color;
@@ -59,6 +55,7 @@ public abstract class ParticlePicker
 
 	public static final int sizemax = 800;
 	protected String block;
+	Format[] formats = new Format[] { Format.Xmipp24, Format.Xmipp30, Format.Xmipp301, Format.Eman };
 
 	private static Color[] colors = new Color[] { Color.BLUE, Color.CYAN, Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.YELLOW };
 
@@ -211,11 +208,13 @@ public abstract class ParticlePicker
 
 	public Format detectFormat(String path)
 	{
-		Format[] formats = new Format[] { Format.Xmipp24, Format.Xmipp30, Format.Xmipp301, Format.Eman };
+
 		String particlesfile;
-		for (Micrograph m : getMicrographs())
+
+		for (Format f : formats)
 		{
-			for (Format f : formats)
+
+			for (Micrograph m : getMicrographs())
 			{
 				particlesfile = getImportMicrographName(path, m.getFile(), f);
 				if (particlesfile != null && Filename.exists(particlesfile))
@@ -228,7 +227,35 @@ public abstract class ParticlePicker
 				}
 			}
 		}
+		particlesfile = getExportFile(path);
+		if(particlesfile != null)
+		{
+        	if (Filename.exists(Filename.join(path, "families.xmd")))
+    			return Format.Xmipp30;
+        	return Format.Xmipp301;
+
+        }
+
 		return Format.Unknown;
+	}
+
+	public String getExportFile(String path)
+	{
+		String particlesfile;
+		File folderToScan = new File(path);
+		File[] listOfFiles = folderToScan.listFiles();
+
+		//Checking file with exported particles
+		for (int i = 0; i < listOfFiles.length; i++)
+		{
+			if (listOfFiles[i].isFile())
+			{
+				particlesfile = listOfFiles[i].getName();
+				if (particlesfile.endsWith("extract_list.xmd"))
+					return Filename.join(path, particlesfile);
+			}
+		}
+		return null;
 	}
 
 	public abstract String getImportMicrographName(String path, String filename, Format f);
@@ -253,12 +280,12 @@ public abstract class ParticlePicker
 		{
 			public String commandExecuting(String command)
 			{
-				
-				if(IJ.getInstance() != null && !Arrays.asList(commonfilters).contains(command) && !isRegisteredFilter(command))
+
+				if (IJ.getInstance() != null && !Arrays.asList(commonfilters).contains(command) && !isRegisteredFilter(command))
 				{
 					String msg = String.format("Would you like to add filter: %s to preprocess micrographs?", command);
 					int result = JOptionPane.showConfirmDialog(null, msg);
-					if(result != JOptionPane.YES_OPTION)
+					if (result != JOptionPane.YES_OPTION)
 						return command;
 				}
 				ParticlePicker.this.command = command;
@@ -292,8 +319,8 @@ public abstract class ParticlePicker
 
 	protected boolean isRegisteredFilter(String command2)
 	{
-		for(IJCommand f: filters)
-			if(f.getCommand().equals(command))
+		for (IJCommand f : filters)
+			if (f.getCommand().equals(command))
 				return true;
 		return false;
 	}
@@ -305,7 +332,7 @@ public abstract class ParticlePicker
 			String options = "";
 			if (Recorder.getCommandOptions() != null)
 				options = Recorder.getCommandOptions();
-			
+
 			if (!isFilterSelected(command))
 				addFilter(command, options);
 			else if (!(options == null || options.equals("")))
@@ -388,7 +415,6 @@ public abstract class ParticlePicker
 		return getMicrographs().indexOf(getMicrograph());
 	}
 
-
 	public String getTemplatesFile(String name)
 	{
 		return getOutputPath(name + "_templates.stk");
@@ -416,7 +442,6 @@ public abstract class ParticlePicker
 	}// function saveData
 
 	public abstract void saveData(Micrograph m);
-
 
 	public Micrograph getMicrograph(String name)
 	{
