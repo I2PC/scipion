@@ -101,7 +101,7 @@ class XmippProtCL2DAlign(ProtAlign, XmippProtocol):
         lastMdFn = self._getExtraPath("images.xmd")
         
         imgs = XmippSetOfParticles(lastMdFn)
-        imgs.setAligment(True)
+        imgs.setAlignment(True)
         self._defineOutputs(outputParticles=imgs)
 
     def validate(self):
