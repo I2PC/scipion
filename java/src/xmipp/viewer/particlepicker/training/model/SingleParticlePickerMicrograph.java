@@ -197,8 +197,11 @@ public class SingleParticlePickerMicrograph extends Micrograph
 		if (state == MicrographState.Available && !imported)
 			throw new IllegalArgumentException(String.format("Invalid state %s on micrograph %s for adding automatic particles", state, getName()));
 		autoparticles.add(p);
-		if (state == MicrographState.Available)
+		if (state == MicrographState.Available )
 			state = MicrographState.Auto;
+		if (state == MicrographState.Manual && imported)
+			state = MicrographState.Review;
+		
 
 	}
 
