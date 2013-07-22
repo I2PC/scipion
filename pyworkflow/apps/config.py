@@ -278,8 +278,6 @@ def addProtocols(settings):
     # ------------------- 3D ----------------------------
     m1 = menu.addSubMenu('3D', tag='section')
     
-    m1.addSubMenu('Initial volume', value='ProtInitialVolume',
-                  tag = 'protocol_base')
     m1.addSubMenu('Refine', value='ProtRefine3D',
                   tag = 'protocol_base')
     m1.addSubMenu('Classify', value='ProtClassify3D',

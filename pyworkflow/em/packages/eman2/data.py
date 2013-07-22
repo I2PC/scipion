@@ -28,10 +28,11 @@ This modules contains basic hierarchy
 for specific EMAN2 EM data objects
 """
 
-from pyworkflow.em import * 
+from pyworkflow.em import *
 from pyworkflow.utils.path import replaceBaseExt, exists
 from glob import glob
 import os
+import json
             
 class EmanCoordinate(Coordinate):
     """This class holds the (x,y) position and other information
@@ -75,40 +76,40 @@ class EmanSetOfCoordinates(SetOfCoordinates):
     EMAN coordinates are taken from top left"""
     def __init__(self, filename=None, **args):
         # Use object value to store filename
-        # Here filename is the path where pos filePaths can be found
+        # Here filename is the path to a json file where coordinates (on json format) are linked to micrographs ids
         SetOfCoordinates.__init__(self, value=filename, **args)
+        emanJson = EmanJson(self.getFileName())
+        self.jsonDict = emanJson.loadJsonFile()
         
     def getFileName(self):
-        return self.get()   
-    
+        return self.get()  
+      
     def getSize(self):
         """ Return the number of coordinates on the set """
-        from glob import glob
-        size = 0
-        boxDir = glob(join(self.getFileName(), '*.box'))
-        for boxFn in boxDir:
-            size += sum(1 for line in open(boxFn))
-        return size      
+        pass     
         
     def iterMicrographCoordinates(self, micrograph):
         """ Iterates over the set of coordinates belonging to that micrograph. """
-        path = self.getFileName()
-        pathBox = join(path, replaceBaseExt(micrograph.getFileName(), 'box'))
-        if exists(pathBox):
-            boxFile =  open (pathBox,"r")
-            for line in boxFile:
-                if len(line.strip()) > 0:
-                    parts = line.strip().split()
-                    x = parts[0]
-                    y = parts[1]
-                    coordinate = EmanCoordinate()
-                    coordinate.setMicrograph(micrograph)
-                    coordinate.setPosition(x, y)
-                    coordinate.setBoxSize(self.boxSize.get())
-                    yield coordinate
-                else:
-                    pass
-            boxFile.close()
+        yield self.jsonDict.get(micrograph.getId)
+        
+        
+        
+#        pathBox = join(path, replaceBaseExt(micrograph.getFileName(), 'box'))
+#        if exists(pathBox):
+#            boxFile =  open (pathBox,"r")
+#            for line in boxFile:
+#                if len(line.strip()) > 0:
+#                    parts = line.strip().split()
+#                    x = parts[0]
+#                    y = parts[1]
+#                    coordinate = EmanCoordinate()
+#                    coordinate.setMicrograph(micrograph)
+#                    coordinate.setPosition(x, y)
+#                    coordinate.setBoxSize(self.boxSize.get())
+#                    yield coordinate
+#                else:
+#                    pass
+#            boxFile.close()
         
     def iterCoordinates(self):
         """ Iterates over the whole set of coordinates.
@@ -120,12 +121,7 @@ class EmanSetOfCoordinates(SetOfCoordinates):
                 yield coord
 
     def getFiles(self):
-        filePaths = set()
-        path = self.getFileName()
-        for mic in self.getMicrographs():            
-            filePath = join(path, replaceBaseExt(mic.getFileName(), 'box'))
-            filePaths.add(filePath)
-        return filePaths
+        return self.jsonDict.values() 
     
     def hasTiltPairs(self):
         """Returns True if the SetOfMicrographs has tilted pairs"""
@@ -139,43 +135,13 @@ class EmanImage(Image):
     
 class EmanSetOfImages(SetOfImages):
     """Represents a set of Images for Eman"""
-    BDB_FORMAT = 'bdb'
-    HDF_FORMAT = 'hdf'
-    SPI_FORMAT = 'spi'
-    IMG_FORMAT = 'img'
-    
-    _format = BDB_FORMAT
-
-    def load(self):
-        """ Load extra data from bdb. """
-        if self.getFileName() is None:
-            raise Exception("Set filename before calling load()")
-        
-        os.chdir(os.path.join(os.getcwd(), self.getFileName()))
-        self._format = str(EmanDbd.getEmanParamValue('format'))
-        os.chdir(os.getcwd())
-        
-    def loadIfEmpty(self):
-        """ Load format only if None. """
-        if self._format is None:
-            self.load()
-                
+               
     def __init__(self, filename=None, **args):
         SetOfImages.__init__(self, filename, **args)
-        self._format = args.get('format')
   
     def __iter__(self):
         """ Iterate over the set of images. """
-        self.loadIfEmpty()
-        if self._format == self.BDB_FORMAT:
-            # TODO: Find out how to iterate over images on bdb
-            pass
-        else:
-            imgPaths = glob('*_ptcls.*')
-            if len(imgPaths) == 0:
-                raise Exception('There are not particles.')
-            for imgFn in imgPaths:
-                yield EmanImage(imgFn)
+        pass
 
 
 class EmanSetOfMicrographs(EmanSetOfImages, SetOfMicrographs):
@@ -192,24 +158,21 @@ class EmanSetOfParticles(EmanSetOfImages, SetOfParticles):
         SetOfParticles.__init__(self, filename, **args)
 
 
+class EmanJson():
+    """ Utility class to access the Eman Json files """
+    def __init__(self, filename=None, **args):
+        if filename is not None:
+            self.jsonFn = filename
+        else:
+            raise Exception("Json file name is empty")
     
-class EmanDbd():
-    """ Utility class to access the Eman dbd database """
-
-    @staticmethod    
-    def getEmanParamValue(paramName):
-        """ Recover a parameter value from EMAN Berkeley data base. """        
-        command = "e2bdb.py -D bdb:emboxerbase"
-        pipe = os.popen(command)
-        stOutput = pipe.readlines()
-        pipe.close()
-        auxValue = None
-        for line in stOutput:
-            if (paramName in line):
-                auxValue = line.split(" : ")[1]
-        if auxValue is None:
-            raise Exception("Error getting the stored paramter with command: " + command) 
-        return auxValue
+    def loadJsonFile(self):
+        """ This function loads the Json dictionary into memory """
+        jsonFile = open(self.jsonFn)
+        jsonDict = json.load(jsonFile)
+        jsonFile.close()
+        return jsonDict
+        
 
 
 class EmanVolume(Image):
@@ -226,11 +189,29 @@ class EmanSetOfVolumes(EmanSetOfImages, SetOfVolumes):
         EmanSetOfImages.__init__(self, filename, **args)
 
     
-def getBoxSize():
-    """Method to read boxsize from EMANDB"""
-    from EMAN2db import db_open_dict,db_check_dict,db_close_dict
-
-    EMBOXERBASE_DB = "bdb:emboxerbase"
-    db = db_open_dict(EMBOXERBASE_DB)
-    boxsize = db.get("box_size",dfl=128)
-    return boxsize
+#class EmanDbd():
+#    """ Utility class to access the Eman dbd database """
+#
+#    @staticmethod    
+#    def getEmanParamValue(paramName):
+#        """ Recover a parameter value from EMAN Berkeley data base. """        
+#        command = "e2bdb.py -D bdb:emboxerbase"
+#        pipe = os.popen(command)
+#        stOutput = pipe.readlines()
+#        pipe.close()
+#        auxValue = None
+#        for line in stOutput:
+#            if (paramName in line):
+#                auxValue = line.split(" : ")[1]
+#        if auxValue is None:
+#            raise Exception("Error getting the stored paramter with command: " + command) 
+#        return auxValue
+#    
+#def getBoxSize():
+#    """Method to read boxsize from EMANDB"""
+#    from EMAN2db import db_open_dict,db_check_dict,db_close_dict
+#
+#    EMBOXERBASE_DB = "bdb:emboxerbase"
+#    db = db_open_dict(EMBOXERBASE_DB)
+#    boxsize = db.get("box_size",dfl=128)
+#    return boxsize

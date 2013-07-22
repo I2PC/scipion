@@ -72,7 +72,7 @@ class XmippViewer(Viewer):
             runShowJ(mics.getFileName(), extraParams=extra)  
         
         elif issubclass(cls, XmippSetOfCoordinates):
-            runParticlePicker(obj.getMicrographs().getFileName(), obj.getFileName(), extraParams='readonly')
+            runParticlePicker(obj.getMicrographs().getFileName(), os.path.dirname(obj.getFileName()), extraParams='readonly')
         
         elif issubclass(cls, SetOfImages):
             fn = self._getTmpPath(obj.getName() + '_images.xmd')
