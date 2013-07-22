@@ -82,12 +82,12 @@ public class RotSpectraGalleryTableModel extends MetadataGalleryTableModel {
 		MetaData mdVectors = new MetaData(filenameVectors);
 
 		long id = mdClasses.firstObject();
-		cols = mdClasses.getValueInt(MDLabel.MDL_XSIZE, id);
-		rows = mdClasses.getValueInt(MDLabel.MDL_YSIZE, id);
+		cols = (int)mdClasses.getValueLong(MDLabel.MDL_XSIZE, id);
+		rows = (int)mdClasses.getValueLong(MDLabel.MDL_YSIZE, id);
 		int nvectors = cols * rows;
 
 		id = mdVectors.firstObject();
-		vectorsSize = mdVectors.getValueInt(
+		vectorsSize = (int)mdVectors.getValueLong(
 				MDLabel.MDL_CLASSIFICATION_DATA_SIZE, id);
 
 		double vectors[][] = loadVectors(filenameData, nvectors, vectorsSize);
