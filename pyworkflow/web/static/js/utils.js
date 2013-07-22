@@ -60,9 +60,10 @@ function launchToolbar(projName, id, elm) {
 	var aux = "javascript:alert('Not implemented yet')";
 	$("a#browseTool").attr('href', aux);
 
+	fillTabsSummary(projName, id);
+
 	row.show(); // Show toolbar
 
-	fillTabsSummary(projName, id);
 }
 
 function fillTabsSummary(projName, id) {
@@ -82,9 +83,9 @@ function fillTabsSummary(projName, id) {
 				+ id,
 		dataType : "json",
 		success : function(json) {
-			$("#tab2").empty();
+			$("#tab-summary").empty();
 			for ( var i = 0; i < json.length; i++) {
-				$("#tab2").append('<p>' + json[i] + '</p>');
+				$("#tab-summary").append('<p>' + json[i] + '</p>');
 			}
 		}
 	});
@@ -190,25 +191,6 @@ function selTableMessi(elm) {
 	}
 	row.attr('value', id);
 	elm.attr('style', 'background-color: LightSteelBlue;');
-}
-
-function switchGraph() {
-	var status = $("div#graphActiv").attr("data-mode");
-	if (status == 'inactive') {
-		$("div#graphActiv").attr("data-mode", "active");
-		$("div#graphActiv").attr("style", "");
-		$("div#runTable").attr("data-mode", "inactive");
-		$("div#runTable").attr("style", "display:none;");
-	} else if (status == 'active') {
-		$("div#runTable").attr("data-mode", "active");
-		$("div#runTable").attr("style", "");
-		$("div#graphActiv").attr("data-mode", "inactive");
-		$("div#graphActiv").attr("style", "display:none;");
-	}
-	if ($("div#graphActiv").attr("data-time") == 'first') {
-		callPaintGraph();
-		$("div#graphActiv").attr("data-time", "not");
-	}
 }
 
 /*
@@ -328,9 +310,20 @@ function callPaintGraph() {
 					connectNodes(source, target);
 				}
 			}
+			// If you choose first a element in the table, the
+			// equivalent node
+			// must be flashlighted in the graph
+			if ($("tr.selected").attr("id") != undefined) {
+				var selected = "graph_" + $("tr.selected").attr("id");
+				$("div#graphActiv").attr("data-option", selected);
+				var elm = $("div#" + selected + ".window");
+				var aux = elm.attr("style");
+				aux += "border:2.5px solid Firebrick;"
+				elm.attr("style", aux);
+			}
+
 		}
 	});
-
 	jsPlumb.draggable($(".window"));
 }
 
@@ -351,16 +344,101 @@ function paintBox(nodeSource, id, msg) {
 	}
 
 	nodeSource.append(aux);
+
+	var oldSelect = $("div#graphActiv").attr("data-option");
+}
+
+function switchGraph() {
+	var status = $("div#graphActiv").attr("data-mode");
+	// Graph will be painted once
+	if ($("div#graphActiv").attr("data-time") == 'first') {
+		if (status == 'inactive') {
+			// Graph ON
+			$("div#graphActiv").attr("data-mode", "active");
+			$("div#graphActiv").attr("style", "");
+			// Table OFF
+			$("div#runTable").attr("data-mode", "inactive");
+			$("div#runTable").attr("style", "display:none;");
+		} else if (status == 'active') {
+			// Table ON
+			$("div#runTable").attr("data-mode", "active");
+			$("div#runTable").attr("style", "");
+			// Graph OFF
+			$("div#graphActiv").attr("data-mode", "inactive");
+			$("div#graphActiv").attr("style", "display:none;");
+		}
+		callPaintGraph();
+		$("div#graphActiv").attr("data-time", "not");
+	} else {
+		if (status == 'inactive') {
+			// Graph ON
+			$("div#graphActiv").attr("data-mode", "active");
+			$("div#graphActiv").attr("style", "");
+			// Table OFF
+			$("div#runTable").attr("data-mode", "inactive");
+			$("div#runTable").attr("style", "display:none;");
+
+			// getElement in table
+			var s = $("tr.selected").attr("id");
+			s = "graph_" + s;
+			
+			var nodeClear = $("div#graphActiv").attr("data-option");
+			if(nodeClear!= s){
+				//Clear the node selected
+				var elmClear = $("div#" + nodeClear + ".window");
+				var style = elmClear.attr("style");
+				style = style.replace("border:2.5px solid Firebrick;","");
+				elmClear.attr("style",style);
+				
+				// setElement in graph
+				$("div#graphActiv").attr("data-option", s);
+
+				// Highlight the node
+				var elm = $("div#" + s + ".window");
+				var style = elm.attr("style");
+				style += "border:2.5px solid Firebrick;";
+				elm.attr("style", style);
+			}
+			
+		} else if (status == 'active') {
+			// Table ON
+			$("div#runTable").attr("data-mode", "active");
+			$("div#runTable").attr("style", "");
+			// Graph OFF
+			$("div#graphActiv").attr("data-mode", "inactive");
+			$("div#graphActiv").attr("style", "display:none;");
+
+			// getElement in graph
+			var s = $("div#graphActiv").attr("data-option");
+			var s = s.replace("graph_","");
+			
+			var rowClear = $("tr.selected").attr("id");
+			if(rowClear != s){
+				//Clear the row selected
+				var elmClear = $("tr.selected");
+				elmClear.attr("style","background-color: #fafafa;");
+				elmClear.attr("class", "runtr");
+				
+				// setElement in table
+				var elm = $("tr#"+s+".runtr");
+				var projName = $("div#graphActiv").attr("data-project");
+//				elm.attr("style", "background-color: LightSteelBlue;");
+//				elm.attr("class","selected");
+				launchToolbar(projName, s, elm);
+			}
+		}
+	}
 }
 
 function updateTabs(projName, id, elm) {
 	var oldSelect = $("div#graphActiv").attr("data-option");
-	
+
 	if (oldSelect != "") {
-		var aux = "div#"+oldSelect+".window";
+		var aux = "div#" + oldSelect + ".window";
 		aux = $(aux).attr("style");
-		aux = aux.replace("border:2.5px solid Firebrick;", "border: 1px solid black;");
-		$("#"+oldSelect).attr("style", aux);
+		aux = aux.replace("border:2.5px solid Firebrick;",
+				"");
+		$("#" + oldSelect).attr("style", aux);
 	}
 	var selected = "graph_" + id;
 	$("div#graphActiv").attr("data-option", selected);

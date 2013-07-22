@@ -4,8 +4,13 @@ html,body {
 }
 
 body {
-	/* border: 1px solid black;*/
-	
+	/* border: 1px solid black;*/	
+}
+
+#tabs{
+		font-family: "Trebuchet MS", "Helvetica", "Arial", "Verdana",
+		"sans-serif";
+	font-size: 80%;
 }
 
 input {
