@@ -28,40 +28,24 @@ This module implement some wizards
 """
 
 import os
+import Tkinter as tk
 from pyworkflow.em.viewer import Viewer, Wizard
 from pyworkflow.em import SetOfImages, SetOfMicrographs, DefCTFMicrographs
+from protocol_projmatch import XmippDefProjMatch
 import pyworkflow.gui.dialog as dialog
+from pyworkflow.gui.tree import BoundTree
 import xmipp
 
-class XmippDialogPreview(dialog.Dialog):
-    """ This will be the base class for several wizards.
-    The layout of this wizard will be:
-    1. Left panel(Items) that contains a list of items to preview
-    2. Right-top panel (Preview) where some preview of the items will be displayed
-    3. Right-bottom panel (Controls) where some controls can change the preview
-    """
-    def __init__(self, parent, **args):
-        Viewer.__init__(self)
-        dialog.Dialog.__init__(self, parent, **args) 
 
-    def body(self, bodyFrame):
-        #bodyFrame.config(bg='white')
-        frame = tk.Frame(bodyFrame, bg='white')
-        frame.grid(row=0, column=0, padx=20, pady=20)
-        label = tk.Label(bodyFrame, text=self.entryLabel, bg='white', bd=0)
-        label.grid(row=0, column=0, sticky='nw', padx=(15, 10), pady=15)
-        self.entry = tk.Entry(bodyFrame, bg=gui.cfgEntryBgColor, width=self.entryWidth)
-        self.entry.grid(row=0, column=1, sticky='new', padx=(0,15), pady=15)
-        self.initial_focus = self.entry
+class XmippWizardDownsample(Wizard):
+    _targets = [(DefCTFMicrographs, ['lowRes', 'highRes'])]
         
-    def apply(self):
-        self.value = self.entry.get()
-        
-    def validate(self):
-        if len(self.entry.get().strip()) == 0:
-            showError("Validation error", "Value is empty", self)
-            return False
-        return True
+    def show(self, form):
+        protocol = form.protocol
+        if not protocol.inputMicrographs.hasValue():
+            dialog.showWarning("Input micrographs", "Select some micrographs first", form.root)
+        else:
+            dialog.showWarning("Micrographs", "OK", form.root)    
     
 class XmippWizardCTF(Wizard):
     """ Wrapper to visualize different type of objects
@@ -75,3 +59,99 @@ class XmippWizardCTF(Wizard):
             dialog.showWarning("Input micrographs", "Select some micrographs first", form.root)
         else:
             dialog.showWarning("Micrographs", "OK", form.root)
+            
+            
+class XmippWizardMaskRadius(Wizard):
+
+    _targets = [(XmippDefProjMatch, ['maskRadius'])]
+        
+    def show(self, form):
+        protocol = form.protocol
+        dialog.showWarning("Mask radius", "Not yet implemented the wizard to select mask radius", form.root)
+        
+        
+class XmippWizardRadii(Wizard):
+    
+    _targets = [(XmippDefProjMatch, ['innerRadius', 'outerRadius'])]
+    
+    def show(self, form):
+        protocol = form.protocol
+        dialog.showWarning("Correlation radii", "Not yet implemented the wizard to select radii", form.root)    
+    
+    
+
+#--------------- Dialogs used by Wizards --------------------------
+
+class XmippPreviewDialog(dialog.Dialog):
+    """ This will be the base class for several wizards.
+    The layout of this wizard will be:
+    1. Left panel(Items) that contains a list of items to preview
+    2. Right-top panel (Preview) where some preview of the items will be displayed
+    3. Right-bottom panel (Controls) where some controls can change the preview
+    """
+    def __init__(self, parent, provider, **args):
+        """ 
+        Params:
+            parent: parent windows of the dialog.
+            provider: the TreeProvider to populate items tree.
+        """
+        dialog.Dialog.__init__(self, parent, **args)
+        self.provider = provider
+
+    def body(self, bodyFrame):
+        # Create items frame
+        itemsFrame = tk.Frame(bodyFrame, bg='white')
+        itemsFrame.grid(row=0, column=0, padx=5, pady=5, rowspan=2)
+        itemsFrame.columnconfigure(0, weight=1)
+        itemsFrame.rowconfigure(0, weight=1)
+        itemsTree = BoundTree(itemsFrame, self.provider)
+        itemsTree.grid(row=0, column=0, padx=5, pady=5, sticky='news')
+        
+        # Create preview frame
+        previewFrame = tk.Frame(bodyFrame)
+        previewFrame.grid(row=0, column=1, padx=5, pady=5)
+        self._createPreview(previewFrame)
+        
+        # Create controls frame
+        controlsFrame = tk.Frame(bodyFrame)
+        controlsFrame.grid(row=1, column=1, padx=5, pady=5)
+        self._createControls(controlsFrame)
+    
+    def _createPreview(self, frame):
+        """ Should be implemented by subclasses to 
+        create the items preview. 
+        """
+        pass
+    
+    def _createControls(self, frame):
+        """ Create controls to be used. """
+        pass
+    
+    def _itemSelected(self, obj):
+        """ This will be call when an item in the tree is selected. """
+        pass
+        
+    
+
+class XmippDownsamplingDialog(XmippPreviewDialog):
+    
+    def _createPreview(self, frame):
+        """ Should be implemented by subclasses to 
+        create the items preview. 
+        """
+        from protlib_gui_figure import ImagePreview
+        dim = 128
+        label = 'kk'
+        self.preview = ImagePreview(frame, dim, label=label)
+        
+    def _itemSelected(self, obj):
+        filename = obj.getFileName()
+        
+        self.image = xmipp.Image()        
+        self.image.readPreview(filename, self.dim)
+        if filename.endswith('.psd'):
+            self.image.convertPSD()
+        Z = self.image.getData()
+        self.preview.updateData(Z)
+        
+    
