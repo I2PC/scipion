@@ -34,6 +34,7 @@ if "SCIPION_HOME" not in os.environ:
     raise Exception("SCIPION_HOME is not defined as environment variable")
 
 SCIPION_HOME = os.environ["SCIPION_HOME"]
+PYTHON = os.environ.get("SCIPION_PYTHON", 'python')
 
 PROJECTS = os.path.join(SCIPION_HOME, 'projects')
 SETTINGS = os.path.join(SCIPION_HOME, 'settings.sqlite')
