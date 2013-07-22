@@ -32,7 +32,6 @@ This sub-package contains the XmippProtExtractParticles protocol
 from pyworkflow.em import * 
 from data import *
 from pyworkflow.utils.path import makePath, removeBaseExt, join, exists
-from protlib_particles import runNormalize
 from xmipp3 import XmippProtocol
 from glob import glob
 import xmipp
@@ -160,19 +159,20 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 
         # For each micrograph insert the steps
         for mic in self.inputMics:
-            fn = mic.getFileName()
-            micrographToExtract = fn
-                    
+            micrographToExtract = mic.getFileName()
+            micName = removeBaseExt(mic.getFileName())
+            micId = mic.getId()
+                                
             # If downsample type is 'other' perform a downsample
             if self.downsampleType == self.OTHER:
-                fnDownsampled = self._getTmpPath(removeBaseExt(fn)+"_downsampled.xmp")
+                fnDownsampled = self._getTmpPath(micName+"_downsampled.xmp")
                 downFactor = self.downFactor.get()
                 args = "-i %(micrographToExtract)s -o %(fnDownsampled)s --step %(downFactor)f --method fourier"
                 self._insertRunJobStep("xmipp_transform_downsample", args % locals())
                 micrographToExtract = fnDownsampled
             # If remove dust 
             if self.doRemoveDust:
-                fnNoDust = self._getTmpPath(removeBaseExt(fn)+"_noDust.xmp")
+                fnNoDust = self._getTmpPath(micName+"_noDust.xmp")
                 
                 thresholdDust = self.thresholdDust.get() #TODO: remove this extra variable
                 args=" -i %(micrographToExtract)s -o %(fnNoDust)s --bad_pixels outliers %(thresholdDust)f"
@@ -180,24 +180,23 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 micrographToExtract = fnNoDust
                 
                         
-            self._insertFunctionStep('getCTF', fn, micrographToExtract)
+            self._insertFunctionStep('getCTF', micId, micName, micrographToExtract)
                            
             # Actually extract
-            self._insertFunctionStep('extractParticles', fn, micrographToExtract)
+            self._insertFunctionStep('extractParticles', micId, micName, micrographToExtract)
                 
         # TODO: Delete temporary files
                         
-        # Insert step to create output objects  
-        
+        # Insert step to create output objects       
         self._insertFunctionStep('createOutput')
         
-    def getCTF(self, fn, micrographToExtract):
+    def getCTF(self, micId, micName, micrographToExtract):
         """ Get CTFModel and flip if selected """
-        fnCTF = self._getCTFModel(fn)
+        fnCTF = self._getCTFModel(micId)
              
         if fnCTF is not None:               
             if self.doFlip:
-                fnFlipped = self._getTmpPath(removeBaseExt(fn)+"_flipped.xmp")
+                fnFlipped = self._getTmpPath(micName +"_flipped.xmp")
 #                    fnCTFTmp = self._getTmpPath("tmp.ctfParam")
 #                    xmippCTF = XmippCTFModel.convertCTFModel(mic.getCTF(), fnCTFTmp)
 #                    fnCTF = xmippCTF.getFileName()
@@ -212,23 +211,44 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 
         self.fnCTF = fnCTF
 
+ 
+    def _getCTFModel(self, micId):
+        """ 
+        Check if micrograph associated to coordinate has CTF and 
+        if so return the model 
+        """
+        # Find the associated micrograph from the set of coordinates
+        mics = self.inputCoords.getMicrographs()
+#        for mic in mics:
+#            if removeBaseExt(mic.getFileName()) == removeBaseExt(micFn):
+#                micInput = mic 
+#                break
+            
+        micInput = mics[micId]
         
-    def extractParticles(self, micName, micrographToExtract):
+        # Check if it has CTF and if so return the model
+        fnCTF = None
+        if micInput.hasCTF():
+            micCTF = micInput.getCTF()
+            xmippCTF = XmippCTFModel.convert(micCTF, self._getTmpPath("tmp.ctfParam"))
+            fnCTF = xmippCTF.getFileName()
+
+        return fnCTF
+        
+    def extractParticles(self, micId, micName, micrographToExtract):
         """ Extract particles from one micrograph """
-        # Extract 
-        #micName = mic.getFileName()
+        #If flip selected and exists CTF model use the flip output
         if self.doFlip and self.fnCTF:
-            micrographToExtract = self._getTmpPath(removeBaseExt(micName)+"_flipped.xmp")
+            micrographToExtract = self._getTmpPath(micName +"_flipped.xmp")
                 
-        outputRoot = str(self._getExtraPath(removeBaseExt(micName)))
+        outputRoot = str(self._getExtraPath(micName))
         
-        fnPosFile = self._getExtraPath(removeBaseExt(micName) + '.pos')
-        # If it has coordinates extract the particles
-        if self._createPosFile(micName, fnPosFile):
-            posMetadata = removeBaseExt(micName) + "@" + fnPosFile
-           
+        fnPosFile = self._getExtraPath(micName + '.pos')
+        
+        # If it has coordinates extract the particles      
+        if self._createPosFile(micId, fnPosFile):
             boxSize = self.boxSize.get()
-            args = "-i %(micrographToExtract)s --pos %(posMetadata)s -o %(outputRoot)s --Xdim %(boxSize)d" % locals()
+            args = "-i %(micrographToExtract)s --pos %(fnPosFile)s -o %(outputRoot)s --Xdim %(boxSize)d" % locals()
             if self.downsampleType.get() != self.SAME_AS_PICKING:
                 args += " --downsampling " + str(self.samplingFinal/self.samplingInput)
             if self.doInvert:
@@ -237,9 +257,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             self.runJob(None,"xmipp_micrograph_scissor", args)
             # Normalize 
             if self.doNormalize:
+                from protlib_particles import runNormalize
                 runNormalize(None, outputRoot + '.stk',self.normType.get(), self.backRadius.get(), 1)          
-                           
-            #WHY THIS?????        
+                               
             if (self.downsampleType.get() == self.OTHER) or (self.fnCTF is not None):
                 selfile = outputRoot + ".xmd"
                 md = xmipp.MetaData(selfile)
@@ -252,47 +272,27 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                     md.setValueCol(xmipp.MDL_CTF_MODEL, self.fnCTF)
                 md.write(selfile)
         
- 
-    def _getCTFModel(self, micFn):
-        """ 
-        Check if a original micrograph has CTF and 
-        if so return the model 
-        """
-        # Find the associated micrograph from the set of coordinates
-        #TODO: This needs to be changed once the object ids on sets are implemented ok
-        mics = self.inputCoords.getMicrographs()
-        for mic in mics:
-            if removeBaseExt(mic.getFileName()) == removeBaseExt(micFn):
-                micInput = mic 
-                break
-        
-        # Check if it has CTF and if so return the model
-        fnCTF = None
-        if micInput.hasCTF():
-            micCTF = micInput.getCTF()
-            xmippCTF = XmippCTFModel.convert(micCTF, self._getTmpPath("tmp.ctfParam"))
-            fnCTF = xmippCTF.getFileName()
-
-        return fnCTF
-                        
             
-    def _createPosFile(self, micName, fnPosFile):
+    def _createPosFile(self, micId, fnPosFile):
         """ Create xmipp metadata extract_list with the coordinates for a micrograph """
-        micName = removeBaseExt(micName)
-        mdExtractList = xmipp.MetaData()
-        mic = XmippMicrograph(micName)
+
+        mdPosFile = xmipp.MetaData()
+        #mic = XmippMicrograph(micName)
+        mic = self.inputCoords.getMicrographs()[micId]
         #Iterate over the coordinates on that micrograph
         hasCoords = False
         for coord in self.inputCoords.iterMicrographCoordinates(mic):
-            x, y = coord.getPosition(Coordinate.POS_CENTER)    
-            coorId = mdExtractList.addObject()
-            mdExtractList.setValue(xmipp.MDL_XCOOR, int(x), coorId)
-            mdExtractList.setValue(xmipp.MDL_YCOOR, int(y), coorId)
+            x, y = coord.getPosition(Coordinate.POS_CENTER)
+            coorId = mdPosFile.addObject()
+            mdPosFile.setValue(xmipp.MDL_XCOOR, int(x), coorId)
+            mdPosFile.setValue(xmipp.MDL_YCOOR, int(y), coorId)
+            mdPosFile.setValue(xmipp.MDL_ITEM_ID, coord.getId(), coorId)
             hasCoords = True
                                 
         # Write block only if there are coordinates for this micrograph       
         if hasCoords:
-            mdExtractList.write(micName + "@%s" % fnPosFile, xmipp.MD_OVERWRITE)        
+            #mdPosFile.write(micName + "@%s" % fnPosFile, xmipp.MD_OVERWRITE)        
+            mdPosFile.write(fnPosFile)
         
         return hasCoords
             
@@ -313,12 +313,19 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         if self.downsampleType == self.OTHER:
             imgSet.samplingRate.set(self.inputMics.samplingRate.get()*self.downFactor.get())
                     
-        stackFiles = glob(join(self._getExtraPath(),"*.stk"))
-        stackFiles.sort()
+        posFiles = glob(join(self._getExtraPath(),"*.pos"))
+        posFiles.sort()
 
-        for stack in stackFiles:
-            fn = stack.replace(".stk",".xmd")
-            imgSet.appendFromMd(xmipp.MetaData(fn))
+        for posFn in posFiles:
+            xmdFn = posFn.replace(".pos",".xmd")
+            md = xmipp.MetaData(xmdFn)
+            mdPos = xmipp.MetaData(posFn)
+            mdPos.merge(md) # take the itemId from the .pos file, asuming same size and order
+            # De momento lo seteo con un numero secuencial
+            #md.setColumnValues(xmipp.MDL_ITEM_ID, range(int(id), int(md.size()+id)))
+            #id += md.size()
+            imgSet.appendFromMd(mdPos)
+   
           
         #imgSet.setMd(imagesMd)
         imgSet.sort() # We need sort?

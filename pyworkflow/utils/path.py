@@ -30,7 +30,7 @@ inside the utils module
 
 import os
 import shutil
-from os.path import exists, join, splitext, isdir, isfile, expanduser, basename, dirname
+from os.path import exists, join, splitext, isdir, isfile, expanduser, basename, dirname, split, relpath
 import pyworkflow as pw
 
 
@@ -139,5 +139,12 @@ def copyTree(source, dest):
 def copyFile(source, dest):
     """ Shortcut to shutil.copy. """
     shutil.copy(source, dest)
+    
+def createLink(source, dest):
+    """ Creates a link to a given file path. """
+    if exists(dest):
+        os.remove(dest)
+    destDir = split(dest)[0]
+    os.symlink(relpath(source,destDir),dest)
 
 

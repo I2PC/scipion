@@ -34,7 +34,7 @@ import shutil
 from pyworkflow.object import String, Float
 from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
-from pyworkflow.em import Micrograph, SetOfMicrographs, TiltedPair, SetOfImages, Image, SetOfParticles
+from pyworkflow.em import Micrograph, SetOfMicrographs, TiltedPair, SetOfImages, Image, SetOfParticles, SetOfVolumes, Volume
 from pyworkflow.utils.path import removeBaseExt, join, basename
 
 
@@ -206,6 +206,76 @@ class ProtImportParticles(Protocol):
     def getFiles(self):
         return self.outputParticles.getFiles()
 
+
+class DefImportVolumes(Form):
+    """Create the definition of parameters for
+    the ImportVolumes protocol
+    """
+    def __init__(self):
+        Form.__init__(self)
+    
+        self.addSection(label='Input')
+        self.addParam('pattern', StringParam, label="Pattern")
+        self.addParam('samplingRate', FloatParam,
+                   label='Sampling rate (A/px)')
+        
+
+class ProtImportVolumes(Protocol):
+    """Protocol to import a set of volumes in the project"""
+    _definition = DefImportVolumes()
+    _label = 'Import volumes'
+    _path = join('Volumes', 'Import')
+    
+    def __init__(self, **args):
+        Protocol.__init__(self, **args)         
+        
+    def _defineSteps(self):
+        self._insertFunctionStep('importVolumes', self.pattern.get(), self.samplingRate.get())
+        
+    def importVolumes(self, pattern, samplingRate):
+        """ Copy volumes matching the filename pattern
+        Register other parameters.
+        """
+        from glob import glob
+        filePaths = glob(pattern)
+        if len(filePaths) == 0:
+            raise Exception('importVolumes:There is not filePaths matching pattern')
+        path = self._getPath('volumes.sqlite')
+        volSet = SetOfVolumes(path)
+        outFiles = [path]
+        
+        filePaths.sort()
+        for i, f in enumerate(filePaths):
+            dst = self._getPath(basename(f))            
+            shutil.copyfile(f, dst)
+            vol_dst = Volume(dst)
+            volSet.append(vol_dst)
+            outFiles.append(dst)    
+        
+        volSet.write()
+        self._defineOutputs(outputVolumes=volSet)
+        
+        return outFiles
+    
+    def getFiles(self):
+        return self.outputVolumes.getFiles()
+
+    def _summary(self):
+        summary = []
+
+        if not hasattr(self, 'outputVolumes'):
+            summary.append("Output volume not ready yet.") 
+        else:
+            summary.append("Import of %d volumes from %s" % (self.outputVolumes.getSize(), self.pattern.get()))
+            summary.append("Sampling rate : %f" % self.samplingRate.get())
+        
+        return summary
+    
+    def _validate(self):
+        validateMsgs = []
+        if self.pattern.get() == "":
+            validateMsgs.append('Pattern cannot be EMPTY.')
+        return validateMsgs
 
 class DefCTFMicrographs(Form):
     """ Create the definition of parameters for
@@ -394,6 +464,9 @@ class ProtClassify(Protocol):
 
 
 class ProtAlignClassify(Protocol):
+    pass
+
+class ProtInitialVolume(Protocol):
     pass
 
 class ProtRefine3D(Protocol):

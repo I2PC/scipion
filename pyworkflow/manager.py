@@ -60,6 +60,7 @@ class Manager(object):
         And some other project info
         If sortByData is True, recently modified projects will be first"""
         projList = []
+        makePath(pw.PROJECTS)
         for f in os.listdir(pw.PROJECTS):
             p = self.getProjectPath(f)
             if os.path.isdir(p):

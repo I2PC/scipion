@@ -261,7 +261,7 @@ class RunIOTreeProvider(TreeProvider):
         actions = []    
         viewers = findViewers(obj.getClassName(), 'tkinter')
         for v in viewers:
-            actions.append(('Open with %s' % v.__name__, lambda o: self.visualize(v, o)))
+            actions.append(('Open with %s' % v.__name__, lambda : self.visualize(v, obj)))
             
 #        if isinstance(obj, SetOfMicrographs):
 #            return [('Open Micrographs with Xmipp', lambda: self.viewer.visualize(obj))]

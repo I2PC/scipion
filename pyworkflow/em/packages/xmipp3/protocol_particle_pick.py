@@ -99,7 +99,22 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         
     def _createSetOfCoordinates(self, size):
         inputMicsXmipp = getattr(self, 'inputMicsXmipp', self.inputMics)
-        coords = XmippSetOfCoordinates(filename=self._getExtraPath())
+        # Create a md with the coordinates files for each micrograph
+        coordId = 0L
+        posMd = xmipp.MetaData()
+        for mic in inputMicsXmipp:
+            micPosFn = self._getExtraPath(replaceBaseExt(mic.getFileName(), 'pos'))
+            micPosMd = xmipp.MetaData(micPosFn)
+            #TODO:  micPosMd.fillLinear
+            for id in micPosMd:
+                coordId += 1
+                micPosMd.setValue(xmipp.MDL_ITEM_ID, coordId, id)
+            posId = posMd.addObject()
+            posMd.setValue(xmipp.MDL_ITEM_ID, mic.getId(), posId)
+            posMd.setValue(xmipp.MDL_MICROGRAPH_PARTICLES, micPosFn, posId)
+        coordsFn = self._getExtraPath('micrographs_coordinates.xmd')
+        posMd.write(coordsFn)  
+        coords = XmippSetOfCoordinates(filename=coordsFn)
         coords.setMicrographs(inputMicsXmipp)
         coords.boxSize.set(size)
         

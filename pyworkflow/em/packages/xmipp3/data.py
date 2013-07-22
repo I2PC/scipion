@@ -204,7 +204,7 @@ class XmippSetOfImages(SetOfImages):
     def __getitem__(self, imgId):
         """ Return an element from the set.
         Params:
-         imgId: the id of the image (in Xmipp case a Filename)
+         imgId: the id of the image
         """
         self.loadIfEmpty()
 #        md  = xmipp.MetaData()
@@ -409,7 +409,7 @@ class XmippSetOfCoordinates(SetOfCoordinates):
     """Implementation of SetOfCoordinates for Xmipp"""
     def __init__(self, filename=None, **args):
         # Use object value to store filename
-        # Here filename is the path where pos filePaths can be found
+        # Here filename is the path to a metadata where pos filePaths are linked to micrographs ids
         SetOfCoordinates.__init__(self, value=filename, **args)
         
     def getFileName(self):
@@ -417,20 +417,15 @@ class XmippSetOfCoordinates(SetOfCoordinates):
     
     def getSize(self):
         """ Return the number of coordinates on the set """
-        from glob import glob
         size = 0
-        posDir = glob(join(self.getFileName(), '*.pos'))
-        for posFn in posDir:
+        for posFn in self.iterPosFile():
             mdPos = xmipp.MetaData('particles@%s' % posFn)
             size += mdPos.size()
         return size      
         
     def iterMicrographCoordinates(self, micrograph):
         """ Iterates over the set of coordinates belonging to that micrograph. """
-        path = self.getFileName()
-        
-        pathMic = micrograph.getFileName()
-        pathPos = join(path, replaceBaseExt(pathMic, 'pos'))
+        pathPos = self.getMicrographPosFile(micrograph.getId())
         
         if exists(pathPos):
             mdPos = xmipp.MetaData('particles@%s' % pathPos)
@@ -438,11 +433,12 @@ class XmippSetOfCoordinates(SetOfCoordinates):
             for i, objId in enumerate(mdPos):
                 x = mdPos.getValue(xmipp.MDL_XCOOR, objId)
                 y = mdPos.getValue(xmipp.MDL_YCOOR, objId)
+                coorId = mdPos.getValue(xmipp.MDL_ITEM_ID, objId)
                 coordinate = XmippCoordinate()
                 coordinate.setPosition(x, y)
                 coordinate.setMicrograph(micrograph)
                 coordinate.setBoxSize(self.boxSize.get())
-                coordinate.setId('%s:%06d' % (pathMic, i+1))
+                coordinate.setId(coorId)        
                 yield coordinate
                 
     def iterCoordinates(self):
@@ -453,14 +449,23 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         for mic in self.getMicrographs():
             for coord in self.iterMicrographCoordinates(mic):
                 yield coord
+                
+    def iterPosFile(self):
+        """ Iterates over the micrographs_coordinates file
+        returning each position file.
+        """
+        micPosMd = xmipp.MetaData(self.getFileName())
+        #FIXME: MDQuery????
+        for objId in micPosMd:
+            yield micPosMd.getValue(xmipp.MDL_MICROGRAPH_PARTICLES, objId)        
+        
     
     def getFiles(self):
         filePaths = set()
-        path = self.getFileName()
-        for mic in self.getMicrographs():   
-            filePath = join(path, replaceBaseExt(mic.getFileName(), 'pos'))            
-            if exists(filePath):         
-                filePaths.add(filePath)
+
+        for posFn in self.iterPosFile():
+            if exists(posFn):         
+                filePaths.add(posFn)
         return filePaths
     
     def hasTiltPairs(self):
@@ -475,6 +480,17 @@ class XmippSetOfCoordinates(SetOfCoordinates):
             for coordU, coordT in zip(self.iterMicrographCoordinates(micU),
                                       self.iterMicrographCoordinates(micT)):
                 yield (coordU.getId(), coordT.getId())
+                     
+                
+    def getMicrographPosFile(self, micId):
+        """ This function will return the pos file corresponding to a micrograph item id"""
+        micPosMd = xmipp.MetaData(self.getFileName())
+        #FIXME: MDQuery????
+        for objId in micPosMd:
+            if micPosMd.getValue(xmipp.MDL_ITEM_ID, objId) == micId:
+                return micPosMd.getValue(xmipp.MDL_MICROGRAPH_PARTICLES, objId)
+            
+        return None
             
 class XmippTiltedPair(XmippMdRow):
     """ Tilted Pairs relations in Xmipp are stored in a MetaData row. """
@@ -559,7 +575,7 @@ class XmippClassification2D(Classification2D):
         md = xmipp.MetaData('%(block)s@%(fn)s' % locals())
         for objId in md:
             ref = md.getValue(xmipp.MDL_REF, objId)
-            img = md.getValue(xmipp.MDL_IMAGE, objId)
+            img = XmippImage(md.getValue(xmipp.MDL_IMAGE, objId))
             yield XmippClass2D(ref, fn, img)
             
     def getClassesMdFileName(self):

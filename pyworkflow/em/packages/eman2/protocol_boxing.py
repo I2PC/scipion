@@ -3,11 +3,11 @@ Created on Apr 12, 2013
 
 @author: antonio
 '''
+import os
 
 from pyworkflow.em import *  
 from pyworkflow.utils import * 
-from pyworkflow.em.packages.eman2.data import *
-import os
+import eman2
 
 class EmanDefParticlePicking(Form):
     """Create the definition of parameters for
@@ -36,9 +36,7 @@ class EmanProtBoxing(ProtParticlePicking):
 
         if not 'EMAN2DIR' in os.environ:
             raise Exception('EMAN2DIR should be defined before running EMAN2 protocols.')
-        EMAN2DIR = os.environ['EMAN2DIR']
-        os.environ['PATH'] += os.pathsep + "%(EMAN2DIR)s/bin" % locals()
-        os.environ['PYTHONPATH'] += os.pathsep + '%(EMAN2DIR)s/lib:%(EMAN2DIR)s/bin:%(EMAN2DIR)s/extlib/site-packages' %locals()
+        eman2.loadEnvironment()
         Protocol._runSteps(self, startIndex)
         
     def _defineSteps(self):
@@ -65,6 +63,7 @@ class EmanProtBoxing(ProtParticlePicking):
         
     def createOutput(self):
         # Get the box size store in Eman db
+        # TODO: REtrieve box size from other place (hdf???)
         self._params['boxSize'] = int(EmanDbd.getEmanParamValue('box_size'))
         if not self.importFolder.hasValue():
             program = "pwd; e2boxer.py"
@@ -73,17 +72,23 @@ class EmanProtBoxing(ProtParticlePicking):
             self.runJob(None, program, arguments % self._params) 
   
         # Create the SetOfCoordinates object on the database 
+        #TODO: Create a json file with pairs micrographId, jsonPosFile and point EmanSetOFCoordinates to it
+
         outputCoordinates = EmanSetOfCoordinates(filename=self.workingDir.get())
         outputCoordinates.setBoxSize(self._params['boxSize'])
         outputCoordinates.setMicrographs(self.inputMicrographs.get())
+        # TODO: Now particlesWritten will come from form paramter and if yes e2boxer will need to be executed again
         particlesWritten = bool(EmanDbd.getEmanParamValue('write_particles'))
+        # TODO: No need to retreive format anymore
         particlesFormat = str(EmanDbd.getEmanParamValue('format'))
         # As we move to workingDir we must leave it. 
         self._leaveWorkingDir()    
         
         self._defineOutputs(outputCoordinates=outputCoordinates) 
         
+        
         if particlesWritten:
+            # TODO: GEnerate lst with e2buildsets or maybe a unique hdf
             print 'siiii tenemos particulas con format %s ' % particlesFormat.strip()
             outputParticles = EmanSetOfParticles(filename=self.workingDir.get(), format=particlesFormat.strip())
             self._defineOutputs(outputParticles=outputParticles) 

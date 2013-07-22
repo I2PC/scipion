@@ -18,7 +18,7 @@ from pyworkflow.apps.pw_project_viewprotocols import STATUS_COLORS
 from pyworkflow.em import *
 from pyworkflow.hosts import HostMapper
 from pyworkflow.tests import getInputPath 
-from forms import HostForm
+from forms import HostForm, VolVisualizationForm
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponse, HttpRequest
 
@@ -471,7 +471,7 @@ def viewHosts(request):
     
     projectName = request.session['projectName']    
     project = loadProject(projectName)
-    projectHosts = project.getHosts()   
+    projectHosts = project.getSettings().getHosts()   
     scpnHostsChoices = []
     scpnHostsChoices.append(('', ''))
 
@@ -556,22 +556,14 @@ def updateHostsConfig(request):
     form = HostForm(request.POST, queueSystemConfCont=request.POST.get('queueSystemConfigCount'), queueConfCont=request.POST.get('queueConfigCount'))  # A form bound to the POST data
     context = {'form': form}
     if form.is_valid():  # All validation rules pass
-        print ("Form is valid")
         projectName = request.session['projectName']
         project = loadProject(projectName)
         hostId = request.POST.get('objId')
         hostsMapper = HostMapper(project.settingsPath)
         hostConfig = hostsMapper.selectById(hostId)
         form.host = hostConfig
-        print ("Recovering host from form")
         host = form.getFormHost()
-        print("A salvar")
-        print (host.toString())
         savedHost = project.saveHost(host)
-        context['message'] = "Project hosts config sucesfully updated"
-        return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request, initialContext=context))) 
-        print("Salvado")
-        print (savedHost.toString())
         form.setFormHost(savedHost)
         return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request, host, context))) 
     else:   
@@ -583,7 +575,7 @@ def deleteHost(request):
     project = loadProject(projectName)
     project.deleteHost(hostId)
 #     context = {'message': "Host succesfully deleted"}
-    return HttpResponseRedirect('/viewHosts')
+    return HttpResponseRedirect('/viewHosts')#, RequestContext(request))
 
 def visualizeObject(request):
     objectId = request.GET.get("objectId")    
@@ -652,11 +644,39 @@ def visualizeObject(request):
 #    return HttpResponseRedirect('/showj', inputParameters)
     
     
-def showVolVisualizer(request):
-    context = {'MEDIA_URL' : settings.MEDIA_URL, 'STATIC_URL' :settings.STATIC_URL}
-    
-    return render_to_response('showVolVisualizer.html', context)   
-    
+def showVolVisualization(request):
+    form = None
+    volLinkPath = None
+    volLink = None
+    chimeraHtml = None
+    if (request.POST.get('operation') == 'visualize'):
+        form = VolVisualizationForm(request.POST, request.FILES)
+        if form.is_valid():
+            volPath = form.cleaned_data['volPath']
+            # Astex viewer            
+            from random import randint
+            linkName = 'test_link_' + str(randint(0, 10000)) + '.map'
+            volLinkPath = os.path.join(pw.HOME, 'web', 'pages', 'resources', 'astex', 'tmp', linkName)
+            from pyworkflow.utils.path import cleanPath, createLink
+            cleanPath(volLinkPath)
+            createLink(volPath, volLinkPath)
+#             os.system("ln -s " + str(volPath) + " " + volLinkPath)
+            volLink = os.path.join('/', 'static', 'astex', 'tmp', linkName)
+            # Chimera 
+            from subprocess import Popen, PIPE, STDOUT
+            p = Popen(['chimera', '--start', 'ReadStdin', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+            outputHtmlFile = '/home/antonio/test.html'
+            threshold = form.cleaned_data['threshold']
+            stdout_data = p.communicate(input='volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop')[0]
+            f = open(outputHtmlFile)
+            chimeraHtml = f.read().decode('string-escape').decode("utf-8").split("</html>")[1]
+    else:
+        form = VolVisualizationForm()
+    context = {'MEDIA_URL' : settings.MEDIA_URL, 'STATIC_URL' :settings.STATIC_URL, 'form': form, 'volLink': volLink, 'chimeraHtml': chimeraHtml}    
+    return render_to_response('showVolVisualization.html',  RequestContext(request, context))   
+
+        
+
 if __name__ == '__main__':
     root = loadProtTree()    
     for s in root.childs:
