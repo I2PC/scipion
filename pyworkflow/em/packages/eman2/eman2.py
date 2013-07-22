@@ -36,3 +36,12 @@ class EmanProtPreprocessMicrographs(ProtPreprocessMicrographs):
     pass
 
 
+def loadEnvironment():
+    """ Load the environment variables needed for use EMAN2 tools. """
+    import os, sys
+    EMAN2DIR = os.environ['EMAN2DIR']
+    os.environ['PATH'] += os.pathsep + "%(EMAN2DIR)s/bin" % locals()
+    pathList = [os.path.join(EMAN2DIR, d) for d in ['lib', 'bin', 'extlib/site-packages']]
+    os.environ['PYTHONPATH'] += os.pathsep.join(pathList)
+    #sys.path += pathList
+    
