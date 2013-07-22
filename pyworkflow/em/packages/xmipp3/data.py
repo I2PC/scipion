@@ -575,7 +575,7 @@ class XmippClassification2D(Classification2D):
         md = xmipp.MetaData('%(block)s@%(fn)s' % locals())
         for objId in md:
             ref = md.getValue(xmipp.MDL_REF, objId)
-            img = md.getValue(xmipp.MDL_IMAGE, objId)
+            img = XmippImage(md.getValue(xmipp.MDL_IMAGE, objId))
             yield XmippClass2D(ref, fn, img)
             
     def getClassesMdFileName(self):
