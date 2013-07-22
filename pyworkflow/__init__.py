@@ -27,7 +27,7 @@
 import os
 import os.path
 
-HOME = os.path.dirname(__file__)
+HOME = os.path.abspath(os.path.dirname(__file__))
 RESOURCES = [os.path.join(HOME, 'resources')]
 
 if "SCIPION_HOME" not in os.environ:

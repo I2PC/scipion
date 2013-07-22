@@ -32,7 +32,7 @@ from pyworkflow.em import *
 from pyworkflow.utils import *  
 import xmipp
 from data import *
-from xmipp3 import XmippProtocol
+import xmipp3
 
 
         
@@ -44,7 +44,7 @@ class XmippDefFilterParticles(DefProcessParticles):
         pass
       
       
-class XmippProtFilter(XmippProtocol, ProtFilterParticles):
+class XmippProtFilter(xmipp3.XmippProtocol, ProtFilterParticles):
     """ Protocol base for Xmipp filters. """
     
     _definition = XmippDefFilterParticles()
@@ -88,32 +88,21 @@ class XmippProtFilter(XmippProtocol, ProtFilterParticles):
         return summary
     
 
-LOW_PASS = 0
-HIGH_PASS = 1
-BAND_PASS = 2
-
-class FreqParam(FloatParam):
-    """ Digital frequency param. """
-    def __init__(self, **args):
-        FloatParam.__init__(self, **args)
-        self.addValidator(Range(0., 0.5, 
-                                error="Digital frequencies should be between 0. and 0.5"))
-
 class XmippDefFourierFilter(XmippDefFilterParticles):
     """ Definition for XmippProtoFourierFilter """
 
     def _addProcessParam(self):
         self.addParam('filterType', EnumParam, choices=['low pass', 'high pass', 'band pass'],
-                      label="Filter type", default=BAND_PASS,
+                      label="Filter type", default=xmipp3.BAND_PASS,
                       display=EnumParam.DISPLAY_COMBO,
                       help='Select what type of Fourier filter do you want to apply.\n'
                            '<low pass>: all frequency components below <High frequency> are preserved.\n'
                            '<high pass>: all frequency components above <Low frequency> are preserved.\n'
                            '<band pass>: all frequency components between <Low frequency> and <High frequency> are preserved.\n')
-        self.addParam('lowFreq', FreqParam, default=0.02, condition='filterType != 0',
+        self.addParam('lowFreq', DigFreqParam, default=0.02, condition='filterType != 0',
                       label='Low Frequency (0 < f < 0.5)',
                       help='Low frequency cuttoff to apply the filter.\n')          
-        self.addParam('highFreq', FreqParam, default=0.35, 
+        self.addParam('highFreq', DigFreqParam, default=0.35, 
                       label='High Frequency (0 < f < 0.5)', condition='filterType != 1',
                       help='High frequency cuttoff to apply the filter.\n'
                            'Set to 0.5 for a <high pass> filter.')          
@@ -135,9 +124,9 @@ class XmippProtFourierFilter(XmippProtFilter):
         freqDecay = self.freqDecay.get()
         outputMd = self.outputMd
         
-        if filterType == LOW_PASS:
+        if filterType == xmipp3.LOW_PASS:
             filterStr = "low_pass %(highFreq)f"
-        elif filterType == HIGH_PASS:
+        elif filterType == xmipp3.HIGH_PASS:
             filterStr = "high_pass %(lowFreq)f"
         else:
             filterStr = "band_pass %(lowFreq)f %(highFreq)f"
