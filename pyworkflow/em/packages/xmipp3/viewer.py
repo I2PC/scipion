@@ -29,8 +29,8 @@ visualization program.
 """
 
 import os
-from pyworkflow.em.viewer import Viewer
-from pyworkflow.em import SetOfImages, SetOfMicrographs
+from pyworkflow.em.viewer import Viewer, Wizard
+from pyworkflow.em import SetOfImages, SetOfMicrographs, DefCTFMicrographs
 from pyworkflow.utils.process import runJob
 from xmipp3 import getXmippPath
 from data import XmippSetOfImages, XmippSetOfMicrographs, XmippClassification2D, XmippSetOfCoordinates, XmippSetOfParticles
@@ -72,7 +72,7 @@ class XmippViewer(Viewer):
             runShowJ(mics.getFileName(), extraParams=extra)  
         
         elif issubclass(cls, XmippSetOfCoordinates):
-            runParticlePicker(obj.getMicrographs().getFileName(), obj.getFileName(), extraParams='readonly')
+            runParticlePicker(obj.getMicrographs().getFileName(), os.path.dirname(obj.getFileName()), extraParams='readonly')
         
         elif issubclass(cls, SetOfImages):
             fn = self._getTmpPath(obj.getName() + '_images.xmd')
@@ -110,7 +110,6 @@ class XmippViewer(Viewer):
         
         else:
             raise Exception('XmippViewer.visualize: can not visualize class: %s' % obj.getClassName())
-
 
 # ------------- Xmipp utilities function to launch Java applications ------------
 

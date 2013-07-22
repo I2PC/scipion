@@ -17,7 +17,7 @@ class EmanDefParticlePicking(Form):
         Form.__init__(self)        
         self.addSection(label='Input')
         self.addParam('inputMicrographs', PointerParam, label="Micrographs", pointerClass='SetOfMicrographs')
-        self.addParam('boxSize', IntParam, label='Box size', validators=[Positive()])
+        self.addParam('boxSize', IntParam, label='Box size', validators=[Positive])
 
 class EmanProtBoxing(ProtParticlePicking):
     
@@ -65,6 +65,7 @@ class EmanProtBoxing(ProtParticlePicking):
         
     def createOutput(self):
         # Get the box size store in Eman db
+        # TODO: REtrieve box size from other place (hdf???)
         self._params['boxSize'] = int(EmanDbd.getEmanParamValue('box_size'))
         if not self.importFolder.hasValue():
             program = "pwd; e2boxer.py"
@@ -73,17 +74,23 @@ class EmanProtBoxing(ProtParticlePicking):
             self.runJob(None, program, arguments % self._params) 
   
         # Create the SetOfCoordinates object on the database 
+        #TODO: Create a json file with pairs micrographId, jsonPosFile and point EmanSetOFCoordinates to it
+
         outputCoordinates = EmanSetOfCoordinates(filename=self.workingDir.get())
         outputCoordinates.setBoxSize(self._params['boxSize'])
         outputCoordinates.setMicrographs(self.inputMicrographs.get())
+        # TODO: Now particlesWritten will come from form paramter and if yes e2boxer will need to be executed again
         particlesWritten = bool(EmanDbd.getEmanParamValue('write_particles'))
+        # TODO: No need to retreive format anymore
         particlesFormat = str(EmanDbd.getEmanParamValue('format'))
         # As we move to workingDir we must leave it. 
         self._leaveWorkingDir()    
         
         self._defineOutputs(outputCoordinates=outputCoordinates) 
         
+        
         if particlesWritten:
+            # TODO: GEnerate lst with e2buildsets or maybe a unique hdf
             print 'siiii tenemos particulas con format %s ' % particlesFormat.strip()
             outputParticles = EmanSetOfParticles(filename=self.workingDir.get(), format=particlesFormat.strip())
             self._defineOutputs(outputParticles=outputParticles) 

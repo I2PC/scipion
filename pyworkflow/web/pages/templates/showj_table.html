@@ -7,6 +7,8 @@
 <script type="text/javascript" src="{{jquerydataTables_colreorder}}"></script>
 <script type="text/javascript" src="{{jeditable}}"></script>
 <script type="text/javascript" src="{{jquery_ui}}"></script>
+<!-- <script type="text/javascript" src="{{jquery_tabletools}}"></script> -->
+
 
 
 <script type="text/javascript">
@@ -14,7 +16,7 @@ var oTable;
 var giRedraw = false;
 
 $(document).ready(function() {
-	initializeSelectionRowEvent()
+	initializeSelectionRowEvent2() 
 	initializeGoToEvent()
 	initializeTableWidth()
 	
@@ -41,9 +43,11 @@ $(document).ready(function() {
 			        "bSort": true,
 			        "bInfo": true,
 			        "bAutoWidth": true,
-			        "sDom": 'Rlfrtip',
-			        "sScrollX": "100%",
-			        "bScrollCollapse": true,
+			        "sDom": 'Rlfrtip', 
+			        /* "sDom": 'T<"clear">lfrtip', */
+			        /*"sScrollX": "100%",
+			        "sScrollXInner": "110%",
+			        "bScrollCollapse": true,*/ 
 			        "oColReorder": {
 		    			"aiOrder": {{metadata.tableLayoutConfiguration.colsOrder}}
 		    		}, 
@@ -79,11 +83,16 @@ $(document).ready(function() {
 			        ] ,
 		            "bJQueryUI": true,
 		    		"sPaginationType": "full_numbers"
+/*  		    		"oTableTools": {
+		    			"sRowSelect": "single",
+		    			"aButtons": [ "select_all", "select_none" ]
+		    		}  */
 					
 			    }		
 			);
 	
-	setTableEditable()
+	/* setTableEditable() */ 
+	
 } );
 
 
@@ -175,11 +184,56 @@ function updateRowSelection(){
     }
 }
 
+var lastChecked;
+function initializeSelectionRowEvent2(){
+	$('#data_table').on("click","tr", function(event) {
+        alert("okokokok")
+	    if(!lastChecked) {
+	    	alert("tolastchecked")
+	        lastChecked = this;
+	    }
+	     
+	    if(event.shiftKey) {
+	        var start = $('#data_table tbody tr').index(this);
+	        var end = $('#data_table tbody tr').index(lastChecked);
+	 
+	        for(i=Math.min(start,end);i<=Math.max(start,end);i++) {
+	            if (!$('#data_table tbody tr').eq(i).hasClass('row_selected')){
+	                $('#data_table tbody tr').eq(i).addClass("row_selected");
+	            }
+	        }
+	         
+	        // Clear browser text selection mask
+	        if (window.getSelection) {
+	            if (window.getSelection().empty) {  // Chrome
+	                window.getSelection().empty();
+	            } else if (window.getSelection().removeAllRanges) {  // Firefox
+	                window.getSelection().removeAllRanges();
+	            }
+	        } else if (document.selection) {  // IE?
+	            document.selection.empty();
+	        }
+	    } else if ((event.metaKey || event.ctrlKey)){
+	        $(this).toggleClass('row_selected');
+	    } else {
+	    	/* $(lastChecked).removeClass('row_selected'); */
+	    	
+	    	$('tr').each(function (){
+				$(this).removeClass('row_selected');
+			});
+	        $(this).addClass('row_selected');  
+	    }
+	    
+	    alert($(this).prevAll().length)
+	     
+	    lastChecked = this;
+	});
+}
 
 function initializeSelectionRowEvent(){
 	/* Add a click handler to the rows - this could be used as a callback */
-	$("#data_table tbody").click(function(event) {
-		alert('taka')
+	$("#data_table").click(function(event) {
+		alert('heyhey')
 		$(oTable.fnSettings().aoData).each(function (){
 			$(this.nTr).removeClass('row_selected');
 		});
@@ -188,6 +242,8 @@ function initializeSelectionRowEvent(){
 		/* Refresh value on got field  */
 		selectedRows = fnGetSelected(oTable)
 
+		alert(selectedRows[0].id)
+		
 		if (selectedRows.length == 1) {
 			$("#id_goto").val(selectedRows[0].id)
 		}
@@ -195,6 +251,7 @@ function initializeSelectionRowEvent(){
 			$("#id_goto").val(0)
 		}
 	});
+
 }
 
 /* Get the rows which are currently selected */
@@ -219,7 +276,7 @@ function fnGetSelected(oTableLocal)
 			
 {% block content_view %}
 	
-<div id="table_container">
+<div id="table_container" style="overflow-x:scroll">
 		<table cellspacing="0" id="data_table" width="100%">
 		</table>
 </div>

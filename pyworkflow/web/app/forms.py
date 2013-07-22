@@ -279,6 +279,9 @@ class ShowjForm(forms.Form):
     path = forms.CharField(widget=forms.HiddenInput())
     allowRender = forms.BooleanField(widget=forms.HiddenInput())
     mode = forms.CharField(widget=forms.HiddenInput())
+
+#    imageWidth = forms.IntegerField(widget=forms.HiddenInput())
+#    imageHeight = forms.IntegerField(widget=forms.HiddenInput())
     
     colRowMode = forms.CharField(widget=forms.HiddenInput()) 
     
