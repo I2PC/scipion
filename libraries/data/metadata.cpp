@@ -38,22 +38,32 @@ void getBlocksInMetaDataFile(const FileName &inFile, StringVector& blockList)
         return;
     if (inFile.getBlockName()!="")
         return;
-    MetaData MDaux(inFile);
     blockList.clear();
-    //map file
-    int fd;
-    BUFFER_CREATE(bufferMap);
-    mapFile(inFile, bufferMap.begin, bufferMap.size, fd);
-    BUFFER_COPY(bufferMap, buffer);
-    BLOCK_CREATE(block);
-    String blockName;
-    while (MDaux.nextBlock(buffer, block))
-    {
-        BLOCK_NAME(block, blockName);
-        blockList.push_back(blockName);
-    }
+    String extFile = inFile.getExtension();
 
-    unmapFile(bufferMap.begin, bufferMap.size, fd);
+    if (extFile=="xml")
+        REPORT_ERROR(ERR_NOT_IMPLEMENTED,"getBlocksInMetaDataFile");
+    else if(extFile=="sqlite")
+    {
+    	getBlocksInMetaDataFileDB(inFile,blockList);
+    }
+    else
+    {    //map file
+        int fd;
+		MetaData MDaux(inFile);
+        BUFFER_CREATE(bufferMap);
+        mapFile(inFile, bufferMap.begin, bufferMap.size, fd);
+        BUFFER_COPY(bufferMap, buffer);
+        BLOCK_CREATE(block);
+        String blockName;
+        while (MDaux.nextBlock(buffer, block))
+        {
+            BLOCK_NAME(block, blockName);
+            blockList.push_back(blockName);
+        }
+
+        unmapFile(bufferMap.begin, bufferMap.size, fd);
+    }
 }
 
 // Does the blocks exist
@@ -1868,7 +1878,6 @@ void MetaData::writeText(const FileName fn,  const std::vector<MDLabel>* desired
         _writeRows(ofs);
     ofs.close();
 }
-
 
 bool MetaData::operator==(const MetaData& op) const
 {
