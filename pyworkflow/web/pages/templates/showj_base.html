@@ -10,8 +10,11 @@
 	<script src={{jquery}} type="text/javascript"></script>
 	<script src={{jquery_cookie}} type="text/javascript"></script>
 	<script src={{jquery_treeview}} type="text/javascript"></script>
+	<script src={{jquery_waypoints}} type="text/javascript"></script>
 	<script src={{launchTreeview}} type="text/javascript"></script>
 	<script src={{utils}} type="text/javascript"></script>
+	
+	
 	
 	<script type="text/javascript">
 	$(document).ready(function(){
@@ -164,9 +167,9 @@
 		}
 	}
 	function updateMainContainerDim(colVal){
-		imgContainerWidth =$(".img_container").width() + (parseInt($(".img_container").css("margin-right")) * 2)
+		imgContainerWidth =$(".img_container").width() + (parseInt($(".img_container").css("padding-right")) * 2)
 		alert("imgContainerWidth"+imgContainerWidth)
-		sectionWidth = colVal * (imgContainerWidth + 10)
+		sectionWidth = colVal * imgContainerWidth
 		$("section").width(sectionWidth)
 	}
 	</script>

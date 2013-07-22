@@ -3,26 +3,126 @@
 {% block head %}
 	<script type="text/javascript">
 	$(document).ready(function(){
-		
+		initializeImageLoad()
 		initializeImageEvents()
 		initializeWindowLoadEvents()
+		initializeGoToEvents()
 	});
+	
+	function initializeImageLoad(){
+		$('.tableImages').waypoint(function(direction){
+			$(this).attr("src", $(this).data('real_src'))
+			
+/* 			$.ajax({
+				type : "POST",
+				url : "/save_showj_metadata/?path=\"/home/adrian/taka.xmd\"",
+				dataType : "json",
+				success : function(json) {
+					message = json.message;
+					alert(message)
+				}
+			}); */
+			
+		}, {
+			triggerOnce:true,
+			offset: function() {
+/* 				alert($.waypoints('viewportHeight'))
+				alert($(window).height()) */
+		        return $.waypoints('viewportHeight');
+		    }
+		});
+	}
 
+	function initializeGoToEvents(){
+		$('#id_goto').click(function(){
+			updateSelection();	
+		});
+		
+		$('#id_goto').change(function(){
+			updateSelection();
+		});
+			
+ 		$('#id_goto').keyup(function(e){
+ 			var code = e.keyCode || e.which; 
+			  	if (code  == 13) {               
+			  		updateSelection();
+			  	}
+		});	 
+	}
+	
+	function updateSelection(){
+		$(".img_container").each(function(){
+			$(this).removeClass('image_selected')
+		});	
+		$("#img_container___"+$('#id_goto').val()).addClass("image_selected")
+	}
+	
 	//Show enabled/disabled image and title on hover
 	function initializeImageEvents(){
 		$(".img_container").hover(
-			function(){
-				if (!$(this).find(".enabledGallery").hasClass("selected")){
-					$(this).find(".enabledGallery").fadeIn('slow')
+			function(e){
+				if ($(this).hasClass("image_selected")){
+					var x= e.pageX
+					var y= e.pageY
+					
+					$("#multipleSelectionTool").css('left',x)
+					$("#multipleSelectionTool").css('top',y)
+					
+					$("#multipleSelectionTool").data('img_container_id',$(this).attr("id"))
+					
+					$("#multipleSelectionTool").fadeIn('slow')
+				}
+				else{
+					if (!$(this).find(".enabledGallery").hasClass("selected")){
+						$(this).find(".enabledGallery").fadeIn('slow')
+					}
 				}
 				/* $(this).find(".imageTitle").slideToggle('slow') */
 			},
 			function(){
+				if ($(this).hasClass("image_selected")){
+					$("#multipleSelectionTool").delay(2000).fadeOut('slow')
+				}
+				
 				if (!$(this).find(".enabledGallery").hasClass("selected")){
 					$(this).find(".enabledGallery").fadeOut('slow')
 				}
 				/* $(this).find(".imageTitle").slideToggle('slow') */
 			})
+			
+		$(".img_container").click(
+			function(e){
+				element_id=parseInt($(this).attr("id").split("___")[1]);
+	
+				if (e.shiftKey){
+					prev_element_id=parseInt($('#id_goto').val())
+					
+					if (prev_element_id < element_id){
+						initialIndex = prev_element_id
+						endIndex = element_id
+					}
+					else{
+						initialIndex = element_id
+						endIndex = prev_element_id
+					}
+					
+					for (var x=initialIndex; x<=endIndex; x++){
+						$("#img_container___"+x).addClass("image_selected")
+					}
+				}
+				else{
+					if (e.ctrlKey || e.metaKey){
+						alert("c+c")
+					}
+					else{
+						$(".img_container").each(function(){
+							$(this).removeClass('image_selected')
+						});	
+					}
+					$("#img_container___"+element_id).toggleClass("image_selected")
+				}
+				$('#id_goto').val(element_id);
+			})	
 	}
 	
 	function initializeWindowLoadEvents(){
@@ -37,12 +137,34 @@
 	<script type="text/javascript">
 	function enableDisableImage(element){
 		$(element).toggleClass("selected")
-		element_value="false"
-		if ($(element).hasClass("selected")){
-			element_value="true"
+		saveShowjTable($(element).attr("id"), String($(element).hasClass("selected")))
+	}
+	</script>
+	<script type="text/javascript">
+	function multipleEnableDisableImage(mode){
+		if (mode=='enable'){
+			$(".image_selected").each(function(){
+				$(this).find(".enabledGallery").addClass("selected")
+				$(this).find(".enabledGallery").fadeIn('fast')
+			})
 		}
+		else{
+			$(".image_selected").each(function(){
+				$(this).find(".enabledGallery").removeClass("selected")
+				$(this).find(".enabledGallery").fadeOut('fast')
+			})
+		}
+	}
+	</script>
+	<script type="text/javascript">
+	function multipleSelect(mode){
+		element_id=parseInt($("#multipleSelectionTool").data('img_container_id').split("___")[1]);
 		
-		saveShowjTable($(element).attr("id"), element_value)
+		$(".img_container").each(function(){
+			if (mode=='all' || (mode=='from' && $(this).attr('id').split("___")[1]>element_id) || (mode=='to' && $(this).attr('id').split("___")[1]<element_id) ){
+				$(this).addClass("image_selected")
+			}	
+		})
 	}
 	</script>
 {% endblock %}
@@ -54,16 +176,27 @@
 		{% for obj in metadata.objects %}
 			{% for value in obj.values %}
 				{% if value.typeOfColumn == "image" and value.label == form.metadataComboBox.value %}
-					<div class="img_container">
+					<div class="img_container" id="img_container___{{forloop.parentloop.counter}}">
 						<div class="img_inner_container">
-							<img class="tableImages" title="{{value.strValue}}" src="/get_image/?image={{value.imgValue}}"/>
+							<!-- <img class="tableImages" title="{{value.strValue}}" src="/get_image/?image={{value.imgValue}}"/> -->
+							<img class="tableImages" title="{{value.strValue}}" src="" width="64px" height="64px" data-real_src="/get_image/?image={{value.imgValue}}"/>
+							<!-- <img class="tableImages" title="{{value.strValue}}" src="" width="64px" height="64px" data-render_func="/get_image/?image={{value.imgValue}}"/> -->
 							<img class="enabledGallery" src="/resources/showj/enabled_gallery.png" id="{{value.label}}___{{forloop.parentloop.counter0}}" onclick="enableDisableImage(this);"/>
 						</div>
-						<div class="imageTitle">{{value.strValue}}</div>
+						<!-- <div class="imageTitle">{{value.strValue}}</div> -->
 						<div id="column_label">{{forloop.parentloop.counter}}</div> 
 					</div> 
 				{% endif %}
 			{% endfor %}
 		{% endfor %}	
+		
+		<!-- Hidden menu for multiple selection tool -->
+		<div class="multipleSelectionToolContainer" id="multipleSelectionTool">
+			<div class="multipleSelectionToolItem" onclick="multipleEnableDisableImage('enable')">Enable</div>
+			<div class="multipleSelectionToolItem" onclick="multipleEnableDisableImage('disable')">Disable</div>
+			<div class="multipleSelectionToolItem" onclick="multipleSelect('all')">Select All</div>
+			<div class="multipleSelectionToolItem" onclick="multipleSelect('from')">Select From Here</div>
+			<div class="multipleSelectionToolItem" onclick="multipleSelect('to')">Select To Here</div>
+		</div>
 			
 {% endblock %}
