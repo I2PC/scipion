@@ -428,7 +428,7 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         pathPos = self.getMicrographPosFile(micrograph.getId())
         
         if exists(pathPos):
-            mdPos = xmipp.MetaData('particles@%s' % pathPos)
+            mdPos = xmipp.MetaData('particles@' + pathPos)
                             
             for i, objId in enumerate(mdPos):
                 x = mdPos.getValue(xmipp.MDL_XCOOR, objId)
