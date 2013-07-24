@@ -28,7 +28,12 @@ import os
 import os.path
 
 HOME = os.path.abspath(os.path.dirname(__file__))
-RESOURCES = [os.path.join(HOME, 'resources')]
+
+def join(*paths):
+    """ join paths from HOME. """
+    return os.path.join(HOME, *paths)
+
+RESOURCES = [join('resources')]
 
 if "SCIPION_HOME" not in os.environ:
     raise Exception("SCIPION_HOME is not defined as environment variable")
