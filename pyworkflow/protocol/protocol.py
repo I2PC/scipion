@@ -229,7 +229,7 @@ class Protocol(Step):
         # Run mode
         self.runMode = Integer(args.get('runMode', MODE_RESUME))
         # Use queue system?
-        self.useQueue = Boolean()
+        self._useQueue = Boolean()
         
         self._jobId = String() # Store queue job id
         self._pid = Integer()
@@ -655,7 +655,7 @@ class Protocol(Step):
     
     def useQueue(self):
         """ Return True if the protocol should be launched throught a queue. """
-        return self.useQueue.get()
+        return self._useQueue.get()
         
     def getElapsedTime(self):
         """ Return the time that protocols

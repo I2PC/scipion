@@ -468,7 +468,7 @@ class FormWindow(Window):
         # Queue
         tk.Label(execFrame, text="Launch to queue?", font=self.font).grid(row=2, column=0, padx=5, pady=5, sticky='ne', columnspan=3)
         var, frame = ParamWidget.createBoolWidget(execFrame)
-        self._addVarBinding('useQueue', var)
+        self._addVarBinding('_useQueue', var)
         frame.grid(row=2, column=3, padx=5, pady=5, sticky='nw')
         
         execFrame.grid(row=0, column=1, sticky='news', padx=5, pady=5)
