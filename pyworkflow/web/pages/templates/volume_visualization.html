@@ -7,13 +7,13 @@
 	<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
 	<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
 	<script>
-		function visualizeVolume(setOfVolumesId, volumeId, takeThreshold){
+		function visualizeVolume(setOfVolumesId, volumeId, threshold){
 			$("#htmlDisplayer").append("Wait a moment...");
 			visualizeURL = "";
-			if (takeThreshold){
+			if (threshold == null){
 				visualizeURL = "/visualize_volume/?setOfVolumesId=" + setOfVolumesId + "&volumeId=" + volumeId + "&threshold=" + document.getElementById("threshold").value;
 			} else {
-				visualizeURL = "/visualize_volume/?setOfVolumesId=" + setOfVolumesId + "&volumeId=" + volumeId;
+				visualizeURL = "/visualize_volume/?setOfVolumesId=" + setOfVolumesId + "&volumeId=" + volumeId + "&threshold=" + threshold;
 			} 
 			$.ajax({
 				type : "GET",
@@ -23,10 +23,18 @@
 					$("#htmlDisplayer").empty();
 					$("#htmlDisplayer").append(json['volumeHtml']);
 					$("#htmlDisplayer").append("<br/>");
-					$("#htmlDisplayer").append("<label>Threshold: </label><input id='threshold' name='threshold' type='text' size='10' /><button type='button' onclick='visualizeVolume(" + setOfVolumesId + "," + volumeId + ", true);'> Go </button>");
+					$("#htmlDisplayer").append("<label>Threshold: </label><input id='threshold' name='threshold' type='text' size='10' /><button type='button' onclick='visualizeVolume(" + setOfVolumesId + "," + volumeId + ", null);'> Go </button>");
 					webGLStart();
 				}
 			});
+		}
+		
+		function askInitialThreshold(setOfVolumesId, volumeId){
+			var threshold=prompt("Please enter initial threshold","1");
+			if (threshold==null || threshold=="") {
+			  threshold = 1;
+		  	}
+			visualizeVolume(setOfVolumesId, volumeId, threshold)
 		}
 	</script>
 	</head>
@@ -37,7 +45,7 @@
 				<th>Volume</th>
 			</tr>
 			{% for volume in setOfVolumes %}
-			<tr id="{{volume.getObjId}}" class="" onclick="visualizeVolume({{setOfVolumesId}},{{volume.getObjId}}, false);" style="background-color: #fafafa;">
+			<tr id="{{volume.getId}}" class="" onclick="askInitialThreshold({{setOfVolumesId}},{{volume.getId}});" style="background-color: #fafafa;">
 				<td>
 					{{volume.getFileName}}
 				</td>
