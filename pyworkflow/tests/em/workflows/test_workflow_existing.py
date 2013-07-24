@@ -1,4 +1,7 @@
 import unittest, sys
+import subprocess
+
+import pyworkflow as pw
 from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.utils.graph import Graph, Node
@@ -17,26 +20,27 @@ class TestXmippWorkflow(unittest.TestCase):
         particleList = project.mapper.selectByClass('SetOfParticles')
         
         eman2.loadEnvironment()
-        import numpy
-        from EMAN2 import EMData, EMUtil
-        eman_stack = 'kk.hdf'
         
-        for p in particleList:
-            p.printAll()
-            print "    hasCTF: ", p.evalCondition('hasCTF and samplingRate > 4.0')
+        program = pw.join('em', 'packages', 'eman2', 'e2converter.py')
+        
+        cmd = eman2.getEmanCommand(program, 'myimage.hdf')
+        
+        gcmd = greenStr(cmd)
+        print "** Running: '%s'" % gcmd
+        proc = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE)
         
         p = particleList[0]
         for i, img in enumerate(p):
-            print "SET:"
             loc = img.getLocation()
             index = loc.getIndex()
             fn = loc.getFileName()
-            print " %d at %s" % (index, fn)
-            print "    file: ", fn
-            print " reading with EMAN2"
-            imageData = EMData('myimage.hdf', index - 1, False)
-            print " writing with EMAN2"
-            imageData.write_image(eman_stack, i,EMUtil.ImageType.IMAGE_HDF,True)
+            print >> proc.stdin, index, fn
+        p.wait()
+        
+            #print " reading with EMAN2"
+            #imageData = EMData('myimage.hdf', index - 1, False)
+            #print " writing with EMAN2"
+            #imageData.write_image(eman_stack, i,EMUtil.ImageType.IMAGE_HDF,True)
                 
             
 #        print "=" * 100
