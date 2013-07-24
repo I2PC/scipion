@@ -28,7 +28,7 @@ This modules contains basic hierarchy
 for specific EMAN2 EM data objects
 """
 
-from pyworkflow.em import *  
+from pyworkflow.em import *
 from pyworkflow.utils.path import replaceBaseExt, exists
 from glob import glob
 import os
@@ -173,6 +173,21 @@ class EmanJson():
         jsonFile.close()
         return jsonDict
         
+
+
+class EmanVolume(Image):
+    """Eman implementation for Volume"""
+    def __init__(self, filename=None, **args):
+        Image.__init__(self, filename, **args)
+#        Volume.__init__(self, filename, **args)    
+
+
+class EmanSetOfVolumes(EmanSetOfImages, SetOfVolumes):
+    """Represents a set of Volumes for Xmipp"""
+    def __init__(self, filename=None, **args):
+        SetOfVolumes.__init__(self, filename, **args)
+        EmanSetOfImages.__init__(self, filename, **args)
+
     
 #class EmanDbd():
 #    """ Utility class to access the Eman dbd database """

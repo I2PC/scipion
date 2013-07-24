@@ -155,6 +155,14 @@ class Form(object):
 #                else:
 #                    raise Exception("Invalid token '%s' used in param '%s' condition" 
 #                                    % (t, paramName))
+
+    def escapeLiteral(self, value):
+        if isinstance(value, str):
+            result = "'%s'" % value
+        else:
+            result = str(value)
+        return result
+    
     def evalParamCondition(self, protocol, paramName):
         """Evaluate if a condition is True for a give param
         with the values of a particular Protocol"""
@@ -164,7 +172,7 @@ class Form(object):
         condStr = param.condition.get()
         for t in param._conditionParams:
             if self.hasParam(t):
-                condStr = condStr.replace(t, str(protocol.getAttributeValue(t)))
+                condStr = condStr.replace(t, self.escapeLiteral(protocol.getAttributeValue(t)))
         return eval(condStr)
     
     def validateParams(self, protocol):
@@ -322,6 +330,25 @@ class PointerParam(Param):
         self.pointerClass = String(args.get('pointerClass'))
         # Some conditions on the pointed candidates
         self.pointerCondition = String(args.get('pointerCondition', None))
+     
+        
+class DigFreqParam(FloatParam):
+    """ Digital frequency param. """
+    def __init__(self, **args):
+        FloatParam.__init__(self, **args)
+        self.addValidator(Range(0., 0.5, 
+                                error="Digital frequencies should be between 0. and 0.5"))
+        
+class NumericListParam(StringParam):
+    """ This class will serve to have list representations as strings.
+     Possible notation are:
+     1000 10 1 1 -> to define a list with 4 values [1000, 10, 1, 1], or
+     10x2 5x3    -> to define a list with 5 values [10, 10, 5, 5, 5]
+     If you ask for more elements than in the list, the last one is repeated
+    """
+    def __init__(self, **args):
+        StringParam.__init__(self, **args)
+        self.addValidator(NumericListValidator())   
         
         
 
@@ -386,6 +413,21 @@ class Range(Conditional):
         self._condition = lambda value: value >= minValue and value <= maxValue
         
 Positive = GT(0.0, error='Value should be greater than zero') 
+
+class NumericListValidator(Conditional):
+    """ Validator for ListParam. See ListParam. """
+    def __init__(self, error='Incorrect format for numeric list param. '):
+        Conditional.__init__(self, error)
+        
+    def _condition(self, value):
+        try:
+            value = value.replace('x', '')
+            parts = value.split()
+            for p in parts:
+                float(p)
+            return True
+        except Exception:
+            return False    
 
             
 

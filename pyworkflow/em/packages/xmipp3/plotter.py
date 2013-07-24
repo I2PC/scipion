@@ -35,8 +35,8 @@ import matplotlib.ticker as ticker
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 
-''' Class to create several plots'''
-class XmippPlotter():
+class XmippPlotter(object):
+    ''' Class to create several plots'''
     def __init__(self, x=1, y=1, mainTitle="", figsize=None, dpi=100, windowTitle=""):
         
         if figsize is None: # Set some defaults values

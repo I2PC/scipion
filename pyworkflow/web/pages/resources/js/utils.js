@@ -83,9 +83,9 @@ function fillTabsSummary(projName, id) {
 				+ id,
 		dataType : "json",
 		success : function(json) {
-			$("#tab2").empty();
+			$("#tab-summary").empty();
 			for ( var i = 0; i < json.length; i++) {
-				$("#tab2").append('<p>' + json[i] + '</p>');
+				$("#tab-summary").append('<p>' + json[i] + '</p>');
 			}
 		}
 	});

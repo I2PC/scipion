@@ -32,7 +32,6 @@ This sub-package contains the XmippProtExtractParticles protocol
 from pyworkflow.em import * 
 from data import *
 from pyworkflow.utils.path import makePath, removeBaseExt, join, exists
-from protlib_particles import runNormalize
 from xmipp3 import XmippProtocol
 from glob import glob
 import xmipp
@@ -258,6 +257,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             self.runJob(None,"xmipp_micrograph_scissor", args)
             # Normalize 
             if self.doNormalize:
+                from protlib_particles import runNormalize
                 runNormalize(None, outputRoot + '.stk',self.normType.get(), self.backRadius.get(), 1)          
                                
             if (self.downsampleType.get() == self.OTHER) or (self.fnCTF is not None):
