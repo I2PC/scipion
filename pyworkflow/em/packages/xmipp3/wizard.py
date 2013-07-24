@@ -33,7 +33,7 @@ from pyworkflow.em.viewer import Viewer, Wizard
 from pyworkflow.em import SetOfImages, SetOfMicrographs, DefCTFMicrographs
 from protocol_projmatch import XmippDefProjMatch
 import pyworkflow.gui.dialog as dialog
-from pyworkflow.gui.tree import BoundTree
+from pyworkflow.gui.tree import BoundTree, TreeProvider
 import xmipp
 
 
@@ -47,6 +47,18 @@ class XmippWizardDownsample(Wizard):
         else:
             dialog.showWarning("Micrographs", "OK", form.root)    
     
+class ListTreeProvider(TreeProvider):
+    """ Simple list tree provider. """
+    def __init__(self, objList=None):
+        self.objList = objList
+        self.getColumns = lambda: [('Object', 300)]
+        self.getObjects = lambda: self.objList
+    
+    def getObjectInfo(self, obj):
+        info = {'key': obj.getObjId(), 'text': os.path.basename(obj.getFileName()), 'values': ()}
+            
+        return info
+    
 class XmippWizardCTF(Wizard):
     """ Wrapper to visualize different type of objects
     with the Xmipp program xmipp_showj
@@ -55,8 +67,12 @@ class XmippWizardCTF(Wizard):
         
     def show(self, form):
         protocol = form.protocol
-        if not protocol.inputMicrographs.hasValue():
-            dialog.showWarning("Input micrographs", "Select some micrographs first", form.root)
+        
+        if protocol.inputMicrographs.hasValue():
+            mics = [mic for mic in protocol.inputMicrographs.get()]
+            #XmippDownsampleDialog(form.root, ListTreeProvider(mics))
+            XmippCTFDialog(form.root, ListTreeProvider(mics))
+            #dialog.showWarning("Input micrographs", "Select some micrographs first", form.root)
         else:
             dialog.showWarning("Micrographs", "OK", form.root)
             
@@ -81,7 +97,7 @@ class XmippWizardRadii(Wizard):
     
 
 #--------------- Dialogs used by Wizards --------------------------
-
+    
 class XmippPreviewDialog(dialog.Dialog):
     """ This will be the base class for several wizards.
     The layout of this wizard will be:
@@ -95,8 +111,8 @@ class XmippPreviewDialog(dialog.Dialog):
             parent: parent windows of the dialog.
             provider: the TreeProvider to populate items tree.
         """
-        dialog.Dialog.__init__(self, parent, **args)
         self.provider = provider
+        dialog.Dialog.__init__(self, parent, "Title", **args)
 
     def body(self, bodyFrame):
         # Create items frame
@@ -106,6 +122,7 @@ class XmippPreviewDialog(dialog.Dialog):
         itemsFrame.rowconfigure(0, weight=1)
         itemsTree = BoundTree(itemsFrame, self.provider)
         itemsTree.grid(row=0, column=0, padx=5, pady=5, sticky='news')
+        itemsTree.itemClick = self._itemSelected
         
         # Create preview frame
         previewFrame = tk.Frame(bodyFrame)
@@ -133,16 +150,16 @@ class XmippPreviewDialog(dialog.Dialog):
         
     
 
-class XmippDownsamplingDialog(XmippPreviewDialog):
+class XmippDownsampleDialog(XmippPreviewDialog):
     
     def _createPreview(self, frame):
         """ Should be implemented by subclasses to 
         create the items preview. 
         """
         from protlib_gui_figure import ImagePreview
-        dim = 128
+        self.dim = 256
         label = 'kk'
-        self.preview = ImagePreview(frame, dim, label=label)
+        self.preview = ImagePreview(frame, self.dim, label=label)
         
     def _itemSelected(self, obj):
         filename = obj.getFileName()
@@ -151,7 +168,28 @@ class XmippDownsamplingDialog(XmippPreviewDialog):
         self.image.readPreview(filename, self.dim)
         if filename.endswith('.psd'):
             self.image.convertPSD()
-        Z = self.image.getData()
-        self.preview.updateData(Z)
+        self.Z = self.image.getData()
+        self.preview.updateData(self.Z)
+        
+        
+class XmippCTFDialog(XmippDownsampleDialog):
+    
+    def _createPreview(self, frame):
+        """ Should be implemented by subclasses to 
+        create the items preview. 
+        """
+        leftFrame = tk.Frame(frame)
+        leftFrame.grid(row=0, column=0)
+        
+        rightFrame = tk.Frame(frame)
+        rightFrame.grid(row=0, column=1)
+        
+        XmippDownsampleDialog._createPreview(self, leftFrame)
+        from protlib_gui_figure import ImagePreview
+        self.rightPreview = ImagePreview(rightFrame, self.dim, label='pp') 
+        
+    def _itemSelected(self, obj):
+        XmippDownsampleDialog._itemSelected(self, obj)
+        self.rightPreview.updateData(self.Z)        
         
     
