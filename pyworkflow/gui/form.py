@@ -566,10 +566,15 @@ class FormWindow(Window):
         """This method should retrieve a value from """
         pass
         
-    def setVarFromParam(self, tkVar, paramName):
+    def setVar(self, paramName, value):
+        var = self.widgetDict[paramName]
+        var.set(value)
+        
+    def setVarFromParam(self, paramName):
+        var = self.widgetDict[paramName]
         value = getattr(self.protocol, paramName, None)
         if value is not None:
-            tkVar.set(value.get(''))
+            var.set(value.get(''))
            
     def setParamFromVar(self, paramName):
         value = getattr(self.protocol, paramName, None)

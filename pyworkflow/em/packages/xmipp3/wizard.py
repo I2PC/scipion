@@ -29,10 +29,12 @@ This module implement some wizards
 
 import os
 import Tkinter as tk
+import ttk
 from pyworkflow.em.viewer import Viewer, Wizard
 from pyworkflow.em import SetOfImages, SetOfMicrographs, DefCTFMicrographs
 from protocol_projmatch import XmippDefProjMatch
 import pyworkflow.gui.dialog as dialog
+from pyworkflow.gui.widgets import LabelSlider
 from pyworkflow.gui.tree import BoundTree, TreeProvider
 import xmipp
 
@@ -68,10 +70,16 @@ class XmippWizardCTF(Wizard):
     def show(self, form):
         protocol = form.protocol
         
+        form.setParamFromVar('inputMicrographs') # update selected input micrographs
+        
         if protocol.inputMicrographs.hasValue():
             mics = [mic for mic in protocol.inputMicrographs.get()]
             #XmippDownsampleDialog(form.root, ListTreeProvider(mics))
-            XmippCTFDialog(form.root, ListTreeProvider(mics))
+            d = XmippCTFDialog(form.root, ListTreeProvider(mics), 
+                               lf=protocol.lowRes.get(), hf=protocol.highRes.get())
+            if d.resultYes():
+                form.setVar('lowRes', d.getLowFreq())
+                form.setVar('highRes', d.getHighFreq())
             #dialog.showWarning("Input micrographs", "Select some micrographs first", form.root)
         else:
             dialog.showWarning("Micrographs", "OK", form.root)
@@ -111,9 +119,13 @@ class XmippPreviewDialog(dialog.Dialog):
             parent: parent windows of the dialog.
             provider: the TreeProvider to populate items tree.
         """
+        # Set the attributes in **args
+        for k, v in args.iteritems():
+            setattr(self, k, v)
+            
         self.provider = provider
         buttons = [('Select', dialog.RESULT_YES), ('Cancel', dialog.RESULT_CANCEL)]
-        dialog.Dialog.__init__(self, parent, "Title", buttons=buttons, default='Select', **args)
+        dialog.Dialog.__init__(self, parent, "Wizard", buttons=buttons, default='Select', **args)
 
     def body(self, bodyFrame):
         bodyFrame.config()
@@ -172,9 +184,10 @@ class XmippImagePreviewDialog(XmippPreviewDialog):
         """ Should be implemented by subclasses to 
         create the items preview. 
         """
-        from protlib_gui_figure import ImagePreview
+        from pyworkflow.gui.matplotlib_image import ImagePreview
         self.image = xmipp.Image()       
         self.preview = ImagePreview(frame, self.dim, label=self.previewLabel)
+        self.preview.grid(row=0, column=0) 
         
     def _itemSelected(self, obj):
         filename = obj.getFileName()
@@ -194,6 +207,7 @@ class XmippDownsampleDialog(XmippImagePreviewDialog):
         self.rightPreviewLabel = "PSD"
         self.message = "Computing PSD..."
         self.previewLabel = "Micrograph"
+        self.rightImage = xmipp.Image()
         
     def _createPreview(self, frame):
         """ Should be implemented by subclasses to 
@@ -206,10 +220,12 @@ class XmippDownsampleDialog(XmippImagePreviewDialog):
         rightFrame.grid(row=0, column=1)
         
         XmippImagePreviewDialog._createPreview(self, leftFrame)
-        from protlib_gui_figure import ImagePreview
-        
-        self.rightImage = xmipp.Image()
-        self.rightPreview = ImagePreview(rightFrame, self.dim, label=self.rightPreviewLabel) 
+        self.rightPreview = self._createRightPreview(rightFrame)
+        self.rightPreview.grid(row=0, column=0) 
+                
+    def _createRightPreview(self, rightFrame):
+        from pyworkflow.gui.matplotlib_image import ImagePreview        
+        return ImagePreview(rightFrame, self.dim, label=self.rightPreviewLabel)
         
     def _createControls(self, frame):
         self.downVar = tk.StringVar()
@@ -247,4 +263,33 @@ class XmippDownsampleDialog(XmippImagePreviewDialog):
         
 
 class XmippCTFDialog(XmippDownsampleDialog):
-    pass
+    
+    def _createRightPreview(self, rightFrame):
+        from pyworkflow.gui.matplotlib_image import PsdPreview  
+        return  PsdPreview(rightFrame, 1.2*self.dim, self.lf, self.hf, label=self.rightPreviewLabel)
+
+    def _createControls(self, frame):
+        self.addFrequenciesBox(frame)
+    
+    def getDownsample(self):
+        return 1.0 # Micrograph previously downsample, not taken into account here
+
+    def addFrequenciesBox(self, parent):
+        self.freqFrame = ttk.LabelFrame(parent, text="Frequencies", padding="5 5 5 5")
+        self.freqFrame.grid(row=0, column=0)
+        self.lfSlider = self.addFreqSlider('Low freq', self.lf, col=0)
+        self.hfSlider = self.addFreqSlider('High freq', self.hf, col=1)
+        
+    def addFreqSlider(self, label, value, col):
+        slider = LabelSlider(self.freqFrame, label, from_=0, to=0.5, value=value, callback=lambda a, b, c:self.updateFreqRing())
+        slider.grid(row=0, column=col, padx=5, pady=5)
+        return slider
+        
+    def updateFreqRing(self):
+        self.rightPreview.updateFreq(self.getLowFreq(), self.getHighFreq())
+    
+    def getLowFreq(self):
+        return self.lfSlider.get()
+        
+    def getHighFreq(self):
+        return self.hfSlider.get()
