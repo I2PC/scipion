@@ -7,7 +7,7 @@
 var selectedHost = ""
 
 function newHost() {
-	document.location = "javascript:popup('/hostForm/')"
+	document.location = "javascript:popup('/host_form/')"
 }
 
 function selectHost(hostId) {
@@ -17,7 +17,7 @@ function selectHost(hostId) {
 }
 
 function editHost() {
-	document.location = "javascript:popup('/hostForm/?hostId=" + selectedHost
+	document.location = "javascript:popup('/host_form/?hostId=" + selectedHost
 			+ "')";
 }
 
@@ -26,7 +26,7 @@ function deleteHost() {
 		alert("No host has been selected to delete");
 	} else {
 		if (confirm("Are you sure you want to remove this host?")) {
-			document.location.href = "/deleteHost/?hostId=" + selectedHost;
+			document.location.href = "/delete_host/?hostId=" + selectedHost;
 
 		} else {
 			alert("Remove operation cancelled");
