@@ -163,7 +163,6 @@ class SectionWidget(tk.Frame):
     def set(self, value):
         self.var.set(value)
     
-    
 class ParamWidget():
     """For each one in the Protocol parameters, there will be
     one of this in the Form GUI.
@@ -222,19 +221,35 @@ class ParamWidget():
         wizClass = self.window.wizards[self.paramName]
         wizClass().show(self.window)
                
+    @staticmethod
+    def createBoolWidget(parent, **args):
+        """ Return a BoolVar associated with a yes/no selection. 
+        **args: extra arguments passed to tk.Radiobutton and tk.Frame constructors.
+        """
+        var = BoolVar()
+        frame = tk.Frame(parent, **args)
+        frame.grid(row=0, column=0, sticky='w')
+        rb1 = tk.Radiobutton(frame, text='Yes', variable=var.tkVar, value=1, **args)
+        rb1.grid(row=0, column=0, padx=2, sticky='w')
+        rb2 = tk.Radiobutton(frame, text='No', variable=var.tkVar, value=0, **args)
+        rb2.grid(row=0, column=1, padx=2, sticky='w') 
+        
+        return (var, frame)       
+        
     def _createContentWidgets(self, param, content):
         """Create the specific widgets inside the content frame"""
         # Create widgets for each type of param
         t = type(param)
         #TODO: Move this to a Renderer class to be more flexible
         if t is BooleanParam:
-            var = BoolVar()
-            frame = tk.Frame(content, bg='white')
-            frame.grid(row=0, column=0, sticky='w')
-            rb1 = tk.Radiobutton(frame, text='Yes', bg='white', variable=var.tkVar, value=1)
-            rb1.grid(row=0, column=0, padx=2, sticky='w')
-            rb2 = tk.Radiobutton(frame, text='No', bg='white', variable=var.tkVar, value=0)
-            rb2.grid(row=0, column=1, padx=2, sticky='w')
+            var, frame = ParamWidget.createBoolWidget(content, bg='white')
+#            var = BoolVar()
+#            frame = tk.Frame(content, bg='white')
+#            frame.grid(row=0, column=0, sticky='w')
+#            rb1 = tk.Radiobutton(frame, text='Yes', bg='white', variable=var.tkVar, value=1)
+#            rb1.grid(row=0, column=0, padx=2, sticky='w')
+#            rb2 = tk.Radiobutton(frame, text='No', bg='white', variable=var.tkVar, value=0)
+#            rb2.grid(row=0, column=1, padx=2, sticky='w')
             
         elif t is EnumParam:
             var = ComboVar(param)
@@ -349,6 +364,7 @@ class FormWindow(Window):
         
         commonFrame = self._createHeaderCommons(headerFrame)
         commonFrame.grid(row=1, column=0, padx=5, pady=5, sticky='news')
+        headerFrame.columnconfigure(0, weight=1)
         
         text = TaggedText(self.root, width=40, height=15, bd=0, cursor='arrow')
         text.grid(row=1, column=0, sticky='news')
@@ -395,56 +411,65 @@ class FormWindow(Window):
         setattr(self, paramName + 'Var', var)
         self._addVarBinding(paramName, var)
         return tk.Entry(parent, font=self.font, width=width, textvariable=var)
+    
+    def _createBoundCombo(self, parent, paramName, choices, *callbacks):
+        # Create expert level combo
+        param = EnumParam(choices=choices)
+        var = ComboVar(param)
+        #self.protocol.expertLevel.set(0)
+        self._addVarBinding(paramName, var, *callbacks)
+        #var.set(self.protocol.expertLevel.get())
+        combo = ttk.Combobox(parent, textvariable=var.tkVar, 
+                                state='readonly', width=10)
+        combo['values'] = param.choices
+        return combo
+            
+        
         
     def _createHeaderCommons(self, parent):
         """ Create the header common values such as: runName, expertLevel, mpi... """
         commonFrame = tk.Frame(parent)
+        commonFrame.columnconfigure(0, weight=1)
+        commonFrame.columnconfigure(1, weight=1)
         
-        # Create the run part
+        ############# Create the run part ###############
+        # Run name
         runFrame = ttk.Labelframe(commonFrame, text='Run')
         tk.Label(runFrame, text="Run label", font=self.font).grid(row=0, column=0, padx=5, pady=5, sticky='ne')
         self._createBoundEntry(runFrame, 'runName', width=15).grid(row=0, column=1, padx=(0, 5), pady=5, sticky='nw')
-        
-        expLabel = tk.Label(runFrame, text="Expert level", font=self.font)
-        expLabel.grid(row=1, column=0, sticky='ne', padx=5, pady=5)
-        param = EnumParam(choices=LEVEL_CHOICES)
-        var = ComboVar(param)
-        #self.protocol.expertLevel.set(0)
-        self._addVarBinding('expertLevel', var, self._onExpertLevelChanged)
-        #var.set(self.protocol.expertLevel.get())
-        expCombo = ttk.Combobox(runFrame, textvariable=var.tkVar, 
-                                state='readonly', width=10)
-        expCombo['values'] = param.choices        
+        # Expert level
+        tk.Label(runFrame, text="Expert level", font=self.font).grid(row=1, column=0, sticky='ne', padx=5, pady=5)
+        expCombo = self._createBoundCombo(runFrame, 'expertLevel', LEVEL_CHOICES, self._onExpertLevelChanged)   
         expCombo.grid(row=1, column=1, sticky='nw', padx=(0, 5), pady=5)
-        #self.expertVar = var
-        #self.expertVar.trace('w', self._onExpertLevelChanged)
+        # Run mode
+        self.protocol.getDefinitionParam('')
+        tk.Label(runFrame, text="Run mode", font=self.font).grid(row=2, column=0, sticky='ne', padx=5, pady=5)
+        modeCombo = self._createBoundCombo(runFrame, 'runMode', MODE_CHOICES, self._onExpertLevelChanged)   
+        modeCombo.grid(row=2, column=1, sticky='nw', padx=(0, 5), pady=5)        
         
         runFrame.grid(row=0, column=0, sticky='news', padx=5, pady=5)
         
-        
-        # Create the execution part
+        ############## Create the execution part ############
+        # Host name
         execFrame = ttk.Labelframe(commonFrame, text='Execution')
         tk.Label(execFrame, text="Host", font=self.font).grid(row=0, column=0, padx=5, pady=5, sticky='ne')
         param = EnumParam(choices=self.hostList)
         self.hostVar = tk.StringVar()
         self._addVarBinding('hostName', self.hostVar)
         #self.hostVar.set(self.protocol.getHostName())
-        expCombo = ttk.Combobox(execFrame, textvariable=self.hostVar, 
-                                state='readonly', width=15)
+        expCombo = ttk.Combobox(execFrame, textvariable=self.hostVar, state='readonly', width=15)
         expCombo['values'] = param.choices        
         expCombo.grid(row=0, column=1, columnspan=3, padx=(0, 5), pady=5, sticky='nw')
-        
-        tk.Label(execFrame, text="Threads ", font=self.font).grid(row=1, column=0, padx=5, pady=5, sticky='ne')
+        # Threads and MPI
+        tk.Label(execFrame, text="Threads", font=self.font).grid(row=1, column=0, padx=5, pady=5, sticky='ne')
         self._createBoundEntry(execFrame, 'numberOfThreads').grid(row=1, column=1, padx=(0, 5))
-        #var = tk.StringVar()
-        #self._addVarBinding('numberOfThreads', var)
-        #tk.Entry(execFrame, font=self.font, width=5, textvariable=var).grid(row=1, column=1, padx=(0, 5))
-        
-        tk.Label(execFrame, text="MPI ", font=self.font).grid(row=1, column=2, padx=(0, 5))
+        tk.Label(execFrame, text="MPI", font=self.font).grid(row=1, column=2, padx=(0, 5))
         self._createBoundEntry(execFrame, 'numberOfMpi').grid(row=1, column=3, padx=(0, 5))
-#        var = tk.StringVar()
-#        self._addVarBinding('numberOfMpi', var)
-#        tk.Entry(execFrame, font=self.font, width=5).grid(row=1, column=3, padx=(0, 5))
+        # Queue
+        tk.Label(execFrame, text="Launch to queue?", font=self.font).grid(row=2, column=0, padx=5, pady=5, sticky='ne', columnspan=3)
+        var, frame = ParamWidget.createBoolWidget(execFrame)
+        self._addVarBinding('useQueue', var)
+        frame.grid(row=2, column=3, padx=5, pady=5, sticky='nw')
         
         execFrame.grid(row=0, column=1, sticky='news', padx=5, pady=5)
         
@@ -511,11 +536,13 @@ class FormWindow(Window):
         """Check if the condition of a param is statisfied 
         hide or show it depending on the result"""
         widget = self.widgetDict[paramName]
-        v = self.protocol.evalParamCondition(paramName) and self.protocol.evalExpertLevel(paramName)
-        if v:
-            widget.show()
-        else:
-            widget.hide()
+        
+        if isinstance(widget, ParamWidget): # Special vars like MPI, threads or runName are not real widgets
+            v = self.protocol.evalParamCondition(paramName) and self.protocol.evalExpertLevel(paramName)
+            if v:
+                widget.show()
+            else:
+                widget.hide()
             
     def _checkChanges(self, paramName):
         """Check the conditions of all params affected
