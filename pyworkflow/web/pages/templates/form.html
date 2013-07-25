@@ -44,7 +44,7 @@
 						</td>
 						<td>
 							<input type="text" id="runName_input" name="runName"
-							value="{{runName.htmlValue}}">
+							value="{{runName}}">
 						</td>
 						<td class="ico">
 							<a href="javascript:alert('Not Implemented yet');"><img src={{comment}}/></a>
@@ -91,9 +91,9 @@
 						<td>
 							<select name="hostname" size=1
 							onChange="">
-								<option value="0">localhost</option>
-								<option value="1">localhost</option>
-								<option value="2">localhost</option>
+							{% for h in hosts %}
+								<option value="{{h}}" {% if h == hostName %} selected="selected" {% endif %}>{{h}}</option>
+							{% endfor %}
 							</select>
 						</td>
 					</tr>
@@ -103,14 +103,14 @@
 						value="1" data-enum="" data-expert="0">
 							Threads&nbsp;		
 							<input type="text" id="numberOfThreads_input"
-							name="numberOfThreads" value="{{numberOfThreads.htmlValue}}" style="width:3em;">
+							name="numberOfThreads" value="{{numberOfThreads}}" style="width:3em;">
 						</td>
 						<td class="" id="numberOfMpi" name="numberOfMpi"
 					data-type="IntParam" data-cond="None" data-params="" data-depen=""
 					value="1" data-enum="" data-expert="0">
 							MPI&nbsp;		
 							<input type="text" id="numberOfMpi_input"
-						name="numberOfMpi" value="{{numberOfMpi.htmlValue}}" style="width:3em;">
+						name="numberOfMpi" value="{{numberOfMpi}}" style="width:3em;">
 						</td>
 					</tr>
 				</table>

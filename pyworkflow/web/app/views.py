@@ -21,6 +21,7 @@ from pyworkflow.tests import getInputPath
 from forms import HostForm, VolVisualizationForm
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponse, HttpRequest
+from commons import staticPath
 
 def getResource(request):
     if request == 'logoScipion':
@@ -58,11 +59,11 @@ tree_tool_path = getResource('tree_toolbar')
 ######    Projects template    #####
 def projects(request):
     # CSS #
-    css_path = os.path.join(settings.STATIC_URL, 'css/projects_style.css')
-    messi_css_path = os.path.join(settings.STATIC_URL, 'css/messi.css')
+    css_path = staticPath('css/projects_style.css')
+    messi_css_path = staticPath('css/messi.css')
     
     # JS #
-    projectForm_path = os.path.join(settings.STATIC_URL, 'js/projectForm.js')
+    projectForm_path = staticPath('js/projectForm.js')
     
     manager = Manager()
     
@@ -210,15 +211,15 @@ def loadProject(projectName):
     
 def project_content(request):        
     # CSS #
-    css_path = os.path.join(settings.STATIC_URL, 'css/project_content_style.css')
-    messi_css_path = os.path.join(settings.STATIC_URL, 'css/messi.css')
+    css_path = staticPath('css/project_content_style.css')
+    messi_css_path = staticPath('css/messi.css')
 
     # JS #
-    jquery_cookie = os.path.join(settings.STATIC_URL, 'js/jquery.cookie.js')
-    jquery_treeview = os.path.join(settings.STATIC_URL, 'js/jquery.treeview.js')
-    launchTreeview = os.path.join(settings.STATIC_URL, 'js/launchTreeview.js')
-    utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
-    tabs_config = os.path.join(settings.STATIC_URL, 'js/tabsConfig.js')
+    jquery_cookie = staticPath('js/jquery.cookie.js')
+    jquery_treeview = staticPath('js/jquery.treeview.js')
+    launchTreeview = staticPath('js/launchTreeview.js')
+    utils_path = staticPath('js/utils.js')
+    tabs_config = staticPath('js/tabsConfig.js')
     
     projectName = request.GET.get('projectName', None)
     if projectName is None:
@@ -302,28 +303,20 @@ def form(request):
     logo_edit = getResource('edit_toolbar');
     
     # CSS #
-    css_path = os.path.join(settings.STATIC_URL, 'css/form.css')
-    messi_css_path = os.path.join(settings.STATIC_URL, 'css/messi.css')
+    css_path = staticPath('css/form.css')
+    messi_css_path = staticPath('css/messi.css')
     
     # JS #
-    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
-    jsForm_path = os.path.join(settings.STATIC_URL, 'js/form.js')
-    utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
-    messi_path = os.path.join(settings.STATIC_URL, 'js/messi.js')
+    jquery_path = staticPath('js/jquery.js')
+    jsForm_path = staticPath('js/form.js')
+    utils_path = staticPath('js/utils.js')
+    messi_path = staticPath('js/messi.js')
     
-    # Project Id(or Name) should be stored in SESSION
-    projectName = request.session['projectName']
-    # projectName = request.GET.get('projectName')
-    project = loadProject(projectName)        
-    protocolName = request.GET.get('protocol', None)
+    project, protocol = loadProtocolProject(request, requestType='GET')
+    
     action = request.GET.get('action', None)
+    hosts = [host.getLabel() for host in project.getSettings().getHosts()]
     
-    if protocolName is None:
-        protId = request.GET.get('protocolId', None)
-        protocol = project.mapper.selectById(int(protId))
-    else:
-        protocolClass = emProtocolsDict.get(protocolName, None)
-        protocol = protocolClass()
     if action == 'copy':
         protocol = project.copyProtocol(protocol)
     
@@ -351,7 +344,7 @@ def form(request):
             param.htmlCondParams = ','.join(param._conditionParams)
 #            param.htmlExpertLevel = param.expertLevel.get()   
     
-    context = {'projectName':projectName,
+    context = {'projectName':project.getName(),
                'protocol':protocol,
                'definition': protocol._definition,
                'favicon': favicon_path,
@@ -364,87 +357,93 @@ def form(request):
                'css':css_path,
                'messi': messi_path,
                'messi_css': messi_css_path,
-               'runName': protocol._definition.getParam('runName'),
-               'numberOfMpi': protocol._definition.getParam('numberOfMpi'),
-               'numberOfThreads': protocol._definition.getParam('numberOfThreads'),
-               'hostName': protocol._definition.getParam('hostName')}
+               'hosts':hosts
+               }
+    # Update the context dictionary with the special params
+    for paramName in SPECIAL_PARAMS:
+        context[paramName] = protocol.getAttributeValue(paramName, '')
     
     # Cross Site Request Forgery protection is need it
     context.update(csrf(request))
     
     return render_to_response('form.html', context)
 
-def save_protocol(request):
-#    projectName = request.POST.get('projectName')
+
+def loadProtocolProject(request, requestType='POST'):
+    """ Retrieve the project and protocol from this request.
+    Return:
+        (project, protocol) tuple
+    """
+    requestDict = getattr(request, requestType)
     projectName = request.session['projectName']
-    protId = request.POST.get("protocolId")
-    protClass = request.POST.get("protocolClass")
+    protId = requestDict.get("protocolId")
+    protClass = requestDict.get("protocolClass")
     
     # Load the project
     project = loadProject(projectName)
     
     # Create the protocol object
-    if protId != 'None':  # Case of new protocol
-        protId = request.POST.get('protocolId', None)
+    if protId and protId != 'None':  # Case of new protocol
+        protId = requestDict.get('protocolId', None)
         protocol = project.mapper.selectById(int(protId))
     else:
         protocolClass = emProtocolsDict.get(protClass, None)
-        protocol = protocolClass() 
-    
-    # Update parameter set in the form
-    for paramName, attr in protocol.iterDefinitionAttributes():
-        value = request.POST.get(paramName)
-        if attr.isPointer():
-            if len(value.strip()) > 0:
-                objId = int(value.split('.')[-1])  # Get the id string for last part after .
-                value = project.mapper.selectById(objId)  # Get the object from its id
-                if attr.getObjId() == value.getObjId():
-                    raise Exception("Param: %s is autoreferencing with id: %d" % (paramName, objId))
-            else:
-                value = None
-        attr.set(value)
+        protocol = protocolClass()
         
+    return (project, protocol)
+    
+def updateParam(request, project, protocol, paramName):
+    """
+    Params:
+        request: current request handler
+        project: current working project
+        protocol: current protocol
+        paramName: name of the attribute to be set in the protocol
+            from the web form
+    """
+    attr = getattr(protocol, paramName)
+    value = request.POST.get(paramName)
+    if attr.isPointer():
+        if len(value.strip()) > 0:
+            objId = int(value.split('.')[-1])  # Get the id string for last part after .
+            value = project.mapper.selectById(objId)  # Get the object from its id
+            if attr.getObjId() == value.getObjId():
+                raise Exception("Param: %s is autoreferencing with id: %d" % (paramName, objId))
+        else:
+            value = None
+    attr.set(value)
+    
+SPECIAL_PARAMS = ['runName', 'numberOfMpi', 'numberOfThreads', 'hostName']
+
+def updateProtocolParams(request, protocol, project):
+    """ Update the protocol values from the Web-form.
+    This function will be used from save_protocol and execute_protocol.
+    """
+    for paramName, _ in protocol.iterDefinitionAttributes():
+        updateParam(request, project, protocol, paramName)
+        
+    for paramName in SPECIAL_PARAMS:
+        updateParam(request, project, protocol, paramName)
+        
+def save_protocol(request):
+    project, protocol = loadProtocolProject(request)
+    updateProtocolParams(request, protocol, project)            
     project.saveProtocol(protocol)
     
     return HttpResponse(mimetype='application/javascript')
 
 # Method to launch a protocol #
 def protocol(request):
-#    projectName = request.POST.get('projectName')
-    projectName = request.session['projectName']
-    protId = request.POST.get("protocolId")
-    protClass = request.POST.get("protocolClass")
-    
-    # Load the project
-    project = loadProject(projectName)
-    # Create the protocol object
-    if protId != 'None':  # Case of new protocol
-        protId = request.POST.get('protocolId', None)
-        protocol = project.mapper.selectById(int(protId))
-    else:
-        protocolClass = emProtocolsDict.get(protClass, None)
-        protocol = protocolClass() 
-    # Update parameter set in the form
-    for paramName, attr in protocol.iterDefinitionAttributes():
-        value = request.POST.get(paramName)
-        if attr.isPointer():
-            if len(value.strip()) > 0:
-                objId = int(value.split('.')[-1])  # Get the id string for last part after .
-                value = project.mapper.selectById(objId)  # Get the object from its id
-                if attr.getObjId() == value.getObjId():
-                    raise Exception("Param: %s is autoreferencing with id: %d" % (paramName, objId))
-            else:
-                value = None
-        attr.set(value)
-    
+    project, protocol = loadProtocolProject(request)
+    updateProtocolParams(request, protocol, project)    
     errors = protocol.validate()
 
     if len(errors) == 0:
         # No errors 
         # Finally, launch the protocol
         project.launchProtocol(protocol)
-    jsonStr = json.dumps({'errors' : errors},
-                     ensure_ascii=False)
+    jsonStr = json.dumps({'errors' : errors}, ensure_ascii=False)
+    
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
 def browse_objects(request):
@@ -470,10 +469,10 @@ def getScipionHosts():
 
 def viewHosts(request):  
     # Resources #
-    css_path = os.path.join(settings.STATIC_URL, 'css/general_style.css')
-    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
-    utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
-    host_utils_path = os.path.join(settings.STATIC_URL, 'js/hostUtils.js')
+    css_path = staticPath('css/general_style.css')
+    jquery_path = staticPath('js/jquery.js')
+    utils_path = staticPath('js/utils.js')
+    host_utils_path = staticPath('js/hostUtils.js')
     
     projectName = request.session['projectName']    
     project = loadProject(projectName)
@@ -514,9 +513,9 @@ def viewHosts(request):
 
 
 def getHostFormContext(request, host=None, initialContext=None):
-    css_path = os.path.join(settings.STATIC_URL, 'css/general_style.css')
-    jquery_path = os.path.join(settings.STATIC_URL, 'js/jquery.js')
-    utils_path = os.path.join(settings.STATIC_URL, 'js/utils.js')
+    css_path = staticPath('css/general_style.css')
+    jquery_path = staticPath('js/jquery.js')
+    utils_path = staticPath('js/utils.js')
     form = None
 #     scpnHostsChoices = []
 #     scpnHostsChoices.append(('', ''))
