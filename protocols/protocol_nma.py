@@ -5,12 +5,13 @@
 #         Slavica Jonic
 #
 
-import glob,os,re,sys,shutil,time
+import glob,os,re,sys,shutil,time,math
 from protlib_base import *
 from config_protocols import protDict
 from protlib_utils import runJob, which, runShowJ, runChimera, runVMD
 from protlib_filesystem import changeDir, createLink, getExt, moveFile, createDir, deleteFile
-from xmipp import MetaData, MDL_X, MDL_COUNT, MDL_NMA_MODEFILE, MDL_ORDER, MDL_ENABLED, MDL_NMA_COLLECTIVITY, MDL_NMA_SCORE, getImageSize
+from xmipp import MetaData, MDL_X, MDL_COUNT, MDL_NMA_MODEFILE, MDL_ORDER, MDL_ENABLED, MDL_NMA_COLLECTIVITY, MDL_NMA_SCORE, \
+    MDL_NMA_ATOMSHIFT, getImageSize
 
 class ProtNMA(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -57,6 +58,7 @@ class ProtNMA(XmippProtocol):
                             Amplitude=self.Amplitude,NFrames=self.NFrames,Downsample=self.Downsample,
                             PseudoAtomThreshold=self.PseudoAtomThreshold, PseudoAtomRadius=self.PseudoAtomRadius,
                             Sampling=self.Sampling)
+            self.insertStep('computeAtomShifts',WorkingDir=self.WorkingDir,NumberOfModes=self.NumberOfModes)
             if self.StructureType=="EM":
                 self.insertStep('generateChimeraScript',WorkingDir=self.WorkingDir,MaskMode=self.MaskMode,Threshold=self.Threshold, \
                                 InputStructure=self.InputStructure, PseudoAtomRadius=self.PseudoAtomRadius, Sampling=self.Sampling)
@@ -82,6 +84,8 @@ class ProtNMA(XmippProtocol):
         plots = [k for k in ['DisplayPseudoAtom'
                             ,'DisplayPseudoApproximation'
                             ,'DisplayModes'
+                            ,'DisplayMaxDistanceProfile'
+                            ,'DisplayDistanceProfile'
                            ] if self.ParamsDict[k]]
         if len(plots):
             self.launchVisualize(plots)
@@ -100,6 +104,13 @@ class ProtNMA(XmippProtocol):
             runShowJ(self.InputStructure+" "+self.getFilename("extra_pseudoatoms")+"_approximation.vol")
         if doPlot('DisplayModes'):
             runShowJ(self.workingDirPath('modes.xmd'))
+        if doPlot('DisplayMaxDistanceProfile'):
+            fnProfile=os.path.join("extra","maxAtomShifts.xmd")
+            os.system("xmipp_metadata_plot -i "+self.workingDirPath(fnProfile)+' -y nmaAtomShift --title "Maximum atom shifts" &')
+        if doPlot('DisplayDistanceProfile'):
+            fnProfile=os.path.join("extra","distanceProfiles","vec%d"%int(self.DisplaySingleMode)+".xmd")
+            os.system("xmipp_metadata_plot -i "+self.workingDirPath(fnProfile)+' -y nmaAtomShift --title "Atom shifts for mode '+\
+                      self.DisplaySingleMode+'" &')
 
 def countAtoms(fnPDB):
     fh = open(fnPDB, 'r')
@@ -204,6 +215,39 @@ def animateModes(log,WorkingDir,LastMode,Amplitude,NFrames,Downsample,PseudoAtom
         fhCmd.close();
     
     changeDir(log,currentDir)
+
+def computeAtomShifts(log,WorkingDir,NumberOfModes):
+    fnOutDir=os.path.join(WorkingDir,"extra/distanceProfiles")
+    createDir(log,fnOutDir)
+    maxShift=[]
+    maxShiftMode=[]
+    for n in range(7,NumberOfModes+1):
+        fhIn=open(os.path.join(WorkingDir,"modes/vec."+str(n)))
+        md=MetaData()
+        atomCounter=0;
+        for line in fhIn:
+            coord=line.split()
+            x=float(coord[0])
+            y=float(coord[1])
+            z=float(coord[2])
+            d=math.sqrt(x*x+y*y+z*z)
+            if n==7:
+                maxShift.append(d)
+                maxShiftMode.append(7)
+            else:
+                if d>maxShift[atomCounter]:
+                    maxShift[atomCounter]=d
+                    maxShiftMode[atomCounter]=n
+            atomCounter+=1
+            md.setValue(MDL_NMA_ATOMSHIFT,d,md.addObject())
+        md.write(os.path.join(fnOutDir,"vec"+str(n)+".xmd"))
+        fhIn.close()
+    md=MetaData()
+    for i in range(len(maxShift)):
+        id=md.addObject()
+        md.setValue(MDL_NMA_ATOMSHIFT,maxShift[i],id)
+        md.setValue(MDL_NMA_MODEFILE,os.path.join(WorkingDir,"modes/vec."+str(maxShiftMode[i]+1)),id)
+    md.write(os.path.join(WorkingDir,'extra','maxAtomShifts.xmd'))
 
 def generateChimeraScript(log,WorkingDir,MaskMode,Threshold,InputStructure,PseudoAtomRadius,Sampling):
     fhCmd=open(os.path.join(WorkingDir,"chimera.cmd"),'w')

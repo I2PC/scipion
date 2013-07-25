@@ -93,6 +93,12 @@ DisplayPseudoApproximation=True
 # {view} Open list of modes
 DisplayModes=True
 
+# {view} Plot max distance profile
+DisplayMaxDistanceProfile=True
+
+# {view} Plot distance profile
+DisplayDistanceProfile=True
+
 # Open specific mode
 DisplaySingleMode="7"
 
