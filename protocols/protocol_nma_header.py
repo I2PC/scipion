@@ -63,6 +63,16 @@ Rc=8
 """The interatomic distance is calculated and this percentage defines how many of the nearest neighbours are considered """
 RcPercentage=95
 
+# {expert}{condition}(StructureType=="PDB") Number of residues per RTB block:
+"""This is the RTB block size for the RTB NMA method. 
+When calculating the normal modes, aminoacids are grouped into blocks of this size that are moved translationally and rotationally together """
+RTBblockSize=10
+
+# {expert}{condition}(StructureType=="PDB") Interaction force constant
+"""This is the RTB interaction force constant for the RTB NMA method. 
+If it increases, then the structure will be more rigid. """
+RTBForceConstant=10.0
+
 #------------------------------------------------------------------------------------------------
 # {section} Animation
 #------------------------------------------------------------------------------------------------
@@ -84,10 +94,10 @@ PseudoAtomThreshold=0
 # {section}{visualize} Visualization
 #------------------------------------------------------------------------------------------------
 
-# {view} Display pseudoatom representation
+# {view}{condition}(StructureType=="EM") Display pseudoatom representation
 DisplayPseudoAtom=True
 
-# {view} Display pseudoatom approximation
+# {view}{condition}(StructureType=="EM") Display pseudoatom approximation
 DisplayPseudoApproximation=True
 
 # {view} Open list of modes

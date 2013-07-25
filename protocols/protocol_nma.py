@@ -22,7 +22,9 @@ class ProtNMA(XmippProtocol):
         return {
             'normal_modes': "%(WorkingDir)s/normal_modes.xmd",
             'pseudoatoms':  '%(WorkingDir)s/pseudoatoms',
-            'extra_pseudoatoms':  '%(ExtraDir)s/pseudoatoms'
+            'extra_pseudoatoms':  '%(ExtraDir)s/pseudoatoms',
+            'atoms':  '%(WorkingDir)s/atoms',
+            'extra_atoms':  '%(ExtraDir)s/atoms'
             }
 
     def defineSteps(self):
@@ -50,19 +52,36 @@ class ProtNMA(XmippProtocol):
             self.insertStep('moveFile',source=fnOut+"_approximation.vol",dest=self.getFilename("extra_pseudoatoms")+"_approximation.vol")
             self.insertStep('moveFile',source=fnOut+"_distance.hist",dest=self.getFilename("extra_pseudoatoms")+"_distance.hist")
             self.insertRunJobStep("rm", params=fnOut+"_*")
+            
+            # Compute modes
             self.insertStep('computeModes',WorkingDir=self.WorkingDir, NumberOfModes=self.NumberOfModes,
                             CutoffMode=self.CutoffMode, Rc=self.Rc, RcPercentage=self.RcPercentage)
             self.insertStep('reformatOutput',WorkingDir=self.WorkingDir)
-            self.insertStep('qualifyModes',WorkingDir=self.WorkingDir,NumberOfModes=self.NumberOfModes)
-            self.insertStep('animateModes',WorkingDir=self.WorkingDir,LastMode=self.NumberOfModes,
-                            Amplitude=self.Amplitude,NFrames=self.NFrames,Downsample=self.Downsample,
-                            PseudoAtomThreshold=self.PseudoAtomThreshold, PseudoAtomRadius=self.PseudoAtomRadius,
-                            Sampling=self.Sampling)
-            self.insertStep('computeAtomShifts',WorkingDir=self.WorkingDir,NumberOfModes=self.NumberOfModes)
+            
             if self.StructureType=="EM":
                 self.insertStep('generateChimeraScript',WorkingDir=self.WorkingDir,MaskMode=self.MaskMode,Threshold=self.Threshold, \
                                 InputStructure=self.InputStructure, PseudoAtomRadius=self.PseudoAtomRadius, Sampling=self.Sampling)
-    
+        else: # PDB
+            # Link the input
+            self.insertStep("copyFile",source=self.InputStructure,dest=self.workingDirPath(os.path.basename(self.InputStructure)))
+            self.insertStep("createLink",source=self.workingDirPath(os.path.basename(self.InputStructure)),dest=self.workingDirPath("atoms.pdb"))
+            
+            # Compute modes
+            if self.CutoffMode=='Relative':
+                params="-i "+self.InputStructure+" -o "+self.getFilename("extra_atoms")+"_distance.hist"
+                self.insertRunJobStep("xmipp_pdb_compute_distance_histogram",params=params)
+            self.insertStep('computeModesPDB',WorkingDir=self.WorkingDir, NumberOfModes=self.NumberOfModes,
+                            CutoffMode=self.CutoffMode, Rc=self.Rc, RcPercentage=self.RcPercentage, RTBblockSize=self.RTBblockSize,
+                            RTBForceConstant=self.RTBForceConstant)
+            self.insertStep('reformatOutputPDB',WorkingDir=self.WorkingDir, NumberOfModes=self.NumberOfModes)
+            self.PseudoAtomThreshold=0.0
+        self.insertStep('qualifyModes',WorkingDir=self.WorkingDir,NumberOfModes=self.NumberOfModes,StructureType=self.StructureType)
+        self.insertStep('animateModes',WorkingDir=self.WorkingDir,LastMode=self.NumberOfModes,
+                        Amplitude=self.Amplitude,NFrames=self.NFrames,Downsample=self.Downsample,
+                        PseudoAtomThreshold=self.PseudoAtomThreshold, PseudoAtomRadius=self.PseudoAtomRadius,
+                        Sampling=self.Sampling,StructureType=self.StructureType)
+        self.insertStep('computeAtomShifts',WorkingDir=self.WorkingDir,NumberOfModes=self.NumberOfModes)
+
     def summary(self):
         message=[]
         message.append('NMA of [%s]'%self.InputStructure)
@@ -98,10 +117,11 @@ class ProtNMA(XmippProtocol):
     def launchVisualize(self,selectedPlots):
         def doPlot(plotName):
             return plotName in selectedPlots
-        if doPlot('DisplayPseudoAtom'):
-            runChimera(self.workingDirPath("chimera.cmd"))
-        if doPlot('DisplayPseudoApproximation'):
-            runShowJ(self.InputStructure+" "+self.getFilename("extra_pseudoatoms")+"_approximation.vol")
+        if self.StructureType=="EM":
+            if doPlot('DisplayPseudoAtom'):
+                runChimera(self.workingDirPath("chimera.cmd"))
+            if doPlot('DisplayPseudoApproximation'):
+                runShowJ(self.InputStructure+" "+self.getFilename("extra_pseudoatoms")+"_approximation.vol")
         if doPlot('DisplayModes'):
             runShowJ(self.workingDirPath('modes.xmd'))
         if doPlot('DisplayMaxDistanceProfile'):
@@ -149,6 +169,34 @@ def computeModes(log, WorkingDir, NumberOfModes, CutoffMode, Rc, RcPercentage):
     runJob(log,"rm","diag_arpack.in pdbmat.dat")
     changeDir(log,currentDir)
 
+def computeModesPDB(log, WorkingDir, NumberOfModes, CutoffMode, Rc, RcPercentage, RTBblockSize, RTBForceConstant):
+    if CutoffMode=="Relative":
+        MDhist=MetaData(os.path.join(WorkingDir,"extra/pseudoatoms_distance.hist"))
+        distances=MDhist.getColumnValues(MDL_X)
+        distanceCount=MDhist.getColumnValues(MDL_COUNT)
+        
+        # compute total number of distances
+        Ncounts=0
+        for count in distanceCount:
+            Ncounts+=count
+        
+        # Compute threshold
+        NcountThreshold=Ncounts*RcPercentage/100.0
+        Ncounts=0
+        for i in range(len(distanceCount)):
+            Ncounts+=distanceCount[i]
+            if Ncounts>NcountThreshold:
+                Rc=distances[i]
+                break
+        print("Cut-off distance="+str(Rc))
+    currentDir=os.getcwd()
+    changeDir(log,WorkingDir)
+    runJob(log,"nma_record_info_PDB.py","%d %d atoms.pdb %f %f"%(NumberOfModes,RTBblockSize,Rc,RTBForceConstant))
+    runJob(log,"nma_elnemo_pdbmat","")
+    runJob(log,"diagrtb","")
+    runJob(log,"rm","*.dat_run diagrtb.dat pdbmat.xyzm pdbmat.sdijf pdbmat.dat")
+    changeDir(log,currentDir)
+
 def reformatOutput(log,WorkingDir):
     currentDir=os.getcwd()
     changeDir(log,WorkingDir)
@@ -164,13 +212,43 @@ def reformatOutput(log,WorkingDir):
     moveFile(log,'vec_ani.pkl','extra/vec_ani.pkl')
     changeDir(log,currentDir)
 
-def qualifyModes(log,WorkingDir,NumberOfModes):
+def reformatOutputPDB(log,WorkingDir,NumberOfModes):
+    currentDir=os.getcwd()
+    changeDir(log,WorkingDir)
+    createDir(log,"modes")
+    Natoms=countAtoms("atoms.pdb")
+    fhIn=open('diagrtb.eigenfacs')
+    fhAni=open('vec_ani.txt','w')
+    for n in range(NumberOfModes):
+        # Skip two lines
+        fhIn.readline()
+        fhIn.readline()
+        fhOut=open('modes/vec.%d'%(n+1),'w')
+        for i in range(Natoms):
+            line=fhIn.readline()
+            fhOut.write(line)
+            fhAni.write(line.rstrip().lstrip()+" ")
+        fhOut.close()
+        if n!=(NumberOfModes-1):
+            fhAni.write("\n")
+    fhIn.close()
+    fhAni.close()
+    runJob(log,"nma_prepare_for_animate.py","")
+    runJob(log,"rm","vec_ani.txt")
+    moveFile(log,'vec_ani.pkl','extra/vec_ani.pkl')
+    changeDir(log,currentDir)
+
+def qualifyModes(log,WorkingDir,NumberOfModes,StructureType):
     currentDir=os.getcwd()
     changeDir(log,WorkingDir)
     
-    runJob(log,"nma_reformatForElNemo.sh","%d"%NumberOfModes)
-    runJob(log,"echo","diag_arpack.eigenfacs | check_modes")
-    deleteFile(log,"diag_arpack.eigenfacs")
+    fnDiag="diagrtb.eigenfacs"
+    if StructureType=="EM":
+        runJob(log,"nma_reformatForElNemo.sh","%d"%NumberOfModes)
+        fnDiag="diag_arpack.eigenfacs"
+        
+    runJob(log,"echo","%s | check_modes"%fnDiag)
+    deleteFile(log,fnDiag)
     
     fh=open("Chkmod.res")
     MDout=MetaData()
@@ -195,12 +273,16 @@ def qualifyModes(log,WorkingDir,NumberOfModes):
     deleteFile(log,"Chkmod.res")
     changeDir(log,currentDir)
 
-def animateModes(log,WorkingDir,LastMode,Amplitude,NFrames,Downsample,PseudoAtomThreshold,PseudoAtomRadius,Sampling):
+def animateModes(log,WorkingDir,LastMode,Amplitude,NFrames,Downsample,PseudoAtomThreshold,PseudoAtomRadius,Sampling,StructureType):
     createDir(log,os.path.join(WorkingDir,"extra/animations"))
     currentDir=os.getcwd()
     changeDir(log,WorkingDir)
-    runJob(log,"nma_animate.py","pseudoatoms.pdb extra/vec_ani.pkl 7 %d %f extra/animations/animated_mode %d %d %f"%\
-                  (LastMode,Amplitude,NFrames,Downsample,PseudoAtomThreshold))
+    if StructureType=="EM":
+        fn="pseudoatoms.pdb"
+    else:
+        fn="atoms.pdb"
+    runJob(log,"nma_animate.py","%s extra/vec_ani.pkl 7 %d %f extra/animations/animated_mode %d %d %f"%\
+                  (fn,LastMode,Amplitude,NFrames,Downsample,PseudoAtomThreshold))
     
     for mode in range(7,LastMode+1):
         fnAnimation="extra/animations/animated_mode_%03d"%mode
@@ -208,8 +290,12 @@ def animateModes(log,WorkingDir,LastMode,Amplitude,NFrames,Downsample,PseudoAtom
         fhCmd.write("mol new "+os.path.join(WorkingDir,fnAnimation)+".pdb\n")
         fhCmd.write("animate style Loop\n")
         fhCmd.write("display projection Orthographic\n")
-        fhCmd.write("mol modcolor 0 0 Beta\n")
-        fhCmd.write("mol modstyle 0 0 Beads %f 8.000000\n"%(PseudoAtomRadius*Sampling))
+        if StructureType=="EM":
+            fhCmd.write("mol modcolor 0 0 Beta\n")
+            fhCmd.write("mol modstyle 0 0 Beads %f 8.000000\n"%(PseudoAtomRadius*Sampling))
+        else:
+            fhCmd.write("mol modcolor 0 0 Index\n")
+            fhCmd.write("mol modstyle 0 0 Beads 1.000000 8.000000\n")
         fhCmd.write("animate speed 0.5\n")
         fhCmd.write("animate forward\n")
         fhCmd.close();
