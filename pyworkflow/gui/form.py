@@ -163,7 +163,6 @@ class SectionWidget(tk.Frame):
     def set(self, value):
         self.var.set(value)
     
-    
 class ParamWidget():
     """For each one in the Protocol parameters, there will be
     one of this in the Form GUI.
@@ -199,7 +198,7 @@ class ParamWidget():
         else:
             f = self.window.font
         self.label = tk.Label(self.parent, text=self.param.label.get(), 
-                              bg='white', font=f)
+                              bg='white', font=f, wraplength=250)
                
     def _createContent(self):
         self.content = tk.Frame(self.parent, bg='white')
@@ -222,19 +221,35 @@ class ParamWidget():
         wizClass = self.window.wizards[self.paramName]
         wizClass().show(self.window)
                
+    @staticmethod
+    def createBoolWidget(parent, **args):
+        """ Return a BoolVar associated with a yes/no selection. 
+        **args: extra arguments passed to tk.Radiobutton and tk.Frame constructors.
+        """
+        var = BoolVar()
+        frame = tk.Frame(parent, **args)
+        frame.grid(row=0, column=0, sticky='w')
+        rb1 = tk.Radiobutton(frame, text='Yes', variable=var.tkVar, value=1, **args)
+        rb1.grid(row=0, column=0, padx=2, sticky='w')
+        rb2 = tk.Radiobutton(frame, text='No', variable=var.tkVar, value=0, **args)
+        rb2.grid(row=0, column=1, padx=2, sticky='w') 
+        
+        return (var, frame)       
+        
     def _createContentWidgets(self, param, content):
         """Create the specific widgets inside the content frame"""
         # Create widgets for each type of param
         t = type(param)
         #TODO: Move this to a Renderer class to be more flexible
         if t is BooleanParam:
-            var = BoolVar()
-            frame = tk.Frame(content, bg='white')
-            frame.grid(row=0, column=0, sticky='w')
-            rb1 = tk.Radiobutton(frame, text='Yes', bg='white', variable=var.tkVar, value=1)
-            rb1.grid(row=0, column=0, padx=2, sticky='w')
-            rb2 = tk.Radiobutton(frame, text='No', bg='white', variable=var.tkVar, value=0)
-            rb2.grid(row=0, column=1, padx=2, sticky='w')
+            var, frame = ParamWidget.createBoolWidget(content, bg='white')
+#            var = BoolVar()
+#            frame = tk.Frame(content, bg='white')
+#            frame.grid(row=0, column=0, sticky='w')
+#            rb1 = tk.Radiobutton(frame, text='Yes', bg='white', variable=var.tkVar, value=1)
+#            rb1.grid(row=0, column=0, padx=2, sticky='w')
+#            rb2 = tk.Radiobutton(frame, text='No', bg='white', variable=var.tkVar, value=0)
+#            rb2.grid(row=0, column=1, padx=2, sticky='w')
             
         elif t is EnumParam:
             var = ComboVar(param)
@@ -301,23 +316,39 @@ class ParamWidget():
         return self.var.get()
         
 
+class Binding():
+    def __init__(self, paramName, var, protocol, *callbacks):
+        self.paramName = paramName
+        self.var = var
+        self.var.set(protocol.getAttributeValue(paramName, ''))
+        self.var.trace('w', self._onVarChanged)
+        self.callbacks = callbacks
+        
+    def _onVarChanged(self, *args):
+        for cb in self.callbacks:
+            cb(self.paramName)
+            
     
 class FormWindow(Window):
     """This class will create the Protocol params GUI to enter parameters.
     The creaation of compoments will be based on the Protocol Form definition.
     This class will serve as a connection between the GUI variables (tk vars) and 
     the Protocol variables."""
-    def __init__(self, title, protocol, callback, master=None, **args):
+    def __init__(self, title, protocol, callback, master=None, hostList=['localhost'], **args):
         """ Constructor of the Form window. 
         Params:
          title: title string of the windows.
          protocol: protocol from which the form will be generated.
          callback: callback function to call when Save or Excecute are press.
         """
-        Window.__init__(self, title, master, icon='scipion_bn.xbm', weight=False, **args)
+        Window.__init__(self, title, master, icon='scipion_bn.xbm', 
+                        weight=False, minsize=(500, 450), **args)
 
         self.callback = callback
         self.widgetDict = {} # Store tkVars associated with params
+        self.bindings = []
+        self.protocol = protocol
+        self.hostList = hostList
         self.protocol = protocol
         from pyworkflow.em import findWizards
         self.wizards = findWizards(protocol.getDefinition(), 'tkinter')
@@ -331,6 +362,10 @@ class FormWindow(Window):
         headerLabel = tk.Label(headerFrame, text='Protocol: ' + protocol.getClassName(), font=self.fontBig)
         headerLabel.grid(row=0, column=0, padx=5, pady=5)
         
+        commonFrame = self._createHeaderCommons(headerFrame)
+        commonFrame.grid(row=1, column=0, padx=5, pady=5, sticky='news')
+        headerFrame.columnconfigure(0, weight=1)
+        
         text = TaggedText(self.root, width=40, height=15, bd=0, cursor='arrow')
         text.grid(row=1, column=0, sticky='news')
         text.config(state=tk.DISABLED)
@@ -340,19 +375,7 @@ class FormWindow(Window):
         bottomFrame.columnconfigure(0, weight=1)
         bottomFrame.grid(row=2, column=0, sticky='sew')
         
-        expertFrame = tk.Frame(bottomFrame)
-        #expertFrame.columnconfigure(0, weight=1)
-        expertFrame.grid(row=0, column=0, sticky='sw', padx=5, pady=5)
-        expLabel = tk.Label(expertFrame, text="Expert level: ", font=self.font)
-        expLabel.grid(row=0, column=0)
-        param = EnumParam(choices=LEVEL_CHOICES)
-        var = ComboVar(param)
-        var.set(self.protocol.expertLevel.get())
-        expCombo = ttk.Combobox(expertFrame, textvariable=var.tkVar, state='readonly')
-        expCombo['values'] = param.choices        
-        expCombo.grid(row=0, column=1)
-        self.expertVar = var
-        self.expertVar.trace('w', self._onExpertLevelChanged)
+
         
         btnFrame = tk.Frame(bottomFrame)
         btnFrame.columnconfigure(2, weight=1)
@@ -376,6 +399,81 @@ class FormWindow(Window):
         # Resize windows to use more space if needed
         self.desiredDimensions = lambda: self.resize(contentFrame)
         #self.resize(contentFrame)
+        
+    def _addVarBinding(self, paramName, var, *callbacks):
+        binding = Binding(paramName, var, self.protocol, 
+                          self.setParamFromVar, *callbacks)
+        self.widgetDict[paramName] = var
+        self.bindings.append(binding)
+        
+    def _createBoundEntry(self, parent, paramName, width=5):
+        var = tk.StringVar()
+        setattr(self, paramName + 'Var', var)
+        self._addVarBinding(paramName, var)
+        return tk.Entry(parent, font=self.font, width=width, textvariable=var)
+    
+    def _createBoundCombo(self, parent, paramName, choices, *callbacks):
+        # Create expert level combo
+        param = EnumParam(choices=choices)
+        var = ComboVar(param)
+        #self.protocol.expertLevel.set(0)
+        self._addVarBinding(paramName, var, *callbacks)
+        #var.set(self.protocol.expertLevel.get())
+        combo = ttk.Combobox(parent, textvariable=var.tkVar, 
+                                state='readonly', width=10)
+        combo['values'] = param.choices
+        return combo
+            
+        
+        
+    def _createHeaderCommons(self, parent):
+        """ Create the header common values such as: runName, expertLevel, mpi... """
+        commonFrame = tk.Frame(parent)
+        commonFrame.columnconfigure(0, weight=1)
+        commonFrame.columnconfigure(1, weight=1)
+        
+        ############# Create the run part ###############
+        # Run name
+        runFrame = ttk.Labelframe(commonFrame, text='Run')
+        tk.Label(runFrame, text="Run label", font=self.font).grid(row=0, column=0, padx=5, pady=5, sticky='ne')
+        self._createBoundEntry(runFrame, 'runName', width=15).grid(row=0, column=1, padx=(0, 5), pady=5, sticky='nw')
+        # Expert level
+        tk.Label(runFrame, text="Expert level", font=self.font).grid(row=1, column=0, sticky='ne', padx=5, pady=5)
+        expCombo = self._createBoundCombo(runFrame, 'expertLevel', LEVEL_CHOICES, self._onExpertLevelChanged)   
+        expCombo.grid(row=1, column=1, sticky='nw', padx=(0, 5), pady=5)
+        # Run mode
+        self.protocol.getDefinitionParam('')
+        tk.Label(runFrame, text="Run mode", font=self.font).grid(row=2, column=0, sticky='ne', padx=5, pady=5)
+        modeCombo = self._createBoundCombo(runFrame, 'runMode', MODE_CHOICES, self._onExpertLevelChanged)   
+        modeCombo.grid(row=2, column=1, sticky='nw', padx=(0, 5), pady=5)        
+        
+        runFrame.grid(row=0, column=0, sticky='news', padx=5, pady=5)
+        
+        ############## Create the execution part ############
+        # Host name
+        execFrame = ttk.Labelframe(commonFrame, text='Execution')
+        tk.Label(execFrame, text="Host", font=self.font).grid(row=0, column=0, padx=5, pady=5, sticky='ne')
+        param = EnumParam(choices=self.hostList)
+        self.hostVar = tk.StringVar()
+        self._addVarBinding('hostName', self.hostVar)
+        #self.hostVar.set(self.protocol.getHostName())
+        expCombo = ttk.Combobox(execFrame, textvariable=self.hostVar, state='readonly', width=15)
+        expCombo['values'] = param.choices        
+        expCombo.grid(row=0, column=1, columnspan=3, padx=(0, 5), pady=5, sticky='nw')
+        # Threads and MPI
+        tk.Label(execFrame, text="Threads", font=self.font).grid(row=1, column=0, padx=5, pady=5, sticky='ne')
+        self._createBoundEntry(execFrame, 'numberOfThreads').grid(row=1, column=1, padx=(0, 5))
+        tk.Label(execFrame, text="MPI", font=self.font).grid(row=1, column=2, padx=(0, 5))
+        self._createBoundEntry(execFrame, 'numberOfMpi').grid(row=1, column=3, padx=(0, 5))
+        # Queue
+        tk.Label(execFrame, text="Launch to queue?", font=self.font).grid(row=2, column=0, padx=5, pady=5, sticky='ne', columnspan=3)
+        var, frame = ParamWidget.createBoolWidget(execFrame)
+        self._addVarBinding('_useQueue', var)
+        frame.grid(row=2, column=3, padx=5, pady=5, sticky='nw')
+        
+        execFrame.grid(row=0, column=1, sticky='news', padx=5, pady=5)
+        
+        return commonFrame
         
     def resize(self, frame):
         self.root.update_idletasks()
@@ -429,17 +527,22 @@ class FormWindow(Window):
                 widget.show() # Show always, conditions will be checked later
                 r += 1         
             self.widgetDict[paramName] = widget
-            # Set the value to the variable from Protocol instance or default
+        # Ensure width and height needed
+        w, h = parent.winfo_reqwidth(), parent.winfo_reqheight()
+        sectionWidget.columnconfigure(0, minsize=w)
+        sectionWidget.rowconfigure(0, minsize=h)
         
     def _checkCondition(self, paramName):
         """Check if the condition of a param is statisfied 
         hide or show it depending on the result"""
         widget = self.widgetDict[paramName]
-        v = self.protocol.evalParamCondition(paramName) and self.protocol.evalExpertLevel(paramName)
-        if v:
-            widget.show()
-        else:
-            widget.hide()
+        
+        if isinstance(widget, ParamWidget): # Special vars like MPI, threads or runName are not real widgets
+            v = self.protocol.evalParamCondition(paramName) and self.protocol.evalExpertLevel(paramName)
+            if v:
+                widget.show()
+            else:
+                widget.hide()
             
     def _checkChanges(self, paramName):
         """Check the conditions of all params affected
@@ -455,25 +558,30 @@ class FormWindow(Window):
             self._checkCondition(paramName)
             
     def _onExpertLevelChanged(self, *args):
-        self.protocol.expertLevel.set(self.expertVar.get())
+        #self.protocol.expertLevel.set(self.expertVar.get())
         self._checkAllChanges()
         
         
     def getVarValue(self, varName):
         """This method should retrieve a value from """
         pass
-    
-    def setVarFromParam(self, tkVar, paramName):
+        
+    def setVar(self, paramName, value):
+        var = self.widgetDict[paramName]
+        var.set(value)
+        
+    def setVarFromParam(self, paramName):
+        var = self.widgetDict[paramName]
         value = getattr(self.protocol, paramName, None)
         if value is not None:
-            tkVar.set(value.get(''))
+            var.set(value.get(''))
            
     def setParamFromVar(self, paramName):
         value = getattr(self.protocol, paramName, None)
         if value is not None:
-            w = self.widgetDict[paramName]
+            var = self.widgetDict[paramName]
             try:
-                value.set(w.get())
+                value.set(var.get())
             except ValueError:
                 print "Error setting value for: ", paramName
                 value.set(None)
@@ -487,14 +595,20 @@ class FormWindow(Window):
         r = 0
         parent = tk.Frame(text) 
         parent.columnconfigure(0, weight=1)
+        tab = ttk.Notebook(parent) 
+        tab.grid(row=0, column=0, sticky='news',
+                 padx=5, pady=5)
         
         for section in self.protocol.iterDefinitionSections():
-            frame = SectionWidget(self, parent, section, 
-                                  callback=self._checkChanges, bg='white')
-            frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
-            frame.columnconfigure(0, minsize=400)
-            self._fillSection(section, frame)
-            r += 1
+            label = section.getLabel()
+            if label != 'General' and label != 'Parallelization':
+                frame = SectionWidget(self, tab, section, 
+                                      callback=self._checkChanges, bg='white')
+            #frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
+                tab.add(frame, text=section.getLabel())
+                frame.columnconfigure(0, minsize=400)
+                self._fillSection(section, frame)
+                r += 1
         self._checkAllChanges()
         
         # with Windows OS

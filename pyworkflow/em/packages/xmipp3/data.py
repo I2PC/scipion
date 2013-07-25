@@ -428,7 +428,7 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         pathPos = self.getMicrographPosFile(micrograph.getId())
         
         if exists(pathPos):
-            mdPos = xmipp.MetaData('particles@%s' % pathPos)
+            mdPos = xmipp.MetaData('particles@' + pathPos)
                             
             for i, objId in enumerate(mdPos):
                 x = mdPos.getValue(xmipp.MDL_XCOOR, objId)
@@ -575,7 +575,7 @@ class XmippClassification2D(Classification2D):
         md = xmipp.MetaData('%(block)s@%(fn)s' % locals())
         for objId in md:
             ref = md.getValue(xmipp.MDL_REF, objId)
-            img = md.getValue(xmipp.MDL_IMAGE, objId)
+            img = XmippImage(md.getValue(xmipp.MDL_IMAGE, objId))
             yield XmippClass2D(ref, fn, img)
             
     def getClassesMdFileName(self):

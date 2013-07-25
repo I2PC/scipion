@@ -466,6 +466,9 @@ class ProtClassify(Protocol):
 class ProtAlignClassify(Protocol):
     pass
 
+class ProtInitialVolume(Protocol):
+    pass
+
 class ProtRefine3D(Protocol):
     pass
 

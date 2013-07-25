@@ -30,7 +30,7 @@ This sub-package contains the XmippParticlePicking protocol
 
 from pyworkflow.em import *  
 from pyworkflow.utils.path import *  
-from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_ORIGINAL, MDL_MICROGRAPH_TILTED, MDL_MICROGRAPH_TILTED_ORIGINAL, MDL_PICKING_PARTICLE_SIZE
+import xmipp
 from pyworkflow.em.packages.xmipp3.data import *
 from xmipp3 import XmippProtocol
 from data import XmippSetOfMicrographs
@@ -104,11 +104,13 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         posMd = xmipp.MetaData()
         for mic in inputMicsXmipp:
             micPosFn = self._getExtraPath(replaceBaseExt(mic.getFileName(), 'pos'))
-            micPosMd = xmipp.MetaData(micPosFn)
+            micPosBlockFn = 'particles@' + micPosFn
+            micPosMd = xmipp.MetaData(micPosBlockFn)
             #TODO:  micPosMd.fillLinear
-            for id in micPosMd:
+            for objId in micPosMd:
                 coordId += 1
-                micPosMd.setValue(xmipp.MDL_ITEM_ID, coordId, id)
+                micPosMd.setValue(xmipp.MDL_ITEM_ID, coordId, objId)
+            micPosMd.write(micPosBlockFn, xmipp.MD_APPEND)
             posId = posMd.addObject()
             posMd.setValue(xmipp.MDL_ITEM_ID, mic.getId(), posId)
             posMd.setValue(xmipp.MDL_MICROGRAPH_PARTICLES, micPosFn, posId)
@@ -133,8 +135,8 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         
     def createOutput(self):
         fn = self._getExtraPath('config.xmd')
-        md = MetaData('properties@%s' % fn)
-        size = md.getValue(MDL_PICKING_PARTICLE_SIZE, md.firstObject())
+        md = xmipp.MetaData('properties@%s' % fn)
+        size = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, md.firstObject())
         coords = self._createSetOfCoordinates(size)
         self._defineOutputs(outputCoordinates=coords)
 

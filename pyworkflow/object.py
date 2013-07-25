@@ -53,17 +53,25 @@ class Object(object):
     def hasAttribute(self, attrName):
         return hasattr(self, attrName)
     
-    def getAttributeValue(self, attrName):
+    def getAttributeValue(self, attrName, defaultValue=None):
         """ Get the attribute value given its name.
         Equivalent to getattr(self, name).get() 
         """
-        attr = getattr(self, attrName)
-        if callable(attr):
+        attr = getattr(self, attrName, None)
+        if attr is None:
+            value = defaultValue
+        elif callable(attr):
             value = attr()
         else:
             value = attr.get()
         return value
     
+    def setAttributeValue(self, attrName, value):
+        """ Get the attribute value given its name.
+        Equivalent to getattr(self, name).get() 
+        """
+        getattr(self, attrName).set(value)
+        
     def getAttributesToStore(self):
         """Return the list of attributes than are
         subclasses of Object and will be stored"""

@@ -304,7 +304,8 @@ class ProtocolsView(tk.Frame):
         self.root = windows.root
         self.getImage = windows.getImage
         self.protCfg = windows.protCfg
-        self.icon = windows.icon 
+        self.icon = windows.icon
+        self.settings = windows.getSettings()
         
         self.root.bind("<F5>", self.refreshRuns)
         # Hide the right-click menu
@@ -562,7 +563,10 @@ class ProtocolsView(tk.Frame):
         
     def _openProtocolForm(self, prot):
         """Open the Protocol GUI Form given a Protocol instance"""
-        w = FormWindow("Protocol Run: " + prot.getClassName(), prot, self._executeSaveProtocol, self.windows)
+        hosts = [host.getLabel() for host in self.settings.getHosts()]
+        w = FormWindow("Protocol Run: " + prot.getClassName(), prot, 
+                       self._executeSaveProtocol, self.windows,
+                       hostList=hosts)
         w.show(center=True)
         
     def _browseRunData(self):

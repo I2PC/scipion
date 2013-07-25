@@ -30,14 +30,15 @@ urlpatterns = patterns('',
     url(r'^save_protocol/$', 'app.views.save_protocol'),
     url(r'^protocol/$', 'app.views.protocol'),
     url(r'^browse_objects/$', 'app.views.browse_objects'),
-    url(r'^viewHosts', 'app.views.viewHosts', name='viewHosts'),    
+    url(r'^view_hosts', 'app.views.viewHosts', name='view_hosts'),    
     
 #     url(r'^getHost/$', 'app.views.getHost'),
-    url(r'^updateHostsConfig', 'app.views.updateHostsConfig'),
-    url(r'^deleteHost/$', 'app.views.deleteHost'),
-    url(r'^hostForm/$', 'app.views.hostForm'),
+    url(r'^update_host', 'app.views.updateHost'),
+    url(r'^delete host/$', 'app.views.deleteHost'),
+    url(r'^host_form/$', 'app.views.hostForm'),
 #    url(r'^table/', 'app.views.table'),
     url(r'^visualize_object/$', 'app.views.visualizeObject'),
+    url(r'^visualize_volume/$', 'app.views.visualizeVolume'),
 
     #SHOWJ
     url(r'^showj/', 'app.views_showj.showj'), #Load web

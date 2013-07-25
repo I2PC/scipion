@@ -47,7 +47,7 @@ class XmippDefML2D(Form):
                       help='Select the input images from the project.'
                            'It should be a SetOfImages class')        
         self.addParam('doGenerateReferences', BooleanParam, default=True,
-                      label='Generate references (or classes) ?', 
+                      label='Generate references?', 
                       help='If you set to <No>, you should provide references images'
                            'If <Yes>, the default generation is done by averaging'
                            'subsets of the input images.')
@@ -59,25 +59,25 @@ class XmippDefML2D(Form):
                       pointerClass='SetOfImages',
                       help='Image(s) that will serve as class references')
         
-        self.addSection(label='MLF-specific parameters', questionParam='doMlf')        
-        self.addParam('doMlf', BooleanParam, default=False,
-                      label='Use MLF2D instead of ML2D')
-        self.addParam('doCorrectAmplitudes', BooleanParam, default=True,
-                      label='Use CTF-amplitude correction inside MLF?',
+        #self.addSection(label='MLF-specific parameters', questionParam='doMlf')        
+        self.addParam('doMlf', BooleanParam, default=False, important=True,
+                      label='Use MLF2D instead of ML2D?')
+        self.addParam('doCorrectAmplitudes', BooleanParam, default=True, condition='doMlf',
+                      label='Use CTF-amplitude correction?',
                       help='If set to <Yes>, the input images file should contains'
                            'the CTF information for each image.'
                            'If set to <No>, provide the images pixel size in Angstrom.')
-        self.addParam('areImagesPhaseFlipped', BooleanParam, default=True,
+        self.addParam('areImagesPhaseFlipped', BooleanParam, default=True, condition='doMlf',
                       label='Are the images CTF phase flipped?',
                       help='You can run MLF with or without having phase flipped the images.')        
-        self.addParam('highResLimit', IntParam, default=20,
-                      label='High-resolution limit (Angstroms)',
+        self.addParam('highResLimit', IntParam, default=20, condition='doMlf',
+                      label='High-resolution limit (Ang)',
                       help='No frequencies higher than this limit will be taken into account.'
                            'If zero is given, no limit is imposed.')
         
-        self.addSection(label='Advanced parameters', questionParam='showAdvanced')        
-        self.addParam('showAdvanced', BooleanParam, default=False,
-                      label='Show advanced parameters')
+        self.addSection(label='Advanced')#, questionParam='showAdvanced')        
+#        self.addParam('showAdvanced', BooleanParam, default=False,
+#                      label='Show advanced parameters')
         self.addParam('doMirror', BooleanParam, default=True,
                       label='Also include mirror in the alignment?',
                       help='Including the mirror transformation is useful if your particles'
@@ -85,23 +85,23 @@ class XmippDefML2D(Form):
                            )
         self.addParam('doFast', BooleanParam, default=True, condition='not doMlf',
                       label='Use the fast version of this algorithm?',
-                      help='For details see:\n'
+                      help='For details see (and please cite):\n'
                            '<Scheres et al., Bioinformatics, 21 (Suppl. 2), ii243-ii244>\n'
                            '[http://dx.doi.org/10.1093/bioinformatics/bti1140]'
                            )        
         self.addParam('doNorm', BooleanParam, default=False,
                       label='Refine the normalization for each image?',
-                      help='This variant of the algorithm deals with normalization errors.'
-                           'For more info see (and please cite):\n'
+                      help='This variant of the algorithm deals with normalization errors.\n'
+                           'For details see (and please cite):\n'
                            '<Scheres et. al. (2009) J. Struc. Biol., Vol 166, Issue 2, May 2009>\n'
                            '[http://dx.doi.org/10.1016/j.jsb.2009.02.007]'
                            )             
         # Advance or expert parameters
-        self.addParam('maxIters', IntParam, default=100, expertLevel=LEVEL_ADVANCED,
+        self.addParam('maxIters', IntParam, default=100,# expertLevel=LEVEL_ADVANCED,
                       label='Maximum number of iterations',
                       help='If the convergence has not been reached after this number'
                            'of iterations, the process will be stopped.')   
-        self.addParam('psiStep', FloatParam, default=5.0, expertLevel=LEVEL_ADVANCED,
+        self.addParam('psiStep', FloatParam, default=5.0,# expertLevel=LEVEL_ADVANCED,
                       label='In-plane rotation sampling (degrees)',
                       help='In-plane rotation sampling interval (degrees).')          
         self.addParam('stdNoise', FloatParam, default=1.0, expertLevel=LEVEL_EXPERT,

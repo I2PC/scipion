@@ -556,7 +556,7 @@ def hostForm(request):
         form = HostForm()
         form.setFormHost(hostConfig)
         context = {'form': form}
-    return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request, hostConfig, context)))  # Form Django forms
+    return render_to_response('host_form.html', RequestContext(request, getHostFormContext(request, hostConfig, context)))  # Form Django forms
 
 def updateHostsConfig(request):    
     form = HostForm(request.POST, queueSystemConfCont=request.POST.get('queueSystemConfigCount'), queueConfCont=request.POST.get('queueConfigCount'))  # A form bound to the POST data
@@ -569,11 +569,11 @@ def updateHostsConfig(request):
         hostConfig = hostsMapper.selectById(hostId)
         form.host = hostConfig
         host = form.getFormHost()
-        savedHost = project.saveHost(host)
+        savedHost = project.getSettings().saveHost(host)
         form.setFormHost(savedHost)
-        return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request, host, context))) 
+        return render_to_response('host_form.html', RequestContext(request, getHostFormContext(request, host, context))) 
     else:   
-        return render_to_response('hostForm.html', RequestContext(request, getHostFormContext(request, None, context)))  # Form Django forms
+        return render_to_response('host_form.html', RequestContext(request, getHostFormContext(request, None, context)))  # Form Django forms
 
 def deleteHost(request):
     hostId = request.GET.get("hostId")    
@@ -581,7 +581,7 @@ def deleteHost(request):
     project = loadProject(projectName)
     project.deleteHost(hostId)
 #     context = {'message': "Host succesfully deleted"}
-    return HttpResponseRedirect('/viewHosts')#, RequestContext(request))
+    return HttpResponseRedirect('/view_hosts')#, RequestContext(request))
 
 def visualizeObject(request):
     objectId = request.GET.get("objectId")    
@@ -595,6 +595,7 @@ def visualizeObject(request):
     project.load()
     
     object = project.mapper.selectById(int(objectId))
+    object1 = object
     if object.isPointer():
         object = object.get()
         
@@ -607,7 +608,9 @@ def visualizeObject(request):
                        'zoom': 150,
                        'goto': 1,
                        'colRowMode': 'Off'}
-  
+    elif isinstance(object, SetOfVolumes):
+        print ("XXXXX", object.getObjId())
+        inputParameters = {'setOfVolumes' : object, 'setOfVolumesId': object.getObjId()}  
     elif isinstance(object, SetOfImages):
         fn = project.getTmpPath(object.getName() + '_images.xmd')
         imgs = XmippSetOfImages.convert(object, fn)
@@ -631,12 +634,13 @@ def visualizeObject(request):
     else:
         raise Exception('Showj Web visualizer: can not visualize class: %s' % object.getClassName())
 
+    if isinstance(object, SetOfVolumes):
+        return render_to_response('volume_visualization.html', inputParameters)
+    else:
+        from views_showj import showj 
+        return showj(request, inputParameters)
     
-    
-    from views_showj import showj 
-    return showj(request, inputParameters)
-    
-    
+            
     
 #    url2 = reverse('app.views_showj.showj', kwargs={'path': path})
 #    print "url"
@@ -648,6 +652,37 @@ def visualizeObject(request):
     # return redirect('/showj', args=inputParameters)
 
 #    return HttpResponseRedirect('/showj', inputParameters)
+
+def visualizeVolume(request):
+    from django.http import HttpResponse
+    import json
+     
+    if request.is_ajax():
+        setOfVolumesId = int(request.GET.get('setOfVolumesId'))
+        volumeId = int(request.GET.get('volumeId'))
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        setOfVolume = project.mapper.selectById(setOfVolumesId)
+        volume = setOfVolume[volumeId]
+        # Chimera 
+        from subprocess import Popen, PIPE, STDOUT
+#         inputVolume = join(os.getcwd(),volume.getFileName())
+#         outputHtmlFile = join(os.getcwd(),project.getTmpPath("volume_" + str(volume.getObjId()) + '.html'))
+        inputVolume = volume.getFileName()
+        outputHtmlFile = project.getTmpPath("volume_" + str(volume.getObjId()) + '.html')
+        if (request.GET.get('threshold') is None or request.GET.get('threshold') == ''):
+            threshold = 1
+        else:
+            threshold = float(request.GET.get('threshold'))
+        print ("THRESHOLD",threshold)
+        # TODO: Get with Xmipp an approximate threshold
+        p = Popen(['chimera', inputVolume], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+#         p = Popen(['chimera', '--start', 'ReadStdin', inputVolume], stdout=PIPE, stdin=PIPE, stderr=PIPE)        
+        stdout_data = p.communicate(input='volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop')[0]
+        f = open(outputHtmlFile)
+        volumeHtml = f.read().decode('string-escape').decode("utf-8").split("</html>")[1]
+        jsonStr = json.dumps({'volumeHtml': volumeHtml})
+        return HttpResponse(jsonStr, mimetype='application/javascript')
     
     
 def showVolVisualization(request):
@@ -670,7 +705,8 @@ def showVolVisualization(request):
             volLink = os.path.join('/', 'static', 'astex', 'tmp', linkName)
             # Chimera 
             from subprocess import Popen, PIPE, STDOUT
-            p = Popen(['chimera', '--start', 'ReadStdin', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+#             p = Popen(['chimera', '--start', 'ReadStdin', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+            p = Popen(['chimera', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
             outputHtmlFile = '/home/antonio/test.html'
             threshold = form.cleaned_data['threshold']
             stdout_data = p.communicate(input='volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop')[0]
