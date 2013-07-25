@@ -299,6 +299,7 @@ def form(request):
     favicon_path = getResource('favicon')
     logo_help = getResource('help')
     logo_browse = getResource('browse')
+    logo_edit = getResource('edit_toolbar');
     
     # CSS #
     css_path = os.path.join(settings.STATIC_URL, 'css/form.css')
@@ -355,13 +356,18 @@ def form(request):
                'definition': protocol._definition,
                'favicon': favicon_path,
                'help': logo_help,
+               'comment':logo_edit,
                'form': jsForm_path,
                'jquery': jquery_path,
                'browse': logo_browse,
                'utils': utils_path,
                'css':css_path,
                'messi': messi_path,
-               'messi_css': messi_css_path}
+               'messi_css': messi_css_path,
+               'runName': protocol._definition.getParam('runName'),
+               'numberOfMpi': protocol._definition.getParam('numberOfMpi'),
+               'numberOfThreads': protocol._definition.getParam('numberOfThreads'),
+               'hostName': protocol._definition.getParam('hostName')}
     
     # Cross Site Request Forgery protection is need it
     context.update(csrf(request))
