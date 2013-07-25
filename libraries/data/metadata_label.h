@@ -232,6 +232,7 @@ enum MDLabel
     MDL_NMA_MODEFILE, ///< File with an NMA mode
     MDL_NMA_COLLECTIVITY, ///< NMA Collectivity of a given mode
     MDL_NMA_SCORE, ///< NMA Score of a given mode
+    MDL_NMA_ATOMSHIFT, ///< NMA Atom shift in Angstroms
     MDL_NOISE_ANGLES, ///< Noise description for projected angles
     MDL_NOISE_PARTICLE_COORD, ///< Noise description for particle's center coordenates (when projecting)
     MDL_NOISE_COORD,  //Use instead of MDL_NOISE_PARTICLE_COORD in future
@@ -979,6 +980,7 @@ private:
         MDL::addLabelAlias(MDL_NMA_MODEFILE, "NMAModefile");//3.0
         MDL::addLabel(MDL_NMA_COLLECTIVITY, LABEL_DOUBLE, "nmaCollectivity");
         MDL::addLabel(MDL_NMA_SCORE, LABEL_DOUBLE, "nmaScore");
+        MDL::addLabel(MDL_NMA_ATOMSHIFT, LABEL_DOUBLE, "nmaAtomShift");
         MDL::addLabel(MDL_NOISE_ANGLES, LABEL_VECTOR_DOUBLE, "noiseAngles");
         MDL::addLabel(MDL_NOISE_COORD, LABEL_VECTOR_DOUBLE, "noiseCoord");
         MDL::addLabel(MDL_NOISE_PARTICLE_COORD, LABEL_VECTOR_DOUBLE, "noiseParticleCoord");
