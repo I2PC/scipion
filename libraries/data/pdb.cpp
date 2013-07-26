@@ -1015,3 +1015,53 @@ void projectPDB(const PDBPhantom &phantomPDB,
         catch (XmippError XE) {}
     }
 }
+
+void distanceHistogramPDB(const PDBPhantom &phantomPDB, size_t Nnearest, int Nbins, Histogram1D &hist)
+{
+    // Compute the histogram of distances
+	const std::vector<Atom> &atoms=phantomPDB.atomList;
+    int Natoms=atoms.size();
+    MultidimArray<double> NnearestDistances;
+    NnearestDistances.resize((Natoms-1)*Nnearest);
+    for (int i=0; i<Natoms; i++)
+    {
+        std::vector<double> NnearestToThisAtom;
+        const Atom& atom_i=atoms[i];
+        for (int j=i+1; j<Natoms; j++)
+        {
+            const Atom& atom_j=atoms[j];
+            double diffx=atom_i.x-atom_j.x;
+            double diffy=atom_i.y-atom_j.y;
+            double diffz=atom_i.z-atom_j.z;
+            double dist=sqrt(diffx*diffx+diffy*diffy+diffz*diffz);
+        	//std::cout << "Analyzing " << i << " and " << j << " -> d=" << dist << std::endl;
+            size_t nearestSoFar=NnearestToThisAtom.size();
+            if (nearestSoFar==0)
+            {
+                NnearestToThisAtom.push_back(dist);
+            	//std::cout << "Pushing d" << std::endl;
+            }
+            else
+            {
+                size_t idx=0;
+                while (idx<nearestSoFar && NnearestToThisAtom[idx]<dist)
+                    idx++;
+                if (idx<nearestSoFar)
+                {
+                    NnearestToThisAtom.insert(NnearestToThisAtom.begin()+idx,1,dist);
+                    if (NnearestToThisAtom.size()>Nnearest)
+                        NnearestToThisAtom.erase(NnearestToThisAtom.begin()+Nnearest);
+                }
+                if (idx==nearestSoFar && nearestSoFar<Nnearest)
+                {
+                    NnearestToThisAtom.push_back(dist);
+                	//std::cout << "Pushing d" << std::endl;
+                }
+            }
+        }
+		if (i<Natoms-1)
+			for (size_t k=0; k<Nnearest; k++)
+				NnearestDistances(i*Nnearest+k)=NnearestToThisAtom[k];
+    }
+    compute_hist(NnearestDistances, hist, 0, NnearestDistances.computeMax(), Nbins);
+}

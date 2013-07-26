@@ -25,6 +25,7 @@
 
 #include "volume_to_pseudoatoms.h"
 #include "fourier_filter.h"
+#include <data/pdb.h>
 #include <algorithm>
 #include <stdio.h>
 
@@ -803,44 +804,6 @@ void ProgVolumeToPseudoatoms::writeResults()
         Vcurrent.write(fnOut+"_approximation.vol");
         hist.write(fnOut+"_approximation.hist");
 
-        // Compute the histogram of distances
-        int Natoms=atoms.size();
-        MultidimArray<double> NclosestDistances;
-        NclosestDistances.resize((Natoms-1)*Nclosest);
-        for (int i=0; i<Natoms; i++)
-        {
-            std::vector<double> NclosestToThisAtom;
-            for (int j=i+1; j<Natoms; j++)
-            {
-                double dist=(atoms[i].location-atoms[j].location).module();
-                size_t closestSoFar=NclosestToThisAtom.size();
-                if (closestSoFar==0)
-                    NclosestToThisAtom.push_back(dist);
-                else
-                {
-                    size_t idx=0;
-                    while (idx<closestSoFar && NclosestToThisAtom[idx]<dist)
-                        idx++;
-                    if (idx<closestSoFar)
-                    {
-                        NclosestToThisAtom.insert(
-                            NclosestToThisAtom.begin()+idx,1,dist);
-                        if (NclosestToThisAtom.size()>Nclosest)
-                            NclosestToThisAtom.erase(NclosestToThisAtom.begin()+
-                                                     Nclosest);
-                    }
-                    if (idx==closestSoFar && closestSoFar<Nclosest)
-                        NclosestToThisAtom.push_back(dist);
-                }
-            }
-            if (i<Natoms-1)
-                for (size_t k=0; k<Nclosest; k++)
-                    NclosestDistances(i*Nclosest+k)=sampling*NclosestToThisAtom[k];
-        }
-        compute_hist(NclosestDistances, hist, 0, NclosestDistances.computeMax(),
-                     100);
-        hist.write(fnOut+"_distance.hist");
-
         // Save the difference
         Image<double> Vdiff;
         Vdiff()=Vin()-Vcurrent();
@@ -896,6 +859,14 @@ void ProgVolumeToPseudoatoms::writeResults()
                     (float)intensity);
     }
     fclose(fhOut);
+
+    if (verbose>=2)
+    {
+    	PDBPhantom pdb;
+    	pdb.read(fnOut+".pdb");
+    	distanceHistogramPDB(pdb,Nclosest,200,hist);
+        hist.write(fnOut+"_distance.hist");
+    }
 }
 
 /* Run --------------------------------------------------------------------- */
