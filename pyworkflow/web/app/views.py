@@ -412,6 +412,7 @@ def updateParam(request, project, protocol, paramName):
         else:
             value = None
     attr.set(value)
+    print "setting attr %s with value:" % paramName, value 
     
 SPECIAL_PARAMS = ['runName', 'numberOfMpi', 'numberOfThreads', 'hostName']
 
