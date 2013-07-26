@@ -105,7 +105,7 @@ class XmippProtocol():
         
 
 class XmippMdRow():
-    """ Support Xmipp class to tore label and value pairs 
+    """ Support Xmipp class to store label and value pairs 
     corresponding to a Metadata row. It can be used as base
     for classes that maps to a MetaData row like XmippImage, XmippMicrograph..etc. 
     """
@@ -138,6 +138,41 @@ class XmippMdRow():
                 value = str(value)
             md.setValue(label, value, objId)
             
+    def __str__(self):
+        s = '{'
+        for k, v in self._labelDict.iteritems():
+            s += '%s: %s, ' % (xmipp.label2Str(k), v)
+        return s + '}'
+    
+    
+def findRow(md, label, value):
+    """ Query the metadata for a row with label=value.
+    Params:
+        md: metadata to query.
+        label: label to check value
+        value: value for equal condition
+    Returns:
+        XmippMdRow object of the row found.
+        None if no row is found with label=value
+    """
+    mdQuery = xmipp.MetaData() # store result
+    mdQuery.importObjects(md, xmipp.MDValueEQ(label, value))
+    n = mdQuery.size()
+    
+    if n == 0:
+        row = None
+    elif n == 1:
+        row = XmippMdRow()
+        row.getFromMd(mdQuery, mdQuery.firstObject())
+    else:
+        raise Exception("findRow: more than one row found matching the query %s = %s" % (xmipp.label2Str(label), value))
+    
+    return row
+
+def findRowById(md, value):
+    """ Same as findRow, but using MDL_ITEM_ID for label. """
+    return findRow(md, xmipp.MDL_ITEM_ID, value)
+  
   
 class XmippSet():
     """ Support class to store sets in Xmipp base on a MetaData. """

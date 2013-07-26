@@ -41,19 +41,18 @@ class XmippDefPreprocessMicrograph(Form):
     def __init__(self):
         Form.__init__(self)
     
-        self.addSection(label='Input')
-        self.addParam('inputMicrographs', PointerParam, label="Micrographs", 
-                      pointerClass='SetOfMicrographs',
-                      help='Select the SetOfMicrograph ')
-        
         self.addSection(label='Preprocess')
-        self.addParam('doCrop', BooleanParam, default=False, important=True,
+        self.addParam('inputMicrographs', PointerParam, label="Input micrographs", isImportant=True,
+                      pointerClass='SetOfMicrographs',
+                      help='Select the SetOfMicrograph to be preprocessed.')
+        
+        self.addParam('doCrop', BooleanParam, default=False,
                       label='Crop borders?', 
                       help='Crop a given amount of pixels from each border.')
         self.addParam('cropPixels', IntParam, default=10, condition='doCrop',
                       label='Pixels to crop',
                       help='Amount of pixels you want to crop from borders.')
-        self.addParam('doLog', BooleanParam, default=False, important=True,
+        self.addParam('doLog', BooleanParam, default=False,
                       label='Take logarithm?', 
                       help='Depending on your acquisition system you may need to take the logarithm '
                            'of the pixel values in order to have a linear relationship between '
@@ -68,7 +67,7 @@ class XmippDefPreprocessMicrograph(Form):
         self.addParam('logC', FloatParam, default=336.6, condition='doLog',
                       label='c',
                       help='Parameter c in a - b ln(x+c).')
-        self.addParam('doRemoveBadPix', BooleanParam, default=False, important=True,
+        self.addParam('doRemoveBadPix', BooleanParam, default=False,
                       label='Remove bad pixels?',
                       help='Values will be thresholded to this multiple of standard deviations. '
                            'Typical values are about 5, i.e., pixel values beyond 5 times the '
@@ -77,15 +76,14 @@ class XmippDefPreprocessMicrograph(Form):
         self.addParam('mulStddev', IntParam, default=5, condition='doRemoveBadPix',
                       label='Multiple of Stddev',
                       help='Multiple of standard deviation.')    
-        self.addParam('doDownsample', BooleanParam, default=False, important=True,
+        self.addParam('doDownsample', BooleanParam, default=False,
                       label='Downsample micrographs?',
                       help='Downsample micrographs by a given factor.')
         self.addParam('downFactor', FloatParam, default=2., condition='doDownsample',
                       label='Downsampling factor',
                       help='Non-integer downsample factors are possible. Must be larger than 1.')
     
-        #TODO: Solve problem with multiple threads and sqlite mapper
-        self.addParallelSection(threads=1, mpi=1)
+        self.addParallelSection(threads=2, mpi=1)
         
 class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     """Protocol to preprocess a set of micrographs in the project"""
