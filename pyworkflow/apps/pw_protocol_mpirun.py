@@ -28,7 +28,10 @@
 This module is responsible for launching protocol executions.
 """
 import sys
-from pyworkflow.utils import runProtocol
+from os.path import basename
+from pyworkflow.protocol import runProtocolFromDb
+from pyworkflow.em import *
+from pyworkflow.apps.config import *
 from mpi4py import MPI
 
 
@@ -39,13 +42,10 @@ if __name__ == '__main__':
     protId = int(sys.argv[2])
     
     if rank == 0:
-        print "="*100
-        print "projName: ", projName
-        print "protId: ", protId        
-        runProtocol(projName, protId, comm)
+        dbPath = sys.argv[1]
+        protId = int(sys.argv[2])
+        runProtocolFromDb(dbPath, protId, globals(), comm)
         
     else:
-        from pyworkflow.manager import Manager
-        project = Manager().loadProject(projName) # Create the project to change dir
         from pyworkflow.utils.mpi import runJobMPISlave
         runJobMPISlave(comm)
