@@ -100,25 +100,44 @@ class ComboVar():
         return self.value         
         
         
-class SectionWidget(tk.Frame):
-    """This class will be used to create a section in FormWindow"""
-    def __init__(self, form, master, section, callback=None, **args):
-        tk.Frame.__init__(self, master, **args)
-        self.form = form
-        self.section = section
-        self.callback = callback
-        self.__createHeader()
-        self.__createContent()
+class SectionFrame(tk.Frame):
+    """This class will be used to create a frame for the Section
+    That will have a header with red color and a content frame
+    with white background
+    """
+    def __init__(self, master, label, callback=None, **args):
+        tk.Frame.__init__(self, master, bg='white', **args)
+        self._createHeader(label)
+        self._createContent()
         
-    def __createHeader(self):
+    def _createHeader(self, label):
         bgColor = gui.cfgButtonBgColor
         self.headerFrame = tk.Frame(self, bd=2, relief=tk.RAISED, bg=bgColor)
         self.headerFrame.grid(row=0, column=0, sticky='new')
         configureWeigths(self.headerFrame)
         self.headerFrame.columnconfigure(1, weight=1)
         #self.headerFrame.columnconfigure(2, weight=1)
-        self.headerLabel = tk.Label(self.headerFrame, text=self.section.label.get(), fg='white', bg=bgColor)
+        self.headerLabel = tk.Label(self.headerFrame, text=label, fg='white', bg=bgColor)
         self.headerLabel.grid(row=0, column=0, sticky='nw')
+        
+    def _createContent(self):
+        self.contentFrame = tk.Frame(self, bg='white', bd=0)
+        self.contentFrame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
+        configureWeigths(self.contentFrame)
+        self.columnconfigure(0, weight=1)
+        
+                    
+class SectionWidget(SectionFrame):
+    """This class will be used to create a section in FormWindow"""
+    def __init__(self, form, master, section, callback=None, **args):
+        self.form = form
+        self.section = section
+        self.callback = callback
+        SectionFrame.__init__(self, master, self.section.label.get(), **args)
+        
+    def _createHeader(self, label):
+        SectionFrame._createHeader(self, label)        
+        bgColor = gui.cfgButtonBgColor
         
         if self.section.hasQuestion():
             question = self.section.getQuestion() 
@@ -133,13 +152,6 @@ class SectionWidget(tk.Frame):
             self.chb = tk.Checkbutton(self.headerFrame, variable=self.var.tkVar, 
                                       bg=bgColor, activebackground=gui.cfgButtonActiveBgColor)
             self.chb.grid(row=0, column=2, sticky='e')
-                    #bg=SectionBgColor, activebackground=ButtonActiveBgColor)        
-    
-    def __createContent(self):
-        self.contentFrame = tk.Frame(self, bg='white', bd=0)
-        self.contentFrame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
-        configureWeigths(self.contentFrame)
-        self.columnconfigure(0, weight=1)
         
     def show(self):
         self.contentFrame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
@@ -162,6 +174,7 @@ class SectionWidget(tk.Frame):
     
     def set(self, value):
         self.var.set(value)
+    
     
 class ParamWidget():
     """For each one in the Protocol parameters, there will be
@@ -425,7 +438,9 @@ class FormWindow(Window):
         return combo
             
         
-        
+    def _createHeaderLabel(self, parent, text):
+        return tk.Label(parent, text=text, font=self.font, bg='white')
+    
     def _createHeaderCommons(self, parent):
         """ Create the header common values such as: runName, expertLevel, mpi... """
         commonFrame = tk.Frame(parent)
@@ -434,25 +449,29 @@ class FormWindow(Window):
         
         ############# Create the run part ###############
         # Run name
-        runFrame = ttk.Labelframe(commonFrame, text='Run')
-        tk.Label(runFrame, text="Run label", font=self.font).grid(row=0, column=0, padx=5, pady=5, sticky='ne')
+        #runFrame = ttk.Labelframe(commonFrame, text='Run')
+        runSection = SectionFrame(commonFrame, label='Run')
+        runFrame = runSection.contentFrame
+        self._createHeaderLabel(runFrame, "Run label").grid(row=0, column=0, padx=5, pady=5, sticky='ne')
         self._createBoundEntry(runFrame, 'runName', width=15).grid(row=0, column=1, padx=(0, 5), pady=5, sticky='nw')
-        # Expert level
-        tk.Label(runFrame, text="Expert level", font=self.font).grid(row=1, column=0, sticky='ne', padx=5, pady=5)
-        expCombo = self._createBoundCombo(runFrame, 'expertLevel', LEVEL_CHOICES, self._onExpertLevelChanged)   
-        expCombo.grid(row=1, column=1, sticky='nw', padx=(0, 5), pady=5)
         # Run mode
         self.protocol.getDefinitionParam('')
-        tk.Label(runFrame, text="Run mode", font=self.font).grid(row=2, column=0, sticky='ne', padx=5, pady=5)
+        self._createHeaderLabel(runFrame, "Run mode").grid(row=1, column=0, sticky='ne', padx=5, pady=5)
         modeCombo = self._createBoundCombo(runFrame, 'runMode', MODE_CHOICES, self._onExpertLevelChanged)   
-        modeCombo.grid(row=2, column=1, sticky='nw', padx=(0, 5), pady=5)        
+        modeCombo.grid(row=1, column=1, sticky='nw', padx=(0, 5), pady=5)        
+        # Expert level
+        self._createHeaderLabel(runFrame, "Expert level").grid(row=2, column=0, sticky='ne', padx=5, pady=5)
+        expCombo = self._createBoundCombo(runFrame, 'expertLevel', LEVEL_CHOICES, self._onExpertLevelChanged)   
+        expCombo.grid(row=2, column=1, sticky='nw', padx=(0, 5), pady=5)
         
-        runFrame.grid(row=0, column=0, sticky='news', padx=5, pady=5)
+        runSection.grid(row=0, column=0, sticky='news', padx=5, pady=5)
         
         ############## Create the execution part ############
         # Host name
-        execFrame = ttk.Labelframe(commonFrame, text='Execution')
-        tk.Label(execFrame, text="Host", font=self.font).grid(row=0, column=0, padx=5, pady=5, sticky='ne')
+        #execFrame = ttk.Labelframe(commonFrame, text='Execution')
+        execSection = SectionFrame(commonFrame, label='Execution')
+        execFrame = execSection.contentFrame        
+        self._createHeaderLabel(execFrame, "Host").grid(row=0, column=0, padx=5, pady=5, sticky='ne')
         param = EnumParam(choices=self.hostList)
         self.hostVar = tk.StringVar()
         self._addVarBinding('hostName', self.hostVar)
@@ -461,17 +480,17 @@ class FormWindow(Window):
         expCombo['values'] = param.choices        
         expCombo.grid(row=0, column=1, columnspan=3, padx=(0, 5), pady=5, sticky='nw')
         # Threads and MPI
-        tk.Label(execFrame, text="Threads", font=self.font).grid(row=1, column=0, padx=5, pady=5, sticky='ne')
+        self._createHeaderLabel(execFrame, "Threads").grid(row=1, column=0, padx=5, pady=5, sticky='ne')
         self._createBoundEntry(execFrame, 'numberOfThreads').grid(row=1, column=1, padx=(0, 5))
-        tk.Label(execFrame, text="MPI", font=self.font).grid(row=1, column=2, padx=(0, 5))
-        self._createBoundEntry(execFrame, 'numberOfMpi').grid(row=1, column=3, padx=(0, 5))
+        self._createHeaderLabel(execFrame, "MPI").grid(row=1, column=2, padx=(0, 5))
+        self._createBoundEntry(execFrame, 'numberOfMpi').grid(row=1, column=3, padx=(0, 5), pady=5, sticky='nw')
         # Queue
-        tk.Label(execFrame, text="Launch to queue?", font=self.font).grid(row=2, column=0, padx=5, pady=5, sticky='ne', columnspan=3)
-        var, frame = ParamWidget.createBoolWidget(execFrame)
+        self._createHeaderLabel(execFrame, "Launch to queue?").grid(row=2, column=0, padx=5, pady=5, sticky='ne', columnspan=3)
+        var, frame = ParamWidget.createBoolWidget(execFrame, bg='white')
         self._addVarBinding('_useQueue', var)
         frame.grid(row=2, column=3, padx=5, pady=5, sticky='nw')
         
-        execFrame.grid(row=0, column=1, sticky='news', padx=5, pady=5)
+        execSection.grid(row=0, column=1, sticky='news', padx=5, pady=5)
         
         return commonFrame
         
@@ -603,7 +622,7 @@ class FormWindow(Window):
             label = section.getLabel()
             if label != 'General' and label != 'Parallelization':
                 frame = SectionWidget(self, tab, section, 
-                                      callback=self._checkChanges, bg='white')
+                                      callback=self._checkChanges)
             #frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
                 tab.add(frame, text=section.getLabel())
                 frame.columnconfigure(0, minsize=400)

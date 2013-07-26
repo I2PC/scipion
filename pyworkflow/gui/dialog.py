@@ -309,6 +309,28 @@ def askString(title, label, parent, entryWidth=20):
     return d.value
     
 
+class SubclassesTreeProvider(TreeProvider):
+    """Will implement the methods to provide the object info
+    of subclasses objects(of className) found by mapper"""
+    def __init__(self, mapper, pointerParam):
+        className = pointerParam.pointerClass.get()
+        self.condition = pointerParam.pointerCondition.get()
+        self.getObjects = lambda: mapper.selectByClass(className, objectFilter=self.objFilter)
+        
+    def objFilter(self, obj):
+        result = True
+        if self.condition:
+            result = obj.evalCondition(self.condition)
+        return result
+        
+    def getColumns(self):
+        return [('Object', 250), ('Id', 50), ('Class', 200)]
+    
+    def getObjectInfo(self, obj):
+        return {'key': '%s.%s' % (obj.getName(), obj.strId()),
+                'values': (obj.strId(), obj.getClassName())}
+        
+        
 class ListDialog(Dialog):
     """Dialog to select an element from a list.
     It is implemented using a Tree widget"""

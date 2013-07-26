@@ -35,10 +35,11 @@ class Object(object):
     def __init__(self, value=None, **args):
         object.__init__(self)
         self.set(value)
-        self._objId =  args.get('objId', None)
-        self._objParentId =  args.get('objParentId', None)
-        self._objName =  args.get('objName', '')
-        self._objTag =  args.get('objTag', None) # True if the object serves as input to his parent
+        self._objId =  args.get('objId', None) # Unique identifier of this object in some context
+        self._objParentId =  args.get('objParentId', None) # identifier of the parent object
+        self._objName =  args.get('objName', '') # The name of the object will contains the whole path of ancestors
+        self._objLabel = args.get('objLabel', '') # This will serve to label the objects
+        self._objTag =  args.get('objTag', None) # This attribute serve to make some annotation on the object.
         self._objDoStore =  args.get('objDoStore', True) # True if this object will be stored from his parent
         self._objIsPointer =  args.get('objIsPointer', False) # True if will be treated as a reference for storage
         self._objCreationTime = None

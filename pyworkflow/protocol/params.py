@@ -360,7 +360,7 @@ class TupleParam(Param):
     For example: min and max, low and high.
     """
     def __init__(self, **args):
-        Param.__init__(self, paramClass=Pointer, **args) 
+        Param.__init__(self, **args) 
 
 # ------------------------------------------------------------------------
 #         Validators

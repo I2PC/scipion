@@ -250,7 +250,6 @@ class XmippSetOfImages(SetOfImages):
         return XmippSetOfImages._convert(XmippSetOfImages, setOfImgs, filename)
     
                 
-                
 class XmippMicrograph(XmippImage, Micrograph):
     """Xmipp implementation for Micrograph"""
     _label = xmipp.MDL_MICROGRAPH
@@ -263,12 +262,14 @@ class XmippMicrograph(XmippImage, Micrograph):
     def convert(img, ctfFn):
         return XmippImage._convert(XmippMicrograph, img, ctfFn)
 
+
 class XmippVolume(XmippImage, Volume):
     """Xmipp implementation for Volume"""
     
     def __init__(self, filename=None, **args):
         XmippImage.__init__(self, filename, **args)
         Volume.__init__(self, filename, **args)    
+    
     
 class XmippSetOfMicrographs(XmippSetOfImages, SetOfMicrographs):
     """Represents a set of Micrographs for Xmipp"""
@@ -404,6 +405,7 @@ class XmippCTFModel(CTFModel, XmippMdRow):
         xmippCTFModel.write(filename)
         
         return xmippCTFModel          
+    
     
 class XmippSetOfCoordinates(SetOfCoordinates):
     """Implementation of SetOfCoordinates for Xmipp"""
