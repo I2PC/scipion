@@ -1024,8 +1024,16 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
         // Flip order to loop through references
         loop_forward_refs = !loop_forward_refs;
 
-        opt_rot  = XX(mysampling.no_redundant_sampling_points_angles[convert_refno_to_stack_position[opt_refno]]);
-        opt_tilt = YY(mysampling.no_redundant_sampling_points_angles[convert_refno_to_stack_position[opt_refno]]);
+        if (opt_refno>=0)
+        {
+        	opt_rot  = XX(mysampling.no_redundant_sampling_points_angles[convert_refno_to_stack_position[opt_refno]]);
+        	opt_tilt = YY(mysampling.no_redundant_sampling_points_angles[convert_refno_to_stack_position[opt_refno]]);
+        }
+        else
+        {
+        	opt_rot=0;
+        	opt_tilt=0;
+        }
 
 //#define DEBUG
 #ifdef DEBUG
