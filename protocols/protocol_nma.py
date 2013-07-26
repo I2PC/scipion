@@ -259,7 +259,7 @@ def qualifyModes(log,WorkingDir,NumberOfModes,StructureType):
         collectivityList.append(collectivity)
 
         id=MDout.addObject()
-        MDout.setValue(MDL_NMA_MODEFILE,"modes/vec.%d"%(n+1),id)
+        MDout.setValue(MDL_NMA_MODEFILE,os.path.join(WorkingDir,"modes/vec.%d"%(n+1)),id)
         MDout.setValue(MDL_ORDER,long(n+1),id)
         MDout.setValue(MDL_ENABLED,1,id)
         MDout.setValue(MDL_NMA_COLLECTIVITY,collectivity,id)
