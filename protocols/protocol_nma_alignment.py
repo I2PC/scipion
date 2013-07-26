@@ -81,28 +81,32 @@ class ProtNMAAlignment(XmippProtocol):
         dim=len(components)
         if dim>0:
             modeList=[]
-
-            # Get modes
-            for modeComponent in components:
-                mode=int(modeComponent)
-                if mode>self.OutputDim:
-                    from protlib_gui_ext import showWarning
-                    showWarning('Warning', "You don't have so many combined modes",parent=self.master)
-                else:
-                    mode-=1
-                    modeList.append(mode)
-            if dim==1:
-                XmippArrayPlotter1D(self.workingDirPath("deformationsProjected.txt"),modeList[0],"Histogram for combined mode %d"%(modeList[0]+1),
-                                    "Deformation value","Number of images")
-            elif dim==2:
-                XmippArrayPlotter2D(self.workingDirPath("deformationsProjected.txt"),modeList[0],modeList[1],
-                                    "",
-                                    "Combined mode %d"%(modeList[0]+1),"Combined mode %d"%(modeList[1]+1))
-            elif dim==3:
-                XmippArrayPlotter3D(self.workingDirPath("deformationsProjected.txt"),modeList[0],modeList[1],modeList[2],
-                                    "",
-                                    "Combined mode %d"%(modeList[0]+1),"Combined mode %d"%(modeList[1]+1),
-                                    "Combined mode %d"%(modeList[2]+1))
+            fnDeformationsProjected=self.workingDirPath("deformationsProjected.txt")
+            if not os.path.exists(fnDeformationsProjected):
+                from protlib_gui_ext import showWarning
+                showWarning('Warning', "You don't have enough images to compute combined modes",parent=self.master)
+            else:
+                # Get modes
+                for modeComponent in components:
+                    mode=int(modeComponent)
+                    if mode>self.OutputDim:
+                        from protlib_gui_ext import showWarning
+                        showWarning('Warning', "You don't have so many combined modes",parent=self.master)
+                    else:
+                        mode-=1
+                        modeList.append(mode)
+                if dim==1:
+                    XmippArrayPlotter1D(fnDeformationsProjected,modeList[0],"Histogram for combined mode %d"%(modeList[0]+1),
+                                        "Deformation value","Number of images")
+                elif dim==2:
+                    XmippArrayPlotter2D(fnDeformationsProjected,modeList[0],modeList[1],
+                                        "",
+                                        "Combined mode %d"%(modeList[0]+1),"Combined mode %d"%(modeList[1]+1))
+                elif dim==3:
+                    XmippArrayPlotter3D(fnDeformationsProjected,modeList[0],modeList[1],modeList[2],
+                                        "",
+                                        "Combined mode %d"%(modeList[0]+1),"Combined mode %d"%(modeList[1]+1),
+                                        "Combined mode %d"%(modeList[2]+1))
     
 def performNMA(log, WorkingDir, InSelFile, PDBfile, Modesfile, SamplingRate,
                TrustRegionScale,ProjMatch,MinAngularSampling,NProc):
@@ -130,5 +134,9 @@ def projectOntoLowerDim(log,WorkingDir,OutputDim):
             fhDef.write("%f "%coef)
         fhDef.write("\n")
     fhDef.close()
-    fnDefLow=os.path.join(WorkingDir,"deformationsProjected.txt")
-    runJob(log,"xmipp_matrix_dimred","-i %s -o %s --din %d --dout %d --samples %d"%(fnDef,fnDefLow,Xdim,OutputDim,Ydim))
+    Nimgs=MD.size()
+    if Nimgs>=10:
+        fnDefLow=os.path.join(WorkingDir,"deformationsProjected.txt")
+        runJob(log,"xmipp_matrix_dimred","-i %s -o %s --din %d --dout %d --samples %d"%(fnDef,fnDefLow,Xdim,OutputDim,Ydim))
+    else:
+        print("The number of images ("+str(Nimgs)+") is smaller than 10, combined modes are not calculated")
