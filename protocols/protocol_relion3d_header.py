@@ -247,45 +247,89 @@ AdditionalArguments = ""
 # {section}{visualize} Preparation
 #------------------------------------------------------------------------------------------------
 
-# {view}{condition}(DoCorrectGreyScale) Visualize the grey-scale corrected reference volume?
+# {view} Visualize the grey-scale corrected reference volume?
 VisualizeCRVolume = True
 
-# {view}{condition}(DoLowPassFilterReference) Visualize the low-pass filtered reference volume?
+# {view}Visualize the low-pass filtered reference volume?
 VisualizeFRVolume = True
 
-# {view}{condition}(NumberOfReferences>1) Visualize the generated seeds volumes?
+# {view} Visualize the generated seeds volumes?
 VisualizeGSVolume = True
 
 #------------------------------------------------------------------------------------------------
-# {section}{visualize} Results per Iteration
+# {section}{visualize} Results per Iteration and Ref3D
 #------------------------------------------------------------------------------------------------
-# {list} (last, all, selection) Which iteration you want to visualize?
+# {list_combo}( all, selection) Which ref3D you want to visualize?
+""" 
+   If you want two see the reference volume 2 and 5 write
+   2 5. In relaion first reference is 1
+"""
+DisplayRef3DNo='all'
+
+# {condition}(DisplayRef3DNo=='selection') Selected references 3D
+""" Which iteration do you want to visualize 
+If you want two see iterations 2 and 5 write
+   2 5. In relion first iteration is 0"""
+SelectedRef3DNo = ''
+
+# {list_combo}(last, all, selection) Which iteration you want to visualize?
 VisualizeIter = 'last'
 
 # {condition}(VisualizeIter=='selection') Selected iterations
-""" Which iteration do you want to visualize """
+""" Which iteration do you want to visualize 
+If you want two see iterations 2 and 5 write
+   2 5. In relion first iteration is 0"""
 SelectedIters = ''
 
-# {view} Visualize weighted 2D-averages?
-VisualizeML3DAvgs = True
+# {list_combo}(x, y, z, surface) Display volumes as slices or surface rendering
+""" x -> Visualize volumes in slices along x
+    y -> Visualize volumes in slices along y
+    z -> Visualize volumes in slices along z
+    For surface rendering to work, you need to have chimera installed!
+"""
+DisplayVolumeSlicesAlong='z'
 
-# {view} Visualize the 3D-references volumes?
-VisualizeML3DReferences = True
+# {view} Display reconstructed volume
+""" Volume as given by the reconstruction algorithm
+"""
+DisplayReconstruction=False
 
-# {view} Plot angular distribution of 3D-references?
-VisualizeAngDistribution = True
 
-# {view} Plot data distribution over 3D-references?
-VisualizeClassDistribution = True
+
 
 #------------------------------------------------------------------------------------------------
 # {section}{visualize} Overall Results
 #------------------------------------------------------------------------------------------------
 
-# {view} Plot overall convergence statistics?
-""" As also described in Scheres et al. (2007) Nature Methods, 4, 27-29 """
-DoShowStats = True
+# {view} Display resolution plots (SSNR)
+DisplayResolutionPlotsSSNR=True
 
+# {view} Display angular distribution?
+DisplayAngularDistribution=True
+# {condition}(DisplayAngularDistribution) {list} (2D, 3D) Display Angular distribution in
+""" 2D option uses matplotlib while 3D uses chimera
+"""
+DisplayAngularDistributionWith='2D'
+
+# {hiden}{view} Display resolution plots (FSC)
+DisplayResolutionPlotsFSC=False
+
+# {view} No. Images assigned to class
+""" Images assigned to each class per iteration"""
+TableImagesPerClass=True
+
+# {view} Changes Offset, Ang, No Part
+""" changes in orientation, offset. number images assigned to each class"""
+TableChange=True
+
+# {view} LikeliHood Per Image
+""" Max likelihood per image may be used to delete images with smaller value. 
+The higher, the better. Considere remove particles with low values"""
+Likelihood=True
+
+# {view} AveragePmax
+""" Average (per class) of the maximum value of normalized probability function """
+AvgPMAX=False
 #------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE
 #------------------------------------------------------------------------------------------------
@@ -295,3 +339,9 @@ from protocol_relion3d import *
 if __name__ == '__main__':
     protocolMain(ProtRelion3D)
 
+###############################
+# {view} Display resolution plots (FSC)
+#DisplayResolutionPlotsFSC=True
+
+# {expert} Display a threshold in resolution plots (FSC)
+#ResolutionThreshold=0.5
