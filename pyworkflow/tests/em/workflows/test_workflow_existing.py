@@ -10,7 +10,7 @@ import pyworkflow.em.packages.eman2 as eman2
     
 class TestXmippWorkflow(unittest.TestCase):
 
-    def testXmippWorkflow(self):
+    def a_testEmanConvert(self):
         projName = "TestXmippWorkflow"
         project = Manager().loadProject(projName) # Now it will be loaded if exists
         
@@ -49,6 +49,15 @@ class TestXmippWorkflow(unittest.TestCase):
 #        
 #        for p in project.mapper.selectByClass('SetOfParticles', iterate=True, objectFilter=f):
 #            p.printAll()
+
+    def test_findRowById(self):
+        projName = "TestXmippWorkflow"
+        project = Manager().loadProject(projName) # Now it will be loaded if exists
+        
+        coords = project.mapper.selectByClass('SetOfCoordinates')[0]
+
+        for c in coords.iterCoordinates():
+            print "coord: ", c.getPosition(), " from mic: ", c.getMicrograph().getFileName()        
             
         
         
