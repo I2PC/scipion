@@ -68,8 +68,8 @@ class ProtNMA(XmippProtocol):
             
             # Compute modes
             if self.CutoffMode=='Relative':
-                params="-i "+self.InputStructure+" -o "+self.getFilename("extra_atoms")+"_distance.hist"
-                self.insertRunJobStep("xmipp_pdb_compute_distance_histogram",params=params)
+                params="-i "+self.InputStructure+" --operation distance_histogram "+self.getFilename("extra_atoms")+"_distance.hist"
+                self.insertRunJobStep("xmipp_pdb_analysis",params=params)
             self.insertStep('computeModesPDB',WorkingDir=self.WorkingDir, NumberOfModes=self.NumberOfModes,
                             CutoffMode=self.CutoffMode, Rc=self.Rc, RcPercentage=self.RcPercentage, RTBblockSize=self.RTBblockSize,
                             RTBForceConstant=self.RTBForceConstant)
@@ -92,11 +92,10 @@ class ProtNMA(XmippProtocol):
         errors = []
         if self.MaskMode=="Binary mask" and not os.path.exists(self.MaskFile):
             errors.append(self.MaskFile+" does not exist")
-        if self.CutoffMode=="Relative" and self.StructureType=="PDB":
-            errors.append("Cut-off in percentage is not meant for PDB structures. It can only be used with EM.")
-            # TODO: relative cut-off for PDBs
         if which("diag_arpack")=="":
             errors.append("Cannot find diag_arpack in the PATH")
+        if which("diagrtb")=="":
+            errors.append("Cannot find diagrtb in the PATH")
         return errors
     
     def visualize(self):
@@ -141,26 +140,30 @@ def countAtoms(fnPDB):
     fh.close()
     return Natoms
 
+def computeCutoff(fnHist, RcPercentage):
+    MDhist=MetaData(fnHist)
+    distances=MDhist.getColumnValues(MDL_X)
+    distanceCount=MDhist.getColumnValues(MDL_COUNT)
+    
+    # compute total number of distances
+    Ncounts=0
+    for count in distanceCount:
+        Ncounts+=count
+    
+    # Compute threshold
+    NcountThreshold=Ncounts*RcPercentage/100.0
+    Ncounts=0
+    for i in range(len(distanceCount)):
+        Ncounts+=distanceCount[i]
+        if Ncounts>NcountThreshold:
+            Rc=distances[i]
+            break
+    print("Cut-off distance="+str(Rc))
+    return Rc
+
 def computeModes(log, WorkingDir, NumberOfModes, CutoffMode, Rc, RcPercentage):
     if CutoffMode=="Relative":
-        MDhist=MetaData(os.path.join(WorkingDir,"extra/pseudoatoms_distance.hist"))
-        distances=MDhist.getColumnValues(MDL_X)
-        distanceCount=MDhist.getColumnValues(MDL_COUNT)
-        
-        # compute total number of distances
-        Ncounts=0
-        for count in distanceCount:
-            Ncounts+=count
-        
-        # Compute threshold
-        NcountThreshold=Ncounts*RcPercentage/100.0
-        Ncounts=0
-        for i in range(len(distanceCount)):
-            Ncounts+=distanceCount[i]
-            if Ncounts>NcountThreshold:
-                Rc=distances[i]
-                break
-        print("Cut-off distance="+str(Rc))
+        Rc=computeCutoff(os.path.join(WorkingDir,"extra/pseudoatoms_distance.hist"),RcPercentage)
     currentDir=os.getcwd()
     changeDir(log,WorkingDir)
     runJob(log,"nma_record_info.py","%d pseudoatoms.pdb %d"%(NumberOfModes,int(Rc)))
@@ -171,24 +174,7 @@ def computeModes(log, WorkingDir, NumberOfModes, CutoffMode, Rc, RcPercentage):
 
 def computeModesPDB(log, WorkingDir, NumberOfModes, CutoffMode, Rc, RcPercentage, RTBblockSize, RTBForceConstant):
     if CutoffMode=="Relative":
-        MDhist=MetaData(os.path.join(WorkingDir,"extra/pseudoatoms_distance.hist"))
-        distances=MDhist.getColumnValues(MDL_X)
-        distanceCount=MDhist.getColumnValues(MDL_COUNT)
-        
-        # compute total number of distances
-        Ncounts=0
-        for count in distanceCount:
-            Ncounts+=count
-        
-        # Compute threshold
-        NcountThreshold=Ncounts*RcPercentage/100.0
-        Ncounts=0
-        for i in range(len(distanceCount)):
-            Ncounts+=distanceCount[i]
-            if Ncounts>NcountThreshold:
-                Rc=distances[i]
-                break
-        print("Cut-off distance="+str(Rc))
+        Rc=computeCutoff(os.path.join(WorkingDir,"extra/atoms_distance.hist"),RcPercentage)
     currentDir=os.getcwd()
     changeDir(log,WorkingDir)
     runJob(log,"nma_record_info_PDB.py","%d %d atoms.pdb %f %f"%(NumberOfModes,RTBblockSize,Rc,RTBForceConstant))
