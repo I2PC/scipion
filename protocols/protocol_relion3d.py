@@ -8,7 +8,7 @@
 #
 
 from os.path import join, exists
-from os import remove
+from os import remove, rename
 from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
 from xmipp import *
@@ -105,7 +105,7 @@ class ProtRelion3D(XmippProtocol):
                             outputRelion=self.ImgStar                            
                             )
             # launch relion program
-            ###################################self.insertRelionRefine()
+            #######################################self.insertRelionRefine()
             # convert relion output to xmipp
             # relion_it00N_data.star, angular assigment
             self.ImgStar = self.extraPath(replaceBasenameExt(tmpFileNameXMD, '.star'))
@@ -120,7 +120,17 @@ class ProtRelion3D(XmippProtocol):
                             inputs  = inputs,
                             outputs = verifyFiles
                             )
-            
+            inputs=[]
+            outputs=[]
+            for it in range (0,self.NumberOfIterations+1):
+                 for ref3d in range(1,self.NumberOfClasses+1):
+                       inputs  += [self.getFilename('volumeMRC', iter=it, ref3d=ref3d )]
+                       outputs += [self.getFilename('volume', iter=it, ref3d=ref3d )]
+            self.insertStep('convertRelionBinaryData',
+                            inputs  = inputs,
+                            outputs = outputs
+                            )
+                       
     def insertRelionRefine(self):
         args = {'--iter': self.NumberOfIterations,
                 '--tau2_fudge': self.RegularisationParamT,
@@ -203,7 +213,8 @@ class ProtRelion3D(XmippProtocol):
         for v in self.relionFiles:
             myDict[v+'Re']=extraIter + v +'.star'
             myDict[v+'Xm']=extraIter + v +'.xmd'
-        myDict['volume']=extraIter + "class%(ref3d)03d.mrc"
+        myDict['volume']=extraIter + "class%(ref3d)03d.spi"
+        myDict['volumeMRC']=extraIter + "class%(ref3d)03d.mrc"
         
         return myDict
     def visualize(self):
@@ -232,6 +243,7 @@ class ProtRelion3D(XmippProtocol):
         self.launchRelionPlots([varName])
         
     def launchRelionPlots(self, selectedPlots):
+        ############TABLES STOP ANALIZE
         ''' Launch some plots for a Projection Matching protocol run '''
         import numpy as np
         _log = self.Log
@@ -256,7 +268,7 @@ class ProtRelion3D(XmippProtocol):
             iterations = range(1,self.NumberOfIterations+1)
         else:
             iterations = map(int, getListFromVector(self.parser.getTkValue('SelectedIters')))
-        runShowJExtraParameters = ' --dont_wrap --view '+ self.parser.getTkValue('DisplayVolumeSlicesAlong') + ' --columns ' + str(self.parser.getTkValue('MatrixWidth'))
+        runShowJExtraParameters = ' --dont_wrap --view '+ self.parser.getTkValue('DisplayVolumeSlicesAlong') 
         self.DisplayVolumeSlicesAlong=self.parser.getTkValue('DisplayVolumeSlicesAlong')
         
         if doPlot('TableImagesPerClass'):
@@ -326,18 +338,24 @@ class ProtRelion3D(XmippProtocol):
             #print 'gridsize1: ', gridsize1
             #print 'iterations: ', iterations
             #print 'ref3Ds: ', ref3Ds
-            
+            md = MetaData()
+            activateMathExtensions()
             for ref3d in ref3Ds:
                 plot_title = 'Ref3D_%s' % ref3d
-                a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'SSNR', yformat=False)
+                a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'log(SSNR)', yformat=False)
                 legendName=[]
                 blockName = 'model_class_%d@'%ref3d
                 for it in iterations:
                     file_name = blockName + self.getFilename('model'+'Xm', iter=it )
                     #file_name = self.getFilename('ResolutionXmdFile', iter=it, ref=ref3d)
+                    print file_name
                     if xmippExists(file_name):
                         #print 'it: ',it, ' | file_name:',file_name
-                        md = MetaData(file_name)
+                        mdOut = MetaData(file_name)
+                        md.clear()
+                        # only cross by 1 is important
+                        md.importObjects(mdOut, MDValueGT(MDL_RESOLUTION_SSNR, 0.9))
+                        md.operate("resolutionSSNR=log(resolutionSSNR)")
                         resolution_inv = [md.getValue(MDL_RESOLUTION_FREQ, id) for id in md]
                         frc = [md.getValue(MDL_RESOLUTION_SSNR, id) for id in md]
                         a.plot(resolution_inv, frc)
@@ -372,18 +390,32 @@ class ProtRelion3D(XmippProtocol):
                 xplotter.plotMd(md, False, mdLabelY=MDL_LL)
 
 
+#        if doPlot('AvgPMAX'):
+#            plotMd=MetaData()
+#            for it in iterations:
+#                fileName = 'model_general@'+ self.getFilename('model'+'Xm', iter=it )
+#                md = MetaData(fileName)
+#                pmax = md.getValue(MDL_AVGPMAX,md.firstObject())
+#                objId=plotMd.addObject()
+#                plotMd.setValue(MDL_COUNT,long(it),objId)
+#                plotMd.setValue(MDL_AVGPMAX,pmax,objId)
+#            print plotMd
+#            xplotter = XmippPlotter(windowTitle="Avg PMax")
+#            xplotter.createSubPlot("Avg PMax /per iteration", 'Iteration', 'AvgPmax')
+#            xplotter.plotMd(plotMd, mdLabelX=MDL_COUNT, mdLabelY=MDL_AVGPMAX)
+
         if doPlot('AvgPMAX'):
-            plotMd=MetaData()
+            _r = []
+            mdOut = MetaData()
+            _c = ('Iteration','Avg PMax')
+            
             for it in iterations:
                 fileName = 'model_general@'+ self.getFilename('model'+'Xm', iter=it )
                 md = MetaData(fileName)
                 pmax = md.getValue(MDL_AVGPMAX,md.firstObject())
-                objId=mdX.addObject()
-                plotMd.setalue(MDL_COUNT,it,objId)
-                plotMd.setalue(MDL_AVGPMAX,pmax,objId)
-            xplotter = XmippPlotter(windowTitle="Avg PMax"%it)
-            xplotter.createSubPlot("Avg PMax /per iteration", Iteration, AvgPmax)
-            xplotter.plotMd(mdOut, mdLableX=MDL_COUNT, mdLabelY=MDL_LL)
+                _r.append(("Iter_%d" % it, pmax))
+            showTable(_c,_r, title='Avg PMax /per iteration', width=100)
+
 
         if doPlot('DisplayReconstruction'):
 
@@ -397,49 +429,56 @@ class ProtRelion3D(XmippProtocol):
                         else:
                         #Xmipp_showj (x,y and z shows the same)
                             try:
-                                runShowJ(file_name+':mrc', extraParams = runShowJExtraParameters)
+                                runShowJ(file_name, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e))
-            
+                                
+        from tempfile import NamedTemporaryFile    
         if doPlot('DisplayAngularDistribution'):
             self.DisplayAngularDistributionWith = self.parser.getTkValue('DisplayAngularDistributionWith')
             if(self.DisplayAngularDistributionWith == '3D'):
-                fileNameVol = self.getFilename('volume', iter=it, ref3d=ref3d )
+                fileNameVol = self.getFilename('volume', iter=self.NumberOfIterations, ref3d=1 )
                 (Xdim, Ydim, Zdim, Ndim) = getImageSize(fileNameVol)
                 for ref3d in ref3Ds:
                     fileNameVol = self.getFilename('volume', iter=self.NumberOfIterations, ref3d=ref3d )
-                    md='images@'+ self.getFilename('data'+'Xm', iter=self.NumberOfIterations )
+                    md=MetaData('images@'+ self.getFilename('data'+'Xm', iter=self.NumberOfIterations ))
                     mdOut = MetaData()
-                    mdOut.aggregate(md, AGGR_COUNT, MDL_ANGLE_ROT, MDL_ANGLE_ROT, MDL_WEIGHT)
-
+                    mdOut.importObjects(md, MDValueEQ(MDL_REF3D, ref3d))
+                    md.clear()
+                    md.aggregateMdGroupBy(mdOut, AGGR_COUNT, [MDL_ANGLE_ROT, MDL_ANGLE_TILT], MDL_ANGLE_ROT, MDL_WEIGHT)
+                    md.setValue(MDL_ANGLE_PSI,0.0, md.firstObject())
                     _OuterRadius = int(float(self.parser.getTkValue('MaskDiameterA'))/2.0/self.SamplingRate)
-                    if xmippExists(file_name):
-        
-                        parameters =  ' -i ' + file_name_rec_filt + \
-                            ' --mode projector 256 -a ' +file_name + " red "+\
-                             str(float(_OuterRadius) * 1.1)
-                        runJob(_log,
-                               'xmipp_chimera_client',
-                               parameters,1,1,True
-                               ) # run in background
+                    #do not delete file since chimera needs it
+                    ntf = NamedTemporaryFile(dir="/tmp/", suffix='.xmd',delete=False)
+                    md.write("angularDist@"+ntf.name)
+                    parameters =  ' -i ' + fileNameVol + \
+                        ' --mode projector 256 -a ' + "angularDist@"+ ntf.name + " red "+\
+                         str(float(_OuterRadius) * 1.1)
+                    runJob(_log,
+                           'xmipp_chimera_client',
+                           parameters,1,1,True
+                           ) # run in background
             else: #DisplayAngularDistributionWith == '2D'
-                for it in iterations:
-                    if(len(ref3Ds) == 1):
-                        gridsize1 = [1, 1]
-                    elif (len(ref3Ds) == 2):
-                        gridsize1 = [2, 1]
-                    else:
-                        gridsize1 = [(len(ref3Ds)+1)/2, 2]
-                    
-                    xplotter = XmippPlotter(*gridsize1, mainTitle='Iteration_%d' % it, windowTitle="AngularDistribution")
-                    
-                    for ref3d in ref3Ds:
-                        file_name = self.getFilename('OutClassesXmd', iter=it, ref=ref3d)
-                        if xmippExists(file_name):
-                            md = MetaData(file_name)
-                            plot_title = 'Ref3D_%d' % ref3d
-                            xplotter.plotAngularDistribution(plot_title, md)
-                    xplotter.draw()
+                if(len(ref3Ds) == 1):
+                    gridsize1 = [1, 1]
+                elif (len(ref3Ds) == 2):
+                    gridsize1 = [2, 1]
+                else:
+                    gridsize1 = [(len(ref3Ds)+1)/2, 2]
+                
+                xplotter = XmippPlotter(*gridsize1, mainTitle='Iteration_%d' % self.NumberOfIterations, windowTitle="AngularDistribution")
+                
+                for ref3d in ref3Ds:
+                    fileNameVol = self.getFilename('volume', iter=self.NumberOfIterations, ref3d=ref3d )
+                    md=MetaData('images@'+ self.getFilename('data'+'Xm', iter=self.NumberOfIterations ))
+                    mdOut = MetaData()
+                    mdOut.importObjects(md, MDValueEQ(MDL_REF3D, ref3d))
+                    md.clear()
+                    md.aggregateMdGroupBy(mdOut, AGGR_COUNT, [MDL_ANGLE_ROT, MDL_ANGLE_TILT], MDL_ANGLE_ROT, MDL_WEIGHT)
+                    #keep only direction projections from the right ref3D
+                    plot_title = 'Ref3D_%d' % ref3d
+                    xplotter.plotAngularDistribution(plot_title, md)
+                xplotter.draw()
 
         if xplotter:
             xplotter.show()
@@ -489,7 +528,14 @@ def convertRelionMetadata(log, inputs,outputs):
     """
     for i,o in zip(inputs,outputs):
         exportReliontoMetadataFile(i,o)
-            
+
+def convertRelionBinaryData(log, inputs,outputs):
+    """Make sure mrc files are volumes properlly defined"""
+    program = "xmipp_image_convert"
+    for i,o in zip(inputs,outputs):
+        args = "-i %s -o %s  --type vol"%(i,o)
+        runJob(log, program, args )
+        
 def renameOutput(log, WorkingDir, ProgId):
     ''' Remove ml2d prefix from:
         ml2dclasses.stk, ml2dclasses.xmd and ml2dimages.xmd'''

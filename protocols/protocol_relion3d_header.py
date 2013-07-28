@@ -304,6 +304,13 @@ DisplayReconstruction=False
 # {view} Display resolution plots (SSNR)
 DisplayResolutionPlotsSSNR=True
 
+###############################
+# {hiden}{view} Display resolution plots (FSC)
+DisplayResolutionPlotsFSC=False
+
+# {expert} Display a threshold in resolution plots (FSC)
+ResolutionThreshold=0.5
+
 # {view} Display angular distribution?
 DisplayAngularDistribution=True
 # {condition}(DisplayAngularDistribution) {list} (2D, 3D) Display Angular distribution in

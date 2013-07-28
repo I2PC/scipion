@@ -110,7 +110,7 @@ class XmippChimeraClient:
             printCmd(command)
             
     def send(self, cmd, data):
-#        print cmd
+        #print cmd
         self.client.send(cmd)
         self.client.send(data)
         
