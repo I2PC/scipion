@@ -60,10 +60,7 @@ class Main
 					}
 
 					else if (mode == Mode.Review)
-					{
-						String reviewfile = myargs[3];
-						ppicker = new SingleParticlePicker(selfile, outputdir, reviewfile);
-					}
+						ppicker = new SingleParticlePicker(selfile, outputdir, Mode.Review);
 
 					new SingleParticlePickerJFrame(ppicker);
 				}

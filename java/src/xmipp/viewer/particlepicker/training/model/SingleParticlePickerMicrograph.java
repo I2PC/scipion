@@ -15,8 +15,7 @@ import java.awt.Rectangle;
 public class SingleParticlePickerMicrograph extends Micrograph
 {
 
-	private boolean autopicking = false;
-	private String autofilename;
+	private boolean autopicking = false;	
 	private List<ManualParticle> manualparticles;
 	private List<AutomaticParticle> autoparticles;
 	private MicrographState state;
@@ -38,7 +37,7 @@ public class SingleParticlePickerMicrograph extends Micrograph
 	public SingleParticlePickerMicrograph(String file, String psd, String ctf)
 	{
 		super(file, psd, ctf);
-		autofilename = getName() + "_auto" + ext;
+
 		this.manualparticles = new ArrayList<ManualParticle>();
 		this.autoparticles = new ArrayList<AutomaticParticle>();
 		state = MicrographState.Available;
@@ -64,10 +63,7 @@ public class SingleParticlePickerMicrograph extends Micrograph
 		return tokens[tokens.length - 2];
 	}
 
-	public String getAutoPosFile()
-	{
-		return autofilename;
-	}
+
 
 	public ManualParticle getParticle(int x, int y)
 	{
@@ -86,11 +82,7 @@ public class SingleParticlePickerMicrograph extends Micrograph
 		return null;
 	}
 
-	public void addAutomaticParticle(AutomaticParticle p)
-	{
-		addAutomaticParticle(p, false);
-	}
-
+	
 	public boolean hasManualParticles()
 	{
 		if (getManualParticles().size() > 0)
@@ -192,16 +184,9 @@ public class SingleParticlePickerMicrograph extends Micrograph
 		return autoparticles.size() - getAutomaticParticlesDeleted(threshold);
 	}
 
-	public void addAutomaticParticle(AutomaticParticle p, boolean imported)
+	public void addAutomaticParticle(AutomaticParticle p)
 	{
-		if (state == MicrographState.Available && !imported)
-			throw new IllegalArgumentException(String.format("Invalid state %s on micrograph %s for adding automatic particles", state, getName()));
 		autoparticles.add(p);
-		if (state == MicrographState.Available )
-			state = MicrographState.Auto;
-		if (state == MicrographState.Manual && imported)
-			state = MicrographState.Review;
-		
 
 	}
 
