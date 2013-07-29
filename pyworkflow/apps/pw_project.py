@@ -58,27 +58,6 @@ import pyworkflow.apps.config as config
 from config import *
 from pw_browser import BrowserWindow
 
-#ACTION_EDIT = 'Edit'
-#ACTION_COPY = 'Copy'
-#ACTION_DELETE = 'Delete'
-#ACTION_REFRESH = 'Refresh'
-#ACTION_STEPS = 'Browse'
-#ACTION_TREE = 'Tree'
-#ACTION_STOP = 'Stop'
-#ACTION_DEFAULT = 'Default'
-#ACTION_CONTINUE = 'Continue'
-#
-#ActionIcons = {
-#    ACTION_EDIT:  'edit.gif',
-#    ACTION_COPY:  'copy.gif',
-#    ACTION_DELETE:  'delete.gif',
-#    ACTION_REFRESH:  'refresh.gif',
-#    ACTION_STEPS:  'run_steps.gif',
-#    ACTION_TREE:  'tree2.gif',
-#    ACTION_STOP: 'stop.gif',
-#    ACTION_CONTINUE: 'play.png'
-#               }
-
 
 def populateTree(self, tree, prefix, obj, level=0):
     text = obj.text.get()

@@ -30,3 +30,4 @@ This sub-package will contains Xmipp3.0 specific protocols
 from eman2 import *
 from data import *
 from protocol_boxing import EmanProtBoxing
+from protocol_initialmodel import EmanProtInitModel

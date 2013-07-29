@@ -3,11 +3,11 @@ Created on Apr 12, 2013
 
 @author: antonio
 '''
+import os
 
 from pyworkflow.em import *  
 from pyworkflow.utils import * 
-from pyworkflow.em.packages.eman2.data import *
-import os
+import eman2
 
 class EmanDefParticlePicking(Form):
     """Create the definition of parameters for
@@ -36,9 +36,7 @@ class EmanProtBoxing(ProtParticlePicking):
 
         if not 'EMAN2DIR' in os.environ:
             raise Exception('EMAN2DIR should be defined before running EMAN2 protocols.')
-        EMAN2DIR = os.environ['EMAN2DIR']
-        os.environ['PATH'] += os.pathsep + "%(EMAN2DIR)s/bin" % locals()
-        os.environ['PYTHONPATH'] += os.pathsep + '%(EMAN2DIR)s/lib:%(EMAN2DIR)s/bin:%(EMAN2DIR)s/extlib/site-packages' %locals()
+        eman2.loadEnvironment()
         Protocol._runSteps(self, startIndex)
         
     def _defineSteps(self):

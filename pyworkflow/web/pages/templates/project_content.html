@@ -2,19 +2,17 @@
 {% endblock %} {% block head %}
 <link href={{css}} rel="stylesheet" type="text/css">
 <link href={{messi_css}} rel="stylesheet" type="text/css">
+<link href="/static/css/jquery-ui.css" rel="stylesheet" type="text/css">
 <!-- JS Libs -->
 <script src={{jquery_cookie}} type="text/javascript"></script>
 <script src={{jquery_treeview}} type="text/javascript"></script>
 <script src={{launchTreeview}} type="text/javascript"></script>
-<script src={{tabs_config}} type="text/javascript"></script>
+<!-- <script src={{tabs_config}} type="text/javascript"></script> -->
 <script src={{utils}} type="text/javascript"></script>
 <script>
-    $(document).ready(
-            function() {
-                setInterval(function() {
-                    var randomnumber = Math.floor(Math.random() * 100);
-                }, 2000);
-            });
+  $(function() {
+    $("#tabs").tabs();
+  });
 </script>
 {% endblock %} {% block sideLeft %}
 <div class="protFieldsetTree">
@@ -24,13 +22,13 @@
 			<ul>
 				{% for prot in section.childs %} {% if prot.tag == 'protocol'%}
 				<li><span class="protocol"><a
-						href="javascript:popup('/form/?protocol={{prot.name}}')">{{prot.name}}</a></span></li>
+						href="javascript:popup('/form/?protocolClass={{prot.name}}')">{{prot.name}}</a></span></li>
 				{% elif prot.tag == 'protocol_base' %}
 				<li class="closed"><span class="protocol_base">{{prot.name}}</span>
 					<ul>
 						{% for prot2 in prot.childs %}
 						<li><span class="protocol_class"> <a
-								href="javascript:popup('/form/?protocol={{prot2.name}}')">
+								href="javascript:popup('/form/?protocolClass={{prot2.name}}')">
 									{{prot2.name}} </a>
 						</span></li> {% endfor %}
 					</ul></li> {% else %} No athletes. {% endif %} {% endfor %}
@@ -71,35 +69,58 @@
 	<h3>History</h3>
 </div>
 {% endblock %} {% block contentDown %}
-<div id="tabContaier">
+<!-- <div id="tabContaier"> -->
+<!-- 	<ul class="listTabs"> -->
+<!-- 		<li><a id="tabTitle" class="active" href="#tab1">Data</a></li> -->
+<!-- 		<li><a id="tabtabDetailsTitle" href="#tab2">Summary</a></li> -->
+<!-- 	</ul> -->
+<!-- 	<!-- //Tab buttons --> 
+<!-- 	<div class="tabDetails"> -->
+<!-- 		<!-- //tab1 --> 
+<!-- 		<div id="tab1" class="tabContents"> -->
+<!-- 			<div id="listEx"> -->
+<!-- 				<ul> -->
+<!-- 					<li> -->
+<!-- 					<li>Input -->
+<!-- 						<ul id='protocol_input'> -->
+
+<!-- 						</ul> -->
+<!-- 					</li> -->
+<!-- 					<li>Output -->
+<!-- 						<ul id='protocol_output'> -->
+
+<!-- 						</ul> -->
+<!-- 					</li> -->
+<!-- 				</ul> -->
+<!-- 			</div> -->
+<!-- 		</div> -->
+<!-- 		<!-- //tab2 --> 
+<!-- 		<div id="tab2" class="tabContents"> -->
+<!-- 			<p>No summary information.</p> -->
+<!-- 		</div> -->
+<!-- 	</div> -->
+<!-- </div> -->
+
+<div class="tabContaier" id="tabs">
 	<ul class="listTabs">
-		<li><a id="tabTitle" class="active" href="#tab1">Data</a></li>
-		<li><a id="tabTitle" href="#tab2">Summary</a></li>
+		<li><a href="#tab-data">Data</a></li>
+		<li><a href="#tab-summary">Summary</a></li>
 	</ul>
-	<!-- //Tab buttons -->
-	<div class="tabDetails">
-		<!-- //tab1 -->
-		<div id="tab1" class="tabContents">
-			<div id="listEx">
-				<ul>
-					<li>
-					<li>Input
-						<ul id='protocol_input'>
-
-						</ul>
-					</li>
-					<li>Output
-						<ul id='protocol_output'>
-
-						</ul>
-					</li>
-				</ul>
-			</div>
+	<div id="tab-data" class="tabContents">
+		<div id="listEx">
+			<ul>
+				
+				<li><strong>Input</strong>
+					<ul id='protocol_input'></ul>
+				</li><br />
+				<li><strong>Output</strong>
+					<ul id='protocol_output'></ul>
+				
+			</ul>
 		</div>
-		<!-- //tab2 -->
-		<div id="tab2" class="tabContents">
+	</div>
+	<div id="tab-summary" class="tabContents">
 			<p>No summary information.</p>
-		</div>
 	</div>
 </div>
 {% endblock %}

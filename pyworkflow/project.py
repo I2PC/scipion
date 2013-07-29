@@ -49,6 +49,7 @@ class Project(object):
     related with a Project"""
     def __init__(self, path):
         """For create a Project, the path is required""" 
+        self.name = path
         self.path = abspath(path)
         self.pathList = [] # Store all related paths
         self.dbPath = self.addPath(PROJECT_DBNAME)
@@ -71,6 +72,9 @@ class Project(object):
     def getPath(self, *paths):
         """Return path from the project root"""
         return join(*paths)
+    
+    def getName(self):
+        return self.name
     
     def getTmpPath(self, *paths):
         return self.getPath(PROJECT_TMP, *paths)

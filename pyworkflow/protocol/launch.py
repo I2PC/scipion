@@ -23,7 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.utils.remote import RemotePath
 """
 This module is responsible for launching protocol executions.
 There are two main scenarios: local execution and remote execution.
@@ -42,6 +41,7 @@ B. Remote execution:
 """
 import re
 from subprocess import Popen, PIPE
+import pyworkflow as pw
 from pyworkflow.utils import buildRunCommand, redStr, greenStr, makeFilePath, join
 from pyworkflow.utils import process
 from pyworkflow.protocol import STEPS_PARALLEL
@@ -86,16 +86,21 @@ def _isLocal(protocol):
 # ******************************************************************
 # *                 Function related to LAUNCH
 # ******************************************************************
-
+def _getAppsProgram(prog):
+    """ Get a command to launch a program under the apps folder.
+    And also using a different python if configured in SCIPION_PYTHON var.
+    """
+    return '%s %s/apps/%s' % (pw.PYTHON, pw.HOME, prog)
+    
 def _launchLocal(protocol, wait):
     bg = not wait
     # Check first if we need to launch with MPI or not
     if (protocol.stepsExecutionMode == STEPS_PARALLEL and
         protocol.numberOfMpi > 1):
-        program = 'pw_protocol_mpirun.py'
+        program = _getAppsProgram('pw_protocol_mpirun.py')
         mpi = protocol.numberOfMpi.get() + 1
     else:
-        program = 'pw_protocol_run.py'
+        program = _getAppsProgram('pw_protocol_run.py')
         mpi = 1
     protStrId = protocol.strId()
     threads = protocol.numberOfThreads.get()
@@ -115,7 +120,7 @@ def _launchLocal(protocol, wait):
     return jobId
     
 def _launchRemote(protocol, wait):
-    from pyworkflow.utils.remote import sshConnectFromHost
+    from pyworkflow.utils.remote import sshConnectFromHost, RemotePath
     # Establish connection
     host = protocol.getHostConfig()
     ssh = sshConnectFromHost(host)
@@ -209,7 +214,7 @@ def _stopLocal(protocol):
     
 def _stopRemote(protocol):
     raise Exception("_stopRemote not implemented yet")
-    from pyworkflow.utils.remote import sshConnectFromHost
+    from pyworkflow.utils.remote import sshConnectFromHost, RemotePath
     # Establish connection
     host = protocol.getHostConfig()
     ssh = sshConnectFromHost(host)

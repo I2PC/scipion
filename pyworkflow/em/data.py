@@ -60,7 +60,7 @@ class Microscope(EMObject):
         self.voltage.set(other.voltage.get())
         self.sphericalAberration.set(other.sphericalAberration.get())
         
-class ImageLocation():
+class ImageLocation(object):
     """ This class represents the unique location of an image.
     If the image is an stack, the location composed by index and filename.
     Otherwise, only the filename of the image."""

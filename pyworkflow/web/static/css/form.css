@@ -5,7 +5,45 @@ html,body {
 
 body {
 	/* border: 1px solid black;*/
-	
+	font-family: "Trebuchet MS", "Helvetica", "Arial", "Verdana",
+		"sans-serif";
+	font-size: 0.84em;
+}
+
+#protName{
+	margin: 0 0 0.3em 0;
+}
+
+#tabs {
+	/* 	font-size: 80%; */
+	font-size: 0.84em;
+}
+
+#main {
+	width: 17.9em;;
+	background-color: white;
+	border-radius: 4px;
+	border: 1px solid #aaaaaa;
+	font-size: 0.88em;
+	margin-bottom: 0.5em;
+	padding:0.5em;
+	display:inline-block;
+	text-align: left;
+}
+
+#main input{
+	width:8em;
+}
+
+table.section {
+	border-collapse: collapse;
+	border-right: 15px;
+	margin-left: 1em;
+	margin-top: 0.5em;
+}
+
+table.section td{
+	margin-right: 5em;
 }
 
 input {
@@ -28,7 +66,7 @@ input.hide {
 	width: 1.5em;
 	height: 2em;
 	cursor: pointer;
-	list-style: 
+	list-style:
 }
 
 textarea {
@@ -39,13 +77,13 @@ textarea {
 
 .box {
 	background: white;
-	margin: 0.3em;
-	width: 25em;
-	height: 30em;
+	/* 	margin: 0.3em; */
+	width: auto;
+	height: 20em;
 	overflow-y: scroll;
 	overflow-x: hidden;
-	padding-right: 0.5em;
-	margin-top: -1em
+	/* 	padding-right: 0.5em; */
+	/* 	margin-top: -1em */
 }
 
 .title {
@@ -55,10 +93,26 @@ textarea {
 	border-top: 2.5px solid FireBrick;
 	font-size: 0.9em;
 	font-weight: bold;
+	margin:0.5em;
+}
+
+.titleMain {
+	background: DarkRed;
+	color: white;
+	border-left: 2.5px solid FireBrick;
+	border-top: 2.5px solid FireBrick;
+	font-size: 0.9em;
+	font-weight: bold;
+	margin:-1em -0.6em 0.3em -0.6em;
+	text-align: center;
 }
 
 .elementHide {
 	display: none;
+}
+
+#inputName {
+	width: auto;
 }
 
 .recommended {
@@ -98,7 +152,7 @@ textarea {
 	background: url(../../../resources/dialog_close.png) 0.5em no-repeat;
 	background-size: 20%;
 	/* 	margin: 1em 0.5em 0 0; */
-	font-size: 0.8em;
+	/* 	font-size: 0.8em; */
 	color: black;
 	width: 6.3em;
 	height: 2em;
@@ -120,7 +174,7 @@ textarea {
 	background: url(../../../resources/document_save24.png) 0.5em no-repeat;
 	background-size: 20%;
 	/* 	margin: 1em 0.5em 0 0; */
-	font-size: 0.8em;
+	/* 	font-size: 0.8em; */
 	color: black;
 	width: 6.3em;
 	height: 2em;
@@ -138,7 +192,7 @@ textarea {
 }
 
 .buttonExec {
-	font-size: 0.8em;
+	/* 	font-size: 0.8em; */
 	color: white;
 	width: 8em;
 	height: 2em;
@@ -148,7 +202,6 @@ textarea {
 	font-weight: bold;
 	letter-spacing: 0.2em;
 	text-align: center;
-	font-size: 0.8em;
 }
 
 .buttonExec:hover {

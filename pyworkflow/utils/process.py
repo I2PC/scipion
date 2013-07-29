@@ -29,7 +29,6 @@ This module handles process execution
 """
 import os
 import sys
-import psutil
 from utils import greenStr
 
 # The job should be launched from the working directory!
@@ -100,6 +99,7 @@ def killWithChilds(pid):
     Params:
      pid: the process id to terminate
     """
+    import psutil
     proc = psutil.Process(pid)
     for c in proc.get_children(recursive=True):
         print "Terminating child pid: %d" % c.pid

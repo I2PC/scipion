@@ -250,7 +250,6 @@ class XmippSetOfImages(SetOfImages):
         return XmippSetOfImages._convert(XmippSetOfImages, setOfImgs, filename)
     
                 
-                
 class XmippMicrograph(XmippImage, Micrograph):
     """Xmipp implementation for Micrograph"""
     _label = xmipp.MDL_MICROGRAPH
@@ -263,12 +262,14 @@ class XmippMicrograph(XmippImage, Micrograph):
     def convert(img, ctfFn):
         return XmippImage._convert(XmippMicrograph, img, ctfFn)
 
+
 class XmippVolume(XmippImage, Volume):
     """Xmipp implementation for Volume"""
     
     def __init__(self, filename=None, **args):
         XmippImage.__init__(self, filename, **args)
         Volume.__init__(self, filename, **args)    
+    
     
 class XmippSetOfMicrographs(XmippSetOfImages, SetOfMicrographs):
     """Represents a set of Micrographs for Xmipp"""
@@ -405,6 +406,7 @@ class XmippCTFModel(CTFModel, XmippMdRow):
         
         return xmippCTFModel          
     
+    
 class XmippSetOfCoordinates(SetOfCoordinates):
     """Implementation of SetOfCoordinates for Xmipp"""
     def __init__(self, filename=None, **args):
@@ -428,7 +430,7 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         pathPos = self.getMicrographPosFile(micrograph.getId())
         
         if exists(pathPos):
-            mdPos = xmipp.MetaData('particles@%s' % pathPos)
+            mdPos = xmipp.MetaData('particles@' + pathPos)
                             
             for i, objId in enumerate(mdPos):
                 x = mdPos.getValue(xmipp.MDL_XCOOR, objId)
@@ -575,7 +577,7 @@ class XmippClassification2D(Classification2D):
         md = xmipp.MetaData('%(block)s@%(fn)s' % locals())
         for objId in md:
             ref = md.getValue(xmipp.MDL_REF, objId)
-            img = md.getValue(xmipp.MDL_IMAGE, objId)
+            img = XmippImage(md.getValue(xmipp.MDL_IMAGE, objId))
             yield XmippClass2D(ref, fn, img)
             
     def getClassesMdFileName(self):

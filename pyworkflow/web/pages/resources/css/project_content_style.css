@@ -3,6 +3,11 @@ a {
 	color: black;
 }
 
+body{
+	font-family: "Trebuchet MS", "Helvetica", "Arial", "Verdana","sans-serif";
+	font-size: 0.75em;
+}
+
 .protFieldsetTree {
 	height: 95%;
 	width: 90%;
@@ -41,6 +46,7 @@ a {
 * html .hitarea {
 	display: inline;
 	float: none;
+	font-weight: 1em;
 }
 
 .treeview li {
@@ -133,88 +139,88 @@ a {
 }
 
 /* Bottom datatable-tabs style */
-div.datatable {
-	background-color: white;
-	border: 1px solid black;
-	height: 25%;
-}
+/* div.datatable { */
+/* 	background-color: white; */
+/* 	border: 1px solid black; */
+/* 	height: 25%; */
+/* } */
 
-.listTabs {
-	/* 	border: 1px solid black; */
-	padding: 0px;
-	margin: 0px;
-}
+/* .listTabs { */
+/* 	/* 	border: 1px solid black; */ */
+/* 	padding: 0px; */
+/* 	margin: 0px; */
+/* } */
 
-#tabTitle {
-	font-weight: bold;
-}
+/* #tabTitle { */
+/* 	font-weight: bold; */
+/* } */
 
-#tabContaier {
-	background-color: #f0f0f0;
-	border: 1px solid #fff;
-	margin: 5px auto;
-	padding: 7px;
-	/* 	position: relative; */
-	width: 98%;
-}
+/* #tabContaier { */
+/* 	background-color: #f0f0f0; */
+/* 	border: 1px solid #fff; */
+/* 	margin: 5px auto; */
+/* 	padding: 7px; */
+/* 	/* 	position: relative; */ */
+/* 	width: 98%; */
+/* } */
 
-#tabContaier ul {
-	overflow: hidden;
-	border-right: 1px solid #fff;
-	height: auto;
-	position: absolute;
-	/* 	z-index: 100; */
-}
+/* #tabContaier ul { */
+/* 	overflow: hidden; */
+/* 	border-right: 1px solid #fff; */
+/* 	height: auto; */
+/* 	position: absolute; */
+/* 	/* 	z-index: 100; */ */
+/* } */
 
-#tabContaier li {
-	float: left;
-	list-style: none;
-}
+/* #tabContaier li { */
+/* 	float: left; */
+/* 	list-style: none; */
+/* } */
 
-#tabContaier li a {
-	background-color: #ddd;
-	border: 1px solid #fcfcfc;
-	border-right: 0;
-	cursor: pointer;
-	display: block;
-	line-height: 1.8em;
-	padding: 0 30px;
-	text-decoration: none;
-	font-size: 0.9em;
-}
+/* #tabContaier li a { */
+/* 	background-color: #ddd; */
+/* 	border: 1px solid #fcfcfc; */
+/* 	border-right: 0; */
+/* 	cursor: pointer; */
+/* 	display: block; */
+/* 	line-height: 1.8em; */
+/* 	padding: 0 30px; */
+/* 	text-decoration: none; */
+/* 	font-size: 0.9em; */
+/* } */
 
-#tabContaier li a:hover {
-	background-color: #eee;
-}
+/* #tabContaier li a:hover { */
+/* 	background-color: #eee; */
+/* } */
 
-#tabContaier li a.active {
-	background-color: #fbfbfb;
-	border: 1px solid #fff;
-	border-right: 0;
-	color: #333;
-}
+/* #tabContaier li a.active { */
+/* 	background-color: #fbfbfb; */
+/* 	border: 1px solid #fff; */
+/* 	border-right: 0; */
+/* 	color: #333; */
+/* } */
 
-.tabDetails {
-	background-color: #fbfbfb;
-	border: 1px solid #fff;
-	margin: 15px 0 0;
-	height: 94%;
-	overflow: auto;
-}
+/* .tabDetails { */
+/* 	background-color: #fbfbfb; */
+/* 	border: 1px solid #fff; */
+/* 	margin: 15px 0 0; */
+/* 	height: 94%; */
+/* 	overflow: auto; */
+/* } */
 
-.tabContents {
-	padding: 6px;
-	overflow: auto;
-}
+/* .tabContents { */
+/* 	padding: 6px; */
+/* 	overflow: auto; */
+/* } */
 
-.tabContents h1 {
-	/* 	font: normal 24px/1.1em Georgia, "Times New Roman", Times, serif; */
-	padding: 0 0 6px;
-}
+/* .tabContents h1 { */
+/* 	/* 	font: normal 24px/1.1em Georgia, "Times New Roman", Times, serif; */ */
+/* 	padding: 0 0 6px; */
+/* } */
 
-.tabContents p {
-	padding: 0 0 6px;
-}
+/* .tabContents p { */
+/* 	padding: 0 0 6px; */
+/* } */
 
 /*	List inside the tab container	*/
 #listEx li {
@@ -231,6 +237,10 @@ div.datatable {
 #listEx li a {
 	background-color: #fbfbfb;
 	margin-left: -3em;
+}
+
+#listEx li a:hover {
+	color:Firebrick;
 }
 
 /* jsPlumb */

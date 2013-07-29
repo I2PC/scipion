@@ -30,6 +30,29 @@ This sub-package will contains Xmipp3.0 specific protocols
 import os
 import xmipp
 
+MASK_NONE = 0
+MASK_CIRCULAR = 1
+MASK_FILE = 2
+
+PROJECT_FOURIER = 0
+PROJECT_REALSPACE = 1
+
+KERNEL_NEAREST = 0
+KERNEL_LINEAR = 1
+KERNEL_BSPLINE = 2
+
+SELECT_NONE = 0
+SELECT_MAXCC = 1
+SELECT_PERCENTAGE = 2
+SELECT_CLASSPERCENTAGE = 3
+
+RECONSTRUCT_FOURIER = 0
+RECONSTRUCT_ART = 1
+RECONSTRUCT_WBP = 2
+
+LOW_PASS = 0
+HIGH_PASS = 1
+BAND_PASS = 2
 
 def getXmippPath(*paths):
     '''Return the path the the Xmipp installation folder
