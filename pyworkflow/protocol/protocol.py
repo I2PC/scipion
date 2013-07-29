@@ -384,7 +384,7 @@ class Protocol(Step):
 
     def _getExtraPath(self, *paths):
         """ Return a path inside the extra folder. """
-        return self._getPath("extra", *paths)    
+        return self._getPath("extra", *paths)
     
     def _getTmpPath(self, *paths):
         """ Return a path inside the tmp folder. """
