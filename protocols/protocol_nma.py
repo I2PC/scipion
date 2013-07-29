@@ -31,7 +31,8 @@ class ProtNMA(XmippProtocol):
         self.insertStep('createDir',path=self.ExtraDir)
         if self.StructureType=="EM":
             # Link the input
-            self.insertStep("createLink",source=self.InputStructure,dest=self.workingDirPath(os.path.basename(self.InputStructure)))
+            fnLocalInputStructure=self.workingDirPath(os.path.basename(self.InputStructure))
+            self.insertStep("createLink",source=self.InputStructure,dest=fnLocalInputStructure)
             
             # Mask or link input structure
             fnMask=""
@@ -60,7 +61,7 @@ class ProtNMA(XmippProtocol):
             
             if self.StructureType=="EM":
                 self.insertStep('generateChimeraScript',WorkingDir=self.WorkingDir,MaskMode=self.MaskMode,Threshold=self.Threshold, \
-                                InputStructure=self.InputStructure, PseudoAtomRadius=self.PseudoAtomRadius, Sampling=self.Sampling)
+                                InputStructure=fnLocalInputStructure, PseudoAtomRadius=self.PseudoAtomRadius, Sampling=self.Sampling)
         else: # PDB
             # Link the input
             self.insertStep("copyFile",source=self.InputStructure,dest=self.workingDirPath(os.path.basename(self.InputStructure)))
@@ -327,7 +328,7 @@ def generateChimeraScript(log,WorkingDir,MaskMode,Threshold,InputStructure,Pseud
     fhCmd.write("rangecol bfactor,a 0 white 1 red\n")
     fhCmd.write("setattr a radius "+str(PseudoAtomRadius*Sampling)+"\n")
     fhCmd.write("represent sphere\n")
-    fhCmd.write("open "+InputStructure+"\n")
+    fhCmd.write("open "+os.path.basename(InputStructure)+"\n")
     if MaskMode!="Threshold":
         Threshold=0.01
     [xdim,ydim,zdim,ndim]=getImageSize(InputStructure)
