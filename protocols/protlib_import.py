@@ -244,7 +244,6 @@ def exportReliontoMetadataFile(inputRelion,outputXmipp):
     for block in blocklist:
         md = MetaData(block + '@'+tmpFile)
         if len(md.getActiveLabels())!=0:
-            print "writing block ", block, outputXmipp
             md.write(block +'@'+ outputXmipp,MD_APPEND)
         
     from protlib_filesystem import deleteFile
