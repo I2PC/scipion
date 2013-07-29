@@ -23,35 +23,26 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package will contains Eman3.0 specific protocols
-"""
 
+import unittest
 import os, sys
-
-from pyworkflow.em import ProtPreprocessMicrographs   
-
-
-
-class EmanProtPreprocessMicrographs(ProtPreprocessMicrographs):
-    pass
+from pyworkflow.utils.path import *
+from pyworkflow.utils.remote import *
 
 
-def loadEnvironment():
-    """ Load the environment variables needed for use EMAN2 tools. """
-    EMAN2DIR = os.environ['EMAN2DIR']
-    os.environ['PATH'] = "%(EMAN2DIR)s/bin" % locals() + os.pathsep + os.environ['PATH']
-    pathList = [os.path.join(EMAN2DIR, d) for d in ['lib', 'bin', 'extlib/site-packages']]
-    os.environ['PYTHONPATH'] = os.pathsep.join(pathList) + os.pathsep + os.environ['PYTHONPATH']
-    os.environ['EMAN_PYTHON'] = os.path.join(EMAN2DIR, 'Python/bin/python')
-    os.environ['LD_LIBRARY_PATH'] = '/home/josem/xmipp/lib:/home/josem/xmipp/lib:/usr/lib64/mpi/gcc/openmpi/lib64'
-    #sys.path += pathList
+class TestRemotePath(unittest.TestCase):  
     
-def getEmanCommand(program, args):
-    if not 'EMAN_PYTHON' in os.environ:
-        raise Exception('EMAN_PYTHON is not load in environment')
-    python = os.environ['EMAN_PYTHON']
-    
-    return '%(python)s %(program)s %(args)s' % locals()
-    
-    
+    def setUp(self):
+        self.rpath = RemotePath.fromCredentials('crunchy', 'josem', 'kkk')
+        self.localFolder = "/home/josem/Scipion"
+        self.remoteFolder = "/gpfs/fs1/home/bioinfo/josem/Scipion"
+      
+    def test_copyTree(self):        
+        self.rpath.copyTree(self.localFolder, self.remoteFolder)  
+        
+    def test_cleanPath(self):
+        self.rpath.cleanPath(self.remoteFolder)     
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -47,7 +47,7 @@ class Preview(tk.Frame):
         self.canvas = FigureCanvasTkAgg(self.figure, master=self)
         self.canvas.get_tk_widget().grid(column=0, row=0)#, sticky=(N, W, E, S))
         if label:
-            tk.Label(self.frame, text=label).grid(column=0, row=1)
+            tk.Label(self, text=label).grid(column=0, row=1)
         self._createAxes()
         
     def setWindowTitle(self,title):
@@ -85,8 +85,8 @@ class ImagePreview(Preview):
         
         
 class PsdPreview(Preview):
-    def __init__(self, master, dim, lf, hf, dpi=72, Z=None, col=0):
-        Preview.__init__(self, master, dim, dpi, label="PSD", col=col)
+    def __init__(self, master, dim, lf, hf, dpi=72, label="PSD", Z=None):
+        Preview.__init__(self, master, dim, dpi, label)
         self.lf = lf
         self.hf = hf
         if self.ring:

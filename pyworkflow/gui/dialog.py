@@ -36,6 +36,12 @@ from tree import BoundTree, TreeProvider
 from text import TaggedText
 
 
+# Possible result values for a Dialog
+RESULT_YES = 0
+RESULT_NO = 1
+RESULT_CANCEL = 2
+
+
 class Dialog(tk.Toplevel):
     _images = {} #Images cache
     """Implementation of our own dialog to display messages
@@ -44,9 +50,6 @@ class Dialog(tk.Toplevel):
     The buttons(and theirs order) can be changed.
     An image name can be passed to display left to the message.
     """
-    RESULT_YES = 0
-    RESULT_NO = 1
-    RESULT_CANCEL = 2
     
     def __init__(self, parent, title, **args):
         """Initialize a dialog.
@@ -78,8 +81,8 @@ class Dialog(tk.Toplevel):
         bodyFrame.grid(row=0, column=0, sticky='news',
                        padx=5, pady=5)
 
-        self.buttons = args.get('buttons', [('OK', Dialog.RESULT_YES),
-                                            ('Cancel', Dialog.RESULT_CANCEL)])
+        self.buttons = args.get('buttons', [('OK', RESULT_YES),
+                                            ('Cancel', RESULT_CANCEL)])
         self.defaultButton = args.get('default', 'OK')
         btnFrame = tk.Frame(self)
         # Create buttons 
@@ -143,7 +146,7 @@ class Dialog(tk.Toplevel):
                 self.initial_focus = btn
             col += 1
         self.bind("<Return>", self._handleReturn)
-        self.bind("<Escape>", lambda: self._handleResult(Dialog.RESULT_CANCEL))
+        self.bind("<Escape>", lambda e: self._handleResult(RESULT_CANCEL))
 
 
     def _handleResult(self, resultValue):
@@ -151,7 +154,7 @@ class Dialog(tk.Toplevel):
         It will set the resultValue associated with the button
         and close the Dialog"""
         self.result = resultValue
-        noCancel = self.result != Dialog.RESULT_CANCEL
+        noCancel = self.result != RESULT_CANCEL
         
         if noCancel and not self.validate():
             self.initial_focus.focus_set() # put focus back
@@ -169,7 +172,10 @@ class Dialog(tk.Toplevel):
             
     def _handleReturn(self, e=None):
         """Handle press return key"""
-        self._handleResult(Dialog.RESULT_CANCEL)
+        # Check which of the buttons is the default
+        for button, result in self.buttons:
+            if self.defaultButton == button:
+                self._handleResult(result)
 
     def cancel(self, event=None):
         # put focus back to the parent window
@@ -197,6 +203,18 @@ class Dialog(tk.Toplevel):
     def getImage(self, imgName):
         """A shortcut to get an image from its name"""
         return gui.getImage(imgName, self._images)
+    
+    def getResult(self):
+        return self.result
+    
+    def resultYes(self):
+        return self.result == RESULT_YES
+    
+    def resultNo(self):
+        return self.result == RESULT_NO
+    
+    def resultCancel(self):
+        return self.result == RESULT_CANCEL
 
         
 class MessageDialog(Dialog):
@@ -206,7 +224,7 @@ class MessageDialog(Dialog):
         self.msg = msg
         self.iconPath = iconPath
         if not 'buttons' in args:
-            args['buttons'] = [('OK', Dialog.RESULT_YES)]
+            args['buttons'] = [('OK', RESULT_YES)]
             args['default'] = 'OK'
         Dialog.__init__(self, parent, title, **args)
         
@@ -242,7 +260,7 @@ class YesNoDialog(MessageDialog):
     """Ask a question with YES/NO answer"""
     def __init__(self, master, title, msg):
         MessageDialog.__init__(self, master, title, msg, 'warning.gif', default='No',
-                               buttons=[('Yes', Dialog.RESULT_YES), ('No', Dialog.RESULT_NO)])        
+                               buttons=[('Yes', RESULT_YES), ('No', RESULT_NO)])        
 
 
 class EntryDialog(Dialog):
@@ -275,7 +293,7 @@ class EntryDialog(Dialog):
 """ Functions to display dialogs """
 def askYesNo(title, msg, parent):
     d = YesNoDialog(parent, title, msg)
-    return d.result == Dialog.RESULT_YES
+    return d.resultYes()
 
 def showInfo(title, msg, parent):
     MessageDialog(parent, title, msg, 'info.gif')
@@ -320,7 +338,7 @@ class ListDialog(Dialog):
         self.value = None
         self.provider = provider
         Dialog.__init__(self, parent, title,
-                        buttons=[('Select', Dialog.RESULT_YES), ('Cancel', Dialog.RESULT_CANCEL)])
+                        buttons=[('Select', RESULT_YES), ('Cancel', RESULT_CANCEL)])
         
     def body(self, bodyFrame):
         bodyFrame.config(bg='white')
@@ -340,6 +358,36 @@ class ListDialog(Dialog):
             showError("Validation error", "Please select an element", self)
             return False
         return True
+        
+        
+class FlashMessage():
+    def __init__(self, master, msg, delay=5, relief='solid', func=None):
+        self.root = tk.Toplevel(master=master)
+        #hides until know geometry
+        self.root.withdraw()
+        self.root.wm_overrideredirect(1)
+        tk.Label(self.root, text="   %s   " % msg,
+                 bd=1, bg='DodgerBlue4', fg='white').pack()
+        gui.centerWindows(self.root, refWindows=master)
+        self.root.deiconify()
+        self.root.grab_set()
+        self.msg = msg
+
+        if func:
+            self.root.update_idletasks()
+            self.root.after(10, self.proccess, func)
+        else:
+            self.root.after(int(delay*1000), self.close)
+        self.root.wait_window(self.root)
+        
+    def proccess(self, func):
+        func()
+        self.root.destroy()
+        
+    def close(self):
+        self.root.destroy()
+        
+                
         
 if __name__ == '__main__':
     import sys

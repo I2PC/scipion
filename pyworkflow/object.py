@@ -35,10 +35,11 @@ class Object(object):
     def __init__(self, value=None, **args):
         object.__init__(self)
         self.set(value)
-        self._objId =  args.get('objId', None)
-        self._objParentId =  args.get('objParentId', None)
-        self._objName =  args.get('objName', '')
-        self._objTag =  args.get('objTag', None) # True if the object serves as input to his parent
+        self._objId =  args.get('objId', None) # Unique identifier of this object in some context
+        self._objParentId =  args.get('objParentId', None) # identifier of the parent object
+        self._objName =  args.get('objName', '') # The name of the object will contains the whole path of ancestors
+        self._objLabel = args.get('objLabel', '') # This will serve to label the objects
+        self._objTag =  args.get('objTag', None) # This attribute serve to make some annotation on the object.
         self._objDoStore =  args.get('objDoStore', True) # True if this object will be stored from his parent
         self._objIsPointer =  args.get('objIsPointer', False) # True if will be treated as a reference for storage
         self._objCreationTime = None
@@ -53,17 +54,25 @@ class Object(object):
     def hasAttribute(self, attrName):
         return hasattr(self, attrName)
     
-    def getAttributeValue(self, attrName):
+    def getAttributeValue(self, attrName, defaultValue=None):
         """ Get the attribute value given its name.
         Equivalent to getattr(self, name).get() 
         """
-        attr = getattr(self, attrName)
-        if callable(attr):
+        attr = getattr(self, attrName, None)
+        if attr is None:
+            value = defaultValue
+        elif callable(attr):
             value = attr()
         else:
             value = attr.get()
         return value
     
+    def setAttributeValue(self, attrName, value):
+        """ Get the attribute value given its name.
+        Equivalent to getattr(self, name).get() 
+        """
+        getattr(self, attrName).set(value)
+        
     def getAttributesToStore(self):
         """Return the list of attributes than are
         subclasses of Object and will be stored"""

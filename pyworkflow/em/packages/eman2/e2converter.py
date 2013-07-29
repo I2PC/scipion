@@ -24,34 +24,38 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains Eman3.0 specific protocols
+This script should be launched using the EMAN2 python interpreter 
+and its own environment.
+This scripts will convert any SetOfImages to an EMAN2 .hdf stack
+It will read from the stdin the number of images and then
+for each image will read: index, filename and a possible trasformation.
+As parameters will receive the output filename for the hdf stack
 """
 
 import os, sys
 
-from pyworkflow.em import ProtPreprocessMicrographs   
+if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        outputFile = sys.argv[1]
+        
+        print 'PATH', os.environ['PATH'], '\n'
+        print 'PYTHONPATH', os.environ['PYTHONPATH'], '\n'
+        print 'LD_LIBRARY_PATH', os.environ['LD_LIBRARY_PATH']
+            
+        from EMAN2 import EMData, EMUtil
+        
+        i = 0
+        for line in sys.stdin:
+            print "EMAN2: ", line
+            index, filename = line.split()
+            index = int(index) - 1
+            imageData = EMData(filename, index, False)
+            imageData['item_id'] = i + 1
+            imageData.write_image(outputFile, i, EMUtil.ImageType.IMAGE_HDF, False)
+            i += 1
+        
+    else:
+        print "usage: %s outputFile" % os.path.basename(sys.argv[0])
 
 
-
-class EmanProtPreprocessMicrographs(ProtPreprocessMicrographs):
-    pass
-
-
-def loadEnvironment():
-    """ Load the environment variables needed for use EMAN2 tools. """
-    EMAN2DIR = os.environ['EMAN2DIR']
-    os.environ['PATH'] = "%(EMAN2DIR)s/bin" % locals() + os.pathsep + os.environ['PATH']
-    pathList = [os.path.join(EMAN2DIR, d) for d in ['lib', 'bin', 'extlib/site-packages']]
-    os.environ['PYTHONPATH'] = os.pathsep.join(pathList) + os.pathsep + os.environ['PYTHONPATH']
-    os.environ['EMAN_PYTHON'] = os.path.join(EMAN2DIR, 'Python/bin/python')
-    os.environ['LD_LIBRARY_PATH'] = '/home/josem/xmipp/lib:/home/josem/xmipp/lib:/usr/lib64/mpi/gcc/openmpi/lib64'
-    #sys.path += pathList
-    
-def getEmanCommand(program, args):
-    if not 'EMAN_PYTHON' in os.environ:
-        raise Exception('EMAN_PYTHON is not load in environment')
-    python = os.environ['EMAN_PYTHON']
-    
-    return '%(python)s %(program)s %(args)s' % locals()
-    
     

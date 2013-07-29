@@ -132,5 +132,5 @@ class LabelSlider(ttk.Frame):
             self.var.trace('w', callback)
         self.slider.pack(side=tk.LEFT, padx=2)
         
-    def getValue(self):
+    def get(self):
         return self.var.get()

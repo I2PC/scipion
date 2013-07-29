@@ -37,16 +37,9 @@ from pyworkflow.object import OrderedObject, String, List, Integer, Boolean, Csv
 from pyworkflow.utils.path import replaceExt, makeFilePath, join, missingPaths, cleanPath, getFiles
 from pyworkflow.utils.log import *
 from pyworkflow.protocol.executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor
+from constants import *
 
-STATUS_SAVED = "saved" # Parameters saved for later use
-STATUS_LAUNCHED = "launched"  # launched to queue system, only usefull for protocols
-STATUS_RUNNING = "running"    # currently executing
-STATUS_FAILED = "failed"      # it have been failed
-STATUS_FINISHED = "finished"  # successfully finished
-STATUS_ABORTED = "aborted"
-STATUS_WAITING_APPROVAL = "waiting approval"    # waiting for user interaction
 
-ACTIVE_STATUS = [STATUS_LAUNCHED, STATUS_RUNNING, STATUS_WAITING_APPROVAL]
 
 class Step(OrderedObject):
     """ Basic execution unit.
@@ -207,16 +200,6 @@ class RunJobStep(FunctionStep):
                numberOfMpi=self.mpi, numberOfThreads=self.threads)
         #TODO: Add the option to return resultFiles
              
-
-MODE_RESUME = 0
-MODE_RESTART = 1
-MODE_CONTINUE = 2
-
-STEPS_SERIAL = 0
-STEPS_PARALLEL = 1
-         
-LEVEL_NORMAL = 0
-                
                 
 class Protocol(Step):
     """ The Protocol is a higher type of Step.
@@ -243,6 +226,11 @@ class Protocol(Step):
         self.stepsExecutionMode = STEPS_SERIAL
         # Expert level
         self.expertLevel = Integer(args.get('expertLevel', LEVEL_NORMAL))
+        # Run mode
+        self.runMode = Integer(args.get('runMode', MODE_RESUME))
+        # Use queue system?
+        self._useQueue = Boolean()
+        
         self._jobId = String() # Store queue job id
         self._pid = Integer()
         self._stepsExecutor = None
@@ -667,7 +655,7 @@ class Protocol(Step):
     
     def useQueue(self):
         """ Return True if the protocol should be launched throught a queue. """
-        return False
+        return self._useQueue.get()
         
     def getElapsedTime(self):
         """ Return the time that protocols
@@ -769,7 +757,6 @@ def runProtocolFromDb(dbPath, protId, protDict, mpiComm=None):
     protocol.run()        
 
         
-    
     
 def runProtocol(dbPath, protId, mpiComm=None):
     """ Given a project and a protocol run, execute.

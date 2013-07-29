@@ -30,15 +30,14 @@ The definition will be holded at class level and will
 be shared by all protocol class instances
 """
 
-from pyworkflow.object import *
 import re
 import collections
 
+from pyworkflow.object import *
+from constants import *
 
-LEVEL_NORMAL = 0
-LEVEL_ADVANCED = 1
-LEVEL_EXPERT = 2
-LEVEL_CHOICES = ('Normal', 'Advanced', 'Expert')
+
+
 
 
 class FormElement(OrderedObject):
@@ -59,6 +58,9 @@ class FormElement(OrderedObject):
     
     def hasCondition(self):
         return self.condition.hasValue()
+    
+    def getLabel(self):
+        return self.label.get()
     
         
 class Param(FormElement):
@@ -220,10 +222,10 @@ class Form(object):
         self.addSection(label='General')
         self.addParam('runName', StringParam, label="Run name:", important=True, 
                       help='Select run name label to identify this run.')
-        self.addParam('showComment', BooleanParam, default=False, 
-                      label="Show comment?")
-        self.addParam('comment', StringParam, condition="showComment",
-                      label="Comment:", help='Make some annotations on this run.')
+#        self.addParam('showComment', BooleanParam, default=False, 
+#                      label="Show comment?")
+#        self.addParam('comment', StringParam, condition="showComment",
+#                      label="Comment:", help='Make some annotations on this run.')
         self.addParam('runMode', EnumParam, choices=['resume', 'restart'],
                       label="Run mode", display=EnumParam.DISPLAY_COMBO, default=0,
                       help='The <resume> mode will try to start the execution'
@@ -235,6 +237,7 @@ class Form(object):
   
     def addParallelSection(self, threads=1, mpi=8, condition="",
                            hours=72, jobsize=0):
+        return
         self.addSection(label='Parallelization')
         self.addParam('hostName', StringParam, default="localhost",
                       label='Execution host',
@@ -350,7 +353,14 @@ class NumericListParam(StringParam):
         StringParam.__init__(self, **args)
         self.addValidator(NumericListValidator())   
         
-        
+     
+class TupleParam(Param):
+    """ This class will condense a tuple of several
+    other params of the same type and related concenpt.
+    For example: min and max, low and high.
+    """
+    def __init__(self, **args):
+        Param.__init__(self, **args) 
 
 # ------------------------------------------------------------------------
 #         Validators
