@@ -222,9 +222,9 @@ var targetEndpoint = {
 		lineWidth : 2
 	},
 	connector : [ "Bezier", {
-		curviness : 5
+		curviness : 2
 	} ],
-	maxConnections : 10,
+	maxConnections : 100,
 	isTarget : true,
 	dropOptions : targetDropOptions
 };
@@ -246,9 +246,9 @@ var sourceEndpoint = {
 		lineWidth : 2
 	},
 	connector : [ "Bezier", {
-		curviness : 5
+		curviness : 2
 	} ],
-	maxConnections : 10
+	maxConnections : 100
 // isTarget:true,
 // dropOptions : targetDropOptions
 };
@@ -382,22 +382,23 @@ function switchGraph() {
 			var s = $("tr.selected").attr("id");
 			s = "graph_" + s;
 			
-			var nodeClear = $("div#graphActiv").attr("data-option");
-			if(nodeClear!= s){
-				//Clear the node selected
-				var elmClear = $("div#" + nodeClear + ".window");
-				var style = elmClear.attr("style");
-				style = style.replace("border:2.5px solid Firebrick;","");
-				elmClear.attr("style",style);
-				
-				// setElement in graph
-				$("div#graphActiv").attr("data-option", s);
-
-				// Highlight the node
-				var elm = $("div#" + s + ".window");
-				var style = elm.attr("style");
-				style += "border:2.5px solid Firebrick;";
-				elm.attr("style", style);
+			if(s != ""){
+				var nodeClear = $("div#graphActiv").attr("data-option");
+				if(nodeClear != ""){
+					if(nodeClear!= s){
+						//Clear the node selected
+						var elmClear = $("div#" + nodeClear + ".window");
+						elmClear.css("border","");
+						
+						// setElement in graph
+						$("div#graphActiv").attr("data-option", s);
+		
+						// Highlight the node
+						var elm = $("div#" + s + ".window");
+						elm.css("border","2.5px solid Firebrick");
+						
+					}
+				}
 			}
 			
 		} else if (status == 'active') {
@@ -412,19 +413,23 @@ function switchGraph() {
 			var s = $("div#graphActiv").attr("data-option");
 			var s = s.replace("graph_","");
 			
-			var rowClear = $("tr.selected").attr("id");
-			if(rowClear != s){
-				//Clear the row selected
-				var elmClear = $("tr.selected");
-				elmClear.attr("style","background-color: #fafafa;");
-				elmClear.attr("class", "runtr");
-				
-				// setElement in table
-				var elm = $("tr#"+s+".runtr");
-				var projName = $("div#graphActiv").attr("data-project");
-//				elm.attr("style", "background-color: LightSteelBlue;");
-//				elm.attr("class","selected");
-				launchToolbar(projName, s, elm);
+			if(s != ""){
+				var rowClear = $("tr.selected").attr("id");
+				if(rowClear != ""){
+					if(rowClear != s){
+						//Clear the row selected
+						var elmClear = $("tr.selected");
+						elmClear.attr("style","background-color: #fafafa;");
+						elmClear.attr("class", "runtr");
+						
+						// setElement in table
+						var elm = $("tr#"+s+".runtr");
+						var projName = $("div#graphActiv").attr("data-project");
+		//				elm.attr("style", "background-color: LightSteelBlue;");
+		//				elm.attr("class","selected");
+						launchToolbar(projName, s, elm);
+					}
+				}
 			}
 		}
 	}
@@ -432,21 +437,18 @@ function switchGraph() {
 
 function updateTabs(projName, id, elm) {
 	var oldSelect = $("div#graphActiv").attr("data-option");
-
-	if (oldSelect != "") {
-		var aux = "div#" + oldSelect + ".window";
-		aux = $(aux).attr("style");
-		aux = aux.replace("border:2.5px solid Firebrick;",
-				"");
-		$("#" + oldSelect).attr("style", aux);
-	}
 	var selected = "graph_" + id;
-	$("div#graphActiv").attr("data-option", selected);
-	var aux = elm.attr("style");
-	aux += "border:2.5px solid Firebrick;"
-	elm.attr("style", aux);
-
-	fillTabsSummary(projName, id);
+		
+	if(oldSelect != selected){
+		if (oldSelect != "") {
+			var aux = "div#" + oldSelect + ".window";
+			$(aux).css("border","");
+		}
+		$("div#graphActiv").attr("data-option", selected);
+		elm.css("border","2.5px solid Firebrick");
+	
+		fillTabsSummary(projName, id);
+	}
 }
 
 function addStatusBox(nodeSource, id, status) {
