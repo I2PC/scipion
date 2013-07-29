@@ -218,6 +218,12 @@ class Protocol(Step):
             self.numberOfMpi = Integer(1)
         if not hasattr(self, 'numberOfThreads'):
             self.numberOfThreads = Integer(1)
+        # Check if MPI or threads are passed in **args, mainly used in tests
+        if 'numberOfMpi' in args:
+            self.numberOfMpi.set(args.get('numberOfMpi'))
+        if 'numberOfThreads' in args:
+            self.numberOfMpi.set(args.get('numberOfThreads'))            
+        
         if not hasattr(self, 'hostName'):
             self.hostName = String(args.get('hostName', 'localhost'))
         
