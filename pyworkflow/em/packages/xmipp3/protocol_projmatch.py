@@ -124,6 +124,7 @@ class XmippDefProjMatch(Form):
                             '(i.e. 10% of average sum terms over entire space) \n'
                             'see Grigorieff JSB 157 (2006) pp117-125')   
         
+        #TODO: Use common mask parameters
         
         self.addSection(label='Mask')
         

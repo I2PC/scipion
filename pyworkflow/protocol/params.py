@@ -339,8 +339,7 @@ class DigFreqParam(FloatParam):
     """ Digital frequency param. """
     def __init__(self, **args):
         FloatParam.__init__(self, **args)
-        self.addValidator(Range(0., 0.5, 
-                                error="Digital frequencies should be between 0. and 0.5"))
+        self.addValidator(FreqValidator)
         
 class NumericListParam(StringParam):
     """ This class will serve to have list representations as strings.
@@ -360,7 +359,7 @@ class TupleParam(Param):
     For example: min and max, low and high.
     """
     def __init__(self, **args):
-        Param.__init__(self, **args) 
+        Param.__init__(self, **args)
 
 # ------------------------------------------------------------------------
 #         Validators
@@ -422,8 +421,6 @@ class Range(Conditional):
         Conditional.__init__(self, error)
         self._condition = lambda value: value >= minValue and value <= maxValue
         
-Positive = GT(0.0, error='Value should be greater than zero') 
-
 class NumericListValidator(Conditional):
     """ Validator for ListParam. See ListParam. """
     def __init__(self, error='Incorrect format for numeric list param. '):
@@ -438,6 +435,14 @@ class NumericListValidator(Conditional):
             return True
         except Exception:
             return False    
+
+#--------- Some constants validators ---------------------
+
+Positive = GT(0.0, error='Value should be greater than zero')
+
+FreqValidator = Range(0., 0.5, 
+                      error="Digital frequencies should be between 0. and 0.5")
+
 
             
 
