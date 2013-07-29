@@ -179,7 +179,13 @@ NumberOfIterations = 25
 
 # Regularisation paramter T:
 """
-Bayes law strictly determines the relative weight between the contribution of the experimental data and the prior. However, in practice one may need to adjust this weight to put slightly more weight on the experimental data to allow optimal results. Values greater than 1 for this regularisation parameter (T in the JMB2011 paper) put more weight on the experimental data. Values around 2-4 have been observed to be useful for 3D refinements, values of 1-2 for 2D refinements. Too small values yield too-low resolution structures; too high values result in over-estimated resolutions and overfitting.
+Bayes law strictly determines the relative weight between the contribution of the experimental data and the prior.
+ However, in practice one may need to adjust this weight to put slightly more weight on the experimental 
+ data to allow optimal results. Values greater than 1 for this regularisation parameter 
+ (T in the JMB2011 paper) put more weight on the experimental data. Values around 2-4
+  have been observed to be useful for 3D refinements, values of 1-2 for 2D refinements.
+   Too small values yield too-low resolution structures; too high values result in
+    over-estimated resolutions and overfitting.
 """
 RegularisationParamT = 1
 
