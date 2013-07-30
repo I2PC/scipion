@@ -126,7 +126,7 @@
 							</div>
 							<table class="section">				
 								{% for paramName, param in section.iterParams %}
-								<tr class="element" id="{{paramName}}" name="{{paramName}}" data-type="{{param.getClassName}}" data-cond="{{param.condition.get}}" data-params="{{param.htmlCondParams}}" 
+								<tr {% if param.expertLevel.get > 0 %} class="advance" {% else %} class="element" {% endif %} id="{{paramName}}" name="{{paramName}}" data-type="{{param.getClassName}}" data-cond="{{param.condition.get}}" data-params="{{param.htmlCondParams}}" 
 								data-depen="{{param.htmlDepend}}" value="{{param.htmlValue}}" data-enum="{{param.display}}" data-expert="{{param.expertLevel.get}}">
 									<td id="inputName" {% if param.isImportant.get %} class="recommended" 
 									{% else %} class="normal" {% endif %}>{{param.label.get}}</td>
