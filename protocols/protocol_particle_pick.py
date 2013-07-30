@@ -115,15 +115,16 @@ def countParticles(prot, pattern=''):
     
     for posfile in getPosFiles(prot, pattern):
         pos_particles = 0
-        block = 'particles'
-        md = xmipp.MetaData("%(block)s@%(posfile)s" % locals());
-        md.removeDisabled();
-        block_particles = md.size()
-        pos_particles += block_particles
+        
+        blocks = xmipp.getBlocksInMetaDataFile(posfile) 
+        if 'particles' in blocks: #FIXME: also read supervised
+            md = xmipp.MetaData("particles@%(posfile)s" % locals());
+            md.removeDisabled();
+            pos_particles += md.size()
                
-        if pos_particles > 0:
-            particles += pos_particles
-            micrographs += 1
+            if pos_particles > 0:
+                particles += pos_particles
+                micrographs += 1
     return micrographs, particles
 
 def launchParticlePickingGUI(log, InputMicrographs, ExtraDir, PickingMode=PM_MANUAL,

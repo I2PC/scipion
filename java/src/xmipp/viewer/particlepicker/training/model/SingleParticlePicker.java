@@ -857,7 +857,6 @@ public class SingleParticlePicker extends ParticlePicker {
 				micrograph.setAutopickpercent(autopickpercent);
 				md.destroy();
 			}
-
 			loadManualParticles(micrograph, file);
 			loadAutomaticParticles(micrograph, file);
 		} catch (Exception e) {

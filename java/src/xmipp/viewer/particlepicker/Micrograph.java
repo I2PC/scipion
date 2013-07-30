@@ -26,7 +26,7 @@ public abstract class Micrograph {
 	private ImagePlus imp;
 	private String pos24file;
 	public static final String ext = ".pos";
-	public final int width, height;
+	public int width, height;
 	private String posfile;
 	private String ctf, psd;
 	private Icon ctficon;
@@ -55,18 +55,18 @@ public abstract class Micrograph {
 		this.file = file;
 		this.psd = psd;
 		this.ctf = ctf;
-		if (!new File(file).exists()) throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("file", file));
-		ImageGeneric ig;
-		try {
-			ig = new ImageGeneric(file);
-
-			width = ig.getXDim();
-			height = ig.getYDim();
-		} catch (Exception e) {
-
-			e.printStackTrace();
-			throw new IllegalArgumentException(e.getMessage());
-		}
+//		if (!new File(file).exists()) throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("file", file));
+//		ImageGeneric ig;
+//		try {
+//			ig = new ImageGeneric(file);
+//
+//			width = ig.getXDim();
+//			height = ig.getYDim();
+//		} catch (Exception e) {
+//
+//			e.printStackTrace();
+//			throw new IllegalArgumentException(e.getMessage());
+//		}
 		this.name = name;
 		this.posfile = name + ext;
 
@@ -126,10 +126,11 @@ public abstract class Micrograph {
 		if (x < 0 || y < 0) return false;
 
 		int radius = size / 2;
-		if (x - radius < 0) return false;
-		if (x + radius > width) return false;
-		if (y - radius < 0) return false;
-		if (y + radius > height) return false;
+		if (x - radius < 0 ||
+			x + radius > width ||
+			y - radius < 0 ||
+			y + radius > height) 
+			return false;
 		return true;
 	}
 
@@ -152,12 +153,20 @@ public abstract class Micrograph {
 		return posfile;
 	}
 
+	/* Load width and height after loaded ImagePlus */
+	private void loadDimensions(){
+		width = imp.getWidth();
+		height = imp.getHeight();
+	}
+
 	public ImagePlus getImagePlus() {
 		try {
 
 			if (imp == null) {
 				imp = XmippImageConverter.loadImage(file);
-				if (imp == null) imp = new ImagePlus(file);
+				if (imp == null) 
+					imp = new ImagePlus(file);
+				loadDimensions();
 			}
 			return imp;
 		} catch (Exception e) {
@@ -185,6 +194,7 @@ public abstract class Micrograph {
 						break;
 					}
 				imp = XmippImageConverter.convertToImagePlus(ig);
+				loadDimensions();
 				ig.destroy();
 
 			}
