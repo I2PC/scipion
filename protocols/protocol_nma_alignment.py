@@ -51,6 +51,7 @@ class ProtNMAAlignment(XmippProtocol):
             modeNameList=[]
             # Get modes
             MD=MetaData(self.Modesfile)
+            MD.removeDisabled()
             for modeComponent in components:
                 mode=int(modeComponent)
                 if mode>MD.size():
