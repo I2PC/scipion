@@ -372,7 +372,7 @@ class Protocol(Step):
 
     def _getExtraPath(self, *paths):
         """ Return a path inside the extra folder. """
-        return self._getPath("extra", *paths)    
+        return self._getPath("extra", *paths)
     
     def _getTmpPath(self, *paths):
         """ Return a path inside the tmp folder. """
@@ -380,6 +380,10 @@ class Protocol(Step):
     
     def _getLogsPath(self, *paths):
         return self._getPath("logs", *paths)   
+    
+    def _getRelPath(self, *path):
+        """ Return a relative path from the workingDir. """
+        return os.path.relpath(self._getPath(*path), self.workingDir.get()) 
         
     def _insertFunctionStep(self, funcName, *funcArgs, **args):
         """ 
