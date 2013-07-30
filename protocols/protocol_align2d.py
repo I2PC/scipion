@@ -195,11 +195,12 @@ class Align2D_class:
             self.selFileToUse=fnOut
             if not self.doStep1 and os.path.exists(fnOut):
                 numberOfImages=xmipp.getImageSize(fnOut)[3]
-                MD=xmipp.MetaData(self.InSelFile)
-                if MD.size()!=numberOfImages:
-                    self.doStep1=True
+                from protlib_xmipp import getMdSize
+                size = getMdSize(self.InSelFile)
+                if size != numberOfImages:
+                    self.doStep1 = True
             if not stepPerformed("Step 1",self.WorkingDir + "/status.txt"):
-                self.doStep1=True
+                self.doStep1 = True
             if self.doStep1:
                 params= '-i '+str(self.InSelFile)+\
                         ' --fourier_mask raised_cosine '+str(slope)+\

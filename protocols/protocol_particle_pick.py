@@ -50,7 +50,6 @@ class ProtParticlePicking(XmippProtocol):
                 }  
           
     def summary(self):
-        md = xmipp.MetaData(self.MicrographsMd)
         micrographs, particles,  = countParticles(self)
         if self.TiltPairs: 
             suffix = "tilt pairs"
@@ -60,8 +59,9 @@ class ProtParticlePicking(XmippProtocol):
         else: 
             suffix = "micrographs"
             items = "particles"        
-        
-        summary = ["Input: [%s] with <%u> %s" % (self.importDir, md.size(), suffix),         
+        from protlib_xmipp import getMdSize
+        size = getMdSize(self.MicrographsMd)
+        summary = ["Input: [%s] with <%u> %s" % (self.importDir, size, suffix),         
                    "Number of %(items)s manually picked: <%(particles)d> (from <%(micrographs)d> micrographs)" % locals()]
         
         return summary

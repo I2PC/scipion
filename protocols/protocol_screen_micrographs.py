@@ -135,8 +135,9 @@ class ProtScreenMicrographs(XmippProtocol):
 
     def summary(self):
         message = []
-        md = xmipp.MetaData(self.Input['micrographs'])
-        message.append("CTF screening of <%d> micrographs." % md.size())
+        from protlib_xmipp import getMdSize
+        size = getMdSize(self.Input['micrographs'])
+        message.append("CTF screening of <%d> micrographs." % size)
         message.append("Input directory: [%s]" % self.PrevRun.WorkingDir)
         return message
     

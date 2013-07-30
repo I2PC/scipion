@@ -277,9 +277,15 @@ protected:
      * @param[out] columnValues MDRow with values to fill in
      * @param pchStart pointer to the position of '_loop' in memory
      * @param pEnd  pointer to the position of the next '_data' in memory
+     * @param maxRows if this number if greater than 0, only this number of rows will be parsed.
      */
     void _readRowsStar(mdBlock &block, std::vector<MDObject*> & columnValues);
     void _readRowFormat(std::istream& is);
+
+    /** This two variables will be used to read the metadata infomation (labels and size)
+     * or maybe a few rows only
+     */
+    size_t _maxRows, _parsedLines;
 
 public:
     /** @name Constructors
@@ -334,6 +340,23 @@ public:
      */
     bool isColumnFormat() const;
 
+    /** Prevent from parsing all rows from the metadata.
+     * When reading from file, only maxRows will be read.
+     */
+    void setMaxRows(size_t maxRows=0)
+    {
+      _maxRows = maxRows;
+    }
+
+    /** Return the number of lines in the metadata file.
+     * Serves to know the number of items even is read with
+     * maxRows != 0
+     */
+    size_t getParsedLines()
+    {
+      return _parsedLines;
+    }
+
     /**Set precision (number of decimal digits) use by operator == when comparing
      * metadatas with double data. "2" is a good value for angles
      */
@@ -386,10 +409,10 @@ public:
      * and end loop pointers. Return pointer to newline after last label
      */
     void _readColumnsStar(mdBlock &block,
-                            std::vector<MDObject*> & columnValues,
-                            const std::vector<MDLabel>* desiredLabels,
-                            bool addColumns = true,
-                            size_t id = BAD_OBJID);
+                          std::vector<MDObject*> & columnValues,
+                          const std::vector<MDLabel>* desiredLabels,
+                          bool addColumns = true,
+                          size_t id = BAD_OBJID);
     /**Get path.
      */
     String getPath() const ;
@@ -965,7 +988,7 @@ public:
      * The result will be in "calling" MetaData.
      */
     void selectSplitPart(const MetaData &mdIn,
-    					 size_t n, size_t part,
+                         size_t n, size_t part,
                          const MDLabel sortLabel=MDL_OBJID);
 
     /** Select some part from Metadata.
@@ -1044,9 +1067,10 @@ class MDValueGenerator
 {
 public:
     MDLabel label; //label to which generate values
-    
+
     /* Destructor*/
-    virtual ~MDValueGenerator() {}
+    virtual ~MDValueGenerator()
+    {}
 
     /* Method to be implemented in concrete generators */
     virtual void fillValue(MetaData &md, size_t objId) = 0;

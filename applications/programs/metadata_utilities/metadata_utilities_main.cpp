@@ -114,7 +114,8 @@ protected:
         addParamsLine("   count  <label>             : for each value of a given label create new metadata with the number of times the value appears");
         addParamsLine("   sum  <label1> <label2>   : group metadata by label1 and add quantities in label2");
         addParamsLine("   size                       : print Metadata size");
-        addParamsLine("   blocks                     : print blocks in Metadata");
+        addParamsLine("   labels                     : print Metadata labels");
+        addParamsLine("   blocks                     : print blocks in file");
         addParamsLine("           alias -q;                                             ");
 
         addParamsLine("or --fill <labels> <fill_mode>                  : Fill a column values(should be of same type)");
@@ -186,8 +187,17 @@ protected:
     void readParams()
     {
         fn_in = getParam("-i");
-        if (!checkParam("--file") || strcmp(getParam("--file"),"import_txt")==0)
-            mdIn.read(fn_in);
+        // Prevent from reading the input metadata for some special cases
+        bool readIn = !((checkParam("--file") && STR_EQUAL(getParam("--file"), "import_txt")) || //when importing from .txt files
+                        (checkParam("--query") && STR_EQUAL(getParam("--query"), "blocks")));
+
+        if (checkParam("--query") &&
+            (STR_EQUAL(getParam("--query"), "size") ||
+             STR_EQUAL(getParam("--query"), "labels")))
+          mdIn.setMaxRows(1); //avoid parse the entire metadata
+
+        if (readIn)
+          mdIn.read(fn_in);
         doWrite = true;
         fn_out = checkParam("-o") ? getParam("-o") : fn_in;
         mode = MD_OVERWRITE;
@@ -333,7 +343,15 @@ protected:
         else if (operation == "size")
         {
             doWrite = false;
-            std::cout << fn_in + " size is: " << mdIn.size() << std::endl;
+            std::cout << fn_in + " size is: " << mdIn.getParsedLines() << std::endl;
+        }
+        else if (operation == "labels")
+        {
+            doWrite = false;
+            std::cout << fn_in + " has labels: " << std::endl;
+            MDLabelVector labels = mdIn.getActiveLabels();
+            for (size_t i = 0; i < labels.size(); ++i)
+              std::cout << "  " << MDL::label2Str(labels[i]) << std::endl;
         }
         else if (operation == "blocks")
         {

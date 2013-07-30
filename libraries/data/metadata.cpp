@@ -50,13 +50,15 @@ void getBlocksInMetaDataFile(const FileName &inFile, StringVector& blockList)
     else
     {    //map file
         int fd;
-		MetaData MDaux(inFile);
+		MetaData mdAux;
+		mdAux.setMaxRows(1);
+		mdAux.read(inFile);
         BUFFER_CREATE(bufferMap);
         mapFile(inFile, bufferMap.begin, bufferMap.size, fd);
         BUFFER_COPY(bufferMap, buffer);
         BLOCK_CREATE(block);
         String blockName;
-        while (MDaux.nextBlock(buffer, block))
+        while (mdAux.nextBlock(buffer, block))
         {
             BLOCK_NAME(block, blockName);
             blockList.push_back(blockName);
@@ -135,6 +137,8 @@ void MetaData::clear()
 void MetaData::init(const std::vector<MDLabel> *labelsVector)
 {
     _clear();
+    _maxRows = 0; //by default read all rows
+    _parsedLines = 0; //no parsed line;
     if (labelsVector != NULL)
         this->activeLabels = *labelsVector;
     //Create table in database
@@ -987,7 +991,7 @@ void MetaData::_readRowsStar(mdBlock &block, std::vector<MDObject*> & columnValu
     char * buffer = new char[n];
     memcpy(buffer, block.loop, n);
     char *iter = buffer, *end = iter + n, * newline = NULL;
-
+    _parsedLines = 0; //Check how many lines the md have
     while (iter < end) //while there are data lines
     {
         //Assing \n position and check if NULL at the same time
@@ -995,12 +999,20 @@ void MetaData::_readRowsStar(mdBlock &block, std::vector<MDObject*> & columnValu
             newline = end;
         line.assign(iter, newline - iter);
         trim(line);
+
         if (!line.empty())
         {
+          //_maxRows would be > 0 if we only want to read some
+          // rows from the md for performance reasons...
+          // anyway the number of lines will be counted in _parsedLines
+          if (_maxRows == 0 || _parsedLines < _maxRows)
+          {
             std::stringstream ss(line);
             id = addObject();
             for (size_t i = 0; i < nCol; ++i)
                 _parseObject(ss, *(columnValues[i]), id);
+          }
+          _parsedLines++;
         }
         iter = newline + 1; //go to next line
     }
@@ -1173,8 +1185,7 @@ void MetaData::readDB(const FileName &filename,
                       bool decomposeStack)//what is decompose stack for?
 {
     String blockname = blockRegExp;
-
-    myMDSql->copyTableFromFileDB(blockname,filename,desiredLabels);
+    myMDSql->copyTableFromFileDB(blockname, filename, desiredLabels, _maxRows);
 }
 void MetaData::readStar(const FileName &filename,
                         const std::vector<MDLabel> *desiredLabels,
@@ -1295,6 +1306,7 @@ void MetaData::readStar(const FileName &filename,
                 else
                 {
                     id = addObject();
+                    _parsedLines = 1;
                     _readColumnsStar(block, columnValues, desiredLabels, firstBlock, id);
                 }
                 firstBlock = false;
@@ -2051,6 +2063,7 @@ WriteModeMetaData metadataModeConvert (String mode)
         return MD_APPEND;
     REPORT_ERROR(ERR_ARG_INCORRECT,"metadataModeConvert: Invalid mode");
 }
+
 
 /* Class to generate values for columns of a metadata*/
 void MDValueGenerator::fill(MetaData &md)

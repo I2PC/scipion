@@ -556,7 +556,7 @@ def convertRelionMetadata(log, inputs,
     #this images cames from relion
     md = MetaData(lastIterationMetadata)
     #total number Image
-    numberImages    = md.size()
+    numberImages = md.size()
 
 
     #total number volumes 

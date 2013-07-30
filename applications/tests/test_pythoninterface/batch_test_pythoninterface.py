@@ -367,7 +367,7 @@ class TestXmippPythonInterface(unittest.TestCase):
             md2.setValue(MDL_ANGLE_PSI, md2.getValue(MDL_ANGLE_PSI, id) * 2., id);
         self.assertEqual(md, md2)
 
-    def test_xmipp_addTmpLabelAlias(self):
+    def test_xmipp_addLabelAlias(self):
         tmpFileName = '/tmp/test_pythoninterface_readPlain1.xmd'
         line1="""# XMIPP_STAR_1 * 
 # 
@@ -383,8 +383,8 @@ _rlnDefocusU #2
         f.write(line1)
         f.flush()
         f.close()
-        AddTmpLabelAlias(MDL_CTF_VOLTAGE,"rlnVoltage")
-        AddTmpLabelAlias(MDL_CTF_DEFOCUSU,"rlnDefocusU")
+        addLabelAlias(MDL_CTF_VOLTAGE,"rlnVoltage")
+        addLabelAlias(MDL_CTF_DEFOCUSU,"rlnDefocusU")
         md=MetaData(tmpFileName)
         md2=MetaData()
         id = md2.addObject()

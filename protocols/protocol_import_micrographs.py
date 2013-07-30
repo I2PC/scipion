@@ -260,6 +260,6 @@ def checkBorders(log,MicrographFn,WarningFn):
     for objId in md:
         micrograph=md.getValue(MDL_MICROGRAPH,objId)
         if not checkImageCorners(micrograph):
-            mdOut.setValue(MDL_MICROGRAPH,micrograph,mdOut.addObject())
-    if mdOut.size()>0:
+            mdOut.setValue(MDL_MICROGRAPH,micrograph, mdOut.addObject())
+    if mdOut.size() > 0:
         mdOut.write(WarningFn)

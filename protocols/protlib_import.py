@@ -215,9 +215,9 @@ def exportMdToRelion(md, outputRelion):
 def addRelionLabels():
     '''Add relion labels as aliases
     '''
-    from xmipp import AddTmpLabelAlias
+    from xmipp import addLabelAlias
     for k, v in XMIPP_RELION_LABELS.iteritems():
-        AddTmpLabelAlias(k,v)
+        addLabelAlias(k,v)
         
 def exportReliontoMetadataFile(inputRelion,outputXmipp):
     """ This function will receive a relion file and will
