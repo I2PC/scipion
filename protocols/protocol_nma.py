@@ -252,9 +252,13 @@ def qualifyModes(log,WorkingDir,NumberOfModes,StructureType):
         MDout.setValue(MDL_NMA_COLLECTIVITY,collectivity,id)
     fh.close()
     idxSorted=[i[0] for i in sorted(enumerate(collectivityList), key=lambda x:x[1])]
-    i=0;
+    score=[0]*NumberOfModes
+    for i in range(NumberOfModes):
+       score[i]+=i+1
+       score[idxSorted[i]]+=NumberOfModes-i
+    i=0
     for id in MDout:
-        MDout.setValue(MDL_NMA_SCORE,float(idxSorted[i]+1+(NumberOfModes-i))/(2.0*NumberOfModes),id)
+        MDout.setValue(MDL_NMA_SCORE,float(score[i])/(2.0*NumberOfModes),id)
         i+=1
     MDout.write("modes.xmd")
     deleteFile(log,"Chkmod.res")
