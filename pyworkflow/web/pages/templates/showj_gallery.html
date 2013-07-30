@@ -111,10 +111,7 @@
 					}
 				}
 				else{
-					if (e.ctrlKey || e.metaKey){
-						alert("c+c")
-					}
-					else{
+					if (!e.ctrlKey && !e.metaKey){
 						$(".img_container").each(function(){
 							$(this).removeClass('image_selected')
 						});	
