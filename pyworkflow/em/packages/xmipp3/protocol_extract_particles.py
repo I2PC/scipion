@@ -157,6 +157,10 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 # IF 'other' multiply the original sampling rate by the factor provided
                 self.samplingFinal = self.samplingOriginal*self.downFactor.get()
                 
+        # Convert input SetOfCoordinates to Xmipp if needed
+        self._insertConvertStep('inputCoords', XmippSetOfCoordinates, 
+                                 self._getExtraPath('micrographs_coordinates.xmd'))
+                
         # For each micrograph insert the steps
         for mic in self.inputMics:
             micrographToExtract = mic.getFileName()
@@ -243,10 +247,12 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 
         outputRoot = str(self._getExtraPath(micName))
         
-        fnPosFile = self._getExtraPath(micName + '.pos')
-        
+        #fnPosFile = self._getExtraPath(micName + '.pos')
+        fnPosFile = 'particles@%s' % self.inputCoords.getMicrographPosFile(micId)   
         # If it has coordinates extract the particles      
-        if self._createPosFile(micId, fnPosFile):
+        
+        #if self._createPosFile(micId, fnPosFile):
+        if xmipp.existsBlockInMetaDataFile(fnPosFile):
             boxSize = self.boxSize.get()
             args = "-i %(micrographToExtract)s --pos %(fnPosFile)s -o %(outputRoot)s --Xdim %(boxSize)d" % locals()
             if self.downsampleType.get() != self.SAME_AS_PICKING:
@@ -313,21 +319,18 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         if self.downsampleType == self.OTHER:
             imgSet.samplingRate.set(self.inputMics.samplingRate.get()*self.downFactor.get())
                     
-        posFiles = glob(join(self._getExtraPath(),"*.pos"))
-        posFiles.sort()
+#        posFiles = glob(join(self._getExtraPath(),"*.pos"))
+#        posFiles.sort()
 
-        for posFn in posFiles:
-            xmdFn = posFn.replace(".pos",".xmd")
+#        for posFn in posFiles:
+        for posFn in self.inputCoords.iterPosFile():            
+#            xmdFn = posFn.replace(".pos",".xmd")
+            xmdFn = self._getExtraPath(replaceBaseExt(posFn, "xmd"))
             md = xmipp.MetaData(xmdFn)
-            mdPos = xmipp.MetaData(posFn)
-            mdPos.merge(md) # take the itemId from the .pos file, asuming same size and order
-            # De momento lo seteo con un numero secuencial
-            #md.setColumnValues(xmipp.MDL_ITEM_ID, range(int(id), int(md.size()+id)))
-            #id += md.size()
+            mdPos = xmipp.MetaData('particles@%s' % posFn)
+            mdPos.merge(md) 
             imgSet.appendFromMd(mdPos)
    
-          
-        #imgSet.setMd(imagesMd)
         imgSet.sort() # We need sort?
         imgSet.write()
         

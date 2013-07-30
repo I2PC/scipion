@@ -493,6 +493,39 @@ class XmippSetOfCoordinates(SetOfCoordinates):
                 return micPosMd.getValue(xmipp.MDL_MICROGRAPH_PARTICLES, objId)
             
         return None
+    
+    @staticmethod
+    def convert(setOfCoords, filename):
+        if isinstance(setOfCoords, XmippSetOfCoordinates):
+            return setOfCoords
+        
+        print "CONVERTING: ", type(setOfCoords), " TO XmippSetOfCoordinates"
+        print "   ", type(setOfCoords) is XmippSetOfCoordinates
+        
+        xmippCoords = XmippSetOfCoordinates(filename)
+        xmippCoords.setMicrographs(setOfCoords.getMicrographs())
+        
+        extraPath = dirname(filename)
+        posMd = xmipp.MetaData()
+        # write a position file per micrograph
+        for mic in setOfCoords.getMicrographs():
+            posFile = join(extraPath, replaceBaseExt(mic.getFileName(), 'pos'))
+            mdPosFile = xmipp.MetaData()
+            for coord in setOfCoords.iterMicrographCoordinates(mic):
+                x, y = coord.getPosition(Coordinate.POS_CENTER)
+                coorId = mdPosFile.addObject()
+                mdPosFile.setValue(xmipp.MDL_XCOOR, int(x), coorId)
+                mdPosFile.setValue(xmipp.MDL_YCOOR, int(y), coorId)
+                mdPosFile.setValue(xmipp.MDL_ITEM_ID, coord.getId(), coorId)                                       
+            mdPosFile.write(posFile)
+            posId = posMd.addObject()
+            posMd.setValue(xmipp.MDL_ITEM_ID, mic.getId(), posId)
+            posMd.setValue(xmipp.MDL_MICROGRAPH_PARTICLES, posFile, posId)
+            
+        # write the micrograph_coordinates file
+        posMd.write(filename) 
+        
+        return xmippCoords    
             
 class XmippTiltedPair(XmippMdRow):
     """ Tilted Pairs relations in Xmipp are stored in a MetaData row. """
