@@ -105,26 +105,35 @@ $(document).ready(function() {
 
 function addIconsToHeader(){
 	$("#table_container thead th div").append("<span class=\"css_left\"><img src=\"/resources/showj/delete_table.png\" class=\"arrowImage\"></span>")
-	/* $("#table_container thead th div") */
 	$("#table_container thead th").each(function(){
 		if ($(this).hasClass("imageColumn")){
 			$(this).find("div").append("<span class=\"css_left\"><img src=\"/resources/showj/render_table.png\" class=\"arrowImage\"></span>")
 		}
 		if ($(this).hasClass("editable")){
-			$(this).find("div").append("<span class=\"css_left\"><img src=\"/resources/showj/edit_table.png\" class=\"arrowImage\"></span>")
+			$(this).find("div").append("<span class=\"css_left\"><img src=\"/resources/showj/edit_table.png\" class=\"arrowImage pressedButton\" onclick=\"enableDisableEditable(event,this)\"></span>")
 		}
 	})
-	/* .append("<span class=\"css_left\"><img src=\"/resources/showj/render_table.png\" class=\"arrowImage\"></span>")
-	.append("<span class=\"css_left\"><img src=\"/resources/showj/edit_table.png\" class=\"arrowImage\"></span>") */
-	
-	
 
+}
+
+function enableDisableEditable(event, element){
+	/* Habria que hacer un toogle al elmento y ve rcomo habilitamos el evento de nuevo*/
+	/* $(element). */
+	
+	//From the image element we get the column header index
+	var iCol = $('th').index($(element).closest('th'))
+	//We disabled editable event
+	var nTrs = oTable.fnGetNodes();
+	$('td:nth-child('+(iCol+1)+')', nTrs).unbind('click');
+	//This will avoid column sorting
+	event.stopPropagation() 
+	
 }
 
 function setTableEditable(){
 	$('.editable', oTable.fnGetNodes()).editable(
 			/* '../examples_support/editable_ajax.php', */
-			function(value, settings) { 
+			function(value, settings) {
 			     console.log(this);
 			     console.log(value);
 			     console.log(settings);
