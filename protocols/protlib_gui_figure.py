@@ -468,7 +468,10 @@ class XmippArrayPlotter1D():
     def __init__(self, fnArray, col, mainTitle="", xlabel="", ylabel="", figsize=None, dpi=100):
         import numpy
         a=numpy.loadtxt(fnArray)
-        data=a[:,col]
+        if len(a.shape)==1:
+           data=a
+        else:
+           data=a[:,col]
         
         if figsize is None: # Set some defaults values
             figsize = (6, 5)
