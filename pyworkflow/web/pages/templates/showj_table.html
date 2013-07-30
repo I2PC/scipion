@@ -1,12 +1,14 @@
 {% extends 'showj_base.html' %} 
 {% block head %}
 <!-- CSS -->
-<link type="text/css" href="/static/css/jquery-ui_smoothness.css" rel="stylesheet" />
+<link type="text/css" href="/static/css/jquery-ui_smoothness.css" rel="stylesheet" /> 
+<link type="text/css" href="/static/css/demo_table_jui.css" rel="stylesheet" />
 <!-- JS -->
+
 <script type="text/javascript" src="{{jquery_datatable}}"></script>
 <script type="text/javascript" src="{{jquerydataTables_colreorder}}"></script>
 <script type="text/javascript" src="{{jeditable}}"></script>
-<script type="text/javascript" src="{{jquery_ui}}"></script>
+<!-- <script type="text/javascript" src="{{jquery_ui}}"></script> -->
 <!-- <script type="text/javascript" src="{{jquery_tabletools}}"></script> -->
 
 
@@ -16,9 +18,10 @@ var oTable;
 var giRedraw = false;
 
 $(document).ready(function() {
-	initializeSelectionRowEvent2() 
+	initializeSelectionRowEvent() 
 	initializeGoToEvent()
 	initializeTableWidth()
+	
 	
 	
 	/* $("#form").submit(function() {
@@ -77,6 +80,10 @@ $(document).ready(function() {
 				        			{% if typeOfColumn == "text" %}
 				        			"sClass": "editable",
 				        			{% endif %}
+				        			{% if typeOfColumn == "image" %}
+				        			"sClass": "imageColumn",
+				        			{% endif %}
+				        			
 				        			"sTitle": '{{label}}'
 				        		},
 			    			{% endfor %}				
@@ -91,16 +98,42 @@ $(document).ready(function() {
 			    }		
 			);
 	
-	/* setTableEditable() */ 
+	addIconsToHeader()
+	setTableEditable() 
 	
 } );
 
+function addIconsToHeader(){
+	$("#table_container thead th div").append("<span class=\"css_left\"><img src=\"/resources/showj/delete_table.png\" class=\"arrowImage\"></span>")
+	$("#table_container thead th").each(function(){
+		if ($(this).hasClass("imageColumn")){
+			$(this).find("div").append("<span class=\"css_left\"><img src=\"/resources/showj/render_table.png\" class=\"arrowImage\"></span>")
+		}
+		if ($(this).hasClass("editable")){
+			$(this).find("div").append("<span class=\"css_left\"><img src=\"/resources/showj/edit_table.png\" class=\"arrowImage pressedButton\" onclick=\"enableDisableEditable(event,this)\"></span>")
+		}
+	})
 
+}
+
+function enableDisableEditable(event, element){
+	/* Habria que hacer un toogle al elmento y ve rcomo habilitamos el evento de nuevo*/
+	/* $(element). */
+	
+	//From the image element we get the column header index
+	var iCol = $('th').index($(element).closest('th'))
+	//We disabled editable event
+	var nTrs = oTable.fnGetNodes();
+	$('td:nth-child('+(iCol+1)+')', nTrs).unbind('click');
+	//This will avoid column sorting
+	event.stopPropagation() 
+	
+}
 
 function setTableEditable(){
 	$('.editable', oTable.fnGetNodes()).editable(
 			/* '../examples_support/editable_ajax.php', */
-			function(value, settings) { 
+			function(value, settings) {
 			     console.log(this);
 			     console.log(value);
 			     console.log(settings);
@@ -174,22 +207,14 @@ function initializeGoToEvent(){
 }
 function updateRowSelection(){
 	var nodes = oTable.fnGetNodes();
-    for (var i=0; i<nodes.length; i++){
-		if (nodes[i].id == $("#id_goto").val()){
-			/* Falta arreglar. El click se ejecuta sobre el tbody no el tr
-			http://datatables.net/extras/tabletools/api#fnSelect */
-			$("#"+nodes[i].id).children("td").first().click();
-		}    	
-        
-    }
+	nodes[$("#id_goto").val()-1].click();
 }
 
 var lastChecked;
-function initializeSelectionRowEvent2(){
+function initializeSelectionRowEvent(){
 	$('#data_table').on("click","tr", function(event) {
-        alert("okokokok")
+
 	    if(!lastChecked) {
-	    	alert("tolastchecked")
 	        lastChecked = this;
 	    }
 	     
@@ -213,25 +238,26 @@ function initializeSelectionRowEvent2(){
 	        } else if (document.selection) {  // IE?
 	            document.selection.empty();
 	        }
-	    } else if ((event.metaKey || event.ctrlKey)){
-	        $(this).toggleClass('row_selected');
 	    } else {
 	    	/* $(lastChecked).removeClass('row_selected'); */
+	    	if (!event.metaKey && !event.ctrlKey){
+	    		$('tr').each(function (){
+					$(this).removeClass('row_selected');
+				});
+		    }
 	    	
-	    	$('tr').each(function (){
-				$(this).removeClass('row_selected');
-			});
 	        $(this).addClass('row_selected');  
 	    }
 	    
-	    alert($(this).prevAll().length)
 	     
 	    lastChecked = this;
+	    
+	    $("#id_goto").val($(this).index()+1)
 	});
 }
-
+/* 
 function initializeSelectionRowEvent(){
-	/* Add a click handler to the rows - this could be used as a callback */
+	// Add a click handler to the rows - this could be used as a callback 
 	$("#data_table").click(function(event) {
 		alert('heyhey')
 		$(oTable.fnSettings().aoData).each(function (){
@@ -239,7 +265,7 @@ function initializeSelectionRowEvent(){
 		});
 		$(event.target.parentNode).addClass('row_selected');
 
-		/* Refresh value on got field  */
+		// Refresh value on got field  
 		selectedRows = fnGetSelected(oTable)
 
 		alert(selectedRows[0].id)
@@ -252,10 +278,10 @@ function initializeSelectionRowEvent(){
 		}
 	});
 
-}
+} */
 
 /* Get the rows which are currently selected */
-function fnGetSelected(oTableLocal)
+/* function fnGetSelected(oTableLocal)
 {
 	var aReturn = new Array();
 	var aTrs = oTableLocal.fnGetNodes();
@@ -268,7 +294,7 @@ function fnGetSelected(oTableLocal)
 		}
 	}
 	return aReturn;
-}
+} */
 </script>
 {% endblock %}
 
