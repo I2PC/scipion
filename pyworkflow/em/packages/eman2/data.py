@@ -78,21 +78,38 @@ class EmanSetOfCoordinates(SetOfCoordinates):
         # Use object value to store filename
         # Here filename is the path to a json file where coordinates (on json format) are linked to micrographs ids
         SetOfCoordinates.__init__(self, value=filename, **args)
-        emanJson = EmanJson(self.getFileName())
-        self.jsonDict = emanJson.loadJsonFile()
+        #emanJson = EmanJson(self.getFileName())
+        self.jsonDict = loadJson(self.getFileName())
         
     def getFileName(self):
-        return self.get()  
-      
+        return self.get()
+    
+    def getList(self, param):
+        """ Return the list asociated to a param """
+        list =  self.jsonDict[param]
+        return list
+        jsonDict
     def getSize(self):
         """ Return the number of coordinates on the set """
-        pass     
+        size = len(self.jsonDict["boxes"])
+        return size      
         
     def iterMicrographCoordinates(self, micrograph):
         """ Iterates over the set of coordinates belonging to that micrograph. """
-        yield self.jsonDict.get(micrograph.getId)
-        
-        
+        pathJsonPos = self.getMicrographPosFile(micrograph.getId())
+        if exists(pathJsonPos):
+            coordJson = loadJson(pathJsonPos)
+            coordList = coordJson["boxes"]
+            for pos in coordList:
+                x = pos[0]
+                y = pos[1]
+                #coorId = mdPos.getValue(xmipp.MDL_ITEM_ID, objId)
+                coordinate = EmanCoordinate()
+                coordinate.setPosition(x, y)
+                coordinate.setMicrograph(micrograph)
+                coordinate.setBoxSize(self.boxSize.get())
+                coordinate.setId(coorId)        
+                yield coordinate
         
 #        pathBox = join(path, replaceBaseExt(micrograph.getFileName(), 'box'))
 #        if exists(pathBox):
@@ -126,12 +143,19 @@ class EmanSetOfCoordinates(SetOfCoordinates):
     def hasTiltPairs(self):
         """Returns True if the SetOfMicrographs has tilted pairs"""
         return self.getMicrographs().hasTiltPairs()
+    
+    def getMicrographPosFile(self, micId):
+        """ This function will return the pos file corresponding to a micrograph item id"""
+        micPosJson = self.jsonDict[micId]
+        return micPosJson
+
 
 class EmanImage(Image):
     """Eman implementation for Image"""
     
     def __init__(self, filename=None, **args):
         Image.__init__(self, filename, **args)
+
     
 class EmanSetOfImages(SetOfImages):
     """Represents a set of Images for Eman"""
@@ -158,22 +182,27 @@ class EmanSetOfParticles(EmanSetOfImages, SetOfParticles):
         SetOfParticles.__init__(self, filename, **args)
 
 
-class EmanJson():
-    """ Utility class to access the Eman Json files """
-    def __init__(self, filename=None, **args):
-        if filename is not None:
-            self.jsonFn = filename
-        else:
-            raise Exception("Json file name is empty")
-    
-    def loadJsonFile(self):
-        """ This function loads the Json dictionary into memory """
-        jsonFile = open(self.jsonFn)
-        jsonDict = json.load(jsonFile)
-        jsonFile.close()
-        return jsonDict
-        
+# class EmanJson():
+#     """ Utility class to access the Eman Json files """
+#     def __init__(self, filename=None, **args):
+#         if filename is not None:
+#             self.jsonFn = filename
+#         else:
+#             raise Exception("Json file name is empty")
+#     
+#     @static
+def loadJson(jsonFn):
+    """ This function loads the Json dictionary into memory """
+    jsonFile = open(jsonFn)
+    jsonDict = json.load(jsonFile)
+    jsonFile.close()
+    return jsonDict
 
+def writeJson(jsonDict, jsonFn):
+    """ This function write a Json dictionary """
+    with open(jsonFn, 'w') as outfile:
+        json.dump(jsonDict, outfile)
+    
 
 class EmanVolume(Image):
     """Eman implementation for Volume"""
@@ -189,6 +218,18 @@ class EmanSetOfVolumes(EmanSetOfImages, SetOfVolumes):
         EmanSetOfImages.__init__(self, filename, **args)
 
     
+# def getBoxSize(self):
+#     """Method to read boxsize from base.json"""
+#     return self.jsonDict["box_size"]
+
+#     from EMAN2db import db_open_dict,db_check_dict,db_close_dict
+# 
+#     EMBOXERBASE_DB = "bdb:emboxerbase"
+#     db = db_open_dict(EMBOXERBASE_DB)
+#     boxsize = db.get("box_size",dfl=128)
+#     return boxsize
+
+
 #class EmanDbd():
 #    """ Utility class to access the Eman dbd database """
 #
@@ -207,11 +248,3 @@ class EmanSetOfVolumes(EmanSetOfImages, SetOfVolumes):
 #            raise Exception("Error getting the stored paramter with command: " + command) 
 #        return auxValue
 #    
-#def getBoxSize():
-#    """Method to read boxsize from EMANDB"""
-#    from EMAN2db import db_open_dict,db_check_dict,db_close_dict
-#
-#    EMBOXERBASE_DB = "bdb:emboxerbase"
-#    db = db_open_dict(EMBOXERBASE_DB)
-#    boxsize = db.get("box_size",dfl=128)
-#    return boxsize
