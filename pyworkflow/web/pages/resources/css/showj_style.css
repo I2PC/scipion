@@ -220,6 +220,10 @@ section .imageTitle{
 	position: absolute;
 }
 
+.pressedButton{
+	opacity:0.5;
+}
+
 /* FIX FOR DATABLE ARROW BUTTON FIT IN ONE LINE */
 .css_left { float: left; }
 .css_right {float: right; }
