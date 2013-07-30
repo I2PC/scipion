@@ -27,7 +27,7 @@ class ProtNMAAlignment(XmippProtocol):
                         PDBfile=self.PDBfile, Modesfile=self.Modesfile,
                         SamplingRate=self.SamplingRate, TrustRegionScale=self.TrustRegionScale,
                         ProjMatch=self.ProjMatch,
-                        MinAngularSampling=self.MinAngularSampling,
+                        DiscreteAngularSampling=self.DiscreteAngularSampling,
                         NProc=self.NumberOfMpi)
         self.insertStep("deleteFile",filename=self.workingDirPath("nmaTodo.xmd"))
 	self.insertStep("extractDeformations",WorkingDir=self.WorkingDir)
@@ -81,9 +81,9 @@ class ProtNMAAlignment(XmippProtocol):
                                     modeNameList[0],modeNameList[1],modeNameList[2])
   
 def performNMA(log, WorkingDir, InSelFile, PDBfile, Modesfile, SamplingRate,
-               TrustRegionScale,ProjMatch,MinAngularSampling,NProc):
+               TrustRegionScale,ProjMatch,DiscreteAngularSampling,NProc):
     arguments="-i "+InSelFile+" --pdb "+PDBfile+" --modes "+Modesfile+" --sampling_rate "+\
-              str(SamplingRate) +" --discrAngStep " +str(MinAngularSampling) +" --odir "+WorkingDir+" --centerPDB "+\
+              str(SamplingRate) +" --discrAngStep " +str(DiscreteAngularSampling) +" --odir "+WorkingDir+" --centerPDB "+\
               " --trustradius_scale "+str(TrustRegionScale)
     if PDBfile.find("pseudoatoms.pdb")!=-1:
         arguments+=" --fixed_Gaussian"
