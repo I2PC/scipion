@@ -44,8 +44,8 @@ TrustRegionScale=1
 """Use Projection Matching instead of Wavelets and Splines"""
 ProjMatch=True
 
-# Minimum angular sampling rate
-MinAngularSampling=10
+# Discrete angular sampling rate
+DiscreteAngularSampling=10
 
 # {eval} expandParallel(threads=0,mpi=2)
 
