@@ -213,34 +213,41 @@ PyObject * xmipp_MetaDataInfo(PyObject *obj, PyObject *args, PyObject *kwargs)
         try
         {
             MetaData *md = NULL;
-            bool destroyMd=true;
+            size_t size; //number of elements in the metadata
+            bool destroyMd = true;
+
             if (PyString_Check(pyValue))
             {
                 char * str = PyString_AsString(pyValue);
                 md = new MetaData();
+                md->setMaxRows(1);
                 md->read(str);
+                size = md->getParsedLines();
             }
             else if (FileName_Check(pyValue))
             {
                 md = new MetaData();
+                md->setMaxRows(1);
                 md->read(FileName_Value(pyValue));
+                size = md->getParsedLines();
             }
             else if (MetaData_Check(pyValue))
             {
                 md = ((MetaDataObject*)pyValue)->metadata;
-                destroyMd=false;
+                destroyMd = false;
+                size = md->size();
             }
             else
             {
                 PyErr_SetString(PyXmippError, "Invalid argument: expected String, FileName or MetaData");
                 return NULL;
             }
-            size_t xdim, ydim, zdim, ndim, Nimgs;
-            Nimgs=md->size();
+            size_t xdim, ydim, zdim, ndim;
             getImageSize(*md, xdim, ydim, zdim, ndim);
+
             if (destroyMd)
                 delete md;
-            return Py_BuildValue("iiikk", xdim, ydim, zdim, ndim, Nimgs);
+            return Py_BuildValue("iiikk", xdim, ydim, zdim, ndim, size);
         }
         catch (XmippError &xe)
         {
@@ -786,7 +793,7 @@ xmipp_methods[] =
           METH_VARARGS, "Construct a relational query" },
         { "MDValueRange", (PyCFunction) xmipp_MDValueRange,
           METH_VARARGS, "Construct a range query" },
-        { "AddTmpLabelAlias", (PyCFunction) xmipp_addTmpLabelAlias,
+        { "addLabelAlias", (PyCFunction) xmipp_addLabelAlias,
           METH_VARARGS, "Add lable alias dinamically in run time. Use for reading non xmipp star files" },
         { "createEmptyFile", (PyCFunction) xmipp_createEmptyFile,
           METH_VARARGS, "create empty stack (speed up things)" },

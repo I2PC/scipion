@@ -215,9 +215,9 @@ def exportMdToRelion(md, outputRelion):
 def addRelionLabels():
     '''Add relion labels as aliases
     '''
-    from xmipp import AddTmpLabelAlias
+    from xmipp import addLabelAlias
     for k, v in XMIPP_RELION_LABELS.iteritems():
-        AddTmpLabelAlias(k,v)
+        addLabelAlias(k,v)
         
 def exportReliontoMetadataFile(inputRelion,outputXmipp):
     """ This function will receive a relion file and will
@@ -244,7 +244,6 @@ def exportReliontoMetadataFile(inputRelion,outputXmipp):
     for block in blocklist:
         md = MetaData(block + '@'+tmpFile)
         if len(md.getActiveLabels())!=0:
-            print "writing block ", block, outputXmipp
             md.write(block +'@'+ outputXmipp,MD_APPEND)
         
     from protlib_filesystem import deleteFile

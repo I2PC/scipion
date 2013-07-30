@@ -18,6 +18,7 @@ from xmipp import MetaData, MetaDataInfo, MD_APPEND, MDL_MAXCC, MDL_WEIGHT, \
 from protlib_base import *
 from math import floor
 from numpy import array, savetxt, sum, zeros
+from protlib_xmipp import getMdSize
 from protlib_utils import getListFromRangeString, runJob, runShowJ
 from protlib_filesystem import copyFile, deleteFile, removeFilenamePrefix
 
@@ -176,12 +177,11 @@ def getBestVolumes(log,WorkingDir,NRansac,NumVolumes,UseAll):
         print("Best volume "+str(indx)+" = "+fnBestAngles)
         if not UseAll:
             runJob(log,"xmipp_metadata_utilities","-i %s -o %s --query select \"maxCC>%f \" --mode append" %(fnBestAnglesOut,fnBestAnglesOut,threshold))
-            md=MetaData(fnBestAnglesOut)
-            if md.size()>0:
+            if getMdSize(fnBestAnglesOut) > 0:
                 indx += 1
         else:
-            indx+=1
-        i-=1
+            indx += 1
+        i -= 1
         
     # Remove unnecessary files
     for n in range(NRansac):

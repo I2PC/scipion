@@ -1187,9 +1187,11 @@ def textOnDoubleClick(filename, browser):
 
 def getMdString(filename, browser):
     from xmipp import MetaData, MDL_IMAGE, label2Str, labelIsImage
-    md = MetaData(filename)
+    md = MetaData()
+    md.read(filename, 1)
     labels = md.getActiveLabels()
-    msg =  "  <%d items>\n" % md.size()
+    print "parsed: ", md.getParsedLines()
+    msg =  "  <%d items>\n" % md.getParsedLines()
     msg += "  <labels:>" + ''.join(["\n   - %s" % label2Str(l) for l in labels])
     
     img = 'no-image.png'
@@ -1204,7 +1206,10 @@ def mdOnClick(filename, browser):
     if '@' not in filename:
         import xmipp
         msg = "<Metadata File>\n"
+        print "mdOnclick..."
+        print "before getBlocksInMetaDataFile"
         blocks = xmipp.getBlocksInMetaDataFile(filename)
+        print "after...."
         nblocks = len(blocks)
         if nblocks <= 1:
             msg += "  <single block>\n" + getMdString(filename, browser)

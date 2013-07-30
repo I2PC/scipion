@@ -8,6 +8,7 @@
 import glob,os,re,sys,shutil,time
 from protlib_base import *
 from config_protocols import protDict
+from protlib_xmipp import getMdSize
 from protlib_utils import runJob, getListFromRangeString
 from protlib_filesystem import createLink, deleteFile, linkAcquisitionInfo
 from xmipp import MetaData, MD_APPEND, MDL_IMAGE
@@ -56,11 +57,10 @@ class ProtCL2D(XmippProtocol):
             lastLevelFile=levelFiles[-1]
             date=time.ctime(os.path.getmtime(lastLevelFile))
             lastLevel=int(re.search('level_(\d\d)',lastLevelFile).group(1))
-            mD=MetaData("info@"+lastLevelFile)
-            iteration=mD.size()
+            iteration = getMdSize("info@"+lastLevelFile)
             try:
-                mD=MetaData("classes@"+lastLevelFile)
-                message.append("Last iteration is %s from level %d with %d classes (at %s)"%(iteration,lastLevel,mD.size(),date))
+                size = getMdSize("classes@"+lastLevelFile)
+                message.append("Last iteration is %s from level %d with %d classes (at %s)"%(iteration,lastLevel, size,date))
             except:
                 pass
         return message
@@ -132,8 +132,9 @@ def postCl2d(log, WorkingDir, NumberOfReferences):
         levelDirs.sort()
         lastLevelDir=levelDirs[-1]
         fnLastLevelFile=os.path.join(lastLevelDir,"level_classes.xmd")
-        mD = MetaData("classes@"+fnLastLevelFile)
-        if mD.size()==NumberOfReferences:
+        from protlib_xmipp import getMdSize
+        size = getMdSize("classes@"+fnLastLevelFile)
+        if size == NumberOfReferences:
             createLink(log, fnLastLevelFile, os.path.join(WorkingDir,"classes.xmd"))
 
 def sortClasses(log,ExtraDir,Nproc,suffix):

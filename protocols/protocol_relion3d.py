@@ -105,7 +105,7 @@ class ProtRelion3D(XmippProtocol):
                             outputRelion=self.ImgStar                            
                             )
             # launch relion program
-            #######################################self.insertRelionRefine()
+            #############################################self.insertRelionRefine()
             # convert relion output to xmipp
             # relion_it00N_data.star, angular assigment
             self.ImgStar = self.extraPath(replaceBasenameExt(tmpFileNameXMD, '.star'))
@@ -116,9 +116,24 @@ class ProtRelion3D(XmippProtocol):
                      verifyFiles += [self.getFilename(v+'Xm', iter=i )]
                 for v in self.relionFiles:
                      inputs += [self.getFilename(v+'Re', iter=i )]
+            #data to store in Working dir so it can be easily accessed by users
+            lastIteration = self.NumberOfIterations
+            lastIterationVolumeFns = []
+            standardOutputClassFns = []
+            for ref3d in range (1,self.NumberOfClasses+1):
+                lastIterationVolumeFns += [self.getFilename('volume', iter=lastIteration, ref3d=ref3d )]
+                standardOutputClassFns += ["images_ref3d%06d@"%ref3d + self.workingDirPath("classes_ref3D.xmd")]
+            lastIterationMetadata = "images@"+self.getFilename('data'+'Xm', iter=lastIteration )
+
             self.insertStep('convertRelionMetadata', verifyfiles=verifyFiles,
                             inputs  = inputs,
-                            outputs = verifyFiles
+                            outputs = verifyFiles,
+                            lastIterationVolumeFns = lastIterationVolumeFns,
+                            lastIterationMetadata  = lastIterationMetadata,
+                            NumberOfClasses        = self.NumberOfClasses,
+                            standardOutputClassFns = standardOutputClassFns,
+                            standardOutputImageFn  = "images@" + self.workingDirPath("images.xmd"),
+                            standardOutputVolumeFn = "volumes@" + self.workingDirPath("volumes.xmd")
                             )
             inputs=[]
             outputs=[]
@@ -277,7 +292,7 @@ class ProtRelion3D(XmippProtocol):
             maxRef3D = 1
             _c = tuple(['Iter/Ref'] + ['Ref3D_%d' % ref3d for ref3d in ref3Ds])
             for it in iterations:
-                md = MetaData(self.getFilename('data'+'Xm', iter=it ))
+                md = MetaData("images@"+self.getFilename('data'+'Xm', iter=it ))
                 #agregar por ref3D
                 mdOut.aggregate(md, AGGR_COUNT, MDL_REF3D, MDL_REF3D, MDL_COUNT)
                 tmp = ['0']*(self.NumberOfClasses+1)
@@ -512,7 +527,15 @@ def convertImagesMd(log, inputMd, outputRelion):
     # Create the mapping between relion labels and xmipp labels
     exportMdToRelion(md, outputRelion)
     
-def convertRelionMetadata(log, inputs,outputs):
+def convertRelionMetadata(log, inputs,
+                          outputs,
+                          lastIterationVolumeFns,
+                          lastIterationMetadata,
+                          NumberOfClasses,
+                          standardOutputClassFns,
+                          standardOutputImageFn,
+                          standardOutputVolumeFn
+                          ):
     """ Convert the relion style MetaData to one ready for xmipp.
     Main differences are: STAR labels are named different and
     optimiser.star -> changes in orientation, offset. number images assigned to each class
@@ -528,7 +551,38 @@ def convertRelionMetadata(log, inputs,outputs):
     """
     for i,o in zip(inputs,outputs):
         exportReliontoMetadataFile(i,o)
+    #create images. xmd and class metadata
+    #lastIteration = self.NumberOfIterations
+    #this images cames from relion
+    md = MetaData(lastIterationMetadata)
+    #total number Image
+    numberImages = md.size()
 
+
+    #total number volumes 
+    comment  = " numberImages=%d..................................................... "%numberImages
+    comment += " numberRef3D=%d........................................................."%NumberOfClasses
+    md.setComment(comment)
+    md.write(standardOutputImageFn)
+    #data_images_ref3d000001
+    mdOut = MetaData()
+    mdOut.setComment(comment)
+    f = FileName(standardOutputClassFns[0])
+    f=f.removeBlockName()
+    if exists(f):
+        os.remove(f)
+    for i in range (0,NumberOfClasses):
+        mdOut.clear()
+        mdOut.importObjects(md, MDValueEQ(MDL_REF3D, i+1))
+        mdOut.write(standardOutputClassFns[i],MD_APPEND)
+        
+    #volume.xmd, metada with volumes
+    mdOut.clear()
+    for lastIterationVolumeFn in lastIterationVolumeFns:
+        objId = mdOut.addObject()
+        mdOut.setValue(MDL_IMAGE, lastIterationVolumeFn, objId)
+    mdOut.write(standardOutputVolumeFn)
+    
 def convertRelionBinaryData(log, inputs,outputs):
     """Make sure mrc files are volumes properlly defined"""
     program = "xmipp_image_convert"

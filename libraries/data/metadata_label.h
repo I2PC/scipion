@@ -354,6 +354,8 @@ enum MDLabel
     MDL_LAST_LABEL  // **** NOTE ****: Do keep this label always at the end,it is here for looping purposes
 };//close enum Label
 
+typedef std::vector<MDLabel> MDLabelVector;
+
 /** Macro for iterate over all labels */
 #define FOR_ALL_LABELS() for (int _label = MDL_FIRST_LABEL; _label < MDL_LAST_LABEL; ++_label)
 
@@ -675,15 +677,11 @@ private:
 
     /** Add predefined labels to be used in metadata */
     static void addLabel(MDLabel label, MDLabelType type, const String &name, int tags=TAGLABEL_NOTAG);
-    /** Add an alias for an existing label */
-    static void addLabelAlias(MDLabel label, const String &alias);
 
     friend class MDLabelStaticInit;
 public:
-    /** public acces to addLabelAlias, add alias in running time,
-      useful to read non xmipp star files
-      */
-    static void addTmpLabelAlias(MDLabel label, const String &alias);
+    /** Add an alias for an existing label */
+    static void addLabelAlias(MDLabel label, const String &alias);
 }
 ;//close class MLD definition
 
