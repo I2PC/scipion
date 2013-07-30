@@ -106,12 +106,18 @@ public class SingleParticlePicker extends ParticlePicker {
 
 	}
 
+	/* Save changes to the current micrograph. */
 	public void saveData() {
 		super.saveData();
-//		for (Micrograph m : micrographs)
-//			saveData(m);
 		saveData(micrograph);
-
+		setChanged(false);
+	}
+	
+	/* Save changes to ALL micrographs, mainly used when importing. */
+	public void saveAllData(){
+		super.saveData();
+		for (Micrograph m : micrographs)
+			saveData(m);
 		setChanged(false);
 	}
 
@@ -436,7 +442,7 @@ public class SingleParticlePicker extends ParticlePicker {
 				m.setState(MicrographState.Available);
 		}
 
-		saveData();
+		saveAllData();
 		initUpdateTemplates();
 	}
 
@@ -562,7 +568,6 @@ public class SingleParticlePicker extends ParticlePicker {
 		String particlesfile = getExportFile(path);
 		if (particlesfile != null) {
 			importAllParticles(particlesfile);
-			saveData();
 			return "";
 		}
 		for (SingleParticlePickerMicrograph m : micrographs) {
@@ -609,6 +614,7 @@ public class SingleParticlePicker extends ParticlePicker {
 			tm.addManualParticle(new ManualParticle(x, y, this, tm, 2),	this, false);
 			
 		}
+		saveData(m);
 		return result;
 	}// function importParticlesFromMd
 
@@ -695,7 +701,6 @@ public class SingleParticlePicker extends ParticlePicker {
 				}
 			}
 			md.destroy();
-			saveData();
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e);
@@ -1032,7 +1037,8 @@ public class SingleParticlePicker extends ParticlePicker {
 		if (getMode() == Mode.Supervised
 				&& next.getState() == MicrographState.Available)
 			next.setState(MicrographState.Supervised);
-		saveData();
+		saveData(current);
+		saveData(next);
 		MetaData addedmd = getAddedMetaData(current, correctout);
 		MetaData automd = new MetaData(getParticlesAutoBlock(micrograph));
 		MetaData outputmd = new MetaData();
@@ -1116,7 +1122,7 @@ public class SingleParticlePicker extends ParticlePicker {
 
 	public void correct(Rectangle correctout) {
 		micrograph.setState(MicrographState.Corrected);
-		saveData();
+		saveData(micrograph);
 		MetaData addedmd = getAddedMetaData(micrograph, correctout);
 		MetaData automd = new MetaData(getParticlesAutoBlock(micrograph));
 		classifier.correct(addedmd, automd, micrograph.getThreshold());
