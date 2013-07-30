@@ -196,8 +196,9 @@ FileName ProgNmaAlignment::createDeformedPDB(int pyramidLevel) const {
 		if (sigmaGaussian >= 0)
 			arguments += formatString("%f",sigmaGaussian);
 	}
-	else
-		arguments +=" --poor_Gaussian"; // Otherwise, a detailed conversion of the atoms takes too long in this context
+	//else
+		//arguments +=" --poor_Gaussian"; // Otherwise, a detailed conversion of the atoms takes too long in this context
+		
 	progVolumeFromPDB->read(arguments);
 	progVolumeFromPDB->tryRun();
 
