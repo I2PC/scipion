@@ -29,7 +29,7 @@ for specific Xmipp3 EM data objects
 """
 
 from pyworkflow.em import *
-from xmipp3 import XmippMdRow, XmippSet
+from xmipp3 import XmippMdRow, XmippSet, findRowById
 
 from pyworkflow.utils.path import replaceBaseExt, exists, dirname, join
 import xmipp
@@ -226,9 +226,6 @@ class XmippSetOfImages(SetOfImages):
     def _convert(setClass, setOfImgs, filename):
         if isinstance(setOfImgs, setClass):
             return setOfImgs
-        
-        print "CONVERTING: ", type(setOfImgs), setClass
-        print "   ", type(setOfImgs) is setClass
         
         xmippImgs = setClass(filename)
         xmippImgs.copyInfo(setOfImgs)
@@ -457,7 +454,6 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         returning each position file.
         """
         micPosMd = xmipp.MetaData(self.getFileName())
-        #FIXME: MDQuery????
         for objId in micPosMd:
             yield micPosMd.getValue(xmipp.MDL_MICROGRAPH_PARTICLES, objId)        
         
@@ -487,12 +483,12 @@ class XmippSetOfCoordinates(SetOfCoordinates):
     def getMicrographPosFile(self, micId):
         """ This function will return the pos file corresponding to a micrograph item id"""
         micPosMd = xmipp.MetaData(self.getFileName())
-        #FIXME: MDQuery????
-        for objId in micPosMd:
-            if micPosMd.getValue(xmipp.MDL_ITEM_ID, objId) == micId:
-                return micPosMd.getValue(xmipp.MDL_MICROGRAPH_PARTICLES, objId)
-            
-        return None
+        micRow = findRowById(micPosMd, micId)
+        if micRow is None:
+            raise Exception("SetOfCoordinates.getMicrographPosFile: can't find micrograph pos file")
+        
+        return micRow.getValue(xmipp.MDL_MICROGRAPH_PARTICLES)
+    
     
     @staticmethod
     def convert(setOfCoords, filename):
@@ -529,6 +525,7 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         posMd.write(filename) 
         
         return xmippCoords    
+
             
 class XmippTiltedPair(XmippMdRow):
     """ Tilted Pairs relations in Xmipp are stored in a MetaData row. """

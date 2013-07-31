@@ -47,8 +47,6 @@ class XmippDefFilterParticles(DefProcessParticles):
 class XmippProtFilter(xmipp3.XmippProtocol, ProtFilterParticles):
     """ Protocol base for Xmipp filters. """
     
-    _definition = XmippDefFilterParticles()
-    
     def __init__(self):
         ProtFilterParticles.__init__(self)
         self._program = "xmipp_transform_filter"
@@ -60,11 +58,10 @@ class XmippProtFilter(xmipp3.XmippProtocol, ProtFilterParticles):
         self.outputStk = self._getPath('output_images.stk')
         
     def _defineSteps(self):
-        """ Mainly prepare the command line for call ml(f)2d program"""
         self._defineFilenames()
         self.inputPcts = self.inputParticles.get()       
         inputPctsFn = self._insertConvertStep('inputPcts', XmippSetOfImages, self.inputFn)
-        self._insertFilterStep(inputPctsFn, self.outputStk)        
+        self._insertFilterStep(inputPctsFn, self.outputStk, self.outputMd)        
         self._insertFunctionStep('createOutput')
         
     def createOutput(self):
@@ -72,7 +69,7 @@ class XmippProtFilter(xmipp3.XmippProtocol, ProtFilterParticles):
         self._processOutput(outputPcts)
         self._defineOutputs(outputParticles=outputPcts)
         
-    def _insertFilterStep(self, inputFn, outputFn):
+    def _insertFilterStep(self, inputFn, outputFn, outputMd):
         """ This is the function that will insert the filter step. """
         pass
         
@@ -93,20 +90,22 @@ class XmippDefFourierFilter(XmippDefFilterParticles):
 
     def _addProcessParam(self):
         self.addParam('filterType', EnumParam, choices=['low pass', 'high pass', 'band pass'],
-                      label="Filter type", default=xmipp3.BAND_PASS,
+                      label="Filter type", default=xmipp3.FILTER_BAND_PASS,
                       display=EnumParam.DISPLAY_COMBO,
                       help='Select what type of Fourier filter do you want to apply.\n'
                            '<low pass>: all frequency components below <High frequency> are preserved.\n'
                            '<high pass>: all frequency components above <Low frequency> are preserved.\n'
                            '<band pass>: all frequency components between <Low frequency> and <High frequency> are preserved.\n')
-        self.addParam('lowFreq', DigFreqParam, default=0.02, condition='filterType != 0',
+        self.addParam('lowFreq', DigFreqParam, default=0.02, 
+                      condition='filterType != %d' % xmipp3.FILTER_LOW_PASS,
                       label='Low Frequency (0 < f < 0.5)',
                       help='Low frequency cuttoff to apply the filter.\n')          
         self.addParam('highFreq', DigFreqParam, default=0.35, 
-                      label='High Frequency (0 < f < 0.5)', condition='filterType != 1',
+                      label='High Frequency (0 < f < 0.5)', 
+                      condition='filterType != %d' % xmipp3.FILTER_HIGH_PASS,
                       help='High frequency cuttoff to apply the filter.\n'
                            'Set to 0.5 for a <high pass> filter.')          
-        self.addParam('freqDecay', FloatParam, default=0.02, expertLevel=LEVEL_ADVANCED,
+        self.addParam('freqDecay', FloatParam, default=0.02, 
                       label='Frequency decay',
                       help='It describes the length of the amplitude decay in a raised cosine') 
      
@@ -117,16 +116,15 @@ class XmippProtFourierFilter(XmippProtFilter):
     """
     _definition = XmippDefFourierFilter()
     
-    def _insertFilterStep(self, inputFn, outputFn):
+    def _insertFilterStep(self, inputFn, outputFn, outputMd):
         lowFreq = self.lowFreq.get()
         highFreq = self.highFreq.get()
         filterType = self.filterType.get()
         freqDecay = self.freqDecay.get()
-        outputMd = self.outputMd
         
-        if filterType == xmipp3.LOW_PASS:
+        if filterType == xmipp3.FILTER_LOW_PASS:
             filterStr = "low_pass %(highFreq)f"
-        elif filterType == xmipp3.HIGH_PASS:
+        elif filterType == xmipp3.FILTER_HIGH_PASS:
             filterStr = "high_pass %(lowFreq)f"
         else:
             filterStr = "band_pass %(lowFreq)f %(highFreq)f"
@@ -141,7 +139,7 @@ class XmippDefGaussianFilter(XmippDefFilterParticles):
     """ Definition for XmippProtoFourierFilter """
 
     def _addProcessParam(self):
-        self.addParam('freqSigma', FloatParam, default=0.04, expertLevel=LEVEL_ADVANCED,
+        self.addParam('freqSigma', FloatParam, default=0.04, 
                       label='Frequency sigma',
                       help='Remind that the Fourier frequency is normalized between 0 and 0.5') 
         
@@ -149,13 +147,131 @@ class XmippProtGaussianFilter(XmippProtFilter):
     
     _definition = XmippDefGaussianFilter()
     
-    def _insertFilterStep(self, inputFn, outputFn):
+    def _insertFilterStep(self, inputFn, outputFn, outputMd):
         freqSigma = self.freqSigma.get()
-        outputMd = self.outputMd
         
         args = self._args + " --fourier gaussian %(freqSigma)f "
         if outputFn != inputFn:
             args += " -o %(outputFn)s"
                         
         self._insertRunJobStep(self._program, args % locals())
+        
+
+def addMaskParams(self):
+    """ Add common mask parameters that can be used
+    in several protocols definitions.
+    Params:
+        self: the Definition instance.
+    """
+    self.addParam('maskType', EnumParam, 
+                  choices=['raised_cosine', 'circular', 'binary_file'], 
+                  default=xmipp3.MASK_RAISED_COSINE, 
+                  label="Mask type", display=EnumParam.DISPLAY_COMBO,
+                  help='Select which type of mask do you want to apply.\n')
     
+    self.addParam('maskRadius', IntParam, default=-1, 
+                  condition='maskType != %d' % xmipp3.MASK_FILE,
+                  label='Mask radius (pix)',
+                  help='This is the radius (in pixels) of the spherical mask ')       
+
+    self.addParam('maskOuterRadius', IntParam, default=2, 
+                  condition='maskType == %d' % xmipp3.MASK_RAISED_COSINE,
+                  label='Mask outer radius (pix)',
+                  help='Outer radius in pixels for the raised cosine mask ')
+        
+    self.addParam('maskFile', StringParam, default='', 
+                  label='Binary mask file', 
+                  condition='maskType == %d' % xmipp3.MASK_FILE,
+                  help='The mask file should have the same dimensions as your input particles.\n'
+                       'The protein region should be 1 and the solvent should be 0.')  
+    
+    self.addParam('fillType', EnumParam, 
+                  choices=['value', 'min', 'max', 'avg'], 
+                  default=xmipp3.MASK_FILL_VALUE,
+                  label="Fill with ", display=EnumParam.DISPLAY_COMBO,
+                  help='Select how are you going to fill the pixel values outside the mask. ')
+    
+    self.addParam('fillValue', IntParam, default=0, 
+                  condition='fillType == %d' % xmipp3.MASK_FILL_VALUE,
+                  label='Fill value',
+                  help='Value to fill the pixel values outside the mask. ')   
+
+      
+class XmippDefMask(XmippDefFilterParticles):
+    """ Definition for XmippProtoFourierFilter """
+
+    def _addProcessParam(self):
+        addMaskParams(self)
+        
+class XmippProtMask(XmippProtFilter):
+    """ This class implement a protocol for applying a mask with Xmipp.
+    """
+    _definition = XmippDefMask()
+    
+
+    def __init__(self):
+        XmippProtFilter.__init__(self)
+        self._program = "xmipp_transform_mask"
+        #self._args = "-i %(inputFn)s --save_metadata_stack %(outputMd)s --keep_input_columns --track_origin "
+
+    def _insertFilterStep(self, inputFn, outputFn, outputMd):
+        args = self._args
+        fillStr = self.getEnumText('fillType')
+        maskType = self.getEnumText('maskType')
+        maskRadius = self.maskRadius.get()
+        maskBand = maskRadius + self.maskOuterRadius.get()
+        
+        if self.fillType == xmipp3.MASK_FILL_VALUE:
+            fillStr = str(self.fillValue.get())
+        
+        args += " --substitute %(fillStr)s --mask %(maskType)s "
+        if self.maskType == xmipp3.MASK_RAISED_COSINE:
+            args += " -%(maskRadius)d -%(maskBand)d" 
+        elif self.maskType == xmipp3.MASK_CIRCULAR:
+            args += " -%(maskRadius)d"
+        else:
+            args += self.maskFile.get()
+            
+        if outputFn != inputFn:
+            args += " -o %(outputFn)s"
+                        
+        self._insertRunJobStep(self._program, args % locals())
+        
+        
+class XmippDefResize(XmippDefFilterParticles):
+    """ Definition for XmippProtoFourierFilter """
+
+    def _addProcessParam(self):
+        
+        self.addParam('resizeOperation', EnumParam, 
+                      choices=['resize', 'crop'], 
+                      default=0,
+                      label="Resize operation", display=EnumParam.DISPLAY_COMBO,
+                      help='Select how do you want to change the size of the particles.\n'
+                      '<resize>: you will provide the new size (in pixels) for your particles.\n'
+                      '<crop>: you choose how many pixels you want to crop from each border.\n')
+        
+        self.addParam('newSize', IntParam, default=0,
+                      condition='resizeOperation == 0',
+                      label='New image size (pix)',
+                      help='This is the size in pixels of the particle images.')       
+    
+        self.addParam('cropSize', IntParam, default=0,
+                      condition='resizeOperation == 1',
+                      label='Crop size (pix)',
+                      help='This is the desired output size(in pixels) after cropping.') 
+
+        
+class XmippProtResize(XmippProtFilter):
+    """ This class implement a protocol to change dimesions of the particles with Xmipp.
+    """
+    _definition = XmippDefResize()    
+
+    def __init__(self):
+        XmippProtFilter.__init__(self)
+        self._program = "xmipp_transform_mask"
+        #self._args = "-i %(inputFn)s --save_metadata_stack %(outputMd)s --keep_input_columns --track_origin "
+
+    def _insertFilterStep(self, inputFn, outputFn, outputMd):
+        #TODO: Check if we want to separate crop from resize
+        raise Exception('Not yet implemented.')
