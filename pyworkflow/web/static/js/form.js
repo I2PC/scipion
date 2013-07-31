@@ -2,78 +2,68 @@
  * Method to execute a protocol.
  * Overray the post simple method in the html. 
  */
-$(document).ready(
-		function() {
-			$("#protocolForm").submit(
-				function() {
-					var mode = $("#protocolForm").attr('data-mode');
-					
-					if(mode=='execute'){
-						/* Execute the protocol */
-						var action =  $("#protocolForm").attr("action");
-						var msg = "The protocol was launched successfuly";
-						
-						$.post(
-							action, 
-							$("#protocolForm").serialize(), 
-							function(json) {
-								if (json.errors.length > 0) {
-								// Show errors in the validation
-								showErrorValidation(json.errors);
-								} else {
-									// No errors in the validation
-									new Messi(msg, {
-										title : 'Success',
-										modal : true,
-										buttons : [ {
-										id : 0,
-										label : 'Ok',
-										val : 'Y',
-										btnClass : 'btn-select'
-										}],
-										callback : function(val) {
-											if (val == 'Y') {
-												window.opener.location.reload(true);
-												window.close();
-												}
-											}
-										});
-									}
-							}, "json");
+$(document).ready(function() {
+	$("#protocolForm").submit(function() {
+		var mode = $("#protocolForm").attr('data-mode');
 
+		if (mode == 'execute') {
+			/* Execute the protocol */
+			var action = $("#protocolForm").attr("action");
+			var msg = "The protocol was launched successfuly";
+
+			$.post(action, $("#protocolForm").serialize(), function(json) {
+				if (json.errors.length > 0) {
+					// Show errors in the validation
+					showErrorValidation(json.errors);
+				} else {
+					// No errors in the validation
+					new Messi(msg, {
+						title : 'Success',
+						modal : true,
+						buttons : [ {
+							id : 0,
+							label : 'Ok',
+							val : 'Y',
+							btnClass : 'btn-select'
+						} ],
+						callback : function(val) {
+							if (val == 'Y') {
+								window.opener.location.reload(true);
+								window.close();
+							}
+						}
+					});
+				}
+			}, "json");
+
+		} else if (mode == 'save') {
+			/* Save the protocol */
+			var action = "/save_protocol/";
+			var msg = "The protocol was saved successfuly";
+
+			$.post(action, $("#protocolForm").serialize(), function() {
+				new Messi(msg, {
+					title : 'Success',
+					modal : true,
+					buttons : [ {
+						id : 0,
+						label : 'Ok',
+						val : 'Y',
+						btnClass : 'btn-select'
+					} ],
+					callback : function(val) {
+						if (val == 'Y') {
+							window.opener.location.reload(true);
+							window.close();
+						}
 					}
-					else if(mode=='save') {
-						/*  Save the protocol */
-						var action =  "/save_protocol/";
-						var msg = "The protocol was saved successfuly";
-						
-						$.post(
-							action, 
-							$("#protocolForm").serialize(), 
-							function() {
-								new Messi(msg, {
-									title : 'Success',
-									modal : true,
-									buttons : [ {
-									id : 0,
-									label : 'Ok',
-									val : 'Y',
-									btnClass : 'btn-select'
-									}],
-									callback : function(val) {
-										if (val == 'Y') {
-											window.opener.location.reload(true);
-											window.close();
-											}
-										}
-									});
-						});
-					}
-					// Important. Stop the normal POST
-					return false;
-				}	
-			);
-		});
+				});
+			});
+		}
+		// Important. Stop the normal POST
+		return false;
+	});
+});
 
 function showErrorValidation(json) {
 	var msg = JSON.stringify(json);
@@ -81,7 +71,7 @@ function showErrorValidation(json) {
 	msg = msg.replace(">", "");
 	msg = msg.replace("[", "");
 	msg = msg.replace("]", "");
-	
+
 	var msg = "<table><tr><td><img src='/resources/error.gif' width='45' height='45' />"
 			+ "</td><td class='content'>" + msg + "</td></tr></table>";
 
@@ -103,22 +93,28 @@ function evalElements() {
 		var type = jQuery(this).attr('data-type');
 		var param = jQuery(this).attr('id');
 
-		if (type == "BooleanParam") {
-			onChangeBooleanParam(value, param);
-		} else if (type == "EnumParam") {
+//		 alert(value +" - "+type+" - "+param);
+
+//		if (type == "BooleanParam" || type == "FloatParam" || type == "IntParam") {
+//			onChangeBooleanParam(value, param);
+//		} else 
+		if (type == "EnumParam") {
 			var typeEnum = jQuery(this).attr('data-enum');
 			if (typeEnum == '0') {
 				onChangeEnumParamList(value, param);
 			} else if (typeEnum == '1') {
 				onChangeEnumParamCombo(param + "_select", param);
 			}
+		} else {
+			onChangeParam(value, param);
 		}
 	});
 }
 
 /* Differents functions depends on the input type */
-function onChangeBooleanParam(value, paramId) {
+function onChangeParam(value, paramId) {
 	setParamValue(paramId, value);
+	
 }
 
 function onChangeEnumParamCombo(elemId, paramId) {
@@ -132,27 +128,46 @@ function onChangeEnumParamList(index, paramId) {
 
 // Put the new value in an attribute of the parent node
 function setParamValue(paramId, value) {
+	
 	var row = jQuery("tr#" + paramId);
 	row.val(value);
-	evalDependencies(row);
+	var newLevel = $("select[name=expLevel]").val();
+	evalDependencies(row, newLevel);
+
+	var params = row.attr('data-params');
+	
+//	alert(params);
+
+//	if (params != undefined && params.length <= 0) {
+		if (params != 'undefined' ) {
+		
+		var expLevel = row.attr('data-expert');
+
+		if (expLevel > newLevel) {
+			row.hide();
+		} else {
+			row.show();
+		}
+	}
+
 }
 
-function evalDependencies(row) {
-	var newLevel = $("select[name=expLevel]").val();
+function evalDependencies(row, newLevel) {
+//	var newLevel = $("select[name=expLevel]").val();
 
 	var dependencies = row.attr('data-depen');
-	if (dependencies.length > 0) {
+	if (dependencies!= undefined && dependencies.length > 0) {
 		var arrayDepends = dependencies.split(",");
 		for ( var cont = 0; cont < arrayDepends.length; cont++) {
 
-			var row = jQuery("tr#" + arrayDepends[cont]);
-			var res = evalCondition(row);
-			var expLevel = row.attr('data-expert');
+			var row2 = jQuery("tr#" + arrayDepends[cont]);
+			var res = evalCondition(row2);
+			var expLevel = row2.attr('data-expert');
 
 			if (res == false || expLevel > newLevel) {
-				row.hide();
+				row2.hide();
 			} else if (res == true) {
-				row.show();
+				row2.show();
 			}
 		}
 	}

@@ -36,7 +36,11 @@ import json
             
 class EmanCoordinate(Coordinate):
     """This class holds the (x,y) position and other information
-    associated with a EMAN coordinate (Eman coordinates are POS_TOPLEFT mode)"""    
+    associated with a EMAN coordinate (Eman coordinates are POS_TOPLEFT mode)"""  
+    
+    def __init__(self, **args):
+        
+        self.coordId = 0L
     
     def getPosition(self, mode=Coordinate.POS_TOPLEFT):
         """Return the position of the coordinate.
@@ -68,6 +72,12 @@ class EmanCoordinate(Coordinate):
         tilted one and viceversa"""
         pass 
     
+    def setId(self, id):
+        self.coordId = id
+        
+    def getId(self):
+        return self.coordId
+    
     
 class EmanSetOfCoordinates(SetOfCoordinates):
     """Encapsulate the logic of a set of particles coordinates for EMAN.
@@ -78,21 +88,61 @@ class EmanSetOfCoordinates(SetOfCoordinates):
         # Use object value to store filename
         # Here filename is the path to a json file where coordinates (on json format) are linked to micrographs ids
         SetOfCoordinates.__init__(self, value=filename, **args)
-        emanJson = EmanJson(self.getFileName())
-        self.jsonDict = emanJson.loadJsonFile()
+        #emanJson = EmanJson(self.getFileName())   
+        self._jsonDict = {}
+    
+    def load(self):
+        """ Load extra data from files. """
+        if self.getFileName() is None:
+            raise Exception("Set filename before calling load()")
+        self._jsonDict = loadJson(self.getFileName())
         
+    def loadIfEmpty(self):
+        """ Load data only if the main set is empty. """
+        if not self._jsonDict:
+            self.load()
+            
     def getFileName(self):
-        return self.get()  
-      
+        return self.get()
+    
+    def getList(self, param):
+        """ Return the list asociated to a param """
+        self.loadIfEmpty()
+        
+        list =  self._jsonDict[param]
+        return list
+    
     def getSize(self):
         """ Return the number of coordinates on the set """
-        pass     
+        self.loadIfEmpty()
+        #size = len(self._jsonDict["boxes"])
+        # FIXME: jsonPos paths are nor relative to working dir but to run dir
+#        size = 0
+#        for pathJsonPos in self._jsonDict.itervalues():
+#            dictJsonPos = loadJson(pathJsonPos)
+#            size += len(dictJsonPos["boxes"])
+            
+        # Remove when it works
+        size = 4
+        return size      
         
     def iterMicrographCoordinates(self, micrograph):
         """ Iterates over the set of coordinates belonging to that micrograph. """
-        yield self.jsonDict.get(micrograph.getId)
-        
-        
+        pathJsonPos = self.getMicrographPosFile(micrograph.getId())
+        if pathJsonPos is not None:
+            if exists(pathJsonPos):
+                coordJson = loadJson(pathJsonPos)
+                coordList = coordJson["boxes"]
+                coorIdList = coordJson["coordId"]
+                for i, pos in enumerate(coordList):
+                    x = pos[0]
+                    y = pos[1]
+                    coordinate = EmanCoordinate()
+                    coordinate.setPosition(x, y)
+                    coordinate.setMicrograph(micrograph)
+                    coordinate.setBoxSize(self.boxSize.get())
+                    coordinate.setId(coorIdList[i])        
+                    yield coordinate
         
 #        pathBox = join(path, replaceBaseExt(micrograph.getFileName(), 'box'))
 #        if exists(pathBox):
@@ -121,17 +171,27 @@ class EmanSetOfCoordinates(SetOfCoordinates):
                 yield coord
 
     def getFiles(self):
-        return self.jsonDict.values() 
+        self.loadIfEmpty()
+        return self._jsonDict.values() 
     
     def hasTiltPairs(self):
         """Returns True if the SetOfMicrographs has tilted pairs"""
         return self.getMicrographs().hasTiltPairs()
+    
+    def getMicrographPosFile(self, micId):
+        """ This function will return the pos file corresponding to a micrograph item id"""
+        self.loadIfEmpty()
+        if self._jsonDict.has_key(str(micId)):
+            return self._jsonDict[str(micId)]
+        return None
+
 
 class EmanImage(Image):
     """Eman implementation for Image"""
     
     def __init__(self, filename=None, **args):
         Image.__init__(self, filename, **args)
+
     
 class EmanSetOfImages(SetOfImages):
     """Represents a set of Images for Eman"""
@@ -158,22 +218,27 @@ class EmanSetOfParticles(EmanSetOfImages, SetOfParticles):
         SetOfParticles.__init__(self, filename, **args)
 
 
-class EmanJson():
-    """ Utility class to access the Eman Json files """
-    def __init__(self, filename=None, **args):
-        if filename is not None:
-            self.jsonFn = filename
-        else:
-            raise Exception("Json file name is empty")
-    
-    def loadJsonFile(self):
-        """ This function loads the Json dictionary into memory """
-        jsonFile = open(self.jsonFn)
-        jsonDict = json.load(jsonFile)
-        jsonFile.close()
-        return jsonDict
-        
+# class EmanJson():
+#     """ Utility class to access the Eman Json files """
+#     def __init__(self, filename=None, **args):
+#         if filename is not None:
+#             self.jsonFn = filename
+#         else:
+#             raise Exception("Json file name is empty")
+#     
+#     @static
+def loadJson(jsonFn):
+    """ This function loads the Json dictionary into memory """
+    jsonFile = open(jsonFn)
+    jsonDict = json.load(jsonFile)
+    jsonFile.close()
+    return jsonDict
 
+def writeJson(jsonDict, jsonFn):
+    """ This function write a Json dictionary """
+    with open(jsonFn, 'w') as outfile:
+        json.dump(jsonDict, outfile)
+    
 
 class EmanVolume(Image):
     """Eman implementation for Volume"""
@@ -189,6 +254,18 @@ class EmanSetOfVolumes(EmanSetOfImages, SetOfVolumes):
         EmanSetOfImages.__init__(self, filename, **args)
 
     
+# def getBoxSize(self):
+#     """Method to read boxsize from base.json"""
+#     return self.jsonDict["box_size"]
+
+#     from EMAN2db import db_open_dict,db_check_dict,db_close_dict
+# 
+#     EMBOXERBASE_DB = "bdb:emboxerbase"
+#     db = db_open_dict(EMBOXERBASE_DB)
+#     boxsize = db.get("box_size",dfl=128)
+#     return boxsize
+
+
 #class EmanDbd():
 #    """ Utility class to access the Eman dbd database """
 #
@@ -207,11 +284,3 @@ class EmanSetOfVolumes(EmanSetOfImages, SetOfVolumes):
 #            raise Exception("Error getting the stored paramter with command: " + command) 
 #        return auxValue
 #    
-#def getBoxSize():
-#    """Method to read boxsize from EMANDB"""
-#    from EMAN2db import db_open_dict,db_check_dict,db_close_dict
-#
-#    EMBOXERBASE_DB = "bdb:emboxerbase"
-#    db = db_open_dict(EMBOXERBASE_DB)
-#    boxsize = db.get("box_size",dfl=128)
-#    return boxsize
