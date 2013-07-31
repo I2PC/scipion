@@ -318,6 +318,10 @@ PyMethodDef MetaData_methods[] =
         { "aggregate", (PyCFunction) MetaData_aggregate,
           METH_VARARGS,
           "Aggregate operation in metadata. The results is stored in self." },
+        { "aggregateMdGroupBy", (PyCFunction) MetaData_aggregateMdGroupBy,
+          METH_VARARGS,
+          "Aggregate operation in metadata, may use several MDL for aggregation."
+          " The results is stored in self." },
         { "unionAll", (PyCFunction) MetaData_unionAll,
           METH_VARARGS,
           "Union of two metadatas. The results is stored in self." },
@@ -1564,6 +1568,66 @@ MetaData_aggregate(PyObject *obj, PyObject *args, PyObject *kwargs)
             self->metadata->aggregate(MetaData_Value(pyMd),
                                       (AggregateOperation) op, (MDLabel) aggregateLabel,
                                       (MDLabel) operateLabel, (MDLabel) resultLabel);
+            Py_RETURN_NONE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
+/*aggregate*/
+PyObject *
+MetaData_aggregateMdGroupBy(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+
+    AggregateOperation op;
+    PyObject *aggregateLabel= NULL;
+    MDLabel operateLabel;
+    MDLabel resultLabel;
+    PyObject *pyMd = NULL;
+
+    if (PyArg_ParseTuple(args, "OiOii", &pyMd, &op, &aggregateLabel,
+                         &operateLabel, &resultLabel))
+    {
+        try
+        {
+            if (!MetaData_Check(pyMd))
+            {
+                PyErr_SetString(PyExc_TypeError,
+                                "MetaData::aggregateMdGroupBy: Expecting MetaData as first argument");
+                return NULL;
+            }
+            if (!PyList_Check(aggregateLabel))
+            {
+                PyErr_SetString(PyExc_TypeError,
+                                "MetaData::aggregateMdGroupBy: Input must be a mdl List not a mdl label");
+                return NULL;
+
+            }
+            size_t size = PyList_Size(aggregateLabel);
+            std::vector<MDLabel> vaggregateLabel(size);
+            PyObject * item = NULL;
+            int iValue = 0;
+            for (size_t i = 0; i < size; ++i)
+            {
+                item = PyList_GetItem(aggregateLabel, i);
+                if (!PyInt_Check(item))
+                {
+                    PyErr_SetString(PyExc_TypeError,
+                                    "MDL labels must be integers (MDLABEL)");
+                    return NULL;
+                }
+                iValue = PyInt_AsLong(item);
+                vaggregateLabel[i] = (MDLabel)iValue;
+            }
+
+            MetaDataObject *self = (MetaDataObject*) obj;
+            self->metadata->aggregateGroupBy(MetaData_Value(pyMd),
+                                             (AggregateOperation) op, vaggregateLabel,
+                                             operateLabel, resultLabel);
             Py_RETURN_NONE;
         }
         catch (XmippError &xe)

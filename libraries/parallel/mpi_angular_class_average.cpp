@@ -1489,8 +1489,8 @@ void MpiProgAngularClassAverage::createJobList()
         };
     std::vector<MDLabel> groupbyLabels(myGroupByLabels,myGroupByLabels+6);
     mdJobList.aggregateGroupBy(DF, AGGR_COUNT, groupbyLabels, MDL_ORDER, MDL_COUNT);
-    DF.write("kk_DF.xmd");
-    mdJobList.write("kk_mdJobList.xmd");
+    //DF.write("kk_DF.xmd");
+    //mdJobList.write("kk_mdJobList.xmd");
     numberOfJobs = mdJobList.size();
 }
 

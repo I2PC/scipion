@@ -121,6 +121,10 @@ void MetaData_dealloc(MetaDataObject* self);
 /* Constructor */
  PyObject *
 MetaData_aggregate(PyObject *obj, PyObject *args, PyObject *kwargs);
+
+ PyObject *
+MetaData_aggregateMdGroupBy(PyObject *obj, PyObject *args, PyObject *kwargs);
+
  PyObject *
 MetaData_aggregateSingle(PyObject *obj, PyObject *args, PyObject *kwargs);
  PyObject *
