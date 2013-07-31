@@ -424,9 +424,9 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         
     def iterMicrographCoordinates(self, micrograph):
         """ Iterates over the set of coordinates belonging to that micrograph. """
-        pathPos = self.getMicrographPosFile(micrograph.getId())
+        pathPos = self.getMicrographCoordFile(micrograph.getId())
         
-        if exists(pathPos):
+        if pathPos is not None and exists(pathPos):
             mdPos = xmipp.MetaData('particles@' + pathPos)
                             
             for i, objId in enumerate(mdPos):
@@ -480,14 +480,13 @@ class XmippSetOfCoordinates(SetOfCoordinates):
                 yield (coordU.getId(), coordT.getId())
                      
                 
-    def getMicrographPosFile(self, micId):
+    def getMicrographCoordFile(self, micId):
         """ This function will return the pos file corresponding to a micrograph item id"""
         micPosMd = xmipp.MetaData(self.getFileName())
         micRow = findRowById(micPosMd, micId)
-        if micRow is None:
-            raise Exception("SetOfCoordinates.getMicrographPosFile: can't find micrograph pos file")
-        
-        return micRow.getValue(xmipp.MDL_MICROGRAPH_PARTICLES)
+        if micRow is not None:    
+            return micRow.getValue(xmipp.MDL_MICROGRAPH_PARTICLES)
+        return None
     
     
     @staticmethod

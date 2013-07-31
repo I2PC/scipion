@@ -248,13 +248,13 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         outputRoot = str(self._getExtraPath(micName))
         
         #fnPosFile = self._getExtraPath(micName + '.pos')
-        fnPosFile = 'particles@%s' % self.inputCoords.getMicrographPosFile(micId)   
+        fnPosFile = self.getConvertedInput('inputCoords').getMicrographCoordFile(micId)   
         # If it has coordinates extract the particles      
-        
+        particlesMd = 'particles@%s' % fnPosFile
         #if self._createPosFile(micId, fnPosFile):
-        if xmipp.existsBlockInMetaDataFile(fnPosFile):
+        if fnPosFile is not None and xmipp.existsBlockInMetaDataFile(particlesMd):
             boxSize = self.boxSize.get()
-            args = "-i %(micrographToExtract)s --pos %(fnPosFile)s -o %(outputRoot)s --Xdim %(boxSize)d" % locals()
+            args = "-i %(micrographToExtract)s --pos %(particlesMd)s -o %(outputRoot)s --Xdim %(boxSize)d" % locals()
             if self.downsampleType.get() != self.SAME_AS_PICKING:
                 args += " --downsampling " + str(self.samplingFinal/self.samplingInput)
             if self.doInvert:
@@ -279,28 +279,28 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 md.write(selfile)
         
             
-    def _createPosFile(self, micId, fnPosFile):
-        """ Create xmipp metadata extract_list with the coordinates for a micrograph """
-
-        mdPosFile = xmipp.MetaData()
-        #mic = XmippMicrograph(micName)
-        mic = self.inputCoords.getMicrographs()[micId]
-        #Iterate over the coordinates on that micrograph
-        hasCoords = False
-        for coord in self.inputCoords.iterMicrographCoordinates(mic):
-            x, y = coord.getPosition(Coordinate.POS_CENTER)
-            coorId = mdPosFile.addObject()
-            mdPosFile.setValue(xmipp.MDL_XCOOR, int(x), coorId)
-            mdPosFile.setValue(xmipp.MDL_YCOOR, int(y), coorId)
-            mdPosFile.setValue(xmipp.MDL_ITEM_ID, coord.getId(), coorId)
-            hasCoords = True
-                                
-        # Write block only if there are coordinates for this micrograph       
-        if hasCoords:
-            #mdPosFile.write(micName + "@%s" % fnPosFile, xmipp.MD_OVERWRITE)        
-            mdPosFile.write(fnPosFile)
-        
-        return hasCoords
+#    def _createPosFile(self, micId, fnPosFile):
+#        """ Create xmipp metadata extract_list with the coordinates for a micrograph """
+#
+#        mdPosFile = xmipp.MetaData()
+#        #mic = XmippMicrograph(micName)
+#        mic = self.inputCoords.getMicrographs()[micId]
+#        #Iterate over the coordinates on that micrograph
+#        hasCoords = False
+#        for coord in self.inputCoords.iterMicrographCoordinates(mic):
+#            x, y = coord.getPosition(Coordinate.POS_CENTER)
+#            coorId = mdPosFile.addObject()
+#            mdPosFile.setValue(xmipp.MDL_XCOOR, int(x), coorId)
+#            mdPosFile.setValue(xmipp.MDL_YCOOR, int(y), coorId)
+#            mdPosFile.setValue(xmipp.MDL_ITEM_ID, coord.getId(), coorId)
+#            hasCoords = True
+#                                
+#        # Write block only if there are coordinates for this micrograph       
+#        if hasCoords:
+#            #mdPosFile.write(micName + "@%s" % fnPosFile, xmipp.MD_OVERWRITE)        
+#            mdPosFile.write(fnPosFile)
+#        
+#        return hasCoords
             
     def getImgIdFromCoord(self, coordId):
         """ Get the image id from the related coordinate id. """
@@ -323,9 +323,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 #        posFiles.sort()
 
 #        for posFn in posFiles:
-        for posFn in self.inputCoords.iterPosFile():            
+        for posFn in self.getConvertedInput('inputCoords').iterCoordinatesFile():    
 #            xmdFn = posFn.replace(".pos",".xmd")
             xmdFn = self._getExtraPath(replaceBaseExt(posFn, "xmd"))
+            print "xmdFn: %s" % xmdFn
+            print "posFn: %s" % posFn
             md = xmipp.MetaData(xmdFn)
             mdPos = xmipp.MetaData('particles@%s' % posFn)
             mdPos.merge(md) 
