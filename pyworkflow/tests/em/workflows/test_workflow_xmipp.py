@@ -144,13 +144,13 @@ class TestXmippWorkflow(TestWorkflow):
                     'protCL2D/extra/level_01/level_classes.xmd', 
                     'protCL2D/extra/level_00/level_classes.stk', 
                     'protCL2D/extra/level_01/level_classes_core.stk'],
-              'protOnlyalign': ['protOnlyalign/extra/images.xmd', 
-                    'protOnlyalign/extra/level_00/class_classes.stk', 
-                    'protOnlyalign/extra/level_00/class_classes.xmd', 
+              'protOnlyAlign': ['protOnlyAlign/extra/images.xmd', 
+                    'protOnlyAlign/extra/level_00/class_classes.stk', 
+                    'protOnlyAlign/extra/level_00/class_classes.xmd', 
                     'protCTF/extra/BPV_1386/xmipp_ctf.ctfparam', 
                     'protCTF/extra/BPV_1388/xmipp_ctf.ctfparam', 
-                    'protOnlyalign/logs/run.log', 
-                    'protOnlyalign/logs/run.db', 
+                    'protOnlyAlign/logs/run.log', 
+                    'protOnlyAlign/logs/run.db', 
                     'protExtract/extra/BPV_1388.stk', 
                     'protCTF/extra/BPV_1387/xmipp_ctf.ctfparam', 
                     'protExtract/images.xmd', 
@@ -340,64 +340,64 @@ class TestXmippWorkflow(TestWorkflow):
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
         self.validateFiles('protExtract', protExtract)
         
-#        print "Run ML2D"
-#        protML2D = XmippProtML2D(numberOfReferences=1, maxIters=4, doMlf=True,
-#                                 numberOfMpi=2, numberOfThreads=1)
-#        protML2D.inputImages.set(protExtract.outputParticles)
-#        self.proj.launchProtocol(protML2D, wait=True)        
-#        
-#        self.assertIsNotNone(protML2D.outputClassification, "There was a problem with ML2D") 
-#        # Check that images related to each class have ctf model
-#        for class2D in protML2D.outputClassification:
-#            for imgCA in class2D:
-#                xmippImg = imgCA.getImage()
-#                self.assertTrue(imgCA.getImage().hasCTF(), "Image class has not CTF information.")
-#             
-#        self.validateFiles('protML2D', protML2D)
-#        
-#        print "Run CL2D"
-#        protCL2D = XmippProtCL2D(numberOfReferences=2, numberOfInitialReferences=1, 
-#                                 numberOfIterations=4, numberOfMpi=2)
-#        protCL2D.inputImages.set(protExtract.outputParticles)
-#        self.proj.launchProtocol(protCL2D, wait=True)        
-#        
-#        self.assertIsNotNone(protCL2D.outputClassification, "There was a problem with CL2D")
-#        # Check that images related to each class have ctf model
-#        for class2D in protCL2D.outputClassification:
-#            for imgCA in class2D:
-#                xmippImg = imgCA.getImage()
-#                self.assertTrue(imgCA.getImage().hasCTF(), "Image class has not CTF information.")
-#        self.validateFiles('protCL2D', protCL2D) 
-#
-#        print "Run Only Align2d"
-#        protOnlyalign = XmippProtCL2DAlign(maximumShift=5, numberOfIterations=2, 
-#                                 numberOfMpi=2, numberOfThreads=1, useReferenceImage=False)
-#
-#        protOnlyalign.inputImages.set(protExtract.outputParticles)
-#        self.proj.launchProtocol(protOnlyalign, wait=True)        
-#        
-#        self.assertIsNotNone(protOnlyalign.outputParticles, "There was a problem with Only align2d")  
-#        self.validateFiles('protOnlyalign', protOnlyalign)
-#
-#        print "Run kerdensom"
-#        ProtKerdensom = XmippProtKerdensom(useMask=False, SomXdim=2, SomYdim=2,
-#                                 SomReg0=800, SomReg1=400, SomSteps=2)
-#
-#        ProtKerdensom.inputImages.set(protExtract.outputParticles)
-#        self.proj.launchProtocol(ProtKerdensom, wait=True)        
-#        
-#        self.assertIsNotNone(ProtKerdensom.outputClassification, "There was a problem with kerdensom")  
-#        #self.validateFiles('ProtKerdensom', ProtKerdensom)
-#        
-#        print "Run Rotational Spectra"
-#        xmippProtRotSpectra = XmippProtRotSpectra()
-#        xmippProtRotSpectra.inputImages.set(protExtract.outputParticles)
-#        xmippProtRotSpectra.SomXdim.set(2)
-#        xmippProtRotSpectra.SomYdim.set(2)
-#
-#        self.proj.launchProtocol(xmippProtRotSpectra, wait=True)        
-#        
-#        self.assertIsNotNone(xmippProtRotSpectra.outputClassification, "There was a problem with Rotational Spectra")
+        print "Run ML2D"
+        protML2D = XmippProtML2D(numberOfReferences=1, maxIters=4, doMlf=True,
+                                 numberOfMpi=2, numberOfThreads=1)
+        protML2D.inputImages.set(protExtract.outputParticles)
+        self.proj.launchProtocol(protML2D, wait=True)        
+        
+        self.assertIsNotNone(protML2D.outputClassification, "There was a problem with ML2D") 
+        # Check that images related to each class have ctf model
+        for class2D in protML2D.outputClassification:
+            for imgCA in class2D:
+                xmippImg = imgCA.getImage()
+                self.assertTrue(imgCA.getImage().hasCTF(), "Image class has not CTF information.")
+             
+        self.validateFiles('protML2D', protML2D)
+        
+        print "Run CL2D"
+        protCL2D = XmippProtCL2D(numberOfReferences=2, numberOfInitialReferences=1, 
+                                 numberOfIterations=4, numberOfMpi=2)
+        protCL2D.inputImages.set(protExtract.outputParticles)
+        self.proj.launchProtocol(protCL2D, wait=True)        
+        
+        self.assertIsNotNone(protCL2D.outputClassification, "There was a problem with CL2D")
+        # Check that images related to each class have ctf model
+        for class2D in protCL2D.outputClassification:
+            for imgCA in class2D:
+                xmippImg = imgCA.getImage()
+                self.assertTrue(imgCA.getImage().hasCTF(), "Image class has not CTF information.")
+        self.validateFiles('protCL2D', protCL2D) 
+
+        print "Run Only Align2d"
+        protOnlyAlign = XmippProtCL2DAlign(maximumShift=5, numberOfIterations=2, 
+                                 numberOfMpi=2, numberOfThreads=1, useReferenceImage=False)
+
+        protOnlyAlign.inputImages.set(protExtract.outputParticles)
+        self.proj.launchProtocol(protOnlyAlign, wait=True)        
+        
+        self.assertIsNotNone(protOnlyAlign.outputParticles, "There was a problem with Only align2d")  
+        self.validateFiles('protOnlyAlign', protOnlyAlign)
+
+        print "Run kerdensom"
+        ProtKerdensom = XmippProtKerdensom(useMask=False, SomXdim=2, SomYdim=2,
+                                 SomReg0=800, SomReg1=400, SomSteps=2)
+
+        ProtKerdensom.inputImages.set(protOnlyAlign.outputParticles)
+        self.proj.launchProtocol(ProtKerdensom, wait=True)        
+        
+        self.assertIsNotNone(ProtKerdensom.outputClassification, "There was a problem with kerdensom")  
+        #self.validateFiles('ProtKerdensom', ProtKerdensom)
+        
+        print "Run Rotational Spectra"
+        xmippProtRotSpectra = XmippProtRotSpectra()
+        xmippProtRotSpectra.inputImages.set(protOnlyAlign.outputParticles)
+        xmippProtRotSpectra.SomXdim.set(2)
+        xmippProtRotSpectra.SomYdim.set(2)
+
+        self.proj.launchProtocol(xmippProtRotSpectra, wait=True)        
+        
+        self.assertIsNotNone(xmippProtRotSpectra.outputClassification, "There was a problem with Rotational Spectra")
 
         print "ML3D"
         protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2, runMode=1)
