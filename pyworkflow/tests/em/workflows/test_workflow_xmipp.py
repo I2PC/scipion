@@ -397,7 +397,7 @@ class TestXmippWorkflow(TestWorkflow):
         self.assertIsNotNone(xmippProtRotSpectra.outputClassification, "There was a problem with Rotational Spectra")
 
         print "ML3D"
-        protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2, runMode=1)
+        protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2, runMode=1, numberOfMpi=2, numberOfThreads=2)
         protML3D.inputImages.set(protExtract.outputParticles)
         protML3D.ini3DrefVolumes.set(getInputPath('Volumes_BPV', 'BPV_scale_filtered_windowed_64.vol'))
         protML3D.doCorrectGreyScale.set(True)
