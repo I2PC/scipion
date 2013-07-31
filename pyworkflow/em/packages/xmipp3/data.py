@@ -515,12 +515,12 @@ class XmippSetOfCoordinates(SetOfCoordinates):
                 x, y = coord.getPosition(Coordinate.POS_CENTER)
                 coorId = mdPosFile.addObject()
                 mdPosFile.setValue(xmipp.MDL_XCOOR, int(x), coorId)
-                mdPosFile.setValue(xmipp.MDL_YCOOR, int(y), coorId)
-                mdPosFile.setValue(xmipp.MDL_ITEM_ID, coord.getId(), coorId)                                       
-            mdPosFile.write(posFile)
+                mdPosFile.setValue(xmipp.MDL_YCOOR, int(y), coorId) 
+                mdPosFile.setValue(xmipp.MDL_ITEM_ID, long(coord.getId()), coorId)                                       
+            mdPosFile.write('particles@%s' % posFile)
             posId = posMd.addObject()
-            posMd.setValue(xmipp.MDL_ITEM_ID, mic.getId(), posId)
-            posMd.setValue(xmipp.MDL_MICROGRAPH_PARTICLES, posFile, posId)
+            posMd.setValue(xmipp.MDL_ITEM_ID, long(mic.getId()), posId)
+            posMd.setValue(xmipp.MDL_MICROGRAPH_PARTICLES, str(posFile), posId)
             
         # write the micrograph_coordinates file
         posMd.write(filename) 
