@@ -81,7 +81,7 @@ $(document).ready(function() {
 				        			"sClass": "editable",
 				        			{% endif %}
 				        			{% if typeOfColumn == "image" %}
-				        			"sClass": "imageColumn",
+				        			"sClass": "imageColumn renderable",
 				        			{% endif %}
 				        			
 				        			"sTitle": '{{label}}'
@@ -99,32 +99,84 @@ $(document).ready(function() {
 			);
 	
 	addIconsToHeader()
-	setTableEditable() 
+	setElementsEditable('.editable') 
 	
 } );
 
 function addIconsToHeader(){
-	$("#table_container thead th div").append("<span class=\"css_left\"><img src=\"/resources/showj/delete_table.png\" class=\"arrowImage\"></span>")
-	/* $("#table_container thead th div") */
+	$("#table_container thead th div").append("<span class=\"css_left\"><img src=\"/resources/showj/delete_table.png\" class=\"arrowImage\" onclick=\"enableDisableColumn(event,this)\"></span>")
 	$("#table_container thead th").each(function(){
 		if ($(this).hasClass("imageColumn")){
-			$(this).find("div").append("<span class=\"css_left\"><img src=\"/resources/showj/render_table.png\" class=\"arrowImage\"></span>")
+			$(this).find("div").append("<span class=\"css_left\"><img src=\"/resources/showj/render_table.png\" class=\"arrowImage pressedButton\"  onclick=\"enableDisableRenderColumn(event,this)\"></span>")
 		}
 		if ($(this).hasClass("editable")){
-			$(this).find("div").append("<span class=\"css_left\"><img src=\"/resources/showj/edit_table.png\" class=\"arrowImage\"></span>")
+			$(this).find("div").append("<span class=\"css_left\"><img src=\"/resources/showj/edit_table.png\" class=\"arrowImage pressedButton\" onclick=\"enableDisableEditableColumn(event,this)\"></span>")
 		}
 	})
-	/* .append("<span class=\"css_left\"><img src=\"/resources/showj/render_table.png\" class=\"arrowImage\"></span>")
-	.append("<span class=\"css_left\"><img src=\"/resources/showj/edit_table.png\" class=\"arrowImage\"></span>") */
-	
-	
 
 }
+function enableDisableColumn(event, element){
+	$(element).toggleClass("pressedButton")
+	
+	//From the image element we get the column header index
+	var iCol = $('th').index($(element).closest('th'))
+	
+	alert(iCol)
+	
+	var bVis = oTable.fnSettings().aoColumns[iCol].bVisible;
+	oTable.fnSetColumnVis( iCol, bVis ? false : true );
+}
 
-function setTableEditable(){
-	$('.editable', oTable.fnGetNodes()).editable(
+function enableDisableRenderColumn(event, element){
+	$(element).toggleClass("pressedButton")
+	
+	//From the image element we get the column header index
+	var iCol = $('th').index($(element).closest('th'))
+	//We disabled editable event
+	var nTrs = oTable.fnGetNodes();
+	if ($('td:nth-child('+(iCol+1)+')', nTrs).hasClass("renderable")){
+		$('td:nth-child('+(iCol+1)+')', nTrs).each(function(){
+			$(this).find("img").hide()
+			$(this).find("span").show()
+		})
+	}
+	else{
+		$('td:nth-child('+(iCol+1)+')', nTrs).each(function(){
+			$(this).find("img").show()
+			$(this).find("span").hide()
+		})
+	}
+	
+	$('td:nth-child('+(iCol+1)+')', nTrs).toggleClass("renderable")
+	//This will avoid column sorting
+	event.stopPropagation() 
+}
+
+function enableDisableEditableColumn(event, element){
+	$(element).toggleClass("pressedButton")
+	
+	//From the image element we get the column header index
+	var iCol = $('th').index($(element).closest('th'))
+	//We disabled editable event
+	var nTrs = oTable.fnGetNodes();
+	if ($('td:nth-child('+(iCol+1)+')', nTrs).hasClass("editable")){
+		$('td:nth-child('+(iCol+1)+')', nTrs).unbind('click');
+	}
+	else{
+		setElementsEditable('td:nth-child('+(iCol+1)+')')
+	}
+	
+	$('td:nth-child('+(iCol+1)+')', nTrs).toggleClass("editable")
+	
+	//This will avoid column sorting
+	event.stopPropagation() 
+	
+}
+
+function setElementsEditable(elements){
+	$(elements, oTable.fnGetNodes()).editable(
 			/* '../examples_support/editable_ajax.php', */
-			function(value, settings) { 
+			function(value, settings) {
 			     console.log(this);
 			     console.log(value);
 			     console.log(settings);
@@ -151,7 +203,7 @@ function generateDataForTable(){
 		dataRowForTable = new Array()
 		{% for value in obj.values %}
 			{% if value.typeOfColumn == "image" %} 
-				dataRowForTable.push("<img class=\"tableImages\" id=\"{{value.label}}___{{forloop.parentloop.counter0}}\" src=\"/get_image/?image={{value.imgValue}}\"/>")
+				dataRowForTable.push("<img class=\"tableImages\" id=\"{{value.label}}___{{forloop.parentloop.counter0}}\" src=\"/get_image/?image={{value.imgValue}}\"/><span style=\"display:none\">{{value.strValue}}</span> ")
 		   	{% elif value.typeOfColumn == "checkbox" and value.strValue == '1' %}
 				dataRowForTable.push("<input type=\"checkbox\" onclick=\"valueChange(this);\" id=\"{{value.label}}___{{forloop.parentloop.counter0}}\" checked>")
 			{% elif value.typeOfColumn == "checkbox" and value.strValue != '1' %}
