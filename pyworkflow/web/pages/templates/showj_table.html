@@ -6,6 +6,12 @@
 <!-- JS -->
 
 <script type="text/javascript" src="{{jquery_datatable}}"></script>
+<script type="text/javascript">
+$.fn.dataTableExt.oApi.fnVisibleToColumnIndex = function ( oSettings, iMatch )
+{
+    return oSettings.oApi._fnVisibleToColumnIndex( oSettings, iMatch );
+};
+</script>
 <script type="text/javascript" src="{{jquerydataTables_colreorder}}"></script>
 <script type="text/javascript" src="{{jeditable}}"></script>
 <!-- <script type="text/javascript" src="{{jquery_ui}}"></script> -->
@@ -98,6 +104,7 @@ $(document).ready(function() {
 			    }		
 			);
 	
+	initializeMultipleSelectionTool()
 	addIconsToHeader()
 	setElementsEditable('.editable') 
 	
@@ -120,11 +127,12 @@ function enableDisableColumn(event, element){
 	
 	//From the image element we get the column header index
 	var iCol = $('th').index($(element).closest('th'))
+	var iCol2 = oTable.fnVisibleToColumnIndex(iCol)
 	
-	alert(iCol)
+	var bVis = oTable.fnSettings().aoColumns[iCol2].bVisible;
+	oTable.fnSetColumnVis( iCol2, bVis ? false : true );
 	
-	var bVis = oTable.fnSettings().aoColumns[iCol].bVisible;
-	oTable.fnSetColumnVis( iCol, bVis ? false : true );
+	event.stopPropagation() 
 }
 
 function enableDisableRenderColumn(event, element){
@@ -132,6 +140,7 @@ function enableDisableRenderColumn(event, element){
 	
 	//From the image element we get the column header index
 	var iCol = $('th').index($(element).closest('th'))
+	
 	//We disabled editable event
 	var nTrs = oTable.fnGetNodes();
 	if ($('td:nth-child('+(iCol+1)+')', nTrs).hasClass("renderable")){
@@ -297,6 +306,42 @@ function initializeSelectionRowEvent(){
 	    
 	    $("#id_goto").val($(this).index()+1)
 	});
+}
+
+function initializeMultipleSelectionTool(){
+/* 	alert("porakientra")
+	$('#data_table').on("hover","tr", function(event) {
+		console.log("toloco");
+	})
+	
+	$('td').hover(function(event) {
+		alert("td takarrasWithout filter")
+		
+	},function(event) {
+		alert("td takarrasWithout filter")
+		
+	});*/
+	
+	$('tr').hover(function(e) {
+		if ($(this).hasClass("row_selected")){
+			var x= e.pageX
+			var y= e.pageY
+			
+			$("#multipleSelectionTool").css('left',x)
+			$("#multipleSelectionTool").css('top',y)
+			
+			var iRow = $(this).index()
+			$("#multipleSelectionTool").data('img_container_id', iRow)
+			
+			$("#multipleSelectionTool").fadeIn('slow')
+		}	
+		
+	},function(event) {
+		if ($(this).hasClass("row_selected")){
+			$("#multipleSelectionTool").delay(2000).fadeOut('slow')
+		}
+		
+	}); 
 }
 /* 
 function initializeSelectionRowEvent(){

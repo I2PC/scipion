@@ -136,10 +136,10 @@ function onChangeEnumParamList(index, paramId) {
 function setParamValue(paramId, value) {
 	var row = jQuery("tr#" + paramId);
 //	alert("before:"+row.val());
-	row.val(value);
+	row.val(value);	
 //	alert("after:"+row.val());
 	
-	var newLevel = $("select[name=expLevel]").val();
+	var newLevel = $("select[name=expertLevel]").val();
 	evalDependencies(row, newLevel);
 
 	var params = row.attr('data-params');
@@ -202,8 +202,10 @@ function evalCondition(row) {
 	// alert("condition: " + cond + " \nparams:\n" + params + "\n eval: " +
 	// cond_eval);
 	// }
+	
+	cond_eval = cond_eval.replace("not","!");
 
-//	 alert("condition: " + cond + " eval: " + cond_eval);
+	//	alert("condition: " + cond + " eval: " + cond_eval);
 
 	return eval(cond_eval);
 }

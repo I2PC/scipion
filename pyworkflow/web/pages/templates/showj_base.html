@@ -222,6 +222,33 @@
 			});
 		}
 	</script>
+	<script type="text/javascript">
+	function multipleEnableDisableImage(mode){
+		if (mode=='enable'){
+			$(".image_selected").each(function(){
+				$(this).find(".enabledGallery").addClass("selected")
+				$(this).find(".enabledGallery").fadeIn('fast')
+			})
+		}
+		else{
+			$(".image_selected").each(function(){
+				$(this).find(".enabledGallery").removeClass("selected")
+				$(this).find(".enabledGallery").fadeOut('fast')
+			})
+		}
+	}
+	</script>
+	<script type="text/javascript">
+	function multipleSelect(mode){
+		element_id=parseInt($("#multipleSelectionTool").data('img_container_id').split("___")[1]);
+		
+		$(".img_container").each(function(){
+			if (mode=='all' || (mode=='from' && $(this).attr('id').split("___")[1]>element_id) || (mode=='to' && $(this).attr('id').split("___")[1]<element_id) ){
+				$(this).addClass("image_selected")
+			}	
+		})
+	}
+	</script>
 	
 	{% block head %}  {% endblock %}
 </head>
@@ -362,7 +389,14 @@
 
 		
 		{% block content_view %}	{% endblock %}	
-			
+		<!-- Hidden menu for multiple selection tool -->
+		<div class="multipleSelectionToolContainer" id="multipleSelectionTool">
+			<div class="multipleSelectionToolItem" onclick="multipleEnableDisableImage('enable')">Enable</div>
+			<div class="multipleSelectionToolItem" onclick="multipleEnableDisableImage('disable')">Disable</div>
+			<div class="multipleSelectionToolItem" onclick="multipleSelect('all')">Select All</div>
+			<div class="multipleSelectionToolItem" onclick="multipleSelect('from')">Select From Here</div>
+			<div class="multipleSelectionToolItem" onclick="multipleSelect('to')">Select To Here</div>
+		</div>	
 
 			
 		</section>

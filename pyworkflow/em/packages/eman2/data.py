@@ -128,7 +128,7 @@ class EmanSetOfCoordinates(SetOfCoordinates):
         
     def iterMicrographCoordinates(self, micrograph):
         """ Iterates over the set of coordinates belonging to that micrograph. """
-        pathJsonPos = self.getMicrographPosFile(micrograph.getId())
+        pathJsonPos = self.getMicrographCoordFile(micrograph.getId())
         if pathJsonPos is not None:
             if exists(pathJsonPos):
                 coordJson = loadJson(pathJsonPos)
@@ -169,6 +169,14 @@ class EmanSetOfCoordinates(SetOfCoordinates):
         for mic in self.getMicrographs():
             for coord in self.iterMicrographCoordinates(mic):
                 yield coord
+                
+    def iterCoordinatesFile(self):
+        """ Iterates over the micrographs_coordinates file
+        returning each position file.
+        """
+        self.loadIfEmpty()
+        for pos in self._jsonDict.itervalues():
+            yield pos         
 
     def getFiles(self):
         self.loadIfEmpty()
@@ -178,7 +186,7 @@ class EmanSetOfCoordinates(SetOfCoordinates):
         """Returns True if the SetOfMicrographs has tilted pairs"""
         return self.getMicrographs().hasTiltPairs()
     
-    def getMicrographPosFile(self, micId):
+    def getMicrographCoordFile(self, micId):
         """ This function will return the pos file corresponding to a micrograph item id"""
         self.loadIfEmpty()
         if self._jsonDict.has_key(str(micId)):

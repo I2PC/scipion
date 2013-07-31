@@ -414,7 +414,7 @@ def updateParam(request, project, protocol, paramName):
     attr.set(value)
     print "setting attr %s with value:" % paramName, value 
     
-SPECIAL_PARAMS = ['runName', 'numberOfMpi', 'numberOfThreads', 'hostName']
+SPECIAL_PARAMS = ['runName', 'numberOfMpi', 'numberOfThreads', 'hostName','expertLevel','_useQueue']
 
 def updateProtocolParams(request, protocol, project):
     """ Update the protocol values from the Web-form.

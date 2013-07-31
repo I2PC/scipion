@@ -424,9 +424,9 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         
     def iterMicrographCoordinates(self, micrograph):
         """ Iterates over the set of coordinates belonging to that micrograph. """
-        pathPos = self.getMicrographPosFile(micrograph.getId())
+        pathPos = self.getMicrographCoordFile(micrograph.getId())
         
-        if exists(pathPos):
+        if pathPos is not None and exists(pathPos):
             mdPos = xmipp.MetaData('particles@' + pathPos)
                             
             for i, objId in enumerate(mdPos):
@@ -449,7 +449,7 @@ class XmippSetOfCoordinates(SetOfCoordinates):
             for coord in self.iterMicrographCoordinates(mic):
                 yield coord
                 
-    def iterPosFile(self):
+    def iterCoordinatesFile(self):
         """ Iterates over the micrographs_coordinates file
         returning each position file.
         """
@@ -480,14 +480,13 @@ class XmippSetOfCoordinates(SetOfCoordinates):
                 yield (coordU.getId(), coordT.getId())
                      
                 
-    def getMicrographPosFile(self, micId):
+    def getMicrographCoordFile(self, micId):
         """ This function will return the pos file corresponding to a micrograph item id"""
         micPosMd = xmipp.MetaData(self.getFileName())
         micRow = findRowById(micPosMd, micId)
-        if micRow is None:
-            raise Exception("SetOfCoordinates.getMicrographPosFile: can't find micrograph pos file")
-        
-        return micRow.getValue(xmipp.MDL_MICROGRAPH_PARTICLES)
+        if micRow is not None:    
+            return micRow.getValue(xmipp.MDL_MICROGRAPH_PARTICLES)
+        return None
     
     
     @staticmethod
@@ -503,20 +502,23 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         
         extraPath = dirname(filename)
         posMd = xmipp.MetaData()
-        # write a position file per micrograph
+        # write a position file per micrograph that has coordinates
         for mic in setOfCoords.getMicrographs():
             posFile = join(extraPath, replaceBaseExt(mic.getFileName(), 'pos'))
             mdPosFile = xmipp.MetaData()
+            hasCoords = False
             for coord in setOfCoords.iterMicrographCoordinates(mic):
                 x, y = coord.getPosition(Coordinate.POS_CENTER)
                 coorId = mdPosFile.addObject()
                 mdPosFile.setValue(xmipp.MDL_XCOOR, int(x), coorId)
                 mdPosFile.setValue(xmipp.MDL_YCOOR, int(y), coorId) 
-                mdPosFile.setValue(xmipp.MDL_ITEM_ID, long(coord.getId()), coorId)                                       
-            mdPosFile.write('particles@%s' % posFile)
-            posId = posMd.addObject()
-            posMd.setValue(xmipp.MDL_ITEM_ID, long(mic.getId()), posId)
-            posMd.setValue(xmipp.MDL_MICROGRAPH_PARTICLES, str(posFile), posId)
+                mdPosFile.setValue(xmipp.MDL_ITEM_ID, long(coord.getId()), coorId)
+                hasCoords = True            
+            if hasCoords:                           
+                mdPosFile.write('particles@%s' % posFile)
+                posId = posMd.addObject()
+                posMd.setValue(xmipp.MDL_ITEM_ID, long(mic.getId()), posId)
+                posMd.setValue(xmipp.MDL_MICROGRAPH_PARTICLES, str(posFile), posId)
             
         # write the micrograph_coordinates file
         posMd.write(filename) 
