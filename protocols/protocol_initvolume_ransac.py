@@ -43,11 +43,12 @@ class ProtInitVolRANSAC(XmippProtocol):
             K = self.Xdim/Xdim2
         else:
             self.Xdim2 = Xdim2
-        self.Ts = K*self.Ts
+            
         freq = self.Ts/self.MaxFreq
-        
+        self.Ts = K*self.Ts
+
         self.insertRunJobStep("xmipp_transform_filter","-i %s -o %s --fourier low_pass %f"
-                                                %(self.Classes,fnOutputReducedClass,freq*K))
+                                                %(self.Classes,fnOutputReducedClass,freq))
         self.insertRunJobStep("xmipp_image_resize","-i %s --dim %d %d " %(fnOutputReducedClass,self.Xdim2,self.Xdim2))
 
         # Generate projection gallery from the initial volume
