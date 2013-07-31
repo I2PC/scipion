@@ -30,7 +30,6 @@ class TestEmanBoxing(unittest.TestCase):
 #        protPP.inputMicrographs.set(protCTF.outputMicrographs)        
         protPP.inputMicrographs.set(protImport.outputMicrographs)
         self.proj.launchProtocol(protPP, wait=True)
-        self.protDict['protPicking'] = protPP
             
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
 
