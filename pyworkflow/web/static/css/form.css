@@ -10,7 +10,7 @@ body {
 	font-size: 0.84em;
 }
 
-#protName{
+#protName {
 	margin: 0 0 0.3em 0;
 }
 
@@ -26,13 +26,13 @@ body {
 	border: 1px solid #aaaaaa;
 	font-size: 0.88em;
 	margin-bottom: 0.5em;
-	padding:0.5em;
-	display:inline-block;
+	padding: 0.5em;
+	display: inline-block;
 	text-align: left;
 }
 
-#main input{
-	width:8em;
+#main input {
+	width: 8em;
 }
 
 table.section {
@@ -42,7 +42,7 @@ table.section {
 	margin-top: 0.5em;
 }
 
-table.section td{
+table.section td {
 	margin-right: 5em;
 }
 
@@ -52,7 +52,7 @@ input {
 
 input.hide2 {
 	position: relative;
-	filter: alpha(opacity : 0);
+	filter: alpha(opacity :   0);
 	width: 9.7em;
 	cursor: pointer;
 }
@@ -60,7 +60,7 @@ input.hide2 {
 input.hide {
 	position: fixed;
 	-moz-opacity: 0;
-	filter: alpha(opacity : 0);
+	filter: alpha(opacity :   0);
 	opacity: 0;
 	margin: 0.5em;
 	width: 1.5em;
@@ -93,7 +93,7 @@ textarea {
 	border-top: 2.5px solid FireBrick;
 	font-size: 0.9em;
 	font-weight: bold;
-	margin:0.5em;
+	margin: 0.5em;
 }
 
 .titleMain {
@@ -103,12 +103,16 @@ textarea {
 	border-top: 2.5px solid FireBrick;
 	font-size: 0.9em;
 	font-weight: bold;
-	margin:-1em -0.6em 0.3em -0.6em;
+	margin: -1em -0.6em 0.3em -0.6em;
 	text-align: center;
 }
 
 .elementHide {
 	display: none;
+}
+
+.advance {
+	background-color: #eaebec;
 }
 
 #inputName {

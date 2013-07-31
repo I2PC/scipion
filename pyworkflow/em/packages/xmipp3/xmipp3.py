@@ -30,29 +30,9 @@ This sub-package will contains Xmipp3.0 specific protocols
 import os
 import xmipp
 
-MASK_NONE = 0
-MASK_CIRCULAR = 1
-MASK_FILE = 2
+from constants import *
 
-PROJECT_FOURIER = 0
-PROJECT_REALSPACE = 1
 
-KERNEL_NEAREST = 0
-KERNEL_LINEAR = 1
-KERNEL_BSPLINE = 2
-
-SELECT_NONE = 0
-SELECT_MAXCC = 1
-SELECT_PERCENTAGE = 2
-SELECT_CLASSPERCENTAGE = 3
-
-RECONSTRUCT_FOURIER = 0
-RECONSTRUCT_ART = 1
-RECONSTRUCT_WBP = 2
-
-LOW_PASS = 0
-HIGH_PASS = 1
-BAND_PASS = 2
 
 def getXmippPath(*paths):
     '''Return the path the the Xmipp installation folder
@@ -105,7 +85,7 @@ class XmippProtocol():
         
 
 class XmippMdRow():
-    """ Support Xmipp class to tore label and value pairs 
+    """ Support Xmipp class to store label and value pairs 
     corresponding to a Metadata row. It can be used as base
     for classes that maps to a MetaData row like XmippImage, XmippMicrograph..etc. 
     """
@@ -138,6 +118,41 @@ class XmippMdRow():
                 value = str(value)
             md.setValue(label, value, objId)
             
+    def __str__(self):
+        s = '{'
+        for k, v in self._labelDict.iteritems():
+            s += '%s: %s, ' % (xmipp.label2Str(k), v)
+        return s + '}'
+    
+    
+def findRow(md, label, value):
+    """ Query the metadata for a row with label=value.
+    Params:
+        md: metadata to query.
+        label: label to check value
+        value: value for equal condition
+    Returns:
+        XmippMdRow object of the row found.
+        None if no row is found with label=value
+    """
+    mdQuery = xmipp.MetaData() # store result
+    mdQuery.importObjects(md, xmipp.MDValueEQ(label, value))
+    n = mdQuery.size()
+    
+    if n == 0:
+        row = None
+    elif n == 1:
+        row = XmippMdRow()
+        row.getFromMd(mdQuery, mdQuery.firstObject())
+    else:
+        raise Exception("findRow: more than one row found matching the query %s = %s" % (xmipp.label2Str(label), value))
+    
+    return row
+
+def findRowById(md, value):
+    """ Same as findRow, but using MDL_ITEM_ID for label. """
+    return findRow(md, xmipp.MDL_ITEM_ID, long(value))
+  
   
 class XmippSet():
     """ Support class to store sets in Xmipp base on a MetaData. """

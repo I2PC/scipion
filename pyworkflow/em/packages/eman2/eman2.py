@@ -44,13 +44,13 @@ def loadEnvironment():
     pathList = [os.path.join(EMAN2DIR, d) for d in ['lib', 'bin', 'extlib/site-packages']]
     os.environ['PYTHONPATH'] = os.pathsep.join(pathList) + os.pathsep + os.environ['PYTHONPATH']
     os.environ['EMAN_PYTHON'] = os.path.join(EMAN2DIR, 'Python/bin/python')
-    os.environ['LD_LIBRARY_PATH'] = '/home/josem/xmipp/lib:/home/josem/xmipp/lib:/usr/lib64/mpi/gcc/openmpi/lib64'
     #sys.path += pathList
     
 def getEmanCommand(program, args):
     if not 'EMAN_PYTHON' in os.environ:
         raise Exception('EMAN_PYTHON is not load in environment')
     python = os.environ['EMAN_PYTHON']
+    os.environ['LD_LIBRARY_PATH'] = '/home/josem/xmipp/lib:/home/josem/xmipp/lib:/usr/lib64/mpi/gcc/openmpi/lib64'
     
     return '%(python)s %(program)s %(args)s' % locals()
     

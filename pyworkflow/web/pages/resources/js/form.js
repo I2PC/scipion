@@ -89,7 +89,11 @@ function showErrorValidation(json) {
 
 function evalElements() {
 	$("tr").each(function(index) {
-		var value = jQuery(this).attr('value');
+//		
+		var value = jQuery(this).val();
+		if(value.length == 0){
+			var value = jQuery(this).attr('value');
+		}
 		var type = jQuery(this).attr('data-type');
 		var param = jQuery(this).attr('id');
 
@@ -106,6 +110,7 @@ function evalElements() {
 				onChangeEnumParamCombo(param + "_select", param);
 			}
 		} else {
+//			alert("before:"+value);
 			onChangeParam(value, param);
 		}
 	});
@@ -113,6 +118,7 @@ function evalElements() {
 
 /* Differents functions depends on the input type */
 function onChangeParam(value, paramId) {
+//	alert(paramId + "-"+value);
 	setParamValue(paramId, value);
 	
 }
@@ -128,28 +134,26 @@ function onChangeEnumParamList(index, paramId) {
 
 // Put the new value in an attribute of the parent node
 function setParamValue(paramId, value) {
-	
 	var row = jQuery("tr#" + paramId);
+//	alert("before:"+row.val());
 	row.val(value);
+//	alert("after:"+row.val());
+	
 	var newLevel = $("select[name=expLevel]").val();
 	evalDependencies(row, newLevel);
 
 	var params = row.attr('data-params');
-	
-//	alert(params);
 
-//	if (params != undefined && params.length <= 0) {
-		if (params != 'undefined' ) {
-		
+	if (params != undefined && params.length <= 0) {
+					
 		var expLevel = row.attr('data-expert');
-
+	
 		if (expLevel > newLevel) {
 			row.hide();
 		} else {
-			row.show();
+			row.show();			
 		}
 	}
-
 }
 
 function evalDependencies(row, newLevel) {
@@ -168,6 +172,7 @@ function evalDependencies(row, newLevel) {
 				row2.hide();
 			} else if (res == true) {
 				row2.show();
+				evalDependencies(row2, newLevel);
 			}
 		}
 	}
@@ -198,7 +203,7 @@ function evalCondition(row) {
 	// cond_eval);
 	// }
 
-	// alert("condition: " + cond + " eval: " + cond_eval);
+//	 alert("condition: " + cond + " eval: " + cond_eval);
 
 	return eval(cond_eval);
 }

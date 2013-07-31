@@ -90,24 +90,24 @@ def _getAppsProgram(prog):
     """ Get a command to launch a program under the apps folder.
     And also using a different python if configured in SCIPION_PYTHON var.
     """
-    return '%s %s/apps/%s' % (pw.PYTHON, pw.HOME, prog)
+    return pw.join('apps', prog)
     
 def _launchLocal(protocol, wait):
     bg = not wait
     # Check first if we need to launch with MPI or not
     if (protocol.stepsExecutionMode == STEPS_PARALLEL and
         protocol.numberOfMpi > 1):
-        program = _getAppsProgram('pw_protocol_mpirun.py')
+        script = _getAppsProgram('pw_protocol_mpirun.py')
         mpi = protocol.numberOfMpi.get() + 1
     else:
-        program = _getAppsProgram('pw_protocol_run.py')
+        script = _getAppsProgram('pw_protocol_run.py')
         mpi = 1
     protStrId = protocol.strId()
     threads = protocol.numberOfThreads.get()
     params = '%s %s' % (protocol.getDbPath(), protStrId)
-    command = process.buildRunCommand(None, program, params, mpi, threads, bg)
-    # Check if need to submit to queue
     hostConfig = protocol.getHostConfig()
+    command = process.buildRunCommand(None, script, params, mpi, threads, bg, hostConfig)
+    # Check if need to submit to queue
     useQueue = hostConfig.isQueueMandatory() or protocol.useQueue()
     
     if useQueue:        

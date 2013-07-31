@@ -35,6 +35,7 @@ from pyworkflow.em.packages.xmipp3.data import *
 import os
 from data import *
 from glob import glob
+import eman2
 
 class EmanDefInitModel(Form):
     """Create the definition of parameters for
@@ -68,13 +69,8 @@ class EmanProtInitModel(ProtInitialVolume):
     _label = 'Eman Initial Model'
     
     def _defineSteps(self):
-
-        if not 'EMAN2DIR' in os.environ:
-            raise Exception('EMAN2DIR should be defined before running EMAN2 protocols.')
-        EMAN2DIR = os.environ['EMAN2DIR']
-        os.environ['PATH'] += os.pathsep + "%(EMAN2DIR)s/bin" % locals()
-        os.environ['PYTHONPATH'] += os.pathsep + '%(EMAN2DIR)s/lib:%(EMAN2DIR)s/bin:%(EMAN2DIR)s/extlib/site-packages' %locals()
         
+        eman2.loadEnvironment()
         self._prepareDefinition()
         self._insertSteps()
 

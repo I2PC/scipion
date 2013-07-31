@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -25,27 +24,37 @@
 # *
 # **************************************************************************
 """
-This module is responsible for launching protocol executions.
+This modules contains constants related to Xmipp3 protocols
 """
-import sys
-from os.path import basename
-from pyworkflow.protocol import runProtocolFromDb
-from pyworkflow.em import *
-from pyworkflow.apps.config import *
-from mpi4py import MPI
 
+#------------------ Constants values --------------------------------------
 
-if __name__ == '__main__':
-    comm = MPI.COMM_WORLD
-    rank = comm.Get_rank()
-    projName = sys.argv[1]
-    protId = int(sys.argv[2])
-    
-    if rank == 0:
-        dbPath = sys.argv[1]
-        protId = int(sys.argv[2])
-        runProtocolFromDb(dbPath, protId, globals(), comm)
-        
-    else:
-        from pyworkflow.utils.mpi import runJobMPISlave
-        runJobMPISlave(comm)
+MASK_NONE = 0
+MASK_RAISED_COSINE = 0
+MASK_CIRCULAR = 1
+MASK_FILE = 2
+
+MASK_FILL_VALUE = 0
+MASK_FILL_MIN = 1
+MASK_FILL_MAX = 2
+MASK_FILL_AVG = 3
+
+PROJECT_FOURIER = 0
+PROJECT_REALSPACE = 1
+
+KERNEL_NEAREST = 0
+KERNEL_LINEAR = 1
+KERNEL_BSPLINE = 2
+
+SELECT_NONE = 0
+SELECT_MAXCC = 1
+SELECT_PERCENTAGE = 2
+SELECT_CLASSPERCENTAGE = 3
+
+RECONSTRUCT_FOURIER = 0
+RECONSTRUCT_ART = 1
+RECONSTRUCT_WBP = 2
+
+FILTER_LOW_PASS = 0
+FILTER_HIGH_PASS = 1
+FILTER_BAND_PASS = 2
