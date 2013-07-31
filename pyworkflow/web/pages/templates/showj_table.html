@@ -6,6 +6,12 @@
 <!-- JS -->
 
 <script type="text/javascript" src="{{jquery_datatable}}"></script>
+<script type="text/javascript">
+$.fn.dataTableExt.oApi.fnVisibleToColumnIndex = function ( oSettings, iMatch )
+{
+    return oSettings.oApi._fnVisibleToColumnIndex( oSettings, iMatch );
+};
+</script>
 <script type="text/javascript" src="{{jquerydataTables_colreorder}}"></script>
 <script type="text/javascript" src="{{jeditable}}"></script>
 <!-- <script type="text/javascript" src="{{jquery_ui}}"></script> -->
@@ -81,7 +87,7 @@ $(document).ready(function() {
 				        			"sClass": "editable",
 				        			{% endif %}
 				        			{% if typeOfColumn == "image" %}
-				        			"sClass": "imageColumn",
+				        			"sClass": "imageColumn renderable",
 				        			{% endif %}
 				        			
 				        			"sTitle": '{{label}}'
@@ -98,40 +104,86 @@ $(document).ready(function() {
 			    }		
 			);
 	
+	initializeMultipleSelectionTool()
 	addIconsToHeader()
-	setTableEditable() 
+	setElementsEditable('.editable') 
 	
 } );
 
 function addIconsToHeader(){
-	$("#table_container thead th div").append("<span class=\"css_left\"><img src=\"/resources/showj/delete_table.png\" class=\"arrowImage\"></span>")
+	$("#table_container thead th div").append("<span class=\"css_left\"><img src=\"/resources/showj/delete_table.png\" class=\"arrowImage\" onclick=\"enableDisableColumn(event,this)\"></span>")
 	$("#table_container thead th").each(function(){
 		if ($(this).hasClass("imageColumn")){
-			$(this).find("div").append("<span class=\"css_left\"><img src=\"/resources/showj/render_table.png\" class=\"arrowImage\"></span>")
+			$(this).find("div").append("<span class=\"css_left\"><img src=\"/resources/showj/render_table.png\" class=\"arrowImage pressedButton\"  onclick=\"enableDisableRenderColumn(event,this)\"></span>")
 		}
 		if ($(this).hasClass("editable")){
-			$(this).find("div").append("<span class=\"css_left\"><img src=\"/resources/showj/edit_table.png\" class=\"arrowImage pressedButton\" onclick=\"enableDisableEditable(event,this)\"></span>")
+			$(this).find("div").append("<span class=\"css_left\"><img src=\"/resources/showj/edit_table.png\" class=\"arrowImage pressedButton\" onclick=\"enableDisableEditableColumn(event,this)\"></span>")
 		}
 	})
 
 }
+function enableDisableColumn(event, element){
+	$(element).toggleClass("pressedButton")
+	
+	//From the image element we get the column header index
+	var iCol = $('th').index($(element).closest('th'))
+	var iCol2 = oTable.fnVisibleToColumnIndex(iCol)
+	
+	var bVis = oTable.fnSettings().aoColumns[iCol2].bVisible;
+	oTable.fnSetColumnVis( iCol2, bVis ? false : true );
+	
+	event.stopPropagation() 
+}
 
-function enableDisableEditable(event, element){
-	/* Habria que hacer un toogle al elmento y ve rcomo habilitamos el evento de nuevo*/
-	/* $(element). */
+function enableDisableRenderColumn(event, element){
+	$(element).toggleClass("pressedButton")
+	
+	//From the image element we get the column header index
+	var iCol = $('th').index($(element).closest('th'))
+	
+	//We disabled editable event
+	var nTrs = oTable.fnGetNodes();
+	if ($('td:nth-child('+(iCol+1)+')', nTrs).hasClass("renderable")){
+		$('td:nth-child('+(iCol+1)+')', nTrs).each(function(){
+			$(this).find("img").hide()
+			$(this).find("span").show()
+		})
+	}
+	else{
+		$('td:nth-child('+(iCol+1)+')', nTrs).each(function(){
+			$(this).find("img").show()
+			$(this).find("span").hide()
+		})
+	}
+	
+	$('td:nth-child('+(iCol+1)+')', nTrs).toggleClass("renderable")
+	//This will avoid column sorting
+	event.stopPropagation() 
+}
+
+function enableDisableEditableColumn(event, element){
+	$(element).toggleClass("pressedButton")
 	
 	//From the image element we get the column header index
 	var iCol = $('th').index($(element).closest('th'))
 	//We disabled editable event
 	var nTrs = oTable.fnGetNodes();
-	$('td:nth-child('+(iCol+1)+')', nTrs).unbind('click');
+	if ($('td:nth-child('+(iCol+1)+')', nTrs).hasClass("editable")){
+		$('td:nth-child('+(iCol+1)+')', nTrs).unbind('click');
+	}
+	else{
+		setElementsEditable('td:nth-child('+(iCol+1)+')')
+	}
+	
+	$('td:nth-child('+(iCol+1)+')', nTrs).toggleClass("editable")
+	
 	//This will avoid column sorting
 	event.stopPropagation() 
 	
 }
 
-function setTableEditable(){
-	$('.editable', oTable.fnGetNodes()).editable(
+function setElementsEditable(elements){
+	$(elements, oTable.fnGetNodes()).editable(
 			/* '../examples_support/editable_ajax.php', */
 			function(value, settings) {
 			     console.log(this);
@@ -160,7 +212,7 @@ function generateDataForTable(){
 		dataRowForTable = new Array()
 		{% for value in obj.values %}
 			{% if value.typeOfColumn == "image" %} 
-				dataRowForTable.push("<img class=\"tableImages\" id=\"{{value.label}}___{{forloop.parentloop.counter0}}\" src=\"/get_image/?image={{value.imgValue}}\"/>")
+				dataRowForTable.push("<img class=\"tableImages\" id=\"{{value.label}}___{{forloop.parentloop.counter0}}\" src=\"/get_image/?image={{value.imgValue}}\"/><span style=\"display:none\">{{value.strValue}}</span> ")
 		   	{% elif value.typeOfColumn == "checkbox" and value.strValue == '1' %}
 				dataRowForTable.push("<input type=\"checkbox\" onclick=\"valueChange(this);\" id=\"{{value.label}}___{{forloop.parentloop.counter0}}\" checked>")
 			{% elif value.typeOfColumn == "checkbox" and value.strValue != '1' %}
@@ -254,6 +306,42 @@ function initializeSelectionRowEvent(){
 	    
 	    $("#id_goto").val($(this).index()+1)
 	});
+}
+
+function initializeMultipleSelectionTool(){
+/* 	alert("porakientra")
+	$('#data_table').on("hover","tr", function(event) {
+		console.log("toloco");
+	})
+	
+	$('td').hover(function(event) {
+		alert("td takarrasWithout filter")
+		
+	},function(event) {
+		alert("td takarrasWithout filter")
+		
+	});*/
+	
+	$('tr').hover(function(e) {
+		if ($(this).hasClass("row_selected")){
+			var x= e.pageX
+			var y= e.pageY
+			
+			$("#multipleSelectionTool").css('left',x)
+			$("#multipleSelectionTool").css('top',y)
+			
+			var iRow = $(this).index()
+			$("#multipleSelectionTool").data('img_container_id', iRow)
+			
+			$("#multipleSelectionTool").fadeIn('slow')
+		}	
+		
+	},function(event) {
+		if ($(this).hasClass("row_selected")){
+			$("#multipleSelectionTool").delay(2000).fadeOut('slow')
+		}
+		
+	}); 
 }
 /* 
 function initializeSelectionRowEvent(){

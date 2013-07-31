@@ -70,7 +70,7 @@ class EmanProtInitModel(ProtInitialVolume):
     
     def _defineSteps(self):
         
-        loadEnvironment()
+        eman2.loadEnvironment()
         self._prepareDefinition()
         self._insertSteps()
 

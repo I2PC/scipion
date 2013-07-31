@@ -73,7 +73,8 @@ def buildRunCommand(log, programname, params,
                       'COMMAND': "`which %(programname)s` %(params)s" % locals()
                       }
         if hostConfig is None:
-            hostConfig = loadHostConfig()
+            raise Exception('buildRunCommand: hostConfig is needed to launch MPI processes.')
+            #hostConfig = loadHostConfig()
         command = hostConfig.mpiCommand.get() % paramsDict
 
     if runInBackground:

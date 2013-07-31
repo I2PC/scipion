@@ -35,7 +35,7 @@ def runJobMPI(log, programname, params, mpiComm, mpiDest,
            numberOfMpi=1, numberOfThreads=1, 
            runInBackground=False, hostConfig=None):
     """ Send the command to the MPI node in which will be executed. """
-    
+    print "runJobMPI: hostConfig: ", hostConfig
     command = buildRunCommand(log, programname, params,
                               numberOfMpi, numberOfThreads, 
                               runInBackground, hostConfig)

@@ -85,20 +85,20 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
     def launchParticlePickGUI(self):
         # Get the converted input micrographs in Xmipp format
         # if not exists, means the input was already in Xmipp
-        inputMicsXmipp = getattr(self, 'inputMicsXmipp', self.inputMics)
-        self._params['inputMicsXmipp'] = self.getConvertedInput('inputMics').getFileName()
+        inputMicsXmipp = self.getConvertedInput('inputMics')
+        self._params['inputMicsXmipp'] = inputMicsXmipp.getFileName()
         # Launch the particle picking GUI
         program = "xmipp_micrograph_particle_picking"
         arguments = "-i %(inputMicsXmipp)s -o %(extraDir)s --mode %(pickingMode)s --memory %(memory)dg"
         # TiltPairs
         if inputMicsXmipp.hasTiltPairs():
-            self._params['inputMicsXmipp'] = "TiltedPairs@" + self.getConvertedInput('inputMics').getFileName()
+            self._params['inputMicsXmipp'] = "TiltedPairs@" + inputMicsXmipp.getFileName()
             program = "xmipp_micrograph_tiltpair_picking"
         # Run the command with formatted parameters
         self.runJob(None, program, arguments % self._params)
         
     def _createSetOfCoordinates(self, size):
-        inputMicsXmipp = getattr(self, 'inputMicsXmipp', self.inputMics)
+        inputMicsXmipp = self.getConvertedInput('inputMics')
         # Create a md with the coordinates files for each micrograph
         coordId = 0L
         posMd = xmipp.MetaData()

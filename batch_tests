@@ -1,6 +1,19 @@
+########### Basic tests (no data requirement) ###############
+
+python -m unittest pyworkflow.tests.classes.test_object
+python -m unittest pyworkflow.tests.classes.test_process
+
+########### Protocols and Workflow tests (require Test Dataset) ###############
+
+# For Xmipp protocols execution
+python -m unittest -v pyworkflow.tests.em.protocols.test_protocols_xmipp
+
+# For a specific protocol 
 python -m unittest -v pyworkflow.tests.em.protocols.test_protocols_xmipp.TestXmippCTFEstimation 
-python -m unittest -v pyworkflow.tests.em.protocols.test_protocols_xmipp.
+# or
 python -m unittest pyworkflow.tests.em.protocols.test_protocols_xmipp.TestXmippCTFEstimation.test_Micrographs_BPV1_Down3 
 python -m unittest pyworkflow.tests.em.protocols.test_protocols_xmipp.TestXmippPreprocessMicrographs
+
+# For workflows, the same way
 python -m unittest pyworkflow.tests.em.workflows.test_workflow_xmipp
-python -m unittest pyworkflow.tests.classes.tester
+
