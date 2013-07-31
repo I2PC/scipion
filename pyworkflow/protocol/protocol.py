@@ -222,7 +222,7 @@ class Protocol(Step):
         if 'numberOfMpi' in args:
             self.numberOfMpi.set(args.get('numberOfMpi'))
         if 'numberOfThreads' in args:
-            self.numberOfMpi.set(args.get('numberOfThreads'))            
+            self.numberOfThreads.set(args.get('numberOfThreads'))            
         
         if not hasattr(self, 'hostName'):
             self.hostName = String(args.get('hostName', 'localhost'))
