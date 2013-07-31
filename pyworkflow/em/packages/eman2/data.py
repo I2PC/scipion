@@ -169,6 +169,14 @@ class EmanSetOfCoordinates(SetOfCoordinates):
         for mic in self.getMicrographs():
             for coord in self.iterMicrographCoordinates(mic):
                 yield coord
+                
+    def iterCoordinatesFile(self):
+        """ Iterates over the micrographs_coordinates file
+        returning each position file.
+        """
+        self.loadIfEmpty()
+        for pos in self._jsonDict.itervalues():
+            yield pos         
 
     def getFiles(self):
         self.loadIfEmpty()

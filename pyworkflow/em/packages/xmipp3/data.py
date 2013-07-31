@@ -452,7 +452,7 @@ class XmippSetOfCoordinates(SetOfCoordinates):
             for coord in self.iterMicrographCoordinates(mic):
                 yield coord
                 
-    def iterPosFile(self):
+    def iterCoordinatesFile(self):
         """ Iterates over the micrographs_coordinates file
         returning each position file.
         """
@@ -507,20 +507,23 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         
         extraPath = dirname(filename)
         posMd = xmipp.MetaData()
-        # write a position file per micrograph
+        # write a position file per micrograph that has coordinates
         for mic in setOfCoords.getMicrographs():
             posFile = join(extraPath, replaceBaseExt(mic.getFileName(), 'pos'))
             mdPosFile = xmipp.MetaData()
+            hasCoords = False
             for coord in setOfCoords.iterMicrographCoordinates(mic):
                 x, y = coord.getPosition(Coordinate.POS_CENTER)
                 coorId = mdPosFile.addObject()
                 mdPosFile.setValue(xmipp.MDL_XCOOR, int(x), coorId)
                 mdPosFile.setValue(xmipp.MDL_YCOOR, int(y), coorId) 
-                mdPosFile.setValue(xmipp.MDL_ITEM_ID, long(coord.getId()), coorId)                                       
-            mdPosFile.write('particles@%s' % posFile)
-            posId = posMd.addObject()
-            posMd.setValue(xmipp.MDL_ITEM_ID, long(mic.getId()), posId)
-            posMd.setValue(xmipp.MDL_MICROGRAPH_PARTICLES, str(posFile), posId)
+                mdPosFile.setValue(xmipp.MDL_ITEM_ID, long(coord.getId()), coorId)
+                hasCoords = True            
+            if hasCoords:                           
+                mdPosFile.write('particles@%s' % posFile)
+                posId = posMd.addObject()
+                posMd.setValue(xmipp.MDL_ITEM_ID, long(mic.getId()), posId)
+                posMd.setValue(xmipp.MDL_MICROGRAPH_PARTICLES, str(posFile), posId)
             
         # write the micrograph_coordinates file
         posMd.write(filename) 
