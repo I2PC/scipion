@@ -32,80 +32,91 @@
 			<input type="hidden" name="protocolId" value="{{protocol.getObjId}}"/>
 			
 			<div id="main">
-				<div class="titleMain">
-					Run
+				<div id="mainNode1">
+					<div class="titleMain">
+						Run
+					</div>
+					<table>
+						<tr>
+							<td>
+								Run name
+							</td>
+							<td>
+								<input type="text" id="runName_input" name="runName"
+								value="{{runName}}">
+							</td>
+							<td class="ico">
+								<a href="javascript:alert('Not Implemented yet');"><img src={{comment}}/></a>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Run mode
+							</td>
+							<td>
+								<select id="runMode_select" name="runMode" size="1" onchange="javascript:onChangeEnumParamCombo('runMode_select', 'runMode');">
+									<option value="0">resume</option>
+									<option value="1" selected="selected">restart</option>
+								</select>		
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Expert Level
+							</td>
+							<td>
+								<select name="expertLevel" size=1
+								onChange="javascript:evalElements();">
+									<option value="0" {% if expertLevel == 0 %} selected="selected" {% endif %}>Normal</option>
+									<option value="1" {% if expertLevel == 1 %} selected="selected" {% endif %}>Advanced</option>
+									<option value="2" {% if expertLevel == 2 %} selected="selected" {% endif %}>Expert</option>
+								</select>
+							</td>
+						</tr>					
+					</table>			
 				</div>
-				<table>
-					<tr>
-						<td>
-							Run name
-						</td>
-						<td>
-							<input type="text" id="runName_input" name="runName"
-							value="{{runName}}">
-						</td>
-						<td class="ico">
-							<a href="javascript:alert('Not Implemented yet');"><img src={{comment}}/></a>
-						</td>
-					</tr>
-					<tr>
-						<td>
-							Run mode
-						</td>
-						<td>
-							<select id="runMode_select" name="runMode" size="1" onchange="javascript:onChangeEnumParamCombo('runMode_select', 'runMode');">
-								<option value="0">resume</option>
-								<option value="1" selected="selected">restart</option>
-							</select>		
-						</td>
-					</tr>
-					<tr>
-						<td>
-							Expert Level
-						</td>
-						<td>
-							<select name="expLevel" size=1
-							onChange="javascript:evalElements();">
-								<option value="0">Normal</option>
-								<option value="1">Advanced</option>
-								<option value="2">Expert</option>
-							</select>
-						</td>
-					</tr>					
-				</table>			
-			</div>
-							
-			<div id="main">
-				<div class="titleMain">
-					Execution
+								
+				<div id="mainNode2">
+					<div class="titleMain">
+						Execution
+					</div>
+					<table>
+						<tr>
+							<td>
+								Execution host
+							</td>
+							<td>
+								<select name="hostName" size=1
+								onChange="">
+								{% for h in hosts %}
+									<option value="{{h}}" {% if h == hostName %} selected="selected" {% endif %}>{{h}}</option>
+								{% endfor %}
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Threads&nbsp;		
+								<input type="text" id="numberOfThreads_input"
+								name="numberOfThreads" value="{{numberOfThreads}}" style="width:3em;">
+							</td>
+							<td >
+								MPI&nbsp;		
+								<input type="text" id="numberOfMpi_input"
+							name="numberOfMpi" value="{{numberOfMpi}}" style="width:3em;">
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Launch to queue?
+							</td>
+							<td>
+							  <input type="radio" id="queue_yes" name="_useQueue" value="yes"/>Yes
+							  <input type="radio" id="queue_no" name="_useQueue" value="no"/>No
+							</td>
+						</tr>
+					</table>
 				</div>
-				<table>
-					<tr>
-						<td>
-							Execution host
-						</td>
-						<td>
-							<select name="hostName" size=1
-							onChange="">
-							{% for h in hosts %}
-								<option value="{{h}}" {% if h == hostName %} selected="selected" {% endif %}>{{h}}</option>
-							{% endfor %}
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<td>
-							Threads&nbsp;		
-							<input type="text" id="numberOfThreads_input"
-							name="numberOfThreads" value="{{numberOfThreads}}" style="width:3em;">
-						</td>
-						<td >
-							MPI&nbsp;		
-							<input type="text" id="numberOfMpi_input"
-						name="numberOfMpi" value="{{numberOfMpi}}" style="width:3em;">
-						</td>
-					</tr>
-				</table>
 			</div>
  
 			<div id="tabs">
