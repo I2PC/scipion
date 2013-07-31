@@ -3,21 +3,18 @@ package xmipp.viewer.particlepicker.training.model;
 import ij.ImagePlus;
 import ij.gui.Roi;
 import ij.process.ImageProcessor;
-
 import java.awt.Rectangle;
-
 import javax.swing.ImageIcon;
-
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.ImageGeneric;
 import xmipp.utils.XmippMessage;
-import xmipp.viewer.particlepicker.Family;
 import xmipp.viewer.particlepicker.Micrograph;
+import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.PickerParticle;
 
-public class TrainingParticle extends PickerParticle{
+public class ManualParticle extends PickerParticle{
 	
-	protected Family family;
+	protected ParticlePicker picker;
 	protected ImagePlus img;
 	protected double cost = 2;
 
@@ -37,17 +34,16 @@ public class TrainingParticle extends PickerParticle{
 		this.lastalign = lastalign;
 	}
 
-
-	public TrainingParticle(int x, int y, Family family, Micrograph micrograph)
+	public ManualParticle(int x, int y, ParticlePicker picker, Micrograph micrograph)
 	{
-		this(x, y, family, micrograph, 2);
+		this(x, y, picker, micrograph, 2);
 	}
 	
-	public TrainingParticle(int x, int y, Family family, Micrograph micrograph, double cost)
+	public ManualParticle(int x, int y, ParticlePicker picker, Micrograph micrograph, double cost)
 	{
 		super(x, y, micrograph);
 		
-		this.family = family;
+		this.picker = picker;
 		this.cost = cost;
 	}
 	
@@ -58,29 +54,29 @@ public class TrainingParticle extends PickerParticle{
 	}
 
 
-	public Family getFamily() {
-		return family;
+	public ParticlePicker getParticlePicker()
+	{
+		return picker;
 	}
 
-	public void setFamily(Family family) {
-		this.family = family;
-	}
+
+
 	
 	public int getX0()
 	{
-		return getX() - family.getRadius();
+		return getX() - picker.getRadius();
 	}
 	
 	public int getY0()
 	{
-		return getY() - family.getRadius();
+		return getY() - picker.getRadius();
 	}
 	
 
 	
 	public boolean contains(int x2, int y2 )
 	{
-		return super.contains(x2, y2, family.getSize());
+		return super.contains(x2, y2, picker.getSize());
 	}
 
 	
@@ -88,7 +84,7 @@ public class TrainingParticle extends PickerParticle{
 	{
 		if(img == null)
 		{
-			int size = family.getSize();
+			int size = picker.getSize();
 			ImagePlus mimage = micrograph.getImagePlus();
 			int radius = size/2;
 			Rectangle r = new Rectangle(x - radius , y - radius, size, size);
@@ -104,9 +100,9 @@ public class TrainingParticle extends PickerParticle{
 	@Override
 	public void setPosition(int x, int y)
 	{
-		int radius = family.getSize()/2;
-		if(!getMicrograph().fits(x, y, getFamily().getSize()))
-			throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg(String.format("Particle centered at %s, %s with size %s", x, y, getFamily().getSize())));
+		int radius = picker.getSize()/2;
+		if(!getMicrograph().fits(x, y, picker.getSize()))
+			throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg(String.format("Particle centered at %s, %s with size %s", x, y, picker.getSize())));
 		super.setPosition(x, y);
 		
 		img = null;
@@ -161,6 +157,11 @@ public class TrainingParticle extends PickerParticle{
 		if(lastalign == null)
 			return -1;
 		return (int)lastalign[0];
+	}
+
+	public int getSize()
+	{
+		return picker.getSize();
 	}
 
 

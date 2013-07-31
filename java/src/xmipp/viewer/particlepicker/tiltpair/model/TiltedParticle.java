@@ -1,14 +1,14 @@
 package xmipp.viewer.particlepicker.tiltpair.model;
 
-import xmipp.viewer.particlepicker.training.model.TrainingParticle;
+import xmipp.viewer.particlepicker.training.model.ManualParticle;
 
-public class TiltedParticle extends TrainingParticle {
+public class TiltedParticle extends ManualParticle {
 	
 	private UntiltedParticle untiltedparticle;
 	
 	public TiltedParticle(int x, int y, UntiltedParticle untiltedparticle)
 	{
-		super(x, y, untiltedparticle.getFamily(), ((UntiltedMicrograph)untiltedparticle.getMicrograph()).getTiltedMicrograph());
+		super(x, y, untiltedparticle.getParticlePicker(), ((UntiltedMicrograph)untiltedparticle.getMicrograph()).getTiltedMicrograph());
 		this.untiltedparticle = untiltedparticle;
 	}
 	
@@ -16,5 +16,7 @@ public class TiltedParticle extends TrainingParticle {
 	{
 		return untiltedparticle;
 	}
+
+
 
 }

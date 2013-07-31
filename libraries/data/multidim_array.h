@@ -746,6 +746,10 @@ public:
     virtual void coreAllocateReuse() = 0;
     virtual void coreDeallocate()= 0;
 
+    /* return the value of the data pointer
+     */
+    virtual void * getArrayPointer() const = 0;
+
     /// @name Size
     //@{
 
@@ -2013,6 +2017,15 @@ public:
         return A1D_ELEM(*this, i);
     }
 
+
+    /** Return the void pointer to the internal data array
+     */
+    void* getArrayPointer() const
+    {
+    	return (void*) data;
+
+    }
+
     /** Copy an image from a stack to another
      *
      * Copy image image n from this MDA to image n2 in MDA M.
@@ -2040,7 +2053,7 @@ public:
         }
 
         if (n2 > NSIZE(M))
-                    REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS," Multidimarray getImage: n larger than MultidimArray target NSIZE");
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS," Multidimarray getImage: n larger than MultidimArray target NSIZE");
 
 
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(M)

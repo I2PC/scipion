@@ -934,7 +934,7 @@ def createMetaDataFromPattern(pattern, isStack=False, label="image"):
     files = glob.glob(pattern)
     files.sort()
 
-    from xmipp import MetaData, FileName, SingleImgSize, MDL_ENABLED, str2Label
+    from xmipp import MetaData, FileName, getImageSize, MDL_ENABLED, str2Label
     label = str2Label(label) #Check for label value
     
     mD = MetaData()
@@ -946,7 +946,7 @@ def createMetaDataFromPattern(pattern, isStack=False, label="image"):
         if isStack:
             if file.endswith(".mrc"):
                 fileAux=file+":mrcs"
-            x, x, x, nSize = SingleImgSize(fileAux)
+            x, x, x, nSize = getImageSize(fileAux)
         if nSize != 1:
             counter = 1
             for jj in range(nSize):

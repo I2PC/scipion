@@ -67,12 +67,12 @@ class ProtProjMatch(XmippProtocol):
             md = MetaData(acquisionInfo)
             self.ResolSam = md.getValue(MDL_SAMPLINGRATE, md.firstObject())
         if self.MaskRadius == -1:
-           (Xdim, Ydim, Zdim, Ndim) = SingleImgSize(self.ReferenceFileNames[0])
+           (Xdim, Ydim, Zdim, Ndim) = getImageSize(self.ReferenceFileNames[0])
            self.MaskRadius = Xdim/2
 
         
         if self.MaskRadius == -1:
-           (Xdim, Ydim, Zdim, Ndim) = SingleImgSize(self.ReferenceFileNames[0])
+           (Xdim, Ydim, Zdim, Ndim) = getImageSize(self.ReferenceFileNames[0])
            self.MaskRadius = Xdim/2
     def validate(self):
         from protlib_xmipp import validateInputSize
@@ -674,7 +674,7 @@ data_noname
         if doPlot('DisplayAngularDistribution'):
             self.DisplayAngularDistributionWith = self.parser.getTkValue('DisplayAngularDistributionWith')
             if(self.DisplayAngularDistributionWith == '3D'):
-                (Xdim, Ydim, Zdim, Ndim) = SingleImgSize(self.ReferenceFileNames[0])
+                (Xdim, Ydim, Zdim, Ndim) = getImageSize(self.ReferenceFileNames[0])
                 for ref3d in ref3Ds:
                     for it in iterations:
                         _OuterRadius = getComponentFromVector(self.OuterRadius, it)

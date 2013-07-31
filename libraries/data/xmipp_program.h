@@ -286,12 +286,11 @@ public:
 public:
     //Image<double>   img;
     /// Filenames of input and output Metadata
-    FileName        fn_in, fn_out;
+    FileName fn_in, fn_out;
     /// Apply geo
     bool apply_geo;
     /// Output dimensions
-    size_t zdimOut, ydimOut, xdimOut;
-    size_t ndimOut;
+    size_t ndimOut, zdimOut, ydimOut, xdimOut;
     DataType datatypeOut;
     /// Number of input elements
     size_t mdInSize;
@@ -323,8 +322,10 @@ protected:
     bool allow_apply_geo; // Default false
     /// Input Metadata will treat a stack file as a set of images instead of a unique file
     bool decompose_stacks; // Default true
-    // Delete previous output stack file prior to process images
+    /// Delete previous output stack file prior to process images
     bool delete_output_stack; // Default true
+    /// Get the input image file  dimensions to further operations
+    bool get_image_info; // Default true
     /// Save the associated output metadata when output file is a stack
     bool save_metadata_stack; // Default false
     /// Include the original input image filename in the output stack

@@ -6,7 +6,9 @@ import unittest, os, sys
 from unittest import TestResult, _TextTestResult
 from protlib_filesystem import getXmippPath
 from tempfile import NamedTemporaryFile
-
+from time import time
+from os.path import  exists
+from random import randint
 try:
    from unittest.runner import _WritelnDecorator # Python 2.7+
 except ImportError:
@@ -365,6 +367,67 @@ class TestXmippPythonInterface(unittest.TestCase):
             md2.setValue(MDL_ANGLE_PSI, md2.getValue(MDL_ANGLE_PSI, id) * 2., id);
         self.assertEqual(md, md2)
 
+    def test_xmipp_addTmpLabelAlias(self):
+        tmpFileName = '/tmp/test_pythoninterface_readPlain1.xmd'
+        line1="""# XMIPP_STAR_1 * 
+# 
+data_images
+
+loop_
+_rlnVoltage #1
+_rlnDefocusU #2
+  200.0 10000.0
+  201.0 10000.0"""
+        #createTestImage
+        f = open(tmpFileName,'w')
+        f.write(line1)
+        f.flush()
+        f.close()
+        AddTmpLabelAlias(MDL_CTF_VOLTAGE,"rlnVoltage")
+        AddTmpLabelAlias(MDL_CTF_DEFOCUSU,"rlnDefocusU")
+        md=MetaData(tmpFileName)
+        md2=MetaData()
+        id = md2.addObject()
+        md2.setValue(MDL_CTF_VOLTAGE, 200.0, id)
+        md2.setValue(MDL_CTF_DEFOCUSU, 10000.0, id)
+        id = md2.addObject()
+        md2.setValue(MDL_CTF_VOLTAGE, 201.0, id)
+        md2.setValue(MDL_CTF_DEFOCUSU, 10000.0, id)
+        self.assertEqual(md, md2)
+        os.remove(tmpFileName)
+
+    def test_xmipp_exportReliontoMetadataFile(self):
+        from protlib_import import exportReliontoMetadataFile
+
+        tmpFileNameRe = '/tmp/exportReliontoMetadataFile.star'
+        tmpFileNameXm = '/tmp/exportReliontoMetadataFile.xmd'
+        line1="""data_images
+
+loop_
+_rlnVoltage #1
+_rlnDefocusU #2
+  200.0 10000.0
+  201.0 10000.0"""
+        #createR
+        f = open(tmpFileNameRe,'w')
+        f.write(line1)
+        f.flush()
+        f.close()
+        exportReliontoMetadataFile(tmpFileNameRe,tmpFileNameXm)
+        md = MetaData(tmpFileNameXm)
+        md2=MetaData()
+        id = md2.addObject()
+        md2.setValue(MDL_CTF_VOLTAGE, 200.0, id)
+        md2.setValue(MDL_CTF_DEFOCUSU, 10000.0, id)
+        id = md2.addObject()
+        md2.setValue(MDL_CTF_VOLTAGE, 201.0, id)
+        md2.setValue(MDL_CTF_DEFOCUSU, 10000.0, id)
+
+        self.assertEqual(md, md2)
+        os.remove(tmpFileNameRe)
+        os.remove(tmpFileNameXm)
+        #print tmpFileNameRe,tmpFileNameXm
+        
     def test_Metadata_renameColumn(self):
         '''test_Metadata_renameColumn'''
         md = MetaData()
@@ -731,6 +794,63 @@ class TestXmippPythonInterface(unittest.TestCase):
         except Exception, e:
             print str(e)
             
+    def test_Metadata_agregate(self):
+        mdOut = MetaData()
+        md    = MetaData()
+        mdResult = MetaData()
+        for linea in range(1, 101):
+            id = md.addObject()
+            md.setValue(MDL_IMAGE, '%06d@proj.stk' % linea, id)
+            md.setValue(MDL_XCOOR, int(linea%3), id)
+        mdOut.aggregate(md, AGGR_COUNT, MDL_XCOOR, MDL_XCOOR, MDL_COUNT)
+        id = mdResult.addObject()
+        mdResult.setValue(MDL_XCOOR, 0, id)
+        mdResult.setValue(MDL_COUNT, 33L, id)
+        id = mdResult.addObject()
+        mdResult.setValue(MDL_XCOOR, 1, id)
+        mdResult.setValue(MDL_COUNT, 34L, id)
+        id = mdResult.addObject()
+        mdResult.setValue(MDL_XCOOR, 2, id)
+        mdResult.setValue(MDL_COUNT, 33L, id)
+        
+        self.assertEqual(mdOut, mdResult)
+            
+    def test_Metadata_aggregateMdGroupBy(self):
+        mdOut = MetaData()
+        md    = MetaData()
+        mdResult = MetaData()
+        for linea in range(1, 101):
+            id = md.addObject()
+            md.setValue(MDL_IMAGE, '%06d@proj.stk' % linea, id)
+            md.setValue(MDL_XCOOR, int(linea%3), id)
+            md.setValue(MDL_YCOOR, int(linea%2), id)
+        mdOut.aggregateMdGroupBy(md, AGGR_COUNT, [MDL_XCOOR,MDL_YCOOR], MDL_XCOOR, MDL_COUNT)
+        id = mdResult.addObject()
+        mdResult.setValue(MDL_XCOOR, 0, id)
+        mdResult.setValue(MDL_YCOOR, 0, id)
+        mdResult.setValue(MDL_COUNT, 16L, id)
+        id = mdResult.addObject()
+        mdResult.setValue(MDL_XCOOR, 0, id)
+        mdResult.setValue(MDL_YCOOR, 1, id)
+        mdResult.setValue(MDL_COUNT, 17L, id)
+        id = mdResult.addObject()
+        mdResult.setValue(MDL_XCOOR, 1, id)
+        mdResult.setValue(MDL_YCOOR, 0, id)
+        mdResult.setValue(MDL_COUNT, 17L, id)
+        id = mdResult.addObject()
+        mdResult.setValue(MDL_XCOOR, 1, id)
+        mdResult.setValue(MDL_YCOOR, 1, id)
+        mdResult.setValue(MDL_COUNT, 17L, id)
+        id = mdResult.addObject()
+        mdResult.setValue(MDL_XCOOR, 2, id)
+        mdResult.setValue(MDL_YCOOR, 0, id)
+        mdResult.setValue(MDL_COUNT, 17L, id)
+        id = mdResult.addObject()
+        mdResult.setValue(MDL_XCOOR, 2, id)
+        mdResult.setValue(MDL_YCOOR, 1, id)
+        mdResult.setValue(MDL_COUNT, 16L, id)
+        
+        self.assertEqual(mdOut, mdResult)
             
     def test_Metadata_fillExpand(self):
         '''MetaData_fillExpand'''
@@ -775,8 +895,131 @@ class TestXmippPythonInterface(unittest.TestCase):
         
         md1.fillExpand(MDL_CTF_MODEL)
         self.assertEqual(md1, md2)
-
-
+        
+#RESULTS test_metadata_stress
+#no blocks:1000, no lines=100
+#BUFFER FILLING took 11.34 seconds
+#write(append) sqlite took 113.89 seconds
+#write(append) star took 11.15 seconds
+#write(random) sqlite took 215.04 seconds
+#write(random) star took 13.18 seconds
+#read(random) sqlite took 22.55 seconds
+#read(random) star took 9.16 seconds
+#
+#no blocks:1, no lines=1000000
+#BUFFER FILLING took 53.60 seconds
+#write(append) sqlite took 35.81 seconds
+#write(append) star took 53.84 seconds
+#write(random) sqlite took 35.70 seconds
+#write(random) star took 53.57 seconds
+#read(random) sqlite took 2.34 seconds
+#read(random) star took 28.91 seconds
+#
+#
+#    def test_metadata_stress(self):
+#        #create set and save 1000 block with 100 lines each
+#        numberMetadatas=1000+1
+#        numberLines=100+1
+#        md = MetaData()
+#        fnStar = self.getTmpName('.xmd')
+#        fnSqlite = self.getTmpName('.sqlite')
+#        outFileName=""
+#        #fill buffers so comparison is fair
+#        #if you do not fill buffers first meassurements will be muchfaster
+#        print "fill buffers so comparisons are fair"
+#        tmpFn="/tmp/deleteme.xmd"
+#        timestamp1 = time()
+#        if exists(tmpFn):
+#            os.remove(tmpFn)
+#        for met in range(1, numberMetadatas):
+#            outFileName = "b%06d@%s" % (met,tmpFn)
+#            for lin in range(1, numberLines):
+#                id = md.addObject() 
+#                
+#                md.setValue(MDL_IMAGE, '%06d@proj.stk' % met, id)
+#                md.setValue(MDL_XCOOR,   lin+met*numberLines, id)
+#                md.setValue(MDL_YCOOR, 1+lin+met*numberLines, id)
+#            md.write(outFileName,MD_APPEND)
+#            md.clear()
+#        timestamp2 = time()
+#        print "\nBUFFER FILLING took %.2f seconds" % (timestamp2 - timestamp1)
+#        
+#
+#        #write sqlite lineal
+#        timestamp1 = time()
+#        for met in range(1, numberMetadatas):
+#            outFileName = "b%06d@%s" % (met,fnSqlite)
+#            for lin in range(1, numberLines):
+#                id = md.addObject() 
+#                
+#                md.setValue(MDL_IMAGE, '%06d@proj.stk' % met, id)
+#                md.setValue(MDL_XCOOR,   lin+met*numberLines, id)
+#                md.setValue(MDL_YCOOR, 1+lin+met*numberLines, id)
+#            md.write(outFileName,MD_APPEND) 
+#            md.clear()
+#        timestamp2 = time()
+#        print "\nwrite(append) sqlite took %.2f seconds" % (timestamp2 - timestamp1)
+#        #write star lineal
+#        timestamp1 = time()
+#        for met in range(1, numberMetadatas):
+#            outFileName = "b%06d@%s" % (met,fnStar)
+#            for lin in range(1, numberLines):
+#                id = md.addObject() 
+#                
+#                md.setValue(MDL_IMAGE, '%06d@proj.stk' % met, id)
+#                md.setValue(MDL_XCOOR,   lin+met*numberLines, id)
+#                md.setValue(MDL_YCOOR, 1+lin+met*numberLines, id)
+#            md.write(outFileName,MD_APPEND) 
+#            md.clear()
+#        timestamp2 = time()
+#        print "\nwrite(append) star took %.2f seconds" % (timestamp2 - timestamp1)
+#        self.assertEqual(1, 1)
+#        #sqlite random print
+#        timestamp1 = time()
+#        for met in range(1, numberMetadatas):
+#            outFileName = "b%06d@%s" % (randint(1,numberMetadatas),fnSqlite)
+#            for lin in range(1, numberLines):
+#                id = md.addObject() 
+#                
+#                md.setValue(MDL_IMAGE, '%06d@proj.stk' % met, id)
+#                md.setValue(MDL_XCOOR,   lin+met*numberLines, id)
+#                md.setValue(MDL_YCOOR, 1+lin+met*numberLines, id)
+#            md.write(outFileName,MD_APPEND) 
+#            md.clear()
+#        timestamp2 = time()
+#        print "\nwrite(random) sqlite took %.2f seconds" % (timestamp2 - timestamp1)
+#        #star random
+#        timestamp1 = time()
+#        for met in range(1, numberMetadatas):
+#            outFileName = "b%06d@%s" % (randint(1,numberMetadatas),fnStar)
+#            for lin in range(1, numberLines):
+#                id = md.addObject() 
+#                
+#                md.setValue(MDL_IMAGE, '%06d@proj.stk' % met, id)
+#                md.setValue(MDL_XCOOR,   lin+met*numberLines, id)
+#                md.setValue(MDL_YCOOR, 1+lin+met*numberLines, id)
+#            md.write(outFileName,MD_APPEND) 
+#            md.clear()
+#        timestamp2 = time()
+#        print "\nwrite(random) star took %.2f seconds" % (timestamp2 - timestamp1)
+#
+#        #read random 
+#        timestamp1 = time()
+#        for met in range(1, numberMetadatas):
+#            outFileName = "b%06d@%s" % (randint(1,numberMetadatas),fnSqlite)
+#            md.read(outFileName) 
+#            md.clear()
+#        timestamp2 = time()
+#        print "\nread(random) sqlite took %.2f seconds" % (timestamp2 - timestamp1)
+#
+#        timestamp1 = time()
+#        for met in range(1, numberMetadatas):
+#            outFileName = "b%06d@%s" % (randint(1,numberMetadatas),fnStar)
+#            md.read(outFileName) 
+#            md.clear()
+#        timestamp2 = time()
+#        print "\nread(random) star took %.2f seconds" % (timestamp2 - timestamp1)
+#        
     def test_SymList_readSymmetryFile(self):
         '''readSymmetryFile'''
         a = SymList()

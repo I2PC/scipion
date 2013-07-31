@@ -120,7 +120,15 @@ TEST_F( MetadataTest, AddRow)
 
     EXPECT_EQ(md, mDsource);
 }
-
+TEST_F( MetadataTest, addTmpLabelAlias)
+{
+    //metada with no xmipp labels
+    FileName fnNonXmippSTAR =(String)"metadata/noXmipp.xmd";
+    MDL::addTmpLabelAlias(MDL_Y,(String)"noExixtingLabel");
+    MetaData md = MetaData(fnNonXmippSTAR);
+    //std::cerr << "2md" << md <<std::endl;
+    EXPECT_EQ(mDsource,md);
+}
 TEST_F( MetadataTest, Aggregate1)
 {
     //simple agregation
@@ -278,7 +286,7 @@ TEST_F( MetadataTest, Copy)
 TEST_F( MetadataTest,multiWrite)
 {
     char sfn[64] = "";
-    strncpy(sfn, "/tmp/testGetBlocks_XXXXXX", sizeof sfn);
+    strncpy(sfn, "/tmp/multiWrite_XXXXXX", sizeof sfn);
     mkstemp(sfn);
     FileName fnDB   =(String)sfn+".sqlite";
     FileName fnXML  =(String)sfn+".xml";
@@ -296,10 +304,77 @@ TEST_F( MetadataTest,multiWrite)
     EXPECT_TRUE(compareTwoFiles(fnDB, fnDBref));
     EXPECT_TRUE(compareTwoFiles(fnXML, fnXMLref));
     EXPECT_TRUE(compareTwoFiles(fnSTAR, fnSTARref));
+    //    std::cerr << fnDB <<std::endl;
+    //    std::cerr << fnSTAR <<std::endl;
+    //    std::cerr << fnDBref <<std::endl;
     unlink(fnDB.c_str());
     unlink(fnXML.c_str());
     unlink(fnSTAR.c_str());
+}
 
+TEST_F( MetadataTest,multiWriteSqlite)
+{
+    char sfn[64] = "";
+    strncpy(sfn, "/tmp/multiWriteSqlite_XXXXXX", sizeof sfn);
+    mkstemp(sfn);
+    FileName fnDB   =(String)sfn+".sqlite";
+    FileName fnDBref   =(String)"metadata/mDsource.sqlite";
+
+    MetaData md = MetaData();
+    MetaData mdRead = MetaData();
+    MDRow row;
+
+    row.setValue(MDL_ORDER, (size_t)1);
+    row.setValue(MDL_DEFGROUP, 2);
+    row.setValue(MDL_Y, 2.);
+    md.addRow(row);
+    row.setValue(MDL_ORDER, (size_t)1);
+    row.setValue(MDL_DEFGROUP, 2);
+    row.setValue(MDL_Y, 4.);
+    md.addRow(row);
+    row.setValue(MDL_ORDER, (size_t)2);
+    row.setValue(MDL_DEFGROUP, 2);
+    row.setValue(MDL_Y, 2.);
+    md.addRow(row);
+
+    FileName fileNameA = FileName();
+    XMIPP_TRY
+    fileNameA.compose("block001", fnDB);
+
+    md.setValue(MDL_ORDER,(size_t)11, md.firstObject());
+    md.write(fileNameA);
+    mdRead.read(fileNameA);
+    EXPECT_EQ(md,mdRead);
+
+    md.setValue(MDL_ORDER,(size_t)22, md.firstObject());
+    fileNameA.compose("block002", fnDB);
+    md.write(fileNameA,MD_APPEND);
+    mdRead.read(fileNameA);
+    EXPECT_EQ(md,mdRead);
+
+    md.setValue(MDL_ORDER,(size_t)33, md.firstObject());
+    fileNameA.compose("block003", fnDB);
+    md.write(fileNameA,MD_APPEND);
+    mdRead.read(fileNameA);
+    EXPECT_EQ(md,mdRead);
+
+    md.setValue(MDL_ORDER,(size_t)44, md.firstObject());
+    fileNameA.compose("block003", fnDB);
+    md.write(fileNameA,MD_APPEND);
+    mdRead.read(fileNameA);
+    EXPECT_EQ(md,mdRead);
+
+    StringVector readBlockList;
+    getBlocksInMetaDataFile(fnDB,readBlockList);
+    EXPECT_EQ(readBlockList[0],"block001");
+    EXPECT_EQ(readBlockList[1],"block002");
+    EXPECT_EQ(readBlockList[2],"block003");
+
+    //    for (StringVector::iterator it= readBlockList.begin();
+    //         it!=readBlockList.end(); it++)
+    //        std::cerr << "DEBUG_ROB: it: " << *it << std::endl;
+    XMIPP_CATCH
+    unlink(fnDB.c_str());
 }
 
 TEST_F( MetadataTest, ReadEmptyBlock)
@@ -907,7 +982,6 @@ TEST_F( MetadataTest, ExistsBlock)
     mkstemp(sfn);
     FileName tmpFileName((String) "kk@" + sfn);
     mDsource.write(tmpFileName);
-    std::cout << "Writing " << tmpFileName << std::endl;
     MetaData auxMetadata;
     bool result1 = auxMetadata.existsBlock(tmpFileName);
     EXPECT_EQ(result1,true);

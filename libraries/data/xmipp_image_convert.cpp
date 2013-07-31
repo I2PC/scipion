@@ -48,7 +48,6 @@ void ProgConvImg::init()
     type = "auto";
     // Set default write mode
     writeMode = WRITE_OVERWRITE;
-    delete_output_stack = false;
     depth = "";
     swap = false;
 }
@@ -88,7 +87,7 @@ void  ProgConvImg::defineParams()
     addParamsLine("         img : Imagic (Data types: uint8, int16, float* and cfloat).");
     addParamsLine("         inf : RAW file with header INF file (Data types: (u)int8, (u)int16 and float*).");
     addParamsLine("         raw : RAW file with header INF file (Data types: (u)int8, (u)int16 and float*).");
-    addParamsLine("         mrc : CCP4 (Data types: uint8, int16, float* and cfloat).");
+    addParamsLine("         mrc : CCP4 (Data types: uint8, (u)int16, float* and cfloat).");
     addParamsLine("         spi : Spider (Data types: float* and cfloat).");
     addParamsLine("         xmp : Spider (Data types: float* and cfloat).");
     addParamsLine("         tif : TIFF (Data types: uint8*, uint16, uint32 and float).");
@@ -96,7 +95,7 @@ void  ProgConvImg::defineParams()
     addParamsLine("         custom <ext> : Custom extension name, the real format will be Spider.");
     addParamsLine("  [--type <output_type=auto>] : Force output file type.");
     addParamsLine("          where <output_type>");
-    addParamsLine("          auto: Autodetect output type according to output extension and wheter --oroot is passed or not.");
+    addParamsLine("          auto: Autodetect output type according to output extension and whether --oroot is passed or not.");
     addParamsLine("          img : Image");
     addParamsLine("          vol : Volume");
     addParamsLine("          stk : Stack ");
@@ -126,9 +125,6 @@ void  ProgConvImg::defineParams()
     addParamsLine("or --dont_convert : Do not apply any conversion to gray levels when writing");
     addParamsLine("                  : in a lower bit depth or changing the sign");
     addParamsLine("== Stack options == ");
-    addParamsLine("  [--selfile_stack]    : Create a selfile with the images of the output stack,");
-    addParamsLine("                       : keeping the rest of columns of the input selfile");
-    addParamsLine("  alias -s;");
     addParamsLine("  [--append]           : Append the input to the output stack instead of overwriting it");
     addParamsLine("  alias -a;");
 
@@ -165,7 +161,6 @@ void ProgConvImg::readParams()
     castMode = (checkParam("--range_adjust"))? CW_ADJUST: \
                (checkParam("--dont_convert"))? CW_CAST: CW_CONVERT;
 
-    save_metadata_stack = checkParam("--selfile_stack");
     appendToStack = checkParam("--append");
 
     // output extension
@@ -199,7 +194,7 @@ void ProgConvImg::preProcess()
                 type = "stk";
             else if (( mdInSize > 1 || zdimOut > 1 ) && fn_out.hasVolumeExtension()) // if it is volume
                 type = "vol";
-            else if (mdInSize > 1)
+            else if (mdInSize > 1 || appendToStack) // If --append we suppose output is stack
                 type = "stk";
             else if (zdimOut > 1) // if it is volume
                 type = "vol";

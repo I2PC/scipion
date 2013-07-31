@@ -30,7 +30,7 @@
 #include <string>
 #include <string.h>
 
-//TODO: For now just a typedef, I think that would be worth to write an String class
+//TODO: For now just a typedef, I think that would be worth to write a String class
 typedef std::string String;
 typedef std::vector<String> StringVector;
 

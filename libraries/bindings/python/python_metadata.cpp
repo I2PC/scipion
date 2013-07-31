@@ -186,7 +186,39 @@ xmipp_MDValueRange(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }
+/* add alias for label in run time */
+PyObject *
+xmipp_addTmpLabelAlias(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
 
+
+    int label;
+    PyObject *input = NULL;
+    PyObject *pyStr = NULL;
+    char *str = NULL;
+
+    if (PyArg_ParseTuple(args, "iO", &label, &input))
+    {
+        try
+        {
+            if ((pyStr = PyObject_Str(input)) != NULL )
+            {
+                str = PyString_AsString(pyStr);
+                MDL::addTmpLabelAlias((MDLabel)label,(String)str);
+                Py_RETURN_NONE;
+            }
+            else
+                return NULL;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+            return NULL;
+        }
+    }
+
+    return NULL;
+}
 
 /***************************************************************/
 /*                            MetaData                         */
@@ -256,8 +288,8 @@ PyMethodDef MetaData_methods[] =
           METH_VARARGS, "Fill a column with constant value" },
         { "fillRandom", (PyCFunction) MetaData_fillRandom,
           METH_VARARGS, "Fill a column with random value" },
-          { "fillExpand", (PyCFunction) MetaData_fillExpand,
-             METH_VARARGS, "Fill several columns expanding a values from a colum with a path to a row metadata" },
+        { "fillExpand", (PyCFunction) MetaData_fillExpand,
+          METH_VARARGS, "Fill several columns expanding a values from a colum with a path to a row metadata" },
         { "copyColumn", (PyCFunction) MetaData_copyColumn,
           METH_VARARGS, "Copy the values of one column to another" },
         { "copyColumnTo", (PyCFunction) MetaData_copyColumnTo,
@@ -286,6 +318,10 @@ PyMethodDef MetaData_methods[] =
         { "aggregate", (PyCFunction) MetaData_aggregate,
           METH_VARARGS,
           "Aggregate operation in metadata. The results is stored in self." },
+        { "aggregateMdGroupBy", (PyCFunction) MetaData_aggregateMdGroupBy,
+          METH_VARARGS,
+          "Aggregate operation in metadata, may use several MDL for aggregation."
+          " The results is stored in self." },
         { "unionAll", (PyCFunction) MetaData_unionAll,
           METH_VARARGS,
           "Union of two metadatas. The results is stored in self." },
@@ -1542,6 +1578,66 @@ MetaData_aggregate(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+/*aggregate*/
+PyObject *
+MetaData_aggregateMdGroupBy(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+
+    AggregateOperation op;
+    PyObject *aggregateLabel= NULL;
+    MDLabel operateLabel;
+    MDLabel resultLabel;
+    PyObject *pyMd = NULL;
+
+    if (PyArg_ParseTuple(args, "OiOii", &pyMd, &op, &aggregateLabel,
+                         &operateLabel, &resultLabel))
+    {
+        try
+        {
+            if (!MetaData_Check(pyMd))
+            {
+                PyErr_SetString(PyExc_TypeError,
+                                "MetaData::aggregateMdGroupBy: Expecting MetaData as first argument");
+                return NULL;
+            }
+            if (!PyList_Check(aggregateLabel))
+            {
+                PyErr_SetString(PyExc_TypeError,
+                                "MetaData::aggregateMdGroupBy: Input must be a mdl List not a mdl label");
+                return NULL;
+
+            }
+            size_t size = PyList_Size(aggregateLabel);
+            std::vector<MDLabel> vaggregateLabel(size);
+            PyObject * item = NULL;
+            int iValue = 0;
+            for (size_t i = 0; i < size; ++i)
+            {
+                item = PyList_GetItem(aggregateLabel, i);
+                if (!PyInt_Check(item))
+                {
+                    PyErr_SetString(PyExc_TypeError,
+                                    "MDL labels must be integers (MDLABEL)");
+                    return NULL;
+                }
+                iValue = PyInt_AsLong(item);
+                vaggregateLabel[i] = (MDLabel)iValue;
+            }
+
+            MetaDataObject *self = (MetaDataObject*) obj;
+            self->metadata->aggregateGroupBy(MetaData_Value(pyMd),
+                                             (AggregateOperation) op, vaggregateLabel,
+                                             operateLabel, resultLabel);
+            Py_RETURN_NONE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
 /* UnionAll */
 PyObject *
 MetaData_unionAll(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -1736,7 +1832,7 @@ MetaData_operate(PyObject *obj, PyObject *args, PyObject *kwargs)
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
     }
-   // free(str);
+    // free(str);
     return NULL;
 }
 
@@ -1977,15 +2073,15 @@ getMDObjectValue(MDObject * obj)
         return PyString_FromString(obj->data.stringValue->c_str());
     case LABEL_VECTOR_DOUBLE:
         {
-        std::vector<double> & vector = *(obj->data.vectorValue);
-        int size = vector.size();
-        PyObject * list = PyList_New(size);
-        for (int i = 0; i < size; ++i)
-            PyList_SetItem(list, i, PyFloat_FromDouble(vector[i]));
-        return list;
+            std::vector<double> & vector = *(obj->data.vectorValue);
+            int size = vector.size();
+            PyObject * list = PyList_New(size);
+            for (int i = 0; i < size; ++i)
+                PyList_SetItem(list, i, PyFloat_FromDouble(vector[i]));
+            return list;
         }
     default:
-    	return NULL;
+            return NULL;
     }//close switch
     return NULL;
 }

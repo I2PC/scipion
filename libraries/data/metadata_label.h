@@ -63,6 +63,9 @@ enum MDLabel
     MDL_ANGLE_Y,   ///< Angle between y-axis and tilt-axis (double, degrees) for untilted micrographs
     MDL_ANGLE_Y2,   ///< Angle between y-axis and tilt-axis (double, degrees) for tilted micrographs
     MDL_AVG, ///< average value (double)
+    MDL_AVG_CHANGES_ORIENTATIONS, /// Average change in angular orientation (double degrees)
+    MDL_AVG_CHANGES_OFFSETS, /// Average change in offset (double pixels)
+    MDL_AVG_CHANGES_CLASSES, /// Average change in class assignment(double dimensionaless)
     MDL_BGMEAN, ///< Mean background value for an image
     MDL_BLOCK_NUMBER, ///< Current block number (for incremental EM)
 
@@ -206,6 +209,7 @@ enum MDLabel
     MDL_MAXCC, ///< Maximum cross-correlation for the image (double)
     MDL_MAX, ///< Maximum value (double)
     MDL_MICROGRAPH, ///< Name of a micrograph (std::string)
+    MDL_MICROGRAPH_PARTICLES, ///< Name of a position file (std::string)
     MDL_MICROGRAPH_ORIGINAL, ///< Name of the original micrograph, MDL_MICROGRAPH is probably a downsampled version of this one (std::string)
     MDL_MICROGRAPH_TILTED, ///< Name of the corresponding tilted micrograph (std::string)
     MDL_MICROGRAPH_TILTED_ORIGINAL, ///< Name of the corresponding original, tilted micrograph (std::string)
@@ -248,14 +252,16 @@ enum MDLabel
     MDL_PHANTOM_FEATURE_TYPE, ///< Type of the feature (Sphere, Blob, ...) (std::string)
     MDL_PHANTOM_SCALE, ///< Number which will multiply all features (double)
 
+    MDL_MACRO_CMD, //ImageJ macro command on picker
+    MDL_MACRO_CMD_ARGS, //ImageJ macro args on picker
     MDL_COLOR, ///< Color for particle picking
-    MDL_PICKING_FAMILY, ///< Family for particle picking
-    MDL_PICKING_FAMILY_TEMPLATES, ///< Number of templates for the family
-    MDL_PICKING_FAMILY_STATE, ///< Family state for particle picking
-    MDL_PICKING_MICROGRAPH_FAMILY_STATE, ///< Micrograph family state for particle picking
+    MDL_PICKING_TEMPLATES, ///< Number of templates
+    MDL_PICKING_STATE, ///< State for particle picking
+    MDL_PICKING_MICROGRAPH_STATE, ///< Micrograph state for particle picking
     MDL_PICKING_AUTOPICKPERCENT,
     MDL_PICKING_PARTICLE_SIZE, ///< Particle size for particle picking
     MDL_PMAX, ///< Maximum value of normalized probability function (now called "Pmax/sumP") (double)
+    MDL_AVGPMAX, ///< Average (per class) of the maximum value of normalized probability function) (double)
     MDL_POINTSASYMETRICUNIT, /// < Number of non-redundant projections directions (size_t)
 
     MDL_PRJ_DIMENSIONS, // X,Y dimensions for the generated projections
@@ -673,6 +679,11 @@ private:
     static void addLabelAlias(MDLabel label, const String &alias);
 
     friend class MDLabelStaticInit;
+public:
+    /** public acces to addLabelAlias, add alias in running time,
+      useful to read non xmipp star files
+      */
+    static void addTmpLabelAlias(MDLabel label, const String &alias);
 }
 ;//close class MLD definition
 
@@ -715,6 +726,10 @@ private:
         MDL::addLabel(MDL_ANGLE_Y2, LABEL_DOUBLE, "angleY2");
 
         MDL::addLabel(MDL_AVG, LABEL_DOUBLE, "avg");
+        MDL::addLabel(MDL_AVG_CHANGES_ORIENTATIONS, LABEL_DOUBLE, "avgChanOrient");
+        MDL::addLabel(MDL_AVG_CHANGES_OFFSETS, LABEL_DOUBLE, "avgChanOffset");
+        MDL::addLabel(MDL_AVG_CHANGES_CLASSES, LABEL_DOUBLE, "avgChanClass");
+
         MDL::addLabel(MDL_BGMEAN, LABEL_DOUBLE, "bgMean");
         MDL::addLabel(MDL_BLOCK_NUMBER, LABEL_INT, "blockNumber");
 
@@ -943,6 +958,7 @@ private:
         MDL::addLabel(MDL_MAXCC, LABEL_DOUBLE, "maxCC");
         MDL::addLabel(MDL_MAX, LABEL_DOUBLE, "max");
         MDL::addLabel(MDL_MICROGRAPH, LABEL_STRING, "micrograph", TAGLABEL_MICROGRAPH);
+        MDL::addLabel(MDL_MICROGRAPH_PARTICLES, LABEL_STRING, "micrographParticles", TAGLABEL_MICROGRAPH);
         MDL::addLabel(MDL_MICROGRAPH_ORIGINAL, LABEL_STRING, "micrographOriginal", TAGLABEL_MICROGRAPH);
         MDL::addLabel(MDL_MICROGRAPH_TILTED, LABEL_STRING, "micrographTilted", TAGLABEL_MICROGRAPH);
         MDL::addLabel(MDL_MICROGRAPH_TILTED_ORIGINAL, LABEL_STRING, "micrographTiltedOriginal", TAGLABEL_MICROGRAPH);
@@ -985,17 +1001,18 @@ private:
         MDL::addLabel(MDL_PHANTOM_FEATURE_OPERATION, LABEL_STRING, "featureOperation");
         MDL::addLabel(MDL_PHANTOM_FEATURE_SPECIFIC, LABEL_VECTOR_DOUBLE, "featureSpecificVector");
         MDL::addLabel(MDL_PHANTOM_FEATURE_TYPE, LABEL_STRING, "featureType");
+        MDL::addLabel(MDL_MACRO_CMD, LABEL_STRING, "macroCmd");
+        MDL::addLabel(MDL_MACRO_CMD_ARGS, LABEL_STRING, "macroCmdArgs");
         MDL::addLabel(MDL_COLOR, LABEL_INT, "color");
-        MDL::addLabel(MDL_PICKING_FAMILY, LABEL_STRING, "pickingFamily");
-        MDL::addLabelAlias(MDL_PICKING_FAMILY, "family");//3.0
-        MDL::addLabel(MDL_PICKING_FAMILY_STATE, LABEL_STRING, "pickingFamilyState");
-        MDL::addLabelAlias(MDL_PICKING_FAMILY_STATE, "family_state");//3.0
-        MDL::addLabel(MDL_PICKING_MICROGRAPH_FAMILY_STATE, LABEL_STRING, "pickingMicrographFamilyState");
-        MDL::addLabelAlias(MDL_PICKING_MICROGRAPH_FAMILY_STATE, "micrograph_family_state");//3.0
+        MDL::addLabel(MDL_PICKING_STATE, LABEL_STRING, "pickingState");
+        MDL::addLabelAlias(MDL_PICKING_STATE, "picking_state");//3.0
+        MDL::addLabel(MDL_PICKING_MICROGRAPH_STATE, LABEL_STRING, "pickingMicrographState");
+        MDL::addLabelAlias(MDL_PICKING_MICROGRAPH_STATE, "micrograph_state");//3.0
         MDL::addLabel(MDL_PICKING_PARTICLE_SIZE, LABEL_INT, "particleSize");
         MDL::addLabel(MDL_PICKING_AUTOPICKPERCENT, LABEL_INT, "autopickPercent");
-        MDL::addLabel(MDL_PICKING_FAMILY_TEMPLATES, LABEL_INT, "templatesNum");
+        MDL::addLabel(MDL_PICKING_TEMPLATES, LABEL_INT, "templatesNum");
         MDL::addLabel(MDL_PMAX, LABEL_DOUBLE, "pMax");
+        MDL::addLabel(MDL_AVGPMAX, LABEL_DOUBLE, "pMax");
         MDL::addLabelAlias(MDL_PMAX, "Pmax");
         MDL::addLabelAlias(MDL_PMAX, "sumP");
         MDL::addLabel(MDL_POINTSASYMETRICUNIT, LABEL_SIZET, "pointsAsymmetricUnit");

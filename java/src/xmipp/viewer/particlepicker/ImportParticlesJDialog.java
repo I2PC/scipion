@@ -23,7 +23,7 @@ import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.tiltpair.gui.ImportParticlesFromFilesTiltPairJDialog;
-import xmipp.viewer.particlepicker.training.gui.TrainingPickerJFrame;
+import xmipp.viewer.particlepicker.training.gui.SingleParticlePickerJFrame;
 
 public class ImportParticlesJDialog extends XmippDialog {
 
@@ -39,15 +39,15 @@ public class ImportParticlesJDialog extends XmippDialog {
 	protected JCheckBox invertycb;
 
 	protected static String[] FormatStrings = { "Automatic", "Xmipp 2.4",
-			"Xmipp 3.0", "Eman" };
+			"Xmipp 3.0", "Xmipp 3.01", "Eman" };
 	protected static Format[] FormatList = { Format.Auto, Format.Xmipp24,
-			Format.Xmipp30, Format.Eman };
+			Format.Xmipp30, Format.Xmipp301, Format.Eman };
 
 	public ImportParticlesJDialog(ParticlePickerJFrame parent) {
 		super(parent, "Import Particles", true);
 		this.parent = parent;
 		xfc = new XmippFileChooser();
-		if(parent instanceof TrainingPickerJFrame)
+		if(parent instanceof SingleParticlePickerJFrame)
 			xfc.setFileSelectionMode(XmippFileChooser.FILES_AND_DIRECTORIES);
 		else if (this instanceof ImportParticlesFromFilesTiltPairJDialog)
 			xfc.setFileSelectionMode(XmippFileChooser.FILES_ONLY);
@@ -92,8 +92,7 @@ public class ImportParticlesJDialog extends XmippDialog {
 		browsebt = XmippWindowUtil.getIconButton("folderopen.gif", this);
 		panel.add(browsebt, XmippWindowUtil.getConstraints(gbc, 2, 1, 1));
 		
-		panel.add(new JLabel("Scale To:"),
-				XmippWindowUtil.getConstraints(gbc, 0, 2, 1));
+		panel.add(new JLabel("Scale To:"),	XmippWindowUtil.getConstraints(gbc, 0, 2, 1));
 		scaletf = new JFormattedTextField(NumberFormat.getNumberInstance());
 		scaletf.setColumns(3);
 		scaletf.setValue(1);
@@ -141,15 +140,20 @@ public class ImportParticlesJDialog extends XmippDialog {
 				showError(XmippMessage.getPathNotExistsMsg(path));
 			else
 			{
-				importParticles();
+				String result = importParticles();
+				if(result != null && !result.equals(""))
+					XmippDialog.showInfo(this.parent, result);
+
 			}
 		} catch (Exception e) {
 			XmippDialog.showException(parent, e);
 		}
 	}
 	
-	protected void importParticles() {
-		parent.importParticles(format, path, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
+	protected String importParticles()
+	{
+		return parent.importParticles(format, path, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
+
 	}
 	
 	

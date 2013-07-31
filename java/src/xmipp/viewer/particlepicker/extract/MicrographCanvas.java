@@ -1,5 +1,7 @@
 package xmipp.viewer.particlepicker.extract;
 
+import ij.gui.ImageWindow;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -12,23 +14,8 @@ import xmipp.viewer.particlepicker.Shape;
 
 public class MicrographCanvas extends XmippImageCanvas
 {
-	
-	public static void main(String[] args)
-	{
-		
-		String mdfile = args[0];
-		
-		List<MicrographData> loaders = MicrographData.getMicrographData(mdfile);
-		List<Particle> particles;
-		MicrographCanvas mc;
-		for(MicrographData pl: loaders)
-		{
-			particles = pl.getParticles();
-			mc = new MicrographCanvas(pl, 30);
-			mc.display();
-		}
-	}
 
+	
 	private List<Particle> particles;
 	private int size;
 	private MicrographData micdata;
@@ -39,9 +26,24 @@ public class MicrographCanvas extends XmippImageCanvas
 		this.micdata = loader;
 		this.particles = loader.getParticles();
 		this.size = size;
-		// TODO Auto-generated constructor stub
 	}
 	
+	protected ImageWindow iw;
+	
+	public void display()
+	{
+		if (iw != null && iw.isVisible())
+		{
+			iw.setImage(getImage());
+			iw.updateImage(getImage());
+		}
+		else
+			this.iw = new ImageWindow(getImage(), this);// if you dont provide
+														// iw, I init mine
+		// iw.maximize();
+		iw.pack();
+	}
+
 	public void paint(Graphics g)
 	{
 		Graphics offgc;//Off screen graphic
@@ -57,7 +59,7 @@ public class MicrographCanvas extends XmippImageCanvas
 		//drawing offscreen image
 		g.drawImage(offscreen, 0, 0, this);
 	}
-	
+
 	protected void drawShape(Graphics2D g2, Shape shape, int x, int y, int radius)
 	{
 		int size = 2 * radius;
@@ -67,7 +69,7 @@ public class MicrographCanvas extends XmippImageCanvas
 			g2.drawOval(x - radius, y - radius, size, size);
 		else if (shape == Shape.Center)
 		{
-			int distance = (int)(radius/5. * magnification);
+			int distance = (int) (radius / 5. * magnification);
 			g2.drawLine(x, y - distance, x, y + distance);
 			g2.drawLine(x + distance, y, x - distance, y);
 		}
@@ -77,7 +79,7 @@ public class MicrographCanvas extends XmippImageCanvas
 	protected void doCustomPaint(Graphics2D g2)
 	{
 		g2.setColor(Color.GREEN);
-		for(Particle p: particles)
+		for (Particle p : particles)
 		{
 			drawShape(g2, Shape.Rectangle, getXOnImage(p.getX()), getYOnImage(p.getY()), size);
 			drawShape(g2, Shape.Center, getXOnImage(p.getX()), getYOnImage(p.getY()), size);

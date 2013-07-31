@@ -21,8 +21,13 @@ class ChimeraServer:
         #print 'init'
         self.address = ''
         #self.port = int(environ['XMIPP_CHIMERA_PORT'])
-        arg = sys.argv[1]
-        self.port = int(arg)
+        self.port = 6000
+        print sys.argv
+        if len(sys.argv) > 2:#java case only
+            self.port = int(sys.argv[2]) 
+        elif len(sys.argv) > 1 and not 'xmipp_chimera_server.py' in sys.argv[1]:#avoid java case without port
+            self.port = int(sys.argv[1]) 
+        print self.port
         self.authkey = 'test'
         self.listener = Listener((self.address, self.port), authkey=self.authkey) 
         self.remote_conn = self.listener.accept()
@@ -45,7 +50,7 @@ class ChimeraServer:
                 if self.remote_conn.poll():
                     
                     msg = self.remote_conn.recv()
-                    #print msg
+                    print msg
                     
                     if msg == 'exit_client':
                         break
@@ -76,6 +81,7 @@ class ChimeraServer:
                         angulardist = self.remote_conn.recv()
                         for command in angulardist:
                             runCommand(command)
+                    
                     if msg == 'end':    
                         break
                     else:
@@ -104,9 +110,8 @@ class ChimeraServer:
         
             
 def printCmd(cmd):
-        pass
-        #timeformat = "%S.%f" 
-      #  print datetime.now().strftime(timeformat)
-       # print cmd
+            timeformat = "%S.%f" 
+#        print datetime.now().strftime(timeformat)
+#        print cmd
 
 ChimeraServer()

@@ -330,6 +330,8 @@ def validateSchema(filename, schema_file=None):
     ###########
     #try xerces
     ###########
+    answerSize=1024 # avoid overflow in web
+    endding=''
     if schema_file is None:
         _schema = EMXSCHEMA11
     else:
@@ -341,12 +343,15 @@ def validateSchema(filename, schema_file=None):
     stdout, stderr = p.communicate()
     #xerces exists but is error
     if p.returncode == 0 and (stderr!=""):
+        if len(stderr) > answerSize:
+           endding='... (too many errors, displayed first %d characters)'%(answerSize)
         raise Exception("""Error: when validating file %s with schema %s.
-        \nError:%s"""%(filename,_schema,stderr))
+        \nError:%s"""%(filename,_schema,stderr[:answerSize]+endding))
     #######
     #no xerces available, let us try xmlint
     ######
     if p.returncode != 0:
+	print "validating with xmllint"
         if schema_file is None:
             _schema = EMXSCHEMA10
         else:
@@ -363,7 +368,9 @@ def validateSchema(filename, schema_file=None):
     or on the xerces-f project""")
             
         if p.returncode != 0:
+            if len(stderr) > answerSize:
+	         endding='... (too many errors, displayed first %d characters)'%(answerSize)
             raise Exception("""Error: when validating file %s with schema %s.
-            \nError:%s"""%(filename,_schema,stderr))
-    return p.returncode, stdout, stderr
+            \nError:%s"""%(filename,_schema,stderr[:answerSize]+ endding))
+    return p.returncode, stdout[:answerSize], stderr[:answerSize]
 

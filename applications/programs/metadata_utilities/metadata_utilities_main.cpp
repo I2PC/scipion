@@ -409,7 +409,7 @@ protected:
                     //output file name for copy
                     if (operation == "copy" && isStack)
                     {
-                        outFnImg=outFnImg.removeSliceNumber();
+                        outFnImg=outFnImg.removePrefixNumber();
                         outFnImg = path + "/" + outFnImg;
                         outFnImg = integerToString(counter)+'@'+outFnImg;
                     }

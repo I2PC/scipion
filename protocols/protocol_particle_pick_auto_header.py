@@ -9,7 +9,7 @@
 
 # {eval} expandCommentRun()
 
-# {run}(particle_pick_supervised) Supervised particle picking RUN
+# {run}(particle_pick) Supervised particle picking RUN
 """
 Select previous RUN of the <Supervised> particle picking.
 """
