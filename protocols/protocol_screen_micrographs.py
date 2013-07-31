@@ -106,7 +106,8 @@ class ProtScreenMicrographs(XmippProtocol):
                            importMicrographs=self.MicrographsMd,
                            Downsampling=self.DownsampleFactor,
                            NumberOfMpi=self.NumberOfMpi)
-    
+        if self.AutomaticRejection!="":
+            self.insertStep("automaticRejection",WorkingDir=self.WorkingDir,condition=self.AutomaticRejection)
     
     def createFilenameTemplates(self):
         return _templateDict
@@ -291,3 +292,17 @@ def buildSummaryMetadata(WorkingDir,importMicrographs,summaryFile):
     if not md.isEmpty():
         md.sort(xmipp.MDL_MICROGRAPH)
         md.write(summaryFile)
+
+def automaticRejection(log,WorkingDir,condition):
+    fnMic=os.path.join(WorkingDir,"micrographs.xmd")
+    fnRejected=os.path.join(WorkingDir,"tmp/rejectedMicrographs.xmd")
+    runJob(log,"xmipp_metadata_utilities",'-i %s --query select "%s" -o %s'%(fnMic,condition,fnRejected))
+    md = xmipp.MetaData(fnRejected)
+    fnRejectedMicrographs=md.getColumnValues(xmipp.MDL_MICROGRAPH)
+    md.read(fnMic)
+    for id in md:
+        fnCurrentMicrograph=md.getValue(xmipp.MDL_MICROGRAPH,id)
+        if fnCurrentMicrograph in fnRejectedMicrographs:
+            md.setValue(xmipp.MDL_ENABLED,-1,id)
+    md.write(fnMic)
+    deleteFile(log,fnRejected)

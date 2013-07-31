@@ -79,6 +79,14 @@ estimations are noisier.
 """
 WinSize = 256
 
+# {expert} Automatic rejection
+""" 
+Reject micrographs meeting the following condition, e.g., ctfCritCorr13<0.4 OR ctfCritNormality<11. You may use
+any of the following variables ctfDefocusU, ctfDefocusV, ctfCritFirstZero, ctfCritMaxFreq, ctfCritDamping, ctfCritfirstZeroRatio
+ctfCritFitting, ctfCritCorr13, ctfCritPsdCorr90, ctfCritPsdInt, ctfCritPsdStdQ, ctfCritPsdPCA1, ctfCritPsdPCARuns, ctfCritNormality
+"""
+AutomaticRejection = ""
+
 # {eval} expandParallel(threads=0,hours=12)
 
 # {eval} expandExpert()

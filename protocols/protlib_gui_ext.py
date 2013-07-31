@@ -1647,7 +1647,8 @@ class XmippBrowser():
             self.preview.updateData(Z)
     
     def filterResults(self, e=None):
-        self.pattern = self.filterVar.get().split()
+        filterValue = self.filterVar.get().replace(',', '')
+        self.pattern = filterValue.split()
         foundDirs = {}    
         self.changeDir(self.dir)
         if len(self.pattern):
