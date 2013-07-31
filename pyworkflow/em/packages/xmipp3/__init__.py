@@ -45,6 +45,7 @@ from protocol_ml3d import XmippProtML3D
 from protocol_projmatch import XmippProtProjMatch
 from protocol_filters import XmippProtFourierFilter
 from protocol_filters import XmippProtGaussianFilter
+from protocol_filters import XmippProtMask, XmippProtResize
 
 # Wizards
 from wizard import *

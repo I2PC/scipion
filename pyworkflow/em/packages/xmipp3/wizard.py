@@ -33,21 +33,26 @@ import ttk
 from pyworkflow.em.viewer import Viewer, Wizard
 from pyworkflow.em import SetOfImages, SetOfMicrographs, DefCTFMicrographs
 from protocol_projmatch import XmippDefProjMatch
+from protocol_preprocess_micrographs import XmippDefPreprocessMicrograph
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider
 from pyworkflow.gui.tree import BoundTree, TreeProvider
 import xmipp
 
 
-class XmippWizardDownsample(Wizard):
-    _targets = [(DefCTFMicrographs, ['lowRes', 'highRes'])]
+class XmippDownsampleWizard(Wizard):
+    _targets = [(XmippDefPreprocessMicrograph, ['downFactor'])]
         
     def show(self, form):
         protocol = form.protocol
-        if not protocol.inputMicrographs.hasValue():
-            dialog.showWarning("Input micrographs", "Select some micrographs first", form.root)
+        if protocol.inputMicrographs.hasValue():
+            mics = [mic for mic in protocol.inputMicrographs.get()]
+            d = XmippDownsampleDialog(form.root, ListTreeProvider(mics), downsample=protocol.downFactor.get())
+            if d.resultYes():
+                form.setVar('downFactor', d.getDownsample())
         else:
-            dialog.showWarning("Micrographs", "OK", form.root)    
+            dialog.showWarning("Input micrographs", "Select micrographs first", form.root)
+    
     
 class ListTreeProvider(TreeProvider):
     """ Simple list tree provider. """
@@ -61,7 +66,7 @@ class ListTreeProvider(TreeProvider):
             
         return info
     
-class XmippWizardCTF(Wizard):
+class XmippCTFWizard(Wizard):
     """ Wrapper to visualize different type of objects
     with the Xmipp program xmipp_showj
     """
@@ -85,7 +90,7 @@ class XmippWizardCTF(Wizard):
             dialog.showWarning("Micrographs", "OK", form.root)
             
             
-class XmippWizardMaskRadius(Wizard):
+class XmippMaskRadiusWizard(Wizard):
 
     _targets = [(XmippDefProjMatch, ['maskRadius'])]
         
@@ -94,7 +99,7 @@ class XmippWizardMaskRadius(Wizard):
         dialog.showWarning("Mask radius", "Not yet implemented the wizard to select mask radius", form.root)
         
         
-class XmippWizardRadii(Wizard):
+class XmippRadiiWizard(Wizard):
     
     _targets = [(XmippDefProjMatch, ['innerRadius', 'outerRadius'])]
     
@@ -191,7 +196,7 @@ class XmippImagePreviewDialog(XmippPreviewDialog):
         
     def _itemSelected(self, obj):
         filename = obj.getFileName()
-        
+        print "image.readPreview, filename=%s, self.dim=%d" % (filename, self.dim)
         self.image.readPreview(filename, self.dim)
         if filename.endswith('.psd'):
             self.image.convertPSD()

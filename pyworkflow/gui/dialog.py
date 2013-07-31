@@ -81,6 +81,10 @@ class Dialog(tk.Toplevel):
         bodyFrame.grid(row=0, column=0, sticky='news',
                        padx=5, pady=5)
 
+        self.icons = {RESULT_YES: 'dialog_ok.png', 
+                      RESULT_NO: 'dialog_close.png',
+                      RESULT_CANCEL: 'dialog_cancel.png'}
+        
         self.buttons = args.get('buttons', [('OK', RESULT_YES),
                                             ('Cancel', RESULT_CANCEL)])
         self.defaultButton = args.get('default', 'OK')
@@ -130,7 +134,8 @@ class Dialog(tk.Toplevel):
 
         
     def _createButton(self, frame, text, result):
-        return  Button(frame, text=text, width=7, 
+        icon = self.icons[result]
+        return  tk.Button(frame, text=text, image=self.getImage(icon), compound=tk.LEFT,
                          command=lambda: self._handleResult(result))
         
     def buttonbox(self, btnFrame):

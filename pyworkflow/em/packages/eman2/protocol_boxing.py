@@ -39,7 +39,7 @@ class EmanProtBoxing(ProtParticlePicking):
         # Redefine run to change to workingDir path
         # Change to protocol working directory
         self._enterWorkingDir()
-        loadEnvironment()
+        eman2.loadEnvironment()
         Protocol._runSteps(self, startIndex)
         
     def _defineSteps(self):
@@ -74,7 +74,7 @@ class EmanProtBoxing(ProtParticlePicking):
             micFnroot = removeBaseExt(mic.getFileName()) + '_info.json'
             micPosFn = self._getRelPath("info", micFnroot)
             if exists(micPosFn):
-                jsonDict[micId] = micPosFn
+                jsonDict[micId] = self._getPath(micPosFn)
                 jsonPosDict = loadJson(micPosFn)
                 boxes = jsonPosDict["boxes"]
                 listbox = []
@@ -85,7 +85,8 @@ class EmanProtBoxing(ProtParticlePicking):
                 writeJson(jsonPosDict, micPosFn)
         jsoncoordsFn = self._getRelPath('scipion_micrographs_coordinates.json')
         writeJson(jsonDict, jsoncoordsFn)
-        coords = EmanSetOfCoordinates(filename=jsoncoordsFn)
+        #coords = EmanSetOfCoordinates(filename=jsoncoordsFn)
+        coords = EmanSetOfCoordinates(filename=self._getPath('scipion_micrographs_coordinates.json'))
         coords.setMicrographs(mics)
         coords.boxSize.set(size)
         return coords

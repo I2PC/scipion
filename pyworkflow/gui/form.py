@@ -215,7 +215,7 @@ class ParamWidget():
                
     def _createContent(self):
         self.content = tk.Frame(self.parent, bg='white')
-        gui.configureWeigths(self.content)        
+        gui.configureWeigths(self.content) 
         self._createContentWidgets(self.param, self.content) # self.var should be set after this
         
     def _addButton(self, text, imgPath, cmd):
@@ -280,7 +280,7 @@ class ParamWidget():
         elif t is PointerParam:
             var = PointerVar()
             entry = tk.Entry(content, width=25, textvariable=var.tkVar)
-            entry.grid(row=0, column=0)
+            entry.grid(row=0, column=0, sticky='w')
             self._addButton("Select", 'zoom.png', self._browseObject)
         else:
             #v = self.setVarValue(paramName)
@@ -294,7 +294,7 @@ class ParamWidget():
         if self.paramName in self.window.wizards:
             self._addButton('Wizard', 'tools_wizard.png', self._showWizard)
         if param.help.hasValue():
-            self._addButton('Help', 'contents24.png', self._showHelpMessage)
+            self._addButton('Help', 'system_help24.png', self._showHelpMessage)
         self.var = var
         
     def _browseObject(self, e=None):

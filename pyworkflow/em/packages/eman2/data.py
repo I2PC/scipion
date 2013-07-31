@@ -36,7 +36,11 @@ import json
             
 class EmanCoordinate(Coordinate):
     """This class holds the (x,y) position and other information
-    associated with a EMAN coordinate (Eman coordinates are POS_TOPLEFT mode)"""    
+    associated with a EMAN coordinate (Eman coordinates are POS_TOPLEFT mode)"""  
+    
+    def __init__(self, **args):
+        
+        self.coordId = 0L
     
     def getPosition(self, mode=Coordinate.POS_TOPLEFT):
         """Return the position of the coordinate.
@@ -68,6 +72,12 @@ class EmanCoordinate(Coordinate):
         tilted one and viceversa"""
         pass 
     
+    def setId(self, id):
+        self.coordId = id
+        
+    def getId(self):
+        return self.coordId
+    
     
 class EmanSetOfCoordinates(SetOfCoordinates):
     """Encapsulate the logic of a set of particles coordinates for EMAN.
@@ -78,38 +88,61 @@ class EmanSetOfCoordinates(SetOfCoordinates):
         # Use object value to store filename
         # Here filename is the path to a json file where coordinates (on json format) are linked to micrographs ids
         SetOfCoordinates.__init__(self, value=filename, **args)
-        #emanJson = EmanJson(self.getFileName())
-        self.jsonDict = loadJson(self.getFileName())
+        #emanJson = EmanJson(self.getFileName())   
+        self._jsonDict = {}
+    
+    def load(self):
+        """ Load extra data from files. """
+        if self.getFileName() is None:
+            raise Exception("Set filename before calling load()")
+        self._jsonDict = loadJson(self.getFileName())
         
+    def loadIfEmpty(self):
+        """ Load data only if the main set is empty. """
+        if not self._jsonDict:
+            self.load()
+            
     def getFileName(self):
         return self.get()
     
     def getList(self, param):
         """ Return the list asociated to a param """
-        list =  self.jsonDict[param]
+        self.loadIfEmpty()
+        
+        list =  self._jsonDict[param]
         return list
-        jsonDict
+    
     def getSize(self):
         """ Return the number of coordinates on the set """
-        size = len(self.jsonDict["boxes"])
+        self.loadIfEmpty()
+        #size = len(self._jsonDict["boxes"])
+        # FIXME: jsonPos paths are nor relative to working dir but to run dir
+#        size = 0
+#        for pathJsonPos in self._jsonDict.itervalues():
+#            dictJsonPos = loadJson(pathJsonPos)
+#            size += len(dictJsonPos["boxes"])
+            
+        # Remove when it works
+        size = 4
         return size      
         
     def iterMicrographCoordinates(self, micrograph):
         """ Iterates over the set of coordinates belonging to that micrograph. """
-        pathJsonPos = self.getMicrographPosFile(micrograph.getId())
-        if exists(pathJsonPos):
-            coordJson = loadJson(pathJsonPos)
-            coordList = coordJson["boxes"]
-            for pos in coordList:
-                x = pos[0]
-                y = pos[1]
-                #coorId = mdPos.getValue(xmipp.MDL_ITEM_ID, objId)
-                coordinate = EmanCoordinate()
-                coordinate.setPosition(x, y)
-                coordinate.setMicrograph(micrograph)
-                coordinate.setBoxSize(self.boxSize.get())
-                coordinate.setId(coorId)        
-                yield coordinate
+        pathJsonPos = self.getMicrographCoordFile(micrograph.getId())
+        if pathJsonPos is not None:
+            if exists(pathJsonPos):
+                coordJson = loadJson(pathJsonPos)
+                coordList = coordJson["boxes"]
+                coorIdList = coordJson["coordId"]
+                for i, pos in enumerate(coordList):
+                    x = pos[0]
+                    y = pos[1]
+                    coordinate = EmanCoordinate()
+                    coordinate.setPosition(x, y)
+                    coordinate.setMicrograph(micrograph)
+                    coordinate.setBoxSize(self.boxSize.get())
+                    coordinate.setId(coorIdList[i])        
+                    yield coordinate
         
 #        pathBox = join(path, replaceBaseExt(micrograph.getFileName(), 'box'))
 #        if exists(pathBox):
@@ -136,18 +169,29 @@ class EmanSetOfCoordinates(SetOfCoordinates):
         for mic in self.getMicrographs():
             for coord in self.iterMicrographCoordinates(mic):
                 yield coord
+                
+    def iterCoordinatesFile(self):
+        """ Iterates over the micrographs_coordinates file
+        returning each position file.
+        """
+        self.loadIfEmpty()
+        for pos in self._jsonDict.itervalues():
+            yield pos         
 
     def getFiles(self):
-        return self.jsonDict.values() 
+        self.loadIfEmpty()
+        return self._jsonDict.values() 
     
     def hasTiltPairs(self):
         """Returns True if the SetOfMicrographs has tilted pairs"""
         return self.getMicrographs().hasTiltPairs()
     
-    def getMicrographPosFile(self, micId):
+    def getMicrographCoordFile(self, micId):
         """ This function will return the pos file corresponding to a micrograph item id"""
-        micPosJson = self.jsonDict[micId]
-        return micPosJson
+        self.loadIfEmpty()
+        if self._jsonDict.has_key(str(micId)):
+            return self._jsonDict[str(micId)]
+        return None
 
 
 class EmanImage(Image):
