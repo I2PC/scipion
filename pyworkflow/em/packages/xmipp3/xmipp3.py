@@ -151,7 +151,7 @@ def findRow(md, label, value):
 
 def findRowById(md, value):
     """ Same as findRow, but using MDL_ITEM_ID for label. """
-    return findRow(md, xmipp.MDL_ITEM_ID, value)
+    return findRow(md, xmipp.MDL_ITEM_ID, long(value))
   
   
 class XmippSet():
