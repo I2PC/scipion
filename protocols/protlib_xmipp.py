@@ -530,11 +530,11 @@ def validateInputSize(references, images, md, errors):
     '''
     from xmipp import MetaData, MDL_IMAGE, MetaDataInfo
     # Check reference size
-    (xdim, ydim, zdim, ndim) = validateSameSize(references, errors)    
+    xdim, ydim, _, _ = validateSameSize(references, errors)    
     # Check that volume and images have the same size
     if md.containsLabel(MDL_IMAGE):
-        (xdimImg, ydimImg, zdimImg,_,_) = MetaDataInfo(md)    
-        if (xdimImg, ydimImg) != (xdim, ydim, zdim):
+        xdimImg, ydimImg, _,_,_ = MetaDataInfo(md)    
+        if (xdimImg, ydimImg) != (xdim, ydim):
             errors.append("References and images have not the same size")
     else:
         errors.append("Input metadata <%s> does not contain image column" % images)
