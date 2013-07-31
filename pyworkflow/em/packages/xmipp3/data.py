@@ -417,7 +417,7 @@ class XmippSetOfCoordinates(SetOfCoordinates):
     def getSize(self):
         """ Return the number of coordinates on the set """
         size = 0
-        for posFn in self.iterPosFile():
+        for posFn in self.iterCoordFile():
             mdPos = xmipp.MetaData('particles@%s' % posFn)
             size += mdPos.size()
         return size      
@@ -461,7 +461,7 @@ class XmippSetOfCoordinates(SetOfCoordinates):
     def getFiles(self):
         filePaths = set()
 
-        for posFn in self.iterPosFile():
+        for posFn in self.iterCoordFile():
             if exists(posFn):         
                 filePaths.add(posFn)
         return filePaths
