@@ -396,6 +396,11 @@ class Format(Conditional):
         except Exception:
             return False
 
+class NonEmptyCondition(Conditional):
+    def __init__(self, error='Value cannot be empty'):
+        Conditional.__init__(self, error)
+        self._condition = lambda value: len(value) > 0
+        
 class LT(Conditional):
     def __init__(self, thresold, error='Value should be less than the thresold'):
         Conditional.__init__(self, error)
@@ -443,7 +448,7 @@ Positive = GT(0.0, error='Value should be greater than zero')
 FreqValidator = Range(0., 0.5, 
                       error="Digital frequencies should be between 0. and 0.5")
 
-
+NonEmpty = NonEmptyCondition()
             
 
         

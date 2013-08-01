@@ -421,6 +421,9 @@ class Coordinate(EMObject):
         or in the top left corner.
         """
         pass
+
+    def setPosition(self, x, y):
+        pass
     
     def getBoxSize(self):
         return self._boxSize
@@ -438,7 +441,12 @@ class Coordinate(EMObject):
         """ Set the micrograph to which this coordinate belongs. """
         self._micrographPointer.set(micrograph)
     
-    
+    def copyInfo(self, coord):
+        """ Copy information from other coordinate. """
+        self.setPosition(*coord.getPosition(POS_CENTER))
+        self.setId(coord.getId())
+        self.setBoxSize(coord.getBoxSize())
+        
     
 class SetOfCoordinates(EMObject):
     """ Encapsulate the logic of a set of particles coordinates.

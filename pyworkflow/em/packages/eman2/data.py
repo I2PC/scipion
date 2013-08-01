@@ -42,7 +42,7 @@ class EmanCoordinate(Coordinate):
         
         self.coordId = 0L
     
-    def getPosition(self, mode=Coordinate.POS_TOPLEFT):
+    def getPosition(self, mode=Coordinate.POS_CENTER):
         """Return the position of the coordinate.
         mode: select if the position is the center of the box
           or in the top left corner."""
@@ -72,8 +72,8 @@ class EmanCoordinate(Coordinate):
         tilted one and viceversa"""
         pass 
     
-    def setId(self, id):
-        self.coordId = id
+    def setId(self, coordId):
+        self.coordId = long(coordId)
         
     def getId(self):
         return self.coordId
