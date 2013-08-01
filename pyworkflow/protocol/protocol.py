@@ -586,11 +586,8 @@ class Protocol(Step):
         """ Set a new mapper for the protocol to persist state. """
         self.mapper = mapper
         
-    def setDbPath(self, path):
-        self._dbPath = String(self._getLogsPath(path))
-        
     def getDbPath(self):
-        return self._dbPath.get()
+        return self._getLogsPath('run.db')
     
     def getStatus(self):
         return self.status.get()
