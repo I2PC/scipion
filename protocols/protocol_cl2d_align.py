@@ -29,9 +29,10 @@ class ProtCL2DAlignment(XmippProtocol):
         message=["Alignment of "+self.InSelFile]
         fnAlignment=self.workingDirPath("level_00/level_classes.xmd")
         if exists(fnAlignment):
-            mD=MetaData("info@"+fnAlignment)
-            date=time.ctime(os.path.getmtime(fnAlignment))
-            message.append("Iteration "+str(mD.size())+" at "+date)
+            from protlib_xmipp import getMdSize
+            size = getMdSize("info@"+fnAlignment)
+            date = time.ctime(os.path.getmtime(fnAlignment))
+            message.append("Iteration %d at %s" % (size, date))
         return message
     
     def validate(self):

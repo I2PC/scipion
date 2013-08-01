@@ -74,6 +74,7 @@ class ProtProjMatch(XmippProtocol):
         if self.MaskRadius == -1:
            (Xdim, Ydim, Zdim, Ndim) = getImageSize(self.ReferenceFileNames[0])
            self.MaskRadius = Xdim/2
+    
     def validate(self):
         from protlib_xmipp import validateInputSize
         errors = []
@@ -88,11 +89,12 @@ class ProtProjMatch(XmippProtocol):
         # Check that all volumes have the same size
         #getListFromVector(self.ReferenceFileNames,processX=False)
         #listOfReferences=self.ReferenceFileNames.split()
-        md = MetaData(self.SelFileName)
+        md = MetaData()
+        md.read(self.SelFileName, 1)
         validateInputSize(self.ReferenceFileNames, self.SelFileName, md, errors)
         
         # Check there are enough images to avoid overfitting through the FSC
-        if md.size()<100 and self.ConstantToAddToFiltration<0:
+        if md.getParsedLines() < 100 and self.ConstantToAddToFiltration < 0:
             errors.append("You have less than 100 images. The constant to be added to the estimated resolution should be non-negative.")
         
         # Check options compatibility
@@ -367,13 +369,13 @@ data_noname
                                 showError("Error launching java app", str(e))
 
         if doPlot('DisplayProjectionMatchingClasses'):
-            MD = MetaData()
             for ref3d in ref3Ds:
                 for it in iterations:
                     file_name = self.getFilename('OutClassesXmd', iter=it, ref=ref3d)
                     if xmippExists(file_name):
-                        MD.read(file_name)
-                        if MD.size()==0:
+                        _, _, _, _, size = MetaDataInfo(file_name)
+                        
+                        if size == 0:
                             print "Empty metadata: ", file_name
                         else:
                             try:
@@ -497,13 +499,12 @@ data_noname
 
             
         if doPlot('DisplayDiscardedImages'):
-            MD = MetaData()
             for it in iterations:
                 file_name = self.getFilename('OutClassesDiscarded', iter=it)
                 #print 'it: ',it, ' | file_name:',file_name
                 if xmippExists(file_name):
-                    MD.read(file_name)
-                    if MD.size()==0:
+                    _, _, _, _, size = MetaDataInfo(file_name)
+                    if size == 0:
                         print "Empty metadata: ", file_name
                     else:
                         try:

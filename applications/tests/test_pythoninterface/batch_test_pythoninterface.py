@@ -367,7 +367,7 @@ class TestXmippPythonInterface(unittest.TestCase):
             md2.setValue(MDL_ANGLE_PSI, md2.getValue(MDL_ANGLE_PSI, id) * 2., id);
         self.assertEqual(md, md2)
 
-    def test_xmipp_addTmpLabelAlias(self):
+    def test_xmipp_addLabelAlias(self):
         tmpFileName = '/tmp/test_pythoninterface_readPlain1.xmd'
         line1="""# XMIPP_STAR_1 * 
 # 
@@ -383,8 +383,8 @@ _rlnDefocusU #2
         f.write(line1)
         f.flush()
         f.close()
-        AddTmpLabelAlias(MDL_CTF_VOLTAGE,"rlnVoltage")
-        AddTmpLabelAlias(MDL_CTF_DEFOCUSU,"rlnDefocusU")
+        addLabelAlias(MDL_CTF_VOLTAGE,"rlnVoltage")
+        addLabelAlias(MDL_CTF_DEFOCUSU,"rlnDefocusU")
         md=MetaData(tmpFileName)
         md2=MetaData()
         id = md2.addObject()
@@ -794,6 +794,63 @@ _rlnDefocusU #2
         except Exception, e:
             print str(e)
             
+    def test_Metadata_agregate(self):
+        mdOut = MetaData()
+        md    = MetaData()
+        mdResult = MetaData()
+        for linea in range(1, 101):
+            id = md.addObject()
+            md.setValue(MDL_IMAGE, '%06d@proj.stk' % linea, id)
+            md.setValue(MDL_XCOOR, int(linea%3), id)
+        mdOut.aggregate(md, AGGR_COUNT, MDL_XCOOR, MDL_XCOOR, MDL_COUNT)
+        id = mdResult.addObject()
+        mdResult.setValue(MDL_XCOOR, 0, id)
+        mdResult.setValue(MDL_COUNT, 33L, id)
+        id = mdResult.addObject()
+        mdResult.setValue(MDL_XCOOR, 1, id)
+        mdResult.setValue(MDL_COUNT, 34L, id)
+        id = mdResult.addObject()
+        mdResult.setValue(MDL_XCOOR, 2, id)
+        mdResult.setValue(MDL_COUNT, 33L, id)
+        
+        self.assertEqual(mdOut, mdResult)
+            
+    def test_Metadata_aggregateMdGroupBy(self):
+        mdOut = MetaData()
+        md    = MetaData()
+        mdResult = MetaData()
+        for linea in range(1, 101):
+            id = md.addObject()
+            md.setValue(MDL_IMAGE, '%06d@proj.stk' % linea, id)
+            md.setValue(MDL_XCOOR, int(linea%3), id)
+            md.setValue(MDL_YCOOR, int(linea%2), id)
+        mdOut.aggregateMdGroupBy(md, AGGR_COUNT, [MDL_XCOOR,MDL_YCOOR], MDL_XCOOR, MDL_COUNT)
+        id = mdResult.addObject()
+        mdResult.setValue(MDL_XCOOR, 0, id)
+        mdResult.setValue(MDL_YCOOR, 0, id)
+        mdResult.setValue(MDL_COUNT, 16L, id)
+        id = mdResult.addObject()
+        mdResult.setValue(MDL_XCOOR, 0, id)
+        mdResult.setValue(MDL_YCOOR, 1, id)
+        mdResult.setValue(MDL_COUNT, 17L, id)
+        id = mdResult.addObject()
+        mdResult.setValue(MDL_XCOOR, 1, id)
+        mdResult.setValue(MDL_YCOOR, 0, id)
+        mdResult.setValue(MDL_COUNT, 17L, id)
+        id = mdResult.addObject()
+        mdResult.setValue(MDL_XCOOR, 1, id)
+        mdResult.setValue(MDL_YCOOR, 1, id)
+        mdResult.setValue(MDL_COUNT, 17L, id)
+        id = mdResult.addObject()
+        mdResult.setValue(MDL_XCOOR, 2, id)
+        mdResult.setValue(MDL_YCOOR, 0, id)
+        mdResult.setValue(MDL_COUNT, 17L, id)
+        id = mdResult.addObject()
+        mdResult.setValue(MDL_XCOOR, 2, id)
+        mdResult.setValue(MDL_YCOOR, 1, id)
+        mdResult.setValue(MDL_COUNT, 16L, id)
+        
+        self.assertEqual(mdOut, mdResult)
             
     def test_Metadata_fillExpand(self):
         '''MetaData_fillExpand'''
@@ -861,8 +918,8 @@ _rlnDefocusU #2
 #
 #    def test_metadata_stress(self):
 #        #create set and save 1000 block with 100 lines each
-#        numberMetadatas=1+1
-#        numberLines=1000000+1
+#        numberMetadatas=1000+1
+#        numberLines=100+1
 #        md = MetaData()
 #        fnStar = self.getTmpName('.xmd')
 #        fnSqlite = self.getTmpName('.sqlite')
@@ -962,7 +1019,7 @@ _rlnDefocusU #2
 #            md.clear()
 #        timestamp2 = time()
 #        print "\nread(random) star took %.2f seconds" % (timestamp2 - timestamp1)
-        
+#        
     def test_SymList_readSymmetryFile(self):
         '''readSymmetryFile'''
         a = SymList()

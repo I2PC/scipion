@@ -18,6 +18,7 @@ from xmipp import MetaData, MetaDataInfo, MD_APPEND, MDL_MAXCC, MDL_WEIGHT, \
 from protlib_base import *
 from math import floor
 from numpy import array, savetxt, sum, zeros
+from protlib_xmipp import getMdSize
 from protlib_utils import getListFromRangeString, runJob, runShowJ
 from protlib_filesystem import copyFile, deleteFile, removeFilenamePrefix
 
@@ -42,11 +43,12 @@ class ProtInitVolRANSAC(XmippProtocol):
             K = self.Xdim/Xdim2
         else:
             self.Xdim2 = Xdim2
-        self.Ts = K*self.Ts
+            
         freq = self.Ts/self.MaxFreq
-        
+        self.Ts = K*self.Ts
+
         self.insertRunJobStep("xmipp_transform_filter","-i %s -o %s --fourier low_pass %f"
-                                                %(self.Classes,fnOutputReducedClass,freq*K))
+                                                %(self.Classes,fnOutputReducedClass,freq))
         self.insertRunJobStep("xmipp_image_resize","-i %s --dim %d %d " %(fnOutputReducedClass,self.Xdim2,self.Xdim2))
 
         # Generate projection gallery from the initial volume
@@ -176,12 +178,11 @@ def getBestVolumes(log,WorkingDir,NRansac,NumVolumes,UseAll):
         print("Best volume "+str(indx)+" = "+fnBestAngles)
         if not UseAll:
             runJob(log,"xmipp_metadata_utilities","-i %s -o %s --query select \"maxCC>%f \" --mode append" %(fnBestAnglesOut,fnBestAnglesOut,threshold))
-            md=MetaData(fnBestAnglesOut)
-            if md.size()>0:
+            if getMdSize(fnBestAnglesOut) > 0:
                 indx += 1
         else:
-            indx+=1
-        i-=1
+            indx += 1
+        i -= 1
         
     # Remove unnecessary files
     for n in range(NRansac):

@@ -24,6 +24,7 @@ import xmipp.jni.MetaData;
 import xmipp.jni.Program;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.training.model.Mode;
+import xmipp.viewer.particlepicker.training.model.SingleParticlePickerMicrograph;
 
 /**
  * Business object for ParticlePicker common GUI. SingleParticlePicker and
@@ -49,6 +50,7 @@ public abstract class ParticlePicker
 	String[] commonfilters = new String[] { "Install...", "Duplicate", "Bandpass Filter...", "Anisotropic Diffusion...", "Mean Shift",
 			"Subtract Background...", "Gaussian Blur...", "Brightness/Contrast...", "Invert LUT" };
 	static String xmippsmoothfilter = "Xmipp Smooth Filter";
+	public static final String particlesAutoBlock = "particles_auto";
 
 	private Color color;
 	private int size;
@@ -92,6 +94,21 @@ public abstract class ParticlePicker
 	{
 		return getParticlesBlock(Format.Xmipp301, file);
 
+	}
+	
+	public String getParticlesAutoBlock(String file)
+	{
+		return particlesAutoBlock + "@" + file;
+	}
+	
+	public String getParticlesBlock(Micrograph m)
+	{
+		return getParticlesBlock(getOutputPath(m.getPosFile()));
+
+	}
+	
+	public String getParticlesAutoBlock(Micrograph m){
+		return getParticlesAutoBlock(getOutputPath(m.getPosFile()));
 	}
 
 	public ParticlePicker(String selfile, Mode mode)

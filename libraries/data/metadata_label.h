@@ -63,6 +63,9 @@ enum MDLabel
     MDL_ANGLE_Y,   ///< Angle between y-axis and tilt-axis (double, degrees) for untilted micrographs
     MDL_ANGLE_Y2,   ///< Angle between y-axis and tilt-axis (double, degrees) for tilted micrographs
     MDL_AVG, ///< average value (double)
+    MDL_AVG_CHANGES_ORIENTATIONS, /// Average change in angular orientation (double degrees)
+    MDL_AVG_CHANGES_OFFSETS, /// Average change in offset (double pixels)
+    MDL_AVG_CHANGES_CLASSES, /// Average change in class assignment(double dimensionaless)
     MDL_BGMEAN, ///< Mean background value for an image
     MDL_BLOCK_NUMBER, ///< Current block number (for incremental EM)
 
@@ -258,6 +261,7 @@ enum MDLabel
     MDL_PICKING_AUTOPICKPERCENT,
     MDL_PICKING_PARTICLE_SIZE, ///< Particle size for particle picking
     MDL_PMAX, ///< Maximum value of normalized probability function (now called "Pmax/sumP") (double)
+    MDL_AVGPMAX, ///< Average (per class) of the maximum value of normalized probability function) (double)
     MDL_POINTSASYMETRICUNIT, /// < Number of non-redundant projections directions (size_t)
 
     MDL_PRJ_DIMENSIONS, // X,Y dimensions for the generated projections
@@ -349,6 +353,8 @@ enum MDLabel
 
     MDL_LAST_LABEL  // **** NOTE ****: Do keep this label always at the end,it is here for looping purposes
 };//close enum Label
+
+typedef std::vector<MDLabel> MDLabelVector;
 
 /** Macro for iterate over all labels */
 #define FOR_ALL_LABELS() for (int _label = MDL_FIRST_LABEL; _label < MDL_LAST_LABEL; ++_label)
@@ -671,15 +677,11 @@ private:
 
     /** Add predefined labels to be used in metadata */
     static void addLabel(MDLabel label, MDLabelType type, const String &name, int tags=TAGLABEL_NOTAG);
-    /** Add an alias for an existing label */
-    static void addLabelAlias(MDLabel label, const String &alias);
 
     friend class MDLabelStaticInit;
 public:
-    /** public acces to addLabelAlias, add alias in running time,
-      useful to read non xmipp star files
-      */
-    static void addTmpLabelAlias(MDLabel label, const String &alias);
+    /** Add an alias for an existing label */
+    static void addLabelAlias(MDLabel label, const String &alias);
 }
 ;//close class MLD definition
 
@@ -722,6 +724,10 @@ private:
         MDL::addLabel(MDL_ANGLE_Y2, LABEL_DOUBLE, "angleY2");
 
         MDL::addLabel(MDL_AVG, LABEL_DOUBLE, "avg");
+        MDL::addLabel(MDL_AVG_CHANGES_ORIENTATIONS, LABEL_DOUBLE, "avgChanOrient");
+        MDL::addLabel(MDL_AVG_CHANGES_OFFSETS, LABEL_DOUBLE, "avgChanOffset");
+        MDL::addLabel(MDL_AVG_CHANGES_CLASSES, LABEL_DOUBLE, "avgChanClass");
+
         MDL::addLabel(MDL_BGMEAN, LABEL_DOUBLE, "bgMean");
         MDL::addLabel(MDL_BLOCK_NUMBER, LABEL_INT, "blockNumber");
 
@@ -1004,6 +1010,7 @@ private:
         MDL::addLabel(MDL_PICKING_AUTOPICKPERCENT, LABEL_INT, "autopickPercent");
         MDL::addLabel(MDL_PICKING_TEMPLATES, LABEL_INT, "templatesNum");
         MDL::addLabel(MDL_PMAX, LABEL_DOUBLE, "pMax");
+        MDL::addLabel(MDL_AVGPMAX, LABEL_DOUBLE, "pMax");
         MDL::addLabelAlias(MDL_PMAX, "Pmax");
         MDL::addLabelAlias(MDL_PMAX, "sumP");
         MDL::addLabel(MDL_POINTSASYMETRICUNIT, LABEL_SIZET, "pointsAsymmetricUnit");
