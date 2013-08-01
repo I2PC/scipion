@@ -31,7 +31,7 @@ from os.path import join, dirname, exists
 from pyworkflow.em import *  
 import xmipp
 from data import *
-from xmipp3 import XmippProtocol
+import xmipp3
 from glob import glob
 
 class XmippDefKerdensom(Form):
@@ -70,24 +70,28 @@ class XmippDefKerdensom(Form):
         self.addParam('SomSteps', IntParam, default=5, expertLevel=LEVEL_ADVANCED,
                       label='Regularization steps:',
                       help='Number of steps to lower the regularization factor')
-        self.addParam('extraParams', StringParam, default='',
-                      label="Additional kerdenSOM parameters:", 
-                      help='For a complete description'
-                      'See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM')
+        self.addParam('extraParams', StringParam, default='', expertLevel=LEVEL_ADVANCED,
+                      label="Additional parameters:", 
+                      help='Additional parameters for kerdensom program.\nFor a complete description'
+                      'See [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM]')
         
         
-class XmippProtKerdensom(ProtClassify, XmippProtocol):
+class XmippProtKerdensom(ProtClassify, xmipp3.XmippProtocol):
     """ Protocol to align a set of particles. """
     _definition = XmippDefKerdensom()
     _label = 'Xmipp KerDenSom'
 
     def _defineSteps(self):
-        self._prepareDefinition()       
-        self._insertSteps()
+        self._prepareParams()       
+        self._insertImgToVector()
+        self._insertKerdensom()
+        self._insertVectorToImg()
+        self._insertFunctionStep('rewriteClassBlock')
+        self._insertFunctionStep('createOutput')
     
     
-    def _prepareDefinition(self):
-         # Convert input images if necessary
+    def _prepareParams(self):
+        # Convert input images if necessary
         self.inputImgs = self.inputImages.get()        
         imgsFn = self._insertConvertStep('inputImgs', XmippSetOfParticles,
                                          self._getPath('input_images.xmd'))
@@ -106,13 +110,6 @@ class XmippProtKerdensom(ProtClassify, XmippProtocol):
                         'kvectors': self._getExtraPath("kerdensom_vectors.xmd"),
                         'kclasses': self._getExtraPath("kerdensom_classes.xmd")
                        }    
-        
-    def _insertSteps(self):
-        self._insertImgToVector()
-        self._insertKerdensom()
-        self._insertVectorToImg()
-        self._insertFunctionStep('rewriteClassBlock')
-        self._insertFunctionStep('createOutput')
         
     def _insertImgToVector(self):
         """ Insert runJob for convert into a vector Md """
@@ -141,12 +138,10 @@ class XmippProtKerdensom(ProtClassify, XmippProtocol):
         md = xmipp.MetaData(fnClass)
         # TODO: Check if following is necessary
         counter = 1
-        for id in md:
-            md.setValue(xmipp.MDL_IMAGE,"%06d@%s"%(counter,fnClassStack),id)
+        for objId in md:
+            md.setValue(xmipp.MDL_IMAGE,"%06d@%s"%(counter,fnClassStack), objId)
             counter += 1
         md.write(fnClass, xmipp.MD_APPEND)
-        #createLink(Log, fnClassMetadata, self.getPath("classes.xmd"))
-        #createLink(Log, self._getExtraPath("kerdensom_images.xmd"), self.getPath("images.xmd"))
     
     def createOutput(self):
         """ Store the kenserdom object 
