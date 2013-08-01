@@ -159,7 +159,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 
         # Convert input SetOfCoordinates to Xmipp if needed
         self._insertConvertStep('inputCoords', XmippSetOfCoordinates, 
-                                 self._getExtraPath('micrographs_coordinates.xmd'))
+                                 self._getExtraPath('scipion_micrographs_coordinates.xmd'))
                 
         # For each micrograph insert the steps
         for mic in self.inputMics:

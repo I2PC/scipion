@@ -133,25 +133,25 @@ class TestMixedWorkflow_2(TestWorkflow):
                     'protCTF/logs/run.log', 
                     'protCTF/logs/run.db'],
               'protExtract':[
-                    'protPicking/BPV_1387.box', 
-                    'protPicking/BPV_1386.box', 
-                    'protPicking/BPV_1388.box', 
+                    'protPP/info/BPV_1386_info.json'
+                    'protPP/info/BPV_1387_info.json'
+                    'protPP/info/BPV_1388_info.json'
+                    'protExtract/images.xmd', 
+                    'protExtract/extra/BPV_1386.pos', 
                     'protExtract/extra/BPV_1387.pos', 
+                    'protExtract/extra/BPV_1388.pos', 
                     'protExtract/tmp/BPV_1388_flipped.xmp', 
                     'protExtract/tmp/BPV_1387_flipped.xmp', 
+                    'protExtract/tmp/BPV_1386_flipped.xmp',
                     'protExtract/tmp/BPV_1386_noDust.xmp', 
-                    'protExtract/extra/BPV_1388.pos', 
-                    'protExtract/extra/BPV_1386.xmd', 
-                    'protExtract/extra/BPV_1388.stk', 
-                    'protExtract/images.xmd', 
-                    'protExtract/extra/BPV_1386.stk', 
-                    'protExtract/extra/BPV_1388.xmd', 
-                    'protExtract/extra/BPV_1386.pos', 
-                    'protExtract/extra/BPV_1387.stk', 
                     'protExtract/tmp/BPV_1387_noDust.xmp', 
                     'protExtract/tmp/BPV_1388_noDust.xmp', 
+                    'protExtract/extra/BPV_1386.xmd', 
                     'protExtract/extra/BPV_1387.xmd', 
-                    'protExtract/tmp/BPV_1386_flipped.xmp',
+                    'protExtract/extra/BPV_1388.xmd', 
+                    'protExtract/extra/BPV_1388.stk', 
+                    'protExtract/extra/BPV_1386.stk', 
+                    'protExtract/extra/BPV_1387.stk', 
                     'protExtract/logs/run.log',
                     'protExtract/logs/run.db',
                     ],
@@ -188,7 +188,7 @@ class TestMixedWorkflow_2(TestWorkflow):
         # Create a new project
         setupProject(cls)
         cls.pattern = getInputPath('Micrographs_BPV3', '*.mrc')        
-        cls.importFolder = getInputPath('EmanTestProject')
+        cls.importFolder = getInputPath('EmanTestProject2')
         
     def testWorkflow(self):
         #First, import a set of micrographs
@@ -214,17 +214,16 @@ class TestMixedWorkflow_2(TestWorkflow):
         self.proj.launchProtocol(protCTF, wait=True)
         
         self.validateFiles('protCTF', protCTF) 
-        return
         print "Running Eman fake particle picking..."   
         protPP = EmanProtBoxing(importFolder=self.importFolder, runMode=1)                
 #        protPP.inputMicrographs.set(protCTF.outputMicrographs)        
-        protPP.inputMicrographs.set(protCTF.outputMicrographs)
+        protPP.inputMicrographs.set(protImport.outputMicrographs)
         self.proj.launchProtocol(protPP, wait=True)
             
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
             
-        print "Run extract particles with Same as picking"
-        protExtract = XmippProtExtractParticles(boxSize=110, downsampleType=1, doFlip=True, runMode=1)
+        print "<Run extract particles with Same as picking>"
+        protExtract = XmippProtExtractParticles(boxSize=500, downsampleType=1, doFlip=True, runMode=1)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         #protExtract.inputMicrographs.set(protDownsampling.outputMicrographs)
         self.proj.launchProtocol(protExtract, wait=True)
@@ -232,15 +231,15 @@ class TestMixedWorkflow_2(TestWorkflow):
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
         self.validateFiles('protExtract', protExtract)
         
-        print "Run Only Align2d"
-        protOnlyalign = XmippProtCL2DAlign(maximumShift=5, numberOfIterations=5, 
-                                 numberOfMpi=2, numberOfThreads=1, useReferenceImage=False)
-
-        protOnlyalign.inputImages.set(protExtract.outputParticles)
-        self.proj.launchProtocol(protOnlyalign, wait=True)        
-        
-        self.assertIsNotNone(protOnlyalign.outputParticles, "There was a problem with Only align2d")  
-        self.validateFiles('protOnlyalign', protOnlyalign)
+#         print "Run Only Align2d"
+#         protOnlyalign = XmippProtCL2DAlign(maximumShift=5, numberOfIterations=5, 
+#                                  numberOfMpi=2, numberOfThreads=1, useReferenceImage=False)
+# 
+#         protOnlyalign.inputImages.set(protExtract.outputParticles)
+#         self.proj.launchProtocol(protOnlyalign, wait=True)        
+#         
+#         self.assertIsNotNone(protOnlyalign.outputParticles, "There was a problem with Only align2d")  
+#         self.validateFiles('protOnlyalign', protOnlyalign)
         
         print "Run ML2D"
         protML2D = XmippProtML2D(numberOfReferences=1, maxIters=4, 
@@ -252,39 +251,14 @@ class TestMixedWorkflow_2(TestWorkflow):
         self.assertIsNotNone(protML2D.outputClassification, "There was a problem with ML2D")  
         self.validateFiles('protML2D', protML2D)
 
-        print "Run kerdensom"
-        XmippProtKerdensom = XmippProtKerdensom()
-
-        protOnlyalign.inputImages.set(protExtract.outputParticles)
-        self.proj.launchProtocol(XmippProtKerdensom, wait=True)        
-        
-        self.assertIsNotNone(XmippProtKerdensom.outputClassification, "There was a problem with kerdensom")  
-        self.validateFiles('XmippProtKerdensom', XmippProtKerdensom)
-
-class TestOnlyAlign (TestWorkflow):
-
-    def setUpClass(cls):    
-        # Create a new project
-        setupProject(cls)
-        cls.pattern = getInputPath('EmanParticles', '*.mrc')        
-        cls.importFolder = getInputPath('EmanTestParticles')
-        
-    def testWorkflow(self):
-        # Import a set of particles
-        Partimport = ProtImportParticles(patern=self.patern, samplingRate=1.237, tiltPairs=False)
-        self.proj.launchProtocol(Partimport, wait=True)
-
-        self.assertIsNotNone(Partimport.outputParticles, "There was a problem with the import")
-
-        print "Run Only Align2d"
-        protOnlyalign = XmippProtCL2DAlign(maximumShift=5, numberOfIterations=5, 
-                                 numberOfMpi=2, numberOfThreads=1, useReferenceImage=False)
-
-        protOnlyalign.inputImages.set(Partimport.outputParticles)
-        self.proj.launchProtocol(protOnlyalign, wait=True)        
-        
-        self.assertIsNotNone(protOnlyalign.outputParticles, "There was a problem with Only align2d")  
-        self.validateFiles('protOnlyalign', protOnlyalign)
+#         print "Run kerdensom"
+#         XmippProtKerdensom = XmippProtKerdensom()
+# 
+#         protOnlyalign.inputImages.set(protExtract.outputParticles)
+#         self.proj.launchProtocol(XmippProtKerdensom, wait=True)        
+#         
+#         self.assertIsNotNone(XmippProtKerdensom.outputClassification, "There was a problem with kerdensom")  
+#         self.validateFiles('XmippProtKerdensom', XmippProtKerdensom)
         
  
         
