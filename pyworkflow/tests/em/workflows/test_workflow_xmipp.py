@@ -329,7 +329,7 @@ class TestXmippWorkflow(TestWorkflow):
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
             
         print "Run extract particles with other downsampling factor"
-        protExtract = XmippProtExtractParticles(boxSize=64, downsampleType=2, downFactor=8, runMode=1)
+        protExtract = XmippProtExtractParticles(boxSize=64, downsampleType=2, downFactor=8, runMode=1, doInvert=True)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.inputMicrographs.set(protImport.outputMicrographs)
         self.proj.launchProtocol(protExtract, wait=True)
@@ -387,11 +387,8 @@ class TestXmippWorkflow(TestWorkflow):
         #self.validateFiles('ProtKerdensom', ProtKerdensom)
         
         print "Run Rotational Spectra"
-        xmippProtRotSpectra = XmippProtRotSpectra()
+        xmippProtRotSpectra = XmippProtRotSpectra(SomXdim=2, SomYdim=2)
         xmippProtRotSpectra.inputImages.set(protOnlyAlign.outputParticles)
-        xmippProtRotSpectra.SomXdim.set(2)
-        xmippProtRotSpectra.SomYdim.set(2)
-
         self.proj.launchProtocol(xmippProtRotSpectra, wait=True)        
         
         self.assertIsNotNone(xmippProtRotSpectra.outputClassification, "There was a problem with Rotational Spectra")
