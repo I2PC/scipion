@@ -28,6 +28,7 @@ This modules contains basic hierarchy
 for EM data objects like: Image, SetOfImage and others
 """
 
+from constants import *
 from pyworkflow.object import *
 from pyworkflow.mapper.sqlite import SqliteMapper
 from posixpath import join
@@ -407,15 +408,12 @@ class SetOfVolumes(SetOfImages):
 class Coordinate(EMObject):
     """This class holds the (x,y) position and other information
     associated with a coordinate"""
-    POS_CENTER = 0
-    POS_TOPLEFT = 1
-    
     def __init__(self, **args):
         EMObject.__init__(self, **args)
         self._micrographPointer = Pointer()
         self._boxSize = None
     
-    def getPosition(self, mode=POS_CENTER):
+    def getPosition(self):
         """ Return the position of the coordinate as a (x, y) tuple.
         mode: select if the position is the center of the box
         or in the top left corner.
@@ -443,7 +441,7 @@ class Coordinate(EMObject):
     
     def copyInfo(self, coord):
         """ Copy information from other coordinate. """
-        self.setPosition(*coord.getPosition(POS_CENTER))
+        self.setPosition(*coord.getPosition())
         self.setId(coord.getId())
         self.setBoxSize(coord.getBoxSize())
         
@@ -460,17 +458,12 @@ class SetOfCoordinates(EMObject):
         self.boxSize = Integer()
     
     def getBoxSize(self):
-        """ Return the box size of the future particles.
-        This can be None, since when the POS_CENTER mode is used,
-        the box size is only relevant when extraction.
+        """ Return the box size of the particles.
         """
         return self.boxSize.get()
     
-    
     def setBoxSize(self, boxSize):
-        """ Set the box size of the future particles.
-        This can be None, since when the POS_CENTER mode is used,
-        the box size is only relevant when extraction.
+        """ Set the box size of the particles.
         """
         self.boxSize.set(boxSize)
     

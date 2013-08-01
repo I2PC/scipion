@@ -305,7 +305,7 @@ class XmippSetOfVolumes(XmippSetOfImages, SetOfVolumes):
         
 class XmippCoordinate(Coordinate, XmippMdRow):
     """This class holds the (x,y) position and other information
-    associated with a Xmipp coordinate (Xmipp coordinates are POS_CENTER mode)"""
+    associated with a Xmipp coordinate"""
     
     _label_coordId = xmipp.MDL_ITEM_ID
     _label_coordX = xmipp.MDL_XCOOR
@@ -323,21 +323,14 @@ class XmippCoordinate(Coordinate, XmippMdRow):
         #return self.id
         return self.getValue(self._label_coordId)
     
-    def getPosition(self, mode=Coordinate.POS_CENTER):
+    def getPosition(self):
         """Return the position of the coordinate.
         mode: select if the position is the center of the box
           or in the top left corner."""
-        x, y = self.getValue(self._label_coordX), self.getValue(self._label_coordY)
-        if mode == Coordinate.POS_CENTER:
-            return (x, y)
-        elif mode == Coordinate.POS_TOPLEFT: 
-            return (x - self._boxSize / 2, y - self._boxSize / 2)
-        else:
-            raise Exception("No coordinate mode registered for : " + str(mode)) 
-    
+        return (self.getValue(self._label_coordX), 
+                self.getValue(self._label_coordY))
+
     def setPosition(self, x, y):
-        #self.x = x
-        #self.y = y
         self.setValue(self._label_coordX, x)
         self.setValue(self._label_coordY, y)
     
@@ -518,18 +511,10 @@ class XmippSetOfCoordinates(SetOfCoordinates):
             mdPosFile = xmipp.MetaData()
             hasCoords = False
             for coord in setOfCoords.iterMicrographCoordinates(mic):
-                #x, y = coord.getPosition(Coordinate.POS_CENTER)
                 coordXmipp = XmippCoordinate()
                 coordXmipp.copyInfo(coord)
-                
-                #coordXmipp.setId(coord.getId())
-                #coordXmipp.setPosition(int(x), int(y))
                 objId = mdPosFile.addObject()
                 coordXmipp.setToMd(mdPosFile, objId)
-                #mdPosFile.setValue(xmipp.MDL_XCOOR, int(x), coorId)
-                #mdPosFile.setValue(xmipp.MDL_YCOOR, int(y), coorId) 
-                #mdPosFile.setValue(xmipp.MDL_ITEM_ID, long(coord.getId()), coorId)
-                
                 hasCoords = True            
             if hasCoords:                           
                 mdPosFile.write('particles@%s' % posFile)

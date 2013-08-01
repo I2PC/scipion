@@ -36,22 +36,17 @@ import json
             
 class EmanCoordinate(Coordinate):
     """This class holds the (x,y) position and other information
-    associated with a EMAN coordinate (Eman coordinates are POS_TOPLEFT mode)"""  
+    associated with a EMAN coordinate"""  
     
     def __init__(self, **args):
         
         self.coordId = 0L
     
-    def getPosition(self, mode=Coordinate.POS_CENTER):
+    def getPosition(self):
         """Return the position of the coordinate.
         mode: select if the position is the center of the box
           or in the top left corner."""
-        if mode == Coordinate.POS_TOPLEFT:
-            return self.x, self.y
-        elif mode == Coordinate.POS_CENTER: 
-            return (int(self.x) + self._boxSize/2, int(self.y) + self._boxSize/2)
-        else:
-            raise Exception("No coordinate mode registered for : " + str(mode)) 
+        return int(self.x), int(self.y)
     
     def setPosition(self, x, y):
         self.x = x
