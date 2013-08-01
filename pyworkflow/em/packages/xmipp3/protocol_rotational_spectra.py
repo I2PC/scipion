@@ -96,7 +96,7 @@ class XmippProtRotSpectra(XmippProtKerdensom):
         
         program = 'xmipp_image_find_center'
         args = '-i ' + inputImages
-        args += '--oroot %(extraDir)s/center2d --r1 %(R1)d --r2 %(R2)d --r3 %(R3)d --r4 %(R4)d'
+        args += ' --oroot %(extraDir)s/center2d --r1 %(R1)d --r2 %(R2)d --r3 %(R3)d --r4 %(R4)d'
         # Run the command with formatted parameters
         self._insertRunJobStep(program, args % self._params)
             
