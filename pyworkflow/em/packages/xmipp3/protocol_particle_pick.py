@@ -114,7 +114,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
             posId = posMd.addObject()
             posMd.setValue(xmipp.MDL_ITEM_ID, mic.getId(), posId)
             posMd.setValue(xmipp.MDL_MICROGRAPH_PARTICLES, micPosFn, posId)
-        coordsFn = self._getExtraPath('micrographs_coordinates.xmd')
+        coordsFn = self._getExtraPath('scipion_micrographs_coordinates.xmd')
         posMd.write(coordsFn)  
         coords = XmippSetOfCoordinates(filename=coordsFn)
         coords.setMicrographs(inputMicsXmipp)
