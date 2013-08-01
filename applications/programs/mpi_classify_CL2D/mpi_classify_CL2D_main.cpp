@@ -108,7 +108,7 @@ void CL2DClass::updateProjection(const MultidimArray<double> &I,
                                  const CL2DAssignment &assigned,
                                  bool force)
 {
-    if (assigned.corr > 0 && assigned.objId != BAD_OBJID || force)
+    if ((assigned.corr > 0 && assigned.objId != BAD_OBJID) || force)
     {
         Pupdate += I;
         nextListImg.push_back(assigned);
@@ -659,7 +659,8 @@ void CL2D::readImage(Image<double> &I, size_t objId, bool applyGeo) const
         I.read(fnImg);
     }
     I().setXmippOrigin();
-    I().statisticsAdjust(0, 1);
+    if (prm->normalizeImages)
+    	I().statisticsAdjust(0, 1);
 }
 
 /* CL2D initialization ------------------------------------------------ */
@@ -1496,6 +1497,7 @@ void ProgClassifyCL2D::readParams()
     classicalMultiref = checkParam("--classicalMultiref");
     maxShift = getDoubleParam("--maxShift");
 	classifyAllImages = checkParam("--classifyAllImages");
+	normalizeImages = !checkParam("--dontNormalizeImages");
 }
 
 void ProgClassifyCL2D::show() const {
@@ -1514,6 +1516,7 @@ void ProgClassifyCL2D::show() const {
 			<< "Classical Multiref:      " << classicalMultiref << std::endl
 			<< "Maximum shift:           " << maxShift << std::endl
 			<< "Classify all images:     " << classifyAllImages << std::endl
+			<< "Normalize images:        " << normalizeImages << std::endl
 	;
 }
 
@@ -1551,6 +1554,7 @@ void ProgClassifyCL2D::defineParams()
     addParamsLine("   [--classicalMultiref]     : Instead of enhanced clustering");
     addParamsLine("   [--maxShift <d=10>]       : Maximum allowed shift");
 	addParamsLine("   [--classifyAllImages]     : By default, some images may not be classified. Use this option to classify them all.");
+	addParamsLine("   [--dontNormalizeImages]   : By default, input images are normalized to have 0 mean and standard deviation 1");
     addExampleLine("mpirun -np 3 `which xmipp_mpi_classify_CL2D` -i images.stk --nref 256 --oroot class --odir CL2Dresults --iter 10");
 }
 
