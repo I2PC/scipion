@@ -123,7 +123,8 @@ void CL2DClass::transferUpdate()
         // Take from Pupdate
         double iNq = 1.0 / nextListImg.size();
         Pupdate *= iNq;
-        Pupdate.statisticsAdjust(0, 1);
+        if (prm->normalizeImages)
+        	Pupdate.statisticsAdjust(0, 1);
         P = Pupdate;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(P)
         if (!DIRECT_MULTIDIM_ELEM(prm->mask,n))
