@@ -507,24 +507,27 @@ int ImageBase::writeTIFF(size_t select_img, bool isStack, int mode, String bitDe
             TIFFSetField(tif, TIFFTAG_PAGENUMBER, (uint16) i, (uint16) aDim.ndim);
         }
 
-        double min0, max0;
-
-        if (castMode != CW_CAST)
-            mdaBase->computeDoubleMinMaxRange(min0, max0, i*datasize_n, datasize_n);
-
-        for (uint32 y = 0; y < aDim.ydim; y++)
+        // Only write images when needed
+        if (dataMode >= DATA)
         {
-            if (castMode == CW_CAST)
-                getPageFromT(i*datasize_n + y*aDim.xdim, (char *)tif_buf, wDType, (size_t) aDim.xdim);
-            else
-                getCastConvertPageFromT(i*datasize_n + y*aDim.xdim,
-                                        (char *)tif_buf, wDType, (size_t) aDim.xdim, min0, max0, castMode);
+            double min0, max0;
 
-            TIFFWriteScanline(tif, tif_buf,y,0);
+            if (castMode != CW_CAST)
+                mdaBase->computeDoubleMinMaxRange(min0, max0, i*datasize_n, datasize_n);
+
+            for (uint32 y = 0; y < aDim.ydim; y++)
+            {
+                if (castMode == CW_CAST)
+                    getPageFromT(i*datasize_n + y*aDim.xdim, (char *)tif_buf, wDType, (size_t) aDim.xdim);
+                else
+                    getCastConvertPageFromT(i*datasize_n + y*aDim.xdim,
+                                            (char *)tif_buf, wDType, (size_t) aDim.xdim, min0, max0, castMode);
+
+                TIFFWriteScanline(tif, tif_buf,y,0);
+            }
         }
 
-        if (aDim.ndim >1)
-            TIFFWriteDirectory(tif);
+        TIFFWriteDirectory(tif);
     }
 
     _TIFFfree(tif_buf);

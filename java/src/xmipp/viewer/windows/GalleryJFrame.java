@@ -124,6 +124,12 @@ import xmipp.viewer.particlepicker.extract.ExtractParticlePicker;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
 import xmipp.viewer.windows.ClassesJDialog;
 
+
+/**
+ * This is the main frame used in showj
+ * @author airen
+ *
+ */
 public class GalleryJFrame extends JFrame implements iCTFGUI
 {
 	private static final long serialVersionUID = -8957336972082018823L;
@@ -777,10 +783,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		imgAvg.destroy();
 		imgStd.destroy();
 
-		XmippImageWindow winAvg = new XmippImageWindow(this, new ImagePlusLoader(impAvg), "AVG: " + data.getFileName());
+		XmippImageWindow winAvg = new XmippImageWindow(new ImagePlusLoader(impAvg), "AVG: " + data.getFileName());
 		XmippWindowUtil.setLocation(0.2f, 0.5f, winAvg, this);
 		winAvg.setVisible(true);
-		XmippImageWindow winStd = new XmippImageWindow(this, new ImagePlusLoader(impStd), "STD: " + data.getFileName());
+		XmippImageWindow winStd = new XmippImageWindow(new ImagePlusLoader(impStd), "STD: " + data.getFileName());
 
 		XmippWindowUtil.setLocation(0.8f, 0.5f, winStd, this);
 		winStd.setVisible(true);
@@ -1003,6 +1009,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 			}
 		}
+		md.destroy();
 	}
 
 	/** Find and replace in metadata */
@@ -1270,9 +1277,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			}
 		});
 		cbPanel.add(jcbVolumes);
-		
-		
-		
 	}
 
 	protected void updateVisibleCombos()
@@ -2100,7 +2104,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		if (blockto.contains("@"))
 			gallery.data.selectBlock(blockto.substring(0, blockto.lastIndexOf("@")));
 		reloadFile(to, false);
-		setTitle(gallery.getTitle());
+		setGalleryTitle();
 	}
 
 	private void save() throws Exception
@@ -2131,7 +2135,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			else
 				saveAll();
 
-			setGalleryTitle();
 			if (dlgSave.doSaveImages())
 				data.md.writeImages(dlgSave.getOutput(), dlgSave.isOutputIndependent(), dlgSave.getImageLabel());
 		}
@@ -2141,14 +2144,14 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	public void openMicrographs()
 	{
 		if (extractframe == null || !extractframe.isVisible())
-			extractframe = ExtractParticlePicker.open(getBlock(), data.getFileName(), this);
+			extractframe = ExtractParticlePicker.open(getBlock(), data.getFileName(), gallery.getImageWidth(), this);
 		refreshExtractFrame();
 	}
 
 	private void refreshExtractFrame()
 	{
 
-		if (extractframe == null)
+		if (extractframe == null || !extractframe.isVisible())
 			return;
 		for (int i = 0; i < data.selection.length; i++)
 			if (data.selection[i])

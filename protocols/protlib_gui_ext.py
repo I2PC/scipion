@@ -35,6 +35,7 @@ from config_protocols import LabelBgColor, ButtonBgColor, ButtonActiveBgColor, S
 from protlib_filesystem import getXmippPath, xmippExists, removeFilenamePrefix, fixPath, splitFilename
 from protlib_utils import runChimera, runVMD
 from Tkinter import TclError
+from protlib_gui_ext import *
 
 RESOURCES = getXmippPath('resources')
 
@@ -1251,7 +1252,7 @@ def mdOnDoubleClick(filename, browser):
 
 def imgOnClick(filename, browser):
     import xmipp
-    x, y, z, n = xmipp.SingleImgSize(filename)
+    x, y, z, n = xmipp.getImageSize(filename)
     dimMsg = "<Image>\n  <dimensions:> %(x)d x %(y)d" 
     expMsg = "Columns x Rows "
     if z > 1: 
@@ -2061,7 +2062,29 @@ def showTiltPairsDialog(pairsList, parent=None):
     tiltPairs.showGUI()
     root.wait_window(root)
     return tiltPairs.result
+
+def showTable(columns, rows, title='Table', root=None, width=50):
+    if root is None:
+        root = tk.Tk()
+    else:
+        root = tk.Toplevel()
+    root.withdraw()
+    root.title(title)
+    root.columnconfigure(0, weight=1)
+    root.rowconfigure(0, weight=1)
     
+    tree = ttk.Treeview(root, show='headings')
+    tree['columns'] = columns
+    for c in columns:
+        tree.column(c, width=width)
+        tree.heading(c, text=c)
+    for r in rows:
+        tree.insert('', 'end', text='a', values=r)
+    tree.grid(row=0, column=0, sticky='news')
+    
+    centerWindows(root, refWindows=root)
+    root.deiconify()
+    root.mainloop()    
 #Helper function to select Downsampling wizards
 def showCTFPreview(mdPath, parent=None, md=None):  
     path = os.path.dirname(mdPath)
@@ -2073,4 +2096,3 @@ def showCTFPreview(mdPath, parent=None, md=None):
                                     extra={'freqs':None, 'downsampling':1, 'previewLabel': 'Micrograph', \
                                            'computingMessage': 'Estimating PSD...', 'md':md}) # a list is returned
 
-    

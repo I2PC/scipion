@@ -19,15 +19,16 @@ public class ImageGeneric {
     public final static int Short = 4;              // Signed integer (2-byte)
     public final static int UInt = 5;               // Unsigned integer (4-byte)
     public final static int Int = 6;                // Signed integer (4-byte)
-    public final static int Long = 7;               // Signed integer (4 or 8 byte; depending on system)
-    public final static int Float = 8;              // Floating point (4-byte)
-    public final static int Double = 9;             // Double precision floating point (8-byte)
-    public final static int ComplexShort = 10;      // Complex two-byte integer (4-byte)
-    public final static int ComplexInt = 11;        // Complex integer (8-byte)
-    public final static int ComplexFloat = 12;      // Complex floating point (8-byte)
-    public final static int ComplexDouble = 13;     // Complex floating point (16-byte)
-    public final static int Bool = 14;              // Boolean (1-byte?)
-    public final static int LastEntry = 15;         // This must be the last entry
+    public final static int ULong = 7;               // Unsigned integer (4 or 8 byte; depending on system)
+    public final static int Long = 8;               // Signed integer (4 or 8 byte; depending on system)
+    public final static int Float = 9;              // Floating point (4-byte)
+    public final static int Double = 10;             // Double precision floating point (8-byte)
+    public final static int ComplexShort = 11;      // Complex two-byte integer (4-byte)
+    public final static int ComplexInt = 12;        // Complex integer (8-byte)
+    public final static int ComplexFloat = 13;      // Complex floating point (8-byte)
+    public final static int ComplexDouble = 14;     // Complex floating point (16-byte)
+    public final static int Bool = 15;              // Boolean (1-byte?)
+    public final static int LastEntry = 16;         // This must be the last entry
     
     //AxisView constants for volume reslice
     public final static int Z_NEG = 0;
@@ -138,7 +139,9 @@ public class ImageGeneric {
     }
 
     public void read(int width, int height, int slice, long image) throws Exception {
-        read(Filename.getFilename(filename), width, height, slice, image, true);
+        read(filename, width, height, slice, image, true);
+        // At this moment we don't know why
+//        read(Filename.getFilename(filename), width, height, slice, image, true);
     }
     
     public void read(String filename, boolean map) throws Exception {
@@ -233,6 +236,8 @@ public class ImageGeneric {
 
     public native double[] alignImage(ImageGeneric img) throws Exception;
     
+    public native void getRadialAvg(ImageGeneric radialimg) throws Exception;
+    
     public native void applyAlignment(ImageGeneric img, int index, double rot, double tilt, double psi) throws Exception;
 
     
@@ -289,7 +294,7 @@ public class ImageGeneric {
 		{
 		
 			int index = Integer.parseInt(prefix);
-			String file = Filename.getSuffix(imagepath);
+			String file = Filename.removePrefix(imagepath);
 			ImageGeneric ig = new ImageGeneric(file);
 			ig.readHeader(file);
 			if(index < 0 || index > ig.getNDim())

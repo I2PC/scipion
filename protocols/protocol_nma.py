@@ -10,7 +10,7 @@ from protlib_base import *
 from config_protocols import protDict
 from protlib_utils import runJob, which, runShowJ, runChimera, runVMD
 from protlib_filesystem import changeDir, createLink, getExt, moveFile, createDir, deleteFile
-from xmipp import MetaData, MDL_X, MDL_COUNT, MDL_NMA_MODEFILE, MDL_ORDER, MDL_ENABLED, MDL_NMA_COLLECTIVITY, MDL_NMA_SCORE, SingleImgSize
+from xmipp import MetaData, MDL_X, MDL_COUNT, MDL_NMA_MODEFILE, MDL_ORDER, MDL_ENABLED, MDL_NMA_COLLECTIVITY, MDL_NMA_SCORE, getImageSize
 
 class ProtNMA(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -214,6 +214,6 @@ def generateChimeraScript(log,WorkingDir,MaskMode,Threshold,InputStructure,Pseud
     fhCmd.write("open "+InputStructure+"\n")
     if MaskMode!="Threshold":
         Threshold=0.01
-    [xdim,ydim,zdim,ndim]=SingleImgSize(InputStructure)
+    [xdim,ydim,zdim,ndim]=getImageSize(InputStructure)
     fhCmd.write("volume #1 level "+str(Threshold)+" transparency 0.5 voxelSize "+str(Sampling)+" originIndex "+str(xdim/2)+"\n")
     fhCmd.close()

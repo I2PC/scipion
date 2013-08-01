@@ -38,6 +38,43 @@ const char *MDSql::zLeftover;
 int MDSql::rc;
 Mutex sqlMutex; //Mutex to syncronize db access
 
+int getBlocksInMetaDataFileDB(const FileName &inFile, StringVector& blockList)
+{
+
+    char **results;
+    int rows;
+    int columns;
+    char *Labels;
+    int rc;
+
+    sqlite3 *db1;
+    String sql = (String)"SELECT name FROM sqlite_master\
+                 WHERE type='table'\
+                 ORDER BY name;";
+    if (rc=sqlite3_open(inFile.c_str(), &db1))
+        REPORT_ERROR(ERR_MD_SQL,formatString("Error opening database code: %d message: %s",rc,sqlite3_errmsg(db1)));
+    if (rc=sqlite3_get_table (db1, sql.c_str(), &results, &rows, &columns, NULL) != SQLITE_OK)
+        REPORT_ERROR(ERR_MD_SQL,formatString("Error accessing table code: %d message: %s. SQL command %s",rc,sqlite3_errmsg(db1),sql.c_str()));
+    //For tables, the type field will always be 'table' and the name field will
+    //be the name of the table. So to get a list of all tables in the database,
+
+    if (rows < 1)
+    {
+        std::cerr << "Empty Metadata" <<std::endl;
+        return 0;
+    }
+    else
+    {
+        for (int i = 1; i <= rows; i++)
+        {
+            blockList.push_back((String)results[i]);
+        }
+    }
+    sqlite3_free_table (results);
+    sqlite3_close(db1);
+
+    return rows;
+}
 
 int MDSql::getUniqueId()
 {
@@ -637,7 +674,7 @@ void MDSql::setOperate(MetaData *mdPtrOut, MDLabel column, SetOperation operatio
         << " FROM " << tableName(tableId) << ");";
         break;
     default:
-    	REPORT_ERROR(ERR_ARG_INCORRECT,"Cannot use this operation for a set operation");
+        REPORT_ERROR(ERR_ARG_INCORRECT,"Cannot use this operation for a set operation");
     }
     //std::cerr << "ss" << ss.str() <<std::endl;
     if (execStmt)
@@ -718,7 +755,7 @@ void MDSql::setOperate(const MetaData *mdInLeft,
         columnLeft = columnRight = MDL_UNDEFINED;
         break;
     default:
-    	REPORT_ERROR(ERR_ARG_INCORRECT,"Cannot use this operation for a set operation");
+        REPORT_ERROR(ERR_ARG_INCORRECT,"Cannot use this operation for a set operation");
     }
     if(operation==NATURAL_JOIN)
     {
@@ -1113,7 +1150,7 @@ int MDSql::bindValue(sqlite3_stmt *stmt, const int position, const MDObject &val
     case LABEL_VECTOR_SIZET:
         return sqlite3_bind_text(stmt, position, valueIn.toString(false, true).c_str(), -1, SQLITE_TRANSIENT);
     default:
-    	REPORT_ERROR(ERR_ARG_INCORRECT,"Do not know how to handle this type");
+        REPORT_ERROR(ERR_ARG_INCORRECT,"Do not know how to handle this type");
     }
 }
 
@@ -1145,7 +1182,7 @@ void MDSql::extractValue(sqlite3_stmt *stmt, const int position, MDObject &value
         valueOut.fromStream(ss);
         break;
     default:
-    	REPORT_ERROR(ERR_ARG_INCORRECT,"Do not know how to extract a value from this type");
+        REPORT_ERROR(ERR_ARG_INCORRECT,"Do not know how to extract a value from this type");
     }
 }
 

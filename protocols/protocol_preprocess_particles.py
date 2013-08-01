@@ -133,7 +133,7 @@ def createAcquisition(log,InputFile,WorkingDir,DoResize,NewSize):
             md.write(getProtocolFilename('acquisition', WorkingDir=WorkingDir))
 
 def copyImages(log,InputFile,OutputStack):
-    runJob(log,"xmipp_image_convert","-i %(InputFile)s -o %(OutputStack)s --track_origin --selfile_stack" % locals())
+    runJob(log,"xmipp_image_convert","-i %(InputFile)s -o %(OutputStack)s --track_origin --save_metadata_stack --keep_input_columns" % locals())
     fnOutputMetadata=OutputStack.replace(".stk",".xmd")
     mDstack = MetaData(fnOutputMetadata)
     mDstack.removeLabel(MDL_ZSCORE)

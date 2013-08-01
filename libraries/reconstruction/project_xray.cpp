@@ -35,9 +35,11 @@ void ProgXrayProject::defineParams()
     addParamsLine("                              : If empty, same value as X-Y plane sampling from PSF.");
     addParamsLine("alias -s;");
     addParamsLine("[--psf <psf_param_file=\"\">] : XRay-Microscope parameters file. If not set, then default parameters are chosen.");
-    addParamsLine("  [--threshold <thr=0.0>]     : Normalized threshold relative to maximum of PSF to reduce the volume into slabs");
+    addParamsLine("[--focal_shift+ <delta_z=0.0>] : Shift along optical axis between the center of the phantom and the center of the psf in microns");
+    addParamsLine("alias -f;");
+    addParamsLine("[--threshold+ <thr=0.0>]     : Normalized threshold relative to maximum of PSF to reduce the volume into slabs");
     addParamsLine("[--std_proj]                  : Save also standard projections, adding _std suffix to filenames");
-    addParamsLine("[--thr <threads=1>]           : Number of concurrent threads.");
+    addParamsLine("[--thr <threads=1>]           : Number of concurrent threads");
     //Examples
     addExampleLine("Generating a set of projections using a projection parameter file and two threads:", false);
     addExampleLine("xmipp_xray_project -i volume.vol --oroot images --params projParams.xmd -s 10 --psf psf_560.xmd --thr 2");
@@ -70,6 +72,7 @@ void ProgXrayProject::readParams()
     save_std_projs = checkParam("--std_proj");
 
     psf.read(fn_psf_xr);
+    psf.setFocalShift(getDoubleParam("--focal_shift")*1e-6);
     psf.verbose = verbose;
     psf.nThr = nThr;
 }

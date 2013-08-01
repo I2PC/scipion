@@ -131,6 +131,8 @@ std::string datatype2Str(DataType datatype)
         return "uint32";
     case DT_Int:
         return "int32";
+    case DT_Long:
+        return "int64";
     case DT_Float:
         return "float";
     case DT_Double:

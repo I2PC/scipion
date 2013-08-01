@@ -248,7 +248,7 @@ public:
         * size_t num = proj.getStackNumber();
         * @endcode
         */
-    size_t getStackNumber() const;
+    size_t getPrefixNumber(size_t pos = 0) const;
 
     FileName getDir() const;
 
@@ -315,7 +315,7 @@ public:
      * @endcode
      */
 
-    FileName removeSliceNumber() const;
+    FileName removePrefixNumber() const;
 
     /** Remove blockName from filename
      * @code
@@ -334,7 +334,7 @@ public:
     * filename=removeBlockNameOrSliceNumber();//filename="md1.doc"
     * @endcode
     */
-    FileName removeBlockNameOrSliceNumber() const;
+    FileName removeAllPrefixes() const;
 
     /** Random name
      *

@@ -25,6 +25,7 @@
 
 #include "idr_xray_tomo.h"
 #include "data/xmipp_image_convert.h"
+#include "data/filters.h"
 #include "reconstruct_fourier.h"
 #include "reconstruct_art.h"
 
@@ -156,7 +157,7 @@ void ProgIDRXrayTomo::preRun()
     projMD.getValue(MDL_IMAGE, fnProjs, projMD.firstObject());
     // We generate the MD of temporary projections to be used for further reconstructions
     interProjMD = projMD;
-    interProjMD.replace(MDL_IMAGE, fnProjs.removeSliceNumber(), fnInterProjs);
+    interProjMD.replace(MDL_IMAGE, fnProjs.removePrefixNumber(), fnInterProjs);
     interProjMD.write(fnInterProjsMD);
 
     String arguments = formatString("-i %s -o %s -s",
@@ -211,6 +212,8 @@ void ProgIDRXrayTomo::run()
         // Fix the reconstructed volume to physical density values
         double factor = 1/sampling;
         MULTIDIM_ARRAY(phantom.iniVol) *= factor;
+        // remove negative values
+        forcePositive(MULTIDIM_ARRAY(phantom.iniVol));
 
         initProgress(projMD.size());
         size_t imgNo = 1; // Image number
@@ -231,15 +234,15 @@ void ProgIDRXrayTomo::run()
              * To correct for self-attenuation (without considering 3DPSF)
              * I = -ln(Iab)
              */
-            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(MULTIDIM_ARRAY(proj))
-            dAi(MULTIDIM_ARRAY(proj),n) = -log(1. - dAi(MULTIDIM_ARRAY(proj),n));
+//            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(MULTIDIM_ARRAY(proj))
+//            dAi(MULTIDIM_ARRAY(proj),n) = -log(1. - dAi(MULTIDIM_ARRAY(proj),n));
 
 
             fixedProj.read(fnProj);
             mFixedProj.alias(MULTIDIM_ARRAY(fixedProj));
 
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mFixedProj)
-            dAi(mFixedProj, n) = (dAi(mFixedProj, n) - dAi(MULTIDIM_ARRAY(proj),n))*lambda +  dAi(MULTIDIM_ARRAY(stdProj),n);
+            dAi(mFixedProj, n) = (log(1. - dAi(MULTIDIM_ARRAY(proj),n)) - log(dAi(mFixedProj, n)))*lambda +  dAi(MULTIDIM_ARRAY(stdProj),n);
 
             prevFProj.read(fnInterProjs, DATA, imgNo); // To calculate meanError
             mPrevFProj.alias(MULTIDIM_ARRAY(prevFProj));
@@ -249,9 +252,8 @@ void ProgIDRXrayTomo::run()
 
             // debug stuff //
             if (verbose > 5)
-        {
-            proj.write(fnRootInter + "_debug_proj.stk", imgNo , true, WRITE_REPLACE)
-                ;
+            {
+                proj.write(fnRootInter + "_debug_proj.stk", imgNo , true, WRITE_REPLACE);
                 stdProj.write(fnRootInter + "_debug_std_proj.stk", imgNo , true, WRITE_REPLACE);
 
                 FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mFixedProj)
@@ -297,7 +299,7 @@ void ProgIDRXrayTomo::reconstruct(const FileName &fnProjsMD, const FileName &fnV
         FileName fnProjs;
         MD.getValue(MDL_IMAGE, fnProjs, MD.firstObject());
 
-        reconsTomo3D(fnInterAngles, fnProjs.removeSliceNumber(), fnVol);
+        reconsTomo3D(fnInterAngles, fnProjs.removePrefixNumber(), fnVol);
         phantom.read(fnVol);
         MULTIDIM_ARRAY(phantom.iniVol).resetOrigin();
         MULTIDIM_ARRAY(phantom.iniVol).reslice(VIEW_Y_NEG);
@@ -333,13 +335,13 @@ int reconsTomo3D(const MetaData& MD, const FileName& fnOut, const String& params
         REPORT_ERROR(ERR_IMG_NOREAD, "reconsTromo3D: Image format cannot be read by tomo3D.");
     }
 
-    return reconsTomo3D(fnAngles, fnProjs.removeSliceNumber(), fnOut, params);
+    return reconsTomo3D(fnAngles, fnProjs.removePrefixNumber(), fnOut, params);
 }
 
 int reconsTomo3D(const FileName& fnAngles, const FileName& fnProjs,
                  const FileName& fnOut, const String& params)
 {
-    String exec("tomo3d -n -f -v 0 -a "+fnAngles+" -i "+fnProjs.removeBlockNameOrSliceNumber()+" -o "+fnOut+" "+params);
+    String exec("tomo3d -n -f -v 0 -a "+fnAngles+" -i "+fnProjs.removeAllPrefixes()+" -o "+fnOut+" "+params);
     return system(exec.c_str());
 }
 

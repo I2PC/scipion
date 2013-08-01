@@ -83,9 +83,9 @@ xmipp_isValidLabel(PyObject *obj, PyObject *args, PyObject *kwargs);
 PyObject *
 xmipp_createEmptyFile(PyObject *obj, PyObject *args, PyObject *kwargs);
 
-/* SingleImgSize */
+/* getImageSize */
 PyObject *
-xmipp_SingleImgSize(PyObject *obj, PyObject *args, PyObject *kwargs);
+xmipp_getImageSize(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 /* ImgSize (from metadata filename)*/
 PyObject *

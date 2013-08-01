@@ -7,33 +7,34 @@ import java.util.logging.Level;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.viewer.particlepicker.ColorHelper;
+import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.IJCommand;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
-import xmipp.viewer.particlepicker.training.model.FamilyState;
+import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.windows.GalleryJFrame;
 
 public class ExtractParticlePicker extends ParticlePicker
 {
-
-	
 
 	private ArrayList<ExtractMicrograph> micrographs;
 	private ExtractMicrograph micrograph;
 	private ArrayList<ColorHelper> colorby;
 
 
-	public ExtractParticlePicker(String selfile, FamilyState mode)
+	public ExtractParticlePicker(String selfile, int size, Mode mode)
 	{
 		super(selfile, mode);
+		setSize(size);
 		loadParticles();
 		if (filters.isEmpty())
 			filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
 	}
 	
-	public ExtractParticlePicker(String block, String selfile, FamilyState mode)
+	public ExtractParticlePicker(String block, String selfile, int size, Mode mode)
 	{
-		super(block, selfile, ".", null, mode);
+		super(block, selfile, ".", mode);
+		setSize(size);
 		loadParticles();
 		if (filters.isEmpty())
 			filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
@@ -208,9 +209,9 @@ public class ExtractParticlePicker extends ParticlePicker
 		setMicrograph(micrographs.get(0));
 	}
 
-	public static ExtractPickerJFrame open(String block, String filename, GalleryJFrame galleryfr)
+	public static ExtractPickerJFrame open(String block, String filename, int size, GalleryJFrame galleryfr)
 	{
-		ExtractParticlePicker picker = new ExtractParticlePicker(block, filename, FamilyState.Extract);
+		ExtractParticlePicker picker = new ExtractParticlePicker(block, filename, size, Mode.Extract);
 		return new ExtractPickerJFrame(picker, galleryfr);
 	}
 
@@ -222,13 +223,7 @@ public class ExtractParticlePicker extends ParticlePicker
 		return particles;
 	}
 
-	public void resetAllMicrographs()
-	{
-		for (ExtractMicrograph m : micrographs)
-			m.reset();
-		setChanged(true);
-
-	}
+	
 
 	public ColorHelper[] getColumns()
 	{
@@ -242,6 +237,12 @@ public class ExtractParticlePicker extends ParticlePicker
 			if (!getMicrograph().fits(p.getX(), p.getY(), size))
 				return false;
 		return true;
+	}
+
+	@Override
+	public String getImportMicrographName(String path, String filename, Format f)
+	{
+		return null;
 	}
 
 }

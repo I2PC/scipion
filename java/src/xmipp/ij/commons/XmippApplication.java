@@ -24,7 +24,6 @@ public class XmippApplication
 		//System.out.printf("instances:%s\n", instances);
 		if (getInstances() == 0)
 		{
-			//System.out.println("exit");
 			TasksManager.getInstance().stop();
 			System.exit(0);
 		}

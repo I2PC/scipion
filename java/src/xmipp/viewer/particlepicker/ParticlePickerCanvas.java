@@ -23,20 +23,31 @@ import xmipp.jni.Particle;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
-import xmipp.viewer.particlepicker.training.model.TrainingParticle;
+import xmipp.viewer.particlepicker.training.model.ManualParticle;
 
 
 public abstract class ParticlePickerCanvas extends XmippImageCanvas
 {
-	public final static BasicStroke dashedst = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
-	public final static BasicStroke continuousst = new BasicStroke();
+	public final static BasicStroke dashedst = new BasicStroke(2.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
+	public final static BasicStroke continuousst = new BasicStroke(2.0f);
 	public final static BasicStroke activedst = new BasicStroke(3.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
 	public final static BasicStroke activecst = new BasicStroke(3.0f);
 	
+	protected ImageWindow iw;
+	
 	public void display()
 	{
-		super.display();
+		if (iw != null && iw.isVisible())
+		{
+			iw.setImage(getImage());
+			iw.updateImage(getImage());
+		}
+		else
+			this.iw = new ImageWindow(getImage(), this);// if you dont provide
+														// iw, I init mine
+		// iw.maximize();
 		iw.setTitle(getMicrograph().getName());
+		iw.pack();
 	}
 	
 	public abstract void setMicrograph(Micrograph m);
@@ -133,7 +144,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	}
 
 
-	public void display(float xlocation, float ylocation)
+	public void display(double xlocation, double ylocation)
 	{
 		boolean relocate = (iw == null);
 
@@ -222,12 +233,12 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	public abstract ParticlePickerJFrame getFrame();
 
 
-	protected void drawShape(Graphics2D g2, TrainingParticle p, boolean all, Stroke stroke)
+	protected void drawShape(Graphics2D g2, ManualParticle p, boolean all, Stroke stroke)
 	{
-		drawShape(g2, p.getX(), p.getY(), p.getFamily().getSize(), all, stroke);
+		drawShape(g2, p.getX(), p.getY(), p.getParticlePicker().getSize(), all, stroke);
 	}
 	
-	protected void drawShape(Graphics2D g2, TrainingParticle p, boolean all)
+	protected void drawShape(Graphics2D g2, ManualParticle p, boolean all)
 	{
 		drawShape(g2, p, all, continuousst);
 	}

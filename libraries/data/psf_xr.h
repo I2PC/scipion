@@ -248,6 +248,9 @@ public:
     /// Show
     friend std::ostream & operator <<(std::ostream &out, const XRayPSF &psf);
 
+    /// Add focal shift to previously read psf zshift
+    void setFocalShift(double zShift);
+
     /// Produce Side information
     void calculateParams(double _dxo, double _dzo = -1, double threshold = 0.);
 

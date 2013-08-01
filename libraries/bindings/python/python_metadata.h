@@ -89,9 +89,13 @@ xmipp_MDValueGT(PyObject *obj, PyObject *args, PyObject *kwargs);
  PyObject *
 xmipp_MDValueGE(PyObject *obj, PyObject *args, PyObject *kwargs);
 
-/* MDValueRange */
- PyObject *
+ /* MDValueRange */
+  PyObject *
 xmipp_MDValueRange(PyObject *obj, PyObject *args, PyObject *kwargs);
+
+  /* addTmpLabelAlias */
+   PyObject *
+xmipp_addTmpLabelAlias(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 /* MDQuery methods */
 extern PyMethodDef MDQuery_methods[];
@@ -117,6 +121,10 @@ void MetaData_dealloc(MetaDataObject* self);
 /* Constructor */
  PyObject *
 MetaData_aggregate(PyObject *obj, PyObject *args, PyObject *kwargs);
+
+ PyObject *
+MetaData_aggregateMdGroupBy(PyObject *obj, PyObject *args, PyObject *kwargs);
+
  PyObject *
 MetaData_aggregateSingle(PyObject *obj, PyObject *args, PyObject *kwargs);
  PyObject *

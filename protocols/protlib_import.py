@@ -27,27 +27,47 @@
 '''
 
 from xmipp import *
+from os.path import  exists
 
-CTF_BASIC_LABELS = [MDL_CTF_SAMPLING_RATE, 
-                    MDL_CTF_VOLTAGE, 
-                    MDL_CTF_DEFOCUSU, 
-                    MDL_CTF_DEFOCUSV, 
-                    MDL_CTF_DEFOCUS_ANGLE, 
-                    MDL_CTF_CS,
-                    MDL_CTF_CA,
-                    MDL_CTF_Q0, 
-                    MDL_CTF_K]
+CTF_BASIC_LABELS = [
+                     MDL_CTF_CA
+                    ,MDL_CTF_CS
+                    ,MDL_CTF_DEFOCUS_ANGLE 
+                    ,MDL_CTF_DEFOCUSU 
+                    ,MDL_CTF_DEFOCUSV 
+                    ,MDL_CTF_K
+                    ,MDL_CTF_Q0 
+                    ,MDL_CTF_SAMPLING_RATE
+                    ,MDL_CTF_VOLTAGE
+                    ]
 
 # Map from Xmipp labels to Relion labels names
 XMIPP_RELION_LABELS = {
-                       MDL_IMAGE: 'rlnImageName',
-                       MDL_MICROGRAPH: 'rlnMicrographName',
-                       MDL_CTF_DEFOCUSU: 'rlnDefocusU', 
-                       MDL_CTF_DEFOCUSV: 'rlnDefocusV', 
-                       MDL_CTF_DEFOCUS_ANGLE: 'rlnDefocusAngle',  
-                       MDL_CTF_VOLTAGE: 'rlnVoltage',
-                       MDL_CTF_CS: 'rlnSphericalAberration',
-                       MDL_CTF_Q0: 'rlnAmplitudeContrast',                                         
+                        MDL_ANGLE_ROT:         'rlnAngleRot'
+                       ,MDL_ANGLE_TILT:        'rlnAngleTilt'
+                       ,MDL_AVG_CHANGES_ORIENTATIONS:'rlnChangesOptimalOrientations'
+                       ,MDL_AVG_CHANGES_OFFSETS:     'rlnChangesOptimalOffsets'
+                       ,MDL_AVG_CHANGES_CLASSES:     'rlnChangesOptimalClasses'
+                       ,MDL_ANGLE_PSI:         'rlnAnglePsi'
+                       ,MDL_CTF_DEFOCUSU:      'rlnDefocusU'
+                       ,MDL_CTF_DEFOCUSV:      'rlnDefocusV'
+                       ,MDL_CTF_DEFOCUS_ANGLE: 'rlnDefocusAngle'
+                       ,MDL_CTF_VOLTAGE:       'rlnVoltage'
+                       ,MDL_CTF_CS:            'rlnSphericalAberration'
+                       ,MDL_CTF_Q0:            'rlnAmplitudeContrast'
+                       ,MDL_IMAGE:             'rlnImageName'
+                       ,MDL_LL:                'rlnLogLikeliContribution'
+                       ,MDL_MICROGRAPH:        'rlnMicrographName'
+                       ,MDL_AVGPMAX:           'rlnAveragePmax'
+                       ,MDL_REF3D:             'rlnClassNumber'
+                       ,MDL_RESOLUTION_FREQREAL:'rlnAngstromResolution'
+                       ,MDL_RESOLUTION_FRC:     'rlnGoldStandardFsc'
+                       ,MDL_RESOLUTION_FREQ:    'rlnResolution'
+                       ,MDL_RESOLUTION_SSNR:    'rlnSsnrMap'
+                       ,MDL_SCALE:              'rlnMagnificationCorrection'
+                       ,MDL_SHIFT_X:            'rlnOriginX'
+                       ,MDL_SHIFT_Y:            'rlnOriginY'
+                       ,MDL_WEIGHT:             'rlnNrOfSignificantSamples'
                        }
 
 def convertCtfparam(oldCtf):
@@ -186,10 +206,47 @@ def exportMdToRelion(md, outputRelion):
     for k, v in XMIPP_RELION_LABELS.iteritems():
         d[label2Str(k)] = v
         
-    print "dict: ", d
+    #print "dict: ", d
         
     renameMdLabels(tmpFile, outputRelion, d)
     from protlib_filesystem import deleteFile
     deleteFile(None, tmpFile)
+    
+def addRelionLabels():
+    '''Add relion labels as aliases
+    '''
+    from xmipp import AddTmpLabelAlias
+    for k, v in XMIPP_RELION_LABELS.iteritems():
+        AddTmpLabelAlias(k,v)
+        
+def exportReliontoMetadataFile(inputRelion,outputXmipp):
+    """ This function will receive a relion file and will
+    convert to the one xmipp metadata file.    
+    """
+    if str2Label('rlnImageName')== -1:
+       addRelionLabels()
+    #add xmipp header
+    line1="""# XMIPP_STAR_1 * 
+# 
+"""
+    tmpFile = inputRelion + '.tmp'
+    fOut = open(tmpFile,'w')
+    fOut.write(line1)
+    #copy and paste relion file
+    fIn = open(inputRelion,'r')
+    fOut.write(fIn.read())
+    fOut.flush()
+    fOut.close()
+    #addRelionLabels MUST BE CALLED FROM CODE 
+    blocklist = getBlocksInMetaDataFile(tmpFile)
+    if exists (outputXmipp):
+        os.remove(outputXmipp)
+    for block in blocklist:
+        md = MetaData(block + '@'+tmpFile)
+        if len(md.getActiveLabels())!=0:
+            md.write(block +'@'+ outputXmipp,MD_APPEND)
+        
+    from protlib_filesystem import deleteFile
+    deleteFile(None, tmpFile,False)
     
     

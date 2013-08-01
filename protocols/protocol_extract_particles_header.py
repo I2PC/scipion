@@ -35,10 +35,7 @@ DownsampleFactor = 2
 # {run}(particle_pick,particle_pick_supervised, particle_pick_auto) Particle picking run
 PickingRun = ''
 
-# {wizard}(wizardChooseFamilyToExtract) Family 
-Family = ''
-
-# Particle box size
+# {wizard}(wizardChooseSizeToExtract) Particle box size
 """ In pixels. The box size is the size of the boxed particles,
 actual particles may be smaller than this. """
 ParticleSize = 0

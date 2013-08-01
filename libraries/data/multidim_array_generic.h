@@ -68,8 +68,14 @@
         case DT_UChar:\
             {OP(unsigned char)};\
             break;\
-        default:\
-			REPORT_ERROR(ERR_ARG_INCORRECT,"Do not know how to handle this type at this point");\
+        case DT_Long:\
+            {OP(long)};\
+            break;\
+        case DT_ULong:\
+            {OP(unsigned long)};\
+            break;\
+            default:\
+   REPORT_ERROR(ERR_ARG_INCORRECT,"Do not know how to handle this type at this point");\
         }
 
 /// @addtogroup MultidimensionalArrays

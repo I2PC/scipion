@@ -170,7 +170,20 @@ void ImageGeneric::setDatatype(DataType imgType)
             data = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), datatype);
         }
         break;
-    case DT_Unknown:
+    case DT_ULong:
+        {
+            Image<unsigned long> *imT = new Image<unsigned long>;
+            image = imT;
+            data = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), datatype);
+        }
+        break;
+    case DT_Long:
+        {
+            Image<long> *imT = new Image<long>;
+            image = imT;
+            data = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), datatype);
+        }
+        break; case DT_Unknown:
         REPORT_ERROR(ERR_IMG_UNKNOWN,"Datatype of the image file is unknown.");
         break;
     default:

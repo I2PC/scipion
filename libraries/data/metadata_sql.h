@@ -61,6 +61,10 @@ enum JoinType
 
 #include "metadata.h"
 
+/* return number of tables from a metadata file saved as sqlite */
+int getBlocksInMetaDataFileDB(const FileName &inFile, StringVector& blockList);
+
+
 /** This class will manage SQL database interactions.
  * This class is designed to used inside a MetaData.
  */

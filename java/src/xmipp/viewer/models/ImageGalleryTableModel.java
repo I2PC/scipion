@@ -101,6 +101,15 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		resizeCache();
 	}
 	
+	public int getImageWidth()
+	{
+		return image_width;
+	}
+	
+	public int getImageHeight()
+	{
+		return image_height;
+	}
 	
 	// Load initial dimensions
 	protected abstract ImageDimension loadDimension() throws Exception;

@@ -1,25 +1,18 @@
 package xmipp.viewer.particlepicker.tiltpair.gui;
 
-import ij.IJ;
-import ij.ImagePlus;
-import ij.gui.ImageWindow;
-
 import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import xmipp.utils.XmippWindowUtil;
+import xmipp.jni.Particle;
+import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
+import xmipp.utils.XmippMessageDialog;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
@@ -27,8 +20,7 @@ import xmipp.viewer.particlepicker.tiltpair.model.TiltPairPicker;
 import xmipp.viewer.particlepicker.tiltpair.model.TiltedParticle;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedMicrograph;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedParticle;
-import xmipp.viewer.particlepicker.training.model.TrainingParticle;
-import xmipp.jni.Particle;
+import xmipp.viewer.particlepicker.training.model.ManualParticle;
 
 public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 {
@@ -37,7 +29,6 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 	private UntiltedParticle active;
 	private TiltPairPicker pppicker;
 	private UntiltedMicrograph um;
-	private boolean reload = false;
 
 	@Override
 	public ParticlePickerJFrame getFrame()
@@ -89,41 +80,43 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 	public void mousePressed(MouseEvent e)
 	{
 		super.mousePressed(e);
-
-		int x = super.offScreenX(e.getX());
-		int y = super.offScreenY(e.getY());
-
-		if (isDragImage(e))
-			frame.getTiltedCanvas().mousePressed(x, y);
-		else if (frame.isPickingAvailable(e))
+		if (frame.isPickingAvailable(e))
 		{
-			if (frame.isEraserMode())
+			int x = super.offScreenX(e.getX());
+			int y = super.offScreenY(e.getY());
+
+			if (isDragImage(e))
+				frame.getTiltedCanvas().mousePressed(x, y);
+			else
 			{
-				um.removeParticles(x, y);
-				active = getLastParticle();
-				refresh();
+				if (frame.isEraserMode())
+				{
+					um.removeParticles(x, y);
+					active = getLastParticle();
+					refresh();
 
-				return;
-			}
+					return;
+				}
 
-			if (active != null && !active.isAdded() && active.getTiltedParticle() != null)
-				um.addParticleToAligner(active, true);
-			UntiltedParticle p = um.getParticle(x, y, (int) (frame.getParticleSize()));
+				if (active != null && !active.isAdded() && active.getTiltedParticle() != null)
+					um.addParticleToAligner(active, true);
+				UntiltedParticle p = um.getParticle(x, y, (int) (frame.getParticleSize()));
 
-			if (p != null)
-			{
-				if (SwingUtilities.isLeftMouseButton(e) && e.isShiftDown())
-					removeParticle(p);
+				if (p != null)
+				{
+					if (SwingUtilities.isLeftMouseButton(e) && e.isShiftDown())
+						removeParticle(p);
+					else if (SwingUtilities.isLeftMouseButton(e))
+						refreshActive(p);
+				}
 				else if (SwingUtilities.isLeftMouseButton(e))
-					refreshActive(p);
-			}
-			else if (SwingUtilities.isLeftMouseButton(e))
-			{
-				if (um.fits(x, y, frame.getParticleSize()))
-					addParticle(x, y);
-				else
-					JOptionPane.showMessageDialog(this, XmippMessage.getOutOfBoundsMsg(String
-							.format("Particle centered at %s, %s with size %s", x, y, frame.getFamily().getSize())));
+				{
+					if (um.fits(x, y, frame.getParticleSize()))
+						addParticle(x, y);
+					else
+						XmippMessageDialog.showInfo(frame, XmippMessage.getOutOfBoundsMsg(String
+								.format("Particle centered at %s, %s with size %s", x, y, frame.getParticlePicker().getSize())));
+				}
 			}
 		}
 	}
@@ -140,15 +133,16 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 	{
 		super.mouseDragged(e);
 
-		int x = super.offScreenX(e.getX());
-		int y = super.offScreenY(e.getY());
-		if (isDragImage(e))
-		{
-			frame.getTiltedCanvas().mouseDragged(e.getX(), e.getY());
-			return;
-		}
 		if (frame.isPickingAvailable(e))
 		{
+			int x = super.offScreenX(e.getX());
+			int y = super.offScreenY(e.getY());
+			if (isDragImage(e))
+			{
+				frame.getTiltedCanvas().mouseDragged(e.getX(), e.getY());
+				return;
+			}
+
 			if (frame.isEraserMode())
 			{
 				um.removeParticles(x, y);
@@ -165,19 +159,21 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 				moveActiveParticle(x, y);
 
 			}
+			frame.setChanged(true);
+			repaint();
 		}
-		frame.setChanged(true);
-		repaint();
 
 	}
 
 	public void mouseReleased(MouseEvent e)
 	{
-
 		super.mouseReleased(e);
-		int x = e.getX();
-		int y = e.getY();
-		manageActive(x, y);
+		if (frame.isPickingAvailable(e))
+		{
+			int x = super.offScreenX(e.getX());
+			int y = super.offScreenY(e.getY());
+			manageActive(x, y);
+		}
 
 	}
 
@@ -207,7 +203,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		g2.setColor(frame.getColor());
 		int index = 0;
 
-		for (TrainingParticle p : um.getParticles())
+		for (ManualParticle p : um.getParticles())
 		{
 			drawShape(g2, p, index == (um.getParticles().size() - 1));
 			index++;
@@ -234,15 +230,19 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 	{
 		try
 		{
+			if (active != null && active.getTiltedParticle() == null)
+			{
+				XmippMessageDialog.showInfo(frame, "Remember to pick tilted particle for each particle");
+				return;
+			}
 			Particle tp = um.getAlignerTiltedParticle(x, y);
-			if (um.getAddedCount() > UntiltedMicrograph.getAlignmentMin()
-					&& !um.getTiltedMicrograph().fits(tp.getX(), tp.getY(), pppicker.getFamily().getSize()))
-				throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg("Tilted Pair Coordinates"));
-			UntiltedParticle p = new UntiltedParticle(x, y, um, pppicker.getFamily());
+			if (um.getAddedCount() > UntiltedMicrograph.getAlignmentMin() && !um.getTiltedMicrograph().fits(tp.getX(), tp.getY(), pppicker.getSize()))
+				throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg("Tilted particle"));
+			UntiltedParticle p = new UntiltedParticle(x, y, um, pppicker);
 
 			um.addParticle(p);
 
-			if (um.getAddedCount() >= UntiltedMicrograph.getAlignmentMin())
+			if (tp != null)
 				um.setAlignerTiltedParticle(p);
 			refreshActive(p);
 			frame.updateMicrographsModel();
@@ -250,7 +250,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		}
 		catch (Exception e)
 		{
-			JOptionPane.showMessageDialog(this, e.getMessage());
+			XmippDialog.showInfo(frame, e.getMessage());
 		}
 
 	}
@@ -273,29 +273,30 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		frame.getTiltedCanvas().repaint();
 	}
 
-	
 	public void refreshActive(Particle up)
 	{
-		active = (UntiltedParticle) up;
-		if (active != null)
+
+		if (up != null)
 		{
+			active = (UntiltedParticle) up;
 			TiltedParticle tp = active.getTiltedParticle();
 			if (tp != null)
 			{
-				Rectangle srcrect = frame.getTiltedCanvas().getSrcRect();
-				int xrect = (int) ((tp.getX() - srcrect.getX()));
-				int yrect = (int) ((tp.getY() - srcrect.getY()));
+				int x = frame.getTiltedCanvas().getXOnImage(tp.getX());
+				int y = frame.getTiltedCanvas().getYOnImage(tp.getY());
 
-				if (tp != null && !um.fits(xrect, yrect, tp.getFamily().getSize()))
+				if (tp != null && !um.fits(x, y, pppicker.getSize()))
 					frame.getTiltedCanvas().moveTo(tp);
 			}
 		}
+		else
+			active = null;
 		repaint();
 		frame.getTiltedCanvas().repaint();
 	}
 
 	@Override
-	public TrainingParticle getActive()
+	public ManualParticle getActive()
 	{
 		return active;
 	}
@@ -304,22 +305,25 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 	{
 		if (!activemoved)
 			return;
+		boolean hadtilted = active.getTiltedParticle() != null;
 		if (um.fits(x, y, frame.getParticleSize()))
 		{
 			moveActiveParticle(x, y);
 			um.getTiltedMicrograph().removeParticle(active.getTiltedParticle());
 		}
-		if (active.isAdded())// added particle on matrix has been moved. Matrix changed and tilted particle has to be recalculated
+		if (active.isAdded())// added particle on matrix has been moved. Matrix
+								// changed and tilted particle has to be
+								// recalculated
 		{
 
 			active.setAdded(false);
-			um.initAligner();			
+			um.initAligner();
 		}
 		um.setAlignerTiltedParticle(active);
+		if(active.getTiltedParticle() == null && hadtilted)
+			XmippDialog.showInfo(frame, "Tilted particle will be dismissed");
 		frame.getTiltedCanvas().repaint();
 		setActiveMoved(false);
 	}
-
-
 
 }
