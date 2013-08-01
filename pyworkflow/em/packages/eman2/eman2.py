@@ -45,8 +45,8 @@ def loadEnvironment():
     os.environ['PYTHONPATH'] = os.pathsep.join(pathList) + os.pathsep + os.environ['PYTHONPATH']
     os.environ['EMAN_PYTHON'] = os.path.join(EMAN2DIR, 'Python/bin/python')
     # Undo the xmipp_python additions to LD_LIBRARY_PATH
-    print 'OLD_LD_LIBRARY_PATH', os.environ['OLD_LD_LIBRARY_PATH']
     if 'OLD_LD_LIBRARY_PATH' in os.environ:
+        print 'OLD_LD_LIBRARY_PATH', os.environ['OLD_LD_LIBRARY_PATH']
         os.environ['LD_LIBRARY_PATH'] = os.environ['OLD_LD_LIBRARY_PATH']
     #sys.path += pathList
     

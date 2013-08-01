@@ -156,7 +156,7 @@ class TestXmippSetOfCoordinates(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.outputPath = getOutputPath('test_data_xmipp')   
-        cls.posDir = getInputPath('Picking_XmippBPV1', 'extra') 
+        cls.posDir = getInputPath('Picking_XmippBPV1', 'extra/scipion_micrographs_coordinates.xmd') 
         cls.micMd = getInputPath('Micrographs_BPV1', 'micrographs.xmd')
         
     def setUp(self):
