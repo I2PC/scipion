@@ -7,11 +7,11 @@ import pyworkflow as pw
 from pyworkflow.tests import GTestResult
 
 
-def discoverTests(pathList=[]):
+def discoverTests(pathList, pattern):
     tests = unittest.TestSuite()
     for path in pathList:
         testPath = join('pyworkflow','tests', path)
-        tests.addTests(unittest.defaultTestLoader.discover(testPath, top_level_dir=pw.HOME))
+        tests.addTests(unittest.defaultTestLoader.discover(testPath, pattern=pattern, top_level_dir=pw.HOME))
     return tests
 
 def printTests(tests):
@@ -31,6 +31,7 @@ def runTests(tests):
 PATH = 'path'
 CASE = 'case'
 PRINT = 'print'
+PATTERN = 'pattern'
 
 CASE_DICT = {'short': 'classes em/data',
              'medium': 'classes em/data em/workflows'}
@@ -54,17 +55,14 @@ def parseArgs(args):
 
 
 if __name__ == '__main__':
-    arg = None
-    tests = []
-    doPrint = False
     
     if len(sys.argv) > 1:
         argsDict = parseArgs(sys.argv[1:])
     else:
         argsDict = {PATH: 'classes'}
+
+    pattern = argsDict.get(PATTERN, 'test*.py')    
       
-    print "argsDict: ", argsDict
-    
     # CASE and PATH are excusive
     if CASE in argsDict:
         cases = argsDict[CASE].split()
@@ -76,7 +74,7 @@ if __name__ == '__main__':
     
     pathList = path.split()
     
-    tests = discoverTests(pathList)
+    tests = discoverTests(pathList, pattern)
     
     if PRINT in argsDict:
         printTests(tests)
