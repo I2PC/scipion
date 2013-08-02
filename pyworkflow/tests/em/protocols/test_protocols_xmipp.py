@@ -280,7 +280,7 @@ class TestXmippRotSpectra(TestXmippBase):
 
         self.proj.launchProtocol(xmippProtRotSpectra, wait=True)        
         
-        self.assertIsNotNone(xmippProtRotSpectra.outputParticles, "There was a problem with Rotational Spectra")  
+        self.assertIsNotNone(xmippProtRotSpectra.outputClassification, "There was a problem with Rotational Spectra")  
 
     
 class TestXmippML3D(TestXmippBase):
