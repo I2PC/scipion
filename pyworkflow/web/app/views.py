@@ -182,8 +182,8 @@ def populateTree(tree, obj):
         item = TreeItem(text, tag)
         tree.childs.append(item)
         # If have tag 'protocol_base', fill dynamically with protocol sub-classes
+        protClassName = value.split('.')[-1]  # Take last part
         if sub.value.hasValue() and tag == 'protocol_base':
-            protClassName = value.split('.')[-1]  # Take last part
             prot = emProtocolsDict.get(protClassName, None)
             if prot is not None:
                 for k, v in emProtocolsDict.iteritems():
@@ -191,6 +191,7 @@ def populateTree(tree, obj):
                         protItem = TreeItem(k, 'protocol_class', protClassName)
                         item.childs.append(protItem)
         else:
+            item.protClass = protClassName
             populateTree(item, sub)                
 
 

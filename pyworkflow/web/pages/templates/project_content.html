@@ -22,7 +22,7 @@
 			<ul>
 				{% for prot in section.childs %} {% if prot.tag == 'protocol'%}
 				<li><span class="protocol"><a
-						href="javascript:popup('/form/?protocolClass={{prot.name}}')">{{prot.name}}</a></span></li>
+						href="javascript:popup('/form/?protocolClass={{prot.protClass}}')">{{prot.name}}</a></span></li>
 				{% elif prot.tag == 'protocol_base' %}
 				<li class="closed"><span class="protocol_base">{{prot.name}}</span>
 					<ul>
