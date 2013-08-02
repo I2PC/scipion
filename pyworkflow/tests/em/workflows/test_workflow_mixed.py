@@ -188,6 +188,7 @@ class TestMixedWorkflow_2(TestWorkflow):
                     'protML2D/ml2d_classes.xmd',
                     ],
                 'protIniModel': [
+                    'protML2D/ml2d_extra/iter002/iter_classes.stk', 
                     'protIniModel/initial_models/model_00_01.hdf',
                     'protIniModel/initial_models/model_00_01.hdf',
                     'protIniModel/initial_models/model_00_01.hdf',
