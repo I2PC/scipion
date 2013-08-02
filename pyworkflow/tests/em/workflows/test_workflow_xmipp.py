@@ -388,7 +388,7 @@ class TestXmippWorkflow(TestWorkflow):
         
         print "Run Rotational Spectra"
         xmippProtRotSpectra = XmippProtRotSpectra()
-        xmippProtRotSpectra.inputImages.set(protOnlyAlign.outputParticles)
+        xmippProtRotSpectra.inputImages.set(.)
         xmippProtRotSpectra.SomXdim.set(2)
         xmippProtRotSpectra.SomYdim.set(2)
 

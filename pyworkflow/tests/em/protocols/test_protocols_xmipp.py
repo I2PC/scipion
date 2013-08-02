@@ -275,6 +275,7 @@ class TestXmippRotSpectra(TestXmippBase):
 #         format for Rotational Spectra
 
         xmippProtRotSpectra = XmippProtRotSpectra()
+        
         xmippProtRotSpectra.inputImages.set(self.protImport.outputParticles)
 
         self.proj.launchProtocol(xmippProtRotSpectra, wait=True)        
@@ -293,7 +294,7 @@ class TestXmippML3D(TestXmippBase):
         
     def testML3D(self):
         print "Run ML3D"
-        protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2, runMode=1)
+        protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2, runMode=1, numberOfMpi=2, numberOfThreads=2)
         protML3D.inputImages.set(self.protImport.outputParticles)
         protML3D.ini3DrefVolumes.set(self.iniVol)
         protML3D.doCorrectGreyScale.set(True)
