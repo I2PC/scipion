@@ -123,6 +123,7 @@ class EmanSetOfCoordinates(SetOfCoordinates):
         
     def iterMicrographCoordinates(self, micrograph):
         """ Iterates over the set of coordinates belonging to that micrograph. """
+        self.loadIfEmpty()
         pathJsonPos = self.getMicrographCoordFile(micrograph.getId())
         if pathJsonPos is not None:
             if exists(pathJsonPos):
