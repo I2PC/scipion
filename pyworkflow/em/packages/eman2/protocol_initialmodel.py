@@ -79,6 +79,7 @@ class EmanProtInitModel(ProtInitialVolume):
         # ToDo: create an Eman conversor and change this lines.
         image = self.getXmippStackFilename()
         imgsFn = os.path.abspath(image)
+        
         #self._insertFunctionStep('genxmippstack')
         self._params = {'imgsFn': imgsFn,
                         'numberOfIterations': self.numberOfIterations.get(),
@@ -102,19 +103,21 @@ class EmanProtInitModel(ProtInitialVolume):
         self._enterWorkingDir()
         args = '--input %(imgsFn)s iter=%(numberOfIterations)d --tries=%(numberOfModels)d --sym=%(symmetry)s'
         if self.shrink > 1:
-            args += '--shrink=%(shrink)d'
+            args += ' --shrink=%(shrink)d'
         if self.numberOfThreads > 1:
-            args += '--parallel=thread%(threads)d'
+            args += ' --parallel=thread:%(threads)d'
         self._insertRunJobStep('e2initialmodel.py', args % self._params)
                 
     def createOutput(self):
-        models = '%(numberOfModels)d' % self._params
-        volumes = ['initial_models/model_00_%02d.hdf' % k for k in range(models)]
-        #for k in range(models):
-        #    lastIter = 'initial_models/model_00_%02d' % k + '.hdf'
-        setvolumes = EmanSetOfVolumes(self._getPath(lastIter))
-        self._defineOutputs(outputVolumes=volumes)
         self._leaveWorkingDir()
+        volumes = EmanSetOfVolumes(self._getPath('scipion_volumes.json'))
+#        volumes.setSamplingRate(samplingRate)
+        for k in range(self.numberOfModels.get()):
+            volFn = self._getPath('model_00_%02d.hdf' % k)
+            volumes.append(EmanVolume(volFn))
+
+        volumes.write()
+        self._defineOutputs(outputVolumes=volumes)
         
     def _summary(self):
         summary = []

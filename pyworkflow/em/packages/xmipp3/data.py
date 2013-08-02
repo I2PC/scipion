@@ -502,6 +502,7 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         
         xmippCoords = XmippSetOfCoordinates(filename)
         xmippCoords.setMicrographs(setOfCoords.getMicrographs())
+        xmippCoords.setBoxSize(setOfCoords.getBoxSize())
         
         extraPath = dirname(filename)
         posMd = xmipp.MetaData()
@@ -606,9 +607,9 @@ class XmippClassification2D(Classification2D):
         self.classesBlock = String(classesBlock)
         
     def __iter__(self):
-        fn = self.getFileName()
-        block = self.classesBlock.get()
-        md = xmipp.MetaData('%(block)s@%(fn)s' % locals())
+        fn = self.getClassesMdFileName()        
+        md = xmipp.MetaData(fn)
+        
         for objId in md:
             ref = md.getValue(xmipp.MDL_REF, objId)
             img = XmippImage(md.getValue(xmipp.MDL_IMAGE, objId))
@@ -620,4 +621,11 @@ class XmippClassification2D(Classification2D):
         """
         return "%s@%s" % (self.classesBlock.get(),
                           self.getFileName())
+
+    def getFiles(self):
+        filePaths = set()
+        filePaths.append(self.getFileName())
+        for class2d in self:
+            filePaths.append(class2d.getClassRepresentative())
+        return filePaths
   

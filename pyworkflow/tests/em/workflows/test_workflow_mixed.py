@@ -58,7 +58,8 @@ class TestMixedWorkflow_1(TestWorkflow):
         # Perform a downsampling on the micrographs
 
         print "Downsampling..."
-        protDownsampling = XmippProtPreprocessMicrographs(doDownsample=True, downFactor=3, doCrop=False)
+        protDownsampling = XmippProtPreprocessMicrographs(doDownsample=True, downFactor=3, doCrop=False,
+                                                          numberOfMpi=1, numberOfThreads=3)
         protDownsampling.inputMicrographs.set(protImport.outputMicrographs)
         self.proj.launchProtocol(protDownsampling, wait=True)
           
@@ -68,7 +69,7 @@ class TestMixedWorkflow_1(TestWorkflow):
 
         # Now estimate CTF on the downsampled micrographs 
         print "Performing CTFfind..."   
-        protCTF = ProtCTFFind(runMode=1)         
+        protCTF = ProtCTFFind(runMode=1, numberOfMpi=1, numberOfThreads=3)         
         protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)        
         self.proj.launchProtocol(protCTF, wait=True)
         
@@ -133,9 +134,10 @@ class TestMixedWorkflow_2(TestWorkflow):
                     'protCTF/logs/run.log', 
                     'protCTF/logs/run.db'],
               'protExtract':[
-                    'protPP/info/BPV_1386_info.json'
-                    'protPP/info/BPV_1387_info.json'
-                    'protPP/info/BPV_1388_info.json'
+                    'protPP/info/BPV_1386_info.json',
+                    'protPP/info/BPV_1387_info.json',
+                    'protPP/info/BPV_1388_info.json',
+                    'protExtract/extra/scipion_micrographs_coordinates.xmd',
                     'protExtract/images.xmd', 
                     'protExtract/extra/BPV_1386.pos', 
                     'protExtract/extra/BPV_1387.pos', 
@@ -163,25 +165,41 @@ class TestMixedWorkflow_2(TestWorkflow):
                     'protCTF/extra/BPV_1386/xmipp_ctf.ctfparam',
                     'protCTF/extra/BPV_1387/xmipp_ctf.ctfparam',
                     'protCTF/extra/BPV_1388/xmipp_ctf.ctfparam',
-                    'protML2D/ml2d_extra/iter002/iter_classes.xmd', 
-                    'protML2D/ml2d_extra/iter001/iter_classes.xmd', 
-                    'protML2D/ml2d_extra/iter002/iter_images.xmd', 
-                    'protML2D/ml2d_classes.stk', 
-                    'protML2D/ml2d_extra/iter003/iter_images.xmd', 
-                    'protML2D/ml2d_images.xmd', 
-                    'protML2D/ml2d_extra/iter004/iter_classes.stk', 
-                    'protML2D/ml2d__images_average.xmp', 
+                    'protML2D/ml2d_extra/iter000/iter_images.xmd', 
+                    'protML2D/ml2d_extra/iter000/iter_classes.xmd', 
+                    'protML2D/ml2d_extra/iter000/iter_classes.stk', 
                     'protML2D/ml2d_extra/iter001/iter_images.xmd', 
+                    'protML2D/ml2d_extra/iter001/iter_classes.xmd', 
+                    'protML2D/ml2d_extra/iter001/iter_classes.stk', 
+                    'protML2D/ml2d_extra/iter002/iter_images.xmd', 
+                    'protML2D/ml2d_extra/iter002/iter_classes.xmd', 
                     'protML2D/ml2d_extra/iter002/iter_classes.stk', 
-                    'protML2D/ml2d_extra/iter004/iter_classes.xmd', 
-                    'protML2D/ml2d_extra/iter004/iter_images.xmd', 
-                    'protML2D/ml2d_extra/iter003/iter_classes.xmd',  
+#                     'protML2D/ml2d_extra/iter003/iter_images.xmd', 
+#                     'protML2D/ml2d_extra/iter003/iter_classes.xmd',  
+#                     'protML2D/ml2d_extra/iter003/iter_classes.stk',
+#                     'protML2D/ml2d_extra/iter004/iter_images.xmd', 
+#                     'protML2D/ml2d_extra/iter004/iter_classes.xmd',  
+#                     'protML2D/ml2d_extra/iter004/iter_classes.stk',
+                    'protML2D/ml2d_classes.stk', 
+                    'protML2D/ml2d_images.xmd', 
+                    'protML2D/ml2d__images_average.xmp', 
                     'protML2D/logs/run.log',
                     'protML2D/logs/run.db',
-                    'protML2D/ml2d_classes.xmd', 
-                    'protML2D/ml2d_extra/iter001/iter_classes.stk', 
-                    'protML2D/ml2d_extra/iter003/iter_classes.stk'],
-              }
+                    'protML2D/ml2d_classes.xmd',
+                    ],
+                'protIniModel': [
+                    'protML2D/ml2d_extra/iter002/iter_classes.stk', 
+                    'protIniModel/initial_models/model_00_01.hdf',
+                    'protIniModel/initial_models/model_00_01.hdf',
+                    'protIniModel/initial_models/model_00_01.hdf',
+                    'protIniModel/initial_models/model_00_01.hdf',
+                    'protIniModel/initial_models/model_00_01.hdf',
+                    'protIniModel/initial_models/model_00_01.hdf',
+                    'protIniModel/initial_models/model_00_01.hdf',
+                    'protIniModel/initial_models/model_00_01.hdf',
+                    'protIniModel/initial_models/model_00_01.hdf',
+                    'protIniModel/scipion_volumes.json'],
+                }
         
     @classmethod
     def setUpClass(cls):    
@@ -214,16 +232,16 @@ class TestMixedWorkflow_2(TestWorkflow):
         self.proj.launchProtocol(protCTF, wait=True)
         
         self.validateFiles('protCTF', protCTF) 
-        print "Running Eman fake particle picking..."   
+        print "Running Eman fake particle picking..."
         protPP = EmanProtBoxing(importFolder=self.importFolder, runMode=1)                
-#        protPP.inputMicrographs.set(protCTF.outputMicrographs)        
-        protPP.inputMicrographs.set(protImport.outputMicrographs)
+        protPP.inputMicrographs.set(protCTF.outputMicrographs)        
+#        protPP.inputMicrographs.set(protImport.outputMicrographs)
         self.proj.launchProtocol(protPP, wait=True)
-            
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
-            
+        self.protDict['protPP'] = protPP
+
         print "<Run extract particles with Same as picking>"
-        protExtract = XmippProtExtractParticles(boxSize=500, downsampleType=1, doFlip=True, runMode=1)
+        protExtract = XmippProtExtractParticles(boxSize=110, downsampleType=1, doFlip=True, doInvert=True, runMode=1)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         #protExtract.inputMicrographs.set(protDownsampling.outputMicrographs)
         self.proj.launchProtocol(protExtract, wait=True)
@@ -242,8 +260,8 @@ class TestMixedWorkflow_2(TestWorkflow):
 #         self.validateFiles('protOnlyalign', protOnlyalign)
         
         print "Run ML2D"
-        protML2D = XmippProtML2D(numberOfReferences=1, maxIters=4, 
-                                 numberOfMpi=2, numberOfThreads=1)
+        protML2D = XmippProtML2D(numberOfReferences=8, maxIters=2, 
+                                 numberOfMpi=2, numberOfThreads=2)
 #        protML2D.inputImages.set(protExtract.outputParticles)
         protML2D.inputImages.set(protExtract.outputParticles)
         self.proj.launchProtocol(protML2D, wait=True)        
@@ -251,14 +269,15 @@ class TestMixedWorkflow_2(TestWorkflow):
         self.assertIsNotNone(protML2D.outputClassification, "There was a problem with ML2D")  
         self.validateFiles('protML2D', protML2D)
 
-#         print "Run kerdensom"
-#         XmippProtKerdensom = XmippProtKerdensom()
-# 
-#         protOnlyalign.inputImages.set(protExtract.outputParticles)
-#         self.proj.launchProtocol(XmippProtKerdensom, wait=True)        
-#         
-#         self.assertIsNotNone(XmippProtKerdensom.outputClassification, "There was a problem with kerdensom")  
-#         self.validateFiles('XmippProtKerdensom', XmippProtKerdensom)
+        print "Run Initial Model"
+        protIniModel = EmanProtInitModel(numberOfIterations=1, numberOfModels=4,
+                                 shrink=1, symmetry='icos', numberOfThreads=3)
+#        protML2D.inputImages.set(protExtract.outputParticles)
+        protIniModel.inputClasses.set(protML2D.outputClassification)
+        self.proj.launchProtocol(protIniModel, wait=True)        
+        
+        self.assertIsNotNone(protIniModel.outputVolumes, "There was a problem with Initial Model")  
+        self.validateFiles('protIniModel', protIniModel)
         
  
         
