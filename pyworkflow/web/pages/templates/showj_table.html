@@ -11,13 +11,24 @@ $.fn.dataTableExt.oApi.fnVisibleToColumnIndex = function ( oSettings, iMatch )
 {
     return oSettings.oApi._fnVisibleToColumnIndex( oSettings, iMatch );
 };
+$.fn.dataTableExt.oApi.fnGetColumnIndex = function ( oSettings, sCol )
+{
+    var cols = oSettings.aoColumns;
+    for ( var x=0, xLen=cols.length ; x<xLen ; x++ )
+    {
+        if ( cols[x].sTitle.toLowerCase() == sCol.toLowerCase() )
+        {
+            return x;
+        };
+    }
+    return -1;
+};
+
 </script>
 <script type="text/javascript" src="{{jquerydataTables_colreorder}}"></script>
 <script type="text/javascript" src="{{jeditable}}"></script>
 <!-- <script type="text/javascript" src="{{jquery_ui}}"></script> -->
 <!-- <script type="text/javascript" src="{{jquery_tabletools}}"></script> -->
-
-
 
 <script type="text/javascript">
 var oTable;
@@ -166,7 +177,34 @@ function enableDisableEditableColumn(event, element){
 	
 	//From the image element we get the column header index
 	var iCol = $('th').index($(element).closest('th'))
-	//We disabled editable event
+	
+	enableDisableEditableColumnByColId(iCol)
+	
+	//This will avoid column sorting
+	event.stopPropagation()
+	
+}
+
+function enableDisableEditableColumnByColId(iCol){
+	
+/* 	alert(columns[0].nTh)
+	alert(columns[0].nTr) */
+	taka=oTable.fnGetData(0,0)
+	
+	alert($(taka))
+
+	oTable.fnSettings().aoData[0].nTr;
+
+	/*Iterate through all columns */
+    for (var columnIndex=0; columnIndex<columns.length; columnIndex++){
+		
+    	nTd = nTr.childNodes[columnIndex];
+    	
+	alert(oTable.fnSettings().fnRecordsTotal())
+	
+	for (var i=0; i<oTable.fnSettings().fnRecordsTotal(); i++){
+	}
+	
 	var nTrs = oTable.fnGetNodes();
 	if ($('td:nth-child('+(iCol+1)+')', nTrs).hasClass("editable")){
 		$('td:nth-child('+(iCol+1)+')', nTrs).unbind('click');
@@ -174,12 +212,7 @@ function enableDisableEditableColumn(event, element){
 	else{
 		setElementsEditable('td:nth-child('+(iCol+1)+')')
 	}
-	
 	$('td:nth-child('+(iCol+1)+')', nTrs).toggleClass("editable")
-	
-	//This will avoid column sorting
-	event.stopPropagation() 
-	
 }
 
 function setElementsEditable(elements){
@@ -331,7 +364,7 @@ function initializeMultipleSelectionTool(){
 			$("#multipleSelectionTool").css('top',y)
 			
 			var iRow = $(this).index()
-			$("#multipleSelectionTool").data('img_container_id', iRow)
+			$("#multipleSelectionTool").data('row_id', iRow)
 			
 			$("#multipleSelectionTool").fadeIn('slow')
 		}	
@@ -343,52 +376,82 @@ function initializeMultipleSelectionTool(){
 		
 	}); 
 }
-/* 
-function initializeSelectionRowEvent(){
-	// Add a click handler to the rows - this could be used as a callback 
-	$("#data_table").click(function(event) {
-		alert('heyhey')
-		$(oTable.fnSettings().aoData).each(function (){
-			$(this.nTr).removeClass('row_selected');
-		});
-		$(event.target.parentNode).addClass('row_selected');
+</script>
+<script type="text/javascript">
+function enableDisableTableConfig(){
+	/* Display/Hide Div */
+	$("#tableConfigurationContainer").show()
 
-		// Refresh value on got field  
-		selectedRows = fnGetSelected(oTable)
+	/* Read Datatable Columns */
+	var columns = oTable.fnSettings().aoColumns;
+	
 
-		alert(selectedRows[0].id)
+	
+	/* Read First Row. This has to be change when there was a proper model */
+    var nTr = oTable.fnSettings().aoData[0].nTr;
+
+	/*Iterate through all columns */
+    for (var columnIndex=0; columnIndex<columns.length; columnIndex++){
 		
-		if (selectedRows.length == 1) {
-			$("#id_goto").val(selectedRows[0].id)
+    	nTd = nTr.childNodes[columnIndex];
+    	
+    	checkboxLabel="#"+$(columns[columnIndex].nTh).text()+"_"
+		
+		/* EDITABLE */
+		if ($(nTd).hasClass("editable")){
+			$(checkboxLabel+"editable").prop('checked', true);
 		}
 		else{
-			$("#id_goto").val(0)
+			$(checkboxLabel+"editable").prop('checked', false);
 		}
-	});
-
-} */
-
-/* Get the rows which are currently selected */
-/* function fnGetSelected(oTableLocal)
-{
-	var aReturn = new Array();
-	var aTrs = oTableLocal.fnGetNodes();
-	
-	for ( var i=0 ; i<aTrs.length ; i++ )
-	{
-		if ( $(aTrs[i]).hasClass('row_selected') )
-		{
-			aReturn.push( aTrs[i] );
+    	
+    	/*Habia que ver como se pueden cambiar las propiedades de las columnas ocultas */
+    	enableDisableEditableColumnByColId(columnIndex);
+    	
+		/* RENDERABLE */
+		if ($(nTd).hasClass("renderable")){
+			$(checkboxLabel+"renderable").prop('checked', true);
 		}
+		else{
+			$(checkboxLabel+"renderable").prop('checked', false);
+		}
+        
+		/* VISIBLE */
+ 		if (columns[columnIndex].bVisible){
+ 			$(checkboxLabel+"visible").prop('checked', true);
+ 		}
+ 		else{
+ 			$(checkboxLabel+"visible").prop('checked', false);
+ 		}
 	}
-	return aReturn;
-} */
+}	
 </script>
 {% endblock %}
 
 {% block content_menu %}{% endblock %}
 			
 {% block content_view %}
+<a href="#" onclick="enableDisableTableConfig()">Display Table Configuration</a>
+<div id="tableConfigurationContainer" style="display:none">
+	<table>
+		<tr>
+			<td>Label</td>
+			<td>Visible</td>
+			<td>Render</td>
+			<td>Edit</td>
+		</tr>
+	{% for label, typeOfColumn in metadata.tableLayoutConfiguration.labels_typeOfColumns %}
+ 		 <tr>
+ 		 	<td>{{label}}</td>
+ 		 	<td><input type="checkbox" id="{{label}}_visible"></td>
+ 		 	<td><input type="checkbox" id="{{label}}_renderable"></td>
+ 		 	<td><input type="checkbox" id="{{label}}_editable"></td>
+ 		 </tr>
+ 		 
+	{% endfor %}
+	</table>
+</div>
+
 	
 <div id="table_container" style="overflow-x:scroll">
 		<table cellspacing="0" id="data_table" width="100%">

@@ -224,29 +224,57 @@
 	</script>
 	<script type="text/javascript">
 	function multipleEnableDisableImage(mode){
-		if (mode=='enable'){
-			$(".image_selected").each(function(){
-				$(this).find(".enabledGallery").addClass("selected")
-				$(this).find(".enabledGallery").fadeIn('fast')
-			})
-		}
-		else{
-			$(".image_selected").each(function(){
-				$(this).find(".enabledGallery").removeClass("selected")
-				$(this).find(".enabledGallery").fadeOut('fast')
-			})
+		if ($('#multipleSelectionTool').attr('img_container_id') !== undefined) {
+			//If we are in gallery view
+			if (mode=='enable'){
+				$(".image_selected").each(function(){
+					$(this).find(".enabledGallery").addClass("selected")
+					$(this).find(".enabledGallery").fadeIn('fast')
+				})
+			}
+			else{
+				$(".image_selected").each(function(){
+					$(this).find(".enabledGallery").removeClass("selected")
+					$(this).find(".enabledGallery").fadeOut('fast')
+				})
+			}
+		} else {
+			//If we are in table view
+			if (mode=='enable'){
+				$(".row_selected").each(function(){
+					$(this).find(":checkbox").prop('checked', true);
+				})
+			}
+			else{
+				$(".row_selected").each(function(){
+					$(this).find(":checkbox").prop('checked', false);
+				})
+			}
 		}
 	}
 	</script>
 	<script type="text/javascript">
 	function multipleSelect(mode){
-		element_id=parseInt($("#multipleSelectionTool").data('img_container_id').split("___")[1]);
+		if ($('#multipleSelectionTool').attr('img_container_id') !== undefined) {
+			//If we are in gallery view
+			element_id=parseInt($("#multipleSelectionTool").data('img_container_id').split("___")[1]);
+			
+			$(".img_container").each(function(){
+				if (mode=='all' || (mode=='from' && $(this).attr('id').split("___")[1]>element_id) || (mode=='to' && $(this).attr('id').split("___")[1]<element_id) ){
+					$(this).addClass("image_selected")
+				}	
+			})
+		} else {
+			//If we are in table view
+			row_id=parseInt($("#multipleSelectionTool").data('row_id'));
+			
+			$("tr").each(function(){
+				if (mode=='all' || (mode=='from' && $(this).index()>row_id) || (mode=='to' && $(this).index()<row_id) ){
+					$(this).addClass("row_selected")
+				}	
+			})
+		}
 		
-		$(".img_container").each(function(){
-			if (mode=='all' || (mode=='from' && $(this).attr('id').split("___")[1]>element_id) || (mode=='to' && $(this).attr('id').split("___")[1]<element_id) ){
-				$(this).addClass("image_selected")
-			}	
-		})
 	}
 	</script>
 	
