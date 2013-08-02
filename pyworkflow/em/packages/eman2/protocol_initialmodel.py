@@ -68,8 +68,7 @@ class EmanProtInitModel(ProtInitialVolume):
     _definition = EmanDefInitModel()
     _label = 'Eman Initial Model'
     
-    def _defineSteps(self):
-        
+    def _defineSteps(self):        
         eman2.loadEnvironment()
         self._prepareDefinition()
         self._insertSteps()
@@ -91,15 +90,14 @@ class EmanProtInitModel(ProtInitialVolume):
 
     def getXmippStackFilename(self):
         for cls in self.inputClasses.get():
-            img = cls.getClassRepresentative()
+            img = cls.getImage()
             return img.getFileName()
 
     def _insertSteps(self):
-
-        self._createinitialmodel()      
+        self._insertInitialModelStep()      
         self._insertFunctionStep('createOutput')
 
-    def _createinitialmodel(self):
+    def _insertInitialModelStep(self):
         self._enterWorkingDir()
         args = '--input %(imgsFn)s iter=%(numberOfIterations)d --tries=%(numberOfModels)d --sym=%(symmetry)s'
         if self.shrink > 1:

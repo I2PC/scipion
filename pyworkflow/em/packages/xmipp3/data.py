@@ -583,7 +583,7 @@ class XmippClass2D(Class2D):
         Class2D.__init__(self, **args)
         self._number = classNumber
         self._filename = filename
-        self._representative = representative
+        self._representative = representative # Image class
         
     def __iter__(self):
         md = xmipp.MetaData('class%06d_images@%s' % 
@@ -593,8 +593,11 @@ class XmippClass2D(Class2D):
             imgCA.getFromMd(md, objId)
             yield imgCA
     
-    def getClassRepresentative(self):
+    def getImage(self):
         return self._representative
+    
+    def getId(self):
+        return self._number
         
         
 class XmippClassification2D(Classification2D):
@@ -626,6 +629,6 @@ class XmippClassification2D(Classification2D):
         filePaths = set()
         filePaths.append(self.getFileName())
         for class2d in self:
-            filePaths.append(class2d.getClassRepresentative())
+            filePaths.append(class2d.getImage())
         return filePaths
   
