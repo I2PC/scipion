@@ -312,7 +312,7 @@ class EnumParam(IntParam):
     def __init__(self, **args):
         IntParam.__init__(self, **args)
         self.choices = args.get('choices', [])
-        self.display = Integer(args.get('display', EnumParam.DISPLAY_LIST))
+        self.display = Integer(args.get('display', EnumParam.DISPLAY_COMBO))
     
     
 class FloatParam(Param):
