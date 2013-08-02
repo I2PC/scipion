@@ -255,6 +255,40 @@ class EmanSetOfVolumes(EmanSetOfImages, SetOfVolumes):
     def __init__(self, filename=None, **args):
         SetOfVolumes.__init__(self, filename, **args)
         EmanSetOfImages.__init__(self, filename, **args)
+        self._jsonDict = {} # store volumes indexed by id
+        self._idCount = 0
+        
+    def load(self):
+        """ Load extra data from files. """
+        if self.getFileName() is None:
+            raise Exception("Set filename before calling load()")
+        self._jsonDict = loadJson(self.getFileName())
+        
+    def loadIfEmpty(self):
+        """ Load data only if the main set is empty. """
+        if not self._jsonDict:
+            self.load()
+            
+    def __iter__(self):
+        """ Iterate over the set of images. """
+        self.loadIfEmpty()
+        for volID, volFn in self._jsonDict.iteritems():
+            vol = EmanVolume(volFn)
+            vol.setId(volId)
+            vol.setSamplingRate(self.samplingRate.get())
+            yield vol
+            
+    def append(self, vol):
+        if vol.hasId():
+            volId = vol.getId()
+        else:
+            self._idCount += 1
+            volId = self._idCount 
+        self._jsonDict[volId] = vol.getFileName()
+
+    def write(self):
+        writeJson(self._jsonDict, self.getFileName())
+
 
     
 # def getBoxSize(self):
