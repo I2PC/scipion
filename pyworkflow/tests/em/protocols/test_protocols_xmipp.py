@@ -275,6 +275,7 @@ class TestXmippRotSpectra(TestXmippBase):
 #         format for Rotational Spectra
 
         xmippProtRotSpectra = XmippProtRotSpectra()
+        
         xmippProtRotSpectra.inputImages.set(self.protImport.outputParticles)
 
         self.proj.launchProtocol(xmippProtRotSpectra, wait=True)        
