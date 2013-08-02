@@ -502,6 +502,7 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         
         xmippCoords = XmippSetOfCoordinates(filename)
         xmippCoords.setMicrographs(setOfCoords.getMicrographs())
+        xmippCoords.setBoxSize(setOfCoords.getBoxSize())
         
         extraPath = dirname(filename)
         posMd = xmipp.MetaData()
