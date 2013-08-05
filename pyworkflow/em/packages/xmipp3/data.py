@@ -629,6 +629,6 @@ class XmippClassification2D(Classification2D):
         filePaths = set()
         filePaths.add(self.getFileName())
         for class2d in self:
-            filePaths.add(class2d.getClassRepresentative())
+            filePaths.add(class2d.getImage())
         return filePaths
   
