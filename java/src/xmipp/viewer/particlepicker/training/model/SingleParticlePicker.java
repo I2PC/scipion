@@ -178,8 +178,6 @@ public class SingleParticlePicker extends ParticlePicker {
 
 		super.setSize(size);
 		classifier.setSize(size);
-		System.out.println("size updated");
-
 	}
 
 	public synchronized ImageGeneric getTemplates() {
@@ -730,9 +728,9 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public void initUpdateTemplates() {
-		System.out.println("initUpdateTemplates");
+		
 		initUpdateTemplates(getTemplatesNumber());
-		System.out.println("after sending to update templates");
+		
 	}
 
 	public void initUpdateTemplates(int num) {
@@ -766,7 +764,7 @@ public class SingleParticlePicker extends ParticlePicker {
 			}
 			templates.getRadialAvg(radialtemplates);
 			saveTemplates();
-			System.out.println("templates updated");
+//			System.out.println("templates updated");
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e.getMessage());
 		}
