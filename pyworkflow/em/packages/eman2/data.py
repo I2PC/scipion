@@ -273,7 +273,7 @@ class EmanSetOfVolumes(EmanSetOfImages, SetOfVolumes):
     def __iter__(self):
         """ Iterate over the set of images. """
         self.loadIfEmpty()
-        for volID, volFn in self._jsonDict.iteritems():
+        for volId, volFn in self._jsonDict.iteritems():
             vol = EmanVolume(volFn)
             vol.setId(volId)
             vol.setSamplingRate(self.samplingRate.get())
