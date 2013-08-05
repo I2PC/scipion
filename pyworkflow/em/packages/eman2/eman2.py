@@ -52,7 +52,8 @@ def loadEnvironment():
     
 def getEmanCommand(program, args):
     if not 'EMAN_PYTHON' in os.environ:
-        raise Exception('EMAN_PYTHON is not load in environment')
+        os.environ['EMAN_PYTHON'] = os.path.join(os.environ['EMAN2DIR'], 'Python/bin/python')
+        #raise Exception('EMAN_PYTHON is not load in environment')
     python = os.environ['EMAN_PYTHON']
     
     return '%(python)s %(program)s %(args)s' % locals()
