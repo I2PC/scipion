@@ -55,7 +55,7 @@ public abstract class ParticlePicker
 	private Color color;
 	private int size;
 
-	public static final int sizemax = 800;
+	public static final int sizemax = 1048;
 	protected String block;
 	Format[] formats = new Format[] { Format.Xmipp24, Format.Xmipp30, Format.Xmipp301, Format.Eman };
 
