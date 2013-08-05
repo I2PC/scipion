@@ -33,8 +33,9 @@ CASE = 'case'
 PRINT = 'print'
 PATTERN = 'pattern'
 
-CASE_DICT = {'short': 'classes em/data',
-             'medium': 'classes em/data em/workflows'}
+CASE_DICT = {'classes': {PATH:'classes em/data', PATTERN: 'test*.py'},
+             'xmipp': {PATH:'em/workflows', PATTERN: 'test*xmipp*.py'},
+             'mixed': {PATH:'em/workflows', PATTERN: 'test*mixed*.py'}}
   
 def parseArgs(args):
     """ Parse arguments in the form of:
@@ -60,18 +61,14 @@ if __name__ == '__main__':
         argsDict = parseArgs(sys.argv[1:])
     else:
         argsDict = {PATH: 'classes'}
-
-    pattern = argsDict.get(PATTERN, 'test*.py')    
       
     # CASE and PATH are excusive
     if CASE in argsDict:
-        cases = argsDict[CASE].split()
-        path = ''
-        for c in cases:
-            path += CASE_DICT[c] + ' '
-    else:
-        path = argsDict[PATH]
+        case = argsDict[CASE]
+        argsDict.update(CASE_DICT[case])
     
+    path = argsDict[PATH]
+    pattern = argsDict.get(PATTERN, 'test*.py')    
     pathList = path.split()
     
     tests = discoverTests(pathList, pattern)
