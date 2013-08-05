@@ -610,8 +610,9 @@ class XmippClassification2D(Classification2D):
         self.classesBlock = String(classesBlock)
         
     def __iter__(self):
-        fn = self.getClassesMdFileName()        
-        md = xmipp.MetaData(fn)
+        classesFn = self.getClassesMdFileName()        
+        md = xmipp.MetaData(classesFn)
+        fn = self.getFileName()
         
         for objId in md:
             ref = md.getValue(xmipp.MDL_REF, objId)
