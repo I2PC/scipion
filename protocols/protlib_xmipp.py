@@ -207,7 +207,8 @@ def getXmippPrograms():
 def skipProgram(programName):
     if programName in ['xmipp_sqlite3', 'xmipp_mpi_steps_runner',
                        'xmipp_angular_commonline', 'xmipp_python',
-                       'xmipp_transform_threshold', 'xmipp_mpi_write_test']:
+                       'xmipp_transform_threshold', 'xmipp_mpi_write_test', 'xmipp_chimera_client',
+                       'xmipp_imagej','xmipp_mpi_image_common_lines']:
         return True
     for p in ['xmipp_test', 'xmipp_template']:
         if programName.find(p) != -1:
