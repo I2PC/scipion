@@ -8,44 +8,7 @@ import unittest
 from glob import glob
 from pyworkflow.em.packages.eman2 import *
 from pyworkflow.tests import *
-
-class TestEmanUtils(unittest.TestCase):
-    
-    @classmethod
-    def setUpClass(cls):        
-        cls.outputPath = getOutputPath('test_data_eman')
-        
-        cls.emanDir = getInputPath('EmanTestProject')
-        
-    def setUp(self):
-        cleanPath(self.outputPath)
-        makePath(self.outputPath)
-                
-    def atestReadParams(self):
-        """ Test reading parameters from eman bdb """
-        # Enter eman directory
-        os.chdir(self.emanDir)
-        value = self.__getEmanParamValue('box_size')
-        self.assertTrue(int(value) == 110, "Incorrect particle size")
-            
-        self.assertTrue(self.__getEmanParamValue('write_particles'), "Not particles written")
-
-        
-    def __getEmanParamValue(self, paramName):
-        """ Recover a parameter value from EMAN Berkeley data base. """        
-        command = "e2bdb.py -D bdb:emboxerbase"
-        pipe = os.popen(command)
-        stOutput = pipe.readlines()
-        pipe.close()
-        auxValue = None
-        for line in stOutput:
-            if (paramName in line):
-                auxValue = line.split(" : ")[1]
-        if auxValue is None:
-            return None
-    
-        return auxValue
-    
+   
 class TestEmanSetOfCoordinates(unittest.TestCase):
     
     @classmethod
