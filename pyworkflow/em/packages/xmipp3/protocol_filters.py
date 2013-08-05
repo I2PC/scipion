@@ -91,7 +91,6 @@ class XmippDefFourierFilter(XmippDefFilterParticles):
     def _addProcessParam(self):
         self.addParam('filterType', EnumParam, choices=['low pass', 'high pass', 'band pass'],
                       label="Filter type", default=xmipp3.FILTER_BAND_PASS,
-                      display=EnumParam.DISPLAY_COMBO,
                       help='Select what type of Fourier filter do you want to apply.\n'
                            '<low pass>: all frequency components below <High frequency> are preserved.\n'
                            '<high pass>: all frequency components above <Low frequency> are preserved.\n'

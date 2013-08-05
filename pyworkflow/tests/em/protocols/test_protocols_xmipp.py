@@ -274,7 +274,7 @@ class TestXmippRotSpectra(TestXmippBase):
 #         Now we can not use the only align output because we must create tools to get the correct 
 #         format for Rotational Spectra
 
-        xmippProtRotSpectra = XmippProtRotSpectra()
+        xmippProtRotSpectra = XmippProtRotSpectra(SomXdim=2, SomYdim=2)
         
         xmippProtRotSpectra.inputImages.set(self.protImport.outputParticles)
 
