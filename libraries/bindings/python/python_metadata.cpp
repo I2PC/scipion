@@ -188,7 +188,7 @@ xmipp_MDValueRange(PyObject *obj, PyObject *args, PyObject *kwargs)
 }
 /* add alias for label in run time */
 PyObject *
-xmipp_addTmpLabelAlias(PyObject *obj, PyObject *args, PyObject *kwargs)
+xmipp_addLabelAlias(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
 
 
@@ -204,7 +204,7 @@ xmipp_addTmpLabelAlias(PyObject *obj, PyObject *args, PyObject *kwargs)
             if ((pyStr = PyObject_Str(input)) != NULL )
             {
                 str = PyString_AsString(pyStr);
-                MDL::addTmpLabelAlias((MDLabel)label,(String)str);
+                MDL::addLabelAlias((MDLabel)label,(String)str);
                 Py_RETURN_NONE;
             }
             else
@@ -244,6 +244,8 @@ PyMethodDef MetaData_methods[] =
           "Goto last metadata object, return its object id" },
         { "size", (PyCFunction) MetaData_size, METH_NOARGS,
           "Return number of objects in MetaData" },
+        { "getParsedLines", (PyCFunction) MetaData_getParsedLines, METH_NOARGS,
+          "Return number of objects in MetaData file, even if read with maxRows > 0" },
         { "isEmpty", (PyCFunction) MetaData_isEmpty,
           METH_NOARGS,
           "Check whether the MetaData is empty" },
@@ -480,7 +482,7 @@ MetaData_read(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     if (self != NULL)
     {
-        PyObject *list = NULL;
+        PyObject *list = NULL; //list can be a list of labels or maxRows
         PyObject *input = NULL, *pyStr = NULL;
         char *str = NULL;
         if (PyArg_ParseTuple(args, "O|O", &input,  &list))
@@ -490,14 +492,14 @@ MetaData_read(PyObject *obj, PyObject *args, PyObject *kwargs)
                 if ((pyStr = PyObject_Str(input)) != NULL)
                 {
                     str = PyString_AsString(pyStr);
-                    if (list!=NULL)
+                    if (list != NULL)
                     {
                         if (PyList_Check(list))
                         {
                             size_t size = PyList_Size(list);
                             PyObject * item = NULL;
                             int iValue = 0;
-                            std::vector<MDLabel> vValue(size);
+                            MDLabelVector vValue(size);
                             for (size_t i = 0; i < size; ++i)
                             {
                                 item = PyList_GetItem(list, i);
@@ -511,6 +513,11 @@ MetaData_read(PyObject *obj, PyObject *args, PyObject *kwargs)
                                 vValue[i] = (MDLabel)iValue;
                             }
                             self->metadata->read(str,&vValue);
+                        }
+                        else if (PyInt_Check(list)){
+                          size_t maxRows = (size_t) PyInt_AsLong(list);
+                          self->metadata->setMaxRows(maxRows);
+                          self->metadata->read(str);
                         }
                     }
                     else
@@ -704,6 +711,23 @@ MetaData_size(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }
+
+/* getParsedLines */
+PyObject *
+MetaData_getParsedLines(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    try
+    {
+        MetaDataObject *self = (MetaDataObject*) obj;
+        return PyLong_FromUnsignedLong(self->metadata->getParsedLines());
+    }
+    catch (XmippError &xe)
+    {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+    return NULL;
+}
+
 /* isEmpty */
 PyObject *
 MetaData_isEmpty(PyObject *obj, PyObject *args, PyObject *kwargs)

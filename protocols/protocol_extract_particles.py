@@ -11,7 +11,7 @@
 #
 from protlib_base import *
 from protlib_particles import *
-from xmipp import MetaData, AGGR_AVG, LEFT, MD_APPEND, MDL_IMAGE, MDL_CTF_MODEL, MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED, \
+from xmipp import MetaData, MetaDataInfo, AGGR_AVG, LEFT, MD_APPEND, MDL_IMAGE, MDL_CTF_MODEL, MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED, \
                   MDL_MICROGRAPH_ORIGINAL, MDL_MICROGRAPH_TILTED_ORIGINAL, MDL_ZSCORE, MDL_IMAGE_TILTED, MDL_ENABLED, \
                   MDL_SAMPLINGRATE, MDL_SAMPLINGRATE_ORIGINAL, getBlocksInMetaDataFile
 import glob
@@ -205,8 +205,8 @@ class ProtExtractParticles(ProtParticlesBase):
 
         fn = self.getFilename("images")
         if exists(fn):
-            md = MetaData(fn)
-            message.append("%s extracted: <%d>" % (part2, md.size()))
+            _, _, _, _, size = MetaDataInfo(fn)
+            message.append("%s extracted: <%d>" % (part2, size))
         return message
 
     def checkMicrograph(self, micrograph, md, objId, label1, label2, allowCTF):

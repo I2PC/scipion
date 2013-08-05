@@ -13,7 +13,7 @@ from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
 from xmipp import *
 from xmipp import MetaDataInfo
-from protlib_utils import runShowJ, getListFromVector, getListFromRangeString, runJob, runChimera
+from protlib_utils import runShowJ, getListFromVector, getListFromRangeString, runJob, runChimera, which
 from protlib_parser import ProtocolParser
 from protlib_xmipp import redStr, cyanStr
 from protlib_gui_ext import showWarning, showTable
@@ -68,6 +68,10 @@ class ProtRelion3D(XmippProtocol):
         if self.DoCTFCorrection and not md.containsLabel(MDL_CTF_MODEL):
             errors.append("CTF correction selected and input metadata <%s> doesn't contains CTF information" % self.ImgMd)
             
+        # Check relion is installed
+        if len(which('relion_refine')) == 0:
+            errors.append('<relion> was not found.') 
+            
         return errors 
     
     def defineSteps(self): 
@@ -105,7 +109,7 @@ class ProtRelion3D(XmippProtocol):
                             outputRelion=self.ImgStar                            
                             )
             # launch relion program
-            #############################################self.insertRelionRefine()
+            self.insertRelionRefine()
             # convert relion output to xmipp
             # relion_it00N_data.star, angular assigment
             self.ImgStar = self.extraPath(replaceBasenameExt(tmpFileNameXMD, '.star'))
@@ -556,7 +560,7 @@ def convertRelionMetadata(log, inputs,
     #this images cames from relion
     md = MetaData(lastIterationMetadata)
     #total number Image
-    numberImages    = md.size()
+    numberImages = md.size()
 
 
     #total number volumes 

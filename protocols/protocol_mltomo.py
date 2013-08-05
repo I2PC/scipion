@@ -115,9 +115,10 @@ class ProtMLTomo(XmippProtocol):
         if self.DoGenerateReferences:
             N=self.NumberOfReferences
         else:
-            mD=MetaData(self.RefMd)
-            N=mD.size()
-        message.append("MLTomo on "+self.VolumeList+" with "+str(N)+" references")
+            from protlib_xmipp import getMdSize
+            N = getMdSize(self.RefMd)
+        message.append("MLTomo on [%s] with %d references" % (self.VolumeList, N))
+
         return message
 
     def visualize(self):

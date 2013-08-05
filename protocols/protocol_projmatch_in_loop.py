@@ -6,6 +6,8 @@ from distutils.dir_util import mkpath
 from xmipp import *
 from protlib_utils import runJob, getMemoryAvailable
 from protlib_filesystem import copyFile
+from protlib_xmipp import emptyMd
+
 from math import floor
 
 CtfBlockName = 'ctfGroup'
@@ -362,16 +364,13 @@ def angular_class_average(_log
     baseTxtFile = refname[:-len('.stk')] 
     neighbFile = baseTxtFile + '.xmd'
 	
-    MD = MetaData()
-    MD.read(DocFileInputAngles)
-    if MD.size() == 0:
-        print "Empty metadata, remember to copy the reference ", NumberOfCtfGroups, Ref3dNum
+    if emptyMd(DocFileInputAngles):
+        print "Empty metadata file: %s" % DocFileInputAngles
         return
 
     parameters = ' -i ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]\$@' + DocFileInputAngles + \
-                  ' --lib ' + refname.replace(".stk", ".doc") + \
-                  ' --pcaSorting ' + \
-		  ' -o ' + OutClasses
+                 ' --lib ' + refname.replace(".stk", ".doc") + \
+                 ' -o ' + OutClasses
     if(DoSaveImagesAssignedToClasses):
         parameters += ' --save_images_assigned_to_classes'  
                   
@@ -429,9 +428,8 @@ def reconstruction(_log
                    , ConstantToAddToFiltration
                    ):
     
-    md = MetaData(ReconstructionXmd)
     #if inout metadata is empty create a Blanck image
-    if (md.size() == 0):
+    if emptyMd(ReconstructionXmd):
         from protlib_utils import printLog
         img = Image()
         img.read(maskedFileNamesIter, DATA)

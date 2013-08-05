@@ -141,7 +141,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		if (ppicker.isReviewFile(file))
 		{
 			result = ppicker.importAllParticles(file, scale, invertx, inverty);
-			ppicker.saveData();
+			ppicker.saveAllData();
 		}
 		else
 			result = importMicrographParticles(format, file, scale, invertx, inverty);
@@ -386,8 +386,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 						{
 							ppicker.setMode(Mode.Manual);
 							resetbt.setEnabled(true);
-							ppicker.saveData();
-							setChanged(false);
+							ppicker.saveAllData();
 							updateMicrographsModel();
 							autopickout = null;
 							if (autopickchb.isSelected())
@@ -680,7 +679,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		if (index == micrographstb.getSelectedRow() && canvas != null && canvas.getIw().isVisible())
 			return;
 		if (ppicker.isChanged())
-			ppicker.saveData(getMicrograph());// Saving changes when switching
+			ppicker.saveData();// Saving changes when switching
 		index = micrographstb.getSelectedRow();
 		SingleParticlePickerMicrograph next = ppicker.getMicrographs().get(index);
 

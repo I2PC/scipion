@@ -102,7 +102,8 @@ private:
      */
     void copyTableFromFileDB(const FileName blockname,
                              const FileName filename,
-                             const std::vector<MDLabel> *desiredLabels
+                             const std::vector<MDLabel> *desiredLabels,
+                             const size_t maxRows=0
                              );
     /** This will create the table to store the metada objects.
      * Will return false if the mdId table is already present.

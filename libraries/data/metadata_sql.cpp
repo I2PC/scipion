@@ -869,7 +869,8 @@ void MDSql::dumpToFile(const FileName &fileName)
 
 void MDSql::copyTableFromFileDB(const FileName blockname,
                                 const FileName filename,
-                                const std::vector<MDLabel> *desiredLabels
+                                const std::vector<MDLabel> *desiredLabels,
+                                const size_t maxRows
                                )
 {
     char **results;
@@ -938,14 +939,28 @@ void MDSql::copyTableFromFileDB(const FileName blockname,
     dropTable();
     createMd();
 
-    String sqlCommand = (String)"ATTACH database '" + filename+"' as load";
-    if (sqlite3_exec(db, sqlCommand.c_str(),NULL,NULL,&errmsg) != SQLITE_OK)
+    String sqlCommand = formatString("ATTACH database '%s' AS load;", filename.c_str());
+
+    if (sqlite3_exec(db, sqlCommand.c_str(), NULL, NULL, &errmsg) != SQLITE_OK)
     {
         std::cerr << "Couldn't attach or create table:  " << errmsg << std::endl;
         return;
     }
-    sqlCommand = (String)"INSERT INTO " + tableName(tableId).c_str()
-                 +" select " + activeLabel + " from load."+ _blockname.c_str();
+    String selectCmd = formatString("SELECT %s FROM load.%s", activeLabel.c_str(), _blockname.c_str());
+    sqlCommand = formatString("INSERT INTO %s %s", tableName(tableId).c_str(), selectCmd.c_str());
+
+    if (maxRows)
+    {
+      std::stringstream ss;
+      ss << "SELECT COUNT(objId) FROM load." << _blockname;
+      myMd->_parsedLines = execSingleIntStmt(ss);
+      std::cerr << ss.str() << " = " << myMd->_parsedLines << std::endl;
+
+      sqlCommand += formatString(" LIMIT %lu", maxRows);
+
+      std::cerr << sqlCommand << std::endl;
+    }
+
     if (sqlite3_exec(db, sqlCommand.c_str(),NULL,NULL,&errmsg) != SQLITE_OK)
     {
         std::cerr << (String)"Couldn't write table: " << tableName(tableId)
@@ -956,6 +971,7 @@ void MDSql::copyTableFromFileDB(const FileName blockname,
     sqlite3_exec(db, "DETACH load",NULL,NULL,&errmsg);
     sqlBeginTrans();
 }
+
 void MDSql::copyTableToFileDB(const FileName blockname, const FileName &fileName)
 {
     sqlCommitTrans();

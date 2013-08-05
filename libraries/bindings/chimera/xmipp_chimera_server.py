@@ -77,6 +77,7 @@ class ChimeraServer:
                         #print 'volume data'
                         grid = Array_Grid_Data(data)
                         self.volume = volume_from_grid_data(grid)
+                        runCommand("focus")
                     if msg == 'draw_angular_distribution':
                         angulardist = self.remote_conn.recv()
                         for command in angulardist:

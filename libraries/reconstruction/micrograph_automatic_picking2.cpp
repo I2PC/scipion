@@ -1069,7 +1069,7 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier)
         int j=positionArray[k].x;
         int i=positionArray[k].y;
         buildInvariant(IpolarCorr,j,i);
-        std::cerr<<"build inavariant has been done"<<std::endl;
+        //std::cerr<<"build inavariant has been done"<<std::endl;
         extractParticle(j,i,microImage(),pieceImage,false);
         pieceImage.resize(1,1,1,XSIZE(pieceImage)*YSIZE(pieceImage));
         extractStatics(pieceImage,staticVec);
@@ -1851,22 +1851,21 @@ void ProgMicrographAutomaticPicking2::run()
     Micrograph m;
     m.open_micrograph(fn_micrograph);
 
-    FileName fnFilterBank=fn_root+"_filterbank.stk";
-    FileName familyName="particles";
-    FileName fnAutoParticles=familyName+"@"+fn_root+"_auto.pos";
-    FileName fnInvariant=fn_model+"_invariant";
-    FileName fnParticles=fn_model+"_particle";
-    FileName fnPCAModel=fn_model+"_pca_model.stk";
-    FileName fnPCARotModel=fn_model+"_rotpca_model.stk";
-    FileName fnSVMModel=fn_model+"_svm.txt";
-    FileName fnSVMModel2=fn_model+"_svm2.txt";
-    FileName fnVector=fn_model+"_training.txt";
-    FileName fnAutoVectors=fn_model+"_auto_vector.txt";
-    FileName fnRejectedVectors=fn_model+"_rejected_vector.txt";
-    FileName fnAvgModel=fn_model+"_particle_avg.xmp";
+    FileName fnFilterBank = fn_root + "_filterbank.stk";
+    FileName fnAutoParticles = formatString("particles_auto@%s.pos", fn_root.c_str());
+    FileName fnInvariant = fn_model + "_invariant";
+    FileName fnParticles = fn_model + "_particle";
+    FileName fnPCAModel = fn_model + "_pca_model.stk";
+    FileName fnPCARotModel = fn_model + "_rotpca_model.stk";
+    FileName fnSVMModel = fn_model + "_svm.txt";
+    FileName fnSVMModel2 = fn_model + "_svm2.txt";
+    FileName fnVector = fn_model + "_training.txt";
+    FileName fnAutoVectors = fn_model + "_auto_vector.txt";
+    FileName fnRejectedVectors = fn_model + "_rejected_vector.txt";
+    FileName fnAvgModel = fn_model + "_particle_avg.xmp";
 
     autoPicking->produceSideInfo(&m);
-    if (mode!="train")
+    if (mode != "train")
     {
         // Resize the Micrograph
         selfScaleToSizeFourier((int)((m.Ydim)*autoPicking->scaleRate),
