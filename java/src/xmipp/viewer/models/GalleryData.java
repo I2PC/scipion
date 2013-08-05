@@ -112,7 +112,8 @@ public class GalleryData
 			resliceView = param.resliceView;
 			useGeo = param.useGeo;
 			wrap = param.wrap;
-
+			System.err.format(">>>> param.openingMode: %s\n", param.mode);
+			
 			if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_METADATA))
 				mode = Mode.TABLE_MD;
 			else if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_ROTSPECTRA))
@@ -230,9 +231,8 @@ public class GalleryData
 			loadClassesInfo();
 		}
 
-		if (isRotSpectraMd())
+		if (isRotSpectraMd() && mode == Mode.GALLERY_ROTSPECTRA)
 		{
-			mode = Mode.GALLERY_ROTSPECTRA;
 			if (zoom == 0)
 				zoom = 100;
 			return;

@@ -248,6 +248,9 @@ public:
     /// Maximum shift
     double maxShift;
 
+    /// Normalize input images
+    bool normalizeImages;
+
     /// MPI constructor
     ProgClassifyCL2D(int argc, char** argv);
 
