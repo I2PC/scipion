@@ -21,7 +21,7 @@ class TestEmanUtils(unittest.TestCase):
         cleanPath(self.outputPath)
         makePath(self.outputPath)
                 
-    def testReadParams(self):
+    def atestReadParams(self):
         """ Test reading parameters from eman bdb """
         # Enter eman directory
         os.chdir(self.emanDir)
@@ -51,7 +51,7 @@ class TestEmanSetOfCoordinates(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.outputPath = getOutputPath('test_data_eman')
-        cls.emanDir = getInputPath('EmanTestProject')
+        cls.emanCoord = getInputPath('EmanTestProject2', 'scipion_micrographs_coordinates.json')
         cls.micBd = getInputPath('Micrographs_BPV3', 'micrographs.sqlite')
         
     def setUp(self):
@@ -60,13 +60,14 @@ class TestEmanSetOfCoordinates(unittest.TestCase):
         
     def testIterate(self):
         """ Test reading an EmanSetOfCoordinates from an existing  directory """
-        emanSetCoords = EmanSetOfCoordinates(self.emanDir)     
+        #eman2.loadEnvironment()
+        emanSetCoords = EmanSetOfCoordinates(self.emanCoord)     
         #Set micrographs associated to coordinates
         emanSetMics = SetOfMicrographs(self.micBd)
         emanSetCoords.setMicrographs(emanSetMics)   
         for coord in emanSetCoords.iterCoordinates():
             (x, y) = coord.getPosition()
-            #print ("Coordinate: x=%s y=%s" %(x,y))       
+            print ("Coordinate: x=%s y=%s" %(x,y))       
             
             
 if __name__ == '__main__':
