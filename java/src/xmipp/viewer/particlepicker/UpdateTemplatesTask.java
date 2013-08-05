@@ -29,8 +29,8 @@ public class UpdateTemplatesTask implements Task
 		try
 		{
 			picker.updateTemplates(num);
-			if(dialog != null && dialog.isVisible())
-				dialog.loadTemplates(true);
+//			if(dialog != null && dialog.isVisible())
+//				dialog.loadTemplates(true);
 		}
 		catch (Exception e)
 		{

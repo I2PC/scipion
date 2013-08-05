@@ -52,8 +52,8 @@ public abstract class ParticlePicker
 	static String xmippsmoothfilter = "Xmipp Smooth Filter";
 	public static final String particlesAutoBlock = "particles_auto";
 
-	private Color color;
-	private int size;
+	protected Color color;
+	protected int size;
 
 	public static final int sizemax = 1048;
 	protected String block;
@@ -547,11 +547,10 @@ public abstract class ParticlePicker
 
 		long fid = md.firstObject();
 		int size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, fid);
-		if (size > 0)
-			setSize(Math.round(size * scale));
+		
 		int half = size / 2;
 		md.operate(String.format("xcoor=xcoor+%d,ycoor=ycoor+%d", half, half));
-
+		setSize(Math.round(size * scale));
 	}// function fillParticlesMdFromEmanFile
 
 	public void runXmippProgram(String program, String args)

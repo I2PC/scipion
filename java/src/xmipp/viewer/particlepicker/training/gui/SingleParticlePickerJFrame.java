@@ -148,9 +148,9 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		setChanged(false);
 		getCanvas().repaint();
 		updateMicrographsModel();
-		updateSize(ppicker.getSize());
+		updateSize(ppicker.getSize());//will also update templates
 		canvas.refreshActive(null);
-		ppicker.initUpdateTemplates();
+		
 		return result;
 	}
 
@@ -167,7 +167,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			if (importdata)
 				return null;
 		}
-		resetMicrograph();
+		ppicker.resetMicrograph(getMicrograph());
 		String result = ppicker.importParticlesFromFile(file, format, getMicrograph(), scale, invertx, inverty);
 		ppicker.saveData(getMicrograph());
 		return result;
@@ -179,6 +179,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		{
 			ppicker.resetParticleImages();
 			super.updateSize(size);
+			ppicker.initUpdateTemplates();
 
 		}
 		catch (Exception e)
@@ -199,7 +200,9 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			getCanvas().repaint();
 			updateMicrographsModel(true);
 			getCanvas().refreshActive(null);
+			
 			ppicker.initUpdateTemplates();
+			
 		}
 		else
 			// only can choose file if TrainingPickerJFrame instance

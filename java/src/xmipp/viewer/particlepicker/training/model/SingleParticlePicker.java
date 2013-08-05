@@ -112,9 +112,9 @@ public class SingleParticlePicker extends ParticlePicker {
 		saveData(micrograph);
 		setChanged(false);
 	}
-	
+
 	/* Save changes to ALL micrographs, mainly used when importing. */
-	public void saveAllData(){
+	public void saveAllData() {
 		super.saveData();
 		for (Micrograph m : micrographs)
 			saveData(m);
@@ -174,10 +174,12 @@ public class SingleParticlePicker extends ParticlePicker {
 		initUpdateTemplates(num);
 	}
 
-	public synchronized void setSize(int size) {
+	public void setSize(int size) {
+
 		super.setSize(size);
 		classifier.setSize(size);
-		initUpdateTemplates(getTemplatesNumber());
+		System.out.println("size updated");
+
 	}
 
 	public synchronized ImageGeneric getTemplates() {
@@ -513,10 +515,11 @@ public class SingleParticlePicker extends ParticlePicker {
 				m.addAutomaticParticle(particle);
 				added = true;
 			}
-			// Change the state of the micrograph if some automatic particles were added
+			// Change the state of the micrograph if some automatic particles
+			// were added
 			if (added && m.getState() == MicrographState.Available)
 				m.setState(MicrographState.Auto);
-			
+
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
@@ -525,7 +528,12 @@ public class SingleParticlePicker extends ParticlePicker {
 
 	public void loadAutomaticParticles(SingleParticlePickerMicrograph m,
 			String file) {
-		if (new File(file).exists() && MetaData.containsBlock(file, particlesAutoBlock))// todo: check the auto block exists
+		if (new File(file).exists()
+				&& MetaData.containsBlock(file, particlesAutoBlock))// todo:
+																	// check the
+																	// auto
+																	// block
+																	// exists
 		{
 			MetaData md = new MetaData(getParticlesAutoBlock(file));
 			loadAutomaticParticles(m, md);
@@ -564,7 +572,7 @@ public class SingleParticlePicker extends ParticlePicker {
 
 		String filename;
 		String result = "";
-		initTemplates();
+
 		String particlesfile = getExportFile(path);
 		if (particlesfile != null) {
 			importAllParticles(particlesfile);
@@ -607,12 +615,14 @@ public class SingleParticlePicker extends ParticlePicker {
 			y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 			if (!m.fits(x, y, size))// ignore out of bounds particle
 			{
-				result += XmippMessage.getOutOfBoundsMsg("Particle")
-						+ String.format(" on x:%s y:%s", x, y);
+				result += XmippMessage.getOutOfBoundsMsg(String.format(
+						"Particle on x:%s y:%s", x, y)) + " dismissed\n";
+
 				continue;
 			}
-			tm.addManualParticle(new ManualParticle(x, y, this, tm, 2),	this, false);
-			
+			tm.addManualParticle(new ManualParticle(x, y, this, tm, 2), this,
+					false);
+
 		}
 		saveData(m);
 		return result;
@@ -675,7 +685,7 @@ public class SingleParticlePicker extends ParticlePicker {
 			boolean inverty) {// Expected a file for all
 								// micrographs
 		try {
-			initTemplates();
+
 			String[] blocksArray = MetaData.getBlocksInMetaDataFile(file);
 			List<String> blocks = Arrays.asList(blocksArray);
 			String block;
@@ -720,7 +730,9 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public void initUpdateTemplates() {
+		System.out.println("initUpdateTemplates");
 		initUpdateTemplates(getTemplatesNumber());
+		System.out.println("after sending to update templates");
 	}
 
 	public void initUpdateTemplates(int num) {
@@ -754,6 +766,7 @@ public class SingleParticlePicker extends ParticlePicker {
 			}
 			templates.getRadialAvg(radialtemplates);
 			saveTemplates();
+			System.out.println("templates updated");
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e.getMessage());
 		}
@@ -866,9 +879,11 @@ public class SingleParticlePicker extends ParticlePicker {
 
 	}
 
-	public void loadManualParticles(SingleParticlePickerMicrograph micrograph, String file) 
-	{
-		if (new File(file).exists() && MetaData.containsBlock(file, getParticlesBlockName(Format.Xmipp301))) {
+	public void loadManualParticles(SingleParticlePickerMicrograph micrograph,
+			String file) {
+		if (new File(file).exists()
+				&& MetaData.containsBlock(file,
+						getParticlesBlockName(Format.Xmipp301))) {
 
 			int x, y;
 			ManualParticle particle;

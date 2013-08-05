@@ -140,7 +140,9 @@ public class ImportParticlesJDialog extends XmippDialog {
 				showError(XmippMessage.getPathNotExistsMsg(path));
 			else
 			{
+				System.out.println("Handling ok");
 				String result = importParticles();
+				System.out.println("ok handled");
 				if(result != null && !result.equals(""))
 					XmippDialog.showInfo(this.parent, result);
 
