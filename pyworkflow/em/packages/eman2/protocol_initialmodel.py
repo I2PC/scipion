@@ -104,7 +104,8 @@ class EmanProtInitModel(ProtInitialVolume):
             args += ' --shrink=%(shrink)d'
         if self.numberOfThreads > 1:
             args += ' --parallel=thread:%(threads)d'
-        self._insertRunJobStep('e2initialmodel.py', args % self._params)
+        program = eman2.getEmanProgram('e2initialmodel.py')
+        self._insertRunJobStep(program, args % self._params)
                 
     def createOutput(self):
         self._leaveWorkingDir()

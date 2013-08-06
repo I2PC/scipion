@@ -58,7 +58,7 @@ class EmanProtBoxing(ProtParticlePicking):
         # First we go to runs directory (we create if it does not exist)
         #path.makePath("runs")
         # Program to execute and it arguments
-        program = "e2boxer.py"
+        program = eman2.getEmanProgram("e2boxer.py")
         arguments = "%(inputMics)s --boxsize=%(boxSize)i"
         # Run the command with formatted parameters
         self._log.info('Launching: ' + program + ' ' + arguments % self._params)
