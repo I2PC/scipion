@@ -734,7 +734,8 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public void initUpdateTemplates(int num) {
-		TasksManager.getInstance().addTask(new UpdateTemplatesTask(this, num));
+//		TasksManager.getInstance().addTask(new UpdateTemplatesTask(this, num));
+		new UpdateTemplatesTask(this, num);
 		saveConfig();
 	}
 
