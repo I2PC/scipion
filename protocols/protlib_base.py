@@ -341,15 +341,18 @@ class XmippProject():
         
         for r in runs:
             extRunName = getExtendedRunName(r)
-            prot = self.getProtocolFromRunName(extRunName)
-            self._registerRunProtocol(extRunName, prot, runsDict)
-            runsDict[extRunName].state = r['run_state']
+            try:
+                prot = self.getProtocolFromRunName(extRunName)
+                self._registerRunProtocol(extRunName, prot, runsDict)
+                runsDict[extRunName].state = r['run_state']
+            except Exception, ex:
+                print "Error loading run: ", extRunName, "...IGNORED."
         
         for r in runs:
             dd = runsDict[getExtendedRunName(r)]
             for r2 in runs:
-                dd2 = runsDict[getExtendedRunName(r2)]
-                if dd.extRunName != dd2.extRunName and not dd2.hasDep(dd.extRunName):
+                dd2 = runsDict.get(getExtendedRunName(r2), None)
+                if dd2 and dd.extRunName != dd2.extRunName and not dd2.hasDep(dd.extRunName):
                     for k, v in dd.prot.ParamsDict.iteritems():
                         if k != 'RunName' and type(v) == str and v.startswith(dd2.prot.WorkingDir + '/'):
                             dd2.addDep(dd.extRunName)
