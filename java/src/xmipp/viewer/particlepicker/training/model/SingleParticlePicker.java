@@ -136,6 +136,7 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public synchronized void initTemplates(int num) {
+		System.out.println("initTemplates");
 		if (num == 0)
 			return;
 		try {
@@ -163,6 +164,7 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public synchronized void setTemplatesNumber(int num) {
+		System.out.println("setTemplatesNumber");
 		if (num <= 0)
 			throw new IllegalArgumentException(
 					XmippMessage.getIllegalValueMsgWithInfo("Templates Number",
@@ -179,10 +181,12 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public synchronized ImageGeneric getTemplates() {
+		System.out.println("getTemplates");
 		return templates;
 	}
 
 	public synchronized void setTemplate(ImageGeneric ig) {
+		System.out.println("setTemplate");
 		float[] matrix;
 		try {
 			// TODO getArrayFloat and setArrayFloat must be call from C both in
@@ -734,6 +738,7 @@ public class SingleParticlePicker extends ParticlePicker {
 	public synchronized void resetParticleImages()// to update templates with
 													// the right particles
 	{
+		System.out.println("resetParticleImages");
 		for (SingleParticlePickerMicrograph m : micrographs) {
 			for (ManualParticle p : m.getManualParticles())
 				p.resetImagePlus();
@@ -754,6 +759,7 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public synchronized void updateTemplates(int num) {
+		System.out.println("updateTemplates");
 		try {
 			if (getMode() != Mode.Manual)
 				return;
@@ -766,8 +772,10 @@ public class SingleParticlePicker extends ParticlePicker {
 			double[] align;
 
 			System.err.println("JM_DEBUG: ============= Updating TEMPLATES ============");
-
+			int count = 0;
 			for (SingleParticlePickerMicrograph m : getMicrographs()) {
+				if(count >= 100)
+					break;
 				particles = m.getManualParticles();
 				size = particles.size();
 				System.err.println("JM_DEBUG: Updating for Micrograph: "
@@ -781,6 +789,8 @@ public class SingleParticlePicker extends ParticlePicker {
 						align = templates.alignImage(igp);
 						applyAlignment(particle, igp, align);
 					}
+					count ++;
+					
 				}
 				saveTemplates(); //Save templates after each micrograph?
 			}
@@ -793,6 +803,7 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public synchronized void addParticleToTemplates(ManualParticle particle) {
+		System.out.println("addParticleToTemplates");
 		try {
 			ImageGeneric igp = particle.getImageGeneric();
 			// will happen only in manual mode
@@ -824,6 +835,8 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public synchronized void centerParticle(ManualParticle p) {
+		System.out.println("centerParticle");
+		
 		if (getManualParticlesNumber() <= getTemplatesNumber())
 			return;// templates not ready
 		Particle shift = null;
@@ -849,6 +862,7 @@ public class SingleParticlePicker extends ParticlePicker {
 
 	public synchronized void applyAlignment(ManualParticle particle,
 			ImageGeneric igp, double[] align) {
+		System.out.println("applyAlignment");
 		try {
 			particle.setLastalign(align);
 			templates.applyAlignment(igp, particle.getTemplateIndex(),
