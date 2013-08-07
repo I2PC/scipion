@@ -203,8 +203,7 @@ def _run(command, wait):
 def _stopLocal(protocol):
     
     if protocol.useQueue():     
-        jobId = protocol.getJobId()
-        raise Exception("_stopLocal for queue not implemented yet")   
+        jobId = protocol.getJobId()        
         host = protocol.getHostConfig()
         cancelCmd = host.getCancelCommand() % {'JOB_ID': jobId}
         _run(cancelCmd, wait=True)
