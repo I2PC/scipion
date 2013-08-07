@@ -137,6 +137,8 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 	public String importParticlesFromFile(Format format, String file, float scale, boolean invertx, boolean inverty)
 	{
+		if(!new File(file).exists())
+			throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("file", file));
 		String result = "";
 		if (ppicker.isReviewFile(file))
 		{
