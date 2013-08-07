@@ -45,6 +45,7 @@ public:
 	double firstZeroAvg;
 	double maxFreq;
 	double firstZeroDisagreement;
+	double beating;
 	double maxDampingAtBorder;
 	double PSDradialIntegral;
 	double fittingScore;
