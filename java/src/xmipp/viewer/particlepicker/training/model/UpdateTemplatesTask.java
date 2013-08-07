@@ -1,10 +1,8 @@
-package xmipp.viewer.particlepicker;
+package xmipp.viewer.particlepicker.training.model;
 
 import javax.swing.SwingWorker;
 
-import xmipp.utils.Task;
 import xmipp.viewer.particlepicker.training.gui.TemplatesJDialog;
-import xmipp.viewer.particlepicker.training.model.SingleParticlePicker;
 
 
 public class UpdateTemplatesTask extends SwingWorker<String, Object>

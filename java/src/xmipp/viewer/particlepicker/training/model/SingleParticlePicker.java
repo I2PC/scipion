@@ -14,13 +14,11 @@ import xmipp.jni.MetaData;
 import xmipp.jni.Particle;
 import xmipp.jni.PickingClassifier;
 import xmipp.utils.DEBUG;
-import xmipp.utils.TasksManager;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
-import xmipp.viewer.particlepicker.UpdateTemplatesTask;
 import xmipp.viewer.particlepicker.training.gui.SingleParticlePickerJFrame;
 
 /**
@@ -753,7 +751,7 @@ public class SingleParticlePicker extends ParticlePicker {
 
 	public void initUpdateTemplates(int num) {
 //		TasksManager.getInstance().addTask(new UpdateTemplatesTask(this, num));
-		new UpdateTemplatesTask(this, num);
+		new UpdateTemplatesTask(this, num).execute();
 		saveConfig();
 	}
 
