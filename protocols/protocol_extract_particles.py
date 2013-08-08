@@ -17,7 +17,7 @@ from xmipp import MetaData, MetaDataInfo, AGGR_AVG, LEFT, MD_APPEND, MDL_IMAGE, 
 import glob
 from os.path import exists
 from protlib_utils import runJob, printLog
-from protlib_filesystem import createLink, removeFilenameExt
+from protlib_filesystem import createLink, removeFilenameExt, replaceBasenameExt
 from protlib_gui_ext import showError
 
 class DownsamplingMode:
@@ -85,14 +85,14 @@ class ProtExtractParticles(ProtParticlesBase):
                                fnExtractList=destFnExtractList)
             micrographs = self.createBlocksInExtractFile(self.MicrographsMd)
         else:
-            srcFnExtractList = self.PrevRun.getFilename('extract_list')
-            if exists(srcFnExtractList):
-                self.insertCopyFile(srcFnExtractList, destFnExtractList)
-                micrographs = getBlocksInMetaDataFile(srcFnExtractList)
-            else:
-                self.insertStep("createExtractList", fnMicrographsSel=self.MicrographsMd,pickingDir=self.pickingDir,
-                                   fnExtractList=destFnExtractList)
-                micrographs = self.createBlocksInExtractFile(self.MicrographsMd)
+#            srcFnExtractList = self.PrevRun.getFilename('extract_list')
+#            if exists(srcFnExtractList):
+#                self.insertCopyFile(srcFnExtractList, destFnExtractList)
+#                micrographs = getBlocksInMetaDataFile(srcFnExtractList)
+#            else:
+            self.insertStep("createExtractList", fnMicrographsSel=self.MicrographsMd,pickingDir=self.pickingDir,
+                               fnExtractList=destFnExtractList)
+            micrographs = self.createBlocksInExtractFile(self.MicrographsMd)
 
         # Process each micrograph                        
         for micrograph in micrographs:
@@ -265,27 +265,31 @@ def getMicBlockFilename(micrograph, extractList):
     return getProtocolFilename('mic_block_fn', Micrograph=micrograph, ExtractList=extractList)
     
 def createExtractList(log,fnMicrographsSel,pickingDir,fnExtractList):
-    md=MetaData(fnMicrographsSel)
-    mdpos=MetaData()
-    mdposAux=MetaData()
+    md = MetaData(fnMicrographsSel)
+    mdpos = MetaData() 
+    mdposAuto = MetaData()
+    
     for objId in md:
         micName = removeBasenameExt(md.getValue(MDL_MICROGRAPH, objId))
         
         fnManual = join(pickingDir, "extra", micName + ".pos")
-        fnAuto1 = join(pickingDir, "extra", micName + "_auto.pos")
+        #fnAuto1 = join(pickingDir, "extra", micName + "_auto.pos")
         
         mdpos.clear()
         if exists(fnManual):
-            try:            
-                mdpos.read("particles@"+fnManual)
-            except:
-                pass
-        if exists(fnAuto1):
-            try:
-                mdposAux.read("particles@"+fnAuto1)
-                mdposAux.removeDisabled();
-                mdposAux.removeLabel(MDL_ENABLED)
-                mdpos.unionAll(mdposAux) 
+            try:   
+                mdpos.clear()
+                mdposAuto.clear()
+                blocks = getBlocksInMetaDataFile(fnManual)
+                if 'particles' in blocks:         
+                    mdpos.read("particles@" + fnManual)
+                    print "reading particles from : ", "particles@" + fnManual
+                if 'particles_auto' in blocks:
+                    mdposAuto.read("particles_auto@" + fnManual)
+                    print "reading particles from : ", "particles_auto@" + fnManual
+                mdpos.unionAll(mdposAuto)
+                mdpos.removeDisabled()
+                print "total enabled: ", mdpos.size()
             except:
                 pass
         # Append alphanumeric prefix to help identifying the block 
