@@ -774,9 +774,17 @@ public class SingleParticlePicker extends ParticlePicker {
 			double[] align;
 
 			System.err.println("JM_DEBUG: ============= Updating TEMPLATES ============");
+			//FIXME: the template update needs to be done in a 
+			// more efficient way, now we are using this maxcount
+			// to limit the number of particles used in the update
 			int count = 0;
+			int maxcount = 100; 
+			//FIXME: This is a tweak to avoid losing time with big particles
+			if (getSize() > 256)
+				maxcount = 10;
+			
 			for (SingleParticlePickerMicrograph m : getMicrographs()) {
-				if(count >= 100)
+				if(count >= maxcount)
 					break;
 				particles = m.getManualParticles();
 				size = particles.size();
