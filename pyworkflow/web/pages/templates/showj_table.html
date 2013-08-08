@@ -26,6 +26,7 @@ $.fn.dataTableExt.oApi.fnGetColumnIndex = function ( oSettings, sCol )
 
 </script>
 <script type="text/javascript" src="{{jquerydataTables_colreorder}}"></script>
+<script type="text/javascript" src="/static/js/ColReorderWithResize.js"></script>
 <script type="text/javascript" src="{{jeditable}}"></script>
 <!-- <script type="text/javascript" src="{{jquery_ui}}"></script> -->
 <!-- <script type="text/javascript" src="{{jquery_tabletools}}"></script> -->
@@ -69,7 +70,7 @@ $(document).ready(function() {
 			        "sScrollXInner": "110%",
 			        "bScrollCollapse": true,*/ 
 			        "oColReorder": {
-		    			"aiOrder": {{metadata.tableLayoutConfiguration.colsOrder}}
+		    			"aiOrder": {{tableLayoutConfiguration.colsOrder}}
 		    		}, 
 		    		
 		    		"bProcessing": true,
@@ -84,6 +85,11 @@ $(document).ready(function() {
 		                	"imageDim": "{{inputParameters.imageDim}}"
 		                		} );
 		            },
+		            "fnDrawCallback": function( oSettings ) {
+		            	if ( typeof oTable != 'undefined' ) {
+		            		setElementsEditable('.editable')
+		            	}
+		              },
 		            "bDeferRender": true,
 		    		/* "bRetrieve": true */
 /* 		    		"aaData":{% autoescape off %}
@@ -117,10 +123,12 @@ $(document).ready(function() {
 	
 	initializeMultipleSelectionTool()
 	addIconsToHeader()
-	setElementsEditable('.editable') 
+	setElementsEditable('.editable')
+	
 	
 } );
 
+/* Add renderable, editable and disable icon to each column */
 function addIconsToHeader(){
 	$("#table_container thead th div").append("<span class=\"css_left\"><img src=\"/resources/showj/delete_table.png\" class=\"arrowImage\" onclick=\"enableDisableColumn(event,this)\"></span>")
 	$("#table_container thead th").each(function(){
@@ -131,8 +139,11 @@ function addIconsToHeader(){
 			$(this).find("div").append("<span class=\"css_left\"><img src=\"/resources/showj/edit_table.png\" class=\"arrowImage pressedButton\" onclick=\"enableDisableEditableColumn(event,this)\"></span>")
 		}
 	})
-
 }
+
+/* Enable/disable column 
+ * Disable datatable column when event triggered from icon disable column header 
+ */
 function enableDisableColumn(event, element){
 	$(element).toggleClass("pressedButton")
 	
@@ -146,6 +157,9 @@ function enableDisableColumn(event, element){
 	event.stopPropagation() 
 }
 
+/* Enable/disable render to column
+ * When column cell is image, it will change from img element to path text and viceversa 
+ */
 function enableDisableRenderColumn(event, element){
 	$(element).toggleClass("pressedButton")
 	
@@ -172,6 +186,9 @@ function enableDisableRenderColumn(event, element){
 	event.stopPropagation() 
 }
 
+/* Enable/disable editable to column
+ * When column cell is text or a number, it will change from a text element to an input textfield and viceversa 
+ */
 function enableDisableEditableColumn(event, element){
 	$(element).toggleClass("pressedButton")
 	
@@ -185,26 +202,33 @@ function enableDisableEditableColumn(event, element){
 	
 }
 
+/*
+ * Enable/disable editable to column by column id
+ */
 function enableDisableEditableColumnByColId(iCol){
 	
 /* 	alert(columns[0].nTh)
 	alert(columns[0].nTr) */
-	taka=oTable.fnGetData(0,0)
+	/*taka=oTable.fnGetData(0,0)
 	
-	alert($(taka))
+	alert($(taka))*/
 
-	oTable.fnSettings().aoData[0].nTr;
+	for(var rowIndex=0;rowIndex<oTable.fnSettings().fnRecordsTotal();rowIndex++){
+		console.log("viendo celdas ra fila"+rowIndex+" columna "+iCol+":")
+		console.log(oTable.fnSettings().aoData[rowIndex].nTr.childNodes[iCol]);
+	}
 
-	/*Iterate through all columns */
-    for (var columnIndex=0; columnIndex<columns.length; columnIndex++){
+
+   /* for (var columnIndex=0; columnIndex<columns.length; columnIndex++){
 		
     	nTd = nTr.childNodes[columnIndex];
-    	
+  */  	
 	alert(oTable.fnSettings().fnRecordsTotal())
-	
+	alert(oTable.fnSettings().aoData.length)
+	/*
 	for (var i=0; i<oTable.fnSettings().fnRecordsTotal(); i++){
 	}
-	
+	*/
 	var nTrs = oTable.fnGetNodes();
 	if ($('td:nth-child('+(iCol+1)+')', nTrs).hasClass("editable")){
 		$('td:nth-child('+(iCol+1)+')', nTrs).unbind('click');
@@ -216,6 +240,8 @@ function enableDisableEditableColumnByColId(iCol){
 }
 
 function setElementsEditable(elements){
+	alert("settingelementseditable")
+	console.log(oTable.fnGetNodes())
 	$(elements, oTable.fnGetNodes()).editable(
 			/* '../examples_support/editable_ajax.php', */
 			function(value, settings) {
@@ -240,6 +266,29 @@ function setElementsEditable(elements){
 }
 
 function generateDataForTable(){
+	dataForTable = new Array();
+	{% for obj in metadata.objects %}
+		dataRowForTable = new Array()
+		{% for value in obj.values %}
+			{% if value.typeOfColumn == "image" %} 
+				dataRowForTable.push("<img class=\"tableImages\" id=\"{{value.label}}___{{forloop.parentloop.counter0}}\" src=\"/get_image/?image={{value.imgValue}}\"/><span style=\"display:none\">{{value.strValue}}</span> ")
+		   	{% elif value.typeOfColumn == "checkbox" and value.strValue == '1' %}
+				dataRowForTable.push("<input type=\"checkbox\" onclick=\"valueChange(this);\" id=\"{{value.label}}___{{forloop.parentloop.counter0}}\" checked>")
+			{% elif value.typeOfColumn == "checkbox" and value.strValue != '1' %}
+				dataRowForTable.push("<input type=\"checkbox\" onclick=\"valueChange(this);\" id=\"{{value.label}}___{{forloop.parentloop.counter0}}\">")
+		   	{% else %}
+				dataRowForTable.push("{{value.strValue}}")
+		   	{% endif %}	
+		{% endfor %}
+		/* dataRowForTable.push("DT_RowId: \"{{forloop.counter0}}\"") */
+		dataForTable.push(dataRowForTable)
+	{% endfor %}
+	return dataForTable;
+	
+	
+	
+	
+	
 	dataForTable = new Array();
 	{% for obj in metadata.objects %}
 		dataRowForTable = new Array()
