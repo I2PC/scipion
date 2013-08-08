@@ -600,11 +600,10 @@ public class SingleParticlePicker extends ParticlePicker {
 		try {
 			md = new MetaData();
 			fillParticlesMdFromFile(path, f, m, md, scale, invertx, inverty);
+			System.err.format("After fillParticlesMdFromFile, size:\n", md.size());
 			if (md.size() > 0) {
 				//Be sure that width and height are loaded
-				m.loadDimensions();
 				result = importParticlesFromMd(m, md);
-				saveData(m);
 			}
 			md.destroy();
 		} catch (Exception ex) {
@@ -618,7 +617,7 @@ public class SingleParticlePicker extends ParticlePicker {
 			MetaData md) {
 
 		resetMicrograph(m);
-		SingleParticlePickerMicrograph tm = (SingleParticlePickerMicrograph) m;
+		m.loadDimensions();
 		long[] ids = md.findObjects();
 		int x, y;
 		String result = "";
@@ -634,7 +633,7 @@ public class SingleParticlePicker extends ParticlePicker {
 
 				continue;
 			}
-			tm.addManualParticle(new ManualParticle(x, y, this, tm, 2), this,
+			m.addManualParticle(new ManualParticle(x, y, this, m, 2), this,
 					false);
 
 		}
@@ -781,8 +780,8 @@ public class SingleParticlePicker extends ParticlePicker {
 					break;
 				particles = m.getManualParticles();
 				size = particles.size();
-//				System.err.println("JM_DEBUG: Updating for Micrograph: "
-//						+ m.getFile());
+				System.err.println("JM_DEBUG: Updating for Micrograph: "
+						+ m.getFile());
 				for (int i = 0; i < size; i++) {
 					particle = particles.get(i);
 					igp = particle.getImageGeneric();
