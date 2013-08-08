@@ -463,7 +463,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 		// Setting menus
 
-		exportmi = new JMenuItem("Export Particles...", XmippResource.getIcon("export_wiz.gif"));
+		exportmi = new JMenuItem("Export coordinates...", XmippResource.getIcon("export_wiz.gif"));
 
 		exportmi.addActionListener(new ActionListener()
 		{
