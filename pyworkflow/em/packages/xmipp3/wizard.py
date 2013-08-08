@@ -254,6 +254,7 @@ class XmippImagePreviewDialog(XmippPreviewDialog):
     def _itemSelected(self, obj):
         filename = obj.getFileName()
         print "image.readPreview, filename=%s, self.dim=%d" % (filename, self.dim)
+        self.image = xmipp.Image()
         self.image.readPreview(filename, self.dim)
         if filename.endswith('.psd'):
             self.image.convertPSD()
