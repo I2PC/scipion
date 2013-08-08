@@ -57,7 +57,7 @@
 	<script type="text/javascript">
 	//Initialize block and metadata combobox to reload the web when changing
 	function initializeComboBoxEvents(){
-		$("#id_blockComboBox , #id_metadataComboBox").change(function(){
+		$("#id_blockComboBox , #id_labelsToRenderComboBox").change(function(){
 			$('form#showjForm').submit();
 		})
 	}
@@ -177,23 +177,91 @@
 		//Initialize events for zoom change
 		function initializeZoomEvents(){
 			$('#id_zoom').click(function(){
-				updateImageDimByUrl();	
+				/* updateImageDimByUrl(); */
+				setImageSize(false)
 			});
 			
 			$('#id_zoom').change(function(){
-				updateImageDimByUrl();
+				/* updateImageDimByUrl(); */
+				setImageSize(false)
 			});
 				
 	 		$('#id_zoom').keyup(function(e){
 	 			var code = e.keyCode || e.which; 
  			  	if (code  == 13) {               
- 					 updateImageDimByUrl();
+ 					 /* updateImageDimByUrl(); */
+ 					 setImageSize(false)
  			  	}
 			});	 
 		}
 		
+		
+		function setImageSize(refreshElement){
+			/* Gets zoom and image width and height */
+			zoom_element=$('#id_zoom')
+			imageHeight_val = parseInt($('#id_imageHeight').val())
+			imageWidth_val = parseInt($('#id_imageWidth').val())
+			
+			console.log(zoom_element.val())
+			console.log(imageHeight_val)
+			console.log(imageWidth_val)
+			
+			/* Check if zoom in pixel */
+			if (zoom_element.val().indexOf('px')!=-1){
+				/*  Get zoom value*/			
+				zoom_val=parseInt(zoom_element.val().split('px')[0])
+				
+				/* Check is image bigger than zoom */
+				/* if (zoom_val <  imageWidth_val && zoom_val < imageHeight_val){ */
+					/* Calculate zoom in percentage */
+					if (imageHeight_val<imageWidth_val){
+						tableImages_width=zoom_val
+						zoom_val_perc=Math.round((zoom_val/imageWidth_val)*100)
+					} 
+					else{
+						tableImages_width=Math.round(zoom_val*(imageWidth_val/imageHeight_val))
+						zoom_val_perc=Math.round((zoom_val/imageHeight_val)*100)
+					}
+					
+				/* } */
+				
+			}
+			else{
+				zoom_val_perc=zoom_element.val()
+				if (imageHeight_val<imageWidth_val){
+					zoom_val_pixel=Math.round((zoom_val_perc*imageWidth_val)/100)
+					tableImages_width=zoom_val_pixel
+				} 
+				else{
+					zoom_val_pixel=Math.round((zoom_val_perc*imageHeight_val)/100)
+					tableImages_width=zoom_val_pixel
+				}
+				
+				
+			}
+			
+			if (refreshElement==true){
+				zoom_element.val(zoom_val_perc)
+			}
+			
+			d = new Date();
+			$(".tableImages").each(function(){
+			   var newSrc = "";
+			   if ($(this).attr("src").indexOf("&dim") != -1){
+			   	newSrc = $(this).attr("src").substring(0,$(this).attr("src").indexOf("&dim"));
+			   }
+			   else{
+				  newSrc = $(this).attr("src");   
+			   }
+			   $(this).attr("width",tableImages_width)
+			   $(this).attr("src", newSrc + "&dim="+tableImages_width+"&"+d.getTime());
+		   })
+		}
+		
 		//Update image dimensions by url due to zoom change
-		function updateImageDimByUrl(){
+/* 		function updateImageDimByUrl(){
+			console.log("actualizando tamano")
+			
 			d = new Date();
 		   	$(".tableImages").each(function(){
 			   var newSrc = "";
@@ -205,7 +273,7 @@
 			   }
 			   $(this).attr("src", newSrc + "&dim="+$('#id_zoom').val()+"&"+d.getTime());
 		   })
-		}
+		} */
 	
 	</script>
 	<script type="text/javascript">
@@ -384,11 +452,11 @@
 				
 				<div id="metadataSelectorContainer" class="sectionMenu">
 					<span class="textMenu">
-					{% if not form.metadataComboBox.is_hidden %}
-					{{ form.metadataComboBox.label_tag }}
+					{% if not form.labelsToRenderComboBox.is_hidden %}
+					{{ form.labelsToRenderComboBox.label_tag }}
 					{% endif %}
 					</span>
-					{{ form.metadataComboBox }}
+					{{ form.labelsToRenderComboBox }}
 				</div>
 				
 			

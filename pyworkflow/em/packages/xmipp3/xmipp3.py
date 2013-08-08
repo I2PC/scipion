@@ -243,7 +243,6 @@ class XmippDataSet(ds.DataSet):
     """
     def __init__(self, filename):
         self._filename = filename
-        print "filename"+filename
         blocks = xmipp.getBlocksInMetaDataFile(filename)
         ds.DataSet.__init__(self, blocks)
         

@@ -70,7 +70,7 @@ $(document).ready(function() {
 			        "sScrollXInner": "110%",
 			        "bScrollCollapse": true,*/ 
 			        "oColReorder": {
-		    			"aiOrder": {{metadata.tableLayoutConfiguration.colsOrder}}
+		    			"aiOrder": {{tableLayoutConfiguration.colsOrder}}
 		    		}, 
 		    		
 		    		"bProcessing": true,
@@ -266,6 +266,29 @@ function setElementsEditable(elements){
 }
 
 function generateDataForTable(){
+	dataForTable = new Array();
+	{% for obj in metadata.objects %}
+		dataRowForTable = new Array()
+		{% for value in obj.values %}
+			{% if value.typeOfColumn == "image" %} 
+				dataRowForTable.push("<img class=\"tableImages\" id=\"{{value.label}}___{{forloop.parentloop.counter0}}\" src=\"/get_image/?image={{value.imgValue}}\"/><span style=\"display:none\">{{value.strValue}}</span> ")
+		   	{% elif value.typeOfColumn == "checkbox" and value.strValue == '1' %}
+				dataRowForTable.push("<input type=\"checkbox\" onclick=\"valueChange(this);\" id=\"{{value.label}}___{{forloop.parentloop.counter0}}\" checked>")
+			{% elif value.typeOfColumn == "checkbox" and value.strValue != '1' %}
+				dataRowForTable.push("<input type=\"checkbox\" onclick=\"valueChange(this);\" id=\"{{value.label}}___{{forloop.parentloop.counter0}}\">")
+		   	{% else %}
+				dataRowForTable.push("{{value.strValue}}")
+		   	{% endif %}	
+		{% endfor %}
+		/* dataRowForTable.push("DT_RowId: \"{{forloop.counter0}}\"") */
+		dataForTable.push(dataRowForTable)
+	{% endfor %}
+	return dataForTable;
+	
+	
+	
+	
+	
 	dataForTable = new Array();
 	{% for obj in metadata.objects %}
 		dataRowForTable = new Array()

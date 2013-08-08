@@ -37,52 +37,44 @@ def showj(request, inputParameters=None):
     #############
     # WEB INPUT PARAMETERS
     if request.method == 'POST': # If the form has been submitted... Post method
-        #Load Dataset
-        #Todo: Check type of Dataset        
-        dataset = loadDatasetXmipp(request.POST.get('path'))
-        dataset.loadTable(request.POST.get('blockComboBox'))
         
-        #Load table layout configuration. How to display columns and attributes (visible, render, editable)
-        tableLayoutConfiguration = TableLayoutConfiguration(dataset, 'render' in request.GET)
-        
-        #Initialize Showj Form (button toolbar)
-        showjForm = ShowjForm(dataset, tableLayoutConfiguration, request.POST) # A form bound to the POST data
-        
+        _path = request.POST.get('path')
+        _blockComboBox = request.POST.get('blockComboBox')
+        _render = 'render' in request.POST
+         
     else: #If the form is called by get 
+        _path = inputParameters['path']
+        _blockComboBox = inputParameters['blockComboBox'] if 'blockComboBox' in inputParameters else '' 
+        _render = inputParameters['allowRender']
         
-        #Init Dataset
-        dataset = loadDatasetXmipp(request.GET.get('path', 'tux_vol.xmd'))
-
-        #Load Dataset
-        dataset._loadTable(inputParameters['blockComboBox'] if ('blockComboBox' in inputParameters) else dataset.listTables()[0])
-
-        #Load table layout configuration. How to display columns and attributes (visible, render, editable)    
-        tableLayoutConfiguration = TableLayoutConfiguration(dataset, 'render' in request.GET)
-            
-        #If the form is called by the url
-        if inputParameters == None:
-            
-            #Initialize inputParameters from url parameters
-            inputParameters = {'path': request.GET.get('path', 'tux_vol.xmd'),
-                         'blockComboBox': request.GET.get('block', dataset.listTables()[0]),
-                         'labelsToRenderComboBox': getLabelsToRenderComboBoxValues(tableLayoutConfiguration.columnsLayout)[0][0],
-                         'allowRender': 'render' in request.GET,
-                         'zoom' : request.GET.get('dim', 150),
-                         'mode': request.GET.get('mode', 'gallery'),
-                         'goto': 1,
-                         'colRowMode': request.GET.get('colRowMode', 'Off')}
-        #If the form is called from visualize object menu in Scipion    
-        else:
-            #Initialize blockCombox and labelToRenderComboBox default value           
-            # dataset = loadDatasetXmipp(inputParameters['path'], inputParameters['blockComboBox'] if ('blockComboBox' in inputParameters) else '')
-            
-            if 'blockComboBox' not in inputParameters: inputParameters['blockComboBox'] = dataset.listTables()[0]
-            if 'labelsToRenderComboBox' not in inputParameters: inputParameters['labelsToRenderComboBox']=getLabelsToRenderComboBoxValues(tableLayoutConfiguration.columnsLayout)[0][0]
-
         
+    #Init Dataset
+    #Todo: Check type of Dataset 
+    dataset = loadDatasetXmipp(_path)
+    
+    if _blockComboBox == '':
+        _blockComboBox = dataset.listTables()[0]
+    
+    #Get table from block name
+    tableDataset=dataset.getTable(_blockComboBox)
+    
+    #Load table layout configuration. How to display columns and attributes (visible, render, editable)    
+    tableLayoutConfiguration = TableLayoutConfiguration(tableDataset, _render)
 
-        #Initialize Showj Form (button toolbar)
-        showjForm = ShowjForm(dataset, inputParameters) # An unbound form
+    #Initialize Showj Form (button toolbar)
+    if request.method == 'POST': # If the form has been submitted... Post method    
+        showjForm = ShowjForm(dataset, tableLayoutConfiguration, request.POST) # A form bound to the POST data
+    else:
+        if 'labelsToRenderComboBox' not in inputParameters: inputParameters['labelsToRenderComboBox']=getLabelsToRenderComboBoxValues(tableLayoutConfiguration.columnsLayout)[0][0]
+        
+        # NAPA DE LUXE (Xmipp dependant)
+        img_dimensions = get_image_dimensions(request, tableDataset.getElementById(0,inputParameters['labelsToRenderComboBox']))
+        inputParameters['imageWidth']=img_dimensions[0]
+        inputParameters['imageHeight']=img_dimensions[1]
+        
+        inputParameters['blockComboBox']=_blockComboBox
+        
+        showjForm = ShowjForm(dataset, tableLayoutConfiguration, inputParameters) # An unbound form
         
     if showjForm.is_valid() is False:
         print showjForm.errors
@@ -92,8 +84,6 @@ def showj(request, inputParameters=None):
     #Store dataset in session 
     request.session['dataset'] = dataset
 
-#    menuLayoutConfig = MenuLayoutConfig(showjForm.data['mode'], showjForm.data['path'], showjForm.data['blockComboBox'], showjForm.data['allowRender'], showjForm.data['zoom'])
-    
     #Create context to be send
     context = {'jquery': jquery_path, #Configuration variables
                'utils': utils_path,
@@ -109,7 +99,7 @@ def showj(request, inputParameters=None):
                'css': css_path,
                
                'tableLayoutConfiguration' : tableLayoutConfiguration, #Data variables
-               'dataset': dataset,
+               'tableDataset': tableDataset,
                'form': showjForm} #Form
     
     return_page = '%s%s%s' % ('showj_', showjForm.data['mode'], '.html')
@@ -167,11 +157,11 @@ class MdValue():
 ################################### BEGIN LAYOUT ##########################            
             
 class TableLayoutConfiguration():
-    def __init__(self, dataset, allowRender=True):
+    def __init__(self, tableDataset, allowRender=True):
         
         self.columnsLayout = OrderedDict() 
          
-        for col in dataset.iterColumns():
+        for col in tableDataset.iterColumns():
             self.columnsLayout[col.getName()]=ColumnLayoutConfiguration(col, allowRender)
             
         self.colsOrder = defineColsLayout(self.columnsLayout.keys())
@@ -179,6 +169,7 @@ class TableLayoutConfiguration():
 class ColumnLayoutConfiguration():
     def __init__(self, col, allowRender):
         self.columns = col
+        
         self.label = col.getName()
         self.typeOfColumn = getTypeOfColumn(col.getName())
         
@@ -199,17 +190,19 @@ class ColumnLayoutProperties():
         self.visible = True
         self.allowSetVisible = True 
         
-        self.editable = (self.typeOfColumn == 'text')
+        self.editable = (typeOfColumn == 'text')
         self.allowSetEditable = self.editable
         
-        self.renderable = (self.typeOfColumn == 'image' and allowRender)
+        self.renderable = (typeOfColumn == 'image' and allowRender)
         self.allowSetRenderable = self.renderable
         self.renderFunc = "taka"
 #PAJM         
 def getTypeOfColumn(label):
-    if (xmipp.labelIsImage(label)):
+    if (label == "id"):
+        return "id"
+    elif (xmipp.labelIsImage(str(label))):
         return "image"
-    elif (label == xmipp.MDL_ENABLED):
+    elif (label == "enabled"):
         return "checkbox"
     else:
         return "text"    
@@ -224,19 +217,10 @@ def defineColsLayout(labels):
 
 #### Load an Xmipp Dataset ###
 def loadDatasetXmipp(path):
-#    path= getInputPath('showj', path)
-#    if len(block):
-#        path = '%s@%s' % (block, path)
-#    return xmipp.MetaData(path)
     """ Create a table from a metadata. """
     from pyworkflow.em.packages.xmipp3 import XmippDataSet
-    import xmipp
-
-    import pyworkflow.dataset as ds
     mdPath = getInputPath('showj', path)
-
-    print "mdPath"+mdPath
-    return XmippDataSet(mdPath)
+    return XmippDataSet(str(mdPath))
 
     
 
@@ -287,19 +271,19 @@ def save_showj_table(request):
 
 #    request.get.get('value')
 
-def get_image(request):
+def get_image_dimensions(request, imagePath):
     from django.http import HttpResponse
-    from pyworkflow.gui import getImage, getPILImage
+    from pyworkflow.gui import getImage
     imageNo = None
-    imagePath = request.GET.get('image')
-    imageDim = request.GET.get('dim', 150)
+#    imagePath = request.GET.get('image')
+
     
     # PAJM: Como vamos a gestionar lsa imagen    
     if imagePath.endswith('png') or imagePath.endswith('gif'):
         img = getImage(imagePath, tk=False)
     else:
-        if AT in imagePath:
-            parts = imagePath.split(AT)
+        if '@' in imagePath:
+            parts = imagePath.split('@')
             imageNo = parts[0]
             imagePath = parts[1]
             
@@ -313,7 +297,41 @@ def get_image(request):
         
         if imageNo:
             imagePath = '%s@%s' % (imageNo, imagePath) 
+            
         imgXmipp = xmipp.Image(imagePath)
+        
+        return imgXmipp.getDimensions()
+        
+
+def get_image(request):
+    from django.http import HttpResponse
+    from pyworkflow.gui import getImage, getPILImage
+    imageNo = None
+    imagePath = request.GET.get('image')
+    imageDim = request.GET.get('dim', 150)
+    
+    # PAJM: Como vamos a gestionar lsa imagen    
+    if imagePath.endswith('png') or imagePath.endswith('gif'):
+        img = getImage(imagePath, tk=False)
+    else:
+        if '@' in imagePath:
+            parts = imagePath.split('@')
+            imageNo = parts[0]
+            imagePath = parts[1]
+            
+        if 'projectPath' in request.session:
+            imagePathTmp = join(request.session['projectPath'],imagePath)
+            if not os.path.isfile(imagePathTmp):
+                imagePath = getInputPath('showj', imagePath)      
+            
+
+#        imagePath = join(request.session['projectPath'],imagePath)
+        
+        if imageNo:
+            imagePath = '%s@%s' % (imageNo, imagePath) 
+            
+        imgXmipp = xmipp.Image(imagePath)
+        
         # from PIL import Image
         img = getPILImage(imgXmipp, imageDim)
         

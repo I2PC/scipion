@@ -117,6 +117,9 @@ class Table(object):
         """ Iterate over the rows. """
         return self._rowDict.itervalues()
     
+    def getElementById(self, index, label):
+        return self._rowDict.values()[index]._asdict()[label]
+    
     def __str__(self):
         return '\n'.join([str(row) for row in self.iterRows()])
         

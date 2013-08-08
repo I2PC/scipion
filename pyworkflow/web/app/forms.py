@@ -7,6 +7,7 @@ from django import forms
 from pyworkflow.hosts import HostConfig, QueueSystemConfig, QueueConfig
 from django.forms.forms import BoundField
 from pyworkflow.object import List
+#from pyworkflow.web.app.views_showj import get_image_dimensions 
 
 class HostForm(forms.Form):
 #     scpnHosts = forms.ChoiceField(label='Scipion hosts', widget = forms.Select(), required = False,)
@@ -250,11 +251,12 @@ class HostForm(forms.Form):
 ######################### Initialize Showj Form (Button toolbar) #####################        
 class ShowjForm(forms.Form):
     # Init graphical components
-    zoom = forms.IntegerField(required=True,
-                                  max_value=512,
-                                  min_value=10,
-                                  localize=False,
-                                  widget=forms.TextInput(attrs={'class' : 'menuInputNumber'}))
+#    zoom = forms.IntegerField(required=True,
+#                                  localize=False,
+#                                  widget=forms.TextInput(attrs={'class' : 'menuInputNumber'}))
+    zoom = forms.CharField(required=True,
+                            widget=forms.TextInput(attrs={'class' : 'menuInputNumber'}))
+    
     goto = forms.IntegerField(required=True,
                               max_value=100,
                               min_value=1,
@@ -283,8 +285,8 @@ class ShowjForm(forms.Form):
     mode = forms.CharField(widget=forms.HiddenInput())
     colRowMode = forms.CharField(widget=forms.HiddenInput())
 
-#    imageWidth = forms.IntegerField(widget=forms.HiddenInput())
-#    imageHeight = forms.IntegerField(widget=forms.HiddenInput())
+    imageWidth = forms.IntegerField(widget=forms.HiddenInput())
+    imageHeight = forms.IntegerField(widget=forms.HiddenInput())
     
      
     
@@ -292,7 +294,7 @@ class ShowjForm(forms.Form):
     def __init__(self, dataset, tableLayoutConfiguration, *args, **kwargs):
         super(ShowjForm, self).__init__(*args, **kwargs)
         
-        blockComboBoxValues = dataset.listTables()
+        blockComboBoxValues = tuple(zip(dataset.listTables(), dataset.listTables()))
         self.fields['blockComboBox'] = forms.ChoiceField(label='Select Block',
                                                          required=False,
                                                          choices = blockComboBoxValues)
@@ -313,10 +315,14 @@ class ShowjForm(forms.Form):
         if self.data['colRowMode'] == 'Off':
             self.fields['cols'].widget.attrs['readonly'] = True
             self.fields['rows'].widget.attrs['readonly'] = True
+            
+
                     
 def getLabelsToRenderComboBoxValues(columnsLayout):
-    labelsToRender = [columnLayout.label for columnLayout in columnsLayout if (columnLayout.typeOfColumn == 'image')]
+    labelsToRender = [columnLayout.label for columnLayout in columnsLayout.values() if (columnLayout.typeOfColumn == 'image')]
     return tuple(zip(labelsToRender,labelsToRender))
+
+
 
 #def getBlockComboBoxValues(path):    
 #    import xmipp
