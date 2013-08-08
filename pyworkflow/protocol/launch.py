@@ -93,7 +93,6 @@ def _getAppsProgram(prog):
     return pw.join('apps', prog)
     
 def _launchLocal(protocol, wait):
-    bg = not wait
     # Check first if we need to launch with MPI or not
     if (protocol.stepsExecutionMode == STEPS_PARALLEL and
         protocol.numberOfMpi > 1):
@@ -106,10 +105,10 @@ def _launchLocal(protocol, wait):
     threads = protocol.numberOfThreads.get()
     params = '%s %s' % (protocol.getDbPath(), protStrId)
     hostConfig = protocol.getHostConfig()
-    command = process.buildRunCommand(None, script, params, mpi, threads, bg, hostConfig)
-    # Check if need to submit to queue
     useQueue = hostConfig.isQueueMandatory() or protocol.useQueue()
-    
+    bg = not wait and not useQueue
+    command = process.buildRunCommand(None, script, params, mpi, threads, bg, hostConfig)
+    # Check if need to submit to queue    
     if useQueue:        
         submitDict = protocol.getSubmitDict()
         submitDict['JOB_COMMAND'] = command
@@ -204,8 +203,7 @@ def _run(command, wait):
 def _stopLocal(protocol):
     
     if protocol.useQueue():     
-        jobId = protocol.getJobId()
-        raise Exception("_stopLocal for queue not implemented yet")   
+        jobId = protocol.getJobId()        
         host = protocol.getHostConfig()
         cancelCmd = host.getCancelCommand() % {'JOB_ID': jobId}
         _run(cancelCmd, wait=True)
