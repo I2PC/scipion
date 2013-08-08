@@ -586,7 +586,8 @@ def deleteHost(request):
 
 def visualizeObject(request):
     objectId = request.GET.get("objectId")    
-    projectName = request.session['projectName']
+    #projectName = request.session['projectName']
+    projectName = request.GET.get("projectName")
     
 #    project = loadProject(projectName)
     manager = Manager()
@@ -606,7 +607,7 @@ def visualizeObject(request):
         inputParameters = {'path': join(request.session['projectPath'], mics.getFileName()),
                        'allowRender': True,
                        'mode': 'gallery',
-                       'zoom': 150,
+                       'zoom': '150px',
                        'goto': 1,
                        'colRowMode': 'Off'}
     elif isinstance(object, SetOfVolumes):
@@ -618,7 +619,7 @@ def visualizeObject(request):
         inputParameters = {'path': join(request.session['projectPath'], imgs.getFileName()),
                'allowRender': True,
                'mode': 'gallery',
-               'zoom': 150,
+               'zoom': '150px',
                'goto': 1,
                'colRowMode': 'Off'}
 
@@ -628,7 +629,7 @@ def visualizeObject(request):
         inputParameters = {'path': join(request.session['projectPath'], path),
                'allowRender': True,
                'mode': 'gallery',
-               'zoom': 150,
+               'zoom': '150px',
                'goto': 1,
                'colRowMode': 'Off'}
 #        runShowJ(obj.getClassesMdFileName())

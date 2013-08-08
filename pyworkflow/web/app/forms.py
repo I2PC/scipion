@@ -7,6 +7,7 @@ from django import forms
 from pyworkflow.hosts import HostConfig, QueueSystemConfig, QueueConfig
 from django.forms.forms import BoundField
 from pyworkflow.object import List
+#from pyworkflow.web.app.views_showj import get_image_dimensions 
 
 class HostForm(forms.Form):
 #     scpnHosts = forms.ChoiceField(label='Scipion hosts', widget = forms.Select(), required = False,)
@@ -247,13 +248,15 @@ class HostForm(forms.Form):
         return indexes
         
         
-        
+######################### Initialize Showj Form (Button toolbar) #####################        
 class ShowjForm(forms.Form):
-    zoom = forms.IntegerField(required=True,
-                                  max_value=512,
-                                  min_value=10,
-                                  localize=False,
-                                  widget=forms.TextInput(attrs={'class' : 'menuInputNumber'}))
+    # Init graphical components
+#    zoom = forms.IntegerField(required=True,
+#                                  localize=False,
+#                                  widget=forms.TextInput(attrs={'class' : 'menuInputNumber'}))
+    zoom = forms.CharField(required=True,
+                            widget=forms.TextInput(attrs={'class' : 'menuInputNumber'}))
+    
     goto = forms.IntegerField(required=True,
                               max_value=100,
                               min_value=1,
@@ -276,32 +279,34 @@ class ShowjForm(forms.Form):
                               widget=forms.TextInput(attrs={'class' : 'menuInputNumber'}))
     
     
+    # Init hidden fields
     path = forms.CharField(widget=forms.HiddenInput())
     allowRender = forms.BooleanField(widget=forms.HiddenInput())
     mode = forms.CharField(widget=forms.HiddenInput())
+    colRowMode = forms.CharField(widget=forms.HiddenInput())
 
-#    imageWidth = forms.IntegerField(widget=forms.HiddenInput())
-#    imageHeight = forms.IntegerField(widget=forms.HiddenInput())
+    imageWidth = forms.IntegerField(widget=forms.HiddenInput())
+    imageHeight = forms.IntegerField(widget=forms.HiddenInput())
     
-    colRowMode = forms.CharField(widget=forms.HiddenInput()) 
+     
     
     
-    def __init__(self, mdXmipp, *args, **kwargs):
+    def __init__(self, dataset, tableLayoutConfiguration, *args, **kwargs):
         super(ShowjForm, self).__init__(*args, **kwargs)
         
-        blockComboBoxValues = getBlockComboBoxValues(self.data["path"])
+        blockComboBoxValues = tuple(zip(dataset.listTables(), dataset.listTables()))
         self.fields['blockComboBox'] = forms.ChoiceField(label='Select Block',
                                                          required=False,
                                                          choices = blockComboBoxValues)
 
         
-        metadataComboBoxValues = getMetadataComboBoxValues(mdXmipp, self.data["allowRender"])
-        if len(metadataComboBoxValues) > 0:
-            self.fields['metadataComboBox'] = forms.ChoiceField(label='Select Label',
+        labelsToRenderComboBoxValues = getLabelsToRenderComboBoxValues(tableLayoutConfiguration.columnsLayout)
+        if len(labelsToRenderComboBoxValues) > 0:
+            self.fields['labelsToRenderComboBox'] = forms.ChoiceField(label='Select Label',
                                                             required=False,
-                                                            choices = metadataComboBoxValues)
+                                                            choices = labelsToRenderComboBoxValues)
             if self.data['mode'] != 'gallery':
-                self.fields['metadataComboBox'].widget=forms.HiddenInput()
+                self.fields['labelsToRenderComboBox'].widget=forms.HiddenInput()
         
         if self.data['mode'] != 'gallery': 
             self.fields['cols'].widget=forms.HiddenInput()
@@ -310,20 +315,27 @@ class ShowjForm(forms.Form):
         if self.data['colRowMode'] == 'Off':
             self.fields['cols'].widget.attrs['readonly'] = True
             self.fields['rows'].widget.attrs['readonly'] = True
+            
+
                     
-
-def getBlockComboBoxValues(path):    
-    import xmipp
-    from pyworkflow.tests import getInputPath
-    blocks = xmipp.getBlocksInMetaDataFile(str(getInputPath('showj', path)))
-    return tuple(zip(blocks, blocks))
-
-def getMetadataComboBoxValues(mdXmipp, allowRender):
-    import xmipp
-    from pyworkflow.web.app.views_showj import getTypeOfColumns
-    labels = mdXmipp.getActiveLabels()
-    labelsToRender = [xmipp.label2Str(l) for l in labels if (xmipp.labelIsImage(l) and allowRender)]
+def getLabelsToRenderComboBoxValues(columnsLayout):
+    labelsToRender = [columnLayout.label for columnLayout in columnsLayout.values() if (columnLayout.typeOfColumn == 'image')]
     return tuple(zip(labelsToRender,labelsToRender))
+
+
+
+#def getBlockComboBoxValues(path):    
+#    import xmipp
+#    from pyworkflow.tests import getInputPath
+#    blocks = xmipp.getBlocksInMetaDataFile(str(getInputPath('showj', path)))
+#    return tuple(zip(blocks, blocks))
+
+#def getMetadataComboBoxValues(mdXmipp, allowRender):
+#    import xmipp
+#    from pyworkflow.web.app.views_showj import getTypeOfColumns
+#    labels = mdXmipp.getActiveLabels()
+#    labelsToRender = [xmipp.label2Str(l) for l in labels if (xmipp.labelIsImage(l) and allowRender)]
+#    return tuple(zip(labelsToRender,labelsToRender))
 
 #def getInitialZoom(mdXmipp):
     
