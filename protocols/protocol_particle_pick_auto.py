@@ -70,9 +70,14 @@ class ProtParticlePickingAuto(XmippProtocol):
             proceed = True
             fnPos = self.PrevRun.getFilename('pos', micrograph=micrographName)
             if xmippExists(fnPos):
-                mdheader = MetaData("header@" + fnPos)
-                state = mdheader.getValue(MDL_PICKING_MICROGRAPH_STATE, mdheader.firstObject())
-                if state != "Available":
+                blocks = getBlocksInMetaDataFile(fnPos)
+                copy = True
+                if 'header' in blocks:
+                    mdheader = MetaData("header@" + fnPos)
+                    state = mdheader.getValue(MDL_PICKING_MICROGRAPH_STATE, mdheader.firstObject())
+                    if state == "Available":
+                        copy = False
+                if copy:
                     # Copy manual .pos file of this micrograph
                     self.insertCopyFile(fnPos, self.getFilename('pos', micrograph=micrographName))
                     proceed = False
