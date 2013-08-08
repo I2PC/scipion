@@ -643,6 +643,8 @@ public class SingleParticlePicker extends ParticlePicker {
 	}// function importParticlesFromMd
 
 	public boolean isReviewFile(String file) {
+		if(!file.endsWith("xmd"))
+			return false;
 		boolean result = false;
 		boolean nullMicrograph = false;
 		try {
