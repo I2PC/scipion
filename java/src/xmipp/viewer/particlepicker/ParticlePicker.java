@@ -552,7 +552,7 @@ public abstract class ParticlePicker
 		int half = size / 2;
 		System.err.format("Operate string: %s\n", String.format("xcoor=xcoor+%d,ycoor=ycoor+%d", half, half));
 		md.operate(String.format("xcoor=xcoor+%d,ycoor=ycoor+%d", half, half));
-		System.err.format("After operate, size:\n", md.size());
+		
 		setSize(Math.round(size * scale));
 	}// function fillParticlesMdFromEmanFile
 

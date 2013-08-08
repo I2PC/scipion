@@ -347,6 +347,7 @@ class XmippProject():
                 runsDict[extRunName].state = r['run_state']
             except Exception, ex:
                 print "WARNING: Can't load run: %s\n Error: %s" % (extRunName, ex)
+
         
         for r in runs:
             dd = runsDict.get(getExtendedRunName(r), None)

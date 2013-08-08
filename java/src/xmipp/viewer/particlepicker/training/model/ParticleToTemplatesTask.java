@@ -1,11 +1,11 @@
-package xmipp.viewer.particlepicker;
+package xmipp.viewer.particlepicker.training.model;
+
+import javax.swing.SwingWorker;
 
 import xmipp.utils.Task;
 import xmipp.viewer.particlepicker.training.gui.TemplatesJDialog;
-import xmipp.viewer.particlepicker.training.model.ManualParticle;
-import xmipp.viewer.particlepicker.training.model.SingleParticlePicker;
 
-public class ParticleToTemplatesTask implements Task
+public class ParticleToTemplatesTask extends SwingWorker<String, Object>
 {
 
 	private static TemplatesJDialog dialog;
@@ -23,22 +23,27 @@ public class ParticleToTemplatesTask implements Task
 	}
 	
 	@Override
-	public void doTask()
+	protected String doInBackground() throws Exception
 	{
 		try
 		{
 			
 			SingleParticlePicker picker = (SingleParticlePicker)particle.getParticlePicker();
-
 			picker.addParticleToTemplates(particle);
-			if(dialog != null && dialog.isVisible())
-				dialog.loadTemplates(true);
+			
 		}
 		catch (Exception e)
 		{
 			throw new IllegalArgumentException(e);
 		}
-
+		
+		return "";
 	}
+	
+	 @Override
+     protected void done() {
+		 if(dialog != null && dialog.isVisible())
+				dialog.loadTemplates(true);
+     }
 
 }
