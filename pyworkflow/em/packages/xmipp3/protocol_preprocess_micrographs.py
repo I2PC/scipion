@@ -166,6 +166,11 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         micSet = SetOfMicrographs()
         micSet.setFileName(path)
 
+        micSet.copyInfo(self.inputMics)
+        
+        if self.doDownsample.get():
+            micSet.setDownsample(self.downFactor.get())
+
         mapsId = {}
             
         for mic in self.inputMics:
@@ -175,11 +180,6 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
             outMicFn.setId(mic.getId())
             micSet.append(outMicFn)
             #mapsId[mic.getId()] = xmicFn.getId()
-            
-        micSet.copyInfo(self.inputMics)
-        
-        if self.doDownsample.get():
-            micSet.setDownsample(self.downFactor.get())
 
         micSet.write()
         self._defineOutputs(outputMicrographs=micSet)
