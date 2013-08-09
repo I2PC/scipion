@@ -151,8 +151,6 @@ class DefImportParticles(Form):
     
         self.addSection(label='Input')
         self.addParam('pattern', StringParam, label="Pattern")
-        self.addParam('tiltPairs', BooleanParam, default=False, important=True,
-                   label='Are images tilt pairs?')
         
         self.addParam('samplingRate', FloatParam,
                    label='Sampling rate (A/px)')
@@ -167,10 +165,9 @@ class ProtImportParticles(Protocol):
         Protocol.__init__(self, **args)         
         
     def _defineSteps(self):
-        self._insertFunctionStep('importParticles', self.pattern.get(), self.tiltPairs.get(),
-                                self.samplingRate.get())
+        self._insertFunctionStep('importParticles', self.pattern.get(), self.samplingRate.get())
         
-    def importParticles(self, pattern, tiltPairs, samplingRate):
+    def importParticles(self, pattern, samplingRate):
         """ Copy images matching the filename pattern
         Register other parameters.
         """
@@ -179,7 +176,8 @@ class ProtImportParticles(Protocol):
         if len(filePaths) == 0:
             raise Exception('importParticles:There are not filePaths matching pattern')
         path = self._getPath('images.sqlite')
-        imgSet = SetOfParticles(path, tiltPairs=tiltPairs)
+        imgSet = SetOfParticles()
+        imgSet.setFileName(path)
         imgSet.setSamplingRate(samplingRate)
 
         outFiles = [path]
@@ -187,17 +185,12 @@ class ProtImportParticles(Protocol):
         for i, f in enumerate(filePaths):
             dst = self._getPath(basename(f))            
             shutil.copyfile(f, dst)
-            img_dst = Image(dst)
+            img_dst = Image()
+            img_dst.setFileName(dst)
+            img_dst.setId(i+1)
             imgSet.append(img_dst)
             outFiles.append(dst)
-        #REMOVE WHEN TILTED PAIR IS PROPERLY IMPLEMENTED      
-            if self.tiltPairs.get(): 
-                if i%2==0:
-                    img_u = img_dst
-                else:
-                    imgSet.appendPair(img_u.getObjId(), img_dst.getObjId())    
-        # END REMOVE                
-        
+                       
         imgSet.write()
         self._defineOutputs(outputParticles=imgSet)
         
