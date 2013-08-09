@@ -344,11 +344,11 @@ class ProtCTFMicrographs(Protocol):
         # Get pointer to input micrographs 
         self.inputMics = self.inputMicrographs.get() 
                                 
-        self._params = {'voltage': self.inputMics.microscope.voltage.get(),
-                        'sphericalAberration': self.inputMics.microscope.sphericalAberration.get(),
-                        'magnification': self.inputMics.microscope.magnification.get(),
-                        'samplingRate': self.inputMics.samplingRate.get(),
-                        'scannedPixelSize': self.inputMics.scannedPixelSize.get(),
+        self._params = {'voltage': self.inputMics._microscope.voltage.get(),
+                        'sphericalAberration': self.inputMics._microscope.sphericalAberration.get(),
+                        'magnification': self.inputMics._microscope.magnification.get(),
+                        'samplingRate': self.inputMics.getSamplingRate(),
+                        'scannedPixelSize': self.inputMics.getScannedPixelSize(),
                         'windowSize': self.windowSize.get(),
                         'ampContrast': self.ampContrast.get(),
                         'lowRes': self.lowRes.get(),
