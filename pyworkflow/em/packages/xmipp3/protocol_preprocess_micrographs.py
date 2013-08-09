@@ -162,10 +162,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     
     def createOutput(self, IOTable):
         
-        path = self._getPath('micrographs.sqlite')
-        micSet = SetOfMicrographs()
-        micSet.setFileName(path)
-
+        micSet = self._createSetOfMicrographs()
         micSet.copyInfo(self.inputMics)
         
         if self.doDownsample.get():
