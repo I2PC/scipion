@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -20,16 +20,32 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'jgomez@cnb.csic.es'
 # *
 # **************************************************************************
 """
-This sub-package contains data and protocol classes
-wrapping Grigrorieff Lab programs at Brandeis
+This modules contains constants related to Brandeis packages protocols
 """
 
+#------------------ Constants values --------------------------------------
 
-from pyworkflow.em import *
-from constants import *
+# Methods to correct the Ewald sphere
+EWA_DISABLE = 0
+EWA_SIMPLE = 1
+EWA_REFERENCE = 2
+EWA_SIMPLE_HAND = 3
+EWA_REFERENCE_HAND = 4
+
+# FSC calculation
+FSC_CALC = 0
+FSC_3DR_ODD = 1
+FSC_3DR_EVEN = 2
+FSC_3DR_ALL = 3
+
+# Padding factor
+PAD_1 = 0
+PAD_2 = 1
+PAD_4 = 2
+
 
 
