@@ -47,8 +47,8 @@ class DefImportMicrographs(Form):
     
         self.addSection(label='Input')
         self.addParam('pattern', StringParam, label="Pattern")
-        self.addParam('tiltPairs', BooleanParam, default=False, important=True,
-                   label='Are micrographs tilt pairs?')
+#         self.addParam('tiltPairs', BooleanParam, default=False, important=True,
+#                    label='Are micrographs tilt pairs?')
         
         self.addSection(label='Microscope description')
         self.addParam('voltage', FloatParam, default=200,
@@ -76,12 +76,12 @@ class ProtImportMicrographs(Protocol):
         Protocol.__init__(self, **args)         
         
     def _defineSteps(self):
-        self._insertFunctionStep('importMicrographs', self.pattern.get(), self.tiltPairs.get(),
+        self._insertFunctionStep('importMicrographs', self.pattern.get(),
                                 self.voltage.get(), self.sphericalAberration.get(),
                                 self.samplingRate.get(), self.scannedPixelSize.get(),
                                 self.magnification.get())
         
-    def importMicrographs(self, pattern, tiltPairs, voltage, sphericalAberration, 
+    def importMicrographs(self, pattern, voltage, sphericalAberration, 
                           samplingRate, scannedPixelSize, magnification):
         """ Copy micrographs matching the filename pattern
         Register other parameters.
@@ -91,12 +91,13 @@ class ProtImportMicrographs(Protocol):
         if len(filePaths) == 0:
             raise Exception('importMicrographs:There is not filePaths matching pattern')
         path = self._getPath('micrographs.sqlite')
-        micSet = SetOfMicrographs(path, tiltPairs=tiltPairs)
+        micSet = SetOfMicrographs()
+        micSet.setFileName(path)
         # Setting microscope properties
-        micSet.microscope.magnification.set(magnification)
-        micSet.microscope.voltage.set(voltage)
-        micSet.microscope.sphericalAberration.set(sphericalAberration)
-        if self.samplingRateMode.get() == 0:
+        micSet._microscope.magnification.set(magnification)
+        micSet._microscope.voltage.set(voltage)
+        micSet._microscope.sphericalAberration.set(sphericalAberration)
+        if self.samplingRateMode.get():
             micSet.setSamplingRate(samplingRate)
         else:
             micSet.setScannedPixelSize(scannedPixelSize)
@@ -106,16 +107,11 @@ class ProtImportMicrographs(Protocol):
         for i, f in enumerate(filePaths):
             dst = self._getPath(basename(f))            
             shutil.copyfile(f, dst)
-            mic_dst = Micrograph(dst)
+            mic_dst = Micrograph()
+            mic_dst.setFileName(dst)
+            mic_dst.setId(i+1)
             micSet.append(mic_dst)
             outFiles.append(dst)
-        #REMOVE WHEN TILTED PAIR IS PROPERLY IMPLEMENTED      
-            if self.tiltPairs.get(): 
-                if i%2==0:
-                    mic_t = mic_dst
-                else:
-                    micSet.appendPair(mic_dst.getObjId(), mic_t.getObjId())    
-        # END REMOVE                
         
         micSet.write()
         self._defineOutputs(outputMicrographs=micSet)
@@ -151,8 +147,6 @@ class DefImportParticles(Form):
     
         self.addSection(label='Input')
         self.addParam('pattern', StringParam, label="Pattern")
-        self.addParam('tiltPairs', BooleanParam, default=False, important=True,
-                   label='Are images tilt pairs?')
         
         self.addParam('samplingRate', FloatParam,
                    label='Sampling rate (A/px)')
@@ -167,10 +161,9 @@ class ProtImportParticles(Protocol):
         Protocol.__init__(self, **args)         
         
     def _defineSteps(self):
-        self._insertFunctionStep('importParticles', self.pattern.get(), self.tiltPairs.get(),
-                                self.samplingRate.get())
+        self._insertFunctionStep('importParticles', self.pattern.get(), self.samplingRate.get())
         
-    def importParticles(self, pattern, tiltPairs, samplingRate):
+    def importParticles(self, pattern, samplingRate):
         """ Copy images matching the filename pattern
         Register other parameters.
         """
@@ -179,7 +172,8 @@ class ProtImportParticles(Protocol):
         if len(filePaths) == 0:
             raise Exception('importParticles:There are not filePaths matching pattern')
         path = self._getPath('images.sqlite')
-        imgSet = SetOfParticles(path, tiltPairs=tiltPairs)
+        imgSet = SetOfParticles()
+        imgSet.setFileName(path)
         imgSet.setSamplingRate(samplingRate)
 
         outFiles = [path]
@@ -187,17 +181,12 @@ class ProtImportParticles(Protocol):
         for i, f in enumerate(filePaths):
             dst = self._getPath(basename(f))            
             shutil.copyfile(f, dst)
-            img_dst = Image(dst)
+            img_dst = Image()
+            img_dst.setFileName(dst)
+            img_dst.setId(i+1)
             imgSet.append(img_dst)
             outFiles.append(dst)
-        #REMOVE WHEN TILTED PAIR IS PROPERLY IMPLEMENTED      
-            if self.tiltPairs.get(): 
-                if i%2==0:
-                    img_u = img_dst
-                else:
-                    imgSet.appendPair(img_u.getObjId(), img_dst.getObjId())    
-        # END REMOVE                
-        
+                       
         imgSet.write()
         self._defineOutputs(outputParticles=imgSet)
         

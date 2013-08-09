@@ -293,6 +293,7 @@ class SetOfImages(EMObject):
             image.setSamplingRate(self.getSamplingRate())
         self.loadIfEmpty()
         self._mapper.insert(image)
+        self._size.set(self._size.get() + 1)
 
     def copyInfo(self, other):
         """ Copy basic information (sampling rate, scannedPixelSize and ctf)
