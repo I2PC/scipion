@@ -81,7 +81,7 @@ class TestImportMicrographs(TestXmippBase):
         self.assertTrue(protImport.outputMicrographs.getMicroscope().sphericalAberration.get() == sphericalAberration, "Incorrect SphericalAberration on output micrographs.")
 
     def testImport_2(self):
-        pattern = getInputPath('Micrographs_BPV1', '*.mrc')
+        pattern = getInputPath('Micrographs_BPV3', '*.mrc')
         samplingRate=2.56
         scannedPixelSize=7
         magnification=56000
