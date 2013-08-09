@@ -58,9 +58,9 @@ class EMProtocol(Protocol):
         return imgSet
     
     def _createSetOfVolumes(self, suffix=''):
-        micSet = SetOfMicrographs()
-        micSet.setFileName(self._getPath('volumes%s.sqlite' % suffix)) 
-        return micSet
+        volSet = SetOfVolumes()
+        volSet.setFileName(self._getPath('volumes%s.sqlite' % suffix)) 
+        return volSet
 
 
 class DefImportMicrographs(Form):
