@@ -818,6 +818,9 @@ class ProtocolExecutor():
         
         return self.run_id
     
+    def getExtendedRunName(self):
+        return self.ext_name
+    
     def getJobId(self):
         return self.project.projectDb.getRunJobid(self.getRunId())
     
