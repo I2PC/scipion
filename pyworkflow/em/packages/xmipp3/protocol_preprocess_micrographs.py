@@ -162,23 +162,19 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     
     def createOutput(self, IOTable):
         
-        mdOut = self._getPath("micrographs.xmd")    
-        micSet = XmippSetOfMicrographs(mdOut)
-        
+        path = self._getPath('micrographs.sqlite')
+        micSet = SetOfMicrographs()
+        micSet.setFileName(path)
+
         mapsId = {}
             
         for mic in self.inputMics:
-            xmicFn = IOTable[mic.getFileName()]
-            xmic = XmippMicrograph.convert(mic, replaceExt(xmicFn, 'ctfparam'))
+            outMicFn = Micrograph()
+            outMicFn.setFileName(IOTable[mic.getFileName()])
             # Updating micrograph name
-            xmic.setFileName(xmicFn)
-            micSet.append(xmic)
-            mapsId[mic.getId()] = xmic.getId()
-        
-        # If input micrographs have tilt pairs copy the relation
-        if self.inputMics.hasTiltPairs():
-            #TODO: FILL mapIds
-            micSet.copyTiltPairs(self.inputMics, mapsId.get)
+            outMicFn.setId(mic.getId())
+            micSet.append(outMicFn)
+            #mapsId[mic.getId()] = xmicFn.getId()
             
         micSet.copyInfo(self.inputMics)
         
