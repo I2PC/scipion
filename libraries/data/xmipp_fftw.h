@@ -650,5 +650,10 @@ void adaptSpectrum(MultidimArray<double> &Min,
                    const MultidimArray<double> &spectrum_ref,
                    int spectrum_type=AMPLITUDE_SPECTRUM,
                    bool leave_origin_intact=false);
+
+/** Randomize phases beyond a certain frequency
+ * @ingroup FourierOperations
+*/
+void randomizePhases(MultidimArray<double> &Min, double w);
 #endif
 /** @} */

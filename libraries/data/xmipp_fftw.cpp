@@ -797,3 +797,8 @@ void fast_correlation_vector(const MultidimArray< std::complex<double> > & FFT1,
     CenterFFT(R, true);
     R.setXmippOrigin();
 }
+
+void randomizePhases(MultidimArray<double> &Min, double w)
+{
+
+}
