@@ -347,7 +347,7 @@ class SetOfImages(EMObject):
 class SetOfMicrographs(SetOfImages):
     """Represents a set of Micrographs"""
     def __init__(self, filename=None, **args):
-        SetOfImages.__init__(self, filename, **args)
+        SetOfImages.__init__(self, **args)
         self._microscope = Microscope()
         self._scannedPixelSize = Float()
         
