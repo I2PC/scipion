@@ -301,6 +301,7 @@ class SetOfImages(EMObject):
             image.setSamplingRate(self.getSamplingRate())
         self.loadIfEmpty()
         self._mapper.insert(image)
+        self._size.set(self._size.get() + 1)
 
     def copyInfo(self, other):
         """ Copy basic information (sampling rate, scannedPixelSize and ctf)
@@ -382,8 +383,8 @@ class SetOfParticles(SetOfImages):
     concepts of Micrographs and Particles, even if
     both are considered Images
     """
-    def __init__(self, filename=None, **args):
-        SetOfImages.__init__(self, filename, **args)
+    def __init__(self, **args):
+        SetOfImages.__init__(self, **args)
 
 
 class SetOfVolumes(SetOfImages):
