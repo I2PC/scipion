@@ -40,14 +40,13 @@ def showj(request, inputParameters=None):
         
         _path = request.POST.get('path')
         _blockComboBox = request.POST.get('blockComboBox')
-        _render = 'render' in request.POST
+        _render = request.POST.get('allowRender')
          
     else: #If the form is called by get 
         _path = inputParameters['path']
         _blockComboBox = inputParameters['blockComboBox'] if 'blockComboBox' in inputParameters else '' 
         _render = inputParameters['allowRender']
-        
-        
+    
     #Init Dataset
     #Todo: Check type of Dataset 
     dataset = loadDatasetXmipp(_path)
@@ -193,7 +192,13 @@ class ColumnLayoutProperties():
         self.editable = (typeOfColumn == 'text')
         self.allowSetEditable = self.editable
         
+        print "typeOfColumn",typeOfColumn
+        print "allowRender",allowRender
+        
         self.renderable = (typeOfColumn == 'image' and allowRender)
+        
+        print "self.renderable",self.renderable
+        
         self.allowSetRenderable = self.renderable
         self.renderFunc = "taka"
 #PAJM         

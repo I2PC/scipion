@@ -31,9 +31,10 @@ import os
 import Tkinter as tk
 import ttk
 from pyworkflow.em.viewer import Viewer, Wizard
-from pyworkflow.em import SetOfImages, SetOfMicrographs, DefCTFMicrographs
-from protocol_projmatch import XmippDefProjMatch
+from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, DefCTFMicrographs
+from protocol_projmatch import XmippDefProjMatch, XmippProtProjMatch 
 from protocol_preprocess_micrographs import XmippDefPreprocessMicrograph
+from protocol_filters import XmippDefMask, XmippProtMask
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider
 from pyworkflow.gui.tree import BoundTree, TreeProvider
@@ -62,9 +63,14 @@ class ListTreeProvider(TreeProvider):
         self.getObjects = lambda: self.objList
     
     def getObjectInfo(self, obj):
-        info = {'key': obj.getObjId(), 'text': os.path.basename(obj.getFileName()), 'values': ()}
+        info = {'key': obj.getObjId(), 'text': self.getText(obj), 'values': ()}
             
         return info
+    
+    def getText(self, obj):
+        """ Get the text to display for an object. """
+        return os.path.basename(obj.getFileName())
+        
     
 class XmippCTFWizard(Wizard):
     """ Wrapper to visualize different type of objects
@@ -91,12 +97,64 @@ class XmippCTFWizard(Wizard):
             
             
 class XmippMaskRadiusWizard(Wizard):
-
-    _targets = [(XmippDefProjMatch, ['maskRadius'])]
+        
+    def _getProvider(self, protocol):
+        """ This should be implemented to return the list
+        of object to be displayed in the tree.
+        """
+        pass
         
     def show(self, form):
         protocol = form.protocol
-        dialog.showWarning("Mask radius", "Not yet implemented the wizard to select mask radius", form.root)
+        provider = self._getProvider(protocol)
+
+        if provider is not None:
+            d = XmippMaskPreviewDialog(form.root, provider, maskRadius=protocol.maskRadius.get())
+            if d.resultYes():
+                form.setVar('maskRadius', d.getRadius())
+        else:
+            dialog.showWarning("Empty input", "Select elements first", form.root)
+                
+                
+class XmippParticleMaskRadiusWizard(XmippMaskRadiusWizard):
+
+    _targets = [(XmippDefMask, ['maskRadius'])]
+        
+    def _getText(self, obj):
+        index = obj.getLocation().getIndex()
+        text = os.path.basename(obj.getFileName())
+        if index:
+            return "%03d@%s" % (index, text)
+        return text
+        
+    def _getProvider(self, protocol):
+        """ This should be implemented to return the list
+        of object to be displayed in the tree.
+        """
+        provider = None
+        if protocol.inputParticles.hasValue():
+            particles = [] 
+            for i, par in enumerate(protocol.inputParticles.get()):
+                particles.append(par)
+                if i == 100: # Limit the maximum number of particles to display
+                    break
+            provider = ListTreeProvider(particles)
+            provider.getText = self._getText
+            
+        return provider
+    
+class XmippVolumeMaskRadiusWizard(XmippMaskRadiusWizard):
+
+    _targets = [(XmippDefProjMatch, ['maskRadius'])]
+        
+    def _getProvider(self, protocol):
+        """ This should be implemented to return the list
+        of object to be displayed in the tree.
+        """
+        if protocol.input3DReferences.hasValue():
+            vols = [vol for vol in protocol.input3DReferences.get()]
+            return ListTreeProvider(vols)
+        return None
         
         
 class XmippRadiiWizard(Wizard):
@@ -189,14 +247,14 @@ class XmippImagePreviewDialog(XmippPreviewDialog):
         """ Should be implemented by subclasses to 
         create the items preview. 
         """
-        from pyworkflow.gui.matplotlib_image import ImagePreview
-        self.image = xmipp.Image()       
+        from pyworkflow.gui.matplotlib_image import ImagePreview 
         self.preview = ImagePreview(frame, self.dim, label=self.previewLabel)
         self.preview.grid(row=0, column=0) 
+        self.image = xmipp.Image()
         
     def _itemSelected(self, obj):
         filename = obj.getFileName()
-        #print "image.readPreview, filename=%s, self.dim=%d" % (filename, self.dim)
+        print "image.readPreview, filename=%s, self.dim=%d" % (filename, self.dim)
         self.image.readPreview(filename, self.dim)
         if filename.endswith('.psd'):
             self.image.convertPSD()
@@ -295,3 +353,31 @@ class XmippCTFDialog(XmippDownsampleDialog):
         
     def getHighFreq(self):
         return self.hfSlider.get()
+
+class XmippMaskPreviewDialog(XmippImagePreviewDialog):
+    
+    def _beforePreview(self):
+        self.dim = 256
+        self.previewLabel = 'Central slice'
+    
+    def _createPreview(self, frame):
+        """ Should be implemented by subclasses to 
+        create the items preview. 
+        """
+        from pyworkflow.gui.matplotlib_image import MaskPreview    
+        self.preview = MaskPreview(frame, self.dim, label=self.previewLabel, outerRadius=self.maskRadius)
+        self.preview.grid(row=0, column=0) 
+    
+    def _createControls(self, frame):
+        self.addRadiusBox(frame) 
+        
+    def addRadiusBox(self, parent):
+        print "maskRadius: %s" % self.maskRadius
+        self.radiusSlider = LabelSlider(parent, 'Outer radius', from_=0, to=int(self.dim/2), value=self.maskRadius, step=1, callback=lambda a, b, c:self.updateRadius())
+        self.radiusSlider.grid(row=0, column=0, padx=5, pady=5) 
+    
+    def updateRadius(self):
+        self.preview.updateMask(self.radiusSlider.get())     
+        
+    def getRadius(self):
+        return int(self.radiusSlider.get())
