@@ -3,11 +3,13 @@
 {% block head %}
 	<script type="text/javascript">
 	$(document).ready(function(){
+		setImageSize(true)
 		initializeImageLoad()
 		initializeImageEvents()
 		initializeWindowLoadEvents()
 		initializeGoToEvents()
 	});
+	
 	
 	function initializeImageLoad(){
 		$('.tableImages').waypoint(function(direction){
@@ -144,22 +146,27 @@
 {% endblock %}
 
 {% block content_view %}	
-		{% for obj in metadata.objects %}
-			{% for value in obj.values %}
-				{% if value.typeOfColumn == "image" and value.label == form.metadataComboBox.value %}
-					<div class="img_container" id="img_container___{{forloop.parentloop.counter}}">
-						<div class="img_inner_container">
-							<!-- <img class="tableImages" title="{{value.strValue}}" src="/get_image/?image={{value.imgValue}}"/> -->
-							<img class="tableImages" title="{{value.strValue}}" src="" width="64px" height="64px" data-real_src="/get_image/?image={{value.imgValue}}"/>
-							<!-- <img class="tableImages" title="{{value.strValue}}" src="" width="64px" height="64px" data-render_func="/get_image/?image={{value.imgValue}}"/> -->
-							<img class="enabledGallery" src="/resources/showj/enabled_gallery.png" id="{{value.label}}___{{forloop.parentloop.counter0}}" onclick="enableDisableImage(this);"/>
+
+	<!-- Napa de Luxe -->
+ 	{% for columnLayout in tableLayoutConfiguration.columnsLayout %}
+		{% if columnLayout == form.labelsToRenderComboBox.value %}
+			{% for row in tableDataset.getRows %}
+				{% for cell in row %}
+					{% if forloop.counter0 == forloop.parentloop.parentloop.counter0 %} 
+						<div class="img_container" id="img_container___{{forloop.parentloop.counter}}">
+							<div class="img_inner_container">
+								<img class="tableImages" title="{{cell}}" src="" data-real_src="/get_image/?image={{cell}}"/>
+								<img class="enabledGallery" src="/resources/showj/enabled_gallery.png" id="{{form.labelsToRenderComboBox.value}}___{{forloop.parentloop.counter0}}" onclick="enableDisableImage(this);"/>
+							</div>
+							<div id="column_label">{{forloop.parentloop.counter}}</div> 
 						</div>
-						<!-- <div class="imageTitle">{{value.strValue}}</div> -->
-						<div id="column_label">{{forloop.parentloop.counter}}</div> 
-					</div> 
-				{% endif %}
+					
+					{% endif %}		
+				{% endfor %}
 			{% endfor %}
-		{% endfor %}	
+		{% endif %}
+	{% endfor %}	
+ 
 		
 		
 			

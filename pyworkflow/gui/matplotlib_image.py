@@ -38,7 +38,8 @@ from matplotlib.patches import Wedge
 
 
 class Preview(tk.Frame):
-    def __init__(self, parent, dim, dpi=36, label=None):
+    #def __init__(self, parent, dim, dpi=36, label=None):
+    def __init__(self, parent, dim, dpi=36, label=None, col=0, row=0):
         tk.Frame.__init__(self, parent)
         self.dim = dim
         self.bg = np.zeros((dim, dim), float)
@@ -70,7 +71,9 @@ class Preview(tk.Frame):
     
     
 class ImagePreview(Preview):
-    
+    def __init__(self, parent, dim, dpi=36, label=None, col=0):
+        Preview.__init__(self, parent, dim, dpi, label, col)
+            
     def _createAxes(self):
         ax = self.figure.add_axes([0,0,1,1], frameon=False)       
         self.figureimg = ax.imshow(self.bg, cmap=cm.gray)#, extent=[-h, h, -h, h])
@@ -151,12 +154,11 @@ class MaskPreview(ImagePreview):
         self.ring = Wedge((center, center), outerRadius, 0, 360, width=width, alpha=0.15) # Full ring
         self.ax.add_patch(self.ring)
         self.canvas.draw()
-           
-    
+        
+        
 def getPngData(filename):  
     import matplotlib.image as mpimg
     return mpimg.imread(filename)
 
 def createBgImage(dim):
     return np.ones((dim, dim, 3))
-

@@ -151,6 +151,8 @@ def getPILImage(imageXmipp, dim=None):
     from PIL import Image
     imageData = imageXmipp.getData()
 
+    #Napa de Luxe
+
     imageDataMax=imageData.max()
     imageDataMin=imageData.min()
     
