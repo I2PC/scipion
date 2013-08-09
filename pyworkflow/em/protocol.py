@@ -51,15 +51,15 @@ class DefImportMicrographs(Form):
 #         self.addParam('tiltPairs', BooleanParam, default=False, important=True,
 #                    label='Are micrographs tilt pairs?')
         
-        self.addSection(label='Microscope description')
+ #       self.addSection(label='Microscope description')
         self.addParam('voltage', FloatParam, default=200,
                    label='Microscope voltage (in kV)')
         self.addParam('sphericalAberration', FloatParam, default=2.26,
                    label='Spherical aberration (in mm)')
-        self.addParam('samplingRateMode', EnumParam, default=0,
+        self.addParam('samplingRateMode', EnumParam, default=SAMPLING_FROM_IMAGE,
                    label='Sampling rate mode',
                    choices=['From image', 'From scanner'])
-        self.addParam('samplingRate', FloatParam,
+        self.addParam('samplingRate', FloatParam, default=1, 
                    label='Sampling rate (A/px)', 
                    condition='samplingRateMode==%d' % SAMPLING_FROM_IMAGE)
         self.addParam('magnification', IntParam, default=60000,
@@ -103,20 +103,32 @@ class ProtImportMicrographs(Protocol):
         micSet._microscope.magnification.set(magnification)
         micSet._microscope.voltage.set(voltage)
         micSet._microscope.sphericalAberration.set(sphericalAberration)
+<<<<<<< HEAD
         
         if self.samplingRateMode == SAMPLING_FROM_IMAGE:
+=======
+        if self.samplingRateMode.get() == 0:
+>>>>>>> e278fa09d75939ca19cdcebcc741e8f852519d6e
             micSet.setSamplingRate(samplingRate)
         else:
             micSet.setScannedPixelSize(scannedPixelSize)
         outFiles = [path]
-        
+       
         filePaths.sort()
         for f in filePaths:
             dst = self._getPath(basename(f))            
             shutil.copyfile(f, dst)
+<<<<<<< HEAD
             mic = Micrograph()
             mic.setFileName(dst)
             micSet.append(mic)
+=======
+            mic_dst = Micrograph()
+            mic_dst.setFileName(dst)
+            mic_dst.setSamplingRate(micSet.getSamplingRate())
+            mic_dst.setId(i+1)
+            micSet.append(mic_dst)
+>>>>>>> e278fa09d75939ca19cdcebcc741e8f852519d6e
             outFiles.append(dst)
         
         micSet.write()
