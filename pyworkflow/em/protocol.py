@@ -186,6 +186,7 @@ class ProtImportParticles(Protocol):
             dst = self._getPath(basename(f))            
             shutil.copyfile(f, dst)
             img_dst = Image()
+            #TODO: When importing from stack is implemented setLocation should be used instead
             img_dst.setFileName(dst)
             img_dst.setId(i+1)
             imgSet.append(img_dst)
