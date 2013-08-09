@@ -50,7 +50,7 @@ class DefImportMicrographs(Form):
 #         self.addParam('tiltPairs', BooleanParam, default=False, important=True,
 #                    label='Are micrographs tilt pairs?')
         
-        self.addSection(label='Microscope description')
+ #       self.addSection(label='Microscope description')
         self.addParam('voltage', FloatParam, default=200,
                    label='Microscope voltage (in kV)')
         self.addParam('sphericalAberration', FloatParam, default=2.26,
@@ -58,7 +58,7 @@ class DefImportMicrographs(Form):
         self.addParam('samplingRateMode', EnumParam, default=0,
                    label='Sampling rate mode',
                    choices=['From image', 'From scanner'])
-        self.addParam('samplingRate', FloatParam,
+        self.addParam('samplingRate', FloatParam, default=0, 
                    label='Sampling rate (A/px)', condition='samplingRateMode==0')
         self.addParam('magnification', IntParam, default=60000,
                    label='Magnification rate', condition='samplingRateMode==1')
@@ -102,14 +102,14 @@ class ProtImportMicrographs(Protocol):
         else:
             micSet.setScannedPixelSize(scannedPixelSize)
         outFiles = [path]
-        
+       
         filePaths.sort()
         for i, f in enumerate(filePaths):
             dst = self._getPath(basename(f))            
             shutil.copyfile(f, dst)
             mic_dst = Micrograph()
             mic_dst.setFileName(dst)
-            mic_dst.setSamplingRate(samplingRate)
+            mic_dst.setSamplingRate(micSet.getSamplingRate())
             mic_dst.setId(i+1)
             micSet.append(mic_dst)
             outFiles.append(dst)
