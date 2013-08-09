@@ -75,13 +75,13 @@ class TestImportMicrographs(TestXmippBase):
         protImport = self.runImportMicrograph(pattern, samplingRate=samplingRate, scannedPixelSize=scannedPixelSize, magnification=magnification, voltage=voltage, sphericalAberration=sphericalAberration)
         
         # Check that sampling rate on output micrographs is equal to 
-        self.assertTrue(protImport.outputMicrographs.scannedPixelSize.get() == scannedPixelSize, "Incorrect ScannedPixelSize on output micrographs.")
+        self.assertTrue(protImport.outputMicrographs.getScannedPixelSize() == scannedPixelSize, "Incorrect ScannedPixelSize on output micrographs.")
         self.assertTrue(protImport.outputMicrographs.getMicroscope().magnification.get() == magnification, "Incorrect Magnification on output micrographs.")
         self.assertTrue(protImport.outputMicrographs.getMicroscope().voltage.get() == voltage, "Incorrect Voltage on output micrographs.")
         self.assertTrue(protImport.outputMicrographs.getMicroscope().sphericalAberration.get() == sphericalAberration, "Incorrect SphericalAberration on output micrographs.")
 
     def testImport_2(self):
-        pattern = getInputPath('Micrographs_BPV1', '*.mrc')
+        pattern = getInputPath('Micrographs_BPV3', '*.mrc')
         samplingRate=2.56
         scannedPixelSize=7
         magnification=56000
@@ -91,7 +91,7 @@ class TestImportMicrographs(TestXmippBase):
         protImport = self.runImportMicrograph(pattern, samplingRate=samplingRate, scannedPixelSize=scannedPixelSize, magnification=magnification, voltage=voltage, sphericalAberration=sphericalAberration)
         
         # Check that sampling rate on output micrographs is equal to 
-        self.assertTrue(protImport.outputMicrographs.samplingRate.get() == samplingRate, "Incorrect SamplingRate on output micrographs.")
+        self.assertTrue(protImport.outputMicrographs.getSamplingRate() == samplingRate, "Incorrect SamplingRate on output micrographs.")
         self.assertTrue(protImport.outputMicrographs.getMicroscope().voltage.get() == voltage, "Incorrect Voltage on output micrographs.")
         self.assertTrue(protImport.outputMicrographs.getMicroscope().sphericalAberration.get() == sphericalAberration, "Incorrect Spherical aberration on output micrographs.")
 

@@ -31,5 +31,9 @@ This modules contains constants related to EM
 
 NO_INDEX = 0  # This is the index value for single images
     
-    
+
+# Sampling rate input modes
+SAMPLING_FROM_IMAGE = 0
+SAMPLING_FROM_SCANNER = 1
+
     

@@ -384,6 +384,12 @@ class String(Scalar):
     def _convertValue(self, value):
         return str(value)
     
+    def empty(self):
+        """ Return true if None or len == 0 """
+        if not self.hasValue():
+            return True
+        return len(self.get().strip()) == 0
+    
         
 class Float(Scalar):
     """Float object"""

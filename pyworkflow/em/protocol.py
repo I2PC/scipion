@@ -34,6 +34,7 @@ import shutil
 from pyworkflow.object import String, Float
 from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
+from constants import *
 from pyworkflow.em import Micrograph, SetOfMicrographs, SetOfImages, Image, SetOfParticles, SetOfVolumes, Volume
 from pyworkflow.utils.path import removeBaseExt, join, basename
 
@@ -55,15 +56,18 @@ class DefImportMicrographs(Form):
                    label='Microscope voltage (in kV)')
         self.addParam('sphericalAberration', FloatParam, default=2.26,
                    label='Spherical aberration (in mm)')
-        self.addParam('samplingRateMode', EnumParam, default=0,
+        self.addParam('samplingRateMode', EnumParam, default=SAMPLING_FROM_IMAGE,
                    label='Sampling rate mode',
                    choices=['From image', 'From scanner'])
-        self.addParam('samplingRate', FloatParam, default=0, 
-                   label='Sampling rate (A/px)', condition='samplingRateMode==0')
+        self.addParam('samplingRate', FloatParam, default=1, 
+                   label='Sampling rate (A/px)', 
+                   condition='samplingRateMode==%d' % SAMPLING_FROM_IMAGE)
         self.addParam('magnification', IntParam, default=60000,
-                   label='Magnification rate', condition='samplingRateMode==1')
+                   label='Magnification rate', 
+                   condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
         self.addParam('scannedPixelSize', FloatParam, default=7.0,
-                   label='Scanned pixel size', condition='samplingRateMode==1')
+                   label='Scanned pixel size', 
+                   condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
         
 
 class ProtImportMicrographs(Protocol):
@@ -88,8 +92,10 @@ class ProtImportMicrographs(Protocol):
         """
         from glob import glob
         filePaths = glob(pattern)
+        
         if len(filePaths) == 0:
             raise Exception('importMicrographs:There is not filePaths matching pattern')
+        
         path = self._getPath('micrographs.sqlite')
         micSet = SetOfMicrographs()
         micSet.setFileName(path)
@@ -97,21 +103,20 @@ class ProtImportMicrographs(Protocol):
         micSet._microscope.magnification.set(magnification)
         micSet._microscope.voltage.set(voltage)
         micSet._microscope.sphericalAberration.set(sphericalAberration)
-        if self.samplingRateMode.get() == 0:
+        
+        if self.samplingRateMode == SAMPLING_FROM_IMAGE:
             micSet.setSamplingRate(samplingRate)
         else:
             micSet.setScannedPixelSize(scannedPixelSize)
         outFiles = [path]
        
         filePaths.sort()
-        for i, f in enumerate(filePaths):
+        for f in filePaths:
             dst = self._getPath(basename(f))            
             shutil.copyfile(f, dst)
-            mic_dst = Micrograph()
-            mic_dst.setFileName(dst)
-            mic_dst.setSamplingRate(micSet.getSamplingRate())
-            mic_dst.setId(i+1)
-            micSet.append(mic_dst)
+            mic = Micrograph()
+            mic.setFileName(dst)
+            micSet.append(mic)
             outFiles.append(dst)
         
         micSet.write()
@@ -139,6 +144,7 @@ class ProtImportMicrographs(Protocol):
             validateMsgs.append('Pattern cannot be EMPTY.')
         return validateMsgs
 
+
 class DefImportParticles(Form):
     """Create the definition of parameters for
     the ImportParticles protocol
@@ -147,10 +153,11 @@ class DefImportParticles(Form):
         Form.__init__(self)
     
         self.addSection(label='Input')
-        self.addParam('pattern', StringParam, label="Pattern")
-        
+        self.addParam('pattern', StringParam, 
+                      label="Pattern")        
         self.addParam('samplingRate', FloatParam,
                    label='Sampling rate (A/px)')
+
 
 class ProtImportParticles(Protocol):
     """Protocol to import a set of particles in the project"""
@@ -179,13 +186,12 @@ class ProtImportParticles(Protocol):
 
         outFiles = [path]
         
-        for i, f in enumerate(filePaths):
+        for f in filePaths:
             dst = self._getPath(basename(f))            
             shutil.copyfile(f, dst)
-            img_dst = Image()
-            img_dst.setFileName(dst)
-            img_dst.setId(i+1)
-            imgSet.append(img_dst)
+            img = Image()
+            img.setFileName(dst)
+            imgSet.append(img)
             outFiles.append(dst)
                        
         imgSet.write()
@@ -235,12 +241,12 @@ class ProtImportVolumes(Protocol):
         outFiles = [path]
         
         filePaths.sort()
-        for i, f in enumerate(filePaths):
+        for f in filePaths:
             dst = self._getPath(basename(f))            
             shutil.copyfile(f, dst)
-            vol_dst = Volume(dst)
-            volSet.append(vol_dst)
-            outFiles.append(dst)    
+            vol = Volume(dst)
+            volSet.append(vol)
+            outFiles.append(dst)  
         
         volSet.write()
         self._defineOutputs(outputVolumes=volSet)
