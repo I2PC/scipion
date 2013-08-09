@@ -97,7 +97,7 @@ class ProtImportMicrographs(Protocol):
         micSet._microscope.magnification.set(magnification)
         micSet._microscope.voltage.set(voltage)
         micSet._microscope.sphericalAberration.set(sphericalAberration)
-        if self.samplingRateMode.get():
+        if self.samplingRateMode.get() == 0:
             micSet.setSamplingRate(samplingRate)
         else:
             micSet.setScannedPixelSize(scannedPixelSize)
@@ -109,6 +109,7 @@ class ProtImportMicrographs(Protocol):
             shutil.copyfile(f, dst)
             mic_dst = Micrograph()
             mic_dst.setFileName(dst)
+            mic_dst.setSamplingRate(samplingRate)
             mic_dst.setId(i+1)
             micSet.append(mic_dst)
             outFiles.append(dst)

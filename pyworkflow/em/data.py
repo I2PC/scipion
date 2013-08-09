@@ -62,48 +62,38 @@ class Microscope(EMObject):
         self.sphericalAberration.set(other.sphericalAberration.get())
         
         
-class ImageLocation(object):
+class ImageLocation(EMObject):
     """ This class represents the unique location of an image.
     If the image is an stack, the location composed by index and filename.
     Otherwise, only the filename of the image."""
     
-    def __init__(self, index=NO_INDEX, filename=None, locStr=None, loc=None):
+    def __init__(self, index=NO_INDEX, filename=None):
         """ Two ways of build the location:
         1) From index and filename
         2) Parsing from the string representation of the location.
         """
-        if not filename is None:
-            self._index = index
-            self._filename = filename
-        elif not locStr is None:
-            self.parse(locStr)
-        elif not loc is None:
-            self._index = loc.getIndex()
-            self._filename = loc.getFileName()
-        else:
-            # Empty initialization
-            self._index = index
-            self._filename = filename
-            #raise Exception("ImageLocation: all parameter to __init__ are None")
+        EMObject.__init__(self)
+        self._index = Integer(index)
+        self._filename = String(filename)
         
     def getIndex(self):
-        return self._index
+        return self._index.get()
     
     def setIndex(self, index):
-        self._index = index
+        self._index.set(index)
     
     def getFileName(self):
-        return self._filename
+        return self._filename.get()
     
     def setFileName(self, filename):
-        self._filename = filename
+        self._filename.set(filename)
         
     def isStack(self):
-        return self._index != NO_INDEX
+        return self.getIndex() != NO_INDEX
     
     def __str__(self):
         """ This should be implemented in subclasses """
-        pass
+        return "%d %s" % (self.getIndex(), self.getFileName())
     
     def parse(self, locStr):
         """ This method should parse index and filename
@@ -111,6 +101,9 @@ class ImageLocation(object):
         It should be the opposite of __str__
         """
         pass
+    
+    def copyInfo(self, other):
+        self.copyAttributes(other, '_index', '_filename')
 
 
 class CTFModel(EMObject):
@@ -150,7 +143,7 @@ class Image(EMObject):
         self._id.set(imgId)
         
     def hasId(self):
-        return self.getId() != 0
+        return self._id.hasValue()
         
     def getSamplingRate(self):
         """ Return image sampling rate. (A/pix) """
@@ -217,7 +210,7 @@ class SetOfImages(EMObject):
     def __init__(self, **args):
         # Use the object value to store the filename
         EMObject.__init__(self, **args)
-        self._filename = String()
+        self._filename = String() # sqlite filename
         self._samplingRate = Float()        
         self._hasCtf = Boolean(args.get('ctf', False))
         self._hasAlignment = Boolean(args.get('alignmet', False))
@@ -240,17 +233,16 @@ class SetOfImages(EMObject):
     
     def __getitem__(self, imgId):
         """ Get the image with the given id. """
-        self.loadIfEmpty()
-        # FIXME: This should be changed and query to the mapper
-        for mic in self._mapper.selectAll(iterate=True):
-            if mic.getId() == imgId:
-                return mic
-        return None
+        #FIXME, remove this after id is the one in mapper
+        return self._idMap.get(imgId, None)
 
     def __iter__(self):
         """ Iterate over the set of images. """
         self.loadIfEmpty()
-        return self._mapper.selectByClass("Image", iterate=True)
+        self._idMap = {} #FIXME, remove this after id is the one in mapper
+        for img in self._mapper.selectByClass("Image", iterate=True):
+            self._idMap[img.getId()] = img
+            yield img            
     
     def write(self):
         """This method will be used to persist in a file the
@@ -347,7 +339,7 @@ class SetOfImages(EMObject):
     
 class SetOfMicrographs(SetOfImages):
     """Represents a set of Micrographs"""
-    def __init__(self, filename=None, **args):
+    def __init__(self, **args):
         SetOfImages.__init__(self, **args)
         self._microscope = Microscope()
         self._scannedPixelSize = Float()
@@ -389,8 +381,8 @@ class SetOfParticles(SetOfImages):
 
 class SetOfVolumes(SetOfImages):
     """Represents a set of Volumes"""
-    def __init__(self, filename=None, **args):
-        SetOfImages.__init__(self, filename, **args)
+    def __init__(self, **args):
+        SetOfImages.__init__(self, **args)
         
 
 class Coordinate(EMObject):

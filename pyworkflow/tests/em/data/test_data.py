@@ -10,7 +10,21 @@ from pyworkflow.tests import *
 from pyworkflow.em.data import *
 from pyworkflow.utils.path import makePath
 
+class TestImage(unittest.TestCase):
+        
+    def setUp(self):
+        pass
+    
+        
+    def testLocation(self):
+        fn = 'mic0001.mrc'
+        mic = Micrograph()
+        mic.setFileName(fn)
 
+        # Check that setFileName-getFileName is working properly        
+        self.assertEqual(fn, mic.getFileName())
+        
+        
 class TestSetOfMicrographs(unittest.TestCase):
         
     @classmethod
@@ -40,18 +54,25 @@ class TestSetOfMicrographs(unittest.TestCase):
         idCount = 1
         
         for fn, mic in zip(self.mics, setMics):            
-            self.assertEqual(fn, mic.getFileName(), "micrograph name in the set is wrong")
-            self.assertEqual(idCount, mic.getId(), "micrograph id in the set is wrong")
+            micFn = mic.getFileName()
+            self.assertEqual(fn, micFn, 
+                             "micrograph NAME in the set is wrong, \n   expected: '%s'\n        got: '%s'" 
+                             % (fn, micFn))
+            self.assertEqual(idCount, mic.getId(), 
+                             "micrograph ID in the set is wrong, \n   expected: '%s'\n        got: '%s'" 
+                             % (idCount, mic.getId()))
             mic2 = setMics[idCount] # Test getitem
-            self.assertEqual(mic, mic2, "micrograph got from id is wrong")
+            self.assertEqual(mic, mic2, "micrograph got from ID is wrong")
             idCount += 1            
         
     def testCreate(self):
         """ Create a SetOfMicrographs from a list of micrographs """
-        setMics = SetOfMicrographs(self.dbFn, tiltPairs=False)
+        setMics = SetOfMicrographs()
+        setMics.setFileName(self.dbFn)
         setMics.setSamplingRate(1.2)
         for fn in self.mics:
-            mic = Micrograph(fn)
+            mic = Micrograph()
+            mic.setFileName(fn)
             setMics.append(mic)
             
         setMics.write()        
@@ -59,7 +80,8 @@ class TestSetOfMicrographs(unittest.TestCase):
         
     def testRead(self):
         """ Read micrographs from a SetOfMicrographs """
-        setMics = SetOfMicrographs(self.dbGold)
+        setMics = SetOfMicrographs()
+        setMics.setFileName(self.dbGold)
         self.checkSet(setMics)
 
     
