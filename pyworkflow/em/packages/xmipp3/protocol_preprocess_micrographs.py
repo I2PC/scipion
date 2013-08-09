@@ -171,8 +171,6 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         if self.doDownsample.get():
             micSet.setDownsample(self.downFactor.get())
 
-        mapsId = {}
-            
         for mic in self.inputMics:
             outMicFn = Micrograph()
             outMicFn.setFileName(IOTable[mic.getFileName()])

@@ -39,6 +39,30 @@ from pyworkflow.em import Micrograph, SetOfMicrographs, SetOfImages, Image, SetO
 from pyworkflow.utils.path import removeBaseExt, join, basename
 
 
+
+class EMProtocol(Protocol):
+    """ Base class to all EM protocols.
+    It will contains some common functionalities. 
+    """
+    def __init__(self, **args):
+        Protocol.__init__(self, **args)
+        
+    def _createSetOfMicrographs(self, suffix=''):
+        micSet = SetOfMicrographs()
+        micSet.setFileName(self._getPath('micrographs%s.sqlite' % suffix)) 
+        return micSet
+    
+    def _createSetOfParticles(self, suffix=''):
+        imgSet = SetOfParticles()
+        imgSet.setFileName(self._getPath('particles%s.sqlite' % suffix)) 
+        return imgSet
+    
+    def _createSetOfVolumes(self, suffix=''):
+        micSet = SetOfMicrographs()
+        micSet.setFileName(self._getPath('volumes%s.sqlite' % suffix)) 
+        return micSet
+
+
 class DefImportMicrographs(Form):
     """Create the definition of parameters for
     the ImportMicrographs protocol
@@ -70,14 +94,14 @@ class DefImportMicrographs(Form):
                    condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
         
 
-class ProtImportMicrographs(Protocol):
+class ProtImportMicrographs(EMProtocol):
     """Protocol to import a set of micrographs in the project"""
     _definition = DefImportMicrographs()
     _label = 'Import micrographs'
     _path = join('Micrographs', 'Import')
     
     def __init__(self, **args):
-        Protocol.__init__(self, **args)         
+        EMProtocol.__init__(self, **args)         
         
     def _defineSteps(self):
         self._insertFunctionStep('importMicrographs', self.pattern.get(),
@@ -96,9 +120,7 @@ class ProtImportMicrographs(Protocol):
         if len(filePaths) == 0:
             raise Exception('importMicrographs:There is not filePaths matching pattern')
         
-        path = self._getPath('micrographs.sqlite')
-        micSet = SetOfMicrographs()
-        micSet.setFileName(path)
+        micSet = self._createSetOfMicrographs() 
         # Setting microscope properties
         micSet._microscope.magnification.set(magnification)
         micSet._microscope.voltage.set(voltage)
@@ -108,7 +130,7 @@ class ProtImportMicrographs(Protocol):
             micSet.setSamplingRate(samplingRate)
         else:
             micSet.setScannedPixelSize(scannedPixelSize)
-        outFiles = [path]
+        outFiles = [micSet.getFileName()]
        
         filePaths.sort()
         for f in filePaths:
@@ -159,14 +181,14 @@ class DefImportParticles(Form):
                    label='Sampling rate (A/px)')
 
 
-class ProtImportParticles(Protocol):
+class ProtImportParticles(EMProtocol):
     """Protocol to import a set of particles in the project"""
     _definition = DefImportParticles()
     _label = 'Import images'
     _path = join('Images', 'Import')
     
     def __init__(self, **args):
-        Protocol.__init__(self, **args)         
+        EMProtocol.__init__(self, **args)         
         
     def _defineSteps(self):
         self._insertFunctionStep('importParticles', self.pattern.get(), self.samplingRate.get())
@@ -179,12 +201,10 @@ class ProtImportParticles(Protocol):
         filePaths = glob(pattern)
         if len(filePaths) == 0:
             raise Exception('importParticles:There are not filePaths matching pattern')
-        path = self._getPath('images.sqlite')
-        imgSet = SetOfParticles()
-        imgSet.setFileName(path)
+        imgSet = self._createSetOfParticles()
         imgSet.setSamplingRate(samplingRate)
 
-        outFiles = [path]
+        outFiles = [imgSet.getFileName()]
         
         for f in filePaths:
             dst = self._getPath(basename(f))            
@@ -216,14 +236,14 @@ class DefImportVolumes(Form):
                    label='Sampling rate (A/px)')
         
 
-class ProtImportVolumes(Protocol):
+class ProtImportVolumes(EMProtocol):
     """Protocol to import a set of volumes in the project"""
     _definition = DefImportVolumes()
     _label = 'Import volumes'
     _path = join('Volumes', 'Import')
     
     def __init__(self, **args):
-        Protocol.__init__(self, **args)         
+        EMProtocol.__init__(self, **args)         
         
     def _defineSteps(self):
         self._insertFunctionStep('importVolumes', self.pattern.get(), self.samplingRate.get())
@@ -236,9 +256,10 @@ class ProtImportVolumes(Protocol):
         filePaths = glob(pattern)
         if len(filePaths) == 0:
             raise Exception('importVolumes:There is not filePaths matching pattern')
-        path = self._getPath('volumes.sqlite')
-        volSet = SetOfVolumes(path)
-        outFiles = [path]
+        
+        volSet = self._createSetOfVolumes()
+        
+        outFiles = [volSet.getFileName()]
         
         filePaths.sort()
         for f in filePaths:
@@ -321,12 +342,12 @@ class DefCTFMicrographs(Form):
         self.addParallelSection(threads=2, mpi=1)       
 
 
-class ProtCTFMicrographs(Protocol):
+class ProtCTFMicrographs(EMProtocol):
     """ Base class for all protocols that estimates the CTF"""
     _definition = DefCTFMicrographs()
 
     def __init__(self, **args):
-        Protocol.__init__(self, **args)
+        EMProtocol.__init__(self, **args)
         self.stepsExecutionMode = STEPS_PARALLEL 
     
     def _iterMicrographs(self):
@@ -395,11 +416,11 @@ class ProtCTFMicrographs(Protocol):
         raise Exception("_estimateCTF should be implemented")
 
 
-class ProtPreprocessMicrographs(Protocol):
+class ProtPreprocessMicrographs(EMProtocol):
     pass
 
 
-class ProtExtractParticles(Protocol):
+class ProtExtractParticles(EMProtocol):
     pass
 
 
@@ -425,7 +446,7 @@ class DefProcessParticles(Form):
         pass  
         
         
-class ProtProcessParticles(Protocol):
+class ProtProcessParticles(EMProtocol):
     """ This class will serve as a base for all protocol
     that performs some operation on Partices (i.e. filters, mask, resize, etc)
     It is mainly defined by an inputParticles and outputParticles.
@@ -439,7 +460,7 @@ class ProtFilterParticles(ProtProcessParticles):
     pass
 
 
-class ProtParticlePicking(Protocol):
+class ProtParticlePicking(EMProtocol):
 
     def _summary(self):
         summary = []
@@ -451,22 +472,22 @@ class ProtParticlePicking(Protocol):
         return summary
 
 
-class ProtAlign(Protocol):
+class ProtAlign(EMProtocol):
     pass
 
 
-class ProtClassify(Protocol):
+class ProtClassify(EMProtocol):
     pass
 
 
-class ProtAlignClassify(Protocol):
+class ProtAlignClassify(EMProtocol):
     pass
 
-class ProtInitialVolume(Protocol):
+class ProtInitialVolume(EMProtocol):
     pass
 
-class ProtRefine3D(Protocol):
+class ProtRefine3D(EMProtocol):
     pass
 
-class ProtClassify3D(Protocol):
+class ProtClassify3D(EMProtocol):
     pass

@@ -110,10 +110,6 @@ class CTFModel(EMObject):
     """ Represents a generic CTF model. """
     def __init__(self, **args):
         EMObject.__init__(self, **args)
-
-#        self.voltage = Float()
-#        self.sphericalAberration = Float()
-#        self.ampContrast = Float()
         self.defocusU = Float()
         self.defocusV = Float()
         self.defocusAngle = Float()
