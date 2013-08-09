@@ -198,13 +198,10 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 		if (new File(dir).isDirectory())
 		{
-			System.err.println("JM_DEBUG: ============= import from Folder ============");
+			//System.err.println("JM_DEBUG: ============= import from Folder ============");
 			ppicker.importParticlesFromFolder(dir, format, scale, invertx, inverty);
-			System.err.println("JM_DEBUG:   canvas.repaint");
 			getCanvas().repaint();
-			System.err.println("JM_DEBUG:   updateMicrographsModel");
 			updateMicrographsModel(true);
-			System.err.println("JM_DEBUG:   getCanvas().refreshActive");
 			getCanvas().refreshActive(null);
 			
 			ppicker.initUpdateTemplates();
