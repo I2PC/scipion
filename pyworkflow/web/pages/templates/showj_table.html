@@ -175,21 +175,21 @@ function addIconsToHeader(visible,allowSetVisible,editable,allowSetEditable,rend
 
 /* 	columnLayoutProperties.visible */
 	if (visible == 'True'){
-		iconElements+="<span class=\"css_right\"><img src=\"/resources/showj/deleteTableOn.png\" class=\"arrowImage\" "
+		iconElements+="<span class=\"css_right\"><img src=\"/resources/showj/delete.png\" class=\"arrowImage\" "
 		if (allowSetVisible == 'True'){ iconElements+="onclick=\"enableDisableColumn(event,this)\""}
 		iconElements+="></span>"
 	}
 	
 	/* columnLayoutProperties.editable */
 	if (allowSetEditable == 'True'){
-		iconElements+="<span class=\"css_right\"><img src=\"/resources/showj/editTableOn.png\" class=\"arrowImage pressedButton\" "
+		iconElements+="<span class=\"css_right\"><img src=\"/resources/showj/editTableOn.png\" class=\"arrowImage\" "
 		if (editable == 'True'){ iconElements+="onclick=\"enableDisableEditableColumn(event,this)\""}
 		iconElements+="></span>"
 	}
 	
 	/* columnLayoutProperties.renderable */
 	if (allowSetRenderable == 'True'){
-		iconElements+="<span class=\"css_right\"><img src=\"/resources/showj/renderTableOn.png\" class=\"arrowImage pressedButton\" "
+		iconElements+="<span class=\"css_right\"><img src=\"/resources/showj/renderTableOn.png\" class=\"arrowImage\" "
 		if (renderable == 'True'){iconElements+="onclick=\"enableDisableRenderColumn(event,this)\""}
 		iconElements+="></span>" 
 	}
