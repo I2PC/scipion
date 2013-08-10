@@ -93,7 +93,7 @@ class XmippCTFWizard(Wizard):
                 form.setVar('highRes', d.getHighFreq())
             #dialog.showWarning("Input micrographs", "Select some micrographs first", form.root)
         else:
-            dialog.showWarning("Micrographs", "OK", form.root)
+            dialog.showWarning("Input micrographs", "Select micrographs first", form.root)
             
             
 class XmippMaskRadiusWizard(Wizard):
@@ -250,11 +250,11 @@ class XmippImagePreviewDialog(XmippPreviewDialog):
         from pyworkflow.gui.matplotlib_image import ImagePreview 
         self.preview = ImagePreview(frame, self.dim, label=self.previewLabel)
         self.preview.grid(row=0, column=0) 
+        self.image = xmipp.Image()
         
     def _itemSelected(self, obj):
         filename = obj.getFileName()
         print "image.readPreview, filename=%s, self.dim=%d" % (filename, self.dim)
-        self.image = xmipp.Image()
         self.image.readPreview(filename, self.dim)
         if filename.endswith('.psd'):
             self.image.convertPSD()
@@ -332,17 +332,14 @@ class XmippCTFDialog(XmippDownsampleDialog):
         return  PsdPreview(rightFrame, 1.2*self.dim, self.lf, self.hf, label=self.rightPreviewLabel)
 
     def _createControls(self, frame):
-        self.addFrequenciesBox(frame)
+        self.freqFrame = ttk.LabelFrame(frame, text="Frequencies", padding="5 5 5 5")
+        self.freqFrame.grid(row=0, column=0)
+        self.lfSlider = self.addFreqSlider('Low freq', self.lf, col=0)
+        self.hfSlider = self.addFreqSlider('High freq', self.hf, col=1)
     
     def getDownsample(self):
         return 1.0 # Micrograph previously downsample, not taken into account here
 
-    def addFrequenciesBox(self, parent):
-        self.freqFrame = ttk.LabelFrame(parent, text="Frequencies", padding="5 5 5 5")
-        self.freqFrame.grid(row=0, column=0)
-        self.lfSlider = self.addFreqSlider('Low freq', self.lf, col=0)
-        self.hfSlider = self.addFreqSlider('High freq', self.hf, col=1)
-        
     def addFreqSlider(self, label, value, col):
         slider = LabelSlider(self.freqFrame, label, from_=0, to=0.5, value=value, callback=lambda a, b, c:self.updateFreqRing())
         slider.grid(row=0, column=col, padx=5, pady=5)
