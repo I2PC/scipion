@@ -12,8 +12,13 @@ header,section,footer,aside,nav,article,hgroup {
 /* HEADER */
 header {
 	height: 100px;
-	text-align: center;
+	display: -moz-flex;
+	display: -webkit-flex;
+	display: flex;
+	-webkit-flex-flow: row;
+	-webkit-flex-wrap: wrap;
 }
+
 
 /* NAV (TOP MENU) */
 nav {
@@ -35,9 +40,17 @@ nav ul li {
 
 /* ASIDE (BOTTOM MENU) */
 aside {
-	height: 50px;
-	background-color: #320101;
-	padding: 20px;
+	height: 68px;
+	background: #e3e3e3; /* Old browsers */
+	background: -moz-linear-gradient(top, #e3e3e3 0%, #cccccc 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#e3e3e3), color-stop(100%,#cccccc)); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top, #e3e3e3 0%,#cccccc 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top, #e3e3e3 0%,#cccccc 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top, #e3e3e3 0%,#cccccc 100%); /* IE10+ */
+	background: linear-gradient(to bottom, #e3e3e3 0%,#cccccc 100%); /* W3C */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e3e3e3', endColorstr='#cccccc',GradientType=0 ); /* IE6-9 */
+	
+	padding-left: 20px;
 	display: -moz-flex;
 	display: -webkit-flex;
 	display: flex;
@@ -70,10 +83,9 @@ aside .subSectionMenu {
 }
 
 aside .textMenu {
-	color: #FFF;
-	font: 12px Tahoma;
-	font-weight: bold;
-	margin-right: 3px;
+	color: #000;
+	font: 14px Helvetica;
+	margin-right: 8px;
 }
 
 aside #colRowMode {
@@ -86,12 +98,13 @@ aside .menuIcon {
 
 aside .menuInputNumber {
 	width: 60px;
-	background-color: #000;
-	font: 11px Tahoma;
-	color: #fff;
+	background-color: #FFF;
+	font: 11px Helvetica;
+	color: #000;
 	text-align: right;
 	height: 20px;
-	border-color: #9c0101;
+	/* border-color: #9c0101; */
+	border-color: #A7;
 	padding-right: 3px;
 }
 
@@ -106,19 +119,19 @@ aside .submitButton{
 }
 
 aside .tableOn{
-	background-image: url(/resources/showj/tableViewOn.gif);
+	background-image: url(/resources/showj/tableViewOn.png);
 }
 
 aside .tableOff{
-	background-image: url(/resources/showj/tableViewOff.gif);
+	background-image: url(/resources/showj/tableViewOff.png);
 }
 
 aside .galleryOn{
-	background-image: url(/resources/showj/galleryViewOn.gif);
+	background-image: url(/resources/showj/galleryViewOn.png);
 }
 
 aside .galleryOff{
-	background-image: url(/resources/showj/galleryViewOff.gif);
+	background-image: url(/resources/showj/galleryViewOff.png);
 	
 }
 
@@ -132,6 +145,8 @@ aside .arrowImage{
 	margin: 1px;
 }
 
+
+
 /* MAIN SECTION */
 section {
 	padding: 20px;
@@ -141,6 +156,7 @@ section {
 	-webkit-flex-flow: row;
 	-webkit-flex-wrap: wrap;
 }
+
 
 section .img_container {
 	/* margin: 10px 2px 10px 2px; */
@@ -175,7 +191,7 @@ section .imageTitle{
 
 #column_label {
 	background-color: #dddddd;
-	font: 12px Tahoma;
+	font: 12px Helvetica;
 	text-align: center;
 }
 
@@ -187,10 +203,19 @@ section .imageTitle{
 
 #table_container thead tr{
 	height: 20px;
+	
 }
 
 #table_container thead th{
-	font-weight: bold;
+	/* font-weight: bold; */
+	font-family: Helvetica;
+	white-space: nowrap;
+	padding: 8px;
+}
+
+#table_container tbody td{
+	/* font-weight: bold; */
+	font-family: Helvetica;
 }
 
 #table_container { /* 	overflow:auto;*/
@@ -227,5 +252,7 @@ section .imageTitle{
 /* FIX FOR DATABLE ARROW BUTTON FIT IN ONE LINE */
 .css_left { float: left; }
 .css_right {float: right; }
+
+.DataTables_sort_icon{float: left;}
 
 /* GENERAL */

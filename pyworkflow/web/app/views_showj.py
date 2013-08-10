@@ -192,15 +192,12 @@ class ColumnLayoutProperties():
         self.editable = (typeOfColumn == 'text')
         self.allowSetEditable = self.editable
         
-        print "typeOfColumn",typeOfColumn
-        print "allowRender",allowRender
-        
         self.renderable = (typeOfColumn == 'image' and allowRender)
-        
-        print "self.renderable",self.renderable
-        
         self.allowSetRenderable = self.renderable
+
         self.renderFunc = "taka"
+        
+
 #PAJM         
 def getTypeOfColumn(label):
     if (label == "id"):

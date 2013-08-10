@@ -349,14 +349,23 @@
 	{% block head %}  {% endblock %}
 </head>
 <body>
-	<header>Aqui iria la cabecera de Scipion</header>
-	<nav> <!--  Top Menu -->
+	<header>
+	<!-- <div style="float:left;" id="logoDiv"> -->
+	<a href="#" style="box-flex:1;"><img class="logo" src="/resources/scipion_logo.png" alt="Scipion logo" style="max-height:80px; "></a>
+	<!-- </div> -->
+	
+	<div style="box-flex:1;padding:40px;text-align:center;">
+	<span class="project_name" style="font-size:1.8em; ">Xmipp Showj Web</span>
+	</div>
+	
+	</header>
+<!-- 	<nav>  Top Menu
 		<ul>
 			<li>File</li>
 			<li>Display</li>
 			<li>Help</li>
 		</ul>
-	</nav>
+	</nav> -->
 	<div id="main_section">
 		<aside id="side_news"> <!-- Main Menu -->
 
@@ -378,44 +387,38 @@
 					 galleryOn
 					 {% endif %}
 					 " />
-					<!-- <button onclick="{{menuLayoutConfig.tableViewLink}}">
-						<img src="{{menuLayoutConfig.tableViewSrc}}">
-					
-					<button onclick="{{menuLayoutConfig.galleryViewLink}}">
-						<img src="{{menuLayoutConfig.galleryViewSrc}}"> -->
-					
 				</div>
 				
 				<div id="zoomContainer" class="sectionMenu">
-					<img src="/resources/showj/zoom.gif" class="menuIcon">
+					<img src="/resources/showj/zoom.png" class="menuIcon">
 					{{ form.zoom }}
 					
 					<div id="arrowContainer" class="arrowSectionMenu">
-						<img src="/resources/showj/arrow_up.png" class="arrowImage">
-						<img src="/resources/showj/arrow_down.png" class="arrowImage">
+						<img src="/resources/showj/arrowUp.png" class="arrowImage">
+						<img src="/resources/showj/arrowDown.png" class="arrowImage">
 					</div>
 					<!-- <input type="number" class="menuInputNumber" id="zoom" value="150" min="10"> -->
 				</div>
 				
 				<div id="gotoContainer" class="sectionMenu">
-					<img src="/resources/showj/goto.gif" class="menuIcon">
+					<img src="/resources/showj/goto.png" class="menuIcon">
 					{{ form.goto }}
 					
 					<div id="arrowContainer" class="arrowSectionMenu">
-						<img src="/resources/showj/arrow_up.png" class="arrowImage">
-						<img src="/resources/showj/arrow_down.png" class="arrowImage">
+						<img src="/resources/showj/arrowUp.png" class="arrowImage">
+						<img src="/resources/showj/arrowDown.png" class="arrowImage">
 					</div>
 					<!-- <input type="number" class="menuInputNumber" id="goto" value="1" max="{{metadata.objects|length}}" min="1"> -->
 				</div>
 				
 				<div class="sectionMenu">
-					<img src="/resources/showj/separator.gif" class="menuIcon">
+					<img src="/resources/showj/separator.png" class="menuIcon">
 				</div>	
 				
 				{% if form.mode.value == 'gallery' %}
 				<div id="colRowContainer" class="sectionMenu">
 					<button id="colRowMode"> 
-						<img src="/resources/showj/colRowMode{{form.colRowMode.value}}.gif" id="colRowModeImage" />
+						<img src="/resources/showj/colRowMode{{form.colRowMode.value}}.png" id="colRowModeImage" />
 					</button>
 					
 					<div class="subSectionMenu">
@@ -423,8 +426,8 @@
 						{{ form.cols }}
 						
 						<div id="arrowContainer" class="arrowSectionMenu">
-							<img src="/resources/showj/arrow_up.png" class="arrowImage">
-							<img src="/resources/showj/arrow_down.png" class="arrowImage">
+							<img src="/resources/showj/arrowUp.png" class="arrowImage">
+							<img src="/resources/showj/arrowDown.png" class="arrowImage">
 						</div>
 						<!-- <input type="number" class="menuInputNumber" id="cols" value="" min="1" max="{{metadata.objects|length}}" disabled> -->
 					</div>
@@ -433,8 +436,8 @@
 						{{ form.rows }}
 						
 						<div id="arrowContainer" class="arrowSectionMenu">
-							<img src="/resources/showj/arrow_up.png" class="arrowImage">
-							<img src="/resources/showj/arrow_down.png" class="arrowImage">
+							<img src="/resources/showj/arrowUp.png" class="arrowImage">
+							<img src="/resources/showj/arrowDown.png" class="arrowImage">
 						</div>
 						<!-- <input type="number" class="menuInputNumber" id="rows" value="" min="1" max="{{metadata.objects|length}}" disabled> -->
 					</div>
@@ -442,7 +445,7 @@
 				{% endif %}
 				
 				<div class="sectionMenu">
-					<img src="/resources/showj/separator.gif" class="menuIcon">
+					<img src="/resources/showj/separator.png" class="menuIcon">
 				</div>
 		
 				<div id="blockSelectorContainer" class="sectionMenu">
@@ -462,7 +465,7 @@
 			
 		
 				<div class="sectionMenu">
-					<img src="/resources/showj/separator.gif" class="menuIcon">
+					<img src="/resources/showj/separator.png" class="menuIcon">
 				</div>
 				
 				<div id="saveContainer" class="sectionMenu">

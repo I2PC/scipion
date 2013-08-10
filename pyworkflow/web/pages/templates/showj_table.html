@@ -3,6 +3,12 @@
 <!-- CSS -->
 <link type="text/css" href="/static/css/jquery-ui_smoothness.css" rel="stylesheet" /> 
 <link type="text/css" href="/static/css/demo_table_jui.css" rel="stylesheet" />
+<style type="text/css">
+section {
+	display:block;
+}
+</style>
+
 <!-- JS -->
 
 <script type="text/javascript" src="{{jquery_datatable}}"></script>
@@ -36,6 +42,9 @@ var oTable;
 var giRedraw = false;
 
 $(document).ready(function() {
+	
+
+	
 	initializeSelectionRowEvent() 
 	initializeGoToEvent()
 	initializeTableWidth()
@@ -132,9 +141,11 @@ $(document).ready(function() {
 					        					return checkbox_element
 					        				},
 					    				{% endif %}
-									
-										"sTitle": '{{value.label}}',
-										"aTargets": [{{forloop.counter0}}]
+										/* NAPA IN THE NIGHT */
+										"sTitle": '<span style="margin:8px;">{{value.label}}</span>'+addIconsToHeader('{{value.columnLayoutProperties.visible}}','{{value.columnLayoutProperties.allowSetVisible}}','{{value.columnLayoutProperties.editable}}','{{value.columnLayoutProperties.allowSetEditable}}','{{value.columnLayoutProperties.renderable}}','{{value.columnLayoutProperties.allowSetRenderable}}'), 
+										"aTargets": [{{forloop.counter0}}],
+										"sContentPadding": "mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm" 
+										
 									},
 		    		            {% endfor %}
 		    		               
@@ -152,28 +163,40 @@ $(document).ready(function() {
 			);
 	
 	initializeMultipleSelectionTool()
-	addIconsToHeader()
+	/* addIconsToHeader() */
 	setElementsEditable('.editable')
 	
 	
 } );
 
 /* Add renderable, editable and disable icon to each column */
-function addIconsToHeader(){
+function addIconsToHeader(visible,allowSetVisible,editable,allowSetEditable,renderable,allowSetRenderable){
+	var iconElements = ''
+
+/* 	columnLayoutProperties.visible */
+	if (visible == 'True'){
+		iconElements+="<span class=\"css_right\"><img src=\"/resources/showj/deleteTableOn.png\" class=\"arrowImage\" "
+		if (allowSetVisible == 'True'){ iconElements+="onclick=\"enableDisableColumn(event,this)\""}
+		iconElements+="></span>"
+	}
 	
-/* 	{% for key, value in tableLayoutConfiguration.columnsLayout.items %}
-	value.label
-	value.columnLayoutProperties.visible
-	value.columnLayoutProperties.allowSetVisible
+	/* columnLayoutProperties.editable */
+	if (allowSetEditable == 'True'){
+		iconElements+="<span class=\"css_right\"><img src=\"/resources/showj/editTableOn.png\" class=\"arrowImage pressedButton\" "
+		if (editable == 'True'){ iconElements+="onclick=\"enableDisableEditableColumn(event,this)\""}
+		iconElements+="></span>"
+	}
 	
-	value.columnLayoutProperties.editable
-	value.columnLayoutProperties.allowSetEditable
+	/* columnLayoutProperties.renderable */
+	if (allowSetRenderable == 'True'){
+		iconElements+="<span class=\"css_right\"><img src=\"/resources/showj/renderTableOn.png\" class=\"arrowImage pressedButton\" "
+		if (renderable == 'True'){iconElements+="onclick=\"enableDisableRenderColumn(event,this)\""}
+		iconElements+="></span>" 
+	}
 	
-	value.columnLayoutProperties.renderable
-	value.columnLayoutProperties.allowSetRenderable
-	
-	{% endfor %} */
-	
+	return iconElements; 
+
+	/* 
 	$("#table_container thead th div").append("<span class=\"css_left\"><img src=\"/resources/showj/delete_table.png\" class=\"arrowImage\" onclick=\"enableDisableColumn(event,this)\"></span>")
 	$("#table_container thead th").each(function(){
 		if ($(this).hasClass("imageColumn")){
@@ -182,7 +205,7 @@ function addIconsToHeader(){
 		if ($(this).hasClass("editable")){
 			$(this).find("div").append("<span class=\"css_left\"><img src=\"/resources/showj/edit_table.png\" class=\"arrowImage pressedButton\" onclick=\"enableDisableEditableColumn(event,this)\"></span>")
 		}
-	})
+	}) */
 }
 
 /* Enable/disable column 
@@ -552,7 +575,7 @@ function enableDisableTableConfig(){
 </div>
 
 	
-<div id="table_container" style="overflow-x:scroll">
+<div id="table_container" style="overflow-x:auto">
 		<table cellspacing="0" id="data_table" width="100%">
 		</table>
 </div>

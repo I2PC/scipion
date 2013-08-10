@@ -106,19 +106,19 @@ aside .submitButton{
 }
 
 aside .tableOn{
-	background-image: url(/resources/showj/tableViewOn.gif);
+	background-image: url(/resources/showj/tableViewOn.png);
 }
 
 aside .tableOff{
-	background-image: url(/resources/showj/tableViewOff.gif);
+	background-image: url(/resources/showj/tableViewOff.png);
 }
 
 aside .galleryOn{
-	background-image: url(/resources/showj/galleryViewOn.gif);
+	background-image: url(/resources/showj/galleryViewOn.png);
 }
 
 aside .galleryOff{
-	background-image: url(/resources/showj/galleryViewOff.gif);
+	background-image: url(/resources/showj/galleryViewOff.png);
 	
 }
 
