@@ -33,7 +33,14 @@ This module contains converter functions that will serve to:
 import xmipp
 from data import *
 from xmipp3 import XmippMdRow
+from pyworkflow.em.constants import NO_INDEX
 
+LABEL_TYPES = { 
+               xmipp.LABEL_SIZET: long,
+               xmipp.LABEL_DOUBLE: float,
+               xmipp.LABEL_INT: int,
+               xmipp.LABEL_BOOL: bool              
+               }
 
 def objectToRow(obj, row, attrDict):
     """ This function will convert an EMObject into a XmippMdRow.
@@ -45,7 +52,9 @@ def objectToRow(obj, row, attrDict):
     """
     for attr, label in attrDict.iteritems():
         if hasattr(obj, attr):
-            row.setValue(label, getattr(obj, attr))
+            labelType = xmipp.labelType(label)
+            valueType = LABEL_TYPES.get(labelType, str)
+            row.setValue(label, valueType(getattr(obj, attr).get()))
 
 def rowToObject(row, obj, attrDict):
     """ This function will convert from a XmippMdRow to an EMObject.
@@ -66,18 +75,81 @@ def readCTFModel(filename):
     md = xmipp.MetaData(filename)
     ctfRow = XmippMdRow()
     ctfRow.readFromMd(md, md.firstObject())
-    ctfObj = CTFModel()
-    
+    ctfObj = CTFModel()    
     ctfDict = { 
                "defocusU": xmipp.MDL_CTF_DEFOCUSU,
                "defocusV": xmipp.MDL_CTF_DEFOCUSV,
                "defocusAngle": xmipp.MDL_CTF_DEFOCUS_ANGLE,
                "sphericalAberration": xmipp.MDL_CTF_CS
+               }    
+    rowToObject(ctfRow, ctfObj, ctfDict)  
+    ctfObj._xmippMd = String(filename) 
+    
+    return ctfObj
+
+
+def writeCTFModel(ctfObj, filename):
+    """ Write a CTFModel object as Xmipp .ctfparam"""
+    pass
+
+
+def readMicrograph(md, objId):
+    """ Create a Micrograph object from a row of Xmipp metadata. """
+    pass
+
+def locationToXmipp(index, filename):
+    """ Convert an index and filename location
+    to a string with @ as expected in Xmipp.
+    """
+    #TODO: Maybe we need to add more logic dependent of the format
+    if index != NO_INDEX:
+        return "%d@%s" % (index, filename)
+    
+    return filename
+
+def micrographToRow(mic, micRow):
+    """ Set labels values from Micrograph mic to md row. """
+    micDict = { 
+               "_id": xmipp.MDL_ITEM_ID,
+#               "defocusV": xmipp.MDL_CTF_DEFOCUSV,
+#               "defocusAngle": xmipp.MDL_CTF_DEFOCUS_ANGLE,
+#               "sphericalAberration": xmipp.MDL_CTF_CS
                }
+    index, filename = mic.getLocation()
+    fn = locationToXmipp(index, filename)
+    micRow.setValue(xmipp.MDL_MICROGRAPH, fn)
+      
+    objectToRow(mic, micRow, micDict)
+
+
+def readSetOfMicrographs(filename):
+    pass
+
+
+def writeSetOfMicrographs(micSet, filename, rowFunc=None):
+    """ This function will write a SetOfMicrographs as Xmipp metadata.
+    Params:
+        micSet: the SetOfMicrograph instance.
+        filename: the filename where to write the metadata.
+        rowFunc: this function can be used to setup the row before 
+            adding to metadata.
+    """
+    md = xmipp.MetaData()
     
-    rowToObject(ctfRow, ctfObj, ctfDict)   
+    for mic in micSet:
+        objId = md.addObject()
+        micRow = XmippMdRow()
+        micrographToRow(mic, micRow)
+        if rowFunc:
+            rowFunc(mic, micRow)
+        micRow.writeToMd(md, objId)
+        
+    md.write(filename)
+    micSet._xmippMd = String(filename)
+
     
-    return xmippCTFModel
+     
+    
 
 
     

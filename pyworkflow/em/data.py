@@ -35,10 +35,10 @@ from posixpath import join
 from pyworkflow.utils.utils import getUniqueItems
 
 
-class EMObject(Object):
+class EMObject(OrderedObject):
     """Base object for all EM classes"""
     def __init__(self, **args):
-        Object.__init__(self, **args)
+        OrderedObject.__init__(self, **args)
         
     def __str__(self):
         return str(self.get())
@@ -61,7 +61,7 @@ class Microscope(EMObject):
         self.voltage.set(other.voltage.get())
         self.sphericalAberration.set(other.sphericalAberration.get())
         
-        
+#TODO: remove this class, since it is not necessary    
 class ImageLocation(EMObject):
     """ This class represents the unique location of an image.
     If the image is an stack, the location composed by index and filename.
@@ -126,7 +126,9 @@ class Image(EMObject):
         EMObject.__init__(self, **args)
         #TODO: replace this id with objId
         self._id =  Integer()
-        self._location = ImageLocation()
+        # Image location is composed by an index and a filename
+        self._index = Integer(0)
+        self._filename = String()
         self._samplingRate = Float()
         self._ctfModel = None
         
@@ -158,25 +160,31 @@ class Image(EMObject):
         """Return image dimensions as tuple: (Ydim, Xdim)"""
         pass
     
+    def getIndex(self):
+        return self._index.get()
+    
+    def setIndex(self, index):
+        self._index.set(index)
+        
     def getFileName(self):
         """ Use the _objValue attribute to store filename. """
-        return self._location.getFileName()
+        return self._filename.get()
     
     def setFileName(self, filename):
         """ Use the _objValue attribute to store filename. """
-        self._location.setFileName(filename)
+        self._filename.set(filename)
         
     def getLocation(self):
         """ This function return the image index and filename.
         It will only differs from getFileName, when the image
         is contained in a stack and the index make sense. 
         """
-        return self._location    
+        return (self.getIndex(), self.getFileName())
     
     def setLocation(self, index, filename):
         """ Set the image location, see getLocation. """
-        self._location.setIndex(index)
-        self._location.setFileName(filename)
+        self.setIndex(index)
+        self.setFileName(filename)
         
     def hasCTF(self):
         return self._ctfModel is not None

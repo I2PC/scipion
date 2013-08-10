@@ -9,6 +9,7 @@ import unittest
 from pyworkflow.tests import *
 from pyworkflow.em.data import *
 from pyworkflow.utils.path import makePath
+from pyworkflow.em.packages.xmipp3.convert import writeSetOfMicrographs
 
 class TestImage(unittest.TestCase):
         
@@ -50,10 +51,10 @@ class TestSetOfMicrographs(unittest.TestCase):
         makePath(cls.outputPath)
     
         
-    def checkSet(self, setMics):
+    def checkSet(self, micSet):
         idCount = 1
         
-        for fn, mic in zip(self.mics, setMics):            
+        for fn, mic in zip(self.mics, micSet):            
             micFn = mic.getFileName()
             self.assertEqual(fn, micFn, 
                              "micrograph NAME in the set is wrong, \n   expected: '%s'\n        got: '%s'" 
@@ -61,28 +62,37 @@ class TestSetOfMicrographs(unittest.TestCase):
             self.assertEqual(idCount, mic.getId(), 
                              "micrograph ID in the set is wrong, \n   expected: '%s'\n        got: '%s'" 
                              % (idCount, mic.getId()))
-            mic2 = setMics[idCount] # Test getitem
+            mic2 = micSet[idCount] # Test getitem
             self.assertEqual(mic, mic2, "micrograph got from ID is wrong")
             idCount += 1            
         
     def testCreate(self):
         """ Create a SetOfMicrographs from a list of micrographs """
-        setMics = SetOfMicrographs()
-        setMics.setFileName(self.dbFn)
-        setMics.setSamplingRate(1.2)
+        micSet = SetOfMicrographs()
+        micSet.setFileName(self.dbFn)
+        micSet.setSamplingRate(1.2)
         for fn in self.mics:
             mic = Micrograph()
             mic.setFileName(fn)
-            setMics.append(mic)
+            micSet.append(mic)
             
-        setMics.write()        
-        self.checkSet(setMics)
+        micSet.write()        
+        self.checkSet(micSet)
         
     def testRead(self):
         """ Read micrographs from a SetOfMicrographs """
-        setMics = SetOfMicrographs()
-        setMics.setFileName(self.dbGold)
-        self.checkSet(setMics)
+        micSet = SetOfMicrographs()
+        micSet.setFileName(self.dbGold)
+        self.checkSet(micSet)
+        
+    def testXmippConvert(self):
+        """ Test the convertion of a SetOfMicrographs to Xmipp"""
+        micSet = SetOfMicrographs()
+        micSet.setFileName(self.dbGold)
+        mdFn = getOutputPath('test_data', 'micrographs.xmd')
+        from pyworkflow.em.packages.xmipp3.convert import *
+        
+        writeSetOfMicrographs(micSet, mdFn)
 
     
        

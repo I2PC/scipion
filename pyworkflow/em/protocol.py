@@ -350,6 +350,10 @@ class ProtCTFMicrographs(EMProtocol):
         EMProtocol.__init__(self, **args)
         self.stepsExecutionMode = STEPS_PARALLEL 
     
+    def _getMicrographDir(self, mic):
+        """ Return an unique dir name for results of the micrograph. """
+        return self._getExtraPath(removeBaseExt(mic.getFileName()))        
+        
     def _iterMicrographs(self):
         """ Iterate over micrographs and yield
         micrograph name and a directory to process.
