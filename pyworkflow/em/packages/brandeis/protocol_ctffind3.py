@@ -98,9 +98,8 @@ class ProtCTFFind(ProtCTFMicrographs):
         return ctf
         
     def createOutput(self):
-        path = self._getPath('micrographs.sqlite')
-        micSet = SetOfMicrographs()
-        micSet.setFileName(path)
+        
+        micSet = self._createSetOfMicrographs()
         micSet.copyInfo(self.inputMics)
         
         for fn, micDir, mic in self._iterMicrographs():
