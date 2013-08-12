@@ -45,6 +45,7 @@ from protocol_ml2d import XmippProtML2D
 from protocol_cl2d import XmippProtCL2D
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_rotational_spectra import XmippProtRotSpectra
+from convert import writeSetOfMicrographs
 
 
 import xmipp
@@ -66,12 +67,16 @@ class XmippViewer(Viewer):
         cls = type(obj)
         
         if issubclass(cls, SetOfMicrographs):
-            fn = self._getTmpPath(obj.getName() + '_micrographs.xmd')
-            mics = XmippSetOfMicrographs.convert(obj, fn)
+            mdFn = getattr(obj, '_xmippMd', None)
+            if mdFn:
+                fn = mdFn.get()
+            else:
+                fn = self._getTmpPath(obj.getName() + '_micrographs.xmd')
+                writeSetOfMicrographs(obj, fn)
             extra = ''
-            if mics.hasCTF():
+            if obj.hasCTF():
                 extra = ' --mode metadata --render first'
-            runShowJ(mics.getFileName(), extraParams=extra)  
+            runShowJ(fn, extraParams=extra)  
         
         elif issubclass(cls, XmippSetOfCoordinates):
             runParticlePicker(obj.getMicrographs().getFileName(), os.path.dirname(obj.getFileName()), extraParams='readonly')

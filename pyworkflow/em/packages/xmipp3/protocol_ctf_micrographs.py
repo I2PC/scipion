@@ -30,9 +30,10 @@ This sub-package contains the XmippCtfMicrographs protocol
 
 
 from pyworkflow.em import *  
-from pyworkflow.em.packages.xmipp3.data import *
-from pyworkflow.utils.path import makePath, basename, join, exists
-import xmipp
+from data import *
+from convert import *
+#from pyworkflow.utils.path import makePath, basename, join, exists
+#import xmipp
 
 
 class XmippProtCTFMicrographs(ProtCTFMicrographs):
@@ -85,55 +86,39 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         # CTF estimation with Xmipp                
         self.runJob(None, self._program, self._args % self._params)    
 
-    def createOutput(self):
-        # Create micrographs metadata with CTF information
-        mdOut = xmipp.FileName(self._getPath(self._getFilename('micrographs')))        
-        micSet = XmippSetOfMicrographs(str(mdOut))
-        
-        # Label to set values in metadata
+    def setupMicRow(self, mic, micRow):
+        """ Add extra labels to the micrograph row, not present
+        in the base class. 
+        """
+        micDir = self._getMicrographDir(mic)
         labels = [xmipp.MDL_PSD, xmipp.MDL_PSD_ENHANCED, xmipp.MDL_CTF_MODEL, xmipp.MDL_IMAGE1, xmipp.MDL_IMAGE2]
         # Filenames key related to ctf estimation
         keys = ['psd', 'enhanced_psd', 'ctfparam', 'ctfmodel_quadrant', 'ctfmodel_halfplane']
+        values = [self._getFilename(key, micDir=micDir) for key in keys]
+        for l, v in zip(labels, values):
+            micRow.setValue(l, v)        
         
-        mapsId = {}
+    def createOutput(self):
+        # Create the SetOfMicrographs 
+        micSet = self._createSetOfMicrographs()
         
-        for fn, micDir, mic in self._iterMicrographs():
-            xmic = XmippMicrograph(fn)
+        for _, micDir, mic in self._iterMicrographs():
             ctfparam = self._getFilename('ctfparam', micDir=micDir)
-            if exists(ctfparam): # Get filenames
-                values = [self._getFilename(key, micDir=micDir) for key in keys]
-            else: # No files
-                values = ['NA'] * len(labels)
-    
-            # Set values to the micrograph
-            for l, v in zip(labels, values):
-                xmic.setValue(l, v)
-            micSet.append(xmic)
-            mapsId[mic.getId()] = xmic.getId()
-         
-        #TODO: Verificar con J.M. para que vale este sort
-        #micSet.sort()
-        
+            ctfModel = readCTFModel(ctfparam)
+            mic.setCTF(ctfModel)
+            micSet.append(mic)
         #Copy attributes from input to output micrographs
-        micSet.copyInfo(self.inputMics)   
-         
-        # If input micrographs have tilt pairs copy the relation
-        if self.inputMics.hasTiltPairs():
-            
-            #TODO: FILL mapIds
-            micSet.copyTiltPairs(self.inputMics, mapsId.get)
-            
-        micSet.write()
-            
-        auxMdOut = xmipp.FileName(self._getTmpPath('micrographs.xmd'))
-        self.runJob(None,"xmipp_ctf_sort_psds","-i %s -o %s" % (mdOut, auxMdOut))
-        
-        md = xmipp.MetaData(auxMdOut)
-        md.write(micSet._getListBlock(), xmipp.MD_APPEND)
-        
-#        self.runJob(None,"mv","-f %s %s" % (auxMdOut.removeBlockName(),
-#                                       mdOut.removeBlockName()))       
+        micSet.copyInfo(self.inputMics)
+        # Mark flag of CTF as True
+        micSet.setHasCTF(True)      
+        # Write as a Xmipp metadata
+        mdFn = self._getPath('micrographs.xmd')
+        writeSetOfMicrographs(micSet, mdFn, self.setupMicRow)         
+        micSet.write()            
+        # Evaluate the PSD and add some criterias
+        auxMdFn = self._getTmpPath('micrographs.xmd')
+        self.runJob(None, "xmipp_ctf_sort_psds","-i %s -o %s" % (mdFn, auxMdFn))
+        # Copy result to output metadata
+        moveFile(auxMdFn, mdFn)
 
-        # This property should only be set by CTF estimation protocols
-        micSet.setCTF(True)       
         self._defineOutputs(outputMicrographs=micSet)

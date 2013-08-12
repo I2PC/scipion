@@ -140,6 +140,11 @@ def copyFile(source, dest):
     """ Shortcut to shutil.copy. """
     shutil.copy(source, dest)
     
+def moveFile(source, dest):
+    """ Move file from source to dest. """
+    copyFile(source, dest)
+    cleanPath(source)
+    
 def createLink(source, dest):
     """ Creates a link to a given file path. """
     if exists(dest):
