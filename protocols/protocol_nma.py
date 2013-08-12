@@ -46,7 +46,7 @@ class ProtNMA(XmippProtocol):
             # Convert to pseudoatoms
             fnOut=self.getFilename("pseudoatoms")
             params="-i %s -o %s --sigma %f --targetError %f --sampling_rate %f -v 2 --intensityColumn Bfactor"%\
-                (self.InputStructure,fnOut,self.PseudoAtomRadius*self.Sampling,self.PseudoAtomTarget/100.0,self.Sampling)
+                (self.InputStructure,fnOut,self.PseudoAtomRadius*self.Sampling,self.PseudoAtomTarget,self.Sampling)
             if fnMask!="":
                 params+=" --mask binary_file %s"%fnMask
             self.insertRunJobStep("xmipp_volume_to_pseudoatoms", params=params,verifyFiles=[fnOut+".pdb"])

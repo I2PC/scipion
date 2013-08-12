@@ -14,13 +14,11 @@ import xmipp.jni.MetaData;
 import xmipp.jni.Particle;
 import xmipp.jni.PickingClassifier;
 import xmipp.utils.DEBUG;
-import xmipp.utils.TasksManager;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
-import xmipp.viewer.particlepicker.UpdateTemplatesTask;
 import xmipp.viewer.particlepicker.training.gui.SingleParticlePickerJFrame;
 
 /**
@@ -112,9 +110,9 @@ public class SingleParticlePicker extends ParticlePicker {
 		saveData(micrograph);
 		setChanged(false);
 	}
-	
+
 	/* Save changes to ALL micrographs, mainly used when importing. */
-	public void saveAllData(){
+	public void saveAllData() {
 		super.saveData();
 		for (Micrograph m : micrographs)
 			saveData(m);
@@ -138,6 +136,7 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public synchronized void initTemplates(int num) {
+		System.out.println("initTemplates");
 		if (num == 0)
 			return;
 		try {
@@ -165,6 +164,7 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public synchronized void setTemplatesNumber(int num) {
+		System.out.println("setTemplatesNumber");
 		if (num <= 0)
 			throw new IllegalArgumentException(
 					XmippMessage.getIllegalValueMsgWithInfo("Templates Number",
@@ -174,17 +174,19 @@ public class SingleParticlePicker extends ParticlePicker {
 		initUpdateTemplates(num);
 	}
 
-	public synchronized void setSize(int size) {
+	public void setSize(int size) {
+
 		super.setSize(size);
 		classifier.setSize(size);
-		initUpdateTemplates(getTemplatesNumber());
 	}
 
 	public synchronized ImageGeneric getTemplates() {
+		System.out.println("getTemplates");
 		return templates;
 	}
 
 	public synchronized void setTemplate(ImageGeneric ig) {
+		System.out.println("setTemplate");
 		float[] matrix;
 		try {
 			// TODO getArrayFloat and setArrayFloat must be call from C both in
@@ -295,11 +297,9 @@ public class SingleParticlePicker extends ParticlePicker {
 					md.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
 
 				}
-
 				md.writeBlock(getParticlesBlock(file));// to replace/append
-				md.destroy();
-
 			}
+			md.destroy();
 			saveAutomaticParticles(tm);
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
@@ -513,10 +513,11 @@ public class SingleParticlePicker extends ParticlePicker {
 				m.addAutomaticParticle(particle);
 				added = true;
 			}
-			// Change the state of the micrograph if some automatic particles were added
+			// Change the state of the micrograph if some automatic particles
+			// were added
 			if (added && m.getState() == MicrographState.Available)
 				m.setState(MicrographState.Auto);
-			
+
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
@@ -525,7 +526,12 @@ public class SingleParticlePicker extends ParticlePicker {
 
 	public void loadAutomaticParticles(SingleParticlePickerMicrograph m,
 			String file) {
-		if (new File(file).exists() && MetaData.containsBlock(file, particlesAutoBlock))// todo: check the auto block exists
+		if (new File(file).exists()
+				&& MetaData.containsBlock(file, particlesAutoBlock))// todo:
+																	// check the
+																	// auto
+																	// block
+																	// exists
 		{
 			MetaData md = new MetaData(getParticlesAutoBlock(file));
 			loadAutomaticParticles(m, md);
@@ -557,6 +563,7 @@ public class SingleParticlePicker extends ParticlePicker {
 	public String importParticlesFromFolder(String path, Format f, float scale,
 			boolean invertx, boolean inverty) {
 
+		//System.err.format("JM_DEBUG:   >>>> importParticlesFromFolder   scale: %f\n", scale);
 		if (f == Format.Auto)
 			f = detectFormat(path);
 		if (f == Format.Unknown)
@@ -564,17 +571,18 @@ public class SingleParticlePicker extends ParticlePicker {
 
 		String filename;
 		String result = "";
-		initTemplates();
+
 		String particlesfile = getExportFile(path);
-		if (particlesfile != null) {
+		if (particlesfile != null && f == Format.Xmipp30) {
 			importAllParticles(particlesfile);
 			return "";
 		}
 		for (SingleParticlePickerMicrograph m : micrographs) {
 			filename = getImportMicrographName(path, m.getFile(), f);
-			if (Filename.exists(filename))
+			if (Filename.exists(filename)) {
 				result += importParticlesFromFile(filename, f, m, scale,
 						invertx, inverty);
+			}
 		}
 
 		return result;
@@ -584,11 +592,20 @@ public class SingleParticlePicker extends ParticlePicker {
 	public String importParticlesFromFile(String path, Format f,
 			SingleParticlePickerMicrograph m, float scale, boolean invertx,
 			boolean inverty) {
-		MetaData md = new MetaData();
-		fillParticlesMdFromFile(path, f, m, md, scale, invertx, inverty);
-		String result = (md != null) ? importParticlesFromMd(m, md) : "";
-		saveData(m);
-		md.destroy();
+		String result = "";
+		try {
+			MetaData md = new MetaData();
+			fillParticlesMdFromFile(path, f, m, md, scale, invertx, inverty);
+			System.err.format("After fillParticlesMdFromFile, size:\n", md.size());
+			if (md.size() > 0) {
+				//Be sure that width and height are loaded
+				result = importParticlesFromMd(m, md);
+			}
+			md.destroy();
+		} catch (Exception ex) {
+			System.err.format("Error importing from file '%s' message: '%s'\n",
+					path, ex.toString());
+		}
 		return result;
 	}// function importParticlesFromFile
 
@@ -596,7 +613,7 @@ public class SingleParticlePicker extends ParticlePicker {
 			MetaData md) {
 
 		resetMicrograph(m);
-		SingleParticlePickerMicrograph tm = (SingleParticlePickerMicrograph) m;
+		m.loadDimensions();
 		long[] ids = md.findObjects();
 		int x, y;
 		String result = "";
@@ -605,45 +622,52 @@ public class SingleParticlePicker extends ParticlePicker {
 		for (long id : ids) {
 			x = md.getValueInt(MDLabel.MDL_XCOOR, id);
 			y = md.getValueInt(MDLabel.MDL_YCOOR, id);
-			if (!m.fits(x, y, size))// ignore out of bounds particle
+			if (!m.fits(x, y, size))// ignore out of bounds particles
 			{
-				result += XmippMessage.getOutOfBoundsMsg("Particle")
-						+ String.format(" on x:%s y:%s", x, y);
+				result += XmippMessage.getOutOfBoundsMsg(String.format(
+						"Particle on x:%s y:%s\n", x, y)) + " dismissed\n";
+
 				continue;
 			}
-			tm.addManualParticle(new ManualParticle(x, y, this, tm, 2),	this, false);
-			
+			m.addManualParticle(new ManualParticle(x, y, this, m, 2), this,
+					false);
+
 		}
 		saveData(m);
 		return result;
 	}// function importParticlesFromMd
 
 	public boolean isReviewFile(String file) {
+		if(!file.endsWith("xmd"))
+			return false;
+		boolean result = false;
+		boolean nullMicrograph = false;
 		try {
 			MetaData md = new MetaData(file);
-
-			if (!md.containsLabel(MDLabel.MDL_XCOOR))
-				return false;
-			if (!md.containsLabel(MDLabel.MDL_YCOOR))
-				return false;
-			if (!md.containsLabel(MDLabel.MDL_COST))
-				return false;
-			String[] blocksArray = MetaData.getBlocksInMetaDataFile(file);
-			List<String> blocks = Arrays.asList(blocksArray);
-
-			String name;
-			for (String block : blocks) {
-				name = block.replace("mic_", "");
-				if (getMicrograph(name) == null)
-					return false;
-
+			
+			if (md.containsLabel(MDLabel.MDL_XCOOR) &&
+				md.containsLabel(MDLabel.MDL_YCOOR) &&
+				md.containsLabel(MDLabel.MDL_COST)) {
+				String[] blocksArray = MetaData.getBlocksInMetaDataFile(file);
+				List<String> blocks = Arrays.asList(blocksArray);
+				
+				String name;
+				for (String block : blocks) {
+					name = block.replace("mic_", "");
+					if (getMicrograph(name) == null) {
+						nullMicrograph = true;
+						break;
+					}
+				}
 			}
-
 			md.destroy();
-			return true;
+
+			if (!nullMicrograph)
+				result = true;
 		} catch (Exception e) {
-			return false;
+			e.printStackTrace();
 		}
+		return result;
 	}
 
 	public void importAllParticles(String file) {// Expected a file for all
@@ -675,7 +699,7 @@ public class SingleParticlePicker extends ParticlePicker {
 			boolean inverty) {// Expected a file for all
 								// micrographs
 		try {
-			initTemplates();
+
 			String[] blocksArray = MetaData.getBlocksInMetaDataFile(file);
 			List<String> blocks = Arrays.asList(blocksArray);
 			String block;
@@ -712,6 +736,7 @@ public class SingleParticlePicker extends ParticlePicker {
 	public synchronized void resetParticleImages()// to update templates with
 													// the right particles
 	{
+		System.out.println("resetParticleImages");
 		for (SingleParticlePickerMicrograph m : micrographs) {
 			for (ManualParticle p : m.getManualParticles())
 				p.resetImagePlus();
@@ -720,15 +745,19 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public void initUpdateTemplates() {
+
 		initUpdateTemplates(getTemplatesNumber());
+
 	}
 
 	public void initUpdateTemplates(int num) {
-		TasksManager.getInstance().addTask(new UpdateTemplatesTask(this, num));
+//		TasksManager.getInstance().addTask(new UpdateTemplatesTask(this, num));
+		new UpdateTemplatesTask(this, num).execute();
 		saveConfig();
 	}
 
 	public synchronized void updateTemplates(int num) {
+		System.out.println("updateTemplates");
 		try {
 			if (getMode() != Mode.Manual)
 				return;
@@ -736,24 +765,43 @@ public class SingleParticlePicker extends ParticlePicker {
 			initTemplates(num);
 			ImageGeneric igp;
 			List<ManualParticle> particles;
+			int size;
 			ManualParticle particle;
 			double[] align;
 
+			System.err.println("JM_DEBUG: ============= Updating TEMPLATES ============");
+			//FIXME: the template update needs to be done in a 
+			// more efficient way, now we are using this maxcount
+			// to limit the number of particles used in the update
+			int count = 0;
+			int maxcount = 100; 
+			//FIXME: This is a tweak to avoid losing time with big particles
+			if (getSize() > 256)
+				maxcount = 10;
+			
 			for (SingleParticlePickerMicrograph m : getMicrographs()) {
-				for (int i = 0; i < m.getManualParticles().size(); i++) {
-					particles = m.getManualParticles();
+				if(count >= maxcount)
+					break;
+				particles = m.getManualParticles();
+				size = particles.size();
+				//System.err.println("JM_DEBUG: Updating for Micrograph: "+ m.getFile());
+				for (int i = 0; i < size; i++) {
 					particle = particles.get(i);
 					igp = particle.getImageGeneric();
 					if (getTemplateIndex() < getTemplatesNumber())
 						setTemplate(igp);
 					else {
-						align = getTemplates().alignImage(igp);
+						align = templates.alignImage(igp);
 						applyAlignment(particle, igp, align);
 					}
+					count ++;
+					
 				}
+				saveTemplates(); //Save templates after each micrograph?
 			}
 			templates.getRadialAvg(radialtemplates);
 			saveTemplates();
+			// System.out.println("templates updated");
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e.getMessage());
 		}
@@ -791,6 +839,7 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public synchronized void centerParticle(ManualParticle p) {
+		
 		if (getManualParticlesNumber() <= getTemplatesNumber())
 			return;// templates not ready
 		Particle shift = null;
@@ -838,17 +887,14 @@ public class SingleParticlePicker extends ParticlePicker {
 			Integer autopickpercent;
 			if (!new File(file).exists())
 				return;
-			MetaData md;
 			if (MetaData.containsBlock(file, "header")) {
-				md = new MetaData("header@" + file);
-				boolean hasautopercent = md
-						.containsLabel(MDLabel.MDL_PICKING_AUTOPICKPERCENT);
+				MetaData md = new MetaData("header@" + file);
+				boolean hasautopercent = md.containsLabel(MDLabel.MDL_PICKING_AUTOPICKPERCENT);
 				long id = md.firstObject();
 				state = MicrographState.valueOf(md.getValueString(
 						MDLabel.MDL_PICKING_MICROGRAPH_STATE, id));
 				if (hasautopercent)
-					autopickpercent = md.getValueInt(
-							MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
+					autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
 				else
 					autopickpercent = 50;// compatibility with previous projects
 				double threshold = md.getValueDouble(MDLabel.MDL_COST, id);
@@ -866,9 +912,11 @@ public class SingleParticlePicker extends ParticlePicker {
 
 	}
 
-	public void loadManualParticles(SingleParticlePickerMicrograph micrograph, String file) 
-	{
-		if (new File(file).exists() && MetaData.containsBlock(file, getParticlesBlockName(Format.Xmipp301))) {
+	public void loadManualParticles(SingleParticlePickerMicrograph micrograph,
+			String file) {
+		if (new File(file).exists()
+				&& MetaData.containsBlock(file,
+						getParticlesBlockName(Format.Xmipp301))) {
 
 			int x, y;
 			ManualParticle particle;
@@ -1100,8 +1148,8 @@ public class SingleParticlePicker extends ParticlePicker {
 				String path = getParticlesAutoBlock(next);
 				outputmd.writeBlock(path);
 				outputmd.print();
-				outputmd.destroy();
 			}
+			outputmd.destroy();
 			frame.getCanvas().repaint();
 			frame.getCanvas().setEnabled(true);
 			frame.updateMicrographsModel(true);

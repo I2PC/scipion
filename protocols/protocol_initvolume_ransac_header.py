@@ -33,7 +33,7 @@ AngularSampling = 5
 #{expert} Number of RANSAC iterations
 """ Number of initial volumes to test by RANSAC
 """
-NRansac = 300
+NRansac = 380
 
 #{expert} Number of grids per dimension 
 """ Number of grids per dimension. The total number of classes used consists in n x n
@@ -49,7 +49,7 @@ CorrThresh = 0.8
 #{expert} Number of best volumes to refine
 """ Number of best volumes to refine 
 """
-NumVolumes =3
+NumVolumes =10
 
 #{expert} Number of iterations to perform to refine the volumes
 """ Number of iterations to perform to refine the volumes 

@@ -341,15 +341,18 @@ class XmippProject():
         
         for r in runs:
             extRunName = getExtendedRunName(r)
-            prot = self.getProtocolFromRunName(extRunName)
-            self._registerRunProtocol(extRunName, prot, runsDict)
-            runsDict[extRunName].state = r['run_state']
+            try:
+                prot = self.getProtocolFromRunName(extRunName)
+                self._registerRunProtocol(extRunName, prot, runsDict)
+                runsDict[extRunName].state = r['run_state']
+            except Exception, ex:
+                print "Error loading run: ", extRunName, "...IGNORED."
         
         for r in runs:
             dd = runsDict[getExtendedRunName(r)]
             for r2 in runs:
-                dd2 = runsDict[getExtendedRunName(r2)]
-                if dd.extRunName != dd2.extRunName and not dd2.hasDep(dd.extRunName):
+                dd2 = runsDict.get(getExtendedRunName(r2), None)
+                if dd2 and dd.extRunName != dd2.extRunName and not dd2.hasDep(dd.extRunName):
                     for k, v in dd.prot.ParamsDict.iteritems():
                         if k != 'RunName' and type(v) == str and v.startswith(dd2.prot.WorkingDir + '/'):
                             dd2.addDep(dd.extRunName)
@@ -814,6 +817,9 @@ class ProtocolExecutor():
             self.run_id = self.project.projectDb.getRunId(self.protocol_name, self.run_name)
         
         return self.run_id
+    
+    def getExtendedRunName(self):
+        return self.ext_name
     
     def getJobId(self):
         return self.project.projectDb.getRunJobid(self.getRunId())
