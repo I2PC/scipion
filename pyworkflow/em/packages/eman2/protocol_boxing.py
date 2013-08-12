@@ -65,78 +65,17 @@ class EmanProtBoxing(ProtParticlePicking):
         # Run the command with formatted parameters
         self._log.info('Launching: ' + program + ' ' + arguments % self._params)
         self.runJob(None, program, arguments % self._params)
-    
-#     def _createSetOfCoordinates(self, size):
-#         mics = self.inputMicrographs.get()
-#         # Create a json file with the coordinates file for each micrograph
-#         boxId = 0L
-#         jsonDict = {}
-#         for mic in mics:
-#             micId = mic.getId()
-#             micFnroot = removeBaseExt(mic.getFileName()) + '_info.json'
-#             micPosFn = self._getRelPath("info", micFnroot)
-#             if exists(micPosFn):
-#                 jsonDict[micId] = self._getPath(micPosFn)
-#                 jsonPosDict = loadJson(micPosFn)
-#                 boxes = jsonPosDict["boxes"]
-#                 listbox = []
-#                 for box in boxes:
-#                     boxId += 1
-#                     listbox.append(boxId)
-#                 jsonPosDict["coordId"] = listbox
-#                 writeJson(jsonPosDict, micPosFn)
-#         jsoncoordsFn = self._getRelPath('scipion_micrographs_coordinates.json')
-#         writeJson(jsonDict, jsoncoordsFn)
-#         #coords = EmanSetOfCoordinates(filename=jsoncoordsFn)
-#         coords = EmanSetOfCoordinates(filename=self._getPath('scipion_micrographs_coordinates.json'))
-#         coords.setMicrographs(mics)
-#         coords.boxSize.set(size)
-#         return coords
         
     def createOutput(self):
-        #workDir = self.workingDir.get()
-        fn = self._getRelPath('coordinates.sqlite')
-        coordSet = SetOfCoordinates()
+        coodrSet = self._createSetOfCoordinates()
         coordSet.setFileName(fn)
         coordSet.setMicrographs(self.inputMics)
         readSetOfCoordinates(self.inputMics, coordSet)
         coordSet.write()
         self._defineOutputs(outputCoordinates=coordSet)
-
         # As we move to workingDir we must leave it. 
         self._leaveWorkingDir()    
-# 
-#    This comments must be erase!     
-#         
-#         
-#         
-#         # Get the box size store in Eman json
-#         jsonBoxDict = loadJson(self._getRelPath("e2boxercache", 'base.json'))
-#         size = int(jsonBoxDict["box_size"])
-#         
-# #         if not self.importFolder.hasValue():
-# #             program = "e2boxer.py"
-# #             arguments = "%(inputMics)s --boxsize=%(boxSize)i"
-# #             self._log.info('Creating output: ' + program + ' ' + arguments % self._params)
-# #             self.runJob(None, program, arguments % self._params) 
-#   
-#         # Create the SetOfCoordinates object on the database 
-#         #TODO: Create a json file with pairs micrographId, jsonPosFile and point EmanSetOFCoordinates to it
-#         
-#         outputCoordinates = self._createSetOfCoordinates(size)
-#         
-#         # TODO: Now particlesWritten will come from form paramter and if yes e2boxer will need to be executed again
-# #        particlesWritten = bool(EmanDbd.getEmanParamValue('write_particles'))
-#         # TODO: No need to retreive format anymore
-# #        particlesFormat = str(EmanDbd.getEmanParamValue('format'))
-#         self._defineOutputs(outputCoordinates=outputCoordinates) 
-#         
-# #         if particlesWritten:
-# #             # TODO: GEnerate lst with e2buildsets or maybe a unique hdf
-# #             print 'siiii tenemos particulas con format %s ' % particlesFormat.strip()
-# #             outputParticles = EmanSetOfParticles(filename=self.workingDir.get(), format=particlesFormat.strip())
-# #             self._defineOutputs(outputParticles=outputParticles) 
-#     
+
     def getFiles(self):
         filePaths = self.inputMicrographs.get().getFiles() | ProtParticlePicking.getFiles(self)
         return filePaths

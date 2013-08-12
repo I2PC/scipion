@@ -51,12 +51,17 @@ class EMProtocol(Protocol):
         micSet = SetOfMicrographs()
         micSet.setFileName(self._getPath('micrographs%s.sqlite' % suffix)) 
         return micSet
+
+    def _createSetOfCoordinates(self, suffix=''):
+        coordSet = SetOfCoordinates()
+        coordSet.setFileName(self._getPath('coordinates%s.sqlite' % suffix)) 
+        return coordSet
     
     def _createSetOfParticles(self, suffix=''):
         imgSet = SetOfParticles()
         imgSet.setFileName(self._getPath('particles%s.sqlite' % suffix)) 
         return imgSet
-    
+
     def _createSetOfVolumes(self, suffix=''):
         volSet = SetOfVolumes()
         volSet.setFileName(self._getPath('volumes%s.sqlite' % suffix)) 

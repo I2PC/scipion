@@ -81,20 +81,7 @@ def writeSetOfMicrographs(micSet, filename, rowFunc=None):
     pass
     
 def readPosCoordinates(posFile):
-    """ Read the coordinates in .pos file. 
-    and return corresponding metadata. 
-    """
-#     
-#     
-#     md = xmipp.MetaData(posFile)
-#     blocks = xmipp.getBlocksInMetaDataFile(posFile)
-#     
-#     for b in ['particles', 'particles_auto']:
-#         if b in blocks:
-#             mdAux = xmipp.MetaData('%(b)s@%(posFile)s' % locals())
-#             md.unionAll(mdAux)
-#     
-#     return md
+    pass
             
 def readSetOfCoordinates(micSet, coordSet):
     """ Read from Eman .json files.
