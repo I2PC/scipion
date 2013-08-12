@@ -908,6 +908,8 @@ void ProgVolumeToPseudoatoms::run()
     produceSideInfo();
     int iter=0;
     double previousNAtoms=0;
+    percentageDiff=1;
+    double actualGrowSeeds;
     do
     {
         // Place seeds
@@ -916,8 +918,9 @@ void ProgVolumeToPseudoatoms::run()
         else
         {
             double Natoms=atoms.size();
-            removeSeeds(FLOOR(Natoms*(growSeeds/2)/100));
-            placeSeeds(FLOOR(Natoms*growSeeds/100));
+            actualGrowSeeds=growSeeds*std::min(1.0,0.1+(percentageDiff-targetError)/targetError);
+            removeSeeds(FLOOR(Natoms*(actualGrowSeeds/2)/100));
+            placeSeeds(FLOOR(Natoms*actualGrowSeeds/100));
         }
         drawApproximation();
 
@@ -932,8 +935,8 @@ void ProgVolumeToPseudoatoms::run()
 			<< percentageDiff << std::endl;
         writeResults();
         iter++;
-
-        if (fabs(previousNAtoms-atoms.size())/atoms.size()<0.01)
+        
+        if (fabs(previousNAtoms-atoms.size())/atoms.size()<0.01*actualGrowSeeds/100)
         {
             std::cout << "The required precision cannot be attained\n"
             << "Suggestion: Reduce sigma and/or minDistance\n"
