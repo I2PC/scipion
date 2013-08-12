@@ -114,7 +114,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
             posId = posMd.addObject()
             posMd.setValue(xmipp.MDL_ITEM_ID, mic.getId(), posId)
             posMd.setValue(xmipp.MDL_MICROGRAPH_PARTICLES, micPosFn, posId)
-        coordsFn = self._getExtraPath('micrographs_coordinates.xmd')
+        coordsFn = self._getExtraPath('scipion_micrographs_coordinates.xmd')
         posMd.write(coordsFn)  
         coords = XmippSetOfCoordinates(filename=coordsFn)
         coords.setMicrographs(inputMicsXmipp)
@@ -135,8 +135,9 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         
     def createOutput(self):
         fn = self._getExtraPath('config.xmd')
-        md = xmipp.MetaData('properties@%s' % fn)
-        size = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, md.firstObject())
-        coords = self._createSetOfCoordinates(size)
-        self._defineOutputs(outputCoordinates=coords)
+        if xmipp.existsBlockInMetaDataFile('properties@%s' % fn):
+            md = xmipp.MetaData('properties@%s' % fn)
+            size = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, md.firstObject())
+            coords = self._createSetOfCoordinates(size)
+            self._defineOutputs(outputCoordinates=coords)
 

@@ -222,7 +222,7 @@ class Protocol(Step):
         if 'numberOfMpi' in args:
             self.numberOfMpi.set(args.get('numberOfMpi'))
         if 'numberOfThreads' in args:
-            self.numberOfMpi.set(args.get('numberOfThreads'))            
+            self.numberOfThreads.set(args.get('numberOfThreads'))            
         
         if not hasattr(self, 'hostName'):
             self.hostName = String(args.get('hostName', 'localhost'))
@@ -586,11 +586,8 @@ class Protocol(Step):
         """ Set a new mapper for the protocol to persist state. """
         self.mapper = mapper
         
-    def setDbPath(self, path):
-        self._dbPath = String(self._getLogsPath(path))
-        
     def getDbPath(self):
-        return self._dbPath.get()
+        return self._getLogsPath('run.db')
     
     def getStatus(self):
         return self.status.get()

@@ -186,10 +186,16 @@ class Object(object):
         """Print object and all its attributes.
         Main for debugging"""
         tab = ' ' * (level*3)
+        idStr = ' (id = %s, pid = %s)' % (self.getObjId(), self._objParentId)
         if name is None:
-            print tab, self.getClassName()
+            print tab, self.getClassName(), idStr
         else:
-            print tab, '%s = %s' % (name, self._objValue)
+            if name == 'submitTemplate': # Skip this because very large value
+                value = '...'
+            else:
+                value = self._objValue
+                
+            print tab, '%s = %s' % (name, value), idStr
         for k, v in self.getAttributesToStore():
             v.printAll(k, level + 1)
             

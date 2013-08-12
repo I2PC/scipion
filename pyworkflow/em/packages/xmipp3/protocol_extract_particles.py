@@ -159,7 +159,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 
         # Convert input SetOfCoordinates to Xmipp if needed
         self._insertConvertStep('inputCoords', XmippSetOfCoordinates, 
-                                 self._getExtraPath('micrographs_coordinates.xmd'))
+                                 self._getExtraPath('scipion_micrographs_coordinates.xmd'))
                 
         # For each micrograph insert the steps
         for mic in self.inputMics:
@@ -201,16 +201,12 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         if fnCTF is not None:               
             if self.doFlip:
                 fnFlipped = self._getTmpPath(micName +"_flipped.xmp")
-#                    fnCTFTmp = self._getTmpPath("tmp.ctfParam")
-#                    xmippCTF = XmippCTFModel.convertCTFModel(mic.getCTF(), fnCTFTmp)
-#                    fnCTF = xmippCTF.getFileName()
+
                 args = " -i %(micrographToExtract)s --ctf %(fnCTF)s -o %(fnFlipped)s"
                 # If some downsampling has been performed (either before picking or now) pass the downsampling factor 
                 if self.downsampleType != self.ORIGINAL:
-                    #downFactor = self.samplingFinal/xmippCTF.samplingRate.get()
                     downFactor = self.samplingFinal/self.samplingInput
                     args += " --downsampling %(downFactor)f"
-                    #self._insertRunJobStep("xmipp_ctf_phase_flip", args % locals())
                     self.runJob(None, "xmipp_ctf_phase_flip", args % locals())
                 
         self.fnCTF = fnCTF
@@ -223,10 +219,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         """
         # Find the associated micrograph from the set of coordinates
         mics = self.inputCoords.getMicrographs()
-#        for mic in mics:
-#            if removeBaseExt(mic.getFileName()) == removeBaseExt(micFn):
-#                micInput = mic 
-#                break
             
         micInput = mics[micId]
         
@@ -246,12 +238,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             micrographToExtract = self._getTmpPath(micName +"_flipped.xmp")
                 
         outputRoot = str(self._getExtraPath(micName))
-        
-        #fnPosFile = self._getExtraPath(micName + '.pos')
+
         fnPosFile = self.getConvertedInput('inputCoords').getMicrographCoordFile(micId)   
         # If it has coordinates extract the particles      
         particlesMd = 'particles@%s' % fnPosFile
-        #if self._createPosFile(micId, fnPosFile):
+
         if fnPosFile is not None and xmipp.existsBlockInMetaDataFile(particlesMd):
             boxSize = self.boxSize.get()
             args = "-i %(micrographToExtract)s --pos %(particlesMd)s -o %(outputRoot)s --Xdim %(boxSize)d" % locals()
@@ -277,31 +268,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 if self.fnCTF is not None:
                     md.setValueCol(xmipp.MDL_CTF_MODEL, self.fnCTF)
                 md.write(selfile)
-        
-            
-#    def _createPosFile(self, micId, fnPosFile):
-#        """ Create xmipp metadata extract_list with the coordinates for a micrograph """
-#
-#        mdPosFile = xmipp.MetaData()
-#        #mic = XmippMicrograph(micName)
-#        mic = self.inputCoords.getMicrographs()[micId]
-#        #Iterate over the coordinates on that micrograph
-#        hasCoords = False
-#        for coord in self.inputCoords.iterMicrographCoordinates(mic):
-#            x, y = coord.getPosition(Coordinate.POS_CENTER)
-#            coorId = mdPosFile.addObject()
-#            mdPosFile.setValue(xmipp.MDL_XCOOR, int(x), coorId)
-#            mdPosFile.setValue(xmipp.MDL_YCOOR, int(y), coorId)
-#            mdPosFile.setValue(xmipp.MDL_ITEM_ID, coord.getId(), coorId)
-#            hasCoords = True
-#                                
-#        # Write block only if there are coordinates for this micrograph       
-#        if hasCoords:
-#            #mdPosFile.write(micName + "@%s" % fnPosFile, xmipp.MD_OVERWRITE)        
-#            mdPosFile.write(fnPosFile)
-#        
-#        return hasCoords
-            
+                    
     def getImgIdFromCoord(self, coordId):
         """ Get the image id from the related coordinate id. """
         '%s:%06d'
@@ -319,9 +286,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         if self.downsampleType == self.OTHER:
             imgSet.samplingRate.set(self.inputMics.samplingRate.get()*self.downFactor.get())
                     
-#        posFiles = glob(join(self._getExtraPath(),"*.pos"))
-#        posFiles.sort()
-
 #        for posFn in posFiles:
         for posFn in self.getConvertedInput('inputCoords').iterCoordinatesFile():    
 #            xmdFn = posFn.replace(".pos",".xmd")

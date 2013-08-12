@@ -335,7 +335,7 @@ echo PBS_NODEFILE:
 cat $PBS_NODEFILE
 #################################
 
-%(command)s
+%(JOB_COMMAND)s
 """)
     queueSys.cancelCommand.set('canceljob %(JOB_ID)d')
     queueSys.checkCommand.set('qstat %(JOB_ID)d')

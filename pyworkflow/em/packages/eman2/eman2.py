@@ -44,14 +44,25 @@ def loadEnvironment():
     pathList = [os.path.join(EMAN2DIR, d) for d in ['lib', 'bin', 'extlib/site-packages']]
     os.environ['PYTHONPATH'] = os.pathsep.join(pathList) + os.pathsep + os.environ['PYTHONPATH']
     os.environ['EMAN_PYTHON'] = os.path.join(EMAN2DIR, 'Python/bin/python')
+    # Undo the xmipp_python additions to LD_LIBRARY_PATH
+    if 'OLD_LD_LIBRARY_PATH' in os.environ:
+        print 'OLD_LD_LIBRARY_PATH', os.environ['OLD_LD_LIBRARY_PATH']
+        os.environ['LD_LIBRARY_PATH'] = os.environ['OLD_LD_LIBRARY_PATH']
     #sys.path += pathList
     
-def getEmanCommand(program, args):
-    if not 'EMAN_PYTHON' in os.environ:
-        raise Exception('EMAN_PYTHON is not load in environment')
-    python = os.environ['EMAN_PYTHON']
-    os.environ['LD_LIBRARY_PATH'] = '/home/josem/xmipp/lib:/home/josem/xmipp/lib:/usr/lib64/mpi/gcc/openmpi/lib64'
     
-    return '%(python)s %(program)s %(args)s' % locals()
+def getEmanProgram(program):
+    if not 'EMAN_PYTHON' in os.environ:
+        os.environ['EMAN_PYTHON'] = os.path.join(os.environ['EMAN2DIR'], 'Python/bin/python')
+    # For EMAN2 python scripts, join the path to bin
+    if program.startswith('e2'):
+        program = os.path.join(os.environ['EMAN2DIR'], 'bin', program)
+        #raise Exception('EMAN_PYTHON is not load in environment')
+    python = os.environ['EMAN_PYTHON']
+    return '%(python)s %(program)s ' % locals()
+    
+    
+def getEmanCommand(program, args):    
+    return getEmanProgram(program) + args
     
     

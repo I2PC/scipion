@@ -31,6 +31,7 @@ import os
 import xmipp
 
 from constants import *
+import pyworkflow.dataset as ds
 
 
 
@@ -216,24 +217,6 @@ class XmippSet():
     def getSize(self):
         return self._md.size()
         
-#    @staticmethod
-#    def convert(inputSet, xmippSetClass, filename):
-#        """ Convert from a generic set to a XmippSet subclass(xmippSetClass).
-#        In particular a filename is requiered to store the result MetaData.
-#        It is also asummed that this class have a .copyInfo method.
-#        """
-#        if isinstance(inputSet, xmippSetClass):
-#            return inputSet
-#        
-#        setOut = xmippSetClass(filename)
-#        setOut.copyInfo(inputSet)
-#        
-#        for item in inputSet:
-#            setOut.append(item)
-#        setOut.write()
-#        
-#        return setOut
-
     def convert(self, xmippSetClass, filename):
         """ Convert from a generic set to a xmippSetClass.
         In particular a filename is requiered to store the result MetaData.
@@ -249,4 +232,53 @@ class XmippSet():
             setOut.append(item)
         setOut.write()
         
-        return setOut                 
+        return setOut   
+    
+    
+class XmippDataSet(ds.DataSet):
+    """ this class will implement a dataset base on
+    a metadata file, which can contains several blocks.
+    Each block is a table on the dataset and is read
+    as a Xmipp metadata. 
+    """
+    def __init__(self, filename):
+        self._filename = filename
+        blocks = xmipp.getBlocksInMetaDataFile(filename)
+        ds.DataSet.__init__(self, blocks)
+        
+    def _loadTable(self, tableName):
+        md = xmipp.MetaData(tableName + "@" + self._filename)
+        return self._convertMdToTable(md)
+        
+    def _convertMdToTable(self, md):
+        """ Convert a metatada into a table. """
+        labels = md.getActiveLabels()
+        labelsStr = [xmipp.label2Str(l) for l in labels]        
+        columns = [ds.Column(l) for l in labelsStr]        
+        table = ds.Table(*columns)
+        
+        for objId in md:
+            values = [md.getValue(l, objId) for l in labels]
+            d = dict(zip(labelsStr, values))
+            table.addRow(objId, **d)
+            
+        return table
+    
+    def _convertTableToMd(self, table):
+        colLabels = [(col.getName(), xmipp.str2Label(col.getName())) 
+                     for col in table.iterColumns()]
+        md = xmipp.MetaData()
+        
+        for row in table.iterRows():
+            objId = md.addObject()
+            for col, label in colLabels:
+                if col != 'id':
+                    value = getattr(row, col)
+                    md.setValue(label, value, objId)
+                
+        return md
+        
+    def writeTable(self, tableName, table):
+        """ Write changes made to a table. """
+        md = self._convertTableToMd(table)
+        md.write(self._filename, xmipp.MD_APPEND)

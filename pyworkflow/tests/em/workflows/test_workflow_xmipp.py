@@ -54,17 +54,14 @@ class TestXmippWorkflow(TestWorkflow):
                     'protPicking/extra/BPV_1387.pos', 
                     'protPicking/extra/BPV_1386.pos', 
                     'protPicking/extra/BPV_1388.pos', 
-                    'protExtract/extra/BPV_1387.pos', 
                     'protExtract/tmp/BPV_1388_flipped.xmp', 
                     'protExtract/tmp/BPV_1387_flipped.xmp', 
                     'protExtract/tmp/BPV_1386_noDust.xmp', 
-                    'protExtract/extra/BPV_1388.pos', 
                     'protExtract/extra/BPV_1386.xmd', 
                     'protExtract/extra/BPV_1388.stk', 
                     'protExtract/images.xmd', 
                     'protExtract/extra/BPV_1386.stk', 
                     'protExtract/extra/BPV_1388.xmd', 
-                    'protExtract/extra/BPV_1386.pos', 
                     'protExtract/extra/BPV_1387.stk', 
                     'protExtract/tmp/BPV_1387_noDust.xmp', 
                     'protExtract/tmp/BPV_1388_noDust.xmp', 
@@ -332,7 +329,7 @@ class TestXmippWorkflow(TestWorkflow):
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
             
         print "Run extract particles with other downsampling factor"
-        protExtract = XmippProtExtractParticles(boxSize=64, downsampleType=2, downFactor=8, runMode=1)
+        protExtract = XmippProtExtractParticles(boxSize=64, downsampleType=2, downFactor=8, runMode=1, doInvert=True)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.inputMicrographs.set(protImport.outputMicrographs)
         self.proj.launchProtocol(protExtract, wait=True)
@@ -390,27 +387,28 @@ class TestXmippWorkflow(TestWorkflow):
         #self.validateFiles('ProtKerdensom', ProtKerdensom)
         
         print "Run Rotational Spectra"
-        xmippProtRotSpectra = XmippProtRotSpectra()
+        xmippProtRotSpectra = XmippProtRotSpectra(SomXdim=2, SomYdim=2)
         xmippProtRotSpectra.inputImages.set(protOnlyAlign.outputParticles)
-        xmippProtRotSpectra.SomXdim.set(2)
-        xmippProtRotSpectra.SomYdim.set(2)
-
         self.proj.launchProtocol(xmippProtRotSpectra, wait=True)        
         
         self.assertIsNotNone(xmippProtRotSpectra.outputClassification, "There was a problem with Rotational Spectra")
 
-        print "ML3D"
-        protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2, runMode=1)
-        protML3D.inputImages.set(protExtract.outputParticles)
-        protML3D.ini3DrefVolumes.set(getInputPath('Volumes_BPV', 'BPV_scale_filtered_windowed_64.vol'))
-        protML3D.doCorrectGreyScale.set(True)
-        protML3D.doMlf.set(True)
-        protML3D.numberOfSeedsPerRef.set(2)
-
-        self.proj.launchProtocol(protML3D, wait=True)        
+        # The ML3D test is taking too long now
+        # skipping until revision
+        #return 
         
-        self.assertIsNotNone(protML3D.outputVolumes, "There was a problem with ML3D")
-        self.validateFiles('protML3D', protML3D)
+#        print "ML3D"
+#        protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2, runMode=1, numberOfMpi=2, numberOfThreads=2)
+#        protML3D.inputImages.set(protExtract.outputParticles)
+#        protML3D.ini3DrefVolumes.set(getInputPath('Volumes_BPV', 'BPV_scale_filtered_windowed_64.vol'))
+#        protML3D.doCorrectGreyScale.set(True)
+#        protML3D.doMlf.set(True)
+#        protML3D.numberOfSeedsPerRef.set(2)
+#
+#        self.proj.launchProtocol(protML3D, wait=True)        
+#        
+#        self.assertIsNotNone(protML3D.outputVolumes, "There was a problem with ML3D")
+#        self.validateFiles('protML3D', protML3D)
 
 if __name__ == "__main__":
     unittest.main()

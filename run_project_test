@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-# Remove project folder to start from scratch
-rm -rf ~/Scipion_Projects/TestProject
-python tests/test_project.py TestProject "/home/josem/work/data/InputMicrographs/*.mrc"

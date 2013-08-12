@@ -29,6 +29,7 @@ wrapping Grigrorieff Lab programs at Brandeis
 """
 
 
-from pyworkflow.em import *    
+from pyworkflow.em import *
+from constants import *
 
 

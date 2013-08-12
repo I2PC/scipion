@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.packages.xmipp3.protocol_kerdensom import XmippProtKerdensom
 """
 This module implement the wrappers around xmipp_showj
 visualization program.
@@ -42,7 +43,8 @@ from protocol_extract_particles import XmippProtExtractParticles, ProtImportPart
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_ml2d import XmippProtML2D
 from protocol_cl2d import XmippProtCL2D
-
+from protocol_kerdensom import XmippProtKerdensom
+from protocol_rotational_spectra import XmippProtRotSpectra
 
 
 import xmipp
@@ -60,7 +62,7 @@ class XmippViewer(Viewer):
     def __init__(self, **args):
         Viewer.__init__(self, **args)
 
-    def visualize(self, obj):
+    def visualize(self, obj, **args):
         cls = type(obj)
         
         if issubclass(cls, SetOfMicrographs):
@@ -80,7 +82,7 @@ class XmippViewer(Viewer):
             runShowJ(imgs.getFileName())
         
         elif issubclass(cls, XmippClassification2D):
-            runShowJ(obj.getClassesMdFileName())
+            runShowJ(obj.getClassesMdFileName(), extraParams=args.get('extraParams', ''))
         
         elif (issubclass(cls, ProtImportMicrographs) or
               issubclass(cls, XmippProtPreprocessMicrographs) or
@@ -108,6 +110,10 @@ class XmippViewer(Viewer):
               issubclass(cls, XmippProtCL2D)):
             self.visualize(obj.outputClassification)
         
+        elif issubclass(cls, XmippProtRotSpectra):
+            self.visualize(obj.outputClassification, extraParams='--mode rotspectra --columns %d' % obj.SomXdim.get())
+        elif issubclass(cls, XmippProtKerdensom):
+            self.visualize(obj.outputClassification, extraParams='--columns %d' % obj.SomXdim.get())
         else:
             raise Exception('XmippViewer.visualize: can not visualize class: %s' % obj.getClassName())
 

@@ -36,22 +36,17 @@ import json
             
 class EmanCoordinate(Coordinate):
     """This class holds the (x,y) position and other information
-    associated with a EMAN coordinate (Eman coordinates are POS_TOPLEFT mode)"""  
+    associated with a EMAN coordinate"""  
     
     def __init__(self, **args):
         
         self.coordId = 0L
     
-    def getPosition(self, mode=Coordinate.POS_TOPLEFT):
+    def getPosition(self):
         """Return the position of the coordinate.
         mode: select if the position is the center of the box
           or in the top left corner."""
-        if mode == Coordinate.POS_TOPLEFT:
-            return self.x, self.y
-        elif mode == Coordinate.POS_CENTER: 
-            return (int(self.x) + self._boxSize/2, int(self.y) + self._boxSize/2)
-        else:
-            raise Exception("No coordinate mode registered for : " + str(mode)) 
+        return int(self.x), int(self.y)
     
     def setPosition(self, x, y):
         self.x = x
@@ -72,8 +67,8 @@ class EmanCoordinate(Coordinate):
         tilted one and viceversa"""
         pass 
     
-    def setId(self, id):
-        self.coordId = id
+    def setId(self, coordId):
+        self.coordId = long(coordId)
         
     def getId(self):
         return self.coordId
@@ -128,6 +123,7 @@ class EmanSetOfCoordinates(SetOfCoordinates):
         
     def iterMicrographCoordinates(self, micrograph):
         """ Iterates over the set of coordinates belonging to that micrograph. """
+        self.loadIfEmpty()
         pathJsonPos = self.getMicrographCoordFile(micrograph.getId())
         if pathJsonPos is not None:
             if exists(pathJsonPos):
@@ -260,6 +256,40 @@ class EmanSetOfVolumes(EmanSetOfImages, SetOfVolumes):
     def __init__(self, filename=None, **args):
         SetOfVolumes.__init__(self, filename, **args)
         EmanSetOfImages.__init__(self, filename, **args)
+        self._jsonDict = {} # store volumes indexed by id
+        self._idCount = 0
+        
+    def load(self):
+        """ Load extra data from files. """
+        if self.getFileName() is None:
+            raise Exception("Set filename before calling load()")
+        self._jsonDict = loadJson(self.getFileName())
+        
+    def loadIfEmpty(self):
+        """ Load data only if the main set is empty. """
+        if not self._jsonDict:
+            self.load()
+            
+    def __iter__(self):
+        """ Iterate over the set of images. """
+        self.loadIfEmpty()
+        for volId, volFn in self._jsonDict.iteritems():
+            vol = EmanVolume(volFn)
+            vol.setId(volId)
+            vol.setSamplingRate(self.samplingRate.get())
+            yield vol
+            
+    def append(self, vol):
+        if vol.hasId():
+            volId = vol.getId()
+        else:
+            self._idCount += 1
+            volId = self._idCount 
+        self._jsonDict[volId] = vol.getFileName()
+
+    def write(self):
+        writeJson(self._jsonDict, self.getFileName())
+
 
     
 # def getBoxSize(self):

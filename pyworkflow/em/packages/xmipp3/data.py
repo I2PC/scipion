@@ -303,33 +303,36 @@ class XmippSetOfVolumes(XmippSetOfImages, SetOfVolumes):
         XmippSetOfImages.__init__(self, filename, **args)
                 
         
-class XmippCoordinate(Coordinate):
+class XmippCoordinate(Coordinate, XmippMdRow):
     """This class holds the (x,y) position and other information
-    associated with a Xmipp coordinate (Xmipp coordinates are POS_CENTER mode)"""
+    associated with a Xmipp coordinate"""
+    
+    _label_coordId = xmipp.MDL_ITEM_ID
+    _label_coordX = xmipp.MDL_XCOOR
+    _label_coordY = xmipp.MDL_YCOOR
     
     def __init__(self, **args):
         Coordinate.__init__(self, **args)
+        XmippMdRow.__init__(self)
         
     def setId(self, newId):
-        self.id = newId
+        #self.id = newId
+        self.setValue(self._label_coordId, newId)
         
     def getId(self):
-        return self.id
+        #return self.id
+        return self.getValue(self._label_coordId)
     
-    def getPosition(self, mode=Coordinate.POS_CENTER):
+    def getPosition(self):
         """Return the position of the coordinate.
         mode: select if the position is the center of the box
           or in the top left corner."""
-        if mode == Coordinate.POS_CENTER:
-            return self.x, self.y
-        elif mode == Coordinate.POS_TOPLEFT: 
-            return (int(self.x) - self._boxSize / 2, int(self.y) - self._boxSize / 2)
-        else:
-            raise Exception("No coordinate mode registered for : " + str(mode)) 
-    
+        return (self.getValue(self._label_coordX), 
+                self.getValue(self._label_coordY))
+
     def setPosition(self, x, y):
-        self.x = x
-        self.y = y
+        self.setValue(self._label_coordX, x)
+        self.setValue(self._label_coordY, y)
     
     def getMicrograph(self):
         """Return the micrograph object to which
@@ -417,7 +420,7 @@ class XmippSetOfCoordinates(SetOfCoordinates):
     def getSize(self):
         """ Return the number of coordinates on the set """
         size = 0
-        for posFn in self.iterPosFile():
+        for posFn in self.iterCoordinatesFile():
             mdPos = xmipp.MetaData('particles@%s' % posFn)
             size += mdPos.size()
         return size      
@@ -429,15 +432,16 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         if pathPos is not None and exists(pathPos):
             mdPos = xmipp.MetaData('particles@' + pathPos)
                             
-            for i, objId in enumerate(mdPos):
-                x = mdPos.getValue(xmipp.MDL_XCOOR, objId)
-                y = mdPos.getValue(xmipp.MDL_YCOOR, objId)
-                coorId = mdPos.getValue(xmipp.MDL_ITEM_ID, objId)
+            for objId in mdPos:
+                #x = mdPos.getValue(xmipp.MDL_XCOOR, objId)
+                #y = mdPos.getValue(xmipp.MDL_YCOOR, objId)
+                #coorId = mdPos.getValue(xmipp.MDL_ITEM_ID, objId)
                 coordinate = XmippCoordinate()
-                coordinate.setPosition(x, y)
+                coordinate.getFromMd(mdPos, objId)
+                #coordinate.setPosition(x, y)
                 coordinate.setMicrograph(micrograph)
                 coordinate.setBoxSize(self.boxSize.get())
-                coordinate.setId(coorId)        
+                #coordinate.setId(coorId)        
                 yield coordinate
                 
     def iterCoordinates(self):
@@ -461,7 +465,7 @@ class XmippSetOfCoordinates(SetOfCoordinates):
     def getFiles(self):
         filePaths = set()
 
-        for posFn in self.iterPosFile():
+        for posFn in self.iterCoordinatesFile():
             if exists(posFn):         
                 filePaths.add(posFn)
         return filePaths
@@ -488,7 +492,6 @@ class XmippSetOfCoordinates(SetOfCoordinates):
             return micRow.getValue(xmipp.MDL_MICROGRAPH_PARTICLES)
         return None
     
-    
     @staticmethod
     def convert(setOfCoords, filename):
         if isinstance(setOfCoords, XmippSetOfCoordinates):
@@ -499,6 +502,7 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         
         xmippCoords = XmippSetOfCoordinates(filename)
         xmippCoords.setMicrographs(setOfCoords.getMicrographs())
+        xmippCoords.setBoxSize(setOfCoords.getBoxSize())
         
         extraPath = dirname(filename)
         posMd = xmipp.MetaData()
@@ -508,11 +512,10 @@ class XmippSetOfCoordinates(SetOfCoordinates):
             mdPosFile = xmipp.MetaData()
             hasCoords = False
             for coord in setOfCoords.iterMicrographCoordinates(mic):
-                x, y = coord.getPosition(Coordinate.POS_CENTER)
-                coorId = mdPosFile.addObject()
-                mdPosFile.setValue(xmipp.MDL_XCOOR, int(x), coorId)
-                mdPosFile.setValue(xmipp.MDL_YCOOR, int(y), coorId) 
-                mdPosFile.setValue(xmipp.MDL_ITEM_ID, long(coord.getId()), coorId)
+                coordXmipp = XmippCoordinate()
+                coordXmipp.copyInfo(coord)
+                objId = mdPosFile.addObject()
+                coordXmipp.setToMd(mdPosFile, objId)
                 hasCoords = True            
             if hasCoords:                           
                 mdPosFile.write('particles@%s' % posFile)
@@ -580,7 +583,7 @@ class XmippClass2D(Class2D):
         Class2D.__init__(self, **args)
         self._number = classNumber
         self._filename = filename
-        self._representative = representative
+        self._representative = representative # Image class
         
     def __iter__(self):
         md = xmipp.MetaData('class%06d_images@%s' % 
@@ -590,8 +593,11 @@ class XmippClass2D(Class2D):
             imgCA.getFromMd(md, objId)
             yield imgCA
     
-    def getClassRepresentative(self):
+    def getImage(self):
         return self._representative
+    
+    def getId(self):
+        return self._number
         
         
 class XmippClassification2D(Classification2D):
@@ -604,9 +610,10 @@ class XmippClassification2D(Classification2D):
         self.classesBlock = String(classesBlock)
         
     def __iter__(self):
+        classesFn = self.getClassesMdFileName()        
+        md = xmipp.MetaData(classesFn)
         fn = self.getFileName()
-        block = self.classesBlock.get()
-        md = xmipp.MetaData('%(block)s@%(fn)s' % locals())
+        
         for objId in md:
             ref = md.getValue(xmipp.MDL_REF, objId)
             img = XmippImage(md.getValue(xmipp.MDL_IMAGE, objId))
@@ -618,4 +625,11 @@ class XmippClassification2D(Classification2D):
         """
         return "%s@%s" % (self.classesBlock.get(),
                           self.getFileName())
+
+    def getFiles(self):
+        filePaths = set()
+        filePaths.add(self.getFileName())
+        for class2d in self:
+            filePaths.add(class2d.getImage().getFileName())
+        return filePaths
   

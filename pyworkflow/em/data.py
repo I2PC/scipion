@@ -28,6 +28,7 @@ This modules contains basic hierarchy
 for EM data objects like: Image, SetOfImage and others
 """
 
+from constants import *
 from pyworkflow.object import *
 from pyworkflow.mapper.sqlite import SqliteMapper
 from posixpath import join
@@ -137,7 +138,7 @@ class Image(EMObject):
     
     def getFileName(self):
         """ Use the _objValue attribute to store filename. """
-        return self.get()
+        return str(self.get())
     
     def setFileName(self, newFileName):
         """ Use the _objValue attribute to store filename. """
@@ -407,19 +408,19 @@ class SetOfVolumes(SetOfImages):
 class Coordinate(EMObject):
     """This class holds the (x,y) position and other information
     associated with a coordinate"""
-    POS_CENTER = 0
-    POS_TOPLEFT = 1
-    
     def __init__(self, **args):
         EMObject.__init__(self, **args)
         self._micrographPointer = Pointer()
         self._boxSize = None
     
-    def getPosition(self, mode=POS_CENTER):
+    def getPosition(self):
         """ Return the position of the coordinate as a (x, y) tuple.
         mode: select if the position is the center of the box
         or in the top left corner.
         """
+        pass
+
+    def setPosition(self, x, y):
         pass
     
     def getBoxSize(self):
@@ -438,7 +439,12 @@ class Coordinate(EMObject):
         """ Set the micrograph to which this coordinate belongs. """
         self._micrographPointer.set(micrograph)
     
-    
+    def copyInfo(self, coord):
+        """ Copy information from other coordinate. """
+        self.setPosition(*coord.getPosition())
+        self.setId(coord.getId())
+        self.setBoxSize(coord.getBoxSize())
+        
     
 class SetOfCoordinates(EMObject):
     """ Encapsulate the logic of a set of particles coordinates.
@@ -452,17 +458,12 @@ class SetOfCoordinates(EMObject):
         self.boxSize = Integer()
     
     def getBoxSize(self):
-        """ Return the box size of the future particles.
-        This can be None, since when the POS_CENTER mode is used,
-        the box size is only relevant when extraction.
+        """ Return the box size of the particles.
         """
         return self.boxSize.get()
     
-    
     def setBoxSize(self, boxSize):
-        """ Set the box size of the future particles.
-        This can be None, since when the POS_CENTER mode is used,
-        the box size is only relevant when extraction.
+        """ Set the box size of the particles.
         """
         self.boxSize.set(boxSize)
     
@@ -559,19 +560,38 @@ class Class2D(EMObject):
         """
         pass
     
-    def getClassRepresentative(self):
+    def getImage(self):
         """ Usually the representative is an average of 
         the images assigned to that class.
         """
         pass
+    
+    def hasImage(self):
+        """ Return true if have an average image. """
+        return True
         
         
 class Classification2D(EMObject):
     """ Store results from a 2D classification. """
     def __init__(self, **args):
         EMObject.__init__(self, **args)
+        self._hasImages = True # True if the classes have associated average image
         
     def __iter__(self):
         """ Iterate over all classes. """
-        pass    
+        pass
+    
+    def hasImages(self):
+        return self._hasImages
+    
+    def getImages(self):
+        """ Return a SetOfImages composed by all the average images 
+        of the 2D classes. """
+        imgs = SetOfImages()
+        
+        for class2D in self:
+            imgs.append(class2D.getImage())
+            
+        return imgs
+     
      

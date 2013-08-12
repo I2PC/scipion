@@ -57,7 +57,7 @@
 	<script type="text/javascript">
 	//Initialize block and metadata combobox to reload the web when changing
 	function initializeComboBoxEvents(){
-		$("#id_blockComboBox , #id_metadataComboBox").change(function(){
+		$("#id_blockComboBox , #id_labelsToRenderComboBox").change(function(){
 			$('form#showjForm').submit();
 		})
 	}
@@ -177,23 +177,91 @@
 		//Initialize events for zoom change
 		function initializeZoomEvents(){
 			$('#id_zoom').click(function(){
-				updateImageDimByUrl();	
+				/* updateImageDimByUrl(); */
+				setImageSize(false)
 			});
 			
 			$('#id_zoom').change(function(){
-				updateImageDimByUrl();
+				/* updateImageDimByUrl(); */
+				setImageSize(false)
 			});
 				
 	 		$('#id_zoom').keyup(function(e){
 	 			var code = e.keyCode || e.which; 
  			  	if (code  == 13) {               
- 					 updateImageDimByUrl();
+ 					 /* updateImageDimByUrl(); */
+ 					 setImageSize(false)
  			  	}
 			});	 
 		}
 		
+		
+		function setImageSize(refreshElement){
+			/* Gets zoom and image width and height */
+			zoom_element=$('#id_zoom')
+			imageHeight_val = parseInt($('#id_imageHeight').val())
+			imageWidth_val = parseInt($('#id_imageWidth').val())
+			
+			console.log(zoom_element.val())
+			console.log(imageHeight_val)
+			console.log(imageWidth_val)
+			
+			/* Check if zoom in pixel */
+			if (zoom_element.val().indexOf('px')!=-1){
+				/*  Get zoom value*/			
+				zoom_val=parseInt(zoom_element.val().split('px')[0])
+				
+				/* Check is image bigger than zoom */
+				/* if (zoom_val <  imageWidth_val && zoom_val < imageHeight_val){ */
+					/* Calculate zoom in percentage */
+					if (imageHeight_val<imageWidth_val){
+						tableImages_width=zoom_val
+						zoom_val_perc=Math.round((zoom_val/imageWidth_val)*100)
+					} 
+					else{
+						tableImages_width=Math.round(zoom_val*(imageWidth_val/imageHeight_val))
+						zoom_val_perc=Math.round((zoom_val/imageHeight_val)*100)
+					}
+					
+				/* } */
+				
+			}
+			else{
+				zoom_val_perc=zoom_element.val()
+				if (imageHeight_val<imageWidth_val){
+					zoom_val_pixel=Math.round((zoom_val_perc*imageWidth_val)/100)
+					tableImages_width=zoom_val_pixel
+				} 
+				else{
+					zoom_val_pixel=Math.round((zoom_val_perc*imageHeight_val)/100)
+					tableImages_width=zoom_val_pixel
+				}
+				
+				
+			}
+			
+			if (refreshElement==true){
+				zoom_element.val(zoom_val_perc)
+			}
+			
+			d = new Date();
+			$(".tableImages").each(function(){
+			   var newSrc = "";
+			   if ($(this).attr("src").indexOf("&dim") != -1){
+			   	newSrc = $(this).attr("src").substring(0,$(this).attr("src").indexOf("&dim"));
+			   }
+			   else{
+				  newSrc = $(this).attr("src");   
+			   }
+			   $(this).attr("width",tableImages_width)
+			   $(this).attr("src", newSrc + "&dim="+tableImages_width+"&"+d.getTime());
+		   })
+		}
+		
 		//Update image dimensions by url due to zoom change
-		function updateImageDimByUrl(){
+/* 		function updateImageDimByUrl(){
+			console.log("actualizando tamano")
+			
 			d = new Date();
 		   	$(".tableImages").each(function(){
 			   var newSrc = "";
@@ -205,7 +273,7 @@
 			   }
 			   $(this).attr("src", newSrc + "&dim="+$('#id_zoom').val()+"&"+d.getTime());
 		   })
-		}
+		} */
 	
 	</script>
 	<script type="text/javascript">
@@ -222,18 +290,82 @@
 			});
 		}
 	</script>
+	<script type="text/javascript">
+	function multipleEnableDisableImage(mode){
+		if ($('#multipleSelectionTool').attr('img_container_id') !== undefined) {
+			//If we are in gallery view
+			if (mode=='enable'){
+				$(".image_selected").each(function(){
+					$(this).find(".enabledGallery").addClass("selected")
+					$(this).find(".enabledGallery").fadeIn('fast')
+				})
+			}
+			else{
+				$(".image_selected").each(function(){
+					$(this).find(".enabledGallery").removeClass("selected")
+					$(this).find(".enabledGallery").fadeOut('fast')
+				})
+			}
+		} else {
+			//If we are in table view
+			if (mode=='enable'){
+				$(".row_selected").each(function(){
+					$(this).find(":checkbox").prop('checked', true);
+				})
+			}
+			else{
+				$(".row_selected").each(function(){
+					$(this).find(":checkbox").prop('checked', false);
+				})
+			}
+		}
+	}
+	</script>
+	<script type="text/javascript">
+	function multipleSelect(mode){
+		if ($('#multipleSelectionTool').attr('img_container_id') !== undefined) {
+			//If we are in gallery view
+			element_id=parseInt($("#multipleSelectionTool").data('img_container_id').split("___")[1]);
+			
+			$(".img_container").each(function(){
+				if (mode=='all' || (mode=='from' && $(this).attr('id').split("___")[1]>element_id) || (mode=='to' && $(this).attr('id').split("___")[1]<element_id) ){
+					$(this).addClass("image_selected")
+				}	
+			})
+		} else {
+			//If we are in table view
+			row_id=parseInt($("#multipleSelectionTool").data('row_id'));
+			
+			$("tr").each(function(){
+				if (mode=='all' || (mode=='from' && $(this).index()>row_id) || (mode=='to' && $(this).index()<row_id) ){
+					$(this).addClass("row_selected")
+				}	
+			})
+		}
+		
+	}
+	</script>
 	
 	{% block head %}  {% endblock %}
 </head>
 <body>
-	<header>Aqui iria la cabecera de Scipion</header>
-	<nav> <!--  Top Menu -->
+	<header>
+	<!-- <div style="float:left;" id="logoDiv"> -->
+	<a href="#" style="box-flex:1;"><img class="logo" src="/resources/scipion_logo.png" alt="Scipion logo" style="max-height:80px; "></a>
+	<!-- </div> -->
+	
+	<div style="box-flex:1;padding:40px;text-align:center;">
+	<span class="project_name" style="font-size:1.8em; ">Xmipp Showj Web</span>
+	</div>
+	
+	</header>
+<!-- 	<nav>  Top Menu
 		<ul>
 			<li>File</li>
 			<li>Display</li>
 			<li>Help</li>
 		</ul>
-	</nav>
+	</nav> -->
 	<div id="main_section">
 		<aside id="side_news"> <!-- Main Menu -->
 
@@ -255,44 +387,38 @@
 					 galleryOn
 					 {% endif %}
 					 " />
-					<!-- <button onclick="{{menuLayoutConfig.tableViewLink}}">
-						<img src="{{menuLayoutConfig.tableViewSrc}}">
-					
-					<button onclick="{{menuLayoutConfig.galleryViewLink}}">
-						<img src="{{menuLayoutConfig.galleryViewSrc}}"> -->
-					
 				</div>
 				
 				<div id="zoomContainer" class="sectionMenu">
-					<img src="/resources/showj/zoom.gif" class="menuIcon">
+					<img src="/resources/showj/zoom.png" class="menuIcon">
 					{{ form.zoom }}
 					
 					<div id="arrowContainer" class="arrowSectionMenu">
-						<img src="/resources/showj/arrow_up.png" class="arrowImage">
-						<img src="/resources/showj/arrow_down.png" class="arrowImage">
+						<img src="/resources/showj/arrowUp.png" class="arrowImage">
+						<img src="/resources/showj/arrowDown.png" class="arrowImage">
 					</div>
 					<!-- <input type="number" class="menuInputNumber" id="zoom" value="150" min="10"> -->
 				</div>
 				
 				<div id="gotoContainer" class="sectionMenu">
-					<img src="/resources/showj/goto.gif" class="menuIcon">
+					<img src="/resources/showj/goto.png" class="menuIcon">
 					{{ form.goto }}
 					
 					<div id="arrowContainer" class="arrowSectionMenu">
-						<img src="/resources/showj/arrow_up.png" class="arrowImage">
-						<img src="/resources/showj/arrow_down.png" class="arrowImage">
+						<img src="/resources/showj/arrowUp.png" class="arrowImage">
+						<img src="/resources/showj/arrowDown.png" class="arrowImage">
 					</div>
 					<!-- <input type="number" class="menuInputNumber" id="goto" value="1" max="{{metadata.objects|length}}" min="1"> -->
 				</div>
 				
 				<div class="sectionMenu">
-					<img src="/resources/showj/separator.gif" class="menuIcon">
+					<img src="/resources/showj/separator.png" class="menuIcon">
 				</div>	
 				
 				{% if form.mode.value == 'gallery' %}
 				<div id="colRowContainer" class="sectionMenu">
 					<button id="colRowMode"> 
-						<img src="/resources/showj/colRowMode{{form.colRowMode.value}}.gif" id="colRowModeImage" />
+						<img src="/resources/showj/colRowMode{{form.colRowMode.value}}.png" id="colRowModeImage" />
 					</button>
 					
 					<div class="subSectionMenu">
@@ -300,8 +426,8 @@
 						{{ form.cols }}
 						
 						<div id="arrowContainer" class="arrowSectionMenu">
-							<img src="/resources/showj/arrow_up.png" class="arrowImage">
-							<img src="/resources/showj/arrow_down.png" class="arrowImage">
+							<img src="/resources/showj/arrowUp.png" class="arrowImage">
+							<img src="/resources/showj/arrowDown.png" class="arrowImage">
 						</div>
 						<!-- <input type="number" class="menuInputNumber" id="cols" value="" min="1" max="{{metadata.objects|length}}" disabled> -->
 					</div>
@@ -310,8 +436,8 @@
 						{{ form.rows }}
 						
 						<div id="arrowContainer" class="arrowSectionMenu">
-							<img src="/resources/showj/arrow_up.png" class="arrowImage">
-							<img src="/resources/showj/arrow_down.png" class="arrowImage">
+							<img src="/resources/showj/arrowUp.png" class="arrowImage">
+							<img src="/resources/showj/arrowDown.png" class="arrowImage">
 						</div>
 						<!-- <input type="number" class="menuInputNumber" id="rows" value="" min="1" max="{{metadata.objects|length}}" disabled> -->
 					</div>
@@ -319,7 +445,7 @@
 				{% endif %}
 				
 				<div class="sectionMenu">
-					<img src="/resources/showj/separator.gif" class="menuIcon">
+					<img src="/resources/showj/separator.png" class="menuIcon">
 				</div>
 		
 				<div id="blockSelectorContainer" class="sectionMenu">
@@ -329,17 +455,17 @@
 				
 				<div id="metadataSelectorContainer" class="sectionMenu">
 					<span class="textMenu">
-					{% if not form.metadataComboBox.is_hidden %}
-					{{ form.metadataComboBox.label_tag }}
+					{% if not form.labelsToRenderComboBox.is_hidden %}
+					{{ form.labelsToRenderComboBox.label_tag }}
 					{% endif %}
 					</span>
-					{{ form.metadataComboBox }}
+					{{ form.labelsToRenderComboBox }}
 				</div>
 				
 			
 		
 				<div class="sectionMenu">
-					<img src="/resources/showj/separator.gif" class="menuIcon">
+					<img src="/resources/showj/separator.png" class="menuIcon">
 				</div>
 				
 				<div id="saveContainer" class="sectionMenu">
@@ -362,7 +488,14 @@
 
 		
 		{% block content_view %}	{% endblock %}	
-			
+		<!-- Hidden menu for multiple selection tool -->
+		<div class="multipleSelectionToolContainer" id="multipleSelectionTool">
+			<div class="multipleSelectionToolItem" onclick="multipleEnableDisableImage('enable')">Enable</div>
+			<div class="multipleSelectionToolItem" onclick="multipleEnableDisableImage('disable')">Disable</div>
+			<div class="multipleSelectionToolItem" onclick="multipleSelect('all')">Select All</div>
+			<div class="multipleSelectionToolItem" onclick="multipleSelect('from')">Select From Here</div>
+			<div class="multipleSelectionToolItem" onclick="multipleSelect('to')">Select To Here</div>
+		</div>	
 
 			
 		</section>
