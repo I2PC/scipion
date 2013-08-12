@@ -56,7 +56,7 @@ def objectToRow(obj, row, attrDict):
             valueType = LABEL_TYPES.get(labelType, str)
             row.setValue(label, valueType(getattr(obj, attr).get()))
 
-def rowToObject(row, obj, attrDict):
+def _rowToObject(row, obj, attrDict):
     """ This function will convert from a XmippMdRow to an EMObject.
     Params:
         row: the XmippMdRow instance (input)
@@ -69,12 +69,15 @@ def rowToObject(row, obj, attrDict):
             setattr(obj, attr, String()) #TODO: change string for the type of label
         getattr(obj, attr).set(row.getValue(label))
     
+def rowToObject(md, objId, obj, attrDict):
+    """ Same as rowToObject, but creating the row from md and objId. """
+    row = XmippMdRow()
+    row.readFromMd(md, objId)
+    _rowToObject(row, obj, attrDict)
     
 def readCTFModel(filename):
     """ Read from Xmipp .ctfparam and create a CTFModel object. """
     md = xmipp.MetaData(filename)
-    ctfRow = XmippMdRow()
-    ctfRow.readFromMd(md, md.firstObject())
     ctfObj = CTFModel()    
     ctfDict = { 
                "defocusU": xmipp.MDL_CTF_DEFOCUSU,
@@ -82,7 +85,7 @@ def readCTFModel(filename):
                "defocusAngle": xmipp.MDL_CTF_DEFOCUS_ANGLE,
                "sphericalAberration": xmipp.MDL_CTF_CS
                }    
-    rowToObject(ctfRow, ctfObj, ctfDict)  
+    rowToObject(md, md.firstObject(), ctfObj, ctfDict)  
     ctfObj._xmippMd = String(filename) 
     
     return ctfObj
@@ -121,6 +124,17 @@ def micrographToRow(mic, micRow):
       
     objectToRow(mic, micRow, micDict)
 
+def rowToCoordinate(md, objId):
+    """ Create a Coordinate from a row of a metadata. """
+    coordDict = { 
+               "_x": xmipp.MDL_XCOOR,
+               "_y": xmipp.MDL_YCOOR,
+#               "sphericalAberration": xmipp.MDL_CTF_CS
+               }
+    coord = Coordinate()
+    rowToObject(md, objId, coord, coordDict)
+    
+    return coord
 
 def readSetOfMicrographs(filename):
     pass
@@ -146,11 +160,44 @@ def writeSetOfMicrographs(micSet, filename, rowFunc=None):
         
     md.write(filename)
     micSet._xmippMd = String(filename)
-
     
-     
     
-
-
+def readPosCoordinates(posFile):
+    """ Read the coordinates in .pos file. 
+    and return corresponding metadata. 
+    """
+    md = xmipp.MetaData(posFile)
+    blocks = xmipp.getBlocksInMetaDataFile(posFile)
     
+    for b in ['particles', 'particles_auto']:
+        if b in blocks:
+            mdAux = xmipp.MetaData('%(b)s@%(posFile)s' % locals())
+            md.unionAll(mdAux)
+    
+    return md
+            
+def readSetOfCoordinates(posDir, micSet, coordSet):
+    """ Read from Xmipp .pos files.
+    Params:
+        posDir: the directory where the .pos files are.
+            It is also expected a file named: config.xmd
+            in this directory where the box size can be read.
+        micSet: the SetOfMicrographs to associate the .pos, which 
+            name should be the same of the micrographs.
+        coordSet: the SetOfCoordinates that will be populated.
+    """
+    # Read the boxSize from the config.xmd metadata
+    md = xmipp.MetaData('properties@' + join(posDir, 'config.xmd'))
+    boxSize = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, md.firstObject())
+    
+    for mic in micSet:
+        posFile = join(posDir, replaceBaseExt(mic.getFileName(), 'pos'))
+        posMd = readPosCoordinates(posFile)
+        
+        for objId in posMd:
+            coord = rowToCoordinate(posMd, objId)
+            coord.setMicrograph(mic)
+            coordSet.append(coord)
+
+    coordSet.setBoxSize(boxSize)
     

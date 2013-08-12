@@ -9,14 +9,13 @@ import unittest
 from pyworkflow.tests import *
 from pyworkflow.em.data import *
 from pyworkflow.utils.path import makePath
-from pyworkflow.em.packages.xmipp3.convert import writeSetOfMicrographs
+from pyworkflow.em.packages.xmipp3.convert import *
 
 class TestImage(unittest.TestCase):
         
     def setUp(self):
         pass
     
-        
     def testLocation(self):
         fn = 'mic0001.mrc'
         mic = Micrograph()
@@ -93,7 +92,15 @@ class TestSetOfMicrographs(unittest.TestCase):
         from pyworkflow.em.packages.xmipp3.convert import *
         
         writeSetOfMicrographs(micSet, mdFn)
-
+        
+        # Test reading a set of coordinates
+        posDir = getInputPath('Picking_XmippBPV3_Down3')
+        coordSet = SetOfCoordinates()
+        fn = getOutputPath('coordinates.sqlite')
+        coordSet.setFileName(fn)
+        
+        readSetOfCoordinates(posDir, micSet, coordSet)
+        coordSet.write()
     
        
 if __name__ == '__main__':

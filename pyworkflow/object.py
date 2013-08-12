@@ -297,7 +297,9 @@ class OrderedObject(Object):
         """Return the list of attributes than are
         subclasses of Object and will be stored"""
         for key in self._attributes:
-            yield (key, getattr(self, key))
+            attr = getattr(self, key)
+            if attr._objDoStore:
+                yield (key, attr)
             
 class FakedObject(Object):
     """This is based on Object, but will hide the set and get

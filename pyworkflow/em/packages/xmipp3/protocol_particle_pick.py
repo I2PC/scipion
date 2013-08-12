@@ -31,9 +31,9 @@ This sub-package contains the XmippParticlePicking protocol
 from pyworkflow.em import *  
 from pyworkflow.utils.path import *  
 import xmipp
-from pyworkflow.em.packages.xmipp3.data import *
 from xmipp3 import XmippProtocol
-from data import XmippSetOfMicrographs
+from data import *
+from convert import writeSetOfMicrographs, readSetOfCoordinates
 
 
 class XmippDefParticlePicking(Form):
@@ -71,8 +71,8 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
                         }
         
         # Convert input SetOfMicrographs to Xmipp if needed
-        self._insertConvertStep('inputMics', XmippSetOfMicrographs, 
-                                 self._getPath('micrographs.xmd'))
+#        self._insertConvertStep('inputMics', XmippSetOfMicrographs, 
+#                                 self._getPath('micrographs.xmd'))
         # Launch Particle Picking GUI
         if not self.importFolder.hasValue():
             self._insertFunctionStep('launchParticlePickGUI', isInteractive=True)
@@ -85,59 +85,34 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
     def launchParticlePickGUI(self):
         # Get the converted input micrographs in Xmipp format
         # if not exists, means the input was already in Xmipp
-        inputMicsXmipp = self.getConvertedInput('inputMics')
-        self._params['inputMicsXmipp'] = inputMicsXmipp.getFileName()
+        fn = self._getPath('micrographs.xmd')
+        writeSetOfMicrographs(self.inputMics, fn)
+        self._params['inputMicsXmipp'] = fn
         # Launch the particle picking GUI
         program = "xmipp_micrograph_particle_picking"
         arguments = "-i %(inputMicsXmipp)s -o %(extraDir)s --mode %(pickingMode)s --memory %(memory)dg"
         # TiltPairs
-        if inputMicsXmipp.hasTiltPairs():
-            self._params['inputMicsXmipp'] = "TiltedPairs@" + inputMicsXmipp.getFileName()
-            program = "xmipp_micrograph_tiltpair_picking"
+#        if self.inputMics.hasTiltPairs():
+#            self._params['inputMicsXmipp'] = "TiltedPairs@" + fn
+#            program = "xmipp_micrograph_tiltpair_picking"
         # Run the command with formatted parameters
         self.runJob(None, program, arguments % self._params)
-        
-    def _createSetOfCoordinates(self, size):
-        inputMicsXmipp = self.getConvertedInput('inputMics')
-        # Create a md with the coordinates files for each micrograph
-        coordId = 0L
-        posMd = xmipp.MetaData()
-        for mic in inputMicsXmipp:
-            micPosFn = self._getExtraPath(replaceBaseExt(mic.getFileName(), 'pos'))
-            micPosBlockFn = 'particles@' + micPosFn
-            micPosMd = xmipp.MetaData(micPosBlockFn)
-            #TODO:  micPosMd.fillLinear
-            for objId in micPosMd:
-                coordId += 1
-                micPosMd.setValue(xmipp.MDL_ITEM_ID, coordId, objId)
-            micPosMd.write(micPosBlockFn, xmipp.MD_APPEND)
-            posId = posMd.addObject()
-            posMd.setValue(xmipp.MDL_ITEM_ID, mic.getId(), posId)
-            posMd.setValue(xmipp.MDL_MICROGRAPH_PARTICLES, micPosFn, posId)
-        coordsFn = self._getExtraPath('scipion_micrographs_coordinates.xmd')
-        posMd.write(coordsFn)  
-        coords = XmippSetOfCoordinates(filename=coordsFn)
-        coords.setMicrographs(inputMicsXmipp)
-        coords.boxSize.set(size)
-        
-        return coords                    
         
     def _importFromFolder(self):
         """ This function will copy Xmipp .pos files for
         simulating an particle picking run...this is only
         for testing purposes.
         """
-        from pyworkflow.utils.path import getFiles
-        import shutil
-        
         for f in getFiles(self.importFolder.get()):
-            shutil.copy(f, self._getExtraPath())
+            copyFile(f, self._getExtraPath())
         
     def createOutput(self):
-        fn = self._getExtraPath('config.xmd')
-        if xmipp.existsBlockInMetaDataFile('properties@%s' % fn):
-            md = xmipp.MetaData('properties@%s' % fn)
-            size = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, md.firstObject())
-            coords = self._createSetOfCoordinates(size)
-            self._defineOutputs(outputCoordinates=coords)
+        posDir = self._getExtraPath()
+        fn = self._getPath('coordinates.sqlite')
+        coordSet = SetOfCoordinates()
+        coordSet.setFileName(fn)
+        coordSet.setMicrographs(self.inputMics)
+        readSetOfCoordinates(posDir, self.inputMics, coordSet)
+        coordSet.write()
+        self._defineOutputs(outputCoordinates=coordSet)
 
