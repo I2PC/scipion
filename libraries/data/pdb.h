@@ -332,6 +332,6 @@ void projectPDB(const PDBPhantom &phantomPDB,
  * Consider the distance between each atom and its N nearest neighbours. Then, compute the histogram of these distances
  * with Nbin samples.
  */
-void distanceHistogramPDB(const PDBPhantom &phantomPDB, size_t Nnearest, int Nbins, Histogram1D &hist);
+void distanceHistogramPDB(const PDBPhantom &phantomPDB, size_t Nnearest, double maxDistance, int Nbins, Histogram1D &hist);
 //@}
 #endif

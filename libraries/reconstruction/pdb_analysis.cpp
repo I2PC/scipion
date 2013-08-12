@@ -32,7 +32,9 @@ void ProgPdbAnalysis::defineParams()
 	addParamsLine("-i <file>    : PDB to study");
 	addParamsLine("--operation <op>  : Operation to perform");
 	addParamsLine("    where <op>");
-	addParamsLine("          distance_histogram <fileOut> <Nnearest=3> : Compute the distance histogram between an atom and its N nearest neighbours");
+	addParamsLine("          distance_histogram <fileOut> <Nnearest=3> <MaxDistance=-1>: Compute the distance histogram between");
+	addParamsLine("                                                                    : an atom and its N nearest neighbours");
+	addParamsLine("                                                                    : The maximum distance of the neighbours may be limited (in Angstroms)");
 	addExampleLine("Compute the histogram of interatomic distances",false);
 	addExampleLine("xmipp_pdb_analysis -i mypdb.pdb --operation distance_histogram distance.hist");
 }
@@ -45,6 +47,7 @@ void ProgPdbAnalysis::readParams()
 	{
 		fn_hist=getParam("--operation",1);
 		Nnearest=getIntParam("--operation",2);
+		maxDistance=getDoubleParam("--operation",3);
 	}
 }
 
@@ -57,7 +60,8 @@ void ProgPdbAnalysis::show()
 	<< "Operation:    " << op << std::endl;
 	if (op=="distance_histogram")
 		std::cout << "Output histogram: " << fn_hist << std::endl
-		          << "Nnearest:         " << Nnearest << std::endl;
+		          << "Nnearest:         " << Nnearest << std::endl
+				  << "MaxDistance:      " << maxDistance << std::endl;
 }
 
 void ProgPdbAnalysis::run()
@@ -67,7 +71,7 @@ void ProgPdbAnalysis::run()
 		PDBPhantom pdb; // It cannot be a PDBRichAtom because it also has to work with pseudoatomic structures
 		pdb.read(fn_pdb);
 		Histogram1D hist;
-		distanceHistogramPDB(pdb,Nnearest,200,hist);
+		distanceHistogramPDB(pdb,Nnearest,maxDistance,200,hist);
 		hist.write(fn_hist);
 	}
 }

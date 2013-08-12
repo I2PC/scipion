@@ -868,7 +868,7 @@ void ProgVolumeToPseudoatoms::writeResults()
     {
     	PDBPhantom pdb;
     	pdb.read(fnOut+".pdb");
-    	distanceHistogramPDB(pdb,Nclosest,200,hist);
+    	distanceHistogramPDB(pdb,Nclosest,200,-1,hist);
         hist.write(fnOut+"_distance.hist");
     }
 }

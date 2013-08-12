@@ -1038,7 +1038,7 @@ void projectPDB(const PDBPhantom &phantomPDB,
     }
 }
 
-void distanceHistogramPDB(const PDBPhantom &phantomPDB, size_t Nnearest, int Nbins, Histogram1D &hist)
+void distanceHistogramPDB(const PDBPhantom &phantomPDB, size_t Nnearest, double maxDistance, int Nbins, Histogram1D &hist)
 {
     // Compute the histogram of distances
 	const std::vector<Atom> &atoms=phantomPDB.atomList;
@@ -1056,6 +1056,8 @@ void distanceHistogramPDB(const PDBPhantom &phantomPDB, size_t Nnearest, int Nbi
             double diffy=atom_i.y-atom_j.y;
             double diffz=atom_i.z-atom_j.z;
             double dist=sqrt(diffx*diffx+diffy*diffy+diffz*diffz);
+            if (maxDistance>0 && dist>maxDistance)
+            	continue;
         	//std::cout << "Analyzing " << i << " and " << j << " -> d=" << dist << std::endl;
             size_t nearestSoFar=NnearestToThisAtom.size();
             if (nearestSoFar==0)

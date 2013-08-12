@@ -47,6 +47,9 @@ public:
 
     /** Nearest neighbours to explore */
     int Nnearest;
+
+    /** MaxDistance */
+    double maxDistance;
 public:
     /** Params definitions */
     void defineParams();
