@@ -654,6 +654,6 @@ void adaptSpectrum(MultidimArray<double> &Min,
 /** Randomize phases beyond a certain frequency
  * @ingroup FourierOperations
 */
-void randomizePhases(MultidimArray<double> &Min, double w);
+void randomizePhases(MultidimArray<double> &Min, double wRandom);
 #endif
 /** @} */

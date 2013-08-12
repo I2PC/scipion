@@ -684,9 +684,7 @@ void multiplyBySpectrum(MultidimArray<double> &Min,
         dAkij(Faux, k, i, j) *=  lspectrum(idx) * dim3;
     }
     transformer.inverseFourierTransform();
-
 }
-
 
 void whitenSpectrum(MultidimArray<double> &Min,
                     MultidimArray<double> &Mout,
@@ -798,7 +796,26 @@ void fast_correlation_vector(const MultidimArray< std::complex<double> > & FFT1,
     R.setXmippOrigin();
 }
 
-void randomizePhases(MultidimArray<double> &Min, double w)
+void randomizePhases(MultidimArray<double> &Min, double wRandom)
 {
+	FourierTransformer transformer;
+	MultidimArray< std::complex<double> > F;
+	transformer.FourierTransform(Min,F,false);
 
+	Matrix1D<double> f(3);
+	FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(F)
+    {
+        FFT_IDX2DIGFREQ(j,XSIZE(Min), XX(f));
+        FFT_IDX2DIGFREQ(i,YSIZE(F),YY(f));
+        FFT_IDX2DIGFREQ(k,ZSIZE(F),ZZ(f));
+        double w=f.module();
+        if (w > wRandom)
+        {
+        	double alpha=rnd_unif(0,2*PI);
+        	double c,s;
+        	sincos(alpha,&s,&c);
+        	DIRECT_A3D_ELEM(F,k,i,j)*=std::complex<double>(s,c);
+        }
+    }
+	transformer.inverseFourierTransform();
 }
