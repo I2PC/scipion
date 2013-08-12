@@ -101,6 +101,17 @@ class TestPyworkflow(unittest.TestCase):
         s = String(value)
         self.assertEqual(value, s.get())
         self.assertEqual(s.hasValue(), True)
+        
+        s2 = String()
+        # None value is considered empty
+        self.assertTrue(s2.empty(), "s2 string should be empty if None")
+        s2.set(' ')
+        # Only spaces is also empty
+        self.assertTrue(s2.empty(), "s2 string should be empty if only spaces")
+        s2.set('something')
+        # No empty after some value
+        self.assertFalse(s2.empty(), "s2 string should not be empty after value")
+        
         a = Integer()
         self.assertEqual(a.hasValue(), False)
         c = self.createComplex()

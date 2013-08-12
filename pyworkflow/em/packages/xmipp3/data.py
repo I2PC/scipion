@@ -367,7 +367,7 @@ class XmippCTFModel(CTFModel, XmippMdRow):
 
             md = xmipp.MetaData(filename)
             objId = md.firstObject()
-            self.getFromMd(md, objId)
+            self.readFromMd(md, objId)
             
             for key, label in  self.ctfParams.iteritems():
                 mdVal = md.getValue(label, objId)
@@ -382,7 +382,7 @@ class XmippCTFModel(CTFModel, XmippMdRow):
         md = xmipp.MetaData()
         md.setColumnFormat(False)
         objId = md.addObject()
-        self.setToMd(md, objId)
+        self.writeToMd(md, objId)
         md.write(fn)
         
         self.setFileName(fn)
@@ -437,7 +437,7 @@ class XmippSetOfCoordinates(SetOfCoordinates):
                 #y = mdPos.getValue(xmipp.MDL_YCOOR, objId)
                 #coorId = mdPos.getValue(xmipp.MDL_ITEM_ID, objId)
                 coordinate = XmippCoordinate()
-                coordinate.getFromMd(mdPos, objId)
+                coordinate.readFromMd(mdPos, objId)
                 #coordinate.setPosition(x, y)
                 coordinate.setMicrograph(micrograph)
                 coordinate.setBoxSize(self.boxSize.get())
@@ -515,7 +515,7 @@ class XmippSetOfCoordinates(SetOfCoordinates):
                 coordXmipp = XmippCoordinate()
                 coordXmipp.copyInfo(coord)
                 objId = mdPosFile.addObject()
-                coordXmipp.setToMd(mdPosFile, objId)
+                coordXmipp.writeToMd(mdPosFile, objId)
                 hasCoords = True            
             if hasCoords:                           
                 mdPosFile.write('particles@%s' % posFile)
@@ -590,7 +590,7 @@ class XmippClass2D(Class2D):
                             (self._number, self._filename))
         for objId in md:
             imgCA = XmippImageClassAssignment()
-            imgCA.getFromMd(md, objId)
+            imgCA.readFromMd(md, objId)
             yield imgCA
     
     def getImage(self):

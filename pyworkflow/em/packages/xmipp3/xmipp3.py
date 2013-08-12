@@ -104,13 +104,13 @@ class XmippMdRow():
     def getValue(self, label):
         return self._labelDict[label]
     
-    def getFromMd(self, md, objId):
+    def readFromMd(self, md, objId):
         """ Get all row values from a given id of a metadata. """
         self._labelDict.clear()
         for label in md.getActiveLabels():
             self._labelDict[label] = md.getValue(label, objId)
             
-    def setToMd(self, md, objId):
+    def writeToMd(self, md, objId):
         """ Set back row values to a metadata row. """
         for label, value in self._labelDict.iteritems():
             # TODO: Check how to handle correctly unicode type
@@ -144,7 +144,7 @@ def findRow(md, label, value):
         row = None
     elif n == 1:
         row = XmippMdRow()
-        row.getFromMd(mdQuery, mdQuery.firstObject())
+        row.readFromMd(mdQuery, mdQuery.firstObject())
     else:
         raise Exception("findRow: more than one row found matching the query %s = %s" % (xmipp.label2Str(label), value))
     
@@ -174,7 +174,7 @@ class XmippSet():
         
         for objId in self._md:  
             item = self._itemClass()
-            item.getFromMd(self._md, objId)  
+            item.readFromMd(self._md, objId)  
             #m = Image(md.getValue(xmipp.MDL_IMAGE, objId))
             #if self.hasCTF():
             #    m.ctfModel = XmippCTFModel(md.getValue(xmipp.MDL_CTF_MODEL, objId)) 
@@ -199,7 +199,7 @@ class XmippSet():
             itemXmipp = item
         else:
             itemXmipp = self._itemClass.convert(item)
-        itemXmipp.setToMd(self._md, objId)
+        itemXmipp.writeToMd(self._md, objId)
         
     def sort(self, label):
         self._md.sort(label)

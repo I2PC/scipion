@@ -35,10 +35,10 @@ from posixpath import join
 from pyworkflow.utils.utils import getUniqueItems
 
 
-class EMObject(Object):
+class EMObject(OrderedObject):
     """Base object for all EM classes"""
     def __init__(self, **args):
-        Object.__init__(self, **args)
+        OrderedObject.__init__(self, **args)
         
     def __str__(self):
         return str(self.get())
@@ -61,7 +61,7 @@ class Microscope(EMObject):
         self.voltage.set(other.voltage.get())
         self.sphericalAberration.set(other.sphericalAberration.get())
         
-        
+#TODO: remove this class, since it is not necessary    
 class ImageLocation(EMObject):
     """ This class represents the unique location of an image.
     If the image is an stack, the location composed by index and filename.
@@ -110,10 +110,6 @@ class CTFModel(EMObject):
     """ Represents a generic CTF model. """
     def __init__(self, **args):
         EMObject.__init__(self, **args)
-
-#        self.voltage = Float()
-#        self.sphericalAberration = Float()
-#        self.ampContrast = Float()
         self.defocusU = Float()
         self.defocusV = Float()
         self.defocusAngle = Float()
@@ -123,14 +119,16 @@ class CTFModel(EMObject):
         self.copyAttributes(other, 'defocusU', 'defocusV',
                             'defocusAngle', 'psdFile')
     
-    
+
 class Image(EMObject):
     """Represents an EM Image object"""
     def __init__(self, **args):
         EMObject.__init__(self, **args)
         #TODO: replace this id with objId
         self._id =  Integer()
-        self._location = ImageLocation()
+        # Image location is composed by an index and a filename
+        self._index = Integer(0)
+        self._filename = String()
         self._samplingRate = Float()
         self._ctfModel = None
         
@@ -162,25 +160,31 @@ class Image(EMObject):
         """Return image dimensions as tuple: (Ydim, Xdim)"""
         pass
     
+    def getIndex(self):
+        return self._index.get()
+    
+    def setIndex(self, index):
+        self._index.set(index)
+        
     def getFileName(self):
         """ Use the _objValue attribute to store filename. """
-        return self._location.getFileName()
+        return self._filename.get()
     
     def setFileName(self, filename):
         """ Use the _objValue attribute to store filename. """
-        self._location.setFileName(filename)
+        self._filename.set(filename)
         
     def getLocation(self):
         """ This function return the image index and filename.
         It will only differs from getFileName, when the image
         is contained in a stack and the index make sense. 
         """
-        return self._location    
+        return (self.getIndex(), self.getFileName())
     
     def setLocation(self, index, filename):
         """ Set the image location, see getLocation. """
-        self._location.setIndex(index)
-        self._location.setFileName(filename)
+        self.setIndex(index)
+        self.setFileName(filename)
         
     def hasCTF(self):
         return self._ctfModel is not None
@@ -205,21 +209,18 @@ class Volume(Image):
         Image.__init__(self, **args)
 
 
-class SetOfImages(EMObject):
-    """ Represents a set of Images """
+class Set(EMObject):
+    """ This class will be a container implementation for elements.
+    It will use an extra sqlite file to store the elements.
+    All items will have an unique id that identifies each element in the set.
+    """
     def __init__(self, **args):
         # Use the object value to store the filename
         EMObject.__init__(self, **args)
         self._filename = String() # sqlite filename
-        self._samplingRate = Float()        
-        self._hasCtf = Boolean(args.get('ctf', False))
-        self._hasAlignment = Boolean(args.get('alignmet', False))
-        self._hasProjectionMatrix = Boolean(False)
-        self._isPhaseFlippled = Boolean(False)
-        self._isAmplitudeCorrected = Boolean(False)
         self._mapper = None
         self._idCount = 0
-        self._size = Integer(0) # cached value of the number of images
+        self._size = Integer(0) # cached value of the number of images    
        
     def getSize(self):
         """Return the number of images"""
@@ -230,6 +231,52 @@ class SetOfImages(EMObject):
     
     def setFileName(self, filename):
         self._filename.set(filename)
+    
+    def write(self):
+        """This method will be used to persist in a file the
+        list of images path contained in this Set
+        path: output file path
+        images: list with the images path to be stored
+        """
+        #TODO: If mapper is in memory, do commit and dump to disk
+        self._mapper.commit()
+    
+    def load(self):
+        """ Load extra data from files. """
+        if self.getFileName() is None:
+            raise Exception("Set filename before calling load()")
+        self._mapper = SqliteMapper(self.getFileName(), globals())
+        
+    def loadIfEmpty(self):
+        """ Load data only if the main set is empty. """
+        if self._mapper is None:
+            self.load()
+            
+    def append(self, item):
+        """ Add a image to the set. """
+        if not item.hasId():
+            self._idCount += 1
+            item.setId(self._idCount)
+        self.loadIfEmpty()
+        self._mapper.insert(item)
+        self._size.set(self._size.get() + 1)
+                
+    
+class SetOfImages(Set):
+    """ Represents a set of Images """
+    def __init__(self, **args):
+        # Use the object value to store the filename
+        Set.__init__(self, **args)
+        self._filename = String() # sqlite filename
+        self._samplingRate = Float()        
+        self._hasCtf = Boolean(args.get('ctf', False))
+        self._hasAlignment = Boolean(args.get('alignmet', False))
+        self._hasProjectionMatrix = Boolean(False)
+        self._isPhaseFlippled = Boolean(False)
+        self._isAmplitudeCorrected = Boolean(False)
+        self._mapper = None
+        self._idCount = 0
+        self._size = Integer(0) # cached value of the number of images
     
     def __getitem__(self, imgId):
         """ Get the image with the given id. """
@@ -243,15 +290,6 @@ class SetOfImages(EMObject):
         for img in self._mapper.selectByClass("Image", iterate=True):
             self._idMap[img.getId()] = img
             yield img            
-    
-    def write(self):
-        """This method will be used to persist in a file the
-        list of images path contained in this Set
-        path: output file path
-        images: list with the images path to be stored
-        """
-        #TODO: If mapper is in memory, do commit and dump to disk
-        self._mapper.commit()
         
     def hasCTF(self):
         """Return True if the SetOfImages has associated a CTF model"""
@@ -286,14 +324,9 @@ class SetOfImages(EMObject):
         
     def append(self, image):
         """ Add a image to the set. """
-        if not image.hasId():
-            self._idCount += 1
-            image.setId(self._idCount)
         if not image.getSamplingRate():
             image.setSamplingRate(self.getSamplingRate())
-        self.loadIfEmpty()
-        self._mapper.insert(image)
-        self._size.set(self._size.get() + 1)
+        Set.append(self, image)
 
     def copyInfo(self, other):
         """ Copy basic information (sampling rate, scannedPixelSize and ctf)
@@ -311,17 +344,6 @@ class SetOfImages(EMObject):
                 # ctf is a XMippCTFModel
                 filePaths.update(item.getCTF().getFiles())
         return filePaths
-    
-    def load(self):
-        """ Load extra data from files. """
-        if self.getFileName() is None:
-            raise Exception("Set filename before calling load()")
-        self._mapper = SqliteMapper(self.getFileName(), globals())
-        
-    def loadIfEmpty(self):
-        """ Load data only if the main set is empty. """
-        if self._mapper is None:
-            self.load()
             
     def setDownsample(self, downFactor):
         """ Update the values of samplingRate and scannedPixelSize
@@ -390,25 +412,47 @@ class Coordinate(EMObject):
     associated with a coordinate"""
     def __init__(self, **args):
         EMObject.__init__(self, **args)
-        self._micrographPointer = Pointer()
-        self._boxSize = None
+        self._micrographPointer = Pointer(objDoStore=False)
+        self._x = Integer()
+        self._y = Integer()
+        self._micId = Integer()
+        #TODO: replace this id with objId
+        self._id =  Integer()
+        
+    #TODO: replace this id with objId
+    def getId(self):
+        return self._id.get()
+        
+    def setId(self, imgId):
+        """ This id identifies the element inside a set """
+        self._id.set(imgId)
+        
+    def hasId(self):
+        return self._id.hasValue()
+        
+    def getX(self):
+        return self._x.get()
+    
+    def setX(self, x):
+        self._x.set(x)
+    
+    def getY(self):
+        return self._y.get()
+    
+    def setY(self, y):
+        self._y.set(y)        
     
     def getPosition(self):
         """ Return the position of the coordinate as a (x, y) tuple.
         mode: select if the position is the center of the box
         or in the top left corner.
         """
-        pass
+        return (self.getX(), self.getY())
 
     def setPosition(self, x, y):
-        pass
+        self.setX(x)
+        self.setY(y)
     
-    def getBoxSize(self):
-        return self._boxSize
-    
-    def setBoxSize(self, boxSize):
-        self._boxSize = boxSize
-
     def getMicrograph(self):
         """ Return the micrograph object to which
         this coordinate is associated.
@@ -418,6 +462,7 @@ class Coordinate(EMObject):
     def setMicrograph(self, micrograph):
         """ Set the micrograph to which this coordinate belongs. """
         self._micrographPointer.set(micrograph)
+        self._micId.set(micrograph.getId())
     
     def copyInfo(self, coord):
         """ Copy information from other coordinate. """
@@ -426,26 +471,26 @@ class Coordinate(EMObject):
         self.setBoxSize(coord.getBoxSize())
         
     
-class SetOfCoordinates(EMObject):
+class SetOfCoordinates(Set):
     """ Encapsulate the logic of a set of particles coordinates.
     Each coordinate has a (x,y) position and is related to a Micrograph
     The SetOfCoordinates can also have information about TiltPairs.
     """
     
     def __init__(self, **args):
-        EMObject.__init__(self, **args)
+        Set.__init__(self, **args)
         self._micrographsPointer = Pointer()
-        self.boxSize = Integer()
+        self._boxSize = Integer()
     
     def getBoxSize(self):
         """ Return the box size of the particles.
         """
-        return self.boxSize.get()
+        return self._boxSize.get()
     
     def setBoxSize(self, boxSize):
         """ Set the box size of the particles.
         """
-        self.boxSize.set(boxSize)
+        self._boxSize.set(boxSize)
     
     def iterMicrographs(self):
         """ Iterate over the micrographs set associated with this
@@ -463,11 +508,9 @@ class SetOfCoordinates(EMObject):
         If the SetOfMicrographs has tilted pairs, the coordinates
         should have the information related to its paired coordinate.
         """
-        pass
-    
-    def hasTiltPairs(self):
-        """ Returns True if the SetOfMicrographs has tilted pairs"""
-        return self.getMicrographs().hasTiltPairs()
+        self.loadIfEmpty()
+        for coord in self._mapper.selectByClass("Coordinate", iterate=True):
+            yield coord 
     
     def getMicrographs(self):
         """ Returns the SetOfMicrographs associated with 
@@ -479,10 +522,6 @@ class SetOfCoordinates(EMObject):
         this set of coordinates.
          """
         self._micrographsPointer.set(micrographs)
-        
-    def iterTiltPairs(self):
-        """Iterate over the tilt pairs if is the case"""
-        pass
 
     
 class ImageClassAssignment(EMObject):
