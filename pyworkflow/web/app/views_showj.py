@@ -8,6 +8,7 @@ from pyworkflow.web.app.forms import ShowjForm, getLabelsToRenderComboBoxValues
 from django.template import RequestContext
 from os.path import join    
 from collections import OrderedDict
+import json
     
 def showj(request, inputParameters=None):
     
@@ -83,6 +84,8 @@ def showj(request, inputParameters=None):
     #Store dataset in session 
     request.session['dataset'] = dataset
 
+    
+
     #Create context to be send
     context = {'jquery': jquery_path, #Configuration variables
                'utils': utils_path,
@@ -98,6 +101,10 @@ def showj(request, inputParameters=None):
                'css': css_path,
                
                'tableLayoutConfiguration' : tableLayoutConfiguration, #Data variables
+               'tableLayoutConfiguration_json' : 2,
+#    json.dumps(tableLayoutConfiguration.columnsLayout, ensure_ascii=False, cls=ColumnLayoutConfigurationEncoder),
+#               'tableLayoutConfiguration_json' : tableLayoutConfiguration.toJSON(),
+
                'tableDataset': tableDataset,
                'form': showjForm} #Form
     
@@ -110,50 +117,46 @@ def showj(request, inputParameters=None):
 #class InitialValuesShowj():
 #    def __init__(self, md, path, allowRender
 
-AT = '__at__'
-
-class MdObj():
-    pass
-    
-class MdValue():
-    def __init__(self, md, label, objId, typeOfColumn):
-             
-
-        self.label = xmipp.label2Str(label)
-        
-#        self.allowRender = allowRender
-
-        # check if enabled label
-#        self.displayCheckbox = (label == xmipp.MDL_ENABLED)
-
-        
-        self.strValue = str(md.getValue(label, objId))   
-        
-        # Prepare path for image
-        self.imgValue = self.strValue
-        
-        self.typeOfColumn = typeOfColumn
-        
-        if typeOfColumn=="image" and '@' in self.strValue:
-            self.imgValue = self.imgValue.replace('@', AT)
-#            if imageDim:
-#                self.imgValue += '&dim=%s' % imageDim
-
-#class MdData():
-#    def __init__(self, md, allowRender=True, imageDim=None):        
-#        labels = md.getActiveLabels()
+#AT = '__at__'
+#
+#class MdObj():
+#    pass
+#    
+#class MdValue():
+#    def __init__(self, md, label, objId, typeOfColumn):
+#
+#        self.label = xmipp.label2Str(label)
+#        self.strValue = str(md.getValue(label, objId))   
 #        
-#        self.tableLayoutConfiguration = TableLayoutConfiguration(labels, allowRender)
+#        # Prepare path for image
+#        self.imgValue = self.strValue
 #        
-#        self.objects = []
-#        for objId in md:
-#            obj = MdObj()
-#            #PAJM que es este objId
-#            obj.id = objId
-#            obj.values = [MdValue(md, l, objId, typeOfColumn) for l, typeOfColumn in zip(labels, self.tableLayoutConfiguration.typeOfColumns)]
-#            self.objects.append(obj)
+#        self.typeOfColumn = typeOfColumn
+#        
+#        if typeOfColumn=="image" and '@' in self.strValue:
+#            self.imgValue = self.imgValue.replace('@', AT)
             
-################################### BEGIN LAYOUT ##########################            
+class ColumnLayoutConfigurationEncoder(json.JSONEncoder):
+    def default(self, columnLayoutConfiguration):
+        print type(columnLayoutConfiguration)
+        print "obj.label",columnLayoutConfiguration.label
+#        return ([columnLayoutConfiguration.__dict__]for columnLayoutConfiguration in obj) 
+#        for taka in columnLayoutConfiguration.iterValues():
+#            print "columnLayoutConfiguration",taka.label
+        
+        columnLayoutConfigurationCoded=[]
+        columnLayoutConfigurationCoded[columnLayoutConfiguration.label]={"typeOfColumn":columnLayoutConfiguration.typeOfColumn,
+                                                                         "columnLayoutProperties":{"visible":columnLayoutConfiguration.columnLayoutProperties.visible,
+                                                                                                   "allowSetVisible":columnLayoutConfiguration.columnLayoutProperties.allowSetVisible,
+                                                                                                   "editable":columnLayoutConfiguration.columnLayoutProperties.editable,
+                                                                                                   "allowSetEditable":columnLayoutConfiguration.columnLayoutProperties.allowSetEditable,
+                                                                                                   "renderable":columnLayoutConfiguration.columnLayoutProperties.renderable,
+                                                                                                   "allowSetRenderable":columnLayoutConfiguration.columnLayoutProperties.allowSetRenderable,
+                                                                                                   "renderFunc":columnLayoutConfiguration.columnLayoutProperties.renderFunc}
+                                                                         }
+        return columnLayoutConfigurationCoded 
+#          return [obj.real, obj.imag]
+                 
             
 class TableLayoutConfiguration():
     def __init__(self, tableDataset, allowRender=True):
@@ -164,6 +167,7 @@ class TableLayoutConfiguration():
             self.columnsLayout[col.getName()]=ColumnLayoutConfiguration(col, allowRender)
             
         self.colsOrder = defineColsLayout(self.columnsLayout.keys())
+        
             
 class ColumnLayoutConfiguration():
     def __init__(self, col, allowRender):
@@ -172,8 +176,8 @@ class ColumnLayoutConfiguration():
         self.label = col.getName()
         self.typeOfColumn = getTypeOfColumn(col.getName())
         
-        self.columnLayoutProperties = ColumnLayoutProperties()
-        self.columnLayoutProperties.initializeFromTypeOfColumn(self.typeOfColumn, allowRender)
+        self.columnLayoutProperties = ColumnLayoutProperties(self.typeOfColumn, allowRender)
+
         
 #        self.labels = [xmipp.label2Str(l) for l in labels]
 #        self.typeOfColumns = getTypeOfColumns(labels, allowRender)
@@ -182,10 +186,8 @@ class ColumnLayoutConfiguration():
 #        self.labels_typeOfColumns= zip(self.labels,self.typeOfColumns)
 
 class ColumnLayoutProperties():
-    def __init__(self):
-        self.layoutPropertiesDict = {}
-        
-    def initializeFromTypeOfColumn(self, typeOfColumn, allowRender=True):      
+    def __init__(self, typeOfColumn, allowRender=True):
+#        self.layoutPropertiesDict = {}
         self.visible = True
         self.allowSetVisible = True 
         
@@ -196,6 +198,7 @@ class ColumnLayoutProperties():
         self.allowSetRenderable = self.renderable
 
         self.renderFunc = "taka"
+        
         
 
 #PAJM         

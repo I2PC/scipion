@@ -4,6 +4,7 @@
 * {
 	margin: 0px;
 	padding: 0px;
+	font-family: Helvetica;
 } /* Reset default margin and padding for all element */
 header,section,footer,aside,nav,article,hgroup {
 	display: block;
@@ -211,11 +212,17 @@ section .imageTitle{
 	font-family: Helvetica;
 	white-space: nowrap;
 	padding: 8px;
+	border: 0px;
 }
 
 #table_container tbody td{
 	/* font-weight: bold; */
 	font-family: Helvetica;
+	
+}
+
+#table_container tbody tr.odd{
+	background-color: #FFF;
 }
 
 #table_container { /* 	overflow:auto;*/
@@ -227,11 +234,12 @@ section .imageTitle{
 }
 
 .row_selected{
-	background-color: #7a0000 !important;
+	background-color: #F3CBCB !important;
 }
 
 .tableImages{
 	display: block;
+	margin: 0 auto;
 }
 
 .multipleSelectionToolContainer{
@@ -243,6 +251,20 @@ section .imageTitle{
 	-webkit-align-items: center;
 	-webkit-flex-flow: column;
 	position: absolute;
+}
+
+.data_table_length{
+	margin-bottom: 10px;
+	
+}
+
+.dataTables_filter{
+	margin-bottom: 10px;
+}
+
+#data_table_filter input{
+	font-size:16px;
+	padding: 2px 2px 0px 3px;
 }
 
 .pressedButton{
