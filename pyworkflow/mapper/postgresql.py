@@ -24,5 +24,65 @@
 # *
 # **************************************************************************
 
+from mapper import Mapper
+
 class PostgresqlMapper(Mapper):
     """Specific Mapper implementation using postgresql database"""
+    def __init__(self ,dbSettingsFile, dictClasses=None):
+        Mapper.__init__(self,dictClasses)
+        self.db=PostgresqlDb(dbSettingsFile)
+# !!!! insert
+    def insert(self,obj):
+        pass
+
+# !!!! commit
+    def commit(self):
+        pass
+
+# !!!! selectAll
+    def selectAll(self):
+        pass
+
+# There are some python libraries for interfacing Postgres, see
+# http://wiki.postgresql.org/wiki/Python
+# Initial election: psycopg (http://initd.org/psycopg/)
+
+import psycopg2
+import xml.etree.ElementTree as ET
+
+# getting connection parameters:
+# 1) explicit parameters
+# 2) get from config file. It's simple and reasonable for the API 
+
+class PostgresqlDb():
+    """PostgreSql internals handling"""
+
+    def __init__(self,configFile=None):
+        if configFile:
+            self.connectUsing(configFile)
+
+    def connect(self, database,user,password,host,port=5432):
+        self.connection = psycopg2.connect(database=database, user=user, password=password, host=host, port=port)
+
+    # auto-closing could be implemented with atexit, @see
+    # http://stackoverflow.com/questions/974813/cleaning-up-an-internal-pysqlite-connection-on-object-destruction
+    def close(self):
+        self.connection.close()
+
+    # !!!! parse the config file using ConfigMapper or XMLmapper
+    def connectUsing(self, configFile):
+        """configFile is XML. @see settings/postresql.xml"""
+
+        print "Using %s" % configFile
+        tree = ET.parse(configFile)
+        root = tree.getroot()
+        user=root.find("PostgresqlConfig/user").text
+        host=root.find("PostgresqlConfig/host").text
+        database=root.find("PostgresqlConfig/database").text
+        password=root.find("PostgresqlConfig/password").text
+        port = None
+        if root.find("PostgresqlConfig/port"):
+            port=root.find("PostgresqlConfig/port").text
+
+        self.connect(database,user,password,host,port)
+        

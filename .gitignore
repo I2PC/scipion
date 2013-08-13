@@ -57,6 +57,8 @@ lib/
 documentation/
 gmon.out
 *~
+\#*
+.\#*
 pyworkflow/tests/classes/tmp
 pyworkflow/web/scipion.db
 .directory
