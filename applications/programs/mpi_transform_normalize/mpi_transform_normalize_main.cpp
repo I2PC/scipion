@@ -24,8 +24,9 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <data/normalize.h>
 #include <parallel/xmipp_mpi.h>
+#include <data/normalize.h>
+
 
 CREATE_MPI_METADATA_PROGRAM(ProgNormalize, MpiProgNormalize)
 
