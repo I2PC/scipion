@@ -63,7 +63,8 @@ void FourierFilter::defineParams(XmippProgram *program)
     program->addParamsLine("                                             : y is rotated by euler angles degrees");
     program->addParamsLine("            cone <th0>                       : Missing cone for tilt angles up to th0 ");
     program->addParamsLine("                                             : do not use mask type for wedge or cone filters");
-    program->addParamsLine("            gaussian <w1>                    : Gaussian with sigma = w1");
+    program->addParamsLine("            real_gaussian <w1>               : Gaussian in real space with sigma = w1");
+    program->addParamsLine("            gaussian <w1>                    : Gaussian in Fourier space with sigma = w1");
     program->addParamsLine("            sparsify <p=0.975>               : Delete p percent of the smallest Fourier coefficients");
     program->addParamsLine("            ctf <ctfile>                     : Provide a .ctfparam file");
     program->addParamsLine("            ctfpos <ctfile>                  : Provide a .ctfparam file");
