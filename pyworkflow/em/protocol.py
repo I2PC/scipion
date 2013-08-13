@@ -35,7 +35,7 @@ from pyworkflow.object import String, Float
 from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
 from constants import *
-from data import Micrograph, SetOfMicrographs, SetOfImages, Image, SetOfParticles, SetOfVolumes, Volume
+from data import Micrograph, SetOfMicrographs, SetOfImages, Image, SetOfParticles, SetOfVolumes, Volume, SetOfCoordinates
 from pyworkflow.utils.path import removeBaseExt, join, basename
 
 
