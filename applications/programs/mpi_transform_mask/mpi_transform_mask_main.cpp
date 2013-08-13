@@ -23,8 +23,9 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/mask.h>
 #include <parallel/xmipp_mpi.h>
+#include <data/mask.h>
+
 
 CREATE_MPI_METADATA_PROGRAM(ProgMask, MpiProgMask)
 

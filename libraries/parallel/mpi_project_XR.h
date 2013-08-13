@@ -26,8 +26,8 @@
 #ifndef MPI_PROJECT_XR_H_
 #define MPI_PROJECT_XR_H_
 
-#include "reconstruction/project_xray.h"
 #include "parallel/xmipp_mpi.h"
+#include "reconstruction/project_xray.h"
 
 /**@defgroup ProgMPIXrayProject ProgMPIXrayProject
    @ingroup Programs */

@@ -24,8 +24,9 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <data/image_operate.h>
 #include <parallel/xmipp_mpi.h>
+#include <data/image_operate.h>
+
 
 CREATE_MPI_METADATA_PROGRAM(ProgOperate, MpiProgOperate)
 

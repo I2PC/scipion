@@ -24,8 +24,9 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <data/transform_geometry.h>
 #include <parallel/xmipp_mpi.h>
+#include <data/transform_geometry.h>
+
 
 CREATE_MPI_METADATA_PROGRAM(ProgTransformGeometry, MpiProgTransformGeometry)
 

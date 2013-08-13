@@ -23,8 +23,9 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/symmetrize.h>
 #include <parallel/xmipp_mpi.h>
+#include <reconstruction/symmetrize.h>
+
 
 CREATE_MPI_METADATA_PROGRAM(ProgSymmetrize, MpiProgSymmetrize)
 RUN_XMIPP_PROGRAM(MpiProgSymmetrize)
