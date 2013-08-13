@@ -101,7 +101,7 @@ DoSegment=False
 """ Type of segmentation """
 SegmentationType='Automatic'
 
-# {condition}(DoSegment==True) Molecule Mass
+# {condition}(DoSegment==True and SegmentationType!="Automatic") Molecule Mass
 """ In automatic segmentation, set it to -1"""
 SegmentationMass=-1
 
