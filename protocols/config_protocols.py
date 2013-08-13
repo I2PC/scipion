@@ -21,6 +21,7 @@ protocols = {
         'screen_classes': ('Screen classes', '2D/Screening'),
         'rct': ('Random Conical Tilt', '3D/InitialVolume/RCT'),
         'initvolume_ransac': ('RANSAC', '3D/InitialVolume/RANSAC'),
+        'preprocess_volume': ('Preprocess', '3D/InitialVolume/Preprocessed'),
         'projmatch': ('Projection Matching', '3D/ProjMatch'), 
         'ml3d': ('ML3D', '3D/ML3D'),
         'nma': ('Normal Mode Analysis', '3D/NMA'),
@@ -43,7 +44,7 @@ sections = [
 ('2D', 
    [['Align+Classify', 'cl2d', 'ml2d', ['Other', 'cl2d_align', 'kerdensom', 'rotspectra', 'screen_classes']]]),
 ('3D', 
-   [['Initial Model', 'rct', 'initvolume_ransac'], 
+   [['Initial Model', 'rct', 'initvolume_ransac', 'preprocess_volume'], 
     ['Model Refinement', 'projmatch', 'ml3d', 'relion3d'],
     ['Analysis', ['Flexibility', 'nma', 'nma_alignment']]])
 ,
