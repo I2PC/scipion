@@ -149,8 +149,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             self.inputMics = self.inputCoords.getMicrographs()
             self.samplingFinal = self.samplingInput
         else:
-            self.samplingOriginal = self.inputMicrographs.getSamplingRate()
             self.inputMics = self.inputMicrographs.get()
+            self.samplingOriginal = self.inputMics.getSamplingRate()
             if self.downsampleType.get() == self.ORIGINAL:
                 # If 'original' get sampling rate from original micrographs
                 self.samplingFinal = self.samplingOriginal
