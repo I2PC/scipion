@@ -93,7 +93,20 @@ def readCTFModel(filename):
 
 def writeCTFModel(ctfObj, filename):
     """ Write a CTFModel object as Xmipp .ctfparam"""
-    pass
+    ctfDict = { 
+           "defocusU": xmipp.MDL_CTF_DEFOCUSU,
+           "defocusV": xmipp.MDL_CTF_DEFOCUSV,
+           "defocusAngle": xmipp.MDL_CTF_DEFOCUS_ANGLE,
+           "sphericalAberration": xmipp.MDL_CTF_CS
+           }   
+    
+    md = xmipp.MetaData()
+    md.setColumnFormat(False)
+    objId = md.addObject()
+    ctfRow = XmippMdRow() 
+    objectToRow(ctfObj, ctfRow, ctfDict)
+    ctfRow.writeToMd(md, objId)
+    md.write(filename)
 
 
 def readMicrograph(md, objId):
@@ -136,6 +149,18 @@ def rowToCoordinate(md, objId):
     
     return coord
 
+def coordinateToRow(coord, coordRow):
+    """ Set labels values from Coordinate coord to md row. """
+    coordDict = { 
+               "_x": xmipp.MDL_XCOOR,
+               "_y": xmipp.MDL_YCOOR
+               }
+#    x, y = coord.getPosition()
+#    coordRow.setValue(xmipp.MDL_XCOOR, x)
+#    coordRow.setValue(xmipp.MDL_YCOOR, y)
+      
+    objectToRow(coord, coordRow, coordDict)
+    
 def readSetOfMicrographs(filename):
     pass
 
@@ -175,6 +200,28 @@ def readPosCoordinates(posFile):
             md.unionAll(mdAux)
     
     return md
+
+def writePosCoordinates(posDir, coordSet):
+    """ Write a pos file on metadata format for each micrograph 
+    on the coordSet. 
+    Params:
+        posDir: the directory where the .pos files will be written.
+        coordSet: the SetOfCoordinates that will be read.
+    """
+    posFiles = []
+    for mic in coordSet.iterMicrographs():
+        posFn = join(posDir, replaceBaseExt(mic.getFileName(), "pos"))
+        md = xmipp.MetaData()
+        for coord in coordSet.iterCoordinates(micrograph=mic):
+            objId = md.addObject()
+            coordRow = XmippMdRow()
+            coordinateToRow(coord, coordRow)
+            coordRow.writeToMd(md, objId)
+        md.write(posFn)
+        posFiles.append(posFn)
+        
+    return posFiles
+    
             
 def readSetOfCoordinates(posDir, micSet, coordSet):
     """ Read from Xmipp .pos files.

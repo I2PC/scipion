@@ -470,6 +470,9 @@ class Coordinate(EMObject):
         self.setId(coord.getId())
         self.setBoxSize(coord.getBoxSize())
         
+    def getMicId(self):
+        return self._micId.get()
+        
     
 class SetOfCoordinates(Set):
     """ Encapsulate the logic of a set of particles coordinates.
@@ -502,15 +505,17 @@ class SetOfCoordinates(Set):
         """ Iterates over the set of coordinates belonging to that micrograph. """
         pass
     
-    def iterCoordinates(self):
-        """ Itearate over the coordinates associated with a micrograph.
+    def iterCoordinates(self, micrograph=None):
+        """ Iterate over the coordinates associated with a micrograph.
         If micrograph=None, the iteration is performed over the whole set of coordinates.
-        If the SetOfMicrographs has tilted pairs, the coordinates
-        should have the information related to its paired coordinate.
         """
         self.loadIfEmpty()
         for coord in self._mapper.selectByClass("Coordinate", iterate=True):
-            yield coord 
+            if micrograph is None:
+                yield coord 
+            else:
+                if coord.getMicId() == micrograph.getId():
+                    yield coord
     
     def getMicrographs(self):
         """ Returns the SetOfMicrographs associated with 

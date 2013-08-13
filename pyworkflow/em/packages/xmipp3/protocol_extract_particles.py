@@ -31,6 +31,7 @@ This sub-package contains the XmippProtExtractParticles protocol
 
 from pyworkflow.em import * 
 from data import *
+from convert import writeCTFModel, writePosCoordinates
 from pyworkflow.utils.path import makePath, removeBaseExt, join, exists
 from xmipp3 import XmippProtocol
 from glob import glob
@@ -141,14 +142,14 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         # Set sampling rate and inputMics according to downsample type
         self.inputCoords = self.inputCoordinates.get() 
 
-        self.samplingInput = self.inputCoords.getMicrographs().samplingRate.get()
+        self.samplingInput = self.inputCoords.getMicrographs().getSamplingRate()
         
         if self.downsampleType.get() == self.SAME_AS_PICKING:
             # If 'same as picking' get samplingRate from input micrographs  
             self.inputMics = self.inputCoords.getMicrographs()
             self.samplingFinal = self.samplingInput
         else:
-            self.samplingOriginal = self.inputMicrographs.get().samplingRate.get()
+            self.samplingOriginal = self.inputMicrographs.getSamplingRate()
             self.inputMics = self.inputMicrographs.get()
             if self.downsampleType.get() == self.ORIGINAL:
                 # If 'original' get sampling rate from original micrographs
@@ -158,9 +159,12 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 self.samplingFinal = self.samplingOriginal*self.downFactor.get()
                 
         # Convert input SetOfCoordinates to Xmipp if needed
-        self._insertConvertStep('inputCoords', XmippSetOfCoordinates, 
-                                 self._getExtraPath('scipion_micrographs_coordinates.xmd'))
+#        self._insertConvertStep('inputCoords', XmippSetOfCoordinates, 
+#                                 self._getExtraPath('scipion_micrographs_coordinates.xmd'))
                 
+        # Write pos files for each micrograph
+        self._insertFunctionStep('writePosFiles')
+           
         # For each micrograph insert the steps
         for mic in self.inputMics:
             micrographToExtract = mic.getFileName()
@@ -192,7 +196,13 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         # TODO: Delete temporary files
                         
         # Insert step to create output objects       
-        self._insertFunctionStep('createOutput')
+        #self._insertFunctionStep('createOutput')
+        
+        
+    def writePosFiles(self):
+        """ Write the pos file for each micrograph on metadata format. """
+        self.posFiles = writePosCoordinates(self._getExtraPath(), self.inputCoords)
+        
         
     def getCTF(self, micId, micName, micrographToExtract):
         """ Get CTFModel and flip if selected """
@@ -226,8 +236,10 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         fnCTF = None
         if micInput.hasCTF():
             micCTF = micInput.getCTF()
-            xmippCTF = XmippCTFModel.convert(micCTF, self._getTmpPath("tmp.ctfParam"))
-            fnCTF = xmippCTF.getFileName()
+            #xmippCTF = XmippCTFModel.convert(micCTF, self._getTmpPath("tmp.ctfParam"))
+            #fnCTF = xmippCTF.getFileName()
+            fnCTF = self._getTmpPath("%s.ctfParam" % removeBaseExt(micInput.getFileName()))
+            writeCTFModel(micCTF, fnCTF)
 
         return fnCTF
         
@@ -237,15 +249,19 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         if self.doFlip and self.fnCTF:
             micrographToExtract = self._getTmpPath(micName +"_flipped.xmp")
                 
+        print "micrographToExtract=%s" % micrographToExtract
         outputRoot = str(self._getExtraPath(micName))
 
-        fnPosFile = self.getConvertedInput('inputCoords').getMicrographCoordFile(micId)   
+        #fnPosFile = self.getConvertedInput('inputCoords').getMicrographCoordFile(micId)
+        fnPosFile =  self._getExtraPath(micName + ".pos")
+
         # If it has coordinates extract the particles      
         particlesMd = 'particles@%s' % fnPosFile
 
-        if fnPosFile is not None and xmipp.existsBlockInMetaDataFile(particlesMd):
+        #if fnPosFile is not None and xmipp.existsBlockInMetaDataFile(particlesMd):
+        if fnPosFile is not None:
             boxSize = self.boxSize.get()
-            args = "-i %(micrographToExtract)s --pos %(particlesMd)s -o %(outputRoot)s --Xdim %(boxSize)d" % locals()
+            args = "-i %(micrographToExtract)s --pos %(fnPosFile)s -o %(outputRoot)s --Xdim %(boxSize)d" % locals()
             if self.downsampleType.get() != self.SAME_AS_PICKING:
                 args += " --downsampling " + str(self.samplingFinal/self.samplingInput)
             if self.doInvert:
@@ -279,21 +295,22 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         
     def createOutput(self):
         # Create the SetOfImages object on the database
-        imgSet = XmippSetOfParticles(self._getPath('images.xmd'))
+        #imgSet = XmippSetOfParticles(self._getPath('images.xmd'))
+        imgSet = self._createSetOfParticles()
         imgSet.copyInfo(self.inputMics)
         imgSet.setCTF(self.fnCTF is not None)       
                  
         if self.downsampleType == self.OTHER:
-            imgSet.samplingRate.set(self.inputMics.samplingRate.get()*self.downFactor.get())
+            imgSet.setSamplingRate(self.inputMics.getSamplingRate()*self.downFactor.get())
                     
-#        for posFn in posFiles:
-        for posFn in self.getConvertedInput('inputCoords').iterCoordinatesFile():    
+        for posFn in self.posFiles:
+        #for posFn in self.getConvertedInput('inputCoords').iterCoordinatesFile():    
 #            xmdFn = posFn.replace(".pos",".xmd")
             xmdFn = self._getExtraPath(replaceBaseExt(posFn, "xmd"))
             print "xmdFn: %s" % xmdFn
             print "posFn: %s" % posFn
             md = xmipp.MetaData(xmdFn)
-            mdPos = xmipp.MetaData('particles@%s' % posFn)
+            mdPos = xmipp.MetaData(posFn)
             mdPos.merge(md) 
             imgSet.appendFromMd(mdPos)
    
@@ -301,27 +318,23 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         imgSet.write()
         
         fnImages = imgSet._getListBlock()
-        # If not tilted pairs perform a sort and a avgZscore
-        if not self.inputCoords.hasTiltPairs():
-            args="-i %(fnImages)s --addToInput"
-            if self.rejectionMethod==self.MAXZSCORE:
-                maxZscore = self.maxZscore.get()
-                args+=" --zcut "+str(maxZscore)
-            elif self.rejectionMethod==self.PERCENTAGE:
-                percentage = self.percentage.get()
-                args+=" --percent "+str(percentage)
-    
-            self.runJob(None, "xmipp_image_sort_by_statistics", args % locals())
-            md = xmipp.MetaData(fnImages) # Should have ZScore label after runJob
-            md.sort(xmipp.MDL_ZSCORE)
-            md.write(fnImages) 
-            
-            mdavgZscore = xmipp.MetaData()
-            md.read(fnImages)
-            mdavgZscore.aggregate(md, xmipp.AGGR_AVG, xmipp.MDL_MICROGRAPH, xmipp.MDL_ZSCORE, xmipp.MDL_ZSCORE)
-        # If input coordinates have tilt pairs copy the relation
-        else:
-            imgSet.copyTiltPairs(self.inputCoords, self.getImgIdFromCoord)
+
+        args="-i %(fnImages)s --addToInput"
+        if self.rejectionMethod==self.MAXZSCORE:
+            maxZscore = self.maxZscore.get()
+            args+=" --zcut "+str(maxZscore)
+        elif self.rejectionMethod==self.PERCENTAGE:
+            percentage = self.percentage.get()
+            args+=" --percent "+str(percentage)
+
+        self.runJob(None, "xmipp_image_sort_by_statistics", args % locals())
+        md = xmipp.MetaData(fnImages) # Should have ZScore label after runJob
+        md.sort(xmipp.MDL_ZSCORE)
+        md.write(fnImages) 
+        
+        mdavgZscore = xmipp.MetaData()
+        md.read(fnImages)
+        mdavgZscore.aggregate(md, xmipp.AGGR_AVG, xmipp.MDL_MICROGRAPH, xmipp.MDL_ZSCORE, xmipp.MDL_ZSCORE)
         
         self._defineOutputs(outputParticles=imgSet)
     
