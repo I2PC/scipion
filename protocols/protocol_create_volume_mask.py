@@ -170,7 +170,7 @@ def removeSmall(log,Mask,SmallSize):
 
 def symmetrize(log,Mask,Symmetry):
     if Symmetry!='c1':
-        args="-i %s --sym %s"%(Mask,Symmetry)
+        args="-i %s --sym %s --dont_wrap"%(Mask,Symmetry)
         runJob(log,"xmipp_transform_symmetrize",args)
 
 def morphology(log,Mask,MorphologicalOperation,ElementSize):
