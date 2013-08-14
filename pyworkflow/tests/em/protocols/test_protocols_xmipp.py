@@ -163,13 +163,13 @@ class TestXmippExtractParticles(TestXmippBase):
     def testExtractSameAsPicking(self):
         print "Run extract particles with downsampling factor equal to the one at picking"
         protExtract = XmippProtExtractParticles(boxSize=171, downsampleType=self.SAME_AS_PICKING, 
-                                                doFlip=False, inputCoordinates=self.protPP.outputCoordinates)
-        #protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
+                                                doFlip=False)
+        protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         self.proj.launchProtocol(protExtract, wait=True)
         
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
         
-    def atestExtractOriginal(self):
+    def testExtractOriginal(self):
         print "Run extract particles with downsampling factor equal to the original micrographs"
         protExtract = XmippProtExtractParticles(boxSize=512, downsampleType=self.ORIGINAL, doFlip=False)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
@@ -178,7 +178,7 @@ class TestXmippExtractParticles(TestXmippBase):
         
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
 
-    def atestExtractOther(self):
+    def testExtractOther(self):
         print "Run extract particles with downsampling factor equal to other"
         protExtract = XmippProtExtractParticles(boxSize=256, downsampleType=self.OTHER, downFactor=2,doFlip=False)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
