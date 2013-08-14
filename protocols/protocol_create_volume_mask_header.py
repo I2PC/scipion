@@ -92,6 +92,7 @@ DoSymmetrize=False
 Symmetry='c1'
 
 # Apply morphological operation
+""" See See [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Transform_morphology_v3] for a description of the operations """
 DoMorphological=False
 
 # {list_combo}(dilation, erosion, closing, opening){condition}(DoMorphological) Operation
