@@ -31,7 +31,7 @@ This sub-package contains the XmippProtExtractParticles protocol
 
 from pyworkflow.em import * 
 from data import *
-from convert import writeCTFModel, writePosCoordinates
+from convert import writeCTFModel, writePosCoordinates, readSetOfParticles
 from pyworkflow.utils.path import makePath, removeBaseExt, join, exists
 from xmipp3 import XmippProtocol
 from glob import glob
@@ -196,7 +196,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         # TODO: Delete temporary files
                         
         # Insert step to create output objects       
-        #self._insertFunctionStep('createOutput')
+        self._insertFunctionStep('createOutput')
         
         
     def writePosFiles(self):
@@ -296,29 +296,28 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     def createOutput(self):
         # Create the SetOfImages object on the database
         #imgSet = XmippSetOfParticles(self._getPath('images.xmd'))
-        imgSet = self._createSetOfParticles()
-        imgSet.copyInfo(self.inputMics)
-        imgSet.setCTF(self.fnCTF is not None)       
-                 
-        if self.downsampleType == self.OTHER:
-            imgSet.setSamplingRate(self.inputMics.getSamplingRate()*self.downFactor.get())
-                    
+                  
+        #Create images.xmd metadata
+        fnImages = self._getPath('images.xmd')
+        imgsXmd = xmipp.MetaData()  
         for posFn in self.posFiles:
         #for posFn in self.getConvertedInput('inputCoords').iterCoordinatesFile():    
 #            xmdFn = posFn.replace(".pos",".xmd")
             xmdFn = self._getExtraPath(replaceBaseExt(posFn, "xmd"))
-            print "xmdFn: %s" % xmdFn
-            print "posFn: %s" % posFn
             md = xmipp.MetaData(xmdFn)
             mdPos = xmipp.MetaData(posFn)
             mdPos.merge(md) 
-            imgSet.appendFromMd(mdPos)
+            #imgSet.appendFromMd(mdPos)
+            imgsXmd.unionAll(mdPos)
    
-        imgSet.sort() # We need sort?
-        imgSet.write()
+        imgsXmd.sort(xmipp.MDL_IMAGE)
+        imgsXmd.write(fnImages)
+        #imgSet.sort() # We need sort?
+        #imgSet.write()
         
-        fnImages = imgSet._getListBlock()
+        #fnImages = imgSet._getListBlock()
 
+        # Run xmipp_image_sort_by_statistics to add zscore info to images.xmd
         args="-i %(fnImages)s --addToInput"
         if self.rejectionMethod==self.MAXZSCORE:
             maxZscore = self.maxZscore.get()
@@ -336,6 +335,18 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         md.read(fnImages)
         mdavgZscore.aggregate(md, xmipp.AGGR_AVG, xmipp.MDL_MICROGRAPH, xmipp.MDL_ZSCORE, xmipp.MDL_ZSCORE)
         
+        # Create output SetOfParticles
+        imgSet = self._createSetOfParticles()
+        imgSet.copyInfo(self.inputMics)
+        imgSet.setHasCTF(self.fnCTF is not None)       
+                 
+        if self.downsampleType == self.OTHER:
+            imgSet.setSamplingRate(self.inputMics.getSamplingRate()*self.downFactor.get())
+            
+        imgSet.setCoordinates(self.inputCoords)
+        readSetOfParticles(fnImages, imgSet)
+        imgSet.write()
+            
         self._defineOutputs(outputParticles=imgSet)
     
     def _summary(self):
