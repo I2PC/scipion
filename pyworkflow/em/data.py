@@ -417,7 +417,7 @@ class SetOfParticles(SetOfImages):
         """ Set the SetOfCoordinates associates with 
         this set of particles.
          """
-        self._micrographsPointer.set(coordinates)    
+        self._coordsPointer.set(coordinates)    
 
 
 class SetOfVolumes(SetOfImages):
