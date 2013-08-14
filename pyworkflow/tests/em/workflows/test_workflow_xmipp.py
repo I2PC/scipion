@@ -19,7 +19,7 @@ class TestXmippWorkflow(TestWorkflow):
                     'protDownsampling/BPV_1386.mrc', 
                     'protDownsampling/BPV_1387.mrc', 
                     'protDownsampling/BPV_1388.mrc', 
-                    'protDownsampling/micrographs.xmd', 
+                    'protDownsampling/micrographs.sqlite', 
                     'protDownsampling/logs/run.log',
                     'protDownsampling/logs/run.db', 
                     ],
@@ -34,16 +34,16 @@ class TestXmippWorkflow(TestWorkflow):
                     'protCTF/extra/BPV_1388/xmipp_ctf_ctfmodel_halfplane.xmp', 
                     'protCTF/extra/BPV_1387/xmipp_ctf.ctfparam', 
                     'protCTF/extra/BPV_1388/xmipp_ctf_enhanced_psd.xmp', 
-                    'protCTF/tmp/micrographs.xmd', 
                     'protCTF/extra/BPV_1387/xmipp_ctf_ctfmodel_halfplane.xmp', 
                     'protCTF/extra/BPV_1387/xmipp_ctf_enhanced_psd.xmp', 
                     'protCTF/extra/BPV_1386/xmipp_ctf_ctfmodel_quadrant.xmp', 
                     'protDownsampling/BPV_1388.mrc', 
                     'protDownsampling/BPV_1387.mrc', 
-                    'protDownsampling/micrographs.xmd', 
+                    'protDownsampling/micrographs.sqlite', 
                     'protCTF/extra/BPV_1386/xmipp_ctf.psd', 
                     'protCTF/extra/BPV_1386/xmipp_ctf_ctfmodel_halfplane.xmp', 
-                    'protCTF/micrographs.xmd', 
+                    'protCTF/micrographs.sqlite',
+                    'protCTF/micrographs.xmd',  
                     'protDownsampling/BPV_1386.mrc', 
                     'protCTF/extra/BPV_1388/xmipp_ctf_ctfmodel_quadrant.xmp'],
               'protExtract':[
@@ -297,7 +297,7 @@ class TestXmippWorkflow(TestWorkflow):
         protImport = ProtImportMicrographs(pattern=self.pattern, samplingRate=1.237, voltage=300)
         self.proj.launchProtocol(protImport, wait=True)
         
-        self.assertIsNotNone(protImport.outputMicrographs, "There was a problem with the import")
+        self.assertIsNotNone(protImport.outputMicrographs.getFileName(), "There was a problem with the import")
         self.validateFiles('protImport', protImport)        
         
         # Perform a downsampling on the micrographs
@@ -327,6 +327,8 @@ class TestXmippWorkflow(TestWorkflow):
         self.protDict['protPicking'] = protPP
             
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
+        
+        exit(0)
             
         print "Run extract particles with other downsampling factor"
         protExtract = XmippProtExtractParticles(boxSize=64, downsampleType=2, downFactor=8, runMode=1, doInvert=True)
