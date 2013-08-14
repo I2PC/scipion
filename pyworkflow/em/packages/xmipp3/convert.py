@@ -140,6 +140,7 @@ def micrographToRow(mic, micRow):
 def rowToCoordinate(md, objId):
     """ Create a Coordinate from a row of a metadata. """
     coordDict = { 
+               "_id": xmipp.MDL_ITEM_ID,
                "_x": xmipp.MDL_XCOOR,
                "_y": xmipp.MDL_YCOOR,
 #               "sphericalAberration": xmipp.MDL_CTF_CS
@@ -152,6 +153,7 @@ def rowToCoordinate(md, objId):
 def coordinateToRow(coord, coordRow):
     """ Set labels values from Coordinate coord to md row. """
     coordDict = { 
+               "_id": xmipp.MDL_ITEM_ID,
                "_x": xmipp.MDL_XCOOR,
                "_y": xmipp.MDL_YCOOR
                }
@@ -160,6 +162,35 @@ def coordinateToRow(coord, coordRow):
 #    coordRow.setValue(xmipp.MDL_YCOOR, y)
       
     objectToRow(coord, coordRow, coordDict)
+
+def rowToParticle(md, objId):
+    """ Create a Particle from a row of a metadata. """
+    partDict = { 
+               "_id": xmipp.MDL_ITEM_ID,
+               "_x": xmipp.MDL_XCOOR,
+               "_y": xmipp.MDL_YCOOR,
+#               "sphericalAberration": xmipp.MDL_CTF_CS
+               }
+    part = Particle()
+    rowToObject(md, objId, part, partDict)
+    
+    return part
+
+def particleToRow(part, partRow):
+    """ Set labels values from Particle to md row. """
+    partDict = { 
+               "_id": xmipp.MDL_ITEM_ID,
+               "_x": xmipp.MDL_XCOOR,
+               "_y": xmipp.MDL_YCOOR,
+#               "defocusV": xmipp.MDL_CTF_DEFOCUSV,
+#               "defocusAngle": xmipp.MDL_CTF_DEFOCUS_ANGLE,
+#               "sphericalAberration": xmipp.MDL_CTF_CS
+               }
+    index, filename = part.getLocation()
+    fn = locationToXmipp(index, filename)
+    partRow.setValue(xmipp.MDL_IMAGE, fn)
+      
+    objectToRow(part, partRow, partDict)
     
 def readSetOfMicrographs(filename):
     pass
@@ -222,7 +253,6 @@ def writePosCoordinates(posDir, coordSet):
         
     return posFiles
     
-            
 def readSetOfCoordinates(posDir, micSet, coordSet):
     """ Read from Xmipp .pos files.
     Params:
@@ -247,4 +277,20 @@ def readSetOfCoordinates(posDir, micSet, coordSet):
             coordSet.append(coord)
 
     coordSet.setBoxSize(boxSize)
+
+def writeSetOfParticles():
+    pass
     
+def readSetOfParticles(fnImages, imgSet):
+    """read from Xmipp image metadata.
+        fnImages: The metadata filename where the particles properties are.
+        imgSet: the SetOfParticles that will be populated.
+    """
+    
+    imgMd = xmipp.MetaData(fnImages)
+
+    for objId in imgMd:
+        part = rowToParticle(imgMd, objId)
+        index, filename = xmipp.FileName(imgMd.getValue(xmipp.MDL_IMAGE, objId)).decompose()
+        part.setLocation(index, filename)
+        imgSet.append(part)
