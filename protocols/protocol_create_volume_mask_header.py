@@ -80,6 +80,18 @@ BinaryMask=""
 #-----------------------------------------------------------------------------
 # {section} Postprocess mask
 #-----------------------------------------------------------------------------
+# Remove small objects
+""" The input mask has to be binary """
+DoSmall=False
+
+# {condition}(DoSmall==True) Minimum component size
+""" Connected components whose size is smaller than this number in voxels will be removed """
+SmallSize=50
+
+# Keep largest component
+""" The input mask has to be binary """
+DoBig=False
+
 # Symmetrize
 """ Symmetrize mask """
 DoSymmetrize=False

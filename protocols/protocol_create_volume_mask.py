@@ -49,6 +49,10 @@ class ProtCreateVolumeMask(XmippProtocol):
             self.insertStep("copyFile",source=self.BinaryMask,dest=self.OutMask)
         
         # Postprocess mask
+        if self.DoSmall:
+            self.insertStep("removeSmall",Mask=self.OutMask,SmallSize=self.SmallSize)
+        if self.DoBig:
+            self.insertStep("keepLargest",Mask=self.OutMask)
         if self.DoSymmetrize:
             self.insertStep("symmetrize",Mask=self.OutMask,Symmetry=self.Symmetry)
         if self.DoMorphological:
@@ -97,6 +101,10 @@ class ProtCreateVolumeMask(XmippProtocol):
             elif self.SimpleOperation=="Raised crown":
                 messages.append("   Raised crown between %f and %f (width=%f)"%(self.InnerRadius,self.OuterRadius,self.PixelWidth))
         messages.append("<Mask processing>")
+        if self.DoSmall:
+            messages.append("   Removing components smaller than %d"%(int(self.SmallSize)))
+        if self.DoBig:
+            messages.append("   Keeping largest component")
         if self.DoSymmetrize:
             messages.append("   Symmetrized %s"%self.Symmetry)
         if self.DoMorphological:
@@ -153,6 +161,12 @@ def createRaisedCosine(log,Mask,InnerRadius,OuterRadius):
 def createRaisedCrown(log,Mask,InnerRadius,OuterRadius,PixelWidth):
     runJob(log,"xmipp_transform_mask","-i %s --mask raised_crown %d %d %d --create_mask %s"%(Mask,-int(InnerRadius),-int(OuterRadius),
                                                                                              int(PixelWidth),Mask))    
+
+def keepLargest(log,Mask):
+    runJob(log,"xmipp_transform_morphology","-i %s --binaryOperation keepBiggest"%Mask)
+
+def removeSmall(log,Mask,SmallSize):
+    runJob(log,"xmipp_transform_morphology","-i %s --binaryOperation removeSmall %d"%(Mask,int(SmallSize)))
 
 def symmetrize(log,Mask,Symmetry):
     if Symmetry!='c1':
