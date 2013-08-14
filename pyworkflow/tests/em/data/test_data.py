@@ -11,6 +11,7 @@ from pyworkflow.em.data import *
 from pyworkflow.utils.path import makePath
 from pyworkflow.em.packages.xmipp3.convert import *
 
+
 class TestImage(unittest.TestCase):
         
     def setUp(self):
@@ -89,14 +90,14 @@ class TestSetOfMicrographs(unittest.TestCase):
         micSet = SetOfMicrographs()
         micSet.setFileName(self.dbGold)
         mdFn = getOutputPath('test_data', 'micrographs.xmd')
-        from pyworkflow.em.packages.xmipp3.convert import *
         
         writeSetOfMicrographs(micSet, mdFn)
         
         # Test reading a set of coordinates
         posDir = getInputPath('Picking_XmippBPV3_Down3')
+        print "reading pos from :", posDir
         coordSet = SetOfCoordinates()
-        fn = getOutputPath('coordinates.sqlite')
+        fn = getOutputPath('test_data', 'coordinates.sqlite')
         coordSet.setFileName(fn)
         
         readSetOfCoordinates(posDir, micSet, coordSet)

@@ -222,7 +222,7 @@ def readPosCoordinates(posFile):
     """ Read the coordinates in .pos file. 
     and return corresponding metadata. 
     """
-    md = xmipp.MetaData(posFile)
+    md = xmipp.MetaData()
     blocks = xmipp.getBlocksInMetaDataFile(posFile)
     
     for b in ['particles', 'particles_auto']:
