@@ -33,7 +33,14 @@ class PostgresqlMapper(Mapper):
         self.db=PostgresqlDb(dbSettingsFile)
 # !!!! insert
     def insert(self,obj):
-        pass
+        obj._objId = self.db.insertObject(obj._objName, obj.getClassName(),
+                                          self.__getObjectValue(obj), obj._objParentId)
+        sid = obj.strId()
+        if namePrefix is None:
+            namePrefix = sid
+        else:
+            namePrefix = joinExt(namePrefix, sid)
+        self.insertChilds(obj, namePrefix)
 
 # !!!! commit
     def commit(self):
@@ -43,12 +50,14 @@ class PostgresqlMapper(Mapper):
     def selectAll(self):
         pass
 
+
 # There are some python libraries for interfacing Postgres, see
 # http://wiki.postgresql.org/wiki/Python
 # Initial election: psycopg (http://initd.org/psycopg/)
 
 import psycopg2
 import xml.etree.ElementTree as ET
+
 
 # getting connection parameters:
 # 1) explicit parameters
@@ -60,16 +69,20 @@ class PostgresqlDb():
     def __init__(self,configFile=None):
         if configFile:
             self.connectUsing(configFile)
+            self.createTables()
 
     def connect(self, database,user,password,host,port=5432):
         self.connection = psycopg2.connect(database=database, user=user, password=password, host=host, port=port)
+        self.cursor = self.connection.cursor()
 
-    # auto-closing could be implemented with atexit, @see
-    # http://stackoverflow.com/questions/974813/cleaning-up-an-internal-pysqlite-connection-on-object-destruction
+
     def close(self):
+        # auto-closing could be implemented with atexit, @see
+        # http://stackoverflow.com/questions/974813/cleaning-up-an-internal-pysqlite-connection-on-object-destruction
         self.connection.close()
 
-    # !!!! parse the config file using ConfigMapper or XMLmapper
+
+    # !!!! refactor - parse the config file using ConfigMapper or XMLmapper
     def connectUsing(self, configFile):
         """configFile is XML. @see settings/postresql.xml"""
 
@@ -85,4 +98,31 @@ class PostgresqlDb():
             port=root.find("PostgresqlConfig/port").text
 
         self.connect(database,user,password,host,port)
-        
+
+    # !!! current insertObject
+    def insertObject(self, name, classname, value, parent_id):
+        """Execute command to insert a new object. Return the inserted object id"""
+        self.executeCommand("INSERT INTO Objects (parent_id, name, classname, value) VALUES (?, ?, ?, ?)", \
+                            (parent_id, name, classname, value))
+        return self.cursor.lastrowid
+
+
+    def createTables(self):
+        """Create required tables if they don't exist"""
+        self.executeCommand("""CREATE TABLE IF NOT EXISTS Objects
+                     (id        SERIAL PRIMARY KEY,
+                      parent_id INTEGER REFERENCES Objects(id),
+                      name      TEXT,               -- object name 
+                      classname TEXT,               -- object's class name
+                      value     TEXT DEFAULT NULL   -- object value, used for Scalars
+                      )""")
+        self.commit()
+
+
+    def commit(self):
+        print "commit"
+        self.connection.commit()
+
+    def executeCommand(self,sqlQuery):
+        print "Running %s" % sqlQuery
+        self.cursor.execute(sqlQuery)

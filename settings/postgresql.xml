@@ -3,7 +3,7 @@
   <!-- Sample PostgreSql config, customize to your database  -->
   <PostgresqlConfig>
     <host>postgresql</host>
-    <database>scipion</database>
+    <database>scipiondev</database>
     <user>scipion</user>
     <password>1234</password>
   </PostgresqlConfig>

@@ -39,3 +39,8 @@ class TestMappers(unittest.TestCase):
         db= pyworkflow.mapper.postgresql.PostgresqlDb()
         dbconfig= os.path.join(self.getScipionHome() , "postgresql.xml")
         db.connectUsing(dbconfig)
+        return db
+
+    def test_createTables(self):
+        db=self.test_connectUsing()
+        db.createTables()
