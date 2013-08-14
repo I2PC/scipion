@@ -406,6 +406,18 @@ class SetOfParticles(SetOfImages):
     def __init__(self, **args):
         SetOfImages.__init__(self, **args)
         self._coordsPointer = Pointer()
+        
+    
+    def getCoordinates(self):
+        """ Returns the SetOfCoordinates associated with 
+        this SetOfParticles"""
+        return self._coordsPointer.get()
+    
+    def setCoordinates(self, coordinates):
+        """ Set the SetOfCoordinates associates with 
+        this set of particles.
+         """
+        self._micrographsPointer.set(coordinates)    
 
 
 class SetOfVolumes(SetOfImages):
