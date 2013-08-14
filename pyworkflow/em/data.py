@@ -201,6 +201,12 @@ class Micrograph(Image):
     """ Represents an EM Micrograph object """
     def __init__(self, **args):
         Image.__init__(self, **args)
+        
+        
+class Particle(Image):
+    """ Represents an EM Particle object """
+    def __init__(self, **args):
+        Image.__init__(self, **args)
 
 
 class Volume(Image):
@@ -399,6 +405,7 @@ class SetOfParticles(SetOfImages):
     """
     def __init__(self, **args):
         SetOfImages.__init__(self, **args)
+        self._coordsPointer = Pointer()
 
 
 class SetOfVolumes(SetOfImages):
