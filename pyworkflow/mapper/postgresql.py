@@ -88,9 +88,34 @@ class PostgresqlMapper(Mapper):
     def commit(self):
         pass
 
+
+
     # !!!! @current selectAll
-    def selectAll(self):
+    def selectAll(self, asIterator=False, objectFilter=None):
+        """ Return all the objects matching the filter, as a list or as an iterator"""
+        self.__initObjDict()
+        objRows = self.db.selectObjectsByParent(parent_id=None)
+        return self.__objectsFromRows(objRows, iterate, objectFilter)
+
+
+
+
+
+
         
+    def __objectsFromRows(self, objRows, asIterator=False, objectFilter=None):
+        """Returns a group of objects from a set of rows, either as an iterator or as a list.
+           You can apply an optional filter to the objects group"""
+        if asIterator:
+            return self.__iterObjectsFromRows(objRows, objectFilter)
+        else:
+            return [obj for obj in self.__iterObjectsFromRows(objRows, objectFilter)]
+
+    def __iterObjectsFromRows(self, objRows, objectFilter=None):
+        for objRow in objRows:
+            obj = self.__objFromRow(objRow)
+            if objectFilter is None or objectFilter(obj):
+                yield obj
 
 
 # There are some python libraries for interfacing Postgres, see
@@ -108,6 +133,10 @@ import xml.etree.ElementTree as ET
 
 class PostgresqlDb():
     """PostgreSql internals handling"""
+
+    SELECT = "SELECT id, parent_id, name, classname, value FROM Objects WHERE "
+    DELETE = "DELETE FROM Objects WHERE "
+
 
     def __init__(self,configFile=None):
         if configFile:
@@ -167,3 +196,32 @@ class PostgresqlDb():
     def commit(self):
         print "commit"
         self.connection.commit()
+
+
+    
+    def selectCmd(self, whereStr, orderByStr=' ORDER BY id'):
+        return self.SELECT + whereStr + orderByStr
+
+
+    def selectObjectsByParent(self, parent_id=None, iterate=False):
+        """Select object with a parent matching parent_id, or no parent (if parent_id is None)"""
+        if parent_id is None:
+            self.cursor.execute(self.selectCmd("parent_id is NULL"))
+        else:
+            self.cursor.execute(self.selectCmd("parent_id=%s"), (parent_id,))
+        return self._results(iterate)  
+
+
+    def _results(self, asIterator=False):
+        """ Return the results of a previous query, either as a list or as an iterator"""
+        if asIterator:
+            return self._iterResults()
+        else:
+            return self.cursor.fetchall()
+
+
+    def _iterResults(self):
+        row = self.cursor.fetchone()
+        while row is not None:
+            yield row
+            row = self.cursor.fetchone()

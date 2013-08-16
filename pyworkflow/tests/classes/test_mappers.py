@@ -50,3 +50,8 @@ class TestMappers(unittest.TestCase):
        mapper = pyworkflow.mapper.postgresql.PostgresqlMapper(dbconfig)
        i = Integer(4)
        mapper.insert(i)
+
+    def test_selectObjectsByParent(self):
+        db=self.test_connectUsing()
+        objects=db.selectObjectsByParent()
+        print objects
