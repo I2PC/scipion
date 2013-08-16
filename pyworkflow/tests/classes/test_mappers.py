@@ -14,6 +14,8 @@ from pyworkflow.object import *
 # @see test_object.TestPyworkflow.test_SqliteMapper
 class TestMappers(unittest.TestCase):
 
+    # !!!! add some asserts to the tests
+
     def getScipionHome(self):
         if "SCIPION_HOME" not in os.environ:
             raise Exception("SCIPION_HOME is not defined as environment variable")

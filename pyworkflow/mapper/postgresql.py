@@ -177,7 +177,9 @@ class PostgresqlDb():
         self.cursor.execute("""INSERT INTO Objects (id, parent_id, name, classname, value)
                                VALUES (DEFAULT,%s, %s, %s, %s) RETURNING id""", 
                            (parent_id, name, classname, value))
-        return self.cursor.fetchone()[0]
+        insertedObjectId=self.cursor.fetchone()[0]
+        self.commit()
+        return insertedObjectId
         # !!!! commit?
 
 
