@@ -26,6 +26,8 @@
 
 from mapper import Mapper
 
+FIELD_CLASSNAME="classname"
+
 class PostgresqlMapper(Mapper):
     """Specific Mapper implementation using postgresql database"""
     def __init__(self ,dbSettingsFile, dictClasses=None):
@@ -89,33 +91,92 @@ class PostgresqlMapper(Mapper):
         pass
 
 
+    def updateFrom(self, obj):
+        objectData = self.db.selectObjectById(obj._objId)
+        self.unpack(objectData, obj)
+
 
     # !!!! @current selectAll
     def selectAll(self, asIterator=False, objectFilter=None):
         """ Return all the objects matching the filter, as a list or as an iterator"""
         self.__initObjDict()
-        objRows = self.db.selectObjectsByParent(parent_id=None)
-        return self.__objectsFromRows(objRows, iterate, objectFilter)
+        objectsData = self.db.selectObjectsByParent(parent_id=None)
+        return self.__unpackObjects(objectsData, asIterator, objectFilter)
 
 
-
-
-
-
+    def __initObjDict(self):
+        """ Clear the object cache dictionary"""        
+        self.objDict = {}
         
-    def __objectsFromRows(self, objRows, asIterator=False, objectFilter=None):
+
+    # def __objectsFromRows(self, objRows, asIterator=False, objectFilter=None):
+    def __unpackObjects(self, objectsData, asIterator=False, objectFilter=None):
         """Returns a group of objects from a set of rows, either as an iterator or as a list.
            You can apply an optional filter to the objects group"""
         if asIterator:
-            return self.__iterObjectsFromRows(objRows, objectFilter)
+            return self.__iterUnpackObjects(objectsData, objectFilter)
         else:
-            return [obj for obj in self.__iterObjectsFromRows(objRows, objectFilter)]
+            return [obj for obj in self.__iterUnpackObjects(objectsData, objectFilter)]
 
-    def __iterObjectsFromRows(self, objRows, objectFilter=None):
-        for objRow in objRows:
-            obj = self.__objFromRow(objRow)
+    # def __iterObjectsFromRows(self, objRows, objectFilter=None):
+    def __iterUnpackObjects(self, objectsData, objectFilter=None):
+        for objectData in objectsData:
+            obj = self.unpack(objectData)
+
             if objectFilter is None or objectFilter(obj):
                 yield obj
+
+
+    # def fillObject(self, obj, objRow):
+    # other name would be restoreObjectAndAttributes
+    def unpack(self, objectData, obj=None):
+        """Restore the object from objectData, and restore all of its attributes (children objects)
+           from the database."""
+        if obj == None:
+            obj = self._buildObject(objectData[FIELD_CLASSNAME])
+
+        self.restoreObject(obj, objectData)
+
+        namePrefix = self.__getNamePrefix(obj)
+        childrenData = self.db.selectObjectsByAncestor(namePrefix)
+        
+        for childData in childrenData:
+            childHierarchy = childData['name'].split('.')
+            childName = childHierarchy[-1]
+            parentId = int(childHierarchy[-2])
+
+            # Here we are assuming that the parent will always  have
+            # been processed first, so it will be in the dictiorary
+            parentObj = self.objDict[parentId]
+            
+            childObj = getattr(parentObj, childName, None)
+            # setattr(parentObj, childName, childObj) - it is set in restoreObject...
+            self.restoreObject(childObj, childData)  
+        return obj
+
+    # def fillObjectWithRow(self, obj, objectData):              
+    def restoreObject(self, obj, objectData):
+        """Restore only the object itself from objectData (no attributes restoration)"""
+        obj._objId = objectData['id']
+
+        self.objDict[obj._objId] = obj
+
+        name = objectData['name']
+        if name is None or len(name) <= 0:
+            obj._objName = ''#obj.strId()
+        else:
+            obj._objName = name
+
+        objValue = objectData['value']
+
+        obj._objParentId = objectData['parent_id']
+
+        if obj.isPointer():
+            if objValue is not None:
+                objValue = self.selectById(int(objValue))
+
+        obj.set(objValue)
+
 
 
 # There are some python libraries for interfacing Postgres, see
@@ -124,6 +185,7 @@ class PostgresqlMapper(Mapper):
 # http://initd.org/psycopg/docs/usage.html
 
 import psycopg2
+import psycopg2.extras
 import xml.etree.ElementTree as ET
 
 
@@ -134,7 +196,8 @@ import xml.etree.ElementTree as ET
 class PostgresqlDb():
     """PostgreSql internals handling"""
 
-    SELECT = "SELECT id, parent_id, name, classname, value FROM Objects WHERE "
+    OBJECT_FIELDS="id, parent_id, name, " + FIELD_CLASSNAME + ", value"
+    SELECT = "SELECT " + OBJECT_FIELDS + " FROM Objects WHERE "
     DELETE = "DELETE FROM Objects WHERE "
 
 
@@ -145,7 +208,7 @@ class PostgresqlDb():
 
     def connect(self, database,user,password,host,port=5432):
         self.connection = psycopg2.connect(database=database, user=user, password=password, host=host, port=port)
-        self.cursor = self.connection.cursor()
+        self.cursor = self.connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
 
     def close(self):
@@ -171,16 +234,15 @@ class PostgresqlDb():
 
         self.connect(database,user,password,host,port)
 
-    # !!!! current insertObject
+
     def insertObject(self, name, classname, value, parent_id):
         """Execute command to insert a new object. Return the inserted object id"""
-        self.cursor.execute("""INSERT INTO Objects (id, parent_id, name, classname, value)
+        self.cursor.execute("INSERT INTO Objects (id, parent_id, name," + FIELD_CLASSNAME + """, value)
                                VALUES (DEFAULT,%s, %s, %s, %s) RETURNING id""", 
                            (parent_id, name, classname, value))
         insertedObjectId=self.cursor.fetchone()[0]
         self.commit()
         return insertedObjectId
-        # !!!! commit?
 
 
     def createTables(self):
@@ -189,7 +251,7 @@ class PostgresqlDb():
                      (id        SERIAL PRIMARY KEY,
                       parent_id INTEGER REFERENCES Objects(id),
                       name      TEXT,               -- object name 
-                      classname TEXT,               -- object's class name
+                      """ + FIELD_CLASSNAME + """ TEXT,               -- object's class name
                       value     TEXT DEFAULT NULL   -- object value, used for Scalars
                       )""")
         self.commit()
@@ -212,6 +274,12 @@ class PostgresqlDb():
         else:
             self.cursor.execute(self.selectCmd("parent_id=%s"), (parent_id,))
         return self._results(iterate)  
+
+
+    def selectObjectsByAncestor(self, ancestor_namePrefix, asIterator=False):
+        """Select all objects in the hierachy of ancestor_id"""
+        self.cursor.execute(self.selectCmd("name LIKE '%s.%%'" % ancestor_namePrefix))
+        return self._results(asIterator)          
 
 
     def _results(self, asIterator=False):

@@ -48,12 +48,18 @@ class TestMappers(unittest.TestCase):
 
     def test_insert(self):
        dbconfig= os.path.join(self.getScipionHome() , "postgresql.xml")
-  
        mapper = pyworkflow.mapper.postgresql.PostgresqlMapper(dbconfig)
        i = Integer(4)
        mapper.insert(i)
 
+    # !!!! actually select some object by its parent id
     def test_selectObjectsByParent(self):
         db=self.test_connectUsing()
         objects=db.selectObjectsByParent()
         print objects
+
+    def test_selectAll(self):
+       dbconfig= os.path.join(self.getScipionHome() , "postgresql.xml")
+       mapper = pyworkflow.mapper.postgresql.PostgresqlMapper(dbconfig)
+       for object in mapper.selectAll():
+           object.printAll()
