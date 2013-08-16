@@ -86,15 +86,16 @@ class EmanProtBoxing(ProtParticlePicking):
         self.runJob(None, program, arguments % self._params)
         
     def createOutput(self):
-        coodrSet = self._createSetOfCoordinates()
-        coordSet.setFileName(fn)
+        workDir = self.workingDir.get()
+        self._leaveWorkingDir()
+        coordSet = self._createSetOfCoordinates()
         coordSet.setMicrographs(self.inputMics)
-        readSetOfCoordinates(self.inputMics, coordSet)
+        readSetOfCoordinates(workDir, self.inputMics, coordSet)
         coordSet.write()
         self._defineOutputs(outputCoordinates=coordSet)
         # As we move to workingDir we must leave it. 
-        self._leaveWorkingDir()    
-
+        
+        
     def getFiles(self):
         filePaths = self.inputMicrographs.get().getFiles() | ProtParticlePicking.getFiles(self)
         return filePaths
