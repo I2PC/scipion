@@ -246,7 +246,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 		filemn.add(savemi);
-		importmi = new JMenuItem("Import Particles...", XmippResource.getIcon("import_wiz.gif"));
+		importmi = new JMenuItem("Import coordinates...", XmippResource.getIcon("import_wiz.gif"));
 		filemn.add(importmi);
 		if (picker.getMode() != Mode.Manual)
 			importmi.setEnabled(false);
@@ -307,7 +307,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		});
 		helpmn.add(hcontentsmi);
 
-		keyassistmi = new JMenuItem("Key Assist...");
+		keyassistmi = new JMenuItem("Key assist...");
 		keyassistmi.addActionListener(new ActionListener()
 		{
 
@@ -366,7 +366,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		addFilterMenuItem(ParticlePicker.xmippsmoothfilter, true, picker);
 		addFilterMenuItem("Bandpass Filter...", true, picker);
 
-		JCheckBoxMenuItem admi = addFilterMenuItem("Anisotropic Diffusion...", false, picker);
+		JCheckBoxMenuItem admi = addFilterMenuItem("Anisotropic diffusion...", false, picker);
 		admi.addActionListener(new ActionListener()
 		{
 
@@ -779,7 +779,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				p.resetParticleCanvas();
 			loadParticles();
 		}
-		//		getParticlePicker().saveFamilies();
+		
 		getParticlePicker().saveConfig();
 	}
 

@@ -45,6 +45,8 @@ public:
     bool            do_not_generate_subgroup;
     /// wrap or don't wrap input file during symmetrisation
     bool            wrap;
+    /// Sum or average the result
+    bool            sum;
 public:
     /** Read parameters from command line. */
     void readParams();
@@ -70,11 +72,11 @@ public:
 /** Symmetrize volume.*/
 void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
                       MultidimArray<double> &V_out,
-                      bool wrap=true, bool do_outside_avg=false);
+                      bool wrap=true, bool do_outside_avg=false, bool sum=false);
 
 /** Symmetrize image.*/
 void symmetrizeImage(int symorder, const MultidimArray<double> &I_in,
                       MultidimArray<double> &I_out,
-                      bool wrap=true, bool do_outside_avg=false);
+                      bool wrap=true, bool do_outside_avg=false, bool sum=false);
 //@}
 #endif

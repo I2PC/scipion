@@ -52,10 +52,10 @@ public abstract class ParticlePicker
 	static String xmippsmoothfilter = "Xmipp Smooth Filter";
 	public static final String particlesAutoBlock = "particles_auto";
 
-	private Color color;
-	private int size;
+	protected Color color;
+	protected int size;
 
-	public static final int sizemax = 800;
+	public static final int sizemax = 1048;
 	protected String block;
 	Format[] formats = new Format[] { Format.Xmipp24, Format.Xmipp30, Format.Xmipp301, Format.Eman };
 
@@ -505,23 +505,25 @@ public abstract class ParticlePicker
 	/** Return the number of particles imported from a file */
 	public void fillParticlesMdFromFile(String path, Format f, Micrograph m, MetaData md, float scale, boolean invertx, boolean inverty)
 	{
-
 		if (f == Format.Auto)
 			f = detectFileFormat(path);
-
+		
 		switch (f)
 		{
 		case Xmipp24:
 			md.readPlain(path, "xcoor ycoor");
 			break;
 		case Xmipp30:
-			String blockname = getParticlesBlockName(f);
-			if (!MetaData.containsBlock(path, blockname))
-				throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg(blockname));
-			md.read(getParticlesBlock(f, path));
-			break;
+			String blockname = getParticlesBlockName(f); //only used with Xmipp
+			if (MetaData.containsBlock(path, blockname))
+				md.read(getParticlesBlock(f, path));
 		case Xmipp301:
-			md.read(ParticlePicker.getParticlesBlock(f, path));
+			if (MetaData.containsBlock(path, particlesAutoBlock)){
+				MetaData mdAuto = new MetaData();
+				mdAuto.read(getParticlesAutoBlock(path));
+				md.unionAll(mdAuto);
+				mdAuto.destroy();
+			}
 			break;
 		case Eman:
 			fillParticlesMdFromEmanFile(path, m, md, scale);
@@ -544,14 +546,16 @@ public abstract class ParticlePicker
 	{
 		// inverty = true;
 		md.readPlain(file, "xcoor ycoor particleSize");
-
+		System.err.format("After readPlain: md.size: %d\n", md.size());
+		
 		long fid = md.firstObject();
 		int size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, fid);
-		if (size > 0)
-			setSize(Math.round(size * scale));
+		
 		int half = size / 2;
+		System.err.format("Operate string: %s\n", String.format("xcoor=xcoor+%d,ycoor=ycoor+%d", half, half));
 		md.operate(String.format("xcoor=xcoor+%d,ycoor=ycoor+%d", half, half));
-
+		
+		setSize(Math.round(size * scale));
 	}// function fillParticlesMdFromEmanFile
 
 	public void runXmippProgram(String program, String args)

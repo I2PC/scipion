@@ -191,6 +191,7 @@ void insertNeighbour(Matrix2D<int> &idx, Matrix2D<double> &distance, int i1, int
 
 void kNearestNeighbours(const Matrix2D<double> &X, int K, Matrix2D<int> &idx, Matrix2D<double> &distance, DimRedDistance2 f, bool computeSqrt)
 {
+	K=std::min(K,(int)MAT_YSIZE(X)-1);
 	idx.initConstant(MAT_YSIZE(X),K,-1);
 	distance.initConstant(MAT_YSIZE(X),K,1e38);
 	for (size_t i1=0; i1<MAT_YSIZE(X)-1; ++i1)

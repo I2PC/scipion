@@ -1207,14 +1207,17 @@ void Mask::write_mask(const FileName &fn)
 }
 
 
-void Mask::defineParams(XmippProgram * program, int allowed_data_types, const char* prefix, const char* comment)
+void Mask::defineParams(XmippProgram * program, int allowed_data_types, const char* prefix, const char* comment, bool moreOptions)
 {
     char tempLine[256];
 
+    char advanced=' ';
+    if (moreOptions)
+    	advanced='+';
     if(prefix == NULL)
-        sprintf(tempLine, "  [--mask <mask_type=circular>] ");
+        sprintf(tempLine, "  [--mask%c <mask_type=circular>] ",advanced);
     else
-        sprintf(tempLine,"%s --mask <mask_type=circular> ", prefix);
+        sprintf(tempLine,"%s --mask%c <mask_type=circular> ", prefix,advanced);
     if (comment != NULL)
         sprintf(tempLine, "%s : %s", tempLine, comment);
 
@@ -1271,10 +1274,13 @@ void Mask::defineParams(XmippProgram * program, int allowed_data_types, const ch
         program->addParamsLine("         sinc <w>          : 2D or 3D sincs");
         program->addParamsLine("                             :  if w > 0 => outside sinc");
         program->addParamsLine("                             :  if w < 0 => inside sinc");
-        program->addParamsLine("   [ -m <blob_order=2>]       : Order of blob");
-        program->addParamsLine("   [ -a <blob_alpha=10.4>]    : Alpha of blob");
+        sprintf(tempLine, "   [ -m%c <blob_order=2>]       : Order of blob",advanced);
+        program->addParamsLine(tempLine);
+        sprintf(tempLine, "   [ -a%c <blob_alpha=10.4>]    : Alpha of blob",advanced);
+        program->addParamsLine(tempLine);
     }
-    program->addParamsLine("   [--center <x0=0> <y0=0> <z0=0>]: mask center");
+    sprintf(tempLine, "   [--center%c <x0=0> <y0=0> <z0=0>]: mask center",advanced);
+    program->addParamsLine(tempLine);
 }
 
 void Mask::readParams(XmippProgram * program)

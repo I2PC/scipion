@@ -87,6 +87,11 @@ void ProgPSDSort::defineParams()
     addUsageLine("+This criterion reports the correlation between the experimental and theoretical PSDs ");
     addUsageLine("+within this region. High correlations indicate good fits.");
     addUsageLine("+ ");
+    addUsageLine("+$ *Non-astigmatic validity*: if we consider the CTF cosine part in the direction U and V ");
+    addUsageLine("+and add both as if they were waves, this criterion shows the frequency (in Angstroms) at which ");
+    addUsageLine("+both waves would interfere completely destructively. Beyond this frequency, it cannot be assumed that ");
+    addUsageLine("+a non-astigmatic CTF correction can manage an astigmatic CTF");
+    addUsageLine("+ ");
     addUsageLine("+$ *PSD correlation at 90 degrees*: The PSD of non-astigmatic micrographs correlate well ");
     addUsageLine("+with itself after rotating the micrograph 90 degrees. This is so because non-astigmatic ");
     addUsageLine("+PSDs are circularly symmetrical, while astigmatic micrographs are elliptically symmetrical.");
@@ -162,6 +167,28 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
     	CTF2.read(fnCTF2);
     	CTF2.produceSideInfo();
     }
+
+    // Evaluate beating due to astigmatism
+    /* The argument of the cosine part of the CTF is:                     wu=cos(K1*deltafu*u.^2+K2*u.^4)
+     * If there is no astigmatism, then in the V direction we would have  wv=cos(K1*deltafv*u.^2+K2*u.^4)
+     * and we should have (wu+wv)/2 = wu.
+     * If there is astigmatism, the sum (wu+wv)/2 will depart from the behavior of wu
+     * http://en.wikipedia.org/wiki/Beat_%28acoustics%29
+     * calling argu and argv the argument of the two waves, we have
+     *
+     * (wu+wv)/2=cos((argu+argv)/2)cos((argu-argv)/2)
+     *
+     * The term cos((argu-argv)/2) acts as an envelope which may even vanish. Let's analyze this envelope
+     * cos(0.5*(K1*deltafu*u.^2+K2*u.^4-K1*deltafv*u.^2+K2*u.^4))=cos(0.5*K1*abs(deltafu-deltafv)*u^2)
+     *
+     * When this envelope is 0, the interference between the two waves is totally destructive (we cannot apply a
+     * non-astigmatic correction to an astigmatic CTF). This happens for
+     *
+     * 0.5*K1*abs(deltafu-deltafv)*u_0^2=pi/2 ---> u_0=sqrt(PI/(K1*abs(deltafu-deltafv)))
+     *
+     * This is the expression of critBeating
+     */
+    evaluation.beating=1.0/sqrt(PI/(CTF1.K1*abs(CTF1.DeltafU-CTF1.DeltafV)));
 
     // Enhance the PSD
     ProgCTFEnhancePSD enhancePSD;
@@ -281,6 +308,7 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
     rowOut.setValue(MDL_CTF_CRIT_FIRSTZERORATIO,evaluation.firstZeroRatio);
     rowOut.setValue(MDL_CTF_CRIT_FITTINGSCORE,evaluation.fittingScore);
     rowOut.setValue(MDL_CTF_CRIT_FITTINGCORR13,evaluation.fittingCorr13);
+    rowOut.setValue(MDL_CTF_CRIT_NONASTIGMATICVALIDITY,evaluation.beating);
     rowOut.setValue(MDL_CTF_CRIT_PSDCORRELATION90,evaluation.PSDcorrelation90);
     rowOut.setValue(MDL_CTF_CRIT_PSDRADIALINTEGRAL,evaluation.PSDradialIntegral);
     rowOut.setValue(MDL_CTF_CRIT_PSDVARIANCE,evaluation.PSDVariance);

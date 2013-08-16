@@ -5,11 +5,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import xmipp.jni.Particle;
-import xmipp.utils.TasksManager;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.Micrograph;
-import xmipp.viewer.particlepicker.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.PickerParticle;
+
 import java.awt.Rectangle;
 
 public class SingleParticlePickerMicrograph extends Micrograph
