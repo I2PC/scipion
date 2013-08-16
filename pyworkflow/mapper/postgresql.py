@@ -315,6 +315,21 @@ class PostgresqlDb():
         return self.cursor.fetchone()
 
 
+    def selectObjectsBy(self, asIterator=False, **args):     
+        """Select based on a constrain dictionary, where all of them must be fulfilled"""
+        whereList = ['%s=%%s' % k for k in args.keys()]
+        whereStr = ' AND '.join(whereList)
+        print whereStr
+        whereTuple = tuple(args.values())
+        self.cursor.execute(self.selectCmd(whereStr), whereTuple)
+        return self._results(asIterator)
+
+    
+    def selectObjectsWhere(self, whereStr, asIterator=False):
+        self.cursor.execute(self.selectCmd(whereStr))
+        return self._results(asIterator)   
+
+
 
     def _results(self, asIterator=False):
         """ Return the results of a previous query, either as a list or as an iterator"""

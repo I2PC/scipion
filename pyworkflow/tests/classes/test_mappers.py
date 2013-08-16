@@ -69,6 +69,12 @@ class TestMappers(unittest.TestCase):
        object.printAll()
         
 
+    def test_selectBy(self):
+        db=self.test_connectUsing()
+        objects=db.selectObjectsBy(id= 3, value="4")
+        print objects
+
+
     def test_selectAll(self):
        dbconfig= os.path.join(self.getScipionHome() , "postgresql.xml")
        mapper = pyworkflow.mapper.postgresql.PostgresqlMapper(dbconfig)
