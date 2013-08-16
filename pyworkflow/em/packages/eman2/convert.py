@@ -86,14 +86,15 @@ def readPosCoordinates(posFile):
             
 def readSetOfCoordinates(workDir, micSet, coordSet):
     """ Read from Eman .json files.
+    It is expected a file named: base.json under the workDir.
     Params:
-            It is expected a file named: base.json.
+        workDir: where the Eman boxer output files are located.
         micSet: the SetOfMicrographs to associate the .json, which 
             name should be the same of the micrographs.
         coordSet: the SetOfCoordinates that will be populated.
     """
     # Read the boxSize from the e2boxercache/base.json
-    jsonFnbase = join(workDir, 'e2boxercache/base.json')
+    jsonFnbase = join(workDir, 'e2boxercache', 'base.json')
     jsonBoxDict = loadJson(jsonFnbase)
     size = int(jsonBoxDict["box_size"])
     
@@ -102,14 +103,12 @@ def readSetOfCoordinates(workDir, micSet, coordSet):
         micPosRelFn = join("info", micFnroot)
         micPosFn = join(workDir, micPosRelFn)
         
-        
         if exists(micPosFn):
             jsonPosDict = loadJson(micPosFn)
             boxes = jsonPosDict["boxes"]
 
             for box in boxes:
-                x = box[0]
-                y = box[1]
+                x, y = box[:2] 
                 coord = Coordinate()
                 coord.setPosition(x, y)
                 coord.setMicrograph(mic)
