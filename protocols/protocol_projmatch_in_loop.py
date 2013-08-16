@@ -369,9 +369,8 @@ def angular_class_average(_log
         return
 
     parameters = ' -i ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]\$@' + DocFileInputAngles + \
-                  ' --lib ' + refname.replace(".stk", ".doc") + \
-                  ' --pcaSorting ' + \
-		  ' -o ' + OutClasses
+                 ' --lib ' + refname.replace(".stk", ".doc") + \
+                 ' -o ' + OutClasses
     if(DoSaveImagesAssignedToClasses):
         parameters += ' --save_images_assigned_to_classes'  
                   
