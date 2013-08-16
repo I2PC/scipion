@@ -300,6 +300,7 @@ VJPEG=jpeg-8c
 VHDF5=hdf5-1.8.10
 VARPACK=arpack++-2.3
 VNUMPY=numpy-1.6.1
+VSCIPY=scipy-0.12.0
 VMATLIBPLOT=matplotlib-1.1.0
 VPYMPI=mpi4py-1.2.2
 #read star files
@@ -650,9 +651,11 @@ if $DO_PYMOD; then
     echoExec "cd $EXT_PYTHON/tcl$VTCLTK/unix/"
     echoExec "ln -sf libtcl8.5.so  libtcl.so"
   fi
-compile_pymodule $VMATLIBPLOT
-compile_pymodule $VPYMPI
-compile_pymodule $VPYCIFRW
+  compile_pymodule $VMATLIBPLOT
+  compile_pymodule $VPYMPI
+  compile_pymodule $VPYCIFRW
+  export LDFLAGS="-shared $LDFLAGS"
+  compile_pymodule $VSCIPY
 fi
 
 #################### ARPACK ###########################
