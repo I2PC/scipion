@@ -10,6 +10,7 @@ from config_protocols import protDict
 from protlib_base import *
 from protlib_utils import runJob
 from protlib_filesystem import createLink, copyFile
+from protlib_xmipp import redStr
 import xmipp
 from glob import glob
 from os.path import exists, join
@@ -63,6 +64,10 @@ class ProtParticlePicking(XmippProtocol):
         size = getMdSize(self.MicrographsMd)
         summary = ["Input: [%s] with <%u> %s" % (self.importDir, size, suffix),         
                    "Number of %(items)s manually picked: <%(particles)d> (from <%(micrographs)d> micrographs)" % locals()]
+        md=xmipp.MetaData(self.MicrographsMd)
+        if not md.containsLabel(xmipp.MDL_CTF_MODEL):
+            summary.append(redStr("There is no CTF information in the input micrographs: "))
+            summary.append("[%s]"%self.MicrographsMd)
         
         return summary
     

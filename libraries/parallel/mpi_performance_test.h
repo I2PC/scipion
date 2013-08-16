@@ -25,9 +25,10 @@
 #ifndef _PROG_PERFORMANCE_TEST
 #define _PROG_PERFORMANCE_TEST
 
+#include <parallel/xmipp_mpi.h>
 #include <data/metadata.h>
 #include <classification/pca.h>
-#include <parallel/xmipp_mpi.h>
+
 
 class ProgPerformanceTest: public XmippProgram
 {

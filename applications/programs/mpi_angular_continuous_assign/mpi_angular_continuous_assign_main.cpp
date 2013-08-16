@@ -25,8 +25,9 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <reconstruction/angular_continuous_assign.h>
 #include <parallel/xmipp_mpi.h>
+#include <reconstruction/angular_continuous_assign.h>
+
 
 CREATE_MPI_METADATA_PROGRAM(ProgAngularContinuousAssign, MpiProgAngularContinuousAssign)
 

@@ -24,8 +24,9 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <data/image_resize.h>
 #include <parallel/xmipp_mpi.h>
+#include <data/image_resize.h>
+
 
 CREATE_MPI_METADATA_PROGRAM(ProgImageResize, MpiProgImageResize)
 
