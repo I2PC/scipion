@@ -23,7 +23,6 @@ class TestMappers(unittest.TestCase):
 
     def test_PostgresqlMapper(self):
         # Note: general-purpose exception-handling is handled by Pyunit
-        # psql conn parameters? psql python library? !!!
         mapper = pyworkflow.mapper.postgresql.PostgresqlMapper()
 
         i = Integer(4)
@@ -44,3 +43,10 @@ class TestMappers(unittest.TestCase):
     def test_createTables(self):
         db=self.test_connectUsing()
         db.createTables()
+
+    def test_insert(self):
+       dbconfig= os.path.join(self.getScipionHome() , "postgresql.xml")
+  
+       mapper = pyworkflow.mapper.postgresql.PostgresqlMapper(dbconfig)
+       i = Integer(4)
+       mapper.insert(i)

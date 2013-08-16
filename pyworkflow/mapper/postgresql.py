@@ -31,8 +31,26 @@ class PostgresqlMapper(Mapper):
     def __init__(self ,dbSettingsFile, dictClasses=None):
         Mapper.__init__(self,dictClasses)
         self.db=PostgresqlDb(dbSettingsFile)
-# !!!! insert
+
+
+
+    def __getNamePrefix(self, obj):
+        if len(obj._objName) > 0 and '.' in obj._objName:
+            return replaceExt(obj._objName, obj.strId())
+        return obj.strId()
+
+
+    def __getObjectValue(self, obj):
+        if obj.isPointer() and obj.hasValue():
+            return obj.get().strId() # For pointers store the id of referenced object
+        return obj.getObjValue()
+
+
+    # !!!! insert
     def insert(self,obj):
+        self.__insert(obj)
+
+    def __insert(self, obj, namePrefix=None):
         obj._objId = self.db.insertObject(obj._objName, obj.getClassName(),
                                           self.__getObjectValue(obj), obj._objParentId)
         sid = obj.strId()
@@ -42,18 +60,43 @@ class PostgresqlMapper(Mapper):
             namePrefix = joinExt(namePrefix, sid)
         self.insertChilds(obj, namePrefix)
 
-# !!!! commit
+
+    # !!!! refactor namePrefix?
+
+
+    def insertChild(self, obj, key, attr, namePrefix=None):
+        if namePrefix is None:
+            namePrefix = self.__getNamePrefix(obj)
+        attr._objName = joinExt(namePrefix, key)
+        attr._objParentId = obj._objId
+        self.__insert(attr, namePrefix)
+
+
+    # !!!! rename/refactor as insertChildren
+    def insertChilds(self,obj,namePrefix):
+        """ Inserts children of an object. """
+
+        # This is also done in insertChild, but getting the prefix here avoids 
+        # doing it for every child element
+        if namePrefix is None:
+            namePrefix = self.__getNamePrefix(obj)
+
+        for key, attr in obj.getAttributesToStore():
+            self.insertChild(obj, key, attr, namePrefix)
+
+    # !!!! commit
     def commit(self):
         pass
 
-# !!!! selectAll
+    # !!!! @current selectAll
     def selectAll(self):
-        pass
+        
 
 
 # There are some python libraries for interfacing Postgres, see
 # http://wiki.postgresql.org/wiki/Python
 # Initial election: psycopg (http://initd.org/psycopg/)
+# http://initd.org/psycopg/docs/usage.html
 
 import psycopg2
 import xml.etree.ElementTree as ET
@@ -99,17 +142,19 @@ class PostgresqlDb():
 
         self.connect(database,user,password,host,port)
 
-    # !!! current insertObject
+    # !!!! current insertObject
     def insertObject(self, name, classname, value, parent_id):
         """Execute command to insert a new object. Return the inserted object id"""
-        self.executeCommand("INSERT INTO Objects (parent_id, name, classname, value) VALUES (?, ?, ?, ?)", \
-                            (parent_id, name, classname, value))
-        return self.cursor.lastrowid
+        self.cursor.execute("""INSERT INTO Objects (id, parent_id, name, classname, value)
+                               VALUES (DEFAULT,%s, %s, %s, %s) RETURNING id""", 
+                           (parent_id, name, classname, value))
+        return self.cursor.fetchone()[0]
+        # !!!! commit?
 
 
     def createTables(self):
         """Create required tables if they don't exist"""
-        self.executeCommand("""CREATE TABLE IF NOT EXISTS Objects
+        self.cursor.execute("""CREATE TABLE IF NOT EXISTS Objects
                      (id        SERIAL PRIMARY KEY,
                       parent_id INTEGER REFERENCES Objects(id),
                       name      TEXT,               -- object name 
@@ -122,7 +167,3 @@ class PostgresqlDb():
     def commit(self):
         print "commit"
         self.connection.commit()
-
-    def executeCommand(self,sqlQuery):
-        print "Running %s" % sqlQuery
-        self.cursor.execute(sqlQuery)
