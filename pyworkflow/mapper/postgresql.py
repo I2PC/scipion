@@ -32,8 +32,12 @@ class PostgresqlMapper(Mapper):
     """Specific Mapper implementation using postgresql database"""
     def __init__(self ,dbSettingsFile, dictClasses=None):
         Mapper.__init__(self,dictClasses)
-        self.db=PostgresqlDb(dbSettingsFile)
-
+        self.__initObjDict()
+        try:
+            self.db=PostgresqlDb(dbSettingsFile)
+        except Exception, ex:
+            raise Exception('Error creating PostgresqlMapper, settings file: %s\n error: %s' % (dbSettingsFile, ex))
+            
 
 
     def __getNamePrefix(self, obj):
@@ -47,8 +51,8 @@ class PostgresqlMapper(Mapper):
             return obj.get().strId() # For pointers store the id of referenced object
         return obj.getObjValue()
 
+    # insert methods
 
-    # !!!! insert
     def insert(self,obj):
         self.__insert(obj)
 
@@ -64,8 +68,6 @@ class PostgresqlMapper(Mapper):
 
 
     # !!!! refactor namePrefix?
-
-
     def insertChild(self, obj, key, attr, namePrefix=None):
         if namePrefix is None:
             namePrefix = self.__getNamePrefix(obj)
@@ -86,9 +88,9 @@ class PostgresqlMapper(Mapper):
         for key, attr in obj.getAttributesToStore():
             self.insertChild(obj, key, attr, namePrefix)
 
-    # !!!! commit
+
     def commit(self):
-        pass
+        self.db.commit()
 
 
     def updateFrom(self, obj):
@@ -96,12 +98,31 @@ class PostgresqlMapper(Mapper):
         self.unpack(objectData, obj)
 
 
-    # !!!! @current selectAll
+    # select methods
+
     def selectAll(self, asIterator=False, objectFilter=None):
         """ Return all the objects matching the filter, as a list or as an iterator"""
         self.__initObjDict()
         objectsData = self.db.selectObjectsByParent(parent_id=None)
         return self.__unpackObjects(objectsData, asIterator, objectFilter)
+
+
+    def selectById(self, objId):
+        """Return the object which id in the database is objId"""
+        if objId in self.objDict:
+            obj = self.objDict[objId]
+        else:
+            objectData = self.db.selectObjectById(objId)
+            if objectData is None:
+                obj = None
+            else:
+                obj= self.unpack(objectData)
+        return obj
+
+    
+    def getParent(self, obj):
+        """ Retrieve obj's  parent object """
+        return self.selectById(obj._objParentId)
 
 
     def __initObjDict(self):
@@ -154,6 +175,8 @@ class PostgresqlMapper(Mapper):
             self.restoreObject(childObj, childData)  
         return obj
 
+
+
     # def fillObjectWithRow(self, obj, objectData):              
     def restoreObject(self, obj, objectData):
         """Restore only the object itself from objectData (no attributes restoration)"""
@@ -177,6 +200,10 @@ class PostgresqlMapper(Mapper):
 
         obj.set(objValue)
 
+
+        # !!!! delete methods
+
+        # !!!! update methods
 
 
 # There are some python libraries for interfacing Postgres, see
@@ -280,6 +307,13 @@ class PostgresqlDb():
         """Select all objects in the hierachy of ancestor_id"""
         self.cursor.execute(self.selectCmd("name LIKE '%s.%%'" % ancestor_namePrefix))
         return self._results(asIterator)          
+
+
+    def selectObjectById(self, objId):
+        """Select an object give its id"""
+        self.cursor.execute(self.selectCmd("id=%s"), (objId,))  
+        return self.cursor.fetchone()
+
 
 
     def _results(self, asIterator=False):
