@@ -346,7 +346,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         imgSet.setCoordinates(self.inputCoords)
         readSetOfParticles(fnImages, imgSet)
         imgSet.write()
-            
+        
         self._defineOutputs(outputParticles=imgSet)
     
     def _summary(self):
