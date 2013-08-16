@@ -207,6 +207,13 @@ class Particle(Image):
     """ Represents an EM Particle object """
     def __init__(self, **args):
         Image.__init__(self, **args)
+        self._micId = Integer()
+        
+    def getMicId(self):
+        return self._micId.get()
+    
+    def setMicId(self, micId):
+        self._micId.set(micId)
 
 
 class Volume(Image):
@@ -407,7 +414,6 @@ class SetOfParticles(SetOfImages):
         SetOfImages.__init__(self, **args)
         self._coordsPointer = Pointer()
         
-    
     def getCoordinates(self):
         """ Returns the SetOfCoordinates associated with 
         this SetOfParticles"""
@@ -503,7 +509,7 @@ class SetOfCoordinates(Set):
         Set.__init__(self, **args)
         self._micrographsPointer = Pointer()
         self._boxSize = Integer()
-    
+
     def getBoxSize(self):
         """ Return the box size of the particles.
         """
