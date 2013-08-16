@@ -38,22 +38,27 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         outputFile = sys.argv[1]
         
-        print 'PATH', os.environ['PATH'], '\n'
-        print 'PYTHONPATH', os.environ['PYTHONPATH'], '\n'
-        print 'LD_LIBRARY_PATH', os.environ['LD_LIBRARY_PATH']
+        #print 'PATH', os.environ['PATH'], '\n'
+        #print 'PYTHONPATH', os.environ['PYTHONPATH'], '\n'
+        #print 'LD_LIBRARY_PATH', os.environ['LD_LIBRARY_PATH']
             
         from EMAN2 import EMData, EMUtil
         
         i = 0
-        for line in sys.stdin:
-            print "EMAN2: ", line
-            index, filename = line.split()
-            index = int(index) - 1
+        line = sys.stdin.readline()
+        while line:
+        #for line in sys.stdin:
+            imgId, index, filename = line.split()
+            if index: # NO_INDEX is zero, otherwise remove one due EMAN2 is zero based index
+                index = int(index) - 1
             imageData = EMData(filename, index, False)
-            imageData['item_id'] = i + 1
+            imageData['item_id'] = imgId
             imageData.write_image(outputFile, i, EMUtil.ImageType.IMAGE_HDF, False)
             i += 1
-        
+            print "EMAN2: ", line.strip()
+            sys.stdout.flush()
+            line = sys.stdin.readline()
+        print "DONE"
     else:
         print "usage: %s outputFile" % os.path.basename(sys.argv[0])
 

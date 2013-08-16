@@ -10,7 +10,7 @@ from pyworkflow.tests import *
 from pyworkflow.em.data import *
 from pyworkflow.utils.path import makePath
 from pyworkflow.em.packages.xmipp3.convert import *
-
+import pyworkflow.em.packages.eman2.convert as e2convert
 
 class TestImage(unittest.TestCase):
         
@@ -102,6 +102,19 @@ class TestSetOfMicrographs(unittest.TestCase):
         
         readSetOfCoordinates(posDir, micSet, coordSet)
         coordSet.write()
+        
+        
+        cwd = os.getcwd()
+        # Change to test path
+        os.chdir(getPath())
+        
+        # Test writing micrgraphs to an hdf        
+        filename = getOutputPath('test_data', 'micrographs.hdf')
+        e2convert.writeSetOfParticles(micSet, filename)
+        # Test writing a set of particles
+        #partSet = SetOfParticles()
+        
+        os.chdir(cwd)
     
        
 if __name__ == '__main__':

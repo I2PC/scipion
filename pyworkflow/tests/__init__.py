@@ -39,7 +39,10 @@ try:
 except ImportError:
    from unittest import _WritelnDecorator # Python <2.6
    
-
+def getPath(*filenames):
+    """Return the path to the SCIPION_HOME/tests/input dir
+    joined with filename"""
+    return join(pw.TESTS, *filenames)
 
 def getInputPath(*filenames):
     """Return the path to the SCIPION_HOME/tests/input dir

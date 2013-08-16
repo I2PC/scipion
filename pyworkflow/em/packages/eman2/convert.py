@@ -31,10 +31,12 @@ This module contains converter functions that will serve to:
 2. Read from Eman files to base classes
 """
 
+import subprocess
 from data import *
 from eman2 import *
 
 from pyworkflow.em.constants import NO_INDEX
+from os.path import abspath
 
 # LABEL_TYPES = { 
 #                xmipp.LABEL_SIZET: long,
@@ -114,3 +116,32 @@ def readSetOfCoordinates(workDir, micSet, coordSet):
                 coord.setMicrograph(mic)
                 coordSet.append(coord)
     coordSet.setBoxSize(size)
+
+def readSetOfParticles(filename):
+    pass
+
+def writeSetOfParticles(partSet, filename):
+    """ Convert the imgSet particles to a single .hdf file as expected by Eman. 
+    This function should be called from a current dir where
+    the images in the set are available.
+    """
+    cwd = os.getcwd()
+    loadEnvironment()
+    program = pw.join('em', 'packages', 'eman2', 'e2converter.py')        
+    cmd = getEmanCommand(program, filename)
+    
+#    gcmd = greenStr(cmd)
+    print "** Running: '%s'" % cmd
+    proc = subprocess.Popen(cmd, shell=True, 
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE)
+    
+    for part in partSet:
+        index, fn = part.getLocation()
+        # Write the e2converter.py process from where to read the image
+        print "sending: ", part.getId(), index, fn
+        print >> proc.stdin, part.getId(), index, join(cwd, fn)
+        proc.stdin.flush()
+        response = proc.stdout.readline()
+        print "response: ", response
+    #proc.wait()
