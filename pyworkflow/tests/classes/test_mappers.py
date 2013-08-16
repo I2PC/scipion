@@ -74,6 +74,11 @@ class TestMappers(unittest.TestCase):
         objects=db.selectObjectsBy(id= 3, value="4")
         print objects
 
+    def test_selectWhere(self):
+        db=self.test_connectUsing()
+        objects=db.selectObjectsWhere("id= 3 AND value='4'")
+        print objects
+
 
     def test_selectAll(self):
        dbconfig= os.path.join(self.getScipionHome() , "postgresql.xml")
