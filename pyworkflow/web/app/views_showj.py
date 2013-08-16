@@ -100,52 +100,23 @@ def showj(request, inputParameters=None):
 #               'jquery_tabletools':jquery_tabletools_path,
                'css': css_path,
                
-               'tableLayoutConfiguration' : tableLayoutConfiguration, #Data variables
-               'tableLayoutConfiguration_json' : 2,
-#    json.dumps(tableLayoutConfiguration.columnsLayout, ensure_ascii=False, cls=ColumnLayoutConfigurationEncoder),
-#               'tableLayoutConfiguration_json' : tableLayoutConfiguration.toJSON(),
+               
+               'tableLayoutConfiguration' : tableLayoutConfiguration if (showjForm.data['mode']=='gallery') else json.dumps({'columnsLayout': tableLayoutConfiguration.columnsLayout, 'colsOrder': tableLayoutConfiguration.colsOrder}, ensure_ascii=False, cls=ColumnLayoutConfigurationEncoder), #Data variables
+#               'tableLayoutConfiguration' : json.dumps({'columnsLayout': tableLayoutConfiguration.columnsLayout, 'colsOrder': tableLayoutConfiguration.colsOrder}, ensure_ascii=False, cls=ColumnLayoutConfigurationEncoder),
 
                'tableDataset': tableDataset,
                'form': showjForm} #Form
     
     return_page = '%s%s%s' % ('showj_', showjForm.data['mode'], '.html')
 
+
     return render_to_response(return_page, RequestContext(request, context))
 
-
-
-#class InitialValuesShowj():
-#    def __init__(self, md, path, allowRender
-
-#AT = '__at__'
-#
-#class MdObj():
-#    pass
-#    
-#class MdValue():
-#    def __init__(self, md, label, objId, typeOfColumn):
-#
-#        self.label = xmipp.label2Str(label)
-#        self.strValue = str(md.getValue(label, objId))   
-#        
-#        # Prepare path for image
-#        self.imgValue = self.strValue
-#        
-#        self.typeOfColumn = typeOfColumn
-#        
-#        if typeOfColumn=="image" and '@' in self.strValue:
-#            self.imgValue = self.imgValue.replace('@', AT)
-            
+                 
 class ColumnLayoutConfigurationEncoder(json.JSONEncoder):
     def default(self, columnLayoutConfiguration):
-        print type(columnLayoutConfiguration)
-        print "obj.label",columnLayoutConfiguration.label
-#        return ([columnLayoutConfiguration.__dict__]for columnLayoutConfiguration in obj) 
-#        for taka in columnLayoutConfiguration.iterValues():
-#            print "columnLayoutConfiguration",taka.label
-        
-        columnLayoutConfigurationCoded=[]
-        columnLayoutConfigurationCoded[columnLayoutConfiguration.label]={"typeOfColumn":columnLayoutConfiguration.typeOfColumn,
+        columnLayoutConfigurationCoded={}
+        columnLayoutConfigurationCoded={"typeOfColumn":columnLayoutConfiguration.typeOfColumn,
                                                                          "columnLayoutProperties":{"visible":columnLayoutConfiguration.columnLayoutProperties.visible,
                                                                                                    "allowSetVisible":columnLayoutConfiguration.columnLayoutProperties.allowSetVisible,
                                                                                                    "editable":columnLayoutConfiguration.columnLayoutProperties.editable,
@@ -155,8 +126,8 @@ class ColumnLayoutConfigurationEncoder(json.JSONEncoder):
                                                                                                    "renderFunc":columnLayoutConfiguration.columnLayoutProperties.renderFunc}
                                                                          }
         return columnLayoutConfigurationCoded 
-#          return [obj.real, obj.imag]
                  
+
             
 class TableLayoutConfiguration():
     def __init__(self, tableDataset, allowRender=True):
@@ -188,17 +159,16 @@ class ColumnLayoutConfiguration():
 class ColumnLayoutProperties():
     def __init__(self, typeOfColumn, allowRender=True):
 #        self.layoutPropertiesDict = {}
-        self.visible = True
+        self.visible = not(typeOfColumn == 'id')
         self.allowSetVisible = True 
         
         self.editable = (typeOfColumn == 'text')
         self.allowSetEditable = self.editable
         
-        self.renderable = (typeOfColumn == 'image' and allowRender)
-        self.allowSetRenderable = self.renderable
+        self.renderable = False
+        self.allowSetRenderable = True if (typeOfColumn == 'image' and allowRender) else False
 
         self.renderFunc = "taka"
-        
         
 
 #PAJM         
@@ -248,7 +218,7 @@ def save_showj_table(request):
     from django.http import HttpResponse
     import json
     from django.utils import simplejson
-    
+    print "akiiiiiiii"
     
     if request.is_ajax():
         element_id = request.GET.get('element_id')
