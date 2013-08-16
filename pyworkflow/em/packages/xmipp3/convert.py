@@ -109,10 +109,6 @@ def writeCTFModel(ctfObj, filename):
     md.write(filename)
 
 
-def readMicrograph(md, objId):
-    """ Create a Micrograph object from a row of Xmipp metadata. """
-    pass
-
 def locationToXmipp(index, filename):
     """ Convert an index and filename location
     to a string with @ as expected in Xmipp.
@@ -122,6 +118,14 @@ def locationToXmipp(index, filename):
         return "%d@%s" % (index, filename)
     
     return filename
+
+def xmippToLocation(xmippFilename):
+    """ Return a location (index, filename) given
+    a Xmipp filename with the index@filename structure. """
+    if '@' in xmippFilename:
+        return xmipp.FileName(xmippFilename).decompose()
+    else:
+        return NO_INDEX, str(xmippFilename)
 
 def micrographToRow(mic, micRow):
     """ Set labels values from Micrograph mic to md row. """
@@ -137,18 +141,9 @@ def micrographToRow(mic, micRow):
       
     objectToRow(mic, micRow, micDict)
 
-def rowToCoordinate(md, objId):
-    """ Create a Coordinate from a row of a metadata. """
-    coordDict = { 
-               "_id": xmipp.MDL_ITEM_ID,
-               "_x": xmipp.MDL_XCOOR,
-               "_y": xmipp.MDL_YCOOR,
-#               "sphericalAberration": xmipp.MDL_CTF_CS
-               }
-    coord = Coordinate()
-    rowToObject(md, objId, coord, coordDict)
-    
-    return coord
+def rowToMicrograph(md, objId):
+    """ Create a Micrograph object from a row of Xmipp metadata. """
+    pass
 
 def coordinateToRow(coord, coordRow):
     """ Set labels values from Coordinate coord to md row. """
@@ -163,6 +158,19 @@ def coordinateToRow(coord, coordRow):
       
     objectToRow(coord, coordRow, coordDict)
 
+def rowToCoordinate(md, objId):
+    """ Create a Coordinate from a row of a metadata. """
+    coordDict = { 
+               "_id": xmipp.MDL_ITEM_ID,
+               "_x": xmipp.MDL_XCOOR,
+               "_y": xmipp.MDL_YCOOR,
+#               "sphericalAberration": xmipp.MDL_CTF_CS
+               }
+    coord = Coordinate()
+    rowToObject(md, objId, coord, coordDict)
+    
+    return coord
+
 def rowToParticle(md, objId):
     """ Create a Particle from a row of a metadata. """
     partDict = { 
@@ -172,6 +180,9 @@ def rowToParticle(md, objId):
 #               "sphericalAberration": xmipp.MDL_CTF_CS
                }
     part = Particle()
+    # Decompose Xmipp filename
+    index, filename = xmippToLocation(md.getValue(xmipp.MDL_IMAGE, objId))
+    part.setLocation(index, filename)    
     rowToObject(md, objId, part, partDict)
     
     return part
@@ -291,6 +302,4 @@ def readSetOfParticles(fnImages, imgSet):
 
     for objId in imgMd:
         part = rowToParticle(imgMd, objId)
-        index, filename = xmipp.FileName(imgMd.getValue(xmipp.MDL_IMAGE, objId)).decompose()
-        part.setLocation(index, filename)
         imgSet.append(part)
