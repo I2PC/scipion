@@ -207,13 +207,6 @@ class Particle(Image):
     """ Represents an EM Particle object """
     def __init__(self, **args):
         Image.__init__(self, **args)
-        self._micId = Integer()
-        
-    def getMicId(self):
-        return self._micId.get()
-    
-    def setMicId(self, micId):
-        self._micId.set(micId)
 
 
 class Volume(Image):
