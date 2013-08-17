@@ -292,14 +292,15 @@ def readSetOfCoordinates(posDir, micSet, coordSet):
 def writeSetOfParticles():
     pass
     
-def readSetOfParticles(fnImages, imgSet):
+def readSetOfParticles(fnImages, coordSet, imgSet):
     """read from Xmipp image metadata.
         fnImages: The metadata filename where the particles properties are.
         imgSet: the SetOfParticles that will be populated.
     """
     
     imgMd = xmipp.MetaData(fnImages)
-
-    for objId in imgMd:
-        part = rowToParticle(imgMd, objId)
-        imgSet.append(part)
+    for coord in coordSet.iterCoordinates():
+        for objId in imgMd:
+            part = rowToParticle(imgMd, objId)
+            part.setMicId(coord.getMicId())
+            imgSet.append(part)
