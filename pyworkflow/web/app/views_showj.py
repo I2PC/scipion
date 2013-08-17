@@ -198,21 +198,6 @@ def loadDatasetXmipp(path):
     return XmippDataSet(str(mdPath))
 
     
-
-def save_showj_metadata(request):    
-    from django.http import HttpResponse
-    import json
-    from django.utils import simplejson
-    
-    if request.is_ajax():
-        path = request.GET.get('path')
-        
-#        md = request.session['md']
-#        mdXmipp = xmipp.MetaData()
-#        mdXmipp.write(path)
-        
-        return HttpResponse(json.dumps({'message':'Ok'}), mimetype='application/javascript')
-
 def save_showj_table(request):
     
     from django.http import HttpResponse
@@ -221,28 +206,34 @@ def save_showj_table(request):
     print "akiiiiiiii"
     
     if request.is_ajax():
-        element_id = request.GET.get('element_id')
-        try:
-            label, idRow = element_id.split("___")
-        except ValueError:
-            return HttpResponse(json.dumps({'message':'Error'}), mimetype='application/javascript')
+        changes = request.POST.get('changes')
+        print "changes", changes
+        print "type", type(changes)
+        request.session['dataset']
+#        NAPA DE LUXE
         
-#        if len(element_id_split)!=2: 
-#            print "esto peto y hay que hacer alguna movidita"
-        element_value= request.GET.get('element_value')
-        #conversion for checkbox element
-        if (element_value == 'true'): element_value = 1
-        else: element_value = 0
-        
-        md = request.session['md']
-
-        for index, mdObject in enumerate(md.objects[int(idRow)].values):
-            if label in mdObject.label:
-                md.objects[int(idRow)].values[index].strValue=element_value
-        
-        request.session['md']=md
-#        mdXmipp.setValue(element_id_split[0], False, mdXmipp[element_id_split[1]])
-        return HttpResponse(json.dumps({'message':'Ok'}), mimetype='application/javascript')
+#        element_id = request.GET.get('element_id')
+#        try:
+#            label, idRow = element_id.split("___")
+#        except ValueError:
+#            return HttpResponse(json.dumps({'message':'Error'}), mimetype='application/javascript')
+#        
+##        if len(element_id_split)!=2: 
+##            print "esto peto y hay que hacer alguna movidita"
+#        element_value= request.GET.get('element_value')
+#        #conversion for checkbox element
+#        if (element_value == 'true'): element_value = 1
+#        else: element_value = 0
+#        
+#        md = request.session['md']
+#
+#        for index, mdObject in enumerate(md.objects[int(idRow)].values):
+#            if label in mdObject.label:
+#                md.objects[int(idRow)].values[index].strValue=element_value
+#        
+#        request.session['md']=md
+##        mdXmipp.setValue(element_id_split[0], False, mdXmipp[element_id_split[1]])
+#        return HttpResponse(json.dumps({'message':'Ok'}), mimetype='application/javascript')
 
 #    request.get.get('value')
 

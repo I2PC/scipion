@@ -41,7 +41,7 @@
 	function initializeArrowEvents(){
 		$(".arrowImage").click(function(){
 			if ($(this).closest(".sectionMenu, .subSectionMenu").find(".menuInputNumber").is("[readonly]")==false){
-				if ($(this).attr("src").indexOf("up") != -1){
+				if ($(this).attr("src").indexOf("Up") != -1){
 					$(this).closest(".sectionMenu, .subSectionMenu").find(".menuInputNumber").val(+$(this).closest(".sectionMenu, .subSectionMenu").find(".menuInputNumber").val()+1)
 				}
 				else{
@@ -264,14 +264,28 @@
 		function saveShowjTable(){
 			console.log("changeswewe",changes)
 			
-			$.post("/save_showj_table/",
-			  {
+			$.ajax({
+				type : "POST",
+				url : "/save_showj_table/",
+				data : {
+					changes: JSON.stringify(changes),
+					csrfmiddlewaretoken: '{{ csrf_token }}'
+				}, 
+				success : function(json) {
+					console.log("return")
+					message = json.message;
+					alert(message)
+				}
+			});
+			
+			/* $.post("/save_showj_table/",
+			  data: {
 			    changes:changes,
 			    csrfmiddlewaretoken: '{{ csrf_token }}'
 			  },
 			  function(data,status){
 			    alert("Data: " + data + "\nStatus: " + status);
-			  });
+			  }); */
 			
 /* 			$.ajax({
 				type : "POST",
