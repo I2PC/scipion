@@ -344,7 +344,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             imgSet.setSamplingRate(self.inputMics.getSamplingRate()*self.downFactor.get())
             
         imgSet.setCoordinates(self.inputCoords)
-        readSetOfParticles(fnImages, self.inputCoordinates.get(), imgSet)
+        readSetOfParticles(fnImages, imgSet)
         imgSet.write()
         
         self._defineOutputs(outputParticles=imgSet)

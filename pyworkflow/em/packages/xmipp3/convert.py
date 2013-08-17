@@ -175,8 +175,6 @@ def rowToParticle(md, objId):
     """ Create a Particle from a row of a metadata. """
     partDict = { 
                "_id": xmipp.MDL_ITEM_ID,
-               "_x": xmipp.MDL_XCOOR,
-               "_y": xmipp.MDL_YCOOR,
 #               "sphericalAberration": xmipp.MDL_CTF_CS
                }
     part = Particle()
@@ -191,8 +189,6 @@ def particleToRow(part, partRow):
     """ Set labels values from Particle to md row. """
     partDict = { 
                "_id": xmipp.MDL_ITEM_ID,
-               "_x": xmipp.MDL_XCOOR,
-               "_y": xmipp.MDL_YCOOR,
 #               "defocusV": xmipp.MDL_CTF_DEFOCUSV,
 #               "defocusAngle": xmipp.MDL_CTF_DEFOCUS_ANGLE,
 #               "sphericalAberration": xmipp.MDL_CTF_CS
@@ -292,15 +288,13 @@ def readSetOfCoordinates(posDir, micSet, coordSet):
 def writeSetOfParticles():
     pass
     
-def readSetOfParticles(fnImages, coordSet, imgSet):
+def readSetOfParticles(fnImages, imgSet):
     """read from Xmipp image metadata.
         fnImages: The metadata filename where the particles properties are.
         imgSet: the SetOfParticles that will be populated.
     """
     
     imgMd = xmipp.MetaData(fnImages)
-    for coord in coordSet.iterCoordinates():
-        for objId in imgMd:
-            part = rowToParticle(imgMd, objId)
-            part.setMicId(coord.getMicId())
-            imgSet.append(part)
+    for objId in imgMd:
+        part = rowToParticle(imgMd, objId)
+        imgSet.append(part)
