@@ -111,8 +111,10 @@ class TestSetOfMicrographs(unittest.TestCase):
         # Test writing micrgraphs to an hdf        
         filename = getOutputPath('test_data', 'micrographs.hdf')
         e2convert.writeSetOfParticles(micSet, filename)
+        
         # Test writing a set of particles
         #partSet = SetOfParticles()
+        #readSetOfParticles(fnImages, imgSet)
         
         os.chdir(cwd)
     

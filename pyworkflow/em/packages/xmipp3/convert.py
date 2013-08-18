@@ -127,23 +127,38 @@ def xmippToLocation(xmippFilename):
     else:
         return NO_INDEX, str(xmippFilename)
 
-def micrographToRow(mic, micRow):
-    """ Set labels values from Micrograph mic to md row. """
-    micDict = { 
+def imageToRow(img, imgRow, imgLabel):
+    imgDict = { 
                "_id": xmipp.MDL_ITEM_ID,
-#               "defocusV": xmipp.MDL_CTF_DEFOCUSV,
-#               "defocusAngle": xmipp.MDL_CTF_DEFOCUS_ANGLE,
+               }
+    index, filename = img.getLocation()
+    fn = locationToXmipp(index, filename)
+    imgRow.setValue(imgLabel, fn)
+    #TODO: use writeCTFModel if necessary   
+    objectToRow(img, imgRow, imgDict)
+    
+def rowToImage(md, objId, imgLabel, imgClass):
+    """ Create a Particle from a row of a metadata. """
+    imgDict = { 
+               "_id": xmipp.MDL_ITEM_ID,
 #               "sphericalAberration": xmipp.MDL_CTF_CS
                }
-    index, filename = mic.getLocation()
-    fn = locationToXmipp(index, filename)
-    micRow.setValue(xmipp.MDL_MICROGRAPH, fn)
-      
-    objectToRow(mic, micRow, micDict)
-
+    img = imgClass()
+    # Decompose Xmipp filename
+    index, filename = xmippToLocation(md.getValue(imgLabel, objId))
+    img.setLocation(index, filename)  
+    #TODO: use readCTFModel if necessary  
+    rowToObject(md, objId, img, imgDict)
+    
+    return img
+    
+def micrographToRow(mic, micRow):
+    """ Set labels values from Micrograph mic to md row. """
+    imageToRow(mic, micRow, imgLabel=xmipp.MDL_MICROGRAPH)
+    
 def rowToMicrograph(md, objId):
     """ Create a Micrograph object from a row of Xmipp metadata. """
-    pass
+    return rowToImage(md, objId, xmipp.MDL_MICROGRAPH, Micrograph)
 
 def coordinateToRow(coord, coordRow):
     """ Set labels values from Coordinate coord to md row. """
@@ -173,31 +188,11 @@ def rowToCoordinate(md, objId):
 
 def rowToParticle(md, objId):
     """ Create a Particle from a row of a metadata. """
-    partDict = { 
-               "_id": xmipp.MDL_ITEM_ID,
-#               "sphericalAberration": xmipp.MDL_CTF_CS
-               }
-    part = Particle()
-    # Decompose Xmipp filename
-    index, filename = xmippToLocation(md.getValue(xmipp.MDL_IMAGE, objId))
-    part.setLocation(index, filename)    
-    rowToObject(md, objId, part, partDict)
+    return rowToImage(md, objId, xmipp.MDL_IMAGE, Particle)
     
-    return part
-
 def particleToRow(part, partRow):
     """ Set labels values from Particle to md row. """
-    partDict = { 
-               "_id": xmipp.MDL_ITEM_ID,
-#               "defocusV": xmipp.MDL_CTF_DEFOCUSV,
-#               "defocusAngle": xmipp.MDL_CTF_DEFOCUS_ANGLE,
-#               "sphericalAberration": xmipp.MDL_CTF_CS
-               }
-    index, filename = part.getLocation()
-    fn = locationToXmipp(index, filename)
-    partRow.setValue(xmipp.MDL_IMAGE, fn)
-      
-    objectToRow(part, partRow, partDict)
+    imageToRow(part, partRow, imgLabel=xmipp.MDL_IMAGE)
     
 def readSetOfMicrographs(filename):
     pass
