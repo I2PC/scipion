@@ -25,6 +25,7 @@
  ***************************************************************************/
 
 #include "frm.h"
+#include <data/geometry.h>
 
 void initializeXmippPython(String &xmippPython)
 {
@@ -57,32 +58,48 @@ PyObject * getPointerToPythonFRMFunction()
 	return pFunc;
 }
 
-void alignVolumesFRM(PyObject *pFunc, const MultidimArray<double> &I1, const MultidimArray<double> &I2,
+void alignVolumesFRM(PyObject *pFunc, const MultidimArray<double> &Iref, const MultidimArray<double> &I,
 		double &rot, double &tilt, double &psi, double &x, double &y, double &z, double &score)
 {
-	PyObject *pyI1=convertToNumpy(I1);
-	PyObject *pyI2=convertToNumpy(I2);
+	PyObject *pyIref=convertToNumpy(Iref);
+	PyObject *pyI=convertToNumpy(I);
 
 	// Call frm
 	int bandWidthSphericalHarmonics0=4;
 	int bandWidthSphericalHarmonicsF=64;
 	int frequency=20; // Pixels
 	int maxshift=10;
-	PyObject *arglistfrm = Py_BuildValue("OOOO(ii)i", pyI1, Py_None, pyI2, Py_None,
+	PyObject *arglistfrm = Py_BuildValue("OOOO(ii)i", pyI, Py_None, pyIref, Py_None,
 			bandWidthSphericalHarmonics0, bandWidthSphericalHarmonicsF, frequency, maxshift);
 	PyObject *resultfrm = PyObject_CallObject(pFunc, arglistfrm);
 	Py_DECREF(arglistfrm);
+	Py_DECREF(pyIref);
+	Py_DECREF(pyI);
 	if (resultfrm!=NULL)
 	{
 		PyObject *shift=PyTuple_GetItem(resultfrm,0);
 		PyObject *euler=PyTuple_GetItem(resultfrm,1);
 		score=PyFloat_AsDouble(PyTuple_GetItem(resultfrm,2));
-		x=PyFloat_AsDouble(PyList_GetItem(shift,0));
-		y=PyFloat_AsDouble(PyList_GetItem(shift,1));
-		z=PyFloat_AsDouble(PyList_GetItem(shift,2));
-		rot=PyFloat_AsDouble(PyList_GetItem(euler,0));
-		tilt=PyFloat_AsDouble(PyList_GetItem(euler,1));
-		psi=PyFloat_AsDouble(PyList_GetItem(euler,2));
+		x=PyFloat_AsDouble(PyList_GetItem(shift,0))-XSIZE(Iref)/2;
+		y=PyFloat_AsDouble(PyList_GetItem(shift,1))-YSIZE(Iref)/2;
+		z=PyFloat_AsDouble(PyList_GetItem(shift,2))-ZSIZE(Iref)/2;
+		double angz1=PyFloat_AsDouble(PyList_GetItem(euler,0));
+		double angz2=PyFloat_AsDouble(PyList_GetItem(euler,1));
+		double angx=PyFloat_AsDouble(PyList_GetItem(euler,2));
+		Matrix2D<double> Efrm, E(3,3);
+		Euler_anglesZXZ2matrix(-angz1, -angx, -angz2, Efrm); // -angles because FRM rotation definition
+		                                                  // is the opposite of Xmipp
+
+		// Reorganize the matrix because the Z and X axes in the coordinate system are reversed with
+		// respect to Xmipp
+		// Exmipp=[0 0 1; 0 1 0; 1 0 0]*Efrm*[0 0 1; 0 1 0; 1 0 0]
+		MAT_ELEM(E,0,0)=MAT_ELEM(Efrm, 2, 2); MAT_ELEM(E,0,1)=MAT_ELEM(Efrm, 2, 1); MAT_ELEM(E,0,2)=MAT_ELEM(Efrm, 2, 0);
+		MAT_ELEM(E,1,0)=MAT_ELEM(Efrm, 1, 2); MAT_ELEM(E,1,1)=MAT_ELEM(Efrm, 1, 1); MAT_ELEM(E,1,2)=MAT_ELEM(Efrm, 1, 0);
+		MAT_ELEM(E,2,0)=MAT_ELEM(Efrm, 0, 2); MAT_ELEM(E,2,1)=MAT_ELEM(Efrm, 0, 1); MAT_ELEM(E,2,2)=MAT_ELEM(Efrm, 0, 0);
+		E=E.inv();
+		Euler_matrix2angles(E,rot,tilt,psi);
 		Py_DECREF(resultfrm);
+
+		Euler_angles2matrix(0,20,20, E);
 	}
 }

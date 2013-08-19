@@ -53,7 +53,7 @@ PyObject * getPointerToPythonFRMFunction();
  * The first argument is the pointer to the FRM python function. You may obtain it with
  * getPointerToPythonFRMFunction()
  */
-void alignVolumesFRM(PyObject *pFunc, const MultidimArray<double> &I1, const MultidimArray<double> &I2,
+void alignVolumesFRM(PyObject *pFunc, const MultidimArray<double> &Iref, const MultidimArray<double> &I,
 		double &rot, double &tilt, double &psi, double &x, double &y, double &z, double &score);
 
 //@}
