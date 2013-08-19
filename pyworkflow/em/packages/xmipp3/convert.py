@@ -180,7 +180,6 @@ def rowToCoordinate(md, objId):
                "_id": xmipp.MDL_ITEM_ID,
                "_x": xmipp.MDL_XCOOR,
                "_y": xmipp.MDL_YCOOR,
-#               "sphericalAberration": xmipp.MDL_CTF_CS
                }
     coord = Coordinate()
     rowToObject(md, objId, coord, coordDict)
@@ -281,13 +280,42 @@ def readSetOfCoordinates(posDir, micSet, coordSet):
 
     coordSet.setBoxSize(boxSize)
 
-def writeSetOfParticles():
-    pass
+def writeSetOfParticles(imgSet, filename, rowFunc=None):
+    
+    """ This function will write a SetOfParticles as Xmipp metadata.
+    Params:
+        imgSet: the SetOfParticles instance.
+        filename: the filename where to write the metadata.
+        rowFunc: this function can be used to setup the row before 
+            adding to metadata.
+    """
+    
+#     mdFn = getattr(obj, '_xmippMd', None)
+#     if mdFn:
+#         fn = mdFn.get()
+#     else:
+#         fn = self._getTmpPath(obj.getName() + '_micrographs.xmd')
+#         writeSetOfMicrographs(obj, fn)
+    
+    md = xmipp.MetaData()
+    
+    for img in imgSet:
+        objId = md.addObject()
+        imgRow = XmippMdRow()
+        particleToRow(img, imgRow)
+        if rowFunc:
+            rowFunc(img, imgRow)
+        imgRow.writeToMd(md, objId)
+        
+    md.write(filename)
+    imgSet._xmippMd = String(filename)
+
     
 def readSetOfParticles(fnImages, imgSet, hasCtf):
     """read from Xmipp image metadata.
         fnImages: The metadata filename where the particles properties are.
         imgSet: the SetOfParticles that will be populated.
+        hasCtf: is True if the ctf information exists.
     """
     
     imgMd = xmipp.MetaData(fnImages)

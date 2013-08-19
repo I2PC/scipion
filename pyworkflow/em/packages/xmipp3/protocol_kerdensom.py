@@ -76,7 +76,7 @@ class XmippDefKerdensom(Form):
                       'See [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM]')
         
         
-class XmippProtKerdensom(ProtClassify, xmipp3.XmippProtocol):
+class XmippProtKerdensom(ProtClassify, XmippProtocols):
     """ Protocol to align a set of particles. """
     _definition = XmippDefKerdensom()
     _label = 'Xmipp KerDenSom'
@@ -91,10 +91,10 @@ class XmippProtKerdensom(ProtClassify, xmipp3.XmippProtocol):
     
     
     def _prepareParams(self):
+        
         # Convert input images if necessary
-        self.inputImgs = self.inputImages.get()        
-        imgsFn = self._insertConvertStep('inputImgs', XmippSetOfParticles,
-                                         self._getPath('input_images.xmd'))
+        imgsFn = self._createXmippInputImages(self.inputImages.get())
+        
         mask = self.Mask.get()
         self._params = {'oroot': self._getExtraPath("kerdensom"),
                         'imgsFn': imgsFn,

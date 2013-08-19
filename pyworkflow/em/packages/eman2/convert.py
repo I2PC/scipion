@@ -117,6 +117,9 @@ def readSetOfCoordinates(workDir, micSet, coordSet):
                 coordSet.append(coord)
     coordSet.setBoxSize(size)
 
+def writeSetOfCoordinates():
+    pass
+
 def readSetOfParticles(filename):
     pass
 

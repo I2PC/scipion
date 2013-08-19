@@ -30,10 +30,19 @@ for specific Xmipp3 EM data objects
 
 from pyworkflow.em import *
 from xmipp3 import XmippMdRow, XmippSet, findRowById
+from convert import writeSetOfParticles
 
 from pyworkflow.utils.path import replaceBaseExt, exists, dirname, join
 import xmipp
-    
+
+
+class XmippProtocols():
+
+    def _createXmippInputImages(self, imgSet):
+        imgsFn = self._getPath('input_images.xmd')
+        writeSetOfParticles(imgSet, imgsFn)
+        return imgsFn
+
       
 class XmippImageLocation(ImageLocation):
     

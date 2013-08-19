@@ -48,7 +48,7 @@ class XmippProtocol():
     """ This class groups some common functionalities that
     share some Xmipp protocols, like converting steps.
     """
-    
+           
     def _insertConvertStep(self, inputName, xmippClass, resultFn):
         """ Insert the convertInputToXmipp if the inputName attribute
         is not an instance of xmippClass.
@@ -63,7 +63,7 @@ class XmippProtocol():
             self._insertFunctionStep('convertInputToXmipp', inputName, xmippClass, resultFn)
             return resultFn
         return inputAttr.getFileName()
-        
+         
     def convertInputToXmipp(self, inputName, xmippClass, resultFn):
         """ This step can be used whenever a convertion is needed.
         It will receive the inputName and get this attribute from self,
@@ -72,12 +72,12 @@ class XmippProtocol():
         """
         inputAttr = getattr(self, inputName)
         inputXmipp = xmippClass.convert(inputAttr, resultFn)
-        
+         
         if inputXmipp is not inputAttr:
             print "======== CONVERTIN........."
             self._insertChild(inputName + 'Xmipp', inputXmipp)
             return [resultFn] # validate resultFn was produced if converted
-        
+         
     def getConvertedInput(self, inputName):
         """ Retrieve the converted input, it can be the case that
         it is the same as input, when not convertion was done. 

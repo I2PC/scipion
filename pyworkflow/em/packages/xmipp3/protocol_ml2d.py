@@ -32,7 +32,7 @@ from pyworkflow.em import *
 from pyworkflow.utils import *  
 import xmipp
 from data import *
-from xmipp3 import XmippProtocol
+#from xmipp3 import XmippProtocol
 
 
 class XmippDefML2D(Form):
@@ -114,7 +114,7 @@ class XmippDefML2D(Form):
         self.addParallelSection(threads=2, mpi=2)
         
         
-class XmippProtML2D(ProtAlign, ProtClassify, XmippProtocol):
+class XmippProtML2D(ProtAlign, ProtClassify, XmippProtocols):
     """ Protocol to preprocess a set of micrographs in the project. """
     _definition = XmippDefML2D()
     _label = 'Xmipp ML2D'
@@ -136,9 +136,8 @@ class XmippProtML2D(ProtAlign, ProtClassify, XmippProtocol):
         prefix = '%s2d_' % progId
         self.oroot = self._getPath(prefix)
         
-        self.inputImgs = self.inputImages.get()       
-        imgsFn = self._insertConvertStep('inputImgs', XmippSetOfParticles,
-                                         self._getPath('input_images.xmd'))
+        # Convert input images if necessary
+        imgsFn = self._createXmippInputImages(self.inputImages.get())
         
         params = ' -i %s --oroot %s' % (imgsFn, self.oroot)
         # Number of references will be ignored if -ref is passed as expert option
