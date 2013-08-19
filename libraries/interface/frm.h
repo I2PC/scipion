@@ -42,6 +42,9 @@ void initializeXmippPython(String &xmippPython);
 /// Convert from MultidimArray to numpy array
 PyObject* convertToNumpy(const MultidimArray<double> &I);
 
+/// Convert from MultidimArray to numpy array
+PyObject* convertToNumpy(const MultidimArray<int> &I);
+
 /** Get pointer to FRM function.
  * This is done to avoid losing time in importing the module each time.
  * Remind to free it when you do not need it any longer with
@@ -58,7 +61,7 @@ PyObject * getPointerToPythonFRMFunction();
  */
 void alignVolumesFRM(PyObject *pFunc, const MultidimArray<double> &Iref, const MultidimArray<double> &I,
 		double &rot, double &tilt, double &psi, double &x, double &y, double &z, double &score,
-		int maxshift=10, double maxFreq=0.25);
+		int maxshift=10, double maxFreq=0.25, const MultidimArray<int> *mask=NULL);
 
 //@}
 #endif

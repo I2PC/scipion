@@ -123,6 +123,7 @@ public:
     bool     mask_enabled;
     bool     usePowell, onlyShift, useFRM;
     double   maxFreq;
+    int      maxShift;
 public:
 
     void defineParams()
@@ -209,6 +210,11 @@ public:
 
         usePowell = checkParam("--local");
         useFRM = checkParam("--frm");
+        if (useFRM)
+        {
+        	maxFreq=getDoubleParam("--frm",0);
+        	maxShift=getIntParam("--frm",1);
+        }
         onlyShift = checkParam("--onlyShift");
 
         if (step_rot   == 0)
@@ -383,7 +389,7 @@ public:
     		initializeXmippPython(xmippPython);
     		PyObject * pFunc = getPointerToPythonFRMFunction();
     		double rot,tilt,psi,x,y,z,score;
-    		alignVolumesFRM(pFunc, params.V1(), params.V2(),rot,tilt,psi,x,y,z,score);
+    		alignVolumesFRM(pFunc, params.V1(), params.V2(),rot,tilt,psi,x,y,z,score,maxShift,maxFreq,params.mask_ptr);
     		best_align.initZeros(9);
     		best_align(0)=1; // Gray scale
     		best_align(1)=0; // Gray shift

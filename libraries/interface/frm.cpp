@@ -49,6 +49,16 @@ PyObject* convertToNumpy(const MultidimArray<double> &I)
 	return pyI;
 }
 
+PyObject* convertToNumpy(const MultidimArray<int> &I)
+{
+	npy_intp dim[3];
+	dim[0]=ZSIZE(I);
+	dim[1]=YSIZE(I);
+	dim[2]=XSIZE(I);
+	PyObject* pyI=PyArray_SimpleNewFromData(3, dim, NPY_INT, (void *)MULTIDIM_ARRAY(I));
+	return pyI;
+}
+
 PyObject * getPointerToPythonFRMFunction()
 {
 	PyObject * pName = PyString_FromString("sh_alignment.frm"); // Import sh_alignment.frm
@@ -60,21 +70,26 @@ PyObject * getPointerToPythonFRMFunction()
 
 void alignVolumesFRM(PyObject *pFunc, const MultidimArray<double> &Iref, const MultidimArray<double> &I,
 		double &rot, double &tilt, double &psi, double &x, double &y, double &z, double &score,
-		int maxshift, double maxFreq)
+		int maxshift, double maxFreq, const MultidimArray<int> *mask)
 {
 	PyObject *pyIref=convertToNumpy(Iref);
 	PyObject *pyI=convertToNumpy(I);
+	PyObject *pyMask=Py_None;
+	if (mask!=NULL)
+		pyMask=convertToNumpy(*mask);
 
 	// Call frm
 	int bandWidthSphericalHarmonics0=4;
 	int bandWidthSphericalHarmonicsF=64;
 	int frequencyPixels=(int)(XSIZE(Iref)*maxFreq);
-	PyObject *arglistfrm = Py_BuildValue("OOOO(ii)i", pyI, Py_None, pyIref, Py_None,
-			bandWidthSphericalHarmonics0, bandWidthSphericalHarmonicsF, frequencyPixels, maxshift);
+	PyObject *arglistfrm = Py_BuildValue("OOOO(ii)iiO", pyI, Py_None, pyIref, Py_None,
+			bandWidthSphericalHarmonics0, bandWidthSphericalHarmonicsF, frequencyPixels, maxshift, pyMask);
 	PyObject *resultfrm = PyObject_CallObject(pFunc, arglistfrm);
 	Py_DECREF(arglistfrm);
 	Py_DECREF(pyIref);
 	Py_DECREF(pyI);
+	if (mask!=NULL)
+		Py_DECREF(pyMask);
 	if (resultfrm!=NULL)
 	{
 		PyObject *shift=PyTuple_GetItem(resultfrm,0);
