@@ -52,9 +52,13 @@ PyObject * getPointerToPythonFRMFunction();
 /** Align two volumes using FRM.
  * The first argument is the pointer to the FRM python function. You may obtain it with
  * getPointerToPythonFRMFunction()
+ *
+ * Maxshift is in pixels.
+ * MaxFreq is in digital frequency.
  */
 void alignVolumesFRM(PyObject *pFunc, const MultidimArray<double> &Iref, const MultidimArray<double> &I,
-		double &rot, double &tilt, double &psi, double &x, double &y, double &z, double &score);
+		double &rot, double &tilt, double &psi, double &x, double &y, double &z, double &score,
+		int maxshift=10, double maxFreq=0.25);
 
 //@}
 #endif

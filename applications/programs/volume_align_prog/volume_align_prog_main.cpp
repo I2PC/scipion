@@ -107,9 +107,7 @@ double wrapperFitness(double *p, void *params)
 
 class ProgAlignVolumes : public XmippProgram
 {
-
 public:
-
     Mask mask;
 
     FileName fn1, fn2;
@@ -122,9 +120,9 @@ public:
     int      tell;
     bool     apply;
     FileName fnOut;
-    bool     mask_enabled, mean_in_mask;
+    bool     mask_enabled;
     bool     usePowell, onlyShift, useFRM;
-
+    double   maxFreq;
 public:
 
     void defineParams()
@@ -146,15 +144,16 @@ public:
         addParamsLine("  [-x <x0=0> <xF=0> <step_x=1>] : X position in pixels");
         addParamsLine("  [--show_fit]      : Show fitness values");
         addParamsLine("  [--apply <file=\"\">] : Apply best movement to --i2 and store results in this file");
-        addParamsLine("  [--mean_in_mask]  : Use the means within the mask");
         addParamsLine("  [--covariance]    : Covariance fitness criterion");
         addParamsLine("  [--least_squares] : LS fitness criterion");
         addParamsLine("  [--local]         : Use local optimizer instead of exhaustive search");
-        addParamsLine("  [--frm]           : Use Fast Rotational Matching");
+        addParamsLine("  [--frm <maxFreq=0.25> <maxShift=10>] : Use Fast Rotational Matching");
+        addParamsLine("                    : Maximum frequency is in digital frequencies (<0.5)");
+        addParamsLine("                    : Maximum shift is in pixels");
         addParamsLine("                    :+ See Y. Chen, et al. Fast and accurate reference-free alignment of subtomograms. JSB, 182: 235-245 (2013)");
         addParamsLine("  [--onlyShift]     : Only shift");
         addParamsLine(" == Mask Options == ");
-        mask.defineParams(this);
+        mask.defineParams(this,INT_MASK,NULL,NULL,true);
         addExampleLine("Typically you first look for a rough approximation of the alignment using exhaustive search. For instance, for a global rotational alignment use",false);
         addExampleLine("xmipp_volume_align --i1 volume1.vol --i2 volume2.vol --rot 0 360 15 --tilt 0 180 15 --psi 0 360 15");
         addExampleLine("Then, assume the best alignment is obtained for rot=45, tilt=60, psi=90",false);
@@ -205,7 +204,6 @@ public:
         step_x = getDoubleParam("-x",2);
 
         mask_enabled = checkParam("--mask");
-        mean_in_mask = checkParam("--mean_in_mask");
         if (mask_enabled)
             mask.read(argc, argv);
 

@@ -59,7 +59,8 @@ PyObject * getPointerToPythonFRMFunction()
 }
 
 void alignVolumesFRM(PyObject *pFunc, const MultidimArray<double> &Iref, const MultidimArray<double> &I,
-		double &rot, double &tilt, double &psi, double &x, double &y, double &z, double &score)
+		double &rot, double &tilt, double &psi, double &x, double &y, double &z, double &score,
+		int maxshift, double maxFreq)
 {
 	PyObject *pyIref=convertToNumpy(Iref);
 	PyObject *pyI=convertToNumpy(I);
@@ -67,10 +68,9 @@ void alignVolumesFRM(PyObject *pFunc, const MultidimArray<double> &Iref, const M
 	// Call frm
 	int bandWidthSphericalHarmonics0=4;
 	int bandWidthSphericalHarmonicsF=64;
-	int frequency=20; // Pixels
-	int maxshift=10;
+	int frequencyPixels=(int)(XSIZE(Iref)*maxFreq);
 	PyObject *arglistfrm = Py_BuildValue("OOOO(ii)i", pyI, Py_None, pyIref, Py_None,
-			bandWidthSphericalHarmonics0, bandWidthSphericalHarmonicsF, frequency, maxshift);
+			bandWidthSphericalHarmonics0, bandWidthSphericalHarmonicsF, frequencyPixels, maxshift);
 	PyObject *resultfrm = PyObject_CallObject(pFunc, arglistfrm);
 	Py_DECREF(arglistfrm);
 	Py_DECREF(pyIref);
@@ -88,7 +88,7 @@ void alignVolumesFRM(PyObject *pFunc, const MultidimArray<double> &Iref, const M
 		double angx=PyFloat_AsDouble(PyList_GetItem(euler,2));
 		Matrix2D<double> Efrm, E(3,3);
 		Euler_anglesZXZ2matrix(-angz1, -angx, -angz2, Efrm); // -angles because FRM rotation definition
-		                                                  // is the opposite of Xmipp
+		                                                     // is the opposite of Xmipp
 
 		// Reorganize the matrix because the Z and X axes in the coordinate system are reversed with
 		// respect to Xmipp
