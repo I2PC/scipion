@@ -28,6 +28,7 @@
 #include <data/geometry.h>
 #include <data/mask.h>
 #include <data/xmipp_program.h>
+#include <interface/frm.h>
 
 // Alignment parameters needed by fitness ----------------------------------
 class AlignParams
@@ -122,7 +123,7 @@ public:
     bool     apply;
     FileName fnOut;
     bool     mask_enabled, mean_in_mask;
-    bool     usePowell, onlyShift;
+    bool     usePowell, onlyShift, useFRM;
 
 public:
 
@@ -149,6 +150,8 @@ public:
         addParamsLine("  [--covariance]    : Covariance fitness criterion");
         addParamsLine("  [--least_squares] : LS fitness criterion");
         addParamsLine("  [--local]         : Use local optimizer instead of exhaustive search");
+        addParamsLine("  [--frm]           : Use Fast Rotational Matching");
+        addParamsLine("                    :+ See Y. Chen, et al. Fast and accurate reference-free alignment of subtomograms. JSB, 182: 235-245 (2013)");
         addParamsLine("  [--onlyShift]     : Only shift");
         addParamsLine(" == Mask Options == ");
         mask.defineParams(this);
@@ -207,6 +210,7 @@ public:
             mask.read(argc, argv);
 
         usePowell = checkParam("--local");
+        useFRM = checkParam("--frm");
         onlyShift = checkParam("--onlyShift");
 
         if (step_rot   == 0)
@@ -271,7 +275,7 @@ public:
             params.mask_ptr = NULL;
 
         // Exhaustive search
-        if (!usePowell)
+        if (!usePowell && !useFRM)
         {
             // Count number of iterations
             int times = 1;
@@ -349,7 +353,7 @@ public:
             if (!tell)
                 progress_bar(times);
         }
-        else
+        else if (usePowell)
         {
             // Use Powell optimization
             Matrix1D<double> x(9), steps(9);
@@ -374,6 +378,18 @@ public:
             best_align=x;
             best_fit=fitness;
             first=false;
+        }
+        else if (useFRM)
+        {
+    		String xmippPython;
+    		initializeXmippPython(xmippPython);
+    		PyObject * pFunc = getPointerToPythonFRMFunction();
+    		double rot,tilt,psi,x,y,z,score;
+    		alignVolumesFRM(pFunc, params.V1(), params.V2(),rot,tilt,psi,x,y,z,score);
+
+    		std::cout << "Shift=" << x << "," << y << "," << z << std::endl;
+    		std::cout << "Rot=" << rot << " tilt=" << tilt << " psi=" << psi << std::endl;
+    		std::cout << "Score=" << score << std::endl;
         }
 
         if (!first)
