@@ -23,13 +23,19 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponse, HttpRequest
 from commons import staticPath
 
+iconDict = {
+            'logoScipion': 'scipion_logo.png',
+            'favicon': 'scipion_bn.png',
+            }
 def getResource(request):
+#    return iconDict[request]
+    
     if request == 'logoScipion':
         img = 'scipion_logo.png'
     elif request == 'favicon':
         img = 'scipion_bn.png'
     elif request == 'help':
-        img = 'contents24.png'
+        img = 'system_help24.png'
     elif request == 'browse':
         img = 'zoom.png'
     elif request == 'edit_toolbar':
