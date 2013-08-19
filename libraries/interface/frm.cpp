@@ -80,9 +80,9 @@ void alignVolumesFRM(PyObject *pFunc, const MultidimArray<double> &Iref, const M
 		PyObject *shift=PyTuple_GetItem(resultfrm,0);
 		PyObject *euler=PyTuple_GetItem(resultfrm,1);
 		score=PyFloat_AsDouble(PyTuple_GetItem(resultfrm,2));
-		x=PyFloat_AsDouble(PyList_GetItem(shift,0))-XSIZE(Iref)/2;
-		y=PyFloat_AsDouble(PyList_GetItem(shift,1))-YSIZE(Iref)/2;
-		z=PyFloat_AsDouble(PyList_GetItem(shift,2))-ZSIZE(Iref)/2;
+		double xfrm=PyFloat_AsDouble(PyList_GetItem(shift,0))-XSIZE(Iref)/2;
+		double yfrm=PyFloat_AsDouble(PyList_GetItem(shift,1))-YSIZE(Iref)/2;
+		double zfrm=PyFloat_AsDouble(PyList_GetItem(shift,2))-ZSIZE(Iref)/2;
 		double angz1=PyFloat_AsDouble(PyList_GetItem(euler,0));
 		double angz2=PyFloat_AsDouble(PyList_GetItem(euler,1));
 		double angx=PyFloat_AsDouble(PyList_GetItem(euler,2));
@@ -100,6 +100,8 @@ void alignVolumesFRM(PyObject *pFunc, const MultidimArray<double> &Iref, const M
 		Euler_matrix2angles(E,rot,tilt,psi);
 		Py_DECREF(resultfrm);
 
-		Euler_angles2matrix(0,20,20, E);
+		x=-zfrm;
+		y=-yfrm;
+		z=-xfrm;
 	}
 }
