@@ -342,9 +342,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                  
         if self.downsampleType == self.OTHER:
             imgSet.setSamplingRate(self.inputMics.getSamplingRate()*self.downFactor.get())
-            
         imgSet.setCoordinates(self.inputCoords)
-        readSetOfParticles(fnImages, imgSet)
+        readSetOfParticles(fnImages, imgSet, imgSet.hasCTF())
         imgSet.write()
         
         self._defineOutputs(outputParticles=imgSet)

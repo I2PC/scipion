@@ -137,17 +137,18 @@ def imageToRow(img, imgRow, imgLabel):
     #TODO: use writeCTFModel if necessary   
     objectToRow(img, imgRow, imgDict)
     
-def rowToImage(md, objId, imgLabel, imgClass):
+def rowToImage(md, objId, imgLabel, imgClass, hasCtf):
     """ Create a Particle from a row of a metadata. """
     imgDict = { 
                "_id": xmipp.MDL_ITEM_ID,
-#               "sphericalAberration": xmipp.MDL_CTF_CS
                }
     img = imgClass()
     # Decompose Xmipp filename
     index, filename = xmippToLocation(md.getValue(imgLabel, objId))
-    img.setLocation(index, filename)  
-    #TODO: use readCTFModel if necessary  
+    img.setLocation(index, filename)
+    if hasCtf:
+        ctFilename = md.getValue(xmipp.MDL_CTF_MODEL, objId)
+        img.setCTF(readCTFModel(ctFilename))
     rowToObject(md, objId, img, imgDict)
     
     return img
@@ -156,9 +157,9 @@ def micrographToRow(mic, micRow):
     """ Set labels values from Micrograph mic to md row. """
     imageToRow(mic, micRow, imgLabel=xmipp.MDL_MICROGRAPH)
     
-def rowToMicrograph(md, objId):
+def rowToMicrograph(md, objId, hasCtf):
     """ Create a Micrograph object from a row of Xmipp metadata. """
-    return rowToImage(md, objId, xmipp.MDL_MICROGRAPH, Micrograph)
+    return rowToImage(md, objId, xmipp.MDL_MICROGRAPH, Micrograph, hasCtf)
 
 def coordinateToRow(coord, coordRow):
     """ Set labels values from Coordinate coord to md row. """
@@ -186,9 +187,9 @@ def rowToCoordinate(md, objId):
     
     return coord
 
-def rowToParticle(md, objId):
+def rowToParticle(md, objId, hasCtf):
     """ Create a Particle from a row of a metadata. """
-    return rowToImage(md, objId, xmipp.MDL_IMAGE, Particle)
+    return rowToImage(md, objId, xmipp.MDL_IMAGE, Particle, hasCtf)
     
 def particleToRow(part, partRow):
     """ Set labels values from Particle to md row. """
@@ -283,7 +284,7 @@ def readSetOfCoordinates(posDir, micSet, coordSet):
 def writeSetOfParticles():
     pass
     
-def readSetOfParticles(fnImages, imgSet):
+def readSetOfParticles(fnImages, imgSet, hasCtf):
     """read from Xmipp image metadata.
         fnImages: The metadata filename where the particles properties are.
         imgSet: the SetOfParticles that will be populated.
@@ -291,5 +292,5 @@ def readSetOfParticles(fnImages, imgSet):
     
     imgMd = xmipp.MetaData(fnImages)
     for objId in imgMd:
-        part = rowToParticle(imgMd, objId)
+        part = rowToParticle(imgMd, objId, hasCtf)
         imgSet.append(part)
