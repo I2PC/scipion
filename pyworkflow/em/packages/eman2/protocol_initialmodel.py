@@ -68,8 +68,7 @@ class EmanProtInitModel(ProtInitialVolume):
     _definition = EmanDefInitModel()
     _label = 'Eman Initial Model'
     
-    def _defineSteps(self):
-        
+    def _defineSteps(self):        
         eman2.loadEnvironment()
         self._prepareDefinition()
         self._insertSteps()
@@ -79,6 +78,7 @@ class EmanProtInitModel(ProtInitialVolume):
         # ToDo: create an Eman conversor and change this lines.
         image = self.getXmippStackFilename()
         imgsFn = os.path.abspath(image)
+        
         #self._insertFunctionStep('genxmippstack')
         self._params = {'imgsFn': imgsFn,
                         'numberOfIterations': self.numberOfIterations.get(),
@@ -90,31 +90,33 @@ class EmanProtInitModel(ProtInitialVolume):
 
     def getXmippStackFilename(self):
         for cls in self.inputClasses.get():
-            img = cls.getClassRepresentative()
+            img = cls.getImage()
             return img.getFileName()
 
     def _insertSteps(self):
-
-        self._createinitialmodel()      
+        self._insertInitialModelStep()      
         self._insertFunctionStep('createOutput')
 
-    def _createinitialmodel(self):
+    def _insertInitialModelStep(self):
         self._enterWorkingDir()
         args = '--input %(imgsFn)s iter=%(numberOfIterations)d --tries=%(numberOfModels)d --sym=%(symmetry)s'
         if self.shrink > 1:
-            args += '--shrink=%(shrink)d'
+            args += ' --shrink=%(shrink)d'
         if self.numberOfThreads > 1:
-            args += '--parallel=thread%(threads)d'
-        self._insertRunJobStep('e2initialmodel.py', args % self._params)
+            args += ' --parallel=thread:%(threads)d'
+        program = eman2.getEmanProgram('e2initialmodel.py')
+        self._insertRunJobStep(program, args % self._params)
                 
     def createOutput(self):
-        models = '%(numberOfModels)d' % self._params
-        volumes = ['initial_models/model_00_%02d.hdf' % k for k in range(models)]
-        #for k in range(models):
-        #    lastIter = 'initial_models/model_00_%02d' % k + '.hdf'
-        setvolumes = EmanSetOfVolumes(self._getPath(lastIter))
-        self._defineOutputs(outputVolumes=volumes)
         self._leaveWorkingDir()
+        volumes = EmanSetOfVolumes(self._getPath('scipion_volumes.json'))
+#        volumes.setSamplingRate(samplingRate)
+        for k in range(self.numberOfModels.get()):
+            volFn = self._getPath('model_00_%02d.hdf' % k)
+            volumes.append(EmanVolume(volFn))
+
+        volumes.write()
+        self._defineOutputs(outputVolumes=volumes)
         
     def _summary(self):
         summary = []

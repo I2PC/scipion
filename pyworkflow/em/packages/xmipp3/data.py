@@ -502,6 +502,7 @@ class XmippSetOfCoordinates(SetOfCoordinates):
         
         xmippCoords = XmippSetOfCoordinates(filename)
         xmippCoords.setMicrographs(setOfCoords.getMicrographs())
+        xmippCoords.setBoxSize(setOfCoords.getBoxSize())
         
         extraPath = dirname(filename)
         posMd = xmipp.MetaData()
@@ -582,7 +583,7 @@ class XmippClass2D(Class2D):
         Class2D.__init__(self, **args)
         self._number = classNumber
         self._filename = filename
-        self._representative = representative
+        self._representative = representative # Image class
         
     def __iter__(self):
         md = xmipp.MetaData('class%06d_images@%s' % 
@@ -592,8 +593,11 @@ class XmippClass2D(Class2D):
             imgCA.getFromMd(md, objId)
             yield imgCA
     
-    def getClassRepresentative(self):
+    def getImage(self):
         return self._representative
+    
+    def getId(self):
+        return self._number
         
         
 class XmippClassification2D(Classification2D):
@@ -606,9 +610,10 @@ class XmippClassification2D(Classification2D):
         self.classesBlock = String(classesBlock)
         
     def __iter__(self):
+        classesFn = self.getClassesMdFileName()        
+        md = xmipp.MetaData(classesFn)
         fn = self.getFileName()
-        block = self.classesBlock.get()
-        md = xmipp.MetaData('%(block)s@%(fn)s' % locals())
+        
         for objId in md:
             ref = md.getValue(xmipp.MDL_REF, objId)
             img = XmippImage(md.getValue(xmipp.MDL_IMAGE, objId))
@@ -620,4 +625,11 @@ class XmippClassification2D(Classification2D):
         """
         return "%s@%s" % (self.classesBlock.get(),
                           self.getFileName())
+
+    def getFiles(self):
+        filePaths = set()
+        filePaths.add(self.getFileName())
+        for class2d in self:
+            filePaths.add(class2d.getImage().getFileName())
+        return filePaths
   

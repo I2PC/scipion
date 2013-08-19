@@ -59,10 +59,9 @@ class XmippDefProjMatch(Form):
                       label="Use initial angles/shifts ? ", 
                       help='Set to <Yes> if you want to use the projection assignment (angles/shifts)\n'
                       'associated with the input particles (hasProjectionAssigment=True)')
-
-        # ReferenceFileNames
-        #TODO: the following parameter should be a Pointer to a Volume and not a string containing the path      
-        self.addParam('input3DReferences', StringParam,
+        # ReferenceFileNames      
+        self.addParam('input3DReferences', PointerParam,
+                      pointerClass='SetOfVolumes',
                       label='Initial 3D reference volumes', 
                       help='Initial 3D density maps with the same dimensions as your particles.\n'
                            'For example: reference1.vol reference2.vol\n'
@@ -922,18 +921,17 @@ class XmippProtProjMatch(xmipp3.XmippProtocol, ProtRefine3D, ProtClassify3D):
 
     def _summary(self):
         summary = []
-        summary.append("Input images:  %s" % self.inputImages.get().getNameId())
-        if self.doMlf.get():
-            if self.doCorrectAmplitudes.get():
-                suffix = "with CTF correction "
-            else:
-                suffix = "ignoring CTF effects "
-            summary.append("Using a ML in <Fourier-space> " + suffix)
+        summary.append("Input images:  %s" % self.inputParticles.get().getNameId())
+        if self.doCTFCorrection.get():
+            suffix = "with CTF correction "
+        else:
+            suffix = "ignoring CTF effects "
+        summary.append("Using a ML in <Fourier-space> " + suffix)
          
-        summary.append("Reference volumes(s): [%s]" % self.ini3DrefVolumes.get())
+        summary.append("Reference volumes(s): [%s]" % self.input3DReferences.get())
 
-        if self.numberOfSeedsPerRef.get() > 1:
-            summary.append("Number of references per volume: <%d>" % self.numberOfSeedsPerRef.get())
+#        if self.numberOfSeedsPerRef.get() > 1:
+#            summary.append("Number of references per volume: <%d>" % self.numberOfSeedsPerRef.get())
            
         # TODO: Add information at info@iter_classes.xmd from last iteration
         

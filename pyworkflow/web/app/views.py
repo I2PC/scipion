@@ -188,8 +188,8 @@ def populateTree(tree, obj):
         item = TreeItem(text, tag)
         tree.childs.append(item)
         # If have tag 'protocol_base', fill dynamically with protocol sub-classes
+        protClassName = value.split('.')[-1]  # Take last part
         if sub.value.hasValue() and tag == 'protocol_base':
-            protClassName = value.split('.')[-1]  # Take last part
             prot = emProtocolsDict.get(protClassName, None)
             if prot is not None:
                 for k, v in emProtocolsDict.iteritems():
@@ -197,6 +197,7 @@ def populateTree(tree, obj):
                         protItem = TreeItem(k, 'protocol_class', protClassName)
                         item.childs.append(protItem)
         else:
+            item.protClass = protClassName
             populateTree(item, sub)                
 
 
@@ -591,7 +592,8 @@ def deleteHost(request):
 
 def visualizeObject(request):
     objectId = request.GET.get("objectId")    
-    projectName = request.session['projectName']
+    #projectName = request.session['projectName']
+    projectName = request.GET.get("projectName")
     
 #    project = loadProject(projectName)
     manager = Manager()
@@ -611,7 +613,7 @@ def visualizeObject(request):
         inputParameters = {'path': join(request.session['projectPath'], mics.getFileName()),
                        'allowRender': True,
                        'mode': 'gallery',
-                       'zoom': 150,
+                       'zoom': '150px',
                        'goto': 1,
                        'colRowMode': 'Off'}
     elif isinstance(object, SetOfVolumes):
@@ -623,7 +625,7 @@ def visualizeObject(request):
         inputParameters = {'path': join(request.session['projectPath'], imgs.getFileName()),
                'allowRender': True,
                'mode': 'gallery',
-               'zoom': 150,
+               'zoom': '150px',
                'goto': 1,
                'colRowMode': 'Off'}
 
@@ -633,7 +635,7 @@ def visualizeObject(request):
         inputParameters = {'path': join(request.session['projectPath'], path),
                'allowRender': True,
                'mode': 'gallery',
-               'zoom': 150,
+               'zoom': '150px',
                'goto': 1,
                'colRowMode': 'Off'}
 #        runShowJ(obj.getClassesMdFileName())

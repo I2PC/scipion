@@ -135,8 +135,9 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         
     def createOutput(self):
         fn = self._getExtraPath('config.xmd')
-        md = xmipp.MetaData('properties@%s' % fn)
-        size = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, md.firstObject())
-        coords = self._createSetOfCoordinates(size)
-        self._defineOutputs(outputCoordinates=coords)
+        if xmipp.existsBlockInMetaDataFile('properties@%s' % fn):
+            md = xmipp.MetaData('properties@%s' % fn)
+            size = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, md.firstObject())
+            coords = self._createSetOfCoordinates(size)
+            self._defineOutputs(outputCoordinates=coords)
 

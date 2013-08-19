@@ -138,7 +138,7 @@ class Image(EMObject):
     
     def getFileName(self):
         """ Use the _objValue attribute to store filename. """
-        return self.get()
+        return str(self.get())
     
     def setFileName(self, newFileName):
         """ Use the _objValue attribute to store filename. """
@@ -560,19 +560,38 @@ class Class2D(EMObject):
         """
         pass
     
-    def getClassRepresentative(self):
+    def getImage(self):
         """ Usually the representative is an average of 
         the images assigned to that class.
         """
         pass
+    
+    def hasImage(self):
+        """ Return true if have an average image. """
+        return True
         
         
 class Classification2D(EMObject):
     """ Store results from a 2D classification. """
     def __init__(self, **args):
         EMObject.__init__(self, **args)
+        self._hasImages = True # True if the classes have associated average image
         
     def __iter__(self):
         """ Iterate over all classes. """
-        pass    
+        pass
+    
+    def hasImages(self):
+        return self._hasImages
+    
+    def getImages(self):
+        """ Return a SetOfImages composed by all the average images 
+        of the 2D classes. """
+        imgs = SetOfImages()
+        
+        for class2D in self:
+            imgs.append(class2D.getImage())
+            
+        return imgs
+     
      

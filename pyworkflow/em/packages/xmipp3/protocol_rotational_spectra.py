@@ -1,20 +1,18 @@
 from pyworkflow.em import *  
 import xmipp
 from data import *
-from xmipp3 import XmippProtocol
+import xmipp, xmipp3
 from protocol_kerdensom import *
 
-CENTER_MIDDLE = 0
-CENTER_FIRST_HARMONIC = 1
 
 
 class XmippDefRotSpectra(XmippDefKerdensom):
     """Create the definition of parameters for
     the Rotational Spectra protocol"""
     def _addParams(self):
-        self.addSection(label='Rotational spectra parameters')
-        self.addParam('howCenter', EnumParam, choices=['Use the middle of the image', 'Minimize first harmonic'], 
-                      default=CENTER_MIDDLE, important=True, label='How to find the center of rotation', display=EnumParam.DISPLAY_COMBO, 
+        self.addParam('howCenter', EnumParam, choices=['Middle of the image', 'Minimize first harmonic'], 
+                      default=xmipp3.ROTSPECTRA_CENTER_MIDDLE, important=True, 
+                      label='How to find the center of rotation', display=EnumParam.DISPLAY_COMBO, 
                       help='Select how to find the center of rotation.')  
         self.addParam('spectraInnerRadius', IntParam, default=15,
                       label='Inner radius for rotational harmonics (%)',
@@ -28,7 +26,7 @@ class XmippDefRotSpectra(XmippDefKerdensom):
         self.addParam('spectraHighHarmonic', IntParam, default=15,
                       label='Highest harmonic to calculate',
                       expertLevel=LEVEL_ADVANCED) 
-        self.addSection(label='Classification: classify kerdensom')
+        self.addSection(label='Kerdensom')
         XmippDefKerdensom._addParams(self)
           
 #         self.addSection(label='Classification: classify kerdensom')
@@ -58,110 +56,74 @@ class XmippProtRotSpectra(XmippProtKerdensom):
     """Protocol to compute the rotational spectrum of the given particles"""
     
     _definition = XmippDefRotSpectra()
-    
-    def _defineSteps(self):
         
-#         # Convert input images if necessary
-#         self.inputParts = self.inputParticles.get()        
-#         partsFn = self._insertConvertStep('inputParts', XmippSetOfParticles,
-#                                          self._getPath('input_particles.xmd'))
-        
-        XmippProtKerdensom._prepareDefinition(self)
-        
-        # Prepare arguments to call programs
-#         self._params = self._params + { 'extraDir': self._getExtraPath(),
-# #                                         'partsFn': partsFn,
-#                                         'howCenter' : self.howCenter.get(),
-#                                         'spectraInnerRadius' : self.spectraInnerRadius.get(),
-#                                         'spectraOuterRadius' : self.spectraOuterRadius.get(),
-#                                         'spectraLowHarmonic' : self.spectraLowHarmonic.get(),
-#                                         'spectraHighHarmonic' : self.spectraHighHarmonic.get()
-#                 #                         'xDimension' : xDimension,
-#                 #                         'yDimension' : yDimension,
-#                 #                         'initialRegFactor' : initialRegFactor,
-#                 #                         'finalRegFactor' : finalRegFactor,
-#                 #                         'lowerRegFactorSteps' : lowerRegFactorSteps,
-#                 #                         'kerdenSOMParamters' : kerdenSOMParamters                        
-#                                         }
-
+    def _prepareParams(self):
+        XmippProtKerdensom._prepareParams(self)
         self._params['extraDir'] = self._getExtraPath()
-        self._params['centerFn'] =  self._getExtraPath("center2d_center.xmd")
-        self._params['howCenter'] = self.howCenter.get()
-        self._params['spectraInnerRadius'] = self.spectraInnerRadius.get()
-        self._params['spectraOuterRadius'] = self.spectraOuterRadius.get()
+        self._params['R1'] = self.spectraInnerRadius.get()
+        self._params['R2'] = self.spectraOuterRadius.get()
         self._params['spectraLowHarmonic'] = self.spectraLowHarmonic.get()
         self._params['spectraHighHarmonic'] = self.spectraHighHarmonic.get()
-        
-        self._insertFindCenter()
-        self._insertFunctionStep('calculateSpectra')
-        self._insertSteps()
-        
-    def _insertFindCenter(self):
-        if self.howCenter == CENTER_MIDDLE:
-            self._insertMiddle()
+        self._params['vectors'] = self._getExtraPath("rotSpectra.xmd")
+    
+    def _defineSteps(self):
+        self._prepareParams()  
+        imagesFn = self._params['imgsFn']
+        centerFn = self._getExtraPath("center2d_center.xmd")
+        # After any of this steps the file "center2d_center.xmd" should be produced
+        if self.howCenter == xmipp3.ROTSPECTRA_CENTER_MIDDLE:
+            self._insertMiddle(imagesFn, centerFn)
         else:
-            self._insertFunctionStep('centerFirstHarmonic', self._params['imgsFn'], self._params['centerFn'])
+            self._insertFunctionStep('centerFirstHarmonic', imagesFn, centerFn)
+        # Produce "rotSpectra.xmd" vectors
+        self._insertFunctionStep('calculateSpectra', imagesFn, centerFn, self._params['vectors'])
+        # Call kerdensom for classification
+        self._insertKerdensom()
+        # Store outputs in db
+        self._insertFunctionStep('createOutput')
         
-    def _insertMiddle(self):
-        centerFinder = self._params['howCenter']
-        spectraOuterRadius = self._params['spectraOuterRadius']
-        extraDir = self._params['extraDir']
+    def _insertMiddle(self, inputImages, outputCenter):
+        R2 = self._params['R2']
         
-        if spectraOuterRadius + 20 > 100:
-            R3 = spectraOuterRadius + (100 - spectraOuterRadius) / 2
+        if R2 + 20 > 100:
+            R3 = R2 + (100 - R2) / 2
             R4 = 100
         else:
-            R3 = spectraOuterRadius + 10
-            R4 = spectraOuterRadius + 20
+            R3 = R2 + 10
+            R4 = R2 + 20
+        self._params['R3'] = R3
+        self._params['R4'] = R4
+        
         program = 'xmipp_image_find_center'
-        arguments = '-i %(imgsFn)s --oroot %(extraDir)s/center2d --r1 %(spectraInnerRadius)i --r2 %(spectraOuterRadius)i' + \
-                 ' --r3 ' + str(R3) + ' --r4 ' + str(R4)
+        args = '-i ' + inputImages
+        args += ' --oroot %(extraDir)s/center2d --r1 %(R1)d --r2 %(R2)d --r3 %(R3)d --r4 %(R4)d'
         # Run the command with formatted parameters
-        self._log.info('Launching: ' + program + ' ' + arguments % self._params)
-        self._insertRunJobStep(program, arguments % self._params)
+        self._insertRunJobStep(program, args % self._params)
             
     def centerFirstHarmonic(self, inputImages, outputCenter):
-            from xmipp import MetaDataInfo
-            dims = MetaDataInfo(inputImages)
-            md = xmipp.MetaData()
-            id = md.addObject()
-            md.setValue(xmipp.MDL_X, float(dims[0] / 2), id)
-            md.setValue(xmipp.MDL_Y, float(dims[1] / 2), id)
-            md.write(join(extraDir), outputCenter)
+        dims = xmipp.MetaDataInfo(str(inputImages))
+        md = xmipp.MetaData()
+        objId = md.addObject()
+        md.setValue(xmipp.MDL_X, float(dims[0] / 2), objId)
+        md.setValue(xmipp.MDL_Y, float(dims[1] / 2), objId)
+        md.write(outputCenter)
+        return [outputCenter] # this file should exists after the step
             
-    def calculateSpectra(self):     
-        md = xmipp.MetaData(self._params['centerFn'])
-        id = md.firstObject()
-        xOffset=md.getValue(xmipp.MDL_X, id)
-        yOffset=md.getValue(xmipp.MDL_Y, id)
+    def calculateSpectra(self, inputImages, inputCenter, outputSpectra):     
+        md = xmipp.MetaData(inputCenter)
+        objId = md.firstObject()
+        self._params['xOffset'] = md.getValue(xmipp.MDL_X, objId)
+        self._params['yOffset'] = md.getValue(xmipp.MDL_Y, objId)
         
         program = 'xmipp_image_rotational_spectra'
-        arguments = '-i %(imgsFn)s -o %(extraDir)s/rotSpectra.xmd' + \
-                 ' --x0 ' + str(xOffset) + \
-                 ' --y0 ' + str(yOffset) + \
-                 ' --r1 %(spectraInnerRadius)i --r2 %(spectraOuterRadius)i' + \
-                 ' --low %(spectraLowHarmonic)i' + \
-                 ' --high %(spectraHighHarmonic)i'
+        args = "-i %s -o %s" % (inputImages, outputSpectra)
+        args += ' --x0 %(xOffset)d --y0 %(yOffset)d --r1 %(R1)d --r2 %(R2)d' + \
+                     ' --low %(spectraLowHarmonic)d --high %(spectraHighHarmonic)d'
         # Run the command with formatted parameters
-        self._log.info('Launching: ' + program + ' ' + arguments % self._params)
-        self._insertRunJobStep(program, arguments % self._params)       
+        self.runJob(None, program, args % self._params)
+        return [outputSpectra]     
     
-    
-#     def kerdensom(self):
-#         extraDir = self._params['extraDir']        
-#         program = 'xmipp_classify_kerdensom'
-#         params = '-i %(extraDir)s/rotSpectra.xmd' + \
-#                  ' --oroot %(extraDir)s/kerdensom' + \
-#                  ' --xdim %(xDimension)i' + \
-#                  ' --ydim %(yDimension)i' + \
-#                  ' --deterministic_annealing %(lowerRegFactorSteps)f %(initialRegFactor)f %(initialRegFactor)f' + \
-#                  ' %(kerdenSOMParamters)s' 
-#         # Run the command with formatted parameters
-#         self._log.info('Launching: ' + program + ' ' + arguments % self._params)
-#         self._insertRunJobStep(program, arguments % self._params)   
-#         
-#         deleteFiles(log, [os.path.join(extraDir,"rotSpectra.xmd"),os.path.join(extraDir,"rotSpectra.vec")], True)
-#     
+
 #         
 #     def _validate(self):
 #         validateMsgs = []
