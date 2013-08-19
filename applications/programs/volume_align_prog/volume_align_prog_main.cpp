@@ -386,10 +386,17 @@ public:
     		PyObject * pFunc = getPointerToPythonFRMFunction();
     		double rot,tilt,psi,x,y,z,score;
     		alignVolumesFRM(pFunc, params.V1(), params.V2(),rot,tilt,psi,x,y,z,score);
-
-    		std::cout << "Shift=" << x << "," << y << "," << z << std::endl;
-    		std::cout << "Rot=" << rot << " tilt=" << tilt << " psi=" << psi << std::endl;
-    		std::cout << "Score=" << score << std::endl;
+    		best_align.initZeros(9);
+    		best_align(0)=1; // Gray scale
+    		best_align(1)=0; // Gray shift
+    		best_align(2)=rot;
+    		best_align(3)=tilt;
+    		best_align(4)=psi;
+    		best_align(5)=1; // Scale
+    		best_align(6)=z;
+    		best_align(7)=y;
+    		best_align(8)=x;
+    		best_fit=-score;
         }
 
         if (!first)
