@@ -20,7 +20,6 @@
 	$(document).ready(function(){
 		initializeZoomEvents();
 		initializeColRowModeEvents()
-		initializeSaveButtonEvents()
 		initializeComboBoxEvents()
 		initializeArrowEvents()
 		initializeColsRowsEvents()
@@ -42,7 +41,7 @@
 	function initializeArrowEvents(){
 		$(".arrowImage").click(function(){
 			if ($(this).closest(".sectionMenu, .subSectionMenu").find(".menuInputNumber").is("[readonly]")==false){
-				if ($(this).attr("src").indexOf("up") != -1){
+				if ($(this).attr("src").indexOf("Up") != -1){
 					$(this).closest(".sectionMenu, .subSectionMenu").find(".menuInputNumber").val(+$(this).closest(".sectionMenu, .subSectionMenu").find(".menuInputNumber").val()+1)
 				}
 				else{
@@ -60,22 +59,6 @@
 		$("#id_blockComboBox , #id_labelsToRenderComboBox").change(function(){
 			$('form#showjForm').submit();
 		})
-	}
-	</script>
-	<script type="text/javascript">
-	//Initialize save buttons events. Ajax call for saving metadata to file
-	function initializeSaveButtonEvents(){
-		$("#saveButton").click(function(){
-			$.ajax({
-				type : "GET",
-				url : "/save_showj_metadata/?path=\"/home/adrian/taka.xmd\"",
-				dataType : "json",
-				success : function(json) {
-					message = json.message;
-					alert(message)
-				}
-			});
-		});
 	}
 	</script>
 	<script type="text/javascript">
@@ -278,16 +261,41 @@
 	</script>
 	<script type="text/javascript">
 		//Save table change in metadata
-		function saveShowjTable(elementId, value){
+		function saveShowjTable(){
+			console.log("changeswewe",changes)
+			
 			$.ajax({
-				type : "GET",
+				type : "POST",
+				url : "/save_showj_table/",
+				data : {
+					changes: JSON.stringify(changes),
+					csrfmiddlewaretoken: '{{ csrf_token }}'
+				}, 
+				success : function(json) {
+					console.log("return")
+					message = json.message;
+					alert(message)
+				}
+			});
+			
+			/* $.post("/save_showj_table/",
+			  data: {
+			    changes:changes,
+			    csrfmiddlewaretoken: '{{ csrf_token }}'
+			  },
+			  function(data,status){
+			    alert("Data: " + data + "\nStatus: " + status);
+			  }); */
+			
+/* 			$.ajax({
+				type : "POST",
 				url : "/save_showj_table/?element_id=" + elementId + "&element_value=" + value,
 				dataType : "json",
 				success : function(json) {
 					message = json.message;
 					alert(message)
 				}
-			});
+			}); */
 		}
 	</script>
 	<script type="text/javascript">
@@ -351,12 +359,14 @@
 <body>
 	<header>
 	<!-- <div style="float:left;" id="logoDiv"> -->
-	<a href="#" style="box-flex:1;"><img class="logo" src="/resources/scipion_logo.png" alt="Scipion logo" style="max-height:80px; "></a>
+	<a href="#" style="margin:2px 0px 0px 8px"><img class="logo" src="/resources/scipion_logo.png" alt="Scipion logo" style="max-height:60px; "></a>
 	<!-- </div> -->
 	
-	<div style="box-flex:1;padding:40px;text-align:center;">
+	<div style="padding:16px 0px 0px 15px;text-align:center;">
 	<span class="project_name" style="font-size:1.8em; ">Xmipp Showj Web</span>
 	</div>
+	
+	
 	
 	</header>
 <!-- 	<nav>  Top Menu
@@ -469,7 +479,7 @@
 				</div>
 				
 				<div id="saveContainer" class="sectionMenu">
-					<button id="saveButton">
+					<button id="saveButton" onclick="saveShowjTable(); return false;">
 						<img src="/resources/showj/saveOff.png" id="saveButtonImage" />
 					</button>
 				</div> 

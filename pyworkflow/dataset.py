@@ -78,6 +78,9 @@ class Table(object):
         """ Return all columns. """
         return self._columns.values()
     
+    def getNumberOfColumns(self):
+        return len(self._columns)
+    
     def getSize(self):
         """ Return the number of rows. """
         return len(self._rowDict)

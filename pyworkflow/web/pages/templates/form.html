@@ -164,12 +164,12 @@
 											<input type="text" id="{{paramName}}_input" name={{paramName}} value="{{param.htmlValue}}">
 									{% endif %}
 									</td>
-									<td class="ico"><a href="javascript:help('{{paramName}}','{{param.help.get}}');"><img src={{help}} /></a></td>
-								{% if param.getClassName == "PointerParam" %}
 									<td class="ico">
+								{% if param.getClassName == "PointerParam" %}
 										<a href="javascript:browseObjects('{{paramName}}','{{projectName}}','{{param.pointerClass.get}}');"><img src={{browse}}/></a>
-									</td>
 								{% endif %}
+									</td>
+									<td class="ico"><a href="javascript:help('{{paramName}}','{{param.help.get}}');"><img src={{help}} /></a></td>
 								</tr>
 								{% endfor %}
 								</table>

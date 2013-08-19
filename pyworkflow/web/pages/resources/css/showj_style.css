@@ -142,10 +142,10 @@ aside .arrowSectionMenu{
 	-webkit-flex-flow: column;
 	margin: 4px;
 }
+
 aside .arrowImage{
 	margin: 1px;
 }
-
 
 
 /* MAIN SECTION */
@@ -190,10 +190,41 @@ section .imageTitle{
 	color: #FFF;
 }
 
+.image_selected {
+	background-color: #000;
+}
+
+
+.tableImages{
+	display: block;
+	margin: 0 auto;
+}
+
+.multipleSelectionToolContainer{
+	display:none;
+	z-index:999;
+	background-color: rgb(50, 1, 1);
+	color: #FFF;
+	/* display: -webkit-flex; */
+	-webkit-align-items: center;
+	-webkit-flex-flow: column;
+	position: absolute;
+}
+
+.pressedButton{
+	opacity:0.5;
+}
+
+/* GALLERY VIEW */
 #column_label {
 	background-color: #dddddd;
 	font: 12px Helvetica;
 	text-align: center;
+}
+
+/* TABLE VIEW */
+.row_selected{
+	background-color: #F3CBCB !important;
 }
 
 #data_table {
@@ -220,6 +251,23 @@ section .imageTitle{
 	font-family: Helvetica;
 	
 }
+.iconHeader{
+	width:20px;
+	height:20px;
+}
+.renderTableOn{
+	background-image: url(/resources/showj/renderTableOn.png);	
+}
+.renderTableOff{
+	background-image: url(/resources/showj/renderTableOff.png);	
+}
+
+.editTableOn{
+	background-image: url(/resources/showj/editTableOn.png);	
+}
+.editTableOff{
+	background-image: url(/resources/showj/editTableOff.png);	
+}
 
 #table_container tbody tr.odd{
 	background-color: #FFF;
@@ -229,46 +277,52 @@ section .imageTitle{
 	width: 100%;
 }
 
-.image_selected {
-	background-color: #000;
-}
-
-.row_selected{
-	background-color: #F3CBCB !important;
-}
-
-.tableImages{
-	display: block;
-	margin: 0 auto;
-}
-
-.multipleSelectionToolContainer{
-	display:none;
-	z-index:999;
-	background-color: rgb(50, 1, 1);
-	color: #FFF;
-	/* display: -webkit-flex; */
-	-webkit-align-items: center;
-	-webkit-flex-flow: column;
-	position: absolute;
-}
-
-.data_table_length{
-	margin-bottom: 10px;
-	
-}
-
-.dataTables_filter{
-	margin-bottom: 10px;
-}
-
+/* DATATABLE STYLE */
 #data_table_filter input{
 	font-size:16px;
 	padding: 2px 2px 0px 3px;
 }
+#data_table_length{
+	margin-bottom: 10px;
+	
+}
 
-.pressedButton{
-	opacity:0.5;
+#data_table_filter{
+	margin-bottom: 10px;
+}
+
+#data_table_info{
+	margin: 10px 0px;
+}
+
+#data_table_paginate{
+	margin: 10px 0px;
+}
+
+/* TABLE CONFIGURATION */
+#tableConfigurationContainer{
+	overflow: hidden;
+}
+#configurationContainer{
+	display:none;
+	margin: 20px;
+	width: 60%;
+}
+
+#tableConfigurationContainer table{
+	
+}
+
+#tableConfigurationButtonBar{
+	text-align: center;
+}
+
+#firstTableConfiguration{
+	float:left;
+}
+
+#secondTableConfiguration{
+	float:right;
 }
 
 /* FIX FOR DATABLE ARROW BUTTON FIT IN ONE LINE */
