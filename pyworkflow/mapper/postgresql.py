@@ -202,6 +202,18 @@ class PostgresqlMapper(Mapper):
 
 
         # !!!! delete methods
+    def deleteChilds(self, obj):
+        namePrefix = self.__getNamePrefix(obj)
+        self.db.deleteChildObjects(namePrefix)
+        
+    def deleteAll(self):
+        """ Delete all objects stored """
+        self.db.deleteAll()
+                
+    def delete(self, obj):
+        """Delete an object and all its childs"""
+        self.deleteChilds(obj)
+        self.db.deleteObject(obj.getObjId())
 
         # !!!! update methods
 
@@ -285,33 +297,44 @@ class PostgresqlDb():
 
 
     def commit(self):
-        print "commit"
         self.connection.commit()
 
+
+    def lastId(self):
+        """ Useful for testing"""
+        self.cursor.execute("select max(id) from objects")
+        row=self.cursor.fetchone()
+        print "last id" + str(row)
+        return(row[0])
 
     
     def selectCmd(self, whereStr, orderByStr=' ORDER BY id'):
         return self.SELECT + whereStr + orderByStr
 
 
+    def executeSelect(self, whereStr, orderByStr=' ORDER BY id', valueTuple=None):
+        # !!!! handle ProgrammingError, OperationalError...
+        self.cursor.execute(self.selectCmd(whereStr,orderByStr),valueTuple)
+
+
     def selectObjectsByParent(self, parent_id=None, iterate=False):
         """Select object with a parent matching parent_id, or no parent (if parent_id is None)"""
         if parent_id is None:
-            self.cursor.execute(self.selectCmd("parent_id is NULL"))
+            self.executeSelect("parent_id is NULL")
         else:
-            self.cursor.execute(self.selectCmd("parent_id=%s"), (parent_id,))
+            self.executeSelect("parent_id=%s", (parent_id,))
         return self._results(iterate)  
 
 
     def selectObjectsByAncestor(self, ancestor_namePrefix, asIterator=False):
-        """Select all objects in the hierachy of ancestor_id"""
-        self.cursor.execute(self.selectCmd("name LIKE '%s.%%'" % ancestor_namePrefix))
+        """Select all objects in the hierachy of ancestor"""
+        self.executeSelect("name LIKE '%s.%%'" % ancestor_namePrefix)
         return self._results(asIterator)          
 
 
     def selectObjectById(self, objId):
         """Select an object give its id"""
-        self.cursor.execute(self.selectCmd("id=%s"), (objId,))  
+        self.executeSelect("id=%s", valueTuple=(objId,))  
         return self.cursor.fetchone()
 
 
@@ -319,16 +342,14 @@ class PostgresqlDb():
         """Select based on a constrain dictionary, where all of them must be fulfilled"""
         whereList = ['%s=%%s' % k for k in args.keys()]
         whereStr = ' AND '.join(whereList)
-        print whereStr
         whereTuple = tuple(args.values())
-        self.cursor.execute(self.selectCmd(whereStr), whereTuple)
+        self.executeSelect(whereStr, valueTuple=whereTuple)
         return self._results(asIterator)
 
     
     def selectObjectsWhere(self, whereStr, asIterator=False):
-        self.cursor.execute(self.selectCmd(whereStr))
+        self.executeSelect(whereStr)
         return self._results(asIterator)   
-
 
 
     def _results(self, asIterator=False):
@@ -344,3 +365,21 @@ class PostgresqlDb():
         while row is not None:
             yield row
             row = self.cursor.fetchone()
+
+    def executeDelete(self, whereStr, valueTuple=None):
+        self.cursor.execute(self.DELETE + whereStr,valueTuple)
+        self.commit()
+
+    def deleteObject(self, objId):
+        """Delete object matching objId"""
+        self.executeDelete("id=%s", (objId,))
+
+        
+    def deleteChildObjects(self, ancestor_namePrefix):
+        """ Delete all children of ancestor, which share the same starting prefix"""
+        self.executeDelete( "name LIKE '%s.%%'", (ancestor_namePrefix,) )
+
+        
+    def deleteAll(self):
+        """ Delete all Objects from the db. """
+        self.executeDelete("true")
