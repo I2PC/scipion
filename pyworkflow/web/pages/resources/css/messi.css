@@ -94,13 +94,13 @@
 }
 
 .btn-cancel {
-	background: url(../../../resources/dialog_close.png) 0.5em no-repeat;
+	background: url(../../../resources/dialog_cancel.png) 0.5em no-repeat;
 	background-size: 20%;
 	font-size: 0.8em;
-	color: white;
+/* 	color: white; */
 	width: 7.2em;
 	height: 2em;
-	background-color: FireBrick;
+/* 	background-color: FireBrick; */
 	padding: 1px;
 	padding-left: 1.7em;
 	font-weight: bold;
@@ -113,17 +113,17 @@
 
 .btn-cancel:hover {
 	background-color: white;
-	color: black;
+/* 	color: black; */
 }
 
 .btn-select {
-	background: url(../../../resources/enable.gif) 0.5em no-repeat;
+	background: url(../../../resources/dialog_ok.png) 0.5em no-repeat;
 	background-size: 20%;
 	font-size: 0.8em;
-	color: white;
+/* 	color: white; */
 	width: 7.2em;
 	height: 2em;
-	background-color: LimeGreen;
+/* 	background-color: LimeGreen; */
 	padding: 1px;
 	padding-left: 1.7em;
 	font-weight: bold;
@@ -136,7 +136,7 @@
 
 .btn-select:hover {
 	background-color: white;
-	color: black;
+/* 	color: black; */
 }
 
 .messi .btn-success:hover,.messi .btn-success:active,.messi .btn-success.active,.messi .btn-success.disabled,.messi .btn-success[disabled]
