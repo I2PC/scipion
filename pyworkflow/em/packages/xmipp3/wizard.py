@@ -121,7 +121,7 @@ class XmippParticleMaskRadiusWizard(XmippMaskRadiusWizard):
     _targets = [(XmippDefMask, ['maskRadius'])]
         
     def _getText(self, obj):
-        index = obj.getLocation().getIndex()
+        index = obj.getIndex()
         text = os.path.basename(obj.getFileName())
         if index:
             return "%03d@%s" % (index, text)
@@ -250,11 +250,10 @@ class XmippImagePreviewDialog(XmippPreviewDialog):
         from pyworkflow.gui.matplotlib_image import ImagePreview 
         self.preview = ImagePreview(frame, self.dim, label=self.previewLabel)
         self.preview.grid(row=0, column=0) 
-        self.image = xmipp.Image()
         
     def _itemSelected(self, obj):
         filename = obj.getFileName()
-        print "image.readPreview, filename=%s, self.dim=%d" % (filename, self.dim)
+        self.image = xmipp.Image()
         self.image.readPreview(filename, self.dim)
         if filename.endswith('.psd'):
             self.image.convertPSD()
