@@ -30,6 +30,8 @@ This module contains converter functions that will serve to:
 2. Read from Xmipp files to base classes
 """
 
+import os
+
 import xmipp
 from data import *
 from xmipp3 import XmippMdRow
@@ -127,14 +129,18 @@ def xmippToLocation(xmippFilename):
     else:
         return NO_INDEX, str(xmippFilename)
 
-def imageToRow(img, imgRow, imgLabel):
+def imageToRow(img, imgRow, ctfDir, hasCtf, imgLabel):
     imgDict = { 
                "_id": xmipp.MDL_ITEM_ID,
                }
     index, filename = img.getLocation()
     fn = locationToXmipp(index, filename)
+    if hasCtf:
+        rootFn = "%06d_%s" % (img.getId(), replaceBaseExt(img.getFileName(), "ctfparam"))
+        ctfFn = join(ctfDir, rootFn)
+        writeCTFModel(img.getCTF(), ctfFn)
+        imgRow.setValue(xmipp.MDL_CTF_MODEL, ctfFn)
     imgRow.setValue(imgLabel, fn)
-    #TODO: use writeCTFModel if necessary   
     objectToRow(img, imgRow, imgDict)
     
 def rowToImage(md, objId, imgLabel, imgClass, hasCtf):
@@ -153,9 +159,9 @@ def rowToImage(md, objId, imgLabel, imgClass, hasCtf):
     
     return img
     
-def micrographToRow(mic, micRow):
+def micrographToRow(mic, micRow, ctfDir, hasCtf):
     """ Set labels values from Micrograph mic to md row. """
-    imageToRow(mic, micRow, imgLabel=xmipp.MDL_MICROGRAPH)
+    imageToRow(mic, micRow, ctfDir, hasCtf, imgLabel=xmipp.MDL_MICROGRAPH)
     
 def rowToMicrograph(md, objId, hasCtf):
     """ Create a Micrograph object from a row of Xmipp metadata. """
@@ -190,15 +196,19 @@ def rowToParticle(md, objId, hasCtf):
     """ Create a Particle from a row of a metadata. """
     return rowToImage(md, objId, xmipp.MDL_IMAGE, Particle, hasCtf)
     
-def particleToRow(part, partRow):
+def particleToRow(part, partRow, ctfDir, hasCtf):
     """ Set labels values from Particle to md row. """
-    imageToRow(part, partRow, imgLabel=xmipp.MDL_IMAGE)
+    imageToRow(part, partRow, ctfDir, hasCtf, imgLabel=xmipp.MDL_IMAGE)
     
-def readSetOfMicrographs(filename):
-    pass
+def readSetOfMicrographs(filename, micSet, hasCtf):
+    
+    micMd = xmipp.MetaData(filename)
+    for objId in micMd:
+        mic = rowToMicrograph(micMd, objId, hasCtf)
+        micSet.append(mic)
 
 
-def writeSetOfMicrographs(micSet, filename, rowFunc=None):
+def writeSetOfMicrographs(micSet, filename, ctfDir, rowFunc=None):
     """ This function will write a SetOfMicrographs as Xmipp metadata.
     Params:
         micSet: the SetOfMicrograph instance.
@@ -207,11 +217,12 @@ def writeSetOfMicrographs(micSet, filename, rowFunc=None):
             adding to metadata.
     """
     md = xmipp.MetaData()
+    hasCtf = micSet.hasCTF()
     
     for mic in micSet:
         objId = md.addObject()
         micRow = XmippMdRow()
-        micrographToRow(mic, micRow)
+        micrographToRow(mic, micRow, ctfDir, hasCtf)
         if rowFunc:
             rowFunc(mic, micRow)
         micRow.writeToMd(md, objId)
@@ -280,7 +291,7 @@ def readSetOfCoordinates(posDir, micSet, coordSet):
 
     coordSet.setBoxSize(boxSize)
 
-def writeSetOfParticles(imgSet, filename, rowFunc=None):
+def writeSetOfParticles(imgSet, filename, ctfDir, rowFunc=None):
     
     """ This function will write a SetOfParticles as Xmipp metadata.
     Params:
@@ -298,11 +309,12 @@ def writeSetOfParticles(imgSet, filename, rowFunc=None):
 #         writeSetOfMicrographs(obj, fn)
     
     md = xmipp.MetaData()
+    hasCtf = imgSet.hasCTF()
     
     for img in imgSet:
         objId = md.addObject()
         imgRow = XmippMdRow()
-        particleToRow(img, imgRow)
+        particleToRow(img, imgRow, ctfDir, hasCtf)
         if rowFunc:
             rowFunc(img, imgRow)
         imgRow.writeToMd(md, objId)
@@ -310,7 +322,7 @@ def writeSetOfParticles(imgSet, filename, rowFunc=None):
     md.write(filename)
     imgSet._xmippMd = String(filename)
 
-    
+
 def readSetOfParticles(fnImages, imgSet, hasCtf):
     """read from Xmipp image metadata.
         fnImages: The metadata filename where the particles properties are.
@@ -324,6 +336,8 @@ def readSetOfParticles(fnImages, imgSet, hasCtf):
         imgSet.append(part)
 
 def createXmippInputImages(self, imgSet):
+    
     imgsFn = self._getPath('input_images.xmd')
-    writeSetOfParticles(imgSet, imgsFn)
+    ctfDir = self._getTmpPath()
+    writeSetOfParticles(imgSet, imgsFn, ctfDir)
     return imgsFn
