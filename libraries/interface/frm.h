@@ -58,9 +58,14 @@ PyObject * getPointerToPythonFRMFunction();
  *
  * Maxshift is in pixels.
  * MaxFreq is in digital frequency.
+ *
+ * A is the transformation matrix that needs to be applied on I to fit Iref.
+ *
+ * If apply is set, then I is substituted with the aligned volume.
  */
-void alignVolumesFRM(PyObject *pFunc, const MultidimArray<double> &Iref, const MultidimArray<double> &I,
+void alignVolumesFRM(PyObject *pFunc, const MultidimArray<double> &Iref, MultidimArray<double> &I,
 		double &rot, double &tilt, double &psi, double &x, double &y, double &z, double &score,
+		Matrix2D<double> &A,
 		int maxshift=10, double maxFreq=0.25, const MultidimArray<int> *mask=NULL);
 
 //@}

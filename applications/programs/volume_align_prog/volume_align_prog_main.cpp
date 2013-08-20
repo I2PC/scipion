@@ -389,7 +389,8 @@ public:
     		initializeXmippPython(xmippPython);
     		PyObject * pFunc = getPointerToPythonFRMFunction();
     		double rot,tilt,psi,x,y,z,score;
-    		alignVolumesFRM(pFunc, params.V1(), params.V2(),rot,tilt,psi,x,y,z,score,maxShift,maxFreq,params.mask_ptr);
+    		Matrix2D<double> A;
+    		alignVolumesFRM(pFunc, params.V1(), params.V2(),rot,tilt,psi,x,y,z,score,A,maxShift,maxFreq,params.mask_ptr);
     		best_align.initZeros(9);
     		best_align(0)=1; // Gray scale
     		best_align(1)=0; // Gray shift

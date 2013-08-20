@@ -26,6 +26,7 @@
 
 #include "frm.h"
 #include <data/geometry.h>
+#include <data/transformations.h>
 
 void initializeXmippPython(String &xmippPython)
 {
@@ -68,8 +69,9 @@ PyObject * getPointerToPythonFRMFunction()
 	return pFunc;
 }
 
-void alignVolumesFRM(PyObject *pFunc, const MultidimArray<double> &Iref, const MultidimArray<double> &I,
+void alignVolumesFRM(PyObject *pFunc, const MultidimArray<double> &Iref, MultidimArray<double> &I,
 		double &rot, double &tilt, double &psi, double &x, double &y, double &z, double &score,
+		Matrix2D<double> &A,
 		int maxshift, double maxFreq, const MultidimArray<int> *mask)
 {
 	PyObject *pyIref=convertToNumpy(Iref);
@@ -118,5 +120,15 @@ void alignVolumesFRM(PyObject *pFunc, const MultidimArray<double> &Iref, const M
 		x=-zfrm;
 		y=-yfrm;
 		z=-xfrm;
+
+		// Apply
+        Euler_angles2matrix(rot, tilt, psi, A, true);
+        Matrix2D<double> Aaux;
+        Matrix1D<double> r(3);
+        XX(r)=x;
+        YY(r)=y;
+        ZZ(r)=z;
+        translation3DMatrix(r,Aaux);
+        A=A*Aaux;
 	}
 }
