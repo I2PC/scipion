@@ -31,6 +31,7 @@ from os.path import join, dirname, exists
 from pyworkflow.em import *  
 import xmipp
 from data import *
+from convert import createXmippInputImages
 #from xmipp3 import XmippProtocol
 from glob import glob
 
@@ -98,7 +99,7 @@ class XmippDefCL2D(Form):
         self.addParallelSection(threads=0, mpi=2)
         
         
-class XmippProtCL2D(ProtAlign, ProtClassify, XmippProtocols):
+class XmippProtCL2D(ProtAlign, ProtClassify):
     """ Protocol to preprocess a set of micrographs in the project. """
     _definition = XmippDefCL2D()
     _label = 'Xmipp CL2D'
@@ -107,7 +108,7 @@ class XmippProtCL2D(ProtAlign, ProtClassify, XmippProtocols):
         """ Mainly prepare the command line for call cl2d program"""
         
         # Convert input images if necessary
-        imgsFn = self._createXmippInputImages(self.inputImages.get())
+        imgsFn = createXmippInputImages(self, self.inputImages.get())
         
         # Prepare arguments to call program: xmipp_classify_CL2D
         self._params = {'imgsFn': imgsFn, 

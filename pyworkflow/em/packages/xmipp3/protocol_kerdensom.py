@@ -32,6 +32,7 @@ from pyworkflow.em import *
 import xmipp
 from data import *
 import xmipp3
+from convert import createXmippInputImages
 from glob import glob
 
 class XmippDefKerdensom(Form):
@@ -76,7 +77,7 @@ class XmippDefKerdensom(Form):
                       'See [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM]')
         
         
-class XmippProtKerdensom(ProtClassify, XmippProtocols):
+class XmippProtKerdensom(ProtClassify):
     """ Protocol to align a set of particles. """
     _definition = XmippDefKerdensom()
     _label = 'Xmipp KerDenSom'
@@ -93,7 +94,7 @@ class XmippProtKerdensom(ProtClassify, XmippProtocols):
     def _prepareParams(self):
         
         # Convert input images if necessary
-        imgsFn = self._createXmippInputImages(self.inputImages.get())
+        imgsFn = createXmippInputImages(self, self.inputImages.get())
         
         mask = self.Mask.get()
         self._params = {'oroot': self._getExtraPath("kerdensom"),

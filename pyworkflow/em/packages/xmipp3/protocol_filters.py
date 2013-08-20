@@ -33,6 +33,7 @@ from pyworkflow.utils import *
 import xmipp
 from data import *
 import xmipp3
+from convert import createXmippInputImages
 
 
         
@@ -44,7 +45,7 @@ class XmippDefFilterParticles(DefProcessParticles):
         pass
       
       
-class XmippProtFilter(xmipp3.XmippProtocol, ProtFilterParticles):
+class XmippProtFilter(ProtFilterParticles):
     """ Protocol base for Xmipp filters. """
     
     def __init__(self):
@@ -59,8 +60,9 @@ class XmippProtFilter(xmipp3.XmippProtocol, ProtFilterParticles):
         
     def _defineSteps(self):
         self._defineFilenames()
-        self.inputPcts = self.inputParticles.get()       
-        inputPctsFn = self._insertConvertStep('inputPcts', XmippSetOfImages, self.inputFn)
+        inputPctsFn = createXmippInputImages(self, self.inputImages.get())
+#         self.inputPcts = self.inputParticles.get()       
+#         inputPctsFn = self._insertConvertStep('inputPcts', XmippSetOfImages, self.inputFn)
         self._insertFilterStep(inputPctsFn, self.outputStk, self.outputMd)        
         self._insertFunctionStep('createOutput')
         

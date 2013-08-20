@@ -36,14 +36,6 @@ from pyworkflow.utils.path import replaceBaseExt, exists, dirname, join
 import xmipp
 
 
-class XmippProtocols():
-
-    def _createXmippInputImages(self, imgSet):
-        imgsFn = self._getPath('input_images.xmd')
-        writeSetOfParticles(imgSet, imgsFn)
-        return imgsFn
-
-      
 class XmippImageLocation(ImageLocation):
     
     def __str__(self):

@@ -31,7 +31,7 @@ from os.path import join, dirname, exists
 from pyworkflow.em import *  
 import xmipp
 from data import *
-#from xmipp3 import XmippProtocol
+from convert import createXmippInputImages
 from glob import glob
 
 class XmippDefCL2DAlign(Form):
@@ -64,7 +64,7 @@ class XmippDefCL2DAlign(Form):
         self.addParallelSection(threads=1, mpi=3)
         
         
-class XmippProtCL2DAlign(ProtAlign, XmippProtocols):
+class XmippProtCL2DAlign(ProtAlign):
     """ Protocol to align a set of particles. """
     _definition = XmippDefCL2DAlign()
     _label = 'Xmipp CL2D Align'
@@ -73,7 +73,7 @@ class XmippProtCL2DAlign(ProtAlign, XmippProtocols):
         """ Mainly prepare the command line for call cl2d align program"""
         
         # Convert input images if necessary
-        imgsFn = self._createXmippInputImages(self.inputImages.get())
+        imgsFn = createXmippInputImages(self, self.inputImages.get())
         
         # Prepare arguments to call program: xmipp_classify_CL2D
         self._params = {'imgsFn': imgsFn, 

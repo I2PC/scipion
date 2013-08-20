@@ -31,6 +31,7 @@ This sub-package contains wrapper around ML2D Xmipp program
 from pyworkflow.em import *  
 from pyworkflow.utils import *  
 import xmipp
+from convert import createXmippInputImages
 from data import *
 #from xmipp3 import XmippProtocol
 
@@ -114,7 +115,7 @@ class XmippDefML2D(Form):
         self.addParallelSection(threads=2, mpi=2)
         
         
-class XmippProtML2D(ProtAlign, ProtClassify, XmippProtocols):
+class XmippProtML2D(ProtAlign, ProtClassify):
     """ Protocol to preprocess a set of micrographs in the project. """
     _definition = XmippDefML2D()
     _label = 'Xmipp ML2D'
@@ -137,7 +138,7 @@ class XmippProtML2D(ProtAlign, ProtClassify, XmippProtocols):
         self.oroot = self._getPath(prefix)
         
         # Convert input images if necessary
-        imgsFn = self._createXmippInputImages(self.inputImages.get())
+        imgsFn = createXmippInputImages(self, self.inputImages.get())
         
         params = ' -i %s --oroot %s' % (imgsFn, self.oroot)
         # Number of references will be ignored if -ref is passed as expert option

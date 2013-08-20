@@ -322,3 +322,8 @@ def readSetOfParticles(fnImages, imgSet, hasCtf):
     for objId in imgMd:
         part = rowToParticle(imgMd, objId, hasCtf)
         imgSet.append(part)
+
+def createXmippInputImages(self, imgSet):
+    imgsFn = self._getPath('input_images.xmd')
+    writeSetOfParticles(imgSet, imgsFn)
+    return imgsFn

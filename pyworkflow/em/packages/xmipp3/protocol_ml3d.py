@@ -31,6 +31,7 @@ This sub-package contains wrapper around ML3D Xmipp program
 from pyworkflow.em import *  
 from pyworkflow.utils import *  
 import xmipp
+from convert import createXmippInputImages
 from data import *
 #from xmipp3 import XmippProtocol
 
@@ -146,7 +147,7 @@ class XmippDefML3D(Form):
         self.addParallelSection(threads=1, mpi=8)
         
         
-class XmippProtML3D(XmippProtocols, ProtRefine3D, ProtClassify3D):
+class XmippProtML3D(ProtRefine3D, ProtClassify3D):
     """ Protocol for Xmipp-based ML3D/MLF3D classification. """
     _definition = XmippDefML3D()
     _label = 'Xmipp ML3D'
@@ -172,7 +173,7 @@ class XmippProtML3D(XmippProtocols, ProtRefine3D, ProtClassify3D):
         self.mdVols = xmipp.MetaData(refMd)
         
         # Convert input images if necessary
-        imgsFn = self._createXmippInputImages(self.inputImages.get())
+        imgsFn = createXmippInputImages(self, self.inputImages.get())
         self.imgMd = self.ParamsDict['ImgMd'] = imgsFn
         
         #Get sampling rate from input images
