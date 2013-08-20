@@ -246,7 +246,7 @@ void CL3DClass::sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK,
             double *ptrIfourier=(double*)&DIRECT_MULTIDIM_ELEM(Ifourier,n);
             double *ptrPfourier=(double*)&DIRECT_MULTIDIM_ELEM(Pfourier,n);
 
-            // Scale factor for the real part
+            // Scale factor
             // This is the least squares solution of I(w)K=P(w)
             double auxI=(*ptrIfourier);
             double auxP=(*ptrPfourier);
@@ -588,6 +588,7 @@ void CL3D::initialize(MetaData &_SF,
                 q = idx % (prm->Ncodes0);
             size_t objId = prm->objId[idx];
             readImage(I, objId, true);
+            std::cout << "Reading " << I.name() << std::endl;
 
             // Measure the variance of the signal outside a circular mask
             double avg, stddev;
@@ -846,6 +847,7 @@ void CL3D::run(const FileName &fnOut, int level)
             {
                 size_t objId = prm->objId[idx];
                 readImage(I, objId, false);
+                std::cout << "Reading " << I.name() << std::endl;
 
                 assignment.objId = objId;
                 lookNode(I(), oldAssignment[idx], node, assignment);
@@ -1376,9 +1378,9 @@ void ProgClassifyCL3D::defineParams()
     addParamsLine("   [--maxShiftX <d=10>]      : Maximum allowed shift in X");
     addParamsLine("   [--maxShiftY <d=10>]      : Maximum allowed shift in Y");
     addParamsLine("   [--maxShiftZ <d=10>]      : Maximum allowed shift in Z");
-    addParamsLine("   [--maxRot <d=180>]        : Maximum allowed rotational angle in absolute value");
-    addParamsLine("   [--maxTilt <d=180>]       : Maximum allowed tilt angle in absolute value");
-    addParamsLine("   [--maxPsi <d=180>]        : Maximum allowed in-plane angle in absolute value");
+    addParamsLine("   [--maxRot <d=360>]        : Maximum allowed rotational angle in absolute value");
+    addParamsLine("   [--maxTilt <d=360>]       : Maximum allowed tilt angle in absolute value");
+    addParamsLine("   [--maxPsi <d=360>]        : Maximum allowed in-plane angle in absolute value");
     addParamsLine("   [--classifyAllImages]     : By default, some images may not be classified. Use this option to classify them all.");
     addParamsLine("   [--sym <s=c1>]            : Symmetry of the classes to be reconstructed");
     addParamsLine("   [--maxFreq <w=0.2>]       : Maximum frequency for the alignment");
