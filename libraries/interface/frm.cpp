@@ -43,9 +43,9 @@ void initializeXmippPython(String &xmippPython)
 PyObject* convertToNumpy(const MultidimArray<double> &I)
 {
 	npy_intp dim[3];
-	dim[0]=ZSIZE(I);
+	dim[0]=XSIZE(I);
 	dim[1]=YSIZE(I);
-	dim[2]=XSIZE(I);
+	dim[2]=ZSIZE(I);
 	PyObject* pyI=PyArray_SimpleNewFromData(3, dim, NPY_DOUBLE, (void *)MULTIDIM_ARRAY(I));
 	return pyI;
 }
@@ -53,9 +53,9 @@ PyObject* convertToNumpy(const MultidimArray<double> &I)
 PyObject* convertToNumpy(const MultidimArray<int> &I)
 {
 	npy_intp dim[3];
-	dim[0]=ZSIZE(I);
+	dim[0]=XSIZE(I);
 	dim[1]=YSIZE(I);
-	dim[2]=XSIZE(I);
+	dim[2]=ZSIZE(I);
 	PyObject* pyI=PyArray_SimpleNewFromData(3, dim, NPY_INT, (void *)MULTIDIM_ARRAY(I));
 	return pyI;
 }
@@ -64,12 +64,26 @@ PyObject * getPointerToPythonFRMFunction()
 {
 	PyObject * pName = PyString_FromString("sh_alignment.frm"); // Import sh_alignment.frm
 	PyObject * pModule = PyImport_Import(pName);
-	Py_DECREF(pName);
 	PyObject * pFunc = PyObject_GetAttrString(pModule, "frm_align");
+	Py_DECREF(pName);
+	Py_DECREF(pModule);
 	return pFunc;
 }
 
+PyObject * getPointerToPythonGeneralWedgeClass()
+{
+	PyObject * pName = PyString_FromString("sh_alignment.tompy.filter"); // Import sh_alignment.tompy.filter
+	PyObject * pModule = PyImport_Import(pName);
+	PyObject * pDict = PyModule_GetDict(pModule);
+	PyObject * pWedgeClass = PyDict_GetItemString(pDict, "GeneralWedge");
+	Py_DECREF(pName);
+	Py_DECREF(pModule);
+	Py_DECREF(pDict);
+	return pWedgeClass;
+}
+
 void alignVolumesFRM(PyObject *pFunc, const MultidimArray<double> &Iref, MultidimArray<double> &I,
+		PyObject *Imask,
 		double &rot, double &tilt, double &psi, double &x, double &y, double &z, double &score,
 		Matrix2D<double> &A,
 		int maxshift, double maxFreq, const MultidimArray<int> *mask)
@@ -131,4 +145,6 @@ void alignVolumesFRM(PyObject *pFunc, const MultidimArray<double> &Iref, Multidi
         translation3DMatrix(r,Aaux);
         A=A*Aaux;
 	}
+	else
+		A.initIdentity(4);
 }

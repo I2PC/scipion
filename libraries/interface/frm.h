@@ -52,10 +52,18 @@ PyObject* convertToNumpy(const MultidimArray<int> &I);
  */
 PyObject * getPointerToPythonFRMFunction();
 
+/** Get pointer to GeneralWedge class.
+ * This is done to avoid losing time in importing the module each time.
+ * Remind to free it when you do not need it any longer with
+ * Py_DECREF(pClass);
+ */
+PyObject * getPointerToPythonGeneralWedgeClass();
+
 /** Align two volumes using FRM.
  * The first argument is the pointer to the FRM python function. You may obtain it with
  * getPointerToPythonFRMFunction()
  *
+ * Imask is a mask in Fourier space for I
  * Maxshift is in pixels.
  * MaxFreq is in digital frequency.
  *
@@ -64,6 +72,7 @@ PyObject * getPointerToPythonFRMFunction();
  * If apply is set, then I is substituted with the aligned volume.
  */
 void alignVolumesFRM(PyObject *pFunc, const MultidimArray<double> &Iref, MultidimArray<double> &I,
+		PyObject *Imask,
 		double &rot, double &tilt, double &psi, double &x, double &y, double &z, double &score,
 		Matrix2D<double> &A,
 		int maxshift=10, double maxFreq=0.25, const MultidimArray<int> *mask=NULL);
