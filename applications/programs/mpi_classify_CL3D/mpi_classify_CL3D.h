@@ -85,6 +85,12 @@ public:
     // Auxiliary Fourier image magnitude
     MultidimArray<double> IfourierMag, IfourierMagSorted;
 
+    // Fourier mask for the experimental image
+    MultidimArray<int> IfourierMask, IfourierMaskFRM;
+
+    // Mask for experimental image as a python object
+	PyObject *pyIfourierMaskFRM;
+
     // Update for next iteration
     MultidimArray< std::complex<double> > Pupdate;
 
@@ -115,6 +121,12 @@ public:
 
     /** Transfer update */
     void transferUpdate();
+
+    /** Construct Fourier mask */
+    void constructFourierMask(MultidimArray<double> &I);
+
+    /** Construct the mask in the FRM convention */
+    void constructFourierMaskFRM();
 
     /** Sparse distance to centroid */
     void sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK, double &stdK, double &L1distance);
@@ -220,6 +232,9 @@ public:
     /// Minimum size of a node
     double PminSize;
     
+    /// Maximum frequency for the alignment
+    double maxFreq;
+
     /// Sparsity factor (0<f<1; 1=drop all coefficients, 0=do not drop any coefficient)
     double sparsity;
 
@@ -237,6 +252,7 @@ public:
 
     /// Maximum shift X
     double maxShiftX;
+
 
     /// Maximum rot
     double maxRot;
@@ -300,6 +316,12 @@ public:
 
     /// Pointer to the Python FRM alignment function
     PyObject * frmFunc;
+
+    /// Pointer to the Python GeneralWedge class
+    PyObject * wedgeClass;
+
+    /// Max shift
+    double maxShift;
 };
 //@}
 #endif

@@ -87,6 +87,7 @@ CL3DClass::CL3DClass()
     transformer.setReal(Paux);
     Pupdate.initZeros(transformer.fFourier);
     PupdateMask.initZeros(Pupdate);
+    pyIfourierMaskFRM=NULL;
 }
 
 CL3DClass::CL3DClass(const CL3DClass &other)
@@ -106,15 +107,9 @@ void CL3DClass::updateProjection(MultidimArray<double> &I,
 {
     if ((assigned.score < 1e37 && assigned.objId != BAD_OBJID) || force)
     {
-        transformer.FourierTransform(I,Ifourier,false);
-
-        FFT_magnitude(Ifourier,IfourierMag);
-        IfourierMag.resize(1,1,1,MULTIDIM_SIZE(IfourierMag));
-        IfourierMag.sort(IfourierMagSorted);
-        const double percentage=0.975;
-        double minMagnitude=A1D_ELEM(IfourierMagSorted,(int)(percentage*XSIZE(IfourierMag)));
+    	constructFourierMask(I);
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Ifourier)
-        if (DIRECT_MULTIDIM_ELEM(IfourierMag,n)>minMagnitude)
+        if (DIRECT_MULTIDIM_ELEM(IfourierMask,n))
         {
             double *ptrIfourier=(double*)&DIRECT_MULTIDIM_ELEM(Ifourier,n);
             double *ptrPupdate=(double*)&DIRECT_MULTIDIM_ELEM(Pupdate,n);
@@ -199,7 +194,7 @@ void CL3DClass::transferUpdate()
 }
 #undef DEBUG
 
-void CL3DClass::sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK, double &stdK, double &L1distance)
+void CL3DClass::constructFourierMask(MultidimArray<double> &I)
 {
     transformer.FourierTransform(I,Ifourier,false);
 
@@ -207,11 +202,46 @@ void CL3DClass::sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK,
     IfourierMag.resize(1,1,1,MULTIDIM_SIZE(IfourierMag));
     IfourierMag.sort(IfourierMagSorted);
     double minMagnitude=A1D_ELEM(IfourierMagSorted,(int)(prm->sparsity*XSIZE(IfourierMag)));
+
+    IfourierMask.initZeros(Ifourier);
+    for (size_t n=1; n<MULTIDIM_SIZE(Ifourier); ++n)
+        if (DIRECT_MULTIDIM_ELEM(IfourierMag,n)>minMagnitude)
+        	DIRECT_MULTIDIM_ELEM(IfourierMask,n)=1;
+}
+
+void CL3DClass::constructFourierMaskFRM()
+{
+	int xdim=(int)(prm->Xdim);
+	int xdim_2=(int)xdim/2;
+	IfourierMaskFRM.initZeros(prm->Xdim,prm->Xdim,prm->Xdim);
+	IfourierMaskFRM.setXmippOrigin();
+	FOR_ALL_ELEMENTS_IN_ARRAY3D(IfourierMask)
+	if (A3D_ELEM(IfourierMask,k,i,j))
+	{
+		int kp=k, ip=i;
+		if (k>xdim_2)
+			kp-=xdim;
+		if (i>xdim_2)
+			ip-=xdim;
+		A3D_ELEM(IfourierMaskFRM,j,ip,kp)=A3D_ELEM(IfourierMaskFRM,-j,-ip,-kp)=1;
+	}
+
+    PyObject *pyMask=convertToNumpy(IfourierMaskFRM);
+	PyObject *arglist = Py_BuildValue("(Oi)", pyMask,0);
+	if (pyIfourierMaskFRM!=NULL)
+		Py_DECREF(pyIfourierMaskFRM);
+	pyIfourierMaskFRM = PyObject_CallObject(prm->wedgeClass, arglist);
+	Py_DECREF(arglist);
+	Py_DECREF(pyMask);
+}
+
+void CL3DClass::sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK, double &stdK, double &L1distance)
+{
     avgK=stdK=0;
     double N=0;
     double stdAngle=0;
     for (size_t n=1; n<MULTIDIM_SIZE(Ifourier); ++n)
-        if (DIRECT_MULTIDIM_ELEM(IfourierMag,n)>minMagnitude)
+        if (DIRECT_MULTIDIM_ELEM(IfourierMask,n))
         {
             double *ptrIfourier=(double*)&DIRECT_MULTIDIM_ELEM(Ifourier,n);
             double *ptrPfourier=(double*)&DIRECT_MULTIDIM_ELEM(Pfourier,n);
@@ -259,7 +289,7 @@ void CL3DClass::sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK,
 
     L1distance=0;
     for (size_t n=1; n<MULTIDIM_SIZE(Ifourier); ++n)
-        if (DIRECT_MULTIDIM_ELEM(IfourierMag,n)>minMagnitude)
+        if (DIRECT_MULTIDIM_ELEM(IfourierMask,n))
         {
             double *ptrIfourier=(double*)&DIRECT_MULTIDIM_ELEM(Ifourier,n);
             double *ptrPfourier=(double*)&DIRECT_MULTIDIM_ELEM(Pfourier,n);
@@ -276,7 +306,7 @@ void CL3DClass::sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK,
     L1distance/=N;
 }
 
-#define DEBUG
+//#define DEBUG
 void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
 {
 #ifdef DEBUG
@@ -291,14 +321,23 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
         return;
 
     Matrix2D<double> A;
-    alignVolumesFRM(prm->frmFunc, P, I, result.rot, result.tilt, result.psi, result.shiftx, result.shifty, result.shiftz,
-    		result.score,A);
-    if (fabs(result.shiftx)>prm->maxShiftX || fabs(result.shifty)>prm->maxShiftY || fabs(result.shiftz)>prm->maxShiftZ)
+    double frmScore;
+    constructFourierMask(I);
+    constructFourierMaskFRM();
+    alignVolumesFRM(prm->frmFunc, P, I, pyIfourierMaskFRM, result.rot, result.tilt, result.psi, result.shiftx, result.shifty, result.shiftz,
+    		frmScore,A,prm->maxShift, prm->maxFreq);
+    if (fabs(result.shiftx)>prm->maxShiftX || fabs(result.shifty)>prm->maxShiftY || fabs(result.shiftz)>prm->maxShiftZ ||
+    	fabs(result.rot)>prm->maxRot || fabs(result.tilt)>prm->maxTilt || fabs(result.psi)>prm->maxPsi)
     	result.score=1e38;
     else
     {
 		applyGeometry(LINEAR, Iaux, I, A, IS_NOT_INV, DONT_WRAP);
 		apply_binary_mask(prm->mask.get_binary_mask(),Iaux,I,0.0);
+
+		constructFourierMask(I);
+		double avgK, stdK, L1distance;
+		sparseDistanceToCentroid(I, avgK, stdK, L1distance);
+		result.score=L1distance*stdK;
     }
 
 #ifdef DEBUG
@@ -1271,6 +1310,9 @@ void ProgClassifyCL3D::readParams()
     maxShiftZ = getDoubleParam("--maxShiftZ");
     maxShiftY = getDoubleParam("--maxShiftY");
     maxShiftX = getDoubleParam("--maxShiftX");
+    maxShift=std::max(maxShiftX,maxShiftY);
+    maxShift=std::max(maxShift,maxShiftZ);
+    maxFreq=getDoubleParam("--maxFreq");
     maxRot = getDoubleParam("--maxRot");
     maxTilt = getDoubleParam("--maxTilt");
     maxPsi = getDoubleParam("--maxPsi");
@@ -1331,9 +1373,6 @@ void ProgClassifyCL3D::defineParams()
     addParamsLine("   [--minsize+ <N=20>]       : Percentage minimum node size");
     addParamsLine("   [--sparsity+ <f=0.975>]   : Percentage of Fourier coefficients to drop");
     addParamsLine("   [--DWTsparsity+ <f=0.99>] : Percentage of wavelet coefficients to drop");
-    addParamsLine("   [--distance <type=correntropy>]       : Distance type");
-    addParamsLine("            where <type>");
-    addParamsLine("                       correntropy correlation: See CL3D paper for the definition of correntropy");
     addParamsLine("   [--maxShiftX <d=10>]      : Maximum allowed shift in X");
     addParamsLine("   [--maxShiftY <d=10>]      : Maximum allowed shift in Y");
     addParamsLine("   [--maxShiftZ <d=10>]      : Maximum allowed shift in Z");
@@ -1342,6 +1381,7 @@ void ProgClassifyCL3D::defineParams()
     addParamsLine("   [--maxPsi <d=180>]        : Maximum allowed in-plane angle in absolute value");
     addParamsLine("   [--classifyAllImages]     : By default, some images may not be classified. Use this option to classify them all.");
     addParamsLine("   [--sym <s=c1>]            : Symmetry of the classes to be reconstructed");
+    addParamsLine("   [--maxFreq <w=0.2>]       : Maximum frequency for the alignment");
     Mask::defineParams(this,INT_MASK,NULL,NULL,true);
     addExampleLine("mpirun -np 3 `which xmipp_mpi_classify_CL3D` -i images.stk --nref 256 --oroot class --iter 10");
 }
@@ -1400,6 +1440,7 @@ void ProgClassifyCL3D::run()
     String xmippPython;
 	initializeXmippPython(xmippPython);
     frmFunc = getPointerToPythonFRMFunction();
+    wedgeClass = getPointerToPythonGeneralWedgeClass();
 
     CREATE_LOG();
     show();
