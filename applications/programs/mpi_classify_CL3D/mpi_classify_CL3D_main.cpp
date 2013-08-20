@@ -177,21 +177,6 @@ void CL3DClass::transferUpdate()
             DIRECT_MULTIDIM_ELEM(P,n) = 0;
         */
 
-        double deltaAng=atan(2.0/XSIZE(P));
-        Matrix1D<double> v(3);
-        XX(v)=0;
-        YY(v)=0;
-        ZZ(v)=1;
-        volume_convertCartesianToCylindrical(P,PcylZ,3,XSIZE(P)/2,1,0,2*PI,deltaAng,v);
-        XX(v)=0;
-        YY(v)=1;
-        ZZ(v)=0;
-        volume_convertCartesianToCylindrical(P,PcylY,3,XSIZE(P)/2,1,0,2*PI,deltaAng,v);
-        XX(v)=1;
-        YY(v)=0;
-        ZZ(v)=0;
-        volume_convertCartesianToCylindrical(P,PcylX,3,XSIZE(P)/2,1,0,2*PI,deltaAng,v);
-
         // Take the list of images
         currentListImg = nextListImg;
         nextListImg.clear();
@@ -291,105 +276,6 @@ void CL3DClass::sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK,
     L1distance/=N;
 }
 
-class BestAlignment {
-public:
-	MultidimArray<double> bestI;
-	CL3DAssignment alignment;
-};
-
-BestAlignment bestAlignment;
-
-class ObjectiveAux {
-public:
-	MultidimArray<double> IS, ISR, I, bestI;
-	Matrix1D<double> v;
-	CL3DClass * parent;
-    CL3DAssignment candidateSR;
-    Matrix2D<double> R;
-};
-
-const String eulerSeqs[12]=
-    {"XZX","XYX","YXY","YZY","ZYZ","ZXZ","XZY","XYZ","YXZ","YZX","ZYX","ZXY"
-    };
-
-#define DEBUG_MORE
-double objectiveCL3DAlignment(double *p, void *vaux)
-{
-	ObjectiveAux *aux=(ObjectiveAux*) vaux;
-	aux->v.resizeNoCopy(3);
-	XX(aux->v)=p[1];
-	YY(aux->v)=p[2];
-	ZZ(aux->v)=p[3];
-    translate(LINEAR,aux->IS,aux->I,aux->v);
-
-    // Look for best rotation
-    MultidimArray<double> &mISR=aux->ISR;
-    double bestScore=1e38;
-    for (int neuler=0; neuler<12; ++neuler)
-    {
-    	aux->ISR=aux->IS;
-        fastBestRotation(aux->parent->PcylZ,aux->parent->PcylY,aux->parent->PcylX,mISR,eulerSeqs[neuler],aux->R,
-        		aux->parent->corrAux2,aux->parent->volAlignmentAux);
-        aux->candidateSR.readAlignment(aux->R);
-        if (fabs(aux->candidateSR.rot)>prm->maxRot || fabs(aux->candidateSR.tilt)>prm->maxTilt || fabs(aux->candidateSR.psi)>prm->maxPsi)
-        	return 1e38;
-
-        // Compute the distance
-        const MultidimArray<int> &imask = prm->mask.get_binary_mask();
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(imask)
-        if (!DIRECT_MULTIDIM_ELEM(imask,n))
-            DIRECT_MULTIDIM_ELEM(mISR,n)=0.;
-        double avgK, stdK, L1;
-        aux->parent->sparseDistanceToCentroid(mISR, avgK, stdK, L1);
-        double score=L1;
-
-        // If it is the best, keep it
-        if (score<bestScore)
-        {
-        	bestScore=score;
-        	if (score<bestAlignment.alignment.score)
-        	{
-				bestAlignment.bestI=mISR;
-        		bestAlignment.alignment.score=score;
-				bestAlignment.alignment.rot=aux->candidateSR.rot;
-				bestAlignment.alignment.tilt=aux->candidateSR.tilt;
-				bestAlignment.alignment.psi=aux->candidateSR.psi;
-				bestAlignment.alignment.shiftx=XX(aux->v);
-				bestAlignment.alignment.shifty=YY(aux->v);
-				bestAlignment.alignment.shiftz=ZZ(aux->v);
-#ifdef DEBUG_MORE
-	std::cout << "(rot,tilt,psi)=(" << aux->candidateSR.rot << "," << aux->candidateSR.tilt << "," << aux->candidateSR.psi
-			  << ") (x,y,z)=(" << XX(aux->v) << "," << YY(aux->v) << "," << ZZ(aux->v) << ") "
-			  << " avgK= " << avgK << " stdK= " << stdK << " L1=" << L1 << " -> bestSoFar= " << score << std::endl;
-	Image<double> save;
-	save()=aux->parent->P;
-	save.write("PPPI1.xmp");
-	save()=aux->ISR;
-	save.write("PPPI2.xmp");
-	std::cout << "Press any key\n";
-	char c;
-	std::cin >> c;
-#endif
-
-        	}
-        }
-    }
-    return bestScore;
-}
-#undef DEBUG_MORE
-
-class AlignmentSolver: public DESolver
-{
-public:
-	  ObjectiveAux aux;
-	  AlignmentSolver(int dim,int pop) : DESolver(dim,pop) {;}
-	  double EnergyFunction(double trial[],bool &bAtSolution) {
-		 double score=objectiveCL3DAlignment(trial-1,&aux);
-         bAtSolution=false;
-         return score;
-      }
-};
-
 #define DEBUG
 void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
 {
@@ -397,46 +283,27 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
     Image<double> save2;
     save2()=I;
     save2.write("PPP0.xmp");
+    save2()=P;
+    save2.write("PPPI1.xmp");
 #endif
 
     if (currentListImg.size() == 0)
         return;
 
-    bestAlignment.alignment.score=1e38;
-    Matrix1D<double> shift(3);
-    Matrix1D<double> steps(3);
-    steps.initConstant(1);
-
-    ObjectiveAux aux;
-    aux.parent=this;
-    aux.I=I;
-    double score;
-    int iter;
-    // powellOptimizer(shift,1,3,&objectiveCL3DAlignment,&aux,1e-3,score,iter,steps,true);
-
-    AlignmentSolver solver(3,30);
-    solver.aux.parent=this;
-    solver.aux.I=I;
-    MultidimArray<double> min_allowed(3), max_allowed(3);
-    min_allowed(0)=-prm->maxShiftX;
-    min_allowed(1)=-prm->maxShiftY;
-    min_allowed(2)=-prm->maxShiftZ;
-    max_allowed(0)= prm->maxShiftX;
-    max_allowed(1)= prm->maxShiftY;
-    max_allowed(2)= prm->maxShiftZ;
-    solver.Setup(MULTIDIM_ARRAY(min_allowed),MULTIDIM_ARRAY(max_allowed), stBest2Bin, 0.5, 0.8);
-    solver.Solve(100);
-    score=solver.Energy();
-        if (score<1e37)
-        I=bestAlignment.bestI;
+    Matrix2D<double> A;
+    alignVolumesFRM(prm->frmFunc, P, I, result.rot, result.tilt, result.psi, result.shiftx, result.shifty, result.shiftz,
+    		result.score,A);
+    if (fabs(result.shiftx)>prm->maxShiftX || fabs(result.shifty)>prm->maxShiftY || fabs(result.shiftz)>prm->maxShiftZ)
+    	result.score=1e38;
     else
-        I.initZeros();
+    {
+		applyGeometry(LINEAR, Iaux, I, A, IS_NOT_INV, DONT_WRAP);
+		apply_binary_mask(prm->mask.get_binary_mask(),Iaux,I,0.0);
+    }
 
 #ifdef DEBUG
 
     Image<double> save;
-    save()=P;
-    save.write("PPPI1.xmp");
     save()=I;
     save.write("PPPI2.xmp");
     save()=P-I;
@@ -447,248 +314,6 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
 #endif
 }
 #undef DEBUG
-
-#ifdef EXHAUSTIVE_ANGLES
-#define DEBUG
-//#define DEBUG_MORE
-void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
-{
-#ifdef DEBUG
-    Image<double> save2;
-    save2()=I;
-    save2.write("PPP0.xmp");
-#endif
-
-    if (currentListImg.size() == 0)
-        return;
-
-    Matrix2D<double> A, E;
-    MultidimArray<double> Iaux, bestI;
-
-    result.score=1e38;
-    for (double rot=-prm->maxRot; rot<prm->maxRot; rot+=10)
-        for (double tilt=-prm->maxTilt; tilt<prm->maxTilt; tilt+=10)
-            for (double psi=-prm->maxPsi; psi<prm->maxPsi; psi+=10)
-            {
-                // Rotate
-                Euler_angles2matrix(rot,tilt,psi,E,true);
-                applyGeometry(LINEAR, Iaux, I, E, IS_NOT_INV, WRAP);
-
-                // Look for the best shift
-                double shiftX, shiftY, shiftZ;
-                bestShift(P, Iaux, shiftX, shiftY, shiftZ, corrAux);
-                if (fabs(shiftX)>prm->maxShiftX || fabs(shiftY)>prm->maxShiftY || fabs(shiftZ)>prm->maxShiftZ)
-                    continue;
-
-                // Compute the distance
-                const MultidimArray<int> &imask = prm->mask.get_binary_mask();
-                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(imask)
-                if (!DIRECT_MULTIDIM_ELEM(imask,n))
-                    DIRECT_MULTIDIM_ELEM(Iaux,n)=0.;
-                double avgK, stdK, L1;
-                sparseDistanceToCentroid(Iaux, avgK, stdK, L1);
-                double score=L1;
-
-#ifdef DEBUG
-
-                if (score<result.score)
-                    std::cout << "(rot,tilt,psi)=(" << rot << "," << tilt << "," << psi << ") (x,y,z)=(" << shiftX << "," << shiftY << "," << shiftZ << ") "
-                    << " avgK= " << avgK << " stdK= " << stdK << " L1=" << L1 << " -> bestSoFar= " << result.score << std::endl;
-#ifdef DEBUG_MORE
-
-                Image<double> save;
-                save()=P;
-                save.write("PPPI1.xmp");
-                save()=Iaux;
-                save.write("PPPI2.xmp");
-                std::cout << "Press any key\n";
-                char c;
-                std::cin >> c;
-#endif
-#endif
-
-                // If it is the best, keep it
-                if (score<result.score)
-                {
-                    bestI=Iaux;
-                    result.score=score;
-                    result.rot=rot;
-                    result.tilt=tilt;
-                    result.psi=psi;
-                    result.shiftx=shiftX;
-                    result.shifty=shiftY;
-                    result.shiftz=shiftZ;
-                }
-            }
-
-    if (result.score<1e37)
-        I=bestI;
-    else
-        I.initZeros();
-
-#ifdef DEBUG
-
-    Image<double> save;
-    save()=P;
-    save.write("PPPI1.xmp");
-    save()=I;
-    save.write("PPPI2.xmp");
-    save()=P-I;
-    save.write("PPPdiff.xmp");
-    std::cout << "sigma=" << prm->sigma << " score=" << result.score << ". Press" << std::endl;
-    char c;
-    std::cin >> c;
-#endif
-}
-#undef DEBUG
-#endif
-
-#ifdef HEURISTICALIGNMENT
-//#define DEBUG
-//#define DEBUG_MORE
-const String eulerSeqs[12]=
-    {"XZX","XYX","YXY","YZY","ZYZ","ZXZ","XZY","XYZ","YXZ","YZX","ZYX","ZXY"
-    };
-
-void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
-{
-#ifdef DEBUG
-    Image<double> save2;
-    save2()=I;
-    save2.write("PPP0.xmp");
-#endif
-
-    if (currentListImg.size() == 0)
-        return;
-
-    Matrix2D<double> ARS, ASR, R(4, 4);
-    MultidimArray<double> IauxSR, IauxRS, bestI;
-
-    result.score=1e38;
-    for (int neuler=0; neuler<12; neuler++)
-    {
-        ARS.initIdentity(4);
-        ASR = ARS;
-        IauxSR = IauxRS = I;
-
-        // Align the image with the node
-        for (int i = 0; i < 3; i++)
-        {
-            double shiftX, shiftY, shiftZ;
-
-            // Shift then rotate
-            bestShift(P, IauxSR, shiftX, shiftY, shiftZ, corrAux);
-            MAT_ELEM(ASR,0,3) += shiftX;
-            MAT_ELEM(ASR,1,3) += shiftY;
-            MAT_ELEM(ASR,2,3) += shiftZ;
-            applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
-
-            fastBestRotation(PcylZ,PcylY,PcylX,IauxSR,eulerSeqs[neuler],R,corrAux2,volAlignmentAux);
-            ASR=R*ASR;
-
-            // Rotate then shift
-            fastBestRotation(PcylZ,PcylY,PcylX,IauxRS,eulerSeqs[neuler],R,corrAux2,volAlignmentAux);
-            ARS=R*ARS;
-
-            bestShift(P, IauxRS, shiftX, shiftY, shiftZ, corrAux);
-            MAT_ELEM(ARS,0,3) += shiftX;
-            MAT_ELEM(ARS,1,3) += shiftY;
-            MAT_ELEM(ARS,2,3) += shiftZ;
-            applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
-        }
-
-        // Compute the distance
-        const MultidimArray<int> &imask = prm->mask.get_binary_mask();
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(imask)
-        if (!DIRECT_MULTIDIM_ELEM(imask,n))
-            DIRECT_MULTIDIM_ELEM(IauxRS,n)=DIRECT_MULTIDIM_ELEM(IauxSR,n)=0.;
-        double avgKSR, avgKRS, stdKSR, stdKRS, L1RS, L1SR;
-        sparseDistanceToCentroid(IauxRS,avgKRS, stdKRS, L1RS);
-        sparseDistanceToCentroid(IauxSR,avgKSR, stdKSR, L1SR);
-
-        correlationIndex(P,IauxRS);
-        correlationIndex(P,IauxSR);
-        double scoreRS=L1RS; // stdKRS*(1-corrRS);
-        double scoreSR=L1SR; // stdKSR*(1-corrSR);
-
-        // Prepare result
-        CL3DAssignment candidateRS, candidateSR;
-        candidateRS.readAlignment(ARS);
-        candidateSR.readAlignment(ASR);
-        if (std::abs(candidateRS.shiftx)>prm->maxShiftX ||
-            std::abs(candidateRS.shifty)>prm->maxShiftY ||
-            std::abs(candidateRS.shiftz)>prm->maxShiftZ ||
-            std::abs(candidateRS.rot)>prm->maxRot ||
-            std::abs(candidateRS.tilt)>prm->maxTilt ||
-            std::abs(candidateRS.psi)>prm->maxPsi)
-            candidateRS.score = 1e38;
-        else
-            candidateRS.score = scoreRS;
-        if (std::abs(candidateSR.shiftx)>prm->maxShiftX ||
-            std::abs(candidateSR.shifty)>prm->maxShiftY ||
-            std::abs(candidateSR.shiftz)>prm->maxShiftZ ||
-            std::abs(candidateSR.rot)>prm->maxRot ||
-            std::abs(candidateSR.tilt)>prm->maxTilt ||
-            std::abs(candidateSR.psi)>prm->maxPsi)
-            candidateSR.score = 1e38;
-        else
-            candidateSR.score = scoreSR;
-
-        if (candidateRS.score < result.score)
-        {
-            bestI = IauxRS;
-            result.copyAlignment(candidateRS);
-        }
-        if (candidateSR.score < result.score)
-        {
-            bestI = IauxSR;
-            result.copyAlignment(candidateSR);
-        }
-#ifdef DEBUG
-        std::cout << eulerSeqs[neuler] << " avgRS= " << avgKRS << " stdRS= " << stdKRS << " avgSR= " << avgKSR << " stdSR= " << stdKSR
-        << " -> bestSoFar= " << result.score << std::endl;
-#ifdef DEBUG_MORE
-
-        Image<double> save;
-        save()=P;
-        save.write("PPPI1.xmp");
-        save()=IauxRS;
-        save.write("PPPI2RS.xmp");
-        save()=IauxSR;
-        save.write("PPPI2SR.xmp");
-        std::cout << "    corr  RS=" << corrRS  << " corr  SR=" << corrSR << std::endl;
-        std::cout << "    L1    RS=" << L1RS    << " L1    SR=" << L1SR << std::endl;
-        std::cout << "    stdK  RS=" << stdKRS  << " stdK  SR=" << stdKSR << std::endl;
-        std::cout << "    score RS=" << scoreRS << " score SR=" << scoreSR << std::endl;
-        char c;
-        std::cin >> c;
-#endif
-#endif
-
-    }
-
-    if (result.score<1e37)
-        I=bestI;
-    else
-        I.initZeros();
-
-#ifdef DEBUG
-
-    Image<double> save;
-    save()=P;
-    save.write("PPPI1.xmp");
-    save()=I;
-    save.write("PPPI2.xmp");
-    save()=P-I;
-    save.write("PPPdiff.xmp");
-    std::cout << "sigma=" << prm->sigma << " score=" << result.score
-    << ". Press" << std::endl;
-    char c;
-    //std::cin >> c;
-#endif
-}
-#undef DEBUG
-#endif
 
 /* Look for K neighbours in a list ----------------------------------------- */
 //#define DEBUG
@@ -1717,7 +1342,7 @@ void ProgClassifyCL3D::defineParams()
     addParamsLine("   [--maxPsi <d=180>]        : Maximum allowed in-plane angle in absolute value");
     addParamsLine("   [--classifyAllImages]     : By default, some images may not be classified. Use this option to classify them all.");
     addParamsLine("   [--sym <s=c1>]            : Symmetry of the classes to be reconstructed");
-    Mask::defineParams(this);
+    Mask::defineParams(this,INT_MASK,NULL,NULL,true);
     addExampleLine("mpirun -np 3 `which xmipp_mpi_classify_CL3D` -i images.stk --nref 256 --oroot class --iter 10");
 }
 
@@ -1772,6 +1397,10 @@ void ProgClassifyCL3D::produceSideInfo()
 
 void ProgClassifyCL3D::run()
 {
+    String xmippPython;
+	initializeXmippPython(xmippPython);
+    frmFunc = getPointerToPythonFRMFunction();
+
     CREATE_LOG();
     show();
     produceSideInfo();

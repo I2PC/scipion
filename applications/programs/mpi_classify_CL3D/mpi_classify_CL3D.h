@@ -35,9 +35,10 @@
 #include <data/numerical_tools.h>
 #include <data/xmipp_program.h>
 #include <data/symmetries.h>
+#include <interface/frm.h>
 #include <vector>
 
-/**@defgroup VQforProjections Vector Quantization for Projections
+/**@defgroup VQforVolumes Vector Quantization for Volumes
    @ingroup ClassificationLibrary */
 //@{
 /** AssignedImage */
@@ -90,20 +91,8 @@ public:
     // Update for next iteration
     MultidimArray< double > PupdateMask;
 
-    // P in cylindrical coordinates around Z
-    MultidimArray<double> PcylZ;
-
-    // P in cylindrical coordinates around Y
-    MultidimArray<double> PcylY;
-
-    // P in cylindrical coordinates around X
-    MultidimArray<double> PcylX;
-
-    // Correlation aux
-    CorrelationAux corrAux, corrAux2;
-
-    // Volume Alignment aux
-    VolumeAlignmentAux volAlignmentAux;
+    // Auxiliary for alignment
+    MultidimArray<double> Iaux;
 
     // List of images assigned
     std::vector<CL3DAssignment> currentListImg;
@@ -308,6 +297,9 @@ public:
 
 	/// Noise in the images
     double sigma;
+
+    /// Pointer to the Python FRM alignment function
+    PyObject * frmFunc;
 };
 //@}
 #endif

@@ -266,6 +266,7 @@ def AddXmippMPIProgram(name, libs=[]):
        elif libs[i] == 'XmippInterface':
           finalLibPath += ['libraries/interface']+PythonLibDir
           finalLibs += PythonLibs
+          finalIncludePath += PythonInc
        elif libs[i] == 'XmippRecons_Interface':
           finalLibPath += ['libraries/interface']
           finalLibs.insert(i + 1, 'XmippInterface')
@@ -950,7 +951,7 @@ AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
 AddXmippMPIProgram('mpi_classify_CL2D', ['XmippRecons'])
 AddProgramLink('classify_CL2D', 'mpi_classify_CL2D')
 if not int(env['release']):
-    AddXmippMPIProgram('mpi_classify_CL3D', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_classify_CL3D', ['XmippRecons','XmippInterface'])
     AddProgramLink('classify_CL3D', 'mpi_classify_CL3D')
 AddXmippMPIProgram('mpi_classify_CL2D_core_analysis', ['XmippRecons'])
 if not int(env['release']):
