@@ -16,6 +16,7 @@ class TestMappers(unittest.TestCase):
 
     def setUp(self):
         self.db=None
+        self.mapper=None
 
     # !!!! add some asserts to the tests
 
@@ -28,27 +29,38 @@ class TestMappers(unittest.TestCase):
 
     def  getConnection(self):
         if self.db == None:
-            self.db= pyworkflow.mapper.postgresql.PostgresqlDb()
             dbconfig= os.path.join(self.getScipionHome() , "postgresql.xml")
-            self.db.connectUsing(dbconfig)
+            if os.path.isfile(dbconfig):
+                self.db= pyworkflow.mapper.postgresql.PostgresqlDb()
+                self.db.connectUsing(dbconfig)
+            else:
+                print "Config file %s not found" % dbconfig
+                return None
         return self.db
+
+    def getMapper(self):
+        if self.mapper == None:
+            dbconfig= os.path.join(self.getScipionHome() , "postgresql.xml")
+            if os.path.isfile(dbconfig):
+                self.mapper = pyworkflow.mapper.postgresql.PostgresqlMapper(dbconfig)
+            else:
+                print "Config file %s not found" % dbconfig
+                return None
+        return self.mapper
 
     def getLastId(self):
         return self.getConnection().lastId()
 
     def test_PostgresqlMapper(self):
         # Note: general-purpose exception-handling is handled by Pyunit
-        dbconfig= os.path.join(self.getScipionHome() , "postgresql.xml")
-        mapper = pyworkflow.mapper.postgresql.PostgresqlMapper(dbconfig)
+        mapper = self.getMapper()
+        if mapper != None:
+            i = Integer(4)
+            mapper.insert(i)
+            mapper.commit()
 
-        i = Integer(4)
-
-        mapper.insert(i)
-
-        mapper.commit()
-
-        objects = mapper.selectAll()
-        self.assertEqual(len(objects),1)
+            objects = mapper.selectAll()
+            self.assertEqual(len(objects),1)
 
     def test_connectUsing(self):
         db=self.getConnection()
@@ -56,75 +68,83 @@ class TestMappers(unittest.TestCase):
 
     def test_createTables(self):
         db=self.getConnection()
-        db.createTables()
+        if db != None:
+            db.createTables()
 
     def test_insert(self):
-       dbconfig= os.path.join(self.getScipionHome() , "postgresql.xml")
-       mapper = pyworkflow.mapper.postgresql.PostgresqlMapper(dbconfig)
-       i = Integer(4)
-       mapper.insert(i)
+       mapper=self.getMapper()
+       if mapper != None:
+           i = Integer(4)
+           mapper.insert(i)
 
 
     def test_insertChildren(self):
         """ Test mapper insertion of an object with attributes (children)"""
-        dbconfig= os.path.join(self.getScipionHome() , "postgresql.xml")
-        mapper = pyworkflow.mapper.postgresql.PostgresqlMapper(dbconfig)
-        micro=Microscope()
-        micro.voltage=Float(200.0)
-        objectId=mapper.insert(micro)
-        mapper.commit()
-        object = mapper.selectById(objectId)
-        object.printAll()
-        self.assertEqual(object.voltage.get(),200.0)
+        mapper=self.getMapper()
+        if mapper != None:
+            micro=Microscope()
+            micro.voltage=Float(200.0)
+            objectId=mapper.insert(micro)
+            mapper.commit()
+            object = mapper.selectById(objectId)
+            object.printAll()
+            self.assertEqual(object.voltage.get(),200.0)
 
 
     # !!!! actually select some object by its parent id
     def test_selectObjectsByParent(self):
         db=self.getConnection()
-        objects=db.selectObjectsByParent()
-        print objects
+        if db != None:
+            objects=db.selectObjectsByParent()
+            print objects
+
 
     # !!!! not tested yet
     def test_selectObjectsByAncestor(self):
         db=self.getConnection()
-        objects=db.selectObjectsByAncestor("aa")
-        print objects
+        if db != None:        
+            objects=db.selectObjectsByAncestor("aa")
+            print objects
 
 
     def test_selectById(self):
-       dbconfig= os.path.join(self.getScipionHome() , "postgresql.xml")
-       mapper = pyworkflow.mapper.postgresql.PostgresqlMapper(dbconfig)
-       object = mapper.selectById(self.getLastId())
-       object.printAll()
+       mapper=self.getMapper()
+       if mapper != None:
+           object = mapper.selectById(self.getLastId())
+           object.printAll()
         
 
     def test_selectBy(self):
         db=self.getConnection()
-        objects=db.selectObjectsBy(id= 3, value="4")
-        print objects
+        if db != None:
+            objects=db.selectObjectsBy(id= 3, value="4")
+            print objects
 
     def test_selectWhere(self):
         db=self.getConnection()
-        objects=db.selectObjectsWhere("id= 3 AND value='4'")
-        print objects
+        if db != None:
+            objects=db.selectObjectsWhere("id= 3 AND value='4'")
+            print objects
 
 
     def test_selectAll(self):
-       dbconfig= os.path.join(self.getScipionHome() , "postgresql.xml")
-       mapper = pyworkflow.mapper.postgresql.PostgresqlMapper(dbconfig)
-       for object in mapper.selectAll():
-           object.printAll()
+       mapper=self.getMapper()
+       if mapper != None:
+           for object in mapper.selectAll():
+               object.printAll()
 
     # !!!! assert that the object was deleted indeed
     def test_DeleteObject(self):
         db=self.getConnection()
-        db.deleteObject(self.getLastId())
+        if db != None:
+            db.deleteObject(self.getLastId())
 
 
     # !!!! assert that the object was deleted indeed
     def test_DeleteChildObjects(self):
         db=self.getConnection()
-        db.deleteChildObjects("qq")
+        if db != None:
+            db.deleteChildObjects("70")
 
     # !!!! assert that all was deleted
     # This test is dangerous if run against a production DB ;-)
@@ -132,7 +152,8 @@ class TestMappers(unittest.TestCase):
     def DeleteAll(self):
         print "delete All"
         db=self.getConnection()
-        db.deleteAll()
+        if db != None:
+            db.deleteAll()
 
 
 
