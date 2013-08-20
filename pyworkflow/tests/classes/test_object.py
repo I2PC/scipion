@@ -171,15 +171,6 @@ class TestPyworkflow(unittest.TestCase):
         for a1, a2 in zip(allObj, iterAllObj):
             self.assertEqual(a1, a2)
 
-    def test_PostgresqlMapper(self):
-        # Note: general-purpose exception-handling is handled by Pyunit
-        # psql conn parameters? psql python library? !!!
-        mapper = PostgresqlMapper()
-
-        i = Integer(4)
-        mapper.insert(i)
-        mapper.commit()
-
         
     def test_XMLMapper(self):
         fn = self.getTmpPath("basic.xml")
