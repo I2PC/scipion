@@ -9,7 +9,7 @@ import os.path
 import unittest
 import pyworkflow.mapper.postgresql
 from pyworkflow.object import *
-
+from pyworkflow.em.data import Microscope
 
 # @see test_object.TestPyworkflow.test_SqliteMapper
 class TestMappers(unittest.TestCase):
@@ -64,9 +64,19 @@ class TestMappers(unittest.TestCase):
        i = Integer(4)
        mapper.insert(i)
 
-    # !!!! insert a complex object
+
     def test_insertChildren(self):
-        pass
+        """ Test mapper insertion of an object with attributes (children)"""
+        dbconfig= os.path.join(self.getScipionHome() , "postgresql.xml")
+        mapper = pyworkflow.mapper.postgresql.PostgresqlMapper(dbconfig)
+        micro=Microscope()
+        micro.voltage=Float(200.0)
+        objectId=mapper.insert(micro)
+        mapper.commit()
+        object = mapper.selectById(objectId)
+        object.printAll()
+        self.assertEqual(object.voltage.get(),200.0)
+
 
     # !!!! actually select some object by its parent id
     def test_selectObjectsByParent(self):

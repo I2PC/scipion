@@ -24,20 +24,33 @@
 # *
 # **************************************************************************
 
-from mapper import Mapper
+"""
+Map objects to PostgreSql backend
+"""
+
+import mapper
+from pyworkflow.utils.path import replaceExt, joinExt
+
 
 FIELD_CLASSNAME="classname"
 
-class PostgresqlMapper(Mapper):
+class PostgresqlMapper(mapper.Mapper):
     """Specific Mapper implementation using postgresql database"""
     def __init__(self ,dbSettingsFile, dictClasses=None):
-        Mapper.__init__(self,dictClasses)
+        if dictClasses == None:
+            dictClasses=self.__getClassesDictionary()
+        mapper.Mapper.__init__(self,dictClasses)
         self.__initObjDict()
         try:
             self.db=PostgresqlDb(dbSettingsFile)
         except Exception, ex:
             raise Exception('Error creating PostgresqlMapper, settings file: %s\n error: %s' % (dbSettingsFile, ex))
             
+    def __getClassesDictionary(self):
+        """ Return a dictionary with all the relevant classes inheriting from Object"""
+        from pyworkflow.object import *
+        from pyworkflow.em.data import *
+        return locals()
 
 
     def __getNamePrefix(self, obj):
@@ -54,7 +67,7 @@ class PostgresqlMapper(Mapper):
     # insert methods
 
     def insert(self,obj):
-        self.__insert(obj)
+        return(self.__insert(obj))
 
     def __insert(self, obj, namePrefix=None):
         obj._objId = self.db.insertObject(obj._objName, obj.getClassName(),
@@ -65,9 +78,9 @@ class PostgresqlMapper(Mapper):
         else:
             namePrefix = joinExt(namePrefix, sid)
         self.insertChilds(obj, namePrefix)
+        return(obj._objId)
 
 
-    # !!!! refactor namePrefix?
     def insertChild(self, obj, key, attr, namePrefix=None):
         if namePrefix is None:
             namePrefix = self.__getNamePrefix(obj)
@@ -201,7 +214,7 @@ class PostgresqlMapper(Mapper):
         obj.set(objValue)
 
 
-        # !!!! delete methods
+    # !!!! delete methods
     def deleteChilds(self, obj):
         namePrefix = self.__getNamePrefix(obj)
         self.db.deleteChildObjects(namePrefix)
