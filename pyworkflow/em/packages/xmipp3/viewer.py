@@ -31,7 +31,7 @@ visualization program.
 
 import os
 from pyworkflow.em.viewer import Viewer, Wizard
-from pyworkflow.em import SetOfImages, SetOfMicrographs, DefCTFMicrographs
+from pyworkflow.em import SetOfImages, SetOfMicrographs, SetOfCoordinates, DefCTFMicrographs
 from pyworkflow.utils.process import runJob
 from xmipp3 import getXmippPath
 from data import XmippSetOfImages, XmippSetOfMicrographs, XmippClassification2D, XmippSetOfCoordinates, XmippSetOfParticles
@@ -55,7 +55,7 @@ class XmippViewer(Viewer):
     """ Wrapper to visualize different type of objects
     with the Xmipp program xmipp_showj
     """
-    _targets = [SetOfImages, XmippSetOfCoordinates, XmippClassification2D, 
+    _targets = [SetOfImages, SetOfCoordinates, XmippClassification2D, 
                 ProtImportMicrographs, XmippProtPreprocessMicrographs, XmippProtCTFMicrographs,
                 XmippProtParticlePicking, ProtImportParticles, XmippProtExtractParticles,
                 XmippProtCL2DAlign, XmippProtML2D, XmippProtCL2D]
@@ -73,13 +73,22 @@ class XmippViewer(Viewer):
             else:
                 fn = self._getTmpPath(obj.getName() + '_micrographs.xmd')
                 writeSetOfMicrographs(obj, fn)
+                
             extra = ''
             if obj.hasCTF():
                 extra = ' --mode metadata --render first'
             runShowJ(fn, extraParams=extra)  
         
-        elif issubclass(cls, XmippSetOfCoordinates):
-            runParticlePicker(obj.getMicrographs().getFileName(), os.path.dirname(obj.getFileName()), extraParams='readonly')
+        elif issubclass(cls, SetOfCoordinates):
+            obj_mics = obj.getMicrographs()
+            mdFn = getattr(obj_mics, '_xmippMd', None)
+            if mdFn:
+                fn = mdFn.get()
+            else:
+                fn = self._getTmpPath(obj_mics.getName() + '_micrographs.xmd')
+                writeSetOfMicrographs(obj_mics, fn)
+            #runParticlePicker(obj.getMicrographs().getFileName(), os.path.dirname(obj.getFileName()), extraParams='readonly')
+            runParticlePicker(fn, os.path.dirname(fn), extraParams='readonly')
         
         elif issubclass(cls, SetOfImages):
             fn = self._getTmpPath(obj.getName() + '_images.xmd')
