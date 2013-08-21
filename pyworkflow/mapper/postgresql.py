@@ -36,18 +36,22 @@ FIELD_CLASSNAME="classname"
 
 class PostgresqlMapper(mapper.Mapper):
     """Specific Mapper implementation using postgresql database"""
-    def __init__(self ,dbSettingsFile, dictClasses=None):
+    def __init__(self ,dbSettingsFile, dictClasses=None,database=None):
         if dictClasses == None:
             dictClasses=self.__getClassesDictionary()
         mapper.Mapper.__init__(self,dictClasses)
         self.__initObjDict()
-        try:
-            self.db=PostgresqlDb(dbSettingsFile)
-        except Exception, ex:
-            raise Exception('Error creating PostgresqlMapper, settings file: %s\n error: %s' % (dbSettingsFile, ex))
+        if database== None:
+            try:
+                self.db=PostgresqlDb(dbSettingsFile)
+            except Exception, ex:
+                raise Exception('Error creating PostgresqlMapper, settings file: %s\n error: %s' % (dbSettingsFile, ex))
+        else:
+            self.db=database
             
     def __getClassesDictionary(self):
         """ Return a dictionary with all the relevant classes inheriting from Object"""
+        # It might produce a warning, but it's not a problem, @see http://stackoverflow.com/questions/3571514/python-why-should-from-module-import-be-prohibited
         from pyworkflow.object import *
         from pyworkflow.em.data import *
         return locals()
@@ -214,7 +218,6 @@ class PostgresqlMapper(mapper.Mapper):
         obj.set(objValue)
 
 
-    # !!!! delete methods
     def deleteChilds(self, obj):
         namePrefix = self.__getNamePrefix(obj)
         self.db.deleteChildObjects(namePrefix)
@@ -228,7 +231,7 @@ class PostgresqlMapper(mapper.Mapper):
         self.deleteChilds(obj)
         self.db.deleteObject(obj.getObjId())
 
-        # !!!! update methods
+    # !!!! update methods
 
 
 # There are some python libraries for interfacing Postgres, see
