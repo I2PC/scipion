@@ -91,16 +91,13 @@ class XmippViewer(Viewer):
         
         elif issubclass(cls, SetOfParticles):
             fn = self._getTmpPath(obj.getName() + '_images.xmd')
-            #imgs = XmippSetOfImages.convert(obj, fn)
-            #runShowJ(imgs.getFileName())
             mdFn = getattr(obj, '_xmippMd', None)
             if mdFn:
                 fn = mdFn.get()
             else:
                 fn = self._getTmpPath(obj.getName() + '_images.xmd')
-                #Set hasCTF to False to avoid problems 
-                obj.setHasCTF(False)
-                writeSetOfParticles(obj, fn)
+                #Set hasCTF to False to avoid problems
+                writeSetOfParticles(obj, fn, self._getTmpPath())
 
             runShowJ(fn)  
         

@@ -45,7 +45,7 @@ class Viewer(object):
     _targets = []
     _environment = DESKTOP_TKINTER
     
-    def __init__(self, tmpPath='.', **args):
+    def __init__(self, tmpPath='./Tmp', **args):
         self._tmpPath = tmpPath
         
     def _getTmpPath(self, *paths):

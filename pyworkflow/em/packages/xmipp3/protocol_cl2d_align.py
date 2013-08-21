@@ -31,7 +31,7 @@ from os.path import join, dirname, exists
 from pyworkflow.em import *  
 import xmipp
 from data import *
-from convert import createXmippInputImages
+from convert import createXmippInputImages, readSetOfParticles
 from glob import glob
 
 class XmippDefCL2DAlign(Form):
@@ -94,14 +94,19 @@ class XmippProtCL2DAlign(ProtAlign):
         self._insertFunctionStep('createOutput')        
         
     def createOutput(self):
-        """ Store the XmippClassification2D object 
+        """ Store the setOfParticles object 
         as result of the protocol. 
         """
+        
         lastMdFn = self._getExtraPath("images.xmd")
         
-        imgs = XmippSetOfParticles(lastMdFn)
-        imgs.setAlignment(True)
-        self._defineOutputs(outputParticles=imgs)
+        imgSet = self._createSetOfParticles()
+        imgSet.copyInfo(self.inputImages.get())
+        imgSet.setHasAlignment(True)
+        readSetOfParticles(lastMdFn, imgSet, imgSet.hasCTF())
+        imgSet.write()
+
+        self._defineOutputs(outputParticles=imgSet)
 
     def validate(self):
         errors = []
