@@ -131,7 +131,8 @@ class TestMappers(unittest.TestCase):
     def test_selectBy(self):
         db=self.getConnection()
         if db != None:
-            objects=db.selectObjectsBy(id= 3, value="4")
+            id=self.test_insert(33)
+            objects=db.selectObjectsBy(id= id, value="33")
             print objects
 
     def test_selectWhere(self):
