@@ -23,29 +23,34 @@ class TestMappers(unittest.TestCase):
     def getScipionHome(self):
         if "SCIPION_HOME" not in os.environ:
             raise Exception("SCIPION_HOME is not defined as environment variable")
-
         return os.environ["SCIPION_HOME"]
 
 
     def  getConnection(self):
         if self.db == None:
-            dbconfig= os.path.join(self.getScipionHome() , "postgresql.xml")
-            if os.path.isfile(dbconfig):
-                self.db= pyworkflow.mapper.postgresql.PostgresqlDb()
-                self.db.connectUsing(dbconfig)
-            else:
-                print "Config file %s not found" % dbconfig
-                return None
+            try:
+                dbconfig= os.path.join(self.getScipionHome() , "postgresql.xml")
+                if os.path.isfile(dbconfig):
+                    self.db= pyworkflow.mapper.postgresql.PostgresqlDb()
+                    self.db.connectUsing(dbconfig)
+                else:
+                    print "Config file %s not found" % dbconfig
+                    return None
+            except Exception as e:
+                print str(e)
         return self.db
 
     def getMapper(self):
         if self.mapper == None:
-            dbconfig= os.path.join(self.getScipionHome() , "postgresql.xml")
-            if os.path.isfile(dbconfig):
-                self.mapper = pyworkflow.mapper.postgresql.PostgresqlMapper(dbconfig)
-            else:
-                print "Config file %s not found" % dbconfig
-                return None
+            try:
+                dbconfig= os.path.join(self.getScipionHome() , "postgresql.xml")
+                if os.path.isfile(dbconfig):
+                    self.mapper = pyworkflow.mapper.postgresql.PostgresqlMapper(dbconfig)
+                else:
+                    print "Config file %s not found" % dbconfig
+                    return None
+            except Exception as e:
+                print str(e)
         return self.mapper
 
     def getLastId(self):
