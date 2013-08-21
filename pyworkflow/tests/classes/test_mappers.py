@@ -79,6 +79,7 @@ class TestMappers(unittest.TestCase):
             db.createTables()
 
     def test_insert(self,intValue=22):
+       """Test mapper insertion and selection by Id"""
        mapper=self.getMapper()
        if mapper != None:
            i = Integer(intValue)
@@ -97,7 +98,6 @@ class TestMappers(unittest.TestCase):
             parentId=mapper.insert(micro)
             mapper.commit()
             object = mapper.selectById(parentId)
-            object.printAll()
             self.assertEqual(object.voltage.get(),200.0)
             return parentId
 
@@ -120,12 +120,6 @@ class TestMappers(unittest.TestCase):
             childrenList=db.selectObjectsByAncestor(str(parentId))
             self.assertTrue(self.allChildrenBelongToParent(childrenList,parentId))
 
-
-    def test_selectById(self):
-       mapper=self.getMapper()
-       if mapper != None:
-           object = mapper.selectById(self.getLastId())
-           object.printAll()
         
 
     def test_selectBy(self):
@@ -135,18 +129,21 @@ class TestMappers(unittest.TestCase):
             objects=db.selectObjectsBy(id= id, value="33")
             self.assertEqual(len(objects),1)
 
+
     def test_selectWhere(self):
         db=self.getConnection()
         if db != None:
-            objects=db.selectObjectsWhere("id= 3 AND value='4'")
-            print objects
+            id=self.test_insert(44)
+            objects=db.selectObjectsWhere("id= %s AND value='%d'" %(id,44))
+            self.assertEqual(len(objects),1)
+
 
 
     def test_selectAll(self):
        mapper=self.getMapper()
        if mapper != None:
-           for object in mapper.selectAll():
-               object.printAll()
+           allObjects= mapper.selectAll()
+           self.assertNotEqual(len(allObjects),0)
 
 
     def test_DeleteObject(self):
@@ -159,17 +156,17 @@ class TestMappers(unittest.TestCase):
             row = db.selectObjectById(id)
             self.assertIsNone(row)
 
+
     # !!!! assert that the object was deleted indeed
     def test_DeleteChildObjects(self):
         db=self.getConnection()
         if db != None:
-            mapper = self.getMapper()
             # test_insertChildren checks that things are really inserted
             id=self.test_insertChildren()
             print str(id)
             db.deleteChildObjects(str(id))
-            obj_list=self.selectObjectsByParent(str(id))
-            print len(obj_list)
+            obj_list=db.selectObjectsByParent(id)
+            self.assertEqual(len(obj_list),0)
 
 
     # !!!! assert that all was deleted

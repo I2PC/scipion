@@ -359,7 +359,7 @@ class PostgresqlDb():
         self.executeSelect(whereStr, valueTuple=whereTuple)
         return self._results(asIterator)
 
-    
+    # Risk of SQL injection??
     def selectObjectsWhere(self, whereStr, asIterator=False):
         self.executeSelect(whereStr)
         return self._results(asIterator)   
