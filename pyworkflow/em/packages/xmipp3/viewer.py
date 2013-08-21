@@ -31,7 +31,7 @@ visualization program.
 
 import os
 from pyworkflow.em.viewer import Viewer, Wizard
-from pyworkflow.em import SetOfImages, SetOfMicrographs, SetOfCoordinates, DefCTFMicrographs
+from pyworkflow.em import SetOfImages, SetOfMicrographs, SetOfParticles, SetOfCoordinates, DefCTFMicrographs
 from pyworkflow.utils.process import runJob
 from xmipp3 import getXmippPath
 from data import XmippSetOfImages, XmippSetOfMicrographs, XmippClassification2D, XmippSetOfCoordinates, XmippSetOfParticles
@@ -45,7 +45,7 @@ from protocol_ml2d import XmippProtML2D
 from protocol_cl2d import XmippProtCL2D
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_rotational_spectra import XmippProtRotSpectra
-from convert import writeSetOfMicrographs
+from convert import writeSetOfMicrographs, writeSetOfParticles
 
 
 import xmipp
@@ -87,13 +87,22 @@ class XmippViewer(Viewer):
             else:
                 fn = self._getTmpPath(obj_mics.getName() + '_micrographs.xmd')
                 writeSetOfMicrographs(obj_mics, fn)
-            #runParticlePicker(obj.getMicrographs().getFileName(), os.path.dirname(obj.getFileName()), extraParams='readonly')
             runParticlePicker(fn, os.path.dirname(fn), extraParams='readonly')
         
-        elif issubclass(cls, SetOfImages):
+        elif issubclass(cls, SetOfParticles):
             fn = self._getTmpPath(obj.getName() + '_images.xmd')
-            imgs = XmippSetOfImages.convert(obj, fn)
-            runShowJ(imgs.getFileName())
+            #imgs = XmippSetOfImages.convert(obj, fn)
+            #runShowJ(imgs.getFileName())
+            mdFn = getattr(obj, '_xmippMd', None)
+            if mdFn:
+                fn = mdFn.get()
+            else:
+                fn = self._getTmpPath(obj.getName() + '_images.xmd')
+                #Set hasCTF to False to avoid problems 
+                obj.setHasCTF(False)
+                writeSetOfParticles(obj, fn)
+
+            runShowJ(fn)  
         
         elif issubclass(cls, XmippClassification2D):
             runShowJ(obj.getClassesMdFileName(), extraParams=args.get('extraParams', ''))
