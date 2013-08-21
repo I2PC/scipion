@@ -29,13 +29,16 @@ class TestMappers(unittest.TestCase):
     def  getConnection(self):
         if self.db == None:
             try:
-                dbconfig= os.path.join(self.getScipionHome() , "postgresql.xml")
-                if os.path.isfile(dbconfig):
-                    self.db= pyworkflow.mapper.postgresql.PostgresqlDb()
-                    self.db.connectUsing(dbconfig)
+                if self.mapper != None and self.mapper.db != None:
+                    self.db=self.mapper.db
                 else:
-                    print "Config file %s not found" % dbconfig
-                    return None
+                    dbconfig= os.path.join(self.getScipionHome() , "postgresql.xml")
+                    if os.path.isfile(dbconfig):
+                        self.db= pyworkflow.mapper.postgresql.PostgresqlDb()
+                        self.db.connectUsing(dbconfig)
+                    else:
+                        print "Config file %s not found" % dbconfig
+                        return None
             except Exception as e:
                 print str(e)
         return self.db
@@ -75,11 +78,14 @@ class TestMappers(unittest.TestCase):
         if db != None:
             db.createTables()
 
-    def test_insert(self):
+    def test_insert(self,intValue=22):
        mapper=self.getMapper()
        if mapper != None:
-           i = Integer(4)
-           mapper.insert(i)
+           i = Integer(intValue)
+           objectId=mapper.insert(i)
+           object = mapper.selectById(objectId)
+           self.assertEqual(object.get(),intValue)
+           return objectId
 
 
     def test_insertChildren(self):
@@ -142,8 +148,12 @@ class TestMappers(unittest.TestCase):
     def test_DeleteObject(self):
         db=self.getConnection()
         if db != None:
-            db.deleteObject(self.getLastId())
-
+            id=self.test_insert(24)
+            # No need to check if the object was inserted, it's already checked inside test_insert
+            print "Deleting %s" % str(id)
+            db.deleteObject(id)
+            row = db.selectObjectById(id)
+            self.assertIsNone(row)
 
     # !!!! assert that the object was deleted indeed
     def test_DeleteChildObjects(self):
@@ -154,7 +164,6 @@ class TestMappers(unittest.TestCase):
             print str(id)
             object = mapper.selectById(id)
             self.assertIsNotNone(object)
-            # !!!! @current deletes the object too?
             db.deleteChildObjects(str(id))
             object = mapper.selectById(id)
             print len(object.getDictionary())
