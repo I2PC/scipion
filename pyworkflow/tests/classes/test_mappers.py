@@ -133,7 +133,7 @@ class TestMappers(unittest.TestCase):
         if db != None:
             id=self.test_insert(33)
             objects=db.selectObjectsBy(id= id, value="33")
-            print objects
+            self.assertEqual(len(objects),1)
 
     def test_selectWhere(self):
         db=self.getConnection()
