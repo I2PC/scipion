@@ -63,9 +63,8 @@ class TestMappers(unittest.TestCase):
             i = Integer(4)
             mapper.insert(i)
             mapper.commit()
-
-            objects = mapper.selectAll()
-            self.assertEqual(len(objects),1)
+            object = mapper.selectById(self.getLastId())
+            self.assertEqual(object.get(),4)
 
     def test_connectUsing(self):
         db=self.getConnection()
@@ -94,6 +93,7 @@ class TestMappers(unittest.TestCase):
             object = mapper.selectById(objectId)
             object.printAll()
             self.assertEqual(object.voltage.get(),200.0)
+            return objectId
 
 
     # !!!! actually select some object by its parent id
@@ -149,7 +149,16 @@ class TestMappers(unittest.TestCase):
     def test_DeleteChildObjects(self):
         db=self.getConnection()
         if db != None:
-            db.deleteChildObjects("70")
+            mapper = self.getMapper()
+            id=self.test_insertChildren()
+            print str(id)
+            object = mapper.selectById(id)
+            self.assertIsNotNone(object)
+            # !!!! @current deletes the object too?
+            db.deleteChildObjects(str(id))
+            object = mapper.selectById(id)
+            print len(object.getDictionary())
+
 
     # !!!! assert that all was deleted
     # This test is dangerous if run against a production DB ;-)

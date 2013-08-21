@@ -273,7 +273,7 @@ class PostgresqlDb():
     def connectUsing(self, configFile):
         """configFile is XML. @see settings/postresql.xml"""
 
-        print "Using %s" % configFile
+        # print "Using %s" % configFile
         tree = ET.parse(configFile)
         root = tree.getroot()
         user=root.find("PostgresqlConfig/user").text
@@ -390,7 +390,7 @@ class PostgresqlDb():
         
     def deleteChildObjects(self, ancestor_namePrefix):
         """ Delete all children of ancestor, which share the same starting prefix"""
-        self.executeDelete( "name LIKE '%s.%%'", (ancestor_namePrefix,) )
+        self.executeDelete( "name LIKE %s", ("%s.%%" % ancestor_namePrefix,) )
 
         
     def deleteAll(self):
