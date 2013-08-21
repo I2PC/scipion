@@ -325,7 +325,7 @@ class PostgresqlDb():
         return self.SELECT + whereStr + orderByStr
 
 
-    def executeSelect(self, whereStr, orderByStr=' ORDER BY id', valueTuple=None):
+    def executeSelect(self, whereStr, valueTuple=None, orderByStr=' ORDER BY id'):
         # !!!! handle ProgrammingError, OperationalError...
         self.cursor.execute(self.selectCmd(whereStr,orderByStr),valueTuple)
 

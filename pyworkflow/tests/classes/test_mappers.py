@@ -102,12 +102,13 @@ class TestMappers(unittest.TestCase):
             return objectId
 
 
-    # !!!! actually select some object by its parent id
     def test_selectObjectsByParent(self):
         db=self.getConnection()
         if db != None:
-            objects=db.selectObjectsByParent()
-            print objects
+            parentId=self.test_insertChildren()
+            childrenList=db.selectObjectsByParent(parentId)
+            allChildrenBelongToParent = reduce(lambda x,y:  x and y, map(lambda rowDict: parentId in rowDict.values(), childrenList))
+            self.assertTrue(allChildrenBelongToParent)
 
 
     # !!!! not tested yet
@@ -144,7 +145,7 @@ class TestMappers(unittest.TestCase):
            for object in mapper.selectAll():
                object.printAll()
 
-    # !!!! assert that the object was deleted indeed
+
     def test_DeleteObject(self):
         db=self.getConnection()
         if db != None:
@@ -160,13 +161,12 @@ class TestMappers(unittest.TestCase):
         db=self.getConnection()
         if db != None:
             mapper = self.getMapper()
+            # test_insertChildren checks that things are really inserted
             id=self.test_insertChildren()
             print str(id)
-            object = mapper.selectById(id)
-            self.assertIsNotNone(object)
             db.deleteChildObjects(str(id))
-            object = mapper.selectById(id)
-            print len(object.getDictionary())
+            obj_list=self.selectObjectsByParent(str(id))
+            print len(obj_list)
 
 
     # !!!! assert that all was deleted
