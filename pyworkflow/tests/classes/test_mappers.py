@@ -18,7 +18,6 @@ class TestMappers(unittest.TestCase):
         self.db=None
         self.mapper=None
 
-    # !!!! add some asserts to the tests
 
     def getScipionHome(self):
         if "SCIPION_HOME" not in os.environ:
@@ -157,7 +156,7 @@ class TestMappers(unittest.TestCase):
             self.assertIsNone(row)
 
 
-    # !!!! assert that the object was deleted indeed
+
     def test_DeleteChildObjects(self):
         db=self.getConnection()
         if db != None:
@@ -169,14 +168,16 @@ class TestMappers(unittest.TestCase):
             self.assertEqual(len(obj_list),0)
 
 
-    # !!!! assert that all was deleted
+
     # This test is dangerous if run against a production DB ;-)
     # Hence, if you really want to run it, add "test_" to the function name
     def DeleteAll(self):
-        print "delete All"
-        db=self.getConnection()
-        if db != None:
+        print "DELETING ALL..."
+        mapper=self.getMapper()
+        if mapper != None:
+            db=self.getConnection()
             db.deleteAll()
-
+            allObjects= mapper.selectAll()
+            self.assertEqual(len(allObjects),0)
 
 
