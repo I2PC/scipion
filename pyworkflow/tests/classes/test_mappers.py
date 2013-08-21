@@ -94,12 +94,15 @@ class TestMappers(unittest.TestCase):
         if mapper != None:
             micro=Microscope()
             micro.voltage=Float(200.0)
-            objectId=mapper.insert(micro)
+            parentId=mapper.insert(micro)
             mapper.commit()
-            object = mapper.selectById(objectId)
+            object = mapper.selectById(parentId)
             object.printAll()
             self.assertEqual(object.voltage.get(),200.0)
-            return objectId
+            return parentId
+
+    def allChildrenBelongToParent(self,childrenList,parentId):
+            return reduce(lambda x,y:  x and y, map(lambda rowDict: parentId in rowDict.values(), childrenList))
 
 
     def test_selectObjectsByParent(self):
@@ -107,16 +110,15 @@ class TestMappers(unittest.TestCase):
         if db != None:
             parentId=self.test_insertChildren()
             childrenList=db.selectObjectsByParent(parentId)
-            allChildrenBelongToParent = reduce(lambda x,y:  x and y, map(lambda rowDict: parentId in rowDict.values(), childrenList))
-            self.assertTrue(allChildrenBelongToParent)
+            self.assertTrue(self.allChildrenBelongToParent(childrenList,parentId))
 
 
-    # !!!! not tested yet
     def test_selectObjectsByAncestor(self):
         db=self.getConnection()
         if db != None:        
-            objects=db.selectObjectsByAncestor("aa")
-            print objects
+            parentId=self.test_insertChildren()
+            childrenList=db.selectObjectsByAncestor(str(parentId))
+            self.assertTrue(self.allChildrenBelongToParent(childrenList,parentId))
 
 
     def test_selectById(self):
