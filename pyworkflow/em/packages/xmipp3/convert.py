@@ -208,7 +208,7 @@ def readSetOfMicrographs(filename, micSet, hasCtf):
         micSet.append(mic)
 
 
-def writeSetOfMicrographs(micSet, filename, ctfDir, rowFunc=None):
+def writeSetOfMicrographs(micSet, filename, ctfDir=None, rowFunc=None):
     """ This function will write a SetOfMicrographs as Xmipp metadata.
     Params:
         micSet: the SetOfMicrograph instance.
@@ -291,7 +291,7 @@ def readSetOfCoordinates(posDir, micSet, coordSet):
 
     coordSet.setBoxSize(boxSize)
 
-def writeSetOfParticles(imgSet, filename, ctfDir, rowFunc=None):
+def writeSetOfParticles(imgSet, filename, ctfDir=None, rowFunc=None):
     
     """ This function will write a SetOfParticles as Xmipp metadata.
     Params:
@@ -335,9 +335,16 @@ def readSetOfParticles(fnImages, imgSet, hasCtf):
         part = rowToParticle(imgMd, objId, hasCtf)
         imgSet.append(part)
 
-def createXmippInputImages(self, imgSet):
+def createXmippInputImages(self, imgSet, rowFunc=None):
     
     imgsFn = self._getPath('input_images.xmd')
     ctfDir = self._getTmpPath()
-    writeSetOfParticles(imgSet, imgsFn, ctfDir)
+    writeSetOfParticles(imgSet, imgsFn, ctfDir, rowFunc)
     return imgsFn
+
+def createXmippInputMicrographs(self, micSet, rowFunc=None):
+    
+    micsFn = self._getPath('input_micrographs.xmd')
+    ctfDir = self._getTmpPath()
+    writeSetOfMicrographs(micSet, micsFn, ctfDir, rowFunc)
+    return micsFn

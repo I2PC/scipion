@@ -33,7 +33,7 @@ from pyworkflow.utils.path import *
 import xmipp
 from xmipp3 import XmippProtocol
 from data import *
-from convert import writeSetOfMicrographs, readSetOfCoordinates
+from convert import createXmippInputMicrographs, readSetOfCoordinates
 
 
 class XmippDefParticlePicking(Form):
@@ -85,9 +85,8 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
     def launchParticlePickGUI(self):
         # Get the converted input micrographs in Xmipp format
         # if not exists, means the input was already in Xmipp
-        fn = self._getPath('micrographs.xmd')
-        writeSetOfMicrographs(self.inputMics, fn)
-        self._params['inputMicsXmipp'] = fn
+        micFn = createXmippInputMicrographs(self, self.inputMics)
+        self._params['inputMicsXmipp'] = micFn
         # Launch the particle picking GUI
         program = "xmipp_micrograph_particle_picking"
         arguments = "-i %(inputMicsXmipp)s -o %(extraDir)s --mode %(pickingMode)s --memory %(memory)dg"

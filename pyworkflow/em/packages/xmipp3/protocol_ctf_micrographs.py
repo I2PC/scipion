@@ -99,6 +99,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
             micRow.setValue(l, v)        
         
     def createOutput(self):
+        
         # Create the SetOfMicrographs 
         micSet = self._createSetOfMicrographs()
         
@@ -107,14 +108,20 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
             ctfModel = readCTFModel(ctfparam)
             mic.setCTF(ctfModel)
             micSet.append(mic)
+ 
         #Copy attributes from input to output micrographs
         micSet.copyInfo(self.inputMics)
+        
+
+        # Write as a Xmipp metadata
+        ctfDir = self._getTmpPath()
+        mdFn = self._getPath('micrographs.xmd')
+        writeSetOfMicrographs(micSet, mdFn, ctfDir, self.setupMicRow)
+                 
         # Mark flag of CTF as True
         micSet.setHasCTF(True)      
-        # Write as a Xmipp metadata
-        mdFn = self._getPath('micrographs.xmd')
-        writeSetOfMicrographs(micSet, mdFn, self.setupMicRow)         
         micSet.write()            
+
         # Evaluate the PSD and add some criterias
         auxMdFn = self._getTmpPath('micrographs.xmd')
         self.runJob(None, "xmipp_ctf_sort_psds","-i %s -o %s" % (mdFn, auxMdFn))
