@@ -12,8 +12,7 @@ from pyworkflow.object import *
 from pyworkflow.em.data import Microscope
 
 # @see test_object.TestPyworkflow.test_SqliteMapper
-class TestMappers(unittest.TestCase):
-
+class TestPostgreSqlMapper(unittest.TestCase):
     def setUp(self):
         self.db=None
         self.mapper=None
@@ -24,23 +23,6 @@ class TestMappers(unittest.TestCase):
             raise Exception("SCIPION_HOME is not defined as environment variable")
         return os.environ["SCIPION_HOME"]
 
-
-    def  getConnection(self):
-        if self.db == None:
-            try:
-                if self.mapper != None and self.mapper.db != None:
-                    self.db=self.mapper.db
-                else:
-                    dbconfig= os.path.join(self.getScipionHome() , "postgresql.xml")
-                    if os.path.isfile(dbconfig):
-                        self.db= pyworkflow.mapper.postgresql.PostgresqlDb()
-                        self.db.connectUsing(dbconfig)
-                    else:
-                        print "Config file %s not found" % dbconfig
-                        return None
-            except Exception as e:
-                print str(e)
-        return self.db
 
     def getMapper(self):
         if self.mapper == None:
@@ -55,27 +37,6 @@ class TestMappers(unittest.TestCase):
                 print str(e)
         return self.mapper
 
-    def getLastId(self):
-        return self.getConnection().lastId()
-
-    def test_PostgresqlMapper(self):
-        # Note: general-purpose exception-handling is handled by Pyunit
-        mapper = self.getMapper()
-        if mapper != None:
-            i = Integer(4)
-            mapper.insert(i)
-            mapper.commit()
-            object = mapper.selectById(self.getLastId())
-            self.assertEqual(object.get(),4)
-
-    def test_connectUsing(self):
-        db=self.getConnection()
-        return db
-
-    def test_createTables(self):
-        db=self.getConnection()
-        if db != None:
-            db.createTables()
 
     def test_insert(self,intValue=22):
        """Test mapper insertion and selection by Id"""
@@ -100,6 +61,78 @@ class TestMappers(unittest.TestCase):
             self.assertEqual(object.voltage.get(),200.0)
             return parentId
 
+
+    def test_selectAll(self):
+       mapper=self.getMapper()
+       if mapper != None:
+           allObjects= mapper.selectAll()
+           self.assertNotEqual(len(allObjects),0)
+
+
+
+    # !!!! delete test
+    def test_delete(self):
+        pass
+
+
+    # !!!! deleteChilds test
+    def test_deleteChilds(self):
+        pass
+
+    # !!!! delete test
+    def test_delete(self):
+        pass
+
+
+
+    # !!!! updateFrom test
+    def test_updateFrom(self):
+        pass
+
+
+class TestPostgreSqlDb(unittest.TestCase):
+    def setUp(self):
+        self.db=None
+        self.mapper=None
+  
+    def getScipionHome(self):
+        if "SCIPION_HOME" not in os.environ:
+            raise Exception("SCIPION_HOME is not defined as environment variable")
+        return os.environ["SCIPION_HOME"]
+
+
+    def  getConnection(self):
+        if self.db == None:
+            try:
+                if self.mapper != None and self.mapper.db != None:
+                    self.db=self.mapper.db
+                else:
+                    dbconfig= os.path.join(self.getScipionHome() , "postgresql.xml")
+                    if os.path.isfile(dbconfig):
+                        self.db= pyworkflow.mapper.postgresql.PostgresqlDb()
+                        self.db.connectUsing(dbconfig)
+                    else:
+                        print "Config file %s not found" % dbconfig
+                        return None
+            except Exception as e:
+                print str(e)
+        return self.db
+
+
+    def getLastId(self):
+        return self.getConnection().lastId()
+
+
+    def test_connectUsing(self):
+        db=self.getConnection()
+        return db
+
+    def test_createTables(self):
+        db=self.getConnection()
+        if db != None:
+            db.createTables()
+
+
     def allChildrenBelongToParent(self,childrenList,parentId):
             return reduce(lambda x,y:  x and y, map(lambda rowDict: parentId in rowDict.values(), childrenList))
 
@@ -107,7 +140,7 @@ class TestMappers(unittest.TestCase):
     def test_selectObjectsByParent(self):
         db=self.getConnection()
         if db != None:
-            parentId=self.test_insertChildren()
+            parentId=TestPostgreSqlMapper.test_insertChildren()
             childrenList=db.selectObjectsByParent(parentId)
             self.assertTrue(self.allChildrenBelongToParent(childrenList,parentId))
 
@@ -138,14 +171,20 @@ class TestMappers(unittest.TestCase):
 
 
 
-    def test_selectAll(self):
-       mapper=self.getMapper()
-       if mapper != None:
-           allObjects= mapper.selectAll()
-           self.assertNotEqual(len(allObjects),0)
 
+    # This test is dangerous if run against a production DB ;-)
+    # Hence, if you really want to run it, add "test_" to the function name
+    # !!!! check empty table without using mapper
+    def DeleteAll(self):
+        print "DELETING ALL..."
+        mapper=self.getMapper()
+        if mapper != None:
+            db=self.getConnection()
+            db.deleteAll()
+            allObjects= mapper.selectAll()
+            self.assertEqual(len(allObjects),0)
 
-    def test_DeleteObject(self):
+    def test_dbDeleteObject(self):
         db=self.getConnection()
         if db != None:
             id=self.test_insert(24)
@@ -157,7 +196,7 @@ class TestMappers(unittest.TestCase):
 
 
 
-    def test_DeleteChildObjects(self):
+    def test_dbDeleteChildObjects(self):
         db=self.getConnection()
         if db != None:
             # test_insertChildren checks that things are really inserted
@@ -166,18 +205,3 @@ class TestMappers(unittest.TestCase):
             db.deleteChildObjects(str(id))
             obj_list=db.selectObjectsByParent(id)
             self.assertEqual(len(obj_list),0)
-
-
-
-    # This test is dangerous if run against a production DB ;-)
-    # Hence, if you really want to run it, add "test_" to the function name
-    def DeleteAll(self):
-        print "DELETING ALL..."
-        mapper=self.getMapper()
-        if mapper != None:
-            db=self.getConnection()
-            db.deleteAll()
-            allObjects= mapper.selectAll()
-            self.assertEqual(len(allObjects),0)
-
-
