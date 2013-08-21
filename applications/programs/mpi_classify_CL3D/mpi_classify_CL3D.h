@@ -244,6 +244,9 @@ public:
     /// Clasify all images
     bool classifyAllImages;
 
+    /// Use this option to avoid aligning at the beginning all the missing wedges
+    bool randomizeStartingOrientation;
+
     /// Maximum shift Z
     double maxShiftZ;
 
@@ -310,9 +313,6 @@ public:
 
     // Image dimensions
     size_t Zdim, Ydim, Xdim;
-
-	/// Noise in the images
-    double sigma;
 
     /// Pointer to the Python FRM alignment function
     PyObject * frmFunc;

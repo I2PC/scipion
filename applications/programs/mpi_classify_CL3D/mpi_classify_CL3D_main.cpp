@@ -570,9 +570,7 @@ void CL3D::initialize(MetaData &_SF,
         }
     }
 
-    // Estimate sigma and if no previous classes have been given,
-    // assign randomly
-    prm->sigma = 0;
+    // If no previous classes have been given, assign randomly
     if (prm->node->rank == 0)
         init_progress_bar(Nimgs);
     Image<double> I;
@@ -588,18 +586,22 @@ void CL3D::initialize(MetaData &_SF,
                 q = idx % (prm->Ncodes0);
             size_t objId = prm->objId[idx];
             readImage(I, objId, true);
-            std::cout << "Reading " << I.name() << std::endl;
-
-            // Measure the variance of the signal outside a circular mask
-            double avg, stddev;
-            I().computeAvgStdev_within_binary_mask(prm->mask.get_binary_mask(), avg, stddev);
-            prm->sigma += stddev;
 
             // Put it randomly in one of the classes
             bestAssignment.objId = assignment.objId = objId;
             if (!initialCodesGiven)
             {
                 bestAssignment.score = 1;
+                if (prm->randomizeStartingOrientation)
+                {
+					// Randomize the orientation of the volume, to avoid aligning all the missing wedges
+					double rot=rnd_unif(0,360);
+					double tilt=rnd_unif(0,360);
+					double psi=rnd_unif(0,360);
+					Matrix2D<double> E;
+					Euler_angles2matrix(rot,tilt,psi,E,true);
+					selfApplyGeometry(LINEAR,I(),E,IS_NOT_INV,DONT_WRAP,0.0);
+                }
                 P[q]->updateProjection(I(), bestAssignment);
             }
             else
@@ -627,11 +629,6 @@ void CL3D::initialize(MetaData &_SF,
     }
     if (prm->node->rank == 0)
         progress_bar(Nimgs);
-
-    // Put sigma in common
-    MPI_Allreduce(MPI_IN_PLACE, &(prm->sigma), 1, MPI_DOUBLE, MPI_SUM,
-                  MPI_COMM_WORLD);
-    prm->sigma *= sqrt(2.0) / Nimgs;
 
     // Share all assignments
     shareAssignments(true, true);
@@ -847,7 +844,6 @@ void CL3D::run(const FileName &fnOut, int level)
             {
                 size_t objId = prm->objId[idx];
                 readImage(I, objId, false);
-                std::cout << "Reading " << I.name() << std::endl;
 
                 assignment.objId = objId;
                 lookNode(I(), oldAssignment[idx], node, assignment);
@@ -1319,6 +1315,7 @@ void ProgClassifyCL3D::readParams()
     maxTilt = getDoubleParam("--maxTilt");
     maxPsi = getDoubleParam("--maxPsi");
     classifyAllImages = checkParam("--classifyAllImages");
+    randomizeStartingOrientation = checkParam("--randomizeStartingOrientation");
     fnSym = getParam("--sym");
     if (checkParam("--mask"))
         mask.readParams(this);
@@ -1384,6 +1381,7 @@ void ProgClassifyCL3D::defineParams()
     addParamsLine("   [--classifyAllImages]     : By default, some images may not be classified. Use this option to classify them all.");
     addParamsLine("   [--sym <s=c1>]            : Symmetry of the classes to be reconstructed");
     addParamsLine("   [--maxFreq <w=0.2>]       : Maximum frequency for the alignment");
+    addParamsLine("   [--randomizeStartingOrientation] : Use this option to avoid aligning all missing wedges");
     Mask::defineParams(this,INT_MASK,NULL,NULL,true);
     addExampleLine("mpirun -np 3 `which xmipp_mpi_classify_CL3D` -i images.stk --nref 256 --oroot class --iter 10");
 }
