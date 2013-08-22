@@ -300,7 +300,7 @@ class XmippSetOfParticles(XmippSetOfImages, SetOfParticles):
 class XmippSetOfVolumes(XmippSetOfImages, SetOfVolumes):
     """Represents a set of Volumes for Xmipp"""
     def __init__(self, filename=None, **args):
-        SetOfVolumes.__init__(self, filename, **args)
+        SetOfVolumes.__init__(self, **args)
         XmippSetOfImages.__init__(self, filename, **args)
                 
         
