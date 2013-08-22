@@ -32,7 +32,7 @@ from pyworkflow.em import *
 import xmipp
 from data import *
 import xmipp3
-from convert import createXmippInputImages
+from convert import createXmippInputImages, readSetOfClasses2D
 from glob import glob
 
 class XmippDefKerdensom(Form):
@@ -148,8 +148,9 @@ class XmippProtKerdensom(ProtClassify):
         """ Store the kenserdom object 
         as result of the protocol. 
         """
-        classification = XmippClassification2D(self._params['kclasses'])
-        self._defineOutputs(outputClassification=classification)
+        classes2DSet = self._createSetOfClasses2D()
+        readSetOfClasses2D(classes2DSet, self._params['kclasses'])
+        self._defineOutputs(outputClassification=classes2DSet)
 
     def _validate(self):
         errors = []

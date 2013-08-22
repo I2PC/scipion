@@ -62,6 +62,11 @@ class EMProtocol(Protocol):
         imgSet.setFileName(self._getPath('particles%s.sqlite' % suffix)) 
         return imgSet
 
+    def _createSetOfClasses2D(self, suffix=''):
+        classes2DSet = SetOfClasses2D()
+        classes2DSet.setFileName(self._getPath('classes2D%s.sqlite' % suffix)) 
+        return classes2DSet
+
     def _createSetOfVolumes(self, suffix=''):
         volSet = SetOfVolumes()
         volSet.setFileName(self._getPath('volumes%s.sqlite' % suffix)) 

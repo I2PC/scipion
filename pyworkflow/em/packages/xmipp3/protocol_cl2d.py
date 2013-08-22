@@ -31,7 +31,7 @@ from os.path import join, dirname, exists
 from pyworkflow.em import *  
 import xmipp
 from data import *
-from convert import createXmippInputImages
+from convert import createXmippInputImages, readSetOfClasses2D
 #from xmipp3 import XmippProtocol
 from glob import glob
 
@@ -191,12 +191,12 @@ class XmippProtCL2D(ProtAlign, ProtClassify):
             prevMdFn = mdFn
             
     def createOutput(self, subset=''):
-        """ Store the XmippClassification2D object 
+        """ Store the setOfClasses2D object 
         as result of the protocol. 
         """
         levelMdFiles = self._getLevelMdFiles(subset)
         lastMdFn = levelMdFiles[-1]
-        result = {'outputClassification' + subset: XmippClassification2D(lastMdFn, 'classes_sorted')}
+        result = {'outputClassification' + subset: readSetOfClasses2D(self._createSetOfClasses2D(subset), lastMdFn, 'classes_sorted')}
         self._defineOutputs(**result)
 
     def _summary(self):

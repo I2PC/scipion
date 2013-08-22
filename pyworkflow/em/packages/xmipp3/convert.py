@@ -199,6 +199,14 @@ def rowToParticle(md, objId, hasCtf):
 def particleToRow(part, partRow, ctfDir, hasCtf):
     """ Set labels values from Particle to md row. """
     imageToRow(part, partRow, ctfDir, hasCtf, imgLabel=xmipp.MDL_IMAGE)
+
+def rowToClass2D(md, objId):
+    """ Create a Class2D from a row of a metadata. """
+    return rowToImage(md, objId, xmipp.MDL_IMAGE)
+    
+def class2DToRow(part, partRow):
+    """ Set labels values from Class2D to md row. """
+    imageToRow(part, partRow, ctfDir, hasCtf, imgLabel=xmipp.MDL_IMAGE)
     
 def readSetOfMicrographs(filename, micSet, hasCtf=False):
     
@@ -334,6 +342,45 @@ def readSetOfParticles(fnImages, imgSet, hasCtf=False):
     for objId in imgMd:
         part = rowToParticle(imgMd, objId, hasCtf)
         imgSet.append(part)
+        
+def writeSetOfClasses2D(imgSet, filename, ctfDir=None, rowFunc=None):
+    
+    """ This function will write a SetOfParticles as Xmipp metadata.
+    Params:
+        imgSet: the SetOfParticles instance.
+        filename: the filename where to write the metadata.
+        rowFunc: this function can be used to setup the row before 
+            adding to metadata.
+    """
+    pass
+
+#     md = xmipp.MetaData()
+#     hasCtf = imgSet.hasCTF()
+#     
+#     for img in imgSet:
+#         objId = md.addObject()
+#         imgRow = XmippMdRow()
+#         particleToRow(img, imgRow, ctfDir, hasCtf)
+#         if rowFunc:
+#             rowFunc(img, imgRow)
+#         imgRow.writeToMd(md, objId)
+#         
+#     md.write(filename)
+#     imgSet._xmippMd = String(filename)
+
+
+def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
+    """read from Xmipp image metadata.
+        fnImages: The metadata filename where the particles properties are.
+        imgSet: the SetOfParticles that will be populated.
+        hasCtf: is True if the ctf information exists.
+    """
+    classMd = xmipp.MetaData(filename)
+    imgClassesMd = xmipp.MetaData(classesBlock)
+    
+    for objId in classMd:
+#       class2D = rowToParticle(imgMd, objId, hasCtf)
+       classes2DSet.append(class2D)
 
 def createXmippInputImages(self, imgSet, rowFunc=None):
     
