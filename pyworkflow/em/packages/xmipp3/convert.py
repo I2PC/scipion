@@ -202,9 +202,9 @@ def particleToRow(part, partRow, ctfDir, hasCtf):
 
 def rowToClass2D(md, objId):
     """ Create a Class2D from a row of a metadata. """
-    return rowToImage(md, objId, xmipp.MDL_IMAGE)
+    return rowToImage(md, objId, xmipp.MDL_IMAGE, Particle, hasCtf)
     
-def class2DToRow(part, partRow):
+def class2DToRow(part, partRow, ctfDir, hasCtf):
     """ Set labels values from Class2D to md row. """
     imageToRow(part, partRow, ctfDir, hasCtf, imgLabel=xmipp.MDL_IMAGE)
     
