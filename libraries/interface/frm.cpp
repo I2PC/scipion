@@ -98,7 +98,7 @@ void alignVolumesFRM(PyObject *pFunc, const MultidimArray<double> &Iref, Multidi
 	int bandWidthSphericalHarmonics0=4;
 	int bandWidthSphericalHarmonicsF=64;
 	int frequencyPixels=(int)(XSIZE(Iref)*maxFreq);
-	PyObject *arglistfrm = Py_BuildValue("OOOO(ii)iiO", pyI, Py_None, pyIref, Py_None,
+	PyObject *arglistfrm = Py_BuildValue("OOOO(ii)iiO", pyI, Imask, pyIref, Py_None,
 			bandWidthSphericalHarmonics0, bandWidthSphericalHarmonicsF, frequencyPixels, maxshift, pyMask);
 	PyObject *resultfrm = PyObject_CallObject(pFunc, arglistfrm);
 	Py_DECREF(arglistfrm);
