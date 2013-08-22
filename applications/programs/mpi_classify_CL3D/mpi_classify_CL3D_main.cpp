@@ -85,6 +85,7 @@ CL3DClass::CL3DClass()
     Paux.initZeros(prm->Zdim, prm->Ydim, prm->Xdim);
     Paux.setXmippOrigin();
     transformer.setReal(Paux);
+    PupdateReal=Paux;
     Pupdate.initZeros(transformer.fFourier);
     PupdateMask.initZeros(Pupdate);
     pyIfourierMaskFRM=NULL;
@@ -117,6 +118,7 @@ void CL3DClass::updateProjection(MultidimArray<double> &I,
             *(ptrPupdate+1)+=(*(ptrIfourier+1));
             DIRECT_MULTIDIM_ELEM(PupdateMask,n)+=1;
         }
+        PupdateReal+=I;
         nextListImg.push_back(assigned);
     }
 }
@@ -143,6 +145,7 @@ void CL3DClass::transferUpdate()
         transformer.inverseFourierTransform(Pupdate,Paux);
 
         // Compact support in real space
+#ifdef NEVERDEFINED
         double mean;
         detectBackground(Paux,bgMask,0.01,mean);
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Paux)
@@ -155,6 +158,10 @@ void CL3DClass::transferUpdate()
         // Symmetrize
         symmetrizeVolume(prm->SL,Paux,P,WRAP);
 
+#else
+        P=PupdateReal/(double)nextListImg.size();
+#endif
+
         // Normalize and remove outside sphere
         P.statisticsAdjust(0, 1);
         const MultidimArray<int> &mask=prm->mask.get_binary_mask();
@@ -162,6 +169,7 @@ void CL3DClass::transferUpdate()
         if (!DIRECT_MULTIDIM_ELEM(mask,n))
             DIRECT_MULTIDIM_ELEM(P,n) = 0;
         Pupdate.initZeros();
+        PupdateReal.initZeros();
         PupdateMask.initZeros();
 
         /* COSS: STILL TO PUT IN 3D

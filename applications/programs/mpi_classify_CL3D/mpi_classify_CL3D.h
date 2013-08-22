@@ -95,6 +95,9 @@ public:
     MultidimArray< std::complex<double> > Pupdate;
 
     // Update for next iteration
+    MultidimArray<double> PupdateReal;
+
+    // Update for next iteration
     MultidimArray< double > PupdateMask;
 
     // Auxiliary for alignment
