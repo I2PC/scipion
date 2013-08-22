@@ -194,7 +194,7 @@ class TestXmippExtractParticles(TestXmippBase):
 #        # Update the setofmicrographs associated to the coordinates to set the CTF model
 #        micsXmd = getInputPath('Micrographs_BPV3_Down3', 'micrographs.xmd')
 #        mics = XmippSetOfMicrographs(micsXmd)
-#        mics.samplingRate.set(3.711)
+#        mics.setSamplingRate(3.711)
 #        mics.setCTF(True)
 #        self.protPP.outputCoordinates.setMicrographs(mics)
 #        protExtract.inputCoordinates.set(self.protPP.outputCoordinates)

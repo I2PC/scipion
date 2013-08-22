@@ -735,7 +735,7 @@ class XmippProtProjMatch(xmipp3.XmippProtocol, ProtRefine3D, ProtClassify3D):
         self.imgMd = self.ParamsDict['ImgMd'] = imgsFn
         
         #Get sampling rate from input images
-        self.samplingRate = self.inputImages.get().samplingRate.get()
+        self.samplingRate = self.inputImages.get().getSamplingRate()
         
         self._insertFunctionStep('copyVolumes', refMd, initVols)
         
