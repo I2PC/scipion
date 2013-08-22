@@ -644,7 +644,7 @@ if __name__ == '__main__':
     from pyworkflow.em import ProtImportMicrographs
     p = ProtImportMicrographs()
     p.sphericalAberration.set(2.3)
-    p.samplingRate.set('5.4')
+    p.setSamplingRate('5.4')
     w = FormWindow(p)
     w.show()
     

@@ -157,7 +157,7 @@ class XmippProtML2D(ProtAlign, ProtClassify):
                 params += ' --not_phase_flipped'
             if self.highResLimit.get() > 0:
                 params += ' --limit_resolution 0 %f' % self.highResLimit.get()
-            params += ' --sampling_rate %f' % self.inputImages.get().samplingRate.get()
+            params += ' --sampling_rate %f' % self.inputImages.get().getSamplingRate()
         else:
             if self.doFast:
                 params += ' --fast'
