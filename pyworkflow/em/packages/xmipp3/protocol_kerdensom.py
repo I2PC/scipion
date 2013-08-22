@@ -148,7 +148,7 @@ class XmippProtKerdensom(ProtClassify):
         """ Store the kenserdom object 
         as result of the protocol. 
         """
-        classification = XmippClassification2D(self._params['kclasses'])
+        classification = XmippSetOfClasses2D(self._params['kclasses'])
         self._defineOutputs(outputClassification=classification)
 
     def _validate(self):

@@ -46,9 +46,9 @@ class EmanDefInitModel(Form):
         Form.__init__(self)
         self.addSection(label='Input')
         self.addParam('inputClasses', PointerParam, label="Input classes", important=True, 
-                      pointerClass='Classification2D',
+                      pointerClass='SetOfClasses2D',
                       help='Select the input images from the project.'
-                           'It should be a Classification2D class')
+                           'It should be a SetOfClasses2D class')
         self.addParam('numberOfIterations', IntParam, default=8,
                       label='Number of iterations to perform',
                       help='The total number of refinement to perform.')

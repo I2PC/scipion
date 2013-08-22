@@ -590,7 +590,7 @@ class Class2D(EMObject):
         return True
         
         
-class Classification2D(EMObject):
+class SetOfClasses2D(EMObject):
     """ Store results from a 2D classification. """
     def __init__(self, **args):
         EMObject.__init__(self, **args)

@@ -193,8 +193,8 @@ class ProtocolTreeProvider(ObjectTreeProvider):
 #            return [('Open Micrographs with Xmipp', lambda: self.viewer.visualize(obj))]
 #        if isinstance(obj, SetOfImages):
 #            return [('Open Images with Xmipp', lambda: self.viewer.visualize(obj))]
-#        if isinstance(obj, XmippClassification2D):
-#            return [('Open Classification2D with Xmipp', lambda: self.viewer.visualize(obj))]
+#        if isinstance(obj, XmippSetOfClasses2D):
+#            return [('Open SetOfClasses2D with Xmipp', lambda: self.viewer.visualize(obj))]
 #        return []   
 #    
 #    def getObjectInfo(self, obj):
@@ -269,8 +269,8 @@ class RunIOTreeProvider(TreeProvider):
 #            return [('Open Coordinates with Xmipp', lambda: self.viewer.visualize(obj))]
 #        if isinstance(obj, SetOfImages):
 #            return [('Open Images with Xmipp', lambda: self.viewer.visualize(obj))]
-#        if isinstance(obj, XmippClassification2D):
-#            return [('Open Classification2D with Xmipp', lambda: self.viewer.visualize(obj))]
+#        if isinstance(obj, XmippSetOfClasses2D):
+#            return [('Open SetOfClasses2D with Xmipp', lambda: self.viewer.visualize(obj))]
         return actions
     
     def getObjectInfo(self, obj):

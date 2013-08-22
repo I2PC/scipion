@@ -191,12 +191,12 @@ class XmippProtCL2D(ProtAlign, ProtClassify):
             prevMdFn = mdFn
             
     def createOutput(self, subset=''):
-        """ Store the XmippClassification2D object 
+        """ Store the XmippSetOfClasses2D object 
         as result of the protocol. 
         """
         levelMdFiles = self._getLevelMdFiles(subset)
         lastMdFn = levelMdFiles[-1]
-        result = {'outputClassification' + subset: XmippClassification2D(lastMdFn, 'classes_sorted')}
+        result = {'outputClassification' + subset: XmippSetOfClasses2D(lastMdFn, 'classes_sorted')}
         self._defineOutputs(**result)
 
     def _summary(self):

@@ -34,7 +34,7 @@ from pyworkflow.em.viewer import Viewer, Wizard
 from pyworkflow.em import SetOfImages, SetOfMicrographs, SetOfParticles, SetOfCoordinates, DefCTFMicrographs
 from pyworkflow.utils.process import runJob
 from xmipp3 import getXmippPath
-from data import XmippSetOfImages, XmippSetOfMicrographs, XmippClassification2D, XmippSetOfCoordinates, XmippSetOfParticles
+from data import XmippSetOfImages, XmippSetOfMicrographs, XmippSetOfClasses2D, XmippSetOfCoordinates, XmippSetOfParticles
 from pyworkflow.em.protocol import ProtImportMicrographs
 from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
@@ -55,7 +55,7 @@ class XmippViewer(Viewer):
     """ Wrapper to visualize different type of objects
     with the Xmipp program xmipp_showj
     """
-    _targets = [SetOfImages, SetOfCoordinates, XmippClassification2D, 
+    _targets = [SetOfImages, SetOfCoordinates, XmippSetOfClasses2D, 
                 ProtImportMicrographs, XmippProtPreprocessMicrographs, XmippProtCTFMicrographs,
                 XmippProtParticlePicking, ProtImportParticles, XmippProtExtractParticles,
                 XmippProtCL2DAlign, XmippProtML2D, XmippProtCL2D]
@@ -101,7 +101,7 @@ class XmippViewer(Viewer):
 
             runShowJ(fn)  
         
-        elif issubclass(cls, XmippClassification2D):
+        elif issubclass(cls, XmippSetOfClasses2D):
             runShowJ(obj.getClassesMdFileName(), extraParams=args.get('extraParams', ''))
         
         elif (issubclass(cls, ProtImportMicrographs) or

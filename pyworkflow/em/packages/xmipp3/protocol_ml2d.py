@@ -178,7 +178,7 @@ class XmippProtML2D(ProtAlign, ProtClassify):
         self._insertFunctionStep('createOutput')
         
     def createOutput(self):
-        classification = XmippClassification2D(self.oroot + 'classes.xmd')
+        classification = XmippSetOfClasses2D(self.oroot + 'classes.xmd')
         self._defineOutputs(outputClassification=classification)
 
     def _summary(self):

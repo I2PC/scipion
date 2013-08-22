@@ -623,7 +623,7 @@ def visualizeObject(request):
                'goto': 1,
                'colRowMode': 'Off'}
 
-    elif isinstance(object, XmippClassification2D):
+    elif isinstance(object, XmippSetOfClasses2D):
         mdPath = object.getClassesMdFileName()
         block, path = mdPath.split('@')
         inputParameters = {'path': join(request.session['projectPath'], path),

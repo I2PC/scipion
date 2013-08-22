@@ -100,7 +100,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         '''
         print "En defineSteps"
         # Get pointer to input micrographs 
-        self.inputMics = self.inputMicrographs.get() 
+        inputMics = self.inputMicrographs.get() 
         
         IOTable = {}
         
@@ -114,7 +114,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         
         # For each micrograph insert the steps to preprocess it
         pre = []
-        for mic in self.inputMics:
+        for mic in inputMics:
             fn = mic.getFileName()
             fnOut = self._getPath(os.path.basename(fn))
             stepId = self.__insertStepsForMicrograph(fn, fnOut)
@@ -162,13 +162,14 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     
     def createOutput(self, IOTable):
         
+        inputMics = self.inputMicrographs.get()
         micSet = self._createSetOfMicrographs()
-        micSet.copyInfo(self.inputMics)
+        micSet.copyInfo(inputMics)
         
         if self.doDownsample.get():
             micSet.setDownsample(self.downFactor.get())
 
-        for mic in self.inputMics:
+        for mic in inputMics:
             outMicFn = Micrograph()
             outMicFn.setFileName(IOTable[mic.getFileName()])
             # Updating micrograph name

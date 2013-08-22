@@ -601,10 +601,10 @@ class XmippClass2D(Class2D):
         return self._number
         
         
-class XmippClassification2D(Classification2D):
+class XmippSetOfClasses2D(SetOfClasses2D):
     """ Store results from a 2D classification. """
     def __init__(self, filename=None, classesBlock='classes', **args):
-        Classification2D.__init__(self, **args)
+        SetOfClasses2D.__init__(self, **args)
         self.getFileName = self.get
         self.setFileName = self.set
         self.setFileName(filename)
