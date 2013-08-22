@@ -180,14 +180,14 @@ class XmippProtML2D(ProtAlign, ProtClassify):
     def createOutput(self):
         classes2DSet = self._createSetOfClasses2D()
         readSetOfClasses2D(classes2DSet, self.oroot + 'classes.xmd')
-        self._defineOutputs(outputClassification=classes2DSet)
+        self._defineOutputs(outputClasses=classes2DSet)
 
     def _summary(self):
         summary = []
-        if not hasattr(self, 'outputClassification'):
+        if not hasattr(self, 'outputClasses'):
             summary.append("Output classes not ready yet.")
         else:
             summary.append("Input Images: %s" % self.inputImages.get().getNameId())
             summary.append("Number of references: %d" % self.numberOfReferences.get())
-            summary.append("Output classes: %s" % self.outputClassification.get())
+            summary.append("Output classes: %s" % self.outputClasses.get())
         return summary

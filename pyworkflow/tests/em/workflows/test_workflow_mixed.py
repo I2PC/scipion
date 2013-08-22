@@ -285,14 +285,14 @@ class TestMixedWorkflow_2(TestWorkflow):
         protML2D.inputImages.set(protExtract.outputParticles)
         self.proj.launchProtocol(protML2D, wait=True)        
         
-        self.assertIsNotNone(protML2D.outputClassification, "There was a problem with ML2D")  
+        self.assertIsNotNone(protML2D.outputClasses, "There was a problem with ML2D")  
         #self.validateFiles('protML2D', protML2D)
 
         print "Run Initial Model"
         protIniModel = EmanProtInitModel(numberOfIterations=1, numberOfModels=4,
                                  shrink=1, symmetry='icos', numberOfThreads=3)
 #        protML2D.inputImages.set(protExtract.outputParticles)
-        protIniModel.inputClasses.set(protML2D.outputClassification)
+        protIniModel.inputClasses.set(protML2D.outputClasses)
         self.proj.launchProtocol(protIniModel, wait=True)        
         
         self.assertIsNotNone(protIniModel.outputVolumes, "There was a problem with Initial Model")  

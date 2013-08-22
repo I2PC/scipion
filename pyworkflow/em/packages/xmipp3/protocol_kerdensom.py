@@ -150,7 +150,7 @@ class XmippProtKerdensom(ProtClassify):
         """
         classes2DSet = self._createSetOfClasses2D()
         readSetOfClasses2D(classes2DSet, self._params['kclasses'])
-        self._defineOutputs(outputClassification=classes2DSet)
+        self._defineOutputs(outputClasses=classes2DSet)
 
     def _validate(self):
         errors = []
@@ -168,9 +168,9 @@ class XmippProtKerdensom(ProtClassify):
         
     def _summary(self):
         summary = []
-        if not hasattr(self, 'outputClassification'):
+        if not hasattr(self, 'outputClasses'):
             summary.append("Output classification not ready yet.")
         else:
             summary.append("Input Images: %s" % self.inputImages.get().getNameId())
-            summary.append("Output Classified Images: %s" % self.outputClassification.get())
+            summary.append("Output Classified Images: %s" % self.outputClasses.get())
         return summary

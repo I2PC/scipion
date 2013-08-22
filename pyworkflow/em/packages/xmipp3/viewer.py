@@ -128,12 +128,12 @@ class XmippViewer(Viewer):
         elif (issubclass(cls, XmippProtCL2DAlign) or
               issubclass(cls, XmippProtML2D) or
               issubclass(cls, XmippProtCL2D)):
-            self.visualize(obj.outputClassification)
+            self.visualize(obj.outputClasses)
         
         elif issubclass(cls, XmippProtRotSpectra):
-            self.visualize(obj.outputClassification, extraParams='--mode rotspectra --columns %d' % obj.SomXdim.get())
+            self.visualize(obj.outputClasses, extraParams='--mode rotspectra --columns %d' % obj.SomXdim.get())
         elif issubclass(cls, XmippProtKerdensom):
-            self.visualize(obj.outputClassification, extraParams='--columns %d' % obj.SomXdim.get())
+            self.visualize(obj.outputClasses, extraParams='--columns %d' % obj.SomXdim.get())
         else:
             raise Exception('XmippViewer.visualize: can not visualize class: %s' % obj.getClassName())
 

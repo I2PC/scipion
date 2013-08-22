@@ -196,15 +196,15 @@ class XmippProtCL2D(ProtAlign, ProtClassify):
         """
         levelMdFiles = self._getLevelMdFiles(subset)
         lastMdFn = levelMdFiles[-1]
-        result = {'outputClassification' + subset: readSetOfClasses2D(self._createSetOfClasses2D(subset), lastMdFn, 'classes_sorted')}
+        result = {'outputClasses' + subset: readSetOfClasses2D(self._createSetOfClasses2D(subset), lastMdFn, 'classes_sorted')}
         self._defineOutputs(**result)
 
     def _summary(self):
         summary = []
-        if not hasattr(self, 'outputClassification'):
+        if not hasattr(self, 'outputClasses'):
             summary.append("Output classes not ready yet.")
         else:
             summary.append("Input Images: %s" % self.inputImages.get().getNameId())
             summary.append("Number of references: %d" % self.numberOfReferences.get())
-            summary.append("Output classes: %s" % self.outputClassification.get())
+            summary.append("Output classes: %s" % self.outputClasses.get())
         return summary

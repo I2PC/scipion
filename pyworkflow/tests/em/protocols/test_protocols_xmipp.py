@@ -224,7 +224,7 @@ class TestXmippML2D(TestXmippBase):
         protML2D.inputImages.set(self.protImport.outputParticles)
         self.proj.launchProtocol(protML2D, wait=True)        
         
-        self.assertIsNotNone(protML2D.outputClassification, "There was a problem with ML2D")  
+        self.assertIsNotNone(protML2D.outputClasses, "There was a problem with ML2D")  
         
 class TestXmippCL2D(TestXmippBase):
 
@@ -239,7 +239,7 @@ class TestXmippCL2D(TestXmippBase):
         protCL2D.inputImages.set(self.protImport.outputParticles)
         self.proj.launchProtocol(protCL2D, wait=True)        
         
-        self.assertIsNotNone(protCL2D.outputClassification, "There was a problem with CL2D")  
+        self.assertIsNotNone(protCL2D.outputClasses, "There was a problem with CL2D")  
 
 class TestXmippProtCL2DAlign(TestXmippBase):
 
@@ -281,7 +281,7 @@ class TestXmippRotSpectra(TestXmippBase):
 
         self.proj.launchProtocol(xmippProtRotSpectra, wait=True)        
         
-        self.assertIsNotNone(xmippProtRotSpectra.outputClassification, "There was a problem with Rotational Spectra")  
+        self.assertIsNotNone(xmippProtRotSpectra.outputClasses, "There was a problem with Rotational Spectra")  
 
     
 #class TestXmippML3D(TestXmippBase):
