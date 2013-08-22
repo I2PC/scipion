@@ -33,6 +33,7 @@ from pyworkflow.object import *
 from pyworkflow.mapper.sqlite import SqliteMapper
 from posixpath import join
 from pyworkflow.utils.utils import getUniqueItems
+from pyworkflow.utils.path import exists
 
 
 class EMObject(OrderedObject):
@@ -545,6 +546,12 @@ class SetOfCoordinates(Set):
         this set of coordinates.
          """
         self._micrographsPointer.set(micrographs)
+        
+    
+    def getFiles(self):
+        filePaths = set()
+        filePaths.add(self.getFileName())
+        return filePaths
 
     
 class ImageClassAssignment(EMObject):
