@@ -85,10 +85,11 @@ CL3DClass::CL3DClass()
     Paux.initZeros(prm->Zdim, prm->Ydim, prm->Xdim);
     Paux.setXmippOrigin();
     transformer.setReal(Paux);
-    PupdateReal=Paux;
+    //PupdateReal=Paux;
     Pupdate.initZeros(transformer.fFourier);
     PupdateMask.initZeros(Pupdate);
     pyIfourierMaskFRM=NULL;
+    //weightSum=0;
 }
 
 CL3DClass::CL3DClass(const CL3DClass &other)
@@ -102,6 +103,7 @@ CL3DClass::CL3DClass(const CL3DClass &other)
     neighboursIdx = other.neighboursIdx;
 }
 
+//#define DEBUG
 void CL3DClass::updateProjection(MultidimArray<double> &I,
                                  const CL3DAssignment &assigned,
                                  bool force)
@@ -114,14 +116,30 @@ void CL3DClass::updateProjection(MultidimArray<double> &I,
         {
             double *ptrIfourier=(double*)&DIRECT_MULTIDIM_ELEM(Ifourier,n);
             double *ptrPupdate=(double*)&DIRECT_MULTIDIM_ELEM(Pupdate,n);
-            *(ptrPupdate)+=(*(ptrIfourier));
-            *(ptrPupdate+1)+=(*(ptrIfourier+1));
-            DIRECT_MULTIDIM_ELEM(PupdateMask,n)+=1;
+            *(ptrPupdate)+=(*(ptrIfourier))*assigned.score;
+            *(ptrPupdate+1)+=(*(ptrIfourier+1))*assigned.score;
+            DIRECT_MULTIDIM_ELEM(PupdateMask,n)+=assigned.score;
         }
-        PupdateReal+=I;
+        //PupdateReal+=I*assigned.score;
+        //weightSum+=assigned.score;
         nextListImg.push_back(assigned);
+
+#ifdef DEBUG
+        Image<double> save;
+        save()=I;
+        save.write("PPPupdateI.vol");
+        save()=PupdateReal;
+        save.write("PPPupdateUpdateReal.vol");
+        save()=P;
+        if (MULTIDIM_SIZE(P)>0)
+        	save.write("PPPupdateP.vol");
+        std::cout << "Updating. Press any key\n";
+        char c;
+        std::cin >> c;
+#endif
     }
 }
+#undef DEBUG
 
 //#define DEBUG
 void CL3DClass::transferUpdate()
@@ -132,7 +150,7 @@ void CL3DClass::transferUpdate()
         double *ptrPupdate=(double*)&DIRECT_MULTIDIM_ELEM(Pupdate,0);
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PupdateMask)
         {
-            int maskVal=(int)DIRECT_MULTIDIM_ELEM(PupdateMask,n);
+            double maskVal=DIRECT_MULTIDIM_ELEM(PupdateMask,n);
             if (maskVal>0)
             {
                 double iMask=1./maskVal;
@@ -143,23 +161,37 @@ void CL3DClass::transferUpdate()
         }
         Pfourier=Pupdate;
         transformer.inverseFourierTransform(Pupdate,Paux);
+        // P=PupdateReal/weightSum;
 
         // Compact support in real space
-#ifdef NEVERDEFINED
+#ifdef DEBUG
+        Image<double> save;
+        save()=Paux;
+        save.write("PPPtransfer0.vol");
+#endif
+
         double mean;
         detectBackground(Paux,bgMask,0.01,mean);
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Paux)
         if (DIRECT_MULTIDIM_ELEM(bgMask,n))
             DIRECT_MULTIDIM_ELEM(Paux,n) = 0;
 
+#ifdef DEBUG
+        save()=Paux;
+        save.write("PPPtransfer1.vol");
+#endif
         // Compact support in wavelet space
         forceDWTSparsity(Paux,1.0-prm->DWTsparsity);
 
+#ifdef DEBUG
+        save()=Paux;
+        save.write("PPPtransfer2.vol");
+#endif
         // Symmetrize
         symmetrizeVolume(prm->SL,Paux,P,WRAP);
-
-#else
-        P=PupdateReal/(double)nextListImg.size();
+#ifdef DEBUG
+        save()=P;
+        save.write("PPPtransfer3.vol");
 #endif
 
         // Normalize and remove outside sphere
@@ -169,9 +201,14 @@ void CL3DClass::transferUpdate()
         if (!DIRECT_MULTIDIM_ELEM(mask,n))
             DIRECT_MULTIDIM_ELEM(P,n) = 0;
         Pupdate.initZeros();
-        PupdateReal.initZeros();
+        //PupdateReal.initZeros();
         PupdateMask.initZeros();
+        //weightSum=0;
 
+#ifdef DEBUG
+        save()=P;
+        save.write("PPPtransfer4.vol");
+#endif
         /* COSS: STILL TO PUT IN 3D
         // Make sure the image is centered
         centerImage(P,corrAux,rotAux);
@@ -199,6 +236,11 @@ void CL3DClass::transferUpdate()
         currentListImg.clear();
         P.initZeros();
     }
+#ifdef DEBUG
+        std::cout << "Transfer finished. Press any key\n";
+        char c;
+        std::cin >> c;
+#endif
 }
 #undef DEBUG
 
@@ -243,86 +285,15 @@ void CL3DClass::constructFourierMaskFRM()
 	Py_DECREF(pyMask);
 }
 
-void CL3DClass::sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK, double &stdK, double &L1distance)
-{
-    avgK=stdK=0;
-    double N=0;
-    double stdAngle=0;
-    for (size_t n=1; n<MULTIDIM_SIZE(Ifourier); ++n)
-        if (DIRECT_MULTIDIM_ELEM(IfourierMask,n))
-        {
-            double *ptrIfourier=(double*)&DIRECT_MULTIDIM_ELEM(Ifourier,n);
-            double *ptrPfourier=(double*)&DIRECT_MULTIDIM_ELEM(Pfourier,n);
-
-            // Scale factor
-            // This is the least squares solution of I(w)K=P(w)
-            double auxI=(*ptrIfourier);
-            double auxP=(*ptrPfourier);
-            double num=(auxI*auxP);
-            double den=(auxI*auxI);
-            double normP=auxP*auxP;
-            auxI=(*(ptrIfourier+1));
-            auxP=(*(ptrPfourier+1));
-            num+=(auxI*auxP);
-            den+=(auxI*auxI);
-            normP+=auxP*auxP;
-            double normI=den;
-
-            if (den!=0. && num!=0.)
-            {
-                double K=fabs(num/den);
-                avgK+=K;
-                stdK+=K*K;
-
-                double normPI=normP*normI;
-                if (normPI>0)
-                {
-                    double angle=acos(num/sqrt(fabs(normPI))); // Angle between I(w) and P(w)
-                    stdAngle+=angle*angle;
-                }
-                N+=1;
-            }
-        }
-    avgK/=N;
-    if (N > 1)
-    {
-        stdK = stdK / N - avgK * avgK;
-        stdK = sqrt(fabs(stdK));
-
-        stdAngle=sqrt(fabs(stdAngle/N));
-        stdK*=stdAngle;
-    }
-    else
-        stdK = 0;
-
-    L1distance=0;
-    for (size_t n=1; n<MULTIDIM_SIZE(Ifourier); ++n)
-        if (DIRECT_MULTIDIM_ELEM(IfourierMask,n))
-        {
-            double *ptrIfourier=(double*)&DIRECT_MULTIDIM_ELEM(Ifourier,n);
-            double *ptrPfourier=(double*)&DIRECT_MULTIDIM_ELEM(Pfourier,n);
-
-            // Scale factor for the real part
-            // This is the least squares solution of I(w)K=P(w)
-            double auxI=(*ptrIfourier)*avgK;
-            double auxP=(*ptrPfourier);
-            L1distance+=fabs(auxI-auxP);
-            auxI=(*(ptrIfourier+1))*avgK;
-            auxP=(*(ptrPfourier+1));
-            L1distance+=fabs(auxI-auxP);
-        }
-    L1distance/=N;
-}
-
 //#define DEBUG
 void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
 {
 #ifdef DEBUG
     Image<double> save2;
     save2()=I;
-    save2.write("PPP0.xmp");
+    save2.write("PPPfitBasic0.xmp");
     save2()=P;
-    save2.write("PPPI1.xmp");
+    save2.write("PPPfitBasicI1.xmp");
 #endif
 
     if (currentListImg.size() == 0)
@@ -343,21 +314,19 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
 		apply_binary_mask(prm->mask.get_binary_mask(),Iaux,I,0.0);
 
 		constructFourierMask(I);
-		double avgK, stdK, L1distance;
-		sparseDistanceToCentroid(I, avgK, stdK, L1distance);
-		result.score=L1distance*stdK;
+		result.score=frmScore;
     }
 
 #ifdef DEBUG
 
     Image<double> save;
     save()=I;
-    save.write("PPPI2.xmp");
+    save.write("PPPfitBasicI2.xmp");
     save()=P-I;
-    save.write("PPPdiff.xmp");
+    save.write("PPPfitBasicdiff.xmp");
     std::cout << "final score=" << result.score << ". Press" << std::endl;
-    char c;
-    std::cin >> c;
+    //char c;
+    //std::cin >> c;
 #endif
 }
 #undef DEBUG

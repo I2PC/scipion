@@ -94,8 +94,11 @@ public:
     // Update for next iteration
     MultidimArray< std::complex<double> > Pupdate;
 
-    // Update for next iteration
-    MultidimArray<double> PupdateReal;
+    // Update for next iteration in real space
+    // MultidimArray<double> PupdateReal;
+
+    // Sum weights
+    double weightSum;
 
     // Update for next iteration
     MultidimArray< double > PupdateMask;
@@ -130,9 +133,6 @@ public:
 
     /** Construct the mask in the FRM convention */
     void constructFourierMaskFRM();
-
-    /** Sparse distance to centroid */
-    void sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK, double &stdK, double &L1distance);
 
     /** Compute the fit of the input image with this node.
         The input image is rotationally and traslationally aligned
