@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "mpi_classify_CL3D.h"
+#include "mpi_classify_CLTomo.h"
 #include <data/mask.h>
 #include <data/polar.h>
 #include <data/xmipp_image_generic.h>
