@@ -95,10 +95,10 @@ public:
     MultidimArray< std::complex<double> > Pupdate;
 
     // Update for next iteration in real space
-    // MultidimArray<double> PupdateReal;
+    //MultidimArray<double> PupdateReal;
 
     // Sum weights
-    double weightSum;
+    //double weightSum;
 
     // Update for next iteration
     MultidimArray< double > PupdateMask;

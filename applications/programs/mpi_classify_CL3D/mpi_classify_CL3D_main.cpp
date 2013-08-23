@@ -95,7 +95,7 @@ CL3DClass::CL3DClass()
 CL3DClass::CL3DClass(const CL3DClass &other)
 {
     CL3DAssignment assignment;
-    assignment.score = 1e38;
+    assignment.score = -1e38;
     updateProjection((MultidimArray<double> &)other.P,assignment);
     transferUpdate();
 
@@ -108,7 +108,7 @@ void CL3DClass::updateProjection(MultidimArray<double> &I,
                                  const CL3DAssignment &assigned,
                                  bool force)
 {
-    if ((assigned.score < 1e37 && assigned.objId != BAD_OBJID) || force)
+    if ((fabs(assigned.score) <=1 && assigned.objId != BAD_OBJID && assigned.score>0) || force)
     {
     	constructFourierMask(I);
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Ifourier)
@@ -161,7 +161,7 @@ void CL3DClass::transferUpdate()
         }
         Pfourier=Pupdate;
         transformer.inverseFourierTransform(Pupdate,Paux);
-        // P=PupdateReal/weightSum;
+        //P=PupdateReal/weightSum;
 
         // Compact support in real space
 #ifdef DEBUG
@@ -307,7 +307,7 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
     		frmScore,A,prm->maxShift, prm->maxFreq);
     if (fabs(result.shiftx)>prm->maxShiftX || fabs(result.shifty)>prm->maxShiftY || fabs(result.shiftz)>prm->maxShiftZ ||
     	fabs(result.rot)>prm->maxRot || fabs(result.tilt)>prm->maxTilt || fabs(result.psi)>prm->maxPsi)
-    	result.score=1e38;
+    	result.score=-1e38;
     else
     {
 		applyGeometry(LINEAR, Iaux, I, A, IS_NOT_INV, DONT_WRAP);
@@ -583,13 +583,13 @@ void CL3D::initialize(MetaData &_SF,
             }
             else
             {
-                bestAssignment.score = 1e38;
+                bestAssignment.score = -1e38;
                 q = -1;
                 for (int qp = 0; qp < prm->Ncodes0; qp++)
                 {
                     Iaux = I();
                     P[qp]->fitBasic(Iaux, assignment);
-                    if (assignment.score < bestAssignment.score)
+                    if (assignment.score > bestAssignment.score)
                     {
                         bestAssignment = assignment;
                         Ibest = Iaux;
@@ -714,7 +714,7 @@ void CL3D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
     Matrix1D<double> corrList;
     corrList.resizeNoCopy(Q);
     CL3DAssignment assignment;
-    bestAssignment.score = 1e38;
+    bestAssignment.score = -1e38;
     size_t objId = bestAssignment.objId;
     for (int q = 0; q < Q; q++)
     {
@@ -747,7 +747,7 @@ void CL3D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
             P[q]->fitBasic(Iaux, assignment);
 
             VEC_ELEM(corrList,q) = assignment.score;
-            if (assignment.score < bestAssignment.score ||
+            if (assignment.score > bestAssignment.score ||
                 prm->classifyAllImages)
             {
                 bestq = q;
@@ -826,7 +826,7 @@ void CL3D::run(const FileName &fnOut, int level)
                 lookNode(I(), oldAssignment[idx], node, assignment);
                 LOG(formatString("Analyzing %s oldAssignment=%d newAssignment=%d",I.name().c_str(),oldAssignment[idx], node));
                 SF->setValue(MDL_REF, node + 1, objId);
-                if (assignment.score<1e10)
+                if (assignment.score>0)
                     corrSum += assignment.score;
                 if (prm->node->rank == 0 && idx % progressStep == 0)
                     progress_bar(idx);
@@ -1143,12 +1143,12 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
                     Iaux2 = I();
                     node2->fitBasic(Iaux2, assignment2);
 
-                    if (assignment1.score < assignment2.score)
+                    if (assignment1.score > assignment2.score && assignment1.score>0)
                     {
                         node1->updateProjection(Iaux1, assignment1);
                         VEC_ELEM(newAssignment,i) = 1;
                     }
-                    else if (assignment2.score < assignment1.score)
+                    else if (assignment2.score > assignment1.score && assignment2.score>0)
                     {
                         node2->updateProjection(Iaux2, assignment2);
                         VEC_ELEM(newAssignment,i) = 2;
