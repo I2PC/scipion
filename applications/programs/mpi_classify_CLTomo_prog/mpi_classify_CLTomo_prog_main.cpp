@@ -220,16 +220,6 @@ void CL3DClass::transferUpdate()
         // Take the list of images
         currentListImg = nextListImg;
         nextListImg.clear();
-
-        // Update the histogram of corrs of elements inside and outside the class
-        MultidimArray<double> classCorr, nonClassCorr;
-
-        classCorr.initZeros(currentListImg.size());
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(classCorr)
-        DIRECT_A1D_ELEM(classCorr,i) = currentListImg[i].score;
-
-        double minC, maxC;
-        classCorr.computeDoubleMinMax(minC, maxC);
     }
     else
     {
@@ -325,8 +315,8 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
     save()=P-I;
     save.write("PPPfitBasicdiff.xmp");
     std::cout << "final score=" << result.score << ". Press" << std::endl;
-    //char c;
-    //std::cin >> c;
+    char c;
+    std::cin >> c;
 #endif
 }
 #undef DEBUG
@@ -357,7 +347,7 @@ void CL3DClass::lookForNeighbours(const std::vector<CL3DClass *> listP, int K)
             {
                 I = listP[q]->P;
                 fitBasic(I, assignment);
-                A1D_ELEM(distanceCode,q) = assignment.score;
+                A1D_ELEM(distanceCode,q) = 1-assignment.score;
             }
         }
 
@@ -411,7 +401,6 @@ void CL3D::shareAssignments(bool shareAssignment, bool shareUpdates)
                           MPI_COMM_WORLD);
 
             // Share nextClassCorr and nextNonClassCorr
-            std::vector<double> receivedNonClassCorr;
             std::vector<CL3DAssignment> receivedNextListImage;
             int listSize;
             for (size_t rank = 0; rank < prm->node->size; rank++)
@@ -470,7 +459,6 @@ void CL3D::shareSplitAssignments(Matrix1D<int> &assignment, CL3DClass *node1,
                       MPI_COMM_WORLD);
 
         // Share nextClassCorr and nextNonClassCorr
-        std::vector<double> receivedNonClassCorr;
         std::vector<CL3DAssignment> receivedNextListImage;
         int listSize;
         for (size_t rank = 0; rank < prm->node->size; rank++)
@@ -536,13 +524,14 @@ void CL3D::initialize(MetaData &_SF,
 
     // Start with _Ncodes0 codevectors
     CL3DAssignment assignment;
+    assignment.score=1;
     bool initialCodesGiven = _codes0.size() > 0;
     for (int q = 0; q < prm->Ncodes0; q++)
     {
         P.push_back(new CL3DClass());
         if (initialCodesGiven)
         {
-            P[q]->updateProjection(_codes0[q],assignment,true);
+        	P[q]->updateProjection(_codes0[q],assignment,true);
             P[q]->transferUpdate();
         }
     }
@@ -609,52 +598,6 @@ void CL3D::initialize(MetaData &_SF,
 
     // Share all assignments
     shareAssignments(true, true);
-
-    // Now compute the histogram of score values
-    if (prm->node->rank == 0)
-    {
-        std::cout << "Computing histogram of score values\n";
-        init_progress_bar(Nimgs);
-    }
-
-    CL3DAssignment inClass, outClass;
-    prm->taskDistributor->reset();
-    while (prm->taskDistributor->getTasks(first, last))
-    {
-        for (size_t idx = first; idx <= last; ++idx)
-        {
-            size_t objId = prm->objId[idx];
-            readImage(I, objId, false);
-
-            int q;
-            SF->getValue(MDL_REF, q, objId);
-            if (q == -1)
-                continue;
-            q -= 1;
-
-            outClass.objId = inClass.objId = objId;
-            if (q != -1)
-            {
-                Iaux = I();
-                P[q]->fitBasic(Iaux, inClass);
-                P[q]->updateProjection(Iaux, inClass);
-                if (prm->Ncodes0 > 1)
-                    for (int qp = 0; qp < prm->Ncodes0; qp++)
-                    {
-                        if (qp == q)
-                            continue;
-                        Iaux = I();
-                        P[qp]->fitBasic(Iaux, outClass);
-                    }
-            }
-            if (prm->node->rank == 0 && idx % 100 == 0)
-                progress_bar(idx);
-        }
-    }
-    if (prm->node->rank == 0)
-        progress_bar(Nimgs);
-
-    shareAssignments(false, true);
 }
 #undef DEBUG
 
@@ -763,7 +706,7 @@ void CL3D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
 
     // Assign it to the new node
     if (newnode != -1)
-        P[newnode]->updateProjection(I, bestAssignment);
+    	P[newnode]->updateProjection(I, bestAssignment);
 }
 
 void CL3D::transferUpdates()
