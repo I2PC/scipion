@@ -568,6 +568,7 @@ class ImageClassAssignment(EMObject):
         self._shiftX = Float()
         self._shiftY = Float()
         self._flip = Boolean()
+        self._imgId = Integer()
         
 #    def setImage(self, image):
 #        """ Set associated image. """
@@ -576,6 +577,14 @@ class ImageClassAssignment(EMObject):
 #    def getImage(self):
 #        """ Get associated image. """
 #        return self._imagePointer.get()
+
+    def setImageId(self, imgId):
+        """ Set associated image Id. """
+        self._imgId.set(imgId)
+        
+    def getImageId(self):
+        """ Get associated image Id. """
+        return self._imgId.get()
     
     def setAnglePsi(self, anglePsi):
         self._anglePsi.set(anglePsi)
@@ -628,7 +637,8 @@ class Class2D(EMObject):
         """ Iterate over the assigments of images
         to this particular class.
         """
-        return self._imageClassAssignments
+        for imgCA in self._imageClassAssignments:
+            yield imgCA
             
     def addImageClassAssignment(self, imgCA):
         self._imageClassAssignments.append(imgCA)

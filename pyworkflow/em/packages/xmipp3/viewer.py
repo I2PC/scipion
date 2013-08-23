@@ -31,7 +31,7 @@ visualization program.
 
 import os
 from pyworkflow.em.viewer import Viewer, Wizard
-from pyworkflow.em import SetOfImages, SetOfMicrographs, SetOfParticles, SetOfCoordinates, DefCTFMicrographs
+from pyworkflow.em import SetOfImages, SetOfMicrographs, SetOfParticles, SetOfCoordinates, DefCTFMicrographs, SetOfClasses2D
 from pyworkflow.utils.process import runJob
 from xmipp3 import getXmippPath
 from data import XmippSetOfImages, XmippSetOfMicrographs, XmippSetOfClasses2D, XmippSetOfCoordinates, XmippSetOfParticles
@@ -45,7 +45,7 @@ from protocol_ml2d import XmippProtML2D
 from protocol_cl2d import XmippProtCL2D
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_rotational_spectra import XmippProtRotSpectra
-from convert import writeSetOfMicrographs, writeSetOfParticles
+from convert import writeSetOfMicrographs, writeSetOfParticles, writeSetOfClasses2D
 
 
 import xmipp
@@ -58,7 +58,7 @@ class XmippViewer(Viewer):
     _targets = [SetOfImages, SetOfCoordinates, XmippSetOfClasses2D, 
                 ProtImportMicrographs, XmippProtPreprocessMicrographs, XmippProtCTFMicrographs,
                 XmippProtParticlePicking, ProtImportParticles, XmippProtExtractParticles,
-                XmippProtCL2DAlign, XmippProtML2D, XmippProtCL2D]
+                XmippProtCL2DAlign, XmippProtML2D, XmippProtCL2D, SetOfClasses2D]
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
@@ -101,8 +101,15 @@ class XmippViewer(Viewer):
 
             runShowJ(fn)  
         
-        elif issubclass(cls, XmippSetOfClasses2D):
-            runShowJ(obj.getClassesMdFileName(), extraParams=args.get('extraParams', ''))
+        elif issubclass(cls, SetOfClasses2D):
+            mdFn = getattr(obj, '_xmippMd', None)
+            if mdFn:
+                fn = mdFn.get()
+            else:
+                fn = self._getTmpPath(obj.getName() + '_classes.xmd')
+                writeSetOfClasses2D(obj, fn, self._getTmpPath())
+            #runShowJ(obj.getClassesMdFileName(), extraParams=args.get('extraParams', ''))
+            runShowJ(fn)  
         
         elif (issubclass(cls, ProtImportMicrographs) or
               issubclass(cls, XmippProtPreprocessMicrographs) or

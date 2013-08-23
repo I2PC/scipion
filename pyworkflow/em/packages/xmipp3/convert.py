@@ -235,9 +235,37 @@ def rowToImageClassAssignment(md, objId):
     return imageCA
     
     
-def class2DToRow(part, partRow, ctfDir, hasCtf):
+def class2DToRow(class2D, classRow):
     """ Set labels values from Class2D to md row. """
-    imageToRow(part, partRow, ctfDir, hasCtf, imgLabel=xmipp.MDL_IMAGE)
+    classDict = { 
+               "_id": xmipp.MDL_REF,
+               }
+    if class2D.getHasRepresentativeImage():
+        index, filename = class2D.getRepresentativeImage().getLocation()
+        fn = locationToXmipp(index, filename)
+        classRow.setValue(xmipp.MDL_IMAGE, fn)
+    objectToRow(class2D, classRow, classDict)
+    
+def imageClassAssignmentToRow(imgCA, imgCARow, img,  ctfDir):
+    """ Set label values from ImageClassAssignment to md row. """
+    imgCADict = { 
+               "_id": xmipp.MDL_ITEM_ID,
+#               "_anglePsi": xmipp.MDL_ANGLE_PSI,
+#               "_shiftX": xmipp.MDL_SHIFT_X,
+#               "_shiftY": xmipp.MDL_SHIFT_Y,
+#               "_flip": xmipp.MDL_FLIP
+               }
+    index, filename = img.getLocation()
+    fn = locationToXmipp(index, filename)
+    imgCARow.setValue(xmipp.MDL_IMAGE, fn)
+    
+    if img.hasCTF():
+        rootFn = "%06d_%s" % (img.getId(), replaceBaseExt(img.getFileName(), "ctfparam"))
+        ctfFn = join(ctfDir, rootFn)
+        writeCTFModel(img.getCTF(), ctfFn)
+        imgCARow.setValue(xmipp.MDL_CTF_MODEL, ctfFn)
+    
+    objectToRow(img, imgCARow, imgCADict)
     
 def readSetOfMicrographs(filename, micSet, hasCtf=False):
     
@@ -374,30 +402,40 @@ def readSetOfParticles(fnImages, imgSet, hasCtf=False):
         part = rowToParticle(imgMd, objId, hasCtf)
         imgSet.append(part)
         
-def writeSetOfClasses2D(imgSet, filename, ctfDir=None, rowFunc=None):
+def writeSetOfClasses2D(classes2DSet, filename, ctfDir=None, classesBlock='classes'):
     
-    """ This function will write a SetOfParticles as Xmipp metadata.
+    """ This function will write a SetOfClasses2D as Xmipp metadata.
     Params:
-        imgSet: the SetOfParticles instance.
+        classes2DSet: the SetOfClasses2D instance.
         filename: the filename where to write the metadata.
-        rowFunc: this function can be used to setup the row before 
-            adding to metadata.
     """
-    pass
-
-#     md = xmipp.MetaData()
-#     hasCtf = imgSet.hasCTF()
-#     
-#     for img in imgSet:
-#         objId = md.addObject()
-#         imgRow = XmippMdRow()
-#         particleToRow(img, imgRow, ctfDir, hasCtf)
-#         if rowFunc:
-#             rowFunc(img, imgRow)
-#         imgRow.writeToMd(md, objId)
-#         
-#     md.write(filename)
-#     imgSet._xmippMd = String(filename)
+    md = xmipp.MetaData()
+    
+    images = classes2DSet.getImages()
+        
+    for class2D in classes2DSet.iterClasses():
+        classRow = XmippMdRow()
+        class2DToRow(class2D, classRow)
+        objId = md.addObject()
+        classRow.writeToMd(md, objId)
+        md.write('%s@%s' %(classesBlock, filename))
+        ref = class2D.getId() 
+        for imgCA in class2D:
+            #FIXME: This doesnt work, _idMap is empty (and not even defined!)
+            #img = images[imgCA.getImageId()]
+            for img1 in images:
+                if img1.getId() == imgCA.getImageId():
+                    img = img1
+                    break
+                
+            imgCARow = XmippMdRow()
+            imageClassAssignmentToRow(imgCA, imgCARow, img, ctfDir)
+            objCAId = md.addObject()
+            assignmentBlock = 'class%06d_images@%s' % (ref, filename)
+            classRow.writeToMd(md, objCAId)  
+            md.write(assignmentBlock, xmipp.MD_APPEND)
+            
+    classes2DSet._xmippMd = String(filename)
 
 
 def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
