@@ -123,7 +123,7 @@ class Canvas(tk.Frame):
         self.canvas.yview("scroll", count, "units")          
         
     def createTextbox(self, text, x, y, bgColor="#99DAE8", textColor='black'):
-        tb = TextBox(self.canvas, text, x, y, bgColor, textColor)
+        tb = RoundedTextBox(self.canvas, text, x, y, bgColor, textColor)
         self.items[tb.id] = tb
         return tb
     
@@ -145,7 +145,7 @@ class TextItem():
         self.bgColor = bgColor
         self.textColor = textColor
         self.text = text
-        self.margin = 3
+        self.margin = 8
         self.canvas = canvas
         self.x = x
         self.y = y
@@ -207,6 +207,35 @@ class TextItem():
 class TextBox(TextItem):
     def _paintBounds(self, x, y, w, h, fillColor):
         return self.canvas.create_rectangle(x, y, w, h, fill=fillColor) 
+
+class RoundedTextBox(TextItem):
+    def _paintBounds(self, upperLeftX, upperLeftY , bottomRightX, bottomRightY, fillColor):
+        d=5
+        # When smooth=1, you define a straight segment by including its ends twice
+        return self.canvas.create_polygon(upperLeftX+d+1,upperLeftY, #1
+                                          upperLeftX+d,upperLeftY, #1
+                                          bottomRightX-d,upperLeftY, #2
+                                          bottomRightX-d,upperLeftY, #2
+                                          # bottomRightX-d+1,upperLeftY, #2b
+                                          bottomRightX,upperLeftY+d-1, #3b
+                                          bottomRightX,upperLeftY+d, #3
+                                          bottomRightX,upperLeftY+d, #3
+                                          bottomRightX, bottomRightY-d, #4
+                                          bottomRightX, bottomRightY-d, #4
+                                          bottomRightX-d,bottomRightY, #5
+                                          bottomRightX-d,bottomRightY, #5
+                                          upperLeftX+d,bottomRightY, #6
+                                          upperLeftX+d,bottomRightY, #6
+                                          # upperLeftX+d-1,bottomRightY, #6b
+                                          upperLeftX, bottomRightY-d+1, #7b
+                                          upperLeftX, bottomRightY-d, #7
+                                          upperLeftX, bottomRightY-d, #7
+                                          upperLeftX, upperLeftY+d, #8
+                                          upperLeftX, upperLeftY+d, #8
+                                          # upperLeftX, upperLeftY+d-1, #8b
+                                          upperLeftX+d-1,upperLeftY, #1b
+                                          fill=fillColor, outline='black',smooth=1) 
+
     
 class TextCircle(TextItem):
     def _paintBounds(self, x, y, w, h, fillColor):
@@ -245,13 +274,13 @@ class Edge():
  
 if __name__ == '__main__':
     root = tk.Tk()
-    canvas = Canvas(root, width=400, height=400)
+    canvas = Canvas(root, width=800, height=600)
     canvas.grid(row=0, column=0, sticky='nsew')
     root.grid_columnconfigure(0, weight=1)
     root.grid_rowconfigure(0, weight=1)
     
     tb1 = canvas.createTextbox("Project", 100, 100, "blue")
-    tb2 = canvas.createTextbox("aqui estoy yo\ny tu tb", 200, 200)
+    tb2 = canvas.createTextbox("This is an intentionally quite big, big box,\nas you may appreciate looking carefully\nat it,\nas many times\nas you might need", 300, 200)
     tb3 = canvas.createTextbox("otro mas\n", 100, 200, "red")
     e1 = canvas.createEdge(tb1, tb2)
     e2 = canvas.createEdge(tb1, tb3)
