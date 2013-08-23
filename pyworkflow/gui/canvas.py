@@ -127,11 +127,19 @@ class Canvas(tk.Frame):
         self.items[tb.id] = tb
         return tb
     
-    def createEdge(self, src, dst):
-        edge = Edge(self.canvas, src, dst)
+    def createEdge(self, srcItem, dstItem):
+        # !!!! "connect" the middle of the closest edges, instead of centers of items
+        srcConnectors=self._findConnectors(srcItem)
+        edge = Edge(self.canvas, srcItem, dstItem)
         #self.items[edge.id] = edge
         return edge
     
+    def getConnectorsCoordinates(self,item):
+        w,h=item.getDimensions()
+        xc=item.x + w/2
+        yc=item.y + h/2
+        return [(xc,item.y), (item.x+w,yc), (xc,item.y+h), (item.x,yc)]
+
     def clear(self):
         """Clear all items from the canvas"""
         self.canvas.delete(tk.ALL)
