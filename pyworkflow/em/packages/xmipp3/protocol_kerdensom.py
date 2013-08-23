@@ -149,7 +149,9 @@ class XmippProtKerdensom(ProtClassify):
         as result of the protocol. 
         """
         classes2DSet = self._createSetOfClasses2D()
+        classes2DSet.setImages(self.inputImages.get())
         readSetOfClasses2D(classes2DSet, self._params['kclasses'])
+        classes2DSet.write()
         self._defineOutputs(outputClasses=classes2DSet)
 
     def _validate(self):

@@ -179,7 +179,9 @@ class XmippProtML2D(ProtAlign, ProtClassify):
         
     def createOutput(self):
         classes2DSet = self._createSetOfClasses2D()
+        classes2DSet.setImages(self.inputImages.get())
         readSetOfClasses2D(classes2DSet, self.oroot + 'classes.xmd')
+        classes2DSet.write()
         self._defineOutputs(outputClasses=classes2DSet)
 
     def _summary(self):

@@ -562,16 +562,45 @@ class ImageClassAssignment(EMObject):
     """
     def __init__(self, **args):
         EMObject.__init__(self, **args)
-        self._imagePointer = Pointer() # Pointer to image
+        #self._imagePointer = Pointer() # Pointer to image
+        # This parameters will dissappear when transformation matrix is used
+        self._anglePsi = Float()
+        self._shiftX = Float()
+        self._shiftY = Float()
+        self._flip = Boolean()
         
-    def setImage(self, image):
-        """ Set associated image. """
-        self._imagePointer.set(image)
-        
-    def getImage(self):
-        """ Get associated image. """
-        return self._imagePointer.get()
+#    def setImage(self, image):
+#        """ Set associated image. """
+#        self._imagePointer.set(image)
+#        
+#    def getImage(self):
+#        """ Get associated image. """
+#        return self._imagePointer.get()
     
+    def setAnglePsi(self, anglePsi):
+        self._anglePsi.set(anglePsi)
+        
+    def getAnglePsi(self):
+        return self._anglePsi.get()
+    
+    def setShiftX(self, shiftX):
+        self._shiftX.set(shiftX)
+        
+    def getShiftX(self):
+        return self.shiftX.get()
+
+    def setShiftY(self, shiftY):
+        self._shiftY.set(shiftY)
+        
+    def getShiftY(self):
+        return self.shiftY.get()   
+
+    def setFlip(self, flip):
+        self._flip.set(flip)
+        
+    def getFlip(self):
+        return self.flip.get()       
+     
     
 class Class2D(EMObject):
     """ Represent a Class that group some elements 
@@ -579,45 +608,90 @@ class Class2D(EMObject):
     """
     def __init__(self, **args):
         EMObject.__init__(self, **args)
+        self._id =  Integer()
+        self._hasRepresentativeImage = Boolean(False)
+        self._representativeImage = Image()
+        self._imageClassAssignments = List()
+
+    #TODO: replace this id with objId
+    def getId(self):
+        return self._id.get()
         
+    def setId(self, imgId):
+        """ This id identifies the element inside a set """
+        self._id.set(imgId)
+        
+    def hasId(self):
+        return self._id.hasValue()
+    
     def __iter__(self):
         """ Iterate over the assigments of images
         to this particular class.
         """
-        pass
+        return self._imageClassAssignments
+            
+    def addImageClassAssignment(self, imgCA):
+        self._imageClassAssignments.append(imgCA)
     
-    def getImage(self):
+    def setRepresentativeImage(self, representativeImage):
+        self._representativeImage = representativeImage
+    
+    def getRepresentativeImage(self):
         """ Usually the representative is an average of 
         the images assigned to that class.
         """
-        pass
+        return self._representativeImage
     
-    def hasImage(self):
+    def getHasRepresentativeImage(self):
         """ Return true if have an average image. """
-        return True
+        return self._hasRepresentativeImage.get()
+    
+    def setHasRepresentativeImage(self, hasRepresentativeImage):
+        self._hasRepresentativeImage.set(hasRepresentativeImage)
         
         
-class SetOfClasses2D(EMObject):
+class SetOfClasses2D(Set):
     """ Store results from a 2D classification. """
     def __init__(self, **args):
-        EMObject.__init__(self, **args)
-        self._hasImages = True # True if the classes have associated average image
+        Set.__init__(self, **args)
+        self._hasRepresentativeImages = True # True if the classes have associated average image
+        self._imagesPointer = Pointer()
         
-    def __iter__(self):
+    def iterClasses(self):
         """ Iterate over all classes. """
+        self.loadIfEmpty()
+        self._idMap = {} #FIXME, remove this after id is the one in mapper
+        for class2D in self._mapper.selectByClass("Class2D", iterate=True):
+            self._idMap[class2D.getId()] = class2D
+            yield class2D  
+            
+    def iterImagesClass(self):
+        """ Iterate over the images of a class. """
         pass
     
-    def hasImages(self):
-        return self._hasImages
+    def hasRepresentativeImages(self):
+        return self._hasRepresentativeImages
     
-    def getImages(self):
+    def getRepresentativeImages(self):
         """ Return a SetOfImages composed by all the average images 
         of the 2D classes. """
         imgs = SetOfImages()
         
         for class2D in self:
-            imgs.append(class2D.getImage())
+            imgs.append(class2D.getHasRepresentativeImage())
             
         return imgs
+    
+    def getImages(self):
+        """ Return the SetOFImages used to create the SetOfClasses2D. """
+        return self._imagesPointer.get()
+    
+    def setImages(self, images):
+        self._imagesPointer.set(images)
+    
+    def __getitem__(self, classId):
+        """ Get the class with the given id. """
+        #FIXME, remove this after id is the one in mapper
+        return self._idMap.get(classId, None)
      
      

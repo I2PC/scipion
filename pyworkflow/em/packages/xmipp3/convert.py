@@ -200,9 +200,40 @@ def particleToRow(part, partRow, ctfDir, hasCtf):
     """ Set labels values from Particle to md row. """
     imageToRow(part, partRow, ctfDir, hasCtf, imgLabel=xmipp.MDL_IMAGE)
 
-def rowToClass2D(md, objId):
+def rowToClass2D(md, objId, samplingRate):
     """ Create a Class2D from a row of a metadata. """
-    return rowToImage(md, objId, xmipp.MDL_IMAGE, Particle, hasCtf)
+    classDict = { 
+               "_id": xmipp.MDL_REF,
+               }
+    class2D = Class2D()
+
+    if md.containsLabel(xmipp.MDL_IMAGE):
+        index, filename = xmippToLocation(md.getValue(xmipp.MDL_IMAGE, objId))
+        img = Image()
+        img.setLocation(index, filename)
+        img.setSamplingRate(samplingRate)
+        class2D.setHasRepresentativeImage(True)
+        class2D.setRepresentativeImage(img)
+    
+    rowToObject(md, objId, class2D, classDict) 
+    
+    return class2D
+    
+def rowToImageClassAssignment(md, objId):
+    """ Create a ImageClassAssignment from a row of a metadata. """
+    imgCADict = { 
+               "_id": xmipp.MDL_ITEM_ID,
+#               "_anglePsi": xmipp.MDL_ANGLE_PSI,
+#               "_shiftX": xmipp.MDL_SHIFT_X,
+#               "_shiftY": xmipp.MDL_SHIFT_Y,
+#               "_flip": xmipp.MDL_FLIP
+               }
+    imageCA = ImageClassAssignment()
+    
+    rowToObject(md, objId, imageCA, imgCADict) 
+    
+    return imageCA
+    
     
 def class2DToRow(part, partRow, ctfDir, hasCtf):
     """ Set labels values from Class2D to md row. """
@@ -375,12 +406,21 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
         imgSet: the SetOfParticles that will be populated.
         hasCtf: is True if the ctf information exists.
     """
-    classMd = xmipp.MetaData(filename)
-    imgClassesMd = xmipp.MetaData(classesBlock)
+    classesMd = xmipp.MetaData('%s@%s' %(classesBlock, filename))
     
-    for objId in classMd:
-#       class2D = rowToParticle(imgMd, objId, hasCtf)
-       classes2DSet.append(class2D)
+    samplingRate = classes2DSet.getImages().getSamplingRate()
+    
+    for objId in classesMd:           
+        class2D = rowToClass2D(classesMd, objId, samplingRate)
+        ref = classesMd.getValue(xmipp.MDL_REF, objId)
+        assignmentBlock = 'class%06d_images@%s' % (ref, filename)
+        imgAssignmentMd = xmipp.MetaData(assignmentBlock)
+        for objCAId in imgAssignmentMd:
+            imgCA = ImageClassAssignment()
+            imgCA = rowToImageClassAssignment(imgAssignmentMd, objCAId)
+            class2D.addImageClassAssignment(imgCA)
+        classes2DSet.append(class2D)
+            
 
 def createXmippInputImages(self, imgSet, rowFunc=None):
     
