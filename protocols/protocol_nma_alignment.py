@@ -23,6 +23,8 @@ class ProtNMAAlignment(XmippProtocol):
         self.insertStep('createDir',path=self.ExtraDir)
         fnImgs=self.workingDirPath("images.xmd")
         self.insertStep("copyFile",verifyfiles=[fnImgs],source=self.InSelFile,dest=fnImgs)
+        fnModes=self.workingDirPath("modes.xmd")
+        self.insertStep("copyFile",verifyfiles=[fnModes],source=self.Modesfile,dest=fnModes)
         self.insertStep("performNMA",WorkingDir=self.WorkingDir, InSelFile=fnImgs, 
                         PDBfile=self.PDBfile, Modesfile=self.Modesfile,
                         SamplingRate=self.SamplingRate, TrustRegionScale=self.TrustRegionScale,
