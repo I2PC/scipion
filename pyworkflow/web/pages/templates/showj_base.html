@@ -185,6 +185,7 @@
 			imageHeight_val = parseInt($('#id_imageHeight').val())
 			imageWidth_val = parseInt($('#id_imageWidth').val())
 			
+			console.log("setting image size")
 			console.log(zoom_element.val())
 			console.log(imageHeight_val)
 			console.log(imageWidth_val)
@@ -230,34 +231,23 @@
 			d = new Date();
 			$(".tableImages").each(function(){
 			   var newSrc = "";
-			   if ($(this).attr("src").indexOf("&dim") != -1){
-			   	newSrc = $(this).attr("src").substring(0,$(this).attr("src").indexOf("&dim"));
+			   if ($(this).data("real_src").indexOf("&dim") != -1){
+			   	newSrc = $(this).data("real_src").substring(0,$(this).data("real_src").indexOf("&dim"));
 			   }
 			   else{
-				  newSrc = $(this).attr("src");   
+				  newSrc = $(this).data("real_src");   
 			   }
+			   $(this).attr("height",tableImages_width)
 			   $(this).attr("width",tableImages_width)
-			   $(this).attr("src", newSrc + "&dim="+tableImages_width+"&"+d.getTime());
+			   $(this).data("real_src", newSrc + "&dim="+tableImages_width+"&"+d.getTime());
 		   })
+		   
+		   {% if form.mode.value == 'gallery' %}
+			$.waypoints('refresh')
+			{% endif %}
+		   
 		}
-		
-		//Update image dimensions by url due to zoom change
-/* 		function updateImageDimByUrl(){
-			console.log("actualizando tamano")
-			
-			d = new Date();
-		   	$(".tableImages").each(function(){
-			   var newSrc = "";
-			   if ($(this).attr("src").indexOf("&dim") != -1){
-			   	newSrc = $(this).attr("src").substring(0,$(this).attr("src").indexOf("&dim"));
-			   }
-			   else{
-				  newSrc = $(this).attr("src");   
-			   }
-			   $(this).attr("src", newSrc + "&dim="+$('#id_zoom').val()+"&"+d.getTime());
-		   })
-		} */
-	
+
 	</script>
 	<script type="text/javascript">
 		//Save table change in metadata

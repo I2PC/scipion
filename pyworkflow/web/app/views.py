@@ -591,6 +591,8 @@ def deleteHost(request):
     return HttpResponseRedirect('/view_hosts')#, RequestContext(request))
 
 def visualizeObject(request):
+    probandoCTFParam = False
+    
     objectId = request.GET.get("objectId")    
     #projectName = request.session['projectName']
     projectName = request.GET.get("projectName")
@@ -603,11 +605,17 @@ def visualizeObject(request):
     project.load()
     
     object = project.mapper.selectById(int(objectId))
-    object1 = object
     if object.isPointer():
         object = object.get()
         
-    if isinstance(object, SetOfMicrographs):
+    if probandoCTFParam:
+        inputParameters = {'path': join(request.session['projectPath'], "Runs/XmippProtCTFMicrographs218/extra/BPV_1386/xmipp_ctf.ctfparam"),
+               'allowRender': True,
+               'mode': 'column',
+               'zoom': '150px',
+               'goto': 1,
+               'colRowMode': 'Off'}    
+    elif isinstance(object, SetOfMicrographs):
         fn = project.getTmpPath(object.getName() + '_micrographs.xmd')
         mics = XmippSetOfMicrographs.convert(object, fn)
         inputParameters = {'path': join(request.session['projectPath'], mics.getFileName()),

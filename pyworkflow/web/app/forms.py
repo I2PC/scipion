@@ -285,13 +285,13 @@ class ShowjForm(forms.Form):
     mode = forms.CharField(widget=forms.HiddenInput())
     colRowMode = forms.CharField(widget=forms.HiddenInput())
 
-    imageWidth = forms.IntegerField(widget=forms.HiddenInput())
-    imageHeight = forms.IntegerField(widget=forms.HiddenInput())
+    imageWidth = forms.IntegerField(widget=forms.HiddenInput(), initial=0)
+    imageHeight = forms.IntegerField(widget=forms.HiddenInput(), initial=0)
     
      
     
     
-    def __init__(self, dataset, tableLayoutConfiguration, *args, **kwargs):
+    def __init__(self, dataset, tableLayoutConfiguration, imageDimensions, *args, **kwargs):
         super(ShowjForm, self).__init__(*args, **kwargs)
         
         blockComboBoxValues = tuple(zip(dataset.listTables(), dataset.listTables()))
@@ -316,10 +316,17 @@ class ShowjForm(forms.Form):
             self.fields['cols'].widget.attrs['readonly'] = True
             self.fields['rows'].widget.attrs['readonly'] = True
             
+        if imageDimensions is not None:     
+#           Habria que carajo hacemos con esto 
+            print "settingimagedime", imageDimensions           
+            self.fields['imageWidth'].initial=imageDimensions[0]
+            self.fields['imageHeight'].initial=imageDimensions[1]
+            
 
                     
 def getLabelsToRenderComboBoxValues(columnsLayout):
     labelsToRender = [columnLayout.label for columnLayout in columnsLayout.values() if (columnLayout.typeOfColumn == 'image')]
+    print "labelsToRender",labelsToRender
     return tuple(zip(labelsToRender,labelsToRender))
 
 
