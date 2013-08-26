@@ -129,50 +129,58 @@ class Canvas(tk.Frame):
         return tb
     
     def createEdge(self, srcItem, dstItem):
-        # !!!! @current "connect" the middle of the closest edges, instead of centers of items
-        # !!!! the edge ends coordinates are wrong
-        # !!!! the edge  does not follow its boxes
-        srcConnectors=self.getConnectorsCoordinates(srcItem)
-        print srcConnectors
-        dstConnectors=self.getConnectorsCoordinates(dstItem)
-        print dstConnectors
-        c1Coords,c2Coords=self.findClosestConnectors(srcConnectors,dstConnectors)
-        print c1Coords,c2Coords
-        c1x=c1Coords[0]
-        c1y=c1Coords[1]
-        conn1=Connector(self.canvas,c1x,c1y)
-        conn2=Connector(self.canvas,c2Coords[0],c2Coords[1])
-        self.items[conn1.id]=conn1
-        self.items[conn2.id]=conn2
-        edge = Edge(self.canvas, conn1, conn2)
+        edge = Edge(self.canvas, srcItem, dstItem)
         #self.items[edge.id] = edge
         return edge
     
-    def getConnectorsCoordinates(self,item):
-        x1,y1,x2,y2=item.getCorners()
-        #coords= self.canvas.coords(item.id)
-        xc=(x2+x1)/2.0
-        yc=(y2+y1)/2.0
-        return [(xc,y1), (x2,yc), (xc,y2), (x1,yc)]
-
-    def findClosestConnectors(self,list1,list2):
-        candidates=[]
-        for c1 in list1:
-            for c2 in list2:
-                candidates.append([c1,c2, math.hypot(c2[0] - c1[0], c2[1] - c1[1])])
-        closest=min(candidates,key=operator.itemgetter(2))
-        return closest[0],closest[1]
 
     def clear(self):
         """Clear all items from the canvas"""
         self.canvas.delete(tk.ALL)
        
-      
+
+def findClosestPoints(list1,list2):
+    candidates=[]
+    for c1 in list1:
+        for c2 in list2:
+            candidates.append([c1,c2, math.hypot(c2[0] - c1[0], c2[1] - c1[1])])
+    closestTuple=min(candidates,key=operator.itemgetter(2))
+    return closestTuple[0],closestTuple[1]
+
+def findClosestConnectors(item1,item2):
+    srcConnectors=item1.getConnectorsCoordinates()
+    dstConnectors=item2.getConnectorsCoordinates()
+    c1Coords,c2Coords=findClosestPoints(srcConnectors,dstConnectors)
+    item1.setActiveConnector(c1Coords)
+    item2.setActiveConnector(c2Coords)
+    return c1Coords,c2Coords
+
+class Item(object):      
+    def __init__(self,canvas):
+        self.activeConnector=None
+        self.canvas=canvas
+
+    def getConnectorsCoordinates(self):
+        x1,y1,x2,y2=self.getCorners()
+        xc=(x2+x1)/2.0
+        yc=(y2+y1)/2.0
+        return [(xc,y1), (x2,yc), (xc,y2), (x1,yc)]
+
+    def getCorners(self):
+        return self.canvas.bbox(self.id)
+
+    def setActiveConnector(self,coords):
+        if self.activeConnector:
+            self.activeConnector.erase()
+        self.activeConnector=Connector(self.canvas,coords[0],coords[1])
+        # add the connector to the items list in order to track it for events
+
         
-class TextItem():
+class TextItem(Item):
     """This class will serve to paint and store rectange boxes with some text.
        x and y are the coordinates of the center of this item"""
     def __init__(self, canvas, text, x, y, bgColor, textColor='black'):
+        super(TextItem,self).__init__(canvas)
         self.bgColor = bgColor
         self.textColor = textColor
         self.text = text
@@ -206,8 +214,6 @@ class TextItem():
         self.id = self._paintBounds(xr-m, yr-m, w+m, h+m, fillColor=self.bgColor)
         self.canvas.tag_raise(self.id_text)
         
-    def getCorners(self):
-        return self.canvas.bbox(self.id)
 
     def getDimensions(self):
         x, y, x2, y2 = self.canvas.bbox(self.id)
@@ -239,10 +245,17 @@ class TextItem():
    
         
 class TextBox(TextItem):
+    def __init__(self, canvas, text, x, y, bgColor, textColor='black'):
+        super(TextBox,self).__init__(canvas, text, x, y, bgColor, textColor)
+
     def _paintBounds(self, x, y, w, h, fillColor):
         return self.canvas.create_rectangle(x, y, w, h, fill=fillColor) 
 
 class RoundedTextBox(TextItem):
+    def __init__(self, canvas, text, x, y, bgColor, textColor='black'):
+        super(RoundedTextBox,self).__init__(canvas, text, x, y, bgColor, textColor)
+
+
     def _paintBounds(self, upperLeftX, upperLeftY , bottomRightX, bottomRightY, fillColor):
         d=5
         # When smooth=1, you define a straight segment by including its ends twice
@@ -274,12 +287,16 @@ class RoundedTextBox(TextItem):
             return self.canvas.bbox(self.id)
     
 class TextCircle(TextItem):
+    def __init__(self, canvas, text, x, y, bgColor, textColor='black'):
+        super(TextCircle,self).__init__(canvas, text, x, y, bgColor, textColor)
+
     def _paintBounds(self, x, y, w, h, fillColor):
         return self.canvas.create_oval(x, y, w, h, fill=fillColor) 
         
 
 class Connector():
     def __init__(self,canvas,x,y):
+        self.id=None
         self.x=x
         self.y=y
         self.canvas=canvas
@@ -291,6 +308,10 @@ class Connector():
 
     def paint(self):
         self.id = self.canvas.create_oval(self.x,self.y,self.x+5,self.y+5)
+
+    def erase(self):
+        if self.id:
+            self.canvas.delete(self.id)
 
     def moveTo(self, x, y):
         self.move(x-self.x, y-self.y)
@@ -315,6 +336,8 @@ class Connector():
 class Edge():
     """Edge between two objects"""
     def __init__(self, canvas, source, dest):
+        self.source=source
+        self.dest=dest
         self.srcX, self.srcY = source.x, source.y
         self.dstX, self.dstY = dest.x, dest.y
         self.canvas = canvas
@@ -324,10 +347,13 @@ class Edge():
         self.paint()
         
     def paint(self):
+        c1Coords,c2Coords=findClosestConnectors(self.source,self.dest)
+
         if self.id:
-            self.canvas.delete(self.id)
-        self.id = self.canvas.create_line(self.srcX, self.srcY, 
-                                          self.dstX, self.dstY,
+           self.canvas.delete(self.id)
+
+        self.id = self.canvas.create_line(c1Coords[0], c1Coords[1], 
+                                          c2Coords[0], c2Coords[1],
                                           width=2)
         self.canvas.tag_lower(self.id)
         
