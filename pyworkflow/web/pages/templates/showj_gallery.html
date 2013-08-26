@@ -12,19 +12,16 @@
 	
 	
 	function initializeImageLoad(){
+		console.log("initializing image load")
 		$('.tableImages').waypoint(function(direction){
 			$(this).attr("src", $(this).data('real_src'))
-			
-
-			
 		}, {
 			triggerOnce:true,
-			offset: function() {
-/* 				alert($.waypoints('viewportHeight'))
-				alert($(window).height()) */
+			offset: '150%'
+/* 			offset: function() {
 		        return $.waypoints('viewportHeight');
 		    }
-		});
+ */		});
 	}
 
 	function initializeGoToEvents(){
@@ -147,7 +144,7 @@
 					{% if forloop.counter0 == forloop.parentloop.parentloop.counter0 %} 
 						<div class="img_container" id="img_container___{{forloop.parentloop.counter}}">
 							<div class="img_inner_container">
-								<img class="tableImages" title="{{cell}}" src="" data-real_src="/get_image/?image={{cell}}"/>
+								<img class="tableImages" title="{{cell}}" data-real_src="/get_image/?image={{cell}}"/>
 								<img class="enabledGallery" src="/resources/showj/enabled_gallery.png" id="{{form.labelsToRenderComboBox.value}}___{{forloop.parentloop.counter0}}" onclick="enableDisableImage(this);"/>
 							</div>
 							<div id="column_label">{{forloop.parentloop.counter}}</div> 
