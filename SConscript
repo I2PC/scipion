@@ -1012,7 +1012,8 @@ if int(env['gtest']):
 if int(env['matlab']):
     def AddMatlabBinding(name):
         print 'compiling Matlab wrapper for ' + name
-        command = env['MATLAB_DIR'] + '/bin/mex -O -outdir libraries/bindings/matlab -I. -Ilibraries/data -Ilibraries -Llib -Ilibraries/reconstruction -lXmippRecons -lXmippData -lXmippExternal libraries/bindings/matlab/tom_xmipp_' + name + '_wrapper.cpp'
+        command = env['MATLAB_DIR'] + '/bin/mex -O -outdir libraries/bindings/matlab -I. -Ilibraries/data -Ilibraries -Llib -Ilibraries/reconstruction -lXmippRecons -lXmippData -lXmippExternal libraries/bindings/matlab/'+name+".cpp"
+        print command
         output = os.popen(command).read()
         if len(output) > 0:
             print output
@@ -1021,7 +1022,8 @@ if int(env['matlab']):
         'mask', 'mirror', 'morphology', 'normalize', 'psd_enhance',
         'resolution', 'rotate', 'scale', 'scale_pyramid', 'volume_segment']
     for i in range(len(bindings)):
-       AddMatlabBinding(bindings[i])
+       AddMatlabBinding("tom_xmipp_"+bindings[i]+"_wrapper")
+    AddMatlabBinding('xmipp_read')
 
 # Clean
 # Configuration or cleaning
