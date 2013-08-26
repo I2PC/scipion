@@ -207,8 +207,7 @@ class TextItem():
         self.canvas.tag_raise(self.id_text)
         
     def getCorners(self):
-        xmin,ymin,xmax,ymax=self.canvas.bbox(self.id)
-        return (xmin,ymin,xmax,ymax)
+        return self.canvas.bbox(self.id)
 
     def getDimensions(self):
         x, y, x2, y2 = self.canvas.bbox(self.id)
