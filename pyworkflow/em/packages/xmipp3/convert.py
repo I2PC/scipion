@@ -222,18 +222,16 @@ def rowToClass2D(md, objId, samplingRate):
 def rowToImageClassAssignment(md, objId):
     """ Create a ImageClassAssignment from a row of a metadata. """
     imgCADict = { 
-               "_id": xmipp.MDL_ITEM_ID,
+               "_imgId": xmipp.MDL_ITEM_ID,
 #               "_anglePsi": xmipp.MDL_ANGLE_PSI,
 #               "_shiftX": xmipp.MDL_SHIFT_X,
 #               "_shiftY": xmipp.MDL_SHIFT_Y,
 #               "_flip": xmipp.MDL_FLIP
                }
+    
     imageCA = ImageClassAssignment()
-    
     rowToObject(md, objId, imageCA, imgCADict) 
-    
     return imageCA
-    
     
 def class2DToRow(class2D, classRow):
     """ Set labels values from Class2D to md row. """
@@ -246,10 +244,11 @@ def class2DToRow(class2D, classRow):
         classRow.setValue(xmipp.MDL_IMAGE, fn)
     objectToRow(class2D, classRow, classDict)
     
-def imageClassAssignmentToRow(imgCA, imgCARow, img,  ctfDir):
+def imageClassAssignmentToRow(imgCA, imgCARow, img, ctfDir, ref):
     """ Set label values from ImageClassAssignment to md row. """
     imgCADict = { 
-               "_id": xmipp.MDL_ITEM_ID,
+               "_imgId": xmipp.MDL_ITEM_ID,
+               "_ref": xmipp.MDL_REF,
 #               "_anglePsi": xmipp.MDL_ANGLE_PSI,
 #               "_shiftX": xmipp.MDL_SHIFT_X,
 #               "_shiftY": xmipp.MDL_SHIFT_Y,
@@ -264,8 +263,8 @@ def imageClassAssignmentToRow(imgCA, imgCARow, img,  ctfDir):
         ctfFn = join(ctfDir, rootFn)
         writeCTFModel(img.getCTF(), ctfFn)
         imgCARow.setValue(xmipp.MDL_CTF_MODEL, ctfFn)
+    objectToRow(imgCA, imgCARow, imgCADict)
     
-    objectToRow(img, imgCARow, imgCADict)
     
 def readSetOfMicrographs(filename, micSet, hasCtf=False):
     
@@ -410,30 +409,35 @@ def writeSetOfClasses2D(classes2DSet, filename, ctfDir=None, classesBlock='class
         filename: the filename where to write the metadata.
     """
     md = xmipp.MetaData()
+    imgSet = classes2DSet.getImages()
+    print imgSet
     
-    images = classes2DSet.getImages()
-        
     for class2D in classes2DSet.iterClasses():
+        
         classRow = XmippMdRow()
         class2DToRow(class2D, classRow)
         objId = md.addObject()
         classRow.writeToMd(md, objId)
         md.write('%s@%s' %(classesBlock, filename))
-        ref = class2D.getId() 
-        for imgCA in class2D:
-            #FIXME: This doesnt work, _idMap is empty (and not even defined!)
-            #img = images[imgCA.getImageId()]
-            for img1 in images:
-                if img1.getId() == imgCA.getImageId():
-                    img = img1
-                    break
-                
+        ref = class2D.getId()
+        
+        for imgCA in class2D._imageClassAssignments:
             imgCARow = XmippMdRow()
-            imageClassAssignmentToRow(imgCA, imgCARow, img, ctfDir)
             objCAId = md.addObject()
+            imgSet[imgCA.getImageId()]
+            print imgSet
+            return
+#             for img in imgSet:
+#                 if img.getId() == imgCA.getImageId():
+#                     img1 = img
+#                     break
+
+            imageClassAssignmentToRow(imgCA, imgCARow, img1, ctfDir, ref)
             assignmentBlock = 'class%06d_images@%s' % (ref, filename)
-            classRow.writeToMd(md, objCAId)  
+            imgCARow.writeToMd(md, objCAId)
             md.write(assignmentBlock, xmipp.MD_APPEND)
+            
+            return
             
     classes2DSet._xmippMd = String(filename)
 

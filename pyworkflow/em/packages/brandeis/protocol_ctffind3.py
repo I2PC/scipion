@@ -111,10 +111,11 @@ class ProtCTFFind(ProtCTFMicrographs):
             micOut.setCTF(self._getCTFModel(defocusU, defocusV, defocusAngle, 
                                                 self._getPsdPath(micDir)))
             micSet.append(micOut)
-            
-        micSet.write()
+
         # This property should only be set by CTF estimation protocols
         micSet.setHasCTF(True)     
+            
+        micSet.write()
         self._defineOutputs(outputMicrographs=micSet)
 	
     def _validate(self):

@@ -287,7 +287,7 @@ class SetOfImages(Set):
     
     def __getitem__(self, imgId):
         """ Get the image with the given id. """
-        #FIXME, remove this after id is the one in mapper
+        self._idMap = {}#FIXME, remove this after id is the one in mapper
         return self._idMap.get(imgId, None)
 
     def __iter__(self):
@@ -564,10 +564,10 @@ class ImageClassAssignment(EMObject):
         EMObject.__init__(self, **args)
         #self._imagePointer = Pointer() # Pointer to image
         # This parameters will dissappear when transformation matrix is used
-        self._anglePsi = Float()
-        self._shiftX = Float()
-        self._shiftY = Float()
-        self._flip = Boolean()
+#         self._anglePsi = Float()
+#         self._shiftX = Float()
+#         self._shiftY = Float()
+#         self._flip = Boolean()
         self._imgId = Integer()
         
 #    def setImage(self, image):
@@ -589,26 +589,26 @@ class ImageClassAssignment(EMObject):
     def setAnglePsi(self, anglePsi):
         self._anglePsi.set(anglePsi)
         
-    def getAnglePsi(self):
-        return self._anglePsi.get()
-    
-    def setShiftX(self, shiftX):
-        self._shiftX.set(shiftX)
-        
-    def getShiftX(self):
-        return self.shiftX.get()
-
-    def setShiftY(self, shiftY):
-        self._shiftY.set(shiftY)
-        
-    def getShiftY(self):
-        return self.shiftY.get()   
-
-    def setFlip(self, flip):
-        self._flip.set(flip)
-        
-    def getFlip(self):
-        return self.flip.get()       
+#     def getAnglePsi(self):
+#         return self._anglePsi.get()
+#     
+#     def setShiftX(self, shiftX):
+#         self._shiftX.set(shiftX)
+#         
+#     def getShiftX(self):
+#         return self.shiftX.get()
+# 
+#     def setShiftY(self, shiftY):
+#         self._shiftY.set(shiftY)
+#         
+#     def getShiftY(self):
+#         return self.shiftY.get()   
+# 
+#     def setFlip(self, flip):
+#         self._flip.set(flip)
+#         
+#     def getFlip(self):
+#         return self.flip.get()       
      
     
 class Class2D(EMObject):
@@ -621,7 +621,7 @@ class Class2D(EMObject):
         self._hasRepresentativeImage = Boolean(False)
         self._representativeImage = Image()
         self._imageClassAssignments = List()
-
+    
     #TODO: replace this id with objId
     def getId(self):
         return self._id.get()
@@ -702,6 +702,6 @@ class SetOfClasses2D(Set):
     def __getitem__(self, classId):
         """ Get the class with the given id. """
         #FIXME, remove this after id is the one in mapper
-        return self._idMap.get(classId, None)
+        return self._idMap.get(class2DId, None)
      
      
