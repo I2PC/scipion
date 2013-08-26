@@ -207,22 +207,7 @@ class TextItem():
         self.canvas.tag_raise(self.id_text)
         
     def getCorners(self):
-        coords=self.canvas.coords(self.id)
-        xmax=coords[0]
-        ymax=coords[1]
-        xmin=xmax
-        ymin=ymax
-        for i in range(0,len(coords)-1,2):
-            x=coords[i]
-            y=coords[i+1]
-            if x > xmax:
-                xmax=x
-            if x < xmin:
-                xmin=x
-            if y > ymax:
-                ymax=y
-            if y < ymin:
-                ymin=y
+        xmin,ymin,xmax,ymax=self.canvas.bbox(self.id)
         return (xmin,ymin,xmax,ymax)
 
     def getDimensions(self):
@@ -287,15 +272,6 @@ class RoundedTextBox(TextItem):
                                           fill=fillColor, outline='black',smooth=1) 
 
         def getDimensions(self):
-            coords=self.canvas.coords(item.id)
-            xmax=0
-            ymax=0
-            for x,y in coords:
-                if x > xmax:
-                    xmax=x
-                if y > ymax:
-                    ymax=y
-            print xmax,ymax
             return self.canvas.bbox(self.id)
     
 class TextCircle(TextItem):
