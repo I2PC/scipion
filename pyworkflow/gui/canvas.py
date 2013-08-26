@@ -30,7 +30,8 @@ that can be interactively dragged and clicked.
 """
 
 import Tkinter as tk
-
+import math
+import operator
 
 class Canvas(tk.Frame):
     """Canvas to draw some objects.
@@ -128,17 +129,39 @@ class Canvas(tk.Frame):
         return tb
     
     def createEdge(self, srcItem, dstItem):
-        # !!!! "connect" the middle of the closest edges, instead of centers of items
-        srcConnectors=self._findConnectors(srcItem)
-        edge = Edge(self.canvas, srcItem, dstItem)
+        # !!!! @current "connect" the middle of the closest edges, instead of centers of items
+        # !!!! the edge ends coordinates are wrong
+        # !!!! the edge  does not follow its boxes
+        srcConnectors=self.getConnectorsCoordinates(srcItem)
+        print srcConnectors
+        dstConnectors=self.getConnectorsCoordinates(dstItem)
+        print dstConnectors
+        c1Coords,c2Coords=self.findClosestConnectors(srcConnectors,dstConnectors)
+        print c1Coords,c2Coords
+        c1x=c1Coords[0]
+        c1y=c1Coords[1]
+        conn1=Connector(self.canvas,c1x,c1y)
+        conn2=Connector(self.canvas,c2Coords[0],c2Coords[1])
+        self.items[conn1.id]=conn1
+        self.items[conn2.id]=conn2
+        edge = Edge(self.canvas, conn1, conn2)
         #self.items[edge.id] = edge
         return edge
     
     def getConnectorsCoordinates(self,item):
-        w,h=item.getDimensions()
-        xc=item.x + w/2
-        yc=item.y + h/2
-        return [(xc,item.y), (item.x+w,yc), (xc,item.y+h), (item.x,yc)]
+        x1,y1,x2,y2=item.getCorners()
+        #coords= self.canvas.coords(item.id)
+        xc=(x2+x1)/2.0
+        yc=(y2+y1)/2.0
+        return [(xc,y1), (x2,yc), (xc,y2), (x1,yc)]
+
+    def findClosestConnectors(self,list1,list2):
+        candidates=[]
+        for c1 in list1:
+            for c2 in list2:
+                candidates.append([c1,c2, math.hypot(c2[0] - c1[0], c2[1] - c1[1])])
+        closest=min(candidates,key=operator.itemgetter(2))
+        return closest[0],closest[1]
 
     def clear(self):
         """Clear all items from the canvas"""
@@ -147,8 +170,8 @@ class Canvas(tk.Frame):
       
         
 class TextItem():
-    """This class will serve to paint and store
-    rectange boxes with some text"""
+    """This class will serve to paint and store rectange boxes with some text.
+       x and y are the coordinates of the center of this item"""
     def __init__(self, canvas, text, x, y, bgColor, textColor='black'):
         self.bgColor = bgColor
         self.textColor = textColor
@@ -183,6 +206,25 @@ class TextItem():
         self.id = self._paintBounds(xr-m, yr-m, w+m, h+m, fillColor=self.bgColor)
         self.canvas.tag_raise(self.id_text)
         
+    def getCorners(self):
+        coords=self.canvas.coords(self.id)
+        xmax=coords[0]
+        ymax=coords[1]
+        xmin=xmax
+        ymin=ymax
+        for i in range(0,len(coords)-1,2):
+            x=coords[i]
+            y=coords[i+1]
+            if x > xmax:
+                xmax=x
+            if x < xmin:
+                xmin=x
+            if y > ymax:
+                ymax=y
+            if y < ymin:
+                ymin=y
+        return (xmin,ymin,xmax,ymax)
+
     def getDimensions(self):
         x, y, x2, y2 = self.canvas.bbox(self.id)
         return (x2-x, y2-y)
@@ -244,12 +286,57 @@ class RoundedTextBox(TextItem):
                                           upperLeftX+d-1,upperLeftY, #1b
                                           fill=fillColor, outline='black',smooth=1) 
 
+        def getDimensions(self):
+            coords=self.canvas.coords(item.id)
+            xmax=0
+            ymax=0
+            for x,y in coords:
+                if x > xmax:
+                    xmax=x
+                if y > ymax:
+                    ymax=y
+            print xmax,ymax
+            return self.canvas.bbox(self.id)
     
 class TextCircle(TextItem):
     def _paintBounds(self, x, y, w, h, fillColor):
         return self.canvas.create_oval(x, y, w, h, fill=fillColor) 
         
+
+class Connector():
+    def __init__(self,canvas,x,y):
+        self.x=x
+        self.y=y
+        self.canvas=canvas
+        self.listeners=[]
+        self.paint()
         
+    def addPositionListener(self,listenerFunc):
+        self.listeners.append(listenerFunc)        
+
+    def paint(self):
+        self.id = self.canvas.create_oval(self.x,self.y,self.x+5,self.y+5)
+
+    def moveTo(self, x, y):
+        self.move(x-self.x, y-self.y)
+
+    def move(self, dx, dy):
+        self.canvas.move(self.id, dx, dy)
+        self.x += dx
+        self.y += dy
+        for listenerFunc in self.listeners:
+            listenerFunc(dx, dy)
+
+    def setSelected(self, value):
+        bw = 1
+        if value:
+            bw = 2
+        self.canvas.itemconfig(self.id, width=bw)
+        print self.x,self.y
+
+
+
+
 class Edge():
     """Edge between two objects"""
     def __init__(self, canvas, source, dest):
