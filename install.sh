@@ -12,6 +12,7 @@ DO_TIFF=true
 DO_JPEG=true
 DO_HDF5=true
 DO_ARPACK=false
+DO_FRM=false
 
 DO_CLEAN=true
 DO_STATIC=false
@@ -99,6 +100,8 @@ for param in $@; do
         "hdf5=false")       DO_HDF5=false;;
         "arpack=true")      DO_ARPACK=true;;
         "arpack=false")     DO_ARPACK=false;;
+        "frm=true")         DO_FRM=true;;
+        "frm=false")        DO_FRM=false;;
         "clean=true")       DO_CLEAN=true;;
         "clean=false")      DO_CLEAN=false;;
         "static=true")      DO_STATIC=true;;
@@ -300,6 +303,7 @@ VJPEG=jpeg-8c
 VHDF5=hdf5-1.8.10
 VARPACK=arpack++-2.3
 VNUMPY=numpy-1.6.1
+VSCIPY=scipy-0.12.0
 VMATLIBPLOT=matplotlib-1.1.0
 VPYMPI=mpi4py-1.2.2
 #read star files
@@ -384,9 +388,10 @@ compile_pymodule()
 install_libs()
 {
   cd $XMIPP_HOME
-  LIBPATH=../external/$1; shift
+  LIBPATH=external/$1; shift
   COMMON="$1"; shift
-  VERSION=$1
+  VERSION=$1; shift
+  COPY=$1
   SUFFIXES=".a .la "
   if $IS_MAC; then
 	SUFFIXES="$SUFFIXES .dylib .$VERSION.dylib"
@@ -398,8 +403,16 @@ install_libs()
   
   for suffix in $SUFFIXES; do
      LIBNAME=$COMMON$suffix
-     echo "--> ln -sf $LIBPATH/$LIBNAME lib/$LIBNAME"
-     ln -sf $LIBPATH/$LIBNAME lib/$LIBNAME  
+     if $COPY; then
+     	     if [ -e lib/$LIBNAME ]; then
+	         rm -f lib/$LIBNAME
+             fi
+	     echo "--> cp -f $LIBPATH/$LIBNAME lib/$LIBNAME"
+	     cp -f $LIBPATH/$LIBNAME lib/$LIBNAME  
+     else
+	     echo "--> ln -sf ../$LIBPATH/$LIBNAME lib/$LIBNAME"
+	     ln -sf ../$LIBPATH/$LIBNAME lib/$LIBNAME  
+     fi
   done
 }
 
@@ -461,7 +474,7 @@ if $DO_SQLITE; then
   #execute sqlite to avoid relinking in the future
   echo "select 1+1 ;" | $VSQLITE/sqlite3
   install_bin $VSQLITE/sqlite3 xmipp_sqlite3
-  install_libs $VSQLITE/.libs libsqlite3 0
+  install_libs $VSQLITE/.libs libsqlite3 0 false
   #compile math library for sqlite
   cd $EXT_PATH/$VSQLITE_EXT
   if $IS_MINGW; then
@@ -479,31 +492,37 @@ fi
 #################### FFTW ###########################
 if $DO_FFTW; then
   if $IS_MINGW; then
-    compile_library $VFFTW "." "." "--enable-threads CPPFLAGS=-I/c/MinGW/include CFLAGS=-I/c/MinGW/include"
+    FFTWFLAGS=" CPPFLAGS=-I/c/MinGW/include CFLAGS=-I/c/MinGW/include"
   else
-    compile_library $VFFTW "." "." "--enable-threads"
+    FFTWFLAGS=""
   fi
-  install_libs $VFFTW/.libs libfftw3 3
-  install_libs $VFFTW/threads/.libs libfftw3_threads 3
+  FLAGS="$FFTWFLAGS --enable-threads"
+  compile_library $VFFTW "." "." $FLAGS
+  install_libs $VFFTW/.libs libfftw3 3 true
+  install_libs $VFFTW/threads/.libs libfftw3_threads 3 true
+
+  FLAGS="$FFTWFLAGS --enable-float"
+  compile_library $VFFTW "." "." $FLAGS
+  install_libs $VFFTW/.libs libfftw3f 3 true
 fi
 
 #################### JPEG ###########################
 if $DO_JPEG; then
 compile_library $VJPEG "." "." "CPPFLAGS=-w"
-install_libs $VJPEG/.libs libjpeg 8
+install_libs $VJPEG/.libs libjpeg 8 false
 fi
 
 #################### TIFF ###########################
 if $DO_TIFF; then
   compile_library $VTIFF "." "." "CPPFLAGS=-w --with-jpeg-include-dir=$EXT_PATH/$VJPEG --with-jpeg-lib-dir=$XMIPP_HOME/lib"
-  install_libs $VTIFF/libtiff/.libs libtiff 3
+  install_libs $VTIFF/libtiff/.libs libtiff 3 false
 fi
 
 #################### HDF5 ###########################
 if $DO_HDF5; then
 compile_library $VHDF5 "." "." "CPPFLAGS=-w --enable-cxx"
-install_libs $VHDF5/src/.libs libhdf5 7
-install_libs $VHDF5/c++/src/.libs libhdf5_cpp 7
+install_libs $VHDF5/src/.libs libhdf5 7 false
+install_libs $VHDF5/c++/src/.libs libhdf5_cpp 7 false
 fi
 
 #################### TCL/TK ###########################
@@ -650,15 +669,23 @@ if $DO_PYMOD; then
     echoExec "cd $EXT_PYTHON/tcl$VTCLTK/unix/"
     echoExec "ln -sf libtcl8.5.so  libtcl.so"
   fi
-compile_pymodule $VMATLIBPLOT
-compile_pymodule $VPYMPI
-compile_pymodule $VPYCIFRW
+  compile_pymodule $VMATLIBPLOT
+  compile_pymodule $VPYMPI
+  compile_pymodule $VPYCIFRW
+  
+  if $DO_FRM; then
+    # Fast Rotational Matching
+    export LDFLAGS="-shared $LDFLAGS"
+    compile_pymodule $VSCIPY
+    cd $EXT_PATH/sh_alignment
+    ./compile.sh
+  fi
 fi
 
 #################### ARPACK ###########################
 if $DO_ARPACK; then
   compile_library $VARPACK "." "." ""
-  install_libs $VARPACK/src/.libs libarpack++ 2
+  install_libs $VARPACK/src/.libs libarpack++ 2 false
 fi
 
 # Launch the configure/compile python script 
