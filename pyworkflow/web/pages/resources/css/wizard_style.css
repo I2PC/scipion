@@ -1,0 +1,115 @@
+/* CSS Document */
+html,body {
+/* 	background-color: #F0F0F0; */
+}
+
+body {
+	font-family: "Trebuchet MS", "Helvetica", "Arial", "Verdana",
+		"sans-serif";
+	font-size: 0.84em;
+}
+
+.layout {
+	width: auto;
+	margin: 5px;
+	padding: 5px;
+	/* 	height:5px; */
+}
+
+.list {
+/* 	border: 1px solid black; */
+	width: 5em;
+/* 	margin: 5px; */
+/* 	padding: 5px; */
+/* 	/* 	float:left; */ */
+/* 	display:table-cell; */
+}
+
+.images {
+	border: 1px solid black;
+	padding: 5px;
+	margin: 5px;
+	width:35em;
+	height: 135px;
+	/* 	float:right; */
+	display:table-cell;
+	text-align: center;
+}
+
+.image {
+	border: 1px solid black;
+	width: 120px;
+	height: 120px;
+	margin: px;
+	display:table-cell;
+	text-align: center;
+}
+
+.options {
+	border: 1px solid black;
+	padding: 5px;
+	margin: 5px;
+	/* 	clear:both; */
+}
+
+/**************** Table CSS *******************/
+table#list a:link {
+	font-weight: bold;
+}
+
+table#list a:active,table a:hover {
+	color: Firebrick;
+}
+
+table#list {
+	width: 100%;
+	overflow-x: auto;
+	font-size: 0.9em;
+	background-color: #eaebec;
+	border-spacing: 0;
+	overflow-x: auto;
+	border: 1px solid black
+}
+
+table#list th {
+	height: 0.2em;
+/* 	border-top: 1px solid #fafafa; */
+	border-bottom: 1px solid #e0e0e0;
+	background-color: Firebrick;
+	color:white;
+}
+
+table#list th:first-child {
+	text-align: center;
+	
+}
+
+table#list tr {
+	text-align: center;
+}
+
+table#list tr td:first-child {
+	text-align: left;
+	border-left: 0;
+}
+
+table#list tr td {
+	padding: 0.3em;
+	padding-left: 1.5em;
+	border-top: 1px solid #ffffff;
+	border-bottom: 1px solid #e0e0e0;
+	border-left: 1px solid #e0e0e0;
+}
+
+table#list tr:last-child td {
+	border-bottom: 0;
+}
+
+table#list tr:hover td {
+	background-color: #f2f2f2;
+}
+
+table#list tr.selected:hover td {
+	background-color: LightSteelBlue;
+}
+/***************************************************/

@@ -309,3 +309,4 @@ function processSelectionTable(elm) {
 
 	jQuery('input#' + elm.attr('data-node') + '_input').val(value);
 }
+

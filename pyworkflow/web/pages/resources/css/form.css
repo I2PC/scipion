@@ -112,7 +112,18 @@ textarea {
 	margin: 0.5em;
 }
 
-.titleMain {
+.titleMain1 {
+	background: DarkRed;
+	color: white;
+	border-left: 2.5px solid FireBrick;
+	border-top: 2.5px solid FireBrick;
+	font-size: 0.9em;
+	font-weight: bold;
+	margin: -1em -0.7em 0.3em -0.65em;
+	text-align: center;
+}
+
+.titleMain2 {
 	background: DarkRed;
 	color: white;
 	border-left: 2.5px solid FireBrick;

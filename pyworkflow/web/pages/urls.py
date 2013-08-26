@@ -26,6 +26,9 @@ urlpatterns = patterns('',
     url(r'^protocol_summary/$', 'app.views.protocol_summary'),
     url(r'^project_graph/$', 'app.views.project_graph'),
     url(r'^form/$', 'app.views.form'),
+    
+    url(r'^wizard/$', 'app.views.wizard'),
+    
     #url(r'^copy_run/$', 'app.views.copy_run'),
     url(r'^save_protocol/$', 'app.views.save_protocol'),
     url(r'^protocol/$', 'app.views.protocol'),

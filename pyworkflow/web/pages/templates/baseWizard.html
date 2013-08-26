@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang='es'>
+<head>
+<title>Wizard {% block title %} {% endblock %}</title>
+<meta charset='utf-8'>
+<link href="/static/css/wizard_style.css" rel="stylesheet"
+	type="text/css">
+<link type="text/css" href="/static/css/jquery-ui.css" rel="stylesheet" />
+<script type="text/javascript" src="/static/js/jquery.js"></script>
+<script type="text/javascript" src="/static/js/jquery-ui.js"></script>
+<script type="text/javascript" src="/static/js/wizardUtils.js"></script>
+<script>
+	
+</script>
+{% block head %} {% endblock %}
+</head>
+
+<body>
+	<div class="layout">
+		<div class="list">
+			<table id="list" cellspacing="0">
+				<tr><th>Object</th></tr>
+				{% block list %}
+				{% endblock %}
+			</table>
+		</div>
+		<div class="images">	
+		{% block images %}
+		{% endblock %}
+		</div>
+	</div>
+	<div class="options">
+	{% block options %}
+	{% endblock %}
+	</div>
+	<div>
+		<input type="button" class="select" value="select"/>
+		<input type="button" class="cancel" value="cancel"/>
+	</div>
+	
+</body>
+</html>
