@@ -124,9 +124,20 @@ class Canvas(tk.Frame):
         self.canvas.yview("scroll", count, "units")          
         
     def createTextbox(self, text, x, y, bgColor="#99DAE8", textColor='black'):
+        tb = TextBox(self.canvas, text, x, y, bgColor, textColor)
+        self.items[tb.id] = tb
+        return tb
+
+    def createTextCircle(self, text, x, y, bgColor="#99DAE8", textColor='black'):
+        tb = TextCircle(self.canvas, text, x, y, bgColor, textColor)
+        self.items[tb.id] = tb
+        return tb
+
+    def createRoundedTextbox(self, text, x, y, bgColor="#99DAE8", textColor='black'):
         tb = RoundedTextBox(self.canvas, text, x, y, bgColor, textColor)
         self.items[tb.id] = tb
         return tb
+
     
     def createEdge(self, srcItem, dstItem):
         edge = Edge(self.canvas, srcItem, dstItem)
@@ -147,6 +158,9 @@ def findClosestPoints(list1,list2):
     closestTuple=min(candidates,key=operator.itemgetter(2))
     return closestTuple[0],closestTuple[1]
 
+
+
+# !!!! sometimes, in a hierarchichal graph, it's better the upper (or lower) connector, than the closest...
 def findClosestConnectors(item1,item2):
     srcConnectors=item1.getConnectorsCoordinates()
     dstConnectors=item2.getConnectorsCoordinates()
@@ -155,6 +169,9 @@ def findClosestConnectors(item1,item2):
     item2.setActiveConnector(c2Coords)
     return c1Coords,c2Coords
 
+
+
+# !!!! refactor code repeated in subclasses, probably into this Item class
 class Item(object):      
     def __init__(self,canvas):
         self.activeConnector=None
@@ -306,6 +323,7 @@ class Connector():
     def addPositionListener(self,listenerFunc):
         self.listeners.append(listenerFunc)        
 
+    # !!!! improve connector paint (sometimes is not well centered against its item)
     def paint(self):
         self.id = self.canvas.create_oval(self.x,self.y,self.x+5,self.y+5)
 
@@ -375,9 +393,9 @@ if __name__ == '__main__':
     root.grid_columnconfigure(0, weight=1)
     root.grid_rowconfigure(0, weight=1)
     
-    tb1 = canvas.createTextbox("Project", 100, 100, "blue")
+    tb1 = canvas.createTextCircle("Project", 100, 100, "blue")
     tb2 = canvas.createTextbox("This is an intentionally quite big, big box,\nas you may appreciate looking carefully\nat it,\nas many times\nas you might need", 300, 200)
-    tb3 = canvas.createTextbox("otro mas\n", 100, 200, "red")
+    tb3 = canvas.createRoundedTextbox("otro mas\n", 100, 200, "red")
     e1 = canvas.createEdge(tb1, tb2)
     e2 = canvas.createEdge(tb1, tb3)
     
