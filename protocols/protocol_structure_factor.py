@@ -28,7 +28,10 @@ class ProtStructureFactor(XmippProtocol):
             if self.DisplayStructureFactor:
                 os.system('xmipp_metadata_plot -i %s -x resolutionFreqFourier -y resolutionLogStructure --title "Structure factor" --xtitle "Frequency (1/A)" --ytitle "Log(StructureFactor)" &'%self.fnStructure)
             if self.DisplayGuinier:
-                os.system('xmipp_metadata_plot -i %s -x resolutionFreqFourier2 -y resolutionLogStructure --title "Guinier plot" --xtitle "Frequency (1/A^2)" --ytitle "Log(StructureFactor)" &'%self.fnStructure)
+                if self.UseMatlab:
+                    os.system("matlab -r \"xmipp_show_structure_factor(\'"+self.WorkingDir+"\')\"")
+                else:
+                    os.system('xmipp_metadata_plot -i %s -x resolutionFreqFourier2 -y resolutionLogStructure --title "Guinier plot" --xtitle "Frequency (1/A^2)" --ytitle "Log(StructureFactor)" &'%self.fnStructure)
 
 def calculateStructureFactor(log,Structure,InModel,Sampling):
     runJob(log,"xmipp_volume_structure_factor","-i %s -o %s --sampling %f"%(InModel,Structure,float(Sampling)))

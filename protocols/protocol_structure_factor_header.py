@@ -27,6 +27,9 @@ DisplayStructureFactor=True
 # Display Guinier plot
 DisplayGuinier=True
 
+#{expert}{condition}(DisplayGuinier) Use Matlab for Guinier
+UseMatlab=False
+
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...

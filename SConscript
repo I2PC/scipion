@@ -1025,6 +1025,7 @@ if int(env['matlab']):
     for i in range(len(bindings)):
        CompileMatlab("tom_xmipp_"+bindings[i]+"_wrapper")
     CompileMatlab('xmipp_read')
+    CompileMatlab('xmipp_read_structure_factor')
 
 # Clean
 # Configuration or cleaning
