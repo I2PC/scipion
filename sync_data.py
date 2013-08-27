@@ -84,7 +84,7 @@ def main(argv):
         if ans == ("y" or "Y"):
             print "You've chosen to proceed. Executing bash script " + args.syncfile + "-r ..."
             print "bash " + args.syncfile + deleteFlag + "-r " + " ".join(args.reverse_sync)
-            #subprocess.call("bash " + args.syncfile + deleteFlag + " -r " + " ".join(args.reverse_sync), shell=True)
+            subprocess.call("bash " + args.syncfile + deleteFlag + " -r " + " ".join(args.reverse_sync), shell=True)
         else:
             print "You've chosen to abort. Goodbye!."
             sys.exit(3)
@@ -92,7 +92,7 @@ def main(argv):
         scipion_logo()
         print "Executing bash script " + args.syncfile + "..."
         print "bash " + args.syncfile
-        #subprocess.call("bash " + args.syncfile, shell=True)
+        subprocess.call("bash " + args.syncfile, shell=True)
         
 
 if __name__ == "__main__":
