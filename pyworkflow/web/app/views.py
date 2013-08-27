@@ -606,7 +606,7 @@ def deleteHost(request):
     return HttpResponseRedirect('/view_hosts')#, RequestContext(request))
 
 def visualizeObject(request):
-    probandoCTFParam = False
+    probandoCTFParam = True
     
     objectId = request.GET.get("objectId")    
     #projectName = request.session['projectName']
