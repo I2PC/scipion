@@ -1,7 +1,5 @@
 #!/usr/bin/env xmipp_python
 #------------------------------------------------------------------------------------------------
-#
-# General script for Xmipp-based pre-processing of volumes 
 
 # Author: Carlos Oscar, August 2013
 #
