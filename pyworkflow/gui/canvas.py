@@ -33,6 +33,11 @@ import Tkinter as tk
 import math
 import operator
 
+# !!!! A connector can be a Socket (female) or a Plug (male)
+# !!!! Different connectors paint socket and plug differently
+# !!!! A cable connects 2 connectors. It only needs to know the coordinates of the connectors to paint itself
+
+
 class Canvas(tk.Frame):
     """Canvas to draw some objects.
     It will really contains a Frame, a Canvas and scrollbars"""
@@ -172,10 +177,12 @@ def findClosestConnectors(item1,item2):
 
 
 # !!!! refactor code repeated in subclasses, probably into this Item class
+# !!!! An item can have many Sockets, in the top or bottom, in different positions (order)
 class Item(object):      
     def __init__(self,canvas):
         self.activeConnector=None
         self.canvas=canvas
+        self.sockets=[]
 
     def getConnectorsCoordinates(self):
         x1,y1,x2,y2=self.getCorners()
@@ -191,6 +198,27 @@ class Item(object):
             self.activeConnector.erase()
         self.activeConnector=Connector(self.canvas,coords[0],coords[1])
         # add the connector to the items list in order to track it for events
+
+    def addSocket(self,name,socketClass,verticalLocation,position=None):
+        self.sockets.append({"name": name, "verticalLocation": verticalLocation, "class":socketClass})
+        self.paint()
+
+    def paintSocket(self,socket):
+        x1,y1,x2,y2=self.getCorners()
+        xc=(x2+x1)/2.0
+        if socket["verticalLocation"] == "top":
+            y=y1
+        else:
+            y=y2
+        print "paint socket at %d %d" %(xc,y)
+        #class_=globals()[socket["class"]]
+        socket["class"].paintSocket(self.canvas,xc,y)
+
+    def paintSockets(self):
+        print self.sockets
+        for socket in self.sockets:
+            self.paintSocket(socket)
+
 
         
 class TextItem(Item):
@@ -230,7 +258,9 @@ class TextItem(Item):
 
         self.id = self._paintBounds(xr-m, yr-m, w+m, h+m, fillColor=self.bgColor)
         self.canvas.tag_raise(self.id_text)
-        
+    
+        self.paintSockets()
+
 
     def getDimensions(self):
         x, y, x2, y2 = self.canvas.bbox(self.id)
@@ -312,20 +342,34 @@ class TextCircle(TextItem):
         
 
 class Connector():
-    def __init__(self,canvas,x,y):
+    def __init__(self,canvas,x,y,paintFn=None):
         self.id=None
         self.x=x
         self.y=y
         self.canvas=canvas
+        if paintFn == None:
+            self.paintFn=self.defaultPaint
         self.listeners=[]
         self.paint()
         
     def addPositionListener(self,listenerFunc):
         self.listeners.append(listenerFunc)        
 
+    def defaultPaint(self):
+        """ Right now, the default is not painting de connector"""
+        return None
+
+    def ovalPaint(self):
+        return self.canvas.create_oval(self.x,self.y,self.x+5,self.y+5)
+
+    @classmethod
+    def paintPlug(cls,canvas,x,y):
+        """Should be implemented by the subclasses"""
+        pass
+
     # !!!! improve connector paint (sometimes is not well centered against its item)
     def paint(self):
-        self.id = self.canvas.create_oval(self.x,self.y,self.x+5,self.y+5)
+        self.id=self.paintFn()
 
     def erase(self):
         if self.id:
@@ -348,8 +392,10 @@ class Connector():
         self.canvas.itemconfig(self.id, width=bw)
         print self.x,self.y
 
-
-
+class RoundConnector(Connector):
+    @classmethod
+    def paintSocket(cls,canvas,x,y):
+        return canvas.create_oval(x,y,x+5,y+5)
 
 class Edge():
     """Edge between two objects"""
@@ -395,7 +441,10 @@ if __name__ == '__main__':
     
     tb1 = canvas.createTextCircle("Project", 100, 100, "blue")
     tb2 = canvas.createTextbox("This is an intentionally quite big, big box,\nas you may appreciate looking carefully\nat it,\nas many times\nas you might need", 300, 200)
+    tb2.addSocket("output1",RoundConnector, "bottom")
     tb3 = canvas.createRoundedTextbox("otro mas\n", 100, 200, "red")
+    tb4 = canvas.createRoundedTextbox("tb4", 300, 300, "yellow")
+    tb4.addSocket("input1",RoundConnector, "top")
     e1 = canvas.createEdge(tb1, tb2)
     e2 = canvas.createEdge(tb1, tb3)
     
