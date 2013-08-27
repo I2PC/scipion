@@ -4,7 +4,8 @@ COMMAND="rsync -av"
 if [[ "$1" == "-f" ]]; then
     shift
     COMMAND="$COMMAND --delete"
-elif [[ "$1" == "-r" ]]; then
+fi
+if [[ "$1" == "-r" ]]; then
     shift
     DST=scipion@scipion.cnb.csic.es:Scipion
     if [[ "$1" == "all" ]]; then
