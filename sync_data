@@ -1,6 +1,23 @@
 #!/usr/bin/env bash
 #set -x #debug
 COMMAND="rsync -av"
+LAST="last_m.txt"
+MODIF="modifications.log"
+WHO="$(whoami) at $(hostname)"
+
+
+if [[ "$1" == "-h" ]]; then
+    shift
+    echo "Scipion data synchronization script. Please, do not use it directly. Use sync_data.py instead."
+fi
+if [[ "$1" == "-m" ]]; then
+    MODIF=$2
+    shift 2
+fi
+if [[ "$1" == "-l" ]]; then
+    LAST=$2
+    shift 2
+fi
 if [[ "$1" == "-f" ]]; then
     shift
     COMMAND="$COMMAND --delete"
@@ -11,10 +28,12 @@ if [[ "$1" == "-r" ]]; then
     if [[ "$1" == "all" ]]; then
         ${COMMAND} ${SCIPION_HOME}/tests/input/ ${DST}/tests/input/
         ${COMMAND} ${SCIPION_HOME}/tests/gold/ ${DST}/tests/gold
+        ssh scipion@scipion.cnb.csic.es "echo ${WHO} >> Scipion/${LAST}"
     else
         for file in $@; do
             ${COMMAND} ${SCIPION_HOME}/tests/${file} ${DST}/tests/${file}
         done
+        ssh scipion@scipion.cnb.csic.es "echo ${WHO} >> Scipion/${LAST}"
     fi
 else
     mkdir -p $SCIPION_HOME/tests
