@@ -64,3 +64,5 @@ pyworkflow/web/scipion.db
 .directory
 pw.bashrc
 pw.cshrc
+last_m.txt
+modifications.log
