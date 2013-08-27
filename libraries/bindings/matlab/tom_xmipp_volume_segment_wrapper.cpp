@@ -23,9 +23,9 @@
  *=================================================================*/
 
 /*xmipp includes */
-#include "xmipp_image.h"
 #include "tom_xmipp_helpers.h"
-#include "volume_segment.h"
+#include <data/xmipp_image.h>
+#include <reconstruction/volume_segment.h>
 
 #define VOXEL_MASS 1
 #define DALTON_MASS 2
