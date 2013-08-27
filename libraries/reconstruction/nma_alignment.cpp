@@ -217,7 +217,6 @@ FileName ProgNmaAlignment::createDeformedPDB(int pyramidLevel) const {
 		selfPyramidReduce(BSPLINE3, I(), pyramidLevel);
 		I.write(fnDeformed);
 	}
-
 	return fnRandom;
 }
 
@@ -236,7 +235,7 @@ void ProgNmaAlignment::performCompleteSearch(const FileName &fnRandom,
 		selfPyramidReduce(BSPLINE3, I(), pyramidLevel);
 		I.write(fnDown);
 	} else
-		link(currentImgName.c_str(), fnDown.c_str());
+		copyImage(currentImgName.c_str(), fnDown.c_str());
 
 	mkdir((fnRandom+"_ref").c_str(), S_IRWXU);
 
@@ -389,7 +388,7 @@ double ObjFunc_nma_alignment::eval(Vector X, int *nerror) {
 		DF.setValue(MDL_SHIFT_Y, yshift, objId);
 
 		DF.write(formatString("%s_angledisc.xmd", randStr));
-		link(global_nma_prog->currentImgName.c_str(), fnDown.c_str());
+		copyImage(global_nma_prog->currentImgName.c_str(), fnDown.c_str());
 	}
 	double fitness = global_nma_prog->performContinuousAssignment(fnRandom,
 			pyramidLevelCont);
