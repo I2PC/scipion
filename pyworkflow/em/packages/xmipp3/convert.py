@@ -410,7 +410,6 @@ def writeSetOfClasses2D(classes2DSet, filename, ctfDir=None, classesBlock='class
     """
     md = xmipp.MetaData()
     imgSet = classes2DSet.getImages()
-    print imgSet
     
     for class2D in classes2DSet.iterClasses():
         
@@ -424,9 +423,9 @@ def writeSetOfClasses2D(classes2DSet, filename, ctfDir=None, classesBlock='class
         for imgCA in class2D._imageClassAssignments:
             imgCARow = XmippMdRow()
             objCAId = md.addObject()
+
             imgSet[imgCA.getImageId()]
-            print imgSet
-            return
+
 #             for img in imgSet:
 #                 if img.getId() == imgCA.getImageId():
 #                     img1 = img
