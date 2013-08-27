@@ -1,5 +1,22 @@
 #!/usr/bin/env bash
-mkdir -p $SCIPION_HOME/tests
-SRC=scipion@scipion.cnb.csic.es:Scipion
-rsync -av ${SRC}/tests/input/ $SCIPION_HOME/tests/input/
-rsync -av ${SRC}/tests/gold/ $SCIPION_HOME/tests/gold/
+COMMAND="rsync -av"
+if $1 == "-f"; then
+    shift
+    COMMAND="$COMMAND --delete"
+elif $1 == "-r"; then
+    shift
+    DST=scipion@scipion.cnb.csic.es:Scipion
+    if $1 == "all"; then
+        ${COMMAND} ${SCIPION_HOME}/tests/input/ ${DST}/tests/input/
+        ${COMMAND} ${SCIPION_HOME}/tests/gold/ ${DST}/tests/gold
+    else
+        for file in $@; do
+            ${COMMAND} ${SCIPION_HOME}/tests/${file}
+        done
+    fi
+else
+    mkdir -p $SCIPION_HOME/tests
+    SRC=scipion@scipion.cnb.csic.es:Scipion
+    ${COMMAND} ${SRC}/tests/input/ ${SCIPION_HOME}/tests/input/
+    ${COMMAND} ${SRC}/tests/gold/ ${SCIPION_HOME}/tests/gold/
+fi
