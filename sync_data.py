@@ -64,12 +64,12 @@ def main(argv):
     args = parser.parse_args()
 
     # Depending on the arguments selected, doing one thing or another
+    deleteFlag=""
+    if args.delete:
+        deleteFlag=" -f"
     if args.query_for_modifications:
         print "Querying the modifications log file..."
     elif args.reverse_sync:
-        deleteFlag=""
-        if args.delete:
-            deleteFlag=" -f"
         print "Reverse synchronizing, BE CAREFUL!!! OPERATION EXTREMELY DANGEROUS!!!"
         ans = ""
         if "".join(args.reverse_sync) == "all":
@@ -91,7 +91,7 @@ def main(argv):
     else:
         scipion_logo()
         print "Executing bash script " + args.syncfile + "..."
-        print "bash " + args.syncfile
+        print "bash " + args.syncfile + deleteFlag
         subprocess.call("bash " + args.syncfile, shell=True)
         
 

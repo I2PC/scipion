@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -x #debug
+#set -x #debug
 COMMAND="rsync -av"
 if [[ "$1" == "-f" ]]; then
     shift
