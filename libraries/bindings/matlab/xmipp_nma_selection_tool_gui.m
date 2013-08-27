@@ -22,7 +22,7 @@ function varargout = xmipp_nma_selection_tool_gui(varargin)
 
 % Edit the above text to modify the response to help xmipp_nma_selection_tool_gui
 
-% Last Modified by GUIDE v2.5 27-Aug-2013 16:06:01
+% Last Modified by GUIDE v2.5 27-Aug-2013 18:36:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -57,14 +57,22 @@ handles.output = hObject;
 
 handles.rundir=varargin{2};
 set(handles.nmaRun,'String',['NMA directory: ' handles.rundir]);
+handles.fnProjected=[handles.rundir '/extra/deformationsProjected.txt'];
 
 % Open NMA results
-%[images, NMAdisplacements, cost]= xmipp_read(rundir);
-handles.NMAdisplacements=rand(100,4);
-handles.NMAdisplacementsProjected=handles.NMAdisplacements;
-handles.cost=rand(size(handles.NMAdisplacements,1),1);
-for i=1:length(handles.cost)
-    handles.images{i}=['file ' int2str(i) '.xmp'];
+
+[handles.images, handles.NMAdisplacements, handles.cost]= xmipp_nma_read_alignment(handles.rundir);
+%handles.NMAdisplacements=rand(100,4);
+
+%handles.cost=rand(size(handles.NMAdisplacements,1),1);
+%for i=1:length(handles.cost)
+%    handles.images{i}=['file ' int2str(i) '.xmp'];
+%end
+
+if exist(handles.fnProjected,'file') && 0
+    handles.NMAdisplacementsProjected=load(handles.fnProjected);
+else
+    handles.NMAdisplacementsProjected=handles.NMAdisplacements;
 end
 handles.figHandle=figure();
 updateListBox(hObject, handles);
@@ -86,6 +94,8 @@ function varargout = xmipp_nma_selection_tool_gui_OutputFcn(hObject, eventdata, 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 
+function ndimensions_Callback(hObject, eventdata, handles)
+% Do nothing
 
 % --- Executes on selection change in popupProjection.
 function popupProjection_Callback(hObject, eventdata, handles)
@@ -115,7 +125,50 @@ function pushbuttonProjection_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbuttonProjection (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+projectionOptions=cellstr(get(handles.popupProjection,'String'));
+selectedProjection=projectionOptions{get(handles.popupProjection,'Value')};
+dout=get(handles.ndimensions,'String');
+fnProjector=[handles.rundir '/extra/projector.txt'];
 
+cmd=['xmipp_matrix_dimred -i ' handles.rundir '/extra/deformations.txt --din ' ...
+    num2str(size(handles.NMAdisplacements,2)) ' --samples ' ...
+    num2str(size(handles.NMAdisplacements,1)) ' -o ' ...
+    handles.fnProjected ' --dout ' ...
+    dout ' -m '];
+if strcmp(selectedProjection,'None')==1
+    cmd=['cp ' handles.rundir '/extra/deformations.txt ' handles.fnProjected];
+elseif strcmp(selectedProjection,'Principal Component Analysis')==1
+    cmd=[cmd 'PCA --saveMapping ' fnProjector];
+elseif strcmp(selectedProjection,'Kernel Principal Component Analysis')==1
+    cmd=[cmd 'kPCA'];
+elseif strcmp(selectedProjection,'Probabilistic Principal Component Analysis')==1
+    cmd=[cmd 'pPCA --saveMapping ' fnProjector];
+elseif strcmp(selectedProjection,'Local Tangent Space Alignment')==1
+    cmd=[cmd 'LTSA'];
+elseif strcmp(selectedProjection,'Linear Local Tangent Space Alignment')==1
+    cmd=[cmd 'LLTSA --saveMapping ' fnProjector];
+elseif strcmp(selectedProjection,'Diffusion Map')==1
+    cmd=[cmd 'DM'];
+elseif strcmp(selectedProjection,'Linearity Preserving Projection')==1
+    cmd=[cmd 'LPP --saveMapping ' fnProjector];
+elseif strcmp(selectedProjection,'Laplacian Eigenmap')==1
+    cmd=[cmd 'LE'];
+elseif strcmp(selectedProjection,'Hessian Locally Linear Embedding')==1
+    cmd=[cmd 'HLLE'];
+elseif strcmp(selectedProjection,'Stochastic Proximity Embedding')==1
+    cmd=[cmd 'SPE'];
+elseif strcmp(selectedProjection,'Neighborhood Preserving Embedding')==1
+    cmd=[cmd 'NPE --saveMapping ' fnProjector];
+end
+if exist(fnProjector,'file')==2
+    system(['rm -f ' fnProjector]);
+end
+system(cmd);
+handles.NMAdisplacementsProjected=load(handles.fnProjected);
+updateListBox(gcbo, handles);
+set(handles.listRepresentation,'Value',1:min(2,str2num(dout)))
+guidata(gcbo,handles)
+updatePlot(handles)
 
 % --- Executes during object creation, after setting all properties.
 function listRepresentation_CreateFcn(hObject, eventdata, handles)
