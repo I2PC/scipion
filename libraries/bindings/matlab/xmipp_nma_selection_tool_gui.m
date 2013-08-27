@@ -58,6 +58,7 @@ handles.output = hObject;
 handles.rundir=varargin{2};
 set(handles.nmaRun,'String',['NMA directory: ' handles.rundir]);
 handles.fnProjected=[handles.rundir '/extra/deformationsProjected.txt'];
+handles.fnState=[handles.rundir '/extra/projectionConfig.mat'];
 
 % Open NMA results
 
@@ -69,16 +70,37 @@ handles.fnProjected=[handles.rundir '/extra/deformationsProjected.txt'];
 %    handles.images{i}=['file ' int2str(i) '.xmp'];
 %end
 
-if exist(handles.fnProjected,'file') && 0
+if exist(handles.fnProjected,'file')
     handles.NMAdisplacementsProjected=load(handles.fnProjected);
 else
     handles.NMAdisplacementsProjected=handles.NMAdisplacements;
 end
+if exist(handles.fnState,'file')
+    handles=loadState(handles);
+else
+    updateListBox(hObject, handles);
+    set(handles.listRepresentation,'Value',[1 2])
+    saveState(handles);
+end
 handles.figHandle=figure();
-updateListBox(hObject, handles);
-set(handles.listRepresentation,'Value',[1 2])
 guidata(hObject,handles)
 updatePlot(handles)
+
+function handlesOut=loadState(handles)
+    handlesOut=handles;
+    load(handles.fnState);
+    set(handlesOut.popupProjection,'Value',projectionMethod);
+    set(handlesOut.listRepresentation,'Value',representationIdx);
+    set(handlesOut.ndimensions,'String',ndimensions);
+    set(handles.listRepresentation,'String',listboxString);
+ 
+function saveState(handles)
+    projectionMethod=get(handles.popupProjection,'Value');
+    representationIdx=get(handles.listRepresentation,'Value');
+    ndimensions=get(handles.ndimensions,'String');
+    listboxString=get(handles.listRepresentation,'String');
+    save(handles.fnState,'projectionMethod','representationIdx','ndimensions',...
+        'listboxString');
 
 % UIWAIT makes xmipp_nma_selection_tool_gui wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
@@ -169,6 +191,7 @@ updateListBox(gcbo, handles);
 set(handles.listRepresentation,'Value',1:min(2,str2num(dout)))
 guidata(gcbo,handles)
 updatePlot(handles)
+saveState(handles)
 
 % --- Executes during object creation, after setting all properties.
 function listRepresentation_CreateFcn(hObject, eventdata, handles)
@@ -240,3 +263,4 @@ function updatePlot(handles)
         grid on
         axis square
     end
+    saveState(handles)
