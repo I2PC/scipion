@@ -46,7 +46,7 @@ void mexFunction( int nlhs, mxArray *plhs[],
 	  mxSetCell(plhs[0], i, mxCreateString(fnImg.c_str()));
 	  mdImages.getValue(MDL_NMA,lambda,__iter.objId);
 	  for (int j=0; j<nModes; ++j)
-		  ptrNMADistplacements[i*nModes+j]=lambda[j];
+		  ptrNMADistplacements[j*nImgs+i]=lambda[j]; // x*Ydim+y
 	  mdImages.getValue(MDL_COST,*ptrCost,__iter.objId);
 	  i++;
 	  ptrCost++;
