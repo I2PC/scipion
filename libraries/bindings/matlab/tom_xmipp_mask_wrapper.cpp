@@ -23,8 +23,8 @@
  *=================================================================*/
 
 /*xmipp includes */
-#include "mask.h"
 #include "tom_xmipp_helpers.h"
+#include <data/mask.h>
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
