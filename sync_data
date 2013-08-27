@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 set -x #debug
 COMMAND="rsync -av"
-if $1 == "-f"; then
+if [[ "$1" == "-f" ]]; then
     shift
     COMMAND="$COMMAND --delete"
-elif $1 == "-r"; then
+elif [[ "$1" == "-r" ]]; then
     shift
     DST=scipion@scipion.cnb.csic.es:Scipion
-    if $1 == "all"; then
+    if [[ "$1" == "all" ]]; then
         ${COMMAND} ${SCIPION_HOME}/tests/input/ ${DST}/tests/input/
         ${COMMAND} ${SCIPION_HOME}/tests/gold/ ${DST}/tests/gold
     else
