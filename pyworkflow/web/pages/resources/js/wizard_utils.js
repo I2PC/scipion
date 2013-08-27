@@ -1,5 +1,5 @@
 function selectList(elm) {
-	var row = $("div.list");
+	var row = $("table#list");
 	var oldValue = elm.attr('id');
 
 	if (row.attr('value') != undefined && row.attr('value') != oldValue) {
