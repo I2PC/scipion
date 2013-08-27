@@ -831,6 +831,10 @@ void copyImage(const FileName & source, const FileName & target)
     img.write(target);
 }
 
+void deleteFile(const FileName &fn)
+{
+	fn.deleteFile();
+}
 
 void FileLock::lock(int _fileno)
 {
