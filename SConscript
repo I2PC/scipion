@@ -1025,7 +1025,6 @@ if int(env['matlab']):
     for i in range(len(bindings)):
        CompileMatlab("tom_xmipp_"+bindings[i]+"_wrapper")
     CompileMatlab('xmipp_read')
-    CompileMatlab('xmipp_nma_read_alignment')
 
 # Clean
 # Configuration or cleaning
