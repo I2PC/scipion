@@ -1,6 +1,6 @@
 /* CSS Document */
 html,body {
-/* 	background-color: #F0F0F0; */
+	background-color: #F0F0F0;
 }
 
 body {
@@ -9,47 +9,75 @@ body {
 	font-size: 0.84em;
 }
 
-.layout {
-	width: auto;
-	margin: 5px;
-	padding: 5px;
-	/* 	height:5px; */
+#wizName {
+	margin: 0 0 0.3em 0;
 }
 
-.list {
-/* 	border: 1px solid black; */
-	width: 5em;
-/* 	margin: 5px; */
-/* 	padding: 5px; */
-/* 	/* 	float:left; */ */
-/* 	display:table-cell; */
+.layout {
+	width: 25em;
+/* 	padding: 10px; */
+}
+
+.elm1 {
+	width: 12em;
+	float: left;
+}
+
+.elm2 {
+	width: 12em;
+	float: right;
 }
 
 .images {
-	border: 1px solid black;
-	padding: 5px;
-	margin: 5px;
-	width:35em;
-	height: 135px;
-	/* 	float:right; */
-	display:table-cell;
+	width: 20em;
+	height: 5em;;
 	text-align: center;
 }
 
 .image {
-	border: 1px solid black;
-	width: 120px;
-	height: 120px;
-	margin: px;
-	display:table-cell;
+	background-color: black;
+	border: 3.5px solid Firebrick;
+	width: 250px;
+	height: 250px;
+	margin: 0 7px 7px 0;
 	text-align: center;
 }
 
 .options {
-	border: 1px solid black;
+	text-align:center;
 	padding: 5px;
-	margin: 5px;
-	/* 	clear:both; */
+	clear: both;
+}
+
+
+#buttonGen {
+	background-size: 20%;
+	/* 	margin: 1em 0.5em 0 0; */
+	/* 	font-size: 0.8em; */
+	color: black;
+	width: 6.3em;
+	height: 2em;
+	background-color: LightGray;
+	/* 	border: 1px solid #000066; */
+/* 	padding: 1px; */
+	font-weight: bold;
+	letter-spacing: 0.2em;
+	text-align: center;
+	font-weight: bold;
+}
+
+#buttonGen:hover {
+	background-color: white;
+}
+
+.buttonCancel{
+	background: url(../../../resources/dialog_cancel.png) 0.5em no-repeat;
+	padding-left: 1.8em;
+}
+
+.buttonSelect{
+	background: url(../../../resources/dialog_ok.png) 0.5em no-repeat;
+	padding-left: 1.7em;
 }
 
 /**************** Table CSS *******************/
@@ -73,15 +101,21 @@ table#list {
 
 table#list th {
 	height: 0.2em;
-/* 	border-top: 1px solid #fafafa; */
+	/* 	border-top: 1px solid #fafafa; */
 	border-bottom: 1px solid #e0e0e0;
 	background-color: Firebrick;
-	color:white;
+	color: white;
 }
 
 table#list th:first-child {
+	background: DarkRed;
+	color: white;
+	border-left: 2.5px solid FireBrick;
+	border-top: 2.5px solid FireBrick;
+	font-size: 0.9em;
+	font-weight: bold;
+/* 	margin: -1em -0.7em 0.3em -0.65em; */
 	text-align: center;
-	
 }
 
 table#list tr {
@@ -99,6 +133,7 @@ table#list tr td {
 	border-top: 1px solid #ffffff;
 	border-bottom: 1px solid #e0e0e0;
 	border-left: 1px solid #e0e0e0;
+	text-align: center;
 }
 
 table#list tr:last-child td {

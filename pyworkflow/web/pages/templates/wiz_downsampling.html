@@ -1,0 +1,28 @@
+{% extends 'wiz_base.html' %} 
+{% block title %} Downsampling {% endblock %}
+{% block name %} Downsampling {% endblock %}
+{% block head %}{% endblock %}	
+
+{% block list %}			
+	<tr><th>Object</th></tr>
+	<tr id="id1" class="no-selected" style="background-color: #fafafa;" onclick="selectList(($(this)));">
+		<td>Id1</td>
+	</tr>
+	<tr id="id2" class="no-selected" style="background-color: #fafafa;" onclick="selectList(($(this)));">
+		<td>Id2</td>
+	</tr>
+	<tr id="id3" class="no-selected" style="background-color: #fafafa;" onclick="selectList(($(this)));">
+		<td>Id3</td>
+	</tr>
+{% endblock %}		
+{% block images %}
+	<tr>
+		<td><div class="image"></div>Micrograph</td>
+		<td><div class="image"></div>PSD</td>
+	</tr>
+{% endblock %}
+{% block options %}
+Downsample
+	<input type="text"/>	
+	<input type="button" id="buttonGen" value="preview"/>	
+{% endblock %}
