@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -x #debug
+#set -x #debug
 COMMAND="rsync -av"
 LAST="last_m.txt"
 MODIF="modifications.log"
@@ -28,12 +28,12 @@ if [[ "$1" == "-r" ]]; then
     if [[ "$1" == "all" ]]; then
         ${COMMAND} ${SCIPION_HOME}/tests/input/ ${DST}/tests/input/
         ${COMMAND} ${SCIPION_HOME}/tests/gold/ ${DST}/tests/gold
-        ssh scipion@scipion.cnb.csic.es "echo '----> Modification made at' >> Scipion/${LAST} && date >> Scipion/${LAST} && echo ${WHO} >> Scipion/${LAST}"
+        ssh scipion@scipion.cnb.csic.es "echo '++++' >> Scipion/${LAST} && echo 'Modification made at' >> Scipion/${LAST} && date >> Scipion/${LAST} && echo ${WHO} >> Scipion/${LAST} && echo '----' >> Scipion/${LAST}"
     else
         for file in $@; do
             ${COMMAND} ${SCIPION_HOME}/tests/${file} ${DST}/tests/${file}
         done
-        ssh scipion@scipion.cnb.csic.es "echo '----> Modification made at' >> Scipion/${LAST} && date >> Scipion/${LAST} && echo ${WHO} >> Scipion/${LAST}"
+        ssh scipion@scipion.cnb.csic.es "echo '++++' >> Scipion/${LAST} && echo 'Modification made at' >> Scipion/${LAST} && date >> Scipion/${LAST} && echo ${WHO} >> Scipion/${LAST} && echo '----' >> Scipion/${LAST}"
     fi
 else
     mkdir -p $SCIPION_HOME/tests
