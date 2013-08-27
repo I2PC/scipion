@@ -284,10 +284,16 @@ class SetOfImages(Set):
         self._mapper = None
         self._idCount = 0
         self._size = Integer(0) # cached value of the number of images
+        self._idMap = {}#FIXME, remove this after id is the one in mapper
     
+    def load(self):
+        """ Load data only if the main set is empty. """
+        Set.load(self)
+        for img in self._mapper.selectByClass("Image", iterate=True):
+            self._idMap[img.getId()] = img
+            
     def __getitem__(self, imgId):
         """ Get the image with the given id. """
-        self._idMap = {}#FIXME, remove this after id is the one in mapper
         return self._idMap.get(imgId, None)
 
     def __iter__(self):
@@ -295,7 +301,6 @@ class SetOfImages(Set):
         self.loadIfEmpty()
         self._idMap = {} #FIXME, remove this after id is the one in mapper
         for img in self._mapper.selectByClass("Image", iterate=True):
-            self._idMap[img.getId()] = img
             yield img            
         
     def hasCTF(self):
@@ -620,7 +625,7 @@ class Class2D(EMObject):
         self._id =  Integer()
         self._hasRepresentativeImage = Boolean(False)
         self._representativeImage = Image()
-        self._imageClassAssignments = List()
+        self._imageAssignments = List()
     
     #TODO: replace this id with objId
     def getId(self):
@@ -637,11 +642,14 @@ class Class2D(EMObject):
         """ Iterate over the assigments of images
         to this particular class.
         """
-        for imgCA in self._imageClassAssignments:
+        for imgCA in self._imageAssignments:
             yield imgCA
             
+    def getImageAssignments(self):
+        return self._imageAssignments
+    
     def addImageClassAssignment(self, imgCA):
-        self._imageClassAssignments.append(imgCA)
+        self._imageAssignments.append(imgCA)
     
     def setRepresentativeImage(self, representativeImage):
         self._representativeImage = representativeImage
