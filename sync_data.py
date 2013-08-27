@@ -40,12 +40,10 @@ def main(argv):
         help="Sync Bash Script")
 
     parser.add_argument('-t', '--last-mod-file', 
-        type=file,
         default="last_m.txt", 
         help="File that contain the IP/s of the computer/s that acceeded last time to change the Scipion tests data.")
 
     parser.add_argument('-m', '--mod-log-file', 
-        type=file,
         default="modifications.log",
         help="File that contain the whole modifications log to keep a tracking of what has been done in the Scipion tests data.")
 
