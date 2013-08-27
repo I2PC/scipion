@@ -436,7 +436,6 @@ def writeSetOfClasses2D(classes2DSet, filename, ctfDir=None, classesBlock='class
             imgCARow.writeToMd(md, objCAId)
             md.write(assignmentBlock, xmipp.MD_APPEND)
             
-            return
             
     classes2DSet._xmippMd = String(filename)
 
