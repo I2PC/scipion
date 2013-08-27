@@ -81,7 +81,7 @@ def main(argv):
                 ans = raw_input("You're about to synchronize all of them. Are you sure you want to smash 'em all? (y/n): ")
         if ans == ("y" or "Y"):
             print "You've chosen to proceed. Executing bash script " + args.syncfile + "-r ..."
-            print "bash " + args.syncfile + deleteFlag + "-r " + " ".join(args.reverse_sync)
+            print "bash " + args.syncfile + deleteFlag + " -r " + " ".join(args.reverse_sync)
             subprocess.call("bash " + args.syncfile + deleteFlag + " -r " + " ".join(args.reverse_sync), shell=True)
         else:
             print "You've chosen to abort. Goodbye!."
