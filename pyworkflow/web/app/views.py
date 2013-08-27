@@ -383,7 +383,7 @@ def wizard(request):
     action = request.GET.get('action', None)
     
     if(action=='downsampling'):
-        response = 'wizardDownsampling.html'
+        response = 'wiz_downsampling.html'
     
     context={'action':action
              }
