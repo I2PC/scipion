@@ -22,7 +22,7 @@ function varargout = xmipp_nma_selection_tool_gui(varargin)
 
 % Edit the above text to modify the response to help xmipp_nma_selection_tool_gui
 
-% Last Modified by GUIDE v2.5 28-Aug-2013 13:10:18
+% Last Modified by GUIDE v2.5 28-Aug-2013 14:28:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -80,6 +80,7 @@ if exist(handles.fnState,'file')
     handles=loadState(handles);
 else
     handles.inCluster=zeros(size(handles.NMAdisplacementsProjected,1),1);
+    handles.included=ones(size(handles.NMAdisplacementsProjected,1),1);
     updateListBox(hObject, handles);
     set(handles.listRepresentation,'Value',[1 2])
     saveState(handles);
@@ -96,15 +97,17 @@ function handlesOut=loadState(handles)
     set(handlesOut.ndimensions,'String',ndimensions);
     set(handlesOut.listRepresentation,'String',listboxString);
     handlesOut.inCluster=inCluster;
- 
+    handlesOut.included=included;
+
 function saveState(handles)
     projectionMethod=get(handles.popupProjection,'Value');
     representationIdx=get(handles.listRepresentation,'Value');
     ndimensions=get(handles.ndimensions,'String');
     listboxString=get(handles.listRepresentation,'String');
     inCluster=handles.inCluster;
+    included=handles.included;
     save(handles.fnState,'projectionMethod','representationIdx','ndimensions',...
-        'listboxString','inCluster');
+        'listboxString','inCluster','included');
 
 % UIWAIT makes xmipp_nma_selection_tool_gui wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
@@ -249,6 +252,42 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+function conditionExcludeString_Callback(hObject, eventdata, handles)
+% hObject    handle to conditionExcludeString (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of conditionExcludeString as text
+%        str2double(get(hObject,'String')) returns contents of conditionExcludeString as a double
+    for i=1:size(handles.NMAdisplacementsProjected,2)
+        eval(['X' num2str(i) '=handles.NMAdisplacementsProjected(:,' num2str(i) ');']);
+    end
+    eval(['idx=' get(handles.conditionExcludeString,'String') ';']);
+    handles.included(idx)=0;
+    guidata(gcbo,handles)
+    updatePlot(handles)
+
+% --- Executes during object creation, after setting all properties.
+function conditionExcludeString_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to conditionExcludeString (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+% --- Executes on button press in excludeReset.
+function excludeReset_Callback(hObject, eventdata, handles)
+% hObject    handle to excludeReset (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    handles.included=ones(size(handles.included));
+    guidata(gcbo,handles)
+    updatePlot(handles)
+
 % --- Executes on button press in clusterReset.
 function clusterReset_Callback(hObject, eventdata, handles)
 % hObject    handle to clusterReset (see GCBO)
@@ -360,6 +399,7 @@ function updatePlot(handles)
     idx=get(handles.listRepresentation,'Value');
     figure(handles.figHandle)
     c=handles.inCluster;
+    in=handles.included;
     hold off
     if length(idx)==1
         x=handles.NMAdisplacementsProjected(:,idx);
@@ -368,15 +408,15 @@ function updatePlot(handles)
         N=50;
         d=(M-m)/N;
         bins=m+d/2+[0:(N-1)]*d;
-        hist(x(find(c==0)),bins);
+        hist(x(find(c==0 & in)),bins);
         hold on
-        hist(x(find(c==1)),bins);
+        hist(x(find(c==1 & in)),bins);
         h = findobj(gca,'Type','patch');
         set(h(1),'FaceColor','b');
         set(h(2),'FaceColor','r');
         xlabel(['X' num2str(idx)])
     elseif length(idx)==2
-        idxc=find(c==0);
+        idxc=find(c==0 & in);
         X=handles.NMAdisplacementsProjected(:,idx(1));
         Y=handles.NMAdisplacementsProjected(:,idx(2));
         sizePointsX=(max(abs(X))-min(abs(X)))/15;
@@ -384,7 +424,7 @@ function updatePlot(handles)
         sizePoints=max(5,min([sizePointsX,sizePointsY]));
         scatter(X(idxc),Y(idxc),sizePoints,handles.cost(idxc),'o');
         hold on
-        idxc=find(c==1);
+        idxc=find(c==1 & in);
         plot(X(idxc),Y(idxc),'*b');
         h=colorbar;
         ylabel(h,'Error')
@@ -393,7 +433,7 @@ function updatePlot(handles)
         grid on
         axis square
     elseif length(idx)==3
-        idxc=find(c==0);
+        idxc=find(c==0 & in);
         X=handles.NMAdisplacementsProjected(:,idx(1));
         Y=handles.NMAdisplacementsProjected(:,idx(2));
         Z=handles.NMAdisplacementsProjected(:,idx(3));
@@ -403,7 +443,7 @@ function updatePlot(handles)
         sizePoints=max(5,min([sizePointsX,sizePointsY,sizePointsZ]));
         scatter3(X(idxc),Y(idxc),Z(idxc),sizePoints,handles.cost(idxc),'o');
         hold on
-        idxc=find(c==1);
+        idxc=find(c==1 & in);
         plot3(X(idxc),Y(idxc),Z(idxc),'*b');
         xlabel(['X' num2str(idx(1))])
         ylabel(['X' num2str(idx(2))])
@@ -416,3 +456,16 @@ function updatePlot(handles)
     set(handles.clusterSizeText,'String',[num2str(sum(c)) '/' num2str(length(c)) ' images'])
     saveState(handles)
 
+
+% --- Executes on button press in pushbutton9.
+function pushbutton9_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton9 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in pushbutton10.
+function pushbutton10_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton10 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
