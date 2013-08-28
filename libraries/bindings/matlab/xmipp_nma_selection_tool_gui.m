@@ -81,12 +81,12 @@ if exist(handles.fnState,'file')
 else
     handles.inCluster=zeros(size(handles.NMAdisplacementsProjected,1),1);
     handles.included=ones(size(handles.NMAdisplacementsProjected,1),1);
-    handles.trajectoryX=[];
-    handles.trajectoryY=[];
     updateListBox(hObject, handles);
     set(handles.listRepresentation,'Value',[1 2])
     saveState(handles);
 end
+handles.trajectoryX=[];
+handles.trajectoryY=[];
 handles.figHandle=figure();
 guidata(hObject,handles)
 updatePlot(handles)
@@ -434,6 +434,10 @@ function updatePlot(handles)
         ylabel(['X' num2str(idx(2))])
         grid on
         axis square
+        
+        if length(handles.trajectoryX)>0
+            plot(handles.trajectoryX,handles.trajectoryY,'LineWidth',2);
+        end
     elseif length(idx)==3
         idxc=find(c==0 & in);
         X=handles.NMAdisplacementsProjected(:,idx(1));
@@ -470,7 +474,9 @@ function drawTrajectory_Callback(hObject, eventdata, handles)
     end
 
     k = waitforbuttonpress;
-    [x,y]=getline()
+    [handles.trajectoryX,handles.trajectoryY]=getline();
+    guidata(gcbo,handles);
+    updatePlot(handles);
 
 % --- Executes on button press in generateAnimation.
 function generateAnimation_Callback(hObject, eventdata, handles)
