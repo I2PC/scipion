@@ -627,16 +627,17 @@ void getSpectrum(MultidimArray<double> &Min,
         FFT_IDX2DIGFREQ(k,ZSIZE(Faux),ZZ(f));
         double R=f.module();
         //if (R>0.5) continue;
-        int idx = ROUND(R*xsize);
+        int idx = round(R*xsize);
+        double F=abs(dAkij(Faux, k, i, j));
         if (spectrum_type == AMPLITUDE_SPECTRUM)
-            spectrum(idx) += abs(dAkij(Faux, k, i, j));
+            A1D_ELEM(spectrum,idx) += F;
         else
-            spectrum(idx) += abs(dAkij(Faux, k, i, j)) * abs(dAkij(Faux, k, i, j));
-        count(idx) += 1.;
+            A1D_ELEM(spectrum,idx) += F*F;
+        A1D_ELEM(count,idx) += 1.;
     }
     for (int i = 0; i < xsize; i++)
-        if (count(i) > 0.)
-            spectrum(i) /= count(i);
+        if (A1D_ELEM(count,i) > 0.)
+            A1D_ELEM(spectrum,i) /= A1D_ELEM(count,i);
 }
 
 void divideBySpectrum(MultidimArray<double> &Min,

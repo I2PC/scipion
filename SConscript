@@ -882,6 +882,7 @@ AddXmippProgram('volume_find_symmetry')
 AddXmippProgram('volume_from_pdb', ['XmippRecons'])
 AddXmippProgram('volume_reslice')
 AddXmippProgram('volume_segment', ['XmippRecons'])
+AddXmippProgram('volume_structure_factor')
 AddXmippProgram('volume_to_pseudoatoms', ['XmippRecons'])
 AddXmippProgram('volume_to_web')
 AddXmippProgram('xray_import', ['XmippRecons'])
@@ -1026,6 +1027,7 @@ if int(env['matlab']):
        CompileMatlab("tom_xmipp_"+bindings[i]+"_wrapper")
     CompileMatlab('xmipp_read')
     CompileMatlab('xmipp_nma_read_alignment')
+    CompileMatlab('xmipp_read_structure_factor')
 
 # Clean
 # Configuration or cleaning

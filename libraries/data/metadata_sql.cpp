@@ -40,20 +40,18 @@ Mutex sqlMutex; //Mutex to syncronize db access
 
 int getBlocksInMetaDataFileDB(const FileName &inFile, StringVector& blockList)
 {
-
     char **results;
     int rows;
     int columns;
-    char *Labels;
     int rc;
 
     sqlite3 *db1;
     String sql = (String)"SELECT name FROM sqlite_master\
                  WHERE type='table'\
                  ORDER BY name;";
-    if (rc=sqlite3_open(inFile.c_str(), &db1))
+    if ((rc=sqlite3_open(inFile.c_str(), &db1)))
         REPORT_ERROR(ERR_MD_SQL,formatString("Error opening database code: %d message: %s",rc,sqlite3_errmsg(db1)));
-    if (rc=sqlite3_get_table (db1, sql.c_str(), &results, &rows, &columns, NULL) != SQLITE_OK)
+    if ((rc=sqlite3_get_table (db1, sql.c_str(), &results, &rows, &columns, NULL)) != SQLITE_OK)
         REPORT_ERROR(ERR_MD_SQL,formatString("Error accessing table code: %d message: %s. SQL command %s",rc,sqlite3_errmsg(db1),sql.c_str()));
     //For tables, the type field will always be 'table' and the name field will
     //be the name of the table. So to get a list of all tables in the database,
