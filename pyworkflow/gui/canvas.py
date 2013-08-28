@@ -37,6 +37,8 @@ import operator
 # !!!! Different connectors paint socket and plug differently
 # !!!! A cable connects 2 connectors. It only needs to know the coordinates of the connectors to paint itself
 
+DEFAULT_CONNECTOR_FILL="blue"
+DEFAULT_CONNECTOR_OUTLINE="black"
 
 class Canvas(tk.Frame):
     """Canvas to draw some objects.
@@ -199,9 +201,9 @@ class Item(object):
         return self.canvas.bbox(self.id)
 
 
-    def addSocket(self,name,socketClass,verticalLocation,position=None):
+    def addSocket(self,name,socketClass,verticalLocation,fillColor=DEFAULT_CONNECTOR_FILL,outline=DEFAULT_CONNECTOR_OUTLINE,position=None):
         x,y=self.getSocketCoordsAt(verticalLocation)
-        self.sockets[name]={"object": socketClass(self.canvas,x,y,name), "verticalLocation": verticalLocation}
+        self.sockets[name]={"object": socketClass(self.canvas,x,y,name,fillColor=fillColor,outline=outline), "verticalLocation": verticalLocation}
         self.paintSocket(self.getSocket(name))
 
     def getSocket(self,name):
@@ -352,10 +354,14 @@ class TextCircle(TextItem):
         
 
 class Connector(Item):
+    """ Default connector has no graphical representation (hence, it'ss invisible). Subclasses offer different looks"""
     def __init__(self,canvas,x,y,name):
         super(Connector,self).__init__(canvas, x, y)
         self.name= name
 
+    def paintSocket(self):
+        """Should be implemented by the subclasses"""
+        pass
 
     def paintPlug(cls,canvas,x,y):
         """Should be implemented by the subclasses"""
@@ -368,14 +374,18 @@ class Connector(Item):
         if self.plugId:
             self.canvas.move(self.plugId, dx, dy)
 
+class ColoredConnector(Connector):
+    def __init__(self,canvas,x,y,name,fillColor=DEFAULT_CONNECTOR_FILL,outline=DEFAULT_CONNECTOR_OUTLINE):
+        super(ColoredConnector,self).__init__(canvas,x,y,name)
+        self.fillColor=fillColor
+        self.outline=outline
 
-
-class RoundConnector(Connector):
+class RoundConnector(ColoredConnector):
     def paintSocket(self):
-        self.socketId= self.canvas.create_oval(self.x,self.y,self.x+5,self.y+5)
+        self.socketId= self.canvas.create_oval(self.x,self.y,self.x+5,self.y+5,outline=self.outline)
 
     def paintPlug(self):
-        self.plugId= self.canvas.create_oval(self.x,self.y,self.x+5,self.y+5,fill="blue",width=0)
+        self.plugId= self.canvas.create_oval(self.x,self.y,self.x+5,self.y+5,fill=self.fillColor,width=0)
 
 
 
@@ -461,10 +471,10 @@ if __name__ == '__main__':
     
     tb1 = canvas.createTextCircle("Project", 100, 100, "blue")
     tb2 = canvas.createTextbox("This is an intentionally quite big, big box,\nas you may appreciate looking carefully\nat it,\nas many times\nas you might need", 300, 200)
-    tb2.addSocket("output1",RoundConnector, "bottom")
+    tb2.addSocket("output1",RoundConnector, "bottom",fillColor="green")
     tb3 = canvas.createRoundedTextbox("otro mas\n", 100, 200, "red")
     tb4 = canvas.createRoundedTextbox("tb4", 300, 300, "yellow")
-    tb4.addSocket("input1",RoundConnector, "top")
+    tb4.addSocket("input1",RoundConnector, "top",outline="red")
     e1 = canvas.createEdge(tb1, tb2)
     e2 = canvas.createEdge(tb1, tb3)
     c1= canvas.createCable(tb2,"output1",tb4,"input1")
