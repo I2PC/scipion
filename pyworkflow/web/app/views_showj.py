@@ -33,10 +33,11 @@ def showj(request, inputParameters=None):
     jquery_ui_path = join(settings.STATIC_URL, 'js/jquery-ui.js')
     jquery_waypoints_path = join(settings.STATIC_URL, 'js/waypoints.min.js')    
 #    jquery_tabletools_path = join(settings.STATIC_URL, 'js/TableTools.min.js')
-        
     
     #############
     # WEB INPUT PARAMETERS
+    _imageDimensions = ''
+    
     if request.method == 'POST': # If the form has been submitted... Post method
         
         _path = request.POST.get('path')
@@ -49,6 +50,7 @@ def showj(request, inputParameters=None):
         _blockComboBox = inputParameters['blockComboBox'] if 'blockComboBox' in inputParameters else '' 
         _render = inputParameters['allowRender']
         _labelsToRenderComboBox = inputParameters['labelsToRenderComboBox'] if 'labelsToRenderComboBox' in inputParameters else ''
+        request.session['defaultZoom'] = inputParameters['zoom'] if 'zoom' in inputParameters else '150px' 
     
     #Init Dataset
     #Todo: Check type of Dataset 
@@ -65,31 +67,36 @@ def showj(request, inputParameters=None):
 
     #Initialize Showj Form (button toolbar)
     if request.method == 'POST': # If the form has been submitted... Post method  
+        if _labelsToRenderComboBox != '':
+            if _labelsToRenderComboBox != request.session['labelsToRenderComboBox']:
+                _imageDimensions = get_image_dimensions(request.session['projectPath'], tableDataset.getElementById(0,_labelsToRenderComboBox))
+        else:
+            _imageDimensions = None
+        
         showjForm = ShowjForm(dataset,
                               tableLayoutConfiguration,
-                              get_image_dimensions(request.session['projectPath'], tableDataset.getElementById(0,_labelsToRenderComboBox)) if _labelsToRenderComboBox != '' and _labelsToRenderComboBox != request.session['labelsToRenderComboBox'] else None,
                               request.POST) # A form bound to the POST data
     else:
         if _labelsToRenderComboBox == '':
             labelsToRenderComboBoxValues = getLabelsToRenderComboBoxValues(tableLayoutConfiguration.columnsLayout)
-            if len(labelsToRenderComboBoxValues) > 0:
-                inputParameters['labelsToRenderComboBox']=labelsToRenderComboBoxValues[0][0]
-        
+            inputParameters['labelsToRenderComboBox']=labelsToRenderComboBoxValues[0][0] if len(labelsToRenderComboBoxValues) > 0 else ''
+       
+        _imageDimensions = get_image_dimensions(request.session['projectPath'], tableDataset.getElementById(0,inputParameters['labelsToRenderComboBox']))  if inputParameters['labelsToRenderComboBox']!='' else None
+            
         inputParameters['blockComboBox']=_blockComboBox
         
         showjForm = ShowjForm(dataset,
                               tableLayoutConfiguration,
-                              get_image_dimensions(request.session['projectPath'], tableDataset.getElementById(0,inputParameters['labelsToRenderComboBox']))if inputParameters['labelsToRenderComboBox']!='' else None,
                               inputParameters) # An unbound form
-        
+
     if showjForm.is_valid() is False:
         print showjForm.errors
-    
-#    md = MdData(dataset, showjForm.data['allowRender'], showjForm.data['zoom'])
-
+        
     #Store dataset and labelsToRender in session 
     request.session['dataset'] = dataset
     request.session['labelsToRenderComboBox'] = _labelsToRenderComboBox
+    if (_imageDimensions != ''):
+        request.session['imageDimensions'] = _imageDimensions
 
     #Create context to be send
     context = {'jquery': jquery_path, #Configuration variables
@@ -106,6 +113,8 @@ def showj(request, inputParameters=None):
                'tableLayoutConfiguration' : tableLayoutConfiguration if (showjForm.data['mode']=='gallery') else json.dumps({'columnsLayout': tableLayoutConfiguration.columnsLayout, 'colsOrder': tableLayoutConfiguration.colsOrder}, ensure_ascii=False, cls=ColumnLayoutConfigurationEncoder), #Data variables
 #               'tableLayoutConfiguration' : json.dumps({'columnsLayout': tableLayoutConfiguration.columnsLayout, 'colsOrder': tableLayoutConfiguration.colsOrder}, ensure_ascii=False, cls=ColumnLayoutConfigurationEncoder),
                'tableDataset': tableDataset,
+               'imageDimensions': request.session['imageDimensions'],
+               'defaultZoom': request.session['defaultZoom'], 
                'form': showjForm} #Form
     
     return_page = '%s%s%s' % ('showj_', showjForm.data['mode'], '.html')
@@ -116,17 +125,15 @@ class ColumnLayoutConfigurationEncoder(json.JSONEncoder):
     def default(self, columnLayoutConfiguration):
         columnLayoutConfigurationCoded={}
         columnLayoutConfigurationCoded={"typeOfColumn":columnLayoutConfiguration.typeOfColumn,
-                                                                         "columnLayoutProperties":{"visible":columnLayoutConfiguration.columnLayoutProperties.visible,
-                                                                                                   "allowSetVisible":columnLayoutConfiguration.columnLayoutProperties.allowSetVisible,
-                                                                                                   "editable":columnLayoutConfiguration.columnLayoutProperties.editable,
-                                                                                                   "allowSetEditable":columnLayoutConfiguration.columnLayoutProperties.allowSetEditable,
-                                                                                                   "renderable":columnLayoutConfiguration.columnLayoutProperties.renderable,
-                                                                                                   "allowSetRenderable":columnLayoutConfiguration.columnLayoutProperties.allowSetRenderable,
-                                                                                                   "renderFunc":columnLayoutConfiguration.columnLayoutProperties.renderFunc}
-                                                                         }
+                                        "columnLayoutProperties":{"visible":columnLayoutConfiguration.columnLayoutProperties.visible,
+                                                                  "allowSetVisible":columnLayoutConfiguration.columnLayoutProperties.allowSetVisible,
+                                                                  "editable":columnLayoutConfiguration.columnLayoutProperties.editable,
+                                                                  "allowSetEditable":columnLayoutConfiguration.columnLayoutProperties.allowSetEditable,
+                                                                  "renderable":columnLayoutConfiguration.columnLayoutProperties.renderable,
+                                                                  "allowSetRenderable":columnLayoutConfiguration.columnLayoutProperties.allowSetRenderable,
+                                                                  "renderFunc":columnLayoutConfiguration.columnLayoutProperties.renderFunc}
+                                        }
         return columnLayoutConfigurationCoded 
-                 
-
             
 class TableLayoutConfiguration():
     def __init__(self, tableDataset, allowRender=True):

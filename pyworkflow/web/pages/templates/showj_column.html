@@ -41,9 +41,10 @@ $.fn.dataTableExt.oApi.fnGetColumnIndex = function ( oSettings, sCol )
 
 </script>
 
-<!-- <script type="text/javascript" src="{{jquerydataTables_colreorder}}"></script> -->
-<!-- <script type="text/javascript" src="/static/js/ColReorderWithResize.js"></script> -->
+<script type="text/javascript" src="{{jquerydataTables_colreorder}}"></script>
+<script type="text/javascript" src="/static/js/ColReorderWithResize.js"></script>
 <script type="text/javascript" src="{{jeditable}}"></script>
+<script type="text/javascript" src="/static/js/Transpose.js"></script>
 
 <!-- <script type="text/javascript" src="{{jquery_ui}}"></script> -->
 <!-- <script type="text/javascript" src="{{jquery_tabletools}}"></script> -->
@@ -61,9 +62,24 @@ $(document).ready(function() {
 	
 
 	
-	/* initializeSelectionRowEvent() */ 
+	initializeSelectionRowEvent() 
 	initializeGoToEvent()
 	initializeTableWidth()
+	
+	
+	
+	/* $("#form").submit(function() {
+		var sData = $('input', oTable.fnGetNodes()).serialize();
+		alert( "The following data would have been submitted to the server: \n\n"+sData );
+		return false;
+	} ) */
+	
+	/* Add a click handler for the delete row */
+	/* $('#delete').click( function() {
+		var anSelected = fnGetSelected( oTable );
+		oTable.fnDeleteRow( anSelected[0] );
+	} ); */
+	
 	
 	/* Init the table */
 	oTable = $('#data_table').dataTable(
@@ -74,11 +90,11 @@ $(document).ready(function() {
 			        "bSort": true,
 			        "bInfo": true,
 			        "bAutoWidth": true,
-			        "sDom": 'Rlfrtip', 
+			        "sDom": 'ZRrt', 
 			        /* "sDom": 'T<"clear">lfrtip', */
-/*  			        "oColReorder": {
+ 			        "oColReorder": {
 		    			"aiOrder": jsonTableLayoutConfiguration.colsOrder
-		    		},   */
+		    		},  
 		    		
 		    		"bProcessing": true,
 /* 		            "bServerSide": true, */
@@ -109,7 +125,9 @@ $(document).ready(function() {
 			    }		
 			);
 	
-	/* initializeMultipleSelectionTool() */
+	
+	
+	initializeMultipleSelectionTool()
 	setElementsEditable(null)
 	initializeColumnHeader()
 	
@@ -164,6 +182,8 @@ function initializeColumnHeader(){
     {
         var cellIndex = oTable.fnColumnIndexToVisible(x)
         if (cellIndex !=null){
+        	console.log("header")
+        	console.log(getHeaderWithIcon(cols[x].sTitle,jsonTableLayoutConfiguration.columnsLayout[cols[x].sTitle].columnLayoutProperties))
         	$('th:eq('+cellIndex+')',headerRow).find("div").append(getHeaderWithIcon(cols[x].sTitle,jsonTableLayoutConfiguration.columnsLayout[cols[x].sTitle].columnLayoutProperties))
         	$('th:eq('+cellIndex+')',headerRow).attr("id",cols[x].sTitle+"___column_header")
         } 
@@ -196,19 +216,41 @@ function getHeaderWithIcon(text, columnLayoutProperties){
 	return iconElements; 
 }
 
-/* Create column definition (class, title, visible) for table layout (label, value)*/
+/* Create column definition (class, title, visible) from table layout configuration*/
 function getColumnsDefinition(){
+	jsonColumnsLayout=jsonTableLayoutConfiguration.columnsLayout
 	columnId=0;
 	var dataForTable = []
+	for (var i in jsonColumnsLayout){ 
+		
+		var dataRowForTable = []
+		
+ 		var columnLayoutConfiguration = jsonColumnsLayout[i]
+		/* if (columnLayoutConfiguration.typeOfColumn == "text" && columnLayoutConfiguration.columnLayoutProperties.editable){
+			dataRowForTable["sClass"]= "editable" 
+		}
+		else if(columnLayoutConfiguration.typeOfColumn == "image"){
+			sClass_Tmp = "imageColumn"
+			if (columnLayoutConfiguration.columnLayoutProperties.renderable){
+				dataRowForTable["sClass"]= sClass_Tmp +" editable"
+			} 
+		} */
+		
+ 		if(!columnLayoutConfiguration.columnLayoutProperties.visible){
+			dataRowForTable["bVisible"] = false
+		} 
+		
+		dataRowForTable["sTitle"]= i
+		dataRowForTable["aTargets"]=[columnId]
+		dataRowForTable["bSortable"]= false
+		dataForTable.push(dataRowForTable)
+		columnId++;
+		
+	}
 	
-	dataRowForTable["sTitle"]= "Label"
-	dataRowForTable["aTargets"]=[0]
-	dataForTable.push(dataRowForTable)
+	/* TO BE DELETED */
+	/* console.log(JSON.stringify(dataForTable)) */
 	
-	dataRowForTable["sTitle"]= "Value"
-	dataRowForTable["aTargets"]=[1]
-	dataForTable.push(dataRowForTable)
-
 	return dataForTable;
 }
 
@@ -346,14 +388,18 @@ function setElementsEditable(elements){
 function generateDataForTable(){
 	dataForTable = new Array();
 	{% for row in tableDataset.getRows %}
-		taktak{{row}}
-		taktak2{{row.0}}
+		dataRowForTable = new Array()
+		var row_id
 		{% for cell in row %}
-			dataRowForTable = new Array()
 			dataRowForTable.push("{{cell}}")
-			dataForTable.push(dataRowForTable)
+			{% if forloop.first	%}
+				row_id = "{{cell}}"
+			{% endif %}
+
 		{% endfor %}
-		
+		/* dataRowForTable.push("DT_RowId\": \""+row_id+"\"") */
+		/* dataRowForTable.push("DT_RowId: "+row_id) */
+		dataForTable.push(dataRowForTable)
 	{% endfor %}
 	return dataForTable;
 }
@@ -369,8 +415,6 @@ function valueChange(element){
 	
 	/*Keep changes in global variable */
 	changes[$(element).attr("id")]=element_value
-	
-	
 }
 
 function initializeTableWidth(){
@@ -394,6 +438,89 @@ function updateRowSelection(){
 	nodes[$("#id_goto").val()-1].click();
 }
 
+/* Control row event selection allowing shift, ctrol and single click */
+var lastChecked;
+function initializeSelectionRowEvent(){
+	$('#data_table').on("click","tr", function(event) {
+
+		var start = $('#data_table tbody tr').index(this);
+		if (start>=0){
+		    if(!lastChecked) {
+		        lastChecked = this;
+		    }
+		     
+		    if(event.shiftKey) {
+		        var end = $('#data_table tbody tr').index(lastChecked);
+		 
+		        for(i=Math.min(start,end);i<=Math.max(start,end);i++) {
+		            if (!$('#data_table tbody tr').eq(i).hasClass('row_selected')){
+		                $('#data_table tbody tr').eq(i).addClass("row_selected");
+		            }
+		        }
+		         
+		        // Clear browser text selection mask
+		        if (window.getSelection) {
+		            if (window.getSelection().empty) {  // Chrome
+		                window.getSelection().empty();
+		            } else if (window.getSelection().removeAllRanges) {  // Firefox
+		                window.getSelection().removeAllRanges();
+		            }
+		        } else if (document.selection) {  // IE?
+		            document.selection.empty();
+		        }
+		    } else {
+		    	/* $(lastChecked).removeClass('row_selected'); */
+		    	if (!event.metaKey && !event.ctrlKey){
+		    		$('tr').each(function (){
+						$(this).removeClass('row_selected');
+					});
+			    }
+	
+		        $(this).toggleClass('row_selected');  
+		    }
+		     
+		    lastChecked = this;
+		    
+		    $("#id_goto").val($(this).index()+1)
+		}	    
+	});
+}
+
+function initializeMultipleSelectionTool(){
+/* 	alert("porakientra")
+	$('#data_table').on("hover","tr", function(event) {
+		console.log("toloco");
+	})
+	
+	$('td').hover(function(event) {
+		alert("td takarrasWithout filter")
+		
+	},function(event) {
+		alert("td takarrasWithout filter")
+		
+	});*/
+	
+	$('tr').hover(function(e) {
+		if ($(this).hasClass("row_selected")){
+			var x= e.pageX
+			var y= e.pageY
+			
+			$("#multipleSelectionTool").css('left',x)
+			$("#multipleSelectionTool").css('top',y)
+			
+			var iRow = $(this).index()
+			$("#multipleSelectionTool").data('row_id', iRow)
+			
+			$("#multipleSelectionTool").fadeIn('slow')
+		}	
+		
+	},function(event) {
+		if ($(this).hasClass("row_selected")){
+			$("#multipleSelectionTool").delay(2000).fadeOut('slow')
+		}
+		
+	}); 
+}
 
 /*Display and initialize div for configuring table layout*/
 function showTableConfig(){

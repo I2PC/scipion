@@ -383,7 +383,7 @@ def wizard(request):
     action = request.GET.get('action', None)
     
     if(action=='downsampling'):
-        response = 'wizardDownsampling.html'
+        response = 'wiz_downsampling.html'
     
     context={'action':action
              }
@@ -606,7 +606,7 @@ def deleteHost(request):
     return HttpResponseRedirect('/view_hosts')#, RequestContext(request))
 
 def visualizeObject(request):
-    probandoCTFParam = False
+    probandoCTFParam = True
     
     objectId = request.GET.get("objectId")    
     #projectName = request.session['projectName']
