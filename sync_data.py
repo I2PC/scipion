@@ -78,6 +78,8 @@ def main(argv):
                 modif_file = open(os.path.join(os.environ['SCIPION_HOME'],args.mod_log_file), 'a')
                 file_content = last_file.read()
                 modif_file.write(file_content)
+                print "Last modifications file shows following content:"
+                print file_content
                 #TODO: In case we want to add the responsible of the modifications to the blame list, this is the place to do it
                 last_file.close()
                 modif_file.close()
