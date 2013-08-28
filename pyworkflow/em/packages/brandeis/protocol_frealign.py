@@ -47,10 +47,24 @@ class BrandeisDefFrealign(Form):
                       pointerClass='SetOfParticles',
                       help='Select the input particles.\n')  
         
-#         self.addParam('mode', EnumParam, choices=['Recontruction only', 'Local param. refinement', ],
-#                       label="Operation mode", default=brandeis.MOD_SEARCH,
-#                       display=EnumParam.DISPLAY_COMBO,
-#                       help='Use correlation or correntropy')
+        self.addParam('mode', EnumParam, choices=['Recontruction only', 'Refinement', 'Random Search & Refine',
+                                                   'Simple search & Refine', 'Search, Refine, Randomise', 'Create new param file, Simple search & Refine', 
+                                                   'Create new param file, Search, Refine & Randomise'],
+                      label="Operation mode", default=brandeis.MOD_REFINEMENT,
+                      display=EnumParam.DISPLAY_COMBO,
+                      help='Parameter <IFLAG> in FREALIGN'
+                           'Mode  0: Reconstruction only parameters as read in\n'
+                           'Mode  1: Refinement & Reconstruction\n'
+                           'Mode  2: Random Search & Refinement\n'
+                           'Mode  3: Simple search & Refine\n'
+                           'Mode  4: Search,Refine,Randomise & extend to RREC\n'
+                           'Mode -3: bootstrap parameter file, then Mode 3\n'
+                           'Mode -4: bootstrap parameter file, then Mode 4\n'
+                           '\n'
+                           '\n'
+                           '\n'
+                           '\n'
+                           '')
 
         self.addParam('doMagRefinement', BooleanParam, default=False,
                       label="Refine magnification?", expertLevel=LEVEL_EXPERT,
@@ -58,7 +72,7 @@ class BrandeisDefFrealign(Form):
                            'Parameter <FMAG> in FREALIGN')
 
         self.addParam('doDefRefinement', BooleanParam, default=False,
-                      label="Refine defocus", expertLevel=LEVEL_EXPERT,
+                      label="Refine defocus?", expertLevel=LEVEL_ADVANCED,
                       help='Set True of False to enable/disable defocus parameter refinement\n'
                            'Parameter <FDEF> in FREALIGN')
 
@@ -75,7 +89,8 @@ class BrandeisDefFrealign(Form):
                            'Parameter <FPART> in FREALIGN')
 
         self.addParam('methodEwaldSphere', EnumParam, choices=['Disable', 'Simple', 'Reference-based', 'Simple with reversed handedness',
-                                                         'Reference-based with reversed handedness'], default=brandeis.EWA_DISABLE, expertLevel=LEVEL_EXPERT,
+                                                               'Reference-based with reversed handedness'],
+                      default=brandeis.EWA_DISABLE, expertLevel=LEVEL_EXPERT,
                       label="Ewald sphere correction", display=EnumParam.DISPLAY_COMBO,
                       help='Ewald correction are (parameter <IEWALD> in FREALIGN):\n'
                            'Disable: No correction. Option <0> for parameter <IEWALD> in FREALIGN.\n'
@@ -86,7 +101,7 @@ class BrandeisDefFrealign(Form):
                            'Reference-based with reversed handedness: \n'
                            '   Do correction, reference-based method with inverted handedness. Option <-2>')
 
-        self.addParam('doRealSpaceSym', BooleanParam, default=False,
+        self.addParam('doExtraRealSpaceSym', BooleanParam, default=False,
                       label="Apply extra real space symmetry?",
                       help='Apply extra real space symmetry averaging \n'
                            'and masking to beautify final map just prior to output.\n'
@@ -109,7 +124,9 @@ class BrandeisDefFrealign(Form):
                            'Parameter <FMATCH> in FREALIGN')
 
         self.addParam('methodCalcFsc', EnumParam, choices=['calculate FSC', 'Calculate one 3DR with odd particles', 
-                                                     'Calculate one 3DR with even particles', 'Calculate one 3DR with all particles'], default=brandeis.FSC_CALC,
+                                                     'Calculate one 3DR with even particles',
+                                                     'Calculate one 3DR with all particles'],
+                      default=brandeis.FSC_CALC,
                       label="Calculation of FSC", display=EnumParam.DISPLAY_COMBO,
                       help='Calculation of FSC table (parameter <IFSC> in FREALIGN):\n'
                            'calculate FSC: Internally calculate two reconstructions with odd and even \n'
@@ -125,46 +142,100 @@ class BrandeisDefFrealign(Form):
 
         self.addParam('doAditionalStatisFSC', BooleanParam, default=True,
                       label="Calculate aditional statistics in FSC?",
-                      help='Calculate additional statistics in resolution table at the end \n'
-                           '(QFACT, SSNR, CC and related columns). Setting FSTAT=F saves'
-                           'over 50% of memory!. Parameter <FSTAT> in FREALIGN')
+                      help='Parameter <FSTAT> in FREALIGN\n'
+                           'Calculate additional statistics in resolution table at the end \n'
+                           '(QFACT, SSNR, CC and related columns). Setting FSTAT=F saves over 50% of memory!.')
 
         self.addParam('paddingFactor', EnumParam, choices=['1', '2', '4'], default=brandeis.PAD_4,
                       label='Padding Factor', display=EnumParam.DISPLAY_COMBO,
-                      help='Padding factor for reference structure.\n'
+                      help='Parameter <IBLOW> in FREALIGN\n'
+                           'Padding factor for reference structure.\n'
                            'Padding factor 4 requires the most memory but results\n'
-                           'in the fastest search & refinement.\n'
-                           'Parameter <IBLOW> in FREALIGN')
+                           'in the fastest search & refinement.\n')
 
         self.addSection(label='Projection Matching')
         
         self.addParam('innerRadius', FloatParam, default='0.0', 
-                      label='Inner radius of reconstruction:', 
-                      help=""" In Angstroms from the image center.
-Enter the inner radius of the volume to be reconstructed. 
-This is useful for reconstructions of viruses and other 
-particles that might be hollow or have a disordered core.
-""")
+                      label='Inner radius of reconstruction (in Amgs):', 
+                      help='Parameter <RI> in FREALIGN\n'
+                           'In Angstroms from centre of particle.\n'
+                           'Enter the inner radius of the volume to be reconstructed.\n' 
+                           'This is useful for reconstructions of viruses and other\n' 
+                           'particles that might be hollow or have a disordered core.')
               
         self.addParam('outerRadius', FloatParam, default='108.0', 
-                      label='Outer radius of reconstruction in Angstroms:', 
-                      help=""" In pixels from the image center. Use a negative number to use the entire image.
-<WARNING>: this radius will be use for masking before computing resolution
-You may specify this option for each iteration. 
-This can be done by a sequence of numbers (for instance, "8 8 2 2 " 
-specifies 4 iterations, the first two set the value to 8 
-and the last two to 2. An alternative compact notation 
-is ("2x8 2x0", i.e.,
-2 iterations with value 8, and 2 with value 2).
-<Note>: if there are less values than iterations the last value is reused
-<Note>: if there are more values than iterations the extra value are ignored
-""")        
+                      label='Outer radius of reconstruction (in Amgs):', 
+                      help='Parameter <RO> in FREALIGN\n'
+                           'In Angstroms from centre of particle.\n'
+                           'Enter the outer radius of the volume to be reconstructed.\n'
+                           'he program will also apply a mask with a cosine edge to the particle image\n'
+                           'before processing (done inside CTFAPPLY using  HALFW=6 pixels for cosine bell).')
+        
+        self.addParam('ThresholdMask', FloatParam, default='0.0', 
+                      label='Threshold to for masking the input 3D structure:', expertLevel=LEVEL_ADVANCED,
+                      help='Parameter <XSTD> in FREALIGN.\n'
+                           'filtered 3D model - note this 3D masking does not use RI.\n'
+                           '- if positive, calculates mask with subroutine D3MASK, equiv to\n'
+                           '  solvent flattening with 5-pixel-cosine-bell smoothed mask\n'
+                           '  boundary.  The mask is then used to multiply the input 3D map,\n'
+                           '  which is then used for all parameter refinement and subsequent\n'
+                           '  calculations.\n'
+                           '- if negative, calculates mask with subroutine D2MASK resulting\n'
+                           '  in a sharp binary (0/1) mask boundary for which is used for\n'
+                           '  both parameter refinement and reconstruction, and to mask and\n'
+                           '  output the matching projections.  Each matching particle image\n'
+                           '  is also always masked with a cosine bell edged function of\n'
+                           '  radius RI.\n'
+                           'If set 0, disables this function.')
+        
+        self.addParam('pseudoBFactor', FloatParam, default='5.0', 
+                      label='Resol-Dependent weighting of particles for 3D reconstruction:',
+                      help='Parameter <PBC> in FREALIGN.\n'
+                           'Automatic weighting is applied to each particle: a pseudo-temperature (B)\n'
+                           'factor is applied to each particle according to its relative phase\n'
+                           'residual against the reference. The weight is calculated as\n'
+                           '          W = exp (-DELTAP/PBC * R^2)\n'
+                           'with DELTAP = relative phase residual (actual phase residual minus BOFF),\n'
+                           'PBC = conversion constant (5.0 in the example),\n'
+                           'and R^2 the squared resolution in Fourier units (R = 0.0 ... 0.5).\n'
+                           'A large value for PBC (e.g. 100.0) gives equal weighting to each particle.')
+
+        self.addParam('avePhaseResidual', FloatParam, default='60.0', 
+                      label='Average phase residual:',
+                      help='Parameter <BOFF> in FREALIGN.\n'
+                           'Approximate average phase residual of all particles,\n'
+                           ' used in calculating weights for contributions of different\n'
+                           'particles to 3D map (see Grigorieff, 1998).')
+
+        self.addParam('angStepSize', FloatParam, default='10.0', 
+                      label='Angular step size for the angular search:',
+                      help='Parameter <DANG> in FREALIGN.\n'
+                           'Angular step size for the angular search used in modes IFLAG=3,4.\n'
+                           'There is a program default value calculated taking resolution into\n'
+                           'account, but if this input value is non-zero, the program value is\n'
+                           'overridden.')
+
+        self.addParam('numberRandomSearch', FloatParam, default='10.0', 
+                      label='Number of randomised search/refinement trials:',
+                      help='Parameter <ITMAX> in FREALIGN.\n'
+                           'number of cycles of randomised search/refinement used in modes IFLAG=2,4\n'
+                           'There is a program default value (10 cycles), but if this input value is\n'
+                           'non-zero, the program value is overridden.\n')
+
+        self.addParam('numberPotentialMatches', FloatParam, default='10.0', 
+                      label='number of potential matches:',
+                      help='Parameter <IPMAX> in FREALIGN.\n'
+                           'number of potential matches in a search that should be tested further in\n'
+                           'a subsequent local refinement.\n')
 
 
 
-class ProtCTFFind(ProtCTFMicrographs):
-    """Protocol to perform CTF estimation on a set of micrographs
-    using the ctffind3 program"""
+
+
+
+class ProtFrealign():
+    """
+    """
 
     def _prepareCommand(self):
         self._params['step_focus'] = 1000.0

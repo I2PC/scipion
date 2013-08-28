@@ -29,6 +29,17 @@ This modules contains constants related to Brandeis packages protocols
 
 #------------------ Constants values --------------------------------------
 
+#Modes of search/refinement/reconstruction
+MOD_RECONSTRUCTION = 0
+MOD_REFINEMENT = 1
+MOD_RANDOM_SEARCH_REFINEMENT = 2
+MOD_SIMPLE_SEARCH_REFINEMENT = 3
+MOD_SEARCH_REFINE_RANDOMISE = 4
+MOD_SIMPLE_SEARCH_REFINEMENT_NEW_FILE = 5
+MOD_SEARCH_REFINE_RANDOMISE_NEW_FILE = 6
+
+
+
 # Methods to correct the Ewald sphere
 EWA_DISABLE = 0
 EWA_SIMPLE = 1

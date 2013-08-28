@@ -31,3 +31,4 @@ wrapping Grigrorieff Lab programs at Brandeis
 from brandeis import *
 
 from protocol_ctffind3 import ProtCTFFind
+from protocol_frealign import ProtFrealign
