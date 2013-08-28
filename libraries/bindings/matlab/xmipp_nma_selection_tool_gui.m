@@ -87,6 +87,7 @@ else
 end
 handles.trajectoryX=[];
 handles.trajectoryY=[];
+handles.fnTrajectory=[];
 handles.figHandle=figure();
 guidata(hObject,handles)
 updatePlot(handles)
@@ -484,6 +485,92 @@ function generateAnimation_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+    % Measure the length of each segment
+    trajectoryX=handles.trajectoryX;
+    trajectoryY=handles.trajectoryY;
+    totalLength=0;
+    segmentLength=[];
+    if length(trajectoryX)==0
+        return
+    end
+    segmentLength=zeros(length(trajectoryX)-1,1);
+    for i=1:length(segmentLength)
+        diffx=trajectoryX(i+1)-trajectoryX(i);
+        diffy=trajectoryY(i+1)-trajectoryY(i);
+        segmentLength(i)=sqrt(diffx*diffx+diffy*diffy);
+        totalLength=totalLength+segmentLength(i);
+    end
+
+    % Now choose points in the trajectory
+    N=20;
+    A=totalLength/2;
+    t=A+A*sin(2*pi/N*[0:(N-1)]);
+    accumulatedLength=cumsum(segmentLength);
+    startingSegment=[0; accumulatedLength(1:end-1)];
+    xt=zeros(size(t));
+    yt=zeros(size(t));
+    for i=1:length(t)
+        segment_t=min(find(accumulatedLength>=t(i)));
+        lambda_t=(t(i)-startingSegment(segment_t))/segmentLength(segment_t);
+        xt(i)=(1-lambda_t)*trajectoryX(segment_t)+lambda_t*trajectoryX(segment_t+1);
+        yt(i)=(1-lambda_t)*trajectoryY(segment_t)+lambda_t*trajectoryY(segment_t+1);
+    end
+    
+    % Get Projection mode
+    projectionOptions=cellstr(get(handles.popupProjection,'String'));
+    selectedProjection=projectionOptions{get(handles.popupProjection,'Value')};
+    
+    % Generate the set of NMA deformations
+    deformations=zeros(N,size(handles.NMAdisplacements,2));
+    idx=get(handles.listRepresentation,'Value');
+    if strcmp(selectedProjection,'None')==1
+        deformations(:,idx(1))=xt;
+        deformations(:,idx(2))=yt;
+    elseif strcmp(selectedProjection,'Principal Component Analysis')==1 || ...
+           strcmp(selectedProjection,'Linear Local Tangent Space Alignment')==1 || ...
+           strcmp(selectedProjection,'Linearity Preserving Projection')==1 || ...
+           strcmp(selectedProjection,'Probabilistic Principal Component Analysis')==1 || ...
+           strcmp(selectedProjection,'Neighborhood Preserving Embedding')==1
+        % Hay projector
+    else
+        % No hay projector
+    end
+    
+    % Generate the deformed PDBs
+    fnPDB=[handles.rundir '/atoms.pdb'];
+    fnOut=[handles.rundir '/atomsDeformed.pdb'];
+    fnModes=[handles.rundir '/modes.xmd'];
+    if isempty(handles.fnTrajectory)
+        saveTrajectory_Callback([], [], handles);
+        handles=guidata(gcbo);
+    end
+    fnTrajectory=[handles.rundir '/extra/trajectory__' handles.fnTrajectory '.pdb'];
+    if exist(fnTrajectory,'file')
+        system(['rm -f ' fnTrajectory])
+    end
+    system(['touch ' fnTrajectory])
+    for i=1:length(t)
+        cmd=['xmipp_pdb_nma_deform --pdb ' fnPDB ' -o ' fnOut ' --nma ' fnModes ' --deformations ' ...
+            num2str(deformations(i,:)) ' ; cat ' fnOut ' >> ' fnTrajectory ' ; echo TER >> ' ...
+            fnTrajectory ' ; echo ENDMDL >> ' fnTrajectory];
+        system(cmd);
+    end
+    
+    % Generate VMD script
+    fnTrajectoryVMD=[handles.rundir '/extra/trajectory__' handles.fnTrajectory '.vmd'];
+    fid = fopen(fnTrajectoryVMD,'w');
+    fprintf(fid,'mol new %s\n',fnTrajectory);
+    fprintf(fid,'animate style Loop\n');
+    fprintf(fid,'display projection Orthographic\n');
+    fprintf(fid,'mol modcolor 0 0 Index\n');
+    fprintf(fid,'mol modstyle 0 0 Beads 1.000000 8.000000\n');
+    fprintf(fid,'animate speed 0.5\n');
+    fprintf(fid,'animate forward\n');
+    fclose(fid)
+    
+    % Invoke VMD
+    cmd=['vmd -e ' fnTrajectoryVMD];
+    system(cmd)
 
 % --- Executes on button press in loadTrajectory.
 function loadTrajectory_Callback(hObject, eventdata, handles)
@@ -502,6 +589,7 @@ function loadTrajectory_Callback(hObject, eventdata, handles)
     [Selection,ok] = listdlg('ListString',listString,'SelectionMode','single');
     if ok
         load([handles.rundir '/extra/trajectory__' listString{Selection} '.mat'])
+        handles.fnTrajectory=listString{Selection};
         handles.trajectoryX=trajectoryX;
         handles.trajectoryY=trajectoryY;
         guidata(gcbo,handles)
@@ -519,6 +607,8 @@ function saveTrajectory_Callback(hObject, eventdata, handles)
         trajectoryX=handles.trajectoryX;
         trajectoryY=handles.trajectoryY;
         save([handles.rundir '/extra/trajectory__' trajectoryName{1} '.mat'],'trajectoryX','trajectoryY')
+        handles.fnTrajectory=trajectoryName{1};
+        guidata(gcbo,handles);
     end
 
 % --- Executes on button press in resetTrajectory.
