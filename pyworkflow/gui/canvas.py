@@ -174,8 +174,7 @@ def findClosestConnectors(item1,item2):
     srcConnectors=item1.getConnectorsCoordinates()
     dstConnectors=item2.getConnectorsCoordinates()
     c1Coords,c2Coords=findClosestPoints(srcConnectors,dstConnectors)
-    item1.setActiveConnector(c1Coords)
-    item2.setActiveConnector(c2Coords)
+    # !!!! update the connectors coords
     return c1Coords,c2Coords
 
 
@@ -183,10 +182,13 @@ def findClosestConnectors(item1,item2):
 # !!!! refactor code repeated in subclasses, probably into this Item class
 # !!!! An item can have many Sockets, in the top or bottom, in different positions (order)
 class Item(object):      
-    def __init__(self,canvas):
+    def __init__(self,canvas,x,y):
         self.activeConnector=None
         self.canvas=canvas
+        self.x=x
+        self.y=y
         self.sockets={}
+        self.listeners = []
 
     def getConnectorsCoordinates(self):
         x1,y1,x2,y2=self.getCorners()
@@ -197,11 +199,6 @@ class Item(object):
     def getCorners(self):
         return self.canvas.bbox(self.id)
 
-    def setActiveConnector(self,coords):
-        if self.activeConnector:
-            self.activeConnector.erase()
-        self.activeConnector=Connector(self.canvas,coords[0],coords[1],"auto")
-        # add the connector to the items list in order to track it for events
 
     def addSocket(self,name,socketClass,verticalLocation,position=None):
         x,y=self.getSocketCoordsAt(verticalLocation)
@@ -231,21 +228,47 @@ class Item(object):
             self.paintSocket(self.sockets[name])
 
 
+    def getDimensions(self):
+        x, y, x2, y2 = self.canvas.bbox(self.id)
+        return (x2-x, y2-y)
+        
+    def move(self, dx, dy):
+        self.canvas.move(self.id, dx, dy)
+        self.x += dx
+        self.y += dy
+        for name in self.sockets.keys():
+            socket=self.sockets[name]
+            socket["object"].move(dx,dy)
+        for listenerFunc in self.listeners:
+            listenerFunc(dx, dy)
+            
+    def moveTo(self, x, y):
+        """Move TextBox to new position
+        dx and dy are the new position"""
+        self.move(x-self.x, y-self.y)
+        
+    def addPositionListener(self, listenerFunc):
+        self.listeners.append(listenerFunc)
+        
+    def setSelected(self, value):
+        bw = 1
+        if value:
+            bw = 2
+        self.canvas.itemconfig(self.id, width=bw)
+
+
         
 class TextItem(Item):
     """This class will serve to paint and store rectange boxes with some text.
        x and y are the coordinates of the center of this item"""
     def __init__(self, canvas, text, x, y, bgColor, textColor='black'):
-        super(TextItem,self).__init__(canvas)
+        super(TextItem,self).__init__(canvas,x,y)
         self.bgColor = bgColor
         self.textColor = textColor
         self.text = text
         self.margin = 8
-        self.canvas = canvas
-        self.x = x
-        self.y = y
         self.paint()
-        self.listeners = []
+
         
     def _paintBounds(self, x, y, w, h, fillColor):
         """ Subclasses should implement this method 
@@ -269,40 +292,11 @@ class TextItem(Item):
 
         self.id = self._paintBounds(xr-m, yr-m, w+m, h+m, fillColor=self.bgColor)
         self.canvas.tag_raise(self.id_text)
-    
-        # self.paintSockets()
 
-
-    def getDimensions(self):
-        x, y, x2, y2 = self.canvas.bbox(self.id)
-        return (x2-x, y2-y)
-        
     def move(self, dx, dy):
-        """Move TextBox to new position
-        dx and y are differences to current position"""
+        super(TextItem,self).move(dx,dy)
         self.canvas.move(self.id_text, dx, dy)
-        self.canvas.move(self.id, dx, dy)
-        self.x += dx
-        self.y += dy
-        for name in self.sockets.keys():
-            socket=self.sockets[name]
-            socket["object"].move(dx,dy)
-        for listenerFunc in self.listeners:
-            listenerFunc(dx, dy)
-            
-    def moveTo(self, x, y):
-        """Move TextBox to new position
-        dx and dy are the new position"""
-        self.move(x-self.x, y-self.y)
-        
-    def addPositionListener(self, listenerFunc):
-        self.listeners.append(listenerFunc)
-        
-    def setSelected(self, value):
-        bw = 1
-        if value:
-            bw = 2
-        self.canvas.itemconfig(self.id, width=bw)
+    
    
         
 class TextBox(TextItem):
@@ -355,53 +349,17 @@ class TextCircle(TextItem):
         return self.canvas.create_oval(x, y, w, h, fill=fillColor) 
         
 
-class Connector():
+class Connector(Item):
     def __init__(self,canvas,x,y,name):
-        self.id=None
-        self.x=x
-        self.y=y
-        self.canvas=canvas
+        super(Connector,self).__init__(canvas, x, y)
         self.name= name
-        self.listeners=[]
 
-    def addPositionListener(self,listenerFunc):
-        self.listeners.append(listenerFunc)        
-
-    def defaultPaint(self):
-        """ Right now, the default is not painting de connector"""
-        return None
-
-    def ovalPaint(self):
-        return self.canvas.create_oval(self.x,self.y,self.x+5,self.y+5)
 
     def paintPlug(cls,canvas,x,y):
         """Should be implemented by the subclasses"""
         pass
 
-    # !!!! improve connector paint (sometimes is not well centered against its item)
-    def paint(self):
-        self.id=self.paintFn()
 
-    def erase(self):
-        if self.id:
-            self.canvas.delete(self.id)
-
-    def moveTo(self, x, y):
-        self.move(x-self.x, y-self.y)
-
-    def move(self, dx, dy):
-        self.canvas.move(self.id, dx, dy)
-        self.x += dx
-        self.y += dy
-        for listenerFunc in self.listeners:
-            listenerFunc(dx, dy)
-
-    def setSelected(self, value):
-        bw = 1
-        if value:
-            bw = 2
-        self.canvas.itemconfig(self.id, width=bw)
-        print self.x,self.y
 
 class RoundConnector(Connector):
     def paintSocket(self):
@@ -443,15 +401,11 @@ class Edge():
         self.paint()
 
 
-# !!!! "move" line instead of delete and create?
+
 class Cable():
     def __init__(self,canvas,src,srcConnector,dst,dstConnector):
         self.id=None
         self.canvas=canvas
-        #self.src=src
-        # self.srcConnector=srcConnector
-        #self.dst=dst
-        # self.dstConnector=dstConnector
         self.srcCoords=src.getSocketCoords(srcConnector)
         self.dstCoords=dst.getSocketCoords(dstConnector)
 
