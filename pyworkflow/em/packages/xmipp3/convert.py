@@ -256,6 +256,7 @@ def imageClassAssignmentToRow(imgCA, imgCARow, img, ctfDir, ref):
 #               "_shiftY": xmipp.MDL_SHIFT_Y,
 #               "_flip": xmipp.MDL_FLIP
                }
+    
     index, filename = img.getLocation()
     fn = locationToXmipp(index, filename)
     imgCARow.setValue(xmipp.MDL_IMAGE, fn)
@@ -266,6 +267,7 @@ def imageClassAssignmentToRow(imgCA, imgCARow, img, ctfDir, ref):
         ctfFn = join(ctfDir, rootFn)
         writeCTFModel(img.getCTF(), ctfFn)
         imgCARow.setValue(xmipp.MDL_CTF_MODEL, ctfFn)
+        
     objectToRow(imgCA, imgCARow, imgCADict)
     
     
@@ -424,26 +426,16 @@ def writeSetOfClasses2D(classes2DSet, filename, ctfDir=None, classesBlock='class
         class2DToRow(class2D, classRow)
         classRow.writeToMd(classMd, classMd.addObject())
         ref = class2D.getId()
-        
         imagesFn = 'class%06d_images@%s' % (ref, filename)
         imagesMd = xmipp.MetaData()
-        
         for imgCA in class2D.getImageAssignments():
             imgCARow = XmippMdRow()
-            img1 = imgSet[imgCA.getImageId()]
-
-#             for img in imgSet:
-#                 if img.getId() == imgCA.getImageId():
-#                     img1 = img
-#                     break
-
-            imageClassAssignmentToRow(imgCA, imgCARow, img1, ctfDir, ref)
+            img = imgSet[imgCA.getImageId()]
+            imageClassAssignmentToRow(imgCA, imgCARow, img, ctfDir, ref)
             imgCARow.writeToMd(imagesMd, imagesMd.addObject())
         imagesMd.write(imagesFn, xmipp.MD_APPEND)
      
     classMd.write(classFn, xmipp.MD_APPEND) # Empty write to ensure the classes is the first block
-           
-            
     classes2DSet._xmippMd = String(filename)
 
 
