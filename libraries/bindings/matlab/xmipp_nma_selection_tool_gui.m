@@ -22,7 +22,7 @@ function varargout = xmipp_nma_selection_tool_gui(varargin)
 
 % Edit the above text to modify the response to help xmipp_nma_selection_tool_gui
 
-% Last Modified by GUIDE v2.5 28-Aug-2013 10:48:51
+% Last Modified by GUIDE v2.5 28-Aug-2013 13:10:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -194,6 +194,21 @@ guidata(gcbo,handles)
 updatePlot(handles)
 saveState(handles)
 
+% --- Executes on button press in exportWorkspace.
+function exportWorkspace_Callback(hObject, eventdata, handles)
+% hObject    handle to exportWorkspace (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    assignin('base','imgs',handles.images)
+    assignin('base','NMAdisplacements',handles.NMAdisplacements)
+    assignin('base','NMAdisplacementsProjected',handles.NMAdisplacementsProjected)
+    assignin('base','cost',handles.cost)
+    disp('The following variables have been created in the workspace')
+    disp('   images:                    cell array with the image names')
+    disp('   NMAdisplacements:          matrix with the raw displacements')
+    disp('   NMAdisplacementsProjected: matrix with the displacements projected onto a lower dimensional space')
+    disp('   cost:                      cost of each one of the images (lower costs, better assignments)')
+    
 % --- Executes during object creation, after setting all properties.
 function listRepresentation_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to listRepresentation (see GCBO)
@@ -274,6 +289,7 @@ function clusterSave_Callback(hObject, eventdata, handles)
     if ~isempty(clusterName)
         inCluster=handles.inCluster;
         save([handles.rundir '/extra/cluster__' clusterName{1} '.mat'],'inCluster')
+        xmipp_nma_save_cluster(handles.rundir,clusterName{1},inCluster);
     end
 
 function conditionString_Callback(hObject, eventdata, handles)
@@ -399,3 +415,4 @@ function updatePlot(handles)
     end
     set(handles.clusterSizeText,'String',[num2str(sum(c)) '/' num2str(length(c)) ' images'])
     saveState(handles)
+

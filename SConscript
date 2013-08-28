@@ -1027,6 +1027,7 @@ if int(env['matlab']):
        CompileMatlab("tom_xmipp_"+bindings[i]+"_wrapper")
     CompileMatlab('xmipp_read')
     CompileMatlab('xmipp_nma_read_alignment')
+    CompileMatlab('xmipp_nma_save_cluster')
     CompileMatlab('xmipp_read_structure_factor')
 
 # Clean
