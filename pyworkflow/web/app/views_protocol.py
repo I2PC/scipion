@@ -11,26 +11,7 @@ import json
 
 ######    Project Form template    #####
 def form(request):
-    
-    # Resources #
-    favicon_path = getResourceIcon('favicon')
-    logo_help = getResourceIcon('help')
-    logo_browse = getResourceIcon('browse')
-    logo_wiz = getResourceIcon('wizard')
-    logo_edit = getResourceIcon('edit_toolbar')
-    
-    # CSS #
-    css_path = getResourceCss('form')
-    messi_css_path = getResourceCss('messi')
-    
-    # JS #
-    jquery_path = getResourceJs('jquery')
-    jsForm_path = getResourceJs('form')
-    utils_path = getResourceJs('utils')
-    messi_path = getResourceJs('messi')
-    
     project, protocol = loadProtocolProject(request, requestType='GET')
-    
     action = request.GET.get('action', None)
     hosts = [host.getLabel() for host in project.getSettings().getHosts()]
     
@@ -64,17 +45,17 @@ def form(request):
     context = {'projectName':project.getName(),
                'protocol':protocol,
                'definition': protocol._definition,
-               'favicon': favicon_path,
-               'help': logo_help,
-               'comment':logo_edit,
-               'form': jsForm_path,
-               'jquery': jquery_path,
-               'browse': logo_browse,
-               'wizard': logo_wiz,
-               'utils': utils_path,
-               'css':css_path,
-               'messi': messi_path,
-               'messi_css': messi_css_path,
+               'favicon': getResourceIcon('favicon'),
+               'help': getResourceIcon('help'),
+               'comment':getResourceIcon('edit_toolbar'),
+               'form': getResourceJs('form'),
+               'jquery': getResourceJs('jquery'),
+               'browse': getResourceIcon('browse'),
+               'wizard': getResourceIcon('wizard'),
+               'utils': getResourceJs('utils'),
+               'css':getResourceCss('form'),
+               'messi': getResourceJs('messi'),
+               'messi_css': getResourceCss('messi'),
                'hosts':hosts
                }
     # Update the context dictionary with the special params
@@ -89,10 +70,10 @@ def form(request):
 def wizard(request):
     action = request.GET.get('action', None)
     
-    if(action=='downsampling'):
+    if(action == 'downsampling'):
         response = 'wiz_downsampling.html'
     
-    context={'action':action
+    context = {'action':action
              }
     
     return render_to_response(response, context)
@@ -142,7 +123,7 @@ def updateParam(request, project, protocol, paramName):
     attr.set(value)
     print "setting attr %s with value:" % paramName, value 
     
-SPECIAL_PARAMS = ['runName', 'numberOfMpi', 'numberOfThreads', 'hostName','expertLevel','_useQueue']
+SPECIAL_PARAMS = ['runName', 'numberOfMpi', 'numberOfThreads', 'hostName', 'expertLevel', '_useQueue']
 
 def updateProtocolParams(request, protocol, project):
     """ Update the protocol values from the Web-form.

@@ -23,7 +23,7 @@ urlpatterns = patterns('',
     url(r'^delete host/$', 'app.views_host.deleteHost'),
     url(r'^host_form/$', 'app.views_host.hostForm'),
     
-    #PROJECT (Content, run table and graphs)
+    #PROJECT (CONTENT, RUNTABLE AND GRAPH)
     url(r'^projects/', 'app.views_project.projects'),
     url(r'^create_project/$', 'app.views_project.create_project'),
     url(r'^delete_project/$', 'app.views_project.delete_project'),

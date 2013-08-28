@@ -26,14 +26,11 @@ cssDict = {'project_content': 'project_content_style.css',
            'showj': 'showj_style.css',
            'general': 'general_style.css',
            'form': 'form.css'
-           
-           
            }
 
 jsDict = {'jquery': 'jquery.js',
           'jquery_cookie': 'jquery.cookie.js',
           'jquery_treeview': 'jquery.treeview.js',
-          'launch_treeview': 'launchTreeview.js', #PARA JOSEGUTAB
           'utils': 'utils.js',
           'host_util': 'host_utils.js',
           'tabs_config': 'tabs_config.js',
@@ -45,7 +42,6 @@ jsDict = {'jquery': 'jquery.js',
           'jquery_waypoints': 'waypoints.min.js',
           'form': 'form.js',
           'messi': 'messi.js'
-          
           }
 
 def getResourceIcon(icon):
