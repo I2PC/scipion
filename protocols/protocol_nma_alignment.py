@@ -25,6 +25,8 @@ class ProtNMAAlignment(XmippProtocol):
         self.insertStep("copyFile",verifyfiles=[fnImgs],source=self.InSelFile,dest=fnImgs)
         fnModes=self.workingDirPath("modes.xmd")
         self.insertStep("copyFile",verifyfiles=[fnModes],source=self.Modesfile,dest=fnModes)
+        fnAtoms=self.workingDirPath("atoms.pdb")
+        self.insertStep("copyFile",verifyfiles=[fnAtoms],source=self.PDBfile,dest=fnAtoms)
         self.insertStep("performNMA",WorkingDir=self.WorkingDir, InSelFile=fnImgs, 
                         PDBfile=self.PDBfile, Modesfile=self.Modesfile,
                         SamplingRate=self.SamplingRate, TrustRegionScale=self.TrustRegionScale,
