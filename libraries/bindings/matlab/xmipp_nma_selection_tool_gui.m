@@ -22,7 +22,7 @@ function varargout = xmipp_nma_selection_tool_gui(varargin)
 
 % Edit the above text to modify the response to help xmipp_nma_selection_tool_gui
 
-% Last Modified by GUIDE v2.5 28-Aug-2013 14:28:18
+% Last Modified by GUIDE v2.5 28-Aug-2013 16:36:43
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -81,6 +81,8 @@ if exist(handles.fnState,'file')
 else
     handles.inCluster=zeros(size(handles.NMAdisplacementsProjected,1),1);
     handles.included=ones(size(handles.NMAdisplacementsProjected,1),1);
+    handles.trajectoryX=[];
+    handles.trajectoryY=[];
     updateListBox(hObject, handles);
     set(handles.listRepresentation,'Value',[1 2])
     saveState(handles);
@@ -457,15 +459,21 @@ function updatePlot(handles)
     saveState(handles)
 
 
-% --- Executes on button press in pushbutton9.
-function pushbutton9_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton9 (see GCBO)
+% --- Executes on button press in drawTrajectory.
+function drawTrajectory_Callback(hObject, eventdata, handles)
+% hObject    handle to drawTrajectory (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+    idxVars=get(handles.listRepresentation,'Value');
+    if length(idxVars)~=2
+        return
+    end
 
+    k = waitforbuttonpress;
+    [x,y]=getline()
 
-% --- Executes on button press in pushbutton10.
-function pushbutton10_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton10 (see GCBO)
+% --- Executes on button press in generateAnimation.
+function generateAnimation_Callback(hObject, eventdata, handles)
+% hObject    handle to generateAnimation (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
