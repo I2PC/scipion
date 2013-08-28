@@ -33,7 +33,7 @@
 			
 			<div id="main">
 				<div id="mainNode1">
-					<div class="titleMain">
+					<div class="titleMain1">
 						Run
 					</div>
 					<table>
@@ -77,7 +77,7 @@
 				</div>
 								
 				<div id="mainNode2">
-					<div class="titleMain">
+					<div class="titleMain2">
 						Execution
 					</div>
 					<table>
@@ -164,11 +164,18 @@
 											<input type="text" id="{{paramName}}_input" name={{paramName}} value="{{param.htmlValue}}">
 									{% endif %}
 									</td>
-									<td class="ico">
+									
 								{% if param.getClassName == "PointerParam" %}
+									<td class="ico">
 										<a href="javascript:browseObjects('{{paramName}}','{{projectName}}','{{param.pointerClass.get}}');"><img src={{browse}}/></a>
-								{% endif %}
 									</td>
+									<td class="ico">
+										<a href="javascript:customPopup('/wizard/?action=downsampling',600,470)"><img src={{wizard}}/></a>
+									</td>
+								{% else %}
+									<td>
+									</td>
+								{% endif %}
 									<td class="ico"><a href="javascript:help('{{paramName}}','{{param.help.get}}');"><img src={{help}} /></a></td>
 								</tr>
 								{% endfor %}
@@ -182,8 +189,7 @@
 				<table>
 					<tr>
 						<td>
-							<a href=""><button class="buttonClose" type="button" onclick="window.close()">Close</button></a>
-							<!-- <a href=""><button class="buttonSave" type="button">Save</button></a> -->
+							<button class="buttonClose" type="button" onclick="window.close()">Close</button>
 							<input type="submit" class="buttonSave" value="Save" onclick="javascript:putMode('save');">
 							<input type="submit" class="buttonExec" value="Execute" onclick="javascript:putMode('execute');">
 						</td>

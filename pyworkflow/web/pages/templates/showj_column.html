@@ -44,6 +44,7 @@ $.fn.dataTableExt.oApi.fnGetColumnIndex = function ( oSettings, sCol )
 <script type="text/javascript" src="{{jquerydataTables_colreorder}}"></script>
 <script type="text/javascript" src="/static/js/ColReorderWithResize.js"></script>
 <script type="text/javascript" src="{{jeditable}}"></script>
+<script type="text/javascript" src="/static/js/Transpose.js"></script>
 
 <!-- <script type="text/javascript" src="{{jquery_ui}}"></script> -->
 <!-- <script type="text/javascript" src="{{jquery_tabletools}}"></script> -->
@@ -89,7 +90,7 @@ $(document).ready(function() {
 			        "bSort": true,
 			        "bInfo": true,
 			        "bAutoWidth": true,
-			        "sDom": 'Rlfrtip', 
+			        "sDom": 'ZRrt', 
 			        /* "sDom": 'T<"clear">lfrtip', */
  			        "oColReorder": {
 		    			"aiOrder": jsonTableLayoutConfiguration.colsOrder
@@ -123,6 +124,8 @@ $(document).ready(function() {
 		    		"sPaginationType": "full_numbers"
 			    }		
 			);
+	
+	
 	
 	initializeMultipleSelectionTool()
 	setElementsEditable(null)
@@ -179,6 +182,8 @@ function initializeColumnHeader(){
     {
         var cellIndex = oTable.fnColumnIndexToVisible(x)
         if (cellIndex !=null){
+        	console.log("header")
+        	console.log(getHeaderWithIcon(cols[x].sTitle,jsonTableLayoutConfiguration.columnsLayout[cols[x].sTitle].columnLayoutProperties))
         	$('th:eq('+cellIndex+')',headerRow).find("div").append(getHeaderWithIcon(cols[x].sTitle,jsonTableLayoutConfiguration.columnsLayout[cols[x].sTitle].columnLayoutProperties))
         	$('th:eq('+cellIndex+')',headerRow).attr("id",cols[x].sTitle+"___column_header")
         } 
@@ -237,6 +242,7 @@ function getColumnsDefinition(){
 		
 		dataRowForTable["sTitle"]= i
 		dataRowForTable["aTargets"]=[columnId]
+		dataRowForTable["bSortable"]= false
 		dataForTable.push(dataRowForTable)
 		columnId++;
 		

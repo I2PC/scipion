@@ -38,6 +38,8 @@ def getResource(request):
         img = 'system_help24.png'
     elif request == 'browse':
         img = 'zoom.png'
+    elif request == 'wizard':
+        img = 'tools_wizard.png'
     elif request == 'edit_toolbar':
         img = 'edit.gif'
     elif request == 'copy_toolbar':
@@ -307,7 +309,8 @@ def form(request):
     favicon_path = getResource('favicon')
     logo_help = getResource('help')
     logo_browse = getResource('browse')
-    logo_edit = getResource('edit_toolbar');
+    logo_wiz = getResource('wizard')
+    logo_edit = getResource('edit_toolbar')
     
     # CSS #
     css_path = staticPath('css/form.css')
@@ -360,6 +363,7 @@ def form(request):
                'form': jsForm_path,
                'jquery': jquery_path,
                'browse': logo_browse,
+               'wizard': logo_wiz,
                'utils': utils_path,
                'css':css_path,
                'messi': messi_path,
@@ -375,6 +379,17 @@ def form(request):
     
     return render_to_response('form.html', context)
 
+def wizard(request):
+    action = request.GET.get('action', None)
+    
+    if(action=='downsampling'):
+        response = 'wiz_downsampling.html'
+    
+    context={'action':action
+             }
+    
+    return render_to_response(response, context)
+    
 
 def loadProtocolProject(request, requestType='POST'):
     """ Retrieve the project and protocol from this request.
@@ -591,6 +606,8 @@ def deleteHost(request):
     return HttpResponseRedirect('/view_hosts')#, RequestContext(request))
 
 def visualizeObject(request):
+    probandoCTFParam = True
+    
     objectId = request.GET.get("objectId")    
     #projectName = request.session['projectName']
     projectName = request.GET.get("projectName")
@@ -603,11 +620,17 @@ def visualizeObject(request):
     project.load()
     
     object = project.mapper.selectById(int(objectId))
-    object1 = object
     if object.isPointer():
         object = object.get()
         
-    if isinstance(object, SetOfMicrographs):
+    if probandoCTFParam:
+        inputParameters = {'path': join(request.session['projectPath'], "Runs/XmippProtCTFMicrographs218/extra/BPV_1386/xmipp_ctf.ctfparam"),
+               'allowRender': True,
+               'mode': 'column',
+               'zoom': '150px',
+               'goto': 1,
+               'colRowMode': 'Off'}    
+    elif isinstance(object, SetOfMicrographs):
         fn = project.getTmpPath(object.getName() + '_micrographs.xmd')
         mics = XmippSetOfMicrographs.convert(object, fn)
         inputParameters = {'path': join(request.session['projectPath'], mics.getFileName()),

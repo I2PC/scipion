@@ -32,21 +32,25 @@ def showj(request, inputParameters=None):
     jeditable_path = join(settings.STATIC_URL, 'js/jquery.jeditable.js')
     jquery_ui_path = join(settings.STATIC_URL, 'js/jquery-ui.js')
     jquery_waypoints_path = join(settings.STATIC_URL, 'js/waypoints.min.js')    
-    jquery_tabletools_path = join(settings.STATIC_URL, 'js/TableTools.min.js')
-        
+#    jquery_tabletools_path = join(settings.STATIC_URL, 'js/TableTools.min.js')
     
     #############
     # WEB INPUT PARAMETERS
+    _imageDimensions = ''
+    
     if request.method == 'POST': # If the form has been submitted... Post method
         
         _path = request.POST.get('path')
         _blockComboBox = request.POST.get('blockComboBox')
         _render = request.POST.get('allowRender')
+        _labelsToRenderComboBox = request.POST.get('labelsToRenderComboBox')
          
     else: #If the form is called by get 
         _path = inputParameters['path']
         _blockComboBox = inputParameters['blockComboBox'] if 'blockComboBox' in inputParameters else '' 
         _render = inputParameters['allowRender']
+        _labelsToRenderComboBox = inputParameters['labelsToRenderComboBox'] if 'labelsToRenderComboBox' in inputParameters else ''
+        request.session['defaultZoom'] = inputParameters['zoom'] if 'zoom' in inputParameters else '150px' 
     
     #Init Dataset
     #Todo: Check type of Dataset 
@@ -62,29 +66,37 @@ def showj(request, inputParameters=None):
     tableLayoutConfiguration = TableLayoutConfiguration(tableDataset, _render)
 
     #Initialize Showj Form (button toolbar)
-    if request.method == 'POST': # If the form has been submitted... Post method    
-        showjForm = ShowjForm(dataset, tableLayoutConfiguration, request.POST) # A form bound to the POST data
+    if request.method == 'POST': # If the form has been submitted... Post method  
+        if _labelsToRenderComboBox != '':
+            if _labelsToRenderComboBox != request.session['labelsToRenderComboBox']:
+                _imageDimensions = get_image_dimensions(request.session['projectPath'], tableDataset.getElementById(0,_labelsToRenderComboBox))
+        else:
+            _imageDimensions = None
+        
+        showjForm = ShowjForm(dataset,
+                              tableLayoutConfiguration,
+                              request.POST) # A form bound to the POST data
     else:
-        if 'labelsToRenderComboBox' not in inputParameters: inputParameters['labelsToRenderComboBox']=getLabelsToRenderComboBoxValues(tableLayoutConfiguration.columnsLayout)[0][0]
-        
-        # NAPA DE LUXE (Xmipp dependant)
-        img_dimensions = get_image_dimensions(request, tableDataset.getElementById(0,inputParameters['labelsToRenderComboBox']))
-        inputParameters['imageWidth']=img_dimensions[0]
-        inputParameters['imageHeight']=img_dimensions[1]
-        
+        if _labelsToRenderComboBox == '':
+            labelsToRenderComboBoxValues = getLabelsToRenderComboBoxValues(tableLayoutConfiguration.columnsLayout)
+            inputParameters['labelsToRenderComboBox']=labelsToRenderComboBoxValues[0][0] if len(labelsToRenderComboBoxValues) > 0 else ''
+       
+        _imageDimensions = get_image_dimensions(request.session['projectPath'], tableDataset.getElementById(0,inputParameters['labelsToRenderComboBox']))  if inputParameters['labelsToRenderComboBox']!='' else None
+            
         inputParameters['blockComboBox']=_blockComboBox
         
-        showjForm = ShowjForm(dataset, tableLayoutConfiguration, inputParameters) # An unbound form
-        
+        showjForm = ShowjForm(dataset,
+                              tableLayoutConfiguration,
+                              inputParameters) # An unbound form
+
     if showjForm.is_valid() is False:
         print showjForm.errors
-    
-#    md = MdData(dataset, showjForm.data['allowRender'], showjForm.data['zoom'])
-
-    #Store dataset in session 
+        
+    #Store dataset and labelsToRender in session 
     request.session['dataset'] = dataset
-
-    
+    request.session['labelsToRenderComboBox'] = _labelsToRenderComboBox
+    if (_imageDimensions != ''):
+        request.session['imageDimensions'] = _imageDimensions
 
     #Create context to be send
     context = {'jquery': jquery_path, #Configuration variables
@@ -97,19 +109,15 @@ def showj(request, inputParameters=None):
                'jeditable': jeditable_path,
                'jquery_ui': jquery_ui_path,
                'jquery_waypoints':jquery_waypoints_path,
-#               'jquery_tabletools':jquery_tabletools_path,
                'css': css_path,
-               
-               
                'tableLayoutConfiguration' : tableLayoutConfiguration if (showjForm.data['mode']=='gallery') else json.dumps({'columnsLayout': tableLayoutConfiguration.columnsLayout, 'colsOrder': tableLayoutConfiguration.colsOrder}, ensure_ascii=False, cls=ColumnLayoutConfigurationEncoder), #Data variables
 #               'tableLayoutConfiguration' : json.dumps({'columnsLayout': tableLayoutConfiguration.columnsLayout, 'colsOrder': tableLayoutConfiguration.colsOrder}, ensure_ascii=False, cls=ColumnLayoutConfigurationEncoder),
-
                'tableDataset': tableDataset,
+               'imageDimensions': request.session['imageDimensions'],
+               'defaultZoom': request.session['defaultZoom'], 
                'form': showjForm} #Form
     
     return_page = '%s%s%s' % ('showj_', showjForm.data['mode'], '.html')
-
-
     return render_to_response(return_page, RequestContext(request, context))
 
                  
@@ -117,17 +125,15 @@ class ColumnLayoutConfigurationEncoder(json.JSONEncoder):
     def default(self, columnLayoutConfiguration):
         columnLayoutConfigurationCoded={}
         columnLayoutConfigurationCoded={"typeOfColumn":columnLayoutConfiguration.typeOfColumn,
-                                                                         "columnLayoutProperties":{"visible":columnLayoutConfiguration.columnLayoutProperties.visible,
-                                                                                                   "allowSetVisible":columnLayoutConfiguration.columnLayoutProperties.allowSetVisible,
-                                                                                                   "editable":columnLayoutConfiguration.columnLayoutProperties.editable,
-                                                                                                   "allowSetEditable":columnLayoutConfiguration.columnLayoutProperties.allowSetEditable,
-                                                                                                   "renderable":columnLayoutConfiguration.columnLayoutProperties.renderable,
-                                                                                                   "allowSetRenderable":columnLayoutConfiguration.columnLayoutProperties.allowSetRenderable,
-                                                                                                   "renderFunc":columnLayoutConfiguration.columnLayoutProperties.renderFunc}
-                                                                         }
+                                        "columnLayoutProperties":{"visible":columnLayoutConfiguration.columnLayoutProperties.visible,
+                                                                  "allowSetVisible":columnLayoutConfiguration.columnLayoutProperties.allowSetVisible,
+                                                                  "editable":columnLayoutConfiguration.columnLayoutProperties.editable,
+                                                                  "allowSetEditable":columnLayoutConfiguration.columnLayoutProperties.allowSetEditable,
+                                                                  "renderable":columnLayoutConfiguration.columnLayoutProperties.renderable,
+                                                                  "allowSetRenderable":columnLayoutConfiguration.columnLayoutProperties.allowSetRenderable,
+                                                                  "renderFunc":columnLayoutConfiguration.columnLayoutProperties.renderFunc}
+                                        }
         return columnLayoutConfigurationCoded 
-                 
-
             
 class TableLayoutConfiguration():
     def __init__(self, tableDataset, allowRender=True):
@@ -237,7 +243,7 @@ def save_showj_table(request):
 
 #    request.get.get('value')
 
-def get_image_dimensions(request, imagePath):
+def get_image_dimensions(projectPath, imagePath):
     from django.http import HttpResponse
     from pyworkflow.gui import getImage
     imageNo = None
@@ -253,8 +259,8 @@ def get_image_dimensions(request, imagePath):
             imageNo = parts[0]
             imagePath = parts[1]
             
-        if 'projectPath' in request.session:
-            imagePathTmp = join(request.session['projectPath'],imagePath)
+        if projectPath != '':
+            imagePathTmp = join(projectPath,imagePath)
             if not os.path.isfile(imagePathTmp):
                 imagePath = getInputPath('showj', imagePath)      
             

@@ -1,5 +1,38 @@
 #!/usr/bin/env bash
-mkdir -p $SCIPION_HOME/tests
-SRC=scipion@scipion.cnb.csic.es:Scipion
-rsync -av ${SRC}/tests/input/ $SCIPION_HOME/tests/input/
-rsync -av ${SRC}/tests/gold/ $SCIPION_HOME/tests/gold/
+#set -x #debug
+COMMAND="rsync -av"
+LAST="last_m.txt"
+WHO="by $(whoami) at $(hostname)"
+
+
+if [[ "$1" == "-h" ]]; then
+    shift
+    echo "Scipion data synchronization script. Please, do not use it directly. Use sync_data.py instead."
+fi
+if [[ "$1" == "-l" ]]; then
+    LAST=$2
+    shift 2
+fi
+if [[ "$1" == "-f" ]]; then
+    shift
+    COMMAND="$COMMAND --delete"
+fi
+if [[ "$1" == "-r" ]]; then
+    shift
+    DST=scipion@scipion.cnb.csic.es:Scipion
+    if [[ "$1" == "all" ]]; then
+        ${COMMAND} ${SCIPION_HOME}/tests/input/ ${DST}/tests/input/
+        ${COMMAND} ${SCIPION_HOME}/tests/gold/ ${DST}/tests/gold
+        ssh scipion@scipion.cnb.csic.es "echo '++++' >> Scipion/${LAST} && echo 'Modification made at' >> Scipion/${LAST} && date >> Scipion/${LAST} && echo ${WHO} >> Scipion/${LAST} && echo '----' >> Scipion/${LAST}"
+    else
+        for file in $@; do
+            ${COMMAND} ${SCIPION_HOME}/tests/${file} ${DST}/tests/${file}
+        done
+        ssh scipion@scipion.cnb.csic.es "echo '++++' >> Scipion/${LAST} && echo 'Modification made at' >> Scipion/${LAST} && date >> Scipion/${LAST} && echo ${WHO} >> Scipion/${LAST} && echo '----' >> Scipion/${LAST}"
+    fi
+else
+    mkdir -p $SCIPION_HOME/tests
+    SRC=scipion@scipion.cnb.csic.es:Scipion
+    ${COMMAND} ${SRC}/tests/input/ ${SCIPION_HOME}/tests/input/
+    ${COMMAND} ${SRC}/tests/gold/ ${SCIPION_HOME}/tests/gold/
+fi

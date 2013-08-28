@@ -57,6 +57,7 @@
 	//Initialize block and metadata combobox to reload the web when changing
 	function initializeComboBoxEvents(){
 		$("#id_blockComboBox , #id_labelsToRenderComboBox").change(function(){
+			$('#id_zoom').val('{{defaultZoom}}')
 			$('form#showjForm').submit();
 		})
 	}
@@ -182,12 +183,11 @@
 		function setImageSize(refreshElement){
 			/* Gets zoom and image width and height */
 			zoom_element=$('#id_zoom')
-			imageHeight_val = parseInt($('#id_imageHeight').val())
-			imageWidth_val = parseInt($('#id_imageWidth').val())
 			
-			console.log(zoom_element.val())
-			console.log(imageHeight_val)
-			console.log(imageWidth_val)
+			console.log("yaki")
+			console.log({{imageDimensions}})
+			imageHeight_val = parseInt({{imageDimensions.1}})
+			imageWidth_val = parseInt({{imageDimensions.0}})
 			
 			/* Check if zoom in pixel */
 			if (zoom_element.val().indexOf('px')!=-1){
@@ -230,34 +230,23 @@
 			d = new Date();
 			$(".tableImages").each(function(){
 			   var newSrc = "";
-			   if ($(this).attr("src").indexOf("&dim") != -1){
-			   	newSrc = $(this).attr("src").substring(0,$(this).attr("src").indexOf("&dim"));
+			   if ($(this).data("real_src").indexOf("&dim") != -1){
+			   	newSrc = $(this).data("real_src").substring(0,$(this).data("real_src").indexOf("&dim"));
 			   }
 			   else{
-				  newSrc = $(this).attr("src");   
+				  newSrc = $(this).data("real_src");   
 			   }
+			   $(this).attr("height",tableImages_width)
 			   $(this).attr("width",tableImages_width)
-			   $(this).attr("src", newSrc + "&dim="+tableImages_width+"&"+d.getTime());
+			   $(this).data("real_src", newSrc + "&dim="+tableImages_width+"&"+d.getTime());
 		   })
+		   
+			{% if form.mode.value == 'gallery' %}
+			$.waypoints('refresh')
+			{% endif %}
+		   
 		}
-		
-		//Update image dimensions by url due to zoom change
-/* 		function updateImageDimByUrl(){
-			console.log("actualizando tamano")
-			
-			d = new Date();
-		   	$(".tableImages").each(function(){
-			   var newSrc = "";
-			   if ($(this).attr("src").indexOf("&dim") != -1){
-			   	newSrc = $(this).attr("src").substring(0,$(this).attr("src").indexOf("&dim"));
-			   }
-			   else{
-				  newSrc = $(this).attr("src");   
-			   }
-			   $(this).attr("src", newSrc + "&dim="+$('#id_zoom').val()+"&"+d.getTime());
-		   })
-		} */
-	
+
 	</script>
 	<script type="text/javascript">
 		//Save table change in metadata
@@ -382,21 +371,29 @@
 			<form id="showjForm" action="/showj/" method="post"> {% csrf_token %}
 				<div id="modeContainer" class="sectionMenu">
 					<input type="submit" value="table" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='table';" class="submitButton
-					 {% if form.mode.value == 'gallery' %}
-					  tableOn
+					 {% if form.mode.value == 'gallery' or form.mode.value == 'column' %}
+					  tableOff
 					 {% endif %}
 					 {% if form.mode.value == 'table' %}
-					 tableOff
+					 tableOn
 					 {% endif %}	
-					  "/>
+					  " 
+					  {% if form.mode.value == 'column' %}
+					  disabled
+					  {% endif %}
+					  />
 					<input type="submit" value="gallery" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='gallery';" class="submitButton
 					{% if form.mode.value == 'gallery' %}
-					  galleryOff
+					  galleryOn
 					 {% endif %}
-					 {% if form.mode.value == 'table' %}
-					 galleryOn
+					 {% if form.mode.value == 'table' or form.mode.value == 'column'  %}
+					 galleryOff
 					 {% endif %}
-					 " />
+					 "
+					 {% if form.mode.value == 'column' %}
+					  disabled
+					 {% endif %}
+					 />
 				</div>
 				
 				<div id="zoomContainer" class="sectionMenu">
