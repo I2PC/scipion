@@ -2,17 +2,12 @@
 #set -x #debug
 COMMAND="rsync -av"
 LAST="last_m.txt"
-MODIF="modifications.log"
 WHO="by $(whoami) at $(hostname)"
 
 
 if [[ "$1" == "-h" ]]; then
     shift
     echo "Scipion data synchronization script. Please, do not use it directly. Use sync_data.py instead."
-fi
-if [[ "$1" == "-m" ]]; then
-    MODIF=$2
-    shift 2
 fi
 if [[ "$1" == "-l" ]]; then
     LAST=$2
