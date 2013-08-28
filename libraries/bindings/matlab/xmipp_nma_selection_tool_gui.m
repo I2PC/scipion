@@ -22,7 +22,7 @@ function varargout = xmipp_nma_selection_tool_gui(varargin)
 
 % Edit the above text to modify the response to help xmipp_nma_selection_tool_gui
 
-% Last Modified by GUIDE v2.5 28-Aug-2013 16:36:43
+% Last Modified by GUIDE v2.5 28-Aug-2013 20:45:33
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -483,3 +483,50 @@ function generateAnimation_Callback(hObject, eventdata, handles)
 % hObject    handle to generateAnimation (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in loadTrajectory.
+function loadTrajectory_Callback(hObject, eventdata, handles)
+% hObject    handle to loadTrajectory (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    fileList=dir([handles.rundir '/extra/trajectory__*.mat']);
+    if length(fileList)==0
+        return
+    end
+    listString={};
+    for i=1:length(fileList)
+        aux=strrep(fileList(i).name,'.mat','');
+        listString{i}=strrep(aux,'trajectory__','');
+    end
+    [Selection,ok] = listdlg('ListString',listString,'SelectionMode','single');
+    if ok
+        load([handles.rundir '/extra/trajectory__' listString{Selection} '.mat'])
+        handles.trajectoryX=trajectoryX;
+        handles.trajectoryY=trajectoryY;
+        guidata(gcbo,handles)
+        updatePlot(handles)
+    end
+
+% --- Executes on button press in saveTrajectory.
+function saveTrajectory_Callback(hObject, eventdata, handles)
+% hObject    handle to saveTrajectory (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+    trajectoryName=inputdlg('Name of the trajectory','Save trajectory',1);
+    if ~isempty(trajectoryName)
+        trajectoryX=handles.trajectoryX;
+        trajectoryY=handles.trajectoryY;
+        save([handles.rundir '/extra/trajectory__' trajectoryName{1} '.mat'],'trajectoryX','trajectoryY')
+    end
+
+% --- Executes on button press in resetTrajectory.
+function resetTrajectory_Callback(hObject, eventdata, handles)
+% hObject    handle to resetTrajectory (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+        handles.trajectoryX=[];
+        handles.trajectoryY=[];
+        guidata(gcbo,handles)
+        updatePlot(handles)
