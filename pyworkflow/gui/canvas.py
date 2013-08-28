@@ -211,7 +211,7 @@ class Item(object):
     # !!!! check that the name exists...
     def getSocketCoords(self,name):
         socket=self.sockets[name]
-        return getSocketCoordsAt(socket["verticalLocation"])
+        return self.getSocketCoordsAt(socket["verticalLocation"])
 
     def getSocketCoordsAt(self,verticalLocation):
         x1,y1,x2,y2=self.getCorners()
@@ -443,7 +443,7 @@ class Edge():
         self.paint()
 
 
-# !!!! @current - socket moving with item - use move instead of delete and create?
+# !!!! "move" line instead of delete and create?
 class Cable():
     def __init__(self,canvas,src,srcConnector,dst,dstConnector):
         self.id=None
@@ -455,16 +455,25 @@ class Cable():
         self.srcCoords=src.getSocketCoords(srcConnector)
         self.dstCoords=dst.getSocketCoords(dstConnector)
 
-        src.addPositionListener(self.itemMoved)
-        dst.addPositionListener(self.itemMoved)
+        src.addPositionListener(self.srcMoved)
+        dst.addPositionListener(self.dstMoved)
         self.paint()
 
     def srcMoved(self,dx,dy):
         srcX,srcY=self.srcCoords        
-        self.canvas.coords(self.id, srcX+dx, srcY+dy)
+        self.srcCoords=(srcX+dx,srcY+dy)
+        self.updateCoords()
+
+    def updateCoords(self):
+        srcX,srcY=self.srcCoords        
+        dstX,dstY=self.dstCoords        
+        self.canvas.coords(self.id, srcX, srcY,dstX,dstY)
+
 
     def dstMoved(self,dx,dy):
-        self.canvas.move(self.id, dx, dy)
+        dstX,dstY=self.dstCoords
+        self.dstCoords=(dstX+dx,dstY+dy)
+        self.updateCoords()
 
     def paint(self):
         srcX,srcY=self.srcCoords
@@ -489,7 +498,7 @@ if __name__ == '__main__':
     tb4.addSocket("input1",RoundConnector, "top")
     e1 = canvas.createEdge(tb1, tb2)
     e2 = canvas.createEdge(tb1, tb3)
-    # c1= canvas.createCable(tb2,"output1",tb4,"input1")
+    c1= canvas.createCable(tb2,"output1",tb4,"input1")
     tb3.moveTo(100, 300)
 
     root.mainloop()
