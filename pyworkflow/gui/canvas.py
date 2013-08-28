@@ -179,7 +179,6 @@ def findClosestConnectors(item1,item2):
 
 
 
-# !!!! refactor code repeated in subclasses, probably into this Item class
 # !!!! An item can have many Sockets, in the top or bottom, in different positions (order)
 class Item(object):      
     def __init__(self,canvas,x,y):
@@ -203,12 +202,14 @@ class Item(object):
     def addSocket(self,name,socketClass,verticalLocation,position=None):
         x,y=self.getSocketCoordsAt(verticalLocation)
         self.sockets[name]={"object": socketClass(self.canvas,x,y,name), "verticalLocation": verticalLocation}
-        self.paintSocket(self.sockets[name])
+        self.paintSocket(self.getSocket(name))
+
+    def getSocket(self,name):
+        return self.sockets[name]["object"]
 
     # !!!! check that the name exists...
     def getSocketCoords(self,name):
-        socket=self.sockets[name]
-        return self.getSocketCoordsAt(socket["verticalLocation"])
+        return self.getSocketCoordsAt(self.sockets[name]["verticalLocation"])
 
     def getSocketCoordsAt(self,verticalLocation):
         x1,y1,x2,y2=self.getCorners()
@@ -221,11 +222,11 @@ class Item(object):
 
     def paintSocket(self,socket):
         # x,y=self.getSocketCoords(socket["name"])
-        socket["object"].paintSocket()
+        socket.paintSocket()
 
     def paintSockets(self):
         for name in self.sockets.keys():
-            self.paintSocket(self.sockets[name])
+            self.paintSocket(self.getSocket(name))
 
 
     def getDimensions(self):
@@ -233,7 +234,8 @@ class Item(object):
         return (x2-x, y2-y)
         
     def move(self, dx, dy):
-        self.canvas.move(self.id, dx, dy)
+        if hasattr(self,"id"):
+            self.canvas.move(self.id, dx, dy)
         self.x += dx
         self.y += dy
         for name in self.sockets.keys():
@@ -359,12 +361,23 @@ class Connector(Item):
         """Should be implemented by the subclasses"""
         pass
 
+    def move(self,dx,dy):
+        super(Connector,self).move(dx,dy)
+        if self.socketId:
+            self.canvas.move(self.socketId, dx, dy)
+        if self.plugId:
+            self.canvas.move(self.plugId, dx, dy)
+
 
 
 class RoundConnector(Connector):
     def paintSocket(self):
-        self.id= self.canvas.create_oval(self.x,self.y,self.x+5,self.y+5)
-        return self.id
+        self.socketId= self.canvas.create_oval(self.x,self.y,self.x+5,self.y+5)
+
+    def paintPlug(self):
+        self.plugId= self.canvas.create_oval(self.x,self.y,self.x+5,self.y+5,fill="blue",width=0)
+
+
 
 class Edge():
     """Edge between two objects"""
@@ -406,36 +419,38 @@ class Cable():
     def __init__(self,canvas,src,srcConnector,dst,dstConnector):
         self.id=None
         self.canvas=canvas
-        self.srcCoords=src.getSocketCoords(srcConnector)
-        self.dstCoords=dst.getSocketCoords(dstConnector)
-
+        self.srcPlug=src.getSocket(srcConnector)
+        self.dstPlug=dst.getSocket(dstConnector) 
+        self.srcX=self.srcPlug.x
+        self.srcY=self.srcPlug.y
+        self.dstX,self.dstY=dst.getSocketCoords(dstConnector)
         src.addPositionListener(self.srcMoved)
         dst.addPositionListener(self.dstMoved)
         self.paint()
 
     def srcMoved(self,dx,dy):
-        srcX,srcY=self.srcCoords        
-        self.srcCoords=(srcX+dx,srcY+dy)
+        self.srcX=self.srcX+dx
+        self.srcY=self.srcY+dy
         self.updateCoords()
 
     def updateCoords(self):
-        srcX,srcY=self.srcCoords        
-        dstX,dstY=self.dstCoords        
-        self.canvas.coords(self.id, srcX, srcY,dstX,dstY)
+        self.canvas.coords(self.id, self.srcX, self.srcY,self.dstX,self.dstY)
 
 
     def dstMoved(self,dx,dy):
-        dstX,dstY=self.dstCoords
-        self.dstCoords=(dstX+dx,dstY+dy)
+        self.dstX=self.dstX+dx
+        self.dstY=self.dstY+dy
         self.updateCoords()
 
     def paint(self):
-        srcX,srcY=self.srcCoords
-        dstX,dstY=self.dstCoords
-
-        self.id = self.canvas.create_line(srcX,srcY, dstX,dstY, width=2)
+        self.id = self.canvas.create_line(self.srcX,self.srcY,self.dstX,self.dstY, width=2)
         self.canvas.tag_lower(self.id)
+        self.paintPlugs()
         
+    def paintPlugs(self):
+        self.srcPlug.paintPlug()
+        self.dstPlug.paintPlug()
+
  
 if __name__ == '__main__':
     root = tk.Tk()
