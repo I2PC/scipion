@@ -101,6 +101,8 @@ def get_image_dimensions(projectPath, imagePath):
 def get_image(request):
     from django.http import HttpResponse
     from pyworkflow.gui import getImage, getPILImage
+#    print "request.session['projectPath']2", request.session['projectPath']
+    
     imageNo = None
     imagePath = request.GET.get('image')
     imageDim = request.GET.get('dim', 150)
@@ -113,7 +115,7 @@ def get_image(request):
             parts = imagePath.split('@')
             imageNo = parts[0]
             imagePath = parts[1]
-            
+
         if 'projectPath' in request.session:
             imagePathTmp = os.path.join(request.session['projectPath'],imagePath)
             if not os.path.isfile(imagePathTmp):

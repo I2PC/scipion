@@ -19,6 +19,7 @@ def showj(request, inputParameters=None):
     # WEB INPUT PARAMETERS
     _imageDimensions = ''
     
+    print "metodo",request.method
     if request.method == 'POST': # If the form has been submitted... Post method
         
         _path = request.POST.get('path')
@@ -35,7 +36,7 @@ def showj(request, inputParameters=None):
     
     #Init Dataset
     #Todo: Check type of Dataset 
-    dataset = loadDatasetXmipp(_path)
+    dataset = loadDatasetXmipp(_path) if 'dataset' not in request.session else request.session['dataset']
     
     if _blockComboBox == '':
         _blockComboBox = dataset.listTables()[0]
@@ -60,7 +61,8 @@ def showj(request, inputParameters=None):
     else:
         if _labelsToRenderComboBox == '':
             labelsToRenderComboBoxValues = getLabelsToRenderComboBoxValues(tableLayoutConfiguration.columnsLayout)
-            inputParameters['labelsToRenderComboBox']=labelsToRenderComboBoxValues[0][0] if len(labelsToRenderComboBoxValues) > 0 else ''
+            _labelsToRenderComboBox=labelsToRenderComboBoxValues[0][0] if len(labelsToRenderComboBoxValues) > 0 else ''
+            inputParameters['labelsToRenderComboBox']=_labelsToRenderComboBox
        
         _imageDimensions = get_image_dimensions(request.session['projectPath'], tableDataset.getElementById(0,inputParameters['labelsToRenderComboBox']))  if inputParameters['labelsToRenderComboBox']!='' else None
             
@@ -76,6 +78,9 @@ def showj(request, inputParameters=None):
     #Store dataset and labelsToRender in session 
     request.session['dataset'] = dataset
     request.session['labelsToRenderComboBox'] = _labelsToRenderComboBox
+    request.session['blockComboBox'] = _blockComboBox
+    #Esto falla y creo que es por el tamano
+    #request.session['table'] = tableDataset
     if (_imageDimensions != ''):
         request.session['imageDimensions'] = _imageDimensions
 
@@ -85,6 +90,7 @@ def showj(request, inputParameters=None):
                'demo_table_jui': getResourceCss('showj_demo_table_jui'),
                
                'favicon': getResourceIcon('favicon'),
+               
                'jquery': getResourceJs('jquery'), #Configuration variables
                'jquery_datatable': getResourceJs('jquery_datatables'),
                'jquerydataTables_colreorder': getResourceJs('jquery_colreorder'),
@@ -190,13 +196,18 @@ def save_showj_table(request):
     from django.http import HttpResponse
     import json
     from django.utils import simplejson
-    print "akiiiiiiii"
     
     if request.is_ajax():
         changes = request.POST.get('changes')
         print "changes", changes
         print "type", type(changes)
-        request.session['dataset']
+        
+        dataset=request.session['dataset']
+        blockComboBox=request.session['blockComboBox']
+        
+        tableDataset=dataset.getTable(blockComboBox)
+        tableDataset.updateRow(rowId,values)
+        
 #        NAPA DE LUXE
         
 #        element_id = request.GET.get('element_id')
