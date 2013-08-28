@@ -149,6 +149,10 @@ class Canvas(tk.Frame):
         #self.items[edge.id] = edge
         return edge
     
+    def createCable(self,src,srcSocket,dst,dstSocket):
+        cable= Cable(self.canvas,src,srcSocket,dst,dstSocket)
+        # self.items[cable.id]=cable
+
 
     def clear(self):
         """Clear all items from the canvas"""
@@ -182,7 +186,7 @@ class Item(object):
     def __init__(self,canvas):
         self.activeConnector=None
         self.canvas=canvas
-        self.sockets=[]
+        self.sockets={}
 
     def getConnectorsCoordinates(self):
         x1,y1,x2,y2=self.getCorners()
@@ -196,28 +200,35 @@ class Item(object):
     def setActiveConnector(self,coords):
         if self.activeConnector:
             self.activeConnector.erase()
-        self.activeConnector=Connector(self.canvas,coords[0],coords[1])
+        self.activeConnector=Connector(self.canvas,coords[0],coords[1],"auto")
         # add the connector to the items list in order to track it for events
 
     def addSocket(self,name,socketClass,verticalLocation,position=None):
-        self.sockets.append({"name": name, "verticalLocation": verticalLocation, "class":socketClass})
-        self.paint()
+        x,y=self.getSocketCoordsAt(verticalLocation)
+        self.sockets[name]={"object": socketClass(self.canvas,x,y,name), "verticalLocation": verticalLocation}
+        self.paintSocket(self.sockets[name])
 
-    def paintSocket(self,socket):
+    # !!!! check that the name exists...
+    def getSocketCoords(self,name):
+        socket=self.sockets[name]
+        return getSocketCoordsAt(socket["verticalLocation"])
+
+    def getSocketCoordsAt(self,verticalLocation):
         x1,y1,x2,y2=self.getCorners()
         xc=(x2+x1)/2.0
-        if socket["verticalLocation"] == "top":
+        if verticalLocation == "top":
             y=y1
         else:
             y=y2
-        print "paint socket at %d %d" %(xc,y)
-        #class_=globals()[socket["class"]]
-        socket["class"].paintSocket(self.canvas,xc,y)
+        return (xc,y)
+
+    def paintSocket(self,socket):
+        # x,y=self.getSocketCoords(socket["name"])
+        socket["object"].paintSocket()
 
     def paintSockets(self):
-        print self.sockets
-        for socket in self.sockets:
-            self.paintSocket(socket)
+        for name in self.sockets.keys():
+            self.paintSocket(self.sockets[name])
 
 
         
@@ -259,7 +270,7 @@ class TextItem(Item):
         self.id = self._paintBounds(xr-m, yr-m, w+m, h+m, fillColor=self.bgColor)
         self.canvas.tag_raise(self.id_text)
     
-        self.paintSockets()
+        # self.paintSockets()
 
 
     def getDimensions(self):
@@ -273,6 +284,9 @@ class TextItem(Item):
         self.canvas.move(self.id, dx, dy)
         self.x += dx
         self.y += dy
+        for name in self.sockets.keys():
+            socket=self.sockets[name]
+            socket["object"].move(dx,dy)
         for listenerFunc in self.listeners:
             listenerFunc(dx, dy)
             
@@ -342,16 +356,14 @@ class TextCircle(TextItem):
         
 
 class Connector():
-    def __init__(self,canvas,x,y,paintFn=None):
+    def __init__(self,canvas,x,y,name):
         self.id=None
         self.x=x
         self.y=y
         self.canvas=canvas
-        if paintFn == None:
-            self.paintFn=self.defaultPaint
+        self.name= name
         self.listeners=[]
-        self.paint()
-        
+
     def addPositionListener(self,listenerFunc):
         self.listeners.append(listenerFunc)        
 
@@ -362,7 +374,6 @@ class Connector():
     def ovalPaint(self):
         return self.canvas.create_oval(self.x,self.y,self.x+5,self.y+5)
 
-    @classmethod
     def paintPlug(cls,canvas,x,y):
         """Should be implemented by the subclasses"""
         pass
@@ -393,9 +404,9 @@ class Connector():
         print self.x,self.y
 
 class RoundConnector(Connector):
-    @classmethod
-    def paintSocket(cls,canvas,x,y):
-        return canvas.create_oval(x,y,x+5,y+5)
+    def paintSocket(self):
+        self.id= self.canvas.create_oval(self.x,self.y,self.x+5,self.y+5)
+        return self.id
 
 class Edge():
     """Edge between two objects"""
@@ -430,6 +441,37 @@ class Edge():
         self.dstX += dx
         self.dstY += dy
         self.paint()
+
+
+# !!!! @current - socket moving with item - use move instead of delete and create?
+class Cable():
+    def __init__(self,canvas,src,srcConnector,dst,dstConnector):
+        self.id=None
+        self.canvas=canvas
+        #self.src=src
+        # self.srcConnector=srcConnector
+        #self.dst=dst
+        # self.dstConnector=dstConnector
+        self.srcCoords=src.getSocketCoords(srcConnector)
+        self.dstCoords=dst.getSocketCoords(dstConnector)
+
+        src.addPositionListener(self.itemMoved)
+        dst.addPositionListener(self.itemMoved)
+        self.paint()
+
+    def srcMoved(self,dx,dy):
+        srcX,srcY=self.srcCoords        
+        self.canvas.coords(self.id, srcX+dx, srcY+dy)
+
+    def dstMoved(self,dx,dy):
+        self.canvas.move(self.id, dx, dy)
+
+    def paint(self):
+        srcX,srcY=self.srcCoords
+        dstX,dstY=self.dstCoords
+
+        self.id = self.canvas.create_line(srcX,srcY, dstX,dstY, width=2)
+        self.canvas.tag_lower(self.id)
         
  
 if __name__ == '__main__':
@@ -447,7 +489,7 @@ if __name__ == '__main__':
     tb4.addSocket("input1",RoundConnector, "top")
     e1 = canvas.createEdge(tb1, tb2)
     e2 = canvas.createEdge(tb1, tb3)
-    
+    # c1= canvas.createCable(tb2,"output1",tb4,"input1")
     tb3.moveTo(100, 300)
 
     root.mainloop()
