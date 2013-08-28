@@ -82,6 +82,10 @@ class ProtNMAAlignment(XmippProtocol):
                 XmippArrayPlotter3D(self.extraPath("deformations.txt"),modeList[0],modeList[1],modeList[2],"",
                                     modeNameList[0],modeNameList[1],modeNameList[2])
   
+    def visualizeVar(self, varName):
+        if varName=="AnalyzeMATLAB" and self.AnalyzeMATLAB:
+            os.system("matlab -r \"xmipp_nma_selection_tool(\'"+self.WorkingDir+"\')\"")
+
 def performNMA(log, WorkingDir, InSelFile, PDBfile, Modesfile, SamplingRate,
                TrustRegionScale,ProjMatch,DiscreteAngularSampling,NProc):
     arguments="-i "+InSelFile+" --pdb "+PDBfile+" --modes "+Modesfile+" --sampling_rate "+\

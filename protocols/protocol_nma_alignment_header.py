@@ -59,6 +59,11 @@ Type 1 2 to see the 2D plot of raw deformations number 1 vs 2. Type 1 2 3 to see
 """ 
 DisplayRawDeformation="1"
 
+#{view} Analyze with MATLAB
+""" In MATLAB you may create image clusters and draw deformation trajectories
+""" 
+AnalyzeMATLAB=True
+
 #------------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #------------------------------------------------------------------------------------------------
