@@ -25,7 +25,11 @@ cssDict = {'project_content': 'project_content_style.css',
            'projects': 'projects_style.css',
            'showj': 'showj_style.css',
            'general': 'general_style.css',
-           'form': 'form.css'
+           'form': 'form.css',
+           'ui_smoothness': 'jquery-ui_smoothness.css',
+           'showj_demo_table_jui': 'demo_table_jui.css'
+           
+           
            }
 
 jsDict = {'jquery': 'jquery.js',
@@ -37,6 +41,7 @@ jsDict = {'jquery': 'jquery.js',
           'project_form': 'project_form.js',
           'jquery_datatables': 'jquery.dataTables.js',
           'jquery_colreorder': 'ColReorder.js',
+          'jquery_colreorder_resize': 'ColReorderWithResize.js',
           'jquery_editable': 'jquery.jeditable.js',
           'jquery_ui': 'jquery-ui.js',
           'jquery_waypoints': 'waypoints.min.js',
