@@ -289,6 +289,27 @@ function freehand_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+    idxVars=get(handles.listRepresentation,'Value');
+    if length(idxVars)~=2
+        return
+    end
+
+    k = waitforbuttonpress;
+    point1 = get(gca,'CurrentPoint');    % button down detected
+    finalRect = rbbox;                   % return figure units
+    point2 = get(gca,'CurrentPoint');    % button up detected
+    point1 = point1(1,1:2);              % extract x and y
+    point2 = point2(1,1:2);
+    p1 = min(point1,point2);             % calculate locations
+    offset = abs(point1-point2);         % and dimensions
+
+    X=handles.NMAdisplacementsProjected(:,idxVars(1));
+    Y=handles.NMAdisplacementsProjected(:,idxVars(2));
+    idx = X>=p1(1) & X<=(p1(1)+offset(1)) & Y>=p1(2) & Y<=(p1(2)+offset(2));
+    handles.inCluster(idx)=1;
+    guidata(gcbo,handles)
+    updatePlot(handles)
+
 function updateListBox(hObject, handles)
     listboxString={};
     for i=1:size(handles.NMAdisplacementsProjected,2)
