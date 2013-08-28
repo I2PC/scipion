@@ -35,7 +35,6 @@ cssDict = {'project_content': 'project_content_style.css',
 jsDict = {'jquery': 'jquery.js',
           'jquery_cookie': 'jquery.cookie.js',
           'jquery_treeview': 'jquery.treeview.js',
-          'launch_treeview': 'launchTreeview.js', #PARA JOSEGUTAB
           'utils': 'utils.js',
           'host_util': 'host_utils.js',
           'tabs_config': 'tabs_config.js',
@@ -44,10 +43,10 @@ jsDict = {'jquery': 'jquery.js',
           'jquery_colreorder': 'ColReorder.js',
           'jquery_colreorder_resize': 'ColReorderWithResize.js',
           'jquery_editable': 'jquery.jeditable.js',
+          'jquery_ui': 'jquery-ui.js',
           'jquery_waypoints': 'waypoints.min.js',
           'form': 'form.js',
           'messi': 'messi.js'
-          
           }
 
 def getResourceIcon(icon):

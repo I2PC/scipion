@@ -10,9 +10,13 @@
 <!-- <script src={{tabs_config}} type="text/javascript"></script> -->
 <script src={{utils}} type="text/javascript"></script>
 <script>
-  $(function() {
-    $("#tabs").tabs();
-  });
+	$(document).ready(function(){
+		$("#browser").treeview();
+	});
+	
+	$(function() {
+    	$("#tabs").tabs();
+  	});
 </script>
 {% endblock %} {% block sideLeft %}
 <div class="protFieldsetTree">

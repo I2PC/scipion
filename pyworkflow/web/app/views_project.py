@@ -10,13 +10,6 @@ from pyworkflow.em import *
 
 ######    Projects template    #####
 def projects(request):
-    # CSS #
-    css_path = getResourceCss('projects')
-    messi_css_path = getResourceCss('messi')
-    
-    # JS #
-    projectForm_path = getResourceJs('project_form')
-    
     manager = Manager()
     
     projects = manager.listProjects()
@@ -24,9 +17,9 @@ def projects(request):
         p.pTime = prettyDate(p.mTime)
 
     context = {'projects': projects,
-               'css': css_path,
-               'messi_css': messi_css_path,
-               'projectForm':projectForm_path,
+               'css': getResourceCss('projects'),
+               'messi_css': getResourceCss('messi'),
+               'project_form': getResourceJs('project_form'),
                'contentConfig': 'full'}
     
     return render_to_response('projects.html', context)
@@ -151,25 +144,11 @@ def loadProtTree(project):
     protCfg = project.getSettings().getCurrentProtocolMenu()
     root = TreeItem('root', 'root')
     populateTree(root, protCfg)
-    return root
-
-    
-
-    
+    return root    
     
 def project_content(request):        
-    # CSS #
-    css_path = getResourceCss('project_content')
-    messi_css_path = getResourceCss('messi')
-
-    # JS #
-    jquery_cookie = getResourceJs('jquery_cookie')
-    jquery_treeview = getResourceJs('jquery_treeview')
-    launchTreeview = getResourceJs('launch_treeview')
-    utils_path = getResourceJs('utils')
-    tabs_config = getResourceJs('tabs_config')
-    
     projectName = request.GET.get('projectName', None)
+    
     if projectName is None:
         projectName = request.POST.get('projectName', None)
         
@@ -186,21 +165,18 @@ def project_content(request):
                'deleteTool': getResourceIcon('delete_toolbar'),
                'browseTool': getResourceIcon('browse_toolbar'),
                'treeTool': getResourceIcon('tree_toolbar'),
-               'utils': utils_path,
-               'jquery_cookie': jquery_cookie,
-               'jquery_treeview': jquery_treeview,
-               'launchTreeview': launchTreeview,
-               'tabs_config': tabs_config,
-               'css':css_path,
+               'utils': getResourceJs('utils'),
+               'jquery_cookie': getResourceJs('jquery_cookie'),
+               'jquery_treeview': getResourceJs('jquery_treeview'),
+               'tabs_config': getResourceJs('tabs_config'),
+               'css':getResourceCss('project_content'),
                'sections': root.childs,
                'provider':provider,
-               'messi_css': messi_css_path,
+               'messi_css': getResourceCss('messi'),
                'view': 'protocols',
                'contentConfig': 'divided'}
     
     return render_to_response('project_content.html', context)
-
-
 
 def protocol_io(request):
     # Project Id(or Name) should be stored in SESSION
@@ -230,8 +206,6 @@ def protocol_summary(request):
 #        print jsonStr
         
     return HttpResponse(jsonStr, mimetype='application/javascript')
-
-
 
 def browse_objects(request):
     """ Browse objects from the database. """
