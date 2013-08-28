@@ -81,12 +81,15 @@ def showj(request, inputParameters=None):
 
     #Create context to be send
     context = {'css': getResourceCss('showj'),
+               'smoothness': getResourceCss('ui_smoothness'),
+               'demo_table_jui': getResourceCss('showj_demo_table_jui'),
+               
                'favicon': getResourceIcon('favicon'),
                'jquery': getResourceJs('jquery'), #Configuration variables
                'jquery_datatable': getResourceJs('jquery_datatables'),
                'jquerydataTables_colreorder': getResourceJs('jquery_colreorder'),
+               'jquerydataTables_colreorder_resize': getResourceJs('jquery_colreorder_resize'),
                'jeditable': getResourceJs('jquery_editable'),
-               'jquery_ui': getResourceJs('jquery_ui'),
                'jquery_waypoints':getResourceJs('jquery_waypoints'),
                
                'tableLayoutConfiguration' : tableLayoutConfiguration if (showjForm.data['mode']=='gallery') else json.dumps({'columnsLayout': tableLayoutConfiguration.columnsLayout, 'colsOrder': tableLayoutConfiguration.colsOrder}, ensure_ascii=False, cls=ColumnLayoutConfigurationEncoder), #Data variables
