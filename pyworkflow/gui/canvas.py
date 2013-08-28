@@ -33,9 +33,6 @@ import Tkinter as tk
 import math
 import operator
 
-# !!!! A connector can be a Socket (female) or a Plug (male)
-# !!!! Different connectors paint socket and plug differently
-# !!!! A cable connects 2 connectors. It only needs to know the coordinates of the connectors to paint itself
 
 DEFAULT_CONNECTOR_FILL="blue"
 DEFAULT_CONNECTOR_OUTLINE="black"
@@ -170,9 +167,19 @@ def findClosestPoints(list1,list2):
     return closestTuple[0],closestTuple[1]
 
 
-
-# !!!! sometimes, in a hierarchichal graph, it's better the upper (or lower) connector, than the closest...
 def findClosestConnectors(item1,item2):
+    return findUpDownClosestConnectors(item1,item2)
+
+# !!!! @current sometimes, in a hierarchichal graph, it's better the upper (or lower) connector, than the closest...
+def findUpDownClosestConnectors(item1,item2):
+    srcConnectors=item1.getUpDownConnectorsCoordinates()
+    dstConnectors=item2.getUpDownConnectorsCoordinates()
+    c1Coords,c2Coords=findClosestPoints(srcConnectors,dstConnectors)
+    # !!!! update the connectors coords
+    return c1Coords,c2Coords
+
+
+def findStrictClosestConnectors(item1,item2):
     srcConnectors=item1.getConnectorsCoordinates()
     dstConnectors=item2.getConnectorsCoordinates()
     c1Coords,c2Coords=findClosestPoints(srcConnectors,dstConnectors)
@@ -191,11 +198,22 @@ class Item(object):
         self.sockets={}
         self.listeners = []
 
-    def getConnectorsCoordinates(self):
-        x1,y1,x2,y2=self.getCorners()
+
+    def getCenter(self,x1,y1,x2,y2):
         xc=(x2+x1)/2.0
         yc=(y2+y1)/2.0
+        return (xc,yc)
+
+    def getConnectorsCoordinates(self):
+        x1,y1,x2,y2=self.getCorners()
+        xc,yc=self.getCenter(x1,y1,x2,y2)
         return [(xc,y1), (x2,yc), (xc,y2), (x1,yc)]
+
+    def getUpDownConnectorsCoordinates(self):
+        x1,y1,x2,y2=self.getCorners()
+        xc,yc=self.getCenter(x1,y1,x2,y2)
+        return [(xc,y1), (xc,y2)]
+
 
     def getCorners(self):
         return self.canvas.bbox(self.id)
@@ -209,7 +227,6 @@ class Item(object):
     def getSocket(self,name):
         return self.sockets[name]["object"]
 
-    # !!!! check that the name exists...
     def getSocketCoords(self,name):
         return self.getSocketCoordsAt(self.sockets[name]["verticalLocation"])
 
