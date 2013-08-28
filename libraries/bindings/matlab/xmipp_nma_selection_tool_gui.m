@@ -22,7 +22,7 @@ function varargout = xmipp_nma_selection_tool_gui(varargin)
 
 % Edit the above text to modify the response to help xmipp_nma_selection_tool_gui
 
-% Last Modified by GUIDE v2.5 27-Aug-2013 18:36:18
+% Last Modified by GUIDE v2.5 28-Aug-2013 10:48:51
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -75,9 +75,11 @@ if exist(handles.fnProjected,'file')
 else
     handles.NMAdisplacementsProjected=handles.NMAdisplacements;
 end
+
 if exist(handles.fnState,'file')
     handles=loadState(handles);
 else
+    handles.inCluster=zeros(size(handles.NMAdisplacementsProjected,1),1);
     updateListBox(hObject, handles);
     set(handles.listRepresentation,'Value',[1 2])
     saveState(handles);
@@ -92,19 +94,20 @@ function handlesOut=loadState(handles)
     set(handlesOut.popupProjection,'Value',projectionMethod);
     set(handlesOut.listRepresentation,'Value',representationIdx);
     set(handlesOut.ndimensions,'String',ndimensions);
-    set(handles.listRepresentation,'String',listboxString);
+    set(handlesOut.listRepresentation,'String',listboxString);
+    handlesOut.inCluster=inCluster;
  
 function saveState(handles)
     projectionMethod=get(handles.popupProjection,'Value');
     representationIdx=get(handles.listRepresentation,'Value');
     ndimensions=get(handles.ndimensions,'String');
     listboxString=get(handles.listRepresentation,'String');
+    inCluster=handles.inCluster;
     save(handles.fnState,'projectionMethod','representationIdx','ndimensions',...
-        'listboxString');
+        'listboxString','inCluster');
 
 % UIWAIT makes xmipp_nma_selection_tool_gui wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
-
 
 % --- Outputs from this function are returned to the command line.
 function varargout = xmipp_nma_selection_tool_gui_OutputFcn(hObject, eventdata, handles) 
@@ -128,7 +131,6 @@ function popupProjection_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns popupProjection contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from popupProjection
 
-
 % --- Executes during object creation, after setting all properties.
 function popupProjection_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to popupProjection (see GCBO)
@@ -140,7 +142,6 @@ function popupProjection_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 % --- Executes on button press in pushbuttonProjection.
 function pushbuttonProjection_Callback(hObject, eventdata, handles)
@@ -233,6 +234,61 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+% --- Executes on button press in clusterReset.
+function clusterReset_Callback(hObject, eventdata, handles)
+% hObject    handle to clusterReset (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    handles.inCluster=zeros(size(handles.inCluster));
+    guidata(gcbo,handles)
+    updatePlot(handles)
+
+% --- Executes on button press in clusterLoad.
+function clusterLoad_Callback(hObject, eventdata, handles)
+% hObject    handle to clusterLoad (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% --- Executes on button press in clusterSave.
+function clusterSave_Callback(hObject, eventdata, handles)
+% hObject    handle to clusterSave (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+function conditionString_Callback(hObject, eventdata, handles)
+% hObject    handle to conditionString (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of conditionString as text
+%        str2double(get(hObject,'String')) returns contents of conditionString as a double
+    % Produce Xi variables
+    for i=1:size(handles.NMAdisplacementsProjected,2)
+        eval(['X' num2str(i) '=handles.NMAdisplacementsProjected(:,' num2str(i) ');']);
+    end
+    eval(['idx=' get(handles.conditionString,'String') ';']);
+    handles.inCluster(idx)=1;
+    guidata(gcbo,handles)
+    updatePlot(handles)
+
+% --- Executes during object creation, after setting all properties.
+function conditionString_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to conditionString (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+% --- Executes on button press in freehand.
+function freehand_Callback(hObject, eventdata, handles)
+% hObject    handle to freehand (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
 function updateListBox(hObject, handles)
     listboxString={};
     for i=1:size(handles.NMAdisplacementsProjected,2)
@@ -245,22 +301,45 @@ function updateListBox(hObject, handles)
 function updatePlot(handles)
     idx=get(handles.listRepresentation,'Value');
     figure(handles.figHandle)
+    c=handles.inCluster;
+    hold off
     if length(idx)==1
-        hist(handles.NMAdisplacementsProjected(:,idx),50);
+        x=handles.NMAdisplacementsProjected(:,idx);
+        m=min(x);
+        M=max(x);
+        N=50;
+        d=(M-m)/N;
+        bins=m+d/2+[0:(N-1)]*d;
+        hist(x(find(c==0)),bins);
+        hold on
+        hist(x(find(c==1)),bins);
+        h = findobj(gca,'Type','patch');
+        set(h(1),'FaceColor','r');
+        set(h(2),'FaceColor','b');
         xlabel(['X' num2str(idx)])
     elseif length(idx)==2
-        plot(handles.NMAdisplacementsProjected(:,idx(1)),handles.NMAdisplacementsProjected(:,idx(2)),'o');
+        plot(handles.NMAdisplacementsProjected(find(c==0),idx(1)),...
+             handles.NMAdisplacementsProjected(find(c==0),idx(2)),'ob');
+        hold on
+        plot(handles.NMAdisplacementsProjected(find(c==1),idx(1)),...
+             handles.NMAdisplacementsProjected(find(c==1),idx(2)),'or');
         xlabel(['X' num2str(idx(1))])
         ylabel(['X' num2str(idx(2))])
         grid on
         axis square
     elseif length(idx)==3
-        plot3(handles.NMAdisplacementsProjected(:,idx(1)),handles.NMAdisplacementsProjected(:,idx(2)),...
-            handles.NMAdisplacementsProjected(:,idx(3)),'o');
+        plot3(handles.NMAdisplacementsProjected(find(c==0),idx(1)),...
+            handles.NMAdisplacementsProjected(find(c==0),idx(2)),...
+            handles.NMAdisplacementsProjected(find(c==0),idx(3)),'ob');
+        hold on
+        plot3(handles.NMAdisplacementsProjected(find(c==1),idx(1)),...
+            handles.NMAdisplacementsProjected(find(c==1),idx(2)),...
+            handles.NMAdisplacementsProjected(find(c==1),idx(3)),'or');
         xlabel(['X' num2str(idx(1))])
         ylabel(['X' num2str(idx(2))])
         zlabel(['X' num2str(idx(3))])
         grid on
         axis square
     end
+    set(handles.clusterSizeText,'String',[num2str(sum(c)) '/' num2str(length(c)) ' images'])
     saveState(handles)
