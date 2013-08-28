@@ -248,12 +248,33 @@ function clusterLoad_Callback(hObject, eventdata, handles)
 % hObject    handle to clusterLoad (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+    fileList=dir([handles.rundir '/extra/cluster__*.mat']);
+    if length(fileList)==0
+        return
+    end
+    listString={};
+    for i=1:length(fileList)
+        aux=strrep(fileList(i).name,'.mat','');
+        listString{i}=strrep(aux,'cluster__','');
+    end
+    [Selection,ok] = listdlg('ListString',listString,'SelectionMode','single');
+    if ok
+        load([handles.rundir '/extra/cluster__' listString{Selection} '.mat'])
+        handles.inCluster=inCluster;
+        guidata(gcbo,handles)
+        updatePlot(handles)
+    end
 
 % --- Executes on button press in clusterSave.
 function clusterSave_Callback(hObject, eventdata, handles)
 % hObject    handle to clusterSave (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+    clusterName=inputdlg('Name of the cluster','Save cluster',1);
+    if ~isempty(clusterName)
+        inCluster=handles.inCluster;
+        save([handles.rundir '/extra/cluster__' clusterName{1} '.mat'],'inCluster')
+    end
 
 function conditionString_Callback(hObject, eventdata, handles)
 % hObject    handle to conditionString (see GCBO)
