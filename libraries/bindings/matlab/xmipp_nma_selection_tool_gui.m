@@ -521,9 +521,9 @@ function generateAnimation_Callback(hObject, eventdata, handles)
     selectedProjection=projectionOptions{get(handles.popupProjection,'Value')};
     
     % Generate the set of NMA deformations
-    deformations=zeros(N,size(handles.NMAdisplacements,2));
     idx=get(handles.listRepresentation,'Value');
     if strcmp(selectedProjection,'None')==1
+        deformations=zeros(N,size(handles.NMAdisplacements,2));
         deformations(:,idx(1))=xt;
         deformations(:,idx(2))=yt;
     elseif strcmp(selectedProjection,'Principal Component Analysis')==1 || ...
@@ -531,7 +531,11 @@ function generateAnimation_Callback(hObject, eventdata, handles)
            strcmp(selectedProjection,'Linearity Preserving Projection')==1 || ...
            strcmp(selectedProjection,'Probabilistic Principal Component Analysis')==1 || ...
            strcmp(selectedProjection,'Neighborhood Preserving Embedding')==1
-        % Hay projector
+        deformationsProjected=zeros(N,size(handles.NMAdisplacementsProjected,2));
+        deformationsProjected(:,idx(1))=xt;
+        deformationsProjected(:,idx(2))=yt;
+        M=load([handles.rundir '/extra/projector.txt']);
+        deformations=deformationsProjected*pinv(M);
     else
         % No hay projector
     end
