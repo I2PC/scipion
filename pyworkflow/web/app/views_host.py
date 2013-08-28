@@ -1,23 +1,9 @@
-import pyworkflow as pw
-import os
 import xmipp
-from django.shortcuts import render_to_response
-from django.core.context_processors import csrf
 from django.template import RequestContext
-
-
-from pyworkflow.utils.path import findResource
-from pyworkflow.web.pages import settings
-from pyworkflow.apps.config import *
-
-from pyworkflow.em import *
-from pyworkflow.hosts import HostMapper
-from pyworkflow.tests import getInputPath 
 from forms import HostForm
-from django.core.urlresolvers import reverse
-from django.http import HttpResponseRedirect, HttpResponse, HttpRequest
-
-
+from pyworkflow.hosts import HostMapper
+from pyworkflow.web.app.views_util import *
+from django.http import HttpResponseRedirect
 
 ######    Hosts template    #####
 def getScipionHosts():
@@ -27,10 +13,10 @@ def getScipionHosts():
 
 def viewHosts(request):  
     # Resources #
-    css_path = staticPath('css/general_style.css')
-    jquery_path = staticPath('js/jquery.js')
-    utils_path = staticPath('js/utils.js')
-    host_utils_path = staticPath('js/hostUtils.js')
+    css_path = getResourceCss('general')
+    jquery_path = getResourceJs('jquery')
+    utils_path = getResourceJs('utils')
+    host_utils_path = getResourceJs('host_util')
     
     projectName = request.session['projectName']    
     project = loadProject(projectName)
@@ -40,10 +26,10 @@ def viewHosts(request):
 
     message = request.GET.get("message")
     context = {'projectName' : projectName,
-               'editTool': edit_tool_path,
-               'newTool': new_tool_path,
-               'deleteTool': delete_tool_path,
-               'browseTool': browse_tool_path,
+               'editTool': getResourceIcon('edit_toolbar'),
+               'newTool': getResourceIcon('new_toolbar'),
+               'deleteTool': getResourceIcon('delete_toolbar'),
+               'browseTool': getResourceIcon('browse_toolbar'),
                'hosts': projectHosts,
                'jquery': jquery_path,
                'utils': utils_path,
@@ -71,9 +57,9 @@ def viewHosts(request):
 
 
 def getHostFormContext(request, host=None, initialContext=None):
-    css_path = staticPath('css/general_style.css')
-    jquery_path = staticPath('js/jquery.js')
-    utils_path = staticPath('js/utils.js')
+    css_path = getResourceCss('general')
+    jquery_path = getResourceJs('jquery')
+    utils_path = getResourceJs('utils')
     form = None
 #     scpnHostsChoices = []
 #     scpnHostsChoices.append(('', ''))
@@ -139,12 +125,3 @@ def deleteHost(request):
     project.deleteHost(hostId)
 #     context = {'message': "Host succesfully deleted"}
     return HttpResponseRedirect('/view_hosts')#, RequestContext(request))
-
-        
-
-if __name__ == '__main__':
-    root = loadProtTree()    
-    for s in root.childs:
-        print s.name, '-', s.tag
-        for p in s.childs:
-            print p.name, '-', p.tag

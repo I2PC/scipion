@@ -9,31 +9,12 @@ from django.template import RequestContext
 from os.path import join    
 from collections import OrderedDict
 import json
+from pyworkflow.web.app.views_util import *
+from forms import VolVisualizationForm
+from pyworkflow.em import *
     
 def showj(request, inputParameters=None):
-    
-    # Resources #
-    # Style Sheets
-    css_path = join(settings.STATIC_URL, 'css/showj_style.css')
-
-    #Favicon
-#    favicon_path = getResource('favicon')
-    
-    #General jquery libs
-    jquery_path = join(settings.STATIC_URL, 'js/jquery.js')
-    jquery_cookie = join(settings.STATIC_URL, 'js/jquery.cookie.js')
-    jquery_treeview = join(settings.STATIC_URL, 'js/jquery.treeview.js')
-    launchTreeview = join(settings.STATIC_URL, 'js/launchTreeview.js')
-    utils_path = join(settings.STATIC_URL, 'js/utils.js')
-    
-    #Table View jquery libs
-    jquerydataTables_path = join(settings.STATIC_URL, 'js/jquery.dataTables.js')
-    jquerydataTables_colreorder_path = join(settings.STATIC_URL, 'js/ColReorder.js')
-    jeditable_path = join(settings.STATIC_URL, 'js/jquery.jeditable.js')
-    jquery_ui_path = join(settings.STATIC_URL, 'js/jquery-ui.js')
-    jquery_waypoints_path = join(settings.STATIC_URL, 'js/waypoints.min.js')    
-#    jquery_tabletools_path = join(settings.STATIC_URL, 'js/TableTools.min.js')
-    
+   
     #############
     # WEB INPUT PARAMETERS
     _imageDimensions = ''
@@ -99,19 +80,16 @@ def showj(request, inputParameters=None):
         request.session['imageDimensions'] = _imageDimensions
 
     #Create context to be send
-    context = {'jquery': jquery_path, #Configuration variables
-               'utils': utils_path,
-               'jquery_cookie': jquery_cookie,
-               'jquery_treeview': jquery_treeview,
-               'launchTreeview': launchTreeview,
-               'jquery_datatable': jquerydataTables_path,
-               'jquerydataTables_colreorder': jquerydataTables_colreorder_path,
-               'jeditable': jeditable_path,
-               'jquery_ui': jquery_ui_path,
-               'jquery_waypoints':jquery_waypoints_path,
-               'css': css_path,
+    context = {'css': getResourceCss('showj'),
+               'favicon': getResourceIcon('favicon'),
+               'jquery': getResourceJs('jquery'), #Configuration variables
+               'jquery_datatable': getResourceJs('jquery_datatables'),
+               'jquerydataTables_colreorder': getResourceJs('jquery_colreorder'),
+               'jeditable': getResourceJs('jquery_editable'),
+               'jquery_ui': getResourceJs('jquery_ui'),
+               'jquery_waypoints':getResourceJs('jquery_waypoints'),
+               
                'tableLayoutConfiguration' : tableLayoutConfiguration if (showjForm.data['mode']=='gallery') else json.dumps({'columnsLayout': tableLayoutConfiguration.columnsLayout, 'colsOrder': tableLayoutConfiguration.colsOrder}, ensure_ascii=False, cls=ColumnLayoutConfigurationEncoder), #Data variables
-#               'tableLayoutConfiguration' : json.dumps({'columnsLayout': tableLayoutConfiguration.columnsLayout, 'colsOrder': tableLayoutConfiguration.colsOrder}, ensure_ascii=False, cls=ColumnLayoutConfigurationEncoder),
                'tableDataset': tableDataset,
                'imageDimensions': request.session['imageDimensions'],
                'defaultZoom': request.session['defaultZoom'], 
@@ -243,73 +221,135 @@ def save_showj_table(request):
 
 #    request.get.get('value')
 
-def get_image_dimensions(projectPath, imagePath):
-    from django.http import HttpResponse
-    from pyworkflow.gui import getImage
-    imageNo = None
-#    imagePath = request.GET.get('image')
 
+
+
+def visualizeObject(request):
+    probandoCTFParam = False
     
-    # PAJM: Como vamos a gestionar lsa imagen    
-    if imagePath.endswith('png') or imagePath.endswith('gif'):
-        img = getImage(imagePath, tk=False)
-    else:
-        if '@' in imagePath:
-            parts = imagePath.split('@')
-            imageNo = parts[0]
-            imagePath = parts[1]
-            
-        if projectPath != '':
-            imagePathTmp = join(projectPath,imagePath)
-            if not os.path.isfile(imagePathTmp):
-                imagePath = getInputPath('showj', imagePath)      
-            
-
-#        imagePath = join(request.session['projectPath'],imagePath)
-        
-        if imageNo:
-            imagePath = '%s@%s' % (imageNo, imagePath) 
-            
-        imgXmipp = xmipp.Image(imagePath)
-        
-        return imgXmipp.getDimensions()
-        
-
-def get_image(request):
-    from django.http import HttpResponse
-    from pyworkflow.gui import getImage, getPILImage
-    imageNo = None
-    imagePath = request.GET.get('image')
-    imageDim = request.GET.get('dim', 150)
+    objectId = request.GET.get("objectId")    
+    #projectName = request.session['projectName']
+    projectName = request.GET.get("projectName")
     
-    # PAJM: Como vamos a gestionar lsa imagen    
-    if imagePath.endswith('png') or imagePath.endswith('gif'):
-        img = getImage(imagePath, tk=False)
-    else:
-        if '@' in imagePath:
-            parts = imagePath.split('@')
-            imageNo = parts[0]
-            imagePath = parts[1]
-            
-        if 'projectPath' in request.session:
-            imagePathTmp = join(request.session['projectPath'],imagePath)
-            if not os.path.isfile(imagePathTmp):
-                imagePath = getInputPath('showj', imagePath)      
-            
+#    project = loadProject(projectName)
+    manager = Manager()
+    projPath = manager.getProjectPath(projectName)
+    request.session['projectPath'] = projPath
+    project = Project(projPath)
+    project.load()
+    
+    object = project.mapper.selectById(int(objectId))
+    if object.isPointer():
+        object = object.get()
+        
+    if probandoCTFParam:
+        inputParameters = {'path': join(request.session['projectPath'], "Runs/XmippProtCTFMicrographs218/extra/BPV_1386/xmipp_ctf.ctfparam"),
+               'allowRender': True,
+               'mode': 'column',
+               'zoom': '150px',
+               'goto': 1,
+               'colRowMode': 'Off'}    
+    elif isinstance(object, SetOfMicrographs):
+        fn = project.getTmpPath(object.getName() + '_micrographs.xmd')
+        mics = XmippSetOfMicrographs.convert(object, fn)
+        inputParameters = {'path': join(request.session['projectPath'], mics.getFileName()),
+                       'allowRender': True,
+                       'mode': 'gallery',
+                       'zoom': '150px',
+                       'goto': 1,
+                       'colRowMode': 'Off'}
+    elif isinstance(object, SetOfVolumes):
+        print ("XXXXX", object.getObjId())
+        inputParameters = {'setOfVolumes' : object, 'setOfVolumesId': object.getObjId()}  
+    elif isinstance(object, SetOfImages):
+        fn = project.getTmpPath(object.getName() + '_images.xmd')
+        imgs = XmippSetOfImages.convert(object, fn)
+        inputParameters = {'path': join(request.session['projectPath'], imgs.getFileName()),
+               'allowRender': True,
+               'mode': 'gallery',
+               'zoom': '150px',
+               'goto': 1,
+               'colRowMode': 'Off'}
 
-#        imagePath = join(request.session['projectPath'],imagePath)
-        
-        if imageNo:
-            imagePath = '%s@%s' % (imageNo, imagePath) 
-            
-        imgXmipp = xmipp.Image(imagePath)
-        
-        # from PIL import Image
-        img = getPILImage(imgXmipp, imageDim)
-        
-        
-        
-    # response = HttpResponse(mimetype="image/png")    
-    response = HttpResponse(mimetype="image/png")
-    img.save(response, "PNG")
-    return response
+    elif isinstance(object, XmippClassification2D):
+        mdPath = object.getClassesMdFileName()
+        block, path = mdPath.split('@')
+        inputParameters = {'path': join(request.session['projectPath'], path),
+               'allowRender': True,
+               'mode': 'gallery',
+               'zoom': '150px',
+               'goto': 1,
+               'colRowMode': 'Off'}
+#        runShowJ(obj.getClassesMdFileName())
+    else:
+        raise Exception('Showj Web visualizer: can not visualize class: %s' % object.getClassName())
+
+    if isinstance(object, SetOfVolumes):
+        return render_to_response('volume_visualization.html', inputParameters)
+    else:
+        return showj(request, inputParameters)
+    
+def visualizeVolume(request):
+    from django.http import HttpResponse
+    import json
+     
+    if request.is_ajax():
+        setOfVolumesId = int(request.GET.get('setOfVolumesId'))
+        volumeId = int(request.GET.get('volumeId'))
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        setOfVolume = project.mapper.selectById(setOfVolumesId)
+        volume = setOfVolume[volumeId]
+        # Chimera 
+        from subprocess import Popen, PIPE, STDOUT
+#         inputVolume = join(os.getcwd(),volume.getFileName())
+#         outputHtmlFile = join(os.getcwd(),project.getTmpPath("volume_" + str(volume.getObjId()) + '.html'))
+        inputVolume = volume.getFileName()
+        outputHtmlFile = project.getTmpPath("volume_" + str(volume.getObjId()) + '.html')
+        if (request.GET.get('threshold') is None or request.GET.get('threshold') == ''):
+            threshold = 1
+        else:
+            threshold = float(request.GET.get('threshold'))
+        print ("THRESHOLD",threshold)
+        # TODO: Get with Xmipp an approximate threshold
+        p = Popen(['chimera', inputVolume], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+#         p = Popen(['chimera', '--start', 'ReadStdin', inputVolume], stdout=PIPE, stdin=PIPE, stderr=PIPE)        
+        stdout_data = p.communicate(input='volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop')[0]
+        f = open(outputHtmlFile)
+        volumeHtml = f.read().decode('string-escape').decode("utf-8").split("</html>")[1]
+        jsonStr = json.dumps({'volumeHtml': volumeHtml})
+        return HttpResponse(jsonStr, mimetype='application/javascript')
+    
+    
+def showVolVisualization(request):
+    form = None
+    volLinkPath = None
+    volLink = None
+    chimeraHtml = None
+    if (request.POST.get('operation') == 'visualize'):
+        form = VolVisualizationForm(request.POST, request.FILES)
+        if form.is_valid():
+            volPath = form.cleaned_data['volPath']
+            # Astex viewer            
+            from random import randint
+            linkName = 'test_link_' + str(randint(0, 10000)) + '.map'
+            volLinkPath = os.path.join(pw.HOME, 'web', 'pages', 'resources', 'astex', 'tmp', linkName)
+            from pyworkflow.utils.path import cleanPath, createLink
+            cleanPath(volLinkPath)
+            createLink(volPath, volLinkPath)
+#             os.system("ln -s " + str(volPath) + " " + volLinkPath)
+            volLink = os.path.join('/', 'static', 'astex', 'tmp', linkName)
+            # Chimera 
+            from subprocess import Popen, PIPE, STDOUT
+#             p = Popen(['chimera', '--start', 'ReadStdin', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+            p = Popen(['chimera', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+            outputHtmlFile = '/home/antonio/test.html'
+            threshold = form.cleaned_data['threshold']
+            stdout_data = p.communicate(input='volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop')[0]
+            f = open(outputHtmlFile)
+            chimeraHtml = f.read().decode('string-escape').decode("utf-8").split("</html>")[1]
+    else:
+        form = VolVisualizationForm()
+    context = {'MEDIA_URL' : settings.MEDIA_URL, 'STATIC_URL' :settings.STATIC_URL, 'form': form, 'volLink': volLink, 'chimeraHtml': chimeraHtml}    
+    return render_to_response('showVolVisualization.html',  RequestContext(request, context))   
+

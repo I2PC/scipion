@@ -1,0 +1,188 @@
+from pyworkflow.web.app.views_util import * 
+import os
+import xmipp
+from pyworkflow.manager import Manager
+from pyworkflow.project import Project
+from django.shortcuts import render_to_response
+from django.core.context_processors import csrf
+from pyworkflow.em import *
+from django.http import HttpResponse
+import json
+
+######    Project Form template    #####
+def form(request):
+    
+    # Resources #
+    favicon_path = getResourceIcon('favicon')
+    logo_help = getResourceIcon('help')
+    logo_browse = getResourceIcon('browse')
+    logo_wiz = getResourceIcon('wizard')
+    logo_edit = getResourceIcon('edit_toolbar')
+    
+    # CSS #
+    css_path = getResourceCss('form')
+    messi_css_path = getResourceCss('messi')
+    
+    # JS #
+    jquery_path = getResourceJs('jquery')
+    jsForm_path = getResourceJs('form')
+    utils_path = getResourceJs('utils')
+    messi_path = getResourceJs('messi')
+    
+    project, protocol = loadProtocolProject(request, requestType='GET')
+    
+    action = request.GET.get('action', None)
+    hosts = [host.getLabel() for host in project.getSettings().getHosts()]
+    
+    if action == 'copy':
+        protocol = project.copyProtocol(protocol)
+    
+    # TODO: Add error page validation when protocol is None
+    for section in protocol._definition.iterSections():
+        for paramName, param in section.iterParams():
+            protVar = getattr(protocol, paramName, None)
+            if protVar is None:
+                raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
+                # Create the label
+            if protVar.isPointer():
+                if protVar.hasValue():
+                    param.htmlValue = protVar.get().getNameId()
+                else:
+                    param.htmlValue = ""
+            else:
+                param.htmlValue = protVar.get(param.default.get(""))
+                if isinstance(protVar, Boolean):
+                    if param.htmlValue:
+                        param.htmlValue = 'true'
+                    else:
+                        param.htmlValue = 'false' 
+            param.htmlCond = param.condition.get()
+            param.htmlDepend = ','.join(param._dependants)
+            param.htmlCondParams = ','.join(param._conditionParams)
+#            param.htmlExpertLevel = param.expertLevel.get()   
+    
+    context = {'projectName':project.getName(),
+               'protocol':protocol,
+               'definition': protocol._definition,
+               'favicon': favicon_path,
+               'help': logo_help,
+               'comment':logo_edit,
+               'form': jsForm_path,
+               'jquery': jquery_path,
+               'browse': logo_browse,
+               'wizard': logo_wiz,
+               'utils': utils_path,
+               'css':css_path,
+               'messi': messi_path,
+               'messi_css': messi_css_path,
+               'hosts':hosts
+               }
+    # Update the context dictionary with the special params
+    for paramName in SPECIAL_PARAMS:
+        context[paramName] = protocol.getAttributeValue(paramName, '')
+    
+    # Cross Site Request Forgery protection is need it
+    context.update(csrf(request))
+    
+    return render_to_response('form.html', context)
+
+def wizard(request):
+    action = request.GET.get('action', None)
+    
+    if(action=='downsampling'):
+        response = 'wiz_downsampling.html'
+    
+    context={'action':action
+             }
+    
+    return render_to_response(response, context)
+    
+def loadProtocolProject(request, requestType='POST'):
+    """ Retrieve the project and protocol from this request.
+    Return:
+        (project, protocol) tuple
+    """
+    requestDict = getattr(request, requestType)
+    projectName = request.session['projectName']
+    protId = requestDict.get("protocolId")
+    protClass = requestDict.get("protocolClass")
+    
+    # Load the project
+    project = loadProject(projectName)
+    
+    # Create the protocol object
+    if protId and protId != 'None':  # Case of new protocol
+        protId = requestDict.get('protocolId', None)
+        protocol = project.mapper.selectById(int(protId))
+    else:
+        protocolClass = emProtocolsDict.get(protClass, None)
+        protocol = protocolClass()
+        
+    return (project, protocol)
+    
+def updateParam(request, project, protocol, paramName):
+    """
+    Params:
+        request: current request handler
+        project: current working project
+        protocol: current protocol
+        paramName: name of the attribute to be set in the protocol
+            from the web form
+    """
+    attr = getattr(protocol, paramName)
+    value = request.POST.get(paramName)
+    if attr.isPointer():
+        if len(value.strip()) > 0:
+            objId = int(value.split('.')[-1])  # Get the id string for last part after .
+            value = project.mapper.selectById(objId)  # Get the object from its id
+            if attr.getObjId() == value.getObjId():
+                raise Exception("Param: %s is autoreferencing with id: %d" % (paramName, objId))
+        else:
+            value = None
+    attr.set(value)
+    print "setting attr %s with value:" % paramName, value 
+    
+SPECIAL_PARAMS = ['runName', 'numberOfMpi', 'numberOfThreads', 'hostName','expertLevel','_useQueue']
+
+def updateProtocolParams(request, protocol, project):
+    """ Update the protocol values from the Web-form.
+    This function will be used from save_protocol and execute_protocol.
+    """
+    for paramName, _ in protocol.iterDefinitionAttributes():
+        updateParam(request, project, protocol, paramName)
+        
+    for paramName in SPECIAL_PARAMS:
+        updateParam(request, project, protocol, paramName)
+        
+def save_protocol(request):
+    project, protocol = loadProtocolProject(request)
+    updateProtocolParams(request, protocol, project)            
+    project.saveProtocol(protocol)
+    
+    return HttpResponse(mimetype='application/javascript')
+
+# Method to launch a protocol #
+def protocol(request):
+    project, protocol = loadProtocolProject(request)
+    updateProtocolParams(request, protocol, project)    
+    errors = protocol.validate()
+
+    if len(errors) == 0:
+        # No errors 
+        # Finally, launch the protocol
+        project.launchProtocol(protocol)
+    jsonStr = json.dumps({'errors' : errors}, ensure_ascii=False)
+    
+    return HttpResponse(jsonStr, mimetype='application/javascript')   
+
+def delete_protocol(request):
+    # Project Id(or Name) should be stored in SESSION
+    if request.is_ajax():
+        projectName = request.GET.get('projectName')
+        project = loadProject(projectName)
+        protId = request.GET.get('protocolId', None)
+        protocol = project.mapper.selectById(int(protId))
+     
+        project.deleteProtocol(protocol)         
+        
+    return HttpResponse(mimetype='application/javascript') 
