@@ -537,7 +537,21 @@ function generateAnimation_Callback(hObject, eventdata, handles)
         M=load([handles.rundir '/extra/projector.txt']);
         deformations=deformationsProjected*pinv(M);
     else
-        % No hay projector
+        deformations=zeros(N,size(handles.NMAdisplacements,2));
+        x=handles.NMAdisplacementsProjected(:,idx(1));
+        y=handles.NMAdisplacementsProjected(:,idx(2));
+        inCluster=zeros(size(x));
+        for i=1:length(t)
+            diffx=x-xt(i);
+            diffy=y-yt(i);
+            d=sqrt(diffx.*diffx+diffy.*diffy);
+            [mind,idxmin]=min(d);
+            inCluster(idxmin)=1;
+            deformations(i,:)=handles.NMAdisplacements(idxmin,:);
+        end
+        handles.inCluster=inCluster;
+        guidata(gcbo,handles);
+        updatePlot(handles);
     end
     
     % Generate the deformed PDBs
@@ -550,9 +564,9 @@ function generateAnimation_Callback(hObject, eventdata, handles)
     end
     fnTrajectory=[handles.rundir '/extra/trajectory__' handles.fnTrajectory '.pdb'];
     if exist(fnTrajectory,'file')
-        system(['rm -f ' fnTrajectory])
+        system(['rm -f ' fnTrajectory]);
     end
-    system(['touch ' fnTrajectory])
+    system(['touch ' fnTrajectory]);
     for i=1:length(t)
         cmd=['xmipp_pdb_nma_deform --pdb ' fnPDB ' -o ' fnOut ' --nma ' fnModes ' --deformations ' ...
             num2str(deformations(i,:)) ' ; cat ' fnOut ' >> ' fnTrajectory ' ; echo TER >> ' ...
@@ -574,7 +588,7 @@ function generateAnimation_Callback(hObject, eventdata, handles)
     
     % Invoke VMD
     cmd=['vmd -e ' fnTrajectoryVMD];
-    system(cmd)
+    system(cmd);
 
 % --- Executes on button press in loadTrajectory.
 function loadTrajectory_Callback(hObject, eventdata, handles)
