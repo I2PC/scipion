@@ -23,9 +23,9 @@
  *=================================================================*/
 
 /*xmipp includes */
-#include "xmipp_image.h"
-#include "xmipp_fftw.h"
 #include "tom_xmipp_helpers.h"
+#include <data/xmipp_image.h>
+#include <data/xmipp_fftw.h>
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 {

@@ -23,12 +23,9 @@
  *=================================================================*/
 
 /*xmipp includes */
-#include "xmipp_image.h"
-#include "normalize.h"
 #include "tom_xmipp_helpers.h"
-
-/*Matlab includes*/
-#include "mex.h"
+#include <data/xmipp_image.h>
+#include <data/normalize.h>
 
 #define NONE 0
 #define OLDXMIPP 1
