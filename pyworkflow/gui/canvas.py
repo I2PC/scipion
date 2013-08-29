@@ -175,7 +175,6 @@ def findUpDownClosestConnectors(item1,item2):
     srcConnectors=item1.getUpDownConnectorsCoordinates()
     dstConnectors=item2.getUpDownConnectorsCoordinates()
     c1Coords,c2Coords=findClosestPoints(srcConnectors,dstConnectors)
-    # !!!! update the connectors coords
     return c1Coords,c2Coords
 
 
@@ -183,7 +182,6 @@ def findStrictClosestConnectors(item1,item2):
     srcConnectors=item1.getConnectorsCoordinates()
     dstConnectors=item2.getConnectorsCoordinates()
     c1Coords,c2Coords=findClosestPoints(srcConnectors,dstConnectors)
-    # !!!! update the connectors coords
     return c1Coords,c2Coords
 
 
@@ -480,7 +478,10 @@ class Edge():
 
 
 # !!!! Interaction: allow to reconnect cables dynamically
-# !!!! Antialiasing for the line
+
+# !!!! Antialiasing for the line - it seems TkInter does not support antialiasing...
+# Although Tk 8.5 supports anti-aliasing if the Cairo library is installed:
+# @see http://wiki.tcl.tk/10630
 
 class Cable():
     def __init__(self,canvas,src,srcConnector,dst,dstConnector):
