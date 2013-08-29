@@ -573,7 +573,21 @@ function generateAnimation_Callback(hObject, eventdata, handles)
 % hObject    handle to generateAnimation (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    
+    % Check if there is a trajectory
+    if isempty(handles.NMAdisplacementsTrajectory)
+        if size(handles.NMAdisplacementsProjected,2)==1
+            % 1D projections
+            y = quantile(handles.NMAdisplacementsProjected,[.05 .95]);
+            N=20;
+            handles.NMAdisplacementsTrajectory=linspace(y(1),y(2),N/2+1);
+            handles.NMAdisplacementsTrajectory=handles.NMAdisplacementsTrajectory';
+            guidata(gcbo,handles);
+        else
+            warndlg('There is no trajectory')
+            return
+        end
+    end
+
     % Get Projection mode
     projectionOptions=cellstr(get(handles.popupProjection,'String'));
     selectedProjection=projectionOptions{get(handles.popupProjection,'Value')};
