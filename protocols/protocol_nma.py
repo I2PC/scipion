@@ -76,7 +76,8 @@ class ProtNMA(XmippProtocol):
                             RTBForceConstant=self.RTBForceConstant)
             self.insertStep('reformatOutputPDB',WorkingDir=self.WorkingDir, NumberOfModes=self.NumberOfModes)
             self.PseudoAtomThreshold=0.0
-        self.insertStep('qualifyModes',WorkingDir=self.WorkingDir,NumberOfModes=self.NumberOfModes,StructureType=self.StructureType)
+        self.insertStep('qualifyModes',WorkingDir=self.WorkingDir,NumberOfModes=self.NumberOfModes,StructureType=self.StructureType,
+                        CollectivityThreshold=self.CollectivityThreshold)
         self.insertStep('animateModes',WorkingDir=self.WorkingDir,LastMode=self.NumberOfModes,
                         Amplitude=self.Amplitude,NFrames=self.NFrames,Downsample=self.Downsample,
                         PseudoAtomThreshold=self.PseudoAtomThreshold, PseudoAtomRadius=self.PseudoAtomRadius,
@@ -225,7 +226,7 @@ def reformatOutputPDB(log,WorkingDir,NumberOfModes):
     moveFile(log,'vec_ani.pkl','extra/vec_ani.pkl')
     changeDir(log,currentDir)
 
-def qualifyModes(log,WorkingDir,NumberOfModes,StructureType):
+def qualifyModes(log,WorkingDir,NumberOfModes,StructureType,CollectivityThreshold):
     currentDir=os.getcwd()
     changeDir(log,WorkingDir)
     
@@ -248,8 +249,13 @@ def qualifyModes(log,WorkingDir,NumberOfModes,StructureType):
         id=MDout.addObject()
         MDout.setValue(MDL_NMA_MODEFILE,os.path.join(WorkingDir,"modes/vec.%d"%(n+1)),id)
         MDout.setValue(MDL_ORDER,long(n+1),id)
-        MDout.setValue(MDL_ENABLED,1,id)
+        if n>=6:
+            MDout.setValue(MDL_ENABLED,1,id)
+        else:
+            MDout.setValue(MDL_ENABLED,-1,id)
         MDout.setValue(MDL_NMA_COLLECTIVITY,collectivity,id)
+        if collectivity<CollectivityThreshold:
+            MDout.setValue(MDL_ENABLED,-1,id)
     fh.close()
     idxSorted=[i[0] for i in sorted(enumerate(collectivityList), key=lambda x:x[1])]
     score=[0]*NumberOfModes
@@ -258,7 +264,8 @@ def qualifyModes(log,WorkingDir,NumberOfModes,StructureType):
        score[idxSorted[i]]+=NumberOfModes-i
     i=0
     for id in MDout:
-        MDout.setValue(MDL_NMA_SCORE,float(score[i])/(2.0*NumberOfModes),id)
+        score_i=float(score[i])/(2.0*NumberOfModes)
+        MDout.setValue(MDL_NMA_SCORE,score_i,id)
         i+=1
     MDout.write("modes.xmd")
     deleteFile(log,"Chkmod.res")

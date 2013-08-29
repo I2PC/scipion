@@ -73,6 +73,10 @@ RTBblockSize=10
 If it increases, then the structure will be more rigid. """
 RTBForceConstant=10.0
 
+# {expert} Threshold on collectivity
+""" Modes below this collectivity are deselected. Set to 0 for no filtering based on collectivity.  """
+CollectivityThreshold=0.15
+
 #------------------------------------------------------------------------------------------------
 # {section} Animation
 #------------------------------------------------------------------------------------------------
