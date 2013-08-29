@@ -81,16 +81,14 @@ if exist(handles.fnState,'file')
 else
     handles.inCluster=zeros(size(handles.NMAdisplacementsProjected,1),1);
     handles.included=ones(size(handles.NMAdisplacementsProjected,1),1);
-    handles.imPoints={};
     updateListBox(hObject, handles);
     set(handles.listRepresentation,'Value',[1 2])
     saveState(handles);
 end
-handles.NMAdisplacementsTrajectory=[];
-handles.fnTrajectory=[];
+handles=cleanTrajectory(handles);
 handles.figHandle=figure();
 guidata(hObject,handles)
-updatePlot(handles)
+updatePlot(hObject,handles)
 
 function handlesOut=loadState(handles)
     handlesOut=handles;
@@ -197,7 +195,8 @@ handles.NMAdisplacementsProjected=load(handles.fnProjected);
 updateListBox(gcbo, handles);
 set(handles.listRepresentation,'Value',1:min(2,str2num(dout)))
 guidata(gcbo,handles)
-updatePlot(handles)
+handles=cleanTrajectory(handles);
+updatePlot(gcbo,handles)
 saveState(handles)
 
 % --- Executes on button press in exportWorkspace.
@@ -241,7 +240,7 @@ function pushbuttonRepresentation_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbuttonRepresentation (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-updatePlot(handles)
+updatePlot(gcbo,handles)
 
 % --- Executes during object creation, after setting all properties.
 function ndimensions_CreateFcn(hObject, eventdata, handles)
@@ -268,7 +267,7 @@ function conditionExcludeString_Callback(hObject, eventdata, handles)
     eval(['idx=' get(handles.conditionExcludeString,'String') ';']);
     handles.included(idx)=0;
     guidata(gcbo,handles)
-    updatePlot(handles)
+    updatePlot(gcbo,handles)
 
 % --- Executes during object creation, after setting all properties.
 function conditionExcludeString_CreateFcn(hObject, eventdata, handles)
@@ -289,7 +288,7 @@ function excludeReset_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
     handles.included=ones(size(handles.included));
     guidata(gcbo,handles)
-    updatePlot(handles)
+    updatePlot(gcbo,handles)
 
 % --- Executes on button press in clusterReset.
 function clusterReset_Callback(hObject, eventdata, handles)
@@ -298,7 +297,7 @@ function clusterReset_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
     handles.inCluster=zeros(size(handles.inCluster));
     guidata(gcbo,handles)
-    updatePlot(handles)
+    updatePlot(gcbo,handles)
 
 % --- Executes on button press in clusterLoad.
 function clusterLoad_Callback(hObject, eventdata, handles)
@@ -319,7 +318,7 @@ function clusterLoad_Callback(hObject, eventdata, handles)
         load([handles.rundir '/extra/cluster__' listString{Selection} '.mat'])
         handles.inCluster=inCluster;
         guidata(gcbo,handles)
-        updatePlot(handles)
+        updatePlot(gcbo,handles)
     end
 
 % --- Executes on button press in clusterSave.
@@ -348,7 +347,7 @@ function conditionString_Callback(hObject, eventdata, handles)
     eval(['idx=' get(handles.conditionString,'String') ';']);
     handles.inCluster(idx)=1;
     guidata(gcbo,handles)
-    updatePlot(handles)
+    updatePlot(gcbo,handles)
 
 % --- Executes during object creation, after setting all properties.
 function conditionString_CreateFcn(hObject, eventdata, handles)
@@ -387,7 +386,7 @@ function freehand_Callback(hObject, eventdata, handles)
     idx = X>=p1(1) & X<=(p1(1)+offset(1)) & Y>=p1(2) & Y<=(p1(2)+offset(2));
     handles.inCluster(idx)=1;
     guidata(gcbo,handles)
-    updatePlot(handles)
+    updatePlot(gcbo,handles)
 
 function updateListBox(hObject, handles)
     listboxString={};
@@ -398,8 +397,20 @@ function updateListBox(hObject, handles)
     set(handles.listRepresentation,'String',listboxString);
     guidata(hObject,handles)
 
-function updatePlot(handles)
+function updatePlot(ptrGui,handles)
     idx=get(handles.listRepresentation,'Value');
+
+    % Update trajectory information
+    if length(handles.idxTrajectory)==2
+        % We were drawing a trajectory
+        handles=updateTrajectory(handles);
+    end
+    % impoints are going to disappear any way because of the hold off
+    handles.idxTrajectory=[];
+    handles.impointList={};
+    guidata(ptrGui,handles);
+        
+    % Plot
     figure(handles.figHandle)
     c=handles.inCluster;
     in=handles.included;
@@ -435,6 +446,13 @@ function updatePlot(handles)
         ylabel(['X' num2str(idx(2))])
         grid on
         axis square
+
+        % Create trajectory impoints if necessary
+        if ~isempty(handles.NMAdisplacementsTrajectory)
+            handles.idxTrajectory=idx;
+            handles.impointList=createTrajectoryImPoints(handles);
+            guidata(ptrGui,handles);
+        end
     elseif length(idx)==3
         idxc=find(c==0 & in);
         X=handles.NMAdisplacementsProjected(:,idx(1));
@@ -457,8 +475,29 @@ function updatePlot(handles)
         axis square
     end
     set(handles.clusterSizeText,'String',[num2str(sum(c)) '/' num2str(length(c)) ' images'])
+    if length(handles.impointList)==0 && length(idx)==2
+        set(handles.drawTrajectory,'Visible','on');
+    else
+        set(handles.drawTrajectory,'Visible','off');
+    end
     saveState(handles)
 
+function handlesOut=cleanTrajectory(handles)
+    handlesOut=handles;
+    handlesOut.impointList={};
+    handlesOut.fnTrajectory=[];
+    handlesOut.idxTrajectory=[];
+    handlesOut.NMAdisplacementsTrajectory=[];
+
+function handlesOut=updateTrajectory(handles)
+    handlesOut=handles;
+    idx=handles.idxTrajectory;
+    for i=1:length(handles.impointList)
+        pos = getPosition(handles.impointList{i});
+        handlesOut.NMAdisplacementsTrajectory(i,idx(1))=pos(1);
+        handlesOut.NMAdisplacementsTrajectory(i,idx(2))=pos(2);
+    end
+    
 % --- Executes on button press in drawTrajectory.
 function drawTrajectory_Callback(hObject, eventdata, handles)
 % hObject    handle to drawTrajectory (see GCBO)
@@ -468,6 +507,7 @@ function drawTrajectory_Callback(hObject, eventdata, handles)
     if length(idxVars)~=2
         return
     end
+    handles.idxTrajectory=idxVars;
 
     k = waitforbuttonpress;
     [trajectoryX,trajectoryY]=getline();
@@ -509,9 +549,11 @@ function drawTrajectory_Callback(hObject, eventdata, handles)
     
     % Create array of impoints
     handles.impointList=createTrajectoryImPoints(handles);
+    set(handles.drawTrajectory,'Visible','off');
     guidata(gcbo,handles);
     
 function impointList=createTrajectoryImPoints(handles)
+    figure(handles.figHandle)
     impointList={};
     idx=get(handles.listRepresentation,'Value');
     xt=handles.NMAdisplacementsTrajectory(:,idx(1));
@@ -531,10 +573,6 @@ function generateAnimation_Callback(hObject, eventdata, handles)
 % hObject    handle to generateAnimation (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-    % Measure the length of each segment
-    trajectoryX=handles.trajectoryX;
-    trajectoryY=handles.trajectoryY;
     
     % Get Projection mode
     projectionOptions=cellstr(get(handles.popupProjection,'String'));
@@ -543,57 +581,70 @@ function generateAnimation_Callback(hObject, eventdata, handles)
     % Generate the set of NMA deformations
     idx=get(handles.listRepresentation,'Value');
     if strcmp(selectedProjection,'None')==1
-        deformations=zeros(N,size(handles.NMAdisplacements,2));
-        deformations(:,idx(1))=xt;
-        deformations(:,idx(2))=yt;
+        deformations=handles.NMAdisplacementsTrajectory;
     elseif strcmp(selectedProjection,'Principal Component Analysis')==1 || ...
            strcmp(selectedProjection,'Linear Local Tangent Space Alignment')==1 || ...
            strcmp(selectedProjection,'Linearity Preserving Projection')==1 || ...
            strcmp(selectedProjection,'Probabilistic Principal Component Analysis')==1 || ...
            strcmp(selectedProjection,'Neighborhood Preserving Embedding')==1
-        deformationsProjected=zeros(N,size(handles.NMAdisplacementsProjected,2));
-        deformationsProjected(:,idx(1))=xt;
-        deformationsProjected(:,idx(2))=yt;
         M=load([handles.rundir '/extra/projector.txt']);
-        deformations=deformationsProjected*pinv(M);
+        deformations=handles.NMAdisplacementsTrajectory*pinv(M);
     else
-        deformations=zeros(N,size(handles.NMAdisplacements,2));
-        x=handles.NMAdisplacementsProjected(:,idx(1));
-        y=handles.NMAdisplacementsProjected(:,idx(2));
-        inCluster=zeros(size(x));
-        for i=1:length(t)
-            diffx=x-xt(i);
-            diffy=y-yt(i);
-            d=sqrt(diffx.*diffx+diffy.*diffy);
+        deformations=zeros(size(handles.NMAdisplacementsTrajectory,1),size(handles.NMAdisplacements,2));
+        inCluster=zeros(size(handles.NMAdisplacements,1),1);
+        for i=1:size(handles.NMAdisplacementsTrajectory,1)
+            d=zeros(size(handles.NMAdisplacements,1),1);
+            for j=1:size(handles.NMAdisplacementsProjected,1)
+                d(j)=norm(handles.NMAdisplacementsTrajectory(i,:)-handles.NMAdisplacementsProjected(j,:));
+            end
             [mind,idxmin]=min(d);
             inCluster(idxmin)=1;
             deformations(i,:)=handles.NMAdisplacements(idxmin,:);
         end
         handles.inCluster=inCluster;
         guidata(gcbo,handles);
-        updatePlot(handles);
+        updatePlot(gcbo,handles);
     end
     
     % Generate the deformed PDBs
     fnPDB=[handles.rundir '/atoms.pdb'];
-    fnOut=[handles.rundir '/atomsDeformed.pdb'];
     fnModes=[handles.rundir '/modes.xmd'];
     if isempty(handles.fnTrajectory)
         saveTrajectory_Callback([], [], handles);
         handles=guidata(gcbo);
     end
+    fnOut={}
+    for i=1:size(handles.NMAdisplacementsTrajectory,1)
+        fnOut{i}=[handles.rundir '/tmp/atomsDeformed' num2str(i) '.pdb'];
+        cmd=['xmipp_pdb_nma_deform --pdb ' fnPDB ' -o ' fnOut{i} ' --nma ' fnModes ' --deformations ' ...
+            num2str(deformations(i,:))];
+        system(cmd);
+    end
+    
+    % Now construct the sequence
+    currentPDB=1;
     fnTrajectory=[handles.rundir '/extra/trajectory__' handles.fnTrajectory '.pdb'];
     if exist(fnTrajectory,'file')
         system(['rm -f ' fnTrajectory]);
     end
     system(['touch ' fnTrajectory]);
-    for i=1:length(t)
-        cmd=['xmipp_pdb_nma_deform --pdb ' fnPDB ' -o ' fnOut ' --nma ' fnModes ' --deformations ' ...
-            num2str(deformations(i,:)) ' ; cat ' fnOut ' >> ' fnTrajectory ' ; echo TER >> ' ...
-            fnTrajectory ' ; echo ENDMDL >> ' fnTrajectory];
+    N=2*(size(handles.NMAdisplacementsTrajectory,1)-1);
+    for i=1:N
+        cmd=['cat ' fnOut{currentPDB} ' >> ' fnTrajectory ' ; echo TER >> ' ...
+             fnTrajectory ' ; echo ENDMDL >> ' fnTrajectory]; 
         system(cmd);
+        if i<=N/2
+            currentPDB=currentPDB+1;
+        else
+            system(['rm -f ' fnOut{currentPDB}]);
+            currentPDB=currentPDB-1;
+        end
     end
-    system(['rm -f ' fnOut]);
+    system(['rm -f ' fnOut{1}]);
+    
+    % 
+    %cmd=['; cat ' fnOut ' >> ' fnTrajectory ' ; echo TER >> ' ...
+    %        fnTrajectory ' ; echo ENDMDL >> ' fnTrajectory];    
     
     % Generate VMD script
     fnTrajectoryVMD=[handles.rundir '/extra/trajectory__' handles.fnTrajectory '.vmd'];
@@ -616,6 +667,7 @@ function loadTrajectory_Callback(hObject, eventdata, handles)
 % hObject    handle to loadTrajectory (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+    handles=cleanTrajectory(handles);
     fileList=dir([handles.rundir '/extra/trajectory__*.mat']);
     if length(fileList)==0
         return
@@ -643,7 +695,11 @@ function saveTrajectory_Callback(hObject, eventdata, handles)
     trajectoryName=inputdlg('Name of the trajectory','Save trajectory',1);
     if ~isempty(trajectoryName)
         NMAdisplacementsTrajectory=handles.NMAdisplacementsTrajectory;
-        save([handles.rundir '/extra/trajectory__' trajectoryName{1} '.mat'],'NMAdisplacementsTrajectory')
+        fnFullTrajectory=[handles.rundir '/extra/trajectory__' trajectoryName{1} '.mat'];
+        if exist(fnFullTrajectory,'file')
+            system(['rm -f ' fnFullTrajectory]);
+        end
+        save(fnFullTrajectory,'NMAdisplacementsTrajectory')
         handles.fnTrajectory=trajectoryName{1};
         guidata(gcbo,handles);
     end
@@ -653,7 +709,6 @@ function resetTrajectory_Callback(hObject, eventdata, handles)
 % hObject    handle to resetTrajectory (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-        handles.NMAdisplacementsTrajectory=[];
-        handles.impointList={};
+        handles=cleanTrajectory(handles);
         guidata(gcbo,handles)
-        updatePlot(handles)
+        updatePlot(gcbo,handles)
