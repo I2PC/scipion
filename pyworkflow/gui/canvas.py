@@ -170,7 +170,7 @@ def findClosestPoints(list1,list2):
 def findClosestConnectors(item1,item2):
     return findUpDownClosestConnectors(item1,item2)
 
-# !!!! @current sometimes, in a hierarchichal graph, it's better the upper (or lower) connector, than the closest...
+
 def findUpDownClosestConnectors(item1,item2):
     srcConnectors=item1.getUpDownConnectorsCoordinates()
     dstConnectors=item2.getUpDownConnectorsCoordinates()
@@ -187,9 +187,9 @@ def findStrictClosestConnectors(item1,item2):
     return c1Coords,c2Coords
 
 
-
-# !!!! An item can have many Sockets, in the top or bottom, in different positions (order)
 class Item(object):      
+    socketSeparation=12
+
     def __init__(self,canvas,x,y):
         self.activeConnector=None
         self.canvas=canvas
@@ -219,25 +219,53 @@ class Item(object):
         return self.canvas.bbox(self.id)
 
 
+    def countSockets(self,verticalLocation):
+        return len(self.getSocketsAt(verticalLocation))
+
+
     def addSocket(self,name,socketClass,verticalLocation,fillColor=DEFAULT_CONNECTOR_FILL,outline=DEFAULT_CONNECTOR_OUTLINE,position=None):
-        x,y=self.getSocketCoordsAt(verticalLocation)
-        self.sockets[name]={"object": socketClass(self.canvas,x,y,name,fillColor=fillColor,outline=outline), "verticalLocation": verticalLocation}
+        count=self.countSockets(verticalLocation) + 1
+        if position==None:
+            position=count
+        self.relocateSockets(verticalLocation, count)
+        x,y=self.getSocketCoordsAt(verticalLocation, count, count)
+        self.sockets[name]={"object": socketClass(self.canvas,x,y,name,fillColor=fillColor,outline=outline), "verticalLocation": verticalLocation, "position":position}
         self.paintSocket(self.getSocket(name))
+
 
     def getSocket(self,name):
         return self.sockets[name]["object"]
 
-    def getSocketCoords(self,name):
-        return self.getSocketCoordsAt(self.sockets[name]["verticalLocation"])
 
-    def getSocketCoordsAt(self,verticalLocation):
+    def getSocketsAt(self,verticalLocation):
+        return filter(lambda s: s["verticalLocation"] == verticalLocation, self.sockets.values())
+
+
+    def getSocketCoords(self,name):
+        socket=self.sockets[name]
+        return self.getSocketCoordsAt(socket["verticalLocation"], socket["position"], self.countSockets(socket["verticalLocation"]))
+
+
+    def getSocketCoordsAt(self,verticalLocation,position=1,socketsCount=1):
         x1,y1,x2,y2=self.getCorners()
         xc=(x2+x1)/2.0
+        socketsGroupSize=(socketsCount-1)*self.socketSeparation
+        socketsGroupStart=xc - (socketsGroupSize / 2)
+        x=socketsGroupStart+(position-1)*self.socketSeparation
         if verticalLocation == "top":
             y=y1
         else:
             y=y2
-        return (xc,y)
+        return (x,y)
+
+
+    def relocateSockets(self,verticalLocation,count):
+        sockets=self.getSocketsAt(verticalLocation)
+        for socket in sockets:
+            o=socket["object"]
+            x,y=self.getSocketCoordsAt(verticalLocation,socket["position"],count)
+            o.moveTo(x,y)
+
 
     def paintSocket(self,socket):
         # x,y=self.getSocketCoords(socket["name"])
@@ -264,8 +292,7 @@ class Item(object):
             listenerFunc(dx, dy)
             
     def moveTo(self, x, y):
-        """Move TextBox to new position
-        dx and dy are the new position"""
+        """Move TextBox to a new position (x,y)"""
         self.move(x-self.x, y-self.y)
         
     def addPositionListener(self, listenerFunc):
@@ -386,9 +413,9 @@ class Connector(Item):
 
     def move(self,dx,dy):
         super(Connector,self).move(dx,dy)
-        if self.socketId:
+        if hasattr(self,"socketId"):
             self.canvas.move(self.socketId, dx, dy)
-        if self.plugId:
+        if hasattr(self,"plugId"):
             self.canvas.move(self.plugId, dx, dy)
 
 class ColoredConnector(Connector):
@@ -405,7 +432,7 @@ class RoundConnector(ColoredConnector):
     def paintPlug(self):
         self.plugId= self.canvas.create_oval(self.x-self.radius, self.y-self.radius, self.x+self.radius, self.y+self.radius, fill=self.fillColor,width=0)
 
-# !!!! other figures: half circle, square, diamond...
+
 class SquareConnector(ColoredConnector):
     halfside=3
     def paintSocket(self):
@@ -414,6 +441,8 @@ class SquareConnector(ColoredConnector):
     def paintPlug(self):
         self.plugId= self.canvas.create_rectangle(self.x-self.halfside, self.y-self.halfside, self.x+self.halfside, self.y+self.halfside, fill=self.fillColor,width=0)
 
+
+# !!!! other figures: half circle, diamond...
 
 class Edge():
     """Edge between two objects"""
@@ -500,12 +529,17 @@ if __name__ == '__main__':
     tb1 = canvas.createTextCircle("Project", 100, 100, "blue")
     tb2 = canvas.createTextbox("This is an intentionally quite big, big box,\nas you may appreciate looking carefully\nat it,\nas many times\nas you might need", 300, 200)
     tb2.addSocket("output1",RoundConnector, "bottom",fillColor="green")
+    tb2.addSocket("output2",SquareConnector, "bottom",fillColor="yellow")
+    tb2.addSocket("output3",SquareConnector, "bottom",fillColor="blue")
     tb3 = canvas.createRoundedTextbox("otro mas\n", 100, 200, "red")
     tb4 = canvas.createRoundedTextbox("tb4", 300, 300, "yellow")
     tb4.addSocket("input1",SquareConnector, "top",outline="red")
+    tb5 = canvas.createTextCircle("tb5", 400, 300, "grey")
+    tb5.addSocket("input1",SquareConnector, "top")
     e1 = canvas.createEdge(tb1, tb2)
     e2 = canvas.createEdge(tb1, tb3)
-    c1= canvas.createCable(tb2,"output1",tb4,"input1")
+    c1= canvas.createCable(tb2,"output2",tb4,"input1")
+    c2= canvas.createCable(tb2,"output3",tb5,"input1")
     tb3.moveTo(100, 300)
 
     root.mainloop()
