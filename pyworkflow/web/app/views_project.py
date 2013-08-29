@@ -18,7 +18,7 @@ def projects(request):
     context = {'projects': projects,
                'css': getResourceCss('projects'),
                'messi_css': getResourceCss('messi'),
-               'project_form': getResourceJs('project_form'),
+               'project_utils': getResourceJs('project_utils'),
                'contentConfig': 'full'}
     
     return render_to_response('projects.html', context)
@@ -164,10 +164,13 @@ def project_content(request):
                'browseTool': getResourceIcon('browse_toolbar'),
                'treeTool': getResourceIcon('tree_toolbar'),
                'utils': getResourceJs('utils'),
+               'graph_utils': getResourceJs('graph_utils'),
+               'project_content_utils': getResourceJs('project_content_utils'),
                'jquery_cookie': getResourceJs('jquery_cookie'),
                'jquery_treeview': getResourceJs('jquery_treeview'),
                'tabs_config': getResourceJs('tabs_config'),
                'css':getResourceCss('project_content'),
+               'jquery_ui':getResourceCss('jquery_ui'),
                'sections': root.childs,
                'provider':provider,
                'messi_css': getResourceCss('messi'),

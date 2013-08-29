@@ -1,3 +1,13 @@
+/**
+ * Methods used in the project template
+ * 
+ * createProject(elm);
+ * createProjectForm();
+ * deleteProjectForm(projName);
+ * deleteProject(elm);
+ * 
+ **/
+
 function createProjectForm() {
 
 	var html = "Project Name: <input type='text' id='newProjName' class='content'/>";

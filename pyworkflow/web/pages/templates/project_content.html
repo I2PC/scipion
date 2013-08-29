@@ -2,20 +2,17 @@
 {% endblock %} {% block head %}
 <link href={{css}} rel="stylesheet" type="text/css">
 <link href={{messi_css}} rel="stylesheet" type="text/css">
-<link href="/static/css/jquery-ui.css" rel="stylesheet" type="text/css">
+<link href="{{jquery_ui}}" rel="stylesheet" type="text/css">
 <!-- JS Libs -->
 <script src={{jquery_cookie}} type="text/javascript"></script>
 <script src={{jquery_treeview}} type="text/javascript"></script>
-<script src={{launchTreeview}} type="text/javascript"></script>
-<!-- <script src={{tabs_config}} type="text/javascript"></script> -->
 <script src={{utils}} type="text/javascript"></script>
-<script>
-	$(document).ready(function(){
-		$("#browser").treeview();
-	});
-	
+<script src={{project_content_utils}} type="text/javascript"></script>
+<script src={{graph_utils}} type="text/javascript"></script>
+<script>	
 	$(function() {
     	$("#tabs").tabs();
+    	$("#browser").treeview(); 
   	});
 </script>
 {% endblock %} {% block sideLeft %}

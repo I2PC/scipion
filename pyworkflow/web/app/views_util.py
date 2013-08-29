@@ -29,25 +29,31 @@ cssDict = {'project_content': 'project_content_style.css',
            'general': 'general_style.css',
            'form': 'form.css',
            'ui_smoothness': 'jquery-ui_smoothness.css',
+           'jquery_ui': 'jquery-ui.css',
            'showj_demo_table_jui': 'demo_table_jui.css'
            
            
            }
 
-jsDict = {'jquery': 'jquery.js',
-          'jquery_cookie': 'jquery.cookie.js',
-          'jquery_treeview': 'jquery.treeview.js',
-          'utils': 'utils.js',
-          'host_util': 'host_utils.js',
+jsDict = {'jquery': 'jquery/jquery.js',
+          'jquery_cookie': 'jquery/jquery.cookie.js',
+          'jquery_treeview': 'jquery/jquery.treeview.js',
+          'jquery_datatables': 'jquery/jquery.dataTables.js',
+          'jquery_editable': 'jquery/jquery.jeditable.js',
+          'jquery_ui': 'jquery/jquery-ui.js',
+          
+          'utils': 'templates_libs/utils.js',
+          'host_utils': 'templates_libs/host_utils.js',
+          'graph_utils': 'templates_libs/graph_utils.js',
+          'project_content_utils':'templates_libs/project_content_utils.js',
+          'project_utils': 'templates_libs/project_utils.js',
+          'protocols_utils': 'templates_libs/protocols_utils.js',
+          'protocol_form_utils': 'templates_libs/protocol_form_utils.js',
+
           'tabs_config': 'tabs_config.js',
-          'project_form': 'project_form.js',
-          'jquery_datatables': 'jquery.dataTables.js',
           'jquery_colreorder': 'ColReorder.js',
           'jquery_colreorder_resize': 'ColReorderWithResize.js',
-          'jquery_editable': 'jquery.jeditable.js',
-          'jquery_ui': 'jquery-ui.js',
           'jquery_waypoints': 'waypoints.min.js',
-          'form': 'form.js',
           'messi': 'messi.js'
           }
 
@@ -98,7 +104,7 @@ def get_image_dimensions(projectPath, imagePath):
             imagePath = parts[1]
             
         if projectPath != '':
-            imagePathTmp = os.path.join(projectPath,imagePath)
+            imagePathTmp = os.path.join(projectPath, imagePath)
             if not os.path.isfile(imagePathTmp):
                 imagePath = getInputPath('showj', imagePath)      
             
@@ -132,7 +138,7 @@ def get_image(request):
             imagePath = parts[1]
 
         if 'projectPath' in request.session:
-            imagePathTmp = os.path.join(request.session['projectPath'],imagePath)
+            imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
             if not os.path.isfile(imagePathTmp):
                 imagePath = getInputPath('showj', imagePath)      
             

@@ -11,13 +11,7 @@ def getScipionHosts():
     defaultHosts = getSettingsPath()
     return HostMapper(defaultHosts).selectAll()
 
-def viewHosts(request):  
-    # Resources #
-    css_path = getResourceCss('general')
-    jquery_path = getResourceJs('jquery')
-    utils_path = getResourceJs('utils')
-    host_utils_path = getResourceJs('host_util')
-    
+def viewHosts(request):      
     projectName = request.session['projectName']    
     project = loadProject(projectName)
     projectHosts = project.getSettings().getHosts()   
@@ -31,10 +25,10 @@ def viewHosts(request):
                'deleteTool': getResourceIcon('delete_toolbar'),
                'browseTool': getResourceIcon('browse_toolbar'),
                'hosts': projectHosts,
-               'jquery': jquery_path,
-               'utils': utils_path,
-               'hostUtils': host_utils_path,
-               'css':css_path,
+               'jquery': getResourceJs('jquery'),
+               'utils': getResourceJs('utils'),
+               'host_utils': getResourceJs('host_utils'),
+               'css':getResourceCss('general'),
                'message': message,
                'view': 'hosts',
                'contentConfig': 'full'}    
@@ -57,10 +51,6 @@ def viewHosts(request):
 
 
 def getHostFormContext(request, host=None, initialContext=None):
-    css_path = getResourceCss('general')
-    jquery_path = getResourceJs('jquery')
-    utils_path = getResourceJs('utils')
-    form = None
 #     scpnHostsChoices = []
 #     scpnHostsChoices.append(('', ''))
 #     scipionHosts = getScipionHosts()
@@ -77,9 +67,9 @@ def getHostFormContext(request, host=None, initialContext=None):
         tittle = "New host configuration"  
             
     context = {'tittle': tittle,
-               'jquery': jquery_path,
-               'utils': utils_path,
-               'css':css_path,
+               'jquery': getResourceJs('jquery'),
+               'utils': getResourceJs('utils'),
+               'css':getResourceCss('general'),
                'form': form}
      
     if initialContext is not None:
