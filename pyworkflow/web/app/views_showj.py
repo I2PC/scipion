@@ -19,9 +19,7 @@ def showj(request, inputParameters=None):
     # WEB INPUT PARAMETERS
     _imageDimensions = ''
     
-    print "metodo",request.method
     if request.method == 'POST': # If the form has been submitted... Post method
-        
         _path = request.POST.get('path')
         _blockComboBox = request.POST.get('blockComboBox')
         _render = request.POST.get('allowRender')
@@ -36,7 +34,7 @@ def showj(request, inputParameters=None):
     
     #Init Dataset
     #Todo: Check type of Dataset 
-    dataset = loadDatasetXmipp(_path) if 'dataset' not in request.session else request.session['dataset']
+    dataset = loadDatasetXmipp(_path) 
     
     if _blockComboBox == '':
         _blockComboBox = dataset.listTables()[0]
@@ -79,6 +77,7 @@ def showj(request, inputParameters=None):
     request.session['dataset'] = dataset
     request.session['labelsToRenderComboBox'] = _labelsToRenderComboBox
     request.session['blockComboBox'] = _blockComboBox
+    request.session['tableLayoutConfiguration'] = tableLayoutConfiguration
     #Esto falla y creo que es por el tamano
     #request.session['table'] = tableDataset
     if (_imageDimensions != ''):
@@ -90,6 +89,7 @@ def showj(request, inputParameters=None):
                'demo_table_jui': getResourceCss('showj_demo_table_jui'),
                
                'favicon': getResourceIcon('favicon'),
+               'logo': getResourceIcon('logo_scipion'),
                
                'jquery': getResourceJs('jquery'), #Configuration variables
                'jquery_datatable': getResourceJs('jquery_datatables'),
@@ -142,13 +142,6 @@ class ColumnLayoutConfiguration():
         
         self.columnLayoutProperties = ColumnLayoutProperties(self.typeOfColumn, allowRender)
 
-        
-#        self.labels = [xmipp.label2Str(l) for l in labels]
-#        self.typeOfColumns = getTypeOfColumns(labels, allowRender)
-#        self.colsOrder = defineColsLayout(self.labels)
-#        #Esto es un napeidus que habria que arreglar
-#        self.labels_typeOfColumns= zip(self.labels,self.typeOfColumns)
-
 class ColumnLayoutProperties():
     def __init__(self, typeOfColumn, allowRender=True):
 #        self.layoutPropertiesDict = {}
@@ -192,50 +185,32 @@ def loadDatasetXmipp(path):
 
     
 def save_showj_table(request):
-    
-    from django.http import HttpResponse
-    import json
-    from django.utils import simplejson
-    
     if request.is_ajax():
         changes = request.POST.get('changes')
-        print "changes", changes
-        print "type", type(changes)
+        jsonChanges = json.loads(changes)
+        
+        print "jsonChanges",jsonChanges 
         
         dataset=request.session['dataset']
         blockComboBox=request.session['blockComboBox']
+        tableLayoutConfiguration=request.session['tableLayoutConfiguration']
         
         tableDataset=dataset.getTable(blockComboBox)
-        tableDataset.updateRow(rowId,values)
         
-#        NAPA DE LUXE
+        for key in jsonChanges:
+            element_split = key.rsplit('___')
+            if len(element_split)!=2: 
+                print "this fails and sth has to be done"
+            
+            #NAPA de LUXE ahora mismo se realiza una conversion a int pero habria que ver de que tipo de datos se trata 
+            #tableLayoutConfiguration.columnsLayout[element_split[0]].typeOfColumn
+
+            dictelement = {element_split[0]:int(jsonChanges[key])}
+            tableDataset.updateRow(int(element_split[1]),**dictelement)
         
-#        element_id = request.GET.get('element_id')
-#        try:
-#            label, idRow = element_id.split("___")
-#        except ValueError:
-#            return HttpResponse(json.dumps({'message':'Error'}), mimetype='application/javascript')
-#        
-##        if len(element_id_split)!=2: 
-##            print "esto peto y hay que hacer alguna movidita"
-#        element_value= request.GET.get('element_value')
-#        #conversion for checkbox element
-#        if (element_value == 'true'): element_value = 1
-#        else: element_value = 0
-#        
-#        md = request.session['md']
-#
-#        for index, mdObject in enumerate(md.objects[int(idRow)].values):
-#            if label in mdObject.label:
-#                md.objects[int(idRow)].values[index].strValue=element_value
-#        
-#        request.session['md']=md
-##        mdXmipp.setValue(element_id_split[0], False, mdXmipp[element_id_split[1]])
-#        return HttpResponse(json.dumps({'message':'Ok'}), mimetype='application/javascript')
-
-#    request.get.get('value')
-
-
+        dataset.writeTable(blockComboBox, tableDataset)
+        
+        return HttpResponse(json.dumps({'message':'Ok'}), mimetype='application/javascript')
 
 
 def visualizeObject(request):

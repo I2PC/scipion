@@ -47,31 +47,11 @@ var oTable;
 /* Initialize Table Layout Configuration from json variable*/
 var jsonTableLayoutConfiguration = {{tableLayoutConfiguration|safe }}
 console.log("json",jsonTableLayoutConfiguration)
-/*  Initialize variable to keep changes*/
-var changes={}
 
 $(document).ready(function() {
-	
-
-	
 	initializeSelectionRowEvent() 
 	initializeGoToEvent()
 	initializeTableWidth()
-	
-	
-	
-	/* $("#form").submit(function() {
-		var sData = $('input', oTable.fnGetNodes()).serialize();
-		alert( "The following data would have been submitted to the server: \n\n"+sData );
-		return false;
-	} ) */
-	
-	/* Add a click handler for the delete row */
-	/* $('#delete').click( function() {
-		var anSelected = fnGetSelected( oTable );
-		oTable.fnDeleteRow( anSelected[0] );
-	} ); */
-	
 	
 	/* Init the table */
 	oTable = $('#data_table').dataTable(
@@ -82,7 +62,7 @@ $(document).ready(function() {
 			        "bSort": true,
 			        "bInfo": true,
 			        "bAutoWidth": true,
-			        "sDom": 'Rlfrtip', 
+			        "sDom": 'Rl<"#configurationContainer">frtip', 
 			        /* "sDom": 'T<"clear">lfrtip', */
  			        "oColReorder": {
 		    			"aiOrder": jsonTableLayoutConfiguration.colsOrder
@@ -126,7 +106,7 @@ $(document).ready(function() {
 
 /* Render elements on table (Image and checkbox) */
 function renderElements(nRow, aData){
-	 console.log("row") 
+/* 	 console.log("row")  */
 	 columnId = 0
 	 invisibleColumns = 0 
 	 for (var i in jsonTableLayoutConfiguration.columnsLayout){ 
@@ -214,15 +194,6 @@ function getColumnsDefinition(){
 		var dataRowForTable = []
 		
  		var columnLayoutConfiguration = jsonColumnsLayout[i]
-		/* if (columnLayoutConfiguration.typeOfColumn == "text" && columnLayoutConfiguration.columnLayoutProperties.editable){
-			dataRowForTable["sClass"]= "editable" 
-		}
-		else if(columnLayoutConfiguration.typeOfColumn == "image"){
-			sClass_Tmp = "imageColumn"
-			if (columnLayoutConfiguration.columnLayoutProperties.renderable){
-				dataRowForTable["sClass"]= sClass_Tmp +" editable"
-			} 
-		} */
 		
  		if(!columnLayoutConfiguration.columnLayoutProperties.visible){
 			dataRowForTable["bVisible"] = false
@@ -234,9 +205,6 @@ function getColumnsDefinition(){
 		columnId++;
 		
 	}
-	
-	/* TO BE DELETED */
-	/* console.log(JSON.stringify(dataForTable)) */
 	
 	return dataForTable;
 }
@@ -356,6 +324,10 @@ function setElementsEditable(elements){
 				var rowId =$(nTd).text()
 				
 				/*Keep changes in global variable */
+				if ($("#saveButton").hasClass("saveOff")){
+					$("#saveButton").toggleClass("saveOn").toggleClass("saveOff")
+				}
+					
 				changes[label+"___"+rowId]=value
 			    return(value);
 			  },
@@ -376,7 +348,7 @@ function generateDataForTable(){
 	dataForTable = new Array();
 	{% for row in tableDataset.getRows %}
 		dataRowForTable = new Array()
-		var row_id
+		/* var row_id */
 		{% for cell in row %}
 			dataRowForTable.push("{{cell}}")
 			{% if forloop.first	%}
@@ -393,12 +365,8 @@ function generateDataForTable(){
 
 function valueChange(element){
 	element_value = ""
-	if ($(element).is("input:checkbox")){
-		element_value = $(element).is(":checked")
-	}
-	else{
-		element_value = $(element).val()
-	}
+	if ($(element).is("input:checkbox")){element_value = $(element).is(":checked")}
+	else{element_value = $(element).val()}
 	
 	/*Keep changes in global variable */
 	changes[$(element).attr("id")]=element_value

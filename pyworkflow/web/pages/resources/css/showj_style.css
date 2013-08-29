@@ -269,6 +269,17 @@ section .imageTitle{
 	background-image: url(/resources/showj/editTableOff.png);	
 }
 
+aside #saveButton{
+	width:27px;
+	height:27px;
+}
+.saveOn{
+	background-image: url(/resources/showj/saveOn.png);	
+}
+.saveOff{
+	background-image: url(/resources/showj/saveOff.png);
+}
+
 #table_container tbody tr.odd{
 	background-color: #FFF;
 }
