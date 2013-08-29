@@ -77,7 +77,9 @@ protected:
         addParamsLine("                                 : use label:col, e.g., NMADisplacements:0");
         addParamsLine("                                 : The first column is column number 0.");
         addParamsLine("                                 : order can be asc (ascending) or desc (descending)");
-        addParamsLine("   randomize                            : Randomize elements of metadata");
+        addParamsLine("    random_subset <size>                : Extract a random subset without replacement of this metadata");
+        addParamsLine("    bootstrap                           : Extract a bootstrap subset (with replacement) of this metadata");
+        addParamsLine("    randomize                           : Randomize elements of metadata");
         addParamsLine("    keep_column <labels>                : Keep some columns(label list) from metadata");
         addParamsLine("    drop_column <labels>                : Drop some columns(label list) from metadata");
         addParamsLine("    rename_column <labels>              : Rename a column");
@@ -273,6 +275,33 @@ protected:
             }
             else if (operation == "randomize")
                 mdIn.randomize(md);
+            else if (operation == "bootstrap")
+            {
+            	std::vector<size_t> objId;
+            	objId.resize(md.size());
+            	size_t n=0;
+            	FOR_ALL_OBJECTS_IN_METADATA(md)
+            	objId[n++]=__iter.objId;
+            	// md.getColumnValues(MDL_OBJID,objId); COSS: It should work, but it does not
+            	int N_1=((int)objId.size())-1;
+            	MDRow row;
+            	MetaData mdAux;
+            	FOR_ALL_OBJECTS_IN_METADATA(md)
+            	{
+            		md.getRow(row,objId[(size_t)rnd_unif(0,N_1)]);
+            		mdAux.setRow(row,mdAux.addObject());
+            	}
+            	mdIn.sort(mdAux,MDL_IMAGE);
+            }
+            else if (operation == "random_subset")
+            {
+            	MetaData mdAux, mdAux2;
+                mdAux.randomize(md);
+                md.clear();
+                mdAux2.selectPart(mdAux, 0, getIntParam("--operate", 1));
+                mdAux.clear();
+                mdIn.sort(mdAux2,MDL_IMAGE);
+            }
         }
     }//end of function doOperate
 
