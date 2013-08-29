@@ -397,13 +397,16 @@ class ColoredConnector(Connector):
         self.fillColor=fillColor
         self.outline=outline
 
+# !!!! display the oval centered...
 class RoundConnector(ColoredConnector):
+    radius=3
     def paintSocket(self):
-        self.socketId= self.canvas.create_oval(self.x,self.y,self.x+5,self.y+5,outline=self.outline)
+        self.socketId= self.canvas.create_oval(self.x-self.radius, self.y-self.radius, self.x+self.radius, self.y+self.radius, outline=self.outline)
 
     def paintPlug(self):
-        self.plugId= self.canvas.create_oval(self.x,self.y,self.x+5,self.y+5,fill=self.fillColor,width=0)
+        self.plugId= self.canvas.create_oval(self.x-self.radius, self.y-self.radius, self.x+self.radius, self.y+self.radius, fill=self.fillColor,width=0)
 
+# !!!! other figures: half circle, square, diamond...
 
 
 class Edge():
@@ -441,6 +444,8 @@ class Edge():
         self.paint()
 
 
+# !!!! Interaction: allow to reconnect cables dynamically
+# !!!! Antialiasing for the line
 
 class Cable():
     def __init__(self,canvas,src,srcConnector,dst,dstConnector):
