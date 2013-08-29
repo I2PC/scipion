@@ -1,10 +1,12 @@
-from django.shortcuts import render_to_response
-from pyworkflow.tests import getInputPath
 import os
 import xmipp
+import json
+from pyworkflow.tests import getInputPath
 from pyworkflow.web.pages import settings
 from pyworkflow.manager import Manager
 from pyworkflow.project import Project
+from django.shortcuts import render_to_response
+from django.http import HttpResponse
 
 iconDict = {
             'logo_scipion': 'scipion_logo.png',
@@ -64,6 +66,20 @@ def loadProject(projectName):
     project = Project(projPath)
     project.load()
     return project
+
+def browse_objects(request):
+    """ Browse objects from the database. """
+    if request.is_ajax():
+        objClass = request.GET.get('objClass')
+        projectName = request.GET.get('projectName')
+        project = loadProject(projectName)    
+        
+        objs = []
+        for obj in project.mapper.selectByClass(objClass, iterate=True):
+            objs.append(obj.getNameId())
+        jsonStr = json.dumps({'objects' : objs},
+                             ensure_ascii=False)
+        return HttpResponse(jsonStr, mimetype='application/javascript')
 
 def get_image_dimensions(projectPath, imagePath):
     from django.http import HttpResponse
@@ -130,9 +146,7 @@ def get_image(request):
         
         # from PIL import Image
         img = getPILImage(imgXmipp, imageDim)
-        
-        
-        
+         
     # response = HttpResponse(mimetype="image/png")    
     response = HttpResponse(mimetype="image/png")
     img.save(response, "PNG")

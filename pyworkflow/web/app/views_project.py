@@ -1,14 +1,13 @@
+import json
+import pyworkflow.gui.graph as gg
+from pyworkflow.em import *
 from pyworkflow.web.app.views_util import * 
 from pyworkflow.utils.utils import prettyDate
-from django.http import HttpResponse
 from pyworkflow.manager import Manager
-import pyworkflow.gui.graph as gg
 from pyworkflow.apps.pw_project_viewprotocols import STATUS_COLORS
 from pyworkflow.gui.tree import TreeProvider, ProjectRunsTreeProvider
-import json
-from pyworkflow.em import *
+from django.http import HttpResponse
 
-######    Projects template    #####
 def projects(request):
     manager = Manager()
     
@@ -43,7 +42,6 @@ def delete_project(request):
         
     return HttpResponse(mimetype='application/javascript')
 
-######    Project Content template    #####
 def createNode(node, y):
     try:
         item = gg.TNode(node.getName(), y=y)
@@ -206,18 +204,4 @@ def protocol_summary(request):
 #        print jsonStr
         
     return HttpResponse(jsonStr, mimetype='application/javascript')
-
-def browse_objects(request):
-    """ Browse objects from the database. """
-    if request.is_ajax():
-        objClass = request.GET.get('objClass')
-        projectName = request.GET.get('projectName')
-        project = loadProject(projectName)    
-        
-        objs = []
-        for obj in project.mapper.selectByClass(objClass, iterate=True):
-            objs.append(obj.getNameId())
-        jsonStr = json.dumps({'objects' : objs},
-                             ensure_ascii=False)
-        return HttpResponse(jsonStr, mimetype='application/javascript')
 

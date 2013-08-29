@@ -1,15 +1,14 @@
-from pyworkflow.web.app.views_util import * 
 import os
 import xmipp
+import json
+from pyworkflow.em import *
+from pyworkflow.web.app.views_util import * 
 from pyworkflow.manager import Manager
 from pyworkflow.project import Project
-from django.shortcuts import render_to_response
 from django.core.context_processors import csrf
-from pyworkflow.em import *
+from django.shortcuts import render_to_response
 from django.http import HttpResponse
-import json
 
-######    Project Form template    #####
 def form(request):
     project, protocol = loadProtocolProject(request, requestType='GET')
     action = request.GET.get('action', None)

@@ -31,10 +31,10 @@ urlpatterns = patterns('',
     url(r'^protocol_io/$', 'app.views_project.protocol_io'),
     url(r'^project_graph/$', 'app.views_project.project_graph'),
     url(r'^protocol_summary/$', 'app.views_project.protocol_summary'),    
-    url(r'^browse_objects/$', 'app.views_project.browse_objects'),
-    
+        
     #UTILS
     url(r'^get_image/', 'app.views_util.get_image'), # Load images dynamically
+    url(r'^browse_objects/$', 'app.views_util.browse_objects'), # Browse objects from the database
 
     #PROTOCOL (WIZARD AND FORM)
     url(r'^save_protocol/$', 'app.views_protocol.save_protocol'),
