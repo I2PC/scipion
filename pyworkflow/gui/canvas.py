@@ -397,7 +397,6 @@ class ColoredConnector(Connector):
         self.fillColor=fillColor
         self.outline=outline
 
-# !!!! display the oval centered...
 class RoundConnector(ColoredConnector):
     radius=3
     def paintSocket(self):
@@ -407,6 +406,13 @@ class RoundConnector(ColoredConnector):
         self.plugId= self.canvas.create_oval(self.x-self.radius, self.y-self.radius, self.x+self.radius, self.y+self.radius, fill=self.fillColor,width=0)
 
 # !!!! other figures: half circle, square, diamond...
+class SquareConnector(ColoredConnector):
+    halfside=3
+    def paintSocket(self):
+        self.socketId= self.canvas.create_rectangle(self.x-self.halfside, self.y-self.halfside, self.x+self.halfside, self.y+self.halfside, outline=self.outline)
+
+    def paintPlug(self):
+        self.plugId= self.canvas.create_rectangle(self.x-self.halfside, self.y-self.halfside, self.x+self.halfside, self.y+self.halfside, fill=self.fillColor,width=0)
 
 
 class Edge():
@@ -496,7 +502,7 @@ if __name__ == '__main__':
     tb2.addSocket("output1",RoundConnector, "bottom",fillColor="green")
     tb3 = canvas.createRoundedTextbox("otro mas\n", 100, 200, "red")
     tb4 = canvas.createRoundedTextbox("tb4", 300, 300, "yellow")
-    tb4.addSocket("input1",RoundConnector, "top",outline="red")
+    tb4.addSocket("input1",SquareConnector, "top",outline="red")
     e1 = canvas.createEdge(tb1, tb2)
     e2 = canvas.createEdge(tb1, tb3)
     c1= canvas.createCable(tb2,"output1",tb4,"input1")
