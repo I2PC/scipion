@@ -502,9 +502,9 @@ function generateAnimation_Callback(hObject, eventdata, handles)
     end
 
     % Now choose points in the trajectory
-    N=20;
+    N=19;
     A=totalLength/2;
-    t=A+A*sin(2*pi/N*[0:(N-1)]);
+    t=A+A*sin(2*pi/N*[0:(N-1)]+pi/4);
     accumulatedLength=cumsum(segmentLength);
     startingSegment=[0; accumulatedLength(1:end-1)];
     xt=zeros(size(t));
