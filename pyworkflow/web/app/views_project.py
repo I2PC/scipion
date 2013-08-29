@@ -1,14 +1,13 @@
+import json
+import pyworkflow.gui.graph as gg
+from pyworkflow.em import *
 from pyworkflow.web.app.views_util import * 
 from pyworkflow.utils.utils import prettyDate
-from django.http import HttpResponse
 from pyworkflow.manager import Manager
-import pyworkflow.gui.graph as gg
 from pyworkflow.apps.pw_project_viewprotocols import STATUS_COLORS
 from pyworkflow.gui.tree import TreeProvider, ProjectRunsTreeProvider
-import json
-from pyworkflow.em import *
+from django.http import HttpResponse
 
-######    Projects template    #####
 def projects(request):
     manager = Manager()
     
@@ -19,7 +18,7 @@ def projects(request):
     context = {'projects': projects,
                'css': getResourceCss('projects'),
                'messi_css': getResourceCss('messi'),
-               'project_form': getResourceJs('project_form'),
+               'project_utils': getResourceJs('project_utils'),
                'contentConfig': 'full'}
     
     return render_to_response('projects.html', context)
@@ -43,7 +42,6 @@ def delete_project(request):
         
     return HttpResponse(mimetype='application/javascript')
 
-######    Project Content template    #####
 def createNode(node, y):
     try:
         item = gg.TNode(node.getName(), y=y)
@@ -166,10 +164,13 @@ def project_content(request):
                'browseTool': getResourceIcon('browse_toolbar'),
                'treeTool': getResourceIcon('tree_toolbar'),
                'utils': getResourceJs('utils'),
+               'graph_utils': getResourceJs('graph_utils'),
+               'project_content_utils': getResourceJs('project_content_utils'),
                'jquery_cookie': getResourceJs('jquery_cookie'),
                'jquery_treeview': getResourceJs('jquery_treeview'),
                'tabs_config': getResourceJs('tabs_config'),
                'css':getResourceCss('project_content'),
+               'jquery_ui':getResourceCss('jquery_ui'),
                'sections': root.childs,
                'provider':provider,
                'messi_css': getResourceCss('messi'),
@@ -206,18 +207,4 @@ def protocol_summary(request):
 #        print jsonStr
         
     return HttpResponse(jsonStr, mimetype='application/javascript')
-
-def browse_objects(request):
-    """ Browse objects from the database. """
-    if request.is_ajax():
-        objClass = request.GET.get('objClass')
-        projectName = request.GET.get('projectName')
-        project = loadProject(projectName)    
-        
-        objs = []
-        for obj in project.mapper.selectByClass(objClass, iterate=True):
-            objs.append(obj.getNameId())
-        jsonStr = json.dumps({'objects' : objs},
-                             ensure_ascii=False)
-        return HttpResponse(jsonStr, mimetype='application/javascript')
 

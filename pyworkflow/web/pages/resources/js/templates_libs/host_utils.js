@@ -1,4 +1,33 @@
-/* {% if message != None and message != '' %}
+/*
+ * Toolbar used in the view host template
+ */
+function launchHostsToolbar(projName, hostId, elm) {
+	var row = $("div#toolbarHost");
+
+	if (row.attr('value') != undefined && row.attr('value') != hostId) {
+		var rowOld = $("tr#" + row.attr('value'));
+		rowOld.attr('style', 'background-color: #fafafa;');
+		rowOld.attr('class', 'runtr');
+	}
+	row.attr('value', hostId);
+	elm.attr('style', 'background-color: LightSteelBlue;');
+	elm.attr('class', 'selected');
+
+	// Action Edit Button
+	$("a#editTool").attr('href', 'javascript:editHost()');
+	// Action Copy Button
+	$("a#newTool").attr('href', 'javascript:newHost()');
+	// Action Delete Button
+	$("a#deleteTool").attr('href', 'javascript:deleteHost()');
+	// Action Browse Button
+	// $("a#browseTool").attr(
+	// 'href',
+	// 'javascript:popup("/form/?&protocolId="'+ id + '")');
+
+	row.show(); // Show toolbar
+}
+
+	/* {% if message != None and message != '' %}
 		window.onload = function() {
 			alert("{{message}}")
 		}

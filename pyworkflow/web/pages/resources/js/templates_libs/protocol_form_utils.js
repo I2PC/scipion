@@ -1,8 +1,29 @@
-/*	
- * Method to execute a protocol.
- * Overray the post simple method in the html. 
- */
+/**
+ * Methods to manage the protocol form
+ * 
+ * showErrorValidation(json);
+ * evalElements();
+ * onChangeParam(value, paramId);
+ * onChangeEnumParamCombo(elemId, paramId);
+ * onChangeEnumParamList(index, paramId);
+ * setParamValue(paramId, value);
+ * evalDependencies(row, newLevel);
+ * evalCondition(row);
+ * help(title, msg);
+ * browseObjects(node, projName, objClass);
+ * getListFormatted(node, list, id);
+ * getTableFormatted(node, list, id);
+ * selectDialog(objClass, msg, funcName);
+ * processSelectionList(elm);
+ * processSelectionTable(elm);
+ * 
+ **/
+
 $(document).ready(function() {
+	/*	
+		 * Method to execute a protocol.
+		 * Overray the post simple method in the html. 
+	*/
 	$("#protocolForm").submit(function() {
 		var mode = $("#protocolForm").attr('data-mode');
 

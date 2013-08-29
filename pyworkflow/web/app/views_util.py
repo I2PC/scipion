@@ -1,10 +1,12 @@
-from django.shortcuts import render_to_response
-from pyworkflow.tests import getInputPath
 import os
 import xmipp
+import json
+from pyworkflow.tests import getInputPath
 from pyworkflow.web.pages import settings
 from pyworkflow.manager import Manager
 from pyworkflow.project import Project
+from django.shortcuts import render_to_response
+from django.http import HttpResponse
 
 iconDict = {
             'logo_scipion': 'scipion_logo.png',
@@ -27,25 +29,31 @@ cssDict = {'project_content': 'project_content_style.css',
            'general': 'general_style.css',
            'form': 'form.css',
            'ui_smoothness': 'jquery-ui_smoothness.css',
+           'jquery_ui': 'jquery-ui.css',
            'showj_demo_table_jui': 'demo_table_jui.css'
            
            
            }
 
-jsDict = {'jquery': 'jquery.js',
-          'jquery_cookie': 'jquery.cookie.js',
-          'jquery_treeview': 'jquery.treeview.js',
-          'utils': 'utils.js',
-          'host_util': 'host_utils.js',
+jsDict = {'jquery': 'jquery/jquery.js',
+          'jquery_cookie': 'jquery/jquery.cookie.js',
+          'jquery_treeview': 'jquery/jquery.treeview.js',
+          'jquery_datatables': 'jquery/jquery.dataTables.js',
+          'jquery_editable': 'jquery/jquery.jeditable.js',
+          'jquery_ui': 'jquery/jquery-ui.js',
+          
+          'utils': 'templates_libs/utils.js',
+          'host_utils': 'templates_libs/host_utils.js',
+          'graph_utils': 'templates_libs/graph_utils.js',
+          'project_content_utils':'templates_libs/project_content_utils.js',
+          'project_utils': 'templates_libs/project_utils.js',
+          'protocols_utils': 'templates_libs/protocols_utils.js',
+          'protocol_form_utils': 'templates_libs/protocol_form_utils.js',
+
           'tabs_config': 'tabs_config.js',
-          'project_form': 'project_form.js',
-          'jquery_datatables': 'jquery.dataTables.js',
           'jquery_colreorder': 'ColReorder.js',
           'jquery_colreorder_resize': 'ColReorderWithResize.js',
-          'jquery_editable': 'jquery.jeditable.js',
-          'jquery_ui': 'jquery-ui.js',
           'jquery_waypoints': 'waypoints.min.js',
-          'form': 'form.js',
           'messi': 'messi.js'
           }
 
@@ -65,6 +73,20 @@ def loadProject(projectName):
     project.load()
     return project
 
+def browse_objects(request):
+    """ Browse objects from the database. """
+    if request.is_ajax():
+        objClass = request.GET.get('objClass')
+        projectName = request.GET.get('projectName')
+        project = loadProject(projectName)    
+        
+        objs = []
+        for obj in project.mapper.selectByClass(objClass, iterate=True):
+            objs.append(obj.getNameId())
+        jsonStr = json.dumps({'objects' : objs},
+                             ensure_ascii=False)
+        return HttpResponse(jsonStr, mimetype='application/javascript')
+
 def get_image_dimensions(projectPath, imagePath):
     from django.http import HttpResponse
     from pyworkflow.gui import getImage
@@ -82,7 +104,7 @@ def get_image_dimensions(projectPath, imagePath):
             imagePath = parts[1]
             
         if projectPath != '':
-            imagePathTmp = os.path.join(projectPath,imagePath)
+            imagePathTmp = os.path.join(projectPath, imagePath)
             if not os.path.isfile(imagePathTmp):
                 imagePath = getInputPath('showj', imagePath)      
             
@@ -116,7 +138,7 @@ def get_image(request):
             imagePath = parts[1]
 
         if 'projectPath' in request.session:
-            imagePathTmp = os.path.join(request.session['projectPath'],imagePath)
+            imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
             if not os.path.isfile(imagePathTmp):
                 imagePath = getInputPath('showj', imagePath)      
             
@@ -130,9 +152,7 @@ def get_image(request):
         
         # from PIL import Image
         img = getPILImage(imgXmipp, imageDim)
-        
-        
-        
+         
     # response = HttpResponse(mimetype="image/png")    
     response = HttpResponse(mimetype="image/png")
     img.save(response, "PNG")
