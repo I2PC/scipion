@@ -81,12 +81,12 @@ if exist(handles.fnState,'file')
 else
     handles.inCluster=zeros(size(handles.NMAdisplacementsProjected,1),1);
     handles.included=ones(size(handles.NMAdisplacementsProjected,1),1);
+    handles.imPoints={};
     updateListBox(hObject, handles);
     set(handles.listRepresentation,'Value',[1 2])
     saveState(handles);
 end
-handles.trajectoryX=[];
-handles.trajectoryY=[];
+handles.NMAdisplacementsTrajectory=[];
 handles.fnTrajectory=[];
 handles.figHandle=figure();
 guidata(hObject,handles)
@@ -435,10 +435,6 @@ function updatePlot(handles)
         ylabel(['X' num2str(idx(2))])
         grid on
         axis square
-        
-        if length(handles.trajectoryX)>0
-            plot(handles.trajectoryX,handles.trajectoryY,'LineWidth',2);
-        end
     elseif length(idx)==3
         idxc=find(c==0 & in);
         X=handles.NMAdisplacementsProjected(:,idx(1));
@@ -463,7 +459,6 @@ function updatePlot(handles)
     set(handles.clusterSizeText,'String',[num2str(sum(c)) '/' num2str(length(c)) ' images'])
     saveState(handles)
 
-
 % --- Executes on button press in drawTrajectory.
 function drawTrajectory_Callback(hObject, eventdata, handles)
 % hObject    handle to drawTrajectory (see GCBO)
@@ -475,19 +470,9 @@ function drawTrajectory_Callback(hObject, eventdata, handles)
     end
 
     k = waitforbuttonpress;
-    [handles.trajectoryX,handles.trajectoryY]=getline();
-    guidata(gcbo,handles);
-    updatePlot(handles);
+    [trajectoryX,trajectoryY]=getline();
 
-% --- Executes on button press in generateAnimation.
-function generateAnimation_Callback(hObject, eventdata, handles)
-% hObject    handle to generateAnimation (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-    % Measure the length of each segment
-    trajectoryX=handles.trajectoryX;
-    trajectoryY=handles.trajectoryY;
+    % Measure curve total length
     totalLength=0;
     segmentLength=[];
     if length(trajectoryX)==0
@@ -502,9 +487,9 @@ function generateAnimation_Callback(hObject, eventdata, handles)
     end
 
     % Now choose points in the trajectory
-    N=19;
+    N=20; % N has to be an even number
     A=totalLength/2;
-    t=A+A*sin(2*pi/N*[0:(N-1)]+pi/4);
+    t=A+A*sin(2*pi/N*[0:N/2]-pi/2);
     accumulatedLength=cumsum(segmentLength);
     startingSegment=[0; accumulatedLength(1:end-1)];
     xt=zeros(size(t));
@@ -515,6 +500,41 @@ function generateAnimation_Callback(hObject, eventdata, handles)
         xt(i)=(1-lambda_t)*trajectoryX(segment_t)+lambda_t*trajectoryX(segment_t+1);
         yt(i)=(1-lambda_t)*trajectoryY(segment_t)+lambda_t*trajectoryY(segment_t+1);
     end
+    
+    % Create trajectory in the projected space
+    handles.NMAdisplacementsTrajectory=zeros(length(t),size(handles.NMAdisplacementsProjected,2));
+    idx=get(handles.listRepresentation,'Value');
+    handles.NMAdisplacementsTrajectory(:,idx(1))=xt;
+    handles.NMAdisplacementsTrajectory(:,idx(2))=yt;
+    
+    % Create array of impoints
+    handles.impointList=createTrajectoryImPoints(handles);
+    guidata(gcbo,handles);
+    
+function impointList=createTrajectoryImPoints(handles)
+    impointList={};
+    idx=get(handles.listRepresentation,'Value');
+    xt=handles.NMAdisplacementsTrajectory(:,idx(1));
+    yt=handles.NMAdisplacementsTrajectory(:,idx(2));
+    
+    for i=1:length(xt)
+        impointList{i} = impoint(gca,xt(i),yt(i));
+        % Enforce boundary constraint function using setPositionConstraintFcn
+        fcn = makeConstrainToRectFcn('impoint',get(gca,'XLim'),get(gca,'YLim'));
+        setPositionConstraintFcn(impointList{i},fcn);
+        setColor(impointList{i} ,'b');
+        setString(impointList{i}, num2str(i));
+    end
+    
+% --- Executes on button press in generateAnimation.
+function generateAnimation_Callback(hObject, eventdata, handles)
+% hObject    handle to generateAnimation (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+    % Measure the length of each segment
+    trajectoryX=handles.trajectoryX;
+    trajectoryY=handles.trajectoryY;
     
     % Get Projection mode
     projectionOptions=cellstr(get(handles.popupProjection,'String'));
@@ -573,6 +593,7 @@ function generateAnimation_Callback(hObject, eventdata, handles)
             fnTrajectory ' ; echo ENDMDL >> ' fnTrajectory];
         system(cmd);
     end
+    system(['rm -f ' fnOut]);
     
     % Generate VMD script
     fnTrajectoryVMD=[handles.rundir '/extra/trajectory__' handles.fnTrajectory '.vmd'];
@@ -608,10 +629,9 @@ function loadTrajectory_Callback(hObject, eventdata, handles)
     if ok
         load([handles.rundir '/extra/trajectory__' listString{Selection} '.mat'])
         handles.fnTrajectory=listString{Selection};
-        handles.trajectoryX=trajectoryX;
-        handles.trajectoryY=trajectoryY;
+        handles.NMAdisplacementsTrajectory=NMAdisplacementsTrajectory;
+        handles.impointList=createTrajectoryImPoints(handles);
         guidata(gcbo,handles)
-        updatePlot(handles)
     end
 
 % --- Executes on button press in saveTrajectory.
@@ -622,9 +642,8 @@ function saveTrajectory_Callback(hObject, eventdata, handles)
 
     trajectoryName=inputdlg('Name of the trajectory','Save trajectory',1);
     if ~isempty(trajectoryName)
-        trajectoryX=handles.trajectoryX;
-        trajectoryY=handles.trajectoryY;
-        save([handles.rundir '/extra/trajectory__' trajectoryName{1} '.mat'],'trajectoryX','trajectoryY')
+        NMAdisplacementsTrajectory=handles.NMAdisplacementsTrajectory;
+        save([handles.rundir '/extra/trajectory__' trajectoryName{1} '.mat'],'NMAdisplacementsTrajectory')
         handles.fnTrajectory=trajectoryName{1};
         guidata(gcbo,handles);
     end
@@ -634,7 +653,7 @@ function resetTrajectory_Callback(hObject, eventdata, handles)
 % hObject    handle to resetTrajectory (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-        handles.trajectoryX=[];
-        handles.trajectoryY=[];
+        handles.NMAdisplacementsTrajectory=[];
+        handles.impointList={};
         guidata(gcbo,handles)
         updatePlot(handles)
