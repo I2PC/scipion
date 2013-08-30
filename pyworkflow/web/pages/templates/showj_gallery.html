@@ -2,6 +2,8 @@
 		
 {% block head %}
 	<script type="text/javascript">
+	var hoverElement;
+	
 	$(document).ready(function(){
 		setImageSize(true)
 		initializeImageLoad()
@@ -51,15 +53,12 @@
 	function initializeImageEvents(){
 		$(".img_container").hover(
 			function(e){
-				if ($(this).hasClass("image_selected")){
-					var x= e.pageX
-					var y= e.pageY
-					
-					$("#multipleSelectionTool").css('left',x)
-					$("#multipleSelectionTool").css('top',y)
-					
+				if ($(this).hasClass("image_selected") && $("#multipleSelectionTool").css('display')!="block"){
+					hoverElement=$(this).attr("id")
+										
+					$("#multipleSelectionTool").css('left',e.pageX)
+					$("#multipleSelectionTool").css('top',e.pageY)
 					$("#multipleSelectionTool").data('img_container_id',$(this).attr("id"))
-					
 					$("#multipleSelectionTool").fadeIn('slow')
 				}
 				else{
@@ -67,17 +66,15 @@
 						$(this).find(".enabledGallery").fadeIn('slow')
 					}
 				}
-				/* $(this).find(".imageTitle").slideToggle('slow') */
 			},
 			function(){
-				if ($(this).hasClass("image_selected")){
-					$("#multipleSelectionTool").delay(2000).fadeOut('slow')
+				if ($(this).hasClass("image_selected") && hoverElement==$(this).attr("id")){
+					$("#multipleSelectionTool").delay(1000).fadeOut('slow')
 				}
 				
 				if (!$(this).find(".enabledGallery").hasClass("selected")){
 					$(this).find(".enabledGallery").fadeOut('slow')
 				}
-				/* $(this).find(".imageTitle").slideToggle('slow') */
 			})
 			
 		$(".img_container").click(
@@ -122,8 +119,17 @@
 	}
 	</script>
 	<script type="text/javascript">
-	function enableDisableImage(element){
-		$(element).toggleClass("selected")
+	function enableDisableImage(element, enableDisable){
+		if (enableDisable=='enable'){
+			$(element).removeClass("selected")
+		}
+		else if (enableDisable=='disable'){
+			$(element).addClass("selected")
+		}
+		else{
+			$(element).toggleClass("selected")
+		}
+		
 		
 		if ($(element).hasClass("selected")){element_value = 0}
 		else{element_value = 1}
@@ -136,7 +142,38 @@
 		changes[$(element).attr("id")]=element_value
 	}
 	</script>
-	
+	<script type="text/javascript">
+	function multipleEnableDisableImage(mode){
+		console.log("veamos")
+		if (mode=='enable'){
+			$(".image_selected").each(function(){
+				enableDisableImage($(this).find(".enabledGallery"), 'enable')
+				$(this).find(".enabledGallery").fadeOut('fast')
+				/* $(this).find(".enabledGallery").addClass("selected")
+				$(this).find(".enabledGallery").fadeIn('fast') */
+			})
+		}
+		else{
+			$(".image_selected").each(function(){
+				console.log("veamosdis")
+				enableDisableImage($(this).find(".enabledGallery"), 'disable')
+				$(this).find(".enabledGallery").fadeIn('fast')
+				/* $(this).find(".enabledGallery").removeClass("selected")
+				$(this).find(".enabledGallery").fadeOut('fast') */
+			})
+		}
+	}
+	</script>
+	<script type="text/javascript">
+	function multipleSelect(mode){
+		element_id=parseInt($("#multipleSelectionTool").data('img_container_id').split("___")[1]);
+		$(".img_container").each(function(){
+			if (mode=='all' || (mode=='from' && $(this).attr('id').split("___")[1]>element_id) || (mode=='to' && $(this).attr('id').split("___")[1]<element_id) ){
+				$(this).addClass("image_selected")
+			}	
+		})
+	}
+	</script>
 {% endblock %}
 
 {% block content_menu %}

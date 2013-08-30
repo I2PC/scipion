@@ -264,62 +264,6 @@
 		});
 	}
 	</script>
-	<script type="text/javascript">
-	function multipleEnableDisableImage(mode){
-		if ($('#multipleSelectionTool').attr('img_container_id') !== undefined) {
-			//If we are in gallery view
-			if (mode=='enable'){
-				$(".image_selected").each(function(){
-					$(this).find(".enabledGallery").addClass("selected")
-					$(this).find(".enabledGallery").fadeIn('fast')
-				})
-			}
-			else{
-				$(".image_selected").each(function(){
-					$(this).find(".enabledGallery").removeClass("selected")
-					$(this).find(".enabledGallery").fadeOut('fast')
-				})
-			}
-		} else {
-			//If we are in table view
-			if (mode=='enable'){
-				$(".row_selected").each(function(){
-					$(this).find(":checkbox").prop('checked', true);
-				})
-			}
-			else{
-				$(".row_selected").each(function(){
-					$(this).find(":checkbox").prop('checked', false);
-				})
-			}
-		}
-	}
-	</script>
-	<script type="text/javascript">
-	function multipleSelect(mode){
-		if ($('#multipleSelectionTool').attr('img_container_id') !== undefined) {
-			//If we are in gallery view
-			element_id=parseInt($("#multipleSelectionTool").data('img_container_id').split("___")[1]);
-			
-			$(".img_container").each(function(){
-				if (mode=='all' || (mode=='from' && $(this).attr('id').split("___")[1]>element_id) || (mode=='to' && $(this).attr('id').split("___")[1]<element_id) ){
-					$(this).addClass("image_selected")
-				}	
-			})
-		} else {
-			//If we are in table view
-			row_id=parseInt($("#multipleSelectionTool").data('row_id'));
-			
-			$("tr").each(function(){
-				if (mode=='all' || (mode=='from' && $(this).index()>row_id) || (mode=='to' && $(this).index()<row_id) ){
-					$(this).addClass("row_selected")
-				}	
-			})
-		}
-		
-	}
-	</script>
-	
 	{% block head %}  {% endblock %}
 </head>
 <body>
@@ -331,9 +275,6 @@
 	<div style="padding:16px 0px 0px 15px;text-align:center;">
 	<span class="project_name" style="font-size:1.8em; ">Xmipp Showj Web</span>
 	</div>
-	
-	
-	
 	</header>
 <!-- 	<nav>  Top Menu
 		<ul>

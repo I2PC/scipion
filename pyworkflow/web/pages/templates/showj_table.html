@@ -62,7 +62,7 @@ $(document).ready(function() {
 			        "bSort": true,
 			        "bInfo": true,
 			        "bAutoWidth": true,
-			        "sDom": 'Rl<"#configurationContainer">frtip', 
+			        "sDom": 'Rl<"#displayTableContainer">frtip', 
 			        /* "sDom": 'T<"clear">lfrtip', */
  			        "oColReorder": {
 		    			"aiOrder": jsonTableLayoutConfiguration.colsOrder
@@ -96,6 +96,8 @@ $(document).ready(function() {
 		    		"sPaginationType": "full_numbers"
 			    }		
 			);
+	
+	$("#displayTableContainer").html("<a href='#' onclick='showTableConfig()'>Display Table Configuration</a>")
 	
 	initializeMultipleSelectionTool()
 	setElementsEditable(null)
@@ -442,26 +444,10 @@ function initializeSelectionRowEvent(){
 }
 
 function initializeMultipleSelectionTool(){
-/* 	alert("porakientra")
-	$('#data_table').on("hover","tr", function(event) {
-		console.log("toloco");
-	})
-	
-	$('td').hover(function(event) {
-		alert("td takarrasWithout filter")
-		
-	},function(event) {
-		alert("td takarrasWithout filter")
-		
-	});*/
-	
 	$('tr').hover(function(e) {
 		if ($(this).hasClass("row_selected")){
-			var x= e.pageX
-			var y= e.pageY
-			
-			$("#multipleSelectionTool").css('left',x)
-			$("#multipleSelectionTool").css('top',y)
+			$("#multipleSelectionTool").css('left',e.pageX)
+			$("#multipleSelectionTool").css('top',e.pageY)
 			
 			var iRow = $(this).index()
 			$("#multipleSelectionTool").data('row_id', iRow)
@@ -480,7 +466,7 @@ function initializeMultipleSelectionTool(){
 /*Display and initialize div for configuring table layout*/
 function showTableConfig(){
 	/* Display Div */
-	$("#configurationContainer").slideDown()
+	$("#configurationContainer").slideDown('slow')
 
 	/*  Initialize checkbox in table confirguration container (checked and disable attributes)*/
 	for (var label in jsonTableLayoutConfiguration.columnsLayout){ 
@@ -535,12 +521,36 @@ function saveTableConfiguration(){
 	$("#configurationContainer").hide()
 }
 </script>
+<script type="text/javascript">
+function multipleEnableDisableImage(mode){
+	if (mode=='enable'){
+		$(".row_selected").each(function(){
+			$(this).find(":checkbox").prop('checked', true);
+		})
+	}
+	else{
+		$(".row_selected").each(function(){
+			$(this).find(":checkbox").prop('checked', false);
+		})
+	}
+}
+</script>
+<script type="text/javascript">
+function multipleSelect(mode){
+	row_id=parseInt($("#multipleSelectionTool").data('row_id'));
+	
+	$("tr").each(function(){
+		if (mode=='all' || (mode=='from' && $(this).index()>row_id) || (mode=='to' && $(this).index()<row_id) ){
+			$(this).addClass("row_selected")
+		}	
+	})
+}
+</script>
 {% endblock %}
 
 {% block content_menu %}{% endblock %}
 			
 {% block content_view %}
-<a href="#" onclick="showTableConfig()">Display Table Configuration</a>
 <div id="configurationContainer">
 	<div id="tableConfigurationContainer">
 		<table id="firstTableConfiguration">
@@ -581,7 +591,7 @@ function saveTableConfiguration(){
 		<button id="acceptTableConfigurationButton" onclick="saveTableConfiguration()">
 			Ok
 		</button>
-		<button id="cancelTableConfigurationButton" onclick="$('#configurationContainer').hide()">
+		<button id="cancelTableConfigurationButton" onclick="$('#configurationContainer').slideUp('slow')">
 			Cancel
 		</button>
 	</div>
