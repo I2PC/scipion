@@ -45,7 +45,7 @@ def main(argv):
 
     parser.add_argument('-m', '--mod-log-file', 
         default="modifications.log",
-        help="File that contain the whole modifications log to keep a tracking of what has been done in the Scipion tests data.")
+        help="File that contain the whole modifications log to keep a tracking of what has been done in the Scipion tests data. The path given must be relative to $SCIPION_HOME")
 
     exclusive.add_argument('-q', '--query-for-modifications', 
         action="store_true",
@@ -61,12 +61,37 @@ def main(argv):
 
     args = parser.parse_args()
 
+
     # Depending on the arguments selected, doing one thing or another
+
     deleteFlag=""
     if args.delete:
         deleteFlag=" -f"
+
     if args.query_for_modifications:
         print "Querying the modifications log file..."
+        if os.path.exists(os.path.join(os.environ['SCIPION_HOME'],args.last_mod_file)):
+            print "File " + args.last_mod_file + " exists. Checking its content..."
+            if os.stat(os.path.join(os.environ['SCIPION_HOME'],args.last_mod_file)).st_size != 0: #File contains data
+                print "File's not empty. Copying the content to log file " + args.mod_log_file
+                last_file = open(os.path.join(os.environ['SCIPION_HOME'],args.last_mod_file), 'r+')
+                modif_file = open(os.path.join(os.environ['SCIPION_HOME'],args.mod_log_file), 'a')
+                file_content = last_file.read()
+                modif_file.write(file_content)
+                print "Last modifications file shows following content:"
+                print file_content
+                #TODO: In case we want to add the responsible of the modifications to the blame list, this is the place to do it
+                last_file.close()
+                modif_file.close()
+                last_file = open(os.path.join(os.environ['SCIPION_HOME'],args.last_mod_file), 'w').close()
+            else: #File's empty
+                print "File's empty, so no modification since last check."
+                sys.exit(1)
+        else:
+            print "File " + args.last_mod_file + " doesn't exist. Creating it..."
+            open(os.path.join(os.environ['SCIPION_HOME'],args.last_mod_file), 'w').close()
+            sys.exit(2) #We return with 2, to let Buildbot know that no modification was made (when failure there was modification)
+
     elif args.reverse_sync:
         print "Reverse synchronizing, BE CAREFUL!!! OPERATION EXTREMELY DANGEROUS!!!"
         ans = ""
@@ -80,16 +105,17 @@ def main(argv):
             while ans != "y" and ans != "Y" and ans != "n" and ans != "N":
                 ans = raw_input("You're about to synchronize all of them. Are you sure you want to smash 'em all? (y/n): ")
         if ans == ("y" or "Y"):
-            print "You've chosen to proceed. Executing bash script " + args.syncfile + "-r ..."
+            print "You've chosen to proceed. Executing bash script " + args.syncfile + " -r ..."
             print "bash " + args.syncfile + deleteFlag + " -r " + " ".join(args.reverse_sync)
-            subprocess.call("bash " + args.syncfile + deleteFlag + " -r " + " ".join(args.reverse_sync), shell=True)
+            subprocess.call("bash " + args.syncfile + " -l " + args.last_mod_file + deleteFlag + " -r " + " ".join(args.reverse_sync), shell=True)
         else:
             print "You've chosen to abort. Goodbye!."
             sys.exit(3)
+
     else:
         scipion_logo()
         print "Executing bash script " + args.syncfile + "..."
-        print "bash " + args.syncfile + deleteFlag
+        print "bash " + args.syncfile + " -l " + args.last_mod_file + deleteFlag
         subprocess.call("bash " + args.syncfile, shell=True)
         
 

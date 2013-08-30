@@ -506,9 +506,7 @@ class ProtocolsView(tk.Frame):
         lt.paint(self.createRunItem)
         
     def createRunItem(self, node, y):
-        """ If not nodeBuildFunc is specified, this one will be used
-        by default. 
-        """
+        """ If not nodeBuildFunc is specified, this one will be used by default."""
         nodeText = node.getName()
         textColor = 'black'
         color = '#ADD8E6' #Lightblue

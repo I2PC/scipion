@@ -341,7 +341,7 @@ class PostgresqlDb():
             self.executeSelect("parent_id=%s", (parent_id,))
         return self._results(iterate)  
 
-
+    # !!!! remove %, use psycopg filter (@see  deleteChildObjects)
     def selectObjectsByAncestor(self, ancestor_namePrefix, asIterator=False):
         """Select all objects in the hierachy of ancestor"""
         self.executeSelect("name LIKE '%s.%%'" % ancestor_namePrefix)
