@@ -61,6 +61,8 @@ gmon.out
 .\#*
 pyworkflow/tests/classes/tmp
 pyworkflow/web/scipion.db
+pyworkflow/web/static/*
 .directory
 pw.bashrc
 pw.cshrc
+
