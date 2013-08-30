@@ -717,6 +717,7 @@ if $DO_NMA; then
     echoExec "cp nma_* $XMIPP_HOME/bin"
     echoExec "cd $XMIPP_HOME"
     echoExec "cp $XMIPP_HOME/external/NMA/nma_* $XMIPP_HOME/bin"
+    echoExec "cp $XMIPP_HOME/external/NMA/m_inout_Bfact.py $XMIPP_HOME/bin"
 fi
 
 exit 0
