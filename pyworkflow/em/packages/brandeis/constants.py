@@ -58,5 +58,7 @@ PAD_1 = 0
 PAD_2 = 1
 PAD_4 = 2
 
-
-
+# Parameters to Remine
+REF_ALL = 0
+REF_ANGLES = 1
+REF_SHIFTS = 2

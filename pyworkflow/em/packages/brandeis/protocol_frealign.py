@@ -48,8 +48,7 @@ class BrandeisDefFrealign(Form):
                       help='Select the input particles.\n')  
         
         self.addParam('mode', EnumParam, choices=['Recontruction only', 'Refinement', 'Random Search & Refine',
-                                                   'Simple search & Refine', 'Search, Refine, Randomise', 'Create new param file, Simple search & Refine', 
-                                                   'Create new param file, Search, Refine & Randomise'],
+                                                   'Simple search & Refine', 'Search, Refine, Randomise'],
                       label="Operation mode", default=brandeis.MOD_REFINEMENT,
                       display=EnumParam.DISPLAY_COMBO,
                       help='Parameter <IFLAG> in FREALIGN'
@@ -57,14 +56,16 @@ class BrandeisDefFrealign(Form):
                            'Mode  1: Refinement & Reconstruction\n'
                            'Mode  2: Random Search & Refinement\n'
                            'Mode  3: Simple search & Refine\n'
-                           'Mode  4: Search,Refine,Randomise & extend to RREC\n'
-                           'Mode -3: bootstrap parameter file, then Mode 3\n'
-                           'Mode -4: bootstrap parameter file, then Mode 4\n'
-                           '\n'
-                           '\n'
-                           '\n'
-                           '\n'
-                           '')
+                           'Mode  4: Search, Refine, Randomise & extend to RREC\n')
+
+        self.addParam('useInitialAngles', BooleanParam, default=False,
+                      label="Use initial angles/shifts ? ", 
+                      help='Set to <Yes> if you want to use the projection assignment (angles/shifts)\n'
+                      'associated with the input particles (hasProjectionAssigment=True)')
+
+        self.addParam('numberOfIterations', IntParam, default=4,
+                      label='Number of iterations',
+                      help='Number of iterations to perform.')
 
         self.addParam('doMagRefinement', BooleanParam, default=False,
                       label="Refine magnification?", expertLevel=LEVEL_EXPERT,
@@ -228,24 +229,149 @@ class BrandeisDefFrealign(Form):
                            'number of potential matches in a search that should be tested further in\n'
                            'a subsequent local refinement.\n')
 
+        self.addParam('paramRefine', EnumParam, choices=['Refine All', 'Refine only Euler angles', 'Refine Only X & Y shifts'],
+                      default=brandeis.REF_ALL,
+                      label="Parameters to refine", display=EnumParam.DISPLAY_COMBO,
+                      help='Parameter <MASK> in FREALIGN.\n'
+                           'Parameters to include in refinemet')
+
+        self.addParam('symmetry', TextParam, default='c1',
+                      label='Point group symmetry:',
+                      help='Parameter <ASYM> in FREALIGN.\n'
+                           'Specify the symmetry.Choices are: C(n),D(n),T,O,I,I1,I2 or N (can be zero)\n'
+                           'n  = rotational symmetry required in pointgroup C(n) or D(n)\n'
+                           'N  = number of symmetry matrices to read in.\n'
+                           'T  = tetrahedral pointgroup 23\n'
+                           'O  = octahedral pointgroup 432\n'
+                           'I  = icosahedral 532 symmetry in setting 1 (5fold is on X)\n'
+                           'I1 = also in setting 1 (X) - as used by Imagic\n'
+                           'I2 = in setting 2 (Y) - as used by Crowther et. al')        
+
+        self.addParam('relMagnification', FloatParam, default='1.0', 
+                      label='Relative magnification:',
+                      help='Parameter <RELMAG> in FREALIGN.\n'
+                           'Relative magnification of data set. The magnification feature allows\n'
+                           'for manual variations of magnification between data sets.')
+
+        self.addParam('targetPhaseResidual', FloatParam, default='10.0',
+                      label='Target phase residual:', expertLevel=LEVEL_EXPERT,
+                      help='Parameter <TARGET> in FREALIGN.\n'
+                           'Target phase residual (for resolution between RMAX1 and RMAX2)\n'
+                           'during parameter saerch and refinement, below which the search and/or\n'
+                           'refinement is terminated.  This is normally set low (e.g. THRESH=10.0)\n'
+                           'This will give excellent determination of particle orientations.')
+
+        self.addParam('PhaseResidual', FloatParam, default='90.0', 
+                      label='Phase residual cut-off:',
+                      help='Parameter <THRESH> in FREALIGN.\n'
+                           'Any particles with a higher overall phase residual will not be\n'
+                           'included in the reconstruction when IFLAG=0,1,2,3. This variable\n'
+                           'is often used with IFLAG=0 in separate runs to calculate maps\n'
+                           'using various values of THRESH to find the optimum value to produce\n'
+                           'the best map as judged from the statistics.')
+
+        self.addParam('beamTiltX', FloatParam, default='0.0',
+                      label='Beam tilt in X direction (in mrad):', expertLevel=LEVEL_EXPERT,
+                      help='Parameter <TX> in FREALIGN.')
+
+        self.addParam('beamTiltY', FloatParam, default='0.0',
+                      label='Beam tilt in Y direction (in mrad):', expertLevel=LEVEL_EXPERT,
+                      help='Parameter <TY> in FREALIGN.')
+
+        self.addParam('resolution', FloatParam, default='10.0', 
+                      label='Resol. of reconstruction (in Amgs):',
+                      help='Parameter <RREC> in FREALIGN.\n'
+                           'Resolution to which the reconstruction is calculated.\n'
+                           'If several datasets have different values, the data is individually\n'
+                           'limited in the summation to the RREC resolution but symmetry is\n'
+                           'applied, statistics output and the final map calculated to the\n'
+                           'maximum resolution requested for any dataset.')
+
+        self.addParam('lowResolRefine', FloatParam, default='200.0', 
+                      label='Low resolution in refinement (in Amgs):',
+                      help='Parameter <RMAX1> in FREALIGN.\n'
+                           'Resolution of the data included in the search/refinement. These\n'
+                           'two parameters (RMAX1,RMAX2) are very important.  The successful\n'
+                           'alignment of particles depends critically on the signal-to-noise\n'
+                           'ratio of thecross-correlation or phase residual calculation, and\n'
+                           'exclusion of weak data at high resolution or spurious, very strong\n'
+                           'artefacts at low resolution can make a big difference.  Success can\n'
+                           'be judged by whether the X,Y coordinates of the particle centres are\n'
+                           'reasonable.')
+
+        self.addParam('highResolRefine', FloatParam, default='25.0', 
+                      label='High resolution in refinement (in Amgs):',
+                      help='Parameter <RMAX2> in FREALIGN.\n'
+                           'Resolution of the data included in the search/refinement. These\n'
+                           'two parameters (RMAX1,RMAX2) are very important.  The successful\n'
+                           'alignment of particles depends critically on the signal-to-noise\n'
+                           'ratio of thecross-correlation or phase residual calculation, and\n'
+                           'exclusion of weak data at high resolution or spurious, very strong\n'
+                           'artefacts at low resolution can make a big difference.  Success can\n'
+                           'be judged by whether the X,Y coordinates of the particle centres are\n'
+                           'reasonable.')
+
+        self.addParam('defocusUncertainty', FloatParam, default='200.0', 
+                      label='Defocus uncertainty (in Amgs):', expertLevel=LEVEL_EXPERT,
+                      help='Parameter <DFSIG> in FREALIGN.\n'
+                           'This will restrain the change in defocus when refining defocus values\n'
+                           'for individual particles.')
+
+        self.addParam('Bfactor', FloatParam, default='0.0', 
+                      label='B-factor to apply to particle:', expertLevel=LEVEL_EXPERT,
+                      help='Parameter <RBFACT> in FREALIGN.\n'
+                           'B-factor to apply to particle image projections before orientation\n'
+                           'determination or refinement.  This allows inclusion of high resolution\n'
+                           'data but with a reduced (or increased if negative) weight.  WGH and\n'
+                           'RBFAC can be manipulated in particle parameter refinement as if they\n'
+                           'were low pass and high pass filters.  WGH and the CTF are used to\n'
+                           'correct the density in the final map, whereas RBFAC is not.\n'
+                           'NOTE: This option should be used with great care as amplification of\n'
+                           'noisy high-resolution terms can lead to over-fitting and artificially\n'
+                           'high values in the FSC curve (se publication #2 above). FREALIGN uses an\n'
+                           'automatic weighting scheme and RBFACT should normally be set to 0.0.')
+
+        self.addParam('input3DReference', PointerParam,
+                      pointerClass='Volume',
+                      label='Initial 3D reference volume:', 
+                      help='Input 3D reference reconstruction.\n')
+
+        self.addParallelSection(threads=2, mpi=4)
+
+class ProtFrealign(ProtRefine3D):
+    """Protocol to perform a volume from a SetOfParticles
+    using the frealign program"""
+    _definition = BrandeisDefFrealign()
+    _label = 'Frealign'
+    
+    
+    def _defineSteps(self):
+        
+        self._enterWorkingDir()
+        
+        
 
 
 
 
-
-class ProtFrealign():
-    """
-    """
 
     def _prepareCommand(self):
-        self._params['step_focus'] = 1000.0
-        # Convert digital frequencies to spatial frequencies
-        sampling = self.inputMics.samplingRate.get()
-        self._params['lowRes'] = sampling / self._params['lowRes']
-        self._params['highRes'] = sampling / self._params['highRes']        
-        
-        if which('ctffind3.exe') is '':
-            raise Exception('Missing ctffind3.exe')
+
+        #TODO: change this for writeSetOfParticles and writeVolume functions.
+        imgSet = self.inputParticles.get()
+        vol = self.input3DReference,get()
+
+        #Get sampling rate from input images
+        self.samplingRate = imgSet.samplingRate.get()
+
+#         self._params['step_focus'] = 1000.0
+#         # Convert digital frequencies to spatial frequencies
+#         sampling = self.inputMics.samplingRate.get()
+#         self._params['lowRes'] = sampling / self._params['lowRes']
+#         self._params['highRes'] = sampling / self._params['highRes']        
+#         
+#         if which('ctffind3.exe') is '':
+#             raise Exception('Missing ctffind3.exe')
          
         self._program = 'export NATIVEMTZ=kk ; ' + which('ctffind3.exe')
         self._args = """   << eof > %(ctffindOut)s
