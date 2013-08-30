@@ -1,0 +1,9 @@
+This files are generated with command:
+
+python manage.py collectstatic
+
+There are duplicated files of the path web/pages/resources
+So if you need change something, do firstly in the original path
+and execute the command.
+
+This path was removed from the git index to avoid the syncro.
