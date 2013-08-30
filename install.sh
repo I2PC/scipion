@@ -13,6 +13,7 @@ DO_JPEG=true
 DO_HDF5=true
 DO_ARPACK=false
 DO_FRM=false
+DO_NMA=true
 
 DO_CLEAN=true
 DO_STATIC=false
@@ -78,6 +79,8 @@ for param in $@; do
 			    DO_JPEG=false
 			    DO_HDF5=false
 			    DO_ARPACK=false
+			    DO_NMA=false
+			    DO_MATLAB=false
 			    DO_SETUP=false;;			
         "-j")               TAKE_CPU=true;;
         "untar=true")       DO_UNTAR=true;;
@@ -102,6 +105,10 @@ for param in $@; do
         "arpack=false")     DO_ARPACK=false;;
         "frm=true")         DO_FRM=true;;
         "frm=false")        DO_FRM=false;;
+        "matlab=true")      DO_MATLAB=true;;
+        "matlab=false")     DO_MATLAB=false;;
+        "nma=true")         DO_NMA=true;;
+        "nma=false")        DO_NMA=false;;
         "clean=true")       DO_CLEAN=true;;
         "clean=false")      DO_CLEAN=false;;
         "static=true")      DO_STATIC=true;;
@@ -698,6 +705,18 @@ cd $XMIPP_HOME
 
 if $DO_SETUP; then
 	echoExec "./setup.py -j $NUMBER_OF_CPU configure $CONFIGURE_ARGS compile $COMPILE_ARGS $GUI_ARGS install"
+fi
+
+#################### NMA ###########################
+if $DO_NMA; then
+    echoExec "cd $XMIPP_HOME/external/NMA/ElNemo"
+    echoExec "make" 
+    echoExec "cp nma_* $XMIPP_HOME/bin"
+    echoExec "cd $XMIPP_HOME/external/NMA/NMA_cart"
+    echoExec "make" 
+    echoExec "cp nma_* $XMIPP_HOME/bin"
+    echoExec "cd $XMIPP_HOME"
+    echoExec "cp $XMIPP_HOME/external/NMA/nma_* $XMIPP_HOME/bin"
 fi
 
 exit 0

@@ -94,10 +94,10 @@ class ProtNMA(XmippProtocol):
         errors = []
         if self.MaskMode=="Binary mask" and not os.path.exists(self.MaskFile):
             errors.append(self.MaskFile+" does not exist")
-        if which("diag_arpack")=="":
-            errors.append("Cannot find diag_arpack in the PATH")
-        if which("diagrtb")=="":
-            errors.append("Cannot find diagrtb in the PATH")
+        if which("nma_diag_arpack")=="":
+            errors.append("Cannot find nma_diag_arpack in the PATH")
+        if which("nma_diagrtb")=="":
+            errors.append("Cannot find nma_diagrtb in the PATH")
         return errors
     
     def visualize(self):
@@ -170,7 +170,7 @@ def computeModes(log, WorkingDir, NumberOfModes, CutoffMode, Rc, RcPercentage):
     changeDir(log,WorkingDir)
     runJob(log,"nma_record_info.py","%d pseudoatoms.pdb %d"%(NumberOfModes,int(Rc)))
     runJob(log,"nma_pdbmat.pl","pdbmat.dat")
-    runJob(log,"diag_arpack","")
+    runJob(log,"nma_diag_arpack","")
     runJob(log,"rm","diag_arpack.in pdbmat.dat")
     changeDir(log,currentDir)
 
@@ -181,7 +181,7 @@ def computeModesPDB(log, WorkingDir, NumberOfModes, CutoffMode, Rc, RcPercentage
     changeDir(log,WorkingDir)
     runJob(log,"nma_record_info_PDB.py","%d %d atoms.pdb %f %f"%(NumberOfModes,RTBblockSize,Rc,RTBForceConstant))
     runJob(log,"nma_elnemo_pdbmat","")
-    runJob(log,"diagrtb","")
+    runJob(log,"nma_diagrtb","")
     runJob(log,"rm","*.dat_run diagrtb.dat pdbmat.xyzm pdbmat.sdijf pdbmat.dat")
     changeDir(log,currentDir)
 
@@ -235,7 +235,7 @@ def qualifyModes(log,WorkingDir,NumberOfModes,StructureType,CollectivityThreshol
         runJob(log,"nma_reformatForElNemo.sh","%d"%NumberOfModes)
         fnDiag="diag_arpack.eigenfacs"
         
-    runJob(log,"echo","%s | check_modes"%fnDiag)
+    runJob(log,"echo","%s | nma_check_modes"%fnDiag)
     deleteFile(log,fnDiag)
     
     fh=open("Chkmod.res")
