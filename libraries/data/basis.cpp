@@ -83,8 +83,9 @@ void Basis::defineParams(XmippProgram * program, const char* prefix, const char*
     program->addParamsLine("      blobs <radius=2> <Bessel_order=2> <alpha_param=10.4> : Default blob parameters and grid relative size adjusted to use small blobs");
     program->addParamsLine("     voxels");
     program->addParamsLine("     splines");
-    program->addParamsLine(" or   --big_blobs    : blob parameters and grid relative size adjusted to use big blobs");
-    program->addParamsLine(" or   --visual_blobs : blobs optimal for direct visualization");
+    program->addParamsLine(" or   --big_blobs    : blob parameters and grid relative size adjusted to use big blobs (r=2, m=2, alpha=2.26, g=2.26)");
+    program->addParamsLine(" or   --visual_blobs : blobs optimal for direct visualization (r=2.4, m=2, alpha=13.3633, g=1.41)");
+    program->addParamsLine(" or   --tomo_blobs   : blobs with high overlapping (r=3.469269, m=2, alpha=13.7385, g=1/sqrt(2))");
 }
 
 void Basis::readParams(XmippProgram * program)
@@ -115,6 +116,14 @@ void Basis::readParams(XmippProgram * program)
         blob.alpha  = 13.3633;
 
         grid_relative_size = 1.41;
+    }
+    else if (program->checkParam("--tomo_blobs"))
+    {
+        blob.radius = 3.469269392209083;
+        blob.order  = 2;
+        blob.alpha  = 13.7385068372842;
+
+        grid_relative_size = 1.0/sqrt(2);
     }
     else
     {
