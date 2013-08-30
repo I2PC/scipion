@@ -49,6 +49,7 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'project_utils': 'templates_libs/project_utils.js',
           'protocols_utils': 'templates_libs/protocols_utils.js',
           'protocol_form_utils': 'templates_libs/protocol_form_utils.js',
+          'wizard_utils': 'templates_libs/wizard_utils.js',
 
           'tabs_config': 'tabs_config.js',
           'jquery_colreorder': 'ColReorder.js',
