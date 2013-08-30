@@ -433,5 +433,5 @@ class PostgresqlDb():
 
     def updateObject(self, objId, name, classname, value, parent_id):
         """Update object data """
-        print self.UPDATE, (parent_id, name, classname, value, objId)
+        # print self.UPDATE, (parent_id, name, classname, value, objId)
         self.cursor().execute(self.UPDATE, (parent_id, name, classname, value, objId))
