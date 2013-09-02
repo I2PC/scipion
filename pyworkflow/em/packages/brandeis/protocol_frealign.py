@@ -500,7 +500,8 @@ class ProtFrealign(ProtRefine3D):
         else:
             self._params['paramRefine'] = '0 0 0 1 1'
         
-        micSet = self.imgSet.
+        coordSet = self.imgSet.getCoordinates()
+        micSet = coordSet.
         self.imgSet.
         
     def _createCurrentWDir():
