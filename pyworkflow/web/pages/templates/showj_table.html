@@ -1,19 +1,16 @@
 {% extends 'showj_base.html' %} 
 {% block head %}
 <!-- CSS -->
-<link type="text/css" href="/static/css/jquery-ui_smoothness.css" rel="stylesheet" /> 
-<link type="text/css" href="/static/css/demo_table_jui.css" rel="stylesheet" />
+<link type="text/css" href="{{smoothness}}" rel="stylesheet" /> 
+<link type="text/css" href="{{demo_table_jui}}" rel="stylesheet" />
 
 <!-- TABLE STYLES 
 Overwrite general section property for table view -->
 <style type="text/css">
-section {
-	display:block;
-}
+section {display:block;}
 </style>
 
 <!-- JS -->
-
 <script type="text/javascript" src="{{jquery_datatable}}"></script>
 
 <!-- Datatable extra api -->
@@ -38,15 +35,11 @@ $.fn.dataTableExt.oApi.fnGetColumnIndex = function ( oSettings, sCol )
     }
     return -1;
 };
-
 </script>
 
 <script type="text/javascript" src="{{jquerydataTables_colreorder}}"></script>
-<script type="text/javascript" src="/static/js/ColReorderWithResize.js"></script>
+<script type="text/javascript" src="{{jquerydataTables_colreorder_resize}}"></script>
 <script type="text/javascript" src="{{jeditable}}"></script>
-
-<!-- <script type="text/javascript" src="{{jquery_ui}}"></script> -->
-<!-- <script type="text/javascript" src="{{jquery_tabletools}}"></script> -->
 
 <script type="text/javascript">
 /* Initialize datatable table */
@@ -54,31 +47,11 @@ var oTable;
 /* Initialize Table Layout Configuration from json variable*/
 var jsonTableLayoutConfiguration = {{tableLayoutConfiguration|safe }}
 console.log("json",jsonTableLayoutConfiguration)
-/*  Initialize variable to keep changes*/
-var changes={}
 
 $(document).ready(function() {
-	
-
-	
 	initializeSelectionRowEvent() 
 	initializeGoToEvent()
 	initializeTableWidth()
-	
-	
-	
-	/* $("#form").submit(function() {
-		var sData = $('input', oTable.fnGetNodes()).serialize();
-		alert( "The following data would have been submitted to the server: \n\n"+sData );
-		return false;
-	} ) */
-	
-	/* Add a click handler for the delete row */
-	/* $('#delete').click( function() {
-		var anSelected = fnGetSelected( oTable );
-		oTable.fnDeleteRow( anSelected[0] );
-	} ); */
-	
 	
 	/* Init the table */
 	oTable = $('#data_table').dataTable(
@@ -89,7 +62,7 @@ $(document).ready(function() {
 			        "bSort": true,
 			        "bInfo": true,
 			        "bAutoWidth": true,
-			        "sDom": 'Rlfrtip', 
+			        "sDom": 'Rl<"#displayTableContainer">frtip', 
 			        /* "sDom": 'T<"clear">lfrtip', */
  			        "oColReorder": {
 		    			"aiOrder": jsonTableLayoutConfiguration.colsOrder
@@ -124,6 +97,8 @@ $(document).ready(function() {
 			    }		
 			);
 	
+	$("#displayTableContainer").html("<a href='#' onclick='showTableConfig()'>Display Table Configuration</a>")
+	
 	initializeMultipleSelectionTool()
 	setElementsEditable(null)
 	initializeColumnHeader()
@@ -133,7 +108,7 @@ $(document).ready(function() {
 
 /* Render elements on table (Image and checkbox) */
 function renderElements(nRow, aData){
-	 console.log("row") 
+/* 	 console.log("row")  */
 	 columnId = 0
 	 invisibleColumns = 0 
 	 for (var i in jsonTableLayoutConfiguration.columnsLayout){ 
@@ -221,15 +196,6 @@ function getColumnsDefinition(){
 		var dataRowForTable = []
 		
  		var columnLayoutConfiguration = jsonColumnsLayout[i]
-		/* if (columnLayoutConfiguration.typeOfColumn == "text" && columnLayoutConfiguration.columnLayoutProperties.editable){
-			dataRowForTable["sClass"]= "editable" 
-		}
-		else if(columnLayoutConfiguration.typeOfColumn == "image"){
-			sClass_Tmp = "imageColumn"
-			if (columnLayoutConfiguration.columnLayoutProperties.renderable){
-				dataRowForTable["sClass"]= sClass_Tmp +" editable"
-			} 
-		} */
 		
  		if(!columnLayoutConfiguration.columnLayoutProperties.visible){
 			dataRowForTable["bVisible"] = false
@@ -241,9 +207,6 @@ function getColumnsDefinition(){
 		columnId++;
 		
 	}
-	
-	/* TO BE DELETED */
-	/* console.log(JSON.stringify(dataForTable)) */
 	
 	return dataForTable;
 }
@@ -363,6 +326,10 @@ function setElementsEditable(elements){
 				var rowId =$(nTd).text()
 				
 				/*Keep changes in global variable */
+				if ($("#saveButton").hasClass("saveOff")){
+					$("#saveButton").toggleClass("saveOn").toggleClass("saveOff")
+				}
+					
 				changes[label+"___"+rowId]=value
 			    return(value);
 			  },
@@ -383,7 +350,7 @@ function generateDataForTable(){
 	dataForTable = new Array();
 	{% for row in tableDataset.getRows %}
 		dataRowForTable = new Array()
-		var row_id
+		/* var row_id */
 		{% for cell in row %}
 			dataRowForTable.push("{{cell}}")
 			{% if forloop.first	%}
@@ -400,12 +367,8 @@ function generateDataForTable(){
 
 function valueChange(element){
 	element_value = ""
-	if ($(element).is("input:checkbox")){
-		element_value = $(element).is(":checked")
-	}
-	else{
-		element_value = $(element).val()
-	}
+	if ($(element).is("input:checkbox")){element_value = $(element).is(":checked")}
+	else{element_value = $(element).val()}
 	
 	/*Keep changes in global variable */
 	changes[$(element).attr("id")]=element_value
@@ -481,26 +444,10 @@ function initializeSelectionRowEvent(){
 }
 
 function initializeMultipleSelectionTool(){
-/* 	alert("porakientra")
-	$('#data_table').on("hover","tr", function(event) {
-		console.log("toloco");
-	})
-	
-	$('td').hover(function(event) {
-		alert("td takarrasWithout filter")
-		
-	},function(event) {
-		alert("td takarrasWithout filter")
-		
-	});*/
-	
 	$('tr').hover(function(e) {
 		if ($(this).hasClass("row_selected")){
-			var x= e.pageX
-			var y= e.pageY
-			
-			$("#multipleSelectionTool").css('left',x)
-			$("#multipleSelectionTool").css('top',y)
+			$("#multipleSelectionTool").css('left',e.pageX)
+			$("#multipleSelectionTool").css('top',e.pageY)
 			
 			var iRow = $(this).index()
 			$("#multipleSelectionTool").data('row_id', iRow)
@@ -519,7 +466,7 @@ function initializeMultipleSelectionTool(){
 /*Display and initialize div for configuring table layout*/
 function showTableConfig(){
 	/* Display Div */
-	$("#configurationContainer").slideDown()
+	$("#configurationContainer").slideDown('slow')
 
 	/*  Initialize checkbox in table confirguration container (checked and disable attributes)*/
 	for (var label in jsonTableLayoutConfiguration.columnsLayout){ 
@@ -574,12 +521,36 @@ function saveTableConfiguration(){
 	$("#configurationContainer").hide()
 }
 </script>
+<script type="text/javascript">
+function multipleEnableDisableImage(mode){
+	if (mode=='enable'){
+		$(".row_selected").each(function(){
+			$(this).find(":checkbox").prop('checked', true);
+		})
+	}
+	else{
+		$(".row_selected").each(function(){
+			$(this).find(":checkbox").prop('checked', false);
+		})
+	}
+}
+</script>
+<script type="text/javascript">
+function multipleSelect(mode){
+	row_id=parseInt($("#multipleSelectionTool").data('row_id'));
+	
+	$("tr").each(function(){
+		if (mode=='all' || (mode=='from' && $(this).index()>row_id) || (mode=='to' && $(this).index()<row_id) ){
+			$(this).addClass("row_selected")
+		}	
+	})
+}
+</script>
 {% endblock %}
 
 {% block content_menu %}{% endblock %}
 			
 {% block content_view %}
-<a href="#" onclick="showTableConfig()">Display Table Configuration</a>
 <div id="configurationContainer">
 	<div id="tableConfigurationContainer">
 		<table id="firstTableConfiguration">
@@ -620,7 +591,7 @@ function saveTableConfiguration(){
 		<button id="acceptTableConfigurationButton" onclick="saveTableConfiguration()">
 			Ok
 		</button>
-		<button id="cancelTableConfigurationButton" onclick="$('#configurationContainer').hide()">
+		<button id="cancelTableConfigurationButton" onclick="$('#configurationContainer').slideUp('slow')">
 			Cancel
 		</button>
 	</div>

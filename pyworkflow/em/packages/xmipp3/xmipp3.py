@@ -33,8 +33,6 @@ import xmipp
 from constants import *
 import pyworkflow.dataset as ds
 
-
-
 def getXmippPath(*paths):
     '''Return the path the the Xmipp installation folder
     if a subfolder is provided, will be concatenated to the path'''
@@ -281,4 +279,4 @@ class XmippDataSet(ds.DataSet):
     def writeTable(self, tableName, table):
         """ Write changes made to a table. """
         md = self._convertTableToMd(table)
-        md.write(self._filename, xmipp.MD_APPEND)
+        md.write("%s@%s" % (tableName, self._filename), xmipp.MD_APPEND)

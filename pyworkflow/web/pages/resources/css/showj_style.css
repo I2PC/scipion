@@ -203,12 +203,17 @@ section .imageTitle{
 .multipleSelectionToolContainer{
 	display:none;
 	z-index:999;
-	background-color: rgb(50, 1, 1);
-	color: #FFF;
+	background-color: #e6e6e6;
+	color: #555555;
 	/* display: -webkit-flex; */
 	-webkit-align-items: center;
 	-webkit-flex-flow: column;
 	position: absolute;
+	padding: 10px;
+}
+
+.multipleSelectionToolItem{
+	cursor: pointer;
 }
 
 .pressedButton{
@@ -269,6 +274,17 @@ section .imageTitle{
 	background-image: url(/resources/showj/editTableOff.png);	
 }
 
+aside #saveButton{
+	width:27px;
+	height:27px;
+}
+.saveOn{
+	background-image: url(/resources/showj/saveOn.png);	
+}
+.saveOff{
+	background-image: url(/resources/showj/saveOff.png);
+}
+
 #table_container tbody tr.odd{
 	background-color: #FFF;
 }
@@ -289,6 +305,11 @@ section .imageTitle{
 
 #data_table_filter{
 	margin-bottom: 10px;
+	width:20%;
+}
+
+#displayTableContainer{
+	display: inline;
 }
 
 #data_table_info{
@@ -324,6 +345,7 @@ section .imageTitle{
 #secondTableConfiguration{
 	float:right;
 }
+
 
 /* FIX FOR DATABLE ARROW BUTTON FIT IN ONE LINE */
 .css_left { float: left; }
