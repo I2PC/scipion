@@ -41,6 +41,7 @@ class PostgresqlMapper(mapper.Mapper):
             dictClasses=self.__getClassesDictionary()
         mapper.Mapper.__init__(self,dictClasses)
         self.__initObjDict()
+        self.objectsUpdatedToDb={}
         if database== None:
             try:
                 self.db=PostgresqlDb(dbSettingsFile)
@@ -62,7 +63,7 @@ class PostgresqlMapper(mapper.Mapper):
             return replaceExt(obj._objName, obj.strId())
         return obj.strId()
 
-
+    # !!!! refactor into Object?
     def __getObjectValue(self, obj):
         if obj.isPointer() and obj.hasValue():
             return obj.get().strId() # For pointers store the id of referenced object
@@ -110,28 +111,37 @@ class PostgresqlMapper(mapper.Mapper):
         self.db.commit()
 
 
-    # !!!! update methods
     def updateTo(self, obj, level=1):
-        self.db.updateObject(obj._objId, obj._objName, obj.getClassName(),
-                             self.__getObjectValue(obj), obj._objParentId)
-        if obj.getObjId() in self.updateDict:
-            for k, v in self.updateDict.iteritems():
+        """obj exists in the database and has been modified outside, so it must be
+        updated in the database"""
+        if  obj.getObjId() in self.objectsUpdatedToDb:
+            for k, v in self.objectsUpdatedToDb.iteritems():
                 print "%d -> %s" % (k, v.getName())
             raise Exception('Circular reference, object: %s found twice' % obj.getName())
-        
-        self.updateDict[obj._objId] = obj
+
+        # print "updateTo - %s %s" % (obj.getObjId(), self.__getObjectValue(obj))
+        self.db.updateObject(obj.getObjId(), obj.getName(), obj.getClassName(),
+                             self.__getObjectValue(obj), obj._objParentId)        
+        self.objDict[obj.getObjId()]=obj
+        self.objectsUpdatedToDb[obj._objId] = obj
+
         for key, attr in obj.getAttributesToStore():
-            if attr._objId is None: # Insert new items from the previous state
-                attr._objParentId = obj._objId
-                #path = obj._objName[:obj._objName.rfind('.')] # remove from last .
-                namePrefix = self.__getNamePrefix(obj)
-                attr._objName = joinExt(namePrefix, key)
+            namePrefix = self.__getNamePrefix(obj)
+            name = joinExt(namePrefix, key)
+            attributesInDb=self.db.selectObjectsBy(name=name)
+            attr._objName = name
+            attr._objParentId = obj._objId
+            if attributesInDb is None: 
                 self.__insert(attr, namePrefix)
             else:  
+                attr._objId=attributesInDb[0]["id"]
                 self.updateTo(attr, level + 2)
+
+        self.objectsUpdatedToDb={}
 
 
     def updateFrom(self, obj):
+        """Update obj data from the database"""
         objectData = self.db.selectObjectById(obj._objId)
         self.unpack(objectData, obj)
 
@@ -286,7 +296,6 @@ class PostgresqlDb():
     def connect(self, database,user,password,host,port=5432):
         try:
             self.connection = psycopg2.connect(database=database, user=user, password=password, host=host, port=port)
-            print "Conn: " + str(self.connection)
             self._cursor = self.connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
         except psycopg2.OperationalError as err:
             print "Problem connecting to database - ", err
@@ -435,3 +444,4 @@ class PostgresqlDb():
         """Update object data """
         # print self.UPDATE, (parent_id, name, classname, value, objId)
         self.cursor().execute(self.UPDATE, (parent_id, name, classname, value, objId))
+        self.commit()
