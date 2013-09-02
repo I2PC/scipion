@@ -243,7 +243,7 @@ section .imageTitle{
 	
 }
 
-#table_container thead th{
+#table_container th{
 	/* font-weight: bold; */
 	font-family: Helvetica;
 	white-space: nowrap;
@@ -291,6 +291,13 @@ aside #saveButton{
 
 #table_container { /* 	overflow:auto;*/
 	width: 100%;
+}
+
+/* TABLE COLUMN VIEW */
+#data_table_transpose td{
+	font-family: Helvetica;
+	padding: 8px;
+	border: 0px;
 }
 
 /* DATATABLE STYLE */

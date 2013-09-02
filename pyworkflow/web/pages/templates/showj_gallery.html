@@ -144,22 +144,16 @@
 	</script>
 	<script type="text/javascript">
 	function multipleEnableDisableImage(mode){
-		console.log("veamos")
 		if (mode=='enable'){
 			$(".image_selected").each(function(){
 				enableDisableImage($(this).find(".enabledGallery"), 'enable')
 				$(this).find(".enabledGallery").fadeOut('fast')
-				/* $(this).find(".enabledGallery").addClass("selected")
-				$(this).find(".enabledGallery").fadeIn('fast') */
 			})
 		}
 		else{
 			$(".image_selected").each(function(){
-				console.log("veamosdis")
 				enableDisableImage($(this).find(".enabledGallery"), 'disable')
 				$(this).find(".enabledGallery").fadeIn('fast')
-				/* $(this).find(".enabledGallery").removeClass("selected")
-				$(this).find(".enabledGallery").fadeOut('fast') */
 			})
 		}
 	}
