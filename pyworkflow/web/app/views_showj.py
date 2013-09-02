@@ -61,8 +61,12 @@ def showj(request, inputParameters=None):
             labelsToRenderComboBoxValues = getLabelsToRenderComboBoxValues(tableLayoutConfiguration.columnsLayout)
             _labelsToRenderComboBox=labelsToRenderComboBoxValues[0][0] if len(labelsToRenderComboBoxValues) > 0 else ''
             inputParameters['labelsToRenderComboBox']=_labelsToRenderComboBox
-       
-        _imageDimensions = get_image_dimensions(request.session['projectPath'], tableDataset.getElementById(0,inputParameters['labelsToRenderComboBox']))  if inputParameters['labelsToRenderComboBox']!='' else None
+            
+        if inputParameters['labelsToRenderComboBox'] == '':
+            inputParameters['zoom']=0
+            _imageDimensions = None
+        else:    
+            _imageDimensions = get_image_dimensions(request.session['projectPath'], tableDataset.getElementById(0,inputParameters['labelsToRenderComboBox']))  
             
         inputParameters['blockComboBox']=_blockComboBox
         
@@ -101,7 +105,8 @@ def showj(request, inputParameters=None):
                'tableLayoutConfiguration' : tableLayoutConfiguration if (showjForm.data['mode']=='gallery') else json.dumps({'columnsLayout': tableLayoutConfiguration.columnsLayout, 'colsOrder': tableLayoutConfiguration.colsOrder}, ensure_ascii=False, cls=ColumnLayoutConfigurationEncoder), #Data variables
                'tableDataset': tableDataset,
                'imageDimensions': request.session['imageDimensions'],
-               'defaultZoom': request.session['defaultZoom'], 
+               'defaultZoom': request.session['defaultZoom'],
+               'projectName': request.session['projectName'],
                'form': showjForm} #Form
     
     return_page = '%s%s%s' % ('showj_', showjForm.data['mode'], '.html')
@@ -214,7 +219,7 @@ def save_showj_table(request):
 
 
 def visualizeObject(request):
-    probandoCTFParam = False
+    probandoCTFParam = True
     
     objectId = request.GET.get("objectId")    
     #projectName = request.session['projectName']

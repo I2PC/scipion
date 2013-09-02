@@ -398,6 +398,7 @@ function updateRowSelection(){
 /* Control row event selection allowing shift, ctrol and single click */
 var lastChecked;
 function initializeSelectionRowEvent(){
+	/* $('#data_table').on("click","tr", function(event) { */
 	$('#data_table').on("click","tr", function(event) {
 
 		var start = $('#data_table tbody tr').index(this);
@@ -523,23 +524,29 @@ function saveTableConfiguration(){
 </script>
 <script type="text/javascript">
 function multipleEnableDisableImage(mode){
-	if (mode=='enable'){
-		$(".row_selected").each(function(){
-			$(this).find(":checkbox").prop('checked', true);
-		})
+	columnId=oTable.fnGetColumnIndex("enabled")
+	columnIdReal=oTable.fnColumnIndexToVisible(columnId)
+	
+	booleanValue=(mode=='enable')
+	integerValue= (booleanValue)? 1 : 0
+	
+	$(".row_selected").each(function(){
+		checkbox_element=$('td:eq('+columnIdReal+')',this).find(":checkbox")
+		checkbox_element.prop('checked', booleanValue);
+		changes[checkbox_element.attr("id")]=integerValue
+	})
+
+	if ($("#saveButton").hasClass("saveOff")){
+		$("#saveButton").toggleClass("saveOn").toggleClass("saveOff")
 	}
-	else{
-		$(".row_selected").each(function(){
-			$(this).find(":checkbox").prop('checked', false);
-		})
-	}
+	console.log(changes)
 }
 </script>
 <script type="text/javascript">
 function multipleSelect(mode){
 	row_id=parseInt($("#multipleSelectionTool").data('row_id'));
 	
-	$("tr").each(function(){
+	$("#data_table tbody tr").each(function(){
 		if (mode=='all' || (mode=='from' && $(this).index()>row_id) || (mode=='to' && $(this).index()<row_id) ){
 			$(this).addClass("row_selected")
 		}	

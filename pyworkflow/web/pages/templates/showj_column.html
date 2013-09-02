@@ -10,6 +10,12 @@ Overwrite general section property for table view -->
 section {
 	display:block;
 }
+#displayTableContainer{
+	width:60%;
+	text-align:center;
+	margin-bottom:10px;
+	display:block;
+}
 </style>
 
 <!-- JS -->
@@ -46,9 +52,6 @@ $.fn.dataTableExt.oApi.fnGetColumnIndex = function ( oSettings, sCol )
 <script type="text/javascript" src="{{jeditable}}"></script>
 <script type="text/javascript" src="/static/js/Transpose.js"></script>
 
-<!-- <script type="text/javascript" src="{{jquery_ui}}"></script> -->
-<!-- <script type="text/javascript" src="{{jquery_tabletools}}"></script> -->
-
 <script type="text/javascript">
 /* Initialize datatable table */
 var oTable;
@@ -60,26 +63,9 @@ var changes={}
 
 $(document).ready(function() {
 	
-
-	
 	initializeSelectionRowEvent() 
 	initializeGoToEvent()
 	initializeTableWidth()
-	
-	
-	
-	/* $("#form").submit(function() {
-		var sData = $('input', oTable.fnGetNodes()).serialize();
-		alert( "The following data would have been submitted to the server: \n\n"+sData );
-		return false;
-	} ) */
-	
-	/* Add a click handler for the delete row */
-	/* $('#delete').click( function() {
-		var anSelected = fnGetSelected( oTable );
-		oTable.fnDeleteRow( anSelected[0] );
-	} ); */
-	
 	
 	/* Init the table */
 	oTable = $('#data_table').dataTable(
@@ -90,7 +76,8 @@ $(document).ready(function() {
 			        "bSort": true,
 			        "bInfo": true,
 			        "bAutoWidth": true,
-			        "sDom": 'ZRrt', 
+			        "sDom": '<"#displayTableContainer">ZRrt',
+			        /* "sDom": 'Rrt', */
 			        /* "sDom": 'T<"clear">lfrtip', */
  			        "oColReorder": {
 		    			"aiOrder": jsonTableLayoutConfiguration.colsOrder
@@ -125,11 +112,14 @@ $(document).ready(function() {
 			    }		
 			);
 	
-	
+	$("#displayTableContainer").html("<a href='#' onclick='showTableConfig()'>Display Table Configuration</a>")
 	
 	initializeMultipleSelectionTool()
 	setElementsEditable(null)
 	initializeColumnHeader()
+	
+	/*  Transpose data table after all events have been initialized*/
+	oTable.fnTranspose(true)
 	
 	
 } );
@@ -182,8 +172,6 @@ function initializeColumnHeader(){
     {
         var cellIndex = oTable.fnColumnIndexToVisible(x)
         if (cellIndex !=null){
-        	console.log("header")
-        	console.log(getHeaderWithIcon(cols[x].sTitle,jsonTableLayoutConfiguration.columnsLayout[cols[x].sTitle].columnLayoutProperties))
         	$('th:eq('+cellIndex+')',headerRow).find("div").append(getHeaderWithIcon(cols[x].sTitle,jsonTableLayoutConfiguration.columnsLayout[cols[x].sTitle].columnLayoutProperties))
         	$('th:eq('+cellIndex+')',headerRow).attr("id",cols[x].sTitle+"___column_header")
         } 
@@ -560,13 +548,11 @@ function saveTableConfiguration(){
 		//From the image element we get the column header index
 		columnId=oTable.fnGetColumnIndex(label)
 		oTable.fnSetColumnVis(columnId, columnLayoutProperties.visible);
-		
 		newValue=$("#"+label+"_renderable").prop('checked')
 		if (newValue != columnLayoutProperties.renderable){
 			columnLayoutProperties.renderable=newValue
 			$("#"+label+"_renderable_icon").toggleClass("renderTableOn").toggleClass("renderTableOff")
 		}
-		
 		newValue=$("#"+label+"_editable").prop('checked')
 		if (newValue != columnLayoutProperties.editable){
 			columnLayoutProperties.editable=newValue
@@ -576,7 +562,6 @@ function saveTableConfiguration(){
 	}
 	
 	oTable.fnDraw();
-	
 	$("#configurationContainer").hide()
 }
 </script>
@@ -585,7 +570,6 @@ function saveTableConfiguration(){
 {% block content_menu %}{% endblock %}
 			
 {% block content_view %}
-<a href="#" onclick="showTableConfig()">Display Table Configuration</a>
 <div id="configurationContainer">
 	<div id="tableConfigurationContainer">
 		<table id="firstTableConfiguration">
@@ -634,7 +618,7 @@ function saveTableConfiguration(){
 
 	
 <div id="table_container" style="overflow-x:auto">
-		<table cellspacing="0" id="data_table" width="100%">
+		<table cellspacing="0" id="data_table" width="60%">
 		</table>
 </div>
 			
