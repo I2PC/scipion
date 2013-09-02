@@ -87,13 +87,28 @@ class TestPostgreSqlMapper(unittest.TestCase):
     def test_deleteAll(self):
         pass
 
-    # !!!! updateFrom test
-    def test_updateFrom(self):
-        pass
+
+    def test_updates(self):
+        mapper=TestPostgreSqlMapper.mapper
+        if mapper != None:
+            micro=Microscope()
+            micro.voltage=Float(180.0)
+            parentId=mapper.insert(micro)
+            mapper.commit()
+            object = mapper.selectById(parentId)
+            self.assertEqual(object.voltage.get(),180.0)
+
+            micro.voltage=Float(160.0)
+            # !!!! To test the for in updateTo, we would need an object that allows to add attributes dynamically
+            mapper.updateTo(micro)
+            object = mapper.selectById(parentId)
+            self.assertEqual(object.voltage.get(),160.0)
+            micro.voltage=Float(150.0)
+            mapper.updateFrom(micro)
+            self.assertEqual(micro.voltage.get(),160.0)
 
 
 class TestPostgreSqlDb(unittest.TestCase):
-
     database=None
     mapper=None
 
@@ -240,7 +255,6 @@ class TestPostgreSqlDb(unittest.TestCase):
             self.assertEqual(len(allObjects),0)
 
 
-    # !!!! @current
     def test_updateObject(self):
         if TestPostgreSqlDb.database != None:
             mapper=self.getMapper()
