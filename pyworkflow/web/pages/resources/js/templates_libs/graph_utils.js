@@ -97,7 +97,7 @@ function callPaintGraph() {
 			// Iterate over the nodes and position in the screen
 			// coordinates should come in the json response
 			for ( var i = 0; i < json.length; i++) {
-				var top = json[i].y * 1.2;
+				var top = json[i].y*0.8;
 				var left = json[i].x;
 				addStatusBox(nodeSource, "graph_" + json[i].id,
 						json[i].status);
@@ -184,4 +184,4 @@ function connectNodes(elm1, elm2) {
 // jsPlumb.addEndpoint($(elm + ".window"), {
 // anchor : "BottomCenter"
 // }, sourceEndpoint);
-/// }
+// }
