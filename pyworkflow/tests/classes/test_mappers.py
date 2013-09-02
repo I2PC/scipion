@@ -19,6 +19,8 @@ class TestPostgreSqlMapper(unittest.TestCase):
     def setUpClass(cls):
         cls.setupMapper()
 
+    # this class methods allow for the sharing of the connection by all tests
+
     @classmethod
     def getScipionHome(self):
         if "SCIPION_HOME" not in os.environ:
@@ -73,19 +75,32 @@ class TestPostgreSqlMapper(unittest.TestCase):
 
 
 
-    # !!!! delete test
     def test_delete(self):
-        pass
+       # deleteChilds test is implicit in delete, for complex objects
+       mapper=TestPostgreSqlMapper.mapper
+       if mapper != None:
+           micro=Microscope()
+           micro.voltage=Float(200.0)
+           parentId=mapper.insert(micro)
+           voltageId=micro.voltage.getObjId()
+           print parentId,voltageId
+           mapper.delete(micro)
+           object = mapper.selectById(parentId)
+           self.assertIsNone(object)
+           object = mapper.selectById(voltageId)
+           self.assertIsNone(object)
 
 
-    # !!!! deleteChilds test
-    def test_deleteChilds(self):
-        pass
 
-
-    # !!!! deleteAll test
-    def test_deleteAll(self):
-        pass
+    # This test is dangerous if run against a production DB ;-)
+    # Hence, if you really want to run it, add "test_" to the function name
+    def deleteAll(self):
+        mapper=TestPostgreSqlMapper.mapper
+        if mapper != None:
+            print "DELETING ALL..."
+            mapper.deleteAll()
+            allObjects= mapper.selectAll()
+            self.assertEqual(len(allObjects),0)
 
 
     def test_updates(self):
@@ -99,7 +114,6 @@ class TestPostgreSqlMapper(unittest.TestCase):
             self.assertEqual(object.voltage.get(),180.0)
 
             micro.voltage=Float(160.0)
-            # !!!! To test the for in updateTo, we would need an object that allows to add attributes dynamically
             mapper.updateTo(micro)
             object = mapper.selectById(parentId)
             self.assertEqual(object.voltage.get(),160.0)
@@ -245,13 +259,13 @@ class TestPostgreSqlDb(unittest.TestCase):
 
     # This test is dangerous if run against a production DB ;-)
     # Hence, if you really want to run it, add "test_" to the function name
-    # !!!! check empty table without using mapper
     def DeleteAll(self):
-        print "DELETING ALL..."
-        mapper=self.getMapper()
-        if mapper != None:
+        if TestPostgreSqlDb.database != None:
+            print "DELETING ALL..."
+            allObjects= TestPostgreSqlDb.database.selectObjectsWhere(None)
+            print "Before: %d" % len(allObjects)
             TestPostgreSqlDb.database.deleteAll()
-            allObjects= mapper.selectAll()
+            allObjects= TestPostgreSqlDb.database.selectObjectsWhere(None)
             self.assertEqual(len(allObjects),0)
 
 

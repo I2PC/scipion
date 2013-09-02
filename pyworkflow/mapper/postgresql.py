@@ -282,7 +282,7 @@ class PostgresqlDb():
     """PostgreSql internals handling"""
 
     OBJECT_FIELDS="id, parent_id, name, " + FIELD_CLASSNAME + ", value"
-    SELECT = "SELECT " + OBJECT_FIELDS + " FROM Objects WHERE "
+    SELECT = "SELECT " + OBJECT_FIELDS + " FROM Objects "
     DELETE = "DELETE FROM Objects WHERE "
     UPDATE = "UPDATE Objects SET parent_id=%s, name=%s, classname=%s, value=%s WHERE id=%s"
 
@@ -363,7 +363,10 @@ class PostgresqlDb():
         return(row[0])
 
     
-    def selectCmd(self, whereStr, orderByStr=' ORDER BY id'):
+    def selectCmd(self, whereCond, orderByStr=' ORDER BY id'):
+        whereStr=""
+        if whereCond != None and len(whereCond)>0:
+            whereStr="WHERE " + whereCond
         return self.SELECT + whereStr + orderByStr
 
 
