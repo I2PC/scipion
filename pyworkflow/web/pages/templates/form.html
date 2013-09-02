@@ -7,16 +7,16 @@
 	<!-- CSS -->
 	<link href={{css}} rel="stylesheet" type="text/css">
 	<link href={{messi_css}} rel="stylesheet" type="text/css">
-	<link href="/static/css/jquery-ui.css" rel="stylesheet" type="text/css">
+	<link href="{{jquery_ui_css}}" rel="stylesheet" type="text/css">
 	<!-- JS -->
 	<script src={{jquery}} type="text/javascript"></script>
-	<script src={{form}} type="text/javascript"></script>
 	<script src={{messi}} type="text/javascript"></script>
 	<script src={{utils}} type="text/javascript"></script>
-	<script type="text/javascript" src="/static/js/jquery-ui.js"></script>
+	<script src={{protocol_form_utils}} type="text/javascript"></script>
+	<script src="{{jquery_ui}} "type="text/javascript"></script>
 	<script>
 	function putMode(mode){
-		$("#protocolForm").attr('data-mode', mode)
+		$("#protocolForm").attr('data-mode', mode);
 	}
 	</script>
 	 <script>
@@ -170,7 +170,7 @@
 										<a href="javascript:browseObjects('{{paramName}}','{{projectName}}','{{param.pointerClass.get}}');"><img src={{browse}}/></a>
 									</td>
 									<td class="ico">
-										<a href="javascript:customPopup('/wizard/?action=downsampling',600,470)"><img src={{wizard}}/></a>
+										<a href="javascript:customPopup('/wizard/?action=downsampling',750,470)"><img src={{wizard}}/></a>
 									</td>
 								{% else %}
 									<td>

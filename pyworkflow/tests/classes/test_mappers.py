@@ -32,7 +32,7 @@ class TestPostgreSqlMapper(unittest.TestCase):
             if os.path.isfile(dbconfig):
                 cls.mapper = pyworkflow.mapper.postgresql.PostgresqlMapper(dbconfig)
             else:
-                print "Config file %s not found" % dbconfig
+                print "Config file %s not found" % (dbconfig,)
                 return None
         except Exception as e:
                 print str(e)
@@ -240,3 +240,13 @@ class TestPostgreSqlDb(unittest.TestCase):
             self.assertEqual(len(allObjects),0)
 
 
+    # !!!! @current
+    def test_updateObject(self):
+        if TestPostgreSqlDb.database != None:
+            mapper=self.getMapper()
+            if mapper != None:
+                i = Integer(66)
+                objectId=mapper.insert(i)
+                TestPostgreSqlDb.database.updateObject(objectId, i.getName(), i.getClassName(), 67, i.getAttributeValue("parent_id"))
+                object = mapper.selectById(objectId)
+                self.assertTrue(object.get() == 67)
