@@ -166,11 +166,11 @@ body{
 	border-radius: 0.5em;
 	box-shadow: 2px 2px 19px #AAAAAA;
 	color: black;
-	height: auto;
+/* 	height: auto; */
 	text-align: center;
-	width: auto;
+/* 	width: auto; */
 	position: absolute;
-	left: 7em;
+/* 	left: 7em; */
 	z-index: 5;
 	padding: 1.5px;
 	font-size: 0.9em;
