@@ -46,17 +46,24 @@ class BrandeisDefFrealign(Form):
         self.addParam('inputParticles', PointerParam, label="Input particles", important=True,
                       pointerClass='SetOfParticles',
                       help='Select the input particles.\n')  
+
+        self.addParam('input3DReference', PointerParam,
+                      pointerClass='Volume',
+                      label='Initial 3D reference volume:', 
+                      help='Input 3D reference reconstruction.\n')
         
         self.addParam('mode', EnumParam, choices=['Recontruction only', 'Refinement', 'Random Search & Refine',
                                                    'Simple search & Refine', 'Search, Refine, Randomise'],
                       label="Operation mode", default=brandeis.MOD_REFINEMENT,
                       display=EnumParam.DISPLAY_COMBO,
                       help='Parameter <IFLAG> in FREALIGN'
-                           'Mode  0: Reconstruction only parameters as read in\n'
-                           'Mode  1: Refinement & Reconstruction\n'
-                           'Mode  2: Random Search & Refinement\n'
-                           'Mode  3: Simple search & Refine\n'
-                           'Mode  4: Search, Refine, Randomise & extend to RREC\n')
+                           'Mode 0: Reconstruction only parameters as read in\n'
+                           'Mode 1: Refinement & Reconstruction\n'
+                           'Mode 2: Random Search & Refinement\n'
+                           'Mode 3: Simple search & Refine\n'
+                           'Mode 4: Search, Refine, Randomise & extend to RREC\n'
+                           "If the protocol haven't .par file, you must execute\n"
+                           'it in mode 3 or 4')
 
         self.addParam('useInitialAngles', BooleanParam, default=False,
                       label="Use initial angles/shifts ? ", 
@@ -331,38 +338,184 @@ class BrandeisDefFrealign(Form):
                            'high values in the FSC curve (se publication #2 above). FREALIGN uses an\n'
                            'automatic weighting scheme and RBFACT should normally be set to 0.0.')
 
-        self.addParam('input3DReference', PointerParam,
-                      pointerClass='Volume',
-                      label='Initial 3D reference volume:', 
-                      help='Input 3D reference reconstruction.\n')
-
         self.addParallelSection(threads=2, mpi=4)
 
 class ProtFrealign(ProtRefine3D):
     """Protocol to perform a volume from a SetOfParticles
     using the frealign program"""
     _definition = BrandeisDefFrealign()
-    _label = 'Frealign'
+    _label = 'Frealign Protocol'
     
     
     def _defineSteps(self):
-        
+        # for entire set of particles
         self._enterWorkingDir()
+        self._createCurrentWDir()
+        self.input3DRef = self.input3DReference.get()
+        self._defCurrentIteration()
+        # -------------------------------------
+        # for each particle's subgroup
+        
+        #--------------------------------------
         
         
+    def _defCurrentIteration(self):
+        """ Defining the current iteration
+        """
+        
+        #Prepare arguments to call program: fralign_v8.exe
+        self._params = {'imgsFn': imgsFn,
+                        'mode': self.mode.get(),
+                        'useInitialAngles': self.useInitialAngles.get(),
+                        'iter': self.numberOfIterations.get(),
+                        'innerRadius': self.innerRadius.get(),
+                        'outerRadius': self.outerRadius.get(),
+                        'ThresholdMask': self.ThresholdMask.get(),
+                        'pseudoBFactor': self.pseudoBFactor.get(),
+                        'avePhaseResidual': self.avePhaseResidual.get(),
+                        'angStepSize': self.angStepSize.get(),
+                        'numberRandomSearch': self.numberRandomSearch.get(),
+                        'numberPotentialMatches': self.numberPotentialMatches.get(),
+                        'sym': self.symmetry.get(),
+                        'relMagnification': self.relMagnification.get(),
+                        'targetPhaseResidual': self.targetPhaseResidual.get(),
+                        'PhaseResidual': self.PhaseResidual.get(),
+                        'beamTiltX': self.beamTiltX.get(),
+                        'beamTiltY': self.beamTiltY.get(),
+                        'resol': self.resolution.get(),
+                        'lowRes': self.lowResolRefine.get(),
+                        'highRes': self.highResolRefine.get(),
+                        'defocusUncertainty': self.defocusUncertainty.get(),
+                        'Bfactor': self.Bfactor.get(),
+                        'sampling3DR': self.input3DRef.getSamplingRate()
+                       }
 
+        #Get sampling rate from input images
+        self._params['sampling'] = imgSet.samplingRate.get()
 
+        # Get reference map for the iteration.
+        self._params['vol'] = self.input3DRef
+        
+        # Get the amplitude Contrast of the micrographs
+        # We need the amplitude Contrast for CTF correction
+        self._params['ampContrast'] = imgSet.ampContrast.get()
 
+        # Defining the operation mode
+        if self.mode == MOD_RECONSTRUCTION:
+            self._params['mode'] = 0
+        elif self.mode == MOD_REFINEMENT:
+            self._params['mode'] = 1
+        elif self.mode == MOD_RANDOM_SEARCH_REFINEMENT:
+            self._params['mode'] = 2
+        elif self.mode == MOD_SIMPLE_SEARCH_REFINEMENT:
+            self._params['mode'] = 3
+        else:
+            self._params['mode'] = 4
+        
+        # Defining if magnification refinement is going to do
+        if self.doMagRefinement:
+            self._params['doMagRefinement'] = T
+        else:
+            self._params['doMagRefinement'] = F
+            
+        # Defining if defocus refinement is going to do
+        if self.doDefRefinement:
+            self._params['doDefocusRef'] = T
+        else:
+            self._params['doDefocusRef'] = F
 
+        # Defining if astigmatism refinement is going to do
+        if self.doAstigRefinement:
+            self._params['doAstigRef'] = T
+        else:
+            self._params['doAstigRef'] = F
+        
+        # Defining if defocus refinement for individual particles is going to do
+        if self.doDefPartRefinement:
+            self._params['doDefocusPartRef'] = T
+        else:
+            self._params['doDefocusPartRef'] = F
+        
+        if self.methodEwaldSphere == EWA_DISABLE:
+            self._params['metEwaldSphere'] = 0
+        elif self.methodEwaldSphere == EWA_SIMPLE:
+            self._params['metEwaldSphere'] = 1
+        elif self.methodEwaldSphere == EWA_REFERENCE:
+            self._params['metEwaldSphere'] = 2
+        elif self.methodEwaldSphere == EWA_SIMPLE_HAND:
+            self._params['metEwaldSphere'] = -1
+        else:
+            self._params['metEwaldSphere'] = -2
+        
+        # Defining if apply extra real space symmetry
+        if self.doExtraRealSpaceSym:
+            self._params['doExtraRealSpaceSym'] = T
+        else:
+            self._params['doExtraRealSpaceSym'] = F
+        
+        # Defining if wiener filter is going to apply
+        if self.doWienerFilter:
+            self._params['doWienerFilter'] = T
+        else:
+            self._params['doWienerFilter'] = F
+        
+        # Defining if wiener filter is going to calculate and apply
+        if self.doBfactor:
+            self._params['doBfactor'] = T
+        else:
+            self._params['doBfactor'] = F
+        
+        # Defining if matching projections is going to write
+        if self.writeMatchProjections:
+            self._params['writeMatchProj'] = T
+        else:
+            self._params['writeMatchProj'] = F
+            
+        if self.methodCalcFsc == FSC_CALC:
+            self._params['metFsc'] = 0
+        elif self.methodCalcFsc == FSC_3DR_ODD:
+            self._params['metFsc'] = 1
+        elif self.methodCalcFsc == FSC_3DR_EVEN:
+            self._params['metFsc'] = 2
+        elif self.methodCalcFsc == FSC_3DR_ALL:
+            self._params['metFsc'] = 3
+        
+        
+        if self.doAditionalStatisFSC:
+            self._params['doAditionalStatisFSC'] = T
+        else:
+            self._params['doAditionalStatisFSC'] = F
+            
+        if self.paddingFactor == PAD_1:
+            self._params['padFactor'] = 1
+        elif self.paddingFactor == PAD_2:
+            self._params['padFactor'] = 2
+        else:
+            self._params['padFactor'] = 4
+            
+        if self.paramRefine == REF_ALL:
+            self._params['paramRefine'] = '1 1 1 1 1'
+        elif self.paramRefine == REF_ANGLES:
+            self._params['paramRefine'] = '1 1 1 0 0'
+        else:
+            self._params['paramRefine'] = '0 0 0 1 1'
+        
+        micSet = self.imgSet.
+        self.imgSet.
+        
+    def _createCurrentWDir():
+        pass
 
     def _prepareCommand(self):
 
-        #TODO: change this for writeSetOfParticles and writeVolume functions.
-        imgSet = self.inputParticles.get()
-        vol = self.input3DReference,get()
+#        TODO: change this for writeSetOfParticles and writeVolume functions.
+#        TODO: Uncomment the following line when writeSetOfParticles protocol is implemented
+#        imgsFn = writeSetOfParticles(self.inputParticles.get())
 
-        #Get sampling rate from input images
-        self.samplingRate = imgSet.samplingRate.get()
+        imgSet = self.inputParticles.get()
+        imgsFn = imgSet.getFileName()
+        vol = self.input3DReference.get()
+
 
 #         self._params['step_focus'] = 1000.0
 #         # Convert digital frequencies to spatial frequencies
