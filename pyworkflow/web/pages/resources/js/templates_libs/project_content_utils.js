@@ -86,7 +86,7 @@ function fillUL(list, ulId, icon, projName) {
 	for ( var i = 0; i < list.length; i++) {
 		ul.append('<li><a href="/visualize_object/?projectName=' + projName
 				+ '&objectId=' + list[i].id
-				+ '"target="_new"><img src="../../../../resources/' + icon + '" /> '
+				+ '"target="_blank"><img src="../../../../resources/' + icon + '" /> '
 				+ list[i].name + '</a></li>');
 	}
 }
