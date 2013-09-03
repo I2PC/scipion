@@ -359,7 +359,10 @@ class XmippProtML3D(XmippProtocol, ProtRefine3D, ProtClassify3D):
                                                     
     def createOutput(self):
         lastIter = 'iter%03d' % self.numberOfIterations.get()
-        volumes = XmippSetOfVolumes(self._getExtraPath(lastIter, 'iter_volumes.xmd'))
+        md = xmipp.MetaData(self._getExtraPath(lastIter, 'iter_volumes.xmd'))
+        fn = self._getPath('output_volumes.xmd')
+        md.write('Volumes@%s'%fn)
+        volumes = XmippSetOfVolumes(fn)
         self._defineOutputs(outputVolumes=volumes)
 
     def _summary(self):
