@@ -296,8 +296,11 @@ enum MDLabel
     MDL_RESOLUTION_FRC, ///<Fourier shell correlation (double)
     MDL_RESOLUTION_FRCRANDOMNOISE, ///<Fourier shell correlation noise (double)
     MDL_RESOLUTION_FREQ, ///<Frequency in 1/A (double)
+    MDL_RESOLUTION_FREQ2, ///< Frequency in 1/A squared (double)
     MDL_RESOLUTION_FREQREAL, ///< Frequency in A (double)
+    MDL_RESOLUTION_LOG_STRUCTURE_FACTOR, ///<Logarithm of the structure factor
     MDL_RESOLUTION_SSNR, ///<Fourier shell correlation (double)
+    MDL_RESOLUTION_STRUCTURE_FACTOR, ///<Structure factor
 
     MDL_SAMPLINGRATE, ///< sampling rate in A/pixel (double)
     MDL_SAMPLINGRATE_ORIGINAL, ///< original sampling rate in A/pixel (double)
@@ -1050,8 +1053,12 @@ private:
         MDL::addLabel(MDL_RESOLUTION_FRC, LABEL_DOUBLE, "resolutionFRC");
         MDL::addLabel(MDL_RESOLUTION_FRCRANDOMNOISE, LABEL_DOUBLE, "resolutionFRCRandomNoise");
         MDL::addLabel(MDL_RESOLUTION_FREQ, LABEL_DOUBLE, "resolutionFreqFourier");
+        MDL::addLabel(MDL_RESOLUTION_FREQ2, LABEL_DOUBLE, "resolutionFreqFourier2");
         MDL::addLabel(MDL_RESOLUTION_FREQREAL, LABEL_DOUBLE, "resolutionFreqReal");
+        MDL::addLabel(MDL_RESOLUTION_LOG_STRUCTURE_FACTOR, LABEL_DOUBLE, "resolutionLogStructure");
+        MDL::addLabel(MDL_RESOLUTION_STRUCTURE_FACTOR, LABEL_DOUBLE, "resolutionStructure");
         MDL::addLabel(MDL_RESOLUTION_SSNR, LABEL_DOUBLE, "resolutionSSNR");
+        MDL::addLabel(MDL_RESOLUTION_STRUCTURE_FACTOR, LABEL_DOUBLE, "resolutionStructure");
 
         MDL::addLabelAlias(MDL_RESOLUTION_DPR, "DPR");
         MDL::addLabelAlias(MDL_RESOLUTION_ERRORL2, "Error_l2");

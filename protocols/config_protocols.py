@@ -27,6 +27,7 @@ protocols = {
         'ml3d': ('ML3D', '3D/ML3D'),
         'nma': ('Normal Mode Analysis', '3D/NMA'),
         'nma_alignment': ('Flexible alignment', '3D/NMA_alignment'),
+        'structure_factor': ('Structure factor', '3D/StructureFactor'),
         'relion3d': ('Relion3D', '3D/Relion3D'),
         'mltomo': ('MLTomo', '3D/MLTomo'),
         'subtraction': ('Partial Projection Subtraction', '3D/ProjSub'),
@@ -47,7 +48,7 @@ sections = [
 ('3D', 
    [['Initial Model', 'rct', 'initvolume_ransac', 'preprocess_volume'], 
     ['Model Refinement', 'projmatch', 'ml3d', 'relion3d'],
-    ['Analysis', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask']])
+    ['Analysis', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask','structure_factor']])
 ,
 ('Other',
  [['Extra', 'custom','subtraction', 'mltomo']])
