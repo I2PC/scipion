@@ -12,6 +12,7 @@ import json
 from pyworkflow.web.app.views_util import *
 from forms import VolVisualizationForm
 from pyworkflow.em import *
+from pyworkflow.em.packages.xmipp3.data import XmippSetOfVolumes
     
 def showj(request, inputParameters=None):
    
@@ -219,17 +220,14 @@ def save_showj_table(request):
 
 
 def visualizeObject(request):
-    probandoCTFParam = True
+    probandoCTFParam = False
     
     objectId = request.GET.get("objectId")    
     #projectName = request.session['projectName']
     projectName = request.GET.get("projectName")
     
 #    project = loadProject(projectName)
-    manager = Manager()
-    projPath = manager.getProjectPath(projectName)
-    request.session['projectPath'] = projPath
-    project = Project(projPath)
+    project = Project(request.session['projectPath'])
     project.load()
     
     object = project.mapper.selectById(int(objectId))
@@ -253,8 +251,13 @@ def visualizeObject(request):
                        'goto': 1,
                        'colRowMode': 'Off'}
     elif isinstance(object, SetOfVolumes):
-        print ("XXXXX", object.getObjId())
-        inputParameters = {'setOfVolumes' : object, 'setOfVolumesId': object.getObjId()}  
+        fn = project.getTmpPath(object.getName()+ '_volumes.xmd')
+        vols = XmippSetOfVolumes.convert(object,fn)
+        inputParameters = {'path': join(request.session['projectPath'], vols.getFileName()),
+                           'setOfVolumes' : object,
+                           'setOfVolumesId': object.getObjId(),
+                           'dims': '3d',
+                           'mode': 'table'}  
     elif isinstance(object, SetOfImages):
         fn = project.getTmpPath(object.getName() + '_images.xmd')
         imgs = XmippSetOfImages.convert(object, fn)

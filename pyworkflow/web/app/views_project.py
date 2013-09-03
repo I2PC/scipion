@@ -151,6 +151,8 @@ def project_content(request):
         projectName = request.POST.get('projectName', None)
         
     request.session['projectName'] = projectName
+    manager = Manager()
+    request.session['projectPath'] = manager.getProjectPath(projectName)
         
     project = loadProject(projectName)    
     provider = ProjectRunsTreeProvider(project)
