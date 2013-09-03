@@ -30,7 +30,7 @@ visualization program.
 """
 
 import os
-from pyworkflow.em.viewer import Viewer, Wizard
+from pyworkflow.viewer import Viewer, Wizard
 from pyworkflow.em import SetOfImages, SetOfMicrographs, DefCTFMicrographs
 from pyworkflow.utils.process import runJob
 from xmipp3 import getXmippPath

@@ -12,15 +12,20 @@ function selectList(elm) {
 	row.attr('value', oldValue);
 	elm.attr('style', 'background-color: LightSteelBlue;');
 	elm.attr('class', 'selected');
-	
-	// load the image 
+
+	// load the image
 	var uri = elm.attr('value');
-	if(uri == undefined){
+	if (uri == undefined) {
 		uri = elm.val();
 	}
+
+	var img = $("img#mic");
+	var uri = "/get_image/?image=" + uri;
+	img.attr("src", uri);
 	
+//	img.removeAttr("src").attr("src", "/myimg.jpg");
+
 	
-	
-	
-	
+	$.repaint();
+
 }
