@@ -1,7 +1,7 @@
 import json
 import pyworkflow.gui.graph as gg
 from pyworkflow.em import *
-from pyworkflow.web.app.views_util import * 
+from views_util import * 
 from pyworkflow.utils.utils import prettyDate
 from pyworkflow.manager import Manager
 from pyworkflow.apps.pw_project_viewprotocols import STATUS_COLORS

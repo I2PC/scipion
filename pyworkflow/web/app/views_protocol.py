@@ -2,7 +2,7 @@ import os
 import xmipp
 import json
 from pyworkflow.em import *
-from pyworkflow.web.app.views_util import * 
+from views_util import * 
 from pyworkflow.manager import Manager
 from pyworkflow.project import Project
 from django.core.context_processors import csrf
@@ -67,40 +67,6 @@ def form(request):
     context.update(csrf(request))
     
     return render_to_response('form.html', context)
-
-def wizard(request):
-    action = request.GET.get('action', None)
-    
-    if(action == 'downsampling'):
-        response = 'wiz_downsampling.html'
-    
-    context = {'action':action
-             }
-    
-    return render_to_response(response, context)
-    
-def loadProtocolProject(request, requestType='POST'):
-    """ Retrieve the project and protocol from this request.
-    Return:
-        (project, protocol) tuple
-    """
-    requestDict = getattr(request, requestType)
-    projectName = request.session['projectName']
-    protId = requestDict.get("protocolId")
-    protClass = requestDict.get("protocolClass")
-    
-    # Load the project
-    project = loadProject(projectName)
-    
-    # Create the protocol object
-    if protId and protId != 'None':  # Case of new protocol
-        protId = requestDict.get('protocolId', None)
-        protocol = project.mapper.selectById(int(protId))
-    else:
-        protocolClass = emProtocolsDict.get(protClass, None)
-        protocol = protocolClass()
-        
-    return (project, protocol)
     
 def updateParam(request, project, protocol, paramName):
     """

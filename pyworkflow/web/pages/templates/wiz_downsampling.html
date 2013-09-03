@@ -5,15 +5,11 @@
 
 {% block list %}			
 	<tr><th>Object</th></tr>
-	<tr id="id1" class="no-selected" style="background-color: #fafafa;" onclick="selectList(($(this)));">
-		<td>Id1</td>
-	</tr>
-	<tr id="id2" class="no-selected" style="background-color: #fafafa;" onclick="selectList(($(this)));">
-		<td>Id2</td>
-	</tr>
-	<tr id="id3" class="no-selected" style="background-color: #fafafa;" onclick="selectList(($(this)));">
-		<td>Id3</td>
-	</tr>
+	{% for obj in objects %}
+	<tr id="{{obj.getObjId}}" class="no-selected" style="background-color: #fafafa;" onclick="selectList(($(this)));" value="{{obj.getFileName}}">
+		<td>{{obj.getFileName}}</td>
+	</tr>	
+	{% endfor %}
 {% endblock %}		
 {% block images %}
 	<tr>
