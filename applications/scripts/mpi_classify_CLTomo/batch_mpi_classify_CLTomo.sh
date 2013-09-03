@@ -8,4 +8,4 @@ export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$XMIPP_HOME/applications
 
 PROCS=$1
 shift
-mpirun -np $PROCS `which xmipp_mpi_classify_CLTomo` "$@"
+mpirun -np $PROCS `which xmipp_mpi_classify_CLTomo_prog` "$@"
