@@ -25,10 +25,11 @@
 
 // Translated from MATLAB code by Yoel Shkolnisky
 
+#include <mpi.h>
 #include "mpi_performance_test.h"
 #include <data/mask.h>
 #include <data/metadata_extension.h>
-#include <mpi.h>
+
 
 // Empty constructor =======================================================
 ProgPerformanceTest::ProgPerformanceTest(int argc, char **argv)

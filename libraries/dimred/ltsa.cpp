@@ -59,8 +59,9 @@ void LTSA::computeAlignmentMatrix(Matrix2D<double> &B)
 
 	size_t n = MAT_YSIZE(*X);
 	Matrix2D<int> ni;
-	Matrix2D<double> D, Xi(MAT_XSIZE(ni), MAT_XSIZE(*X)), W, Vi, Vi2, Si, Gi;
+	Matrix2D<double> D;
 	kNearestNeighbours(*X, k, ni, D);
+	Matrix2D<double> Xi(MAT_XSIZE(ni), MAT_XSIZE(*X)), W, Vi, Vi2, Si, Gi;
 
 	B.initIdentity(n);
 	Matrix1D<int> weightVector;

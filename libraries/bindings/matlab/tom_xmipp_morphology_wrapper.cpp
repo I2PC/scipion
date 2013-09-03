@@ -23,9 +23,9 @@
  *=================================================================*/
 
 /*xmipp includes */
-#include "xmipp_image.h"
-#include "morphology.h"
 #include "tom_xmipp_helpers.h"
+#include <data/xmipp_image.h>
+#include <data/morphology.h>
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 {

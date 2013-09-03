@@ -66,6 +66,7 @@ enum MDLabel
     MDL_AVG_CHANGES_ORIENTATIONS, /// Average change in angular orientation (double degrees)
     MDL_AVG_CHANGES_OFFSETS, /// Average change in offset (double pixels)
     MDL_AVG_CHANGES_CLASSES, /// Average change in class assignment(double dimensionaless)
+    MDL_AVGPMAX, ///< Average (per class) of the maximum value of normalized probability function) (double)
     MDL_BGMEAN, ///< Mean background value for an image
     MDL_BLOCK_NUMBER, ///< Current block number (for incremental EM)
 
@@ -141,6 +142,7 @@ enum MDLabel
     MDL_CTF_BG_GAUSSIAN2_CU, ///< CTF Background parameter
     MDL_CTF_BG_GAUSSIAN2_CV, ///< CTF Background parameter
     MDL_CTF_BG_GAUSSIAN2_ANGLE, ///< CTF Background parameter
+    MDL_CTF_CRIT_NONASTIGMATICVALIDITY, ///< Maximum frequency (in Angstroms) at which non-astigmatic CTF correction is valid
     MDL_CTF_CRIT_PSDCORRELATION90, ///< PSD correlation at 90 degrees
     MDL_CTF_CRIT_FIRSTZERORATIO, ///< First zero ratio
     MDL_CTF_CRIT_FIRSTZEROAVG, ///< First zero average (in Angstroms)
@@ -261,7 +263,6 @@ enum MDLabel
     MDL_PICKING_AUTOPICKPERCENT,
     MDL_PICKING_PARTICLE_SIZE, ///< Particle size for particle picking
     MDL_PMAX, ///< Maximum value of normalized probability function (now called "Pmax/sumP") (double)
-    MDL_AVGPMAX, ///< Average (per class) of the maximum value of normalized probability function) (double)
     MDL_POINTSASYMETRICUNIT, /// < Number of non-redundant projections directions (size_t)
 
     MDL_PRJ_DIMENSIONS, // X,Y dimensions for the generated projections
@@ -295,8 +296,11 @@ enum MDLabel
     MDL_RESOLUTION_FRC, ///<Fourier shell correlation (double)
     MDL_RESOLUTION_FRCRANDOMNOISE, ///<Fourier shell correlation noise (double)
     MDL_RESOLUTION_FREQ, ///<Frequency in 1/A (double)
+    MDL_RESOLUTION_FREQ2, ///< Frequency in 1/A squared (double)
     MDL_RESOLUTION_FREQREAL, ///< Frequency in A (double)
+    MDL_RESOLUTION_LOG_STRUCTURE_FACTOR, ///<Logarithm of the structure factor
     MDL_RESOLUTION_SSNR, ///<Fourier shell correlation (double)
+    MDL_RESOLUTION_STRUCTURE_FACTOR, ///<Structure factor
 
     MDL_SAMPLINGRATE, ///< sampling rate in A/pixel (double)
     MDL_SAMPLINGRATE_ORIGINAL, ///< original sampling rate in A/pixel (double)
@@ -353,6 +357,8 @@ enum MDLabel
 
     MDL_LAST_LABEL  // **** NOTE ****: Do keep this label always at the end,it is here for looping purposes
 };//close enum Label
+
+typedef std::vector<MDLabel> MDLabelVector;
 
 /** Macro for iterate over all labels */
 #define FOR_ALL_LABELS() for (int _label = MDL_FIRST_LABEL; _label < MDL_LAST_LABEL; ++_label)
@@ -675,15 +681,11 @@ private:
 
     /** Add predefined labels to be used in metadata */
     static void addLabel(MDLabel label, MDLabelType type, const String &name, int tags=TAGLABEL_NOTAG);
-    /** Add an alias for an existing label */
-    static void addLabelAlias(MDLabel label, const String &alias);
 
     friend class MDLabelStaticInit;
 public:
-    /** public acces to addLabelAlias, add alias in running time,
-      useful to read non xmipp star files
-      */
-    static void addTmpLabelAlias(MDLabel label, const String &alias);
+    /** Add an alias for an existing label */
+    static void addLabelAlias(MDLabel label, const String &alias);
 }
 ;//close class MLD definition
 
@@ -729,6 +731,7 @@ private:
         MDL::addLabel(MDL_AVG_CHANGES_ORIENTATIONS, LABEL_DOUBLE, "avgChanOrient");
         MDL::addLabel(MDL_AVG_CHANGES_OFFSETS, LABEL_DOUBLE, "avgChanOffset");
         MDL::addLabel(MDL_AVG_CHANGES_CLASSES, LABEL_DOUBLE, "avgChanClass");
+        MDL::addLabel(MDL_AVGPMAX, LABEL_DOUBLE, "avgPMax");
 
         MDL::addLabel(MDL_BGMEAN, LABEL_DOUBLE, "bgMean");
         MDL::addLabel(MDL_BLOCK_NUMBER, LABEL_INT, "blockNumber");
@@ -816,6 +819,7 @@ private:
 
         MDL::addLabel(MDL_CTF_CA, LABEL_DOUBLE, "ctfChromaticAberration");
         MDL::addLabel(MDL_CTF_CONVERGENCE_CONE, LABEL_DOUBLE, "ctfConvergenceCone");
+        MDL::addLabel(MDL_CTF_CRIT_NONASTIGMATICVALIDITY, LABEL_DOUBLE, "ctfCritNonAstigmaticValidty");
         MDL::addLabel(MDL_CTF_CRIT_DAMPING, LABEL_DOUBLE, "ctfCritDamping");
         MDL::addLabel(MDL_CTF_CRIT_FIRSTZEROAVG, LABEL_DOUBLE, "ctfCritFirstZero");
         MDL::addLabel(MDL_CTF_CRIT_FIRSTZERODISAGREEMENT, LABEL_DOUBLE, "ctfCritDisagree");
@@ -1012,7 +1016,6 @@ private:
         MDL::addLabel(MDL_PICKING_AUTOPICKPERCENT, LABEL_INT, "autopickPercent");
         MDL::addLabel(MDL_PICKING_TEMPLATES, LABEL_INT, "templatesNum");
         MDL::addLabel(MDL_PMAX, LABEL_DOUBLE, "pMax");
-        MDL::addLabel(MDL_AVGPMAX, LABEL_DOUBLE, "pMax");
         MDL::addLabelAlias(MDL_PMAX, "Pmax");
         MDL::addLabelAlias(MDL_PMAX, "sumP");
         MDL::addLabel(MDL_POINTSASYMETRICUNIT, LABEL_SIZET, "pointsAsymmetricUnit");
@@ -1050,8 +1053,12 @@ private:
         MDL::addLabel(MDL_RESOLUTION_FRC, LABEL_DOUBLE, "resolutionFRC");
         MDL::addLabel(MDL_RESOLUTION_FRCRANDOMNOISE, LABEL_DOUBLE, "resolutionFRCRandomNoise");
         MDL::addLabel(MDL_RESOLUTION_FREQ, LABEL_DOUBLE, "resolutionFreqFourier");
+        MDL::addLabel(MDL_RESOLUTION_FREQ2, LABEL_DOUBLE, "resolutionFreqFourier2");
         MDL::addLabel(MDL_RESOLUTION_FREQREAL, LABEL_DOUBLE, "resolutionFreqReal");
+        MDL::addLabel(MDL_RESOLUTION_LOG_STRUCTURE_FACTOR, LABEL_DOUBLE, "resolutionLogStructure");
+        MDL::addLabel(MDL_RESOLUTION_STRUCTURE_FACTOR, LABEL_DOUBLE, "resolutionStructure");
         MDL::addLabel(MDL_RESOLUTION_SSNR, LABEL_DOUBLE, "resolutionSSNR");
+        MDL::addLabel(MDL_RESOLUTION_STRUCTURE_FACTOR, LABEL_DOUBLE, "resolutionStructure");
 
         MDL::addLabelAlias(MDL_RESOLUTION_DPR, "DPR");
         MDL::addLabelAlias(MDL_RESOLUTION_ERRORL2, "Error_l2");

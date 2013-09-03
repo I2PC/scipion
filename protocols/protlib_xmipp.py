@@ -207,7 +207,8 @@ def getXmippPrograms():
 def skipProgram(programName):
     if programName in ['xmipp_sqlite3', 'xmipp_mpi_steps_runner',
                        'xmipp_angular_commonline', 'xmipp_python',
-                       'xmipp_transform_threshold', 'xmipp_mpi_write_test']:
+                       'xmipp_transform_threshold', 'xmipp_mpi_write_test', 'xmipp_chimera_client',
+                       'xmipp_imagej','xmipp_mpi_image_common_lines']:
         return True
     for p in ['xmipp_test', 'xmipp_template']:
         if programName.find(p) != -1:
@@ -495,19 +496,33 @@ def findColor(color):
             color = color.replace(x, '').replace(y, '')
             return (k, fx, fy, color)
     return None
+
+def getMdSize(filename):
+    """ Return the metadata size without parsing entirely. """
+    from xmipp import MetaData
+    md = MetaData()
+    md.read(filename, 1)
+    
+    return md.getParsedLines()
+
+def emptyMd(filename):
+    """ Use getMdSize to check if metadata is empty. """
+    return getMdSize(filename) == 0
         
 def validateSameSize(fileList, errors, errorPrefix='References'):
     '''Validate if a list of images(or volumes) have
     the same dimensions. 
     The dimensions tuple is returned'''
     from xmipp import getImageSize
-    (xdim, ydim, zdim, ndim) = getImageSize(fileList[0])
+    firstFile = fileList[0]
+    dim1 = getImageSize(firstFile)
+    
     for filename in fileList[1:]:
-        (xdim2, ydim2, zdim2, ndim2) = getImageSize(filename)
-        if (xdim2, ydim2, zdim2, ndim2) != (xdim, ydim, zdim, ndim):
+        dim2 = getImageSize(filename)
+        if dim1 != dim2:
             errors.append("%s: %s and %s have not the same size" % \
-                           (errorPrefix, fileList[0], filename)) 
-    return (xdim, ydim, zdim, ndim)
+                           (errorPrefix, firstFile, filename)) 
+    return dim1
 
 def validateInputSize(references, images, md, errors):
     '''This function will validate that all references
@@ -516,10 +531,10 @@ def validateInputSize(references, images, md, errors):
     '''
     from xmipp import MetaData, MDL_IMAGE, MetaDataInfo
     # Check reference size
-    (xdim, ydim, zdim, ndim) = validateSameSize(references, errors)    
+    xdim, ydim, _, _ = validateSameSize(references, errors)    
     # Check that volume and images have the same size
     if md.containsLabel(MDL_IMAGE):
-        (xdimImg,ydimImg,_,_,_)=MetaDataInfo(md)    
+        xdimImg, ydimImg, _,_,_ = MetaDataInfo(md)    
         if (xdimImg, ydimImg) != (xdim, ydim):
             errors.append("References and images have not the same size")
     else:

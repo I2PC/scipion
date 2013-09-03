@@ -7,7 +7,7 @@
 #  Updated:  J. M. de la Rosa Trevin July 2011
 #
 
-from xmipp import MetaData, MDL_ITER, MDL_LL, MDL_REF, MDValueEQ, getBlocksInMetaDataFile, \
+from xmipp import MetaData, MetaDataInfo, MDL_ITER, MDL_LL, MDL_REF, MDValueEQ, getBlocksInMetaDataFile, \
 MDL_PMAX, MDL_SIGNALCHANGE, AGGR_MAX, MDL_MAX, MDL_MIRRORFRAC, MDL_WEIGHT, MDL_CLASS_COUNT, MD_APPEND,\
 getImageSize, MDL_IMAGE, MDL_SAMPLINGRATE
 from protlib_base import XmippProtocol, protocolMain
@@ -50,8 +50,8 @@ class ProtML2D(XmippProtocol):
         
             
     def summary(self):
-        md = MetaData(self.ImgMd)
-        lines = ["Input images:  [%s] (<%u>)" % (self.ImgMd, md.size())]
+        _, _, _, _, size = MetaDataInfo(self.ImgMd)
+        lines = ["Input images:  [%s] (<%u>)" % (self.ImgMd, size)]
 
         if self.DoMlf:
             if self.DoCorrectAmplitudes:

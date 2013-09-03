@@ -1,4 +1,4 @@
-/***************************************************************************
+ /***************************************************************************
  *
  * Authors:    Carlos Oscar           coss@cnb.csic.es (2010)
  *
@@ -23,13 +23,14 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <mpi.h>
+//#include <mpi.h>
+#include <parallel/xmipp_mpi.h>
 #include <data/filters.h>
 #include <data/xmipp_image.h>
 #include <data/mask.h>
 #include <data/metadata.h>
 #include <data/xmipp_program.h>
-#include <parallel/xmipp_mpi.h>
+
 
 class ProgSortImages: public XmippProgram
 {

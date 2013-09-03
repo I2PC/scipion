@@ -10,6 +10,7 @@ from config_protocols import protDict
 from protlib_base import *
 from protlib_utils import runJob
 from protlib_filesystem import createLink, copyFile
+from protlib_xmipp import redStr
 import xmipp
 from glob import glob
 from os.path import exists, join
@@ -50,7 +51,6 @@ class ProtParticlePicking(XmippProtocol):
                 }  
           
     def summary(self):
-        md = xmipp.MetaData(self.MicrographsMd)
         micrographs, particles,  = countParticles(self)
         if self.TiltPairs: 
             suffix = "tilt pairs"
@@ -60,9 +60,14 @@ class ProtParticlePicking(XmippProtocol):
         else: 
             suffix = "micrographs"
             items = "particles"        
-        
-        summary = ["Input: [%s] with <%u> %s" % (self.importDir, md.size(), suffix),         
+        from protlib_xmipp import getMdSize
+        size = getMdSize(self.MicrographsMd)
+        summary = ["Input: [%s] with <%u> %s" % (self.importDir, size, suffix),         
                    "Number of %(items)s manually picked: <%(particles)d> (from <%(micrographs)d> micrographs)" % locals()]
+        md=xmipp.MetaData(self.MicrographsMd)
+        if not md.containsLabel(xmipp.MDL_CTF_MODEL):
+            summary.append(redStr("There is no CTF information in the input micrographs: "))
+            summary.append("[%s]"%self.MicrographsMd)
         
         return summary
     
@@ -115,15 +120,16 @@ def countParticles(prot, pattern=''):
     
     for posfile in getPosFiles(prot, pattern):
         pos_particles = 0
-        block = 'particles'
-        md = xmipp.MetaData("%(block)s@%(posfile)s" % locals());
-        md.removeDisabled();
-        block_particles = md.size()
-        pos_particles += block_particles
+        
+        blocks = xmipp.getBlocksInMetaDataFile(posfile) 
+        if 'particles' in blocks: #FIXME: also read supervised
+            md = xmipp.MetaData("particles@%(posfile)s" % locals());
+            md.removeDisabled();
+            pos_particles += md.size()
                
-        if pos_particles > 0:
-            particles += pos_particles
-            micrographs += 1
+            if pos_particles > 0:
+                particles += pos_particles
+                micrographs += 1
     return micrographs, particles
 
 def launchParticlePickingGUI(log, InputMicrographs, ExtraDir, PickingMode=PM_MANUAL,

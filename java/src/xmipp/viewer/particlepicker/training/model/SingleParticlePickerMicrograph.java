@@ -5,18 +5,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import xmipp.jni.Particle;
-import xmipp.utils.TasksManager;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.Micrograph;
-import xmipp.viewer.particlepicker.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.PickerParticle;
+
 import java.awt.Rectangle;
 
 public class SingleParticlePickerMicrograph extends Micrograph
 {
 
-	private boolean autopicking = false;
-	private String autofilename;
+	private boolean autopicking = false;	
 	private List<ManualParticle> manualparticles;
 	private List<AutomaticParticle> autoparticles;
 	private MicrographState state;
@@ -38,7 +36,7 @@ public class SingleParticlePickerMicrograph extends Micrograph
 	public SingleParticlePickerMicrograph(String file, String psd, String ctf)
 	{
 		super(file, psd, ctf);
-		autofilename = getName() + "_auto" + ext;
+
 		this.manualparticles = new ArrayList<ManualParticle>();
 		this.autoparticles = new ArrayList<AutomaticParticle>();
 		state = MicrographState.Available;
@@ -64,10 +62,7 @@ public class SingleParticlePickerMicrograph extends Micrograph
 		return tokens[tokens.length - 2];
 	}
 
-	public String getAutoPosFile()
-	{
-		return autofilename;
-	}
+
 
 	public ManualParticle getParticle(int x, int y)
 	{
@@ -86,11 +81,7 @@ public class SingleParticlePickerMicrograph extends Micrograph
 		return null;
 	}
 
-	public void addAutomaticParticle(AutomaticParticle p)
-	{
-		addAutomaticParticle(p, false);
-	}
-
+	
 	public boolean hasManualParticles()
 	{
 		if (getManualParticles().size() > 0)
@@ -130,15 +121,8 @@ public class SingleParticlePickerMicrograph extends Micrograph
 
 	public void addManualParticle(ManualParticle p, SingleParticlePicker ppicker, boolean center)
 	{
-		if (!p.getMicrograph().fits(p.getX(), p.getY(), ppicker.getSize()))
-		{
-			System.err.format("Warning: ignoring particle out of bounds: x=%d, y=%d in micrograph: %s\n", p.getX(), p.getY(), p.getMicrograph());
-			return;
-		}
-		
-		// throw new
-		// IllegalArgumentException(XmippMessage.getOutOfBoundsMsg("Particle"));
 		manualparticles.add(p);
+
 		if (state == MicrographState.Available || state == MicrographState.Auto)
 		{
 			if (ppicker.getMode() == Mode.Manual)
@@ -192,16 +176,9 @@ public class SingleParticlePickerMicrograph extends Micrograph
 		return autoparticles.size() - getAutomaticParticlesDeleted(threshold);
 	}
 
-	public void addAutomaticParticle(AutomaticParticle p, boolean imported)
+	public void addAutomaticParticle(AutomaticParticle p)
 	{
-		if (state == MicrographState.Available && !imported)
-			throw new IllegalArgumentException(String.format("Invalid state %s on micrograph %s for adding automatic particles", state, getName()));
 		autoparticles.add(p);
-		if (state == MicrographState.Available )
-			state = MicrographState.Auto;
-		if (state == MicrographState.Manual && imported)
-			state = MicrographState.Review;
-		
 
 	}
 

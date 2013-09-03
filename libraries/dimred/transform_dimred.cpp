@@ -96,6 +96,9 @@ void ProgTransformDimRed::produceSideInfo()
         return;
     SFin.removeDisabled();
 
+    // Adjust number of grid points
+    numGrids=floor(sqrt((double)(SFin.size())));
+
     MetaData SFaux;
     SFaux.removeDuplicates(SFin,MDL_IMAGE);
     SFin=SFaux;

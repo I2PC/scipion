@@ -10,7 +10,7 @@
 from os.path import join, exists
 from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
-from xmipp import MetaData, Image, MDL_IMAGE, MDL_ITER, MDL_LL, AGGR_SUM, MDL_REF3D, MDL_WEIGHT, \
+from xmipp import MetaData, MetaDataInfo, Image, MDL_IMAGE, MDL_ITER, MDL_LL, AGGR_SUM, MDL_REF3D, MDL_WEIGHT, \
 getBlocksInMetaDataFile, MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDValueEQ, MDL_SAMPLINGRATE
 from protlib_utils import runShowJ, getListFromVector, getListFromRangeString
 from protlib_parser import ProtocolParser
@@ -52,8 +52,8 @@ class ProtML3D(XmippProtocol):
                 }
         
     def summary(self):
-        md = MetaData(self.ImgMd)
-        lines = ["Input images:  [%s] (<%u>)" % (self.ImgMd, md.size())]
+        _, _, _, _, size = MetaDataInfo(self.ImgMd)
+        lines = ["Input images:  [%s] (<%u>)" % (self.ImgMd, size)]
         if self.DoMlf:
             if self.DoCorrectAmplitudes:
                 suffix = "with CTF correction "

@@ -28,7 +28,7 @@
 #define __XmippFFTW_H
 
 #include <complex>
-#include "../../external/fftw-3.3.1/api/fftw3.h"
+#include "../../external/fftw-3.3.3/api/fftw3.h"
 #include "multidim_array.h"
 #include "multidim_array_generic.h"
 #include "xmipp_fft.h"
@@ -650,5 +650,10 @@ void adaptSpectrum(MultidimArray<double> &Min,
                    const MultidimArray<double> &spectrum_ref,
                    int spectrum_type=AMPLITUDE_SPECTRUM,
                    bool leave_origin_intact=false);
+
+/** Randomize phases beyond a certain frequency
+ * @ingroup FourierOperations
+*/
+void randomizePhases(MultidimArray<double> &Min, double wRandom);
 #endif
 /** @} */

@@ -632,6 +632,8 @@ void ProgNormalize::preProcess()
                             OUTSIDE_MASK);
             break;
         case CIRCLE:
+        	if (r>(int)(xdimOut/2))
+        		REPORT_ERROR(ERR_ARG_INCORRECT,"Given radius is larger than half the output size");
             BinaryCircularMask(bg_mask, r, OUTSIDE_MASK);
             break;
         case NOBACKGROUND:
