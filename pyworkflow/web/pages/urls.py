@@ -36,13 +36,15 @@ urlpatterns = patterns('',
     url(r'^get_image/', 'app.views_util.get_image'), # Load images dynamically
     url(r'^browse_objects/$', 'app.views_util.browse_objects'), # Browse objects from the database
 
-    #PROTOCOL (WIZARD AND FORM)
+    #PROTOCOL (INCLUDE FORM)
     url(r'^save_protocol/$', 'app.views_protocol.save_protocol'),
-    url(r'^wizard/$', 'app.views_protocol.wizard'),
     url(r'^protocol/$', 'app.views_protocol.protocol'),
     url(r'^delete_protocol/$', 'app.views_protocol.delete_protocol'),
     url(r'^form/$', 'app.views_protocol.form'),
 
+    #WIZARDS
+    url(r'^wizard/$', 'app.em_wizard.wizard'),
+    
     #SHOWJ
     url(r'^showj/', 'app.views_showj.showj'), #Load web
     url(r'^save_showj_table/', 'app.views_showj.save_showj_table'), # Save table to session variable dynamically

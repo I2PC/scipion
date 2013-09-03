@@ -74,6 +74,29 @@ def loadProject(projectName):
     project.load()
     return project
 
+def loadProtocolProject(request, requestType='POST'):
+    """ Retrieve the project and protocol from this request.
+    Return:
+        (project, protocol) tuple
+    """
+    requestDict = getattr(request, requestType)
+    projectName = request.session['projectName']
+    protId = requestDict.get("protocolId")
+    protClass = requestDict.get("protocolClass")
+    
+    # Load the project
+    project = loadProject(projectName)
+    
+    # Create the protocol object
+    if protId and protId != 'None':  # Case of new protocol
+        protId = requestDict.get('protocolId', None)
+        protocol = project.mapper.selectById(int(protId))
+    else:
+        protocolClass = emProtocolsDict.get(protClass, None)
+        protocol = protocolClass()
+        
+    return (project, protocol)
+
 def browse_objects(request):
     """ Browse objects from the database. """
     if request.is_ajax():
@@ -88,40 +111,9 @@ def browse_objects(request):
                              ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
 
-def get_image_dimensions(projectPath, imagePath):
-    from django.http import HttpResponse
-    from pyworkflow.gui import getImage
-    imageNo = None
-#    imagePath = request.GET.get('image')
-
-    
-    # PAJM: Como vamos a gestionar lsa imagen    
-    if imagePath.endswith('png') or imagePath.endswith('gif'):
-        img = getImage(imagePath, tk=False)
-    else:
-        if '@' in imagePath:
-            parts = imagePath.split('@')
-            imageNo = parts[0]
-            imagePath = parts[1]
-            
-        if projectPath != '':
-            imagePathTmp = os.path.join(projectPath, imagePath)
-            if not os.path.isfile(imagePathTmp):
-                imagePath = getInputPath('showj', imagePath)      
-            
-
-#        imagePath = join(request.session['projectPath'],imagePath)
-        
-        if imageNo:
-            imagePath = '%s@%s' % (imageNo, imagePath) 
-            
-        imgXmipp = xmipp.Image(imagePath)
-        
-        return imgXmipp.getDimensions()
-        
 
 def get_image(request):
-    from django.http import HttpResponse
+#    from django.http import HttpResponse
     from pyworkflow.gui import getImage, getPILImage
 #    print "request.session['projectPath']2", request.session['projectPath']
     
@@ -158,3 +150,35 @@ def get_image(request):
     response = HttpResponse(mimetype="image/png")
     img.save(response, "PNG")
     return response
+
+def get_image_dimensions(projectPath, imagePath):
+    from django.http import HttpResponse
+    from pyworkflow.gui import getImage
+    imageNo = None
+#    imagePath = request.GET.get('image')
+    
+    # PAJM: Como vamos a gestionar lsa imagen    
+    if imagePath.endswith('png') or imagePath.endswith('gif'):
+        img = getImage(imagePath, tk=False)
+    else:
+        if '@' in imagePath:
+            parts = imagePath.split('@')
+            imageNo = parts[0]
+            imagePath = parts[1]
+            
+        if projectPath != '':
+            imagePathTmp = os.path.join(projectPath, imagePath)
+            if not os.path.isfile(imagePathTmp):
+                imagePath = getInputPath('showj', imagePath)      
+            
+
+#        imagePath = join(request.session['projectPath'],imagePath)
+        
+        if imageNo:
+            imagePath = '%s@%s' % (imageNo, imagePath) 
+            
+        imgXmipp = xmipp.Image(imagePath)
+        
+        return imgXmipp.getDimensions()
+        
+
