@@ -262,7 +262,9 @@ Transpose.prototype = {
     }
     else 
     {
-      this.s.bTranspose = true;
+//    	This has been changed in order not to transpose table on init
+//      this.s.bTranspose = true;
+    	this.s.bTranspose = false;
     }
   },
   
@@ -305,19 +307,11 @@ Transpose.prototype = {
         // when sScrollX is used, the header is placed into a separate div. get the header and place into column 0
         if ($('.dataTables_scrollHeadInner').length) {
           $('.dataTables_scrollHeadInner thead th:nth-child('+i+')').each( function() {
-          	console.log("header2")
-        	console.log($(this))
-        	console.log("finheader2")
             $nTr.append($(this).clone(true)); 
           });
         } else {
           $('thead tr th:nth-child('+i+')', nTable).each( function() { 
-            	console.log("header3")
-            	console.log($(this))
-            	console.log("finheader3")  
-                    	console.log("vdengana44444444444n")
             $nTr.append($(this).clone(true)); 
-          	console.log($nTr) 
           });
         }
 

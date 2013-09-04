@@ -41,6 +41,7 @@ class PostgresqlMapper(mapper.Mapper):
             dictClasses=self.__getClassesDictionary()
         mapper.Mapper.__init__(self,dictClasses)
         self.__initObjDict()
+        self.objectsUpdatedToDb={}
         if database== None:
             try:
                 self.db=PostgresqlDb(dbSettingsFile)
@@ -62,7 +63,7 @@ class PostgresqlMapper(mapper.Mapper):
             return replaceExt(obj._objName, obj.strId())
         return obj.strId()
 
-
+    # !!!! refactor into Object?
     def __getObjectValue(self, obj):
         if obj.isPointer() and obj.hasValue():
             return obj.get().strId() # For pointers store the id of referenced object
@@ -110,7 +111,37 @@ class PostgresqlMapper(mapper.Mapper):
         self.db.commit()
 
 
+    def updateTo(self, obj, level=1):
+        """obj exists in the database and has been modified outside, so it must be
+        updated in the database"""
+        if  obj.getObjId() in self.objectsUpdatedToDb:
+            for k, v in self.objectsUpdatedToDb.iteritems():
+                print "%d -> %s" % (k, v.getName())
+            raise Exception('Circular reference, object: %s found twice' % obj.getName())
+
+        # print "updateTo - %s %s" % (obj.getObjId(), self.__getObjectValue(obj))
+        self.db.updateObject(obj.getObjId(), obj.getName(), obj.getClassName(),
+                             self.__getObjectValue(obj), obj._objParentId)        
+        self.objDict[obj.getObjId()]=obj
+        self.objectsUpdatedToDb[obj._objId] = obj
+
+        for key, attr in obj.getAttributesToStore():
+            namePrefix = self.__getNamePrefix(obj)
+            name = joinExt(namePrefix, key)
+            attributesInDb=self.db.selectObjectsBy(name=name)
+            attr._objName = name
+            attr._objParentId = obj._objId
+            if attributesInDb is None: 
+                self.__insert(attr, namePrefix)
+            else:  
+                attr._objId=attributesInDb[0]["id"]
+                self.updateTo(attr, level + 2)
+
+        self.objectsUpdatedToDb={}
+
+
     def updateFrom(self, obj):
+        """Update obj data from the database"""
         objectData = self.db.selectObjectById(obj._objId)
         self.unpack(objectData, obj)
 
@@ -231,7 +262,6 @@ class PostgresqlMapper(mapper.Mapper):
         self.deleteChilds(obj)
         self.db.deleteObject(obj.getObjId())
 
-    # !!!! update methods
 
 
 # There are some python libraries for interfacing Postgres, see
@@ -252,19 +282,24 @@ class PostgresqlDb():
     """PostgreSql internals handling"""
 
     OBJECT_FIELDS="id, parent_id, name, " + FIELD_CLASSNAME + ", value"
-    SELECT = "SELECT " + OBJECT_FIELDS + " FROM Objects WHERE "
+    SELECT = "SELECT " + OBJECT_FIELDS + " FROM Objects "
     DELETE = "DELETE FROM Objects WHERE "
-
+    UPDATE = "UPDATE Objects SET parent_id=%s, name=%s, classname=%s, value=%s WHERE id=%s"
 
     def __init__(self,configFile=None):
+        self.connection=None
+        self._cursor=None
         if configFile:
             self.connectUsing(configFile)
             self.createTables()
 
     def connect(self, database,user,password,host,port=5432):
-        self.connection = psycopg2.connect(database=database, user=user, password=password, host=host, port=port)
-        self.cursor = self.connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
+        try:
+            self.connection = psycopg2.connect(database=database, user=user, password=password, host=host, port=port)
+            self._cursor = self.connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        except psycopg2.OperationalError as err:
+            print "Problem connecting to database - ", err
+            raise Exception("PostgreSql - problem connecting to %s" %database)
 
     def close(self):
         # auto-closing could be implemented with atexit, @see
@@ -289,20 +324,24 @@ class PostgresqlDb():
 
         self.connect(database,user,password,host,port)
 
+    def cursor(self):
+        if self._cursor == None:
+            raise Exception("Postgresql - no cursor available")
+        return self._cursor
 
     def insertObject(self, name, classname, value, parent_id):
         """Execute command to insert a new object. Return the inserted object id"""
-        self.cursor.execute("INSERT INTO Objects (id, parent_id, name," + FIELD_CLASSNAME + """, value)
+        self.cursor().execute("INSERT INTO Objects (id, parent_id, name," + FIELD_CLASSNAME + """, value)
                                VALUES (DEFAULT,%s, %s, %s, %s) RETURNING id""", 
                            (parent_id, name, classname, value))
-        insertedObjectId=self.cursor.fetchone()[0]
+        insertedObjectId=self.cursor().fetchone()[0]
         self.commit()
         return insertedObjectId
 
 
     def createTables(self):
         """Create required tables if they don't exist"""
-        self.cursor.execute("""CREATE TABLE IF NOT EXISTS Objects
+        self.cursor().execute("""CREATE TABLE IF NOT EXISTS Objects
                      (id        SERIAL PRIMARY KEY,
                       parent_id INTEGER REFERENCES Objects(id),
                       name      TEXT,               -- object name 
@@ -318,19 +357,22 @@ class PostgresqlDb():
 
     def lastId(self):
         """ Useful for testing"""
-        self.cursor.execute("select max(id) from objects")
-        row=self.cursor.fetchone()
+        self.cursor().execute("select max(id) from objects")
+        row=self.cursor().fetchone()
         print "last id" + str(row)
         return(row[0])
 
     
-    def selectCmd(self, whereStr, orderByStr=' ORDER BY id'):
+    def selectCmd(self, whereCond, orderByStr=' ORDER BY id'):
+        whereStr=""
+        if whereCond != None and len(whereCond)>0:
+            whereStr="WHERE " + whereCond
         return self.SELECT + whereStr + orderByStr
 
 
     def executeSelect(self, whereStr, valueTuple=None, orderByStr=' ORDER BY id'):
         # !!!! handle ProgrammingError, OperationalError...
-        self.cursor.execute(self.selectCmd(whereStr,orderByStr),valueTuple)
+        self.cursor().execute(self.selectCmd(whereStr,orderByStr),valueTuple)
 
 
     def selectObjectsByParent(self, parent_id=None, iterate=False):
@@ -341,17 +383,17 @@ class PostgresqlDb():
             self.executeSelect("parent_id=%s", (parent_id,))
         return self._results(iterate)  
 
-    # !!!! remove %, use psycopg filter (@see  deleteChildObjects)
+
     def selectObjectsByAncestor(self, ancestor_namePrefix, asIterator=False):
         """Select all objects in the hierachy of ancestor"""
-        self.executeSelect("name LIKE '%s.%%'" % ancestor_namePrefix)
+        self.executeSelect("name LIKE %s", ("%s.%%" % ancestor_namePrefix,) )
         return self._results(asIterator)          
 
 
     def selectObjectById(self, objId):
         """Select an object give its id"""
         self.executeSelect("id=%s", valueTuple=(objId,))  
-        return self.cursor.fetchone()
+        return self.cursor().fetchone()
 
 
     def selectObjectsBy(self, asIterator=False, **args):     
@@ -373,17 +415,17 @@ class PostgresqlDb():
         if asIterator:
             return self._iterResults()
         else:
-            return self.cursor.fetchall()
+            return self.cursor().fetchall()
 
 
     def _iterResults(self):
-        row = self.cursor.fetchone()
+        row = self.cursor().fetchone()
         while row is not None:
             yield row
-            row = self.cursor.fetchone()
+            row = self.cursor().fetchone()
 
     def executeDelete(self, whereStr, valueTuple=None):
-        self.cursor.execute(self.DELETE + whereStr,valueTuple)
+        self.cursor().execute(self.DELETE + whereStr,valueTuple)
         self.commit()
 
     def deleteObject(self, objId):
@@ -399,3 +441,10 @@ class PostgresqlDb():
     def deleteAll(self):
         """ Delete all Objects from the db. """
         self.executeDelete("true")
+
+
+    def updateObject(self, objId, name, classname, value, parent_id):
+        """Update object data """
+        # print self.UPDATE, (parent_id, name, classname, value, objId)
+        self.cursor().execute(self.UPDATE, (parent_id, name, classname, value, objId))
+        self.commit()

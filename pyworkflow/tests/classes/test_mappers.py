@@ -19,6 +19,8 @@ class TestPostgreSqlMapper(unittest.TestCase):
     def setUpClass(cls):
         cls.setupMapper()
 
+    # this class methods allow for the sharing of the connection by all tests
+
     @classmethod
     def getScipionHome(self):
         if "SCIPION_HOME" not in os.environ:
@@ -32,7 +34,7 @@ class TestPostgreSqlMapper(unittest.TestCase):
             if os.path.isfile(dbconfig):
                 cls.mapper = pyworkflow.mapper.postgresql.PostgresqlMapper(dbconfig)
             else:
-                print "Config file %s not found" % dbconfig
+                print "Config file %s not found" % (dbconfig,)
                 return None
         except Exception as e:
                 print str(e)
@@ -73,27 +75,54 @@ class TestPostgreSqlMapper(unittest.TestCase):
 
 
 
-    # !!!! delete test
     def test_delete(self):
-        pass
+       # deleteChilds test is implicit in delete, for complex objects
+       mapper=TestPostgreSqlMapper.mapper
+       if mapper != None:
+           micro=Microscope()
+           micro.voltage=Float(200.0)
+           parentId=mapper.insert(micro)
+           voltageId=micro.voltage.getObjId()
+           print parentId,voltageId
+           mapper.delete(micro)
+           object = mapper.selectById(parentId)
+           self.assertIsNone(object)
+           object = mapper.selectById(voltageId)
+           self.assertIsNone(object)
 
 
-    # !!!! deleteChilds test
-    def test_deleteChilds(self):
-        pass
+
+    # This test is dangerous if run against a production DB ;-)
+    # Hence, if you really want to run it, add "test_" to the function name
+    def deleteAll(self):
+        mapper=TestPostgreSqlMapper.mapper
+        if mapper != None:
+            print "DELETING ALL..."
+            mapper.deleteAll()
+            allObjects= mapper.selectAll()
+            self.assertEqual(len(allObjects),0)
 
 
-    # !!!! deleteAll test
-    def test_deleteAll(self):
-        pass
+    def test_updates(self):
+        mapper=TestPostgreSqlMapper.mapper
+        if mapper != None:
+            micro=Microscope()
+            micro.voltage=Float(180.0)
+            parentId=mapper.insert(micro)
+            mapper.commit()
+            object = mapper.selectById(parentId)
+            self.assertEqual(object.voltage.get(),180.0)
 
-    # !!!! updateFrom test
-    def test_updateFrom(self):
-        pass
+            micro.voltage=Float(160.0)
+            mapper.updateTo(micro)
+            object = mapper.selectById(parentId)
+            self.assertEqual(object.voltage.get(),160.0)
+            micro.voltage=Float(150.0)
+            mapper.updateFrom(micro)
+            self.assertEqual(micro.voltage.get(),160.0)
 
 
 class TestPostgreSqlDb(unittest.TestCase):
-
     database=None
     mapper=None
 
@@ -230,13 +259,22 @@ class TestPostgreSqlDb(unittest.TestCase):
 
     # This test is dangerous if run against a production DB ;-)
     # Hence, if you really want to run it, add "test_" to the function name
-    # !!!! check empty table without using mapper
     def DeleteAll(self):
-        print "DELETING ALL..."
-        mapper=self.getMapper()
-        if mapper != None:
+        if TestPostgreSqlDb.database != None:
+            print "DELETING ALL..."
+            allObjects= TestPostgreSqlDb.database.selectObjectsWhere(None)
+            print "Before: %d" % len(allObjects)
             TestPostgreSqlDb.database.deleteAll()
-            allObjects= mapper.selectAll()
+            allObjects= TestPostgreSqlDb.database.selectObjectsWhere(None)
             self.assertEqual(len(allObjects),0)
 
 
+    def test_updateObject(self):
+        if TestPostgreSqlDb.database != None:
+            mapper=self.getMapper()
+            if mapper != None:
+                i = Integer(66)
+                objectId=mapper.insert(i)
+                TestPostgreSqlDb.database.updateObject(objectId, i.getName(), i.getClassName(), 67, i.getAttributeValue("parent_id"))
+                object = mapper.selectById(objectId)
+                self.assertTrue(object.get() == 67)

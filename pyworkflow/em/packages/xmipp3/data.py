@@ -301,6 +301,13 @@ class XmippSetOfVolumes(XmippSetOfImages, SetOfVolumes):
     def __init__(self, filename=None, **args):
         SetOfVolumes.__init__(self, filename, **args)
         XmippSetOfImages.__init__(self, filename, **args)
+ 
+    @staticmethod
+    def convert(setOfImgs, filename):
+        return XmippSetOfImages._convert(XmippSetOfVolumes, setOfImgs, filename)
+        
+    def _getListBlock(self):
+        return 'Volumes@' + self.getFileName()   
                 
         
 class XmippCoordinate(Coordinate, XmippMdRow):

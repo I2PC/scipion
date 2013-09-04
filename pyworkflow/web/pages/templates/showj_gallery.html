@@ -2,6 +2,8 @@
 		
 {% block head %}
 	<script type="text/javascript">
+	var hoverElement;
+	
 	$(document).ready(function(){
 		setImageSize(true)
 		initializeImageLoad()
@@ -12,7 +14,6 @@
 	
 	
 	function initializeImageLoad(){
-		console.log("initializing image load")
 		$('.tableImages').waypoint(function(direction){
 			$(this).attr("src", $(this).data('real_src'))
 		}, {
@@ -52,15 +53,12 @@
 	function initializeImageEvents(){
 		$(".img_container").hover(
 			function(e){
-				if ($(this).hasClass("image_selected")){
-					var x= e.pageX
-					var y= e.pageY
-					
-					$("#multipleSelectionTool").css('left',x)
-					$("#multipleSelectionTool").css('top',y)
-					
+				if ($(this).hasClass("image_selected") && $("#multipleSelectionTool").css('display')!="block"){
+					hoverElement=$(this).attr("id")
+										
+					$("#multipleSelectionTool").css('left',e.pageX)
+					$("#multipleSelectionTool").css('top',e.pageY)
 					$("#multipleSelectionTool").data('img_container_id',$(this).attr("id"))
-					
 					$("#multipleSelectionTool").fadeIn('slow')
 				}
 				else{
@@ -68,17 +66,15 @@
 						$(this).find(".enabledGallery").fadeIn('slow')
 					}
 				}
-				/* $(this).find(".imageTitle").slideToggle('slow') */
 			},
 			function(){
-				if ($(this).hasClass("image_selected")){
-					$("#multipleSelectionTool").delay(2000).fadeOut('slow')
+				if ($(this).hasClass("image_selected") && hoverElement==$(this).attr("id")){
+					$("#multipleSelectionTool").delay(1000).fadeOut('slow')
 				}
 				
 				if (!$(this).find(".enabledGallery").hasClass("selected")){
 					$(this).find(".enabledGallery").fadeOut('slow')
 				}
-				/* $(this).find(".imageTitle").slideToggle('slow') */
 			})
 			
 		$(".img_container").click(
@@ -123,12 +119,55 @@
 	}
 	</script>
 	<script type="text/javascript">
-	function enableDisableImage(element){
-		$(element).toggleClass("selected")
-		saveShowjTable($(element).attr("id"), String($(element).hasClass("selected")))
+	function enableDisableImage(element, enableDisable){
+		if (enableDisable=='enable'){
+			$(element).removeClass("selected")
+		}
+		else if (enableDisable=='disable'){
+			$(element).addClass("selected")
+		}
+		else{
+			$(element).toggleClass("selected")
+		}
+		
+		
+		if ($(element).hasClass("selected")){element_value = 0}
+		else{element_value = 1}
+		
+		/*Keep changes in global variable */
+		if ($("#saveButton").hasClass("saveOff")){
+			$("#saveButton").toggleClass("saveOn").toggleClass("saveOff")
+		}
+			
+		changes[$(element).attr("id")]=element_value
 	}
 	</script>
-	
+	<script type="text/javascript">
+	function multipleEnableDisableImage(mode){
+		if (mode=='enable'){
+			$(".image_selected").each(function(){
+				enableDisableImage($(this).find(".enabledGallery"), 'enable')
+				$(this).find(".enabledGallery").fadeOut('fast')
+			})
+		}
+		else{
+			$(".image_selected").each(function(){
+				enableDisableImage($(this).find(".enabledGallery"), 'disable')
+				$(this).find(".enabledGallery").fadeIn('fast')
+			})
+		}
+	}
+	</script>
+	<script type="text/javascript">
+	function multipleSelect(mode){
+		element_id=parseInt($("#multipleSelectionTool").data('img_container_id').split("___")[1]);
+		$(".img_container").each(function(){
+			if (mode=='all' || (mode=='from' && $(this).attr('id').split("___")[1]>element_id) || (mode=='to' && $(this).attr('id').split("___")[1]<element_id) ){
+				$(this).addClass("image_selected")
+			}	
+		})
+	}
+	</script>
 {% endblock %}
 
 {% block content_menu %}
@@ -142,12 +181,20 @@
 			{% for row in tableDataset.getRows %}
 				{% for cell in row %}
 					{% if forloop.counter0 == forloop.parentloop.parentloop.counter0 %} 
-						<div class="img_container" id="img_container___{{forloop.parentloop.counter}}">
+						<div class="img_container" id="img_container___{{row.0}}">
 							<div class="img_inner_container">
 								<img class="tableImages" title="{{cell}}" data-real_src="/get_image/?image={{cell}}"/>
-								<img class="enabledGallery" src="/resources/showj/enabled_gallery.png" id="{{form.labelsToRenderComboBox.value}}___{{forloop.parentloop.counter0}}" onclick="enableDisableImage(this);"/>
+								<img class="enabledGallery
+								{% if row.enabled == 0 %}
+								selected
+								{% endif %}
+								" src="/resources/showj/enabled_gallery.png" id="enabled___{{row.0}}" onclick="enableDisableImage(this);" 
+								{% if row.enabled == 0 %} 
+								style="display:block;"
+								{% endif %}	
+								/>
 							</div>
-							<div id="column_label">{{forloop.parentloop.counter}}</div> 
+							<div id="column_label">{{row.0}}</div> 
 						</div>
 					
 					{% endif %}		
@@ -155,8 +202,17 @@
 			{% endfor %}
 		{% endif %}
 	{% endfor %}	
- 
-		
+	
+<!-- 	{% for row in tableDataset.getRows %}
+ 	
+		<div class="img_container" id="img_container___{{row.0}}">
+			<div class="img_inner_container">
+				<img class="tableImages" title="{{cell}}" data-real_src="/get_image/?image={{cell}}"/>
+				<img class="enabledGallery" src="/resources/showj/enabled_gallery.png" id="{{form.labelsToRenderComboBox.value}}___{{forloop.parentloop.counter0}}" onclick="enableDisableImage(this);"/>
+			</div>
+			<div id="column_label">{{forloop.parentloop.counter}}</div> 
+		</div>
+	{% endfor %} -->		
 		
 			
 {% endblock %}

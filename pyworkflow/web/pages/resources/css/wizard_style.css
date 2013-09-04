@@ -14,7 +14,7 @@ body {
 }
 
 .layout {
-	width: 25em;
+	width: 33em;
 /* 	padding: 10px; */
 }
 
@@ -80,7 +80,7 @@ body {
 	padding-left: 1.7em;
 }
 
-/**************** Table CSS *******************/
+/**************** List CSS *******************/
 table#list a:link {
 	font-weight: bold;
 }

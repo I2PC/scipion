@@ -307,6 +307,9 @@ class ShowjForm(forms.Form):
                                                             choices = labelsToRenderComboBoxValues)
             if self.data['mode'] != 'gallery':
                 self.fields['labelsToRenderComboBox'].widget=forms.HiddenInput()
+        else:
+            self.fields['zoom'].widget.attrs['readonly'] = True
+            
         
         if self.data['mode'] != 'gallery': 
             self.fields['cols'].widget=forms.HiddenInput()
@@ -315,14 +318,6 @@ class ShowjForm(forms.Form):
         if self.data['colRowMode'] == 'Off':
             self.fields['cols'].widget.attrs['readonly'] = True
             self.fields['rows'].widget.attrs['readonly'] = True
-            
-#        if imageDimensions is not None:     
-##           Habria que carajo hacemos con esto 
-#            print "settingimagedime", imageDimensions           
-#            self.fields['imageWidth'].initial=imageDimensions[0]
-#            self.fields['imageHeight'].initial=imageDimensions[1]
-            
-
                     
 def getLabelsToRenderComboBoxValues(columnsLayout):
     labelsToRender = [columnLayout.label for columnLayout in columnsLayout.values() if (columnLayout.typeOfColumn == 'image')]

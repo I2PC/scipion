@@ -20,7 +20,7 @@ body {
 }
 
 #main {
-	width:35em;
+	width: 35em;
 }
 
 #mainNode1 {
@@ -68,7 +68,7 @@ input {
 
 input.hide2 {
 	position: relative;
-	filter: alpha(opacity :   0);
+	filter: alpha(opacity :     0);
 	width: 9.7em;
 	cursor: pointer;
 }
@@ -76,7 +76,7 @@ input.hide2 {
 input.hide {
 	position: fixed;
 	-moz-opacity: 0;
-	filter: alpha(opacity :   0);
+	filter: alpha(opacity :     0);
 	opacity: 0;
 	margin: 0.5em;
 	width: 1.5em;
@@ -162,7 +162,7 @@ textarea {
 	margin-top: -1em;
 	text-decoration: none;
 	list-style: none;
-	/* 		background: LightGray; */
+	/* 	background: LightGray; */
 	width: 9em;
 }
 
@@ -176,6 +176,7 @@ textarea {
 
 .boxBottom {
 	/* 	background-color: rgb(235, 235, 235); */
+	
 }
 
 .buttonClose {

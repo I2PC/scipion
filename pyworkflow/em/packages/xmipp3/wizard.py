@@ -30,7 +30,7 @@ This module implement some wizards
 import os
 import Tkinter as tk
 import ttk
-from pyworkflow.em.viewer import Viewer, Wizard
+from pyworkflow.viewer import Viewer, Wizard
 from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, DefCTFMicrographs
 from protocol_projmatch import XmippDefProjMatch, XmippProtProjMatch 
 from protocol_preprocess_micrographs import XmippDefPreprocessMicrograph
