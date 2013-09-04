@@ -357,7 +357,9 @@ class ProtFrealign(ProtRefine3D):
         initVol = self.input3DReference.get()
         imgSet = self.inputParticles.get()
         coordSet = imgSet.getCoordinates()
+        coordSet.loadIfEmpty()
         micSet = coordSet.getMicrographs()
+        micSet.loadIfEmpty()
         
         while iter < maxIter:
             prevIter = iter
@@ -554,7 +556,9 @@ class ProtFrealign(ProtRefine3D):
         self._params['stopParam'] = 0
         part = iniParticle
         for part,img in enumerate(imgSet):
-            film = img.getMicId()
+            #film = coordSet[img.getId()].getmicId()
+            #mag = micSet.magnification.get()
+           # defocus1 = img.
             if part == finalParticle:
                 break
             
