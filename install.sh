@@ -480,7 +480,7 @@ if $DO_SQLITE; then
     gcc -fno-common -dynamiclib extension-functions.c -o libsqlitefunctions.dylib
     cp libsqlitefunctions.dylib $XMIPP_HOME/lib/libXmippSqliteExt.dylib
   else  
-    gcc -fPIC -lm -shared  extension-functions.c -o libsqlitefunctions.so
+    gcc -fPIC  -shared  extension-functions.c -o libsqlitefunctions.so -lm
     cp libsqlitefunctions.so $XMIPP_HOME/lib/libXmippSqliteExt.so
   fi
 fi
