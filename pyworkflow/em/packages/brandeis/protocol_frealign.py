@@ -34,7 +34,6 @@ from data import *
 from constants import *
 
 
-
 class BrandeisDefFrealign(Form):
     """Create the definition of parameters for
     the Frealign protocol"""
@@ -52,18 +51,24 @@ class BrandeisDefFrealign(Form):
                       label='Initial 3D reference volume:', 
                       help='Input 3D reference reconstruction.\n')
         
+        self.addParam('Firstmode', EnumParam, choices=['Simple search & Refine', 'Search, Refine, Randomise'],
+                      label="Operation mode for iteration 1:", default=brandeis.MOD2_SIMPLE_SEARCH_REFINEMENT,
+                      display=EnumParam.DISPLAY_COMBO,
+                      help='Parameter <IFLAG> in FREALIGN\n'
+                           'This option is only for the iteration 1'
+                           'Mode -3: Simple search, Refine and create a parameter file for the set\n'
+                           'Mode -4: Search, Refine, Randomise and create a parameterfile for the set')
+
         self.addParam('mode', EnumParam, choices=['Recontruction only', 'Refinement', 'Random Search & Refine',
                                                    'Simple search & Refine', 'Search, Refine, Randomise'],
-                      label="Operation mode", default=brandeis.MOD_REFINEMENT,
+                      label="Operation mode:", default=brandeis.MOD_REFINEMENT,
                       display=EnumParam.DISPLAY_COMBO,
                       help='Parameter <IFLAG> in FREALIGN'
                            'Mode 0: Reconstruction only parameters as read in\n'
                            'Mode 1: Refinement & Reconstruction\n'
                            'Mode 2: Random Search & Refinement\n'
                            'Mode 3: Simple search & Refine\n'
-                           'Mode 4: Search, Refine, Randomise & extend to RREC\n'
-                           "If the protocol haven't .par file, you must execute\n"
-                           'it in mode 3 or 4')
+                           'Mode 4: Search, Refine, Randomise & extend to RREC\n')
 
         self.addParam('useInitialAngles', BooleanParam, default=False,
                       label="Use initial angles/shifts ? ", 
@@ -338,36 +343,49 @@ class BrandeisDefFrealign(Form):
                            'high values in the FSC curve (se publication #2 above). FREALIGN uses an\n'
                            'automatic weighting scheme and RBFACT should normally be set to 0.0.')
 
-        self.addParallelSection(threads=2, mpi=4)
+        self.addParallelSection(threads=1, mpi=1)
 
 class ProtFrealign(ProtRefine3D):
     """Protocol to perform a volume from a SetOfParticles
     using the frealign program"""
     _definition = BrandeisDefFrealign()
     _label = 'Frealign Protocol'
-    
-    
+        
     def _defineSteps(self):
         # for entire set of particles
-        self._enterWorkingDir()
-        self._createCurrentWDir()
-        self.input3DRef = self.input3DReference.get()
-        self._defCurrentIteration()
-        # -------------------------------------
-        # for each particle's subgroup
+        maxIter = self.numberOfIterations.get()
+        initVol = self.input3DReference.get()
+        imgSet = self.inputParticles.get()
+        coordSet = imgSet.getCoordinates()
+        micSet = coordSet.getMicrographs()
         
-        #--------------------------------------
-        
+        while iter < maxIter:
+            prevIter = iter
+            iter = iter + 1
+            self._createWorkingDir(iter)
+            vol = 'volume_iter_%03d.mrc' % iter
+            self._defCurrentIteration()
+            # -------------------------------------
+            # for each sub-set of particles
+            if iter == 1:
+                self._constructParamFile()
+            else:
+                self._params['stringConstructor'] = '../iter_%03d/particles_%06d_%06d_iter_%03d.par' % prevIter, iniParticle, finalParticle, prevIter
+                self._refineParticles()
+            #--------------------------------------
+            # for entire set of particles
+            if self._param['mode'] != 0:
+                self._params['stringConstructor'] = '../iter_%03d/particles_%06d_%06d_iter_%03d.par' % prevIter, iniParticle, finalParticle, prevIter
+                self._generate3DR()
+            self._leaveWorkingDir()
         
     def _defCurrentIteration(self):
         """ Defining the current iteration
-        """
-        
-        #Prepare arguments to call program: fralign_v8.exe
+        """        
+        #Prepare arguments to call program fralign_v8.exe
         self._params = {'imgsFn': imgsFn,
                         'mode': self.mode.get(),
                         'useInitialAngles': self.useInitialAngles.get(),
-                        'iter': self.numberOfIterations.get(),
                         'innerRadius': self.innerRadius.get(),
                         'outerRadius': self.outerRadius.get(),
                         'ThresholdMask': self.ThresholdMask.get(),
@@ -390,11 +408,8 @@ class ProtFrealign(ProtRefine3D):
                         'sampling3DR': self.input3DRef.getSamplingRate()
                        }
 
-        #Get sampling rate from input images
-        self._params['sampling'] = imgSet.samplingRate.get()
-
         # Get reference map for the iteration.
-        self._params['vol'] = self.input3DRef
+        self._params['initVol'] = self.input3DRef.get()
         
         # Get the amplitude Contrast of the micrographs
         # We need the amplitude Contrast for CTF correction
@@ -412,6 +427,12 @@ class ProtFrealign(ProtRefine3D):
         else:
             self._params['mode'] = 4
         
+        # Defining the operation mode for iteration 1.
+        if self.Firstmode == MOD2_SIMPLE_SEARCH_REFINEMENT:
+            self._params['mode2'] = -3
+        else:
+            self._params['mode2'] = -4
+
         # Defining if magnification refinement is going to do
         if self.doMagRefinement:
             self._params['doMagRefinement'] = T
@@ -494,112 +515,164 @@ class ProtFrealign(ProtRefine3D):
             self._params['padFactor'] = 4
             
         if self.paramRefine == REF_ALL:
-            self._params['paramRefine'] = '1 1 1 1 1'
+            self._params['paramRefine'] = '1, 1, 1, 1, 1'
         elif self.paramRefine == REF_ANGLES:
-            self._params['paramRefine'] = '1 1 1 0 0'
+            self._params['paramRefine'] = '1, 1, 1, 0, 0'
         else:
-            self._params['paramRefine'] = '0 0 0 1 1'
+            self._params['paramRefine'] = '0, 0, 0, 1, 1'
         
-        coordSet = self.imgSet.getCoordinates()
-        micSet = coordSet.
-        self.imgSet.
+        self._params['scannedPixelSize'] = micSet.scannedPixelSize.get()
+        self._params['voltage'] = micSet.voltage.get()
+        self._params['sphericalAberration'] = micSet.sphericalAberration.get()
         
-    def _createCurrentWDir():
-        pass
+    def _createWorkingDir(self, iter):        
+        iterDir = 'iter_%03d' % iter
+        workDir = self._getPath(iterDir)    
+        # Create dir for current iteration
+        makePath(workDir)
+        os.chdir(workDir)
+    
+    def _generate3DR(self):        
+        mode = self._params['mode']
+        self._params['mode'] = 0
+        # The stopParam must be 0 if you want to obtain a 3D reconstruction.
+        self._params['stopParam'] = 0
+        
+        self._prepareCommand(iniParticle, finalParticle)
+        self._params['mode'] = mode
+    
+    def _refineParticles(self):
+        self._params['stopParam'] = -100
+        self._prepareCommand(iniParticle, finalParticle)
+        
+    def _constructParamFile(self):
+        """ This function construct a unique parameter file (.par) with the information of the SetOfParticle.
+        This function will execute it only in iteration 1.
+        """
+        mode = self._params['mode']
+        self._params['mode'] = selself._params['Firstmode']
+        self._params['stopParam'] = 0
+        part = iniParticle
+        for part,img in enumerate(imgSet):
+            film = img.getMicId()
+            if part == finalParticle:
+                break
+            
+            
+        self._params['stringConstructor'] = 1, magnification, film, def1, def2, astig, more
+        self._prepareCommand(iniParticle, finalParticle)
+        self._params['mode'] = mode
 
-    def _prepareCommand(self):
+        
 
+    def _prepareCommand(self, iniParticle, finalParticle):
 #        TODO: change this for writeSetOfParticles and writeVolume functions.
-#        TODO: Uncomment the following line when writeSetOfParticles protocol is implemented
+#        TODO: Uncomment the following line when writeSetOfParticles function is implemented
 #        imgsFn = writeSetOfParticles(self.inputParticles.get())
 
-        imgSet = self.inputParticles.get()
-        imgsFn = imgSet.getFileName()
-        vol = self.input3DReference.get()
+        self._params['initParticle'] = iniParticle
+        self._params['finalParticle'] = finalParticle
+        self._params['imgFnMatch'] = 'particles_match_iter_%03d.mrc' % iter
+        self._params['outputParFn'] = 'particles_%06d_%06d_iter_%03d.par' % iniParticle, finalParticle, iter
+        self._params['outputShiftFn'] = 'particles_shifts_iter_%03d.shft' % iter
+        self._params['volume'] = vol
+        self._params['3Dweigh'] = 'volume_weights_iter_%03d' % iter
+        self._params['FSC3DR1'] = 'volume_1_iter_%03d' % iter
+        self._params['FSC3DR2'] = 'volume_2_iter_%03d' % iter
+        self._params['VolPhResidual'] = 'volume_phasediffs_iter_%03d' % iter
+        self._params['VolpointSpread'] = 'volume_pointspread_iter_%03d' % iter
 
-
-#         self._params['step_focus'] = 1000.0
-#         # Convert digital frequencies to spatial frequencies
-#         sampling = self.inputMics.samplingRate.get()
-#         self._params['lowRes'] = sampling / self._params['lowRes']
-#         self._params['highRes'] = sampling / self._params['highRes']        
-#         
-#         if which('ctffind3.exe') is '':
-#             raise Exception('Missing ctffind3.exe')
-         
-        self._program = 'export NATIVEMTZ=kk ; ' + which('ctffind3.exe')
-        self._args = """   << eof > %(ctffindOut)s
-%(micFn)s
-%(ctffindPSD)s
-%(sphericalAberration)f,%(voltage)f,%(ampContrast)f,%(magnification)f,%(scannedPixelSize)f
-%(windowSize)d,%(lowRes)f,%(highRes)f,%(minDefocus)f,%(maxDefocus)f,%(step_focus)f
+        if which('frealign_v8.exe') is '':
+            raise Exception('Missing frealign_v8.exe')
+        self._program = which('frealign_v8.exe')
+        self._args = """   << eot > %(frealignOut)s
+M,%(mode)i,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartRef)s,%(metEwaldSphere)d,%(doExtraRealSpaceSym)s,%(doWienerFilter)s,%(doBfactor)s,%(writeMatchProj)s,%(metFsc)d,%(doAditionalStatisFSC)s,%(padFactor)d
+%(outerRadius)f,%(innerRadius)f,%(sampling3DR)f,%(ampContrast)f,%(ThresholdMask)f,%(pseudoBFactor)f,%(avePhaseResidual)f,%(angStepSize)f,%(numberRandomSearch)f,%(numberPotentialMatches)f
+%(paramRefine)s
+%(initParticle)d,%(finalParticle)d
+%(sym)s
+%(relMagnification)f,%(scannedPixelSize)f,%(targetPhaseResidual)f,%(PhaseResidual)f,%(sphericalAberration)f,%(voltage)f,%(beamTiltX)f,%(beamTiltY)f
+%(resol)f,%(lowRes)f,%(highRes)f,%(defocusUncertainty)f,%(Bfactor)f
+%(imgsFn)s
+%(stringConstructor)s
+%(inputParFn)s
+%(outputParFn)s
+%(outputShiftFn)s
+%(stopParam)i, 0., 0., 0., 0., 0., 0., 0.
+%(volume)s
+%(3Dweigh)s
+%(FSC3DR1)s
+%(FSC3DR2)s
+%(VolPhResidual)s
+%(VolpointSpread)s
+eot
 """
-
-    def _getPsdPath(self, micDir):
-        return join(micDir, 'ctffind_psd.mrc')
-    
-    def _estimateCTF(self, micFn, micDir):
-        """ Run ctffind3 with required parameters """
-        # Create micrograph dir 
-        makePath(micDir)
-        # Update _params dictionary
-        self._params['micFn'] = micFn
-        self._params['micDir'] = micDir
-        self._params['ctffindOut'] = join(micDir, 'ctffind.out')
-        self._params['ctffindPSD'] = self._getPsdPath(micDir)
-                
-        self.runJob(None, self._program, self._args % self._params)
-        # print "command: ", self._program, self._args % self._params    
-
-    def _parseOutput(self, filename):
-        """ Try to find the output estimation parameters
-        from filename. It search for a line containing: Final Values.
-        """
-        f = open(filename)
-        result = None
-        for line in f:
-            if 'Final Values' in line:
-                # Take DefocusU, DefocusV and Angle as a tuple
-                # that are the first three values in the line
-                result = tuple(map(float, line.split()[:3]))
-                break
-        f.close()
-        return result
-            
-    def _getCTFModel(self, defocusU, defocusV, defocusAngle, psdFile):
-        ctf = CTFModel()
-        ctf.copyAttributes(self.inputMics, 'samplingRate')
-        ctf.copyAttributes(self.inputMics.microscope, 'voltage', 'sphericalAberration')
-        
-        ctf.defocusU.set(defocusU)
-        ctf.defocusV.set(defocusV)
-        ctf.defocusAngle.set(defocusAngle)
-        ctf.psdFile.set(psdFile)
-        
-        return ctf
-        
-    def createOutput(self):
-        path = self._getPath('micrographs.sqlite')
-        micSet = SetOfMicrographs(path)
-        micSet.copyInfo(self.inputMics)
-        
-        for fn, micDir, mic in self._iterMicrographs():
-            out = join(micDir, 'ctffind.out')
-            result = self._parseOutput(out)
-            defocusU, defocusV, defocusAngle = result
-            micOut = Micrograph(fn)
-            micOut.setCTF(self._getCTFModel(defocusU, defocusV, defocusAngle,
-                                                self._getPsdPath(micDir)))
-            micSet.append(micOut)
-            
-        micSet.write()
-        # This property should only be set by CTF estimation protocols
-        micSet.setCTF(True)     
-        self._defineOutputs(outputMicrographs=micSet)
-	
-    def _validate(self):
-        errors = []
-        if which('ctffind3.exe') is '':
-            errors.append('Missing ctffind3.exe')
-	return errors
-            
+# 
+#     def _getPsdPath(self, micDir):
+#         return join(micDir, 'ctffind_psd.mrc')
+#     
+#     def _estimateCTF(self, micFn, micDir):
+#         """ Run ctffind3 with required parameters """
+#         # Create micrograph dir 
+#         makePath(micDir)
+#         # Update _params dictionary
+#         self._params['micFn'] = micFn
+#         self._params['micDir'] = micDir
+#         self._params['frealignOut'] = join(micDir, 'frealign_protocol.log')
+#         self._params['ctffindPSD'] = self._getPsdPath(micDir)
+#                 
+#         self.runJob(None, self._program, self._args % self._params)
+#         # print "command: ", self._program, self._args % self._params    
+# 
+#     def _parseOutput(self, filename):
+#         """ Try to find the output estimation parameters
+#         from filename. It search for a line containing: Final Values.
+#         """
+#         f = open(filename)
+#         result = None
+#         for line in f:
+#             if 'Final Values' in line:
+#                 # Take DefocusU, DefocusV and Angle as a tuple
+#                 # that are the first three values in the line
+#                 result = tuple(map(float, line.split()[:3]))
+#                 break
+#         f.close()
+#         return result
+#             
+#     def _getCTFModel(self, defocusU, defocusV, defocusAngle, psdFile):
+#         ctf = CTFModel()
+#         ctf.copyAttributes(self.inputMics, 'samplingRate')
+#         ctf.copyAttributes(self.inputMics.microscope, 'voltage', 'sphericalAberration')
+#         
+#         ctf.defocusU.set(defocusU)
+#         ctf.defocusV.set(defocusV)
+#         ctf.defocusAngle.set(defocusAngle)
+#         ctf.psdFile.set(psdFile)
+#         
+#         return ctf
+#         
+#     def createOutput(self):
+#         path = self._getPath('micrographs.sqlite')
+#         micSet = SetOfMicrographs(path)
+#         micSet.copyInfo(self.inputMics)
+#         
+#         for fn, micDir, mic in self._iterMicrographs():
+#             out = join(micDir, 'ctffind.out')
+#             result = self._parseOutput(out)
+#             defocusU, defocusV, defocusAngle = result
+#             micOut = Micrograph(fn)
+#             micOut.setCTF(self._getCTFModel(defocusU, defocusV, defocusAngle,
+#                                                 self._getPsdPath(micDir)))
+#             micSet.append(micOut)
+#             
+#         micSet.write()
+#         # This property should only be set by CTF estimation protocols
+#         micSet.setCTF(True)     
+#         self._defineOutputs(outputMicrographs=micSet)
+# 	
+#     def _validate(self):
+#         errors = []
+#         if which('ctffind3.exe') is '':
+#             errors.append('Missing ctffind3.exe')
+# 	return errors
+#             
