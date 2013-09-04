@@ -105,7 +105,7 @@ class ProtRelion3D(XmippProtocol):
                             outputRelion=self.ImgStar                            
                             )
             # launch relion program
-            #############################################self.insertRelionRefine()
+            self.insertRelionRefine()
             # convert relion output to xmipp
             # relion_it00N_data.star, angular assigment
             self.ImgStar = self.extraPath(replaceBasenameExt(tmpFileNameXMD, '.star'))
