@@ -468,7 +468,7 @@ if $DO_SQLITE; then
     compile_library $VSQLITE "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
   fi
   #execute sqlite to avoid relinking in the future
-  echo "select 1+1 ;" | external/$VSQLITE/sqlite3
+  echo "select 1+1 ;" | $XMIPP_HOME/external/$VSQLITE/sqlite3
   install_bin $VSQLITE/sqlite3 xmipp_sqlite3
   install_libs $VSQLITE/.libs libsqlite3 0 false
   #compile math library for sqlite
