@@ -34,6 +34,7 @@
 #include "xmipp_image_base.h"
 #include "xmipp_image_generic.h"
 #include "xmipp_color.h"
+#include "multidim_array.h"
 
 /// @addtogroup Images
 //@{
@@ -716,6 +717,31 @@ public:
         //                ptrDest = reinterpret_cast<T*> (iTemp);
     }
 
+    /** flip image arround X axis
+     *
+     */
+    void mirrorY(void)
+    {
+        T aux=0;
+        size_t Z,Y,X,N,Y2;
+
+        X=XSIZE(data);
+        Y=YSIZE(data);
+        Z=ZSIZE(data);
+        N=NSIZE(data);
+        Y2=Y/2;
+        Y--;
+        for (size_t l=0; l<N; ++l)
+            for (size_t k=0; k<Z; ++k)
+                for (size_t i=0; i<Y2; ++i)
+                    for (size_t j=0; j<X; ++j)
+                    {
+                        aux = DIRECT_NZYX_ELEM(data,l, k, i, j);
+                        DIRECT_NZYX_ELEM(data, l, k, i, j) =
+                            DIRECT_NZYX_ELEM(data, l, k, Y-i, j);
+                        DIRECT_NZYX_ELEM(data, l, k, Y-i, j) = aux;
+                    }
+    }
     /* Read an image with a lower resolution as a preview image.
      * If Zdim parameter is not passed, then all slices are rescaled.
      * If Ydim is not passed, then Ydim is rescaled same factor as Xdim.
