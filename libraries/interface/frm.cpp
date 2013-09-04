@@ -47,6 +47,7 @@ PyObject* convertToNumpy(const MultidimArray<double> &I)
 	dim[1]=YSIZE(I);
 	dim[2]=ZSIZE(I);
 	PyObject* pyI=PyArray_SimpleNewFromData(3, dim, NPY_DOUBLE, (void *)MULTIDIM_ARRAY(I));
+	npy_intp *afterSize=PyArray_DIMS(pyI);
 	return pyI;
 }
 
@@ -82,6 +83,10 @@ PyObject * getPointerToPythonGeneralWedgeClass()
 	return pWedgeClass;
 }
 
+//#define DEBUG
+#ifdef DEBUG
+#include <data/xmipp_image.h>
+#endif
 void alignVolumesFRM(PyObject *pFunc, const MultidimArray<double> &Iref, MultidimArray<double> &I,
 		PyObject *Imask,
 		double &rot, double &tilt, double &psi, double &x, double &y, double &z, double &score,
@@ -93,6 +98,18 @@ void alignVolumesFRM(PyObject *pFunc, const MultidimArray<double> &Iref, Multidi
 	PyObject *pyMask=Py_None;
 	if (mask!=NULL)
 		pyMask=convertToNumpy(*mask);
+
+//#define DEBUG
+#ifdef DEBUG
+	Image<double> save;
+	save()=I;
+	save.write("PPPI.vol");
+	save()=Iref;
+	save.write("PPPIref.vol");
+	std::cout << "Imask=" << Imask << std::endl;
+	std::cout << "Press any key\n";
+	char c; std::cin >> c;
+#endif
 
 	// Call frm
 	int bandWidthSphericalHarmonics0=4;
@@ -146,5 +163,9 @@ void alignVolumesFRM(PyObject *pFunc, const MultidimArray<double> &Iref, Multidi
         A=A*Aaux;
 	}
 	else
+	{
+		x=y=z=rot=tilt=psi=score=0;
 		A.initIdentity(4);
+	}
 }
+#undef DEBUG
