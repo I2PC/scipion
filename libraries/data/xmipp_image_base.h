@@ -764,6 +764,10 @@ public:
       */
     virtual void sumWithFile(const FileName &fn)=0;
 
+    /** flip multidim array around X axis
+     *
+     */
+    virtual void mirrorY() =0;
 
 protected:
 
