@@ -293,6 +293,23 @@ class TestXmippPythonInterface(unittest.TestCase):
         self.assertAlmostEqual(min, 0., 5)
         self.assertAlmostEqual(max, 1., 5)   
         
+    def test_Image_mirrorY(self):
+        img = Image()
+        img.setDataType(DT_FLOAT)
+        imgY = Image()
+        imgY.setDataType(DT_FLOAT)
+        dim=3
+        img.resize(dim, dim)
+        imgY.resize(dim, dim)
+        for i in range(0,dim):
+            for j in range(0,dim):
+                img.setPixel(i, j, 1.*dim*i+j)
+        img.mirrorY();
+        for i in range(0,dim):
+            for j in range(0,dim):
+                imgY.setPixel(dim -1 -i, j, 1.*dim*i+j)
+        self.assertEquals(img, imgY)
+        
     def test_Metadata_getValue(self):
         '''MetaData_GetValues'''
         mdPath = testFile("test.xmd")
