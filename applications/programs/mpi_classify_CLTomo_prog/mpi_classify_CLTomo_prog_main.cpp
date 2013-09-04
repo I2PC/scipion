@@ -271,6 +271,8 @@ void CL3DClass::constructFourierMaskFRM()
 	if (pyIfourierMaskFRM!=NULL)
 		Py_DECREF(pyIfourierMaskFRM);
 	pyIfourierMaskFRM = PyObject_CallObject(prm->wedgeClass, arglist);
+	/*if (PyErr_Occurred()!=NULL)
+		PyErr_Print();*/
 	Py_DECREF(arglist);
 	Py_DECREF(pyMask);
 }
