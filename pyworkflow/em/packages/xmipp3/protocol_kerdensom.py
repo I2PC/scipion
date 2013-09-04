@@ -32,6 +32,7 @@ from pyworkflow.em import *
 import xmipp
 from data import *
 import xmipp3
+from convert import createXmippInputImages, readSetOfClasses2D
 from glob import glob
 
 class XmippDefKerdensom(Form):
@@ -76,7 +77,7 @@ class XmippDefKerdensom(Form):
                       'See [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM]')
         
         
-class XmippProtKerdensom(ProtClassify, xmipp3.XmippProtocol):
+class XmippProtKerdensom(ProtClassify):
     """ Protocol to align a set of particles. """
     _definition = XmippDefKerdensom()
     _label = 'Xmipp KerDenSom'
@@ -91,10 +92,10 @@ class XmippProtKerdensom(ProtClassify, xmipp3.XmippProtocol):
     
     
     def _prepareParams(self):
+        
         # Convert input images if necessary
-        self.inputImgs = self.inputImages.get()        
-        imgsFn = self._insertConvertStep('inputImgs', XmippSetOfParticles,
-                                         self._getPath('input_images.xmd'))
+        imgsFn = createXmippInputImages(self, self.inputImages.get())
+        
         mask = self.Mask.get()
         self._params = {'oroot': self._getExtraPath("kerdensom"),
                         'imgsFn': imgsFn,
@@ -147,8 +148,11 @@ class XmippProtKerdensom(ProtClassify, xmipp3.XmippProtocol):
         """ Store the kenserdom object 
         as result of the protocol. 
         """
-        classification = XmippClassification2D(self._params['kclasses'])
-        self._defineOutputs(outputClassification=classification)
+        classes2DSet = self._createSetOfClasses2D()
+        classes2DSet.setImages(self.inputImages.get())
+        readSetOfClasses2D(classes2DSet, self._params['kclasses'])
+        classes2DSet.write()
+        self._defineOutputs(outputClasses=classes2DSet)
 
     def _validate(self):
         errors = []
@@ -166,9 +170,9 @@ class XmippProtKerdensom(ProtClassify, xmipp3.XmippProtocol):
         
     def _summary(self):
         summary = []
-        if not hasattr(self, 'outputClassification'):
+        if not hasattr(self, 'outputClasses'):
             summary.append("Output classification not ready yet.")
         else:
             summary.append("Input Images: %s" % self.inputImages.get().getNameId())
-            summary.append("Output Classified Images: %s" % self.outputClassification.get())
+            summary.append("Output Classified Images: %s" % self.outputClasses.get())
         return summary

@@ -31,8 +31,9 @@ This sub-package contains wrapper around ML3D Xmipp program
 from pyworkflow.em import *  
 from pyworkflow.utils import *  
 import xmipp
+from convert import createXmippInputImages
 from data import *
-from xmipp3 import XmippProtocol
+#from xmipp3 import XmippProtocol
 
 
 class XmippDefML3D(Form):
@@ -146,7 +147,7 @@ class XmippDefML3D(Form):
         self.addParallelSection(threads=1, mpi=8)
         
         
-class XmippProtML3D(XmippProtocol, ProtRefine3D, ProtClassify3D):
+class XmippProtML3D(ProtRefine3D, ProtClassify3D):
     """ Protocol for Xmipp-based ML3D/MLF3D classification. """
     _definition = XmippDefML3D()
     _label = 'Xmipp ML3D'
@@ -172,13 +173,11 @@ class XmippProtML3D(XmippProtocol, ProtRefine3D, ProtClassify3D):
         self.mdVols = xmipp.MetaData(refMd)
         
         # Convert input images if necessary
-        self.inputImgs = self.inputImages.get()        
-        imgsFn = self._insertConvertStep('inputImgs', XmippSetOfImages,
-                                         self._getPath('input_images.xmd'))
+        imgsFn = createXmippInputImages(self, self.inputImages.get())
         self.imgMd = self.ParamsDict['ImgMd'] = imgsFn
         
         #Get sampling rate from input images
-        self.samplingRate = self.inputImages.get().samplingRate.get()
+        self.samplingRate = self.inputImages.get().getSamplingRate()
         
         self._insertFunctionStep('copyVolumes', refMd, initVols)
         

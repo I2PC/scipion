@@ -30,11 +30,12 @@ for specific Xmipp3 EM data objects
 
 from pyworkflow.em import *
 from xmipp3 import XmippMdRow, XmippSet, findRowById
+from convert import writeSetOfParticles
 
 from pyworkflow.utils.path import replaceBaseExt, exists, dirname, join
 import xmipp
-    
-      
+
+
 class XmippImageLocation(ImageLocation):
     
     def __str__(self):
@@ -299,7 +300,7 @@ class XmippSetOfParticles(XmippSetOfImages, SetOfParticles):
 class XmippSetOfVolumes(XmippSetOfImages, SetOfVolumes):
     """Represents a set of Volumes for Xmipp"""
     def __init__(self, filename=None, **args):
-        SetOfVolumes.__init__(self, filename, **args)
+        SetOfVolumes.__init__(self, **args)
         XmippSetOfImages.__init__(self, filename, **args)
  
     @staticmethod
@@ -374,7 +375,7 @@ class XmippCTFModel(CTFModel, XmippMdRow):
 
             md = xmipp.MetaData(filename)
             objId = md.firstObject()
-            self.getFromMd(md, objId)
+            self.readFromMd(md, objId)
             
             for key, label in  self.ctfParams.iteritems():
                 mdVal = md.getValue(label, objId)
@@ -389,7 +390,7 @@ class XmippCTFModel(CTFModel, XmippMdRow):
         md = xmipp.MetaData()
         md.setColumnFormat(False)
         objId = md.addObject()
-        self.setToMd(md, objId)
+        self.writeToMd(md, objId)
         md.write(fn)
         
         self.setFileName(fn)
@@ -444,7 +445,7 @@ class XmippSetOfCoordinates(SetOfCoordinates):
                 #y = mdPos.getValue(xmipp.MDL_YCOOR, objId)
                 #coorId = mdPos.getValue(xmipp.MDL_ITEM_ID, objId)
                 coordinate = XmippCoordinate()
-                coordinate.getFromMd(mdPos, objId)
+                coordinate.readFromMd(mdPos, objId)
                 #coordinate.setPosition(x, y)
                 coordinate.setMicrograph(micrograph)
                 coordinate.setBoxSize(self.boxSize.get())
@@ -522,7 +523,7 @@ class XmippSetOfCoordinates(SetOfCoordinates):
                 coordXmipp = XmippCoordinate()
                 coordXmipp.copyInfo(coord)
                 objId = mdPosFile.addObject()
-                coordXmipp.setToMd(mdPosFile, objId)
+                coordXmipp.writeToMd(mdPosFile, objId)
                 hasCoords = True            
             if hasCoords:                           
                 mdPosFile.write('particles@%s' % posFile)
@@ -597,7 +598,7 @@ class XmippClass2D(Class2D):
                             (self._number, self._filename))
         for objId in md:
             imgCA = XmippImageClassAssignment()
-            imgCA.getFromMd(md, objId)
+            imgCA.readFromMd(md, objId)
             yield imgCA
     
     def getImage(self):
@@ -607,10 +608,10 @@ class XmippClass2D(Class2D):
         return self._number
         
         
-class XmippClassification2D(Classification2D):
+class XmippSetOfClasses2D(SetOfClasses2D):
     """ Store results from a 2D classification. """
     def __init__(self, filename=None, classesBlock='classes', **args):
-        Classification2D.__init__(self, **args)
+        SetOfClasses2D.__init__(self, **args)
         self.getFileName = self.get
         self.setFileName = self.set
         self.setFileName(filename)

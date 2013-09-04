@@ -188,7 +188,7 @@ class TestXmippTiltedWorkflow(TestWorkflow):
         self.proj.launchProtocol(protML2D, wait=True)        
         
         self.validateFiles('protML2D', protML2D)  
-        self.assertIsNotNone(protML2D.outputClassification, "There was a problem with ML2D")  
+        self.assertIsNotNone(protML2D.outputClasses, "There was a problem with ML2D")  
         
         print "Run CL2D"
         protCL2D = XmippProtCL2D(numberOfReferences=2, numberOfInitialReferences=1, 
@@ -199,7 +199,7 @@ class TestXmippTiltedWorkflow(TestWorkflow):
         self.printSet('current', protCL2D.getFiles())
         
         self.validateFiles('protCL2D', protCL2D)  
-        self.assertIsNotNone(protCL2D.outputClassification, "There was a problem with CL2D")         
+        self.assertIsNotNone(protCL2D.outputClasses, "There was a problem with CL2D")         
 
         
 if __name__ == "__main__":

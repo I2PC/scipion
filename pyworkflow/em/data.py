@@ -33,12 +33,13 @@ from pyworkflow.object import *
 from pyworkflow.mapper.sqlite import SqliteMapper
 from posixpath import join
 from pyworkflow.utils.utils import getUniqueItems
+from pyworkflow.utils.path import exists
 
 
-class EMObject(Object):
+class EMObject(OrderedObject):
     """Base object for all EM classes"""
     def __init__(self, **args):
-        Object.__init__(self, **args)
+        OrderedObject.__init__(self, **args)
         
     def __str__(self):
         return str(self.get())
@@ -54,43 +55,46 @@ class Microscope(EMObject):
         EMObject.__init__(self, **args)
         self.magnification = Float(60000)
         self.voltage = Float(300)
-        self.sphericalAberration = Float(1.2)
+        self.sphericalAberration = Float(2.0)
         
     def copyInfo(self, other):
         self.magnification.set(other.magnification.get())
         self.voltage.set(other.voltage.get())
         self.sphericalAberration.set(other.sphericalAberration.get())
         
-class ImageLocation(object):
+#TODO: remove this class, since it is not necessary    
+class ImageLocation(EMObject):
     """ This class represents the unique location of an image.
     If the image is an stack, the location composed by index and filename.
     Otherwise, only the filename of the image."""
     
-    def __init__(self, index=0, filename=None, locStr=None, loc=None):
+    def __init__(self, index=NO_INDEX, filename=None):
         """ Two ways of build the location:
         1) From index and filename
         2) Parsing from the string representation of the location.
         """
-        if not filename is None:
-            self._index = index
-            self._filename = filename
-        elif not locStr is None:
-            self.parse(locStr)
-        elif not loc is None:
-            self._index = loc.getIndex()
-            self._filename = loc.getFileName()
-        else:
-            raise Exception("ImageLocation: all parameter to __init__ are None")
+        EMObject.__init__(self)
+        self._index = Integer(index)
+        self._filename = String(filename)
         
     def getIndex(self):
-        return self._index
+        return self._index.get()
+    
+    def setIndex(self, index):
+        self._index.set(index)
     
     def getFileName(self):
-        return self._filename
+        return self._filename.get()
+    
+    def setFileName(self, filename):
+        self._filename.set(filename)
+        
+    def isStack(self):
+        return self.getIndex() != NO_INDEX
     
     def __str__(self):
         """ This should be implemented in subclasses """
-        pass
+        return "%d %s" % (self.getIndex(), self.getFileName())
     
     def parse(self, locStr):
         """ This method should parse index and filename
@@ -98,17 +102,38 @@ class ImageLocation(object):
         It should be the opposite of __str__
         """
         pass
+    
+    def copyInfo(self, other):
+        self.copyAttributes(other, '_index', '_filename')
 
+
+class CTFModel(EMObject):
+    """ Represents a generic CTF model. """
+    def __init__(self, **args):
+        EMObject.__init__(self, **args)
+        self.defocusU = Float()
+        self.defocusV = Float()
+        self.defocusAngle = Float()
+        self.psdFile = String()
+        
+    def copyInfo(self, other):
+        self.copyAttributes(other, 'defocusU', 'defocusV',
+                            'defocusAngle', 'psdFile')
+    
 
 class Image(EMObject):
     """Represents an EM Image object"""
-    def __init__(self, filename=None, **args):
+    def __init__(self, **args):
         EMObject.__init__(self, **args)
-        self.setFileName(filename)
-        self.samplingRate = Float()
+        #TODO: replace this id with objId
+        self._id =  Integer()
+        # Image location is composed by an index and a filename
+        self._index = Integer(0)
+        self._filename = String()
+        self._samplingRate = Float()
         self._ctfModel = None
-        self._id = Integer(0) # By default value 0 means no Id
         
+    #TODO: replace this id with objId
     def getId(self):
         return self._id.get()
         
@@ -117,14 +142,14 @@ class Image(EMObject):
         self._id.set(imgId)
         
     def hasId(self):
-        return self.getId() != 0
+        return self._id.hasValue()
         
     def getSamplingRate(self):
         """ Return image sampling rate. (A/pix) """
-        return self.samplingRate.get()
+        return self._samplingRate.get()
     
     def setSamplingRate(self, sampling):
-        self.samplingRate.set(sampling)
+        self._samplingRate.set(sampling)
     
     def getFormat(self):
         pass
@@ -136,24 +161,31 @@ class Image(EMObject):
         """Return image dimensions as tuple: (Ydim, Xdim)"""
         pass
     
+    def getIndex(self):
+        return self._index.get()
+    
+    def setIndex(self, index):
+        self._index.set(index)
+        
     def getFileName(self):
         """ Use the _objValue attribute to store filename. """
-        return str(self.get())
+        return self._filename.get()
     
-    def setFileName(self, newFileName):
+    def setFileName(self, filename):
         """ Use the _objValue attribute to store filename. """
-        self.set(newFileName)
+        self._filename.set(filename)
         
     def getLocation(self):
         """ This function return the image index and filename.
         It will only differs from getFileName, when the image
         is contained in a stack and the index make sense. 
         """
-        return ImageLocation(None, self.getFileName()) # Return None as default index        
+        return (self.getIndex(), self.getFileName())
     
     def setLocation(self, index, filename):
         """ Set the image location, see getLocation. """
-        self.setFileName(filename) # Index is ignored at this point
+        self.setIndex(index)
+        self.setFileName(filename)
         
     def hasCTF(self):
         return self._ctfModel is not None
@@ -167,79 +199,45 @@ class Image(EMObject):
         
         
 class Micrograph(Image):
-    """ Represents an EM Image object """
-    def __init__(self, filename=None, **args):
-        Image.__init__(self, filename, **args)
+    """ Represents an EM Micrograph object """
+    def __init__(self, **args):
+        Image.__init__(self, **args)
         
-    def getMicroscope(self):
-        pass
+        
+class Particle(Image):
+    """ Represents an EM Particle object """
+    def __init__(self, **args):
+        Image.__init__(self, **args)
+
 
 class Volume(Image):
     """ Represents an EM Volume object """
-    def __init__(self, filename=None, **args):
-        Image.__init__(self, filename, **args)
+    def __init__(self, **args):
+        Image.__init__(self, **args)
 
 
-class TiltedPair(CsvList):
-    """Store the id of the untilted and tilted images"""
-    def __init__(self, uId=None, tId=None, **args):
-        CsvList.__init__(self, int, **args)
-        self.append(uId)
-        self.append(tId)
-        
-    def getUId(self):
-        return self[0]
-    
-    def getTId(self):
-        return self[1]
-        
-
-class SetOfImages(EMObject):
-    """ Represents a set of Images """
-    def __init__(self, filename=None, **args):
+class Set(EMObject):
+    """ This class will be a container implementation for elements.
+    It will use an extra sqlite file to store the elements.
+    All items will have an unique id that identifies each element in the set.
+    """
+    def __init__(self, **args):
         # Use the object value to store the filename
         EMObject.__init__(self, **args)
-        self.setFileName(filename)
-        self.samplingRate = Float()        
-        self._ctf = Boolean(args.get('ctf', False))
-        self._alignment = Boolean(args.get('alignmet', False))
-        self._tiltPairs = Boolean(args.get('tiltPairs', False))
-        self._projectionMatrix = Boolean(False)
-        self._phaseFlip = Boolean(False)
-        self._amplitudeCorrect = Boolean(False)
+        self._filename = String() # sqlite filename
         self._mapper = None
         self._idCount = 0
+        self._size = Integer(0) # cached value of the number of images    
        
     def getSize(self):
         """Return the number of images"""
-        self.loadIfEmpty()
-        return len(self._mapper.selectByClass("Image", iterate=False))
+        return self._size.get()
     
     def getFileName(self):
-        return self.get()
+        return self._filename.get()
     
-    def setFileName(self, newFileName):
-        self.set(newFileName)
-    
-    def __getitem__(self, imgId):
-        """ Get the image with the given id. """
-        self.loadIfEmpty()
-        # FIXME: This should be changed and query to the mapper
-        for mic in self._mapper.selectAll(iterate=True):
-            if mic.getId() == imgId:
-                return mic
-        return None
-
-    def __iter__(self):
-        """ Iterate over the set of images. """
-        self.loadIfEmpty()
-        return self._mapper.selectByClass("Image", iterate=True)
-        
-    def iterTiltPairs(self):
-        """Iterate over the tilt pairs if is the case"""
-        self.loadIfEmpty()
-        for tp in self._mapper.selectByClass("TiltedPair", iterate=True):
-            yield (tp.getUId(), tp.getTId())
+    def setFileName(self, filename):
+        self._filename.set(filename)
     
     def write(self):
         """This method will be used to persist in a file the
@@ -249,86 +247,6 @@ class SetOfImages(EMObject):
         """
         #TODO: If mapper is in memory, do commit and dump to disk
         self._mapper.commit()
-        
-    def hasCTF(self):
-        """Return True if the SetOfImages has associated a CTF model"""
-        return self._ctf.get()  
-    
-    def setCTF(self, value):
-        self._ctf.set(value)
-        
-    def hasAlignment(self):
-        return self._alignment.get()
-    
-    def setAlignment(self, value):
-        self._alignment.set(value)
-        
-    def hasProjectionMatrix(self):
-        return self._projectionMatrix
-    
-    def setProjectionMatrix(self, value):
-        self._projectionMatrix.set(value)
-        
-    def isPhaseFlipped(self):
-        return self._phaseFlip
-    
-    def setPhaseFlipped(self, value):
-        self._phaseFlip.set(value)
-        
-    def isAmplitudeCorrected(self):
-        return self._amplitudeCorrect
-    
-    def setAmplitudeCorrected(self, value):
-        self._amplitudeCorrect.set(value)
-        
-    def append(self, image):
-        """ Add a image to the set. """
-        if not image.hasId():
-            self._idCount += 1
-            image.setId(self._idCount)
-        image.samplingRate.set(self.samplingRate.get())
-        self.loadIfEmpty()
-        self._mapper.insert(image)
-
-    def appendPair(self, iU, iT):
-        """ Add a tilted pair relation to the set.
-        Params:
-        iU: id of the untilted image.
-        iT: id of the tilted image. """
-        self.loadIfEmpty()
-        self._mapper.insert(TiltedPair(iU, iT))
-
-    def copyInfo(self, other):
-        """ Copy basic information (sampling rate, scannedPixelSize and ctf)
-        from other set of images to current one"""
-        self.copyAttributes(other, 'samplingRate', '_ctf', '_tiltPairs')
-        
-    def copyTiltPairs(self, other, mapFunc):
-        """ Copy tilted pairs relation from other set of images 
-        to the current one.
-        Params:
-        other: set containing tilted pairs.
-        mapFunc: function that maps elements from other ids to self ids. 
-                 usually this function will be the dict.get method. """
-
-        for iU, iT in other.iterTiltPairs():
-            self.appendPair(mapFunc(iU), mapFunc(iT))
-                
-    def hasTiltPairs(self):
-        """ Return True it the SetOFImages has tilt pairs """
-        return self._tiltPairs.get()   
-        
-    def getFiles(self):
-        filePaths = set()
-        filePaths.add(self.getFileName())
-        for item in self:
-            # item is an XmippImage or an Image
-            filePaths.add(item.getFileName())
-            # If it has CTF we must include ctf file
-            if item.hasCTF():
-                # ctf is a XMippCTFModel
-                filePaths.update(item.getCTF().getFiles())
-        return filePaths
     
     def load(self):
         """ Load extra data from files. """
@@ -341,52 +259,148 @@ class SetOfImages(EMObject):
         if self._mapper is None:
             self.load()
             
+    def append(self, item):
+        """ Add a image to the set. """
+        if not item.hasId():
+            self._idCount += 1
+            item.setId(self._idCount)
+        self.loadIfEmpty()
+        self._mapper.insert(item)
+        self._size.set(self._size.get() + 1)
+                
+    
+class SetOfImages(Set):
+    """ Represents a set of Images """
+    def __init__(self, **args):
+        # Use the object value to store the filename
+        Set.__init__(self, **args)
+        self._filename = String() # sqlite filename
+        self._samplingRate = Float()        
+        self._hasCtf = Boolean(args.get('ctf', False))
+        self._hasAlignment = Boolean(args.get('alignmet', False))
+        self._hasProjectionMatrix = Boolean(False)
+        self._isPhaseFlippled = Boolean(False)
+        self._isAmplitudeCorrected = Boolean(False)
+        self._mapper = None
+        self._idCount = 0
+        self._size = Integer(0) # cached value of the number of images
+        self._idMap = {}#FIXME, remove this after id is the one in mapper
+    
+    def load(self):
+        """ Load data only if the main set is empty. """
+        Set.load(self)
+        for img in self._mapper.selectByClass("Image", iterate=True):
+            self._idMap[img.getId()] = img
+            
+    def __getitem__(self, imgId):
+        """ Get the image with the given id. """
+        return self._idMap.get(imgId, None)
+
+    def __iter__(self):
+        """ Iterate over the set of images. """
+        self.loadIfEmpty()
+        self._idMap = {} #FIXME, remove this after id is the one in mapper
+        for img in self._mapper.selectByClass("Image", iterate=True):
+            yield img            
+        
+    def hasCTF(self):
+        """Return True if the SetOfImages has associated a CTF model"""
+        return self._hasCtf.get()  
+    
+    def setHasCTF(self, value):
+        self._hasCtf.set(value)
+        
+    def hasAlignment(self):
+        return self._hasAlignment.get()
+    
+    def setHasAlignment(self, value):
+        self._hasAlignment.set(value)
+        
+    def hasProjectionMatrix(self):
+        return self._hasProjectionMatrix.get()
+    
+    def setHasProjectionMatrix(self, value):
+        self._hasProjectionMatrix.set(value)
+        
+    def isPhaseFlipped(self):
+        return self._isPhaseFlipped.get()
+    
+    def setIsPhaseFlipped(self, value):
+        self._isPhaseFlipped.set(value)
+        
+    def isAmplitudeCorrected(self):
+        return self._isAmplitudeCorrected.get()
+    
+    def setIsAmplitudeCorrected(self, value):
+        self._isAmplitudeCorrected.set(value)
+        
+    def append(self, image):
+        """ Add a image to the set. """
+        if not image.getSamplingRate():
+            image.setSamplingRate(self.getSamplingRate())
+        Set.append(self, image)
+
+    def copyInfo(self, other):
+        """ Copy basic information (sampling rate, scannedPixelSize and ctf)
+        from other set of images to current one"""
+        self.copyAttributes(other, '_samplingRate', '_hasCtf')
+        
+    def getFiles(self):
+        filePaths = set()
+        filePaths.add(self.getFileName())
+        for item in self:
+            # item is an XmippImage or an Image
+            filePaths.add(item.getFileName())
+            # If it has CTF we must include ctf file
+            if item.hasCTF():
+                # ctf is a XMippCTFModel
+                filePaths.update(item.getCTF().getFiles())
+        return filePaths
+            
     def setDownsample(self, downFactor):
         """ Update the values of samplingRate and scannedPixelSize
         after applying a downsampling factor of downFactor.
         """
-        self.setSamplingRate(self.samplingRate.get() * downFactor)        
+        self.setSamplingRate(self.getSamplingRate() * downFactor)        
         
     def setSamplingRate(self, samplingRate):
         """ Set the sampling rate and adjust the scannedPixelSize. """
-        self.samplingRate.set(samplingRate)
+        self._samplingRate.set(samplingRate)
+        
+    def getSamplingRate(self):
+        return self._samplingRate.get()
     
     
 class SetOfMicrographs(SetOfImages):
     """Represents a set of Micrographs"""
-    def __init__(self, filename=None, **args):
-        SetOfImages.__init__(self, filename, **args)
-        self.microscope = Microscope()
-        self.scannedPixelSize = Float()
-        
+    def __init__(self, **args):
+        SetOfImages.__init__(self, **args)
+        self._microscope = Microscope()
+        self._scannedPixelSize = Float()
         
     def getMicroscope(self, index=0):
-        return self.microscope
-    
-#    def __getMicrographByIndex(self, micIndex):
-#        """ Retrieve micrograph by index from imgList """
-#        if micIndex >= 0 and micIndex < len(self._imgList):
-#            return self._imgList[micIndex]
-#        #TODO:
-#        return None
+        return self._microscope
         
     def copyInfo(self, other):
         """ Copy basic information (voltage, spherical aberration and sampling rate)
         from other set of micrographs to current one.
         """
         SetOfImages.copyInfo(self, other)
-        self.microscope.copyInfo(other.microscope)
-        self.scannedPixelSize.set(other.scannedPixelSize.get())
+        self._microscope.copyInfo(other._microscope)
+        self._scannedPixelSize.set(other.getScannedPixelSize())
         
     def setSamplingRate(self, samplingRate):
         """ Set the sampling rate and adjust the scannedPixelSize. """
-        self.samplingRate.set(samplingRate)
-        self.scannedPixelSize.set(1e-4 * samplingRate * self.microscope.magnification.get())
-                                  
+        self._samplingRate.set(samplingRate)
+        self._scannedPixelSize.set(1e-4 * samplingRate * self._microscope.magnification.get())
+               
+    def getScannedPixelSize(self):
+        return self._scannedPixelSize.get()
+                       
     def setScannedPixelSize(self, scannedPixelSize):
         """ Set scannedPixelSize and update samplingRate. """
-        self.scannedPixelSize.set(scannedPixelSize)
-        self.samplingRate.set((1e+4 * scannedPixelSize) / self.microscope.magnification.get())
+        self._scannedPixelSize.set(scannedPixelSize)
+        self._samplingRate.set((1e+4 * scannedPixelSize) / self._microscope.magnification.get())
 
 
 class SetOfParticles(SetOfImages):
@@ -395,14 +409,26 @@ class SetOfParticles(SetOfImages):
     concepts of Micrographs and Particles, even if
     both are considered Images
     """
-    def __init__(self, filename=None, **args):
-        SetOfImages.__init__(self, filename, **args)
+    def __init__(self, **args):
+        SetOfImages.__init__(self, **args)
+        self._coordsPointer = Pointer()
+        
+    def getCoordinates(self):
+        """ Returns the SetOfCoordinates associated with 
+        this SetOfParticles"""
+        return self._coordsPointer.get()
+    
+    def setCoordinates(self, coordinates):
+        """ Set the SetOfCoordinates associates with 
+        this set of particles.
+         """
+        self._coordsPointer.set(coordinates)    
 
 
 class SetOfVolumes(SetOfImages):
     """Represents a set of Volumes"""
-    def __init__(self, filename=None, **args):
-        SetOfImages.__init__(self, filename, **args)
+    def __init__(self, **args):
+        SetOfImages.__init__(self, **args)
         
 
 class Coordinate(EMObject):
@@ -410,25 +436,47 @@ class Coordinate(EMObject):
     associated with a coordinate"""
     def __init__(self, **args):
         EMObject.__init__(self, **args)
-        self._micrographPointer = Pointer()
-        self._boxSize = None
+        self._micrographPointer = Pointer(objDoStore=False)
+        self._x = Integer()
+        self._y = Integer()
+        self._micId = Integer()
+        #TODO: replace this id with objId
+        self._id =  Integer()
+        
+    #TODO: replace this id with objId
+    def getId(self):
+        return self._id.get()
+        
+    def setId(self, imgId):
+        """ This id identifies the element inside a set """
+        self._id.set(imgId)
+        
+    def hasId(self):
+        return self._id.hasValue()
+        
+    def getX(self):
+        return self._x.get()
+    
+    def setX(self, x):
+        self._x.set(x)
+    
+    def getY(self):
+        return self._y.get()
+    
+    def setY(self, y):
+        self._y.set(y)        
     
     def getPosition(self):
         """ Return the position of the coordinate as a (x, y) tuple.
         mode: select if the position is the center of the box
         or in the top left corner.
         """
-        pass
+        return (self.getX(), self.getY())
 
     def setPosition(self, x, y):
-        pass
+        self.setX(x)
+        self.setY(y)
     
-    def getBoxSize(self):
-        return self._boxSize
-    
-    def setBoxSize(self, boxSize):
-        self._boxSize = boxSize
-
     def getMicrograph(self):
         """ Return the micrograph object to which
         this coordinate is associated.
@@ -438,6 +486,7 @@ class Coordinate(EMObject):
     def setMicrograph(self, micrograph):
         """ Set the micrograph to which this coordinate belongs. """
         self._micrographPointer.set(micrograph)
+        self._micId.set(micrograph.getId())
     
     def copyInfo(self, coord):
         """ Copy information from other coordinate. """
@@ -445,27 +494,30 @@ class Coordinate(EMObject):
         self.setId(coord.getId())
         self.setBoxSize(coord.getBoxSize())
         
+    def getMicId(self):
+        return self._micId.get()
+        
     
-class SetOfCoordinates(EMObject):
+class SetOfCoordinates(Set):
     """ Encapsulate the logic of a set of particles coordinates.
     Each coordinate has a (x,y) position and is related to a Micrograph
     The SetOfCoordinates can also have information about TiltPairs.
     """
     
     def __init__(self, **args):
-        EMObject.__init__(self, **args)
+        Set.__init__(self, **args)
         self._micrographsPointer = Pointer()
-        self.boxSize = Integer()
-    
+        self._boxSize = Integer()
+
     def getBoxSize(self):
         """ Return the box size of the particles.
         """
-        return self.boxSize.get()
+        return self._boxSize.get()
     
     def setBoxSize(self, boxSize):
         """ Set the box size of the particles.
         """
-        self.boxSize.set(boxSize)
+        self._boxSize.set(boxSize)
     
     def iterMicrographs(self):
         """ Iterate over the micrographs set associated with this
@@ -477,17 +529,17 @@ class SetOfCoordinates(EMObject):
         """ Iterates over the set of coordinates belonging to that micrograph. """
         pass
     
-    def iterCoordinates(self):
-        """ Itearate over the coordinates associated with a micrograph.
+    def iterCoordinates(self, micrograph=None):
+        """ Iterate over the coordinates associated with a micrograph.
         If micrograph=None, the iteration is performed over the whole set of coordinates.
-        If the SetOfMicrographs has tilted pairs, the coordinates
-        should have the information related to its paired coordinate.
         """
-        pass
-    
-    def hasTiltPairs(self):
-        """ Returns True if the SetOfMicrographs has tilted pairs"""
-        return self.getMicrographs().hasTiltPairs()
+        self.loadIfEmpty()
+        for coord in self._mapper.selectByClass("Coordinate", iterate=True):
+            if micrograph is None:
+                yield coord 
+            else:
+                if coord.getMicId() == micrograph.getId():
+                    yield coord
     
     def getMicrographs(self):
         """ Returns the SetOfMicrographs associated with 
@@ -500,33 +552,12 @@ class SetOfCoordinates(EMObject):
          """
         self._micrographsPointer.set(micrographs)
         
-    def iterTiltPairs(self):
-        """Iterate over the tilt pairs if is the case"""
-        pass
-                
     
-class CTFModel(EMObject):
-    """ Represents a generic CTF model. """
-    def __init__(self, **args):
-        EMObject.__init__(self, **args)
-        
-        self.samplingRate = Float()
-        self.voltage = Float()
-        self.sphericalAberration = Float()
-        self.defocusU = Float()
-        self.defocusV = Float()
-        self.defocusAngle = Float()
-        self.ampContrast = Float()
-        self.psdFile = String()
-        
-    def copyInfo(self, other):
-        self.copyAttributes(other, 'defocusU', 'defocusV',
-                            'defocusAngle', 'samplingRate', 'voltage', 
-                            'sphericalAberration', 'psdFile')
+    def getFiles(self):
+        filePaths = set()
+        filePaths.add(self.getFileName())
+        return filePaths
 
-    def getPsdFile(self):
-        return self.psdFile.get()
-    
     
 class ImageClassAssignment(EMObject):
     """ This class represents the relation of
@@ -536,16 +567,54 @@ class ImageClassAssignment(EMObject):
     """
     def __init__(self, **args):
         EMObject.__init__(self, **args)
-        self._imagePointer = Pointer() # Pointer to image
+        #self._imagePointer = Pointer() # Pointer to image
+        # This parameters will dissappear when transformation matrix is used
+#         self._anglePsi = Float()
+#         self._shiftX = Float()
+#         self._shiftY = Float()
+#         self._flip = Boolean()
+        self._imgId = Integer()
         
-    def setImage(self, image):
-        """ Set associated image. """
-        self._imagePointer.set(image)
+#    def setImage(self, image):
+#        """ Set associated image. """
+#        self._imagePointer.set(image)
+#        
+#    def getImage(self):
+#        """ Get associated image. """
+#        return self._imagePointer.get()
+
+    def setImageId(self, imgId):
+        """ Set associated image Id. """
+        self._imgId.set(imgId)
         
-    def getImage(self):
-        """ Get associated image. """
-        return self._imagePointer.get()
+    def getImageId(self):
+        """ Get associated image Id. """
+        return self._imgId.get()
     
+    def setAnglePsi(self, anglePsi):
+        self._anglePsi.set(anglePsi)
+        
+#     def getAnglePsi(self):
+#         return self._anglePsi.get()
+#     
+#     def setShiftX(self, shiftX):
+#         self._shiftX.set(shiftX)
+#         
+#     def getShiftX(self):
+#         return self.shiftX.get()
+# 
+#     def setShiftY(self, shiftY):
+#         self._shiftY.set(shiftY)
+#         
+#     def getShiftY(self):
+#         return self.shiftY.get()   
+# 
+#     def setFlip(self, flip):
+#         self._flip.set(flip)
+#         
+#     def getFlip(self):
+#         return self.flip.get()       
+     
     
 class Class2D(EMObject):
     """ Represent a Class that group some elements 
@@ -553,45 +622,94 @@ class Class2D(EMObject):
     """
     def __init__(self, **args):
         EMObject.__init__(self, **args)
+        self._id =  Integer()
+        self._hasRepresentativeImage = Boolean(False)
+        self._representativeImage = Image()
+        self._imageAssignments = List()
+    
+    #TODO: replace this id with objId
+    def getId(self):
+        return self._id.get()
         
+    def setId(self, imgId):
+        """ This id identifies the element inside a set """
+        self._id.set(imgId)
+        
+    def hasId(self):
+        return self._id.hasValue()
+    
     def __iter__(self):
         """ Iterate over the assigments of images
         to this particular class.
         """
-        pass
+        for imgCA in self._imageAssignments:
+            yield imgCA
+            
+    def getImageAssignments(self):
+        return self._imageAssignments
     
-    def getImage(self):
+    def addImageClassAssignment(self, imgCA):
+        self._imageAssignments.append(imgCA)
+    
+    def setRepresentativeImage(self, representativeImage):
+        self._representativeImage = representativeImage
+    
+    def getRepresentativeImage(self):
         """ Usually the representative is an average of 
         the images assigned to that class.
         """
-        pass
+        return self._representativeImage
     
-    def hasImage(self):
+    def getHasRepresentativeImage(self):
         """ Return true if have an average image. """
-        return True
+        return self._hasRepresentativeImage.get()
+    
+    def setHasRepresentativeImage(self, hasRepresentativeImage):
+        self._hasRepresentativeImage.set(hasRepresentativeImage)
         
         
-class Classification2D(EMObject):
+class SetOfClasses2D(Set):
     """ Store results from a 2D classification. """
     def __init__(self, **args):
-        EMObject.__init__(self, **args)
-        self._hasImages = True # True if the classes have associated average image
+        Set.__init__(self, **args)
+        self._hasRepresentativeImages = True # True if the classes have associated average image
+        self._imagesPointer = Pointer()
         
-    def __iter__(self):
+    def iterClasses(self):
         """ Iterate over all classes. """
+        self.loadIfEmpty()
+        self._idMap = {} #FIXME, remove this after id is the one in mapper
+        for class2D in self._mapper.selectByClass("Class2D", iterate=True):
+            self._idMap[class2D.getId()] = class2D
+            yield class2D  
+            
+    def iterImagesClass(self):
+        """ Iterate over the images of a class. """
         pass
     
-    def hasImages(self):
-        return self._hasImages
+    def hasRepresentativeImages(self):
+        return self._hasRepresentativeImages
     
-    def getImages(self):
+    def getRepresentativeImages(self):
         """ Return a SetOfImages composed by all the average images 
         of the 2D classes. """
         imgs = SetOfImages()
         
         for class2D in self:
-            imgs.append(class2D.getImage())
+            imgs.append(class2D.getHasRepresentativeImage())
             
         return imgs
+    
+    def getImages(self):
+        """ Return the SetOFImages used to create the SetOfClasses2D. """
+        return self._imagesPointer.get()
+    
+    def setImages(self, images):
+        self._imagesPointer.set(images)
+    
+    def __getitem__(self, classId):
+        """ Get the class with the given id. """
+        #FIXME, remove this after id is the one in mapper
+        return self._idMap.get(class2DId, None)
      
      

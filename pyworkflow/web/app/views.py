@@ -140,7 +140,6 @@ def deleteHost(request):
 #     context = {'message': "Host succesfully deleted"}
     return HttpResponseRedirect('/view_hosts')#, RequestContext(request))
 
-        
 
 if __name__ == '__main__':
     root = loadProtTree()    

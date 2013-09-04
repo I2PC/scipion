@@ -31,8 +31,9 @@ This sub-package contains wrapper around ML2D Xmipp program
 from pyworkflow.em import *  
 from pyworkflow.utils import *  
 import xmipp
+from convert import createXmippInputImages, readSetOfClasses2D
 from data import *
-from xmipp3 import XmippProtocol
+#from xmipp3 import XmippProtocol
 
 
 class XmippDefML2D(Form):
@@ -114,7 +115,7 @@ class XmippDefML2D(Form):
         self.addParallelSection(threads=2, mpi=2)
         
         
-class XmippProtML2D(ProtAlign, ProtClassify, XmippProtocol):
+class XmippProtML2D(ProtAlign, ProtClassify):
     """ Protocol to preprocess a set of micrographs in the project. """
     _definition = XmippDefML2D()
     _label = 'Xmipp ML2D'
@@ -136,9 +137,8 @@ class XmippProtML2D(ProtAlign, ProtClassify, XmippProtocol):
         prefix = '%s2d_' % progId
         self.oroot = self._getPath(prefix)
         
-        self.inputImgs = self.inputImages.get()       
-        imgsFn = self._insertConvertStep('inputImgs', XmippSetOfParticles,
-                                         self._getPath('input_images.xmd'))
+        # Convert input images if necessary
+        imgsFn = createXmippInputImages(self, self.inputImages.get())
         
         params = ' -i %s --oroot %s' % (imgsFn, self.oroot)
         # Number of references will be ignored if -ref is passed as expert option
@@ -157,7 +157,7 @@ class XmippProtML2D(ProtAlign, ProtClassify, XmippProtocol):
                 params += ' --not_phase_flipped'
             if self.highResLimit.get() > 0:
                 params += ' --limit_resolution 0 %f' % self.highResLimit.get()
-            params += ' --sampling_rate %f' % self.inputImages.get().samplingRate.get()
+            params += ' --sampling_rate %f' % self.inputImages.get().getSamplingRate()
         else:
             if self.doFast:
                 params += ' --fast'
@@ -178,15 +178,18 @@ class XmippProtML2D(ProtAlign, ProtClassify, XmippProtocol):
         self._insertFunctionStep('createOutput')
         
     def createOutput(self):
-        classification = XmippClassification2D(self.oroot + 'classes.xmd')
-        self._defineOutputs(outputClassification=classification)
+        classes2DSet = self._createSetOfClasses2D()
+        classes2DSet.setImages(self.inputImages.get())
+        readSetOfClasses2D(classes2DSet, self.oroot + 'classes.xmd')
+        classes2DSet.write()
+        self._defineOutputs(outputClasses=classes2DSet)
 
     def _summary(self):
         summary = []
-        if not hasattr(self, 'outputClassification'):
+        if not hasattr(self, 'outputClasses'):
             summary.append("Output classes not ready yet.")
         else:
             summary.append("Input Images: %s" % self.inputImages.get().getNameId())
             summary.append("Number of references: %d" % self.numberOfReferences.get())
-            summary.append("Output classes: %s" % self.outputClassification.get())
+            summary.append("Output classes: %s" % self.outputClasses.get())
         return summary

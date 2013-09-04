@@ -100,7 +100,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         '''
         print "En defineSteps"
         # Get pointer to input micrographs 
-        self.inputMics = self.inputMicrographs.get() 
+        inputMics = self.inputMicrographs.get() 
         
         IOTable = {}
         
@@ -114,7 +114,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         
         # For each micrograph insert the steps to preprocess it
         pre = []
-        for mic in self.inputMics:
+        for mic in inputMics:
             fn = mic.getFileName()
             fnOut = self._getPath(os.path.basename(fn))
             stepId = self.__insertStepsForMicrograph(fn, fnOut)
@@ -162,28 +162,20 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     
     def createOutput(self, IOTable):
         
-        mdOut = self._getPath("micrographs.xmd")    
-        micSet = XmippSetOfMicrographs(mdOut)
-        
-        mapsId = {}
-            
-        for mic in self.inputMics:
-            xmicFn = IOTable[mic.getFileName()]
-            xmic = XmippMicrograph.convert(mic, replaceExt(xmicFn, 'ctfparam'))
-            # Updating micrograph name
-            xmic.setFileName(xmicFn)
-            micSet.append(xmic)
-            mapsId[mic.getId()] = xmic.getId()
-        
-        # If input micrographs have tilt pairs copy the relation
-        if self.inputMics.hasTiltPairs():
-            #TODO: FILL mapIds
-            micSet.copyTiltPairs(self.inputMics, mapsId.get)
-            
-        micSet.copyInfo(self.inputMics)
+        inputMics = self.inputMicrographs.get()
+        micSet = self._createSetOfMicrographs()
+        micSet.copyInfo(inputMics)
         
         if self.doDownsample.get():
             micSet.setDownsample(self.downFactor.get())
+
+        for mic in inputMics:
+            outMicFn = Micrograph()
+            outMicFn.setFileName(IOTable[mic.getFileName()])
+            # Updating micrograph name
+            outMicFn.setId(mic.getId())
+            micSet.append(outMicFn)
+            #mapsId[mic.getId()] = xmicFn.getId()
 
         micSet.write()
         self._defineOutputs(outputMicrographs=micSet)

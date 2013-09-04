@@ -73,6 +73,13 @@ class Object(object):
         """
         getattr(self, attrName).set(value)
         
+    def getAttributes(self):
+        """Return the list of attributes than are
+        subclasses of Object"""
+        for key, attr in self.__dict__.iteritems():
+            if issubclass(attr.__class__, Object):
+                yield (key, attr)        
+                
     def getAttributesToStore(self):
         """Return the list of attributes than are
         subclasses of Object and will be stored"""
@@ -297,7 +304,9 @@ class OrderedObject(Object):
         """Return the list of attributes than are
         subclasses of Object and will be stored"""
         for key in self._attributes:
-            yield (key, getattr(self, key))
+            attr = getattr(self, key)
+            if attr._objDoStore:
+                yield (key, attr)
             
 class FakedObject(Object):
     """This is based on Object, but will hide the set and get
@@ -383,6 +392,12 @@ class String(Scalar):
     """String object"""
     def _convertValue(self, value):
         return str(value)
+    
+    def empty(self):
+        """ Return true if None or len == 0 """
+        if not self.hasValue():
+            return True
+        return len(self.get().strip()) == 0
     
         
 class Float(Scalar):

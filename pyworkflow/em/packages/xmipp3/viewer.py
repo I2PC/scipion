@@ -31,10 +31,9 @@ visualization program.
 
 import os
 from pyworkflow.viewer import Viewer, Wizard
-from pyworkflow.em import SetOfImages, SetOfMicrographs, DefCTFMicrographs
+from pyworkflow.em import SetOfImages, SetOfMicrographs, SetOfParticles, SetOfCoordinates, DefCTFMicrographs, SetOfClasses2D
 from pyworkflow.utils.process import runJob
 from xmipp3 import getXmippPath
-from data import XmippSetOfImages, XmippSetOfMicrographs, XmippClassification2D, XmippSetOfCoordinates, XmippSetOfParticles
 from pyworkflow.em.protocol import ProtImportMicrographs
 from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
@@ -45,6 +44,7 @@ from protocol_ml2d import XmippProtML2D
 from protocol_cl2d import XmippProtCL2D
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_rotational_spectra import XmippProtRotSpectra
+from convert import writeSetOfMicrographs, writeSetOfParticles, writeSetOfClasses2D
 
 
 import xmipp
@@ -54,10 +54,10 @@ class XmippViewer(Viewer):
     """ Wrapper to visualize different type of objects
     with the Xmipp program xmipp_showj
     """
-    _targets = [SetOfImages, XmippSetOfCoordinates, XmippClassification2D, 
+    _targets = [SetOfImages, SetOfCoordinates, SetOfClasses2D, 
                 ProtImportMicrographs, XmippProtPreprocessMicrographs, XmippProtCTFMicrographs,
                 XmippProtParticlePicking, ProtImportParticles, XmippProtExtractParticles,
-                XmippProtCL2DAlign, XmippProtML2D, XmippProtCL2D]
+                XmippProtCL2DAlign, XmippProtML2D, XmippProtCL2D, SetOfClasses2D]
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
@@ -66,23 +66,49 @@ class XmippViewer(Viewer):
         cls = type(obj)
         
         if issubclass(cls, SetOfMicrographs):
-            fn = self._getTmpPath(obj.getName() + '_micrographs.xmd')
-            mics = XmippSetOfMicrographs.convert(obj, fn)
+            mdFn = getattr(obj, '_xmippMd', None)
+            if mdFn:
+                fn = mdFn.get()
+            else:
+                fn = self._getTmpPath(obj.getName() + '_micrographs.xmd')
+                writeSetOfMicrographs(obj, fn)
+                
             extra = ''
-            if mics.hasCTF():
+            if obj.hasCTF():
                 extra = ' --mode metadata --render first'
-            runShowJ(mics.getFileName(), extraParams=extra)  
+            runShowJ(fn, extraParams=extra)  
         
-        elif issubclass(cls, XmippSetOfCoordinates):
-            runParticlePicker(obj.getMicrographs().getFileName(), os.path.dirname(obj.getFileName()), extraParams='readonly')
+        elif issubclass(cls, SetOfCoordinates):
+            obj_mics = obj.getMicrographs()
+            mdFn = getattr(obj_mics, '_xmippMd', None)
+            if mdFn:
+                fn = mdFn.get()
+            else:
+                fn = self._getTmpPath(obj_mics.getName() + '_micrographs.xmd')
+                writeSetOfMicrographs(obj_mics, fn)
+            runParticlePicker(fn, os.path.dirname(fn), extraParams='readonly')
         
-        elif issubclass(cls, SetOfImages):
+        elif issubclass(cls, SetOfParticles):
             fn = self._getTmpPath(obj.getName() + '_images.xmd')
-            imgs = XmippSetOfImages.convert(obj, fn)
-            runShowJ(imgs.getFileName())
+            mdFn = getattr(obj, '_xmippMd', None)
+            if mdFn:
+                fn = mdFn.get()
+            else:
+                fn = self._getTmpPath(obj.getName() + '_images.xmd')
+                #Set hasCTF to False to avoid problems
+                writeSetOfParticles(obj, fn, self._getTmpPath())
+
+            runShowJ(fn)  
         
-        elif issubclass(cls, XmippClassification2D):
-            runShowJ(obj.getClassesMdFileName(), extraParams=args.get('extraParams', ''))
+        elif issubclass(cls, SetOfClasses2D):
+            mdFn = getattr(obj, '_xmippMd', None)
+            if mdFn:
+                fn = mdFn.get()
+            else:
+                fn = self._getTmpPath(obj.getName() + '_classes.xmd')
+                writeSetOfClasses2D(obj, fn, self._getTmpPath())
+            #runShowJ(obj.getClassesMdFileName(), extraParams=args.get('extraParams', ''))
+            runShowJ(fn)  
         
         elif (issubclass(cls, ProtImportMicrographs) or
               issubclass(cls, XmippProtPreprocessMicrographs) or
@@ -108,12 +134,12 @@ class XmippViewer(Viewer):
         elif (issubclass(cls, XmippProtCL2DAlign) or
               issubclass(cls, XmippProtML2D) or
               issubclass(cls, XmippProtCL2D)):
-            self.visualize(obj.outputClassification)
+            self.visualize(obj.outputClasses)
         
         elif issubclass(cls, XmippProtRotSpectra):
-            self.visualize(obj.outputClassification, extraParams='--mode rotspectra --columns %d' % obj.SomXdim.get())
+            self.visualize(obj.outputClasses, extraParams='--mode rotspectra --columns %d' % obj.SomXdim.get())
         elif issubclass(cls, XmippProtKerdensom):
-            self.visualize(obj.outputClassification, extraParams='--columns %d' % obj.SomXdim.get())
+            self.visualize(obj.outputClasses, extraParams='--columns %d' % obj.SomXdim.get())
         else:
             raise Exception('XmippViewer.visualize: can not visualize class: %s' % obj.getClassName())
 

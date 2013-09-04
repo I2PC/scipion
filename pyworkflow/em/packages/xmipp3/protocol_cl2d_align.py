@@ -31,7 +31,7 @@ from os.path import join, dirname, exists
 from pyworkflow.em import *  
 import xmipp
 from data import *
-from xmipp3 import XmippProtocol
+from convert import createXmippInputImages, readSetOfParticles
 from glob import glob
 
 class XmippDefCL2DAlign(Form):
@@ -64,7 +64,7 @@ class XmippDefCL2DAlign(Form):
         self.addParallelSection(threads=1, mpi=3)
         
         
-class XmippProtCL2DAlign(ProtAlign, XmippProtocol):
+class XmippProtCL2DAlign(ProtAlign):
     """ Protocol to align a set of particles. """
     _definition = XmippDefCL2DAlign()
     _label = 'Xmipp CL2D Align'
@@ -73,9 +73,8 @@ class XmippProtCL2DAlign(ProtAlign, XmippProtocol):
         """ Mainly prepare the command line for call cl2d align program"""
         
         # Convert input images if necessary
-        self.inputImgs = self.inputImages.get()        
-        imgsFn = self._insertConvertStep('inputImgs', XmippSetOfImages,
-                                         self._getPath('input_images.xmd'))
+        imgsFn = createXmippInputImages(self, self.inputImages.get())
+        
         # Prepare arguments to call program: xmipp_classify_CL2D
         self._params = {'imgsFn': imgsFn, 
                         'extraDir': self._getExtraPath(),
@@ -95,14 +94,19 @@ class XmippProtCL2DAlign(ProtAlign, XmippProtocol):
         self._insertFunctionStep('createOutput')        
         
     def createOutput(self):
-        """ Store the XmippClassification2D object 
+        """ Store the setOfParticles object 
         as result of the protocol. 
         """
+        
         lastMdFn = self._getExtraPath("images.xmd")
         
-        imgs = XmippSetOfParticles(lastMdFn)
-        imgs.setAlignment(True)
-        self._defineOutputs(outputParticles=imgs)
+        imgSet = self._createSetOfParticles()
+        imgSet.copyInfo(self.inputImages.get())
+        imgSet.setHasAlignment(True)
+        readSetOfParticles(lastMdFn, imgSet, imgSet.hasCTF())
+        imgSet.write()
+
+        self._defineOutputs(outputParticles=imgSet)
 
     def validate(self):
         errors = []

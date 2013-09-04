@@ -19,7 +19,7 @@ class TestXmippWorkflow(TestWorkflow):
                     'protDownsampling/BPV_1386.mrc', 
                     'protDownsampling/BPV_1387.mrc', 
                     'protDownsampling/BPV_1388.mrc', 
-                    'protDownsampling/micrographs.xmd', 
+                    'protDownsampling/micrographs.sqlite', 
                     'protDownsampling/logs/run.log',
                     'protDownsampling/logs/run.db', 
                     ],
@@ -34,16 +34,16 @@ class TestXmippWorkflow(TestWorkflow):
                     'protCTF/extra/BPV_1388/xmipp_ctf_ctfmodel_halfplane.xmp', 
                     'protCTF/extra/BPV_1387/xmipp_ctf.ctfparam', 
                     'protCTF/extra/BPV_1388/xmipp_ctf_enhanced_psd.xmp', 
-                    'protCTF/tmp/micrographs.xmd', 
                     'protCTF/extra/BPV_1387/xmipp_ctf_ctfmodel_halfplane.xmp', 
                     'protCTF/extra/BPV_1387/xmipp_ctf_enhanced_psd.xmp', 
                     'protCTF/extra/BPV_1386/xmipp_ctf_ctfmodel_quadrant.xmp', 
                     'protDownsampling/BPV_1388.mrc', 
                     'protDownsampling/BPV_1387.mrc', 
-                    'protDownsampling/micrographs.xmd', 
+                    'protDownsampling/micrographs.sqlite', 
                     'protCTF/extra/BPV_1386/xmipp_ctf.psd', 
                     'protCTF/extra/BPV_1386/xmipp_ctf_ctfmodel_halfplane.xmp', 
-                    'protCTF/micrographs.xmd', 
+                    'protCTF/micrographs.sqlite',
+                    'protCTF/micrographs.xmd',  
                     'protDownsampling/BPV_1386.mrc', 
                     'protCTF/extra/BPV_1388/xmipp_ctf_ctfmodel_quadrant.xmp'],
               'protExtract':[
@@ -51,25 +51,30 @@ class TestXmippWorkflow(TestWorkflow):
                     'protImport/BPV_1388.mrc',
                     'protImport/BPV_1387.mrc',
                     'protImport/micrographs.sqlite',
-                    'protPicking/extra/BPV_1387.pos', 
-                    'protPicking/extra/BPV_1386.pos', 
-                    'protPicking/extra/BPV_1388.pos', 
+                    'protPicking/coordinates.sqlite',
                     'protExtract/tmp/BPV_1388_flipped.xmp', 
                     'protExtract/tmp/BPV_1387_flipped.xmp', 
                     'protExtract/tmp/BPV_1386_noDust.xmp', 
                     'protExtract/extra/BPV_1386.xmd', 
                     'protExtract/extra/BPV_1388.stk', 
                     'protExtract/images.xmd', 
+                    'protExtract/particles.sqlite',
                     'protExtract/extra/BPV_1386.stk', 
                     'protExtract/extra/BPV_1388.xmd', 
                     'protExtract/extra/BPV_1387.stk', 
                     'protExtract/tmp/BPV_1387_noDust.xmp', 
                     'protExtract/tmp/BPV_1388_noDust.xmp', 
-                    'protExtract/extra/BPV_1387.xmd', 
+                    'protExtract/extra/BPV_1387.xmd',
+                    'protExtract/extra/BPV_1386.pos',
+                    'protExtract/extra/BPV_1387.pos',
+                    'protExtract/extra/BPV_1388.pos',  
                     'protExtract/tmp/BPV_1386_flipped.xmp',
                     'protExtract/tmp/BPV_1387_downsampled.xmp',
                     'protExtract/tmp/BPV_1386_downsampled.xmp',
                     'protExtract/tmp/BPV_1388_downsampled.xmp',
+                    'protExtract/tmp/BPV_1386.ctfParam',
+                    'protExtract/tmp/BPV_1387.ctfParam',
+                    'protExtract/tmp/BPV_1388.ctfParam',
                     'protExtract/logs/run.log',
                     'protExtract/logs/run.db',
                     ],
@@ -297,7 +302,7 @@ class TestXmippWorkflow(TestWorkflow):
         protImport = ProtImportMicrographs(pattern=self.pattern, samplingRate=1.237, voltage=300)
         self.proj.launchProtocol(protImport, wait=True)
         
-        self.assertIsNotNone(protImport.outputMicrographs, "There was a problem with the import")
+        self.assertIsNotNone(protImport.outputMicrographs.getFileName(), "There was a problem with the import")
         self.validateFiles('protImport', protImport)        
         
         # Perform a downsampling on the micrographs
@@ -343,9 +348,9 @@ class TestXmippWorkflow(TestWorkflow):
         protML2D.inputImages.set(protExtract.outputParticles)
         self.proj.launchProtocol(protML2D, wait=True)        
         
-        self.assertIsNotNone(protML2D.outputClassification, "There was a problem with ML2D") 
+        self.assertIsNotNone(protML2D.outputClasses, "There was a problem with ML2D") 
         # Check that images related to each class have ctf model
-        for class2D in protML2D.outputClassification:
+        for class2D in protML2D.outputClasses:
             for imgCA in class2D:
                 xmippImg = imgCA.getImage()
                 self.assertTrue(imgCA.getImage().hasCTF(), "Image class has not CTF information.")
@@ -358,9 +363,9 @@ class TestXmippWorkflow(TestWorkflow):
         protCL2D.inputImages.set(protExtract.outputParticles)
         self.proj.launchProtocol(protCL2D, wait=True)        
         
-        self.assertIsNotNone(protCL2D.outputClassification, "There was a problem with CL2D")
+        self.assertIsNotNone(protCL2D.outputClasses, "There was a problem with CL2D")
         # Check that images related to each class have ctf model
-        for class2D in protCL2D.outputClassification:
+        for class2D in protCL2D.outputClasses:
             for imgCA in class2D:
                 xmippImg = imgCA.getImage()
                 self.assertTrue(imgCA.getImage().hasCTF(), "Image class has not CTF information.")
@@ -383,7 +388,7 @@ class TestXmippWorkflow(TestWorkflow):
         ProtKerdensom.inputImages.set(protOnlyAlign.outputParticles)
         self.proj.launchProtocol(ProtKerdensom, wait=True)        
         
-        self.assertIsNotNone(ProtKerdensom.outputClassification, "There was a problem with kerdensom")  
+        self.assertIsNotNone(ProtKerdensom.outputClasses, "There was a problem with kerdensom")  
         #self.validateFiles('ProtKerdensom', ProtKerdensom)
         
         print "Run Rotational Spectra"
@@ -391,7 +396,7 @@ class TestXmippWorkflow(TestWorkflow):
         xmippProtRotSpectra.inputImages.set(protOnlyAlign.outputParticles)
         self.proj.launchProtocol(xmippProtRotSpectra, wait=True)        
         
-        self.assertIsNotNone(xmippProtRotSpectra.outputClassification, "There was a problem with Rotational Spectra")
+        self.assertIsNotNone(xmippProtRotSpectra.outputClasses, "There was a problem with Rotational Spectra")
 
         # The ML3D test is taking too long now
         # skipping until revision

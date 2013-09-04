@@ -133,7 +133,7 @@ class EmanSetOfCoordinates(SetOfCoordinates):
                 for i, pos in enumerate(coordList):
                     x = pos[0]
                     y = pos[1]
-                    coordinate = EmanCoordinate()
+                    coordinate = Coordinate()
                     coordinate.setPosition(x, y)
                     coordinate.setMicrograph(micrograph)
                     coordinate.setBoxSize(self.boxSize.get())

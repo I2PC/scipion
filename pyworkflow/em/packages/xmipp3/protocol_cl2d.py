@@ -31,7 +31,8 @@ from os.path import join, dirname, exists
 from pyworkflow.em import *  
 import xmipp
 from data import *
-from xmipp3 import XmippProtocol
+from convert import createXmippInputImages, readSetOfClasses2D
+#from xmipp3 import XmippProtocol
 from glob import glob
 
 # Comparison methods enum
@@ -98,7 +99,7 @@ class XmippDefCL2D(Form):
         self.addParallelSection(threads=0, mpi=2)
         
         
-class XmippProtCL2D(ProtAlign, ProtClassify, XmippProtocol):
+class XmippProtCL2D(ProtAlign, ProtClassify):
     """ Protocol to preprocess a set of micrographs in the project. """
     _definition = XmippDefCL2D()
     _label = 'Xmipp CL2D'
@@ -107,9 +108,8 @@ class XmippProtCL2D(ProtAlign, ProtClassify, XmippProtocol):
         """ Mainly prepare the command line for call cl2d program"""
         
         # Convert input images if necessary
-        self.inputImgs = self.inputImages.get()        
-        imgsFn = self._insertConvertStep('inputImgs', XmippSetOfImages,
-                                         self._getPath('input_images.xmd'))
+        imgsFn = createXmippInputImages(self, self.inputImages.get())
+        
         # Prepare arguments to call program: xmipp_classify_CL2D
         self._params = {'imgsFn': imgsFn, 
                         'extraDir': self._getExtraPath(),
@@ -191,20 +191,24 @@ class XmippProtCL2D(ProtAlign, ProtClassify, XmippProtocol):
             prevMdFn = mdFn
             
     def createOutput(self, subset=''):
-        """ Store the XmippClassification2D object 
-        as result of the protocol. 
+        """ Store the SetOfClasses2D object  
+        resulting from the protocol execution. 
         """
         levelMdFiles = self._getLevelMdFiles(subset)
         lastMdFn = levelMdFiles[-1]
-        result = {'outputClassification' + subset: XmippClassification2D(lastMdFn, 'classes_sorted')}
+        classes2DSet = self._createSetOfClasses2D(subset)
+        classes2DSet.setImages(self.inputImages.get())
+        readSetOfClasses2D(classes2DSet, lastMdFn, 'classes_sorted')
+        classes2DSet.write()
+        result = {'outputClasses' + subset: classes2DSet}
         self._defineOutputs(**result)
 
     def _summary(self):
         summary = []
-        if not hasattr(self, 'outputClassification'):
+        if not hasattr(self, 'outputClasses'):
             summary.append("Output classes not ready yet.")
         else:
             summary.append("Input Images: %s" % self.inputImages.get().getNameId())
             summary.append("Number of references: %d" % self.numberOfReferences.get())
-            summary.append("Output classes: %s" % self.outputClassification.get())
+            summary.append("Output classes: %s" % self.outputClasses.get())
         return summary

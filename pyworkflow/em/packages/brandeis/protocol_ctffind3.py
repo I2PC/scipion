@@ -40,7 +40,7 @@ class ProtCTFFind(ProtCTFMicrographs):
     def _prepareCommand(self):
         self._params['step_focus'] = 1000.0
         # Convert digital frequencies to spatial frequencies
-        sampling = self.inputMics.samplingRate.get()
+        sampling = self.inputMics.getSamplingRate()
         self._params['lowRes'] = sampling / self._params['lowRes']
         self._params['highRes'] = sampling / self._params['highRes']        
         
@@ -88,9 +88,8 @@ class ProtCTFFind(ProtCTFMicrographs):
             
     def _getCTFModel(self, defocusU, defocusV, defocusAngle, psdFile):
         ctf = CTFModel()
-        ctf.copyAttributes(self.inputMics, 'samplingRate')
-        ctf.copyAttributes(self.inputMics.microscope, 'voltage', 'sphericalAberration')
-        
+#        ctf.copyAttributes(self.inputMics, 'samplingRate')
+#        ctf.copyAttributes(self.inputMics.microscope, 'voltage', 'sphericalAberration')
         ctf.defocusU.set(defocusU)
         ctf.defocusV.set(defocusV)
         ctf.defocusAngle.set(defocusAngle)
@@ -99,22 +98,24 @@ class ProtCTFFind(ProtCTFMicrographs):
         return ctf
         
     def createOutput(self):
-        path = self._getPath('micrographs.sqlite')
-        micSet = SetOfMicrographs(path)
+        
+        micSet = self._createSetOfMicrographs()
         micSet.copyInfo(self.inputMics)
         
         for fn, micDir, mic in self._iterMicrographs():
             out = join(micDir, 'ctffind.out')
             result = self._parseOutput(out)
             defocusU, defocusV, defocusAngle = result
-            micOut = Micrograph(fn)
+            micOut = Micrograph()
+            micOut.setFileName(mic.getFileName())
             micOut.setCTF(self._getCTFModel(defocusU, defocusV, defocusAngle, 
                                                 self._getPsdPath(micDir)))
             micSet.append(micOut)
+
+        # This property should only be set by CTF estimation protocols
+        micSet.setHasCTF(True)     
             
         micSet.write()
-        # This property should only be set by CTF estimation protocols
-        micSet.setCTF(True)     
         self._defineOutputs(outputMicrographs=micSet)
 	
     def _validate(self):

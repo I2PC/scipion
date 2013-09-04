@@ -33,6 +33,7 @@ from pyworkflow.utils import *
 import xmipp
 from data import *
 import xmipp3
+from convert import createXmippInputImages, readSetOfParticles
 
 
         
@@ -44,7 +45,7 @@ class XmippDefFilterParticles(DefProcessParticles):
         pass
       
       
-class XmippProtFilter(xmipp3.XmippProtocol, ProtFilterParticles):
+class XmippProtFilter(ProtFilterParticles):
     """ Protocol base for Xmipp filters. """
     
     def __init__(self):
@@ -53,21 +54,27 @@ class XmippProtFilter(xmipp3.XmippProtocol, ProtFilterParticles):
         self._args = "-i %(inputFn)s --save_metadata_stack %(outputMd)s --keep_input_columns --track_origin "
     
     def _defineFilenames(self):
-        self.inputFn = self._getPath('input_images.xmd')    
+        self.inputFn = createXmippInputImages(self, self.inputParticles.get())
+#        self.inputFn = self._getPath('input_images.xmd')    
         self.outputMd = self._getPath('output_images.xmd')
         self.outputStk = self._getPath('output_images.stk')
         
     def _defineSteps(self):
         self._defineFilenames()
-        self.inputPcts = self.inputParticles.get()       
-        inputPctsFn = self._insertConvertStep('inputPcts', XmippSetOfImages, self.inputFn)
+        inputPctsFn = createXmippInputImages(self, self.inputParticles.get())
+#        self.inputPcts = self.inputParticles.get()       
+#        inputPctsFn = self._insertConvertStep('inputPcts', XmippSetOfImages, self.inputFn)
         self._insertFilterStep(inputPctsFn, self.outputStk, self.outputMd)        
         self._insertFunctionStep('createOutput')
         
     def createOutput(self):
-        outputPcts = XmippSetOfParticles(self.outputMd)
-        self._processOutput(outputPcts)
-        self._defineOutputs(outputParticles=outputPcts)
+        imgSet = self._createSetOfParticles()
+        imgSet.copyInfo(self.inputParticles.get())
+        readSetOfParticles(self.outputMd, imgSet, imgSet.hasCTF())
+        imgSet.write()
+#        outputPcts = XmippSetOfParticles(self.outputMd)
+        self._processOutput(imgSet)
+        self._defineOutputs(outputParticles=imgSet)
         
     def _insertFilterStep(self, inputFn, outputFn, outputMd):
         """ This is the function that will insert the filter step. """
