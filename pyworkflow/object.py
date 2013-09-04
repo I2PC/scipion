@@ -73,6 +73,13 @@ class Object(object):
         """
         getattr(self, attrName).set(value)
         
+    def getAttributes(self):
+        """Return the list of attributes than are
+        subclasses of Object"""
+        for key, attr in self.__dict__.iteritems():
+            if issubclass(attr.__class__, Object):
+                yield (key, attr)        
+                
     def getAttributesToStore(self):
         """Return the list of attributes than are
         subclasses of Object and will be stored"""
