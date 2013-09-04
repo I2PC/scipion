@@ -206,12 +206,12 @@ void getImageSize(const MetaData &MD, size_t &Xdim, size_t &Ydim, size_t &Zdim, 
         REPORT_ERROR(ERR_MD_NOOBJ, "Can not read image size from empty metadata");
 }
 
-void getImageInfo(const MetaData &MD, size_t &Xdim, size_t &Ydim, size_t &Zdim, size_t &Ndim, DataType &datatype, MDLabel image_label)
+void getImageInfo(const MetaData &md, size_t &Xdim, size_t &Ydim, size_t &Zdim, size_t &Ndim, DataType &datatype, MDLabel image_label)
 {
-    if (!MD.isEmpty())
+    if (!md.isEmpty())
     {
         FileName fn_img;
-        MD.getValue(image_label, fn_img, MD.firstObject());
+        md.getValue(image_label, fn_img, md.firstObject());
         getImageInfo(fn_img, Xdim, Ydim, Zdim, Ndim, datatype);
 
     }
@@ -219,12 +219,12 @@ void getImageInfo(const MetaData &MD, size_t &Xdim, size_t &Ydim, size_t &Zdim, 
         REPORT_ERROR(ERR_MD_NOOBJ, "Can not read image size from empty metadata");
 }
 
-void getImageInfo(const MetaData &MD, ImageInfo &imgInfo, MDLabel image_label)
+void getImageInfo(const MetaData &md, ImageInfo &imgInfo, MDLabel image_label)
 {
-    if (!MD.isEmpty())
+    if (!md.isEmpty())
     {
         FileName fn_img;
-        MD.getValue(image_label, fn_img, MD.firstObject());
+        md.getValue(image_label, fn_img, md.firstObject());
         getImageInfo(fn_img, imgInfo);
     }
     else
@@ -236,7 +236,12 @@ void getImageSizeFromFilename(const FileName &filename, size_t &Xdim, size_t &Yd
     if (filename.hasImageExtension())
         getImageSize(filename, Xdim, Ydim, Zdim, Ndim);
     else
-        getImageSize(MetaData(filename), Xdim, Ydim, Zdim, Ndim, image_label);
+    {
+        MetaData mdi;
+        mdi.setMaxRows(1);
+        mdi.read(filename);
+        getImageSize(mdi, Xdim, Ydim, Zdim, Ndim, image_label);
+    }
 }
 
 bool compareImage(const FileName &filename1, const FileName &filename2)
@@ -290,13 +295,13 @@ void copyImages(const MetaData &md, const char * output, bool independent, MDLab
     conv.tryRun();
 }
 
-int maxFileNameLength(const MetaData &MD, MDLabel image_label)
+int maxFileNameLength(const MetaData &md, MDLabel image_label)
 {
     int maxLength=0;
-    FOR_ALL_OBJECTS_IN_METADATA(MD)
+    FOR_ALL_OBJECTS_IN_METADATA(md)
     {
         FileName fnImg;
-        MD.getValue(image_label, fnImg, __iter.objId);
+        md.getValue(image_label, fnImg, __iter.objId);
         int length=fnImg.length();
         maxLength=XMIPP_MAX(length,maxLength);
     }
@@ -310,10 +315,10 @@ void mpiSelectPart(MetaData &md, int rank, int size, int &num_img_tot)
     md.selectSplitPart(aux, size, rank);
 }
 
-void readMetaDataWithTwoPossibleImages(const FileName &fn, MetaData &MD)
+void readMetaDataWithTwoPossibleImages(const FileName &fn, MetaData &md)
 {
     if (fn.isStar1(true))
-        MD.read(fn);
+        md.read(fn);
     else
     {
         // Try to read a one or two column file
@@ -321,7 +326,7 @@ void readMetaDataWithTwoPossibleImages(const FileName &fn, MetaData &MD)
         fhIn.open(fn.c_str());
         if (!fhIn)
             REPORT_ERROR(ERR_IO_NOTEXIST,fn);
-        MD.clear();
+        md.clear();
         String line;
         size_t id;
         while (!fhIn.eof())
@@ -334,13 +339,13 @@ void readMetaDataWithTwoPossibleImages(const FileName &fn, MetaData &MD)
             case 0:
                 break;
             case 1:
-                id = MD.addObject();
-                MD.setValue(MDL_IMAGE,tokens[0], id);
+                id = md.addObject();
+                md.setValue(MDL_IMAGE,tokens[0], id);
                 break;
             case 2:
-                id = MD.addObject();
-                MD.setValue(MDL_IMAGE,tokens[0], id);
-                MD.setValue(MDL_IMAGE1,tokens[1], id);
+                id = md.addObject();
+                md.setValue(MDL_IMAGE,tokens[0], id);
+                md.setValue(MDL_IMAGE1,tokens[1], id);
                 break;
             default:
                 REPORT_ERROR(ERR_MD_OBJECTNUMBER,
@@ -356,12 +361,12 @@ void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const 
                               MDLabel label, bool skipFirstBlock)
 {
     // Read the original files
-    MetaData MDorig(fnOrig);
-    if (MDorig.containsLabel(MDL_ENABLED))
-        MDorig.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+    MetaData mdorig(fnOrig);
+    if (mdorig.containsLabel(MDL_ENABLED))
+        mdorig.removeObjects(MDValueEQ(MDL_ENABLED, -1));
     StringVector filesOrig;
-    MDorig.getColumnValues(MDL_IMAGE, filesOrig);
-    MDorig.clear(); // Save memory
+    mdorig.getColumnValues(MDL_IMAGE, filesOrig);
+    mdorig.clear(); // Save memory
     FileName auxFn;
 
     // Read the blocks available
@@ -374,22 +379,22 @@ void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const 
     // Process each block
     for (size_t b=0; b<blocks.size(); b++)
     {
-        MetaData MD;
-        MD.read(blocks[b]+"@"+fn);
-        if (MD.containsLabel(label) && (!skipFirstBlock || b!=0))
+        MetaData md;
+        md.read(blocks[b]+"@"+fn);
+        if (md.containsLabel(label) && (!skipFirstBlock || b!=0))
         {
             FileName fnImg;
             size_t stkNo;
             String stkName;
-            FOR_ALL_OBJECTS_IN_METADATA(MD)
+            FOR_ALL_OBJECTS_IN_METADATA(md)
             {
-                MD.getValue(label, fnImg, __iter.objId);
+                md.getValue(label, fnImg, __iter.objId);
                 fnImg.decompose(stkNo,stkName);
-                MD.setValue(label, filesOrig[stkNo], __iter.objId);
+                md.setValue(label, filesOrig[stkNo], __iter.objId);
             }
         }
         auxFn.compose(blocks[b],fnOut);
-        MD.write(auxFn, MD_APPEND);
+        md.write(auxFn, MD_APPEND);
         //MD._write(fnOut,blocks[b],MD_APPEND);
     }
 }

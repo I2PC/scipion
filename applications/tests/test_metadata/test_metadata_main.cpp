@@ -120,15 +120,16 @@ TEST_F( MetadataTest, AddRow)
 
     EXPECT_EQ(md, mDsource);
 }
-TEST_F( MetadataTest, addTmpLabelAlias)
+
+TEST_F( MetadataTest, addLabelAlias)
 {
     //metada with no xmipp labels
     FileName fnNonXmippSTAR =(String)"metadata/noXmipp.xmd";
-    MDL::addTmpLabelAlias(MDL_Y,(String)"noExixtingLabel");
+    MDL::addLabelAlias(MDL_Y,(String)"noExixtingLabel");
     MetaData md = MetaData(fnNonXmippSTAR);
-    //std::cerr << "2md" << md <<std::endl;
     EXPECT_EQ(mDsource,md);
 }
+
 TEST_F( MetadataTest, Aggregate1)
 {
     //simple agregation
@@ -283,6 +284,44 @@ TEST_F( MetadataTest, Copy)
     EXPECT_EQ(mDsource,auxMetadata);
 }
 
+TEST_F( MetadataTest, MDInfo)
+{
+    char sfn[64] = "";
+    strncpy(sfn, "/tmp/MDInfo_XXXXXX", sizeof sfn);
+    mkstemp(sfn);
+    FileName fnDB   =(String)sfn+".sqlite";
+    FileName fnSTAR =(String)sfn+".xmd";
+
+    XMIPP_TRY
+
+    mDsource.write(fnDB);
+    mDsource.write(fnSTAR);
+
+    MetaData md;
+    //Read from sqlite
+    md.read(fnDB);
+    MetaData mdOnlyOne;
+    mdOnlyOne.setMaxRows(1);
+    mdOnlyOne.read(fnDB);
+    EXPECT_EQ(md.size(), mdOnlyOne.getParsedLines());
+
+    mdOnlyOne.read(fnSTAR);
+    EXPECT_EQ(md.size(), mdOnlyOne.getParsedLines());
+
+    // Read from STAR
+    md.read(fnSTAR);
+    MDLabelVector labels = md.getActiveLabels();
+    // Check containsLabel is true for all md labels
+    for (size_t i = 0; i < labels.size(); ++i)
+      EXPECT_TRUE(mdOnlyOne.containsLabel(labels[i]));
+
+    XMIPP_CATCH
+
+
+    unlink(fnDB.c_str());
+    unlink(fnSTAR.c_str());
+}
+
 TEST_F( MetadataTest,multiWrite)
 {
     char sfn[64] = "";
@@ -304,9 +343,7 @@ TEST_F( MetadataTest,multiWrite)
     EXPECT_TRUE(compareTwoFiles(fnDB, fnDBref));
     EXPECT_TRUE(compareTwoFiles(fnXML, fnXMLref));
     EXPECT_TRUE(compareTwoFiles(fnSTAR, fnSTARref));
-    //    std::cerr << fnDB <<std::endl;
-    //    std::cerr << fnSTAR <<std::endl;
-    //    std::cerr << fnDBref <<std::endl;
+
     unlink(fnDB.c_str());
     unlink(fnXML.c_str());
     unlink(fnSTAR.c_str());
@@ -370,9 +407,6 @@ TEST_F( MetadataTest,multiWriteSqlite)
     EXPECT_EQ(readBlockList[1],"block002");
     EXPECT_EQ(readBlockList[2],"block003");
 
-    //    for (StringVector::iterator it= readBlockList.begin();
-    //         it!=readBlockList.end(); it++)
-    //        std::cerr << "DEBUG_ROB: it: " << *it << std::endl;
     XMIPP_CATCH
     unlink(fnDB.c_str());
 }

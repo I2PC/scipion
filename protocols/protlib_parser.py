@@ -223,6 +223,8 @@ class ProtocolVariable():
         for t in tokens:
             if self.parser.hasVariable(t):
                 condition = condition.replace(t, self.parser.getVariable(t).getLiteralValue())
+                condition = condition.replace('[', '(')
+                condition = condition.replace(']', ')')
         if len(condition):#,  eval(condition)
             return eval(condition)
         return True 

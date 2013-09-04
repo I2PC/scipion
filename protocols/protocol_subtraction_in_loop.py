@@ -123,8 +123,8 @@ def subtractionScript(_log
     stackResults = resultsImagesName+'.stk'
     
     if (os.path.exists(stackResults)):
-        mdTmpResults = MetaData(stackResults)
-        idResults = mdTmpResults.size()
+        from protlib_xmipp import getMdSize
+        idResults = getMdSize(stackResults)
     else:
         idResults = 0
         

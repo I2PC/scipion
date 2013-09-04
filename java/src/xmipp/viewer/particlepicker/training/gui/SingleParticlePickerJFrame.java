@@ -39,14 +39,14 @@ import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
-import xmipp.viewer.particlepicker.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.ParticlesJDialog;
-import xmipp.viewer.particlepicker.UpdateTemplatesTask;
 import xmipp.viewer.particlepicker.training.model.ManualParticle;
 import xmipp.viewer.particlepicker.training.model.MicrographState;
 import xmipp.viewer.particlepicker.training.model.Mode;
+import xmipp.viewer.particlepicker.training.model.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.training.model.SingleParticlePicker;
 import xmipp.viewer.particlepicker.training.model.SingleParticlePickerMicrograph;
+import xmipp.viewer.particlepicker.training.model.UpdateTemplatesTask;
 
 public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 {
@@ -137,20 +137,22 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 	public String importParticlesFromFile(Format format, String file, float scale, boolean invertx, boolean inverty)
 	{
+		if(!new File(file).exists())
+			throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("file", file));
 		String result = "";
 		if (ppicker.isReviewFile(file))
 		{
 			result = ppicker.importAllParticles(file, scale, invertx, inverty);
-			ppicker.saveData();
+			ppicker.saveAllData();
 		}
 		else
 			result = importMicrographParticles(format, file, scale, invertx, inverty);
 		setChanged(false);
 		getCanvas().repaint();
 		updateMicrographsModel();
-		updateSize(ppicker.getSize());
+		updateSize(ppicker.getSize());//will also update templates
 		canvas.refreshActive(null);
-		ppicker.initUpdateTemplates();
+		
 		return result;
 	}
 
@@ -167,7 +169,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			if (importdata)
 				return null;
 		}
-		resetMicrograph();
+		ppicker.resetMicrograph(getMicrograph());
 		String result = ppicker.importParticlesFromFile(file, format, getMicrograph(), scale, invertx, inverty);
 		ppicker.saveData(getMicrograph());
 		return result;
@@ -179,6 +181,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		{
 			ppicker.resetParticleImages();
 			super.updateSize(size);
+			ppicker.initUpdateTemplates();
 
 		}
 		catch (Exception e)
@@ -195,11 +198,14 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 		if (new File(dir).isDirectory())
 		{
+			//System.err.println("JM_DEBUG: ============= import from Folder ============");
 			ppicker.importParticlesFromFolder(dir, format, scale, invertx, inverty);
 			getCanvas().repaint();
 			updateMicrographsModel(true);
 			getCanvas().refreshActive(null);
+			
 			ppicker.initUpdateTemplates();
+			
 		}
 		else
 			// only can choose file if TrainingPickerJFrame instance
@@ -386,8 +392,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 						{
 							ppicker.setMode(Mode.Manual);
 							resetbt.setEnabled(true);
-							ppicker.saveData();
-							setChanged(false);
+							ppicker.saveAllData();
 							updateMicrographsModel();
 							autopickout = null;
 							if (autopickchb.isSelected())
@@ -455,7 +460,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 		// Setting menus
 
-		exportmi = new JMenuItem("Export Particles...", XmippResource.getIcon("export_wiz.gif"));
+		exportmi = new JMenuItem("Export coordinates...", XmippResource.getIcon("export_wiz.gif"));
 
 		exportmi.addActionListener(new ActionListener()
 		{
@@ -680,7 +685,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		if (index == micrographstb.getSelectedRow() && canvas != null && canvas.getIw().isVisible())
 			return;
 		if (ppicker.isChanged())
-			ppicker.saveData(getMicrograph());// Saving changes when switching
+			ppicker.saveData();// Saving changes when switching
 		index = micrographstb.getSelectedRow();
 		SingleParticlePickerMicrograph next = ppicker.getMicrographs().get(index);
 

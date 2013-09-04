@@ -40,20 +40,18 @@ Mutex sqlMutex; //Mutex to syncronize db access
 
 int getBlocksInMetaDataFileDB(const FileName &inFile, StringVector& blockList)
 {
-
     char **results;
     int rows;
     int columns;
-    char *Labels;
     int rc;
 
     sqlite3 *db1;
     String sql = (String)"SELECT name FROM sqlite_master\
                  WHERE type='table'\
                  ORDER BY name;";
-    if (rc=sqlite3_open(inFile.c_str(), &db1))
+    if ((rc=sqlite3_open(inFile.c_str(), &db1)))
         REPORT_ERROR(ERR_MD_SQL,formatString("Error opening database code: %d message: %s",rc,sqlite3_errmsg(db1)));
-    if (rc=sqlite3_get_table (db1, sql.c_str(), &results, &rows, &columns, NULL) != SQLITE_OK)
+    if ((rc=sqlite3_get_table (db1, sql.c_str(), &results, &rows, &columns, NULL)) != SQLITE_OK)
         REPORT_ERROR(ERR_MD_SQL,formatString("Error accessing table code: %d message: %s. SQL command %s",rc,sqlite3_errmsg(db1),sql.c_str()));
     //For tables, the type field will always be 'table' and the name field will
     //be the name of the table. So to get a list of all tables in the database,
@@ -869,7 +867,8 @@ void MDSql::dumpToFile(const FileName &fileName)
 
 void MDSql::copyTableFromFileDB(const FileName blockname,
                                 const FileName filename,
-                                const std::vector<MDLabel> *desiredLabels
+                                const std::vector<MDLabel> *desiredLabels,
+                                const size_t maxRows
                                )
 {
     char **results;
@@ -938,14 +937,28 @@ void MDSql::copyTableFromFileDB(const FileName blockname,
     dropTable();
     createMd();
 
-    String sqlCommand = (String)"ATTACH database '" + filename+"' as load";
-    if (sqlite3_exec(db, sqlCommand.c_str(),NULL,NULL,&errmsg) != SQLITE_OK)
+    String sqlCommand = formatString("ATTACH database '%s' AS load;", filename.c_str());
+
+    if (sqlite3_exec(db, sqlCommand.c_str(), NULL, NULL, &errmsg) != SQLITE_OK)
     {
         std::cerr << "Couldn't attach or create table:  " << errmsg << std::endl;
         return;
     }
-    sqlCommand = (String)"INSERT INTO " + tableName(tableId).c_str()
-                 +" select " + activeLabel + " from load."+ _blockname.c_str();
+    String selectCmd = formatString("SELECT %s FROM load.%s", activeLabel.c_str(), _blockname.c_str());
+    sqlCommand = formatString("INSERT INTO %s %s", tableName(tableId).c_str(), selectCmd.c_str());
+
+    if (maxRows)
+    {
+      std::stringstream ss;
+      ss << "SELECT COUNT(objId) FROM load." << _blockname;
+      myMd->_parsedLines = execSingleIntStmt(ss);
+      std::cerr << ss.str() << " = " << myMd->_parsedLines << std::endl;
+
+      sqlCommand += formatString(" LIMIT %lu", maxRows);
+
+      std::cerr << sqlCommand << std::endl;
+    }
+
     if (sqlite3_exec(db, sqlCommand.c_str(),NULL,NULL,&errmsg) != SQLITE_OK)
     {
         std::cerr << (String)"Couldn't write table: " << tableName(tableId)
@@ -956,6 +969,7 @@ void MDSql::copyTableFromFileDB(const FileName blockname,
     sqlite3_exec(db, "DETACH load",NULL,NULL,&errmsg);
     sqlBeginTrans();
 }
+
 void MDSql::copyTableToFileDB(const FileName blockname, const FileName &fileName)
 {
     sqlCommitTrans();

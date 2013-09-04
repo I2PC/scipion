@@ -47,10 +47,6 @@ void MDL::addLabelAlias(const MDLabel label, const String &alias)
     names[alias] = label;
 }//close function addLabel
 
-void MDL::addTmpLabelAlias(const MDLabel label, const String &alias)
-{
-	addLabelAlias( label, alias);
-}
 void MDL::str2LabelVector(const String &labelsStr, std::vector<MDLabel> &labels)
 {
     labels.clear();

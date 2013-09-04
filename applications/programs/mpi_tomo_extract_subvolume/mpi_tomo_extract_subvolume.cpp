@@ -1,4 +1,4 @@
-/***************************************************************************
+ /***************************************************************************
  *
  * Authors:  Carlos Oscar Sanchez Sorzano coss.eps@ceu.es
  *
@@ -24,8 +24,9 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <reconstruction/tomo_extract_subvolume.h>
 #include <parallel/xmipp_mpi.h>
+#include <reconstruction/tomo_extract_subvolume.h>
+
 
 CREATE_MPI_METADATA_PROGRAM(ProgTomoExtractSubvolume, MpiProgTomoExtractSubvolume)
 

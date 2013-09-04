@@ -57,14 +57,7 @@ class ProtParticlePickingAuto(XmippProtocol):
             self.particleSizeForAuto = md.getValue(MDL_PICKING_PARTICLE_SIZE, objId)
         filesToImport = [self.Input[k] for k in self.keysToImport]
         filesToImport += getTemplateFiles(self.PrevRun)
-        
-        filesToImport.append(self.PrevRun.getFilename('training', model=self.model))
-        filesToImport.append(self.PrevRun.getFilename('pca', model=self.model))
-        filesToImport.append(self.PrevRun.getFilename('rotpca', model=self.model))
-        filesToImport.append(self.PrevRun.getFilename('svm', model=self.model))
-        #filesToImport.append(self.PrevRun.getFilename('svm2', model=model))
-        filesToImport.append(self.PrevRun.getFilename('average', model=self.model))
-        filesToImport.append(self.PrevRun.getFilename('config', model=self.model))
+        filesToImport += [self.PrevRun.getFilename(k, model=self.model) for k in ['training', 'pca', 'rotpca', 'svm', 'average', 'config']]
         self.insertImportOfFiles(filesToImport)
 
         md = MetaData(self.Input['micrographs'])
@@ -77,9 +70,16 @@ class ProtParticlePickingAuto(XmippProtocol):
             proceed = True
             fnPos = self.PrevRun.getFilename('pos', micrograph=micrographName)
             if xmippExists(fnPos):
-                mdheader = MetaData("header@" + fnPos)
-                state = mdheader.getValue(MDL_PICKING_MICROGRAPH_STATE, mdheader.firstObject())
-                if state != "Available":
+                blocks = getBlocksInMetaDataFile(fnPos)
+                copy = True
+                if 'header' in blocks:
+                    mdheader = MetaData("header@" + fnPos)
+                    state = mdheader.getValue(MDL_PICKING_MICROGRAPH_STATE, mdheader.firstObject())
+                    if state == "Available":
+                        copy = False
+                if copy:
+                    # Copy manual .pos file of this micrograph
+                    self.insertCopyFile(fnPos, self.getFilename('pos', micrograph=micrographName))
                     proceed = False
             if proceed:
                 oroot = self.extraPath(micrographName)

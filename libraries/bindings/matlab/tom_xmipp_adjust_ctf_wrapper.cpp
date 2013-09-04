@@ -23,7 +23,7 @@
  *=================================================================*/
 
 /*xmipp includes */
-#include "ctf_estimate_from_psd.h"
+#include <reconstruction/ctf_estimate_from_psd.h>
 #include "tom_xmipp_helpers.h"
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])

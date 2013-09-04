@@ -21,11 +21,13 @@ protocols = {
         'screen_classes': ('Screen classes', '2D/Screening'),
         'rct': ('Random Conical Tilt', '3D/InitialVolume/RCT'),
         'initvolume_ransac': ('RANSAC', '3D/InitialVolume/RANSAC'),
-        'symmetric_initial': ('Symmetric Cn/Dn volume', '3D/Symmetric'),
+        'preprocess_volume': ('Preprocess', '3D/InitialVolume/Preprocessed'),
+        'create_volume_mask': ('Create Volume mask', '3D/Mask'),
         'projmatch': ('Projection Matching', '3D/ProjMatch'), 
         'ml3d': ('ML3D', '3D/ML3D'),
         'nma': ('Normal Mode Analysis', '3D/NMA'),
         'nma_alignment': ('Flexible alignment', '3D/NMA_alignment'),
+        'structure_factor': ('Structure factor', '3D/StructureFactor'),
         'relion3d': ('Relion3D', '3D/Relion3D'),
         'mltomo': ('MLTomo', '3D/MLTomo'),
         'subtraction': ('Partial Projection Subtraction', '3D/ProjSub'),
@@ -44,9 +46,9 @@ sections = [
 ('2D', 
    [['Align+Classify', 'cl2d', 'ml2d', ['Other', 'cl2d_align', 'kerdensom', 'rotspectra', 'screen_classes']]]),
 ('3D', 
-   [['Initial Model', 'rct', 'initvolume_ransac', 'symmetric_initial'], 
+   [['Initial Model', 'rct', 'initvolume_ransac', 'preprocess_volume'], 
     ['Model Refinement', 'projmatch', 'ml3d', 'relion3d'],
-    ['Analysis', ['Flexibility', 'nma', 'nma_alignment']]])
+    ['Analysis', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask','structure_factor']])
 ,
 ('Other',
  [['Extra', 'custom','subtraction', 'mltomo']])

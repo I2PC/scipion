@@ -1076,7 +1076,7 @@ class PyBuildExt(build_ext):
                 sqlite_defines.append(('MODULE_NAME', '\\"sqlite3\\"'))
 
             # Comment this out if you want the sqlite3 module to be able to load extensions.
-            sqlite_defines.append(("SQLITE_OMIT_LOAD_EXTENSION", "1"))
+            # sqlite_defines.append(("SQLITE_OMIT_LOAD_EXTENSION", "1"))
 
             if sys.platform == 'darwin':
                 # In every directory on the search path search for a dynamic

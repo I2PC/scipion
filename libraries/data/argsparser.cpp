@@ -102,9 +102,13 @@ ArgLexer::~ArgLexer()
     delete pToken;
 }
 
+//#define DEBUG
 void ArgLexer::addLine(const String &line)
 {
     input.push_back(line + " ");
+#ifdef DEBUG
+	std::cout << input.size() << ": " << line << std::endl;
+#endif
 }
 
 inline void ArgLexer::nextLine()

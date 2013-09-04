@@ -392,7 +392,7 @@ public:
 #define ALL_KINDS   INT_MASK | DOUBLE_MASK
 
     static void defineParams(XmippProgram * program, int allowed_data_types = ALL_KINDS,
-                             const char* prefix=NULL, const char* comment=NULL);
+                             const char* prefix=NULL, const char* comment=NULL, bool moreOptions=false);
     void readParams(XmippProgram * program);
 
 

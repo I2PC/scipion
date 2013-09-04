@@ -93,9 +93,9 @@ xmipp_MDValueGE(PyObject *obj, PyObject *args, PyObject *kwargs);
   PyObject *
 xmipp_MDValueRange(PyObject *obj, PyObject *args, PyObject *kwargs);
 
-  /* addTmpLabelAlias */
+  /* addLabelAlias */
    PyObject *
-xmipp_addTmpLabelAlias(PyObject *obj, PyObject *args, PyObject *kwargs);
+xmipp_addLabelAlias(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 /* MDQuery methods */
 extern PyMethodDef MDQuery_methods[];
@@ -206,6 +206,10 @@ MetaData_lastObject(PyObject *obj, PyObject *args, PyObject *kwargs);
 /* size */
 PyObject *
 MetaData_size(PyObject *obj, PyObject *args, PyObject *kwargs);
+
+/* size */
+PyObject *
+MetaData_getParsedLines(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 /* isEmpty */
 PyObject *

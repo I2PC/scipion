@@ -23,8 +23,9 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/program_filter.h>
 #include <parallel/xmipp_mpi.h>
+#include <reconstruction/program_filter.h>
+
 
 CREATE_MPI_METADATA_PROGRAM(ProgFilter, MpiProgFilter)
 
