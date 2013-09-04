@@ -134,10 +134,9 @@ def get_image(request):
             imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
             if not os.path.isfile(imagePathTmp):
                 imagePath = getInputPath('showj', imagePath)      
-            
 
 #        imagePath = join(request.session['projectPath'],imagePath)
-        
+            
         if imageNo:
             imagePath = '%s@%s' % (imageNo, imagePath) 
             
