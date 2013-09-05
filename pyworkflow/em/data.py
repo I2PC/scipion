@@ -341,6 +341,7 @@ class SetOfImages(Set):
         if not image.getSamplingRate():
             image.setSamplingRate(self.getSamplingRate())
         Set.append(self, image)
+        self._idMap[image.getId()] = image
 
     def copyInfo(self, other):
         """ Copy basic information (sampling rate, scannedPixelSize and ctf)

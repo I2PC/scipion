@@ -34,6 +34,7 @@ import os
 
 import xmipp
 from xmipp3 import XmippMdRow
+from pyworkflow.em.data import Coordinate
 from pyworkflow.em.constants import NO_INDEX
 from pyworkflow.object import String
 from pyworkflow.utils.path import join, dirname, replaceBaseExt

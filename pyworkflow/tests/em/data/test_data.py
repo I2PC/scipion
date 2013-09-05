@@ -53,6 +53,7 @@ class TestSetOfMicrographs(unittest.TestCase):
         
     def checkSet(self, micSet):
         idCount = 1
+        micSet.loadIfEmpty()
         
         for fn, mic in zip(self.mics, micSet):            
             micFn = mic.getFileName()
@@ -63,7 +64,7 @@ class TestSetOfMicrographs(unittest.TestCase):
                              "micrograph ID in the set is wrong, \n   expected: '%s'\n        got: '%s'" 
                              % (idCount, mic.getId()))
             mic2 = micSet[idCount] # Test getitem
-            self.assertEqual(mic, mic2, "micrograph got from ID is wrong")
+            self.assertEqual(mic.getId(), mic2.getId(), "micrograph got from ID is wrong")
             idCount += 1            
         
     def testCreate(self):
@@ -76,7 +77,7 @@ class TestSetOfMicrographs(unittest.TestCase):
             mic.setFileName(fn)
             micSet.append(mic)
             
-        micSet.write()        
+        micSet.write()    
         self.checkSet(micSet)
         
     def testRead(self):
