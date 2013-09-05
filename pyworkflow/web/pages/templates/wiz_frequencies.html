@@ -1,0 +1,85 @@
+{% extends 'wiz_base.html' %} 
+{% block title %} Frequencies {% endblock %} 
+{% block name %} Frequencies {% endblock %} {% block head %}
+
+{% endblock %} 
+{% block list %}
+<tr>
+	<th>Object</th>
+</tr>
+{% for obj in objects %}
+<tr id="{{obj.getObjId}}" class="no-selected"
+	style="background-color: #fafafa;"
+	onclick="compositePreview(($(this)));" value="{{obj.getFileName}}">
+	<td>{{obj.getFileName}}</td>
+</tr>
+{% endfor %} {% endblock %} {% block images %}
+<tr>
+	<td>
+		<div class="image">
+			<img id="loadingMic" src="../../../../resources/loading.gif"
+				style="display: none;" /> <img id="mic" src="" />
+		</div>Micrograph
+	</td>
+	<td>
+		<div class="image">
+			<img id="loadingPsd" src="../../../../resources/loading.gif"
+				style="display: none;" /> <img id="psd" src="" />
+		</div>PSD
+	</td>
+</tr>
+{% endblock %} {% block options %}
+
+<fieldset id="freqOptions">
+	<legend>Frequencies</legend>
+	<div id="lowFreq">
+		<span id="title_freq">Low freq<span>
+		<div id="slider" class="slider_low"></div>
+		<div id="slider_low_result">0.25</div>
+		<input id="low_val" type="hidden"/>
+	</div>
+	
+	<div id="highFreq">
+		<span id="title_freq">High freq<span>
+		<div id="slider" class="slider_high"></div>
+		<div id="slider_high_result">0.25</div>
+		<input id="high_val" type="hidden"/>
+	</div>
+</fieldset>
+
+<script>
+$(".slider_low").slider({
+	animate : true,
+	range : "min",
+	value : 0.25,
+	min : 0.00,
+	max : 0.50,
+	step : 0.01,
+	//this gets a live reading of the value and prints it on the page
+	slide : function(event, ui) {
+		$("#slider_low_result").html(ui.value);
+	},
+	//this updates the hidden form field so we can submit the data using a form
+	change : function(event, ui) {
+		$('#low_val').attr('value', ui.value);
+	}
+});
+
+$(".slider_high").slider({
+	animate : true,
+	range : "min",
+	value : 0.25,
+	min : 0.00,
+	max : 0.50,
+	step : 0.01,
+	//this gets a live reading of the value and prints it on the page
+	slide : function(event, ui) {
+		$("#slider_high_result").html(ui.value);
+	},
+	//this updates the hidden form field so we can submit the data using a form
+	change : function(event, ui) {
+		$('#high_val').attr('value', ui.value);
+	}
+});
+</script>
+{% endblock %}

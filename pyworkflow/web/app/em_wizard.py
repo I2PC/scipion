@@ -25,6 +25,13 @@ def wiz_downsampling(protocol):
     context = {'objects': mics}
     
     return render_to_response('wiz_downsampling.html', context)
+
+def wiz_frequencies(protocol):
+    mics = [mic for mic in protocol.inputMicrographs.get()]
+    
+    context = {'objects': mics}
+    
+    return render_to_response('wiz_frequencies.html', context)
     
 def get_image_psd(request):
     
@@ -32,14 +39,15 @@ def get_image_psd(request):
     downsample = request.GET.get('downsample', None)
     dim = request.GET.get('dim', None)
     
+    # create a xmipp image empty
     imgXmipp = xmipp.Image()
-    xmipp.fastEstimateEnhancedPSD(imgXmipp, str(imagePath), int(downsample), int(dim), 2)
     
+    # compute the PSD image
+    xmipp.fastEstimateEnhancedPSD(imgXmipp, str(imagePath), int(downsample), int(dim), 2)
         
     # from PIL import Image
     img = getPILImage(imgXmipp, dim)
         
-    # response = HttpResponse(mimetype="image/png")    
     response = HttpResponse(mimetype="image/png")
     img.save(response, "PNG")
     return response
