@@ -418,7 +418,7 @@ def writeSetOfClasses2D(classes2DSet, filename, ctfDir=None, classesBlock='class
     classMd = xmipp.MetaData()
     classMd.write(classFn) # Empty write to ensure the classes is the first block
     
-    for class2D in classes2DSet.iterClasses():        
+    for class2D in classes2DSet:        
         classRow = XmippMdRow()
         class2DToRow(class2D, classRow)
         classRow.writeToMd(classMd, classMd.addObject())
