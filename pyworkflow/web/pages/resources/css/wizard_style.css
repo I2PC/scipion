@@ -35,8 +35,10 @@ body {
 }
 
 .image {
-	background-color: black;
-	border: 3.5px solid Firebrick;
+	/* 	background-color: #F0F0F0; */
+	/* 	border: 2px solid white; */
+	background-color: white;
+/* 	border: 3.5px solid Firebrick; */
 	width: 250px;
 	height: 250px;
 	margin: 0 7px 7px 0;

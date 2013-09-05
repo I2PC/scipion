@@ -13,12 +13,22 @@
 {% endblock %}		
 {% block images %}
 	<tr>
-		<td><div class="image"><img id="mic" src=""/></div>Micrograph</td>
-		<td><div class="image"><img id="psd" src=""/></div>PSD</td> 	
+		<td>
+			<div class="image">
+				<img id="loadingMic" src="../../../../resources/loading.gif" style="display:none;"/>
+				<img id="mic" src=""/>
+			</div>Micrograph
+		</td>
+		<td>
+			<div class="image">
+				<img id="loadingPsd" src="../../../../resources/loading.gif" style="display:none;"/>
+				<img id="psd" src=""/>
+			</div>PSD
+		</td> 	
 	</tr>
 {% endblock %}
 {% block options %}
 Downsample
-	<input type="text"/>	
-	<input type="button" id="buttonGen" value="preview"/>	
+	<input id="downsampling" type="text"/>	
+	<input type="button" id="buttonGen" onclick="previewPsd();" value="preview"/>	
 {% endblock %}

@@ -44,6 +44,7 @@ urlpatterns = patterns('',
 
     #WIZARDS
     url(r'^wizard/$', 'app.em_wizard.wizard'),
+    url(r'^get_image_psd/$', 'app.em_wizard.get_image_psd'),
     
     #SHOWJ
     url(r'^showj/', 'app.views_showj.showj'), #Load web
