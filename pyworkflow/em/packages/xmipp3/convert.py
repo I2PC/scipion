@@ -168,6 +168,14 @@ def rowToMicrograph(md, objId, hasCtf):
     """ Create a Micrograph object from a row of Xmipp metadata. """
     return rowToImage(md, objId, xmipp.MDL_MICROGRAPH, Micrograph, hasCtf)
 
+def volumeToRow(vol, volRow):
+    """ Set labels values from Micrograph mic to md row. """
+    imageToRow(vol, volRow, ctfDir=None, hasCtf=False, imgLabel=xmipp.MDL_IMAGE)
+    
+def rowToVolume(md, objId):
+    """ Create a Micrograph object from a row of Xmipp metadata. """
+    return rowToImage(md, objId, xmipp.MDL_IMAGE, Volume, False)
+
 def coordinateToRow(coord, coordRow):
     """ Set labels values from Coordinate coord to md row. """
     coordDict = { 
@@ -272,36 +280,19 @@ def imageClassAssignmentToRow(imgCA, imgCARow, img, ctfDir, ref):
     objectToRow(imgCA, imgCARow, imgCADict)
     
     
-def readSetOfMicrographs(filename, micSet, hasCtf=False):    
-    micMd = xmipp.MetaData(filename)
-    for objId in micMd:
-        mic = rowToMicrograph(micMd, objId, hasCtf)
-        micSet.append(mic)
 
+def readSetOfMicrographs(filename, micSet, hasCtf=False):    
+    readSetOfImages(filename, micSet, rowToMicrograph, hasCtf)
 
 def writeSetOfMicrographs(micSet, filename, ctfDir=None, rowFunc=None):
-    """ This function will write a SetOfMicrographs as Xmipp metadata.
-    Params:
-        micSet: the SetOfMicrograph instance.
-        filename: the filename where to write the metadata.
-        rowFunc: this function can be used to setup the row before 
-            adding to metadata.
-    """
-    md = xmipp.MetaData()
-    hasCtf = micSet.hasCTF()
-    if ctfDir is None:
-        ctfDir = dirname(filename)
+    writeSetOfImages(micSet, filename, micrographToRow, ctfDir, rowFunc)
     
-    for mic in micSet:
-        objId = md.addObject()
-        micRow = XmippMdRow()
-        micrographToRow(mic, micRow, ctfDir, hasCtf)
-        if rowFunc:
-            rowFunc(mic, micRow)
-        micRow.writeToMd(md, objId)
-        
-    md.write(filename)
-    micSet._xmippMd = String(filename)
+    
+def readSetOfVolumes(filename, volSet, hasCtf=False):    
+    readSetOfImages(filename, volSet, rowToVolume, False)
+
+def writeSetOfVolumes(volSet, filename):
+    writeSetOfImages(volSet, filename, volumeToRow)    
     
     
 def readPosCoordinates(posFile):
@@ -364,47 +355,50 @@ def readSetOfCoordinates(posDir, micSet, coordSet):
 
     coordSet.setBoxSize(boxSize)
 
-def writeSetOfParticles(imgSet, filename, ctfDir=None, rowFunc=None):    
-    """ This function will write a SetOfParticles as Xmipp metadata.
+
+def readSetOfImages(filename, imgSet, rowToFunc, hasCtf):
+    """read from Xmipp image metadata.
+        filename: The metadata filename where the image are.
+        imgSet: the SetOfParticles that will be populated.
+        rowToFunc: this function will be used to convert the row to Object
+        hasCtf: is True if the ctf information exists.
+    """    
+    imgMd = xmipp.MetaData(filename)
+    for objId in imgMd:
+        img = rowToFunc(imgMd, objId, hasCtf)
+        imgSet.append(img)   
+         
+def writeSetOfImages(imgSet, filename, imgToFunc, ctfDir, rowFunc):
+    """ This function will write a SetOfMicrographs as Xmipp metadata.
     Params:
-        imgSet: the SetOfParticles instance.
+        imgSet: the SetOfMicrograph instance.
         filename: the filename where to write the metadata.
+        ctfDir: where to write ctfparam files if necessary
         rowFunc: this function can be used to setup the row before 
             adding to metadata.
     """
-    
-#     mdFn = getattr(obj, '_xmippMd', None)
-#     if mdFn:
-#         fn = mdFn.get()
-#     else:
-#         fn = self._getTmpPath(obj.getName() + '_micrographs.xmd')
-#         writeSetOfMicrographs(obj, fn)
-    
     md = xmipp.MetaData()
     hasCtf = imgSet.hasCTF()
+    if ctfDir is None:
+        ctfDir = dirname(filename)
     
     for img in imgSet:
         objId = md.addObject()
         imgRow = XmippMdRow()
-        particleToRow(img, imgRow, ctfDir, hasCtf)
+        imgToFunc(img, imgRow, ctfDir, hasCtf)
         if rowFunc:
             rowFunc(img, imgRow)
         imgRow.writeToMd(md, objId)
         
     md.write(filename)
     imgSet._xmippMd = String(filename)
+        
 
-
-def readSetOfParticles(fnImages, imgSet, hasCtf=False):
-    """read from Xmipp image metadata.
-        fnImages: The metadata filename where the particles properties are.
-        imgSet: the SetOfParticles that will be populated.
-        hasCtf: is True if the ctf information exists.
-    """    
-    imgMd = xmipp.MetaData(fnImages)
-    for objId in imgMd:
-        part = rowToParticle(imgMd, objId, hasCtf)
-        imgSet.append(part)
+def readSetOfParticles(filename, partSet, hasCtf=False):
+    readSetOfImages(filename, partSet, rowToParticle, hasCtf)
+        
+def writeSetOfParticles(imgSet, filename, ctfDir=None, rowFunc=None):
+    writeSetOfImages(imgSet, filename, particleToRow, ctfDir, rowFunc)
         
         
 def writeSetOfClasses2D(classes2DSet, filename, ctfDir=None, classesBlock='classes'):    
@@ -420,6 +414,8 @@ def writeSetOfClasses2D(classes2DSet, filename, ctfDir=None, classesBlock='class
     classFn = '%s@%s' % (classesBlock, filename)
     classMd = xmipp.MetaData()
     classMd.write(classFn) # Empty write to ensure the classes is the first block
+    if ctfDir is None:
+        ctfDir = dirname(filename)
     
     for class2D in classes2DSet:        
         classRow = XmippMdRow()

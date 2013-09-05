@@ -253,26 +253,26 @@ def visualizeObject(request):
                        'colRowMode': 'Off'}
     elif isinstance(obj, SetOfVolumes):
         fn = project.getTmpPath(obj.getName()+ '_volumes.xmd')
-        vols = XmippSetOfVolumes.convert(obj,fn)
-        inputParameters = {'path': join(request.session['projectPath'], vols.getFileName()),
+        writeSetOfVolumes(obj, fn)
+        inputParameters = {'path': join(request.session['projectPath'], fn),
                            'setOfVolumes' : obj,
                            'setOfVolumesId': obj.getObjId(),
                            'dims': '3d',
                            'mode': 'table'}  
     elif isinstance(obj, SetOfImages):
         fn = project.getTmpPath(obj.getName() + '_images.xmd')
-        imgs = XmippSetOfImages.convert(obj, fn)
-        inputParameters = {'path': join(request.session['projectPath'], imgs.getFileName()),
+        writeSetOfParticles(obj, fn)
+        inputParameters = {'path': join(request.session['projectPath'], fn),
                'allowRender': True,
                'mode': 'gallery',
                'zoom': '150px',
                'goto': 1,
                'colRowMode': 'Off'}
 
-    elif isinstance(obj, XmippClassification2D):
-        mdPath = obj.getClassesMdFileName()
-        block, path = mdPath.split('@')
-        inputParameters = {'path': join(request.session['projectPath'], path),
+    elif isinstance(obj, SetOfClasses2D):
+        fn = project.getTmpPath(obj.getName() + '_classes.xmd')
+        writeSetOfClasses2D(obj, fn)
+        inputParameters = {'path': join(request.session['projectPath'], fn),
                'allowRender': True,
                'mode': 'gallery',
                'zoom': '150px',
