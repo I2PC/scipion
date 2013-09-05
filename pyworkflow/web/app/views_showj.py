@@ -70,6 +70,8 @@ def showj(request, inputParameters=None):
             _imageDimensions = get_image_dimensions(request.session['projectPath'], tableDataset.getElementById(0,inputParameters['labelsToRenderComboBox']))  
             
         inputParameters['blockComboBox']=_blockComboBox
+        if 'mirrorY' not in inputParameters:
+            inputParameters['mirrorY']=False
         
         showjForm = ShowjForm(dataset,
                               tableLayoutConfiguration,
@@ -163,11 +165,10 @@ class ColumnLayoutProperties():
         self.renderFunc = "taka"
         
 
-#PAJM         
 def getTypeOfColumn(label):
     if (label == "id"):
         return "id"
-    elif (xmipp.labelIsImage(str(label))):
+    elif (label!='image_transformationMatrix' and xmipp.labelIsImage(str(label))):
         return "image"
     elif (label == "enabled"):
         return "checkbox"

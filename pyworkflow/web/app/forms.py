@@ -251,9 +251,6 @@ class HostForm(forms.Form):
 ######################### Initialize Showj Form (Button toolbar) #####################        
 class ShowjForm(forms.Form):
     # Init graphical components
-#    zoom = forms.IntegerField(required=True,
-#                                  localize=False,
-#                                  widget=forms.TextInput(attrs={'class' : 'menuInputNumber'}))
     zoom = forms.CharField(required=True,
                             widget=forms.TextInput(attrs={'class' : 'menuInputNumber'}))
     
@@ -284,6 +281,8 @@ class ShowjForm(forms.Form):
     allowRender = forms.BooleanField(widget=forms.HiddenInput())
     mode = forms.CharField(widget=forms.HiddenInput())
     colRowMode = forms.CharField(widget=forms.HiddenInput())
+    
+    mirrorY = forms.BooleanField(label='Invert Y axis')
 
 #    imageWidth = forms.IntegerField(widget=forms.HiddenInput(), initial=0)
 #    imageHeight = forms.IntegerField(widget=forms.HiddenInput(), initial=0)

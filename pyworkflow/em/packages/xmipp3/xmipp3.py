@@ -251,12 +251,18 @@ class XmippDataSet(ds.DataSet):
     def _convertMdToTable(self, md):
         """ Convert a metatada into a table. """
         labels = md.getActiveLabels()
+        hasTransformation = self._hasTransformation(labels)  
         labelsStr = [xmipp.label2Str(l) for l in labels]        
+        #NAPA de LUXE (xmipp deberia saber a que campo va asignado el transformation matrix)             
+        if hasTransformation:
+            labelsStr.append("image_transformationMatrix")   
         columns = [ds.Column(l) for l in labelsStr]        
         table = ds.Table(*columns)
         
         for objId in md:
             values = [md.getValue(l, objId) for l in labels]
+            if hasTransformation:
+                values.append(self._getTransformation(md, objId))
             d = dict(zip(labelsStr, values))
             table.addRow(objId, **d)
             
@@ -280,3 +286,32 @@ class XmippDataSet(ds.DataSet):
         """ Write changes made to a table. """
         md = self._convertTableToMd(table)
         md.write("%s@%s" % (tableName, self._filename), xmipp.MD_APPEND)
+
+        
+    def _hasTransformation(self, labels):
+        for l in [xmipp.MDL_SHIFT_X, xmipp.MDL_SHIFT_Y, xmipp.MDL_SHIFT_Z]:
+            if l in labels:
+                return True
+        return False
+        
+    def _getTransformation(self, md, objId):
+        rot  = md.getValue(xmipp.MDL_ANGLE_ROT ,objId)
+        tilt = md.getValue(xmipp.MDL_ANGLE_TILT,objId)
+        psi  = md.getValue(xmipp.MDL_ANGLE_PSI ,objId)
+        if rot is  None:
+            rot = 0
+        if tilt is  None:
+            tilt = 0
+        if psi is  None:
+            psi = 0
+
+        tMatrix=xmipp.Euler_angles2matrix(rot,tilt,psi)
+        x = md.getValue(xmipp.MDL_SHIFT_X, objId)
+        y = md.getValue(xmipp.MDL_SHIFT_Y, objId)
+        z = md.getValue(xmipp.MDL_SHIFT_Z, objId)
+
+        return [tMatrix[0][0], tMatrix[0][1], tMatrix[0][2], x,
+                tMatrix[1][0], tMatrix[1][1], tMatrix[1][2], y,
+                tMatrix[2][0], tMatrix[2][1], tMatrix[2][2], z]
+
+
