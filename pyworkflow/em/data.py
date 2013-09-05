@@ -289,17 +289,19 @@ class SetOfImages(Set):
     def load(self):
         """ Load data only if the main set is empty. """
         Set.load(self)
+        self._idMap = {} #FIXME, remove this after id is the one in mapper
         for img in self._mapper.selectByClass("Image", iterate=True):
             self._idMap[img.getId()] = img
             
     def __getitem__(self, imgId):
         """ Get the image with the given id. """
+        self.loadIfEmpty() 
+            
         return self._idMap.get(imgId, None)
 
     def __iter__(self):
         """ Iterate over the set of images. """
         self.loadIfEmpty()
-        self._idMap = {} #FIXME, remove this after id is the one in mapper
         for img in self._mapper.selectByClass("Image", iterate=True):
             yield img            
         

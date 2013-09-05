@@ -228,12 +228,10 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         if so return the model 
         """
         # Find the associated micrograph from the set of coordinates
-        mics = self.inputCoords.getMicrographs()
-            
-        micInput = mics[micId]
-        
-        # Check if it has CTF and if so return the model
+        mics = self.inputCoords.getMicrographs()  
+        micInput = mics[micId]        
         fnCTF = None
+        
         if micInput.hasCTF():
             micCTF = micInput.getCTF()
             #xmippCTF = XmippCTFModel.convert(micCTF, self._getTmpPath("tmp.ctfParam"))
@@ -249,7 +247,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         if self.doFlip and self.fnCTF:
             micrographToExtract = self._getTmpPath(micName +"_flipped.xmp")
                 
-        print "micrographToExtract=%s" % micrographToExtract
         outputRoot = str(self._getExtraPath(micName))
 
         #fnPosFile = self.getConvertedInput('inputCoords').getMicrographCoordFile(micId)
