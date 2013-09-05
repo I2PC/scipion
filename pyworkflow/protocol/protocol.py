@@ -302,7 +302,7 @@ class Protocol(Step):
                 
     def iterOutputAttributes(self, outputClass):
         """ Iterate over the outputs produced by this protocol. """
-        for key, attr in self.getAttributesToStore():
+        for key, attr in self.getAttributes():
             if isinstance(attr, outputClass):
                 yield key, attr
             

@@ -354,9 +354,9 @@ class SetOfImages(Set):
             # item is an XmippImage or an Image
             filePaths.add(item.getFileName())
             # If it has CTF we must include ctf file
-            if item.hasCTF():
-                # ctf is a XMippCTFModel
-                filePaths.update(item.getCTF().getFiles())
+#            if item.hasCTF():
+#                # ctf is a XMippCTFModel
+#                filePaths.update(item.getCTF().getFiles())
         return filePaths
             
     def setDownsample(self, downFactor):
@@ -677,7 +677,7 @@ class SetOfClasses2D(Set):
         self._hasRepresentativeImages = True # True if the classes have associated average image
         self._imagesPointer = Pointer()
         
-    def iterClasses(self):
+    def __iter__(self):
         """ Iterate over all classes. """
         self.loadIfEmpty()
         self._idMap = {} #FIXME, remove this after id is the one in mapper
@@ -712,6 +712,6 @@ class SetOfClasses2D(Set):
     def __getitem__(self, classId):
         """ Get the class with the given id. """
         #FIXME, remove this after id is the one in mapper
-        return self._idMap.get(class2DId, None)
+        return self._idMap.get(classId, None)
      
      
