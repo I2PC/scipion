@@ -397,12 +397,12 @@ def readSetOfParticles(fnImages, imgSet, hasCtf=False):
         fnImages: The metadata filename where the particles properties are.
         imgSet: the SetOfParticles that will be populated.
         hasCtf: is True if the ctf information exists.
-    """
-    
+    """    
     imgMd = xmipp.MetaData(fnImages)
     for objId in imgMd:
         part = rowToParticle(imgMd, objId, hasCtf)
         imgSet.append(part)
+        
         
 def writeSetOfClasses2D(classes2DSet, filename, ctfDir=None, classesBlock='classes'):    
     """ This function will write a SetOfClasses2D as Xmipp metadata.
@@ -463,6 +463,7 @@ def createXmippInputImages(self, imgSet, rowFunc=None):
     ctfDir = self._getExtraPath()
     writeSetOfParticles(imgSet, imgsFn, ctfDir, rowFunc)
     return imgsFn
+
 
 def createXmippInputMicrographs(self, micSet, rowFunc=None):    
     micsFn = self._getPath('input_micrographs.xmd')
