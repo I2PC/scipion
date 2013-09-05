@@ -4,7 +4,7 @@ function selectList(elm) {
 
 	var img = $("img#mic");
 	var img_psd = $("img#psd");
-	
+
 	var load_img = $("img#loadingMic");
 
 	if (row.attr('value') != undefined && row.attr('value') != oldValue) {
@@ -45,16 +45,18 @@ function selectList(elm) {
 
 function previewPsd() {
 	var img = $("img#psd");
-	
+
 	img.hide();
-	
+
 	// check downsampling is a number
 	var downsampling = $("input#downsampling").val();
+	if (downsampling == undefined) {
+		downsampling = 1.0;
+	}
 
 	// get the img path
 	var path_img = $("tr#" + $("table#list").attr("value")).attr("value");
 
-	
 	var load = $("img#loadingPsd");
 
 	// set loading img
@@ -71,3 +73,20 @@ function previewPsd() {
 		img.show();
 	});
 }
+
+function compositePreview(elm) {
+	$.when(selectList(elm)).then(previewPsd());
+
+	//	selectList(elm);
+	//	previewPsd();
+}
+
+//$("div.highFreq").noUiSlider({
+//	range : [ 20, 100 ],
+//	start : [ 40, 80 ],
+//	step : 20,
+//	slide : function() {
+//		var values = $(this).val();
+//		$("span").text(values[0] + " - " + values[1]);
+//	}
+//});

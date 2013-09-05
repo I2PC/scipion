@@ -51,7 +51,6 @@ body {
 	clear: both;
 }
 
-
 #buttonGen {
 	background-size: 20%;
 	/* 	margin: 1em 0.5em 0 0; */
@@ -61,7 +60,7 @@ body {
 	height: 2em;
 	background-color: LightGray;
 	/* 	border: 1px solid #000066; */
-/* 	padding: 1px; */
+	/* 	padding: 1px; */
 	font-weight: bold;
 	letter-spacing: 0.2em;
 	text-align: center;
@@ -149,4 +148,30 @@ table#list tr:hover td {
 table#list tr.selected:hover td {
 	background-color: LightSteelBlue;
 }
-/***************************************************/
+
+
+/**************** Slider CSS *******************/
+
+
+
+#slider{
+	width:15em;
+	margin: 4px 0 4px 0;
+}
+
+#lowFreq{
+	width:15m;
+	float:left;
+}
+
+#highFreq{
+	width:15em;
+	float:right;
+	margin-right:2em;
+}
+
+#freqOptions{
+	width:36em;
+	background: #fafafa;
+	float:right;
+}
