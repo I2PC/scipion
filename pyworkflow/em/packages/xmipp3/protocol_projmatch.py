@@ -39,7 +39,7 @@ This sub-package implement projection matching using xmipp 3.1
 from pyworkflow.em import *  
 from pyworkflow.utils import *  
 import xmipp, xmipp3
-from data import *
+
 
 class XmippDefProjMatch(Form):
     """Create the definition of parameters for

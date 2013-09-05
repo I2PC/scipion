@@ -32,7 +32,7 @@ from pyworkflow.em import *
 from pyworkflow.utils.path import *  
 import xmipp
 from xmipp3 import XmippProtocol
-from data import *
+
 from convert import createXmippInputMicrographs, readSetOfCoordinates
 
 

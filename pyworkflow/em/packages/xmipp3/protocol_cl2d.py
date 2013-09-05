@@ -30,7 +30,7 @@ This sub-package contains wrapper around CL2D Xmipp program
 from os.path import join, dirname, exists
 from pyworkflow.em import *  
 import xmipp
-from data import *
+
 from convert import createXmippInputImages, readSetOfClasses2D
 #from xmipp3 import XmippProtocol
 from glob import glob

@@ -33,9 +33,10 @@ This module contains converter functions that will serve to:
 import os
 
 import xmipp
-from data import *
 from xmipp3 import XmippMdRow
 from pyworkflow.em.constants import NO_INDEX
+from pyworkflow.object import String
+from pyworkflow.utils.path import join, dirname, replaceBaseExt
 
 LABEL_TYPES = { 
                xmipp.LABEL_SIZET: long,
@@ -288,6 +289,8 @@ def writeSetOfMicrographs(micSet, filename, ctfDir=None, rowFunc=None):
     """
     md = xmipp.MetaData()
     hasCtf = micSet.hasCTF()
+    if ctfDir is None:
+        ctfDir = dirname(filename)
     
     for mic in micSet:
         objId = md.addObject()

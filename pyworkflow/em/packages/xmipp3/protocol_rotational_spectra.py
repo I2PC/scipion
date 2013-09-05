@@ -1,6 +1,6 @@
 from pyworkflow.em import *  
 import xmipp
-from data import *
+
 import xmipp, xmipp3
 from protocol_kerdensom import *
 

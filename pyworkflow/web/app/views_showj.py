@@ -12,10 +12,10 @@ import json
 from pyworkflow.web.app.views_util import *
 from forms import VolVisualizationForm
 from pyworkflow.em import *
-from pyworkflow.em.packages.xmipp3.data import XmippSetOfVolumes
+from pyworkflow.em.packages.xmipp3.convert import *
+
     
 def showj(request, inputParameters=None):
-   
     #############
     # WEB INPUT PARAMETERS
     _imageDimensions = ''
@@ -230,9 +230,9 @@ def visualizeObject(request):
     project = Project(request.session['projectPath'])
     project.load()
     
-    object = project.mapper.selectById(int(objectId))
-    if object.isPointer():
-        object = object.get()
+    obj = project.mapper.selectById(int(objectId))
+    if obj.isPointer():
+        obj = obj.get()
         
     if probandoCTFParam:
         inputParameters = {'path': join(request.session['projectPath'], "Runs/XmippProtCTFMicrographs218/extra/BPV_1386/xmipp_ctf.ctfparam"),
@@ -241,26 +241,26 @@ def visualizeObject(request):
                'zoom': '150px',
                'goto': 1,
                'colRowMode': 'Off'}    
-    elif isinstance(object, SetOfMicrographs):
-        fn = project.getTmpPath(object.getName() + '_micrographs.xmd')
-        mics = XmippSetOfMicrographs.convert(object, fn)
-        inputParameters = {'path': join(request.session['projectPath'], mics.getFileName()),
+    elif isinstance(obj, SetOfMicrographs):
+        fn = project.getTmpPath(obj.getName() + '_micrographs.xmd')
+        writeSetOfMicrographs(obj, fn)
+        inputParameters = {'path': join(request.session['projectPath'], fn),
                        'allowRender': True,
                        'mode': 'gallery',
                        'zoom': '150px',
                        'goto': 1,
                        'colRowMode': 'Off'}
-    elif isinstance(object, SetOfVolumes):
-        fn = project.getTmpPath(object.getName()+ '_volumes.xmd')
-        vols = XmippSetOfVolumes.convert(object,fn)
+    elif isinstance(obj, SetOfVolumes):
+        fn = project.getTmpPath(obj.getName()+ '_volumes.xmd')
+        vols = XmippSetOfVolumes.convert(obj,fn)
         inputParameters = {'path': join(request.session['projectPath'], vols.getFileName()),
-                           'setOfVolumes' : object,
-                           'setOfVolumesId': object.getObjId(),
+                           'setOfVolumes' : obj,
+                           'setOfVolumesId': obj.getObjId(),
                            'dims': '3d',
                            'mode': 'table'}  
-    elif isinstance(object, SetOfImages):
-        fn = project.getTmpPath(object.getName() + '_images.xmd')
-        imgs = XmippSetOfImages.convert(object, fn)
+    elif isinstance(obj, SetOfImages):
+        fn = project.getTmpPath(obj.getName() + '_images.xmd')
+        imgs = XmippSetOfImages.convert(obj, fn)
         inputParameters = {'path': join(request.session['projectPath'], imgs.getFileName()),
                'allowRender': True,
                'mode': 'gallery',
@@ -268,8 +268,8 @@ def visualizeObject(request):
                'goto': 1,
                'colRowMode': 'Off'}
 
-    elif isinstance(object, XmippClassification2D):
-        mdPath = object.getClassesMdFileName()
+    elif isinstance(obj, XmippClassification2D):
+        mdPath = obj.getClassesMdFileName()
         block, path = mdPath.split('@')
         inputParameters = {'path': join(request.session['projectPath'], path),
                'allowRender': True,
@@ -279,9 +279,9 @@ def visualizeObject(request):
                'colRowMode': 'Off'}
 #        runShowJ(obj.getClassesMdFileName())
     else:
-        raise Exception('Showj Web visualizer: can not visualize class: %s' % object.getClassName())
+        raise Exception('Showj Web visualizer: can not visualize class: %s' % obj.getClassName())
 
-    if isinstance(object, SetOfVolumes):
+    if isinstance(obj, SetOfVolumes):
         return render_to_response('volume_visualization.html', inputParameters)
     else:
         return showj(request, inputParameters)

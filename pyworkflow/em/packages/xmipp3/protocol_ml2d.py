@@ -32,7 +32,7 @@ from pyworkflow.em import *
 from pyworkflow.utils import *  
 import xmipp
 from convert import createXmippInputImages, readSetOfClasses2D
-from data import *
+
 #from xmipp3 import XmippProtocol
 
 

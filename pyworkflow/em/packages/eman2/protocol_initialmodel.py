@@ -31,7 +31,6 @@ This sub-package contains wrapper around EMAN initialmodel program
 from pyworkflow.em import *  
 from pyworkflow.utils import * 
 from pyworkflow.em.packages.eman2.data import *
-from pyworkflow.em.packages.xmipp3.data import *
 import os
 from data import *
 from glob import glob

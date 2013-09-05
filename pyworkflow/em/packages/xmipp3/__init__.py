@@ -28,7 +28,6 @@ This sub-package will contains Xmipp3.0 specific protocols
 """
 
 from xmipp3 import *
-from data import *
 from convert import *
 from viewer import XmippViewer
 from plotter import XmippPlotter

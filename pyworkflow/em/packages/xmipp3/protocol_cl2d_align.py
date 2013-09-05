@@ -30,7 +30,7 @@ This sub-package contains wrapper around align2d Xmipp program
 from os.path import join, dirname, exists
 from pyworkflow.em import *  
 import xmipp
-from data import *
+
 from convert import createXmippInputImages, readSetOfParticles
 from glob import glob
 

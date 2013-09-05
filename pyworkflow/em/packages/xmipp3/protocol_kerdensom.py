@@ -30,7 +30,7 @@ This sub-package contains wrapper around kendersom Xmipp program
 from os.path import join, dirname, exists
 from pyworkflow.em import *  
 import xmipp
-from data import *
+
 import xmipp3
 from convert import createXmippInputImages, readSetOfClasses2D
 from glob import glob

@@ -31,7 +31,7 @@ This sub-package contains protocol for particles filters operations
 from pyworkflow.em import *  
 from pyworkflow.utils import *  
 import xmipp
-from data import *
+
 import xmipp3
 from convert import createXmippInputImages, readSetOfParticles
 
