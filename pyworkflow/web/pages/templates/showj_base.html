@@ -20,6 +20,7 @@
 		initializeComboBoxEvents()
 		initializeArrowEvents()
 		initializeColsRowsEvents()
+		initializeMirrorY()
 		
 		/* Avoid enter key submit form */
 		$('.menuInputNumber').keypress(function(e) {
@@ -46,6 +47,13 @@
 				$(this).closest(".sectionMenu, .subSectionMenu").find(".menuInputNumber").change();
 			}	
 		});	
+	}
+	</script>
+	<script type="text/javascript">
+	function initializeMirrorY(){
+		$("#id_mirrorY").click(function(){
+			$('form#showjForm').submit();
+		})
 	}
 	</script>
 	<script type="text/javascript">
@@ -222,16 +230,19 @@
 			
 			d = new Date();
 			$(".tableImages").each(function(){
-			   var newSrc = "";
-			   if ($(this).data("real_src").indexOf("&dim") != -1){
-			   	newSrc = $(this).data("real_src").substring(0,$(this).data("real_src").indexOf("&dim"));
-			   }
-			   else{
-				  newSrc = $(this).data("real_src");   
-			   }
-			   $(this).attr("height",tableImages_width)
-			   $(this).attr("width",tableImages_width)
-			   $(this).data("real_src", newSrc + "&dim="+tableImages_width+"&"+d.getTime());
+			   	var newSrc = "";
+			   	if ($(this).data("real_src").indexOf("&dim") != -1){
+			   		newSrc = $(this).data("real_src").substring(0,$(this).data("real_src").indexOf("&dim"));
+			   	}
+			   	else{
+					newSrc = $(this).data("real_src");   
+			   	}
+			   	$(this).attr("height",tableImages_width)
+			   	$(this).attr("width",tableImages_width)
+		   	
+		   		realSrc = newSrc.concat("&dim="+tableImages_width).concat("&"+d.getTime())
+		   		
+				$(this).data("real_src", realSrc);
 		   })
 		   
 			{% if form.mode.value == 'gallery' %}
@@ -395,7 +406,10 @@
 					{{ form.labelsToRenderComboBox }}
 				</div>
 				
-			
+				<div id="mirrorContainer" class="sectionMenu">
+					<span class="textMenu"> {{ form.mirrorY.label_tag }} </span>
+					{{ form.mirrorY }} 
+				</div>
 		
 				<div class="sectionMenu">
 					<img src="/resources/showj/separator.png" class="menuIcon">
