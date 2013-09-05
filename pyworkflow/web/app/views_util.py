@@ -143,6 +143,10 @@ def get_image(request):
             
         imgXmipp = xmipp.Image(imagePath)
         
+        if ('mirrorY' in request.GET):
+            imgXmipp.mirrorY()
+        
+        
         # from PIL import Image
         img = getPILImage(imgXmipp, imageDim)
          
