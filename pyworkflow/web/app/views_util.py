@@ -1,6 +1,7 @@
 import os
 import xmipp
 import json
+from pyworkflow.em import emProtocolsDict
 from pyworkflow.tests import getInputPath
 from pyworkflow.web.pages import settings
 from pyworkflow.manager import Manager
