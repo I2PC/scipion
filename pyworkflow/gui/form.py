@@ -363,8 +363,9 @@ class FormWindow(Window):
         self.protocol = protocol
         self.hostList = hostList
         self.protocol = protocol
+        from pyworkflow.viewer import DESKTOP_TKINTER
         from pyworkflow.em import findWizards
-        self.wizards = findWizards(protocol.getDefinition(), 'tkinter')
+        self.wizards = findWizards(protocol.getDefinition(), DESKTOP_TKINTER)
         
         self.fontBig = tkFont.Font(size=12, family='verdana', weight='bold')
         self.font = tkFont.Font(size=10, family='verdana')#, weight='bold')
