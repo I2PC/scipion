@@ -118,6 +118,8 @@ PyMethodDef Image_methods[] =
           "Initialize to value" },
         { "mirrorY", (PyCFunction) Image_mirrorY, METH_VARARGS,
           "mirror image so up goes down" },
+        { "applyTransforMatScipion", (PyCFunction) Image_applyTransforMatScipion, METH_VARARGS,
+          "apply transformationMatrix as defined by EMX and used by Scipion" },
         { "initRandom", (PyCFunction) Image_initRandom, METH_VARARGS,
           "Initialize to random value" },
         { "resize", (PyCFunction) Image_resize, METH_VARARGS,
@@ -683,15 +685,15 @@ Image_mirrorY(PyObject *obj, PyObject *args, PyObject *kwargs)
     ImageObject *self = (ImageObject*) obj;
     double value = -1;
 
-        try
-        {
-            self->image->mirrorY();
-            Py_RETURN_NONE;
-        }
-        catch (XmippError &xe)
-        {
-            PyErr_SetString(PyXmippError, xe.msg.c_str());
-        }
+    try
+    {
+        self->image->mirrorY();
+        Py_RETURN_NONE;
+    }
+    catch (XmippError &xe)
+    {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
     return NULL;
 }//function Image_initConstant
 
@@ -1127,6 +1129,60 @@ Image_isubtract(PyObject *obj1, PyObject *obj2)
         PyErr_SetString(PyXmippError, xe.msg.c_str());
     }
     return (PyObject *)result;
+}//operator +=
+
+/** Image inplace subtraction, equivalent to -= operator */
+PyObject *
+Image_applyTransforMatScipion(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+
+	PyObject * list = NULL;
+    PyObject * item = NULL;
+    double value;
+    ImageObject *self = (ImageObject*) obj;
+    ImageBase * img;
+    img = self->image->image;
+
+    try
+    {
+        PyArg_ParseTuple(args, "O", &list);
+        if (PyList_Check(list))
+        {
+            size_t size = PyList_Size(list);
+            Matrix2D<double> A,B;
+            A.initIdentity(4);
+            for (size_t i = 0; i < size; ++i)
+            {
+                item  = PyList_GetItem(list, i);
+                MAT_ELEM(A,i/4,i%4 ) = PyFloat_AsDouble(item);
+            }
+            double scale, shiftX, shiftY, shiftZ, rot,tilt, psi;
+            bool flip;
+            transformationMatrix2Parameters3D(A, flip, scale, shiftX, shiftY, shiftZ, rot,tilt, psi);
+            double _rot;
+            if (tilt==0.)
+                _rot=rot + psi;
+            else
+                _rot=psi;
+            img->setEulerAngles(0,0.,_rot);
+            img->setShifts(shiftX,shiftY);
+            img->setScale(scale);
+            img->setFlip(flip);
+            img->selfApplyGeometry(LINEAR, false, false);//wrap, onlyShifts
+            Py_RETURN_NONE;
+
+        }
+        else
+        {
+            PyErr_SetString(PyExc_TypeError, "ImageGeneric::applyTransforMatScipion: Expecting a list");
+
+        }
+    }
+    catch (XmippError &xe)
+    {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+    return NULL;
 }//operator +=
 
 PyObject *

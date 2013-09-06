@@ -742,6 +742,24 @@ public:
                         DIRECT_NZYX_ELEM(data, l, k, Y-i, j) = aux;
                     }
     }
+
+    void selfApplyGeometry(int SplineDegree, bool wrap = WRAP, bool only_apply_shifts=false)
+    {
+        //apply geo has not been defined for volumes
+        //and only make sense when reading data
+        if (data.getDim() < 3 && dataMode >= DATA)
+        {
+            Matrix2D< double > A;
+            getTransformationMatrix(A, only_apply_shifts);
+            if (!A.isIdentity())
+            {
+                MultidimArray<T> tmp=MULTIDIM_ARRAY(*this);
+                applyGeometry(SplineDegree, MULTIDIM_ARRAY(*this), tmp,
+                              A, IS_NOT_INV, wrap);
+            }
+        }
+    }
+
     /* Read an image with a lower resolution as a preview image.
      * If Zdim parameter is not passed, then all slices are rescaled.
      * If Ydim is not passed, then Ydim is rescaled same factor as Xdim.

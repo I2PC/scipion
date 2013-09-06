@@ -82,7 +82,7 @@ typedef enum
     _HEADER_ALL = 0, //Read complete header(main and geo), useful for header_extract and header_assign
     DATA = 1, //Read image data and main header, geometrical transformations will be ignored
     _DATA_ALL = 2  //Read data with complete header(the use of this option is not recommended, all Xmipp
-    // programs should read and write geo info through metadatas
+                // programs should read and write geo info through metadatas
 }DataMode;
 
 /* Cast Write mode
@@ -106,7 +106,7 @@ struct ImageFHandler
     FILE*     fimg;       // Image File handler
     FILE*     fhed;       // Image File header handler
     TIFF*     tif;        // TIFF Image file handler
-    hid_t     fhdf5;	  // HDF5 File handler
+    hid_t     fhdf5;   // HDF5 File handler
     FileName  fileName;   // Image file name
     FileName  headName;   // Header file name
     FileName  ext_name;   // Filename extension
@@ -238,9 +238,9 @@ protected:
     FILE*               fimg;        // Image File handler
     FILE*               fhed;        // Image File header handler
     TIFF*               tif;         // TIFF Image file hander
-    hid_t				fhdf5;       // HDF5 File handler
+    hid_t    fhdf5;       // HDF5 File handler
     ImageFHandler*      hFile;       // Image File handler information structure
-    ArrayDim        	aDimFile;   // Image header file information structure (original info from file)
+    ArrayDim         aDimFile;   // Image header file information structure (original info from file)
     DataMode            dataMode;    // Flag to force select what will be read/write from image files
     size_t              offset;      // Data offset
     int                 swap;        // Perform byte swapping upon reading
@@ -253,7 +253,7 @@ protected:
     int                 mFd;         // Handle the file in reading method and mmap
     size_t              mappedSize;  // Size of the mapped file
     size_t              mappedOffset;// Offset for the mapped file
-    size_t        		virtualOffset;// MDA Offset when movePointerTo is used
+    size_t          virtualOffset;// MDA Offset when movePointerTo is used
 
 public:
 
@@ -768,6 +768,10 @@ public:
      *
      */
     virtual void mirrorY() =0;
+    /** Internal apply geometrical transformations
+     */
+    virtual void selfApplyGeometry(int SplineDegree, bool wrap, bool only_apply_shifts)=0;
+
 
 protected:
 

@@ -310,6 +310,39 @@ class TestXmippPythonInterface(unittest.TestCase):
                 imgY.setPixel(dim -1 -i, j, 1.*dim*i+j)
         self.assertEquals(img, imgY)
         
+    def test_Image_applyTransforMatScipion(self):
+            img = Image()
+            img2 = Image()
+            img.setDataType(DT_FLOAT)
+            img2.setDataType(DT_FLOAT)
+            dim=3
+            img.resize(dim, dim)
+            img2.resize(dim, dim)
+            for i in range(0,dim):
+                for j in range(0,dim):
+                    img.setPixel(dim -1 -i, j, 1.*dim*i+j)
+            A=[0.,-1.,0.,0.,
+               1.,0.,0.,0.,
+               0.,0.,1.,1.]
+            img2.setPixel(0,0,0)
+            img2.setPixel(0,1,3.)
+            img2.setPixel(0,2,6.)
+
+            img2.setPixel(1,0,1.)
+            img2.setPixel(1,1,4.)
+            img2.setPixel(1,2,7.)
+
+            img2.setPixel(2,0,2.)
+            img2.setPixel(2,1,5.)
+            img2.setPixel(2,2,8.)
+
+            img.applyTransforMatScipion(A)
+            #print img.getData(),"\n", img2.getData()
+            for i in range(0, dim):
+                for j in range (0, dim):
+                    p1 = img.getPixel(i, j)
+                    p2 = img2.getPixel(i, j)
+                    self.assertAlmostEquals(p1, p2)
     def test_Metadata_getValue(self):
         '''MetaData_GetValues'''
         mdPath = testFile("test.xmd")
