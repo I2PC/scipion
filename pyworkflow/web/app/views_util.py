@@ -56,7 +56,8 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'jquery_colreorder': 'ColReorder.js',
           'jquery_colreorder_resize': 'ColReorderWithResize.js',
           'jquery_waypoints': 'waypoints.min.js',
-          'messi': 'messi/messi.js'
+          'messi': 'messi/messi.js',
+          'rapahel': 'raphael/raphael.js'
           
           }
 

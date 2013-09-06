@@ -29,7 +29,9 @@ def wiz_downsampling(protocol):
 def wiz_frequencies(protocol):
     mics = [mic for mic in protocol.inputMicrographs.get()]
     
-    context = {'objects': mics}
+    context = {'objects': mics,
+               'raphael':getResourceJs('rapahel')
+               }
     
     return render_to_response('wiz_frequencies.html', context)
     

@@ -1,7 +1,8 @@
 {% extends 'wiz_base.html' %} 
 {% block title %} Frequencies {% endblock %} 
-{% block name %} Frequencies {% endblock %} {% block head %}
-
+{% block name %} Frequencies {% endblock %} 
+{% block head %}
+	<script type="text/javascript" src="{{raphael}}"></script>
 {% endblock %} 
 {% block list %}
 <tr>
@@ -22,10 +23,14 @@
 		</div>Micrograph
 	</td>
 	<td>
-		<div class="image">
+		<div id="wrapper" class="image">
 			<img id="loadingPsd" src="../../../../resources/loading.gif"
-				style="display: none;" /> <img id="psd" src="" />
+				style="display: none;"/> 
+			<div id="psd_freq"> </div>
+			<div id="canvas_low"></div>
+			<div id="canvas_high"></div>
 		</div>PSD
+		
 	</td>
 </tr>
 {% endblock %} {% block options %}
@@ -58,6 +63,9 @@ $(".slider_low").slider({
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
 		$("#slider_low_result").html(ui.value);
+		
+		//update the circle
+		putCircleLow(ui.value*250);
 	},
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
@@ -75,6 +83,9 @@ $(".slider_high").slider({
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
 		$("#slider_high_result").html(ui.value);
+		
+		//update the circle
+		putCircleHigh(ui.value*250);
 	},
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
