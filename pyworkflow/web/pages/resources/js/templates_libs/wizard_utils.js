@@ -12,11 +12,11 @@ function selectList(elm) {
 		var rowOld = $("tr#" + row.attr('value'));
 		rowOld.attr('style', 'background-color: #fafafa;');
 		rowOld.attr('class', 'no-selected');
-
-		// hide the last micrograph
+	}
+	
+	// hide the last micrograph
 		img.hide();
 		img_psd.hide();
-	}
 
 	// mark the new option
 	row.attr('value', oldValue);
@@ -74,19 +74,63 @@ function previewPsd() {
 	});
 }
 
-function compositePreview(elm) {
-	$.when(selectList(elm)).then(previewPsd());
+function previewPsdFreq() {
+	//	var img = $("img#psd");
+	//	img.hide();
 
-	//	selectList(elm);
-	//	previewPsd();
+	// check downsampling is a number
+	var downsampling = $("input#downsampling").val();
+	if (downsampling == undefined) {
+		downsampling = 1.0;
+	}
+
+	// get the img path
+	var path_img = $("tr#" + $("table#list").attr("value")).attr("value");
+
+	var load = $("img#loadingPsd");
+
+	// set loading img
+	load.show();
+
+	// load and set the image
+	var uri = "/get_image_psd/?image=" + path_img + "&downsample="
+			+ downsampling + "&dim=250";
+
+	// show the new micrograph
+	load.load(putPsdImg(uri), function() {
+		// hide the load img
+		load.hide();
+	});
+
 }
 
-//$("div.highFreq").noUiSlider({
-//	range : [ 20, 100 ],
-//	start : [ 40, 80 ],
-//	step : 20,
-//	slide : function() {
-//		var values = $(this).val();
-//		$("span").text(values[0] + " - " + values[1]);
-//	}
-//});
+function putPsdImg(uri){
+	$("#psd_freq").empty();
+	var paper = Raphael(document.getElementById('psd_freq'));
+	var rec = paper.rect(0, 0, 250, 250);
+	rec.attr("stroke-width", 0);
+	rec.attr("fill", "url("+ uri +")");
+}
+
+function compositePreview(elm) {
+	$.when(selectList(elm)).then(previewPsdFreq());
+}
+
+function putCircleHigh(radio){
+	$("#canvas_high").empty();
+	var paper = Raphael(document.getElementById('canvas_high'));
+	var circle = paper.circle(125, 125, radio);
+	circle.attr("fill", "blue");
+	circle.attr("opacity", 0.4);
+}
+
+function putCircleLow(radio){
+	$("#canvas_low").empty();
+	var paper = Raphael(document.getElementById('canvas_low'));
+	var circle = paper.circle(125, 125, radio);
+	circle.attr("fill", "red");
+	circle.attr("opacity", 0.4);
+}
+
+
+
