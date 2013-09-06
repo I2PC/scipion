@@ -1,7 +1,9 @@
+// *** Common Methods *** //
+
 function selectList(elm) {
 	var row = $("table#list");
 	var oldValue = elm.attr('id');
-
+	
 	var img = $("img#mic");
 	var img_psd = $("img#psd");
 
@@ -43,6 +45,8 @@ function selectList(elm) {
 	});
 }
 
+// *** Methods Wizard Downsampling *** //
+
 function previewPsd() {
 	var img = $("img#psd");
 
@@ -74,6 +78,12 @@ function previewPsd() {
 	});
 }
 
+// *** Methods Wizard Frequencies *** //
+
+function compositePreview(elm) {
+	$.when(selectList(elm)).then(previewPsdFreq());
+}
+
 function previewPsdFreq() {
 	//	var img = $("img#psd");
 	//	img.hide();
@@ -97,40 +107,25 @@ function previewPsdFreq() {
 			+ downsampling + "&dim=250";
 
 	// show the new micrograph
-	load.load(putPsdImg(uri), function() {
+	load.load(putImage(uri, "psd_freq", 250, 250), function() {
 		// hide the load img
 		load.hide();
 	});
-
 }
 
-function putPsdImg(uri){
-	$("#psd_freq").empty();
-	var paper = Raphael(document.getElementById('psd_freq'));
+function putImage(url, canvas, width, height){
+	$("#"+canvas).empty();
+	var paper = Raphael(document.getElementById(canvas));
 	var rec = paper.rect(0, 0, 250, 250);
 	rec.attr("stroke-width", 0);
-	rec.attr("fill", "url("+ uri +")");
+	rec.attr("fill", "url("+ url +")");
 }
 
-function compositePreview(elm) {
-	$.when(selectList(elm)).then(previewPsdFreq());
-}
-
-function putCircleHigh(radio){
-	$("#canvas_high").empty();
-	var paper = Raphael(document.getElementById('canvas_high'));
+function putCircle(radio, canvas, color){
+	$("#"+canvas).empty();
+	var paper = Raphael(document.getElementById(canvas));
 	var circle = paper.circle(125, 125, radio);
-	circle.attr("fill", "blue");
+	circle.attr("fill", color);
 	circle.attr("opacity", 0.4);
 }
-
-function putCircleLow(radio){
-	$("#canvas_low").empty();
-	var paper = Raphael(document.getElementById('canvas_low'));
-	var circle = paper.circle(125, 125, radio);
-	circle.attr("fill", "red");
-	circle.attr("opacity", 0.4);
-}
-
-
 
