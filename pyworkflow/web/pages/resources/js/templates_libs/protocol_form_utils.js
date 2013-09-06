@@ -331,3 +331,18 @@ function processSelectionTable(elm) {
 	jQuery('input#' + elm.attr('data-node') + '_input').val(value);
 }
 
+/*
+ * Used to choose a element in the protocol form
+ */
+function selTableMessi(elm) {
+
+	var row = $("table.content");
+	var id = elm.attr('id');
+
+	if (row.attr('value') != undefined && row.attr('value') != id) {
+		var rowOld = $("td#" + row.attr('value'));
+		rowOld.attr('style', '');
+	}
+	row.attr('value', id);
+	elm.attr('style', 'background-color: LightSteelBlue;');
+}

@@ -12,7 +12,7 @@
 <tr id="{{obj.getObjId}}" class="no-selected"
 	style="background-color: #fafafa;"
 	onclick="compositePreview(($(this)));" value="{{obj.getFileName}}">
-	<td>{{obj.getFileName}}</td>
+	<td>{{obj.basename}}</td>
 </tr>
 {% endfor %} {% endblock %} {% block images %}
 <tr>
@@ -27,10 +27,9 @@
 			<img id="loadingPsd" src="../../../../resources/loading.gif"
 				style="display: none;"/> 
 			<div id="psd_freq"> </div>
-			<div id="canvas_low"></div>
 			<div id="canvas_high"></div>
+			<div id="canvas_low"></div>
 		</div>PSD
-		
 	</td>
 </tr>
 {% endblock %} {% block options %}
@@ -43,7 +42,6 @@
 		<div id="slider_low_result">0.25</div>
 		<input id="low_val" type="hidden"/>
 	</div>
-	
 	<div id="highFreq">
 		<span id="title_freq">High freq<span>
 		<div id="slider" class="slider_high"></div>
@@ -65,7 +63,7 @@ $(".slider_low").slider({
 		$("#slider_low_result").html(ui.value);
 		
 		//update the circle
-		putCircleLow(ui.value*250);
+		putCircle(ui.value*250, "canvas_low", "red");
 	},
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
@@ -85,7 +83,7 @@ $(".slider_high").slider({
 		$("#slider_high_result").html(ui.value);
 		
 		//update the circle
-		putCircleHigh(ui.value*250);
+		putCircle(ui.value*250, "canvas_high", "blue");
 	},
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
