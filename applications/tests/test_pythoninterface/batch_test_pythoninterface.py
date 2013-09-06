@@ -787,6 +787,7 @@ _rlnDefocusU #2
             
             
         self.assertEqual(mdRef, md)
+        print "THIS IS NOT AN ERROR: we are testing exceptions: an error message should appear regarding count and DOUBLE"
         self.assertRaises(XmippError, md.setValue, MDL_COUNT, 5.5, 1L)
    
         
