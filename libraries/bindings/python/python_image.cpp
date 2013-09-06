@@ -1141,13 +1141,27 @@ Image_applyTransforMatScipion(PyObject *obj, PyObject *args, PyObject *kwargs)
     double value;
     ImageObject *self = (ImageObject*) obj;
     ImageBase * img;
+    PyObject *only_apply_shifts = Py_False;
+    PyObject *wrap = (WRAP ? Py_True : Py_False);
     img = self->image->image;
+    bool boolOnly_apply_shifts = false;
+    bool boolWrap = WRAP;
 
     try
     {
-        PyArg_ParseTuple(args, "O", &list);
+        PyArg_ParseTuple(args, "O|OO", &list, &only_apply_shifts, &wrap);
         if (PyList_Check(list))
         {
+            if (PyBool_Check(only_apply_shifts))
+                boolOnly_apply_shifts = (only_apply_shifts == Py_True);
+            else
+                PyErr_SetString(PyExc_TypeError, "ImageGeneric::applyGeo: Expecting boolean value");
+            if (PyBool_Check(wrap))
+                boolWrap = (wrap == Py_True);
+            else
+                PyErr_SetString(PyExc_TypeError, "ImageGeneric::applyGeo: Expecting boolean value");
+
+
             size_t size = PyList_Size(list);
             Matrix2D<double> A,B;
             A.initIdentity(4);
@@ -1168,9 +1182,8 @@ Image_applyTransforMatScipion(PyObject *obj, PyObject *args, PyObject *kwargs)
             img->setShifts(shiftX,shiftY);
             img->setScale(scale);
             img->setFlip(flip);
-            img->selfApplyGeometry(LINEAR, false, false);//wrap, onlyShifts
+            img->selfApplyGeometry(LINEAR, boolWrap, boolOnly_apply_shifts);//wrap, onlyShifts
             Py_RETURN_NONE;
-
         }
         else
         {
