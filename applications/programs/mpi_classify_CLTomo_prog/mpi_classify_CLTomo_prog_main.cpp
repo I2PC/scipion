@@ -133,6 +133,25 @@ void CL3DClass::updateProjection(MultidimArray<double> &I,
         save()=P;
         if (MULTIDIM_SIZE(P)>0)
         	save.write("PPPupdateP.vol");
+
+        // Take from Pupdate
+        MultidimArray< std::complex<double> > PfourierAux;
+        PfourierAux=Pupdate;
+        save().initZeros(I);
+        double *ptrPupdate=(double*)&DIRECT_MULTIDIM_ELEM(PfourierAux,0);
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PupdateMask)
+        {
+            double maskVal=DIRECT_MULTIDIM_ELEM(PupdateMask,n);
+            if (maskVal>0)
+            {
+                double iMask=1./maskVal;
+                *(ptrPupdate)*=iMask;
+                *(ptrPupdate+1)*=iMask;
+            }
+            ptrPupdate+=2;
+        }
+        transformer.inverseFourierTransform(PfourierAux,save());
+        save.write("PPPupdateUpdateFourier.vol");
         std::cout << "Updating. Press any key\n";
         char c;
         std::cin >> c;
@@ -148,18 +167,29 @@ void CL3DClass::transferUpdate()
     {
         // Take from Pupdate
         double *ptrPupdate=(double*)&DIRECT_MULTIDIM_ELEM(Pupdate,0);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PupdateMask)
+        Matrix1D<int> idx(3);
+        Matrix1D<double> freq(3);
+        FOR_ALL_ELEMENTS_IN_ARRAY3D(PupdateMask)
         {
-            double maskVal=DIRECT_MULTIDIM_ELEM(PupdateMask,n);
-            if (maskVal>0)
+            double maskVal=A3D_ELEM(PupdateMask,k,i,j);
+            XX(idx)=j;
+            YY(idx)=i;
+            ZZ(idx)=k;
+            FFT_idx2digfreq(Paux,idx,freq);
+            if (maskVal>0 && freq.module()<prm->maxFreq)
             {
                 double iMask=1./maskVal;
                 *(ptrPupdate)*=iMask;
                 *(ptrPupdate+1)*=iMask;
             }
+            else
+            {
+            	*(ptrPupdate)=*(ptrPupdate+1)=0.;
+            }
             ptrPupdate+=2;
         }
         Pfourier=Pupdate;
+
         transformer.inverseFourierTransform(Pupdate,Paux);
         //P=PupdateReal/weightSum;
 
@@ -172,9 +202,12 @@ void CL3DClass::transferUpdate()
 
         double mean;
         detectBackground(Paux,bgMask,0.01,mean);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Paux)
-        if (DIRECT_MULTIDIM_ELEM(bgMask,n))
-            DIRECT_MULTIDIM_ELEM(Paux,n) = 0;
+        FOR_ALL_ELEMENTS_IN_ARRAY3D(Paux)
+        if (A3D_ELEM(bgMask,k,i,j))
+            A3D_ELEM(Paux,k,i,j) = 0;
+        else if (k<=STARTINGZ(Paux)+2  || i<=STARTINGY(Paux)+2  || j<=STARTINGX(Paux)+2 ||
+        		 k>=FINISHINGZ(Paux)-2 || i>=FINISHINGY(Paux)-2 || j>=FINISHINGX(Paux)-2)
+        	A3D_ELEM(Paux,k,i,j) = 0;
 
 #ifdef DEBUG
         save()=Paux;
@@ -283,7 +316,7 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
 #ifdef DEBUG
     Image<double> save2;
     save2()=I;
-    save2.write("PPPfitBasic0.xmp");
+    save2.write("PPPfitBasicI0.xmp");
     save2()=P;
     save2.write("PPPfitBasicI1.xmp");
 #endif
@@ -1302,7 +1335,7 @@ void ProgClassifyCL3D::defineParams()
     addParamsLine("   [--maxPsi <d=360>]        : Maximum allowed in-plane angle in absolute value");
     addParamsLine("   [--classifyAllImages]     : By default, some images may not be classified. Use this option to classify them all.");
     addParamsLine("   [--sym <s=c1>]            : Symmetry of the classes to be reconstructed");
-    addParamsLine("   [--maxFreq <w=0.2>]       : Maximum frequency for the alignment");
+    addParamsLine("   [--maxFreq <w=0.2>]       : Maximum frequency to be reconstructed");
     addParamsLine("   [--randomizeStartingOrientation] : Use this option to avoid aligning all missing wedges");
     Mask::defineParams(this,INT_MASK,NULL,NULL,true);
     addExampleLine("mpirun -np 3 `which xmipp_mpi_classify_CL3D` -i images.stk --nref 256 --oroot class --iter 10");
