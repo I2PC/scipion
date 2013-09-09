@@ -78,7 +78,7 @@ function previewPsd() {
 	});
 }
 
-// *** Methods Wizard Frequencies *** //
+// *** Methods Wizard CTF *** //
 
 function compositePreview(elm) {
 	$.when(selectList(elm)).then(previewPsdFreq());

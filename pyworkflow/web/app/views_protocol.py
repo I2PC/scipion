@@ -41,7 +41,10 @@ def form(request):
                         param.htmlValue = 'false'
             if paramName in wizards:
                 param.hasWizard = True
-                print "param: ", paramName, " has wizard"
+                param.wizardName = wizards[paramName].getView()
+                print "param: ", paramName, " has wizard", " view: "
+                
+                
             param.htmlCond = param.condition.get()
             param.htmlDepend = ','.join(param._dependants)
             param.htmlCondParams = ','.join(param._conditionParams)

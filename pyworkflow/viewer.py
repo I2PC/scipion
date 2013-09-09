@@ -84,3 +84,10 @@ class Wizard(object):
                 same form.
         """
         pass
+    
+    def getView(self):
+        """ This method should return the string value of the view in web
+        that will respond to this wizard. This method only should be implemented
+        in those wizards that have WEB_DJANGO environment defined. 
+        """
+        return None
