@@ -138,6 +138,11 @@ xmipp_gaussianFilter(PyObject *obj, PyObject *args, PyObject *kwargs);
 /* calculate enhanced psd and return preview
  * used for protocol preprocess_particles*/
 PyObject *
+xmipp_realGaussianFilter(PyObject *obj, PyObject *args, PyObject *kwargs);
+
+/* calculate enhanced psd and return preview
+ * used for protocol preprocess_particles*/
+PyObject *
 xmipp_badPixelFilter(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 /* dump metadatas to database*/
