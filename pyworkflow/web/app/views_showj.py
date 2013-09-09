@@ -72,6 +72,8 @@ def showj(request, inputParameters=None):
         inputParameters['blockComboBox']=_blockComboBox
         if 'mirrorY' not in inputParameters:
             inputParameters['mirrorY']=False
+        if 'transformMatrix' not in inputParameters:
+            inputParameters['transformMatrix']=False
         
         showjForm = ShowjForm(dataset,
                               tableLayoutConfiguration,
@@ -105,6 +107,7 @@ def showj(request, inputParameters=None):
                'jeditable': getResourceJs('jquery_editable'),
                'jquery_waypoints':getResourceJs('jquery_waypoints'),
                
+               'dataset': dataset,
                'tableLayoutConfiguration' : tableLayoutConfiguration if (showjForm.data['mode']=='gallery') else json.dumps({'columnsLayout': tableLayoutConfiguration.columnsLayout, 'colsOrder': tableLayoutConfiguration.colsOrder}, ensure_ascii=False, cls=ColumnLayoutConfigurationEncoder), #Data variables
                'tableDataset': tableDataset,
                'imageDimensions': request.session['imageDimensions'],

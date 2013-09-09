@@ -34,9 +34,19 @@ class DataSet(object):
     All tables should have an unique tableName. 
     """
     
-    def __init__(self, tables):
+    def __init__(self, tables, tableName=None, labelToRender=None):
         self._tables = list(tables)
+        self._tableName = tableName
+        self._labelToRender = labelToRender
+        
+    def setTableName(self, tableName):    
+        self._tableName = tableName
     
+    def setLabelToRender(self, labelToRender):
+        self._labelToRender = labelToRender
+    
+#    def getDataToRender(self):    
+        
     def listTables(self):
         """ List the actual table names on the DataSet. """
         return self._tables

@@ -121,6 +121,11 @@ def get_image(request):
     imageNo = None
     imagePath = request.GET.get('image')
     imageDim = request.GET.get('dim', 150)
+    mirrorY = 'mirrorY' in request.GET
+    applyTransformMatrix = 'applyTransformMatrix' in request.GET
+    onlyApplyShifts = request.GET.get('onlyApplyShifts',False)
+    wrap = request.GET.get('wrap',False)
+    transformMatrix = request.GET.get('transformMatrix',None)
     
     # PAJM: Como vamos a gestionar lsa imagen    
     if imagePath.endswith('png') or imagePath.endswith('gif'):
@@ -143,8 +148,8 @@ def get_image(request):
             
         imgXmipp = xmipp.Image(imagePath)
         
-        if ('mirrorY' in request.GET):
-            imgXmipp.mirrorY()
+        if (applyTransformMatrix and transformMatrix!=None): imgXmipp.applyTransforMatScipion(transformMatrix, onlyApplyShifts, wrap)
+        if (mirrorY): imgXmipp.mirrorY()
         
         
         # from PIL import Image

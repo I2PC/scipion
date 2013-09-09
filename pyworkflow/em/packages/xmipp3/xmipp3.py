@@ -289,15 +289,15 @@ class XmippDataSet(ds.DataSet):
 
         
     def _hasTransformation(self, labels):
-        for l in [xmipp.MDL_SHIFT_X, xmipp.MDL_SHIFT_Y, xmipp.MDL_SHIFT_Z]:
+        for l in [xmipp.MDL_SHIFT_X, xmipp.MDL_SHIFT_Y, xmipp.MDL_SHIFT_Z, xmipp.MDL_ANGLE_ROT, xmipp.MDL_ANGLE_TILT, xmipp.MDL_ANGLE_PSI]:
             if l in labels:
                 return True
         return False
         
     def _getTransformation(self, md, objId):
-        rot  = md.getValue(xmipp.MDL_ANGLE_ROT ,objId)
+        rot  = md.getValue(xmipp.MDL_ANGLE_ROT,objId)
         tilt = md.getValue(xmipp.MDL_ANGLE_TILT,objId)
-        psi  = md.getValue(xmipp.MDL_ANGLE_PSI ,objId)
+        psi  = md.getValue(xmipp.MDL_ANGLE_PSI,objId)
         if rot is  None:
             rot = 0
         if tilt is  None:
@@ -310,8 +310,8 @@ class XmippDataSet(ds.DataSet):
         y = md.getValue(xmipp.MDL_SHIFT_Y, objId)
         z = md.getValue(xmipp.MDL_SHIFT_Z, objId)
 
-        return [tMatrix[0][0], tMatrix[0][1], tMatrix[0][2], x,
-                tMatrix[1][0], tMatrix[1][1], tMatrix[1][2], y,
-                tMatrix[2][0], tMatrix[2][1], tMatrix[2][2], z]
+        return [tMatrix[0][0], tMatrix[0][1], tMatrix[0][2], x if x!=None else 0,
+                tMatrix[1][0], tMatrix[1][1], tMatrix[1][2], y if y!=None else 0,
+                tMatrix[2][0], tMatrix[2][1], tMatrix[2][2], z if z!=None else 0]
 
 

@@ -20,7 +20,7 @@
 		initializeComboBoxEvents()
 		initializeArrowEvents()
 		initializeColsRowsEvents()
-		initializeMirrorY()
+		initializeCheckboxEvents()
 		
 		/* Avoid enter key submit form */
 		$('.menuInputNumber').keypress(function(e) {
@@ -50,8 +50,8 @@
 	}
 	</script>
 	<script type="text/javascript">
-	function initializeMirrorY(){
-		$("#id_mirrorY").click(function(){
+	function initializeCheckboxEvents(){
+		$("#id_mirrorY", "#id_transformMatrix", "#id_onlyShifts", '#id_wrap').click(function(){
 			$('form#showjForm').submit();
 		})
 	}

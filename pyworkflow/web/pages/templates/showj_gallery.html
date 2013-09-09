@@ -15,7 +15,10 @@
 	
 	function initializeImageLoad(){
 		$('.tableImages').waypoint(function(direction){
-			$(this).attr("src", $(this).data('real_src').concat($("#id_mirrorY").is(':checked')?"&mirrorY":""))
+			$(this).attr(
+					"src",
+					$(this).data('real_src').concat($("#id_mirrorY").is(':checked')?"&mirrorY":"").concat($("#id_transformMatrix").is(':checked')?"&transformMatrix":"").concat($("#id_onlyShifts").is(':checked')?"&onlyShifts":"").concat($("#id_wrap").is(':checked')?"&wrap":"")
+					)
 		}, {
 			triggerOnce:true,
 			offset: '150%'
@@ -202,17 +205,6 @@
 			{% endfor %}
 		{% endif %}
 	{% endfor %}	
-	
-<!-- 	{% for row in tableDataset.getRows %}
- 	
-		<div class="img_container" id="img_container___{{row.0}}">
-			<div class="img_inner_container">
-				<img class="tableImages" title="{{cell}}" data-real_src="/get_image/?image={{cell}}"/>
-				<img class="enabledGallery" src="/resources/showj/enabled_gallery.png" id="{{form.labelsToRenderComboBox.value}}___{{forloop.parentloop.counter0}}" onclick="enableDisableImage(this);"/>
-			</div>
-			<div id="column_label">{{forloop.parentloop.counter}}</div> 
-		</div>
-	{% endfor %} -->		
 		
 			
 {% endblock %}

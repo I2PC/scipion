@@ -282,13 +282,12 @@ class ShowjForm(forms.Form):
     mode = forms.CharField(widget=forms.HiddenInput())
     colRowMode = forms.CharField(widget=forms.HiddenInput())
     
-    mirrorY = forms.BooleanField(label='Invert Y axis')
+    mirrorY = forms.BooleanField(label='Invert Y Axis')
+    
+    transformMatrix = forms.BooleanField(label='Apply Transform Matrix')
+    onlyShifts = forms.BooleanField(label='Only Shifts')
+    wrap = forms.BooleanField(label='Wrap')
 
-#    imageWidth = forms.IntegerField(widget=forms.HiddenInput(), initial=0)
-#    imageHeight = forms.IntegerField(widget=forms.HiddenInput(), initial=0)
-    
-     
-    
     
     def __init__(self, dataset, tableLayoutConfiguration, *args, **kwargs):
         super(ShowjForm, self).__init__(*args, **kwargs)
