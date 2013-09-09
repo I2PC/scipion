@@ -149,14 +149,10 @@ table#list tr.selected:hover td {
 	background-color: LightSteelBlue;
 }
 
-
-/**************** Slider CSS *******************/
-
-
-
+/**************** Frequencies CSS *******************/
 #slider{
 	width:15em;
-	margin: 4px 0 4px 0;
+	margin: 5px 0 5px 0;
 }
 
 #lowFreq{
@@ -165,13 +161,45 @@ table#list tr.selected:hover td {
 }
 
 #highFreq{
-	width:15em;
+	width:17em;
 	float:right;
-	margin-right:2em;
 }
 
 #freqOptions{
 	width:36em;
 	background: #fafafa;
 	float:right;
+}
+
+#wrapper {
+    position: relative;
+/*     padding: 0; */
+/*     outline: 1px solid #999; */
+}
+#wrapper img {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+#canvas_low {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+#canvas_high {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+#psd_freq {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+svg{
+	width:250px;
+	height:250px;
 }

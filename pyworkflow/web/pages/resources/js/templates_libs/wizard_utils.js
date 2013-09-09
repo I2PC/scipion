@@ -1,7 +1,9 @@
+// *** Common Methods *** //
+
 function selectList(elm) {
 	var row = $("table#list");
 	var oldValue = elm.attr('id');
-
+	
 	var img = $("img#mic");
 	var img_psd = $("img#psd");
 
@@ -12,11 +14,11 @@ function selectList(elm) {
 		var rowOld = $("tr#" + row.attr('value'));
 		rowOld.attr('style', 'background-color: #fafafa;');
 		rowOld.attr('class', 'no-selected');
-
-		// hide the last micrograph
+	}
+	
+	// hide the last micrograph
 		img.hide();
 		img_psd.hide();
-	}
 
 	// mark the new option
 	row.attr('value', oldValue);
@@ -42,6 +44,8 @@ function selectList(elm) {
 		img.show();
 	});
 }
+
+// *** Methods Wizard Downsampling *** //
 
 function previewPsd() {
 	var img = $("img#psd");
@@ -74,19 +78,54 @@ function previewPsd() {
 	});
 }
 
-function compositePreview(elm) {
-	$.when(selectList(elm)).then(previewPsd());
+// *** Methods Wizard Frequencies *** //
 
-	//	selectList(elm);
-	//	previewPsd();
+function compositePreview(elm) {
+	$.when(selectList(elm)).then(previewPsdFreq());
 }
 
-//$("div.highFreq").noUiSlider({
-//	range : [ 20, 100 ],
-//	start : [ 40, 80 ],
-//	step : 20,
-//	slide : function() {
-//		var values = $(this).val();
-//		$("span").text(values[0] + " - " + values[1]);
-//	}
-//});
+function previewPsdFreq() {
+	//	var img = $("img#psd");
+	//	img.hide();
+
+	// check downsampling is a number
+	var downsampling = $("input#downsampling").val();
+	if (downsampling == undefined) {
+		downsampling = 1.0;
+	}
+
+	// get the img path
+	var path_img = $("tr#" + $("table#list").attr("value")).attr("value");
+
+	var load = $("img#loadingPsd");
+
+	// set loading img
+	load.show();
+
+	// load and set the image
+	var uri = "/get_image_psd/?image=" + path_img + "&downsample="
+			+ downsampling + "&dim=250";
+
+	// show the new micrograph
+	load.load(putImage(uri, "psd_freq", 250, 250), function() {
+		// hide the load img
+		load.hide();
+	});
+}
+
+function putImage(url, canvas, width, height){
+	$("#"+canvas).empty();
+	var paper = Raphael(document.getElementById(canvas));
+	var rec = paper.rect(0, 0, 250, 250);
+	rec.attr("stroke-width", 0);
+	rec.attr("fill", "url("+ url +")");
+}
+
+function putCircle(radio, canvas, color){
+	$("#"+canvas).empty();
+	var paper = Raphael(document.getElementById(canvas));
+	var circle = paper.circle(125, 125, radio);
+	circle.attr("fill", color);
+	circle.attr("opacity", 0.4);
+}
+

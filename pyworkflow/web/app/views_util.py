@@ -1,6 +1,7 @@
 import os
 import xmipp
 import json
+from pyworkflow.em import emProtocolsDict
 from pyworkflow.tests import getInputPath
 from pyworkflow.web.pages import settings
 from pyworkflow.manager import Manager
@@ -55,7 +56,8 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'jquery_colreorder': 'ColReorder.js',
           'jquery_colreorder_resize': 'ColReorderWithResize.js',
           'jquery_waypoints': 'waypoints.min.js',
-          'messi': 'messi/messi.js'
+          'messi': 'messi/messi.js',
+          'rapahel': 'raphael/raphael.js'
           
           }
 

@@ -30,7 +30,7 @@ This module implement some wizards
 import os
 import Tkinter as tk
 import ttk
-from pyworkflow.viewer import Viewer, Wizard
+from pyworkflow.viewer import Viewer, Wizard, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, DefCTFMicrographs
 from protocol_projmatch import XmippDefProjMatch, XmippProtProjMatch 
 from protocol_preprocess_micrographs import XmippDefPreprocessMicrograph
@@ -43,6 +43,7 @@ import xmipp
 
 class XmippDownsampleWizard(Wizard):
     _targets = [(XmippDefPreprocessMicrograph, ['downFactor'])]
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
         
     def show(self, form):
         protocol = form.protocol
@@ -77,6 +78,7 @@ class XmippCTFWizard(Wizard):
     with the Xmipp program xmipp_showj
     """
     _targets = [(DefCTFMicrographs, ['lowRes', 'highRes'])]
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
         
     def show(self, form):
         protocol = form.protocol

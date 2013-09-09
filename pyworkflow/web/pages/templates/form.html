@@ -169,9 +169,28 @@
 									<td class="ico">
 										<a href="javascript:browseObjects('{{paramName}}','{{projectName}}','{{param.pointerClass.get}}');"><img src={{browse}}/></a>
 									</td>
+								{% elif protocol.getClassName == "XmippProtCTFMicrographs" or protocol.getClassName == "ProtCTFFind" %}
+									{% if paramName == "lowRes" %}
 									<td class="ico">
 										<a href="javascript:customPopup('/wizard/?function=wiz_frequencies&protocolId={{protocol.getObjId}}',825,470)"><img src={{wizard}}/></a>
 									</td>
+									{% elif paramName == "highRes" %}
+									<td class="ico">
+										<a href="javascript:customPopup('/wizard/?function=wiz_frequencies&protocolId={{protocol.getObjId}}',825,470)"><img src={{wizard}}/></a>
+									</td>
+									{% else %}
+									<td>
+									</td>
+									{% endif %}
+								{% elif protocol.getClassName == "XmippProtPreprocessMicrographs" %}
+									{% if paramName == "downFactor" %}
+									<td class="ico">
+										<a href="javascript:customPopup('/wizard/?function=wiz_downsampling&protocolId={{protocol.getObjId}}',825,470)"><img src={{wizard}}/></a>
+									</td>
+									{% else %}
+									<td>
+									</td>
+									{% endif %}
 								{% else %}
 									<td>
 									</td>

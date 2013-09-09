@@ -1,4 +1,5 @@
 import os
+from os.path import basename
 import xmipp
 from pyworkflow.web.app.views_util import * 
 from pyworkflow.manager import Manager
@@ -21,6 +22,8 @@ def wizard(request):
 
 def wiz_downsampling(protocol):
     mics = [mic for mic in protocol.inputMicrographs.get()]
+    for m in mics:
+        m.basename = basename(m.getFileName())
     
     context = {'objects': mics}
     
@@ -28,8 +31,12 @@ def wiz_downsampling(protocol):
 
 def wiz_frequencies(protocol):
     mics = [mic for mic in protocol.inputMicrographs.get()]
+    for m in mics:
+        m.basename = basename(m.getFileName())
     
-    context = {'objects': mics}
+    context = {'objects': mics,
+               'raphael':getResourceJs('rapahel')
+               }
     
     return render_to_response('wiz_frequencies.html', context)
     
