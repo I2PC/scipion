@@ -1936,6 +1936,17 @@ class XmippBrowserGaussianFilter(XmippBrowserBandpassFilter):
         self.fillResultPreview()
         return frame
 
+class XmippBrowserRealGaussianFilter(XmippBrowserGaussianFilter):
+    def __init__(self, **args):
+        XmippBrowserGaussianFilter.__init__(self, **args)
+        self.label = 'Real Space Sigma'
+        self.key = 'realSigma'
+    
+    def getComputeFunction(self):
+        from xmipp import realGaussianFilter
+        realSigma = float(self.getResults())
+        return lambda: realGaussianFilter(self.image, self.lastitem, realSigma, self.dim)
+
 """
 class XmippBrowserCropSizeFilter(XmippBrowserCropSizeFilter):
     ''' This subclass is specific preview some operations
