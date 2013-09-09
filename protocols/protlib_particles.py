@@ -77,6 +77,12 @@ class ProtParticlesBase(XmippProtocol):
             for i, m in enumerate(self.Steps):
                 messages.append("  %d -> %s" % (i+1, m % self.ParamsDict))
 
+def runThreshold(log, stack, selectionMode, threshold, substituteBy, substituteValue, Nproc):
+    args="-i %(stack)s --select %(selectionMode)s %(threshold)f --substitute %(substituteBy)s" % locals()
+    if substituteBy=='value':
+        args+=" %f"%substituteValue
+    runJob(log,"xmipp_transform_threshold",args,Nproc)
+
 def runFourierFilter(log,stack,freq_low,freq_high,freq_decay,Nproc):
     program = "xmipp_transform_filter"
     args = "-i %(stack)s --fourier "
