@@ -90,108 +90,112 @@ PyNumberMethods Image_NumberMethods =
 
 /* Image methods */
 PyMethodDef Image_methods[] =
-   {
-   { "applyGeo", (PyCFunction) Image_applyGeo, METH_VARARGS,
-     "Apply geometry in refering metadata to an image" },
-   { "read", (PyCFunction) Image_read, METH_VARARGS,
-     "Read image from disk" },
-   { "readPreview", (PyCFunction) Image_readPreview, METH_VARARGS,
-     "Read image preview" },
-   { "equal", (PyCFunction) Image_equal, METH_VARARGS,
-     "return true if both images are equal up to precision" },
-   { "convertPSD", (PyCFunction) Image_convertPSD, METH_VARARGS,
-     "Convert to PSD: center FFT and use logarithm" },
-   { "readApplyGeo", (PyCFunction) Image_readApplyGeo, METH_VARARGS,
-     "Read image from disk applying geometry in refering metadata" },
-   { "write", (PyCFunction) Image_write, METH_VARARGS,
-     "Write image to disk" },
-   { "getData", (PyCFunction) Image_getData, METH_VARARGS,
-     "Return NumPy array from image data" },
-   { "projectVolumeDouble", (PyCFunction) Image_projectVolumeDouble, METH_VARARGS,
-     "project a volume using Euler angles" },
+    {
+        { "applyGeo", (PyCFunction) Image_applyGeo, METH_VARARGS,
+          "Apply geometry in refering metadata to an image" },
+        { "read", (PyCFunction) Image_read, METH_VARARGS,
+          "Read image from disk" },
+        { "readPreview", (PyCFunction) Image_readPreview, METH_VARARGS,
+          "Read image preview" },
+        { "equal", (PyCFunction) Image_equal, METH_VARARGS,
+          "return true if both images are equal up to precision" },
+        { "convertPSD", (PyCFunction) Image_convertPSD, METH_VARARGS,
+          "Convert to PSD: center FFT and use logarithm" },
+        { "readApplyGeo", (PyCFunction) Image_readApplyGeo, METH_VARARGS,
+          "Read image from disk applying geometry in refering metadata" },
+        { "write", (PyCFunction) Image_write, METH_VARARGS,
+          "Write image to disk" },
+        { "getData", (PyCFunction) Image_getData, METH_VARARGS,
+          "Return NumPy array from image data" },
+        { "projectVolumeDouble", (PyCFunction) Image_projectVolumeDouble, METH_VARARGS,
+          "project a volume using Euler angles" },
 
-   { "setData", (PyCFunction) Image_setData, METH_VARARGS,
-     "Copy NumPy array to image data" },
-   { "getPixel", (PyCFunction) Image_getPixel, METH_VARARGS,
-     "Return a pixel value" },
-   { "initConstant", (PyCFunction) Image_initConstant, METH_VARARGS,
-     "Initialize to value" },
-   { "initRandom", (PyCFunction) Image_initRandom, METH_VARARGS,
-     "Initialize to random value" },
-   { "resize", (PyCFunction) Image_resize, METH_VARARGS,
-     "Resize the image dimensions" },
-   { "scale", (PyCFunction) Image_scale, METH_VARARGS,
-     "Scale the image" },
-   { "patch", (PyCFunction) Image_patch, METH_VARARGS,
-     "Make a patch with other image" },
-   { "setDataType", (PyCFunction) Image_setDataType, METH_VARARGS,
-     "set DataType for Image" },
-   { "convert2DataType", (PyCFunction) Image_convert2DataType, METH_VARARGS,
-     "Convert datatype of Image" },
-   { "setPixel", (PyCFunction) Image_setPixel, METH_VARARGS,
-     "Set the value of some pixel" },
-   { "getDimensions", (PyCFunction) Image_getDimensions, METH_VARARGS,
-     "Return image dimensions as a tuple" },
-   { "getEulerAngles", (PyCFunction) Image_getEulerAngles, METH_VARARGS,
-     "Return euler angles as a tuple" },
-   { "getMainHeaderValue", (PyCFunction) Image_getMainHeaderValue, METH_VARARGS,
-     "Return value from MainHeader" },
-   { "setMainHeaderValue", (PyCFunction) Image_setMainHeaderValue, METH_VARARGS,
-     "Set value to MainHeader" },
-   { "getHeaderValue", (PyCFunction) Image_getHeaderValue, METH_VARARGS,
-     "Return value from Header" },
-   { "setHeaderValue", (PyCFunction) Image_setHeaderValue, METH_VARARGS,
-     "Set value to Header" },
-   { "computeStats", (PyCFunction) Image_computeStats, METH_VARARGS,
-     "Compute image statistics, return mean, dev, min and max" },
-   { "adjustAndSubtract", (PyCFunction) Image_adjustAndSubtract, METH_VARARGS,
-       "I1=I1-adjusted(I2)" },
-   { NULL } /* Sentinel */
-};//Image_methods
+        { "setData", (PyCFunction) Image_setData, METH_VARARGS,
+          "Copy NumPy array to image data" },
+        { "getPixel", (PyCFunction) Image_getPixel, METH_VARARGS,
+          "Return a pixel value" },
+        { "initConstant", (PyCFunction) Image_initConstant, METH_VARARGS,
+          "Initialize to value" },
+        { "mirrorY", (PyCFunction) Image_mirrorY, METH_VARARGS,
+          "mirror image so up goes down" },
+        { "applyTransforMatScipion", (PyCFunction) Image_applyTransforMatScipion, METH_VARARGS,
+          "apply transformationMatrix as defined by EMX and used by Scipion" },
+        { "initRandom", (PyCFunction) Image_initRandom, METH_VARARGS,
+          "Initialize to random value" },
+        { "resize", (PyCFunction) Image_resize, METH_VARARGS,
+          "Resize the image dimensions" },
+        { "scale", (PyCFunction) Image_scale, METH_VARARGS,
+          "Scale the image" },
+        { "patch", (PyCFunction) Image_patch, METH_VARARGS,
+          "Make a patch with other image" },
+        { "setDataType", (PyCFunction) Image_setDataType, METH_VARARGS,
+          "set DataType for Image" },
+        { "convert2DataType", (PyCFunction) Image_convert2DataType, METH_VARARGS,
+          "Convert datatype of Image" },
+        { "setPixel", (PyCFunction) Image_setPixel, METH_VARARGS,
+          "Set the value of some pixel" },
+        { "getDimensions", (PyCFunction) Image_getDimensions, METH_VARARGS,
+          "Return image dimensions as a tuple" },
+        { "getEulerAngles", (PyCFunction) Image_getEulerAngles, METH_VARARGS,
+          "Return euler angles as a tuple" },
+        { "getMainHeaderValue", (PyCFunction) Image_getMainHeaderValue, METH_VARARGS,
+          "Return value from MainHeader" },
+        { "setMainHeaderValue", (PyCFunction) Image_setMainHeaderValue, METH_VARARGS,
+          "Set value to MainHeader" },
+        { "getHeaderValue", (PyCFunction) Image_getHeaderValue, METH_VARARGS,
+          "Return value from Header" },
+        { "setHeaderValue", (PyCFunction) Image_setHeaderValue, METH_VARARGS,
+          "Set value to Header" },
+        { "computeStats", (PyCFunction) Image_computeStats, METH_VARARGS,
+          "Compute image statistics, return mean, dev, min and max" },
+        { "adjustAndSubtract", (PyCFunction) Image_adjustAndSubtract, METH_VARARGS,
+          "I1=I1-adjusted(I2)" },
+        { NULL } /* Sentinel */
+    };//Image_methods
 
 
 /*Image Type */
 PyTypeObject ImageType = {
-    PyObject_HEAD_INIT(NULL)
-    0, /*ob_size*/
-    "xmipp.Image", /*tp_name*/
-    sizeof(ImageObject), /*tp_basicsize*/
-    0, /*tp_itemsize*/
-    (destructor)Image_dealloc, /*tp_dealloc*/
-    0, /*tp_print*/
-    0, /*tp_getattr*/
-    0, /*tp_setattr*/
-    Image_compare, /*tp_compare*/
-    Image_repr, /*tp_repr*/
-    &Image_NumberMethods, /*tp_as_number*/
-    0, /*tp_as_sequence*/
-    0, /*tp_as_mapping*/
-    0, /*tp_hash */
-    0, /*tp_call*/
-    0, /*tp_str*/
-    0, /*tp_getattro*/
-    0, /*tp_setattro*/
-    0, /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT, /*tp_flags*/
-    "Python wrapper to Xmipp Image class",/* tp_doc */
-    0, /* tp_traverse */
-    0, /* tp_clear */
-    0, /* tp_richcompare */
-    0, /* tp_weaklistoffset */
-    0, /* tp_iter */
-    0, /* tp_iternext */
-    Image_methods, /* tp_methods */
-    0, /* tp_members */
-    0, /* tp_getset */
-    0, /* tp_base */
-    0, /* tp_dict */
-    0, /* tp_descr_get */
-    0, /* tp_descr_set */
-    0, /* tp_dictoffset */
-    0, /* tp_init */
-    0, /* tp_alloc */
-    Image_new, /* tp_new */
-};//ImageType
+                             PyObject_HEAD_INIT(NULL)
+                             0, /*ob_size*/
+                             "xmipp.Image", /*tp_name*/
+                             sizeof(ImageObject), /*tp_basicsize*/
+                             0, /*tp_itemsize*/
+                             (destructor)Image_dealloc, /*tp_dealloc*/
+                             0, /*tp_print*/
+                             0, /*tp_getattr*/
+                             0, /*tp_setattr*/
+                             Image_compare, /*tp_compare*/
+                             Image_repr, /*tp_repr*/
+                             &Image_NumberMethods, /*tp_as_number*/
+                             0, /*tp_as_sequence*/
+                             0, /*tp_as_mapping*/
+                             0, /*tp_hash */
+                             0, /*tp_call*/
+                             0, /*tp_str*/
+                             0, /*tp_getattro*/
+                             0, /*tp_setattro*/
+                             0, /*tp_as_buffer*/
+                             Py_TPFLAGS_DEFAULT, /*tp_flags*/
+                             "Python wrapper to Xmipp Image class",/* tp_doc */
+                             0, /* tp_traverse */
+                             0, /* tp_clear */
+                             0, /* tp_richcompare */
+                             0, /* tp_weaklistoffset */
+                             0, /* tp_iter */
+                             0, /* tp_iternext */
+                             Image_methods, /* tp_methods */
+                             0, /* tp_members */
+                             0, /* tp_getset */
+                             0, /* tp_base */
+                             0, /* tp_dict */
+                             0, /* tp_descr_get */
+                             0, /* tp_descr_set */
+                             0, /* tp_dictoffset */
+                             0, /* tp_init */
+                             0, /* tp_alloc */
+                             Image_new, /* tp_new */
+                         };//ImageType
 
 /* Constructor */
 PyObject *
@@ -674,6 +678,25 @@ Image_initConstant(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }//function Image_initConstant
 
+/* initConstant */
+PyObject *
+Image_mirrorY(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
+    double value = -1;
+
+    try
+    {
+        self->image->mirrorY();
+        Py_RETURN_NONE;
+    }
+    catch (XmippError &xe)
+    {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+    return NULL;
+}//function Image_initConstant
+
 /* initRandom */
 PyObject *
 Image_initRandom(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -748,28 +771,28 @@ Image_scale(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }//function Image_scale
 
- /* Patch Image */
- PyObject *
- Image_patch(PyObject *obj, PyObject *args, PyObject *kwargs)
- {
-     ImageObject *self = (ImageObject*) obj;
-     PyObject *patch;
-     int x = 0, y = 0;
+/* Patch Image */
+PyObject *
+Image_patch(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
+    PyObject *patch;
+    int x = 0, y = 0;
 
-     if (self != NULL && PyArg_ParseTuple(args, "Oii", &patch, &x, &y))
-     {
-         try
-         {
-             MULTIDIM_ARRAY_GENERIC(Image_Value(self)).patch(MULTIDIM_ARRAY_GENERIC(Image_Value(patch)), x, y);
-             Py_RETURN_NONE;
-         }
-         catch (XmippError &xe)
-         {
-             PyErr_SetString(PyXmippError, xe.msg.c_str());
-         }
-     }
-     return NULL;
- }//function Image_patch
+    if (self != NULL && PyArg_ParseTuple(args, "Oii", &patch, &x, &y))
+    {
+        try
+        {
+            MULTIDIM_ARRAY_GENERIC(Image_Value(self)).patch(MULTIDIM_ARRAY_GENERIC(Image_Value(patch)), x, y);
+            Py_RETURN_NONE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}//function Image_patch
 
 
 /* Set Data Type */
@@ -1014,14 +1037,14 @@ Image_adjustAndSubtract(PyObject *obj, PyObject *args, PyObject *kwargs)
     {
         try
         {
-        	if (PyArg_ParseTuple(args, "O", &pimg2))
-        	{
-        		ImageObject *img2=(ImageObject *)pimg2;
+            if (PyArg_ParseTuple(args, "O", &pimg2))
+            {
+                ImageObject *img2=(ImageObject *)pimg2;
                 result->image = new ImageGeneric(Image_Value(img2));
-        		MULTIDIM_ARRAY_GENERIC(*result->image).rangeAdjust(MULTIDIM_ARRAY_GENERIC(*self->image));
-        		MULTIDIM_ARRAY_GENERIC(*result->image) *=-1;
-        		MULTIDIM_ARRAY_GENERIC(*result->image) += MULTIDIM_ARRAY_GENERIC(*self->image);
-        	}
+                MULTIDIM_ARRAY_GENERIC(*result->image).rangeAdjust(MULTIDIM_ARRAY_GENERIC(*self->image));
+                MULTIDIM_ARRAY_GENERIC(*result->image) *=-1;
+                MULTIDIM_ARRAY_GENERIC(*result->image) += MULTIDIM_ARRAY_GENERIC(*self->image);
+            }
         }
         catch (XmippError &xe)
         {
@@ -1106,6 +1129,73 @@ Image_isubtract(PyObject *obj1, PyObject *obj2)
         PyErr_SetString(PyXmippError, xe.msg.c_str());
     }
     return (PyObject *)result;
+}//operator +=
+
+/** Image inplace subtraction, equivalent to -= operator */
+PyObject *
+Image_applyTransforMatScipion(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+
+	PyObject * list = NULL;
+    PyObject * item = NULL;
+    double value;
+    ImageObject *self = (ImageObject*) obj;
+    ImageBase * img;
+    PyObject *only_apply_shifts = Py_False;
+    PyObject *wrap = (WRAP ? Py_True : Py_False);
+    img = self->image->image;
+    bool boolOnly_apply_shifts = false;
+    bool boolWrap = WRAP;
+
+    try
+    {
+        PyArg_ParseTuple(args, "O|OO", &list, &only_apply_shifts, &wrap);
+        if (PyList_Check(list))
+        {
+            if (PyBool_Check(only_apply_shifts))
+                boolOnly_apply_shifts = (only_apply_shifts == Py_True);
+            else
+                PyErr_SetString(PyExc_TypeError, "ImageGeneric::applyGeo: Expecting boolean value");
+            if (PyBool_Check(wrap))
+                boolWrap = (wrap == Py_True);
+            else
+                PyErr_SetString(PyExc_TypeError, "ImageGeneric::applyGeo: Expecting boolean value");
+
+
+            size_t size = PyList_Size(list);
+            Matrix2D<double> A,B;
+            A.initIdentity(4);
+            for (size_t i = 0; i < size; ++i)
+            {
+                item  = PyList_GetItem(list, i);
+                MAT_ELEM(A,i/4,i%4 ) = PyFloat_AsDouble(item);
+            }
+            double scale, shiftX, shiftY, shiftZ, rot,tilt, psi;
+            bool flip;
+            transformationMatrix2Parameters3D(A, flip, scale, shiftX, shiftY, shiftZ, rot,tilt, psi);
+            double _rot;
+            if (tilt==0.)
+                _rot=rot + psi;
+            else
+                _rot=psi;
+            img->setEulerAngles(0,0.,_rot);
+            img->setShifts(shiftX,shiftY);
+            img->setScale(scale);
+            img->setFlip(flip);
+            img->selfApplyGeometry(LINEAR, boolWrap, boolOnly_apply_shifts);//wrap, onlyShifts
+            Py_RETURN_NONE;
+        }
+        else
+        {
+            PyErr_SetString(PyExc_TypeError, "ImageGeneric::applyTransforMatScipion: Expecting a list");
+
+        }
+    }
+    catch (XmippError &xe)
+    {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+    return NULL;
 }//operator +=
 
 PyObject *
