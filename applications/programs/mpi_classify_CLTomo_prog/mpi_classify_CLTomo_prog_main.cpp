@@ -167,16 +167,10 @@ void CL3DClass::transferUpdate()
     {
         // Take from Pupdate
         double *ptrPupdate=(double*)&DIRECT_MULTIDIM_ELEM(Pupdate,0);
-        Matrix1D<int> idx(3);
-        Matrix1D<double> freq(3);
-        FOR_ALL_ELEMENTS_IN_ARRAY3D(PupdateMask)
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PupdateMask)
         {
-            double maskVal=A3D_ELEM(PupdateMask,k,i,j);
-            XX(idx)=j;
-            YY(idx)=i;
-            ZZ(idx)=k;
-            FFT_idx2digfreq(Paux,idx,freq);
-            if (maskVal>0 && freq.module()<prm->maxFreq)
+            double maskVal=DIRECT_MULTIDIM_ELEM(PupdateMask,n);
+            if (maskVal>0 && DIRECT_MULTIDIM_ELEM(prm->maxFreqMask,n))
             {
                 double iMask=1./maskVal;
                 *(ptrPupdate)*=iMask;
@@ -289,7 +283,7 @@ void CL3DClass::constructFourierMaskFRM()
 	IfourierMaskFRM.initZeros(prm->Xdim,prm->Xdim,prm->Xdim);
 	IfourierMaskFRM.setXmippOrigin();
 	FOR_ALL_ELEMENTS_IN_ARRAY3D(IfourierMask)
-	if (A3D_ELEM(IfourierMask,k,i,j))
+	if (A3D_ELEM(IfourierMask,k,i,j) && A3D_ELEM(prm->maxFreqMask,k,i,j))
 	{
 		int kp=k, ip=i;
 		if (k>xdim_2)
@@ -1388,6 +1382,24 @@ void ProgClassifyCL3D::produceSideInfo()
         Ncodes0 = codes0.size();
     }
     vq.initialize(SF, codes0);
+
+    // MaxFreq mask
+    MultidimArray<double> V;
+    V.initZeros(Zdim,Ydim,Xdim);
+    FourierTransformer transformer;
+    transformer.setReal(V);
+    maxFreqMask.initZeros(transformer.fFourier);
+    Matrix1D<int> idx(3);
+    Matrix1D<double> freq(3);
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(maxFreqMask)
+    {
+    	XX(idx)=j;
+    	YY(idx)=i;
+    	ZZ(idx)=k;
+    	FFT_idx2digfreq(V,idx,freq);
+    	if (freq.module()<=maxFreq)
+    		A3D_ELEM(maxFreqMask,k,i,j)=1;
+    }
 }
 
 void ProgClassifyCL3D::run()

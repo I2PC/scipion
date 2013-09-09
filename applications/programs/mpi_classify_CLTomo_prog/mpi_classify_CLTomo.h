@@ -325,6 +325,9 @@ public:
 
     /// Max shift
     double maxShift;
+
+    /// MaxFreq mask
+    MultidimArray<unsigned char> maxFreqMask;
 };
 //@}
 #endif
