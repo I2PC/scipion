@@ -42,7 +42,7 @@ sections = [
 ('Preprocessing', 
    [['Micrographs', 'import_micrographs','screen_micrographs','downsample_micrographs'], 
     ['Particle picking', 'particle_pick', 'particle_pick_auto'], 
-    ['Particles', 'extract_particles', 'import_particles', 'merge_particles', ['Other', 'preprocess_particles', 'screen_particles']]]),
+    ['Particles', 'extract_particles', ['Other', 'preprocess_particles', 'screen_particles', 'import_particles', 'merge_particles']]]),
 ('2D', 
    [['Align+Classify', 'cl2d', 'ml2d', ['Other', 'cl2d_align', 'kerdensom', 'rotspectra', 'screen_classes']]]),
 ('3D', 
