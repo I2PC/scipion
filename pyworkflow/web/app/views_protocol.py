@@ -1,6 +1,7 @@
 import os
 import xmipp
 import json
+from pyworkflow.viewer import WEB_DJANGO
 from pyworkflow.em import *
 from views_util import * 
 from pyworkflow.manager import Manager
@@ -16,6 +17,8 @@ def form(request):
     
     if action == 'copy':
         protocol = project.copyProtocol(protocol)
+        
+    wizards = findWizards(protocol.getDefinition(), WEB_DJANGO)
     
     # TODO: Add error page validation when protocol is None
     for section in protocol._definition.iterSections():
@@ -35,7 +38,10 @@ def form(request):
                     if param.htmlValue:
                         param.htmlValue = 'true'
                     else:
-                        param.htmlValue = 'false' 
+                        param.htmlValue = 'false'
+            if paramName in wizards:
+                param.hasWizard = True
+                print "param: ", paramName, " has wizard"
             param.htmlCond = param.condition.get()
             param.htmlDepend = ','.join(param._dependants)
             param.htmlCondParams = ','.join(param._conditionParams)

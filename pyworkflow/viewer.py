@@ -66,9 +66,12 @@ class Wizard(object):
     parameters the Wizard is defined, it will be a list of tuples such as:
     _targets = [(DefImportMicrographs, ['voltage', sphericalAberration']),
                 (DefCTFMicrographs, ['lowRes', 'highRes'])]
+    The _environmets will serve to define when this wizard can be used.
+    For example>
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     """
     _targets = []
-    _environment = DESKTOP_TKINTER
+    _environments = [DESKTOP_TKINTER]
     
     def show(self, form, *params):
         """ This will show up the wizard to select parametes.

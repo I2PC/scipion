@@ -80,7 +80,7 @@ def findWizards(definition, environment):
     wizards = {}
     baseClasses = definition.getClass().mro()
     for wiz in emWizardsDict.values():
-        if wiz._environment == environment:
+        if environment in wiz._environments:
             for t in wiz._targets:
                 cls, params = t
                 if cls in baseClasses:
