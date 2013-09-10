@@ -55,6 +55,10 @@ class XmippDownsampleWizard(Wizard):
         else:
             dialog.showWarning("Input micrographs", "Select micrographs first", form.root)
     
+    @classmethod
+    def getView(self):
+        return "wiz_downsampling"
+        
     
 class ListTreeProvider(TreeProvider):
     """ Simple list tree provider. """
@@ -96,7 +100,10 @@ class XmippCTFWizard(Wizard):
             #dialog.showWarning("Input micrographs", "Select some micrographs first", form.root)
         else:
             dialog.showWarning("Input micrographs", "Select micrographs first", form.root)
-            
+    
+    @classmethod    
+    def getView(self):
+        return "wiz_ctf"            
             
 class XmippMaskRadiusWizard(Wizard):
         
