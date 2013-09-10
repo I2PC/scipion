@@ -9,7 +9,6 @@ from protlib_filesystem import deleteFile, createLink2, exists, replaceFilenameE
 import xmipp
 from protlib_gui_ext import showWarning
 
-
 # The dictionary with specific filename templates 
 # is defined here to allow use of it outside the protocol
 _prefix = join('%(micrographDir)s','xmipp_ctf')
