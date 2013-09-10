@@ -39,26 +39,26 @@ class TestDataSet(unittest.TestCase):
         print "Table:"
         print table
 
-    def test_XmippDataSet(self):
-        """ Create a table from a metadata. """
-        from pyworkflow.em.packages.xmipp3 import XmippDataSet
-        import xmipp
-        mdPath = getInputPath('showj', 'tux_vol.xmd')
-
-        xds = XmippDataSet(mdPath)
-        
-        tableNames = xds.listTables()
-        print '\ntables: ', tableNames
-        
-        tn = tableNames[0]
-        
-        table = xds.getTable(tn)
-        
-        print "\nTable '%s':" % tn
-        print table
-        
-        md = xds._convertTableToMd(table)
-        print md
+#    def test_XmippDataSet(self):
+#        """ Create a table from a metadata. """
+#        from pyworkflow.em.packages.xmipp3 import XmippDataSet
+#        import xmipp
+#        mdPath = getInputPath('showj', 'tux_vol.xmd')
+#
+#        xds = XmippDataSet(mdPath)
+#        
+#        tableNames = xds.listTables()
+#        print '\ntables: ', tableNames
+#        
+#        tn = tableNames[0]
+#        
+#        table = xds.getTable(tn)
+#        
+#        print "\nTable '%s':" % tn
+#        print table
+#        
+#        md = xds._convertTableToMd(table)
+#        print md
         
 if __name__ == '__main__':
     unittest.main()
