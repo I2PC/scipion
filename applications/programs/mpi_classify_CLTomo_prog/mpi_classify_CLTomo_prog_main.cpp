@@ -1309,7 +1309,6 @@ void ProgClassifyCL3D::defineParams()
     addUsageLine("+");
     addUsageLine("+An interesting convergence criterion is the number of images changing classes between iterations. If a low percentage of the image change class, then the clustering is rather stable and clear.");
     addUsageLine("+If many images change class, it is likely that there is not enough SNR to determine so many classes. It is recommended to reduce the number of classes");
-    addSeeAlsoLine("mpi_image_sort");
     addParamsLine("    -i <selfile>             : Selfile with the input images");
     addParamsLine("   [--oroot <root=class>]    : Output rootname, by default, class");
     addParamsLine("   [--iter <N=20>]           : Number of iterations");
