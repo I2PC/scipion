@@ -7,6 +7,7 @@ from django import forms
 from pyworkflow.hosts import HostConfig, QueueSystemConfig, QueueConfig
 from django.forms.forms import BoundField
 from pyworkflow.object import List
+import json
 #from pyworkflow.web.app.views_showj import get_image_dimensions 
 
 class HostForm(forms.Form):
@@ -282,23 +283,27 @@ class ShowjForm(forms.Form):
     mode = forms.CharField(widget=forms.HiddenInput())
     colRowMode = forms.CharField(widget=forms.HiddenInput())
     
-    mirrorY = forms.BooleanField(label='Invert Y axis')
+    mirrorY = forms.BooleanField(label='Invert Y Axis')
+    
+    transformMatrix = forms.BooleanField(label='Apply Transform Matrix')
+    onlyShifts = forms.BooleanField(label='Only Shifts')
+    wrap = forms.BooleanField(label='Wrap')
 
-#    imageWidth = forms.IntegerField(widget=forms.HiddenInput(), initial=0)
-#    imageHeight = forms.IntegerField(widget=forms.HiddenInput(), initial=0)
     
-     
-    
-    
-    def __init__(self, dataset, tableLayoutConfiguration, *args, **kwargs):
+    def __init__(self, dataset, tableLayoutConfiguration=None, *args, **kwargs):
         super(ShowjForm, self).__init__(*args, **kwargs)
         
-        blockComboBoxValues = tuple(zip(dataset.listTables(), dataset.listTables()))
         self.fields['blockComboBox'] = forms.ChoiceField(label='Select Block',
                                                          required=False,
-                                                         choices = blockComboBoxValues)
-
+                                                         choices = tuple(zip(dataset.listTables(), dataset.listTables())))
         
+#        if tableLayoutConfiguration is not None:
+#            self.fields['tableLayoutConfiguration'] = forms.CharField(widget=forms.HiddenInput(),
+#                                                                      initial=json.dumps({'columnsLayout': tableLayoutConfiguration.columnsLayout, 'colsOrder': tableLayoutConfiguration.colsOrder}, ensure_ascii=False, cls=ColumnLayoutConfigurationEncoder))
+#        else:    
+#            print "lC",self.data['tableLayoutConfiguration']
+#            print "lC",self.cleaned_data['tableLayoutConfiguration']
+#        
         labelsToRenderComboBoxValues = getLabelsToRenderComboBoxValues(tableLayoutConfiguration.columnsLayout)
         if len(labelsToRenderComboBoxValues) > 0:
             self.fields['labelsToRenderComboBox'] = forms.ChoiceField(label='Select Label',
@@ -318,6 +323,21 @@ class ShowjForm(forms.Form):
             self.fields['cols'].widget.attrs['readonly'] = True
             self.fields['rows'].widget.attrs['readonly'] = True
                     
+class ColumnLayoutConfigurationEncoder(json.JSONEncoder):
+    def default(self, columnLayoutConfiguration):
+        columnLayoutConfigurationCoded={}
+        columnLayoutConfigurationCoded={"typeOfColumn":columnLayoutConfiguration.typeOfColumn,
+                                        "columnLayoutProperties":{"visible":columnLayoutConfiguration.columnLayoutProperties.visible,
+                                                                  "allowSetVisible":columnLayoutConfiguration.columnLayoutProperties.allowSetVisible,
+                                                                  "editable":columnLayoutConfiguration.columnLayoutProperties.editable,
+                                                                  "allowSetEditable":columnLayoutConfiguration.columnLayoutProperties.allowSetEditable,
+                                                                  "renderable":columnLayoutConfiguration.columnLayoutProperties.renderable,
+                                                                  "allowSetRenderable":columnLayoutConfiguration.columnLayoutProperties.allowSetRenderable,
+                                                                  "renderFunc":columnLayoutConfiguration.columnLayoutProperties.renderFunc}
+                                        }
+        return columnLayoutConfigurationCoded                     
+
+                   
 def getLabelsToRenderComboBoxValues(columnsLayout):
     labelsToRender = [columnLayout.label for columnLayout in columnsLayout.values() if (columnLayout.typeOfColumn == 'image')]
     return tuple(zip(labelsToRender,labelsToRender))

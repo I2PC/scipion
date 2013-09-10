@@ -15,7 +15,10 @@
 	
 	function initializeImageLoad(){
 		$('.tableImages').waypoint(function(direction){
-			$(this).attr("src", $(this).data('real_src').concat($("#id_mirrorY").is(':checked')?"&mirrorY":""))
+			$(this).attr(
+					"src",
+					$(this).data('real_src').concat($("#id_mirrorY").is(':checked')?"&mirrorY":"").concat($("#id_transformMatrix").is(':checked')?"&transformMatrix":"").concat($("#id_onlyShifts").is(':checked')?"&onlyShifts":"").concat($("#id_wrap").is(':checked')?"&wrap":"")
+					)
 		}, {
 			triggerOnce:true,
 			offset: '150%'
@@ -175,44 +178,28 @@
 
 {% block content_view %}	
 
-	<!-- Napa de Luxe -->
- 	{% for columnLayout in tableLayoutConfiguration.columnsLayout %}
-		{% if columnLayout == form.labelsToRenderComboBox.value %}
-			{% for row in tableDataset.getRows %}
-				{% for cell in row %}
-					{% if forloop.counter0 == forloop.parentloop.parentloop.counter0 %} 
-						<div class="img_container" id="img_container___{{row.0}}">
-							<div class="img_inner_container">
-								<img class="tableImages" title="{{cell}}" data-real_src="/get_image/?image={{cell}}"/>
-								<img class="enabledGallery
-								{% if row.enabled == 0 %}
-								selected
-								{% endif %}
-								" src="/resources/showj/enabled_gallery.png" id="enabled___{{row.0}}" onclick="enableDisableImage(this);" 
-								{% if row.enabled == 0 %} 
-								style="display:block;"
-								{% endif %}	
-								/>
-							</div>
-							<div id="column_label">{{row.0}}</div> 
-						</div>
-					
-					{% endif %}		
-				{% endfor %}
-			{% endfor %}
-		{% endif %}
-	{% endfor %}	
-	
-<!-- 	{% for row in tableDataset.getRows %}
- 	
-		<div class="img_container" id="img_container___{{row.0}}">
+	{% for id,enable,data,transformationMatrix in dataset.getDataToRenderAndExtra %}
+		<div class="img_container" id="img_container___{{id}}">
 			<div class="img_inner_container">
-				<img class="tableImages" title="{{cell}}" data-real_src="/get_image/?image={{cell}}"/>
-				<img class="enabledGallery" src="/resources/showj/enabled_gallery.png" id="{{form.labelsToRenderComboBox.value}}___{{forloop.parentloop.counter0}}" onclick="enableDisableImage(this);"/>
+				<img class="tableImages" title="{{data}}" data-real_src="/get_image/?image={{data}}"/>
+				
+				{% if dataset.getTable.hasEnabledColumn %}
+				<img class="enabledGallery
+				{% if enable == 0 %}
+				selected
+				{% endif %}
+				" src="/resources/showj/enabled_gallery.png" id="enabled___{{id}}" onclick="enableDisableImage(this);" 
+				{% if enable == 0 %} 
+				style="display:block;"
+				{% endif %}	
+				/>
+				{% endif %} 
+				
 			</div>
-			<div id="column_label">{{forloop.parentloop.counter}}</div> 
+			<div id="column_label">{{id}}</div> 
 		</div>
-	{% endfor %} -->		
+	{% endfor %}	 
+
 		
 			
 {% endblock %}

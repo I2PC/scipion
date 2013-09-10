@@ -34,14 +34,40 @@ class DataSet(object):
     All tables should have an unique tableName. 
     """
     
-    def __init__(self, tables):
+    def __init__(self, tables, tableName=None, labelToRender=None):
         self._tables = list(tables)
+        self._tableName = tableName
+        self._labelToRender = labelToRender
+        
+    def setTableName(self, tableName):    
+        self._tableName = tableName
     
+    def setLabelToRender(self, labelToRender):
+        self._labelToRender = labelToRender
+        
+    def getDataToRender(self):
+        return self.getTable().getColumnByLabel(self._labelToRender)
+    
+    def getDataToRenderAndExtra(self):
+        return zip(self.getIdColumn(),
+                   self.getTable().getColumnByLabel("enabled"),
+                   self.getDataToRender(),
+                   self.getTransformationMatrix())
+    
+    def getIdColumn(self):
+        return self.getTable().getColumnByLabel("id")
+        
+    def getTransformationMatrix(self):    
+        return self.getTable().getColumnByLabel(self._labelToRender+"_transformationMatrix")
+        
     def listTables(self):
         """ List the actual table names on the DataSet. """
         return self._tables
     
-    def getTable(self, tableName):
+    def getTable(self, tableName=None):
+        if tableName == None:
+            tableName = self._tableName
+            
         if not tableName in self._tables:
             raise Exception("DataSet: table '%s' not found.\n   Current tables: %s" % 
                             (tableName, self._tables))
@@ -71,8 +97,23 @@ class Table(object):
     def _addColumn(self, col):
         self._columns[col.getName()] = col
         
+    def getColumnByLabel(self, label):
+        if (self.hasColumn(label)):
+            columnIndex = self._columns.keys().index(label)
+            return [row[columnIndex] for row in self.iterRows()] 
+        else:
+            return [None] * self.getSize()
+        
     def iterColumns(self):
         return self._columns.itervalues()
+    
+    def hasColumn(self, columnName):
+        """ Return true if column exists """
+        return True if columnName in self._columns else False
+    
+    def hasEnabledColumn(self):
+        """ Return true if enabled column exists """
+        return self.hasColumn('enabled')
         
     def getColumns(self):
         """ Return all columns. """

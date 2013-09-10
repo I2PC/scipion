@@ -41,9 +41,11 @@ def showj(request, inputParameters=None):
         _blockComboBox = dataset.listTables()[0]
     
     #Get table from block name
-    tableDataset=dataset.getTable(_blockComboBox)
+    dataset.setTableName(_blockComboBox)
+    tableDataset=dataset.getTable()
     
-    #Load table layout configuration. How to display columns and attributes (visible, render, editable)    
+    #Load table layout configuration. How to display columns and attributes (visible, render, editable)  
+#    tableLayoutConfiguration = TableLayoutConfiguration(tableDataset, _render) if 'blockComboBox' not in request.session or _blockComboBox != request.session['blockComboBox'] or request.method == 'GET' else None
     tableLayoutConfiguration = TableLayoutConfiguration(tableDataset, _render)
 
     #Initialize Showj Form (button toolbar)
@@ -70,8 +72,10 @@ def showj(request, inputParameters=None):
             _imageDimensions = get_image_dimensions(request.session['projectPath'], tableDataset.getElementById(0,inputParameters['labelsToRenderComboBox']))  
             
         inputParameters['blockComboBox']=_blockComboBox
-        if 'mirrorY' not in inputParameters:
-            inputParameters['mirrorY']=False
+        inputParameters['tableLayoutConfiguration']=tableLayoutConfiguration
+        
+        inputParameters['mirrorY']='mirrorY' in inputParameters
+        inputParameters['transformMatrix']='transformMatrix' in inputParameters
         
         showjForm = ShowjForm(dataset,
                               tableLayoutConfiguration,
@@ -79,12 +83,14 @@ def showj(request, inputParameters=None):
 
     if showjForm.is_valid() is False:
         print showjForm.errors
+
+    dataset.setLabelToRender(_labelsToRenderComboBox)
         
     #Store dataset and labelsToRender in session 
     request.session['dataset'] = dataset
     request.session['labelsToRenderComboBox'] = _labelsToRenderComboBox
     request.session['blockComboBox'] = _blockComboBox
-    request.session['tableLayoutConfiguration'] = tableLayoutConfiguration
+#    request.session['tableLayoutConfiguration'] = tableLayoutConfiguration
     #Esto falla y creo que es por el tamano
     #request.session['table'] = tableDataset
     if (_imageDimensions != ''):
@@ -105,7 +111,8 @@ def showj(request, inputParameters=None):
                'jeditable': getResourceJs('jquery_editable'),
                'jquery_waypoints':getResourceJs('jquery_waypoints'),
                
-               'tableLayoutConfiguration' : tableLayoutConfiguration if (showjForm.data['mode']=='gallery') else json.dumps({'columnsLayout': tableLayoutConfiguration.columnsLayout, 'colsOrder': tableLayoutConfiguration.colsOrder}, ensure_ascii=False, cls=ColumnLayoutConfigurationEncoder), #Data variables
+               'dataset': dataset,
+               'tableLayoutConfiguration': json.dumps({'columnsLayout': tableLayoutConfiguration.columnsLayout, 'colsOrder': tableLayoutConfiguration.colsOrder}, ensure_ascii=False, cls=ColumnLayoutConfigurationEncoder), #Data variables
                'tableDataset': tableDataset,
                'imageDimensions': request.session['imageDimensions'],
                'defaultZoom': request.session['defaultZoom'],
@@ -115,7 +122,6 @@ def showj(request, inputParameters=None):
     return_page = '%s%s%s' % ('showj_', showjForm.data['mode'], '.html')
     return render_to_response(return_page, RequestContext(request, context))
 
-                 
 class ColumnLayoutConfigurationEncoder(json.JSONEncoder):
     def default(self, columnLayoutConfiguration):
         columnLayoutConfigurationCoded={}
@@ -128,7 +134,8 @@ class ColumnLayoutConfigurationEncoder(json.JSONEncoder):
                                                                   "allowSetRenderable":columnLayoutConfiguration.columnLayoutProperties.allowSetRenderable,
                                                                   "renderFunc":columnLayoutConfiguration.columnLayoutProperties.renderFunc}
                                         }
-        return columnLayoutConfigurationCoded 
+        return columnLayoutConfigurationCoded                     
+                 
             
 class TableLayoutConfiguration():
     def __init__(self, tableDataset, allowRender=True):
@@ -200,7 +207,7 @@ def save_showj_table(request):
         
         dataset=request.session['dataset']
         blockComboBox=request.session['blockComboBox']
-        tableLayoutConfiguration=request.session['tableLayoutConfiguration']
+#        tableLayoutConfiguration=request.session['tableLayoutConfiguration']
         
         tableDataset=dataset.getTable(blockComboBox)
         
