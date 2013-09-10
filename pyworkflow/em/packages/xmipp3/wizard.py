@@ -106,6 +106,8 @@ class XmippCTFWizard(Wizard):
         return "wiz_ctf"            
             
 class XmippMaskRadiusWizard(Wizard):
+    
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
         
     def _getProvider(self, protocol):
         """ This should be implemented to return the list
@@ -152,6 +154,10 @@ class XmippParticleMaskRadiusWizard(XmippMaskRadiusWizard):
             
         return provider
     
+    @classmethod    
+    def getView(self):
+        return "wiz_particle_mask"       
+    
 class XmippVolumeMaskRadiusWizard(XmippMaskRadiusWizard):
 
     _targets = [(XmippDefProjMatch, ['maskRadius'])]
@@ -164,17 +170,24 @@ class XmippVolumeMaskRadiusWizard(XmippMaskRadiusWizard):
             vols = [vol for vol in protocol.input3DReferences.get()]
             return ListTreeProvider(vols)
         return None
+    
+    @classmethod    
+    def getView(self):
+        return "wiz_volume_mask"       
         
         
 class XmippRadiiWizard(Wizard):
     
     _targets = [(XmippDefProjMatch, ['innerRadius', 'outerRadius'])]
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
     def show(self, form):
         protocol = form.protocol
         dialog.showWarning("Correlation radii", "Not yet implemented the wizard to select radii", form.root)    
     
-    
+    @classmethod    
+    def getView(self):
+        return "wiz_volume_mask_radii"   
 
 #--------------- Dialogs used by Wizards --------------------------
     
