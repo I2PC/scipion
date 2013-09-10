@@ -51,7 +51,8 @@
 	</script>
 	<script type="text/javascript">
 	function initializeCheckboxEvents(){
-		$("#id_mirrorY", "#id_transformMatrix", "#id_onlyShifts", '#id_wrap').click(function(){
+		$("#id_mirrorY, #id_transformMatrix, #id_onlyShifts, #id_wrap").click(function(){
+			console.log("witole")
 			$('form#showjForm').submit();
 		})
 	}
@@ -437,8 +438,10 @@
 		{% block content_view %}	{% endblock %}	
 		<!-- Hidden menu for multiple selection tool -->
 		<div class="multipleSelectionToolContainer" id="multipleSelectionTool">
+			{% if dataset.getTable.hasEnabledColumn %}
 			<div class="multipleSelectionToolItem" onclick="multipleEnableDisableImage('enable')">Enable</div>
 			<div class="multipleSelectionToolItem" onclick="multipleEnableDisableImage('disable')">Disable</div>
+			{% endif %}
 			<div class="multipleSelectionToolItem" onclick="multipleSelect('all')">Select All</div>
 			<div class="multipleSelectionToolItem" onclick="multipleSelect('from')">Select From Here</div>
 			<div class="multipleSelectionToolItem" onclick="multipleSelect('to')">Select To Here</div>
