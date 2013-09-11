@@ -530,8 +530,8 @@ if $DO_TCLTK; then
     compile_library tcl$VTCLTK python win "--disable-xft CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
     compile_library tk$VTCLTK python win "--disable-xft --with-tcl=../../tcl$VTCLTK/win CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
   else
-    compile_library tcl$VTCLTK python unix "--disable-xft --enable-threads"
-    compile_library tk$VTCLTK python unix "--disable-xft --enable-threads"
+    compile_library tcl$VTCLTK python unix "--enable-threads"
+    compile_library tk$VTCLTK python unix "--enable-threads"
   fi
 fi
 
