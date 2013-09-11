@@ -32,6 +32,7 @@ protocols = {
         'mltomo': ('MLTomo', '3D/MLTomo'),
         'subtraction': ('Partial Projection Subtraction', '3D/ProjSub'),
         'custom': ('Custom', 'Custom'),
+        'image_operate': ('Image Operate', 'Tools/ImageOperate'),
         'xmipp': ('Xmipp Programs', 'XmippPrograms')            
         }
 
@@ -51,7 +52,7 @@ sections = [
     ['Analysis', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask','structure_factor']])
 ,
 ('Other',
- [['Extra', 'custom','subtraction', 'mltomo']])
+ [['Extra', 'custom',['Virus','subtraction'],['Tomography','mltomo'],['Tools','image_operate']]])
 ]
 
 #--------------------------------------------------------------------------------
