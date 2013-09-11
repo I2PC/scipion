@@ -7,7 +7,7 @@ from protlib_base import *
 from xmipp import MetaData
 import glob
 import os
-from protlib_filesystem import deleteFile, deleteDir, createLink, copyFile
+from protlib_filesystem import createLink
 from protlib_utils import getListFromVector, runJob
 
 class ProtCLTomo(XmippProtocol):
@@ -16,8 +16,9 @@ class ProtCLTomo(XmippProtocol):
         self.Import = 'from protocol_cltomo import *'
 
     def defineSteps(self):
+        self.insertStep('createDir',path=self.ExtraDir)
         params= ' -i '            + self.VolumeList + \
-                ' --oroot '       + self.workingDirPath("results") + \
+                ' --oroot '       + self.extraPath("results") + \
                 ' --iter '        + str(self.NumberOfIterations) + \
                 ' --nref '        + str(self.NumberOfReferences) + \
                 ' --sym '         + self.Symmetry + \
@@ -38,7 +39,7 @@ class ProtCLTomo(XmippProtocol):
             params+=' --ref0 '+self.RefMd
         if self.Mask!="":
             params+=' --mask '+self.Mask
-        self.insertStep("runCLTomo", params=params, nproc=self.NumberOfMpi)
+        self.insertStep("runCLTomo", WorkingDir=self.WorkingDir, params=params, nproc=self.NumberOfMpi)
                 
     def validate(self):
         errors = []
@@ -60,7 +61,15 @@ class ProtCLTomo(XmippProtocol):
         return message
 
     def visualize(self):
-        pass
+        from protlib_utils import runShowJ
+        fnClasses=self.workingDirPath('classes.xmd')
+        if os.path.exists(fnClasses):
+            runShowJ(fnClasses)
 
-def runCLTomo(log, params, nproc):
+def runCLTomo(log, WorkingDir, params, nproc):
     runJob(log,'xmipp_mpi_classify_CLTomo','%d %s'%(nproc,params))
+    levelFiles=glob.glob(WorkingDir+"/extra/results_classes_level*.xmd")
+    if levelFiles:
+        levelFiles.sort()
+        lastLevelFile=levelFiles[-1]
+        createLink(log,lastLevelFile,os.path.join(WorkingDir,'results.xmd'))
