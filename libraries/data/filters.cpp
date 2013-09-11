@@ -590,35 +590,44 @@ int labelImage3D(const MultidimArray<double> &V, MultidimArray<double> &label)
 void removeSmallComponents(MultidimArray<double> &I, int size,
                            int neighbourhood)
 {
-    I.checkDimension(2);
-
     MultidimArray<double> label;
-    int imax = labelImage2D(I, label, neighbourhood);
+    int imax;
+    if (ZSIZE(I)==1)
+    	imax=labelImage2D(I, label, neighbourhood);
+    else
+    	imax=labelImage3D(I, label);
     MultidimArray<int> nlabel(imax + 1);
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(label)
-    nlabel((int) (label(i, j)))++;
-    FOR_ALL_ELEMENTS_IN_ARRAY2D
-    (label)
-    if (nlabel((int) (label(i, j))) < size)
-        I(i, j) = 0;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(label)
+    {
+    	int l=(int)DIRECT_MULTIDIM_ELEM(label,n);
+    	A1D_ELEM(nlabel,l)++;
+    }
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(label)
+    {
+    	int l=(int)DIRECT_MULTIDIM_ELEM(label,n);
+    	if (A1D_ELEM(nlabel,l)<size)
+    		DIRECT_MULTIDIM_ELEM(I,n)=0;
+    }
 }
 
 /* Keep biggest component -------------------------------------------------- */
 void keepBiggestComponent(MultidimArray<double> &I, double percentage,
                           int neighbourhood)
 {
-    I.checkDimension(2);
-
     MultidimArray<double> label;
-    int imax = labelImage2D(I, label, neighbourhood);
+    int imax;
+    if (ZSIZE(I)==1)
+    	imax=labelImage2D(I, label, neighbourhood);
+    else
+    	imax=labelImage3D(I, label);
     MultidimArray<int> nlabel(imax + 1);
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(label)
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(label)
     {
-        int idx = (int) (label(i, j));
-        if (idx == 0)
-            continue;
-        nlabel(idx)++;
+    	int l=(int)DIRECT_MULTIDIM_ELEM(label,n);
+    	if (l>0)
+    		A1D_ELEM(nlabel,l)++;
     }
+
     MultidimArray <int> best;
     nlabel.indexSort(best);
     best -= 1;
@@ -631,17 +640,18 @@ void keepBiggestComponent(MultidimArray<double> &I, double percentage,
         explained += nlabel(best(nbest));
     }
 
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(label)
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(label)
     {
+    	int l=(int)DIRECT_MULTIDIM_ELEM(label,n);
         bool among_the_best = false;
-        for (int n = nbest; n < imax + 1; n++)
-            if (label(i, j) == best(n))
+        for (int k = nbest; k < imax + 1; k++)
+            if (l == A1D_ELEM(best,k))
             {
                 among_the_best = true;
                 break;
             }
         if (!among_the_best)
-            I(i, j) = 0;
+    		DIRECT_MULTIDIM_ELEM(I,n)=0;
     }
 }
 

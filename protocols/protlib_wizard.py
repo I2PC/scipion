@@ -399,6 +399,12 @@ def wizardHelperSetRadii(gui, inputVarName, outerVarName, innerVarName=None, ):
 def wizardSetMaskRadius(gui, var):
     wizardHelperSetRadii(gui, 'ReferenceFileNames', 'MaskRadius')
     
+def wizardSetMaskRadiusPreprocess(gui, var):
+    wizardHelperSetRadii(gui, 'InModel', 'MaskRadius')
+    
+def wizardSetMaskRadiusPreprocess2(gui, var):
+    wizardHelperSetRadii(gui, 'InModel', 'MaskRadiusNormalize')
+    
 def wizardSetAlignRadii(gui, var):
     wizardHelperSetRadii(gui, 'ReferenceFileNames', 'OuterRadius', 'InnerRadius')
 

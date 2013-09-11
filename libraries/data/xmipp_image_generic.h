@@ -232,6 +232,8 @@ public:
     /** Apply geometry in refering metadata to the image */
     void applyGeo(const MetaData &md, size_t objId,
                   const ApplyGeoParams &params = DefaultApplyGeoParams);
+    /* Euler mirror Y ---------------------------------------------------------- */
+    void mirrorY(void);
 
     /** Read image mapped from file.
      */

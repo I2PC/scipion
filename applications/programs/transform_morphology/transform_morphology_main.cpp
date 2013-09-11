@@ -2,7 +2,7 @@
 /***************************************************************************
  *
  * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
- *              Pedro A. de Alarc�n (pedro@cnb.csic.es)
+ *              Pedro A. de Alarcon (pedro@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -27,6 +27,7 @@
 
 #include <data/xmipp_program.h>
 #include <data/morphology.h>
+#include <data/filters.h>
 
 class ProgMorphology: public XmippMetadataProgram
 {
@@ -36,6 +37,8 @@ public:
 #define OPENING      3
 #define CLOSING      4
 #define SHARPENING   5
+#define KEEPBIGGEST  6
+#define REMOVESMALL  7
 
 	bool binaryOperation;
     int operation;
@@ -44,6 +47,7 @@ public:
     int neig2D, neig3D;
     double width;
     double strength;
+    int smallSize;
 public:
     void defineParams()
     {
@@ -59,6 +63,8 @@ public:
         addParamsLine("             erosion    : Erode white region");
         addParamsLine("             closing    : Dilation+Erosion, removes black spots");
         addParamsLine("             opening    : Erosion+Dilation, removes white spots");
+        addParamsLine("             keepBiggest : Keep biggest component");
+        addParamsLine("             removeSmall <size=10> : Remove components whose size is smaller than this size");
         addParamsLine("or --grayOperation <op>: Morphological operation on gray images");
         addParamsLine("       where <op>");
         addParamsLine("             sharpening <w=1> <s=0.5>: Sharpening with width (suggested 1 or 2)");
@@ -100,6 +106,13 @@ public:
                 operation = CLOSING;
             else if (strOperation=="opening")
                 operation = OPENING;
+            else if (strOperation=="keepBiggest")
+                operation = KEEPBIGGEST;
+            else if (strOperation=="removeSmall")
+            {
+                operation = REMOVESMALL;
+                smallSize = getIntParam("--binaryOperation",1);
+            }
 
             size = getIntParam("--size");
             String neighbourhood=getParam("--neigh2D");
@@ -149,6 +162,13 @@ public:
             std::cout << "Sharpening\n"
             << "Width = " << width << std::endl
             << "Strength = " << strength << std::endl;
+        case KEEPBIGGEST   :
+        	std::cout << "Keeping biggest component\n";
+        	break;
+        case REMOVESMALL   :
+        	std::cout << "Removing small objects\n"
+        	<< "Small size < " << smallSize << std::endl;
+        	break;
         }
         if (binaryOperation)
             std::cout << "Size=" << size << std::endl
@@ -197,6 +217,21 @@ public:
                 sharpening(img(), width, strength, imgOut());
             else
                 REPORT_ERROR(ERR_NOT_IMPLEMENTED,"Sharpening has not been implemented for images");
+            break;
+        case KEEPBIGGEST:
+        	if (isVolume)
+        		keepBiggestComponent(img(),0,neig3D);
+        	else
+        		keepBiggestComponent(img(),0,neig2D);
+        	imgOut()=img();
+        	break;
+        case REMOVESMALL:
+        	if (isVolume)
+        		removeSmallComponents(img(),smallSize,neig3D);
+        	else
+        		removeSmallComponents(img(),smallSize,neig2D);
+        	imgOut()=img();
+        	break;
         }
 
         if (binaryOperation)

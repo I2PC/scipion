@@ -38,7 +38,7 @@ public:
         allow_apply_geo = false;
         XmippMetadataProgram::defineParams();
         addUsageLine("This program randomizes all phases beyond a certain frequency");
-        addParamsLine("  --freq <mode=digital>                  : Frequency beyond which phases will be randomized");
+        addParamsLine("  --freq <mode=discrete>                 : Frequency beyond which phases will be randomized");
         addParamsLine("        where <mode>");
         addParamsLine("              discrete <w=0.25>          : Discrete frequencies are normalized to 0.5");
         addParamsLine("              continuous <w=15> <s=1>    : Continuous frequencies are in Angstroms. s=Sampling rate (Angstroms/pixel), w=Freq. in Angstroms");

@@ -55,13 +55,14 @@ void ProgVolumeToPseudoatoms::readParams()
     if ((useMask = checkParam("--mask")))
         mask_prm.readParams(this);
     sigma = getDoubleParam("--sigma");
-    targetError = getDoubleParam("--targetError");
+    targetError = getDoubleParam("--targetError")/100.0;
     stop = getDoubleParam("--stop");
     initialSeeds = getIntParam("--initialSeeds");
     growSeeds = getDoubleParam("--growSeeds");
     allowMovement = !checkParam("--dontAllowMovement");
     allowIntensity = !checkParam("--dontAllowIntensity");
-    intensityFraction = getDoubleParam("--intensityFraction");
+    if (!allowIntensity)
+    	intensityFraction = getDoubleParam("--dontAllowIntensity",1);
     intensityColumn = getParam("--intensityColumn");
     Nclosest = getIntParam("--Nclosest");
     minDistance = getDoubleParam("--minDistance");
@@ -139,14 +140,13 @@ void ProgVolumeToPseudoatoms::defineParams()
     addParamsLine("  [--stop+ <p=0.001>]                : Stop criterion (0<p<1) for inner iterations");
     addParamsLine("                                     :+At each iteration the current number of gaussians will be optimized until ");
     addParamsLine("                                     :+the average error does not decrease at least this amount relative to the previous iteration.");
-    addParamsLine("  [--targetError+ <e=0.02>]          : Finish when the average representation");
-    addParamsLine("                                     : error is below this threshold (in percentage)");
-    addParamsLine("  [--dontAllowMovement]              : Don't allow pseudoatoms to move");
-    addParamsLine("  [--dontAllowIntensity]             : Don't allow pseudoatoms to change intensity");
-    addParamsLine("  [--intensityFraction+ <f=0.01>]    : In case of all pseudoatoms with the same intensity");
-    addParamsLine("                                     : this parameter determines the fraction of intensity");
+    addParamsLine("  [--targetError+ <e=2>]             : Finish when the average representation");
+    addParamsLine("                                     : error is below this threshold (in percentage; by default, 2%)");
+    addParamsLine("  [--dontAllowMovement+]             : Don't allow pseudoatoms to move");
+    addParamsLine("  [--dontAllowIntensity+ <f=0.01>]   : Don't allow pseudoatoms to change intensity");
+    addParamsLine("                                     : f determines the fraction of intensity");
     addParamsLine("                                     : held by each pseudoatom");
-    addParamsLine("  [--intensityColumn+ <s=occupancy>] : Where to write the intensity in the PDB file");
+    addParamsLine("  [--intensityColumn+ <s=Bfactor>]   : Where to write the intensity in the PDB file");
     addParamsLine("                   where <s>");
     addParamsLine("                         occupancy");
     addParamsLine("                         Bfactor");
@@ -159,8 +159,11 @@ void ProgVolumeToPseudoatoms::defineParams()
     addParamsLine("  [--dontScale+]                     : Don't scale atom weights in the PDB");
     addParamsLine("  [--binarize+ <threshold>]          : Binarize the volume for a more uniform distribution");
     addParamsLine("  [--thr <n=1>]                      : Number of threads");
-    mask_prm.defineParams(this,INT_MASK,NULL,"Statistics restricted to the mask area.");
+    mask_prm.defineParams(this,INT_MASK,NULL,"Statistics restricted to the mask area.",true);
+    addExampleLine("Convert volume to pseudoatoms, each pseudoatom with a different weight",false);
     addExampleLine("xmipp_volume_to_pseudoatoms -i volume.vol -o pseudoatoms");
+    addExampleLine("Convert volume to pseudoatoms, all pseudoatoms with the same weight",false);
+    addExampleLine("xmipp_volume_to_pseudoatoms -i volume.vol -o pseudoatoms --dontAllowIntensity");
 }
 
 void ProgVolumeToPseudoatoms::produceSideInfo()
@@ -773,11 +776,12 @@ void ProgVolumeToPseudoatoms::optimizeCurrentAtoms()
                 atoms.erase(atoms.begin()+n);
 
         drawApproximation();
-        std::cout << "Iteration " << iter << " error= " << percentageDiff
-        << " Natoms= " << atoms.size()
-        << " Intensity= " << Nintensity
-        << " Location= " << Nmovement
-        << std::endl;
+        if (verbose>0)
+			std::cout << "Iteration " << iter << " error= " << percentageDiff
+			<< " Natoms= " << atoms.size()
+			<< " Intensity= " << Nintensity
+			<< " Location= " << Nmovement
+			<< std::endl;
 
         if (iter>0)
             if ((oldError-percentageDiff)/oldError<stop)
@@ -904,6 +908,8 @@ void ProgVolumeToPseudoatoms::run()
     produceSideInfo();
     int iter=0;
     double previousNAtoms=0;
+    percentageDiff=1;
+    double actualGrowSeeds;
     do
     {
         // Place seeds
@@ -912,23 +918,25 @@ void ProgVolumeToPseudoatoms::run()
         else
         {
             double Natoms=atoms.size();
-            removeSeeds(FLOOR(Natoms*(growSeeds/2)/100));
-            placeSeeds(FLOOR(Natoms*growSeeds/100));
+            actualGrowSeeds=growSeeds*std::min(1.0,0.1+(percentageDiff-targetError)/targetError);
+            removeSeeds(FLOOR(Natoms*(actualGrowSeeds/2)/100));
+            placeSeeds(FLOOR(Natoms*actualGrowSeeds/100));
         }
         drawApproximation();
 
-        if (iter==0)
+        if (iter==0 && verbose>0)
             std::cout << "Initial error with " << atoms.size()
             << " pseudo-atoms " << percentageDiff << std::endl;
 
         // Optimize seeds until convergence
         optimizeCurrentAtoms();
-        std::cout << "Error with " << atoms.size() << " pseudo-atoms "
-        << percentageDiff << std::endl;
+        if (verbose>0)
+			std::cout << "Error with " << atoms.size() << " pseudo-atoms "
+			<< percentageDiff << std::endl;
         writeResults();
         iter++;
-
-        if (ABS(previousNAtoms-atoms.size())/atoms.size()<0.01)
+        
+        if (fabs(previousNAtoms-atoms.size())/atoms.size()<0.01*actualGrowSeeds/100)
         {
             std::cout << "The required precision cannot be attained\n"
             << "Suggestion: Reduce sigma and/or minDistance\n"
