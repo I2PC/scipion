@@ -38,9 +38,9 @@ class ProtScreenClasses(XmippProtocol):
                               %(self.Volume,fnGallery,float(self.AngularSampling),self.SymmetryGroup,self.fnImages),[fnGallery])
 
         # Assign angles
-        fnAngles=self.workingDirPath('angles.xmd')        
-        self.insertRunJobStep("xmipp_angular_projection_matching", "-i %s -o %s --ref %s --Ri 0 --Ro %s --max_shift 1000 --search5d_shift %s --search5d_step  1 --append"\
-                              %(self.fnImages,fnAngles,fnGallery,str(self.Xdim/2),str(self.Xdim/10)),[fnAngles])  
+        fnAngles=self.workingDirPath('angles.xmd')
+        self.insertRunJobStep("xmipp_angular_projection_matching", "-i %s -o %s --ref %s --Ri 0 --Ro %s --max_shift 1000 --search5d_shift %s --search5d_step  %s --append"\
+                              %(self.fnImages,fnAngles,fnGallery,str(self.Xdim/2),str(int(self.Xdim/10)),str(int(self.Xdim/25))),[fnAngles])  
         self.insertStep("deleteFile",filename=self.workingDirPath('gallery_sampling.xmd') )
         self.insertStep("deleteFile",filename=self.workingDirPath('gallery_angles.doc') )
         self.insertStep("deleteFile",filename=self.workingDirPath('gallery.doc') )
