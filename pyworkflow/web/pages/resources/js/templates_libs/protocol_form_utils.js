@@ -86,6 +86,9 @@ $(document).ready(function() {
 			var action = "/wizard/";
 			$.post(action, $("#protocolForm").serialize(), function(html) {
 				customPopupHTML(html);
+				
+				
+				
 			});
 		}
 		// Important. Stop the normal POST

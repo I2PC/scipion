@@ -2,6 +2,13 @@
 {% block title %} Downsampling {% endblock %}
 {% block name %} Downsampling {% endblock %}
 {% block head %}
+<script>
+	function putSelection(){
+		var value = $("input#downsampling").val();
+		window.opener.document.getElementById("downFactor_input").value = value;
+		window.close();
+	}
+</script>
 {% endblock %}	
 {% block list %}			
 <tr>
@@ -44,5 +51,5 @@ Downsample
 </script>
 {% endblock %}
 {% block function %}
-	onclick="javascript:alert('hola');"
+	onclick="putSelection()"
 {% endblock %}

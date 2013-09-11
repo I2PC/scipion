@@ -13,6 +13,7 @@ def wizard(request):
     # Get the Wizard Name
     requestDict = getattr(request, "POST")
     functionName = requestDict.get("wizName")
+    windowName = requestDict.get("windowName")
     function = globals().get(functionName, None)
     
     # Get the protocol object
@@ -24,15 +25,16 @@ def wizard(request):
     elif not callable(function):
         pass  # redirect to error: name is not a function
     else:
-        return function(protocol)
+        return function(protocol, windowName)
 
-def wiz_downsampling(protocol):
+def wiz_downsampling(protocol, windowName):
     mics = [mic for mic in protocol.inputMicrographs.get()]
     for m in mics:
         m.basename = basename(m.getFileName())
         
     context = {'objects': mics,
-               'downFactor': protocol.downFactor.get()}
+               'downFactor': protocol.downFactor.get(),
+               'windowName': windowName}
     
     return render_to_response('wiz_downsampling.html', context)
 
