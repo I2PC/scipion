@@ -32,7 +32,7 @@ import Tkinter as tk
 from tkSimpleDialog import Dialog
 import ttk
 from config_protocols import LabelBgColor, ButtonBgColor, ButtonActiveBgColor, SectionTextColor
-from protlib_filesystem import getXmippPath, xmippExists, removeFilenamePrefix, fixPath, splitFilename
+from protlib_filesystem import getXmippPath, xmippExists, removeFilenamePrefix, fixPath, splitFilename, getExt
 from protlib_utils import runChimera, runVMD
 from Tkinter import TclError
 from protlib_gui_ext import *
@@ -65,7 +65,11 @@ def openLink(link):
     if os.path.isdir(link):
         showBrowseDialog(link, link, seltype="none", selmode="browse")
     elif xmippExists(link):
-        showj(link)
+        ext = getExt(link)
+        if ext in TEXT_EXTENSIONS:
+            showTextfileViewer(link, [link])
+        else: # VALIDATE THAT showj can visualize the extesion
+            showj(link)
     else:
         from  webbrowser import open
         open(link)
@@ -1311,6 +1315,11 @@ class FileManager():
         for k, v in attributes.iteritems():
             setattr(self, k, v)
 
+
+TEXT_EXTENSIONS = ['.txt', '.c', '.h', '.cpp', '.java', '.sh', '.star', '.emx']
+
+
+
 class XmippBrowser():
     def __init__(self, initialDir='.', parent=None, root=None, seltype="both", selmode="browse", allowFilter=True, filter=None, previewDim=144):
         ''' seltype is the selection type, it could be:
@@ -1366,7 +1375,7 @@ class XmippBrowser():
                             imgFillMenu, imgOnClick, imgOnDoubleClick)
         addFm('vol', 'vol.gif', ['.vol', '.mrc', '.map', '.em', '.pif'], 
                             volFillMenu, imgOnClick, volOnDoubleClick)
-        addFm('text', 'fileopen.gif', ['.txt', '.c', '.h', '.cpp', '.java', '.sh', '.star'],
+        addFm('text', 'fileopen.gif', TEXT_EXTENSIONS,
               textFillMenu, defaultOnClick, textOnDoubleClick)
         addFm('pyfile', 'python_file.gif', ['.py'],textFillMenu, defaultOnClick, textOnDoubleClick)
         addFm('out', 'out.gif', ['.out'],textFillMenu, defaultOnClick, textOnDoubleClick)

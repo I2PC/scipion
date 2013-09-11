@@ -5,9 +5,9 @@
 #{eval} expandCommentRun()
 
 #------------------------------------------------------------------------------------------------
-# {section}{has_question} Input Files 
+# {section} Input  
 #------------------------------------------------------------------------------------------------
-# {file} EMX file name
+# {file}(*.emx) EMX file name &&&VIEW####
 """EMX file name:"""
 EmxFileName = ''
 

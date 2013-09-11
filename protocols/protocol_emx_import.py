@@ -14,6 +14,8 @@ import math
 from genericpath import exists
 from emx import *
 from emx.emxmapper import *
+from os.path import relpath, join, abspath, dirname
+
 
 class ProtEmxImport(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -22,79 +24,57 @@ class ProtEmxImport(XmippProtocol):
         #read emx file
         #Class to group EMX objects
         self.emxData = EmxData()
-        self.xmlMapper = XmlMapper(emxData)
-        
-    def readEmxFile(self):
-        xmlMapper.readEMXFile(self.EmxFileName)
-
+        self.xmlMapper = XmlMapper(self.emxData)
             
     def defineSteps(self):
-            self.insertCreateMicroscope()
+        self._loadInfo()
+        self.insertStep("createOutputs", verifyfiles=[], 
+                        emxFilename=self.EmxFileName,
+                        binaryFilename=self.binaryFile
+                        )
             
+    def _loadInfo(self):
+        #What kind of elements are in the binary file
+        emxDir = dirname(abspath(self.EmxFileName))
+        self.classElement = None
+        self.binaryFile = None
+        self.object = None
+        
+        for classElement in CLASSLIST:
+            self.object = self.xmlMapper.firstObject(classElement, self.EmxFileName)
+            if self.object != None:
+                #is the binary file of this type
+                self.classElement = classElement
+                binaryFile = join(emxDir, self.object.get(FILENAME))
+                if exists(binaryFile):
+                    self.binaryFile = binaryFile
+                    break
+        
     def validate(self):
         errors = []
-        #What kind of elements are in the binary file
-        self.classElement = None
-        object = None
-        for classElement in CLASSLIST:
-            object = xmlMapper.firstObject(classElement, self.EmxFileName)
-            if object != None:
-                #is the binary file of this type
-                if exists (object.get(FILENAME)):
-                    self.classElement = classElement
-                    break
-        if object == None:
-            errors.append('Canot find any object in EMX file <%s>'% self.EmxFileName)
-        
         # Check that input EMX file exist
         if not exists(self.EmxFileName):
                 errors.append("Input EMX file <%s> doesn't exists" % self.EmxFileName)
-        # Same for binary file
-        if not exists(self.BinFileName):
-                errors.append("Input EMX file <%s> doesn't exists" % self.BinFileName)
-
+        else:
+            self._loadInfo()   
+            
+            if self.object is None:
+                errors.append('Canot find any object in EMX file <%s>' % self.EmxFileName)
+            else:
+                if self.binaryFile is None:
+                    errors.append('Canot find binary data <%s> associated with EMX metadata file' % self.binaryFile)
+        
         return errors
 
     def summary(self):
-        message = []
-        if self.DoMerge:
-            prev1 = self.getProtocolFromRunName(self.ImportRun1)
-            prev2 = self.getProtocolFromRunName(self.ImportRun2)
-            message.append("Merge of previous imports:\n   [%s]\n   [%s]" 
-                           % (prev1.WorkingDir, prev2.WorkingDir))
-            #message.append("   [%s]" % prev1.WorkingDir)
-            #message.append("   [%s]" % prev2.WorkingDir)
-        else:
-            message.append("Import of <%d> micrographs from [%s]" % (len(self.getMicrographs()), self.DirMicrographs))
-        
-        if self.TiltPairs:
-            message.append("Micrographs are in tilt pairs")
-        
-        fnAcquisition = self.getFilename('acquisition')
-        if os.path.exists(fnAcquisition):
-            md = MetaData(fnAcquisition)
-            sampling = md.getValue(MDL_SAMPLINGRATE, md.firstObject())
-            message.append("\nSampling rate = <%f> A/pix" % sampling)
-        
-        fnWarning = self.workingDirPath('warnings.xmd')
-        if os.path.exists(fnWarning):
-            message.append(redStr("WARNINGS ON THE BORDERS OF SOME MICROGRAPHS:"))
-            message.append("[%s]" % fnWarning)
-            
-        return message
-    
-    def getMicrographs(self):
-        ''' Return a list with micrographs in WorkingDir'''
-        return glob(self.PatternMicrographs)
+        self._loadInfo()
+        summary = ['Input EMX file: [%s]' % self.EmxFileName,
+                   'Main class: <%s>' % self.classElement,
+                   'Binary file: [%s]' % self.binaryFile]            
+        return summary
     
     def visualize(self):
-        if self.TiltPairs:
-            summaryFile = self.getFilename('tilted_pairs')
-        else:
-            summaryFile = self.getFilename('micrographs')
-        if os.path.exists(summaryFile):
-            from protlib_utils import runShowJ
-            runShowJ(summaryFile)
+        pass
 
     def insertCreateMicroscope(self):    
         if self.SamplingRateMode == "From image":
@@ -200,6 +180,15 @@ def merge(log, OutWd, InWd1, InWd2):
     md1.write(getWdFile(OutWd, 'micrographs'))
 
 
+def createOutputs(log, emxFilename, binaryFilename):
+    emxData = EmxData()
+    xmlMapper = XmlMapper(emxData)
+    xmlMapper.readEMXFile(emxFilename)
+    
+    for obj in emxData:
+        print obj
+    
+    
 def createMicroscope(log,fnOut,Voltage,SphericalAberration,SamplingRate,Magnification):
     md = MetaData()
     md.setColumnFormat(False)
