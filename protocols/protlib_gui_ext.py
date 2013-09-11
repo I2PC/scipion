@@ -1190,7 +1190,6 @@ def getMdString(filename, browser):
     md = MetaData()
     md.read(filename, 1)
     labels = md.getActiveLabels()
-    print "parsed: ", md.getParsedLines()
     msg =  "  <%d items>\n" % md.getParsedLines()
     msg += "  <labels:>" + ''.join(["\n   - %s" % label2Str(l) for l in labels])
     
@@ -1206,10 +1205,7 @@ def mdOnClick(filename, browser):
     if '@' not in filename:
         import xmipp
         msg = "<Metadata File>\n"
-        print "mdOnclick..."
-        print "before getBlocksInMetaDataFile"
         blocks = xmipp.getBlocksInMetaDataFile(filename)
-        print "after...."
         nblocks = len(blocks)
         if nblocks <= 1:
             msg += "  <single block>\n" + getMdString(filename, browser)
