@@ -161,6 +161,8 @@ def getCorrThresh(log,WorkingDir,NRansac,CorrThresh):
     mdCorr= MetaData()
     sortedCorrVector = sorted(corrVector)
     indx = int(floor(CorrThresh*(len(sortedCorrVector)-1)))    
+    
+    #With the line below commented the percentil is not used for the threshold and is used the value introduced in the form
     #CorrThresh = sortedCorrVector[indx]#
     
     
