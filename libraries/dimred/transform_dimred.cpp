@@ -262,6 +262,7 @@ void ProgTransformDimRed::run()
 
     if (!SFin.containsLabel(MDL_DIMRED))
     {
+
         algorithm->reduceDimensionality();
 
         std::vector<double> dimredProj;
@@ -275,7 +276,7 @@ void ProgTransformDimRed::run()
             i++;
         }
 
-        SFin.write(fnOut,MD_APPEND);
+        SFin.write(fnIn,MD_OVERWRITE);
     }
 
     if (fnRandomSampling!="")
