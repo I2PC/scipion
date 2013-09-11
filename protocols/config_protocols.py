@@ -32,7 +32,9 @@ protocols = {
         'mltomo': ('MLTomo', '3D/MLTomo'),
         'subtraction': ('Partial Projection Subtraction', '3D/ProjSub'),
         'custom': ('Custom', 'Custom'),
-        'xmipp': ('Xmipp Programs', 'XmippPrograms')            
+        #'xmipp': ('Xmipp Programs', 'XmippPrograms'), 
+        'emx_import': ('Import', 'EMX'),
+        'emx_export': ('Export', 'EMX'),
         }
 
 #--------------------------------------------------------------------------------
@@ -51,7 +53,7 @@ sections = [
     ['Analysis', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask','structure_factor']])
 ,
 ('Other',
- [['Extra', 'custom','subtraction', 'mltomo']])
+ [['Extra', 'custom','subtraction', 'mltomo', ['EMX', 'emx_import', 'emx_export']]])
 ]
 
 #--------------------------------------------------------------------------------
@@ -78,7 +80,7 @@ class ProtocolDictionary(dict):
                         for p in protocol[1:]:
                             self.addProtocol(section, group, p)
         # Add special 'xmipp_program'
-        self.addProtocol(None, None, 'xmipp')
+        #self.addProtocol(None, None, 'xmipp')
 
     def addProtocol(self, section, group, protocol):
         title, path = protocols[protocol]

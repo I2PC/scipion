@@ -37,9 +37,9 @@
       <Y unit="A/px">5.77</Y>
     </pixelSpacing>
     <transformationMatrix>
-      <t11>11.0</t11> <t12>12.0</t12> <t13>13.0</t13> <t14 unit="A">14.0</t14>
-      <t21>21.0</t21> <t22>22.0</t22> <t23>23.0</t23> <t24 unit="A">24.0</t24>
-      <t31>31.0</t31> <t32>32.0</t32> <t33>33.0</t33> <t34 unit="A">34.0</t34>
+      <t11>11.0</t11> <t12>12.0</t12> <t13>13.0</t13> <t14 unit="px">14.0</t14>
+      <t21>21.0</t21> <t22>22.0</t22> <t23>23.0</t23> <t24 unit="px">24.0</t24>
+      <t31>31.0</t31> <t32>32.0</t32> <t33>33.0</t33> <t34 unit="px">34.0</t34>
     </transformationMatrix>
     <micrograph fileName="mic" index="2"/>
   </particle>

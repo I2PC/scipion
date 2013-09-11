@@ -62,7 +62,7 @@ EMX_SEP = '__'
 MICROGRAPH = 'micrograph'
 PARTICLE   = 'particle'
 #order in which items should be read
-CLASSLIST  = [MICROGRAPH,PARTICLE]
+CLASSLIST  = [MICROGRAPH, PARTICLE]
 #primary keys
 FILENAME   = 'fileName'
 INDEX      = 'index'

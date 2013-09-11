@@ -68,7 +68,7 @@ ActionIcons = {
 
 
 GROUP_ALL = 'All'
-GROUP_XMIPP = protDict.xmipp.title
+#GROUP_XMIPP = protDict.xmipp.title
         
 class ProjectSection(tk.Frame):
     def __init__(self, master, label_text, **opts):
@@ -809,8 +809,8 @@ class XmippProjectGUI():
                 menu = self.createToolbarMenu(section, opts)
                 self.ToolbarButtonsDict[index] = (key, btn, menu)
                 index = index + 1
-        section.addButton(GROUP_XMIPP, command=self.launchProgramsGUI)
-        self.ToolbarButtonsDict[index] = (GROUP_XMIPP, None, None)
+        #section.addButton(GROUP_XMIPP, command=self.launchProgramsGUI)
+        #self.ToolbarButtonsDict[index] = (GROUP_XMIPP, None, None)
 
         return toolbar
                 
