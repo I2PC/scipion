@@ -28,6 +28,9 @@ class ProtEmxImport(XmippProtocol):
             
     def defineSteps(self):
         self._loadInfo()
+        self.insertStep("validateSchema", verifyfiles=[], 
+                        emxFilename=self.EmxFileName
+                        )
         self.insertStep("createOutputs", verifyfiles=[], 
                         emxFilename=self.EmxFileName,
                         binaryFilename=self.binaryFile
@@ -180,6 +183,12 @@ def merge(log, OutWd, InWd1, InWd2):
     md1.write(getWdFile(OutWd, 'micrographs'))
 
 
+def validateSchema(log, emxFilename):
+    code, out, err = validateSchema(emxFileName)
+    
+    if code:
+        raise Exception(err) 
+    
 def createOutputs(log, emxFilename, binaryFilename):
     emxData = EmxData()
     xmlMapper = XmlMapper(emxData)
