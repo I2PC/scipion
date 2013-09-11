@@ -1,11 +1,9 @@
 /**
  * Generic lib with commons methods
  * 
- * popup(URL);
- * customPopup(URL, widthValue, heightValue);
- * closePopup();
+ * popup(URL); customPopup(URL, widthValue, heightValue); closePopup();
  * 
- **/
+ */
 
 function popup(URL) {
 	var popup_width = 500;
@@ -27,6 +25,16 @@ function customPopup(URL, widthValue, heightValue) {
 			+ " = window.open(URL, '"
 			+ id
 			+ "', 'toolbar=0,scrollbars=1,location=0,statusbar=0,menubar=0,resizable=0,width='+widthValue+',height='+heightValue+'');");
+
+	window.open(URL, 'TheWindow');
+	$("#protocolForm").submit();
+
+}
+
+function customPopupHTML(html) {
+	day = new Date();
+	id = day.getTime();
+	window.open('', id, 'height=470,width=825').document.write(html);
 }
 
 function closePopup() {
@@ -35,4 +43,3 @@ function closePopup() {
 	window.opener.location.reload(true);
 	window.close();
 }
-

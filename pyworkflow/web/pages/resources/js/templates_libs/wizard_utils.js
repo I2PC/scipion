@@ -129,3 +129,47 @@ function putCircle(radio, canvas, color){
 	circle.attr("opacity", 0.4);
 }
 
+// *** Methods Wizard Particle Mask *** //
+
+function selectParticle(elm) {
+	var row = $("table#list");
+	var oldValue = elm.attr('id');
+	
+	var img = $("img#mic");
+
+	var load_img = $("img#loadingMic");
+
+	if (row.attr('value') != undefined && row.attr('value') != oldValue) {
+		// unmark the last option
+		var rowOld = $("tr#" + row.attr('value'));
+		rowOld.attr('style', 'background-color: #fafafa;');
+		rowOld.attr('class', 'no-selected');
+	}
+	
+	// hide the last micrograph
+		img.hide();
+
+	// mark the new option
+	row.attr('value', oldValue);
+	elm.attr('style', 'background-color: LightSteelBlue;');
+	elm.attr('class', 'selected');
+
+	// set loading img
+	load_img.show();
+
+	// get the img path
+	var path_img = elm.attr('value');
+	if (path_img == undefined) {
+		path_img = elm.val();
+	}
+
+	// load and set the image
+	var uri = "/get_image/?image=" + path_img + "&dim=250";
+
+	// show the new micrograph
+	load.load(putImage(uri, "mic", 250, 250), function() {
+		// hide the load img
+		load.hide();
+	});
+
+}

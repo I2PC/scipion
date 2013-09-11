@@ -113,7 +113,7 @@ def updateProtocolParams(request, protocol, project):
         
 def save_protocol(request):
     project, protocol = loadProtocolProject(request)
-    updateProtocolParams(request, protocol, project)            
+    updateProtocolParams(request, protocol, project)
     project.saveProtocol(protocol)
     
     return HttpResponse(mimetype='application/javascript')

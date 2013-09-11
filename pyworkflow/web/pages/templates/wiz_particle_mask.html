@@ -1,0 +1,72 @@
+{% extends 'wiz_base.html' %} 
+{% block title %} Particle Mask Radius {% endblock %} 
+{% block name %} Particle Mask Radius {% endblock %} 
+{% block head %}
+	<script type="text/javascript" src="{{raphael}}"></script>
+{% endblock %} 
+{% block list %}
+<tr>
+	<th>Object</th>
+</tr>
+{% for obj in objects %}
+{% if forloop.counter0 == 0 %} 
+<script>
+	firstElm  = {{obj.getObjId}};
+</script>
+{% endif %}
+<tr id="{{obj.getObjId}}" class="no-selected"
+	style="background-color: #fafafa;"
+	onclick="selectParticle(($(this)));" value="{{obj.getFileName}}">
+	<td>{{obj.basename}}</td>
+</tr>
+{% endfor %} {% endblock %} {% block images %}
+<tr>
+	<td>
+		<div id="wrapper" class="image">
+			<img id="loadingMic" src="../../../../resources/loading.gif"
+				style="display: none;"/> 
+			<div id="mic"> </div>
+			<div id="canvas"></div>
+		</div>Central Slice
+	</td>
+</tr>
+{% endblock %} 
+{% block options %}
+<fieldset id="radiusOptions">
+	<div id="outer">
+		<span id="title_outer">Outer radius<span>
+		<div id="slider" class="slider_outer"></div>
+		<div id="slider_outer_result">0.25</div>
+		<input id="outer_val" type="hidden" value="0.25"/>
+	</div>
+</fieldset>
+
+<script>
+$(".slider_outer").slider({
+	animate : true,
+	range : "min",
+	value : 0.25,
+	min : 0.00,
+	max : 0.50,
+	step : 0.01,
+	//this gets a live reading of the value and prints it on the page
+	slide : function(event, ui) {
+		$("#slider_outer_result").html(ui.value);
+		
+		//update the circle
+		putCircle(ui.value*250, "canvas", "blue");
+	},
+	//this updates the hidden form field so we can submit the data using a form
+	change : function(event, ui) {
+		$('#outer_val').attr('value', ui.value);
+	}
+});
+
+//Load the First Element of the list
+window.onload = selectParticle($("tr#"+firstElm));
+
+</script>
+{% endblock %}
+{% block function %}
+	onclick="javascript:alert('hola');"
+{% endblock %}

@@ -9,6 +9,11 @@
 	<th>Object</th>
 </tr>
 {% for obj in objects %}
+{% if forloop.counter0 == 0 %} 
+<script>
+	firstElm  = {{obj.getObjId}};
+</script>
+{% endif %}
 <tr id="{{obj.getObjId}}" class="no-selected"
 	style="background-color: #fafafa;"
 	onclick="compositePreview(($(this)));" value="{{obj.getFileName}}">
@@ -90,6 +95,10 @@ $(".slider_high").slider({
 		$('#high_val').attr('value', ui.value);
 	}
 });
+
+//Load the First Element of the list
+window.onload = compositePreview($("tr#"+firstElm));
+
 </script>
 {% endblock %}
 {% block function %}
