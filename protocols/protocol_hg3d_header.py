@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------------------------
 # Protocol for screening a number of classes comparing them to a volume
 #
-# Author: Carlos Oscar Sorzano, March 2013 
+# Author: Javier Vargas, September 2013 
 #
 # {begin_of_header}
 
@@ -33,23 +33,23 @@ AngularSampling = 5
 #{expert} Number of RANSAC iterations
 """ Number of initial volumes to test by RANSAC
 """
-NRansac = 380
+NRansac = 300
 
 #{expert} Number of grids per dimension 
 """ Number of grids per dimension. The total number of classes used consists in n x n
 """
 NumGrids = 3
 
-#{expert} Inlier threshold
-""" correlation value threshold to determine if an experimental projection is an
+#{expert} Inlier percentil
+""" correlation value using the estimated initial volume to determine if an experimental projection is an
 inlier or outlier
 """
-CorrThresh = 0.77
+CorrThresh = 0.8
 
 #{expert} Number of best volumes to refine
 """ Number of best volumes to refine 
 """
-NumVolumes =10
+NumVolumes =3
 
 #{expert} Number of iterations to perform to refine the volumes
 """ Number of iterations to perform to refine the volumes 
@@ -82,9 +82,9 @@ UseAll=False
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #------------------------------------------------------------------------------------------------
 
-from protocol_initvolume_ransac import *
-#		
+from protocol_hg3d import *
+#        
 # Main
 #     
 if __name__ == '__main__':
-    protocolMain(ProtInitVolRANSAC)
+    protocolMain(ProtHg3D)
