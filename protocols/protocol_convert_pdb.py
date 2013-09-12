@@ -25,6 +25,9 @@ class ProtConvertPDB(XmippProtocol):
         self.insertStep('createLink',source=self.InModel,dest=self.workingDirPath(os.path.split(self.InModel)[1]))
         self.insertStep("convertFromPDB",InModel=self.InModel,WorkingDir=self.WorkingDir,Ts=self.FinalTs,Size=self.FinalSize,
                         CenterPDB=self.CenterPDB)
+        if self.MaxFreq>0:
+            self.insertStep("filter",OutModel=self.workingDirPath('volume.vol'),Ts=self.FinalTs,MaxResolution=self.MaxFreq,
+                            RaisedCosine=self.RaisedCosine)
         
     def validate(self):
         errors = []
@@ -57,3 +60,8 @@ def convertFromPDB(log,InModel,WorkingDir,Ts,Size,CenterPDB):
     if Ts>4:
         args+=" --poor_Gaussian"
     runJob(log,"xmipp_volume_from_pdb",args)
+
+def filter(log,OutModel,Ts,MaxResolution,RaisedCosine):
+    runJob(log,"xmipp_transform_filter","-i %s --fourier low_pass %f %f --sampling %f"%(OutModel,float(MaxResolution),float(RaisedCosine),
+                                                                                        float(Ts)))
+

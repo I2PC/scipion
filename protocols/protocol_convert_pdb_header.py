@@ -26,6 +26,13 @@ FinalTs=1.0
 """ Set to -1 for automatic estimation  """
 FinalSize=-1
 
+# Low pass filter (Angstroms)
+""" Set to -1 for no filtering """
+MaxFreq=-1
+
+# {expert} Raised Cosine length
+RaisedCosine=0.04
+
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
