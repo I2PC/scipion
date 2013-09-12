@@ -10,7 +10,7 @@ import os
 from xmipp import MetaData, MDL_SAMPLINGRATE
 from os.path import exists, split, splitext
 from protlib_utils import runJob, runShowJ
-from protlib_filesystem import copyFile
+from protlib_filesystem import createLink
 import glob
 from protlib_gui_ext import showError
 
@@ -22,7 +22,9 @@ class ProtConvertPDB(XmippProtocol):
 
     def defineSteps(self):
         self.insertStep('createAcquisition',WorkingDir=self.WorkingDir,Ts=self.FinalTs)
-        self.insertStep("convertFromPDB",InModel=self.InModel,WorkingDir=self.WorkingDir,Ts=self.FinalTs,Size=self.FinalSize)
+        self.insertStep('createLink',source=self.InModel,dest=self.workingDirPath(os.path.split(self.InModel)[1]))
+        self.insertStep("convertFromPDB",InModel=self.InModel,WorkingDir=self.WorkingDir,Ts=self.FinalTs,Size=self.FinalSize,
+                        CenterPDB=self.CenterPDB)
         
     def validate(self):
         errors = []
@@ -46,8 +48,10 @@ def createAcquisition(log,WorkingDir,Ts):
     md.setValue(MDL_SAMPLINGRATE,float(Ts),id)
     md.write(os.path.join(WorkingDir,"acquisition_info.xmd"))
 
-def convertFromPDB(log,InModel,WorkingDir,Ts,Size):
-    args="-i %s -o %s/volume --centerPDB"%(InModel,WorkingDir)
+def convertFromPDB(log,InModel,WorkingDir,Ts,Size,CenterPDB):
+    args="-i %s -o %s/volume"%(InModel,WorkingDir)
+    if CenterPDB:
+        args+" --centerPDB"
     if Size>0:
         args+=" --size %d"%(int(Size))
     if Ts>4:

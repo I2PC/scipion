@@ -15,6 +15,10 @@
 """ PDB file"""
 InModel = ''
 
+# {expert} Center PDB
+"""Move the PDB to sit in the center of the box"""
+CenterPDB=True
+
 # Final voxel size (A/voxel):
 FinalTs=1.0
 
