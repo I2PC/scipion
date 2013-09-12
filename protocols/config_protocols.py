@@ -34,7 +34,9 @@ protocols = {
         'subtraction': ('Partial Projection Subtraction', '3D/ProjSub'),
         'custom': ('Custom', 'Custom'),
         'image_operate': ('Image Operate', 'Tools/ImageOperate'),
-        'xmipp': ('Xmipp Programs', 'XmippPrograms')            
+        #'xmipp': ('Xmipp Programs', 'XmippPrograms'), 
+        'emx_import': ('Import', 'EMX'),
+        'emx_export': ('Export', 'EMX'),
         }
 
 #--------------------------------------------------------------------------------
@@ -48,13 +50,12 @@ sections = [
 ('2D', 
    [['Align+Classify', 'cl2d', 'ml2d', ['Other', 'cl2d_align', 'kerdensom', 'rotspectra', 'screen_classes']]]),
 ('3D', 
-
    [['Initial Model', 'rct', 'initvolume_ransac', 'convert_pdb', 'preprocess_volume'], 
     ['Model Refinement', 'projmatch', 'ml3d', 'relion3d'],
     ['Volumes', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask','structure_factor']])
 ,
 ('Other',
- [['Extra', 'custom',['Virus','subtraction'],['Tomography','mltomo'],['Tools','image_operate']]])
+ [['Extra', 'custom',['Virus','subtraction'],['Tomography','mltomo'],['Tools','image_operate'], ['EMX', 'emx_import', 'emx_export']]])
 ]
 
 #--------------------------------------------------------------------------------
@@ -81,7 +82,7 @@ class ProtocolDictionary(dict):
                         for p in protocol[1:]:
                             self.addProtocol(section, group, p)
         # Add special 'xmipp_program'
-        self.addProtocol(None, None, 'xmipp')
+        #self.addProtocol(None, None, 'xmipp')
 
     def addProtocol(self, section, group, protocol):
         title, path = protocols[protocol]
