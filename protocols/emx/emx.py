@@ -62,7 +62,7 @@ EMX_SEP = '__'
 MICROGRAPH = 'micrograph'
 PARTICLE   = 'particle'
 #order in which items should be read
-CLASSLIST  = [MICROGRAPH,PARTICLE]
+CLASSLIST  = [MICROGRAPH, PARTICLE]
 #primary keys
 FILENAME   = 'fileName'
 INDEX      = 'index'
@@ -109,15 +109,15 @@ emxDataTypes={
               ,'transformationMatrix__t11':EmxLabel(float)
               ,'transformationMatrix__t12':EmxLabel(float)
               ,'transformationMatrix__t13':EmxLabel(float)
-              ,'transformationMatrix__t14':EmxLabel(float,'A')
+              ,'transformationMatrix__t14':EmxLabel(float,'px')
               ,'transformationMatrix__t21':EmxLabel(float)
               ,'transformationMatrix__t22':EmxLabel(float)
               ,'transformationMatrix__t23':EmxLabel(float)
-              ,'transformationMatrix__t24':EmxLabel(float,'A')
+              ,'transformationMatrix__t24':EmxLabel(float,'px')
               ,'transformationMatrix__t31':EmxLabel(float)
               ,'transformationMatrix__t32':EmxLabel(float)
               ,'transformationMatrix__t33':EmxLabel(float)
-              ,'transformationMatrix__t34':EmxLabel(float,'A')
+              ,'transformationMatrix__t34':EmxLabel(float,'px')
 }
 
 class EmxObject:

@@ -468,7 +468,7 @@ if $DO_SQLITE; then
     compile_library $VSQLITE "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
   fi
   #execute sqlite to avoid relinking in the future
-  echo "select 1+1 ;" | $VSQLITE/sqlite3
+  echo "select 1+1 ;" | $XMIPP_HOME/external/$VSQLITE/sqlite3
   install_bin $VSQLITE/sqlite3 xmipp_sqlite3
   install_libs $VSQLITE/.libs libsqlite3 0 false
   #compile math library for sqlite
@@ -480,7 +480,7 @@ if $DO_SQLITE; then
     gcc -fno-common -dynamiclib extension-functions.c -o libsqlitefunctions.dylib
     cp libsqlitefunctions.dylib $XMIPP_HOME/lib/libXmippSqliteExt.dylib
   else  
-    gcc -fPIC -lm -shared  extension-functions.c -o libsqlitefunctions.so
+    gcc -fPIC  -shared  extension-functions.c -o libsqlitefunctions.so -lm
     cp libsqlitefunctions.so $XMIPP_HOME/lib/libXmippSqliteExt.so
   fi
 fi
@@ -530,8 +530,8 @@ if $DO_TCLTK; then
     compile_library tcl$VTCLTK python win "--disable-xft CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
     compile_library tk$VTCLTK python win "--disable-xft --with-tcl=../../tcl$VTCLTK/win CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
   else
-    compile_library tcl$VTCLTK python unix "--disable-xft --enable-threads"
-    compile_library tk$VTCLTK python unix "--disable-xft --enable-threads"
+    compile_library tcl$VTCLTK python unix "--enable-threads"
+    compile_library tk$VTCLTK python unix "--enable-threads"
   fi
 fi
 

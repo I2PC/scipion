@@ -294,6 +294,10 @@ int ImageGeneric::readApplyGeo(const FileName &name, const MetaData &md, size_t 
     return image->readApplyGeo(name, md, objId, params);
 }
 
+void ImageGeneric::mirrorY()
+{
+    return image->mirrorY();
+ }
 /** Read an image from metadata, filename is taken from MDL_IMAGE */
 int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId,
                                const ApplyGeoParams &params)
