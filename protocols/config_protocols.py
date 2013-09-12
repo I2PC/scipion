@@ -21,7 +21,8 @@ protocols = {
         'screen_classes': ('Screen classes', '2D/Screening'),
         'rct': ('Random Conical Tilt', '3D/InitialVolume/RCT'),
         'initvolume_ransac': ('RANSAC', '3D/InitialVolume/RANSAC'),
-        'preprocess_volume': ('Preprocess', '3D/Preprocessed'),
+        'convert_pdb': ('Convert PDB', '3D/PDB'),
+        'preprocess_volume': ('Preprocess volume', '3D/Preprocessed'),
         'create_volume_mask': ('Create mask', '3D/Mask'),
         'projmatch': ('Projection Matching', '3D/ProjMatch'), 
         'ml3d': ('ML3D', '3D/ML3D'),
@@ -48,7 +49,7 @@ sections = [
    [['Align+Classify', 'cl2d', 'ml2d', ['Other', 'cl2d_align', 'kerdensom', 'rotspectra', 'screen_classes']]]),
 ('3D', 
 
-   [['Initial Model', 'rct', 'initvolume_ransac', 'preprocess_volume'], 
+   [['Initial Model', 'rct', 'initvolume_ransac', 'convert_pdb', 'preprocess_volume'], 
     ['Model Refinement', 'projmatch', 'ml3d', 'relion3d'],
     ['Volumes', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask','structure_factor']])
 ,
