@@ -143,21 +143,30 @@ def createAcquisition(log,WorkingDir,Ts):
     md.setValue(MDL_SAMPLINGRATE,float(Ts),id)
     md.write(os.path.join(WorkingDir,"acquisition_info.xmd"))
 
-def changeSamplingRateAndOrBox(log,InModel,OutModel,SingleVolume,InitialTs,FinalTs,Size):
-    input=InModel
-    if InitialTs!=FinalTs:
-        args="-i %s -o %s --scale %f --dont_wrap"%(input,OutModel,InitialTs/FinalTs)
-        if not SingleVolume:
-            args+=" --save_metadata_stack"
-        runJob(log,"xmipp_transform_geometry",args)
-        input=OutModel
+def window(log,input,OutModel,SingleVolume,Size):
     if Size>0:
         args="-i %s --size %d"%(input,int(Size))
         if not SingleVolume:
             args+=" --save_metadata_stack"
         if input!=OutModel:
-            args+" -o %s"%OutModel
+            args+=" -o %s"%OutModel
         runJob(log,"xmipp_transform_window",args)
+
+def scale(log,input,OutModel,SingleVolume,scale):
+    args="-i %s -o %s --scale %f --dont_wrap"%(input,OutModel,scale)
+    if not SingleVolume:
+        args+=" --save_metadata_stack"
+    runJob(log,"xmipp_transform_geometry",args)
+
+def changeSamplingRateAndOrBox(log,InModel,OutModel,SingleVolume,InitialTs,FinalTs,Size):
+    if InitialTs==FinalTs:
+        window(log,InModel,OutModel,SingleVolume,Size)
+    elif InitialTs<FinalTs:
+        scale(log,InModel,OutModel,SingleVolume,InitialTs/FinalTs)
+        window(log,OutModel,OutModel,SingleVolume,Size)
+    else:
+        window(log,InModel,OutModel,SingleVolume,Size)
+        scale(log,OutModel,OutModel,SingleVolume,InitialTs/FinalTs)
 
 def randomize(log,OutModel,Ts,MaxResolution):
     runJob(log,"xmipp_transform_randomize_phases","-i %s --freq continuous %f %f"%(OutModel,float(MaxResolution),float(Ts)))
