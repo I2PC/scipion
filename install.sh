@@ -20,6 +20,7 @@ DO_SETUP=true
 DO_GUI=true
 DO_UNATTENDED=false
 DO_MATLAB=false
+DO_NEWSTYLE=false
 
 export NUMBER_OF_CPU=1
 
@@ -113,6 +114,7 @@ for param in $@; do
                             TAKE_COMPILE=true;;
         "unattended=true")  DO_UNATTENDED=true;;
         "unattended=false") DO_UNATTENDED=false;;
+	"newstyle=true")    DO_NEWSTYLE=true;;
          *)          echo "Unrecognized option $param, exiting..."; exit 1
     esac
  fi 
@@ -436,6 +438,11 @@ create_dir build
 create_dir bin
 create_dir lib
 
+#################### IF NEWSTYLE IS GIVEN WE LAUNCH NEWSTYLE SCRITP ##########
+if $DO_NEWSTYLE; then
+  . ${XMIPP_HOME}/install_newstyle.sh
+  exit 0
+fi
 
 #################### DECOMPRESSING EXTERNAL LIBRARIES ###########################
 if $DO_UNTAR; then  
@@ -618,14 +625,14 @@ if $DO_PYTHON; then
     printf 'export DYLD_FALLBACK_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tcl$VTCLTK/macosx:$EXT_PYTHON/tk$VTCLTK/macosx:$DYLD_FALLBACK_LIBRARY_PATH \n' >> $PYTHON_BIN	
     printf '$EXT_PYTHON/$VPYTHON/python.exe "$@"\n' >> $PYTHON_BIN
   else
-    printf 'VPYTHON=%b \n' "$VPYTHON" >> $PYTHON_BIN
-    printf 'VTCLTK=%b \n\n' "$VTCLTK" >> $PYTHON_BIN
-    printf 'EXT_PYTHON=$XMIPP_HOME/external/python \n' >> $PYTHON_BIN
-    printf 'export LD_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tcl$VTCLTK/unix:$EXT_PYTHON/tk$VTCLTK/unix:$LD_LIBRARY_PATH \n' >> $PYTHON_BIN
-    printf 'export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$XMIPP_HOME/applications/tests/pythonlib:$XMIPP_HOME/lib/python2.7/site-packages:$PYTHONPATH \n' >> $PYTHON_BIN
-    printf 'export TCL_LIBRARY=$EXT_PYTHON/tcl$VTCLTK/library \n' >> $PYTHON_BIN
-    printf 'export TK_LIBRARY=$EXT_PYTHON/tk$VTCLTK/library \n\n' >> $PYTHON_BIN
-
+#    printf 'VPYTHON=%b \n' "$VPYTHON" >> $PYTHON_BIN
+#    printf 'VTCLTK=%b \n\n' "$VTCLTK" >> $PYTHON_BIN
+#    printf 'EXT_PYTHON=$XMIPP_HOME/external/python \n' >> $PYTHON_BIN
+#    printf 'export LD_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tcl$VTCLTK/unix:$EXT_PYTHON/tk$VTCLTK/unix:$LD_LIBRARY_PATH \n' >> $PYTHON_BIN
+#    printf 'export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$XMIPP_HOME/applications/tests/pythonlib:$XMIPP_HOME/lib/python2.7/site-packages:$PYTHONPATH \n' >> $PYTHON_BIN
+#    printf 'export TCL_LIBRARY=$EXT_PYTHON/tcl$VTCLTK/library \n' >> $PYTHON_BIN
+#    printf 'export TK_LIBRARY=$EXT_PYTHON/tk$VTCLTK/library \n\n' >> $PYTHON_BIN
+    printf 'source ${XMIPP_HOME}/bin/activate' >> $PYTHON_BIN
     printf '$EXT_PYTHON/$VPYTHON/python "$@"\n' >> $PYTHON_BIN
   fi
   echoExec "chmod a+x $PYTHON_BIN"
