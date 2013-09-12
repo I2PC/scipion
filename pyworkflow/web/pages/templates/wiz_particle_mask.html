@@ -1,6 +1,6 @@
 {% extends 'wiz_base.html' %} 
-{% block title %} CTF {% endblock %} 
-{% block name %} CTF {% endblock %} 
+{% block title %} Particle Mask Radius {% endblock %} 
+{% block name %} Particle Mask Radius {% endblock %} 
 {% block head %}
 	<script type="text/javascript" src="{{raphael}}"></script>
 {% endblock %} 
@@ -9,14 +9,14 @@
 	<th>Object</th>
 </tr>
 {% for obj in objects %}
-{% if forloop.counter0 == 0 %} 
-<script>
-	firstElm  = {{obj.getObjId}};
-</script>
-{% endif %}
+	{% if forloop.counter0 == 0 %} 
+	<script>
+		firstElm  = {{obj.getObjId}};
+	</script>
+	{% endif %}
 <tr id="{{obj.getObjId}}" class="no-selected"
 	style="background-color: #fafafa;"
-	onclick="selectParticle(($(this)));" value="{{obj.getFileName}}">
+	onclick="selectParticle(($(this)));" value="{{obj.text}}">
 	<td>{{obj.basename}}</td>
 </tr>
 {% endfor %} {% endblock %} {% block images %}
@@ -25,7 +25,7 @@
 		<div id="wrapper" class="image">
 			<img id="loadingMic" src="../../../../resources/loading.gif"
 				style="display: none;"/> 
-			<div id="mic"> </div>
+			<div id="mic"></div>
 			<div id="canvas"></div>
 		</div>Central Slice
 	</td>

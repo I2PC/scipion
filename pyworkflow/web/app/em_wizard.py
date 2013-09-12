@@ -51,16 +51,21 @@ def wiz_ctf(protocol):
     return render_to_response('wiz_ctf.html', context)
 
 def wiz_particle_mask(protocol):
-    mics = [mic for mic in protocol.inputParticles.get()]
-    for m in mics:
-        m.basename = basename(m.getFileName())
+    
+    parts = [p for p in protocol.inputParticles.get()] 
+    
+    for p in parts:
+        p.basename = basename(p.getFileName())
+        index = p.getIndex()
+        text = p.getFileName()
+        if index:
+            p.text = "%03d@%s" % (index, text)
         
     mask_radius = protocol.maskRadius.get()
-    
     if mask_radius == -1 :
         mask_radius = 0.25
     
-    context = {'objects': mics,
+    context = {'objects': parts[1:20],
                'raphael': getResourceJs('raphael'),
                'maskRadius': mask_radius
                }
