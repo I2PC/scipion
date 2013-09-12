@@ -3,7 +3,6 @@
  * 
  * deleteProtocolForm(projName, protocolId);
  * deleteProtocol(elm);
- * selTableMessi(elm);
  *  
  **/
 

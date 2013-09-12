@@ -10,7 +10,13 @@
 <script type="text/javascript" src="/static/js/jquery/jquery-ui.js"></script>
 <script type="text/javascript" src="/static/js/templates_libs/wizard_utils.js"></script>
 <script>
+	var firstElm;
 	
+	function putSelection(input_ori, input_des){
+		var value = $(input_ori).val();
+		window.opener.document.getElementById(input_des).value = value;
+		window.close();
+	}
 </script>
 {% block head %} {% endblock %}
 </head>

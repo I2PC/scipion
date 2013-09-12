@@ -16,6 +16,7 @@
  * selectDialog(objClass, msg, funcName);
  * processSelectionList(elm);
  * processSelectionTable(elm);
+ * selTableMessi(elm);
  * 
  **/
 
@@ -79,6 +80,12 @@ $(document).ready(function() {
 						}
 					}
 				});
+			});
+		} else if (mode == 'wiz') {
+			/* Execute the wizard */
+			var action = "/wizard/";
+			$.post(action, $("#protocolForm").serialize(), function(html) {
+				customPopupHTML(html);				
 			});
 		}
 		// Important. Stop the normal POST

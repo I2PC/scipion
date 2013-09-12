@@ -3,37 +3,45 @@
 {% block name %} Downsampling {% endblock %}
 {% block head %}{% endblock %}	
 {% block list %}			
-	<tr><th>Object</th></tr>
-	{% for obj in objects %}
+<tr>
+	<th>Object</th>
+</tr>
+{% for obj in objects %}
+	{% if forloop.counter0 == 0 %} 
+	<script>
+		firstElm  = {{obj.getObjId}};
+	</script>
+	{% endif %}
 	<tr id="{{obj.getObjId}}" class="no-selected" style="background-color: #fafafa;" onclick="selectList(($(this)));" value="{{obj.getFileName}}">
 		<td>{{obj.basename}}</td>
-	</tr>	
+	</tr>
 	{% endfor %}
 {% endblock %}		
 {% block images %}
-	<tr>
-		<td>
-			<div class="image">
-				<img id="loadingMic" src="../../../../resources/loading.gif" style="display:none;"/>
-				<img id="mic" src=""/>
-			</div>Micrograph
-		</td>
-		<td>
-			<div class="image">
-				<img id="loadingPsd" src="../../../../resources/loading.gif" style="display:none;"/>
-				<img id="psd" src=""/>
-			</div>PSD
-		</td> 	
-	</tr>
+<tr>
+	<td>
+		<div class="image">
+			<img id="loadingMic" src="../../../../resources/loading.gif" style="display:none;"/>
+			<img id="mic" src=""/>
+		</div>Micrograph
+	</td>
+	<td>
+		<div class="image">
+			<img id="loadingPsd" src="../../../../resources/loading.gif" style="display:none;"/>
+			<img id="psd" src=""/>
+		</div>PSD
+	</td> 	
+</tr>	
 {% endblock %}
 {% block options %}
 Downsample
-	<input id="downsampling" type="text" value="{{downFactor}}"/>
-	<input type="button" id="buttonGen" onclick="previewPsd();" value="preview"/>
-	<script>
-		
-	</script>
+<input id="downsampling" type="text" value="{{downFactor}}"/>
+<input type="button" id="buttonGen" onclick="previewPsd();" value="preview"/>
+<script>
+	//Load the First Element of the list
+	window.onload = $.when(selectList($("tr#"+firstElm))).then(previewPsd());
+</script>
 {% endblock %}
 {% block function %}
-	onclick="javascript:alert('hola');"
+	onclick="putSelection('input#downsampling', 'downFactor_input')"
 {% endblock %}

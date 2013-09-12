@@ -239,6 +239,19 @@ textarea {
 	background-color: FireBrick;
 }
 
+.buttonWiz {
+	background: url(../../../resources/tools_wizard.png) no-repeat;
+	color: white;
+	width: 2em;
+	height: 2em;
+	border: 0px;
+	text-align: center;
+}
+
+.buttonWiz:hover {
+	background-color: FireBrick;
+}
+
 /* CSS for messi selection table */
 table.content {
 	width: 100%;

@@ -1,7 +1,8 @@
 import os
 from os.path import basename
 import xmipp
-from pyworkflow.web.app.views_util import * 
+from views_util import * 
+from views_protocol import updateProtocolParams
 from pyworkflow.manager import Manager
 from pyworkflow.project import Project
 from django.shortcuts import render_to_response
@@ -9,87 +10,63 @@ from pyworkflow.gui import getImage, getPILImage
 from django.http import HttpResponse
 
 def wizard(request):
-    _ , protocol = loadProtocolProject(request, 'GET')
-    functionName = request.GET.get('function', None)
+    # Get the Wizard Name
+    requestDict = getattr(request, "POST")
+    functionName = requestDict.get("wizName")
     function = globals().get(functionName, None)
-    param = request.GET.get('param', None)
+    
+    # Get the protocol object
+    project, protocol = loadProtocolProject(request)
+    updateProtocolParams(request, protocol, project)
     
     if function is None:
         pass  # redirect to error: wizard not found
     elif not callable(function):
         pass  # redirect to error: name is not a function
     else:
-        return function(protocol, param)
+        return function(protocol)
 
-def wiz_downsampling(protocol, param):
+def wiz_downsampling(protocol):
     mics = [mic for mic in protocol.inputMicrographs.get()]
     for m in mics:
         m.basename = basename(m.getFileName())
         
-    param = param.split('-');
-    
     context = {'objects': mics,
-               'downFactor': param[1]}
+               'downFactor': protocol.downFactor.get(),
+               }
     
     return render_to_response('wiz_downsampling.html', context)
 
-def wiz_ctf(protocol, param):
+def wiz_ctf(protocol):
     mics = [mic for mic in protocol.inputMicrographs.get()]
     for m in mics:
-        m.basename = basename(m.getFileName())
-    
-    param = param.split('-');
-    
-    if param[0] == "lowRes":
-        highRes = 0.25
-        lowRes= param[1]
-    elif param[0] == 'highRes':
-        lowRes = 0.25
-        highRes= param[1]
-    
+        m.basename = basename(m.getFileName())    
     
     context = {'objects': mics,
-               'raphael':getResourceJs('rapahel'),
-               'high_res' : highRes,
-               'low_res': lowRes
+               'raphael':getResourceJs('raphael'),
+               'high_res' : protocol.highRes.get(),
+               'low_res': protocol.lowRes.get()
                }
     
     return render_to_response('wiz_ctf.html', context)
-    
-def wiz_fourier(protocol, param):
-    mics = [mic for mic in protocol.inputMicrographs.get()]
-    for m in mics:
-        m.basename = basename(m.getFileName())
-    
-    param = param.split('-');
-    
-    if param[0] == "lowRes":
-        highRes = 0.25
-        lowRes= param[1]
-    elif param[0] == 'highRes':
-        lowRes = 0.25
-        highRes= param[1]
-    
-    
-    context = {'objects': mics,
-               'raphael':getResourceJs('rapahel'),
-               'high_res' : highRes,
-               'low_res': lowRes
-               }
-    
-    return render_to_response('wiz_fourier.html', context)
 
-def wiz_gaussian(protocol, param):
-    mics = [mic for mic in protocol.inputMicrographs.get()]
+def wiz_particle_mask(protocol):
+    mics = [mic for mic in protocol.inputParticles.get()]
     for m in mics:
         m.basename = basename(m.getFileName())
         
-    param = param.split('-');
+    mask_radius = protocol.maskRadius.get()
+    
+    if mask_radius == -1 :
+        mask_radius = 0.25
     
     context = {'objects': mics,
-               'downFactor': param[1]}
+               'raphael': getResourceJs('raphael'),
+               'maskRadius': mask_radius
+               }
     
-    return render_to_response('wiz_gaussian.html', context)
+    return render_to_response('wiz_particle_mask.html', context)
+    
 
 def get_image_psd(request):
     imagePath = request.GET.get('image', None)
@@ -100,7 +77,7 @@ def get_image_psd(request):
     imgXmipp = xmipp.Image()
     
     # compute the PSD image
-    xmipp.fastEstimateEnhancedPSD(imgXmipp, str(imagePath), int(downsample), int(dim), 2)
+    xmipp.fastEstimateEnhancedPSD(imgXmipp, str(imagePath), float(downsample), int(dim), 2)
         
     # from PIL import Image
     img = getPILImage(imgXmipp, dim)

@@ -18,6 +18,10 @@
 	function putMode(mode){
 		$("#protocolForm").attr('data-mode', mode);
 	}
+	function putModeWiz(mode, functionName){
+		$("input#wizName").attr("value", functionName);
+		putMode("wiz");
+	}
 	</script>
 	 <script>
 	  $(function() {
@@ -28,8 +32,10 @@
 	<body onload="evalElements();">
 		<h3 id="protName">Protocol: {{protocol.getClassName}}</h3>
 		<form id="protocolForm" action="/protocol/" method="POST" data-mode="">{% csrf_token %}
+			<input type="hidden" id="windowName" name="windowName" value=""/>
 			<input type="hidden" name="protocolClass" value="{{protocol.getClassName}}"/>
 			<input type="hidden" name="protocolId" value="{{protocol.getObjId}}"/>
+			<input type="hidden" id="wizName" name="wizName" value=""/>
 			
 			<div id="main">
 				<div id="mainNode1">
@@ -164,14 +170,13 @@
 											<input type="text" id="{{paramName}}_input" name={{paramName}} value="{{param.htmlValue}}">
 									{% endif %}
 									</td>
-									
 								{% if param.getClassName == "PointerParam" %}
 									<td class="ico">
 										<a href="javascript:browseObjects('{{paramName}}','{{projectName}}','{{param.pointerClass.get}}');"><img src={{browse}}/></a>
 									</td>
 								{% elif param.hasWizard %}
 									<td class="ico">
-										<a href="javascript:customPopup('/wizard/?function={{param.wizardName}}&protocolId={{protocol.getObjId}}&param={{paramName}}-{{param.htmlValue}}',825,470)"><img src={{wizard}}/></a>
+										<input type="submit" class="buttonWiz" value="" onclick="javascript:putModeWiz('wiz', '{{param.wizardName}}');"/>
 									</td>
 								{% else %}
 									<td>
