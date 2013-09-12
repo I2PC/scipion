@@ -4,8 +4,8 @@ Created on May 20, 2013
 @author: laura
 '''
 
-from glob import glob, iglob
 import unittest
+
 from pyworkflow.em.packages.xmipp3 import *
 from pyworkflow.tests import *
 
@@ -80,7 +80,6 @@ class TestXmippCTFModel(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.outputPath = getOutputPath('test_data_xmipp')   
-        cls.ctfFn = getOutputPath(cls.outputPath, 'xmipp_ctf.ctfparam')
         
     def setUp(self):
         cleanPath(self.outputPath)
