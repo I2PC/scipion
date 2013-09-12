@@ -134,10 +134,8 @@ function putCircle(radio, canvas, color){
 function selectParticle(elm) {
 	var row = $("table#list");
 	var oldValue = elm.attr('id');
-	
 	var img = $("img#mic");
-
-	var load_img = $("img#loadingMic");
+	var load = $("img#loadingMic");
 
 	if (row.attr('value') != undefined && row.attr('value') != oldValue) {
 		// unmark the last option
@@ -155,7 +153,7 @@ function selectParticle(elm) {
 	elm.attr('class', 'selected');
 
 	// set loading img
-	load_img.show();
+	load.show();
 
 	// get the img path
 	var path_img = elm.attr('value');

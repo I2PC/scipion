@@ -35,13 +35,6 @@ function customPopupHTML(html) {
 	id = day.getTime();
 	var popup = window.open('', id, 'height=470,width=825');
 	popup.document.write(html);
-	
-	jQuery(popup).bind(
-	    "beforeunload", 
-	    function() { 
-	        return $("input#downsampling").attr("value");
-	    }
-	)
 }
 
 function closePopup() {

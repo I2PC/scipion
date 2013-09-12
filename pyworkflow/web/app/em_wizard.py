@@ -13,7 +13,6 @@ def wizard(request):
     # Get the Wizard Name
     requestDict = getattr(request, "POST")
     functionName = requestDict.get("wizName")
-    windowName = requestDict.get("windowName")
     function = globals().get(functionName, None)
     
     # Get the protocol object
@@ -25,16 +24,16 @@ def wizard(request):
     elif not callable(function):
         pass  # redirect to error: name is not a function
     else:
-        return function(protocol, windowName)
+        return function(protocol)
 
-def wiz_downsampling(protocol, windowName):
+def wiz_downsampling(protocol):
     mics = [mic for mic in protocol.inputMicrographs.get()]
     for m in mics:
         m.basename = basename(m.getFileName())
         
     context = {'objects': mics,
                'downFactor': protocol.downFactor.get(),
-               'windowName': windowName}
+               }
     
     return render_to_response('wiz_downsampling.html', context)
 
@@ -44,7 +43,7 @@ def wiz_ctf(protocol):
         m.basename = basename(m.getFileName())    
     
     context = {'objects': mics,
-               'raphael':getResourceJs('rapahel'),
+               'raphael':getResourceJs('raphael'),
                'high_res' : protocol.highRes.get(),
                'low_res': protocol.lowRes.get()
                }
@@ -52,49 +51,22 @@ def wiz_ctf(protocol):
     return render_to_response('wiz_ctf.html', context)
 
 def wiz_particle_mask(protocol):
-    mics = [mic for mic in protocol.inputMicrographs.get()]
+    mics = [mic for mic in protocol.inputParticles.get()]
     for m in mics:
         m.basename = basename(m.getFileName())
+        
+    mask_radius = protocol.maskRadius.get()
+    
+    if mask_radius == -1 :
+        mask_radius = 0.25
     
     context = {'objects': mics,
-               'raphael':getResourceJs('rapahel')
+               'raphael': getResourceJs('raphael'),
+               'maskRadius': mask_radius
                }
     
     return render_to_response('wiz_particle_mask.html', context)
     
-def wiz_fourier(protocol):
-    mics = [mic for mic in protocol.inputMicrographs.get()]
-    for m in mics:
-        m.basename = basename(m.getFileName())
-    
-    param = param.split('-');
-    
-    if param[0] == "lowRes":
-        highRes = 0.25
-        lowRes= param[1]
-    elif param[0] == 'highRes':
-        lowRes = 0.25
-        highRes= param[1]
-    
-    
-    context = {'objects': mics,
-               'raphael':getResourceJs('rapahel'),
-               'high_res' : highRes,
-               'low_res': lowRes
-               }
-    
-    return render_to_response('wiz_fourier.html', context)
-
-def wiz_gaussian(protocol):
-    mics = [mic for mic in protocol.inputMicrographs.get()]
-    for m in mics:
-        m.basename = basename(m.getFileName())
-    
-    
-    context = {'objects': mics
-               }
-    
-    return render_to_response('wiz_gaussian.html', context)
 
 def get_image_psd(request):
     imagePath = request.GET.get('image', None)

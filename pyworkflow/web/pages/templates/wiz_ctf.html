@@ -3,6 +3,12 @@
 {% block name %} CTF {% endblock %} 
 {% block head %}
 	<script type="text/javascript" src="{{raphael}}"></script>
+	<script>
+		function returnParams(){
+			putSelection('input#high_val', 'highRes_input');
+			putSelection('input#low_val', 'lowRes_input');
+		}
+	</script>
 {% endblock %} 
 {% block list %}
 <tr>
@@ -39,7 +45,7 @@
 </tr>
 {% endblock %} 
 {% block options %}
-<fieldset id="freqOptions">
+<fieldset id="sliderOptions">
 	<legend>Frequencies</legend>
 	<div id="lowFreq">
 		<span id="title_freq">Low freq<span>
@@ -102,5 +108,5 @@ window.onload = compositePreview($("tr#"+firstElm));
 </script>
 {% endblock %}
 {% block function %}
-	onclick="javascript:alert('hola');"
+	onclick="returnParams()"
 {% endblock %}

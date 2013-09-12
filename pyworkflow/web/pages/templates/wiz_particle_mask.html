@@ -1,6 +1,6 @@
 {% extends 'wiz_base.html' %} 
-{% block title %} Particle Mask Radius {% endblock %} 
-{% block name %} Particle Mask Radius {% endblock %} 
+{% block title %} CTF {% endblock %} 
+{% block name %} CTF {% endblock %} 
 {% block head %}
 	<script type="text/javascript" src="{{raphael}}"></script>
 {% endblock %} 
@@ -32,41 +32,41 @@
 </tr>
 {% endblock %} 
 {% block options %}
-<fieldset id="radiusOptions">
-	<div id="outer">
-		<span id="title_outer">Outer radius<span>
-		<div id="slider" class="slider_outer"></div>
-		<div id="slider_outer_result">0.25</div>
-		<input id="outer_val" type="hidden" value="0.25"/>
+<fieldset id="freqOptions">
+	<div id="lowFreq">
+		<span id="title">Outer radius<span>
+		<div id="slider" class="slider_radius"></div>
+		<div id="slider_radius_result">{{maskRadius}}</div>
+		<input id="radius_val" type="hidden" value="{{maskRadius}"/>
 	</div>
 </fieldset>
 
 <script>
-$(".slider_outer").slider({
+$(".slider_radius").slider({
 	animate : true,
 	range : "min",
-	value : 0.25,
+	value : "{{maskRadius}}",
 	min : 0.00,
 	max : 0.50,
 	step : 0.01,
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
-		$("#slider_outer_result").html(ui.value);
+		$("#slider_radius_result").html(ui.value);
 		
 		//update the circle
 		putCircle(ui.value*250, "canvas", "blue");
 	},
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
-		$('#outer_val').attr('value', ui.value);
+		$('#radius_val').attr('value', ui.value);
 	}
 });
 
 //Load the First Element of the list
-window.onload = selectParticle($("tr#"+firstElm));
+// window.onload = selectParticle($("tr#"+firstElm));
 
 </script>
 {% endblock %}
 {% block function %}
-	onclick="javascript:alert('hola');"
+	onclick="putSelection('input#radius_val', 'maskRadius_input')"
 {% endblock %}
