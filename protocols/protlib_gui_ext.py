@@ -68,6 +68,8 @@ def openLink(link):
         ext = getExt(link)
         if ext in TEXT_EXTENSIONS:
             showTextfileViewer(link, [link])
+        elif ext in CHIMERA_EXTENSIONS:
+            chimera(link)
         else: # VALIDATE THAT showj can visualize the extesion
             showj(link)
     else:
@@ -1317,8 +1319,7 @@ class FileManager():
 
 
 TEXT_EXTENSIONS = ['.txt', '.c', '.h', '.cpp', '.java', '.sh', '.star', '.emx']
-
-
+CHIMERA_EXTENSIONS = ['.pdb']
 
 class XmippBrowser():
     def __init__(self, initialDir='.', parent=None, root=None, seltype="both", selmode="browse", allowFilter=True, filter=None, previewDim=144):
@@ -1384,7 +1385,7 @@ class XmippBrowser():
         addFm('folder', 'folderopen.gif', [])
         addFm('default', 'generic_file.gif', [])
         addFm('up', 'up.gif', [])
-        addFm('pdb', 'pdbSmall.gif', ['.pdb'], pdbFillMenu, defaultOnClick, pdbOnDoubleClick)
+        addFm('pdb', 'pdbSmall.gif', CHIMERA_EXTENSIONS, pdbFillMenu, defaultOnClick, pdbOnDoubleClick)
         
     def createDetailsTop(self, parent):
         self.detailstop = tk.Frame(parent)
