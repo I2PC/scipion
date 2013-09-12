@@ -77,13 +77,13 @@ class XmlMapper():
     def __del__(self):
         pass
     
-    def objectToXML(self,object):
+    def objectToXML(self, object):
         """ given an object persist it in XML dataBase.
         Each object goes to a different element. Much much faster...
         """
         
         #write primary key
-        xmlString = r"  <%s"%object.name
+        xmlString = r"  <%s" % object.name
         for key, value in object.dictPrimaryKeys.iteritems():
             if value is None:
                 continue
@@ -158,7 +158,8 @@ class XmlMapper():
         ,'pixelSpacing__Y'
         ,'pixelSpacing__Z'
         ] 
-    def readEMXFile(self,fileName):
+    
+    def readEMXFile(self, fileName):
         """ create tree from xml file 
         """
         #get context
@@ -259,6 +260,20 @@ class XmlMapper():
         else:
             raise Exception("readObjectPK: No fileName or index provided" )
 
+    def firstObject(self, classname, fileName):
+        """ Iterate over the tags elements and find the 
+        first one of type 'classname', build the object
+        and return it. The foreing keys will be not updated.
+        """
+        context = ET.iterparse(fileName, events=('start','end'))
+        for event, elem in iter(context):
+            tag = elem.tag
+            if event == 'start':
+                if tag == classname:
+                    self.createObject(elem)
+                    return self._object
+        return None
+        
     def writeEMXFile(self, fileName):
         """read xml file and store it in a document
         """

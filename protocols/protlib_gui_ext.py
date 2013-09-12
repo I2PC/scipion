@@ -32,7 +32,7 @@ import Tkinter as tk
 from tkSimpleDialog import Dialog
 import ttk
 from config_protocols import LabelBgColor, ButtonBgColor, ButtonActiveBgColor, SectionTextColor
-from protlib_filesystem import getXmippPath, xmippExists, removeFilenamePrefix, fixPath, splitFilename
+from protlib_filesystem import getXmippPath, xmippExists, removeFilenamePrefix, fixPath, splitFilename, getExt
 from protlib_utils import runChimera, runVMD
 from Tkinter import TclError
 from protlib_gui_ext import *
@@ -65,7 +65,13 @@ def openLink(link):
     if os.path.isdir(link):
         showBrowseDialog(link, link, seltype="none", selmode="browse")
     elif xmippExists(link):
-        showj(link)
+        ext = getExt(link)
+        if ext in TEXT_EXTENSIONS:
+            showTextfileViewer(link, [link])
+        elif ext in CHIMERA_EXTENSIONS:
+            chimera(link)
+        else: # VALIDATE THAT showj can visualize the extesion
+            showj(link)
     else:
         from  webbrowser import open
         open(link)
@@ -1190,7 +1196,6 @@ def getMdString(filename, browser):
     md = MetaData()
     md.read(filename, 1)
     labels = md.getActiveLabels()
-    print "parsed: ", md.getParsedLines()
     msg =  "  <%d items>\n" % md.getParsedLines()
     msg += "  <labels:>" + ''.join(["\n   - %s" % label2Str(l) for l in labels])
     
@@ -1206,10 +1211,7 @@ def mdOnClick(filename, browser):
     if '@' not in filename:
         import xmipp
         msg = "<Metadata File>\n"
-        print "mdOnclick..."
-        print "before getBlocksInMetaDataFile"
         blocks = xmipp.getBlocksInMetaDataFile(filename)
-        print "after...."
         nblocks = len(blocks)
         if nblocks <= 1:
             msg += "  <single block>\n" + getMdString(filename, browser)
@@ -1315,6 +1317,10 @@ class FileManager():
         for k, v in attributes.iteritems():
             setattr(self, k, v)
 
+
+TEXT_EXTENSIONS = ['.txt', '.c', '.h', '.cpp', '.java', '.sh', '.star', '.emx']
+CHIMERA_EXTENSIONS = ['.pdb']
+
 class XmippBrowser():
     def __init__(self, initialDir='.', parent=None, root=None, seltype="both", selmode="browse", allowFilter=True, filter=None, previewDim=144):
         ''' seltype is the selection type, it could be:
@@ -1370,7 +1376,7 @@ class XmippBrowser():
                             imgFillMenu, imgOnClick, imgOnDoubleClick)
         addFm('vol', 'vol.gif', ['.vol', '.mrc', '.map', '.em', '.pif'], 
                             volFillMenu, imgOnClick, volOnDoubleClick)
-        addFm('text', 'fileopen.gif', ['.txt', '.c', '.h', '.cpp', '.java', '.sh', '.star'],
+        addFm('text', 'fileopen.gif', TEXT_EXTENSIONS,
               textFillMenu, defaultOnClick, textOnDoubleClick)
         addFm('pyfile', 'python_file.gif', ['.py'],textFillMenu, defaultOnClick, textOnDoubleClick)
         addFm('out', 'out.gif', ['.out'],textFillMenu, defaultOnClick, textOnDoubleClick)
@@ -1379,7 +1385,7 @@ class XmippBrowser():
         addFm('folder', 'folderopen.gif', [])
         addFm('default', 'generic_file.gif', [])
         addFm('up', 'up.gif', [])
-        addFm('pdb', 'pdbSmall.gif', ['.pdb'], pdbFillMenu, defaultOnClick, pdbOnDoubleClick)
+        addFm('pdb', 'pdbSmall.gif', CHIMERA_EXTENSIONS, pdbFillMenu, defaultOnClick, pdbOnDoubleClick)
         
     def createDetailsTop(self, parent):
         self.detailstop = tk.Frame(parent)

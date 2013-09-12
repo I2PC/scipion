@@ -67,9 +67,9 @@ int ImageBase::read(const FileName &name, DataMode datamode, size_t select_img,
     hFile = openFile(name, mode);
     int err = _read(name, hFile, datamode, select_img, mapData);
     closeFile(hFile);
-
     return err;
 }
+
 
 int ImageBase::readMapped(const FileName &name, size_t select_img, int mode)
 {
@@ -912,6 +912,17 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
         hFile->exist = _exists = true;
 }
 
+bool ImageBase::isImage(const FileName &name)
+{
+    try
+    {
+        return !read(name, HEADER);
+    }
+    catch (XmippError &xe)
+    {
+        return false;
+    }
+}
 
 /** Show image properties
       */
