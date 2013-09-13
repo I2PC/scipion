@@ -158,6 +158,7 @@ def get_image(request):
         img = getPILImage(imgXmipp, imageDim)
          
     # response = HttpResponse(mimetype="image/png")    
+    
     response = HttpResponse(mimetype="image/png")
     img.save(response, "PNG")
     return response
@@ -167,7 +168,7 @@ def get_image_dimensions(projectPath, imagePath):
     from pyworkflow.gui import getImage
     imageNo = None
 #    imagePath = request.GET.get('image')
-    
+        
     # PAJM: Como vamos a gestionar lsa imagen    
     if imagePath.endswith('png') or imagePath.endswith('gif'):
         img = getImage(imagePath, tk=False)
@@ -180,8 +181,7 @@ def get_image_dimensions(projectPath, imagePath):
         if projectPath != '':
             imagePathTmp = os.path.join(projectPath, imagePath)
             if not os.path.isfile(imagePathTmp):
-                imagePath = getInputPath('showj', imagePath)      
-            
+                imagePath = getInputPath('showj', imagePath)          
 
 #        imagePath = join(request.session['projectPath'],imagePath)
         
@@ -191,5 +191,4 @@ def get_image_dimensions(projectPath, imagePath):
         imgXmipp = xmipp.Image(imagePath)
         
         return imgXmipp.getDimensions()
-        
-
+    

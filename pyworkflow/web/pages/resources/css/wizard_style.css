@@ -14,13 +14,16 @@ body {
 }
 
 .layout {
-	width: 33em;
+	width: 30em;
 	/* 	padding: 10px; */
 }
 
 .elm1 {
 	width: 12em;
 	float: left;
+	height: 25em;
+	overflow-y: auto;
+	
 }
 
 .elm2 {
@@ -49,6 +52,7 @@ body {
 	text-align: center;
 	padding: 5px;
 	clear: both;
+
 }
 
 #buttonGen {
@@ -148,7 +152,7 @@ table#list tr.selected:hover td {
 	background-color: LightSteelBlue;
 }
 
-/**************** Frequencies CSS *******************/
+/**************** CTF CSS *******************/
 #slider {
 	width: 15em;
 	margin: 5px 0 5px 0;
@@ -172,17 +176,11 @@ table#list tr.selected:hover td {
 
 #wrapper {
 	position: relative;
-	    padding: 0;
-	    outline: 1px solid #999;
+	/*     padding: 0; */
+	/*     outline: 1px solid #999; */
 }
 
 #wrapper img {
-	position: absolute;
-	top: 0;
-	left: 0;
-}
-
-#canvas {
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -206,13 +204,32 @@ table#list tr.selected:hover td {
 	left: 0;
 }
 
-#mic {
+svg {
+	width: 250px;
+	height: 250px;
+}
+
+/**************** Mask Radius CSS *******************/
+
+#canvas {
 	position: absolute;
 	top: 0;
 	left: 0;
 }
 
-svg {
-	width: 250px;
-	height: 250px;
+#particle {
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+
+#sliderOptionsLite {
+	width: 17em;
+	background: #fafafa;
+	float: right;
+}
+
+#sliderUni {
+	width: 15m;
+/* 	float: left; */
 }

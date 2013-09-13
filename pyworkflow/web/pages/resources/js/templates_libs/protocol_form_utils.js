@@ -84,8 +84,15 @@ $(document).ready(function() {
 		} else if (mode == 'wiz') {
 			/* Execute the wizard */
 			var action = "/wizard/";
+			var type_wiz = $("#wizName").attr("value");
+			
 			$.post(action, $("#protocolForm").serialize(), function(html) {
-				customPopupHTML(html);				
+				if(type_wiz=='wiz_particle_mask'){
+				customPopupHTML(html,560,470);
+				}
+				else{
+				customPopupHTML(html,825,470);
+				}
 			});
 		}
 		// Important. Stop the normal POST

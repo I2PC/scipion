@@ -45,6 +45,22 @@ function selectList(elm) {
 	});
 }
 
+function putImage(url, canvas, width, height){
+	$("div#"+canvas).empty();
+	var paper = Raphael(document.getElementById(canvas));
+	var rec = paper.rect(0, 0, 250, 250);
+	rec.attr("stroke-width", 0);
+	rec.attr("fill", "url("+ url +")");
+}
+
+function putCircle(radio, canvas, color){
+	$("#"+canvas).empty();
+	var paper = Raphael(document.getElementById(canvas));
+	var circle = paper.circle(125, 125, radio);
+	circle.attr("fill", color);
+	circle.attr("opacity", 0.4);
+}
+
 // *** Methods Wizard Downsampling *** //
 
 function previewPsd() {
@@ -113,29 +129,12 @@ function previewPsdFreq() {
 	});
 }
 
-function putImage(url, canvas, width, height){
-	$("#"+canvas).empty();
-	var paper = Raphael(document.getElementById(canvas));
-	var rec = paper.rect(0, 0, 250, 250);
-	rec.attr("stroke-width", 0);
-	rec.attr("fill", "url("+ url +")");
-}
-
-function putCircle(radio, canvas, color){
-	$("#"+canvas).empty();
-	var paper = Raphael(document.getElementById(canvas));
-	var circle = paper.circle(125, 125, radio);
-	circle.attr("fill", color);
-	circle.attr("opacity", 0.4);
-}
-
 // *** Methods Wizard Particle Mask *** //
 
 function selectParticle(elm) {
 	var row = $("table#list");
 	var oldValue = elm.attr('id');
-	var img = $("div#mic");
-	var load = $("img#loadingMic");
+	var img = $("div#particle");
 
 	if (row.attr('value') != undefined && row.attr('value') != oldValue) {
 		// unmark the last option
@@ -143,33 +142,20 @@ function selectParticle(elm) {
 		rowOld.attr('style', 'background-color: #fafafa;');
 		rowOld.attr('class', 'no-selected');
 	}
-	
-	// hide the last micrograph
-		img.hide();
 
 	// mark the new option
 	row.attr('value', oldValue);
 	elm.attr('style', 'background-color: LightSteelBlue;');
 	elm.attr('class', 'selected');
-
-	// set loading img
-	load.show();
-
+	
 	// get the img path
 	var path_img = elm.attr('value');
 	if (path_img == undefined) {
 		path_img = elm.val();
 	}
 	
-	load.hide();
-
 	// load and set the image
 	var uri = "/get_image/?image=" + path_img + "&dim=250";
-
-	// show the new micrograph
-	img.load(putImage(uri, "mic", 250, 250), function() {
-		// hide the load img
-		load.hide();
-	});
-
+	putImage(uri, "particle", 250, 250);
+	
 }

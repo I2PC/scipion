@@ -30,10 +30,10 @@ function customPopup(URL, widthValue, heightValue) {
 			+ "', 'toolbar=0,scrollbars=1,location=0,statusbar=0,menubar=0,resizable=0,width='+widthValue+',height='+heightValue+'');");
 }
 
-function customPopupHTML(html) {
+function customPopupHTML(html, widthValue, heightValue) {
 	day = new Date();
 	id = day.getTime();
-	var popup = window.open('', id, 'height=470,width=825');
+	var popup = window.open('', id, 'height='+heightValue+',width='+widthValue);
 	popup.document.write(html);
 }
 

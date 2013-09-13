@@ -55,17 +55,18 @@ def wiz_particle_mask(protocol):
     parts = [p for p in protocol.inputParticles.get()] 
     
     for p in parts:
-        p.basename = basename(p.getFileName())
         index = p.getIndex()
         text = p.getFileName()
+        p.basename = basename(text)
         if index:
             p.text = "%03d@%s" % (index, text)
-        
+            p.basename = "%03d@%s" % (index, basename(text))
+            
     mask_radius = protocol.maskRadius.get()
     if mask_radius == -1 :
-        mask_radius = 0.25
+        mask_radius = 62
     
-    context = {'objects': parts[1:20],
+    context = {'objects': parts[0:100],
                'raphael': getResourceJs('raphael'),
                'maskRadius': mask_radius
                }

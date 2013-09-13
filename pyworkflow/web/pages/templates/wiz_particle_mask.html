@@ -23,17 +23,15 @@
 <tr>
 	<td>
 		<div id="wrapper" class="image">
-			<img id="loadingMic" src="../../../../resources/loading.gif"
-				style="display: none;"/> 
-			<div id="mic"></div>
+			<div id="particle"></div>
 			<div id="canvas"></div>
 		</div>Central Slice
 	</td>
 </tr>
 {% endblock %} 
 {% block options %}
-<fieldset id="freqOptions">
-	<div id="lowFreq">
+<fieldset id="sliderOptionsLite">
+	<div id="sliderUni">
 		<span id="title">Outer radius<span>
 		<div id="slider" class="slider_radius"></div>
 		<div id="slider_radius_result">{{maskRadius}}</div>
@@ -46,15 +44,15 @@ $(".slider_radius").slider({
 	animate : true,
 	range : "min",
 	value : "{{maskRadius}}",
-	min : 0.00,
-	max : 0.50,
-	step : 0.01,
+	min : 0,
+	max : 125,
+	step : 1,
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
 		$("#slider_radius_result").html(ui.value);
 		
 		//update the circle
-		putCircle(ui.value*250, "canvas", "blue");
+		putCircle(ui.value, "canvas", "blue");
 	},
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
@@ -63,7 +61,7 @@ $(".slider_radius").slider({
 });
 
 //Load the First Element of the list
-// window.onload = selectParticle($("tr#"+firstElm));
+window.onload = selectParticle($("tr#"+firstElm));
 
 </script>
 {% endblock %}
