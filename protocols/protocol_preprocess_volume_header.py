@@ -11,14 +11,11 @@
 #-----------------------------------------------------------------------------
 # {section} Input
 #-----------------------------------------------------------------------------
-# {file}(*.vol *.pdb){validate}(PathExists) Input model:
+# {file}(*.vol *.stk *.xmd){validate}(PathExists) Volumes to process:
 """ Can be a density volume or a PDB file"""
 InModel = ''
 
-# {list_combo}(convert from PDB, preprocess density volume) Action:
-Action = 'preprocess density volume'
-
-# {condition}(Action=="preprocess density volume") Input voxel size (A/voxel):
+# Input voxel size (A/voxel):
 InitialTs=1.0
 
 #-----------------------------------------------------------------------------

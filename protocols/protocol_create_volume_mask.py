@@ -62,6 +62,10 @@ class ProtCreateVolumeMask(XmippProtocol):
             self.insertStep("invert",Mask=self.OutMask)        
         if self.DoSmooth:
             self.insertStep("convolve",Mask=self.OutMask,SigmaConvolution=self.SigmaConvolution)
+        
+        # Apply Mask
+        if self.MaskSource=="Volume" and self.ApplyMask:
+            self.insertStep("applyMask",Mask=self.OutMask,WorkingDir=self.WorkingDir,InModel=self.InModel)
 
     def summary(self):
         messages = []      
@@ -119,6 +123,9 @@ class ProtCreateVolumeMask(XmippProtocol):
         from protlib_utils import runShowJ
         if os.path.exists(self.OutMask):
             runShowJ(self.OutMask)
+        fnMasked=self.workingDirPath("volume_masked.vol")
+        if os.path.exists(fnMasked):
+            runShowJ(fnMasked)
 
 def threshold(log,WorkingDir,InModel,Threshold):
     runJob(log,"xmipp_transform_threshold","-i %s -o %s/mask.vol --select below %f --substitute binarize"%(InModel,WorkingDir,float(Threshold)))
@@ -182,3 +189,6 @@ def invert(log,Mask):
 
 def convolve(log,Mask,SigmaConvolution):
     runJob(log,"xmipp_transform_filter","-i %s --fourier real_gaussian %f"%(Mask,float(SigmaConvolution)))
+
+def applyMask(log,Mask,WorkingDir,InModel):
+    runJob(log,"xmipp_transform_mask","-i %s --mask binary_file %s -o %s"%(InModel,Mask,os.path.join(WorkingDir,"volume_masked.vol")))
