@@ -121,8 +121,11 @@ projectDefaults = {
 
 #Font
 #FontName = "Helvetica"
-FontName = "Verdana"
-FontSize = 10
+# Try to read FontName and FontSize 
+# from environment variables
+import os
+FontName = os.environ.get('XMIPP_FONT_NAME', "Verdana")
+FontSize = int(os.environ.get('XMIPP_FONT_SIZE', 10))
 
 #TextColor
 CitationTextColor = "dark olive green"
@@ -146,7 +149,7 @@ ButtonSelectColor = "DeepSkyBlue2"
 
 #Dimensions limits
 MaxHeight = 650
-MaxWidth = 800
-MaxFontSize = 14
-MinFontSize = 6
+MaxWidth = 2048
+MaxFontSize = 18
+MinFontSize = 10
 WrapLenght = MaxWidth - 50

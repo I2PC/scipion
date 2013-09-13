@@ -40,10 +40,7 @@ from protlib_gui_ext import centerWindows, changeFontSize, askYesNo, Fonts, regi
     showError, showInfo, showBrowseDialog, showWarning, AutoScrollbar, FlashMessage,\
     TaggedText, XmippText, XmippButton, OutputText
 from protlib_filesystem import getXmippPath, xmippExists, removeBasenameExt
-from config_protocols import protDict
-from config_protocols import FontName, FontSize, MaxHeight, MaxWidth, WrapLenght
-from config_protocols import LabelTextColor, SectionTextColor, CitationTextColor
-from config_protocols import BgColor, EntryBgColor, SectionBgColor, LabelBgColor, ButtonActiveBgColor, ButtonBgColor                         
+from config_protocols import *
 from protlib_sql import SqliteDb
 from protlib_include import *
 from protlib_parser import ProtocolParser
@@ -54,8 +51,8 @@ class ProtocolStyle():
     ''' Class to define some style settings like font, colors, etc '''
     def __init__(self, configModuleName=None):        
         #Font
-        self.FontName = "Helvetica"
-        self.FontSize = 10
+        self.FontName = FontName
+        self.FontSize = FontSize
         self.ButtonFontSize = self.FontSize
         #TextColor
         self.CitationTextColor = "dark olive green"
@@ -514,7 +511,7 @@ class ProtocolGUI(BasicGUI):
             label_text += ' %s_' % self.run['protocol_name']
         #label_text="_%s_"%label_text
         label = tk.Label(frame, text=label_text, fg=label_color, bg=label_bgcolor, font=Fonts['normal'])
-        label.grid(row=label_row, column=0, sticky='w', padx=(5, 10))
+        label.grid(row=label_row, column=0, sticky='e', padx=(5, 10))
         
         self.maxLabelWidth = max(self.maxLabelWidth, label.winfo_reqwidth())
         w.widgetslist.append(label)
