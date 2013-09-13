@@ -34,6 +34,7 @@ protocols = {
         'subtraction': ('Partial Projection Subtraction', '3D/ProjSub'),
         'custom': ('Custom', 'Custom'),
         'image_operate': ('Image Operate', 'Tools/ImageOperate'),
+        'metadata_split': ('Metadata Split', 'Tools/MetadataSplit'),
         #'xmipp': ('Xmipp Programs', 'XmippPrograms'), 
         'emx_import': ('Import', 'EMX'),
         'emx_export': ('Export', 'EMX'),
@@ -52,10 +53,10 @@ sections = [
 ('3D', 
    [['Initial Model', 'rct', 'initvolume_ransac', 'convert_pdb'], 
     ['Model Refinement', 'projmatch', 'ml3d', 'relion3d'],
-    ['Volumes', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask', 'preprocess_volume', 'structure_factor']])
-,
+    ['Volumes', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask', 'preprocess_volume', 'structure_factor']]),
 ('Other',
- [['Extra', 'custom',['Virus','subtraction'],['Tomography','mltomo'],['Tools','image_operate'], ['EMX', 'emx_import', 'emx_export']]])
+ [['Extra', 'custom',['Virus','subtraction'],['Tomography','mltomo'],['Tools','image_operate','metadata_split'],
+   ['EMX', 'emx_import', 'emx_export']]])
 ]
 
 #--------------------------------------------------------------------------------
