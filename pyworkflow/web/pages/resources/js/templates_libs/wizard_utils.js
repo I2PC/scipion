@@ -134,7 +134,7 @@ function putCircle(radio, canvas, color){
 function selectParticle(elm) {
 	var row = $("table#list");
 	var oldValue = elm.attr('id');
-	var img = $("img#mic");
+	var img = $("div#mic");
 	var load = $("img#loadingMic");
 
 	if (row.attr('value') != undefined && row.attr('value') != oldValue) {
@@ -160,12 +160,14 @@ function selectParticle(elm) {
 	if (path_img == undefined) {
 		path_img = elm.val();
 	}
+	
+	load.hide();
 
 	// load and set the image
 	var uri = "/get_image/?image=" + path_img + "&dim=250";
 
 	// show the new micrograph
-	load.load(putImage(uri, "mic", 250, 250), function() {
+	img.load(putImage(uri, "mic", 250, 250), function() {
 		// hide the load img
 		load.hide();
 	});
