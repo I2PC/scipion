@@ -513,7 +513,11 @@ class ProtocolGUI(BasicGUI):
         label = tk.Label(frame, text=label_text, fg=label_color, bg=label_bgcolor, font=Fonts['normal'])
         label.grid(row=label_row, column=0, sticky='e', padx=(5, 10))
         
-        self.maxLabelWidth = max(self.maxLabelWidth, label.winfo_reqwidth())
+        doMax = section.var.isVisualize()
+        if not self.visualize_mode:
+            doMax = not doMax
+        if doMax: 
+            self.maxLabelWidth = max(self.maxLabelWidth, label.winfo_reqwidth())
         w.widgetslist.append(label)
     
         return w
@@ -557,6 +561,7 @@ class ProtocolGUI(BasicGUI):
             for var in s.childs:
                 if var.hasTag('cite'):
                     citeslist.append(var.getValue())
+                
                 self.createWidget(section, var)
         
         #Show usage if found
@@ -811,6 +816,7 @@ class ProtocolGUI(BasicGUI):
             self.createScrollableCanvas()
             self.fillHeader()
             self.parser = ProtocolParser(self.run['source'])
+            self.visualize_mode = visualize_mode
             self.createWidgets()
             self.master.update_idletasks()
             maxWidth = max([s.frame.winfo_width() for s in self.sectionslist])
@@ -825,7 +831,6 @@ class ProtocolGUI(BasicGUI):
                 self.inRunName = run['run_name']
                 self.setVarValue('RunName', self.inRunName)
                 
-            self.visualize_mode = visualize_mode
             self.fillGUI()
         except Exception, e:
             errMsg = "Couldn't create GUI. ERROR: %s\n" % e
