@@ -570,7 +570,7 @@ class ProtocolGUI(BasicGUI):
         if len(maintext):
             self.fonts['cites'] = tkFont.Font(family=FontName, size=FontSize-2, weight=tkFont.BOLD)
             label = tk.Label(self.frame, text=maintext, fg=CitationTextColor, bg=BgColor, justify=tk.LEFT,
-                          font=self.fonts['cites'], wraplength=500)
+                          font=self.fonts['cites'], wraplength=WrapLenght)
             label.grid(row=self.citerow, column=0, columnspan=5, sticky='ew')
             
     #-------------------------------------------------------------------

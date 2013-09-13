@@ -230,15 +230,16 @@ class Edge():
         self.dstY += dy
         self.paint()
 
+DY = 15
+DX = 15
+FONT = "sans-serif"
+FONTSIZE = 9
+colors = ['#D9F1FA', '#D9F1FA', '#FCCE62', '#D2F5CB', '#F5CCCB', '#F3F5CB', '#124EB0']
+
+
 def showDependencyTree(canvas, runsDict, rootName):
     ''' This function will create a Canvas to display
     the protocols dependency tree''' 
-
-    DY = 45
-    DX = 15
-    FONT = "sans-serif"
-    FONTSIZE = 9
-    colors = ['#D9F1FA', '#D9F1FA', '#FCCE62', '#D2F5CB', '#F5CCCB', '#F3F5CB', '#124EB0']
     
 #    root = tk.Toplevel()
 #    root.withdraw()
@@ -266,7 +267,7 @@ def showDependencyTree(canvas, runsDict, rootName):
         dd.half = dd.width / 2
         dd.hLimits = [[-dd.half, dd.half]]
         dd.t = t
-        dd.y = y
+        dd.y = y + dd.height / 2
         dd.offset = 0
         
         return t
@@ -326,16 +327,17 @@ def showDependencyTree(canvas, runsDict, rootName):
   
         return sep + DX
         
-    def showLevel(dd, level):
-        y = level * DY
+    def showLevel(dd, level, y):
         n = len(dd.deps)
         
         showNode(dd, y)
+        ny = y + dd.height + DY
+        
         if n > 0:
             #width = (xmax - xmin) / n
             childs = [runsDict[rn] for rn in dd.deps]
             for c in childs:
-                showLevel(c, level + 1)
+                showLevel(c, level + 1, ny)
                 
             if n > 1:
                 offset = 0
@@ -380,7 +382,7 @@ def showDependencyTree(canvas, runsDict, rootName):
             canvas.createEdge(dd.t, c.t)
     
     rootNode = runsDict[rootName]
-    dd = showLevel(rootNode, 1)
+    dd = showLevel(rootNode, 1, DY)
     m = 9999
     for left, right in dd.hLimits:
         m = min(m, left)
