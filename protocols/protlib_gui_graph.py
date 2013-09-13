@@ -129,8 +129,8 @@ class Canvas(tk.Frame):
             count = -1
         self.canvas.yview("scroll", count, "units")          
         
-    def createTextbox(self, text, x, y, bgColor="#99DAE8", textColor='black'):
-        tb = TextBox(self.canvas, text, x, y, bgColor, textColor)
+    def createTextbox(self, text, x, y, bgColor="#99DAE8", textColor='black', font=None):
+        tb = TextBox(self.canvas, text, x, y, bgColor, textColor, font)
         self.items[tb.id] = tb
         return tb
     
@@ -147,10 +147,11 @@ class Canvas(tk.Frame):
 class TextBox():
     '''This class will serve to paint and store
     rectange boxes with some text'''
-    def __init__(self, canvas, text, x, y, bgColor, textColor='black'):
+    def __init__(self, canvas, text, x, y, bgColor, textColor='black', font=None):
         self.bgColor = bgColor
         self.textColor = textColor
         self.text = text
+        self.font = font
         self.margin = 3
         self.canvas = canvas
         self.x = x
@@ -161,7 +162,7 @@ class TextBox():
     def paint(self):
         '''Paint the object in a specific position.'''
         self.id_text = self.canvas.create_text(self.x, self.y, text=self.text, 
-                                               justify=tk.CENTER, fill=self.textColor)
+                                               justify=tk.CENTER, fill=self.textColor, font=self.font)
         xr, yr, w, h = self.canvas.bbox(self.id_text)
         m = self.margin
         xr -= m
@@ -259,7 +260,8 @@ def showDependencyTree(canvas, runsDict, rootName):
         if nodeText.startswith('Project'):
             textColor='white'
         
-        t = canvas.createTextbox(nodeText, 100, y, bgColor=colors[dd.state], textColor=textColor)
+        from protlib_gui_ext import Fonts
+        t = canvas.createTextbox(nodeText, 100, y, bgColor=colors[dd.state], textColor=textColor, font=Fonts['normal'])
         dd.width, dd.height = t.getDimensions()
         dd.half = dd.width / 2
         dd.hLimits = [[-dd.half, dd.half]]
