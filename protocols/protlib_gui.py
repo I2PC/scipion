@@ -192,7 +192,8 @@ class BasicGUI():
         check = tk.Checkbutton(parent, text=text, variable=controlVar,
                       command=command,
                       selectcolor=self.style.BooleanSelectColor,
-                      bg=self.style.BgColor)
+                      bg=self.style.BgColor,
+                      font=Fonts['normal'])
         check.grid(row=row, column=column, sticky=sticky)
         return check
 
@@ -205,7 +206,8 @@ class BasicGUI():
                           bg=self.style.ButtonBgColor,
                           activebackground=self.style.ButtonActiveBgColor,
                           highlightbackground=self.style.HighlightBgColor,
-                          selectcolor=self.style.ButtonActiveBgColor)
+                          selectcolor=self.style.ButtonActiveBgColor,
+                          font=Fonts['normal'])
         radio.grid(row=row, column=column, sticky=sticky)
         return radio
 
@@ -337,9 +339,10 @@ class ProtocolGUI(BasicGUI):
         return btn
     
     def addRadioButton(self, w, var, text, value, row, col, parent):
-        rb = tk.Radiobutton(parent, text=text, variable=var.tkvar, value=value, bg=self.style.LabelBgColor)
+        rb = tk.Radiobutton(parent, text=text, variable=var.tkvar, value=value, bg=self.style.LabelBgColor,
+                                 font=Fonts['normal'])
         rb.grid(row=row, column=col, sticky='w')
-        w.widgetslist.append(rb)
+        w.widgetslist.append(rb) 
         return rb
         
     def expandCollapseSection(self, section):
@@ -391,7 +394,7 @@ class ProtocolGUI(BasicGUI):
             label_bgcolor = self.style.ExpertLabelBgColor
             
         if var.isText():
-            var.tktext = tk.Text(frame, width=66, height=10, wrap=tk.WORD, bg=EntryBgColor)#, yscrollcommand=scrollbar.set, bg=EntryBgColor)
+            var.tktext = tk.Text(frame, width=66, height=10, wrap=tk.WORD, bg=EntryBgColor, font=Fonts['normal'])
             var.tktext.grid(row=label_row, column=0, columnspan=5, sticky='ew', padx=(10, 0), pady=(10, 0))
             var.tktext.insert(tk.END, var.value)
             w.widgetslist.append(var.tktext)
@@ -408,7 +411,7 @@ class ProtocolGUI(BasicGUI):
                 section.tkvar = var.tkvar
                 #Label(section.frame, text=label_text, bg=SectionBgColor).grid(row=0, column=1, padx=(5, 0))
                 chb = tk.Checkbutton(section.frame, text=label_text, variable=var.tkvar, 
-                            onvalue='True', offvalue='False',
+                            onvalue='True', offvalue='False', font=Fonts['normal'],
                             command=lambda:self.expandCollapseSection(section),
                             bg=SectionBgColor, activebackground=ButtonActiveBgColor)
                 chb.grid(row=0, column=1, padx=(5, 0))
@@ -422,15 +425,16 @@ class ProtocolGUI(BasicGUI):
                     w.widgetslist.append(btn)
                 var.tkvar.trace('w', self.checkVisibility)
         elif 'list_combo' in keys:
-            opts = var.getTagValues('list_combo')
-            optMenu = tk.OptionMenu(frame, var.tkvar, *opts)
-            optMenu.config(bg=ButtonBgColor, activebackground=ButtonActiveBgColor)
+            items = var.getTagValues('list_combo')
+            optMenu = tk.OptionMenu(frame, var.tkvar, *items)
+            optMenu.config(bg=ButtonBgColor, activebackground=ButtonActiveBgColor, font=Fonts['normal'])
+            optMenu['menu'].config(bg=ButtonBgColor, activebackground=ButtonActiveBgColor, font=Fonts['normal'])
             optMenu.grid(row=row, column=var_column, sticky='ew', columnspan=2)
             w.widgetslist.append(optMenu)
             var.tkvar.trace('w', self.checkVisibility)            
         elif 'list' in keys:
-            opts = var.tags['list'].split(',')
-            for o in opts:
+            items = var.tags['list'].split(',')
+            for o in items:
                 o = o.strip()
                 self.addRadioButton(w, var, o, o, row, var_column, frame)
                 row = self.getRow()
@@ -438,7 +442,7 @@ class ProtocolGUI(BasicGUI):
          
         else: #Add a text Entry
             from protlib_gui_ext import AutoCompleteEntry
-            entry = AutoCompleteEntry(frame, textvariable=var.tkvar, bg=EntryBgColor)
+            entry = AutoCompleteEntry(frame, textvariable=var.tkvar, bg=EntryBgColor, font=Fonts['normal'])
             entry.grid(row=row, column=var_column, columnspan=2, sticky='ew')
             w.widgetslist.append(entry)
             args = None
@@ -508,9 +512,9 @@ class ProtocolGUI(BasicGUI):
             w.widgetslist.append(btn)
         if var.name == 'RunName':
             label_text += ' %s_' % self.run['protocol_name']
-            
-        label = tk.Label(frame, text=label_text, fg=label_color, bg=label_bgcolor)
-        label.grid(row=label_row, column=0, sticky='e', padx=(5, 10))
+        #label_text="_%s_"%label_text
+        label = tk.Label(frame, text=label_text, fg=label_color, bg=label_bgcolor, font=Fonts['normal'])
+        label.grid(row=label_row, column=0, sticky='w', padx=(5, 10))
         
         self.maxLabelWidth = max(self.maxLabelWidth, label.winfo_reqwidth())
         w.widgetslist.append(label)
