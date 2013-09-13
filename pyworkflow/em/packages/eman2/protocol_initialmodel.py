@@ -89,7 +89,7 @@ class EmanProtInitModel(ProtInitialVolume):
 
     def getXmippStackFilename(self):
         for cls in self.inputClasses.get():
-            img = cls.getImage()
+            img = cls.getRepresentativeImage()
             return img.getFileName()
 
     def _insertSteps(self):
@@ -108,11 +108,15 @@ class EmanProtInitModel(ProtInitialVolume):
                 
     def createOutput(self):
         self._leaveWorkingDir()
-        volumes = EmanSetOfVolumes(self._getPath('scipion_volumes.json'))
+        #volumes = EmanSetOfVolumes(self._getPath('scipion_volumes.json'))
+        volumes = self._createSetOfVolumes()
 #        volumes.setSamplingRate(samplingRate)
+        
         for k in range(self.numberOfModels.get()):
             volFn = self._getPath('model_00_%02d.hdf' % k)
-            volumes.append(EmanVolume(volFn))
+            vol = Volume()
+            vol.setFileName(volFn)
+            volumes.append(vol)
 
         volumes.write()
         self._defineOutputs(outputVolumes=volumes)
