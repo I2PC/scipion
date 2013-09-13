@@ -23,11 +23,11 @@ InputVol = ''
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
-from protocol_fsc import *
+from protocol_resolution3D import *
 #        
 # Main
 #     
  
 if __name__ == '__main__':
     # create preprocess_particles_class object
-    protocolMain(ProtFSC)
+    protocolMain(ProtResolution3D)

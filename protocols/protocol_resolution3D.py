@@ -10,13 +10,13 @@ import os
 from protlib_utils import runJob, runShowJ
 from protlib_filesystem import linkAcquisitionInfo
 import glob
-from xmipp import MetaData, MDL_SAMPLINGRATE, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FREQREAL, MDL_RESOLUTION_FRC
+from xmipp import MetaData, MDL_SAMPLINGRATE, MDL_RESOLUTION_FREQREAL, MDL_RESOLUTION_FRC
 from protlib_gui_ext import showError
 
-class ProtFSC(XmippProtocol):
+class ProtResolution3D(XmippProtocol):
     def __init__(self, scriptname, project):
-        XmippProtocol.__init__(self, protDict.fsc.name, scriptname, project)
-        self.Import = 'from protocol_fsc import *'
+        XmippProtocol.__init__(self, protDict.resolution3D.name, scriptname, project)
+        self.Import = 'from protocol_resolution3D import *'
 
     def defineSteps(self):
         self.insertStep('linkAcquisitionInfo',InputFile=self.InputVol, dirDest=self.WorkingDir)
@@ -49,15 +49,7 @@ class ProtFSC(XmippProtocol):
         from protlib_gui_figure import XmippPlotter
         fnFSC=self.workingDirPath("fsc.xmd")
         if os.path.exists(fnFSC):
-            xplotter = XmippPlotter(1,1,windowTitle="ResolutionFSC")
-            a = xplotter.createSubPlot("Resolution", 'Armstrongs^-1', 'Fourier Shell Correlation', yformat=False)
-            md = MetaData(fnFSC)
-            resolution_inv = [md.getValue(MDL_RESOLUTION_FREQ, id) for id in md]
-            frc = [md.getValue(MDL_RESOLUTION_FRC, id) for id in md]
-            a.plot(resolution_inv, frc)
-            a.grid(True)
-            xplotter.draw()
-            xplotter.show()
+            os.system('xmipp_metadata_plot -i %s -x resolutionFreqFourier -y resolutionFRC --title "Fourier Shell Correlation" --xtitle "1/Angstroms"'%fnFSC) 
 
 def fsc(log,ReferenceVol,InputVol,WorkingDir):
     fnAcquisition=os.path.join(WorkingDir,'acquisition_info.xmd')
