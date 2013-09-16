@@ -129,8 +129,8 @@ class Canvas(tk.Frame):
             count = -1
         self.canvas.yview("scroll", count, "units")          
         
-    def createTextbox(self, text, x, y, bgColor="#99DAE8", textColor='black'):
-        tb = TextBox(self.canvas, text, x, y, bgColor, textColor)
+    def createTextbox(self, text, x, y, bgColor="#99DAE8", textColor='black', font=None):
+        tb = TextBox(self.canvas, text, x, y, bgColor, textColor, font)
         self.items[tb.id] = tb
         return tb
     
@@ -147,10 +147,11 @@ class Canvas(tk.Frame):
 class TextBox():
     '''This class will serve to paint and store
     rectange boxes with some text'''
-    def __init__(self, canvas, text, x, y, bgColor, textColor='black'):
+    def __init__(self, canvas, text, x, y, bgColor, textColor='black', font=None):
         self.bgColor = bgColor
         self.textColor = textColor
         self.text = text
+        self.font = font
         self.margin = 3
         self.canvas = canvas
         self.x = x
@@ -161,7 +162,7 @@ class TextBox():
     def paint(self):
         '''Paint the object in a specific position.'''
         self.id_text = self.canvas.create_text(self.x, self.y, text=self.text, 
-                                               justify=tk.CENTER, fill=self.textColor)
+                                               justify=tk.CENTER, fill=self.textColor, font=self.font)
         xr, yr, w, h = self.canvas.bbox(self.id_text)
         m = self.margin
         xr -= m
@@ -229,15 +230,16 @@ class Edge():
         self.dstY += dy
         self.paint()
 
+DY = 15
+DX = 15
+FONT = "sans-serif"
+FONTSIZE = 9
+colors = ['#D9F1FA', '#D9F1FA', '#FCCE62', '#D2F5CB', '#F5CCCB', '#F3F5CB', '#124EB0']
+
+
 def showDependencyTree(canvas, runsDict, rootName):
     ''' This function will create a Canvas to display
     the protocols dependency tree''' 
-
-    DY = 45
-    DX = 15
-    FONT = "sans-serif"
-    FONTSIZE = 9
-    colors = ['#D9F1FA', '#D9F1FA', '#FCCE62', '#D2F5CB', '#F5CCCB', '#F3F5CB', '#124EB0']
     
 #    root = tk.Toplevel()
 #    root.withdraw()
@@ -259,12 +261,13 @@ def showDependencyTree(canvas, runsDict, rootName):
         if nodeText.startswith('Project'):
             textColor='white'
         
-        t = canvas.createTextbox(nodeText, 100, y, bgColor=colors[dd.state], textColor=textColor)
+        from protlib_gui_ext import Fonts
+        t = canvas.createTextbox(nodeText, 100, y, bgColor=colors[dd.state], textColor=textColor, font=Fonts['normal'])
         dd.width, dd.height = t.getDimensions()
         dd.half = dd.width / 2
         dd.hLimits = [[-dd.half, dd.half]]
         dd.t = t
-        dd.y = y
+        dd.y = y + dd.height / 2
         dd.offset = 0
         
         return t
@@ -324,16 +327,17 @@ def showDependencyTree(canvas, runsDict, rootName):
   
         return sep + DX
         
-    def showLevel(dd, level):
-        y = level * DY
+    def showLevel(dd, level, y):
         n = len(dd.deps)
         
         showNode(dd, y)
+        ny = y + dd.height + DY
+        
         if n > 0:
             #width = (xmax - xmin) / n
             childs = [runsDict[rn] for rn in dd.deps]
             for c in childs:
-                showLevel(c, level + 1)
+                showLevel(c, level + 1, ny)
                 
             if n > 1:
                 offset = 0
@@ -378,7 +382,7 @@ def showDependencyTree(canvas, runsDict, rootName):
             canvas.createEdge(dd.t, c.t)
     
     rootNode = runsDict[rootName]
-    dd = showLevel(rootNode, 1)
+    dd = showLevel(rootNode, 1, DY)
     m = 9999
     for left, right in dd.hLimits:
         m = min(m, left)
