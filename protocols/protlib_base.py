@@ -260,6 +260,21 @@ class XmippProject():
         This is usually the input when one protocol uses another one.'''
         return self.getProtocolFromModule(getScriptFromRunName(extendedRunName))
     
+    def getProtocolFromFile(self,filename):
+        """Given a filename that is a result from a protocol run,
+           return an instance of the protocol that generated that file"""
+        protocolData=None
+        for p in protDict.values():
+            if filename.startswith(p.dir+'/'):
+                protocolData=p
+                break
+        if protocolData is None:
+            return None
+        filenameWithoutProtocol=filename.replace(protocolData.dir+'/','')
+        runName=filenameWithoutProtocol.split('/')[0]
+        extRunName = getExtendedRunName(protName=protocolData.name, runName=runName)
+        return self.getProtocolFromRunName(extRunName)
+
     def getStateRunList(self, protGroup='All', checkDead=False):
         '''Return the list of runs and also 
         a list of 3-tuple with (run_extended_name, state, modified)
@@ -838,10 +853,11 @@ class ProtocolExecutor():
         self.checkProgramAvailable('SubmitToQueue', launch.Program)
             
 #----------Some helper functions ------------------
-
-def getExtendedRunName(run):
+def getExtendedRunName(run=None, protName=None, runName=None):
     ''' Return the extended run name, ie: protocol_runName '''
-    return "%s_%s" % (run['protocol_name'], run['run_name'])
+    if run is not None:
+        protName, runName = run['protocol_name'], run['run_name']
+    return "%s_%s" % (protName, runName)
 
 def splitExtendedRunName(extendedRunName):
     ''' Take an extended runname of the form protocol_runName and returns (protocol,runName).

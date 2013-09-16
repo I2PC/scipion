@@ -196,6 +196,27 @@ def getXmippLabels():
             labels.append(label)
     return labels
 
+def getXmippLabelsName():
+    ''' Parse the labels name from the 'libraries/data/metadata_label.h' file '''
+    labelHeader = getXmippPath(os.path.join('libraries', 'data', 'metadata_label.h'))
+    f = open(labelHeader)
+    labels = []
+    comments = {}
+    
+    for line in f:
+        line = line.strip()
+        if line.startswith('MDL_') and '///<' in line:
+            parts = line.split('///<')
+            mdl = parts[0].strip()[:-1] # remove last comma
+            comm = parts[1].strip()
+            comments[mdl] = comm
+        if line.startswith('MDL::addLabel(MDL_'):
+            l = line.find('(')
+            r = line.find(')')
+            parts = line[l + 1:r].split(',')
+            labels.append(parts[2].replace('"', '').strip())
+    return labels
+
 def getXmippPrograms():
     '''Return the list of Xmipp's programs, taken from from bin/ folder'''     
     from glob import glob
