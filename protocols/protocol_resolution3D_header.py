@@ -11,12 +11,46 @@
 #-----------------------------------------------------------------------------
 # {section} Input
 #-----------------------------------------------------------------------------
-# {file}(*.vol){validate}(PathExists) Reference volume:
-ReferenceVol = ''
-
 # {file}(*.vol){validate}(PathExists) Input volume:
 """This volume will be compared to the reference volume"""
 InputVol = ''
+
+# Calculate FSC and DPR
+DoFSC=True
+
+# {file}(*.vol){validate}(PathExists){condition}(DoFSC) Reference volume:
+ReferenceVol = ''
+
+# Calculate Structure Factor
+DoStructureFactor=True
+
+# Calculate Spectral SNR
+""" *** """
+DoSSNR=True
+
+# Calculate Volumetric Spectral SNR
+""" *** """
+DoVSSNR=False
+
+#------------------------------------------------------------------------------------------------
+# {section}{visualize} Visualization
+#------------------------------------------------------------------------------------------------
+
+# {condition}(DoFSC) Display Fourier Shell Correlation
+DisplayFSC=True
+
+# {condition}(DoFSC) Display Differential Phase Residual
+DisplayDPR=True
+
+# {condition}(DoStructureFactor) Display Structure factor
+DisplayStructureFactor=True
+
+# {condition}(DoStructureFactor) Display Guinier plot
+DisplayGuinier=True
+
+#{expert}{condition}(DisplayGuinier and DoStructureFactor) Use Matlab for Guinier
+UseMatlab=False
+
 
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
