@@ -14,7 +14,7 @@ body {
 }
 
 .layout {
-	width: 30em;
+	width: 25em;
 	/* 	padding: 10px; */
 }
 
@@ -50,9 +50,14 @@ body {
 
 .options {
 	text-align: center;
+	padding: 5px 0 5px 0;
+	width: auto;
+}
+
+.buttons {
+	text-align: center;
 	padding: 5px;
 	clear: both;
-
 }
 
 #buttonGen {
@@ -171,7 +176,7 @@ table#list tr.selected:hover td {
 #sliderOptions {
 	width: 36em;
 	background: #fafafa;
-	float: right;
+/* 	float: right; */
 }
 
 #wrapper {
@@ -224,12 +229,10 @@ svg {
 }
 
 #sliderOptionsLite {
-	width: 17em;
+	width: 9em;
 	background: #fafafa;
-	float: right;
 }
 
 #sliderUni {
 	width: 15m;
-/* 	float: left; */
 }

@@ -87,11 +87,10 @@ $(document).ready(function() {
 			var type_wiz = $("#wizName").attr("value");
 			
 			$.post(action, $("#protocolForm").serialize(), function(html) {
-				if(type_wiz=='wiz_particle_mask'){
-				customPopupHTML(html,560,470);
-				}
-				else{
-				customPopupHTML(html,825,470);
+				if(type_wiz=='wiz_particle_mask' || type_wiz=='wiz_volume_mask'){
+					customPopupHTML(html,460,460);
+				}else{
+					customPopupHTML(html,725,470);
 				}
 			});
 		}

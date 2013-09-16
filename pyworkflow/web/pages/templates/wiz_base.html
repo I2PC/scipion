@@ -33,12 +33,12 @@
 			<table class="images" cellspacing="0">
 				{% block images %}{% endblock %}
 			</table>
+			<div class="options">
+				{% block options %}{% endblock %}
+			</div>
 		</div>
-	</div>
-	<div class="options">
-		{% block options %}{% endblock %}
-		<br />
-		<br />
+	</div>	
+	<div class="buttons">
 		<input type="button" id="buttonGen" class="buttonSelect" value="Select" {% block function %}{% endblock %}/>
 		<input type="button" id="buttonGen" class="buttonCancel" onclick="window.close()" value="Cancel"/>
 	</div>

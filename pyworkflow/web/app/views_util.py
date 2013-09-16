@@ -163,12 +163,17 @@ def get_image(request):
     img.save(response, "PNG")
     return response
 
+def get_image_dim(request, imagePath):
+    projectPath = request.session['projectPath']
+    size, y, z, h = get_image_dimensions(projectPath, imagePath)
+    return size
+
 def get_image_dimensions(projectPath, imagePath):
     from django.http import HttpResponse
     from pyworkflow.gui import getImage
     imageNo = None
 #    imagePath = request.GET.get('image')
-        
+    
     # PAJM: Como vamos a gestionar lsa imagen    
     if imagePath.endswith('png') or imagePath.endswith('gif'):
         img = getImage(imagePath, tk=False)

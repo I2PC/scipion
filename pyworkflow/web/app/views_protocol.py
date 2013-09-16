@@ -96,7 +96,6 @@ def updateParam(request, project, protocol, paramName):
                 raise Exception("Param: %s is autoreferencing with id: %d" % (paramName, objId))
         else:
             value = None
-    print value
     attr.set(value)
     print "setting attr %s with value:" % paramName, value 
     

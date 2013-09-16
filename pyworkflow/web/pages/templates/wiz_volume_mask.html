@@ -1,6 +1,6 @@
 {% extends 'wiz_base.html' %} 
-{% block title %} Particle Mask Radius {% endblock %} 
-{% block name %} Particle Mask Radius {% endblock %} 
+{% block title %} Volume Mask Radius {% endblock %} 
+{% block name %} Volume Mask Radius {% endblock %} 
 {% block head %}
 	<script type="text/javascript" src="{{raphael}}"></script>
 {% endblock %} 
@@ -16,14 +16,14 @@
 	{% endif %}
 <tr id="{{obj.getObjId}}" class="no-selected"
 	style="background-color: #fafafa;"
-	onclick="selectParticle(($(this)));" value="{{obj.text}}">
+	onclick="selectVolume(($(this)));" value="{{obj.text}}">
 	<td>{{obj.basename}}</td>
 </tr>
 {% endfor %} {% endblock %} {% block images %}
 <tr>
 	<td>Central Slice
 		<div id="wrapper" class="image">
-			<div id="particle"></div>
+			<div id="volume"></div>
 			<div id="canvas"></div>
 		</div>
 	</td>
@@ -45,7 +45,7 @@ $(".slider_radius").slider({
 	range : "min",
 	value : "{{maskRadius}}",
 	min : 0,
-	max : "{{sizeParticle}}",
+	max : "{{sizeVolume}}",
 	step : 1,
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
@@ -61,7 +61,7 @@ $(".slider_radius").slider({
 });
 
 //Load the First Element of the list
-window.onload = selectParticle($("tr#"+firstElm));
+window.onload = selectVolume($("tr#"+firstElm));
 
 </script>
 {% endblock %}
