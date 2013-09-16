@@ -1344,6 +1344,25 @@ void ProgClassifyCL3D::produceSideInfo()
     size_t Ndim;
     getImageSize(SF, Xdim, Ydim, Zdim, Ndim);
 
+    // MaxFreq mask
+    MultidimArray<double> V;
+    MultidimArray< std::complex<double> > VF;
+    V.initZeros(Zdim,Ydim,Xdim);
+    FourierTransformer transformer;
+    transformer.FourierTransform(V,VF);
+    maxFreqMask.initZeros(VF);
+    Matrix1D<int> idx(3);
+    Matrix1D<double> freq(3);
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(maxFreqMask)
+    {
+    	XX(idx)=j;
+    	YY(idx)=i;
+    	ZZ(idx)=k;
+    	FFT_idx2digfreq(V,idx,freq);
+    	if (freq.module()<=maxFreq)
+    		A3D_ELEM(maxFreqMask,k,i,j)=1;
+    }
+
     // Prepare symmetry list
     SL.readSymmetryFile(fnSym);
 
@@ -1382,24 +1401,6 @@ void ProgClassifyCL3D::produceSideInfo()
         Ncodes0 = codes0.size();
     }
     vq.initialize(SF, codes0);
-
-    // MaxFreq mask
-    MultidimArray<double> V;
-    V.initZeros(Zdim,Ydim,Xdim);
-    FourierTransformer transformer;
-    transformer.setReal(V);
-    maxFreqMask.initZeros(transformer.fFourier);
-    Matrix1D<int> idx(3);
-    Matrix1D<double> freq(3);
-    FOR_ALL_ELEMENTS_IN_ARRAY3D(maxFreqMask)
-    {
-    	XX(idx)=j;
-    	YY(idx)=i;
-    	ZZ(idx)=k;
-    	FFT_idx2digfreq(V,idx,freq);
-    	if (freq.module()<=maxFreq)
-    		A3D_ELEM(maxFreqMask,k,i,j)=1;
-    }
 }
 
 void ProgClassifyCL3D::run()
