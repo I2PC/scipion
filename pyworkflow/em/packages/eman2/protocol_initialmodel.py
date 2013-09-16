@@ -89,7 +89,6 @@ class EmanProtInitModel(ProtInitialVolume):
 
     def getXmippStackFilename(self):
         for cls in self.inputClasses.get():
-            print "QUE PASA CONTIGO PISHAAAAA"
             img = cls.getRepresentativeImage()
             return img.getFileName()
 
