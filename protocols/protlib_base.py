@@ -435,6 +435,7 @@ def getImagesMd(workingDir, suffix=''):
     from xmipp import MetaData
     return MetaData(getImagesFilename(workingDir, suffix))
 
+
 class XmippProtocol(object):
     '''This class will serve as base for all Xmipp Protocols'''
     def __init__(self, protocolName, scriptname, project):

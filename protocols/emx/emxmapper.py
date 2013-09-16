@@ -279,8 +279,11 @@ class XmlMapper():
         for event, elem in iter(context):
             tag = elem.tag
             if event == 'start':
+                print "tag: '%s'" % tag, "class: '%s'" % classname
                 if tag == classname:
+                    print "tag==class"
                     self.createObject(elem)
+                    print "self._object: ", self._object
                     return self._object
         return None
         

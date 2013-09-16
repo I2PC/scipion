@@ -573,7 +573,7 @@ class XmippProjectGUI():
             if not self.graphView:
                 # Update runs tree
                 for name, state, stateStr, modified in stateList:
-                    tree.insert('', 'end', text = name, 
+                    tree.insert('', 'end', text = name, tags=('normal'),
                                 image=self.getStateImage(state),
                                 values=(stateStr, modified)) 
                 
@@ -886,6 +886,7 @@ class XmippProjectGUI():
         tree.bind('<Double-1>', lambda e:self.runButtonClick(ACTION_DEFAULT))
         tree.bind("<Button-3>", self.onRightClick) #right button on win and linux
         tree.bind("<Button-2>", self.onRightClick) #right button on mac
+        tree.tag_configure('normal', font=Fonts['normal'])
         self.treeHist = tree
         
     def createHistoryGraph(self, parent):

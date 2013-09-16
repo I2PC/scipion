@@ -231,7 +231,7 @@ OffsetSearchRangePix = 5
 """
 OffsetSearchStepPix = 1
 
-# Perform local angular search?
+# Perform local angular search? 
 """If set to Yes, then rather than performing exhaustive angular searches, local searches within the range given below will be performed. A prior Gaussian distribution centered at the optimal orientation in the previous iteration and with a stddev of 1/3 of the range given below will be enforced.
 """
 PerformLocalAngularSearch = False
@@ -253,13 +253,13 @@ AdditionalArguments = ""
 # {section}{visualize} Preparation
 #------------------------------------------------------------------------------------------------
 
-# {view} Visualize the grey-scale corrected reference volume?
+# {view} Show the grey-scale corrected ref. map?
 VisualizeCRVolume = True
 
-# {view}Visualize the low-pass filtered reference volume?
+# {view} Show the low-pass filtered ref. map?
 VisualizeFRVolume = True
 
-# {view} Visualize the generated seeds volumes?
+# {view} Show the generated seeds volumes?
 VisualizeGSVolume = True
 
 #------------------------------------------------------------------------------------------------
@@ -287,11 +287,11 @@ If you want two see iterations 2 and 5 write
    2 5. In relion first iteration is 0"""
 SelectedIters = ''
 
-# {list_combo}(x, y, z, surface) Display volumes as slices or surface rendering
+# {list_combo}(x, y, z, surface) Display volumes 
 """ x -> Visualize volumes in slices along x
     y -> Visualize volumes in slices along y
     z -> Visualize volumes in slices along z
-    For surface rendering to work, you need to have chimera installed!
+    surface: surface rendering, you need chimera installed!
 """
 DisplayVolumeSlicesAlong='z'
 
