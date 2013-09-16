@@ -65,7 +65,17 @@ except ImportError:
 #    for value in mydict.values(): 
 #        s += value
 #    return s
-
+class ValidateError(Exception):
+    def __init__(self, code, message):
+        self.errorMessage = message
+        self.errorCode = code
+    def __str__(self):
+        return "Error Code: %d. Message: %s" % (self.errorCode, self.errorMessage)
+    def getCode(self):
+        return self.code
+    def getMessage(self):
+        return self.message
+    
 class XmlMapper():
     '''Mapper for XML'''
     def __init__(self, emxData):
@@ -269,8 +279,11 @@ class XmlMapper():
         for event, elem in iter(context):
             tag = elem.tag
             if event == 'start':
+                print "tag: '%s'" % tag, "class: '%s'" % classname
                 if tag == classname:
+                    print "tag==class"
                     self.createObject(elem)
+                    print "self._object: ", self._object
                     return self._object
         return None
         
@@ -360,7 +373,8 @@ def validateSchema(filename, schema_file=None):
     if p.returncode == 0 and (stderr!=""):
         if len(stderr) > answerSize:
            endding='... (too many errors, displayed first %d characters)'%(answerSize)
-        raise Exception("""Error: when validating file %s with schema %s.
+        print ">>>>>>>>>>>>>>>>>>>>>>>>1"
+        raise ValidateError(p.returncode, """Error: when validating file %s with schema %s.
         \nError:%s"""%(filename,_schema,stderr[:answerSize]+endding))
     #######
     #no xerces available, let us try xmlint
@@ -377,15 +391,19 @@ def validateSchema(filename, schema_file=None):
             shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
         if p.returncode == 127:
-            raise Exception(
+            print ">>>>>>>>>>>>>>>>>>>>>>>>2"
+            raise ValidateError(127,
                 """Error: neither xerces-f nor xmllint could be found,  I cannot validate schema. 
     Schema validation is based either on the xmllint program that belongs to the libxml2-tools package.
     or on the xerces-f project""")
             
         if p.returncode != 0:
             if len(stderr) > answerSize:
-	         endding='... (too many errors, displayed first %d characters)'%(answerSize)
-            raise Exception("""Error: when validating file %s with schema %s.
-            \nError:%s"""%(filename,_schema,stderr[:answerSize]+ endding))
+                 endding='... (too many errors, displayed first %d characters)'%(answerSize)
+            print ">>>>>>>>>>>>>>>>>>>>>>>>3"
+            message = """Error: when validating file %s with schema %s.
+            \nError:%s"""%(filename,_schema,stderr[:answerSize]+endding)
+            print "message", message
+            raise ValidateError(p.returncode, message)
     return p.returncode, stdout[:answerSize], stderr[:answerSize]
 

@@ -14,6 +14,7 @@ import math
 from genericpath import exists
 from emx import *
 from emx.emxmapper import *
+from emxLib.emxLib import ctfMicEMXToXmipp, coorEMXToXmipp, alignEMXToXmipp
 from os.path import relpath, join, abspath, dirname
 
 
@@ -31,9 +32,11 @@ class ProtEmxImport(XmippProtocol):
         self.insertStep("validateSchema", verifyfiles=[], 
                         emxFilename=self.EmxFileName
                         )
-        self.insertStep("createOutputs", verifyfiles=[], 
+        self.insertStep("createOutputs", verifyfiles=[],
                         emxFilename=self.EmxFileName,
-                        binaryFilename=self.binaryFile
+                        binaryFilename=self.binaryFile,
+                        micsFileName=self.workingDirPath('micrographs.xmd'),
+                        projectDir=self.projectDir
                         )
             
     def _loadInfo(self):
@@ -49,6 +52,7 @@ class ProtEmxImport(XmippProtocol):
                 #is the binary file of this type
                 self.classElement = classElement
                 binaryFile = join(emxDir, self.object.get(FILENAME))
+                print "checking binary: ", binaryFile
                 if exists(binaryFile):
                     self.binaryFile = binaryFile
                     break
@@ -138,6 +142,26 @@ class ProtEmxImport(XmippProtocol):
             previousId = self.insertParallelRunJobStep("xmipp_transform_filter", params, verifyfiles=[outputMic], parent_step_id=previousId)
         
 
+
+def validateSchema(log, emxFilename):
+    return
+    code, out, err = validateSchema(emxFileName)
+    
+    if code:
+        raise Exception(err) 
+    
+    
+def createOutputs(log, emxFilename, binaryFilename, micsFileName):
+    emxData = EmxData()
+    xmlMapper = XmlMapper(emxData)
+    xmlMapper.readEMXFile(emxFilename)
+    
+    ctfMicEMXToXmipp(emxData, micsFileName)
+    
+    
+    
+################### Old functions ########################3
+
 def getWdFile(wd, key):
     return getProtocolFilename(key, WorkingDir=wd)
 
@@ -183,19 +207,7 @@ def merge(log, OutWd, InWd1, InWd2):
     md1.write(getWdFile(OutWd, 'micrographs'))
 
 
-def validateSchema(log, emxFilename):
-    code, out, err = validateSchema(emxFileName)
-    
-    if code:
-        raise Exception(err) 
-    
-def createOutputs(log, emxFilename, binaryFilename):
-    emxData = EmxData()
-    xmlMapper = XmlMapper(emxData)
-    xmlMapper.readEMXFile(emxFilename)
-    
-    for obj in emxData:
-        print obj
+
     
     
 def createMicroscope(log,fnOut,Voltage,SphericalAberration,SamplingRate,Magnification):
