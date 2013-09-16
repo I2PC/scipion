@@ -25,6 +25,7 @@
 
 #include "ctf.h"
 #include "xmipp_fft.h"
+#include <math.h>
 
 /* Read -------------------------------------------------------------------- */
 void CTFDescription::readFromMdRow(const MDRow &row, bool disable_if_not_K)
@@ -140,10 +141,10 @@ void CTFDescription::write(const FileName &fn)
     }
     if (isLocalCTF)
     {
-    	row.setValue(MDL_CTF_X0, x0);
-    	row.setValue(MDL_CTF_XF, xF);
-    	row.setValue(MDL_CTF_Y0, y0);
-    	row.setValue(MDL_CTF_YF, yF);
+        row.setValue(MDL_CTF_X0, x0);
+        row.setValue(MDL_CTF_XF, xF);
+        row.setValue(MDL_CTF_Y0, y0);
+        row.setValue(MDL_CTF_YF, yF);
     }
 
     MetaData md;
@@ -433,70 +434,73 @@ void CTFDescription::applyCTF(MultidimArray < std::complex<double> > &FFTI)
 void CTFDescription::getProfile(double angle, double fmax, int nsamples,
                                 MultidimArray<double> &profiles)
 {
-	double step = fmax / nsamples;
+    double step = fmax / nsamples;
 
-	profiles.resizeNoCopy(nsamples, 4);
-	double sinus = sin(angle);
-	double cosinus = cos(angle);
-	double f;
-	size_t i;
+    profiles.resizeNoCopy(nsamples, 4);
+    double sinus = sin(angle);
+    double cosinus = cos(angle);
+    double f;
+    size_t i;
 
-	for (i = 0, f = 0; i < YSIZE(profiles); i++, f += step) {
-		double fx = f * cosinus;
-		double fy = f * sinus;
+    for (i = 0, f = 0; i < YSIZE(profiles); i++, f += step)
+    {
+        double fx = f * cosinus;
+        double fy = f * sinus;
 
-		// Compute current frequencies.
-		precomputeValues(fx, fy);
+        // Compute current frequencies.
+        precomputeValues(fx, fy);
 
-		// Store values.
-		double bgNoise = getValueNoiseAt();
-		double ctf = getValuePureAt();
-		double E = getValueDampingAt();
+        // Store values.
+        double bgNoise = getValueNoiseAt();
+        double ctf = getValuePureAt();
+        double E = getValueDampingAt();
 
-		A2D_ELEM(profiles, i, 0) = bgNoise;
-		A2D_ELEM(profiles, i, 1) = bgNoise + E * E;
-		A2D_ELEM(profiles, i, 2) = bgNoise + ctf * ctf;
-		A2D_ELEM(profiles, i, 3) = ctf;
-	}
+        A2D_ELEM(profiles, i, 0) = bgNoise;
+        A2D_ELEM(profiles, i, 1) = bgNoise + E * E;
+        A2D_ELEM(profiles, i, 2) = bgNoise + ctf * ctf;
+        A2D_ELEM(profiles, i, 3) = ctf;
+    }
 }
 
 /* Get average profiles ----------------------------------------------------- */
 void CTFDescription::getAverageProfile(double fmax, int nsamples,
-                                MultidimArray<double> &profiles)
+                                       MultidimArray<double> &profiles)
 {
-	double step = fmax / nsamples;
-	profiles.initZeros(nsamples, 4);
+    double step = fmax / nsamples;
+    profiles.initZeros(nsamples, 4);
 
-	for (double angle = 0.0; angle < 360; angle++) {
-		double sinus = sin(angle);
-		double cosinus = cos(angle);
-		double f;
-		size_t i;
-		for (i = 0, f = 0; i < YSIZE(profiles); i++, f += step) {
-			double fx = f * cosinus;
-			double fy = f * sinus;
+    for (double angle = 0.0; angle < 360; angle++)
+    {
+        double sinus = sin(angle);
+        double cosinus = cos(angle);
+        double f;
+        size_t i;
+        for (i = 0, f = 0; i < YSIZE(profiles); i++, f += step)
+        {
+            double fx = f * cosinus;
+            double fy = f * sinus;
 
-			// Compute current frequencies.
-			precomputeValues(fx, fy);
+            // Compute current frequencies.
+            precomputeValues(fx, fy);
 
-			// Store values.
-	        double bgNoise = getValueNoiseAt();
-	        double ctf = getValuePureAt();
-	        double E = getValueDampingAt();
+            // Store values.
+            double bgNoise = getValueNoiseAt();
+            double ctf = getValuePureAt();
+            double E = getValueDampingAt();
 
-			A2D_ELEM(profiles, i, 0) += bgNoise;
-			A2D_ELEM(profiles, i, 1) += bgNoise + E * E;
-			A2D_ELEM(profiles, i, 2) += bgNoise + ctf * ctf;
-			A2D_ELEM(profiles, i, 3) += ctf;
-		}
-	}
-	profiles*=1.0/360;
+            A2D_ELEM(profiles, i, 0) += bgNoise;
+            A2D_ELEM(profiles, i, 1) += bgNoise + E * E;
+            A2D_ELEM(profiles, i, 2) += bgNoise + ctf * ctf;
+            A2D_ELEM(profiles, i, 3) += ctf;
+        }
+    }
+    profiles*=1.0/360;
 }
 
 /* Generate CTF Image ------------------------------------------------------ */
 //#define DEBUG
 void CTFDescription::generateCTF(int Ydim, int Xdim,
-                                  MultidimArray < std::complex<double> > &CTF)
+                                 MultidimArray < std::complex<double> > &CTF)
 {
     Matrix1D<int>    idx(2);
     Matrix1D<double> freq(2);
@@ -834,22 +838,96 @@ void generateCTFImageWith2CTFs(const MetaData &MD1, const MetaData &MD2, int Xdi
         if (XX(freq)>=0 && XX(freq)<0.5)
         {
             digfreq2contfreq(freq, freq, CTF1.Tm);
-        	CTF1.precomputeValues(XX(freq),YY(freq));
-        	A2D_ELEM(imgOut,i,j)=CTF1.getValueAt();
+            CTF1.precomputeValues(XX(freq),YY(freq));
+            A2D_ELEM(imgOut,i,j)=CTF1.getValueAt();
         }
         else
         {
-        	digfreq2contfreq(freq, freq, CTF2.Tm);
-        	CTF2.precomputeValues(XX(freq),YY(freq));
-        	A2D_ELEM(imgOut,i,j)=CTF2.getValueAt();
+            digfreq2contfreq(freq, freq, CTF2.Tm);
+            CTF2.precomputeValues(XX(freq),YY(freq));
+            A2D_ELEM(imgOut,i,j)=CTF2.getValueAt();
         }
     }
     CenterFFT(imgOut,false);
 }
 
+double errorBetween2CTFs(const MetaData &MD1,
+                         const MetaData &MD2,
+                         int Xdim,
+                         double minFreq,
+                         double maxFreq)
+{
+
+    Matrix1D<double> freq(2); // Frequencies for Fourier plane
+
+    CTFDescription CTF1, CTF2;
+
+    CTF1.enable_CTF=true;
+    CTF1.enable_CTFnoise=false;
+    CTF1.readFromMetadataRow(MD1,MD1.firstObject());
+    CTF1.produceSideInfo();
+
+    CTF2.enable_CTF=true;
+    CTF2.enable_CTFnoise=false;
+    CTF2.readFromMetadataRow(MD2,MD2.firstObject());
+    CTF2.produceSideInfo();
+
+    double iTm=1.0/CTF1.Tm;
+    size_t xDim, yDim;
+    xDim = yDim = (size_t) Xdim;
+//#define DEBUG
+#ifdef DEBUG
+
+    Image<double> img1(xDim,yDim);
+    Image<double> img2(xDim,yDim);
+    Image<double> img3(xDim,yDim);
+
+    MultidimArray<double> &dummy1 = img1.data;
+    MultidimArray<double> &dummy2 = img2.data;
+    MultidimArray<double> &dummy3 = img3.data;
+#endif
+
+    int x2Dim = xDim / 2 ;
+    int y2Dim = yDim / 2 ;
+
+    double error =0.;
+    double _freq=0.;
+
+    for (int i=0; i<yDim; ++i)
+    {
+        FFT_IDX2DIGFREQ(i, yDim, YY(freq));
+        //YY(freq) *= iTm;
+        for (int j=0; j<xDim; ++j)
+        {
+            FFT_IDX2DIGFREQ(j, xDim, XX(freq));
+        	_freq = freq.module();
+        	if (_freq < minFreq || _freq > maxFreq)
+        		continue;
+        	//XX(freq) *= iTm;
+            freq *= iTm;
+            CTF1.precomputeValues(XX(freq),YY(freq));
+            CTF2.precomputeValues(XX(freq),YY(freq));
+            error += fabs(CTF2.getValuePureWithoutDampingAt()- CTF1.getValuePureWithoutDampingAt());
+#ifdef DEBUG
+            double a = CTF1.getValuePureWithoutDampingAt();
+            double b = CTF2.getValuePureWithoutDampingAt();
+            DIRECT_A2D_ELEM(dummy1,i,j)=a;
+            DIRECT_A2D_ELEM(dummy2,i,j)=b;
+            DIRECT_A2D_ELEM(dummy3,i,j)=fabs(b-a);
+#endif
+        }
+    }
+#ifdef DEBUG
+    img1.write("/tmp/img1.spi");
+    img2.write("/tmp/img2.spi");
+    img3.write("/tmp/img3.spi");
+#endif
+    return error;
+}
+
 void generatePSDCTFImage(MultidimArray<double> &img, const MetaData &MD)
 {
-	img.rangeAdjust(-1,1);
+    img.rangeAdjust(-1,1);
     CenterFFT(img,false);
 
     CTFDescription CTF;
@@ -870,9 +948,9 @@ void generatePSDCTFImage(MultidimArray<double> &img, const MetaData &MD)
         if (XX(freq)>=0 && XX(freq)<0.5)
         {
             digfreq2contfreq(freq, freq, CTF.Tm);
-        	CTF.precomputeValues(XX(freq),YY(freq));
-        	double aux=CTF.getValueAt();
-        	A2D_ELEM(img,i,j)=aux*aux;
+            CTF.precomputeValues(XX(freq),YY(freq));
+            double aux=CTF.getValueAt();
+            A2D_ELEM(img,i,j)=aux*aux;
         }
     }
     CenterFFT(img,true);
