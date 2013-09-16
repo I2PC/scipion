@@ -21,6 +21,7 @@ protocols = {
         'screen_classes': ('Screen classes', '2D/Screening'),
         'rct': ('Random Conical Tilt', '3D/InitialVolume/RCT'),
         'initvolume_ransac': ('RANSAC', '3D/InitialVolume/RANSAC'),
+
         'convert_pdb': ('Convert PDB', '3D/PDB'),
         'preprocess_volume': ('Preprocess', '3D/Preprocessed'),
         'create_volume_mask': ('Create mask', '3D/Mask'),
@@ -35,6 +36,7 @@ protocols = {
         'subtraction': ('Partial Projection Subtraction', '3D/ProjSub'),
         'custom': ('Custom', 'Custom'),
         'image_operate': ('Image Operate', 'Tools/ImageOperate'),
+        'metadata_utilities': ('Metadata Utilities', 'Tools/MetadataUtilities'),
         'metadata_split': ('Metadata Split', 'Tools/MetadataSplit'),
         #'xmipp': ('Xmipp Programs', 'XmippPrograms'), 
         'emx_import': ('Import', 'EMX'),
@@ -56,7 +58,7 @@ sections = [
     ['Model Refinement', 'projmatch', 'ml3d', 'relion3d'],
     ['Volumes', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask', 'preprocess_volume', 'resolution3D']]),#, 'align_volume']]),
 ('Other',
- [['Extra', 'custom',['Virus','subtraction'],['Tomography','mltomo'],['Tools','image_operate','metadata_split'],
+ [['Extra', 'custom',['Virus','subtraction'],['Tomography','mltomo'],['Tools','image_operate','metadata_utilities','metadata_split'],
    ['EMX', 'emx_import', 'emx_export']]])
 ]
 
