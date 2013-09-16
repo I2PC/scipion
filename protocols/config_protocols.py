@@ -23,8 +23,6 @@ protocols = {
         'initvolume_ransac': ('RANSAC', '3D/InitialVolume/RANSAC'),
         'preprocess_volume': ('Preprocess', '3D/InitialVolume/Preprocessed'),
         'create_volume_mask': ('Create Volume mask', '3D/Mask'),
-        'hg3d': ('Heterogeneity 3D', '3D/InitialVolume/Hg3D'),
-        'symmetric_initial': ('Symmetric Cn/Dn volume', '3D/Symmetric'),
         'projmatch': ('Projection Matching', '3D/ProjMatch'), 
         'ml3d': ('ML3D', '3D/ML3D'),
         'nma': ('Normal Mode Analysis', '3D/NMA'),
@@ -34,6 +32,8 @@ protocols = {
         'mltomo': ('MLTomo', '3D/MLTomo'),
         'subtraction': ('Partial Projection Subtraction', '3D/ProjSub'),
         'custom': ('Custom', 'Custom'),
+        'image_operate': ('Image Operate', 'Tools/ImageOperate'),
+        'metadata_utilities': ('Metadata Utilities', 'Tools/MetadataUtilities'),
         'xmipp': ('Xmipp Programs', 'XmippPrograms')            
         }
 
@@ -48,13 +48,12 @@ sections = [
 ('2D', 
    [['Align+Classify', 'cl2d', 'ml2d', ['Other', 'cl2d_align', 'kerdensom', 'rotspectra', 'screen_classes']]]),
 ('3D', 
-
-   [['Initial Model', 'rct', 'initvolume_ransac', 'symmetric_initial','hg3d', 'preprocess_volume'], 
+   [['Initial Model', 'rct', 'initvolume_ransac', 'preprocess_volume'], 
     ['Model Refinement', 'projmatch', 'ml3d', 'relion3d'],
     ['Analysis', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask','structure_factor']])
 ,
 ('Other',
- [['Extra', 'custom','subtraction', 'mltomo']])
+ [['Extra', 'custom',['Virus','subtraction'],['Tomography','mltomo'],['Tools','image_operate','metadata_utilities']]])
 ]
 
 #--------------------------------------------------------------------------------
