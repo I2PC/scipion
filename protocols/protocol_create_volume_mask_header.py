@@ -20,6 +20,9 @@ MaskSource="Volume"
 """ Density volume"""
 InModel = ''
 
+#{condition}(MaskSource=="Volume") Apply mask to this volume
+ApplyMask=True
+
 # {list_combo}(Threshold, Segment){condition}(MaskSource=="Volume") Operation
 VolumeOperation="Threshold"
 

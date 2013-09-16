@@ -85,7 +85,7 @@ class XmippProject():
                            self.projectDb.insertProtocol(groupName, p2) 
         #Hard coded insertion of xmipp_program protocol
         #this is an special case of protocols
-        self.projectDb.insertProtocol(protDict.xmipp.title, protDict.xmipp.name)
+        #self.projectDb.insertProtocol(protDict.xmipp.title, protDict.xmipp.name)
         # commit changes
         self.projectDb.connection.commit()         
          
@@ -434,6 +434,7 @@ def getClassBlock(block, classMd):
 def getImagesMd(workingDir, suffix=''):
     from xmipp import MetaData
     return MetaData(getImagesFilename(workingDir, suffix))
+
 
 class XmippProtocol(object):
     '''This class will serve as base for all Xmipp Protocols'''

@@ -284,17 +284,7 @@ public:
     /** Is this file an image
      *
      *  Check whether a real-space image can be read*/
-    bool isImage(const FileName &name)
-    {
-        try
-        {
-            return !read(name, HEADER);
-        }
-        catch (XmippError &xe)
-        {
-            return false;
-        }
-    }
+    bool isImage(const FileName &name);
 
     /** Check if image is mapped on file
       */
