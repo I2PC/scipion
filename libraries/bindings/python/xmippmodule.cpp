@@ -642,6 +642,25 @@ xmipp_gaussianFilter(PyObject *obj, PyObject *args, PyObject *kwargs)
 /* calculate enhanced psd and return preview
  * used for protocol preprocess_particles*/
 PyObject *
+xmipp_realGaussianFilter(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    PyObject *pyStrFn, *pyImage;
+    double realSigma;
+    int dim;
+    FileName fn;
+
+    if (PyArg_ParseTuple(args, "OOdi", &pyImage, &pyStrFn, &realSigma, &dim))
+    {
+        FILTER_TRY()
+        realGaussianFilter(data, realSigma);
+        FILTER_CATCH()
+    }
+    return NULL;
+}
+
+/* calculate enhanced psd and return preview
+ * used for protocol preprocess_particles*/
+PyObject *
 xmipp_badPixelFilter(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     PyObject *pyStrFn, *pyImage;
@@ -823,6 +842,8 @@ xmipp_methods[] =
           "Utility function to apply bandpass filter" },
         { "gaussianFilter", (PyCFunction) xmipp_gaussianFilter, METH_VARARGS,
           "Utility function to apply gaussian filter in Fourier space" },
+        { "realGaussianFilter", (PyCFunction) xmipp_realGaussianFilter, METH_VARARGS,
+          "Utility function to apply gaussian filter in Real space" },
         { "badPixelFilter", (PyCFunction) xmipp_badPixelFilter, METH_VARARGS,
           "Bad pixel filter" },
         { "dumpToFile", (PyCFunction) xmipp_dumpToFile, METH_VARARGS,

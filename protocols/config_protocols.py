@@ -29,6 +29,7 @@ protocols = {
         'nma_alignment': ('Flexible alignment', '3D/NMA_alignment'),
         'structure_factor': ('Structure factor', '3D/StructureFactor'),
         'relion3d': ('Relion3D', '3D/Relion3D'),
+        'cltomo': ('CLTomo', '3D/CLTomo'),
         'mltomo': ('MLTomo', '3D/MLTomo'),
         'subtraction': ('Partial Projection Subtraction', '3D/ProjSub'),
         'custom': ('Custom', 'Custom'),
@@ -42,7 +43,7 @@ sections = [
 ('Preprocessing', 
    [['Micrographs', 'import_micrographs','screen_micrographs','downsample_micrographs'], 
     ['Particle picking', 'particle_pick', 'particle_pick_auto'], 
-    ['Particles', 'extract_particles', 'import_particles', 'merge_particles', ['Other', 'preprocess_particles', 'screen_particles']]]),
+    ['Particles', 'extract_particles', 'import_particles', ['Other', 'preprocess_particles', 'screen_particles', 'merge_particles']]]),
 ('2D', 
    [['Align+Classify', 'cl2d', 'ml2d', ['Other', 'cl2d_align', 'kerdensom', 'rotspectra', 'screen_classes']]]),
 ('3D', 
@@ -51,7 +52,7 @@ sections = [
     ['Analysis', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask','structure_factor']])
 ,
 ('Other',
- [['Extra', 'custom','subtraction', 'mltomo']])
+ [['Extra', 'custom', ['Virus', 'subtraction'], ['Tomography', 'mltomo', 'cltomo']]])
 ]
 
 #--------------------------------------------------------------------------------
