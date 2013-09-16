@@ -263,6 +263,13 @@ public:
      */
     void getPreview(ImageGeneric &imgOut, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE);
 
+    /* Read an image with a lower resolution as a preview image.
+    * Resizing is done in fourier space
+    * If Zdim parameter is not passed, then all slices are rescaled.
+    * If Ydim is not passed, then Ydim is rescaled same factor as Xdim.
+    */
+    int readPreviewFourier(const FileName &name, size_t Xdim, size_t Ydim = 0, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE);
+
     /** Write image to file.
     */
     inline void write(const FileName &name="", size_t select_img = ALL_IMAGES, bool isStack=false,

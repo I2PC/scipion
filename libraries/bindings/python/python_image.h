@@ -80,6 +80,10 @@ Image_read(PyObject *obj, PyObject *args, PyObject *kwargs);
 PyObject *
 Image_readPreview(PyObject *obj, PyObject *args, PyObject *kwargs);
 
+/* read preview, downsample in Fourier*/
+PyObject *
+Image_readPreviewFourier(PyObject *obj, PyObject *args, PyObject *kwargs);
+
 /* convert to psd */
 PyObject *
 Image_convertPSD(PyObject *obj, PyObject *args, PyObject *kwargs);
