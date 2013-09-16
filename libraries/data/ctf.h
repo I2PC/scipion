@@ -624,9 +624,9 @@ public:
 void generateCTFImageWith2CTFs(const MetaData &MD1, const MetaData &MD2, int Xdim, MultidimArray<double> &imgOut);
 
 /** compute error between two CTFS, return a single value */
-double errorBetween2CTFs(const MetaData &MD1,
-                         const MetaData &MD2,
-                         int Xdim,
+double errorBetween2CTFs( MetaData &MD1,
+                          MetaData &MD2,
+                         size_t dim,
                          double minFreq=0.05,
                          double maxFreq=0.25);
 

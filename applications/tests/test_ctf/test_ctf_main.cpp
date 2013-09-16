@@ -83,8 +83,8 @@ TEST_F( CtfTest, errorBetween2CTFs)
     double error = errorBetween2CTFs(metadata1,
                              metadata2,
                              256,
-                             0.1,0.5);
-    EXPECT_FLOAT_EQ(error,40344.6);
+                             0.05,0.25);
+    EXPECT_FLOAT_EQ(error,10441.1);
     XMIPP_CATCH
 }
 

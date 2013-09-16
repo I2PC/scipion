@@ -851,9 +851,9 @@ void generateCTFImageWith2CTFs(const MetaData &MD1, const MetaData &MD2, int Xdi
     CenterFFT(imgOut,false);
 }
 
-double errorBetween2CTFs(const MetaData &MD1,
-                         const MetaData &MD2,
-                         int Xdim,
+double errorBetween2CTFs( MetaData &MD1,
+                          MetaData &MD2,
+                         size_t Xdim,
                          double minFreq,
                          double maxFreq)
 {
@@ -874,7 +874,7 @@ double errorBetween2CTFs(const MetaData &MD1,
 
     double iTm=1.0/CTF1.Tm;
     size_t xDim, yDim;
-    xDim = yDim = (size_t) Xdim;
+    xDim = yDim = Xdim;
 //#define DEBUG
 #ifdef DEBUG
 
