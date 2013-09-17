@@ -853,9 +853,9 @@ void generateCTFImageWith2CTFs(const MetaData &MD1, const MetaData &MD2, int Xdi
 
 double errorBetween2CTFs( MetaData &MD1,
                           MetaData &MD2,
-                         size_t Xdim,
-                         double minFreq,
-                         double maxFreq)
+                          size_t Xdim,
+                          double minFreq,
+                          double maxFreq)
 {
 
     Matrix1D<double> freq(2); // Frequencies for Fourier plane
@@ -875,7 +875,7 @@ double errorBetween2CTFs( MetaData &MD1,
     double iTm=1.0/CTF1.Tm;
     size_t xDim, yDim;
     xDim = yDim = Xdim;
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
 
     Image<double> img1(xDim,yDim);
@@ -900,21 +900,23 @@ double errorBetween2CTFs( MetaData &MD1,
         for (int j=0; j<xDim; ++j)
         {
             FFT_IDX2DIGFREQ(j, xDim, XX(freq));
-        	_freq = freq.module();
-        	if (_freq < minFreq || _freq > maxFreq)
-        		continue;
-        	//XX(freq) *= iTm;
+            _freq = freq.module();
+            if (_freq < minFreq || _freq > maxFreq)
+                continue;
+            //XX(freq) *= iTm;
             freq *= iTm;
             CTF1.precomputeValues(XX(freq),YY(freq));
             CTF2.precomputeValues(XX(freq),YY(freq));
             error += fabs(CTF2.getValuePureWithoutDampingAt()- CTF1.getValuePureWithoutDampingAt());
 #ifdef DEBUG
+
             double a = CTF1.getValuePureWithoutDampingAt();
             double b = CTF2.getValuePureWithoutDampingAt();
             DIRECT_A2D_ELEM(dummy1,i,j)=a;
             DIRECT_A2D_ELEM(dummy2,i,j)=b;
             DIRECT_A2D_ELEM(dummy3,i,j)=fabs(b-a);
 #endif
+
         }
     }
 #ifdef DEBUG
@@ -922,7 +924,49 @@ double errorBetween2CTFs( MetaData &MD1,
     img2.write("/tmp/img2.spi");
     img3.write("/tmp/img3.spi");
 #endif
+
     return error;
+}
+
+
+double errorMaxFreqCTFs( MetaData &MD1,
+                         MetaData &MD2)
+{
+    //This is a quick and extremely dirty solution
+    //return angstroms
+
+    CTFDescription CTF1, CTF2;
+
+    CTF1.enable_CTF=true;
+    CTF1.enable_CTFnoise=false;
+    CTF1.readFromMetadataRow(MD1,MD1.firstObject());
+    double defocus1 = (CTF1.DeltafU + CTF1.DeltafV)/2.0;
+    CTF1.produceSideInfo();
+
+    CTF2.enable_CTF=true;
+    CTF2.enable_CTFnoise=false;
+    CTF2.readFromMetadataRow(MD2,MD2.firstObject());
+    double defocus2 = (CTF2.DeltafU + CTF2.DeltafV)/2.0;
+    CTF2.produceSideInfo();
+#ifdef DEBUG
+
+    Matrix1D<double> freq(2); // Frequencies for Fourier plane
+    double iTm=1.0/CTF1.Tm;
+    for (int i=0; i<256; ++i)
+    {
+        FFT_IDX2DIGFREQ(i, 512, YY(freq));
+        FFT_IDX2DIGFREQ(i, 512, XX(freq));
+        freq *= iTm;
+        CTF1.precomputeValues(XX(freq),YY(freq));
+        CTF2.precomputeValues(XX(freq),YY(freq));
+        std::cerr << "DEBUG_ROB: "
+        		  << XX(freq) << " "
+        		  << CTF1.getValuePureWithoutDampingAt() << " "
+        		  << CTF2.getValuePureWithoutDampingAt() << " "
+        		  << std::endl;
+    }
+#endif
+    return 1.0/sqrt(PI/(CTF1.K1*abs(defocus1-defocus2)));
 }
 
 void generatePSDCTFImage(MultidimArray<double> &img, const MetaData &MD)

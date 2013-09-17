@@ -629,6 +629,11 @@ double errorBetween2CTFs( MetaData &MD1,
                          size_t dim,
                          double minFreq=0.05,
                          double maxFreq=0.25);
+/** Report at which resolution these two CTF are shifted by 90 degrees
+ *retuen amsgtroms
+ */
+double errorMaxFreqCTFs( MetaData &MD1,
+                         MetaData &MD2);
 
 /** Generate an image with the PSD and the CTF
  *  Before calling the function img must have the enhanced PSD. The enhanced PSD image is modified to add the CTF. */
