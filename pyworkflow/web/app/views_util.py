@@ -164,8 +164,7 @@ def get_image(request):
     return response
 
 def get_image_dim(request, imagePath):
-    projectPath = request.session['projectPath']
-    size, y, z, h = get_image_dimensions(projectPath, imagePath)
+    size, y, z, h = get_image_dimensions(request.session['projectPath'], imagePath)
     return size
 
 def get_image_dimensions(projectPath, imagePath):
