@@ -580,7 +580,7 @@ class XmippProjectGUI():
                 for c in tree.get_children(''):
                     if selectFirst or tree.item(c, 'text') == runName:
                         tree.selection_set(c)
-                        self.updateRunSelection(tree.index(c))
+                        self.updateRunSelection(tree.index(c), update_summary=checkDead)
                         break
             else:
                 self.updateHistoryGraph()
@@ -588,7 +588,7 @@ class XmippProjectGUI():
             self.historyRefreshRate = min(10*self.historyRefreshRate, 3600)
             self.historyRefresh = tree.after(self.historyRefreshRate*1000, self.updateRunHistory, protGroup, False)
         else:
-            self.updateRunSelection(-1)
+            self.updateRunSelection(-1, update_summary=checkDead)
 
     #---------------- Functions related with Popup menu ----------------------   
     def unpostMenu(self, event=None):
@@ -643,7 +643,8 @@ class XmippProjectGUI():
             self.updateRunHistory(group)
             self.lastDisplayGroup = group
             
-    def updateRunSelection(self, index):
+    def updateRunSelection(self, index, update_summary=False):
+        print "updateRunSelection"
         state = tk.NORMAL
         details = self.Frames['details']
         if index == -1:
@@ -660,11 +661,12 @@ class XmippProjectGUI():
                 
                 run_state = run['run_state']
                 run_summary_cache = run['script'].replace('.py', '_summary.txt')
-                update_summary = (run_state == SqliteDb.RUN_STARTED or
+                update_summary = (update_summary or (run_state == SqliteDb.RUN_STARTED) or
                                   not exists(run_summary_cache))
                 
                 prot = self.project.getProtocolFromModule(run['script'])
                 if update_summary:
+                    print "updating summary...."
                     comment = ""
 
                     if not prot.Comment == None:
