@@ -366,6 +366,15 @@ Image_read(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }//function Image_read
 
+void readImagePreview(ImageGeneric *ig, FileName fn, size_t xdim)
+{
+    ig->read(fn, HEADER);
+    ImageInfo ii;
+    ig->getInfo(ii);
+    if (xdim != ii.adim.xdim)
+      ig->readPreview(name, xdim);
+}
+
 /* read preview*/
 PyObject *
 Image_readPreview(PyObject *obj, PyObject *args, PyObject *kwargs)
