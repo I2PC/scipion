@@ -191,7 +191,7 @@ public class PlotJDialog extends XmippDialog {
 
 		try {
 			String[] argsBasic = { "xmipp_metadata_plot",
-					gallery.data.getFileName(), "-y", labels, "--colors", colors,
+					gallery.data.getMdFilename(), "-y", labels, "--colors", colors,
 					"--style", styles, "--markers", markers, "--title",
 					tfTitle.getText().trim(), "--ytitle", ylabel, "--xtitle",
 					tfXLabel.getText().trim() };

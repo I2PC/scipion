@@ -217,7 +217,7 @@ def projectInitialVolume(log,WorkingDir,InitialVolume,Xdim2,AngularSampling,Symm
     runJob(log,'xmipp_image_convert',"-i %s -o %s"%(removeFilenamePrefix(InitialVolume),fnOutputInitVolume))
     runJob(log,"xmipp_image_resize","-i %s --dim %d %d"%(fnOutputInitVolume,Xdim2,Xdim2))
     fnGallery=os.path.join(WorkingDir,'tmp/gallery_InitialVolume.stk')
-    fnOutputReducedClass = os.path.join(WorkingDir,"extra/reducedClasses.stk") 
+    fnOutputReducedClass = os.path.join(WorkingDir,"extra/reducedClasses.xmd") 
     runJob(log,"xmipp_angular_project_library", "-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
                           %(fnOutputInitVolume,fnGallery,float(AngularSampling),SymmetryGroup,fnOutputReducedClass))
 

@@ -531,7 +531,8 @@ void frc_dpr(MultidimArray< double > & m1,
 }
 
 
-void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> &Mpmem, int nThreads)
+
+void scaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> &mdaIn, MultidimArray<double> &mdaOut, int nThreads)
 {
     //Mmem = *this
     //memory for fourier transform output
@@ -539,13 +540,13 @@ void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> 
     // Perform the Fourier transform
     FourierTransformer transformerM;
     transformerM.setThreadsNumber(nThreads);
-    transformerM.FourierTransform(Mpmem, MmemFourier, false);
+    transformerM.FourierTransform(mdaIn, MmemFourier, false);
 
     // Create space for the downsampled image and its Fourier transform
-    Mpmem.resizeNoCopy(Zdim, Ydim, Xdim);
+    mdaOut.resizeNoCopy(Zdim, Ydim, Xdim);
     MultidimArray<std::complex<double> > MpmemFourier;
     FourierTransformer transformerMp;
-    transformerMp.setReal(Mpmem);
+    transformerMp.setReal(mdaOut);
     transformerMp.getFourierAlias(MpmemFourier);
 
     size_t ihalf = XMIPP_MIN((YSIZE(MpmemFourier)/2+1),(YSIZE(MmemFourier)/2+1));
@@ -554,6 +555,7 @@ void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> 
     //Init with zero
     MpmemFourier.initZeros();
 
+    //TODO: Check if we can accelerate the last loop by using memcpy ???
     for (size_t k = 0; k < zhalf; ++k)
     {
         for (size_t i=0; i<ihalf; i++)
@@ -583,6 +585,13 @@ void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> 
     transformerMp.inverseFourierTransform();
 }
 
+
+void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> &mda, int nThreads)
+{
+  scaleToSizeFourier(Zdim, Ydim, Xdim, mda, mda, nThreads);
+}
+
+
 void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArray<double>& Mpmem,int nThreads)
 {
     selfScaleToSizeFourier(1, Ydim, Xdim, Mpmem, nThreads);
@@ -595,7 +604,6 @@ void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArrayGeneric &
     selfScaleToSizeFourier(Zdim, Ydim, Xdim, aux, nThreads);
     Mpmem.setImage(aux);
 }
-
 
 void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArrayGeneric &Mpmem, int nThreads)
 {

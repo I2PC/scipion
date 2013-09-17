@@ -710,15 +710,19 @@ class XmippProtocol(object):
             args['execution_mode'] = SqliteDb.EXEC_PARALLEL
         return self.insertStep(command, **args)
         
-    def insertRunJobStep(self, program, params, verifyFiles=[]):
+    def insertRunJobStep(self, program, params, verifyFiles=[], NumberOfMpi=None, NumberOfThreads=None):
         ''' This function is a shortcut to insert a runJob step into database
         it will pass threads and mpi info, and also the unique run id'''
+        if NumberOfMpi is None:
+            NumberOfMpi=self.NumberOfMpi
+        if NumberOfThreads is None:
+            NumberOfThreads=self.NumberOfThreads
         return self.insertStep('runJob', 
                      programname=program, 
                      params=params,
                      verifyfiles = verifyFiles,
-                     NumberOfMpi = self.NumberOfMpi,
-                     NumberOfThreads = self.NumberOfThreads)
+                     NumberOfMpi = NumberOfMpi,
+                     NumberOfThreads = NumberOfThreads)
         
     def insertParallelRunJobStep(self, program, params, verifyfiles=[], parent_step_id=XmippProjectDb.FIRST_STEP):
         ''' This function is a shortcut to insert a runJob step into database
