@@ -1,4 +1,3 @@
-from __future__ import division
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -403,7 +402,7 @@ class XmippMaskPreviewDialog(XmippImagePreviewDialog):
     def _beforePreview(self):
         self.dim = 256           
         self.dim_par = self.firstItem.getDim()[0]
-        self.ratio = self.dim / self.dim_par
+        self.ratio = self.dim / float(self.dim_par)
         self.previewLabel = 'Central slice'
     
     def _createPreview(self, frame):
