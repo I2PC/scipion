@@ -7,7 +7,7 @@
 #include "data/xmipp_image_generic.h"
 #include "data/xmipp_fft.h"
 #include "data/ctf.h"
-#include "reconstruction/transform_downsample.h"
+#include "data/transform_downsample.h"
 #include "data/filters.h"
 #include "data/geometry.h"
 

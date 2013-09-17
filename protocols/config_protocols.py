@@ -21,6 +21,7 @@ protocols = {
         'screen_classes': ('Screen classes', '2D/Screening'),
         'rct': ('Random Conical Tilt', '3D/InitialVolume/RCT'),
         'initvolume_ransac': ('RANSAC', '3D/InitialVolume/RANSAC'),
+
         'convert_pdb': ('Convert PDB', '3D/PDB'),
         'preprocess_volume': ('Preprocess', '3D/Preprocessed'),
         'create_volume_mask': ('Create mask', '3D/Mask'),
@@ -28,13 +29,14 @@ protocols = {
         'ml3d': ('ML3D', '3D/ML3D'),
         'nma': ('Normal Mode Analysis', '3D/NMA'),
         'nma_alignment': ('Flexible alignment', '3D/NMA_alignment'),
-        'structure_factor': ('Structure factor', '3D/StructureFactor'),
-        'fsc': ('Calculate FSC', '3D/Resolution/FSC'),
+        'resolution3D': ('Resolution 3D', '3D/Resolution'),
+        #'align_volume': ('Align Volume', '3D/AlignVolume'),
         'relion3d': ('Relion3D', '3D/Relion3D'),
         'mltomo': ('MLTomo', '3D/MLTomo'),
         'subtraction': ('Partial Projection Subtraction', '3D/ProjSub'),
         'custom': ('Custom', 'Custom'),
         'image_operate': ('Image Operate', 'Tools/ImageOperate'),
+        'metadata_utilities': ('Metadata Utilities', 'Tools/MetadataUtilities'),
         'metadata_split': ('Metadata Split', 'Tools/MetadataSplit'),
         #'xmipp': ('Xmipp Programs', 'XmippPrograms'), 
         'emx_import': ('Import', 'EMX'),
@@ -54,9 +56,9 @@ sections = [
 ('3D', 
    [['Initial Model', 'rct', 'initvolume_ransac', 'convert_pdb'], 
     ['Model Refinement', 'projmatch', 'ml3d', 'relion3d'],
-    ['Volumes', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask', 'preprocess_volume', 'structure_factor', 'fsc']]),
+    ['Volumes', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask', 'preprocess_volume', 'resolution3D']]),#, 'align_volume']]),
 ('Other',
- [['Extra', 'custom',['Virus','subtraction'],['Tomography','mltomo'],['Tools','image_operate','metadata_split'],
+ [['Extra', 'custom',['Virus','subtraction'],['Tomography','mltomo'],['Tools','image_operate','metadata_utilities','metadata_split'],
    ['EMX', 'emx_import', 'emx_export']]])
 ]
 
@@ -73,6 +75,7 @@ class ProtocolData:
 
 class ProtocolDictionary(dict):
     def __init__(self):
+        self.protocolPaths=[]
         for section, sectionList in sections:
             for groupList in sectionList:
                 group = groupList[0]
@@ -85,13 +88,22 @@ class ProtocolDictionary(dict):
                             self.addProtocol(section, group, p)
         # Add special 'xmipp_program'
         #self.addProtocol(None, None, 'xmipp')
+    def existsPrefix(self,path):
+        """ Find if another protocol contains this path as prefix"""
+        path+='/'
+        for p in self.protocolPaths:
+            if p.startswith(path):
+                return True
+        return False
 
     def addProtocol(self, section, group, protocol):
         title, path = protocols[protocol]
+        if self.existsPrefix(path):
+            raise Exception("Path is already existing as prefix: "+path)
+        self.protocolPaths.append(path)
         p = ProtocolData(section, group, protocol, title, path)
         setattr(self, protocol, p)
         self[protocol] = p
-        
 
 protDict = ProtocolDictionary()
 
@@ -121,8 +133,11 @@ projectDefaults = {
 
 #Font
 #FontName = "Helvetica"
-FontName = "Verdana"
-FontSize = 10
+# Try to read FontName and FontSize 
+# from environment variables
+import os
+FontName = os.environ.get('XMIPP_FONT_NAME', "Verdana")
+FontSize = int(os.environ.get('XMIPP_FONT_SIZE', 10))
 
 #TextColor
 CitationTextColor = "dark olive green"
@@ -146,7 +161,7 @@ ButtonSelectColor = "DeepSkyBlue2"
 
 #Dimensions limits
 MaxHeight = 650
-MaxWidth = 800
-MaxFontSize = 14
-MinFontSize = 6
+MaxWidth = 2048
+MaxFontSize = 18
+MinFontSize = 10
 WrapLenght = MaxWidth - 50

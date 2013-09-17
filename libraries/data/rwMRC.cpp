@@ -155,10 +155,11 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
 
     bool isVolStk = (header->ispg == 401);
 
-    if (isVolStk || !filename.contains(":")) // If format is forced through ":" flag suffix, then ignore the stack behavior in header
-    {
+    /* isStack is already true if file uses our customized "mrcs" extension. In this case
+     * we ignore the stack behavior in header. If format is forced through ":" flag suffix,
+     * then we also ignore the stack behavior in header */
+    if ( !isStack && (isVolStk || !filename.contains(":")))
         isStack = ((header->ispg == 0 || isVolStk ) && (header->nsymbt == 0));
-    }
 
     if(isStack)
     {

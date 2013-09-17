@@ -829,6 +829,12 @@ def which(command, path=None, verbose=0, exts=None):
         return ''
     return match
 
+def grepFirst(filename, text):
+    """Returns the first line in filename in which text appears"""
+    for line in open(filename):
+        if text in line:
+            return line
+    return None
 
 def whichall(command, path=None, verbose=0, exts=None):
     """Return a list of full paths to all matches of the given command

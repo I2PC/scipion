@@ -15,7 +15,7 @@
 """
 Operand1=''
 
-# {list_combo}(plus, minus, multiply, divide, minimum, maximum, dot product, log, log10, sqrt, abs, pow, slice, column, row, radial average) Operation
+# {list_combo}(plus, minus, multiply, divide, minimum, maximum, dot product, log, log10, sqrt, abs, pow, slice, column, row, radial average, reset) Operation
 Operation='plus'
 
 # {file}{condition}(Operation=='plus' or Operation=='minus' or Operation=='multiply' or Operation=='divide' or Operation=='minimum' or Operation=='maximum' or Operation=='dot product' or Operation=='column' or Operation=='slice' or Operation=='row') 2nd operand 

@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
+ * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -23,6 +23,15 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "data/transform_downsample.h"
+#ifndef XMIPP_TYPES_H_
+#define XMIPP_TYPES_H_
 
-RUN_XMIPP_PROGRAM(ProgTransformDownsample)
+#include "xmipp_image.h"
+
+
+typedef Image<double> ImageD;
+//typedef std::vector<String> StringVector;
+
+typedef MultidimArray<double> ArrayD;
+
+#endif /* XMIPP_TYPES_H_ */
