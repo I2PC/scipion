@@ -35,7 +35,7 @@ from pyworkflow.viewer import Viewer, Wizard, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, DefCTFMicrographs
 from protocol_projmatch import XmippDefProjMatch, XmippProtProjMatch 
 from protocol_preprocess_micrographs import XmippDefPreprocessMicrograph
-from protocol_filters import XmippDefMask, XmippProtMask
+from protocol_filters import XmippDefMask, XmippProtMask, XmippDefFourierFilter, XmippDefGaussianFilter
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider
 from pyworkflow.gui.tree import BoundTree, TreeProvider
@@ -189,6 +189,25 @@ class XmippRadiiWizard(Wizard):
     @classmethod    
     def getView(self):
         return "wiz_volume_mask_radii"   
+
+class XmippBandpassWizard(Wizard):
+    
+    _targets = [(XmippDefFourierFilter, ['lowFreq', 'highFreq', 'freqDecay'])]
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    
+    
+    @classmethod    
+    def getView(self):
+        return "wiz_bandpass"   
+    
+class XmippGaussianWizard(Wizard):
+    
+    _targets = [(XmippDefGaussianFilter, ['freqSigma'])]
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    
+    @classmethod    
+    def getView(self):
+        return "wiz_gaussian"   
 
 #--------------- Dialogs used by Wizards --------------------------
     

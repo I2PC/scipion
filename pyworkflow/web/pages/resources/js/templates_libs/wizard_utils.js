@@ -3,7 +3,7 @@
 function selectList(elm) {
 	var row = $("table#list");
 	var oldValue = elm.attr('id');
-	
+
 	var img = $("img#mic");
 	var img_psd = $("img#psd");
 
@@ -15,10 +15,10 @@ function selectList(elm) {
 		rowOld.attr('style', 'background-color: #fafafa;');
 		rowOld.attr('class', 'no-selected');
 	}
-	
+
 	// hide the last micrograph
-		img.hide();
-		img_psd.hide();
+	img.hide();
+	img_psd.hide();
 
 	// mark the new option
 	row.attr('value', oldValue);
@@ -43,6 +43,22 @@ function selectList(elm) {
 		// show the new micrograph
 		img.show();
 	});
+}
+
+function putImage(url, canvas, width, height) {
+	$("div#" + canvas).empty();
+	var paper = Raphael(document.getElementById(canvas));
+	var rec = paper.rect(0, 0, 250, 250);
+	rec.attr("stroke-width", 0);
+	rec.attr("fill", "url(" + url + ")");
+}
+
+function putCircle(radio, canvas, color) {
+	$("#" + canvas).empty();
+	var paper = Raphael(document.getElementById(canvas));
+	var circle = paper.circle(125, 125, radio);
+	circle.attr("fill", color);
+	circle.attr("opacity", 0.4);
 }
 
 // *** Methods Wizard Downsampling *** //
@@ -85,8 +101,8 @@ function compositePreview(elm) {
 }
 
 function previewPsdFreq() {
-	//	var img = $("img#psd");
-	//	img.hide();
+	// var img = $("img#psd");
+	// img.hide();
 
 	// check downsampling is a number
 	var downsampling = $("input#downsampling").val();
@@ -113,29 +129,12 @@ function previewPsdFreq() {
 	});
 }
 
-function putImage(url, canvas, width, height){
-	$("#"+canvas).empty();
-	var paper = Raphael(document.getElementById(canvas));
-	var rec = paper.rect(0, 0, 250, 250);
-	rec.attr("stroke-width", 0);
-	rec.attr("fill", "url("+ url +")");
-}
-
-function putCircle(radio, canvas, color){
-	$("#"+canvas).empty();
-	var paper = Raphael(document.getElementById(canvas));
-	var circle = paper.circle(125, 125, radio);
-	circle.attr("fill", color);
-	circle.attr("opacity", 0.4);
-}
-
 // *** Methods Wizard Particle Mask *** //
 
 function selectParticle(elm) {
 	var row = $("table#list");
 	var oldValue = elm.attr('id');
-	var img = $("div#mic");
-	var load = $("img#loadingMic");
+	var img = $("div#particle");
 
 	if (row.attr('value') != undefined && row.attr('value') != oldValue) {
 		// unmark the last option
@@ -143,33 +142,69 @@ function selectParticle(elm) {
 		rowOld.attr('style', 'background-color: #fafafa;');
 		rowOld.attr('class', 'no-selected');
 	}
-	
-	// hide the last micrograph
-		img.hide();
 
 	// mark the new option
 	row.attr('value', oldValue);
 	elm.attr('style', 'background-color: LightSteelBlue;');
 	elm.attr('class', 'selected');
 
-	// set loading img
-	load.show();
-
 	// get the img path
 	var path_img = elm.attr('value');
 	if (path_img == undefined) {
 		path_img = elm.val();
 	}
-	
-	load.hide();
 
 	// load and set the image
 	var uri = "/get_image/?image=" + path_img + "&dim=250";
+	
+	putImage(uri, "particle", 250, 250);
+}
+
+// *** Methods Wizard Bandpass filter *** //
+
+	$.when(selectList(elm)).then(previewBandpassFilter());
+}
+
+function previewBandpassFilter() {
+	// check values
+	var low = $("#slider_low_result").val();
+	var high = $("#slider_high_result").val();
+	var decay = $("#slider_decay_result").val();
+
+	// get the img path
+	var path_img = $("tr#" + $("table#list").attr("value")).attr("value");
+
+	// load and set the image
+	var uri = "/get_image_bandpass/?image=" + path_img + "&lowFreq=" + low
+			+ "&highFreq=" + high + "&decayFreq=" + decay + "&dim=250";
+
+	putImage(uri, "imgFiltered", 250, 250);
+}
+
+// *** Methods Wizard Gaussian filter *** //
+
+function compositeGaussian(elm) {
+	$.when(selectParticle(elm)).then(previewGaussianFilter());
+}
+
+function previewGaussianFilter() {
+	// check values
+	var sigma = $("#slider_sigma_result").val();
+
+	// get the img path
+	var path_img = $("tr#" + $("table#list").attr("value")).attr("value");
+
+	var load = $("img#loading");
+
+	// set loading img
+	load.show();
+
+	// load and set the image
+	var uri = "/get_image_gaussian/?image=" + path_img + "&sigmaFreq=" + sigma + "&dim=250";
 
 	// show the new micrograph
-	img.load(putImage(uri, "mic", 250, 250), function() {
+	load.load(putImage(uri, "imgFiltered", 250, 250), function() {
 		// hide the load img
 		load.hide();
 	});
-
 }
