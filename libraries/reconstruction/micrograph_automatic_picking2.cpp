@@ -33,11 +33,14 @@
 #include <algorithm>
 #include <classification/uniform.h>
 
-
 AutoParticlePicking2::AutoParticlePicking2()
-{}
+{
+}
+
 AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum, int basisPCA, const FileName &model_name)
 {
+
+	// Defining the paths for pca, svm, ... models.
     fn_model=model_name;
     fnPCAModel=fn_model+"_pca_model.stk";
     fnPCARotModel=fn_model+"_rotpca_model.stk";
@@ -48,6 +51,7 @@ AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum
     fnInvariant=fn_model+"_invariant";
     fnParticles=fn_model+"_particle";
 
+    // Setting the values of the parameters
     corr_num=corrNum;
     filter_num=filterNum;
     NPCA=basisPCA;
@@ -56,6 +60,7 @@ AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum
     num_features=num_correlation*NPCA+NRPCA+12;
     setSize(pSize);
 
+    // If models were generated then load them to memory.
     if (fnPCAModel.exists())
     {
         particleAvg.initZeros(particle_size+1,particle_size+1);
@@ -71,11 +76,12 @@ AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum
         particleAvg=II();
     }
 
-    // Read the SVM model
+    // Set the parameters for two SVM classifiers.
     classifier.setParameters(8.0, 0.125);
     classifier2.setParameters(1.0, 0.25);
 }
 
+// This method is required by the JAVA part.
 void AutoParticlePicking2::setSize(int pSize)
 {
     double t=std::max(0.25,50.0/pSize);
@@ -85,6 +91,7 @@ void AutoParticlePicking2::setSize(int pSize)
     NRsteps=particle_size/2-3;
 }
 
+// Read the micrograph and generate the filter bank for it.
 void AutoParticlePicking2::readMic(FileName fn_micrograph)
 {
     m.open_micrograph(fn_micrograph);
@@ -98,6 +105,7 @@ void AutoParticlePicking2::readMic(FileName fn_micrograph)
     micrographStack()=filterBankStack;
 }
 
+// Generate filter bank from the micrograph image (this is for automatic mode)
 void filterBankGenerator(MultidimArray<double> &inputMicrograph,
                          const FileName &fnFilterBankStack,
                          int filter_num)
@@ -123,7 +131,7 @@ void filterBankGenerator(MultidimArray<double> &inputMicrograph,
     }
 }
 
-//Generate filter bank from the micrograph image
+// Generate filter bank from the micrograph image (this is for supervised mode)
 void AutoParticlePicking2::filterBankGenerator()
 {
     MultidimArray<double> inputMicrograph;
@@ -447,6 +455,7 @@ void AutoParticlePicking2::train(MetaData MD, bool corrFlag, int x, int y, int w
 {
     if (width!=0)
     {
+        // Scale the specified region in the last micrograph to fit to the scaled one
         x*=scaleRate;
         y*=scaleRate;
         width*=scaleRate;
@@ -468,7 +477,6 @@ void AutoParticlePicking2::train(MetaData MD, bool corrFlag, int x, int y, int w
             fnVector.deleteFile();
 
             //Second reset all the arrays
-
             pcaModel.clear();
             pcaRotModel.clear();
             particleAvg.clear();
@@ -1068,7 +1076,6 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier)
         int j=positionArray[k].x;
         int i=positionArray[k].y;
         buildInvariant(IpolarCorr,j,i);
-        //std::cerr<<"build inavariant has been done"<<std::endl;
         extractParticle(j,i,microImage(),pieceImage,false);
         pieceImage.resize(1,1,1,XSIZE(pieceImage)*YSIZE(pieceImage));
         extractStatics(pieceImage,staticVec);
@@ -1475,7 +1482,6 @@ int AutoParticlePicking2::saveAutoParticles(const FileName &fn) const
             MD.setValue(MDL_ENABLED,1,id);
         }
     }
-    std::cerr<<"We are writing the position here"<<fn<<std::endl;
     MD.write(fn,MD_OVERWRITE);
     return MD.size();
 }
@@ -1830,7 +1836,6 @@ void ProgMicrographAutomaticPicking2::defineParams()
 
 void AutoParticlePicking2::produceSideInfo(Micrograph *_m)
 {
-	std::cerr<<"produce side info has been called"<<std::endl;
     __m=_m;
     microImage.read(fn_micrograph);
     double t=std::max(0.25,50.0/particle_size);
@@ -1845,6 +1850,7 @@ void AutoParticlePicking2::produceSideInfo(Micrograph *_m)
     classifier2.setParameters(1.0, 0.25);
 }
 
+// This is just for calling automatic mode
 void ProgMicrographAutomaticPicking2::run()
 {
     Micrograph m;
@@ -1864,6 +1870,7 @@ void ProgMicrographAutomaticPicking2::run()
     FileName fnAvgModel = fn_model + "_particle_avg.xmp";
 
     autoPicking->produceSideInfo(&m);
+
     if (mode != "train")
     {
         // Resize the Micrograph
@@ -1875,75 +1882,6 @@ void ProgMicrographAutomaticPicking2::run()
         autoPicking->micrographStack.read(fnFilterBank,DATA);
     }
 
-    if (mode=="buildinv")
-    {
-        MetaData MD;
-        // Insert all true positives
-        if (fn_train!="")
-        {
-            MD.read(fn_train);
-            int x, y;
-            FOR_ALL_OBJECTS_IN_METADATA(MD)
-            {
-                MD.getValue(MDL_XCOOR,x, __iter.objId);
-                MD.getValue(MDL_YCOOR,y, __iter.objId);
-                m.add_coord(x,y,0,1);
-            }
-            // Insert the false positives
-            if (fnAutoParticles.existsTrim())
-            {
-
-                int idx=0;
-                MD.read(fnAutoParticles);
-                if (MD.size()>0)
-                {
-                    autoPicking->loadAutoVectors(fnAutoVectors);
-                    FOR_ALL_OBJECTS_IN_METADATA(MD)
-                    {
-                        int enabled;
-                        MD.getValue(MDL_ENABLED,enabled,__iter.objId);
-                        if (enabled==-1)
-                        {
-                            autoPicking->rejected_particles.push_back(
-                                autoPicking->auto_candidates[idx]);
-                        }
-                        else
-                        {
-                            autoPicking->accepted_particles.push_back(
-                                autoPicking->auto_candidates[idx]);
-                            MD.getValue(MDL_XCOOR, x, __iter.objId);
-                            MD.getValue(MDL_YCOOR, y, __iter.objId);
-                            m.add_coord(x, y, 0, 0);
-                        }
-                        ++idx;
-                    }
-                }
-                autoPicking->saveVectors(fn_model);
-            }
-        }
-        if (fnAvgModel.exists())
-        {
-            Image<double> II;
-            II.read(fnAvgModel);
-            autoPicking->particleAvg=II();
-        }
-        else
-        {
-            autoPicking->particleAvg.initZeros(autoPicking->particle_size+1,autoPicking->particle_size+1);
-            autoPicking->particleAvg.setXmippOrigin();
-        }
-        // If the PCA model exist then we have obtained the templatea and then we do not want
-        // to continue it anymore
-        if (fnPCAModel.exists())
-            autoPicking->extractInvariant(fnInvariant,fnParticles,true);
-        else
-        {
-            autoPicking->extractInvariant(fnInvariant,fnParticles,false);
-            Image<double> II;
-            II()=autoPicking->particleAvg;
-            II.write(fnAvgModel);
-        }
-    }
 
     if (mode=="try" || mode=="autoselect")
     {
@@ -1952,10 +1890,9 @@ void ProgMicrographAutomaticPicking2::run()
             MetaData MD;
             MD.read(fn_model.beforeLastOf("/")+"/config.xmd");
             MD.getValue( MDL_PICKING_AUTOPICKPERCENT,autoPicking->proc_prec,MD.firstObject());
-            std::cerr<<"number of pekas to pick"<<autoPicking->proc_prec<<std::endl;
         }
         autoPicking->micrographStack.read(fnFilterBank, DATA);
-//        autoPicking->filterBankStack=autoPicking->micrographStack();
+        //        autoPicking->filterBankStack=autoPicking->micrographStack();
         // Read the PCA Model
         Image<double> II;
         II.read(fnPCAModel);
@@ -1979,54 +1916,14 @@ void ProgMicrographAutomaticPicking2::run()
             autoPicking->automaticallySelectParticles(true);
         }
         else
-        {
             int num=autoPicking->automaticallySelectParticles(false);
-            std::cerr<<"the number of automatically selected particles is equal to"<<num<<std::endl;
-        }
-        std::cerr<<"the name of the file is"<<fnAutoParticles<<std::endl;
         int num2=autoPicking->saveAutoParticles(fnAutoParticles);
-        std::cerr<<"size of the automatically picked particles is equal to"<<num2<<std::endl;
         if (mode=="try")
             if (autoPicking->auto_candidates.size()!=0)
                 autoPicking->saveAutoVectors(fnAutoVectors);
     }
-    if (mode=="train")
-    {
-        // If PCA does not exist obtain the PCA basis and save them
-        if (!fnPCAModel.exists())
-            autoPicking->trainPCA(fn_model);
-        if (!fnPCARotModel.exists())
-            autoPicking->trainRotPCA(fnAvgModel,fnPCARotModel.removeAllExtensions());
-
-        // If we have the models then we just load it
-        Image<double> II;
-        II.read(fnPCAModel);
-        autoPicking->pcaModel=II();
-        II.read(fnPCARotModel);
-        autoPicking->pcaRotModel=II();
-        if (fnVector.exists())
-            autoPicking->loadTrainingSet(fnVector);
-        autoPicking->add2Dataset(fnInvariant+"_Positive.stk",fnParticles+"_Positive.stk",1);
-        autoPicking->add2Dataset(fnInvariant+"_Negative.stk",fnParticles+"_Negative.stk",2);
-        // If we have some false positives also add it
-        // Load the rejected vectors features as false positives
-        autoPicking->loadVectors(fn_model);
-        if (autoPicking->rejected_particles.size()!= 0 || autoPicking->accepted_particles.size()!= 0)
-            autoPicking->add2Dataset();
-        // We just save the un normalized dataset
-        autoPicking->saveTrainingSet(fnVector);
-        autoPicking->normalizeDataset(0,1);
-        // Generate two different dataset
-        autoPicking->generateTrainSet();
-
-        autoPicking->trainSVM(fnSVMModel,1);
-        autoPicking->trainSVM(fnSVMModel2,2);
-    }
     if (mode!="train")
-    {
         fnFilterBank.deleteFile();
-        std::cerr<<"We have deleted the file"<<std::endl;
-    }
     delete autoPicking;
 }
 

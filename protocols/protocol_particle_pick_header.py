@@ -34,14 +34,14 @@ LaunchGUI = True
 
 # {eval} expandJavaMemory()
 
-# Number of threads
+# {expert} Number of threads
 """ 
 This option provides shared-memory parallelization on multi-core machines.
 It does not require any additional software, other than xmipp.
 """
 NumberOfThreads = 2
 
-# Fast picking
+# {expert} Fast picking
 """ 
 The fast version includes a Fourier filter while the non-fast version 
 uses the Fourier filter and a Wavelet denoising. The fast version takes 

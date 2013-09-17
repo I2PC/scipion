@@ -97,6 +97,8 @@ PyMethodDef Image_methods[] =
           "Read image from disk" },
         { "readPreview", (PyCFunction) Image_readPreview, METH_VARARGS,
           "Read image preview" },
+        { "readPreviewSmooth", (PyCFunction) Image_readPreviewSmooth, METH_VARARGS,
+          "Read image preview, downsample in Fourier space" },
         { "equal", (PyCFunction) Image_equal, METH_VARARGS,
           "return true if both images are equal up to precision" },
         { "convertPSD", (PyCFunction) Image_convertPSD, METH_VARARGS,
@@ -315,6 +317,7 @@ Image_write(PyObject *obj, PyObject *args, PyObject *kwargs)
         {
             try
             {
+
                 if (PyString_Check(input))
                     self->image->write(PyString_AsString(input));
                 else if (FileName_Check(input))
@@ -364,9 +367,58 @@ Image_read(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }//function Image_read
 
+void readImagePreview(ImageGeneric *ig, FileName fn, size_t xdim)
+{
+    ig->read(fn, HEADER);
+    ImageInfo ii;
+    ig->getInfo(ii);
+    if (xdim > 0 || xdim != ii.adim.xdim)
+      ig->readPreview(fn, xdim);
+    else
+      ig->read(fn);
+}
+
 /* read preview*/
 PyObject *
 Image_readPreview(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
+
+    if (self != NULL)
+    {
+        PyObject *input = NULL;
+        int x = 0;
+        if (PyArg_ParseTuple(args, "O|i", &input, &x))
+        {
+            try
+            {
+              PyObject *pyStr;
+              if ((pyStr = PyObject_Str(input)) != NULL)
+              {
+                  readImagePreview(self->image, PyString_AsString(pyStr), x);
+                  Py_RETURN_NONE;
+              }
+              else
+              {
+                  PyErr_SetString(PyExc_TypeError,
+                                  "Image_readPreview: Expected string or FileName as first argument");
+                  return NULL;
+              }
+            }
+            catch (XmippError &xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+            }
+        }
+        else
+          PyErr_SetString(PyXmippError,"Error with input arguments, expected filename and optional size");
+    }
+    return NULL;
+}//function Image_readPreview
+
+/* read preview, downsampling in Fourier space*/
+PyObject *
+Image_readPreviewSmooth(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     ImageObject *self = (ImageObject*) obj;
 
@@ -379,9 +431,9 @@ Image_readPreview(PyObject *obj, PyObject *args, PyObject *kwargs)
             try
             {
                 if (PyString_Check(input))
-                    self->image->readPreview(PyString_AsString(input), x);
+                    self->image->readPreviewSmooth(PyString_AsString(input), x);
                 else if (FileName_Check(input))
-                    self->image->readPreview(FileName_Value(input), x);
+                    self->image->readPreviewSmooth(FileName_Value(input), x);
                 else
                     return NULL;
                 Py_RETURN_NONE;
@@ -393,7 +445,7 @@ Image_readPreview(PyObject *obj, PyObject *args, PyObject *kwargs)
         }
     }
     return NULL;
-}//function Image_readPreview
+}//function Image_readPreviewSmooth
 
 /* convert to psd */
 PyObject *

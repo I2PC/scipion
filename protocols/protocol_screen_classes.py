@@ -10,7 +10,7 @@
 
 from os.path import join, exists
 from xmipp import MetaData, MetaDataInfo, MDL_IMAGE, MDL_IMAGE1, MDL_IMAGE_REF, MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_ANGLE_PSI, MDL_REF, \
-        MDL_SHIFT_X, MDL_SHIFT_Y, MDL_FLIP, MD_APPEND, MDL_MAXCC, MDL_ENABLED, Euler_angles2matrix, Image
+        MDL_SHIFT_X, MDL_SHIFT_Y, MDL_FLIP, MD_APPEND, MDL_MAXCC, MDL_ENABLED, Euler_angles2matrix, Image, FileName
 
 from protlib_base import *
 from protlib_utils import getListFromRangeString, runJob, runShowJ
@@ -30,7 +30,10 @@ class ProtScreenClasses(XmippProtocol):
         fnOutputClass=self.workingDirPath('classes.xmd')
         self.insertStep('createDir',path=self.ExtraDir)
         self.insertStep("linkAcquisitionInfo",InputFile=self.Classes,dirDest=self.WorkingDir)
-        self.insertStep('copyFile',source=removeFilenamePrefix(self.Classes),dest=fnOutputClass)
+        if FileName(self.Classes).isMetaData():
+            self.insertStep("copyFile",source=removeFilenamePrefix(self.Classes),dest=fnOutputClass)
+        else:
+            self.insertRunJobStep("xmipp_metadata_utilities","-i %s -o classes@%s"%(self.Classes,fnOutputClass),NumberOfMpi=1,NumberOfThreads=1)
 
         # Generate gallery of projections        
         fnGallery=self.workingDirPath('gallery.stk')
@@ -39,8 +42,8 @@ class ProtScreenClasses(XmippProtocol):
 
         # Assign angles
         fnAngles=self.workingDirPath('angles.xmd')
-        self.insertRunJobStep("xmipp_angular_projection_matching", "-i %s -o %s --ref %s --Ri 0 --Ro %s --max_shift 1000 --search5d_shift %s --search5d_step  %s --append"\
-                              %(self.fnImages,fnAngles,fnGallery,str(self.Xdim/2),str(int(self.Xdim/10)),str(int(self.Xdim/25))),[fnAngles])  
+        self.insertRunJobStep("xmipp_angular_projection_matching", "-i classes@%s -o %s --ref %s --Ri 0 --Ro %s --max_shift 1000 --search5d_shift %s --search5d_step  %s --append"\
+                              %(fnOutputClass,fnAngles,fnGallery,str(self.Xdim/2),str(int(self.Xdim/10)),str(int(self.Xdim/25))),[fnAngles])  
         self.insertStep("deleteFile",filename=self.workingDirPath('gallery_sampling.xmd') )
         self.insertStep("deleteFile",filename=self.workingDirPath('gallery_angles.doc') )
         self.insertStep("deleteFile",filename=self.workingDirPath('gallery.doc') )
