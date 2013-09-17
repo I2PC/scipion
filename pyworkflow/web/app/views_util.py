@@ -148,14 +148,21 @@ def get_image(request):
         if imageNo:
             imagePath = '%s@%s' % (imageNo, imagePath) 
             
-        imgXmipp = xmipp.Image(imagePath)
+        #imgXmipp = xmipp.Image(imagePath)
+        imgXmipp = xmipp.Image()
+        imgXmipp.readPreview(imagePath, int(imageDim))
         
-        if (applyTransformMatrix and transformMatrix!=None): imgXmipp.applyTransforMatScipion(transformMatrix, onlyApplyShifts, wrap)
-        if (mirrorY): imgXmipp.mirrorY()
+        print "after read"
+        
+        if applyTransformMatrix and transformMatrix != None: 
+            imgXmipp.applyTransforMatScipion(transformMatrix, onlyApplyShifts, wrap)
+        
+        if mirrorY: 
+            imgXmipp.mirrorY()
         
         
         # from PIL import Image
-        img = getPILImage(imgXmipp, imageDim)
+        img = getPILImage(imgXmipp, None)
          
     # response = HttpResponse(mimetype="image/png")    
     

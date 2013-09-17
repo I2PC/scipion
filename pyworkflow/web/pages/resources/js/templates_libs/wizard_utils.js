@@ -97,6 +97,10 @@ function previewPsd() {
 	});
 }
 
+function compositeDownSampling(elm) {
+	$.when(selectList(elm)).then(previewPsd());
+}
+
 // *** Methods Wizard CTF *** //
 
 function compositePreview(elm) {
