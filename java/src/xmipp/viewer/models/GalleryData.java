@@ -112,7 +112,6 @@ public class GalleryData
 			resliceView = param.resliceView;
 			useGeo = param.useGeo;
 			wrap = param.wrap;
-			System.err.format(">>>> param.openingMode: %s\n", param.mode);
 			
 			if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_METADATA))
 				mode = Mode.TABLE_MD;
@@ -258,7 +257,7 @@ public class GalleryData
 			for (int i = 0; i < ids.length && image == null; ++i)
 			{
 				imageFn = Filename.findImagePath(md.getValueString(renderLabel, ids[i]), filename, true);
-				DEBUG.printFormat("imageFn1: %s", imageFn);
+				//DEBUG.printFormat("imageFn1: %s", imageFn);
 				// imageFn = Filename.fixPath(md.getValueString(renderLabel,
 				// ids[i]), filename, false);
 				// DEBUG.printFormat("imageFn2: %s", imageFn);

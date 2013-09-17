@@ -323,7 +323,7 @@ int ImageGeneric::readPreviewFourier(const FileName &name, size_t xdim, size_t y
 
 int ImageGeneric::readPreviewSmooth(const FileName &name, size_t xdim, size_t ydim, int select_slice, size_t select_img)
 {
-  std::cerr << "DEBUG_JM: readPreviewSmooth" << std::endl;
+  //std::cerr << "DEBUG_JM: readPreviewSmooth" << std::endl;
     ImageGeneric ig;
     int result = ig.read(name, DATA, select_img);
     ig.convert2Datatype(DT_UChar);
