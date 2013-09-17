@@ -30,7 +30,10 @@ class ProtScreenClasses(XmippProtocol):
         fnOutputClass=self.workingDirPath('classes.xmd')
         self.insertStep('createDir',path=self.ExtraDir)
         self.insertStep("linkAcquisitionInfo",InputFile=self.Classes,dirDest=self.WorkingDir)
-        self.insertStep('copyFile',source=removeFilenamePrefix(self.Classes),dest=fnOutputClass)
+        if self.Classes.isMetaData():
+            self.insertStep("copyFile",source=removeFilenamePrefix(self.Classes),dest=fnOutputClass)
+        else:
+            self.insertRunJobStep("xmipp_metadata_utilities","-i %s -o classes@%s"%(self.Classes,fnOutputClass),NumberOfMpi=1,NumberOfThreads=1)
 
         # Generate gallery of projections        
         fnGallery=self.workingDirPath('gallery.stk')
