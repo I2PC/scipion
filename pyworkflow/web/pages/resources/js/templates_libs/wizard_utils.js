@@ -48,9 +48,12 @@ function selectList(elm) {
 function putImage(url, canvas, width, height) {
 	$("div#" + canvas).empty();
 	var paper = Raphael(document.getElementById(canvas));
-	var rec = paper.rect(0, 0, 250, 250);
-	rec.attr("stroke-width", 0);
-	rec.attr("fill", "url(" + url + ")");
+	var img = paper.image(url, 0, 0, width, height);
+	
+//	img.attr({ "clip-rect": "20,20,30,30" });
+//	var rec = paper.rect(0, 0, 250, 250);
+//	rec.attr("stroke-width", 0);
+//	rec.attr("fill", "url(" + url + ")");	
 }
 
 function putCircle(radio, canvas, color) {
@@ -162,15 +165,11 @@ function selectParticle(elm) {
 
 // *** Methods Wizard Bandpass filter *** //
 
-	$.when(selectList(elm)).then(previewBandpassFilter());
+function compositeBandpass(elm, low, high, decay) {
+	$.when(selectParticle(elm)).then(previewBandpassFilter(low, high, decay));
 }
 
-function previewBandpassFilter() {
-	// check values
-	var low = $("#slider_low_result").val();
-	var high = $("#slider_high_result").val();
-	var decay = $("#slider_decay_result").val();
-
+function previewBandpassFilter(low, high, decay) {
 	// get the img path
 	var path_img = $("tr#" + $("table#list").attr("value")).attr("value");
 
