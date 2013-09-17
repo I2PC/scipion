@@ -373,7 +373,6 @@ def validateSchema(filename, schema_file=None):
     if p.returncode == 0 and (stderr!=""):
         if len(stderr) > answerSize:
            endding='... (too many errors, displayed first %d characters)'%(answerSize)
-        print ">>>>>>>>>>>>>>>>>>>>>>>>1"
         raise ValidateError(p.returncode, """Error: when validating file %s with schema %s.
         \nError:%s"""%(filename,_schema,stderr[:answerSize]+endding))
     #######
@@ -391,7 +390,6 @@ def validateSchema(filename, schema_file=None):
             shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
         if p.returncode == 127:
-            print ">>>>>>>>>>>>>>>>>>>>>>>>2"
             raise ValidateError(127,
                 """Error: neither xerces-f nor xmllint could be found,  I cannot validate schema. 
     Schema validation is based either on the xmllint program that belongs to the libxml2-tools package.
@@ -400,7 +398,6 @@ def validateSchema(filename, schema_file=None):
         if p.returncode != 0:
             if len(stderr) > answerSize:
                  endding='... (too many errors, displayed first %d characters)'%(answerSize)
-            print ">>>>>>>>>>>>>>>>>>>>>>>>3"
             message = """Error: when validating file %s with schema %s.
             \nError:%s"""%(filename,_schema,stderr[:answerSize]+endding)
             print "message", message
