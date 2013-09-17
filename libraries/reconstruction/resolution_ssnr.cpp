@@ -172,34 +172,44 @@ void ProgSSNR::produceSideInfo()
     }
 }
 
+//#define DEBUG
 void ProgSSNR::run()
 {
     show();
     produceSideInfo();
 
     Matrix2D<double> output;
-
     if (!radial_avg)
     {
         if (!generate_VSSNR)
             estimateSSNR(1, output);
         else
             estimateSSNR(2, output);
-        if (fn_out != "")
-            output.write(fn_out);
-        else
-            output.write(fn_S.insertBeforeExtension("_SSNR").removeLastExtension().addExtension("txt"));
+        if (fn_out == "")
+        	fn_out=fn_S.insertBeforeExtension("_SSNR").removeLastExtension().addExtension("xmd");
     }
     else
     {
         radialAverage(output);
-        if (fn_out != "")
-            output.write(fn_out);
-        else
-            output.write(fn_VSSNR.insertBeforeExtension("_radial_avg").removeLastExtension().addExtension("txt"));
+        if (fn_out == "")
+        	fn_out=fn_VSSNR.insertBeforeExtension("_radial_avg").removeLastExtension().addExtension("xmd");
     }
+#ifdef DEBUG
+    output.write(fn_out);
+#endif
+    MetaData MD;
+    for (size_t i=1; i<MAT_YSIZE(output); ++i)
+    {
+    	size_t id=MD.addObject();
+    	MD.setValue(MDL_RESOLUTION_FREQ,output(i,1),id);
+    	if (output(i,2)<-900)
+    		MD.setValue(MDL_RESOLUTION_SSNR,0.0,id);
+    	else
+    		MD.setValue(MDL_RESOLUTION_SSNR,pow(10.0,output(i,2)/10.0),id);
+    	MD.setValue(MDL_RESOLUTION_FREQREAL,1.0/output(i,1),id);
+    }
+    MD.write(fn_out);
 }
-
 
 void ProgSSNR::estimateSSNR(int dim, Matrix2D<double> &output)
 {
