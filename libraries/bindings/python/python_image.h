@@ -82,7 +82,7 @@ Image_readPreview(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 /* read preview, downsample in Fourier*/
 PyObject *
-Image_readPreviewFourier(PyObject *obj, PyObject *args, PyObject *kwargs);
+Image_readPreviewSmooth(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 /* convert to psd */
 PyObject *

@@ -24,10 +24,10 @@
  ***************************************************************************/
 
 #include "transform_downsample.h"
-#include <data/args.h>
-#include <data/mask.h>
-#include <data/xmipp_fftw.h>
-#include <data/xvsmooth.h>
+#include "args.h"
+#include "mask.h"
+#include "xmipp_fftw.h"
+#include "xvsmooth.h"
 
 // Read --------------------------------------------------------------------
 void ProgTransformDownsample::readParams()
