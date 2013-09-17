@@ -311,7 +311,7 @@ DisplayReconstruction=False
 DisplayResolutionPlotsSSNR=True
 
 ###############################
-# {hiden}{view} Display resolution plots (FSC)
+# {hidden}{view} Display resolution plots (FSC)
 DisplayResolutionPlotsFSC=False
 
 # {expert} Display a threshold in resolution plots (FSC)
@@ -324,7 +324,7 @@ DisplayAngularDistribution=True
 """
 DisplayAngularDistributionWith='2D'
 
-# {hiden}{view} Display resolution plots (FSC)
+# {hidden}{view} Display resolution plots (FSC)
 DisplayResolutionPlotsFSC=False
 
 # {view} No. Images assigned to class

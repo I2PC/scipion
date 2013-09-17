@@ -97,6 +97,8 @@ PyMethodDef Image_methods[] =
           "Read image from disk" },
         { "readPreview", (PyCFunction) Image_readPreview, METH_VARARGS,
           "Read image preview" },
+        { "readPreviewSmooth", (PyCFunction) Image_readPreviewSmooth, METH_VARARGS,
+          "Read image preview, downsample in Fourier space" },
         { "equal", (PyCFunction) Image_equal, METH_VARARGS,
           "return true if both images are equal up to precision" },
         { "convertPSD", (PyCFunction) Image_convertPSD, METH_VARARGS,
@@ -394,6 +396,37 @@ Image_readPreview(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }//function Image_readPreview
+
+/* read preview, downsampling in Fourier space*/
+PyObject *
+Image_readPreviewSmooth(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
+
+    if (self != NULL)
+    {
+        PyObject *input = NULL;
+        int x;
+        if (PyArg_ParseTuple(args, "Oi", &input, &x))
+        {
+            try
+            {
+                if (PyString_Check(input))
+                    self->image->readPreviewSmooth(PyString_AsString(input), x);
+                else if (FileName_Check(input))
+                    self->image->readPreviewSmooth(FileName_Value(input), x);
+                else
+                    return NULL;
+                Py_RETURN_NONE;
+            }
+            catch (XmippError &xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+            }
+        }
+    }
+    return NULL;
+}//function Image_readPreviewSmooth
 
 /* convert to psd */
 PyObject *
