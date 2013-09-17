@@ -34,6 +34,7 @@ from pyworkflow.mapper.sqlite import SqliteMapper
 from posixpath import join
 from pyworkflow.utils.utils import getUniqueItems
 from pyworkflow.utils.path import exists
+import xmipp
 
 
 class EMObject(OrderedObject):
@@ -159,7 +160,11 @@ class Image(EMObject):
     
     def getDim(self):
         """Return image dimensions as tuple: (Ydim, Xdim)"""
-        pass
+        imagePath = '%s@%s' % (self._index, self._filename) 
+            
+        imgXmipp = xmipp.Image(imagePath)
+        
+        return imgXmipp.getDimensions()
     
     def getIndex(self):
         return self._index.get()

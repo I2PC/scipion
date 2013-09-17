@@ -91,6 +91,11 @@ class Tree(ttk.Treeview, Scrollable):
         for c in childs:
             self.delete(c)
             
+    def selectItem(self, index):
+        """ Select the item at the position index """
+        child = self.get_children('')[index]
+        self.selection_set(child)
+            
             
 class TreeProvider():
     """ Class class will serve to separete the logic of feed data
