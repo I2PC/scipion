@@ -1,0 +1,134 @@
+{% extends 'wiz_base.html' %} 
+{% block title %} Bandpass Filter {% endblock %} 
+{% block name %} Bandpass Filter {% endblock %} 
+{% block head %}
+	<script type="text/javascript" src="{{raphael}}"></script>
+	<script>
+		function returnParams(){
+			putSelection('input#high_val', 'highFreq_input');
+			putSelection('input#low_val', 'lowFreq_input');
+			putSelection('input#decay_val', 'freqDecay_input');
+		}		
+	</script>
+{% endblock %} 
+{% block list %}
+<tr>
+	<th>Object</th>
+</tr>
+{% for obj in objects %}
+{% if forloop.counter0 == 0 %} 
+<script>
+	firstElm  = {{obj.getObjId}};
+</script>
+{% endif %}
+<tr id="{{obj.getObjId}}" class="no-selected"
+	style="background-color: #fafafa;"
+	onclick="compositeBandpass(($(this)));" value="{{obj.getFileName}}">
+	<td>{{obj.basename}}</td>
+</tr>
+{% endfor %} {% endblock %} {% block images %}
+<tr>
+	<td>
+		<div class="image">
+			<div id="particle"></div>
+		</div>Image
+	</td>
+	<td>
+		<div id="wrapper" class="image">
+			<div id="imgFiltered"></div>
+		</div>Filtered
+	</td>
+</tr>
+{% endblock %} 
+{% block options %}
+<fieldset id="sliderOptions">
+	<legend>Frequencies</legend>
+	<div id="lowFreq">
+		<span id="title_freq">Low freq<span>
+		<div id="slider" class="slider_low"></div>
+		<div id="slider_low_result">{{lowFreq}}</div>
+		<input id="low_val" type="hidden" value="{{lowFreq}}"/>
+	</div>
+	<div id="highFreq">
+		<span id="title_freq">High freq<span>
+		<div id="slider" class="slider_high"></div>
+		<div id="slider_high_result">{{highFreq}}</div>
+		<input id="high_val" type="hidden" value="{{highFreq}}"/>
+	</div>
+	<div id="decay">
+		<span id="title_freq">Decay<span>
+		<div id="slider" class="slider_decay"></div>
+		<div id="slider_decay_result">{{decayFreq}}</div>
+		<input id="decay_val" type="hidden" value="{{decayFreq}}"/>
+	</div>
+</fieldset>
+
+<script>
+$(".slider_low").slider({
+	animate : true,
+	range : "min",
+	value : "{{lowFreq}}",
+	min : 0.00,
+	max : 0.50,
+	step : 0.01,
+	//this gets a live reading of the value and prints it on the page
+	slide : function(event, ui) {
+		$("#slider_low_result").html(ui.value);
+		
+		//update the image filtered
+		compositeBandpass($("tr.selected"));
+	},
+	//this updates the hidden form field so we can submit the data using a form
+	change : function(event, ui) {
+		$('#low_val').attr('value', ui.value);
+	}
+});
+
+$(".slider_high").slider({
+	animate : true,
+	range : "min",
+	value : "{{highFreq}}",
+	min : 0.00,
+	max : 0.50,
+	step : 0.01,
+	//this gets a live reading of the value and prints it on the page
+	slide : function(event, ui) {
+		$("#slider_high_result").html(ui.value);
+		
+		//update the image filtered
+		compositeBandpass($("tr.selected"));
+	},
+	//this updates the hidden form field so we can submit the data using a form
+	change : function(event, ui) {
+		$('#high_val').attr('value', ui.value);
+	}
+});
+
+$(".slider_decay").slider({
+	animate : true,
+	range : "min",
+	value : "{{decayFreq}}",
+	min : 0.00,
+	max : 0.50,
+	step : 0.01,
+	//this gets a live reading of the value and prints it on the page
+	slide : function(event, ui) {
+		$("#slider_decay_result").html(ui.value);
+		
+		//update the image filtered
+		compositeBandpass($("tr.selected"));
+	},
+	//this updates the hidden form field so we can submit the data using a form
+	change : function(event, ui) {
+		$('#decay_val').attr('value', ui.value);
+	}
+});
+
+//Load the First Element of the list
+window.onload = compositeBandpass($("tr#"+firstElm));
+
+</script>
+{% endblock %}
+{% block function %}
+	onclick="returnParams()"
+{% endblock %}

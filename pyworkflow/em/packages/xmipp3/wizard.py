@@ -34,7 +34,7 @@ from pyworkflow.viewer import Viewer, Wizard, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, DefCTFMicrographs
 from protocol_projmatch import XmippDefProjMatch, XmippProtProjMatch 
 from protocol_preprocess_micrographs import XmippDefPreprocessMicrograph
-from protocol_filters import XmippDefMask, XmippProtMask
+from protocol_filters import XmippDefMask, XmippProtMask, XmippDefFourierFilter, XmippDefGaussianFilter
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider
 from pyworkflow.gui.tree import BoundTree, TreeProvider
@@ -189,6 +189,25 @@ class XmippRadiiWizard(Wizard):
     def getView(self):
         return "wiz_volume_mask_radii"   
 
+class XmippBandpassWizard(Wizard):
+    
+    _targets = [(XmippDefFourierFilter, ['lowFreq', 'highFreq', 'freqDecay'])]
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    
+    
+    @classmethod    
+    def getView(self):
+        return "wiz_bandpass"   
+    
+class XmippGaussianWizard(Wizard):
+    
+    _targets = [(XmippDefGaussianFilter, ['freqSigma'])]
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    
+    @classmethod    
+    def getView(self):
+        return "wiz_gaussian"   
+
 #--------------- Dialogs used by Wizards --------------------------
     
 class XmippPreviewDialog(dialog.Dialog):
@@ -209,6 +228,7 @@ class XmippPreviewDialog(dialog.Dialog):
             setattr(self, k, v)
             
         self.provider = provider
+        self.firstItem = provider.getObjects()[0]
         buttons = [('Select', dialog.RESULT_YES), ('Cancel', dialog.RESULT_CANCEL)]
         dialog.Dialog.__init__(self, parent, "Wizard", buttons=buttons, default='Select', **args)
 
@@ -236,6 +256,8 @@ class XmippPreviewDialog(dialog.Dialog):
         controlsFrame = tk.Frame(bodyFrame)
         controlsFrame.grid(row=1, column=1, padx=5, pady=5, sticky='news')
         self._createControls(controlsFrame)
+        self._itemSelected(self.firstItem)
+        itemsTree.selectItem(0) # Select the first item
     
     def _beforePreview(self):
         """ Called just before setting the preview.
@@ -378,7 +400,9 @@ class XmippCTFDialog(XmippDownsampleDialog):
 class XmippMaskPreviewDialog(XmippImagePreviewDialog):
     
     def _beforePreview(self):
-        self.dim = 256
+        self.dim = 256           
+        self.dim_par = self.firstItem.getDim()[0]
+        self.ratio = self.dim / float(self.dim_par)
         self.previewLabel = 'Central slice'
     
     def _createPreview(self, frame):
@@ -386,19 +410,18 @@ class XmippMaskPreviewDialog(XmippImagePreviewDialog):
         create the items preview. 
         """
         from pyworkflow.gui.matplotlib_image import MaskPreview    
-        self.preview = MaskPreview(frame, self.dim, label=self.previewLabel, outerRadius=self.maskRadius)
+        self.preview = MaskPreview(frame, self.dim, label=self.previewLabel, outerRadius=self.maskRadius*self.ratio)
         self.preview.grid(row=0, column=0) 
     
     def _createControls(self, frame):
         self.addRadiusBox(frame) 
         
     def addRadiusBox(self, parent):
-        print "maskRadius: %s" % self.maskRadius
-        self.radiusSlider = LabelSlider(parent, 'Outer radius', from_=0, to=int(self.dim/2), value=self.maskRadius, step=1, callback=lambda a, b, c:self.updateRadius())
+        self.radiusSlider = LabelSlider(parent, 'Outer radius', from_=0, to=int(self.dim_par/2), value=self.maskRadius, step=1, callback=lambda a, b, c:self.updateRadius())
         self.radiusSlider.grid(row=0, column=0, padx=5, pady=5) 
     
     def updateRadius(self):
-        self.preview.updateMask(self.radiusSlider.get())     
+        self.preview.updateMask(self.radiusSlider.get() * self.ratio)     
         
     def getRadius(self):
         return int(self.radiusSlider.get())

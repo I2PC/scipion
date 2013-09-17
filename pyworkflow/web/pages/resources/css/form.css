@@ -240,7 +240,7 @@ textarea {
 }
 
 .buttonWiz {
-	background: url(../../../resources/tools_wizard.png) no-repeat;
+	background: url(../../../resources/tools_wizard.png) 1px no-repeat;
 	color: white;
 	width: 2em;
 	height: 2em;

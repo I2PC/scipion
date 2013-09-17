@@ -158,9 +158,15 @@ def get_image(request):
         img = getPILImage(imgXmipp, imageDim)
          
     # response = HttpResponse(mimetype="image/png")    
+    
     response = HttpResponse(mimetype="image/png")
     img.save(response, "PNG")
     return response
+
+def get_image_dim(request, imagePath):
+    projectPath = request.session['projectPath']
+    size, y, z, h = get_image_dimensions(projectPath, imagePath)
+    return size
 
 def get_image_dimensions(projectPath, imagePath):
     from django.http import HttpResponse
@@ -180,8 +186,7 @@ def get_image_dimensions(projectPath, imagePath):
         if projectPath != '':
             imagePathTmp = os.path.join(projectPath, imagePath)
             if not os.path.isfile(imagePathTmp):
-                imagePath = getInputPath('showj', imagePath)      
-            
+                imagePath = getInputPath('showj', imagePath)          
 
 #        imagePath = join(request.session['projectPath'],imagePath)
         
@@ -191,5 +196,4 @@ def get_image_dimensions(projectPath, imagePath):
         imgXmipp = xmipp.Image(imagePath)
         
         return imgXmipp.getDimensions()
-        
-
+    

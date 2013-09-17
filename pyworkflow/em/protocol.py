@@ -275,7 +275,8 @@ class ProtImportVolumes(EMProtocol):
         for f in filePaths:
             dst = self._getPath(basename(f))            
             shutil.copyfile(f, dst)
-            vol = Volume(dst)
+            vol = Volume()
+            vol.setFileName(dst)
             volSet.append(vol)
             outFiles.append(dst)  
         
