@@ -146,6 +146,31 @@ class TestXmippPythonInterface(unittest.TestCase):
 
         self.assertAlmostEqual(error, 10441.1,0)
 
+    def test_xmipp_errorMaxFreqCTFs(self):
+        '''activateMathExtensions'''
+        md1 = MetaData()
+        id = md1.addObject()
+        md1.setValue(MDL_CTF_SAMPLING_RATE, 2., id)
+        md1.setValue(MDL_CTF_VOLTAGE, 300., id);
+        md1.setValue(MDL_CTF_DEFOCUSU, 7500., id);
+        md1.setValue(MDL_CTF_DEFOCUSV, 7500., id);
+        md1.setValue(MDL_CTF_DEFOCUS_ANGLE, 45., id);
+        md1.setValue(MDL_CTF_CS, 2., id);
+        md1.setValue(MDL_CTF_Q0, 0.1, id);
+
+        md2 = MetaData()
+        id = md2.addObject()
+        md2.setValue(MDL_CTF_SAMPLING_RATE, 2., id)
+        md2.setValue(MDL_CTF_VOLTAGE, 300., id);
+        md2.setValue(MDL_CTF_DEFOCUSU, 5000., id);
+        md2.setValue(MDL_CTF_DEFOCUSV, 5000., id);
+        md2.setValue(MDL_CTF_DEFOCUS_ANGLE, 45., id);
+        md2.setValue(MDL_CTF_CS, 2., id);
+        md2.setValue(MDL_CTF_Q0, 0.1, id);
+        resolution = errorMaxFreqCTFs(md1,md2)
+
+        self.assertAlmostEqual(resolution, 7.0156283,2)
+
     def test_FileName_compose(self):
          fn1 = FileName("kk000001.xmp")
          fn2 = FileName("")

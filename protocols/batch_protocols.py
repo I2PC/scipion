@@ -644,7 +644,6 @@ class XmippProjectGUI():
             self.lastDisplayGroup = group
             
     def updateRunSelection(self, index, update_summary=False):
-        print "updateRunSelection"
         state = tk.NORMAL
         details = self.Frames['details']
         if index == -1:
@@ -666,7 +665,6 @@ class XmippProjectGUI():
                 
                 prot = self.project.getProtocolFromModule(run['script'])
                 if update_summary:
-                    print "updating summary...."
                     comment = ""
 
                     if not prot.Comment == None:
