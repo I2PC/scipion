@@ -371,8 +371,10 @@ void readImagePreview(ImageGeneric *ig, FileName fn, size_t xdim)
     ig->read(fn, HEADER);
     ImageInfo ii;
     ig->getInfo(ii);
-    if (xdim != ii.adim.xdim)
-      ig->readPreview(name, xdim);
+    if (xdim > 0 || xdim != ii.adim.xdim)
+      ig->readPreview(fn, xdim);
+    else
+      ig->read(fn);
 }
 
 /* read preview*/
@@ -384,15 +386,15 @@ Image_readPreview(PyObject *obj, PyObject *args, PyObject *kwargs)
     if (self != NULL)
     {
         PyObject *input = NULL;
-        int x;
-        if (PyArg_ParseTuple(args, "Oi", &input, &x))
+        int x = 0;
+        if (PyArg_ParseTuple(args, "O|i", &input, &x))
         {
             try
             {
                 if (PyString_Check(input))
-                    self->image->readPreview(PyString_AsString(input), x);
+                    readImagePreview(self->image, PyString_AsString(input), x);
                 else if (FileName_Check(input))
-                    self->image->readPreview(FileName_Value(input), x);
+                    readImagePreview(self->image, FileName_Value(input), x);
                 else
                     return NULL;
                 Py_RETURN_NONE;
