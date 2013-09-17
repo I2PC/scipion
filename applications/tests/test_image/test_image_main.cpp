@@ -153,6 +153,35 @@ TEST_F( ImageTest, writeIMAGICimage)
     XMIPP_CATCH
 }
 
+TEST_F( ImageTest, mirrorY)
+{
+    XMIPP_TRY
+    Image<double> auxImage(3,3);
+    Image<double> auxImageY(3,3);
+    int dim ;
+    dim=3;//odd
+    for (int i=0; i< dim; i++)
+        for (int j=0; j< dim ; j++)
+            DIRECT_IMGPIXEL(auxImage,i,j)=(double) dim*i+j;
+    for (int i=0; i< dim; i++)
+        for (int j=0; j< dim ; j++)
+            DIRECT_IMGPIXEL(auxImageY,dim-i-1,j)=(double) dim*i+j;
+    auxImage.mirrorY();
+    EXPECT_EQ(auxImage,auxImageY);
+    dim=4;//even
+    Image<double> auxImage2(4,4);
+    Image<double> auxImage2Y(4,4);
+    for (int i=0; i< dim; i++)
+        for (int j=0; j< dim ; j++)
+            DIRECT_IMGPIXEL(auxImage2,i,j)=(double) dim*i+j;
+    for (int i=0; i< dim; i++)
+        for (int j=0; j< dim ; j++)
+            DIRECT_IMGPIXEL(auxImage2Y,dim-i-1,j)=(double) dim*i+j;
+    auxImage2.mirrorY();
+    EXPECT_EQ(auxImage2,auxImage2Y);
+    XMIPP_CATCH
+}
+
 TEST_F( ImageTest, writeIMAGICstack)
 {
     XMIPP_TRY

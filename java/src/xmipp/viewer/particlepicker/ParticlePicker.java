@@ -505,23 +505,25 @@ public abstract class ParticlePicker
 	/** Return the number of particles imported from a file */
 	public void fillParticlesMdFromFile(String path, Format f, Micrograph m, MetaData md, float scale, boolean invertx, boolean inverty)
 	{
-
 		if (f == Format.Auto)
 			f = detectFileFormat(path);
-
+		
 		switch (f)
 		{
 		case Xmipp24:
 			md.readPlain(path, "xcoor ycoor");
 			break;
 		case Xmipp30:
-			String blockname = getParticlesBlockName(f);
-			if (!MetaData.containsBlock(path, blockname))
-				throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg(blockname));
-			md.read(getParticlesBlock(f, path));
-			break;
+			String blockname = getParticlesBlockName(f); //only used with Xmipp
+			if (MetaData.containsBlock(path, blockname))
+				md.read(getParticlesBlock(f, path));
 		case Xmipp301:
-			md.read(ParticlePicker.getParticlesBlock(f, path));
+			if (MetaData.containsBlock(path, particlesAutoBlock)){
+				MetaData mdAuto = new MetaData();
+				mdAuto.read(getParticlesAutoBlock(path));
+				md.unionAll(mdAuto);
+				mdAuto.destroy();
+			}
 			break;
 		case Eman:
 			fillParticlesMdFromEmanFile(path, m, md, scale);

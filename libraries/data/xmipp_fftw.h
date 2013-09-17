@@ -28,7 +28,7 @@
 #define __XmippFFTW_H
 
 #include <complex>
-#include "../../external/fftw-3.3.1/api/fftw3.h"
+#include "../../external/fftw-3.3.3/api/fftw3.h"
 #include "multidim_array.h"
 #include "multidim_array_generic.h"
 #include "xmipp_fft.h"
@@ -596,14 +596,15 @@ void frc_dpr(MultidimArray< double > & m1,
 
 /** Scale matrix using Fourier transform
  * @ingroup FourierOperations
- * Ydim and Xdim define the output size, Mpmem is the matrix to scale
+ * Ydim and Xdim define the output size, mda is the MultidimArray to scale
  */
-void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> &Mpmem, int nthreads=1);
+void scaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> &mdaIn, MultidimArray<double> &mdaOut, int nThreads=1);
+void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> &mda, int nthreads=1);
 
-void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArray<double> &Mpmem, int nthreads=1);
+void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArray<double> &mda, int nthreads=1);
 /** MultidimArrayGeneric version */
-void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArrayGeneric &Mpmem, int nthreads=1);
-void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArrayGeneric &Mpmem, int nthreads=1);
+void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArrayGeneric &mda, int nthreads=1);
+void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArrayGeneric &mda, int nthreads=1);
 
 #define POWER_SPECTRUM 0
 #define AMPLITUDE_SPECTRUM 1
@@ -650,5 +651,10 @@ void adaptSpectrum(MultidimArray<double> &Min,
                    const MultidimArray<double> &spectrum_ref,
                    int spectrum_type=AMPLITUDE_SPECTRUM,
                    bool leave_origin_intact=false);
+
+/** Randomize phases beyond a certain frequency
+ * @ingroup FourierOperations
+*/
+void randomizePhases(MultidimArray<double> &Min, double wRandom);
 #endif
 /** @} */

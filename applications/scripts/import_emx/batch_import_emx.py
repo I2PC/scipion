@@ -50,7 +50,7 @@ class ScriptImportEMX(XmippScript):
         self.addParamsLine('     alias -n;');
         self.addParamsLine(' [--onlyValidate]                : do not import');
         self.addParamsLine('     alias -y;');
-        self.addParamsLine(' [--schema <schema=default>]                      : validate again this schema ');
+        self.addParamsLine(' [--schema <schema=default>]     : validate again this schema ');
         self.addParamsLine("     alias -s;")
         self.addExampleLine(' default= http://sourceforge.net/p/emexchange/code/ci/master/tree/trunk/resourcesEmx/schemas/emx.xsd?format=raw>');
         self.addExampleLine("Import information from EMX file to Xmipp", False);
@@ -94,7 +94,7 @@ class ScriptImportEMX(XmippScript):
 	#        xmlMapperW.writeEMXFile(fileName)
 		#create xmd files with mic CTF information and auxiliary files
 		if mode == 'micCTF':
-		    ctfMicEMXToXmipp(emxData,MICROGRAPH)
+		    ctfMicEMXToXmipp(emxData)
 		elif mode == 'coordinates':
 		    coorEMXToXmipp(emxData,PARTICLE,emxFileName)
 		elif mode == 'alignment':

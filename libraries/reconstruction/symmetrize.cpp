@@ -34,6 +34,7 @@ void ProgSymmetrize::readParams()
     fn_sym = getParam("--sym");
     do_not_generate_subgroup = checkParam("--no_group");
     wrap = !checkParam("--dont_wrap");
+    sum = checkParam("--sum");
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -52,6 +53,7 @@ void ProgSymmetrize::defineParams()
     addParamsLine("                         :+ http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry");
     addParamsLine("   [--no_group]          : For 3D volumes: do not generate symmetry subgroup");
     addParamsLine("   [--dont_wrap]         : by default, the image/volume is wrapped");
+    addParamsLine("   [--sum]               : compute the sum of the images/volumes instead of the average. This is useful for symmetrizing pieces");
     addExampleLine("Symmetrize a list of images with 6 fold symmetry",false);
     addExampleLine("   xmipp_symmetrize -i input.sel --sym 6");
     addExampleLine("Symmetrize with i3 symmetry and the volume is not wrapped",false);
@@ -67,13 +69,14 @@ void ProgSymmetrize::show()
     std::cout
     << "Symmetry: " << fn_sym << std::endl
     << "No group: " << do_not_generate_subgroup << std::endl
-    << "Wrap:     " << wrap << std::endl;
+    << "Wrap:     " << wrap << std::endl
+    << "Sum:      " << sum << std::endl;
 }
 
 /* Symmetrize ------------------------------------------------------- */
 void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
                       MultidimArray<double> &V_out,
-                      bool wrap, bool do_outside_avg)
+                      bool wrap, bool do_outside_avg, bool sum)
 {
     Matrix2D<double> L(4, 4), R(4, 4); // A matrix from the list
     MultidimArray<double> V_aux;
@@ -104,12 +107,13 @@ void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
         applyGeometry(BSPLINE3, V_aux, V_in, R.transpose(), IS_NOT_INV, wrap, avg);
         arrayByArray(V_out, V_aux, V_out, '+');
     }
-    arrayByScalar(V_out, 1.0/(SL.symsNo() + 1.0f), V_out, '*');
+    if (!sum)
+    	arrayByScalar(V_out, 1.0/(SL.symsNo() + 1.0f), V_out, '*');
 }
 
 void symmetrizeImage(int symorder, const MultidimArray<double> &I_in,
                      MultidimArray<double> &I_out,
-                     bool wrap, bool do_outside_avg)
+                     bool wrap, bool do_outside_avg, bool sum)
 {
     double avg = 0.;
     if (do_outside_avg)
@@ -130,7 +134,8 @@ void symmetrizeImage(int symorder, const MultidimArray<double> &I_in,
         rotate(BSPLINE3, rotatedImg, I_in, 360.0 / symorder * i,'Z',wrap,avg);
         I_out += rotatedImg;
     }
-    I_out *= 1.0/symorder;
+    if (!sum)
+    	I_out *= 1.0/symorder;
 }
 
 /* Preprocess ------------------------------------------------------------- */
@@ -156,14 +161,14 @@ void ProgSymmetrize::processImage(const FileName &fnImg, const FileName &fnImgOu
     if (ZSIZE(Iin())==1)
     {
         if (symorder!=-1)
-            symmetrizeImage(symorder,Iin(),Iout(),wrap,!wrap);
+            symmetrizeImage(symorder,Iin(),Iout(),wrap,!wrap,sum);
         else
             REPORT_ERROR(ERR_ARG_MISSING,"The symmetry order is not valid for images");
     }
     else
     {
         if (SL.symsNo()>0)
-            symmetrizeVolume(SL,Iin(),Iout(),wrap,!wrap);
+            symmetrizeVolume(SL,Iin(),Iout(),wrap,!wrap,sum);
         else
             REPORT_ERROR(ERR_ARG_MISSING,"The symmetry description is not valid for volumes");
     }

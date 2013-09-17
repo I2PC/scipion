@@ -143,7 +143,7 @@
 
 <xsd:simpleType name="unitTransformation">
     <xsd:restriction base="xsd:string">
-        <xsd:pattern value="A"/>
+        <xsd:pattern value="px"/>
     </xsd:restriction>
 </xsd:simpleType>
 

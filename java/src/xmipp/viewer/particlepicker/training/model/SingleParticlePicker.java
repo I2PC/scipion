@@ -563,6 +563,7 @@ public class SingleParticlePicker extends ParticlePicker {
 	public String importParticlesFromFolder(String path, Format f, float scale,
 			boolean invertx, boolean inverty) {
 
+		//System.err.format("JM_DEBUG:   >>>> importParticlesFromFolder   scale: %f\n", scale);
 		if (f == Format.Auto)
 			f = detectFormat(path);
 		if (f == Format.Unknown)
@@ -572,17 +573,13 @@ public class SingleParticlePicker extends ParticlePicker {
 		String result = "";
 
 		String particlesfile = getExportFile(path);
-		if (particlesfile != null) {
+		if (particlesfile != null && f == Format.Xmipp30) {
 			importAllParticles(particlesfile);
 			return "";
 		}
-		System.err
-				.format("JM_DEBUG:   ========= importParticlesFromFolder ========    scale: %f\n",
-						scale);
 		for (SingleParticlePickerMicrograph m : micrographs) {
 			filename = getImportMicrographName(path, m.getFile(), f);
 			if (Filename.exists(filename)) {
-				//System.err.println("JM_DEBUG:       filename: " + filename);
 				result += importParticlesFromFile(filename, f, m, scale,
 						invertx, inverty);
 			}
@@ -595,10 +592,9 @@ public class SingleParticlePicker extends ParticlePicker {
 	public String importParticlesFromFile(String path, Format f,
 			SingleParticlePickerMicrograph m, float scale, boolean invertx,
 			boolean inverty) {
-		MetaData md = null;
 		String result = "";
 		try {
-			md = new MetaData();
+			MetaData md = new MetaData();
 			fillParticlesMdFromFile(path, f, m, md, scale, invertx, inverty);
 			System.err.format("After fillParticlesMdFromFile, size:\n", md.size());
 			if (md.size() > 0) {
@@ -788,8 +784,7 @@ public class SingleParticlePicker extends ParticlePicker {
 					break;
 				particles = m.getManualParticles();
 				size = particles.size();
-				System.err.println("JM_DEBUG: Updating for Micrograph: "
-						+ m.getFile());
+				//System.err.println("JM_DEBUG: Updating for Micrograph: "+ m.getFile());
 				for (int i = 0; i < size; i++) {
 					particle = particles.get(i);
 					igp = particle.getImageGeneric();
@@ -813,7 +808,6 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public synchronized void addParticleToTemplates(ManualParticle particle) {
-		System.out.println("addParticleToTemplates");
 		try {
 			ImageGeneric igp = particle.getImageGeneric();
 			// will happen only in manual mode
@@ -845,7 +839,6 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public synchronized void centerParticle(ManualParticle p) {
-		System.out.println("centerParticle");
 		
 		if (getManualParticlesNumber() <= getTemplatesNumber())
 			return;// templates not ready
@@ -872,7 +865,6 @@ public class SingleParticlePicker extends ParticlePicker {
 
 	public synchronized void applyAlignment(ManualParticle particle,
 			ImageGeneric igp, double[] align) {
-		System.out.println("applyAlignment");
 		try {
 			particle.setLastalign(align);
 			templates.applyAlignment(igp, particle.getTemplateIndex(),

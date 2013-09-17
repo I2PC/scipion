@@ -531,7 +531,8 @@ void frc_dpr(MultidimArray< double > & m1,
 }
 
 
-void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> &Mpmem, int nThreads)
+
+void scaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> &mdaIn, MultidimArray<double> &mdaOut, int nThreads)
 {
     //Mmem = *this
     //memory for fourier transform output
@@ -539,13 +540,13 @@ void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> 
     // Perform the Fourier transform
     FourierTransformer transformerM;
     transformerM.setThreadsNumber(nThreads);
-    transformerM.FourierTransform(Mpmem, MmemFourier, false);
+    transformerM.FourierTransform(mdaIn, MmemFourier, false);
 
     // Create space for the downsampled image and its Fourier transform
-    Mpmem.resizeNoCopy(Zdim, Ydim, Xdim);
+    mdaOut.resizeNoCopy(Zdim, Ydim, Xdim);
     MultidimArray<std::complex<double> > MpmemFourier;
     FourierTransformer transformerMp;
-    transformerMp.setReal(Mpmem);
+    transformerMp.setReal(mdaOut);
     transformerMp.getFourierAlias(MpmemFourier);
 
     size_t ihalf = XMIPP_MIN((YSIZE(MpmemFourier)/2+1),(YSIZE(MmemFourier)/2+1));
@@ -554,6 +555,7 @@ void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> 
     //Init with zero
     MpmemFourier.initZeros();
 
+    //TODO: Check if we can accelerate the last loop by using memcpy ???
     for (size_t k = 0; k < zhalf; ++k)
     {
         for (size_t i=0; i<ihalf; i++)
@@ -583,6 +585,13 @@ void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> 
     transformerMp.inverseFourierTransform();
 }
 
+
+void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> &mda, int nThreads)
+{
+  scaleToSizeFourier(Zdim, Ydim, Xdim, mda, mda, nThreads);
+}
+
+
 void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArray<double>& Mpmem,int nThreads)
 {
     selfScaleToSizeFourier(1, Ydim, Xdim, Mpmem, nThreads);
@@ -595,7 +604,6 @@ void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArrayGeneric &
     selfScaleToSizeFourier(Zdim, Ydim, Xdim, aux, nThreads);
     Mpmem.setImage(aux);
 }
-
 
 void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArrayGeneric &Mpmem, int nThreads)
 {
@@ -627,16 +635,17 @@ void getSpectrum(MultidimArray<double> &Min,
         FFT_IDX2DIGFREQ(k,ZSIZE(Faux),ZZ(f));
         double R=f.module();
         //if (R>0.5) continue;
-        int idx = ROUND(R*xsize);
+        int idx = round(R*xsize);
+        double F=abs(dAkij(Faux, k, i, j));
         if (spectrum_type == AMPLITUDE_SPECTRUM)
-            spectrum(idx) += abs(dAkij(Faux, k, i, j));
+            A1D_ELEM(spectrum,idx) += F;
         else
-            spectrum(idx) += abs(dAkij(Faux, k, i, j)) * abs(dAkij(Faux, k, i, j));
-        count(idx) += 1.;
+            A1D_ELEM(spectrum,idx) += F*F;
+        A1D_ELEM(count,idx) += 1.;
     }
     for (int i = 0; i < xsize; i++)
-        if (count(i) > 0.)
-            spectrum(i) /= count(i);
+        if (A1D_ELEM(count,i) > 0.)
+            A1D_ELEM(spectrum,i) /= A1D_ELEM(count,i);
 }
 
 void divideBySpectrum(MultidimArray<double> &Min,
@@ -684,9 +693,7 @@ void multiplyBySpectrum(MultidimArray<double> &Min,
         dAkij(Faux, k, i, j) *=  lspectrum(idx) * dim3;
     }
     transformer.inverseFourierTransform();
-
 }
-
 
 void whitenSpectrum(MultidimArray<double> &Min,
                     MultidimArray<double> &Mout,
@@ -796,4 +803,28 @@ void fast_correlation_vector(const MultidimArray< std::complex<double> > & FFT1,
     R=*transformer.fReal;
     CenterFFT(R, true);
     R.setXmippOrigin();
+}
+
+void randomizePhases(MultidimArray<double> &Min, double wRandom)
+{
+	FourierTransformer transformer;
+	MultidimArray< std::complex<double> > F;
+	transformer.FourierTransform(Min,F,false);
+
+	Matrix1D<double> f(3);
+	FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(F)
+    {
+        FFT_IDX2DIGFREQ(j,XSIZE(Min), XX(f));
+        FFT_IDX2DIGFREQ(i,YSIZE(F),YY(f));
+        FFT_IDX2DIGFREQ(k,ZSIZE(F),ZZ(f));
+        double w=f.module();
+        if (w > wRandom)
+        {
+        	double alpha=rnd_unif(0,2*PI);
+        	double c,s;
+        	sincos(alpha,&s,&c);
+        	DIRECT_A3D_ELEM(F,k,i,j)*=std::complex<double>(s,c);
+        }
+    }
+	transformer.inverseFourierTransform();
 }

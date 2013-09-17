@@ -857,6 +857,7 @@ AddXmippProgram('transform_mask')
 AddXmippProgram('transform_mirror')
 AddXmippProgram('transform_morphology')
 AddXmippProgram('transform_normalize')
+AddXmippProgram('transform_randomize_phases')
 AddXmippProgram('transform_range_adjust')
 AddXmippProgram('transform_symmetrize', ['XmippRecons'])
 AddXmippProgram('transform_threshold', ['XmippRecons'])
@@ -880,6 +881,7 @@ AddXmippProgram('volume_find_symmetry')
 AddXmippProgram('volume_from_pdb', ['XmippRecons'])
 AddXmippProgram('volume_reslice')
 AddXmippProgram('volume_segment', ['XmippRecons'])
+AddXmippProgram('volume_structure_factor')
 AddXmippProgram('volume_to_pseudoatoms', ['XmippRecons'])
 AddXmippProgram('volume_to_web')
 AddXmippProgram('xray_import', ['XmippRecons'])
@@ -1008,18 +1010,22 @@ if int(env['gtest']):
      #env.Default('run_tests'     )
 
 if int(env['matlab']):
-    def AddMatlabBinding(name):
-        print 'compiling Matlab wrapper for ' + name
-        command = env['MATLAB_DIR'] + '/bin/mex -O -outdir libraries/bindings/matlab -I. -Ilibraries/data -Ilibraries -Llib -Ilibraries/reconstruction -lXmippRecons -lXmippData -lXmippExternal libraries/bindings/matlab/tom_xmipp_' + name + '_wrapper.cpp'
-        output = os.popen(command).read()
-        if len(output) > 0:
-            print output
-
+    def CompileMatlab(name, dependencies=[]):
+        ''' name parameter is expected without .java extension '''
+        source = 'libraries/bindings/matlab/'+name+".cpp"
+        target = 'libraries/bindings/matlab/'+name+".mexa64"
+        command = env['MATLAB_DIR'] + '/bin/mex -O -outdir libraries/bindings/matlab -I. -Ilibraries -Llib -lXmippRecons -lXmippData -lXmippExternal '+source
+        compileCmd = env.Command(target, source, command)
+        env.Default(compileCmd)
+        return compileCmd
+    
     bindings = ['adjust_ctf', 'align2d', 'ctf_correct_phase',
         'mask', 'mirror', 'morphology', 'normalize', 'psd_enhance',
         'resolution', 'rotate', 'scale', 'scale_pyramid', 'volume_segment']
     for i in range(len(bindings)):
-       AddMatlabBinding(bindings[i])
+       CompileMatlab("tom_xmipp_"+bindings[i]+"_wrapper")
+    CompileMatlab('xmipp_read')
+    CompileMatlab('xmipp_read_structure_factor')
 
 # Clean
 # Configuration or cleaning
