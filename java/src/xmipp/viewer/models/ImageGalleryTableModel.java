@@ -407,9 +407,11 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	}
 	
 	public int getFirstSelectedIndex(){
+		if (data.selectedVolFn.isEmpty()){
 		for (int i = 0; i < n; ++i)
 			if (data.selection[i])
 				return i;
+		}
 		return -1;
 	}
 
