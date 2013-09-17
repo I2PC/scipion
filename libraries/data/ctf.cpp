@@ -887,17 +887,14 @@ double errorBetween2CTFs( MetaData &MD1,
     MultidimArray<double> &dummy3 = img3.data;
 #endif
 
-    int x2Dim = xDim / 2 ;
-    int y2Dim = yDim / 2 ;
-
     double error =0.;
     double _freq=0.;
 
-    for (int i=0; i<yDim; ++i)
+    for (int i=0; i<(int)yDim; ++i)
     {
         FFT_IDX2DIGFREQ(i, yDim, YY(freq));
         //YY(freq) *= iTm;
-        for (int j=0; j<xDim; ++j)
+        for (int j=0; j<(int)xDim; ++j)
         {
             FFT_IDX2DIGFREQ(j, xDim, XX(freq));
         	_freq = freq.module();

@@ -25,4 +25,4 @@
 
 #include "data/transform_downsample.h"
 
-RUN_XMIPP_PROGRAM(ProgTransformDownsample);
+RUN_XMIPP_PROGRAM(ProgTransformDownsample)

@@ -112,12 +112,11 @@ InitValueRandStCont2 = ""
 InitValueRandStCont3 = ""
 
 
+#  {list_combo} (overwrite, append) Select writing mode
 """ 
-Different types of metadata writting mode
+Different types of metadata writing mode
 """
-#  {list_combo} (overwrite, append) Select writting mode
 ModeType = "overwrite"
-
 
 # {hidden} Program name
 """This is the name of the program to be executed, dont change this!!!"""
