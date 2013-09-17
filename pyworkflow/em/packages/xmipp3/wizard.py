@@ -418,11 +418,10 @@ class XmippMaskPreviewDialog(XmippImagePreviewDialog):
         self.addRadiusBox(frame) 
         
     def addRadiusBox(self, parent):
-        self.radiusSlider = LabelSlider(parent, 'Outer radius', from_=0, to=int(self.dim_par/2), value=self.maskRadius*self.ratio, step=1, callback=lambda a, b, c:self.updateRadius())
+        self.radiusSlider = LabelSlider(parent, 'Outer radius', from_=0, to=int(self.dim_par/2), value=self.maskRadius, step=1, callback=lambda a, b, c:self.updateRadius())
         self.radiusSlider.grid(row=0, column=0, padx=5, pady=5) 
     
     def updateRadius(self):
-        print "in updateRadius with ratio=%s" % self.ratio
         self.preview.updateMask(self.radiusSlider.get() * self.ratio)     
         
     def getRadius(self):
