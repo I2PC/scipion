@@ -30,7 +30,7 @@ protocols = {
         'nma': ('Normal Mode Analysis', '3D/NMA'),
         'nma_alignment': ('Flexible alignment', '3D/NMA_alignment'),
         'resolution3D': ('Resolution 3D', '3D/Resolution'),
-        #'align_volume': ('Align Volume', '3D/AlignVolume'),
+        'align_volume': ('Align Volume', '3D/AlignVolume'),
         'relion3d': ('Relion3D', '3D/Relion3D'),
         'mltomo': ('MLTomo', '3D/MLTomo'),
         'subtraction': ('Partial Projection Subtraction', '3D/ProjSub'),
@@ -56,7 +56,7 @@ sections = [
 ('3D', 
    [['Initial Model', 'rct', 'initvolume_ransac', 'convert_pdb'], 
     ['Model Refinement', 'projmatch', 'ml3d', 'relion3d'],
-    ['Volumes', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask', 'preprocess_volume', 'resolution3D']]),#, 'align_volume']]),
+    ['Volumes', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask', 'preprocess_volume', 'resolution3D', 'align_volume']]),
 ('Other',
  [['Extra', 'custom',['Virus','subtraction'],['Tomography','mltomo'],['Tools','image_operate','metadata_utilities','metadata_split'],
    ['EMX', 'emx_import', 'emx_export']]])
