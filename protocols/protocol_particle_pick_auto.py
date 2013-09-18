@@ -9,14 +9,18 @@
 from config_protocols import protDict
 from os.path import exists
 from protlib_base import *
-from protlib_particles import getMetadataWithPickedParticles
+from protlib_particles import countParticles
 from protlib_filesystem import createLink, deleteFiles, replaceFilenameExt
 from protlib_utils import runJob
-from protocol_particle_pick import launchParticlePickingGUI, getTemplateFiles, PM_READONLY, PM_REVIEW
+from protocol_particle_pick import launchParticlePickingGUI, PM_READONLY, PM_REVIEW
 from xmipp import MetaData, MD_APPEND, MDL_IMAGE, \
     MDL_PICKING_PARTICLE_SIZE, MDL_PICKING_MICROGRAPH_STATE, MDL_ENABLED, \
     MDL_COST, MDL_MICROGRAPH, MDValueRange, getBlocksInMetaDataFile
 import glob
+
+def getTemplateFiles(prot, pattern=''):
+    '''Return the .pos files of this picking protocol'''
+    return glob(os.path.join(prot.ExtraDir,'*%s_templates.stk' % pattern))
 
 # Create a GUI automatically from a selfile of micrographs
 class ProtParticlePickingAuto(XmippProtocol):
@@ -87,11 +91,8 @@ class ProtParticlePickingAuto(XmippProtocol):
                                              
     def summary(self):
         summary = ["Input directory: [%s] " % self.pickingDir]
-        totalCount=0
-        for fnPos in glob.glob(self.extraPath('*.pos')):
-            md=getMetadataWithPickedParticles(fnPos)
-            totalCount+=md.size()
-        summary.append("Number of particles: %d"%totalCount)
+        micrographs, particles = countParticles(self.ExtraDir)
+        summary.append("Number of particles picked: <%(particles)d> (from <%(micrographs)d> micrographs)" % locals())
         return summary
     
     def validate(self):

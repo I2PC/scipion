@@ -76,29 +76,20 @@ class ProtExtractParticles(ProtParticlesBase):
                             TsOriginal=self.TsOriginal, Ts=self.TsFinal, TsMode=self.downsamplingMode)
         
         md = MetaData(self.MicrographsMd)
+        md.removeDisabled()
         self.containsCTF = md.containsLabel(MDL_CTF_MODEL)
-        # Create or look for the extract list
-        destFnExtractList = self.getFilename('extract_list')
-        if self.TiltPairs:
-            self.insertStep("createExtractListTiltPairs", 
-                               fnMicrographs=self.MicrographsMd, pickingDir=self.pickingDir,
-                               fnExtractList=destFnExtractList)
-            micrographs = self.createBlocksInExtractFile(self.MicrographsMd)
-        else:
-#            srcFnExtractList = self.PrevRun.getFilename('extract_list')
-#            if exists(srcFnExtractList):
-#                self.insertCopyFile(srcFnExtractList, destFnExtractList)
-#                micrographs = getBlocksInMetaDataFile(srcFnExtractList)
-#            else:
-            self.insertStep("createExtractList", fnMicrographsSel=self.MicrographsMd,pickingDir=self.pickingDir,
-                               fnExtractList=destFnExtractList)
-            micrographs = self.createBlocksInExtractFile(self.MicrographsMd)
 
         # Process each micrograph                        
-        for micrograph in micrographs:
+        for id in md:
+            micrograph=md.getValue(MDL_MICROGRAPH,id)
+            fullMicrographName, originalMicrograph, ctf = self.getMicrographInfo(micrograph, md)
+            print micrograph
+            print fullMicrographName
+            print originalMicrograph
+            print ctf
+            print " "
+            
             parent_id = XmippProjectDb.FIRST_STEP
-            micrographName = micrograph[4:] # Remove "mic_" from the name
-            fullMicrographName, originalMicrograph, ctf = self.getMicrographInfo(micrographName, md)
             
             # Downsampling?
             if self.downsamplingMode==DownsamplingMode.SameAsPicking:
@@ -224,14 +215,12 @@ class ProtExtractParticles(ProtParticlesBase):
         
     def getMicrographInfo(self, micrograph, md):
         for objId in md:
-            result = self.checkMicrograph(micrograph, md, objId, MDL_MICROGRAPH, 
-                                          MDL_MICROGRAPH_ORIGINAL, True)
+            result = self.checkMicrograph(micrograph, md, objId, MDL_MICROGRAPH, MDL_MICROGRAPH_ORIGINAL, True)
             if not result is None:
                 return result 
             
             if self.TiltPairs:
-                result = self.checkMicrograph(micrograph, md, objId, MDL_MICROGRAPH_TILTED, 
-                                          MDL_MICROGRAPH_TILTED_ORIGINAL, True)
+                result = self.checkMicrograph(micrograph, md, objId, MDL_MICROGRAPH_TILTED, MDL_MICROGRAPH_TILTED_ORIGINAL, True)
                 if not result is None:
                     return result               
 
@@ -259,67 +248,6 @@ def updateSampling(log, SamplingMd, TsOriginal, Ts, TsMode):
         
     md.setValue(MDL_SAMPLINGRATE, Ts, objId)
     md.write(SamplingMd)
-
-def getMicBlockFilename(micrograph, extractList):
-    '''Shortcut to getProtocolFilename('mic_block_fn'...)'''
-    return getProtocolFilename('mic_block_fn', Micrograph=micrograph, ExtractList=extractList)
-    
-def createExtractList(log,fnMicrographsSel,pickingDir,fnExtractList):
-    md = MetaData(fnMicrographsSel)
-    mdpos = MetaData() 
-    mdposAuto = MetaData()
-    
-    for objId in md:
-        micName = removeBasenameExt(md.getValue(MDL_MICROGRAPH, objId))
-        
-        fnManual = join(pickingDir, "extra", micName + ".pos")
-        #fnAuto1 = join(pickingDir, "extra", micName + "_auto.pos")
-        
-        mdpos.clear()
-        if exists(fnManual):
-            try:   
-                mdpos.clear()
-                mdposAuto.clear()
-                blocks = getBlocksInMetaDataFile(fnManual)
-                if 'particles' in blocks:         
-                    mdpos.read("particles@" + fnManual)
-                    print "reading particles from : ", "particles@" + fnManual
-                if 'particles_auto' in blocks:
-                    mdposAuto.read("particles_auto@" + fnManual)
-                    print "reading particles from : ", "particles_auto@" + fnManual
-                mdpos.unionAll(mdposAuto)
-                mdpos.removeDisabled()
-                print "total enabled: ", mdpos.size()
-            except:
-                pass
-        # Append alphanumeric prefix to help identifying the block 
-        fn = getMicBlockFilename(micName, fnExtractList)
-        mdpos.write(fn, MD_APPEND)
-
-def createExtractListTiltPairs(log, fnMicrographs, pickingDir, fnExtractList):
-    md = MetaData(fnMicrographs)
-    mdUntiltedPos = MetaData()
-    mdTiltedPos = MetaData()
-    for objId in md:
-        umicName = removeBasenameExt(md.getValue(MDL_MICROGRAPH, objId))
-        tmicName =removeBasenameExt(md.getValue(MDL_MICROGRAPH_TILTED, objId))
-        
-        fnUntilted = join(pickingDir,"extra",umicName + ".pos")
-        fnTilted = join(pickingDir,"extra",tmicName + ".pos")
-
-        mdUntiltedPos.clear()
-        mdTiltedPos.clear()
-        if exists(fnUntilted) and exists(fnTilted):
-            try:            
-                mdUntiltedPos.read("particles@%s"%fnUntilted)
-                mdTiltedPos.read("particles@%s"%fnTilted)
-            except:
-                pass
-        # Append alphanumeric prefix to help identifying the block 
-        fn = getMicBlockFilename(umicName, fnExtractList)
-        mdUntiltedPos.write(fn, MD_APPEND)
-        fn = getMicBlockFilename(tmicName, fnExtractList)
-        mdTiltedPos.write(fn, MD_APPEND)
 
 def extractParticles(log,ExtraDir,micrographName, ctf, fullMicrographName, originalMicrograph, micrographToExtract,
                      TsFinal, TsInput, downsamplingMode,

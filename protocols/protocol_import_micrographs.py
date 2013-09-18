@@ -6,7 +6,7 @@
 from glob import glob
 from protlib_base import *
 from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED, MDL_SAMPLINGRATE, MDL_CTF_VOLTAGE, \
-    MDL_CTF_CS, MDL_CTF_SAMPLING_RATE, MDL_MAGNIFICATION, checkImageFileSize, checkImageCorners
+    MDL_CTF_CS, MDL_CTF_SAMPLING_RATE, MDL_MAGNIFICATION, checkImageFileSize, checkImageCorners, MD_APPEND
 from protlib_filesystem import replaceBasenameExt, renameFile
 from protlib_utils import runJob
 from protlib_xmipp import redStr
@@ -17,10 +17,7 @@ class ProtImportMicrographs(XmippProtocol):
         XmippProtocol.__init__(self, protDict.import_micrographs.name, scriptname, project)
         self.Import = "from protocol_import_micrographs import *"
         self.PatternMicrographs = join(self.DirMicrographs, self.ExtMicrographs)
-        if self.TiltPairs:
-            self.MicrographsMd = self.getFilename('tilted_pairs')
-        else:
-            self.MicrographsMd = self.getFilename('micrographs')
+        self.MicrographsMd = self.getFilename('micrographs')
             
     def defineSteps(self):
         if self.DoMerge:
@@ -106,10 +103,7 @@ class ProtImportMicrographs(XmippProtocol):
         return glob(self.PatternMicrographs)
     
     def visualize(self):
-        if self.TiltPairs:
-            summaryFile = self.getFilename('tilted_pairs')
-        else:
-            summaryFile = self.getFilename('micrographs')
+        summaryFile = self.getFilename('micrographs')
         if os.path.exists(summaryFile):
             from protlib_utils import runShowJ
             runShowJ(summaryFile)
@@ -127,16 +121,11 @@ class ProtImportMicrographs(XmippProtocol):
             
     def insertCreateResults(self, filenameDict):
         micFn = self.getFilename('micrographs')
-        vf = [micFn]
         pairMd = ''
-        tilted = ''
         if self.TiltPairs:
-            tilted = self.getFilename('tilted_pairs')
-            vf.append(tilted)
             pairMd = self.PairDescr
-        self.insertStep('createResults', verifyfiles=vf, WorkingDir=self.WorkingDir, PairsMd=pairMd, 
-                        FilenameDict=filenameDict, MicrographFn=vf[0], TiltedFn=tilted,
-                        PixelSize=self.AngPix)
+        self.insertStep('createResults', verifyfiles=[micFn], WorkingDir=self.WorkingDir, PairsMd=pairMd, 
+                        FilenameDict=filenameDict, MicrographFn=micFn, PixelSize=self.AngPix)
         
     def insertCopyMicrograph(self, inputMic, outputMic):
         self.insertStep('copyFile', source=inputMic, dest=outputMic)
@@ -199,12 +188,6 @@ def merge(log, OutWd, InWd1, InWd2):
     ''' Generate import micrograph files from two existing runs.
     Respective working directories are passed as argument '''
     
-        #if tilt pair report error since it is not implemented
-#        fn1 = PrevRun1.getFilename('TiltPairs')
-#        if exists(fn1):
-#        	raise Exception('Error (%s): Merging for "%s" is not yet implemented' 
-#                        	 % (self.scriptName,'tilt pairs'))
-        #check acquisition and microscopy are identical in both runs
     for key in ['acquisition', 'microscope']:
         validateSameMd(getWdFile(OutWd, key), getWdFile(InWd1, key), getWdFile(InWd2, key))
 
@@ -228,7 +211,7 @@ def createMicroscope(log,fnOut,Voltage,SphericalAberration,SamplingRate,Magnific
     md.setValue(MDL_MAGNIFICATION,float(Magnification),objId)
     md.write(fnOut)    
 
-def createResults(log, WorkingDir, PairsMd, FilenameDict, MicrographFn, TiltedFn, PixelSize):
+def createResults(log, WorkingDir, PairsMd, FilenameDict, MicrographFn, PixelSize):
     ''' Create a metadata micrographs.xmd with all micrographs
     and if tilted pairs another one tilted_pairs.xmd'''
     md = MetaData()
@@ -250,7 +233,7 @@ def createResults(log, WorkingDir, PairsMd, FilenameDict, MicrographFn, TiltedFn
             id2 = md.addObject()
             md.setValue(MDL_MICROGRAPH, FilenameDict[u], id2)
             md.setValue(MDL_MICROGRAPH_TILTED, FilenameDict[t], id2)
-        md.write("micrographPairs@"+TiltedFn)
+        md.write("micrographPairs@"+MicrographFn,MD_APPEND)
 
 def checkBorders(log,MicrographFn,WarningFn):
     md = MetaData()

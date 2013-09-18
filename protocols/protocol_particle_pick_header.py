@@ -28,7 +28,6 @@ If you want to correct for the CTF in a subsequent step, you must use a screen o
 """
 ImportRun = ""
 
-
 # {hidden} launchGUI
 LaunchGUI = True
 
