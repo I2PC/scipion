@@ -10,7 +10,7 @@ import os
 from protlib_utils import runJob, runShowJ, grepFirst
 from protlib_filesystem import findAcquisitionInfo
 import glob
-from xmipp import MetaData, MDL_SAMPLINGRATE, MDL_RESOLUTION_FREQREAL, MDL_RESOLUTION_FRC
+from xmipp import MetaData, MDL_SAMPLINGRATE, MDL_RESOLUTION_FREQREAL, MDL_RESOLUTION_FRC, MDL_RESOLUTION_SSNR
 from protlib_gui_ext import showError
 from os.path import dirname, basename
 
@@ -35,7 +35,11 @@ class ProtResolution3D(XmippProtocol):
         if self.DoSSNR:
             self.insertStep('calculateSSNR',WorkingDir=self.WorkingDir,cmd=trueCmd)
         if self.DoVSSNR:
+<<<<<<< HEAD
             self.insertStep('calculateVSSNR',WorkingDir=self.WorkingDir,cmd=trueCmd)
+=======
+            self.insertStep('calculateVSSNR',WorkingDir=self.WorkingDir,cmd=trueCmd,Nproc=self.NumberOfThreads)
+>>>>>>> 3d50d011be95f29de3c2470c31c84f3075d78747
 
     def validate(self):
         errors = []
@@ -150,8 +154,17 @@ def calculateSSNR(log,WorkingDir,cmd):
          " -o "+os.path.join(WorkingDir,"ssnr.xmd")+" --sampling_rate "+str(Ts)
     runJob(log,'xmipp_resolution_ssnr',args)
 
-def calculateVSSNR(log,WorkingDir,cmd):
+def calculateVSSNR(log,WorkingDir,cmd,Nproc):
     fnSignalVolume,fnSignalSel,fnNoiseVolume,fnNoiseSel,Ts=getSSNRParams(cmd,WorkingDir)
+
+    # Get symmetry
+    tokens=cmd.split(' ')
+    if tokens.index('-sym')>=0:
+        sym=tokens[tokens.index('-sym')+1]
+    else:
+        sym='c1'
+    
     args="--signal "+fnSignalVolume+" --sel_signal "+fnSignalSel+" --noise "+fnNoiseVolume+" --sel_noise "+fnNoiseSel+\
-         " -o "+os.path.join(WorkingDir,"ssnr.xmd")+" --sampling_rate "+str(Ts)+" --gen_VSSNR --VSSNR "+os.path.join(WorkingDir,"vssnr.vol")
+         " -o "+os.path.join(WorkingDir,"ssnr.xmd")+" --sampling_rate "+str(Ts)+\
+         " --gen_VSSNR --VSSNR "+os.path.join(WorkingDir,"vssnr.vol")+" --thr "+str(Nproc)+" --sym "+sym
     runJob(log,'xmipp_resolution_ssnr',args)
