@@ -10,7 +10,7 @@ import os
 from protlib_utils import runJob, runShowJ, grepFirst
 from protlib_filesystem import findAcquisitionInfo
 import glob
-from xmipp import MetaData, MDL_SAMPLINGRATE, MDL_RESOLUTION_FREQREAL, MDL_RESOLUTION_FRC
+from xmipp import MetaData, MDL_SAMPLINGRATE, MDL_RESOLUTION_FREQREAL, MDL_RESOLUTION_FRC, MDL_RESOLUTION_SSNR
 from protlib_gui_ext import showError
 from os.path import dirname, basename
 
@@ -32,6 +32,10 @@ class ProtResolution3D(XmippProtocol):
             iF=reconstructionCmd.find(" --xmipp_protocol_script")
             trueCmd=reconstructionCmd[(i0+24):iF]
             self.insertStep('createNoisyVolume',WorkingDir=self.WorkingDir,cmd=trueCmd)
+        if self.DoSSNR:
+            self.insertStep('calculateSSNR',WorkingDir=self.WorkingDir,cmd=trueCmd)
+        if self.DoVSSNR:
+            self.insertStep('calculateVSSNR',WorkingDir=self.WorkingDir,cmd=trueCmd,Nproc=self.NumberOfThreads)
 
     def validate(self):
         errors = []
@@ -57,30 +61,48 @@ class ProtResolution3D(XmippProtocol):
                 frc = [md.getValue(MDL_RESOLUTION_FRC, id) for id in md]
                 for i in range(len(frc)):
                     if frc[i]<0.5:
-                        messages.append("Resolution FSC(0.5) = %f"%resolution[i])
+                        messages.append("Resolution FSC(=0.5) = %f"%resolution[i])
                         break
                 for i in range(len(frc)):
                     if frc[i]<0.143:
-                        messages.append("Resolution FSC(0.143)= %f"%resolution[i])
+                        messages.append("Resolution FSC(=0.143)= %f"%resolution[i])
+                        break
+        if self.DoSSNR:
+            fnSSNR=self.workingDirPath("ssnr.xmd")
+            if os.path.exists(fnSSNR):
+                md = MetaData(fnSSNR)
+                resolution = [md.getValue(MDL_RESOLUTION_FREQREAL, id) for id in md]
+                ssnr = [md.getValue(MDL_RESOLUTION_SSNR, id) for id in md]
+                for i in range(len(ssnr)):
+                    if ssnr[i]<1:
+                        messages.append("Resolution SSNR(=1) = %f"%resolution[i])
                         break
         return messages
 
     def visualize(self):
         fnFSC=self.workingDirPath("fsc.xmd")
         if os.path.exists(fnFSC):
-            if self.DisplayFSC:
+            if self.DisplayFSC and self.DoFSC:
                 os.system('xmipp_metadata_plot -i %s -x resolutionFreqFourier -y resolutionFRC --title "Fourier Shell Correlation" --xtitle "1/Angstroms" &'%fnFSC) 
-            if self.DisplayDPR:
+            if self.DisplayDPR and self.DoFSC:
                 os.system('xmipp_metadata_plot -i %s -x resolutionFreqFourier -y resolutionDPR --title "Differential Phase Residual" --xtitle "1/Angstroms" &'%fnFSC) 
         fnStructure=self.workingDirPath("structureFactor.xmd")
         if os.path.exists(fnStructure):
-            if self.DisplayStructureFactor:
+            if self.DisplayStructureFactor and self.DoStructureFactor:
                 os.system('xmipp_metadata_plot -i %s -x resolutionFreqFourier -y resolutionLogStructure --title "Structure factor" --xtitle "Frequency (1/A)" --ytitle "Log(StructureFactor)" &'%fnStructure)
             if self.DisplayGuinier:
                 if self.UseMatlab:
                     os.system("matlab -r \"xmipp_show_structure_factor(\'"+self.WorkingDir+"\')\"")
                 else:
                     os.system('xmipp_metadata_plot -i %s -x resolutionFreqFourier2 -y resolutionLogStructure --title "Guinier plot" --xtitle "Frequency (1/A^2)" --ytitle "Log(StructureFactor)" &'%fnStructure)
+        fnSSNR=self.workingDirPath("ssnr.xmd")
+        if os.path.exists(fnSSNR):
+            if self.DisplaySSNR and self.DoSSNR:
+                os.system('xmipp_metadata_plot -i %s -x resolutionFreqFourier -y resolutionSSNR --title "Spectral SNR" --xtitle "Frequency (1/A)" --ytitle "SNR" &'%fnSSNR)
+        fnVSSNR=self.workingDirPath("vssnr.vol")
+        if os.path.exists(fnVSSNR):
+            if self.DisplayVSSNR and self.DoVSSNR:
+                runShowJ(fnVSSNR)
 
 def getTs(InputVol):
     fnAcquisition=findAcquisitionInfo(InputVol)
@@ -112,3 +134,33 @@ def createNoisyVolume(log,WorkingDir,cmd):
     tokens[tokens.index('-o')+1]=os.path.join(WorkingDir,'extra/noisyVolume.vol')
     newArgs=' '.join(tokens[1:])
     runJob(log,tokens[0],newArgs)
+
+def getSSNRParams(cmd,WorkingDir):
+    tokens=cmd.split(' ')
+    fnSignalVolume=tokens[tokens.index('-o')+1]
+    fnSignalSel=tokens[tokens.index('-i')+1]
+    fnNoiseVolume=os.path.join(WorkingDir,'extra/noisyVolume.vol')
+    fnNoiseSel=os.path.join(WorkingDir,'extra/noisyImages.xmd')
+    Ts=getTs(fnSignalVolume)
+    return [fnSignalVolume,fnSignalSel,fnNoiseVolume,fnNoiseSel,Ts]
+
+def calculateSSNR(log,WorkingDir,cmd):
+    fnSignalVolume,fnSignalSel,fnNoiseVolume,fnNoiseSel,Ts=getSSNRParams(cmd,WorkingDir)
+    args="--signal "+fnSignalVolume+" --sel_signal "+fnSignalSel+" --noise "+fnNoiseVolume+" --sel_noise "+fnNoiseSel+\
+         " -o "+os.path.join(WorkingDir,"ssnr.xmd")+" --sampling_rate "+str(Ts)
+    runJob(log,'xmipp_resolution_ssnr',args)
+
+def calculateVSSNR(log,WorkingDir,cmd,Nproc):
+    fnSignalVolume,fnSignalSel,fnNoiseVolume,fnNoiseSel,Ts=getSSNRParams(cmd,WorkingDir)
+
+    # Get symmetry
+    tokens=cmd.split(' ')
+    if '--sym' in tokens:
+        sym=tokens[tokens.index('--sym')+1]
+    else:
+        sym='c1'
+    
+    args="--signal "+fnSignalVolume+" --sel_signal "+fnSignalSel+" --noise "+fnNoiseVolume+" --sel_noise "+fnNoiseSel+\
+         " -o "+os.path.join(WorkingDir,"ssnr.xmd")+" --sampling_rate "+str(Ts)+\
+         " --gen_VSSNR --VSSNR "+os.path.join(WorkingDir,"vssnr.vol")+" --thr "+str(Nproc)+" --sym "+sym
+    runJob(log,'xmipp_resolution_ssnr',args)
