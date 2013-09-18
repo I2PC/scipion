@@ -44,9 +44,8 @@ class ProtParticlePicking(XmippProtocol):
         return {
                  'pos': join('%(ExtraDir)s', '%(micrograph)s.pos'),
                  'templates': join('%(ExtraDir)s', 'templates.stk'),
-#      
-                'config': join('%(ExtraDir)s','config.xmd')
-                }  
+                 'config': join('%(ExtraDir)s','config.xmd')
+            }  
           
     def summary(self):
         micrographs, particles = countParticles(self.ExtraDir)
@@ -81,13 +80,16 @@ class ProtParticlePicking(XmippProtocol):
 def launchParticlePickingGUI(log, InputMicrographs, ExtraDir, PickingMode=PM_MANUAL,
                              TiltPairs=False, Memory=2):
     ''' Utility function to launch the Particle Picking application '''
-    args = "-i %(InputMicrographs)s -o %(ExtraDir)s --mode %(PickingMode)s --memory %(Memory)dg"
-   
     if TiltPairs:
-        program = "xmipp_micrograph_tiltpair_picking"
+        program = "xmipp_micrograph_tiltpair_picking "
+        args="-i micrographPairs@%(InputMicrographs)s"%locals()
     else:
         program = "xmipp_micrograph_particle_picking"
-    runJob(log, program, args % locals(), RunInBackground=False)
+        args="-i %(InputMicrographs)s"%locals()
+    args += " -o %(ExtraDir)s --mode %(PickingMode)s --memory %(Memory)dg"%locals()
+   
+    runJob(log, program, args, RunInBackground=False)
+
 #		
 # Main
 #     
