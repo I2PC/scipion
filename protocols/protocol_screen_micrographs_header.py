@@ -18,7 +18,7 @@
 #-----------------------------------------------------------------------------
 # {section} CTF Estimation
 #-----------------------------------------------------------------------------
-# {run}(import_micrographs,downsample_micrographs) Import Micrographs Run
+# {run}(import_micrographs,downsample_micrographs,emx_import) Import Micrographs Run
 ImportRun = ''
 
 # {wizard}(wizardBrowseCTF2) CTF Downsampling factor 

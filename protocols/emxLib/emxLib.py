@@ -27,7 +27,7 @@
 from xmipp import *
 from emx.emx import *
 from numpy import eye
-from protlib_filesystem import join, dirname, replaceBasenameExt
+from protlib_filesystem import join, dirname, abspath, replaceBasenameExt
 
 BINENDING     = '.mrc'
 CTFENDING     = '_ctf.param'
@@ -37,6 +37,7 @@ MICFILE       = 'micrographs.xmd'
 PARTFILE      = 'images.xmd'
 POSENDING     = ".pos"
 STACKENDING   = '.stk'
+
 
 def ctfMicXmippToEmx(emxData,xmdFileName):
     
@@ -101,10 +102,12 @@ def ctfMicXmippToEmxChallenge(emxData,xmdFileName):
 class CTF(object):
     pass
 
-def ctfMicEMXToXmipp(emxData, outputFileName=MICFILE):
+def ctfMicEMXToXmipp(emxData, outputFileName=MICFILE, filesPrefix=None):
     #iterate though emxData
     mdMic = MetaData()
     root = dirname(outputFileName)
+    
+    samplingRate = 0.
     
     for micrograph in emxData.iterClasses(MICROGRAPH):
         micIndex = micrograph.get('index')
@@ -113,6 +116,8 @@ def ctfMicEMXToXmipp(emxData, outputFileName=MICFILE):
         if micFileName is None:
             raise Exception("ctfMicEMXToXmipp: Xmipp doesn't support Micrograph without filename")
         
+        if filesPrefix is not None:
+            micFileName = join(filesPrefix, micFileName)
         # micIndex is ignored now, in a more general solution
         # Xmipp should be able to handle micrographs in a stack
         # where the index has sense....
@@ -151,7 +156,8 @@ def ctfMicEMXToXmipp(emxData, outputFileName=MICFILE):
         if ctf.pixelSpacing__Y is not None:
             if ctf.pixelSpacing__X != ctf.pixelSpacing__Y:
                 raise Exception ('pixelSpacingX != pixelSpacingY. Xmipp does not support it') 
-
+            
+        samplingRate = ctf.pixelSpacing__X
         # Create the .ctfparam, replacing the micrograph name
         mdCtf = MetaData()
         mdCtf.setColumnFormat(False)
@@ -165,10 +171,20 @@ def ctfMicEMXToXmipp(emxData, outputFileName=MICFILE):
         mdCtf.setValue(MDL_CTF_K, 1.0, objId)
         mdCtf.write(ctfModelFileName)
         
+        
+        
     # Sort metadata by micrograph name
     mdMic.sort(MDL_MICROGRAPH)
     # Write micrographs metadata
     mdMic.write('Micrographs@' + outputFileName)
+    # Create the acquisition info file
+    acqFn = join(root, 'acquisition_info.xmd')
+    mdAcq = MetaData()
+    mdAcq.setColumnFormat(False)
+    objId = mdAcq.addObject()
+    mdAcq.setValue(MDL_SAMPLINGRATE, float(1), objId)
+    mdAcq.write(acqFn)
+    
     
 def coorrXmippToEmx(emxData,xmdFileName):
     ''' convert a single file '''
