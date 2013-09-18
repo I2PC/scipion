@@ -28,7 +28,7 @@
 # This library contains some common utilities 
 # for all particles related protocols: Extract, Import
 from protlib_base import *
-from xmipp import MetaData, MetaDataInfo, MDL_ZSCORE
+from xmipp import MetaData, MetaDataInfo, MDL_ZSCORE, getBlocksInMetaDataFile
 from protlib_utils import runJob, runShowJ
 from protlib_filesystem import moveFile
 #MDL_CTF_SAMPLING_RATE, MDL_CTF_VOLTAGE, MDL_CTF_DEFOCUSU, MDL_CTF_DEFOCUSV, \
@@ -136,3 +136,20 @@ def sortImages(log, ImagesFn, rejectionMethod='None', maxZscore=3, percentage=5)
         md.sort(MDL_ZSCORE)
         md.write(ImagesFn)        
 
+def getMetadataWithPickedParticles(fnPos):
+    mdpos = MetaData() 
+    mdposAuto = MetaData()
+    
+    mdpos.clear()
+    if exists(fnPos):
+        try:
+            blocks = getBlocksInMetaDataFile(fnPos)
+            if 'particles' in blocks:         
+                mdpos.read("particles@" + fnPos)
+            if 'particles_auto' in blocks:
+                mdposAuto.read("particles_auto@" + fnPos)
+            mdpos.unionAll(mdposAuto)
+            mdpos.removeDisabled()
+        except:
+            pass
+    return mdpos
