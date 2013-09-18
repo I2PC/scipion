@@ -155,8 +155,8 @@ def calculateVSSNR(log,WorkingDir,cmd,Nproc):
 
     # Get symmetry
     tokens=cmd.split(' ')
-    if tokens.index('-sym')>=0:
-        sym=tokens[tokens.index('-sym')+1]
+    if '--sym' in tokens:
+        sym=tokens[tokens.index('--sym')+1]
     else:
         sym='c1'
     
