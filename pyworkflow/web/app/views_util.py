@@ -143,17 +143,13 @@ def get_image(request):
             if not os.path.isfile(imagePathTmp):
                 imagePath = getInputPath('showj', imagePath)      
 
-#        imagePath = join(request.session['projectPath'],imagePath)
-            
         if imageNo:
             imagePath = '%s@%s' % (imageNo, imagePath) 
             
         #imgXmipp = xmipp.Image(imagePath)
         imgXmipp = xmipp.Image()
         imgXmipp.readPreview(imagePath, int(imageDim))
-        
-        print "after read"
-        
+                
         if applyTransformMatrix and transformMatrix != None: 
             imgXmipp.applyTransforMatScipion(transformMatrix, onlyApplyShifts, wrap)
         

@@ -236,3 +236,24 @@ svg {
 #sliderUni {
 	width: 15m;
 }
+
+/**************** Fourier Filter CSS *******************/
+#sliderLite {
+	width: 5em;
+	margin: 5px 0 5px 0;
+}
+
+#lowFou {
+	width: 7m;
+/* 	float: left; */
+}
+
+#highFou {
+	width: 7em;
+/* 	float: right; */
+}
+#decayFou {
+	width: 7m;
+/* 	float: left; */
+}
+

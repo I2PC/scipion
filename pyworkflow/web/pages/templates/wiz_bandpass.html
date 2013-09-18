@@ -2,7 +2,6 @@
 {% block title %} Bandpass Filter {% endblock %} 
 {% block name %} Bandpass Filter {% endblock %} 
 {% block head %}
-	<script type="text/javascript" src="{{raphael}}"></script>
 	<script>
 		function returnParams(){
 			putSelection('input#high_val', 'highFreq_input');
@@ -30,12 +29,12 @@
 <tr>
 	<td>
 		<div id="wrapper" class="image">
-			<div id="particle"></div>
+			<img id="particle"/>
 		</div>Image
 	</td>
 	<td>
 		<div id="wrapper" class="image">
-			<div id="imgFiltered"></div>
+			<img id="imgFiltered"/>
 		</div>Filtered
 	</td>
 </tr>
@@ -43,19 +42,19 @@
 {% block options %}
 <fieldset id="sliderOptions">
 	<legend>Frequencies</legend>
-	<div id="lowFreq">
+	<div id="lowFou">
 		<span id="title_freq">Low freq<span>
 		<div id="slider" class="slider_low"></div>
 		<div id="slider_low_result">{{lowFreq}}</div>
 		<input id="low_val" type="hidden" value="{{lowFreq}}"/>
 	</div>
-	<div id="highFreq">
+	<div id="highFou">
 		<span id="title_freq">High freq<span>
 		<div id="slider" class="slider_high"></div>
 		<div id="slider_high_result">{{highFreq}}</div>
 		<input id="high_val" type="hidden" value="{{highFreq}}"/>
 	</div>
-	<div id="decay">
+	<div id="decayFou">
 		<span id="title_freq">Decay<span>
 		<div id="slider" class="slider_decay"></div>
 		<div id="slider_decay_result">{{decayFreq}}</div>
@@ -74,13 +73,12 @@ $(".slider_low").slider({
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
 		$("#slider_low_result").html(ui.value);
-		
-		//update the image filtered
- 		previewBandpassFilter(ui.value,$('#high_val').attr('value'),$('#decay_val').attr('value'));
 	},
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
 		$('#low_val').attr('value', ui.value);
+		//update the image filtered
+ 		previewBandpassFilter(ui.value,$('#high_val').attr('value'),$('#decay_val').attr('value'));
 	}
 });
 
@@ -94,13 +92,12 @@ $(".slider_high").slider({
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
 		$("#slider_high_result").html(ui.value);
-		
-		//update the image filtered
-		previewBandpassFilter($('#low_val').attr('value'),ui.value,$('#decay_val').attr('value'));
 	},
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
 		$('#high_val').attr('value', ui.value);
+		//update the image filtered
+		previewBandpassFilter($('#low_val').attr('value'),ui.value,$('#decay_val').attr('value'));	
 	}
 });
 
@@ -114,13 +111,12 @@ $(".slider_decay").slider({
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
 		$("#slider_decay_result").html(ui.value);
-		
-		//update the image filtered
-		previewBandpassFilter($('#low_val').attr('value'),$('#high_val').attr('value'),ui.value);
 	},
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
 		$('#decay_val').attr('value', ui.value);
+		//update the image filtered
+		previewBandpassFilter($('#low_val').attr('value'),$('#high_val').attr('value'),ui.value);
 	}
 });
 

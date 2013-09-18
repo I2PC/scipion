@@ -16,7 +16,7 @@
 	{% endif %}
 <tr id="{{obj.getObjId}}" class="no-selected"
 	style="background-color: #fafafa;"
-	onclick="selectParticle(($(this)));" value="{{obj.text}}">
+	onclick="compositeParticle(($(this)));" value="{{obj.text}}">
 	<td>{{obj.basename}}</td>
 </tr>
 {% endfor %} {% endblock %} {% block images %}
@@ -61,7 +61,7 @@ $(".slider_radius").slider({
 });
 
 //Load the First Element of the list
-window.onload = selectParticle($("tr#"+firstElm));
+window.onload = compositeParticle($("tr#"+firstElm));
 
 </script>
 {% endblock %}
