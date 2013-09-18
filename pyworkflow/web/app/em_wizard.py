@@ -125,29 +125,14 @@ def wiz_bandpass(protocol, request):
     
     return render_to_response('wiz_bandpass.html', context)
 
-def get_image_psd(request):
-    imagePath = request.GET.get('image', None)
-    downsample = request.GET.get('downsample', None)
-    dim = request.GET.get('dim', None)
-    
-    # create a xmipp image empty
-    imgXmipp = xmipp.Image()
-    
-    # compute the PSD image
-    xmipp.fastEstimateEnhancedPSD(imgXmipp, str(imagePath), float(downsample), int(dim), 2)
-        
-    # from PIL import Image
-    img = getPILImage(imgXmipp, dim)
-        
-    response = HttpResponse(mimetype="image/png")
-    img.save(response, "PNG")
-    return response
-
+"""
+Function to get the computing image with a fourier filter applied
+"""
 def get_image_bandpass(request):
     imagePath = request.GET.get('image', None)
     lowFreq = request.GET.get('lowFreq', None)
     highFreq = request.GET.get('highFreq', None)
-    decay = request.GET.get('decay', None)
+    decay = request.GET.get('decayFreq', None)
     dim = request.GET.get('dim', None)
     
     # create a xmipp image empty
@@ -163,6 +148,9 @@ def get_image_bandpass(request):
     img.save(response, "PNG")
     return response
 
+"""
+Function to get the computing image with a gaussian filter applied
+"""
 def get_image_gaussian(request):
     imagePath = request.GET.get('image', None)
     freqSigma = request.GET.get('freqSigma', None)
@@ -173,6 +161,27 @@ def get_image_gaussian(request):
     
     # compute the Gaussian Filter in the image
     xmipp.gaussianFilter(imgXmipp, str(imagePath), float(freqSigma), int(dim))
+        
+    # from PIL import Image
+    img = getPILImage(imgXmipp, dim)
+        
+    response = HttpResponse(mimetype="image/png")
+    img.save(response, "PNG")
+    return response
+
+"""
+Function to get the computing psd image
+"""
+def get_image_psd(request):
+    imagePath = request.GET.get('image', None)
+    downsample = request.GET.get('downsample', None)
+    dim = request.GET.get('dim', None)
+    
+    # create a xmipp image empty
+    imgXmipp = xmipp.Image()
+    
+    # compute the PSD image
+    xmipp.fastEstimateEnhancedPSD(imgXmipp, str(imagePath), float(downsample), int(dim), 2)
         
     # from PIL import Image
     img = getPILImage(imgXmipp, dim)

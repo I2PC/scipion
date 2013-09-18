@@ -408,7 +408,6 @@ def writeSetOfClasses2D(classes2DSet, filename, ctfDir=None, classesBlock='class
         classes2DSet: the SetOfClasses2D instance.
         filename: the filename where to write the metadata.
     """
-    md = xmipp.MetaData()
     imgSet = classes2DSet.getImages()
     imgSet.loadIfEmpty()
     
@@ -425,6 +424,7 @@ def writeSetOfClasses2D(classes2DSet, filename, ctfDir=None, classesBlock='class
         ref = class2D.getId()
         imagesFn = 'class%06d_images@%s' % (ref, filename)
         imagesMd = xmipp.MetaData()
+        
         for imgCA in class2D.getImageAssignments():
             imgCARow = XmippMdRow()
             img = imgSet[imgCA.getImageId()]
@@ -442,6 +442,7 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
         imgSet: the SetOfParticles that will be populated.
         hasCtf: is True if the ctf information exists.
     """
+    blocks = xmipp.getBlocksInMetaDataFile(filename)
     classesMd = xmipp.MetaData('%s@%s' %(classesBlock, filename))
     
     samplingRate = classes2DSet.getImages().getSamplingRate()
@@ -449,12 +450,15 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
     for objId in classesMd:           
         class2D = rowToClass2D(classesMd, objId, samplingRate)
         ref = classesMd.getValue(xmipp.MDL_REF, objId)
-        assignmentBlock = 'class%06d_images@%s' % (ref, filename)
-        imgAssignmentMd = xmipp.MetaData(assignmentBlock)
-        for objCAId in imgAssignmentMd:
-            imgCA = ImageClassAssignment()
-            imgCA = rowToImageClassAssignment(imgAssignmentMd, objCAId)
-            class2D.addImageClassAssignment(imgCA)
+        b = 'class%06d_images' % ref
+        
+        if b in blocks:
+            imgAssignmentMd = xmipp.MetaData('%s@%s' % (b, filename))
+            
+            for objCAId in imgAssignmentMd:
+                imgCA = ImageClassAssignment()
+                imgCA = rowToImageClassAssignment(imgAssignmentMd, objCAId)
+                class2D.addImageClassAssignment(imgCA)
         classes2DSet.append(class2D)
             
 

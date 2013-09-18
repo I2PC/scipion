@@ -23,13 +23,13 @@
 {% endif %}
 <tr id="{{obj.getObjId}}" class="no-selected"
 	style="background-color: #fafafa;"
-	onclick="compositeBandpass(($(this)));" value="{{obj.getFileName}}">
+	onclick="compositeBandpass(($(this)),$('#low_val').attr('value'),$('#high_val').attr('value'),$('#decay_val').attr('value'));" value="{{obj.text}}">
 	<td>{{obj.basename}}</td>
 </tr>
 {% endfor %} {% endblock %} {% block images %}
 <tr>
 	<td>
-		<div class="image">
+		<div id="wrapper" class="image">
 			<div id="particle"></div>
 		</div>Image
 	</td>
@@ -76,7 +76,7 @@ $(".slider_low").slider({
 		$("#slider_low_result").html(ui.value);
 		
 		//update the image filtered
-		compositeBandpass($("tr.selected"));
+ 		previewBandpassFilter(ui.value,$('#high_val').attr('value'),$('#decay_val').attr('value'));
 	},
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
@@ -96,7 +96,7 @@ $(".slider_high").slider({
 		$("#slider_high_result").html(ui.value);
 		
 		//update the image filtered
-		compositeBandpass($("tr.selected"));
+		previewBandpassFilter($('#low_val').attr('value'),ui.value,$('#decay_val').attr('value'));
 	},
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
@@ -116,7 +116,7 @@ $(".slider_decay").slider({
 		$("#slider_decay_result").html(ui.value);
 		
 		//update the image filtered
-		compositeBandpass($("tr.selected"));
+		previewBandpassFilter($('#low_val').attr('value'),$('#high_val').attr('value'),ui.value);
 	},
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
@@ -125,7 +125,8 @@ $(".slider_decay").slider({
 });
 
 //Load the First Element of the list
-window.onload = compositeBandpass($("tr#"+firstElm));
+window.onload = compositeBandpass($("tr#"+firstElm),$('#low_val').attr('value'),$('#high_val').attr('value'),$('#decay_val').attr('value'));
+
 
 </script>
 {% endblock %}
