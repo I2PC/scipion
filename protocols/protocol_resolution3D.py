@@ -35,11 +35,7 @@ class ProtResolution3D(XmippProtocol):
         if self.DoSSNR:
             self.insertStep('calculateSSNR',WorkingDir=self.WorkingDir,cmd=trueCmd)
         if self.DoVSSNR:
-<<<<<<< HEAD
-            self.insertStep('calculateVSSNR',WorkingDir=self.WorkingDir,cmd=trueCmd)
-=======
             self.insertStep('calculateVSSNR',WorkingDir=self.WorkingDir,cmd=trueCmd,Nproc=self.NumberOfThreads)
->>>>>>> 3d50d011be95f29de3c2470c31c84f3075d78747
 
     def validate(self):
         errors = []
