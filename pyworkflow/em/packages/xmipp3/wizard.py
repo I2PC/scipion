@@ -442,7 +442,7 @@ class XmippMaskRadiiPreviewDialog(XmippMaskPreviewDialog):
         create the items preview. 
         """
         from pyworkflow.gui.matplotlib_image import MaskPreview    
-        self.preview = MaskPreview(frame, self.dim, label=self.previewLabel, outerRadius=self.dim_par/2, innerRadius=0)
+        self.preview = MaskPreview(frame, self.dim, label=self.previewLabel, outerRadius=int(self.outerRadius)*self.ratio, innerRadius=0)
         self.preview.grid(row=0, column=0) 
     
     def _createControls(self, frame):
