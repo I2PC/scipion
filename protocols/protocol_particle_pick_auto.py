@@ -9,10 +9,10 @@
 from config_protocols import protDict
 from os.path import exists
 from protlib_base import *
+from protlib_particles import getMetadataWithPickedParticles
 from protlib_filesystem import createLink, deleteFiles, replaceFilenameExt
 from protlib_utils import runJob
-from protocol_particle_pick import launchParticlePickingGUI, getTemplateFiles, PM_READONLY, \
-    PM_REVIEW
+from protocol_particle_pick import launchParticlePickingGUI, getTemplateFiles, PM_READONLY, PM_REVIEW
 from xmipp import MetaData, MD_APPEND, MDL_IMAGE, \
     MDL_PICKING_PARTICLE_SIZE, MDL_PICKING_MICROGRAPH_STATE, MDL_ENABLED, \
     MDL_COST, MDL_MICROGRAPH, MDValueRange, getBlocksInMetaDataFile
@@ -33,7 +33,6 @@ class ProtParticlePickingAuto(XmippProtocol):
         self.micrographs = self.getFilename('micrographs')
         self.model="model"
         
-        
     def createFilenameTemplates(self):
         return {
             'training': join('%(ExtraDir)s', '%(model)s_training.txt'),
@@ -47,8 +46,6 @@ class ProtParticlePickingAuto(XmippProtocol):
                 'average': join('%(ExtraDir)s', '%(model)s_particle_avg.xmp'),
                 'config': join('%(ExtraDir)s','config.xmd')
                 }
-        
-   
        
     def defineSteps(self):
         self.insertStep("createDir",verifyfiles=[self.ExtraDir],path=self.ExtraDir)
@@ -88,22 +85,13 @@ class ProtParticlePickingAuto(XmippProtocol):
                     cmd += " --fast "
                 self.insertParallelRunJobStep("xmipp_micrograph_automatic_picking", cmd)
                                              
-        self.insertStep('gatherResults', WorkingDir=self.WorkingDir, PickingDir=self.pickingDir)
-        self.insertStep('deleteTempFiles', ExtraDir=self.ExtraDir)
-
     def summary(self):
         summary = ["Input directory: [%s] " % self.pickingDir]
-#        fnExtractList = self.getFilename('extract_list', model=self.model)
-#        if os.path.exists(fnExtractList):
-#            MD = MetaData("mic.*@" + fnExtractList)
-#            MDauto = MetaData()
-#            MDauto.importObjects(MD, MDValueRange(MDL_COST, 0., 1.))
-#            Nparticles = MDauto.size()
-#            #minTime = os.stat(self.workingDirPath(family+"_mask.xmp")).st_mtime
-#            #maxTime = os.stat(fnExtractList).st_mtime
-#            #Nmicrographs = len(getBlocksInMetaDataFile(fnExtractList))
-#            #msg += "<%d> particles automatically picked from <%d> micrographs in <%d> minutes"%(Nparticles,Nmicrographs,int((maxTime-minTime)/60.0))
-#        summary.append(msg)
+        totalCount=0
+        for fnPos in glob.glob(self.extraPath('*.pos')):
+            md=getMetadataWithPickedParticles(fnPos)
+            totalCount+=md.size()
+        summary.append("Number of particles: %d"%totalCount)
         return summary
     
     def validate(self):
@@ -111,57 +99,9 @@ class ProtParticlePickingAuto(XmippProtocol):
         return errors
     
     def visualize(self):
-        mode = PM_REVIEW + " %s"
-        for f in glob.glob(self.extraPath("*extract_list.xmd")):
-            launchParticlePickingGUI(None, self.Input['micrographs'], self.ExtraDir, mode % f, self.TiltPairs, self.Memory)
+        mode = PM_REVIEW
+        launchParticlePickingGUI(None, self.Input['micrographs'], self.ExtraDir, mode, self.TiltPairs, self.Memory)
             
-def gatherResults(log, WorkingDir, PickingDir):
-    md = MetaData(getProtocolFilename("micrographs",WorkingDir=WorkingDir))
-    mdpos = MetaData()
-    mdposAux = MetaData()
-    fnExtractList = getProtocolFilename("extract_list", ExtraDir=join(WorkingDir,"extra"))
-    particlesblock = 'particles@'
-    for objId in md:
-        fullname = md.getValue(MDL_MICROGRAPH, objId)
-        name = os.path.split(replaceFilenameExt(fullname, ''))[1]        
-        
-        fn = join(PickingDir, "extra", name + ".pos")
-        mdpos.clear()
-        print "Looking for "+fn
-        if exists(fn):
-            try:
-                print "Reading: "+ fn          
-                mdpos.read(particlesblock + fn)
-                mdpos.setValueCol(MDL_COST, 2.0)
-                print "Found : "+str(mdpos.size())
-            except:
-                # Skip this metadata if it is corrupted
-                pass
-        else:
-            print "    It does not exist"
-        for path in [PickingDir, WorkingDir]:
-            fn = join(path, "extra", name + "_auto.pos")
-            print "Looking for "+fn
-            if exists(fn):
-                try:
-                    print "Reading: %s" % fn          
-                    mdposAux.read(particlesblock + fn)
-                    mdposAux.removeDisabled();
-                    mdposAux.removeLabel(MDL_ENABLED)
-                    print "Found : "+str(mdposAux.size())
-                    mdpos.unionAll(mdposAux) 
-                    print "Altogether : "+str(mdpos.size())
-                except:
-                    # Skip this metadata if it is corrupted
-                    pass
-            else:
-                print "    It does not exist"
-        # Append alphanumeric prefix to help identifying the block s
-        mdpos.write("mic_%s@%s" % (name, fnExtractList), MD_APPEND)
-
-def deleteTempFiles(log, ExtraDir):
-    deleteFiles(log, glob.glob(join(ExtraDir, "*_auto.pos")), True)
-
 #		
 # Main
 #     

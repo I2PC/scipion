@@ -162,5 +162,6 @@ def calculateVSSNR(log,WorkingDir,cmd,Nproc):
     
     args="--signal "+fnSignalVolume+" --sel_signal "+fnSignalSel+" --noise "+fnNoiseVolume+" --sel_noise "+fnNoiseSel+\
          " -o "+os.path.join(WorkingDir,"ssnr.xmd")+" --sampling_rate "+str(Ts)+\
-         " --gen_VSSNR --VSSNR "+os.path.join(WorkingDir,"vssnr.vol")+" --thr "+str(Nproc)+" --sym "+sym
+         " --gen_VSSNR --VSSNR "+os.path.join(WorkingDir,"vssnr.vol")+" --thr "+str(Nproc)+" --sym "+sym+\
+         " --oroot "+os.path.join(WorkingDir,"tmp/individualSSNR")
     runJob(log,'xmipp_resolution_ssnr',args)
