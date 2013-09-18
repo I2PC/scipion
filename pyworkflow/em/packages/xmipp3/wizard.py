@@ -176,14 +176,23 @@ class XmippVolumeMaskRadiusWizard(XmippMaskRadiusWizard):
         return "wiz_volume_mask"       
         
         
-class XmippRadiiWizard(Wizard):
+class XmippRadiiWizard(XmippVolumeMaskRadiusWizard):
     
     _targets = [(XmippDefProjMatch, ['innerRadius', 'outerRadius'])]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
     def show(self, form):
+       
         protocol = form.protocol
-        dialog.showWarning("Correlation radii", "Not yet implemented the wizard to select radii", form.root)    
+        provider = self._getProvider(protocol)
+
+        if provider is not None:
+            d = XmippMaskRadiiPreviewDialog(form.root, provider, innerRadius=protocol.innerRadius.get(), outerRadius=protocol.outerRadius.get())
+            if d.resultYes():
+                form.setVar('innerRadius', d.getRadius(d.radiusSliderIn))
+                form.setVar('outerRadius', d.getRadius(d.radiusSliderOut))
+        else:
+            dialog.showWarning("Empty input", "Select elements first", form.root)    
     
     @classmethod    
     def getView(self):
@@ -425,3 +434,27 @@ class XmippMaskPreviewDialog(XmippImagePreviewDialog):
         
     def getRadius(self):
         return int(self.radiusSlider.get())
+
+class XmippMaskRadiiPreviewDialog(XmippMaskPreviewDialog):
+
+    def _createPreview(self, frame):
+        """ Should be implemented by subclasses to 
+        create the items preview. 
+        """
+        from pyworkflow.gui.matplotlib_image import MaskPreview    
+        self.preview = MaskPreview(frame, self.dim, label=self.previewLabel, outerRadius=int(self.outerRadius)*self.ratio, innerRadius=0)
+        self.preview.grid(row=0, column=0) 
+    
+    def _createControls(self, frame):
+        self.radiusSliderOut = LabelSlider(frame, 'Outer radius', from_=0, to=int(self.dim_par/2), value=self.outerRadius, step=1, callback=lambda a, b, c:self.updateRadius(self.radiusSliderOut, self.radiusSliderIn))
+        self.radiusSliderOut.grid(row=0, column=0, padx=5, pady=5) 
+
+        self.radiusSliderIn = LabelSlider(frame, 'Inner radius', from_=0, to=int(self.dim_par/2), value=self.innerRadius, step=1, callback=lambda a, b, c:self.updateRadius(self.radiusSliderOut, self.radiusSliderIn))
+        self.radiusSliderIn.grid(row=1, column=0, padx=5, pady=5) 
+    
+    def updateRadius(self, radiusSliderOut, radiusSliderIn):
+        self.preview.updateMask(outerRadius = radiusSliderOut.get() * self.ratio, innerRadius = radiusSliderIn.get() * self.ratio)     
+        
+    def getRadius(self, radiusSlider):
+        return int(radiusSlider.get())
+    
