@@ -9,8 +9,9 @@ from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED, MDL_SAMPLINGR
     MDL_CTF_CS, MDL_CTF_SAMPLING_RATE, MDL_MAGNIFICATION, checkImageFileSize, checkImageCorners
 from protlib_filesystem import replaceBasenameExt, renameFile
 from protlib_utils import runJob
-from protlib_xmipp import redStr
+from protlib_xmipp import redStr, RowMetaData
 import math
+
 
 class ProtImportMicrographs(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -218,14 +219,12 @@ def merge(log, OutWd, InWd1, InWd2):
     md1.write(getWdFile(OutWd, 'micrographs'))
 
 
-def createMicroscope(log,fnOut,Voltage,SphericalAberration,SamplingRate,Magnification):
-    md = MetaData()
-    md.setColumnFormat(False)
-    objId = md.addObject()
-    md.setValue(MDL_CTF_VOLTAGE,float(Voltage),objId)    
-    md.setValue(MDL_CTF_CS,float(SphericalAberration),objId)    
-    md.setValue(MDL_CTF_SAMPLING_RATE,float(SamplingRate),objId)
-    md.setValue(MDL_MAGNIFICATION,float(Magnification),objId)
+def createMicroscope(log, fnOut, Voltage, SphericalAberration, SamplingRate, Magnification):
+    md = RowMetaData()
+    md.setValue(MDL_CTF_VOLTAGE, float(Voltage))    
+    md.setValue(MDL_CTF_CS, float(SphericalAberration))    
+    md.setValue(MDL_CTF_SAMPLING_RATE, float(SamplingRate))
+    md.setValue(MDL_MAGNIFICATION, float(Magnification))
     md.write(fnOut)    
 
 def createResults(log, WorkingDir, PairsMd, FilenameDict, MicrographFn, TiltedFn, PixelSize):

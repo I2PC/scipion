@@ -28,6 +28,7 @@ from xmipp import *
 from emx.emx import *
 from numpy import eye
 from protlib_filesystem import join, dirname, abspath, replaceBasenameExt
+from protlib_xmipp import RowMetaData
 
 BINENDING     = '.mrc'
 CTFENDING     = '_ctf.param'
@@ -159,16 +160,14 @@ def ctfMicEMXToXmipp(emxData, outputFileName=MICFILE, filesPrefix=None):
             
         samplingRate = ctf.pixelSpacing__X
         # Create the .ctfparam, replacing the micrograph name
-        mdCtf = MetaData()
-        mdCtf.setColumnFormat(False)
-        objId = mdCtf.addObject()
+        mdCtf = RowMetaData()
         
         for var, label in ctfVarLabels.iteritems():
             v = getattr(ctf, var)
             if v is not None:
-                mdCtf.setValue(label, float(v), objId)
+                mdCtf.setValue(label, float(v))
         
-        mdCtf.setValue(MDL_CTF_K, 1.0, objId)
+        mdCtf.setValue(MDL_CTF_K, 1.0)
         mdCtf.write(ctfModelFileName)
         
         
@@ -179,10 +178,8 @@ def ctfMicEMXToXmipp(emxData, outputFileName=MICFILE, filesPrefix=None):
     mdMic.write('Micrographs@' + outputFileName)
     # Create the acquisition info file
     acqFn = join(root, 'acquisition_info.xmd')
-    mdAcq = MetaData()
-    mdAcq.setColumnFormat(False)
-    objId = mdAcq.addObject()
-    mdAcq.setValue(MDL_SAMPLINGRATE, float(1), objId)
+    mdAcq = RowMetaData()
+    mdAcq.setValue(MDL_SAMPLINGRATE, float(1))
     mdAcq.write(acqFn)
     
     
