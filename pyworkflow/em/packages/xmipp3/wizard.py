@@ -198,10 +198,7 @@ class XmippRadiiWizard(XmippVolumeMaskRadiusWizard):
     def getView(self):
         return "wiz_volume_mask_radii"   
 
-class XmippBandpassWizard(Wizard):
-    
-    _targets = [(XmippDefFourierFilter, ['lowFreq', 'highFreq', 'freqDecay'])]
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+class XmippFilterParticlesWizard(Wizard):
     
     def _getText(self, obj):
         index = obj.getIndex()
@@ -226,6 +223,11 @@ class XmippBandpassWizard(Wizard):
             
         return provider
 
+class XmippBandpassWizard(XmippFilterParticlesWizard):
+    
+    _targets = [(XmippDefFourierFilter, ['lowFreq', 'highFreq', 'freqDecay'])]
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    
     def show(self, form):
         protocol = form.protocol
         provider = self._getProvider(protocol)
@@ -244,10 +246,21 @@ class XmippBandpassWizard(Wizard):
     def getView(self):
         return "wiz_bandpass"   
     
-class XmippGaussianWizard(Wizard):
+class XmippGaussianWizard(XmippFilterParticlesWizard):
     
     _targets = [(XmippDefGaussianFilter, ['freqSigma'])]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    
+    def show(self, form):
+        protocol = form.protocol
+        provider = self._getProvider(protocol)
+
+        if provider is not None:
+            d = XmippGaussianFilterDialog(form.root, provider, freqSigma=protocol.freqSigma.get())
+            if d.resultYes():
+                form.setVar('freqSigma', d.getFreqSigma())
+        else:
+            dialog.showWarning("Input particles", "Select particles first", form.root)  
     
     @classmethod    
     def getView(self):
@@ -483,8 +496,29 @@ class XmippBandPassFilterDialog(XmippDownsampleDialog):
     
     def getFreqDecay(self):
         return self.freqDecaySlider.get()    
+    
+class XmippGaussianFilterDialog(XmippBandPassFilterDialog):
+    
+    def _createControls(self, frame):
+        self.freqVar = tk.StringVar()
+        self.freqVar.set(getattr(self, 'freqSigma', 1))
+        freqFrame = tk.Frame(frame)
+        freqFrame.grid(row=0, column=0, sticky='nw')
+        downEntry = tk.Entry(freqFrame, width=10, textvariable=self.freqVar)
+        downEntry.grid(row=0, column=1, padx=5, pady=5)
+        downButton = tk.Button(freqFrame, text='Preview', command=self._doPreview)
+        downButton.grid(row=0, column=2, padx=5, pady=5)    
+        
+    def getFreqSigma(self):
+        return float(self.freqVar.get())
 
-class XmippMaskPreviewDialog(XmippImagePreviewDialog):
+    def _computeRightPreview(self):
+        """ This function should compute the right preview
+        using the self.lastObj that was selected
+        """
+        xmipp.gaussianFilter(self.rightImage, "%03d@%s" % (self.lastObj.getIndex(), self.lastObj.getFileName()), self.getFreqSigma(), self.dim)
+
+class XmippMaskPreviewDialog(XmippDownsampleDialog):
     
     def _beforePreview(self):
         self.dim = 256           
