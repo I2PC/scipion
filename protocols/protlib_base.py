@@ -364,13 +364,14 @@ class XmippProject():
                 print "Error loading run: ", extRunName, "...IGNORED."
         
         for r in runs:
-            dd = runsDict[getExtendedRunName(r)]
-            for r2 in runs:
-                dd2 = runsDict.get(getExtendedRunName(r2), None)
-                if dd2 and dd.extRunName != dd2.extRunName and not dd2.hasDep(dd.extRunName):
-                    for k, v in dd.prot.ParamsDict.iteritems():
-                        if k != 'RunName' and type(v) == str and v.startswith(dd2.prot.WorkingDir + '/'):
-                            dd2.addDep(dd.extRunName)
+            dd = runsDict.get(getExtendedRunName(r), None)
+            if dd is not None:
+                for r2 in runs:
+                    dd2 = runsDict.get(getExtendedRunName(r2), None)
+                    if dd2 and dd.extRunName != dd2.extRunName and not dd2.hasDep(dd.extRunName):
+                        for k, v in dd.prot.ParamsDict.iteritems():
+                            if k != 'RunName' and type(v) == str and v.startswith(dd2.prot.WorkingDir + '/'):
+                                dd2.addDep(dd.extRunName)
         
         #Create special node ROOT
         roots = [k for k, v in runsDict.iteritems() if v.isRoot]
