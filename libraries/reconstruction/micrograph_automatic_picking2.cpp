@@ -645,6 +645,7 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
         }
     }
     saveAutoParticles(md);
+    return auto_candidates.size();
 }
 
 void AutoParticlePicking2::saveAutoParticles(MetaData &md)
