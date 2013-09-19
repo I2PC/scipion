@@ -337,14 +337,22 @@ class TestEMX(unittest.TestCase):
         xmlFile    = join(self.testsPath,'EMX/EMXwrite.emx')
         (code,_out,_err) = validateSchema(xmlFile)
         self.assertEqual(code,0)
+        
+        
         xmlFile    = join(self.testsPath,'EMX/EMXwrite_badly_formed.emx')
-        try:
+        with self.assertRaises(ValidateError) as context:
             validateSchema(xmlFile)
-        except ValidateError, v:
-            print v.getCode(), v.getMessage()
-        except Exception, e:
-            print "ERROR; we should have never arrive here:", e
-            self.assertEqual(1,0)
+            print "Validate Error", context
+        self.assertIn(str(context.exception), 'This is broken')
+  
+#        try:
+#            validateSchema(xmlFile)
+#        except ValidateError, v:
+#            print "Validate Error"
+#            print v.getCode(), v.getMessage()
+#        except Exception, e:
+#            print "ERROR; we should have never arrive here:", e
+#            self.assertEqual(1,0)
 
 from  XmippPythonTestResult import XmippPythonTestResult
 

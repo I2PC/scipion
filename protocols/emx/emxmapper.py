@@ -279,11 +279,11 @@ class XmlMapper():
         for event, elem in iter(context):
             tag = elem.tag
             if event == 'start':
-                print "tag: '%s'" % tag, "class: '%s'" % classname
+                #print "tag: '%s'" % tag, "class: '%s'" % classname
                 if tag == classname:
-                    print "tag==class"
+                    #print "tag==class"
                     self.createObject(elem)
-                    print "self._object: ", self._object
+                    #print "self._object: ", self._object
                     return self._object
         return None
         
@@ -400,7 +400,7 @@ def validateSchema(filename, schema_file=None):
                  endding='... (too many errors, displayed first %d characters)'%(answerSize)
             message = """Error: when validating file %s with schema %s.
             \nError:%s"""%(filename,_schema,stderr[:answerSize]+endding)
-            print "message", message
+            #print "message", message
             raise ValidateError(p.returncode, message)
     return p.returncode, stdout[:answerSize], stderr[:answerSize]
 
