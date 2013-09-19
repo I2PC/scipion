@@ -59,8 +59,7 @@ public:
     void barrierWait();
 
     /** Gather metadatas */
-    void gatherMetadatas(MetaData &MD, const FileName &rootName,
-                         MDLabel sortLabel=MDL_IMAGE);
+    void gatherMetadatas(MetaData &MD, const FileName &rootName);
 
     /** Update the MPI communicator to connect the currently active nodes */
 //    void updateComm();
@@ -219,7 +218,11 @@ public:
     void defineParams();
     void readParams();
     /** Create task distributor */
-    void createTaskDistributor(const MetaData &mdIn, size_t blockSize = 0);
+    void createTaskDistributor(MetaData &mdIn, size_t blockSize = 0);
+    /** Preprocess */
+    void preProcess();
+    /** finishProcessing */
+    void finishProcessing();
     /** Get task to process */
     bool getTaskToProcess(size_t &objId, size_t &objIndex);
 };
@@ -249,6 +252,7 @@ public:\
     {\
         baseClassName::preProcess();\
         MetaData &mdIn = *getInputMd();\
+        mdIn.addItemId(); \
         createTaskDistributor(mdIn, blockSize);\
     }\
     void startProcessing()\
@@ -272,6 +276,10 @@ public:\
     void finishProcessing()\
     {\
         node->gatherMetadatas(*getOutputMd(), fn_out);\
+    	MetaData MDaux; \
+    	MDaux.sort(*getOutputMd(), MDL_ITEM_ID); \
+        MDaux.removeItemId(); \
+        *getOutputMd()=MDaux; \
         if (node->isMaster())\
             baseClassName::finishProcessing();\
     }\

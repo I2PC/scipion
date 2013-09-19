@@ -85,7 +85,7 @@ class XmippProject():
                            self.projectDb.insertProtocol(groupName, p2) 
         #Hard coded insertion of xmipp_program protocol
         #this is an special case of protocols
-        self.projectDb.insertProtocol(protDict.xmipp.title, protDict.xmipp.name)
+        #self.projectDb.insertProtocol(protDict.xmipp.title, protDict.xmipp.name)
         # commit changes
         self.projectDb.connection.commit()         
          
@@ -260,6 +260,21 @@ class XmippProject():
         This is usually the input when one protocol uses another one.'''
         return self.getProtocolFromModule(getScriptFromRunName(extendedRunName))
     
+    def getProtocolFromFile(self,filename):
+        """Given a filename that is a result from a protocol run,
+           return an instance of the protocol that generated that file"""
+        protocolData=None
+        for p in protDict.values():
+            if filename.startswith(p.dir+'/'):
+                protocolData=p
+                break
+        if protocolData is None:
+            return None
+        filenameWithoutProtocol=filename.replace(protocolData.dir+'/','')
+        runName=filenameWithoutProtocol.split('/')[0]
+        extRunName = getExtendedRunName(protName=protocolData.name, runName=runName)
+        return self.getProtocolFromRunName(extRunName)
+
     def getStateRunList(self, protGroup='All', checkDead=False):
         '''Return the list of runs and also 
         a list of 3-tuple with (run_extended_name, state, modified)
@@ -349,13 +364,14 @@ class XmippProject():
                 print "Error loading run: ", extRunName, "...IGNORED."
         
         for r in runs:
-            dd = runsDict[getExtendedRunName(r)]
-            for r2 in runs:
-                dd2 = runsDict.get(getExtendedRunName(r2), None)
-                if dd2 and dd.extRunName != dd2.extRunName and not dd2.hasDep(dd.extRunName):
-                    for k, v in dd.prot.ParamsDict.iteritems():
-                        if k != 'RunName' and type(v) == str and v.startswith(dd2.prot.WorkingDir + '/'):
-                            dd2.addDep(dd.extRunName)
+            dd = runsDict.get(getExtendedRunName(r), None)
+            if dd is not None:
+                for r2 in runs:
+                    dd2 = runsDict.get(getExtendedRunName(r2), None)
+                    if dd2 and dd.extRunName != dd2.extRunName and not dd2.hasDep(dd.extRunName):
+                        for k, v in dd.prot.ParamsDict.iteritems():
+                            if k != 'RunName' and type(v) == str and v.startswith(dd2.prot.WorkingDir + '/'):
+                                dd2.addDep(dd.extRunName)
         
         #Create special node ROOT
         roots = [k for k, v in runsDict.iteritems() if v.isRoot]
@@ -397,7 +413,6 @@ _baseProtocolNames = {
         'macros':       join('%(ExtraDir)s', 'macros.xmd'), 
         'micrographs':  join('%(WorkingDir)s','micrographs.xmd'),
         'microscope':   join('%(WorkingDir)s','microscope.xmd'),
-        'tilted_pairs': join('%(WorkingDir)s','tilted_pairs.xmd'),
         'images':       join('%(WorkingDir)s', 'images.xmd'),
         'images_stk':       join('%(WorkingDir)s', 'images.stk'),
         'images_tilted': join("%(WorkingDir)s", 'images_tilted.xmd'),
@@ -434,6 +449,7 @@ def getClassBlock(block, classMd):
 def getImagesMd(workingDir, suffix=''):
     from xmipp import MetaData
     return MetaData(getImagesFilename(workingDir, suffix))
+
 
 class XmippProtocol(object):
     '''This class will serve as base for all Xmipp Protocols'''
@@ -694,15 +710,19 @@ class XmippProtocol(object):
             args['execution_mode'] = SqliteDb.EXEC_PARALLEL
         return self.insertStep(command, **args)
         
-    def insertRunJobStep(self, program, params, verifyFiles=[]):
+    def insertRunJobStep(self, program, params, verifyFiles=[], NumberOfMpi=None, NumberOfThreads=None):
         ''' This function is a shortcut to insert a runJob step into database
         it will pass threads and mpi info, and also the unique run id'''
+        if NumberOfMpi is None:
+            NumberOfMpi=self.NumberOfMpi
+        if NumberOfThreads is None:
+            NumberOfThreads=self.NumberOfThreads
         return self.insertStep('runJob', 
                      programname=program, 
                      params=params,
                      verifyfiles = verifyFiles,
-                     NumberOfMpi = self.NumberOfMpi,
-                     NumberOfThreads = self.NumberOfThreads)
+                     NumberOfMpi = NumberOfMpi,
+                     NumberOfThreads = NumberOfThreads)
         
     def insertParallelRunJobStep(self, program, params, verifyfiles=[], parent_step_id=XmippProjectDb.FIRST_STEP):
         ''' This function is a shortcut to insert a runJob step into database
@@ -837,10 +857,11 @@ class ProtocolExecutor():
         self.checkProgramAvailable('SubmitToQueue', launch.Program)
             
 #----------Some helper functions ------------------
-
-def getExtendedRunName(run):
+def getExtendedRunName(run=None, protName=None, runName=None):
     ''' Return the extended run name, ie: protocol_runName '''
-    return "%s_%s" % (run['protocol_name'], run['run_name'])
+    if run is not None:
+        protName, runName = run['protocol_name'], run['run_name']
+    return "%s_%s" % (protName, runName)
 
 def splitExtendedRunName(extendedRunName):
     ''' Take an extended runname of the form protocol_runName and returns (protocol,runName).

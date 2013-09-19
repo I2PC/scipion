@@ -17,7 +17,7 @@ class ScriptTrainingPicking(ScriptAppIJ):
         self.addParamsLine("       manual  <thr=1> <fast=True> <incore=False>     : Enables manual mode. User will pick particles manually and can switch to supervised mode if desired.");
         self.addParamsLine("                                                      : Particles from manual mode will be used to train software and switch to supervised mode");
         self.addParamsLine("                                                      : Autopicker will use number of threads, fast and incore modes provided");
-        self.addParamsLine("       review <file>                                  : Enables review mode. User reviews/corrects particles set provided on specified file");
+        self.addParamsLine("       review                                         : Enables review mode. User reviews/corrects particles set provided on specified file");
         self.addParamsLine("                                                      : without updating model. ");
         self.addParamsLine("       readonly                                       : Enables readonly mode. User can see the picked particles, but cannot modify them.");
         
@@ -30,20 +30,13 @@ class ScriptTrainingPicking(ScriptAppIJ):
             os.makedirs(output)
         manual = (mode == 'manual')
         if manual:
-            
             numberOfThreads = self.getIntParam('--mode', 1)
             fastMode = self.getParam('--mode', 2)
             incore = self.getParam('--mode', 3)
             
-        review = (mode == 'review')
-        if review:
-            file = self.getParam('--mode', 1)
-
         self.args = "%(input)s %(output)s %(mode)s" %locals()
         if manual:
             self.args += " %(numberOfThreads)d %(fastMode)s %(incore)s" %locals()
-        if review:
-            self.args += " %(file)s" %locals()
         
 if __name__ == '__main__':
     ScriptTrainingPicking().tryRun()

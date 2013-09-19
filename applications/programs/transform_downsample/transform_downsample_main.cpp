@@ -23,12 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/transform_downsample.h>
-#include <data/args.h>
+#include "data/transform_downsample.h"
 
-int main(int argc, char **argv)
-{
-    ProgTransformDownsample prm;
-    prm.read(argc,argv);
-    return prm.tryRun();
-}
+RUN_XMIPP_PROGRAM(ProgTransformDownsample)

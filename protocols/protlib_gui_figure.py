@@ -162,6 +162,8 @@ class MaskPreview(ImagePreview):
 class ImageWindow():
     def __init__(self, filename=None, dim=512, dpi=96, image=None, label=None):
         
+        dpi = min(dpi, dim)
+        
         if filename is None and image is None:
             reportError("You should provide image or filename")
     

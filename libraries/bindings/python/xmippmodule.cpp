@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include "xmippmodule.h"
+#include "data/ctf.h"
 
 PyObject * PyXmippError;
 
@@ -755,6 +756,77 @@ xmipp_activateMathExtensions(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+PyObject *
+xmipp_errorBetween2CTFs(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    PyObject *pyMd1, *pyMd2;
+    double minFreq=0.05,maxFreq=0.25;
+    size_t dim=256;
+
+    if (PyArg_ParseTuple(args, "OO|idd"
+                         ,&pyMd1, &pyMd2
+                         ,&dim,&minFreq,&maxFreq))
+    {
+        try
+        {
+            if (!MetaData_Check(pyMd1))
+                PyErr_SetString(PyExc_TypeError,
+                                "Expected MetaData as first argument");
+            else if (!MetaData_Check(pyMd2))
+                PyErr_SetString(PyExc_TypeError,
+                                "Expected MetaData as second argument");
+            else
+            {
+                double error = errorBetween2CTFs(MetaData_Value(pyMd1),
+                                                 MetaData_Value(pyMd2),
+                                                 dim,
+                                                 minFreq,maxFreq);
+                return Py_BuildValue("f", error);
+            }
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+
+}
+
+PyObject *
+xmipp_errorMaxFreqCTFs(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    PyObject *pyMd1, *pyMd2;
+
+    if (PyArg_ParseTuple(args, "OO", &pyMd1, &pyMd2))
+    {
+        try
+        {
+            if (!MetaData_Check(pyMd1))
+                PyErr_SetString(PyExc_TypeError,
+                                "Expected MetaData as first argument");
+            else if (!MetaData_Check(pyMd2))
+                PyErr_SetString(PyExc_TypeError,
+                                "Expected MetaData as second argument");
+            else
+            {
+                double resolutionA = errorMaxFreqCTFs(MetaData_Value(pyMd1),
+                                                      MetaData_Value(pyMd2)
+                                                     );
+                return Py_BuildValue("f", resolutionA);
+            }
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+
+}
+
+
+
 static PyMethodDef
 xmipp_methods[] =
     {
@@ -835,7 +907,10 @@ xmipp_methods[] =
           "converts euler angles to direction" },
         { "activateMathExtensions", (PyCFunction) xmipp_activateMathExtensions,
           METH_VARARGS, "activate math function in metadatas" },
-
+        { "errorBetween2CTFs", (PyCFunction) xmipp_errorBetween2CTFs,
+          METH_VARARGS, "difference between two metadatas" },
+        { "errorMaxFreqCTFs", (PyCFunction) xmipp_errorMaxFreqCTFs,
+          METH_VARARGS, "resolution at which CTFs phase differs more than 90º" },
         { NULL } /* Sentinel */
     };//xmipp_methods
 

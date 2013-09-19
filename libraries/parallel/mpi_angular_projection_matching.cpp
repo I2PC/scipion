@@ -225,7 +225,9 @@ void MpiProgAngularProjectionMatching::writeOutputFiles()
     node->gatherMetadatas(DFo, fn_out);
     if (node->isMaster())
     {
-        DFo.write(fn_out, do_overwrite);
+    	MetaData mdAux;
+    	mdAux.sort(DFo,MDL_IMAGE);
+    	mdAux.write(fn_out, do_overwrite);
     }
 }
 

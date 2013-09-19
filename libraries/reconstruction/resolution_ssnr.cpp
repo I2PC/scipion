@@ -30,7 +30,7 @@
 #include <data/xmipp_fftw.h>
 #include <data/metadata_extension.h>
 #include "reconstruct_art.h"
-
+#include "fourier_projection.h"
 
 void ProgSSNR::defineParams()
 {
@@ -45,8 +45,6 @@ void ProgSSNR::defineParams()
     addUsageLine("+++* Before applying this measure make sure that the noise images and the background in the experimental" \
                  " images have zero average. It is also assumed that the projection of the reconstructed volumes matches the" \
                  " experimental or the noisy projections (i.e., check that both projections are within the same range");
-    addUsageLine("+++* The VSSNR is stored in the file as 10*log10(1+VSSNR). Thus, if you want a threshold of VSSNR=1, the" \
-                 " threshold in the visualizer must be set to =10*log10(1+1)=3=");
     addUsageLine("+++* If the reconstruction algorithm linearly scales the reconstructed volume so that the reprojected" \
                  " images do not match the gray values of the experimental images, use adjust_volume to correct for the linear" \
                  " transformation before computing the SSNR images");
@@ -66,17 +64,7 @@ void ProgSSNR::defineParams()
     addParamsLine("   [-o <SSNR_file=\"\">]     : Output file with the SSNR estimation");
     addParamsLine("                             :+++If the output filename is not given, then the input filename is taken");
     addParamsLine("                             :+++from the -S parameter by inserting _SSNR before the extension.");
-    addParamsLine("                             :+++The columns of the output file are as follows: %BR%");
-    addParamsLine("                             :+++  =Column 1: Fourier pixel number= %BR%");
-    addParamsLine("                             :+++  =Column 2: Corresponding frequency (1/Angstroms)= %BR%");
-    addParamsLine("                             :+++  =Column 3: 10*log10(SSNR-1)  (SSNR=ISSNR/alpha)= %BR%");
-    addParamsLine("                             :+++  =Column 4: ISSNR    (Input SSNR=Sexp/Nexp)= %BR%");
-    addParamsLine("                             :+++  =Column 5: 10*log10(Sexp)= %BR%");
-    addParamsLine("                             :+++  =Column 6: 10*log10(Nexp)= %BR%");
-    addParamsLine("                             :+++  =Column 7: alpha       (alpha=Snoise/Nnoise)= %BR%");
-    addParamsLine("                             :+++  =Column 8: 10*log10(Snoise)= %BR%");
-    addParamsLine("                             :+++  =Column 9: 10*log10(Nnoise)= ");
-
+    addParamsLine("   [--fourierProjections]    : perform projections in Fourier space");
     addParamsLine("   [--ring <w=4>]            : Ring width for the SSNR averaging computation (Measured in Fourier pixels)");
     addParamsLine("   [--sampling_rate <Ts=1>]  : Pixel size (Angstrom)");
     addParamsLine("  alias -s;");
@@ -88,11 +76,9 @@ void ProgSSNR::defineParams()
     addParamsLine("                             :+++ %BR%");
     addParamsLine("                             : Generate the individual estimations of the SSNR for each particle and build an ");
     addParamsLine("                             : interpolation volume (VSSNR) that is compatible with the individual SSNRs.");
-    addParamsLine("                             :+ In fact, the VSSNR is stored as 10*log10(1+SSNR). Thus, after interpolating the threshold");
-    addParamsLine("                             :+ at SSNR = 1 must be shown as the threshold of the output interpolated volume at 3.01 ");
-    addParamsLine("                             :+ (10*log10(1+1)). The threshold at SSNR = 4 must be shown as the threshold of the output");
-    addParamsLine("                             :+ interpolated volume at 6.99 (10*log10(1+4)). The 1D SSNR is also generated as a side-product");
     addParamsLine("   requires --signal,--noise,--VSSNR;");
+    addParamsLine("   [--sym <sym=c1>]          : Symmetry for constructing the VSSNR");
+    addParamsLine("   [--thr <n=1>]             : Number of threads to construct the VSSNR");
     addParamsLine("   [--VSSNR <fn_vol_file>]   : Volume with the Volumetric SSNR");
     addParamsLine("   [--oroot <root=\"\">]     : Root name for individual SSNR estimations");
     addParamsLine("== Estimation by radial averaging of the VSSNR ==");
@@ -110,6 +96,7 @@ void ProgSSNR::defineParams()
 void ProgSSNR::readParams()
 {
     radial_avg = checkParam("--radial_avg");
+    fourierProjections = checkParam("--fourierProjections");
     if (!radial_avg)
     {
         fn_S = getParam("-S");
@@ -121,6 +108,8 @@ void ProgSSNR::readParams()
         {
             fn_VSSNR = getParam("--VSSNR");
             fn_out_images = getParam("--oroot");
+            sym=getParam("--sym");
+            Nthreads=getIntParam("--thr");
         }
     }
     else
@@ -135,16 +124,17 @@ void ProgSSNR::readParams()
 void ProgSSNR::show()
 {
     std::cout
-    << "Signal Volume:     " << fn_S       << std::endl
-    << "Noise  Volume:     " << fn_N       << std::endl
-    << "Signal selfile:    " << fn_S_sel   << std::endl
-    << "Noise  selfile:    " << fn_N_sel   << std::endl
-    << "Volumetric SSNR:   " << fn_VSSNR   << std::endl
-    << "Output images:     " << fn_out     << std::endl
-    << "Ring width:        " << ring_width << std::endl
-    << "Sampling rate:     " << Tm         << std::endl
-    << "Generate VSSNR:    " << generate_VSSNR << std::endl
-    << "Radial average:    " << radial_avg << std::endl;
+    << "Signal Volume:       " << fn_S       << std::endl
+    << "Noise  Volume:       " << fn_N       << std::endl
+    << "Signal selfile:      " << fn_S_sel   << std::endl
+    << "Noise  selfile:      " << fn_N_sel   << std::endl
+    << "Volumetric SSNR:     " << fn_VSSNR   << std::endl
+    << "Output images:       " << fn_out     << std::endl
+    << "Ring width:          " << ring_width << std::endl
+    << "Sampling rate:       " << Tm         << std::endl
+    << "Generate VSSNR:      " << generate_VSSNR << std::endl
+    << "Radial average:      " << radial_avg << std::endl
+    << "Fourier projections: " << fourierProjections << std::endl;
 }
 
 void ProgSSNR::produceSideInfo()
@@ -172,34 +162,41 @@ void ProgSSNR::produceSideInfo()
     }
 }
 
+//#define DEBUG
 void ProgSSNR::run()
 {
     show();
     produceSideInfo();
 
     Matrix2D<double> output;
-
     if (!radial_avg)
     {
         if (!generate_VSSNR)
             estimateSSNR(1, output);
         else
             estimateSSNR(2, output);
-        if (fn_out != "")
-            output.write(fn_out);
-        else
-            output.write(fn_S.insertBeforeExtension("_SSNR").removeLastExtension().addExtension("txt"));
+        if (fn_out == "")
+        	fn_out=fn_S.insertBeforeExtension("_SSNR").removeLastExtension().addExtension("xmd");
     }
     else
     {
         radialAverage(output);
-        if (fn_out != "")
-            output.write(fn_out);
-        else
-            output.write(fn_VSSNR.insertBeforeExtension("_radial_avg").removeLastExtension().addExtension("txt"));
+        if (fn_out == "")
+        	fn_out=fn_VSSNR.insertBeforeExtension("_radial_avg").removeLastExtension().addExtension("xmd");
     }
+#ifdef DEBUG
+    output.write(fn_out);
+#endif
+    MetaData MD;
+    for (size_t i=1; i<MAT_YSIZE(output); ++i)
+    {
+    	size_t id=MD.addObject();
+    	MD.setValue(MDL_RESOLUTION_FREQ,output(i,1),id);
+  		MD.setValue(MDL_RESOLUTION_SSNR,output(i,2),id);
+    	MD.setValue(MDL_RESOLUTION_FREQREAL,1.0/output(i,1),id);
+    }
+    MD.write(fn_out);
 }
-
 
 void ProgSSNR::estimateSSNR(int dim, Matrix2D<double> &output)
 {
@@ -223,22 +220,37 @@ void ProgSSNR::estimateSSNR(int dim, Matrix2D<double> &output)
     MultidimArray< std::complex<double> > FFT_Is, FFT_Iths,  FFT_In, FFT_Ithn;
     MultidimArray<double> S2s, N2s, S2n, N2n;
     FileName fn_img;
+    FourierTransformer FT(FFTW_BACKWARD);
+    FourierProjector *Sprojector=NULL;
+    FourierProjector *Nprojector=NULL;
+    if (fourierProjections)
+    {
+    	Sprojector=new FourierProjector(S(),2,0.5,LINEAR);
+    	Nprojector=new FourierProjector(N(),2,0.5,LINEAR);
+    }
     FOR_ALL_OBJECTS_IN_METADATA2(SF_S, SF_N)
     {
-        Is.readApplyGeo(SF_S,__iter.objId);
+    	double rot, tilt, psi;
+    	SF_S.getValue(MDL_ANGLE_ROT,rot, __iter.objId);
+    	SF_S.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
+    	SF_S.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
+    	SF_S.getValue(MDL_IMAGE,fn_img,__iter.objId);
+        Is.read(fn_img);
         Is().setXmippOrigin();
-        In.readApplyGeo(SF_N,__iter2.objId);
+    	SF_N.getValue(MDL_IMAGE,fn_img,__iter2.objId);
+        In.read(fn_img);
         In().setXmippOrigin();
 
-        if (!XMIPP_EQUAL_REAL(Is.rot(), In.rot()) ||
-            !XMIPP_EQUAL_REAL(Is.tilt(), In.tilt()) ||
-            !XMIPP_EQUAL_REAL(Is.psi(), In.psi()))
-            REPORT_ERROR(ERR_VALUE_INCORRECT, "Noise projection angles are different from signal projections angles.");
-
-        projectVolume(S(), Iths, YSIZE(Is()), XSIZE(Is()),
-                      Is.rot(), Is.tilt(), Is.psi());
-        projectVolume(N(), Ithn, YSIZE(Is()), XSIZE(Is()),
-                      Is.rot(), Is.tilt(), Is.psi());
+        if (fourierProjections)
+        {
+        	projectVolume(*Sprojector, Iths, YSIZE(Is()), XSIZE(Is()), rot, tilt, psi);
+        	projectVolume(*Nprojector, Ithn, YSIZE(Is()), XSIZE(Is()), rot, tilt, psi);
+        }
+        else
+        {
+			projectVolume(S(), Iths, YSIZE(Is()), XSIZE(Is()), rot, tilt, psi);
+			projectVolume(N(), Ithn, YSIZE(Is()), XSIZE(Is()), rot, tilt, psi);
+        }
 
 #ifdef DEBUG
 
@@ -255,8 +267,6 @@ void ProgSSNR::estimateSSNR(int dim, Matrix2D<double> &output)
 
         Is() -= Iths();
         In() -= Ithn();
-
-        FourierTransformer FT(FFTW_BACKWARD);
 
         if (dim == 2)
         {
@@ -336,7 +346,7 @@ void ProgSSNR::estimateSSNR(int dim, Matrix2D<double> &output)
                     SSNR = XMIPP_MAX(aux, 0.0);
                 }
                 if (SSNR    > min_power)
-                    DIRECT_MULTIDIM_ELEM(SSNR2Dmatrix,n) = 10.0 * log10(SSNR + 1.0);
+                    DIRECT_MULTIDIM_ELEM(SSNR2Dmatrix,n) = SSNR;
             }
             CenterFFT(SSNR2D(), true);
 #ifdef DEBUG
@@ -348,10 +358,12 @@ void ProgSSNR::estimateSSNR(int dim, Matrix2D<double> &output)
             // Save image
             FileName fn_img_out;
             fn_img_out.compose(imgno, fn_out_images, "stk");
-            SSNR2D.setEulerAngles(Is.rot(),Is.tilt(),Is.psi());
             SSNR2D.write(fn_img_out);
             size_t objId = SF_individual.addObject();
             SF_individual.setValue(MDL_IMAGE,fn_img_out,objId);
+            SF_individual.setValue(MDL_ANGLE_ROT,rot,objId);
+            SF_individual.setValue(MDL_ANGLE_TILT,tilt,objId);
+            SF_individual.setValue(MDL_ANGLE_PSI,psi,objId);
         }
 
         // Average over rings
@@ -400,8 +412,15 @@ void ProgSSNR::estimateSSNR(int dim, Matrix2D<double> &output)
             progress_bar(imgno);
     }
     progress_bar(SF_S.size());
+    if (fourierProjections)
+    {
+    	delete Sprojector;
+    	delete Nprojector;
+    	Sprojector=NULL;
+    	Nprojector=NULL;
+    }
 
-    // Compute the SSNR
+    // Compute the SSNRsym
     S_SSNR1D = S_S21D / S_N21D;
     S_S21D *= 1.0/K1D;
     S_N21D *= 1.0/K1D;
@@ -424,9 +443,9 @@ void ProgSSNR::estimateSSNR(int dim, Matrix2D<double> &output)
         output(i, 1) = w * 1 / Tm;
         double SSNR = S_SSNR1D(i) / N_SSNR1D(i);
         if (SSNR > 1)
-            output(i, 2) = 10 * log10(SSNR - 1); // Corrected SSNR
+            output(i, 2) = SSNR - 1; // Corrected SSNR
         else
-            output(i, 2) = -1000;         // In fact it should be -inf
+            output(i, 2) = 0;
         output(i, 3) = S_SSNR1D(i);
         output(i, 4) = 10 * log10(S_S21D(i) / imgno);
         output(i, 5) = 10 * log10(S_N21D(i) / imgno);
@@ -444,8 +463,8 @@ void ProgSSNR::estimateSSNR(int dim, Matrix2D<double> &output)
         SF_individual.write(fn_out_images + ".xmd");
 
         ProgReconsART artRecons;
-        artRecons.read(formatString("-i %s.xmd -o %s -l 0.1 -R %i --ray_length 1 -n 5",fn_out_images.c_str(),
-                                    fn_VSSNR.c_str(), ROUND(XSIZE(S()) / 3)));
+        artRecons.read(formatString("-i %s.xmd -o %s -l 0.1 -R %i --ray_length 1 -n 5 --sym %s --thr %d",fn_out_images.c_str(),
+                                    fn_VSSNR.c_str(), ROUND(XSIZE(S()) / 3), sym.c_str(),Nthreads));
         artRecons.run();
 
         remove(fn_out_images.addExtension("xmd").c_str());
@@ -476,8 +495,7 @@ void ProgSSNR::radialAverage(Matrix2D<double> &output)
         int l0 = XMIPP_MAX(0, CEIL(widx - ring_width));
         int lF = FLOOR(widx);
 
-        double VSSNRkij = pow(10, VSSNR(k, i, j) / 10) - 1;
-
+        double VSSNRkij = VSSNR(k, i, j);
         for (int l = l0; l <= lF; l++)
         {
             VSSNR_avg(l) += VSSNRkij;
@@ -499,8 +517,8 @@ void ProgSSNR::radialAverage(Matrix2D<double> &output)
         output(i, 1) = w * 1 / Tm;
         double SSNR = VSSNR_avg(i);
         if (SSNR > 1)
-            output(i, 2) = 10 * log10(SSNR - 1); // Corrected SSNR
+            output(i, 2) = SSNR; // Corrected SSNR
         else
-            output(i, 2) = -1000;         // In fact it should be -inf
+            output(i, 2) = 0;
     }
 }

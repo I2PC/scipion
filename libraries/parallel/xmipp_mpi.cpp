@@ -286,8 +286,7 @@ size_t MpiNode::getActiveNodes()
 }
 
 #endif
-void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname,
-                              MDLabel sortLabel)
+void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname)
 {
     if (size == 1)
         return;
@@ -319,8 +318,7 @@ void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname,
         fn = formatString("%s_node%d.xmd", rootname.c_str(), 1);
         fn = fn.removeBlockName();
         remove(fn.c_str());
-
-        MD.sort(mdAll, sortLabel);
+        MD=mdAll;
     }
 }
 
@@ -410,11 +408,10 @@ void MpiMetadataProgram::readParams()
     blockSize = getIntParam("--mpi_job_size");
 }
 
-void MpiMetadataProgram::createTaskDistributor(const MetaData &mdIn,
+void MpiMetadataProgram::createTaskDistributor(MetaData &mdIn,
 		size_t blockSize)
 {
     size_t size = mdIn.size();
-
     if (blockSize < 1)
         blockSize = XMIPP_MAX(1, size/(node->size * 5));
     else if (blockSize > size)

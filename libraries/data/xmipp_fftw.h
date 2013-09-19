@@ -596,14 +596,15 @@ void frc_dpr(MultidimArray< double > & m1,
 
 /** Scale matrix using Fourier transform
  * @ingroup FourierOperations
- * Ydim and Xdim define the output size, Mpmem is the matrix to scale
+ * Ydim and Xdim define the output size, mda is the MultidimArray to scale
  */
-void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> &Mpmem, int nthreads=1);
+void scaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> &mdaIn, MultidimArray<double> &mdaOut, int nThreads=1);
+void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> &mda, int nthreads=1);
 
-void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArray<double> &Mpmem, int nthreads=1);
+void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArray<double> &mda, int nthreads=1);
 /** MultidimArrayGeneric version */
-void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArrayGeneric &Mpmem, int nthreads=1);
-void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArrayGeneric &Mpmem, int nthreads=1);
+void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArrayGeneric &mda, int nthreads=1);
+void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArrayGeneric &mda, int nthreads=1);
 
 #define POWER_SPECTRUM 0
 #define AMPLITUDE_SPECTRUM 1

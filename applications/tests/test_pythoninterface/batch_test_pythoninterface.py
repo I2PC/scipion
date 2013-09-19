@@ -120,7 +120,77 @@ class TestXmippPythonInterface(unittest.TestCase):
         operateString = angleRotLabel + "= sqrt(" + angleRotLabel+")"
         md1.operate(operateString)
         self.assertEqual(md1, md2)
-    
+
+    def test_xmipp_errorBetween2CTFs(self):
+        '''activateMathExtensions'''
+        md1 = MetaData()
+        id = md1.addObject()
+#         md1.setValue(MDL_CTF_SAMPLING_RATE, 1., id)
+#         md1.setValue(MDL_CTF_VOLTAGE, 300., id);
+#         md1.setValue(MDL_CTF_DEFOCUSU, 5000., id);
+#         md1.setValue(MDL_CTF_DEFOCUSV, 7500., id);
+#         md1.setValue(MDL_CTF_DEFOCUS_ANGLE, -45., id);
+#         md1.setValue(MDL_CTF_CS, 2., id);
+#         md1.setValue(MDL_CTF_Q0, 0.1, id);
+# 
+#         md2 = MetaData()
+#         id = md2.addObject()
+#         md2.setValue(MDL_CTF_SAMPLING_RATE, 1., id)
+#         md2.setValue(MDL_CTF_VOLTAGE, 300., id);
+#         md2.setValue(MDL_CTF_DEFOCUSU, 10000., id);
+#         md2.setValue(MDL_CTF_DEFOCUSV, 10000., id);
+#         md2.setValue(MDL_CTF_DEFOCUS_ANGLE, 45., id);
+#         md2.setValue(MDL_CTF_CS, 2., id);
+#         md2.setValue(MDL_CTF_Q0, 0.1, id);
+
+        md1.setValue(MDL_CTF_SAMPLING_RATE, 1., id)
+        md1.setValue(MDL_CTF_VOLTAGE, 200., id);
+        md1.setValue(MDL_CTF_DEFOCUSU, 18306.250000, id);
+        md1.setValue(MDL_CTF_DEFOCUSV, 16786.470000, id);
+        md1.setValue(MDL_CTF_DEFOCUS_ANGLE, 30.100000, id);
+        md1.setValue(MDL_CTF_CS, 2., id);
+        md1.setValue(MDL_CTF_Q0, 0.07, id);
+ 
+        md2 = MetaData()
+        id = md2.addObject()
+        md2.setValue(MDL_CTF_SAMPLING_RATE, 1., id)
+        md2.setValue(MDL_CTF_VOLTAGE, 200., id);
+        md2.setValue(MDL_CTF_DEFOCUSU, 17932.700000, id);
+        md2.setValue(MDL_CTF_DEFOCUSV, 16930.300000, id);
+        md2.setValue(MDL_CTF_DEFOCUS_ANGLE, 45., id);
+        md2.setValue(MDL_CTF_CS, 2., id);
+        md2.setValue(MDL_CTF_Q0, 0.07, id);
+        
+        
+        error = errorBetween2CTFs(md1,md2, 256, 0.05,0.25)
+
+        self.assertAlmostEqual(error, 5045.79,0)
+
+    def test_xmipp_errorMaxFreqCTFs(self):
+        '''activateMathExtensions'''
+        md1 = MetaData()
+        id = md1.addObject()
+        md1.setValue(MDL_CTF_SAMPLING_RATE, 2., id)
+        md1.setValue(MDL_CTF_VOLTAGE, 300., id);
+        md1.setValue(MDL_CTF_DEFOCUSU, 7500., id);
+        md1.setValue(MDL_CTF_DEFOCUSV, 7500., id);
+        md1.setValue(MDL_CTF_DEFOCUS_ANGLE, 45., id);
+        md1.setValue(MDL_CTF_CS, 2., id);
+        md1.setValue(MDL_CTF_Q0, 0.1, id);
+
+        md2 = MetaData()
+        id = md2.addObject()
+        md2.setValue(MDL_CTF_SAMPLING_RATE, 2., id)
+        md2.setValue(MDL_CTF_VOLTAGE, 300., id);
+        md2.setValue(MDL_CTF_DEFOCUSU, 5000., id);
+        md2.setValue(MDL_CTF_DEFOCUSV, 5000., id);
+        md2.setValue(MDL_CTF_DEFOCUS_ANGLE, 45., id);
+        md2.setValue(MDL_CTF_CS, 2., id);
+        md2.setValue(MDL_CTF_Q0, 0.1, id);
+        resolution = errorMaxFreqCTFs(md1,md2)
+
+        self.assertAlmostEqual(resolution, 7.0156283,2)
+
     def test_FileName_compose(self):
          fn1 = FileName("kk000001.xmp")
          fn2 = FileName("")
@@ -293,6 +363,56 @@ class TestXmippPythonInterface(unittest.TestCase):
         self.assertAlmostEqual(min, 0., 5)
         self.assertAlmostEqual(max, 1., 5)   
         
+    def test_Image_mirrorY(self):
+        img = Image()
+        img.setDataType(DT_FLOAT)
+        imgY = Image()
+        imgY.setDataType(DT_FLOAT)
+        dim=3
+        img.resize(dim, dim)
+        imgY.resize(dim, dim)
+        for i in range(0,dim):
+            for j in range(0,dim):
+                img.setPixel(i, j, 1.*dim*i+j)
+        img.mirrorY();
+        for i in range(0,dim):
+            for j in range(0,dim):
+                imgY.setPixel(dim -1 -i, j, 1.*dim*i+j)
+        self.assertEquals(img, imgY)
+        
+    def test_Image_applyTransforMatScipion(self):
+            img = Image()
+            img2 = Image()
+            img.setDataType(DT_FLOAT)
+            img2.setDataType(DT_FLOAT)
+            dim=3
+            img.resize(dim, dim)
+            img2.resize(dim, dim)
+            for i in range(0,dim):
+                for j in range(0,dim):
+                    img.setPixel(dim -1 -i, j, 1.*dim*i+j)
+            A=[0.,-1.,0.,0.,
+               1.,0.,0.,0.,
+               0.,0.,1.,1.]
+            img2.setPixel(0,0,0)
+            img2.setPixel(0,1,3.)
+            img2.setPixel(0,2,6.)
+
+            img2.setPixel(1,0,1.)
+            img2.setPixel(1,1,4.)
+            img2.setPixel(1,2,7.)
+
+            img2.setPixel(2,0,2.)
+            img2.setPixel(2,1,5.)
+            img2.setPixel(2,2,8.)
+
+            img.applyTransforMatScipion(A)
+            #print img.getData(),"\n", img2.getData()
+            for i in range(0, dim):
+                for j in range (0, dim):
+                    p1 = img.getPixel(i, j)
+                    p2 = img2.getPixel(i, j)
+                    self.assertAlmostEquals(p1, p2)
     def test_Metadata_getValue(self):
         '''MetaData_GetValues'''
         mdPath = testFile("test.xmd")
@@ -737,6 +857,7 @@ _rlnDefocusU #2
             
             
         self.assertEqual(mdRef, md)
+        print "THIS IS NOT AN ERROR: we are testing exceptions: an error message should appear regarding count and DOUBLE"
         self.assertRaises(XmippError, md.setValue, MDL_COUNT, 5.5, 1L)
    
         
