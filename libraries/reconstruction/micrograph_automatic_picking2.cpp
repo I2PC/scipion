@@ -1897,15 +1897,12 @@ void ProgMicrographAutomaticPicking2::run()
         Image<double> II;
         II.read(fnPCAModel);
         autoPicking->pcaModel=II();
-        II.write("pcamodel.stk");
         // Read rotational PCA model
         II.read(fnPCARotModel);
         autoPicking->pcaRotModel=II();
-        II.write("rotpcamodel.stk");
         // Read the average of the particles for convolution
         II.read(fnAvgModel);
         autoPicking->particleAvg=II();
-        II.write("particleavg.xmp");
         // Read the SVM model
         autoPicking->classifier.LoadModel(fnSVMModel);
         // If we have generated the second SVM model then we use
