@@ -11,8 +11,8 @@ DO_FFTW=true
 DO_TIFF=true
 DO_JPEG=true
 DO_HDF5=true
-DO_FRM=false
-DO_NMA=false
+DO_CLTOMO=true
+DO_NMA=true
 
 DO_CLEAN=true
 DO_STATIC=false
@@ -97,8 +97,8 @@ for param in $@; do
         "jpeg=false")       DO_JPEG=false;;
         "hdf5=true")        DO_HDF5=true;;
         "hdf5=false")       DO_HDF5=false;;
-        "frm=true")         DO_FRM=true;;
-        "frm=false")        DO_FRM=false;;
+        "cltomo=true")      DO_CLTOMO=true;;
+        "clromo=false")     DO_CLTOMO=false;;
         "nma=true")         DO_NMA=true;;
         "nma=false")        DO_NMA=false;;
         "clean=true")       DO_CLEAN=true;;
@@ -671,7 +671,7 @@ if $DO_PYMOD; then
   compile_pymodule $VPYMPI
   compile_pymodule $VPYCIFRW
   
-  if $DO_FRM; then
+  if $DO_CLTOMO; then
     # Fast Rotational Matching
     export LDFLAGS="-shared $LDFLAGS"
     compile_pymodule $VSCIPY
