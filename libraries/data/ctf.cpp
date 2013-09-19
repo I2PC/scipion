@@ -893,15 +893,15 @@ double errorBetween2CTFs( MetaData &MD1,
     for (int i=0; i<(int)yDim; ++i)
     {
         FFT_IDX2DIGFREQ(i, yDim, YY(freq));
-        //YY(freq) *= iTm;
+        YY(freq) *= iTm;
         for (int j=0; j<(int)xDim; ++j)
         {
             FFT_IDX2DIGFREQ(j, xDim, XX(freq));
             _freq = freq.module();
             if (_freq < minFreq || _freq > maxFreq)
                 continue;
-            //XX(freq) *= iTm;
-            freq *= iTm;
+            XX(freq) *= iTm;
+            //freq *= CTF1.Tm;
             CTF1.precomputeValues(XX(freq),YY(freq));
             CTF2.precomputeValues(XX(freq),YY(freq));
             error += fabs(CTF2.getValuePureWithoutDampingAt()- CTF1.getValuePureWithoutDampingAt());
@@ -921,7 +921,7 @@ double errorBetween2CTFs( MetaData &MD1,
     img2.write("/tmp/img2.spi");
     img3.write("/tmp/img3.spi");
 #endif
-
+#undef DEBUG
     return error;
 }
 
