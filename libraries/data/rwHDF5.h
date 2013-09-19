@@ -38,7 +38,9 @@
 /** Determine datatype of a HDF5 dataset.
   * @ingroup TIFF
   */
-DataType datatypeHDF5(hid_t dataset);
+DataType datatypeH5(hid_t dataset);
+
+hid_t H5Datatype(DataType datatype);
 
 /**
  * Return the default dataset name according to the typical group

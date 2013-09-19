@@ -9,10 +9,10 @@
 from config_protocols import protDict
 from os.path import exists
 from protlib_base import *
-from protlib_particles import getMetadataWithPickedParticles
+from protlib_particles import countParticles
 from protlib_filesystem import createLink, deleteFiles, replaceFilenameExt
 from protlib_utils import runJob
-from protocol_particle_pick import launchParticlePickingGUI, getTemplateFiles, PM_READONLY, PM_REVIEW
+from protocol_particle_pick import launchParticlePickingGUI, PM_READONLY, PM_REVIEW
 from xmipp import MetaData, MD_APPEND, MDL_IMAGE, \
     MDL_PICKING_PARTICLE_SIZE, MDL_PICKING_MICROGRAPH_STATE, MDL_ENABLED, \
     MDL_COST, MDL_MICROGRAPH, MDValueRange, getBlocksInMetaDataFile
@@ -53,8 +53,7 @@ class ProtParticlePickingAuto(XmippProtocol):
         for objId in md:
             self.particleSizeForAuto = md.getValue(MDL_PICKING_PARTICLE_SIZE, objId)
         filesToImport = [self.Input[k] for k in self.keysToImport]
-        filesToImport += getTemplateFiles(self.PrevRun)
-        filesToImport += [self.PrevRun.getFilename(k, model=self.model) for k in ['training', 'pca', 'rotpca', 'svm', 'average', 'config']]
+        filesToImport += [self.PrevRun.getFilename(k, model=self.model) for k in ['training', 'pca', 'rotpca', 'svm', 'average', 'config', 'templates']]
         self.insertImportOfFiles(filesToImport)
 
         md = MetaData(self.Input['micrographs'])
@@ -87,11 +86,8 @@ class ProtParticlePickingAuto(XmippProtocol):
                                              
     def summary(self):
         summary = ["Input directory: [%s] " % self.pickingDir]
-        totalCount=0
-        for fnPos in glob.glob(self.extraPath('*.pos')):
-            md=getMetadataWithPickedParticles(fnPos)
-            totalCount+=md.size()
-        summary.append("Number of particles: %d"%totalCount)
+        micrographs, particles = countParticles(self.ExtraDir)
+        summary.append("Number of particles picked: <%(particles)d> (from <%(micrographs)d> micrographs)" % locals())
         return summary
     
     def validate(self):
