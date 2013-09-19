@@ -12,7 +12,10 @@
 		firstElm  = {{obj.getObjId}};
 	</script>
 	{% endif %}
-	<tr id="{{obj.getObjId}}" class="no-selected" style="background-color: #fafafa;" onclick="compositeDownSampling(($(this)));" value="{{obj.getFileName}}">
+	<tr id="{{obj.getObjId}}" class="no-selected" 
+	style="background-color: #fafafa;" 
+	onclick="compositeDownSampling(($(this)));" 
+	value="{{obj.getFileName}}">
 		<td>{{obj.basename}}</td>
 	</tr>
 	{% endfor %}

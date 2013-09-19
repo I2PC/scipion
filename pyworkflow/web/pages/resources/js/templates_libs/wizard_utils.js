@@ -45,6 +45,39 @@ function selectList(elm) {
 	});
 }
 
+function selectParticle(elm, mode) {
+	var row = $("table#list");
+	var oldValue = elm.attr('id');
+
+	if (row.attr('value') != undefined && row.attr('value') != oldValue) {
+		// unmark the last option
+		var rowOld = $("tr#" + row.attr('value'));
+		rowOld.attr('style', 'background-color: #fafafa;');
+		rowOld.attr('class', 'no-selected');
+	}
+
+	// mark the new option
+	row.attr('value', oldValue);
+	elm.attr('style', 'background-color: LightSteelBlue;');
+	elm.attr('class', 'selected');
+
+	// get the img path
+	var path_img = elm.attr('value');
+	if (path_img == undefined) {
+		path_img = elm.val();
+	}
+
+	// load and set the image
+	var uri = "/get_image/?image=" + path_img + "&dim=250";
+	
+	if(mode=="raphael"){
+		putImage(uri, "particle", 250, 250);
+	}
+	else if(mode=="normal"){
+		$("img#particle").attr("src", uri);
+	}
+}
+
 function putImage(url, canvas, width, height) {
 	$("div#" + canvas).empty();
 	var paper = Raphael(document.getElementById(canvas));
@@ -65,6 +98,10 @@ function putCircle(radio, canvas, color) {
 }
 
 // *** Methods Wizard Downsampling *** //
+
+function compositeDownSampling(elm) {
+	$.when(selectList(elm)).then(previewPsd());
+}
 
 function previewPsd() {
 	var img = $("img#psd");
@@ -97,19 +134,13 @@ function previewPsd() {
 	});
 }
 
-function compositeDownSampling(elm) {
-	$.when(selectList(elm)).then(previewPsd());
-}
-
 // *** Methods Wizard CTF *** //
 
-function compositePreview(elm) {
+function compositeCTF(elm) {
 	$.when(selectList(elm)).then(previewPsdFreq());
 }
 
 function previewPsdFreq() {
-	// var img = $("img#psd");
-	// img.hide();
 
 	// check downsampling is a number
 	var downsampling = $("input#downsampling").val();
@@ -136,41 +167,16 @@ function previewPsdFreq() {
 	});
 }
 
-// *** Methods Wizard Particle Mask *** //
+// *** Methods Particle Mask *** //
 
-function selectParticle(elm) {
-	var row = $("table#list");
-	var oldValue = elm.attr('id');
-	var img = $("div#particle");
-
-	if (row.attr('value') != undefined && row.attr('value') != oldValue) {
-		// unmark the last option
-		var rowOld = $("tr#" + row.attr('value'));
-		rowOld.attr('style', 'background-color: #fafafa;');
-		rowOld.attr('class', 'no-selected');
-	}
-
-	// mark the new option
-	row.attr('value', oldValue);
-	elm.attr('style', 'background-color: LightSteelBlue;');
-	elm.attr('class', 'selected');
-
-	// get the img path
-	var path_img = elm.attr('value');
-	if (path_img == undefined) {
-		path_img = elm.val();
-	}
-
-	// load and set the image
-	var uri = "/get_image/?image=" + path_img + "&dim=250";
-	
-	putImage(uri, "particle", 250, 250);
+function compositeParticle(elm){
+	selectParticle(elm,"raphael");
 }
 
 // *** Methods Wizard Bandpass filter *** //
 
 function compositeBandpass(elm, low, high, decay) {
-	$.when(selectParticle(elm)).then(previewBandpassFilter(low, high, decay));
+	$.when(selectParticle(elm, "normal")).then(previewBandpassFilter(low, high, decay));
 }
 
 function previewBandpassFilter(low, high, decay) {
@@ -181,33 +187,26 @@ function previewBandpassFilter(low, high, decay) {
 	var uri = "/get_image_bandpass/?image=" + path_img + "&lowFreq=" + low
 			+ "&highFreq=" + high + "&decayFreq=" + decay + "&dim=250";
 
-	putImage(uri, "imgFiltered", 250, 250);
+	$("img#imgFiltered").attr("src", uri);
 }
 
 // *** Methods Wizard Gaussian filter *** //
 
 function compositeGaussian(elm) {
-	$.when(selectParticle(elm)).then(previewGaussianFilter());
+	$.when(selectParticle(elm,"normal").then(previewSigma()));
 }
 
-function previewGaussianFilter() {
+function previewSigma() {
 	// check values
-	var sigma = $("#slider_sigma_result").val();
+	var sigma = $("#sigma").val();
 
 	// get the img path
 	var path_img = $("tr#" + $("table#list").attr("value")).attr("value");
 
-	var load = $("img#loading");
-
-	// set loading img
-	load.show();
-
 	// load and set the image
 	var uri = "/get_image_gaussian/?image=" + path_img + "&sigmaFreq=" + sigma + "&dim=250";
 
-	// show the new micrograph
-	load.load(putImage(uri, "imgFiltered", 250, 250), function() {
-		// hide the load img
-		load.hide();
-	});
+	$("img#imgFiltered").attr("src", uri);
 }
+
+

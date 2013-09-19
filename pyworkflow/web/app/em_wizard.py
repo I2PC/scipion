@@ -117,13 +117,51 @@ def wiz_bandpass(protocol, request):
             p.basename = "%03d@%s" % (index, basename(text))
              
     context = {'objects': parts[0:100],
-               'raphael': getResourceJs('raphael'),
                'lowFreq': protocol.lowFreq.get(),
                'highFreq': protocol.highFreq.get(),
                'decayFreq': protocol.freqDecay.get()
                }
     
     return render_to_response('wiz_bandpass.html', context)
+
+def wiz_gaussian(protocol, request):
+    
+    parts = [p for p in protocol.inputParticles.get()] 
+    
+    for p in parts:
+        index = p.getIndex()
+        text = p.getFileName()
+        p.basename = basename(text)
+        if index:
+            p.text = "%03d@%s" % (index, text)
+            p.basename = "%03d@%s" % (index, basename(text))
+             
+    context = {'objects': parts[0:100],
+               'freqSigma': protocol.freqSigma.get()
+               }
+    
+    return render_to_response('wiz_gaussian.html', context)
+
+"""
+Function to get the computing psd image
+"""
+def get_image_psd(request):
+    imagePath = request.GET.get('image', None)
+    downsample = request.GET.get('downsample', None)
+    dim = request.GET.get('dim', None)
+    
+    # create a xmipp image empty
+    imgXmipp = xmipp.Image()
+    
+    # compute the PSD image
+    xmipp.fastEstimateEnhancedPSD(imgXmipp, str(imagePath), float(downsample), int(dim), 2)
+        
+    # from PIL import Image
+    img = getPILImage(imgXmipp, dim)
+        
+    response = HttpResponse(mimetype="image/png")
+    img.save(response, "PNG")
+    return response
 
 """
 Function to get the computing image with a fourier filter applied
@@ -153,7 +191,7 @@ Function to get the computing image with a gaussian filter applied
 """
 def get_image_gaussian(request):
     imagePath = request.GET.get('image', None)
-    freqSigma = request.GET.get('freqSigma', None)
+    freqSigma = request.GET.get('sigmaFreq', None)
     dim = request.GET.get('dim', None)
     
     # create a xmipp image empty
@@ -161,27 +199,6 @@ def get_image_gaussian(request):
     
     # compute the Gaussian Filter in the image
     xmipp.gaussianFilter(imgXmipp, str(imagePath), float(freqSigma), int(dim))
-        
-    # from PIL import Image
-    img = getPILImage(imgXmipp, dim)
-        
-    response = HttpResponse(mimetype="image/png")
-    img.save(response, "PNG")
-    return response
-
-"""
-Function to get the computing psd image
-"""
-def get_image_psd(request):
-    imagePath = request.GET.get('image', None)
-    downsample = request.GET.get('downsample', None)
-    dim = request.GET.get('dim', None)
-    
-    # create a xmipp image empty
-    imgXmipp = xmipp.Image()
-    
-    # compute the PSD image
-    xmipp.fastEstimateEnhancedPSD(imgXmipp, str(imagePath), float(downsample), int(dim), 2)
         
     # from PIL import Image
     img = getPILImage(imgXmipp, dim)

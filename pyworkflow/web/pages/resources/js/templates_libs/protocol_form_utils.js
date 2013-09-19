@@ -89,6 +89,8 @@ $(document).ready(function() {
 			$.post(action, $("#protocolForm").serialize(), function(html) {
 				if(type_wiz=='wiz_particle_mask' || type_wiz=='wiz_volume_mask'){
 					customPopupHTML(html,460,460);
+				}else if(type_wiz=='wiz_volume_radii'){
+					customPopupHTML(html,725,470);
 				}else{
 					customPopupHTML(html,725,470);
 				}
@@ -154,7 +156,6 @@ function evalElements() {
 function onChangeParam(value, paramId) {
 //	alert(paramId + "-"+value);
 	setParamValue(paramId, value);
-	
 }
 
 function onChangeEnumParamCombo(elemId, paramId) {
