@@ -154,6 +154,8 @@ class ProtExtractParticles(ProtParticlesBase):
             errors.append("MaxZscore must be positive")
         elif self.RejectionMethod=='Percentage' and (self.Percentage<0 or self.Percentage>100):
             errors.append("Percentage must be between 0 and 100")
+        if self.ParticleSize<=0:
+            errors.append("Size has to be a positive amount")
         return errors
 
     def summary(self):
@@ -257,7 +259,7 @@ def createImagesMd(log, ImagesFn, ExtraDir):
     imagesMd.write(ImagesFn)
 
 def createTiltPairsImagesMd(log, WorkingDir, ExtraDir, fnMicrographs):
-    mdPairs = MetaData(fnMicrographs)
+    mdPairs = MetaData("micrographPairs@"+fnMicrographs)
     mdUntilted = MetaData()
     mdTilted = MetaData()
     for objId in mdPairs:
