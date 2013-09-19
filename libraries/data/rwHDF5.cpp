@@ -26,7 +26,7 @@
 #include "xmipp_image_base.h"
 
 
-DataType ImageBase::datatypeHDF5(hid_t h5datatype)
+DataType ImageBase::datatypeH5(hid_t h5datatype)
 {
     H5T_sign_t h5sign = H5Tget_sign(h5datatype);
 
@@ -80,6 +80,38 @@ DataType ImageBase::datatypeHDF5(hid_t h5datatype)
         break;
     }
     return dt;
+}
+
+hid_t ImageBase::H5Datatype(DataType datatype)
+{
+    switch (datatype)
+    {
+    case DT_Float:
+        return H5T_NATIVE_FLOAT;
+    case DT_ULong:
+        return H5T_NATIVE_ULONG;
+    case DT_Long:
+        return H5T_NATIVE_LONG;
+    case DT_UInt:
+        return H5T_NATIVE_UINT;
+    case DT_Int:
+        return H5T_NATIVE_INT;
+    case DT_UShort:
+        return H5T_NATIVE_USHORT;
+    case DT_Short:
+        return H5T_NATIVE_SHORT;
+    case DT_UChar:
+        return H5T_NATIVE_UCHAR;
+    case DT_SChar:
+        return H5T_NATIVE_CHAR;
+    case DT_Double:
+        return H5T_NATIVE_DOUBLE;
+    default:
+        REPORT_ERROR(ERR_NOT_IMPLEMENTED, formatString("rwHDF5: %s datatype not implemented for " \
+                     " HDF5 datatype", datatype2Str(datatype).c_str()));
+        break;
+    }
+
 }
 
 std::string ImageBase::getDefaultDataset(hid_t fhdf5)
@@ -162,7 +194,7 @@ int ImageBase::readHDF5(size_t select_img)
         break;
     }
 
-    DataType datatype = datatypeHDF5(h5datatype);
+    DataType datatype = datatypeH5(h5datatype);
     MDMainHeader.setValue(MDL_DATATYPE,(int) datatype);
 
     //    bool isStack = ( rank > 2 );
@@ -207,28 +239,35 @@ int ImageBase::readHDF5(size_t select_img)
         hsize_t     offset[4];
 
         // Define hyperslab to read.
-        offset[0] = imgStart;
         offset[1] = 0;
         offset[2] = 0;
         count[0]  = 1;
         count[1]  = dims[1];
         count[2]  = dims[2];
 
-        /*
-         * Define the memory space to read a hyperslab.
-         */
+        // Define the memory space to read a hyperslab.
         memspace = H5Screate_simple(rank,count,NULL);
 
-        if ( H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offset, NULL,
-                                 count, NULL) < 0 )
-            REPORT_ERROR(ERR_IO_NOREAD, formatString("readHDF5: Error selecting hyperslab %d from filename %s",
-                         imgStart, filename.c_str()));
-        // Read
-        if ( H5Dread(dataset, h5datatype, memspace, filespace,
-                     H5P_DEFAULT, this->mdaBase->getArrayPointer()) < 0 )
-            REPORT_ERROR(ERR_IO_NOREAD,formatString("readHDF5: Error reading hyperslab %d from filename %s",
-                                                    imgStart, filename.c_str()));
+        size_t data = (size_t) this->mdaBase->getArrayPointer();
+        size_t pad = aDim.zyxdim*gettypesize(myT());
 
+
+        for (size_t idx = imgStart, imN = 0; idx < imgEnd; ++idx, ++imN)
+        {
+            offset[0] = idx;
+
+            if ( H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offset, NULL,
+                                     count, NULL) < 0 )
+                REPORT_ERROR(ERR_IO_NOREAD, formatString("readHDF5: Error selecting hyperslab %d from filename %s",
+                             imgStart, filename.c_str()));
+
+            //            movePointerTo(ALL_SLICES,imN);
+            // Read
+            if ( H5Dread(dataset, H5Datatype(myT()), memspace, filespace,
+                         H5P_DEFAULT, (void*)(data + pad*imN)) < 0 )
+                REPORT_ERROR(ERR_IO_NOREAD,formatString("readHDF5: Error reading hyperslab %d from filename %s",
+                                                        imgStart, filename.c_str()));
+        }
         H5Sclose(memspace);
     }
 

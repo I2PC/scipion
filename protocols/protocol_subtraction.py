@@ -23,7 +23,6 @@ from config_protocols import protDict
 from protlib_filesystem import copyFile
 
 class ProtPartialProjectionSubtraction(XmippProtocol):
-
     def __init__(self, scriptname,project=None):
         
         super(ProtPartialProjectionSubtraction, self).__init__(protDict.subtraction.name, scriptname, project)
@@ -59,14 +58,14 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
     def ImportProtocol(self):
         
         self.pmprotWorkingDir = self.PrevRun.WorkingDir
-        if (self.SymmetryGroup == ''):
-            self.SymmetryGroup = self.PrevRun.SymmetryGroup
+#        if (self.SymmetryGroup == ''):
+#            self.SymmetryGroup = self.PrevRun.SymmetryGroup
             
-        if (len(self.AngSamplingRateDeg) <1):
-            self.AngSamplingRateDeg    = getComponentFromVector(self.PrevRun.AngSamplingRateDeg,self.iterationNo - 1)
+#        if (len(self.AngSamplingRateDeg) <1):
+#            self.AngSamplingRateDeg    = getComponentFromVector(self.PrevRun.AngSamplingRateDeg,self.iterationNo - 1)
             
-        if (len(self.MaxChangeInAngles) <1):
-            self.MaxChangeInAngles    = float(getComponentFromVector(self.PrevRun.MaxChangeInAngles,self.iterationNo - 1))
+#        if (len(self.MaxChangeInAngles) <1):
+#            self.MaxChangeInAngles    = float(getComponentFromVector(self.PrevRun.MaxChangeInAngles,self.iterationNo - 1))
             
         file_name_tmp = join(self.CtfGroupDirectoryName, self.CtfGroupRootName) +'Info.xmd'
         file_name = join(self.PrevRun.WorkingDir, file_name_tmp)
@@ -82,7 +81,20 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         errors = []
         #1 call base class, checks if project exists
         super(ProtPartialProjectionSubtraction, self).validate()
-        
+        #create auxiliary file names and check if the files exists
+        #ReferenceFileName
+        prot = self.project.getProtocolFromRunName(self.ImportRun)
+        remoteWorkingDir  = join(prot.WorkingDir,"Iter_%03d"%(self.iterationNo))
+        referenceName     = "reconstruction_filtered_Ref3D_%03d.vol"%(self.reference3DNo)
+        self.ReferenceFileNames =  join(remoteWorkingDir,referenceName)
+        if not exists(self.ReferenceFileNames):
+            errors.append('Reference FileName = %s does not exists'%self.ReferenceFileName)
+        #DocFileExp: Iter_(X-1)/Iter_(X-1)_current_angles.doc
+        #remember to filter the metadata for ref3D 
+        docFileName     = "current_angles.doc"
+        self.DocFileExp =  join(remoteWorkingDir,docFileName)
+        if not exists(self.DocFileExp):
+            errors.append('DocFileExp FileName = %s does not exists'%self.DocFileExp)
         return errors 
 
     def summary(self):
@@ -228,22 +240,22 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         
         self.Iteration_Working_Directory = os.path.join(self.pmprotWorkingDir,'Iter_00'+ str(self.iterationNo))
         self.subtractionDir = self.workingDirPath(self.RunName)
-        self.volsDir = self.workingDirPath(self.volsDir)
-        self.referenceDir = self.workingDirPath(self.referenceDir)
-        self.subImgsDir = self.workingDirPath(self.subImgsDir)
-        self.scaledImages = self.workingDirPath(self.scaledImages)
+        self.volsDir        = self.workingDirPath(self.volsDir)
+        self.referenceDir   = self.workingDirPath(self.referenceDir)
+        self.subImgsDir     = self.workingDirPath(self.subImgsDir)
+        self.scaledImages   = self.workingDirPath(self.scaledImages)
         self.resultsImagesName = self.workingDirPath(self.resultsImagesName)
         
         self.localFilenameCurrentAngles = self.workingDirPath(self.localCurrentAngles)
         
-        self.CtfGroupDirectory = self.workingDirPath(self.CtfGroupDirectoryName)
-        tmpCTFname = join(self.CtfGroupDirectoryName,self.localStackCTFs)
+        self.CtfGroupDirectory  = self.workingDirPath(self.CtfGroupDirectoryName)
+        tmpCTFname              = join(self.CtfGroupDirectoryName,self.localStackCTFs)
         self.projmatchStackCTFs = join(self.pmprotWorkingDir,tmpCTFname)
-        self.localStackCTFs = self.workingDirPath(tmpCTFname)
+        self.localStackCTFs     = self.workingDirPath(tmpCTFname)
         
-        tmpCTFname = join(self.CtfGroupDirectoryName,self.localDocCTFs)
+        tmpCTFname            = join(self.CtfGroupDirectoryName,self.localDocCTFs)
         self.projmatchDocCTFs = join(self.pmprotWorkingDir,tmpCTFname)
-        self.localDocCTFs = self.workingDirPath(tmpCTFname)
+        self.localDocCTFs     = self.workingDirPath(tmpCTFname)
                 
         if(self.MaxChangeInAngles > 100):
             self.MaxChangeInAngles=-1

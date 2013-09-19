@@ -695,6 +695,14 @@ public:
     void removeIndex(MDLabel label);
     void removeIndex(const std::vector<MDLabel> desiredLabels);
 
+    /** Add item id.
+     * From 0 to last.
+     */
+    void addItemId();
+
+    /** Remove item id.*/
+    void removeItemId();
+
     /** @} */
 
     /** @name Iteration functions

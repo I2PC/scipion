@@ -7,18 +7,18 @@ from glob import glob
 from protlib_base import *
 from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED, MDL_SAMPLINGRATE, MDL_CTF_VOLTAGE, \
     MDL_CTF_CS, MDL_CTF_SAMPLING_RATE, MDL_MAGNIFICATION, checkImageFileSize, checkImageCorners
-from protlib_filesystem import replaceBasenameExt, renameFile, exists
+from protlib_filesystem import replaceBasenameExt, renameFile
 from protlib_utils import runJob
 from protlib_xmipp import redStr
 import math
-from genericpath import exists
 from emx import *
 from emx.emxmapper import *
 from emxLib.emxLib import ctfMicEMXToXmipp, coorEMXToXmipp, alignEMXToXmipp
-from os.path import relpath, join, abspath, dirname
+from os.path import relpath, join, abspath, dirname, exists
 
 
 class ProtEmxImport(XmippProtocol):
+    
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.emx_import.name, scriptname, project)
         self.Import = "from protocol_emx_import import *"
@@ -26,6 +26,8 @@ class ProtEmxImport(XmippProtocol):
         #Class to group EMX objects
         self.emxData = EmxData()
         self.xmlMapper = XmlMapper(self.emxData)
+        self.TiltPairs = False
+        self.MicrographsMd = self.workingDirPath('micrographs.xmd')
             
     def defineSteps(self):
         self._loadInfo()
@@ -41,14 +43,14 @@ class ProtEmxImport(XmippProtocol):
             
     def _loadInfo(self):
         #What kind of elements are in the binary file
-        emxDir = dirname(abspath(self.EmxFileName))
+        emxDir = dirname(self.EmxFileName)
         self.classElement = None
         self.binaryFile = None
         self.object = None
         
         for classElement in CLASSLIST:
             self.object = self.xmlMapper.firstObject(classElement, self.EmxFileName)
-            if self.object != None:
+            if self.object is not None:
                 #is the binary file of this type
                 self.classElement = classElement
                 binaryFile = join(emxDir, self.object.get(FILENAME))
@@ -151,12 +153,13 @@ def validateSchema(log, emxFilename):
         raise Exception(err) 
     
     
-def createOutputs(log, emxFilename, binaryFilename, micsFileName):
+def createOutputs(log, emxFilename, binaryFilename, micsFileName, projectDir):
     emxData = EmxData()
     xmlMapper = XmlMapper(emxData)
     xmlMapper.readEMXFile(emxFilename)
+    filesPrefix = dirname(emxFilename)
     
-    ctfMicEMXToXmipp(emxData, micsFileName)
+    ctfMicEMXToXmipp(emxData, micsFileName, filesPrefix)
     
     
     

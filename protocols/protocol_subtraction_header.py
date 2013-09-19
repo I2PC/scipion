@@ -16,7 +16,7 @@
 # {section} Input
 #-----------------------------------------------------------------------------
 
-# {run}(projmatch) Projection Matching RUN
+# {run}(projmatch){post_run}(postSelectRunProjmatch) Import Projection Matching Run
 """
 Select desired RUN from which you obtained the micrographs.
 
@@ -24,67 +24,61 @@ Possible input protocols are:
 <Projection Matching>
 
 """
-ImportRun = ""
+ImportRun = ''
 
-# {eval} expandJavaMemory()
-
-#Show results for iteration
-""" Use data coming from iteration
+#Use results for iteration
+""" Use data coming from projection matching 
+iteration number... Will be set to the last
+ iteration each time a  projection matching
+run is selected
 """
-iterationNo=3
+iterationNo=-1
 
-# {expert} Resume at Iter (vs Step)
-"""This option control how to resume a previously performed run.
-    Set to TRUE to restart at the beginning of iteration N
-    or FALSE to continue at step N. (N is set in the next parameter).
-    NOTE:If you do not know what are you doing make it equal to False
+#Use Reference Number
+""" Use 3D reference from projection matching 
 """
-IsIter =False
+reference3DNo=1
 
-# Resume at iteration
-""" Set to 1 to start a new run, set to -1 to continue the process (where you left it),
-    set to a positive number N to restart at the begining of iteration N
-    Note1: Do NOT delete working directory if this option is not set to 1
-    Note2: Set this option to -1 if you want to perform extra iterations after
-           successfully finish an execution
+#{hidden}ReferenceFileName
+"""{hiden}Name of 
+the reference volume by default 
+Iter_X_reconstruction.vol
 """
-ContinueAtIteration =1
+ReferenceFileNames=''
 
-
-#{expert}{file} Select the input volume
-"""{expert DELETE THIS ENTRY}Name of the reference volume by default Iter_X_reconstruction.vol
-
-"""
-szInputVolumeName=''
-#{expert}{file} Select docfile used to compute references
-"""Name of the doc file used to compute reference library, by dfault
+#{hidden} Select docfile used to compute references
+"""Name of the doc file used to compute reference library, by default
    ../Iter_(X-1)/Iter_(X-1)_current_angles.doc
 """
 DocFileExp=''
 
-# {expert} Mask reference volume?
-doMask =True
+# {hidden} Mask reference volume?
+"""mask reference volume? by default
+use the same than in projection matching"""
+doMask=True
 
-#Crown Mask radius (inner)
-dRradiusMin=39
+# {expert}{condition}(doMask){wizard}(wizardSetAlignRadii) Crown mask radius center inner
+"""mask reference volume? by default
+use the same than in projection matching"""
+InnerRadius=0
 
-#{expert}  iCrown mask radius center (outter)
-dRradiusMax=64
-
-# {expert} Backup Experimental Proj. angles
-doBackupProjectionAngles =True
+# {expert}{condition}(doMask){wizard}(wizardSetAlignRadii) Crown mask radius center outter
+"""mask reference volume? by default
+use the same than in projection matching"""
+OuterRadius=-1
 
 # {expert}Angular sampling rate
-"""Angular distance (in degrees) between neighboring projection  points
-   usually obtained from protocol file
-"""   
-AngSamplingRateDeg=''
+"""Angular distance (in degrees) between neighboring projection  points 
+mask reference volume? by default
+use the same than in projection matching
+"""
+AngSamplingRateDeg=-1
 
 # {expert}  Angular search range 
 """Maximum change in rot & tilt  (in +/- degrees)
-   usually obtained from protocol file
+   usually obtained from projection matching protocol
 """   
-MaxChangeInAngles =''
+MaxChangeInAngles =-1
 
 # {expert} Symmetry group
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
@@ -94,14 +88,20 @@ MaxChangeInAngles =''
 """
 SymmetryGroup=''
 
+# {hidden} CTFDatInformation
+"""mapping between particles and CTFs
+"""
 CTFDatName=''
-# {expert} Correct by CTF:
+# Correct by CTF:
 """ Set to True if you want to correct by CTF
 """
-doCTFCorrection=False
+doCTFCorrection=True
 
-# Scale images?
-""" Set to True if you want to scale images (Using padding/windowing in Fourier space)
+#-----------------------------------------------------------------------------
+# {section}{has_question}  Scale images REMOVE?
+#-----------------------------------------------------------------------------
+#  Scale images
+""" Scale image. Not supported yet..
 """
 doScaleImages=True
 
