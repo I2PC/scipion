@@ -11,9 +11,8 @@ DO_FFTW=true
 DO_TIFF=true
 DO_JPEG=true
 DO_HDF5=true
-DO_ARPACK=false
 DO_FRM=false
-DO_NMA=true
+DO_NMA=false
 
 DO_CLEAN=true
 DO_STATIC=false
@@ -21,7 +20,6 @@ DO_UPDATE=false
 DO_SETUP=true
 DO_GUI=true
 DO_UNATTENDED=false
-DO_MATLAB=false
 
 export NUMBER_OF_CPU=1
 
@@ -78,9 +76,7 @@ for param in $@; do
 			    DO_TIFF=false
 			    DO_JPEG=false
 			    DO_HDF5=false
-			    DO_ARPACK=false
 			    DO_NMA=false
-			    DO_MATLAB=false
 			    DO_SETUP=false;;			
         "-j")               TAKE_CPU=true;;
         "untar=true")       DO_UNTAR=true;;
@@ -101,12 +97,8 @@ for param in $@; do
         "jpeg=false")       DO_JPEG=false;;
         "hdf5=true")        DO_HDF5=true;;
         "hdf5=false")       DO_HDF5=false;;
-        "arpack=true")      DO_ARPACK=true;;
-        "arpack=false")     DO_ARPACK=false;;
         "frm=true")         DO_FRM=true;;
         "frm=false")        DO_FRM=false;;
-        "matlab=true")      DO_MATLAB=true;;
-        "matlab=false")     DO_MATLAB=false;;
         "nma=true")         DO_NMA=true;;
         "nma=false")        DO_NMA=false;;
         "clean=true")       DO_CLEAN=true;;
@@ -114,7 +106,7 @@ for param in $@; do
         "static=true")      DO_STATIC=true;;
         "static=false")     DO_STATIC=false;;
         "gui=false")        GUI_ARGS="";;
-	"setup=true")       DO_SETUP=true;;
+        "setup=true")       DO_SETUP=true;;
         # This two if passed should be at the end and 
         # will setup arguments for configure and compilation steps
         "configure")        TAKE_CONFIGURE=true;
@@ -308,7 +300,6 @@ VFFTW=fftw-3.3.3
 VTIFF=tiff-3.9.4
 VJPEG=jpeg-8c
 VHDF5=hdf5-1.8.10
-VARPACK=arpack++-2.3
 VNUMPY=numpy-1.6.1
 VSCIPY=scipy-0.12.0
 VMATLIBPLOT=matplotlib-1.1.0
@@ -689,12 +680,6 @@ if $DO_PYMOD; then
   fi
 fi
 
-#################### ARPACK ###########################
-if $DO_ARPACK; then
-  compile_library $VARPACK "." "." ""
-  install_libs $VARPACK/src/.libs libarpack++ 2 false
-fi
-
 # Launch the configure/compile python script 
 cd $XMIPP_HOME
 
@@ -719,8 +704,6 @@ if $DO_NMA; then
     echoExec "cp $XMIPP_HOME/external/NMA/nma_* $XMIPP_HOME/bin"
     echoExec "cp $XMIPP_HOME/external/NMA/m_inout_Bfact.py $XMIPP_HOME/bin"
 fi
-
-exit 0
 
 #################### JAVA ###########################
 install_jdk()

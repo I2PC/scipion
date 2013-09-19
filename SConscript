@@ -20,8 +20,6 @@ MACOSX = env['PLATFORM'] == 'darwin'
 MINGW = env['PLATFORM'] == 'win32'
 if CYGWIN:
 	TIFFLibs.append('z')
-ARPACKppDir = "external/arpack++-2.3"
-ARPACKppLibs = ['arpack++']
 SQliteDir = "external/sqlite-3.6.23"
 SQLiteLibs = ['sqlite3']
 
@@ -205,8 +203,6 @@ def AddXmippProgram(name, libs=[], folder='programs', incPaths=[], libPaths=[],
         finalLibs.append('XmippClassif')
     if 'XmippRecons' in finalLibs and int(env['cuda']):
         finalLibs.append("XmippReconsCuda");
-    if int(env["arpack"]):
-        finalLibs += ['arpack++', 'arpack', 'lapack', 'blas']
     if 'XmippInterface' in finalLibs:
       finalLibPath += ['libraries/interface']+PythonLibDir
       finalLibs += PythonLibs
@@ -254,8 +250,6 @@ def AddXmippMPIProgram(name, libs=[]):
     finalLibPath = ['lib']
     finalIncludePath = ['libraries', '#', '#'+HDF5Dir]
     finalLibs = libs + ['XmippData', 'XmippExternal', 'XmippParallel'] + FFTWLibs + SQLiteLibs + TIFFLibs + JPEGLibs + HDF5Libs
-    if int(env["arpack"]):
-        finalLibs += ['arpack++', 'arpack', 'lapack', 'blas']
     if 'XmippRecons' in finalLibs and not 'XmippClassif' in finalLibs:
         finalLibs.append('XmippClassif')
     if 'XmippRecons' in finalLibs and int(env['cuda']):
@@ -637,13 +631,10 @@ if MACOSX:
 	env.Alias(pythonLibName, command)
 
 # Reconstruction
-ReconsSources = Glob('libraries/reconstruction', '*.cpp', ["angular_gcar.cpp"])
+ReconsSources = Glob('libraries/reconstruction', '*.cpp', [])
 ReconsLib = ['XmippExternal', 'XmippData', 'pthread', 'XmippClassif'] + FFTWLibs + TIFFLibs + JPEGLibs + HDF5Libs + SQLiteLibs
 ReconsIncDir = ['#libraries', '#external', '#', '#'+HDF5Dir]
 ReconsLibDir = ['lib']
-if int(env['arpack']):
-    ReconsSources.append("angular_gcar.cpp")
-    ReconsLib += ['arpack', 'lapack', 'blas']
 AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
            ReconsIncDir, ReconsLibDir, ReconsLib, useCudaEnvironment=int(env['cuda']))
 
@@ -750,8 +741,6 @@ if int(env['java']):
 
     JavaInterfaceSources = Glob('libraries/bindings/java', '*.cpp', [])
     JavaDependLibraries = ['XmippData', 'pthread', 'XmippRecons', 'XmippClassif', 'XmippExternal']
-    if int(env['arpack']):
-        JavaDependLibraries += ['arpack++', 'arpack', 'lapack', 'blas']
     # Compilation of the c code needed for java jni binding
     javaJniC = AddLibrary('XmippJNI', 'libraries/bindings/java', JavaInterfaceSources, ['#libraries', '#external', '#', '#'+HDF5Dir] + env['JNI_CPPPATH'], ['lib'],JavaDependLibraries)
 
@@ -903,10 +892,6 @@ AddXmippProgram('xray_project', ['XmippRecons'])
 #if not int(env['release']):
 	#AddXmippProgram('xray_volume_correct', ['XmippRecons'])	
 
-if int(env['arpack']):
-    AddXmippProgram('angular_gcar', ['XmippRecons'])
-
-
 # --- Scripts
 
 # Python Batches (apps)
@@ -950,8 +935,6 @@ SymLink('bin/xmipp_imagej', 'external/runImageJ')
 # MPI
 AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_continuous_assign', ['XmippRecons'])
-if not int(env['release']):
-    AddXmippMPIProgram('mpi_angular_gcar_commonlines', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
 AddXmippMPIProgram('mpi_classify_CL2D', ['XmippRecons'])
