@@ -875,7 +875,7 @@ double errorBetween2CTFs( MetaData &MD1,
     double iTm=1.0/CTF1.Tm;
     size_t xDim, yDim;
     xDim = yDim = Xdim;
-    //#define DEBUG
+#define DEBUG
 #ifdef DEBUG
 
     Image<double> img1(xDim,yDim);
@@ -889,6 +889,8 @@ double errorBetween2CTFs( MetaData &MD1,
 
     double error =0.;
     double _freq=0.;
+    minFreq /= CTF1.Tm;
+    maxFreq /= CTF1.Tm;
 
     for (int i=0; i<(int)yDim; ++i)
     {
@@ -897,10 +899,10 @@ double errorBetween2CTFs( MetaData &MD1,
         for (int j=0; j<(int)xDim; ++j)
         {
             FFT_IDX2DIGFREQ(j, xDim, XX(freq));
+            XX(freq) *= iTm;
             _freq = freq.module();
             if (_freq < minFreq || _freq > maxFreq)
                 continue;
-            XX(freq) *= iTm;
             //freq *= CTF1.Tm;
             CTF1.precomputeValues(XX(freq),YY(freq));
             CTF2.precomputeValues(XX(freq),YY(freq));
@@ -945,14 +947,15 @@ double errorMaxFreqCTFs( MetaData &MD1,
     CTF2.readFromMetadataRow(MD2,MD2.firstObject());
     double defocus2 = (CTF2.DeltafU + CTF2.DeltafV)/2.0;
     CTF2.produceSideInfo();
+
 #ifdef DEBUG
 
     Matrix1D<double> freq(2); // Frequencies for Fourier plane
     double iTm=1.0/CTF1.Tm;
-    for (int i=0; i<256; ++i)
+    for (int i=0; i<64; ++i)
     {
-        FFT_IDX2DIGFREQ(i, 512, YY(freq));
-        FFT_IDX2DIGFREQ(i, 512, XX(freq));
+        FFT_IDX2DIGFREQ(i, 256, YY(freq));
+        FFT_IDX2DIGFREQ(i, 256, XX(freq));
         freq *= iTm;
         CTF1.precomputeValues(XX(freq),YY(freq));
         CTF2.precomputeValues(XX(freq),YY(freq));

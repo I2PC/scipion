@@ -65,7 +65,7 @@ TEST_F( CtfTest, errorBetween2CTFs)
     metadata1.setValue(MDL_CTF_SAMPLING_RATE, 2.1, objectId);
     metadata1.setValue(MDL_CTF_VOLTAGE, 300., objectId);
     metadata1.setValue(MDL_CTF_DEFOCUSU, 5000., objectId);
-    metadata1.setValue(MDL_CTF_DEFOCUSV, 7500., objectId);
+    metadata1.setValue(MDL_CTF_DEFOCUSV, 10000., objectId);
     metadata1.setValue(MDL_CTF_DEFOCUS_ANGLE, -45., objectId);
     metadata1.setValue(MDL_CTF_CS, 2., objectId);
     metadata1.setValue(MDL_CTF_Q0, 0.1, objectId);
@@ -84,7 +84,7 @@ TEST_F( CtfTest, errorBetween2CTFs)
                              metadata2,
                              256,
                              0.05,0.25);
-    EXPECT_FLOAT_EQ(error,21597.15);
+    EXPECT_FLOAT_EQ(error,7121.4971);
     XMIPP_CATCH
 }
 
