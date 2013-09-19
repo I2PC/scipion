@@ -203,6 +203,42 @@ class XmippBandpassWizard(Wizard):
     _targets = [(XmippDefFourierFilter, ['lowFreq', 'highFreq', 'freqDecay'])]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
+    def _getText(self, obj):
+        index = obj.getIndex()
+        text = os.path.basename(obj.getFileName())
+        if index:
+            return "%03d@%s" % (index, text)
+        return text
+    
+    def _getProvider(self, protocol):
+        """ This should be implemented to return the list
+        of object to be displayed in the tree.
+        """
+        provider = None
+        if protocol.inputParticles.hasValue():
+            particles = [] 
+            for i, par in enumerate(protocol.inputParticles.get()):
+                particles.append(par)
+                if i == 100: # Limit the maximum number of particles to display
+                    break
+            provider = ListTreeProvider(particles)
+            provider.getText = self._getText
+            
+        return provider
+
+    def show(self, form):
+        protocol = form.protocol
+        provider = self._getProvider(protocol)
+
+        if provider is not None:
+            d = XmippBandPassFilterDialog(form.root, provider, 
+                                          lowFreq=protocol.lowFreq.get(), highFreq=protocol.highFreq.get(), freqDecay=protocol.freqDecay.get())
+            if d.resultYes():
+                form.setVar('lowFreq', d.getLowFreq())
+                form.setVar('highFreq', d.getHighFreq())
+                form.setVar('freqDecay', d.getFreqDecay())
+        else:
+            dialog.showWarning("Input particles", "Select particles first", form.root)  
     
     @classmethod    
     def getView(self):
@@ -405,6 +441,48 @@ class XmippCTFDialog(XmippDownsampleDialog):
         
     def getHighFreq(self):
         return self.hfSlider.get()
+
+class XmippBandPassFilterDialog(XmippDownsampleDialog):
+    
+    def _beforePreview(self):
+        XmippImagePreviewDialog._beforePreview(self)
+        self.lastObj = None
+        self.rightPreviewLabel = "Filtered"
+        self.message = "Computing filtered image..."
+        self.previewLabel = "Image"
+        self.rightImage = xmipp.Image()
+        
+
+    def _createControls(self, frame):
+
+        self.freqFrame = ttk.LabelFrame(frame, text="Frequencies", padding="5 5 5 5")
+        self.freqFrame.grid(row=0, column=0)
+        self.lfSlider = self.addFreqSlider('Low freq', self.lowFreq, col=0)
+        self.hfSlider = self.addFreqSlider('High freq', self.highFreq, col=1)
+        self.freqDecaySlider = self.addFreqSlider('Decay', self.freqDecay, col=2)
+        
+    def addFreqSlider(self, label, value, col):
+        slider = LabelSlider(self.freqFrame, label, from_=0, to=0.5, value=value, callback=lambda a, b, c:self.updateFilteredImage())
+        slider.grid(row=0, column=col, padx=5, pady=5)
+        return slider
+
+    def updateFilteredImage(self):
+        self.rightPreview.updateData(self.rightImage.getData())
+        
+    def _computeRightPreview(self):
+        """ This function should compute the right preview
+        using the self.lastObj that was selected
+        """
+        xmipp.bandPassFilter(self.rightImage, "%03d@%s" % (self.lastObj.getIndex(), self.lastObj.getFileName()), self.getLowFreq(), self.getHighFreq(), self.getFreqDecay(), self.dim)
+
+    def getLowFreq(self):
+        return self.lfSlider.get()
+        
+    def getHighFreq(self):
+        return self.hfSlider.get()
+    
+    def getFreqDecay(self):
+        return self.freqDecaySlider.get()    
 
 class XmippMaskPreviewDialog(XmippImagePreviewDialog):
     
