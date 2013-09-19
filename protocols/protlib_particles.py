@@ -148,8 +148,8 @@ def getMetadataWithPickedParticles(fnPos):
                 mdpos.read("particles@" + fnPos)
             if 'particles_auto' in blocks:
                 mdposAuto.read("particles_auto@" + fnPos)
+                mdposAuto.removeDisabled()
             mdpos.unionAll(mdposAuto)
-            mdpos.removeDisabled()
         except:
             pass
     return mdpos
