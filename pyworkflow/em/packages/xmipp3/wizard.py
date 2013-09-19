@@ -518,7 +518,7 @@ class XmippGaussianFilterDialog(XmippBandPassFilterDialog):
         """
         xmipp.gaussianFilter(self.rightImage, "%03d@%s" % (self.lastObj.getIndex(), self.lastObj.getFileName()), self.getFreqSigma(), self.dim)
 
-class XmippMaskPreviewDialog(XmippDownsampleDialog):
+class XmippMaskPreviewDialog(XmippImagePreviewDialog):
     
     def _beforePreview(self):
         self.dim = 256           
