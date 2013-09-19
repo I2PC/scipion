@@ -170,8 +170,10 @@ class XmlMapper():
         , 'pixelSpacing__Z'
         ] 
     
-    def readEMXFile(self, fileName):
+    def readEMXFile(self, fileName, classElement=None):
         """ create tree from xml file 
+        If classElement is not None, the first element of this class
+        will be returned
         """
         # get context
         context = ET.iterparse(fileName, events=('start', 'end'))
@@ -222,6 +224,8 @@ class XmlMapper():
                 # PK or FG
                 if tag in CLASSLIST and skipLabelPK == tag:
                     doItPK = True
+                    if tag == classElement:
+                        return
                 # other attributes
                 else:
                     # simple element
@@ -259,9 +263,8 @@ class XmlMapper():
         self.emxData.addObject(self._object)
         
     def readObjectPK(self, elem):
-        ''' read primary key. So far all entities has the
-        same PK. We may need to specialize or use dictPrimaryKeys
-        in the future
+        ''' read primary key. So far all entities has the same PK. 
+        We may need to specialize or use dictPrimaryKeys in the future
         '''
         mapPK = collections.OrderedDict()
         for attribute in elem.attrib:
@@ -276,17 +279,20 @@ class XmlMapper():
         first one of type 'classname', build the object
         and return it. The foreing keys will be not updated.
         """
-        context = ET.iterparse(fileName, events=('start', 'end'))
-        for event, elem in iter(context):
-            tag = elem.tag
-            if event == 'start':
-                # print "tag: '%s'" % tag, "class: '%s'" % classname
-                if tag == classname:
-                    # print "tag==class"
-                    self.createObject(elem)
-                    # print "self._object: ", self._object
-                    return self._object
-        return None
+        self._object = None
+#        context = ET.iterparse(fileName, events=('start', 'end'))
+#        for event, elem in iter(context):
+#            tag = elem.tag
+#            if event == 'start':
+#                # print "tag: '%s'" % tag, "class: '%s'" % classname
+#                if tag == classname:
+#                    # print "tag==class"
+#                    self.createObject(elem)
+#                    # print "self._object: ", self._object
+#                    return self._object
+        self.readEMXFile(fileName, classElement=classname)
+        
+        return self._object
         
     def writeEMXFile(self, fileName):
         """read xml file and store it in a document

@@ -170,17 +170,11 @@ def ctfMicEMXToXmipp(emxData, outputFileName=MICFILE, filesPrefix=None):
         mdCtf.setValue(MDL_CTF_K, 1.0)
         mdCtf.write(ctfModelFileName)
         
-        
-        
     # Sort metadata by micrograph name
     mdMic.sort(MDL_MICROGRAPH)
     # Write micrographs metadata
     mdMic.write('Micrographs@' + outputFileName)
-    # Create the acquisition info file
-    acqFn = join(root, 'acquisition_info.xmd')
-    mdAcq = RowMetaData()
-    mdAcq.setValue(MDL_SAMPLINGRATE, float(1))
-    mdAcq.write(acqFn)
+
     
     
 def coorrXmippToEmx(emxData,xmdFileName):

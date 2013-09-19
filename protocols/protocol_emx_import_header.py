@@ -7,11 +7,26 @@
 #------------------------------------------------------------------------------------------------
 # {section} Input  
 #------------------------------------------------------------------------------------------------
-# {file}(*.emx) EMX file name &&&VIEW####
+# {file}(*.emx) EMX file name
 """EMX file name:"""
 EmxFileName = ''
 
 
+#------------------------------------------------------------------------------------------------
+# {section} Acquisition information (fill it if not in EMX file)
+#------------------------------------------------------------------------------------------------
+
+# {validate}(IsFloatOrEmpty) Microscope voltage (in kV)
+""" If left blank, the value will be read from the EMX file. """
+Voltage = ""
+
+# {validate}(IsFloatOrEmpty) Spherical aberration (in mm)
+""" If left blank, the value will be read from the EMX file. """
+SphericalAberration = ""
+
+# {validate}(IsFloatOrEmpty) Sampling rate (A/pixel)
+""" If left blank, the value will be read from the EMX file. """
+SamplingRate = ""
 
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
@@ -19,5 +34,6 @@ EmxFileName = ''
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 from protocol_emx_import import *
+
 if __name__ == '__main__':
     protocolMain(ProtEmxImport)

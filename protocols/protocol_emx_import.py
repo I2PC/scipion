@@ -9,7 +9,7 @@ from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED, MDL_SAMPLINGR
     MDL_CTF_CS, MDL_CTF_SAMPLING_RATE, MDL_MAGNIFICATION, checkImageFileSize, checkImageCorners
 from protlib_filesystem import replaceBasenameExt, renameFile
 from protlib_utils import runJob
-from protlib_xmipp import redStr
+from protlib_xmipp import redStr, RowMetaData
 import math
 from emx import *
 from emx.emxmapper import *
@@ -28,6 +28,10 @@ class ProtEmxImport(XmippProtocol):
         self.xmlMapper = XmlMapper(self.emxData)
         self.TiltPairs = False
         self.MicrographsMd = self.workingDirPath('micrographs.xmd')
+        
+        self.propDict = {'SamplingRate': 'pixelSpacing__X',
+                         'SphericalAberration': 'cs',
+                         'Voltage': 'acceleratingVoltage'}
             
     def defineSteps(self):
         self._loadInfo()
@@ -40,6 +44,16 @@ class ProtEmxImport(XmippProtocol):
                         micsFileName=self.workingDirPath('micrographs.xmd'),
                         projectDir=self.projectDir
                         )
+        
+        acqFn = self.getFilename('acquisition')
+        self.insertStep('createAcquisition', verifyfiles=[acqFn],
+                        fnOut=acqFn, SamplingRate=self.SamplingRate)
+        
+        microscopeFn = self.getFilename('microscope')
+        self.insertStep('createMicroscope', verifyfiles=[microscopeFn],
+                        fnOut=microscopeFn, Voltage=self.Voltage, 
+                        SphericalAberration=self.SphericalAberration,
+                        SamplingRate=self.SamplingRate)
             
     def _loadInfo(self):
         #What kind of elements are in the binary file
@@ -54,9 +68,12 @@ class ProtEmxImport(XmippProtocol):
                 #is the binary file of this type
                 self.classElement = classElement
                 binaryFile = join(emxDir, self.object.get(FILENAME))
-                print "checking binary: ", binaryFile
                 if exists(binaryFile):
                     self.binaryFile = binaryFile
+                    for k, v in self.propDict.iteritems():
+                        if len(getattr(self, k)) == 0:
+                            if self.object.get(v) is not None:
+                                setattr(self, k, str(self.object.get(v)))
                     break
         
     def validate(self):
@@ -72,6 +89,12 @@ class ProtEmxImport(XmippProtocol):
             else:
                 if self.binaryFile is None:
                     errors.append('Canot find binary data <%s> associated with EMX metadata file' % self.binaryFile)
+                for k, v in self.propDict.iteritems():
+                        if len(getattr(self, k)) == 0:
+                            errors.append('<%s> was left empty and <%s> does not have this property' % (k, self.classElement))
+                    
+                    
+                
         
         return errors
 
@@ -85,64 +108,6 @@ class ProtEmxImport(XmippProtocol):
     def visualize(self):
         pass
 
-    def insertCreateMicroscope(self):    
-        if self.SamplingRateMode == "From image":
-            self.AngPix = float(self.SamplingRate)
-        else:
-            scannedPixelSize=float(self.ScannedPixelSize)
-            self.AngPix = (10000. * scannedPixelSize) / self.Magnification
-        fnOut = self.getFilename('microscope')
-        self.insertStep("createMicroscope", verifyfiles=[fnOut], fnOut=fnOut, Voltage=self.Voltage,
-                        SphericalAberration=self.SphericalAberration,SamplingRate=self.AngPix,
-                        Magnification=self.Magnification)
-            
-    def insertCreateResults(self, filenameDict):
-        micFn = self.getFilename('micrographs')
-        vf = [micFn]
-        pairMd = ''
-        tilted = ''
-        if self.TiltPairs:
-            tilted = self.getFilename('tilted_pairs')
-            vf.append(tilted)
-            pairMd = self.PairDescr
-        self.insertStep('createResults', verifyfiles=vf, WorkingDir=self.WorkingDir, PairsMd=pairMd, 
-                        FilenameDict=filenameDict, MicrographFn=vf[0], TiltedFn=tilted,
-                        PixelSize=self.AngPix)
-        
-    def insertCopyMicrograph(self, inputMic, outputMic):
-        self.insertStep('copyFile', source=inputMic, dest=outputMic)
-        if inputMic.endswith('.raw'):
-            self.insertStep('copyFile', source=replaceFilenameExt(inputMic, '.inf'), 
-                            dest=replaceFilenameExt(outputMic, '.inf'))
-        
-    def insertPreprocessStep(self, inputMic, outputMic):
-        previousId = XmippProjectDb.FIRST_STEP
-        # Crop
-        iname = inputMic
-        if self.DoCrop:
-            previousId = self.insertParallelRunJobStep("xmipp_transform_window", " -i %s -o %s --crop %d -v 0" %(iname,outputMic, self.Crop),
-                                                       verifyfiles=[outputMic])
-            iname = outputMic
-        # Take logarithm
-        if self.DoLog:
-            params = " -i %s --log --fa %f --fb %f --fc %f" % (iname,
-                                                               self.log_a,
-                                                               self.log_b,
-                                                               self.log_c)
-            if iname != outputMic:
-                params += " -o " + outputMic
-                iname = outputMic
-            previousId = self.insertParallelRunJobStep("xmipp_transform_filter", params, 
-                                                       verifyfiles=[outputMic], 
-                                                       parent_step_id=previousId)
-        # Remove bad pixels
-        if self.DoRemoveBadPixels:
-            params = " -i %s --bad_pixels outliers %f -v 0" % (iname, self.Stddev)
-            if iname != outputMic:
-                params += " -o " + outputMic
-                iname = outputMic
-            previousId = self.insertParallelRunJobStep("xmipp_transform_filter", params, verifyfiles=[outputMic], parent_step_id=previousId)
-        
 
 
 def validateSchema(log, emxFilename):
@@ -152,7 +117,6 @@ def validateSchema(log, emxFilename):
     if code:
         raise Exception(err) 
     
-    
 def createOutputs(log, emxFilename, binaryFilename, micsFileName, projectDir):
     emxData = EmxData()
     xmlMapper = XmlMapper(emxData)
@@ -161,7 +125,19 @@ def createOutputs(log, emxFilename, binaryFilename, micsFileName, projectDir):
     
     ctfMicEMXToXmipp(emxData, micsFileName, filesPrefix)
     
+def createAcquisition(log, fnOut, SamplingRate):
+        # Create the acquisition info file
+    mdAcq = RowMetaData()
+    mdAcq.setValue(MDL_SAMPLINGRATE, float(SamplingRate))
+    mdAcq.write(fnOut)
     
+def createMicroscope(log, fnOut, Voltage, SphericalAberration, SamplingRate):
+    md = RowMetaData()
+    md.setValue(MDL_CTF_VOLTAGE, float(Voltage))    
+    md.setValue(MDL_CTF_CS, float(SphericalAberration))    
+    md.setValue(MDL_CTF_SAMPLING_RATE, float(SamplingRate))
+    md.setValue(MDL_MAGNIFICATION, 60000.0)
+    md.write(fnOut)  
     
 ################### Old functions ########################3
 
@@ -210,18 +186,6 @@ def merge(log, OutWd, InWd1, InWd2):
     md1.write(getWdFile(OutWd, 'micrographs'))
 
 
-
-    
-    
-def createMicroscope(log,fnOut,Voltage,SphericalAberration,SamplingRate,Magnification):
-    md = MetaData()
-    md.setColumnFormat(False)
-    objId = md.addObject()
-    md.setValue(MDL_CTF_VOLTAGE,float(Voltage),objId)    
-    md.setValue(MDL_CTF_CS,float(SphericalAberration),objId)    
-    md.setValue(MDL_CTF_SAMPLING_RATE,float(SamplingRate),objId)
-    md.setValue(MDL_MAGNIFICATION,float(Magnification),objId)
-    md.write(fnOut)    
 
 def createResults(log, WorkingDir, PairsMd, FilenameDict, MicrographFn, TiltedFn, PixelSize):
     ''' Create a metadata micrographs.xmd with all micrographs
