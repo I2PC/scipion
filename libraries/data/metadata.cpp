@@ -543,6 +543,16 @@ void MetaData::removeIndex(const std::vector<MDLabel> desiredLabels)
     myMDSql->indexModify(desiredLabels, false);
 }
 
+void MetaData::addItemId()
+{
+	addLabel(MDL_ITEM_ID);
+	fillLinear(MDL_ITEM_ID,1,1);
+}
+
+void MetaData::removeItemId()
+{
+	removeLabel(MDL_ITEM_ID);
+}
 
 //----------Iteration functions -------------------
 

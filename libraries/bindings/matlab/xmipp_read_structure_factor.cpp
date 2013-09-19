@@ -33,4 +33,5 @@ void mexFunction( int nlhs, mxArray *plhs[],
 	  md.getValue(MDL_RESOLUTION_FREQ2,*ptrFreq2++,__iter.objId);
 	  md.getValue(MDL_RESOLUTION_LOG_STRUCTURE_FACTOR,*ptrLogStruct++,__iter.objId);
   }
+  
 }

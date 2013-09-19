@@ -40,7 +40,7 @@ from protlib_utils import loadModule, which, runShowJ,\
     getComponentFromVector
 from protlib_gui_ext import centerWindows, changeFontSize, askYesNo, Fonts, registerCommonFonts, \
     showError, showInfo, showBrowseDialog, showWarning, AutoScrollbar, FlashMessage,\
-    TaggedText
+    TaggedText, openFile
 from protlib_filesystem import getXmippPath, xmippExists, xmippRelpath
 from config_protocols import protDict
 from config_protocols import FontName, FontSize, MaxHeight, MaxWidth, WrapLenght
@@ -103,7 +103,7 @@ def wizardDummy(gui, var):
 def wizardShowJ(gui, var):
     value = var.getTkValue().strip()
     if len(value):
-        runShowJ(var.getTkValue())
+        openFile(var.getTkValue())
     else:
         showWarning("Empty file", "Please select a file to visualize", parent=gui.master)
     
@@ -406,6 +406,9 @@ def wizardHelperSetRadii(gui, inputVarName, outerVarName, innerVarName=None, ):
         
 def wizardSetMaskRadius(gui, var):
     wizardHelperSetRadii(gui, 'ReferenceFileNames', 'MaskRadius')
+    
+def wizardSetMaskRadiusAlign(gui, var):
+    wizardHelperSetRadii(gui, 'ReferenceVolume', 'MaskRadius')
     
 def wizardSetMaskRadiusPreprocess(gui, var):
     wizardHelperSetRadii(gui, 'InModel', 'MaskRadius')

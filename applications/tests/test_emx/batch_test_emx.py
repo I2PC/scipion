@@ -31,7 +31,7 @@ import unittest, os, sys
 
 from unittest import TestResult, _TextTestResult
 from protlib_filesystem import getXmippPath
-from test.test_support import unlink
+#from test.test_support import unlink
 try:
    from unittest.runner import _WritelnDecorator # Python 2.7+
 except ImportError:
@@ -171,7 +171,24 @@ class TestEMX(unittest.TestCase):
         self.assertTrue(emxData.objLists[MICROGRAPH][0].strongEq(m1))
         self.assertTrue(emxData.objLists[MICROGRAPH][1].strongEq(m2))
         self.assertTrue(emxData.objLists[PARTICLE][0].strongEq(p1))
-
+        
+        
+    def test_31_firstObject(self):
+        #fileName = "massive_million.xml"
+        #fileName = "massive_100000.xml"
+        fileName = join(self.testsPath,'EMX/EMXread.emx')
+        emxData = EmxData()
+        xmlMapper = XmlMapper(emxData)
+        
+        mic = xmlMapper.firstObject(MICROGRAPH, fileName)
+        m1 = Emxmicrograph('mic', 1)
+        self.assertEqual(mic, m1, "first micrograph differ from expected")    
+ 
+        particle = xmlMapper.firstObject(PARTICLE, fileName)  
+        p1 = Emxparticle('parti', 1)
+        self.assertEqual(particle, p1, "first particle differ from expected")  
+            
+        
     def test_35size(self):
         emxData=EmxData()
 
@@ -318,12 +335,21 @@ class TestEMX(unittest.TestCase):
 
     def test_70schema(self):
         xmlFile    = join(self.testsPath,'EMX/EMXwrite.emx')
-        (code,_out,_err)=validateSchema(xmlFile)
+        (code,_out,_err) = validateSchema(xmlFile)
         self.assertEqual(code,0)
+        
+        
         xmlFile    = join(self.testsPath,'EMX/EMXwrite_badly_formed.emx')
-        with self.assertRaises(Exception) as context:
+        try:
             validateSchema(xmlFile)
-        self.assertTrue(context.exception.message.find('Error when validating ')>=0)
+        except ValidateError, v:
+            print "EXCEPTION TESTING STARTS HERE: an Error message should appear. It is OK disregard it."
+            print "Validate Error"
+            print v.getCode(), v.getMessage()
+            print "EXCEPTION TESTING ENDS HERE."
+        except Exception, e:
+            print "ERROR; we should have never arrive here:", e
+            self.assertEqual(1,0)
 
 from  XmippPythonTestResult import XmippPythonTestResult
 

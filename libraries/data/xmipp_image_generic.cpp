@@ -27,6 +27,9 @@
 #include "xmipp_image_generic.h"
 #include "xmipp_image_extension.h"
 #include "xmipp_error.h"
+#include "xmipp_fftw.h"
+#include "xmipp_types.h"
+#include "xvsmooth.h"
 
 
 ImageGeneric::ImageGeneric(DataType _datatype)
@@ -85,16 +88,17 @@ void  ImageGeneric::copy(const ImageGeneric &img)
 
 }
 
-void ImageGeneric::getDimensions(size_t & Xdim, size_t & Ydim, size_t & Zdim) const
+void ImageGeneric::getDimensions(size_t & xdim, size_t & ydim, size_t & Zdim) const
 {
     size_t Ndim;
-    image->getDimensions(Xdim, Ydim, Zdim, Ndim);
+    image->getDimensions(xdim, ydim, Zdim, Ndim);
 }
 
-void ImageGeneric::getDimensions(size_t & Xdim, size_t & Ydim, size_t & Zdim, size_t & Ndim) const
+void ImageGeneric::getDimensions(size_t & xdim, size_t & ydim, size_t & Zdim, size_t & Ndim) const
 {
-    image->getDimensions(Xdim, Ydim, Zdim, Ndim);
+    image->getDimensions(xdim, ydim, Zdim, Ndim);
 }
+
 void ImageGeneric::getDimensions(ArrayDim &aDim) const
 {
     image->getDimensions(aDim);
@@ -183,7 +187,8 @@ void ImageGeneric::setDatatype(DataType imgType)
             image = imT;
             data = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), datatype);
         }
-        break; case DT_Unknown:
+        break;
+    case DT_Unknown:
         REPORT_ERROR(ERR_IMG_UNKNOWN,"Datatype of the image file is unknown.");
         break;
     default:
@@ -192,31 +197,32 @@ void ImageGeneric::setDatatype(DataType imgType)
     }
 }
 
-void ImageGeneric::setDatatype(const FileName &name)
+void ImageGeneric::setDatatype(const FileName &name, ImageInfo &imgInf)
 {
-    ImageInfo imgInf;
     getImageInfo(name, imgInf);
     checkImageFileSize(name, imgInf, true);
     setDatatype(imgInf.datatype);
+
+}
+
+#define SET_DATATYPE(name) ImageInfo imgInf; setDatatype(name, imgInf);
+
+void ImageGeneric::setDatatype(const FileName &name)
+{
+    SET_DATATYPE(name);
 }
 
 int ImageGeneric::read(const FileName &name, DataMode datamode, size_t select_img,
                        bool mapData)
 {
-    ImageInfo imInf;
-    getImageInfo(name, imInf);
-    checkImageFileSize(name, imInf, true);
-    setDatatype(imInf.datatype);
-    return image->read(name, datamode, select_img, mapData && !imInf.swap);
+    SET_DATATYPE(name);
+    return image->read(name, datamode, select_img, mapData && !imgInf.swap);
 }
 
 int ImageGeneric::readMapped(const FileName &name, size_t select_img, int mode)
 {
-    ImageInfo imInf;
-    getImageInfo(name, imInf);
-    checkImageFileSize(name, imInf, true);
-    setDatatype(imInf.datatype);
-    return image->read(name, DATA, select_img, !imInf.swap, mode);
+    SET_DATATYPE(name);
+    return image->read(name, DATA, select_img, !imgInf.swap, mode);
 }
 
 int ImageGeneric::readOrReadMapped(const FileName &name, size_t select_img, int mode)
@@ -238,37 +244,112 @@ int ImageGeneric::readOrReadMapped(const FileName &name, size_t select_img, int 
     }
 }
 
-int ImageGeneric::readPreview(const FileName &name, size_t Xdim, size_t Ydim, int select_slice, size_t select_img)
+double getScale(ImageInfo imgInf, size_t &xdim, size_t &ydim)
 {
-    setDatatype(name);
-    return image->readPreview(name, Xdim, Ydim, select_slice, select_img);
+    double scale = 0;
+    // If only xdim is passed, it is the higher allowable size, for any dimension
+    if (ydim == 0 && imgInf.adim.xdim < imgInf.adim.ydim)
+    {
+        ydim = xdim;
+        scale = ((double) ydim)/((double) imgInf.adim.ydim);
+        xdim = (int)(scale*imgInf.adim.xdim);
+    }
+    else
+    {
+        scale = ((double) xdim)/((double) imgInf.adim.xdim);
+        if (ydim == 0)
+            ydim = (int)(scale*imgInf.adim.ydim);
+    }
+    return scale;
 }
 
-int ImageGeneric::readOrReadPreview(const FileName &name, size_t Xdim, size_t Ydim, int select_slice, size_t select_img,
+int ImageGeneric::readPreview(const FileName &name, size_t xdim, size_t ydim, int select_slice, size_t select_img)
+{
+    SET_DATATYPE(name);
+    double scale = getScale(imgInf, xdim, ydim);
+    //std::cerr << "DEBUG_JM: readPreview, scale: " << scale << std::endl;
+
+    if (scale < 0.1)
+      return readPreviewSmooth(name, xdim, ydim, select_slice, select_img);
+    return image->readPreview(name, xdim, ydim, select_slice, select_img);
+}
+
+int ImageGeneric::readOrReadPreview(const FileName &name, size_t xdim, size_t ydim, int select_slice, size_t select_img,
                                     bool mapData, bool wrap)
 {
-    ImageInfo imInf;
-    getImageInfo(name, imInf);
-    checkImageFileSize(name, imInf, true);
-    setDatatype(imInf.datatype);
+    SET_DATATYPE(name);
+    double scale = getScale(imgInf, xdim, ydim);
+    //std::cerr << "DEBUG_JM: readOrReadPreview, scale: " << scale << std::endl;
 
-    return image->readOrReadPreview(name, Xdim, Ydim, select_slice, select_img, !imInf.swap && mapData);
+    if (scale < 0.1)
+      return readPreviewSmooth(name, xdim, ydim, select_slice, select_img);
+    return image->readOrReadPreview(name, xdim, ydim, select_slice, select_img, !imgInf.swap && mapData);
 }
 
-void ImageGeneric::getPreview(ImageGeneric &imgOut, int Xdim, int Ydim, int select_slice, size_t select_img)
+void ImageGeneric::getPreview(ImageGeneric &imgOut, int xdim, int ydim, int select_slice, size_t select_img)
 {
     imgOut.setDatatype(getDatatype());
-    image->getPreview(imgOut.image, Xdim, Ydim, select_slice, select_img);
+    image->getPreview(imgOut.image, xdim, ydim, select_slice, select_img);
 }
 
 
-void  ImageGeneric::mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &_filename,
+int ImageGeneric::readPreviewFourier(const FileName &name, size_t xdim, size_t ydim, int select_slice, size_t select_img)
+{
+    ImageGeneric ig;
+    int result = ig.read(name, DATA, select_img);
+    ImageInfo ii;
+    ig.getInfo(ii);
+    setDatatype(ii.datatype);
+    switch (select_slice)
+    {
+    case CENTRAL_SLICE:
+    case ALL_SLICES:
+        select_slice = (int)((float)ii.adim.zdim / 2.0);
+        break;
+    default:
+        select_slice--;
+        break;
+    }
+
+    getScale(ii, xdim, ydim);
+
+    ig().getSlice(select_slice, data);
+
+
+    data->setXmippOrigin();
+    selfScaleToSizeFourier((int)ydim, (int)xdim, *data, 1);
+    return result;
+}
+
+int ImageGeneric::readPreviewSmooth(const FileName &name, size_t xdim, size_t ydim, int select_slice, size_t select_img)
+{
+  //std::cerr << "DEBUG_JM: readPreviewSmooth" << std::endl;
+    ImageGeneric ig;
+    int result = ig.read(name, DATA, select_img);
+    ig.convert2Datatype(DT_UChar);
+    ImageInfo ii;
+    ig.getInfo(ii);
+
+    getScale(ii, xdim, ydim);
+
+    setDatatype(DT_UChar);
+    resize(xdim, ydim, 1, 1, false);
+
+    byte *inputArray = (byte*) MULTIDIM_ARRAY_GENERIC(ig).getArrayPointer();
+    byte *outputArray = (byte*) MULTIDIM_ARRAY_GENERIC(*this).getArrayPointer();
+
+    SmoothResize(inputArray, outputArray, ii.adim.xdim, ii.adim.ydim, xdim, ydim);
+    return result;
+}
+
+
+void  ImageGeneric::mapFile2Write(int xdim, int ydim, int Zdim, const FileName &_filename,
                                   bool createTempFile, size_t select_img, bool isStack,int mode, int swapWrite)
 {
     image->setDataMode(HEADER); // Use this to ask rw* which datatype to use
     if (swapWrite > 0)
         image->swapOnWrite();
-    image->mapFile2Write(Xdim,Ydim,Zdim,_filename,createTempFile, select_img, isStack, mode);
+    image->mapFile2Write(xdim,ydim,Zdim,_filename,createTempFile, select_img, isStack, mode);
 
     DataType writeDT = image->datatype();
 
@@ -276,7 +357,7 @@ void  ImageGeneric::mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &
     {
         setDatatype(writeDT);
 
-        image->mapFile2Write(Xdim,Ydim,Zdim,_filename,createTempFile, select_img, isStack, mode);
+        image->mapFile2Write(xdim,ydim,Zdim,_filename,createTempFile, select_img, isStack, mode);
     }
 }
 
@@ -297,7 +378,7 @@ int ImageGeneric::readApplyGeo(const FileName &name, const MetaData &md, size_t 
 void ImageGeneric::mirrorY()
 {
     return image->mirrorY();
- }
+}
 /** Read an image from metadata, filename is taken from MDL_IMAGE */
 int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId,
                                const ApplyGeoParams &params)
@@ -472,7 +553,7 @@ void ImageGeneric::subtract(const ImageGeneric &img)
 }
 
 
-void createEmptyFile(const FileName &filename, int Xdim, int Ydim, int Zdim,
+void createEmptyFile(const FileName &filename, int xdim, int ydim, int Zdim,
                      size_t select_img, bool isStack, int mode, int _swapWrite)
 {
     ImageGeneric image;
@@ -487,5 +568,5 @@ void createEmptyFile(const FileName &filename, int Xdim, int Ydim, int Zdim,
         image.setDatatype(str2Datatype(strType));
     }
 
-    image.mapFile2Write(Xdim, Ydim, Zdim, filename, false, select_img, isStack, mode, _swapWrite);
+    image.mapFile2Write(xdim, ydim, Zdim, filename, false, select_img, isStack, mode, _swapWrite);
 }

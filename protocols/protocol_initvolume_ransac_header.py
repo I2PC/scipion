@@ -40,11 +40,11 @@ NRansac = 380
 """
 NumGrids = 3
 
-#{expert} Inlier percentil
-""" correlation value using the estimated initial volume to determine if an experimental projection is an
+#{expert} Inlier threshold
+""" correlation value threshold to determine if an experimental projection is an
 inlier or outlier
 """
-CorrThresh = 0.8
+CorrThresh = 0.77
 
 #{expert} Number of best volumes to refine
 """ Number of best volumes to refine 

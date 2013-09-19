@@ -196,6 +196,27 @@ def getXmippLabels():
             labels.append(label)
     return labels
 
+def getXmippLabelsName():
+    ''' Parse the labels name from the 'libraries/data/metadata_label.h' file '''
+    labelHeader = getXmippPath(os.path.join('libraries', 'data', 'metadata_label.h'))
+    f = open(labelHeader)
+    labels = []
+    comments = {}
+    
+    for line in f:
+        line = line.strip()
+        if line.startswith('MDL_') and '///<' in line:
+            parts = line.split('///<')
+            mdl = parts[0].strip()[:-1] # remove last comma
+            comm = parts[1].strip()
+            comments[mdl] = comm
+        if line.startswith('MDL::addLabel(MDL_'):
+            l = line.find('(')
+            r = line.find(')')
+            parts = line[l + 1:r].split(',')
+            labels.append(parts[2].replace('"', '').strip())
+    return labels
+
 def getXmippPrograms():
     '''Return the list of Xmipp's programs, taken from from bin/ folder'''     
     from glob import glob
@@ -539,4 +560,28 @@ def validateInputSize(references, images, md, errors):
             errors.append("References and images have not the same size")
     else:
         errors.append("Input metadata <%s> does not contain image column" % images)
+        
+        
+class RowMetaData():
+    """ This class is a wrapper for MetaData in row mode.
+    Where only one object is used.
+    """
+    def __init__(self):
+        self._md = xmipp.MetaData()
+        self._md.setColumnFormat(False)
+        self._id = self._md.addObject()
+        
+    def setValue(self, label, value):
+        self._md.setValue(label, value, self._id)
+        
+    def getValue(self, label):
+        self._md.getValue(label, self._id)
+        
+    def write(self, filename, mode=xmipp.MD_APPEND):
+        self._md.write(filename, mode)
+        
+    def read(self, filename):
+        self._md.read(filename)
+        self._md.setColumnFormat(False)
+        self._id = self._md.firstObject()
     

@@ -606,6 +606,9 @@ if MINGW:
     libraries.append(env['MINGW_PATHS'])
     AddLibrary('XmippData', '', DataSources, libraries, 
                ['lib'], ['XmippExternal','regex','rt'] + FFTWLibs + TIFFLibs + JPEGLibs + HDF5Libs + SQLiteLibs)
+elif MACOSX:
+    AddLibrary('XmippData', 'libraries/data', DataSources, libraries,
+               ['lib'], ['XmippExternal'] + FFTWLibs + TIFFLibs + JPEGLibs + HDF5Libs + SQLiteLibs)  
 else:
     AddLibrary('XmippData', 'libraries/data', DataSources, libraries,
                ['lib'], ['XmippExternal','rt'] + FFTWLibs + TIFFLibs + JPEGLibs + HDF5Libs + SQLiteLibs)  

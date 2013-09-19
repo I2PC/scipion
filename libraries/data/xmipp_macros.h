@@ -68,6 +68,7 @@
 /// Includes needed in APPLE Platforms
 #ifdef __APPLE__
 #include <math.h>
+#define __MACH__
 #endif
 
 /// Includes needed in Windows Platforms using MINGW

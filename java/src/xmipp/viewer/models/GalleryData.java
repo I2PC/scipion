@@ -40,8 +40,7 @@ import xmipp.utils.Param;
 import xmipp.utils.XmippStringUtils;
 
 /** This class will serve to store important data about the gallery */
-public class GalleryData
-{
+public class GalleryData {
 	public MetaData md;
 	public long[] ids;
 	public String[] mdBlocks = null;
@@ -58,8 +57,7 @@ public class GalleryData
 	private String filename;
 	public int resliceView;
 
-	public enum Mode
-	{
+	public enum Mode {
 		GALLERY_MD, GALLERY_VOL, TABLE_MD, GALLERY_ROTSPECTRA
 	};
 
@@ -99,11 +97,9 @@ public class GalleryData
 	 * 
 	 * @param jFrameGallery
 	 */
-	public GalleryData(Window window, String fn, Param param, MetaData md)
-	{
+	public GalleryData(Window window, String fn, Param param, MetaData md) {
 		this.window = window;
-		try
-		{
+		try {
 			selectedBlock = "";
 			parameters = param;
 			zoom = param.zoom;
@@ -112,8 +108,7 @@ public class GalleryData
 			resliceView = param.resliceView;
 			useGeo = param.useGeo;
 			wrap = param.wrap;
-			System.err.format(">>>> param.openingMode: %s\n", param.mode);
-			
+
 			if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_METADATA))
 				mode = Mode.TABLE_MD;
 			else if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_ROTSPECTRA))
@@ -121,51 +116,41 @@ public class GalleryData
 
 			setFileName(fn);
 
-			if (md == null)
-			{
+			if (md == null) {
 				this.md = new MetaData();
 				readMetadata(fn);
-			}
-			else
-			{
+			} else {
 				this.md = md;
 				loadMd();
 			}
 
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
 			md = null;
 		}
 
 	}// constructor GalleryData
-	
-	public ArrayList<ColumnInfo> getColumns()
-	{
+
+	public ArrayList<ColumnInfo> getColumns() {
 		return labels;
 	}
-	
-	public void setRenderColumn(ColumnInfo ci)
-	{
+
+	public void setRenderColumn(ColumnInfo ci) {
 		ciFirstRender = ci;
 	}
-	
-	public ColumnInfo getRenderColumn()
-	{
+
+	public ColumnInfo getRenderColumn() {
 		return ciFirstRender;
 	}
 
 	/** Return the name of the selected md block */
-	public String getMdFilename()
-	{
+	public String getMdFilename() {
 		if (selectedBlock.isEmpty())
 			return filename;
 		return String.format("%s@%s", selectedBlock, filename);
 	}// function getMdFilename
 
-	public String getMdSaveFileName()
-	{
+	public String getMdSaveFileName() {
 		if (filename == null)
 			return null;
 
@@ -175,27 +160,21 @@ public class GalleryData
 		else
 			savefn = String.format("%s@%s", selectedBlock, filename);
 		String ext;
-		if (savefn.contains("."))
-		{
+		if (savefn.contains(".")) {
 			ext = savefn.substring(savefn.lastIndexOf("."));
 			if (ext.equals(".stk"))
 				return savefn.replace(ext, ".xmd");
-		}
-		else
+		} else
 			savefn = savefn + ".xmd";
 		return savefn;
 	}
 
-	public void setFileName(String file)
-	{
+	public void setFileName(String file) {
 		filename = file;
 
-		if (file != null)
-		{
-			if (Filename.hasPrefix(file))
-			{
-				if (Filename.isMetadata(file))
-				{
+		if (file != null) {
+			if (Filename.hasPrefix(file)) {
+				if (Filename.isMetadata(file)) {
 					selectedBlock = Filename.getPrefix(file); // FIXME:
 																// validate
 																// block exists
@@ -210,11 +189,8 @@ public class GalleryData
 
 	}
 
-
-	
 	/** Load contents from a metadata already read */
-	public void loadMd() throws Exception
-	{
+	public void loadMd() throws Exception {
 		ids = md.findObjects();
 		loadLabels();
 		numberOfVols = 0;
@@ -224,22 +200,19 @@ public class GalleryData
 		selection = new boolean[ids.length];
 		is2dClassification = checkifIs2DClassificationMd();
 
-		if (is2dClassification)
-		{
+		if (is2dClassification) {
 			classes = new ClassInfo[ids.length];
 			classesArray = new ArrayList<ClassInfo>();
 			loadClassesInfo();
 		}
 
-		if (isRotSpectraMd() && mode == Mode.GALLERY_ROTSPECTRA)
-		{
+		if (isRotSpectraMd() && mode == Mode.GALLERY_ROTSPECTRA) {
 			if (zoom == 0)
 				zoom = 100;
 			return;
 		}
 
-		if (!md.isColumnFormat())
-		{
+		if (!md.isColumnFormat()) {
 			mode = Mode.TABLE_MD;
 			if (zoom == 0)
 				zoom = 100;
@@ -248,39 +221,33 @@ public class GalleryData
 		if (isGalleryMode())
 			mode = Mode.GALLERY_MD;
 
-		if (hasRenderLabel())
-		{
+		if (hasRenderLabel()) {
 			int renderLabel = ciFirstRender.getLabel();
 			ImageGeneric image = null;
 			String imageFn;
 			// Try to find at least one image to render
 			// and take dimensions from that
-			for (int i = 0; i < ids.length && image == null; ++i)
-			{
-				imageFn = Filename.findImagePath(md.getValueString(renderLabel, ids[i]), filename, true);
-				DEBUG.printFormat("imageFn1: %s", imageFn);
+			for (int i = 0; i < ids.length && image == null; ++i) {
+				imageFn = Filename.findImagePath(
+						md.getValueString(renderLabel, ids[i]), filename, true);
+				// DEBUG.printFormat("imageFn1: %s", imageFn);
 				// imageFn = Filename.fixPath(md.getValueString(renderLabel,
 				// ids[i]), filename, false);
 				// DEBUG.printFormat("imageFn2: %s", imageFn);
 				// if (imageFn != null){
-				if (imageFn != null)
-				{
-					try
-					{
+				if (imageFn != null) {
+					try {
 						image = new ImageGeneric(imageFn);
-					}
-					catch (Exception e)
-					{
+					} catch (Exception e) {
 						image = null;
 					}
 				}
 				break;
 			}
-			if (image != null)
-			{ // Image file was found to render
-				if (zoom == 0)
-				{ // if default value, calculate zoom
-					// If in micrograph mode, reduce the MAX_SIZE constant
+			if (image != null) { // Image file was found to render
+				if (zoom == 0) { // if default value, calculate zoom
+									// If in micrograph mode, reduce the
+									// MAX_SIZE constant
 					if (md.containsMicrographsInfo())
 						MAX_SIZE /= 2;
 					int xdim = image.getXDim();
@@ -289,31 +256,28 @@ public class GalleryData
 					zoom = (int) Math.ceil(scale * 100);
 				}
 
-				if (image.isVolume())
-				{ // We are assuming all are volumes
-					// or images, dont mix it
+				if (image.isVolume()) { // We are assuming all are volumes
+										// or images, dont mix it
 					if (isGalleryMode())
 						mode = Mode.GALLERY_VOL;
 					numberOfVols = md.size();
 					volumes = new String[numberOfVols];
 
-					for (int i = 0; i < numberOfVols; ++i)
-					{
-						volumes[i] = md.getValueString(ciFirstRender.getLabel(), ids[i]);
+					for (int i = 0; i < numberOfVols; ++i) {
+						volumes[i] = md.getValueString(
+								ciFirstRender.getLabel(), ids[i]);
 					}
-					commonVolPrefix = XmippStringUtils.commonPathPrefix(volumes);
+					commonVolPrefix = XmippStringUtils
+							.commonPathPrefix(volumes);
 
 					if (selectedVolFn.isEmpty())
 						selectVolume(volumes[0]);
 
 				}
 				image.destroy();
-			}
-			else
+			} else
 				zoom = 100; // Render missing image icon at zoom 100
-		}
-		else
-		{
+		} else {
 			// force this mode when there aren't render label
 			mode = Mode.TABLE_MD;
 		}
@@ -324,54 +288,50 @@ public class GalleryData
 	 * Load labels info in md, try to keep previous settings of render and
 	 * visible on same columns
 	 */
-	public void loadLabels()
-	{
+	public void loadLabels() {
 		ColumnInfo ci;
-		try
-		{
+		try {
 			int[] lab = md.getActiveLabels();
-			ArrayList<ColumnInfo> newLabels = new ArrayList<ColumnInfo>(lab.length);
+			ArrayList<ColumnInfo> newLabels = new ArrayList<ColumnInfo>(
+					lab.length);
 			ciFirstRender = null;
 			ColumnInfo ciFirstRenderVisible = null;
 			int inputRenderLabel = MDLabel.MDL_UNDEFINED;
 
-			if (!parameters.renderLabel.equalsIgnoreCase("first"))
-			{
+			if (!parameters.renderLabel.equalsIgnoreCase("first")) {
 				inputRenderLabel = MetaData.str2Label(parameters.renderLabel);
 			}
 
-			for (int i = 0; i < lab.length; ++i)
-			{
+			for (int i = 0; i < lab.length; ++i) {
 				ci = new ColumnInfo(lab[i]);
-				if (labels != null)
-				{
+				if (labels != null) {
 					for (ColumnInfo ci2 : labels)
 						if (ci.label == ci2.label)
 							ci.updateInfo(ci2);
-				}
-				else if (ci.allowRender)
+				} else if (ci.allowRender)
 					ci.render = globalRender;
 				newLabels.add(ci);
-				if (inputRenderLabel == lab[i] && ci.allowRender)
-				{
+				if (inputRenderLabel == lab[i] && ci.allowRender) {
 					ciFirstRender = ci;
 					if (ci.visible)
 						ciFirstRenderVisible = ci;
 				}
-				if ((ciFirstRender == null || ci.getLabel() == MDLabel.MDL_IMAGE) && ci.allowRender)//favor mdl_image over mdl_micrograph
+				if ((ciFirstRender == null || ci.getLabel() == MDLabel.MDL_IMAGE)
+						&& ci.allowRender)// favor mdl_image over mdl_micrograph
 				{
 					ciFirstRender = ci;
 				}
-				if ((ciFirstRenderVisible == null || ci.getLabel() == MDLabel.MDL_IMAGE)  && ci.allowRender && ci.visible)
+				if ((ciFirstRenderVisible == null || ci.getLabel() == MDLabel.MDL_IMAGE)
+						&& ci.allowRender && ci.visible)
 					ciFirstRenderVisible = ci;
 			}
-			if (ciFirstRenderVisible != null)
-			{
+			if (ciFirstRenderVisible != null) {
 				ciFirstRender = ciFirstRenderVisible;
 			}
 			// Add MDL_ENABLED if not present
-			if (!md.containsLabel(MDLabel.MDL_ENABLED) && (md.containsLabel(MDLabel.MDL_IMAGE) || md.containsLabel(MDLabel.MDL_MICROGRAPH)))
-			{
+			if (!md.containsLabel(MDLabel.MDL_ENABLED)
+					&& (md.containsLabel(MDLabel.MDL_IMAGE) || md
+							.containsLabel(MDLabel.MDL_MICROGRAPH))) {
 				newLabels.add(0, new ColumnInfo(MDLabel.MDL_ENABLED));
 				md.addLabel(MDLabel.MDL_ENABLED);
 				for (long id : ids)
@@ -380,25 +340,19 @@ public class GalleryData
 			}
 
 			labels = newLabels;
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}// function loadLabels
 
 	/** Read metadata and store ids */
-	private void readMetadata(String fn)
-	{
-		try
-		{
+	private void readMetadata(String fn) {
+		try {
 			hasMdChanges = false;
 			hasClassesChanges = false;
 			md.read(fn);
 
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			md = null;
@@ -410,48 +364,38 @@ public class GalleryData
 	 * Sort the metadata by a given column. The sort could be ascending or
 	 * descending
 	 */
-	public void sortMd(int col, boolean ascending)
-	{
-		try
-		{
+	public void sortMd(int col, boolean ascending) {
+		try {
 			md.sort(getLabelFromCol(col), ascending);
 			clearSelection();
 			hasMdChanges = true;
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	void clearSelection()
-	{
+	void clearSelection() {
 		for (int i = 0; i < selection.length; ++i)
 			selection[i] = false;
-		
+
 	}
 
 	/** Reload current metadata from file */
-	public void readMd()
-	{
+	public void readMd() {
 		if (filename != null)
 			readMetadata(getMdFilename());
 	}
 
 	/** Select one of the blocks */
-	public void selectBlock(String block)
-	{
+	public void selectBlock(String block) {
 		selectedBlock = block;
 		selectedVolFn = ""; // Set to empty string to get the first vol
 		readMd();
 	}
 
-	public ImageGalleryTableModel createModel()
-	{
-		try
-		{
-			switch (mode)
-			{
+	public ImageGalleryTableModel createModel() {
+		try {
+			switch (mode) {
 			case GALLERY_VOL:
 				return new VolumeGalleryTableModel(this);
 			case GALLERY_MD:
@@ -469,85 +413,74 @@ public class GalleryData
 			case GALLERY_ROTSPECTRA:
 				return new RotSpectraGalleryTableModel(this);
 			}
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return null;
 	}
 
-	public int getNumberOfBlocks()
-	{
+	public int getNumberOfBlocks() {
 		return mdBlocks != null ? mdBlocks.length : 0;
 	}
 
-	public int getNumberOfVols()
-	{
+	public int getNumberOfVols() {
 		return numberOfVols;
 	}
 
 	/** Return the mode of the gallery */
-	public Mode getMode()
-	{
+	public Mode getMode() {
 		return mode;
 	}
 
 	/** Return true if there is a renderizable label in the metadata */
-	public boolean hasRenderLabel()
-	{
+	public boolean hasRenderLabel() {
 		return ciFirstRender != null;
 	}
 
 	/** Return the label that is used for rendering */
-	public int getRenderLabel()
-	{
+	public int getRenderLabel() {
 		return ciFirstRender.getLabel();
 	}
 
 	/** Return true if the gallery mode is allowed */
-	public boolean allowGallery()
-	{
+	public boolean allowGallery() {
 		return hasRenderLabel() || isRotSpectraMd();
 	}
 
 	// some mode shortcuts
-	public boolean isGalleryMode()
-	{
-		return mode == Mode.GALLERY_MD || mode == Mode.GALLERY_VOL || mode == Mode.GALLERY_ROTSPECTRA;
+	public boolean isGalleryMode() {
+		return mode == Mode.GALLERY_MD || mode == Mode.GALLERY_VOL
+				|| mode == Mode.GALLERY_ROTSPECTRA;
 	}
 
-	public boolean isVolumeMode()
-	{
+	public boolean isVolumeMode() {
 		return mode == Mode.GALLERY_VOL;
 	}
 
-	public boolean isTableMode()
-	{
+	public boolean isTableMode() {
 		return mode == Mode.TABLE_MD;
 	}
 
 	/** Return true if the underlying metadata is in row format */
-	public boolean isColumnFormat()
-	{
+	public boolean isColumnFormat() {
 		return md.isColumnFormat();
 	}
 
-	public boolean isRotSpectraMode()
-	{
+	public boolean isRotSpectraMode() {
 		return mode == Mode.GALLERY_ROTSPECTRA;
 	}
 
-	public boolean isMicrographsMode()
-	{
+	public boolean isMicrographsMode() {
 		return md.containsMicrographsInfo();
 	}
 
 	// utility function to change of mode
-	public void changeMode()
-	{
-		if (isGalleryMode())
+	public void changeMode() {
+		if (isGalleryMode()) {
 			mode = Mode.TABLE_MD;
+			if (selection.length < ids.length) //This can happen when in volume mode, that changes the selection array
+				selection = new boolean[ids.length];
+		}
 		else if (isRotSpectraMd())
 			mode = Mode.GALLERY_ROTSPECTRA;
 		else if (numberOfVols > 0)
@@ -557,134 +490,103 @@ public class GalleryData
 	}
 
 	/** following function only should be used in VolumeGallery mode */
-	public String getVolumeAt(int index)
-	{
+	public String getVolumeAt(int index) {
 		return volumes[index];
 	}
 
-	public void selectVolume(String vol)
-	{
+	public void selectVolume(String vol) {
 		selectedVolFn = vol; // FIXME: Check it is valid
 	}
 
 	// Check if the underlying data has geometrical information
-	public boolean containsGeometryInfo()
-	{
-		try
-		{
+	public boolean containsGeometryInfo() {
+		try {
 			return md.containsGeometryInfo();
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
 		}
 	}
 
 	/** Check if an item is enabled or not */
-	public boolean isEnabled(int index)
-	{
-		try
-		{
+	public boolean isEnabled(int index) {
+		try {
 			if (isVolumeMode() || !md.containsLabel(MDLabel.MDL_ENABLED))
 				return true;
 			return md.getEnabled(ids[index]);
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return true;
 	}
 
 	/** Set enabled state */
-	public void setEnabled(int index, boolean value)
-	{
-		try
-		{
-			if (!isVolumeMode())
-			{ // slices in a volume are always enabled
+	public void setEnabled(int index, boolean value) {
+		try {
+			if (!isVolumeMode()) { // slices in a volume are always enabled
 				md.setEnabled(value, ids[index]);
 				hasMdChanges = true;
 			}
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
 	/** Set all values coming from a row md */
-	public void setRow(MetaData mdRow, long objId)
-	{
+	public void setRow(MetaData mdRow, long objId) {
 		md.setRow(mdRow, objId);
 		setMdChanges(true);
 	}
 
 	/** This is only needed for metadata table galleries */
-	public boolean isFile(ColumnInfo ci)
-	{
-		try
-		{
+	public boolean isFile(ColumnInfo ci) {
+		try {
 			return MetaData.isPathField(ci.getLabel());
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return false;
 	}
 
-	public boolean isFile(int col)
-	{
+	public boolean isFile(int col) {
 		return isFile(labels.get(col));
 	}
 
-	public boolean isImageFile(int col)
-	{
+	public boolean isImageFile(int col) {
 		return isImageFile(labels.get(col));
 	}
 
-	public boolean isImageFile(ColumnInfo ci)
-	{
-		try
-		{
+	public boolean isImageFile(ColumnInfo ci) {
+		try {
 			return MetaData.isImage(ci.getLabel());
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return false;
 	}
 
-	public boolean is2DClassificationMd()
-	{
+	public boolean is2DClassificationMd() {
 		return is2dClassification;
 	}
 
 	/** Return true if current metadata comes from 2d classification */
-	public boolean checkifIs2DClassificationMd()
-	{
-		try
-		{
-			if (!selectedBlock.startsWith("classes") || !(md.containsLabel(MDLabel.MDL_REF) && md.containsLabel(MDLabel.MDL_CLASS_COUNT)))
+	public boolean checkifIs2DClassificationMd() {
+		try {
+			if (!selectedBlock.startsWith("classes")
+					|| !(md.containsLabel(MDLabel.MDL_REF) && md
+							.containsLabel(MDLabel.MDL_CLASS_COUNT)))
 				return false;
-			for (long id : ids)
-			{
+			for (long id : ids) {
 				int ref = md.getValueInt(MDLabel.MDL_REF, id);
 				long count = md.getValueLong(MDLabel.MDL_CLASS_COUNT, id);
 				String s = Filename.getClassBlockName(ref);
-				if (count > 0 && !containsBlock(s))
-				{
+				if (count > 0 && !containsBlock(s)) {
 					// DEBUG.printFormat("2Dclass: for ref: %d, no block '%s'",
 					// ref, s);
 					return false;
 				}
 			}
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -692,23 +594,20 @@ public class GalleryData
 	}
 
 	/** Get the assigned class of some element */
-	public ClassInfo getItemClassInfo(int index)
-	{
-		if (is2dClassification)
+	public ClassInfo getItemClassInfo(int index) {
+		if (is2dClassification && index < classes.length) {
 			return classes[index];
+		}
 		return null;
 	}
 
 	/** Set item class info in md */
-	private void setItemClassInfo(long id, ClassInfo cli)
-	{
+	private void setItemClassInfo(long id, ClassInfo cli) {
 		String comment = "None";
 		int ref2 = -1;
 		int color = -1;
-		try
-		{
-			if (cli != null)
-			{
+		try {
+			if (cli != null) {
 				ref2 = cli.index + 1;
 				color = cli.getColor().getRGB();
 				comment = cli.getComment();
@@ -716,24 +615,20 @@ public class GalleryData
 			md.setValueInt(MDLabel.MDL_REF2, ref2, id);
 			md.setValueString(MDLabel.MDL_KEYWORDS, comment, id);
 			md.setValueInt(MDLabel.MDL_COLOR, color, id);
-		}
-		catch (Exception ex)
-		{
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 	}
 
 	/** Set the class of an element */
-	public void setItemClass(int index, ClassInfo cli)
-	{
+	public void setItemClass(int index, ClassInfo cli) {
 		hasClassesChanges = true;
 		classes[index] = cli;
 		long id = ids[index];
 		setItemClassInfo(id, cli);
 	}
 
-	public ClassInfo getClassInfo(int classNumber)
-	{
+	public ClassInfo getClassInfo(int classNumber) {
 		return classesArray.get(classNumber);
 	}
 
@@ -741,25 +636,20 @@ public class GalleryData
 	 * Compute and update the number of classes and images assigned to this
 	 * superclass
 	 */
-	public void updateClassesInfo()
-	{
-		try
-		{
+	public void updateClassesInfo() {
+		try {
 			int i = 0;
-			for (ClassInfo cli : classesArray)
-			{
+			for (ClassInfo cli : classesArray) {
 				cli.numberOfClasses = 0;
 				cli.numberOfImages = 0;
 				cli.index = i++;
 			}
 			i = 0;
-			for (long id : ids)
-			{ // iterate over all references
+			for (long id : ids) { // iterate over all references
 				long count = md.getValueLong(MDLabel.MDL_CLASS_COUNT, id);
 
 				ClassInfo cli = getItemClassInfo(i);
-				if (cli != null)
-				{
+				if (cli != null) {
 					cli.numberOfClasses += 1;
 					cli.numberOfImages += count;
 					hasMdChanges = true;
@@ -767,44 +657,36 @@ public class GalleryData
 				setItemClassInfo(id, cli);
 				++i;
 			}
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}// function upateClassesInfo
 
 	/** Load classes structure if previously stored */
-	public void loadClassesInfo()
-	{
-		try
-		{
-			if (md.containsLabel(MDLabel.MDL_REF2))
-			{
+	public void loadClassesInfo() {
+		try {
+			if (md.containsLabel(MDLabel.MDL_REF2)) {
 				long id;
 				int ref2;
 				ClassInfo cli;
 
-				for (int i = 0; i < ids.length; ++i)
-				{
+				for (int i = 0; i < ids.length; ++i) {
 					id = ids[i];
 					ref2 = md.getValueInt(MDLabel.MDL_REF2, id);
 
-					if (ref2 > 0)
-					{
+					if (ref2 > 0) {
 						cli = null;
 
 						for (ClassInfo cli2 : classesArray)
-							if (cli2.index == ref2)
-							{
+							if (cli2.index == ref2) {
 								cli = cli2;
 								break;
 							}
 
-						if (cli == null)
-						{
-							String comment = md.getValueString(MDLabel.MDL_KEYWORDS, id);
+						if (cli == null) {
+							String comment = md.getValueString(
+									MDLabel.MDL_KEYWORDS, id);
 							int color = md.getValueInt(MDLabel.MDL_COLOR, id);
 							cli = new ClassInfo(comment, new Color(color));
 							cli.index = ref2;
@@ -814,41 +696,37 @@ public class GalleryData
 					}
 				}
 			}
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}// function loadClassesInfo
 
 	/** Return the number of selected elements */
-	public int getSelectionCount()
-	{
+	public int getSelectionCount() {
 		int count = 0;
-		for (int i = 0; i < ids.length; ++i)
-			if (selection[i])
-				++count;
+		if (!isVolumeMode()) {
+			for (int i = 0; i < ids.length; ++i)
+				if (selection[i])
+					++count;
+		}
 		return count;
 	}
 
 	/** Create a metadata just with selected items */
-	public MetaData getSelectionMd()
-	{
+	public MetaData getSelectionMd() {
 		MetaData selectionMd = null;
-
-		long[] selectedIds = new long[getSelectionCount()];
-		int count = 0;
-		for (int i = 0; i < ids.length; ++i)
-			if (selection[i])
-				selectedIds[count++] = ids[i];
-		try
-		{
-			selectionMd = new MetaData();
-			selectionMd.importObjects(md, selectedIds);
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
+		if (!isVolumeMode()) {
+			long[] selectedIds = new long[getSelectionCount()];
+			int count = 0;
+			for (int i = 0; i < ids.length; ++i)
+				if (selection[i])
+					selectedIds[count++] = ids[i];
+			try {
+				selectionMd = new MetaData();
+				selectionMd.importObjects(md, selectedIds);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		return selectionMd;
 	}
@@ -856,12 +734,9 @@ public class GalleryData
 	/**
 	 * Compute the metadatas
 	 */
-	public MetaData[] getClassesMd()
-	{
-		try
-		{
-			if (!classesArray.isEmpty())
-			{
+	public MetaData[] getClassesMd() {
+		try {
+			if (!classesArray.isEmpty()) {
 				updateClassesInfo();
 				// Count the number of non-empty classes
 				MetaData[] mds = new MetaData[classesArray.size() + 1];
@@ -870,24 +745,24 @@ public class GalleryData
 				int i = 0;
 				long id;
 				// Md for classes block
-				for (ClassInfo cli : classesArray)
-				{
+				for (ClassInfo cli : classesArray) {
 					id = mdAux.addObject();
 					mdAux.setValueInt(MDLabel.MDL_REF, ++i, id);
-					mdAux.setValueLong(MDLabel.MDL_CLASS_COUNT, cli.numberOfImages, id);
-					mdAux.setValueString(MDLabel.MDL_KEYWORDS, cli.getComment(), id);
+					mdAux.setValueLong(MDLabel.MDL_CLASS_COUNT,
+							cli.numberOfImages, id);
+					mdAux.setValueString(MDLabel.MDL_KEYWORDS,
+							cli.getComment(), id);
 					mds[i] = new MetaData();
 				}
 				i = 0;
 				// Fill the classX_images blocks
-				for (i = 0; i < ids.length; ++i)
-				{
+				for (i = 0; i < ids.length; ++i) {
 					ClassInfo cli = getItemClassInfo(i);
-					if (cli != null)
-					{
+					if (cli != null) {
 						id = ids[i];
 						md.setValueInt(MDLabel.MDL_REF2, cli.index + 1, id);
-						md.setValueString(MDLabel.MDL_KEYWORDS, cli.getComment(), id);
+						md.setValueString(MDLabel.MDL_KEYWORDS,
+								cli.getComment(), id);
 						mdAux = getClassImages(i);
 						if (mdAux != null)
 							mds[cli.index + 1].unionAll(mdAux);
@@ -895,9 +770,7 @@ public class GalleryData
 				}
 				return mds;
 			}
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -905,57 +778,53 @@ public class GalleryData
 	}
 
 	/** Get the metadata with assigned images to this classes */
-	public MetaData getClassImages(int index)
-	{
-		try
-		{
+	public MetaData getClassImages(int index) {
+		try {
 			long id = ids[index];
 			int ref = md.getValueInt(MDLabel.MDL_REF, id);
 			String blockName = Filename.getClassBlockName(ref);
-			if (containsBlock(blockName))
-			{
+			if (containsBlock(blockName)) {
 				return new MetaData(blockName + Filename.SEPARATOR + filename);
 			}
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return null;
 	}
 
 	/** Return true if current metadata is a rotspectra classes */
-	public boolean isRotSpectraMd()
-	{
-		if (filename != null)
-		{
+	public boolean isRotSpectraMd() {
+		if (filename != null) {
 			String fnVectors = filename.replace("classes", "vectors");
 			String fnVectorsData = fnVectors.replace(".xmd", ".vec");
-			if (is2DClassificationMd() && Filename.exists(fnVectors) && Filename.exists(fnVectorsData))
+			if (is2DClassificationMd() && Filename.exists(fnVectors)
+					&& Filename.exists(fnVectorsData))
 				return true;
 		}
 		return false;
 	}
 
 	/** Check if a block is present, ignore case */
-	public boolean containsBlock(String block)
-	{
+	public boolean containsBlock(String block) {
 		if (mdBlocks != null)
 			for (String b : mdBlocks)
 				if (b.equalsIgnoreCase(block))
 					return true;
 		return false;
 	}
-	
-	/** Take an index counting only visible columns
-	 * and translate into the general column index
-	 * @param col column index in visible counting
+
+	/**
+	 * Take an index counting only visible columns and translate into the
+	 * general column index
+	 * 
+	 * @param col
+	 *            column index in visible counting
 	 * @return column index in general counting
 	 */
-	public int getVisibleColumnIndex(int col){
+	public int getVisibleColumnIndex(int col) {
 		int visibleIndex = 0;
-		for (int i=0; i < labels.size(); i++)
-			if (labels.get(i).visible){
+		for (int i = 0; i < labels.size(); i++)
+			if (labels.get(i).visible) {
 				if (col == visibleIndex)
 					return i;
 				visibleIndex++;
@@ -963,72 +832,53 @@ public class GalleryData
 		return -1;
 	}
 
-	public int getLabelFromCol(int col)
-	{
+	public int getLabelFromCol(int col) {
 		return labels.get(col).getLabel();
 	}
 
-	public ColumnInfo getColumnInfo(int col)
-	{
+	public ColumnInfo getColumnInfo(int col) {
 		return labels.get(col);
 	}
 
-	public String getValueFromCol(int index, int col)
-	{
-		if (!isColumnFormat())
-		{
+	public String getValueFromCol(int index, int col) {
+		if (!isColumnFormat()) {
 			col = index;
 			index = 0;
 		}
 		return getValueFromCol(index, labels.get(col));
 	}
 
-	public String getValueFromCol(int index, ColumnInfo ci)
-	{
-		try
-		{
+	public String getValueFromCol(int index, ColumnInfo ci) {
+		try {
 			return md.getValueString(ci.getLabel(), ids[index]);
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return null;
 	}
 
-	public String getValueFromLabel(int index, int label)
-	{
-		try
-		{
+	public String getValueFromLabel(int index, int label) {
+		try {
 			return md.getValueString(label, ids[index]);
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return null;
 	}
 
-	public void setValueToCol(int index, ColumnInfo ci, String value)
-	{
-		try
-		{
+	public void setValueToCol(int index, ColumnInfo ci, String value) {
+		try {
 			md.setValueString(ci.getLabel(), value, ids[index]);
 			setMdChanges(true);
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
 	/** Delete from metadata selected items */
-	public void removeSelection() throws Exception
-	{
-		for (int i = 0; i < ids.length; ++i)
-		{
-			if (selection[i])
-			{
+	public void removeSelection() throws Exception {
+		for (int i = 0; i < ids.length; ++i) {
+			if (selection[i]) {
 				md.removeObject(ids[i]);
 				hasMdChanges = true;
 			}
@@ -1036,15 +886,13 @@ public class GalleryData
 	}
 
 	/** Add a new class */
-	public void addClass(ClassInfo ci)
-	{
+	public void addClass(ClassInfo ci) {
 		classesArray.add(ci);
 		hasClassesChanges = true;
 	}
 
 	/** Remove a class from the selection */
-	public void removeClass(int classNumber)
-	{
+	public void removeClass(int classNumber) {
 		ClassInfo cli = getClassInfo(classNumber);
 		for (int i = 0; i < ids.length; ++i)
 			if (getItemClassInfo(i) == cli)
@@ -1053,43 +901,35 @@ public class GalleryData
 		hasClassesChanges = true;
 	}
 
-	public boolean hasMdChanges()
-	{
+	public boolean hasMdChanges() {
 		return hasMdChanges;
 	}
 
-	public void setMdChanges(boolean value)
-	{
+	public void setMdChanges(boolean value) {
 		hasMdChanges = value;
 	}
 
-	public boolean hasClassesChanges()
-	{
+	public boolean hasClassesChanges() {
 		return hasClassesChanges;
 	}
 
-
-	public boolean hasMicrographParticles()
-	{
+	public boolean hasMicrographParticles() {
 		return md.containsMicrographParticles();
 	}
 
-
-	public String getFileName()
-	{
+	public String getFileName() {
 		return filename;
 
 	}
-	public String getBlock(int index)
-	{
+
+	public String getBlock(int index) {
 		int size = getNumberOfBlocks();
 		if (size > 0 && index >= 0 && index < size)
 			return mdBlocks[index];
 		return null;
 	}
 
-	public MetaData getImagesMd()
-	{
+	public MetaData getImagesMd() {
 		int idlabel = getRenderLabel();
 		if (md == null)
 			return null;
@@ -1102,21 +942,17 @@ public class GalleryData
 		String imagepath;
 		long id2;
 		// md.print();
-		for (long id : md.findObjects())
-		{
-			if (isEnabled(index))
-			{
+		for (long id : md.findObjects()) {
+			if (isEnabled(index)) {
 				imagepath = md.getValueString(idlabel, id, true);
-				if (imagepath != null && ImageGeneric.exists(imagepath))
-				{
+				if (imagepath != null && ImageGeneric.exists(imagepath)) {
 					id2 = imagesmd.addObject();
-					if (useGeo)
-					{
+					if (useGeo) {
 						row = md.getRow(id);
-						row.setValueString(idlabel, imagepath, row.firstObject());
+						row.setValueString(idlabel, imagepath,
+								row.firstObject());
 						imagesmd.setRow(row, id2);
-					}
-					else
+					} else
 						imagesmd.setValueString(idlabel, imagepath, id2);
 				}
 			}
@@ -1124,20 +960,16 @@ public class GalleryData
 		}
 		return imagesmd;
 	}
-	
 
+	public String getFileInfo() {
+		File file = new File(getFileName());
 
-	public String getFileInfo()
-	{
-		File file = new File(getFileName()); 
-        
-        String fileInfo = "Path: " + file.getAbsolutePath() + "\n\n";
-         
-         
-        fileInfo += "File Name: " + file.getName() + "\n"
-                + "Last Modified: " + new Date(file.lastModified()) + "\n"
-        
-        		+ "Size: " + Filename.humanReadableByteCount(file.length());
+		String fileInfo = "Path: " + file.getAbsolutePath() + "\n\n";
+
+		fileInfo += "File Name: " + file.getName() + "\n" + "Last Modified: "
+				+ new Date(file.lastModified()) + "\n"
+
+				+ "Size: " + Filename.humanReadableByteCount(file.length());
 		return fileInfo;
 	}
 }// class GalleryDaa

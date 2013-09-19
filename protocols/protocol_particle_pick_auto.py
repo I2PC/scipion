@@ -9,10 +9,10 @@
 from config_protocols import protDict
 from os.path import exists
 from protlib_base import *
+from protlib_particles import countParticles
 from protlib_filesystem import createLink, deleteFiles, replaceFilenameExt
 from protlib_utils import runJob
-from protocol_particle_pick import launchParticlePickingGUI, getTemplateFiles, PM_READONLY, \
-    PM_REVIEW
+from protocol_particle_pick import launchParticlePickingGUI, PM_READONLY, PM_REVIEW
 from xmipp import MetaData, MD_APPEND, MDL_IMAGE, \
     MDL_PICKING_PARTICLE_SIZE, MDL_PICKING_MICROGRAPH_STATE, MDL_ENABLED, \
     MDL_COST, MDL_MICROGRAPH, MDValueRange, getBlocksInMetaDataFile
@@ -25,14 +25,17 @@ class ProtParticlePickingAuto(XmippProtocol):
         self.Import = "from protocol_particle_pick_auto import *"
         self.setPreviousRun(self.SupervisedRun)
         self.pickingDir = self.PrevRun.WorkingDir
-        self.keysToImport = ['micrographs', 'config', 'acquisition', 'templates']
+        self.keysToImport = ['config', 'acquisition', 'templates']
        
         self.inputFilename(*self.keysToImport)
-        self.inputProperty('TiltPairs', 'MicrographsMd', 'Fast')
-        self.inputProperty('TiltPairs', 'MicrographsMd')
-        self.micrographs = self.getFilename('micrographs')
-        self.model="model"
+        self.inputProperty('TiltPairs', 'Fast')
         
+        if self.MicrographsMd=="":
+            self.inputProperty('MicrographsMd')
+            self.anotherSet=False
+        else:
+            self.anotherSet=True
+        self.model="model"
         
     def createFilenameTemplates(self):
         return {
@@ -47,8 +50,6 @@ class ProtParticlePickingAuto(XmippProtocol):
                 'average': join('%(ExtraDir)s', '%(model)s_particle_avg.xmp'),
                 'config': join('%(ExtraDir)s','config.xmd')
                 }
-        
-   
        
     def defineSteps(self):
         self.insertStep("createDir",verifyfiles=[self.ExtraDir],path=self.ExtraDir)
@@ -56,11 +57,11 @@ class ProtParticlePickingAuto(XmippProtocol):
         for objId in md:
             self.particleSizeForAuto = md.getValue(MDL_PICKING_PARTICLE_SIZE, objId)
         filesToImport = [self.Input[k] for k in self.keysToImport]
-        filesToImport += getTemplateFiles(self.PrevRun)
-        filesToImport += [self.PrevRun.getFilename(k, model=self.model) for k in ['training', 'pca', 'rotpca', 'svm', 'average', 'config']]
+        filesToImport += [self.PrevRun.getFilename(k, model=self.model) for k in ['training', 'pca', 'rotpca', 'svm', 'average', 'config', 'templates']]
         self.insertImportOfFiles(filesToImport)
+        self.insertCopyFile(self.MicrographsMd, self.getFilename('micrographs'))
 
-        md = MetaData(self.Input['micrographs'])
+        md = MetaData(self.MicrographsMd)
         particleSize = self.particleSizeForAuto
         modelRoot = self.extraPath(self.model)
         for objId in md:
@@ -68,19 +69,20 @@ class ProtParticlePickingAuto(XmippProtocol):
             path = md.getValue(MDL_MICROGRAPH, objId)
             micrographName = removeBasenameExt(path)
             proceed = True
-            fnPos = self.PrevRun.getFilename('pos', micrograph=micrographName)
-            if xmippExists(fnPos):
-                blocks = getBlocksInMetaDataFile(fnPos)
-                copy = True
-                if 'header' in blocks:
-                    mdheader = MetaData("header@" + fnPos)
-                    state = mdheader.getValue(MDL_PICKING_MICROGRAPH_STATE, mdheader.firstObject())
-                    if state == "Available":
-                        copy = False
-                if copy:
-                    # Copy manual .pos file of this micrograph
-                    self.insertCopyFile(fnPos, self.getFilename('pos', micrograph=micrographName))
-                    proceed = False
+            if not self.anotherSet:
+                fnPos = self.PrevRun.getFilename('pos', micrograph=micrographName)
+                if xmippExists(fnPos):
+                    blocks = getBlocksInMetaDataFile(fnPos)
+                    copy = True
+                    if 'header' in blocks:
+                        mdheader = MetaData("header@" + fnPos)
+                        state = mdheader.getValue(MDL_PICKING_MICROGRAPH_STATE, mdheader.firstObject())
+                        if state == "Available":
+                            copy = False
+                    if copy:
+                        # Copy manual .pos file of this micrograph
+                        self.insertCopyFile(fnPos, self.getFilename('pos', micrograph=micrographName))
+                        proceed = False
             if proceed:
                 oroot = self.extraPath(micrographName)
                 cmd = "-i %(path)s --particleSize %(particleSize)d --model %(modelRoot)s --outputRoot %(oroot)s --mode autoselect" % locals()
@@ -88,22 +90,10 @@ class ProtParticlePickingAuto(XmippProtocol):
                     cmd += " --fast "
                 self.insertParallelRunJobStep("xmipp_micrograph_automatic_picking", cmd)
                                              
-        self.insertStep('gatherResults', WorkingDir=self.WorkingDir, PickingDir=self.pickingDir)
-        self.insertStep('deleteTempFiles', ExtraDir=self.ExtraDir)
-
     def summary(self):
         summary = ["Input directory: [%s] " % self.pickingDir]
-#        fnExtractList = self.getFilename('extract_list', model=self.model)
-#        if os.path.exists(fnExtractList):
-#            MD = MetaData("mic.*@" + fnExtractList)
-#            MDauto = MetaData()
-#            MDauto.importObjects(MD, MDValueRange(MDL_COST, 0., 1.))
-#            Nparticles = MDauto.size()
-#            #minTime = os.stat(self.workingDirPath(family+"_mask.xmp")).st_mtime
-#            #maxTime = os.stat(fnExtractList).st_mtime
-#            #Nmicrographs = len(getBlocksInMetaDataFile(fnExtractList))
-#            #msg += "<%d> particles automatically picked from <%d> micrographs in <%d> minutes"%(Nparticles,Nmicrographs,int((maxTime-minTime)/60.0))
-#        summary.append(msg)
+        micrographs, particles = countParticles(self.ExtraDir)
+        summary.append("Number of particles picked: <%(particles)d> (from <%(micrographs)d> micrographs)" % locals())
         return summary
     
     def validate(self):
@@ -111,57 +101,9 @@ class ProtParticlePickingAuto(XmippProtocol):
         return errors
     
     def visualize(self):
-        mode = PM_REVIEW + " %s"
-        for f in glob.glob(self.extraPath("*extract_list.xmd")):
-            launchParticlePickingGUI(None, self.Input['micrographs'], self.ExtraDir, mode % f, self.TiltPairs, self.Memory)
+        mode = PM_REVIEW
+        launchParticlePickingGUI(None, self.getFilename('micrographs'), self.ExtraDir, mode, self.TiltPairs, self.Memory)
             
-def gatherResults(log, WorkingDir, PickingDir):
-    md = MetaData(getProtocolFilename("micrographs",WorkingDir=WorkingDir))
-    mdpos = MetaData()
-    mdposAux = MetaData()
-    fnExtractList = getProtocolFilename("extract_list", ExtraDir=join(WorkingDir,"extra"))
-    particlesblock = 'particles@'
-    for objId in md:
-        fullname = md.getValue(MDL_MICROGRAPH, objId)
-        name = os.path.split(replaceFilenameExt(fullname, ''))[1]        
-        
-        fn = join(PickingDir, "extra", name + ".pos")
-        mdpos.clear()
-        print "Looking for "+fn
-        if exists(fn):
-            try:
-                print "Reading: "+ fn          
-                mdpos.read(particlesblock + fn)
-                mdpos.setValueCol(MDL_COST, 2.0)
-                print "Found : "+str(mdpos.size())
-            except:
-                # Skip this metadata if it is corrupted
-                pass
-        else:
-            print "    It does not exist"
-        for path in [PickingDir, WorkingDir]:
-            fn = join(path, "extra", name + "_auto.pos")
-            print "Looking for "+fn
-            if exists(fn):
-                try:
-                    print "Reading: %s" % fn          
-                    mdposAux.read(particlesblock + fn)
-                    mdposAux.removeDisabled();
-                    mdposAux.removeLabel(MDL_ENABLED)
-                    print "Found : "+str(mdposAux.size())
-                    mdpos.unionAll(mdposAux) 
-                    print "Altogether : "+str(mdpos.size())
-                except:
-                    # Skip this metadata if it is corrupted
-                    pass
-            else:
-                print "    It does not exist"
-        # Append alphanumeric prefix to help identifying the block s
-        mdpos.write("mic_%s@%s" % (name, fnExtractList), MD_APPEND)
-
-def deleteTempFiles(log, ExtraDir):
-    deleteFiles(log, glob.glob(join(ExtraDir, "*_auto.pos")), True)
-
 #		
 # Main
 #     

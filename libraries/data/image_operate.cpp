@@ -223,6 +223,11 @@ void radialAvg(Image<double> &op)
     }
 }
 
+void reset(Image<double> &op)
+{
+	op().initZeros();
+}
+
 void ProgOperate::defineParams()
 {
     each_image_produces_an_output = true;
@@ -257,6 +262,7 @@ void ProgOperate::defineParams()
     addParamsLine("or --column <value>          :Extracts a given column from a image or volume");
     addParamsLine("or --row    <value>          :Extracts a given row from a image or volume");
     addParamsLine("or --radial_avg              :Compute the radial average of an image");
+    addParamsLine("or --reset                   :Set the image to 0");
 
     addExampleLine("Sum two volumes and save result", false);
     addExampleLine("xmipp_image_operate -i volume1.vol --plus volume2.vol -o result.vol");
@@ -392,6 +398,11 @@ void ProgOperate::readParams()
     {
         fnOut = fn_out;
         unaryOperator = radialAvg;
+    }
+    else if (checkParam("--reset"))
+    {
+        fnOut = fn_out;
+        unaryOperator = reset;
     }
     else if (checkParam("--log"))
         unaryOperator = log;

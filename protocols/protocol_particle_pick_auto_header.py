@@ -9,11 +9,15 @@
 
 # {eval} expandCommentRun()
 
-# {run}(particle_pick) Supervised particle picking RUN
+# {run}(particle_pick) Supervised particle picking run
 """
 Select previous RUN of the <Supervised> particle picking.
 """
 SupervisedRun = ""
+
+# {file}(micrographs*.xmd) Set of micrographs to pick
+""" Leave it empty if it is the same as in the supervised particle picking"""
+MicrographsMd = ""
 
 # {eval} expandJavaMemory()
 

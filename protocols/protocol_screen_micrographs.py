@@ -114,15 +114,19 @@ class ProtScreenMicrographs(XmippProtocol):
     
     def validate(self):
         errors = []
+
         if self.DownsampleFactor<1:
             errors.append("Downsampling must be >=1");
 
+        micsFn = self.Input['micrographs']
         # Check that there are any micrograph to process
-        if xmippExists(self.Input['micrographs']):
-            md = xmipp.MetaData(self.Input['micrographs'])
+        if xmippExists(micsFn):
+            md = xmipp.MetaData(micsFn)
             if md.isEmpty():
                 errors.append("Imported micrographs file <%(micrographs)s> is empty" % self.Input)
-        
+#        else:
+#            errors.append("Expected micrographs file <%(micrographs)s> is missing" % self.Input)
+            
         if self.AmplitudeContrast < 0:
             errors.append("Q0 should be positive")
         

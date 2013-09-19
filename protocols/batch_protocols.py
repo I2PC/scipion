@@ -68,7 +68,7 @@ ActionIcons = {
 
 
 GROUP_ALL = 'All'
-GROUP_XMIPP = protDict.xmipp.title
+#GROUP_XMIPP = protDict.xmipp.title
         
 class ProjectSection(tk.Frame):
     def __init__(self, master, label_text, **opts):
@@ -573,14 +573,14 @@ class XmippProjectGUI():
             if not self.graphView:
                 # Update runs tree
                 for name, state, stateStr, modified in stateList:
-                    tree.insert('', 'end', text = name, 
+                    tree.insert('', 'end', text = name, tags=('normal'),
                                 image=self.getStateImage(state),
                                 values=(stateStr, modified)) 
                 
                 for c in tree.get_children(''):
                     if selectFirst or tree.item(c, 'text') == runName:
                         tree.selection_set(c)
-                        self.updateRunSelection(tree.index(c))
+                        self.updateRunSelection(tree.index(c), update_summary=checkDead)
                         break
             else:
                 self.updateHistoryGraph()
@@ -588,7 +588,7 @@ class XmippProjectGUI():
             self.historyRefreshRate = min(10*self.historyRefreshRate, 3600)
             self.historyRefresh = tree.after(self.historyRefreshRate*1000, self.updateRunHistory, protGroup, False)
         else:
-            self.updateRunSelection(-1)
+            self.updateRunSelection(-1, update_summary=checkDead)
 
     #---------------- Functions related with Popup menu ----------------------   
     def unpostMenu(self, event=None):
@@ -643,7 +643,7 @@ class XmippProjectGUI():
             self.updateRunHistory(group)
             self.lastDisplayGroup = group
             
-    def updateRunSelection(self, index):
+    def updateRunSelection(self, index, update_summary=False):
         state = tk.NORMAL
         details = self.Frames['details']
         if index == -1:
@@ -660,7 +660,7 @@ class XmippProjectGUI():
                 
                 run_state = run['run_state']
                 run_summary_cache = run['script'].replace('.py', '_summary.txt')
-                update_summary = (run_state == SqliteDb.RUN_STARTED or
+                update_summary = (update_summary or (run_state == SqliteDb.RUN_STARTED) or
                                   not exists(run_summary_cache))
                 
                 prot = self.project.getProtocolFromModule(run['script'])
@@ -809,8 +809,8 @@ class XmippProjectGUI():
                 menu = self.createToolbarMenu(section, opts)
                 self.ToolbarButtonsDict[index] = (key, btn, menu)
                 index = index + 1
-        section.addButton(GROUP_XMIPP, command=self.launchProgramsGUI)
-        self.ToolbarButtonsDict[index] = (GROUP_XMIPP, None, None)
+        #section.addButton(GROUP_XMIPP, command=self.launchProgramsGUI)
+        #self.ToolbarButtonsDict[index] = (GROUP_XMIPP, None, None)
 
         return toolbar
                 
@@ -886,6 +886,7 @@ class XmippProjectGUI():
         tree.bind('<Double-1>', lambda e:self.runButtonClick(ACTION_DEFAULT))
         tree.bind("<Button-3>", self.onRightClick) #right button on win and linux
         tree.bind("<Button-2>", self.onRightClick) #right button on mac
+        tree.tag_configure('normal', font=Fonts['normal'])
         self.treeHist = tree
         
     def createHistoryGraph(self, parent):

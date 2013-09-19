@@ -28,7 +28,7 @@
 # This library contains some common utilities 
 # for all particles related protocols: Extract, Import
 from protlib_base import *
-from xmipp import MetaData, MetaDataInfo, MDL_ZSCORE
+from xmipp import MetaData, MetaDataInfo, MDL_ZSCORE, getBlocksInMetaDataFile
 from protlib_utils import runJob, runShowJ
 from protlib_filesystem import moveFile
 #MDL_CTF_SAMPLING_RATE, MDL_CTF_VOLTAGE, MDL_CTF_DEFOCUSU, MDL_CTF_DEFOCUSV, \
@@ -144,4 +144,35 @@ def sortImages(log, ImagesFn, rejectionMethod='None', maxZscore=3, percentage=5)
         md.read(ImagesFn) # Should have ZScore label after runJob
         md.sort(MDL_ZSCORE)
         md.write(ImagesFn)        
+
+def getMetadataWithPickedParticles(fnPos):
+    mdpos = MetaData() 
+    mdposAuto = MetaData()
+    
+    mdpos.clear()
+    if exists(fnPos):
+        try:
+            blocks = getBlocksInMetaDataFile(fnPos)
+            if 'particles' in blocks:         
+                mdpos.read("particles@" + fnPos)
+            if 'particles_auto' in blocks:
+                mdposAuto.read("particles_auto@" + fnPos)
+                mdposAuto.removeDisabled()
+            mdpos.unionAll(mdposAuto)
+        except:
+            pass
+    return mdpos
+
+def countParticles(directory, pattern='*.pos'):
+    '''Return the number of picked micrographs and particles '''
+    particles = 0
+    micrographs = 0
+    import glob    
+    for fnPos in glob.glob(os.path.join(directory,pattern)):
+        md=getMetadataWithPickedParticles(fnPos)
+        pos_particles=md.size()
+        if pos_particles > 0:
+            particles += pos_particles
+            micrographs += 1
+    return micrographs, particles
 

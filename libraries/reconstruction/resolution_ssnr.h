@@ -49,6 +49,8 @@ public:
     FileName fn_S_sel, fn_N_sel;
     /// Filename of the Volumetric SSNR, used only for radial averaging
     FileName fn_VSSNR;
+    /// Fourier projections
+    bool fourierProjections;
     /// Ringwidth
     double ring_width;
     /// Sampling rate
@@ -59,12 +61,16 @@ public:
     /** Output rootname for the individual estimations.
         If empty, SSNR is inserted before the extension in fn_S */
     FileName fn_out_images;
+    /** Symmetry */
+    String sym;
     /** Generate VSSNR.*/
     bool generate_VSSNR;
     /** Generate radial average.*/
     bool radial_avg;
     /** Min_power: Threshold for not dividing */
     double min_power;
+    /** Number of threads for ART */
+    int Nthreads;
 public:
     /* Side info -------------------------------------------------------- */
     // Signal volume
