@@ -28,7 +28,9 @@ SQLiteLibs = ['sqlite3']
 #PYSQliteDir = "external/pysqlite-2.6.3"
 
 PythonDir = "external/python/Python-2.7.2"
-PythonLibs = []
+PythonInc = ["#"+PythonDir,"#"+PythonDir+"/Include","#lib/python2.7/site-packages/numpy/core/include"]
+PythonLibDir = ["#"+PythonDir]
+PythonLibs = ['python2.7']
 
 PluginLibs = {}
 PluginResources = {}
@@ -202,9 +204,13 @@ def AddXmippProgram(name, libs=[], folder='programs', incPaths=[], libPaths=[],
     if 'XmippRecons' in finalLibs and not 'XmippClassif' in finalLibs:
         finalLibs.append('XmippClassif')
     if 'XmippRecons' in finalLibs and int(env['cuda']):
-	finalLibs.append("XmippReconsCuda");
+        finalLibs.append("XmippReconsCuda");
     if int(env["arpack"]):
         finalLibs += ['arpack++', 'arpack', 'lapack', 'blas']
+    if 'XmippInterface' in finalLibs:
+      finalLibPath += ['libraries/interface']+PythonLibDir
+      finalLibs += PythonLibs
+      finalIncludePath += PythonInc
     program = AddProgram(name, 'applications/%s/%s' % (folder, name), '*.cpp', [],
         finalIncludePath, finalLibPath, finalLibs, [], [])
     env.Alias('xmipp_programs', program)
@@ -258,7 +264,9 @@ def AddXmippMPIProgram(name, libs=[]):
        if libs[i] == 'XmippRecons':
           finalLibPath += ['libraries/reconstruction']
        elif libs[i] == 'XmippInterface':
-          finalLibPath += ['libraries/interface']
+          finalLibPath += ['libraries/interface']+PythonLibDir
+          finalLibs += PythonLibs
+          finalIncludePath += PythonInc
        elif libs[i] == 'XmippRecons_Interface':
           finalLibPath += ['libraries/interface']
           finalLibs.insert(i + 1, 'XmippInterface')
@@ -662,7 +670,7 @@ AddMPILibrary("XmippParallel", 'libraries/parallel', ParallelSources, ["#", "#li
 # Interface
 InterfaceSources = Glob('libraries/interface', '*.cpp', [])
 AddLibrary('XmippInterface', 'libraries/interface', InterfaceSources,
-    ['#libraries', '#external', '#', '#'+HDF5Dir], ['lib'], ['XmippExternal', 'XmippData', 'pthread'])
+    ['#libraries', '#external', '#', '#'+HDF5Dir]+PythonInc, ['lib']+PythonLibDir, ['XmippExternal', 'XmippData', 'pthread']+PythonLibs)
 
 # Recons Interface
 #AddLibrary('XmippRecons_Interface', '#libraries/reconstruction',
@@ -877,7 +885,7 @@ AddXmippProgram('tomo_detect_missing_wedge', ['XmippRecons'])
 AddXmippProgram('tomo_project', ['XmippRecons'])
 AddXmippProgram('tomo_remove_fluctuations', ['XmippRecons'])
 AddXmippProgram('tomo_extract_subvolume', ['XmippRecons'])
-AddXmippProgram('volume_align')
+AddXmippProgram('volume_align_prog', ['XmippInterface'])
 AddXmippProgram('volume_center')
 AddXmippProgram('volume_correct_bfactor', ['XmippRecons'])
 AddXmippProgram('volume_enhance_contrast', ['XmippRecons'])
@@ -921,6 +929,7 @@ AddBatch('micrograph_particle_picking', 'applications/scripts/micrograph_particl
 AddBatch('chimera_client', 'applications/scripts/chimera_client', '.py')
 #AddBatch('metadata_showj', 'applications/scripts/metadata_showj', '.py')
 AddBatch('micrograph_tiltpair_picking', 'applications/scripts/micrograph_tiltpair_picking', '.py')
+AddBatch('mpi_classify_CLTomo', 'applications/scripts/mpi_classify_CLTomo', '.sh')
 AddBatch('mpi_steps_runner', 'protocols', '.py')
 AddBatch('projections_explorerj', 'applications/scripts/projections_explorerj', '.py')
 #AddBatch('rot_spectraj', 'applications/scripts/rot_spectraj', '.py')
@@ -928,6 +937,7 @@ AddBatch('showj', 'applications/scripts/showj', '.py')
 #AddBatch('stitchingj', 'applications/scripts/stitchingj', '.py')
 AddBatch('tomoj', 'applications/scripts/tomoj', '.py')
 AddBatch('visualize_preprocessing_micrographj', 'applications/scripts/visualize_preprocessing_micrograph', '.py')
+AddBatch('volume_align', 'applications/scripts/volume_align', '.sh')
 
 # Shell script files
 #
@@ -946,9 +956,8 @@ AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
 AddXmippMPIProgram('mpi_classify_CL2D', ['XmippRecons'])
 AddProgramLink('classify_CL2D', 'mpi_classify_CL2D')
-if not int(env['release']):
-    AddXmippMPIProgram('mpi_classify_CL3D', ['XmippRecons'])
-    AddProgramLink('classify_CL3D', 'mpi_classify_CL3D')
+AddXmippMPIProgram('mpi_classify_CLTomo_prog', ['XmippRecons','XmippInterface'])
+AddProgramLink('classify_CLTomo', 'mpi_classify_CLTomo')
 AddXmippMPIProgram('mpi_classify_CL2D_core_analysis', ['XmippRecons'])
 if not int(env['release']):
     AddXmippMPIProgram('mpi_classify_FTTRI', ['XmippRecons'])
@@ -976,7 +985,8 @@ AddXmippMPIProgram('mpi_transform_filter', ['XmippRecons'])
 AddXmippMPIProgram('mpi_transform_symmetrize', ['XmippRecons'])
 AddXmippMPIProgram('mpi_transform_geometry', ['XmippRecons'])
 AddXmippMPIProgram('mpi_transform_mask', ['XmippRecons'])
-AddXmippMPIProgram('mpi_transform_normalize', ['XmippRecons'])
+AddXmippMPIProgram('mpi_transform_normalize')
+AddXmippMPIProgram('mpi_transform_threshold', ['XmippRecons'])
 if not int(env['release']):
     AddXmippMPIProgram('mpi_write_test', ['XmippRecons'])
 #    AddXmippMPIProgram('template_threads', ['XmippRecons'])
