@@ -164,7 +164,7 @@ class TestXmippPythonInterface(unittest.TestCase):
         
         error = errorBetween2CTFs(md1,md2, 256, 0.05,0.25)
 
-        self.assertAlmostEqual(error, 10441.1,0)
+        self.assertAlmostEqual(error, 5045.79,0)
 
     def test_xmipp_errorMaxFreqCTFs(self):
         '''activateMathExtensions'''

@@ -30,7 +30,8 @@ except ImportError:
                      'earlier than 2.7 this module may be missing. '
                      )
 
-VERSION=1.0
+ERR_VALIDATION_WRONG=1
+VERSION = 1.0
 ROOTNAME = 'EMX'
 HEADER = '''
   ##########################################################################
@@ -48,8 +49,8 @@ HEADER = '''
   #  Please report bugs to: emx@cnb.csic.es
   ##########################################################################
   '''
-EMXSCHEMA10 ='http://sourceforge.net/p/emexchange/code/ci/master/tree/trunk/resourcesEmx/schemas/emx.xsd?format=raw'
-EMXSCHEMA11 ='http://sourceforge.net/p/emexchange/code/ci/master/tree/trunk/resourcesEmx/schemas/emx_11.xsd?format=raw'
+EMXSCHEMA10 = 'http://sourceforge.net/p/emexchange/code/ci/master/tree/trunk/resourcesEmx/schemas/emx.xsd?format=raw'
+EMXSCHEMA11 = 'http://sourceforge.net/p/emexchange/code/ci/master/tree/trunk/resourcesEmx/schemas/emx_11.xsd?format=raw'
 from emx import MICROGRAPH, EMX_SEP, CLASSLIST, emxDataTypes
 from emx import Emxmicrograph, Emxparticle
 
@@ -60,7 +61,7 @@ try:
 except ImportError:
     import xml.etree.ElementTree as ET
 
-#def convert2Dictionary(mydict):
+# def convert2Dictionary(mydict):
 #    s = ''
 #    for value in mydict.values(): 
 #        s += value
@@ -72,17 +73,17 @@ class ValidateError(Exception):
     def __str__(self):
         return "Error Code: %d. Message: %s" % (self.errorCode, self.errorMessage)
     def getCode(self):
-        return self.code
+        return self.errorCode
     def getMessage(self):
-        return self.message
+        return self.errorMessage
     
 class XmlMapper():
     '''Mapper for XML'''
     def __init__(self, emxData):
         self.emxData = emxData
-        self.classObject={}
+        self.classObject = {}
         for element in CLASSLIST:
-            self.classObject[element] = globals()['Emx'+element]
+            self.classObject[element] = globals()['Emx' + element]
 
     def __del__(self):
         pass
@@ -92,101 +93,101 @@ class XmlMapper():
         Each object goes to a different element. Much much faster...
         """
         
-        #write primary key
+        # write primary key
         xmlString = r"  <%s" % object.name
         for key, value in object.dictPrimaryKeys.iteritems():
             if value is None:
                 continue
-            xmlString += ' %(key)s="%(value)s"'%({'key':key,'value':str(value)})
+            xmlString += ' %(key)s="%(value)s"' % ({'key':key, 'value':str(value)})
         xmlString += ">\n"
         
-        #write attributes
-        oldParent=""
+        # write attributes
+        oldParent = ""
         for key, value in object.iterAttributes():
             if value is None:
                 continue
             unit = emxDataTypes[key].getUnit()
-            #is this an special case, that is, 
+            # is this an special case, that is, 
             # does the label contains '__'?
             # I asumme there is no grandchild
             if EMX_SEP in key:
-                (parent,child) = key.split(EMX_SEP)
-                #take care of cases like:
-                #<pixelSpacing>
+                (parent, child) = key.split(EMX_SEP)
+                # take care of cases like:
+                # <pixelSpacing>
                 # <X>5.6</X>
                 # <Y>5.7</Y>
-                #</pixelSpacing>
-                #second entry
+                # </pixelSpacing>
+                # second entry
                 if oldParent == parent:
-                    xmlString = xmlString.replace("  </%s>\n"%parent,"")
-                #first entry
+                    xmlString = xmlString.replace("  </%s>\n" % parent, "")
+                # first entry
                 else:
-                    xmlString += "    <%s>\n  "%parent
+                    xmlString += "    <%s>\n  " % parent
                 if unit is None:
                     xmlString += "    <%(child)s>%(value)s"\
-                              "</%(child)s>\n  </%(parent)s>\n"%({'parent':parent,
+                              "</%(child)s>\n  </%(parent)s>\n" % ({'parent':parent,
                                                            'child':child,
                                                            'value':str(value)})
                 else:
                     xmlString += '    <%(child)s unit="%(unit)s">%(value)s'\
-                              "</%(child)s>\n    </%(parent)s>\n"%({'parent':parent,
+                              "</%(child)s>\n    </%(parent)s>\n" % ({'parent':parent,
                                                            'child':child,
                                                            'value':str(value),
                                                            'unit':unit})
                 oldParent = parent
-            #simple attributes with no child
+            # simple attributes with no child
             else:
                 if unit is None:
-                    xmlString += "    <%(key)s>%(value)s</%(key)s>\n"%({'key':key,'value':str(value)})
+                    xmlString += "    <%(key)s>%(value)s</%(key)s>\n" % ({'key':key, 'value':str(value)})
                 else:
-                    xmlString += '    <%(key)s unit="%(unit)s">%(value)s</%(key)s>\n'%({'key':key,'value':str(value),'unit':unit})
+                    xmlString += '    <%(key)s unit="%(unit)s">%(value)s</%(key)s>\n' % ({'key':key, 'value':str(value), 'unit':unit})
                     
-        #write foreign key
+        # write foreign key
         if len(object.dictForeignKeys) and\
                object.dictForeignKeys[object.dictForeignKeys.keys()[0]]:
             pointedObject = object.dictForeignKeys[object.dictForeignKeys.keys()[0]]
-            xmlString += "    <%s"%pointedObject.name
+            xmlString += "    <%s" % pointedObject.name
             for key, value in pointedObject.dictPrimaryKeys.iteritems():
                 if value is None:
                     continue
-                xmlString += ' %(key)s="%(value)s"'%({'key':key,'value':str(value)})
+                xmlString += ' %(key)s="%(value)s"' % ({'key':key, 'value':str(value)})
             xmlString += "/>\n"
-        xmlString += "  </%s>\n"%object.name
-        #print xmlString
+        xmlString += "  </%s>\n" % object.name
+        # print xmlString
         return xmlString
 
-    _attributes=[
+    _attributes = [
         'acceleratingVoltage'
-        ,'activeFlag'
-        ,'amplitudeContrast'
-        ,'cs'
-        ,'defocusU'
-        ,'defocusV'
-        ,'defocusUAngle'
-        ,'fom'
-        ,'pixelSpacing__X'
-        ,'pixelSpacing__Y'
-        ,'pixelSpacing__Z'
+        , 'activeFlag'
+        , 'amplitudeContrast'
+        , 'cs'
+        , 'defocusU'
+        , 'defocusV'
+        , 'defocusUAngle'
+        , 'fom'
+        , 'pixelSpacing__X'
+        , 'pixelSpacing__Y'
+        , 'pixelSpacing__Z'
         ] 
     
     def readEMXFile(self, fileName):
         """ create tree from xml file 
         """
-        #get context
-        context     = ET.iterparse(fileName, events=('start','end'))
+        # get context
+        context = ET.iterparse(fileName, events=('start', 'end'))
         # turn it into an iterator
-        context     = iter(context)
+        context = iter(context)
         # get the root element
         event, root = context.next()
         
-        #self.classObject = globals()['Emx'+element]
+        # self.classObject = globals()['Emx'+element]
         doItPK = True
-        skipLabelPK='kk'
+        skipLabelPK = 'kk'
         
         mergeParent = False
-        parentLabel='kk'
+        parentLabel = 'kk'
         
-        lastStartTagA='kk'
+        lastStartTagA = 'kk'
         lastEventStartA = False
 
         listObjectWithForeignKey = []
@@ -196,65 +197,65 @@ class XmlMapper():
             if tag == 'EMX':
                 continue
             if event == 'start':
-                #primary key and FK
+                # primary key and FK
                 if tag in CLASSLIST:
-                    #only primary key
+                    # only primary key
                     if(doItPK):
                         self.createObject(elem)
                         doItPK = False
                         skipLabelPK = tag
-                    #foreign key
+                    # foreign key
                     else:
-                        #get PF and save the map for the first pass 
-                        #since the actual pointed object may not exists
-                        FK=self.readObjectPK(elem)
-                        self._object._setXMLForeignKey(tag,FK )
+                        # get PF and save the map for the first pass 
+                        # since the actual pointed object may not exists
+                        FK = self.readObjectPK(elem)
+                        self._object._setXMLForeignKey(tag, FK)
                         listObjectWithForeignKey.append(self._object)
                 else:
                     if lastEventStartA == True:
-                        mergeParent   = True
-                        parentLabel   = lastStartTagA
-                    lastStartTagA=tag
+                        mergeParent = True
+                        parentLabel = lastStartTagA
+                    lastStartTagA = tag
                     lastEventStartA = True
 
             elif event == 'end':
-                #PK or FG
+                # PK or FG
                 if tag in CLASSLIST and skipLabelPK == tag:
                     doItPK = True
-                #other attributes
+                # other attributes
                 else:
-                    #simple element
+                    # simple element
                     if lastStartTagA == tag:
                         if elem.text is None:
-                            raise Exception ("Element: "+tag+" is empty")
+                            raise Exception ("Element: " + tag + " is empty")
                         else:
                             text = elem.text.strip(' \n\t')
-                        if(len(text)<1):
-                            raise Exception ("ZERO for tag=%s, value=%s"%(tag,text))
+                        if(len(text) < 1):
+                            raise Exception ("ZERO for tag=%s, value=%s" % (tag, text))
                         if  mergeParent: 
-                            self._object.set(parentLabel+EMX_SEP+tag, text)
+                            self._object.set(parentLabel + EMX_SEP + tag, text)
                         else:
                             self._object.set(tag, text)
                     elif parentLabel == tag:
-                        mergeParent   = False
-                        parentLabel   = 'kk'
+                        mergeParent = False
+                        parentLabel = 'kk'
                     lastEventStartA = False
             else:
-                raise Exception ("Unknown event type %s"%event)
+                raise Exception ("Unknown event type %s" % event)
             root.clear()
-        #Now loop Trough all objects and fix the FK
+        # Now loop Trough all objects and fix the FK
         for object in listObjectWithForeignKey:
             for key in object._foreignKeys:
                 object.setForeignKey(self.emxData.getObjectwithPK(object._getXMLForeignKey(key)))
 
-    def createObject(self,elem):
+    def createObject(self, elem):
         self.myClass = self.classObject[elem.tag]
-        #primary key 
-        #get PK
-        self.dict         = self.readObjectPK(elem)
-        #create object
+        # primary key 
+        # get PK
+        self.dict = self.readObjectPK(elem)
+        # create object
         self._object = self.classObject[elem.tag](**(self.dict))
-        #add it to emxData
+        # add it to emxData
         self.emxData.addObject(self._object)
         
     def readObjectPK(self, elem):
@@ -262,28 +263,28 @@ class XmlMapper():
         same PK. We may need to specialize or use dictPrimaryKeys
         in the future
         '''
-        mapPK=collections.OrderedDict()
+        mapPK = collections.OrderedDict()
         for attribute in elem.attrib:
             mapPK[attribute] = emxDataTypes[attribute].getType()(elem.get(attribute))
         if mapPK:
             return collections.OrderedDict(sorted(mapPK.items(), key=lambda t: t[0]))
         else:
-            raise Exception("readObjectPK: No fileName or index provided" )
+            raise Exception("readObjectPK: No fileName or index provided")
 
     def firstObject(self, classname, fileName):
         """ Iterate over the tags elements and find the 
         first one of type 'classname', build the object
         and return it. The foreing keys will be not updated.
         """
-        context = ET.iterparse(fileName, events=('start','end'))
+        context = ET.iterparse(fileName, events=('start', 'end'))
         for event, elem in iter(context):
             tag = elem.tag
             if event == 'start':
-                #print "tag: '%s'" % tag, "class: '%s'" % classname
+                # print "tag: '%s'" % tag, "class: '%s'" % classname
                 if tag == classname:
-                    #print "tag==class"
+                    # print "tag==class"
                     self.createObject(elem)
-                    #print "self._object: ", self._object
+                    # print "self._object: ", self._object
                     return self._object
         return None
         
@@ -309,22 +310,22 @@ class XmlMapper():
   -->
 ''')
         for object in self.emxData:
-            text = self.objectToXML(object)# 
+            text = self.objectToXML(object)  # 
 #            #implement this with a regular expression
 #            #format matrices properly
             for i, j in {
                           '</t11>\n    ':'</t11> '
-                         ,'</t12>\n    ':'</t12> '
-                         ,'</t13>\n    ':'</t13> '
-                         ,'</t21>\n    ':'</t21> '
-                         ,'</t22>\n    ':'</t22> '
-                         ,'</t23>\n    ':'</t23> '
-                         ,'</t31>\n    ':'</t31> '
-                         ,'</t32>\n    ':'</t32> '
-                         ,'</t33>\n    ':'</t33> '
+                         , '</t12>\n    ':'</t12> '
+                         , '</t13>\n    ':'</t13> '
+                         , '</t21>\n    ':'</t21> '
+                         , '</t22>\n    ':'</t22> '
+                         , '</t23>\n    ':'</t23> '
+                         , '</t31>\n    ':'</t31> '
+                         , '</t32>\n    ':'</t32> '
+                         , '</t33>\n    ':'</t33> '
                          }.iteritems():
                 text = text.replace(i, j)
-            xmlFile.write( text)
+            xmlFile.write(text)
         xmlFile.write("</EMX>")
         xmlFile.close()
 
@@ -356,30 +357,30 @@ def validateSchema(filename, schema_file=None):
     """
     import subprocess, os
     ###########
-    #try xerces
+    # try xerces
     ###########
-    answerSize=1024 # avoid overflow in web
-    endding=''
+    answerSize = 1024  # avoid overflow in web
+    endding = ''
     if schema_file is None:
         _schema = EMXSCHEMA11
     else:
         _schema = schema_file
-    #print "java jaxp.SourceValidator -a %s -i %s -xsd11"% (_schema, filename)
+    # print "java jaxp.SourceValidator -a %s -i %s -xsd11"% (_schema, filename)
     p = subprocess.Popen("java jaxp.SourceValidator -a %s -i %s -xsd11" 
                          % (_schema, filename),
             shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
-    #xerces exists but is error
-    if p.returncode == 0 and (stderr!=""):
+    # xerces exists but is error
+    if p.returncode == 0 and (stderr != ""):
         if len(stderr) > answerSize:
-           endding='... (too many errors, displayed first %d characters)'%(answerSize)
-        raise ValidateError(p.returncode, """Error: when validating file %s with schema %s.
-        \nError:%s"""%(filename,_schema,stderr[:answerSize]+endding))
+           endding = '... (too many errors, displayed first %d characters)' % (answerSize)
+        raise ValidateError(ERR_VALIDATION_WRONG, """Error: when validating file %s with schema %s.
+        \nError:%s""" % (filename, _schema, stderr[:answerSize] + endding))
     #######
-    #no xerces available, let us try xmlint
+    # no xerces available, let us try xmlint
     ######
     if p.returncode != 0:
-	print "validating with xmllint"
+        print "validating with xmllint"
         if schema_file is None:
             _schema = EMXSCHEMA10
         else:
@@ -397,10 +398,10 @@ def validateSchema(filename, schema_file=None):
             
         if p.returncode != 0:
             if len(stderr) > answerSize:
-                 endding='... (too many errors, displayed first %d characters)'%(answerSize)
+                 endding = '... (too many errors, displayed first %d characters)' % (answerSize)
             message = """Error: when validating file %s with schema %s.
-            \nError:%s"""%(filename,_schema,stderr[:answerSize]+endding)
-            #print "message", message
-            raise ValidateError(p.returncode, message)
+            \nError:%s""" % (filename, _schema, stderr[:answerSize] + endding)
+            # print "message", message
+            raise ValidateError(ERR_VALIDATION_WRONG, message)
     return p.returncode, stdout[:answerSize], stderr[:answerSize]
 
