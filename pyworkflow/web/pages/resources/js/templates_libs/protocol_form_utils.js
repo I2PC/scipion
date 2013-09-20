@@ -31,7 +31,8 @@ $(document).ready(function() {
 		if (mode == 'execute') {
 			/* Execute the protocol */
 			var action = $("#protocolForm").attr("action");
-			var msg = "The protocol was launched successfuly";
+			
+			var msg = messiInfo("The protocol was launched successfuly");
 
 			$.post(action, $("#protocolForm").serialize(), function(json) {
 				if (json.errors.length > 0) {
@@ -61,7 +62,8 @@ $(document).ready(function() {
 		} else if (mode == 'save') {
 			/* Save the protocol */
 			var action = "/save_protocol/";
-			var msg = "The protocol was saved successfuly";
+			
+			var msg = messiInfo("The protocol was saved successfuly");
 
 			$.post(action, $("#protocolForm").serialize(), function() {
 				new Messi(msg, {
@@ -83,7 +85,9 @@ $(document).ready(function() {
 			});
 		} else if (mode == 'wiz') {
 			
-			new Messi("<img src='../../../../resources/tools_wizard.png'/>  Loading Wizard...",{
+
+			
+			new Messi("<img src='/resources/tools_wizard.png'/>  Loading Wizard...",{
 				modal : true
 				});
 			
@@ -97,7 +101,10 @@ $(document).ready(function() {
 				$('.messi-modal').remove();
 				
 				if(html=="errorInput"){
-					new Messi("Input was not selected, please choose one.", {
+					
+					var msg = messiError("Input was not selected, please choose one.");
+					
+					new Messi(msg, {
 						title : 'Error',
 						modal : true,
 						buttons : [ {
@@ -381,3 +388,4 @@ function selTableMessi(elm) {
 	row.attr('value', id);
 	elm.attr('style', 'background-color: LightSteelBlue;');
 }
+

@@ -43,3 +43,17 @@ function closePopup() {
 	window.opener.location.reload(true);
 	window.close();
 }
+
+function messiError(msg){
+	var res = "<table><tr><td><img src='/resources/error.gif' width='45' height='45' />"
+	+ "</td><td>"+ msg +"</td></tr></table>";
+
+	return res;
+}
+
+function messiInfo(msg){
+	var res = "<table><tr><td><img src='/resources/info.gif' width='45' height='45' />"
+	+ "</td><td>"+ msg +"</td></tr></table>";
+
+	return res;
+}
