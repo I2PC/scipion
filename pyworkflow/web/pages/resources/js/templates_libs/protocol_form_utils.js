@@ -82,12 +82,33 @@ $(document).ready(function() {
 				});
 			});
 		} else if (mode == 'wiz') {
+			
+			new Messi("<img src='../../../../resources/tools_wizard.png'/>  Loading Wizard...",{
+				modal : true
+				});
+			
 			/* Execute the wizard */
 			var action = "/wizard/";
 			var type_wiz = $("#wizName").attr("value");
 			
 			$.post(action, $("#protocolForm").serialize(), function(html) {
-				if(type_wiz=='wiz_particle_mask' || type_wiz=='wiz_volume_mask'){
+				
+				$('.messi').remove();
+				$('.messi-modal').remove();
+				
+				if(html=="errorInput"){
+					new Messi("Input was not selected, please choose one.", {
+						title : 'Error',
+						modal : true,
+						buttons : [ {
+							id : 0,
+							label : 'Ok',
+							val : 'Y',
+							btnClass : 'btn-select'
+						} ]
+					});
+				}
+				else if(type_wiz=='wiz_particle_mask' || type_wiz=='wiz_volume_mask'){
 					customPopupHTML(html,520,460);
 				}else if(type_wiz=='wiz_volume_mask_radii'){
 					customPopupHTML(html,530,520);
