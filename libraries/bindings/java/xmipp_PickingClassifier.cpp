@@ -66,9 +66,6 @@ JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_autopick
 }
 
 
-
-
-
 JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_correct
 (JNIEnv *env, jobject jobj, jobject jmanualmd, jobject jautomaticmd, jdouble threshold)
 {
@@ -77,13 +74,11 @@ JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_correct
     	MetaData * manualmd = GET_INTERNAL_METADATA(jmanualmd);
     	MetaData * automaticmd = GET_INTERNAL_METADATA(jautomaticmd);
     	AutoParticlePicking2 *picker = GET_INTERNAL_AUTOPARTICLEPICKING2(jobj);
-    	std::cout<<"correct"<< std::endl;
     	picker->correction(*manualmd, *automaticmd);
     }
     XMIPP_JAVA_CATCH;
 
 }
-
 
 
 JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_setSize

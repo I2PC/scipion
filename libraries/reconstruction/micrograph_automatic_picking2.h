@@ -101,6 +101,7 @@ public:
     MultidimArray<double>        negativeParticleStack;
     MultidimArray<double>        positiveInvariatnStack;
     MultidimArray<double>        negativeInvariatnStack;
+    MultidimArray<double>        autoFeatVec;
     MultidimArray<double>        pcaModel;
     MultidimArray<double>        pcaRotModel;
     MultidimArray<double>        particleAvg;
@@ -352,14 +353,23 @@ public:
      * particles and the false positives.
      */
     void generateTrainSet();
+
+    /*
+     * This method generate feature vectors for the candidates
+     * of a micrographs which are obtained by a cross-correlation
+     */
+    void generateFeatVec(const FileName &fnmicrograph, int proc_prec,  std::vector<Particle2> &positionArray);
+
 };
 
-struct AutoPickThreadParams
+void * genFeatVecThread(void * args);
+
+struct GenFeatVecThreadParams
 {
 	AutoParticlePicking2 *autoPicking;
 	std::vector<Particle2> positionArray;
-	bool use2Classifier;
-	int idThread;
+	FileName fnmicrograph;
+	int proc_prec;
 	int Nthreads;
 };
 

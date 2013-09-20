@@ -34,13 +34,12 @@
 #include <classification/uniform.h>
 
 AutoParticlePicking2::AutoParticlePicking2()
-{
-}
+{}
 
 AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum, int basisPCA, const FileName &model_name)
 {
 
-	// Defining the paths for pca, svm, ... models.
+    // Defining the paths for pca, svm, ... models.
     fn_model=model_name;
     fnPCAModel=fn_model+"_pca_model.stk";
     fnPCARotModel=fn_model+"_rotpca_model.stk";
@@ -542,74 +541,81 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
 
     double label, score;
     Particle2 p;
-    MultidimArray<double> IpolarCorr;
-    MultidimArray<double> featVec;
-    MultidimArray<double> featVecNN;
-    MultidimArray<double> pieceImage;
-    MultidimArray<double> staticVec, dilatedVec;
+    MultidimArray<double> featVec, featVecNN;
     std::vector<Particle2> positionArray;
 
-    readMic(fnmicrograph);
-    IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
-    buildSearchSpace(positionArray,true);
-    //    pthread_t * th_ids = new pthread_t[Nthreads];
-    //    AutoPickThreadParams * th_args =
-    //        new AutoPickThreadParams[Nthreads];
-    //    for (int nt=0;nt<Nthreads;nt++)
-    //    {
-    //        th_args[nt].autoPicking=this;
-    //        th_args[nt].positionArray=positionArray;
-    //        th_args[nt].idThread=nt;
-    //        th_args[nt].use2Classifier=use2Classifier;
-    //        th_args[nt].Nthreads=Nthreads;
-    //        pthread_create(&th_ids[nt],NULL,autoPickThread,
-    //                       &th_args[nt]);
-    //    }
+    pthread_t th_ids;
+    GenFeatVecThreadParams th_args;
 
-    //    for (int nt=0;nt<Nthreads;nt++)
-    //        pthread_join(th_ids[nt],NULL);
+    th_args.autoPicking=this;
+    th_args.positionArray=positionArray;
+    th_args.proc_prec=proc_prec;
+    th_args.fnmicrograph=fnmicrograph;
+    pthread_create(&th_ids,NULL,genFeatVecThread,
+                   &th_args);
+    pthread_join(th_ids,NULL);
+    positionArray=th_args.positionArray;
+
+//    generateFeatVec(fnmicrograph,proc_prec,positionArray);
     int num=(int)(positionArray.size()*(proc_prec/100.0));
+    featVec.resize(num_features);
     for (int k=0;k<num;k++)
     {
-        int j=positionArray[k].x;
-        int i=positionArray[k].y;
-        buildInvariant(IpolarCorr,j,i);
-        extractParticle(j,i,microImage(),pieceImage,false);
-        pieceImage.resize(1,1,1,XSIZE(pieceImage)*YSIZE(pieceImage));
-        extractStatics(pieceImage,staticVec);
-        buildVector(IpolarCorr,staticVec,featVec,pieceImage);
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
+        DIRECT_A1D_ELEM(featVec,i)=DIRECT_A2D_ELEM(autoFeatVec,k,i);
+        featVecNN=featVec;
         double max=featVec.computeMax();
         double min=featVec.computeMin();
-        featVecNN=featVec;
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
         DIRECT_A1D_ELEM(featVec,i)=0+((1)*((DIRECT_A1D_ELEM(featVec,i)-min)/(max-min)));
+        int j=positionArray[k].x;
+        int i=positionArray[k].y;
         label= classifier.predict(featVec, score);
         if (label==1)
         {
-            //            if (fnSVMModel2.exists())
-            //            {
-            //                label=classifier2.predict(featVec,score);
-            //                if (label==1)
-            //                {
-            //                    p.x=j;
-            //                    p.y=i;
-            //                    p.status=1;
-            //                    p.cost=score;
-            //                    p.vec=featVec;
-            //                    auto_candidates.push_back(p);
-            //                }
-            //            }
-            //            else
-            //            {
             p.x=j;
             p.y=i;
             p.status=1;
             p.cost=score;
             p.vec=featVecNN;
             auto_candidates.push_back(p);
-            //            }
+
         }
     }
+
+    //    double max=featVec.computeMax();
+    //    double min=featVec.computeMin();
+    //    featVecNN=featVec;
+    //    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
+    //    DIRECT_A1D_ELEM(featVec,i)=0+((1)*((DIRECT_A1D_ELEM(featVec,i)-min)/(max-min)));
+    //
+    //    label= classifier.predict(featVec, score);
+    //    if (label==1)
+    //    {
+    //            if (fnSVMModel2.exists())
+    //            {
+    //                label=classifier2.predict(featVec,score);
+    //                if (label==1)
+    //                {
+    //                    p.x=j;
+    //                    p.y=i;
+    //                    p.status=1;
+    //                    p.cost=score;
+    //                    p.vec=featVec;
+    //                    auto_candidates.push_back(p);
+    //                }
+    //            }
+    //            else
+    //            {
+    //        p.x=j;
+    //        p.y=i;
+    //        p.status=1;
+    //        p.cost=score;
+    //        p.vec=featVecNN;
+    //        auto_candidates.push_back(p);
+    //            }
+    //    }
+
 
     if (auto_candidates.size() == 0)
         return 0;
@@ -646,6 +652,68 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
     }
     saveAutoParticles(md);
     return auto_candidates.size();
+}
+
+void AutoParticlePicking2::generateFeatVec(const FileName &fnmicrograph, int proc_prec, std::vector<Particle2> &positionArray)
+{
+    MultidimArray<double> IpolarCorr;
+    MultidimArray<double> featVec;
+    MultidimArray<double> pieceImage;
+    MultidimArray<double> staticVec;
+
+    readMic(fnmicrograph);
+    IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
+    buildSearchSpace(positionArray,true);
+    int num=(int)(positionArray.size()*(proc_prec/100.0));
+    autoFeatVec.resize(num,num_features);
+    for (int k=0;k<num;k++)
+    {
+        int j=positionArray[k].x;
+        int i=positionArray[k].y;
+        buildInvariant(IpolarCorr,j,i);
+        extractParticle(j,i,microImage(),pieceImage,false);
+        pieceImage.resize(1,1,1,XSIZE(pieceImage)*YSIZE(pieceImage));
+        extractStatics(pieceImage,staticVec);
+        buildVector(IpolarCorr,staticVec,featVec,pieceImage);
+        // Keep the features on memory to classify later on
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
+        DIRECT_A2D_ELEM(autoFeatVec,k,i)=DIRECT_A1D_ELEM(featVec,i);
+    }
+}
+
+void * genFeatVecThread(void * args)
+{
+    GenFeatVecThreadParams *prm=(GenFeatVecThreadParams *) args;
+    MultidimArray<double> IpolarCorr;
+    MultidimArray<double> featVec;
+    MultidimArray<double> pieceImage;
+    MultidimArray<double> staticVec;
+
+    prm->autoPicking->readMic(prm->fnmicrograph);
+    int num_correlation=prm->autoPicking->num_correlation;
+    int NangSteps=prm->autoPicking->NangSteps;
+    int NRsteps=prm->autoPicking->NRsteps;
+    int proc_prec=prm->proc_prec;
+    int num_features=prm->autoPicking->num_features;
+
+    IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
+    prm->autoPicking->buildSearchSpace(prm->positionArray,true);
+    int num=(int)(prm->positionArray.size()*(proc_prec/100.0));
+    prm->autoPicking->autoFeatVec.resize(num,num_features);
+
+    for (int k=0;k<num;k++)
+    {
+        int j=prm->positionArray[k].x;
+        int i=prm->positionArray[k].y;
+        prm->autoPicking->buildInvariant(IpolarCorr,j,i);
+        prm->autoPicking->extractParticle(j,i,prm->autoPicking->microImage(),pieceImage,false);
+        pieceImage.resize(1,1,1,XSIZE(pieceImage)*YSIZE(pieceImage));
+        prm->autoPicking->extractStatics(pieceImage,staticVec);
+        prm->autoPicking->buildVector(IpolarCorr,staticVec,featVec,pieceImage);
+        // Keep the features on memory to classify later on
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
+        DIRECT_A2D_ELEM(prm->autoPicking->autoFeatVec,k,i)=DIRECT_A1D_ELEM(featVec,i);
+    }
 }
 
 void AutoParticlePicking2::saveAutoParticles(MetaData &md)
