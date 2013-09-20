@@ -33,7 +33,7 @@ SamplingRate = ""
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
-from protocol_emx_import import *
+from protocol_emx_import_micrographs import *
 
 if __name__ == '__main__':
     protocolMain(ProtEmxImport)

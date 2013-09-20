@@ -39,7 +39,7 @@ protocols = {
         'metadata_utilities': ('Metadata Utilities', 'Tools/MetadataUtilities'),
         'metadata_split': ('Metadata Split', 'Tools/MetadataSplit'),
         #'xmipp': ('Xmipp Programs', 'XmippPrograms'), 
-        'emx_import': ('Import', 'EMX'),
+        'emx_import_micrographs': ('Import', 'EMX'),
         'emx_export': ('Export', 'EMX'),
         }
 
@@ -59,7 +59,7 @@ sections = [
     ['Volumes', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask', 'preprocess_volume', 'resolution3D', 'align_volume']]),
 ('Other',
  [['Extra', 'custom',['Virus','subtraction'],['Tomography','mltomo'],['Tools','image_operate','metadata_utilities','metadata_split'],
-   ['EMX', 'emx_import', 'emx_export']]])
+   ['EMX', 'emx_import_micrographs', 'emx_export']]])
 ]
 
 #--------------------------------------------------------------------------------

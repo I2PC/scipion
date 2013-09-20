@@ -13,15 +13,15 @@ from protlib_xmipp import redStr, RowMetaData
 import math
 from emx import *
 from emx.emxmapper import *
-from emxLib.emxLib import ctfMicEMXToXmipp, coorEMXToXmipp, alignEMXToXmipp
+from emxLib.emxLib import emxMicsToXmipp, emxCoordsToXmipp, alignEMXToXmipp
 from os.path import relpath, join, abspath, dirname, exists
 
 
 class ProtEmxImport(XmippProtocol):
     
     def __init__(self, scriptname, project):
-        XmippProtocol.__init__(self, protDict.emx_import.name, scriptname, project)
-        self.Import = "from protocol_emx_import import *"
+        XmippProtocol.__init__(self, protDict.emx_import_micrographs.name, scriptname, project)
+        self.Import = "from protocol_emx_import_micrographs import *"
         #read emx file
         #Class to group EMX objects
         self.emxData = EmxData()
@@ -33,16 +33,27 @@ class ProtEmxImport(XmippProtocol):
                          'SphericalAberration': 'cs',
                          'Voltage': 'acceleratingVoltage'}
             
+    def createFilenameTemplates(self):
+        return {
+                 'pos': join('%(ExtraDir)s', '%(micrograph)s.pos'),
+                 'config': join('%(ExtraDir)s','config.xmd')
+            } 
+        
     def defineSteps(self):
         self._loadInfo()
         self.insertStep("validateSchema", verifyfiles=[], 
-                        emxFilename=self.EmxFileName
+                        emxFileName=self.EmxFileName
                         )
-        self.insertStep("createOutputs", verifyfiles=[],
-                        emxFilename=self.EmxFileName,
+        self.insertStep("createDir", verifyfiles=[self.ExtraDir], 
+                        path=self.ExtraDir)
+        
+        micsFn = self.getFilename('micrographs')
+        self.insertStep("createMicrographs", verifyfiles=[micsFn],
+                        emxFileName=self.EmxFileName,
                         binaryFilename=self.binaryFile,
-                        micsFileName=self.workingDirPath('micrographs.xmd'),
-                        projectDir=self.projectDir
+                        micsFileName=micsFn,
+                        projectDir=self.projectDir,
+                        ctfDir=self.ExtraDir,
                         )
         
         acqFn = self.getFilename('acquisition')
@@ -54,6 +65,13 @@ class ProtEmxImport(XmippProtocol):
                         fnOut=microscopeFn, Voltage=self.Voltage, 
                         SphericalAberration=self.SphericalAberration,
                         SamplingRate=self.SamplingRate)
+        
+        if PARTICLE in self.objDict:
+            part = self.objDict[PARTICLE]
+            if part.has('centerCoord__X'):
+                self.insertStep('createCoordinates', verifyfiles=[],
+                                emxFileName=self.EmxFileName,
+                                oroot=self.ExtraDir)
             
     def _loadInfo(self):
         #What kind of elements are in the binary file
@@ -61,20 +79,25 @@ class ProtEmxImport(XmippProtocol):
         self.classElement = None
         self.binaryFile = None
         self.object = None
+        self.objDict = {}
         
         for classElement in CLASSLIST:
-            self.object = self.xmlMapper.firstObject(classElement, self.EmxFileName)
-            if self.object is not None:
+            obj = self.xmlMapper.firstObject(classElement, self.EmxFileName)
+            if obj is not None:
+                self.objDict[classElement] = obj
                 #is the binary file of this type
-                self.classElement = classElement
-                binaryFile = join(emxDir, self.object.get(FILENAME))
+                binaryFile = join(emxDir, obj.get(FILENAME))
+                
                 if exists(binaryFile):
+                    self.object = obj
                     self.binaryFile = binaryFile
+                    self.classElement = classElement
+                    
                     for k, v in self.propDict.iteritems():
                         if len(getattr(self, k)) == 0:
                             if self.object.get(v) is not None:
                                 setattr(self, k, str(self.object.get(v)))
-                    break
+                    #break
         
     def validate(self):
         errors = []
@@ -110,20 +133,28 @@ class ProtEmxImport(XmippProtocol):
 
 
 
-def validateSchema(log, emxFilename):
+def loadEmxData(emxFileName):
+    """ Given an EMX filename, load data. """
+    emxData = EmxData()
+    xmlMapper = XmlMapper(emxData)
+    xmlMapper.readEMXFile(emxFileName)
+    
+    return emxData
+    
+    
+def validateSchema(log, emxFileName):
     return
     code, out, err = validateSchema(emxFileName)
     
     if code:
         raise Exception(err) 
     
-def createOutputs(log, emxFilename, binaryFilename, micsFileName, projectDir):
-    emxData = EmxData()
-    xmlMapper = XmlMapper(emxData)
-    xmlMapper.readEMXFile(emxFilename)
-    filesPrefix = dirname(emxFilename)
     
-    ctfMicEMXToXmipp(emxData, micsFileName, filesPrefix)
+def createMicrographs(log, emxFileName, binaryFilename, micsFileName, projectDir, ctfDir):
+    filesPrefix = dirname(emxFileName)
+    emxData = loadEmxData(emxFileName)
+    emxMicsToXmipp(emxData, micsFileName, filesPrefix, ctfDir)
+    
     
 def createAcquisition(log, fnOut, SamplingRate):
         # Create the acquisition info file
@@ -131,13 +162,18 @@ def createAcquisition(log, fnOut, SamplingRate):
     mdAcq.setValue(MDL_SAMPLINGRATE, float(SamplingRate))
     mdAcq.write(fnOut)
     
+    
 def createMicroscope(log, fnOut, Voltage, SphericalAberration, SamplingRate):
     md = RowMetaData()
     md.setValue(MDL_CTF_VOLTAGE, float(Voltage))    
     md.setValue(MDL_CTF_CS, float(SphericalAberration))    
     md.setValue(MDL_CTF_SAMPLING_RATE, float(SamplingRate))
     md.setValue(MDL_MAGNIFICATION, 60000.0)
-    md.write(fnOut)  
+    md.write(fnOut)
+    
+def createCoordinates(log, emxFileName, oroot):
+    emxData = loadEmxData(emxFileName)
+    emxCoordsToXmipp(emxData, oroot)
     
 ################### Old functions ########################3
 

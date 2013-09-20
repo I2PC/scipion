@@ -100,22 +100,30 @@ def ctfMicXmippToEmxChallenge(emxData,xmdFileName):
         m1.set('defocusUAngle',defocusUAngle)
         emxData.addObject(m1)
 
+
 class CTF(object):
     pass
 
-def ctfMicEMXToXmipp(emxData, outputFileName=MICFILE, filesPrefix=None):
+
+def emxMicsToXmipp(emxData, outputFileName=MICFILE, filesPrefix=None, ctfRoot=None):
+    """ This function will iterate over the EMX micrographs and create
+    the equivalent Xmipp 'micrographs.xmd' with the list of micrographs.
+    If CTF information is found, for each micrograph, a file .ctfparam
+    will be generated with the CTF parameters as expected by Xmipp.
+    """
     #iterate though emxData
     mdMic = MetaData()
-    root = dirname(outputFileName)
+    if ctfRoot is None:
+        ctfRoot = dirname(outputFileName)
     
     samplingRate = 0.
     
     for micrograph in emxData.iterClasses(MICROGRAPH):
-        micIndex = micrograph.get('index')
-        micFileName = micrograph.get('fileName')
+        micIndex = micrograph.get(INDEX)
+        micFileName = micrograph.get(FILENAME)
 
         if micFileName is None:
-            raise Exception("ctfMicEMXToXmipp: Xmipp doesn't support Micrograph without filename")
+            raise Exception("emxMicsToXmipp: Xmipp doesn't support Micrograph without filename")
         
         if filesPrefix is not None:
             micFileName = join(filesPrefix, micFileName)
@@ -125,7 +133,7 @@ def ctfMicEMXToXmipp(emxData, outputFileName=MICFILE, filesPrefix=None):
 
         mdMicId = mdMic.addObject()
         mdMic.setValue(MDL_MICROGRAPH, micFileName, mdMicId)
-        ctfModelFileName = join(root, replaceBasenameExt(micFileName, CTFENDING))
+        ctfModelFileName = join(ctfRoot, replaceBasenameExt(micFileName, CTFENDING))
         mdMic.setValue(MDL_CTF_MODEL, ctfModelFileName, mdMicId)
 
         # Dictionary for matching between EMX var and Xmipp labes
@@ -202,37 +210,44 @@ def coorrXmippToEmx(emxData,xmdFileName):
 
         counter += 1
 
-def coorEMXToXmipp(emxData,mode,emxFileName):
-    #iterate though emxData
-    mdParticle     = MetaData()
-    for particle in emxData.objLists[mode]:
-        mdPartId   = mdParticle.addObject()
 
-        partIndex     = particle.get('index')
-        partFileName  = particle.get('fileName')
-        if partFileName is None:
-            if partIndex is None:
-                raise Exception("coorEMXToXmipp: Particle has neither filename not index")
-            else: #only index? for xmipp index should behave as filename
-                partFileName = FileName(str(partIndex).zfill(FILENAMENUMBERLENGTH))
-                partIndex    = None
-                fileName = FileName(partFileName)
-        elif partIndex is None:
-            fileName = FileName(partFileName)
-        #particle is a stack. 
-        else:
-            fileName=FileName()
-            fileName.compose(int(partIndex),partFileName)
+def emxCoordsToXmipp(emxData, filesRoot):
+    """ This function will iterate for each particle and 
+    create several .pos metadata (per micrograph) where 
+    the coordinates will written.
+    """
+    mdDict = {}
+    # Create a dictionary for each micrograph
+    for mic in emxData.iterClasses(MICROGRAPH):
+        micFileName = mic.get(FILENAME)
 
-        centerCoordX   = particle.get('centerCoord__X')
-        centerCoordY   = particle.get('centerCoord__Y')
-        mdParticle.setValue(MDL_IMAGE, fileName, mdPartId)
-        mdParticle.setValue(MDL_XCOOR, int(centerCoordX), mdPartId)
-        mdParticle.setValue(MDL_YCOOR, int(centerCoordY), mdPartId)
-    f = FileName()
-    f.compose(FAMILY,emxFileName)
-    mdParticle.sort(MDL_IMAGE)
-    mdParticle.write(f.withoutExtension() + POSENDING)
+        if micFileName is None:
+            raise Exception("emxCoordsToXmipp: Xmipp doesn't support Micrograph without filename")
+        
+        mdDict[micFileName] = MetaData()
+                  
+    for part in emxData.iterClasses(PARTICLE):
+        mic = part.getForeignObject(MICROGRAPH)
+        micFileName = mic.get(FILENAME)
+        md = mdDict[micFileName]
+        objId = md.addObject()
+        md.setValue(MDL_XCOOR, int(part.get('centerCoord__X')), objId)
+        md.setValue(MDL_YCOOR, int(part.get('centerCoord__Y')), objId)        
+    
+    for mic in emxData.iterClasses(MICROGRAPH):
+        micFileName = mic.get(FILENAME)
+        md = mdDict[micFileName]
+        mdFn = join(filesRoot, replaceBasenameExt(micFileName, POSENDING))
+        md.write('particles@' + mdFn)
+        
+    part = emxData.iterClasses(PARTICLE)[0]
+    if part.has('boxSize__X'):
+        boxSize = part.get('boxSize__X')
+        md = MetaData()
+        objId = md.addObject()
+        md.setValue(MDL_PICKING_PARTICLE_SIZE, int(boxSize), objId)
+        md.write('properties@' + join(filesRoot, 'config.xmd'))
+
     
 def alignXmippToEmx(emxData,xmdFileName):
     ''' convert a set of particles including geometric information '''
@@ -283,11 +298,11 @@ def alignEMXToXmipp(emxData,mode,xmdFileName):
     for particle in emxData.objLists[mode]:
         mdPartId   = mdParticle.addObject()
 
-        partIndex     = particle.get('index')
-        partFileName  = particle.get('fileName')
+        partIndex     = particle.get(INDEX)
+        partFileName  = particle.get(FILENAME)
         if partFileName is None:
             if partIndex is None:
-                raise Exception("coorEMXToXmipp: Particle has neither filename not index")
+                raise Exception("emxCoordsToXmipp: Particle has neither filename not index")
             else: #only index? for xmipp index should behave as filename
                 partFileName = FileName(str(partIndex).zfill(FILENAMENUMBERLENGTH))
                 partIndex    = None

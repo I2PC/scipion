@@ -7,7 +7,7 @@
 #-----------------------------------------------------------------------------
 # {section} Input micrographs
 #-----------------------------------------------------------------------------
-# {run}(import_micrographs,screen_micrographs,emx_import) Micrographs to downsample
+# {run}(import_micrographs,screen_micrographs,emx_import_micrographs) Micrographs to downsample
 """ List with input micrographs. It is obtained from an execution of
 either <import_micrograph> or <screen_micrograph>. <BE AWARE>, if you
 use as input an execution of <import_micrographs> there will be not
