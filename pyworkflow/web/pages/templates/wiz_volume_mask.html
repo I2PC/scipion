@@ -1,6 +1,6 @@
 {% extends 'wiz_base.html' %} 
-{% block title %} Particle Mask Radius {% endblock %} 
-{% block name %} Particle Mask Radius {% endblock %} 
+{% block title %} Volume Mask Radius {% endblock %} 
+{% block name %} Volume Mask Radius {% endblock %} 
 {% block head %}
 	<script type="text/javascript" src="{{raphael}}"></script>
 {% endblock %} 
@@ -11,19 +11,19 @@
 {% for obj in objects %}
 	{% if forloop.counter0 == 0 %} 
 	<script>
-		firstElm = {{obj.getObjId}};
+		firstElm  = {{obj.getObjId}};
 	</script>
 	{% endif %}
 <tr id="{{obj.getObjId}}" class="no-selected"
 	style="background-color: #fafafa;"
-	onclick="compositeParticle(($(this)));" value="{{obj.text}}">
+	onclick="compositeVol(($(this)));" value="{{obj.getFileName}}">
 	<td>{{obj.basename}}</td>
 </tr>
 {% endfor %} {% endblock %} {% block images %}
 <tr>
 	<td>Central Slice
 		<div id="wrapper" class="image">
-			<div id="particle"></div>
+			<div id="mic"></div>
 			<div id="canvas"></div>
 		</div>
 	</td>
@@ -45,14 +45,14 @@ $(".slider_radius").slider({
 	range : "min",
 	value : "{{maskRadius}}",
 	min : 0,
-	max : "{{xdim}}",
+	max : {{xdim}},
 	step : 1,
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
 		$("#slider_radius_result").html(ui.value);
 		
 		//update the circle
-		putCircle((ui.value*125)/{{xdim}}, "canvas", "blue");
+ 		putCircle((ui.value*125)/{{xdim}}, "canvas", "blue");
 	},
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
@@ -61,7 +61,7 @@ $(".slider_radius").slider({
 });
 
 //Load the First Element of the list
-window.onload = compositeParticle($("tr#"+firstElm));
+window.onload = compositeVol($("tr#"+firstElm));
 
 </script>
 {% endblock %}

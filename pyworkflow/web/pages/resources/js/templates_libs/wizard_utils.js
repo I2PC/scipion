@@ -1,6 +1,6 @@
 // *** Common Methods *** //
 
-function selectList(elm) {
+function selectList(elm, mode) {
 	var row = $("table#list");
 	var oldValue = elm.attr('id');
 
@@ -36,13 +36,24 @@ function selectList(elm) {
 
 	// load and set the image
 	var uri = "/get_image/?image=" + path_img + "&dim=250";
-
-	img.load(img.attr("src", uri), function() {
-		// hide the load img
-		load_img.hide();
-		// show the new micrograph
-		img.show();
-	});
+	
+	
+	if(mode=="raphael"){
+		img.load(putImage(uri, "mic", 250, 250), function() {
+			// hide the load img
+			load_img.hide();
+			// show the new micrograph
+			img.show();
+		});
+	}
+	else if(mode=="normal"){
+		img.load(img.attr("src", uri), function() {
+			// hide the load img
+			load_img.hide();
+			// show the new micrograph
+			img.show();
+		});
+	}	
 }
 
 function selectParticle(elm, mode) {
@@ -94,13 +105,13 @@ function putCircle(radio, canvas, color) {
 	var paper = Raphael(document.getElementById(canvas));
 	var circle = paper.circle(125, 125, radio);
 	circle.attr("fill", color);
-	circle.attr("opacity", 0.4);
+	circle.attr("opacity", 0.3);
 }
 
 // *** Methods Wizard Downsampling *** //
 
 function compositeDownSampling(elm) {
-	$.when(selectList(elm)).then(previewPsd());
+	$.when(selectList(elm,"normal")).then(previewPsd());
 }
 
 function previewPsd() {
@@ -137,7 +148,7 @@ function previewPsd() {
 // *** Methods Wizard CTF *** //
 
 function compositeCTF(elm) {
-	$.when(selectList(elm)).then(previewPsdFreq());
+	$.when(selectList(elm,"normal")).then(previewPsdFreq());
 }
 
 function previewPsdFreq() {
@@ -167,10 +178,16 @@ function previewPsdFreq() {
 	});
 }
 
-// *** Methods Particle Mask *** //
+// *** Methods Wizard Particle Mask *** //
 
 function compositeParticle(elm){
 	selectParticle(elm,"raphael");
+}
+
+// *** Methods Wizard Volume Mask *** //
+
+function compositeVol(elm){
+	selectList(elm,"raphael");
 }
 
 // *** Methods Wizard Bandpass filter *** //

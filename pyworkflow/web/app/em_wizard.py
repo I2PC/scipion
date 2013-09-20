@@ -62,19 +62,19 @@ def wiz_particle_mask(protocol, request):
             p.text = "%03d@%s" % (index, text)
             p.basename = "%03d@%s" % (index, basename(text))
             
-    size_particle = get_image_dim(request, parts[0].text)
+    xdim = getImageXdim(request, parts[0].text)
 
     mask_radius = protocol.maskRadius.get()
      
-    if mask_radius > size_particle :
-        mask_radius = size_particle
+    if mask_radius > xdim :
+        mask_radius = xdim
     elif mask_radius == -1 :
-        mask_radius = size_particle/2
+        mask_radius = xdim/2
         
     context = {'objects': parts[0:100],
                'raphael': getResourceJs('raphael'),
                'maskRadius': mask_radius,
-               'sizeParticle':size_particle
+               'xdim':xdim
                }
     
     return render_to_response('wiz_particle_mask.html', context)
@@ -85,24 +85,44 @@ def wiz_volume_mask(protocol, request):
     
     for v in vols:
         v.basename = basename(v.getFileName())
-        
                 
-    size_volume = get_image_dim(request, v[0])
+    xdim = getImageXdim(request, vols[0].getFileName())
 
     mask_radius = protocol.maskRadius.get()
      
-    if mask_radius > size_volume :
-        mask_radius = size_volume
+    if mask_radius > xdim :
+        mask_radius = xdim
     elif mask_radius == -1 :
-        mask_radius = size_volume/2
+        mask_radius = xdim/2
         
     context = {'objects': vols,
                'raphael': getResourceJs('raphael'),
                'maskRadius': mask_radius,
-               'sizeVolume':size_volume
+               'xdim': xdim
                }
     
     return render_to_response('wiz_volume_mask.html', context)    
+
+def wiz_volume_mask_radii(protocol, request):
+    
+    vols = [vol for vol in protocol.input3DReferences.get()]
+    
+    for v in vols:
+        v.basename = basename(v.getFileName())
+                
+    xdim = getImageXdim(request, vols[0].getFileName())
+
+    inner_radius = protocol.innerRadius.get()
+    outer_radius = protocol.outerRadius.get()
+        
+    context = {'objects': vols,
+               'raphael': getResourceJs('raphael'),
+               'innerRadius': inner_radius,
+               'outerRadius': outer_radius,
+               'xdim': xdim
+               }
+    
+    return render_to_response('wiz_volume_mask_radii.html', context)   
 
 def wiz_bandpass(protocol, request):
     

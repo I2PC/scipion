@@ -14,14 +14,14 @@ body {
 }
 
 .layout {
-	width: 25em;
+	width: 30em;
 	/* 	padding: 10px; */
 }
 
 .elm1 {
-	width: 12em;
+	width: 16em;
 	float: left;
-	height: 25em;
+	height: 27em;
 	overflow-y: auto;
 	
 }
@@ -257,3 +257,5 @@ svg {
 /* 	float: left; */
 }
 
+
+}

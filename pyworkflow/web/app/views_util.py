@@ -166,10 +166,16 @@ def get_image(request):
     img.save(response, "PNG")
     return response
 
-def get_image_dim(request, imagePath):
-    size, y, z, h = get_image_dimensions(request.session['projectPath'], imagePath)
-    return size
 
+def getImageXdim(request, imagePath):
+    img = xmipp.Image()
+    imgFn = os.path.join(request.session['projectPath'], imagePath)
+    img.read(str(imgFn), xmipp.HEADER)
+    return img.getDimensions()[0]
+
+# TODO: Check with ADRIAN the dimensions are read efficiently
+# For getting dimension the read function can be used with HEADER
+# to avoid read the entire image
 def get_image_dimensions(projectPath, imagePath):
     from django.http import HttpResponse
     from pyworkflow.gui import getImage

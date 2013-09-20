@@ -88,11 +88,11 @@ $(document).ready(function() {
 			
 			$.post(action, $("#protocolForm").serialize(), function(html) {
 				if(type_wiz=='wiz_particle_mask' || type_wiz=='wiz_volume_mask'){
-					customPopupHTML(html,460,460);
-				}else if(type_wiz=='wiz_volume_radii'){
-					customPopupHTML(html,725,470);
+					customPopupHTML(html,520,460);
+				}else if(type_wiz=='wiz_volume_mask_radii'){
+					customPopupHTML(html,530,520);
 				}else{
-					customPopupHTML(html,725,470);
+					customPopupHTML(html,775,470);
 				}
 			});
 		}
