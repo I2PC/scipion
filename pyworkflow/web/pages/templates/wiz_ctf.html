@@ -81,7 +81,6 @@ $(".slider_low").slider({
 		$('#low_val').attr('value', ui.value);
 	}
 });
-
 $(".slider_high").slider({
 	animate : true,
 	range : "min",
@@ -101,10 +100,8 @@ $(".slider_high").slider({
 		$('#high_val').attr('value', ui.value);
 	}
 });
-
 //Load the First Element of the list
 window.onload = compositeCTF($("tr#"+firstElm));
-
 </script>
 {% endblock %}
 {% block function %}

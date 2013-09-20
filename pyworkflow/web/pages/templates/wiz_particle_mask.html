@@ -38,7 +38,6 @@
 		<input id="radius_val" type="hidden" value="{{maskRadius}"/>
 	</div>
 </fieldset>
-
 <script>
 $(".slider_radius").slider({
 	animate : true,
@@ -59,10 +58,8 @@ $(".slider_radius").slider({
 		$('#radius_val').attr('value', ui.value);
 	}
 });
-
 //Load the First Element of the list
 window.onload = compositeParticle($("tr#"+firstElm));
-
 </script>
 {% endblock %}
 {% block function %}

@@ -48,7 +48,6 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'graph_utils': 'templates_libs/graph_utils.js',
           'project_content_utils':'templates_libs/project_content_utils.js',
           'project_utils': 'templates_libs/project_utils.js',
-          'protocols_utils': 'templates_libs/protocols_utils.js',
           'protocol_form_utils': 'templates_libs/protocol_form_utils.js',
           'wizard_utils': 'templates_libs/wizard_utils.js',
 

@@ -33,9 +33,19 @@
 </tr>
 {% endblock %} 
 {% block options %}
-Sigma Freq
-<input id="sigma" type="text" value="{{freqSigma}}"/>
-<input type="button" id="buttonGen" onclick="previewSigma();" value="preview"/>
+<table>
+	<tr>
+		<td>
+			Sigma Freq	
+		</td>
+		<td>
+			<input id="sigma" type="text" value="{{freqSigma}}"/>
+		</td>
+		<td>
+			<input type="button" id="buttonGen" onclick="previewSigma();" value="preview"/>
+		</td>
+	</tr>
+</table>
 <script>
 	//Load the First Element of the list
 	window.onload = compositeGaussian($("tr#"+firstElm));

@@ -37,9 +37,19 @@
 </tr>	
 {% endblock %}
 {% block options %}
-Downsample
-<input id="downsampling" type="text" value="{{downFactor}}"/>
-<input type="button" id="buttonGen" onclick="previewPsd();" value="preview"/>
+<table>
+	<tr>
+		<td>
+			Downsample		
+		</td>
+		<td>
+			<input id="downsampling" type="text" value="{{downFactor}}"/>
+		</td>
+		<td>
+			<input type="button" id="buttonGen" onclick="previewPsd();" value="preview"/>
+		</td>
+	</tr>
+</table>
 <script>
 	//Load the First Element of the list
 	window.onload = compositeDownSampling($("tr#"+firstElm));

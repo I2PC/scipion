@@ -76,7 +76,7 @@ $(document).ready(function() {
 					callback : function(val) {
 						if (val == 'Y') {
 							window.opener.location.reload(true);
-							window.close();
+							// window.close();
 						}
 					}
 				});

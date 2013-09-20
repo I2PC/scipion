@@ -42,26 +42,35 @@
 {% block options %}
 <fieldset id="sliderOptions">
 	<legend>Frequencies</legend>
-	<div id="lowFou">
-		<span id="title_freq">Low freq<span>
-		<div id="slider" class="slider_low"></div>
-		<div id="slider_low_result">{{lowFreq}}</div>
-		<input id="low_val" type="hidden" value="{{lowFreq}}"/>
-	</div>
-	<div id="highFou">
-		<span id="title_freq">High freq<span>
-		<div id="slider" class="slider_high"></div>
-		<div id="slider_high_result">{{highFreq}}</div>
-		<input id="high_val" type="hidden" value="{{highFreq}}"/>
-	</div>
-	<div id="decayFou">
-		<span id="title_freq">Decay<span>
-		<div id="slider" class="slider_decay"></div>
-		<div id="slider_decay_result">{{decayFreq}}</div>
-		<input id="decay_val" type="hidden" value="{{decayFreq}}"/>
-	</div>
+	<table id="fourierTable">
+		<tr>
+			<td>
+				<div id="lowFou">
+					<span id="title_freq">Low freq<span>
+					<div id="sliderLite" class="slider_low"></div>
+					<div id="slider_low_result">{{lowFreq}}</div>
+					<input id="low_val" type="hidden" value="{{lowFreq}}"/>
+				</div>
+			</td>
+			<td>
+				<div id="highFou">
+					<span id="title_freq">High freq<span>
+					<div id="sliderLite" class="slider_high"></div>
+					<div id="slider_high_result">{{highFreq}}</div>
+					<input id="high_val" type="hidden" value="{{highFreq}}"/>
+				</div>
+			</td>
+			<td>
+				<div id="decayFou">
+					<span id="title_freq">Decay<span>
+					<div id="sliderLite" class="slider_decay"></div>
+					<div id="slider_decay_result">{{decayFreq}}</div>
+					<input id="decay_val" type="hidden" value="{{decayFreq}}"/>
+				</div>
+			</td>
+		</tr>
+	</table>
 </fieldset>
-
 <script>
 $(".slider_low").slider({
 	animate : true,
@@ -81,7 +90,6 @@ $(".slider_low").slider({
  		previewBandpassFilter(ui.value,$('#high_val').attr('value'),$('#decay_val').attr('value'));
 	}
 });
-
 $(".slider_high").slider({
 	animate : true,
 	range : "min",
@@ -100,7 +108,6 @@ $(".slider_high").slider({
 		previewBandpassFilter($('#low_val').attr('value'),ui.value,$('#decay_val').attr('value'));	
 	}
 });
-
 $(".slider_decay").slider({
 	animate : true,
 	range : "min",
@@ -119,11 +126,8 @@ $(".slider_decay").slider({
 		previewBandpassFilter($('#low_val').attr('value'),$('#high_val').attr('value'),ui.value);
 	}
 });
-
 //Load the First Element of the list
 window.onload = compositeBandpass($("tr#"+firstElm),$('#low_val').attr('value'),$('#high_val').attr('value'),$('#decay_val').attr('value'));
-
-
 </script>
 {% endblock %}
 {% block function %}

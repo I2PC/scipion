@@ -93,11 +93,6 @@ function putImage(url, canvas, width, height) {
 	$("div#" + canvas).empty();
 	var paper = Raphael(document.getElementById(canvas));
 	var img = paper.image(url, 0, 0, width, height);
-	
-//	img.attr({ "clip-rect": "20,20,30,30" });
-//	var rec = paper.rect(0, 0, 250, 250);
-//	rec.attr("stroke-width", 0);
-//	rec.attr("fill", "url(" + url + ")");	
 }
 
 function putCircle(radio, canvas, color) {
@@ -152,7 +147,6 @@ function compositeCTF(elm) {
 }
 
 function previewPsdFreq() {
-
 	// check downsampling is a number
 	var downsampling = $("input#downsampling").val();
 	if (downsampling == undefined) {
@@ -225,5 +219,4 @@ function previewSigma() {
 
 	$("img#imgFiltered").attr("src", uri);
 }
-
 
