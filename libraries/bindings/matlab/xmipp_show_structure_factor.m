@@ -32,7 +32,7 @@ fF=f2(idx(end));
 disp(['Model for the interval f^2 (1/A^2)=[' num2str(f0) ',' num2str(fF) ']  f(A)=['...
     num2str(1/sqrt(fF)) ',' num2str(1/sqrt(f0)) ']'])
 disp(['B2=' num2str(P(1))])
-disp(['Fitting line : logF=' num2str(P(1)) '*f^2+(' num2str(P(2))])
+disp(['Fitting line : logF=' num2str(P(2)) num2str(P(1)) '*f^2'])
 R2=1-var(logF(idx)-logFp)/var(logF(idx));
 p=length(P);
 R2adj=R2-(1-R2)*p/(length(idx)-p-1);

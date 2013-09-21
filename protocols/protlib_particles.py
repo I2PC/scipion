@@ -77,6 +77,12 @@ class ProtParticlesBase(XmippProtocol):
             for i, m in enumerate(self.Steps):
                 messages.append("  %d -> %s" % (i+1, m % self.ParamsDict))
 
+def runThreshold(log, stack, selectionMode, threshold, substituteBy, substituteValue, Nproc):
+    args="-i %(stack)s --select %(selectionMode)s %(threshold)f --substitute %(substituteBy)s" % locals()
+    if substituteBy=='value':
+        args+=" %f"%substituteValue
+    runJob(log,"xmipp_transform_threshold",args,Nproc)
+
 def runFourierFilter(log,stack,freq_low,freq_high,freq_decay,Nproc):
     program = "xmipp_transform_filter"
     args = "-i %(stack)s --fourier "
@@ -90,6 +96,9 @@ def runFourierFilter(log,stack,freq_low,freq_high,freq_decay,Nproc):
 
 def runGaussianFilter(log, stack, freq_sigma, Nproc):
     runJob(log,"xmipp_transform_filter","-i %(stack)s --fourier gaussian %(freq_sigma)f" % locals(),Nproc)
+
+def runRealGaussianFilter(log, stack, real_sigma, Nproc):
+    runJob(log,"xmipp_transform_filter","-i %(stack)s --fourier real_gaussian %(real_sigma)f" % locals(),Nproc)
 
 def runCrop(log, stack, cropSize, tmpStack):
     runJob(log,"xmipp_transform_window","-i %(stack)s --size %(cropSize)d -o %(tmpStack)s" % locals())
@@ -148,8 +157,8 @@ def getMetadataWithPickedParticles(fnPos):
                 mdpos.read("particles@" + fnPos)
             if 'particles_auto' in blocks:
                 mdposAuto.read("particles_auto@" + fnPos)
+                mdposAuto.removeDisabled()
             mdpos.unionAll(mdposAuto)
-            mdpos.removeDisabled()
         except:
             pass
     return mdpos

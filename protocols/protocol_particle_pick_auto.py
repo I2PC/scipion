@@ -25,12 +25,16 @@ class ProtParticlePickingAuto(XmippProtocol):
         self.Import = "from protocol_particle_pick_auto import *"
         self.setPreviousRun(self.SupervisedRun)
         self.pickingDir = self.PrevRun.WorkingDir
-        self.keysToImport = ['micrographs', 'config', 'acquisition', 'templates']
+        self.keysToImport = ['config', 'acquisition', 'templates']
        
         self.inputFilename(*self.keysToImport)
-        self.inputProperty('TiltPairs', 'MicrographsMd', 'Fast')
-        self.inputProperty('TiltPairs', 'MicrographsMd')
-        self.micrographs = self.getFilename('micrographs')
+        self.inputProperty('TiltPairs', 'Fast')
+        
+        if self.MicrographsMd=="":
+            self.inputProperty('MicrographsMd')
+            self.anotherSet=False
+        else:
+            self.anotherSet=True
         self.model="model"
         
     def createFilenameTemplates(self):
@@ -55,8 +59,9 @@ class ProtParticlePickingAuto(XmippProtocol):
         filesToImport = [self.Input[k] for k in self.keysToImport]
         filesToImport += [self.PrevRun.getFilename(k, model=self.model) for k in ['training', 'pca', 'rotpca', 'svm', 'average', 'config', 'templates']]
         self.insertImportOfFiles(filesToImport)
+        self.insertCopyFile(self.MicrographsMd, self.getFilename('micrographs'))
 
-        md = MetaData(self.Input['micrographs'])
+        md = MetaData(self.MicrographsMd)
         particleSize = self.particleSizeForAuto
         modelRoot = self.extraPath(self.model)
         for objId in md:
@@ -64,19 +69,20 @@ class ProtParticlePickingAuto(XmippProtocol):
             path = md.getValue(MDL_MICROGRAPH, objId)
             micrographName = removeBasenameExt(path)
             proceed = True
-            fnPos = self.PrevRun.getFilename('pos', micrograph=micrographName)
-            if xmippExists(fnPos):
-                blocks = getBlocksInMetaDataFile(fnPos)
-                copy = True
-                if 'header' in blocks:
-                    mdheader = MetaData("header@" + fnPos)
-                    state = mdheader.getValue(MDL_PICKING_MICROGRAPH_STATE, mdheader.firstObject())
-                    if state == "Available":
-                        copy = False
-                if copy:
-                    # Copy manual .pos file of this micrograph
-                    self.insertCopyFile(fnPos, self.getFilename('pos', micrograph=micrographName))
-                    proceed = False
+            if not self.anotherSet:
+                fnPos = self.PrevRun.getFilename('pos', micrograph=micrographName)
+                if xmippExists(fnPos):
+                    blocks = getBlocksInMetaDataFile(fnPos)
+                    copy = True
+                    if 'header' in blocks:
+                        mdheader = MetaData("header@" + fnPos)
+                        state = mdheader.getValue(MDL_PICKING_MICROGRAPH_STATE, mdheader.firstObject())
+                        if state == "Available":
+                            copy = False
+                    if copy:
+                        # Copy manual .pos file of this micrograph
+                        self.insertCopyFile(fnPos, self.getFilename('pos', micrograph=micrographName))
+                        proceed = False
             if proceed:
                 oroot = self.extraPath(micrographName)
                 cmd = "-i %(path)s --particleSize %(particleSize)d --model %(modelRoot)s --outputRoot %(oroot)s --mode autoselect" % locals()
@@ -96,7 +102,7 @@ class ProtParticlePickingAuto(XmippProtocol):
     
     def visualize(self):
         mode = PM_REVIEW
-        launchParticlePickingGUI(None, self.Input['micrographs'], self.ExtraDir, mode, self.TiltPairs, self.Memory)
+        launchParticlePickingGUI(None, self.getFilename('micrographs'), self.ExtraDir, mode, self.TiltPairs, self.Memory)
             
 #		
 # Main

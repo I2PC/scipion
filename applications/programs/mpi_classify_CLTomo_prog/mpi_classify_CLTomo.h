@@ -35,9 +35,10 @@
 #include <data/numerical_tools.h>
 #include <data/xmipp_program.h>
 #include <data/symmetries.h>
+#include <interface/frm.h>
 #include <vector>
 
-/**@defgroup VQforProjections Vector Quantization for Projections
+/**@defgroup VQforVolumes Vector Quantization for Volumes
    @ingroup ClassificationLibrary */
 //@{
 /** AssignedImage */
@@ -84,26 +85,26 @@ public:
     // Auxiliary Fourier image magnitude
     MultidimArray<double> IfourierMag, IfourierMagSorted;
 
+    // Fourier mask for the experimental image
+    MultidimArray<int> IfourierMask, IfourierMaskFRM;
+
+    // Mask for experimental image as a python object
+	PyObject *pyIfourierMaskFRM;
+
     // Update for next iteration
     MultidimArray< std::complex<double> > Pupdate;
+
+    // Update for next iteration in real space
+    //MultidimArray<double> PupdateReal;
+
+    // Sum weights
+    //double weightSum;
 
     // Update for next iteration
     MultidimArray< double > PupdateMask;
 
-    // P in cylindrical coordinates around Z
-    MultidimArray<double> PcylZ;
-
-    // P in cylindrical coordinates around Y
-    MultidimArray<double> PcylY;
-
-    // P in cylindrical coordinates around X
-    MultidimArray<double> PcylX;
-
-    // Correlation aux
-    CorrelationAux corrAux, corrAux2;
-
-    // Volume Alignment aux
-    VolumeAlignmentAux volAlignmentAux;
+    // Auxiliary for alignment
+    MultidimArray<double> Iaux;
 
     // List of images assigned
     std::vector<CL3DAssignment> currentListImg;
@@ -127,8 +128,11 @@ public:
     /** Transfer update */
     void transferUpdate();
 
-    /** Sparse distance to centroid */
-    void sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK, double &stdK, double &L1distance);
+    /** Construct Fourier mask */
+    void constructFourierMask(MultidimArray<double> &I);
+
+    /** Construct the mask in the FRM convention */
+    void constructFourierMaskFRM();
 
     /** Compute the fit of the input image with this node.
         The input image is rotationally and traslationally aligned
@@ -231,6 +235,9 @@ public:
     /// Minimum size of a node
     double PminSize;
     
+    /// Maximum frequency for the alignment
+    double maxFreq;
+
     /// Sparsity factor (0<f<1; 1=drop all coefficients, 0=do not drop any coefficient)
     double sparsity;
 
@@ -240,6 +247,9 @@ public:
     /// Clasify all images
     bool classifyAllImages;
 
+    /// Use this option to avoid aligning at the beginning all the missing wedges
+    bool randomizeStartingOrientation;
+
     /// Maximum shift Z
     double maxShiftZ;
 
@@ -248,6 +258,7 @@ public:
 
     /// Maximum shift X
     double maxShiftX;
+
 
     /// Maximum rot
     double maxRot;
@@ -306,8 +317,17 @@ public:
     // Image dimensions
     size_t Zdim, Ydim, Xdim;
 
-	/// Noise in the images
-    double sigma;
+    /// Pointer to the Python FRM alignment function
+    PyObject * frmFunc;
+
+    /// Pointer to the Python GeneralWedge class
+    PyObject * wedgeClass;
+
+    /// Max shift
+    double maxShift;
+
+    /// MaxFreq mask
+    MultidimArray<unsigned char> maxFreqMask;
 };
 //@}
 #endif

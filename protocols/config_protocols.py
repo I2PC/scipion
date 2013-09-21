@@ -31,7 +31,9 @@ protocols = {
         'nma_alignment': ('Flexible alignment', '3D/NMA_alignment'),
         'resolution3D': ('Resolution 3D', '3D/Resolution'),
         'align_volume': ('Align Volume', '3D/AlignVolume'),
-        'relion3d': ('Relion3D', '3D/Relion3D'),
+        'relionClass': ('Relion: 3D Classification ', '3D/RelionClass'),
+        'relionRef': ('Relion: Angle Refinament ', '3D/RelionRef'),
+        'cltomo': ('CLTomo', '3D/CLTomo'),
         'mltomo': ('MLTomo', '3D/MLTomo'),
         'subtraction': ('Partial Projection Subtraction', '3D/ProjSub'),
         'custom': ('Custom', 'Custom'),
@@ -56,10 +58,10 @@ sections = [
    [['Align+Classify', 'cl2d', 'ml2d', ['Other', 'cl2d_align', 'kerdensom', 'rotspectra', 'screen_classes']]]),
 ('3D', 
    [['Initial Model', 'rct', 'initvolume_ransac', 'convert_pdb'], 
-    ['Model Refinement', 'projmatch', 'ml3d', 'relion3d'],
+    ['Model Refinement', 'projmatch', 'ml3d', ['relion','relionClass','relionRef']],
     ['Volumes', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask', 'preprocess_volume', 'resolution3D', 'align_volume']]),
 ('Other',
- [['Extra', 'custom',['Virus','subtraction'],['Tomography','mltomo'],['Tools','image_operate','metadata_utilities','metadata_split'],
+ [['Extra', 'custom',['Virus','subtraction'],['Tomography','mltomo', 'cltomo'],['Tools','image_operate','metadata_utilities','metadata_split'],
    ['EMX', 'emx_import_micrographs', 'emx_import_particles', 'emx_export']]])
 ]
 

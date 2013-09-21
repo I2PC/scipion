@@ -335,8 +335,9 @@ void MpiProgAngularClassAverage::run()
             }
         }
     }
-
-    node->gatherMetadatas(DFscore, "kk.xmd");
+    FileName gatherFile;
+    formatStringFast( gatherFile, "%s_GatherMetadata.xmd", fn_out.c_str());
+    node->gatherMetadatas(DFscore, gatherFile);
 
     if (node->rank == 0)
     {

@@ -23,11 +23,11 @@ from protlib_filesystem import createLink
 from protlib_import import exportReliontoMetadataFile
 from protlib_gui_figure import XmippPlotter
 
-class ProtRelion3D(XmippProtocol):
+class ProtRelionRef(XmippProtocol):
     relionFiles=['data','model','optimiser','sampling']
     def __init__(self, scriptname, project):
-        XmippProtocol.__init__(self, protDict.relion3d.name, scriptname, project)
-        self.Import = 'from protocol_relion3d import *'
+        XmippProtocol.__init__(self, protDict.relionRef.name, scriptname, project)
+        self.Import = 'from protocol_relionRef import *'
         self.ParamsStr = ''
         if self.NumberOfMpi > 1:
             self.program = 'relion_refine_mpi'
