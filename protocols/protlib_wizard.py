@@ -203,16 +203,24 @@ def wizardChooseBandPassFilter(gui, var):
         
 #Choose Gaussian Filter
 def wizardChooseGaussianFilter(gui, var):
-    '''Wizard dialog to help choosing Gaussian filter(in Fourier space) parameters (used in protocol_preprocess_particles) '''
+    '''Wizard dialog to help choosing Gaussian filter (in Fourier space) parameters (used in protocol_preprocess_particles) '''
     from protlib_gui_ext import XmippBrowserGaussianFilter
     results = wizardHelperFilter(gui, XmippBrowserGaussianFilter, "Gaussian Filter", freqSigma=gui.getVarValue('Freq_sigma'))
+    if results:
+        var.setTkValue(results) #expecting single result            
+
+#Choose Gaussian Filter
+def wizardChooseRealGaussianFilter(gui, var):
+    '''Wizard dialog to help choosing Real Gaussian filter (in real space) parameters (used in protocol_preprocess_particles) '''
+    from protlib_gui_ext import XmippBrowserRealGaussianFilter
+    results = wizardHelperFilter(gui, XmippBrowserRealGaussianFilter, "Real Gaussian Filter", realSigma=gui.getVarValue('Real_sigma'))
     if results:
         var.setTkValue(results) #expecting single result            
 
 #Choose Bad pixels wizard
 def wizardChooseBadPixelsFilter(gui, var):
     from protlib_gui_ext import XmippBrowserBadpixelFilter
-    results = wizardHelperFilter(gui, XmippBrowserBadpixelFilter, "Gaussian Filter", dustRemovalThreshold=gui.getVarValue('DustRemovalThreshold'))
+    results = wizardHelperFilter(gui, XmippBrowserBadpixelFilter, "Bad pixels Filter", dustRemovalThreshold=gui.getVarValue('DustRemovalThreshold'))
     if results:
         var.setTkValue(results) #expecting single result            
 
@@ -448,6 +456,17 @@ def validatorIsFloat(var):
         except ValueError:
             err = "Input value: <%s> for <%s> isn't a valid number" % (value, var.comment)
     return err    
+
+def validatorIsFloatOrEmpty(var):
+    """ Same as validator float, but allows empty values. """
+    err = None
+    try:
+        value = var.getTkValue()
+        if len(value):
+            float(value)
+    except ValueError:
+        err = "Input value: <%s> for <%s> isn't a valid number" % (value, var.comment)
+    return err 
 
 def validatorIsInt(var):
     err = validatorNonEmpty(var)

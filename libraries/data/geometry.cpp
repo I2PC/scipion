@@ -503,6 +503,15 @@ void Euler_angles2matrix(double alpha, double beta, double gamma,
     MAT_ELEM(A, 2, 2) = cb;
 }
 
+void Euler_anglesZXZ2matrix(double a, double b, double g, Matrix2D< double >& A, bool homogeneous)
+{
+	Matrix2D<double> RZ1, RX2, RZ3;
+	rotation3DMatrix(a,'Z',RZ1,homogeneous);
+	rotation3DMatrix(b,'X',RX2,homogeneous);
+	rotation3DMatrix(g,'Z',RZ3,homogeneous);
+	A=RZ3*RX2*RZ1;
+}
+
 /* Euler distance ---------------------------------------------------------- */
 double Euler_distanceBetweenMatrices(const Matrix2D<double> &E1,
                                      const Matrix2D<double> &E2)

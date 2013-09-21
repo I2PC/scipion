@@ -9,6 +9,7 @@ import xmipp
 from protlib_filesystem import replaceBasenameExt, createLink, createDir
 from protlib_utils import runJob
 
+
 class ProtDownsampleMicrographs(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.downsample_micrographs.name, scriptname, project)

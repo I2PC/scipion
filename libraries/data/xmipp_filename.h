@@ -578,8 +578,6 @@ public:
      */
     FileName removeDirectories(int keep = 0) const;
     /**copy one file
-     *
-     * s
      */
     void copyFile(const FileName & target) const;
 
@@ -686,6 +684,10 @@ inline bool fileExists( const FileName &filename )
 /** Copy one image
  */
 void copyImage(const FileName & source,const FileName & target);
+
+/** Delete file
+ */
+void deleteFile(const FileName &fn);
 
 //Functions to make easy to change the magicWord used to identify the
 //file format of metadata

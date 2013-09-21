@@ -229,7 +229,7 @@ def skipProgram(programName):
     if programName in ['xmipp_sqlite3', 'xmipp_mpi_steps_runner',
                        'xmipp_angular_commonline', 'xmipp_python',
                        'xmipp_transform_threshold', 'xmipp_mpi_write_test', 'xmipp_chimera_client',
-                       'xmipp_imagej','xmipp_mpi_image_common_lines']:
+                       'xmipp_imagej','xmipp_mpi_image_common_lines', 'xmipp_mpi_classify_CLTomo', 'xmipp_classify_CLTomo']:
         return True
     for p in ['xmipp_test', 'xmipp_template']:
         if programName.find(p) != -1:
