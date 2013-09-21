@@ -1,7 +1,11 @@
 #!/usr/bin/env xmipp_python
+
 #------------------------------------------------------------------------------------------------
-# General script for Xmipp-based pre-processing of micrographs
-# Author: Carlos Oscar Sorzano, July 2011
+#   General script for importing micrographs from EMX format
+#
+#   Authors: J.M. de la Rosa Trevin, Sept 2013
+#            Roberto Marabini
+# 
 
 from glob import glob
 from protlib_base import *
@@ -13,11 +17,11 @@ from protlib_xmipp import redStr, RowMetaData
 import math
 from emx import *
 from emx.emxmapper import *
-from emxLib.emxLib import emxMicsToXmipp, emxCoordsToXmipp, alignEMXToXmipp
+from protlib_emx import *
 from os.path import relpath, join, abspath, dirname, exists
 
 
-class ProtEmxImport(XmippProtocol):
+class ProtEmxImportMicrographs(XmippProtocol):
     
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.emx_import_micrographs.name, scriptname, project)
@@ -115,9 +119,6 @@ class ProtEmxImport(XmippProtocol):
                 for k, v in self.propDict.iteritems():
                         if len(getattr(self, k)) == 0:
                             errors.append('<%s> was left empty and <%s> does not have this property' % (k, self.classElement))
-                    
-                    
-                
         
         return errors
 
@@ -129,7 +130,10 @@ class ProtEmxImport(XmippProtocol):
         return summary
     
     def visualize(self):
-        pass
+        micsFn = self.getFilename('micrographs')
+        if exists(micsFn):
+            from protlib_utils import runShowJ
+            runShowJ(micsFn)
 
 
 

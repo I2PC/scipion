@@ -36,4 +36,4 @@ SamplingRate = ""
 from protocol_emx_import_micrographs import *
 
 if __name__ == '__main__':
-    protocolMain(ProtEmxImport)
+    protocolMain(ProtEmxImportMicrographs)
