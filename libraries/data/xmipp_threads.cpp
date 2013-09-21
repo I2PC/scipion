@@ -9,14 +9,14 @@ Mutex::Mutex()
     pthread_mutex_init(&mutex, NULL);
 }
 
-void Mutex::lock()
-{
-    pthread_mutex_lock(&mutex);
-}
-
 Mutex::~Mutex()
 {
     pthread_mutex_destroy(&mutex);
+}
+
+void Mutex::lock()
+{
+    pthread_mutex_lock(&mutex);
 }
 
 void Mutex::unlock()
@@ -24,35 +24,69 @@ void Mutex::unlock()
     pthread_mutex_unlock(&mutex);
 }
 
+// ================= CONDITION ==========================
+Condition::Condition()
+{
+    mutex = new Mutex();
+    pthread_cond_init(&cond, NULL);
+}
+
+Condition::~Condition()
+{
+    delete mutex;
+    pthread_cond_destroy(&cond);
+}
+
+void Condition::lock()
+{
+    mutex->lock();
+}
+
+void Condition::unlock()
+{
+    mutex->unlock();
+}
+
+void Condition::wait()
+{
+    pthread_cond_wait(&cond, &(mutex->mutex));
+}
+
+void Condition::signal()
+{
+    pthread_cond_signal(&cond);
+}
+
+void Condition::broadcast()
+{
+    pthread_cond_broadcast(&cond);
+}
+
 // ================= BARRIER ==========================
 Barrier::Barrier(int numberOfThreads)
 {
     needed = numberOfThreads;
     called = 0;
-    pthread_mutex_init(&mutex, NULL);
-    pthread_cond_init(&cond, NULL);
+    condition = new Condition();
 }
 
 Barrier::~Barrier()
 {
-    pthread_mutex_destroy(&mutex);
-    pthread_cond_destroy(&cond);
+    delete condition;
 }
 
 void Barrier::wait()
 {
-    pthread_mutex_lock(&mutex);
+    condition->lock();
     ++called;
     if (called == needed)
     {
         called = 0;
-        pthread_cond_broadcast(&cond);
+        condition->broadcast();
     }
     else
-    {
-        pthread_cond_wait(&cond, &mutex);
-    }
-    pthread_mutex_unlock(&mutex);
+        condition->wait();
+    condition->unlock();
 }
 
 // ================= THREAD MANAGER =======================
