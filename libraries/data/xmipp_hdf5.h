@@ -28,7 +28,9 @@
 
 #include "../../external/hdf5-1.8.10/src/hdf5.h"
 #include "../../external/hdf5-1.8.10/c++/src/H5Cpp.h"
+#include "matrix1d.h"
 #include <iostream>
+
 
 
 /** @defgroup Tools for General Purpose handling of hdf5 files
@@ -41,12 +43,31 @@
 class XmippH5File: public H5::H5File
 {
 
-
 public:
 
-    void showTree(std::ostream &out = std::cout);
+	/**
+	 * Show the groups and dataset and print them in the output stream out.
+	 * @param out Output stream
+	 */
+	void showTree(std::ostream &out = std::cout);
 
+    /**
+     * Open HDF5 file
+     * @param name	File name
+     * @param flags	tandard hdf5 flags
+     * @param access_plist Standard hdf5 plist
+     */
+    void openFile(const H5std_string& name, unsigned int flags,
+                  const H5::FileAccPropList& access_plist = H5::FileAccPropList::DEFAULT);
 
+    /** Return the values in the dataset dsname and return them in a Matrix1D double data
+     *
+     * @param dsname Dataset name
+     * @param data	 Vector data
+     * @param reportError If true throw an exception in case of failure, otherwise it returns
+     * a negative number
+     */
+    int getDataset(const char* dsname, Matrix1D<double> &data, bool reportError = true) const;
 };
 
 herr_t showObjectInfo(hid_t group, const char *name, void *op_data);

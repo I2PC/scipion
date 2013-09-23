@@ -235,10 +235,11 @@ int ImageBase::readHDF5(size_t select_img)
         mdaBase->coreAllocateReuse();
 
         hid_t       memspace;
-        hsize_t     count[4];
-        hsize_t     offset[4];
 
-        // Define hyperslab to read.
+        hsize_t offset[4]; // Hyperslab offset in the file
+        hsize_t  count[4]; // Size of the hyperslab in the file
+
+        // Define the offset and count of the hyperslab to be read.
         offset[1] = 0;
         offset[2] = 0;
         count[0]  = 1;
@@ -254,6 +255,8 @@ int ImageBase::readHDF5(size_t select_img)
 
         for (size_t idx = imgStart, imN = 0; idx < imgEnd; ++idx, ++imN)
         {
+
+            // Set the offset of the hyperslab to be read
             offset[0] = idx;
 
             if ( H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offset, NULL,

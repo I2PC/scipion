@@ -29,6 +29,7 @@
 #include <data/multidim_array.h>
 #include <data/xmipp_image.h>
 #include <data/xmipp_program.h>
+#include "data/xmipp_hdf5.h"
 #include <data/xmipp_threads.h>
 
 ///@defgroup XrayImport Xray import
@@ -39,9 +40,9 @@ class ProgXrayImport: public XmippProgram
 {
 public:
     /// Input directory
-    FileName fnDirData;
+    FileName fnInput;
     /// Input Flatfield directory
-    FileName fnDirFlat;
+    FileName fnFlat;
     /// Output directory
     FileName fnRoot;
     /// Output Stack file
@@ -52,10 +53,49 @@ public:
     int thrNum;
     /// bad Pixel filter Mask
     FileName fnBPMask;
+    /// Flag to apply flat field correction
+    bool flatFix;
+    /// Flag to apply dark field correction
+    bool darkFix;
     /// Flag to apply log filter
     bool logFilt;
+    /// Xray microscopy data origin;
+    enum DataSource
+    {
+        NONE,
+        MISTRAL,
+        BESSY
+    } dSource;
+    /// Index number used in Bessy tomograms and flatfield images
+    size_t tIni, tEnd, fIni, fEnd;
+    /// hdf5 file handler
+    XmippH5File H5File;
+    double* vCBeam, vExpTime, vslitWidth;
+    Matrix1D<double> expTimeArray, cBeamArray, slitWidthArray, anglesArray;
+
+    /// List of input images
+    MetaData inMD;
+    /// List of output images
+    MetaData outMD;
+
+    // Intermediate results
+    Image<double> IavgFlat;
+    Image<double> IavgDark;
+    Image<char>   bpMask;
+    std::vector<FileName> filenames;
+    std::vector<size_t> objIds;
+
+
+    // Variables for the threads
+    ParallelTaskDistributor *td;
+    ThreadManager           *tm;
+    Mutex                    mutex;
 
 public:
+
+    /// Constructor
+    void init();
+
     /// Read argument from command line
     void readParams();
 
@@ -71,33 +111,24 @@ public:
     /// Read an image and crop
     void readAndCrop(const FileName &fn, Image<double> &I) const;
 
-    /// Correct for the synchrotron parameters
-    void correct(Image<double> &I) const;
+    /// Read geometrical info
+    void readGeoInfo(const FileName &fn, MDRow &rowGeo) const;
+
+    /// Read related data to normalize the tomogram
+    void readCorrectionInfo(const FileName &fn, double &currentBeam,
+                            double &expTime, double &slitWidth) const;
 
     /** Get the darkfield for a directory.
      *  In case there is no darkfield a message is shown and the output image
      *  is empty. */
-    void getDarkfield(const FileName &fnDir, Image<double> &IavgDark) const;
+    void getDarkfield(const FileName &fnDir, Image<double> &IavgDark);
 
     /** Get the corrected average of a directory.
      *  If there is a darkfield, a file called fnRoot+"_"+fnDir+"_darkfield.xmp"
      *  is saved.
      */
-    void getFlatfield(const FileName &fnDir, Image<double> &Iavg) const;
+    void getFlatfield(const FileName &fnDir, Image<double> &Iavg);
 public:
-    // Variables for the threads
-    ParallelTaskDistributor *td;
-    ThreadManager           *tm;
-    Mutex                    mutex;
-
-    // Intermediate results
-    Image<double> IavgFlat;
-    Image<double> IavgDark;
-    Image<char>   bpMask;
-    std::vector<FileName> filenames;
-
-    // Final list of images
-    MetaData MD;
 };
 //@}
 #endif
