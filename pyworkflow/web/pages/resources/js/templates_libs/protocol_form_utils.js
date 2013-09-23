@@ -309,6 +309,40 @@ function browseObjects(node, projName, objClass) {
 	});
 }
 
+function showComment() {
+	
+	var msg = $("input#comment").val();
+	
+	if(msg == ""){
+		msg = "Describe your run here...";
+	}
+	
+	var msg ="<textarea id='description'>"+ msg +"</textarea>";
+	
+	new Messi(msg, {
+		title : 'Comment',
+		modal : true,
+		buttons : [ {
+			id : 0,
+			label : 'Select',
+			val : 'Y',
+			btnClass : 'btn-select',
+			btnFunc : 'putComment'
+			}, {
+			id : 1,
+			label : 'Cancel',
+			val : 'C',
+			btnClass : 'btn-cancel'
+		}]
+	});
+}
+
+function putComment(){
+	$("input#comment").attr("value",$("textarea#description").val());
+}
+
+
+
 function getListFormatted(node, list, id) {
 	var res = "<div class='content' style='overflow:auto' data-node='" + node
 			+ "'>";
