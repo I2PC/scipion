@@ -956,6 +956,22 @@ void print_elapsed_time(ProcessorTimeStamp& time, bool _IN_SECS = true);
  */
 void print_elapsed_time(TimeStamp& time, bool _IN_SECS = true);
 
+/** This class will encapsulate the logic to time printing.
+ * Useful for debugging.
+ */
+class Timer
+{
+private:
+  struct timeval  tv;
+  struct tm tm;
+  size_t tic_time;
+
+public:
+  size_t now();
+  void tic();
+  void toc();
+};
+
 #if !defined _NO_TIME && !defined __MINGW32__
 /** Returns the estimated time left to finish
  *
