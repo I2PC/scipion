@@ -849,11 +849,16 @@ void AutoParticlePicking2::correction(MetaData addedParticlesMD,MetaData removed
 {
     dataSet.clear();
     classLabel.clear();
+    Timer t;
+    t.tic();
     loadTrainingSet(fnVector);
+    t.toc("loadTrainingSet");
     int idx=0,enabled,x,y;
     double cost;
     accepted_particles.clear();
     rejected_particles.clear();
+
+    t.tic();
     FOR_ALL_OBJECTS_IN_METADATA(removedParticlesMD)
     {
         removedParticlesMD.getValue(MDL_ENABLED,enabled, __iter.objId);
@@ -874,13 +879,28 @@ void AutoParticlePicking2::correction(MetaData addedParticlesMD,MetaData removed
         }
         ++idx;
     }
+    t.toc("after FOR_ALL");
+    t.tic();
     train(addedParticlesMD,true,0,0,0,0);
+    t.toc("addedParticlesMD");
+        t.tic();
     add2Dataset();
+    t.toc("add2Dataset");
+     t.tic();
     saveTrainingSet(fnVector);
+    t.toc("saveTrainingSet");
+    t.tic();
     normalizeDataset(0,1);
+    t.toc("normalizeDataset");
+    t.tic();
     generateTrainSet();
+    t.toc("generateTrainSet");
+    t.tic();
     classifier.SVMTrain(dataSet,classLabel);
+    t.toc("classifier.SVMTrain");
+    t.tic();
     trainSVM(fnSVMModel,1);
+    t.toc("trainSVM");
     //    trainSVM(fnSVMModel2,2);
 }
 

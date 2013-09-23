@@ -969,7 +969,7 @@ private:
 public:
   size_t now();
   void tic();
-  void toc();
+  void toc(const char * msg=NULL);
 };
 
 #if !defined _NO_TIME && !defined __MINGW32__

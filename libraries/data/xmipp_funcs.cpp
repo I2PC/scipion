@@ -700,9 +700,11 @@ void Timer::tic()
   tic_time = now();
 }
 
-void Timer::toc()
+void Timer::toc(const char * msg)
 {
   size_t diff = now() - tic_time;
+  if (msg != NULL)
+      std::cout << msg;
   std::cout << "Elapsed time: ";
   std::cout << diff/1000.0 << " secs." << std::endl;
 }
