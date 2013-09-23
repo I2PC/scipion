@@ -128,7 +128,8 @@ public:
     FileName 				     fnInvariant;
     FileName 					 fnParticles;
 
-    FeaturesThread * thread;
+    FeaturesThread               * thread;
+    MetaData                     micList;
 public:
 
     /// Constructor
@@ -364,6 +365,11 @@ public:
      * of a micrographs which are obtained by a cross-correlation
      */
     void generateFeatVec(const FileName &fnmicrograph, int proc_prec,  std::vector<Particle2> &positionArray);
+
+    /*
+     * Read the next micrograph from the list of the micrographs
+     */
+    void readNextMic(FileName &fnmicrograph);
 
 };
 

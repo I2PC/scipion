@@ -37,7 +37,7 @@ AutoParticlePicking2::AutoParticlePicking2()
 {}
 
 AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum, int basisPCA,
-    const FileName &model_name, const FileName &micsFn)
+        const FileName &model_name, const FileName &micsFn)
 {
 
     // Defining the paths for pca, svm, ... models.
@@ -51,6 +51,7 @@ AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum
     fnInvariant=fn_model+"_invariant";
     fnParticles=fn_model+"_particle";
 
+    micList.read(micsFn);
     // Setting the values of the parameters
     corr_num=corrNum;
     filter_num=filterNum;
@@ -548,30 +549,26 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
     MultidimArray<double> featVec, featVecNN;
     std::vector<Particle2> positionArray;
 
-    pthread_t th_ids;
-    GenFeatVecThreadParams th_args;
-
-//    th_args.autoPicking=this;
-//    th_args.positionArray=positionArray;
-//    th_args.proc_prec=proc_prec;
-//    th_args.fnmicrograph=fnmicrograph;
-//    pthread_create(&th_ids,NULL,genFeatVecThread,
-//                   &th_args);
-//    pthread_join(th_ids,NULL);
+    //    th_args.autoPicking=this;
+    //    th_args.positionArray=positionArray;
+    //    th_args.proc_prec=proc_prec;
+    //    th_args.fnmicrograph=fnmicrograph;
+    //    pthread_create(&th_ids,NULL,genFeatVecThread,
+    //                   &th_args);
+    //    pthread_join(th_ids,NULL);
 
     if (thread == NULL)
     {
-      thread = new FeaturesThread(this);
-      thread->start();
+        thread = new FeaturesThread(this);
+        thread->start();
+        thread->workOnMicrograph(fnmicrograph, proc_prec);
     }
-
-    thread->workOnMicrograph(fnmicrograph, proc_prec);
     thread->waitForResults();
 
     //positionArray=th_args.positionArray;
     positionArray = thread->positionArray;
-
-//    generateFeatVec(fnmicrograph,proc_prec,positionArray);
+    std::cerr<<"the size of position array is equal to"<<positionArray.size()<<std::endl;
+    //    generateFeatVec(fnmicrograph,proc_prec,positionArray);
     int num=(int)(positionArray.size()*(proc_prec/100.0));
     featVec.resize(num_features);
     for (int k=0;k<num;k++)
@@ -666,7 +663,11 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
         }
     }
     saveAutoParticles(md);
-
+    std::cerr<<"the current micrograph is"<<fnmicrograph<<std::endl;
+    readNextMic(fnmicrograph);
+    std::cerr<<"the next micrograph is"<<fnmicrograph<<std::endl;
+    thread->positionArray.clear();
+    thread->workOnMicrograph(fnmicrograph, proc_prec);
     return auto_candidates.size();
 }
 
@@ -694,7 +695,7 @@ void AutoParticlePicking2::generateFeatVec(const FileName &fnmicrograph, int pro
         buildVector(IpolarCorr,staticVec,featVec,pieceImage);
         // Keep the features on memory to classify later on
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
-          DIRECT_A2D_ELEM(autoFeatVec,k,i)=DIRECT_A1D_ELEM(featVec,i);
+        DIRECT_A2D_ELEM(autoFeatVec,k,i)=DIRECT_A1D_ELEM(featVec,i);
     }
     std::cerr << "DEBUG_JM: AutoParticlePicking2::END " << std::endl;
 }
@@ -709,8 +710,7 @@ FeaturesThread::FeaturesThread(AutoParticlePicking2 * picker)
 }
 
 FeaturesThread::~FeaturesThread()
-{
-}
+{}
 
 void FeaturesThread::setMicrograph(const FileName &fnMic, int proc_prec)
 {
@@ -728,21 +728,21 @@ void FeaturesThread::run()
         condIn.lock();
         if (status == TH_WAITING)
         {
-          std::cerr << "DEBUG_JM: Thread: waiting for work..." <<std::endl;
-          condIn.wait();
-          std::cerr << "DEBUG_JM: Thread: awaked..." <<std::endl;
+            std::cerr << "DEBUG_JM: Thread: waiting for work..." <<std::endl;
+            condIn.wait();
+            std::cerr << "DEBUG_JM: Thread: awaked..." <<std::endl;
         }
         condIn.unlock();
 
         if (status == TH_ABORT)
-          return;
+            return;
 
         std::cerr << "DEBUG_JM: Thread: working on micrograph: " << fnmicrograph <<std::endl;
         //Do the real work
         generateFeatures();
         condOut.lock();
         if (waitingForResults)
-          condOut.signal(); // Notify that we have done with the micrograph
+            condOut.signal(); // Notify that we have done with the micrograph
 
         status = TH_WAITING;
         condOut.unlock();
@@ -751,31 +751,31 @@ void FeaturesThread::run()
 
 void FeaturesThread::generateFeatures()
 {
-   this->picker->generateFeatVec(fnmicrograph, proc_prec, positionArray);
+    this->picker->generateFeatVec(fnmicrograph, proc_prec, positionArray);
 }
 
 void FeaturesThread::workOnMicrograph(const FileName &fnMic, int proc_prec)
 {
-  condIn.lock();
-  status = TH_WORKING;
-  setMicrograph(fnMic, proc_prec);
-  std::cerr << "DEBUG_JM: Main: setMicrograph: " << fnMic <<std::endl;
-  condIn.signal(); //notify there is micrograph to work
-  std::cerr << "DEBUG_JM: Main: after sent signal" <<std::endl;
-  condIn.unlock();
+    condIn.lock();
+    status = TH_WORKING;
+    setMicrograph(fnMic, proc_prec);
+    std::cerr << "DEBUG_JM: Main: setMicrograph: " << fnMic <<std::endl;
+    condIn.signal(); //notify there is micrograph to work
+    std::cerr << "DEBUG_JM: Main: after sent signal" <<std::endl;
+    condIn.unlock();
 }
 
 void FeaturesThread::waitForResults()
 {
-  condOut.lock();
-  if (status == TH_WORKING)
-  {
-    std::cerr << "DEBUG_JM: Main: waiting for results..." <<std::endl;
-    waitingForResults = true;
-    condOut.wait();
-  }
-  condOut.unlock();
-  std::cerr << "DEBUG_JM: Main: resuls got." <<std::endl;
+    condOut.lock();
+    if (status == TH_WORKING)
+    {
+        std::cerr << "DEBUG_JM: Main: waiting for results..." <<std::endl;
+        waitingForResults = true;
+        condOut.wait();
+    }
+    condOut.unlock();
+    std::cerr << "DEBUG_JM: Main: resuls got." <<std::endl;
 }
 
 void * genFeatVecThread(void * args)
@@ -810,6 +810,21 @@ void * genFeatVecThread(void * args)
         // Keep the features on memory to classify later on
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
         DIRECT_A2D_ELEM(prm->autoPicking->autoFeatVec,k,i)=DIRECT_A1D_ELEM(featVec,i);
+    }
+}
+
+void AutoParticlePicking2::readNextMic(FileName &fnmicrograph)
+{
+    FileName currentMic;
+    FOR_ALL_OBJECTS_IN_METADATA(micList)
+    {
+        micList.getValue(MDL_MICROGRAPH,currentMic, __iter.objId);
+        if (!strcmp(currentMic.c_str(),fnmicrograph.c_str()))
+        {
+            __iter.moveNext();
+            micList.getValue(MDL_MICROGRAPH,currentMic, __iter.objId);
+            fnmicrograph=currentMic;
+        }
     }
 }
 
