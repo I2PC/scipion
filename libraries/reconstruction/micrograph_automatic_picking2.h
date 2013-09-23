@@ -43,6 +43,8 @@
 #include <data/basic_pca.h>
 #include <data/morphology.h>
 
+class FeaturesThread;
+
 /// @defgroup AutomaticPicking Image denoising
 /// @ingroup ReconsLibrary
 //@{
@@ -125,6 +127,8 @@ public:
     FileName                     fnSVMModel2;
     FileName 				     fnInvariant;
     FileName 					 fnParticles;
+
+    FeaturesThread * thread;
 public:
 
     /// Constructor
@@ -374,22 +378,48 @@ struct GenFeatVecThreadParams
 	int Nthreads;
 };
 
+/**
+ *  Structure to define random generation mode
+ */
+enum FeatureStatus
+{
+    TH_WAITING, TH_WORKING, TH_FINISHED, TH_ABORT
+} ;
+
 /** This class will compute the features calculation
  * in a separate thread.
  */
 class FeaturesThread: public Thread
 {
+private:
+  /* Condtions to be used to notifiy the thread to work(condIn)
+   * and to know the thread has finished (condOut)
+   */
+  Condition condIn, condOut;
+  bool waitingForResults; // Flag to know if the main thread is waiting
+  FeatureStatus status;
+
 public:
   AutoParticlePicking2 * picker;
   std::vector<Particle2> positionArray;
   FileName fnmicrograph;
   int proc_prec;
 
-  FeaturesThread(AutoParticlePicking2 * picker, const FileName &fnMic, int proc_prec);
+  FeaturesThread(AutoParticlePicking2 * picker);
   ~FeaturesThread();
 
   void setMicrograph(const FileName &fnMic, int proc_prec);
   void run();
+  /* This function should be called from outside to wait for results. */
+  void waitForResults();
+  /* Notify the thread to start working another micrograph */
+  void workOnMicrograph(const FileName &fnMic, int proc_prec);
+  /* Stop the work because the micrograph that the thread is working is not
+   * the next one the user has clicked.
+   */
+  void cancelWork();
+  /* Call the picker generateFeatVec */
+  void generateFeatures();
 }; //class FeaturesThread
 
 class ProgMicrographAutomaticPicking2: public XmippProgram

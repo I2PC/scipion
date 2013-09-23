@@ -81,7 +81,7 @@ AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum
     classifier2.setParameters(1.0, 0.25);
 
     std::cerr << "DEBUG_JM: micsFn: " << micsFn << std::endl;
-
+    thread = NULL;
 }
 
 // This method is required by the JAVA part.
@@ -558,18 +558,18 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
 //    pthread_create(&th_ids,NULL,genFeatVecThread,
 //                   &th_args);
 //    pthread_join(th_ids,NULL);
-    Timer timer;
 
-    timer.tic();
-    FeaturesThread thread(this, fnmicrograph, proc_prec);
-    thread.run();
+    if (thread == NULL)
+    {
+      thread = new FeaturesThread(this);
+      thread->start();
+    }
 
-    timer.toc();
-    timer.tic();
-
+    thread->workOnMicrograph(fnmicrograph, proc_prec);
+    thread->waitForResults();
 
     //positionArray=th_args.positionArray;
-    positionArray = thread.positionArray;
+    positionArray = thread->positionArray;
 
 //    generateFeatVec(fnmicrograph,proc_prec,positionArray);
     int num=(int)(positionArray.size()*(proc_prec/100.0));
@@ -667,7 +667,6 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
     }
     saveAutoParticles(md);
 
-    timer.toc();
     return auto_candidates.size();
 }
 
@@ -678,7 +677,7 @@ void AutoParticlePicking2::generateFeatVec(const FileName &fnmicrograph, int pro
     MultidimArray<double> pieceImage;
     MultidimArray<double> staticVec;
 
-    std::cerr << "DEBUG_JM: fnmicrograph: " << fnmicrograph << std::endl;
+    std::cerr << "DEBUG_JM: AutoParticlePicking2::fnmicrograph: " << fnmicrograph << std::endl;
     readMic(fnmicrograph);
     IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
     buildSearchSpace(positionArray,true);
@@ -697,12 +696,16 @@ void AutoParticlePicking2::generateFeatVec(const FileName &fnmicrograph, int pro
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
           DIRECT_A2D_ELEM(autoFeatVec,k,i)=DIRECT_A1D_ELEM(featVec,i);
     }
+    std::cerr << "DEBUG_JM: AutoParticlePicking2::END " << std::endl;
 }
 
-FeaturesThread::FeaturesThread(AutoParticlePicking2 * picker, const FileName &fnMic, int proc_prec)
+FeaturesThread::FeaturesThread(AutoParticlePicking2 * picker)
 {
     this->picker = picker;
-    setMicrograph(fnMic, proc_prec);
+    waitingForResults = false;
+    status = TH_WAITING;
+    fnmicrograph = "";
+    proc_prec = -1;
 }
 
 FeaturesThread::~FeaturesThread()
@@ -717,8 +720,62 @@ void FeaturesThread::setMicrograph(const FileName &fnMic, int proc_prec)
 
 void FeaturesThread::run()
 {
-    std::cerr << "DEBUG_JM: FeaturesThread.run" <<std::endl;
-    this->picker->generateFeatVec(fnmicrograph, proc_prec, positionArray);
+    std::cerr << "DEBUG_JM: Thread: run" <<std::endl;
+
+    while (true)
+    {
+        //wait there is work to do
+        condIn.lock();
+        if (status == TH_WAITING)
+        {
+          std::cerr << "DEBUG_JM: Thread: waiting for work..." <<std::endl;
+          condIn.wait();
+          std::cerr << "DEBUG_JM: Thread: awaked..." <<std::endl;
+        }
+        condIn.unlock();
+
+        if (status == TH_ABORT)
+          return;
+
+        std::cerr << "DEBUG_JM: Thread: working on micrograph: " << fnmicrograph <<std::endl;
+        //Do the real work
+        generateFeatures();
+        condOut.lock();
+        if (waitingForResults)
+          condOut.signal(); // Notify that we have done with the micrograph
+
+        status = TH_WAITING;
+        condOut.unlock();
+    }
+}
+
+void FeaturesThread::generateFeatures()
+{
+   this->picker->generateFeatVec(fnmicrograph, proc_prec, positionArray);
+}
+
+void FeaturesThread::workOnMicrograph(const FileName &fnMic, int proc_prec)
+{
+  condIn.lock();
+  status = TH_WORKING;
+  setMicrograph(fnMic, proc_prec);
+  std::cerr << "DEBUG_JM: Main: setMicrograph: " << fnMic <<std::endl;
+  condIn.signal(); //notify there is micrograph to work
+  std::cerr << "DEBUG_JM: Main: after sent signal" <<std::endl;
+  condIn.unlock();
+}
+
+void FeaturesThread::waitForResults()
+{
+  condOut.lock();
+  if (status == TH_WORKING)
+  {
+    std::cerr << "DEBUG_JM: Main: waiting for results..." <<std::endl;
+    waitingForResults = true;
+    condOut.wait();
+  }
+  condOut.unlock();
+  std::cerr << "DEBUG_JM: Main: resuls got." <<std::endl;
 }
 
 void * genFeatVecThread(void * args)
