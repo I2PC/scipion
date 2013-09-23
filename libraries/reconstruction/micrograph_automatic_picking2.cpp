@@ -36,7 +36,8 @@
 AutoParticlePicking2::AutoParticlePicking2()
 {}
 
-AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum, int basisPCA, const FileName &model_name)
+AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum, int basisPCA,
+    const FileName &model_name, const FileName &micsFn)
 {
 
     // Defining the paths for pca, svm, ... models.
@@ -78,6 +79,9 @@ AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum
     // Set the parameters for two SVM classifiers.
     classifier.setParameters(8.0, 0.125);
     classifier2.setParameters(1.0, 0.25);
+
+    std::cerr << "DEBUG_JM: micsFn: " << micsFn << std::endl;
+
 }
 
 // This method is required by the JAVA part.
@@ -547,14 +551,25 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
     pthread_t th_ids;
     GenFeatVecThreadParams th_args;
 
-    th_args.autoPicking=this;
-    th_args.positionArray=positionArray;
-    th_args.proc_prec=proc_prec;
-    th_args.fnmicrograph=fnmicrograph;
-    pthread_create(&th_ids,NULL,genFeatVecThread,
-                   &th_args);
-    pthread_join(th_ids,NULL);
-    positionArray=th_args.positionArray;
+//    th_args.autoPicking=this;
+//    th_args.positionArray=positionArray;
+//    th_args.proc_prec=proc_prec;
+//    th_args.fnmicrograph=fnmicrograph;
+//    pthread_create(&th_ids,NULL,genFeatVecThread,
+//                   &th_args);
+//    pthread_join(th_ids,NULL);
+    Timer timer;
+
+    timer.tic();
+    FeaturesThread thread(this, fnmicrograph, proc_prec);
+    thread.run();
+
+    timer.toc();
+    timer.tic();
+
+
+    //positionArray=th_args.positionArray;
+    positionArray = thread.positionArray;
 
 //    generateFeatVec(fnmicrograph,proc_prec,positionArray);
     int num=(int)(positionArray.size()*(proc_prec/100.0));
@@ -651,6 +666,8 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
         }
     }
     saveAutoParticles(md);
+
+    timer.toc();
     return auto_candidates.size();
 }
 
@@ -661,6 +678,7 @@ void AutoParticlePicking2::generateFeatVec(const FileName &fnmicrograph, int pro
     MultidimArray<double> pieceImage;
     MultidimArray<double> staticVec;
 
+    std::cerr << "DEBUG_JM: fnmicrograph: " << fnmicrograph << std::endl;
     readMic(fnmicrograph);
     IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
     buildSearchSpace(positionArray,true);
@@ -677,8 +695,30 @@ void AutoParticlePicking2::generateFeatVec(const FileName &fnmicrograph, int pro
         buildVector(IpolarCorr,staticVec,featVec,pieceImage);
         // Keep the features on memory to classify later on
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
-        DIRECT_A2D_ELEM(autoFeatVec,k,i)=DIRECT_A1D_ELEM(featVec,i);
+          DIRECT_A2D_ELEM(autoFeatVec,k,i)=DIRECT_A1D_ELEM(featVec,i);
     }
+}
+
+FeaturesThread::FeaturesThread(AutoParticlePicking2 * picker, const FileName &fnMic, int proc_prec)
+{
+    this->picker = picker;
+    setMicrograph(fnMic, proc_prec);
+}
+
+FeaturesThread::~FeaturesThread()
+{
+}
+
+void FeaturesThread::setMicrograph(const FileName &fnMic, int proc_prec)
+{
+    this->fnmicrograph = fnMic;
+    this->proc_prec = proc_prec;
+}
+
+void FeaturesThread::run()
+{
+    std::cerr << "DEBUG_JM: FeaturesThread.run" <<std::endl;
+    this->picker->generateFeatVec(fnmicrograph, proc_prec, positionArray);
 }
 
 void * genFeatVecThread(void * args)

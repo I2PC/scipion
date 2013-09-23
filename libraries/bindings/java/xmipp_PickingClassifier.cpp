@@ -7,15 +7,18 @@
 #include <data/metadata.h>
 
 JNIEXPORT void JNICALL
-Java_xmipp_jni_PickingClassifier_create(JNIEnv *env, jobject jobj, jint particle_size, jstring output)
+Java_xmipp_jni_PickingClassifier_create(JNIEnv *env, jobject jobj, jint particle_size, jstring output, jstring micsFn)
 {
     XMIPP_JAVA_TRY
     {
     	int size = particle_size, filter_num = 6, corr_num = 2, NPCA = 4;
     	jboolean aux=false;
     	const FileName &model_name = env->GetStringUTFChars(output, &aux);
-    	AutoParticlePicking2 *picker = new AutoParticlePicking2(size, filter_num, corr_num, NPCA, model_name);
-        STORE_PEER_ID(jobj, (long)picker);
+    	const FileName &mics = env->GetStringUTFChars(micsFn, &aux);
+
+    	AutoParticlePicking2 *picker = new AutoParticlePicking2(size, filter_num, corr_num, NPCA, model_name, mics);
+
+    	STORE_PEER_ID(jobj, (long)picker);
     }
     XMIPP_JAVA_CATCH;
 }

@@ -128,7 +128,8 @@ public:
 public:
 
     /// Constructor
-    AutoParticlePicking2(int particle_size, int filter_num = 6, int corr_num = 2, int NPCA = 4, const FileName &model_name=NULL);
+    AutoParticlePicking2(int particle_size, int filter_num = 6, int corr_num = 2, int NPCA = 4,
+        const FileName &model_name=NULL, const FileName &micsFn=NULL);
 
     AutoParticlePicking2();
 
@@ -372,6 +373,24 @@ struct GenFeatVecThreadParams
 	int proc_prec;
 	int Nthreads;
 };
+
+/** This class will compute the features calculation
+ * in a separate thread.
+ */
+class FeaturesThread: public Thread
+{
+public:
+  AutoParticlePicking2 * picker;
+  std::vector<Particle2> positionArray;
+  FileName fnmicrograph;
+  int proc_prec;
+
+  FeaturesThread(AutoParticlePicking2 * picker, const FileName &fnMic, int proc_prec);
+  ~FeaturesThread();
+
+  void setMicrograph(const FileName &fnMic, int proc_prec);
+  void run();
+}; //class FeaturesThread
 
 class ProgMicrographAutomaticPicking2: public XmippProgram
 {

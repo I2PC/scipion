@@ -76,7 +76,7 @@ public class SingleParticlePicker extends ParticlePicker {
 			for (SingleParticlePickerMicrograph m : micrographs)
 				loadMicrographData(m);
 			classifier = new PickingClassifier(getSize(),
-					getOutputPath("model"));
+					getOutputPath("model"), selfile);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new IllegalArgumentException();
