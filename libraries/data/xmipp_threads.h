@@ -185,6 +185,46 @@ public:
 }
 ;//end of class Barrier
 
+/** Class wrapping around the pthreads.
+ * This class will ease the way to launch threads with
+ * a more object oriented, approach.
+ */
+class Thread
+{
+private:
+    pthread_t thId; ///< pthreads id
+
+public:
+    /** Default constructor.
+     * This constructor just initialize the pthread_mutex_t structure
+     * with its defaults values, just like static initialization with PTHREAD_MUTEX_INITIALIZER
+     */
+    Thread();
+
+    /** Destructor. */
+     virtual ~Thread();
+
+    /** This function should be implemented in subclasses and
+     * will be the main threads working function.
+     */
+     virtual void run() = 0;
+
+    /** This function should not be re-implemented in sub-classes.
+     * This is the function to be called to start the run() in a separated thread.
+     */
+     void start();
+}
+;//end of class Condition
+
+/** This function is used from the Thread class to provide a wrapper over pthreads.
+ * This will be the real function called from pthread_create and from this
+ * the function thread.run() will be called.
+ */
+void * _singleThreadMain(void * data);
+
+/** This function is used in ThreadManager as the main threads function to
+ * live in.
+ */
 void * _threadMain(void * data);
 
 /** Class for manage a group of threads performing one or several tasks.

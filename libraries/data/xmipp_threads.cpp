@@ -3,7 +3,9 @@
 #include <stdio.h>
 #include <iostream>
 
+
 // ================= MUTEX ==========================
+
 Mutex::Mutex()
 {
     pthread_mutex_init(&mutex, NULL);
@@ -25,6 +27,7 @@ void Mutex::unlock()
 }
 
 // ================= CONDITION ==========================
+
 Condition::Condition()
 {
     mutex = new Mutex();
@@ -63,6 +66,7 @@ void Condition::broadcast()
 }
 
 // ================= BARRIER ==========================
+
 Barrier::Barrier(int numberOfThreads)
 {
     needed = numberOfThreads;
@@ -89,6 +93,35 @@ void Barrier::wait()
     condition->unlock();
 }
 
+
+// ================= THREAD =======================
+
+Thread::Thread()
+{
+}
+
+Thread::~Thread()
+{
+    pthread_join(thId, NULL);
+}
+
+void Thread::start()
+{
+    int result = pthread_create(&thId, NULL, _singleThreadMain, (void*)this);
+
+    if (result != 0)
+    {
+        std::cerr << "Thread: can't start thread." << std::endl;
+        exit(1);
+    }
+}
+
+void * _singleThreadMain(void * data){
+  Thread * thread = (Thread*) data;
+  thread->run();
+  return NULL;
+}
+
 // ================= THREAD MANAGER =======================
 
 ThreadArgument::ThreadArgument()
@@ -97,6 +130,7 @@ ThreadArgument::ThreadArgument()
     threads = -1;
     manager = NULL;
     data = NULL;
+    workClass = NULL;
 }
 
 ThreadArgument::ThreadArgument(int id, ThreadManager * manager, void * data)
@@ -105,7 +139,9 @@ ThreadArgument::ThreadArgument(int id, ThreadManager * manager, void * data)
     this->threads = manager->threads;
     this->manager = manager;
     this->data = data;
+    this->workClass = NULL;
 }
+
 
 void * _threadMain(void * data)
 {
