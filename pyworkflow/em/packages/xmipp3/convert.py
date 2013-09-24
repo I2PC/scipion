@@ -193,7 +193,7 @@ def coordinateToRow(coord, coordRow):
 def rowToCoordinate(md, objId):
     """ Create a Coordinate from a row of a metadata. """
     coordDict = { 
-               "_id": xmipp.MDL_ITEM_ID,
+#               "_id": xmipp.MDL_ITEM_ID,
                "_x": xmipp.MDL_XCOOR,
                "_y": xmipp.MDL_YCOOR,
                }
