@@ -57,18 +57,18 @@ function launchToolbar(projName, id, elm) {
 function fillTabsSummary(projName, id) {
 	$.ajax({
 		type : "GET",
-		url : '/protocol_io/?projectName=' + projName + '&protocolId=' + id,
+		url : '/protocol_io/?protocolId=' + id,
 		dataType : "json",
 		success : function(json) {
 			fillUL(json.inputs, "protocol_input", "db_input.gif", projName);
 			fillUL(json.outputs, "protocol_output", "db_output.gif", projName);
+			fillAnalyze(json.outputs, projName);
 		}
 	});
 
 	$.ajax({
 		type : "GET",
-		url : '/protocol_summary/?projectName=' + projName + '&protocolId='
-				+ id,
+		url : '/protocol_summary/?protocolId='+ id,
 		dataType : "json",
 		success : function(json) {
 			$("#tab-summary").empty();
@@ -93,6 +93,32 @@ function fillUL(list, ulId, icon, projName) {
 				+ list[i].name + '</a></li>');
 	}
 }
+
+function fillAnalyze(list, projName) {
+	$("a#analyzeTool").attr('href', 
+			'javascript:launchViewer("' + projName + '","' + list[0].id + '")');
+}
+
+function launchViewer(projName, id){
+	
+//	var uri = '/visualize_object/?projectName=' + projName+ '&objectId=' + id;
+	
+	/* Execute the viewer */
+	$.ajax({
+		type : "GET",
+		url : "/viewer/?projectName=" + projName+ '&objectId=' + id ,
+		success : function(html) {
+			
+			if(html=="errorInput"){
+			
+			}
+			else {
+				customPopupHTML(html,520,460);
+			}
+		}
+	});	
+}
+
 
 function updateTabs(projName, id, elm) {
 	var oldSelect = $("div#graphActiv").attr("data-option");

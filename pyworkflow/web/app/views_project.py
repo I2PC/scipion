@@ -164,6 +164,7 @@ def project_content(request):
                'copyTool': getResourceIcon('copy_toolbar'),
                'deleteTool': getResourceIcon('delete_toolbar'),
                'browseTool': getResourceIcon('browse_toolbar'),
+               'analyzeTool': getResourceIcon('analyze_toolbar'),
                'treeTool': getResourceIcon('tree_toolbar'),
                'utils': getResourceJs('utils'),
                'graph_utils': getResourceJs('graph_utils'),
@@ -184,7 +185,7 @@ def project_content(request):
 def protocol_io(request):
     # Project Id(or Name) should be stored in SESSION
     if request.is_ajax():
-        projectName = request.GET.get('projectName')
+        projectName = request.session['projectName']
         project = loadProject(projectName)
         protId = request.GET.get('protocolId', None)
         protocol = project.mapper.selectById(int(protId))
@@ -199,7 +200,7 @@ def protocol_io(request):
 def protocol_summary(request):
     # Project Id(or Name) should be stored in SESSION
     if request.is_ajax():
-        projectName = request.GET.get('projectName')
+        projectName = request.session['projectName']
         project = loadProject(projectName)
         protId = request.GET.get('protocolId', None)
         protocol = project.mapper.selectById(int(protId))
@@ -210,3 +211,16 @@ def protocol_summary(request):
         
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
+def viewer(request):
+    # Project Id(or Name) should be stored in SESSION
+    if request.is_ajax():
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        protId = request.GET.get('protocolId', None)
+        protocol = project.mapper.selectById(int(protId))
+        summary = protocol.summary()
+#        print "======================= in protocol_summary...."
+        jsonStr = json.dumps(summary, ensure_ascii=False)
+#        print jsonStr
+        
+    return HttpResponse(jsonStr, mimetype='application/javascript')

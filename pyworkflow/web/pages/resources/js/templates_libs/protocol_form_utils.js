@@ -85,8 +85,6 @@ $(document).ready(function() {
 			});
 		} else if (mode == 'wiz') {
 			
-
-			
 			new Messi("<img src='/resources/tools_wizard.png'/>  Loading Wizard...",{
 				modal : true
 				});
