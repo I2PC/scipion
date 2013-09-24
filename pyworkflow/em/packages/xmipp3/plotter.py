@@ -185,3 +185,6 @@ class XmippPlotter(object):
         plt.tight_layout()
         plt.draw()
         
+    def savefig(self, *args, **kwargs):
+        self.figure.savefig(*args, **kwargs)
+        
