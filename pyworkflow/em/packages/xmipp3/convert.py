@@ -368,6 +368,8 @@ def readSetOfImages(filename, imgSet, rowToFunc, hasCtf):
     for objId in imgMd:
         img = rowToFunc(imgMd, objId, hasCtf)
         imgSet.append(img)   
+        
+    imgSet._xmippMd = String(filename)
          
 def writeSetOfImages(imgSet, filename, imgToFunc, ctfDir, rowFunc):
     """ This function will write a SetOfMicrographs as Xmipp metadata.
@@ -460,7 +462,9 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
                 imgCA = rowToImageClassAssignment(imgAssignmentMd, objCAId)
                 class2D.addImageClassAssignment(imgCA)
         classes2DSet.append(class2D)
-            
+        
+    classes2DSet._xmippMd = String(filename)
+         
 
 def createXmippInputImages(self, imgSet, rowFunc=None):    
     imgsFn = self._getPath('input_images.xmd')

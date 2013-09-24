@@ -127,5 +127,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         self.runJob(None, "xmipp_ctf_sort_psds","-i %s -o %s" % (mdFn, auxMdFn))
         # Copy result to output metadata
         moveFile(auxMdFn, mdFn)
+        
+        micSet._xmippMd.set(mdFn)
 
         self._defineOutputs(outputMicrographs=micSet)
