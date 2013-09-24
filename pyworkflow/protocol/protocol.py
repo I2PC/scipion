@@ -241,6 +241,9 @@ class Protocol(Step):
         self._pid = Integer()
         self._stepsExecutor = None
         
+        # Comment
+        self.comment = Integer(args.get('comment'))
+        
     @staticmethod
     def hasDefinition(cls):
         """ Check if the protocol has some definition.
