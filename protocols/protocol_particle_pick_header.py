@@ -15,7 +15,7 @@
 
 # {eval} expandCommentRun()
 
-# {run}(downsample_micrographs,screen_micrographs,import_micrographs) Micrographs RUN
+# {run}(downsample_micrographs,screen_micrographs,import_micrographs,emx_import_micrographs) Micrographs RUN
 """
 Select desired RUN from which you obtained the micrographs.
 

@@ -457,6 +457,17 @@ def validatorIsFloat(var):
             err = "Input value: <%s> for <%s> isn't a valid number" % (value, var.comment)
     return err    
 
+def validatorIsFloatOrEmpty(var):
+    """ Same as validator float, but allows empty values. """
+    err = None
+    try:
+        value = var.getTkValue()
+        if len(value):
+            float(value)
+    except ValueError:
+        err = "Input value: <%s> for <%s> isn't a valid number" % (value, var.comment)
+    return err 
+
 def validatorIsInt(var):
     err = validatorNonEmpty(var)
     if not err:
