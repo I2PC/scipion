@@ -51,7 +51,9 @@ AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum
     fnInvariant=fn_model+"_invariant";
     fnParticles=fn_model+"_particle";
 
+    // Reading the list of micrographs
     micList.read(micsFn);
+
     // Setting the values of the parameters
     corr_num=corrNum;
     filter_num=filterNum;
@@ -81,7 +83,7 @@ AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum
     classifier.setParameters(8.0, 0.125);
     classifier2.setParameters(1.0, 0.25);
 
-    std::cerr << "DEBUG_JM: micsFn: " << micsFn << std::endl;
+    // Initalize the thread to one
     thread = NULL;
 }
 
@@ -594,40 +596,6 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
 
         }
     }
-
-    //    double max=featVec.computeMax();
-    //    double min=featVec.computeMin();
-    //    featVecNN=featVec;
-    //    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
-    //    DIRECT_A1D_ELEM(featVec,i)=0+((1)*((DIRECT_A1D_ELEM(featVec,i)-min)/(max-min)));
-    //
-    //    label= classifier.predict(featVec, score);
-    //    if (label==1)
-    //    {
-    //            if (fnSVMModel2.exists())
-    //            {
-    //                label=classifier2.predict(featVec,score);
-    //                if (label==1)
-    //                {
-    //                    p.x=j;
-    //                    p.y=i;
-    //                    p.status=1;
-    //                    p.cost=score;
-    //                    p.vec=featVec;
-    //                    auto_candidates.push_back(p);
-    //                }
-    //            }
-    //            else
-    //            {
-    //        p.x=j;
-    //        p.y=i;
-    //        p.status=1;
-    //        p.cost=score;
-    //        p.vec=featVecNN;
-    //        auto_candidates.push_back(p);
-    //            }
-    //    }
-
 
     if (auto_candidates.size() == 0)
         return 0;
