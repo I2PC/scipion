@@ -36,6 +36,7 @@
 			<input type="hidden" name="protocolClass" value="{{protocol.getClassName}}"/>
 			<input type="hidden" name="protocolId" value="{{protocol.getObjId}}"/>
 			<input type="hidden" id="wizName" name="wizName" value=""/>
+			<input type="hidden" id="comment" name="comment" value=""/>
 			
 			<div id="main">
 				<div id="mainNode1">
@@ -52,7 +53,7 @@
 								value="{{runName}}">
 							</td>
 							<td class="ico">
-								<a href="javascript:alert('Not Implemented yet');"><img src={{comment}}/></a>
+								<a href="javascript:showComment();"><img src={{comment}}/></a>
 							</td>
 						</tr>
 						<tr>
@@ -128,7 +129,7 @@
 			<div id="tabs">
 				<ul>
 				 {% for section in definition.iterSections %}
-				 	{% if section.label.get != "General" and section.label.get != "Parallelization" %}
+				 	{% if section.label.get != "General" and section.label.get != "Parallelization" %}	
 				 		<li><a href="#tabs-{{forloop.counter0}}">{{section.label.get}}</a></li>
 				 	{% endif %}
 				 {% endfor %}
