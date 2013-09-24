@@ -89,7 +89,6 @@ class XmippViewer(Viewer):
             runParticlePicker(fn, os.path.dirname(fn), extraParams='readonly')
         
         elif issubclass(cls, SetOfParticles):
-            fn = self._getTmpPath(obj.getName() + '_images.xmd')
             mdFn = getattr(obj, '_xmippMd', None)
             if mdFn:
                 fn = mdFn.get()
@@ -97,8 +96,15 @@ class XmippViewer(Viewer):
                 fn = self._getTmpPath(obj.getName() + '_images.xmd')
                 #Set hasCTF to False to avoid problems
                 writeSetOfParticles(obj, fn, self._getTmpPath())
-
             runShowJ(fn)  
+            md = xmipp.MetaData(fn) 
+            #print "MD=%s" % obj.outputParticles.getFileName()
+            if md.containsLabel(xmipp.MDL_ZSCORE):
+                print "MD contains ZSCORE"
+                xplotter = XmippPlotter(windowTitle="Zscore particles sorting")
+                xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
+                xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_ZSCORE)
+                xplotter.show()   
         
         elif issubclass(cls, SetOfClasses2D):
             mdFn = getattr(obj, '_xmippMd', None)
@@ -119,20 +125,13 @@ class XmippViewer(Viewer):
             self.visualize(obj.outputCoordinates)
         
         elif (issubclass(cls, ProtImportParticles) or
-              issubclass(cls, XmippProtExtractParticles)):
+              issubclass(cls, XmippProtExtractParticles) or
+              issubclass(cls, XmippProtCL2DAlign)):
             self.visualize(obj.outputParticles)
             # If Zscore on output images plot Zscore particle sorting            
-            md = xmipp.MetaData(obj.outputParticles.getFileName()) 
-            print "MD=%s" % obj.outputParticles.getFileName()
-            if md.containsLabel(xmipp.MDL_ZSCORE):
-                print "MD contains ZSCORE"
-                xplotter = XmippPlotter(windowTitle="Zscore particles sorting")
-                xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
-                xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_ZSCORE)
-                xplotter.show()      
+   
         
-        elif (issubclass(cls, XmippProtCL2DAlign) or
-              issubclass(cls, XmippProtML2D) or
+        elif (issubclass(cls, XmippProtML2D) or
               issubclass(cls, XmippProtCL2D)):
             self.visualize(obj.outputClasses)
         
