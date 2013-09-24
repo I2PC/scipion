@@ -632,10 +632,12 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
     }
     saveAutoParticles(md);
     std::cerr<<"the current micrograph is"<<fnmicrograph<<std::endl;
-    readNextMic(fnmicrograph);
-    std::cerr<<"the next micrograph is"<<fnmicrograph<<std::endl;
-    thread->positionArray.clear();
-    thread->workOnMicrograph(fnmicrograph, proc_prec);
+    if (readNextMic(fnmicrograph))
+    {
+        std::cerr<<"the next micrograph is"<<fnmicrograph<<std::endl;
+        thread->positionArray.clear();
+        thread->workOnMicrograph(fnmicrograph, proc_prec);
+    }
     return auto_candidates.size();
 }
 
@@ -781,17 +783,20 @@ void * genFeatVecThread(void * args)
     }
 }
 
-void AutoParticlePicking2::readNextMic(FileName &fnmicrograph)
+int AutoParticlePicking2::readNextMic(FileName &fnmicrograph)
 {
     FileName currentMic;
     FOR_ALL_OBJECTS_IN_METADATA(micList)
     {
         micList.getValue(MDL_MICROGRAPH,currentMic, __iter.objId);
+        if (__iter.objId==micList.lastObject())
+            return 0;
         if (!strcmp(currentMic.c_str(),fnmicrograph.c_str()))
         {
             __iter.moveNext();
             micList.getValue(MDL_MICROGRAPH,currentMic, __iter.objId);
             fnmicrograph=currentMic;
+            return 1;
         }
     }
 }
@@ -849,12 +854,13 @@ void AutoParticlePicking2::correction(MetaData addedParticlesMD,MetaData removed
     }
     t.toc("after FOR_ALL");
     t.tic();
-    train(addedParticlesMD,true,0,0,0,0);
+    if (!addedParticlesMD.isEmpty())
+        train(addedParticlesMD,true,0,0,0,0);
     t.toc("addedParticlesMD");
-        t.tic();
+    t.tic();
     add2Dataset();
     t.toc("add2Dataset");
-     t.tic();
+    t.tic();
     saveTrainingSet(fnVector);
     t.toc("saveTrainingSet");
     t.tic();

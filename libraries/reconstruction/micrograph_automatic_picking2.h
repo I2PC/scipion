@@ -369,7 +369,7 @@ public:
     /*
      * Read the next micrograph from the list of the micrographs
      */
-    void readNextMic(FileName &fnmicrograph);
+    int readNextMic(FileName &fnmicrograph);
 
 };
 
