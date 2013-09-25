@@ -54,7 +54,7 @@ class FormElement(OrderedObject):
         self._conditionParams = [] # All param names that appears in the condition
         
     def isExpert(self):
-        return self.expert.hasValue()
+        return self.expertLevel > LEVEL_NORMAL
     
     def hasCondition(self):
         return self.condition.hasValue()

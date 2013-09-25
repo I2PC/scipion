@@ -486,16 +486,9 @@ class ProtocolsView(tk.Frame):
         self.runsGraph = Canvas(parent, width=400, height=400)
         self.runsGraph.onClickCallback = self._runItemClick
         self.runsGraph.onDoubleClickCallback = self._runItemDoubleClick
-        #self.runsGraph.onRightClickCallback = self.rightClickGraph
-        #self.runsGraph.grid(row=0, column=0, sticky='nsew')
         parent.grid_columnconfigure(0, weight=1)
         parent.grid_rowconfigure(0, weight=1)
         
-#        tb1 = canvas.createTextbox("Project", 100, 100, "blue")
-#        tb2 = canvas.createTextbox("aqui estoy yo\ny tu tb", 200, 200)
-#        tb3 = canvas.createTextbox("otro mas\n", 100, 200, "red")
-#        e1 = canvas.createEdge(tb1, tb2)
-#        e2 = canvas.createEdge(tb1, tb3)
         self.updateRunsGraph()
 
     def updateRunsGraph(self):      
@@ -504,6 +497,7 @@ class ProtocolsView(tk.Frame):
         self.runsGraph.clear()
         lt.setCanvas(self.runsGraph)
         lt.paint(self.createRunItem)
+        self.runsGraph.updateScrollRegion()
         
     def createRunItem(self, node, y):
         """ If not nodeBuildFunc is specified, this one will be used by default."""
@@ -523,11 +517,11 @@ class ProtocolsView(tk.Frame):
         self.showGraph = not self.showGraph
         
         if self.showGraph:
-            show = self.runsGraph
+            show = self.runsGraph.frame
             hide = self.runsTree
         else:
             show = self.runsTree
-            hide = self.runsGraph
+            hide = self.runsGraph.frame
             
         hide.grid_remove()
         show.grid(row=0, column=0, sticky='news')
