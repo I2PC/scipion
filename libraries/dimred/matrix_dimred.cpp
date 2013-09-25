@@ -35,6 +35,7 @@ void ProgDimRed::readParams()
 {
     fnIn = getParam("-i");
     fnOut = getParam("-o");
+    fnMapping = getParam("--saveMapping");
     dimRefMethod = getParam("-m");
     outputDim  = getIntParam("--dout");
     dimEstMethod = getParam("--dout",1);
@@ -61,6 +62,7 @@ void ProgDimRed::show()
         std::cout
         << "Input metadata file:    " << fnIn          << std::endl
         << "Output metadata:        " << fnOut         << std::endl
+        << "Output mapping:         " << fnMapping     << std::endl
         << "Dim Red Method:         " << dimRefMethod  << std::endl
         << "Dimension out:          " << outputDim     << std::endl
         ;
@@ -99,6 +101,9 @@ void ProgDimRed::defineParams()
     addParamsLine("       where <method>");
     addParamsLine("                  CorrDim: Correlation dimension");
     addParamsLine("                  MLE: Maximum Likelihood Estimate");
+    addParamsLine("  [--saveMapping <fn=\"\">] : Save mapping if available (PCA, LLTSA, LPP, pPCA, NPE) so that it can be reused later (Y=X*M)");
+    addParamsLine("                            :+X is the input matrix with individuals as rows");
+    addParamsLine("                            :+Y is the output matrix with individuals as rows");
 }
 
 // Produce Side info  ====================================================================
@@ -150,6 +155,7 @@ void ProgDimRed::produceSideInfo()
     }
 
     algorithm->setOutputDimensionality(outputDim);
+    algorithm->fnMapping=fnMapping;
 }
 
 // Estimate dimension

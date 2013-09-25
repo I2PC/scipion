@@ -24,11 +24,10 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <parallel/mpi_angular_gcar_commonlines.h>
+#include <parallel/xmipp_mpi.h>
+#include <reconstruction/threshold.h>
 
-int main(int argc, char **argv)
-{
-	ProgAngularGCARCommonLines program(argc, argv);
-    program.read(argc, argv);
-    return program.tryRun();
-}
+
+CREATE_MPI_METADATA_PROGRAM(ProgThreshold, MpiProgThreshold)
+
+RUN_XMIPP_PROGRAM(MpiProgThreshold)

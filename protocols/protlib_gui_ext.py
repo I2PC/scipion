@@ -1463,6 +1463,11 @@ class XmippBrowser():
         tree = XmippTree(frame, selectmode=self.selmode)#, columns=('items'))
         tree.grid(column=0, row=treeRow, sticky="nwes")
         self.tree = tree
+        # Put scroll
+        vscroll = AutoScrollbar(frame)
+        vscroll.grid(column=1, row=treeRow, sticky='nes')
+        vscroll.config(command=tree.yview)
+        tree.config(yscrollcommand=vscroll.set)
         # List for hidden tree items, (parent, item)
         self.hidden = []
         #tree.column('items', width=60, anchor='e')
@@ -1655,8 +1660,8 @@ class XmippBrowser():
     def filterResults(self, e=None):
         filterValue = self.filterVar.get().replace(',', '')
         self.pattern = filterValue.split()
-        foundDirs = {}    
-        self.changeDir(self.dir)
+        foundDirs = {}   
+        #self.changeDir(self.dir)
         if len(self.pattern):
             self.tree.clear()
             for root, dirs, files in os.walk(self.dir, followlinks=True):
@@ -1671,8 +1676,8 @@ class XmippBrowser():
                             self.tree.item(rootId, open=tk.TRUE)
                             foundDirs[relRoot] = rootId
                         self.insertElement(rootId, f)
-        #else:
-        #    self.changeDir(self.dir)
+        else:
+            self.changeDir(self.dir)
             
     def matchPattern(self, item):
         ##i = basename(item)
@@ -1941,6 +1946,17 @@ class XmippBrowserGaussianFilter(XmippBrowserBandpassFilter):
         self.createPreviewButton(frame)
         self.fillResultPreview()
         return frame
+
+class XmippBrowserRealGaussianFilter(XmippBrowserGaussianFilter):
+    def __init__(self, **args):
+        XmippBrowserGaussianFilter.__init__(self, **args)
+        self.label = 'Real Space Sigma'
+        self.key = 'realSigma'
+    
+    def getComputeFunction(self):
+        from xmipp import realGaussianFilter
+        realSigma = float(self.getResults())
+        return lambda: realGaussianFilter(self.image, self.lastitem, realSigma, self.dim)
 
 """
 class XmippBrowserCropSizeFilter(XmippBrowserCropSizeFilter):

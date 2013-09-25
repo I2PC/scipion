@@ -136,4 +136,6 @@ void ProbabilisticPCA::reduceDimensionality()
     //mapping.M = (inW \ W')';
     matrixOperation_ABt(W,inW.inv(),A);
     matrixOperation_AB(*X,A,Y);
+	if (fnMapping!="")
+		A.write(fnMapping);
 }

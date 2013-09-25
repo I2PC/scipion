@@ -25,12 +25,16 @@ ReferenceVol = ''
 DoStructureFactor=True
 
 # Calculate Spectral SNR
-""" *** """
+""" The input volume for this option must be the raw output after reconstruction (reconstruction_Ref3D_???.vol) of
+any of the iterations in a projection matching"""
 DoSSNR=True
 
 # Calculate Volumetric Spectral SNR
-""" *** """
+""" The input volume for this option must be the raw output after reconstruction (reconstruction_Ref3D_???.vol) of
+any of the iterations in a projection matching"""
 DoVSSNR=False
+
+# {eval} expandParallel(jobsize=1)
 
 #------------------------------------------------------------------------------------------------
 # {section}{visualize} Visualization
@@ -51,6 +55,11 @@ DisplayGuinier=True
 #{expert}{condition}(DisplayGuinier and DoStructureFactor) Use Matlab for Guinier
 UseMatlab=False
 
+# {condition}(DoSSNR) Display Spectral SNR
+DisplaySSNR=True
+
+# {condition}(DoVSSNR) Display Volumetric Spectral SNR
+DisplayVSSNR=True
 
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------

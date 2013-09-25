@@ -378,8 +378,8 @@ public:
                 mySFin.read(output_file_root + "_angles.doc");
 #define ANGLESDOC
 #ifdef ANGLESDOC
-       std::cerr << "DEBUG_ROB, output_file_root + angle.doc:"
-    		     << output_file_root + "_angles.doc" << std::endl;
+//       std::cerr << "DEBUG_ROB, output_file_root + angle.doc:"
+//    		     << output_file_root + "_angles.doc" << std::endl;
 #endif
                 MetaData  mySF;
                 FileName fn_temp;

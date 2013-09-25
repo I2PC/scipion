@@ -44,4 +44,6 @@ void LLTSA::reduceDimensionality()
     generalizedEigs(XtBX, XtX, DEigs, A);
     eraseLastNColumns(A, MAT_XSIZE(A) - outputDim);
     Y = *X * A;
+	if (fnMapping!="")
+		A.write(fnMapping);
 }

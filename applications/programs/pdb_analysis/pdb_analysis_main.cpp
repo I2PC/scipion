@@ -23,11 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/angular_gcar.h>
+#include <reconstruction/pdb_analysis.h>
 
-int main(int argc, char **argv)
-{
-    ProgAngularGCAR prm;
-    prm.read(argc,argv);
-    return prm.tryRun();
-}
+RUN_XMIPP_PROGRAM(ProgPdbAnalysis)

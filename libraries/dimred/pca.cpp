@@ -36,4 +36,6 @@ void PCA::reduceDimensionality()
 	firstEigs(C, outputDim, lambda, M);
 
 	Y=*X*M;
+	if (fnMapping!="")
+		M.write(fnMapping);
 }

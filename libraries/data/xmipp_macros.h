@@ -68,6 +68,7 @@
 /// Includes needed in APPLE Platforms
 #ifdef __APPLE__
 #include <math.h>
+#define __MACH__
 #endif
 
 /// Includes needed in Windows Platforms using MINGW
@@ -94,6 +95,13 @@
  */
 #ifndef PI
 #define PI 3.14159265358979323846
+#endif
+
+/** Pi/2
+ * @ingroup MacrosConstants
+ */
+#ifndef HALFPI
+#define HALFPI 1.57079632679489661923
 #endif
 
 /** 2 * Pi
