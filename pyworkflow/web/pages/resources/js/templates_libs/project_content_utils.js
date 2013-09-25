@@ -3,8 +3,8 @@
  * Toolbar functions + Manage tabs
  * 
  * launchToolbar(projName, id, elm);
- * fillTabsSummary(projName, id);
- * fillUL(list, ulId, icon, projName);
+ * fillTabsSummary(id);
+ * fillUL(list, ulId, icon);
  * updateTabs(projName, id, elm);
  * switchGraph();
  * deleteProtocolForm(projName, protocolId);
@@ -30,12 +30,10 @@ function launchToolbar(projName, id, elm) {
 
 	// Action Edit Button
 	$("a#editTool").attr('href',
-	// 'javascript:popup("/form/?projectName=' + projName + '&protocolId='
 	'javascript:popup("/form/?=&protocolId=' + id + '")');
+	
 	// Action Copy Button
 	$("a#copyTool").attr('href',
-	// 'javascript:popup("/form/?projectName=' + projName + '&protocolId='
-	// + id + '&action=copy' + '")');
 	'javascript:popup("/form/?&protocolId=' + id + '&action=copy' + '")');
 
 	// Action Delete Button
@@ -46,7 +44,7 @@ function launchToolbar(projName, id, elm) {
 	var aux = "javascript:alert('Not implemented yet')";
 	$("a#browseTool").attr('href', aux);
 
-	fillTabsSummary(projName, id);
+	fillTabsSummary(id);
 
 	row.show(); // Show toolbar
 }
@@ -54,15 +52,15 @@ function launchToolbar(projName, id, elm) {
 /*
  * Fill the content of the summary tab
  */
-function fillTabsSummary(projName, id) {
+function fillTabsSummary(id) {
 	$.ajax({
 		type : "GET",
 		url : '/protocol_io/?protocolId=' + id,
 		dataType : "json",
 		success : function(json) {
-			fillUL(json.inputs, "protocol_input", "db_input.gif", projName);
-			fillUL(json.outputs, "protocol_output", "db_output.gif", projName);
-			fillAnalyze(json.outputs, projName);
+			fillUL(json.inputs, "protocol_input", "db_input.gif");
+			fillUL(json.outputs, "protocol_output", "db_output.gif");
+			fillAnalyze(json.outputs);
 		}
 	});
 
@@ -83,30 +81,29 @@ function fillTabsSummary(projName, id) {
  * Fill an UL element with items from a list items should contains id and name
  * properties
  */
-function fillUL(list, ulId, icon, projName) {
-	ul = $("#" + ulId)
-	ul.empty()
+function fillUL(list, ulId, icon) {
+	ul = $("#" + ulId);
+	ul.empty();
 	for ( var i = 0; i < list.length; i++) {
-		ul.append('<li><a href="/visualize_object/?projectName=' + projName
-				+ '&objectId=' + list[i].id
+		ul.append('<li><a href="/visualize_object/?objectId=' + list[i].id
 				+ '"target="_blank"><img src="../../../../resources/' + icon + '" /> '
 				+ list[i].name + '</a></li>');
 	}
 }
 
-function fillAnalyze(list, projName) {
+function fillAnalyze(list) {
 	$("a#analyzeTool").attr('href', 
-			'javascript:launchViewer("' + projName + '","' + list[0].id + '")');
+			'javascript:launchViewer("' + list[0].id + '")');
 }
 
-function launchViewer(projName, id){
+function launchViewer(id){
 	
 //	var uri = '/visualize_object/?projectName=' + projName+ '&objectId=' + id;
 	
 	/* Execute the viewer */
 	$.ajax({
 		type : "GET",
-		url : "/viewer/?projectName=" + projName+ '&objectId=' + id ,
+		url : "/viewer/?objectId=" + id ,
 		success : function(html) {
 			
 			if(html=="errorInput"){
@@ -132,7 +129,7 @@ function updateTabs(projName, id, elm) {
 		$("div#graphActiv").attr("data-option", selected);
 		elm.css("border", "2.5px solid Firebrick");
 
-		fillTabsSummary(projName, id);
+		fillTabsSummary(id);
 	}
 }
 

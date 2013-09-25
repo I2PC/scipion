@@ -231,8 +231,8 @@ def visualizeObject(request):
     probandoCTFParam = False
     
     objectId = request.GET.get("objectId")    
-    #projectName = request.session['projectName']
-    projectName = request.GET.get("projectName")
+#    projectName = request.session['projectName']
+#    projectName = request.GET.get("projectName")
     
 #    project = loadProject(projectName)
     project = Project(request.session['projectPath'])
