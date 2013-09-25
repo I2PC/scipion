@@ -5,6 +5,7 @@
  * launchToolbar(projName, id, elm);
  * fillTabsSummary(id);
  * fillUL(list, ulId, icon);
+ * launchViewer(id);
  * updateTabs(projName, id, elm);
  * switchGraph();
  * deleteProtocolForm(projName, protocolId);
@@ -43,6 +44,10 @@ function launchToolbar(projName, id, elm) {
 	// Action Browse Button
 	var aux = "javascript:alert('Not implemented yet')";
 	$("a#browseTool").attr('href', aux);
+	
+	// Action Analyze Result Button
+	$("a#analyzeTool").attr('href', 
+			'javascript:launchViewer("'+id +'")');
 
 	fillTabsSummary(id);
 
@@ -60,7 +65,6 @@ function fillTabsSummary(id) {
 		success : function(json) {
 			fillUL(json.inputs, "protocol_input", "db_input.gif");
 			fillUL(json.outputs, "protocol_output", "db_output.gif");
-			fillAnalyze(json.outputs);
 		}
 	});
 
@@ -91,31 +95,24 @@ function fillUL(list, ulId, icon) {
 	}
 }
 
-function fillAnalyze(list) {
-	$("a#analyzeTool").attr('href', 
-			'javascript:launchViewer("' + list[0].id + '")');
-}
-
-function launchViewer(id){
-	
-//	var uri = '/visualize_object/?projectName=' + projName+ '&objectId=' + id;
-	
+/*
+ * Launch the viewers to analyze the results of the protocol run
+ */
+function launchViewer(id){	
 	/* Execute the viewer */
 	$.ajax({
 		type : "GET",
-		url : "/viewer/?objectId=" + id ,
-		success : function(html) {
-			
-			if(html=="errorInput"){
-			
-			}
-			else {
-				customPopupHTML(html,520,460);
-			}
+		url : "/viewer/?protocolId=" + id ,
+		dataType : "json",
+		success : function(json) {
+		
+			$.each(json, function(key, value) {
+				customPopupHTML(value,520,460);
+				
+			});
 		}
 	});	
 }
-
 
 function updateTabs(projName, id, elm) {
 	var oldSelect = $("div#graphActiv").attr("data-option");
