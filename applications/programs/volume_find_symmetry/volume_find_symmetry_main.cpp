@@ -313,7 +313,7 @@ public:
 
             }
             if (verbose!=0)
-                std::cout << "Symmetry parameters (rot,z)= " << best_rot << " " << best_z << std::endl;
+                std::cout << "Symmetry parameters (z,rot)= " << best_z << " " << best_rot << " correlation=" << best_corr << std::endl;
             if (fn_output!="")
             {
                 MetaData MD;
