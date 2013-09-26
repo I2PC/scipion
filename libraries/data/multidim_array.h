@@ -4424,6 +4424,21 @@ public:
         indexx(XSIZE(*this), temp_array, indx_array);
     }
 
+    /** Cumulative Density Function.
+     * For each entry in the array, give what is the probability of having a value smaller or equal than this entry.*/
+    void cumlativeDensityFunction(MultidimArray<double> &cdf)
+    {
+    	MultidimArray<int> indx;
+    	indexSort(indx);
+    	cdf.resizeNoCopy(*this);
+    	double iSize=1.0/XSIZE(indx);
+    	FOR_ALL_ELEMENTS_IN_ARRAY1D(indx)
+    	{
+    		int ii=A1D_ELEM(indx,i)-1;
+    		A1D_ELEM(cdf,ii)=(i+1)*iSize;
+    	}
+    }
+
     /** Several thresholding.
      *
      * Apply a threshold to the array, the object is modified itself. There
