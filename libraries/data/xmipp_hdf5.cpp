@@ -97,6 +97,17 @@ herr_t showObjectInfo(hid_t objId, const char *name, void *op_data)
     return err;
 }
 
+
+
+std::map<String, H5infoProvider > createProviderMap()
+{
+    std::map<String, H5infoProvider > m;
+    m["NXtomo"] = std::make_pair(MISTRAL, "/NXtomo/instrument/sample/data");
+    m["MDF"]  = std::make_pair(EMAN,    "/MDF/images/%i/image");
+    return m;
+}
+
+
 void XmippH5File::openFile(const H5std_string& name, unsigned int flags,
                            const H5::FileAccPropList& access_plist)
 {
@@ -116,10 +127,10 @@ int XmippH5File::getDataset(const char* dsname, Matrix1D<double> &data, bool rep
     }
     catch (H5::Exception &h5e)
     {
-    	if ( reportError )
-    		REPORT_ERROR(ERR_ARG_MISSING,formatString("getDataset: %s dataset " \
-    				"does not exist in file %s.", dsname, this->getFileName().c_str()));
-//        std::cerr << "getDataset Error: " << h5e.getCDetailMsg() << std::endl;
+        if ( reportError )
+            REPORT_ERROR(ERR_ARG_MISSING,formatString("getDataset: %s dataset " \
+                         "does not exist in file %s.", dsname, this->getFileName().c_str()));
+        //        std::cerr << "getDataset Error: " << h5e.getCDetailMsg() << std::endl;
         return -1;
     }
 
@@ -170,3 +181,35 @@ void XmippH5File::showTree(std::ostream &out)
     this->iterateElems("/", NULL, showObjectInfo, &h5Info);
 }
 
+
+H5infoProvider getProvider(hid_t fhdf5)
+{
+    H5infoProvider provider;
+
+    size_t maxSize = 1024;
+    char groupName[1024];
+    char memName[1024];
+
+    hid_t gid;
+    ssize_t len;
+
+    gid = H5Gopen(fhdf5,"/", H5P_DEFAULT);
+
+    len = H5Iget_name(gid, groupName, maxSize);
+
+    if (len == 0)
+        REPORT_ERROR(ERR_VALUE_EMPTY, "rwHDF5: Empty structure in file.");
+
+    len = H5Gget_objname_by_idx(gid, 0, memName, maxSize);
+
+    typedef std::map<String, H5infoProvider >::const_iterator it_type;
+
+    for ( it_type it = H5ProviderMap.begin(); it != H5ProviderMap.end(); it++)
+    {
+        if ( strcmp(memName,it->first.c_str() ) == 0 )
+            return it->second;
+    }
+
+    REPORT_ERROR(ERR_IO, "rwHDF5: Unknown file provider. Default dataset unknown.");
+
+}

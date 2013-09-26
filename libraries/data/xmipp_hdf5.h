@@ -26,10 +26,11 @@
 #ifndef XMIPP_HDF5_H_
 #define XMIPP_HDF5_H_
 
+#include <iostream>
+#include<map>
 #include "../../external/hdf5-1.8.10/src/hdf5.h"
 #include "../../external/hdf5-1.8.10/c++/src/H5Cpp.h"
 #include "matrix1d.h"
-#include <iostream>
 
 
 
@@ -40,21 +41,48 @@
  */
 
 
+enum H5FileProvider
+{
+    NONE,
+    MISTRAL,
+    EMAN
+} ;
+
+
+typedef std::pair<H5FileProvider, String> H5infoProvider;
+
+std::map<String, H5infoProvider > createProviderMap();
+
+/** Global declaration of a map to distinguish the h5file provider
+ */
+const std::map<String, H5infoProvider > H5ProviderMap = createProviderMap();
+
+/**
+ * Return the default dataset name according to the typical group
+ * name of the root
+ * @param fhdf5 hdf5 file hander
+ * @return Default dataset name for a file provider
+ */
+H5infoProvider getProvider(hid_t fhdf5);
+
+
+
+
 class XmippH5File: public H5::H5File
 {
 
 public:
 
-	/**
-	 * Show the groups and dataset and print them in the output stream out.
-	 * @param out Output stream
-	 */
-	void showTree(std::ostream &out = std::cout);
+    /**
+     * Show the groups and dataset and print them in the output stream out.
+     * @param out Output stream
+     */
+    void showTree(std::ostream &out = std::cout);
 
     /**
      * Open HDF5 file
-     * @param name	File name
-     * @param flags	tandard hdf5 flags
+     * @param name File name
+     * @param flags tandard hdf5 flags
      * @param access_plist Standard hdf5 plist
      */
     void openFile(const H5std_string& name, unsigned int flags,
@@ -63,7 +91,7 @@ public:
     /** Return the values in the dataset dsname and return them in a Matrix1D double data
      *
      * @param dsname Dataset name
-     * @param data	 Vector data
+     * @param data  Vector data
      * @param reportError If true throw an exception in case of failure, otherwise it returns
      * a negative number
      */
