@@ -520,7 +520,7 @@ void ProgXrayImport::run()
         std::cout << "Getting flatfield from "+fnFlat << " ..." << std::endl;
         getFlatfield(fnFlat,IavgFlat);
         if ( XSIZE(IavgFlat()) != 0 )
-            IavgFlat.write(fnRoot+"_"+fnFlat.removeAllPrefixes().removeDirectories()+"_avg.xmp");
+            IavgFlat.write(fnRoot+"_flatfield_avg.xmp");
     }
 
 
