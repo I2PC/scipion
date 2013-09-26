@@ -86,7 +86,7 @@ void ProgRecRandom::run()
     	// Reconstruct
     	reconstructCurrent();
 
-    	finish=(iter==10);
+    	finish=(iter==30);
     	iter++;
     } while (!finish);
 }
@@ -125,7 +125,7 @@ void ProgRecRandom::alignSingleImage(size_t nImg, size_t id, double &newCorr, do
 	std::cout << "Press any key\n";
 	char c; std::cin >> c;
 #endif
-		if (corr>oldCorr)
+		if (corr>oldCorr || true)
 		{
 			++improvementCount;
 			double random=abs(rnd_gaus(0.0,corr));
@@ -211,5 +211,4 @@ void ProgRecRandom::produceSideinfo()
 		mCurrentImage.aliasImageInStack(inputImages(),n++);
 		memcpy(MULTIDIM_ARRAY(mCurrentImage),MULTIDIM_ARRAY(I()),MULTIDIM_SIZE(mCurrentImage)*sizeof(double));
 	}
-	inputImages.write("PPPinputimages.stk");
 }
