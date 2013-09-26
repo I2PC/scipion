@@ -373,6 +373,7 @@ public:
 
 };
 
+
 void * genFeatVecThread(void * args);
 
 struct GenFeatVecThreadParams

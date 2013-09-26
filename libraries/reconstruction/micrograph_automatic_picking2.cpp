@@ -33,6 +33,8 @@
 #include <algorithm>
 #include <classification/uniform.h>
 
+int flagAbort=0;
+
 AutoParticlePicking2::AutoParticlePicking2()
 {}
 
@@ -565,11 +567,23 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
         thread->start();
         thread->workOnMicrograph(fnmicrograph, proc_prec);
     }
-    thread->waitForResults();
+    if (strcmp(fnmicrograph.c_str(),thread->fnmicrograph.c_str()))
+    {
+    	flagAbort=1;
+    	thread->waitForResults();
+    	flagAbort=0;
+    	positionArray.clear();
+        generateFeatVec(fnmicrograph,proc_prec,positionArray);
+    }
+    else
+    {
+        thread->waitForResults();
+        positionArray = thread->positionArray;
+    }
 
     //positionArray=th_args.positionArray;
-    positionArray = thread->positionArray;
-    std::cerr<<"the size of position array is equal to"<<positionArray.size()<<std::endl;
+
+//    std::cerr<<"The size of the position array is "<<positionArray.size()<<std::endl;
     //    generateFeatVec(fnmicrograph,proc_prec,positionArray);
     int num=(int)(positionArray.size()*(proc_prec/100.0));
     featVec.resize(num_features);
@@ -631,10 +645,8 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
         }
     }
     saveAutoParticles(md);
-    std::cerr<<"the current micrograph is"<<fnmicrograph<<std::endl;
     if (readNextMic(fnmicrograph))
     {
-        std::cerr<<"the next micrograph is"<<fnmicrograph<<std::endl;
         thread->positionArray.clear();
         thread->workOnMicrograph(fnmicrograph, proc_prec);
     }
@@ -648,7 +660,7 @@ void AutoParticlePicking2::generateFeatVec(const FileName &fnmicrograph, int pro
     MultidimArray<double> pieceImage;
     MultidimArray<double> staticVec;
 
-    std::cerr << "DEBUG_JM: AutoParticlePicking2::fnmicrograph: " << fnmicrograph << std::endl;
+//    std::cerr << "DEBUG_JM: AutoParticlePicking2::fnmicrograph: " << fnmicrograph << std::endl;
     readMic(fnmicrograph);
     IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
     buildSearchSpace(positionArray,true);
@@ -656,6 +668,11 @@ void AutoParticlePicking2::generateFeatVec(const FileName &fnmicrograph, int pro
     autoFeatVec.resize(num,num_features);
     for (int k=0;k<num;k++)
     {
+    	if (flagAbort)
+    	{
+//    		std::cerr<<"The process has been aborted"<<std::endl;
+    		return;
+    	}
         int j=positionArray[k].x;
         int i=positionArray[k].y;
         buildInvariant(IpolarCorr,j,i);
@@ -667,7 +684,7 @@ void AutoParticlePicking2::generateFeatVec(const FileName &fnmicrograph, int pro
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
         DIRECT_A2D_ELEM(autoFeatVec,k,i)=DIRECT_A1D_ELEM(featVec,i);
     }
-    std::cerr << "DEBUG_JM: AutoParticlePicking2::END " << std::endl;
+//    std::cerr << "DEBUG_JM: AutoParticlePicking2::END " << std::endl;
 }
 
 FeaturesThread::FeaturesThread(AutoParticlePicking2 * picker)
@@ -690,7 +707,7 @@ void FeaturesThread::setMicrograph(const FileName &fnMic, int proc_prec)
 
 void FeaturesThread::run()
 {
-    std::cerr << "DEBUG_JM: Thread: run" <<std::endl;
+//    std::cerr << "DEBUG_JM: Thread: run" <<std::endl;
 
     while (true)
     {
@@ -698,16 +715,16 @@ void FeaturesThread::run()
         condIn.lock();
         if (status == TH_WAITING)
         {
-            std::cerr << "DEBUG_JM: Thread: waiting for work..." <<std::endl;
+//            std::cerr << "DEBUG_JM: Thread: waiting for work..." <<std::endl;
             condIn.wait();
-            std::cerr << "DEBUG_JM: Thread: awaked..." <<std::endl;
+//            std::cerr << "DEBUG_JM: Thread: awaked..." <<std::endl;
         }
         condIn.unlock();
 
         if (status == TH_ABORT)
             return;
 
-        std::cerr << "DEBUG_JM: Thread: working on micrograph: " << fnmicrograph <<std::endl;
+//        std::cerr << "DEBUG_JM: Thread: working on micrograph: " << fnmicrograph <<std::endl;
         //Do the real work
         generateFeatures();
         condOut.lock();
@@ -729,9 +746,9 @@ void FeaturesThread::workOnMicrograph(const FileName &fnMic, int proc_prec)
     condIn.lock();
     status = TH_WORKING;
     setMicrograph(fnMic, proc_prec);
-    std::cerr << "DEBUG_JM: Main: setMicrograph: " << fnMic <<std::endl;
+//    std::cerr << "DEBUG_JM: Main: setMicrograph: " << fnMic <<std::endl;
     condIn.signal(); //notify there is micrograph to work
-    std::cerr << "DEBUG_JM: Main: after sent signal" <<std::endl;
+//    std::cerr << "DEBUG_JM: Main: after sent signal" <<std::endl;
     condIn.unlock();
 }
 
@@ -740,12 +757,12 @@ void FeaturesThread::waitForResults()
     condOut.lock();
     if (status == TH_WORKING)
     {
-        std::cerr << "DEBUG_JM: Main: waiting for results..." <<std::endl;
+//        std::cerr << "DEBUG_JM: Main: waiting for results..." <<std::endl;
         waitingForResults = true;
         condOut.wait();
     }
     condOut.unlock();
-    std::cerr << "DEBUG_JM: Main: resuls got." <<std::endl;
+//    std::cerr << "DEBUG_JM: Main: resuls got." <<std::endl;
 }
 
 void * genFeatVecThread(void * args)
@@ -820,18 +837,11 @@ void AutoParticlePicking2::saveAutoParticles(MetaData &md)
 
 void AutoParticlePicking2::correction(MetaData addedParticlesMD,MetaData removedParticlesMD)
 {
-    dataSet.clear();
-    classLabel.clear();
-    Timer t;
-    t.tic();
-    loadTrainingSet(fnVector);
-    t.toc("loadTrainingSet");
     int idx=0,enabled,x,y;
     double cost;
     accepted_particles.clear();
     rejected_particles.clear();
 
-    t.tic();
     FOR_ALL_OBJECTS_IN_METADATA(removedParticlesMD)
     {
         removedParticlesMD.getValue(MDL_ENABLED,enabled, __iter.objId);
@@ -852,29 +862,14 @@ void AutoParticlePicking2::correction(MetaData addedParticlesMD,MetaData removed
         }
         ++idx;
     }
-    t.toc("after FOR_ALL");
-    t.tic();
     if (!addedParticlesMD.isEmpty())
         train(addedParticlesMD,true,0,0,0,0);
-    t.toc("addedParticlesMD");
-    t.tic();
     add2Dataset();
-    t.toc("add2Dataset");
-    t.tic();
     saveTrainingSet(fnVector);
-    t.toc("saveTrainingSet");
-    t.tic();
     normalizeDataset(0,1);
-    t.toc("normalizeDataset");
-    t.tic();
     generateTrainSet();
-    t.toc("generateTrainSet");
-    t.tic();
     classifier.SVMTrain(dataSet,classLabel);
-    t.toc("classifier.SVMTrain");
-    t.tic();
     trainSVM(fnSVMModel,1);
-    t.toc("trainSVM");
     //    trainSVM(fnSVMModel2,2);
 }
 
@@ -2098,5 +2093,6 @@ void ProgMicrographAutomaticPicking2::run()
         fnFilterBank.deleteFile();
     delete autoPicking;
 }
+
 
 
