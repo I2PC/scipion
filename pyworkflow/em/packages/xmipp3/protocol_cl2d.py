@@ -104,10 +104,6 @@ class XmippProtCL2D(ProtAlign, ProtClassify):
     _definition = XmippDefCL2D()
     _label = 'Xmipp CL2D'
     
-    def __init__(self):
-        ProtAlign.__init__(self)
-        ProtClassify.__init__(self)
-        self.numberOfMpi.set(2)
 
     def _defineSteps(self):
         """ Mainly prepare the command line for call cl2d program"""
