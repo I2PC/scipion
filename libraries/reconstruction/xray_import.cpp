@@ -1,6 +1,7 @@
 /***************************************************************************
  *
  * Authors:    Carlos Oscar            coss@cnb.csic.es (2010)
+ * 			   Joaquin Oton			   joton@cnb.csic.es (2013)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -30,7 +31,7 @@
 // usage ===================================================================
 void ProgXrayImport::defineParams()
 {
-    addUsageLine("Preprocess X-ray micrographs");
+    addUsageLine("Preprocess X-ray micrograph to be used in tomographic reconstruction software");
     addUsageLine(" ");
     addUsageLine("+This program converts a single-axis tilt series coming from X-ray");
     addUsageLine("+microscopy into a stack. Several corrections are applied ");
@@ -39,12 +40,21 @@ void ProgXrayImport::defineParams()
     addUsageLine("+darkfield are also corrected. The exact formula applied is");
     addUsageLine("+ ");
     addUsageLine("+                       (I-darkfield)/(expTime*beamCurrent*slitWidth)",true);
-    addUsageLine("+Icorrected=log10 -----------------------------------------------------------",true);
+    addUsageLine("+Inormalized =  -----------------------------------------------------------",true);
     addUsageLine("+                 Avg{(Iflatfield-darkfield)/(expTime*beamCurrent*slitWidth)}",true);
     addUsageLine("+ ");
-    addUsageLine("+If the darkfield is not available, it is not used for the correction.");
-    addUsageLine("+The flatfields and the the tilt series may be in any directory. If the");
-    addUsageLine("+darkfield are available, they must be within the flatfield and the tilt");
+    addUsageLine("+Because the intrinsic self-attenuation, X-ray projections are not optimal to be used ");
+    addUsageLine("+with EM 3D reconstruction algorithm. To fix that, use --correct flag:");
+    addUsageLine("+ ");
+    addUsageLine("+Icorrected = -log10(Inormalized)");
+    addUsageLine("+ ");
+    addUsageLine("+If darkfield/flatfield are not available, then they are not used for the correction.");
+    addUsageLine("+ ");
+    addUsageLine("+Specific flags to import tomo series from Mistral microscope (Alba synchrotron) and ");
+    addUsageLine("+U41-TXM (Bessy).");
+    addUsageLine("+ ");
+    addUsageLine("+In the general case, the flatfields and the the tilt series may be in any directory.");
+    addUsageLine("+ If the darkfield are available, they must be within the flatfield and the tilt");
     addUsageLine("+series under a directory named darkfields (in small letters). For each");
     addUsageLine("+SPE file there must be a positions file. For instance, the file myfile.spe");
     addUsageLine("+must have in the same directory the file myfile-positions.txt. The");
@@ -78,10 +88,11 @@ void ProgXrayImport::defineParams()
     addParamsLine("                                     : f_ini and f_end denotes the range of the flatfield images stored in the same directory");
     addParamsLine("[--mistral <input_file>]    : hdf5 Nexus file acquired in Mistral microscope at Alba, which contains all data");
     addParamsLine("   == Filters                                          ");
-    addParamsLine("  [--filterBadPixels  <mask=\"\">]        : Apply a boundaries median filter to bad pixels given in mask.");
+    addParamsLine("  [--filterBadPixels  <mask=\"\">]   : Apply a boundaries median filter to bad pixels given in mask.");
     addParamsLine("  alias -f;");
-    addParamsLine("  [--log]                            : Apply a log10 correction to normalized output images.");
-    addParamsLine("  alias -l;");
+    addParamsLine("  [--correct]                        : Correct for the self-attenuation of X-ray projections applying ");
+    addParamsLine("  									: a log10 and multiplying by -1");
+    addParamsLine("  alias -c;");
     addExampleLine("The most standard call is",false);
     addExampleLine("xmipp_xray_import --data 10s --flat flatfields --oroot ProcessedData/img --crop 7");
 }
@@ -132,7 +143,7 @@ void ProgXrayImport::readParams()
     cropSize  = getIntParam("--crop");
     thrNum    = getIntParam("--thr");
     fnBPMask  = getParam("--filterBadPixels");
-    logFilt   = checkParam("--log");
+    selfAttFix   = checkParam("--correct");
 }
 
 // Show ====================================================================
@@ -173,7 +184,7 @@ void ProgXrayImport::readGeoInfo(const FileName &fn, MDRow &rowGeo) const
     case BESSY:
     case NONE:
         {
-            FileName fnBase = fn.getBaseName();
+            FileName fnBase = fn.withoutExtension();
             std::ifstream fhPosition;
             fhPosition.open((fnBase+"-positions.txt").c_str());
             if (!fhPosition)
@@ -456,8 +467,11 @@ void runThread(ThreadArgument &thArg)
                 mask += ptrProg->bpMask();
             boundMedianFilter(Iaux(), mask);
 
-            if (ptrProg->logFilt)
+            if (ptrProg->selfAttFix)
+            {
                 Iaux().selfLog10();
+                Iaux() *= -1.;
+            }
 
             fnImgOut.compose(i+1, ptrProg->fnOut);
 
