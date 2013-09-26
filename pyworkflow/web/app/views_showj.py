@@ -226,16 +226,16 @@ def save_showj_table(request):
         
         return HttpResponse(json.dumps({'message':'Ok'}), mimetype='application/javascript')
 
-
 def visualizeObject(request):
     probandoCTFParam = False
     
     objectId = request.GET.get("objectId")    
-#    projectName = request.session['projectName']
-#    projectName = request.GET.get("projectName")
+    projectPath = request.session['projectPath']
     
+#    projectName = request.session['projectName']
 #    project = loadProject(projectName)
-    project = Project(request.session['projectPath'])
+
+    project = Project(projectPath)
     project.load()
     
     obj = project.mapper.selectById(int(objectId))
@@ -243,7 +243,7 @@ def visualizeObject(request):
         obj = obj.get()
         
     if probandoCTFParam:
-        inputParameters = {'path': join(request.session['projectPath'], "Runs/XmippProtCTFMicrographs218/extra/BPV_1386/xmipp_ctf.ctfparam"),
+        inputParameters = {'path': join(projectPath, "Runs/XmippProtCTFMicrographs218/extra/BPV_1386/xmipp_ctf.ctfparam"),
                'allowRender': True,
                'mode': 'column',
                'zoom': '150px',
@@ -252,7 +252,7 @@ def visualizeObject(request):
     elif isinstance(obj, SetOfMicrographs):
         fn = project.getTmpPath(obj.getName() + '_micrographs.xmd')
         writeSetOfMicrographs(obj, fn)
-        inputParameters = {'path': join(request.session['projectPath'], fn),
+        inputParameters = {'path': join(projectPath, fn),
                        'allowRender': True,
                        'mode': 'gallery',
                        'zoom': '150px',
@@ -261,7 +261,7 @@ def visualizeObject(request):
     elif isinstance(obj, SetOfVolumes):
         fn = project.getTmpPath(obj.getName()+ '_volumes.xmd')
         writeSetOfVolumes(obj, fn)
-        inputParameters = {'path': join(request.session['projectPath'], fn),
+        inputParameters = {'path': join(projectPath, fn),
                            'setOfVolumes' : obj,
                            'setOfVolumesId': obj.getObjId(),
                            'dims': '3d',
@@ -269,7 +269,7 @@ def visualizeObject(request):
     elif isinstance(obj, SetOfImages):
         fn = project.getTmpPath(obj.getName() + '_images.xmd')
         writeSetOfParticles(obj, fn)
-        inputParameters = {'path': join(request.session['projectPath'], fn),
+        inputParameters = {'path': join(projectPath, fn),
                'allowRender': True,
                'mode': 'gallery',
                'zoom': '150px',
@@ -279,7 +279,7 @@ def visualizeObject(request):
     elif isinstance(obj, SetOfClasses2D):
         fn = project.getTmpPath(obj.getName() + '_classes.xmd')
         writeSetOfClasses2D(obj, fn)
-        inputParameters = {'path': join(request.session['projectPath'], fn),
+        inputParameters = {'path': join(projectPath, fn),
                'allowRender': True,
                'mode': 'gallery',
                'zoom': '150px',
