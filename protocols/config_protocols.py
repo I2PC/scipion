@@ -31,6 +31,7 @@ protocols = {
         'nma_alignment': ('Flexible alignment', '3D/NMA_alignment'),
         'resolution3D': ('Resolution 3D', '3D/Resolution'),
         'align_volume': ('Align Volume', '3D/AlignVolume'),
+        'helical_params': ('Helical Parameters','3D/Helical'),
         'relion_classify': ('3D Classification ', '3D/RelionClass'),
         'relion_refine': ('Angle Refinement ', '3D/RelionRef'),
         'cltomo': ('CLTomo', '3D/CLTomo'),
@@ -59,7 +60,7 @@ sections = [
 ('3D', 
    [['Initial Model', 'rct', 'initvolume_ransac', 'convert_pdb'], 
     ['Model Refinement', 'projmatch', 'ml3d', ['relion','relion_classify','relion_refine']],
-    ['Volumes', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask', 'preprocess_volume', 'resolution3D', 'align_volume']]),
+    ['Volumes', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask', 'preprocess_volume', 'resolution3D', 'align_volume', 'helical_params']]),
 ('Other',
  [['Extra', 'custom',['Virus','subtraction'],['Tomography','mltomo', 'cltomo'],['Tools','image_operate','metadata_utilities','metadata_split'],
    ['EMX', 'emx_import_micrographs', 'emx_import_particles', 'emx_export']]])
