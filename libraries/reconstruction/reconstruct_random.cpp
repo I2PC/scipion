@@ -105,16 +105,20 @@ void ProgRecRandom::alignSingleImage(size_t nImg, size_t id, double &newCorr, do
 	mCurrentImage.aliasImageInStack(inputImages(),nImg);
 	mCurrentImage.setXmippOrigin();
 
+	MultidimArray<double> allCorrs;
+	allCorrs.resizeNoCopy(mdGallery.size());
+
 	size_t nGallery=0;
 	size_t improvementCount=0;
 	double oldCorr=bestCorr;
-	double bestRandom=-1.0;
 	FOR_ALL_OBJECTS_IN_METADATA(mdGallery)
 	{
 		mCurrentImageAligned=mCurrentImage;
 		mGalleryProjection.aliasImageInStack(gallery(),nGallery);
 		mGalleryProjection.setXmippOrigin();
 		double corr=alignImages(mGalleryProjection,mCurrentImageAligned,M,DONT_WRAP);
+		A1D_ELEM(allCorrs,nGallery)=corr;
+		++nGallery;
 #ifdef DEBUG_MORE
 	std::cout << "Image " << nImg << " corr=" << corr << std::endl;
 	Image<double> save;
@@ -125,22 +129,27 @@ void ProgRecRandom::alignSingleImage(size_t nImg, size_t id, double &newCorr, do
 	std::cout << "Press any key\n";
 	char c; std::cin >> c;
 #endif
-		if (corr>oldCorr || true)
+	}
+
+	MultidimArray<double> scaledCorrs;
+	allCorrs.cumlativeDensityFunction(scaledCorrs);
+	nGallery=0;
+	double bestRandom=-1.0;
+	FOR_ALL_OBJECTS_IN_METADATA(mdGallery)
+	{
+		double random=abs(rnd_gaus(0.0,A1D_ELEM(scaledCorrs,nGallery)));
+		if (random>bestRandom)
 		{
-			++improvementCount;
-			double random=abs(rnd_gaus(0.0,corr));
-			if (random>bestRandom)
-			{
-				bool flip;
-				double scale, psi;
-				transformationMatrix2Parameters2D(M,flip,scale,shiftX,shiftY,anglePsi);
-				anglePsi*=-1;
-				bestRandom=random;
-				bestCorr=corr;
-				mdGallery.getValue(MDL_ANGLE_ROT,angleRot,__iter.objId);
-				mdGallery.getValue(MDL_ANGLE_TILT,angleTilt,__iter.objId);
-			}
+			bool flip;
+			double scale, psi;
+			transformationMatrix2Parameters2D(M,flip,scale,shiftX,shiftY,anglePsi);
+			anglePsi*=-1;
+			bestRandom=random;
+			bestCorr=A1D_ELEM(allCorrs,nGallery);
+			mdGallery.getValue(MDL_ANGLE_ROT,angleRot,__iter.objId);
+			mdGallery.getValue(MDL_ANGLE_TILT,angleTilt,__iter.objId);
 		}
+
 		++nGallery;
 	}
 
