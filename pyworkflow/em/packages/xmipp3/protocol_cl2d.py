@@ -103,6 +103,7 @@ class XmippProtCL2D(ProtAlign, ProtClassify):
     """ Protocol to preprocess a set of micrographs in the project. """
     _definition = XmippDefCL2D()
     _label = 'Xmipp CL2D'
+    
 
     def _defineSteps(self):
         """ Mainly prepare the command line for call cl2d program"""
@@ -212,3 +213,10 @@ class XmippProtCL2D(ProtAlign, ProtClassify):
             summary.append("Number of references: %d" % self.numberOfReferences.get())
             summary.append("Output classes: %s" % self.outputClasses.get())
         return summary
+    
+    def _validate(self):
+        validateMsgs = []
+        # Some prepocessing option need to be marked
+        if self.numberOfMpi <= 1:
+            validateMsgs.append('Mpi needs to be greater than 1.')
+        return validateMsgs
