@@ -138,6 +138,11 @@ xmipp_gaussianFilter(PyObject *obj, PyObject *args, PyObject *kwargs);
 /* calculate enhanced psd and return preview
  * used for protocol preprocess_particles*/
 PyObject *
+xmipp_realGaussianFilter(PyObject *obj, PyObject *args, PyObject *kwargs);
+
+/* calculate enhanced psd and return preview
+ * used for protocol preprocess_particles*/
+PyObject *
 xmipp_badPixelFilter(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 /* dump metadatas to database*/
@@ -152,6 +157,15 @@ xmipp_Euler_direction(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 PyObject *
 MetaData_activateMathExtensions(PyObject *obj, PyObject *args, PyObject *kwargs);
+
+PyObject *
+xmipp_errorBetween2CTFs(PyObject *obj, PyObject *args, PyObject *kwargs);
+
+PyObject *
+xmipp_errorMaxFreqCTFs(PyObject *obj, PyObject *args, PyObject *kwargs);
+
+PyObject *
+xmipp_errorMaxFreqCTFs2D(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 void addIntConstant(PyObject * dict, const char * name, const long &value);
 void addLabels(PyObject * dict);

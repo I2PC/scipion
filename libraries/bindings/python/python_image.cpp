@@ -317,6 +317,7 @@ Image_write(PyObject *obj, PyObject *args, PyObject *kwargs)
         {
             try
             {
+
                 if (PyString_Check(input))
                     self->image->write(PyString_AsString(input));
                 else if (FileName_Check(input))
@@ -391,19 +392,26 @@ Image_readPreview(PyObject *obj, PyObject *args, PyObject *kwargs)
         {
             try
             {
-                if (PyString_Check(input))
-                    readImagePreview(self->image, PyString_AsString(input), x);
-                else if (FileName_Check(input))
-                    readImagePreview(self->image, FileName_Value(input), x);
-                else
-                    return NULL;
-                Py_RETURN_NONE;
+              PyObject *pyStr;
+              if ((pyStr = PyObject_Str(input)) != NULL)
+              {
+                  readImagePreview(self->image, PyString_AsString(pyStr), x);
+                  Py_RETURN_NONE;
+              }
+              else
+              {
+                  PyErr_SetString(PyExc_TypeError,
+                                  "Image_readPreview: Expected string or FileName as first argument");
+                  return NULL;
+              }
             }
             catch (XmippError &xe)
             {
                 PyErr_SetString(PyXmippError, xe.msg.c_str());
             }
         }
+        else
+          PyErr_SetString(PyXmippError,"Error with input arguments, expected filename and optional size");
     }
     return NULL;
 }//function Image_readPreview

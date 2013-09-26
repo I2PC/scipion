@@ -134,6 +134,16 @@ def detectMpi():
     
     return (inc_mpi, lib_mpi)
 
+def detectMatlab():
+    from protlib_utils import which
+    matlab_home = None
+    matlab = which('matlab')
+    if matlab:
+        from os.path import dirname
+        from protlib_filesystem import findRealFile
+        matlab_home = dirname(dirname(findRealFile(matlab)))
+    return matlab_home
+    
 def addTabOption(tab, option, comment, default, group=None, cond=None, wiz=None, browse=False):
     defaultsDic = globals()
     if defaultsDic.has_key(option):
@@ -171,7 +181,14 @@ def wizardJava(tab_java):
         tab_java.setValue('JAVA_HOME', java_home)  
         return ""
     return "JAVA_HOME could not be found."  
-    
+
+def wizardMatlab(tab_matlab):
+    matlab_home=detectMatlab()
+    if matlab_home:
+        tab_matlab.setValue('MATLAB_DIR', matlab_home)
+        return ""
+    return "MATLAB_DIR could not be found."  
+
 def addTabs(nb):
     tab = nb.addTab("Compilers")
     tab.addGroupPanel("C/C++")
@@ -214,12 +231,14 @@ def addTabs(nb):
     addTabOption(tab,'debug', 'Build debug version?', 'no')
     addTabOption(tab,'profile', 'Build profile version?', 'no')
     addTabOption(tab,'warn', 'Show warnings?', 'no')
-    addTabOption(tab,'fast', 'Fast?', 'no')
+    addTabOption(tab,'fast', 'Fast?', 'yes')
     addTabOption(tab,'static', 'Prevent dynamic linking?', 'no')
-    addTabOption(tab,'prepend', 'What to prepend to executable names', 'xmipp')
-    addTabOption(tab, 'gtest', 'Build tests?', 'yes')
+    addTabOption(tab, 'gtest', 'Build tests?', 'no')
     addTabOption(tab, 'cuda', 'Build CUDA support?', 'no')
+    addTabOption(tab, 'matlab', 'Build Matlab support', 'no')
+    addTabOption(tab,'MATLAB_DIR', 'Matlab dir ', '/usr/local/MATLAB/R2011a', None, 'matlab', wizardMatlab, True)
     addTabOption(tab, 'release', 'Release mode', 'yes')
+
     defaultsDic = globals()    
     if not defaultsDic.has_key('JAVA_HOME'):
         wizardJava(tab_gui)
@@ -434,5 +453,3 @@ elif options.hasOption('compile'):
         print "Include file .xmipp.bashrc or .xmipp.csh to your startup shell file"
 elif options.getNumberOfOptions() == 1: # Script name is passed as argument, so at least is 1
     print "Xmipp has successfully remained equal"
-        
-        

@@ -543,7 +543,11 @@ void hlpf(MultidimArray<double> &f, int M, double T, const std::string &filterTy
     }
     else if (filterType=="SincKaiser")
     {
-        SincKaiserMask(filter,reductionFactor*PI/M,ripple,deltaw);
+    	int lastIdx=FINISHINGX(filter);
+    	SincKaiserMask(filter,reductionFactor*PI/M,ripple,deltaw);
+    	int newLastIdx=FINISHINGX(filter);
+    	if (newLastIdx>3*lastIdx)
+    		filter.selfWindow(-lastIdx,lastIdx);
         filter/=filter.sum();
         if (FINISHINGX(f)>FINISHINGX(filter))
             filter.selfWindow(STARTINGX(f),FINISHINGX(f));
@@ -556,7 +560,7 @@ void hlpf(MultidimArray<double> &f, int M, double T, const std::string &filterTy
 void fhlpf(const MultidimArray<double> &f, const MultidimArray<double> &filter,
            int M, MultidimArray<double> &convolution)
 {
-    // Expand the two input signals
+	// Expand the two input signals
     int Nmax=FINISHINGX(filter);
     MultidimArray<double> auxF, auxFilter;
     auxF=f;
@@ -597,6 +601,7 @@ int globalM;
 double globalT;
 std::string globalAtom;
 
+//#define DEBUG
 double Hlpf_fitness(double *p, void *prm)
 {
     double reductionFactor=p[1];
@@ -607,7 +612,7 @@ double Hlpf_fitness(double *p, void *prm)
         return 1e38;
     if (ripple<0 || ripple>0.2)
         return 1e38;
-    if (deltaw<0 || deltaw>0.2)
+    if (deltaw<1e-3 || deltaw>0.2)
         return 1e38;
 
     // Construct the filter with the current parameters
@@ -655,17 +660,34 @@ double Hlpf_fitness(double *p, void *prm)
     Matrix1D<double> descriptors;
     atomDescriptors(globalAtom, descriptors);
     double iglobalT=1.0/globalT;
+#ifdef DEBUG
+    MultidimArray<double> f1array, f2array;
+    f1array.initZeros(FfilterMag);
+    f2array.initZeros(FfilterMag);
+#endif
+    double Npoints=0;
     FOR_ALL_ELEMENTS_IN_ARRAY1D(FfilterMag)
     if (A1D_ELEM(freq,i)>=0)
     {
         double f1=log10(A1D_ELEM(FfilterMag,i)*XSIZE(FfilterMag)*amplitudeFactor);
         double f2=log10(iglobalT*
                            electronFormFactorFourier(A1D_ELEM(freq,i),descriptors));
-        double diff=20*(f1-f2);
+        Npoints++;
+        double diff=(f1-f2);
         error+=diff*diff;
+#ifdef DEBUG
+        f1array(i)=f1;
+        f2array(i)=f2;
+        std::cout << "i=" << i << " wi=" << A1D_ELEM(freq,i) << " f1=" << f1 << " f2=" << f2 << " diff=" << diff << " err2=" << diff*diff << std::endl;
+#endif
     }
+#ifdef DEBUG
+        f1array.write("PPPf1.txt");
+        f2array.write("PPPf2.txt");
+        std::cout << "Error " << error/Npoints << " " << Npoints << " M=" << globalM << " T=" << globalT << std::endl;
+#endif
 
-    return error/XSIZE(FfilterMag);
+    return error/Npoints;
 }
 
 /** Optimize the low pass filter.
@@ -1014,4 +1036,56 @@ void projectPDB(const PDBPhantom &phantomPDB,
         }
         catch (XmippError XE) {}
     }
+}
+
+void distanceHistogramPDB(const PDBPhantom &phantomPDB, size_t Nnearest, double maxDistance, int Nbins, Histogram1D &hist)
+{
+    // Compute the histogram of distances
+	const std::vector<Atom> &atoms=phantomPDB.atomList;
+    int Natoms=atoms.size();
+    MultidimArray<double> NnearestDistances;
+    NnearestDistances.resize((Natoms-1)*Nnearest);
+    for (int i=0; i<Natoms; i++)
+    {
+        std::vector<double> NnearestToThisAtom;
+        const Atom& atom_i=atoms[i];
+        for (int j=i+1; j<Natoms; j++)
+        {
+            const Atom& atom_j=atoms[j];
+            double diffx=atom_i.x-atom_j.x;
+            double diffy=atom_i.y-atom_j.y;
+            double diffz=atom_i.z-atom_j.z;
+            double dist=sqrt(diffx*diffx+diffy*diffy+diffz*diffz);
+            if (maxDistance>0 && dist>maxDistance)
+            	continue;
+        	//std::cout << "Analyzing " << i << " and " << j << " -> d=" << dist << std::endl;
+            size_t nearestSoFar=NnearestToThisAtom.size();
+            if (nearestSoFar==0)
+            {
+                NnearestToThisAtom.push_back(dist);
+            	//std::cout << "Pushing d" << std::endl;
+            }
+            else
+            {
+                size_t idx=0;
+                while (idx<nearestSoFar && NnearestToThisAtom[idx]<dist)
+                    idx++;
+                if (idx<nearestSoFar)
+                {
+                    NnearestToThisAtom.insert(NnearestToThisAtom.begin()+idx,1,dist);
+                    if (NnearestToThisAtom.size()>Nnearest)
+                        NnearestToThisAtom.erase(NnearestToThisAtom.begin()+Nnearest);
+                }
+                if (idx==nearestSoFar && nearestSoFar<Nnearest)
+                {
+                    NnearestToThisAtom.push_back(dist);
+                	//std::cout << "Pushing d" << std::endl;
+                }
+            }
+        }
+		if (i<Natoms-1)
+			for (size_t k=0; k<Nnearest; k++)
+				NnearestDistances(i*Nnearest+k)=NnearestToThisAtom[k];
+    }
+    compute_hist(NnearestDistances, hist, 0, NnearestDistances.computeMax(), Nbins);
 }

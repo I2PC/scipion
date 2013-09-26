@@ -32,6 +32,7 @@
 #include <string>
 #include "matrix1d.h"
 #include "projection.h"
+#include "histogram.h"
 
 /**@defgroup PDBinterface PDB
    @ingroup InterfaceLibrary */
@@ -326,5 +327,11 @@ public:
 void projectPDB(const PDBPhantom &phantomPDB,
                 const AtomInterpolator &interpolator, Projection &proj,
                 int Ydim, int Xdim, double rot, double tilt, double psi);
+
+/** Compute distance histogram of a PDB phantom.
+ * Consider the distance between each atom and its N nearest neighbours. Then, compute the histogram of these distances
+ * with Nbin samples.
+ */
+void distanceHistogramPDB(const PDBPhantom &phantomPDB, size_t Nnearest, double maxDistance, int Nbins, Histogram1D &hist);
 //@}
 #endif

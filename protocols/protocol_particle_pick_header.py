@@ -15,7 +15,7 @@
 
 # {eval} expandCommentRun()
 
-# {run}(downsample_micrographs,screen_micrographs,import_micrographs) Micrographs RUN
+# {run}(downsample_micrographs,screen_micrographs,import_micrographs,emx_import_micrographs) Micrographs RUN
 """
 Select desired RUN from which you obtained the micrographs.
 
@@ -27,7 +27,6 @@ Possible input protocols are:
 If you want to correct for the CTF in a subsequent step, you must use a screen or downsample run.
 """
 ImportRun = ""
-
 
 # {hidden} launchGUI
 LaunchGUI = True

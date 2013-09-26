@@ -562,3 +562,14 @@ void gaussianFilter(MultidimArray<double> &img, double w1)
     Filter.generateMask(img);
     Filter.applyMaskSpace(img);
 }
+
+void realGaussianFilter(MultidimArray<double> &img, double sigma)
+{
+    FourierFilter Filter;
+    Filter.FilterShape = REALGAUSSIAN;
+    Filter.FilterBand = LOWPASS;
+    Filter.w1=sigma;
+    img.setXmippOrigin();
+    Filter.generateMask(img);
+    Filter.applyMaskSpace(img);
+}

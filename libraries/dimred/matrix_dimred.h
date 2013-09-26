@@ -51,6 +51,8 @@ public:
     FileName fnIn;
     /** Output metadata */
     FileName fnOut;
+    /** Output mapping */
+    FileName fnMapping;
     /** Output dimension */
     int outputDim;
     /** Method */

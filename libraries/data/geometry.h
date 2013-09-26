@@ -550,6 +550,14 @@ int line_plane_intersection(const Matrix1D< double > normal_plane,
 void Euler_angles2matrix(double a, double b, double g, Matrix2D< double >& A,
                          bool homogeneous=false);
 
+/** Euler angles --> Euler matrix.
+ *
+ * This function returns the transformation matrix associated to the 3 given
+ * Euler angles (in degrees).
+ */
+void Euler_anglesZXZ2matrix(double a, double b, double g, Matrix2D< double >& A,
+                         bool homogeneous=false);
+
 /** Distance between two Euler matrices.
  *
  * The distance is defined as 1/3*(X1.X2 + Y1.Y2 + Z1.Z2)

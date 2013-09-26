@@ -144,6 +144,9 @@ public:
 
 	/// Distance function
 	DimRedDistance2 distance;
+
+	/// Save mapping
+	FileName fnMapping;
 public:
 	/// Empty constructor
 	DimRedAlgorithm();

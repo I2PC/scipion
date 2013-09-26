@@ -129,4 +129,6 @@ void NPE::reduceDimensionality()
 
 	//Compute results
 	Y=*X*eigvector;
+	if (fnMapping!="")
+		eigvector.write(fnMapping);
 }
