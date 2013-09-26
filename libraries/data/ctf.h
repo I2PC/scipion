@@ -413,6 +413,12 @@ public:
         return -(Ksin*sine_part - Kcos*cosine_part);
     }
 
+    /// Compute pure CTF without damping at (U,V). Continuous frequencies
+    double getValueArgument(bool show = false) const
+    {
+        return K1 * precomputed.deltaf * precomputed.u2 + K2 * precomputed.u4;
+    }
+
     /// Compute CTF damping at (U,V). Continuous frequencies
     inline double getValueDampingAt(bool show = false) const
     {
@@ -634,6 +640,11 @@ double errorBetween2CTFs( MetaData &MD1,
  */
 double errorMaxFreqCTFs( MetaData &MD1,
                          MetaData &MD2);
+
+double errorMaxFreqCTFs2D( MetaData &MD1,
+                         MetaData &MD2,
+                         size_t xDim=256,
+                         double phaseRad=HALFPI);
 
 /** Generate an image with the PSD and the CTF
  *  Before calling the function img must have the enhanced PSD. The enhanced PSD image is modified to add the CTF. */

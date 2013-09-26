@@ -23,11 +23,11 @@ from protlib_filesystem import createLink
 from protlib_import import exportReliontoMetadataFile
 from protlib_gui_figure import XmippPlotter
 
-class ProtRelionRef(XmippProtocol):
+class ProtRelionClassifier(XmippProtocol):
     relionFiles=['data','model','optimiser','sampling']
     def __init__(self, scriptname, project):
-        XmippProtocol.__init__(self, protDict.relionRef.name, scriptname, project)
-        self.Import = 'from protocol_relionRef import *'
+        XmippProtocol.__init__(self, protDict.relion_classify.name, scriptname, project)
+        self.Import = 'from protocol_relion_classify import *'
         self.ParamsStr = ''
         if self.NumberOfMpi > 1:
             self.program = 'relion_refine_mpi'
@@ -81,10 +81,12 @@ class ProtRelionRef(XmippProtocol):
         #temporary normalized files
         tmpFileNameSTK = join(self.ExtraDir, 'norRelion.stk')
         tmpFileNameXMD = join(self.ExtraDir, 'norRelion.xmd')
+        print "Define steps"
         if restart:            #Not yet implemented
             print 'NOT YET IMPLEMENTED'
             pass
         else:
+            print "else define steps"
             #create extra output directory
             self.insertStep('createDir', verifyfiles=[self.ExtraDir], path=self.ExtraDir)
             #normalize data

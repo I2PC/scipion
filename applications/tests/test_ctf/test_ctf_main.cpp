@@ -117,6 +117,35 @@ TEST_F( CtfTest, errorMaxFreqCTFs)
     XMIPP_CATCH
 }
 
+TEST_F( CtfTest, errorMaxFreqCTFs2D)
+{
+    XMIPP_TRY
+    MetaData metadata1;
+    long objectId = metadata1.addObject();
+    metadata1.setValue(MDL_CTF_SAMPLING_RATE, 2., objectId);
+    metadata1.setValue(MDL_CTF_VOLTAGE, 300., objectId);
+    metadata1.setValue(MDL_CTF_DEFOCUSU, 5400., objectId);
+    metadata1.setValue(MDL_CTF_DEFOCUSV, 5400., objectId);
+    metadata1.setValue(MDL_CTF_DEFOCUS_ANGLE, 45., objectId);
+    metadata1.setValue(MDL_CTF_CS, 2., objectId);
+    metadata1.setValue(MDL_CTF_Q0, 0.1, objectId);
+
+    MetaData metadata2;
+    objectId = metadata2.addObject();
+    metadata2.setValue(MDL_CTF_SAMPLING_RATE, 2., objectId);
+    metadata2.setValue(MDL_CTF_VOLTAGE, 300., objectId);
+    metadata2.setValue(MDL_CTF_DEFOCUSU, 5000., objectId);
+    metadata2.setValue(MDL_CTF_DEFOCUSV, 5000., objectId);
+    metadata2.setValue(MDL_CTF_DEFOCUS_ANGLE, 45., objectId);
+    metadata2.setValue(MDL_CTF_CS, 2., objectId);
+    metadata2.setValue(MDL_CTF_Q0, 0.1, objectId);
+
+    double resolution = errorMaxFreqCTFs2D(metadata1,
+                             metadata2,256,HALFPI);
+    EXPECT_NEAR(resolution,3.94458,0.00001);
+    XMIPP_CATCH
+}
+
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
