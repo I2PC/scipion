@@ -3,8 +3,9 @@
  * Toolbar functions + Manage tabs
  * 
  * launchToolbar(projName, id, elm);
- * fillTabsSummary(projName, id);
- * fillUL(list, ulId, icon, projName);
+ * fillTabsSummary(id);
+ * fillUL(list, ulId, icon);
+ * launchViewer(id);
  * updateTabs(projName, id, elm);
  * switchGraph();
  * deleteProtocolForm(projName, protocolId);
@@ -30,12 +31,10 @@ function launchToolbar(projName, id, elm) {
 
 	// Action Edit Button
 	$("a#editTool").attr('href',
-	// 'javascript:popup("/form/?projectName=' + projName + '&protocolId='
 	'javascript:popup("/form/?=&protocolId=' + id + '")');
+	
 	// Action Copy Button
 	$("a#copyTool").attr('href',
-	// 'javascript:popup("/form/?projectName=' + projName + '&protocolId='
-	// + id + '&action=copy' + '")');
 	'javascript:popup("/form/?&protocolId=' + id + '&action=copy' + '")');
 
 	// Action Delete Button
@@ -45,8 +44,12 @@ function launchToolbar(projName, id, elm) {
 	// Action Browse Button
 	var aux = "javascript:alert('Not implemented yet')";
 	$("a#browseTool").attr('href', aux);
+	
+	// Action Analyze Result Button
+	$("a#analyzeTool").attr('href', 
+			'javascript:launchViewer("'+id +'")');
 
-	fillTabsSummary(projName, id);
+	fillTabsSummary(id);
 
 	row.show(); // Show toolbar
 }
@@ -54,21 +57,20 @@ function launchToolbar(projName, id, elm) {
 /*
  * Fill the content of the summary tab
  */
-function fillTabsSummary(projName, id) {
+function fillTabsSummary(id) {
 	$.ajax({
 		type : "GET",
-		url : '/protocol_io/?projectName=' + projName + '&protocolId=' + id,
+		url : '/protocol_io/?protocolId=' + id,
 		dataType : "json",
 		success : function(json) {
-			fillUL(json.inputs, "protocol_input", "db_input.gif", projName);
-			fillUL(json.outputs, "protocol_output", "db_output.gif", projName);
+			fillUL(json.inputs, "protocol_input", "db_input.gif");
+			fillUL(json.outputs, "protocol_output", "db_output.gif");
 		}
 	});
 
 	$.ajax({
 		type : "GET",
-		url : '/protocol_summary/?projectName=' + projName + '&protocolId='
-				+ id,
+		url : '/protocol_summary/?protocolId='+ id,
 		dataType : "json",
 		success : function(json) {
 			$("#tab-summary").empty();
@@ -83,15 +85,33 @@ function fillTabsSummary(projName, id) {
  * Fill an UL element with items from a list items should contains id and name
  * properties
  */
-function fillUL(list, ulId, icon, projName) {
-	ul = $("#" + ulId)
-	ul.empty()
+function fillUL(list, ulId, icon) {
+	ul = $("#" + ulId);
+	ul.empty();
 	for ( var i = 0; i < list.length; i++) {
-		ul.append('<li><a href="/visualize_object/?projectName=' + projName
-				+ '&objectId=' + list[i].id
+		ul.append('<li><a href="/visualize_object/?objectId=' + list[i].id
 				+ '"target="_blank"><img src="../../../../resources/' + icon + '" /> '
 				+ list[i].name + '</a></li>');
 	}
+}
+
+/*
+ * Launch the viewers to analyze the results of the protocol run
+ */
+function launchViewer(id){	
+	/* Execute the viewer */
+	$.ajax({
+		type : "GET",
+		url : "/viewer/?protocolId=" + id ,
+		dataType : "json",
+		success : function(json) {
+		
+			$.each(json, function(key, value) {
+				customPopupHTML(value,520,460);
+				
+			});
+		}
+	});	
 }
 
 function updateTabs(projName, id, elm) {
@@ -106,7 +126,7 @@ function updateTabs(projName, id, elm) {
 		$("div#graphActiv").attr("data-option", selected);
 		elm.css("border", "2.5px solid Firebrick");
 
-		fillTabsSummary(projName, id);
+		fillTabsSummary(id);
 	}
 }
 

@@ -31,6 +31,7 @@ import Tkinter as tk
 import gui
 from widgets import Scrollable
 
+
 class HyperlinkManager:
     """ Tkinter Text Widget Hyperlink Manager, take from:
     http://effbot.org/zone/tkinter-text-hyperlink.htm """
@@ -63,6 +64,7 @@ class HyperlinkManager:
             if tag[:6] == "hyper-":
                 self.links[tag]()
                 return
+
 
 class Text(tk.Text, Scrollable):    
     """ Base Text widget with some functionalities 

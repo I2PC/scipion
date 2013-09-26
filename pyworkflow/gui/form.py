@@ -206,12 +206,18 @@ class ParamWidget():
         
         
     def _createLabel(self):
-        if self.param.isImportant.get():
+        f = self.window.font
+
+        if self.param.isImportant:
             f = self.window.fontBold
-        else:
-            f = self.window.font
+            
+        bgColor = 'white'
+        
+        if self.param.isExpert():
+            bgColor = 'grey'
+        
         self.label = tk.Label(self.parent, text=self.param.label.get(), 
-                              bg='white', font=f, wraplength=250)
+                              bg=bgColor, font=f, wraplength=250)
                
     def _createContent(self):
         self.content = tk.Frame(self.parent, bg='white')
@@ -533,8 +539,10 @@ class FormWindow(Window):
         r = 0
         for paramName, param in sectionParam.iterParams():
             protVar = getattr(self.protocol, paramName, None)
+            
             if protVar is None:
                 raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
+            
             if sectionParam.getQuestionName() == paramName:
                 widget = sectionWidget
                 if not protVar:

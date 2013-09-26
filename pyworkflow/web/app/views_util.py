@@ -20,6 +20,7 @@ iconDict = {
             'delete_toolbar': 'delete.gif',
             'browse_toolbar': 'run_steps.gif',
             'tree_toolbar': 'tree2.gif',
+            'analyze_toolbar': 'visualize.gif',
             'new_toolbar': 'new_object.gif'
             }
 

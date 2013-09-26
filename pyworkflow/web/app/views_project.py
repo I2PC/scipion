@@ -164,6 +164,7 @@ def project_content(request):
                'copyTool': getResourceIcon('copy_toolbar'),
                'deleteTool': getResourceIcon('delete_toolbar'),
                'browseTool': getResourceIcon('browse_toolbar'),
+               'analyzeTool': getResourceIcon('analyze_toolbar'),
                'treeTool': getResourceIcon('tree_toolbar'),
                'utils': getResourceJs('utils'),
                'graph_utils': getResourceJs('graph_utils'),
@@ -182,9 +183,8 @@ def project_content(request):
     return render_to_response('project_content.html', context)
 
 def protocol_io(request):
-    # Project Id(or Name) should be stored in SESSION
     if request.is_ajax():
-        projectName = request.GET.get('projectName')
+        projectName = request.session['projectName']
         project = loadProject(projectName)
         protId = request.GET.get('protocolId', None)
         protocol = project.mapper.selectById(int(protId))
@@ -197,9 +197,8 @@ def protocol_io(request):
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
 def protocol_summary(request):
-    # Project Id(or Name) should be stored in SESSION
     if request.is_ajax():
-        projectName = request.GET.get('projectName')
+        projectName = request.session['projectName']
         project = loadProject(projectName)
         protId = request.GET.get('protocolId', None)
         protocol = project.mapper.selectById(int(protId))
@@ -210,3 +209,31 @@ def protocol_summary(request):
         
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
+def viewer(request):
+    import urllib2
+    
+    if request.is_ajax():
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        protId = request.GET.get('protocolId', None)
+        protocol = project.mapper.selectById(int(protId))
+    
+        print "======================= in viewer...."
+        
+#        ioDict = {'inputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterInputAttributes()],
+#                  'outputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterOutputAttributes(EMObject)]}
+        
+        uri = 'http://127.0.0.1:8000/visualize_object/?objectId=746'
+
+        req = urllib2.Request(uri)
+        response = urllib2.urlopen(req).readlines()
+        print response
+        
+        ioDict = {"pag1" : response, "pag2" : "<h2>pagina2</h2>"}
+        
+        jsonStr = json.dumps(ioDict, ensure_ascii=False)
+        
+#        jsonStr = json.dumps(ioDict, ensure_ascii=False)
+#        print jsonStr
+        
+    return HttpResponse(jsonStr, mimetype='application/javascript')

@@ -104,6 +104,8 @@ class XmippViewer(Viewer):
                 xplotter = XmippPlotter(windowTitle="Zscore particles sorting")
                 xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
                 xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_ZSCORE)
+                figFn = fn.replace('.xmd', '.png')
+                xplotter.savefig(figFn)
                 xplotter.show()   
         
         elif issubclass(cls, SetOfClasses2D):
