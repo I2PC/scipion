@@ -366,14 +366,14 @@ class XmippProject():
         
         for r in runs:
             dd = runsDict.get(getExtendedRunName(r), None)
-            if not dd:
-                continue
-            for r2 in runs:
-                dd2 = runsDict.get(getExtendedRunName(r2), None)
-                if dd2 and dd.extRunName != dd2.extRunName and not dd2.hasDep(dd.extRunName):
-                    for k, v in dd.prot.ParamsDict.iteritems():
-                        if k != 'RunName' and type(v) == str and v.startswith(dd2.prot.WorkingDir + '/'):
-                            dd2.addDep(dd.extRunName)
+
+            if dd is not None:
+                for r2 in runs:
+                    dd2 = runsDict.get(getExtendedRunName(r2), None)
+                    if dd2 and dd.extRunName != dd2.extRunName and not dd2.hasDep(dd.extRunName):
+                        for k, v in dd.prot.ParamsDict.iteritems():
+                            if k != 'RunName' and type(v) == str and v.startswith(dd2.prot.WorkingDir + '/'):
+                                dd2.addDep(dd.extRunName)
         
         #Create special node ROOT
         roots = [k for k, v in runsDict.iteritems() if v.isRoot]
@@ -415,7 +415,6 @@ _baseProtocolNames = {
         'macros':       join('%(ExtraDir)s', 'macros.xmd'), 
         'micrographs':  join('%(WorkingDir)s','micrographs.xmd'),
         'microscope':   join('%(WorkingDir)s','microscope.xmd'),
-        'tilted_pairs': join('%(WorkingDir)s','tilted_pairs.xmd'),
         'images':       join('%(WorkingDir)s', 'images.xmd'),
         'images_stk':       join('%(WorkingDir)s', 'images.stk'),
         'images_tilted': join("%(WorkingDir)s", 'images_tilted.xmd'),

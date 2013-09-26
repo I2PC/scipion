@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:    Carlos Oscar            coss@cnb.csic.es (2002)
+ * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -22,54 +22,43 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-#ifndef _PROG_IMAGE_ROTATIONAL_PCA
-#define _PROG_IMAGE_ROTATIONAL_PCA
+#ifndef _PROG_PDB_NMA_DEFORM_HH
+#define _PROG_PDB_NMA_DEFORM_HH
 
-#include <parallel/xmipp_mpi.h>
-#include <data/metadata.h>
-#include <classification/pca.h>
+#include <data/pdb.h>
+#include <data/xmipp_program.h>
 
-
-/**@defgroup RotationalPCA Rotational invariant PCA
+/**@defgroup PDBAnalysis Different statistics of the PDB
    @ingroup ReconsLibrary */
 //@{
-/** Rotational invariant PCA parameters. */
-class ProgAngularGCARCommonLines: public XmippProgram
+/* PDB Analysis Parameters ------------------------------------------ */
+/** Parameter class for the PDB Analysis program */
+class ProgPdbAnalysis: public XmippProgram
 {
 public:
-	/** Input selfile */
-	FileName fnIn;
-	/** Output root */
-	FileName fnRoot;
-    /** Psi step */
-    double psi_step;
-    /** Maximum shift change */
-    double max_shift_change;
-    /** Shift step */
-    double shift_step;
+    /** PDB file */
+    FileName fn_pdb;
+
+    /** Operation */
+    String op;
+
+    /** Output distance histogram */
+    FileName fn_hist;
+
+    /** Nearest neighbours to explore */
+    int Nnearest;
+
+    /** MaxDistance */
+    double maxDistance;
 public:
-    // Mpi node
-    MpiNode *node;
-    // SVD matrix
-    Matrix2D<double> W;
-public:
-    /// Empty constructor
-    ProgAngularGCARCommonLines(int argc, char **argv);
-
-    /// Destructor
-    ~ProgAngularGCARCommonLines();
-
-    /// Read argument from command line
-    void readParams();
-
-    /// Show
-    void show();
-
-    /// Usage
+    /** Params definitions */
     void defineParams();
 
-    /// Produce side info
-    void produceSideInfo();
+    /** Read from a command line. */
+    void readParams();
+
+    /** Show parameters. */
+    void show();
 
     /** Run. */
     void run();

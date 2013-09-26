@@ -100,8 +100,6 @@ opts.Add(BoolVariable('quiet', 'Hide command line?', 'yes'))
 
 opts.Add(BoolVariable('java', 'Build the java programs?', 'yes'))
 
-opts.Add(BoolVariable('arpack', 'Build the arpack programs?', 'no'))
-
 opts.Add(BoolVariable('gtest', 'Build tests?', 'yes'))
 
 #opts.Add(BoolVariable('mpi', 'Build the MPI programs?', 'yes'))
@@ -119,7 +117,7 @@ opts.Add('MINGW_PATHS', 'Include path for MinGW', '')
 opts.Add('prefix', 'Base installation directory', Dir('.').abspath)
 
 opts.Add(BoolVariable('matlab', 'Build the Matlab bindings?', 'no'))
-opts.Add('MATLAB_DIR', 'Matlab installation dir', '/usr/local/matlab')
+opts.Add('MATLAB_DIR', 'Matlab installation dir', '/usr/local/MATLAB/R2011a')
 
 opts.Add(BoolVariable('cuda', 'Build GPU stuff?', 'no'))
 opts.Add('CUDA_SDK_PATH', 'CUDA SDK dir', '/root/NVIDIA_GPU_Computing_SDK')
@@ -131,9 +129,6 @@ opts.Add('CUDA_LIB_PATH', 'CUDA RunTimeLib dir', '/usr/local/cuda/lib64')
 #
 #opts.Add(BoolVariable('verbose_tiff', 'Verbose configuring of TIFF libraries?', 'no'))
 #opts.Add('TIFFFLAGS', 'Additional flags for TIFF configure', 'CPPFLAGS=-w')
-#
-#opts.Add(BoolVariable('verbose_arpack', 'Verbose configuring of ARPACK++ libraries?', 'no'))
-#opts.Add('ARPACKFLAGS', 'Additional flags for ARPACK++ configure', '')
 #
 #opts.Add(BoolVariable('verbose_sqlite', 'Verbose configuring of SQLite libraries?', 'no'))
 #opts.Add('SQLITEFLAGS', 'Additional flags for SQLite configure', 'CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1')
@@ -314,8 +309,6 @@ if (ARGUMENTS['mode'] == 'configure'):
 #                             'fftw-3.2.2', int(env['verbose_fftw']))
 #    ConfigureExternalLibrary('tiff', env['TIFFFLAGS'], 
 #                             'tiff-3.9.4', int(env['verbose_tiff']))
-#    ConfigureExternalLibrary('arpack++', env['ARPACKFLAGS'], 
-#                             'arpack++-2.3', int(env['verbose_arpack']))
 
     # Finish configuration
     env = conf.Finish()

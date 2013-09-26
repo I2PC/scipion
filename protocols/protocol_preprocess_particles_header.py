@@ -17,6 +17,8 @@ This selfile points to the stack or metadata containing your images
 """
 InSelFile = ''
 
+# {eval} expandThreshold()
+
 # {eval} expandFilter()
 
 # {eval} expandMask()

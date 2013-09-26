@@ -643,6 +643,25 @@ xmipp_gaussianFilter(PyObject *obj, PyObject *args, PyObject *kwargs)
 /* calculate enhanced psd and return preview
  * used for protocol preprocess_particles*/
 PyObject *
+xmipp_realGaussianFilter(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    PyObject *pyStrFn, *pyImage;
+    double realSigma;
+    int dim;
+    FileName fn;
+
+    if (PyArg_ParseTuple(args, "OOdi", &pyImage, &pyStrFn, &realSigma, &dim))
+    {
+        FILTER_TRY()
+        realGaussianFilter(data, realSigma);
+        FILTER_CATCH()
+    }
+    return NULL;
+}
+
+/* calculate enhanced psd and return preview
+ * used for protocol preprocess_particles*/
+PyObject *
 xmipp_badPixelFilter(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     PyObject *pyStrFn, *pyImage;
@@ -793,6 +812,70 @@ xmipp_errorBetween2CTFs(PyObject *obj, PyObject *args, PyObject *kwargs)
 
 }
 
+PyObject *
+xmipp_errorMaxFreqCTFs(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    PyObject *pyMd1, *pyMd2;
+
+    if (PyArg_ParseTuple(args, "OO", &pyMd1, &pyMd2))
+    {
+        try
+        {
+            if (!MetaData_Check(pyMd1))
+                PyErr_SetString(PyExc_TypeError,
+                                "Expected MetaData as first argument");
+            else if (!MetaData_Check(pyMd2))
+                PyErr_SetString(PyExc_TypeError,
+                                "Expected MetaData as second argument");
+            else
+            {
+                double resolutionA = errorMaxFreqCTFs(MetaData_Value(pyMd1),
+                                                      MetaData_Value(pyMd2)
+                                                     );
+                return Py_BuildValue("f", resolutionA);
+            }
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+
+}
+
+PyObject *
+xmipp_errorMaxFreqCTFs2D(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    PyObject *pyMd1, *pyMd2;
+
+    if (PyArg_ParseTuple(args, "OO", &pyMd1, &pyMd2))
+    {
+        try
+        {
+            if (!MetaData_Check(pyMd1))
+                PyErr_SetString(PyExc_TypeError,
+                                "Expected MetaData as first argument");
+            else if (!MetaData_Check(pyMd2))
+                PyErr_SetString(PyExc_TypeError,
+                                "Expected MetaData as second argument");
+            else
+            {
+                double resolutionA = errorMaxFreqCTFs2D(MetaData_Value(pyMd1),
+                                                        MetaData_Value(pyMd2)
+                                                       );
+                return Py_BuildValue("f", resolutionA);
+            }
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+
+}
+
 
 
 static PyMethodDef
@@ -863,6 +946,8 @@ xmipp_methods[] =
           "Utility function to apply bandpass filter" },
         { "gaussianFilter", (PyCFunction) xmipp_gaussianFilter, METH_VARARGS,
           "Utility function to apply gaussian filter in Fourier space" },
+        { "realGaussianFilter", (PyCFunction) xmipp_realGaussianFilter, METH_VARARGS,
+          "Utility function to apply gaussian filter in Real space" },
         { "badPixelFilter", (PyCFunction) xmipp_badPixelFilter, METH_VARARGS,
           "Bad pixel filter" },
         { "dumpToFile", (PyCFunction) xmipp_dumpToFile, METH_VARARGS,
@@ -877,6 +962,10 @@ xmipp_methods[] =
           METH_VARARGS, "activate math function in metadatas" },
         { "errorBetween2CTFs", (PyCFunction) xmipp_errorBetween2CTFs,
           METH_VARARGS, "difference between two metadatas" },
+        { "errorMaxFreqCTFs", (PyCFunction) xmipp_errorMaxFreqCTFs,
+          METH_VARARGS, "resolution at which CTFs phase differs more than 90º" },
+        { "errorMaxFreqCTFs2D", (PyCFunction) xmipp_errorMaxFreqCTFs2D,
+          METH_VARARGS, "resolution at which CTFs phase differs more than 90º, 2D case" },
         { NULL } /* Sentinel */
     };//xmipp_methods
 

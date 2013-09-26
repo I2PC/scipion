@@ -229,7 +229,7 @@ def skipProgram(programName):
     if programName in ['xmipp_sqlite3', 'xmipp_mpi_steps_runner',
                        'xmipp_angular_commonline', 'xmipp_python',
                        'xmipp_transform_threshold', 'xmipp_mpi_write_test', 'xmipp_chimera_client',
-                       'xmipp_imagej','xmipp_mpi_image_common_lines']:
+                       'xmipp_imagej','xmipp_mpi_image_common_lines', 'xmipp_mpi_classify_CLTomo', 'xmipp_classify_CLTomo']:
         return True
     for p in ['xmipp_test', 'xmipp_template']:
         if programName.find(p) != -1:
@@ -560,4 +560,28 @@ def validateInputSize(references, images, md, errors):
             errors.append("References and images have not the same size")
     else:
         errors.append("Input metadata <%s> does not contain image column" % images)
+        
+        
+class RowMetaData():
+    """ This class is a wrapper for MetaData in row mode.
+    Where only one object is used.
+    """
+    def __init__(self):
+        self._md = xmipp.MetaData()
+        self._md.setColumnFormat(False)
+        self._id = self._md.addObject()
+        
+    def setValue(self, label, value):
+        self._md.setValue(label, value, self._id)
+        
+    def getValue(self, label):
+        self._md.getValue(label, self._id)
+        
+    def write(self, filename, mode=xmipp.MD_APPEND):
+        self._md.write(filename, mode)
+        
+    def read(self, filename):
+        self._md.read(filename)
+        self._md.setColumnFormat(False)
+        self._id = self._md.firstObject()
     

@@ -215,7 +215,7 @@ public class TiltPairPicker extends ParticlePicker
 				anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y2, (double) m.getTiltedAngle(), id);
 				anglesmd.setValueDouble(MDLabel.MDL_ANGLE_TILT, (double) m.getTiltAngle(), id);
 
-				anglesmd.write(selfile);
+				anglesmd.writeBlock(selfile);
 				saveData(m);
 
 			}

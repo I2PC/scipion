@@ -1,61 +1,107 @@
 #!/usr/bin/env xmipp_python
+
 #------------------------------------------------------------------------------------------------
-# General script for Xmipp-based pre-processing of micrographs
-# Author: Carlos Oscar Sorzano, July 2011
+#   General script for importing micrographs from EMX format
+#
+#   Authors: J.M. de la Rosa Trevin, Sept 2013
+#            Roberto Marabini
+# 
 
 from glob import glob
 from protlib_base import *
 from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED, MDL_SAMPLINGRATE, MDL_CTF_VOLTAGE, \
     MDL_CTF_CS, MDL_CTF_SAMPLING_RATE, MDL_MAGNIFICATION, checkImageFileSize, checkImageCorners
-from protlib_filesystem import replaceBasenameExt, renameFile, exists
+from protlib_filesystem import replaceBasenameExt, renameFile
 from protlib_utils import runJob
-from protlib_xmipp import redStr
+from protlib_xmipp import redStr, RowMetaData
 import math
-from genericpath import exists
 from emx import *
 from emx.emxmapper import *
-from emxLib.emxLib import ctfMicEMXToXmipp, coorEMXToXmipp, alignEMXToXmipp
-from os.path import relpath, join, abspath, dirname
+from protlib_emx import *
+from os.path import relpath, join, abspath, dirname, exists
 
 
-class ProtEmxImport(XmippProtocol):
+class ProtEmxImportMicrographs(XmippProtocol):
+    
     def __init__(self, scriptname, project):
-        XmippProtocol.__init__(self, protDict.emx_import.name, scriptname, project)
-        self.Import = "from protocol_emx_import import *"
+        XmippProtocol.__init__(self, protDict.emx_import_micrographs.name, scriptname, project)
+        self.Import = "from protocol_emx_import_micrographs import *"
         #read emx file
         #Class to group EMX objects
         self.emxData = EmxData()
         self.xmlMapper = XmlMapper(self.emxData)
+        self.TiltPairs = False
+        self.MicrographsMd = self.workingDirPath('micrographs.xmd')
+        
+        self.propDict = {'SamplingRate': 'pixelSpacing__X',
+                         'SphericalAberration': 'cs',
+                         'Voltage': 'acceleratingVoltage'}
             
+    def createFilenameTemplates(self):
+        return {
+                 'pos': join('%(ExtraDir)s', '%(micrograph)s.pos'),
+                 'config': join('%(ExtraDir)s','config.xmd')
+            } 
+        
     def defineSteps(self):
         self._loadInfo()
         self.insertStep("validateSchema", verifyfiles=[], 
-                        emxFilename=self.EmxFileName
+                        emxFileName=self.EmxFileName
                         )
-        self.insertStep("createOutputs", verifyfiles=[],
-                        emxFilename=self.EmxFileName,
+        self.insertStep("createDir", verifyfiles=[self.ExtraDir], 
+                        path=self.ExtraDir)
+        
+        micsFn = self.getFilename('micrographs')
+        self.insertStep("createMicrographs", verifyfiles=[micsFn],
+                        emxFileName=self.EmxFileName,
                         binaryFilename=self.binaryFile,
-                        micsFileName=self.workingDirPath('micrographs.xmd'),
-                        projectDir=self.projectDir
+                        micsFileName=micsFn,
+                        projectDir=self.projectDir,
+                        ctfDir=self.ExtraDir,
                         )
+        
+        acqFn = self.getFilename('acquisition')
+        self.insertStep('createAcquisition', verifyfiles=[acqFn],
+                        fnOut=acqFn, SamplingRate=self.SamplingRate)
+        
+        microscopeFn = self.getFilename('microscope')
+        self.insertStep('createMicroscope', verifyfiles=[microscopeFn],
+                        fnOut=microscopeFn, Voltage=self.Voltage, 
+                        SphericalAberration=self.SphericalAberration,
+                        SamplingRate=self.SamplingRate)
+        
+        if PARTICLE in self.objDict:
+            part = self.objDict[PARTICLE]
+            if part.has('centerCoord__X'):
+                self.insertStep('createCoordinates', verifyfiles=[],
+                                emxFileName=self.EmxFileName,
+                                oroot=self.ExtraDir)
             
     def _loadInfo(self):
         #What kind of elements are in the binary file
-        emxDir = dirname(abspath(self.EmxFileName))
+        emxDir = dirname(self.EmxFileName)
         self.classElement = None
         self.binaryFile = None
         self.object = None
+        self.objDict = {}
         
         for classElement in CLASSLIST:
-            self.object = self.xmlMapper.firstObject(classElement, self.EmxFileName)
-            if self.object != None:
+            obj = self.xmlMapper.firstObject(classElement, self.EmxFileName)
+            if obj is not None:
+                self.objDict[classElement] = obj
                 #is the binary file of this type
-                self.classElement = classElement
-                binaryFile = join(emxDir, self.object.get(FILENAME))
-                print "checking binary: ", binaryFile
+                binaryFile = join(emxDir, obj.get(FILENAME))
+                
                 if exists(binaryFile):
+                    self.object = obj
                     self.binaryFile = binaryFile
-                    break
+                    self.classElement = classElement
+                    
+                    for k, v in self.propDict.iteritems():
+                        if len(getattr(self, k)) == 0:
+                            if self.object.get(v) is not None:
+                                setattr(self, k, str(self.object.get(v)))
+                    #break
         
     def validate(self):
         errors = []
@@ -70,6 +116,9 @@ class ProtEmxImport(XmippProtocol):
             else:
                 if self.binaryFile is None:
                     errors.append('Canot find binary data <%s> associated with EMX metadata file' % self.binaryFile)
+                for k, v in self.propDict.iteritems():
+                        if len(getattr(self, k)) == 0:
+                            errors.append('<%s> was left empty and <%s> does not have this property' % (k, self.classElement))
         
         return errors
 
@@ -81,69 +130,23 @@ class ProtEmxImport(XmippProtocol):
         return summary
     
     def visualize(self):
-        pass
-
-    def insertCreateMicroscope(self):    
-        if self.SamplingRateMode == "From image":
-            self.AngPix = float(self.SamplingRate)
-        else:
-            scannedPixelSize=float(self.ScannedPixelSize)
-            self.AngPix = (10000. * scannedPixelSize) / self.Magnification
-        fnOut = self.getFilename('microscope')
-        self.insertStep("createMicroscope", verifyfiles=[fnOut], fnOut=fnOut, Voltage=self.Voltage,
-                        SphericalAberration=self.SphericalAberration,SamplingRate=self.AngPix,
-                        Magnification=self.Magnification)
-            
-    def insertCreateResults(self, filenameDict):
-        micFn = self.getFilename('micrographs')
-        vf = [micFn]
-        pairMd = ''
-        tilted = ''
-        if self.TiltPairs:
-            tilted = self.getFilename('tilted_pairs')
-            vf.append(tilted)
-            pairMd = self.PairDescr
-        self.insertStep('createResults', verifyfiles=vf, WorkingDir=self.WorkingDir, PairsMd=pairMd, 
-                        FilenameDict=filenameDict, MicrographFn=vf[0], TiltedFn=tilted,
-                        PixelSize=self.AngPix)
-        
-    def insertCopyMicrograph(self, inputMic, outputMic):
-        self.insertStep('copyFile', source=inputMic, dest=outputMic)
-        if inputMic.endswith('.raw'):
-            self.insertStep('copyFile', source=replaceFilenameExt(inputMic, '.inf'), 
-                            dest=replaceFilenameExt(outputMic, '.inf'))
-        
-    def insertPreprocessStep(self, inputMic, outputMic):
-        previousId = XmippProjectDb.FIRST_STEP
-        # Crop
-        iname = inputMic
-        if self.DoCrop:
-            previousId = self.insertParallelRunJobStep("xmipp_transform_window", " -i %s -o %s --crop %d -v 0" %(iname,outputMic, self.Crop),
-                                                       verifyfiles=[outputMic])
-            iname = outputMic
-        # Take logarithm
-        if self.DoLog:
-            params = " -i %s --log --fa %f --fb %f --fc %f" % (iname,
-                                                               self.log_a,
-                                                               self.log_b,
-                                                               self.log_c)
-            if iname != outputMic:
-                params += " -o " + outputMic
-                iname = outputMic
-            previousId = self.insertParallelRunJobStep("xmipp_transform_filter", params, 
-                                                       verifyfiles=[outputMic], 
-                                                       parent_step_id=previousId)
-        # Remove bad pixels
-        if self.DoRemoveBadPixels:
-            params = " -i %s --bad_pixels outliers %f -v 0" % (iname, self.Stddev)
-            if iname != outputMic:
-                params += " -o " + outputMic
-                iname = outputMic
-            previousId = self.insertParallelRunJobStep("xmipp_transform_filter", params, verifyfiles=[outputMic], parent_step_id=previousId)
-        
+        micsFn = self.getFilename('micrographs')
+        if exists(micsFn):
+            from protlib_utils import runShowJ
+            runShowJ(micsFn)
 
 
-def validateSchema(log, emxFilename):
+
+def loadEmxData(emxFileName):
+    """ Given an EMX filename, load data. """
+    emxData = EmxData()
+    xmlMapper = XmlMapper(emxData)
+    xmlMapper.readEMXFile(emxFileName)
+    
+    return emxData
+    
+    
+def validateSchema(log, emxFileName):
     return
     code, out, err = validateSchema(emxFileName)
     
@@ -151,14 +154,30 @@ def validateSchema(log, emxFilename):
         raise Exception(err) 
     
     
-def createOutputs(log, emxFilename, binaryFilename, micsFileName):
-    emxData = EmxData()
-    xmlMapper = XmlMapper(emxData)
-    xmlMapper.readEMXFile(emxFilename)
-    
-    ctfMicEMXToXmipp(emxData, micsFileName)
+def createMicrographs(log, emxFileName, binaryFilename, micsFileName, projectDir, ctfDir):
+    filesPrefix = dirname(emxFileName)
+    emxData = loadEmxData(emxFileName)
+    emxMicsToXmipp(emxData, micsFileName, filesPrefix, ctfDir)
     
     
+def createAcquisition(log, fnOut, SamplingRate):
+        # Create the acquisition info file
+    mdAcq = RowMetaData()
+    mdAcq.setValue(MDL_SAMPLINGRATE, float(SamplingRate))
+    mdAcq.write(fnOut)
+    
+    
+def createMicroscope(log, fnOut, Voltage, SphericalAberration, SamplingRate):
+    md = RowMetaData()
+    md.setValue(MDL_CTF_VOLTAGE, float(Voltage))    
+    md.setValue(MDL_CTF_CS, float(SphericalAberration))    
+    md.setValue(MDL_CTF_SAMPLING_RATE, float(SamplingRate))
+    md.setValue(MDL_MAGNIFICATION, 60000.0)
+    md.write(fnOut)
+    
+def createCoordinates(log, emxFileName, oroot):
+    emxData = loadEmxData(emxFileName)
+    emxCoordsToXmipp(emxData, oroot)
     
 ################### Old functions ########################3
 
@@ -207,18 +226,6 @@ def merge(log, OutWd, InWd1, InWd2):
     md1.write(getWdFile(OutWd, 'micrographs'))
 
 
-
-    
-    
-def createMicroscope(log,fnOut,Voltage,SphericalAberration,SamplingRate,Magnification):
-    md = MetaData()
-    md.setColumnFormat(False)
-    objId = md.addObject()
-    md.setValue(MDL_CTF_VOLTAGE,float(Voltage),objId)    
-    md.setValue(MDL_CTF_CS,float(SphericalAberration),objId)    
-    md.setValue(MDL_CTF_SAMPLING_RATE,float(SamplingRate),objId)
-    md.setValue(MDL_MAGNIFICATION,float(Magnification),objId)
-    md.write(fnOut)    
 
 def createResults(log, WorkingDir, PairsMd, FilenameDict, MicrographFn, TiltedFn, PixelSize):
     ''' Create a metadata micrographs.xmd with all micrographs

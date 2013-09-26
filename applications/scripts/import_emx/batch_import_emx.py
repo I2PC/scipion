@@ -29,7 +29,7 @@ from xmipp import MetaData, MDL_CTF_MODEL, MD_APPEND, MD_OVERWRITE, FileName,Xmi
 from emxLib.emxLib import ctfMicXmippToEmx
 from emx.emxmapper import *
 from emx.emx import *
-from emxLib.emxLib import ctfMicEMXToXmipp, coorEMXToXmipp, alignEMXToXmipp
+from emxLib.emxLib import emxMicsToXmipp, emxCoordsToXmipp, alignEMXToXmipp
 
 class ScriptImportEMX(XmippScript):
     def __init__(self):
@@ -53,6 +53,7 @@ class ScriptImportEMX(XmippScript):
         self.addParamsLine(' [--schema <schema=default>]     : validate again this schema ');
         self.addParamsLine("     alias -s;")
         self.addExampleLine(' default= http://sourceforge.net/p/emexchange/code/ci/master/tree/trunk/resourcesEmx/schemas/emx.xsd?format=raw>');
+        self.addParamsLine(' [--oroot <outputdir=".">]     : where to generate output files ');
         self.addExampleLine("Import information from EMX file to Xmipp", False);
         self.addExampleLine("xmipp_import_emx -i particlePicking.emx -m micCTF ");
       
@@ -69,15 +70,17 @@ class ScriptImportEMX(XmippScript):
         doNotValidate= self.checkParam('-n')
         onlyValidate = self.checkParam('-y')
         schema       = self.getParam('-s')
+        oroot = self.getParam('--oroot')
+        print "oroot: ", oroot
         #validate emx file
         if not doNotValidate:
             try:
                 if schema == 'default':
-                    (code, _out,_err)=validateSchema(emxFileName)
+                    code, _out,_err = validateSchema(emxFileName)
                 else:
-                    (code, _out,_err)=validateSchema(emxFileName,schema)
-                if code !=0:
-                   raise Exception (_err) 
+                    code, _out,_err = validateSchema(emxFileName,schema)
+                if code != 0:
+                   raise Exception(_err) 
             except Exception, e:
                 print >> sys.stderr, "XMIPP_ERROR -1:", str(e)
                 exit(-1)
@@ -85,7 +88,7 @@ class ScriptImportEMX(XmippScript):
                 print emxFileName, " was successfully validated"
                 exit(0)
         #object to store emx data
-        emxData   = EmxData()
+        emxData = EmxData()
         #object to read/write emxData
         mapper = XmlMapper(emxData)
 	try:
@@ -94,9 +97,9 @@ class ScriptImportEMX(XmippScript):
 	#        xmlMapperW.writeEMXFile(fileName)
 		#create xmd files with mic CTF information and auxiliary files
 		if mode == 'micCTF':
-		    ctfMicEMXToXmipp(emxData)
+		    emxMicsToXmipp(emxData)
 		elif mode == 'coordinates':
-		    coorEMXToXmipp(emxData,PARTICLE,emxFileName)
+		    emxCoordsToXmipp(emxData, '.')
 		elif mode == 'alignment':
 		    xmdFileName = emxFileName.replace(".emx",".xmd")
 		    alignEMXToXmipp(emxData,PARTICLE,xmdFileName)

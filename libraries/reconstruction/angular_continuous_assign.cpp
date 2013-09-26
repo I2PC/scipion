@@ -319,8 +319,10 @@ double CSTSplineAssignment(
     Data.ny_OutputParameters = 5;
 
     // Set performance parameters
-    Matrix1D<double> Cost(max_no_iter + 1), TimePerIter(max_no_iter + 1),
-    Failures(max_no_iter + 1);
+    Matrix1D<double> Cost, TimePerIter, Failures;
+    Cost.initZeros(max_no_iter + 1);
+    TimePerIter.initZeros(max_no_iter + 1);
+    Failures.initZeros(max_no_iter + 1);
     long             NumberIterPerformed, NumberSuccPerformed,
     NumberFailPerformed;
     Data.Cost             = MATRIX1D_ARRAY(Cost);

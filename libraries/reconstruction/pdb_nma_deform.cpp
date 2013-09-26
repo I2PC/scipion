@@ -70,6 +70,7 @@ void ProgPdbNmaDeform::run()
 	MetaData modes;
 	pdb.read(fn_pdb);
 	modes.read(fn_nma);
+	modes.removeDisabled();
 	int j=0;
 	FileName fnMode;
 	MultidimArray<double> mode;

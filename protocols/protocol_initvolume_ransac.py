@@ -51,7 +51,7 @@ class ProtInitVolRANSAC(XmippProtocol):
 
         self.insertRunJobStep("xmipp_transform_filter","-i %s -o %s --fourier low_pass %f --oroot %s"
                                                 %(self.Classes,fnOutputReducedClass,freq,fnOutputReducedClassNoExt))
-        self.insertRunJobStep("xmipp_image_resize","-i %s --dim %d %d --oroot %s" %(fnOutputReducedClass,self.Xdim2,self.Xdim2,fnOutputReducedClassNoExt))
+        self.insertRunJobStep("xmipp_image_resize","-i %s --dim %d %d -o %s" %(fnOutputReducedClass,self.Xdim2,self.Xdim2,fnOutputReducedClassNoExt))
 
         # Generate projection gallery from the initial volume
         if (self.InitialVolume != ''):
@@ -165,8 +165,7 @@ def getCorrThresh(log,WorkingDir,NRansac,CorrThresh):
     
     #With the line below commented the percentil is not used for the threshold and is used the value introduced in the form
     #CorrThresh = sortedCorrVector[indx]#
-    
-    
+        
     objId = mdCorr.addObject()
     mdCorr.setValue(MDL_WEIGHT,float(CorrThresh),objId)
     mdCorr.write("corrThreshold@"+fnCorr,MD_APPEND)

@@ -853,11 +853,129 @@ void generateCTFImageWith2CTFs(const MetaData &MD1, const MetaData &MD2, int Xdi
 
 double errorBetween2CTFs( MetaData &MD1,
                           MetaData &MD2,
-                         size_t Xdim,
-                         double minFreq,
-                         double maxFreq)
+                          size_t Xdim,
+                          double minFreq,
+                          double maxFreq)
 {
 
+    Matrix1D<double> freq(2); // Frequencies for Fourier plane
+
+    CTFDescription CTF1, CTF2;
+
+    CTF1.enable_CTF=true;
+    CTF1.enable_CTFnoise=false;
+    CTF1.readFromMetadataRow(MD1,MD1.firstObject());
+    CTF1.produceSideInfo();
+
+    CTF2.enable_CTF=true;
+    CTF2.enable_CTFnoise=false;
+    CTF2.readFromMetadataRow(MD2,MD2.firstObject());
+    CTF2.produceSideInfo();
+
+    double iTm=1.0/CTF1.Tm;
+    size_t xDim, yDim;
+    xDim = yDim = Xdim;
+#define DEBUG
+#ifdef DEBUG
+
+    Image<double> img1(xDim,yDim);
+    Image<double> img2(xDim,yDim);
+    Image<double> img3(xDim,yDim);
+
+    MultidimArray<double> &dummy1 = img1.data;
+    MultidimArray<double> &dummy2 = img2.data;
+    MultidimArray<double> &dummy3 = img3.data;
+#endif
+
+    double error =0.;
+    double _freq=0.;
+    minFreq /= CTF1.Tm;
+    maxFreq /= CTF1.Tm;
+
+    for (int i=0; i<(int)yDim; ++i)
+    {
+        FFT_IDX2DIGFREQ(i, yDim, YY(freq));
+        YY(freq) *= iTm;
+        for (int j=0; j<(int)xDim; ++j)
+        {
+            FFT_IDX2DIGFREQ(j, xDim, XX(freq));
+            XX(freq) *= iTm;
+            _freq = freq.module();
+            if (_freq < minFreq || _freq > maxFreq)
+                continue;
+            //freq *= CTF1.Tm;
+            CTF1.precomputeValues(XX(freq),YY(freq));
+            CTF2.precomputeValues(XX(freq),YY(freq));
+            error += fabs(CTF2.getValuePureWithoutDampingAt()- CTF1.getValuePureWithoutDampingAt());
+#ifdef DEBUG
+
+            double a = CTF1.getValuePureWithoutDampingAt();
+            double b = CTF2.getValuePureWithoutDampingAt();
+            DIRECT_A2D_ELEM(dummy1,i,j)=a;
+            DIRECT_A2D_ELEM(dummy2,i,j)=b;
+            DIRECT_A2D_ELEM(dummy3,i,j)=fabs(b-a);
+#endif
+
+        }
+    }
+#ifdef DEBUG
+    img1.write("/tmp/img1.spi");
+    img2.write("/tmp/img2.spi");
+    img3.write("/tmp/img3.spi");
+#endif
+#undef DEBUG
+
+    return error;
+}
+
+
+double errorMaxFreqCTFs( MetaData &MD1,
+                         MetaData &MD2)
+{
+    //This is a quick and extremely dirty solution
+    //return angstroms
+
+    CTFDescription CTF1, CTF2;
+
+    CTF1.enable_CTF=true;
+    CTF1.enable_CTFnoise=false;
+    CTF1.readFromMetadataRow(MD1,MD1.firstObject());
+    double defocus1 = (CTF1.DeltafU + CTF1.DeltafV)/2.0;
+    CTF1.produceSideInfo();
+
+    CTF2.enable_CTF=true;
+    CTF2.enable_CTFnoise=false;
+    CTF2.readFromMetadataRow(MD2,MD2.firstObject());
+    double defocus2 = (CTF2.DeltafU + CTF2.DeltafV)/2.0;
+    CTF2.produceSideInfo();
+
+#ifdef DEBUG
+
+    Matrix1D<double> freq(2); // Frequencies for Fourier plane
+    double iTm=1.0/CTF1.Tm;
+    for (int i=0; i<64; ++i)
+    {
+        FFT_IDX2DIGFREQ(i, 256, YY(freq));
+        FFT_IDX2DIGFREQ(i, 256, XX(freq));
+        freq *= iTm;
+        CTF1.precomputeValues(XX(freq),YY(freq));
+        CTF2.precomputeValues(XX(freq),YY(freq));
+        std::cerr << "DEBUG_ROB: "
+        << XX(freq) << " "
+        << CTF1.getValuePureWithoutDampingAt() << " "
+        << CTF2.getValuePureWithoutDampingAt() << " "
+        << std::endl;
+    }
+#endif
+    return 1.0/sqrt(PI/(CTF1.K1*abs(defocus1-defocus2)));
+}
+
+
+double errorMaxFreqCTFs2D( MetaData &MD1,
+                          MetaData &MD2,
+                          size_t Xdim,
+                          double phaseRad)
+{
     Matrix1D<double> freq(2); // Frequencies for Fourier plane
 
     CTFDescription CTF1, CTF2;
@@ -885,41 +1003,57 @@ double errorBetween2CTFs( MetaData &MD1,
     MultidimArray<double> &dummy1 = img1.data;
     MultidimArray<double> &dummy2 = img2.data;
     MultidimArray<double> &dummy3 = img3.data;
+    int counterAux = 0 ;
 #endif
 
-    double error =0.;
+    int counter = 0 ;
     double _freq=0.;
-
+    std::cerr << "DEBUG_ROB: phaseRad: " << phaseRad << std::endl;
     for (int i=0; i<(int)yDim; ++i)
     {
         FFT_IDX2DIGFREQ(i, yDim, YY(freq));
-        //YY(freq) *= iTm;
+        YY(freq) *= iTm;
         for (int j=0; j<(int)xDim; ++j)
         {
             FFT_IDX2DIGFREQ(j, xDim, XX(freq));
-        	_freq = freq.module();
-        	if (_freq < minFreq || _freq > maxFreq)
-        		continue;
-        	//XX(freq) *= iTm;
-            freq *= iTm;
+            XX(freq) *= iTm;
+            _freq = freq.module();
+            //freq *= CTF1.Tm;
             CTF1.precomputeValues(XX(freq),YY(freq));
             CTF2.precomputeValues(XX(freq),YY(freq));
-            error += fabs(CTF2.getValuePureWithoutDampingAt()- CTF1.getValuePureWithoutDampingAt());
+            double a = CTF1.getValueArgument();
+            double b = CTF2.getValueArgument();
+            if (fabs(b-a) < phaseRad)
+                counter++;
 #ifdef DEBUG
-            double a = CTF1.getValuePureWithoutDampingAt();
-            double b = CTF2.getValuePureWithoutDampingAt();
-            DIRECT_A2D_ELEM(dummy1,i,j)=a;
-            DIRECT_A2D_ELEM(dummy2,i,j)=b;
-            DIRECT_A2D_ELEM(dummy3,i,j)=fabs(b-a);
+
+            counterAux++;
+            DIRECT_A2D_ELEM(dummy1,i,j)=fabs(b-a);
+            DIRECT_A2D_ELEM(dummy2,i,j)=a;
+            DIRECT_A2D_ELEM(dummy3,i,j)=b;
 #endif
+
         }
     }
+    double areaLessHalfPIPixels = counter;
+    double totalArePixels       = PI*Xdim*Xdim/4.0;
+    double maxFreqA             = 1./(2.*CTF1.Tm);
+    double resolutionA_1        = areaLessHalfPIPixels * maxFreqA / totalArePixels;
+    double resolutionA          = 1./ resolutionA_1;
 #ifdef DEBUG
     img1.write("/tmp/img1.spi");
     img2.write("/tmp/img2.spi");
     img3.write("/tmp/img3.spi");
+    std::cerr << "DEBUG_ROB: counter: "    << counter << std::endl;
+    std::cerr << "DEBUG_ROB: counterAux: " << counterAux << std::endl;
+    std::cerr << "DEBUG_ROB: res in pixels: " << sqrt (counter/PI) << std::endl;
+    // area < halfpi  area whole sprecta  normalize to .5
+    std::cerr << "DEBUG_ROB: resolutionA_1: " << resolutionA_1 << std::endl;
+    std::cerr << "DEBUG_ROB: resolutionA: " << resolutionA << std::endl;
 #endif
-    return error;
+#undef DEBUG
+    return resolutionA;
+    //divide between area
 }
 
 void generatePSDCTFImage(MultidimArray<double> &img, const MetaData &MD)
