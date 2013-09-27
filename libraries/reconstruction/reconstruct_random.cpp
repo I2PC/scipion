@@ -132,7 +132,7 @@ void ProgRecRandom::alignSingleImage(size_t nImg, size_t id, double &newCorr, do
 		mCurrentImageAligned=mCurrentImage;
 		mGalleryProjection.aliasImageInStack(gallery(),nGallery);
 		mGalleryProjection.setXmippOrigin();
-		double corr=alignImages(mGalleryProjection,mCurrentImageAligned,M,DONT_WRAP);
+		double corr=alignImagesConsideringMirrors(mGalleryProjection,mCurrentImageAligned,M,DONT_WRAP);
 #ifdef DEBUG
 		mdGallery.getValue(MDL_MAXCC,corr,__iter.objId);
 #endif
@@ -161,12 +161,13 @@ void ProgRecRandom::alignSingleImage(size_t nImg, size_t id, double &newCorr, do
 	bool bestFlip;
 	bestCorr=-1;
 	double correctionFactor=1;
+	/*
 	if (improvementCount>1)
 		correctionFactor=1.0/improvementCount;
 	else if (iter<=NiterRandom)
 		correctionFactor=1.0/(0.98*XSIZE(scaledCorrs));
 	else
-		correctionFactor=1;
+		correctionFactor=1;*/
 	FOR_ALL_OBJECTS_IN_METADATA(mdGallery)
 	{
 		bool getThis=(A1D_ELEM(allCorrs,nGallery)>oldCorr) || (improvementCount==0 && A1D_ELEM(scaledCorrs,nGallery)>=0.98);
@@ -268,10 +269,10 @@ void ProgRecRandom::filterByCorrelation()
 	{
 		double cc, weight;
 		mdAux.getValue(MDL_MAXCC,cc,__iter.objId);
-		if (cc<minCorr || cc>maxCorr)
+		if (cc<minCorr) // COSS || cc>maxCorr)
 			mdAux.setValue(MDL_ENABLED,-1,__iter.objId);
 		mdAux.getValue(MDL_WEIGHT,weight,__iter.objId);
-		if (weight<minWeight || weight>maxWeight)
+		if (weight<minWeight) // COSS || weight>maxWeight)
 			mdAux.setValue(MDL_ENABLED,-1,__iter.objId);
 	}
 	mdAux.removeDisabled();
