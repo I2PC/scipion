@@ -6,7 +6,8 @@ from pyworkflow.utils.utils import prettyDate
 from pyworkflow.manager import Manager
 from pyworkflow.apps.pw_project_viewprotocols import STATUS_COLORS
 from pyworkflow.gui.tree import TreeProvider, ProjectRunsTreeProvider
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpRequest
+from django.contrib.gis.shortcuts import render_to_text
 
 def projects(request):
     manager = Manager()
@@ -209,10 +210,9 @@ def protocol_summary(request):
         
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
-def viewer(request):
-    import urllib2
-    
+def viewer(request):    
     if request.is_ajax():
+        projectPath= request.session['projectPath']
         projectName = request.session['projectName']
         project = loadProject(projectName)
         protId = request.GET.get('protocolId', None)
@@ -223,17 +223,12 @@ def viewer(request):
 #        ioDict = {'inputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterInputAttributes()],
 #                  'outputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterOutputAttributes(EMObject)]}
         
-        uri = 'http://127.0.0.1:8000/visualize_object/?objectId=746'
-
-        req = urllib2.Request(uri)
-        response = urllib2.urlopen(req).readlines()
-        print response
+        url = '/visualize_object/?objectId=746'   
         
-        ioDict = {"pag1" : response, "pag2" : "<h2>pagina2</h2>"}
+        ioDict = {"pag1": url , "pag2" : "<html><h2>pagina2</h2></html>"}
         
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
         
-#        jsonStr = json.dumps(ioDict, ensure_ascii=False)
 #        print jsonStr
         
     return HttpResponse(jsonStr, mimetype='application/javascript')
