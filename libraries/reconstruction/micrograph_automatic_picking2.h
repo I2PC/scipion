@@ -148,10 +148,6 @@ public:
 
     void filterBankGenerator();
 
-    void filterBankGenerator(MultidimArray<double> &inputMicrograph,
-                             const FileName &fnFilterBankStack,
-                             int filter_num);
-
     void batchBuildInvariant(MetaData MD);
 
     void buildInvariant(MetaData MD);
@@ -176,6 +172,8 @@ public:
 
     int automaticallySelectParticles(FileName fnmicrograph, int proc_prec, MetaData &md);
 
+    int automaticWithouThread(FileName fnmicrograph, int proc_prec, const FileName &fn);
+
     void saveAutoParticles(MetaData &md);
 
     /// Define the parameters of the main program
@@ -186,8 +184,6 @@ public:
 
     /// Read the micrograph in memory
     void readMicrograph();
-
-    void produceSideInfo(Micrograph *m);
 
     //Check the distance between a point and positive samples in micrograph
     bool checkDist(Particle2 &p);
@@ -350,9 +346,6 @@ public:
     /// Load the features for particles and non-particles (from the supervised)
     void loadVectors(const FileName &fn);
 
-    /// Select particles from the micrograph in an automatic way
-    int automaticallySelectParticles(bool use2Classifier);
-
     /*
      * This method generates two different datasets. One for the
      * particles and non particles and the other one for the
@@ -371,18 +364,6 @@ public:
      */
     int readNextMic(FileName &fnmicrograph);
 
-};
-
-
-void * genFeatVecThread(void * args);
-
-struct GenFeatVecThreadParams
-{
-	AutoParticlePicking2 *autoPicking;
-	std::vector<Particle2> positionArray;
-	FileName fnmicrograph;
-	int proc_prec;
-	int Nthreads;
 };
 
 /**
