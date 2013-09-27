@@ -41,7 +41,6 @@ AutoParticlePicking2::AutoParticlePicking2()
 AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum, int basisPCA,
         const FileName &model_name, const FileName &micsFn)
 {
-	std::cerr<<"The constructor has been caleed"<<std::endl;
     // Defining the paths for pca, svm, ... models.
     fn_model=model_name;
     fnPCAModel=fn_model+"_pca_model.stk";
@@ -620,14 +619,13 @@ int AutoParticlePicking2::automaticWithouThread(FileName fnmicrograph, int proc_
     // Read the SVM model
     classifier.LoadModel(fnSVMModel);
 
-    std::cerr<<"SVM model has been loaded "<< "for micrograph name"<<fnmicrograph<<std::endl;
     double label, score;
     Particle2 p;
     MultidimArray<double> featVec, featVecNN;
     std::vector<Particle2> positionArray;
 
     generateFeatVec(fnmicrograph,proc_prec,positionArray);
-    std::cerr<<"fetures has been generated"<<std::endl;
+
     int num=(int)(positionArray.size()*(proc_prec/100.0));
     featVec.resize(num_features);
     for (int k=0;k<num;k++)
@@ -703,8 +701,7 @@ void AutoParticlePicking2::generateFeatVec(const FileName &fnmicrograph, int pro
     readMic(fnmicrograph);
     IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
     buildSearchSpace(positionArray,true);
-    std::cerr<<"position array size is equal to "<<positionArray.size()<<std::endl;
-    std::cerr<<"The value for proc_prec is "<<proc_prec<<std::endl;
+
     int num=(int)(positionArray.size()*(proc_prec/100.0));
     autoFeatVec.resize(num,num_features);
     for (int k=0;k<num;k++)
