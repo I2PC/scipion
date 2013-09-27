@@ -86,7 +86,6 @@ class ProtRelionRefinner(XmippProtocol):
             print 'NOT YET IMPLEMENTED'
             pass
         else:
-            print "else define steps"
             #create extra output directory
             self.insertStep('createDir', verifyfiles=[self.ExtraDir], path=self.ExtraDir)
             #normalize data
@@ -153,8 +152,8 @@ class ProtRelionRefinner(XmippProtocol):
                             )
                        
     def insertRelionRefine(self):
-        args = {'--iter': self.NumberOfIterations,
-                '--tau2_fudge': self.RegularisationParamT,
+        args = {#'--iter': self.NumberOfIterations,
+                #'--tau2_fudge': self.RegularisationParamT,
                 '--flatten_solvent': '',
                 '--zero_mask': '',# this is an option but is almost always true
                 '--norm': '',
@@ -166,6 +165,17 @@ class ProtRelionRefinner(XmippProtocol):
             
         if self.doContinue:
             args['--continue'] = self.ContinueFrom
+            #note: no movie realigment is included, since 1) it is not the core of relion and 2) by design continue
+            #does not allow to change parameters in xmipp.
+#            // Movies
+#        if (run_type == RUN3DAUTO && is_continue && do_movies.getValue())
+#        {
+#            cline += " --realign_movie_frames " + fn_movie_star.getValue();
+#            cline += " --movie_frames_running_avg " + floatToString(movie_runavg_window.getValue());
+#            cline += " --sigma_ang " + floatToString(movie_sigma_angles.getValue());
+#            cline += " --sigma_off " + floatToString(movie_sigma_offset.getValue());
+#        }
+        
         else: # Not continue
             args.update({'--i': self.ImgStar,
                          '--particle_diameter': self.MaskDiameterA,
@@ -194,19 +204,24 @@ class ProtRelionRefinner(XmippProtocol):
                 args['--ctf_intact_first_peak'] = ''
                 
             args['--sym'] = self.SymmetryGroup.upper()
+            args['--auto_refine']=''
+            args['--split_random_halves']=''
             
-            args['--K'] = self.NumberOfClasses
+            if args['--sym'][:1] == 'C':
+                args['--low_resol_join_halves'] = "40";
+            #args['--K'] = self.NumberOfClasses
             
         # Sampling stuff
         # Find the index(starting at 0) of the selected
         # sampling rate, as used in relion program
-        iover = 1 #TODO: check this DROP THIS
+        iover = 1 
         index = ['30','15','7.5','3.7','1.8',
                  '0.9','0.5','0.2','0.1'].index(self.AngularSamplingDeg)
         args['--healpix_order'] = float(index + 1 - iover)
+        args['--auto_local_healpix_order'] = float(index + 1 - iover)
         
-        if self.PerformLocalAngularSearch:
-            args['--sigma_ang'] = self.LocalAngularSearchRange / 3.
+        #if self.PerformLocalAngularSearch:
+        #    args['--sigma_ang'] = self.LocalAngularSearchRange / 3.
             
         args['--offset_range'] = self.OffsetSearchRangePix
         args['--offset_step']  = self.OffsetSearchStepPix * pow(2, iover)
