@@ -29,7 +29,7 @@ from xmipp import MetaData, MDL_CTF_MODEL, MD_APPEND, MD_OVERWRITE, FileName,Xmi
 from emxLib.emxLib import ctfMicXmippToEmx
 from emx.emxmapper import *
 from emx.emx import *
-from emxLib.emxLib import emxMicsToXmipp, emxCoordsToXmipp, alignEMXToXmipp
+from protlib_emx import emxMicsToXmipp, emxCoordsToXmipp, alignEMXToXmipp
 
 class ScriptImportEMX(XmippScript):
     def __init__(self):

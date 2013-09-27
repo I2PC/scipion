@@ -82,7 +82,7 @@ public:
         addParamsLine("==Locate helical parameters==");
         addParamsLine("[-z <z0=1> <zF=10> <zstep=0.5>]          : Search space for the shift in Z");
         addParamsLine("[--rotHelical <rot0=0> <rotF=357> <step=3>]: Search space for rotation around Z");
-        addParamsLine("[--localHelical <z> <rot> <rot0=0>]  : Perform a local search around this angle and shift");
+        addParamsLine("[--localHelical <z> <rot>]  : Perform a local search around this angle and shift");
         mask_prm.defineParams(this,INT_MASK,NULL,"Restrict the comparison to the mask area.",true);
         addExampleLine("A typical application for a rotational symmetry axis is ",false);
         addExampleLine("xmipp_volume_center -i volume.vol");
@@ -310,6 +310,7 @@ public:
                                 fitness,iter,steps,true);
                 best_rot=p(0);
                 best_z=p(1);
+                best_corr=-fitness;
 
             }
             if (verbose!=0)

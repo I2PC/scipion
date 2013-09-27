@@ -10,8 +10,7 @@
 
 from os.path import join, exists
 from xmipp import MetaData, MetaDataInfo, MDL_IMAGE, MDL_IMAGE1, MDL_IMAGE_REF, MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_ANGLE_PSI, MDL_REF, \
-        MDL_SHIFT_X, MDL_SHIFT_Y, MDL_FLIP, MD_APPEND, MDL_MAXCC, MDL_ENABLED, Euler_angles2matrix, Image, FileName
-
+        MDL_SHIFT_X, MDL_SHIFT_Y, MDL_FLIP, MD_APPEND, MDL_MAXCC, MDL_ENABLED, Euler_angles2matrix, Image, FileName, getBlocksInMetaDataFile
 from protlib_base import *
 from protlib_utils import getListFromRangeString, runJob, runShowJ
 from protlib_filesystem import copyFile, deleteFile, removeFilenamePrefix
@@ -20,8 +19,14 @@ class ProtScreenClasses(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.screen_classes.name, scriptname, project)
         self.Import = 'from protocol_screen_classes import *'
+        self.trueClass=False
         if self.Classes.find('@')==-1:
-            self.fnImages='classes@'+self.Classes
+            blocks=getBlocksInMetaDataFile(self.Classes)
+            if 'classes' in blocks:
+                self.fnImages='classes@'+self.Classes
+                self.trueClass=True
+            else:
+                self.fnImages=self.Classes
         else:
             self.fnImages=self.Classes
         self.Xdim= MetaDataInfo(self.fnImages)[0]
@@ -30,7 +35,7 @@ class ProtScreenClasses(XmippProtocol):
         fnOutputClass=self.workingDirPath('classes.xmd')
         self.insertStep('createDir',path=self.ExtraDir)
         self.insertStep("linkAcquisitionInfo",InputFile=self.Classes,dirDest=self.WorkingDir)
-        if FileName(self.Classes).isMetaData():
+        if self.trueClass:
             self.insertStep("copyFile",source=removeFilenamePrefix(self.Classes),dest=fnOutputClass)
         else:
             self.insertRunJobStep("xmipp_metadata_utilities","-i %s -o classes@%s"%(self.Classes,fnOutputClass),NumberOfMpi=1,NumberOfThreads=1)
