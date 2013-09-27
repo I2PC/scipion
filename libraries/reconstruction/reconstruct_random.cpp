@@ -34,7 +34,9 @@ void ProgRecRandom::defineParams()
     addParamsLine("   -i <md_file>                : Metadata file with input projections");
     addParamsLine("  [--oroot <volume_file=\"rec_random\">]  : Filename for output rootname");
     addParamsLine("  [--sym <symfile=c1>]         : Enforce symmetry in projections");
-    addParamsLine("  [--iter <N=50>]              : Number of iterations");
+    addParamsLine("  [--randomIter <N=7>]         : Number of iterations with random assignment");
+    addParamsLine("  [--greedyIter <N=3>]         : Number of iterations with greedy assignment");
+    addParamsLine("  [--rejection <p=25>]         : Percentage of images to reject for reconstruction");
 }
 
 // Read arguments ==========================================================
@@ -43,7 +45,9 @@ void ProgRecRandom::readParams()
     fnIn = getParam("-i");
     fnRoot = getParam("--oroot");
     fnSym = getParam("--sym");
-    Niter = getIntParam("--iter");
+    NiterRandom = getIntParam("--randomIter");
+    NiterGreedy = getIntParam("--greedyIter");
+    rejection = getDoubleParam("--rejection");
 }
 
 // Show ====================================================================
@@ -51,11 +55,13 @@ void ProgRecRandom::show()
 {
     if (verbose > 0)
     {
-        std::cout << " Input metadata            : "  << fnIn   << std::endl;
-        std::cout << " Output rootname           : "  << fnRoot << std::endl;
-        std::cout << " Number of iterations      : "  << Niter  << std::endl;
+        std::cout << " Input metadata              : "  << fnIn        << std::endl;
+        std::cout << " Output rootname             : "  << fnRoot      << std::endl;
+        std::cout << " Number of random iterations : "  << NiterRandom << std::endl;
+        std::cout << " Number of greedy iterations : "  << NiterGreedy << std::endl;
+        std::cout << " Rejection percentage        : "  << rejection   << std::endl;
         if (fnSym != "")
-            std::cout << " Symmetry file for projections : "  << fnSym << std::endl;
+            std::cout << " Symmetry for projections   : "  << fnSym << std::endl;
     }
 }
 
@@ -76,13 +82,16 @@ void ProgRecRandom::run()
     	size_t nImg=0;
     	double avgCorr=0, avgImprovement=0;
     	mdReconstruction.clear();
+    	init_progress_bar(mdIn.size());
     	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
     	{
     		double corr, improvement;
     		alignSingleImage(nImg++,__iter.objId, corr, improvement);
     		avgCorr+=corr;
     		avgImprovement+=improvement;
+    		progress_bar(nImg);
     	}
+    	progress_bar(mdIn.size());
     	avgCorr/=mdIn.size();
     	avgImprovement/=mdIn.size();
     	std::cout << "Iter " << iter << " avg.correlation=" << avgCorr << " avg.improvement=" << avgImprovement << std::endl;
@@ -94,7 +103,7 @@ void ProgRecRandom::run()
     	// Reconstruct
     	reconstructCurrent();
 
-    	finish=(iter==Niter);
+    	finish=(iter==(NiterRandom+NiterGreedy));
     	iter++;
     } while (!finish);
 }
@@ -149,12 +158,15 @@ void ProgRecRandom::alignSingleImage(size_t nImg, size_t id, double &newCorr, do
 	allCorrs.cumlativeDensityFunction(scaledCorrs);
 	nGallery=0;
 	double bestCorr, bestAngleRot, bestAngleTilt, bestAnglePsi, bestShiftX, bestShiftY, bestWeight;
+	bool bestFlip;
 	bestCorr=-1;
 	double correctionFactor=1;
 	if (improvementCount>1)
 		correctionFactor=1.0/improvementCount;
-	else
+	else if (iter<=NiterRandom)
 		correctionFactor=1.0/(0.98*XSIZE(scaledCorrs));
+	else
+		correctionFactor=1;
 	FOR_ALL_OBJECTS_IN_METADATA(mdGallery)
 	{
 		bool getThis=(A1D_ELEM(allCorrs,nGallery)>oldCorr) || (improvementCount==0 && A1D_ELEM(scaledCorrs,nGallery)>=0.98);
@@ -174,7 +186,7 @@ void ProgRecRandom::alignSingleImage(size_t nImg, size_t id, double &newCorr, do
 					  << " tilt=" << angleTilt << std::endl;
 #endif
 
-			if (iter<0.8*Niter)
+			if (iter<=NiterRandom)
 			{
 				size_t recId=mdReconstruction.addObject();
 				FileName fnImg;
@@ -187,6 +199,7 @@ void ProgRecRandom::alignSingleImage(size_t nImg, size_t id, double &newCorr, do
 				mdReconstruction.setValue(MDL_ANGLE_PSI,anglePsi,recId);
 				mdReconstruction.setValue(MDL_SHIFT_X,shiftX,recId);
 				mdReconstruction.setValue(MDL_SHIFT_Y,shiftY,recId);
+				mdReconstruction.setValue(MDL_FLIP,flip,recId);
 				mdReconstruction.setValue(MDL_WEIGHT,weight,recId);
 			}
 			if (corr>bestCorr)
@@ -197,6 +210,7 @@ void ProgRecRandom::alignSingleImage(size_t nImg, size_t id, double &newCorr, do
 				bestAnglePsi=anglePsi;
 				bestShiftX=shiftX;
 				bestShiftY=shiftY;
+				bestFlip=flip;
 				bestWeight=weight;
 			}
 		}
@@ -204,7 +218,7 @@ void ProgRecRandom::alignSingleImage(size_t nImg, size_t id, double &newCorr, do
 		++nGallery;
 	}
 
-	if (iter>=0.8*Niter)
+	if (iter>NiterRandom)
 	{
 		size_t recId=mdReconstruction.addObject();
 		FileName fnImg;
@@ -217,6 +231,7 @@ void ProgRecRandom::alignSingleImage(size_t nImg, size_t id, double &newCorr, do
 		mdReconstruction.setValue(MDL_ANGLE_PSI,bestAnglePsi,recId);
 		mdReconstruction.setValue(MDL_SHIFT_X,bestShiftX,recId);
 		mdReconstruction.setValue(MDL_SHIFT_Y,bestShiftY,recId);
+		mdReconstruction.setValue(MDL_FLIP,bestFlip,recId);
 		mdReconstruction.setValue(MDL_WEIGHT,bestWeight,recId);
 	}
 	mdIn.setValue(MDL_MAXCC,bestCorr,id);
@@ -235,17 +250,28 @@ void ProgRecRandom::filterByCorrelation()
 	MetaData mdAux;
 	mdAux=mdReconstruction;
 	mdAux.removeDisabled();
+
 	std::vector<double> correlations;
 	mdAux.getColumnValues(MDL_MAXCC,correlations);
 	std::sort(correlations.begin(),correlations.end());
-	size_t skip=(size_t)floor(correlations.size()*0.25);
+	size_t skip=(size_t)floor(correlations.size()*(rejection/100.0));
 	double minCorr=correlations[skip];
-	double maxCorr=correlations[correlations.size()-skip-1];
+	double maxCorr=correlations[correlations.size()-skip/4-1];
+
+	std::vector<double> weights;
+	mdAux.getColumnValues(MDL_WEIGHT,weights);
+	std::sort(weights.begin(),weights.end());
+	double minWeight=weights[skip];
+	double maxWeight=weights[weights.size()-skip/4-1];
+
 	FOR_ALL_OBJECTS_IN_METADATA(mdAux)
 	{
-		double cc;
+		double cc, weight;
 		mdAux.getValue(MDL_MAXCC,cc,__iter.objId);
-		if (cc<minCorr)
+		if (cc<minCorr || cc>maxCorr)
+			mdAux.setValue(MDL_ENABLED,-1,__iter.objId);
+		mdAux.getValue(MDL_WEIGHT,weight,__iter.objId);
+		if (weight<minWeight || weight>maxWeight)
 			mdAux.setValue(MDL_ENABLED,-1,__iter.objId);
 	}
 	mdAux.removeDisabled();
@@ -262,30 +288,11 @@ void ProgRecRandom::reconstructCurrent()
 	cmd=(String)"xmipp_transform_mask "+args;
 	system(cmd.c_str());
 
-	if (iter<0.8*Niter)
+	if (iter<=NiterRandom)
 	{
 		args=formatString("-i %s --select below 0 --substitute value 0 -v 0",fnVolume.c_str());
 		cmd=(String)"xmipp_transform_threshold "+args;
 		system(cmd.c_str());
-
-//		Image<double> V;
-//		V.read(fnVolume);
-//		MultidimArray<double> &mV=V();
-//		mV.setXmippOrigin();
-//		V.write((String)"old_"+fnVolume);
-
-		// Remove voxels randomly
-		//FOR_ALL_ELEMENTS_IN_ARRAY3D(mV)
-		//if (rnd_unif()<0.25)
-		//	A3D_ELEM(mV,k,i,j)=0;
-//		double a=rnd_unif(-1,1);
-//		double b=rnd_unif(-1,1);
-//		double c=rnd_unif(-1,1);
-//		double d=0.0; rnd_unif(-(float)XSIZE(mV)*0.25,(float)XSIZE(mV)*0.25);
-//		FOR_ALL_ELEMENTS_IN_ARRAY3D(mV)
-//		if (k*a+i*b+j*c>d)
-//			A3D_ELEM(mV,k,i,j)=0;
-//		V.write(fnVolume);
 	}
 }
 

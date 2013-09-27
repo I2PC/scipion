@@ -42,7 +42,10 @@ public:
     FileName fnIn, fnRoot, fnSym;
 
     /** Total number of iterations */
-    int Niter;
+    int NiterRandom, NiterGreedy;
+
+    /** Rejection percentage */
+    double rejection;
 public: // Internal members
     MetaData mdIn, mdGallery, mdReconstruction;
 
