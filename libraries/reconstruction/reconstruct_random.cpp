@@ -75,6 +75,7 @@ void ProgRecRandom::run()
     	// Align the input images to the projections
     	size_t nImg=0;
     	double avgCorr=0, avgImprovement=0;
+    	mdReconstruction.clear();
     	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
     	{
     		double corr, improvement;
@@ -86,6 +87,10 @@ void ProgRecRandom::run()
     	avgImprovement/=mdIn.size();
     	std::cout << "Iter " << iter << " avg.correlation=" << avgCorr << " avg.improvement=" << avgImprovement << std::endl;
 
+    	// Remove too good and too bad images
+    	filterByCorrelation();
+    	//mdReconstruction.write(fnAngles);
+
     	// Reconstruct
     	reconstructCurrent();
 
@@ -95,17 +100,8 @@ void ProgRecRandom::run()
 }
 
 //#define DEBUG
-//#define DEBUG_MORE
 void ProgRecRandom::alignSingleImage(size_t nImg, size_t id, double &newCorr, double &improvementFraction)
 {
-	double bestCorr, angleRot, angleTilt, anglePsi, shiftX, shiftY, weight;
-	mdIn.getValue(MDL_MAXCC,bestCorr,id);
-	mdIn.getValue(MDL_ANGLE_ROT,angleRot,id);
-	mdIn.getValue(MDL_ANGLE_TILT,angleTilt,id);
-	mdIn.getValue(MDL_ANGLE_PSI,anglePsi,id);
-	mdIn.getValue(MDL_SHIFT_X,shiftX,id);
-	mdIn.getValue(MDL_SHIFT_Y,shiftY,id);
-	mdIn.getValue(MDL_WEIGHT,weight,id);
 	mCurrentImage.aliasImageInStack(inputImages(),nImg);
 	mCurrentImage.setXmippOrigin();
 
@@ -114,79 +110,150 @@ void ProgRecRandom::alignSingleImage(size_t nImg, size_t id, double &newCorr, do
 
 	size_t nGallery=0;
 	size_t improvementCount=0;
-	double oldCorr=bestCorr;
+	double oldCorr;
+	mdIn.getValue(MDL_MAXCC,oldCorr,id);
+#ifdef DEBUG
+	FileName fnImg;
+	mdIn.getValue(MDL_IMAGE,fnImg,id);
+	std::cout << "Image: " << fnImg << " oldCorr=" << oldCorr << std::endl;
+#endif
+	std::vector< Matrix2D<double> > allM;
 	FOR_ALL_OBJECTS_IN_METADATA(mdGallery)
 	{
 		mCurrentImageAligned=mCurrentImage;
 		mGalleryProjection.aliasImageInStack(gallery(),nGallery);
 		mGalleryProjection.setXmippOrigin();
 		double corr=alignImages(mGalleryProjection,mCurrentImageAligned,M,DONT_WRAP);
+#ifdef DEBUG
+		mdGallery.getValue(MDL_MAXCC,corr,__iter.objId);
+#endif
 		A1D_ELEM(allCorrs,nGallery)=corr;
+		allM.push_back(M);
 		++nGallery;
 		if (corr>oldCorr)
+		{
 			++improvementCount;
-#ifdef DEBUG_MORE
-	std::cout << "Image " << nImg << " corr=" << corr << std::endl;
-	Image<double> save;
-	save()=mGalleryProjection;
-	save.write("PPPgalleryProjection.xmp");
-	save()=mCurrentImageAligned;
-	save.write("PPPimageAligned.xmp");
-	std::cout << "Press any key\n";
-	char c; std::cin >> c;
+#ifdef DEBUG
+		mdGallery.getValue(MDL_IMAGE,fnImg,__iter.objId);
+		std::cout << "   Matching Gallery: " << fnImg << " " << corr << std::endl;
 #endif
+		}
 	}
+	improvementFraction=(double)improvementCount/NSIZE(gallery());
+#ifdef DEBUG
+		mdGallery.write("PPPgallery.xmd");
+		std::cout << "   oldcorr=" << oldCorr << std::endl;
+#endif
 
 	MultidimArray<double> scaledCorrs;
 	allCorrs.cumlativeDensityFunction(scaledCorrs);
 	nGallery=0;
-	double bestRandom=-1.0;
-	double lambda=(double)iter/Niter;
-	double threshold=0.99*lambda+0.9*(1-lambda);
+	double bestCorr, bestAngleRot, bestAngleTilt, bestAnglePsi, bestShiftX, bestShiftY, bestWeight;
+	bestCorr=-1;
+	double correctionFactor=1;
+	if (improvementCount>1)
+		correctionFactor=1.0/improvementCount;
+	else
+		correctionFactor=1.0/(0.98*XSIZE(scaledCorrs));
 	FOR_ALL_OBJECTS_IN_METADATA(mdGallery)
 	{
-		double random=abs(rnd_gaus(0.0,A1D_ELEM(scaledCorrs,nGallery)));
-		bool getThis=false;
-		if (iter<0.8*Niter)
-			getThis=random>bestRandom && A1D_ELEM(scaledCorrs,nGallery)>threshold;
-		else
-			getThis=A1D_ELEM(allCorrs,nGallery)>bestCorr;
+		bool getThis=(A1D_ELEM(allCorrs,nGallery)>oldCorr) || (improvementCount==0 && A1D_ELEM(scaledCorrs,nGallery)>=0.98);
 		if (getThis)
 		{
 			bool flip;
-			double scale, psi;
-			transformationMatrix2Parameters2D(M,flip,scale,shiftX,shiftY,anglePsi);
+			double scale, psi, shiftX, shiftY, angleRot, angleTilt, anglePsi;
+			transformationMatrix2Parameters2D(allM[nGallery],flip,scale,shiftX,shiftY,anglePsi);
 			anglePsi*=-1;
-			weight=A1D_ELEM(scaledCorrs,nGallery);
-			bestRandom=random;
-			bestCorr=A1D_ELEM(allCorrs,nGallery);
+			double weight=A1D_ELEM(scaledCorrs,nGallery)*correctionFactor;
+			double corr=A1D_ELEM(allCorrs,nGallery);
 			mdGallery.getValue(MDL_ANGLE_ROT,angleRot,__iter.objId);
 			mdGallery.getValue(MDL_ANGLE_TILT,angleTilt,__iter.objId);
+#ifdef DEBUG
+			mdGallery.getValue(MDL_IMAGE,fnImg,__iter.objId);
+			std::cout << "   Getting Gallery: " << fnImg << " corr=" << corr << " cdf=" << weight << " rot=" << angleRot
+					  << " tilt=" << angleTilt << std::endl;
+#endif
+
+			if (iter<0.8*Niter)
+			{
+				size_t recId=mdReconstruction.addObject();
+				FileName fnImg;
+				mdIn.getValue(MDL_IMAGE,fnImg,id);
+				mdReconstruction.setValue(MDL_IMAGE,fnImg,recId);
+				mdReconstruction.setValue(MDL_ENABLED,1,recId);
+				mdReconstruction.setValue(MDL_MAXCC,corr,recId);
+				mdReconstruction.setValue(MDL_ANGLE_ROT,angleRot,recId);
+				mdReconstruction.setValue(MDL_ANGLE_TILT,angleTilt,recId);
+				mdReconstruction.setValue(MDL_ANGLE_PSI,anglePsi,recId);
+				mdReconstruction.setValue(MDL_SHIFT_X,shiftX,recId);
+				mdReconstruction.setValue(MDL_SHIFT_Y,shiftY,recId);
+				mdReconstruction.setValue(MDL_WEIGHT,weight,recId);
+			}
+			if (corr>bestCorr)
+			{
+				bestCorr=corr;
+				bestAngleRot=angleRot;
+				bestAngleTilt=angleTilt;
+				bestAnglePsi=anglePsi;
+				bestShiftX=shiftX;
+				bestShiftY=shiftY;
+				bestWeight=weight;
+			}
 		}
 
 		++nGallery;
 	}
 
+	if (iter>=0.8*Niter)
+	{
+		size_t recId=mdReconstruction.addObject();
+		FileName fnImg;
+		mdIn.getValue(MDL_IMAGE,fnImg,id);
+		mdReconstruction.setValue(MDL_IMAGE,fnImg,recId);
+		mdReconstruction.setValue(MDL_ENABLED,1,recId);
+		mdReconstruction.setValue(MDL_MAXCC,bestCorr,recId);
+		mdReconstruction.setValue(MDL_ANGLE_ROT,bestAngleRot,recId);
+		mdReconstruction.setValue(MDL_ANGLE_TILT,bestAngleTilt,recId);
+		mdReconstruction.setValue(MDL_ANGLE_PSI,bestAnglePsi,recId);
+		mdReconstruction.setValue(MDL_SHIFT_X,bestShiftX,recId);
+		mdReconstruction.setValue(MDL_SHIFT_Y,bestShiftY,recId);
+		mdReconstruction.setValue(MDL_WEIGHT,bestWeight,recId);
+	}
 	mdIn.setValue(MDL_MAXCC,bestCorr,id);
-	mdIn.setValue(MDL_ANGLE_ROT,angleRot,id);
-	mdIn.setValue(MDL_ANGLE_TILT,angleTilt,id);
-	mdIn.setValue(MDL_ANGLE_PSI,anglePsi,id);
-	mdIn.setValue(MDL_SHIFT_X,shiftX,id);
-	mdIn.setValue(MDL_SHIFT_Y,shiftY,id);
-	mdIn.setValue(MDL_WEIGHT,weight,id);
 	newCorr=bestCorr;
-	improvementFraction=(double)improvementCount/NSIZE(gallery());
 #ifdef DEBUG
-	std::cout << "Image " << nImg << " oldCorr=" << oldCorr << " newCorr=" << bestCorr << " improvement=" << improvementCount << std::endl;
-	std::cout << "Press any key\n";
-	char c; std::cin >> c;
+	mdReconstruction.write("PPPreconstruction.xmd");
+	std::cout << "Press any key" << std::endl;
+	char c;
+	std::cin >> c;
 #endif
 }
 #undef DEBUG
 
+void ProgRecRandom::filterByCorrelation()
+{
+	MetaData mdAux;
+	mdAux=mdReconstruction;
+	mdAux.removeDisabled();
+	std::vector<double> correlations;
+	mdAux.getColumnValues(MDL_MAXCC,correlations);
+	std::sort(correlations.begin(),correlations.end());
+	size_t skip=(size_t)floor(correlations.size()*0.25);
+	double minCorr=correlations[skip];
+	double maxCorr=correlations[correlations.size()-skip-1];
+	FOR_ALL_OBJECTS_IN_METADATA(mdAux)
+	{
+		double cc;
+		mdAux.getValue(MDL_MAXCC,cc,__iter.objId);
+		if (cc<minCorr)
+			mdAux.setValue(MDL_ENABLED,-1,__iter.objId);
+	}
+	mdAux.removeDisabled();
+	mdAux.write(fnAngles);
+}
+
 void ProgRecRandom::reconstructCurrent()
 {
-	mdIn.write(fnAngles);
 	String args=formatString("-i %s -o %s --sym %s --weight -v 0",fnAngles.c_str(),fnVolume.c_str(),fnSym.c_str());
 	String cmd=(String)"xmipp_reconstruct_fourier "+args;
 	system(cmd.c_str());
@@ -194,6 +261,32 @@ void ProgRecRandom::reconstructCurrent()
 	args=formatString("-i %s --mask circular %d -v 0",fnVolume.c_str(),-XSIZE(inputImages())/2);
 	cmd=(String)"xmipp_transform_mask "+args;
 	system(cmd.c_str());
+
+	if (iter<0.8*Niter)
+	{
+		args=formatString("-i %s --select below 0 --substitute value 0 -v 0",fnVolume.c_str());
+		cmd=(String)"xmipp_transform_threshold "+args;
+		system(cmd.c_str());
+
+//		Image<double> V;
+//		V.read(fnVolume);
+//		MultidimArray<double> &mV=V();
+//		mV.setXmippOrigin();
+//		V.write((String)"old_"+fnVolume);
+
+		// Remove voxels randomly
+		//FOR_ALL_ELEMENTS_IN_ARRAY3D(mV)
+		//if (rnd_unif()<0.25)
+		//	A3D_ELEM(mV,k,i,j)=0;
+//		double a=rnd_unif(-1,1);
+//		double b=rnd_unif(-1,1);
+//		double c=rnd_unif(-1,1);
+//		double d=0.0; rnd_unif(-(float)XSIZE(mV)*0.25,(float)XSIZE(mV)*0.25);
+//		FOR_ALL_ELEMENTS_IN_ARRAY3D(mV)
+//		if (k*a+i*b+j*c>d)
+//			A3D_ELEM(mV,k,i,j)=0;
+//		V.write(fnVolume);
+	}
 }
 
 void ProgRecRandom::generateProjections()
@@ -239,5 +332,6 @@ void ProgRecRandom::produceSideinfo()
 		memcpy(MULTIDIM_ARRAY(mCurrentImage),MULTIDIM_ARRAY(I()),MULTIDIM_SIZE(mCurrentImage)*sizeof(double));
 	}
 
+	mdIn.write(fnAngles);
 	reconstructCurrent();
 }

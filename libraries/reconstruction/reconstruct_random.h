@@ -44,7 +44,7 @@ public:
     /** Total number of iterations */
     int Niter;
 public: // Internal members
-    MetaData mdIn, mdGallery;
+    MetaData mdIn, mdGallery, mdReconstruction;
 
     // Filenames
     FileName fnAngles, fnVolume, fnGallery, fnGalleryMetaData;
@@ -81,6 +81,9 @@ public:
 
     /// Generate projections from the current volume
     void generateProjections();
+
+    /// Filter by correlation
+    void filterByCorrelation();
 
     /// Align a single image
     void alignSingleImage(size_t nImg, size_t id, double &newCorr, double &improvementFraction);
