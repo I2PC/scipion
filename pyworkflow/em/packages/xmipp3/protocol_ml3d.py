@@ -357,7 +357,7 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
             shutil.move(f, nf)
                                                     
     def createOutput(self):
-        lastIter = 'iter%03d' % self.numberOfIterations.get()
+        lastIter = self.__lastIteration()
         md = xmipp.MetaData(self._getExtraPath(lastIter, 'iter_volumes.xmd'))
         fn = self._getPath('output_volumes.xmd')
         md.write('Volumes@%s'%fn)
@@ -400,3 +400,12 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
             
         #TODO: Check images dimension when it is implemented on SetOFImages class
         return validateMsgs
+    
+    def __lastIteration(self):
+        ''' Find the last iteration number '''
+        iter = 0        
+        while True:
+            if os.path.exists(self._getExtraPath('iter%03d' % iter, 'iter_volumes.xmd')):
+                break
+            iter = iter + 1
+        return 'iter%03d' % iter
