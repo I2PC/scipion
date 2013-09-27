@@ -238,7 +238,7 @@ def emxCoordsToXmipp(emxData, filesRoot):
         micFileName = mic.get(FILENAME)
         md = mdDict[micFileName]
         mdFn = join(filesRoot, replaceBasenameExt(micFileName, POSENDING))
-        md.write('particles@' + mdFn)
+        md.write('coordinates@' + mdFn)
         
     part = emxData.iterClasses(PARTICLE)[0]
     if part.has('boxSize__X'):
@@ -248,6 +248,53 @@ def emxCoordsToXmipp(emxData, filesRoot):
         md.setValue(MDL_PICKING_PARTICLE_SIZE, int(boxSize), objId)
         md.write('properties@' + join(filesRoot, 'config.xmd'))
 
+    
+def emxParticlesToXmipp(emxData, outputFileName=PARTFILE, filesPrefix=None, ctfRoot=None):
+    """ This function will iterate over the EMX particles and create
+    the equivalent Xmipp 'images.xmd' with the list of particles.
+    If CTF information is found, for each particle will contains information about the CTF
+    """
+    #iterate though emxData
+    md = MetaData()
+    if ctfRoot is None:
+        ctfRoot = dirname(outputFileName)
+    
+    samplingRate = 0.
+    
+    for particle in emxData.iterClasses(PARTICLE):
+        pIndex = particle.get(INDEX)
+        pFileName = particle.get(FILENAME)
+
+        if pFileName is None:
+            raise Exception("emxMicsToXmipp: Xmipp doesn't support Particles without filename")
+        
+        if filesPrefix is not None:
+            pFileName = join(filesPrefix, pFileName)
+            
+        if pIndex is not None:
+            pFileName = '%06d@%s' % (pIndex, pFileName)
+        # pIndex is ignored now, in a more general solution
+        # Xmipp should be able to handle particles in a stack
+        # where the index has sense....
+
+        objId = md.addObject()
+        md.setValue(MDL_IMAGE, pFileName, objId)
+        
+        mic = particle.getForeignObject(MICROGRAPH)
+        if mic is not None:
+            micFileName = mic.get(FILENAME)
+            md.setValue(MDL_MICROGRAPH, micFileName, objId)
+
+        if particle.has('centerCoord__X'):
+            md.setValue(MDL_XCOOR, int(particle.get('centerCoord__X')), objId)
+            md.setValue(MDL_YCOOR, int(particle.get('centerCoord__Y')), objId)
+
+        
+    # Sort metadata by particle name
+    md.sort(MDL_IMAGE)
+    # Write particles metadata
+    md.write('Particles@' + outputFileName)   
+    
     
 def alignXmippToEmx(emxData,xmdFileName):
     ''' convert a set of particles including geometric information '''
