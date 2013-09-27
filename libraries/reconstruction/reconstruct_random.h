@@ -41,6 +41,8 @@ public:
     /** Filenames */
     FileName fnIn, fnRoot, fnSym;
 
+    /** Total number of iterations */
+    int Niter;
 public: // Internal members
     MetaData mdIn, mdGallery;
 
@@ -55,6 +57,9 @@ public: // Internal members
 
 	// Alignment matrix
 	Matrix2D<double> M;
+
+	// Current iteration
+	int iter;
 public:
     /// Read arguments from command line
     void readParams();

@@ -33,7 +33,8 @@ void ProgRecRandom::defineParams()
     //params
     addParamsLine("   -i <md_file>                : Metadata file with input projections");
     addParamsLine("  [--oroot <volume_file=\"rec_random\">]  : Filename for output rootname");
-    addParamsLine("  [--sym <symfile=c1>]              : Enforce symmetry in projections");
+    addParamsLine("  [--sym <symfile=c1>]         : Enforce symmetry in projections");
+    addParamsLine("  [--iter <N=50>]              : Number of iterations");
 }
 
 // Read arguments ==========================================================
@@ -42,6 +43,7 @@ void ProgRecRandom::readParams()
     fnIn = getParam("-i");
     fnRoot = getParam("--oroot");
     fnSym = getParam("--sym");
+    Niter = getIntParam("--iter");
 }
 
 // Show ====================================================================
@@ -51,6 +53,7 @@ void ProgRecRandom::show()
     {
         std::cout << " Input metadata            : "  << fnIn   << std::endl;
         std::cout << " Output rootname           : "  << fnRoot << std::endl;
+        std::cout << " Number of iterations      : "  << Niter  << std::endl;
         if (fnSym != "")
             std::cout << " Symmetry file for projections : "  << fnSym << std::endl;
     }
@@ -63,7 +66,7 @@ void ProgRecRandom::run()
     produceSideinfo();
 
     bool finish=false;
-    int iter=1;
+    iter=1;
     do
     {
     	// Generate projections from the volume
@@ -86,7 +89,7 @@ void ProgRecRandom::run()
     	// Reconstruct
     	reconstructCurrent();
 
-    	finish=(iter==30);
+    	finish=(iter==Niter);
     	iter++;
     } while (!finish);
 }
@@ -95,13 +98,14 @@ void ProgRecRandom::run()
 //#define DEBUG_MORE
 void ProgRecRandom::alignSingleImage(size_t nImg, size_t id, double &newCorr, double &improvementFraction)
 {
-	double bestCorr, angleRot, angleTilt, anglePsi, shiftX, shiftY;
+	double bestCorr, angleRot, angleTilt, anglePsi, shiftX, shiftY, weight;
 	mdIn.getValue(MDL_MAXCC,bestCorr,id);
 	mdIn.getValue(MDL_ANGLE_ROT,angleRot,id);
 	mdIn.getValue(MDL_ANGLE_TILT,angleTilt,id);
 	mdIn.getValue(MDL_ANGLE_PSI,anglePsi,id);
 	mdIn.getValue(MDL_SHIFT_X,shiftX,id);
 	mdIn.getValue(MDL_SHIFT_Y,shiftY,id);
+	mdIn.getValue(MDL_WEIGHT,weight,id);
 	mCurrentImage.aliasImageInStack(inputImages(),nImg);
 	mCurrentImage.setXmippOrigin();
 
@@ -119,6 +123,8 @@ void ProgRecRandom::alignSingleImage(size_t nImg, size_t id, double &newCorr, do
 		double corr=alignImages(mGalleryProjection,mCurrentImageAligned,M,DONT_WRAP);
 		A1D_ELEM(allCorrs,nGallery)=corr;
 		++nGallery;
+		if (corr>oldCorr)
+			++improvementCount;
 #ifdef DEBUG_MORE
 	std::cout << "Image " << nImg << " corr=" << corr << std::endl;
 	Image<double> save;
@@ -135,15 +141,23 @@ void ProgRecRandom::alignSingleImage(size_t nImg, size_t id, double &newCorr, do
 	allCorrs.cumlativeDensityFunction(scaledCorrs);
 	nGallery=0;
 	double bestRandom=-1.0;
+	double lambda=(double)iter/Niter;
+	double threshold=0.99*lambda+0.9*(1-lambda);
 	FOR_ALL_OBJECTS_IN_METADATA(mdGallery)
 	{
 		double random=abs(rnd_gaus(0.0,A1D_ELEM(scaledCorrs,nGallery)));
-		if (random>bestRandom)
+		bool getThis=false;
+		if (iter<0.8*Niter)
+			getThis=random>bestRandom && A1D_ELEM(scaledCorrs,nGallery)>threshold;
+		else
+			getThis=A1D_ELEM(allCorrs,nGallery)>bestCorr;
+		if (getThis)
 		{
 			bool flip;
 			double scale, psi;
 			transformationMatrix2Parameters2D(M,flip,scale,shiftX,shiftY,anglePsi);
 			anglePsi*=-1;
+			weight=A1D_ELEM(scaledCorrs,nGallery);
 			bestRandom=random;
 			bestCorr=A1D_ELEM(allCorrs,nGallery);
 			mdGallery.getValue(MDL_ANGLE_ROT,angleRot,__iter.objId);
@@ -159,6 +173,7 @@ void ProgRecRandom::alignSingleImage(size_t nImg, size_t id, double &newCorr, do
 	mdIn.setValue(MDL_ANGLE_PSI,anglePsi,id);
 	mdIn.setValue(MDL_SHIFT_X,shiftX,id);
 	mdIn.setValue(MDL_SHIFT_Y,shiftY,id);
+	mdIn.setValue(MDL_WEIGHT,weight,id);
 	newCorr=bestCorr;
 	improvementFraction=(double)improvementCount/NSIZE(gallery());
 #ifdef DEBUG
@@ -172,8 +187,12 @@ void ProgRecRandom::alignSingleImage(size_t nImg, size_t id, double &newCorr, do
 void ProgRecRandom::reconstructCurrent()
 {
 	mdIn.write(fnAngles);
-	String args=formatString("-i %s -o %s --sym %s -v 0",fnAngles.c_str(),fnVolume.c_str(),fnSym.c_str());
+	String args=formatString("-i %s -o %s --sym %s --weight -v 0",fnAngles.c_str(),fnVolume.c_str(),fnSym.c_str());
 	String cmd=(String)"xmipp_reconstruct_fourier "+args;
+	system(cmd.c_str());
+
+	args=formatString("-i %s --mask circular %d -v 0",fnVolume.c_str(),-XSIZE(inputImages())/2);
+	cmd=(String)"xmipp_transform_mask "+args;
 	system(cmd.c_str());
 }
 
@@ -198,13 +217,12 @@ void ProgRecRandom::produceSideinfo()
 	mdIn.fillRandom(MDL_ANGLE_PSI,"uniform",0,360);
 	mdIn.fillConstant(MDL_SHIFT_X,"0.0");
 	mdIn.fillConstant(MDL_SHIFT_Y,"0.0");
+	mdIn.fillConstant(MDL_WEIGHT,"1.0");
 
 	fnAngles=fnRoot+".xmd";
 	fnVolume=fnRoot+".vol";
 	fnGallery=fnRoot+"_gallery.stk";
 	fnGalleryMetaData=fnRoot+"_gallery.doc";
-
-	reconstructCurrent();
 
 	size_t xdim, ydim, zdim, ndim;
 	getImageSize(mdIn,xdim, ydim, zdim, ndim);
@@ -220,4 +238,6 @@ void ProgRecRandom::produceSideinfo()
 		mCurrentImage.aliasImageInStack(inputImages(),n++);
 		memcpy(MULTIDIM_ARRAY(mCurrentImage),MULTIDIM_ARRAY(I()),MULTIDIM_SIZE(mCurrentImage)*sizeof(double));
 	}
+
+	reconstructCurrent();
 }
