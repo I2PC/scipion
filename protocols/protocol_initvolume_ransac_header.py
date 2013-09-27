@@ -35,6 +35,11 @@ AngularSampling = 5
 """
 NRansac = 380
 
+#{expert} Perform dimensionality reduction
+""" Perform dimensionality reduction
+"""
+DimRed=True
+
 #{expert} Number of grids per dimension 
 """ Number of grids per dimension. The total number of classes used consists in n x n
 """
