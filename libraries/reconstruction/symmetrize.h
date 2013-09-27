@@ -41,6 +41,12 @@ class ProgSymmetrize : public XmippMetadataProgram
 public:
     /// symmetry file
     FileName        fn_sym;
+    /// Helical rotation
+    double rotHelical;
+    /// Helical phase
+    double rotPhaseHelical;
+    /// Helical shift
+    double zHelical;
     /// Do not generate subgroup
     bool            do_not_generate_subgroup;
     /// wrap or don't wrap input file during symmetrisation
@@ -65,14 +71,17 @@ public:
 public:
     // Symmetry description for volumes
     SymList SL;
-    // Symmetry descriptio for images
+    // Symmetry description for images
     int symorder;
+    // Helical symmetry
+    bool helical;
 };
 
 /** Symmetrize volume.*/
 void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
                       MultidimArray<double> &V_out,
-                      bool wrap=true, bool do_outside_avg=false, bool sum=false);
+                      bool wrap=true, bool do_outside_avg=false, bool sum=false, bool helical=false,
+                      double rotHelical=0.0, double rotPhaseHelical=0.0, double zHelical=0.0);
 
 /** Symmetrize image.*/
 void symmetrizeImage(int symorder, const MultidimArray<double> &I_in,

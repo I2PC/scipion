@@ -463,6 +463,7 @@ void ImageBase::getDimensions(size_t &Xdim, size_t &Ydim, size_t &Zdim, size_t &
  */
 void ImageBase::getInfo(ImageInfo &imgInfo) const
 {
+	imgInfo.filename = filename;
     imgInfo.offset = offset;
     imgInfo.datatype = datatype();
     imgInfo.swap = getSwap() > 0;

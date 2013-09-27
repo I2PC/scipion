@@ -42,13 +42,6 @@ DataType datatypeH5(hid_t dataset);
 
 hid_t H5Datatype(DataType datatype);
 
-/**
- * Return the default dataset name according to the typical group
- * name of the root
- * @param fhdf5 hdf5 file hander
- * @return Default dataset name for a file provider
- */
-std::string getDefaultDataset(hid_t fhdf5);
 
 /** Read Images from HDF5 container files.
   */

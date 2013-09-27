@@ -27,6 +27,7 @@
 #include <data/mask.h>
 #include <data/filters.h>
 #include <data/geometry.h>
+#include <data/symmetries.h>
 #include <data/xmipp_program.h>
 #include <data/xmipp_threads.h>
 
@@ -79,17 +80,17 @@ public:
         addParamsLine("[--localRot <rot0> <tilt0>]     : Perform a local search around this angle");
         addParamsLine("[--useSplines+]                 : Use cubic B-Splines for the interpolations");
         addParamsLine("==Locate helical parameters==");
-        addParamsLine("[-z <z0> <zF> <zstep>]          : Search space for the shift in Z");
-        addParamsLine("[--rotHelical <rot0=0> <rotF=355> <step=5>]: Search space for rotation around Z");
-        addParamsLine("[--localHelical <rot0> <z0>]    : Perform a local search around this angle");
-        mask_prm.defineParams(this,INT_MASK,NULL,"Restrict the comparison to the mask area.");
+        addParamsLine("[-z <z0=1> <zF=10> <zstep=0.5>]          : Search space for the shift in Z");
+        addParamsLine("[--rotHelical <rot0=0> <rotF=357> <step=3>]: Search space for rotation around Z");
+        addParamsLine("[--localHelical <z> <rot>]  : Perform a local search around this angle and shift");
+        mask_prm.defineParams(this,INT_MASK,NULL,"Restrict the comparison to the mask area.",true);
         addExampleLine("A typical application for a rotational symmetry axis is ",false);
         addExampleLine("xmipp_volume_center -i volume.vol");
         addExampleLine("xmipp_volume_find_symmetry -i volume.vol --sym rot 3");
         addExampleLine("Presume the symmetry axis is in rot=20, tilt=10. To align vertically the axis use",false);
         addExampleLine("xmipp_transform_geometry -i volume.vol --rotate euler 20 10 0");
         addExampleLine("For locating the helical parameters use",false);
-        addExampleLine("xmipp_volume_find_symmetry -i volume --sym helical -z -6 6 1 --mask circular -32 --thr 2 -o parameters.xmd");
+        addExampleLine("xmipp_volume_find_symmetry -i volume --sym helical -z 0 6 1 --mask circular -32 --thr 2 -o parameters.xmd");
     }
 
     // Read parameters
@@ -112,8 +113,8 @@ public:
             local=checkParam("--localHelical");
             if (local)
             {
-                rot0=getDoubleParam("--localHelical",0);
-                z0=getDoubleParam("--localHelical",1);
+                z0=getDoubleParam("--localHelical",0);
+                rot0=getDoubleParam("--localHelical",1);
             }
             else
             {
@@ -172,12 +173,7 @@ public:
                     YY(p)=tiltVector[i];
                 double corr=-evaluateSymmetry(MATRIX1D_ARRAY(p)-1);
                 if (helical)
-                {
-                    int xDim=XSIZE(helicalCorrelation());
-                    int jj=i%xDim;
-                    int ii=i/xDim;
-                    helicalCorrelation(ii,jj)=corr;
-                }
+                    DIRECT_MULTIDIM_ELEM(helicalCorrelation(),i)=corr;
                 if (corr > DIRECT_A1D_ELEM(vbest_corr,thrId))
                 {
                     DIRECT_A1D_ELEM(vbest_corr,thrId) = corr;
@@ -197,7 +193,7 @@ public:
 
     void run()
     {
-        // Read input volume
+    	// Read input volume
         volume.read(fn_input);
         volume().setXmippOrigin();
         mask_prm.generate_mask(volume());
@@ -274,16 +270,16 @@ public:
             if (!local)
             {
                 int ydim=0, xdim=0;
-                for (double rot = rot0; rot <= rotF; rot += step_rot)
+				for (double rot = rot0; rot <= rotF; rot += step_rot)
                 {
                     ydim++;
-                    for (double z = z0; z <= zF; z += step_z)
-                    {
-                        if (ydim==1)
-                            xdim++;
-                        rotVector.push_back(rot);
-                        zVector.push_back(z);
-                    }
+					for (double z = z0; z <= zF; z += step_z)
+					{
+						if (ydim==1)
+							xdim++;
+						rotVector.push_back(rot);
+						zVector.push_back(z);
+					}
                 }
                 vbest_corr.resizeNoCopy(numberOfThreads);
                 vbest_corr.initConstant(-1e38);
@@ -314,11 +310,11 @@ public:
                                 fitness,iter,steps,true);
                 best_rot=p(0);
                 best_z=p(1);
+                best_corr=-fitness;
 
             }
             if (verbose!=0)
-                std::cout << "Symmetry parameters (rot,z)= " << best_rot << " "
-                << best_z << std::endl;
+                std::cout << "Symmetry parameters (z,rot)= " << best_z << " " << best_rot << " correlation=" << best_corr << std::endl;
             if (fn_output!="")
             {
                 MetaData MD;
@@ -327,7 +323,7 @@ public:
                 MD.setValue(MDL_SHIFT_Z,best_z,id);
                 MD.write(fn_output);
                 if (!local)
-                    helicalCorrelation.write(fn_output+".xmp");
+                    helicalCorrelation.write(fn_output.removeAllExtensions()+".xmp");
             }
         }
         delete td;
@@ -375,28 +371,13 @@ public:
         }
         else
         {
-            double rot=p[1];
-            double z=p[2];
-            rotation3DMatrix(rot,'Z',sym_matrix);
-            MAT_ELEM(sym_matrix,2,3)=z;
-            if (useSplines)
-                applyGeometry(BSPLINE3,volume_sym,mVolume,sym_matrix,IS_NOT_INV, DONT_WRAP);
-            else
-                applyGeometry(LINEAR,volume_sym,mVolume,sym_matrix,IS_NOT_INV, DONT_WRAP);
-            if (&mask_prm.get_binary_mask()!=NULL)
-            {
-                MultidimArray<int> mask_aux;
-                MultidimArray<double> mask_auxd;
-                applyGeometry(LINEAR,mask_auxd,mask_prm.get_binary_mask(),
-                              sym_matrix,IS_NOT_INV, DONT_WRAP);
-                mask_auxd.binarize(0.5);
-                typeCast(mask_auxd,mask_aux);
-                MultidimArray<int> &originalMask=mask_prm.get_binary_mask();
-                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(originalMask)
-                if (DIRECT_MULTIDIM_ELEM(originalMask,n)==0)
-                    DIRECT_MULTIDIM_ELEM(mask_aux,n)=0;
-                double corr=correlationIndex(mVolume, volume_sym, &mask_aux);
-                //#define DEBUG
+            double rotHelical=DEG2RAD(p[1]);
+            double zHelical=p[2];
+            if (zHelical<0 || zHelical>ZSIZE(mVolume)*0.4)
+            	return 1e38;
+            symmetry_Helical(volume_sym, mVolume, zHelical, rotHelical, 0, &mask_prm.get_binary_mask());
+			double corr=correlationIndex(mVolume, volume_sym, &mask_prm.get_binary_mask());
+//#define DEBUG
 #ifdef DEBUG
 
                 Image<double> save;
@@ -404,17 +385,13 @@ public:
                 save.write("PPPvol.vol");
                 save()=volume_sym;
                 save.write("PPPvolsym.vol");
-                typeCast(mask_aux,save());
+                typeCast(mask_prm.get_binary_mask(),save());
                 save.write("PPPmask.vol");
-                std::cout << p[1] << " " << p[2] << " -> " << corr << std::endl;
+                std::cout << p[1] << " " << p[2] << " " << p[3] << " -> " << corr << std::endl;
                 char c;
                 std::cin >> c;
 #endif
-
-                return -corr;
-            }
-            else
-                return -correlationIndex(mVolume, volume_sym);
+			return -corr;
         }
     }
 };

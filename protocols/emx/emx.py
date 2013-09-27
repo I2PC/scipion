@@ -205,14 +205,15 @@ class EmxObject:
         else:
             self.dictPrimaryKeys[key] = emxDataTypes[key].getType()(value)
         
-    def get(self, key):
+    def get(self, key, value=None):
         '''given a key (attribute name) returns 
-           the value assigned to it'''
+           the value assigned to it.
+           If not present, the value will be returned.'''
         if key in self.dictPrimaryKeys:
             return self.dictPrimaryKeys[key]
         if key in self.dictAttributes:
             return self.dictAttributes[key]
-        return None
+        return value
         #raise Exception("Key %s not found in: %s" % (key, self.name))
         
     def has(self, key):
