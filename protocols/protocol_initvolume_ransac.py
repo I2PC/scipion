@@ -107,6 +107,8 @@ class ProtInitVolRANSAC(XmippProtocol):
     def summary(self):
         message=[]
         message.append("Input images: [%s]"%self.Classes)
+        if self.InitialVolume!="":
+            message.append("Initial volume: [%s]"%self.InitialVolume)
         message.append("RANSAC iterations: %d"%self.NRansac)
         message.append("Symmetry: "+self.SymmetryGroup)
         return message
