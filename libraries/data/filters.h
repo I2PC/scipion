@@ -511,6 +511,10 @@ double alignImages(const MultidimArray< double >& Iref,
                    Matrix2D< double >&M,
                    bool wrap=WRAP);
 
+/** Align two images considering mirrors */
+double alignImagesConsideringMirrors(const MultidimArray<double>& Iref, MultidimArray<double>& I,
+                   Matrix2D<double>&M, bool wrap);
+
 /** Fast version of align two images
  * @ingroup Filters
  */
