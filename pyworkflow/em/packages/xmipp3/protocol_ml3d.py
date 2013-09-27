@@ -31,7 +31,7 @@ This sub-package contains wrapper around ML3D Xmipp program
 from pyworkflow.em import *  
 from pyworkflow.utils import *  
 import xmipp
-from convert import createXmippInputImages
+from convert import createXmippInputImages, readSetOfVolumes
 
 #from xmipp3 import XmippProtocol
 
@@ -361,7 +361,9 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
         md = xmipp.MetaData(self._getExtraPath(lastIter, 'iter_volumes.xmd'))
         fn = self._getPath('output_volumes.xmd')
         md.write('Volumes@%s'%fn)
-        volumes = XmippSetOfVolumes(fn)
+        volumes = self._createSetOfVolumes()
+        readSetOfVolumes(fn, volumes)
+        volumes.write()
         self._defineOutputs(outputVolumes=volumes)
 
     def _summary(self):

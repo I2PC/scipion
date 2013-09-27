@@ -71,7 +71,8 @@ def _rowToObject(row, obj, attrDict):
     for attr, label in attrDict.iteritems():
         if not hasattr(obj, attr):
             setattr(obj, attr, String()) #TODO: change string for the type of label
-        getattr(obj, attr).set(row.getValue(label))
+        if row.hasLabel(label):
+            getattr(obj, attr).set(row.getValue(label))
     
 def rowToObject(md, objId, obj, attrDict):
     """ Same as rowToObject, but creating the row from md and objId. """
@@ -173,7 +174,7 @@ def volumeToRow(vol, volRow):
     """ Set labels values from Micrograph mic to md row. """
     imageToRow(vol, volRow, ctfDir=None, hasCtf=False, imgLabel=xmipp.MDL_IMAGE)
     
-def rowToVolume(md, objId):
+def rowToVolume(md, objId, hasCtf):
     """ Create a Micrograph object from a row of Xmipp metadata. """
     return rowToImage(md, objId, xmipp.MDL_IMAGE, Volume, False)
 
