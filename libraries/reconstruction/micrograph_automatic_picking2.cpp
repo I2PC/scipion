@@ -54,7 +54,7 @@ AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum
 
     // Reading the list of micrographs
     if (strcmp(micsFn.c_str()," "))
-    	micList.read(micsFn);
+        micList.read(micsFn);
 
     // Setting the values of the parameters
     corr_num=corrNum;
@@ -623,6 +623,7 @@ int AutoParticlePicking2::automaticWithouThread(FileName fnmicrograph, int proc_
     Particle2 p;
     MultidimArray<double> featVec, featVecNN;
     std::vector<Particle2> positionArray;
+    MetaData md;
 
     generateFeatVec(fnmicrograph,proc_prec,positionArray);
 
@@ -685,7 +686,8 @@ int AutoParticlePicking2::automaticWithouThread(FileName fnmicrograph, int proc_
             }
         }
     }
-    saveAutoParticles(fn);
+    saveAutoParticles(md);
+    md.write(fn,MD_OVERWRITE);
     return auto_candidates.size();
 }
 
@@ -817,23 +819,6 @@ int AutoParticlePicking2::readNextMic(FileName &fnmicrograph)
             micList.getValue(MDL_MICROGRAPH,currentMic, __iter.objId);
             fnmicrograph=currentMic;
             return 1;
-        }
-    }
-}
-
-void AutoParticlePicking2::saveAutoParticles(MetaData &md)
-{
-    size_t nmax=auto_candidates.size();
-    for (size_t n=0;n<nmax;++n)
-    {
-        const Particle2 &p=auto_candidates[n];
-        if (p.cost>0 && p.status==1)
-        {
-            size_t id=md.addObject();
-            md.setValue(MDL_XCOOR,int(p.x*(1.0/scaleRate)),id);
-            md.setValue(MDL_YCOOR,int(p.y*(1.0/scaleRate)),id);
-            md.setValue(MDL_COST, p.cost,id);
-            md.setValue(MDL_ENABLED,1,id);
         }
     }
 }
@@ -983,70 +968,6 @@ bool isLocalMaxima(MultidimArray<double> &inputArray, int x, int y)
     else
         return false;
 }
-
-//void * autoPickThread(void * args)
-//{
-//    AutoPickThreadParams *prm=(AutoPickThreadParams *) args;
-//    double label, score;
-//    int idThread = prm->idThread;
-//    int Nthreads=prm->Nthreads;
-//    int num_correlation=prm->autoPicking->num_correlation;
-//    int NangSteps=prm->autoPicking->NangSteps;
-//    int NRsteps=prm->autoPicking->NRsteps;
-//    int procprec=prm->autoPicking->proc_prec;
-//    bool use2Classifier=prm->use2Classifier;
-//    Particle2 p;
-//    MultidimArray<double> IpolarCorr;
-//    MultidimArray<double> featVec;
-//    MultidimArray<double> pieceImage;
-//    MultidimArray<double> staticVec, dilatedVec;
-//    IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
-//    int num=(int)(prm->positionArray.size()*(procprec/100.0));
-//    for (int k=0;k<num;k++)
-//    {
-//        if (k%Nthreads==idThread)
-//        {
-//            int j=prm->positionArray[k].x;
-//            int i=prm->positionArray[k].y;
-//            prm->autoPicking->buildInvariant(IpolarCorr,j,i);
-//            prm->autoPicking->extractParticle(j,i,prm->autoPicking->microImage(),pieceImage,false);
-//            pieceImage.resize(1,1,1,XSIZE(pieceImage)*YSIZE(pieceImage));
-//            prm->autoPicking->extractStatics(pieceImage,staticVec);
-//            prm->autoPicking->buildVector(IpolarCorr,staticVec,featVec,pieceImage);
-//            double max=featVec.computeMax();
-//            double min=featVec.computeMin();
-//            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
-//                DIRECT_A1D_ELEM(featVec,i)=0+((1)*((DIRECT_A1D_ELEM(featVec,i)-min)/(max-min)));
-//            label= prm->autoPicking->classifier.predict(featVec, score);
-//            if (label==1)
-//            {
-//                if (use2Classifier==true)
-//                {
-//                    label=prm->autoPicking->classifier2.predict(featVec,score);
-//                    if (label==1)
-//                    {
-//                        p.x=j;
-//                        p.y=i;
-//                        p.status=1;
-//                        p.cost=score;
-//                        p.vec=featVec;
-//                        prm->autoPicking->auto_candidates.push_back(p);
-//                    }
-//                }
-//                else
-//                {
-//                    p.x=j;
-//                    p.y=i;
-//                    p.status=1;
-//                    p.cost=score;
-//                    p.vec=featVec;
-//                    prm->autoPicking->auto_candidates.push_back(p);
-//                }
-//            }
-//        }
-//    }
-//    return NULL;
-//}
 
 void AutoParticlePicking2::polarCorrelation(MultidimArray<double> &Ipolar,
         MultidimArray<double> &IpolarCorr)
@@ -1534,144 +1455,20 @@ void AutoParticlePicking2::savePCAModel(const FileName &fn_root)
 }
 
 /* Save particles ---------------------------------------------------------- */
-int AutoParticlePicking2::saveAutoParticles(const FileName &fn) const
+void AutoParticlePicking2::saveAutoParticles(MetaData &md)
 {
-    MetaData MD;
     size_t nmax=auto_candidates.size();
     for (size_t n=0;n<nmax;++n)
     {
         const Particle2 &p=auto_candidates[n];
         if (p.cost>0 && p.status==1)
         {
-            size_t id=MD.addObject();
-            MD.setValue(MDL_XCOOR,int(p.x*(1.0/scaleRate)),id);
-            MD.setValue(MDL_YCOOR,int(p.y*(1.0/scaleRate)),id);
-            MD.setValue(MDL_COST, p.cost,id);
-            MD.setValue(MDL_ENABLED,1,id);
+            size_t id=md.addObject();
+            md.setValue(MDL_XCOOR,int(p.x*(1.0/scaleRate)),id);
+            md.setValue(MDL_YCOOR,int(p.y*(1.0/scaleRate)),id);
+            md.setValue(MDL_COST, p.cost,id);
+            md.setValue(MDL_ENABLED,1,id);
         }
-    }
-    MD.write(fn,MD_OVERWRITE);
-    return MD.size();
-}
-
-/* Save features of Autoparticles ---------------------------------------------------------- */
-void AutoParticlePicking2::saveAutoVectors(const FileName &fn)
-{
-    std::ofstream fhVectors;
-    fhVectors.open(fn.c_str());
-    int X=XSIZE(auto_candidates[0].vec);
-    fhVectors<<auto_candidates.size()<<" " <<X<<std::endl;
-    size_t nmax = auto_candidates.size();
-    for (size_t n=0; n<nmax;++n)
-    {
-        const Particle2 &p=auto_candidates[n];
-        if (p.cost>0 && p.status==1)
-        {
-            for (int j=0;j<X;++j)
-                fhVectors<<DIRECT_A1D_ELEM(p.vec,j)<<" ";
-            fhVectors<<std::endl;
-        }
-    }
-    fhVectors.close();
-}
-
-/* Load features of Autoparticles ---------------------------------------------------------- */
-void AutoParticlePicking2::loadAutoVectors(const FileName &fn)
-{
-    int numVector;
-    int numFeature;
-    std::ifstream fhVectors;
-    fhVectors.open(fn.c_str());
-    fhVectors>>numVector>>numFeature;
-    for (int n=0; n<numVector;++n)
-    {
-        Particle2 p;
-        p.vec.resize(1,1,1,numFeature);
-        for (int j=0; j<numFeature;++j)
-            fhVectors >> DIRECT_A1D_ELEM(p.vec,j);
-        auto_candidates.push_back(p);
-    }
-    fhVectors.close();
-}
-
-/* Save features of rejected and kept particles ---------------------------------------------------------- */
-void AutoParticlePicking2::saveVectors(const FileName &fn)
-{
-    if (rejected_particles.size()>0)
-    {
-        std::ofstream fhRejected;
-        FileName fnRejectedVectors=fn+"_rejected_vector.txt";
-        fhRejected.open(fnRejectedVectors.c_str());
-        int rejSize=XSIZE(rejected_particles[0].vec);
-        fhRejected<<rejected_particles.size()<<" "<<rejSize<< std::endl;
-        size_t nmax=rejected_particles.size();
-        for (size_t n=0;n<nmax;++n)
-        {
-            const Particle2 &p=rejected_particles[n];
-            for (int j=0;j<rejSize;++j)
-                fhRejected<<DIRECT_A1D_ELEM(p.vec,j)<<" ";
-            fhRejected <<std::endl;
-        }
-        fhRejected.close();
-    }
-    if (accepted_particles.size()>0)
-    {
-        std::ofstream fhAccepted;
-        FileName fnAcceptedVectors=fn+"_accepted_vector.txt";
-        fhAccepted.open(fnAcceptedVectors.c_str());
-        int accSize=XSIZE(accepted_particles[0].vec);
-        fhAccepted<<accepted_particles.size()<<" "<<accSize<< std::endl;
-        size_t nmax=accepted_particles.size();
-        for (size_t n=0;n<nmax;++n)
-        {
-            const Particle2 &p=accepted_particles[n];
-            for (int j=0;j<accSize;++j)
-                fhAccepted<<DIRECT_A1D_ELEM(p.vec,j)<<" ";
-            fhAccepted <<std::endl;
-        }
-        fhAccepted.close();
-    }
-}
-
-/* Load features of rejected and kept particles ---------------------------------------------------------- */
-void AutoParticlePicking2::loadVectors(const FileName &fn)
-{
-    int numVector;
-    int numFeature;
-    FileName fnRejectedVectors=fn+"_rejected_vector.txt";
-    FileName fnAcceptedVectors=fn+"_accepted_vector.txt";
-
-    if (fnRejectedVectors.exists())
-    {
-        std::ifstream fhRejected;
-        fhRejected.open(fnRejectedVectors.c_str());
-        fhRejected>>numVector>>numFeature;
-        for (int n=0; n<numVector;++n)
-        {
-            Particle2 p;
-            p.vec.resize(1,1,1,numFeature);
-            for (int j=0; j<numFeature;++j)
-                fhRejected >> DIRECT_A1D_ELEM(p.vec,j);
-            rejected_particles.push_back(p);
-        }
-        fhRejected.close();
-        fnRejectedVectors.deleteFile();
-    }
-    if (fnAcceptedVectors.exists())
-    {
-        std::ifstream fhAccepted;
-        fhAccepted.open(fnAcceptedVectors.c_str());
-        fhAccepted>>numVector>>numFeature;
-        for (int n=0; n<numVector;++n)
-        {
-            Particle2 p;
-            p.vec.resize(1,1,1,numFeature);
-            for (int j=0; j<numFeature;++j)
-                fhAccepted >> DIRECT_A1D_ELEM(p.vec,j);
-            accepted_particles.push_back(p);
-        }
-        fhAccepted.close();
-        fnAcceptedVectors.deleteFile();
     }
 }
 
@@ -1905,9 +1702,9 @@ void ProgMicrographAutomaticPicking2::defineParams()
 // This is just for calling automatic mode
 void ProgMicrographAutomaticPicking2::run()
 {
-	int proc_prec;
+    int proc_prec;
     MetaData MD;
-	FileName fnAutoParticles = formatString("particles_auto@%s.pos", fn_root.c_str());
+    FileName fnAutoParticles = formatString("particles_auto@%s.pos", fn_root.c_str());
     MD.read(fn_model.beforeLastOf("/")+"/config.xmd");
     MD.getValue( MDL_PICKING_AUTOPICKPERCENT,proc_prec,MD.firstObject());
 

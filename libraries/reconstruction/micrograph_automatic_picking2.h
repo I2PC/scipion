@@ -1,7 +1,7 @@
 /***************************************************************************
 *
 * Authors:    Carlos Oscar            coss@cnb.csic.es (2011)
-* 			  Vahid Abrishami		  vabrishami@cnb.csic (2012)
+*      Vahid Abrishami    vabrishami@cnb.csic (2012)
 *
 * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 *
@@ -72,69 +72,37 @@ class AutoParticlePicking2
 public:
 
     static const int NangSteps=120;
+    int particle_size, particle_radius, filter_num, proc_prec, NPCA, NRPCA, corr_num;
+    int num_correlation, num_features, Nthreads, fast, NRsteps;
 
-    Micrograph                  *__m;
-    Micrograph                   m;
-    Image<double>                microImage;
-    PCAMahalanobisAnalyzer       pcaAnalyzer;
-    ProgImageRotationalPCA       rotPcaAnalyzer;
-    SVMClassifier                classifier;
-    SVMClassifier                classifier2;
-    FileName                     fn_micrograph;
-    int                          piece_xsize;
-    int                          particle_size;
-    int                          particle_radius;
-    int                          filter_num;
-    int                          proc_prec;
-    int                          NPCA;
-    int                          NRPCA;
-    int                          corr_num;
-    int                          num_correlation;
-    int                          num_features;
-    int 					     Nthreads;
-    int 						 fast;
-    double                       scaleRate;
-    int                          NRsteps;
-    Point                        p1,p2;
+    SVMClassifier classifier, classifier2;
+    PCAMahalanobisAnalyzer pcaAnalyzer;
+    ProgImageRotationalPCA rotPcaAnalyzer;
+    Point p1,p2;
+    FeaturesThread * thread;
+    MetaData micList;
+    Micrograph m;
 
-    MultidimArray<double>        convolveRes;
-    MultidimArray<double>        filterBankStack;
-    MultidimArray<double>        positiveParticleStack;
-    MultidimArray<double>        negativeParticleStack;
-    MultidimArray<double>        positiveInvariatnStack;
-    MultidimArray<double>        negativeInvariatnStack;
-    MultidimArray<double>        autoFeatVec;
-    MultidimArray<double>        pcaModel;
-    MultidimArray<double>        pcaRotModel;
-    MultidimArray<double>        particleAvg;
-    MultidimArray<double>        dataSet;
-    MultidimArray<double>        dataSet1;
-    MultidimArray<double>        classLabel;
-    MultidimArray<double>        classLabel1;
-    MultidimArray<double>        labelSet;
+    Image<double> microImage, micrographStack;
 
-    std::vector<Particle2>       auto_candidates;
-    std::vector<Particle2>       rejected_particles;
-    std::vector<Particle2>       accepted_particles;
-    Image<double>                micrographStack;
+    std::vector<Particle2> auto_candidates;
+    std::vector<Particle2> rejected_particles;
+    std::vector<Particle2> accepted_particles;
 
-    FileName                     fn_model;
-    FileName                     fnPCAModel;
-    FileName                     fnPCARotModel;
-    FileName                     fnAvgModel;
-    FileName                     fnVector;
-    FileName                     fnSVMModel;
-    FileName                     fnSVMModel2;
-    FileName 				     fnInvariant;
-    FileName 					 fnParticles;
+    FileName fn_micrograph, fn_model, fnPCAModel, fnPCARotModel, fnAvgModel;
+    FileName fnVector, fnSVMModel, fnSVMModel2, fnInvariant, fnParticles;
 
-    FeaturesThread               * thread;
-    MetaData                     micList;
+    double scaleRate;
+    MultidimArray<double> convolveRes, filterBankStack, positiveParticleStack, negativeParticleStack;
+    MultidimArray<double> positiveInvariatnStack, negativeInvariatnStack, autoFeatVec;
+    MultidimArray<double> pcaModel, pcaRotModel, particleAvg, dataSet, dataSet1, classLabel;
+    MultidimArray<double> classLabel1, labelSet;
+
 public:
 
     /// Constructor
     AutoParticlePicking2(int particle_size, int filter_num = 6, int corr_num = 2, int NPCA = 4,
-        const FileName &model_name=NULL, const FileName &micsFn=NULL);
+                         const FileName &model_name=NULL, const FileName &micsFn=NULL);
 
     AutoParticlePicking2();
 
@@ -314,37 +282,15 @@ public:
      */
     void normalizeDataset(int a,int b);
 
-    /// Save automatically selected particles
-    int saveAutoParticles(const FileName &fn) const;
-
-    /*
-     * In Semi-Automatic step, we save all the feature
-     * vectors in order to have them to retrain the
-     * classifier.
-     */
-    void saveAutoVectors(const FileName &fn);
-
-    /// Save the extracted features for both rejected and found features
-    void saveVectors(const FileName &fn);
-
     /// Save the PCA basis and average for each channel
-    void savePCAModel(const FileName &fn_root);
+    void savePCAModel(const FileName &fn);
 
     /// Save training set into memory
     void saveTrainingSet(const FileName &fn_root);
 
-    /*
-     * In Semi-Automatic step, we save all the feature
-     * vectors in order to have them to retrain the
-     * classifier.
-     */
-    void loadAutoVectors(const FileName &fn);
 
     /// Load training set into the related array.
     void loadTrainingSet(const FileName &fn_root);
-
-    /// Load the features for particles and non-particles (from the supervised)
-    void loadVectors(const FileName &fn);
 
     /*
      * This method generates two different datasets. One for the
@@ -380,35 +326,36 @@ enum FeatureStatus
 class FeaturesThread: public Thread
 {
 private:
-  /* Condtions to be used to notifiy the thread to work(condIn)
-   * and to know the thread has finished (condOut)
-   */
-  Condition condIn, condOut;
-  bool waitingForResults; // Flag to know if the main thread is waiting
-  FeatureStatus status;
+    /* Condtions to be used to notifiy the thread to work(condIn)
+     * and to know the thread has finished (condOut)
+     */
+    Condition condIn, condOut;
+    bool waitingForResults; // Flag to know if the main thread is waiting
+    FeatureStatus status;
 
 public:
-  AutoParticlePicking2 * picker;
-  std::vector<Particle2> positionArray;
-  FileName fnmicrograph;
-  int proc_prec;
+    AutoParticlePicking2 * picker;
+    std::vector<Particle2> positionArray;
+    FileName fnmicrograph;
+    int proc_prec;
 
-  FeaturesThread(AutoParticlePicking2 * picker);
-  ~FeaturesThread();
+    FeaturesThread(AutoParticlePicking2 * picker);
+    ~FeaturesThread();
 
-  void setMicrograph(const FileName &fnMic, int proc_prec);
-  void run();
-  /* This function should be called from outside to wait for results. */
-  void waitForResults();
-  /* Notify the thread to start working another micrograph */
-  void workOnMicrograph(const FileName &fnMic, int proc_prec);
-  /* Stop the work because the micrograph that the thread is working is not
-   * the next one the user has clicked.
-   */
-  void cancelWork();
-  /* Call the picker generateFeatVec */
-  void generateFeatures();
-}; //class FeaturesThread
+    void setMicrograph(const FileName &fnMic, int proc_prec);
+    void run();
+    /* This function should be called from outside to wait for results. */
+    void waitForResults();
+    /* Notify the thread to start working another micrograph */
+    void workOnMicrograph(const FileName &fnMic, int proc_prec);
+    /* Stop the work because the micrograph that the thread is working is not
+     * the next one the user has clicked.
+     */
+    void cancelWork();
+    /* Call the picker generateFeatVec */
+    void generateFeatures();
+}
+; //class FeaturesThread
 
 class ProgMicrographAutomaticPicking2: public XmippProgram
 {
@@ -424,7 +371,7 @@ public:
     /// Number of threads
     /// Output rootname
     FileName fn_root;
-	AutoParticlePicking2 *autoPicking;
+    AutoParticlePicking2 *autoPicking;
 public:
     /// Read parameters
     void readParams();
