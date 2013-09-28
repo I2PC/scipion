@@ -266,7 +266,7 @@ def emxParticlesToXmipp(emxData, outputFileName=PARTFILE, filesPrefix=None, ctfR
         pFileName = particle.get(FILENAME)
 
         if pFileName is None:
-            raise Exception("emxMicsToXmipp: Xmipp doesn't support Particles without filename")
+            raise Exception("emxParticlesToXmipp: Xmipp doesn't support Particles without filename")
         
         if filesPrefix is not None:
             pFileName = join(filesPrefix, pFileName)
@@ -289,12 +289,39 @@ def emxParticlesToXmipp(emxData, outputFileName=PARTFILE, filesPrefix=None, ctfR
             md.setValue(MDL_XCOOR, int(particle.get('centerCoord__X')), objId)
             md.setValue(MDL_YCOOR, int(particle.get('centerCoord__Y')), objId)
 
+        if particle.has('centerCoord__X'):
+            emxTransformToXmipp(md, objId, particle)
         
     # Sort metadata by particle name
     md.sort(MDL_IMAGE)
     # Write particles metadata
     md.write('Particles@' + outputFileName)   
     
+def emxTransformToXmipp(md, objId, particle):
+    """ Transform the particle transformation matrix
+    in the euler angles and shift as expected by Xmipp.
+    """
+    #eulerangle2matrix
+    _array = eye(3)# unitary matrix
+
+    for i, j, label in iterTransformationMatrix():
+        if particle.has(label):
+            _array[i][j] = particle.get(label)
+            
+    rot, tilt, psi = Euler_matrix2angles(_array)
+    
+    _X = particle.get('transformationMatrix__t14', 0.)
+    _Y = particle.get('transformationMatrix__t24', 0.)
+    _Z = particle.get('transformationMatrix__t34', 0.)
+
+    md.setValue(MDL_ANGLE_ROT , rot , objId)
+    md.setValue(MDL_ANGLE_TILT, tilt, objId)
+    md.setValue(MDL_ANGLE_PSI , psi , objId)
+
+    md.setValue(MDL_SHIFT_X, _X, objId)
+    md.setValue(MDL_SHIFT_Y, _Y, objId)
+    md.setValue(MDL_SHIFT_Z, _Z, objId)    
+
     
 def alignXmippToEmx(emxData,xmdFileName):
     ''' convert a set of particles including geometric information '''
@@ -337,8 +364,20 @@ def alignXmippToEmx(emxData,xmdFileName):
 
         emxData.addObject(p1)
         
+def iterTransformationMatrix():
+    """ This function will return an iterator over the indexes 
+    and the EMX label for transformation matrix.
+    """
+    r = range(3)
+    for i in r:
+        for j in r:
+            label = "transformationMatrix_t%d%d" % (i+1, j+1)
+            yield (i, j, label)
+    
+    
 def alignEMXToXmipp(emxData,mode,xmdFileName):
     """import align related information
+    DEPRECATED: Should be used the more general emxParticlesToXmipp
     """
     #iterate though emxData
     mdParticle     = MetaData()
