@@ -66,7 +66,7 @@ sections = [
     ['Volumes', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask', 'preprocess_volume', 'resolution3D', 'align_volume', 'helical_params']]),
 ('Other',
  [['Extra', 'custom',['Virus','subtraction'],['Tomography','mltomo', 'cltomo'],['Tools','image_operate','metadata_utilities','metadata_split'],
-   ['EMX', 'emx_import_micrographs', 'emx_import_particles', 'emx_export_particles']]])
+   ['EMX', 'emx_import_micrographs', 'emx_import_particles', 'emx_export_micrographs', 'emx_export_particles']]])
 ]
 
 #--------------------------------------------------------------------------------

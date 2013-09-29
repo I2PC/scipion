@@ -41,91 +41,20 @@ POSENDING     = ".pos"
 STACKENDING   = '.stk'
 
 
-def ctfMicXmippToEmx(emxData,xmdFileName):
-    
-    md    = MetaData()
-    mdCTF = MetaData()
-    md.read(xmdFileName)
-    for objId in md:
-        micrographName = md.getValue(MDL_MICROGRAPH, objId)
-        ctfModel       = md.getValue(MDL_CTF_MODEL,objId)
-        m1             = Emxmicrograph(fileName=micrographName)
-
-        mdCTF.read(ctfModel)
-        objId2 = mdCTF.firstObject()
-        pixelSpacing        = mdCTF.getValue(MDL_CTF_SAMPLING_RATE, objId2)####
-        acceleratingVoltage = mdCTF.getValue(MDL_CTF_VOLTAGE, objId2)
-        cs                  = mdCTF.getValue(MDL_CTF_CS, objId2)
-        defocusU            = mdCTF.getValue(MDL_CTF_DEFOCUSU, objId2)/10.
-        defocusV            = mdCTF.getValue(MDL_CTF_DEFOCUSV, objId2)/10.
-        defocusUAngle       = mdCTF.getValue(MDL_CTF_DEFOCUS_ANGLE, objId2)
-        amplitudeContrast   = mdCTF.getValue(MDL_CTF_Q0, objId2)
-        while defocusUAngle < 0:
-            defocusUAngle += 180.
-        while defocusUAngle > 180.:
-            defocusUAngle -= 180.;            
-        
-        m1.set('acceleratingVoltage',acceleratingVoltage)
-        m1.set('amplitudeContrast',amplitudeContrast)
-        m1.set('cs',cs)
-        m1.set('defocusU',defocusU)
-        m1.set('defocusV',defocusV)
-        m1.set('defocusUAngle',defocusUAngle)
-        m1.set('pixelSpacing__X',pixelSpacing)
-        m1.set('pixelSpacing__Y',pixelSpacing)
-        emxData.addObject(m1)
-
-def ctfMicXmippToEmxChallenge(emxData,xmdFileName):
-    
-    md    = MetaData()
-    mdCTF = MetaData()
-    md.read(xmdFileName)
-    for objId in md:
-        micrographName = md.getValue(MDL_MICROGRAPH, objId)
-        ctfModel       = md.getValue(MDL_CTF_MODEL,objId)
-        m1             = Emxmicrograph(fileName=micrographName)
-
-        mdCTF.read(ctfModel)
-        objId2 = mdCTF.firstObject()
-        defocusU            = mdCTF.getValue(MDL_CTF_DEFOCUSU, objId2)/10.
-        defocusV            = mdCTF.getValue(MDL_CTF_DEFOCUSV, objId2)/10.
-        defocusUAngle       = mdCTF.getValue(MDL_CTF_DEFOCUS_ANGLE, objId2)
-        amplitudeContrast   = mdCTF.getValue(MDL_CTF_Q0, objId2)
-        while defocusUAngle < 0:
-            defocusUAngle += 180.
-        while defocusUAngle > 180.:
-            defocusUAngle -= 180.;            
-            
-        m1.set('defocusU',defocusU)
-        m1.set('defocusV',defocusV)
-        m1.set('defocusUAngle',defocusUAngle)
-        emxData.addObject(m1)
-
-
 class CTF(object):
-    pass
+    # Dictionary for matching between EMX var and Xmipp labes
+    ctfVarLabels = {'acceleratingVoltage': MDL_CTF_VOLTAGE,
+                    'amplitudeContrast': MDL_CTF_Q0,
+                    'cs': MDL_CTF_CS,
+                    'defocusU': MDL_CTF_DEFOCUSU,
+                    'defocusV': MDL_CTF_DEFOCUSV,
+                    'defocusUAngle': MDL_CTF_DEFOCUS_ANGLE,
+                    'pixelSpacing__X': MDL_CTF_SAMPLING_RATE,
+                    }
 
-
-def xmippCtfToEmx(md, objId, micrograph):
-    ctfModel = md.getValue(MDL_CTF_MODEL, objId)
-
-    mdCTF = RowMetaData(ctfModel)
-    
-    defocusU = mdCTF.getValue(MDL_CTF_DEFOCUSU) / 10.
-    defocusV = mdCTF.getValue(MDL_CTF_DEFOCUSV) / 10.
-    defocusUAngle = mdCTF.getValue(MDL_CTF_DEFOCUS_ANGLE)
-    amplitudeContrast = mdCTF.getValue(MDL_CTF_Q0)
-    
-    while defocusUAngle < 0:
-        defocusUAngle += 180.
-    
-    while defocusUAngle > 180.:
-        defocusUAngle -= 180.;            
-        
-    micrograph.set('defocusU', defocusU)
-    micrograph.set('defocusV', defocusV)
-    micrograph.set('defocusUAngle', defocusUAngle)    
-
+#*******************************************************************
+#*            EMX to Xmipp convertion functions                    *
+#*******************************************************************
 
 def emxMicsToXmipp(emxData, outputFileName=MICFILE, filesPrefix=None, ctfRoot=None):
     """ This function will iterate over the EMX micrographs and create
@@ -158,20 +87,11 @@ def emxMicsToXmipp(emxData, outputFileName=MICFILE, filesPrefix=None, ctfRoot=No
         ctfModelFileName = join(ctfRoot, replaceBasenameExt(micFileName, CTFENDING))
         mdMic.setValue(MDL_CTF_MODEL, ctfModelFileName, mdMicId)
 
-        # Dictionary for matching between EMX var and Xmipp labes
-        ctfVarLabels = {'acceleratingVoltage': MDL_CTF_VOLTAGE,
-                        'amplitudeContrast': MDL_CTF_Q0,
-                        'cs': MDL_CTF_CS,
-                        'defocusU': MDL_CTF_DEFOCUSU,
-                        'defocusV': MDL_CTF_DEFOCUSV,
-                        'defocusUAngle': MDL_CTF_DEFOCUS_ANGLE,
-                        'pixelSpacing__X': MDL_CTF_SAMPLING_RATE,
-                        }
         ctf = CTF()
         ctf.pixelSpacing__Y = micrograph.get('pixelSpacing__Y')
         
         # Set the variables in the dict
-        for var in ctfVarLabels.keys():
+        for var in CTF.ctfVarLabels.keys():
             setattr(ctf, var, micrograph.get(var))
 
         # Now do some adjusments to vars        
@@ -192,7 +112,7 @@ def emxMicsToXmipp(emxData, outputFileName=MICFILE, filesPrefix=None, ctfRoot=No
         # Create the .ctfparam, replacing the micrograph name
         mdCtf = RowMetaData()
         
-        for var, label in ctfVarLabels.iteritems():
+        for var, label in CTF.ctfVarLabels.iteritems():
             v = getattr(ctf, var)
             if v is not None:
                 mdCtf.setValue(label, float(v))
@@ -204,33 +124,6 @@ def emxMicsToXmipp(emxData, outputFileName=MICFILE, filesPrefix=None, ctfRoot=No
     mdMic.sort(MDL_MICROGRAPH)
     # Write micrographs metadata
     mdMic.write('Micrographs@' + outputFileName)
-
-    
-    
-def coorrXmippToEmx(emxData,xmdFileName):
-    ''' convert a single file '''
-    md    = MetaData()
-    md.read(xmdFileName)
-    xmdFileNameNoExt = FileName(xmdFileName.withoutExtension())
-    xmdFileNameNoExtNoBlock = xmdFileNameNoExt.removeBlockName()
-    micrographName = xmdFileNameNoExtNoBlock + BINENDING
-    particleName   = xmdFileNameNoExtNoBlock + STACKENDING
-    m1 = Emxmicrograph(fileName=micrographName)
-    emxData.addObject(m1)
-    counter = FIRSTIMAGE
-    #check if MDL_XCOOR column exists if not 
-    #print error no coordenates found. did you rememebr to include the block name in the filename
-    for objId in md:
-
-        coorX = md.getValue(MDL_XCOOR, objId)
-        coorY = md.getValue(MDL_YCOOR, objId)
-        p1    = Emxparticle(fileName=particleName, index=counter)
-        p1.set('centerCoord__X',coorX)
-        p1.set('centerCoord__Y',coorY)
-        p1.setForeignKey(m1)
-        emxData.addObject(p1)
-
-        counter += 1
 
 
 def emxCoordsToXmipp(emxData, filesRoot):
@@ -319,6 +212,7 @@ def emxParticlesToXmipp(emxData, outputFileName=PARTFILE, filesPrefix=None, ctfR
     # Write particles metadata
     md.write('Particles@' + outputFileName)   
     
+    
 def emxTransformToXmipp(md, objId, particle):
     """ Transform the particle transformation matrix
     in the euler angles and shift as expected by Xmipp.
@@ -344,6 +238,10 @@ def emxTransformToXmipp(md, objId, particle):
     md.setValue(MDL_SHIFT_Y, _Y, objId)
     md.setValue(MDL_SHIFT_Z, _Z, objId)
     
+
+#*******************************************************************
+#*            Xmipp to EMX convertion functions                    *
+#*******************************************************************
     
 def hasGeoLabels(md):
     """ Return true if there is geometric information. """
@@ -351,6 +249,63 @@ def hasGeoLabels(md):
         if md.containsLabel(label):
             return True
     return False
+
+
+def xmippCtfToEmx(md, objId, micrograph):
+    """ Read a CTF file ctfparam from Xmipp 
+    and set the attributes in micrograph.
+    """
+    ctfModel = md.getValue(MDL_CTF_MODEL, objId)
+    mdCTF = RowMetaData(ctfModel)
+    ctf = CTF()
+    # Set the variables in the dict
+    for var, label in CTF.ctfVarLabels.iteritems():
+        setattr(ctf, var, mdCTF.getValue(label))
+        
+    ctf.defocusU /= 10.
+    ctf.defocusV /= 10.
+
+    while ctf.defocusUAngle < 0:
+        ctf.defocusUAngle += 180.
+    
+    while ctf.defocusUAngle > 180.:
+        ctf.defocusUAngle -= 180.; 
+        
+    for var in CTF.ctfVarLabels.keys():
+        micrograph.set(var, getattr(ctf, var))           
+
+    micrograph.set('pixelSpacing__Y', ctf.pixelSpacing__X)
+
+    
+def _writeEmxData(emxData, filename):
+    xmlMapper = XmlMapper(emxData)
+    xmlMapper.writeEMXFile(filename)      
+    
+def xmippMicrographsToEmx(micMd, emxData, emxDir):
+    """ Export micrographs from xmipp metadata to EMX.
+    """
+    md = MetaData(micMd)
+    micFn = 'mic%06d.mrc'
+    index = 0
+    img = Image()
+    hasCtf = md.containsLabel(MDL_CTF_MODEL)
+
+    for objId in md:
+        fnIn = md.getValue(MDL_MICROGRAPH, objId)
+        index += 1
+        fnOut = micFn % index
+        img.read(fnIn)
+        img.write(join(emxDir, fnOut))
+        
+        micrograph = Emxmicrograph(fnOut)
+        # Set CTF parameters if present
+        if hasCtf:
+            xmippCtfToEmx(md, objId, micrograph)
+
+        emxData.addObject(micrograph)
+    # Write EMX particles
+    _writeEmxData(emxData, join(emxDir, 'micrographs.emx'))
+ 
 
 def xmippParticlesToEmx(imagesMd, emxData, emxDir):
     """ Export particles from xmipp metadata to EMX.
@@ -412,9 +367,8 @@ def xmippParticlesToEmx(imagesMd, emxData, emxDir):
         emxData.addObject(particle)
         
     # Write EMX particles
-    emxParticles = join(emxDir, 'particles.emx')
-    xmlMapper = XmlMapper(emxData)
-    xmlMapper.writeEMXFile(emxParticles)
+    _writeEmxData(emxData, join(emxDir, 'particles.emx'))
+       
         
 def xmippTransformToEmx(md, objId, particle):
     rot = md.getValue(MDL_ANGLE_ROT, objId) or 0.
@@ -433,6 +387,83 @@ def xmippTransformToEmx(md, objId, particle):
     z = md.getValue(MDL_SHIFT_Z, objId) or 0.
     particle.set('transformationMatrix__t34', z)
 
+
+def iterTransformationMatrix():
+    """ This function will return an iterator over the indexes 
+    and the EMX label for transformation matrix.
+    """
+    r = range(3)
+    for i in r:
+        for j in r:
+            label = "transformationMatrix__t%d%d" % (i+1, j+1)
+            yield (i, j, label)
+    
+    
+    
+    
+################ Old Roberto convertion functions ############
+
+
+def ctfMicXmippToEmx(emxData,xmdFileName):
+    
+    md    = MetaData()
+    mdCTF = MetaData()
+    md.read(xmdFileName)
+    for objId in md:
+        micrographName = md.getValue(MDL_MICROGRAPH, objId)
+        ctfModel       = md.getValue(MDL_CTF_MODEL,objId)
+        m1             = Emxmicrograph(fileName=micrographName)
+
+        mdCTF.read(ctfModel)
+        objId2 = mdCTF.firstObject()
+        pixelSpacing        = mdCTF.getValue(MDL_CTF_SAMPLING_RATE, objId2)####
+        acceleratingVoltage = mdCTF.getValue(MDL_CTF_VOLTAGE, objId2)
+        cs                  = mdCTF.getValue(MDL_CTF_CS, objId2)
+        defocusU            = mdCTF.getValue(MDL_CTF_DEFOCUSU, objId2)/10.
+        defocusV            = mdCTF.getValue(MDL_CTF_DEFOCUSV, objId2)/10.
+        defocusUAngle       = mdCTF.getValue(MDL_CTF_DEFOCUS_ANGLE, objId2)
+        amplitudeContrast   = mdCTF.getValue(MDL_CTF_Q0, objId2)
+        while defocusUAngle < 0:
+            defocusUAngle += 180.
+        while defocusUAngle > 180.:
+            defocusUAngle -= 180.;            
+        
+        m1.set('acceleratingVoltage',acceleratingVoltage)
+        m1.set('amplitudeContrast',amplitudeContrast)
+        m1.set('cs',cs)
+        m1.set('defocusU',defocusU)
+        m1.set('defocusV',defocusV)
+        m1.set('defocusUAngle',defocusUAngle)
+        m1.set('pixelSpacing__X',pixelSpacing)
+        m1.set('pixelSpacing__Y',pixelSpacing)
+        emxData.addObject(m1)
+
+def ctfMicXmippToEmxChallenge(emxData,xmdFileName):
+    
+    md    = MetaData()
+    mdCTF = MetaData()
+    md.read(xmdFileName)
+    for objId in md:
+        micrographName = md.getValue(MDL_MICROGRAPH, objId)
+        ctfModel       = md.getValue(MDL_CTF_MODEL,objId)
+        m1             = Emxmicrograph(fileName=micrographName)
+
+        mdCTF.read(ctfModel)
+        objId2 = mdCTF.firstObject()
+        defocusU            = mdCTF.getValue(MDL_CTF_DEFOCUSU, objId2)/10.
+        defocusV            = mdCTF.getValue(MDL_CTF_DEFOCUSV, objId2)/10.
+        defocusUAngle       = mdCTF.getValue(MDL_CTF_DEFOCUS_ANGLE, objId2)
+        amplitudeContrast   = mdCTF.getValue(MDL_CTF_Q0, objId2)
+        while defocusUAngle < 0:
+            defocusUAngle += 180.
+        while defocusUAngle > 180.:
+            defocusUAngle -= 180.;            
+            
+        m1.set('defocusU',defocusU)
+        m1.set('defocusV',defocusV)
+        m1.set('defocusUAngle',defocusUAngle)
+        emxData.addObject(m1)
+        
 
 def alignXmippToEmx(emxData,xmdFileName):
     ''' convert a set of particles including geometric information '''
@@ -475,18 +506,6 @@ def alignXmippToEmx(emxData,xmdFileName):
 
         emxData.addObject(p1)
         
-        
-def iterTransformationMatrix():
-    """ This function will return an iterator over the indexes 
-    and the EMX label for transformation matrix.
-    """
-    r = range(3)
-    for i in r:
-        for j in r:
-            label = "transformationMatrix__t%d%d" % (i+1, j+1)
-            yield (i, j, label)
-    
-    
 def alignEMXToXmipp(emxData,mode,xmdFileName):
     """import align related information
     DEPRECATED: Should be used the more general emxParticlesToXmipp
@@ -553,3 +572,29 @@ def alignEMXToXmipp(emxData,mode,xmdFileName):
         mdParticle.setValue(MDL_SHIFT_Y, _Y, mdPartId)
         mdParticle.setValue(MDL_SHIFT_Z, _Z, mdPartId)
     mdParticle.write(xmdFileName)
+    
+    
+def coorrXmippToEmx(emxData,xmdFileName):
+    ''' convert a single file '''
+    md    = MetaData()
+    md.read(xmdFileName)
+    xmdFileNameNoExt = FileName(xmdFileName.withoutExtension())
+    xmdFileNameNoExtNoBlock = xmdFileNameNoExt.removeBlockName()
+    micrographName = xmdFileNameNoExtNoBlock + BINENDING
+    particleName   = xmdFileNameNoExtNoBlock + STACKENDING
+    m1 = Emxmicrograph(fileName=micrographName)
+    emxData.addObject(m1)
+    counter = FIRSTIMAGE
+    #check if MDL_XCOOR column exists if not 
+    #print error no coordenates found. did you rememebr to include the block name in the filename
+    for objId in md:
+
+        coorX = md.getValue(MDL_XCOOR, objId)
+        coorY = md.getValue(MDL_YCOOR, objId)
+        p1    = Emxparticle(fileName=particleName, index=counter)
+        p1.set('centerCoord__X',coorX)
+        p1.set('centerCoord__Y',coorY)
+        p1.setForeignKey(m1)
+        emxData.addObject(p1)
+
+        counter += 1
