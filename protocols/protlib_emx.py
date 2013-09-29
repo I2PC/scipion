@@ -26,6 +26,7 @@
 #from emx_data_model import *
 from xmipp import *
 from emx.emx import *
+from emx.emxmapper import *
 from numpy import eye
 from protlib_filesystem import join, dirname, abspath, replaceBasenameExt
 from protlib_xmipp import RowMetaData
@@ -103,6 +104,27 @@ def ctfMicXmippToEmxChallenge(emxData,xmdFileName):
 
 class CTF(object):
     pass
+
+
+def xmippCtfToEmx(md, objId, micrograph):
+    ctfModel = md.getValue(MDL_CTF_MODEL, objId)
+
+    mdCTF = RowMetaData(ctfModel)
+    
+    defocusU = mdCTF.getValue(MDL_CTF_DEFOCUSU) / 10.
+    defocusV = mdCTF.getValue(MDL_CTF_DEFOCUSV) / 10.
+    defocusUAngle = mdCTF.getValue(MDL_CTF_DEFOCUS_ANGLE)
+    amplitudeContrast = mdCTF.getValue(MDL_CTF_Q0)
+    
+    while defocusUAngle < 0:
+        defocusUAngle += 180.
+    
+    while defocusUAngle > 180.:
+        defocusUAngle -= 180.;            
+        
+    micrograph.set('defocusU', defocusU)
+    micrograph.set('defocusV', defocusV)
+    micrograph.set('defocusUAngle', defocusUAngle)    
 
 
 def emxMicsToXmipp(emxData, outputFileName=MICFILE, filesPrefix=None, ctfRoot=None):
@@ -320,9 +342,98 @@ def emxTransformToXmipp(md, objId, particle):
 
     md.setValue(MDL_SHIFT_X, _X, objId)
     md.setValue(MDL_SHIFT_Y, _Y, objId)
-    md.setValue(MDL_SHIFT_Z, _Z, objId)    
-
+    md.setValue(MDL_SHIFT_Z, _Z, objId)
     
+    
+def hasGeoLabels(md):
+    """ Return true if there is geometric information. """
+    for label in [MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_ANGLE_PSI, MDL_SHIFT_X, MDL_SHIFT_Y, MDL_SHIFT_Z]:
+        if md.containsLabel(label):
+            return True
+    return False
+
+def xmippParticlesToEmx(imagesMd, emxData, emxDir):
+    """ Export particles from xmipp metadata to EMX.
+    imagesMd: the filename of the images metadata
+    emxData: the emxData object to be populated.
+    """
+    md = MetaData(imagesMd)
+    md.removeDisabled()
+    
+    imgFn = 'particles.mrc'
+    mrcFn = join(emxDir, imgFn)
+    index = 0
+    img = Image()
+    hasCoords = md.containsLabel(MDL_XCOOR)
+    hasGeo = hasGeoLabels(md)
+    hasMicrograph = md.containsLabel(MDL_MICROGRAPH)
+    hasCtf = md.containsLabel(MDL_CTF_MODEL)
+    micsDict = {}
+    
+    for objId in md:
+            
+        # Read image from filename
+        fn = FileName(md.getValue(MDL_IMAGE, objId))
+        img.read(fn)
+        
+        # Write to mrc stack
+        index += 1
+        img.write('%d@%s' % (index, mrcFn))
+        particle = Emxparticle(imgFn, index)
+        # Create the micrograph object if exists
+        if hasMicrograph:
+            fn = md.getValue(MDL_MICROGRAPH, objId)
+            if fn in micsDict:
+                micrograph = micsDict[fn]
+            else:
+                idx, path = FileName(fn).decompose()
+                idx = idx or None
+                micrograph = Emxmicrograph(path, idx)
+                emxData.addObject(micrograph)
+                micsDict[fn] = micrograph 
+            
+            particle.setForeignKey(micrograph)
+            
+            if hasCtf:
+                xmippCtfToEmx(md, objId, micrograph)
+                particle.set('defocusU', micrograph.get('defocusU'))
+                particle.set('defocusV', micrograph.get('defocusV'))
+
+        # Check if there are coordinates
+        if hasCoords:
+            particle.set('centerCoord__X', md.getValue(MDL_XCOOR, objId))
+            particle.set('centerCoord__Y', md.getValue(MDL_YCOOR, objId))
+        
+        # If there is geometrical info, convert and set
+        if hasGeo:
+            xmippTransformToEmx(md, objId, particle)
+        
+        # Add particle to emxData
+        emxData.addObject(particle)
+        
+    # Write EMX particles
+    emxParticles = join(emxDir, 'particles.emx')
+    xmlMapper = XmlMapper(emxData)
+    xmlMapper.writeEMXFile(emxParticles)
+        
+def xmippTransformToEmx(md, objId, particle):
+    rot = md.getValue(MDL_ANGLE_ROT, objId) or 0.
+    tilt = md.getValue(MDL_ANGLE_TILT, objId) or 0.
+    psi = md.getValue(MDL_ANGLE_PSI , objId) or 0.
+    
+    tMatrix = Euler_angles2matrix(rot, tilt, psi)
+
+    for i, j, label in iterTransformationMatrix():
+        particle.set(label, tMatrix[i][j])
+
+    x = md.getValue(MDL_SHIFT_X, objId) or 0.
+    particle.set('transformationMatrix__t14', x)
+    y = md.getValue(MDL_SHIFT_Y, objId) or 0.
+    particle.set('transformationMatrix__t24', y)
+    z = md.getValue(MDL_SHIFT_Z, objId) or 0.
+    particle.set('transformationMatrix__t34', z)
+
+
 def alignXmippToEmx(emxData,xmdFileName):
     ''' convert a set of particles including geometric information '''
     md       = MetaData(xmdFileName)
@@ -364,6 +475,7 @@ def alignXmippToEmx(emxData,xmdFileName):
 
         emxData.addObject(p1)
         
+        
 def iterTransformationMatrix():
     """ This function will return an iterator over the indexes 
     and the EMX label for transformation matrix.
@@ -371,7 +483,7 @@ def iterTransformationMatrix():
     r = range(3)
     for i in r:
         for j in r:
-            label = "transformationMatrix_t%d%d" % (i+1, j+1)
+            label = "transformationMatrix__t%d%d" % (i+1, j+1)
             yield (i, j, label)
     
     
