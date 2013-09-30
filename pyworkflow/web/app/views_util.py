@@ -17,6 +17,7 @@ iconDict = {
             'wizard': 'tools_wizard.png',
             'edit_toolbar': 'edit.gif',
             'copy_toolbar': 'copy.gif',
+            'stop_toolbar': 'stop.gif',
             'delete_toolbar': 'delete.gif',
             'browse_toolbar': 'run_steps.gif',
             'tree_toolbar': 'tree2.gif',
