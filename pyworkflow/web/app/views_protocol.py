@@ -131,14 +131,28 @@ def protocol(request):
     
     return HttpResponse(jsonStr, mimetype='application/javascript')   
 
+# Method to delete a protocol #
 def delete_protocol(request):
     # Project Id(or Name) should be stored in SESSION
     if request.is_ajax():
-        projectName = request.GET.get('projectName')
+        projectName = request.session['projectName']
         project = loadProject(projectName)
         protId = request.GET.get('protocolId', None)
         protocol = project.mapper.selectById(int(protId))
      
         project.deleteProtocol(protocol)         
+        
+    return HttpResponse(mimetype='application/javascript') 
+
+# Method to stop a protocol #
+def stop_protocol(request):
+    # Project Id(or Name) should be stored in SESSION
+    if request.is_ajax():
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        protId = request.GET.get('protocolId', None)
+        protocol = project.mapper.selectById(int(protId))
+     
+        project.stopProtocol(protocol)
         
     return HttpResponse(mimetype='application/javascript') 

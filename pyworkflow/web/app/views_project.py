@@ -165,6 +165,7 @@ def project_content(request):
                'copyTool': getResourceIcon('copy_toolbar'),
                'deleteTool': getResourceIcon('delete_toolbar'),
                'browseTool': getResourceIcon('browse_toolbar'),
+               'stopTool': getResourceIcon('stop_toolbar'),
                'analyzeTool': getResourceIcon('analyze_toolbar'),
                'treeTool': getResourceIcon('tree_toolbar'),
                'utils': getResourceJs('utils'),
@@ -183,18 +184,30 @@ def project_content(request):
     
     return render_to_response('project_content.html', context)
 
+def protocol_status(request):
+    if request.is_ajax():
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        protId = request.GET.get('protocolId', None)
+        protocol = project.mapper.selectById(int(protId))
+        status = protocol.status.get()
+
+#        print "======================= in protocol_status...."
+#        print jsonStr        
+    return HttpResponse(status, mimetype='application/javascript')
+
 def protocol_io(request):
     if request.is_ajax():
         projectName = request.session['projectName']
         project = loadProject(projectName)
         protId = request.GET.get('protocolId', None)
         protocol = project.mapper.selectById(int(protId))
-#        print "======================= in protocol_io...."
         ioDict = {'inputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterInputAttributes()],
                   'outputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterOutputAttributes(EMObject)]}
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
-#        print jsonStr
-        
+
+#        print "======================= in protocol_io...."
+#        print jsonStr        
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
 def protocol_summary(request):
@@ -204,15 +217,15 @@ def protocol_summary(request):
         protId = request.GET.get('protocolId', None)
         protocol = project.mapper.selectById(int(protId))
         summary = protocol.summary()
-#        print "======================= in protocol_summary...."
         jsonStr = json.dumps(summary, ensure_ascii=False)
-#        print jsonStr
         
+#        print "======================= in protocol_summary...."
+#        print jsonStr
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
 def viewer(request):    
     if request.is_ajax():
-        projectPath= request.session['projectPath']
+#        projectPath= request.session['projectPath']
         projectName = request.session['projectName']
         project = loadProject(projectName)
         protId = request.GET.get('protocolId', None)
@@ -221,11 +234,11 @@ def viewer(request):
         print "======================= in viewer...."
         
 #        ioDict = {'inputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterInputAttributes()],
-#                  'outputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterOutputAttributes(EMObject)]}
+#                 'outputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterOutputAttributes(EMObject)]}
         
-        url = '/visualize_object/?objectId=746'   
+        url = '/visualize_object/?objectId=746'
         
-        ioDict = {"pag1": url , "pag2" : "<html><h2>pagina2</h2></html>"}
+        ioDict = {"pag1": url , "pag2" : "<html><h2>Under construction</h2></html>"}
         
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
         
