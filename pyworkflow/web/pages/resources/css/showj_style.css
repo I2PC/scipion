@@ -15,9 +15,19 @@ header {
 	height: 100px;
 	display: -moz-flex;
 	display: -webkit-flex;
+	display: -ms-flex;
+	display: -o-flex;
 	display: flex;
 	-webkit-flex-flow: row;
+	-moz-flex-flow: row;
+	-ms-flex-flow: row;
+	-o-flex-flow: row;
+	flex-flow: row;
 	-webkit-flex-wrap: wrap;
+	-moz-flex-wrap: wrap;
+	-ms-flex-wrap: wrap;
+	-o-flex-wrap: wrap;
+	flex-wrap: wrap;
 }
 
 
@@ -53,10 +63,20 @@ aside {
 	
 	padding-left: 20px;
 	display: -moz-flex;
+	display: -ms-flex;
+	display: -o-flex;
 	display: -webkit-flex;
 	display: flex;
 	-webkit-flex-flow: row;
+	-moz-flex-flow: row;
+	-ms-flex-flow: row;
+	-o-flex-flow: row;
+	flex-flow: row;
 	-webkit-flex-wrap: wrap;
+	-moz-flex-wrap: wrap;
+	-o-flex-wrap: wrap;
+	-ms-flex-wrap: wrap;
+	flex-wrap: wrap;
 }
 
 aside button {
@@ -66,6 +86,9 @@ aside button {
 }
 
 aside form{
+	display: -moz-flex;
+	display: -ms-flex;
+	display: -o-flex;
 	display: -webkit-flex;
 	display: flex;
 }
@@ -73,14 +96,30 @@ aside form{
 aside .sectionMenu {
 	margin-right: 20px;
 	/* display: inline-block; */
+	display: -moz-flex;
+	display: -ms-flex;
+	display: -o-flex;
 	display: -webkit-flex;
+	display: flex;
 	-webkit-align-items: center;
+	-moz-align-items: center;
+	-o-align-items: center;
+	-ms-align-items: center;
+	align-items: center;
 }
 
 aside .subSectionMenu {
 	margin-right: 10px;
+	display: -moz-flex;
+	display: -ms-flex;
+	display: -o-flex;
 	display: -webkit-flex;
+	display: flex;
 	-webkit-align-items: center;
+	-moz-align-items: center;
+	-o-align-items: center;
+	-ms-align-items: center;
+	align-items: center;
 }
 
 aside .textMenu {
@@ -137,9 +176,21 @@ aside .galleryOff{
 }
 
 aside .arrowSectionMenu{
+	display: -moz-flex;
+	display: -ms-flex;
+	display: -o-flex;
 	display: -webkit-flex;
+	display: flex;
 	-webkit-align-items: center;
+	-moz-align-items: center;
+	-o-align-items: center;
+	-ms-align-items: center;
+	align-items: center;
 	-webkit-flex-flow: column;
+	-moz-flex-flow: column;
+	-o-flex-flow: column;
+	-ms-flex-flow: column;
+	flex-flow: column;
 	margin: 4px;
 }
 
@@ -152,10 +203,20 @@ aside .arrowImage{
 section {
 	padding: 20px;
 	display: -moz-flex;
+	display: -ms-flex;
+	display: -o-flex;
 	display: -webkit-flex;
 	display: flex;
 	-webkit-flex-flow: row;
+	-moz-flex-flow: row;
+	-o-flex-flow: row;
+	-ms-flex-flow: row;
+	flex-flow: row;
 	-webkit-flex-wrap: wrap;
+	-moz-flex-wrap: wrap;
+	-o-flex-wrap: wrap;
+	-ms-flex-wrap: wrap;
+	flex-wrap: wrap;
 }
 
 
@@ -205,9 +266,17 @@ section .imageTitle{
 	z-index:999;
 	background-color: #e6e6e6;
 	color: #555555;
-	/* display: -webkit-flex; */
 	-webkit-align-items: center;
+	-moz-align-items: center;
+	-o-align-items: center;
+	-ms-align-items: center;
+	align-items: center;
+	
 	-webkit-flex-flow: column;
+	-moz-flex-flow: column;
+	-o-flex-flow: column;
+	-ms-flex-flow: column;
+	flex-flow: column;
 	position: absolute;
 	padding: 10px;
 }
