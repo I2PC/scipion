@@ -45,14 +45,14 @@ def showj(request, inputParameters=None):
     tableDataset=dataset.getTable()
     
     #Load table layout configuration. How to display columns and attributes (visible, render, editable)  
-#    tableLayoutConfiguration = TableLayoutConfiguration(tableDataset, _render) if 'blockComboBox' not in request.session or _blockComboBox != request.session['blockComboBox'] or request.method == 'GET' else None
-    tableLayoutConfiguration = TableLayoutConfiguration(tableDataset, _render)
+    #tableLayoutConfiguration = TableLayoutConfiguration(tableDataset, _render) if 'blockComboBox' not in request.session or _blockComboBox != request.session['blockComboBox'] or request.method == 'GET' else None
+    tableLayoutConfiguration = TableLayoutConfiguration(dataset, tableDataset, _render)
 
     #Initialize Showj Form (button toolbar)
     if request.method == 'POST': # If the form has been submitted... Post method  
         if _labelsToRenderComboBox != '':
             if _labelsToRenderComboBox != request.session['labelsToRenderComboBox']:
-                _imageDimensions = get_image_dimensions(request.session['projectPath'], tableDataset.getElementById(0,_labelsToRenderComboBox))
+                _imageDimensions = getImageDim(request, tableDataset.getElementById(0,_labelsToRenderComboBox))
         else:
             _imageDimensions = None
         
@@ -69,7 +69,7 @@ def showj(request, inputParameters=None):
             inputParameters['zoom']=0
             _imageDimensions = None
         else:    
-            _imageDimensions = get_image_dimensions(request.session['projectPath'], tableDataset.getElementById(0,inputParameters['labelsToRenderComboBox']))  
+            _imageDimensions = getImageDim(request, tableDataset.getElementById(0,inputParameters['labelsToRenderComboBox']))
             
         inputParameters['blockComboBox']=_blockComboBox
         inputParameters['tableLayoutConfiguration']=tableLayoutConfiguration
@@ -122,6 +122,9 @@ def showj(request, inputParameters=None):
     return_page = '%s%s%s' % ('showj_', showjForm.data['mode'], '.html')
     return render_to_response(return_page, RequestContext(request, context))
 
+###################################################################
+################################ BEGIN LAYOUT #####################  
+###################################################################
 class ColumnLayoutConfigurationEncoder(json.JSONEncoder):
     def default(self, columnLayoutConfiguration):
         columnLayoutConfigurationCoded={}
@@ -138,22 +141,22 @@ class ColumnLayoutConfigurationEncoder(json.JSONEncoder):
                  
             
 class TableLayoutConfiguration():
-    def __init__(self, tableDataset, allowRender=True):
+    def __init__(self, ds, tableDataset, allowRender=True):
         
         self.columnsLayout = OrderedDict() 
          
         for col in tableDataset.iterColumns():
-            self.columnsLayout[col.getName()]=ColumnLayoutConfiguration(col, allowRender)
+            self.columnsLayout[col.getName()]=ColumnLayoutConfiguration(col, ds.getTypeOfColumn(col.getName()), allowRender)
             
         self.colsOrder = defineColsLayout(self.columnsLayout.keys())
         
             
 class ColumnLayoutConfiguration():
-    def __init__(self, col, allowRender):
+    def __init__(self, col, typeOfColumn, allowRender):
         self.columns = col
         
         self.label = col.getName()
-        self.typeOfColumn = getTypeOfColumn(col.getName())
+        self.typeOfColumn = typeOfColumn
         
         self.columnLayoutProperties = ColumnLayoutProperties(self.typeOfColumn, allowRender)
 
@@ -171,25 +174,19 @@ class ColumnLayoutProperties():
 
         self.renderFunc = "taka"
         
-
-def getTypeOfColumn(label):
-    if (label == "id"):
-        return "id"
-    elif (label!='image_transformationMatrix' and xmipp.labelIsImage(str(label))):
-        return "image"
-    elif (label == "enabled"):
-        return "checkbox"
-    else:
-        return "text"    
-    
 def defineColsLayout(labels):
     colsOrder = range(len(labels))
     if 'enabled' in labels:
         colsOrder.insert(0, colsOrder.pop(labels.index('enabled')))
     return colsOrder
 
-################################### END LAYOUT ##########################    
+###################################################################
+################################ END LAYOUT #######################    
+###################################################################
 
+###################################################################
+########################### BEGIN SAVE & LOAD #####################    
+###################################################################
 #### Load an Xmipp Dataset ###
 def loadDatasetXmipp(path):
     """ Create a table from a metadata. """
@@ -225,7 +222,86 @@ def save_showj_table(request):
         dataset.writeTable(blockComboBox, tableDataset)
         
         return HttpResponse(json.dumps({'message':'Ok'}), mimetype='application/javascript')
+###################################################################
+########################### END SAVE & LOAD #######################    
+###################################################################    
 
+
+###################################################################
+######################## BEGIN VOLUME DISPLAY #####################    
+###################################################################    
+def visualizeVolume(request):
+    from django.http import HttpResponse
+    import json
+     
+    if request.is_ajax():
+        setOfVolumesId = int(request.GET.get('setOfVolumesId'))
+        volumeId = int(request.GET.get('volumeId'))
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        setOfVolume = project.mapper.selectById(setOfVolumesId)
+        volume = setOfVolume[volumeId]
+        # Chimera 
+        from subprocess import Popen, PIPE, STDOUT
+#         inputVolume = join(os.getcwd(),volume.getFileName())
+#         outputHtmlFile = join(os.getcwd(),project.getTmpPath("volume_" + str(volume.getObjId()) + '.html'))
+        inputVolume = volume.getFileName()
+        outputHtmlFile = project.getTmpPath("volume_" + str(volume.getObjId()) + '.html')
+        if (request.GET.get('threshold') is None or request.GET.get('threshold') == ''):
+            threshold = 1
+        else:
+            threshold = float(request.GET.get('threshold'))
+        print ("THRESHOLD",threshold)
+        # TODO: Get with Xmipp an approximate threshold
+        p = Popen(['chimera', inputVolume], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+#         p = Popen(['chimera', '--start', 'ReadStdin', inputVolume], stdout=PIPE, stdin=PIPE, stderr=PIPE)        
+        stdout_data = p.communicate(input='volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop')[0]
+        f = open(outputHtmlFile)
+        volumeHtml = f.read().decode('string-escape').decode("utf-8").split("</html>")[1]
+        jsonStr = json.dumps({'volumeHtml': volumeHtml})
+        return HttpResponse(jsonStr, mimetype='application/javascript')
+    
+    
+def showVolVisualization(request):
+    form = None
+    volLinkPath = None
+    volLink = None
+    chimeraHtml = None
+    if (request.POST.get('operation') == 'visualize'):
+        form = VolVisualizationForm(request.POST, request.FILES)
+        if form.is_valid():
+            volPath = form.cleaned_data['volPath']
+            # Astex viewer            
+            from random import randint
+            linkName = 'test_link_' + str(randint(0, 10000)) + '.map'
+            volLinkPath = os.path.join(pw.HOME, 'web', 'pages', 'resources', 'astex', 'tmp', linkName)
+            from pyworkflow.utils.path import cleanPath, createLink
+            cleanPath(volLinkPath)
+            createLink(volPath, volLinkPath)
+#             os.system("ln -s " + str(volPath) + " " + volLinkPath)
+            volLink = os.path.join('/', 'static', 'astex', 'tmp', linkName)
+            # Chimera 
+            from subprocess import Popen, PIPE, STDOUT
+#             p = Popen(['chimera', '--start', 'ReadStdin', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+            p = Popen(['chimera', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+            outputHtmlFile = '/home/antonio/test.html'
+            threshold = form.cleaned_data['threshold']
+            stdout_data = p.communicate(input='volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop')[0]
+            f = open(outputHtmlFile)
+            chimeraHtml = f.read().decode('string-escape').decode("utf-8").split("</html>")[1]
+    else:
+        form = VolVisualizationForm()
+    context = {'MEDIA_URL' : settings.MEDIA_URL, 'STATIC_URL' :settings.STATIC_URL, 'form': form, 'volLink': volLink, 'chimeraHtml': chimeraHtml}    
+    return render_to_response('showVolVisualization.html',  RequestContext(request, context))   
+
+###################################################################
+######################## END VOLUME DISPLAY #######################    
+###################################################################  
+
+
+###################################################################
+######################## DISPATCHER ###############################    
+###################################################################  
 def visualizeObject(request):
     probandoCTFParam = False
     
@@ -292,69 +368,4 @@ def visualizeObject(request):
     if isinstance(obj, SetOfVolumes):
         return render_to_response('volume_visualization.html', inputParameters)
     else:
-        return showj(request, inputParameters)
-    
-def visualizeVolume(request):
-    from django.http import HttpResponse
-    import json
-     
-    if request.is_ajax():
-        setOfVolumesId = int(request.GET.get('setOfVolumesId'))
-        volumeId = int(request.GET.get('volumeId'))
-        projectName = request.session['projectName']
-        project = loadProject(projectName)
-        setOfVolume = project.mapper.selectById(setOfVolumesId)
-        volume = setOfVolume[volumeId]
-        # Chimera 
-        from subprocess import Popen, PIPE, STDOUT
-#         inputVolume = join(os.getcwd(),volume.getFileName())
-#         outputHtmlFile = join(os.getcwd(),project.getTmpPath("volume_" + str(volume.getObjId()) + '.html'))
-        inputVolume = volume.getFileName()
-        outputHtmlFile = project.getTmpPath("volume_" + str(volume.getObjId()) + '.html')
-        if (request.GET.get('threshold') is None or request.GET.get('threshold') == ''):
-            threshold = 1
-        else:
-            threshold = float(request.GET.get('threshold'))
-        print ("THRESHOLD",threshold)
-        # TODO: Get with Xmipp an approximate threshold
-        p = Popen(['chimera', inputVolume], stdout=PIPE, stdin=PIPE, stderr=PIPE)
-#         p = Popen(['chimera', '--start', 'ReadStdin', inputVolume], stdout=PIPE, stdin=PIPE, stderr=PIPE)        
-        stdout_data = p.communicate(input='volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop')[0]
-        f = open(outputHtmlFile)
-        volumeHtml = f.read().decode('string-escape').decode("utf-8").split("</html>")[1]
-        jsonStr = json.dumps({'volumeHtml': volumeHtml})
-        return HttpResponse(jsonStr, mimetype='application/javascript')
-    
-    
-def showVolVisualization(request):
-    form = None
-    volLinkPath = None
-    volLink = None
-    chimeraHtml = None
-    if (request.POST.get('operation') == 'visualize'):
-        form = VolVisualizationForm(request.POST, request.FILES)
-        if form.is_valid():
-            volPath = form.cleaned_data['volPath']
-            # Astex viewer            
-            from random import randint
-            linkName = 'test_link_' + str(randint(0, 10000)) + '.map'
-            volLinkPath = os.path.join(pw.HOME, 'web', 'pages', 'resources', 'astex', 'tmp', linkName)
-            from pyworkflow.utils.path import cleanPath, createLink
-            cleanPath(volLinkPath)
-            createLink(volPath, volLinkPath)
-#             os.system("ln -s " + str(volPath) + " " + volLinkPath)
-            volLink = os.path.join('/', 'static', 'astex', 'tmp', linkName)
-            # Chimera 
-            from subprocess import Popen, PIPE, STDOUT
-#             p = Popen(['chimera', '--start', 'ReadStdin', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
-            p = Popen(['chimera', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
-            outputHtmlFile = '/home/antonio/test.html'
-            threshold = form.cleaned_data['threshold']
-            stdout_data = p.communicate(input='volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop')[0]
-            f = open(outputHtmlFile)
-            chimeraHtml = f.read().decode('string-escape').decode("utf-8").split("</html>")[1]
-    else:
-        form = VolVisualizationForm()
-    context = {'MEDIA_URL' : settings.MEDIA_URL, 'STATIC_URL' :settings.STATIC_URL, 'form': form, 'volLink': volLink, 'chimeraHtml': chimeraHtml}    
-    return render_to_response('showVolVisualization.html',  RequestContext(request, context))   
-
+        return showj(request, inputParameters)  

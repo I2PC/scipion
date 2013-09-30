@@ -35,6 +35,35 @@ $.fn.dataTableExt.oApi.fnGetColumnIndex = function ( oSettings, sCol )
     }
     return -1;
 };
+$.fn.dataTableExt.oApi.fnDisplayRowWithIndex = function ( oSettings, iPos )
+{
+    // Account for the "display" all case - row is already displayed
+    if ( oSettings._iDisplayLength == -1 )
+    {
+        return;
+    }
+  
+    // Find the node in the table
+/*     var iPos = -1;
+    for( var i=0, iLen=oSettings.aiDisplay.length ; i<iLen ; i++ )
+    {
+        if( oSettings.aoData[ oSettings.aiDisplay[i] ].nTr == nRow )
+        {
+            iPos = i;
+            break;
+        }
+    }
+ */      
+ 
+    // Alter the start point of the paging display
+    if( iPos >= 0 )
+    {
+        oSettings._iDisplayStart = ( Math.floor(iPos / oSettings._iDisplayLength) ) * oSettings._iDisplayLength;
+        this.oApi._fnCalculateEnd( oSettings );
+    }
+      
+    this.oApi._fnDraw( oSettings );
+};
 </script>
 
 <script type="text/javascript" src="{{jquerydataTables_colreorder}}"></script>
@@ -63,7 +92,15 @@ $(document).ready(function() {
 			        "bInfo": true,
 			        "bAutoWidth": true,
 			        "sDom": 'Rl<"#displayTableContainer">frtip', 
-			        /* "sDom": 'T<"clear">lfrtip', */
+			        "iDisplayLength": 50,
+			        "oLanguage": {
+			            "sLengthMenu": 'Display <select>'+
+			                '<option value="25">25</option>'+
+			                '<option value="50">50</option>'+
+			                '<option value="100">100</option>'+
+			                '<option value="-1">All</option>'+
+			                '</select> records'
+			        }, 
  			        "oColReorder": {
 		    			"aiOrder": jsonTableLayoutConfiguration.colsOrder
 		    		},  
@@ -168,9 +205,9 @@ function getHeaderWithIcon(text, columnLayoutProperties){
 	var iconElements = '' 
 	/* NAPA DE LUXE HABRIA QUE PONERLE UN MARGIN AL LABEL DEL HEADER */
 	/* var iconElements = '<span style=\"margin:8px\">'+text+'</span>' */
-	if (columnLayoutProperties.visible && columnLayoutProperties.allowSetVisible){
+/* 	if (columnLayoutProperties.visible && columnLayoutProperties.allowSetVisible){
 		iconElements+="<span class=\"css_right\"><img src=\"/resources/showj/delete.png\" class=\"arrowImage\" onclick=\"enableDisableColumn(event,this)\" ></span>"
-	}
+	} */
 	
 	if (columnLayoutProperties.allowSetEditable){
 		iconElements+="<span class=\"css_right\"><div class=\"iconHeader "
@@ -213,7 +250,9 @@ function getColumnsDefinition(){
 }
 
 
-/* Enable/disable column 
+/* 
+ * Currently this is not been used as delete icon has been removed
+ * Enable/disable column 
  * Disable datatable column when event triggered from icon disable column header 
  */
 function enableDisableColumn(event, element){
@@ -395,6 +434,7 @@ function initializeGoToEvent(){
 	});
 }
 function updateRowSelection(){
+	oTable.fnDisplayRowWithIndex($("#id_goto").val()-1)
 	var nodes = oTable.fnGetNodes();
 	nodes[$("#id_goto").val()-1].click();
 }
@@ -402,7 +442,6 @@ function updateRowSelection(){
 /* Control row event selection allowing shift, ctrol and single click */
 var lastChecked;
 function initializeSelectionRowEvent(){
-	/* $('#data_table').on("click","tr", function(event) { */
 	$('#data_table').on("click","tr", function(event) {
 
 		var start = $('#data_table tbody tr').index(this);
@@ -443,7 +482,7 @@ function initializeSelectionRowEvent(){
 		     
 		    lastChecked = this;
 		    
-		    $("#id_goto").val($(this).index()+1)
+		    $("#id_goto").val(oTable.fnSettings()._iDisplayStart + $(this).index()+1)
 		}	    
 	});
 }
