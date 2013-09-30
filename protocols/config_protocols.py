@@ -30,8 +30,11 @@ protocols = {
         'nma': ('Normal Mode Analysis', '3D/NMA'),
         'nma_alignment': ('Flexible alignment', '3D/NMA_alignment'),
         'resolution3D': ('Resolution 3D', '3D/Resolution'),
-        #'align_volume': ('Align Volume', '3D/AlignVolume'),
-        'relion3d': ('Relion3D', '3D/Relion3D'),
+        'align_volume': ('Align Volume', '3D/AlignVolume'),
+        'helical_params': ('Helical Parameters','3D/Helical'),
+        'relion_classify': ('3D Classification ', '3D/RelionClass'),
+        'relion_refine': ('Angle Refinement ', '3D/RelionRef'),
+        'cltomo': ('CLTomo', '3D/CLTomo'),
         'mltomo': ('MLTomo', '3D/MLTomo'),
         'subtraction': ('Partial Projection Subtraction', '3D/ProjSub'),
         'custom': ('Custom', 'Custom'),
@@ -39,8 +42,12 @@ protocols = {
         'metadata_utilities': ('Metadata Utilities', 'Tools/MetadataUtilities'),
         'metadata_split': ('Metadata Split', 'Tools/MetadataSplit'),
         #'xmipp': ('Xmipp Programs', 'XmippPrograms'), 
-        'emx_import': ('Import', 'EMX'),
-        'emx_export': ('Export', 'EMX'),
+        'emx_import_micrographs': ('Import micrographs', 'Micrographs/EmxImported'),
+        'emx_import_particles': ('Import particles', 'Images/EmxImported'),
+        'emx_export_micrographs': ('Export micrographs', 'Micrographs/EmxExported'),
+        'emx_export_particles': ('Export particles', 'Images/EmxExported'),
+        # DEPRECATED:
+        #'emx_export': ('kk', 'kk')
         }
 
 #--------------------------------------------------------------------------------
@@ -55,11 +62,11 @@ sections = [
    [['Align+Classify', 'cl2d', 'ml2d', ['Other', 'cl2d_align', 'kerdensom', 'rotspectra', 'screen_classes']]]),
 ('3D', 
    [['Initial Model', 'rct', 'initvolume_ransac', 'convert_pdb'], 
-    ['Model Refinement', 'projmatch', 'ml3d', 'relion3d'],
-    ['Volumes', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask', 'preprocess_volume', 'resolution3D']]),#, 'align_volume']]),
+    ['Model Refinement', 'projmatch', 'ml3d', ['relion','relion_classify','relion_refine']],
+    ['Volumes', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask', 'preprocess_volume', 'resolution3D', 'align_volume', 'helical_params']]),
 ('Other',
- [['Extra', 'custom',['Virus','subtraction'],['Tomography','mltomo'],['Tools','image_operate','metadata_utilities','metadata_split'],
-   ['EMX', 'emx_import', 'emx_export']]])
+ [['Extra', 'custom',['Virus','subtraction'],['Tomography','mltomo', 'cltomo'],['Tools','image_operate','metadata_utilities','metadata_split'],
+   ['EMX', 'emx_import_micrographs', 'emx_import_particles', 'emx_export_micrographs', 'emx_export_particles']]])
 ]
 
 #--------------------------------------------------------------------------------

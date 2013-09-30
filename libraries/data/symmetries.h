@@ -409,5 +409,10 @@ void symmetry_P6(Image<double> &vol, const SimpleGrid &grid,
                  const Matrix1D<double> &eprm_bint,
                  const MultidimArray<int> &mask, int volume_no,
                  int grid_type);
+
+/** Symmetrize with a helical symmetry */
+void symmetry_Helical(MultidimArray<double> &Vout, const MultidimArray<double> &Vin, double zHelical, double rotHelical,
+		double rot0=0, MultidimArray<int> *mask=NULL);
+
 //@}
 #endif

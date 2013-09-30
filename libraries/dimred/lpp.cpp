@@ -71,4 +71,6 @@ void LPP::reduceDimensionality()
 
 	// Compute the result of the reduce dimensionality method
 	Y=*X * eigvector;
+	if (fnMapping!="")
+		eigvector.write(fnMapping);
 }

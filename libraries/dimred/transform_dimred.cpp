@@ -97,7 +97,8 @@ void ProgTransformDimRed::produceSideInfo()
     SFin.removeDisabled();
 
     // Adjust number of grid points
-    numGrids=floor(sqrt((double)(SFin.size())));
+    //JV I do not know why is this line below here and who has written!
+    //numGrids=floor(sqrt((double)(SFin.size())));
 
     MetaData SFaux;
     SFaux.removeDuplicates(SFin,MDL_IMAGE);

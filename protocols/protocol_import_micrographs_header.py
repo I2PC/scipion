@@ -113,7 +113,7 @@ DoRemoveBadPixels = False
 Stddev = 5
 
 #------------------------------------------------------------------------------------------------
-# {condition}(not DoMerge){section} Microscope description
+# {condition}(not DoMerge){section} Acquisition information
 #------------------------------------------------------------------------------------------------
 # Microscope voltage (in kV)
 Voltage = 200
@@ -129,6 +129,7 @@ SamplingRate = ""
 
 # {condition}(SamplingRateMode=="From scanner") Magnification rate
 Magnification = 60000
+
 # {condition}(SamplingRateMode=="From scanner"){validate}(IsFloat) Scanned pixel size (in um/pixel)
 ScannedPixelSize = ""
 

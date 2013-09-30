@@ -205,15 +205,19 @@ class EmxObject:
         else:
             self.dictPrimaryKeys[key] = emxDataTypes[key].getType()(value)
         
-    def get(self, key):
+    def get(self, key, value=None):
         '''given a key (attribute name) returns 
-           the value assigned to it'''
+           the value assigned to it.
+           If not present, the value will be returned.'''
         if key in self.dictPrimaryKeys:
             return self.dictPrimaryKeys[key]
         if key in self.dictAttributes:
             return self.dictAttributes[key]
-        return None
+        return value
         #raise Exception("Key %s not found in: %s" % (key, self.name))
+        
+    def has(self, key):
+        return self.get(key) is not None
     
     def set(self, key, value=None):
         '''given a key (attribute name) assigns a value to it'''
@@ -280,6 +284,9 @@ class EmxObject:
         if className not in self._foreignKeys:
             raise Exception("class %s does not have FK of type: %s"%(self.name, object.name))
         self.dictForeignKeys[className] = object
+        
+    def getForeignObject(self, className):
+        return self.dictForeignKeys.get(className, None)
 
     def addForeignKey(self, className, object):
         """Set object as foreign key
@@ -287,6 +294,7 @@ class EmxObject:
         if className not in self._foreignKeys:
             raise Exception("class %s does not have FK of type: %s"%(self.name, object.name))
         self.dictForeignKeys[className] = object
+
 
 class Emxmicrograph(EmxObject):
     '''Class for Micrographs
@@ -332,7 +340,7 @@ class Emxparticle(EmxObject):
                 ,'defocusU'
                 ,'defocusV'
                 ,'defocusUAngle'
-		,'fom'
+                ,'fom'
                 ,'pixelSpacing__X'
                 ,'pixelSpacing__Y'
                 ,'pixelSpacing__Z'
@@ -374,6 +382,7 @@ class Emxparticle(EmxObject):
             raise Exception("class %s does not have FK of type: %s"%(self.name, object.name))
         return self.dictForeignKeys[className]
 
+
 class EmxData():
     ''' Class to group EMX objects'''
     def __init__(self):
@@ -401,14 +410,14 @@ class EmxData():
             for subnode in nodelist:
                 yield subnode
 
-    def iterClasses(self,className):
+    def iterClasses(self, className):
         """Iterate through a particular class
         """
         return self.objLists[className]
 
     def __str__(self):
         partStr=""
-        for k,v in self.objLists.iteritems():
+        for k, v in self.objLists.iteritems():
             if len(v):
                 partStr += "\n****\n%sS\n****\n"% k.upper()
             for obj in v:

@@ -24,7 +24,8 @@ class ProtPreprocessParticles(ProtParticlesBase):
         baseFile = removeBasenameExt(file)
         self.OutStack = self.getFilename('images_stk')
         self.OutMetadata = self.getFilename('images')
-        self.TiltPair = exists(getProtocolFilename('tilted_pairs', WorkingDir=self.InputDir)) and self.InSelFile.find('images.xmd')!=-1
+        #self.TiltPair = exists(getProtocolFilename('tilted_pairs', WorkingDir=self.InputDir)) and self.InSelFile.find('images.xmd')!=-1
+        self.TiltPair = 0
         if self.TiltPair:
             self.TiltedPairs=os.path.join(self.InputDir,'tilted_pairs.xmd')
             self.InputUntilted=self.InSelFile.replace(".xmd","_untilted.xmd")
@@ -52,6 +53,13 @@ class ProtPreprocessParticles(ProtParticlesBase):
         self.insertStep('createAcquisition',InputFile=self.InSelFile, WorkingDir=self.WorkingDir,
                         DoResize=self.DoResize, NewSize=self.NewSize)
         
+        # Apply threshold if selected
+        if self.DoThreshold:
+            self.insertStep('runThreshold',stack=self.OutStack,selectionMode=self.SelectionMode,threshold=self.Threshold,
+                            substituteBy=self.SubstituteBy, substituteValue=self.SubstituteValue, Nproc=self.NumberOfMpi)
+            if self.TiltPair:
+                self.insertStep('runFourierFilter',stack=self.OutTiltedStack,freq_low=self.Freq_low,freq_high=self.Freq_high,freq_decay=self.Freq_decay,Nproc=self.NumberOfMpi)
+
         # Apply filters if selected
         if self.DoFourier:
             self.insertStep('runFourierFilter',stack=self.OutStack,freq_low=self.Freq_low,freq_high=self.Freq_high,freq_decay=self.Freq_decay,Nproc=self.NumberOfMpi)
@@ -61,6 +69,10 @@ class ProtPreprocessParticles(ProtParticlesBase):
             self.insertStep('runGaussianFilter',stack=self.OutStack,freq_sigma=self.Freq_sigma, Nproc=self.NumberOfMpi)
             if self.TiltPair:
                 self.insertStep('runGaussianFilter',stack=self.OutTiltedStack,freq_sigma=self.Freq_sigma, Nproc=self.NumberOfMpi)
+        if self.DoRealGaussian:
+            self.insertStep('runRealGaussianFilter',stack=self.OutStack,real_sigma=self.Real_sigma, Nproc=self.NumberOfMpi)
+            if self.TiltPair:
+                self.insertStep('runRealGaussianFilter',stack=self.OutTiltedStack,real_sigma=self.Real_sigma, Nproc=self.NumberOfMpi)
             
         # Apply mask
         if self.DoMask:
@@ -133,8 +145,8 @@ def createAcquisition(log,InputFile,WorkingDir,DoResize,NewSize):
             md.write(getProtocolFilename('acquisition', WorkingDir=WorkingDir))
 
 def copyImages(log,InputFile,OutputStack):
-    runJob(log,"xmipp_image_convert","-i %(InputFile)s -o %(OutputStack)s --track_origin --save_metadata_stack --keep_input_columns" % locals())
     fnOutputMetadata=OutputStack.replace(".stk",".xmd")
+    runJob(log,"xmipp_image_convert","-i %(InputFile)s -o %(OutputStack)s --track_origin --save_metadata_stack %(fnOutputMetadata)s --keep_input_columns" % locals())
     mDstack = MetaData(fnOutputMetadata)
     mDstack.removeLabel(MDL_ZSCORE)
     mDstack.write(fnOutputMetadata)

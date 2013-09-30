@@ -174,6 +174,31 @@ BackGroundRadius = -1
 '''
     return linesStr
 
+def expandThreshold():
+    return '''
+#-----------------------------------------------------------------------------
+# {section}{has_question} Threshold 
+#-----------------------------------------------------------------------------
+# Apply threshold?
+DoThreshold = False
+
+# {list_combo}(below, above, abs_below) Select pixels
+""" Select those pixels whose value is below, above or whose absolute value is below threshold"""
+SelectionMode = 'below' 
+
+# Threshold
+""" Threshold value for selecting pixels """
+Threshold = 0.0
+
+# {list_combo}(binarize, value, avg) Substitute by
+""" Binarize: Selected are set to 0, non-selected to 1; avg: Average of non-selected """
+SubstituteBy = 'value'
+
+#{condition}(SubstituteBy=='value') Value
+""" Substitute selected pixels by this value """
+SubstituteValue = 0.0
+'''
+    
 def expandFilter():
     return '''
 #-----------------------------------------------------------------------------
@@ -207,6 +232,14 @@ DoGaussian = False
 #{condition}(DoGaussian){wizard}(wizardChooseGaussianFilter) Frequency sigma
 """ Remind that the Fourier frequency is normalized between 0 and 0.5"""
 Freq_sigma = 0.04
+
+# Real Gaussian
+""" Gaussian filter defined in Real space"""
+DoRealGaussian = False
+
+#{condition}(DoRealGaussian){wizard}(wizardChooseRealGaussianFilter) Sigma
+""" This sigma is defined in pixel units """
+Real_sigma = 2
 '''
     
 def expandMask():

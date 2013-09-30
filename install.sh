@@ -11,7 +11,8 @@ DO_FFTW=true
 DO_TIFF=true
 DO_JPEG=true
 DO_HDF5=true
-DO_ARPACK=false
+DO_CLTOMO=false
+DO_NMA=false
 
 DO_CLEAN=true
 DO_STATIC=false
@@ -19,7 +20,6 @@ DO_UPDATE=false
 DO_SETUP=true
 DO_GUI=true
 DO_UNATTENDED=false
-DO_MATLAB=false
 DO_NEWSTYLE=false
 
 export NUMBER_OF_CPU=1
@@ -77,7 +77,7 @@ for param in $@; do
 			    DO_TIFF=false
 			    DO_JPEG=false
 			    DO_HDF5=false
-			    DO_ARPACK=false
+			    DO_NMA=false
 			    DO_SETUP=false;;			
         "-j")               TAKE_CPU=true;;
         "untar=true")       DO_UNTAR=true;;
@@ -98,14 +98,16 @@ for param in $@; do
         "jpeg=false")       DO_JPEG=false;;
         "hdf5=true")        DO_HDF5=true;;
         "hdf5=false")       DO_HDF5=false;;
-        "arpack=true")      DO_ARPACK=true;;
-        "arpack=false")     DO_ARPACK=false;;
+        "cltomo=true")      DO_CLTOMO=true;;
+        "clromo=false")     DO_CLTOMO=false;;
+        "nma=true")         DO_NMA=true;;
+        "nma=false")        DO_NMA=false;;
         "clean=true")       DO_CLEAN=true;;
         "clean=false")      DO_CLEAN=false;;
         "static=true")      DO_STATIC=true;;
         "static=false")     DO_STATIC=false;;
         "gui=false")        GUI_ARGS="";;
-	"setup=true")       DO_SETUP=true;;
+        "setup=true")       DO_SETUP=true;;
         # This two if passed should be at the end and 
         # will setup arguments for configure and compilation steps
         "configure")        TAKE_CONFIGURE=true;
@@ -300,8 +302,8 @@ VFFTW=fftw-3.3.3
 VTIFF=tiff-3.9.4
 VJPEG=jpeg-8c
 VHDF5=hdf5-1.8.10
-VARPACK=arpack++-2.3
 VNUMPY=numpy-1.6.1
+VSCIPY=scipy-0.12.0
 VMATLIBPLOT=matplotlib-1.1.0
 VPYMPI=mpi4py-1.2.2
 #read star files
@@ -672,15 +674,17 @@ if $DO_PYMOD; then
     echoExec "cd $EXT_PYTHON/tcl$VTCLTK/unix/"
     echoExec "ln -sf libtcl8.5.so  libtcl.so"
   fi
-compile_pymodule $VMATLIBPLOT
-compile_pymodule $VPYMPI
-compile_pymodule $VPYCIFRW
-fi
-
-#################### ARPACK ###########################
-if $DO_ARPACK; then
-  compile_library $VARPACK "." "." ""
-  install_libs $VARPACK/src/.libs libarpack++ 2 false
+  compile_pymodule $VMATLIBPLOT
+  compile_pymodule $VPYMPI
+  compile_pymodule $VPYCIFRW
+  
+  if $DO_CLTOMO; then
+    # Fast Rotational Matching
+    export LDFLAGS="-shared $LDFLAGS"
+    compile_pymodule $VSCIPY
+    cd $EXT_PATH/sh_alignment
+    ./compile.sh
+  fi
 fi
 
 # Launch the configure/compile python script 
@@ -695,7 +699,18 @@ if $DO_SETUP; then
 	echoExec "./setup.py -j $NUMBER_OF_CPU configure $CONFIGURE_ARGS compile $COMPILE_ARGS $GUI_ARGS install"
 fi
 
-exit 0
+#################### NMA ###########################
+if $DO_NMA; then
+    echoExec "cd $XMIPP_HOME/external/NMA/ElNemo"
+    echoExec "make" 
+    echoExec "cp nma_* $XMIPP_HOME/bin"
+    echoExec "cd $XMIPP_HOME/external/NMA/NMA_cart"
+    echoExec "make" 
+    echoExec "cp nma_* $XMIPP_HOME/bin"
+    echoExec "cd $XMIPP_HOME"
+    echoExec "cp $XMIPP_HOME/external/NMA/nma_* $XMIPP_HOME/bin"
+    echoExec "cp $XMIPP_HOME/external/NMA/m_inout_Bfact.py $XMIPP_HOME/bin"
+fi
 
 #################### JAVA ###########################
 install_jdk()

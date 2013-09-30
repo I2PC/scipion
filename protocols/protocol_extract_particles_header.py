@@ -32,7 +32,7 @@ the differences are correctly handled by Xmipp.
 """
 DownsampleFactor = 2
 
-# {run}(particle_pick,particle_pick_supervised, particle_pick_auto) Particle picking run
+# {run}(particle_pick, particle_pick_auto, emx_import_micrographs) Particle picking run
 PickingRun = ''
 
 # {wizard}(wizardChooseSizeToExtract) Particle box size

@@ -20,15 +20,15 @@ MACOSX = env['PLATFORM'] == 'darwin'
 MINGW = env['PLATFORM'] == 'win32'
 if CYGWIN:
 	TIFFLibs.append('z')
-ARPACKppDir = "external/arpack++-2.3"
-ARPACKppLibs = ['arpack++']
 SQliteDir = "external/sqlite-3.6.23"
 SQLiteLibs = ['sqlite3']
 
 #PYSQliteDir = "external/pysqlite-2.6.3"
 
 PythonDir = "external/python/Python-2.7.2"
-PythonLibs = []
+PythonInc = ["#"+PythonDir,"#"+PythonDir+"/Include","#lib/python2.7/site-packages/numpy/core/include"]
+PythonLibDir = ["#"+PythonDir]
+PythonLibs = ['python2.7']
 
 PluginLibs = {}
 PluginResources = {}
@@ -202,9 +202,11 @@ def AddXmippProgram(name, libs=[], folder='programs', incPaths=[], libPaths=[],
     if 'XmippRecons' in finalLibs and not 'XmippClassif' in finalLibs:
         finalLibs.append('XmippClassif')
     if 'XmippRecons' in finalLibs and int(env['cuda']):
-	finalLibs.append("XmippReconsCuda");
-    if int(env["arpack"]):
-        finalLibs += ['arpack++', 'arpack', 'lapack', 'blas']
+        finalLibs.append("XmippReconsCuda");
+    if 'XmippInterface' in finalLibs:
+      finalLibPath += ['libraries/interface']+PythonLibDir
+      finalLibs += PythonLibs
+      finalIncludePath += PythonInc
     program = AddProgram(name, 'applications/%s/%s' % (folder, name), '*.cpp', [],
         finalIncludePath, finalLibPath, finalLibs, [], [])
     env.Alias('xmipp_programs', program)
@@ -248,8 +250,6 @@ def AddXmippMPIProgram(name, libs=[]):
     finalLibPath = ['lib']
     finalIncludePath = ['libraries', '#', '#'+HDF5Dir]
     finalLibs = libs + ['XmippData', 'XmippExternal', 'XmippParallel'] + FFTWLibs + SQLiteLibs + TIFFLibs + JPEGLibs + HDF5Libs
-    if int(env["arpack"]):
-        finalLibs += ['arpack++', 'arpack', 'lapack', 'blas']
     if 'XmippRecons' in finalLibs and not 'XmippClassif' in finalLibs:
         finalLibs.append('XmippClassif')
     if 'XmippRecons' in finalLibs and int(env['cuda']):
@@ -258,7 +258,9 @@ def AddXmippMPIProgram(name, libs=[]):
        if libs[i] == 'XmippRecons':
           finalLibPath += ['libraries/reconstruction']
        elif libs[i] == 'XmippInterface':
-          finalLibPath += ['libraries/interface']
+          finalLibPath += ['libraries/interface']+PythonLibDir
+          finalLibs += PythonLibs
+          finalIncludePath += PythonInc
        elif libs[i] == 'XmippRecons_Interface':
           finalLibPath += ['libraries/interface']
           finalLibs.insert(i + 1, 'XmippInterface')
@@ -630,13 +632,10 @@ if MACOSX:
 	env.Alias(pythonLibName, command)
 
 # Reconstruction
-ReconsSources = Glob('libraries/reconstruction', '*.cpp', ["angular_gcar.cpp"])
+ReconsSources = Glob('libraries/reconstruction', '*.cpp', [])
 ReconsLib = ['XmippExternal', 'XmippData', 'pthread', 'XmippClassif'] + FFTWLibs + TIFFLibs + JPEGLibs + HDF5Libs + SQLiteLibs
 ReconsIncDir = ['#libraries', '#external', '#', '#'+HDF5Dir]
 ReconsLibDir = ['lib']
-if int(env['arpack']):
-    ReconsSources.append("angular_gcar.cpp")
-    ReconsLib += ['arpack', 'lapack', 'blas']
 AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
            ReconsIncDir, ReconsLibDir, ReconsLib, useCudaEnvironment=int(env['cuda']))
 
@@ -663,7 +662,7 @@ AddMPILibrary("XmippParallel", 'libraries/parallel', ParallelSources, ["#", "#li
 # Interface
 InterfaceSources = Glob('libraries/interface', '*.cpp', [])
 AddLibrary('XmippInterface', 'libraries/interface', InterfaceSources,
-    ['#libraries', '#external', '#', '#'+HDF5Dir], ['lib'], ['XmippExternal', 'XmippData', 'pthread'])
+    ['#libraries', '#external', '#', '#'+HDF5Dir]+PythonInc, ['lib']+PythonLibDir, ['XmippExternal', 'XmippData', 'pthread']+PythonLibs)
 
 # Recons Interface
 #AddLibrary('XmippRecons_Interface', '#libraries/reconstruction',
@@ -743,8 +742,6 @@ if int(env['java']):
 
     JavaInterfaceSources = Glob('libraries/bindings/java', '*.cpp', [])
     JavaDependLibraries = ['XmippData', 'pthread', 'XmippRecons', 'XmippClassif', 'XmippExternal']
-    if int(env['arpack']):
-        JavaDependLibraries += ['arpack++', 'arpack', 'lapack', 'blas']
     # Compilation of the c code needed for java jni binding
     javaJniC = AddLibrary('XmippJNI', 'libraries/bindings/java', JavaInterfaceSources, ['#libraries', '#external', '#', '#'+HDF5Dir] + env['JNI_CPPPATH'], ['lib'],JavaDependLibraries)
 
@@ -836,6 +833,7 @@ AddXmippProgram('mrc_create_metadata')
 AddXmippProgram('nma_alignment', ['XmippRecons'])
 AddXmippProgram('flexible_alignment', ['XmippRecons'])
 AddXmippProgram('pdb_nma_deform', ['XmippRecons'])
+AddXmippProgram('pdb_analysis', ['XmippRecons'])
 AddXmippProgram('phantom_create', ['XmippRecons'])
 AddXmippProgram('phantom_project', ['XmippRecons', 'XmippInterface'])
 AddXmippProgram('phantom_simulate_microscope', ['XmippRecons'])
@@ -877,7 +875,7 @@ AddXmippProgram('tomo_detect_missing_wedge', ['XmippRecons'])
 AddXmippProgram('tomo_project', ['XmippRecons'])
 AddXmippProgram('tomo_remove_fluctuations', ['XmippRecons'])
 AddXmippProgram('tomo_extract_subvolume', ['XmippRecons'])
-AddXmippProgram('volume_align')
+AddXmippProgram('volume_align_prog', ['XmippInterface'])
 AddXmippProgram('volume_center')
 AddXmippProgram('volume_correct_bfactor', ['XmippRecons'])
 AddXmippProgram('volume_enhance_contrast', ['XmippRecons'])
@@ -894,10 +892,6 @@ AddXmippProgram('xray_project', ['XmippRecons'])
 
 #if not int(env['release']):
 	#AddXmippProgram('xray_volume_correct', ['XmippRecons'])	
-
-if int(env['arpack']):
-    AddXmippProgram('angular_gcar', ['XmippRecons'])
-
 
 # --- Scripts
 
@@ -921,6 +915,7 @@ AddBatch('micrograph_particle_picking', 'applications/scripts/micrograph_particl
 AddBatch('chimera_client', 'applications/scripts/chimera_client', '.py')
 #AddBatch('metadata_showj', 'applications/scripts/metadata_showj', '.py')
 AddBatch('micrograph_tiltpair_picking', 'applications/scripts/micrograph_tiltpair_picking', '.py')
+AddBatch('mpi_classify_CLTomo', 'applications/scripts/mpi_classify_CLTomo', '.sh')
 AddBatch('mpi_steps_runner', 'protocols', '.py')
 AddBatch('projections_explorerj', 'applications/scripts/projections_explorerj', '.py')
 #AddBatch('rot_spectraj', 'applications/scripts/rot_spectraj', '.py')
@@ -928,6 +923,7 @@ AddBatch('showj', 'applications/scripts/showj', '.py')
 #AddBatch('stitchingj', 'applications/scripts/stitchingj', '.py')
 AddBatch('tomoj', 'applications/scripts/tomoj', '.py')
 AddBatch('visualize_preprocessing_micrographj', 'applications/scripts/visualize_preprocessing_micrograph', '.py')
+AddBatch('volume_align', 'applications/scripts/volume_align', '.sh')
 
 # Shell script files
 #
@@ -940,18 +936,13 @@ SymLink('bin/xmipp_imagej', 'external/runImageJ')
 # MPI
 AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_continuous_assign', ['XmippRecons'])
-if not int(env['release']):
-    AddXmippMPIProgram('mpi_angular_gcar_commonlines', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
 AddXmippMPIProgram('mpi_classify_CL2D', ['XmippRecons'])
 AddProgramLink('classify_CL2D', 'mpi_classify_CL2D')
-if not int(env['release']):
-    AddXmippMPIProgram('mpi_classify_CL3D', ['XmippRecons'])
-    AddProgramLink('classify_CL3D', 'mpi_classify_CL3D')
+AddXmippMPIProgram('mpi_classify_CLTomo_prog', ['XmippRecons','XmippInterface'])
+AddProgramLink('classify_CLTomo', 'mpi_classify_CLTomo')
 AddXmippMPIProgram('mpi_classify_CL2D_core_analysis', ['XmippRecons'])
-if not int(env['release']):
-    AddXmippMPIProgram('mpi_classify_FTTRI', ['XmippRecons'])
 AddXmippMPIProgram('mpi_ctf_correct_idr', ['XmippRecons'])
 AddXmippMPIProgram('mpi_ctf_sort_psds', ['XmippRecons'])
 AddXmippMPIProgram('mpi_image_operate')
@@ -976,7 +967,8 @@ AddXmippMPIProgram('mpi_transform_filter', ['XmippRecons'])
 AddXmippMPIProgram('mpi_transform_symmetrize', ['XmippRecons'])
 AddXmippMPIProgram('mpi_transform_geometry', ['XmippRecons'])
 AddXmippMPIProgram('mpi_transform_mask', ['XmippRecons'])
-AddXmippMPIProgram('mpi_transform_normalize', ['XmippRecons'])
+AddXmippMPIProgram('mpi_transform_normalize')
+AddXmippMPIProgram('mpi_transform_threshold', ['XmippRecons'])
 if not int(env['release']):
     AddXmippMPIProgram('mpi_write_test', ['XmippRecons'])
 #    AddXmippMPIProgram('template_threads', ['XmippRecons'])
@@ -1029,6 +1021,8 @@ if int(env['matlab']):
     for i in range(len(bindings)):
        CompileMatlab("tom_xmipp_"+bindings[i]+"_wrapper")
     CompileMatlab('xmipp_read')
+    CompileMatlab('xmipp_nma_read_alignment')
+    CompileMatlab('xmipp_nma_save_cluster')
     CompileMatlab('xmipp_read_structure_factor')
 
 # Clean

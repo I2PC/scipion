@@ -44,18 +44,8 @@ TrustRegionScale=1
 """Use Projection Matching instead of Wavelets and Splines"""
 ProjMatch=True
 
-# Minimum angular sampling rate
-MinAngularSampling=10
-
-#{expert}{list_combo}(PCA, LTSA, DM, LLTSA, LPP, kPCA, pPCA, LE, HLLE) Projection method:
-"""Projection methods: Principal Component Analysis, Local Tangent Space Alignment,
-Diffusion map, Linear Local Tangent Space Alignment, Linearity Preserving Projection,
-Kernel PCA, Probabilistic PCA, Laplacian Eigenmap, Hessian Locally Linear Embedding"""
-ProjectionMethod="PCA"
-
-#{expert} Output dimension:
-"""Dimension of the lower dimensional space onto which the deformation coefficients are projected"""
-OutputDim=2
+# Discrete angular sampling rate
+DiscreteAngularSampling=10
 
 # {eval} expandParallel(threads=0,mpi=2)
 
@@ -69,11 +59,10 @@ Type 1 2 to see the 2D plot of raw deformations number 1 vs 2. Type 1 2 3 to see
 """ 
 DisplayRawDeformation="1"
 
-# Display combined deformation
-""" Type 1 to see the histogram of combined deformation number 1; type 2 to see the histogram of combined deformation number 2, etc.
-Type 1 2 to see the 2D plot of combined deformations number 1 vs 2. Type 1 2 3 to see the 3D plot of combined deformations 1, 2 and 3; etc.
+#{view} Analyze with MATLAB
+""" In MATLAB you may create image clusters and draw deformation trajectories
 """ 
-DisplayCombinedDeformation="1"
+AnalyzeMATLAB=True
 
 #------------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
