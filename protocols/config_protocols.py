@@ -44,7 +44,10 @@ protocols = {
         #'xmipp': ('Xmipp Programs', 'XmippPrograms'), 
         'emx_import_micrographs': ('Import micrographs', 'Micrographs/EmxImported'),
         'emx_import_particles': ('Import particles', 'Images/EmxImported'),
-        'emx_export': ('Export', 'EMX'),
+        'emx_export_micrographs': ('Export micrographs', 'Micrographs/EmxExported'),
+        'emx_export_particles': ('Export particles', 'Images/EmxExported'),
+        # DEPRECATED:
+        #'emx_export': ('kk', 'kk')
         }
 
 #--------------------------------------------------------------------------------
@@ -63,7 +66,7 @@ sections = [
     ['Volumes', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask', 'preprocess_volume', 'resolution3D', 'align_volume', 'helical_params']]),
 ('Other',
  [['Extra', 'custom',['Virus','subtraction'],['Tomography','mltomo', 'cltomo'],['Tools','image_operate','metadata_utilities','metadata_split'],
-   ['EMX', 'emx_import_micrographs', 'emx_import_particles', 'emx_export']]])
+   ['EMX', 'emx_import_micrographs', 'emx_import_particles', 'emx_export_micrographs', 'emx_export_particles']]])
 ]
 
 #--------------------------------------------------------------------------------
