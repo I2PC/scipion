@@ -39,7 +39,7 @@ class ProgRecRandom: public XmippProgram
 {
 public:
     /** Filenames */
-    FileName fnIn, fnRoot, fnSym;
+    FileName fnIn, fnRoot, fnSym, fnInit;
 
     /** Total number of iterations */
     int NiterRandom, NiterGreedy;

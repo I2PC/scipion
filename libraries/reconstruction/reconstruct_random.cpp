@@ -37,6 +37,7 @@ void ProgRecRandom::defineParams()
     addParamsLine("  [--randomIter <N=7>]         : Number of iterations with random assignment");
     addParamsLine("  [--greedyIter <N=3>]         : Number of iterations with greedy assignment");
     addParamsLine("  [--rejection <p=25>]         : Percentage of images to reject for reconstruction");
+    addParamsLine("  [--initial <file=\"\">]      : Initial volume if available");
 }
 
 // Read arguments ==========================================================
@@ -48,6 +49,7 @@ void ProgRecRandom::readParams()
     NiterRandom = getIntParam("--randomIter");
     NiterGreedy = getIntParam("--greedyIter");
     rejection = getDoubleParam("--rejection");
+    fnInit = getParam("--initial");
 }
 
 // Show ====================================================================
@@ -55,13 +57,15 @@ void ProgRecRandom::show()
 {
     if (verbose > 0)
     {
-        std::cout << " Input metadata              : "  << fnIn        << std::endl;
-        std::cout << " Output rootname             : "  << fnRoot      << std::endl;
-        std::cout << " Number of random iterations : "  << NiterRandom << std::endl;
-        std::cout << " Number of greedy iterations : "  << NiterGreedy << std::endl;
-        std::cout << " Rejection percentage        : "  << rejection   << std::endl;
+        std::cout << "Input metadata              : "  << fnIn        << std::endl;
+        std::cout << "Output rootname             : "  << fnRoot      << std::endl;
+        std::cout << "Number of random iterations : "  << NiterRandom << std::endl;
+        std::cout << "Number of greedy iterations : "  << NiterGreedy << std::endl;
+        std::cout << "Rejection percentage        : "  << rejection   << std::endl;
         if (fnSym != "")
-            std::cout << " Symmetry for projections   : "  << fnSym << std::endl;
+            std::cout << "Symmetry for projections    : "  << fnSym << std::endl;
+        if (fnInit !="")
+            std::cout << "Initial volume              : "  << fnInit << std::endl;
     }
 }
 
@@ -341,5 +345,8 @@ void ProgRecRandom::produceSideinfo()
 	}
 
 	mdIn.write(fnAngles);
-	reconstructCurrent();
+	if (fnInit=="")
+		reconstructCurrent();
+	else
+		system(formatString("cp %s %s",fnInit.c_str(),fnVolume.c_str()).c_str());
 }
