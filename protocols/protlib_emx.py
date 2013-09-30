@@ -281,14 +281,18 @@ def _writeEmxData(emxData, filename):
     xmlMapper = XmlMapper(emxData)
     xmlMapper.writeEMXFile(filename)      
     
+    
 def xmippMicrographsToEmx(micMd, emxData, emxDir):
     """ Export micrographs from xmipp metadata to EMX.
     """
+    from protlib_particles import getMetadataWithPickedParticles
     md = MetaData(micMd)
     micFn = 'mic%06d.mrc'
     index = 0
+    pIndex = 0
     img = Image()
     hasCtf = md.containsLabel(MDL_CTF_MODEL)
+    filesRoot = dirname(micMd)
 
     for objId in md:
         fnIn = md.getValue(MDL_MICROGRAPH, objId)
@@ -301,7 +305,23 @@ def xmippMicrographsToEmx(micMd, emxData, emxDir):
         # Set CTF parameters if present
         if hasCtf:
             xmippCtfToEmx(md, objId, micrograph)
-
+            
+        posFile = join(filesRoot, 'extra', replaceBasenameExt(fnIn, POSENDING))
+        
+        if exists(posFile):
+            mdPos = getMetadataWithPickedParticles(posFile)
+            print "mdPos.size: ", mdPos.size()
+            
+            for pId in mdPos:
+                pIndex += 1
+                # We are using here a dummy filename, since not make sense
+                # for particles with just coordinates
+                particle = Emxparticle(str(pIndex), pIndex)
+                particle.set('centerCoord__X', mdPos.getValue(MDL_XCOOR, pId))
+                particle.set('centerCoord__Y', mdPos.getValue(MDL_YCOOR, pId))
+                particle.setForeignKey(micrograph)
+                emxData.addObject(particle)
+                
         emxData.addObject(micrograph)
     # Write EMX particles
     _writeEmxData(emxData, join(emxDir, 'micrographs.emx'))
@@ -325,8 +345,8 @@ def xmippParticlesToEmx(imagesMd, emxData, emxDir):
     hasCtf = md.containsLabel(MDL_CTF_MODEL)
     micsDict = {}
     
-    for objId in md:
-            
+    
+    for objId in md:            
         # Read image from filename
         fn = FileName(md.getValue(MDL_IMAGE, objId))
         img.read(fn)

@@ -9,7 +9,9 @@
 #------------------------------------------------------------------------------------------------
 # {file}(micrographs*.xmd) Micrographs to export:
 """Select a metadata containing your micrographs to export
-as EMX particles.
+as EMX data. If you select the micrographs.xmd corresponding
+to a picking run, the .pos coordinates files will be also
+exported.
 """
 MicrographsMd = ''
 
