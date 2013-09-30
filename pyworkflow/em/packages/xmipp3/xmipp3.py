@@ -313,5 +313,15 @@ class XmippDataSet(ds.DataSet):
         return [tMatrix[0][0], tMatrix[0][1], tMatrix[0][2], x if x!=None else 0,
                 tMatrix[1][0], tMatrix[1][1], tMatrix[1][2], y if y!=None else 0,
                 tMatrix[2][0], tMatrix[2][1], tMatrix[2][2], z if z!=None else 0]
+        
+    def getTypeOfColumn(self, label):
+        if (label == "id"):
+            return "id"
+        elif (label!='image_transformationMatrix' and xmipp.labelIsImage(str(label))):
+            return "image"
+        elif (label == "enabled"):
+            return "checkbox"
+        else:
+            return "text"  
 
 
