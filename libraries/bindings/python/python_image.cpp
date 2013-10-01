@@ -367,13 +367,13 @@ Image_read(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }//function Image_read
 
-void readImagePreview(ImageGeneric *ig, FileName fn, size_t xdim)
+void readImagePreview(ImageGeneric *ig, FileName fn, size_t xdim, int slice)
 {
     ig->read(fn, HEADER);
     ImageInfo ii;
     ig->getInfo(ii);
     if (xdim > 0 || xdim != ii.adim.xdim)
-      ig->readPreview(fn, xdim);
+      ig->readPreview(fn, xdim, 0, slice);
     else
       ig->read(fn);
 }
@@ -388,14 +388,16 @@ Image_readPreview(PyObject *obj, PyObject *args, PyObject *kwargs)
     {
         PyObject *input = NULL;
         int x = 0;
-        if (PyArg_ParseTuple(args, "O|i", &input, &x))
+        int slice = CENTRAL_SLICE;
+
+        if (PyArg_ParseTuple(args, "O|ii", &input, &x, &slice))
         {
             try
             {
               PyObject *pyStr;
               if ((pyStr = PyObject_Str(input)) != NULL)
               {
-                  readImagePreview(self->image, PyString_AsString(pyStr), x);
+                  readImagePreview(self->image, PyString_AsString(pyStr), x, slice);
                   Py_RETURN_NONE;
               }
               else

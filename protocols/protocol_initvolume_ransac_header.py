@@ -35,10 +35,14 @@ AngularSampling = 5
 """
 NRansac = 380
 
-#{expert} Number of grids per dimension 
-""" Number of grids per dimension. The total number of classes used consists in n x n
-"""
+#{expert}{list_combo}(Yes,No) Perform dimensionality reduction
+DimRed='Yes'
+
+#{expert}{condition}(DimRed =="Yes") Number of grids per dimension
 NumGrids = 3
+
+#{expert}{condition}(DimRed =="No") Number of random samples
+NumSamples = 8
 
 #{expert} Inlier threshold
 """ correlation value threshold to determine if an experimental projection is an

@@ -566,16 +566,19 @@ class RowMetaData():
     """ This class is a wrapper for MetaData in row mode.
     Where only one object is used.
     """
-    def __init__(self):
+    def __init__(self, filename=None):
         self._md = xmipp.MetaData()
         self._md.setColumnFormat(False)
         self._id = self._md.addObject()
+        
+        if filename:
+            self.read(filename)
         
     def setValue(self, label, value):
         self._md.setValue(label, value, self._id)
         
     def getValue(self, label):
-        self._md.getValue(label, self._id)
+        return self._md.getValue(label, self._id)
         
     def write(self, filename, mode=xmipp.MD_APPEND):
         self._md.write(filename, mode)
@@ -584,4 +587,7 @@ class RowMetaData():
         self._md.read(filename)
         self._md.setColumnFormat(False)
         self._id = self._md.firstObject()
+        
+    def __str__(self):
+        return str(self._md)
     

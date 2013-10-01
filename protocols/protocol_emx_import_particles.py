@@ -19,7 +19,7 @@ from protlib_base import *
 from protlib_filesystem import replaceBasenameExt, renameFile
 from protlib_utils import runJob
 from protlib_xmipp import redStr, RowMetaData
-from protlib_emx import emxMicsToXmipp, emxCoordsToXmipp, alignEMXToXmipp
+from protlib_emx import *
 
 
 class ProtEmxImportParticles(XmippProtocol):
@@ -35,8 +35,7 @@ class ProtEmxImportParticles(XmippProtocol):
         self.MicrographsMd = self.workingDirPath('micrographs.xmd')
         
         self.propDict = {'SamplingRate': 'pixelSpacing__X',
-                         'SphericalAberration': 'cs',
-                         'Voltage': 'acceleratingVoltage'}
+                         }
             
     def createFilenameTemplates(self):
         return {
@@ -52,11 +51,11 @@ class ProtEmxImportParticles(XmippProtocol):
         self.insertStep("createDir", verifyfiles=[self.ExtraDir], 
                         path=self.ExtraDir)
         
-        micsFn = self.getFilename('micrographs')
-        self.insertStep("createMicrographs", verifyfiles=[micsFn],
+        imgsFn = self.getFilename('images')
+        self.insertStep("createParticles", verifyfiles=[imgsFn],
                         emxFileName=self.EmxFileName,
                         binaryFilename=self.binaryFile,
-                        micsFileName=micsFn,
+                        micsFileName=imgsFn,
                         projectDir=self.projectDir,
                         ctfDir=self.ExtraDir,
                         )
@@ -64,19 +63,7 @@ class ProtEmxImportParticles(XmippProtocol):
         acqFn = self.getFilename('acquisition')
         self.insertStep('createAcquisition', verifyfiles=[acqFn],
                         fnOut=acqFn, SamplingRate=self.SamplingRate)
-        
-        microscopeFn = self.getFilename('microscope')
-        self.insertStep('createMicroscope', verifyfiles=[microscopeFn],
-                        fnOut=microscopeFn, Voltage=self.Voltage, 
-                        SphericalAberration=self.SphericalAberration,
-                        SamplingRate=self.SamplingRate)
-        
-        if PARTICLE in self.objDict:
-            part = self.objDict[PARTICLE]
-            if part.has('centerCoord__X'):
-                self.insertStep('createCoordinates', verifyfiles=[],
-                                emxFileName=self.EmxFileName,
-                                oroot=self.ExtraDir)
+
             
     def _loadInfo(self):
         #What kind of elements are in the binary file
@@ -155,10 +142,10 @@ def validateSchema(log, emxFileName):
         raise Exception(err) 
     
     
-def createMicrographs(log, emxFileName, binaryFilename, micsFileName, projectDir, ctfDir):
+def createParticles(log, emxFileName, binaryFilename, micsFileName, projectDir, ctfDir):
     filesPrefix = dirname(emxFileName)
     emxData = loadEmxData(emxFileName)
-    emxMicsToXmipp(emxData, micsFileName, filesPrefix, ctfDir)
+    emxParticlesToXmipp(emxData, micsFileName, filesPrefix, ctfDir)
     
     
 def createAcquisition(log, fnOut, SamplingRate):
