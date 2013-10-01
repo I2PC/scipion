@@ -21,6 +21,7 @@ iconDict = {
             'delete_toolbar': 'delete.gif',
             'browse_toolbar': 'run_steps.gif',
             'tree_toolbar': 'tree2.gif',
+            'list_toolbar': 'md_view.gif',
             'analyze_toolbar': 'visualize.gif',
             'new_toolbar': 'new_object.gif'
             }
@@ -34,8 +35,6 @@ cssDict = {'project_content': 'project_content_style.css',
            'ui_smoothness': 'jquery-ui_smoothness.css',
            'jquery_ui': 'jquery-ui.css',
            'showj_demo_table_jui': 'demo_table_jui.css'
-           
-           
            }
 
 jsDict = {'jquery': 'jquery/jquery.js',

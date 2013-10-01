@@ -15,40 +15,22 @@
  **/
 
 /*
- * Toolbar used in the project content template
+ * Toolbar used in the project content template for list view
  */
-function launchToolbar(projName, id, elm) {
+function launchToolbarList(projName, id, elm) {
 	var row = $("div#toolbar");
+	updateRow(id, elm, row);
+	updateButtons(projName, id, elm);
+	row.show(); // Show toolbar
+}
 
-	if (row.attr('value') != undefined && row.attr('value') != id) {
-		var rowOld = $("tr#" + row.attr('value'));
-		rowOld.attr('style', 'background-color: #fafafa;');
-		rowOld.attr('class', 'runtr');
-	}
-	row.attr('value', id);
-	elm.attr('style', 'background-color: LightSteelBlue;');
-	elm.attr('class', 'selected');
-
-	// Action Edit Button
-	$("a#editTool").attr('href',
-	'javascript:popup("/form/?=&protocolId=' + id + '")');
-	
-	// Action Copy Button
-	$("a#copyTool").attr('href',
-	'javascript:popup("/form/?&protocolId=' + id + '&action=copy' + '")');
-
-	// Action Delete Button
-	$("a#deleteTool").attr('href',
-			'javascript:deleteProtocolForm("' + projName + '","' + id + '")');
-
-	// Action Browse Button
-	var aux = "javascript:alert('Not implemented yet')";
-	$("a#browseTool").attr('href', aux);
-	
-	checkRunStatus(projName, id);
-
-	fillTabsSummary(id);
-
+/*
+ * Toolbar used in the project content template for list view
+ */
+function launchToolbarTree(projName, id, elm) {
+	var row = $("div#toolbar");
+	updateTree(id,elm);
+	updateButtons(projName, id, elm);
 	row.show(); // Show toolbar
 }
 
@@ -139,7 +121,29 @@ function launchViewer(id){
 	});	
 }
 
-function updateTabs(projName, id, elm) {
+function updateButtons(projName, id, elm){
+	// Action Edit Button
+	$("a#editTool").attr('href',
+	'javascript:popup("/form/?=&protocolId=' + id + '")');
+	
+	// Action Copy Button
+	$("a#copyTool").attr('href',
+	'javascript:popup("/form/?&protocolId=' + id + '&action=copy' + '")');
+
+	// Action Delete Button
+	$("a#deleteTool").attr('href',
+			'javascript:deleteProtocolForm("' + projName + '","' + id + '")');
+
+	// Action Browse Button
+	var aux = "javascript:alert('Not implemented yet')";
+	$("a#browseTool").attr('href', aux);
+	
+	checkRunStatus(projName, id);
+	fillTabsSummary(id);
+}
+
+
+function updateTree(id, elm){
 	var oldSelect = $("div#graphActiv").attr("data-option");
 	var selected = "graph_" + id;
 
@@ -150,10 +154,20 @@ function updateTabs(projName, id, elm) {
 		}
 		$("div#graphActiv").attr("data-option", selected);
 		elm.css("border", "2.5px solid Firebrick");
-
-		fillTabsSummary(id);
 	}
 }
+	
+function updateRow(id, elm, row){	
+	if (row.attr('value') != undefined && row.attr('value') != id) {
+		var rowOld = $("tr#" + row.attr('value'));
+		rowOld.attr('style', 'background-color: #fafafa;');
+		rowOld.attr('class', 'runtr');
+	}
+	row.attr('value', id);
+	elm.attr('style', 'background-color: LightSteelBlue;');
+	elm.attr('class', 'selected');
+}
+
 
 function switchGraph() {
 	var status = $("div#graphActiv").attr("data-mode");
@@ -163,28 +177,35 @@ function switchGraph() {
 			// Graph ON
 			$("div#graphActiv").attr("data-mode", "active");
 			$("div#graphActiv").attr("style", "");
+			$("div#treeTool").hide();
 			// Table OFF
 			$("div#runTable").attr("data-mode", "inactive");
 			$("div#runTable").attr("style", "display:none;");
+			$("div#listTool").show();
 		} else if (status == 'active') {
-			// Table ON
+			// Table ON	
 			$("div#runTable").attr("data-mode", "active");
 			$("div#runTable").attr("style", "");
+			$("div#listTool").hide();
 			// Graph OFF
 			$("div#graphActiv").attr("data-mode", "inactive");
 			$("div#graphActiv").attr("style", "display:none;");
+			$("div#treeTool").show();
 		}
 		callPaintGraph();
 		$("div#graphActiv").attr("data-time", "not");
+		
 	} else {
 		if (status == 'inactive') {
 			// Graph ON
 			$("div#graphActiv").attr("data-mode", "active");
 			$("div#graphActiv").attr("style", "");
+			$("div#treeTool").hide();
 			// Table OFF
 			$("div#runTable").attr("data-mode", "inactive");
 			$("div#runTable").attr("style", "display:none;");
-
+			$("div#listTool").show();
+			
 			// getElement in table
 			var s = $("tr.selected").attr("id");
 			s = "graph_" + s;
@@ -212,10 +233,12 @@ function switchGraph() {
 			// Table ON
 			$("div#runTable").attr("data-mode", "active");
 			$("div#runTable").attr("style", "");
+			$("div#listTool").hide();
 			// Graph OFF
 			$("div#graphActiv").attr("data-mode", "inactive");
 			$("div#graphActiv").attr("style", "display:none;");
-
+			$("div#treeTool").show();
+			
 			// getElement in graph
 			var s = $("div#graphActiv").attr("data-option");
 			var s = s.replace("graph_", "");
@@ -235,7 +258,7 @@ function switchGraph() {
 						// elm.attr("style", "background-color:
 						// LightSteelBlue;");
 						// elm.attr("class","selected");
-						launchToolbar(projName, s, elm);
+						launchToolbarList(projName, s, elm);
 					}
 				}
 			}

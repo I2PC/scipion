@@ -38,17 +38,26 @@
 	</ul>
 </div>
 {% endblock %} {% block content %}
-<span style="float: right;"><a id="treeTool"
-	href="javascript:switchGraph();"><img src="{{treeTool}}" /> Tree</a></span>
-<div id="runTable">
-	<div id="toolbar" style="display: none;">
-		<span><a id="editTool" href=""><img src="{{editTool}}" />Edit</a></span>
-		<span><a id="copyTool" href=""><img src="{{copyTool}}" />Copy</a></span>
-		<span><a id="deleteTool" href=""><img src="{{deleteTool}}" />Delete</a></span>
-		<span><a id="browseTool" href=""><img src="{{browseTool}}" />Browse</a></span>
-		<span id="stopTool"><a id="stopTool" href=""><img src="{{stopTool}}" />Stop</a></span>
-		<span id="analyzeTool"><a id="analyzeTool" href=""><img src="{{analyzeTool}}" />Analyze Results</a></span>
+
+<span style="float:right;">
+	<div id="treeTool">
+		<a href="javascript:switchGraph();">
+			<img src="{{treeTool}}" /> Tree</a>	
 	</div>
+	<div id="listTool" style="display:none;">
+		<a  href="javascript:switchGraph();" >
+			<img src="{{listTool}}" /> List</a>
+	</div>
+</span>
+<div id="toolbar" style="display: none;">
+	<span><a id="editTool" href=""><img src="{{editTool}}" />Edit</a></span>
+	<span><a id="copyTool" href=""><img src="{{copyTool}}" />Copy</a></span>
+	<span><a id="deleteTool" href=""><img src="{{deleteTool}}" />Delete</a></span>
+	<span><a id="browseTool" href=""><img src="{{browseTool}}" />Browse</a></span>
+	<span id="stopTool"><a id="stopTool" href=""><img src="{{stopTool}}" />Stop</a></span>
+	<span id="analyzeTool"><a id="analyzeTool" href=""><img src="{{analyzeTool}}" />Analyze Results</a></span>
+</div>
+<div id="runTable">	
 	<table id="data" cellspacing="0">
 		<tr>
 			{% for colName, colWidth in provider.getColumns %}
@@ -56,7 +65,7 @@
 		</tr>
 		{% for obj in provider.getObjects %}
 		<tr id="{{obj.getObjId}}" class="runtr" data-name="{{obj.getName}}"
-			onclick='javascript:launchToolbar("{{projectName}}","{{obj.getObjId}}", ($(this)));'
+			onclick='javascript:launchToolbarList("{{projectName}}","{{obj.getObjId}}", ($(this)));'
 			style="background-color: #fafafa;">
 			<td><a
 				href="javascript:popup('/form/?protocolId={{obj.getObjId}}')">
