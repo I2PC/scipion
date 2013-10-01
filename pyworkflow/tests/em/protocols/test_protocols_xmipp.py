@@ -284,25 +284,25 @@ class TestXmippRotSpectra(TestXmippBase):
         self.assertIsNotNone(xmippProtRotSpectra.outputClasses, "There was a problem with Rotational Spectra")  
 
     
-#class TestXmippML3D(TestXmippBase):
-#    @classmethod
-#    def setUpClass(cls):
-#        setupProject(cls)
-#        #TODO: Find a set of images to make this work, with this it does not
-#        images = getInputPath('Images_Vol_ML3D/phantom_images', '*.xmp')
-#        cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1)
-#        cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
-#        
-#    def testML3D(self):
-#        print "Run ML3D"
-#        protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2, runMode=1, numberOfMpi=2, numberOfThreads=2)
-#        protML3D.inputImages.set(self.protImport.outputParticles)
-#        protML3D.ini3DrefVolumes.set(self.iniVol)
-#        protML3D.doCorrectGreyScale.set(True)
-#        protML3D.numberOfSeedsPerRef.set(2)
-#        self.proj.launchProtocol(protML3D, wait=True)        
-#        
-#        self.assertIsNotNone(protML3D.outputVolumes, "There was a problem with ML3D")          
+class TestXmippML3D(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupProject(cls)
+        #TODO: Find a set of images to make this work, with this it does not
+        images = getInputPath('Images_Vol_ML3D/phantom_images', '*.xmp')
+        cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1)
+        cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
+        
+    def testML3D(self):
+        print "Run ML3D"
+        protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2, runMode=1, numberOfMpi=2, numberOfThreads=2)
+        protML3D.inputImages.set(self.protImport.outputParticles)
+        protML3D.ini3DrefVolumes.set(self.iniVol)
+        protML3D.doCorrectGreyScale.set(True)
+        protML3D.numberOfSeedsPerRef.set(2)
+        self.proj.launchProtocol(protML3D, wait=True)        
+        
+        self.assertIsNotNone(protML3D.outputVolumes, "There was a problem with ML3D")          
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

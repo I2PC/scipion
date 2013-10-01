@@ -31,7 +31,7 @@ visualization program.
 
 import os
 from pyworkflow.viewer import Viewer, Wizard
-from pyworkflow.em import SetOfImages, SetOfMicrographs, SetOfParticles, SetOfCoordinates, DefCTFMicrographs, SetOfClasses2D
+from pyworkflow.em import SetOfImages, SetOfMicrographs, SetOfParticles, SetOfCoordinates, DefCTFMicrographs, SetOfClasses2D, SetOfVolumes
 from pyworkflow.utils.process import runJob
 from xmipp3 import getXmippPath
 from pyworkflow.em.protocol import ProtImportMicrographs
@@ -93,7 +93,7 @@ class XmippViewer(Viewer):
                 
             runParticlePicker(fn, extraDir, extraParams='readonly')
         
-        elif issubclass(cls, SetOfParticles):
+        elif issubclass(cls, SetOfParticles) or issubclass(cls, SetOfVolumes):
             mdFn = getattr(obj, '_xmippMd', None)
             if mdFn:
                 fn = mdFn.get()
