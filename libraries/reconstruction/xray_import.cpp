@@ -88,7 +88,7 @@ void ProgXrayImport::defineParams()
     addParamsLine("                                     : f_ini and f_end denotes the range of the flatfield images stored in the same directory");
     addParamsLine("[--mistral <input_file>]    : hdf5 Nexus file acquired in Mistral microscope at Alba, which contains all data");
     addParamsLine("   == Filters                                          ");
-    addParamsLine("  [--filterBadPixels  <mask=\"\">]   : Apply a boundaries median filter to bad pixels given in mask.");
+    addParamsLine("  [--bad_pixels_filter  <mask_image_file=\"\">]   : Apply a boundaries median filter to bad pixels given in mask.");
     addParamsLine("  alias -f;");
     addParamsLine("  [--correct]                        : Correct for the self-attenuation of X-ray projections applying ");
     addParamsLine("  									: a log10 and multiplying by -1");
@@ -142,7 +142,7 @@ void ProgXrayImport::readParams()
     fnRoot    = getParam("--oroot");
     cropSize  = getIntParam("--crop");
     thrNum    = getIntParam("--thr");
-    fnBPMask  = getParam("--filterBadPixels");
+    fnBPMask  = getParam("--bad_pixels_filter");
     selfAttFix   = checkParam("--correct");
 }
 
