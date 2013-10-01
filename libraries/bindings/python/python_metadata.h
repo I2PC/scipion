@@ -267,6 +267,9 @@ MetaData_containsLabel(PyObject *obj, PyObject *args, PyObject *kwargs);
 PyObject *
 MetaData_addLabel(PyObject *obj, PyObject *args, PyObject *kwargs);
 
+/* addLabel */
+PyObject *
+MetaData_addItemId(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 /* fillConstant */
 PyObject *

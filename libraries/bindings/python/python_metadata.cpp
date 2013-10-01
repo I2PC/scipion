@@ -286,6 +286,8 @@ PyMethodDef MetaData_methods[] =
           "True if this metadata contains this label" },
         { "addLabel", (PyCFunction) MetaData_addLabel,
           METH_VARARGS, "Add a new label to MetaData" },
+        { "addItemId", (PyCFunction) MetaData_addItemId,
+          METH_VARARGS, "Add a item id to the MetaData" },
         { "fillConstant", (PyCFunction) MetaData_fillConstant,
           METH_VARARGS, "Fill a column with constant value" },
         { "fillRandom", (PyCFunction) MetaData_fillRandom,
@@ -1081,6 +1083,7 @@ MetaData_containsLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }
+
 /* addLabel */
 PyObject *
 MetaData_addLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -1098,6 +1101,24 @@ MetaData_addLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
         {
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
+    }
+    return NULL;
+}
+
+/* addLabel */
+PyObject *
+MetaData_addItemId(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int label, pos = -1;
+    try
+    {
+        MetaDataObject *self = (MetaDataObject*) obj;
+        self->metadata->addItemId();
+        Py_RETURN_NONE;
+    }
+    catch (XmippError &xe)
+    {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
     }
     return NULL;
 }
