@@ -533,7 +533,7 @@ class FormWindow(Window):
             self.callback(self.protocol, onlySave)
             self.showInfo("Protocol saved sucessfully")
         except Exception, ex:
-            self.showError("Error during save: " + ex)
+            self.showError("Error during save: " + str(ex))
            
     def _fillSection(self, sectionParam, sectionWidget):
         parent = sectionWidget.contentFrame
