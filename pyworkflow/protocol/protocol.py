@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.protocol.constants import MODE_RESUME
 """
 This modules contains classes required for the workflow
 execution and tracking like: Step and Protocol
@@ -567,6 +568,7 @@ class Protocol(Step):
         Step.run(self)
         outputs = [getattr(self, o) for o in self._outputs]
         #self._store(self.status, self.initTime, self.endTime, *outputs)
+        self.runMode.set(MODE_RESUME) # Always set to resume, even if set to restart
         self._store()
         self._log.info('------------------- PROTOCOL FINISHED')
         self.__closeLogger()

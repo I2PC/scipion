@@ -256,13 +256,25 @@ class SqliteDb():
         """Create requiered tables if don't exists"""
         # Enable foreings keys
         self.executeCommand("PRAGMA foreign_keys=ON")
-    
+        # Create the Objects table
         self.executeCommand("""CREATE TABLE IF NOT EXISTS Objects
                      (id        INTEGER PRIMARY KEY AUTOINCREMENT,
                       parent_id INTEGER REFERENCES Objects(id),
-                      name      TEXT,               -- object name 
-                      classname TEXT,               -- object's class name
-                      value     TEXT DEFAULT NULL   -- object value, used for Scalars
+                      name      TEXT,                -- object name 
+                      classname TEXT,                -- object's class name
+                      value     TEXT DEFAULT NULL,   -- object value, used for Scalars
+                      label     TEXT DEFAULT NULL   -- object label, text used for display
+                      )""")
+        # Create the Relations table
+        self.executeCommand("""CREATE TABLE IF NOT EXISTS Relations
+                     (id        INTEGER PRIMARY KEY AUTOINCREMENT,
+                      parent_id INTEGER REFERENCES Objects(id), -- object that created the relation
+                      name      TEXT,               -- relation name 
+                      classname TEXT,               -- relation's class name
+                      value     TEXT DEFAULT NULL,  -- relation value
+                      label     TEXT DEFAULT NULL,  -- object label, text used for display
+                      object_parent  INTEGER REFERENCES Objects(id),
+                      object_child  INTEGER REFERENCES Objects(id) 
                       )""")
         self.commit()
         
