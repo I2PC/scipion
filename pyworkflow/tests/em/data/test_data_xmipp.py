@@ -72,7 +72,7 @@ class TestXmippSetOfCoordinates(unittest.TestCase):
         coordSet.setMicrographs(micSet)
         
         posDir = getOutputPath(self.outputPath)
-        writePosCoordinates(posDir, coordSet)
+        writeSetOfCoordinates(posDir, coordSet)
         
     
 class TestXmippCTFModel(unittest.TestCase):
