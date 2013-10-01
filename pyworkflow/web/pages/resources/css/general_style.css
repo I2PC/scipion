@@ -20,6 +20,14 @@ body {
 	font-size: 0.75em;
 }
 
+img{
+	border: none;
+}
+
+a{
+	border: none;
+}
+
 a:hover {
 	color: Firebrick;
 }
@@ -127,7 +135,7 @@ a:hover {
 .priorityButton {
 	/* 	font-size: 0.8em; */
 	color: white;
-	width: 13em;
+	width: auto;
 	height: 25px;
 	background-color: DarkRed;
 	border: 1px solid #000066;

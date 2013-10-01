@@ -41,12 +41,13 @@
 <span style="float: right;"><a id="treeTool"
 	href="javascript:switchGraph();"><img src="{{treeTool}}" /> Tree</a></span>
 <div id="runTable">
-	<div id="toolbar" style="float: left; display: none;">
+	<div id="toolbar" style="display: none;">
 		<span><a id="editTool" href=""><img src="{{editTool}}" />Edit</a></span>
 		<span><a id="copyTool" href=""><img src="{{copyTool}}" />Copy</a></span>
 		<span><a id="deleteTool" href=""><img src="{{deleteTool}}" />Delete</a></span>
 		<span><a id="browseTool" href=""><img src="{{browseTool}}" />Browse</a></span>
-		<span><a id="analyzeTool" href=""><img src="{{analyzeTool}}" />Analyze Results</a></span>
+		<span id="stopTool"><a id="stopTool" href=""><img src="{{stopTool}}" />Stop</a></span>
+		<span id="analyzeTool"><a id="analyzeTool" href=""><img src="{{analyzeTool}}" />Analyze Results</a></span>
 	</div>
 	<table id="data" cellspacing="0">
 		<tr>
@@ -71,7 +72,6 @@
 	<h3>History</h3>
 </div>
 {% endblock %} {% block contentDown %}
-
 <div class="tabContaier" id="tabs">
 	<ul class="listTabs">
 		<li><a href="#tab-data">Data</a></li>

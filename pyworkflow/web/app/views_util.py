@@ -17,6 +17,7 @@ iconDict = {
             'wizard': 'tools_wizard.png',
             'edit_toolbar': 'edit.gif',
             'copy_toolbar': 'copy.gif',
+            'stop_toolbar': 'stop.gif',
             'delete_toolbar': 'delete.gif',
             'browse_toolbar': 'run_steps.gif',
             'tree_toolbar': 'tree2.gif',
@@ -173,35 +174,11 @@ def getImageXdim(request, imagePath):
     img.read(str(imgFn), xmipp.HEADER)
     return img.getDimensions()[0]
 
-# TODO: Check with ADRIAN the dimensions are read efficiently
-# For getting dimension the read function can be used with HEADER
-# to avoid read the entire image
-def get_image_dimensions(projectPath, imagePath):
-    from django.http import HttpResponse
-    from pyworkflow.gui import getImage
-    imageNo = None
-#    imagePath = request.GET.get('image')
-    
-    # PAJM: Como vamos a gestionar lsa imagen    
-    if imagePath.endswith('png') or imagePath.endswith('gif'):
-        img = getImage(imagePath, tk=False)
-    else:
-        if '@' in imagePath:
-            parts = imagePath.split('@')
-            imageNo = parts[0]
-            imagePath = parts[1]
-            
-        if projectPath != '':
-            imagePathTmp = os.path.join(projectPath, imagePath)
-            if not os.path.isfile(imagePathTmp):
-                imagePath = getInputPath('showj', imagePath)          
+def getImageDim(request, imagePath):
+    img = xmipp.Image()
+    imgFn = os.path.join(request.session['projectPath'], imagePath)
+    img.read(str(imgFn), xmipp.HEADER)
+    return img.getDimensions()
 
-#        imagePath = join(request.session['projectPath'],imagePath)
-        
-        if imageNo:
-            imagePath = '%s@%s' % (imageNo, imagePath) 
-            
-        imgXmipp = xmipp.Image(imagePath)
-        
-        return imgXmipp.getDimensions()
+
     

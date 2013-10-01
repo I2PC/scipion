@@ -74,6 +74,10 @@ class DataSet(object):
         table = self._loadTable(tableName)
         return table
     
+    def getTypeOfColumn(self, label):
+        """ this method should be implemented by subclasses. """
+        pass
+    
     def _loadTable(self, tableName):
         """ this method should be implemented by subclasses. """
         pass

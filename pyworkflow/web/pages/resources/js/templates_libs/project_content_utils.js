@@ -45,13 +45,34 @@ function launchToolbar(projName, id, elm) {
 	var aux = "javascript:alert('Not implemented yet')";
 	$("a#browseTool").attr('href', aux);
 	
-	// Action Analyze Result Button
-	$("a#analyzeTool").attr('href', 
-			'javascript:launchViewer("'+id +'")');
+	checkRunStatus(projName, id);
 
 	fillTabsSummary(id);
 
 	row.show(); // Show toolbar
+}
+
+function checkRunStatus(projName, id) {
+	$.ajax({
+		type : "GET",
+		url : '/protocol_status/?protocolId=' + id,
+		dataType:"text",
+		success : function(status) {
+			if(status=="running"){
+				// Action Stop Button
+				$("span#analyzeTool").hide();
+				$("span#stopTool").show();
+				$("a#stopTool").attr('href',
+				'javascript:stopProtocolForm("' + projName + '","' + id + '")');
+			}
+			else{
+				// Action Analyze Result Button
+				$("span#stopTool").hide();
+				$("span#analyzeTool").show();
+				$("a#analyzeTool").attr('href', 'javascript:launchViewer("'+id +'")');
+			}
+		}
+	});
 }
 
 /*
@@ -98,7 +119,7 @@ function fillUL(list, ulId, icon) {
 /*
  * Launch the viewers to analyze the results of the protocol run
  */
-function launchViewer(id){	
+function launchViewer(id){
 	/* Execute the viewer */
 	$.ajax({
 		type : "GET",
@@ -106,10 +127,10 @@ function launchViewer(id){
 		dataType : "json",
 		success : function(json) {
 			$.each(json, function(key, value) {
-				if(value.substring(0,6)=="<html>")
+				if(value.substring(0,6)=="<html>"){
 					//Launch a pop up with the html
-					customPopupHTML(value,800,800);
-				else{
+					customPopupHTML(value,800,600);
+				}else{
 					//Launch a pop up with the url
 					customPopup(value,1024,768);
 				}
@@ -268,8 +289,56 @@ function deleteProtocol(elm) {
 	var protId = value[1];
 	$.ajax({
 		type : "GET",
-		url : "/delete_protocol/?projectName=" + projName + "&protocolId="
-				+ protId
+		url : "/delete_protocol/?protocolId=" + protId
 	});
 }
 
+/*
+ * Dialog form to verify the right option to stop a protocol
+ */
+function stopProtocolForm(projName, protocolId) {
+
+	var msg = "<table><tr><td><img src='/resources/warning.gif' width='45' height='45' />"
+			+ "</td><td class='content' value='"
+			+ projName
+			+ "-"
+			+ protocolId
+			+ "'>This <strong>protocol run</strong>"
+			+ " will be <strong>STOPPED</strong>. Do you really want to continue?</td></tr></table>";
+
+	new Messi(msg, {
+		title : 'Confirm STOP',
+		// modal : true,
+		buttons : [ {
+			id : 0,
+			label : 'Yes',
+			val : 'Y',
+			btnClass : 'btn-select',
+			btnFunc : 'stopProtocol'
+		}, {
+			id : 1,
+			label : 'No',
+			val : 'C',
+			btnClass : 'btn-cancel'
+		} ],
+		callback : function(val) {
+			if (val == 'Y') {
+				window.location.href = "/project_content/?projectName="
+						+ projName;
+			}
+		}
+	});
+}
+
+/*
+ * Method to stop the run for a protocol
+ */
+function stopProtocol(elm) {
+	var value = elm.attr('value').split("-");
+	var projName = value[0];
+	var protId = value[1];
+	$.ajax({
+		type : "GET",
+		url : "/stop_protocol/?protocolId=" + protId
+	});
+}

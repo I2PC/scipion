@@ -29,8 +29,9 @@ urlpatterns = patterns('',
     url(r'^delete_project/$', 'app.views_project.delete_project'),
     url(r'^project_content/$', 'app.views_project.project_content'),
     url(r'^protocol_io/$', 'app.views_project.protocol_io'),
-    url(r'^project_graph/$', 'app.views_project.project_graph'),
     url(r'^protocol_summary/$', 'app.views_project.protocol_summary'),
+    url(r'^protocol_status/$', 'app.views_project.protocol_status'),
+    url(r'^project_graph/$', 'app.views_project.project_graph'),
     url(r'^viewer/$', 'app.views_project.viewer'),
     
     #UTILS
@@ -40,6 +41,7 @@ urlpatterns = patterns('',
     #PROTOCOL (INCLUDE FORM)
     url(r'^save_protocol/$', 'app.views_protocol.save_protocol'),
     url(r'^protocol/$', 'app.views_protocol.protocol'),
+    url(r'^stop_protocol/$', 'app.views_protocol.stop_protocol'),
     url(r'^delete_protocol/$', 'app.views_protocol.delete_protocol'),
     url(r'^form/$', 'app.views_protocol.form'),
 
