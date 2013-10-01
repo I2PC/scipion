@@ -157,7 +157,6 @@ def get_image(request):
         if mirrorY: 
             imgXmipp.mirrorY()
         
-        
         # from PIL import Image
         img = getPILImage(imgXmipp, None)
          
@@ -172,7 +171,7 @@ def get_slice(request):
     from pyworkflow.gui import getImage, getPILImage
 #    print "request.session['projectPath']2", request.session['projectPath']
     
-    imageNo = None
+    sliceNo = None
     imagePath = request.GET.get('image')
     imageDim = request.GET.get('dim', 150)
     mirrorY = 'mirrorY' in request.GET
@@ -182,35 +181,30 @@ def get_slice(request):
 #    transformMatrix = request.GET.get('transformMatrix',None)
 #    
     # PAJM: Como vamos a gestionar lsa imagen    
-    if imagePath.endswith('png') or imagePath.endswith('gif'):
-        img = getImage(imagePath, tk=False)
-    else:
-        if '@' in imagePath:
-            parts = imagePath.split('@')
-            imageNo = parts[0]
-            imagePath = parts[1]
+    if not '@' in imagePath:
+        raise Exception('Slice number required.')
+    
+    parts = imagePath.split('@')
+    sliceNo = parts[0]
+    imagePath = parts[1]
 
-        if 'projectPath' in request.session:
-            imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
-            if not os.path.isfile(imagePathTmp):
-                imagePath = getInputPath('showj', imagePath)      
-
-        if imageNo:
-            imagePath = '%s@%s' % (imageNo, imagePath) 
+    if 'projectPath' in request.session:
+        imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
+        if not os.path.isfile(imagePathTmp):
+            imagePath = getInputPath('showj', imagePath)      
+        
+    imgXmipp = xmipp.Image()
+    imgXmipp.readPreview(imagePath, int(imageDim), int(sliceNo))
             
-        #imgXmipp = xmipp.Image(imagePath)
-        imgXmipp = xmipp.Image()
-        imgXmipp.readPreview(imagePath, int(imageDim))
-                
 #        if applyTransformMatrix and transformMatrix != None: 
 #            imgXmipp.applyTransforMatScipion(transformMatrix, onlyApplyShifts, wrap)
 #        
-        if mirrorY: 
-            imgXmipp.mirrorY()
-        
-        
-        # from PIL import Image
-        img = getPILImage(imgXmipp, None)
+    if mirrorY: 
+        imgXmipp.mirrorY()
+    
+    
+    # from PIL import Image
+    img = getPILImage(imgXmipp, None)
          
     # response = HttpResponse(mimetype="image/png")    
     

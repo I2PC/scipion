@@ -153,16 +153,8 @@ def getPILImage(imageXmipp, dim=None):
     import xmipp
     imageXmipp.convert2DataType(xmipp.DT_UCHAR)
     imageData = imageXmipp.getData()
-    
-    #Napa de Luxe
-
-    #imageDataMax=imageData.max()
-    #imageDataMin=imageData.min()
-    
-    #imageData = (imageData-imageDataMin)*(255.0/(imageDataMax-imageDataMin))
 
     image = Image.fromarray(imageData)
-    #img = image.convert('RGB')
     img = image.convert('LA')
     #img = image
     if dim:
