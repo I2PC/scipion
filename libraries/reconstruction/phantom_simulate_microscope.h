@@ -71,6 +71,10 @@ public:
     MetaData * pmdIn;
     /** Downsampling factor */
     double downsampling;
+    /* save U defocus in case we randomize it */
+    double defocusU;
+    /* save V defocus in case we randomize it */
+    double defocusV;
 
 public:
     /** Read from a command line.

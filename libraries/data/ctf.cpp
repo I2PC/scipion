@@ -993,16 +993,24 @@ double errorMaxFreqCTFs2D( MetaData &MD1,
     double iTm=1.0/CTF1.Tm;
     size_t xDim, yDim;
     xDim = yDim = Xdim;
-//#define DEBUG
+#define DEBUG
 #ifdef DEBUG
 
-    Image<double> img1(xDim,yDim);
-    Image<double> img2(xDim,yDim);
-    Image<double> img3(xDim,yDim);
+    Image<double> arg1(xDim,yDim);
+    Image<double> arg2(xDim,yDim);
+    Image<double> argDiff(xDim,yDim);
+    Image<double> ctf1(xDim,yDim);
+    Image<double> ctf2(xDim,yDim);
+    Image<double> ctfDiff(xDim,yDim);
+    Image<double> aux(xDim,yDim);
 
-    MultidimArray<double> &dummy1 = img1.data;
-    MultidimArray<double> &dummy2 = img2.data;
-    MultidimArray<double> &dummy3 = img3.data;
+    MultidimArray<double> &arg1Mul = arg1.data;
+    MultidimArray<double> &arg2Mul = arg2.data;
+    MultidimArray<double> &argDiffMul = argDiff.data;
+    MultidimArray<double> &ctf1Mul = ctf1.data;
+    MultidimArray<double> &ctf2Mul = ctf2.data;
+    MultidimArray<double> &ctfDiffMul = ctfDiff.data;
+    MultidimArray<double> &auxMul  = aux.data;
     int counterAux = 0 ;
 #endif
 
@@ -1028,9 +1036,14 @@ double errorMaxFreqCTFs2D( MetaData &MD1,
 #ifdef DEBUG
 
             counterAux++;
-            DIRECT_A2D_ELEM(dummy1,i,j)=fabs(b-a);
-            DIRECT_A2D_ELEM(dummy2,i,j)=a;
-            DIRECT_A2D_ELEM(dummy3,i,j)=b;
+            DIRECT_A2D_ELEM(argDiffMul,i,j)=fabs(b-a);
+            DIRECT_A2D_ELEM(arg1Mul,i,j)=a;
+            DIRECT_A2D_ELEM(arg2Mul,i,j)=b;
+            a = CTF1.getValuePureWithoutDampingAt();
+            b = CTF2.getValuePureWithoutDampingAt();
+            DIRECT_A2D_ELEM(ctf1Mul,i,j)=a;
+            DIRECT_A2D_ELEM(ctf2Mul,i,j)=b;
+            DIRECT_A2D_ELEM(ctfDiffMul,i,j)=fabs(b-a);
 #endif
 
         }
@@ -1041,9 +1054,23 @@ double errorMaxFreqCTFs2D( MetaData &MD1,
     double resolutionA_1        = areaLessHalfPIPixels * maxFreqA / totalArePixels;
     double resolutionA          = 1./ resolutionA_1;
 #ifdef DEBUG
-    img1.write("/tmp/img1.spi");
-    img2.write("/tmp/img2.spi");
-    img3.write("/tmp/img3.spi");
+    Matrix2D<double>  R;
+    R.initIdentity(3);
+    R(2, 0) = 128.;
+    R(2, 1) = 128.;
+    applyGeometry(BSPLINE3, auxMul, arg1Mul, R.transpose(), IS_NOT_INV, true, 0.);
+    aux.write("/tmp/arg1.spi");
+    applyGeometry(BSPLINE3, auxMul, arg2Mul, R.transpose(), IS_NOT_INV, true, 0.);
+    aux.write("/tmp/arg2.spi");
+    applyGeometry(BSPLINE3, auxMul, argDiffMul, R.transpose(), IS_NOT_INV, true, 0.);
+    aux.write("/tmp/argDiff.spi");
+    applyGeometry(BSPLINE3, auxMul, ctf1Mul, R.transpose(), IS_NOT_INV, true, 0.);
+    aux.write("/tmp/ctf1.spi");
+    applyGeometry(BSPLINE3, auxMul, ctf2Mul, R.transpose(), IS_NOT_INV, true, 0.);
+    aux.write("/tmp/ctf2.spi");
+    applyGeometry(BSPLINE3, auxMul, ctfDiffMul, R.transpose(), IS_NOT_INV, true, 0.);
+    aux.write("/tmp/ctfMDiff.spi");
+
     std::cerr << "DEBUG_ROB: counter: "    << counter << std::endl;
     std::cerr << "DEBUG_ROB: counterAux: " << counterAux << std::endl;
     std::cerr << "DEBUG_ROB: res in pixels: " << sqrt (counter/PI) << std::endl;
