@@ -23,7 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.packages.xmipp3.protocol_kerdensom import XmippProtKerdensom
 """
 This module implement the wrappers around xmipp_showj
 visualization program.
@@ -31,7 +30,7 @@ visualization program.
 
 import os
 from pyworkflow.viewer import Viewer, Wizard
-from pyworkflow.em import SetOfImages, SetOfMicrographs, SetOfParticles, SetOfCoordinates, DefCTFMicrographs, SetOfClasses2D
+from pyworkflow.em import SetOfImages, SetOfMicrographs, SetOfParticles, SetOfCoordinates, DefCTFMicrographs, SetOfClasses2D, SetOfVolumes
 from pyworkflow.utils.process import runJob
 from xmipp3 import getXmippPath
 from pyworkflow.em.protocol import ProtImportMicrographs
@@ -44,7 +43,7 @@ from protocol_ml2d import XmippProtML2D
 from protocol_cl2d import XmippProtCL2D
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_rotational_spectra import XmippProtRotSpectra
-from convert import writeSetOfMicrographs, writeSetOfParticles, writeSetOfClasses2D
+from convert import writeSetOfMicrographs, writeSetOfParticles, writeSetOfClasses2D, writeSetOfCoordinates
 from os.path import dirname, join
 
 
@@ -85,15 +84,20 @@ class XmippViewer(Viewer):
             
             if mdFn:
                 fn = mdFn.get()
-                extraDir = join(dirname(obj.getFileName()), 'extra')                
             else:
                 fn = self._getTmpPath(obj_mics.getName() + '_micrographs.xmd')
                 writeSetOfMicrographs(obj_mics, fn)
-                extraDir = join(dirname(fn), 'extra') #TODO: CHECK THIS 
+                
+            extraFn = getattr(obj, '_xmippMd', None)
+            if extraFn:
+                extraDir = extraFn.get()
+            else:
+                extraDir = self._getTmpPath() # TODO: CHECK to create an extra for the coordinates obj
+                writeSetOfCoordinates(extraDir, obj)            
                 
             runParticlePicker(fn, extraDir, extraParams='readonly')
         
-        elif issubclass(cls, SetOfParticles):
+        elif issubclass(cls, SetOfParticles) or issubclass(cls, SetOfVolumes):
             mdFn = getattr(obj, '_xmippMd', None)
             if mdFn:
                 fn = mdFn.get()

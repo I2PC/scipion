@@ -31,7 +31,7 @@ This sub-package contains the XmippProtExtractParticles protocol
 
 from pyworkflow.em import * 
 
-from convert import writeCTFModel, writePosCoordinates, readSetOfParticles
+from convert import writeCTFModel, writeSetOfCoordinates, readSetOfParticles
 from pyworkflow.utils.path import makePath, removeBaseExt, join, exists
 from xmipp3 import XmippProtocol
 from glob import glob
@@ -201,7 +201,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         
     def writePosFiles(self):
         """ Write the pos file for each micrograph on metadata format. """
-        self.posFiles = writePosCoordinates(self._getExtraPath(), self.inputCoords)
+        self.posFiles = writeSetOfCoordinates(self._getExtraPath(), self.inputCoords)
         
         
     def getCTF(self, micId, micName, micrographToExtract):

@@ -33,6 +33,7 @@ This module contains converter functions that will serve to:
 import os
 
 import xmipp
+from protlib_particles import readPosCoordinates
 from xmipp3 import XmippMdRow
 from pyworkflow.em import *
 from pyworkflow.em.constants import NO_INDEX
@@ -71,8 +72,8 @@ def _rowToObject(row, obj, attrDict):
     for attr, label in attrDict.iteritems():
         if not hasattr(obj, attr):
             setattr(obj, attr, String()) #TODO: change string for the type of label
-        if row.hasLabel(label):
-            getattr(obj, attr).set(row.getValue(label))
+            
+        getattr(obj, attr).set(row.getValue(label))
     
 def rowToObject(md, objId, obj, attrDict):
     """ Same as rowToObject, but creating the row from md and objId. """
@@ -296,22 +297,7 @@ def readSetOfVolumes(filename, volSet, hasCtf=False):
 def writeSetOfVolumes(volSet, filename):
     writeSetOfImages(volSet, filename, volumeToRow, None, None)    
     
-    
-def readPosCoordinates(posFile):
-    """ Read the coordinates in .pos file. 
-    and return corresponding metadata. 
-    """
-    md = xmipp.MetaData()
-    blocks = xmipp.getBlocksInMetaDataFile(posFile)
-    
-    for b in ['particles', 'particles_auto']:
-        if b in blocks:
-            mdAux = xmipp.MetaData('%(b)s@%(posFile)s' % locals())
-            md.unionAll(mdAux)
-    
-    return md
-
-def writePosCoordinates(posDir, coordSet):
+def writeSetOfCoordinates(posDir, coordSet):
     """ Write a pos file on metadata format for each micrograph 
     on the coordSet. 
     Params:
@@ -355,6 +341,7 @@ def readSetOfCoordinates(posDir, micSet, coordSet):
             coord.setMicrograph(mic)
             coordSet.append(coord)
 
+    coordSet._xmippMd = String(posDir)
     coordSet.setBoxSize(boxSize)
 
 
