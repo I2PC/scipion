@@ -44,6 +44,7 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'jquery_datatables': 'jquery/jquery.dataTables.js',
           'jquery_editable': 'jquery/jquery.jeditable.js',
           'jquery_ui': 'jquery/jquery-ui.js',
+          'jquery_hover_intent': 'jquery/jquery.hoverIntent.minified.js',
           
           'utils': 'templates_libs/utils.js',
           'host_utils': 'templates_libs/host_utils.js',
@@ -167,16 +168,65 @@ def get_image(request):
     img.save(response, "PNG")
     return response
 
+def get_slice(request):
+#    from django.http import HttpResponse
+    from pyworkflow.gui import getImage, getPILImage
+#    print "request.session['projectPath']2", request.session['projectPath']
+    
+    imageNo = None
+    imagePath = request.GET.get('image')
+    imageDim = request.GET.get('dim', 150)
+    mirrorY = 'mirrorY' in request.GET
+#    applyTransformMatrix = 'applyTransformMatrix' in request.GET
+#    onlyApplyShifts = request.GET.get('onlyApplyShifts',False)
+#    wrap = request.GET.get('wrap',False)
+#    transformMatrix = request.GET.get('transformMatrix',None)
+#    
+    # PAJM: Como vamos a gestionar lsa imagen    
+    if imagePath.endswith('png') or imagePath.endswith('gif'):
+        img = getImage(imagePath, tk=False)
+    else:
+        if '@' in imagePath:
+            parts = imagePath.split('@')
+            imageNo = parts[0]
+            imagePath = parts[1]
+
+        if 'projectPath' in request.session:
+            imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
+            if not os.path.isfile(imagePathTmp):
+                imagePath = getInputPath('showj', imagePath)      
+
+        if imageNo:
+            imagePath = '%s@%s' % (imageNo, imagePath) 
+            
+        #imgXmipp = xmipp.Image(imagePath)
+        imgXmipp = xmipp.Image()
+        imgXmipp.readPreview(imagePath, int(imageDim))
+                
+#        if applyTransformMatrix and transformMatrix != None: 
+#            imgXmipp.applyTransforMatScipion(transformMatrix, onlyApplyShifts, wrap)
+#        
+        if mirrorY: 
+            imgXmipp.mirrorY()
+        
+        
+        # from PIL import Image
+        img = getPILImage(imgXmipp, None)
+         
+    # response = HttpResponse(mimetype="image/png")    
+    
+    response = HttpResponse(mimetype="image/png")
+    img.save(response, "PNG")
+    return response
+
 
 def getImageXdim(request, imagePath):
-    img = xmipp.Image()
-    imgFn = os.path.join(request.session['projectPath'], imagePath)
-    img.read(str(imgFn), xmipp.HEADER)
-    return img.getDimensions()[0]
+    return getImageDim(request, imagePath)[0]
 
 def getImageDim(request, imagePath):
     img = xmipp.Image()
     imgFn = os.path.join(request.session['projectPath'], imagePath)
+    print("imgFn",imgFn)
     img.read(str(imgFn), xmipp.HEADER)
     return img.getDimensions()
 

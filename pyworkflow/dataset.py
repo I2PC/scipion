@@ -34,13 +34,21 @@ class DataSet(object):
     All tables should have an unique tableName. 
     """
     
-    def __init__(self, tables, tableName=None, labelToRender=None):
+    def __init__(self, tables, tableName=None, volumeName=None, labelToRender=None):
         self._tables = list(tables)
         self._tableName = tableName
+        #NAPA de LUXE: Hay que ver si el volumen name se usa en algun lado        
+        self._volumeName = volumeName 
         self._labelToRender = labelToRender
         
     def setTableName(self, tableName):    
         self._tableName = tableName
+        
+    def setVolumeName(self, volumeName):    
+        self._volumeName = volumeName
+        
+    def getVolumeName(self):
+        return self._volumeName
     
     def setLabelToRender(self, labelToRender):
         self._labelToRender = labelToRender
@@ -56,6 +64,9 @@ class DataSet(object):
     
     def getIdColumn(self):
         return self.getTable().getColumnByLabel("id")
+    
+    def getNumberSlicesForTemplate(self):
+        return range(80)
         
     def getTransformationMatrix(self):    
         return self.getTable().getColumnByLabel(self._labelToRender+"_transformationMatrix")

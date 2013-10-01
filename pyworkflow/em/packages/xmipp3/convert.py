@@ -170,7 +170,7 @@ def rowToMicrograph(md, objId, hasCtf):
     """ Create a Micrograph object from a row of Xmipp metadata. """
     return rowToImage(md, objId, xmipp.MDL_MICROGRAPH, Micrograph, hasCtf)
 
-def volumeToRow(vol, volRow):
+def volumeToRow(vol, volRow, ctfDir, hasCtf):
     """ Set labels values from Micrograph mic to md row. """
     imageToRow(vol, volRow, ctfDir=None, hasCtf=False, imgLabel=xmipp.MDL_IMAGE)
     
@@ -294,7 +294,7 @@ def readSetOfVolumes(filename, volSet, hasCtf=False):
     readSetOfImages(filename, volSet, rowToVolume, False)
 
 def writeSetOfVolumes(volSet, filename):
-    writeSetOfImages(volSet, filename, volumeToRow)    
+    writeSetOfImages(volSet, filename, volumeToRow, None, None)    
     
     
 def readPosCoordinates(posFile):
