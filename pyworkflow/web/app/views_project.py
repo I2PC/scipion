@@ -168,6 +168,7 @@ def project_content(request):
                'stopTool': getResourceIcon('stop_toolbar'),
                'analyzeTool': getResourceIcon('analyze_toolbar'),
                'treeTool': getResourceIcon('tree_toolbar'),
+               'listTool': getResourceIcon('list_toolbar'),
                'utils': getResourceJs('utils'),
                'graph_utils': getResourceJs('graph_utils'),
                'project_content_utils': getResourceJs('project_content_utils'),
