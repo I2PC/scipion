@@ -13,16 +13,22 @@ header,section,footer,aside,nav,article,hgroup {
 /* HEADER */
 header {
 	height: 100px;
+	
+	display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
+  	display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
+  	display: -ms-flexbox;      /* TWEENER - IE 10 */
 	display: -moz-flex;
 	display: -webkit-flex;
 	display: -ms-flex;
 	display: -o-flex;
 	display: flex;
+	
 	-webkit-flex-flow: row;
 	-moz-flex-flow: row;
 	-ms-flex-flow: row;
 	-o-flex-flow: row;
 	flex-flow: row;
+	
 	-webkit-flex-wrap: wrap;
 	-moz-flex-wrap: wrap;
 	-ms-flex-wrap: wrap;
@@ -62,16 +68,22 @@ aside {
 	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e3e3e3', endColorstr='#cccccc',GradientType=0 ); /* IE6-9 */
 	
 	padding-left: 20px;
+	
+	display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
+  	display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
+  	display: -ms-flexbox;      /* TWEENER - IE 10 */
 	display: -moz-flex;
 	display: -ms-flex;
 	display: -o-flex;
 	display: -webkit-flex;
 	display: flex;
+	
 	-webkit-flex-flow: row;
 	-moz-flex-flow: row;
 	-ms-flex-flow: row;
 	-o-flex-flow: row;
 	flex-flow: row;
+	
 	-webkit-flex-wrap: wrap;
 	-moz-flex-wrap: wrap;
 	-o-flex-wrap: wrap;
@@ -86,6 +98,9 @@ aside button {
 }
 
 aside form{
+	display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
+  	display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
+  	display: -ms-flexbox;      /* TWEENER - IE 10 */
 	display: -moz-flex;
 	display: -ms-flex;
 	display: -o-flex;
@@ -96,11 +111,15 @@ aside form{
 aside .sectionMenu {
 	margin-right: 20px;
 	/* display: inline-block; */
+	display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
+  	display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
+  	display: -ms-flexbox;      /* TWEENER - IE 10 */
 	display: -moz-flex;
 	display: -ms-flex;
 	display: -o-flex;
 	display: -webkit-flex;
 	display: flex;
+	
 	-webkit-align-items: center;
 	-moz-align-items: center;
 	-o-align-items: center;
@@ -110,11 +129,16 @@ aside .sectionMenu {
 
 aside .subSectionMenu {
 	margin-right: 10px;
+	
+	display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
+  	display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
+  	display: -ms-flexbox;      /* TWEENER - IE 10 */
 	display: -moz-flex;
 	display: -ms-flex;
 	display: -o-flex;
 	display: -webkit-flex;
 	display: flex;
+	
 	-webkit-align-items: center;
 	-moz-align-items: center;
 	-o-align-items: center;
@@ -134,6 +158,8 @@ aside #colRowMode {
 
 aside .menuIcon {
 	margin-right: 5px;
+/* 	width: 17px;
+    height: 17px; */
 }
 
 aside .menuInputNumber {
@@ -176,16 +202,21 @@ aside .galleryOff{
 }
 
 aside .arrowSectionMenu{
+	display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
+  	display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
+  	display: -ms-flexbox;      /* TWEENER - IE 10 */
 	display: -moz-flex;
 	display: -ms-flex;
 	display: -o-flex;
 	display: -webkit-flex;
 	display: flex;
+	
 	-webkit-align-items: center;
 	-moz-align-items: center;
 	-o-align-items: center;
 	-ms-align-items: center;
 	align-items: center;
+	
 	-webkit-flex-flow: column;
 	-moz-flex-flow: column;
 	-o-flex-flow: column;
@@ -202,16 +233,22 @@ aside .arrowImage{
 /* MAIN SECTION */
 section {
 	padding: 20px;
+	
+	display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
+  	display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
+  	display: -ms-flexbox;      /* TWEENER - IE 10 */
 	display: -moz-flex;
 	display: -ms-flex;
 	display: -o-flex;
 	display: -webkit-flex;
 	display: flex;
+	
 	-webkit-flex-flow: row;
 	-moz-flex-flow: row;
 	-o-flex-flow: row;
 	-ms-flex-flow: row;
 	flex-flow: row;
+	
 	-webkit-flex-wrap: wrap;
 	-moz-flex-wrap: wrap;
 	-o-flex-wrap: wrap;
@@ -266,6 +303,7 @@ section .imageTitle{
 	z-index:999;
 	background-color: #e6e6e6;
 	color: #555555;
+	
 	-webkit-align-items: center;
 	-moz-align-items: center;
 	-o-align-items: center;

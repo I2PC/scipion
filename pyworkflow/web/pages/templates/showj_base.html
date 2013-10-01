@@ -9,6 +9,8 @@
 	<!-- JS -->
 	<script src="{{jquery}}" type="text/javascript"></script>
 	<script src="{{jquery_waypoints}}" type="text/javascript"></script>
+	<script src="{{jquery_hover_intent}}" type="text/javascript"></script>
+	
 	
 	<script type="text/javascript">
 	/*  Initialize variable to keep changes*/
@@ -187,6 +189,12 @@
 		function setImageSize(refreshElement){
 			/* Gets zoom and image width and height */
 			zoom_element=$('#id_zoom')
+			
+			console.log("dim")
+			console.log({{imageDimensions.0}})
+			console.log({{imageDimensions.1}})
+			console.log({{imageDimensions.2}})
+			console.log({{imageDimensions.3}})
 			
 			imageHeight_val = parseInt({{imageDimensions.1}})
 			imageWidth_val = parseInt({{imageDimensions.0}})

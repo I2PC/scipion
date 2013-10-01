@@ -33,6 +33,8 @@ def showj(request, inputParameters=None):
         _labelsToRenderComboBox = inputParameters['labelsToRenderComboBox'] if 'labelsToRenderComboBox' in inputParameters else ''
         request.session['defaultZoom'] = inputParameters['zoom'] if 'zoom' in inputParameters else '150px' 
     
+    print("path",_path)
+    
     #Init Dataset
     #Todo: Check type of Dataset 
     dataset = loadDatasetXmipp(_path) 
@@ -110,6 +112,7 @@ def showj(request, inputParameters=None):
                'jquerydataTables_colreorder_resize': getResourceJs('jquery_colreorder_resize'),
                'jeditable': getResourceJs('jquery_editable'),
                'jquery_waypoints':getResourceJs('jquery_waypoints'),
+               'jquery_hover_intent':getResourceJs('jquery_hover_intent'),
                
                'dataset': dataset,
                'tableLayoutConfiguration': json.dumps({'columnsLayout': tableLayoutConfiguration.columnsLayout, 'colsOrder': tableLayoutConfiguration.colsOrder}, ensure_ascii=False, cls=ColumnLayoutConfigurationEncoder), #Data variables
@@ -303,14 +306,12 @@ def showVolVisualization(request):
 ######################## DISPATCHER ###############################    
 ###################################################################  
 def visualizeObject(request):
+    #Napa de Luxe
     probandoCTFParam = False
+    probandoVolume = False
     
     objectId = request.GET.get("objectId")    
     projectPath = request.session['projectPath']
-    
-#    projectName = request.session['projectName']
-#    project = loadProject(projectName)
-
     project = Project(projectPath)
     project.load()
     
@@ -338,10 +339,12 @@ def visualizeObject(request):
         fn = project.getTmpPath(obj.getName()+ '_volumes.xmd')
         writeSetOfVolumes(obj, fn)
         inputParameters = {'path': join(projectPath, fn),
+                           'allowRender': True,
                            'setOfVolumes' : obj,
                            'setOfVolumesId': obj.getObjId(),
                            'dims': '3d',
-                           'mode': 'table'}  
+                           'mode': 'table',
+                           'colRowMode': 'Off'}  
     elif isinstance(obj, SetOfImages):
         fn = project.getTmpPath(obj.getName() + '_images.xmd')
         writeSetOfParticles(obj, fn)
@@ -365,7 +368,7 @@ def visualizeObject(request):
     else:
         raise Exception('Showj Web visualizer: can not visualize class: %s' % obj.getClassName())
 
-    if isinstance(obj, SetOfVolumes):
+    if isinstance(obj, SetOfVolumes) and probandoVolume:
         return render_to_response('volume_visualization.html', inputParameters)
     else:
         return showj(request, inputParameters)  
