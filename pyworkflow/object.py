@@ -39,6 +39,7 @@ class Object(object):
         self._objParentId =  args.get('objParentId', None) # identifier of the parent object
         self._objName =  args.get('objName', '') # The name of the object will contains the whole path of ancestors
         self._objLabel = args.get('objLabel', '') # This will serve to label the objects
+        self._objComment = args.get('objComment', '')
         self._objTag =  args.get('objTag', None) # This attribute serve to make some annotation on the object.
         self._objDoStore =  args.get('objDoStore', True) # True if this object will be stored from his parent
         self._objIsPointer =  args.get('objIsPointer', False) # True if will be treated as a reference for storage
@@ -133,6 +134,22 @@ class Object(object):
         self.setObjId(None)
         for _, attr in self.getAttributesToStore():
             attr.cleanObjId()
+            
+    def getObjLabel(self):
+        """ Return the label associated with this object"""
+        return self._objLabel
+    
+    def setObjLabel(self, label):
+        """ Set the label to better identify this object"""
+        self._objLabel = label
+             
+    def getObjComment(self):
+        """ Return the comment associated with this object"""
+        return self._objComment
+    
+    def setObjComment(self, comment):
+        """ Set the comment to better identify this object"""
+        self._objComment = comment       
     
     def strId(self):
         """String representation of id"""

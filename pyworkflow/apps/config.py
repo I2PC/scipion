@@ -86,6 +86,7 @@ class ProjectSettings(OrderedObject):
         self.menuList = SettingList() # Store different menus
         self.protMenuList = SettingList() # Store different protocol configurations
         self.mapper = None # This should be set when load, or write 
+        self.graphView = Boolean(False)
         
     def commit(self):
         """ Commit changes made. """

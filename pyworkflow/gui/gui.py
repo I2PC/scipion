@@ -33,6 +33,7 @@ import tkFont
 
 from pyworkflow.object import OrderedObject
 from pyworkflow.utils.path import findResource
+from dialog import showInfo, showError
 
 """
 Some GUI CONFIGURATION parameters
@@ -292,3 +293,10 @@ class Window():
             else:
                 menu.add_command(label=sub.text.get(), compound=tk.LEFT,
                                  image=self.getImage(sub.icon.get()))
+                
+    def showError(self, msg, header="Error"):
+        showError(header, msg, self.root)
+        
+    def showInfo(self, msg, header="Info"):
+        showInfo(header, msg, self.root)
+        

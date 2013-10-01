@@ -298,7 +298,6 @@ class ProtocolsView(tk.Frame):
         tk.Frame.__init__(self, parent, **args)
         # Load global configuration
         self.selectedProtocol = None
-        self.showGraph = False
         self.windows = windows
         self.project = windows.project
         self.root = windows.root
@@ -306,6 +305,7 @@ class ProtocolsView(tk.Frame):
         self.protCfg = windows.protCfg
         self.icon = windows.icon
         self.settings = windows.getSettings()
+        self.showGraph = self.settings.graphView.get()
         
         self.root.bind("<F5>", self.refreshRuns)
         # Hide the right-click menu
@@ -373,6 +373,13 @@ class ProtocolsView(tk.Frame):
         
         self.createRunsGraph(runsFrame)
         
+        if self.showGraph:
+            treeWidget = self.runsGraph
+        else:
+            treeWidget = self.runsTree
+            
+        treeWidget.grid(row=0, column=0, sticky='news')
+        
         # Create the Selected Run Info
         infoFrame = tk.Frame(v)
         #infoFrame.columnconfigure(0, weight=1)
@@ -397,14 +404,8 @@ class ProtocolsView(tk.Frame):
         tab.add(sframe, text="Summary")     
         tab.grid(row=0, column=0, sticky='news')
         
-        v.add(runsFrame, weight=3, 
-              #padx=5, pady=5, 
-              #sticky='news'
-              )
-        v.add(infoFrame, weight=1,
-              #padx=5, pady=5, 
-              #sticky='news'
-              )
+        v.add(runsFrame, weight=3)
+        v.add(infoFrame, weight=1)
         v.grid(row=1, column=0, sticky='news')
         
         # Add sub-windows to PanedWindows
@@ -476,8 +477,7 @@ class ProtocolsView(tk.Frame):
         
     def createRunsTree(self, parent):
         self.provider = RunsTreeProvider(self.project, self._runActionClicked)
-        tree = BoundTree(parent, self.provider)
-        tree.grid(row=0, column=0, sticky='news')
+        tree = BoundTree(parent, self.provider)        
         tree.itemDoubleClick = self._runItemDoubleClick
         tree.itemClick = self._runItemClick
         return tree
@@ -525,7 +525,9 @@ class ProtocolsView(tk.Frame):
             
         hide.grid_remove()
         show.grid(row=0, column=0, sticky='news')
-            #TODO: hide graph
+        self.settings.graphView.set(self.showGraph)
+        self.settings.write()
+        
     
     def _protocolItemClick(self, e=None):
         protClassName = self.protTree.getFirst().split('.')[-1]

@@ -164,6 +164,9 @@ class ProjectWindow(gui.Window):
     def getSettings(self):
         return self.project.getSettings()
     
+    def saveSettings(self):
+        self.project.saveSettings()
+    
     def _viewComboSelected(self, e=None):
         if self.viewVar.get() != self.view:
             self.switchView(self.viewVar.get())

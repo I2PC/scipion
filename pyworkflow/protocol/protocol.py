@@ -214,14 +214,18 @@ class Protocol(Step):
         self.workingDir = String(args.get('workingDir', '.')) # All generated filePaths should be inside workingDir
         self.mapper = args.get('mapper', None)
         self._createVarsFromDefinition(**args)
+        
         # For non-parallel protocols mpi=1 and threads=1
         if not hasattr(self, 'numberOfMpi'):
             self.numberOfMpi = Integer(1)
+        
         if not hasattr(self, 'numberOfThreads'):
             self.numberOfThreads = Integer(1)
+        
         # Check if MPI or threads are passed in **args, mainly used in tests
         if 'numberOfMpi' in args:
             self.numberOfMpi.set(args.get('numberOfMpi'))
+        
         if 'numberOfThreads' in args:
             self.numberOfThreads.set(args.get('numberOfThreads'))            
         
