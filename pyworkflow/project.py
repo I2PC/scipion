@@ -82,6 +82,9 @@ class Project(object):
     def getSettings(self):
         return self.settings
     
+    def saveSettings(self):
+        self.settings.write()
+    
     def load(self):
         """Load project data and settings
         from the project dir."""

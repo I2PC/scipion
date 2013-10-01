@@ -37,8 +37,8 @@ import gui
 from gui import configureWeigths, Window
 from text import TaggedText
 from widgets import Button
-from dialog import showInfo, showError
 from pyworkflow.protocol.params import *
+from dialog import showInfo
 
 
 class BoolVar():
@@ -516,23 +516,24 @@ class FormWindow(Window):
         return (width, height)
         
         
-    def _showError(self, msg):
-        showError("Protocol validation", msg, self.root) 
-        
     def save(self, e=None):
         self._close(onlySave=True)
         
     def execute(self, e=None):
         errors = self.protocol.validate()
         if len(errors):
-            self._showError(errors)
+            self.showError(errors)
         else:
             self._close()
         
     def _close(self, onlySave=False):
         if not onlySave:
             self.close()
-        self.callback(self.protocol, onlySave)
+        try:
+            self.callback(self.protocol, onlySave)
+            self.showInfo("Protocol saved sucessfully")
+        except Exception, ex:
+            self.showError("Error during save: " + ex)
            
     def _fillSection(self, sectionParam, sectionWidget):
         parent = sectionWidget.contentFrame
