@@ -33,6 +33,7 @@ import tkFont
 
 from pyworkflow.object import OrderedObject
 from pyworkflow.utils.path import findResource
+from dialog import showInfo, showError
 
 """
 Some GUI CONFIGURATION parameters
@@ -241,6 +242,8 @@ class Window():
             self.root.iconbitmap("@" + abspath)
             
         self.root.protocol("WM_DELETE_WINDOW", self._onClosing)
+        self._w, self._h, self._x, self._y = 0, 0, 0, 0
+        self.root.bind("<Configure>", self._configure)
         self.master = masterWindow
         setCommonFonts()
         
@@ -248,6 +251,33 @@ class Window():
         """This method should be used by subclasses
         to calculate desired dimensions"""
         return None
+    
+    def _configure(self, e):
+        """ Filter event and call appropiate handler. """
+        if self.root != e.widget:
+            return
+        
+        _, _, x, y = getGeometry(self.root)
+        w, h = e.width, e.height
+        
+        if w != self._w or h != self._h:
+            self._w, self._h = w, h
+            self.handleResize() 
+        
+        if x != self._x or y != self._y:
+            self._x, self._y = x, y
+            self.handleMove()    
+            
+        
+    def handleResize(self):
+        """ This method should be overriden by subclasses
+        in order to response to resize event. """
+        pass
+        
+    def handleMove(self):
+        """ This method should be overriden by subclasses
+        in order to response to move envet. """
+        pass
     
     def show(self, center=True):
         """This function will enter in the Tk mainloop"""
@@ -292,3 +322,10 @@ class Window():
             else:
                 menu.add_command(label=sub.text.get(), compound=tk.LEFT,
                                  image=self.getImage(sub.icon.get()))
+                
+    def showError(self, msg, header="Error"):
+        showError(header, msg, self.root)
+        
+    def showInfo(self, msg, header="Info"):
+        showInfo(header, msg, self.root)
+        

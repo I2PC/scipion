@@ -279,7 +279,6 @@ class SetOfImages(Set):
     def __init__(self, **args):
         # Use the object value to store the filename
         Set.__init__(self, **args)
-        self._filename = String() # sqlite filename
         self._samplingRate = Float()        
         self._hasCtf = Boolean(args.get('ctf', False))
         self._hasAlignment = Boolean(args.get('alignmet', False))

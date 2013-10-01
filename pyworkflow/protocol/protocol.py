@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.protocol.constants import MODE_RESUME
 """
 This modules contains classes required for the workflow
 execution and tracking like: Step and Protocol
@@ -213,14 +214,18 @@ class Protocol(Step):
         self.workingDir = String(args.get('workingDir', '.')) # All generated filePaths should be inside workingDir
         self.mapper = args.get('mapper', None)
         self._createVarsFromDefinition(**args)
+        
         # For non-parallel protocols mpi=1 and threads=1
         if not hasattr(self, 'numberOfMpi'):
             self.numberOfMpi = Integer(1)
+        
         if not hasattr(self, 'numberOfThreads'):
             self.numberOfThreads = Integer(1)
+        
         # Check if MPI or threads are passed in **args, mainly used in tests
         if 'numberOfMpi' in args:
             self.numberOfMpi.set(args.get('numberOfMpi'))
+        
         if 'numberOfThreads' in args:
             self.numberOfThreads.set(args.get('numberOfThreads'))            
         
@@ -567,6 +572,7 @@ class Protocol(Step):
         Step.run(self)
         outputs = [getattr(self, o) for o in self._outputs]
         #self._store(self.status, self.initTime, self.endTime, *outputs)
+        self.runMode.set(MODE_RESUME) # Always set to resume, even if set to restart
         self._store()
         self._log.info('------------------- PROTOCOL FINISHED')
         self.__closeLogger()

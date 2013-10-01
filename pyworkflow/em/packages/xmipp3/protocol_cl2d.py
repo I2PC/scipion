@@ -104,7 +104,11 @@ class XmippProtCL2D(ProtAlign, ProtClassify):
     _definition = XmippDefCL2D()
     _label = 'Xmipp CL2D'
     
-
+    def __init__(self, **args):
+        if 'numberOfMpi' not in args:
+            args['numberOfMpi'] = 2
+        Protocol.__init__(self, **args)        
+        
     def _defineSteps(self):
         """ Mainly prepare the command line for call cl2d program"""
         

@@ -48,8 +48,15 @@
 	function updateSelection(){
 		$(".img_container").each(function(){
 			$(this).removeClass('image_selected')
-		});	
-		$("#img_container___"+$('#id_goto').val()).addClass("image_selected")
+		});
+		
+		selectedElement=$("#img_container___"+$('#id_goto').val())
+		
+		selectedElement.addClass("image_selected")
+		
+		$('html, body').animate({
+	        scrollTop: selectedElement.offset().top
+	    }, 2000);
 	}
 	
 	//Show enabled/disabled image and title on hover

@@ -162,7 +162,10 @@ class ProjectWindow(gui.Window):
         return header
     
     def getSettings(self):
-        return self.project.getSettings()
+        return self.settings
+    
+    def saveSettings(self):
+        self.settings.write()
     
     def _viewComboSelected(self, e=None):
         if self.viewVar.get() != self.view:
@@ -178,6 +181,12 @@ class ProjectWindow(gui.Window):
         # Grid in the second row (1)
         self.viewWidget.grid(row=1, column=0, sticky='news')
         self.view = newView
+        
+#    def handleResize(self):
+#        print self._w, self._h
+#        
+#    def handleMove(self):
+#        print self._x, self._y
         
     def createProtocolsView(self, parent):
         """ Create the Protocols View for the Project.
@@ -203,10 +212,10 @@ class ProjectWindow(gui.Window):
     def loadProject(self):
         self.project = Project(self.projPath)
         self.project.load()
-        settings = self.project.getSettings()
-        self.generalCfg = settings.getConfig()
-        self.menuCfg = settings.getCurrentMenu()
-        self.protCfg = settings.getCurrentProtocolMenu()
+        self.settings = self.project.getSettings()
+        self.generalCfg = self.settings.getConfig()
+        self.menuCfg = self.settings.getCurrentMenu()
+        self.protCfg = self.settings.getCurrentProtocolMenu()
                 
 #    def loadProjectConfig(self):
 #        self.settings = config.loadSettings(self.project.getSettingsPath())
