@@ -69,6 +69,7 @@ class TestXmippSetOfCoordinates(unittest.TestCase):
         coordSet = SetOfCoordinates()
         dbCoord = getInputPath('Picking_XmippBPV3_Down3', 'coordinates.sqlite')
         coordSet.setFileName(dbCoord)
+        coordSet.setBoxSize(512)
         coordSet.setMicrographs(micSet)
         
         posDir = getOutputPath(self.outputPath)
