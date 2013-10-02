@@ -2,15 +2,19 @@
  * Methods used in the project_content template. 
  * Toolbar functions + Manage tabs
  * 
- * launchToolbar(projName, id, elm);
+ * launchToolbarList(projName, id, elm); 
+ * launchToolbarTree(projName, id, elm);
+ * checkRunStatus(projName, id);
  * fillTabsSummary(id);
  * fillUL(list, ulId, icon);
  * launchViewer(id);
- * updateTabs(projName, id, elm);
+ * updateTree(id, elm);
+ * updateRow(id, elm, row);
  * switchGraph();
  * deleteProtocolForm(projName, protocolId);
  * deleteProtocol(elm);
- *  
+ * stopProtocolForm(projName, protocolId);
+ * stopProtocol(elm);
  * 
  **/
 
@@ -271,13 +275,14 @@ function switchGraph() {
  */
 function deleteProtocolForm(projName, protocolId) {
 
-	var msg = "<table><tr><td><img src='/resources/warning.gif' width='45' height='45' />"
-			+ "</td><td class='content' value='"
+	var msg = "</td><td class='content' value='"
 			+ projName
 			+ "-"
 			+ protocolId
 			+ "'><strong>ALL DATA</strong> related to this <strong>protocol run</strong>"
 			+ " will be <strong>DELETED</strong>. Do you really want to continue?</td></tr></table>";
+	
+	msg = messiWarning(msg);
 
 	new Messi(msg, {
 		title : 'Confirm DELETE',
@@ -320,14 +325,15 @@ function deleteProtocol(elm) {
  * Dialog form to verify the right option to stop a protocol
  */
 function stopProtocolForm(projName, protocolId) {
-
-	var msg = "<table><tr><td><img src='/resources/warning.gif' width='45' height='45' />"
-			+ "</td><td class='content' value='"
+		
+	var msg = "<td class='content' value='"
 			+ projName
 			+ "-"
 			+ protocolId
 			+ "'>This <strong>protocol run</strong>"
-			+ " will be <strong>STOPPED</strong>. Do you really want to continue?</td></tr></table>";
+			+ " will be <strong>STOPPED</strong>. Do you really want to continue?</td>";
+			
+	msg = messiWarning(msg);
 
 	new Messi(msg, {
 		title : 'Confirm STOP',

@@ -633,12 +633,10 @@ class FormWindow(Window):
                 
     def setProtocolLabel(self, paramName):
         label = self.widgetDict[paramName].get()
-        print "setting label: ", label
         self.protocol.setObjLabel(label)
         
     def setProtocolComment(self, paramName):
         label = self.widgetDict[paramName].get()
-        print "setting comment: ", label
         self.protocol.setObjLabel(label)       
              
     def updateProtocolParams(self):
