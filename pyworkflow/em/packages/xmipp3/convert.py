@@ -313,7 +313,7 @@ def writeSetOfCoordinates(posDir, coordSet):
     for mic in coordSet.iterMicrographs():
         micName = mic.getFileName()
         posFn = join(posDir, replaceBaseExt(micName, "pos"))
-        # Write filters block
+        # Write header block
         md = xmipp.MetaData()    
         objId = md.addObject()
         md.setValue(xmipp.MDL_PICKING_MICROGRAPH_STATE, 'Manual', objId)
