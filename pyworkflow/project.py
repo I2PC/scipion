@@ -236,6 +236,7 @@ class Project(object):
         protocol.setHostConfig(hostConfig)
     
     def _storeProtocol(self, protocol):
+        print "storing protocol, label", protocol.getObjLabel() 
         self.mapper.store(protocol)
         self.mapper.commit()
                 
@@ -276,6 +277,8 @@ class Project(object):
         for r in runs:
             n = g.createNode(r.strId())
             n.run = r
+            n.label = r.getRunName()
+            
             for key, attr in r.iterOutputAttributes(EMObject):
                 outputDict[attr.getName()] = n # mark this output as produced by r
                 #print "   %s: %s" % (key, attr.getName())
@@ -293,6 +296,8 @@ class Project(object):
                     
         rootNode = g.getRoot()
         rootNode.run = None
+        rootNode.label = "PROJECT"
+        
         for n in g.getNodes():
             if n.isRoot() and not n is rootNode:
                 rootNode.addChild(n)

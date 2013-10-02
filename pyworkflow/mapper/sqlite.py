@@ -27,6 +27,7 @@
 from pyworkflow.utils.path import replaceExt, joinExt
 from mapper import Mapper
 
+
 class SqliteMapper(Mapper):
     """Specific Mapper implementation using Sqlite database"""
     def __init__(self, dbName, dictClasses=None):
@@ -47,7 +48,8 @@ class SqliteMapper(Mapper):
         
     def __insert(self, obj, namePrefix=None):
         obj._objId = self.db.insertObject(obj._objName, obj.getClassName(),
-                                          self.__getObjectValue(obj), obj._objParentId)
+                                          self.__getObjectValue(obj), obj._objParentId,
+                                          obj._objLabel, obj._objComment)
         sid = obj.strId()
         if namePrefix is None:
             namePrefix = sid
@@ -96,7 +98,8 @@ class SqliteMapper(Mapper):
     
     def updateTo(self, obj, level=1):
         self.db.updateObject(obj._objId, obj._objName, obj.getClassName(),
-                             self.__getObjectValue(obj), obj._objParentId)
+                             self.__getObjectValue(obj), obj._objParentId, 
+                             obj._objLabel, obj._objComment)
         if obj.getObjId() in self.updateDict:
             for k, v in self.updateDict.iteritems():
                 print "%d -> %s" % (k, v.getName())
@@ -134,17 +137,22 @@ class SqliteMapper(Mapper):
         """ Retrieve the parent object of another. """
         return self.selectById(obj._objParentId)
     
+    def _getStrValue(self, value):
+        """ Return empty string if value is None or empty. """
+        if value is None or len(value) <= 0:
+            return ''
+        return value
+        
     def fillObjectWithRow(self, obj, objRow):
         """Fill the object with row data"""
         obj._objId = objRow['id']
         self.objDict[obj._objId] = obj
-        name = objRow['name']
-        if name is None or len(name) <= 0:
-            obj._objName = ''#obj.strId()
-        else:
-            obj._objName = name
+        obj._objName = self._getStrValue(objRow['name'])
+        obj._objLabel = self._getStrValue(objRow['label'])
+        obj._objComment = self._getStrValue(objRow['comment'])
         objValue = objRow['value']
         obj._objParentId = objRow['parent_id']
+        
         if obj.isPointer():
             if objValue is not None:
                 objValue = self.selectById(int(objValue))
@@ -232,7 +240,7 @@ class SqliteDb():
     """Class to handle a Sqlite database.
     It will create connection, execute queries and commands"""
     
-    SELECT = "SELECT id, parent_id, name, classname, value FROM Objects WHERE "
+    SELECT = "SELECT id, parent_id, name, classname, value, label, comment FROM Objects WHERE "
     DELETE = "DELETE FROM Objects WHERE "
     
     def selectCmd(self, whereStr, orderByStr=' ORDER BY id'):
@@ -250,7 +258,12 @@ class SqliteDb():
         self.cursor = self.connection.cursor()
         # Define some shortcuts functions
         self.executeCommand = self.cursor.execute
+        #self.executeCommand = self.__debugExecute
         self.commit = self.connection.commit
+        
+    def __debugExecute(self, *args):
+        print args
+        self.cursor.execute(*args)
         
     def __createTables(self):
         """Create requiered tables if don't exists"""
@@ -263,7 +276,8 @@ class SqliteDb():
                       name      TEXT,                -- object name 
                       classname TEXT,                -- object's class name
                       value     TEXT DEFAULT NULL,   -- object value, used for Scalars
-                      label     TEXT DEFAULT NULL   -- object label, text used for display
+                      label     TEXT DEFAULT NULL,   -- object label, text used for display
+                      comment   TEXT DEFAULT NULL    -- object comment, text used for annotations
                       )""")
         # Create the Relations table
         self.executeCommand("""CREATE TABLE IF NOT EXISTS Relations
@@ -272,22 +286,23 @@ class SqliteDb():
                       name      TEXT,               -- relation name 
                       classname TEXT,               -- relation's class name
                       value     TEXT DEFAULT NULL,  -- relation value
-                      label     TEXT DEFAULT NULL,  -- object label, text used for display
+                      label     TEXT DEFAULT NULL,  -- relation label, text used for display
+                      comment   TEXT DEFAULT NULL,   -- relation comment, text used for annotations
                       object_parent  INTEGER REFERENCES Objects(id),
                       object_child  INTEGER REFERENCES Objects(id) 
                       )""")
         self.commit()
         
-    def insertObject(self, name, classname, value, parent_id):
+    def insertObject(self, name, classname, value, parent_id, label, comment):
         """Execute command to insert a new object. Return the inserted object id"""
-        self.executeCommand("INSERT INTO Objects (parent_id, name, classname, value) VALUES (?, ?, ?, ?)", \
-                            (parent_id, name, classname, value))
+        self.executeCommand("INSERT INTO Objects (parent_id, name, classname, value, label, comment) VALUES (?, ?, ?, ?, ?, ?)",
+                            (parent_id, name, classname, value, label, comment))
         return self.cursor.lastrowid
     
-    def updateObject(self, objId, name, classname, value, parent_id):
+    def updateObject(self, objId, name, classname, value, parent_id, label, comment):
         """Update object data """
-        self.executeCommand("UPDATE Objects SET parent_id=?, name=?,classname=?, value=? WHERE id=?", \
-                            (parent_id, name, classname, value, objId))
+        self.executeCommand("UPDATE Objects SET parent_id=?, name=?,classname=?, value=?, label=?, comment=? WHERE id=?",
+                            (parent_id, name, classname, value, label, comment, objId))
         
     def selectObjectById(self, objId):
         """Select an object give its id"""

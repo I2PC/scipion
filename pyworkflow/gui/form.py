@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.gui.dialog import TextDialog
 """
 This modules implements the automatic
 creation of protocol form GUI from its
@@ -361,7 +362,7 @@ class FormWindow(Window):
          callback: callback function to call when Save or Excecute are press.
         """
         Window.__init__(self, title, master, icon='scipion_bn.xbm', 
-                        weight=False, minsize=(500, 450), **args)
+                        weight=False, minsize=(550, 450), **args)
 
         self.callback = callback
         self.widgetDict = {} # Store tkVars associated with params
@@ -420,16 +421,20 @@ class FormWindow(Window):
         self.desiredDimensions = lambda: self.resize(contentFrame)
         #self.resize(contentFrame)
         
-    def _addVarBinding(self, paramName, var, *callbacks):
+    def _addVarBinding(self, paramName, var, func=None, *callbacks):
+        if func is None:
+            func = self.setParamFromVar
         binding = Binding(paramName, var, self.protocol, 
-                          self.setParamFromVar, *callbacks)
+                          func, *callbacks)
         self.widgetDict[paramName] = var
         self.bindings.append(binding)
         
-    def _createBoundEntry(self, parent, paramName, width=5):
+    def _createBoundEntry(self, parent, paramName, width=5, func=None, value=None):
         var = tk.StringVar()
         setattr(self, paramName + 'Var', var)
-        self._addVarBinding(paramName, var)
+        self._addVarBinding(paramName, var, func)
+        if value is not None:
+            var.set(value)
         return tk.Entry(parent, font=self.font, width=width, textvariable=var)
     
     def _createBoundCombo(self, parent, paramName, choices, *callbacks):
@@ -460,7 +465,11 @@ class FormWindow(Window):
         runSection = SectionFrame(commonFrame, label='Run')
         runFrame = runSection.contentFrame
         self._createHeaderLabel(runFrame, "Run label").grid(row=0, column=0, padx=5, pady=5, sticky='ne')
-        self._createBoundEntry(runFrame, 'runName', width=15).grid(row=0, column=1, padx=(0, 5), pady=5, sticky='nw')
+        entry = self._createBoundEntry(runFrame, 'runName', width=15, 
+                                       func=self.setProtocolLabel, value=self.protocol.getObjLabel())
+        entry.grid(row=0, column=1, padx=(0, 5), pady=5, sticky='nw')
+        btnComment = Button(runFrame, 'Edit comment', 'edit.gif', bg='white', command=self._editComment)
+        btnComment.grid(row=0, column=2, padx=(0, 5), pady=5, sticky='nw')
         # Run mode
         self.protocol.getDefinitionParam('')
         self._createHeaderLabel(runFrame, "Run mode").grid(row=1, column=0, sticky='ne', padx=5, pady=5)
@@ -500,6 +509,13 @@ class FormWindow(Window):
         execSection.grid(row=0, column=1, sticky='news', padx=5, pady=5)
         
         return commonFrame
+    
+    def _editComment(self, e=None):
+        """ Show a Text area to edit the protocol comment. """
+        d = TextDialog(self.root, "Edit comment", self.protocol.getObjComment(),
+                       textLabel="Describe your run here:")
+        if d.resultYes():
+            self.protocol.setObjComment(d.value)
         
     def resize(self, frame):
         self.root.update_idletasks()
@@ -601,19 +617,29 @@ class FormWindow(Window):
         
     def setVarFromParam(self, paramName):
         var = self.widgetDict[paramName]
-        value = getattr(self.protocol, paramName, None)
-        if value is not None:
-            var.set(value.get(''))
+        param = getattr(self.protocol, paramName, None)
+        if param is not None:
+            var.set(param.get(''))
            
     def setParamFromVar(self, paramName):
-        value = getattr(self.protocol, paramName, None)
-        if value is not None:
+        param = getattr(self.protocol, paramName, None)
+        if param is not None:
             var = self.widgetDict[paramName]
             try:
-                value.set(var.get())
+                param.set(var.get())
             except ValueError:
-                print "Error setting value for: ", paramName
-                value.set(None)
+                print "Error setting param for: ", paramName
+                param.set(None)
+                
+    def setProtocolLabel(self, paramName):
+        label = self.widgetDict[paramName].get()
+        print "setting label: ", label
+        self.protocol.setObjLabel(label)
+        
+    def setProtocolComment(self, paramName):
+        label = self.widgetDict[paramName].get()
+        print "setting comment: ", label
+        self.protocol.setObjLabel(label)       
              
     def updateProtocolParams(self):
         for paramName, _ in self.protocol.iterDefinitionAttributes():

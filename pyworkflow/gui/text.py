@@ -262,6 +262,7 @@ class TaggedText(Text):
                     self.insert(tk.END, p, t)
         self.addNewline()       
 
+
 class OutputText(Text):
     """
     Implement a Text that will show file content

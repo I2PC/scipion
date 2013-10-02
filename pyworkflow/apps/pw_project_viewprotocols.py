@@ -501,13 +501,13 @@ class ProtocolsView(tk.Frame):
         
     def createRunItem(self, node, y):
         """ If not nodeBuildFunc is specified, this one will be used by default."""
-        nodeText = node.getName()
+        nodeText = node.label
         textColor = 'black'
         color = '#ADD8E6' #Lightblue
             
         if node.run:
             status = node.run.status.get(STATUS_FAILED)
-            nodeText = node.run.getName() + '\n' + status
+            nodeText = nodeText + '\n' + status
             color = STATUS_COLORS[status]
         
         return self.runsGraph.createTextbox(nodeText, 100, y, bgColor=color, textColor=textColor)

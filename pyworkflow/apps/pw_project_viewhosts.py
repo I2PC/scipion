@@ -51,7 +51,7 @@ from pyworkflow.gui import getImage
 from pyworkflow.gui.tree import Tree, ObjectTreeProvider, DbTreeProvider
 from pyworkflow.gui.form import FormWindow
 from pyworkflow.gui.dialog import askYesNo, showInfo, showError
-from pyworkflow.gui.text import TaggedText
+from pyworkflow.gui.text import Text
 from pyworkflow.gui import Canvas
 from pyworkflow.gui.graph import LevelTree
 
@@ -266,7 +266,6 @@ class HostWindow(gui.Window):
         args = {}
         tag = self.tags.get(key, '')
         if  tag == 'text':
-            from pyworkflow.gui.text import Text
             entry = Text(parent, height=15)
             entry.addText(value)
             entry.setReadOnly(False)
