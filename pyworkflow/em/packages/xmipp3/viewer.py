@@ -45,6 +45,7 @@ from protocol_kerdensom import XmippProtKerdensom
 from protocol_rotational_spectra import XmippProtRotSpectra
 from convert import writeSetOfMicrographs, writeSetOfParticles, writeSetOfClasses2D, writeSetOfCoordinates
 from os.path import dirname, join
+from pyworkflow.utils.path import makePath
 
 
 import xmipp
@@ -92,7 +93,8 @@ class XmippViewer(Viewer):
             if extraFn:
                 extraDir = extraFn.get()
             else:
-                extraDir = self._getTmpPath() # TODO: CHECK to create an extra for the coordinates obj
+                extraDir = self._getTmpPath(obj.getName()) # TODO: CHECK to create an extra for the coordinates obj
+                makePath(extraDir)
                 writeSetOfCoordinates(extraDir, obj)            
                 
             runParticlePicker(fn, extraDir, extraParams='readonly')
