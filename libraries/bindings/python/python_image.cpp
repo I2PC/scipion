@@ -128,6 +128,8 @@ PyMethodDef Image_methods[] =
           "Resize the image dimensions" },
         { "scale", (PyCFunction) Image_scale, METH_VARARGS,
           "Scale the image" },
+        { "reslice", (PyCFunction) Image_reslice, METH_VARARGS,
+            "Change the slices order in a volume" },
         { "patch", (PyCFunction) Image_patch, METH_VARARGS,
           "Make a patch with other image" },
         { "setDataType", (PyCFunction) Image_setDataType, METH_VARARGS,
@@ -824,6 +826,28 @@ Image_scale(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }//function Image_scale
+
+/* Change the slices order in a volume */
+PyObject *
+Image_reslice(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
+    int axis = VIEW_Z_NEG;
+
+    if (self != NULL && PyArg_ParseTuple(args, "i", &axis))
+    {
+        try
+        {
+            self->image->reslice((AxisView) axis);
+            Py_RETURN_NONE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}//function Image_reslice
 
 /* Patch Image */
 PyObject *

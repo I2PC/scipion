@@ -464,6 +464,8 @@ void ImageGeneric::reslice(AxisView face, ImageGeneric &imgOut)
         aDimOut.zdim = aDim.xdim;
         reverse = (face == VIEW_X_NEG);
     }
+    else
+      REPORT_ERROR(ERR_VALUE_INCORRECT, formatString("reslice: not supported view %d", (int)face));
 
     DataType dtype = getDatatype();
     imgOut.setDatatype(dtype);
