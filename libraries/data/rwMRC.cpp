@@ -88,7 +88,9 @@ struct MRChead
     int nzStart;         //  6
     int mx;              //  7           unit cell size in voxels
     int my;              //  8
-    int mz;              //  9    1=Image or images stack, if volume mz=nz. If ispg=401 then mz=number of volumes in stack
+    int mz;              //  9    1=Image or images stack, if volume mz=nz.
+                         //              If ispg=401 then nz=number of volumes in stack * volume z dimension
+                         //              mz=volume zdim
     float a;             // 10   40      cell dimensions in A
     float b;             // 11
     float c;             // 12
@@ -153,7 +155,7 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     _yDim = header->ny;
     _zDim = header->nz;
 
-    bool isVolStk = (header->ispg == 401);
+    bool isVolStk = (header->ispg > 400);
 
     /* isStack is already true if file uses our customized "mrcs" extension. In this case
      * we ignore the stack behavior in header. If format is forced through ":" flag suffix,
@@ -164,7 +166,10 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     if(isStack)
     {
         if (isVolStk)
-            _nDim = header->mz;
+        {
+            _nDim = _zDim / header->mz;
+            _zDim = header->mz;
+        }
         else
         {
             _nDim = _zDim;// When isStack slices in Z are supposed to be a stack of images
@@ -542,7 +547,8 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
         if (isVolStk)
         {
             header->ispg = 401;
-            header->mz = nDimHeader;
+            header->mz = Zdim;
+            header->nz = Zdim * nDimHeader;
         }
         else
         {
