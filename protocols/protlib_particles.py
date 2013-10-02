@@ -145,23 +145,25 @@ def sortImages(log, ImagesFn, rejectionMethod='None', maxZscore=3, percentage=5)
         md.sort(MDL_ZSCORE)
         md.write(ImagesFn)        
 
-def getMetadataWithPickedParticles(fnPos):
-    mdpos = MetaData() 
-    mdposAuto = MetaData()
+def readPosCoordinates(posFile):
+    """ Read the coordinates in .pos file and return corresponding metadata.
+    There are two possible blocks with particles:
+    particles: with manual/supervised particles
+    particles_auto: with automatically picked particles.
+    If posFile doesn't exist, the metadata will be empty 
+    """
+    md = MetaData()
     
-    mdpos.clear()
-    if exists(fnPos):
-        try:
-            blocks = getBlocksInMetaDataFile(fnPos)
-            if 'particles' in blocks:         
-                mdpos.read("particles@" + fnPos)
-            if 'particles_auto' in blocks:
-                mdposAuto.read("particles_auto@" + fnPos)
-                mdposAuto.removeDisabled()
-            mdpos.unionAll(mdposAuto)
-        except:
-            pass
-    return mdpos
+    if exists(posFile):
+        blocks = getBlocksInMetaDataFile(posFile)
+        
+        for b in ['particles', 'particles_auto']:
+            if b in blocks:
+                mdAux = MetaData('%(b)s@%(posFile)s' % locals())
+                md.unionAll(mdAux)
+        md.removeDisabled()
+    
+    return md
 
 def countParticles(directory, pattern='*.pos'):
     '''Return the number of picked micrographs and particles '''
@@ -169,7 +171,7 @@ def countParticles(directory, pattern='*.pos'):
     micrographs = 0
     import glob    
     for fnPos in glob.glob(os.path.join(directory,pattern)):
-        md=getMetadataWithPickedParticles(fnPos)
+        md=readPosCoordinates(fnPos)
         pos_particles=md.size()
         if pos_particles > 0:
             particles += pos_particles

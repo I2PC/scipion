@@ -285,7 +285,7 @@ def _writeEmxData(emxData, filename):
 def xmippMicrographsToEmx(micMd, emxData, emxDir):
     """ Export micrographs from xmipp metadata to EMX.
     """
-    from protlib_particles import getMetadataWithPickedParticles
+    from protlib_particles import readPosCoordinates
     md = MetaData(micMd)
     micFn = 'mic%06d.mrc'
     index = 0
@@ -309,7 +309,7 @@ def xmippMicrographsToEmx(micMd, emxData, emxDir):
         posFile = join(filesRoot, 'extra', replaceBasenameExt(fnIn, POSENDING))
         
         if exists(posFile):
-            mdPos = getMetadataWithPickedParticles(posFile)
+            mdPos = readPosCoordinates(posFile)
             print "mdPos.size: ", mdPos.size()
             
             for pId in mdPos:
