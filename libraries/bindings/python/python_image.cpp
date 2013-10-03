@@ -319,14 +319,17 @@ Image_write(PyObject *obj, PyObject *args, PyObject *kwargs)
         {
             try
             {
-
-                if (PyString_Check(input))
-                    self->image->write(PyString_AsString(input));
-                else if (FileName_Check(input))
-                    self->image->write(FileName_Value(input));
-                else
-                    return NULL;
-                Py_RETURN_NONE;
+              PyObject *pyStr;
+              if ((pyStr = PyObject_Str(input)) != NULL)
+              {
+                  self->image->write(PyString_AsString(input));
+                  Py_RETURN_NONE;
+              }
+              else
+              {
+                  PyErr_SetString(PyExc_TypeError,
+                                  "Image_write: Expected an string or FileName as first argument");
+              }
             }
             catch (XmippError &xe)
             {
@@ -352,13 +355,17 @@ Image_read(PyObject *obj, PyObject *args, PyObject *kwargs)
 
             try
             {
-                if (PyString_Check(input))
-                    self->image->read(PyString_AsString(input),(DataMode)datamode);
-                else if (FileName_Check(input))
-                    self->image->read(FileName_Value(input),(DataMode)datamode);
-                else
-                    return NULL;
-                Py_RETURN_NONE;
+              PyObject *pyStr;
+              if ((pyStr = PyObject_Str(input)) != NULL)
+              {
+                  self->image->read(PyString_AsString(input),(DataMode)datamode);
+                  Py_RETURN_NONE;
+              }
+              else
+              {
+                  PyErr_SetString(PyExc_TypeError,
+                                  "Image_write: Expected an string or FileName as first argument");
+              }
             }
             catch (XmippError &xe)
             {
@@ -406,7 +413,6 @@ Image_readPreview(PyObject *obj, PyObject *args, PyObject *kwargs)
               {
                   PyErr_SetString(PyExc_TypeError,
                                   "Image_readPreview: Expected string or FileName as first argument");
-                  return NULL;
               }
             }
             catch (XmippError &xe)
@@ -434,13 +440,18 @@ Image_readPreviewSmooth(PyObject *obj, PyObject *args, PyObject *kwargs)
         {
             try
             {
-                if (PyString_Check(input))
-                    self->image->readPreviewSmooth(PyString_AsString(input), x);
-                else if (FileName_Check(input))
-                    self->image->readPreviewSmooth(FileName_Value(input), x);
-                else
-                    return NULL;
-                Py_RETURN_NONE;
+
+              PyObject *pyStr;
+              if ((pyStr = PyObject_Str(input)) != NULL)
+              {
+                self->image->readPreviewSmooth(PyString_AsString(pyStr), x);
+                  Py_RETURN_NONE;
+              }
+              else
+              {
+                  PyErr_SetString(PyExc_TypeError,
+                                  "Image_readPreviewSmooth: Expected string or FileName as first argument");
+              }
             }
             catch (XmippError &xe)
             {
