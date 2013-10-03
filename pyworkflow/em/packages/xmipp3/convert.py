@@ -34,18 +34,14 @@ import os
 
 import xmipp
 from protlib_particles import readPosCoordinates
-from xmipp3 import XmippMdRow
+from xmipp3 import XmippMdRow, getLabelPythonType
 from pyworkflow.em import *
 from pyworkflow.em.constants import NO_INDEX
 from pyworkflow.object import String
 from pyworkflow.utils.path import join, dirname, replaceBaseExt
 
-LABEL_TYPES = { 
-               xmipp.LABEL_SIZET: long,
-               xmipp.LABEL_DOUBLE: float,
-               xmipp.LABEL_INT: int,
-               xmipp.LABEL_BOOL: bool              
-               }
+
+            
 
 def objectToRow(obj, row, attrDict):
     """ This function will convert an EMObject into a XmippMdRow.
@@ -57,8 +53,7 @@ def objectToRow(obj, row, attrDict):
     """
     for attr, label in attrDict.iteritems():
         if hasattr(obj, attr):
-            labelType = xmipp.labelType(label)
-            valueType = LABEL_TYPES.get(labelType, str)
+            valueType = getLabelPythonType(label)
             row.setValue(label, valueType(getattr(obj, attr).get()))
 
 def _rowToObject(row, obj, attrDict):

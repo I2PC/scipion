@@ -8,6 +8,7 @@ from pyworkflow.hosts import HostConfig, QueueSystemConfig, QueueConfig
 from django.forms.forms import BoundField
 from pyworkflow.object import List
 import json
+import xmipp
 #from pyworkflow.web.app.views_showj import get_image_dimensions 
 
 class HostForm(forms.Form):
@@ -276,12 +277,18 @@ class ShowjForm(forms.Form):
                               localize=False,
                               widget=forms.TextInput(attrs={'class' : 'menuInputNumber'}))
     
-    
+    resliceComboBox = forms.ChoiceField(label='Reslice',
+                                required=False,
+                                choices = ((xmipp.VIEW_Z_NEG,'Z Negative (Front)'),(xmipp.VIEW_Y_NEG,'Y Negative (Top)'),(xmipp.VIEW_X_NEG,'X Negative (Left)'),
+                                           (xmipp.VIEW_Y_POS,'Y Positive (Bottom)'),(xmipp.VIEW_X_POS,'X Positive (Right)'))
+                                )
+
     # Init hidden fields
     path = forms.CharField(widget=forms.HiddenInput())
     allowRender = forms.BooleanField(widget=forms.HiddenInput())
     mode = forms.CharField(widget=forms.HiddenInput())
     colRowMode = forms.CharField(widget=forms.HiddenInput())
+    dims = forms.CharField(widget=forms.HiddenInput())
     
     mirrorY = forms.BooleanField(label='Invert Y Axis')
     
@@ -314,6 +321,16 @@ class ShowjForm(forms.Form):
         else:
             self.fields['zoom'].widget.attrs['readonly'] = True
             
+        if dataset.getNumberSlices()!=0:    
+            volumesToRenderComboBoxValues = tuple(zip(dataset.getTable().getColumnValues(self.data['labelsToRenderComboBox']),dataset.getTable().getColumnValues(self.data['labelsToRenderComboBox'])))
+            self.fields['volumesToRenderComboBox'] = forms.ChoiceField(label='Select Volume',
+                                                            required=False,
+                                                            choices = volumesToRenderComboBoxValues)
+            if self.data['mode'] != 'gallery':
+                self.fields['volumesToRenderComboBox'].widget=forms.HiddenInput()
+                self.fields['resliceComboBox'].widget=forms.HiddenInput()
+        else:
+            self.fields['resliceComboBox'].widget=forms.HiddenInput()   
         
         if self.data['mode'] != 'gallery': 
             self.fields['cols'].widget=forms.HiddenInput()

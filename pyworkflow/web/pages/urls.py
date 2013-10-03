@@ -36,6 +36,7 @@ urlpatterns = patterns('',
     
     #UTILS
     url(r'^get_image/', 'app.views_util.get_image'), # Load images dynamically
+    url(r'^get_slice/', 'app.views_util.get_slice'), # Load slices dynamically
     url(r'^browse_objects/$', 'app.views_util.browse_objects'), # Browse objects from the database
 
     #PROTOCOL (INCLUDE FORM)

@@ -34,11 +34,12 @@ class DataSet(object):
     All tables should have an unique tableName. 
     """
     
-    def __init__(self, tables, tableName=None, volumeName=None, labelToRender=None):
+    def __init__(self, tables, tableName=None, volumeName=None, numberSlices=0, labelToRender=None):
         self._tables = list(tables)
         self._tableName = tableName
         #NAPA de LUXE: Hay que ver si el volumen name se usa en algun lado        
         self._volumeName = volumeName 
+        self._numberSlices = numberSlices 
         self._labelToRender = labelToRender
         
     def setTableName(self, tableName):    
@@ -54,22 +55,28 @@ class DataSet(object):
         self._labelToRender = labelToRender
         
     def getDataToRender(self):
-        return self.getTable().getColumnByLabel(self._labelToRender)
+        return self.getTable().getColumnValues(self._labelToRender)
     
     def getDataToRenderAndExtra(self):
         return zip(self.getIdColumn(),
-                   self.getTable().getColumnByLabel("enabled"),
+                   self.getTable().getColumnValues("enabled"),
                    self.getDataToRender(),
                    self.getTransformationMatrix())
     
     def getIdColumn(self):
-        return self.getTable().getColumnByLabel("id")
+        return self.getTable().getColumnValues("id")
+    
+    def setNumberSlices(self, numberSlices):
+        self._numberSlices = numberSlices
+        
+    def getNumberSlices(self):
+        return self._numberSlices    
     
     def getNumberSlicesForTemplate(self):
-        return range(80)
+        return range(self._numberSlices)
         
     def getTransformationMatrix(self):    
-        return self.getTable().getColumnByLabel(self._labelToRender+"_transformationMatrix")
+        return self.getTable().getColumnValues(self._labelToRender+"_transformationMatrix")
         
     def listTables(self):
         """ List the actual table names on the DataSet. """
@@ -112,10 +119,9 @@ class Table(object):
     def _addColumn(self, col):
         self._columns[col.getName()] = col
         
-    def getColumnByLabel(self, label):
-        if (self.hasColumn(label)):
-            columnIndex = self._columns.keys().index(label)
-            return [row[columnIndex] for row in self.iterRows()] 
+    def getColumnValues(self, columnName):
+        if (self.hasColumn(columnName)):
+            return [getattr(row, columnName) for row in self.iterRows()] 
         else:
             return [None] * self.getSize()
         
@@ -124,7 +130,10 @@ class Table(object):
     
     def hasColumn(self, columnName):
         """ Return true if column exists """
-        return True if columnName in self._columns else False
+        return columnName in self._columns
+    
+    def getColumn(self, columnName):
+        return self._columns[columnName] 
     
     def hasEnabledColumn(self):
         """ Return true if enabled column exists """
@@ -151,6 +160,17 @@ class Table(object):
     def _setRow(self, rowId, row):
         self._rowDict[rowId] = row
     
+    def _convertValues(self, values):
+        """ Convert the input values to the actual
+        expected type of each column. 
+        """
+        cValues = {}
+        for k, v in values.iteritems():
+            col = self.getColumn(k)
+            cValues[k] = col.convert(v)
+        
+        return cValues
+        
     def addRow(self, rowId, **values):
         """ With this implementation the rowId should be provided.
         We need to work around to also allow automatic generation of id's
@@ -164,13 +184,13 @@ class Table(object):
                 else:
                     raise Exception('Table: value for column "%s" not provided.' % col.getName())
                 
-        row = self.Row(**values)
+        row = self.Row(**self._convertValues(values))
         self._setRow(rowId, row)
         
     def updateRow(self, rowId, **values):
         """ Update a row given its rowId and some values to update. """
         row = self.getRow(rowId)
-        self._setRow(rowId, row._replace(**values))
+        self._setRow(rowId, row._replace(**self._convertValues(values)))
     
     def iterRows(self):
         """ Iterate over the rows. """
@@ -192,6 +212,13 @@ class Column(object):
         
     def getName(self):
         return self._name
+    
+    def getType(self):
+        return self._type
+    
+    def convert(self, value):
+        """ Try to convert the value to the column type. """
+        return self._type(value)
     
     def hasDefault(self):
         return self._default is not None
