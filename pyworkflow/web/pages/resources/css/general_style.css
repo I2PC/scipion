@@ -169,6 +169,7 @@ table#data {
 	background-color: #eaebec;
 	border-spacing: 0;
 	overflow-x: auto;
+	clear:both;
 }
 
 table#data th {
