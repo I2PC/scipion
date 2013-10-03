@@ -69,7 +69,12 @@
 			style="background-color: #fafafa;">
 			<td><a
 				href="javascript:popup('/form/?protocolId={{obj.getObjId}}')">
-					{{obj.getName}} </a></td>
+					{% if obj.getObjLabel == '' %} 
+						{{obj.getName}}
+					{% else %} 
+						{{obj.getObjLabel}} 
+					{% endif %}
+						</a></td>
 			<td>{{obj.status.get}}</td>
 			<td>{{obj.getElapsedTime}}</td>
 		</tr>

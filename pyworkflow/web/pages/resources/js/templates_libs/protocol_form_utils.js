@@ -302,8 +302,7 @@ function browseObjects(node, projName, objClass) {
 }
 
 function showComment() {
-	
-	var msg = $("input#comment").val();
+	var msg = $("input#comment").attr("value");
 	
 	if(msg == ""){
 		msg = "Describe your run here...";
@@ -332,8 +331,6 @@ function showComment() {
 function putComment(){
 	$("input#comment").attr("value",$("textarea#description").val());
 }
-
-
 
 function getListFormatted(node, list, id) {
 	var res = "<div class='content' style='overflow:auto' data-node='" + node
