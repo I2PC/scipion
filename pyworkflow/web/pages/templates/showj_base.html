@@ -60,9 +60,9 @@
 	}
 	</script>
 	<script type="text/javascript">
-	//Initialize block and metadata combobox to reload the web when changing
+	//Initialize block, metadata, volume and axis to reslice combobox to reload the web when changing
 	function initializeComboBoxEvents(){
-		$("#id_blockComboBox , #id_labelsToRenderComboBox").change(function(){
+		$("#id_blockComboBox, #id_labelsToRenderComboBox, #id_volumesToRenderComboBox, #id_resliceComboBox").change(function(){
 			$('#id_zoom').val('{{defaultZoom}}')
 			$('form#showjForm').submit();
 		})
@@ -190,12 +190,6 @@
 			/* Gets zoom and image width and height */
 			zoom_element=$('#id_zoom')
 			
-			console.log("dim")
-			console.log({{imageDimensions.0}})
-			console.log({{imageDimensions.1}})
-			console.log({{imageDimensions.2}})
-			console.log({{imageDimensions.3}})
-			
 			imageHeight_val = parseInt({{imageDimensions.1}})
 			imageWidth_val = parseInt({{imageDimensions.0}})
 			
@@ -276,6 +270,7 @@
 				success : function(json) {
 					message = json.message;
 					if (message == 'Ok'){
+						changes={}
 						$("#saveButton").toggleClass("saveOn").toggleClass("saveOff")
 					}
 					else{
@@ -299,9 +294,9 @@
 		<span class="project_name" style="font-size:1.8em; ">Xmipp Showj Web</span>
 		</div>
 		
-		<!-- <div style="padding:16px 0px 0px 15px;text-align:center;display:inline;">
+		<div style="padding:16px 0px 0px 15px;text-align:center;display:inline;">
 		<a href="http://localhost:8081/hello/taka" style="margin:2px 0px 0px 8px" target="_blank">Testing SSH</a>
-		</div> -->
+		</div> 
 	</div>
 	
 	<div style="padding-top:60px;text-align:right;width:45%;display:inline;" >
@@ -419,9 +414,28 @@
 					{{ form.labelsToRenderComboBox }}
 				</div>
 				
+				<div id="volumeSelectorContainer" class="sectionMenu">
+					<span class="textMenu">
+					{% if not form.volumesToRenderComboBox.is_hidden %}
+					{{ form.volumesToRenderComboBox.label_tag }}
+					{% endif %}
+					</span>
+					{{ form.volumesToRenderComboBox }}
+				</div>
+				
+				
 				<div id="mirrorContainer" class="sectionMenu">
 					<span class="textMenu"> {{ form.mirrorY.label_tag }} </span>
 					{{ form.mirrorY }} 
+				</div>
+				
+				<div id="resliceSelectorContainer" class="sectionMenu">
+					<span class="textMenu">
+					{% if not form.resliceComboBox.is_hidden %}
+					{{ form.resliceComboBox.label_tag }}
+					{% endif %}
+					</span>
+					{{ form.resliceComboBox }}
 				</div>
 		
 				<div class="sectionMenu">

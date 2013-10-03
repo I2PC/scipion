@@ -39,6 +39,7 @@ import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider
 from pyworkflow.gui.tree import BoundTree, TreeProvider
 import xmipp
+from pyworkflow import findResource
 
 
 class XmippDownsampleWizard(Wizard):
@@ -349,17 +350,22 @@ class XmippImagePreviewDialog(XmippPreviewDialog):
         """ Should be implemented by subclasses to 
         create the items preview. 
         """
-        from pyworkflow.gui.matplotlib_image import ImagePreview 
+        from pyworkflow.gui.matplotlib_image import ImagePreview
         self.preview = ImagePreview(frame, self.dim, label=self.previewLabel)
         self.preview.grid(row=0, column=0) 
         
     def _itemSelected(self, obj):
         filename = obj.getFileName()
         self.image = xmipp.Image()
-        self.image.readPreview(filename, self.dim)
-        if filename.endswith('.psd'):
-            self.image.convertPSD()
-        self.Z = self.image.getData()
+        try:
+            self.image.readPreview(filename, self.dim)
+            if filename.endswith('.psd'):
+                self.image.convertPSD()
+            self.Z = self.image.getData()
+        except Exception, e:
+            from pyworkflow.gui.matplotlib_image import getPngData
+            self.Z = getPngData(findResource('no-image.png'))
+            dialog.showError("Input particles", "Error reading image <%s>" % filename, self) 
         self.preview.updateData(self.Z)
        
         
