@@ -43,7 +43,7 @@ ComparisonMethod='correlation'
 ClusteringMethod='classical'
 
 # {expert} Additional parameters for classify_CL2D
-""" --verbose, --corrSplit, ... see [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Classify_mpi_cl2d_v3]
+""" --verbose, --corrSplit, --dontMirrorImages ... see [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Classify_mpi_cl2d_v3]
 """
 AdditionalParameters=''
 
