@@ -96,7 +96,10 @@ input.hide {
 textarea {
 	resize: vertical;
 	background: LightGray;
-	max-height: 9em;
+	max-height: 30em;
+	width: 26em;
+	height: 20em;
+	font-size: 0.9em;
 }
 
 .box {
