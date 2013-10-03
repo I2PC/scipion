@@ -148,19 +148,20 @@ def getImage(imageName, imgDict=None, tk=True):
             imgDict[imageName] = image
     return image
 
-def getPILImage(imageXmipp, dim=None):
+def getPILImage(imageXmipp, dim=None, normalize=True):
     from PIL import Image
     import xmipp
-    imageXmipp.convert2DataType(xmipp.DT_UCHAR)
+    
+    if normalize:
+        imageXmipp.convert2DataType(xmipp.DT_UCHAR, xmipp.CW_ADJUST)
+        
     imageData = imageXmipp.getData()
 
     image = Image.fromarray(imageData)
-    img = image.convert('LA')
-    #img = image
     if dim:
         size = int(dim), int(dim)
-        img.thumbnail(size, Image.ANTIALIAS)
-    return img
+        image.thumbnail(size, Image.ANTIALIAS)
+    return image
 
 """
 Windows geometry utilities

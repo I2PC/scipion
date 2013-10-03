@@ -196,7 +196,8 @@
 
 {% block content_view %}	
 
-	{% ifequal imageDimensions.2 1 %}
+
+	{% if form.dims.value == '2d' %}
 
 		{% for id,enable,data,transformationMatrix in dataset.getDataToRenderAndExtra %}
 			<div class="img_container" id="img_container___{{id}}">
@@ -225,15 +226,15 @@
 		{% for i in dataset.getNumberSlicesForTemplate %}
 			<div class="img_container" id="img_container___{{i}}">
 				<div class="img_inner_container">
-					<img class="tableImages" title="{{dataset.getVolumeName}}" data-real_src="/get_slice/?image={{i}}@{{dataset.getVolumeName}}"/>
+					<img class="tableImages" title="Slice {{i|add:1}} from {{dataset.getVolumeName}}" data-real_src="/get_slice/?image={{i|add:1}}@{{dataset.getVolumeName}}"/>
 				</div>
-				<div id="column_label">{{i}}</div> 
+				<div id="column_label">{{i|add:1}}</div> 
 			</div>
 		{% endfor %}
 	
 	
 	
-	{% endifequal %}	 
+	{% endif %}	 
 
 		
 			

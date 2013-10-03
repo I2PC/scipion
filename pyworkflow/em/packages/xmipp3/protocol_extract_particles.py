@@ -258,7 +258,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         #if fnPosFile is not None and xmipp.existsBlockInMetaDataFile(particlesMd):
         if fnPosFile is not None:
             boxSize = self.boxSize.get()
-            args = "-i %(micrographToExtract)s --pos %(fnPosFile)s -o %(outputRoot)s --Xdim %(boxSize)d" % locals()
+            args = "-i %(micrographToExtract)s --pos %(particlesMd)s -o %(outputRoot)s --Xdim %(boxSize)d" % locals()
             if self.downsampleType.get() != self.SAME_AS_PICKING:
                 args += " --downsampling " + str(self.samplingFinal/self.samplingInput)
             if self.doInvert:
@@ -298,11 +298,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         fnImages = self._getPath('images.xmd')
         imgsXmd = xmipp.MetaData()  
         for posFn in self.posFiles:
-        #for posFn in self.getConvertedInput('inputCoords').iterCoordinatesFile():    
-#            xmdFn = posFn.replace(".pos",".xmd")
             xmdFn = self._getExtraPath(replaceBaseExt(posFn, "xmd"))
             md = xmipp.MetaData(xmdFn)
-            mdPos = xmipp.MetaData(posFn)
+            mdPos = xmipp.MetaData('particles@%s' % posFn)
             mdPos.merge(md) 
             #imgSet.appendFromMd(mdPos)
             imgsXmd.unionAll(mdPos)
@@ -311,8 +309,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         imgsXmd.write(fnImages)
         #imgSet.sort() # We need sort?
         #imgSet.write()
-        
-        #fnImages = imgSet._getListBlock()
 
         # Run xmipp_image_sort_by_statistics to add zscore info to images.xmd
         args="-i %(fnImages)s --addToInput"

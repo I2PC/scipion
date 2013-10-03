@@ -33,6 +33,18 @@ import xmipp
 from constants import *
 import pyworkflow.dataset as ds
 
+LABEL_TYPES = { 
+               xmipp.LABEL_SIZET: long,
+               xmipp.LABEL_DOUBLE: float,
+               xmipp.LABEL_INT: int,
+               xmipp.LABEL_BOOL: bool              
+               }
+
+def getLabelPythonType(label):
+    """ From xmipp label to python variable type """
+    labelType = xmipp.labelType(label)
+    return LABEL_TYPES.get(labelType, str)
+
 def getXmippPath(*paths):
     '''Return the path the the Xmipp installation folder
     if a subfolder is provided, will be concatenated to the path'''
@@ -248,15 +260,22 @@ class XmippDataSet(ds.DataSet):
         md = xmipp.MetaData(tableName + "@" + self._filename)
         return self._convertMdToTable(md)
         
+    def _convertLabelToColumn(self, label):
+        """ From an Xmipp label, create the corresponding column. """
+        return ds.Column(xmipp.label2Str(label), 
+                         getLabelPythonType(label))
+        
     def _convertMdToTable(self, md):
         """ Convert a metatada into a table. """
         labels = md.getActiveLabels()
         hasTransformation = self._hasTransformation(labels)  
-        labelsStr = [xmipp.label2Str(l) for l in labels]        
+        columns = [self._convertLabelToColumn(l) for l in labels]        
         #NAPA de LUXE (xmipp deberia saber a que campo va asignado el transformation matrix)             
         if hasTransformation:
-            labelsStr.append("image_transformationMatrix")   
-        columns = [ds.Column(l) for l in labelsStr]        
+            columns.append(ds.Column("image_transformationMatrix", str))
+            
+        labelsStr = [col.getName() for col in columns]        
+        
         table = ds.Table(*columns)
         
         for objId in md:

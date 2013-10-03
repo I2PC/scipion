@@ -19,6 +19,7 @@ def showj(request, inputParameters=None):
     #############
     # WEB INPUT PARAMETERS
     _imageDimensions = ''
+    _imageVolName=''
     
     if request.method == 'POST': # If the form has been submitted... Post method
         _path = request.POST.get('path')
@@ -33,10 +34,10 @@ def showj(request, inputParameters=None):
         _labelsToRenderComboBox = inputParameters['labelsToRenderComboBox'] if 'labelsToRenderComboBox' in inputParameters else ''
         request.session['defaultZoom'] = inputParameters['zoom'] if 'zoom' in inputParameters else '150px' 
     
-    print("path",_path)
+#    print("path",_path)
     
     #Init Dataset
-    #Todo: Check type of Dataset 
+    #NAPA DE LUXE: Check type of Dataset 
     dataset = loadDatasetXmipp(_path) 
     
     if _blockComboBox == '':
@@ -51,16 +52,31 @@ def showj(request, inputParameters=None):
     tableLayoutConfiguration = TableLayoutConfiguration(dataset, tableDataset, _render)
 
     #Initialize Showj Form (button toolbar)
-    if request.method == 'POST': # If the form has been submitted... Post method  
+    if request.method == 'POST': # If the form has been submitted... Post method
         if _labelsToRenderComboBox != '':
-            if _labelsToRenderComboBox != request.session['labelsToRenderComboBox']:
-                _imageDimensions = getImageDim(request, tableDataset.getElementById(0,_labelsToRenderComboBox))
+#            if _labelsToRenderComboBox != request.session['labelsToRenderComboBox']:
+#            print request.POST.get('volumesToRenderComboBox') if ('volumesToRenderComboBox' in request.POST and request.POST.get('volumesToRenderComboBox') != '') else "taka"
+#            print "imageVolName",_imageVolName
+            _imageVolName = request.POST.get('volumesToRenderComboBox') if ('volumesToRenderComboBox' in request.POST and request.POST.get('volumesToRenderComboBox') != '') else tableDataset.getElementById(0,_labelsToRenderComboBox)
+            if request.POST.get('dims')=='3d':
+                img = xmipp.Image()
+                imgFn = os.path.join(request.session['projectPath'], _imageVolName)
+                print("imgFn",imgFn)
+                #FALTARIA LO DEL MAPPED
+                img.read(str(imgFn))
+                img.convert2DataType(xmipp.DT_UCHAR, xmipp.CW_ADJUST)
+                if int(request.POST.get('resliceComboBox')) !=xmipp.VIEW_Z_NEG:
+                    print 'reslicepost',request.POST.get('resliceComboBox')
+                    img.reslice(int(request.POST.get('resliceComboBox')))
+                fileName, fileExtension = os.path.splitext(_imageVolName)
+                _imageVolName = '%s_tmp%s' % (fileName, '.mrc')
+                print "_imageVolName",_imageVolName 
+                img.write(str(_imageVolName))
+                
+            _imageDimensions = getImageDim(request, _imageVolName)
         else:
             _imageDimensions = None
-        
-        showjForm = ShowjForm(dataset,
-                              tableLayoutConfiguration,
-                              request.POST) # A form bound to the POST data
+
     else:
         if _labelsToRenderComboBox == '':
             labelsToRenderComboBoxValues = getLabelsToRenderComboBoxValues(tableLayoutConfiguration.columnsLayout)
@@ -71,18 +87,38 @@ def showj(request, inputParameters=None):
             inputParameters['zoom']=0
             _imageDimensions = None
         else:    
-            _imageDimensions = getImageDim(request, tableDataset.getElementById(0,inputParameters['labelsToRenderComboBox']))
+            _imageVolName = tableDataset.getElementById(0,inputParameters['labelsToRenderComboBox'])
+            if inputParameters['dims']=='3d':
+                img = xmipp.Image()
+                imgFn = os.path.join(request.session['projectPath'], _imageVolName)
+                print("imgFn",imgFn)
+                #FALTARIA LO DEL MAPPED
+                img.read(str(imgFn))
+                img.convert2DataType(xmipp.DT_UCHAR, xmipp.CW_ADJUST)
+                if inputParameters['resliceComboBox'] !=xmipp.VIEW_Z_NEG:
+                    img.reslice(inputParameters['resliceComboBox'])
+                fileName, fileExtension = os.path.splitext(_imageVolName)
+                _imageVolName = '%s_tmp%s' % (fileName, '.mrc')
+                print "_imageVolName",_imageVolName 
+                #HAY QUE QUITAR EL CONVERT2DATYPE del PILIMAGE?
+                img.write(str(_imageVolName))
+                
+            _imageDimensions = getImageDim(request, _imageVolName)
             
         inputParameters['blockComboBox']=_blockComboBox
         inputParameters['tableLayoutConfiguration']=tableLayoutConfiguration
         
-        inputParameters['mirrorY']='mirrorY' in inputParameters
-        inputParameters['transformMatrix']='transformMatrix' in inputParameters
-        
-        showjForm = ShowjForm(dataset,
-                              tableLayoutConfiguration,
-                              inputParameters) # An unbound form
+#        inputParameters['mirrorY']='mirrorY' in inputParameters
+#        inputParameters['transformMatrix']='transformMatrix' in inputParameters
 
+    if _imageDimensions[2]>1:
+        dataset.setNumberSlices(_imageDimensions[2])
+        dataset.setVolumeName(_imageVolName)
+                    
+    showjForm = ShowjForm(dataset,
+                          tableLayoutConfiguration,
+                          request.POST if request.method == 'POST' else inputParameters) # A form bound for the POST data and unbound for the GET
+        
     if showjForm.is_valid() is False:
         print showjForm.errors
 
@@ -219,7 +255,7 @@ def save_showj_table(request):
             #NAPA de LUXE ahora mismo se realiza una conversion a int pero habria que ver de que tipo de datos se trata 
             #tableLayoutConfiguration.columnsLayout[element_split[0]].typeOfColumn
 
-            dictelement = {element_split[0]:int(jsonChanges[key])}
+            dictelement = {element_split[0]:jsonChanges[key]}
             tableDataset.updateRow(int(element_split[1]),**dictelement)
         
         dataset.writeTable(blockComboBox, tableDataset)
@@ -318,52 +354,43 @@ def visualizeObject(request):
     obj = project.mapper.selectById(int(objectId))
     if obj.isPointer():
         obj = obj.get()
-        
+
+    #Initialize default values
+    inputParameters = {'allowRender': True,
+                       'mode': 'gallery',
+                       'zoom': '150px',
+                       'dims': '2d',
+                       'goto': 1,
+                       'colRowMode': 'Off',
+                       'mirrorY': False,
+                       'transformMatrix': False,
+                       'onlyShifts': False,
+                       'wrap': False,
+                       'resliceComboBox': xmipp.VIEW_Z_NEG}      
+    
     if probandoCTFParam:
-        inputParameters = {'path': join(projectPath, "Runs/XmippProtCTFMicrographs218/extra/BPV_1386/xmipp_ctf.ctfparam"),
-               'allowRender': True,
-               'mode': 'column',
-               'zoom': '150px',
-               'goto': 1,
-               'colRowMode': 'Off'}    
+        inputParameters['path']= join(projectPath, "Runs/XmippProtCTFMicrographs218/extra/BPV_1386/xmipp_ctf.ctfparam")
+        inputParameters['mode']= 'column'
     elif isinstance(obj, SetOfMicrographs):
         fn = project.getTmpPath(obj.getName() + '_micrographs.xmd')
         writeSetOfMicrographs(obj, fn)
-        inputParameters = {'path': join(projectPath, fn),
-                       'allowRender': True,
-                       'mode': 'gallery',
-                       'zoom': '150px',
-                       'goto': 1,
-                       'colRowMode': 'Off'}
+        inputParameters['path']= join(projectPath, fn)
     elif isinstance(obj, SetOfVolumes):
         fn = project.getTmpPath(obj.getName()+ '_volumes.xmd')
         writeSetOfVolumes(obj, fn)
-        inputParameters = {'path': join(projectPath, fn),
-                           'allowRender': True,
-                           'setOfVolumes' : obj,
-                           'setOfVolumesId': obj.getObjId(),
-                           'dims': '3d',
-                           'mode': 'table',
-                           'colRowMode': 'Off'}  
+        inputParameters['path']= join(projectPath, fn)
+        inputParameters['setOfVolumes']= obj
+        inputParameters['setOfVolumesId']= obj.getObjId()
+        inputParameters['dims']= '3d'
+        inputParameters['mode']= 'table'
     elif isinstance(obj, SetOfImages):
         fn = project.getTmpPath(obj.getName() + '_images.xmd')
         writeSetOfParticles(obj, fn)
-        inputParameters = {'path': join(projectPath, fn),
-               'allowRender': True,
-               'mode': 'gallery',
-               'zoom': '150px',
-               'goto': 1,
-               'colRowMode': 'Off'}
-
+        inputParameters['path']= join(projectPath, fn)
     elif isinstance(obj, SetOfClasses2D):
         fn = project.getTmpPath(obj.getName() + '_classes.xmd')
         writeSetOfClasses2D(obj, fn)
-        inputParameters = {'path': join(projectPath, fn),
-               'allowRender': True,
-               'mode': 'gallery',
-               'zoom': '150px',
-               'goto': 1,
-               'colRowMode': 'Off'}
+        inputParameters['path']= join(projectPath, fn)
 #        runShowJ(obj.getClassesMdFileName())
     else:
         raise Exception('Showj Web visualizer: can not visualize class: %s' % obj.getClassName())
