@@ -14,6 +14,7 @@ def wizard(request):
     requestDict = getattr(request, "POST")
     functionName = requestDict.get("wizName")
     function = globals().get(functionName, None)
+    print "................In Wizard: " + functionName
     
     # Get the protocol object
     project, protocol = loadProtocolProject(request)
@@ -28,8 +29,11 @@ def wizard(request):
 
 def wiz_downsampling(protocol, request):
     micrographs = protocol.inputMicrographs.get()
-    if micrographs == None:
-        return HttpResponse("errorInput")
+    
+    res = validateSet(micrographs)
+    
+    if res is not 1:
+        return HttpResponse(res)
     else:
         mics = [mic for mic in micrographs]
         for m in mics:
@@ -43,8 +47,11 @@ def wiz_downsampling(protocol, request):
 
 def wiz_ctf(protocol, request):
     micrographs = protocol.inputMicrographs.get()
-    if micrographs == None:
-        return HttpResponse("errorInput")
+    
+    res = validateSet(micrographs)
+    
+    if res is not 1:
+        return HttpResponse(res)
     else:
         mics = [mic for mic in micrographs]
         for m in mics:
@@ -61,41 +68,40 @@ def wiz_ctf(protocol, request):
 def wiz_particle_mask(protocol, request):
     particles = protocol.inputParticles.get()
     
-    if particles == None:
-        return HttpResponse("errorInput")
+    res = validateParticles(particles) 
+    
+    if res is not 1:
+        return HttpResponse(res)
     else:
-        parts = [p for p in particles] 
-    
-        for p in parts:
-            index = p.getIndex()
-            text = p.getFileName()
-            p.basename = basename(text)
-            if index:
-                p.text = "%03d@%s" % (index, text)
-                p.basename = "%03d@%s" % (index, basename(text))
-                
-        xdim = getImageXdim(request, parts[0].text)
-    
-        mask_radius = protocol.maskRadius.get()
-         
-        if mask_radius > xdim :
-            mask_radius = xdim
-        elif mask_radius == -1 :
-            mask_radius = xdim/2
-            
-        context = {'objects': parts[0:100],
-                   'raphael': getResourceJs('raphael'),
-                   'maskRadius': mask_radius,
-                   'xdim':xdim
-                   }
+        parts = getParticleSubset(particles,100)
         
-        return render_to_response('wiz_particle_mask.html', context)
+        if len(parts) == 0:
+            return HttpResponse("errorIterate");
+        else:
+            xdim = getImageXdim(request, parts[0].text)
+    
+            mask_radius = protocol.maskRadius.get()
+             
+            if mask_radius > xdim :
+                mask_radius = xdim
+            elif mask_radius == -1 :
+                mask_radius = xdim/2
+                
+            context = {'objects': parts,
+                       'raphael': getResourceJs('raphael'),
+                       'maskRadius': mask_radius,
+                       'xdim':xdim
+                       }
+            
+            return render_to_response('wiz_particle_mask.html', context)
 
 def wiz_volume_mask(protocol, request):
     volumes = protocol.input3DReferences.get()
     
-    if volumes == None :
-        return HttpResponse("errorInput")
+    res = validateSet(volumes)
+    
+    if res is not 1:
+        return HttpResponse(res)
     else:
         vols = [vol for vol in volumes]
         
@@ -122,8 +128,10 @@ def wiz_volume_mask(protocol, request):
 def wiz_volume_mask_radii(protocol, request):
     volumes = protocol.input3DReferences.get()
     
-    if volumes == None:
-        return HttpResponse("errorInput")
+    res = validateSet(volumes)
+    
+    if res is not 1:
+        return HttpResponse(res)
     else:
         vols = [vol for vol in volumes]
         
@@ -142,53 +150,89 @@ def wiz_volume_mask_radii(protocol, request):
                    'xdim': xdim
                    }
         
-        return render_to_response('wiz_volume_mask_radii.html', context)   
+        return render_to_response('wiz_volume_mask_radii.html', context)
 
 def wiz_bandpass(protocol, request):
     particles = protocol.inputParticles.get()
     
-    if particles == None :
-        return HttpResponse("errorInput")
+    res = validateParticles(particles) 
+    
+    if res is not 1:
+        return HttpResponse(res)
     else:
-        parts = [p for p in particles] 
-
-        for p in parts:
-            index = p.getIndex()
-            text = p.getFileName()
-            p.basename = basename(text)
-            if index:
-                p.text = "%03d@%s" % (index, text)
-                p.basename = "%03d@%s" % (index, basename(text))
-                 
-        context = {'objects': parts[0:100],
-                   'lowFreq': protocol.lowFreq.get(),
-                   'highFreq': protocol.highFreq.get(),
-                   'decayFreq': protocol.freqDecay.get()
-                   }
+        parts = getParticleSubset(particles,100)
         
-        return render_to_response('wiz_bandpass.html', context)
+        if len(parts) == 0:
+            return HttpResponse("errorIterate");
+        else:
+            context = {'objects': parts,
+                       'lowFreq': protocol.lowFreq.get(),
+                       'highFreq': protocol.highFreq.get(),
+                       'decayFreq': protocol.freqDecay.get()
+                       }
+            
+            return render_to_response('wiz_bandpass.html', context)
 
 def wiz_gaussian(protocol, request):
     particles = protocol.inputParticles.get()
     
-    if particles == None :
-        return HttpResponse("errorInput")
+    res = validateParticles(particles) 
+    
+    if res is not 1:
+        return HttpResponse(res)
     else:
-        parts = [p for p in particles] 
-
-        for p in parts:
-            index = p.getIndex()
-            text = p.getFileName()
-            p.basename = basename(text)
-            if index:
-                p.text = "%03d@%s" % (index, text)
-                p.basename = "%03d@%s" % (index, basename(text))
-                 
-        context = {'objects': parts[0:100],
-                   'freqSigma': protocol.freqSigma.get()
-                   }
+        parts = getParticleSubset(particles,100)
         
-        return render_to_response('wiz_gaussian.html', context)
+        if len(parts) == 0:
+            return HttpResponse("errorIterate");
+        else:
+            context = {'objects': parts,
+                       'freqSigma': protocol.freqSigma.get()
+                       }
+            
+            return render_to_response('wiz_gaussian.html', context)
+
+def getParticleSubset(particles, num):
+    """
+    Method to prepare the particles to use a wizard
+    """
+    particleList = []
+    for i, particle in enumerate(particles):
+        if i == num: # Only load up to NUM particles
+            break
+        index = particle.getIndex()
+        text = particle.getFileName()
+        particle.basename = basename(text)
+        if index:
+            particle.text = "%03d@%s" % (index, text)
+            particle.basename = "%03d@%s" % (index, basename(text))
+        particleList.append(particle)
+        
+    return particleList
+
+"""
+Validation for a set of micrographs
+"""
+def validateSet(setOf):
+    if setOf is None:
+        res = "errorInput"
+    else:
+        res = 1
+    return res
+
+"""
+Validation for a set of particles
+"""
+def validateParticles(particles):
+    if particles is None:
+        res = "errorInput"
+    elif particles.getSize() == 0:
+        res = "errorEmpty"
+    else:
+        res = 1
+#        else:
+#            res = parts
+    return res
 
 """
 Function to get the computing psd image

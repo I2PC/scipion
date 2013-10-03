@@ -5,6 +5,10 @@
  * customPopup(URL, widthValue, heightValue);
  * customPopupHTML(html);  
  * closePopup();
+ * launchMessiSimple(title, msg);
+ * messiError(msg);
+ * messiWarning(msg);
+ * messiInfo(msg);
  * 
  */
 
@@ -44,8 +48,28 @@ function closePopup() {
 	window.close();
 }
 
+function launchMessiSimple(title, msg){
+	new Messi(msg, {
+		title : title,
+		modal : true,
+		buttons : [ {
+			id : 0,
+			label : 'Ok',
+			val : 'Y',
+			btnClass : 'btn-select'
+		}]
+	});
+}
+
 function messiError(msg){
 	var res = "<table><tr><td><img src='/resources/error.gif' width='45' height='45' />"
+	+ "</td><td>"+ msg +"</td></tr></table>";
+
+	return res;
+}
+
+function messiWarning(msg){
+	var res = "<table><tr><td><img src='/resources/warning.gif' width='45' height='45' />"
 	+ "</td><td>"+ msg +"</td></tr></table>";
 
 	return res;

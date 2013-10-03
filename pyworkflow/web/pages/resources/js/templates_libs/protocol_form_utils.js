@@ -99,25 +99,19 @@ $(document).ready(function() {
 				$('.messi-modal').remove();
 				
 				if(html=="errorInput"){
-					
 					var msg = messiError("Input was not selected, please choose one.");
-					
-					new Messi(msg, {
-						title : 'Error',
-						modal : true,
-						buttons : [ {
-							id : 0,
-							label : 'Ok',
-							val : 'Y',
-							btnClass : 'btn-select'
-						} ]
-					});
-				}
-				else if(type_wiz=='wiz_particle_mask' || type_wiz=='wiz_volume_mask'){
+					launchMessiSimple("Error",msg);
+				} else if (html=="errorEmpty"){
+					var msg = messiError("Input particles selected are None");
+					launchMessiSimple("Error",msg);
+				} else if (html=="errorIterate"){
+					var msg = messiError("Error iterating over the set of particles");
+					launchMessiSimple("Error",msg);
+				} else if(type_wiz=='wiz_particle_mask' || type_wiz=='wiz_volume_mask'){
 					customPopupHTML(html,520,460);
-				}else if(type_wiz=='wiz_volume_mask_radii'){
+				} else if(type_wiz=='wiz_volume_mask_radii'){
 					customPopupHTML(html,530,520);
-				}else{
+				} else{
 					customPopupHTML(html,775,470);
 				}
 			});

@@ -300,17 +300,49 @@ def writeSetOfCoordinates(posDir, coordSet):
         coordSet: the SetOfCoordinates that will be read.
     """
     posFiles = []
+    boxSize = coordSet.getBoxSize()
+    
+    
+    # Write pos metadatas (one per micrograph)
+    
     for mic in coordSet.iterMicrographs():
-        posFn = join(posDir, replaceBaseExt(mic.getFileName(), "pos"))
+        micName = mic.getFileName()
+        posFn = join(posDir, replaceBaseExt(micName, "pos"))
+        # Write header block
+        md = xmipp.MetaData()    
+        objId = md.addObject()
+        md.setValue(xmipp.MDL_PICKING_MICROGRAPH_STATE, 'Manual', objId)
+        md.write('header@%s' % posFn)
+        
         md = xmipp.MetaData()
         for coord in coordSet.iterCoordinates(micrograph=mic):
             objId = md.addObject()
             coordRow = XmippMdRow()
             coordinateToRow(coord, coordRow)
             coordRow.writeToMd(md, objId)
-        md.write(posFn)
+        md.write('particles@%s' % posFn, xmipp.MD_APPEND)
         posFiles.append(posFn)
         
+    # Write config.xmd metadata
+    configFn = join(posDir, 'config.xmd')
+    md = xmipp.MetaData()
+    # Write properties block
+    objId = md.addObject()
+    micName = removeBaseExt(micName)
+    md.setValue(xmipp.MDL_MICROGRAPH, str(micName), objId)
+    #md.setValue(xmipp.MDL_COLOR, int(-16776961), objId)
+    md.setValue(xmipp.MDL_PICKING_PARTICLE_SIZE, int(boxSize), objId)
+    md.setValue(xmipp.MDL_PICKING_STATE, 'Manual', objId)
+    
+    md.write('properties@%s' % configFn)
+
+    # Write filters block
+    md = xmipp.MetaData()    
+    objId = md.addObject()
+    md.setValue(xmipp.MDL_MACRO_CMD, 'Gaussian_Blur...', objId)
+    md.setValue(xmipp.MDL_MACRO_CMD_ARGS, 'sigma=2', objId)
+    md.write('filters@%s' % configFn, xmipp.MD_APPEND)
+    
     return posFiles
     
 def readSetOfCoordinates(posDir, micSet, coordSet):

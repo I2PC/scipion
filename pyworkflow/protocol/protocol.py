@@ -23,7 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.protocol.constants import MODE_RESUME
 """
 This modules contains classes required for the workflow
 execution and tracking like: Step and Protocol
@@ -37,6 +36,7 @@ import time
 from pyworkflow.object import OrderedObject, String, List, Integer, Boolean, CsvList
 from pyworkflow.utils.path import replaceExt, makeFilePath, join, missingPaths, cleanPath, getFiles
 from pyworkflow.utils.log import *
+from pyworkflow.protocol.constants import MODE_RESUME
 from pyworkflow.protocol.executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor
 from constants import *
 
@@ -645,10 +645,11 @@ class Protocol(Step):
         return self._pid.get()
         
     def getRunName(self):
-        if self.runName.hasValue() and len(self.runName.get()):
-            return self.runName.get()
-        else:
-            return self.getDefaultRunName()
+        runName = self.getObjLabel().strip()
+        if not len(runName):
+            runName = self.getDefaultRunName()
+            
+        return runName
     
     def getDefaultRunName(self):
         return '%s.%s' % (self.getClassName(), self.strId())  
@@ -734,7 +735,7 @@ class Protocol(Step):
     
     def summary(self):
         """ Return a summary message to provide some information to users. """
-        return self._summary()
+        return self._summary() + ['', '<Comments:>', self.getObjComment()]
     
 def getProtocolFromDb(dbPath, protId, protDict):
     from pyworkflow.mapper import SqliteMapper
