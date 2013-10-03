@@ -233,13 +233,14 @@ def viewer(request):
         protocol = project.mapper.selectById(int(protId))
     
         print "======================= in viewer...."
+          
+#        url = '/visualize_object/?objectId=746'
+        request.GET = request.GET.copy()
+        request.GET['objectId'] = protocol.outputMicrographs.getObjId()
+        from views_showj import visualizeObject
+        response = visualizeObject(request)
         
-#        ioDict = {'inputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterInputAttributes()],
-#                 'outputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterOutputAttributes(EMObject)]}
-        
-        url = '/visualize_object/?objectId=746'
-        
-        ioDict = {"pag1": url , "pag2" : "<html><h2>Under construction</h2></html>"}
+        ioDict = {"pag1": response.content , "pag2" : "<html><h2>Under construction</h2></html>"}
         
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
         

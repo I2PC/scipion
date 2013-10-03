@@ -14,7 +14,7 @@ def wizard(request):
     requestDict = getattr(request, "POST")
     functionName = requestDict.get("wizName")
     function = globals().get(functionName, None)
-    print "................In Wizard: " + functionName
+    print "======================= in wizard: " + functionName
     
     # Get the protocol object
     project, protocol = loadProtocolProject(request)
