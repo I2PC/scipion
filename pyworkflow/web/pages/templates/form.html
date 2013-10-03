@@ -36,7 +36,7 @@
 			<input type="hidden" name="protocolClass" value="{{protocol.getClassName}}"/>
 			<input type="hidden" name="protocolId" value="{{protocol.getObjId}}"/>
 			<input type="hidden" id="wizName" name="wizName" value=""/>
-			<input type="hidden" id="comment" name="comment" value=""/>
+			<input type="hidden" id="comment" name="comment" value="{{protocol.getObjComment}}"/>
 			
 			<div id="main">
 				<div id="mainNode1">
@@ -49,8 +49,8 @@
 								Run name
 							</td>
 							<td>
-								<input type="text" id="runName_input" name="runName"
-								value="{{runName}}">
+								<input type="text" id="runName" name="runName"
+								value="{{protocol.getObjLabel}}">
 							</td>
 							<td class="ico">
 								<a href="javascript:showComment();"><img src={{comment}}/></a>
