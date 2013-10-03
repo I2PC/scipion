@@ -210,6 +210,8 @@ H5infoProvider getProvider(hid_t fhdf5)
             return it->second;
     }
 
-    REPORT_ERROR(ERR_IO, "rwHDF5: Unknown file provider. Default dataset unknown.");
+    return std::make_pair(NONE , "");
+
+//    REPORT_ERROR(ERR_IO, "rwHDF5: Unknown file provider. Default dataset unknown.");
 
 }

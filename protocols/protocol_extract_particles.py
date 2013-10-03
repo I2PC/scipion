@@ -214,7 +214,7 @@ def updateSampling(log, SamplingMd, TsOriginal, Ts, TsMode):
 
 def extractParticles(log,ExtraDir,micrographName, micrographPos, ctf, fullMicrographName, micrographOriginal, micrographToExtract,
                      TsFinal, TsInput, downsamplingMode, particleSize, doFlip, doInvert, doNorm, normType, bgRadius):
-    md=getMetadataWithPickedParticles(micrographPos)
+    md=readPosCoordinates(micrographPos)
     fnTmpPos=os.path.join(ExtraDir,"tmp_%s.pos"%micrographName)
     md.write(fnTmpPos)
 
