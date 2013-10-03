@@ -204,7 +204,7 @@ def get_slice(request):
     
     
     # from PIL import Image
-    img = getPILImage(imgXmipp, None)
+    img = getPILImage(imgXmipp, None, False)
          
     # response = HttpResponse(mimetype="image/png")    
     
@@ -222,6 +222,9 @@ def getImageDim(request, imagePath):
     print("imgFn",imgFn)
     img.read(str(imgFn), xmipp.HEADER)
     return img.getDimensions()
+
+
+
 
 
     
