@@ -369,7 +369,7 @@ class ProtRelionClassifier(XmippProtocol):
                 for it in iterations:
                     file_name = blockName + self.getFilename('model'+'Xm', iter=it )
                     #file_name = self.getFilename('ResolutionXmdFile', iter=it, ref=ref3d)
-                    print file_name
+                    #print file_name
                     if xmippExists(file_name):
                         #print 'it: ',it, ' | file_name:',file_name
                         mdOut = MetaData(file_name)
@@ -442,7 +442,7 @@ class ProtRelionClassifier(XmippProtocol):
 
             for ref3d in ref3Ds:
                 for it in iterations:
-                    file_name = self.getFilename('volume', iter=it, ref3d=ref3d )
+                    file_name = self.getFilenameAlternative('volume','volumeMRC', iter=it, ref3d=ref3d )
                     if xmippExists(file_name):
                         #Chimera
                         if(self.DisplayVolumeSlicesAlong == 'surface'):
@@ -453,15 +453,16 @@ class ProtRelionClassifier(XmippProtocol):
                                 runShowJ(file_name, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e))
-                                
+                    else:
+                        print "file ", file_name, "those not exits"
         from tempfile import NamedTemporaryFile    
         if doPlot('DisplayAngularDistribution'):
             self.DisplayAngularDistributionWith = self.parser.getTkValue('DisplayAngularDistributionWith')
             if(self.DisplayAngularDistributionWith == '3D'):
-                fileNameVol = self.getFilename('volume', iter=self.NumberOfIterations, ref3d=1 )
+                fileNameVol = self.getFilenameAlternative('volume', 'volumeMRC', iter=self.NumberOfIterations, ref3d=1 )
                 (Xdim, Ydim, Zdim, Ndim) = getImageSize(fileNameVol)
                 for ref3d in ref3Ds:
-                    fileNameVol = self.getFilename('volume', iter=self.NumberOfIterations, ref3d=ref3d )
+                    fileNameVol = self.getFilenameAlternative('volume', 'volumeMRC',iter=self.NumberOfIterations, ref3d=ref3d )
                     md=MetaData('images@'+ self.getFilename('data'+'Xm', iter=self.NumberOfIterations ))
                     mdOut = MetaData()
                     mdOut.importObjects(md, MDValueEQ(MDL_REF3D, ref3d))
@@ -490,7 +491,7 @@ class ProtRelionClassifier(XmippProtocol):
                 xplotter = XmippPlotter(*gridsize1, mainTitle='Iteration_%d' % self.NumberOfIterations, windowTitle="AngularDistribution")
                 
                 for ref3d in ref3Ds:
-                    fileNameVol = self.getFilename('volume', iter=self.NumberOfIterations, ref3d=ref3d )
+                    fileNameVol = self.getFilenameAlternative('volume', 'volumeMRC', iter=self.NumberOfIterations, ref3d=ref3d )
                     md=MetaData('images@'+ self.getFilename('data'+'Xm', iter=self.NumberOfIterations ))
                     mdOut = MetaData()
                     mdOut.importObjects(md, MDValueEQ(MDL_REF3D, ref3d))
