@@ -444,7 +444,7 @@ def CompileJavaJar(target, source, env):
     # -C java/build xmipp/package/A.class
     # -C java/build xmipp/package/B.class
     # ...
-    cmd = 'jar ' + env['JARFLAGS']
+    cmd = '$JAVA_HOME/bin/jar ' + env['JARFLAGS']
     CreateFileList(classDir, '*.class', classfile, buildDir + '/', '-C %(buildDir)s ' % locals())
     Cmd('%(cmd)s %(jarfile)s @%(classfile)s %(pluginDest)s' % locals())
     
