@@ -101,7 +101,7 @@ class ProtRelionClassifier(XmippProtocol):
                                 )
             else:
                 self.Db.insertStep('createLink',
-                                   verifyfiles=[tmpFileName],
+                                   verifyfiles=[tmpFileNameXMD],
                                    source=self.ImgMd,
                                    dest=tmpFileNameXMD)
             # convert input metadata to relion model
@@ -156,7 +156,7 @@ class ProtRelionClassifier(XmippProtocol):
         args = {'--iter': self.NumberOfIterations,
                 '--tau2_fudge': self.RegularisationParamT,
                 '--flatten_solvent': '',
-                '--zero_mask': '',# this is an option but is almost always true
+                #'--zero_mask': '',# this is an option but is almost always true
                 '--norm': '',
                 '--scale': '',
                 '--o': '%s/relion' % self.ExtraDir

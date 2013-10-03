@@ -361,10 +361,12 @@ class XmippProject():
                 self._registerRunProtocol(extRunName, prot, runsDict)
                 runsDict[extRunName].state = r['run_state']
             except Exception, ex:
-                print "Error loading run: ", extRunName, "...IGNORED."
+                print "WARNING: Can't load run: %s\n Error: %s" % (extRunName, ex)
+
         
         for r in runs:
             dd = runsDict.get(getExtendedRunName(r), None)
+
             if dd is not None:
                 for r2 in runs:
                     dd2 = runsDict.get(getExtendedRunName(r2), None)
