@@ -116,6 +116,7 @@ struct ImageFHandler
 
 struct ImageInfo
 {
+	FileName  filename;
     size_t    offset;
     DataType  datatype;
     bool      swap;

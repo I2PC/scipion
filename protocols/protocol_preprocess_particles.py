@@ -24,7 +24,8 @@ class ProtPreprocessParticles(ProtParticlesBase):
         baseFile = removeBasenameExt(file)
         self.OutStack = self.getFilename('images_stk')
         self.OutMetadata = self.getFilename('images')
-        self.TiltPair = exists(getProtocolFilename('tilted_pairs', WorkingDir=self.InputDir)) and self.InSelFile.find('images.xmd')!=-1
+        #self.TiltPair = exists(getProtocolFilename('tilted_pairs', WorkingDir=self.InputDir)) and self.InSelFile.find('images.xmd')!=-1
+        self.TiltPair = 0
         if self.TiltPair:
             self.TiltedPairs=os.path.join(self.InputDir,'tilted_pairs.xmd')
             self.InputUntilted=self.InSelFile.replace(".xmd","_untilted.xmd")

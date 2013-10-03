@@ -21,16 +21,20 @@ protected:
         // testBaseName = xmippPath + "/resources/test";
         imageName = "image/singleImage.spi";
         stackName = "image/smallStack.stk";
+        stackVolName= "image/smallVolumeStack.stk";
         myImage.read(imageName);
         myStack.read(stackName);
+        myVolStack.read(stackVolName);
         XMIPP_CATCH
     }
 
     // virtual void TearDown() {}//Destructor
     Image<double> myImage;
     Image<double> myStack;
+    Image<double> myVolStack;
     FileName imageName;
     FileName stackName;
+    FileName stackVolName;
     FileName xmippPath;
 
 };
@@ -223,6 +227,25 @@ TEST_F( ImageTest, writeMRCstack)
     Image<double> auxStack;
     auxStack.read(auxFn);
     EXPECT_EQ(myStack,auxStack);
+    auxFn.deleteFile();
+    XMIPP_CATCH
+}
+
+TEST_F( ImageTest, writeMRCVOLstack)
+{
+    XMIPP_TRY
+    FileName auxFn;
+    auxFn.initUniqueName("/tmp/temp_mrcvolstk_XXXXXX");
+    auxFn = auxFn + ":mrc";
+    myVolStack.write(auxFn);
+    Image<double> auxStack;
+    auxStack.read(auxFn);
+    EXPECT_EQ(myVolStack,auxStack);
+    ArrayDim auxStackArrayDim;
+    ArrayDim StackArrayDim;
+    myVolStack.getDimensions(StackArrayDim);
+    auxStack.getDimensions(auxStackArrayDim);
+    EXPECT_TRUE(StackArrayDim==auxStackArrayDim);
     auxFn.deleteFile();
     XMIPP_CATCH
 }

@@ -30,8 +30,7 @@ from protlib_xmipp import XmippScript
 from xmipp import MetaData, MDL_CTF_MODEL, MD_APPEND, MD_OVERWRITE, FileName
 from emx.emxmapper import *
 from emx.emx import *
-from emxLib.emxLib import ctfMicXmippToEmx, coorrXmippToEmx, ctfMicXmippToEmxChallenge,\
-                          alignXmippToEmx
+from protlib_emx import *
 
 
 class ScriptImportEMX(XmippScript):
@@ -49,7 +48,8 @@ class ScriptImportEMX(XmippScript):
         self.addParamsLine("             alignment          : export particle shift and rotations");
         self.addParamsLine("             coordinates        : export particle coordinates (so far only works for a single image)");
         self.addParamsLine("             micCTF             : export micrograph ctf");
-        self.addParamsLine("             micCTFChallenge    : export micrograph ctf to challenge format");        
+        self.addParamsLine("             micCTFChallenge    : export micrograph ctf to challenge format"); 
+        self.addParamsLine("             particles          : export particles");       
         self.addParamsLine("     alias -m;");
 #        self.addParamsLine(' [--amplitudeContrast <Q=0.1>]   : amplitudeContrast, mandatory when mode=micCTF');
 #        self.addParamsLine("     alias -a;");

@@ -61,7 +61,7 @@ class ProtInitVolRANSAC(XmippProtocol):
         # RANSAC iterations
         for n in range(self.NRansac):
             self.insertParallelStep('ransacIteration',WorkingDir=self.WorkingDir,n=n,SymmetryGroup=self.SymmetryGroup,Xdim=self.Xdim,
-                                    Xdim2=self.Xdim2,NumGrids=self.NumGrids,InitialVolume=self.InitialVolume,AngularSampling=self.AngularSampling,
+                                    Xdim2=self.Xdim2,NumGrids=self.NumGrids,NumSamples=self.NumSamples,DimRed=self.DimRed,InitialVolume=self.InitialVolume,AngularSampling=self.AngularSampling,
                                     parent_step_id=XmippProjectDb.FIRST_STEP)
         
         # Look for threshold, evaluate volumes and get the best
@@ -78,10 +78,10 @@ class ProtInitVolRANSAC(XmippProtocol):
                 fnRoot=self.workingDirPath(fnBase)
                 parent_id=XmippProjectDb.FIRST_STEP
                 for it in range(self.NumIter):    
-                    parent_id = self.insertParallelStep('reconstruct',fnRoot=fnRoot,symmetryGroup=self.SymmetryGroup,maskRadius=Xdim2/2,
+                    parent_id = self.insertParallelStep('reconstruct',fnRoot=fnRoot,symmetryGroup=self.SymmetryGroup,maskRadius=self.Xdim2/2,
                                                         parent_step_id=parent_id)
                     parent_id = self.insertParallelStep('projMatch',WorkingDir=self.WorkingDir,fnBase=fnBase,AngularSampling=self.AngularSampling,
-                                                        SymmetryGroup=self.SymmetryGroup, Xdim=self.Xdim, parent_step_id=parent_id)
+                                                        SymmetryGroup=self.SymmetryGroup, Xdim=self.Xdim2, parent_step_id=parent_id)
                 self.insertParallelRunJobStep("xmipp_image_resize","-i %s.vol -o %s.vol --dim %d %d" 
                                               %(fnRoot,fnRoot,self.Xdim,self.Xdim),parent_step_id=parent_id)
         else:
@@ -107,6 +107,8 @@ class ProtInitVolRANSAC(XmippProtocol):
     def summary(self):
         message=[]
         message.append("Input images: [%s]"%self.Classes)
+        if self.InitialVolume!="":
+            message.append("Initial volume: [%s]"%self.InitialVolume)
         message.append("RANSAC iterations: %d"%self.NRansac)
         message.append("Symmetry: "+self.SymmetryGroup)
         return message
@@ -224,15 +226,18 @@ def reconstruct(log,fnRoot,symmetryGroup,maskRadius):
     runJob(log,"xmipp_reconstruct_fourier","-i %s.xmd -o %s.vol --sym %s " %(fnRoot,fnRoot,symmetryGroup))
     runJob(log,"xmipp_transform_mask","-i %s.vol --mask circular -%d "%(fnRoot,maskRadius))
 
-def ransacIteration(log,WorkingDir,n,SymmetryGroup,Xdim,Xdim2,NumGrids,InitialVolume,AngularSampling):
+def ransacIteration(log,WorkingDir,n,SymmetryGroup,Xdim,Xdim2,NumGrids,NumSamples,DimRed,InitialVolume,AngularSampling):
     fnBase="ransac%05d"%n
     TmpDir=os.path.join(WorkingDir,"tmp")
     fnRoot=os.path.join(TmpDir,fnBase)
     fnOutputReducedClass = os.path.join(WorkingDir,"extra/reducedClasses.xmd")
 
-    # Get a random sample of images
-    runJob(log,"xmipp_transform_dimred","-i %s --randomSample %s.xmd  %d -m LTSA "%(fnOutputReducedClass,fnRoot,NumGrids))
-    
+    if (DimRed=='Yes'):
+        # Get a random sample of images
+        runJob(log,"xmipp_transform_dimred","-i %s --randomSample %s.xmd  %d -m LTSA "%(fnOutputReducedClass,fnRoot,NumGrids))
+    else:        
+        runJob(log,"xmipp_metadata_utilities","-i %s -o %s.xmd  --operate random_subset %d --mode overwrite "%(fnOutputReducedClass,fnRoot,NumGrids))
+
     # If there is an initial volume, assign angles        
     if (InitialVolume != ''):
         fnGallery=os.path.join(TmpDir,'gallery_InitialVolume.stk')

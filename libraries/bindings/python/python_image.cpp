@@ -128,6 +128,8 @@ PyMethodDef Image_methods[] =
           "Resize the image dimensions" },
         { "scale", (PyCFunction) Image_scale, METH_VARARGS,
           "Scale the image" },
+        { "reslice", (PyCFunction) Image_reslice, METH_VARARGS,
+            "Change the slices order in a volume" },
         { "patch", (PyCFunction) Image_patch, METH_VARARGS,
           "Make a patch with other image" },
         { "setDataType", (PyCFunction) Image_setDataType, METH_VARARGS,
@@ -317,14 +319,17 @@ Image_write(PyObject *obj, PyObject *args, PyObject *kwargs)
         {
             try
             {
-
-                if (PyString_Check(input))
-                    self->image->write(PyString_AsString(input));
-                else if (FileName_Check(input))
-                    self->image->write(FileName_Value(input));
-                else
-                    return NULL;
-                Py_RETURN_NONE;
+              PyObject *pyStr;
+              if ((pyStr = PyObject_Str(input)) != NULL)
+              {
+                  self->image->write(PyString_AsString(input));
+                  Py_RETURN_NONE;
+              }
+              else
+              {
+                  PyErr_SetString(PyExc_TypeError,
+                                  "Image_write: Expected an string or FileName as first argument");
+              }
             }
             catch (XmippError &xe)
             {
@@ -350,13 +355,17 @@ Image_read(PyObject *obj, PyObject *args, PyObject *kwargs)
 
             try
             {
-                if (PyString_Check(input))
-                    self->image->read(PyString_AsString(input),(DataMode)datamode);
-                else if (FileName_Check(input))
-                    self->image->read(FileName_Value(input),(DataMode)datamode);
-                else
-                    return NULL;
-                Py_RETURN_NONE;
+              PyObject *pyStr;
+              if ((pyStr = PyObject_Str(input)) != NULL)
+              {
+                  self->image->read(PyString_AsString(input),(DataMode)datamode);
+                  Py_RETURN_NONE;
+              }
+              else
+              {
+                  PyErr_SetString(PyExc_TypeError,
+                                  "Image_write: Expected an string or FileName as first argument");
+              }
             }
             catch (XmippError &xe)
             {
@@ -367,13 +376,13 @@ Image_read(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }//function Image_read
 
-void readImagePreview(ImageGeneric *ig, FileName fn, size_t xdim)
+void readImagePreview(ImageGeneric *ig, FileName fn, size_t xdim, int slice)
 {
     ig->read(fn, HEADER);
     ImageInfo ii;
     ig->getInfo(ii);
     if (xdim > 0 || xdim != ii.adim.xdim)
-      ig->readPreview(fn, xdim);
+      ig->readPreview(fn, xdim, 0, slice);
     else
       ig->read(fn);
 }
@@ -388,21 +397,22 @@ Image_readPreview(PyObject *obj, PyObject *args, PyObject *kwargs)
     {
         PyObject *input = NULL;
         int x = 0;
-        if (PyArg_ParseTuple(args, "O|i", &input, &x))
+        int slice = CENTRAL_SLICE;
+
+        if (PyArg_ParseTuple(args, "O|ii", &input, &x, &slice))
         {
             try
             {
               PyObject *pyStr;
               if ((pyStr = PyObject_Str(input)) != NULL)
               {
-                  readImagePreview(self->image, PyString_AsString(pyStr), x);
+                  readImagePreview(self->image, PyString_AsString(pyStr), x, slice);
                   Py_RETURN_NONE;
               }
               else
               {
                   PyErr_SetString(PyExc_TypeError,
                                   "Image_readPreview: Expected string or FileName as first argument");
-                  return NULL;
               }
             }
             catch (XmippError &xe)
@@ -430,13 +440,18 @@ Image_readPreviewSmooth(PyObject *obj, PyObject *args, PyObject *kwargs)
         {
             try
             {
-                if (PyString_Check(input))
-                    self->image->readPreviewSmooth(PyString_AsString(input), x);
-                else if (FileName_Check(input))
-                    self->image->readPreviewSmooth(FileName_Value(input), x);
-                else
-                    return NULL;
-                Py_RETURN_NONE;
+
+              PyObject *pyStr;
+              if ((pyStr = PyObject_Str(input)) != NULL)
+              {
+                self->image->readPreviewSmooth(PyString_AsString(pyStr), x);
+                  Py_RETURN_NONE;
+              }
+              else
+              {
+                  PyErr_SetString(PyExc_TypeError,
+                                  "Image_readPreviewSmooth: Expected string or FileName as first argument");
+              }
             }
             catch (XmippError &xe)
             {
@@ -823,6 +838,28 @@ Image_scale(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }//function Image_scale
 
+/* Change the slices order in a volume */
+PyObject *
+Image_reslice(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
+    int axis = VIEW_Z_NEG;
+
+    if (self != NULL && PyArg_ParseTuple(args, "i", &axis))
+    {
+        try
+        {
+            self->image->reslice((AxisView) axis);
+            Py_RETURN_NONE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}//function Image_reslice
+
 /* Patch Image */
 PyObject *
 Image_patch(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -875,12 +912,13 @@ Image_convert2DataType(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     ImageObject *self = (ImageObject*) obj;
     int datatype;
+    int castMode;
 
-    if (self != NULL && PyArg_ParseTuple(args, "i", &datatype))
+    if (self != NULL && PyArg_ParseTuple(args, "ii", &datatype, &castMode))
     {
         try
         {
-            self->image->convert2Datatype((DataType)datatype);
+            self->image->convert2Datatype((DataType)datatype, (CastWriteMode)castMode);
             Py_RETURN_NONE;
         }
         catch (XmippError &xe)
