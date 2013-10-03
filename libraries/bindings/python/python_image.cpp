@@ -901,12 +901,13 @@ Image_convert2DataType(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     ImageObject *self = (ImageObject*) obj;
     int datatype;
+    int castMode;
 
-    if (self != NULL && PyArg_ParseTuple(args, "i", &datatype))
+    if (self != NULL && PyArg_ParseTuple(args, "ii", &datatype, &castMode))
     {
         try
         {
-            self->image->convert2Datatype((DataType)datatype);
+            self->image->convert2Datatype((DataType)datatype, (CastWriteMode)castMode);
             Py_RETURN_NONE;
         }
         catch (XmippError &xe)
