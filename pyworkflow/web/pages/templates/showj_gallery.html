@@ -5,7 +5,8 @@
 	var hoverElement;
 	
 	$(document).ready(function(){
-		setImageSize(true)
+		
+		
 		initializeImageLoad()
 		{% if dataset.getTable.hasEnabledColumn %}
 		initializeImageEvents()
@@ -15,25 +16,8 @@
 	});
 	
 	
-	function initializeImageLoad(){
-		$('.tableImages').waypoint(function(direction){
-			console.log("waypoint")
-			console.log($(this).data('real_src'))
-			/* if ($(this).data('real_src') != $(this).attr("src")){ */
-				$(this).attr(
-					"src",
-					$(this).data('real_src').concat($("#id_mirrorY").is(':checked')?"&mirrorY":"").concat($("#id_transformMatrix").is(':checked')?"&transformMatrix":"").concat($("#id_onlyShifts").is(':checked')?"&onlyShifts":"").concat($("#id_wrap").is(':checked')?"&wrap":"")
-					)
-			/* }		 */
-		}, {
-/* 			triggerOnce:true, */
-			offset: '150%'
-/* 			offset: function() {
-		        return $.waypoints('viewportHeight');
-		    }
- */		});
-	}
-
+	
+	
 	function initializeGoToEvents(){
 		$('#id_goto').click(function(){
 			updateSelection();	

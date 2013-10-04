@@ -23,12 +23,14 @@
 	var previousZoom='{{defaultZoom}}'
 	
 	$(document).ready(function(){
+		setImageSize(true)
 		initializeZoomEvents();
 		initializeColRowModeEvents()
 		initializeComboBoxEvents()
 		initializeArrowEvents()
 		initializeColsRowsEvents()
 		initializeCheckboxEvents()
+		
 		
 		/* Avoid enter key submit form */
 		$('.menuInputNumber').keypress(function(e) {
@@ -41,7 +43,19 @@
 		
 	});
 	</script>
-	
+	<script type="text/javascript">
+	function initializeImageLoad(){
+		$('.tableImages').waypoint(function(direction){
+			setImagesSrcAttr($(this))
+		}, {
+/* 			triggerOnce:true, */
+			offset: '150%'
+/* 			offset: function() {
+		        return $.waypoints('viewportHeight');
+		    }
+ */		});
+	}
+	</script>
 	<script type="text/javascript">
 	function initializeArrowEvents(){
 		$(".arrowImage").click(function(){
@@ -271,23 +285,29 @@
 		   		realSrc = newSrc.concat("&dim="+tableImages_width).concat("&"+d.getTime())
 				$(this).data("real_src", realSrc);
 			   	
-/* 		   		if (recallServer){
-			   		$(this).attr(
-						"src",
-						$(this).data('real_src').concat($("#id_mirrorY").is(':checked')?"&mirrorY":"").concat($("#id_transformMatrix").is(':checked')?"&transformMatrix":"").concat($("#id_onlyShifts").is(':checked')?"&onlyShifts":"").concat($("#id_wrap").is(':checked')?"&wrap":"")
-					)
-		   		}	 */	
-					
+ 		   		 	
+	
 		   })
 		   
-			{% if form.mode.value == 'gallery' %}
-			/* $.waypoints('disable')
-			$.waypoints('enable') */
-			$.waypoints('refresh') 
-			{% endif %}
-		   
+		   /* If images with new dimensions need to be generated in the server, waypoints jquery script manages it */
+		   if (recallServer){
+		   		{% if form.mode.value == 'gallery' %}
+					$.waypoints('destroy')
+					initializeImageLoad()
+				{% endif %}
+		   }
 		}
 
+	</script>
+	<script type="text/javascript">
+	function setImagesSrcAttr(element){
+		if (element.data('real_src') != element.attr("src")){
+			element.attr(
+				"src",
+				element.data('real_src').concat($("#id_mirrorY").is(':checked')?"&mirrorY":"").concat($("#id_transformMatrix").is(':checked')?"&transformMatrix":"").concat($("#id_onlyShifts").is(':checked')?"&onlyShifts":"").concat($("#id_wrap").is(':checked')?"&wrap":"")
+				)
+		}
+	}
 	</script>
 	<script type="text/javascript">
 	//Save table change in metadata
