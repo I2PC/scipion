@@ -278,8 +278,8 @@ void ProgVolumeInitialH::run()
     	iter++;
     } while (!finish);
     deleteFile(fnRoot+"_gallery_sampling.xmd");
-    deleteFile(fnRoot+"_gallery_sampling.stk");
-    deleteFile(fnRoot+"_gallery_sampling.doc");
+    deleteFile(fnRoot+"_gallery.stk");
+    deleteFile(fnRoot+"_gallery.doc");
 }
 
 void ProgVolumeInitialH::filterByCorrelation()
@@ -334,7 +334,7 @@ void ProgVolumeInitialH::reconstructCurrent()
 
 	if (keepIntermediateVolumes)
 	{
-		cmd=formatString("cp %s %s%02d.vol",fnVolume.c_str(),fnRoot.c_str(),iter);
+		cmd=formatString("cp %s %s_iter%02d.vol",fnVolume.c_str(),fnRoot.c_str(),iter);
 		system(cmd.c_str());
 	}
 }
@@ -395,6 +395,7 @@ void ProgVolumeInitialH::produceSideinfo()
 	}
 
 	mdIn.write(fnAngles);
+	iter=0;
 	if (fnInit=="")
 		reconstructCurrent();
 	else
