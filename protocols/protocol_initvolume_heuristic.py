@@ -12,7 +12,7 @@ class ProtInitVolH(ProtInitVolumeBase):
         self.fnRoot=self.workingDirPath('proposedVolume')
         
     def defineSteps(self):
-        ProtInitVolumeBase.defineSteps(self)
+        self.insertStep("linkAcquisitionInfo",InputFile=self.Classes,dirDest=self.WorkingDir)
         args="-i %s --oroot %s --sym %s --randomIter %d --greedyIter %d --rejection %f --thr %d"%\
             (self.Classes,self.fnRoot,self.SymmetryGroup,self.NIterRandom, self.NIterGreedy, self.Rejection, self.NumberOfThreads)
         if self.InitialVolume!="":
@@ -23,8 +23,6 @@ class ProtInitVolH(ProtInitVolumeBase):
             args+=" --keepIntermediateVolumes"
         
         self.insertRunJobStep("xmipp_volume_initial_H", args, [self.fnRoot+".vol"])
-        if self.Xdim!=self.Xdim2:
-            self.insertRunJobStep("xmipp_image_resize","-i %s --dim %d"%(self.fnRoot+".vol",self.Xdim))
 
     def summary(self):
         message=ProtInitVolumeBase.summary(self)

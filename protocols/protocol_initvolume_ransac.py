@@ -79,6 +79,12 @@ class ProtInitVolRANSAC(ProtInitVolumeBase):
         # Score each of the final volumes
         self.insertStep("scoreFinalVolumes",WorkingDir=self.WorkingDir,NumVolumes=self.NumVolumes)
         
+    def validate(self):
+        errors = []
+        if float(self.MaxFreq)<2*float(self.Ts):
+            errors.append("Maximum frequency cannot be smaller than twice the sampling rate")
+        return errors
+
     def summary(self):
         message=ProtInitVolumeBase.summary(self)
         message.append("RANSAC iterations: %d"%self.NRansac)

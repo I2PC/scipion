@@ -48,20 +48,21 @@ class ProtInitVolumeBase(XmippProtocol):
         self.MaxFreq = float(self.MaxFreq)
         self.Ts = float(self.Ts)
         K = 0.25*(self.MaxFreq/self.Ts)
-        Xdim2 = self.Xdim/K
-        if (Xdim2 < 32):
+        if K<1:
+            K=1
+        self.Xdim2 = self.Xdim/K
+        if (self.Xdim2 < 32):
             self.Xdim2 = 32
-            K = self.Xdim/Xdim2
-        else:
-            self.Xdim2 = Xdim2
+            K = self.Xdim/self.Xdim2
             
         freq = self.Ts/self.MaxFreq
         self.Ts = K*self.Ts
 
         self.insertRunJobStep("xmipp_transform_filter","-i %s -o %s.stk --save_metadata_stack %s.xmd --fourier low_pass %f"
                                                 %(self.Classes,fnOutputReducedClassNoExt,fnOutputReducedClassNoExt,freq))
-        self.insertRunJobStep("xmipp_image_resize","-i %s.stk --dim %d %d" %(fnOutputReducedClassNoExt,self.Xdim2,self.Xdim2))
-        self.insertRunJobStep("rm", fnOutputReducedClassNoExt+".stk_tmp.xmd",NumberOfMpi=1)
+        if self.Xdim!=self.Xdim2:
+            self.insertRunJobStep("xmipp_image_resize","-i %s.stk --dim %d %d" %(fnOutputReducedClassNoExt,self.Xdim2,self.Xdim2))
+            self.insertRunJobStep("rm", fnOutputReducedClassNoExt+".stk_tmp.xmd",NumberOfMpi=1)
         
     def summary(self):
         message=[]
@@ -70,9 +71,3 @@ class ProtInitVolumeBase(XmippProtocol):
             message.append("Initial volume: [%s]"%self.InitialVolume)
         message.append("Symmetry: "+self.SymmetryGroup)
         return message
-
-    def validate(self):
-        errors = []
-        if float(self.MaxFreq)<2*float(self.Ts):
-            errors.append("Maximum frequency cannot be smaller than twice the sampling rate")
-        return errors

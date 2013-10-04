@@ -28,11 +28,6 @@ SymmetryGroup ='c1'
 """
 InitialVolume = ''
 
-#{expert} Max frequency of the initial volume
-""" Max frequency of the initial volume in Angstroms
-"""
-MaxFreq = 2
-
 #{expert} Number of heuristic iterations
 """ During the heuristic iterations, all those particles positively contributing to the improvement of the volume are considered.
 In this way, the same image may participate several times from different projection directions (but different weights) depending
@@ -56,11 +51,6 @@ Positive = True
 #{expert} Keep intermediate volumes
 """Keep all the volumes of the different iterations""" 
 KeepIntermediate = False
-
-# Sampling Rate
-""" Sampling rate (A/px)
-"""
-Ts = '1'
 
 # {eval} expandParallel(threads=4,mpi=0,hours=12)
 
