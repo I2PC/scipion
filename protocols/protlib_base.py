@@ -510,6 +510,19 @@ class XmippProtocol(object):
             return self.FilenamesDict[key] % params
         raise Exception("XmippProtocol.getFilename: key '%s' not found" % key)
     
+    def getFilenameAlternative(self, key1, key2, **params):
+        """Has the same function as getFileName
+        but if the filename does not exists then
+        tries an alternative filename seed given by key2
+         """
+        params.update(self.ParamsDict)
+        if self.FilenamesDict.has_key(key1):
+            fileName = self.FilenamesDict[key1] % params
+            if not xmippExists(fileName):
+                fileName = self.FilenamesDict[key2] % params
+            return fileName
+        raise Exception("XmippProtocol.getFilename: key '%s' not found" % key)
+    
     def getFileList(self, *keyList):
         ''' Return a list of filename using the getFilename function '''
         return [self.getFilename(k) for k in keyList]
