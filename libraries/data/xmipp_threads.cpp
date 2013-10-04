@@ -63,6 +63,7 @@ ThreadArgument::ThreadArgument()
     threads = -1;
     manager = NULL;
     data = NULL;
+    workClass = NULL;
 }
 
 ThreadArgument::ThreadArgument(int id, ThreadManager * manager, void * data)
@@ -71,6 +72,7 @@ ThreadArgument::ThreadArgument(int id, ThreadManager * manager, void * data)
     this->threads = manager->threads;
     this->manager = manager;
     this->data = data;
+    this->workClass = NULL;
 }
 
 void * _threadMain(void * data)
@@ -113,12 +115,10 @@ ThreadManager::ThreadManager(int numberOfThreads, void * workClass)
     arguments = new ThreadArgument[threads];
     started = false;
     this->workClass = workClass;
-
 }
 
 void ThreadManager::setData(void * data, int idxThread)
 {
-
     if (idxThread == -1)
         for (int i = 0; i < threads; ++i)
             arguments[i].data = data;
