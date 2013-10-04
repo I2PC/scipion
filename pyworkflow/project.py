@@ -298,6 +298,5 @@ class Project(object):
         for n in g.getNodes():
             if n.isRoot() and not n is rootNode:
                 rootNode.addChild(n)
-        #print ">>>>>>> Graph building: ", dt.datetime.now() - t
         return g
         
