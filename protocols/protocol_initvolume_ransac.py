@@ -8,50 +8,25 @@
 # Author: Javier Vargas and Carlos Oscar May 2013 
 #
 
-from xmipp import MetaData
 from protlib_base import *
-
 from os.path import join, exists, split, basename
 from xmipp import MetaData, MetaDataInfo, MD_APPEND, MDL_MAXCC, MDL_WEIGHT, \
     MDL_IMAGE, MDL_VOLUME_SCORE1, MDL_VOLUME_SCORE2, MDL_VOLUME_SCORE3, MDL_VOLUME_SCORE4
 
-from protlib_base import *
 from math import floor
 from numpy import array, savetxt, sum, zeros
 from protlib_xmipp import getMdSize
 from protlib_utils import getListFromRangeString, runJob, runShowJ
 from protlib_filesystem import copyFile, deleteFile, removeFilenamePrefix
+from protlib_initvolume import *
 
-class ProtInitVolRANSAC(XmippProtocol):
+class ProtInitVolRANSAC(ProtInitVolumeBase):
     def __init__(self, scriptname, project):
-        XmippProtocol.__init__(self, protDict.initvolume_ransac.name, scriptname, project)
-        self.Import = 'from protocol_initvolume_ransac import *'
-        self.Xdim=MetaDataInfo(self.Classes)[0]
+        ProtInitVolumeBase.__init__(self, protDict.initvolume_ransac.name, scriptname, project)
+        self.Import += 'from protocol_initvolume_ransac import *'
         
     def defineSteps(self):
-        self.insertStep('createDir',path=self.ExtraDir)
-        self.insertStep("linkAcquisitionInfo",InputFile=self.Classes,dirDest=self.WorkingDir)
-        fnOutputReducedClass = self.extraPath("reducedClasses.xmd")
-        fnOutputReducedClassNoExt = os.path.splitext(fnOutputReducedClass)[0]
-
-    
-        # Low pass filter and resize        
-        self.MaxFreq = float(self.MaxFreq)
-        self.Ts = float(self.Ts)
-        K = 0.25*(self.MaxFreq/self.Ts)
-        Xdim2 = self.Xdim/K
-        if (Xdim2 < 32):
-            self.Xdim2 = 32
-            K = self.Xdim/Xdim2
-        else:
-            self.Xdim2 = Xdim2
-            
-        freq = self.Ts/self.MaxFreq
-        self.Ts = K*self.Ts
-
-        self.insertRunJobStep("xmipp_transform_filter","-i %s -o %s --fourier low_pass %f --oroot %s"
-                                                %(self.Classes,fnOutputReducedClass,freq,fnOutputReducedClassNoExt))
-        self.insertRunJobStep("xmipp_image_resize","-i %s --dim %d %d -o %s" %(fnOutputReducedClass,self.Xdim2,self.Xdim2,fnOutputReducedClassNoExt))
+        ProtInitVolumeBase.defineSteps(self)
 
         # Generate projection gallery from the initial volume
         if (self.InitialVolume != ''):
@@ -105,22 +80,19 @@ class ProtInitVolRANSAC(XmippProtocol):
         self.insertStep("scoreFinalVolumes",WorkingDir=self.WorkingDir,NumVolumes=self.NumVolumes)
         
     def summary(self):
-        message=[]
-        message.append("Input images: [%s]"%self.Classes)
-        if self.InitialVolume!="":
-            message.append("Initial volume: [%s]"%self.InitialVolume)
+        message=ProtInitVolumeBase.summary(self)
         message.append("RANSAC iterations: %d"%self.NRansac)
-        message.append("Symmetry: "+self.SymmetryGroup)
         return message
     
-    def validate(self):
-        errors = []
-        return errors
-
     def visualize(self):
-        n=0    
-        fnVolumes = self.workingDirPath('proposedVolumes.xmd')
-        runShowJ(fnVolumes)
+        if self.DoShowList:
+            fnVolumes = self.workingDirPath('proposedVolumes.xmd')
+            runShowJ(fnVolumes)
+        if self.VolumesToShow!="":
+            listOfVolumes = getListFromRangeString(self.VolumesToShow)
+            for volume in listOfVolumes:
+                fnRoot=self.workingDirPath('proposedVolume%05d'%int(volume))
+                os.system("xmipp_chimera_client -i %s.vol --mode projector 256 --angulardist %s.xmd"%(fnRoot,fnRoot))
 
 def evaluateVolumes(log,WorkingDir,NRansac):
     fnCorr=os.path.join(WorkingDir,"extra/correlations.xmd")
@@ -285,8 +257,10 @@ def scoreFinalVolumes(log,WorkingDir,NumVolumes):
     mdOut=MetaData()
     for n in range(NumVolumes):
         fnRoot=os.path.join(WorkingDir,'proposedVolume%05d'%n)
-        if exists(fnRoot+".xmd"):
-            MDassignment=MetaData(fnRoot+".xmd")
+        fnAssignment=fnRoot+".xmd"
+        if exists(fnAssignment):
+            runJob(log,"xmipp_metadata_utilities","-i %s --fill weight constant 1"%fnAssignment)
+            MDassignment=MetaData(fnAssignment)
             sum=0
             thresholdedSum=0
             N=0

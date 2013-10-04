@@ -21,7 +21,7 @@ protocols = {
         'screen_classes': ('Screen classes', '2D/Screening'),
         'rct': ('Random Conical Tilt', '3D/InitialVolume/RCT'),
         'initvolume_ransac': ('RANSAC', '3D/InitialVolume/RANSAC'),
-
+        'initvolume_heuristic': ('Heuristic', '3D/InitialVolume/Heuristic'),
         'convert_pdb': ('Convert PDB', '3D/PDB'),
         'preprocess_volume': ('Preprocess', '3D/Preprocessed'),
         'create_volume_mask': ('Create mask', '3D/Mask'),
@@ -46,8 +46,6 @@ protocols = {
         'emx_import_particles': ('Import particles', 'Images/EmxImported'),
         'emx_export_micrographs': ('Export micrographs', 'Micrographs/EmxExported'),
         'emx_export_particles': ('Export particles', 'Images/EmxExported'),
-        # DEPRECATED:
-        #'emx_export': ('kk', 'kk')
         }
 
 #--------------------------------------------------------------------------------
@@ -61,7 +59,7 @@ sections = [
 ('2D', 
    [['Align+Classify', 'cl2d', 'ml2d', ['Other', 'cl2d_align', 'kerdensom', 'rotspectra', 'screen_classes']]]),
 ('3D', 
-   [['Initial Model', 'rct', 'initvolume_ransac', 'convert_pdb'], 
+   [['Initial Model', 'rct', 'initvolume_ransac', 'initvolume_heuristic', 'convert_pdb'], 
     ['Model Refinement', 'projmatch', 'ml3d', ['relion','relion_classify','relion_refine']],
     ['Volumes', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask', 'preprocess_volume', 'resolution3D', 'align_volume', 'helical_params']]),
 ('Other',

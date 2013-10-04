@@ -68,7 +68,7 @@ InitialVolume = ''
 #{expert} Max frequency of the initial volume
 """ Max frequency of the initial volume in Angstroms
 """
-MaxFreq = 10
+MaxFreq = 5
 
 # Sampling Rate
 """ Sampling rate (A/px)
@@ -81,6 +81,16 @@ Ts = '1'
 UseAll=False
 
 # {eval} expandParallel(threads=0,hours=12)
+
+#------------------------------------------------------------------------------------------------
+# {section}{visualize} Visualization
+#------------------------------------------------------------------------------------------------
+# Show volume list
+DoShowList=True
+
+# Show in projection explorer
+"""Create a list of volumes like: 0,1,3 or 0-3 """
+VolumesToShow=""
 
 #------------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
