@@ -114,7 +114,7 @@ class ProtRelionClassifier(XmippProtocol):
             self.insertRelionRefine()
             # convert relion output to xmipp
             # relion_it00N_data.star, angular assigment
-            self.ImgStar = self.extraPath(replaceBasenameExt(tmpFileNameXMD, '.star'))
+            #self.ImgStar = self.extraPath(replaceBasenameExt(tmpFileNameXMD, '.star'))
             verifyFiles=[]
             inputs=[]
             for i in range (0,self.NumberOfIterations+1):
@@ -292,6 +292,46 @@ class ProtRelionClassifier(XmippProtocol):
         runShowJExtraParameters = ' --dont_wrap --view '+ self.parser.getTkValue('DisplayVolumeSlicesAlong') 
         self.DisplayVolumeSlicesAlong=self.parser.getTkValue('DisplayVolumeSlicesAlong')
         
+        #if relion has not finished metadata has not been converted to xmipp
+        #do it now if needed
+        #=============
+        outputs=[]#output files
+        inputs=[]
+        for i in iterations:
+            for v in self.relionFiles:
+                fileName =self.getFilename(v+'Xm', iter=i )
+                if not xmippExists(fileName):
+                    outputs += [fileName]
+                    inputs += [self.getFilename(v+'Re', iter=i )]
+        lastIteration = iterations[-1]
+        lastIterationVolumeFns = []
+        standardOutputClassFns = []
+        for ref3d in range (1,self.NumberOfClasses+1):
+            lastIterationVolumeFns += [self.getFilename('volume', iter=lastIteration, ref3d=ref3d )]
+            standardOutputClassFns += ["images_ref3d%06d@"%ref3d + self.workingDirPath("classes_ref3D.xmd")]
+        lastIterationMetadata = "images@"+self.getFilename('data'+'Xm', iter=lastIteration )
+
+        convertRelionMetadata(None
+                              , inputs
+                              , outputs
+                              , lastIterationVolumeFns
+                              , lastIterationMetadata
+                              , self.NumberOfClasses
+                              , standardOutputClassFns
+                              , "images@" + self.workingDirPath("images.xmd")
+                              , "volumes@" + self.workingDirPath("volumes.xmd")
+                            )
+        inputs=[]
+        outputs=[]
+        for it in iterations:
+             for ref3d in range(1,self.NumberOfClasses+1):
+                 fileName = self.getFilename('volume', iter=it, ref3d=ref3d )
+                 if not xmippExists(fileName):
+                     inputs  += [self.getFilename('volumeMRC', iter=it, ref3d=ref3d )]
+                     outputs += [fileName]
+        convertRelionBinaryData(None, inputs, outputs)
+                       
+        #============
         if doPlot('TableImagesPerClass'):
             _r = []
             mdOut = MetaData()
@@ -442,6 +482,7 @@ class ProtRelionClassifier(XmippProtocol):
 
             for ref3d in ref3Ds:
                 for it in iterations:
+                    #relion save volume either in spider or mrc therefore try first one of them and then the other
                     file_name = self.getFilenameAlternative('volume','volumeMRC', iter=it, ref3d=ref3d )
                     if xmippExists(file_name):
                         #Chimera
@@ -459,11 +500,13 @@ class ProtRelionClassifier(XmippProtocol):
         if doPlot('DisplayAngularDistribution'):
             self.DisplayAngularDistributionWith = self.parser.getTkValue('DisplayAngularDistributionWith')
             if(self.DisplayAngularDistributionWith == '3D'):
-                fileNameVol = self.getFilenameAlternative('volume', 'volumeMRC', iter=self.NumberOfIterations, ref3d=1 )
+                    #relion save volume either in spider or mrc therefore try first one of them and then the other
+                fileNameVol = self.getFilenameAlternative('volume', 'volumeMRC', iter=iterations[-1], ref3d=1 )
                 (Xdim, Ydim, Zdim, Ndim) = getImageSize(fileNameVol)
                 for ref3d in ref3Ds:
-                    fileNameVol = self.getFilenameAlternative('volume', 'volumeMRC',iter=self.NumberOfIterations, ref3d=ref3d )
-                    md=MetaData('images@'+ self.getFilename('data'+'Xm', iter=self.NumberOfIterations ))
+                    #relion save volume either in spider or mrc therefore try first one of them and then the other
+                    fileNameVol = self.getFilenameAlternative('volume', 'volumeMRC',iter=iterations[-1], ref3d=ref3d )
+                    md=MetaData('images@'+ self.getFilename('data'+'Xm', iter=iterations[-1] ))
                     mdOut = MetaData()
                     mdOut.importObjects(md, MDValueEQ(MDL_REF3D, ref3d))
                     md.clear()
@@ -476,6 +519,7 @@ class ProtRelionClassifier(XmippProtocol):
                     parameters =  ' -i ' + fileNameVol + \
                         ' --mode projector 256 -a ' + "angularDist@"+ ntf.name + " red "+\
                          str(float(_OuterRadius) * 1.1)
+                    print 'xmipp_chimera_client',parameters
                     runJob(_log,
                            'xmipp_chimera_client',
                            parameters,1,1,True
@@ -488,11 +532,12 @@ class ProtRelionClassifier(XmippProtocol):
                 else:
                     gridsize1 = [(len(ref3Ds)+1)/2, 2]
                 
-                xplotter = XmippPlotter(*gridsize1, mainTitle='Iteration_%d' % self.NumberOfIterations, windowTitle="AngularDistribution")
+                xplotter = XmippPlotter(*gridsize1, mainTitle='Iteration_%d' % iterations[-1], windowTitle="AngularDistribution")
                 
                 for ref3d in ref3Ds:
-                    fileNameVol = self.getFilenameAlternative('volume', 'volumeMRC', iter=self.NumberOfIterations, ref3d=ref3d )
-                    md=MetaData('images@'+ self.getFilename('data'+'Xm', iter=self.NumberOfIterations ))
+                    #relion save volume either in spider or mrc therefore try first one of them and then the other
+                    fileNameVol = self.getFilenameAlternative('volume', 'volumeMRC', iter=iterations[-1], ref3d=ref3d )
+                    md=MetaData('images@'+ self.getFilename('data'+'Xm', iter=iterations[-1] ))
                     mdOut = MetaData()
                     mdOut.importObjects(md, MDValueEQ(MDL_REF3D, ref3d))
                     md.clear()
@@ -533,7 +578,7 @@ def convertImagesMd(log, inputMd, outputRelion):
     md.fillExpand(MDL_CTF_MODEL)
     # Create the mapping between relion labels and xmipp labels
     exportMdToRelion(md, outputRelion)
-    
+import os
 def convertRelionMetadata(log, inputs,
                           outputs,
                           lastIterationVolumeFns,
