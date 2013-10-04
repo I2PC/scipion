@@ -38,6 +38,8 @@ void ProgRecRandom::defineParams()
     addParamsLine("  [--greedyIter <N=3>]         : Number of iterations with greedy assignment");
     addParamsLine("  [--rejection <p=25>]         : Percentage of images to reject for reconstruction");
     addParamsLine("  [--initial <file=\"\">]      : Initial volume if available");
+    addParamsLine("  [--dontApplyPositive]        : Do not apply positive constraint in the random iterations");
+    addParamsLine("  [--thr <n=1>]                : Number of threads");
 }
 
 // Read arguments ==========================================================
@@ -50,6 +52,8 @@ void ProgRecRandom::readParams()
     NiterGreedy = getIntParam("--greedyIter");
     rejection = getDoubleParam("--rejection");
     fnInit = getParam("--initial");
+    Nthr = getIntParam("--thr");
+    positiveConstraint = !checkParam("--dontApplyPositive");
 }
 
 // Show ====================================================================
@@ -62,6 +66,8 @@ void ProgRecRandom::show()
         std::cout << "Number of random iterations : "  << NiterRandom << std::endl;
         std::cout << "Number of greedy iterations : "  << NiterGreedy << std::endl;
         std::cout << "Rejection percentage        : "  << rejection   << std::endl;
+        std::cout << "Number of threads           : "  << Nthr        << std::endl;
+        std::cout << "Apply positive constraint   : "  << positiveConstraint << std::endl;
         if (fnSym != "")
             std::cout << "Symmetry for projections    : "  << fnSym << std::endl;
         if (fnInit !="")
@@ -69,72 +75,31 @@ void ProgRecRandom::show()
     }
 }
 
-// Main routine ------------------------------------------------------------
-void ProgRecRandom::run()
-{
-    show();
-    produceSideinfo();
-
-    bool finish=false;
-    iter=1;
-    do
-    {
-    	// Generate projections from the volume
-    	generateProjections();
-
-    	// Align the input images to the projections
-    	size_t nImg=0;
-    	double avgCorr=0, avgImprovement=0;
-    	mdReconstruction.clear();
-    	init_progress_bar(mdIn.size());
-    	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
-    	{
-    		double corr, improvement;
-    		alignSingleImage(nImg++,__iter.objId, corr, improvement);
-    		avgCorr+=corr;
-    		avgImprovement+=improvement;
-    		progress_bar(nImg);
-    	}
-    	progress_bar(mdIn.size());
-    	avgCorr/=mdIn.size();
-    	avgImprovement/=mdIn.size();
-    	std::cout << "Iter " << iter << " avg.correlation=" << avgCorr << " avg.improvement=" << avgImprovement << std::endl;
-
-    	// Remove too good and too bad images
-    	filterByCorrelation();
-    	//mdReconstruction.write(fnAngles);
-
-    	// Reconstruct
-    	reconstructCurrent();
-
-    	finish=(iter==(NiterRandom+NiterGreedy));
-    	iter++;
-    } while (!finish);
-}
-
+// Alignment of a single image ============================================
 //#define DEBUG
-void ProgRecRandom::alignSingleImage(size_t nImg, size_t id, double &newCorr, double &improvementFraction)
+void alignSingleImage(size_t nImg, ProgRecRandom &prm, MetaData &mdReconstruction, double &newCorr, double &improvementFraction)
 {
-	mCurrentImage.aliasImageInStack(inputImages(),nImg);
+	MultidimArray<double> mGalleryProjection, mCurrentImage, mCurrentImageAligned;
+	Matrix2D<double> M;
+
+	mCurrentImage.aliasImageInStack(prm.inputImages(),nImg);
 	mCurrentImage.setXmippOrigin();
 
 	MultidimArray<double> allCorrs;
-	allCorrs.resizeNoCopy(mdGallery.size());
+	allCorrs.resizeNoCopy(prm.mdGallery.size());
 
-	size_t nGallery=0;
 	size_t improvementCount=0;
-	double oldCorr;
-	mdIn.getValue(MDL_MAXCC,oldCorr,id);
+	double oldCorr=prm.mdInp[nImg].maxcc;
 #ifdef DEBUG
 	FileName fnImg;
-	mdIn.getValue(MDL_IMAGE,fnImg,id);
+	prm.mdIn.getValue(MDL_IMAGE,fnImg,id);
 	std::cout << "Image: " << fnImg << " oldCorr=" << oldCorr << std::endl;
 #endif
 	std::vector< Matrix2D<double> > allM;
-	FOR_ALL_OBJECTS_IN_METADATA(mdGallery)
+	for (size_t nGallery=0; nGallery<XSIZE(allCorrs); ++nGallery)
 	{
 		mCurrentImageAligned=mCurrentImage;
-		mGalleryProjection.aliasImageInStack(gallery(),nGallery);
+		mGalleryProjection.aliasImageInStack(prm.gallery(),nGallery);
 		mGalleryProjection.setXmippOrigin();
 		double corr=alignImagesConsideringMirrors(mGalleryProjection,mCurrentImageAligned,M,DONT_WRAP);
 #ifdef DEBUG
@@ -142,17 +107,16 @@ void ProgRecRandom::alignSingleImage(size_t nImg, size_t id, double &newCorr, do
 #endif
 		A1D_ELEM(allCorrs,nGallery)=corr;
 		allM.push_back(M);
-		++nGallery;
 		if (corr>oldCorr)
 		{
 			++improvementCount;
 #ifdef DEBUG
-		mdGallery.getValue(MDL_IMAGE,fnImg,__iter.objId);
+		prm.mdGallery.getValue(MDL_IMAGE,fnImg,__iter.objId);
 		std::cout << "   Matching Gallery: " << fnImg << " " << corr << std::endl;
 #endif
 		}
 	}
-	improvementFraction=(double)improvementCount/NSIZE(gallery());
+	improvementFraction=(double)improvementCount/NSIZE(prm.gallery());
 #ifdef DEBUG
 		mdGallery.write("PPPgallery.xmd");
 		std::cout << "   oldcorr=" << oldCorr << std::endl;
@@ -160,42 +124,34 @@ void ProgRecRandom::alignSingleImage(size_t nImg, size_t id, double &newCorr, do
 
 	MultidimArray<double> scaledCorrs;
 	allCorrs.cumlativeDensityFunction(scaledCorrs);
-	nGallery=0;
 	double bestCorr, bestAngleRot, bestAngleTilt, bestAnglePsi, bestShiftX, bestShiftY, bestWeight;
 	bool bestFlip;
 	bestCorr=-1;
 	double correctionFactor=1;
-	/*
-	if (improvementCount>1)
-		correctionFactor=1.0/improvementCount;
-	else if (iter<=NiterRandom)
-		correctionFactor=1.0/(0.98*XSIZE(scaledCorrs));
-	else
-		correctionFactor=1;*/
-	FOR_ALL_OBJECTS_IN_METADATA(mdGallery)
+	for (size_t nGallery=0; nGallery<XSIZE(allCorrs); ++nGallery)
 	{
 		bool getThis=(A1D_ELEM(allCorrs,nGallery)>oldCorr) || (improvementCount==0 && A1D_ELEM(scaledCorrs,nGallery)>=0.98);
 		if (getThis)
 		{
 			bool flip;
-			double scale, psi, shiftX, shiftY, angleRot, angleTilt, anglePsi;
+			double scale, psi, shiftX, shiftY, anglePsi;
 			transformationMatrix2Parameters2D(allM[nGallery],flip,scale,shiftX,shiftY,anglePsi);
 			anglePsi*=-1;
 			double weight=A1D_ELEM(scaledCorrs,nGallery)*correctionFactor;
 			double corr=A1D_ELEM(allCorrs,nGallery);
-			mdGallery.getValue(MDL_ANGLE_ROT,angleRot,__iter.objId);
-			mdGallery.getValue(MDL_ANGLE_TILT,angleTilt,__iter.objId);
+			double angleRot=prm.mdGallery[nGallery].rot;
+			double angleTilt=prm.mdGallery[nGallery].tilt;
 #ifdef DEBUG
-			mdGallery.getValue(MDL_IMAGE,fnImg,__iter.objId);
+			fnImg=prm.mdGallery[nGallery].fnImg;
 			std::cout << "   Getting Gallery: " << fnImg << " corr=" << corr << " cdf=" << weight << " rot=" << angleRot
 					  << " tilt=" << angleTilt << std::endl;
 #endif
 
-			if (iter<=NiterRandom)
+			if (prm.iter<=prm.NiterRandom)
 			{
 				size_t recId=mdReconstruction.addObject();
 				FileName fnImg;
-				mdIn.getValue(MDL_IMAGE,fnImg,id);
+				fnImg=prm.mdInp[nImg].fnImg;
 				mdReconstruction.setValue(MDL_IMAGE,fnImg,recId);
 				mdReconstruction.setValue(MDL_ENABLED,1,recId);
 				mdReconstruction.setValue(MDL_MAXCC,corr,recId);
@@ -223,11 +179,11 @@ void ProgRecRandom::alignSingleImage(size_t nImg, size_t id, double &newCorr, do
 		++nGallery;
 	}
 
-	if (iter>NiterRandom)
+	if (prm.iter>prm.NiterRandom)
 	{
 		size_t recId=mdReconstruction.addObject();
 		FileName fnImg;
-		mdIn.getValue(MDL_IMAGE,fnImg,id);
+		fnImg=prm.mdInp[nImg].fnImg;
 		mdReconstruction.setValue(MDL_IMAGE,fnImg,recId);
 		mdReconstruction.setValue(MDL_ENABLED,1,recId);
 		mdReconstruction.setValue(MDL_MAXCC,bestCorr,recId);
@@ -239,7 +195,6 @@ void ProgRecRandom::alignSingleImage(size_t nImg, size_t id, double &newCorr, do
 		mdReconstruction.setValue(MDL_FLIP,bestFlip,recId);
 		mdReconstruction.setValue(MDL_WEIGHT,bestWeight,recId);
 	}
-	mdIn.setValue(MDL_MAXCC,bestCorr,id);
 	newCorr=bestCorr;
 #ifdef DEBUG
 	mdReconstruction.write("PPPreconstruction.xmd");
@@ -249,6 +204,77 @@ void ProgRecRandom::alignSingleImage(size_t nImg, size_t id, double &newCorr, do
 #endif
 }
 #undef DEBUG
+
+// Subset alignment =======================================================
+void threadAlignSubset(ThreadArgument &thArg)
+{
+	ProgRecRandom &prm=*((ProgRecRandom *)thArg.workClass);
+	ThreadRecRandomAlignment results=prm.threadResults[thArg.thread_id];
+
+	results.sumCorr=results.sumImprovement=0.0;
+	results.mdReconstruction.clear();
+	size_t nMax=prm.mdInp.size();
+	for (size_t nImg=0; nImg<nMax; ++nImg)
+	{
+		if ((nImg+1)%prm.Nthr==thArg.thread_id)
+		{
+			double corr, improvement;
+			alignSingleImage(nImg, prm, results.mdReconstruction, corr, improvement);
+			results.sumCorr+=corr;
+			results.sumImprovement+=improvement;
+			prm.mdInp[nImg].maxcc=corr;
+		}
+
+		if (thArg.thread_id==0)
+			progress_bar(nImg+1);
+	}
+
+	// Update all MAXCC
+	prm.mutexMaxCC.lock();
+
+	prm.mdReconstruction.unionAll(results.mdReconstruction);
+	prm.sumCorr+=results.sumCorr;
+	prm.sumImprovement+=results.sumImprovement;
+
+	prm.mutexMaxCC.unlock();
+}
+
+// Main routine ------------------------------------------------------------
+void ProgRecRandom::run()
+{
+    show();
+    produceSideinfo();
+
+    bool finish=false;
+    iter=1;
+    ThreadManager thMgr(Nthr,this);
+    do
+    {
+    	// Generate projections from the volume
+    	generateProjections();
+
+    	// Align the input images to the projections
+    	mdReconstruction.clear();
+    	sumCorr=sumImprovement=0;
+    	init_progress_bar(mdIn.size());
+    	thMgr.run(threadAlignSubset);
+    	progress_bar(mdIn.size());
+    	size_t nImg=0;
+    	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
+    		mdIn.setValue(MDL_MAXCC,mdInp[nImg++].maxcc,__iter.objId);
+    	std::cout << "Iter " << iter << " avg.correlation=" << sumCorr/mdIn.size()
+    			  << " avg.improvement=" << sumImprovement/mdIn.size() << std::endl;
+
+    	// Remove too good and too bad images
+    	filterByCorrelation();
+
+    	// Reconstruct
+    	reconstructCurrent();
+
+    	finish=(iter==(NiterRandom+NiterGreedy));
+    	iter++;
+    } while (!finish);
+}
 
 void ProgRecRandom::filterByCorrelation()
 {
@@ -285,7 +311,7 @@ void ProgRecRandom::filterByCorrelation()
 
 void ProgRecRandom::reconstructCurrent()
 {
-	String args=formatString("-i %s -o %s --sym %s --weight -v 0",fnAngles.c_str(),fnVolume.c_str(),fnSym.c_str());
+	String args=formatString("-i %s -o %s --sym %s --weight --thr %d -v 0",fnAngles.c_str(),fnVolume.c_str(),fnSym.c_str(),Nthr);
 	String cmd=(String)"xmipp_reconstruct_fourier "+args;
 	system(cmd.c_str());
 
@@ -293,7 +319,7 @@ void ProgRecRandom::reconstructCurrent()
 	cmd=(String)"xmipp_transform_mask "+args;
 	system(cmd.c_str());
 
-	if (iter<=NiterRandom)
+	if (iter<=NiterRandom && positiveConstraint)
 	{
 		args=formatString("-i %s --select below 0 --substitute value 0 -v 0",fnVolume.c_str());
 		cmd=(String)"xmipp_transform_threshold "+args;
@@ -307,7 +333,16 @@ void ProgRecRandom::generateProjections()
 			fnVolume.c_str(),fnGallery.c_str(),fnSym.c_str(),fnAngles.c_str());
 	String cmd=(String)"xmipp_angular_project_library "+args;
 	system(cmd.c_str());
-	mdGallery.read(fnGalleryMetaData);
+	MetaData mdAux(fnGalleryMetaData);
+	mdGallery.clear();
+	FOR_ALL_OBJECTS_IN_METADATA(mdAux)
+	{
+		GalleryImage I;
+		mdAux.getValue(MDL_IMAGE,I.fnImg,__iter.objId);
+		mdAux.getValue(MDL_ANGLE_ROT,I.rot,__iter.objId);
+		mdAux.getValue(MDL_ANGLE_TILT,I.tilt,__iter.objId);
+		mdGallery.push_back(I);
+	}
 	gallery.read(fnGallery);
 }
 
@@ -333,13 +368,16 @@ void ProgRecRandom::produceSideinfo()
 	getImageSize(mdIn,xdim, ydim, zdim, ndim);
 	inputImages().resizeNoCopy(mdIn.size(), 1, ydim, xdim);
 
-	FileName fnImg;
 	Image<double> I;
 	size_t n=0;
+	MultidimArray<double> mCurrentImage;
 	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
 	{
-		mdIn.getValue(MDL_IMAGE,fnImg,__iter.objId);
-		I.read(fnImg);
+		InputImage Ip;
+		mdIn.getValue(MDL_IMAGE,Ip.fnImg,__iter.objId);
+		Ip.maxcc=0.0;
+		mdInp.push_back(Ip);
+		I.read(Ip.fnImg);
 		mCurrentImage.aliasImageInStack(inputImages(),n++);
 		memcpy(MULTIDIM_ARRAY(mCurrentImage),MULTIDIM_ARRAY(I()),MULTIDIM_SIZE(mCurrentImage)*sizeof(double));
 	}
@@ -349,4 +387,6 @@ void ProgRecRandom::produceSideinfo()
 		reconstructCurrent();
 	else
 		system(formatString("cp %s %s",fnInit.c_str(),fnVolume.c_str()).c_str());
+
+	threadResults=new ThreadRecRandomAlignment[Nthr];
 }

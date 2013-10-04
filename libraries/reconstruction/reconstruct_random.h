@@ -27,12 +27,35 @@
 #define __RECONSTRUCT_RANDOM_H
 
 #include <data/xmipp_program.h>
+#include <data/xmipp_threads.h>
 #include "reconstruct_fourier.h"
 #include "angular_project_library.h"
 
 /**@defgroup RandomReconstruction Random reconstruction
    @ingroup ReconsLibrary */
 //@{
+
+/** Auxiliary class for aligning the input metadata */
+class ThreadRecRandomAlignment
+{
+public:
+	MetaData mdReconstruction;
+	double sumCorr, sumImprovement;
+};
+
+class GalleryImage
+{
+public:
+	FileName fnImg;
+	double rot, tilt;
+};
+
+class InputImage
+{
+public:
+	FileName fnImg;
+	double maxcc;
+};
 
 /** Random reconstruction parameters. */
 class ProgRecRandom: public XmippProgram
@@ -46,8 +69,20 @@ public:
 
     /** Rejection percentage */
     double rejection;
+
+    /** Number of threads */
+    int Nthr;
+
+    /** Positive constraint */
+    bool positiveConstraint;
 public: // Internal members
-    MetaData mdIn, mdGallery, mdReconstruction;
+    MetaData mdIn, mdReconstruction;
+
+    // Set of images in the gallery, it should be a metadata but metadatas do not support threads
+    std::vector<GalleryImage> mdGallery;
+
+    // Set of input images
+    std::vector<InputImage> mdInp;
 
     // Filenames
     FileName fnAngles, fnVolume, fnGallery, fnGalleryMetaData;
@@ -55,14 +90,17 @@ public: // Internal members
     // Images
     Image<double> gallery, inputImages;
 
-    // Pointers to images
-	MultidimArray<double> mGalleryProjection, mCurrentImage, mCurrentImageAligned;
-
-	// Alignment matrix
-	Matrix2D<double> M;
-
 	// Current iteration
 	int iter;
+
+	// Array with information for the threads
+	ThreadRecRandomAlignment *threadResults;
+
+	// Mutex to update MaxCC
+	Mutex mutexMaxCC;
+
+	// Iteration statistics
+	double sumCorr, sumImprovement;
 public:
     /// Read arguments from command line
     void readParams();
@@ -87,9 +125,6 @@ public:
 
     /// Filter by correlation
     void filterByCorrelation();
-
-    /// Align a single image
-    void alignSingleImage(size_t nImg, size_t id, double &newCorr, double &improvementFraction);
 };
 //@}
 #endif
