@@ -350,7 +350,7 @@ AvgPMAX=False
 from protocol_relion_classify import *
 
 if __name__ == '__main__':
-    protocolMain(ProtRelionClassier)
+    protocolMain(ProtRelionClassifier)
 
 ###############################
 # {view} Display resolution plots (FSC)

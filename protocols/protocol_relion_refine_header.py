@@ -309,10 +309,10 @@ AvgPMAX=False
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE
 #------------------------------------------------------------------------------------------------
 
-from protocol_relion_classify import *
+from protocol_relion_refine import *
 
 if __name__ == '__main__':
-    protocolMain(ProtRelionClassier)
+    protocolMain(ProtRelionRefinner)
 
 ###############################
 # {view} Display resolution plots (FSC)

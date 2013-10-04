@@ -124,7 +124,7 @@ TEST_F( CtfTest, errorMaxFreqCTFs2D)
     long objectId = metadata1.addObject();
     metadata1.setValue(MDL_CTF_SAMPLING_RATE, 2., objectId);
     metadata1.setValue(MDL_CTF_VOLTAGE, 300., objectId);
-    metadata1.setValue(MDL_CTF_DEFOCUSU, 5400., objectId);
+    metadata1.setValue(MDL_CTF_DEFOCUSU, 10000., objectId);
     metadata1.setValue(MDL_CTF_DEFOCUSV, 5400., objectId);
     metadata1.setValue(MDL_CTF_DEFOCUS_ANGLE, 45., objectId);
     metadata1.setValue(MDL_CTF_CS, 2., objectId);

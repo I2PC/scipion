@@ -145,6 +145,10 @@ Image_resize(PyObject *obj, PyObject *args, PyObject *kwargs);
 PyObject *
 Image_scale(PyObject *obj, PyObject *args, PyObject *kwargs);
 
+/* Reslice volume */
+PyObject *
+Image_reslice(PyObject *obj, PyObject *args, PyObject *kwargs);
+
 /* Patch with other image */
 PyObject *
 Image_patch(PyObject *obj, PyObject *args, PyObject *kwargs);

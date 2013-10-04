@@ -122,7 +122,7 @@ int ImageBase::readHDF5(size_t select_img)
 {
     bool isStack = false;
 
-    H5infoProvider provider = (H5infoProvider)std::make_pair(NONE , "");
+    H5infoProvider provider = getProvider(fhdf5); // Dataset name
 
     int errCode = 0;
 
@@ -134,8 +134,6 @@ int ImageBase::readHDF5(size_t select_img)
     int rank;
 
     String dsname = filename.getBlockName();
-
-    provider = getProvider(fhdf5); // Dataset name
 
     // Setting default dataset name
     if (dsname.empty())

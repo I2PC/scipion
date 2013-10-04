@@ -203,6 +203,8 @@ void ProgSimulateMicroscope::setupFourierFilter(FourierFilter &filter, bool isBa
 
     filter.FilterBand = CTF;
     filter.ctf.read(fn_ctf);
+    defocusU = ctf.ctf.DeltafU;
+    defocusV = ctf.ctf.DeltafV;
     filter.ctf.enable_CTF = !isBackground;
     filter.ctf.enable_CTFnoise = isBackground;
     filter.ctf.produceSideInfo();
@@ -305,8 +307,8 @@ void ProgSimulateMicroscope::apply(MultidimArray<double> &I)
 		if (defocus_change != 0)
 		{
 			MultidimArray<double> aux;
-			ctf.ctf.DeltafU *= rnd_unif(1 - defocus_change / 100, 1 + defocus_change / 100);
-			ctf.ctf.DeltafV *= rnd_unif(1 - defocus_change / 100, 1 + defocus_change / 100);
+			ctf.ctf.DeltafU = defocusU * rnd_unif(1 - defocus_change / 100, 1 + defocus_change / 100);
+			ctf.ctf.DeltafV = defocusV *rnd_unif(1 - defocus_change / 100, 1 + defocus_change / 100);
 			aux.initZeros(2*Ydim, 2*Xdim);
 			ctf.generateMask(aux);
 		}
