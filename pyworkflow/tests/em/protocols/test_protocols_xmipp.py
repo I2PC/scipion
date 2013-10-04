@@ -155,11 +155,11 @@ class TestXmippExtractParticles(TestXmippBase):
     @classmethod
     def setUpClass(cls):
         setupProject(cls)    
-        pattern = getInputPath('Micrographs_BPV3', '*.mrc')
+        pattern = getInputPath('Micrographs_BPV3_Down3', '*.mrc')
         protImport = cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300, sphericalAberration=2, scannedPixelSize=None, magnification=56000)       
         pattern = getInputPath('Micrographs_BPV3', '*.mrc')
         cls.protImport_ori = cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300, sphericalAberration=2, scannedPixelSize=None, magnification=56000)        
-        cls.protPP = cls.runFakedPicking(protImport.outputMicrographs, 'Picking_XmippBPV3')
+        cls.protPP = cls.runFakedPicking(protImport.outputMicrographs, 'Picking_XmippBPV3_Down3')
 
     def testExtractSameAsPicking(self):
         print "Run extract particles with downsampling factor equal to the one at picking"
@@ -296,7 +296,8 @@ class TestXmippML3D(TestXmippBase):
         
     def testML3D(self):
         print "Run ML3D"
-        protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2, runMode=1, numberOfMpi=2, numberOfThreads=2)
+        protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2, runMode=1, 
+                                 numberOfMpi=2, numberOfThreads=2, extraParams='--random_seed=1971')
         protML3D.inputImages.set(self.protImport.outputParticles)
         protML3D.ini3DrefVolumes.set(self.iniVol)
         protML3D.doCorrectGreyScale.set(True)
