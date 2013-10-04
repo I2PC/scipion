@@ -96,6 +96,12 @@ class SqliteMapper(Mapper):
             return replaceExt(obj._objName, obj.strId())
         return obj.strId()
     
+    def __printObj(self, obj):
+        print "obj._objId", obj._objId
+        print "obj._objParentId", obj._objParentId
+        print "obj._objName", obj._objName
+        print "obj.getObjValue()", obj.getObjValue()
+    
     def updateTo(self, obj, level=1):
         self.db.updateObject(obj._objId, obj._objName, obj.getClassName(),
                              self.__getObjectValue(obj), obj._objParentId, 
@@ -107,6 +113,10 @@ class SqliteMapper(Mapper):
         
         self.updateDict[obj._objId] = obj
         for key, attr in obj.getAttributesToStore():
+#            if isinstance(obj, self.dictClasses.get('Protocol')) and key == '_outputs':
+#                print "updateTo:    "
+#                self.__printObj(attr)
+                
             if attr._objId is None: # Insert new items from the previous state
                 attr._objParentId = obj._objId
                 #path = obj._objName[:obj._objName.rfind('.')] # remove from last .

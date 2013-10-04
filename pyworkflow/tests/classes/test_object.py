@@ -26,6 +26,11 @@ class Complex(Object):
             
     def hasValue(self):
         return True
+    
+class ListContainer(Object):
+    def __init__(self, **args):
+        Object.__init__(self, **args)
+        self.csv = CsvList() 
 
 
 class MyProtocol(Protocol):
@@ -130,6 +135,11 @@ class TestPyworkflow(unittest.TestCase):
         b.set(False)
         self.assertTrue(not b.get())
         
+        # CsvList should be empty if set to ''
+        l = CsvList()
+        l.set('')
+        self.assertEqual(len(l), 0)
+        
     def test_SqliteMapper(self):
         fn = self.getTmpPath("basic.sqlite")
         c = self.createComplex()
@@ -165,15 +175,29 @@ class TestPyworkflow(unittest.TestCase):
         c2 = mapper2.selectByClass('Complex')[0]
         self.assertTrue(c.equalAttributes(c2))
         
-        #mapper3 = SqliteMapper(fn, globals())
         b = mapper2.selectByClass('Boolean')[0]
         self.assertTrue(not b.get())
         
         p = mapper2.selectByClass('Pointer')[0]
         self.assertEqual(c, p.get())
         
-        csv = mapper2.selectByClass('CsvList')[0]
-        self.assertTrue(list.__eq__(csv, strList))
+        csv2 = mapper2.selectByClass('CsvList')[0]
+        self.assertTrue(list.__eq__(csv2, strList))
+        
+        # Update a CsvList
+        lc = ListContainer()
+        mapper.store(lc)
+        mapper.commit()
+        
+        lc.csv.append('4')
+        lc.csv.append('3')
+        mapper.store(lc)
+        mapper.commit()
+        
+        mapper3 = SqliteMapper(fn, globals())
+        lc3 = mapper3.selectByClass('ListContainer')[0]
+        print 'csv3: ', lc3.csv
+        
         
         # Iterate over all objects
         allObj = mapper2.selectAll()

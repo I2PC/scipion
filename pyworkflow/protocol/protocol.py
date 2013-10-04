@@ -33,7 +33,7 @@ import datetime as dt
 import pickle
 import time
 
-from pyworkflow.object import OrderedObject, String, List, Integer, Boolean, CsvList
+from pyworkflow.object import *
 from pyworkflow.utils.path import replaceExt, makeFilePath, join, missingPaths, cleanPath, getFiles
 from pyworkflow.utils.log import *
 from pyworkflow.protocol.constants import MODE_RESUME
@@ -51,7 +51,7 @@ class Step(OrderedObject):
     def __init__(self, **args):
         OrderedObject.__init__(self, **args)
         self._inputs = []
-        self._outputs = []
+        self._outputs = CsvList()
         self._prerequisites = CsvList() # which steps needs to be done first
         self.status = String()
         self.initTime = String()
@@ -63,9 +63,11 @@ class Step(OrderedObject):
         """ Store all attributes in attrDict as 
         attributes of self, also store the key in attrList.
         """
+        print "_storeAttributes: "
         for key, value in attrDict.iteritems():
             attrList.append(key)
             setattr(self, key, value)
+            print "   key: ", key, "value: ", value
         
     def _defineInputs(self, **args):
         """ This function should be used to define
@@ -104,7 +106,13 @@ class Step(OrderedObject):
         """ Set the run failed and store an error message. """
         self.status.set(STATUS_FAILED)
         self.error.set(msg)
-        
+
+    def getStatus(self):
+        return self.status.get()
+    
+    def setStatus(self, value):
+        return self.status.set(value)
+    
     def run(self):
         """ Do the job of this step"""
         self.setRunning() 
@@ -528,17 +536,30 @@ class Protocol(Step):
         self.status.set(self.lastStatus)
         self._store(self.status)
         
+    def __deleteOutputs(self):
+        """ This function should only be used from RESTART.
+        It will remove output attributes from mapper and object.
+        """
+        for o in self._outputs:
+            self.deleteAttribute(o)
+            
+        self._outputs.clear()
+        
     def makePathsAndClean(self):
         """ Create the necessary path or clean
         if in RESTART mode. 
         """
+        print "Protocol.makePathsAndClean...."
         # Clean working path if in RESTART mode
         paths = [self._getPath(), self._getExtraPath(), self._getTmpPath(), self._getLogsPath()]
+        
         if self.runMode == MODE_RESTART:
             cleanPath(*paths)
             self.mapper.deleteChilds(self) # Clean old values
+            self.__deleteOutputs()
             self.mapper.insertChilds(self)
         # Create workingDir, extra and tmp paths
+        print "making Paths."
         makePath(*paths)        
     
     def _run(self):
@@ -570,6 +591,8 @@ class Protocol(Step):
         self._currentDir = os.getcwd()
         #self._run()
         Step.run(self)
+        print "outputs: ", self._outputs
+        
         outputs = [getattr(self, o) for o in self._outputs]
         #self._store(self.status, self.initTime, self.endTime, *outputs)
         self.runMode.set(MODE_RESUME) # Always set to resume, even if set to restart
@@ -597,12 +620,6 @@ class Protocol(Step):
         
     def getDbPath(self):
         return self._getLogsPath('run.db')
-    
-    def getStatus(self):
-        return self.status.get()
-    
-    def setStatus(self, value):
-        return self.status.set(value)
     
     def isActive(self):
         return self.getStatus() in ACTIVE_STATUS
