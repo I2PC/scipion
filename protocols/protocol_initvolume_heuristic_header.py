@@ -41,7 +41,7 @@ NIterGreedy = 3
 #{expert} Percentage of rejected particles
 """At each iteration, the lowest correlated particles are removed from the 3D reconstruction, although they may participate in the
 next iteration""" 
-Rejection = 25
+Rejection = 50
 
 #{expert} Apply positive constraint
 """If the classes are properly normalized (it suffices that you normalized the extracted images before calculating classes), then
