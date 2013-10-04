@@ -179,7 +179,7 @@ class Project(object):
     def stopProtocol(self, protocol):
         """ Stop a running protocol """
         jobs.stop(protocol)
-        protocol.setStatus(STATUS_ABORTED)
+        protocol.setAborted()
         self._storeProtocol(protocol)
         
     def continueProtocol(self, protocol):

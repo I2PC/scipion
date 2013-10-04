@@ -36,7 +36,6 @@ import time
 from pyworkflow.object import *
 from pyworkflow.utils.path import replaceExt, makeFilePath, join, missingPaths, cleanPath, getFiles
 from pyworkflow.utils.log import *
-from pyworkflow.protocol.constants import MODE_RESUME
 from pyworkflow.protocol.executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor
 from constants import *
 
@@ -102,8 +101,14 @@ class Step(OrderedObject):
         
     def setFailed(self, msg):
         """ Set the run failed and store an error message. """
-        self.status.set(STATUS_FAILED)
         self.error.set(msg)
+        self.status.set(STATUS_FAILED)
+        
+    def setAborted(self):
+        """ Set the status to aborted and updated the endTime. """
+        self.endTime.set(dt.datetime.now())
+        self.error.set("Aborted by user.")
+        self.status.set(STATUS_ABORTED)
 
     def getStatus(self):
         return self.status.get()
@@ -524,6 +529,7 @@ class Protocol(Step):
         """ Run all steps defined in self._steps. """
         self._steps.setStore(True) # Set steps to be stored
         self.setRunning()
+        self.runMode.set(MODE_RESUME) # Always set to resume, even if set to restart
         self._store()
         
         self.lastStatus = self.status.get()
@@ -591,9 +597,7 @@ class Protocol(Step):
         #self._run()
         Step.run(self)
         
-        outputs = [getattr(self, o) for o in self._outputs]
-        #self._store(self.status, self.initTime, self.endTime, *outputs)
-        self.runMode.set(MODE_RESUME) # Always set to resume, even if set to restart
+        #outputs = [getattr(self, o) for o in self._outputs]
         self._store()
         self._log.info('------------------- PROTOCOL FINISHED')
         self.__closeLogger()
