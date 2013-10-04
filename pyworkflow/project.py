@@ -236,7 +236,7 @@ class Project(object):
         protocol.setHostConfig(hostConfig)
     
     def _storeProtocol(self, protocol):
-        print "storing protocol, label", protocol.getObjLabel() 
+#        print "storing protocol, label", protocol.getObjLabel() 
         self.mapper.store(protocol)
         self.mapper.commit()
                 
