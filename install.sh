@@ -11,8 +11,8 @@ DO_FFTW=true
 DO_TIFF=true
 DO_JPEG=true
 DO_HDF5=true
-DO_CLTOMO=false
-DO_NMA=false
+DO_CLTOMO=true
+DO_NMA=true
 
 DO_CLEAN=true
 DO_STATIC=false

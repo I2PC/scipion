@@ -23,10 +23,10 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "reconstruct_random.h"
+#include "volume_initial_H.h"
 
 // Define params
-void ProgRecRandom::defineParams()
+void ProgVolumeInitialH::defineParams()
 {
     //usage
     addUsageLine("Generate 3D reconstructions from projections using random orientations");
@@ -38,12 +38,13 @@ void ProgRecRandom::defineParams()
     addParamsLine("  [--greedyIter <N=3>]         : Number of iterations with greedy assignment");
     addParamsLine("  [--rejection <p=25>]         : Percentage of images to reject for reconstruction");
     addParamsLine("  [--initial <file=\"\">]      : Initial volume if available");
+    addParamsLine("  [--keepIntermediateVolumes]  : Keep the volume of each iteration");
     addParamsLine("  [--dontApplyPositive]        : Do not apply positive constraint in the random iterations");
     addParamsLine("  [--thr <n=1>]                : Number of threads");
 }
 
 // Read arguments ==========================================================
-void ProgRecRandom::readParams()
+void ProgVolumeInitialH::readParams()
 {
     fnIn = getParam("-i");
     fnRoot = getParam("--oroot");
@@ -54,10 +55,11 @@ void ProgRecRandom::readParams()
     fnInit = getParam("--initial");
     Nthr = getIntParam("--thr");
     positiveConstraint = !checkParam("--dontApplyPositive");
+    keepIntermediateVolumes = checkParam("--keepIntermediateVolumes");
 }
 
 // Show ====================================================================
-void ProgRecRandom::show()
+void ProgVolumeInitialH::show()
 {
     if (verbose > 0)
     {
@@ -68,6 +70,7 @@ void ProgRecRandom::show()
         std::cout << "Rejection percentage        : "  << rejection   << std::endl;
         std::cout << "Number of threads           : "  << Nthr        << std::endl;
         std::cout << "Apply positive constraint   : "  << positiveConstraint << std::endl;
+        std::cout << "Keep intermediate volumes   : "  << keepIntermediateVolumes << std::endl;
         if (fnSym != "")
             std::cout << "Symmetry for projections    : "  << fnSym << std::endl;
         if (fnInit !="")
@@ -77,7 +80,7 @@ void ProgRecRandom::show()
 
 // Alignment of a single image ============================================
 //#define DEBUG
-void alignSingleImage(size_t nImg, ProgRecRandom &prm, MetaData &mdReconstruction, double &newCorr, double &improvementFraction)
+void alignSingleImage(size_t nImg, ProgVolumeInitialH &prm, MetaData &mdReconstruction, double &newCorr, double &improvementFraction)
 {
 	MultidimArray<double> mGalleryProjection, mCurrentImage, mCurrentImageAligned;
 	Matrix2D<double> M;
@@ -208,8 +211,8 @@ void alignSingleImage(size_t nImg, ProgRecRandom &prm, MetaData &mdReconstructio
 // Subset alignment =======================================================
 void threadAlignSubset(ThreadArgument &thArg)
 {
-	ProgRecRandom &prm=*((ProgRecRandom *)thArg.workClass);
-	ThreadRecRandomAlignment results=prm.threadResults[thArg.thread_id];
+	ProgVolumeInitialH &prm=*((ProgVolumeInitialH *)thArg.workClass);
+	ThreadVolumeInitialAlignment results=prm.threadResults[thArg.thread_id];
 
 	results.sumCorr=results.sumImprovement=0.0;
 	results.mdReconstruction.clear();
@@ -240,7 +243,7 @@ void threadAlignSubset(ThreadArgument &thArg)
 }
 
 // Main routine ------------------------------------------------------------
-void ProgRecRandom::run()
+void ProgVolumeInitialH::run()
 {
     show();
     produceSideinfo();
@@ -274,9 +277,12 @@ void ProgRecRandom::run()
     	finish=(iter==(NiterRandom+NiterGreedy));
     	iter++;
     } while (!finish);
+    deleteFile(fnRoot+"_gallery_sampling.xmd");
+    deleteFile(fnRoot+"_gallery_sampling.stk");
+    deleteFile(fnRoot+"_gallery_sampling.doc");
 }
 
-void ProgRecRandom::filterByCorrelation()
+void ProgVolumeInitialH::filterByCorrelation()
 {
 	MetaData mdAux;
 	mdAux=mdReconstruction;
@@ -309,7 +315,7 @@ void ProgRecRandom::filterByCorrelation()
 	mdAux.write(fnAngles);
 }
 
-void ProgRecRandom::reconstructCurrent()
+void ProgVolumeInitialH::reconstructCurrent()
 {
 	String args=formatString("-i %s -o %s --sym %s --weight --thr %d -v 0",fnAngles.c_str(),fnVolume.c_str(),fnSym.c_str(),Nthr);
 	String cmd=(String)"xmipp_reconstruct_fourier "+args;
@@ -325,9 +331,15 @@ void ProgRecRandom::reconstructCurrent()
 		cmd=(String)"xmipp_transform_threshold "+args;
 		system(cmd.c_str());
 	}
+
+	if (keepIntermediateVolumes)
+	{
+		cmd=formatString("cp %s %s%02d.vol",fnVolume.c_str(),fnRoot.c_str(),iter);
+		system(cmd.c_str());
+	}
 }
 
-void ProgRecRandom::generateProjections()
+void ProgVolumeInitialH::generateProjections()
 {
 	String args=formatString("-i %s -o %s --sampling_rate 5 --sym %s --compute_neighbors --angular_distance -1 --experimental_images %s -v 0",
 			fnVolume.c_str(),fnGallery.c_str(),fnSym.c_str(),fnAngles.c_str());
@@ -346,7 +358,7 @@ void ProgRecRandom::generateProjections()
 	gallery.read(fnGallery);
 }
 
-void ProgRecRandom::produceSideinfo()
+void ProgVolumeInitialH::produceSideinfo()
 {
 	mdIn.read(fnIn);
 	mdIn.removeDisabled();
@@ -388,5 +400,5 @@ void ProgRecRandom::produceSideinfo()
 	else
 		system(formatString("cp %s %s",fnInit.c_str(),fnVolume.c_str()).c_str());
 
-	threadResults=new ThreadRecRandomAlignment[Nthr];
+	threadResults=new ThreadVolumeInitialAlignment[Nthr];
 }

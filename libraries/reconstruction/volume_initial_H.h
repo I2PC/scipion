@@ -23,20 +23,20 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef __RECONSTRUCT_RANDOM_H
-#define __RECONSTRUCT_RANDOM_H
+#ifndef __VOLUME_INITIAL_H_H
+#define __VOLUME_INITIAL_H_H
 
 #include <data/xmipp_program.h>
 #include <data/xmipp_threads.h>
 #include "reconstruct_fourier.h"
 #include "angular_project_library.h"
 
-/**@defgroup RandomReconstruction Random reconstruction
+/**@defgroup VolumeInitialH Heuristic Initial Volume
    @ingroup ReconsLibrary */
 //@{
 
 /** Auxiliary class for aligning the input metadata */
-class ThreadRecRandomAlignment
+class ThreadVolumeInitialAlignment
 {
 public:
 	MetaData mdReconstruction;
@@ -58,7 +58,7 @@ public:
 };
 
 /** Random reconstruction parameters. */
-class ProgRecRandom: public XmippProgram
+class ProgVolumeInitialH: public XmippProgram
 {
 public:
     /** Filenames */
@@ -75,6 +75,9 @@ public:
 
     /** Positive constraint */
     bool positiveConstraint;
+
+    /** Keep intermediate volumes */
+    bool keepIntermediateVolumes;
 public: // Internal members
     MetaData mdIn, mdReconstruction;
 
@@ -94,7 +97,7 @@ public: // Internal members
 	int iter;
 
 	// Array with information for the threads
-	ThreadRecRandomAlignment *threadResults;
+	ThreadVolumeInitialAlignment *threadResults;
 
 	// Mutex to update MaxCC
 	Mutex mutexMaxCC;
