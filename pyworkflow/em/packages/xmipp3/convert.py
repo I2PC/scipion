@@ -300,19 +300,13 @@ def writeSetOfCoordinates(posDir, coordSet):
         coordSet: the SetOfCoordinates that will be read.
     """
     posFiles = []
-    boxSize = coordSet.getBoxSize()
-    
+    boxSize = coordSet.getBoxSize()   
     
     # Write pos metadatas (one per micrograph)
     
     for mic in coordSet.iterMicrographs():
         micName = mic.getFileName()
         posFn = join(posDir, replaceBaseExt(micName, "pos"))
-        # Write header block
-        md = xmipp.MetaData()    
-        objId = md.addObject()
-        md.setValue(xmipp.MDL_PICKING_MICROGRAPH_STATE, 'Manual', objId)
-        md.write('header@%s' % posFn)
         
         md = xmipp.MetaData()
         for coord in coordSet.iterCoordinates(micrograph=mic):
@@ -320,9 +314,17 @@ def writeSetOfCoordinates(posDir, coordSet):
             coordRow = XmippMdRow()
             coordinateToRow(coord, coordRow)
             coordRow.writeToMd(md, objId)
-        md.write('particles@%s' % posFn, xmipp.MD_APPEND)
-        posFiles.append(posFn)
-        
+            
+        if not md.isEmpty():
+            md2 = xmipp.MetaData()    
+            objId = md2.addObject()
+            md2.setValue(xmipp.MDL_PICKING_MICROGRAPH_STATE, 'Manual', objId)
+            # Write header block
+            md2.write('header@%s' % posFn)
+            # Write particles block
+            md.write('particles@%s' % posFn, xmipp.MD_APPEND)
+            posFiles.append(posFn)
+            
     # Write config.xmd metadata
     configFn = join(posDir, 'config.xmd')
     md = xmipp.MetaData()
