@@ -284,16 +284,16 @@ void MultidimArrayBase::printShape(std::ostream& out) const
         out << " Number of images = "<<NSIZE(*this);
 
     int dim = getDim();
-    if (dim == 3)
+    if (ZSIZE(*this)>1)
         out<< " Size(Z,Y,X): " << ZSIZE(*this) << "x" << YSIZE(*this) << "x" << XSIZE(*this)
         << " k=[" << STARTINGZ(*this) << ".." << FINISHINGZ(*this) << "]"
         << " i=[" << STARTINGY(*this) << ".." << FINISHINGY(*this) << "]"
         << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
-    else if (dim == 2)
+    else if (YSIZE(*this)>1)
         out<< " Size(Y,X): " << YSIZE(*this) << "x" << XSIZE(*this)
         << " i=[" << STARTINGY(*this) << ".." << FINISHINGY(*this) << "]"
         << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
-    else if (dim == 1)
+    else if (XSIZE(*this)>1)
         out<< " Size(X): " << XSIZE(*this)
         << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
     else
