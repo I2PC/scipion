@@ -109,17 +109,11 @@ function launchViewer(id){
 	/* Execute the viewer */
 	$.ajax({
 		type : "GET",
-		url : "/viewer/?protocolId=" + id ,
+		url : "/viewer/?protocolId=" + id,
 		dataType : "json",
 		success : function(json) {
 			$.each(json, function(key, value) {
-				if(value.substring(0,6)=="<html>"){
-					//Launch a pop up with the html
 					customPopupHTML(value,800,600);
-				}else{
-					//Launch a pop up with the url
-					customPopup(value,1024,768);
-				}
 			});
 		}
 	});	

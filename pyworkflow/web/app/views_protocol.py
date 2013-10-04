@@ -98,17 +98,21 @@ def updateParam(request, project, protocol, paramName):
     attr.set(value)
 #    print "setting attr %s with value:" % paramName, value 
     
-SPECIAL_PARAMS = ['runName', 'numberOfMpi', 'numberOfThreads', 'hostName', 'expertLevel', '_useQueue']
+SPECIAL_PARAMS = ['numberOfMpi', 'numberOfThreads', 'hostName', 'expertLevel', '_useQueue']
+OBJ_PARAMS =['runName', 'comment']
 
 def updateProtocolParams(request, protocol, project):
     """ Update the protocol values from the Web-form.
     This function will be used from save_protocol and execute_protocol.
-    """
+    """    
     for paramName, _ in protocol.iterDefinitionAttributes():
         updateParam(request, project, protocol, paramName)
         
     for paramName in SPECIAL_PARAMS:
         updateParam(request, project, protocol, paramName)
+
+    protocol.setObjLabel(request.POST.get('runName'))
+    protocol.setObjComment(request.POST.get('comment'))
         
 def save_protocol(request):
     project, protocol = loadProtocolProject(request)

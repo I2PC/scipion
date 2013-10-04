@@ -78,7 +78,9 @@ var jsonTableLayoutConfiguration = {{tableLayoutConfiguration|safe }}
 console.log("json",jsonTableLayoutConfiguration)
 
 $(document).ready(function() {
+	{% if dataset.getTable.hasEnabledColumn %}
 	initializeSelectionRowEvent() 
+	{% endif %}
 	initializeGoToEvent()
 	initializeTableWidth()
 	

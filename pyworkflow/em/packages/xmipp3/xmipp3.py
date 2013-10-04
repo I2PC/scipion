@@ -304,6 +304,7 @@ class XmippDataSet(ds.DataSet):
     def writeTable(self, tableName, table):
         """ Write changes made to a table. """
         md = self._convertTableToMd(table)
+        print "dondecarajo","%s@%s" % (tableName, self._filename)
         md.write("%s@%s" % (tableName, self._filename), xmipp.MD_APPEND)
 
         

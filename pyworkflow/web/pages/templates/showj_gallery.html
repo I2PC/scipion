@@ -7,7 +7,9 @@
 	$(document).ready(function(){
 		setImageSize(true)
 		initializeImageLoad()
+		{% if dataset.getTable.hasEnabledColumn %}
 		initializeImageEvents()
+		{% endif %}
 		initializeWindowLoadEvents()
 		initializeGoToEvents()
 	});
@@ -15,12 +17,16 @@
 	
 	function initializeImageLoad(){
 		$('.tableImages').waypoint(function(direction){
-			$(this).attr(
+			console.log("waypoint")
+			console.log($(this).data('real_src'))
+			/* if ($(this).data('real_src') != $(this).attr("src")){ */
+				$(this).attr(
 					"src",
 					$(this).data('real_src').concat($("#id_mirrorY").is(':checked')?"&mirrorY":"").concat($("#id_transformMatrix").is(':checked')?"&transformMatrix":"").concat($("#id_onlyShifts").is(':checked')?"&onlyShifts":"").concat($("#id_wrap").is(':checked')?"&wrap":"")
 					)
+			/* }		 */
 		}, {
-			triggerOnce:true,
+/* 			triggerOnce:true, */
 			offset: '150%'
 /* 			offset: function() {
 		        return $.waypoints('viewportHeight');
@@ -49,9 +55,7 @@
 		$(".img_container").each(function(){
 			$(this).removeClass('image_selected')
 		});
-		
 		selectedElement=$("#img_container___"+$('#id_goto').val())
-		
 		selectedElement.addClass("image_selected")
 		
 		$('html, body').animate({
@@ -73,6 +77,7 @@
 					$(this).find(".enabledGallery").fadeOut('fast')
 				}
 			}) 
+		
 			
 		//Hover on multiple selection tool	
 		hiConfig = {

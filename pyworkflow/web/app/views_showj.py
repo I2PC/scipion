@@ -61,16 +61,13 @@ def showj(request, inputParameters=None):
             if request.POST.get('dims')=='3d':
                 img = xmipp.Image()
                 imgFn = os.path.join(request.session['projectPath'], _imageVolName)
-                print("imgFn",imgFn)
                 #FALTARIA LO DEL MAPPED
                 img.read(str(imgFn))
                 img.convert2DataType(xmipp.DT_UCHAR, xmipp.CW_ADJUST)
                 if int(request.POST.get('resliceComboBox')) !=xmipp.VIEW_Z_NEG:
-                    print 'reslicepost',request.POST.get('resliceComboBox')
                     img.reslice(int(request.POST.get('resliceComboBox')))
                 fileName, fileExtension = os.path.splitext(_imageVolName)
                 _imageVolName = '%s_tmp%s' % (fileName, '.mrc')
-                print "_imageVolName",_imageVolName 
                 img.write(str(_imageVolName))
                 
             _imageDimensions = getImageDim(request, _imageVolName)
@@ -91,7 +88,6 @@ def showj(request, inputParameters=None):
             if inputParameters['dims']=='3d':
                 img = xmipp.Image()
                 imgFn = os.path.join(request.session['projectPath'], _imageVolName)
-                print("imgFn",imgFn)
                 #FALTARIA LO DEL MAPPED
                 img.read(str(imgFn))
                 img.convert2DataType(xmipp.DT_UCHAR, xmipp.CW_ADJUST)
@@ -100,7 +96,6 @@ def showj(request, inputParameters=None):
                 fileName, fileExtension = os.path.splitext(_imageVolName)
                 _imageVolName = '%s_tmp%s' % (fileName, '.mrc')
                 print "_imageVolName",_imageVolName 
-                #HAY QUE QUITAR EL CONVERT2DATYPE del PILIMAGE?
                 img.write(str(_imageVolName))
                 
             _imageDimensions = getImageDim(request, _imageVolName)
@@ -111,7 +106,7 @@ def showj(request, inputParameters=None):
 #        inputParameters['mirrorY']='mirrorY' in inputParameters
 #        inputParameters['transformMatrix']='transformMatrix' in inputParameters
 
-    if _imageDimensions[2]>1:
+    if _imageDimensions != None and _imageDimensions[2]>1:
         dataset.setNumberSlices(_imageDimensions[2])
         dataset.setVolumeName(_imageVolName)
                     
@@ -369,7 +364,7 @@ def visualizeObject(request):
                        'resliceComboBox': xmipp.VIEW_Z_NEG}      
     
     if probandoCTFParam:
-        inputParameters['path']= join(projectPath, "Runs/XmippProtCTFMicrographs218/extra/BPV_1386/xmipp_ctf.ctfparam")
+        inputParameters['path']= join(projectPath, "Runs/XmippProtCTFMicrographs223/extra/BPV_1386/xmipp_ctf.ctfparam")
         inputParameters['mode']= 'column'
     elif isinstance(obj, SetOfMicrographs):
         fn = project.getTmpPath(obj.getName() + '_micrographs.xmd')
