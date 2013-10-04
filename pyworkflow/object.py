@@ -244,9 +244,9 @@ class Object(object):
         return resultDictionary
     
     def copy(self, other):
-        self.copy2(other, {})
+        self._copy(other, {})
         
-    def copy2(self, other, copyDict):
+    def _copy(self, other, copyDict):
         """ This method will recursively clone all attributes
         from one object to the other.
         Attributes must be present in both.
@@ -261,11 +261,12 @@ class Object(object):
         # Copy attributes recursively
         for name, attr in other.getAttributesToStore():
             myAttr = getattr(self, name, None)
+
             if myAttr is None:
                 myAttr = attr.getClass()()
                 setattr(self, name, myAttr)
-            myAttr.copy2(attr, copyDict)
                 
+            myAttr._copy(attr, copyDict)
             # Store the attr in the copyDict
             if attr.hasObjId():
                 copyDict[attr.getObjId()] = myAttr
@@ -324,6 +325,12 @@ class OrderedObject(Object):
             attr = getattr(self, key)
             if attr._objDoStore:
                 yield (key, attr)
+                
+    def deleteAttribute(self, attrName):
+        """ Delete an attribute. """
+        if attrName in self._attributes:
+            self._attributes.remove(attrName)
+            delattr(self, attrName)
             
 class FakedObject(Object):
     """This is based on Object, but will hide the set and get
@@ -395,7 +402,7 @@ class Scalar(Object):
             return self._objValue
         return default
     
-    def copy(self, other):
+    def _copy(self, other, *args):
         self.set(other.get())
         
     
@@ -521,21 +528,28 @@ class CsvList(Scalar, list):
         
     def _convertValue(self, value):
         """Value should be a str with comman separated values"""
-
-        del self[:] # Clear the list before setting new value
-        for s in value.split(','):
-            self.append(self._pType(s))
+        self.clear()
+        
+        if value:
+            for s in value.split(','):
+                self.append(self._pType(s))
             
     def getObjValue(self):
         self._objValue = ','.join(map(str, self))
         return self._objValue
-#    
-#    def get(self):
-#        return self
+    
+    def get(self):
+        return self.getObjValue()
     
     def __str__(self):
         return list.__str__(self)
+     
+    def isEmpty(self):
+        return len(self) > 0
     
+    def clear(self):
+        del self[:]
+           
         
 class Array(Object):
     """Class for holding fixed len array"""

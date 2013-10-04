@@ -33,10 +33,9 @@ import datetime as dt
 import pickle
 import time
 
-from pyworkflow.object import OrderedObject, String, List, Integer, Boolean, CsvList
+from pyworkflow.object import *
 from pyworkflow.utils.path import replaceExt, makeFilePath, join, missingPaths, cleanPath, getFiles
 from pyworkflow.utils.log import *
-from pyworkflow.protocol.constants import MODE_RESUME
 from pyworkflow.protocol.executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor
 from constants import *
 
@@ -51,7 +50,7 @@ class Step(OrderedObject):
     def __init__(self, **args):
         OrderedObject.__init__(self, **args)
         self._inputs = []
-        self._outputs = []
+        self._outputs = CsvList()
         self._prerequisites = CsvList() # which steps needs to be done first
         self.status = String()
         self.initTime = String()
@@ -102,9 +101,21 @@ class Step(OrderedObject):
         
     def setFailed(self, msg):
         """ Set the run failed and store an error message. """
-        self.status.set(STATUS_FAILED)
         self.error.set(msg)
+        self.status.set(STATUS_FAILED)
         
+    def setAborted(self):
+        """ Set the status to aborted and updated the endTime. """
+        self.endTime.set(dt.datetime.now())
+        self.error.set("Aborted by user.")
+        self.status.set(STATUS_ABORTED)
+
+    def getStatus(self):
+        return self.status.get()
+    
+    def setStatus(self, value):
+        return self.status.set(value)
+    
     def run(self):
         """ Do the job of this step"""
         self.setRunning() 
@@ -464,10 +475,10 @@ class Protocol(Step):
         for i in range(n):
             newStep = self._steps[i]
             oldStep = self._prevSteps[i]
-            print "i: ", i
-            print " oldStep.status: ", str(oldStep.status)
-            print " oldStep!=newStep", oldStep != newStep
-            print " not post: ", not oldStep._postconditions()
+#            print "i: ", i
+#            print " oldStep.status: ", str(oldStep.status)
+#            print " oldStep!=newStep", oldStep != newStep
+#            print " not post: ", not oldStep._postconditions()
             if (oldStep.status.get() != STATUS_FINISHED or
                 newStep != oldStep or 
                 not oldStep._postconditions()):
@@ -518,6 +529,7 @@ class Protocol(Step):
         """ Run all steps defined in self._steps. """
         self._steps.setStore(True) # Set steps to be stored
         self.setRunning()
+        self.runMode.set(MODE_RESUME) # Always set to resume, even if set to restart
         self._store()
         
         self.lastStatus = self.status.get()
@@ -528,18 +540,32 @@ class Protocol(Step):
         self.status.set(self.lastStatus)
         self._store(self.status)
         
+    def __deleteOutputs(self):
+        """ This function should only be used from RESTART.
+        It will remove output attributes from mapper and object.
+        """
+        for o in self._outputs:
+            if hasattr(self, o):
+                self.mapper.delete(getattr(self, o))
+                self.deleteAttribute(o)
+            else:
+                print "DEBUG: error, %s is not found in protocol" % o
+            
+        self._outputs.clear()
+        self.mapper.store(self._outputs)
+        
     def makePathsAndClean(self):
         """ Create the necessary path or clean
         if in RESTART mode. 
         """
         # Clean working path if in RESTART mode
         paths = [self._getPath(), self._getExtraPath(), self._getTmpPath(), self._getLogsPath()]
+        
         if self.runMode == MODE_RESTART:
             cleanPath(*paths)
-            self.mapper.deleteChilds(self) # Clean old values
-            self.mapper.insertChilds(self)
+            self.__deleteOutputs()
         # Create workingDir, extra and tmp paths
-        makePath(*paths)        
+        makePath(*paths)
     
     def _run(self):
         if self._stepsExecutor is None:
@@ -570,9 +596,8 @@ class Protocol(Step):
         self._currentDir = os.getcwd()
         #self._run()
         Step.run(self)
-        outputs = [getattr(self, o) for o in self._outputs]
-        #self._store(self.status, self.initTime, self.endTime, *outputs)
-        self.runMode.set(MODE_RESUME) # Always set to resume, even if set to restart
+        
+        #outputs = [getattr(self, o) for o in self._outputs]
         self._store()
         self._log.info('------------------- PROTOCOL FINISHED')
         self.__closeLogger()
@@ -597,12 +622,6 @@ class Protocol(Step):
         
     def getDbPath(self):
         return self._getLogsPath('run.db')
-    
-    def getStatus(self):
-        return self.status.get()
-    
-    def setStatus(self, value):
-        return self.status.set(value)
     
     def isActive(self):
         return self.getStatus() in ACTIVE_STATUS

@@ -27,14 +27,14 @@
 This modules handles the Project management
 """
 
-import os, shutil
+import os
 from os.path import abspath, split
 
 from pyworkflow.em import *
 from pyworkflow.apps.config import *
 from pyworkflow.protocol import *
 from pyworkflow.mapper import SqliteMapper
-from pyworkflow.utils import cleanPath, makePath, makeFilePath, join, exists, runJob
+from pyworkflow.utils import cleanPath, makePath, makeFilePath, join, exists, runJob, copyFile
 from pyworkflow.hosts import HostMapper, HostConfig
 import pyworkflow.protocol.launch as jobs
 
@@ -137,31 +137,25 @@ class Project(object):
         #print ">>> PROJECT: launchProtocol"
         protocol.setStatus(STATUS_LAUNCHED)
         self._setupProtocol(protocol)
-        #print "      after _setupProtocol, protId: ", protocol.getObjId()
+        
         protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
         protocol.makePathsAndClean() # Create working dir if necessary
-        #self.mapper.commit()
+        self.mapper.commit()
         
         # Prepare a separate db for this run
         # NOTE: now we are simply copying the entire project db, this can be changed later
         # to only create a subset of the db need for the run
-        #protocol.setDbPath('run.db')
-        #print "      copy from '%s' to '%s'" % (self.dbPath, protocol.getDbPath())
-        shutil.copy(self.dbPath, protocol.getDbPath())
+        copyFile(self.dbPath, protocol.getDbPath())
         
         # Launch the protocol, the jobId should be set after this call
         jobs.launch(protocol, wait)
         
         # Commit changes
         if wait: # This is only useful for launching tests...
-            #print "      waiting...."
-            #protocol.printAll()
             self._updateProtocol(protocol)
         else:
             self.mapper.store(protocol)
         self.mapper.commit()
-        #print "      after _updateProtocol, protId:", protocol.getObjId()
-        #protocol.printAll() 
         #print ">>> PROJECT: launchProtocol: DONE"
         
     def _updateProtocol(self, protocol):
@@ -174,7 +168,6 @@ class Project(object):
             prot2 = getProtocolFromDb(dbPath, protocol.getObjId(), globals())
             # Copy is only working for db restored objects
             protocol.copy(prot2)
-            
             # Restore jobId
             protocol.setJobId(jobId)
             
@@ -186,7 +179,7 @@ class Project(object):
     def stopProtocol(self, protocol):
         """ Stop a running protocol """
         jobs.stop(protocol)
-        protocol.status.set(STATUS_ABORTED)
+        protocol.setAborted()
         self._storeProtocol(protocol)
         
     def continueProtocol(self, protocol):
@@ -196,7 +189,7 @@ class Project(object):
         """
         for step in protocol._steps:
             if step.status == STATUS_WAITING_APPROVAL:
-                step.status.set(STATUS_FINISHED)
+                step.setStatus(STATUS_FINISHED)
                 self.mapper.store(step)
                 self.mapper.commit()
                 break
@@ -204,7 +197,12 @@ class Project(object):
         
     def deleteProtocol(self, protocol):
         self.mapper.delete(protocol) # Delete from database
-        cleanPath(protocol.workingDir.get())  
+        wd = protocol.workingDir.get()
+        if wd.startswith(PROJECT_RUNS):
+            cleanPath()
+        else:
+            print "Error path: ", wd 
+      
         self.mapper.commit()     
         
     def copyProtocol(self, protocol):
@@ -217,7 +215,7 @@ class Project(object):
         return newProt
     
     def saveProtocol(self, protocol):
-        protocol.status.set(STATUS_SAVED)
+        protocol.setStatus(STATUS_SAVED)
         if protocol.hasObjId():
             self._storeProtocol(protocol)
         else:
@@ -236,7 +234,6 @@ class Project(object):
         protocol.setHostConfig(hostConfig)
     
     def _storeProtocol(self, protocol):
-        print "storing protocol, label", protocol.getObjLabel() 
         self.mapper.store(protocol)
         self.mapper.commit()
                 
@@ -301,6 +298,5 @@ class Project(object):
         for n in g.getNodes():
             if n.isRoot() and not n is rootNode:
                 rootNode.addChild(n)
-        #print ">>>>>>> Graph building: ", dt.datetime.now() - t
         return g
         

@@ -23,7 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.gui.dialog import TextDialog
 """
 This modules implements the automatic
 creation of protocol form GUI from its
@@ -39,7 +38,7 @@ from gui import configureWeigths, Window
 from text import TaggedText
 from widgets import Button
 from pyworkflow.protocol.params import *
-from dialog import showInfo
+from dialog import showInfo, TextDialog
 
 
 class BoolVar():
@@ -442,7 +441,7 @@ class FormWindow(Window):
         param = EnumParam(choices=choices)
         var = ComboVar(param)
         #self.protocol.expertLevel.set(0)
-        self._addVarBinding(paramName, var, *callbacks)
+        self._addVarBinding(paramName, var, None, *callbacks)
         #var.set(self.protocol.expertLevel.get())
         combo = ttk.Combobox(parent, textvariable=var.tkVar, 
                                 state='readonly', width=10)
@@ -473,7 +472,7 @@ class FormWindow(Window):
         # Run mode
         self.protocol.getDefinitionParam('')
         self._createHeaderLabel(runFrame, "Run mode").grid(row=1, column=0, sticky='ne', padx=5, pady=5)
-        modeCombo = self._createBoundCombo(runFrame, 'runMode', MODE_CHOICES, self._onExpertLevelChanged)   
+        modeCombo = self._createBoundCombo(runFrame, 'runMode', MODE_CHOICES, self._onRunModeChanged)   
         modeCombo.grid(row=1, column=1, sticky='nw', padx=(0, 5), pady=5)        
         # Expert level
         self._createHeaderLabel(runFrame, "Expert level").grid(row=2, column=0, sticky='ne', padx=5, pady=5)
@@ -537,17 +536,21 @@ class FormWindow(Window):
         
     def execute(self, e=None):
         errors = self.protocol.validate()
+        print "errors: ", errors
+        
         if len(errors):
             self.showError(errors)
         else:
             self._close()
         
     def _close(self, onlySave=False):
-        if not onlySave:
-            self.close()
+        print "=" * 200
         try:
             self.callback(self.protocol, onlySave)
-            self.showInfo("Protocol saved sucessfully")
+            if onlySave:
+                self.showInfo("Protocol saved sucessfully")
+            else:
+                self.close()
         except Exception, ex:
             self.showError("Error during save: " + str(ex))
            
@@ -603,9 +606,11 @@ class FormWindow(Window):
             self._checkCondition(paramName)
             
     def _onExpertLevelChanged(self, *args):
-        #self.protocol.expertLevel.set(self.expertVar.get())
         self._checkAllChanges()
         
+    def _onRunModeChanged(self, paramName):
+        print "protocol.runMode: ", self.protocol.runMode.get()
+        self.setParamFromVar(paramName)
         
     def getVarValue(self, varName):
         """This method should retrieve a value from """

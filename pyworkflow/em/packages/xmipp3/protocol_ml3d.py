@@ -319,7 +319,7 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
                         })
         self.ParamsStr = "-i %(_ImgMd)s --oroot %(_ORoot)s --ref %(_InitialVols)s --iter %(_NumberOfIterations)d " + \
                          "--sym %(symmetry)s --ang %(angularSampling)s"
-        if self.aRTExtraParams.hasValue(): self.ParamsStr += " %(extraParams)s"
+        if self.extraParams.hasValue(): self.ParamsStr += " %(extraParams)s"
 #        if self.NumberOfReferences > 1:
 #            self.ParamsStr += " --nref %(NumberOfReferences)s"
         if self.numberOfThreads.get() > 1:

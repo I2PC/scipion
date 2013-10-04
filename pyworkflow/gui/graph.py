@@ -32,7 +32,7 @@ import Tkinter as tk
 class LevelTree(object):
     """ Class to render the Graph in a Canvas. """
     def __init__(self, graph):
-        self.DY = 75
+        self.DY = 65
         self.DX = 15
         self.FONT = "sans-serif"
         self.FONTSIZE = 9

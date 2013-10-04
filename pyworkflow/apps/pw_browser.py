@@ -44,6 +44,7 @@ from pyworkflow.apps.config import *
 class EMTreeProvider(DbTreeProvider):
     """Retrieve the elements from the database"""
     def __init__(self, dbName):
+        print 'complex in globals: ', 'Complex' in globals()
         DbTreeProvider.__init__(self, dbName, globals())
         self.viewer = XmippViewer()
         
