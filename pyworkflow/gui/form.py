@@ -473,7 +473,7 @@ class FormWindow(Window):
         # Run mode
         self.protocol.getDefinitionParam('')
         self._createHeaderLabel(runFrame, "Run mode").grid(row=1, column=0, sticky='ne', padx=5, pady=5)
-        modeCombo = self._createBoundCombo(runFrame, 'runMode', MODE_CHOICES, self._onExpertLevelChanged)   
+        modeCombo = self._createBoundCombo(runFrame, 'runMode', MODE_CHOICES, self._onRunModeChanged)   
         modeCombo.grid(row=1, column=1, sticky='nw', padx=(0, 5), pady=5)        
         # Expert level
         self._createHeaderLabel(runFrame, "Expert level").grid(row=2, column=0, sticky='ne', padx=5, pady=5)
@@ -537,17 +537,21 @@ class FormWindow(Window):
         
     def execute(self, e=None):
         errors = self.protocol.validate()
+        print "errors: ", errors
+        
         if len(errors):
             self.showError(errors)
         else:
             self._close()
         
     def _close(self, onlySave=False):
-        if not onlySave:
-            self.close()
+        print "=" * 200
         try:
             self.callback(self.protocol, onlySave)
-            self.showInfo("Protocol saved sucessfully")
+            if onlySave:
+                self.showInfo("Protocol saved sucessfully")
+            else:
+                self.close()
         except Exception, ex:
             self.showError("Error during save: " + str(ex))
            
@@ -606,6 +610,9 @@ class FormWindow(Window):
         #self.protocol.expertLevel.set(self.expertVar.get())
         self._checkAllChanges()
         
+    def _onRunModeChanged(self, paramName):
+        print "protocol.runMode: ", self.protocol.runMode.get()
+        self.setParamFromVar(paramName)
         
     def getVarValue(self, varName):
         """This method should retrieve a value from """

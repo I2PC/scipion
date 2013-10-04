@@ -256,7 +256,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         particlesMd = 'particles@%s' % fnPosFile
 
         #if fnPosFile is not None and xmipp.existsBlockInMetaDataFile(particlesMd):
-        if fnPosFile is not None:
+        if exists(fnPosFile):
             boxSize = self.boxSize.get()
             args = "-i %(micrographToExtract)s --pos %(particlesMd)s -o %(outputRoot)s --Xdim %(boxSize)d" % locals()
             if self.downsampleType.get() != self.SAME_AS_PICKING:

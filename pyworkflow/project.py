@@ -134,7 +134,7 @@ class Project(object):
         2. Create the working dir and also the protocol independent db
         3. Call the launch method in protocol.job to handle submition: mpi, thread, queue,
         and also take care if the execution is remotely."""
-        #print ">>> PROJECT: launchProtocol"
+        print ">>> PROJECT: launchProtocol"
         protocol.setStatus(STATUS_LAUNCHED)
         self._setupProtocol(protocol)
         #print "      after _setupProtocol, protId: ", protocol.getObjId()
@@ -186,7 +186,7 @@ class Project(object):
     def stopProtocol(self, protocol):
         """ Stop a running protocol """
         jobs.stop(protocol)
-        protocol.status.set(STATUS_ABORTED)
+        protocol.setStatus(STATUS_ABORTED)
         self._storeProtocol(protocol)
         
     def continueProtocol(self, protocol):
@@ -196,7 +196,7 @@ class Project(object):
         """
         for step in protocol._steps:
             if step.status == STATUS_WAITING_APPROVAL:
-                step.status.set(STATUS_FINISHED)
+                step.setStatus(STATUS_FINISHED)
                 self.mapper.store(step)
                 self.mapper.commit()
                 break
@@ -204,7 +204,12 @@ class Project(object):
         
     def deleteProtocol(self, protocol):
         self.mapper.delete(protocol) # Delete from database
-        cleanPath(protocol.workingDir.get())  
+        wd = protocol.workingDir.get()
+        if wd.startswith(PROJECT_RUNS):
+            cleanPath()
+        else:
+            print "Error path: ", wd 
+      
         self.mapper.commit()     
         
     def copyProtocol(self, protocol):
@@ -217,7 +222,7 @@ class Project(object):
         return newProt
     
     def saveProtocol(self, protocol):
-        protocol.status.set(STATUS_SAVED)
+        protocol.setStatus(STATUS_SAVED)
         if protocol.hasObjId():
             self._storeProtocol(protocol)
         else:
