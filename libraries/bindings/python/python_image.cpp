@@ -912,9 +912,9 @@ Image_convert2DataType(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     ImageObject *self = (ImageObject*) obj;
     int datatype;
-    int castMode;
+    int castMode=CW_CONVERT;
 
-    if (self != NULL && PyArg_ParseTuple(args, "ii", &datatype, &castMode))
+    if (self != NULL && PyArg_ParseTuple(args, "i|i", &datatype, &castMode))
     {
         try
         {
