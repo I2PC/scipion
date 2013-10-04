@@ -26,5 +26,10 @@ class ProtInitVolH(ProtInitVolumeBase):
         if self.Xdim!=self.Xdim2:
             self.insertRunJobStep("xmipp_image_resize","-i %s --dim %d"%(self.fnRoot+".vol",self.Xdim))
 
+    def summary(self):
+        message=ProtInitVolumeBase.summary(self)
+        message.append("Output: [%s.vol]"%self.fnRoot)
+        return message
+
     def visualize(self):
         os.system("xmipp_chimera_client -i %s.vol --mode projector 256 --angulardist %s.xmd"%(self.fnRoot,self.fnRoot))
