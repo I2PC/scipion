@@ -261,11 +261,12 @@ class Object(object):
         # Copy attributes recursively
         for name, attr in other.getAttributesToStore():
             myAttr = getattr(self, name, None)
+
             if myAttr is None:
                 myAttr = attr.getClass()()
                 setattr(self, name, myAttr)
-            myAttr._copy(attr, copyDict)
                 
+            myAttr._copy(attr, copyDict)
             # Store the attr in the copyDict
             if attr.hasObjId():
                 copyDict[attr.getObjId()] = myAttr

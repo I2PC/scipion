@@ -27,14 +27,14 @@
 This modules handles the Project management
 """
 
-import os, shutil
+import os
 from os.path import abspath, split
 
 from pyworkflow.em import *
 from pyworkflow.apps.config import *
 from pyworkflow.protocol import *
 from pyworkflow.mapper import SqliteMapper
-from pyworkflow.utils import cleanPath, makePath, makeFilePath, join, exists, runJob
+from pyworkflow.utils import cleanPath, makePath, makeFilePath, join, exists, runJob, copyFile
 from pyworkflow.hosts import HostMapper, HostConfig
 import pyworkflow.protocol.launch as jobs
 
@@ -134,34 +134,28 @@ class Project(object):
         2. Create the working dir and also the protocol independent db
         3. Call the launch method in protocol.job to handle submition: mpi, thread, queue,
         and also take care if the execution is remotely."""
-        print ">>> PROJECT: launchProtocol"
+        #print ">>> PROJECT: launchProtocol"
         protocol.setStatus(STATUS_LAUNCHED)
         self._setupProtocol(protocol)
-        #print "      after _setupProtocol, protId: ", protocol.getObjId()
+        
         protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
         protocol.makePathsAndClean() # Create working dir if necessary
-        #self.mapper.commit()
+        self.mapper.commit()
         
         # Prepare a separate db for this run
         # NOTE: now we are simply copying the entire project db, this can be changed later
         # to only create a subset of the db need for the run
-        #protocol.setDbPath('run.db')
-        #print "      copy from '%s' to '%s'" % (self.dbPath, protocol.getDbPath())
-        shutil.copy(self.dbPath, protocol.getDbPath())
+        copyFile(self.dbPath, protocol.getDbPath())
         
         # Launch the protocol, the jobId should be set after this call
         jobs.launch(protocol, wait)
         
         # Commit changes
         if wait: # This is only useful for launching tests...
-            #print "      waiting...."
-            #protocol.printAll()
             self._updateProtocol(protocol)
         else:
             self.mapper.store(protocol)
         self.mapper.commit()
-        #print "      after _updateProtocol, protId:", protocol.getObjId()
-        #protocol.printAll() 
         #print ">>> PROJECT: launchProtocol: DONE"
         
     def _updateProtocol(self, protocol):
@@ -174,7 +168,6 @@ class Project(object):
             prot2 = getProtocolFromDb(dbPath, protocol.getObjId(), globals())
             # Copy is only working for db restored objects
             protocol.copy(prot2)
-            
             # Restore jobId
             protocol.setJobId(jobId)
             

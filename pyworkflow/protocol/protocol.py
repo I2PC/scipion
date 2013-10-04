@@ -63,11 +63,9 @@ class Step(OrderedObject):
         """ Store all attributes in attrDict as 
         attributes of self, also store the key in attrList.
         """
-        print "_storeAttributes: "
         for key, value in attrDict.iteritems():
             attrList.append(key)
             setattr(self, key, value)
-            print "   key: ", key, "value: ", value
         
     def _defineInputs(self, **args):
         """ This function should be used to define
@@ -472,10 +470,10 @@ class Protocol(Step):
         for i in range(n):
             newStep = self._steps[i]
             oldStep = self._prevSteps[i]
-            print "i: ", i
-            print " oldStep.status: ", str(oldStep.status)
-            print " oldStep!=newStep", oldStep != newStep
-            print " not post: ", not oldStep._postconditions()
+#            print "i: ", i
+#            print " oldStep.status: ", str(oldStep.status)
+#            print " oldStep!=newStep", oldStep != newStep
+#            print " not post: ", not oldStep._postconditions()
             if (oldStep.status.get() != STATUS_FINISHED or
                 newStep != oldStep or 
                 not oldStep._postconditions()):
@@ -541,26 +539,27 @@ class Protocol(Step):
         It will remove output attributes from mapper and object.
         """
         for o in self._outputs:
-            self.deleteAttribute(o)
+            if hasattr(self, o):
+                self.mapper.delete(getattr(self, o))
+                self.deleteAttribute(o)
+            else:
+                print "DEBUG: error, %s is not found in protocol" % o
             
         self._outputs.clear()
+        self.mapper.store(self._outputs)
         
     def makePathsAndClean(self):
         """ Create the necessary path or clean
         if in RESTART mode. 
         """
-        print "Protocol.makePathsAndClean...."
         # Clean working path if in RESTART mode
         paths = [self._getPath(), self._getExtraPath(), self._getTmpPath(), self._getLogsPath()]
         
         if self.runMode == MODE_RESTART:
             cleanPath(*paths)
-            self.mapper.deleteChilds(self) # Clean old values
             self.__deleteOutputs()
-            self.mapper.insertChilds(self)
         # Create workingDir, extra and tmp paths
-        print "making Paths."
-        makePath(*paths)        
+        makePath(*paths)
     
     def _run(self):
         if self._stepsExecutor is None:
@@ -591,7 +590,6 @@ class Protocol(Step):
         self._currentDir = os.getcwd()
         #self._run()
         Step.run(self)
-        print "outputs: ", self._outputs
         
         outputs = [getattr(self, o) for o in self._outputs]
         #self._store(self.status, self.initTime, self.endTime, *outputs)
