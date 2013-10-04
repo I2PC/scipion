@@ -23,7 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.gui.dialog import TextDialog
 """
 This modules implements the automatic
 creation of protocol form GUI from its
@@ -39,7 +38,7 @@ from gui import configureWeigths, Window
 from text import TaggedText
 from widgets import Button
 from pyworkflow.protocol.params import *
-from dialog import showInfo
+from dialog import showInfo, TextDialog
 
 
 class BoolVar():
@@ -442,7 +441,7 @@ class FormWindow(Window):
         param = EnumParam(choices=choices)
         var = ComboVar(param)
         #self.protocol.expertLevel.set(0)
-        self._addVarBinding(paramName, var, *callbacks)
+        self._addVarBinding(paramName, var, None, *callbacks)
         #var.set(self.protocol.expertLevel.get())
         combo = ttk.Combobox(parent, textvariable=var.tkVar, 
                                 state='readonly', width=10)
@@ -607,7 +606,6 @@ class FormWindow(Window):
             self._checkCondition(paramName)
             
     def _onExpertLevelChanged(self, *args):
-        #self.protocol.expertLevel.set(self.expertVar.get())
         self._checkAllChanges()
         
     def _onRunModeChanged(self, paramName):
