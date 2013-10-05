@@ -1965,7 +1965,7 @@ void Sampling::findClosestSamplingPoint(MetaData &DFi,
         DFi.getValue(MDL_SHIFT_Y,aux, iter.objId);
         comment+=floatToString(aux);
         id = DFo.addObject();
-        DFo.setValue(MDL_COMMENT,comment, id);
+        DFo.setValue(MDL_STAR_COMMENT,comment, id);
         DFo.setValue(MDL_IMAGE,fnImg, id);
         DFo.setValue(MDL_REF, winner_sampling, id);
 #ifdef MYPSI
