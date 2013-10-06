@@ -603,8 +603,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		boolean updatingState = isUpdating;
 		isUpdating = true;
 		update_counter++;
-		DEBUG.printMessage(" *** Updating table: " + update_counter); // );
-		// DEBUG.printStackTrace();
+		//DEBUG.printMessage(" *** Updating table: " + update_counter); // );
+		//DEBUG.printStackTrace();
 
 		// FIXME:gallery.updateSort();
 
@@ -622,7 +622,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			rowHeaderModel.setSize(gallery.getRowCount());
 		}
 		// Adjusts columns width
-		gallery.getColumnModel().adjustColumnsWidth(table);
+		if (gallery.adjustWidth)
+			gallery.getColumnModel().adjustColumnsWidth(table);
+		else
+			gallery.adjustWidth = true;
 		// columnModel.setWidth(dimension.width);
 
 		// If auto adjust columns is enabled, refresh!
@@ -651,13 +654,14 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	/** Adjust the columns depending on the current windows width and cell width */
 	private boolean adjustColumns()
 	{
-		if (autoAdjustColumns)
+		if (autoAdjustColumns){
+			//DEBUG.printStackTrace();
 			return gallery.adjustColumn(width - 50);
+		}
 		return false;
 		// DEBUG.printMessage(String.format(
 		// "==>> JFrameGallery.autoAdjust: width: %d", width));
 		// int rw = rowHeader.getWidth();
-		// DEBUG.printStackTrace();
 		// FIXME
 		// gallery.autoAdjustColumns(
 		// // jsPanel.getVisibleRect().width - rowHeader.getWidth(),
@@ -679,7 +683,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private void makeVisible(int index)
 	{
 		int coords[] = gallery.getCoords(index);
-		DEBUG.printMessage(String.format("gotoImage, index: %d, row: %d, col:%d", index, coords[0], coords[1]));
+		//DEBUG.printMessage(String.format("gotoImage, index: %d, row: %d, col:%d", index, coords[0], coords[1]));
 
 		// Gets current selected cell bounds.
 		Rectangle rect = table.getCellRect(coords[0], coords[1], true);
@@ -890,7 +894,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 		try
 		{
-			DEBUG.printMessage("reloadTableData...");
+			//DEBUG.printMessage("reloadTableData...");
 			if (table != null)
 				table.removeAll();
 			createModel();
@@ -1167,6 +1171,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		// Add blocks selector combo
 		jlBlocks = new JLabel(XmippLabel.LABEL_BLOCK);
 		jcbBlocks = new JComboBox();
+		DEBUG.printFormat("data.getNumberOfBlocks: %d\n", data.getNumberOfBlocks());
+		
 		if (data.getNumberOfBlocks() > 0)
 		{
 			cbPanel.add(jlBlocks);
@@ -1289,7 +1295,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		jlBlocks.setVisible(showBlocks);
 		jlVolumes.setVisible(showVols);
 		cbPanel.setVisible(showBlocks || showVols);
-		pack();
+		//pack();
 	}
 
 	private void jsRowsStateChanged(javax.swing.event.ChangeEvent evt)
@@ -2103,7 +2109,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		gallery.data.setFileName(to);
 		if (blockto.contains("@"))
 			gallery.data.selectBlock(blockto.substring(0, blockto.lastIndexOf("@")));
-		reloadFile(to, false);
+		this.saved = true;
+//		reloadFile(to, false);
+		reloadCombos();
 		setGalleryTitle();
 	}
 
@@ -2179,10 +2187,14 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 		createModel();
 		reloadMd(changed);
+		reloadCombos();
+	}
+	
+	private void reloadCombos(){
 		createCombos();
 		updateVisibleCombos();
 		jcbBlocks.setSelectedItem(gallery.data.selectedBlock);
-
+		
 	}
 
 	protected void initResliceButtonMenu()
