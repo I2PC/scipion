@@ -160,7 +160,7 @@ function evalElements() {
 //		} else 
 		if (type == "EnumParam") {
 			var typeEnum = jQuery(this).attr('data-enum');
-			if (typeEnum == '0') {
+			if (typeEnum == '0') {TATOO
 				onChangeEnumParamList(value, param);
 			} else if (typeEnum == '1') {
 				onChangeEnumParamCombo(param + "_select", param);
@@ -256,7 +256,7 @@ function evalCondition(row) {
 				value="''";
 			}
 		}
-//		params += "param: " + param + " value: " + value + "\n";
+		params += "param: " + param + " value: " + value + "\n";
 		cond_eval = cond_eval.replace(param, value);
 	}
 	// if (row.attr("name")=="comment") {
@@ -266,9 +266,9 @@ function evalCondition(row) {
 	
 	cond_eval = normalizeConditions(cond_eval)
 
-//	var foundAnd = cond.indexOf("''") != -1;
-//	if (foundAnd)
-//		alert("condition: " + cond + " \neval: " + cond_eval+ " \nparams:"+ params );
+	var foundAnd = cond.indexOf("'0'") != -1;
+	if (foundAnd)
+		alert("condition: " + cond + " \neval: " + cond_eval+ " \nparams:"+ params );
 
 	return eval(cond_eval);
 }
@@ -277,8 +277,8 @@ function normalizeConditions(cond){
 	cond = cond.replace("not","!");
 	cond = cond.replace("and","&&");
 	cond = cond.replace("or","||");
-	cond = cond.replace("'0'","false");
-	cond = cond.replace("'1'","true");
+//	cond = cond.replace("'0'","false");
+//	cond = cond.replace("'1'","true");
 	return cond;
 }
 

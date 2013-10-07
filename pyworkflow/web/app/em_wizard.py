@@ -14,6 +14,7 @@ def wizard(request):
     requestDict = getattr(request, "POST")
     functionName = requestDict.get("wizName")
     function = globals().get(functionName, None)
+    
     print "======================= in wizard: " + functionName
     
     # Get the protocol object
@@ -210,20 +211,20 @@ def getParticleSubset(particles, num):
         
     return particleList
 
-"""
-Validation for a set of micrographs
-"""
 def validateSet(setOf):
+    """
+    Validation for a set of micrographs
+    """
     if setOf is None:
         res = "errorInput"
     else:
         res = 1
     return res
 
-"""
-Validation for a set of particles
-"""
 def validateParticles(particles):
+    """
+    Validation for a set of particles
+    """
     if particles is None:
         res = "errorInput"
     elif particles.getSize() == 0:
@@ -234,10 +235,10 @@ def validateParticles(particles):
 #            res = parts
     return res
 
-"""
-Function to get the computing psd image
-"""
 def get_image_psd(request):
+    """
+    Function to get the computing psd image
+    """
     imagePath = request.GET.get('image', None)
     downsample = request.GET.get('downsample', None)
     dim = request.GET.get('dim', None)
@@ -255,10 +256,10 @@ def get_image_psd(request):
     img.save(response, "PNG")
     return response
 
-"""
-Function to get the computing image with a fourier filter applied
-"""
 def get_image_bandpass(request):
+    """
+    Function to get the computing image with a fourier filter applied
+    """
     imagePath = request.GET.get('image', None)
     lowFreq = request.GET.get('lowFreq', None)
     highFreq = request.GET.get('highFreq', None)
@@ -276,12 +277,13 @@ def get_image_bandpass(request):
         
     response = HttpResponse(mimetype="image/png")
     img.save(response, "PNG")
+    
     return response
 
-"""
-Function to get the computing image with a gaussian filter applied
-"""
 def get_image_gaussian(request):
+    """
+    Function to get the computing image with a gaussian filter applied
+    """
     imagePath = request.GET.get('image', None)
     freqSigma = request.GET.get('sigmaFreq', None)
     dim = request.GET.get('dim', None)

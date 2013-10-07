@@ -9,6 +9,7 @@ from pyworkflow.project import Project
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
 
+
 iconDict = {
             'logo_scipion': 'scipion_logo.png',
             'favicon': 'scipion_bn.png',
@@ -23,7 +24,8 @@ iconDict = {
             'tree_toolbar': 'tree2.gif',
             'list_toolbar': 'md_view.gif',
             'analyze_toolbar': 'visualize.gif',
-            'new_toolbar': 'new_object.gif'
+            'new_toolbar': 'new_object.gif',
+            'no_image': 'no-image.png'
             }
 
 cssDict = {'project_content': 'project_content_style.css',
@@ -129,39 +131,42 @@ def get_image(request):
     onlyApplyShifts = request.GET.get('onlyApplyShifts',False)
     wrap = request.GET.get('wrap',False)
     transformMatrix = request.GET.get('transformMatrix',None)
+        
+    try:
+        # PAJM: Como vamos a gestionar lsa imagen    
+        if imagePath.endswith('png') or imagePath.endswith('gif'):
+            img = getImage(imagePath, tk=False)
+        else:
+            if '@' in imagePath:
+                parts = imagePath.split('@')
+                imageNo = parts[0]
+                imagePath = parts[1]
     
-    # PAJM: Como vamos a gestionar lsa imagen    
-    if imagePath.endswith('png') or imagePath.endswith('gif'):
-        img = getImage(imagePath, tk=False)
-    else:
-        if '@' in imagePath:
-            parts = imagePath.split('@')
-            imageNo = parts[0]
-            imagePath = parts[1]
-
-        if 'projectPath' in request.session:
-            imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
-            if not os.path.isfile(imagePathTmp):
-                imagePath = getInputPath('showj', imagePath)      
-
-        if imageNo:
-            imagePath = '%s@%s' % (imageNo, imagePath) 
-            
-        #imgXmipp = xmipp.Image(imagePath)
-        imgXmipp = xmipp.Image()
-        imgXmipp.readPreview(imagePath, int(imageDim))
+            if 'projectPath' in request.session:
+                imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
+                if not os.path.isfile(imagePathTmp):
+                    imagePath = getInputPath('showj', imagePath)      
+    
+            if imageNo:
+                imagePath = '%s@%s' % (imageNo, imagePath) 
                 
-        if applyTransformMatrix and transformMatrix != None: 
-            imgXmipp.applyTransforMatScipion(transformMatrix, onlyApplyShifts, wrap)
-        
-        if mirrorY: 
-            imgXmipp.mirrorY()
-        
-        # from PIL import Image
-        img = getPILImage(imgXmipp, None)
-         
-    # response = HttpResponse(mimetype="image/png")    
+            #imgXmipp = xmipp.Image(imagePath)
+            imgXmipp = xmipp.Image()
     
+            imgXmipp.readPreview(imagePath, int(imageDim))
+            if applyTransformMatrix and transformMatrix != None: 
+                imgXmipp.applyTransforMatScipion(transformMatrix, onlyApplyShifts, wrap)
+            
+            if mirrorY: 
+                imgXmipp.mirrorY()
+            
+            # from PIL import Image
+            img = getPILImage(imgXmipp, None)
+    except Exception:
+        from pyworkflow import findResource
+        img = getImage(findResource("no-image.png"), tk=False)
+
+
     response = HttpResponse(mimetype="image/png")
     img.save(response, "PNG")
     return response
@@ -180,33 +185,36 @@ def get_slice(request):
 #    wrap = request.GET.get('wrap',False)
 #    transformMatrix = request.GET.get('transformMatrix',None)
 #    
-    # PAJM: Como vamos a gestionar lsa imagen    
-    if not '@' in imagePath:
-        raise Exception('Slice number required.')
-    
-    parts = imagePath.split('@')
-    sliceNo = parts[0]
-    imagePath = parts[1]
-
-    if 'projectPath' in request.session:
-        imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
-        if not os.path.isfile(imagePathTmp):
-            imagePath = getInputPath('showj', imagePath)      
+      
+    try:
+            # PAJM: Como vamos a gestionar lsa imagen    
+        if not '@' in imagePath:
+            raise Exception('Slice number required.')
         
-    imgXmipp = xmipp.Image()
-    imgXmipp.readPreview(imagePath, int(imageDim), int(sliceNo))
-            
-#        if applyTransformMatrix and transformMatrix != None: 
-#            imgXmipp.applyTransforMatScipion(transformMatrix, onlyApplyShifts, wrap)
-#        
-    if mirrorY: 
-        imgXmipp.mirrorY()
+        parts = imagePath.split('@')
+        sliceNo = parts[0]
+        imagePath = parts[1]
     
-    
-    # from PIL import Image
-    img = getPILImage(imgXmipp, None, False)
-         
-    # response = HttpResponse(mimetype="image/png")    
+        if 'projectPath' in request.session:
+            imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
+            if not os.path.isfile(imagePathTmp):
+                imagePath = getInputPath('showj', imagePath)
+
+        imgXmipp = xmipp.Image()
+        imgXmipp.readPreview(imagePath, int(imageDim), int(sliceNo))
+                
+    #        if applyTransformMatrix and transformMatrix != None: 
+    #            imgXmipp.applyTransforMatScipion(transformMatrix, onlyApplyShifts, wrap)
+    #        
+        if mirrorY: 
+            imgXmipp.mirrorY()
+        
+        
+        # from PIL import Image
+        img = getPILImage(imgXmipp, None, False)
+    except Exception:
+        from pyworkflow import findResource
+        img = getImage(findResource("no-image.png"), tk=False)         
     
     response = HttpResponse(mimetype="image/png")
     img.save(response, "PNG")
