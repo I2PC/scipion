@@ -34,7 +34,7 @@ void ProgVolumeInitialH::defineParams()
     addParamsLine("   -i <md_file>                : Metadata file with input projections");
     addParamsLine("  [--oroot <volume_file=\"rec_random\">]  : Filename for output rootname");
     addParamsLine("  [--sym <symfile=c1>]         : Enforce symmetry in projections");
-    addParamsLine("  [--randomIter <N=15>]        : Number of iterations with random assignment");
+    addParamsLine("  [--randomIter <N=10>]        : Number of iterations with random assignment");
     addParamsLine("  [--greedyIter <N=0>]         : Number of iterations with greedy assignment");
     addParamsLine("  [--rejection <p=25>]         : Percentage of images to reject for reconstruction");
     addParamsLine("  [--initial <file=\"\">]      : Initial volume if available");

@@ -17,7 +17,7 @@ from math import floor
 from numpy import array, savetxt, sum, zeros
 from protlib_xmipp import getMdSize
 from protlib_utils import getListFromRangeString, runJob, runShowJ
-from protlib_filesystem import copyFile, deleteFile, removeFilenamePrefix
+from protlib_filesystem import copyFile, deleteFile, moveFile, removeFilenamePrefix
 from protlib_initvolume import *
 
 class ProtInitVolRANSAC(ProtInitVolumeBase):
@@ -36,7 +36,8 @@ class ProtInitVolRANSAC(ProtInitVolumeBase):
         # RANSAC iterations
         for n in range(self.NRansac):
             self.insertParallelStep('ransacIteration',WorkingDir=self.WorkingDir,n=n,SymmetryGroup=self.SymmetryGroup,Xdim=self.Xdim,
-                                    Xdim2=self.Xdim2,NumGrids=self.NumGrids,NumSamples=self.NumSamples,DimRed=self.DimRed,InitialVolume=self.InitialVolume,AngularSampling=self.AngularSampling,
+                                    Xdim2=self.Xdim2,NumGrids=self.NumGrids,NumSamples=self.NumSamples,DimRed=self.DimRed,
+                                    InitialVolume=self.InitialVolume,AngularSampling=self.AngularSampling,
                                     parent_step_id=XmippProjectDb.FIRST_STEP)
         
         # Look for threshold, evaluate volumes and get the best
@@ -227,10 +228,15 @@ def ransacIteration(log,WorkingDir,n,SymmetryGroup,Xdim,Xdim2,NumGrids,NumSample
 
     # Reconstruct with the small sample
     reconstruct(log,fnRoot,SymmetryGroup,Xdim2/2)
+    fnVol = fnRoot+'.vol'
+    
+    # Simulated annealing
+    runJob(log,"xmipp_volume_initial_simulated_annealing","-i %s --initial %s --oroot %s_sa --sym %s"%(fnRoot+".xmd",fnVol,fnRoot,SymmetryGroup))
+    moveFile(log, fnRoot+"_sa.vol", fnVol)
+    deleteFile(log, fnRoot+"_sa.xmd")
 
     # Generate projections from this reconstruction
     fnGallery=os.path.join(TmpDir,'gallery_'+fnBase+'.stk')
-    fnVol = os.path.join(TmpDir,fnBase+'.vol')
     runJob(log,"xmipp_angular_project_library", "-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
                 %(fnVol,fnGallery,float(AngularSampling),SymmetryGroup,fnOutputReducedClass))
         
