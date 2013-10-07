@@ -234,7 +234,7 @@ def ransacIteration(log,WorkingDir,n,SymmetryGroup,Xdim,Xdim2,NumGrids,NumSample
     
     # Simulated annealing
     if UseSA:
-        runJob(log,"xmipp_volume_initial_simulated_annealing","-i %s --initial %s --oroot %s_sa --sym %s --randomIter %d --rejection %f"\
+        runJob(log,"xmipp_volume_initial_simulated_annealing","-i %s --initial %s --oroot %s_sa --sym %s --randomIter %d --rejection %f --dontApplyPositive"\
                   %(fnRoot+".xmd",fnVol,fnRoot,SymmetryGroup,NIterRandom,Rejection))
         moveFile(log, fnRoot+"_sa.vol", fnVol)
         deleteFile(log, fnRoot+"_sa.xmd")
