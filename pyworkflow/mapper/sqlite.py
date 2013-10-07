@@ -245,7 +245,7 @@ class SqliteMapper(Mapper):
         objRows = self.db.selectObjectsByParent(parent_id=None)
         return self.__objectsFromRows(objRows, iterate, objectFilter)    
     
-    def addRelation(self, relName, creatorObj, parentObj, childObj):
+    def insertRelation(self, relName, creatorObj, parentObj, childObj):
         """ This function will add a new relation between two objects.
         Params:
             relName: the name of the relation to be added.
@@ -287,7 +287,18 @@ class SqliteMapper(Mapper):
         
         return self.__objectsFromIds(parentIds)  
 
-
+    def getRelations(self, creatorObj):
+        """ Return all relations created by creatorObj. """
+        return self.db.selectRelationsByCreator(creatorObj.getObjId())
+    
+    def deleteRelations(self, creatorObj):
+        """ Delete all relations created by object creatorObj """
+        pass
+    
+    def insertRelationData(self, relName, creatorId, parentId, childId):
+        self.db.insertRelation(relName, creatorId, parentId, childId)
+    
+    
 class SqliteDb():
     """Class to handle a Sqlite database.
     It will create connection, execute queries and commands"""
@@ -296,6 +307,7 @@ class SqliteDb():
     DELETE = "DELETE FROM Objects WHERE "
     
     SELECT_RELATION = "SELECT object_%s_id AS id FROM Relations WHERE name=? AND object_%s_id=?"
+    SELECT_RELATIONS = "SELECT * FROM Relations WHERE parent_id=?"
     
     def selectCmd(self, whereStr, orderByStr=' ORDER BY id'):
         return self.SELECT + whereStr + orderByStr
@@ -357,8 +369,12 @@ class SqliteDb():
         """Execute command to insert a new object. Return the inserted object id"""
         self.executeCommand("INSERT INTO Relations (parent_id, name, object_parent_id, object_child_id) VALUES (?, ?, ?, ?)",
                             (parent_id, relName, object_parent_id, object_child_id))
-        return self.cursor.lastrowid    
-
+        return self.cursor.lastrowid
+    
+    def insertRelationRow(self, row):
+        """Execute command to insert a new object. Return the inserted object id"""
+        return self.insertRelation(row['name'], row['parent_id'], 
+                                   row['object_parent_id'], row['object_child_id'])
     
     def updateObject(self, objId, name, classname, value, parent_id, label, comment):
         """Update object data """
@@ -433,9 +449,15 @@ class SqliteDb():
     def selectRelationParents(self, relName, object_child_id):
         self.executeCommand(self.SELECT_RELATION % ('parent', 'child'), 
                             (relName, object_child_id))
-        return self._results()    
+        return self._results()
     
-        
+    def selectRelationsByCreator(self, parent_id):
+        self.executeCommand(self.SELECT_RELATIONS, (parent_id,))
+        return self._results()
+    
+    def deleteRelationsByCreator(self, parent_id):
+        self.executeCommand("DELETE FROM Relations where parent_id=?", (parent_id,))
+
 
 
         

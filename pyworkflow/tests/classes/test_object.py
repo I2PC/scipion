@@ -169,11 +169,11 @@ class TestPyworkflow(unittest.TestCase):
         # Test to add relations
         relName = 'testRelation'
         creator = c
-        mapper.addRelation(relName, creator, i, b)
-        mapper.addRelation(relName, creator, i, b2)
+        mapper.insertRelation(relName, creator, i, b)
+        mapper.insertRelation(relName, creator, i, b2)
         
-        mapper.addRelation(relName, creator, b, p)
-        mapper.addRelation(relName, creator, b2, p)        
+        mapper.insertRelation(relName, creator, b, p)
+        mapper.insertRelation(relName, creator, b2, p)        
         
         # Save changes to file
         mapper.commit()
@@ -225,6 +225,10 @@ class TestPyworkflow(unittest.TestCase):
         for c, p in zip(childs, parents):
             self.assertEqual(c, p, "Childs of object i, should be the parents of object p")
 
+        relations = mapper2.getRelations(creator)
+        for row in relations:
+            print row
+            row['object_child_id'] = 1
         
     def test_XMLMapper(self):
         fn = self.getTmpPath("basic.xml")

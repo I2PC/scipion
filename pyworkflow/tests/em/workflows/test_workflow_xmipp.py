@@ -314,7 +314,8 @@ class TestXmippWorkflow(TestWorkflow):
           
         self.assertIsNotNone(protDownsampling.outputMicrographs, "There was a problem with the downsampling")
         self.validateFiles('protDownsampling', protDownsampling)
-          
+
+     
         # Now estimate CTF on the downsampled micrographs 
         print "Performing CTF..."   
         protCTF = XmippProtCTFMicrographs(numberOfThreads=3)                
@@ -341,6 +342,8 @@ class TestXmippWorkflow(TestWorkflow):
         
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
         self.validateFiles('protExtract', protExtract)
+
+        return
         
 #        print "Run ML2D"
 #        protML2D = XmippProtML2D(numberOfReferences=1, maxIters=4, doMlf=False,#True,
@@ -356,7 +359,7 @@ class TestXmippWorkflow(TestWorkflow):
 #                self.assertTrue(imgCA.getImage().hasCTF(), "Image class has not CTF information.")
              
 #        self.validateFiles('protML2D', protML2D)
-        
+    
         print "Run CL2D"
         protCL2D = XmippProtCL2D(numberOfReferences=2, numberOfInitialReferences=1, 
                                  numberOfIterations=4, numberOfMpi=2)

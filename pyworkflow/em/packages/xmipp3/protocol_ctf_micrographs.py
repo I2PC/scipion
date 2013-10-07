@@ -131,3 +131,4 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         micSet._xmippMd.set(mdFn)
 
         self._defineOutputs(outputMicrographs=micSet)
+        self._defineDataSource(self.inputMics, micSet)

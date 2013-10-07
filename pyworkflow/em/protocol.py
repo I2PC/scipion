@@ -35,7 +35,7 @@ from pyworkflow.object import String, Float
 from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
 from constants import *
-from data import Micrograph, SetOfMicrographs, SetOfImages, Image, SetOfParticles, SetOfVolumes, Volume, SetOfCoordinates, SetOfClasses2D
+from data import * 
 from pyworkflow.utils.path import removeBaseExt, join, basename
 
 
@@ -71,6 +71,11 @@ class EMProtocol(Protocol):
         volSet = SetOfVolumes()
         volSet.setFileName(self._getPath('volumes%s.sqlite' % suffix)) 
         return volSet
+    
+    def _defineDataSource(self, srcObj, dstObj):
+        """ Add a DATASOURCE relation between srcObj and dstObj """
+        self.mapper.insertRelation(RELATION_DATASOURCE, self, srcObj, dstObj)
+        self.mapper.commit()
 
 
 class DefImportMicrographs(Form):

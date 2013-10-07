@@ -340,6 +340,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         imgSet.write()
         
         self._defineOutputs(outputParticles=imgSet)
+        self._defineDataSource(self.inputCoords, imgSet)
     
     def _summary(self):
         downsampleTypeText = {

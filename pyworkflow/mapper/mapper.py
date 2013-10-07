@@ -109,7 +109,7 @@ class Mapper():
         This behaviour can be changed by passing includeSubclass=False"""
         return self.selectBy(classname=className)
     
-    def addRelation(self, relName, creatorObj, parentObj, childObj):
+    def insertRelation(self, relName, creatorObj, parentObj, childObj):
         """ This function will add a new relation between two objects.
         Params:
             relName: the name of the relation to be added.
@@ -137,4 +137,14 @@ class Mapper():
         Returns: 
             a list of "parent" objects.
         """
-        pass   
+        pass
+    
+    def getRelations(self, creatorObj):
+        """ Return all relations created by creatorObj. """
+        pass
+    
+    def deleteRelations(self, creatorObj):
+        """ Delete all relations created by object creatorObj """
+        pass
+    
+    
