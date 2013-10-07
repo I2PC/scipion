@@ -160,7 +160,7 @@ function evalElements() {
 //		} else 
 		if (type == "EnumParam") {
 			var typeEnum = jQuery(this).attr('data-enum');
-			if (typeEnum == '0') {
+			if (typeEnum == '0') {TATOO
 				onChangeEnumParamList(value, param);
 			} else if (typeEnum == '1') {
 				onChangeEnumParamCombo(param + "_select", param);
@@ -250,7 +250,13 @@ function evalCondition(row) {
 		param = arrayParams[cont];
 		// value = getValueByName(param);
 		value = jQuery("tr#" + param).val();
-		// params += "param: " + param + " value: " + value + "\n";
+		if (!value){
+			value = jQuery("tr#" + param).attr("value");
+			if (!value){
+				value="''";
+			}
+		}
+		params += "param: " + param + " value: " + value + "\n";
 		cond_eval = cond_eval.replace(param, value);
 	}
 	// if (row.attr("name")=="comment") {
@@ -258,12 +264,24 @@ function evalCondition(row) {
 	// cond_eval);
 	// }
 	
-	cond_eval = cond_eval.replace("not","!");
+	cond_eval = normalizeConditions(cond_eval)
 
-	//	alert("condition: " + cond + " eval: " + cond_eval);
+	var foundAnd = cond.indexOf("'0'") != -1;
+	if (foundAnd)
+		alert("condition: " + cond + " \neval: " + cond_eval+ " \nparams:"+ params );
 
 	return eval(cond_eval);
 }
+
+function normalizeConditions(cond){
+	cond = cond.replace("not","!");
+	cond = cond.replace("and","&&");
+	cond = cond.replace("or","||");
+//	cond = cond.replace("'0'","false");
+//	cond = cond.replace("'1'","true");
+	return cond;
+}
+
 
 function help(title, msg) {
 	new Messi(msg, {

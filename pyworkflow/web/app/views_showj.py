@@ -36,6 +36,7 @@ def showj(request, inputParameters=None):
     
 #    print("path",_path)
     
+    
     #Init Dataset
     #NAPA DE LUXE: Check type of Dataset 
     dataset = loadDatasetXmipp(_path) 

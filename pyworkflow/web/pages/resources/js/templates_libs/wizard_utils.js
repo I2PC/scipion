@@ -37,6 +37,9 @@ function selectList(elm, mode) {
 	// load and set the image
 	var uri = "/get_image/?image=" + path_img + "&dim=250";
 	
+	if(uri = "no-image")
+		uri="/resources/no-image.png";
+	
 	
 	if(mode=="raphael"){
 		img.load(putImage(uri, "mic", 250, 250), function() {
@@ -80,6 +83,9 @@ function selectParticle(elm, mode) {
 
 	// load and set the image
 	var uri = "/get_image/?image=" + path_img + "&dim=250";
+	
+//	if(uri = "no-image")
+//		uri="/resources/no-image.png";
 	
 	if(mode=="raphael"){
 		putImage(uri, "particle", 250, 250);
@@ -197,7 +203,7 @@ function previewBandpassFilter(low, high, decay) {
 	// load and set the image
 	var uri = "/get_image_bandpass/?image=" + path_img + "&lowFreq=" + low
 			+ "&highFreq=" + high + "&decayFreq=" + decay + "&dim=250";
-
+	
 	$("img#imgFiltered").attr("src", uri);
 }
 
