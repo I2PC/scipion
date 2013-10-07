@@ -432,6 +432,7 @@ class Float(Scalar):
     
 class Boolean(Scalar):
     """Boolean object"""
+    
     def _convertValue(self, value):
         t = type(value)
         if t is bool:

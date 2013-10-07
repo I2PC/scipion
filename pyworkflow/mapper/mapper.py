@@ -108,5 +108,33 @@ class Mapper():
         By default object of subclasses will be retrieved also.
         This behaviour can be changed by passing includeSubclass=False"""
         return self.selectBy(classname=className)
-            
     
+    def addRelation(self, relName, creatorObj, parentObj, childObj):
+        """ This function will add a new relation between two objects.
+        Params:
+            relName: the name of the relation to be added.
+            creatorObj: this object will be the one who register the relation.
+            parentObj: this is "parent" in the relation
+            childObj: this is "child" in the relation
+        """
+        pass
+    
+    def getRelationChilds(self, relName, parentObj):
+        """ Return all "child" objects for a given relation.
+        Params:
+            relName: the name of the relation.
+            parentObj: this is "parent" in the relation
+        Returns: 
+            a list of "child" objects.
+        """
+        pass  
+            
+    def getRelationParents(self, relName, childObj):
+        """ Return all "parent" objects for a given relation.
+        Params:
+            relName: the name of the relation.
+            childObj: this is "child" in the relation
+        Returns: 
+            a list of "parent" objects.
+        """
+        pass   

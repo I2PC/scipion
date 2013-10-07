@@ -243,7 +243,49 @@ class SqliteMapper(Mapper):
     def selectAll(self, iterate=False, objectFilter=None):
         self.__initObjDict()
         objRows = self.db.selectObjectsByParent(parent_id=None)
-        return self.__objectsFromRows(objRows, iterate, objectFilter)
+        return self.__objectsFromRows(objRows, iterate, objectFilter)    
+    
+    def addRelation(self, relName, creatorObj, parentObj, childObj):
+        """ This function will add a new relation between two objects.
+        Params:
+            relName: the name of the relation to be added.
+            creatorObj: this object will be the one who register the relation.
+            parentObj: this is "parent" in the relation
+            childObj: this is "child" in the relation
+        """
+        for o in [creatorObj, parentObj, childObj]:
+            if not o.hasObjId():
+                raise Exception("Before adding a relation, the object should be stored in mapper")
+        self.db.insertRelation(relName, creatorObj.getObjId(), parentObj.getObjId(), childObj.getObjId())
+    
+    def __objectsFromIds(self, objIds):
+        """Return a list of objects, given a list of id's
+        """
+        return [self.selectById(rowId['id']) for rowId in objIds]
+        
+    def getRelationChilds(self, relName, parentObj):
+        """ Return all "child" objects for a given relation.
+        Params:
+            relName: the name of the relation.
+            parentObj: this is "parent" in the relation
+        Returns: 
+            a list of "child" objects.
+        """
+        childIds = self.db.selectRelationChilds(relName, parentObj.getObjId())
+        
+        return self.__objectsFromIds(childIds)  
+            
+    def getRelationParents(self, relName, childObj):
+        """ Return all "parent" objects for a given relation.
+        Params:
+            relName: the name of the relation.
+            childObj: this is "child" in the relation
+        Returns: 
+            a list of "parent" objects.
+        """
+        parentIds = self.db.selectRelationParents(relName, childObj.getObjId())
+        
+        return self.__objectsFromIds(parentIds)  
 
 
 class SqliteDb():
@@ -252,6 +294,8 @@ class SqliteDb():
     
     SELECT = "SELECT id, parent_id, name, classname, value, label, comment FROM Objects WHERE "
     DELETE = "DELETE FROM Objects WHERE "
+    
+    SELECT_RELATION = "SELECT object_%s_id AS id FROM Relations WHERE name=? AND object_%s_id=?"
     
     def selectCmd(self, whereStr, orderByStr=' ORDER BY id'):
         return self.SELECT + whereStr + orderByStr
@@ -294,12 +338,12 @@ class SqliteDb():
                      (id        INTEGER PRIMARY KEY AUTOINCREMENT,
                       parent_id INTEGER REFERENCES Objects(id), -- object that created the relation
                       name      TEXT,               -- relation name 
-                      classname TEXT,               -- relation's class name
+                      classname TEXT DEFAULT NULL,  -- relation's class name
                       value     TEXT DEFAULT NULL,  -- relation value
                       label     TEXT DEFAULT NULL,  -- relation label, text used for display
-                      comment   TEXT DEFAULT NULL,   -- relation comment, text used for annotations
-                      object_parent  INTEGER REFERENCES Objects(id),
-                      object_child  INTEGER REFERENCES Objects(id) 
+                      comment   TEXT DEFAULT NULL,  -- relation comment, text used for annotations
+                      object_parent_id  INTEGER REFERENCES Objects(id),
+                      object_child_id  INTEGER REFERENCES Objects(id) 
                       )""")
         self.commit()
         
@@ -308,6 +352,13 @@ class SqliteDb():
         self.executeCommand("INSERT INTO Objects (parent_id, name, classname, value, label, comment) VALUES (?, ?, ?, ?, ?, ?)",
                             (parent_id, name, classname, value, label, comment))
         return self.cursor.lastrowid
+        
+    def insertRelation(self, relName, parent_id, object_parent_id, object_child_id, **args):
+        """Execute command to insert a new object. Return the inserted object id"""
+        self.executeCommand("INSERT INTO Relations (parent_id, name, object_parent_id, object_child_id) VALUES (?, ?, ?, ?)",
+                            (parent_id, relName, object_parent_id, object_child_id))
+        return self.cursor.lastrowid    
+
     
     def updateObject(self, objId, name, classname, value, parent_id, label, comment):
         """Update object data """
@@ -373,6 +424,17 @@ class SqliteDb():
     def deleteAll(self):
         """ Delete all objects from the db. """
         self.executeCommand(self.DELETE + "1")
+        
+    def selectRelationChilds(self, relName, object_parent_id):
+        self.executeCommand(self.SELECT_RELATION % ('child', 'parent'), 
+                            (relName, object_parent_id))
+        return self._results()
+        
+    def selectRelationParents(self, relName, object_child_id):
+        self.executeCommand(self.SELECT_RELATION % ('parent', 'child'), 
+                            (relName, object_child_id))
+        return self._results()    
+    
         
 
 
