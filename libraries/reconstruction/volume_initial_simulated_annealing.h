@@ -58,7 +58,7 @@ public:
 };
 
 /** Random reconstruction parameters. */
-class ProgVolumeInitialH: public XmippProgram
+class ProgVolumeInitialSimulatedAnnealing: public XmippProgram
 {
 public:
     /** Filenames */

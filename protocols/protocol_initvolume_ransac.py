@@ -38,6 +38,7 @@ class ProtInitVolRANSAC(ProtInitVolumeBase):
             self.insertParallelStep('ransacIteration',WorkingDir=self.WorkingDir,n=n,SymmetryGroup=self.SymmetryGroup,Xdim=self.Xdim,
                                     Xdim2=self.Xdim2,NumGrids=self.NumGrids,NumSamples=self.NumSamples,DimRed=self.DimRed,
                                     InitialVolume=self.InitialVolume,AngularSampling=self.AngularSampling,
+                                    UseSA=self.UseSA, NIterRandom=self.NIterRandom, Rejection=self.Rejection,
                                     parent_step_id=XmippProjectDb.FIRST_STEP)
         
         # Look for threshold, evaluate volumes and get the best
@@ -205,7 +206,8 @@ def reconstruct(log,fnRoot,symmetryGroup,maskRadius):
     runJob(log,"xmipp_reconstruct_fourier","-i %s.xmd -o %s.vol --sym %s " %(fnRoot,fnRoot,symmetryGroup))
     runJob(log,"xmipp_transform_mask","-i %s.vol --mask circular -%d "%(fnRoot,maskRadius))
 
-def ransacIteration(log,WorkingDir,n,SymmetryGroup,Xdim,Xdim2,NumGrids,NumSamples,DimRed,InitialVolume,AngularSampling):
+def ransacIteration(log,WorkingDir,n,SymmetryGroup,Xdim,Xdim2,NumGrids,NumSamples,DimRed,InitialVolume,AngularSampling,UseSA,
+                    NIterRandom,Rejection):
     fnBase="ransac%05d"%n
     TmpDir=os.path.join(WorkingDir,"tmp")
     fnRoot=os.path.join(TmpDir,fnBase)
@@ -231,9 +233,11 @@ def ransacIteration(log,WorkingDir,n,SymmetryGroup,Xdim,Xdim2,NumGrids,NumSample
     fnVol = fnRoot+'.vol'
     
     # Simulated annealing
-    runJob(log,"xmipp_volume_initial_simulated_annealing","-i %s --initial %s --oroot %s_sa --sym %s"%(fnRoot+".xmd",fnVol,fnRoot,SymmetryGroup))
-    moveFile(log, fnRoot+"_sa.vol", fnVol)
-    deleteFile(log, fnRoot+"_sa.xmd")
+    if UseSA:
+        runJob(log,"xmipp_volume_initial_simulated_annealing","-i %s --initial %s --oroot %s_sa --sym %s --randomIter %d --rejection %f"\
+                  %(fnRoot+".xmd",fnVol,fnRoot,SymmetryGroup,NIterRandom,Rejection))
+        moveFile(log, fnRoot+"_sa.vol", fnVol)
+        deleteFile(log, fnRoot+"_sa.xmd")
 
     # Generate projections from this reconstruction
     fnGallery=os.path.join(TmpDir,'gallery_'+fnBase+'.stk')

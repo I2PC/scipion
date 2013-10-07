@@ -23,5 +23,5 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/volume_initial_H.h>
-RUN_XMIPP_PROGRAM(ProgVolumeInitialH);
+#include <reconstruction/volume_initial_simulated_annealing.h>
+RUN_XMIPP_PROGRAM(ProgVolumeInitialSimulatedAnnealing);

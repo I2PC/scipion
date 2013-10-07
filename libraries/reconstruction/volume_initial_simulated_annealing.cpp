@@ -23,10 +23,10 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "volume_initial_H.h"
+#include "volume_initial_simulated_annealing.h"
 
 // Define params
-void ProgVolumeInitialH::defineParams()
+void ProgVolumeInitialSimulatedAnnealing::defineParams()
 {
     //usage
     addUsageLine("Generate 3D reconstructions from projections using random orientations");
@@ -45,7 +45,7 @@ void ProgVolumeInitialH::defineParams()
 }
 
 // Read arguments ==========================================================
-void ProgVolumeInitialH::readParams()
+void ProgVolumeInitialSimulatedAnnealing::readParams()
 {
     fnIn = getParam("-i");
     fnRoot = getParam("--oroot");
@@ -61,7 +61,7 @@ void ProgVolumeInitialH::readParams()
 }
 
 // Show ====================================================================
-void ProgVolumeInitialH::show()
+void ProgVolumeInitialSimulatedAnnealing::show()
 {
     if (verbose > 0)
     {
@@ -83,7 +83,7 @@ void ProgVolumeInitialH::show()
 
 // Alignment of a single image ============================================
 //#define DEBUG
-void alignSingleImage(size_t nImg, ProgVolumeInitialH &prm, MetaData &mdReconstruction, double &newCorr, double &improvementFraction)
+void alignSingleImage(size_t nImg, ProgVolumeInitialSimulatedAnnealing &prm, MetaData &mdReconstruction, double &newCorr, double &improvementFraction)
 {
 	MultidimArray<double> mGalleryProjection, mCurrentImage, mCurrentImageAligned;
 	Matrix2D<double> M;
@@ -223,7 +223,7 @@ void alignSingleImage(size_t nImg, ProgVolumeInitialH &prm, MetaData &mdReconstr
 // Subset alignment =======================================================
 void threadAlignSubset(ThreadArgument &thArg)
 {
-	ProgVolumeInitialH &prm=*((ProgVolumeInitialH *)thArg.workClass);
+	ProgVolumeInitialSimulatedAnnealing &prm=*((ProgVolumeInitialSimulatedAnnealing *)thArg.workClass);
 	ThreadVolumeInitialAlignment results=prm.threadResults[thArg.thread_id];
 
 	results.sumCorr=results.sumImprovement=0.0;
@@ -255,7 +255,7 @@ void threadAlignSubset(ThreadArgument &thArg)
 }
 
 // Main routine ------------------------------------------------------------
-void ProgVolumeInitialH::run()
+void ProgVolumeInitialSimulatedAnnealing::run()
 {
     show();
     produceSideinfo();
@@ -294,7 +294,7 @@ void ProgVolumeInitialH::run()
     deleteFile(fnRoot+"_gallery.doc");
 }
 
-void ProgVolumeInitialH::filterByCorrelation()
+void ProgVolumeInitialSimulatedAnnealing::filterByCorrelation()
 {
 	MetaData mdAux;
 	mdAux=mdReconstruction;
@@ -327,7 +327,7 @@ void ProgVolumeInitialH::filterByCorrelation()
 	mdAux.write(fnAngles);
 }
 
-void ProgVolumeInitialH::reconstructCurrent()
+void ProgVolumeInitialSimulatedAnnealing::reconstructCurrent()
 {
 	String args=formatString("-i %s -o %s --sym %s --weight --thr %d -v 0",fnAngles.c_str(),fnVolume.c_str(),fnSym.c_str(),Nthr);
 	String cmd=(String)"xmipp_reconstruct_fourier "+args;
@@ -351,7 +351,7 @@ void ProgVolumeInitialH::reconstructCurrent()
 	}
 }
 
-void ProgVolumeInitialH::generateProjections()
+void ProgVolumeInitialSimulatedAnnealing::generateProjections()
 {
 	String args=formatString("-i %s -o %s --sampling_rate 5 --sym %s --compute_neighbors --angular_distance -1 --experimental_images %s -v 0",
 			fnVolume.c_str(),fnGallery.c_str(),fnSym.c_str(),fnAngles.c_str());
@@ -370,7 +370,7 @@ void ProgVolumeInitialH::generateProjections()
 	gallery.read(fnGallery);
 }
 
-void ProgVolumeInitialH::produceSideinfo()
+void ProgVolumeInitialSimulatedAnnealing::produceSideinfo()
 {
 	mdIn.read(fnIn);
 	mdIn.removeDisabled();
