@@ -196,12 +196,15 @@ void CL3DClass::transferUpdate()
 
         double mean;
         detectBackground(Paux,bgMask,0.01,mean);
-        FOR_ALL_ELEMENTS_IN_ARRAY3D(Paux)
-        if (A3D_ELEM(bgMask,k,i,j))
-            A3D_ELEM(Paux,k,i,j) = 0;
-        else if (k<=STARTINGZ(Paux)+2  || i<=STARTINGY(Paux)+2  || j<=STARTINGX(Paux)+2 ||
-        		 k>=FINISHINGZ(Paux)-2 || i>=FINISHINGY(Paux)-2 || j>=FINISHINGX(Paux)-2)
-        	A3D_ELEM(Paux,k,i,j) = 0;
+        if (bgMask.sum()<0.9*(XSIZE(Paux)-4)*(YSIZE(Paux)-4)*(ZSIZE(Paux)-4))
+        {
+            FOR_ALL_ELEMENTS_IN_ARRAY3D(Paux)
+            if (A3D_ELEM(bgMask,k,i,j))
+                A3D_ELEM(Paux,k,i,j) = 0;
+            else if (k<=STARTINGZ(Paux)+2  || i<=STARTINGY(Paux)+2  || j<=STARTINGX(Paux)+2 ||
+        		     k>=FINISHINGZ(Paux)-2 || i>=FINISHINGY(Paux)-2 || j>=FINISHINGX(Paux)-2)
+        	    A3D_ELEM(Paux,k,i,j) = 0;
+        }
 
 #ifdef DEBUG
         save()=Paux;

@@ -106,15 +106,18 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         
-        panel.add(new JLabel("Low freq"), XmippWindowUtil.getConstraints(gbc, 0, 0));
+        
+        panel.add(new JLabel("Draw an ellipse to fit the first zero"),XmippWindowUtil.getConstraints(gbc, 0, 0, 4));
+        
+        panel.add(new JLabel("Low freq"), XmippWindowUtil.getConstraints(gbc, 0, 1));
         spinnerLowFreq = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 0.5, 0.01));
-        panel.add(spinnerLowFreq, XmippWindowUtil.getConstraints(gbc, 1, 0));
-        panel.add(new JLabel("High freq"), XmippWindowUtil.getConstraints(gbc, 2, 0));
+        panel.add(spinnerLowFreq, XmippWindowUtil.getConstraints(gbc, 1, 1));
+        panel.add(new JLabel("High freq"), XmippWindowUtil.getConstraints(gbc, 2, 1));
         spinnerLowFreq.addChangeListener(this);        
         
         spinnerHighFreq = new JSpinner(new SpinnerNumberModel(0.5, 0.0, 0.5, 0.01));
-        panel.add(spinnerHighFreq, XmippWindowUtil.getConstraints(gbc, 3, 0));
-        panel.add(button,  XmippWindowUtil.getConstraints(gbc, 2, 1, 2));
+        panel.add(spinnerHighFreq, XmippWindowUtil.getConstraints(gbc, 3, 1));
+        panel.add(button,  XmippWindowUtil.getConstraints(gbc, 2, 2, 2));
         spinnerHighFreq.addChangeListener(this);   
         
         add(panel, BorderLayout.SOUTH);
@@ -123,6 +126,7 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
 
         pack();
         imp.updateImage();
+        IJ.setTool("ellipse");
     }
     
     public double getLowFreq(){

@@ -200,6 +200,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 				md.setValueString(label, value.toString(), id);
 				break;
 			}
+			adjustWidth = false;
 			fireTableRowsUpdated(row, row);
 		}
 	}
@@ -350,8 +351,12 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		@Override
 		public void adjustColumnsWidth(JTable table) {
 			try {
+				
 				if (visibleLabels.size() != getColumnCount())
 					return;
+				
+				//DEBUG.printStackTrace();
+				
 				calculateCellSize();
 				// String[] row = md.getRowValues(data.ids[0]);
 				// table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);

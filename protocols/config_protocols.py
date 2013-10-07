@@ -46,6 +46,7 @@ protocols = {
         'emx_import_particles': ('Import particles', 'Images/EmxImported'),
         'emx_export_micrographs': ('Export micrographs', 'Micrographs/EmxExported'),
         'emx_export_particles': ('Export particles', 'Images/EmxExported'),
+        'xray_import': ('Import tomograms', 'Images/XrayImported')
         }
 
 #--------------------------------------------------------------------------------
@@ -63,7 +64,7 @@ sections = [
     ['Model Refinement', 'projmatch', 'ml3d', ['relion','relion_classify','relion_refine']],
     ['Volumes', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask', 'preprocess_volume', 'resolution3D', 'align_volume', 'helical_params']]),
 ('Other',
- [['Extra', 'custom',['Virus','subtraction'],['Tomography','mltomo', 'cltomo'],['Tools','image_operate','metadata_utilities','metadata_split'],
+ [['Extra', 'custom',['Virus','subtraction'],['Tomography','mltomo', 'cltomo'],['Tools','image_operate','metadata_utilities','metadata_split'], ['X-ray', 'xray_import'],
    ['EMX', 'emx_import_micrographs', 'emx_import_particles', 'emx_export_micrographs', 'emx_export_particles']]])
 ]
 

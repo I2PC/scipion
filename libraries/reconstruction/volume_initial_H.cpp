@@ -149,7 +149,7 @@ void alignSingleImage(size_t nImg, ProgVolumeInitialH &prm, MetaData &mdReconstr
 		if (getThis)
 		{
 			bool flip;
-			double scale, psi, shiftX, shiftY, anglePsi;
+			double scale, shiftX, shiftY, anglePsi;
 			transformationMatrix2Parameters2D(allM[nGallery],flip,scale,shiftX,shiftY,anglePsi);
 			anglePsi*=-1;
 			double weight=A1D_ELEM(scaledCorrs,nGallery)*correctionFactor;
@@ -228,8 +228,8 @@ void threadAlignSubset(ThreadArgument &thArg)
 
 	results.sumCorr=results.sumImprovement=0.0;
 	results.mdReconstruction.clear();
-	size_t nMax=prm.mdInp.size();
-	for (size_t nImg=0; nImg<nMax; ++nImg)
+	int nMax=(int)prm.mdInp.size();
+	for (int nImg=0; nImg<nMax; ++nImg)
 	{
 		if ((nImg+1)%prm.Nthr==thArg.thread_id)
 		{
@@ -305,13 +305,13 @@ void ProgVolumeInitialH::filterByCorrelation()
 	std::sort(correlations.begin(),correlations.end());
 	size_t skip=(size_t)floor(correlations.size()*(rejection/100.0));
 	double minCorr=correlations[skip];
-	double maxCorr=correlations[correlations.size()-skip/4-1];
+	//double maxCorr=correlations[correlations.size()-skip/4-1];
 
 	std::vector<double> weights;
 	mdAux.getColumnValues(MDL_WEIGHT,weights);
 	std::sort(weights.begin(),weights.end());
 	double minWeight=weights[skip];
-	double maxWeight=weights[weights.size()-skip/4-1];
+	//double maxWeight=weights[weights.size()-skip/4-1];
 
 	FOR_ALL_OBJECTS_IN_METADATA(mdAux)
 	{

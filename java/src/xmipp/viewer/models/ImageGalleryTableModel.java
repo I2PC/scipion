@@ -80,6 +80,8 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 
 	public GalleryData data; // information about the gallery
 
+	public boolean adjustWidth = true; 
+	
 	// Initiazation function
 	public ImageGalleryTableModel(GalleryData data) throws Exception {
 		this.data = data;
@@ -456,6 +458,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		int i = getIndex(row, col);
 		if (isValidIndex(i)) {
 			data.selection[i] = !data.selection[i];
+			adjustWidth = false;
 			fireTableCellUpdated(row, col);
 		}
 	}

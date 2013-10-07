@@ -58,11 +58,16 @@ class ProtInitVolumeBase(XmippProtocol):
         freq = self.Ts/self.MaxFreq
         self.Ts = K*self.Ts
 
-        self.insertRunJobStep("xmipp_transform_filter","-i %s -o %s.stk --save_metadata_stack %s.xmd --fourier low_pass %f"
-                                                %(self.Classes,fnOutputReducedClassNoExt,fnOutputReducedClassNoExt,freq))
-        if self.Xdim!=self.Xdim2:
-            self.insertRunJobStep("xmipp_image_resize","-i %s.stk --dim %d %d" %(fnOutputReducedClassNoExt,self.Xdim2,self.Xdim2))
-            self.insertRunJobStep("rm", fnOutputReducedClassNoExt+".stk_tmp.xmd",NumberOfMpi=1)
+
+        self.insertRunJobStep("xmipp_transform_filter","-i %s -o %s --fourier low_pass %f --oroot %s"
+                                                %(self.Classes,fnOutputReducedClass,freq,fnOutputReducedClassNoExt))
+        self.insertRunJobStep("xmipp_image_resize","-i %s --dim %d %d -o %s" %(fnOutputReducedClass,self.Xdim2,self.Xdim2,fnOutputReducedClassNoExt))
+
+        #self.insertRunJobStep("xmipp_transform_filter","-i %s -o %s.stk --save_metadata_stack %s.xmd --fourier low_pass %f"
+        #                                        %(self.Classes,fnOutputReducedClassNoExt,fnOutputReducedClassNoExt,freq))
+        #if self.Xdim!=self.Xdim2:
+        #    self.insertRunJobStep("xmipp_image_resize","-i %s.stk --dim %d %d" %(fnOutputReducedClassNoExt,self.Xdim2,self.Xdim2))
+        #    self.insertRunJobStep("rm", fnOutputReducedClassNoExt+".stk_tmp.xmd",NumberOfMpi=1)
         
     def summary(self):
         message=[]
