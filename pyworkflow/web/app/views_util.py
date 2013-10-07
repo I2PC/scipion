@@ -121,6 +121,8 @@ def get_image(request):
     from pyworkflow.gui import getImage, getPILImage
 #    print "request.session['projectPath']2", request.session['projectPath']
     
+    print "gettingimage"
+    
     imageNo = None
     imagePath = request.GET.get('image')
     imageDim = request.GET.get('dim', 150)
