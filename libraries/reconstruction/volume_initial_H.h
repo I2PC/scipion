@@ -64,6 +64,9 @@ public:
     /** Filenames */
     FileName fnIn, fnRoot, fnSym, fnInit;
 
+    /** First temperature */
+    double T0;
+
     /** Total number of iterations */
     int NiterRandom, NiterGreedy;
 
@@ -78,6 +81,7 @@ public:
 
     /** Keep intermediate volumes */
     bool keepIntermediateVolumes;
+
 public: // Internal members
     MetaData mdIn, mdReconstruction;
 

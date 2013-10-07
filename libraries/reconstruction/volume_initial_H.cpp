@@ -34,12 +34,13 @@ void ProgVolumeInitialH::defineParams()
     addParamsLine("   -i <md_file>                : Metadata file with input projections");
     addParamsLine("  [--oroot <volume_file=\"rec_random\">]  : Filename for output rootname");
     addParamsLine("  [--sym <symfile=c1>]         : Enforce symmetry in projections");
-    addParamsLine("  [--randomIter <N=7>]         : Number of iterations with random assignment");
-    addParamsLine("  [--greedyIter <N=3>]         : Number of iterations with greedy assignment");
+    addParamsLine("  [--randomIter <N=15>]        : Number of iterations with random assignment");
+    addParamsLine("  [--greedyIter <N=0>]         : Number of iterations with greedy assignment");
     addParamsLine("  [--rejection <p=25>]         : Percentage of images to reject for reconstruction");
     addParamsLine("  [--initial <file=\"\">]      : Initial volume if available");
     addParamsLine("  [--keepIntermediateVolumes]  : Keep the volume of each iteration");
     addParamsLine("  [--dontApplyPositive]        : Do not apply positive constraint in the random iterations");
+    addParamsLine("  [--T0 <T=0.1>]               : Initial temperature for simulated annealing");
     addParamsLine("  [--thr <n=1>]                : Number of threads");
 }
 
@@ -49,6 +50,7 @@ void ProgVolumeInitialH::readParams()
     fnIn = getParam("-i");
     fnRoot = getParam("--oroot");
     fnSym = getParam("--sym");
+    T0 = getDoubleParam("--T0");
     NiterRandom = getIntParam("--randomIter");
     NiterGreedy = getIntParam("--greedyIter");
     rejection = getDoubleParam("--rejection");
@@ -65,6 +67,7 @@ void ProgVolumeInitialH::show()
     {
         std::cout << "Input metadata              : "  << fnIn        << std::endl;
         std::cout << "Output rootname             : "  << fnRoot      << std::endl;
+        std::cout << "T0                          : "  << T0          << std::endl;
         std::cout << "Number of random iterations : "  << NiterRandom << std::endl;
         std::cout << "Number of greedy iterations : "  << NiterGreedy << std::endl;
         std::cout << "Rejection percentage        : "  << rejection   << std::endl;
@@ -131,9 +134,18 @@ void alignSingleImage(size_t nImg, ProgVolumeInitialH &prm, MetaData &mdReconstr
 	bool bestFlip;
 	bestCorr=-1;
 	double correctionFactor=1;
+	double currentT=prm.T0*(1.0-((double)prm.iter)/prm.NiterRandom);
+	double icurrentT=1.0/currentT;
 	for (size_t nGallery=0; nGallery<XSIZE(allCorrs); ++nGallery)
 	{
 		bool getThis=(A1D_ELEM(allCorrs,nGallery)>oldCorr) || (improvementCount==0 && A1D_ELEM(scaledCorrs,nGallery)>=0.98);
+		if (A1D_ELEM(allCorrs,nGallery)<oldCorr && !getThis && prm.iter<=prm.NiterRandom)
+		{
+			// Simulated annealing
+			double diff=oldCorr-A1D_ELEM(allCorrs,nGallery);
+			double p=rnd_unif();
+			getThis=(p<exp(-diff*icurrentT));
+		}
 		if (getThis)
 		{
 			bool flip;
