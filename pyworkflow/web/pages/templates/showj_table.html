@@ -78,6 +78,7 @@ var jsonTableLayoutConfiguration = {{tableLayoutConfiguration|safe }}
 console.log("json",jsonTableLayoutConfiguration)
 
 $(document).ready(function() {
+	
 	{% if dataset.getTable.hasEnabledColumn %}
 	initializeSelectionRowEvent() 
 	{% endif %}
@@ -289,7 +290,8 @@ function enableDisableRenderColumn(event, element){
 	var nTrs = oTable.fnGetNodes();
 	$('td:nth-child('+(iCol+1)+')', nTrs).each(function(){
 		if ($(element).hasClass("renderTableOn") && $(this).find("img").attr('src')== undefined){
-			$(this).find("img").attr("src",$(this).find("img").data('real_src'))
+			/* $(this).find("img").attr("src",$(this).find("img").data('real_src')) */
+			initializeImageLoad()
 		}
 		$(this).find("img").toggle()
 		$(this).find("span").toggle()
