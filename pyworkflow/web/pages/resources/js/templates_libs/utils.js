@@ -39,6 +39,8 @@ function customPopupHTML(html, widthValue, heightValue) {
 	id = day.getTime();
 	var popup = window.open('', id, 'height='+heightValue+',width='+widthValue);
 	popup.document.write(html);
+	popup.document.close();
+	
 }
 
 function closePopup() {
