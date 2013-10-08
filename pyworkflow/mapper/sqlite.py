@@ -361,9 +361,14 @@ class SqliteDb():
         
     def insertObject(self, name, classname, value, parent_id, label, comment):
         """Execute command to insert a new object. Return the inserted object id"""
-        self.executeCommand("INSERT INTO Objects (parent_id, name, classname, value, label, comment) VALUES (?, ?, ?, ?, ?, ?)",
-                            (parent_id, name, classname, value, label, comment))
-        return self.cursor.lastrowid
+        try:
+            self.executeCommand("INSERT INTO Objects (parent_id, name, classname, value, label, comment) VALUES (?, ?, ?, ?, ?, ?)",
+                                (parent_id, name, classname, value, label, comment))
+            return self.cursor.lastrowid
+        except Exception, ex:
+            print "insertObject: ERROR "
+            print "INSERT INTO Objects (parent_id, name, classname, value, label, comment) VALUES (?, ?, ?, ?, ?, ?)", (parent_id, name, classname, value, label, comment)
+            raise ex
         
     def insertRelation(self, relName, parent_id, object_parent_id, object_child_id, **args):
         """Execute command to insert a new object. Return the inserted object id"""

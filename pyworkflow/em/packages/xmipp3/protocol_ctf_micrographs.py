@@ -109,7 +109,8 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
             ctfModel = readCTFModel(ctfparam)
             mic.setCTF(ctfModel)
             micSet.append(mic)
-            ctfSet.append(ctfModel)
+            ctfModel2 = readCTFModel(ctfparam)
+            ctfSet.append(ctfModel2)
  
         #Copy attributes from input to output micrographs
         micSet.copyInfo(self.inputMics)
@@ -135,5 +136,5 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         self._defineOutputs(outputMicrographs=micSet)
         self._defineOutputs(outputCTF=ctfSet)
         self._defineDataSource(self.inputMics, micSet)
-        self._defineRelation("CTF", ctfSet, self.inputMics)
+        self._defineRelation(RELATION_CTF, ctfSet, self.inputMics)
         

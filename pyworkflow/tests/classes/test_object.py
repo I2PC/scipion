@@ -228,7 +228,6 @@ class TestPyworkflow(unittest.TestCase):
         relations = mapper2.getRelations(creator)
         for row in relations:
             print row
-            row['object_child_id'] = 1
         
     def test_XMLMapper(self):
         fn = self.getTmpPath("basic.xml")
