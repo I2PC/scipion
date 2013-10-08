@@ -370,7 +370,17 @@ class SubclassesTreeProvider(TreeProvider):
     def getObjectInfo(self, obj):
         return {'key': '%s.%s' % (obj.getName(), obj.strId()),
                 'values': (obj.strId(), obj.getClassName())}
-        
+
+class RelationsTreeProvider(SubclassesTreeProvider):
+    """Will implement the methods to provide the object info
+    of subclasses objects(of className) found by mapper"""
+    def __init__(self, protocol, relationName, relationParent):
+        parentObject = protocol.getAttributeValue(relationParent)
+        if parentObject is not None:        
+            self.getObjects = lambda: protocol.mapper.getRelationChilds(relationName, parentObject)
+        else:
+            self.getObjects = lambda: []
+               
         
 class ListDialog(Dialog):
     """Dialog to select an element from a list.

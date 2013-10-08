@@ -100,6 +100,9 @@ class XmippDefExtractParticles(Form):
         self.addParam('doFlip', BooleanParam, default=True, important=True,
                       label='Phase flipping (Recommended)', 
                       help='Use the information from the CTF to compensate for phase reversals.')
+        self.addParam('ctfRelations', RelationParam, condition='doFlip', 
+                      label='CTF relations', relationName=RELATION_CTF, relationParent='getInputMicrographs', 
+                      help='Choose the CTF.\n')     
         self.addParam('doInvert', BooleanParam, default=False, important=True,
                       label='Invert contrast', 
                       help='Invert the contrast if your particles are black over a white background.')
@@ -135,6 +138,12 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     NONE = 0
     MAXZSCORE = 1
     PERCENTAGE = 2
+        
+    def getInputMicrographs(self):
+        """ Return the micrographs associated to the SetOfCoordinates. """
+        if self.inputCoordinates.get() is None:
+            return None
+        return self.inputCoordinates.get().getMicrographs()
         
     def _defineSteps(self):
         """for each micrograph insert the steps to preprocess it

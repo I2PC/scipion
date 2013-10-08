@@ -36,10 +36,6 @@ from pyworkflow.utils.utils import getUniqueItems
 from pyworkflow.utils.path import exists
 import xmipp
 
-# This is the name for track which data is the source of others
-RELATION_DATASOURCE = 'relation_datasource'
-
-
 
 class EMObject(OrderedObject):
     """Base object for all EM classes"""
