@@ -579,8 +579,11 @@ class Protocol(Step):
         
     def getRelations(self):
         """ Return the relations created by this protocol. """
-        return self.mapper.getRelations(self)        
+        return self.mapper.getRelations(self)  
     
+    def _defineRelation(self, relName, parentObj, childObj):
+        """ Insert a new relation in the mapper using self as creator. """
+        self.mapper.insertRelation(relName, self, parentObj, childObj)
         
     def makePathsAndClean(self):
         """ Create the necessary path or clean
