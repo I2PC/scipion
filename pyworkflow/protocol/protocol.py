@@ -571,6 +571,9 @@ class Protocol(Step):
             rParent = r['object_parent_id']
             rChild = r['object_child_id']
             
+            if rParent in copyDict:
+                rParent = copyDict.get(rParent).getObjId()
+                            
             if rChild in copyDict:
                 rChild = copyDict.get(rChild).getObjId()
             
