@@ -354,8 +354,8 @@ class SqliteDb():
                       value     TEXT DEFAULT NULL,  -- relation value
                       label     TEXT DEFAULT NULL,  -- relation label, text used for display
                       comment   TEXT DEFAULT NULL,  -- relation comment, text used for annotations
-                      object_parent_id  INTEGER REFERENCES Objects(id),
-                      object_child_id  INTEGER REFERENCES Objects(id) 
+                      object_parent_id  INTEGER REFERENCES Objects(id) ON DELETE CASCADE,
+                      object_child_id  INTEGER REFERENCES Objects(id) ON DELETE CASCADE 
                       )""")
         self.commit()
         

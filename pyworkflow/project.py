@@ -167,6 +167,7 @@ class Project(object):
             #join(protocol.getHostConfig().getHostPath(), protocol.getDbPath())
             prot2 = getProtocolFromDb(dbPath, protocol.getObjId(), globals())
             # Copy is only working for db restored objects
+            protocol.setMapper(self.mapper)
             protocol.copy(prot2)
             #protocol.mapper.copyRelations(prot2.mapper.getRelations(prot2))
             # Restore jobId
