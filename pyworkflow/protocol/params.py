@@ -369,6 +369,8 @@ class RelationParam(Param):
         # This will be the parent param
         
         self.relationParent = String(args.get('relationParent'))
+        
+        self.relationReverse = Boolean(args.get('relationReverse', False))
 
 # ------------------------------------------------------------------------
 #         Validators

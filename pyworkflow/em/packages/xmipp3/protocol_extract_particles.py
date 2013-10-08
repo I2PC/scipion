@@ -102,7 +102,7 @@ class XmippDefExtractParticles(Form):
                       help='Use the information from the CTF to compensate for phase reversals.')
         self.addParam('ctfRelations', RelationParam, condition='doFlip', 
                       label='CTF relations', relationName=RELATION_CTF, relationParent='getInputMicrographs', 
-                      help='Choose the CTF.\n')     
+                      relationReverse=True, help='Choose the CTF.\n')     
         self.addParam('doInvert', BooleanParam, default=False, important=True,
                       label='Invert contrast', 
                       help='Invert the contrast if your particles are black over a white background.')

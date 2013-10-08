@@ -319,7 +319,7 @@ class ParamWidget():
         """Select a relation from DB
         This function is suppose to be used only for RelationParam"""
         from pyworkflow.gui.dialog import RelationsTreeProvider, ListDialog
-        tp = RelationsTreeProvider(self.window.protocol, self.param.relationName.get(), self.param.relationParent.get())
+        tp = RelationsTreeProvider(self.window.protocol, self.param)
         dlg = ListDialog(self.parent, "Select object", tp)
         if dlg.value is not None:
             self.set(dlg.value)
