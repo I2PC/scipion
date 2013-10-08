@@ -49,34 +49,27 @@ class ProtInitVolRANSAC(ProtInitVolumeBase):
         self.insertStep("getBestVolumes",WorkingDir=self.WorkingDir, NRansac=self.NRansac, NumVolumes=self.NumVolumes, UseAll=self.UseAll)        
         
         # Refine the best volumes
-        if (1):
-            for n in range(self.NumVolumes):
-                fnBase='proposedVolume%05d'%n
-                fnRoot=self.workingDirPath(fnBase)
-                parent_id=XmippProjectDb.FIRST_STEP
-                for it in range(self.NumIter):    
-                    parent_id = self.insertParallelStep('reconstruct',fnRoot=fnRoot,symmetryGroup=self.SymmetryGroup,maskRadius=self.Xdim2/2,
-                                                        parent_step_id=parent_id)
-                    parent_id = self.insertParallelStep('projMatch',WorkingDir=self.WorkingDir,fnBase=fnBase,AngularSampling=self.AngularSampling,
-                                                        SymmetryGroup=self.SymmetryGroup, Xdim=self.Xdim2, parent_step_id=parent_id)
-                self.insertParallelRunJobStep("xmipp_image_resize","-i %s.vol -o %s.vol --dim %d %d" 
-                                              %(fnRoot,fnRoot,self.Xdim,self.Xdim),parent_step_id=parent_id)
-        else:
-            for n in range(self.NumVolumes):
-                fnBase='proposedVolume%05d'%n
-                fnRoot=self.workingDirPath(fnBase)
-                
-                tmpDir= os.path.join(self.WorkingDir,fnBase)
-                tmpFile=self.workingDirPath(fnBase+"proposedVolume")
-                
-                parent_id =  self.insertParallelRunJobStep("cp","%s.vol %s.spi"
-                                                           %(fnRoot,tmpFile),parent_step_id=parent_id)
-                parent_id =  self.insertParallelRunJobStep("xmipp_image_convert","-i %s.xmd -o %s.spi" 
-                                                           %(fnRoot,tmpFile),parent_step_id=parent_id)
-                
-                parent_id =  self.insertParallelRunJobStep("simple_prime","stk=%s.spi box=%d smpd=%f vol1=%s.spi dynlp=yes oritab=rndoris.txt ring2=%d nthr=16 maxits=%d > OUTPUT &" 
-                                                          %(tmpFile,Xdim2,float(self.Ts),tmpFile,Xdim2/2,self.NumIter),parent_step_id=parent_id)
+        for n in range(self.NumVolumes):
+            fnBase='proposedVolume%05d'%n
+            fnRoot=self.workingDirPath(fnBase)
+            parent_id=XmippProjectDb.FIRST_STEP
 
+            # Simulated annealing
+            parent_id = self.insertParallelStep('reconstruct',fnRoot=fnRoot,symmetryGroup=self.SymmetryGroup,maskRadius=self.Xdim2/2,
+                                                parent_step_id=parent_id)
+            if self.UseSA:
+                parent_id = self.insertParallelRunJobStep("xmipp_volume_initial_simulated_annealing","-i %s.xmd --initial %s.vol --oroot %s_sa --sym %s --randomIter %d --rejection %f --dontApplyPositive"\
+                          %(fnRoot,fnRoot,fnRoot,self.SymmetryGroup,self.NIterRandom,self.Rejection),parent_step_id=parent_id)
+                parent_id = self.insertParallelStep('moveFile', source=fnRoot+"_sa.vol", dest=fnRoot+".vol",parent_step_id=parent_id)
+                parent_id = self.insertParallelStep('deleteFile', filename=fnRoot+"_sa.xmd",parent_step_id=parent_id)
+        
+            for it in range(self.NumIter):    
+                parent_id = self.insertParallelStep('reconstruct',fnRoot=fnRoot,symmetryGroup=self.SymmetryGroup,maskRadius=self.Xdim2/2,
+                                                    parent_step_id=parent_id)
+                parent_id = self.insertParallelStep('projMatch',WorkingDir=self.WorkingDir,fnBase=fnBase,AngularSampling=self.AngularSampling,
+                                                    SymmetryGroup=self.SymmetryGroup, Xdim=self.Xdim2, parent_step_id=parent_id)
+            self.insertParallelRunJobStep("xmipp_image_resize","-i %s.vol -o %s.vol --dim %d %d" 
+                                          %(fnRoot,fnRoot,self.Xdim,self.Xdim),parent_step_id=parent_id)
         
         # Score each of the final volumes
         self.insertStep("scoreFinalVolumes",WorkingDir=self.WorkingDir,NumVolumes=self.NumVolumes)
@@ -90,6 +83,8 @@ class ProtInitVolRANSAC(ProtInitVolumeBase):
     def summary(self):
         message=ProtInitVolumeBase.summary(self)
         message.append("RANSAC iterations: %d"%self.NRansac)
+        if self.UseSA:
+            message.append("Simulated annealing used")
         return message
     
     def visualize(self):
@@ -234,8 +229,9 @@ def ransacIteration(log,WorkingDir,n,SymmetryGroup,Xdim,Xdim2,NumGrids,NumSample
     
     # Simulated annealing
     if UseSA:
-        runJob(log,"xmipp_volume_initial_simulated_annealing","-i %s --initial %s --oroot %s_sa --sym %s --randomIter %d --rejection %f --dontApplyPositive"\
-                  %(fnRoot+".xmd",fnVol,fnRoot,SymmetryGroup,NIterRandom,Rejection))
+        smallIter=int(max(floor(NIterRandom/3.0),5));
+        runJob(log,"xmipp_volume_initial_simulated_annealing","-i %s --initial %s --oroot %s_sa --sym %s --randomIter %d --rejection %f --dontApplyPositive"
+                  %(fnRoot+".xmd",fnVol,fnRoot,SymmetryGroup,smallIter,Rejection))
         moveFile(log, fnRoot+"_sa.vol", fnVol)
         deleteFile(log, fnRoot+"_sa.xmd")
 
