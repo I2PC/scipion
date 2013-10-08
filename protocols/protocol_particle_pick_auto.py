@@ -29,6 +29,7 @@ class ProtParticlePickingAuto(XmippProtocol):
        
         self.inputFilename(*self.keysToImport)
         self.inputProperty('TiltPairs', 'Fast')
+        self.MicrographSource = getattr(self, 'MicrographSource', "Same as supervised")
         
         if self.MicrographSource == "Same as supervised":
             self.inputProperty('MicrographsMd')
