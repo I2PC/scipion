@@ -1068,7 +1068,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			public void stateChanged(javax.swing.event.ChangeEvent evt)
 			{
 				Integer zoom = (Integer) jsZoom.getValue();
-				if (zoom < 10 || gallery.getCellSize().getHeight() < 30)
+				if (gallery.getCellSize().getHeight() < 30)
 				{
 					jsZoom.setValue(gallery.data.zoom);//keep previous zoom
 					return;
@@ -1553,6 +1553,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemSelected(DISPLAY_APPLYGEO, data.useGeo);
 			setItemEnabled(DISPLAY_RENDERIMAGES, !galMode && data.hasRenderLabel());
 			setItemSelected(DISPLAY_RENDERIMAGES, data.globalRender);
+			setItemEnabled(DISPLAY_RENDERIMAGECOLUMN, galMode);
 			for (int i = 0; i < ImageGeneric.VIEWS.length; ++i)
 				setItemSelected(DISPLAY_RESLICE_VIEWS[i], (data.resliceView == ImageGeneric.VIEWS[i]));
 			setItemEnabled(DISPLAY_COLUMNS, !galMode);
