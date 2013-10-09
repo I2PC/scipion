@@ -360,6 +360,17 @@ class TupleParam(Param):
     """
     def __init__(self, **args):
         Param.__init__(self, **args)
+        
+class RelationParam(Param):
+    def __init__(self, **args):
+        Param.__init__(self, paramClass=Pointer, **args)
+        # This will be the name of the relation
+        self.relationName = String(args.get('relationName'))
+        # This will be the parent param
+        
+        self.relationParent = String(args.get('relationParent'))
+        
+        self.relationReverse = Boolean(args.get('relationReverse', False))
 
 # ------------------------------------------------------------------------
 #         Validators

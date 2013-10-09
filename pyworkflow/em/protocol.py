@@ -35,7 +35,7 @@ from pyworkflow.object import String, Float
 from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
 from constants import *
-from data import Micrograph, SetOfMicrographs, SetOfImages, Image, SetOfParticles, SetOfVolumes, Volume, SetOfCoordinates, SetOfClasses2D
+from data import * 
 from pyworkflow.utils.path import removeBaseExt, join, basename
 
 
@@ -47,31 +47,35 @@ class EMProtocol(Protocol):
     def __init__(self, **args):
         Protocol.__init__(self, **args)
         
+    def __createSet(self, SetClass, template, suffix):
+        """ Create a set and set the filename using the suffix. """
+        setObj = SetClass()
+        setObj.setFileName(self._getPath(template % suffix))
+        return setObj
+        
     def _createSetOfMicrographs(self, suffix=''):
-        micSet = SetOfMicrographs()
-        micSet.setFileName(self._getPath('micrographs%s.sqlite' % suffix)) 
-        return micSet
+        return self.__createSet(SetOfMicrographs, 'micrographs%s.sqlite', suffix)
 
     def _createSetOfCoordinates(self, suffix=''):
-        coordSet = SetOfCoordinates()
-        coordSet.setFileName(self._getPath('coordinates%s.sqlite' % suffix)) 
-        return coordSet
+        return self.__createSet(SetOfCoordinates, 'coordinates%s.sqlite', suffix)
     
     def _createSetOfParticles(self, suffix=''):
-        imgSet = SetOfParticles()
-        imgSet.setFileName(self._getPath('particles%s.sqlite' % suffix)) 
-        return imgSet
+        return self.__createSet(SetOfParticles, 'particles%s.sqlite', suffix)
 
     def _createSetOfClasses2D(self, suffix=''):
-        classes2DSet = SetOfClasses2D()
-        classes2DSet.setFileName(self._getPath('classes2D%s.sqlite' % suffix)) 
-        return classes2DSet
+        return self.__createSet(SetOfClasses2D, 'classes2D%s.sqlite', suffix)
 
     def _createSetOfVolumes(self, suffix=''):
-        volSet = SetOfVolumes()
-        volSet.setFileName(self._getPath('volumes%s.sqlite' % suffix)) 
-        return volSet
-
+        return self.__createSet(SetOfVolumes, 'volumes%s.sqlite', suffix)
+    
+    def _createSetOfCTF(self, suffix=''):
+        return self.__createSet(SetOfCTF, 'ctfs%s.sqlite', suffix)
+    
+    def _defineDataSource(self, srcObj, dstObj):
+        """ Add a DATASOURCE relation between srcObj and dstObj """
+        self.mapper.insertRelation(RELATION_DATASOURCE, self, srcObj, dstObj)
+        #self.mapper.commit()
+        
 
 class DefImportMicrographs(Form):
     """Create the definition of parameters for

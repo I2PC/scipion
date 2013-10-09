@@ -49,32 +49,12 @@ class Step(OrderedObject):
     
     def __init__(self, **args):
         OrderedObject.__init__(self, **args)
-        self._inputs = []
-        self._outputs = CsvList()
         self._prerequisites = CsvList() # which steps needs to be done first
         self.status = String()
         self.initTime = String()
         self.endTime = String()
         self.error = String()
         self.isInteractive = Boolean(False)
-        
-    def _storeAttributes(self, attrList, attrDict):
-        """ Store all attributes in attrDict as 
-        attributes of self, also store the key in attrList.
-        """
-        for key, value in attrDict.iteritems():
-            attrList.append(key)
-            setattr(self, key, value)
-        
-    def _defineInputs(self, **args):
-        """ This function should be used to define
-        those attributes considered as Input""" 
-        self._storeAttributes(self._inputs, args)
-        
-    def _defineOutputs(self, **args):
-        """ This function should be used to specify
-        expected outputs""" 
-        self._storeAttributes(self._outputs, args)
            
     def _preconditions(self):
         """ Check if the necessary conditions to
@@ -224,6 +204,8 @@ class Protocol(Step):
         self._steps = List() # List of steps that will be executed
         self.workingDir = String(args.get('workingDir', '.')) # All generated filePaths should be inside workingDir
         self.mapper = args.get('mapper', None)
+        self._inputs = []
+        self._outputs = CsvList()
         self._createVarsFromDefinition(**args)
         
         # For non-parallel protocols mpi=1 and threads=1
@@ -260,6 +242,27 @@ class Protocol(Step):
         # Comment
         self.comment = Integer(args.get('comment'))
         
+    def _storeAttributes(self, attrList, attrDict):
+        """ Store all attributes in attrDict as 
+        attributes of self, also store the key in attrList.
+        """
+        for key, value in attrDict.iteritems():
+            attrList.append(key)
+            setattr(self, key, value)
+        
+    def _defineInputs(self, **args):
+        """ This function should be used to define
+        those attributes considered as Input""" 
+        self._storeAttributes(self._inputs, args)
+        
+    def _defineOutputs(self, **args):
+        """ This function should be used to specify
+        expected outputs""" 
+        self._storeAttributes(self._outputs, args)
+        
+        for k, v in args.iteritems():
+            self._insertChild(k, v)
+                
     @staticmethod
     def hasDefinition(cls):
         """ Check if the protocol has some definition.
@@ -553,6 +556,37 @@ class Protocol(Step):
             
         self._outputs.clear()
         self.mapper.store(self._outputs)
+        
+    def __copyRelations(self, other):
+        """ This will copy relations from protocol other to self """
+    
+    def copy(self, other):
+        copyDict = {}
+        self._copy(other, copyDict)
+        self._store()
+        
+        for r in other.getRelations():
+            rName = r['name']
+            rCreator = r['parent_id']
+            rParent = r['object_parent_id']
+            rChild = r['object_child_id']
+            
+            if rParent in copyDict:
+                rParent = copyDict.get(rParent).getObjId()
+                            
+            if rChild in copyDict:
+                rChild = copyDict.get(rChild).getObjId()
+            
+            self.mapper.insertRelationData(rName, rCreator, rParent, rChild)
+        
+        
+    def getRelations(self):
+        """ Return the relations created by this protocol. """
+        return self.mapper.getRelations(self)  
+    
+    def _defineRelation(self, relName, parentObj, childObj):
+        """ Insert a new relation in the mapper using self as creator. """
+        self.mapper.insertRelation(relName, self, parentObj, childObj)
         
     def makePathsAndClean(self):
         """ Create the necessary path or clean

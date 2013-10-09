@@ -179,6 +179,8 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
 
         micSet.write()
         self._defineOutputs(outputMicrographs=micSet)
+        self._defineDataSource(inputMics, micSet)
+        
 
     def _summary(self):
         summary = []

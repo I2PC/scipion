@@ -283,11 +283,14 @@ class ParamWidget():
             else:
                 raise Exception("Invalid display value '%s' for EnumParam" % str(param.display))
         
-        elif t is PointerParam:
+        elif t is PointerParam or t is RelationParam:
             var = PointerVar()
             entry = tk.Entry(content, width=25, textvariable=var.tkVar)
             entry.grid(row=0, column=0, sticky='w')
-            self._addButton("Select", 'zoom.png', self._browseObject)
+            btnFunc = self._browseObject
+            if t is RelationParam:
+                btnFunc = self._browseRelation
+            self._addButton("Select", 'zoom.png', btnFunc)
         else:
             #v = self.setVarValue(paramName)
             var = tk.StringVar()
@@ -308,6 +311,15 @@ class ParamWidget():
         This function is suppose to be used only for PointerParam"""
         from pyworkflow.gui.dialog import SubclassesTreeProvider, ListDialog
         tp = SubclassesTreeProvider(self.window.protocol.mapper, self.param)
+        dlg = ListDialog(self.parent, "Select object", tp)
+        if dlg.value is not None:
+            self.set(dlg.value)
+            
+    def _browseRelation(self, e=None):
+        """Select a relation from DB
+        This function is suppose to be used only for RelationParam"""
+        from pyworkflow.gui.dialog import RelationsTreeProvider, ListDialog
+        tp = RelationsTreeProvider(self.window.protocol, self.param)
         dlg = ListDialog(self.parent, "Select object", tp)
         if dlg.value is not None:
             self.set(dlg.value)

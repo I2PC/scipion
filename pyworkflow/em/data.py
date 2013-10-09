@@ -62,77 +62,15 @@ class Microscope(EMObject):
         self.magnification.set(other.magnification.get())
         self.voltage.set(other.voltage.get())
         self.sphericalAberration.set(other.sphericalAberration.get())
-        
-#TODO: remove this class, since it is not necessary    
-class ImageLocation(EMObject):
-    """ This class represents the unique location of an image.
-    If the image is an stack, the location composed by index and filename.
-    Otherwise, only the filename of the image."""
     
-    def __init__(self, index=NO_INDEX, filename=None):
-        """ Two ways of build the location:
-        1) From index and filename
-        2) Parsing from the string representation of the location.
-        """
-        EMObject.__init__(self)
-        self._index = Integer(index)
-        self._filename = String(filename)
-        
-    def getIndex(self):
-        return self._index.get()
-    
-    def setIndex(self, index):
-        self._index.set(index)
-    
-    def getFileName(self):
-        return self._filename.get()
-    
-    def setFileName(self, filename):
-        self._filename.set(filename)
-        
-    def isStack(self):
-        return self.getIndex() != NO_INDEX
-    
-    def __str__(self):
-        """ This should be implemented in subclasses """
-        return "%d %s" % (self.getIndex(), self.getFileName())
-    
-    def parse(self, locStr):
-        """ This method should parse index and filename
-        from the string representation of the ImageLocation.
-        It should be the opposite of __str__
-        """
-        pass
-    
-    def copyInfo(self, other):
-        self.copyAttributes(other, '_index', '_filename')
 
-
-class CTFModel(EMObject):
-    """ Represents a generic CTF model. """
+# TODO: Move this class and Set to a separated base module
+class Item(Object):
+    """ This class should be subclasses to be used as elements of Set.
+    """
     def __init__(self, **args):
-        EMObject.__init__(self, **args)
-        self.defocusU = Float()
-        self.defocusV = Float()
-        self.defocusAngle = Float()
-        self.psdFile = String()
-        
-    def copyInfo(self, other):
-        self.copyAttributes(other, 'defocusU', 'defocusV',
-                            'defocusAngle', 'psdFile')
-    
-
-class Image(EMObject):
-    """Represents an EM Image object"""
-    def __init__(self, **args):
-        EMObject.__init__(self, **args)
-        #TODO: replace this id with objId
+        Object.__init__(self, **args)
         self._id =  Integer()
-        # Image location is composed by an index and a filename
-        self._index = Integer(0)
-        self._filename = String()
-        self._samplingRate = Float()
-        self._ctfModel = None
         
     #TODO: replace this id with objId
     def getId(self):
@@ -144,6 +82,34 @@ class Image(EMObject):
         
     def hasId(self):
         return self._id.hasValue()
+        
+
+class CTFModel(EMObject, Item):
+    """ Represents a generic CTF model. """
+    def __init__(self, **args):
+        EMObject.__init__(self, **args)
+        Item.__init__(self, **args)
+        self.defocusU = Float()
+        self.defocusV = Float()
+        self.defocusAngle = Float()
+        self.psdFile = String()
+        
+    def copyInfo(self, other):
+        self.copyAttributes(other, 'defocusU', 'defocusV',
+                            'defocusAngle', 'psdFile')
+
+
+class Image(EMObject, Item):
+    """Represents an EM Image object"""
+    def __init__(self, **args):
+        EMObject.__init__(self, **args)
+        Item.__init__(self, **args)
+        #TODO: replace this id with objId
+        # Image location is composed by an index and a filename
+        self._index = Integer(0)
+        self._filename = String()
+        self._samplingRate = Float()
+        self._ctfModel = None
         
     def getSamplingRate(self):
         """ Return image sampling rate. (A/pix) """
@@ -277,7 +243,6 @@ class Set(EMObject):
 class SetOfImages(Set):
     """ Represents a set of Images """
     def __init__(self, **args):
-        # Use the object value to store the filename
         Set.__init__(self, **args)
         self._samplingRate = Float()        
         self._hasCtf = Boolean(args.get('ctf', False))
@@ -437,29 +402,23 @@ class SetOfVolumes(SetOfImages):
     def __init__(self, **args):
         SetOfImages.__init__(self, **args)
         
+        
+class SetOfCTF(Set):
+    """ Contains a set of CTF models estimated for a set of images."""
+    def __init__(self, **args):
+        Set.__init__(self, **args)      
+        
 
-class Coordinate(EMObject):
+class Coordinate(EMObject, Item):
     """This class holds the (x,y) position and other information
     associated with a coordinate"""
     def __init__(self, **args):
         EMObject.__init__(self, **args)
+        Item.__init__(self, **args)
         self._micrographPointer = Pointer(objDoStore=False)
         self._x = Integer()
         self._y = Integer()
         self._micId = Integer()
-        #TODO: replace this id with objId
-        self._id =  Integer()
-        
-    #TODO: replace this id with objId
-    def getId(self):
-        return self._id.get()
-        
-    def setId(self, imgId):
-        """ This id identifies the element inside a set """
-        self._id.set(imgId)
-        
-    def hasId(self):
-        return self._id.hasValue()
         
     def getX(self):
         return self._x.get()

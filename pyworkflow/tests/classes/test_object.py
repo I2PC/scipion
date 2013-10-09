@@ -142,12 +142,14 @@ class TestPyworkflow(unittest.TestCase):
         
     def test_SqliteMapper(self):
         fn = self.getTmpPath("basic.sqlite")
-        c = self.createComplex()
         mapper = SqliteMapper(fn)
+        # Insert a Complex
+        c = self.createComplex()
         mapper.insert(c)
-        cid = c.getObjId()
+        # Insert an Integer
         i = Integer(1)
         mapper.insert(i)
+        # Insert two Boolean
         b = Boolean(False)
         b2 = Boolean(True)
         mapper.insert(b)
@@ -156,13 +158,24 @@ class TestPyworkflow(unittest.TestCase):
         p = Pointer()
         p.set(c)
         mapper.insert(p)
-        #write file
-        mapper.commit()
         
+        
+        # Store list
         strList = ['1', '2', '3']
         csv = CsvList()
         csv += strList
         mapper.insert(csv)
+
+        # Test to add relations
+        relName = 'testRelation'
+        creator = c
+        mapper.insertRelation(relName, creator, i, b)
+        mapper.insertRelation(relName, creator, i, b2)
+        
+        mapper.insertRelation(relName, creator, b, p)
+        mapper.insertRelation(relName, creator, b2, p)        
+        
+        # Save changes to file
         mapper.commit()
 
         # Reading test
@@ -185,19 +198,18 @@ class TestPyworkflow(unittest.TestCase):
         self.assertTrue(list.__eq__(csv2, strList))
         
         # Update a CsvList
-        lc = ListContainer()
-        mapper.store(lc)
-        mapper.commit()
-        
-        lc.csv.append('4')
-        lc.csv.append('3')
-        mapper.store(lc)
-        mapper.commit()
-        
-        mapper3 = SqliteMapper(fn, globals())
-        lc3 = mapper3.selectByClass('ListContainer')[0]
-        print 'csv3: ', lc3.csv
-        
+#        lc = ListContainer()
+#        mapper.store(lc)
+#        mapper.commit()
+#        
+#        lc.csv.append('4')
+#        lc.csv.append('3')
+#        mapper.store(lc)
+#        mapper.commit()
+#        
+#        mapper3 = SqliteMapper(fn, globals())
+#        lc3 = mapper3.selectByClass('ListContainer')[0]
+#        print 'csv3: ', lc3.csv
         
         # Iterate over all objects
         allObj = mapper2.selectAll()
@@ -205,7 +217,17 @@ class TestPyworkflow(unittest.TestCase):
         
         for a1, a2 in zip(allObj, iterAllObj):
             self.assertEqual(a1, a2)
+            
+        # Test relations
+        childs = mapper2.getRelationChilds(relName, i)
+        parents = mapper2.getRelationParents(relName, p)
+        # In this case both childs and parent should be the same
+        for c, p in zip(childs, parents):
+            self.assertEqual(c, p, "Childs of object i, should be the parents of object p")
 
+        relations = mapper2.getRelations(creator)
+        for row in relations:
+            print row
         
     def test_XMLMapper(self):
         fn = self.getTmpPath("basic.xml")

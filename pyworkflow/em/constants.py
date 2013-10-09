@@ -36,4 +36,8 @@ NO_INDEX = 0  # This is the index value for single images
 SAMPLING_FROM_IMAGE = 0
 SAMPLING_FROM_SCANNER = 1
 
+# This is the name for track which data is the source of others
+RELATION_DATASOURCE = 'relation_datasource'
+RELATION_CTF = 'relation_ctf'
+
     
