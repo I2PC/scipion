@@ -8,6 +8,14 @@ body{
 	font-size: 0.75em;
 }
 
+#toolbar,#treeTool,#listTool{
+	margin: 0em 1em 1em 1em;
+}
+
+#treeTool,#listTool{
+/* 	margin-bottom: 1em;	 */
+}
+
 .protFieldsetTree {
 	height: 95%;
 	width: 90%;

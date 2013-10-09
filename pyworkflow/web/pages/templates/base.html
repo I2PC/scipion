@@ -16,10 +16,6 @@
 <script type="text/javascript" src="/static/js/jquery/jquery.jlayout.js"></script>
 <script>
 	jQuery(function($) {
-		// Just call the inner layout once to initialize it. This
-		// must happen before the outer layout is initialized. It
-		// will be automatically resized when the outer layout is
-		// resized.
 		$('.layout-inner').layout();
 	
 		var outerContainer = $('.layout-outer');
@@ -27,18 +23,30 @@
 		function layout() {
 			outerContainer.layout({resize: false});
 		}
+		
+// 		function layout() {
+// 			outerContainer.layout({
+// 				type: 'grid',
+// 			    columns: 2,
+// 			    rows: 2,
+// 			    items: [
+// 			        $('#component-1'),
+// 			        $('#component-2'),
+// 			        $('#component-3'),
+// 			        $('#component-4')
+// 			    ]
+// 			});
+// 		}
+		
 		layout();
 	
 		$(window).resize(layout);
-	
-		// This selector is changed to only select the west and east
-		// components of the outer layout.
-	
+
 		$('.north').resizable({
 			handles: 's',
 			stop: layout
 		});
-	
+		
 		$('.south').resizable({
 			handles: 's',
 			stop: layout
@@ -67,8 +75,8 @@
 </head>
 
 <body>
-	<div data-layout='{"type": "border", "hgap": 3, "vgap": 3}' class="layout-outer" id="wrapper">
-		<div data-layout='{"type": "border", "hgap": 3, "vgap": 3}' class="center layout-inner" id="wrapperContent">
+	<div data-layout='{"type": "border"}' class="layout-outer" id="wrapper">
+		<div data-layout='{"type": "border"}' class="center layout-inner" id="wrapperContent">
 			<div class="north" id="frameTop">
 				{% block content %}
 				{%endblock %}
