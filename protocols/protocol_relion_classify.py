@@ -13,11 +13,13 @@ from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
 from xmipp import *
 from xmipp import MetaDataInfo
-from protlib_utils import runShowJ, getListFromVector, getListFromRangeString, runJob, runChimera, which
+from protlib_utils import runShowJ, getListFromVector, getListFromRangeString, \
+                          runJob, runChimera, which, runChimeraClient
 from protlib_parser import ProtocolParser
 from protlib_xmipp import redStr, cyanStr
 from protlib_gui_ext import showWarning, showTable
-from protlib_filesystem import xmippExists, findAcquisitionInfo, moveFile, replaceBasenameExt
+from protlib_filesystem import xmippExists, findAcquisitionInfo, moveFile, \
+                               replaceBasenameExt
 from protocol_ml2d import lastIteration
 from protlib_filesystem import createLink
 from protlib_import import exportReliontoMetadataFile
@@ -239,7 +241,7 @@ class ProtRelionClassifier(XmippProtocol):
             myDict[v+'Re']=extraIter + v +'.star'
             myDict[v+'Xm']=extraIter + v +'.xmd'
         myDict['volume']=extraIter + "class%(ref3d)03d.spi"
-        myDict['volumeMRC']=extraIter + "class%(ref3d)03d.mrc"
+        myDict['volumeMRC']=extraIter + "class%(ref3d)03d.mrc:mrc"
         
         return myDict
     def visualize(self):
@@ -325,15 +327,15 @@ class ProtRelionClassifier(XmippProtocol):
                               , "images@" + self.workingDirPath("images.xmd")
                               , "volumes@" + self.workingDirPath("volumes.xmd")
                             )
-        inputs=[]
-        outputs=[]
-        for it in iterations:
-             for ref3d in range(1,self.NumberOfClasses+1):
-                 fileName = self.getFilename('volume', iter=it, ref3d=ref3d )
-                 if not xmippExists(fileName):
-                     inputs  += [self.getFilename('volumeMRC', iter=it, ref3d=ref3d )]
-                     outputs += [fileName]
-        convertRelionBinaryData(None, inputs, outputs)
+#        inputs=[]
+#        outputs=[]
+#        for it in iterations:
+#             for ref3d in range(1,self.NumberOfClasses+1):
+#                 fileName = self.getFilename('volume', iter=it, ref3d=ref3d )
+#                 if not xmippExists(fileName):
+#                     inputs  += [self.getFilename('volumeMRC', iter=it, ref3d=ref3d )]
+#                     outputs += [fileName]
+#        convertRelionBinaryData(None, inputs, outputs)
                        
         #============
         if doPlot('TableImagesPerClass'):
@@ -491,7 +493,7 @@ class ProtRelionClassifier(XmippProtocol):
                     if xmippExists(file_name):
                         #Chimera
                         if(self.DisplayVolumeSlicesAlong == 'surface'):
-                            runChimera(file_name)
+                            runChimeraClient(file_name)
                         else:
                         #Xmipp_showj (x,y and z shows the same)
                             try:
@@ -520,10 +522,10 @@ class ProtRelionClassifier(XmippProtocol):
                     #do not delete file since chimera needs it
                     ntf = NamedTemporaryFile(dir="/tmp/", suffix='.xmd',delete=False)
                     md.write("angularDist@"+ntf.name)
-                    parameters =  ' -i ' + fileNameVol + \
-                        ' --mode projector 256 -a ' + "angularDist@"+ ntf.name + " red "+\
+                    parameters = ' --mode projector 256 -a ' + "angularDist@"+ ntf.name + " red "+\
                          str(float(_OuterRadius) * 1.1)
-                    print 'xmipp_chimera_client',parameters
+                    print 'xmipp_chimera_client ', fileNameVol, parameters
+                    runChimeraClient(fileNameVol,parameters)
                     runJob(_log,
                            'xmipp_chimera_client',
                            parameters,1,1,True
