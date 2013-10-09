@@ -110,6 +110,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
             mic.setCTF(ctfModel)
             micSet.append(mic)
             ctfModel2 = readCTFModel(ctfparam)
+            ctfModel2.setId(mic.getId())
             ctfSet.append(ctfModel2)
  
         #Copy attributes from input to output micrographs
