@@ -198,7 +198,7 @@ OffsetSearchRangePix = 5
 """
 OffsetSearchStepPix = 1
 
-# # {list_combo}(30,15,7.5,3.7,1.8,0.9,0.5,0.2,0.1) Angular sampling interval (deg): Local angular search range
+# {list_combo}(30,15,7.5,3.7,1.8,0.9,0.5,0.2,0.1)  Local angular search range
 """
 """
 LocalAngularSearchRange = 5.0
