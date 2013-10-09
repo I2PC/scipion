@@ -83,6 +83,29 @@ class ProtInitVolRANSAC(ProtInitVolumeBase):
     def summary(self):
         message=ProtInitVolumeBase.summary(self)
         message.append("RANSAC iterations: %d"%self.NRansac)
+        
+        for n in range(self.NumVolumes):
+
+            fnBase='proposedVolume%05d'%n
+            fnRoot=self.workingDirPath(fnBase+".xmd")
+                           
+            if os.path.isfile(fnRoot):
+                md=MetaData(fnRoot)
+                if (md.size()< 5) :
+                    message.append("Num of inliers for %s too small and equal to %d"%(fnRoot,md.size()))
+                    message.append("Decrease the value of Inlier Threshold parameter and run again")
+                                
+        fnBase="ransac00000.xmd"
+        fnRoot=self.workingDirPath("tmp/"+fnBase)    
+        
+        if os.path.isfile(fnRoot):
+            md=MetaData(fnRoot)
+        
+            if (md.size()< 5) :
+                message.append("Num of random samples too small and equal to %d"%(md.size()))
+                message.append("If the option Dimensionality reduction is on, increase the number of grids per dimension")
+                message.append("If the option Dimensionality reduction is off, increase the number of random samples")
+            
         if self.UseSA:
             message.append("Simulated annealing used")
         return message
@@ -106,7 +129,7 @@ def evaluateVolumes(log,WorkingDir,NRansac):
     for n in range(NRansac):        
         fnRoot=os.path.join("ransac%05d"%n)              
         fnAngles=os.path.join(WorkingDir,"tmp/angles_"+fnRoot+".xmd")    
-        md=MetaData(fnAngles)        
+        md=MetaData(fnAngles)
         numInliers=0
         for objId in md:
             corr = md.getValue(MDL_MAXCC, objId)
