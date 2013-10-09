@@ -51,9 +51,11 @@ class ProtRelionClassifier(XmippProtocol):
        
         return lines
     
+    
     def validate(self):
         errors = []
         # TODO: Check if relion is installed
+        
         md = MetaData(self.ImgMd)
         if md.containsLabel(MDL_IMAGE):
             # Check that have same size as images:
@@ -70,13 +72,15 @@ class ProtRelionClassifier(XmippProtocol):
             
         # Check relion is installed
         if len(which('relion_refine')) == 0:
-            errors.append('<relion> was not found.') 
-            
+            errors.append('<relion_refine> was not found.') 
+        if len(which('relion_movie_handler')) == 0:
+            errors.append('''program "relion_movie_handler" is missing. 
+                             Are you sure you have relion version 1.2?.''') 
         return errors 
     
     def defineSteps(self): 
         self.doContinue = len(self.ContinueFrom) > 0
-        
+        #in the future we need to deal with continue
         restart = False
         #temporary normalized files
         tmpFileNameSTK = join(self.ExtraDir, 'norRelion.stk')

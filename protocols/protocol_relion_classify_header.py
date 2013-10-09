@@ -29,7 +29,7 @@ scale corrections in image groups.
 """
 ImgMd = ""
 
-# Continue from here:
+# {hidden}Continue from here:
 """ 
 Select the *_optimiser.star file for the iteration from which you want to continue a previous run. 
 Note that the Output rootname of the continued run and the rootname of the previous run cannot be the same. 
@@ -314,7 +314,7 @@ DisplayResolutionPlotsSSNR=True
 # {hidden}{view} Display resolution plots (FSC)
 DisplayResolutionPlotsFSC=False
 
-# {expert} Display a threshold in resolution plots (FSC)
+# {hidden}{expert} Display a threshold in resolution plots (FSC)
 ResolutionThreshold=0.5
 
 # {view} Display angular distribution?
