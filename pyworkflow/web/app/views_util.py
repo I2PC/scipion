@@ -123,8 +123,6 @@ def get_image(request):
     from pyworkflow.gui import getImage, getPILImage
 #    print "request.session['projectPath']2", request.session['projectPath']
     
-    print "gettingimage"
-    
     imageNo = None
     imagePath = request.GET.get('image')
     imageDim = request.GET.get('dim', 150)
@@ -229,7 +227,6 @@ def getImageXdim(request, imagePath):
 def getImageDim(request, imagePath):
     img = xmipp.Image()
     imgFn = os.path.join(request.session['projectPath'], imagePath)
-    print("imgFn",imgFn)
     img.read(str(imgFn), xmipp.HEADER)
     return img.getDimensions()
 

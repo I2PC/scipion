@@ -21,8 +21,13 @@
 	var recallServer=false
 	/*  Last zoom set properly. In case the new value is too big or small it is set back to the previousZoom*/
 	var previousZoom='{{defaultZoom}}'
+	/* console.log("fuera")
+	alert("fuera") */
 	
-	$(document).ready(function(){
+	$(document).ready(function(){ 
+		/* console.log("fuera")
+		alert("okokok") */
+		
 		setImageSize(true)
 		initializeZoomEvents();
 		initializeColRowModeEvents()
@@ -41,7 +46,7 @@
 		  }
 		});
 		
-	});
+	}); 
 	</script>
 	<script type="text/javascript">
 	function initializeImageLoad(){
@@ -291,10 +296,8 @@
 		   
 		   /* If images with new dimensions need to be generated in the server, waypoints jquery script manages it */
 		   if (recallServer){
-		   		{% if form.mode.value == 'gallery' %}
-					$.waypoints('destroy')
-					initializeImageLoad()
-				{% endif %}
+				$.waypoints('destroy')
+				initializeImageLoad()
 		   }
 		}
 
