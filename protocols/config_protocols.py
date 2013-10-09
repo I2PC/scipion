@@ -61,9 +61,9 @@ sections = [
 ('3D', 
    [['Initial Model', 'rct', 'initvolume_ransac', 'convert_pdb'], 
     ['Model Refinement', 'projmatch', 'ml3d', ['relion','relion_classify','relion_refine']],
-    ['Volumes', ['Flexibility', 'nma', 'nma_alignment'], 'create_volume_mask', 'preprocess_volume', 'resolution3D', 'align_volume', 'helical_params']]),
+    ['Volumes', 'create_volume_mask', 'preprocess_volume', 'resolution3D', 'align_volume', 'helical_params']]),
 ('Other',
- [['Extra', 'custom',['Virus','subtraction'],['Tomography','mltomo', 'cltomo'],['Tools','image_operate','metadata_utilities','metadata_split'], ['X-ray', 'xray_import'],
+ [['Extra', 'custom',['Flexibility', 'nma', 'nma_alignment'], ['Virus','subtraction'],['Tomography','mltomo', 'cltomo'],['Tools','image_operate','metadata_utilities','metadata_split'], ['X-ray', 'xray_import'],
    ['EMX', 'emx_import_micrographs', 'emx_import_particles', 'emx_export_micrographs', 'emx_export_particles']]])
 ]
 
