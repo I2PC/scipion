@@ -290,6 +290,11 @@ class ShowjForm(forms.Form):
     colRowMode = forms.CharField(widget=forms.HiddenInput())
     dims = forms.CharField(widget=forms.HiddenInput())
     
+    imageMaxWidth = forms.CharField(widget=forms.HiddenInput())
+    imageMinWidth = forms.CharField(widget=forms.HiddenInput())
+    imageMaxHeight = forms.CharField(widget=forms.HiddenInput())
+    imageMinHeight = forms.CharField(widget=forms.HiddenInput())
+    
     mirrorY = forms.BooleanField(label='Invert Y Axis')
     
     transformMatrix = forms.BooleanField(label='Apply Transform Matrix')
