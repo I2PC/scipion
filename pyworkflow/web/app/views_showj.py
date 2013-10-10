@@ -57,19 +57,9 @@ def showj(request, inputParameters=None):
         if _labelsToRenderComboBox != '':
 #            if _labelsToRenderComboBox != request.session['labelsToRenderComboBox']:
 #            print request.POST.get('volumesToRenderComboBox') if ('volumesToRenderComboBox' in request.POST and request.POST.get('volumesToRenderComboBox') != '') else "taka"
-#            print "imageVolName",_imageVolName
             _imageVolName = request.POST.get('volumesToRenderComboBox') if ('volumesToRenderComboBox' in request.POST and request.POST.get('volumesToRenderComboBox') != '') else tableDataset.getElementById(0,_labelsToRenderComboBox)
             if request.POST.get('dims')=='3d':
-                img = xmipp.Image()
-                imgFn = os.path.join(request.session['projectPath'], _imageVolName)
-                #FALTARIA LO DEL MAPPED
-                img.read(str(imgFn))
-                img.convert2DataType(xmipp.DT_UCHAR, xmipp.CW_ADJUST)
-                if int(request.POST.get('resliceComboBox')) !=xmipp.VIEW_Z_NEG:
-                    img.reslice(int(request.POST.get('resliceComboBox')))
-                fileName, fileExtension = os.path.splitext(_imageVolName)
-                _imageVolName = '%s_tmp%s' % (fileName, '.mrc')
-                img.write(str(_imageVolName))
+                _imageVolName = readVolumeAndReslice(request.session['projectPath'], _imageVolName, int(request.POST.get('resliceComboBox')))
                 
             _imageDimensions = getImageDim(request, _imageVolName)
         else:
@@ -87,17 +77,7 @@ def showj(request, inputParameters=None):
         else:    
             _imageVolName = tableDataset.getElementById(0,inputParameters['labelsToRenderComboBox'])
             if inputParameters['dims']=='3d':
-                img = xmipp.Image()
-                imgFn = os.path.join(request.session['projectPath'], _imageVolName)
-                #FALTARIA LO DEL MAPPED
-                img.read(str(imgFn))
-                img.convert2DataType(xmipp.DT_UCHAR, xmipp.CW_ADJUST)
-                if inputParameters['resliceComboBox'] !=xmipp.VIEW_Z_NEG:
-                    img.reslice(inputParameters['resliceComboBox'])
-                fileName, fileExtension = os.path.splitext(_imageVolName)
-                _imageVolName = '%s_tmp%s' % (fileName, '.mrc')
-                print "_imageVolName",_imageVolName 
-                img.write(str(_imageVolName))
+                _imageVolName = readVolumeAndReslice(request.session['projectPath'], _imageVolName, inputParameters['resliceComboBox'])
                 
             _imageDimensions = getImageDim(request, _imageVolName)
             
@@ -362,7 +342,11 @@ def visualizeObject(request):
                        'transformMatrix': False,
                        'onlyShifts': False,
                        'wrap': False,
-                       'resliceComboBox': xmipp.VIEW_Z_NEG}      
+                       'resliceComboBox': xmipp.VIEW_Z_NEG,
+                       'imageMaxWidth': 512,
+                       'imageMinWidth': 30,
+                       'imageMaxHeight': 512,
+                       'imageMinHeight': 30}      
     
     if probandoCTFParam:
         inputParameters['path']= join(projectPath, "Runs/XmippProtCTFMicrographs223/extra/BPV_1386/xmipp_ctf.ctfparam")

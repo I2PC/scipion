@@ -291,6 +291,7 @@ function enableDisableRenderColumn(event, element){
 	$('td:nth-child('+(iCol+1)+')', nTrs).each(function(){
 		if ($(element).hasClass("renderTableOn") && $(this).find("img").attr('src')== undefined){
 			/* $(this).find("img").attr("src",$(this).find("img").data('real_src')) */
+			setImageSize(false)
 			initializeImageLoad()
 		}
 		$(this).find("img").toggle()

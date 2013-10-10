@@ -10,54 +10,9 @@
 <script type="text/javascript" src="/static/js/jquery/jquery.js"></script>
 <script type="text/javascript" src="/static/js/jsPlumb/jquery.jsPlumb.js"></script>
 <script type="text/javascript" src="/static/js/jquery/jquery-ui.js"></script>
+<script type="text/javascript" src="/static/js/layouts.js"></script>
 <script type="text/javascript" src="/static/js/messi/messi.js"></script>
-<script type="text/javascript" src="/static/js/jquery/jquery.sizes.js"></script>
-<script type="text/javascript" src="/static/js/jquery/jlayout.border.js"></script>
-<script type="text/javascript" src="/static/js/jquery/jquery.jlayout.js"></script>
 <script>
-	jQuery(function($) {
-		$('.layout-inner').layout();
-	
-		var outerContainer = $('.layout-outer');
-	
-		function layout() {
-			outerContainer.layout({resize: false});
-		}
-		
-// 		function layout() {
-// 			outerContainer.layout({
-// 				type: 'grid',
-// 			    columns: 2,
-// 			    rows: 2,
-// 			    items: [
-// 			        $('#component-1'),
-// 			        $('#component-2'),
-// 			        $('#component-3'),
-// 			        $('#component-4')
-// 			    ]
-// 			});
-// 		}
-		
-		layout();
-	
-		$(window).resize(layout);
-
-		$('.north').resizable({
-			handles: 's',
-			stop: layout
-		});
-		
-		$('.south').resizable({
-			handles: 's',
-			stop: layout
-		});
-		
-		$('.west').resizable({
-			handles: 'e',
-			stop: layout
-		});
-	});
-
 	function changeView(){
 		selection = document.getElementById("viewsCombo").value;
 		if (selection == "projects"){
@@ -75,21 +30,31 @@
 </head>
 
 <body>
-	<div data-layout='{"type": "border"}' class="layout-outer" id="wrapper">
-		<div data-layout='{"type": "border"}' class="center layout-inner" id="wrapperContent">
-			<div class="north" id="frameTop">
+	<div class="layout" id="wrapper">
+		{% if contentConfig == 'divided' %}
+			<div class="center" id="maincontent">
+					<div id="north" style="overflow:auto;height:60%;">
+				
+		{% endif %}
+		{% if contentConfig == 'full' %}
+			<div class="center" id="maincontent">
+		{% endif %}
+		
 				{% block content %}
 				{%endblock %}
-			</div>	
-			<div class="center" id="frameCenter">
+				
+		{% if contentConfig == 'divided' %}		
+			</div>
+			<div style="overflow:auto;">
 				{% block contentDown %}	
 				{%endblock %}
 			</div>
+		
+		{% endif %}	
 		</div>
-		<div class="west" id="frameLeft">
-			{% block sideLeft %} {%endblock %}
-		</div>
-		<div class="north" id="frameTitle">
+		<!-- #middle-->
+
+		<div class="north" id="framecontentTop">
 			<a href="/projects"><img class="logo" src="/resources/scipion_logo.png"
 				alt="Scipion logo" /></a>  
 				{% if projectName != None %}
@@ -106,6 +71,13 @@
 					</div> 
 				{% endif %}	
 		</div>
+		<!-- #header-->
+
+		<div class="west" id="framecontentLeft">{% block sideLeft %} {%endblock %}</div>
+		<!-- sidebar#sideLeft -->
+
+		<div class="south" id="framecontentBottom">{% block footer %} {%endblock %}</div>
+		<!-- #footer -->
 	</div>
 </body>
 </html>

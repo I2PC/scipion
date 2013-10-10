@@ -21,8 +21,13 @@
 	var recallServer=false
 	/*  Last zoom set properly. In case the new value is too big or small it is set back to the previousZoom*/
 	var previousZoom='{{defaultZoom}}'
+	/* console.log("fuera")
+	alert("fuera") */
 	
-	$(document).ready(function(){
+	$(document).ready(function(){ 
+		/* console.log("fuera")
+		alert("okokok") */
+		
 		setImageSize(true)
 		initializeZoomEvents();
 		initializeColRowModeEvents()
@@ -41,7 +46,7 @@
 		  }
 		});
 		
-	});
+	}); 
 	</script>
 	<script type="text/javascript">
 	function initializeImageLoad(){
@@ -212,26 +217,22 @@
 			
 			imageHeight_val = parseInt({{imageDimensions.1}})
 			imageWidth_val = parseInt({{imageDimensions.0}})
+			ratio = imageHeight_val/imageWidth_val 
 			
 			/* Check if zoom in pixel */
 			if (zoom_element.val().indexOf('px')!=-1){
 				/*  Get zoom value*/			
 				zoom_val=parseInt(zoom_element.val().split('px')[0])
 				
-				/* Check is image bigger than zoom */
-				/* if (zoom_val <  imageWidth_val && zoom_val < imageHeight_val){ */
-					/* Calculate zoom in percentage */
-					if (imageHeight_val<imageWidth_val){
-						tableImages_width=zoom_val
-						zoom_val_perc=Math.round((zoom_val/imageWidth_val)*100)
-					} 
-					else{
-						console.log(imageWidth_val,imageHeight_val)
-						tableImages_width=Math.round(zoom_val*(imageWidth_val/imageHeight_val))+1
-						zoom_val_perc=Math.round((zoom_val/imageHeight_val)*100)
-					}
-					
-				/* } */
+				/* Calculate zoom in percentage */
+				if (imageHeight_val<imageWidth_val){
+					tableImages_width=zoom_val
+					zoom_val_perc=Math.round((zoom_val/imageWidth_val)*100)
+				} 
+				else{
+					tableImages_width=Math.round(zoom_val*(imageWidth_val/imageHeight_val))+1
+					zoom_val_perc=Math.round((zoom_val/imageHeight_val)*100)
+				}
 				
 			}
 			else{
@@ -247,9 +248,9 @@
 			}
 			
 			/*  CHECK ZOOM VALUE IS A NUMBER BETWEEN MAX AND MIN*/
-			/* NAPA DE LUXE: El max y el min deberia ser parametrizable  */
-			if (isNaN(tableImages_width) || tableImages_width>512 || tableImages_width<30){
-				alert('Incorrect table width: '+tableImages_width)
+			tableImages_height=tableImages_width*ratio
+			if (isNaN(tableImages_width) || tableImages_width>{{form.imageMaxWidth.value}} || tableImages_width<{{form.imageMinWidth.value}} || tableImages_height>{{form.imageMaxHeight.value}} || tableImages_height<{{form.imageMinHeight.value}}){
+				alert('Incorrect table width or height: '+tableImages_width+'px x '+ tableImages_height +'px.')
 				zoom_element.val(previousZoom)
 				setImageSize(true)
 				return;
@@ -291,10 +292,8 @@
 		   
 		   /* If images with new dimensions need to be generated in the server, waypoints jquery script manages it */
 		   if (recallServer){
-		   		{% if form.mode.value == 'gallery' %}
-					$.waypoints('destroy')
-					initializeImageLoad()
-				{% endif %}
+				$.waypoints('destroy')
+				initializeImageLoad()
 		   }
 		}
 

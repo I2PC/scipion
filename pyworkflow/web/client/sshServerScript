@@ -1,0 +1,9 @@
+#!/bin/sh
+echo "Initializing Server Script"
+#ssh -X scipion@scipion.cnb.csic.es "gedit"
+#ssh -X aquintana@crunchy.cnb.csic.es "ls"
+#export SSH_ASKPASS=/home/adrian/workspace/scipionv2/scipionSSHServer/sshaskpass.sh
+export SSH_ASKPASS=./sshaskpass.sh
+export DISPLAY=:0
+#setsid ssh -X -o StrictHostKeyChecking=no aquintana@crunchy.cnb.csic.es "cd ojala2;xterm -e xmipp_protocols"
+setsid ssh -X -o StrictHostKeyChecking=no aquintana@crunchy.cnb.csic.es "source /gpfs/fs1/apps/eman/EMAN2/eman2.bashrc&&xterm -e e2projectmanager.py"

@@ -123,8 +123,6 @@ def get_image(request):
     from pyworkflow.gui import getImage, getPILImage
 #    print "request.session['projectPath']2", request.session['projectPath']
     
-    print "gettingimage"
-    
     imageNo = None
     imagePath = request.GET.get('image')
     imageDim = request.GET.get('dim', 150)
@@ -166,7 +164,7 @@ def get_image(request):
             img = getPILImage(imgXmipp, None)
     except Exception:
         from pyworkflow import findResource
-        img = getImage(findResource("no-image.png"), tk=False)
+        img = getImage(findResource(getResourceIcon("no_image")), tk=False)
 
 
     response = HttpResponse(mimetype="image/png")
@@ -216,7 +214,7 @@ def get_slice(request):
         img = getPILImage(imgXmipp, None, False)
     except Exception:
         from pyworkflow import findResource
-        img = getImage(findResource("no-image.png"), tk=False)         
+        img = getImage(findResource(getResourceIcon("no_image")), tk=False)         
     
     response = HttpResponse(mimetype="image/png")
     img.save(response, "PNG")
@@ -229,10 +227,21 @@ def getImageXdim(request, imagePath):
 def getImageDim(request, imagePath):
     img = xmipp.Image()
     imgFn = os.path.join(request.session['projectPath'], imagePath)
-    print("imgFn",imgFn)
     img.read(str(imgFn), xmipp.HEADER)
     return img.getDimensions()
 
+def readVolumeAndReslice(projectPath, volName, axis):
+    img = xmipp.Image()
+    imgFn = os.path.join(projectPath, volName)
+    #FALTARIA LO DEL MAPPED
+    img.read(str(imgFn))
+    img.convert2DataType(xmipp.DT_UCHAR, xmipp.CW_ADJUST)
+    if axis !=xmipp.VIEW_Z_NEG:
+        img.reslice(axis)
+    fileName, fileExtension = os.path.splitext(volName)
+    _imageVolName = '%s_tmp%s' % (fileName, '.mrc')
+    img.write(str(_imageVolName))
+    return _imageVolName 
 
 
 

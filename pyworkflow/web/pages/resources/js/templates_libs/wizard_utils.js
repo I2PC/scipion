@@ -35,11 +35,7 @@ function selectList(elm, mode) {
 	}
 
 	// load and set the image
-	var uri = "/get_image/?image=" + path_img + "&dim=250";
-	
-	if(uri = "no-image")
-		uri="/resources/no-image.png";
-	
+	var uri = "/get_image/?image=" + path_img + "&dim=250";	
 	
 	if(mode=="raphael"){
 		img.load(putImage(uri, "mic", 250, 250), function() {
@@ -83,9 +79,6 @@ function selectParticle(elm, mode) {
 
 	// load and set the image
 	var uri = "/get_image/?image=" + path_img + "&dim=250";
-	
-//	if(uri = "no-image")
-//		uri="/resources/no-image.png";
 	
 	if(mode=="raphael"){
 		putImage(uri, "particle", 250, 250);
