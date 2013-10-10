@@ -93,6 +93,7 @@ class CTFModel(EMObject, Item):
         self.defocusV = Float()
         self.defocusAngle = Float()
         self.psdFile = String()
+        self.micFile = String()
         
     def copyInfo(self, other):
         self.copyAttributes(other, 'defocusU', 'defocusV',
@@ -407,6 +408,12 @@ class SetOfCTF(Set):
     """ Contains a set of CTF models estimated for a set of images."""
     def __init__(self, **args):
         Set.__init__(self, **args)      
+        
+    def __iter__(self):
+        """ Iterate over the set of ctfs. """
+        self.loadIfEmpty()
+        for ctfModel in self._mapper.selectByClass("CTFModel", iterate=True):
+            yield ctfModel   
         
 
 class Coordinate(EMObject, Item):

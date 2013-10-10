@@ -110,6 +110,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
             mic.setCTF(ctfModel)
             micSet.append(mic)
             ctfModel2 = readCTFModel(ctfparam)
+            ctfModel2.micFile.set(mic.getFileName())
             ctfSet.append(ctfModel2)
  
         #Copy attributes from input to output micrographs
@@ -118,12 +119,13 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
 
         # Write as a Xmipp metadata
         ctfDir = self._getTmpPath()
-        mdFn = self._getPath('micrographs.xmd')
+        mdFn = self._getPath('micrographs_ctf.xmd')
         writeSetOfMicrographs(micSet, mdFn, ctfDir, self.setupMicRow)
                  
         # Mark flag of CTF as True
-        micSet.setHasCTF(True)      
-        micSet.write()         
+        #micSet.setHasCTF(True)      
+        #micSet.write()         
+        ctfSet._xmippMd = String(mdFn)
         ctfSet.write()   
 
         # Evaluate the PSD and add some criterias
@@ -131,11 +133,11 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         self.runJob(None, "xmipp_ctf_sort_psds","-i %s -o %s" % (mdFn, auxMdFn))
         # Copy result to output metadata
         moveFile(auxMdFn, mdFn)        
-        micSet._xmippMd.set(mdFn)
+        #micSet._xmippMd.set(mdFn)
 
-        self._defineOutputs(outputMicrographs=micSet)
+        #self._defineOutputs(outputMicrographs=micSet)
         self._defineOutputs(outputCTF=ctfSet)
-        self._defineDataSource(self.inputMics, micSet)
+        #self._defineDataSource(self.inputMics, micSet)
         self._defineRelation(RELATION_CTF, ctfSet, self.inputMics)
         #TODO: Remove when output setOfmics dissapear
-        self._defineRelation(RELATION_CTF, ctfSet, micSet)
+        #self._defineRelation(RELATION_CTF, ctfSet, micSet)

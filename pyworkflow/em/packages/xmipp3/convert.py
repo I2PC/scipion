@@ -76,40 +76,7 @@ def rowToObject(md, objId, obj, attrDict):
     row.readFromMd(md, objId)
     _rowToObject(row, obj, attrDict)
     
-def readCTFModel(filename):
-    """ Read from Xmipp .ctfparam and create a CTFModel object. """
-    md = xmipp.MetaData(filename)
-    ctfObj = CTFModel()    
-    ctfDict = { 
-               "defocusU": xmipp.MDL_CTF_DEFOCUSU,
-               "defocusV": xmipp.MDL_CTF_DEFOCUSV,
-               "defocusAngle": xmipp.MDL_CTF_DEFOCUS_ANGLE,
-               "sphericalAberration": xmipp.MDL_CTF_CS
-               }    
-    rowToObject(md, md.firstObject(), ctfObj, ctfDict)  
-    ctfObj._xmippMd = String(filename) 
     
-    return ctfObj
-
-
-def writeCTFModel(ctfObj, filename):
-    """ Write a CTFModel object as Xmipp .ctfparam"""
-    ctfDict = { 
-           "defocusU": xmipp.MDL_CTF_DEFOCUSU,
-           "defocusV": xmipp.MDL_CTF_DEFOCUSV,
-           "defocusAngle": xmipp.MDL_CTF_DEFOCUS_ANGLE,
-           "sphericalAberration": xmipp.MDL_CTF_CS
-           }   
-    
-    md = xmipp.MetaData()
-    md.setColumnFormat(False)
-    objId = md.addObject()
-    ctfRow = XmippMdRow() 
-    objectToRow(ctfObj, ctfRow, ctfDict)
-    ctfRow.writeToMd(md, objId)
-    md.write(filename)
-
-
 def locationToXmipp(index, filename):
     """ Convert an index and filename location
     to a string with @ as expected in Xmipp.
@@ -277,8 +244,30 @@ def imageClassAssignmentToRow(imgCA, imgCARow, img, ctfDir, ref):
         
     objectToRow(imgCA, imgCARow, imgCADict)
     
+def ctfModelToRow(ctfModel, ctfRow):
+    """ Set labels values from ctfModel to md row. """    
+    ctfDict = { 
+           "defocusU": xmipp.MDL_CTF_DEFOCUSU,
+           "defocusV": xmipp.MDL_CTF_DEFOCUSV,
+           "defocusAngle": xmipp.MDL_CTF_DEFOCUS_ANGLE,
+           "sphericalAberration": xmipp.MDL_CTF_CS
+           }   
     
+    objectToRow(ctfModel, ctfRow, ctfDict)
 
+def rowToCtfModel(md, objId):
+    """ Create a CTFModel from a row of a metadata. """
+    ctfDict = { 
+           "defocusU": xmipp.MDL_CTF_DEFOCUSU,
+           "defocusV": xmipp.MDL_CTF_DEFOCUSV,
+           "defocusAngle": xmipp.MDL_CTF_DEFOCUS_ANGLE,
+           "sphericalAberration": xmipp.MDL_CTF_CS
+           }   
+    
+    ctfModel = CTFModel()
+    rowToObject(md, objId, ctfModel, ctfDict) 
+    return ctfModel
+    
 def readSetOfMicrographs(filename, micSet, hasCtf=False):    
     readSetOfImages(filename, micSet, rowToMicrograph, hasCtf)
 
@@ -292,6 +281,27 @@ def readSetOfVolumes(filename, volSet, hasCtf=False):
 def writeSetOfVolumes(volSet, filename):
     writeSetOfImages(volSet, filename, volumeToRow, None, None)    
     
+def readCTFModel(filename):
+    """ Read from Xmipp .ctfparam and create a CTFModel object. """
+    md = xmipp.MetaData(filename)
+    ctfObj = rowToCtfModel(md, md.firstObject())  
+    ctfObj._xmippMd = String(filename) 
+    
+    return ctfObj
+
+
+def writeCTFModel(ctfObj, filename):
+    """ Write a CTFModel object as Xmipp .ctfparam"""
+   
+    md = xmipp.MetaData()
+    md.setColumnFormat(False)
+    objId = md.addObject()
+    ctfRow = XmippMdRow() 
+    ctfModelToRow(ctfObj, ctfRow)
+    ctfRow.writeToMd(md, objId)
+    md.write(filename)
+        
+        
 def writeSetOfCoordinates(posDir, coordSet):
     """ Write a pos file on metadata format for each micrograph 
     on the coordSet. 
@@ -419,8 +429,26 @@ def readSetOfParticles(filename, partSet, hasCtf=False):
         
 def writeSetOfParticles(imgSet, filename, ctfDir=None, rowFunc=None):
     writeSetOfImages(imgSet, filename, particleToRow, ctfDir, rowFunc)
+
+def writeSetOfCTFs(ctfSet, mdCTF):
+    """ Write a ctfSet on metadata format. 
+    Params:
+        ctfSet: the SetOfCTF that will be read.
+        mdCTF: The file where metadata should be written.
+        ctfDir: where to write ctfparam files if necessary
+    """
+    md = xmipp.MetaData()
+            
+    for ctfModel in ctfSet:
+        objId = md.addObject()
+        ctfRow = XmippMdRow()
+        ctfModelToRow(ctfModel, ctfRow)
+        ctfRow.setValue(xmipp.MDL_MICROGRAPH, str(ctfModel.micFile.get()))
+        ctfRow.writeToMd(md, objId)
         
-        
+    md.write(mdCTF)
+    ctfSet._xmippMd = String(mdCTF)
+    
 def writeSetOfClasses2D(classes2DSet, filename, ctfDir=None, classesBlock='classes'):    
     """ This function will write a SetOfClasses2D as Xmipp metadata.
     Params:

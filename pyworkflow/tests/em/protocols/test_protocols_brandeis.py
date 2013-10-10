@@ -35,7 +35,7 @@ class TestBrandeisCtffind(unittest.TestCase):
         protCTF.inputMicrographs.set(protImport.outputMicrographs)
         self.proj.launchProtocol(protCTF, wait=True)
         
-        self.assertTrue(protCTF.outputMicrographs.hasCTF(), "CTF estimation has not been performed.")
+        self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.") 
         
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestBrandeisCtffind)
