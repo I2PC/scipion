@@ -33,6 +33,7 @@
 #include <data/metadata.h>
 #include "reconstruct_fourier.h"
 #include "angular_project_library.h"
+#include "dimred/pca.h"
 
 /**@defgroup VolumeValidatePCA Validation of volume consistency with respect to the provided classes
    @ingroup ReconsLibrary */
@@ -77,11 +78,11 @@ public: // Internal members
     /// Reconstruct current volume
     void reconstructCurrent();
 
-    /// Generate projections from the current volume
-    void generateProjections();
+    /// Reconstruct volume with all projections
+    void reconstruct();
 
-    /// Filter by correlation
-    void filterByCorrelation();
+
+
 };
 //@}
 
