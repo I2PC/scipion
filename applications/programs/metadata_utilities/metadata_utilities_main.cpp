@@ -85,6 +85,7 @@ protected:
         addParamsLine("    rename_column <labels>              : Rename a column");
         addParamsLine("    modify_values <expression>          : Use an SQLite expression to modify the metadata");
         addParamsLine("                                        : This option requires knowledge of basic SQL syntax(more specific SQLite");
+        addParamsLine("    expand <factor>                     : Expand the metadata content by union with himself ");
         addParamsLine(":+ Some of the function allowed are,");
         addParamsLine(":+ Math: +, -, *, /, abs");
         addParamsLine(":+       acos, asin, atan, atn2, atan2, acosh, asinh, atanh,");
@@ -265,6 +266,15 @@ protected:
         {
             MDSql::activateMathExtensions();
             mdIn.operate(getParam("--operate", 1));
+        }
+        else if (operation == "expand")// modify_values
+        {
+          int factor = getIntParam("--operate", 1);
+          MetaData md;
+          for (int i = 0; i < factor; i++)
+            md.unionAll(mdIn);
+
+          mdIn = md;
         }else
         {
             MetaData md(mdIn);
