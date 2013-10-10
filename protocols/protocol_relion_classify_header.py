@@ -267,15 +267,18 @@ VisualizeGSVolume = True
 #------------------------------------------------------------------------------------------------
 # {list_combo}( all, selection) Which ref3D you want to visualize?
 """ 
-   If you want two see the reference volume 2 and 5 write
-   2 5. In relaion first reference is 1
+   If you want two see the reference volume 2 and 5 
+   choose selection and write
+   2 5. In relion first reference is 1. All is equal to number of classes
 """
 DisplayRef3DNo='all'
 
 # {condition}(DisplayRef3DNo=='selection') Selected references 3D
 """ Which iteration do you want to visualize 
-If you want two see iterations 2 and 5 write
-   2 5. In relion first iteration is 0"""
+If you want two see iterations 2 and 5 
+   choose selection and write
+   2 5. In relion first iteration is 0. All is equal to all iterations from  1 to 
+   number of iterations"""
 SelectedRef3DNo = ''
 
 # {list_combo}(last, all, selection) Which iteration you want to visualize?
