@@ -322,7 +322,7 @@ class ProtRelionClassifier(XmippProtocol):
         lastVolume = self.getFilename('volumeMRC', iter=lastIteration, ref3d=ref3d )
         if not xmippExists(lastVolume):
             message = "No data available for <iteration %d> and <ref3D %d>"%\
-                       (lastIterationMetadata,lastRef3D)
+                       (int(lastIterationMetadata),int(lastRef3D))
             showError(message)
 
         convertRelionMetadata(None

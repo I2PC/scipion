@@ -274,14 +274,19 @@ VisualizeGSVolume = True
 DisplayRef3DNo='all'
 
 # {condition}(DisplayRef3DNo=='selection') Selected references 3D
+""" Which reference do you want to visualize 
+If you want two see references 2 and 5 
+   choose selection and write
+   2 5. In relion first iteration is 0. All is equal to all references from  1 to 
+   number of references"""
+SelectedRef3DNo = ''
+
+# {list_combo}(last, all, selection) Which iteration you want to visualize?
 """ Which iteration do you want to visualize 
 If you want two see iterations 2 and 5 
    choose selection and write
    2 5. In relion first iteration is 0. All is equal to all iterations from  1 to 
-   number of iterations"""
-SelectedRef3DNo = ''
-
-# {list_combo}(last, all, selection) Which iteration you want to visualize?
+   number of iterations. Last is equal to number of iterations """
 VisualizeIter = 'last'
 
 # {condition}(VisualizeIter=='selection') Selected iterations
