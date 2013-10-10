@@ -39,7 +39,7 @@ from protlib_gui_ext import ToolTip, centerWindows, askYesNo, showInfo, XmippTre
 from config_protocols import *
 from protlib_base import XmippProject, getExtendedRunName, splitExtendedRunName,\
     getScriptFromRunName, ProtocolExecutor
-from protlib_utils import ProcessManager,  getHostname, loadModule
+from protlib_utils import ProcessManager,  getHostname, loadModule, datetime_fromdb, pretty_delta
 from protlib_sql import SqliteDb, ProgramDb
 from protlib_filesystem import getXmippPath, copyFile
 from protlib_parser import ProtocolParser
@@ -501,7 +501,13 @@ class XmippProjectGUI():
         frame.columnconfigure(0, weight=1, minsize=400)
         frame.rowconfigure(1, weight=1)
         
-        tree = XmippTree(frame)
+        columns = ('Time')
+        tree = XmippTree(frame, columns=columns)
+
+        for c, name, width in [('#0', 'Step', 200), ('Time', 'Time', 100)]:
+            tree.column(c, width=width)
+            tree.heading(c, text=name)
+            
         tree.grid(row=1, column=0, sticky='nsew')
         
         def insertSteps(e=None):
@@ -509,12 +515,26 @@ class XmippProjectGUI():
             r = tree.insert('', 'end', text=runName, image=self.getStateImage(run['run_state']))
             tree.item(r, open=True)
             steps = self.project.projectDb.getRunSteps(run)
+            total = None
+            
             for s in steps:    
                 t = "%s (id = %d)" % (s['command'], s['step_id'])
                 stepIcon = 'step_finished'
+                
                 if s['finish'] is None:
                     stepIcon = 'step'
-                item = tree.insert(r, 'end', text=t, image=self.getImage(stepIcon))
+                    timeValue = ''
+                else:
+                    init = datetime_fromdb(s['init']) 
+                    end = datetime_fromdb(s['finish'])
+                    delta = end - init
+                    if total is None:
+                        total = delta
+                    else:
+                        total += delta 
+                    timeValue = pretty_delta(delta)
+                    
+                item = tree.insert(r, 'end', text=t, image=self.getImage(stepIcon), values=(timeValue,))
                 p = tree.insert(item, 'end', text=' parameters', image=self.getImage('md_view'))
                 vf = tree.insert(item, 'end', text=' verify_files', image=self.getImage('copy'))
                 tree.insert(item, 'end', text='parent = %d' % s['parent_step_id'])
@@ -528,7 +548,9 @@ class XmippProjectGUI():
                 files = pickle.loads(str(s['verifyFiles']))        
                 for f in files:
                     tree.insert(vf, 'end', text=f)
-
+            
+            tree.item(r, values=(pretty_delta(total),))
+            
         btn = XmippButton(frame, "Refresh", 'refresh.gif', command=insertSteps, tooltip='Refresh   F5')
         btn.grid(row=0, column=0, padx=(0, 5), sticky='nw')
         root.bind("<F5>", insertSteps)
