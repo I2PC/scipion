@@ -21,6 +21,7 @@ from protlib_utils import getComponentFromVector, runShowJ
 from protlib_sql import XmippProjectDb
 from config_protocols import protDict
 from protlib_filesystem import copyFile
+from protlib_gui_ext import showError
 
 class ProtPartialProjectionSubtraction(XmippProtocol):
     def __init__(self, scriptname,project=None):
@@ -157,9 +158,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
                     try:
                         runShowJ(file_name)
                     except Exception, e:
-                        from protlib_gui_ext import showError
-                        print "Error: ", str(e)
-#                        showError("Error launching java app", str(e))
+                        showError("Error launching java app", str(e), self.master)
 
         if doPlot('DisplayExperimental'):
             for indexCtf in range(1, self.NumberOfCtfGroups+1): 
@@ -169,9 +168,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
                     try:
                         runShowJ(file_name)
                     except Exception, e:
-                        from protlib_gui_ext import showError
-                        print "Error: ", str(e)
-#                        showError("Error launching java app", str(e))
+                        showError("Error launching java app", str(e), self.master)
 
         if doPlot('DisplaySubtracted'):
             for indexCtf in range(1, self.NumberOfCtfGroups+1): 
@@ -181,9 +178,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
                     try:
                         runShowJ(file_name)
                     except Exception, e:
-                        from protlib_gui_ext import showError
-                        print "Error: ", str(e)
-#                        showError("Error launching java app", str(e))
+                        showError("Error launching java app", str(e), self.master)
 
         if xplotter:
             xplotter.show()

@@ -16,12 +16,12 @@ from xmipp import MetaDataInfo
 from protlib_utils import runShowJ, getListFromVector, getListFromRangeString, runJob, runChimera, which
 from protlib_parser import ProtocolParser
 from protlib_xmipp import redStr, cyanStr
-from protlib_gui_ext import showWarning, showTable
 from protlib_filesystem import xmippExists, findAcquisitionInfo, moveFile, replaceBasenameExt
 from protocol_ml2d import lastIteration
 from protlib_filesystem import createLink
 from protlib_import import exportReliontoMetadataFile
 from protlib_gui_figure import XmippPlotter
+from protlib_gui_ext import showWarning, showTable, showError
 
 class ProtRelionRefinner(XmippProtocol):
     relionFiles=['data','model','optimiser','sampling']
@@ -471,7 +471,7 @@ class ProtRelionRefinner(XmippProtocol):
                             try:
                                 runShowJ(file_name, extraParams = runShowJExtraParameters)
                             except Exception, e:
-                                showError("Error launching java app", str(e))
+                                showError("Error launching java app", str(e),self.master)
                                 
         from tempfile import NamedTemporaryFile    
         if doPlot('DisplayAngularDistribution'):
