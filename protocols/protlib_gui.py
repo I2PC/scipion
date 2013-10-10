@@ -523,6 +523,7 @@ class ProtocolGUI(BasicGUI):
         return w
         
     def visualizeVar(self, varName):
+        print "visualizeVar: ", varName
         prot = self.getProtocol()        
         prot.visualizeVar(varName)
         
@@ -677,6 +678,8 @@ class ProtocolGUI(BasicGUI):
     def getProtocol(self):
         prot = self.project.getProtocolFromModule(self.run['script'])
         prot.parser = self.parser
+        print "setting prot.master: ", self.master
+        prot.master = self.master
         return prot
     
     def saveExecute(self, event=""):
@@ -684,7 +687,6 @@ class ProtocolGUI(BasicGUI):
             return
         prot = self.getProtocol()        
         if self.visualize_mode:
-            prot.master = self.master
             prot.visualize()
         else:
             if self.validateProtocol(prot):

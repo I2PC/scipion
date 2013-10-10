@@ -17,7 +17,7 @@ from protlib_utils import runShowJ, getListFromVector, getListFromRangeString, \
                           runJob, runChimera, which, runChimeraClient
 from protlib_parser import ProtocolParser
 from protlib_xmipp import redStr, cyanStr
-from protlib_gui_ext import showWarning, showTable
+from protlib_gui_ext import showWarning, showTable, showError
 from protlib_filesystem import xmippExists, findAcquisitionInfo, moveFile, \
                                replaceBasenameExt
 from protocol_ml2d import lastIteration
@@ -299,6 +299,16 @@ class ProtRelionClassifier(XmippProtocol):
 
         runShowJExtraParameters = ' --dont_wrap --view '+ self.parser.getTkValue('DisplayVolumeSlicesAlong') 
         self.DisplayVolumeSlicesAlong=self.parser.getTkValue('DisplayVolumeSlicesAlong')
+        lastIteration = iterations[-1]
+        lastRef3D = ref3Ds[-1]
+        lastVolume = self.getFilename('volumeMRC', iter=lastIteration, ref3d=lastRef3D )
+        print "LASTVOLUME", lastVolume
+        if not xmippExists(lastVolume):
+            print "does not exists"
+            message = "No data available for <iteration %d> and <class %d>"%\
+                       (int(lastIteration),int(lastRef3D))
+            showError("File not Found", message, self.master)
+            return
         
         #if relion has not finished metadata has not been converted to xmipp
         #do it now if needed
@@ -311,19 +321,12 @@ class ProtRelionClassifier(XmippProtocol):
                 if not xmippExists(fileName):
                     outputs += [fileName]
                     inputs += [self.getFilename(v+'Re', iter=i )]
-        lastIteration = iterations[-1]
         lastIterationVolumeFns = []
         standardOutputClassFns = []
         for ref3d in range (1,self.NumberOfClasses+1):
             lastIterationVolumeFns += [self.getFilename('volume', iter=lastIteration, ref3d=ref3d )]
             standardOutputClassFns += ["images_ref3d%06d@"%ref3d + self.workingDirPath("classes_ref3D.xmd")]
         lastIterationMetadata = "images@"+self.getFilename('data'+'Xm', iter=lastIteration )
-        lastRef3D = ref3Ds[-1]
-        lastVolume = self.getFilename('volumeMRC', iter=lastIteration, ref3d=ref3d )
-        if not xmippExists(lastVolume):
-            message = "No data available for <iteration %d> and <ref3D %d>"%\
-                       (int(lastIterationMetadata),int(lastRef3D))
-            showError(message)
 
         convertRelionMetadata(None
                               , inputs
@@ -507,7 +510,7 @@ class ProtRelionClassifier(XmippProtocol):
                             try:
                                 runShowJ(file_name, extraParams = runShowJExtraParameters)
                             except Exception, e:
-                                showError("Error launching java app", str(e))
+                                showError("Error launching java app", str(e), self.master)
                     else:
                         print "file ", file_name, "those not exits"
         from tempfile import NamedTemporaryFile    

@@ -495,6 +495,7 @@ class XmippProtocol(object):
         self.PrevRunName = None
         self.Input = {}
         self.parser = None # This is only used in GUI
+        self.master = None # This is only used in GUI for visualize
     
     def addParam(self, key, value):
         self.ParamsDict[key] = value

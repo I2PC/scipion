@@ -15,7 +15,7 @@ from config_protocols import protDict
 import os
 from os.path import exists, join
 from protlib_utils import runShowJ
-from protlib_gui_ext import showWarning
+from protlib_gui_ext import showWarning, showError
 from protlib_xmipp import greenStr, redStr
 from protlib_filesystem import deleteFile, xmippExists, renameFile, findAcquisitionInfo
 
@@ -168,8 +168,7 @@ class ProtML2D(XmippProtocol):
             try:
                 runShowJ(refs, extraParams="--mode metadata --render first")
             except Exception, e:
-                from protlib_gui_ext import showError
-                showError("Error launching java app", str(e))
+                showError("Error launching java app", str(e), self.master)
                
     def visualizeVar(self, varName):
         if varName == 'DoShowReferences':
@@ -206,7 +205,7 @@ def launchML2DPlots(protML, selectedPlots):
         
     n = len(selectedPlots)
     if n == 0:
-        showWarning("ML2D plots", "Nothing to plot")
+        showWarning("ML2D plots", "Nothing to plot", protML.master)
         return
     elif n == 1:
         gridsize = [1, 1]
