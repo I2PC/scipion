@@ -24,4 +24,4 @@
  ***************************************************************************/
 
 #include <reconstruction/volume_initial_simulated_annealing.h>
-RUN_XMIPP_PROGRAM(ProgVolumeInitialSimulatedAnnealing);
+RUN_XMIPP_PROGRAM(ProgVolumeInitialSimulatedAnnealing)

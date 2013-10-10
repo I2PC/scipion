@@ -16,7 +16,7 @@ import java.util.Map;
  */
 public class Cache<K, T> extends LinkedHashMap<K, T> {
 
-    public final static int MEMORY_SIZE = 33554432;// 32 MB = 32 * 1024 * 1024 Bytes.
+    public final static int MEMORY_SIZE = 134217728;// 128 MB = 128 * 1024 * 1024 Bytes.
     public final static int MAXPXSIZE = 4;  // 4 Bytes => 4 * 8 = 32 bits as maximum pixel size.
     private int limit;  // Max number of elements in cache.
 

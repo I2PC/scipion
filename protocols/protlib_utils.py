@@ -622,6 +622,15 @@ def runChimera(inputFile,extraParams=""):
     else:
         print "Error Chimera not available or inputFile %s does not exits."%inputFile
 
+
+def runChimeraClient(inputFile,extraParams=""):
+    from protlib_filesystem import xmippExists
+    if which("chimera") and xmippExists(inputFile):
+        from protlib_filesystem import hasSpiderExt
+        os.system('xmipp_chimera_client --input "%s" %s &' % (inputFile,extraParams))
+    else:
+        print "Error Chimera not available or inputFile %s does not exits."%inputFile
+
 def runVMD(inputFile,extraParams=""):
     if which("vmd") and os.path.exists(inputFile):
         os.system("vmd %s %s" % (inputFile,extraParams))

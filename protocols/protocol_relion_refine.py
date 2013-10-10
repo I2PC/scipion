@@ -69,9 +69,13 @@ class ProtRelionRefinner(XmippProtocol):
             errors.append("CTF correction selected and input metadata <%s> doesn't contains CTF information" % self.ImgMd)
             
         # Check relion is installed
-        if len(which('relion_refine')) == 0:
-            errors.append('<relion> was not found.') 
-            
+        if len(which('relion_classify')) == 0:
+            errors.append('<relion_classify> was not found.') 
+        if len(which('relion_movie_handlerr')) == 0:
+            errors.append('''program "relion_movie_handler" is missing. 
+                             Are you sure you have relion version 1.2?
+                             If you want to continue create a file named relion_movie_handler
+                             and place it in the path.''') 
         return errors 
     
     def defineSteps(self): 
