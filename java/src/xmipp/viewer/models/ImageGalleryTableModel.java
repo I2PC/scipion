@@ -124,7 +124,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		//int imageSize = dimension.getXDim() * dimension.getYDim()
 		//		* Cache.MAXPXSIZE;
 		int imageSize = thumb_height * thumb_width * Cache.MAXPXSIZE;
-		int elements = Cache.MEMORY_SIZE / imageSize;
+		int elements = imageSize > 0 ? Cache.MEMORY_SIZE / imageSize : 1;
 		//System.err.format("Cache elements: %d\n", elements);
 		cache.resize(elements > 0 ? elements : 1);
 	}
