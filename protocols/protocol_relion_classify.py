@@ -103,7 +103,7 @@ class ProtRelionClassifier(XmippProtocol):
                                 outputMd = tmpFileNameSTK,
                                 normType = 'NewXmipp',
                                 bgRadius = int(self.MaskDiameterA/2.0/self.SamplingRate),
-                                Nproc    = self.NumberOfMpi
+                                Nproc    = self.NumberOfMpi*self.NumberOfThreads
                                 )
             else:
                 self.Db.insertStep('createLink',
@@ -295,6 +295,8 @@ class ProtRelionClassifier(XmippProtocol):
             iterations = range(1,self.NumberOfIterations+1)
         else:
             iterations = map(int, getListFromVector(self.parser.getTkValue('SelectedIters')))
+        #check if last iteration exists
+
         runShowJExtraParameters = ' --dont_wrap --view '+ self.parser.getTkValue('DisplayVolumeSlicesAlong') 
         self.DisplayVolumeSlicesAlong=self.parser.getTkValue('DisplayVolumeSlicesAlong')
         
@@ -316,6 +318,12 @@ class ProtRelionClassifier(XmippProtocol):
             lastIterationVolumeFns += [self.getFilename('volume', iter=lastIteration, ref3d=ref3d )]
             standardOutputClassFns += ["images_ref3d%06d@"%ref3d + self.workingDirPath("classes_ref3D.xmd")]
         lastIterationMetadata = "images@"+self.getFilename('data'+'Xm', iter=lastIteration )
+        lastRef3D = ref3Ds[-1]
+        lastVolume = self.getFilename('volumeMRC', iter=lastIteration, ref3d=ref3d )
+        if not xmippExists(lastVolume):
+            message = "No data available for <iteration %d> and <ref3D %d>"%\
+                       (lastIterationMetadata,lastRef3D)
+            showError(message)
 
         convertRelionMetadata(None
                               , inputs
