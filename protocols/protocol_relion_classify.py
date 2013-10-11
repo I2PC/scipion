@@ -534,12 +534,7 @@ class ProtRelionClassifier(XmippProtocol):
                     md.write("angularDist@"+ntf.name)
                     parameters = ' --mode projector 256 -a ' + "angularDist@"+ ntf.name + " red "+\
                          str(float(_OuterRadius) * 1.1)
-                    print 'xmipp_chimera_client ', fileNameVol, parameters
                     runChimeraClient(fileNameVol,parameters)
-                    runJob(_log,
-                           'xmipp_chimera_client',
-                           parameters,1,1,True
-                           ) # run in background
             else: #DisplayAngularDistributionWith == '2D'
                 if(len(ref3Ds) == 1):
                     gridsize1 = [1, 1]

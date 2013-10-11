@@ -248,20 +248,6 @@ AdditionalArguments = ""
 
 
 # {eval} expandParallel()
-
-#------------------------------------------------------------------------------------------------
-# {section}{visualize} Preparation
-#------------------------------------------------------------------------------------------------
-
-# {view} Show the grey-scale corrected ref. map?
-VisualizeCRVolume = True
-
-# {view} Show the low-pass filtered ref. map?
-VisualizeFRVolume = True
-
-# {view} Show the generated seeds volumes?
-VisualizeGSVolume = True
-
 #------------------------------------------------------------------------------------------------
 # {section}{visualize} Results per Iteration and Ref3D
 #------------------------------------------------------------------------------------------------
