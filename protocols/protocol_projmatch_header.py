@@ -51,7 +51,7 @@ NumberOfIterations = 4
 Be careful, many options of the visualization protocol will not work anymore, 
 since all class averages, selfiles etc will be deleted.
 """
-CleanUpFiles = False
+CleanUpFiles = True
 
 #-----------------------------------------------------------------------------
 # {section}{has_question} CTF correction
