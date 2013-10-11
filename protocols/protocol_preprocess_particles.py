@@ -24,10 +24,8 @@ class ProtPreprocessParticles(ProtParticlesBase):
         baseFile = removeBasenameExt(file)
         self.OutStack = self.getFilename('images_stk')
         self.OutMetadata = self.getFilename('images')
-        #self.TiltPair = exists(getProtocolFilename('tilted_pairs', WorkingDir=self.InputDir)) and self.InSelFile.find('images.xmd')!=-1
-        self.TiltPair = 0
+        self.TiltPair = exists(os.path.join(self.InputDir,'images_untilted.xmd')) and self.InSelFile.find('images.xmd')!=-1
         if self.TiltPair:
-            self.TiltedPairs=os.path.join(self.InputDir,'tilted_pairs.xmd')
             self.InputUntilted=self.InSelFile.replace(".xmd","_untilted.xmd")
             self.InputTilted=self.InSelFile.replace(".xmd","_tilted.xmd")
             self.OutUntiltedStack=self.getFilename('images_untilted_stk')
@@ -38,8 +36,6 @@ class ProtPreprocessParticles(ProtParticlesBase):
 
     def defineSteps(self):
         if self.TiltPair:
-            fnTiltedPairs=self.workingDirPath('tilted_pairs.xmd')
-            self.insertStep('copyFile',verifyfiles=[fnTiltedPairs],source=self.TiltedPairs,dest=fnTiltedPairs)
             self.insertStep('copyImages',verifyfiles=[self.OutUntiltedMetadata, self.OutUntiltedStack],
                                InputFile=self.InputUntilted, OutputStack=self.OutUntiltedStack)
             self.insertStep('copyImages',verifyfiles=[self.OutTiltedMetadata, self.OutTiltedStack],
