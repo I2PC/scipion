@@ -628,6 +628,7 @@ def runChimeraClient(inputFile,extraParams=""):
     from protlib_filesystem import xmippExists
     if which("chimera") and xmippExists(inputFile):
         from protlib_filesystem import hasSpiderExt
+        print 'xmipp_chimera_client --input "%s" %s &' % (inputFile,extraParams)
         os.system('xmipp_chimera_client --input "%s" %s &' % (inputFile,extraParams))
     else:
         print "Error Chimera not available or inputFile %s does not exits."%inputFile
