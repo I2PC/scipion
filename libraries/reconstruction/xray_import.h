@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:    Carlos Oscar            coss@cnb.csic.es (2010)
- * 			   Joaquin Oton			   joton@cnb.csic.es (2013)
+ *       Joaquin Oton      joton@cnb.csic.es (2013)
  *
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -59,6 +59,8 @@ public:
     bool flatFix;
     /// Flag to apply dark field correction
     bool darkFix;
+    /// Flag to apply log10 corrections
+    bool log10Fix;
     /// Flag to apply self-attenuation corrections
     bool selfAttFix;
     /// Xray microscopy data origin;
