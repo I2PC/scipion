@@ -11,7 +11,6 @@ from protlib_utils import runJob, runShowJ, grepFirst
 from protlib_filesystem import findAcquisitionInfo
 import glob
 from xmipp import MetaData, MDL_SAMPLINGRATE, MDL_RESOLUTION_FREQREAL, MDL_RESOLUTION_FRC, MDL_RESOLUTION_SSNR
-from protlib_gui_ext import showError
 from os.path import dirname, basename
 
 class ProtResolution3D(XmippProtocol):

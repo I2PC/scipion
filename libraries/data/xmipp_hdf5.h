@@ -40,7 +40,6 @@
  *  @{
  */
 
-
 enum H5FileProvider
 {
     NONE,
@@ -50,7 +49,6 @@ enum H5FileProvider
 
 
 typedef std::pair<H5FileProvider, String> H5infoProvider;
-
 std::map<String, H5infoProvider > createProviderMap();
 
 /** Global declaration of a map to distinguish the h5file provider

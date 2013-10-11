@@ -80,6 +80,8 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 
 	public GalleryData data; // information about the gallery
 
+	public boolean adjustWidth = true; 
+	
 	// Initiazation function
 	public ImageGalleryTableModel(GalleryData data) throws Exception {
 		this.data = data;
@@ -98,7 +100,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 			rows = n;
 		}
 		// DEBUG.printMessage(String.format("col: %d, rows: %d", cols, rows));
-		resizeCache();
+		//resizeCache(); NOw this is done when setZoomValue
 	}
 	
 	public int getImageWidth()
@@ -119,9 +121,11 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 * depending on images size and available memory
 	 */
 	protected void resizeCache() {
-		int imageSize = dimension.getXDim() * dimension.getYDim()
-				* Cache.MAXPXSIZE;
-		int elements = Cache.MEMORY_SIZE / imageSize;
+		//int imageSize = dimension.getXDim() * dimension.getYDim()
+		//		* Cache.MAXPXSIZE;
+		int imageSize = thumb_height * thumb_width * Cache.MAXPXSIZE;
+		int elements = imageSize > 0 ? Cache.MEMORY_SIZE / imageSize : 1;
+		//System.err.format("Cache elements: %d\n", elements);
 		cache.resize(elements > 0 ? elements : 1);
 	}
 
@@ -333,6 +337,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		data.zoom = z;
 		scale = (float) (data.zoom / 100.0);
 		calculateCellSize();
+		resizeCache();
 	}
 
 	public void setZoom(int z) {
@@ -456,6 +461,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		int i = getIndex(row, col);
 		if (isValidIndex(i)) {
 			data.selection[i] = !data.selection[i];
+			adjustWidth = false;
 			fireTableCellUpdated(row, col);
 		}
 	}

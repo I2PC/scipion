@@ -361,10 +361,12 @@ class XmippProject():
                 self._registerRunProtocol(extRunName, prot, runsDict)
                 runsDict[extRunName].state = r['run_state']
             except Exception, ex:
-                print "Error loading run: ", extRunName, "...IGNORED."
+                print "WARNING: Can't load run: %s\n Error: %s" % (extRunName, ex)
+
         
         for r in runs:
             dd = runsDict.get(getExtendedRunName(r), None)
+
             if dd is not None:
                 for r2 in runs:
                     dd2 = runsDict.get(getExtendedRunName(r2), None)
@@ -493,6 +495,7 @@ class XmippProtocol(object):
         self.PrevRunName = None
         self.Input = {}
         self.parser = None # This is only used in GUI
+        self.master = None # This is only used in GUI for visualize
     
     def addParam(self, key, value):
         self.ParamsDict[key] = value
@@ -506,6 +509,19 @@ class XmippProtocol(object):
         params.update(self.ParamsDict)
         if self.FilenamesDict.has_key(key):
             return self.FilenamesDict[key] % params
+        raise Exception("XmippProtocol.getFilename: key '%s' not found" % key)
+    
+    def getFilenameAlternative(self, key1, key2, **params):
+        """Has the same function as getFileName
+        but if the filename does not exists then
+        tries an alternative filename seed given by key2
+         """
+        params.update(self.ParamsDict)
+        if self.FilenamesDict.has_key(key1):
+            fileName = self.FilenamesDict[key1] % params
+            if not xmippExists(fileName):
+                fileName = self.FilenamesDict[key2] % params
+            return fileName
         raise Exception("XmippProtocol.getFilename: key '%s' not found" % key)
     
     def getFileList(self, *keyList):

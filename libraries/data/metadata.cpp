@@ -750,7 +750,7 @@ void MetaData::_writeRows(std::ostream &os) const
     {
         for (size_t i = 0; i < activeLabels.size(); i++)
         {
-            if (activeLabels[i] != MDL_COMMENT)
+            if (activeLabels[i] != MDL_STAR_COMMENT)
             {
                 MDObject mdValue(activeLabels[i]);
                 os.width(1);
@@ -786,7 +786,7 @@ void MetaData::write(std::ostream &os,const String &blockName, WriteModeMetaData
         os << "loop_" << std::endl;
         for (size_t i = 0; i < activeLabels.size(); i++)
         {
-            if (activeLabels.at(i) != MDL_COMMENT)
+            if (activeLabels.at(i) != MDL_STAR_COMMENT)
             {
                 os << " _" << MDL::label2Str(activeLabels.at(i)) << std::endl;
             }
@@ -806,7 +806,7 @@ void MetaData::write(std::ostream &os,const String &blockName, WriteModeMetaData
             int maxWidth=20;
             for (size_t i = 0; i < activeLabels.size(); i++)
             {
-                if (activeLabels.at(i) != MDL_COMMENT)
+                if (activeLabels.at(i) != MDL_STAR_COMMENT)
                 {
                     int w=MDL::label2Str(activeLabels.at(i)).length();
                     if (w>maxWidth)
@@ -816,7 +816,7 @@ void MetaData::write(std::ostream &os,const String &blockName, WriteModeMetaData
 
             for (size_t i = 0; i < activeLabels.size(); i++)
             {
-                if (activeLabels[i] != MDL_COMMENT)
+                if (activeLabels[i] != MDL_STAR_COMMENT)
                 {
                     MDObject mdValue(activeLabels[i]);
                     os << " _" << MDL::label2Str(activeLabels.at(i)) << " ";
@@ -975,7 +975,7 @@ void MetaData::_readRows(std::istream& is, std::vector<MDObject*> & columnValues
                 if (line != "")//this is for old format files
                 {
                     if (!useCommentAsImage)
-                        setValue(MDL_COMMENT, line, id);
+                        setValue(MDL_STAR_COMMENT, line, id);
                     else
                         setValue(MDL_IMAGE, line, id);
                 }
@@ -1871,7 +1871,7 @@ void MetaData::writeXML(const FileName fn, const FileName blockname, WriteModeMe
         ofs <<  "<ROW ";
         for (size_t i = 0; i < size; i++)
         {
-            if (activeLabels[i] != MDL_COMMENT)
+            if (activeLabels[i] != MDL_STAR_COMMENT)
             {
                 ofs << MDL::label2Str(activeLabels[i]) << "=\"";
                 MDObject mdValue(activeLabels[i]);

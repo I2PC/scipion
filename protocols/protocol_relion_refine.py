@@ -16,12 +16,12 @@ from xmipp import MetaDataInfo
 from protlib_utils import runShowJ, getListFromVector, getListFromRangeString, runJob, runChimera, which
 from protlib_parser import ProtocolParser
 from protlib_xmipp import redStr, cyanStr
-from protlib_gui_ext import showWarning, showTable
 from protlib_filesystem import xmippExists, findAcquisitionInfo, moveFile, replaceBasenameExt
 from protocol_ml2d import lastIteration
 from protlib_filesystem import createLink
 from protlib_import import exportReliontoMetadataFile
 from protlib_gui_figure import XmippPlotter
+from protlib_gui_ext import showWarning, showTable, showError
 
 class ProtRelionRefinner(XmippProtocol):
     relionFiles=['data','model','optimiser','sampling']
@@ -69,9 +69,13 @@ class ProtRelionRefinner(XmippProtocol):
             errors.append("CTF correction selected and input metadata <%s> doesn't contains CTF information" % self.ImgMd)
             
         # Check relion is installed
-        if len(which('relion_refine')) == 0:
-            errors.append('<relion> was not found.') 
-            
+        if len(which('relion_classify')) == 0:
+            errors.append('<relion_classify> was not found.') 
+        if len(which('relion_movie_handlerr')) == 0:
+            errors.append('''program "relion_movie_handler" is missing. 
+                             Are you sure you have relion version 1.2?
+                             If you want to continue create a file named relion_movie_handler
+                             and place it in the path.''') 
         return errors 
     
     def defineSteps(self): 
@@ -467,7 +471,7 @@ class ProtRelionRefinner(XmippProtocol):
                             try:
                                 runShowJ(file_name, extraParams = runShowJExtraParameters)
                             except Exception, e:
-                                showError("Error launching java app", str(e))
+                                showError("Error launching java app", str(e),self.master)
                                 
         from tempfile import NamedTemporaryFile    
         if doPlot('DisplayAngularDistribution'):

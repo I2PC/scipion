@@ -496,6 +496,8 @@ void MDObject::toStream(std::ostream &os, bool withFormat, bool isSql, bool esca
                         c = _DQUOT;
                     else if (data.stringValue->find_first_of(_SPACE) != String::npos)
                         c = _QUOT;
+                    else if (data.stringValue->empty())
+                        c = _QUOT;
                 }
                 if (c == _SPACE)
                     os << *(data.stringValue);

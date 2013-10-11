@@ -29,7 +29,7 @@ scale corrections in image groups.
 """
 ImgMd = ""
 
-# Continue from here:
+# {hidden}Continue from here:
 """ 
 Select the *_optimiser.star file for the iteration from which you want to continue a previous run. 
 Note that the Output rootname of the continued run and the rootname of the previous run cannot be the same. 
@@ -267,18 +267,26 @@ VisualizeGSVolume = True
 #------------------------------------------------------------------------------------------------
 # {list_combo}( all, selection) Which ref3D you want to visualize?
 """ 
-   If you want two see the reference volume 2 and 5 write
-   2 5. In relaion first reference is 1
+   If you want two see the reference volume 2 and 5 
+   choose selection and write
+   2 5. In relion first reference is 1. All is equal to number of classes
 """
 DisplayRef3DNo='all'
 
 # {condition}(DisplayRef3DNo=='selection') Selected references 3D
-""" Which iteration do you want to visualize 
-If you want two see iterations 2 and 5 write
-   2 5. In relion first iteration is 0"""
+""" Which reference do you want to visualize 
+If you want two see references 2 and 5 
+   choose selection and write
+   2 5. In relion first iteration is 0. All is equal to all references from  1 to 
+   number of references"""
 SelectedRef3DNo = ''
 
 # {list_combo}(last, all, selection) Which iteration you want to visualize?
+""" Which iteration do you want to visualize 
+If you want two see iterations 2 and 5 
+   choose selection and write
+   2 5. In relion first iteration is 0. All is equal to all iterations from  1 to 
+   number of iterations. Last is equal to number of iterations """
 VisualizeIter = 'last'
 
 # {condition}(VisualizeIter=='selection') Selected iterations
@@ -314,7 +322,7 @@ DisplayResolutionPlotsSSNR=True
 # {hidden}{view} Display resolution plots (FSC)
 DisplayResolutionPlotsFSC=False
 
-# {expert} Display a threshold in resolution plots (FSC)
+# {hidden}{expert} Display a threshold in resolution plots (FSC)
 ResolutionThreshold=0.5
 
 # {view} Display angular distribution?
@@ -350,7 +358,7 @@ AvgPMAX=False
 from protocol_relion_classify import *
 
 if __name__ == '__main__':
-    protocolMain(ProtRelionClassier)
+    protocolMain(ProtRelionClassifier)
 
 ###############################
 # {view} Display resolution plots (FSC)

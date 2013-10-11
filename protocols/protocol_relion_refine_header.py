@@ -198,7 +198,7 @@ OffsetSearchRangePix = 5
 """
 OffsetSearchStepPix = 1
 
-# # {list_combo}(30,15,7.5,3.7,1.8,0.9,0.5,0.2,0.1) Angular sampling interval (deg): Local angular search range
+# {list_combo}(30,15,7.5,3.7,1.8,0.9,0.5,0.2,0.1)  Local angular search range
 """
 """
 LocalAngularSearchRange = 5.0
@@ -309,10 +309,10 @@ AvgPMAX=False
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE
 #------------------------------------------------------------------------------------------------
 
-from protocol_relion_classify import *
+from protocol_relion_refine import *
 
 if __name__ == '__main__':
-    protocolMain(ProtRelionClassier)
+    protocolMain(ProtRelionRefinner)
 
 ###############################
 # {view} Display resolution plots (FSC)

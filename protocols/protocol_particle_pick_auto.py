@@ -29,12 +29,13 @@ class ProtParticlePickingAuto(XmippProtocol):
        
         self.inputFilename(*self.keysToImport)
         self.inputProperty('TiltPairs', 'Fast')
+        self.MicrographSource = getattr(self, 'MicrographSource', "Same as supervised")
         
-        if self.MicrographsMd=="":
+        if self.MicrographSource == "Same as supervised":
             self.inputProperty('MicrographsMd')
-            self.anotherSet=False
+            self.anotherSet = False
         else:
-            self.anotherSet=True
+            self.anotherSet = True
         self.model="model"
         
     def createFilenameTemplates(self):
@@ -98,6 +99,12 @@ class ProtParticlePickingAuto(XmippProtocol):
     
     def validate(self):
         errors = []
+        if self.MicrographSource == "Other":
+            if len(self.MicrographsMd) == 0:
+                errors.append('<Set of micrograph> can not be empty')
+            elif not exists(self.MicrographsMd):
+                errors.append('<%s> micrographs file does not exist' % self.MicrographsMd)
+        
         return errors
     
     def visualize(self):

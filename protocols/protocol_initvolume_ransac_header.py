@@ -68,12 +68,27 @@ InitialVolume = ''
 #{expert} Max frequency of the initial volume
 """ Max frequency of the initial volume in Angstroms
 """
-MaxFreq = 10
+MaxFreq = 5
 
 # Sampling Rate
 """ Sampling rate (A/px)
 """
 Ts = '1'
+
+# Combine simulated annealing and RANSAC
+"""This option produces better results at a higher computational cost"""
+UseSA=True
+
+#{expert}{condition}(UseSA) Number of simulated annealing iterations
+""" During the simulated annealing iterations, all those particles positively contributing to the improvement of the volume are considered.
+In this way, the same image may participate several times from different projection directions (but different weights) depending
+on whether it improves the correlation with the volume or not"""
+NIterRandom = 10
+
+#{expert}{condition}(UseSA) Percentage of rejected particles
+"""At each iteration, the lowest correlated particles are removed from the 3D reconstruction, although they may participate in the
+next iteration""" 
+Rejection = 50
 
 #{expert} Use all images to refine
 """ When refining a RANSAC volume, use all images to refine it instead of only inliers
@@ -81,6 +96,16 @@ Ts = '1'
 UseAll=False
 
 # {eval} expandParallel(threads=0,hours=12)
+
+#------------------------------------------------------------------------------------------------
+# {section}{visualize} Visualization
+#------------------------------------------------------------------------------------------------
+# Show volume list
+DoShowList=True
+
+# Show in projection explorer
+"""Create a list of volumes like: 0,1,3 or 0-3 """
+VolumesToShow=""
 
 #------------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
