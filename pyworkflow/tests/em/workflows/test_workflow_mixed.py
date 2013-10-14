@@ -253,14 +253,14 @@ class TestMixedWorkflow_2(TestWorkflow):
         #self.validateFiles('protCTF', protCTF) 
         print "Running Eman fake particle picking..."
         protPP = EmanProtBoxing(importFolder=self.importFolder, runMode=1)                
-        protPP.inputMicrographs.set(protCTF.outputMicrographs)        
+        protPP.inputMicrographs.set(protDownsampling.outputMicrographs)        
 #        protPP.inputMicrographs.set(protImport.outputMicrographs)
         self.proj.launchProtocol(protPP, wait=True)
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
         self.protDict['protPP'] = protPP
 
         print "<Run extract particles with Same as picking>"
-        protExtract = XmippProtExtractParticles(boxSize=110, downsampleType=1, doFlip=True, doInvert=True, runMode=1)
+        protExtract = XmippProtExtractParticles(boxSize=110, downsampleType=1, doFlip=False, doInvert=True, runMode=1)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         #protExtract.inputMicrographs.set(protDownsampling.outputMicrographs)
         self.proj.launchProtocol(protExtract, wait=True)
