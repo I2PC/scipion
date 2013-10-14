@@ -407,13 +407,32 @@ class SetOfVolumes(SetOfImages):
 class SetOfCTF(Set):
     """ Contains a set of CTF models estimated for a set of images."""
     def __init__(self, **args):
-        Set.__init__(self, **args)      
-        
+        Set.__init__(self, **args)    
+        self._idMap = {}#FIXME, remove this after id is the one in mapper  
+
+    def load(self):
+        """ Load data only if the main set is empty. """
+        Set.load(self)
+        self._idMap = {} #FIXME, remove this after id is the one in mapper
+        for ctfModel in self._mapper.selectByClass("CTFModel", iterate=True):
+            self._idMap[ctfModel.getId()] = ctfModel
+            
+    def __getitem__(self, ctfId):
+        """ Get the ctfModel with the given id. """
+        self.loadIfEmpty() 
+            
+        return self._idMap.get(ctfId, None)
+            
     def __iter__(self):
         """ Iterate over the set of ctfs. """
         self.loadIfEmpty()
         for ctfModel in self._mapper.selectByClass("CTFModel", iterate=True):
-            yield ctfModel   
+            yield ctfModel  
+            
+    def append(self, ctfModel):
+        """ Add a ctfModel to the set. """
+        Set.append(self, ctfModel)
+        self._idMap[ctfModel.getId()] = ctfModel 
         
 
 class Coordinate(EMObject, Item):
