@@ -234,16 +234,22 @@ def viewer(request):
     
         print "======================= in viewer...."
           
-#        url = '/visualize_object/?objectId=746'
         request.GET = request.GET.copy()
-        request.GET['objectId'] = protocol.outputMicrographs.getObjId()
+        
+        # TODO: This should be changed to a more general approach 
+        # when the different protocol viewer be defined (in the same way of wizards.)
+
+        if getattr(protocol, 'outputMicrographs', False):
+            request.GET['objectId'] = protocol.outputMicrographs.getObjId()
+            
+        elif getattr(protocol, 'outputParticles', False):
+            request.GET['objectId'] = protocol.outputParticles.getObjId()
+        
         from views_showj import visualizeObject
         response = visualizeObject(request)
         
         ioDict = {"pag1": response.content , "pag2" : "<html><h2>Under construction</h2></html>"}
         
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
-        
-#        print jsonStr
-        
+                
     return HttpResponse(jsonStr, mimetype='application/javascript')
