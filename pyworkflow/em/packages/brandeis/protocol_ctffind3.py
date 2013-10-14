@@ -99,28 +99,40 @@ class ProtCTFFind(ProtCTFMicrographs):
         
     def createOutput(self):
         
-        micSet = self._createSetOfMicrographs()
-        micSet.copyInfo(self.inputMics)
+        #micSet = self._createSetOfMicrographs()
+        #micSet.copyInfo(self.inputMics)
+        ctfSet = self._createSetOfCTF()
         
         for fn, micDir, mic in self._iterMicrographs():
             out = join(micDir, 'ctffind.out')
             result = self._parseOutput(out)
             defocusU, defocusV, defocusAngle = result
-            micOut = Micrograph()
-            micOut.setFileName(mic.getFileName())
-            micOut.setCTF(self._getCTFModel(defocusU, defocusV, defocusAngle, 
-                                                self._getPsdPath(micDir)))
-            micSet.append(micOut)
+            #micOut = Micrograph()
+            #micOut.setFileName(mic.getFileName())
+            #micOut.setCTF(self._getCTFModel(defocusU, defocusV, defocusAngle, 
+            #                                    self._getPsdPath(micDir)))
+            #micSet.append(micOut)
+            ctfModel = self._getCTFModel(defocusU, defocusV, defocusAngle, 
+                                                self._getPsdPath(micDir))
+            ctfModel.micFile.set(mic.getFileName())
+            ctfSet.append(ctfModel)
 
         # This property should only be set by CTF estimation protocols
-        micSet.setHasCTF(True)     
+        #micSet.setHasCTF(True)     
             
-        micSet.write()
-        self._defineOutputs(outputMicrographs=micSet)
-	
+        #micSet.write()
+        ctfSet.write() 
+        
+        #self._defineOutputs(outputMicrographs=micSet)
+        self._defineOutputs(outputCTF=ctfSet)
+        #self._defineDataSource(self.inputMics, micSet)
+        self._defineRelation(RELATION_CTF, ctfSet, self.inputMics)
+        #TODO: Remove when output setOfmics disappear
+        #self._defineRelation(RELATION_CTF, ctfSet, micSet)
+
     def _validate(self):
         errors = []
         if which('ctffind3.exe') is '':
             errors.append('Missing ctffind3.exe')
-	return errors
+        return errors
             
