@@ -152,11 +152,32 @@ class ProtScreenMicrographs(XmippProtocol):
         if not exists(summaryFile): # Try to create partial summary file
             summaryFile = summaryFile.replace(self.WorkingDir, self.TmpDir)
             buildSummaryMetadata(self.WorkingDir, self.Input['micrographs'], summaryFile)
-            
+        
         if exists(summaryFile):
+            self.regenerateSummary(summaryFile)
             runShowJ(summaryFile, extraParams = "--mode metadata")
         else:
             showWarning('Warning', 'There are not results yet',self.master)
+    
+    def regenerateSummary(self,summaryFile):
+        import time
+        summaryTime=time.ctime(os.path.getmtime(summaryFile))
+        md=xmipp.MetaData(summaryFile)
+        regenerate=False
+        for objId in md:
+            fnCTF=md.getValue(xmipp.MDL_CTF_MODEL,objId)
+            ctfTime=time.ctime(os.path.getmtime(fnCTF))
+            if ctfTime>summaryTime:
+                regenerate=True
+                break
+        if regenerate:
+            print("Regenerating "+summaryFile+" because there are newer CTFs")
+            gatherResults(self.Log,TmpDir=self.TmpDir,
+                          WorkingDir=self.WorkingDir,
+                          summaryFile=self.micrographs,
+                          importMicrographs=self.MicrographsMd,
+                          Downsampling=self.DownsampleFactor,
+                          NumberOfMpi=self.NumberOfMpi)
     
 def estimateCtfCtffind1(_log, micrograph,
                           micrographDir,

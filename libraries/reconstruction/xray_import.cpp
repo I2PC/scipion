@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:    Carlos Oscar            coss@cnb.csic.es (2010)
- * 			   Joaquin Oton			   joton@cnb.csic.es (2013)
+ *       Joaquin Oton      joton@cnb.csic.es (2013)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -44,7 +44,13 @@ void ProgXrayImport::defineParams()
     addUsageLine("+                 Avg{(Iflatfield-darkfield)/(expTime*beamCurrent*slitWidth)}",true);
     addUsageLine("+ ");
     addUsageLine("+Because the intrinsic self-attenuation, X-ray projections are not optimal to be used ");
-    addUsageLine("+with EM 3D reconstruction algorithm. To fix that, use --correct flag:");
+    addUsageLine("+with EM 3D reconstruction algorithm. To fix that, use --log flag:");
+    addUsageLine("+ ");
+    addUsageLine("+log = log10(Inormalized)");
+    addUsageLine("+ ");
+    addUsageLine("+In addition to log correction, to apply a contrast inversion, which allows 3DEM ");
+    addUsageLine("+reconstruction algorithms returning volume coefficients close to the real expected ");
+    addUsageLine("+absorption values, use --correct flag:");
     addUsageLine("+ ");
     addUsageLine("+Icorrected = -log10(Inormalized)");
     addUsageLine("+ ");
@@ -90,8 +96,9 @@ void ProgXrayImport::defineParams()
     addParamsLine("   == Filters                                          ");
     addParamsLine("  [--bad_pixels_filter  <mask_image_file=\"\">]   : Apply a boundaries median filter to bad pixels given in mask.");
     addParamsLine("  alias -f;");
+    addParamsLine("  [--log]                            : Apply log10 to pixel values");
     addParamsLine("  [--correct]                        : Correct for the self-attenuation of X-ray projections applying ");
-    addParamsLine("  									: a log10 and multiplying by -1");
+    addParamsLine("           : a log10 and multiplying by -1");
     addParamsLine("  alias -c;");
     addExampleLine("The most standard call is",false);
     addExampleLine("xmipp_xray_import --data 10s --flat flatfields --oroot ProcessedData/img --crop 7");
@@ -144,6 +151,7 @@ void ProgXrayImport::readParams()
     thrNum    = getIntParam("--thr");
     fnBPMask  = getParam("--bad_pixels_filter");
     selfAttFix   = checkParam("--correct");
+    log10Fix   = (selfAttFix)? true : checkParam("--log");
 }
 
 // Show ====================================================================
@@ -467,10 +475,11 @@ void runThread(ThreadArgument &thArg)
                 mask += ptrProg->bpMask();
             boundMedianFilter(Iaux(), mask);
 
-            if (ptrProg->selfAttFix)
+            if (ptrProg->log10Fix)
             {
                 Iaux().selfLog10();
-                Iaux() *= -1.;
+                if (ptrProg->selfAttFix)
+                    Iaux() *= -1.;
             }
 
             fnImgOut.compose(i+1, ptrProg->fnOut);

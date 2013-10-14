@@ -31,6 +31,8 @@ class ProtHelicalParams(XmippProtocol):
                         CylinderRadius=self.CylinderRadius,fnCoarse=self.fnCoarse,fnFine=self.fnFine)
         self.insertStep('symmetrize',verifyfiles=[self.fnSym],WorkingDir=self.WorkingDir,InputVolume=self.InputVolume,
                         OutputVolume=self.fnSym,CylinderRadius=self.CylinderRadius, fnFine=self.fnFine)
+        if self.Dihedrical:
+            self.insertStep('findDihedrical',WorkingDir=self.WorkingDir,InputVolume=self.fnSym,CylinderRadius=self.CylinderRadius)
     
     def summary(self):
         message=[]
@@ -85,3 +87,18 @@ def symmetrize(log,WorkingDir,InputVolume,OutputVolume,CylinderRadius,fnFine):
         [xdim,ydim,zdim,ndim]=getImageSize(InputVolume)
         args="-i %s --mask cylinder %d %d"%(OutputVolume,int(-CylinderRadius),int(-xdim))
         runJob(log,'xmipp_transform_mask',args)
+
+def findDihedrical(log,WorkingDir,InputVolume,CylinderRadius):
+    fnRotated=os.path.join(WorkingDir,'tmp','volume_rotated.vol')
+    runJob(log,"xmipp_transform_geometry","-i %s -o %s --rotate_volume axis 180 1 0 0"%(InputVolume,fnRotated))
+    if CylinderRadius>0:
+        [xdim,ydim,zdim,ndim]=getImageSize(InputVolume)
+        maskArgs=" --mask cylinder %d %d"%(int(-CylinderRadius),int(-xdim))
+    else:
+        maskArgs=""
+    runJob(log,"xmipp_volume_align","--i1 %s --i2 %s --rot 0 360 3 -z -2 2 0.5 --apply"%(InputVolume,fnRotated)+maskArgs)
+    runJob(log,"xmipp_volume_align","--i1 %s --i2 %s --local --apply"%(InputVolume,fnRotated)+maskArgs)
+    runJob(log,"xmipp_image_operate","-i %s --plus %s -o %s"%(InputVolume,fnRotated,InputVolume))
+    runJob(log,"xmipp_image_operate","-i %s --divide 2"%(InputVolume))
+    runJob(log,"xmipp_transform_mask","-i %s "%(InputVolume)+maskArgs)
+    deleteFile(log,fnRotated)

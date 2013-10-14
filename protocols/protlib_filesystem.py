@@ -33,6 +33,7 @@ from os.path import join, exists, dirname, basename, relpath, split, splitext, i
 from protlib_utils import printLog 
 from shutil import copyfile
 from config_protocols import PROJECT_DB
+from fnmatch import fnmatch
 #from xmipp import *
 
 # The following are Wrappers to be used from Protocols
@@ -188,6 +189,22 @@ def findFilePath(filename, *pathList):
             if filename in files:
                 return root
     return None
+
+def matchPattern(filename, patterns):
+    for p in patterns:
+        if fnmatch(filename, p):
+            return True
+    return False
+
+def findFiles(path, *patterns):
+    '''Find recursively in path all the files matching a specific pattern
+    '''
+    matchingFiles=[]
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            if matchPattern(file,patterns):
+                matchingFiles.append(join(root,file))
+    return matchingFiles
 
 #--------------------------- Xmipp specific tools ---------------------------------
 def getXmippPath(*subpath):
