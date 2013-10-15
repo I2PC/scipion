@@ -99,6 +99,7 @@ public class MicrographsTableModel extends MetadataTableModel {
 		String sortFn = psdFile.replace(".psd", ".tmpSort.xmd");
 		MetaData mdRow = new MetaData(sortFn);
 		data.setRow(mdRow, objId);
+		mdRow.destroy();
 		refreshRow(row);
 	}
 	

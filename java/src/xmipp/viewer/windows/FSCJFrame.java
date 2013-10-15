@@ -86,7 +86,10 @@ public class FSCJFrame extends JFrame {
             add(createChartPanel(chart), BorderLayout.CENTER);
             pack();
             XmippWindowUtil.centerWindows(this);
+            
             imagesmd.destroy();
+            mdout.destroy();
+            
         } catch (Exception e) {
             DEBUG.printException(e);
         }
