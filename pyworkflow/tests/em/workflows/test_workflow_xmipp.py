@@ -321,44 +321,44 @@ class TestXmippWorkflow(TestWorkflow):
         protCTF = XmippProtCTFMicrographs(numberOfThreads=3)                
         protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)        
         self.proj.launchProtocol(protCTF, wait=True)
-        
+        self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF estimation")
         # After CTF estimation, the output micrograph should have CTF info
-        self.assertTrue(protCTF.outputMicrographs.hasCTF())
+        
         self.validateFiles('protCTF', protCTF)
         
         print "Running fake particle picking..."   
         protPP = XmippProtParticlePicking(importFolder=self.importFolder)                
-        protPP.inputMicrographs.set(protCTF.outputMicrographs)        
+        protPP.inputMicrographs.set(protDownsampling.outputMicrographs)        
         self.proj.launchProtocol(protPP, wait=True)
         self.protDict['protPicking'] = protPP
             
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
             
         print "Run extract particles with other downsampling factor"
-        protExtract = XmippProtExtractParticles(boxSize=64, downsampleType=2, downFactor=8, runMode=1, doInvert=True)
+        #TODO: Remove doFlip=True when CTF information is propagated to all SetOFMicrographs
+        protExtract = XmippProtExtractParticles(boxSize=64, downsampleType=2, doFlip=False, downFactor=8, runMode=1, doInvert=True)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.inputMicrographs.set(protImport.outputMicrographs)
         self.proj.launchProtocol(protExtract, wait=True)
         
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
         self.validateFiles('protExtract', protExtract)
-
-        return
         
-#        print "Run ML2D"
-#        protML2D = XmippProtML2D(numberOfReferences=1, maxIters=4, doMlf=False,#True,
-#                                 numberOfMpi=2, numberOfThreads=1)
-#        protML2D.inputImages.set(protExtract.outputParticles)
-#        self.proj.launchProtocol(protML2D, wait=True)        
-#        
-#        self.assertIsNotNone(protML2D.outputClasses, "There was a problem with ML2D") 
+        print "Run ML2D"
+        #TODO: Set doMlf to True when CTF is infered
+        protML2D = XmippProtML2D(numberOfReferences=1, maxIters=4, doMlf=False,#True,
+                                 numberOfMpi=2, numberOfThreads=1)
+        protML2D.inputImages.set(protExtract.outputParticles)
+        self.proj.launchProtocol(protML2D, wait=True)        
+        
+        self.assertIsNotNone(protML2D.outputClasses, "There was a problem with ML2D") 
         # Check that images related to each class have ctf model
 #        for class2D in protML2D.outputClasses:
 #            for imgCA in class2D:
 #                xmippImg = imgCA.getImage()
 #                self.assertTrue(imgCA.getImage().hasCTF(), "Image class has not CTF information.")
              
-#        self.validateFiles('protML2D', protML2D)
+        self.validateFiles('protML2D', protML2D)
     
         print "Run CL2D"
         protCL2D = XmippProtCL2D(numberOfReferences=2, numberOfInitialReferences=1, 
@@ -405,18 +405,18 @@ class TestXmippWorkflow(TestWorkflow):
         # skipping until revision
         #return 
         
-#        print "ML3D"
-#        protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2, runMode=1, numberOfMpi=2, numberOfThreads=2)
-#        protML3D.inputImages.set(protExtract.outputParticles)
-#        protML3D.ini3DrefVolumes.set(getInputPath('Volumes_BPV', 'BPV_scale_filtered_windowed_64.vol'))
-#        protML3D.doCorrectGreyScale.set(True)
-#        protML3D.doMlf.set(True)
-#        protML3D.numberOfSeedsPerRef.set(2)
-#
-#        self.proj.launchProtocol(protML3D, wait=True)        
-#        
-#        self.assertIsNotNone(protML3D.outputVolumes, "There was a problem with ML3D")
-#        self.validateFiles('protML3D', protML3D)
+        print "ML3D"
+        protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2, runMode=1, numberOfMpi=2, numberOfThreads=2)
+        protML3D.inputImages.set(protExtract.outputParticles)
+        protML3D.ini3DrefVolumes.set(getInputPath('Volumes_BPV', 'BPV_scale_filtered_windowed_64.vol'))
+        protML3D.doCorrectGreyScale.set(True)
+        #protML3D.doMlf.set(True)
+        protML3D.numberOfSeedsPerRef.set(2)
+
+        self.proj.launchProtocol(protML3D, wait=True)        
+        
+        self.assertIsNotNone(protML3D.outputVolumes, "There was a problem with ML3D")
+        self.validateFiles('protML3D', protML3D)
 
 if __name__ == "__main__":
     unittest.main()

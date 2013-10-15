@@ -19,23 +19,25 @@
 	var currentImageDim=parseInt('{{defaultZoom}}')
 	/*  If true images are regenerated in the server*/
 	var recallServer=false
+	/* Force regenerate even when src and data_real-src have the same value */
+	var forceRecallServer=false
 	/*  Last zoom set properly. In case the new value is too big or small it is set back to the previousZoom*/
 	var previousZoom='{{defaultZoom}}'
-	/* console.log("fuera")
-	alert("fuera") */
 	
 	$(document).ready(function(){ 
-		/* console.log("fuera")
-		alert("okokok") */
 		
+		
+		{% if form.mode.value != 'column'  %}
 		setImageSize(true)
 		initializeZoomEvents();
+		{% if form.mode.value == 'gallery'  %}
 		initializeColRowModeEvents()
+		initializeColsRowsEvents()
+		{% endif %}
+		{% endif %}
 		initializeComboBoxEvents()
 		initializeArrowEvents()
-		initializeColsRowsEvents()
 		initializeCheckboxEvents()
-		
 		
 		/* Avoid enter key submit form */
 		$('.menuInputNumber').keypress(function(e) {
@@ -49,16 +51,9 @@
 	}); 
 	</script>
 	<script type="text/javascript">
-	function initializeImageLoad(){
-		$('.tableImages').waypoint(function(direction){
-			setImagesSrcAttr($(this))
-		}, {
-/* 			triggerOnce:true, */
-			offset: '150%'
-/* 			offset: function() {
-		        return $.waypoints('viewportHeight');
-		    }
- */		});
+	function reloadImages(forceRecallServer){
+		$.waypoints('destroy')
+		initializeImageLoad(forceRecallServer)
 	}
 	</script>
 	<script type="text/javascript">
@@ -78,14 +73,13 @@
 	</script>
 	<script type="text/javascript">
 	function initializeCheckboxEvents(){
-		$("#id_mirrorY, #id_transformMatrix, #id_onlyShifts, #id_wrap").click(function(){
-			console.log("witole")
-			$('form#showjForm').submit();
+		$("#id_mirrorY, #id_applyTransformMatrix, #id_onlyShifts, #id_wrap").click(function(){
+			reloadImages(true)
 		})
 	}
 	</script>
+	<!-- Initialize block, metadata, volume and axis to reslice combobox to reload the web when changing -->
 	<script type="text/javascript">
-	//Initialize block, metadata, volume and axis to reslice combobox to reload the web when changing
 	function initializeComboBoxEvents(){
 		$("#id_blockComboBox, #id_labelsToRenderComboBox, #id_volumesToRenderComboBox, #id_resliceComboBox").change(function(){
 			$('#id_zoom').val('{{defaultZoom}}')
@@ -93,10 +87,10 @@
 		})
 	}
 	</script>
+	<!--Initialize events for columns and row mode. 
+	Automatic mode => disable cols & rows textfields
+	Manual mode => enable cols & rows textfields and initialize value  -->
 	<script type="text/javascript">
-	//Initialize events for columns and row mode. 
-	//Automatic mode => disable cols & rows textfields
-	//Manual mode => enable cols & rows textfields and initialize value
 	function initializeColRowModeEvents(){
 		$("#colRowMode").click(function(e){
 			if ($("#colRowModeImage").attr("src").indexOf("On") != -1){
@@ -113,6 +107,9 @@
 				/* Allow section div to adjust automatically*/
 				$("section").css("width", "");
 
+				/* Display rows & cols menu */
+				$("#colsSubSectionMenu, #rowsSubSectionMenu").hide()
+				
 				e.preventDefault();
 			}
 			else{
@@ -133,9 +130,25 @@
 					/* Set section div width automatically */
 					updateMainContainerDim($("#id_cols").val())
 				}
+				
+				/* Display rows & cols menu */
+				$("#colsSubSectionMenu, #rowsSubSectionMenu").show()
+				
 				e.preventDefault();
 			}
 		});
+		
+		{% if form.mode.value == 'gallery' %}
+		hideShowColsRowsSubSectionMenu()
+		{% endif %}
+	}
+	function hideShowColsRowsSubSectionMenu(){
+		if ($("#colRowModeImage").attr("src").indexOf("On") != -1){
+			$("#colsSubSectionMenu, #rowsSubSectionMenu").show()
+		}
+		else{
+			$("#colsSubSectionMenu, #rowsSubSectionMenu").hide()
+		}
 	}
 	
 	//Initialize Columns and Rows textfields. Execute when changing to manual mode
@@ -147,29 +160,24 @@
 	}
 	</script>
 	<script type="text/javascript">
+	function isNaturalNumber(n) {
+	    n = n.toString(); // force the value incase it is not
+	    var n1 = Math.abs(n),
+	        n2 = parseInt(n, 10);
+	    
+	    return !isNaN(n1) && n2 === n1 && n1.toString() === n && n2>0;
+	}
 	//Change gallery layout when cols and rows textfield change
 	function initializeColsRowsEvents(){
-		$("#id_cols, #id_rows").click(function(){
-			updateGalleryLayout($("#id_cols").val(),$("#id_rows").val(), $(this).attr("id"))
-		});
-		
-		$("#id_cols, #id_rows").change(function(){
-			alert("por change")
-			updateGalleryLayout($("#id_cols").val(),$("#id_rows").val(), $(this).attr("id"))
-		});
-		$("#id_cols, #id_rows").keyup(function(){
-			alert("por keypress")
+		$("#id_cols, #id_rows").on('click change keyup',function(){
+			if (!isNaturalNumber($("#id_cols").val())){$("#id_cols").val(1)}
+			if (!isNaturalNumber($("#id_rows").val())){$("#id_rows").val(1)}
 			updateGalleryLayout($("#id_cols").val(),$("#id_rows").val(), $(this).attr("id"))
 		});
 	}
 	
 	function updateGalleryLayout(cols, rows, setElement){
-		alert("cols"+cols)
-		alert("rows"+rows)
 		recalculateColsRows(cols,rows, setElement)
-		alert("cols"+cols)
-		alert("rows"+rows)
-		alert("$(#id_cols).val()"+$("#id_cols").val())
 		updateMainContainerDim($("#id_cols").val())
 	}
 	
@@ -183,133 +191,142 @@
 	}
 	function updateMainContainerDim(colVal){
 		imgContainerWidth =$(".img_container").width() + (parseInt($(".img_container").css("padding-right")) * 2)
-		alert("imgContainerWidth"+imgContainerWidth)
 		sectionWidth = colVal * imgContainerWidth
 		$("section").width(sectionWidth)
+		
+		reloadImages(false)
+		
 	}
 	</script>
-	<script type="text/javascript">
-		//Initialize events for zoom change
-		function initializeZoomEvents(){
-			$('#id_zoom').click(function(){
-				/* updateImageDimByUrl(); */
-				setImageSize(false)
-			});
-			
-			$('#id_zoom').change(function(){
-				/* updateImageDimByUrl(); */
-				setImageSize(false)
-			});
-				
-	 		$('#id_zoom').keyup(function(e){
-	 			var code = e.keyCode || e.which; 
- 			  	if (code  == 13) {               
- 					 /* updateImageDimByUrl(); */
- 					 setImageSize(false)
- 			  	}
-			});	 
-		}
-		
-		
-		function setImageSize(refreshElement){
-			/* Gets zoom and image width and height */
-			zoom_element=$('#id_zoom')
-			
-			imageHeight_val = parseInt({{imageDimensions.1}})
-			imageWidth_val = parseInt({{imageDimensions.0}})
-			ratio = imageHeight_val/imageWidth_val 
-			
-			/* Check if zoom in pixel */
-			if (zoom_element.val().indexOf('px')!=-1){
-				/*  Get zoom value*/			
-				zoom_val=parseInt(zoom_element.val().split('px')[0])
-				
-				/* Calculate zoom in percentage */
-				if (imageHeight_val<imageWidth_val){
-					tableImages_width=zoom_val
-					zoom_val_perc=Math.round((zoom_val/imageWidth_val)*100)
-				} 
-				else{
-					tableImages_width=Math.round(zoom_val*(imageWidth_val/imageHeight_val))+1
-					zoom_val_perc=Math.round((zoom_val/imageHeight_val)*100)
-				}
-				
-			}
-			else{
-				zoom_val_perc=zoom_element.val()
-				if (imageHeight_val<imageWidth_val){
-					zoom_val_pixel=Math.round((zoom_val_perc*imageWidth_val)/100)
-					tableImages_width=zoom_val_pixel
-				} 
-				else{
-					zoom_val_pixel=Math.round((zoom_val_perc*imageHeight_val)/100)
-					tableImages_width=zoom_val_pixel
-				}
-			}
-			
-			/*  CHECK ZOOM VALUE IS A NUMBER BETWEEN MAX AND MIN*/
-			tableImages_height=tableImages_width*ratio
-			if (isNaN(tableImages_width) || tableImages_width>{{form.imageMaxWidth.value}} || tableImages_width<{{form.imageMinWidth.value}} || tableImages_height>{{form.imageMaxHeight.value}} || tableImages_height<{{form.imageMinHeight.value}}){
-				alert('Incorrect table width or height: '+tableImages_width+'px x '+ tableImages_height +'px.')
-				zoom_element.val(previousZoom)
-				setImageSize(true)
-				return;
-			}
-			else{
-				previousZoom=tableImages_width+"px"
-			}
-			
-			if (refreshElement==true){
-				zoom_element.val(zoom_val_perc)
-			}
-			
-			if (tableImages_width>currentImageDim*1.2 || tableImages_width<currentImageDim*0.8){
-				recallServer=true
-				currentImageDim=tableImages_width
-			}	
-			else{
-				recallServer=false
-			}
-			
-			d = new Date();
-			$(".tableImages").each(function(){
-			   	var newSrc = "";
-			   	if ($(this).data("real_src").indexOf("&dim") != -1){
-			   		newSrc = $(this).data("real_src").substring(0,$(this).data("real_src").indexOf("&dim"));
-			   	}
-			   	else{
-					newSrc = $(this).data("real_src");   
-			   	}
-			   	$(this).attr("height",tableImages_width)
-			   	$(this).attr("width",tableImages_width)
-		   	
-		   		realSrc = newSrc.concat("&dim="+tableImages_width).concat("&"+d.getTime())
-				$(this).data("real_src", realSrc);
-			   	
- 		   		 	
-	
-		   })
-		   
-		   /* If images with new dimensions need to be generated in the server, waypoints jquery script manages it */
-		   if (recallServer){
-				$.waypoints('destroy')
-				initializeImageLoad()
-		   }
-		}
 
-	</script>
+	<!-- Initialize events on zoom change (calculate dim (perc & pixel) & recall the server) -->
 	<script type="text/javascript">
-	function setImagesSrcAttr(element){
-		if (element.data('real_src') != element.attr("src")){
-			element.attr(
-				"src",
-				element.data('real_src').concat($("#id_mirrorY").is(':checked')?"&mirrorY":"").concat($("#id_transformMatrix").is(':checked')?"&transformMatrix":"").concat($("#id_onlyShifts").is(':checked')?"&onlyShifts":"").concat($("#id_wrap").is(':checked')?"&wrap":"")
-				)
+	function initializeZoomEvents(){
+		$('#id_zoom').click(function(){
+			/* updateImageDimByUrl(); */
+			setImageSize(false)
+		});
+		
+		$('#id_zoom').change(function(){
+			/* updateImageDimByUrl(); */
+			setImageSize(false)
+		});
+			
+ 		$('#id_zoom').keyup(function(e){
+ 			var code = e.keyCode || e.which; 
+			  	if (code  == 13) {               
+					 /* updateImageDimByUrl(); */
+					 setImageSize(false)
+			  	}
+		});	 
+	}
+	
+	
+	function setImageSize(refreshElement){
+		/* Gets zoom and image width and height */
+		zoom_element=$('#id_zoom')
+		
+		imageHeight_val = parseInt({{imageDimensions.1}})
+		imageWidth_val = parseInt({{imageDimensions.0}})
+		ratio = imageHeight_val/imageWidth_val 
+		
+		/* Check if zoom in pixel */
+		if (zoom_element.val().indexOf('px')!=-1){
+			/*  Get zoom value*/			
+			zoom_val=parseInt(zoom_element.val().split('px')[0])
+			
+			/* Calculate zoom in percentage */
+			if (imageHeight_val<imageWidth_val){
+				tableImages_width=zoom_val
+				zoom_val_perc=Math.round((zoom_val/imageWidth_val)*100)
+			} 
+			else{
+				tableImages_width=Math.round(zoom_val*(imageWidth_val/imageHeight_val))+1
+				zoom_val_perc=Math.round((zoom_val/imageHeight_val)*100)
+			}
+			
 		}
+		else{
+			zoom_val_perc=zoom_element.val()
+			if (imageHeight_val<imageWidth_val){
+				zoom_val_pixel=Math.round((zoom_val_perc*imageWidth_val)/100)
+				tableImages_width=zoom_val_pixel
+			} 
+			else{
+				zoom_val_pixel=Math.round((zoom_val_perc*imageHeight_val)/100)
+				tableImages_width=zoom_val_pixel
+			}
+		}
+		
+		/*  CHECK ZOOM VALUE IS A NUMBER BETWEEN MAX AND MIN*/
+		tableImages_height=tableImages_width*ratio
+		if (isNaN(tableImages_width) || tableImages_width>{{form.imageMaxWidth.value}} || tableImages_width<{{form.imageMinWidth.value}} || tableImages_height>{{form.imageMaxHeight.value}} || tableImages_height<{{form.imageMinHeight.value}}){
+			alert('Incorrect table width or height: '+tableImages_width+'px x '+ tableImages_height +'px.')
+			zoom_element.val(previousZoom)
+			setImageSize(true)
+			return;
+		}
+		else{
+			previousZoom=tableImages_width+"px"
+		}
+		
+		if (refreshElement==true){
+			zoom_element.val(zoom_val_perc)
+		}
+		
+		if (tableImages_width>currentImageDim*1.2 || tableImages_width<currentImageDim*0.8){
+			recallServer=true
+			currentImageDim=tableImages_width
+		}	
+		else{
+			recallServer=false
+		}
+		
+		d = new Date();
+		$(".tableImages").each(function(){
+		   	var newSrc = "";
+		   	if ($(this).data("real_src").indexOf("&dim") != -1){
+		   		newSrc = $(this).data("real_src").substring(0,$(this).data("real_src").indexOf("&dim"));
+		   	}
+		   	else{
+				newSrc = $(this).data("real_src");   
+		   	}
+		   	$(this).attr("height",tableImages_width)
+		   	$(this).attr("width",tableImages_width)
+	   	
+	   		realSrc = newSrc.concat("&dim="+tableImages_width).concat("&"+d.getTime())
+			$(this).data("real_src", realSrc);
+		   	
+		   		 	
+
+	   })
+	   
+	   /* If images with new dimensions need to be generated in the server, waypoints jquery script manages it */
+	   if (recallServer){reloadImages(false)}
+		
+		if ($("#colRowModeImage").length >0 && $("#colRowModeImage").attr("src").indexOf("On")!=-1){initializeColsRows()}
+	}
+
+	function initializeImageLoad(forceRecall){
+		forceRecallServer = forceRecall
+		$('.tableImages').waypoint(function(direction){
+			element=$(this)
+			if (element.data('real_src') != element.attr("src") || forceRecallServer){ 
+				element.attr(
+					"src",
+					element.data('real_src').concat($("#id_mirrorY").is(':checked')?"&mirrorY":"").
+					concat($("#id_applyTransformMatrix").is(':checked')?"&applyTransformMatrix":"").
+					concat($("#id_onlyShifts").is(':checked')?"&onlyShifts":"").
+					concat($("#id_wrap").is(':checked')?"&wrap":"")
+					)
+			}
+		}, {
+			offset: '150%'
+		});
 	}
 	</script>
+	<!-- Save table change in metadata -->
 	<script type="text/javascript">
-	//Save table change in metadata
 	function saveShowjTable(){
 		if ($("#saveButton").hasClass("saveOn")){
 			$.ajax({
@@ -334,6 +351,13 @@
 		}
 	}
 	</script>
+	<script type="text/javascript">	
+	function showHideOptionMenu(){
+		$("#optionsButton").toggleClass("optionsOff")
+		$("#optionsButton").toggleClass("optionsOn")
+		$("#optionsList").toggleClass("optionsListOn")
+	}
+	</script>
 	{% block head %}  {% endblock %}
 </head>
 <body>
@@ -356,13 +380,6 @@
 		<a href="/project_content/?projectName={{projectName}}">Back to project</a>
 	</div>
 	</header>
-<!-- 	<nav>  Top Menu
-		<ul>
-			<li>File</li>
-			<li>Display</li>
-			<li>Help</li>
-		</ul>
-	</nav> -->
 	<div id="main_section">
 		<aside id="side_news"> <!-- Main Menu -->
 
@@ -392,6 +409,21 @@
 					  disabled
 					 {% endif %}
 					 />
+					 
+					
+					{% if form.dims.value == '3d' %} 
+					<input type="submit" value="visualizeVol" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='visualizeVol';" class="submitButton
+					{% if form.mode.value == 'visualizeVol' %}
+					  visualizeVolOn
+					 {% endif %}
+					 {% if form.mode.value == 'table' or form.mode.value == 'gallery'  %}
+					 visualizeVolOff
+					 {% endif %}
+					 "
+					 
+					   
+					 />
+					 {% endif %}
 				</div>
 				
 				<div id="zoomContainer" class="sectionMenu">
@@ -426,7 +458,7 @@
 						<img src="/resources/showj/colRowMode{{form.colRowMode.value}}.png" id="colRowModeImage" />
 					</button>
 					
-					<div class="subSectionMenu">
+					<div class="subSectionMenu" id="colsSubSectionMenu">
 						<span class="textMenu">{{ form.cols.label_tag }}</span>
 						{{ form.cols }}
 						
@@ -436,7 +468,7 @@
 						</div>
 						<!-- <input type="number" class="menuInputNumber" id="cols" value="" min="1" max="{{metadata.objects|length}}" disabled> -->
 					</div>
-					<div class="subSectionMenu">
+					<div class="subSectionMenu" id="rowsSubSectionMenu">
 						<span class="textMenu">{{ form.rows.label_tag }}</span>
 						{{ form.rows }}
 						
@@ -476,12 +508,6 @@
 					{{ form.volumesToRenderComboBox }}
 				</div>
 				
-				
-				<div id="mirrorContainer" class="sectionMenu">
-					<span class="textMenu"> {{ form.mirrorY.label_tag }} </span>
-					{{ form.mirrorY }} 
-				</div>
-				
 				<div id="resliceSelectorContainer" class="sectionMenu">
 					<span class="textMenu">
 					{% if not form.resliceComboBox.is_hidden %}
@@ -497,10 +523,21 @@
 				
 				<div id="saveContainer" class="sectionMenu">
 					<button id="saveButton" onclick="saveShowjTable(); return false;" class="saveOff">
-						<!-- <img src="/resources/showj/saveOff.png" id="saveButtonImage" /> -->
 					</button>
-				</div> 
-				 
+				</div>
+				
+				
+				<div id="optionsContainer" class="sectionMenu">
+					<button id="optionsButton" class="optionsOff submitButton" onclick="showHideOptionMenu(); return false;">
+					</button>
+				
+					<ul id="optionsList">
+						<li>{{ form.mirrorY }} {{ form.mirrorY.label_tag }}</li>
+						<li>{{ form.applyTransformMatrix }} {{ form.applyTransformMatrix.label_tag }}</li>
+						<li>{{ form.onlyShifts }} {{ form.onlyShifts.label_tag }}</li>
+						<li>{{ form.wrap }} {{ form.wrap.label_tag }}</li>
+					</ul>
+				</div>  
 				{% block content_menu %}	{% endblock %}
 				 
 				{% for hidden in form.hidden_fields %}

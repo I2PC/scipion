@@ -65,11 +65,11 @@ class Microscope(EMObject):
     
 
 # TODO: Move this class and Set to a separated base module
-class Item(Object):
+class Item(EMObject):
     """ This class should be subclasses to be used as elements of Set.
     """
     def __init__(self, **args):
-        Object.__init__(self, **args)
+        EMObject.__init__(self, **args)
         self._id =  Integer()
         
     #TODO: replace this id with objId
@@ -84,25 +84,24 @@ class Item(Object):
         return self._id.hasValue()
         
 
-class CTFModel(EMObject, Item):
+class CTFModel(Item):
     """ Represents a generic CTF model. """
     def __init__(self, **args):
-        EMObject.__init__(self, **args)
         Item.__init__(self, **args)
         self.defocusU = Float()
         self.defocusV = Float()
         self.defocusAngle = Float()
         self.psdFile = String()
+        self.micFile = String()
         
     def copyInfo(self, other):
         self.copyAttributes(other, 'defocusU', 'defocusV',
                             'defocusAngle', 'psdFile')
 
 
-class Image(EMObject, Item):
+class Image(Item):
     """Represents an EM Image object"""
     def __init__(self, **args):
-        EMObject.__init__(self, **args)
         Item.__init__(self, **args)
         #TODO: replace this id with objId
         # Image location is composed by an index and a filename
@@ -168,6 +167,10 @@ class Image(EMObject, Item):
     def setCTF(self, newCTF):
         self._ctfModel = newCTF
         
+    def __str__(self):
+        """ String representation of an Image. """
+        return "%s (index=%d, filename=%s)" % (self.getClassName(), self.getIndex(), self.getFileName())
+        
         
 class Micrograph(Image):
     """ Represents an EM Micrograph object """
@@ -198,7 +201,23 @@ class Set(EMObject):
         self._filename = String() # sqlite filename
         self._mapper = None
         self._idCount = 0
-        self._size = Integer(0) # cached value of the number of images    
+        self._size = Integer(0) # cached value of the number of images  
+        self._idMap = {}#FIXME, remove this after id is the one in mapper
+        
+    def __getitem__(self, imgId):
+        """ Get the image with the given id. """
+        self.loadIfEmpty() 
+            
+        return self._idMap.get(imgId, None)
+
+    def __iterItems(self):
+        return self._mapper.selectAll(iterate=True)
+    
+    def __iter__(self):
+        """ Iterate over the set of images. """
+        self.loadIfEmpty()
+        
+        return self.__iterItems()
        
     def getSize(self):
         """Return the number of images"""
@@ -224,6 +243,13 @@ class Set(EMObject):
         if self.getFileName() is None:
             raise Exception("Set filename before calling load()")
         self._mapper = SqliteMapper(self.getFileName(), globals())
+        count = 0
+        self._idMap = {}#FIXME, remove this after id is the one in mapper 
+        
+        for item in self.__iterItems():
+            self._idMap[item.getId()] = item
+            count += 1
+        self._size.set(count)
         
     def loadIfEmpty(self):
         """ Load data only if the main set is empty. """
@@ -238,6 +264,11 @@ class Set(EMObject):
         self.loadIfEmpty()
         self._mapper.insert(item)
         self._size.set(self._size.get() + 1)
+        self._idMap[item.getId()] = item
+        
+    def __str__(self):
+        self.loadIfEmpty()
+        return "%-20s (%d items)" % (self.getClassName(), self.getSize())
                 
     
 class SetOfImages(Set):
@@ -250,29 +281,7 @@ class SetOfImages(Set):
         self._hasProjectionMatrix = Boolean(False)
         self._isPhaseFlippled = Boolean(False)
         self._isAmplitudeCorrected = Boolean(False)
-        self._mapper = None
-        self._idCount = 0
-        self._size = Integer(0) # cached value of the number of images
-        self._idMap = {}#FIXME, remove this after id is the one in mapper
-    
-    def load(self):
-        """ Load data only if the main set is empty. """
-        Set.load(self)
-        self._idMap = {} #FIXME, remove this after id is the one in mapper
-        for img in self._mapper.selectByClass("Image", iterate=True):
-            self._idMap[img.getId()] = img
-            
-    def __getitem__(self, imgId):
-        """ Get the image with the given id. """
-        self.loadIfEmpty() 
-            
-        return self._idMap.get(imgId, None)
-
-    def __iter__(self):
-        """ Iterate over the set of images. """
-        self.loadIfEmpty()
-        for img in self._mapper.selectByClass("Image", iterate=True):
-            yield img            
+           
         
     def hasCTF(self):
         """Return True if the SetOfImages has associated a CTF model"""
@@ -310,7 +319,6 @@ class SetOfImages(Set):
         if not image.getSamplingRate():
             image.setSamplingRate(self.getSamplingRate())
         Set.append(self, image)
-        self._idMap[image.getId()] = image
 
     def copyInfo(self, other):
         """ Copy basic information (sampling rate, scannedPixelSize and ctf)
@@ -406,14 +414,38 @@ class SetOfVolumes(SetOfImages):
 class SetOfCTF(Set):
     """ Contains a set of CTF models estimated for a set of images."""
     def __init__(self, **args):
-        Set.__init__(self, **args)      
+        Set.__init__(self, **args)    
+        self._idMap = {}#FIXME, remove this after id is the one in mapper  
+
+    def load(self):
+        """ Load data only if the main set is empty. """
+        Set.load(self)
+        self._idMap = {} #FIXME, remove this after id is the one in mapper
+        for ctfModel in self._mapper.selectByClass("CTFModel", iterate=True):
+            self._idMap[ctfModel.getId()] = ctfModel
+            
+    def __getitem__(self, ctfId):
+        """ Get the ctfModel with the given id. """
+        self.loadIfEmpty() 
+            
+        return self._idMap.get(ctfId, None)
+            
+    def __iter__(self):
+        """ Iterate over the set of ctfs. """
+        self.loadIfEmpty()
+        for ctfModel in self._mapper.selectByClass("CTFModel", iterate=True):
+            yield ctfModel  
+            
+    def append(self, ctfModel):
+        """ Add a ctfModel to the set. """
+        Set.append(self, ctfModel)
+        self._idMap[ctfModel.getId()] = ctfModel 
         
 
-class Coordinate(EMObject, Item):
+class Coordinate(Item):
     """This class holds the (x,y) position and other information
     associated with a coordinate"""
     def __init__(self, **args):
-        EMObject.__init__(self, **args)
         Item.__init__(self, **args)
         self._micrographPointer = Pointer(objDoStore=False)
         self._x = Integer()
@@ -500,7 +532,7 @@ class SetOfCoordinates(Set):
         If micrograph=None, the iteration is performed over the whole set of coordinates.
         """
         self.loadIfEmpty()
-        for coord in self._mapper.selectByClass("Coordinate", iterate=True):
+        for coord in self:
             if micrograph is None:
                 yield coord 
             else:
@@ -518,7 +550,6 @@ class SetOfCoordinates(Set):
          """
         self._micrographsPointer.set(micrographs)
         
-    
     def getFiles(self):
         filePaths = set()
         filePaths.add(self.getFileName())
@@ -641,14 +672,6 @@ class SetOfClasses2D(Set):
         self._hasRepresentativeImages = True # True if the classes have associated average image
         self._imagesPointer = Pointer()
         
-    def __iter__(self):
-        """ Iterate over all classes. """
-        self.loadIfEmpty()
-        self._idMap = {} #FIXME, remove this after id is the one in mapper
-        for class2D in self._mapper.selectByClass("Class2D", iterate=True):
-            self._idMap[class2D.getId()] = class2D
-            yield class2D  
-            
     def iterImagesClass(self):
         """ Iterate over the images of a class. """
         pass
@@ -672,10 +695,6 @@ class SetOfClasses2D(Set):
     
     def setImages(self, images):
         self._imagesPointer.set(images)
-    
-    def __getitem__(self, classId):
-        """ Get the class with the given id. """
-        #FIXME, remove this after id is the one in mapper
-        return self._idMap.get(classId, None)
+
      
      

@@ -136,8 +136,9 @@ class TestXmippCTFEstimation(TestXmippBase):
         protCTF.inputMicrographs.set(protImport.outputMicrographs)        
         self.proj.launchProtocol(protCTF, wait=True)
         
-        self.assertTrue(protCTF.outputMicrographs.hasCTF(), "CTF estimation has not been performed.")
-        self.assertEqual(protCTF.outputMicrographs._xmippMd.get(),protCTF._getPath("micrographs.xmd"), "Xmipp md not set on output.") 
+        #self.assertTrue(protCTF.outputMicrographs.hasCTF(), "CTF estimation has not been performed.")
+        #self.assertEqual(protCTF.outputMicrographs._xmippMd.get(),protCTF._getPath("micrographs.xmd"), "Xmipp md not set on output.")
+        self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.") 
         
     def test_Micrographs_BPV1_Down3(self):
         self.doCTF(pattern = getInputPath('Micrographs_BPV1_Down3', '*.mrc'))

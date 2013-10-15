@@ -125,11 +125,15 @@ def get_image(request):
     imageNo = None
     imagePath = request.GET.get('image')
     imageDim = request.GET.get('dim', 150)
+    
     mirrorY = 'mirrorY' in request.GET
+    
     applyTransformMatrix = 'applyTransformMatrix' in request.GET
-    onlyApplyShifts = request.GET.get('onlyApplyShifts',False)
-    wrap = request.GET.get('wrap',False)
-    transformMatrix = request.GET.get('transformMatrix',None)
+    onlyShifts = 'onlyShifts' in request.GET
+    wrap = 'wrap' in request.GET
+    
+     
+    matrix = request.GET.get('matrix',None)
         
     try:
         # PAJM: Como vamos a gestionar lsa imagen    
@@ -153,8 +157,17 @@ def get_image(request):
             imgXmipp = xmipp.Image()
     
             imgXmipp.readPreview(imagePath, int(imageDim))
-            if applyTransformMatrix and transformMatrix != None: 
-                imgXmipp.applyTransforMatScipion(transformMatrix, onlyApplyShifts, wrap)
+            if applyTransformMatrix: 
+                print "akitikiri"
+                takarras=[tMatrix[0][0], tMatrix[0][1], tMatrix[0][2], x if x!=None else 0,
+                tMatrix[1][0], tMatrix[1][1], tMatrix[1][2], y if y!=None else 0,
+                tMatrix[2][0], tMatrix[2][1], tMatrix[2][2], z if z!=None else 0]
+#                imgXmipp.applyTransforMatScipion(matrix, 
+#                                                 onlyShifts,
+#                                                 wrap)
+                imgXmipp.applyTransforMatScipion(takarras, 
+                                                 onlyShifts,
+                                                 wrap)
             
             if mirrorY: 
                 imgXmipp.mirrorY()
