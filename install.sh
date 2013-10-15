@@ -5,13 +5,24 @@
 # --------------------------#
 # X-Window-based Microscopy Image Processing Package
 # Xmipp is a suite of image processing programs, primarily aimed at single-particle 3D electron microscopy
-# More info: http://xmipp.cnb.csic.es
+# More info: http://xmipp.cnb.csic.es - xmipp@cnb.csic.es
 # Instruct Image Processing Center - National Center of Biotechnology - CSIC. Spain
 
 
 ##################################################################################
 #################### DEFINITIONS #################################################
 ##################################################################################
+
+#Some interface definitions
+TITLE="Xmipp installation script"
+BLACK='\033[30m'
+WHITE='\033[37m'
+YELLOW='\033[33m'
+RED='\033[31m'
+BLUE='\033[36m'
+GREEN="\033[32m"
+RED="\033[31m"
+ENDC="\033[0m"
 
 export NUMBER_OF_CPU=1
 GLOB_STATE=0
@@ -44,7 +55,6 @@ DO_UPDATE=false
 DO_SETUP=true
 DO_GUI=true
 DO_UNATTENDED=false
-DO_NEWSTYLE=false
 
 # Parsing parameters
 TAKE_CPU=false
@@ -130,92 +140,26 @@ VSCONS=1.2.0
 SCONS_FOLDER="scons"
 SCONS_TAR="${SCONS_FOLDER}.tgz"
 
+VNMA=0.0
+NMA_FOLDER="NMA"
+NMA_TAR="${NMA_FOLDER}.tgz"
 
-EXTERNAL_LIBRARIES=(         $ALGLIB_FOLDER $BILIB_FOLDER $CONDOR_FOLDER $FFTW_FOLDER $GTEST_FOLDER $HDF5_FOLDER $IMAGEJ_FOLDER $JPEG_FOLDER $SCONS_FOLDER $SQLITE_FOLDER $TIFF_FOLDER )
-EXTERNAL_LIBRARIES_FILES=(   $ALGLIB_TAR    $BILIB_TAR    $CONDOR_TAR    $FFTW_TAR    $GTEST_TAR    $HDF5_TAR    $IMAGEJ_TAR    $JPEG_TAR    $SCONS_TAR    $SQLITE_TAR    $TIFF_TAR )
-EXTERNAL_LIBRARIES_DEFAULT=(        1             1              1            1             1            1              1            1             1              1            1    )
+VSHALIGNMENT=0.0
+SHALIGNMENT_FOLDER="sh_alignment"
+SHALIGNMENT_TAR="${SH_ALIGNMENT_FOLDER}.tgz"
 
-PYTHON_MODULES=(        $MATLIBPLOT_FOLDER $PYMPI_FOLDER $NUMPY_FOLDER $SCIPY_FOLDER )
-PYTHON_MODULES_DEFAULT=(           1             1             1             1    )
+EXTERNAL_LIBRARIES=(         $ALGLIB_FOLDER $BILIB_FOLDER $CONDOR_FOLDER $FFTW_FOLDER $GTEST_FOLDER $HDF5_FOLDER $IMAGEJ_FOLDER $JPEG_FOLDER $SCONS_FOLDER $SQLITE_FOLDER $TIFF_FOLDER $NMA_FOLDER $SHALIGNMENT_FOLDER )
+EXTERNAL_LIBRARIES_FILES=(   $ALGLIB_TAR    $BILIB_TAR    $CONDOR_TAR    $FFTW_TAR    $GTEST_TAR    $HDF5_TAR    $IMAGEJ_TAR    $JPEG_TAR    $SCONS_TAR    $SQLITE_TAR    $TIFF_TAR    $NMA_TAR    $SHALIGNMENT_TAR    )
+EXTERNAL_LIBRARIES_DEFAULT=(        1             1              1            1             1            1              1            1             1              1            1           0                   0       )
+
+PYTHON_MODULES=(        $MATLIBPLOT_FOLDER $PYMPI_FOLDER $NUMPY_FOLDER $SCIPY_FOLDER $TCL_FOLDER $TK_FOLDER )
+PYTHON_MODULES_FILES=(  $MATLIBPLOT_TAR    $PYMPI_TAR    $NUMPY_TAR    $SCIPY_TAR    $TCL_TAR    $TK_TAR    )
+PYTHON_MODULES_DEFAULT=(           1             1             1             1           1          1       )
 
 
 ##################################################################################
 #################### FUNCTIONS ###################################################
 ##################################################################################
-
-takeArguments()
-{
-  for param in $@; do
-    if $TAKE_CPU; then
-      NUMBER_OF_CPU=$param
-      TAKE_CPU=false
-    elif $TAKE_CONFIGURE && [ "$param" != "compile" ]; then
-       echo "param: $param"
-       CONFIGURE_ARGS="$CONFIGURE_ARGS $param"
-    elif $TAKE_COMPILE && [ "$param" != "configure" ]; then
-       COMPILE_ARGS="$COMPILE_ARGS $param"
-    else
-      case $param in
-        "disable_all")
-                              DO_UNTAR=false
-                              DO_SQLITE=false
-                              DO_TCLTK=false
-                              DO_PYTHON=false
-                              DO_PYMOD=false
-                              DO_FFTW=false
-                              DO_TIFF=false
-                              DO_JPEG=false
-                              DO_HDF5=false
-                              DO_NMA=false
-                              DO_CLTOMO=false
-                              DO_SETUP=false;;			
-        "-j")                 TAKE_CPU=true;;
-        "untar=true")         DO_UNTAR=true;;
-        "untar=false")        DO_UNTAR=false;;
-        "sqlite=true")        DO_SQLITE=true;;
-        "sqlite=false")       DO_SQLITE=false;;
-        "tcltk=true")         DO_TCLTK=true;;
-        "tcltk=false")        DO_TCLTK=false;;
-        "python=true")        DO_PYTHON=true;DO_PYMOD=true;;
-        "python=false")       DO_PYTHON=false;DO_PYMOD=false;;
-        "pymodules=true")     DO_PYMOD=true;;
-        "pymodules=false")    DO_PYMOD=false;;
-        "fftw=true")          DO_FFTW=true;;
-        "fftw=false")         DO_FFTW=false;;
-        "tiff=true")          DO_TIFF=true;;
-        "tiff=false")         DO_TIFF=false;;
-        "jpeg=true")          DO_JPEG=true;;
-        "jpeg=false")         DO_JPEG=false;;
-        "hdf5=true")          DO_HDF5=true;;
-        "hdf5=false")         DO_HDF5=false;;
-        "cltomo=true")        DO_CLTOMO=true;;
-        "clromo=false")       DO_CLTOMO=false;;
-        "nma=true")           DO_NMA=true;;
-        "nma=false")          DO_NMA=false;;
-        "clean=true")         DO_CLEAN=true;;
-        "clean=false")        DO_CLEAN=false;;
-        "static=true")        DO_STATIC=true;;
-        "static=false")       DO_STATIC=false;;
-        "gui=false")          GUI_ARGS="";;
-        "setup=true")         DO_SETUP=true;;
-        # This two if passed should be at the end and 
-        # will setup arguments for configure and compilation steps
-        "configure")          TAKE_CONFIGURE=true;
-                              TAKE_COMPILE=false;;
-        "compile")            TAKE_CONFIGURE=false;
-                              TAKE_COMPILE=true;;
-        "unattended=true")    DO_UNATTENDED=true;;
-        "unattended=false")   DO_UNATTENDED=false;;
-        "newstyle=true")      DO_NEWSTYLE=true;;
-        *)                    echo "Unrecognized option $param, exiting..."; exit 1
-      esac
-    fi 
-  done
-
-  if $DO_UNATTENDED; then
-    CONFIGURE_ARGS="$CONFIGURE_ARGS unattended"
-  fi
-}
 
 decideOS()
 {
@@ -237,11 +181,15 @@ decideOS()
   esac
 }
 
+
+# Helping function to get the timestamp for measuring the time spent at any part of the code
 tic()
 {
    TIMESTAMP="$(date +%s)"
 }
 
+
+# Helping function to get the second timestamp for measuring the difference with the first and then know the time spent at any part of the code
 toc()
 {
    NOW="$(date +%s)"
@@ -249,9 +197,6 @@ toc()
    echo "*** Elapsed time: $ELAPSED seconds"
 }
 
-GREEN="\033[32m"
-RED="\033[31m"
-ENDC="\033[0m"
 
 # Print a green msg using terminal escaped color sequence
 echoGreen()
@@ -259,6 +204,7 @@ echoGreen()
     printf "$GREEN %b $ENDC\n" "$1"
 }
 
+# Pinrt a red msg using terminal escaped color sequence
 echoRed()
 {
     printf "$RED %b $ENDC\n" "$1"
@@ -302,6 +248,266 @@ echoExecRedirectEverything()
   check_state
   return $GLOB_STATE
 }
+welcomeMessage()
+{
+  echo -e "${BLACK}0000000000000000000000000000000000000000000000000001"              
+  echo -e "${BLACK}0000000000000000P!!00000!!!!!00000!!0000000000000001"
+  echo -e "${BLACK}000000000000P'  ${RED}.:==.           ,=;:.  ${BLACK}\"400000000001"
+  echo -e "${BLACK}0000000000!  ${RED}.;=::.::,         .=:.-:=,.  ${BLACK}!000000001"
+  echo -e "${BLACK}0000000P' ${RED}.=:-......::=      ::;.......-:=. ${BLACK}\"0000001"
+  echo -e "${BLACK}0000000,${RED}.==-.........::;.   .;::.-.......-=:${BLACK}.a#00001"
+  echo -e "${BLACK}0000000'${RED}.=;......--:.:.:=:.==::.:--:.:...,=- ${BLACK}!000001"
+  echo -e "${BLACK}000000    ${RED}-=...:.:.:-:::::=;::.::.:.:..-:=-    ${BLACK}00001"
+  echo -e "${BLACK}0000P       ${RED}==:.:-::. ${YELLOW}.aa.${RED} :::::::::.::=:      ${BLACK}\"4001"
+  echo -e "${BLACK}00001        ${RED}:;:::::..${YELLOW}:#0:${RED} =::::::::::::        ${BLACK}j#01"
+  echo -e "${BLACK}0001   ${YELLOW}aa _aas  _aa_  .aa, _a__aa_.  .a__aas,    ${BLACK}j#1"
+  echo -e "${BLACK}"'0001   '"${YELLOW}"'4WU*!4#gW9!##i .##; 3##P!9#Ai .##U!!Q#_   '"${BLACK}"'j#1'
+  echo -e "${BLACK}"'001    '"${YELLOW}"'3O.  :xO.  ]Oi .XX: ]O( .  X2 .XC;  :xX.   '"${BLACK}"'01'
+  echo -e "${BLACK}"'001    '"${YELLOW}"'dU.  :jU.  %Ui .WW: ]UL,..aXf .Ums  jd*    '"${BLACK}"'01'
+  echo -e "${BLACK}"'0001   '"${YELLOW}"'4W.  :dW. .%W1 :WW: %WVXNWO~  .#U*#WV!    _'"${BLACK}"'01'
+  echo -e "${BLACK}"'0001        '"${RED}"'.............. '"${YELLOW}"'%#1  '"${RED}"'.... '"${YELLOW}"'.#A)        '"${BLACK}"'j01'
+  echo -e "${BLACK}"'00001      '"${RED}"':=::-:::::;;;;: '"${YELLOW}"'301 '"${RED}"'::::: '"${YELLOW}"'.0A)       '"${BLACK}"'j#01'
+  echo -e "${BLACK}0000L    ${RED}.;::.--::::::::;: ,,..:::::... .::.   ${BLACK}_d001"
+  echo -e "${BLACK}000000  ${RED}:;:...-.-.:.:::=;   =;:::---.:....::,  ${BLACK}00001"
+  echo -e "${BLACK}000000!${RED}:::.....-.:.::::-     :=:-.:.-......:= ${BLACK}!00001"
+  echo -e "${BLACK}000000a  ${RED}=;.........:;        .:;........,;;  ${BLACK}a00001"
+  echo -e "${BLACK}"'0000000La '"${RED}"'--:_....:=-           :=:...:_:--'"${BLACK}"'_a#000001'
+  echo -e "${BLACK}"'0000000000a  '"${RED}"'-=;,:=              -;::=:-  '"${BLACK}"'a000000001'
+  echo -e "${BLACK}"'00000000000Laaa '"${RED}"'-\aa              ar- '"${BLACK}"'aaa00000000001'
+  echo -e "${BLACK}00000000000000#00000000aaaaaad000000#00#0#0000000001"
+  echo ""
+  echo -e "${WHITE}Welcome to $TITLE ${ENDC}"
+  echo ""
+  return 0;
+}
+
+#function that prints the script usage help
+helpMessage()
+{
+  echo -e ""
+  welcomeMessage
+  echo -e "###################################"
+  echo -e '# XMIPP INSTALLATION SCRIPT USAGE #'
+  echo -e "###################################"
+  echo -e "${RED}NAME"
+  echo -e "${WHITE}  install.sh - XMIPP installation script. "
+  echo -e ""
+  echo -e "${RED}SYNOPSIS"
+  echo -e "${WHITE}  ./install.sh ${BLUE}[OPERATIONS] [OPTIONS]${WHITE}"
+  echo -e ""
+  echo -e "${RED}DESCRIPTION"
+  echo -e "${WHITE}  Script that automates the XMIPP compilation process. When this script is executed, the compilation sequence starts, depending on the selected options. If no option is given, the script follows the sequence:"
+  echo -e "1- untar the external libraries, xmipp_python and xmipp_python modules."
+  echo -e "2- Configure and compile one by one every external library"
+  echo -e "3- Configure and compile xmipp_python"
+  echo -e "4- Compile and install python modules in xmipp_python"
+  echo -e "5- Launch SConscript to compile Xmipp"
+  echo -e "6- Run the unitary tests"
+  echo -e ""
+  echo -e "No option is mandatory. The default behaviour (without any given option) Following options are accepted:"
+  echo -e ""
+  echo -e ""
+  echo -e "GENERAL OPTIONS:"
+  echo -e ""
+  echo -e "${BLUE}--disable-all${WHITE},${BLUE} -d${WHITE}"
+  echo -e "    Disable every option in order to let the user to enable just some of them."
+  echo -e "${BLUE}--num-cpus=${YELLOW}<NUMCPU>${WHITE},${BLUE} -j ${YELLOW}<NUMCPU>${WHITE}"
+  echo -e "    Provides a number of CPUs for the compilation process. Default value is 2."
+  echo -e "${BLUE}--configure-args=${YELLOW}<ARGS>${WHITE}"
+  echo -e "    Store the arguments the user wants to provide to configure process before compilation start."
+  echo -e "${BLUE}--compile-args=${YELLOW}<ARGS>${WHITE}"
+  echo -e "    Store the arguments the user wants to provide to compilation process."
+  echo -e "${BLUE}--unattended=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Tells the script to asume default where no option is given on every question and don't show any GUI. This is intended to be used when no human will be watching the screen (i.e. other scripts)."
+  echo -e "${BLUE}--help,${BLUE} -h${WHITE}"
+  echo -e "    Shows this help message"
+  echo -e ""
+  echo -e ""
+  echo -e "OPERATIONS:"
+  echo -e ""
+  echo -e "${BLUE}--untar${WHITE},${BLUE} -u${WHITE}"
+  echo -e "    Untar the list of libraries provided to the script (or default libraries array if not provided)."
+  echo -e "${BLUE}--configure${WHITE},${BLUE} -f${WHITE}"
+  echo -e "    Configure the list of libraries provided to the script (or default libraries array if not provided)."
+  echo -e "${BLUE}--compile${WHITE},${BLUE} -c${WHITE}"
+  echo -e "    Compile the list of libraries provided to the script (or default libraries array if not provided)."
+  echo -e ""
+  echo -e ""
+  echo -e "EXTERNAL LIBRARIES OPTIONS:"
+  echo -e ""
+  echo -e "${BLUE}--sqlite=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over sqlite library. When just --sqlite is given, true is asumed."
+  echo -e "${BLUE}--fftw=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over fftw library. When just --fftw is given, true is asumed."
+  echo -e "${BLUE}--tiff=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over tiff library. When just --tiff is given, true is asumed."
+  echo -e "${BLUE}--jpeg=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over jpeg library. When just --jpeg is given, true is asumed."
+  echo -e "${BLUE}--hdf5=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over hdf5 library. When just --hdf5 is given, true is asumed."
+  echo -e "${BLUE}--cltomo=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over cltomo library. When just --cltomo is given, true is asumed."
+  echo -e "${BLUE}--nma=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over nma library. When just --nma is given, true is asumed."
+  echo -e ""
+  echo -e ""
+  echo -e "PYTHON-RELATED OPTIONS:"
+  echo -e ""
+  echo -e "${BLUE}--python=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute selected operation over xmipp_python. Just --python is equal to --python=true."
+  echo -e "${BLUE}--tcl-tk=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute selected operation over tcl and tk libraries. --tcl-tk is equivalent to --tcl-tk=true."
+  echo -e "${BLUE}--tcl=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute selected operation over tcl library. If --tcl is given, --tcl=true will be understood."
+  echo -e "${BLUE}--tk=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute selected operation over tk library. Where --tk means --tk=true."
+  echo -e "${BLUE}--pymodules=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over every python modules. When just --pymodules is given, true is asumed."
+  echo -e ""
+  echo -e ""
+  echo -e "XMIPP-RELATED OPTIONS:"
+  echo -e ""
+  echo -e "${BLUE}--gui=${YELLOW}[true|false]${WHITE}"
+  echo -e "    When launching scons compilation, select true whether you want the Xmipp compilation GUI or false otherwise. Where --gui means --gui=true."
+  echo -e ""
+  echo -e ""
+  return 0;
+}
+
+takeArguments()
+{
+  while [ "$1" ]; do
+    case $1 in
+      --disable-all|-d)
+     	                      DO_UNTAR=false
+                              DO_SQLITE=false
+                              DO_TCLTK=false
+                              DO_PYTHON=false
+                              DO_PYMOD=false
+                              DO_FFTW=false
+                              DO_TIFF=false
+                              DO_JPEG=false
+                              DO_HDF5=false
+                              DO_NMA=false
+                              DO_CLTOMO=false
+                              DO_SETUP=false
+        ;;
+      --num-cpus=*)
+        ;;
+      -j)
+        NUMBER_OF_CPU=$2
+        shift
+        ;;
+      -j*)
+        NUMBER_OF_CPU=$(echo "$1"|sed -e 's/-j//g')
+        ;;
+      --configure-args=*)
+        CONFIGURE_ARGS=$(echo "$1"|cut -d '=' -f2)
+        ;;
+      --compile-args=*)
+        COMPILE_ARGS=$(echo "$1"|cut -d '=' -f2)
+        ;;
+      --unattended=*) #[true|false]
+        DO_UNATTENDED=$(echo "$1"|cut -d '=' -f2)
+	if [ "${DO_UNATTENDED}" == "true" ]; then
+          DO_UNATTENDED=true
+	elif [ "${DO_UNATTENDED}" == "false" ]
+          DO_UNATTENDED=false
+	fi
+        ;;
+      --help|-h)
+        ;;
+      --untar|-u)
+        ;;
+      --configure|-f)
+        ;;
+      --compile|-c)
+        ;;
+      --sqlite)
+        ;;
+      --fftw)
+        ;;
+      --tiff)
+        ;;
+      --jpeg)
+        ;;
+      --hdf5)
+        ;;
+      --cltomo)
+        ;;
+      --nma)
+        ;;
+      --python)
+        ;;
+      --tcl-tk)
+        ;;
+      --tcl)
+        ;;
+      --tk)
+        ;;
+      --pymodules)
+        ;;
+    esac
+    shift
+  done
+  for param in $@; do
+    elif $TAKE_CONFIGURE && [ "$param" != "compile" ]; then
+       echo "param: $param"
+       CONFIGURE_ARGS="$CONFIGURE_ARGS $param"
+    elif $TAKE_COMPILE && [ "$param" != "configure" ]; then
+       COMPILE_ARGS="$COMPILE_ARGS $param"
+    else
+      case $param in
+        "-j")                 TAKE_CPU=true;;
+        "untar=true")         DO_UNTAR=true;;
+        "untar=false")        DO_UNTAR=false;;
+        "sqlite=true")        DO_SQLITE=true;;
+        "sqlite=false")       DO_SQLITE=false;;
+        "tcltk=true")         DO_TCLTK=true;;
+        "tcltk=false")        DO_TCLTK=false;;
+        "python=true")        DO_PYTHON=true;DO_PYMOD=true;;
+        "python=false")       DO_PYTHON=false;DO_PYMOD=false;;
+        "pymodules=true")     DO_PYMOD=true;;
+        "pymodules=false")    DO_PYMOD=false;;
+        "fftw=true")          DO_FFTW=true;;
+        "fftw=false")         DO_FFTW=false;;
+        "tiff=true")          DO_TIFF=true;;
+        "tiff=false")         DO_TIFF=false;;
+        "jpeg=true")          DO_JPEG=true;;
+        "jpeg=false")         DO_JPEG=false;;
+        "hdf5=true")          DO_HDF5=true;;
+        "hdf5=false")         DO_HDF5=false;;
+        "cltomo=true")        DO_CLTOMO=true;;
+        "clromo=false")       DO_CLTOMO=false;;
+        "nma=true")           DO_NMA=true;;
+        "nma=false")          DO_NMA=false;;
+        "clean=true")         DO_CLEAN=true;;
+        "clean=false")        DO_CLEAN=false;;
+        "static=true")        DO_STATIC=true;;
+        "static=false")       DO_STATIC=false;;
+        "gui=false")          GUI_ARGS="";;
+        "setup=true")         DO_SETUP=true;;
+        # This two if passed should be at the end and 
+        # will setup arguments for configure and compilation steps
+        "configure")          TAKE_CONFIGURE=true;
+                              TAKE_COMPILE=false;;
+        "compile")            TAKE_CONFIGURE=false;
+                              TAKE_COMPILE=true;;
+        "unattended=true")    
+        "unattended=false")   DO_UNATTENDED=false;;
+        *)                    echoRed "Unrecognized option $param, exiting..."
+                              helpMessage
+                              exit 1
+      esac
+    fi 
+  done
+
+  if $DO_UNATTENDED; then
+    CONFIGURE_ARGS="$CONFIGURE_ARGS unattended"
+  fi
+}
+
+
 
 create_bashrc_file()
 {
@@ -599,7 +805,7 @@ decompressExternals()
     fi
     echo "--> tar -xvzf ${EXTERNAL_LIBRARIES_TAR[$lib]} > /dev/null"
     tar -xvzf ${EXTERNAL_LIBRARIES_TAR[$lib]} > /dev/null 2>&1
-    lib=$(echo "$lib + 1"|bc)
+    lib=$(expr "$lib + 1")
   done
   echo "--> cd - > /dev/null"
   cd - > /dev/null 2>&1
@@ -611,8 +817,8 @@ decompressPython()
   DELETE_ANSWER="n"
   tic
   echoGreen "*** Checking previous decompressed Python ***"
-  echo "--> cd ${EXT_PATH}"
-  cd ${EXT_PATH}
+  echo "--> cd ${EXT_PATH}/python"
+  cd ${EXT_PATH}/python
   if [ -d ${PYTHON_FOLDER} ]; then
     if [ ! $DO_UNATTENDED -a ${DELETE_ANSWER} != "Y" -a ${DELETE_ANSWER} != "N"]; then
       echo "${PYTHON_FOLDER} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
@@ -628,15 +834,40 @@ decompressPython()
   fi
   echo "--> tar -xvzf ${PYTHON_FOLDER} > /dev/null"
   tar -xvzf ${PYTHON_FOLDER} > /dev/null 2>&1
+  echo "--> cd - > /dev/null"
+  cd - > /dev/null 2>&1
   toc
 }
 
 decompressPythonModules()
 {
+  DELETE_ANSWER="n"
   tic
-  echo "--> cd python"
-  cd python
-
+  echo
+  echo "--> cd ${EXT_PATH}/python"
+  cd ${EXT_PATH}/python
+  echoGreen "*** Decompressing python modules ..."
+  lib=0
+  while [ ${lib} -le ${#PYTHON_MODULES[@]} ]; do
+    if [ -d ${PYTHON_MODULES[$lib]} ]; then
+      if [ ! $DO_UNATTENDED -a ${DELETE_ANSWER} != "Y" -a ${DELETE_ANSWER} != "N"]; then
+        echo "${PYTHON_MODULES[$lib]} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
+	read DELETE_ANSWER
+      else
+        DELETE_ANSWER="Y"
+      fi
+      if [ ${DELETE_ANSWER} == "y" -o ${DELETE_ANSWER} == "Y" ]; then
+        echoExec "rm -rf ${PYTHON_MODULES[$lib]}"
+      else
+        echoRed "Library ${PYTHON_MODULES[$lib]} folder untouched."
+      fi
+    fi
+    echo "--> tar -xvzf ${PYTHON_MODULES_TAR[$lib]} > /dev/null"
+    tar -xvzf ${PYTHON_MODULES_TAR[$lib]} > /dev/null 2>&1
+    lib=$(expr "$lib + 1")
+  done
+  echo "--> cd - > /dev/null"
+  cd - > /dev/null 2>&1
   toc
 }
 
@@ -649,6 +880,7 @@ exitGracefully()
 #################### INITIAL TASKS ###############################################
 ##################################################################################
 
+welcomeMessage
 initial_definitions
 takeArguments $@
 decideOS
@@ -664,16 +896,6 @@ echoGreen "*** Checking needed folders ..."
 create_dir build
 create_dir bin
 create_dir lib
-
-
-##################################################################################
-#################### IF NEWSTYLE IS GIVEN WE LAUNCH NEWSTYLE SCRITP ##############
-##################################################################################
-
-if $DO_NEWSTYLE; then
-  . ${XMIPP_HOME}/install_newstyle.sh
-  exit 0
-fi
 
 
 ##################################################################################
