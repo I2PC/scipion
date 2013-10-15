@@ -66,6 +66,9 @@ class XmippPlotter(object):
         self.plot_text_fontsize = 8
         self.plot_yformat = '%1.2e'
 
+    def getCanvas(self):
+        return self.figure.canvas
+    
     def showLegend(self, labels, loc='best'):
         leg = self.last_subplot.legend(tuple(labels), loc=loc)
         for t in leg.get_texts():

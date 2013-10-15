@@ -33,6 +33,7 @@ urlpatterns = patterns('',
     url(r'^protocol_status/$', 'app.views_project.protocol_status'),
     url(r'^project_graph/$', 'app.views_project.project_graph'),
     url(r'^viewer/$', 'app.views_project.viewer'),
+    url(r'^view_plot/$', 'app.views_project.view_plot'),
     
     #UTILS
     url(r'^get_image/', 'app.views_util.get_image'), # Load images dynamically

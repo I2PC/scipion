@@ -112,8 +112,16 @@ function launchViewer(id){
 		url : "/viewer/?protocolId=" + id,
 		dataType : "json",
 		success : function(json) {
-			$.each(json, function(key, value) {
+			$.each(json, function(key, value) {				
+				if(key=="html"){
 					customPopupHTML(value,800,600);
+				}
+				else if(key=="url"){
+					customPopup(value,1024,600)
+				}
+				else if(key=="plot"){
+					customPopup(value,600,500)
+				}
 			});
 		}
 	});	
@@ -122,11 +130,11 @@ function launchViewer(id){
 function updateButtons(projName, id, elm){
 	// Action Edit Button
 	$("a#editTool").attr('href',
-	'javascript:popup("/form/?=&protocolId=' + id + '")');
+	'javascript:popup("/form/?protocolId=' + id + '")');
 	
 	// Action Copy Button
 	$("a#copyTool").attr('href',
-	'javascript:popup("/form/?&protocolId=' + id + '&action=copy' + '")');
+	'javascript:popup("/form/?protocolId=' + id + '&action=copy' + '")');
 
 	// Action Delete Button
 	$("a#deleteTool").attr('href',
