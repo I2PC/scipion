@@ -77,6 +77,7 @@ public class TiltPairPicker extends ParticlePicker
 				micrographs.add(untiltedmicrograph);
 
 			}
+			md.destroy();
 			if (micrographs.size() == 0)
 				throw new IllegalArgumentException(String.format("No micrographs specified on %s", selfile));
 
@@ -146,7 +147,11 @@ public class TiltPairPicker extends ParticlePicker
 	{
 		try
 		{
-			loadMicrographParticles(um, new MetaData(getParticlesBlock(uPosFile)), new MetaData(getParticlesBlock(tPosFile)));
+			MetaData uMd = new MetaData(getParticlesBlock(uPosFile));
+			MetaData tMd = new MetaData(getParticlesBlock(tPosFile));
+			loadMicrographParticles(um, uMd, tMd);
+			uMd.destroy();
+			tMd.destroy();
 		}
 		catch (Exception e)
 		{
@@ -219,6 +224,7 @@ public class TiltPairPicker extends ParticlePicker
 				saveData(m);
 
 			}
+			anglesmd.destroy();
 
 		}
 		catch (Exception e)
@@ -267,6 +273,9 @@ public class TiltPairPicker extends ParticlePicker
 				md.write(getParticlesBlock(file));
 				file = getOutputPath(um.getTiltedMicrograph().getPosFile());
 				md2.write(getParticlesBlock(file));
+				
+				md.destroy();
+				md2.destroy();
 			}
 
 		}

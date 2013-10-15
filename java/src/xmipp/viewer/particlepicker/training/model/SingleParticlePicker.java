@@ -289,8 +289,8 @@ public class SingleParticlePicker extends ParticlePicker {
 				md.setValueDouble(MDLabel.MDL_COST, tm.getThreshold(), id);
 				md.write("header@" + file); // using md.write will remove other
 											// existing blocks
-				md.destroy();
-				md = new MetaData();
+				md.clear();
+				
 				for (ManualParticle p : tm.getManualParticles()) {
 					id = md.addObject();
 					md.setValueInt(MDLabel.MDL_XCOOR, p.getX(), id);
@@ -952,7 +952,6 @@ public class SingleParticlePicker extends ParticlePicker {
 		frame.getCanvas().setEnabled(false);
 		XmippWindowUtil.blockGUI(frame, "Training and Autopicking...");
 		MetaData trainmd = new MetaData();
-		MetaData outputmd = new MetaData();
 		// Change the state of the micrograph and save changes
 		micrograph.setState(MicrographState.Supervised);
 		saveData(micrograph);
@@ -966,7 +965,7 @@ public class SingleParticlePicker extends ParticlePicker {
 		// Add the current micrograph as the last one
 		addMicrographPos(trainmd, micrograph);
 
-		new Thread(new TrainRunnable(frame, trainmd, autopickout, outputmd))
+		new Thread(new TrainRunnable(frame, trainmd, autopickout))
 				.start();
 		// new TrainRunnable(frame, trainmd, outputmd).run();
 	}
@@ -989,10 +988,10 @@ public class SingleParticlePicker extends ParticlePicker {
 		private Rectangle autopickout;
 
 		public TrainRunnable(SingleParticlePickerJFrame frame,
-				MetaData trainmd, Rectangle autopickout, MetaData outputmd) {
+				MetaData trainmd, Rectangle autopickout) {
 			this.frame = frame;
 			this.trainmd = trainmd;
-			this.outputmd = outputmd;
+			this.outputmd = new MetaData();
 			this.autopickout = autopickout;
 		}
 
@@ -1025,6 +1024,7 @@ public class SingleParticlePicker extends ParticlePicker {
 				frame.getCanvas().setEnabled(true);
 				frame.getCanvas().repaint();
 				frame.updateMicrographsModel();
+				
 				trainmd.destroy();
 				outputmd.destroy();
 			} catch (Exception e) {
@@ -1039,11 +1039,10 @@ public class SingleParticlePicker extends ParticlePicker {
 		next.setState(MicrographState.Supervised);
 		saveData(next);
 
-		MetaData outputmd = new MetaData();
 		frame.getCanvas().setEnabled(false);
 		XmippWindowUtil.blockGUI(frame, "Autopicking...");
 
-		new Thread(new AutopickRunnable(frame, next, outputmd)).start();
+		new Thread(new AutopickRunnable(frame, next)).start();
 
 	}
 
@@ -1054,9 +1053,9 @@ public class SingleParticlePicker extends ParticlePicker {
 		private SingleParticlePickerMicrograph micrograph;
 
 		public AutopickRunnable(SingleParticlePickerJFrame frame,
-				SingleParticlePickerMicrograph micrograph, MetaData outputmd) {
+				SingleParticlePickerMicrograph micrograph) {
 			this.frame = frame;
-			this.outputmd = outputmd;
+			this.outputmd = new MetaData();
 			this.micrograph = micrograph;
 		}
 
@@ -1088,17 +1087,15 @@ public class SingleParticlePicker extends ParticlePicker {
 		saveData(next);
 		MetaData addedmd = getAddedMetaData(current, correctout);
 		MetaData automd = new MetaData(getParticlesAutoBlock(micrograph));
-		MetaData outputmd = new MetaData();
 		frame.getCanvas().setEnabled(false);
 		XmippWindowUtil.blockGUI(frame, "Correcting and Autopicking...");
-		new Thread(new CorrectAndAutopickRunnable(frame, addedmd, automd, next,
-				outputmd)).start();
+		new Thread(new CorrectAndAutopickRunnable(frame, addedmd, automd, next)).start();
 
 	}
 
 	private MetaData getAddedMetaData(SingleParticlePickerMicrograph m,
 			Rectangle correctout) {
-		MetaData addedmd;
+		MetaData addedmd = null;
 		if (correctout == null)
 			addedmd = new MetaData(getParticlesBlock(micrograph));
 		else {
@@ -1124,20 +1121,20 @@ public class SingleParticlePicker extends ParticlePicker {
 
 		public CorrectAndAutopickRunnable(SingleParticlePickerJFrame frame,
 				MetaData manualmd, MetaData automaticmd,
-				SingleParticlePickerMicrograph next, MetaData outputmd) {
+				SingleParticlePickerMicrograph next) {
 			this.frame = frame;
 			this.manualmd = manualmd;
 			this.automaticmd = automaticmd;
 			this.next = next;
-			this.outputmd = outputmd;
+			this.outputmd = new MetaData();
 		}
 
 		public void run() {
 
-			classifier
-					.correct(manualmd, automaticmd, micrograph.getThreshold());
+			classifier.correct(manualmd, automaticmd, micrograph.getThreshold());
 			manualmd.destroy();
 			automaticmd.destroy();
+			
 			if (getMode() == Mode.Supervised
 					&& next.getState() == MicrographState.Supervised) {
 				next.getAutomaticParticles().clear();
@@ -1147,7 +1144,6 @@ public class SingleParticlePicker extends ParticlePicker {
 				loadAutomaticParticles(next, outputmd);
 				String path = getParticlesAutoBlock(next);
 				outputmd.writeBlock(path);
-				outputmd.print();
 			}
 			outputmd.destroy();
 			frame.getCanvas().repaint();

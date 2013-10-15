@@ -96,6 +96,9 @@ public class RotSpectraGalleryTableModel extends MetadataGalleryTableModel {
 		
 		for (int i = 0; i < vectors.length; i++) 
 			vectorItems.add(new RotSpectraItem(i, vectors[i]));
+		
+		mdClasses.destroy();
+		mdVectors.destroy();
 	}
 
 	static double[][] loadVectors(String filename, int nvectors, int size)
