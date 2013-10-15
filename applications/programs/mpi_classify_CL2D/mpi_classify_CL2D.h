@@ -251,6 +251,9 @@ public:
     /// Normalize input images
     bool normalizeImages;
 
+    /// Mirror
+    bool mirrorImages;
+
     /// MPI constructor
     ProgClassifyCL2D(int argc, char** argv);
 

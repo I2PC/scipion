@@ -891,6 +891,7 @@ class ShowDialog(Dialog):
         self.msg = msg
         self.type = type
         self.result = defaultResult
+        
         Dialog.__init__(self, master, title) 
         
     def body(self, master):

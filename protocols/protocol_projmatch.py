@@ -221,8 +221,8 @@ data_noname
 #                runShowJ("%(lastBlock)s@%(refs)s" % locals(), "512m", "--mode metadata --render")
 #            except Exception, e:
 #                from protlib_gui_ext import showError
-#                showError("Error launching java app", str(e))
-               
+#                                showError("Error launching java app", str(e), self.master)
+
     def visualizeVar(self, varName):
 #        if varName == 'DoShowReferences':
 #            self.visualizeReferences()
@@ -261,7 +261,7 @@ data_noname
                             try:
                                 runShowJ(file_name, extraParams = runShowJExtraParameters)
                             except Exception, e:
-                                showError("Error launching java app", str(e))
+                                showError("Error launching java app", str(e), self.master)
             
         if doPlot('DisplayReconstruction'):
             for ref3d in ref3Ds:
@@ -277,7 +277,7 @@ data_noname
                             try:
                                 runShowJ(file_name, extraParams = runShowJExtraParameters)
                             except Exception, e:
-                                showError("Error launching java app", str(e))
+                                showError("Error launching java app", str(e), self.master)
                             
         if doPlot('DisplayFilteredReconstruction'):
             for ref3d in ref3Ds:
@@ -294,7 +294,7 @@ data_noname
                             try:
                                 runShowJ(file_name, extraParams = runShowJExtraParameters)
                             except Exception, e:
-                                showError("Error launching java app", str(e))
+                                showError("Error launching java app", str(e), self.master)
                 
         if doPlot('DisplayBFactorCorrectedVolume'):
             #if(self.DisplayVolumeSlicesAlong == 'surface'):
@@ -326,7 +326,7 @@ data_noname
                             try:
                                 runShowJ(file_name_bfactor, extraParams = runShowJExtraParameters)
                             except Exception, e:
-                                showError("Error launching java app", str(e))
+                                showError("Error launching java app", str(e), self.master)
 
 
         if doPlot('DisplayProjectionMatchingLibrary'):
@@ -366,7 +366,7 @@ data_noname
                                 MDout.write( sfn )
                                 runShowJ(sfn, extraParams = runShowJExtraParameters)
                             except Exception, e:
-                                showError("Error launching java app", str(e))
+                                showError("Error launching java app", str(e), self.master)
 
         if doPlot('DisplayProjectionMatchingClasses'):
             for ref3d in ref3Ds:
@@ -381,7 +381,7 @@ data_noname
                             try:
                                 runShowJ(file_name, extraParams = runShowJExtraParameters)
                             except Exception, e:
-                                showError("Error launching java app", str(e))
+                                showError("Error launching java app", str(e), self.master)
         
         if doPlot('DisplayProjectionMatchingLibraryAndClasses'):       
         #map stack position with ref number
@@ -426,7 +426,7 @@ data_noname
                                 MDout.write( sfn )
                                 runShowJ(sfn, extraParams = runShowJExtraParameters)
                             except Exception, e:
-                                showError("Error launching java app", str(e))
+                                showError("Error launching java app", str(e), self.master)
 
         if doPlot('DisplayProjectionMatchingLibraryAndImages'):
             from numpy  import array, dot
@@ -495,7 +495,7 @@ data_noname
                                 MDout.write( sfn )
                                 runShowJ(sfn, extraParams = runShowJExtraParameters)
                             except Exception, e:
-                                showError("Error launching java app", str(e))
+                                showError("Error launching java app", str(e), self.master)
 
             
         if doPlot('DisplayDiscardedImages'):
@@ -510,7 +510,7 @@ data_noname
                         try:
                             runShowJ(file_name, extraParams = runShowJExtraParameters)
                         except Exception, e:
-                            showError("Error launching java app", str(e))
+                                showError("Error launching java app", str(e), self.master)
             
         if doPlot('PlotHistogramAngularMovement'):
             colors = ['g', 'b', 'r', 'y', 'c', 'm', 'k']

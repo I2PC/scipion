@@ -444,7 +444,7 @@ def CompileJavaJar(target, source, env):
     # -C java/build xmipp/package/A.class
     # -C java/build xmipp/package/B.class
     # ...
-    cmd = 'jar ' + env['JARFLAGS']
+    cmd = '$JAVA_HOME/bin/jar ' + env['JARFLAGS']
     CreateFileList(classDir, '*.class', classfile, buildDir + '/', '-C %(buildDir)s ' % locals())
     Cmd('%(cmd)s %(jarfile)s @%(classfile)s %(pluginDest)s' % locals())
     
@@ -841,8 +841,8 @@ AddXmippProgram('reconstruct_art', ['XmippRecons'])
 AddXmippProgram('reconstruct_art_pseudo', ['XmippRecons'])
 if not int(env['release']):
     AddXmippProgram('reconstruct_art_xray', ['XmippRecons'])
-AddXmippProgram('reconstruct_wbp', ['XmippRecons'])
 AddXmippProgram('reconstruct_fourier', ['XmippRecons'])
+AddXmippProgram('reconstruct_wbp', ['XmippRecons'])
 AddXmippProgram('resolution_fsc')
 if not int(env['release']):
     AddXmippProgram('resolution_ibw', ['XmippRecons'])
@@ -880,6 +880,7 @@ AddXmippProgram('volume_correct_bfactor', ['XmippRecons'])
 AddXmippProgram('volume_enhance_contrast', ['XmippRecons'])
 AddXmippProgram('volume_find_symmetry')
 AddXmippProgram('volume_from_pdb', ['XmippRecons'])
+AddXmippProgram('volume_initial_simulated_annealing', ['XmippRecons'])
 AddXmippProgram('volume_reslice')
 AddXmippProgram('volume_segment', ['XmippRecons'])
 AddXmippProgram('volume_structure_factor')

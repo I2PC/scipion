@@ -183,12 +183,10 @@ ThreadManager::ThreadManager(int numberOfThreads, void * workClass)
     arguments = new ThreadArgument[threads];
     started = false;
     this->workClass = workClass;
-
 }
 
 void ThreadManager::setData(void * data, int idxThread)
 {
-
     if (idxThread == -1)
         for (int i = 0; i < threads; ++i)
             arguments[i].data = data;

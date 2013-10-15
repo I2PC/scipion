@@ -11,7 +11,6 @@ from protlib_utils import runJob, runShowJ, grepFirst
 from protlib_filesystem import findAcquisitionInfo
 import glob
 from xmipp import MetaData, MDL_SAMPLINGRATE, MDL_RESOLUTION_FREQREAL, MDL_RESOLUTION_FRC, MDL_RESOLUTION_SSNR
-from protlib_gui_ext import showError
 from os.path import dirname, basename
 
 class ProtResolution3D(XmippProtocol):
@@ -37,7 +36,7 @@ class ProtResolution3D(XmippProtocol):
         if self.DoVSSNR:
             self.insertStep('calculateVSSNR',WorkingDir=self.WorkingDir,cmd=trueCmd,Nproc=self.NumberOfThreads)
             self.insertStep('deleteFile',filename=self.workingDirPath('vssnr.hist'))
-        if self.DoSSNR or DoVSSNR:
+        if self.DoSSNR or self.DoVSSNR:
             self.insertStep("deleteFile",filename=self.extraPath('noisyImages.stk'))
             self.insertStep("deleteFile",filename=self.extraPath('noisyImages.xmd'))
             self.insertStep("deleteFile",filename=self.extraPath('noisyVolume.vol'))

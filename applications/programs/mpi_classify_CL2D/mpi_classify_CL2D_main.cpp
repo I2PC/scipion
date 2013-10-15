@@ -372,9 +372,15 @@ void CL2DClass::fit(MultidimArray<double> &I, CL2DAssignment &result)
     fitBasic(Idirect, resultDirect);
 
     // Try its mirror
-    MultidimArray<double> Imirror = I;
-    CL2DAssignment resultMirror;
-    fitBasic(Imirror, resultMirror, true);
+	CL2DAssignment resultMirror;
+	MultidimArray<double> Imirror;
+    if (prm->mirrorImages)
+    {
+    	Imirror=I;
+		fitBasic(Imirror, resultMirror, true);
+    }
+    else
+    	resultMirror.corr=-1e38;
 
     if (resultMirror.corr > resultDirect.corr)
     {
@@ -1499,6 +1505,7 @@ void ProgClassifyCL2D::readParams()
     maxShift = getDoubleParam("--maxShift");
 	classifyAllImages = checkParam("--classifyAllImages");
 	normalizeImages = !checkParam("--dontNormalizeImages");
+	mirrorImages = !checkParam("--dontMirrorImages");
 }
 
 void ProgClassifyCL2D::show() const {
@@ -1518,6 +1525,7 @@ void ProgClassifyCL2D::show() const {
 			<< "Maximum shift:           " << maxShift << std::endl
 			<< "Classify all images:     " << classifyAllImages << std::endl
 			<< "Normalize images:        " << normalizeImages << std::endl
+			<< "Mirror images:           " << mirrorImages << std::endl
 	;
 }
 
@@ -1556,6 +1564,7 @@ void ProgClassifyCL2D::defineParams()
     addParamsLine("   [--maxShift <d=10>]       : Maximum allowed shift");
 	addParamsLine("   [--classifyAllImages]     : By default, some images may not be classified. Use this option to classify them all.");
 	addParamsLine("   [--dontNormalizeImages]   : By default, input images are normalized to have 0 mean and standard deviation 1");
+	addParamsLine("   [--dontMirrorImages]      : By default, input images are studied unmirrored and mirrored");
     addExampleLine("mpirun -np 3 `which xmipp_mpi_classify_CL2D` -i images.stk --nref 256 --oroot class --odir CL2Dresults --iter 10");
 }
 

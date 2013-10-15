@@ -32,11 +32,12 @@ public class CTFDescription {
 
     public void read(String filename) throws Exception {
         read_(filename);
-        MetaData md=new MetaData(filename);
+        MetaData md = new MetaData(filename);
         if (md.containsLabel(MDLabel.MDL_CTF_DOWNSAMPLE_PERFORMED))
         	downsampling = md.getValueDouble(MDLabel.MDL_CTF_DOWNSAMPLE_PERFORMED, md.firstObject());
         else
         	downsampling = 1.0;
+        md.destroy();
         FMAX = getFMAX()/downsampling;
     }
 

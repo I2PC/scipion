@@ -4,7 +4,7 @@ from protlib_chimera import XmippChimeraClient, XmippProjectionExplorer
 from optparse import OptionParser
 from os import system
 from os.path import exists
-from protlib_filesystem import getXmippPath
+from protlib_filesystem import getXmippPath,xmippExists
 import sys
 from protlib_xmipp import XmippScript
 from xmipp import *
@@ -17,7 +17,7 @@ class ScriptChimeraClient(XmippScript):
     def defineParams(self):
         self.addUsageLine('Chimera client for visualization and projection of xmipp volumes')
         ## params
-        self.addParamsLine('[ --input <input>]          : Volume to visualize')
+        self.addParamsLine(' --input <input>          : Volume to visualize')
         self.addParamsLine('   alias -i;')
         self.addParamsLine('[ --mode <mode=viewer>]             : Sets visualization mode')
 
@@ -36,7 +36,7 @@ class ScriptChimeraClient(XmippScript):
     def run(self):
     	
     	volfile = self.getParam('-i')
-        if not exists(volfile):
+        if not xmippExists(volfile):
             print "ERROR: File " + volfile + "does not exist\n"
             sys.exit(1)
 

@@ -17,6 +17,9 @@ InputVolume=''
 # Cylinder radius
 CylinderRadius = -1
 
+# Look for dihedrical symmetry
+Dihedrical=False
+
 #------------------------------------------------------------------------------------------------
 # {section} Search space
 #------------------------------------------------------------------------------------------------

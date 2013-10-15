@@ -285,7 +285,8 @@ class ProcessManager():
     def __init__(self, run):
         self.run = run
         from protlib_sql import SqliteDb
-        self.isBatch = run['jobid'] > SqliteDb.NO_JOBID;
+        self.isBatch = run['jobid'] > SqliteDb.NO_JOBID
+        self.pid = self.run['pid']
                
     def getProcessFromCmd(self, cmd):
         procs = []
@@ -334,7 +335,7 @@ class ProcessManager():
 
     def getProcessFromPid(self):
         ''' Return the process data, using its arguments to match'''
-        pid = self.run['pid']
+        pid = self.pid
         return self.getUniqueProcessFromCmd('ps -p %(pid)s -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep %(pid)s' % locals())
     
     def getProcessGroup(self):
@@ -342,6 +343,9 @@ class ProcessManager():
         script = 'xmipp_protocol_script %s' % os.path.abspath(self.run['script'])
         return self.getProcessFromCmd('ps -A -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep "%(script)s" | grep -v grep ' % locals())
 
+    def getProcessGroup_(self):
+        pass
+        
     def stopProcessGroup(self, project=None):
         if project != None:
             from protlib_sql import SqliteDb
@@ -353,10 +357,7 @@ class ProcessManager():
             p = Popen(cmd % self.run, shell=True, stdout=PIPE)
             os.waitpid(p.pid, 0)
         else:
-            childs = self.getProcessGroup()
-            for c in childs:
-                c.terminate()
-        
+            self.psutilKillAll()
                 
     def isAlive(self):
         if self.isBatch:
@@ -372,8 +373,25 @@ class ProcessManager():
                 raise Exception("Failed %s, command: %s" % (e, cmd))
             return (retcode == 0)
         else:
-            childs = self.getProcessGroup()
-            return len(childs) > 0
+            return self.psutilIsAlive()
+
+    def psutilKillAll(self):
+        """ Kill all processes related to this job. """
+        import psutil
+        proc = psutil.Process(int(self.pid))
+        for c in proc.get_children(recursive=True):
+            print "Terminating child pid: %d" % c.pid
+            c.kill()
+        print "Terminating process pid: %s" % self.pid
+        proc.kill()   
+        
+    def psutilIsAlive(self):
+        import psutil
+        proc = psutil.Process(int(self.pid))
+        return proc.is_running()
+#        for c in proc.get_children(recursive=True):
+#            return True
+#        return False     
     
 # The job should be launched from the working directory!
 def runJob(log, 
@@ -619,6 +637,15 @@ def runChimera(inputFile,extraParams=""):
         if hasSpiderExt(inputFile):
             inputFile = 'spider:%s' % inputFile
         os.system("chimera %s %s &" % (inputFile,extraParams))
+    else:
+        print "Error Chimera not available or inputFile %s does not exits."%inputFile
+
+
+def runChimeraClient(inputFile,extraParams=""):
+    from protlib_filesystem import xmippExists
+    if which("chimera") and xmippExists(inputFile):
+        from protlib_filesystem import hasSpiderExt
+        os.system('xmipp_chimera_client --input "%s" %s &' % (inputFile,extraParams))
     else:
         print "Error Chimera not available or inputFile %s does not exits."%inputFile
 
@@ -912,6 +939,39 @@ def pretty_size(size):
         return '0 bytes'
     if size == 1:
         return '1 byte'
+    
+    
+def pretty_delta(duration):
+    """ Get a timedelta object a return a nice string representation. """
+    day, sec = duration.days, duration.seconds
+    hour = sec // 3600
+    min = (sec % 3600) // 60
+    sec = (sec % 60)
+    
+    def getStr(value, prefix):
+        s = ''
+        if value > 0:
+            s = ' %d %s' % (value, prefix)
+            if value > 1:
+                s += 's' # plural
+        return s
+        
+    d = ''
+    for v in ['day', 'hour', 'min', 'sec']:
+        d += getStr(locals().get(v), v)
+    
+    if len(d) == 0:
+        d = '0 sec'
+    
+    return d
+    
+    
+def datetime_fromdb(dateStr):
+    """ Create a datetime object from an string retrieved
+    from SQLite. """
+    format = '%Y-%m-%d %H:%M:%S'
+    from datetime import datetime
+    return datetime.strptime(dateStr, format)
 
 def createUniqueFileName(fn):
     '''

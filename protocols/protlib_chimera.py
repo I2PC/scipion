@@ -77,6 +77,9 @@ class XmippChimeraClient:
     
     def loadAngularDist(self):
         md = MetaData(self.angulardistfile)
+        if not md.containsLabel(MDL_WEIGHT):
+            md.fillConstant(MDL_WEIGHT, 1.)
+            
         maxweight = md.aggregateSingle(AGGR_MAX, MDL_WEIGHT)
         minweight = md.aggregateSingle(AGGR_MIN, MDL_WEIGHT)
         interval = maxweight - minweight

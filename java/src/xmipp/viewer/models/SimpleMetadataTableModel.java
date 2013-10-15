@@ -226,6 +226,7 @@ public class SimpleMetadataTableModel extends DefaultTableModel {
 
             MetaData md = new MetaData(filename);
             initFromMetadata(md);
+            md.destroy();
 
         } catch (Exception ex) {
             DEBUG.printException(ex);

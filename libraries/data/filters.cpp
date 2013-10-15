@@ -1367,6 +1367,15 @@ double alignImages(const MultidimArray<double>& Iref, MultidimArray<double>& I,
     return alignImages(Iref, I, M, wrap, aux, aux2, aux3);
 }
 
+double alignImagesConsideringMirrors(const MultidimArray<double>& Iref, MultidimArray<double>& I,
+                   Matrix2D<double>&M, bool wrap)
+{
+    AlignmentAux aux;
+    CorrelationAux aux2;
+    RotationalCorrelationAux aux3;
+    return alignImagesConsideringMirrors(Iref, I, M, aux, aux2, aux3, wrap, NULL);
+}
+
 double alignImagesConsideringMirrors(const MultidimArray<double>& Iref,
                                      MultidimArray<double>& I, Matrix2D<double> &M, AlignmentAux& aux,
                                      CorrelationAux& aux2, RotationalCorrelationAux &aux3, bool wrap,

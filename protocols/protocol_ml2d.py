@@ -15,7 +15,7 @@ from config_protocols import protDict
 import os
 from os.path import exists, join
 from protlib_utils import runShowJ
-from protlib_gui_ext import showWarning
+from protlib_gui_ext import showWarning, showError
 from protlib_xmipp import greenStr, redStr
 from protlib_filesystem import deleteFile, xmippExists, renameFile, findAcquisitionInfo
 
@@ -107,6 +107,11 @@ class ProtML2D(XmippProtocol):
         return progId
         
     def defineSteps(self):
+        # Test the grep with psutil, the following steps are going to sleep
+        # to check failed reported
+        self.insertStep("longSleep")
+        self.insertStep("longSleep")
+        
         self.insertStep("linkAcquisitionInfo",InputFile=self.ImgMd,dirDest=self.WorkingDir)
         progId = self.getId()
         
@@ -168,8 +173,7 @@ class ProtML2D(XmippProtocol):
             try:
                 runShowJ(refs, extraParams="--mode metadata --render first")
             except Exception, e:
-                from protlib_gui_ext import showError
-                showError("Error launching java app", str(e))
+                showError("Error launching java app", str(e), self.master)
                
     def visualizeVar(self, varName):
         if varName == 'DoShowReferences':
@@ -206,7 +210,7 @@ def launchML2DPlots(protML, selectedPlots):
         
     n = len(selectedPlots)
     if n == 0:
-        showWarning("ML2D plots", "Nothing to plot")
+        showWarning("ML2D plots", "Nothing to plot", protML.master)
         return
     elif n == 1:
         gridsize = [1, 1]
@@ -279,29 +283,10 @@ def collectResults(log, WorkingDir, Prefix):
         src = join(WorkingDir, Prefix  + '_result_%s.xmd' % k)
         dst = join(WorkingDir, 'result_%s.xmd' % k)
         renameFile(log, src, dst)
-#        
-#    imgs = join(WorkingDir, Prefix  + 'result_images.xmd')
-#    refs = join(WorkingDir, Prefix  + 'result_classes.xmd')
-#    
-#    
-#    c
-#    for iter in range(LastIter):
-#        fnIter = join(orootRoot, "iter%03d" % (iter+1))
-#    
-#    mdImgs = MetaData(oroot + '_final_images.xmd')
-#    outImages = os.path.join(WorkingDir, 'result_images.xmd')
-#    # change the sign of the angle, since is the expected one
-#    # to align the images agains the reference
-#    mdImgs.operate("anglePsi=360-anglePsi")
-#    mdImgs.write('images@' + outImages)
-#    mdRefs = MetaData(oroot + '_final_refs.xmd')
-#    outRefs = os.path.join(WorkingDir, 'result_classes.xmd')
-#    mdGroup = MetaData()
-#    deleteFile(log, outRefs)
-#    for idx in mdRefs:
-#        ref = mdRefs.getValue(MDL_REF, idx)
-#        mdRefs.setValue(MDL_CLASS_COUNT, long(round(mdRefs.getValue(MDL_WEIGHT, idx))), idx)
-#        mdGroup.importObjects( mdImgs, MDValueEQ(MDL_REF, ref))
-#        mdGroup.write('class%(ref)06d_images@%(outRefs)s' % locals(),MD_APPEND)
-#    mdRefs.write('classes@'+outRefs,MD_APPEND)
+
+
+def longSleep(log):
+    """ Just for test. """
+    import time
+    time.sleep(30)
     
