@@ -57,7 +57,7 @@ RotStep=5
 Tilt0=0
 
 # {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Fast Fourier') Maximum tilt angle
-TiltF=360
+TiltF=180
 
 # {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Fast Fourier') Step tilt angle
 TiltStep=5
@@ -127,6 +127,8 @@ ShiftZCurrent=0.
 
 # {expert}{condition}(AlignmentMethod=='Local') Initial scale
 ScaleCurrent=1.
+
+# {eval} expandParallel(mpi=0, threads=0, hours=10)
 
 #------------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
