@@ -41,6 +41,10 @@ class ProtAlignVolume(XmippProtocol):
                 self.X0,self.XF,self.XStep,self.Y0,self.YF,self.YStep,self.Z0,self.ZF,self.ZStep,
                 self.Scale0,self.ScaleF,self.ScaleStep)
         self.insertRunJobStep("xmipp_volume_align", args)
+        
+        if self.AlignmentMethod=="Exhaustive+Local":
+            args="--i1 %s --i2 %s --apply --local"%(self.ReferenceVolume,fnOut)
+            self.insertRunJobStep("xmipp_volume_align", args)
     
     def summary(self):
         message=[]
