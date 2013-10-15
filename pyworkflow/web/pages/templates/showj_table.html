@@ -292,7 +292,7 @@ function enableDisableRenderColumn(event, element){
 		if ($(element).hasClass("renderTableOn") && $(this).find("img").attr('src')== undefined){
 			/* $(this).find("img").attr("src",$(this).find("img").data('real_src')) */
 			setImageSize(false)
-			initializeImageLoad()
+			initializeImageLoad(false)
 		}
 		$(this).find("img").toggle()
 		$(this).find("span").toggle()

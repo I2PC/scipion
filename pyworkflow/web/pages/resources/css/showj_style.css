@@ -201,6 +201,23 @@ aside .galleryOff{
 	
 }
 
+aside .visualizeVolOn{
+	background-image: url(/resources/showj/galleryViewOff.png);
+	
+}
+
+aside .visualizeVolOff{
+	background-image: url(/resources/showj/galleryViewOff.png);
+	
+}
+
+aside .optionsOff{
+	background-image: url(/resources/showj/galleryViewOff.png);
+}
+aside .optionsOn{
+	background-image: url(/resources/showj/galleryViewOn.png);
+}
+
 aside .arrowSectionMenu{
 	display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
   	display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
@@ -225,10 +242,46 @@ aside .arrowSectionMenu{
 	margin: 4px;
 }
 
+
+/* aside #optionsSubSectionMenu{
+	z-index: 999;
+	display:none;
+} */
 aside .arrowImage{
 	margin: 1px;
 }
 
+aside div>ul{
+	display: none;
+	list-style: none;
+ 	position: relative;
+	left: -200px;
+	float: left;
+	width: 230px;
+	top:20px;
+}
+
+aside .optionsListOn{
+	display: block;
+	z-index:1;
+} 
+aside li{
+	list-style: none;
+	float:left;
+	margin: 0 0.5em;
+	display: block;
+	width: 220px;
+	height: 20px;
+	background-color: #e3e3e3;
+	padding: 2px 10px;
+}
+
+aside li:first-child{
+	padding-top: 10px;
+}	
+aside li:last-child{
+	padding-bottom: 10px;
+}
 
 /* MAIN SECTION */
 section {
@@ -443,6 +496,7 @@ aside #saveButton{
 	margin: 20px;
 	width: 60%;
 }
+
 
 #tableConfigurationContainer table{
 	
