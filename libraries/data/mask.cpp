@@ -1209,7 +1209,7 @@ void Mask::write_mask(const FileName &fn)
 
 void Mask::defineParams(XmippProgram * program, int allowed_data_types, const char* prefix, const char* comment, bool moreOptions)
 {
-    char tempLine[256];
+    char tempLine[256], tempLine2[256];
 
     char advanced=' ';
     if (moreOptions)
@@ -1219,9 +1219,9 @@ void Mask::defineParams(XmippProgram * program, int allowed_data_types, const ch
     else
         sprintf(tempLine,"%s --mask%c <mask_type=circular> ", prefix,advanced);
     if (comment != NULL)
-        sprintf(tempLine, "%s : %s", tempLine, comment);
+        sprintf(tempLine2, "%s : %s", tempLine, comment);
 
-    program->addParamsLine(tempLine);
+    program->addParamsLine(tempLine2);
     program->addParamsLine("        where <mask_type> ");
     // program->addParamsLine("== INT MASK ==");
     if (allowed_data_types & INT_MASK)

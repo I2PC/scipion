@@ -306,6 +306,8 @@ VMATLIBPLOT=matplotlib-1.1.0
 VPYMPI=mpi4py-1.2.2
 #read star files
 VPYCIFRW=PyCifRW-3.3
+VPSUTIL=psutil-0.7.1
+
 ################# HELPER FUNCTIONS ##################
 TIMESTAMP=""
 
@@ -670,6 +672,7 @@ if $DO_PYMOD; then
   compile_pymodule $VMATLIBPLOT
   compile_pymodule $VPYMPI
   compile_pymodule $VPYCIFRW
+  compile_pymodule $VPSUTIL
   
   if $DO_CLTOMO; then
     # Fast Rotational Matching

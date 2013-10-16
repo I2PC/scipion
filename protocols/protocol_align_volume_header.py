@@ -36,7 +36,7 @@ MaskFile = ""
 #------------------------------------------------------------------------------------------------
 # {section} Search method and space
 #------------------------------------------------------------------------------------------------
-# {list_combo}(Exhaustive, Local, Fast Fourier)Alignment algorithm
+# {list_combo}(Exhaustive, Local, Exhaustive+Local, Fast Fourier)Alignment algorithm
 """ Exhaustive searches all possible combinations within a search space.
     Local searches around a given position.
     Be aware that the Fast Fourier algorithm requires a special compilation
@@ -44,67 +44,67 @@ MaskFile = ""
 """
 AlignmentMethod='Exhaustive'
 
-# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Fast Fourier') Minimum rotational angle
+# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Exhaustive+Local' or AlignmentMethod=='Fast Fourier') Minimum rotational angle
 Rot0=0
 
-# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Fast Fourier') Maximum rotational angle
+# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Exhaustive+Local' or AlignmentMethod=='Fast Fourier') Maximum rotational angle
 RotF=360
 
-# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Fast Fourier') Step rotational angle
+# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Exhaustive+Local' or AlignmentMethod=='Fast Fourier') Step rotational angle
 RotStep=5
 
-# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Fast Fourier') Minimum tilt angle
+# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Exhaustive+Local' or AlignmentMethod=='Fast Fourier') Minimum tilt angle
 Tilt0=0
 
-# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Fast Fourier') Maximum tilt angle
-TiltF=360
+# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Exhaustive+Local' or AlignmentMethod=='Fast Fourier') Maximum tilt angle
+TiltF=180
 
-# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Fast Fourier') Step tilt angle
+# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Exhaustive+Local' or AlignmentMethod=='Fast Fourier') Step tilt angle
 TiltStep=5
 
-# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Fast Fourier') Minimum in-plane angle
+# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Exhaustive+Local' or AlignmentMethod=='Fast Fourier') Minimum in-plane angle
 Psi0=0
 
-# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Fast Fourier') Maximum in-plane angle
+# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Exhaustive+Local' or AlignmentMethod=='Fast Fourier') Maximum in-plane angle
 PsiF=360
 
-# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Fast Fourier') Step in-plane angle
+# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Exhaustive+Local' or AlignmentMethod=='Fast Fourier') Step in-plane angle
 PsiStep=5
 
-# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Fast Fourier') Minimum shiftX
+# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Exhaustive+Local' or AlignmentMethod=='Fast Fourier') Minimum shiftX
 X0=0
 
-# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Fast Fourier') Maximum shiftX
+# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Exhaustive+Local' or AlignmentMethod=='Fast Fourier') Maximum shiftX
 XF=0
 
-# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Fast Fourier') Step shiftX
+# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Exhaustive+Local' or AlignmentMethod=='Fast Fourier') Step shiftX
 XStep=1
 
-# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Fast Fourier') Minimum shiftY
+# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Exhaustive+Local' or AlignmentMethod=='Fast Fourier') Minimum shiftY
 Y0=0
 
-# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Fast Fourier') Maximum shiftY
+# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Exhaustive+Local' or AlignmentMethod=='Fast Fourier') Maximum shiftY
 YF=0
 
-# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Fast Fourier') Step shiftY
+# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Exhaustive+Local' or AlignmentMethod=='Fast Fourier') Step shiftY
 YStep=1
 
-# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Fast Fourier') Minimum shiftZ
+# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Exhaustive+Local' or AlignmentMethod=='Fast Fourier') Minimum shiftZ
 Z0=0
 
-# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Fast Fourier') Maximum shiftZ
+# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Exhaustive+Local' or AlignmentMethod=='Fast Fourier') Maximum shiftZ
 ZF=0
 
-# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Fast Fourier') Step shiftZ
+# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Exhaustive+Local' or AlignmentMethod=='Fast Fourier') Step shiftZ
 ZStep=1
 
-# {expert}{condition}(AlignmentMethod=='Exhaustive') Minimum scale
+# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Exhaustive+Local') Minimum scale
 Scale0=1.0
 
-# {expert}{condition}(AlignmentMethod=='Exhaustive') Maximum scale
+# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Exhaustive+Local') Maximum scale
 ScaleF=1.0
 
-# {expert}{condition}(AlignmentMethod=='Exhaustive') Step scale
+# {expert}{condition}(AlignmentMethod=='Exhaustive' or AlignmentMethod=='Exhaustive+Local') Step scale
 ScaleStep=0.005
 
 # {expert}{condition}(AlignmentMethod=='Local') Initial rotational angle
@@ -127,6 +127,8 @@ ShiftZCurrent=0.
 
 # {expert}{condition}(AlignmentMethod=='Local') Initial scale
 ScaleCurrent=1.
+
+# {eval} expandParallel(mpi=0, threads=0, hours=10)
 
 #------------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...

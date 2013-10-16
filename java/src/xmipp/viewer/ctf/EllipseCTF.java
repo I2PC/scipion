@@ -40,6 +40,8 @@ public class EllipseCTF {
             defV = ctfMetaData.getValueDouble(MDLabel.MDL_CTF_DEFOCUSV, firstID);
 
             lambda = lambda(kV);
+            
+            ctfMetaData.destroy();
         } catch (Exception ex) {
             IJ.error(ex.getMessage());
         }

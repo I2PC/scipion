@@ -36,7 +36,7 @@ class ProtResolution3D(XmippProtocol):
         if self.DoVSSNR:
             self.insertStep('calculateVSSNR',WorkingDir=self.WorkingDir,cmd=trueCmd,Nproc=self.NumberOfThreads)
             self.insertStep('deleteFile',filename=self.workingDirPath('vssnr.hist'))
-        if self.DoSSNR or DoVSSNR:
+        if self.DoSSNR or self.DoVSSNR:
             self.insertStep("deleteFile",filename=self.extraPath('noisyImages.stk'))
             self.insertStep("deleteFile",filename=self.extraPath('noisyImages.xmd'))
             self.insertStep("deleteFile",filename=self.extraPath('noisyVolume.vol'))
