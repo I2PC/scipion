@@ -225,10 +225,10 @@ MaxChangeInAngles='1000 10 4 2'
 """
 PerturbProjectionDirections ='0'
 
-# {expert}{list}(fourier, realSpace) projection method
-"""select projection method, by default Fourier with padding 1 and interpolation bspline
+# {expert}{list}(fourier, real_space) projection method
+"""select projection method, by default real space interpolation is used
 """
-ProjectionMethod ='fourier'
+ProjectionMethod ='real_space'
 
 # {expert}{condition}(ProjectionMethod=="fourier") Padding factor for projection generation
 """Increase the padding factor will improve projection quality but 
