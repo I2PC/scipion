@@ -285,7 +285,7 @@ class ShowjForm(forms.Form):
 
     # Init hidden fields
     path = forms.CharField(widget=forms.HiddenInput())
-    allowRender = forms.BooleanField(widget=forms.HiddenInput())
+    allowRender = forms.BooleanField(widget=forms.HiddenInput(), required=False)
     mode = forms.CharField(widget=forms.HiddenInput())
     colRowMode = forms.CharField(widget=forms.HiddenInput())
     dims = forms.CharField(widget=forms.HiddenInput())
@@ -295,11 +295,19 @@ class ShowjForm(forms.Form):
     imageMaxHeight = forms.CharField(widget=forms.HiddenInput())
     imageMinHeight = forms.CharField(widget=forms.HiddenInput())
     
-    mirrorY = forms.BooleanField(label='Invert Y Axis')
+    mirrorY = forms.BooleanField(label='Invert Y Axis', required=False)
     
-    transformMatrix = forms.BooleanField(label='Apply Transform Matrix')
-    onlyShifts = forms.BooleanField(label='Only Shifts')
-    wrap = forms.BooleanField(label='Wrap')
+    
+#    applyTransformation = forms.BooleanField(label='Apply Transform', required=False)
+    
+#    CHOICES = (('transformMatrix', 'Apply Transform Matrix',), ('onlyShifts', 'Only Shifts',), ('wrap', 'Wrap',))
+#    transformationChoice = forms.ChoiceField(widget=forms.RadioSelect, choices=(('transformMatrix', 'Apply Transform Matrix',), ('onlyShifts', 'Only Shifts',), ('wrap', 'Wrap',))
+#                                             )
+    
+    
+    applyTransformMatrix = forms.BooleanField(label='Apply Transform Matrix', required=False)
+    onlyShifts = forms.BooleanField(label='Only Shifts', required=False)
+    wrap = forms.BooleanField(label='Wrap', required=False)
 
     
     def __init__(self, dataset, tableLayoutConfiguration=None, *args, **kwargs):
@@ -344,21 +352,9 @@ class ShowjForm(forms.Form):
         if self.data['colRowMode'] == 'Off':
             self.fields['cols'].widget.attrs['readonly'] = True
             self.fields['rows'].widget.attrs['readonly'] = True
-                    
-class ColumnLayoutConfigurationEncoder(json.JSONEncoder):
-    def default(self, columnLayoutConfiguration):
-        columnLayoutConfigurationCoded={}
-        columnLayoutConfigurationCoded={"typeOfColumn":columnLayoutConfiguration.typeOfColumn,
-                                        "columnLayoutProperties":{"visible":columnLayoutConfiguration.columnLayoutProperties.visible,
-                                                                  "allowSetVisible":columnLayoutConfiguration.columnLayoutProperties.allowSetVisible,
-                                                                  "editable":columnLayoutConfiguration.columnLayoutProperties.editable,
-                                                                  "allowSetEditable":columnLayoutConfiguration.columnLayoutProperties.allowSetEditable,
-                                                                  "renderable":columnLayoutConfiguration.columnLayoutProperties.renderable,
-                                                                  "allowSetRenderable":columnLayoutConfiguration.columnLayoutProperties.allowSetRenderable,
-                                                                  "renderFunc":columnLayoutConfiguration.columnLayoutProperties.renderFunc}
-                                        }
-        return columnLayoutConfigurationCoded                     
-
+            
+        if self.data['mode'] == 'column':    
+            self.fields['goto'].widget.attrs['readonly'] = True
                    
 def getLabelsToRenderComboBoxValues(columnsLayout):
     labelsToRender = [columnLayout.label for columnLayout in columnsLayout.values() if (columnLayout.typeOfColumn == 'image')]

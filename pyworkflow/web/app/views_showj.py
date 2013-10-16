@@ -83,9 +83,6 @@ def showj(request, inputParameters=None):
             
         inputParameters['blockComboBox']=_blockComboBox
         inputParameters['tableLayoutConfiguration']=tableLayoutConfiguration
-        
-#        inputParameters['mirrorY']='mirrorY' in inputParameters
-#        inputParameters['transformMatrix']='transformMatrix' in inputParameters
 
     if _imageDimensions != None and _imageDimensions[2]>1:
         dataset.setNumberSlices(_imageDimensions[2])
@@ -245,6 +242,7 @@ def save_showj_table(request):
 ###################################################################
 ######################## BEGIN VOLUME DISPLAY #####################    
 ###################################################################    
+
 def visualizeVolume(request):
     from django.http import HttpResponse
     import json
@@ -276,7 +274,7 @@ def visualizeVolume(request):
         jsonStr = json.dumps({'volumeHtml': volumeHtml})
         return HttpResponse(jsonStr, mimetype='application/javascript')
     
-    
+
 def showVolVisualization(request):
     form = None
     volLinkPath = None
@@ -292,6 +290,8 @@ def showVolVisualization(request):
             volLinkPath = os.path.join(pw.HOME, 'web', 'pages', 'resources', 'astex', 'tmp', linkName)
             from pyworkflow.utils.path import cleanPath, createLink
             cleanPath(volLinkPath)
+            print "volPath",volPath
+            print "volLinkPath",volLinkPath
             createLink(volPath, volLinkPath)
 #             os.system("ln -s " + str(volPath) + " " + volLinkPath)
             volLink = os.path.join('/', 'static', 'astex', 'tmp', linkName)
@@ -299,11 +299,14 @@ def showVolVisualization(request):
             from subprocess import Popen, PIPE, STDOUT
 #             p = Popen(['chimera', '--start', 'ReadStdin', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
             p = Popen(['chimera', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
-            outputHtmlFile = '/home/antonio/test.html'
-            threshold = form.cleaned_data['threshold']
-            stdout_data = p.communicate(input='volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop')[0]
-            f = open(outputHtmlFile)
-            chimeraHtml = f.read().decode('string-escape').decode("utf-8").split("</html>")[1]
+
+# ESTO SE LO HE QUITADO YO QUE SOY UN CHAMPION
+#            outputHtmlFile = '/home/antonio/test.html'
+#            threshold = form.cleaned_data['threshold']
+#            stdout_data = p.communicate(input='volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop')[0]
+#            f = open(outputHtmlFile)
+#            chimeraHtml = f.read().decode('string-escape').decode("utf-8").split("</html>")[1]
+            chimeraHtml = ""
     else:
         form = VolVisualizationForm()
     context = {'MEDIA_URL' : settings.MEDIA_URL, 'STATIC_URL' :settings.STATIC_URL, 'form': form, 'volLink': volLink, 'chimeraHtml': chimeraHtml}    
@@ -319,7 +322,7 @@ def showVolVisualization(request):
 ###################################################################  
 def visualizeObject(request):
     #Napa de Luxe
-    probandoCTFParam = False
+    probandoCTFParam = True
     probandoVolume = False
     
     objectId = request.GET.get("objectId")    
@@ -339,7 +342,7 @@ def visualizeObject(request):
                        'goto': 1,
                        'colRowMode': 'Off',
                        'mirrorY': False,
-                       'transformMatrix': False,
+                       'applyTransformMatrix': False,
                        'onlyShifts': False,
                        'wrap': False,
                        'resliceComboBox': xmipp.VIEW_Z_NEG,
@@ -349,7 +352,7 @@ def visualizeObject(request):
                        'imageMinHeight': 30}      
     
     if probandoCTFParam:
-        inputParameters['path']= join(projectPath, "Runs/XmippProtCTFMicrographs223/extra/BPV_1386/xmipp_ctf.ctfparam")
+        inputParameters['path']= join(projectPath, "Runs/XmippProtCTFMicrographs175/extra/BPV_1386/xmipp_ctf.ctfparam")
         inputParameters['mode']= 'column'
     elif isinstance(obj, SetOfMicrographs):
         fn = project.getTmpPath(obj.getName() + '_micrographs.xmd')
@@ -364,6 +367,7 @@ def visualizeObject(request):
         inputParameters['dims']= '3d'
         inputParameters['mode']= 'table'
     elif isinstance(obj, SetOfImages):
+#        PAJM aqui falla para el cl2d align y se esta perdiendo la matrix de transformacion en la conversion
         fn = project.getTmpPath(obj.getName() + '_images.xmd')
         writeSetOfParticles(obj, fn)
         inputParameters['path']= join(projectPath, fn)
