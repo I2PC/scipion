@@ -121,6 +121,7 @@ public class ImagesWindowFactory {
 			MetaData md = new MetaData(path);
 			imp = XmippImageConverter.readMetadataToImagePlus(
 					MDLabel.MDL_IMAGE, md, parameters.useGeo, parameters.wrap);
+			md.destroy();
 		} else {
 			imp = XmippImageConverter.loadImage(path,
 					parameters.zoom > 0 ? parameters.zoom : 100);

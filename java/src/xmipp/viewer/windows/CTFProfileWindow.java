@@ -442,6 +442,7 @@ public class CTFProfileWindow extends JFrame implements ItemListener, ActionList
             samplingRate = md.getValueDouble(MDLabel.MDL_CTF_SAMPLING_RATE, md.firstObject());
             if (md.containsLabel(MDLabel.MDL_CTF_DOWNSAMPLE_PERFORMED))
             	downsampling = md.getValueDouble(MDLabel.MDL_CTF_DOWNSAMPLE_PERFORMED, md.firstObject());
+            md.destroy();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
