@@ -97,7 +97,10 @@ class ProtML2D(XmippProtocol):
 
         if self.acquisionInfo is None:
             errors.append("Acquisition info was not found relative to image location")
-            
+        if (self.NumberOfThreads > 1  and self.DoMlf):
+            errors.append("""WARNING: Threads are not implemented for MLF, 
+set number of threads to 1 and consider to  
+increment the number of MPI processes """)     
         return errors 
     
     def getId(self):
