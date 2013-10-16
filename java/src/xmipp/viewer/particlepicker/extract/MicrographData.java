@@ -72,6 +72,7 @@ public class MicrographData
 				particles.add(p);
 			}
 		}
+		md.destroy();
 	}
 
 	public List<Particle> getParticles()
@@ -114,6 +115,7 @@ public class MicrographData
 			p = new Particle(x, y);
 			data.addParticle(p);
 		}
+		md.destroy();
 		return loaders;
 	}
 

@@ -161,6 +161,7 @@ public abstract class ParticlePicker
 				color = new Color(rgb);
 				size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
 			}
+			md.destroy();
 
 			String command, options;
 			md = new MetaData("filters@" + file);
@@ -172,9 +173,7 @@ public abstract class ParticlePicker
 				if (options.equals("NULL"))
 					options = "";
 				filters.add(new IJCommand(command, options));
-
 			}
-
 			md.destroy();
 		}
 		catch (Exception e)
@@ -196,7 +195,8 @@ public abstract class ParticlePicker
 			saveConfig(md, id);
 			md.write("properties@" + file);
 			String options;
-			md = new MetaData();
+			md.clear();
+			
 			for (IJCommand f : filters)
 			{
 				id = md.addObject();
