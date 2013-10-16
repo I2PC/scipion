@@ -1,4 +1,5 @@
 #!/bin/sh
+set -x #uncomment for debugging
 
 #############################
 # XMIPP installation script #
@@ -38,16 +39,7 @@ IS_LINUX=false
 
 #Some flags variables
 DO_UNTAR=true
-DO_SQLITE=true
-DO_TCLTK=true
-DO_PYTHON=true
-DO_PYMOD=true
-DO_FFTW=true
-DO_TIFF=true
-DO_JPEG=true
-DO_HDF5=true
-DO_CLTOMO=false
-DO_NMA=false
+DO_CLTOMO=false #for scipy
 
 DO_CLEAN=true
 DO_STATIC=false
@@ -64,97 +56,124 @@ CONFIGURE_ARGS=""
 COMPILE_ARGS=""
 GUI_ARGS="gui"
 
-#External libraries versions
-VSQLITE=3.6.23
-SQLITE_FOLDER="sqlite-${VSQLITE}"
-SQLITE_TAR="${SQLITE_FOLDER}.tgz"
-SQLITE_EXT_FOLDER=sqliteExt
-
-VTCLTK=8.5.10
-TCL_FOLDER="tcl${$VTCLTK}"
-TCL_TAR="${TCL_FOLDER}.tgz"
-TK_FOLDER="tk${$VTCLTK}"
-TK_TAR="${TK_FOLDER}.tgz"
-
-VPYTHON=2.7.2
-PYTHON_FOLDER="Python-${VPYTHON}"
-PYTHON_TAR="${PYTHON_FOLDER}.tgz"
-
-VFFTW=3.3.3
-FFTW_FOLDER="fftw-${VFFTW}"
-FFTW_TAR="${FFTW_FOLDER}.tgz"
-
-VTIFF=3.9.4
-TIFF_FOLDER="tiff-${VTIFF}"
-TIFF_TAR="${TIFF_FOLDER}.tgz"
-
-VJPEG=8c
-JPEG_FOLDER="jpeg-${VJPEG}"
-JPEG_TAR="jpegsrc.v${VJPEG}.tgz"
-
-VHDF5=1.8.10
-HDF5_FOLDER="hdf5-${VHDF5}"
-HDF5_TAR="${HDF5_FOLDER}.tgz"
-
-VNUMPY=1.6.1
-NUMPY_FOLDER="numpy-${VNUMPY}"
-NUMPY_TAR="${NUMPY_FOLDER}.tgz"
-
-VSCIPY=0.12.0
-SCIPY_FOLDER="scipy-${VSCIPY}"
-SCIPY_TAR="${SCIPY_FOLDER}.tgz"
-
-VMATLIBPLOT=1.1.0
-MATLIBPLOT_FOLDER="matplotlib-${VMATLIBPLOT}"
-MATLIBPLOT_TAR="${MATLIBPLOT_FOLDER}.tgz"
-
-VPYMPI=1.2.2
-PYMPI_FOLDER="mpi4py-${VPYMPI}"
-PYMPI_TAR="${PYMPI_FOLDER}.tgz"
-
+#External libraries definitions
 VALGLIB=3.8.0
 ALGLIB_FOLDER="alglib-${VALGLIB}.cpp"
 ALGLIB_TAR="${ALGLIB_FOLDER}.tgz"
+DO_ALGLIB=false
 
 VBILIB=0.0
 BILIB_FOLDER=bilib
 BILIB_TAR="${BILIB_FOLDER}.tgz"
+DO_BILIB=false
 
 VCONDOR=0.0
 CONDOR_FOLDER=condor
 CONDOR_TAR="${CONDOR_FOLDER}"
+DO_CONDOR=false
+
+VFFTW=3.3.3
+FFTW_FOLDER="fftw-${VFFTW}"
+FFTW_TAR="${FFTW_FOLDER}.tgz"
+DO_FFTW=false
 
 VGTEST=1.6.0
 GTEST_FOLDER="gtest-${VGTEST}"
 GTEST_TAR="${GTEST_FOLDER}.tgz"
+DO_GTEST=false
 
 VHDF5=1.8.10
 HDF5_FOLDER="hdf5-${VHDF5}"
 HDF5_TAR="${HDF5_FOLDER}.tgz"
+DO_HDF5=false
 
 VIMAGEJ=1.45g
 IMAGEJ_FOLDER="imagej"
 IMAGEJ_TAR="${IMAGEJ_FOLDER}.tgz"
+DO_IMAGEJ=false
+
+VJPEG=8c
+JPEG_FOLDER="jpeg-${VJPEG}"
+JPEG_TAR="jpegsrc.v${VJPEG}.tgz"
+DO_JPEG=false
 
 VSCONS=1.2.0
 SCONS_FOLDER="scons"
 SCONS_TAR="${SCONS_FOLDER}.tgz"
+DO_JPEG=false
+
+VSQLITE=3.6.23
+SQLITE_FOLDER="sqlite-${VSQLITE}"
+SQLITE_TAR="${SQLITE_FOLDER}.tgz"
+SQLITE_EXT_FOLDER=sqliteExt
+DO_SQLITE=false
+
+VTIFF=3.9.4
+TIFF_FOLDER="tiff-${VTIFF}"
+TIFF_TAR="${TIFF_FOLDER}.tgz"
+DO_TIFF=false
 
 VNMA=0.0
 NMA_FOLDER="NMA"
 NMA_TAR="${NMA_FOLDER}.tgz"
+DO_NMA=false
 
 VSHALIGNMENT=0.0
 SHALIGNMENT_FOLDER="sh_alignment"
 SHALIGNMENT_TAR="${SH_ALIGNMENT_FOLDER}.tgz"
+DO_SHALIGNMENT=false
 
+#External libraries arrays. For adding a new external library, define his decompress folder and tar names, put them in EXTERNAL_LIBRARIES and EXTERNAL_LIBRARIES_FILES arrays, and put 1 whther it has to be installed by default, 0 otherwise in EXTERNAL_LIBRARIES_DEFAULT in the appropiate positions.
 EXTERNAL_LIBRARIES=(         $ALGLIB_FOLDER $BILIB_FOLDER $CONDOR_FOLDER $FFTW_FOLDER $GTEST_FOLDER $HDF5_FOLDER $IMAGEJ_FOLDER $JPEG_FOLDER $SCONS_FOLDER $SQLITE_FOLDER $TIFF_FOLDER $NMA_FOLDER $SHALIGNMENT_FOLDER )
 EXTERNAL_LIBRARIES_FILES=(   $ALGLIB_TAR    $BILIB_TAR    $CONDOR_TAR    $FFTW_TAR    $GTEST_TAR    $HDF5_TAR    $IMAGEJ_TAR    $JPEG_TAR    $SCONS_TAR    $SQLITE_TAR    $TIFF_TAR    $NMA_TAR    $SHALIGNMENT_TAR    )
+EXTERNAL_LIBRARIES_DO=     ( $DO_ALGLIB     $DO_BILIB     $DO_CONDOR     $DO_FFTW     $DO_GTEST     $DO_HDF5     $DO_IMAGEJ     $DO_JPEG     $DO_SCONS     $DO_SQLITE     $DO_TIFF     $DO_NMA     $DO_SHALIGNMENT     )
 EXTERNAL_LIBRARIES_DEFAULT=(        1             1              1            1             1            1              1            1             1              1            1           0                   0       )
 
+
+#Python definitions
+#Python
+VPYTHON=2.7.2
+PYTHON_FOLDER="Python-${VPYTHON}"
+PYTHON_TAR="${PYTHON_FOLDER}.tgz"
+DO_PYTHON=false
+
+#Python modules
+DO_PYMOD=true
+
+VMATLIBPLOT=1.1.0
+MATLIBPLOT_FOLDER="matplotlib-${VMATLIBPLOT}"
+MATLIBPLOT_TAR="${MATLIBPLOT_FOLDER}.tgz"
+DO_MATLIBPLOT=false
+
+VPYMPI=1.2.2
+PYMPI_FOLDER="mpi4py-${VPYMPI}"
+PYMPI_TAR="${PYMPI_FOLDER}.tgz"
+DO_PYMPI=false
+
+VNUMPY=1.6.1
+NUMPY_FOLDER="numpy-${VNUMPY}"
+NUMPY_TAR="${NUMPY_FOLDER}.tgz"
+DO_NUMPY=false
+
+VSCIPY=0.12.0
+SCIPY_FOLDER="scipy-${VSCIPY}"
+SCIPY_TAR="${SCIPY_FOLDER}.tgz"
+DO_SCIPY=false
+
+VTCLTK=8.5.10
+DO_TCLTK=true
+TCL_FOLDER="tcl${$VTCLTK}"
+TCL_TAR="${TCL_FOLDER}.tgz"
+DO_TCL=false
+TK_FOLDER="tk${$VTCLTK}"
+TK_TAR="${TK_FOLDER}.tgz"
+DO_TK=false
+
+#Python modules arrays. For adding a new python module, define his decompress folder and tar names, put them in PYTHON_MODULES and PYTHON_MODULES_FILES arrays, and put 1 whther it has to be installed by default, 0 otherwise in PYTHON_MODULES_DEFAULT in the appropiate position.
 PYTHON_MODULES=(        $MATLIBPLOT_FOLDER $PYMPI_FOLDER $NUMPY_FOLDER $SCIPY_FOLDER $TCL_FOLDER $TK_FOLDER )
 PYTHON_MODULES_FILES=(  $MATLIBPLOT_TAR    $PYMPI_TAR    $NUMPY_TAR    $SCIPY_TAR    $TCL_TAR    $TK_TAR    )
-PYTHON_MODULES_DEFAULT=(           1             1             1             1           1          1       )
+PYTHON_MODULES_DO=(     $DO_MATLIBPLOT     $DO_PYMPI     $DO_NUMPY     $DO_SCIPY     $DO_TCL     $DO_TK     )
+PYTHON_MODULES_DEFAULT=(           1             1             1             0           1          1       )
 
 
 ##################################################################################
@@ -335,26 +354,48 @@ helpMessage()
   echo -e ""
   echo -e "EXTERNAL LIBRARIES OPTIONS:"
   echo -e ""
-  echo -e "${BLUE}--sqlite=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute or not selected operation over sqlite library. When just --sqlite is given, true is asumed."
+  echo -e "${BLUE}--alglib=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over alglib library. When just --alglib is given, true is asumed."
+  echo -e "${BLUE}--bilib=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over bilib library. When just --bilib is given, true is asumed."
+  echo -e "${BLUE}--condor=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over condor library. When just --condor is given, true is asumed."
   echo -e "${BLUE}--fftw=${YELLOW}[true|false]${WHITE}"
   echo -e "    Execute or not selected operation over fftw library. When just --fftw is given, true is asumed."
-  echo -e "${BLUE}--tiff=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute or not selected operation over tiff library. When just --tiff is given, true is asumed."
-  echo -e "${BLUE}--jpeg=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute or not selected operation over jpeg library. When just --jpeg is given, true is asumed."
+  echo -e "${BLUE}--gtest=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over gtest library. When just --gtest is given, true is asumed."
   echo -e "${BLUE}--hdf5=${YELLOW}[true|false]${WHITE}"
   echo -e "    Execute or not selected operation over hdf5 library. When just --hdf5 is given, true is asumed."
-  echo -e "${BLUE}--cltomo=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute or not selected operation over cltomo library. When just --cltomo is given, true is asumed."
+  echo -e "${BLUE}--imagej=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over imagej library. When just --hdf5 is given, true is asumed."
+  echo -e "${BLUE}--jpeg=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over jpeg library. When just --jpeg is given, true is asumed."
+  echo -e "${BLUE}--scons=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over scons library. When just --scons is given, true is asumed."
+  echo -e "${BLUE}--sqlite=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over sqlite library. When just --sqlite is given, true is asumed."
+  echo -e "${BLUE}--tiff=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over tiff library. When just --tiff is given, true is asumed."
   echo -e "${BLUE}--nma=${YELLOW}[true|false]${WHITE}"
   echo -e "    Execute or not selected operation over nma library. When just --nma is given, true is asumed."
+  echo -e "${BLUE}--sh-alignment=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over nma library. When just --sh-alignment is given, true is asumed."
+  echo -e "${BLUE}--cltomo=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over cltomo library. When just --cltomo is given, true is asumed."
   echo -e ""
   echo -e ""
   echo -e "PYTHON-RELATED OPTIONS:"
   echo -e ""
   echo -e "${BLUE}--python=${YELLOW}[true|false]${WHITE}"
   echo -e "    Execute selected operation over xmipp_python. Just --python is equal to --python=true."
+  echo -e "${BLUE}--matplotlib=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute selected operation over matplotlib module. --matplotlib is equivalent to --matplotlib=true."
+  echo -e "${BLUE}--mpi4py=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute selected operation over mpi4py module. --mpi4py is equivalent to --mpi4py=true."
+  echo -e "${BLUE}--numpy=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute selected operation over numpy module. --numpy is equivalent to --numpy=true."
+  echo -e "${BLUE}--scipy=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute selected operation over scipy module. --scipy is equivalent to --scipy=true."
   echo -e "${BLUE}--tcl-tk=${YELLOW}[true|false]${WHITE}"
   echo -e "    Execute selected operation over tcl and tk libraries. --tcl-tk is equivalent to --tcl-tk=true."
   echo -e "${BLUE}--tcl=${YELLOW}[true|false]${WHITE}"
@@ -379,18 +420,33 @@ takeArguments()
   while [ "$1" ]; do
     case $1 in
       --disable-all|-d)
-     	                      DO_UNTAR=false
-                              DO_SQLITE=false
-                              DO_TCLTK=false
-                              DO_PYTHON=false
-                              DO_PYMOD=false
-                              DO_FFTW=false
-                              DO_TIFF=false
-                              DO_JPEG=false
-                              DO_HDF5=false
-                              DO_NMA=false
-                              DO_CLTOMO=false
-                              DO_SETUP=false
+        DO_UNTAR=false
+        DO_COMPILE=false
+        DO_CONFIGURE=false
+        DO_ALGLIB=false
+        DO_BILIB=false
+        DO_CONDOR=false
+        DO_FFTW=false
+        DO_GTEST=false
+        DO_HDF5=false
+        DO_IMAGEJ=false
+        DO_JPEG=false
+        DO_SCONS=false
+        DO_SQLITE=false
+        DO_TIFF=false
+        DO_NMA=false
+        DO_SHALIGNMENT=false
+        DO_MATLIBPLOT=false
+        DO_PYMPI=false
+        DO_NUMPY=false
+        DO_SCIPY=false
+        DO_TCL=false
+        DO_TK=false
+        DO_PYTHON=false
+        DO_TCLTK=false
+        DO_PYMOD=false
+        DO_CLTOMO=false
+        DO_SETUP=false
         ;;
       --num-cpus=*)
         ;;
@@ -408,106 +464,375 @@ takeArguments()
         COMPILE_ARGS=$(echo "$1"|cut -d '=' -f2)
         ;;
       --unattended=*) #[true|false]
-        DO_UNATTENDED=$(echo "$1"|cut -d '=' -f2)
-	if [ "${DO_UNATTENDED}" == "true" ]; then
+        WITH_UNATTENDED=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_UNATTENDED}" == "true" ]; then
           DO_UNATTENDED=true
-	elif [ "${DO_UNATTENDED}" == "false" ]
+        elif [ "${WITH_UNATTENDED}" == "false" ]
           DO_UNATTENDED=false
-	fi
+        else
+          echoRed "Parameter --unattended only accept true or false values. Ignored and assuming default value."
+        fi
         ;;
       --help|-h)
+        helpMessage
+        exitGracefully
         ;;
       --untar|-u)
+        DO_UNTAR=true
         ;;
       --configure|-f)
+        DO_CONFIGURE=true
         ;;
       --compile|-c)
+        DO_COMPILE=true
         ;;
-      --sqlite)
+      --alglib)
+        DO_ALGLIB=true
+        ;;
+      --alglib=*)
+        WITH_ALGLIB=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_ALGLIB}" == "true" ]; then
+          DO_ALGLIB=true
+        elif [ "${WITH_ALGLIB}" == "false" ]
+          DO_ALGLIB=false
+        else
+          echoRed "Parameter --alglib only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --bilib)
+        DO_BILIB=true
+        ;;
+      --bilib=*)
+        WITH_BILIB=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_BILIB}" == "true" ]; then
+          DO_BILIB=true
+        elif [ "${WITH_BILIB}" == "false" ]
+          DO_BILIB=false
+        else
+          echoRed "Parameter --bilib only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --condor)
+        DO_CONDOR=true
+        ;;
+      --condor=*)
+        WITH_CONDOR=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_CONDOR}" == "true" ]; then
+          DO_CONDOR=true
+        elif [ "${WITH_CONDOR}" == "false" ]
+          DO_CONDOR=false
+        else
+          echoRed "Parameter --condor only accept true or false values. Ignored and assuming default value."
+        fi
         ;;
       --fftw)
+        DO_FFTW=true
         ;;
-      --tiff)
+      --fftw=*)
+        WITH_FFTW=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_FFTW}" == "true" ]; then
+          DO_FFTW=true
+        elif [ "${WITH_FFTW}" == "false" ]
+          DO_FFTW=false
+        else
+          echoRed "Parameter --fftw only accept true or false values. Ignored and assuming default value."
+        fi
         ;;
-      --jpeg)
+      --gtest)
+        DO_GTEST=true
+        ;;
+      --gtest=*)
+        WITH_GTEST=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_GTEST}" == "true" ]; then
+          DO_GTEST=true
+        elif [ "${WITH_GTEST}" == "false" ]
+          DO_GTEST=false
+        else
+          echoRed "Parameter --gtest only accept true or false values. Ignored and assuming default value."
+        fi
         ;;
       --hdf5)
+        DO_HDF5=true
         ;;
-      --cltomo)
+      --hdf5=*)
+        DO_HDF5=$(echo "$1"|cut -d '=' -f2)
+        if [ "${DO_HDF5}" == "true" ]; then
+          DO_HDF5=true
+        elif [ "${DO_HDF5}" == "false" ]
+          DO_HDF5=false
+        else
+          echoRed "Parameter --hdf5 only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --imagej)
+        DO_IMAGEJ=true
+        ;;
+      --imagej=*)
+        DO_IMAGEJ=$(echo "$1"|cut -d '=' -f2)
+        if [ "${DO_IMAGEJ}" == "true" ]; then
+          DO_IMAGEJ=true
+        elif [ "${DO_IMAGEJ}" == "false" ]
+          DO_IMAGEJ=false
+        else
+          echoRed "Parameter --imagej only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --jpeg)
+        DO_JPEG=true
+        ;;
+      --jpeg=*)
+        WITH_JPEG=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_JPEG}" == "true" ]; then
+          DO_JPEG=true
+        elif [ "${WITH_JPEG}" == "false" ]
+          DO_JPEG=false
+        else
+          echoRed "Parameter --jpeg only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --scons)
+        DO_SCONS=true
+        ;;
+      --scons=*)
+        WITH_SCONS=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_SCONS}" == "true" ]; then
+          DO_SCONS=true
+        elif [ "${WITH_SCONS}" == "false" ]
+          DO_SCONS=false
+        else
+          echoRed "Parameter --scons only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --sqlite)
+        DO_SQLITE=true
+        ;;
+      --sqlite=*)
+        WITH_SQLITE=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_SQLITE}" == "true" ]; then
+          DO_SQLITE=true
+        elif [ "${WITH_SQLITE}" == "false" ]
+          DO_SQLITE=false
+        else
+          echoRed "Parameter --sqlite only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --tiff)
+        DO_TIFF=true
+        ;;
+      --tiff=*)
+        WITH_TIFF=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_TIFF}" == "true" ]; then
+          DO_TIFF=true
+        elif [ "${WITH_TIFF}" == "false" ]
+          DO_TIFF=false
+        else
+          echoRed "Parameter --tiff only accept true or false values. Ignored and assuming default value."
+        fi
         ;;
       --nma)
+        DO_NMA=true
+        ;;
+      --nma=*)
+        WITH_NMA=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_NMA}" == "true" ]; then
+          DO_NMA=true
+        elif [ "${WITH_NMA}" == "false" ]
+          DO_NMA=false
+        else
+          echoRed "Parameter --nma only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --sh-alignment)
+        DO_SHALIGNMENT=true
+        ;;
+      --sh-alignment=*)
+        WITH_SHALIGNMENT=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_SHALIGNMENT}" == "true" ]; then
+          DO_ALIGNMENT=true
+        elif [ "${WITH_ALIGNMENT}" == "false" ]
+          DO_ALIGNMENT=false
+        else
+          echoRed "Parameter --sh-alignment only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --cltomo)
+        DO_CLTOMO=true
+        ;;
+      --cltomo=*)
+        WITH_CLTOMO=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_CLTOMO}" == "true" ]; then
+          DO_CLTOMO=true
+        elif [ "${WITH_CLTOMO}" == "false" ]
+          DO_CLTOMO=false
+        else
+          echoRed "Parameter --cltomo only accept true or false values. Ignored and assuming default value."
+        fi
         ;;
       --python)
+        DO_PYTHON=true
+        DO_PYMOD=true
+        ;;
+      --python=*)
+        WITH_PYTHON=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_PYTHON}" == "true" ]; then
+          DO_PYTHON=true
+          DO_PYMOD=true
+        elif [ "${WITH_PYTHON}" == "false" ]
+          DO_PYTHON=false
+          DO_PYMOD=false
+        else
+          echoRed "Parameter --python only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --matplotlib)
+        DO_MATLIBPLOT=true
+        ;;
+      --matplotlib=*)
+        WITH_MATLIBPLOT=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_MATLIBPLOT}" == "true" ]; then
+          DO_MATLIBPLOT=true
+        elif [ "${WITH_MATLIBPLOT}" == "false" ]
+          DO_MATLIBPLOT=false
+        else
+          echoRed "Parameter --matplotlib only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --mpi4py)
+        DO_PYMPI=true
+        ;;
+      --mpi4py=*)
+        WITH_PYMPI=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_PYMPI}" == "true" ]; then
+          DO_PYMPI=true
+        elif [ "${WITH_PYMPI}" == "false" ]
+          DO_PYMPI=false
+        else
+          echoRed "Parameter --mpi4py only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --numpy)
+        DO_NUMPY=true
+        ;;
+      --numpy=*)
+        WITH_NUMPY=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_NUMPY}" == "true" ]; then
+          DO_NUMPY=true
+        elif [ "${WITH_NUMPY}" == "false" ]
+          DO_NUMPY=false
+        else
+          echoRed "Parameter --numpy only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --scipy)
+        DO_SCIPY=true
+        ;;
+      --scipy=*)
+        WITH_SCIPY=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_SCIPY}" == "true" ]; then
+          DO_SCIPY=true
+        elif [ "${WITH_SCIPY}" == "false" ]
+          DO_SCIPY=false
+        else
+          echoRed "Parameter --scipy only accept true or false values. Ignored and assuming default value."
+        fi
         ;;
       --tcl-tk)
+        DO_TCLTK=true
+        ;;
+      --tcl-tk=*)
+        WITH_TCLTK=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_TCLTK}" == "true" ]; then
+          DO_TCLTK=true
+        elif [ "${WITH_TCLTK}" == "false" ]
+          DO_TCLTK=false
+        else
+          echoRed "Parameter --tcl-tk only accept true or false values. Ignored and assuming default value."
+        fi
         ;;
       --tcl)
+        DO_TCL=true
+        ;;
+      --tcl=*)
+        WITH_TCL=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_TCL}" == "true" ]; then
+          DO_TCL=true
+        elif [ "${WITH_TCL}" == "false" ]
+          DO_TCL=false
+        else
+          echoRed "Parameter --tcl only accept true or false values. Ignored and assuming default value."
+        fi
         ;;
       --tk)
+        DO_TK=true
+        ;;
+      --tk=*)
+        WITH_TK=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_TK}" == "true" ]; then
+          DO_TK=true
+        elif [ "${WITH_TK}" == "false" ]
+          DO_TK=false
+        else
+          echoRed "Parameter --tk only accept true or false values. Ignored and assuming default value."
+        fi
         ;;
       --pymodules)
+        DO_PYMOD=true
+        ;;
+      --pymodules=*)
+        WITH_PYMOD=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_PYMOD}" == "true" ]; then
+          DO_PYMOD=true
+        elif [ "${WITH_PYMOD}" == "false" ]
+          DO_PYMOD=false
+        else
+          echoRed "Parameter --pymodules only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --gui=*)
+        WITH_GUI==$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_GUI}" == "true" ]; then
+          WITH_GUI=true
+        elif [ "${WITH_GUI}" == "false" ]
+          WITH_GUI=false
+        else
+          echoRed "Parameter --gui only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      *)
+        echoRed "Error: Unrecognized option $1, exiting..."
+        helpMessage
+        exitGracefully
         ;;
     esac
     shift
   done
-  for param in $@; do
-    elif $TAKE_CONFIGURE && [ "$param" != "compile" ]; then
-       echo "param: $param"
-       CONFIGURE_ARGS="$CONFIGURE_ARGS $param"
-    elif $TAKE_COMPILE && [ "$param" != "configure" ]; then
-       COMPILE_ARGS="$COMPILE_ARGS $param"
-    else
-      case $param in
-        "-j")                 TAKE_CPU=true;;
-        "untar=true")         DO_UNTAR=true;;
-        "untar=false")        DO_UNTAR=false;;
-        "sqlite=true")        DO_SQLITE=true;;
-        "sqlite=false")       DO_SQLITE=false;;
-        "tcltk=true")         DO_TCLTK=true;;
-        "tcltk=false")        DO_TCLTK=false;;
-        "python=true")        DO_PYTHON=true;DO_PYMOD=true;;
-        "python=false")       DO_PYTHON=false;DO_PYMOD=false;;
-        "pymodules=true")     DO_PYMOD=true;;
-        "pymodules=false")    DO_PYMOD=false;;
-        "fftw=true")          DO_FFTW=true;;
-        "fftw=false")         DO_FFTW=false;;
-        "tiff=true")          DO_TIFF=true;;
-        "tiff=false")         DO_TIFF=false;;
-        "jpeg=true")          DO_JPEG=true;;
-        "jpeg=false")         DO_JPEG=false;;
-        "hdf5=true")          DO_HDF5=true;;
-        "hdf5=false")         DO_HDF5=false;;
-        "cltomo=true")        DO_CLTOMO=true;;
-        "clromo=false")       DO_CLTOMO=false;;
-        "nma=true")           DO_NMA=true;;
-        "nma=false")          DO_NMA=false;;
-        "clean=true")         DO_CLEAN=true;;
-        "clean=false")        DO_CLEAN=false;;
-        "static=true")        DO_STATIC=true;;
-        "static=false")       DO_STATIC=false;;
-        "gui=false")          GUI_ARGS="";;
-        "setup=true")         DO_SETUP=true;;
-        # This two if passed should be at the end and 
-        # will setup arguments for configure and compilation steps
-        "configure")          TAKE_CONFIGURE=true;
-                              TAKE_COMPILE=false;;
-        "compile")            TAKE_CONFIGURE=false;
-                              TAKE_COMPILE=true;;
-        "unattended=true")    
-        "unattended=false")   DO_UNATTENDED=false;;
-        *)                    echoRed "Unrecognized option $param, exiting..."
-                              helpMessage
-                              exit 1
-      esac
-    fi 
-  done
+
+#        "clean=true")         DO_CLEAN=true;;
+#        "clean=false")        DO_CLEAN=false;;
+#        "static=true")        DO_STATIC=true;;
+#        "static=false")       DO_STATIC=false;;
+#        "gui=false")          GUI_ARGS="";;
+#        "setup=true")         DO_SETUP=true;;
+#        "configure")          TAKE_CONFIGURE=true;
+#                              TAKE_COMPILE=false;;
+#        "compile")            TAKE_CONFIGURE=false;
+#                              TAKE_COMPILE=true;;
+#                              exit 1
 
   if $DO_UNATTENDED; then
-    CONFIGURE_ARGS="$CONFIGURE_ARGS unattended"
+    CONFIGURE_ARGS="$CONFIGURE_ARGS unattended "
   fi
 }
 
-
+#function that searchs in an array for an element and returns the position of that element in the array
+indexOf(){
+  local i=1 S=$1; shift
+  while [ $S != $1 ]
+  do    ((i++)); shift
+        [ -z "$1" ] && { i=0; break; }
+  done
+  return $i
+}
 
 create_bashrc_file()
 {
@@ -790,21 +1115,23 @@ decompressExternals()
   echoGreen "*** Decompressing external libraries ..."
   lib=0
   while [ ${lib} -le ${#EXTERNAL_LIBRARIES[@]} ]; do
-    if [ -d ${EXTERNAL_LIBRARIES[$lib]} ]; then
-      if [ ! $DO_UNATTENDED -a ${DELETE_ANSWER} != "Y" -a ${DELETE_ANSWER} != "N"]; then
-        echo "${EXTERNAL_LIBRARIES[$lib]} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
-	read DELETE_ANSWER
-      else
-        DELETE_ANSWER="Y"
+    if [ ${EXTERNAL_LIBRARIES_DO[$lib]} ]; then
+      if [ -d ${EXTERNAL_LIBRARIES[$lib]} ]; then
+        if [ ! $DO_UNATTENDED -a ${DELETE_ANSWER} != "Y" -a ${DELETE_ANSWER} != "N"]; then
+          echo "${EXTERNAL_LIBRARIES[$lib]} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
+          read DELETE_ANSWER
+        else
+          DELETE_ANSWER="Y"
+        fi
+        if [ ${DELETE_ANSWER} == "y" -o ${DELETE_ANSWER} == "Y" ]; then
+          echoExec "rm -rf ${EXTERNAL_LIBRARIES[$lib]}"
+        else
+          echoRed "Library ${EXTERNAL_LIBRARIES[$lib]} folder untouched."
+        fi
       fi
-      if [ ${DELETE_ANSWER} == "y" -o ${DELETE_ANSWER} == "Y" ]; then
-        echoExec "rm -rf ${EXTERNAL_LIBRARIES[$lib]}"
-      else
-        echoRed "Library ${EXTERNAL_LIBRARIES[$lib]} folder untouched."
-      fi
+      echo "--> tar -xvzf ${EXTERNAL_LIBRARIES_TAR[$lib]} > /dev/null"
+      tar -xvzf ${EXTERNAL_LIBRARIES_TAR[$lib]} > /dev/null 2>&1
     fi
-    echo "--> tar -xvzf ${EXTERNAL_LIBRARIES_TAR[$lib]} > /dev/null"
-    tar -xvzf ${EXTERNAL_LIBRARIES_TAR[$lib]} > /dev/null 2>&1
     lib=$(expr "$lib + 1")
   done
   echo "--> cd - > /dev/null"
@@ -849,21 +1176,23 @@ decompressPythonModules()
   echoGreen "*** Decompressing python modules ..."
   lib=0
   while [ ${lib} -le ${#PYTHON_MODULES[@]} ]; do
-    if [ -d ${PYTHON_MODULES[$lib]} ]; then
-      if [ ! $DO_UNATTENDED -a ${DELETE_ANSWER} != "Y" -a ${DELETE_ANSWER} != "N"]; then
-        echo "${PYTHON_MODULES[$lib]} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
-	read DELETE_ANSWER
-      else
-        DELETE_ANSWER="Y"
+    if [ ${PYTHON_MODULES_DO[$lib]} ]; then
+      if [ -d ${PYTHON_MODULES[$lib]} ]; then
+        if [ ! $DO_UNATTENDED -a ${DELETE_ANSWER} != "Y" -a ${DELETE_ANSWER} != "N"]; then
+          echo "${PYTHON_MODULES[$lib]} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
+          read DELETE_ANSWER
+        else
+          DELETE_ANSWER="Y"
+        fi
+        if [ ${DELETE_ANSWER} == "y" -o ${DELETE_ANSWER} == "Y" ]; then
+          echoExec "rm -rf ${PYTHON_MODULES[$lib]}"
+        else
+          echoRed "Library ${PYTHON_MODULES[$lib]} folder untouched."
+        fi
       fi
-      if [ ${DELETE_ANSWER} == "y" -o ${DELETE_ANSWER} == "Y" ]; then
-        echoExec "rm -rf ${PYTHON_MODULES[$lib]}"
-      else
-        echoRed "Library ${PYTHON_MODULES[$lib]} folder untouched."
-      fi
+      echo "--> tar -xvzf ${PYTHON_MODULES_TAR[$lib]} > /dev/null"
+      tar -xvzf ${PYTHON_MODULES_TAR[$lib]} > /dev/null 2>&1
     fi
-    echo "--> tar -xvzf ${PYTHON_MODULES_TAR[$lib]} > /dev/null"
-    tar -xvzf ${PYTHON_MODULES_TAR[$lib]} > /dev/null 2>&1
     lib=$(expr "$lib + 1")
   done
   echo "--> cd - > /dev/null"
@@ -873,7 +1202,21 @@ decompressPythonModules()
 
 exitGracefully()
 {
+  if [ $# -eq 1 ]; then
+    GLOB_STATE=$1
+    GLOB_COMMAND="Unknown"
+  elif [ $# -eq 2 ]; then
+    GLOB_STATE=$1
+    GLOB_COMMAND="$2"
+  elif [ $# -gt 2 ]; then
+    echoRed "Error: too much parameters passed to exitGracefully function."
+  fi
 
+  if [ ${GLOB_STATE} -eq 0 ]; then
+    echoGreen "Program exited succesfully."
+  else
+    echoRed "Program exited with non-zero status (${GLOB_STATE}), produced by command ${GLOB_COMMAND}."
+  fi
 }
 
 ##################################################################################
