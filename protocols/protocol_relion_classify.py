@@ -87,7 +87,6 @@ class ProtRelionClassifier(XmippProtocol):
         #temporary normalized files
         tmpFileNameSTK = join(self.ExtraDir, 'norRelion.stk')
         tmpFileNameXMD = join(self.ExtraDir, 'norRelion.xmd')
-        print "Define steps"
         if restart:            #Not yet implemented
             print 'NOT YET IMPLEMENTED'
             pass
