@@ -322,7 +322,7 @@ def showVolVisualization(request):
 ###################################################################  
 def visualizeObject(request):
     #Napa de Luxe
-    probandoCTFParam = True
+    probandoCTFParam = False
     probandoVolume = False
     
     objectId = request.GET.get("objectId")    
