@@ -1223,7 +1223,6 @@ void Mask::defineParams(XmippProgram * program, int allowed_data_types, const ch
     else
     	strcpy(tempLine2,tempLine);
 
-    std::cout << "tempLine2=**" << tempLine2 << "**" << std::endl;
     program->addParamsLine(tempLine2);
     program->addParamsLine("        where <mask_type> ");
     // program->addParamsLine("== INT MASK ==");
