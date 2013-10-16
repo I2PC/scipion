@@ -10,7 +10,7 @@
 from protlib_base import *
 from protlib_particles import *
 import xmipp
-from xmipp import MetaData, FileName, MDL_IMAGE, MDL_SAMPLINGRATE
+from xmipp import MetaData, FileName, MDL_IMAGE, MDL_SAMPLINGRATE,  MDL_MICROGRAPH,MDL_CTF_MODEL
 import glob
 import os
 from os.path import relpath, dirname
@@ -103,6 +103,13 @@ def importImages(log, InputFile, WorkingDir, DoCopy, ImportAll, SubsetMode, Nsub
     imagesFn = getImagesFilename(WorkingDir)
     fnInput = FileName(InputFile)    
     md = MetaData(InputFile)
+    #check if micrographs or ctfparam exists
+    doMic=False
+    doCTFParam=False
+    if md.containsLabel(MDL_MICROGRAPH):
+        doMic = True
+    if md.containsLabel(MDL_CTF_MODEL):
+       doCTFParam = True
     
     if fnInput.isMetaData():        
         inputRelativePath = dirname(relpath(InputFile, '.'))
@@ -114,6 +121,18 @@ def importImages(log, InputFile, WorkingDir, DoCopy, ImportAll, SubsetMode, Nsub
             if imgNo != None:
                 imgFn = "%s@%s" % (imgNo, imgFn)
             md.setValue(MDL_IMAGE, imgFn, id)
+	    #micrograph
+	    if doMic:
+	        micFn =  md.getValue(MDL_MICROGRAPH, id)
+	        print "inside mic"
+		print micFn, projectPath, inputRelativePath
+		micFn = xmippRelpath(fixPath(micFn, projectPath, inputRelativePath, '.'))
+		md.setValue(MDL_MICROGRAPH, micFn, id)
+	    #ctf param
+	    if doCTFParam:
+	        ctfFn =  md.getValue(MDL_CTF_MODEL, id)
+		ctfFn = xmippRelpath(fixPath(ctfFn, projectPath, inputRelativePath, '.'))
+		md.setValue(MDL_CTF_MODEL, ctfFn, id)
         outExt = '.stk'
     else:
         outExt = '.%s' % fnInput.getExtension()
