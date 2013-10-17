@@ -49,7 +49,7 @@
 .projectsList {
 	border: 1px solid black;
 	background: Gainsboro;
-	height: 97%;
+ 	height: 55em;
 	overflow-y: auto;
 	overflow-x: hidden;
 	/*width: 99%;*/
