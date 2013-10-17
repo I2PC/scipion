@@ -511,15 +511,23 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
     classes2DSet._xmippMd = String(filename)
          
 
-def createXmippInputImages(self, imgSet, rowFunc=None):    
-    imgsFn = self._getPath('input_images.xmd')
-    ctfDir = self._getExtraPath()
-    writeSetOfParticles(imgSet, imgsFn, ctfDir, rowFunc)
+def createXmippInputImages(self, imgSet, rowFunc=None):  
+    imgsMd = getattr(imgSet, '_xmippMd', None)
+    if imgsMd is None:
+        imgsFn = self._getPath('input_images.xmd')
+        ctfDir = self._getExtraPath()
+        writeSetOfParticles(imgSet, imgsFn, ctfDir, rowFunc)
+    else:
+        imgsFn = imgsMd.get()
     return imgsFn
 
 
 def createXmippInputMicrographs(self, micSet, rowFunc=None):    
-    micsFn = self._getPath('input_micrographs.xmd')
-    ctfDir = self._getExtraPath()
-    writeSetOfMicrographs(micSet, micsFn, ctfDir, rowFunc)
+    micsMd = getattr(micSet, '_xmippMd', None)
+    if micsMd is None:
+        micsFn = self._getPath('input_micrographs.xmd')
+        ctfDir = self._getExtraPath()
+        writeSetOfMicrographs(micSet, micsFn, ctfDir, rowFunc)
+    else:
+        micsFn = micsMd.get()
     return micsFn
