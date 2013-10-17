@@ -57,70 +57,70 @@ DO_UNATTENDED=false
 VALGLIB=3.8.0
 ALGLIB_FOLDER="alglib-${VALGLIB}.cpp"
 ALGLIB_TAR="${ALGLIB_FOLDER}.tgz"
-DO_ALGLIB=false
+DO_ALGLIB=0
 
 VBILIB=0.0
 BILIB_FOLDER=bilib
 BILIB_TAR="${BILIB_FOLDER}.tgz"
-DO_BILIB=false
+DO_BILIB=0
 
 VCONDOR=0.0
 CONDOR_FOLDER=condor
-CONDOR_TAR="${CONDOR_FOLDER}"
-DO_CONDOR=false
+CONDOR_TAR="${CONDOR_FOLDER}.tgz"
+DO_CONDOR=0
 
 VFFTW=3.3.3
 FFTW_FOLDER="fftw-${VFFTW}"
 FFTW_TAR="${FFTW_FOLDER}.tgz"
-DO_FFTW=false
+DO_FFTW=0
 
 VGTEST=1.6.0
 GTEST_FOLDER="gtest-${VGTEST}"
 GTEST_TAR="${GTEST_FOLDER}.tgz"
-DO_GTEST=false
+DO_GTEST=0
 
 VHDF5=1.8.10
 HDF5_FOLDER="hdf5-${VHDF5}"
 HDF5_TAR="${HDF5_FOLDER}.tgz"
-DO_HDF5=false
+DO_HDF5=0
 
 VIMAGEJ=1.45g
 IMAGEJ_FOLDER="imagej"
 IMAGEJ_TAR="${IMAGEJ_FOLDER}.tgz"
-DO_IMAGEJ=false
+DO_IMAGEJ=0
 
 VJPEG=8c
 JPEG_FOLDER="jpeg-${VJPEG}"
 JPEG_TAR="jpegsrc.v${VJPEG}.tgz"
-DO_JPEG=false
+DO_JPEG=0
 
 VSCONS=1.2.0
 SCONS_FOLDER="scons"
 SCONS_TAR="${SCONS_FOLDER}.tgz"
-DO_JPEG=false
+DO_SCONS=0
 
 VSQLITE=3.6.23
 SQLITE_FOLDER="sqlite-${VSQLITE}"
 SQLITE_TAR="${SQLITE_FOLDER}.tgz"
 SQLITE_EXT_FOLDER=sqliteExt
-DO_SQLITE=false
+DO_SQLITE=0
 
 VTIFF=3.9.4
 TIFF_FOLDER="tiff-${VTIFF}"
 TIFF_TAR="${TIFF_FOLDER}.tgz"
-DO_TIFF=false
+DO_TIFF=0
 
 VNMA=0.0
 NMA_FOLDER="NMA"
 NMA_TAR="${NMA_FOLDER}.tgz"
-DO_NMA=false
+DO_NMA=0
 
 VSHALIGNMENT=0.0
 SHALIGNMENT_FOLDER="sh_alignment"
 SHALIGNMENT_TAR="${SH_ALIGNMENT_FOLDER}.tgz"
-DO_SHALIGNMENT=false
+DO_SHALIGNMENT=0
 
-#External libraries arrays. For adding a new external library, define his decompress folder and tar names, put them in EXTERNAL_LIBRARIES and EXTERNAL_LIBRARIES_FILES arrays, and put 1 whther it has to be installed by default, 0 otherwise in EXTERNAL_LIBRARIES_DEFAULT in the appropiate positions.
+#External libraries arrays. For adding a new external library, define his decompress folder and tar names, put them in EXTERNAL_LIBRARIES and EXTERNAL_LIBRARIES_FILES arrays, and put 1 whther it has to be installed by default, 0 otherwise in EXTERNAL_LIBRARIES_DEFAULT in the appropiate positions. You will also need to stablish a DO* variable in the *DO array, to let the script work
 EXTERNAL_LIBRARIES=(         $ALGLIB_FOLDER $BILIB_FOLDER $CONDOR_FOLDER $FFTW_FOLDER $GTEST_FOLDER $HDF5_FOLDER $IMAGEJ_FOLDER $JPEG_FOLDER $SCONS_FOLDER $SQLITE_FOLDER $TIFF_FOLDER $NMA_FOLDER $SHALIGNMENT_FOLDER )
 EXTERNAL_LIBRARIES_FILES=(   $ALGLIB_TAR    $BILIB_TAR    $CONDOR_TAR    $FFTW_TAR    $GTEST_TAR    $HDF5_TAR    $IMAGEJ_TAR    $JPEG_TAR    $SCONS_TAR    $SQLITE_TAR    $TIFF_TAR    $NMA_TAR    $SHALIGNMENT_TAR    )
 EXTERNAL_LIBRARIES_DO=(      $DO_ALGLIB     $DO_BILIB     $DO_CONDOR     $DO_FFTW     $DO_GTEST     $DO_HDF5     $DO_IMAGEJ     $DO_JPEG     $DO_SCONS     $DO_SQLITE     $DO_TIFF     $DO_NMA     $DO_SHALIGNMENT     )
@@ -140,33 +140,33 @@ DO_PYMOD=true
 VMATLIBPLOT=1.1.0
 MATLIBPLOT_FOLDER="matplotlib-${VMATLIBPLOT}"
 MATLIBPLOT_TAR="${MATLIBPLOT_FOLDER}.tgz"
-DO_MATLIBPLOT=false
+DO_MATLIBPLOT=0
 
 VPYMPI=1.2.2
 PYMPI_FOLDER="mpi4py-${VPYMPI}"
 PYMPI_TAR="${PYMPI_FOLDER}.tgz"
-DO_PYMPI=false
+DO_PYMPI=0
 
 VNUMPY=1.6.1
 NUMPY_FOLDER="numpy-${VNUMPY}"
 NUMPY_TAR="${NUMPY_FOLDER}.tgz"
-DO_NUMPY=false
+DO_NUMPY=0
 
 VSCIPY=0.12.0
 SCIPY_FOLDER="scipy-${VSCIPY}"
 SCIPY_TAR="${SCIPY_FOLDER}.tgz"
-DO_SCIPY=false
+DO_SCIPY=0
 
 VTCLTK=8.5.10
 DO_TCLTK=true
-TCL_FOLDER="tcl${$VTCLTK}"
+TCL_FOLDER="tcl${VTCLTK}"
 TCL_TAR="${TCL_FOLDER}.tgz"
-DO_TCL=false
-TK_FOLDER="tk${$VTCLTK}"
+DO_TCL=0
+TK_FOLDER="tk${VTCLTK}"
 TK_TAR="${TK_FOLDER}.tgz"
-DO_TK=false
+DO_TK=0
 
-#Python modules arrays. For adding a new python module, define his decompress folder and tar names, put them in PYTHON_MODULES and PYTHON_MODULES_FILES arrays, and put 1 whther it has to be installed by default, 0 otherwise in PYTHON_MODULES_DEFAULT in the appropiate position.
+#Python modules arrays. For adding a new python module, define his decompress folder and tar names, put them in PYTHON_MODULES and PYTHON_MODULES_FILES arrays, and put 1 whther it has to be installed by default, 0 otherwise in PYTHON_MODULES_DEFAULT in the appropiate position. You will also need to stablish a DO* variable in the *DO array, to let the script work
 PYTHON_MODULES=(        $MATLIBPLOT_FOLDER $PYMPI_FOLDER $NUMPY_FOLDER $SCIPY_FOLDER $TCL_FOLDER $TK_FOLDER )
 PYTHON_MODULES_FILES=(  $MATLIBPLOT_TAR    $PYMPI_TAR    $NUMPY_TAR    $SCIPY_TAR    $TCL_TAR    $TK_TAR    )
 PYTHON_MODULES_DO=(     $DO_MATLIBPLOT     $DO_PYMPI     $DO_NUMPY     $DO_SCIPY     $DO_TCL     $DO_TK     )
@@ -275,9 +275,9 @@ echoExecRedirectEverything()
 # Function that retreives from *DO arrays whether the asked external library or python module is enabled or not. It receives exactly 2 parameters:
 # The first one can be "library" for external libraries or "pymodule" for python module
 # The second one is the *TAR name of the library/module to search for
-shouldIdoIt()
+shouldIDoIt()
 {
-  ANS=false
+  ANS=0
   if [ $# -ne 2 ]; then
     echoRed "Error: bad parameter number on shouldIDoIt function. Exiting"
     exitGracefully
@@ -286,11 +286,21 @@ shouldIdoIt()
   case $1 in
     library)
       indexOf $2 ${EXTERNAL_LIBRARIES_FILES[@]}
-      ANS=${EXTERNAL_LIBRARIES_DO[$?]}
+      ind=$(expr $? - 1)
+      if [ ${ind} -lt 0 ]; then
+        echoRed "Error: bad parameter ($2) on shouldIDoIt. File not found. Exiting"
+        exitGracefully
+      fi
+      ANS=${EXTERNAL_LIBRARIES_DO[$ind]}
       ;;
     pymodule)
       indexOf $2 ${PYTHON_MODULES_FILES[@]}
-      ANS=${PYTHON_MODULES_DO[$?]}
+      ind=$(expr $? - 1)
+      if [ ${ind} -lt 0 ]; then
+        echoRed "Error: bad parameter ($2) on shouldIDoIt. File not found. Exiting"
+        exitGracefully
+      fi
+      ANS=${PYTHON_MODULES_DO[$ind]}
       ;;
     *)
       echoRed "Error: bad parameter ($1) on shouldIDoIt function. Exiting"
@@ -309,18 +319,28 @@ doIt()
 {
   ANS=0
   if [ $# -ne 2 ]; then
-    echoRed "Error: bad parameter number on shouldIDoIt function. Exiting"
+    echoRed "Error: bad parameter number on doIt function. Exiting"
     exitGracefully
   fi
 
   case $1 in
     library)
       indexOf $2 ${EXTERNAL_LIBRARIES_FILES[@]}
-      EXTERNAL_LIBRARIES_DO[$?]=$3
+      ind=$(expr $? - 1)
+      if [ ${ind} -lt 0 ]; then
+        echoRed "Error: bad parameter ($2) on doIt. File not found. Exiting"
+        exitGracefully
+      fi
+      EXTERNAL_LIBRARIES_DO[$ind]=$3
       ;;
     pymodule)
       indexOf $2 ${PYTHON_MODULES_FILES[@]}
-      PYTHON_MODULES_DO[$?]=$3
+      ind=$(expr $? - 1)
+      if [ ${ind} -lt 0 ]; then
+        echoRed "Error: bad parameter ($2) on shouldIDoIt. File not found. Exiting"
+        exitGracefully
+      fi
+      PYTHON_MODULES_DO[$ind]=$3
       ;;
     *)
       echoRed "Error: bad parameter ($1) on shouldIDoIt function. Exiting"
@@ -368,7 +388,6 @@ welcomeMessage()
 helpMessage()
 {
   echo -e ""
-  welcomeMessage
   echo -e "###################################"
   echo -e '# XMIPP INSTALLATION SCRIPT USAGE #'
   echo -e "###################################"
@@ -487,25 +506,25 @@ takeArguments()
         DO_UNTAR=false
         DO_COMPILE=false
         DO_CONFIGURE=false
-	doIt library ${ALGLIB_TAR} false
-	doIt library ${BILIB_TAR} false
-	doIt library ${CONDOR_TAR} false
-	doIt library ${FFTW_TAR} false
-	doIt library ${GTEST_TAR} false
-	doIt library ${HDF5_TAR} false
-	doIt library ${IMAGEJ_TAR} false
-	doIt library ${JPEG_TAR} false
-	doIt library ${SCONS_TAR} false
-	doIt library ${SQLITE_TAR} false
-	doIt library ${TIFF_TAR} false
-	doIt library ${NMA_TAR} false
-	doIt library ${SHALIGNMENT_TAR} false
-	doIt pymodule ${MATLIBPLOT_TAR} false
-        doIt pymodule ${PYMPI_TAR} false
-        doIt pymodule ${NUMPY_TAR} false
-        doIt pymodule ${SCIPY_TAR} false
-        doIt pymodule ${TCL_TAR} false
-        doIt pymodule ${TK_TAR} false
+	doIt library ${ALGLIB_TAR} 0
+	doIt library ${BILIB_TAR} 0
+	doIt library ${CONDOR_TAR} 0
+	doIt library ${FFTW_TAR} 0
+	doIt library ${GTEST_TAR} 0
+	doIt library ${HDF5_TAR} 0
+	doIt library ${IMAGEJ_TAR} 0
+	doIt library ${JPEG_TAR} 0
+	doIt library ${SCONS_TAR} 0
+	doIt library ${SQLITE_TAR} 0
+	doIt library ${TIFF_TAR} 0
+	doIt library ${NMA_TAR} 0
+	doIt library ${SHALIGNMENT_TAR} 0
+	doIt pymodule ${MATLIBPLOT_TAR} 0
+        doIt pymodule ${PYMPI_TAR} 0
+        doIt pymodule ${NUMPY_TAR} 0
+        doIt pymodule ${SCIPY_TAR} 0
+        doIt pymodule ${TCL_TAR} 0
+        doIt pymodule ${TK_TAR} 0
         DO_PYTHON=false
         DO_TCLTK=false
         DO_PYMOD=false
@@ -551,27 +570,27 @@ takeArguments()
         DO_COMPILE=true
         ;;
       --alglib)
-        doIt library ${ALGLIB_TAR} true
+        doIt library ${ALGLIB_TAR} 1
         ;;
       --alglib=*)
         WITH_ALGLIB=$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_ALGLIB}" == "true" ]; then
-          doIt library ${ALGLIB_TAR} true
+          doIt library ${ALGLIB_TAR} 1
         elif [ "${WITH_ALGLIB}" == "false" ]; then
-          doIt library ${ALGLIB_TAR} false
+          doIt library ${ALGLIB_TAR} 0
         else
           echoRed "Parameter --alglib only accept true or false values. Ignored and assuming default value."
         fi
         ;;
       --bilib)
-        doIt library ${BILIB_TAR} true
+        doIt library ${BILIB_TAR} 1
         ;;
       --bilib=*)
         WITH_BILIB=$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_BILIB}" == "true" ]; then
-          doIt library ${BILIB_TAR} true
+          doIt library ${BILIB_TAR} 1
         elif [ "${WITH_BILIB}" == "false" ]; then
-          doIt library ${BILIB_TAR} false
+          doIt library ${BILIB_TAR} 0
         else
           echoRed "Parameter --bilib only accept true or false values. Ignored and assuming default value."
         fi
@@ -582,139 +601,139 @@ takeArguments()
       --condor=*)
         WITH_CONDOR=$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_CONDOR}" == "true" ]; then
-          doIt library ${CONDOR_TAR} true
+          doIt library ${CONDOR_TAR} 1
         elif [ "${WITH_CONDOR}" == "false" ]; then
-          doIt library ${CONDOR_TAR} false
+          doIt library ${CONDOR_TAR} 0
         else
           echoRed "Parameter --condor only accept true or false values. Ignored and assuming default value."
         fi
         ;;
       --fftw)
-        doIt library ${FFTW_TAR} true
+        doIt library ${FFTW_TAR} 1
         ;;
       --fftw=*)
         WITH_FFTW=$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_FFTW}" == "true" ]; then
-          doIt library ${FFTW_TAR} true
+          doIt library ${FFTW_TAR} 1
         elif [ "${WITH_FFTW}" == "false" ]; then
-          doIt library ${FFTW_TAR} false
+          doIt library ${FFTW_TAR} 0
         else
           echoRed "Parameter --fftw only accept true or false values. Ignored and assuming default value."
         fi
         ;;
       --gtest)
-        doIt library ${GTEST_TAR} true
+        doIt library ${GTEST_TAR} 1
         ;;
       --gtest=*)
         WITH_GTEST=$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_GTEST}" == "true" ]; then
-          doIt library ${GTEST_TAR} true
+          doIt library ${GTEST_TAR} 1
         elif [ "${WITH_GTEST}" == "false" ]; then
-          doIt library ${GTEST_TAR} false
+          doIt library ${GTEST_TAR} 0
         else
           echoRed "Parameter --gtest only accept true or false values. Ignored and assuming default value."
         fi
         ;;
       --hdf5)
-        doIt library ${HDF5_TAR} true
+        doIt library ${HDF5_TAR} 1
         ;;
       --hdf5=*)
         WITH_HDF5=$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_HDF5}" == "true" ]; then
-          doIt library ${HDF5_TAR} true
+          doIt library ${HDF5_TAR} 1
         elif [ "${WITH_HDF5}" == "false" ]; then
-          doIt library ${HDF5_TAR} false
+          doIt library ${HDF5_TAR} 0
         else
           echoRed "Parameter --hdf5 only accept true or false values. Ignored and assuming default value."
         fi
         ;;
       --imagej)
-        doIt library ${IMAGEJ_TAR} true
+        doIt library ${IMAGEJ_TAR} 1
         ;;
       --imagej=*)
         WITH_IMAGEJ=$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_IMAGEJ}" == "true" ]; then
-          doIt library ${IMAGEJ_TAR} true
+          doIt library ${IMAGEJ_TAR} 1
         elif [ "${WITH_IMAGEJ}" == "false" ]; then
-          doIt library ${IMAGEJ_TAR} false
+          doIt library ${IMAGEJ_TAR} 0
         else
           echoRed "Parameter --imagej only accept true or false values. Ignored and assuming default value."
         fi
         ;;
       --jpeg)
-        doIt library ${JPEG_TAR} true
+        doIt library ${JPEG_TAR} 1
         ;;
       --jpeg=*)
         WITH_JPEG=$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_JPEG}" == "true" ]; then
-          doIt library ${JPEG_TAR} true
+          doIt library ${JPEG_TAR} 1
         elif [ "${WITH_JPEG}" == "false" ]; then
-          doIt library ${JPEG_TAR} false
+          doIt library ${JPEG_TAR} 0
         else
           echoRed "Parameter --jpeg only accept true or false values. Ignored and assuming default value."
         fi
         ;;
       --scons)
-        doIt library ${SCONS_TAR} true
+        doIt library ${SCONS_TAR} 1
         ;;
       --scons=*)
         WITH_SCONS=$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_SCONS}" == "true" ]; then
-          doIt library ${SCONS_TAR} true
+          doIt library ${SCONS_TAR} 1
         elif [ "${WITH_SCONS}" == "false" ]; then
-          doIt library ${SCONS_TAR} false
+          doIt library ${SCONS_TAR} 0
         else
           echoRed "Parameter --scons only accept true or false values. Ignored and assuming default value."
         fi
         ;;
       --sqlite)
-        doIt library ${SQLITE_TAR} true
+        doIt library ${SQLITE_TAR} 1
         ;;
       --sqlite=*)
         WITH_SQLITE=$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_SQLITE}" == "true" ]; then
-          doIt library ${SQLITE_TAR} true
+          doIt library ${SQLITE_TAR} 1
         elif [ "${WITH_SQLITE}" == "false" ]; then
-          doIt library ${SQLITE_TAR} false
+          doIt library ${SQLITE_TAR} 0
         else
           echoRed "Parameter --sqlite only accept true or false values. Ignored and assuming default value."
         fi
         ;;
       --tiff)
-        doIt library ${TIFF_TAR} true
+        doIt library ${TIFF_TAR} 1
         ;;
       --tiff=*)
         WITH_TIFF=$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_TIFF}" == "true" ]; then
-          doIt library ${TIFF_TAR} true
+          doIt library ${TIFF_TAR} 1
         elif [ "${WITH_TIFF}" == "false" ]; then
-          doIt library ${TIFF_TAR} false
+          doIt library ${TIFF_TAR} 0
         else
           echoRed "Parameter --tiff only accept true or false values. Ignored and assuming default value."
         fi
         ;;
       --nma)
-        doIt library ${NMA_TAR} true
+        doIt library ${NMA_TAR} 1
         ;;
       --nma=*)
         WITH_NMA=$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_NMA}" == "true" ]; then
-          doIt library ${NMA_TAR} true
+          doIt library ${NMA_TAR} 1
         elif [ "${WITH_NMA}" == "false" ]; then
-          doIt library ${NMA_TAR} false
+          doIt library ${NMA_TAR} 0
         else
           echoRed "Parameter --nma only accept true or false values. Ignored and assuming default value."
         fi
         ;;
       --sh-alignment)
-        doIt library ${SHALIGNMENT_TAR} true
+        doIt library ${SHALIGNMENT_TAR} 1
         ;;
       --sh-alignment=*)
         WITH_SHALIGNMENT=$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_SHALIGNMENT}" == "true" ]; then
-          doIt library ${ALIGNMENT_TAR} true
+          doIt library ${ALIGNMENT_TAR} 1
         elif [ "${WITH_ALIGNMENT}" == "false" ]; then
-          doIt library ${ALIGNMENT_TAR} false
+          doIt library ${ALIGNMENT_TAR} 0
         else
           echoRed "Parameter --sh-alignment only accept true or false values. Ignored and assuming default value."
         fi
@@ -749,53 +768,53 @@ takeArguments()
         fi
         ;;
       --matplotlib)
-        doIt pymodule ${MATLIBPLOT_TAR} true
+        doIt pymodule ${MATLIBPLOT_TAR} 1
         ;;
       --matplotlib=*)
         WITH_MATLIBPLOT=$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_MATLIBPLOT}" == "true" ]; then
-          doIt pymodule ${MATLIBPLOT_TAR} true
+          doIt pymodule ${MATLIBPLOT_TAR} 1
         elif [ "${WITH_MATLIBPLOT}" == "false" ]; then
-          doIt pymodule ${MATLIBPLOT_TAR} false
+          doIt pymodule ${MATLIBPLOT_TAR} 0
         else
           echoRed "Parameter --matplotlib only accept true or false values. Ignored and assuming default value."
         fi
         ;;
       --mpi4py)
-        doIt pymodule ${PYMPI_TAR} true
+        doIt pymodule ${PYMPI_TAR} 1
         ;;
       --mpi4py=*)
         WITH_PYMPI=$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_PYMPI}" == "true" ]; then
-          doIt pymodule ${PYMPI_TAR} true
+          doIt pymodule ${PYMPI_TAR} 1
         elif [ "${WITH_PYMPI}" == "false" ]; then
-          doIt pymodule ${PYMPI_TAR} false
+          doIt pymodule ${PYMPI_TAR} 0
         else
           echoRed "Parameter --mpi4py only accept true or false values. Ignored and assuming default value."
         fi
         ;;
       --numpy)
-        doIt pymodule ${NUMPY_TAR} true
+        doIt pymodule ${NUMPY_TAR} 1
         ;;
       --numpy=*)
         WITH_NUMPY=$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_NUMPY}" == "true" ]; then
-          doIt pymodule ${NUMPY_TAR} true
+          doIt pymodule ${NUMPY_TAR} 1
         elif [ "${WITH_NUMPY}" == "false" ]; then
-          doIt pymodule ${NUMPY_TAR} false
+          doIt pymodule ${NUMPY_TAR} 0
         else
           echoRed "Parameter --numpy only accept true or false values. Ignored and assuming default value."
         fi
         ;;
       --scipy)
-        doIt pymodule ${SCIPY_TAR} true
+        doIt pymodule ${SCIPY_TAR} 1
         ;;
       --scipy=*)
         WITH_SCIPY=$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_SCIPY}" == "true" ]; then
-          doIt pymodule ${SCIPY_TAR} true
+          doIt pymodule ${SCIPY_TAR} 1
         elif [ "${WITH_SCIPY}" == "false" ]; then
-          doIt pymodule ${SCIPY_TAR} false
+          doIt pymodule ${SCIPY_TAR} 0
         else
           echoRed "Parameter --scipy only accept true or false values. Ignored and assuming default value."
         fi
@@ -814,27 +833,27 @@ takeArguments()
         fi
         ;;
       --tcl)
-        doIt pymodule ${TCL_TAR} true
+        doIt pymodule ${TCL_TAR} 1
         ;;
       --tcl=*)
         WITH_TCL=$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_TCL}" == "true" ]; then
-          doIt pymodule ${TCL_TAR} true
+          doIt pymodule ${TCL_TAR} 1
         elif [ "${WITH_TCL}" == "false" ]; then
-          doIt pymodule ${TCL_TAR} false
+          doIt pymodule ${TCL_TAR} 0
         else
           echoRed "Parameter --tcl only accept true or false values. Ignored and assuming default value."
         fi
         ;;
       --tk)
-        doIt pymodule ${TK_TAR} true
+        doIt pymodule ${TK_TAR} 1
         ;;
       --tk=*)
         WITH_TK=$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_TK}" == "true" ]; then
-          doIt pymodule ${TK_TAR} true
+          doIt pymodule ${TK_TAR} 1
         elif [ "${WITH_TK}" == "false" ]; then
-          doIt pymodule ${TK_TAR} false
+          doIt pymodule ${TK_TAR} 0
         else
           echoRed "Parameter --tk only accept true or false values. Ignored and assuming default value."
         fi
@@ -884,22 +903,14 @@ takeDefaults()
 {
 # Update *_DO arrays to represent what the *_DEFAULT arrays say we should do by default
   lib=0
-  while [ ${lib} -le ${#EXTERNAL_LIBRARIES_DO[@]} ]; do
-    if [ ${EXTERNAL_LIBRARIES_DEFAULT[$lib]} -eq 1 ]; then
-      EXTERNAL_LIBRARIES_DO[$lib]=true
-    else
-      EXTERNAL_LIBRARIES_DO[$lib]=false
-    fi
+  while [ $lib -lt ${#EXTERNAL_LIBRARIES_FILES[@]} ]; do
+    EXTERNAL_LIBRARIES_DO[$lib]=${EXTERNAL_LIBRARIES_DEFAULT[$lib]}
     lib=$(expr $lib + 1)
   done
 
   mod=0
-  while [ ${mod} -le ${#PYTHON_MODULES_DO[@]} ]; do
-    if [ ${PYTHON_MODULES_DEFAULT[$mod]} -eq 1 ]; then
-      PYTHON_MODULES_DO[$mod]=true
-    else
-      PYTHON_MODULES_DO[$mod]=false
-    fi
+  while [ ${mod} -lt ${#PYTHON_MODULES_FILES[@]} ]; do
+    PYTHON_MODULES_DO[$mod]=${PYTHON_MODULES_DEFAULT[$mod]}
     mod=$(expr $mod + 1)
   done
 }
@@ -1167,23 +1178,24 @@ decompressExternals()
   echoGreen "*** Decompressing external libraries ..."
   lib=0
   while [ ${lib} -le ${#EXTERNAL_LIBRARIES[@]} ]; do
-    if [ ${EXTERNAL_LIBRARIES_DO[$lib]} == true ]; then
+    if [ ${EXTERNAL_LIBRARIES_DO[$lib]} -eq 1 ]; then
       if [ -d ${EXTERNAL_LIBRARIES[$lib]} ]; then
-        if [ ! $DO_UNATTENDED -a ${DELETE_ANSWER} != "Y" -a ${DELETE_ANSWER} != "N"]; then
+        if ! ( $DO_UNATTENDED ) && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]; then
           echo "${EXTERNAL_LIBRARIES[$lib]} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
           read DELETE_ANSWER
         else
           DELETE_ANSWER="Y"
         fi
         if [ ${DELETE_ANSWER} == "y" -o ${DELETE_ANSWER} == "Y" ]; then
-          echoExecRedirectEverything "rm -rf ${EXTERNAL_LIBRARIES[$lib]}"
+          echoExecRedirectEverything "rm -rf ${EXTERNAL_LIBRARIES[$lib]}" "/dev/null"
         else
           echoRed "Library ${EXTERNAL_LIBRARIES[$lib]} folder remains untouched."
         fi
       fi
-      echoExecRedirectEverything "tar -xvzf ${EXTERNAL_LIBRARIES_TAR[$lib]}" "/dev/null"
+      #echoExec "tar -xvzf ${EXTERNAL_LIBRARIES_FILES[$lib]}"
+      echoExecRedirectEverything "tar -xvzf ${EXTERNAL_LIBRARIES_FILES[$lib]}" "/dev/null"
     fi
-    lib=$(expr "$lib + 1")
+    lib=$(expr $lib + 1)
   done
   echoExecRedirectEverything "cd -" "/dev/null"
   toc
@@ -1196,9 +1208,9 @@ decompressPython()
   echo
   echoExecRedirectEverything "cd ${EXT_PATH}/python" "/dev/null"
   echoGreen "*** Decompressing Python ***"
-  if [ ${DO_PYTHON} == true]; then
+  if ${DO_PYTHON}; then
     if [ -d ${PYTHON_FOLDER} ]; then
-      if [ ! $DO_UNATTENDED -a ${DELETE_ANSWER} != "Y" -a ${DELETE_ANSWER} != "N"]; then
+      if ! ( $DO_UNATTENDED ) && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]; then
         echo "${PYTHON_FOLDER} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
         read DELETE_ANSWER
       else
@@ -1225,9 +1237,9 @@ decompressPythonModules()
   echoGreen "*** Decompressing Python modules ..."
   lib=0
   while [ ${lib} -le ${#PYTHON_MODULES[@]} ]; do
-    if [ ${PYTHON_MODULES_DO[$lib]} == true ]; then
+    if [ ${PYTHON_MODULES_DO[$lib]} -eq 1 ]; then
       if [ -d ${PYTHON_MODULES[$lib]} ]; then
-        if [ ! $DO_UNATTENDED -a ${DELETE_ANSWER} != "Y" -a ${DELETE_ANSWER} != "N"]; then
+        if ! ( $DO_UNATTENDED ) && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]; then
           echo "${PYTHON_MODULES[$lib]} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
           read DELETE_ANSWER
         else
@@ -1239,12 +1251,11 @@ decompressPythonModules()
           echoRed "Library ${PYTHON_MODULES[$lib]} folder remains untouched."
         fi
       fi
-      echoExecRedirectEverything "tar -xvzf ${PYTHON_MODULES_TAR[$lib]}" "/dev/null"
+      echoExecRedirectEverything "tar -xvzf ${PYTHON_MODULES_FILES[$lib]}" "/dev/null"
     fi
-    lib=$(expr "$lib + 1")
+    lib=$(expr $lib + 1)
   done
-  echo "--> cd - > /dev/null"
-  cd - > /dev/null 2>&1
+  echoExecRedirectEverything "cd -" "/dev/null"
   toc
 }
 
@@ -1297,6 +1308,7 @@ exitGracefully()
   else
     echoRed "Program exited with non-zero status (${GLOB_STATE}), produced by command ${GLOB_COMMAND}."
   fi
+  exit $GLOB_STATE
 }
 
 ##################################################################################
@@ -1342,7 +1354,7 @@ fi
 
 #################### SQLITE ###########################
 shouldIDoIt library ${SQLITE_TAR}
-if $?; then
+if [ $? -eq 1 ]; then
   if $IS_MAC; then
     #compile_library $SQLITE_FOLDER "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1 -I/opt/local/include -I/opt/local/lib -I/sw/include -I/sw/lib -lsqlite3" ".libs"
     compile_library ${SQLITE_FOLDER} "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
@@ -1369,7 +1381,7 @@ fi
 
 #################### FFTW ###########################
 shouldIDoIt library ${FFTW_TAR}
-if $?; then
+if [ $? -eq 1 ]; then
   if $IS_MINGW; then
     FFTWFLAGS=" CPPFLAGS=-I/c/MinGW/include CFLAGS=-I/c/MinGW/include"
   else
@@ -1387,21 +1399,21 @@ fi
 
 #################### JPEG ###########################
 shouldIDoIt library ${JPEG_TAR}
-if $?; then
+if [ $? -eq 1 ]; then
   compile_library ${JPEG_FOLDER} "." "." "CPPFLAGS=-w"
   install_libs ${JPEG_FOLDER}/.libs libjpeg 8 false
 fi
 
 #################### TIFF ###########################
 shouldIDoIt library ${TIFF_TAR}
-if $?; then
+if [ $? -eq 1 ]; then
   compile_library ${TIFF_FOLDER} "." "." "CPPFLAGS=-w --with-jpeg-include-dir=${EXT_PATH}/${VJPEG} --with-jpeg-lib-dir=${XMIPP_HOME}/lib"
   install_libs ${TIFF_FOLDER}/libtiff/.libs libtiff 3 false
 fi
 
 #################### HDF5 ###########################
 shouldIDoIt library ${HDF5_TAR}
-if $?; then
+if [ $? -eq 1 ]; then
   compile_library ${HDF5_FOLDER} "." "." "CPPFLAGS=-w --enable-cxx"
   install_libs ${HDF5_FOLDER}/src/.libs libhdf5 7 false
   install_libs ${HDF5_FOLDER}/c++/src/.libs libhdf5_cpp 7 false
@@ -1409,7 +1421,7 @@ fi
 
 #################### NMA ###########################
 shouldIDoIt library ${NMA_TAR}
-if $?; then
+if [ $? -eq 1 ]; then
     echoExec "cd ${XMIPP_HOME}/external/NMA/ElNemo"
     echoExec "make" 
     echoExec "cp nma_* ${XMIPP_HOME}/bin"
@@ -1426,29 +1438,29 @@ fi
 if $DO_TCLTK; then
   if $IS_MAC; then
     shouldIDoIt pymodule ${TCL_TAR}
-    if $?; then
+    if [ $? -eq 1 ]; then
       compile_library ${TCL_FOLDER} python macosx "--disable-xft"
     fi
     shouldIDoIt pymodule ${TK_FOLDER}
-    if $?; then
+    if [ $? -eq 1 ]; then
       compile_library ${TK_FOLDER} python macosx "--disable-xft"
     fi
   elif $IS_MINGW; then
     shouldIDoIt pymodule ${TCL_TAR}
-    if $?; then
+    if [ $? -eq 1 ]; then
       compile_library ${TCL_FOLDER} python win "--disable-xft CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
     fi
     shouldIDoIt pymodule ${TK_FOLDER}
-    if $?; then
+    if [ $? -eq 1 ]; then
       compile_library ${TK_FOLDER} python win "--disable-xft --with-tcl=../../${TCL_FOLDER}/win CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
     fi
   else
     shouldIDoIt pymodule ${TCL_TAR}
-    if $?; then
+    if [ $? -eq 1 ]; then
       compile_library ${TCL_FOLDER} python unix "--enable-threads"
     fi
     shouldIDoIt pymodule ${TK_FOLDER}
-    if $?; then
+    if [ $? -eq 1 ]; then
       compile_library ${TK_FOLDER} python unix "--enable-threads"
     fi
   fi
@@ -1565,15 +1577,15 @@ if $DO_PYMOD; then
   preparePythonEnvironment
 
   shouldIDoIt pymodule ${NUMPY_TAR}
-  if $?; then
+  if [ $? -eq 1 ]; then
     compile_pymodule ${NUMPY_FOLDER}
   fi
   shouldIDoIt pymodule ${MATLIBPLOT_TAR}
-  if $?; then
+  if [ $? -eq 1 ]; then
     compile_pymodule ${MATLIBPLOT_FOLDER}
   fi
   shouldIDoIt pymodule ${PYMPI_TAR}
-  if $?; then
+  if [ $? -eq 1 ]; then
     compile_pymodule ${PYMPI_FOLDER}
   fi
   
@@ -1581,11 +1593,11 @@ if $DO_PYMOD; then
     # Fast Rotational Matching
     export LDFLAGS="-shared ${LDFLAGS}"
     shouldIDoIt pymodule ${SCIPY_TAR}
-    if $?; then
+    if [ $? -eq 1 ]; then
       compile_pymodule ${SCIPY_FOLDER}
     fi
     shouldIDoIt library ${SHALIGNMENT_TAR}
-    if $?; then
+    if [ $? -eq 1 ]; then
       echoExecRedirectEverything "cd ${EXT_PATH}/${SHALIGNMENT_FOLDER}" "/dev/null"
       echoExecRedirectEverything "./compile.sh" "/dev/null"
     fi
