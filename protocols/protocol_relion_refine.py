@@ -78,6 +78,8 @@ class ProtRelionRefinner(XmippProtocol):
             import os
             errors.append('''program "relion_movie_handler" is missing. 
                              Are you sure you have relion version 1.2?.\n''' + environ['PATH']) 
+        if self.NumberOfMpi < 3:
+            errors.append('''relion refine requires at least 3 mpi proesses to compute golden standard''')
         return errors 
     
     def defineSteps(self): 
