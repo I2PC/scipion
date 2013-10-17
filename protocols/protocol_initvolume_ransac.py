@@ -252,7 +252,7 @@ def ransacIteration(log,WorkingDir,n,SymmetryGroup,Xdim,Xdim2,NumGrids,NumSample
     
     # Simulated annealing
     if UseSA:
-        smallIter=int(max(floor(NIterRandom/3.0),5));
+        smallIter=int(min(floor(NIterRandom/5.0),0));
         runJob(log,"xmipp_volume_initial_simulated_annealing","-i %s --initial %s --oroot %s_sa --sym %s --randomIter %d --rejection %f --dontApplyPositive"
                   %(fnRoot+".xmd",fnVol,fnRoot,SymmetryGroup,smallIter,Rejection))
         moveFile(log, fnRoot+"_sa.vol", fnVol)
@@ -280,6 +280,7 @@ def projMatch(log, WorkingDir, fnBase, AngularSampling, SymmetryGroup, Xdim):
     fnGallery=os.path.join(WorkingDir,'tmp/gallery_'+fnBase+'.stk')
     fnOutputReducedClass = os.path.join(WorkingDir,"extra/reducedClasses.xmd") 
     
+    AngularSampling=int(max(floor(AngularSampling/2.0),2));
     runJob(log,"xmipp_angular_project_library", "-i %s.vol -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
                           %(fnRoot,fnGallery,float(AngularSampling),SymmetryGroup,fnOutputReducedClass))
 
