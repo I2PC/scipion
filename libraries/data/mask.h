@@ -324,7 +324,7 @@ void mask3D_26neig(MultidimArray< int >& mask, int value1 = 1, int value2 = 1,
  *
  * @code
  * Mask_Params Mask;
- * Mask.type = READ_MASK;
+ * Mask.type = READ_BINARY_MASK;
  * Mask.fn_mask = "...";
  * Mask.generate_2Dmask();
  *
@@ -377,15 +377,16 @@ public:
 #define BLACKMAN_MASK             7
 #define SINC_MASK                 8
 #define SINC_BLACKMAN_MASK        9
-#define READ_MASK                10
-#define RAISED_CROWN_MASK        11
-#define BINARY_DWT_CIRCULAR_MASK 12
-#define BINARY_DWT_SPHERICAL_MASK 13
-#define BINARY_CONE_MASK         14
-#define BINARY_WEDGE_MASK        15
-#define BLOB_CIRCULAR_MASK       16
-#define BLOB_CROWN_MASK          17
-#define BINARY_TUBE              18
+#define READ_BINARY_MASK                10
+#define READ_REAL_MASK                11
+#define RAISED_CROWN_MASK        12
+#define BINARY_DWT_CIRCULAR_MASK 13
+#define BINARY_DWT_SPHERICAL_MASK 14
+#define BINARY_CONE_MASK         15
+#define BINARY_WEDGE_MASK        16
+#define BLOB_CIRCULAR_MASK       17
+#define BLOB_CROWN_MASK          18
+#define BINARY_TUBE              19
 
 #define INT_MASK    1
 #define DOUBLE_MASK 2
@@ -550,7 +551,7 @@ public:
         if (type == BINARY_CIRCULAR_MASK || type == BINARY_CROWN_MASK ||
             type == BINARY_CYLINDER_MASK || type == BINARY_FRAME_MASK ||
             type == BINARY_TUBE ||
-            type == NO_MASK || type == READ_MASK ||
+            type == NO_MASK || type == READ_BINARY_MASK ||
             type == BINARY_DWT_CIRCULAR_MASK || type == BINARY_CONE_MASK)
             return INT_MASK;
 
@@ -558,7 +559,7 @@ public:
                  type == SINC_MASK || type == SINC_BLACKMAN_MASK ||
                  type == BLACKMAN_MASK || type == RAISED_CROWN_MASK ||
                  type == BINARY_WEDGE_MASK || type == BLOB_CIRCULAR_MASK ||
-                 type == BLOB_CROWN_MASK)
+                 type == BLOB_CROWN_MASK|| type == READ_REAL_MASK)
             return DOUBLE_MASK;
 
         return 0;
