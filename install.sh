@@ -3,11 +3,12 @@ set -x #uncomment for debugging
 
 #############################
 # XMIPP installation script #
-# --------------------------#
-# X-Window-based Microscopy Image Processing Package
-# Xmipp is a suite of image processing programs, primarily aimed at single-particle 3D electron microscopy
-# More info: http://xmipp.cnb.csic.es - xmipp@cnb.csic.es
-# Instruct Image Processing Center - National Center of Biotechnology - CSIC. Spain
+# --------------------------################################################################################
+# X-Window-based Microscopy Image Processing Package                                                       #
+# Xmipp is a suite of image processing programs, primarily aimed at single-particle 3D electron microscopy #
+# More info: http://xmipp.cnb.csic.es - xmipp@cnb.csic.es                                                  #
+# Instruct Image Processing Center - National Center of Biotechnology - CSIC. Spain                        #
+############################################################################################################
 
 
 ##################################################################################
@@ -40,6 +41,9 @@ IS_LINUX=false
 #Some flags variables
 DO_UNTAR=true
 DO_CLTOMO=false #for scipy
+CONFIGURE_ARGS=""
+COMPILE_ARGS=""
+GUI_ARGS="gui"
 
 DO_CLEAN=true
 DO_STATIC=false
@@ -48,13 +52,6 @@ DO_SETUP=true
 DO_GUI=true
 DO_UNATTENDED=false
 
-# Parsing parameters
-TAKE_CPU=false
-TAKE_CONFIGURE=false
-TAKE_COMPILE=false
-CONFIGURE_ARGS=""
-COMPILE_ARGS=""
-GUI_ARGS="gui"
 
 #External libraries definitions
 VALGLIB=3.8.0
@@ -237,7 +234,7 @@ check_state()
     echoRed "COMMAND: $GLOB_COMMAND"
     case $1 in
       1)
-        exit $GLOB_STATE
+        exitGracefully $GLOB_STATE "$GLOB_COMMAND"
       ;;
     esac
   fi
@@ -267,6 +264,7 @@ echoExecRedirectEverything()
   check_state
   return $GLOB_STATE
 }
+
 welcomeMessage()
 {
   echo -e "${BLACK}0000000000000000000000000000000000000000000000000001"              
@@ -813,15 +811,7 @@ takeArguments()
 #        "static=false")       DO_STATIC=false;;
 #        "gui=false")          GUI_ARGS="";;
 #        "setup=true")         DO_SETUP=true;;
-#        "configure")          TAKE_CONFIGURE=true;
-#                              TAKE_COMPILE=false;;
-#        "compile")            TAKE_CONFIGURE=false;
-#                              TAKE_COMPILE=true;;
-#                              exit 1
 
-  if $DO_UNATTENDED; then
-    CONFIGURE_ARGS="$CONFIGURE_ARGS unattended "
-  fi
 }
 
 #function that searchs in an array for an element and returns the position of that element in the array
@@ -1010,20 +1000,11 @@ compile_library()
   fi
 
   if $DO_CLEAN; then
-    echo "--> make distclean > /dev/null 2>&1"
-    GLOB_COMMAND="make distclean > /dev/null 2>&1"
-    make distclean > /dev/null 2>&1
-    GLOB_STATE=$?
-    check_state 1
+    echoRedirectEverything "make distclean" "/dev/null"
   fi
 
-  echo "--> ./configure ${CONFIGFLAGS} > ${BUILD_PATH}/${LIB}_configure.log 2>&1"
-  GLOB_COMMAND="./configure $CONFIGFLAGS > ${BUILD_PATH}/${LIB}_configure.log 2>&1"
-  ./configure $CONFIGFLAGS >$BUILD_PATH/${LIB}_configure.log 2>&1
-  GLOB_STATE=$?
-  check_state 1
-  echo "--> make -j $NUMBER_OF_CPU > $BUILD_PATH/${LIB}_make.log 2>&1"
-  make -j $NUMBER_OF_CPU >$BUILD_PATH/${LIB}_make.log 2>&1
+  echoRedirectEverything "./configure ${CONFIGFLAGS}" "${BUILD_PATH}/${LIB}_configure.log"
+  echoRedirectEverything "make -j $NUMBER_OF_CPU" "$BUILD_PATH/${LIB}_make.log"
   toc
 }
 
@@ -1032,10 +1013,8 @@ compile_pymodule()
    MOD=$1
    _PATH=$EXT_PATH/python/$MOD
    #_PYTHON=$EXT_PATH/python/$PYTHON_FOLDER/python
-   echo "--> cd $_PATH"
-   cd $_PATH
-   echo "--> xmipp_python setup.py install --prefix $XMIPP_HOME >$BUILD_PATH/${MOD}_setup_install.log 2>&1"
-   xmipp_python setup.py install --prefix $XMIPP_HOME >$BUILD_PATH/${MOD}_setup_install.log 2>&1    
+   echoRedirectEverything "cd $_PATH" "/dev/null"
+   echoRedirectEverything "xmipp_python setup.py install --prefix $XMIPP_HOME" "$BUILD_PATH/${MOD}_setup_install.log"
 }
 
 #This function should be called from XMIPP_HOME
@@ -1060,37 +1039,31 @@ install_libs()
      LIBNAME=$COMMON$suffix
      if $COPY; then
      	     if [ -e lib/$LIBNAME ]; then
-	         rm -f lib/$LIBNAME
+	         echoRedirectEverything "rm -f lib/$LIBNAME" "/dev/null"
              fi
-	     echo "--> cp -f $LIBPATH/$LIBNAME lib/$LIBNAME"
-	     cp -f $LIBPATH/$LIBNAME lib/$LIBNAME  
+	     echoRedirectEverything "cp -f $LIBPATH/$LIBNAME lib/$LIBNAME" "/dev/null"
      else
-	     echo "--> ln -sf ../$LIBPATH/$LIBNAME lib/$LIBNAME"
-	     ln -sf ../$LIBPATH/$LIBNAME lib/$LIBNAME  
+	     echoRedirectEverything "ln -sf ../$LIBPATH/$LIBNAME lib/$LIBNAME " "/dev/null"
      fi
   done
 }
 
 install_bin()
 {
-  cd $XMIPP_HOME
+  echoRedirectEverything "cd $XMIPP_HOME" "/dev/null"
   BINPATH=../external/$1
   LINKNAME=bin/$2
-  echoExec "ln -sf $BINPATH $LINKNAME"
+  echoRedirectEverything "ln -sf $BINPATH $LINKNAME" "/dev/null"
 }
 
 create_dir()
 {
   DIR=$1
-  RET=0
   if [ -d $DIR ]; then 
-    echo "--> Dir $DIR exists."
+    echoRed "--> Dir $DIR exists."
   else
-    echoExec "mkdir $DIR"
-    RET=$?
+    echoRedirectEverything "mkdir $DIR" "/dev/null"
   fi
-  GLOB_STATE=$RET
-  return $RET
 }
 
 initial_definitions()
@@ -1110,8 +1083,7 @@ decompressExternals()
   DELETE_ANSWER="n"
   tic
   echo
-  echo "--> cd ${EXT_PATH}"
-  cd ${EXT_PATH}
+  echoRedirectEverything "cd ${EXT_PATH}" "/dev/null"
   echoGreen "*** Decompressing external libraries ..."
   lib=0
   while [ ${lib} -le ${#EXTERNAL_LIBRARIES[@]} ]; do
@@ -1124,18 +1096,16 @@ decompressExternals()
           DELETE_ANSWER="Y"
         fi
         if [ ${DELETE_ANSWER} == "y" -o ${DELETE_ANSWER} == "Y" ]; then
-          echoExec "rm -rf ${EXTERNAL_LIBRARIES[$lib]}"
+          echoRedirectEverything "rm -rf ${EXTERNAL_LIBRARIES[$lib]}"
         else
-          echoRed "Library ${EXTERNAL_LIBRARIES[$lib]} folder untouched."
+          echoRed "Library ${EXTERNAL_LIBRARIES[$lib]} folder remains untouched."
         fi
       fi
-      echo "--> tar -xvzf ${EXTERNAL_LIBRARIES_TAR[$lib]} > /dev/null"
-      tar -xvzf ${EXTERNAL_LIBRARIES_TAR[$lib]} > /dev/null 2>&1
+      echoRedirectEverything "tar -xvzf ${EXTERNAL_LIBRARIES_TAR[$lib]}" "/dev/null"
     fi
     lib=$(expr "$lib + 1")
   done
-  echo "--> cd - > /dev/null"
-  cd - > /dev/null 2>&1
+  echoRedirectEverything "cd -" "/dev/null"
   toc
 }
 
@@ -1143,9 +1113,9 @@ decompressPython()
 {
   DELETE_ANSWER="n"
   tic
-  echoGreen "*** Checking previous decompressed Python ***"
-  echo "--> cd ${EXT_PATH}/python"
-  cd ${EXT_PATH}/python
+  echo
+  echoRedirectEverything "cd ${EXT_PATH}/python" "/dev/null"
+  echoGreen "*** Decompressing Python ***"
   if [ -d ${PYTHON_FOLDER} ]; then
     if [ ! $DO_UNATTENDED -a ${DELETE_ANSWER} != "Y" -a ${DELETE_ANSWER} != "N"]; then
       echo "${PYTHON_FOLDER} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
@@ -1154,15 +1124,13 @@ decompressPython()
       DELETE_ANSWER="Y"
     fi
     if [ ${DELETE_ANSWER} == "y" -o ${DELETE_ANSWER} == "Y" ]; then
-      echoExec "rm -rf ${PYTHON_FOLDER}"
+      echoRedirectEverything "rm -rf ${PYTHON_FOLDER}" "/dev/null"
     else
-      echoRed "${PYTHON_FOLDER} folder untouched."
+      echoRed "${PYTHON_FOLDER} folder remains untouched."
     fi   
   fi
-  echo "--> tar -xvzf ${PYTHON_FOLDER} > /dev/null"
-  tar -xvzf ${PYTHON_FOLDER} > /dev/null 2>&1
-  echo "--> cd - > /dev/null"
-  cd - > /dev/null 2>&1
+  echoRedirectEverything "tar -xvzf ${PYTHON_FOLDER}" "/dev/null"
+  echoRedirectEverything "cd -" "/dev/null"
   toc
 }
 
@@ -1171,9 +1139,8 @@ decompressPythonModules()
   DELETE_ANSWER="n"
   tic
   echo
-  echo "--> cd ${EXT_PATH}/python"
-  cd ${EXT_PATH}/python
-  echoGreen "*** Decompressing python modules ..."
+  echoRedirectEverything "cd ${EXT_PATH}/python" "/dev/null"
+  echoGreen "*** Decompressing Python modules ..."
   lib=0
   while [ ${lib} -le ${#PYTHON_MODULES[@]} ]; do
     if [ ${PYTHON_MODULES_DO[$lib]} ]; then
@@ -1185,13 +1152,12 @@ decompressPythonModules()
           DELETE_ANSWER="Y"
         fi
         if [ ${DELETE_ANSWER} == "y" -o ${DELETE_ANSWER} == "Y" ]; then
-          echoExec "rm -rf ${PYTHON_MODULES[$lib]}"
+          echoRedirectEverything "rm -rf ${PYTHON_MODULES[$lib]}" "/dev/null"
         else
-          echoRed "Library ${PYTHON_MODULES[$lib]} folder untouched."
+          echoRed "Library ${PYTHON_MODULES[$lib]} folder remains untouched."
         fi
       fi
-      echo "--> tar -xvzf ${PYTHON_MODULES_TAR[$lib]} > /dev/null"
-      tar -xvzf ${PYTHON_MODULES_TAR[$lib]} > /dev/null 2>&1
+      echoRedirectEverything "tar -xvzf ${PYTHON_MODULES_TAR[$lib]}" "/dev/null"
     fi
     lib=$(expr "$lib + 1")
   done
@@ -1230,6 +1196,10 @@ decideOS
 create_bashrc_file .xmipp.bashrc # Create file to include from BASH this Xmipp installation
 create_tcsh_file .xmipp.csh      # for CSH or TCSH
 
+if $DO_UNATTENDED; then
+  CONFIGURE_ARGS="$CONFIGURE_ARGS unattended "
+fi
+
 
 ##################################################################################
 #################### NEEDED FOLDERS: bin lib build ###############################
@@ -1242,7 +1212,7 @@ create_dir lib
 
 
 ##################################################################################
-#################### DECOMPRESSING EXTERNAL LIBRARIES ############################
+#################### DECOMPRESSING EVERYTHING ####################################
 ##################################################################################
 
 if $DO_UNTAR; then 
@@ -1250,6 +1220,10 @@ if $DO_UNTAR; then
   decompressPython
   decompressPythonModules
 fi
+
+##################################################################################
+#################### COMPILING EXTERNAL LIBRARIES ################################
+##################################################################################
 
 #################### SQLITE ###########################
 if $DO_SQLITE; then
@@ -1445,7 +1419,7 @@ fi
 
 
 ##################################################################################
-#################### COMPILING PYTHON MODULES ##############################################
+#################### COMPILING PYTHON MODULES ####################################
 ##################################################################################
 
 if $DO_PYMOD; then
@@ -1501,9 +1475,8 @@ cd ${XMIPP_HOME}
 #echoGreen "GUI: $GUI_ARGS"
 
 if $DO_SETUP; then
-	echoExec "./setup.py -j ${NUMBER_OF_CPU} configure ${CONFIGURE_ARGS} compile ${COMPILE_ARGS} ${GUI_ARGS} install"
+  echoExec "./setup.py -j ${NUMBER_OF_CPU} configure ${CONFIGURE_ARGS} compile ${COMPILE_ARGS} ${GUI_ARGS} install"
 fi
-
 
 exit 0
 
