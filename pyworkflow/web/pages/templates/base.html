@@ -27,11 +27,13 @@
 		layout();
 	
 		$(window).resize(layout);
-
+		
+		{% if contentConfig == 'divided' %}
 		$('.north').resizable({
 			handles: 's',
 			stop: layout
 		});
+		{% endif %}
 		
 		$('.south').resizable({
 			handles: 's',
@@ -61,36 +63,40 @@
 </head>
 
 <body>
-	<div data-layout='{"type": "border"}' class="layout-outer" id="wrapper">
-		<div data-layout='{"type": "border"}' class="center layout-inner" id="wrapperContent">
-			<div class="north" id="frameTop">
-				{% block content %}
-				{%endblock %}
-			</div>	
-			<div class="center" id="frameCenter">
-				{% block contentDown %}	
-				{%endblock %}
-			</div>
-		</div>
-		<div class="west" id="frameLeft">
-			{% block sideLeft %} {%endblock %}
-		</div>
-		<div class="north" id="frameTitle">
+	<div id="wrapper">
+		<div id="frameTitle">
 			<a href="/projects"><img class="logo" src="/resources/scipion_logo.png"
 				alt="Scipion logo" /></a>  
-				{% if projectName != None %}
-					<span class="project_name" style="font-size:1.7em;">Project {{projectName}}</span> 
-					<div class="view">
-						<label>View: </label>
-						<select id="viewsCombo" name="viewsCombo" onChange="javascript:changeView();">
-							<!-- <option value=""></option> -->
-							<option value="projects" {% if view == "projects" %} selected {% endif %}>Projects</option>							
-							<option value="protocols" {% if view == "protocols" %} selected {% endif %}>Protocols</option>
-							<option value="data" {% if view == "data" %} selected {% endif %}>Data</option>
-							<option value="hosts" {% if view == "hosts" %} selected {% endif %}>Hosts</option>
-						</select>
-					</div> 
-				{% endif %}	
+			{% if projectName != None %}
+				<span class="project_name" style="font-size:1.7em;">Project {{projectName}}</span> 
+				<div class="view">
+					<label>View: </label>
+					<select id="viewsCombo" name="viewsCombo" onChange="javascript:changeView();">
+						<!-- <option value=""></option> -->
+						<option value="projects" {% if view == "projects" %} selected {% endif %}>Projects</option>							
+						<option value="protocols" {% if view == "protocols" %} selected {% endif %}>Protocols</option>
+						<option value="data" {% if view == "data" %} selected {% endif %}>Data</option>
+						<option value="hosts" {% if view == "hosts" %} selected {% endif %}>Hosts</option>
+					</select>
+				</div> 
+			{% endif %}	
+		</div>
+		<div data-layout='{"type": "border"}' class="layout-outer" id="wrapper">
+			<div data-layout='{"type": "border"}' class="center layout-inner" id="wrapperContent">
+				<div class="north" id="frameTop">
+					{% block content %}
+					{%endblock %}
+				</div>	
+				{% if contentConfig == 'divided' %}
+				<div class="center" id="frameCenter">
+					{% block contentDown %}	
+					{%endblock %}
+				</div>
+				{% endif %}
+			</div>
+			<div class="west" id="frameLeft">
+				{% block sideLeft %} {%endblock %}
+			</div>
 		</div>
 	</div>
 </body>
