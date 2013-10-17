@@ -29,6 +29,16 @@ scale corrections in image groups.
 """
 ImgMd = ""
 
+# {hidden}Continue from here:
+""" 
+Select the *_optimiser.star file for the iteration from which you want to continue a previous run. 
+Note that the Output rootname of the continued run and the rootname of the previous run cannot be the same. 
+If they are the same, the program will automatically add a '_ctX' to the output rootname, 
+with X being the iteration from which one continues the previous run.Provide a list of images 
+from a stack <(Spider/MRC)> or metadata file that make up your data set.
+"""
+ContinueFrom = ""
+
 # {file}(*.vol, *.mrc){validate}(PathExists) Initial 3D reference volume:
 """
 A 3D map in MRC/Spider format. Make sure this map has the same dimensions and 

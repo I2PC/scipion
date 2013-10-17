@@ -358,7 +358,7 @@ Image_read(PyObject *obj, PyObject *args, PyObject *kwargs)
               PyObject *pyStr;
               if ((pyStr = PyObject_Str(input)) != NULL)
               {
-                  self->image->read(PyString_AsString(input),(DataMode)datamode);
+                  self->image->read(PyString_AsString(pyStr),(DataMode)datamode);
                   Py_RETURN_NONE;
               }
               else

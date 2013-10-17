@@ -1220,6 +1220,8 @@ void Mask::defineParams(XmippProgram * program, int allowed_data_types, const ch
         sprintf(tempLine,"%s --mask%c <mask_type=circular> ", prefix,advanced);
     if (comment != NULL)
         sprintf(tempLine2, "%s : %s", tempLine, comment);
+    else
+    	strcpy(tempLine2,tempLine);
 
     program->addParamsLine(tempLine2);
     program->addParamsLine("        where <mask_type> ");
