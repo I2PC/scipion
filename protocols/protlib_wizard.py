@@ -391,7 +391,8 @@ def wizardHelperSetRadii(gui, inputVarName, outerVarName, innerVarName=None, ):
     if outerRadius < 0:
         if fn.isImage():
             img = Image()
-            img.read(fn, HEADER)
+            #ROB: must convert to str first or PyString_AsString will complain
+            img.read(str(fn), HEADER)
             xdim = img.getDimensions()[0]
             outerRadius = xdim / 2 
             gui.setVarValue(outerVarName, outerRadius)
