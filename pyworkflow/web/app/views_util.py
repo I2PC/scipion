@@ -121,7 +121,6 @@ def browse_objects(request):
 def get_image(request):
 #    from django.http import HttpResponse
     from pyworkflow.gui import getImage, getPILImage
-#    print "request.session['projectPath']2", request.session['projectPath']
     
     imageNo = None
     imagePath = request.GET.get('image')
@@ -187,7 +186,6 @@ def get_image(request):
 def get_slice(request):
 #    from django.http import HttpResponse
     from pyworkflow.gui import getImage, getPILImage
-#    print "request.session['projectPath']2", request.session['projectPath']
     
     sliceNo = None
     imagePath = request.GET.get('image')

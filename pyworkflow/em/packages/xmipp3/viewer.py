@@ -117,7 +117,7 @@ class XmippViewer(Viewer):
                 xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_ZSCORE)
                 figFn = fn.replace('.xmd', '.png')
                 xplotter.savefig(figFn)
-                xplotter.show()   
+                xplotter.show()
         
         elif issubclass(cls, SetOfClasses2D):
             mdFn = getattr(obj, '_xmippMd', None)
