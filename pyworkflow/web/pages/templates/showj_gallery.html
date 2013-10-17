@@ -6,9 +6,7 @@
 	
 	$(document).ready(function(){
 		initializeImageLoad()
-		{% if dataset.getTable.hasEnabledColumn %}
 		initializeImageEvents()
-		{% endif %}
 		initializeWindowLoadEvents()
 		initializeGoToEvents()
 	});
@@ -60,7 +58,7 @@
 				}
 			}) 
 		
-			
+		{% if dataset.getTable.hasEnabledColumn %}			
 		//Hover on multiple selection tool	
 		hiConfig = {
 	        sensitivity: 3, // number = sensitivity threshold (must be 1 or higher)
@@ -83,7 +81,8 @@
 	        } // function = onMouseOut callback (REQUIRED)
 	    }	
 		$(".img_container").hoverIntent(hiConfig)
-			
+		{% endif %}	
+		
 		//Selection tool
 		$(".img_container").click(
 			function(e){
