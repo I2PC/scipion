@@ -355,7 +355,15 @@ class ShowjForm(forms.Form):
             
         if self.data['mode'] == 'column':    
             self.fields['goto'].widget.attrs['readonly'] = True
-                   
+        
+            
+def hasEnableColumn(columnsLayout):
+    for columnLayout in columnsLayout.values():
+        if "enable" == columnLayout.label:
+            return True
+    return False;
+                                  
+            
 def getLabelsToRenderComboBoxValues(columnsLayout):
     labelsToRender = [columnLayout.label for columnLayout in columnsLayout.values() if (columnLayout.typeOfColumn == 'image')]
     return tuple(zip(labelsToRender,labelsToRender))

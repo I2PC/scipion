@@ -333,6 +333,8 @@ class PointerParam(Param):
         self.pointerClass = String(args.get('pointerClass'))
         # Some conditions on the pointed candidates
         self.pointerCondition = String(args.get('pointerCondition', None))
+        
+        self.allowNull = Boolean(args.get('allowNull', False))
      
         
 class DigFreqParam(FloatParam):
@@ -372,6 +374,7 @@ class RelationParam(Param):
         
         self.relationReverse = Boolean(args.get('relationReverse', False))
 
+        self.allowNull = Boolean(args.get('allowNull', False))
 # ------------------------------------------------------------------------
 #         Validators
 #-------------------------------------------------------------------------

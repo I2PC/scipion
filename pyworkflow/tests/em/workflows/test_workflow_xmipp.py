@@ -336,9 +336,11 @@ class TestXmippWorkflow(TestWorkflow):
             
         print "Run extract particles with other downsampling factor"
         #TODO: Remove doFlip=True when CTF information is propagated to all SetOFMicrographs
-        protExtract = XmippProtExtractParticles(boxSize=64, downsampleType=2, doFlip=False, downFactor=8, runMode=1, doInvert=True)
+        protExtract = XmippProtExtractParticles(boxSize=64, downsampleType=2, doFlip=True, downFactor=8, runMode=1, doInvert=True)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
+        protExtract.ctfRelations.set(protCTF.outputCTF)
         protExtract.inputMicrographs.set(protImport.outputMicrographs)
+        
         self.proj.launchProtocol(protExtract, wait=True)
         
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
@@ -346,8 +348,9 @@ class TestXmippWorkflow(TestWorkflow):
         
         print "Run ML2D"
         #TODO: Set doMlf to True when CTF is infered
-        protML2D = XmippProtML2D(numberOfReferences=1, maxIters=4, doMlf=False,#True,
+        protML2D = XmippProtML2D(numberOfReferences=1, maxIters=4, 
                                  numberOfMpi=2, numberOfThreads=1)
+        protML2D.doMlf.set(True)
         protML2D.inputImages.set(protExtract.outputParticles)
         self.proj.launchProtocol(protML2D, wait=True)        
         
@@ -410,7 +413,7 @@ class TestXmippWorkflow(TestWorkflow):
         protML3D.inputImages.set(protExtract.outputParticles)
         protML3D.ini3DrefVolumes.set(getInputPath('Volumes_BPV', 'BPV_scale_filtered_windowed_64.vol'))
         protML3D.doCorrectGreyScale.set(True)
-        #protML3D.doMlf.set(True)
+        protML3D.doMlf.set(True)
         protML3D.numberOfSeedsPerRef.set(2)
 
         self.proj.launchProtocol(protML3D, wait=True)        

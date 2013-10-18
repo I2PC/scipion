@@ -225,31 +225,33 @@ class BoundTree(Tree):
         self._objDict = {} # Store the mapping between Tree ids and objects
         self._objects = self.provider.getObjects()
         for obj in self._objects:
-            objDict = self.provider.getObjectInfo(obj)
-            key = objDict.get('key')
-            text = objDict.get('text', key)
-            parent = objDict.get('parent', None)
-            open = objDict.get('open', False)
-            
-            if parent is None:
-                parentId = ''
-            else:
-                if hasattr(parent, '_treeId'): # This should happens always
-                    parentId = parent._treeId # Previously set
-                else:
+            # If the object is a pointer that has a null value do not show
+            if ((not obj.isPointer()) or (obj.isPointer() and obj.get() is not None)): 
+                objDict = self.provider.getObjectInfo(obj)
+                key = objDict.get('key')
+                text = objDict.get('text', key)
+                parent = objDict.get('parent', None)
+                open = objDict.get('open', False)
+                
+                if parent is None:
                     parentId = ''
-                    text += '---> Error: parent not Inserted'
-            image = objDict.get('image', '')
-            if len(image):
-                image = self.getImage(image)
-                if image is None:
-                    image = ''
-            values = objDict.get('values', ())
-            obj._treeId = self.insert(parentId, 'end', key,
-                        text=text, image=image, values=values)
-            self._objDict[obj._treeId] = obj
-            if open:
-                self.itemConfig(obj, open=open)
+                else:
+                    if hasattr(parent, '_treeId'): # This should happens always
+                        parentId = parent._treeId # Previously set
+                    else:
+                        parentId = ''
+                        text += '---> Error: parent not Inserted'
+                image = objDict.get('image', '')
+                if len(image):
+                    image = self.getImage(image)
+                    if image is None:
+                        image = ''
+                values = objDict.get('values', ())
+                obj._treeId = self.insert(parentId, 'end', key,
+                            text=text, image=image, values=values)
+                self._objDict[obj._treeId] = obj
+                if open:
+                    self.itemConfig(obj, open=open)
 
     def itemConfig(self, obj, **args):
         """ Configure inserted items. """

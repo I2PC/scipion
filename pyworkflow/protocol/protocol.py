@@ -762,7 +762,7 @@ class Protocol(Step):
             paramErrors = []
             if attr.isPointer():
                 obj = attr.get()
-                if self.evalParamCondition(paramName) and obj is None:
+                if self.evalParamCondition(paramName) and obj is None and not param.allowNull:
                     paramErrors.append('cannot be EMPTY.')
             else:
                 paramErrors = param.validate(attr.get())

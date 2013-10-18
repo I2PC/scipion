@@ -32,9 +32,23 @@ a:hover {
 	color: Firebrick;
 }
 
+#wrapper {
+/* 	position: absolute; */	
+	width:99.7%;
+	height:98%;
+}
+
+#wrapperContent {
+/* 	position: relative; */
+	width: 100%;
+	height:50em;;
+/* 	margin: 0 1em 1em 1em; */
+/* 	border: 1px solid blue; */
+}
+
 #frameTitle {
 	height: 51px;
-	text-align: center
+	text-align: center;
 }
 
 #frameLeft {
@@ -44,28 +58,35 @@ a:hover {
 	overflow: hidden; 
 	background-color: white;
 	padding: 10px;
+	min-width: 15%;
 }
 
 #frameTop{
 	width:100%;
-/* 	height: 70%; */
-/* 	overflow-y: hidden; */
+	height: 70%;
+	overflow-y: hidden;
 	margin:1em;
+	min-height: 15%;
 }
 
 #frameCenter{
 	width:100%;
-/* 	height: 30%; */
+	height: 30%;
 	margin: 0 1em 0 1em;
 }
 
-#wrapper{
-	width:99.7%;
-	height:98%;
-}
+/* #maincontent { */
+/*  	position: absolute; */
+/* 	overflow: auto; */
+/* 	background: #fff; */
+/* 	margin-right: 10px; */
+/* 	padding-left: 10px; */
+/* 	background: white; */
+/* } */
 
 .innertube {
 	margin: 1em;
+	/*Margins for inner DIV inside each DIV (to provide padding)*/
 }
 
 .logo {
@@ -217,7 +238,40 @@ table#data tr.selected:hover td {
  * Layout configurations
  */
 
+.layout-outer {
+/* 	height: 100%; */
+}
 
+.west, .east {
+/* 	width: 8%; */
+}
+
+.north, .south {
+/* 	height: 10%; */
+}
+
+/**
+ * To get correct percentages widths and heights in the inner layout
+ * you have to set the container to take up all space that's left after
+ * the outer columns east, west, north and south components. In this case:
+ *  width = 100% - 8% - 8% = 84%
+ *  height = 100% - 10% - 10% = 80%
+ */
+ 
+.layout-inner {
+/* 	width: 84%; */
+/* 	height: 80%; */
+	background-color: white;
+	border: 0px;
+}
+
+.layout-inner .west, .layout-inner .east {
+	width: 25%;
+}
+
+.layout-inner .south, .layout-inner .north {
+	height: 20%;
+}
 
 /*
  * These styles are to create custom resize handles.

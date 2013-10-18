@@ -202,12 +202,12 @@ aside .galleryOff{
 }
 
 aside .visualizeVolOn{
-	background-image: url(/resources/showj/galleryViewOff.png);
+	background-image: url(/resources/showj/volumeOn.png);
 	
 }
 
 aside .visualizeVolOff{
-	background-image: url(/resources/showj/galleryViewOff.png);
+	background-image: url(/resources/showj/volumeOff.png);
 	
 }
 
