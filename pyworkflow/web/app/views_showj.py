@@ -87,6 +87,8 @@ def showj(request, inputParameters=None):
     if _imageDimensions != None and _imageDimensions[2]>1:
         dataset.setNumberSlices(_imageDimensions[2])
         dataset.setVolumeName(_imageVolName)
+
+    
                     
     showjForm = ShowjForm(dataset,
                           tableLayoutConfiguration,
@@ -96,6 +98,24 @@ def showj(request, inputParameters=None):
         print showjForm.errors
 
     dataset.setLabelToRender(_labelsToRenderComboBox)
+    
+    volLink=''
+    if showjForm.data['mode']=='volume':
+        volPath='/home/adrian/Curro/Scipionv2/emd_1042.map.gz'
+        # Astex viewer            
+        from random import randint
+        #Hay qye ver como gestionamos el tema de la extension (con .map no me lei un map.gz)
+        linkName = 'test_link_' + str(randint(0, 10000)) + '.map.gz'
+        volLinkPath = os.path.join(pw.HOME, 'web', 'pages', 'resources', 'astex', 'tmp', linkName)
+        from pyworkflow.utils.path import cleanPath, createLink
+        cleanPath(volLinkPath)
+        print "volPath",volPath
+        print "volLinkPath",volLinkPath
+        createLink(volPath, volLinkPath)
+        volLink = os.path.join('/', 'static', 'astex', 'tmp', linkName)
+        
+        
+        
         
     #Store dataset and labelsToRender in session 
     request.session['dataset'] = dataset
@@ -129,7 +149,12 @@ def showj(request, inputParameters=None):
                'imageDimensions': request.session['imageDimensions'],
                'defaultZoom': request.session['defaultZoom'],
                'projectName': request.session['projectName'],
-               'form': showjForm} #Form
+               'form': showjForm,
+               
+               'STATIC_URL' :settings.STATIC_URL,
+               'volLink': volLink,
+               'volType': 1,
+               'threshold': 0.285} #Form
     
     return_page = '%s%s%s' % ('showj_', showjForm.data['mode'], '.html')
     return render_to_response(return_page, RequestContext(request, context))
@@ -284,9 +309,11 @@ def showVolVisualization(request):
         form = VolVisualizationForm(request.POST, request.FILES)
         if form.is_valid():
             volPath = form.cleaned_data['volPath']
+            fileName, fileExtension = os.path.splitext(volPath)
             # Astex viewer            
             from random import randint
-            linkName = 'test_link_' + str(randint(0, 10000)) + '.map'
+            #Hay qye ver como gestionamos el tema de la extension (con .map no me lei un map.gz)
+            linkName = 'test_link_' + str(randint(0, 10000)) +fileExtension
             volLinkPath = os.path.join(pw.HOME, 'web', 'pages', 'resources', 'astex', 'tmp', linkName)
             from pyworkflow.utils.path import cleanPath, createLink
             cleanPath(volLinkPath)
@@ -295,21 +322,29 @@ def showVolVisualization(request):
             createLink(volPath, volLinkPath)
 #             os.system("ln -s " + str(volPath) + " " + volLinkPath)
             volLink = os.path.join('/', 'static', 'astex', 'tmp', linkName)
+           
+           
             # Chimera 
             from subprocess import Popen, PIPE, STDOUT
 #             p = Popen(['chimera', '--start', 'ReadStdin', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
-            p = Popen(['chimera', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+# ESTO SE LO HE QUITADO YO QUE SOY UN CHAMPION            
+            p = Popen(['/home/adrian/.local/UCSF-Chimera64-2013-10-16/bin/chimera', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
 # ESTO SE LO HE QUITADO YO QUE SOY UN CHAMPION
-#            outputHtmlFile = '/home/antonio/test.html'
-#            threshold = form.cleaned_data['threshold']
-#            stdout_data = p.communicate(input='volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop')[0]
-#            f = open(outputHtmlFile)
-#            chimeraHtml = f.read().decode('string-escape').decode("utf-8").split("</html>")[1]
-            chimeraHtml = ""
+            outputHtmlFile = '/home/adrian/test.html'
+            threshold = form.cleaned_data['threshold']
+            stdout_data, stderr_data = p.communicate(input='volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop')
+            print "stdout_data",stdout_data
+            print "stderr_data",stderr_data 
+            f = open(outputHtmlFile)
+            chimeraHtml = f.read().decode('string-escape').decode("utf-8").split("</html>")[1]
+#            chimeraHtml = ""
     else:
         form = VolVisualizationForm()
-    context = {'MEDIA_URL' : settings.MEDIA_URL, 'STATIC_URL' :settings.STATIC_URL, 'form': form, 'volLink': volLink, 'chimeraHtml': chimeraHtml}    
+        
+    print "brokenpipe"    
+    context = {'MEDIA_URL' : settings.MEDIA_URL, 'STATIC_URL' :settings.STATIC_URL, 'form': form, 'volLink': volLink, 'chimeraHtml': chimeraHtml}
+    print "context",context    
     return render_to_response('showVolVisualization.html',  RequestContext(request, context))   
 
 ###################################################################
@@ -336,7 +371,7 @@ def visualizeObject(request):
 
     #Initialize default values
     inputParameters = {'allowRender': True,
-                       'mode': 'gallery',
+                       'mode': 'gallery', #Gallery,table,column,volume
                        'zoom': '150px',
                        'dims': '2d',
                        'goto': 1,

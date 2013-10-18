@@ -78,10 +78,8 @@ var jsonTableLayoutConfiguration = {{tableLayoutConfiguration|safe }}
 console.log("json",jsonTableLayoutConfiguration)
 
 $(document).ready(function() {
-	
-	{% if dataset.getTable.hasEnabledColumn %}
-	initializeSelectionRowEvent() 
-	{% endif %}
+
+	initializeSelectionRowEvent()
 	initializeGoToEvent()
 	initializeTableWidth()
 	
@@ -139,9 +137,12 @@ $(document).ready(function() {
 	
 	$("#displayTableContainer").html("<a href='#' onclick='showTableConfig()'>Display Table Configuration</a>")
 	
+	{% if dataset.getTable.hasEnabledColumn %}
 	initializeMultipleSelectionTool()
+	{% endif %}
 	setElementsEditable(null)
 	initializeColumnHeader()
+	
 	
 	
 } );
@@ -441,7 +442,12 @@ function initializeGoToEvent(){
 function updateRowSelection(){
 	oTable.fnDisplayRowWithIndex($("#id_goto").val()-1)
 	var nodes = oTable.fnGetNodes();
-	nodes[$("#id_goto").val()-1].click();
+	selectedElement=nodes[$("#id_goto").val()-1]
+	selectedElement.click();
+	
+	$('html, body').animate({
+        scrollTop: $(selectedElement).offset().top
+    }, 2000);
 }
 
 /* Control row event selection allowing shift, ctrol and single click */

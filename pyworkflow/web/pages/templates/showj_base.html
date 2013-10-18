@@ -386,11 +386,10 @@
 			<form id="showjForm" action="/showj/" method="post"> {% csrf_token %}
 				<div id="modeContainer" class="sectionMenu">
 					<input type="submit" value="table" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='table';" class="submitButton
-					 {% if form.mode.value == 'gallery' or form.mode.value == 'column' %}
+					 {% if form.mode.value != 'table' %}
 					  tableOff
-					 {% endif %}
-					 {% if form.mode.value == 'table' %}
-					 tableOn
+					 {% else %}
+					  tableOn
 					 {% endif %}	
 					  " 
 					  {% if form.mode.value == 'column' %}
@@ -398,12 +397,12 @@
 					  {% endif %}
 					  />
 					<input type="submit" value="gallery" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='gallery';" class="submitButton
-					{% if form.mode.value == 'gallery' %}
+					 {% if form.mode.value != 'gallery'  %}
+					  galleryOff
+					 {% else %}
 					  galleryOn
 					 {% endif %}
-					 {% if form.mode.value == 'table' or form.mode.value == 'column'  %}
-					 galleryOff
-					 {% endif %}
+					 
 					 "
 					 {% if form.mode.value == 'column' %}
 					  disabled
@@ -412,12 +411,11 @@
 					 
 					
 					{% if form.dims.value == '3d' %} 
-					<input type="submit" value="visualizeVol" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='visualizeVol';" class="submitButton
-					{% if form.mode.value == 'visualizeVol' %}
-					  visualizeVolOn
-					 {% endif %}
-					 {% if form.mode.value == 'table' or form.mode.value == 'gallery'  %}
+					<input type="submit" value="volume" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='volume';" class="submitButton
+					 {% if form.mode.value != 'volume' %}
 					 visualizeVolOff
+					 {% else %}
+					  visualizeVolOn
 					 {% endif %}
 					 "
 					 

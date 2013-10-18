@@ -33,7 +33,7 @@ function av_map_level(l){
 }
 </script>
 </head>
-<body onload="webGLStart();">
+<body> <!-- onload="webGLStart();" -->
 <form action="/showVolVisualization/" method="post">		
 	{% csrf_token %}
 	<table>
@@ -59,12 +59,19 @@ function av_map_level(l){
 					archive="{{ STATIC_URL }}astex/OpenAstexViewer.jar"
 					codebase=".."
 					code="MoleculeViewerApplet.class">
-					<param name="script" value="map load volMap '{{volLink}}' {{form.volType.value}} {{form.threshold.value}};
+					<!-- <param name="scriptFile" value=""> -->
+		<!-- 			<param name="script" value="map load volMap /static/astex/tmp/emd_1042.map.gz 1 0.285;
 					map volMap contour 0 solid on;
 					radius 50;
 					center map volMap;
 					view -background lightgrey;
-					map volMap -reread true;">
+					map volMap -reread true;"> -->
+					<param name="script" value="map load volMap {{volLink}} {{form.volType.value}} {{form.threshold.value}};
+					map volMap contour 0 solid on;
+					radius 50;
+					center map volMap;
+					view -background lightgrey;
+					map volMap -reread true;">  
 				</applet>
 			</td>
 		</tr>

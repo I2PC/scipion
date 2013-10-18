@@ -1,0 +1,70 @@
+{% extends 'showj_base.html' %} 
+{% block head %}
+<script type="text/javascript">
+$(function() {
+	$( "#slider" ).slider({
+		range: "min",
+		value: {{form.threshold.value}},
+		min: 1,
+		max: 1000,
+		change: function( event, ui ) {
+			value = ui.value/100
+			$( "#amount" ).val(+ (value) );
+			av_map_level(value)
+		}
+	});
+	$( "#amount" ).val($( "#slider" ).slider( "value" ) );
+});
+
+function av_execute(command){
+	  document.av.debugOn();
+	  document.av.execute(command);
+	  
+}
+
+function av_map_level(l){
+  av_execute("map volMap -level " + l + ";map volMap -reread true;");
+}
+</script>
+
+{% endblock %}
+
+{% block content_menu %}{% endblock %}
+			
+{% block content_view %}
+
+<div id="astexContainer">
+
+	<applet
+		width="600px" height="600px" name="av"
+		archive="{{ STATIC_URL }}astex/OpenAstexViewer.jar"
+		codebase=".."
+		code="MoleculeViewerApplet.class">
+		<!-- <param name="scriptFile" value=""> -->
+	<!-- 			<param name="script" value="map load volMap /static/astex/tmp/emd_1042.map.gz 1 0.285;
+				map volMap contour 0 solid on;
+				radius 50;
+				center map volMap;
+				view -background lightgrey;
+				map volMap -reread true;"> -->
+				
+				
+		<param name="script" value="map load volMap {{volLink}} {{volType}} {{threshold}};
+		map volMap contour 0 solid on;
+		radius 50;
+		center map volMap;
+		view -background lightgrey;
+		map volMap -reread true;">  
+	</applet>
+
+	<div>
+		<p>
+			<label for="amount">Threshold:</label>
+			<input type="text" id="amount" style="border: 0; color: #f6931f; font-weight: bold;" />
+		</p>
+		<div id="slider"></div>
+	</div>
+	
+</div>
+			
+{% endblock %}
