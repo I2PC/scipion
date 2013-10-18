@@ -100,12 +100,33 @@ def showj(request, inputParameters=None):
     dataset.setLabelToRender(_labelsToRenderComboBox)
     
     volLink=''
+    threshold =0
+    chimeraHtml=''
+    
+    print "path",_imageVolName
     if showjForm.data['mode']=='volume':
-        volPath='/home/adrian/Curro/Scipionv2/emd_1042.map.gz'
+        
+#        img = xmipp.Image()
+#        imgFn = os.path.join(request.session['projectPath'], _imageVolName)
+#        img.read(str(imgFn))
+#        img.convert2DataType(xmipp.DT_SCHAR, xmipp.CW_CAST)
+#        fileName, fileExtension = os.path.splitext(_imageVolName)
+#        _imageVolName2 = '%s_tmp%s' % (fileName, '.mrc')
+#        img.write(str(_imageVolName2))
+        
+#        fileName, fileExtension = os.path.splitext(volName)
+#        _imageVolName = '%s_tmp%s' % (fileName, '.mrc')
+#        img.write(str(_imageVolName))
+#        
+        
+        
+        
+        volPath='/home/adrian/Scipion/tests/input/showj/emd_1042.map'
+        fileName, fileExtension = os.path.splitext(volPath)
         # Astex viewer            
         from random import randint
         #Hay qye ver como gestionamos el tema de la extension (con .map no me lei un map.gz)
-        linkName = 'test_link_' + str(randint(0, 10000)) + '.map.gz'
+        linkName = 'test_link_' + str(randint(0, 10000)) + fileExtension
         volLinkPath = os.path.join(pw.HOME, 'web', 'pages', 'resources', 'astex', 'tmp', linkName)
         from pyworkflow.utils.path import cleanPath, createLink
         cleanPath(volLinkPath)
@@ -114,7 +135,18 @@ def showj(request, inputParameters=None):
         createLink(volPath, volLinkPath)
         volLink = os.path.join('/', 'static', 'astex', 'tmp', linkName)
         
-        
+        from subprocess import Popen, PIPE, STDOUT
+        p = Popen(['/home/adrian/.local/UCSF-Chimera64-2013-10-16/bin/chimera', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+        outputHtmlFile = '/home/adrian/test.html'
+        threshold = 0.285
+        chimeraCommand= 'volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop'
+        print "chimeraCommand",chimeraCommand 
+        stdout_data, stderr_data = p.communicate(input='volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop')
+        print "stdout_data",stdout_data
+        print "stderr_data",stderr_data 
+        f = open(outputHtmlFile)
+        chimeraHtml = f.read().decode('string-escape').decode("utf-8").split("</html>")[1]
+
         
         
     #Store dataset and labelsToRender in session 
@@ -154,7 +186,8 @@ def showj(request, inputParameters=None):
                'STATIC_URL' :settings.STATIC_URL,
                'volLink': volLink,
                'volType': 1,
-               'threshold': 0.285} #Form
+               'threshold': threshold,
+               'chimeraHtml':chimeraHtml} #Form
     
     return_page = '%s%s%s' % ('showj_', showjForm.data['mode'], '.html')
     return render_to_response(return_page, RequestContext(request, context))
@@ -327,10 +360,8 @@ def showVolVisualization(request):
             # Chimera 
             from subprocess import Popen, PIPE, STDOUT
 #             p = Popen(['chimera', '--start', 'ReadStdin', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
-# ESTO SE LO HE QUITADO YO QUE SOY UN CHAMPION            
             p = Popen(['/home/adrian/.local/UCSF-Chimera64-2013-10-16/bin/chimera', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
-# ESTO SE LO HE QUITADO YO QUE SOY UN CHAMPION
             outputHtmlFile = '/home/adrian/test.html'
             threshold = form.cleaned_data['threshold']
             stdout_data, stderr_data = p.communicate(input='volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop')
