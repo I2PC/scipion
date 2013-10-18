@@ -63,16 +63,23 @@ a:hover {
 
 #frameTop{
 	width:100%;
-	height: 70%;
+	height: 100%;
 	overflow-y: hidden;
 	margin:1em;
-	min-height: 15%;
+	min-height: 50%;
+}
+
+#frameTopProj{
+	width:100%;
+	height: 100%;
+	overflow-y: auto;
+	margin:1em;
 }
 
 #frameCenter{
 	width:100%;
-	height: 30%;
-	margin: 0 1em 0 1em;
+	height: auto;
+	margin: 0 1em -50% 1em;
 }
 
 /* #maincontent { */
