@@ -192,6 +192,7 @@ class ParamWidget():
         self.paramName = paramName
         self.param = param
         self.parent = parent
+        self.visualizeCallback = visualizeCallback
         
         self.parent.columnconfigure(0, minsize=200)
         self.parent.columnconfigure(1, minsize=200)
@@ -202,7 +203,6 @@ class ParamWidget():
         
         self.set(value)
         self.callback = callback
-        self.visualizeCallback = visualizeCallback
         self.var.trace('w', self._onVarChanged)
         
         
@@ -302,7 +302,7 @@ class ParamWidget():
             entry.grid(row=0, column=0, sticky='w')
         
         if self.visualizeCallback is not None:
-            self.addButton('Visualize', 'visualize.gif', self._visualizeVar)    
+            self._addButton('Visualize', 'visualize.gif', self._visualizeVar)    
         if self.paramName in self.window.wizards:
             self._addButton('Wizard', 'tools_wizard.png', self._showWizard)
         if param.help.hasValue():
@@ -389,6 +389,8 @@ class FormWindow(Window):
         self.protocol = protocol
         self.hostList = hostList
         self.protocol = protocol
+        self.visualizeMode = False # This control when to close or not after execute
+        
         from pyworkflow.viewer import DESKTOP_TKINTER
         from pyworkflow.em import findWizards
         self.wizards = findWizards(protocol.getDefinition(), DESKTOP_TKINTER)
@@ -425,12 +427,15 @@ class FormWindow(Window):
         btnClose = tk.Button(btnFrame, text="Close", image=self.getImage('dialog_close.png'), compound=tk.LEFT, font=self.font,
                           command=self.close)
         btnClose.grid(row=0, column=0, padx=5, pady=5, sticky='sw')
-        btnSave = tk.Button(btnFrame, text="Save", image=self.getImage('filesave.png'), compound=tk.LEFT, font=self.font, 
-                          command=self.save)
-        btnSave.grid(row=0, column=1, padx=5, pady=5, sticky='sw')
-        # Add create project button
-        
-        btnExecute = Button(btnFrame, text='   Execute   ', fg='white', bg='#7D0709', font=self.font, 
+        t = '   Execute   '
+        # Now save is not available for Visualize
+        if not self.visualizeMode:
+            btnSave = tk.Button(btnFrame, text="Save", image=self.getImage('filesave.png'), compound=tk.LEFT, font=self.font, 
+                              command=self.save)
+            btnSave.grid(row=0, column=1, padx=5, pady=5, sticky='sw')
+            t = '  Visualize  '
+        # Add Execute/Visualize button
+        btnExecute = Button(btnFrame, text=t, fg='white', bg='#7D0709', font=self.font, 
                         activeforeground='white', activebackground='#A60C0C', command=self.execute)
         btnExecute.grid(row=0, column=2, padx=(15, 50), pady=5, sticky='se')
         
@@ -568,10 +573,11 @@ class FormWindow(Window):
         print "=" * 200
         try:
             self.callback(self.protocol, onlySave)
-            if onlySave:
-                self.showInfo("Protocol saved sucessfully")
-            else:
-                self.close()
+            if not self.visualizeMode:
+                if onlySave:
+                    self.showInfo("Protocol saved sucessfully")
+                else:
+                    self.close()
         except Exception, ex:
             self.showError("Error during save: " + str(ex))
            
@@ -590,9 +596,11 @@ class FormWindow(Window):
                     widget.hide() # Show only if question var is True
             else:
                 # Create the label
+                visualizeCallback = self.visualizeDict.get(paramName, None)
                 widget = ParamWidget(r, paramName, param, self, parent, 
                                                          value=protVar.get(param.default.get()),
-                                                         callback=self._checkChanges)
+                                                         callback=self._checkChanges,
+                                                         visualizeCallback=visualizeCallback)
                 widget.show() # Show always, conditions will be checked later
                 r += 1         
             self.widgetDict[paramName] = widget

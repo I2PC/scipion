@@ -206,7 +206,7 @@ class Window():
     setup functions. """
     
     def __init__(self, title, masterWindow=None, weight=True, minsize=(500, 300),
-                 icon=None):
+                 icon=None, **args):
         """Create a Tk window.
         title: string to use as title for the windows.
         master: if not provided, the windows create will be the principal one
