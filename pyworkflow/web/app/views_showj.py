@@ -106,13 +106,13 @@ def showj(request, inputParameters=None):
     print "path",_imageVolName
     if showjForm.data['mode']=='volume':
         
-#        img = xmipp.Image()
-#        imgFn = os.path.join(request.session['projectPath'], _imageVolName)
-#        img.read(str(imgFn))
-#        img.convert2DataType(xmipp.DT_SCHAR, xmipp.CW_CAST)
-#        fileName, fileExtension = os.path.splitext(_imageVolName)
-#        _imageVolName2 = '%s_tmp%s' % (fileName, '.mrc')
-#        img.write(str(_imageVolName2))
+        img = xmipp.Image()
+        imgFn = os.path.join(request.session['projectPath'], _imageVolName)
+        img.read(str(imgFn))
+        img.convert2DataType(xmipp.DT_SCHAR, xmipp.CW_CAST)
+        fileName, fileExtension = os.path.splitext(_imageVolName)
+        _imageVolName2 = '%s_tmp%s' % (fileName, '.mrc')
+        img.write(str(_imageVolName2))
         
 #        fileName, fileExtension = os.path.splitext(volName)
 #        _imageVolName = '%s_tmp%s' % (fileName, '.mrc')
