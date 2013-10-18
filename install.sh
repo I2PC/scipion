@@ -1139,7 +1139,7 @@ compile_pymodule()
 # Parameter: Library_Path Library_name Lib_Version_Number 
 install_libs()
 {
-  cd $XMIPP_HOME
+  echoExecRedirectEverything "cd $XMIPP_HOME" "/dev/null"
   LIBPATH=external/$1; shift
   COMMON="$1"; shift
   VERSION=$1; shift
@@ -1164,6 +1164,39 @@ install_libs()
 	     echoExecRedirectEverything "ln -sf ../$LIBPATH/$LIBNAME lib/$LIBNAME " "/dev/null"
      fi
   done
+  echoExecRedirectEverything "cd -" "/dev/null"
+}
+
+#This function should be called from XMIPP_HOME
+# Parameter: Library_Path Library_name Lib_Version_Number 
+uninstall_libs()
+{
+  echoExecRedirectEverything "cd $XMIPP_HOME" "/dev/null"
+  LIBPATH=external/$1; shift
+  COMMON="$1"; shift
+  VERSION=$1; shift
+  COPY=$1
+  SUFFIXES=".a .la "
+  if [ $IS_MAC -eq 1 ]; then
+	SUFFIXES="$SUFFIXES .dylib .$VERSION.dylib"
+  elif [ $IS_MINGW -eq 1 ]; then
+        SUFFIXES="$SUFFIXES .dll.a -$VERSION.dll"
+  else 
+	SUFFIXES="$SUFFIXES .so .so.$VERSION"
+  fi
+  
+  for suffix in $SUFFIXES; do
+     LIBNAME=$COMMON$suffix
+     if $COPY; then
+     	     if [ -e lib/$LIBNAME ]; then
+	         echoExecRedirectEverything "rm -f lib/$LIBNAME" "/dev/null"
+             fi
+	     echoExecRedirectEverything "cp -f $LIBPATH/$LIBNAME lib/$LIBNAME" "/dev/null"
+     else
+	     echoExecRedirectEverything "ln -sf ../$LIBPATH/$LIBNAME lib/$LIBNAME " "/dev/null"
+     fi
+  done
+  echoExecRedirectEverything "cd -" "/dev/null"
 }
 
 install_bin()
@@ -1172,6 +1205,16 @@ install_bin()
   BINPATH=../external/$1
   LINKNAME=bin/$2
   echoExecRedirectEverything "ln -sf $BINPATH $LINKNAME" "/dev/null"
+  echoExecRedirectEverything "cd -" "/dev/null"
+}
+
+uninstall_bin()
+{
+  echoExecRedirectEverything "cd $XMIPP_HOME" "/dev/null"
+  BINPATH=../external/$1
+  LINKNAME=bin/$2
+  echoExecRedirectEverything "rm $LINKNAME" "/dev/null"
+  echoExecRedirectEverything "cd -" "/dev/null"
 }
 
 create_dir()
@@ -1390,6 +1433,9 @@ if [ $? -eq 1 ]; then
       rm ${EXT_PATH}/${SQLITE_EXT_FOLDER}/libsqlitefunctions.dylib ${XMIPP_HOME}/lib/libXmippSqliteExt.dylib
     else  
       rm ${EXT_PATH}/${SQLITE_EXT_FOLDER}/libsqlitefunctions.so ${XMIPP_HOME}/lib/libXmippSqliteExt.so
+    fi
+    uninstall_bin ${SQLITE_FOLDER}/sqlite3 xmipp_sqlite3
+    uninstall_libs ${SQLITE_FOLDER}/.libs libsqlite3 0 false
   fi
   if [ $DO_CONFIGURE -eq 1 ]; then
     configure_library ${SQLITE_FOLDER} "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
@@ -1418,56 +1464,85 @@ fi
 #################### FFTW ###########################
 shouldIDoIt library ${FFTW_TAR}
 if [ $? -eq 1 ]; then
-  if [ $IS_MINGW -eq 1 ]; then
-    FFTWFLAGS=" CPPFLAGS=-I/c/MinGW/include CFLAGS=-I/c/MinGW/include"
-  else
-    FFTWFLAGS=""
+  if [ $DO_CLEAN  -eq 1 ]; then
+    uninstall_libs ${FFTW_FOLDER}/.libs libfftw3 3 true
+    uninstall_libs ${FFTW_FOLDER}/threads/.libs libfftw3_threads 3 true
+    uninstall_libs ${FFTW_FOLDER}/.libs libfftw3f 3 true
   fi
-  FLAGS="${FFTWFLAGS} --enable-threads"
-  compile_library ${FFTW_FOLDER} "." "." ${FLAGS}
-  install_libs ${FFTW_FOLDER}/.libs libfftw3 3 true
-  install_libs ${FFTW_FOLDER}/threads/.libs libfftw3_threads 3 true
+  if [ $DO_CONFIGURE  -eq 1 ]; then
+    if [ $IS_MINGW -eq 1 ]; then
+      FFTWFLAGS=" CPPFLAGS=-I/c/MinGW/include CFLAGS=-I/c/MinGW/include"
+    else
+      FFTWFLAGS=""
+    fi
+    FLAGS="${FFTWFLAGS} --enable-threads"
+  fi
+  if [ $DO_COMPILE  -eq 1 ]; then
+    compile_library ${FFTW_FOLDER} "." "." ${FLAGS}
+    install_libs ${FFTW_FOLDER}/.libs libfftw3 3 true
+    install_libs ${FFTW_FOLDER}/threads/.libs libfftw3_threads 3 true
+  fi
 
-  FLAGS="${FFTWFLAGS} --enable-float"
-  compile_library ${FFTW_FOLDER} "." "." ${FLAGS}
-  install_libs ${FFTW_FOLDER}/.libs libfftw3f 3 true
+  if [ $DO_CONFIGURE  -eq 1 ]; then
+    FLAGS="${FFTWFLAGS} --enable-float"
+  fi
+  if [ $DO_COMPILE  -eq 1 ]; then
+    compile_library ${FFTW_FOLDER} "." "." ${FLAGS}
+    install_libs ${FFTW_FOLDER}/.libs libfftw3f 3 true
+  fi
 fi
 
 #################### JPEG ###########################
 shouldIDoIt library ${JPEG_TAR}
 if [ $? -eq 1 ]; then
-  compile_library ${JPEG_FOLDER} "." "." "CPPFLAGS=-w"
-  install_libs ${JPEG_FOLDER}/.libs libjpeg 8 false
+  if [ $DO_CLEAN  -eq 1 ]; then
+    uninstall_libs ${JPEG_FOLDER}/.libs libjpeg 8 false
+  fi
+  if [ $DO_COMPILE  -eq 1 ]; then
+    compile_library ${JPEG_FOLDER} "." "." "CPPFLAGS=-w"
+    install_libs ${JPEG_FOLDER}/.libs libjpeg 8 false
+  fi
 fi
 
 #################### TIFF ###########################
 shouldIDoIt library ${TIFF_TAR}
 if [ $? -eq 1 ]; then
-  compile_library ${TIFF_FOLDER} "." "." "CPPFLAGS=-w --with-jpeg-include-dir=${EXT_PATH}/${VJPEG} --with-jpeg-lib-dir=${XMIPP_HOME}/lib"
-  install_libs ${TIFF_FOLDER}/libtiff/.libs libtiff 3 false
+  if [ $DO_CLEAN  -eq 1 ]; then
+    uninstall_libs ${TIFF_FOLDER}/libtiff/.libs libtiff 3 false
+  fi
+  if [ $DO_COMPILE  -eq 1 ]; then
+    compile_library ${TIFF_FOLDER} "." "." "CPPFLAGS=-w --with-jpeg-include-dir=${EXT_PATH}/${VJPEG} --with-jpeg-lib-dir=${XMIPP_HOME}/lib"
+    install_libs ${TIFF_FOLDER}/libtiff/.libs libtiff 3 false
+  fi
 fi
 
 #################### HDF5 ###########################
 shouldIDoIt library ${HDF5_TAR}
 if [ $? -eq 1 ]; then
-  compile_library ${HDF5_FOLDER} "." "." "CPPFLAGS=-w --enable-cxx"
-  install_libs ${HDF5_FOLDER}/src/.libs libhdf5 7 false
-  install_libs ${HDF5_FOLDER}/c++/src/.libs libhdf5_cpp 7 false
+  if [ $DO_CLEAN  -eq 1 ]; then
+    uninstall_libs ${HDF5_FOLDER}/src/.libs libhdf5 7 false
+    uninstall_libs ${HDF5_FOLDER}/c++/src/.libs libhdf5_cpp 7 false
+  fi
+  if [ $DO_COMPILE  -eq 1 ]; then
+    compile_library ${HDF5_FOLDER} "." "." "CPPFLAGS=-w --enable-cxx"
+    install_libs ${HDF5_FOLDER}/src/.libs libhdf5 7 false
+    install_libs ${HDF5_FOLDER}/c++/src/.libs libhdf5_cpp 7 false
+  fi
 fi
 
 #################### NMA ###########################
 shouldIDoIt library ${NMA_TAR}
 if [ $? -eq 1 ]; then
-    echoExec "cd ${XMIPP_HOME}/external/NMA/ElNemo"
-    echoExec "make" 
-    echoExec "cp nma_* ${XMIPP_HOME}/bin"
-    echoExec "cd ${XMIPP_HOME}/external/NMA/NMA_cart"
-    echoExec "make" 
-    echoExec "cp nma_* ${XMIPP_HOME}/bin"
-    echoExec "cd ${XMIPP_HOME}"
-    echoExec "cp ${XMIPP_HOME}/external/NMA/nma_* ${XMIPP_HOME}/bin"
-    echoExec "cp ${XMIPP_HOME}/external/NMA/m_inout_Bfact.py ${XMIPP_HOME}/bin"
-    echoExec "cp -"
+    echoExecRedirectEverything "cd ${XMIPP_HOME}/external/NMA/ElNemo" "/dev/null"
+    echoExecRedirectEverything "make" "/dev/null"
+    echoExecRedirectEverything "cp nma_* ${XMIPP_HOME}/bin" "/dev/null"
+    echoExecRedirectEverything "cd ${XMIPP_HOME}/external/NMA/NMA_cart" "/dev/null"
+    echoExecRedirectEverything "make" "/dev/null" 
+    echoExecRedirectEverything "cp nma_* ${XMIPP_HOME}/bin" "/dev/null"
+    echoExecRedirectEverything "cd ${XMIPP_HOME}" "/dev/null"
+    echoExecRedirectEverything "cp ${XMIPP_HOME}/external/NMA/nma_* ${XMIPP_HOME}/bin" "/dev/null"
+    echoExecRedirectEverything "cp ${XMIPP_HOME}/external/NMA/m_inout_Bfact.py ${XMIPP_HOME}/bin" "/dev/null"
+    echoExecRedirectEverything "cp -" "/dev/null" 
 fi
 
 #################### TCL/TK ###########################
@@ -1477,7 +1552,7 @@ if $DO_TCLTK; then
     if [ $? -eq 1 ]; then
       compile_library ${TCL_FOLDER} python macosx "--disable-xft"
     fi
-    shouldIDoIt pymodule ${TK_FOLDER}
+    shouldIDoIt pymodule ${TK_TAR}
     if [ $? -eq 1 ]; then
       compile_library ${TK_FOLDER} python macosx "--disable-xft"
     fi
@@ -1486,7 +1561,7 @@ if $DO_TCLTK; then
     if [ $? -eq 1 ]; then
       compile_library ${TCL_FOLDER} python win "--disable-xft CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
     fi
-    shouldIDoIt pymodule ${TK_FOLDER}
+    shouldIDoIt pymodule ${TK_TAR}
     if [ $? -eq 1 ]; then
       compile_library ${TK_FOLDER} python win "--disable-xft --with-tcl=../../${TCL_FOLDER}/win CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
     fi
