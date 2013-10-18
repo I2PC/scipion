@@ -389,7 +389,7 @@ class FormWindow(Window):
         self.protocol = protocol
         self.hostList = hostList
         self.protocol = protocol
-        self.visualizeMode = False # This control when to close or not after execute
+        self.visualizeMode = args.get('visualizeMode', False)  # This control when to close or not after execute
         
         from pyworkflow.viewer import DESKTOP_TKINTER
         from pyworkflow.em import findWizards
@@ -427,13 +427,13 @@ class FormWindow(Window):
         btnClose = tk.Button(btnFrame, text="Close", image=self.getImage('dialog_close.png'), compound=tk.LEFT, font=self.font,
                           command=self.close)
         btnClose.grid(row=0, column=0, padx=5, pady=5, sticky='sw')
-        t = '   Execute   '
+        t = '  Visualize  '
         # Now save is not available for Visualize
         if not self.visualizeMode:
             btnSave = tk.Button(btnFrame, text="Save", image=self.getImage('filesave.png'), compound=tk.LEFT, font=self.font, 
                               command=self.save)
             btnSave.grid(row=0, column=1, padx=5, pady=5, sticky='sw')
-            t = '  Visualize  '
+            t = '   Execute   '
         # Add Execute/Visualize button
         btnExecute = Button(btnFrame, text=t, fg='white', bg='#7D0709', font=self.font, 
                         activeforeground='white', activebackground='#A60C0C', command=self.execute)

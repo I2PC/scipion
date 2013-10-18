@@ -57,7 +57,7 @@ class XmippML2DViewer(Viewer, EMProtocol):
     with the Xmipp program xmipp_showj
     """
     _targets = [XmippProtML2D]
-    _environments = [DESKTOP_TKINTER]
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
     _definition = XmippDefML2DViewer()
     _label = 'Xmipp Viewer ML2D'
@@ -72,6 +72,7 @@ class XmippML2DViewer(Viewer, EMProtocol):
         self.allowHeader.set(False)
         w = FormWindow("Protocol Run: " + self.getClassName(), self, 
                        self._viewAll, args['windows'], 
+                       
                        visualizeDict={'lastIterRefs': self._viewParam,
                                       'itersLL': self._viewParam})
         w.visualizeMode = True
