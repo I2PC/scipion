@@ -109,8 +109,6 @@ class ProtML2D(XmippProtocol):
     def defineSteps(self):
         # Test the grep with psutil, the following steps are going to sleep
         # to check failed reported
-        self.insertStep("longSleep")
-        self.insertStep("longSleep")
         
         self.insertStep("linkAcquisitionInfo",InputFile=self.ImgMd,dirDest=self.WorkingDir)
         progId = self.getId()
