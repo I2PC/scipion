@@ -112,8 +112,11 @@ function launchViewer(id){
 		url : "/viewer/?protocolId=" + id,
 		dataType : "json",
 		success : function(json) {
-			$.each(json, function(key, value) {				
-				if(key=="html"){
+			$.each(json, function(key, value) {		
+				if(key=="url_form"){
+					popup(value);
+				}
+				else if(key=="html"){
 					customPopupHTML(value,800,600);
 				}
 				else if(key=="url"){

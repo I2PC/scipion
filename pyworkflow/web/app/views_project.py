@@ -266,6 +266,7 @@ def viewer(request):
         project = loadProject(projectName)
         protId = request.GET.get('protocolId', None)
         protocol = project.mapper.selectById(int(protId))
+        
         print "======================= in viewer...."
           
         request.GET = request.GET.copy()
@@ -279,21 +280,31 @@ def viewer(request):
         elif getattr(protocol, 'outputParticles', False):
             objId = protocol.outputParticles.getObjId()
             request.GET['objectId'] = protocol.outputParticles.getObjId()
-        elif isinstance(protocol, XmippProtML2D):
-            viewer_ML2D(protocol)
-
-        #==XmippPloter Functionality============================================
-        url_plotter = "/view_plot/?protocolId="+protId
-        #==Showj visualizer=====================================================
-        from views_showj import visualizeObject
-#        response = visualizeObject(request)
-        url_showj = "/visualize_object/?objectId="+str(objId)
-                
-#        ioDict = {"html": response.content , "url" : html}
-        ioDict = {"url": url_showj , "plot" : url_plotter}
+        
+        if isinstance(protocol, XmippProtML2D):
+            ioDict = viewer_ML2D(protId)
+        else:
+            ioDict = viewer_default(protId, objId)
+       
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
                 
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
-def viewer_ML2D(protocol):
-    pass
+def viewer_default(protId, objId):
+    #==XmippPloter Functionality============================================
+    url_plotter = "/view_plot/?protocolId="+protId
+    #==Showj visualizer=====================================================
+    from views_showj import visualizeObject
+#   response = visualizeObject(request)
+    url_showj = "/visualize_object/?objectId="+str(objId)
+                
+    ioDict = {"url": url_showj , "plot" : url_plotter}
+    
+    return ioDict
+
+def viewer_ML2D(protId):
+    url_form = "/form/?protocolId=" + protId + "&action=visualize"
+    ioDict = {"url_form": url_form}
+    
+    return ioDict
+  

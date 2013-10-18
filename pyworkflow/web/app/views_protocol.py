@@ -15,7 +15,11 @@ def form(request):
     action = request.GET.get('action', None)
     hosts = [host.getLabel() for host in project.getSettings().getHosts()]
     
-    if action == 'copy':
+    visualize = 0 
+    
+    if action == 'visualize':
+        visualize = 1
+    elif action == 'copy':
         protocol = project.copyProtocol(protocol)
         
     wizards = findWizards(protocol.getDefinition(), WEB_DJANGO)
@@ -51,7 +55,8 @@ def form(request):
     
     context = {'projectName':project.getName(),
                'protocol':protocol,
-               'definition': protocol._definition,
+               'definition':protocol._definition,
+               'visualize':visualize,
                'favicon': getResourceIcon('favicon'),
                'help': getResourceIcon('help'),
                'comment':getResourceIcon('edit_toolbar'),

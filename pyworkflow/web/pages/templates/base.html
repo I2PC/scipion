@@ -83,7 +83,11 @@
 		</div>
 		<div data-layout='{"type": "border"}' class="layout-outer" id="wrapper">
 			<div data-layout='{"type": "border"}' class="center layout-inner" id="wrapperContent">
+			{% if contentConfig == 'divided' %}
 				<div class="north" id="frameTop">
+			{% elif contentConfig == 'full' %}
+				<div class="north" id="frameTopProj">
+			{% endif %}
 					{% block content %}
 					{%endblock %}
 				</div>	
