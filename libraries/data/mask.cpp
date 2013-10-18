@@ -1018,7 +1018,12 @@ void Mask::read(int argc, const char **argv)
     else if (strcmp(argv[i+1], "binary_file") == 0)
     {
         fn_mask = argv[i+2];
-        type = READ_MASK;
+        type = READ_BINARY_MASK;
+    }
+    else if (strcmp(argv[i+1], "real_file") == 0)
+    {
+        fn_mask = argv[i+2];
+        type = READ_REAL_MASK;
     }
     else
         REPORT_ERROR(ERR_ARG_INCORRECT,"Incorrect mask type");
@@ -1220,6 +1225,8 @@ void Mask::defineParams(XmippProgram * program, int allowed_data_types, const ch
         sprintf(tempLine,"%s --mask%c <mask_type=circular> ", prefix,advanced);
     if (comment != NULL)
         sprintf(tempLine2, "%s : %s", tempLine, comment);
+    else
+    	strcpy(tempLine2,tempLine);
 
     program->addParamsLine(tempLine2);
     program->addParamsLine("        where <mask_type> ");
@@ -1249,11 +1256,12 @@ void Mask::defineParams(XmippProgram * program, int allowed_data_types, const ch
         program->addParamsLine("         wedge <th0> <thF>  : 3D missing-wedge mask for data ");
         program->addParamsLine("                                          :collected between tilting angles ");
         program->addParamsLine("                                          :th0 and thF (around the Y-axis) ");
-        program->addParamsLine("         binary_file <binary_file>      : Read from file");
+        program->addParamsLine("         binary_file <binary_file>      : Read from file and cast to binary");
     }
     //program->addParamsLine("== DOUBLE MASK ==");
     if (allowed_data_types & DOUBLE_MASK)
     {
+        program->addParamsLine("         real_file <float_file>       : Read from file and do not cast");
         program->addParamsLine("         gaussian <sigma>   : 2D or 3D gaussian");
         program->addParamsLine("                              :if sigma > 0 => outside gaussian");
         program->addParamsLine("                              : if sigma < 0 => inside gaussian");
@@ -1562,11 +1570,18 @@ void Mask::readParams(XmippProgram * program)
 
         type = SINC_MASK;
     }
-    else
+    else if (mask_type == "binary_file")
     {
         fn_mask = program->getParam("--mask","binary_file");
-        type = READ_MASK;
+        type = READ_BINARY_MASK;
     }
+    else if (mask_type == "real_file")
+    {
+        fn_mask = program->getParam("--mask","real_file");
+        type = READ_REAL_MASK;
+    }
+    else
+    	REPORT_ERROR(ERR_DEBUG_IMPOSIBLE,"You should never see  this meessage, Mask::readParams ");
 }
 // Generate mask --------------------------------------------------------
 void Mask::generate_mask(bool apply_geo)
@@ -1635,10 +1650,15 @@ void Mask::generate_mask(bool apply_geo)
     case SINC_MASK:
         SincMask(dmask, omega, mode, x0, y0, z0);
         break;
-    case READ_MASK:
+    case READ_BINARY_MASK:
         img.readMapped(fn_mask);
         img().getImage(imask);
         imask.setXmippOrigin();
+        break;
+    case READ_REAL_MASK://ROB
+        img.readMapped(fn_mask);
+        img().getImage(dmask);
+        dmask.setXmippOrigin();
         break;
     default:
         REPORT_ERROR(ERR_VALUE_INCORRECT, "MaskProgram::generate_mask: Unknown mask type :"

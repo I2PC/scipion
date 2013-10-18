@@ -678,7 +678,6 @@ class ProtocolGUI(BasicGUI):
     def getProtocol(self):
         prot = self.project.getProtocolFromModule(self.run['script'])
         prot.parser = self.parser
-        print "setting prot.master: ", self.master
         prot.master = self.master
         return prot
     
