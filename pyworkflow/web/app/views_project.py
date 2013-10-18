@@ -279,6 +279,8 @@ def viewer(request):
         elif getattr(protocol, 'outputParticles', False):
             objId = protocol.outputParticles.getObjId()
             request.GET['objectId'] = protocol.outputParticles.getObjId()
+        elif isinstance(protocol, XmippProtML2D):
+            viewer_ML2D(protocol)
 
         #==XmippPloter Functionality============================================
         url_plotter = "/view_plot/?protocolId="+protId
@@ -292,3 +294,6 @@ def viewer(request):
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
                 
     return HttpResponse(jsonStr, mimetype='application/javascript')
+
+def viewer_ML2D(protocol):
+    pass
