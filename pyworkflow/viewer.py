@@ -29,9 +29,11 @@ serve as base for implementing visualization tools(Viewer sub-classes).
 """
 
 from os.path import join
+from protocol import Protocol
 
 DESKTOP_TKINTER = 'tkinter'
 WEB_DJANGO = 'django'
+
 
 class Viewer(object):
     """ All visualization wrappers should user the Viewer class
@@ -91,3 +93,34 @@ class Wizard(object):
         in those wizards that have WEB_DJANGO environment defined. 
         """
         return None
+    
+    
+class ProtocolViewer(Protocol, Viewer):
+    """ This class will serve as base for viwers that will have form and parameters. """
+    def __init__(self, **args):
+        Protocol.__init__(self, **args)
+        Viewer.__init__(self, **args)
+        self.allowHeader.set(False)
+    
+    def visualize(self, obj, **args):
+        """Open the Protocol GUI Form given a Protocol instance"""
+        from gui.form import FormWindow
+        self.protocol = obj
+        w = FormWindow("Protocol Viewer: " + self.getClassName(), self, 
+                       self._viewAll, args.get('windows', None),
+                       visualizeDict=self._getVisualizeDict())
+        w.visualizeMode = True
+        w.show(center=True)     
+
+    def _getVisualizeDict(self):
+        """ Create the visualization dict for view individual params. """
+        return {}
+    
+    def _viewAll(self, *args):
+        """ Visualize all data give the parameters. """
+        pass
+    
+    def _viewParam(self, paramName):
+        """ Visualize a specific parameter. """
+        pass
+        

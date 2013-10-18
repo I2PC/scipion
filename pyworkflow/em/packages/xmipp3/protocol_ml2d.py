@@ -119,24 +119,43 @@ class XmippProtML2D(ProtAlign, ProtClassify):
     """ Protocol to preprocess a set of micrographs in the project. """
     _definition = XmippDefML2D()
     _label = 'Xmipp ML2D'
-
-    def getProgramId(self):
+    
+    def __init__(self, **args):
+        ProtAlign.__init__(self, **args)
+        ProtClassify.__init__(self, **args)
+        
         progId = "ml"
+        
         if self.doMlf:
-            progId += "f" 
-        return progId   
-         
+            progId += "f"
+        self.program = "xmipp_%s_align2d" % progId
+        self.prefix = '%s2d_' % progId
+    
+    def _getIterClasses(self, iter=None, block=None):
+        """ Return the classes metadata for this iteration.
+        block parameter can be 'info' or 'classes'.
+        """
+        if iter is None:
+            iter = self._lastIteration()
+        extra = self._getPath(self.prefix) + 'extra'
+        mdFile = join(extra, 'iter%03d' % iter, 'iter_classes.xmd')
+        if block:
+            mdFile = block + '@' + mdFile
+        
+        return mdFile
+    
+    def _lastIteration(self):
+        """ Find the last iteration number """
+        iterNumber = 0        
+        while True:
+            if not exists(self._getIterClasses(iterNumber+1)):
+                break
+            iterNumber = iterNumber + 1
+        return iterNumber        
+    
     def _defineSteps(self):
+        self.oroot = self._getPath(self.prefix)
         """ Mainly prepare the command line for call ml(f)2d program"""
-        progId = self.getProgramId()
-        
-        program = "xmipp_%s_align2d" % progId
-
-        restart = False
-        
-        prefix = '%s2d_' % progId
-        self.oroot = self._getPath(prefix)
-        
         # Convert input images if necessary
         imgsFn = createXmippInputImages(self, self.inputImages.get())
         
@@ -173,7 +192,7 @@ class XmippProtML2D(ProtAlign, ProtClassify):
         if self.doNorm:
             params += ' --norm'
 
-        self._insertRunJobStep(program, params)
+        self._insertRunJobStep(self.program, params)
                 
         self._insertFunctionStep('createOutput')
         
