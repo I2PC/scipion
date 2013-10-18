@@ -285,7 +285,7 @@ class ParamWidget():
         
         elif t is PointerParam or t is RelationParam:
             var = PointerVar()
-            entry = tk.Entry(content, width=25, textvariable=var.tkVar)
+            entry = tk.Entry(content, width=25, textvariable=var.tkVar, state="readonly")
             entry.grid(row=0, column=0, sticky='w')
             btnFunc = self._browseObject
             if t is RelationParam:
@@ -394,9 +394,10 @@ class FormWindow(Window):
         headerLabel = tk.Label(headerFrame, text='Protocol: ' + protocol.getClassName(), font=self.fontBig)
         headerLabel.grid(row=0, column=0, padx=5, pady=5)
         
-        commonFrame = self._createHeaderCommons(headerFrame)
-        commonFrame.grid(row=1, column=0, padx=5, pady=5, sticky='news')
-        headerFrame.columnconfigure(0, weight=1)
+        if protocol.allowHeader:
+            commonFrame = self._createHeaderCommons(headerFrame)
+            commonFrame.grid(row=1, column=0, padx=5, pady=5, sticky='news')
+            headerFrame.columnconfigure(0, weight=1)
         
         text = TaggedText(self.root, width=40, height=15, bd=0, cursor='arrow')
         text.grid(row=1, column=0, sticky='news')
@@ -595,7 +596,7 @@ class FormWindow(Window):
     def _checkCondition(self, paramName):
         """Check if the condition of a param is statisfied 
         hide or show it depending on the result"""
-        widget = self.widgetDict[paramName]
+        widget = self.widgetDict.get(paramName, None)
         
         if isinstance(widget, ParamWidget): # Special vars like MPI, threads or runName are not real widgets
             v = self.protocol.evalParamCondition(paramName) and self.protocol.evalExpertLevel(paramName)

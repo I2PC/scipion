@@ -27,7 +27,7 @@
 This sub-package will contains Spider protocols
 """
 import os
-from os.path import join
+from os.path import join, dirname, abspath, exists
 import subprocess
 
 
@@ -44,17 +44,34 @@ def loadEnvironment():
     os.environ['PATH'] = os.environ['PATH'] + os.pathsep + os.environ['SPBIN_DIR']
     
     
+
+TEMPLATE_DIR = abspath(join(dirname(__file__), 'templates'))
+        
+def getTemplate(templateName):
+    """ Return the path to the template file given its name. """
+    templateFile = join(TEMPLATE_DIR, templateName)
+    if not exists(templateFile):
+        raise Exception("getTemplate: template '%s' was not found in templates directory" % templateName)
+    
+    return templateFile
+    
+
 class SpiderShell(object):
     """ This class will open a child process running Spider interpreter
     and will keep conection to send commands. 
     """
     def __init__(self, ext='spi', **args):
         self._debug = args.get('debug', True)
+        self._log = args.get('log', None)
+        
         loadEnvironment()
         FNULL = open(os.devnull, 'w')
         self._proc = subprocess.Popen("spider", shell=True, 
                                       stdin=subprocess.PIPE,
                                       stdout=FNULL, stderr=FNULL)
+        if self._debug and self._log:
+            self._log = open(self._log, 'w+')
+            
         self.runCmd(ext)
         
     def runFunction(self, funcName, *args):
@@ -66,9 +83,27 @@ class SpiderShell(object):
     def runCmd(self, cmd):
         if self._debug:
             print "SPIDER: ", cmd
+            print >> self._log, cmd
         print >> self._proc.stdin, cmd
         self._proc.stdin.flush()
         
+    def runScript(self, templateName, paramsDict):
+        """ Run all lines in the template script after replace the params
+        with their values.
+        """
+        templateFile = getTemplate(templateName)        
+        f = open(templateFile, 'r')
+        
+        for line in f:
+            line = line.strip()
+            if not line.startswith(';'): # Skip comment lines
+                line = line % paramsDict
+            self.runCmd(line)
+        
+        if self._debug and self._log:
+            self._log.close()
+        
     def close(self):
         self.runCmd("end")
+        self._proc.wait()
         # self._proc.kill() TODO: Check if necesary

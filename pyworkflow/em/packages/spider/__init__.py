@@ -28,3 +28,6 @@ This sub-package will contains Spider protocols
 """
 
 from spider import *
+
+from protocol_filters import SpiderProtFilter
+from protocol_align_apsr import SpiderProtAlignAPSR

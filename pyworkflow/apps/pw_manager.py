@@ -156,7 +156,7 @@ class ManagerWindow(gui.Window):
         lf.grid(row=0, column=1, sticky='news', padx=10, pady=10, rowspan=2)
         text = TaggedText(lf, width=40, height=15, bd=0)
         text.grid(row=0, column=0, sticky='news')
-        text.config(state=tk.DISABLED)
+        text.setReadOnly(True)
         gui.configureWeigths(lf)
         
         self.createProjectList(text)
@@ -178,6 +178,7 @@ class ManagerWindow(gui.Window):
             frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
             r += 1
         text.window_create(tk.INSERT, window=parent)
+        text.bindWidget(parent)
         
     def createProjectLabel(self, parent, projInfo):
         frame = tk.Frame(parent)

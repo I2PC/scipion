@@ -33,6 +33,7 @@ from pyworkflow.utils.reflection import getSubClassesFromPath, getSubclasses
 from data import *
 from protocol import *
 from constants import *
+from convert import *
 from pyworkflow.viewer import Viewer, Wizard
 #from packages import *
 

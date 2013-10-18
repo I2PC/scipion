@@ -102,18 +102,25 @@ class Scrollable(object):
         else:
             WidgetClass.__init__(self, master, **opts)
 
-        # with Windows OS
-        self.bind("<MouseWheel>", self.scroll)
-        # with Linux OS
-        self.bind("<Button-4>", self.scroll)
-        self.bind("<Button-5>", self.scroll) 
+        # Bind ourselves
+        self.bindWidget(self)
         
     def scroll(self, event):
         if event.num == 5 or event.delta < 0:
             count = 1
         if event.num == 4 or event.delta > 0:
             count = -1
-        self.yview("scroll", count, "units")  
+        self.yview("scroll", count, "units")
+        
+    def bindWidget(self, widget):
+        """ Make the scroll in the widget, respond to this.
+        Useful for child widgets.
+        """
+        # with Windows OS
+        widget.bind("<MouseWheel>", self.scroll)
+        # with Linux OS
+        widget.bind("<Button-4>", self.scroll)
+        widget.bind("<Button-5>", self.scroll) 
         
             
 class LabelSlider(ttk.Frame):
