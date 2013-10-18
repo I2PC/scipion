@@ -39,7 +39,6 @@ from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from protocol_particle_pick import XmippProtParticlePicking
 from protocol_extract_particles import XmippProtExtractParticles, ProtImportParticles
 from protocol_cl2d_align import XmippProtCL2DAlign
-from protocol_ml2d import XmippProtML2D
 from protocol_cl2d import XmippProtCL2D
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_rotational_spectra import XmippProtRotSpectra
@@ -58,7 +57,7 @@ class XmippViewer(Viewer):
     _targets = [SetOfImages, SetOfCoordinates, SetOfClasses2D, 
                 ProtImportMicrographs, XmippProtPreprocessMicrographs, ProtCTFMicrographs,
                 XmippProtParticlePicking, ProtImportParticles, XmippProtExtractParticles,
-                XmippProtCL2DAlign, XmippProtML2D, XmippProtCL2D, SetOfClasses2D, SetOfCTF]
+                XmippProtCL2DAlign, XmippProtCL2D, SetOfClasses2D, SetOfCTF]
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
@@ -139,8 +138,6 @@ class XmippViewer(Viewer):
         
         elif (issubclass(cls, ProtImportMicrographs) or
               issubclass(cls, XmippProtPreprocessMicrographs)):
-#              issubclass(cls, XmippProtPreprocessMicrographs) or
-#              issubclass(cls, XmippProtCTFMicrographs)):
             self.visualize(obj.outputMicrographs)
         
         elif issubclass(cls, XmippProtParticlePicking):
@@ -153,8 +150,7 @@ class XmippViewer(Viewer):
             # If Zscore on output images plot Zscore particle sorting            
    
         
-        elif (issubclass(cls, XmippProtML2D) or
-              issubclass(cls, XmippProtCL2D)):
+        elif (issubclass(cls, XmippProtCL2D)):
             self.visualize(obj.outputClasses)
         
         elif issubclass(cls, XmippProtRotSpectra):
@@ -165,7 +161,7 @@ class XmippViewer(Viewer):
             self.visualize(obj.outputCTF)
         else:
             raise Exception('XmippViewer.visualize: can not visualize class: %s' % obj.getClassName())
-
+        
 # ------------- Xmipp utilities function to launch Java applications ------------
 
 def getArchitecture():
