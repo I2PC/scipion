@@ -24,28 +24,28 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains Xmipp3.0 specific protocols
+This module contains converter functions related to Spider
 """
 
-from xmipp3 import *
-from convert import *
-from viewer import XmippViewer
-from viewer_ml2d import XmippML2DViewer
-from plotter import XmippPlotter
-from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
-from protocol_ctf_micrographs import XmippProtCTFMicrographs
-from protocol_particle_pick import XmippProtParticlePicking 
-from protocol_extract_particles import XmippProtExtractParticles
-from protocol_ml2d import XmippProtML2D
-from protocol_cl2d import XmippProtCL2D
-from protocol_cl2d_align import XmippProtCL2DAlign
-from protocol_kerdensom import XmippProtKerdensom
-from protocol_rotational_spectra import XmippProtRotSpectra 
-from protocol_ml3d import XmippProtML3D
-from protocol_projmatch import XmippProtProjMatch
-from protocol_filters import XmippProtFourierFilter
-from protocol_filters import XmippProtGaussianFilter
-from protocol_filters import XmippProtMask, XmippProtResize
+from pyworkflow.em.constants import NO_INDEX
+   
+    
+def locationToSpider(index, filename):
+    """ Convert an index and filename location
+    to a string with @ as expected in Spider.
+    """
+    #TODO: Maybe we need to add more logic dependent of the format
+    if index != NO_INDEX:
+        return "%s@%d" % (filename, index)
+    
+    return filename
 
-# Wizards
-from wizard import *
+def spiderToLocation(spiderFilename):
+    """ Return a location (index, filename) given
+    a Spider filename with the filename@index structure. """
+    if '@' in spiderFilename:
+        filename, index = spiderFilename.split('@')
+        return int(index), str(filename)
+    else:
+        return NO_INDEX, str(spiderFilename)
+

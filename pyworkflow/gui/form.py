@@ -186,7 +186,7 @@ class ParamWidget():
     A Frame(buttons): a container for available actions buttons
     It will also have a Variable that should be set when creating 
       the specific components"""
-    def __init__(self, row, paramName, param, window, parent, value, callback=None):
+    def __init__(self, row, paramName, param, window, parent, value, callback=None, visualizeCallback=None):
         self.window = window
         self.row = row
         self.paramName = paramName
@@ -202,6 +202,7 @@ class ParamWidget():
         
         self.set(value)
         self.callback = callback
+        self.visualizeCallback = visualizeCallback
         self.var.trace('w', self._onVarChanged)
         
         
@@ -285,7 +286,7 @@ class ParamWidget():
         
         elif t is PointerParam or t is RelationParam:
             var = PointerVar()
-            entry = tk.Entry(content, width=25, textvariable=var.tkVar)
+            entry = tk.Entry(content, width=25, textvariable=var.tkVar, state="readonly")
             entry.grid(row=0, column=0, sticky='w')
             btnFunc = self._browseObject
             if t is RelationParam:
@@ -299,12 +300,18 @@ class ParamWidget():
                 entryWidth = 10 # Reduce the entry width for numbers entries
             entry = tk.Entry(content, width=entryWidth, textvariable=var)
             entry.grid(row=0, column=0, sticky='w')
-            
+        
+        if self.visualizeCallback is not None:
+            self.addButton('Visualize', 'visualize.gif', self._visualizeVar)    
         if self.paramName in self.window.wizards:
             self._addButton('Wizard', 'tools_wizard.png', self._showWizard)
         if param.help.hasValue():
             self._addButton('Help', 'system_help24.png', self._showHelpMessage)
         self.var = var
+        
+    def _visualizeVar(self, e=None):
+        """ Visualize specific variable. """
+        self.visualizeCallback(self.paramName)
         
     def _browseObject(self, e=None):
         """Select an object from DB
@@ -377,6 +384,7 @@ class FormWindow(Window):
 
         self.callback = callback
         self.widgetDict = {} # Store tkVars associated with params
+        self.visualizeDict = args.get('visualizeDict', {})
         self.bindings = []
         self.protocol = protocol
         self.hostList = hostList
@@ -394,9 +402,10 @@ class FormWindow(Window):
         headerLabel = tk.Label(headerFrame, text='Protocol: ' + protocol.getClassName(), font=self.fontBig)
         headerLabel.grid(row=0, column=0, padx=5, pady=5)
         
-        commonFrame = self._createHeaderCommons(headerFrame)
-        commonFrame.grid(row=1, column=0, padx=5, pady=5, sticky='news')
-        headerFrame.columnconfigure(0, weight=1)
+        if protocol.allowHeader:
+            commonFrame = self._createHeaderCommons(headerFrame)
+            commonFrame.grid(row=1, column=0, padx=5, pady=5, sticky='news')
+            headerFrame.columnconfigure(0, weight=1)
         
         text = TaggedText(self.root, width=40, height=15, bd=0, cursor='arrow')
         text.grid(row=1, column=0, sticky='news')
@@ -595,7 +604,7 @@ class FormWindow(Window):
     def _checkCondition(self, paramName):
         """Check if the condition of a param is statisfied 
         hide or show it depending on the result"""
-        widget = self.widgetDict[paramName]
+        widget = self.widgetDict.get(paramName, None)
         
         if isinstance(widget, ParamWidget): # Special vars like MPI, threads or runName are not real widgets
             v = self.protocol.evalParamCondition(paramName) and self.protocol.evalExpertLevel(paramName)

@@ -318,7 +318,7 @@ class ProtocolsView(tk.Frame):
         gui.configureWeigths(self)
         c.grid(row=0, column=0, sticky='news')
         
-        self.viewer = XmippViewer()
+        #self.viewer = XmippViewer()
         
     def createContent(self):
         """ Create the Protocols View for the Project.
@@ -601,7 +601,15 @@ class ProtocolsView(tk.Frame):
             self.runsTree.update()        
 
     def _analyzeResults(self, prot):
-        self.viewer.visualize(prot)
+        from pyworkflow.em import findViewers
+        from pyworkflow.viewer import DESKTOP_TKINTER
+
+        print "PROTOCOL TO ANALIZE"
+        print prot.getClassName()
+
+        self.viewers = findViewers(prot.getClassName(), DESKTOP_TKINTER)
+        self.viewer = self.viewers[0]()
+        self.viewer.visualize(prot, windows=self.windows)
         
                 
     def _runActionClicked(self, action):

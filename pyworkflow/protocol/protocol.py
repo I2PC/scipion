@@ -239,8 +239,8 @@ class Protocol(Step):
         self._pid = Integer()
         self._stepsExecutor = None
         
-        # Comment
-        self.comment = Integer(args.get('comment'))
+        # For visualization
+        self.allowHeader = Boolean(True)        
         
     def _storeAttributes(self, attrList, attrDict):
         """ Store all attributes in attrDict as 
@@ -445,6 +445,7 @@ class Protocol(Step):
         
     def _enterWorkingDir(self):
         """ Change to the protocol working dir. """
+        self._currentDir = os.getcwd()
         os.chdir(self.workingDir.get())
         
     def _leaveWorkingDir(self):
@@ -627,7 +628,6 @@ class Protocol(Step):
         self._log.info('   workingDir: ' + self.workingDir.get())
         self._log.info('      runMode: %d' % self.runMode.get())
         #self.namePrefix = replaceExt(self._steps.getName(), self._steps.strId()) #keep
-        self._currentDir = os.getcwd()
         #self._run()
         Step.run(self)
         
