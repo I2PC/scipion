@@ -186,7 +186,7 @@ class ParamWidget():
     A Frame(buttons): a container for available actions buttons
     It will also have a Variable that should be set when creating 
       the specific components"""
-    def __init__(self, row, paramName, param, window, parent, value, callback=None):
+    def __init__(self, row, paramName, param, window, parent, value, callback=None, visualizeCallback=None):
         self.window = window
         self.row = row
         self.paramName = paramName
@@ -202,6 +202,7 @@ class ParamWidget():
         
         self.set(value)
         self.callback = callback
+        self.visualizeCallback = visualizeCallback
         self.var.trace('w', self._onVarChanged)
         
         
@@ -299,12 +300,18 @@ class ParamWidget():
                 entryWidth = 10 # Reduce the entry width for numbers entries
             entry = tk.Entry(content, width=entryWidth, textvariable=var)
             entry.grid(row=0, column=0, sticky='w')
-            
+        
+        if self.visualizeCallback is not None:
+            self.addButton('Visualize', 'visualize.gif', self._visualizeVar)    
         if self.paramName in self.window.wizards:
             self._addButton('Wizard', 'tools_wizard.png', self._showWizard)
         if param.help.hasValue():
             self._addButton('Help', 'system_help24.png', self._showHelpMessage)
         self.var = var
+        
+    def _visualizeVar(self, e=None):
+        """ Visualize specific variable. """
+        self.visualizeCallback(self.paramName)
         
     def _browseObject(self, e=None):
         """Select an object from DB
@@ -377,6 +384,7 @@ class FormWindow(Window):
 
         self.callback = callback
         self.widgetDict = {} # Store tkVars associated with params
+        self.visualizeDict = args.get('visualizeDict', {})
         self.bindings = []
         self.protocol = protocol
         self.hostList = hostList
