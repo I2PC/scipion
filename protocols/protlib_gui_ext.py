@@ -1373,7 +1373,7 @@ class XmippBrowser():
                             mdFillMenu, mdOnClick, mdOnDoubleClick)
         addFm('stk', 'stack.gif', ['.stk', '.mrcs', '.st', '.pif'],
                             stackFillMenu, imgOnClick, stackOnDoubleClick)
-        addFm('img', 'image.gif', ['.xmp', '.tif', '.tiff', '.spi', '.mrc', '.map', '.raw', '.inf', '.dm3', '.em', '.pif', '.psd', '.spe', '.ser', '.img', '.hed', '.jpeg', '.jpg'],
+        addFm('img', 'image.gif', ['.xmp', '.tif', '.tiff', '.spi', '.mrc', '.map', '.raw', '.inf', '.dm3', '.em', '.pif', '.psd', '.spe', '.ser', '.img', '.hed', '.jpeg', '.jpg', '.hdf', '.hdf5', '.h5'],
                             imgFillMenu, imgOnClick, imgOnDoubleClick)
         addFm('vol', 'vol.gif', ['.vol', '.mrc', '.map', '.em', '.pif'], 
                             volFillMenu, imgOnClick, volOnDoubleClick)
