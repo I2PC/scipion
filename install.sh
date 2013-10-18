@@ -33,13 +33,15 @@ TIMESTAMP=""
 EXT_PATH=
 BUILD_PATH=
 OS_TYPE=$(uname)
-IS_MAC=false
-IS_CYGWIN=false
-IS_MINGW=false
-IS_LINUX=false
+IS_MAC=0
+IS_MINGW=0
+IS_LINUX=0
 
 #Some flags variables
-DO_UNTAR=true
+DO_UNTAR=1
+DO_COMPILE=1
+DO_CONFIGURE=1
+
 DO_CLTOMO=false #for scipy
 CONFIGURE_ARGS=""
 COMPILE_ARGS=""
@@ -192,17 +194,14 @@ decideOS()
   echo "The OS is $OS_TYPE"
   case "$OS_TYPE" in
     Darwin)
-      IS_MAC=true
+      IS_MAC=1
       CONFIGURE_ARGS="mpi=True MPI_CXX=mpic++ MPI_LINKERFORPROGRAMS=mpic++"
       ;;
-    CYGWIN*)
-      IS_CYGWIN=true
-      ;;
     MINGW*)
-      IS_MINGW=true
+      IS_MINGW=1
       ;;
     *)
-      IS_LINUX=true
+      IS_LINUX=1
       ;;
   esac
 }
@@ -503,9 +502,9 @@ takeArguments()
   while [ "$1" ]; do
     case $1 in
       --disable-all|-d)
-        DO_UNTAR=false
-        DO_COMPILE=false
-        DO_CONFIGURE=false
+        DO_UNTAR=0
+        DO_COMPILE=0
+        DO_CONFIGURE=0
 	doIt library ${ALGLIB_TAR} 0
 	doIt library ${BILIB_TAR} 0
 	doIt library ${CONDOR_TAR} 0
@@ -561,13 +560,13 @@ takeArguments()
         exitGracefully
         ;;
       --untar|-u)
-        DO_UNTAR=true
+        DO_UNTAR=1
         ;;
       --configure|-f)
-        DO_CONFIGURE=true
+        DO_CONFIGURE=1
         ;;
       --compile|-c)
-        DO_COMPILE=true
+        DO_COMPILE=1
         ;;
       --alglib)
         doIt library ${ALGLIB_TAR} 1
@@ -928,7 +927,7 @@ create_bashrc_file()
   echo 'test -s $XMIPP_HOME/.xmipp_programs.autocomplete && . $XMIPP_HOME/.xmipp_programs.autocomplete || true' >> $INC_FILE
   echo 'fi' >> $INC_FILE
   
-  if $IS_MAC; then
+  if [ $IS_MAC -eq 1 ]; then
     echo 'export DYLD_FALLBACK_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
   fi
   echo " "    >> $INC_FILE
@@ -1003,7 +1002,7 @@ create_tcsh_file()
   echo '  setenv LD_LIBRARY_PATH $XMIPP_HOME/lib' >> $INC_FILE
   echo 'endif' >> $INC_FILE
   
-  if $IS_MAC; then
+  if [ $IS_MAC -eq 1 ]; then
     echo 'if($?DYLD_FALLBACK_LIBRARY_PATH) then' >> $INC_FILE
     echo '  setenv DYLD_FALLBACK_LIBRARY_PATH $XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
     echo 'else' >> $INC_FILE
@@ -1083,19 +1082,47 @@ compile_library()
   _PATH=${EXT_PATH}/${PREFIX_PATH}/${LIB}/${SUFFIX_PATH}
   echo
   echoGreen "*** Compiling ${LIB} ..."
-  echoExec "cd ${_PATH}"
+  echoExecRedirectEverything "cd ${_PATH}" "/dev/null"
+  echoExecRedirectEverything "make -j $NUMBER_OF_CPU" "$BUILD_PATH/${LIB}_make.log"
+  echoExecRedirectEverything "cd -" "/dev/null"
+  toc
+}
 
-  if ! $DO_STATIC; then
+configure_library()
+{
+  tic
+  LIB=$1
+  PREFIX_PATH=$2
+  SUFFIX_PATH=$3
+  CONFIGFLAGS=$4
+  LIBS_PATH=$5
+  _PATH=${EXT_PATH}/${PREFIX_PATH}/${LIB}/${SUFFIX_PATH}
+  echo
+  echoGreen "*** Configuring ${LIB} ..."
+  echoExecRedirectEverything "cd ${_PATH}" "/dev/null"
+  if [ $DO_STATIC -eq 0 ]; then
     echo "--> Enabling shared libraries..."
     CONFIGFLAGS="--enable-shared ${CONFIGFLAGS}"
   fi
-
-  if $DO_CLEAN; then
-    echoExecRedirectEverything "make distclean" "/dev/null"
-  fi
-
   echoExecRedirectEverything "./configure ${CONFIGFLAGS}" "${BUILD_PATH}/${LIB}_configure.log"
-  echoExecRedirectEverything "make -j $NUMBER_OF_CPU" "$BUILD_PATH/${LIB}_make.log"
+  echoExecRedirectEverything "cd -" "/dev/null"
+  toc
+}
+
+clean_library()
+{
+  tic
+  LIB=$1
+  PREFIX_PATH=$2
+  SUFFIX_PATH=$3
+  CONFIGFLAGS=$4
+  LIBS_PATH=$5
+  _PATH=${EXT_PATH}/${PREFIX_PATH}/${LIB}/${SUFFIX_PATH}
+  echo
+  echoGreen "*** Cleaning ${LIB} ..."
+  echoExecRedirectEverything "cd ${_PATH}" "/dev/null"
+  echoExecRedirectEverything "make distclean" "/dev/null"
+  echoExecRedirectEverything "cd -" "/dev/null"
   toc
 }
 
@@ -1118,9 +1145,9 @@ install_libs()
   VERSION=$1; shift
   COPY=$1
   SUFFIXES=".a .la "
-  if $IS_MAC; then
+  if [ $IS_MAC -eq 1 ]; then
 	SUFFIXES="$SUFFIXES .dylib .$VERSION.dylib"
-  elif $IS_MINGW; then
+  elif [ $IS_MINGW -eq 1 ]; then
         SUFFIXES="$SUFFIXES .dll.a -$VERSION.dll"
   else 
 	SUFFIXES="$SUFFIXES .so .so.$VERSION"
@@ -1162,7 +1189,7 @@ initial_definitions()
   export XMIPP_HOME=$PWD
   export PATH=$XMIPP_HOME/bin:$PATH
   export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH
-  if $IS_MAC; then
+  if [ $IS_MAC -eq 1 ]; then
     export DYLD_FALLBACK_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH
   fi
   EXT_PATH=$XMIPP_HOME/external
@@ -1262,7 +1289,7 @@ decompressPythonModules()
 preparePythonEnvironment()
 {
   export CPPFLAGS="-I${EXT_PATH}/${SQLITE_FOLDER} -I${EXT_PYTHON}/${TK_FOLDER}/generic -I${EXT_PYTHON}/${TCL_FOLDER}/generic"
-  if $IS_MAC; then
+  if [ $IS_MAC -eq 1 ]; then
     export LDFLAGS="-L${EXT_PYTHON}/${PYTHON_FOLDER} -L${XMIPP_HOME}/lib -L${EXT_PYTHON}/${TK_FOLDER}/macosx -L${EXT_PYTHON}/${TCL_FOLDER}/macosx"
     export LD_LIBRARY_PATH="${EXT_PYTHON}/${PYTHON_FOLDER}:${EXT_PYTHON}/${TK_FOLDER}/macosx:${EXT_PYTHON}/${TCL_FOLDER}/macosx:${LD_LIBRARY_PATH}"
     export DYLD_FALLBACK_LIBRARY_PATH="${EXT_PYTHON}/${PYTHON_FOLDER}:${EXT_PYTHON}/${TK_FOLDER}/macosx:${EXT_PYTHON}/${TCL_FOLDER}/macosx:${DYLD_FALLBACK_LIBRARY_PATH}"
@@ -1273,7 +1300,7 @@ preparePythonEnvironment()
     echoExec "make -f make.osx PREFIX=${XMIPP_HOME} PYVERSION=Xmipp fetch deps mpl_install"
     echoExec "rm ${XMIPP_HOME}/bin/pythonXmipp"
     echoExec "rm ${XMIPP_HOME}/bin/python2.7"
-  elif $IS_MINGW; then
+  elif [ $IS_MINGW -eq 1 ]; then
     export LDFLAGS="-L${EXT_PYTHON}/${PYTHON_FOLDER} -L${XMIPP_HOME}/lib -L${EXT_PYTHON}/${TK_FOLDER}/win -L${EXT_PYTHON}/${TCL_FOLDER}/win"
     export LD_LIBRARY_PATH="${EXT_PYTHON}/${PYTHON_FOLDER}:${EXT_PYTHON}/${TK_FOLDER}/win:${EXT_PYTHON}/${TCL_FOLDER}/win:${LD_LIBRARY_PATH}"
     echoExec "ln -s ${XMIPP_HOME}/bin/xmipp_python ${XMIPP_HOME}/bin/python2.7"
@@ -1342,7 +1369,7 @@ create_dir lib
 #################### DECOMPRESSING EVERYTHING ####################################
 ##################################################################################
 
-if $DO_UNTAR; then 
+if [ $DO_UNTAR -eq 1 ]; then 
   decompressExternals
   decompressPython
   decompressPythonModules
@@ -1355,34 +1382,43 @@ fi
 #################### SQLITE ###########################
 shouldIDoIt library ${SQLITE_TAR}
 if [ $? -eq 1 ]; then
-  if $IS_MAC; then
-    #compile_library $SQLITE_FOLDER "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1 -I/opt/local/include -I/opt/local/lib -I/sw/include -I/sw/lib -lsqlite3" ".libs"
-    compile_library ${SQLITE_FOLDER} "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
-  else
-    compile_library ${SQLITE_FOLDER} "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
+  if [ $DO_CLEAN  -eq 1 ]; then
+    clean_library ${SQLITE_FOLDER} "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
+    if [ $IS_MINGW -eq 1 ]; then
+      rm ${EXT_PATH}/${SQLITE_EXT_FOLDER}/libsqlitefunctions.dll ${XMIPP_HOME}/lib/libXmippSqliteExt.dll
+    elif [ $IS_MAC -eq 1 ]; then
+      rm ${EXT_PATH}/${SQLITE_EXT_FOLDER}/libsqlitefunctions.dylib ${XMIPP_HOME}/lib/libXmippSqliteExt.dylib
+    else  
+      rm ${EXT_PATH}/${SQLITE_EXT_FOLDER}/libsqlitefunctions.so ${XMIPP_HOME}/lib/libXmippSqliteExt.so
   fi
-  #execute sqlite to avoid relinking in the future
-  echo "select 1+1 ;" | ${XMIPP_HOME}/external/${SQLITE_FOLDER}/sqlite3
-  install_bin ${SQLITE_FOLDER}/sqlite3 xmipp_sqlite3
-  install_libs ${SQLITE_FOLDER}/.libs libsqlite3 0 false
-  #compile math library for sqlite
-  cd ${EXT_PATH}/${SQLITE_EXT_FOLDER}
-  if $IS_MINGW; then
-    gcc -shared -I. -o libsqlitefunctions.dll extension-functions.c
-    cp libsqlitefunctions.dll ${XMIPP_HOME}/lib/libXmippSqliteExt.dll
-  elif $IS_MAC; then
-    gcc -fno-common -dynamiclib extension-functions.c -o libsqlitefunctions.dylib
-    cp libsqlitefunctions.dylib ${XMIPP_HOME}/lib/libXmippSqliteExt.dylib
-  else  
-    gcc -fPIC  -shared  extension-functions.c -o libsqlitefunctions.so -lm
-    cp libsqlitefunctions.so ${XMIPP_HOME}/lib/libXmippSqliteExt.so
+  if [ $DO_CONFIGURE -eq 1 ]; then
+    configure_library ${SQLITE_FOLDER} "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
+  fi
+  if [ $DO_COMPILE -eq 1 ]; then
+    compile_library ${SQLITE_FOLDER} "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
+    #execute sqlite to avoid relinking in the future
+    echo "select 1+1 ;" | ${XMIPP_HOME}/external/${SQLITE_FOLDER}/sqlite3
+    install_bin ${SQLITE_FOLDER}/sqlite3 xmipp_sqlite3
+    install_libs ${SQLITE_FOLDER}/.libs libsqlite3 0 false
+    #compile math library for sqlite
+    cd ${EXT_PATH}/${SQLITE_EXT_FOLDER}
+    if [ $IS_MINGW -eq 1 ]; then
+      gcc -shared -I. -o libsqlitefunctions.dll extension-functions.c
+      cp libsqlitefunctions.dll ${XMIPP_HOME}/lib/libXmippSqliteExt.dll
+    elif [ $IS_MAC -eq 1 ]; then
+      gcc -fno-common -dynamiclib extension-functions.c -o libsqlitefunctions.dylib
+      cp libsqlitefunctions.dylib ${XMIPP_HOME}/lib/libXmippSqliteExt.dylib
+    else  
+      gcc -fPIC  -shared  extension-functions.c -o libsqlitefunctions.so -lm
+      cp libsqlitefunctions.so ${XMIPP_HOME}/lib/libXmippSqliteExt.so
+    fi
   fi
 fi
 
 #################### FFTW ###########################
 shouldIDoIt library ${FFTW_TAR}
 if [ $? -eq 1 ]; then
-  if $IS_MINGW; then
+  if [ $IS_MINGW -eq 1 ]; then
     FFTWFLAGS=" CPPFLAGS=-I/c/MinGW/include CFLAGS=-I/c/MinGW/include"
   else
     FFTWFLAGS=""
@@ -1436,7 +1472,7 @@ fi
 
 #################### TCL/TK ###########################
 if $DO_TCLTK; then
-  if $IS_MAC; then
+  if [ $IS_MAC -eq 1 ]; then
     shouldIDoIt pymodule ${TCL_TAR}
     if [ $? -eq 1 ]; then
       compile_library ${TCL_FOLDER} python macosx "--disable-xft"
@@ -1445,7 +1481,7 @@ if $DO_TCLTK; then
     if [ $? -eq 1 ]; then
       compile_library ${TK_FOLDER} python macosx "--disable-xft"
     fi
-  elif $IS_MINGW; then
+  elif [ $IS_MINGW -eq 1 ]; then
     shouldIDoIt pymodule ${TCL_TAR}
     if [ $? -eq 1 ]; then
       compile_library ${TCL_FOLDER} python win "--disable-xft CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
@@ -1459,7 +1495,7 @@ if $DO_TCLTK; then
     if [ $? -eq 1 ]; then
       compile_library ${TCL_FOLDER} python unix "--enable-threads"
     fi
-    shouldIDoIt pymodule ${TK_FOLDER}
+    shouldIDoIt pymodule ${TK_TAR}
     if [ $? -eq 1 ]; then
       compile_library ${TK_FOLDER} python unix "--enable-threads"
     fi
@@ -1475,14 +1511,7 @@ EXT_PYTHON=${EXT_PATH}/python
 if $DO_PYTHON; then
   echoGreen "PYTHON SETUP"
   export CPPFLAGS="-I${EXT_PATH}/${SQLITE_FOLDER} -I${EXT_PYTHON}/${TK_FOLDER}/generic -I${EXT_PYTHON}/${TCL_FOLDER}/generic"
-  if $IS_CYGWIN; then
-    export CPPFLAGS="-I/usr/include -I/usr/include/ncurses ${CPPFLAGS}"
-    export LDFLAGS="-L${EXT_PYTHON}/${PYTHON_FOLDER} -L${XMIPP_HOME}/lib -L${EXT_PYTHON}/${TK_FOLDER}/unix -L${EXT_PYTHON}/${TCL_FOLDER}/unix"
-    export LD_LIBRARY_PATH="${EXT_PYTHON}/${PYTHON_FOLDER}:${EXT_PYTHON}/${TK_FOLDER}/unix:${EXT_PYTHON}/${TCL_VERSION}/unix:${LD_LIBRARY_PATH}"
-    echo "--> export CPPFLAGS=${CPPFLAGS}"
-    echo "--> export LDFLAGS=${LDFLAGS}"
-    echo "--> export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"	 
-  elif $IS_MAC; then
+  if [ $IS_MAC -eq 1 ]; then
     export LDFLAGS="-L${EXT_PYTHON}/${PYTHON_FOLDER} -L${XMIPP_HOME}/lib -L${EXT_PYTHON}/${TK_FOLDER}/macosx -L${EXT_PYTHON}/${TCL_FOLDER}/macosx"
     export LD_LIBRARY_PATH="${EXT_PYTHON}/${PYTHON_FOLDER}:${EXT_PYTHON}/${TK_FOLDER}/macosx:${EXT_PYTHON}/${TCL_FOLDER}/macosx:${LD_LIBRARY_PATH}"
     export DYLD_FALLBACK_LIBRARY_PATH="${EXT_PYTHON}/${PYTHON_FOLDER}:${EXT_PYTHON}/${TK_FOLDER}/macosx:${EXT_PYTHON}/${TCL_FOLDER}/macosx:${DYLD_FALLBACK_LIBRARY_PATH}"
@@ -1490,7 +1519,7 @@ if $DO_PYTHON; then
     echo "--> export LDFLAGS=${LDFLAGS}"
     echo "--> export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
     echo "--> export DYLD_FALLBACK_LIBRARY_PATH=${DYLD_FALLBACK_LIBRARY_PATH}"
-  elif $IS_MINGW; then
+  elif [ $IS_MINGW -eq 1 ]; then
     export CPPFLAGS="-I/usr/include -I/usr/include/ncurses -I/c/MinGW/include ${CPPFLAGS} -D__MINGW32__ -I${EXT_PYTHON}/${PYTHON_FOLDER}/Include -I${EXT_PYTHON}/${PYTHON_FOLDER}/PC "
     export CFLAGS="${CPPFLAGS}"
     export LDFLAGS="-L${EXT_PYTHON}/${PYTHON_FOLDER} -L${XMIPP_HOME}/lib -L${EXT_PYTHON}/${TK_FOLDER}/win -L${EXT_PYTHON}/${TCL_FOLDER}/win"
@@ -1520,19 +1549,7 @@ if $DO_PYTHON; then
   PYTHON_BIN=${XMIPP_HOME}/bin/xmipp_python
   echo "--> Creating python launch script $PYTHON_BIN ..."
   printf "#!/bin/sh\n\n" > $PYTHON_BIN
-  if $IS_CYGWIN; then
-    printf 'PYTHON_FOLDER=%b \n' "${PYTHON_FOLDER}" >> $PYTHON_BIN
-    printf 'VTCLTK=%b \n\n' "${VTCLTK}" >> $PYTHON_BIN
-    printf 'EXT_PYTHON=$XMIPP_HOME/external/python \n' >> $PYTHON_BIN
-    printf 'export LD_LIBRARY_PATH=$EXT_PYTHON/$PYTHON_FOLDER:$EXT_PYTHON/tcl$VTCLTK/unix:$EXT_PYTHON/tk$VTCLTK/unix:$LD_LIBRARY_PATH \n' >> $PYTHON_BIN
-    printf 'export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$XMIPP_HOME/applications/tests/pythonlib:$XMIPP_HOME/lib/python2.7/site-packages:$PYTHONPATH \n' >> $PYTHON_BIN
-    printf 'export TCL_LIBRARY=$EXT_PYTHON/tcl$VTCLTK/library \n' >> $PYTHON_BIN
-    printf 'export TK_LIBRARY=$EXT_PYTHON/tk$VTCLTK/library \n\n' >> $PYTHON_BIN
-    printf 'PYTHONCYGWINLIB=`find $EXT_PYTHON/$PYTHON_FOLDER/build -name "lib.cygwin*" -type d`\n' >> $PYTHON_BIN
-    printf 'export LD_LIBRARY_PATH=$PYTHONCYGWINLIB:$LD_LIBRARY_PATH\n' >> $PYTHON_BIN
-    printf 'export PYTHONPATH=$PYTHONCYGWINLIB:$PYTHONPATH\n' >> $PYTHON_BIN
-    printf '$EXT_PYTHON/$PYTHON_FOLDER/python.exe "$@"\n' >> $PYTHON_BIN
-  elif $IS_MINGW; then
+  if [ $IS_MINGW -eq 1 ]; then
     printf 'PYTHON_FOLDER=Python27 \n' >> $PYTHON_BIN
     printf 'VTCLTK=8.5 \n\n' >> $PYTHON_BIN
     printf 'EXT_PYTHON=/c \n' >> $PYTHON_BIN
@@ -1541,7 +1558,7 @@ if $DO_PYTHON; then
     printf 'export TCL_LIBRARY=$EXT_PYTHON/$PYTHON_FOLDER/tcl/tcl$VTCLTK \n' >> $PYTHON_BIN
     printf 'export TK_LIBRARY=$EXT_PYTHON/$PYTHON_FOLDER/tcl/tk$VTCLTK \n\n' >> $PYTHON_BIN
     printf '$EXT_PYTHON/$PYTHON_FOLDER/python.exe "$@"\n' >> $PYTHON_BIN
-  elif $IS_MAC; then
+  elif [ $IS_MAC -eq 1 ]; then
     printf 'PYTHON_FOLDER=%b \n' "${PYTHON_FOLDER}" >> $PYTHON_BIN
     printf 'VTCLTK=%b \n\n' "${VTCLTK}" >> $PYTHON_BIN
     printf 'EXT_PYTHON=$XMIPP_HOME/external/python \n' >> $PYTHON_BIN
