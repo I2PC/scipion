@@ -44,15 +44,18 @@ class XmippDefML2DViewer(Form):
         Form.__init__(self)
     
         self.addSection(label='Visualization')
-        self.addParam('lastIterRefs', BooleanParam, label="Visualize last iter references", default=True, 
-                      help='Visualize last iteration references.')      
+        self.addParam('doShowClasses', BooleanParam, label="Visualize last iter references", default=True, 
+                      help='Visualize last iteration references.')
+        self.addParam('doShowPlots', BooleanParam, label="Show all plots per iteration?", default=True)
+        
+        self.addSection(label='Iteration plots')    
         self.addParam('doShowLL', BooleanParam, label="Show Log-Likehood over iterations?", default=False, 
                       help='The Log-Likelihood value should increase.')      
         self.addParam('doShowPmax', BooleanParam, label="Show maximum model probability?", default=False, 
                       help='Show the maximum probability for a model, this should tend to be a deltha function.')      
         self.addParam('doShowSignalChange', BooleanParam, label="Show plot for signal change?", default=False, 
                       help='Should approach to zero when convergence.')      
-        self.addParam('doShowMirror', BooleanParam, label="Show mirror fraction for last iteration?", default=True, 
+        self.addParam('doShowMirror', BooleanParam, label="Show mirror fraction for last iteration?", default=False, 
                       help='he the mirror fraction of each reference in last iteration.')      
         
 class XmippML2DViewer(ProtocolViewer):
@@ -66,16 +69,17 @@ class XmippML2DViewer(ProtocolViewer):
     _label = 'Xmipp Viewer ML2D'
     
     def _getVisualizeDict(self):
-        return {'lastIterRefs': self._viewIterRefs,
+        return {'doShowClasses': self._viewIterRefs,
                 'doShowLL': self._viewPlot,
                 'doShowPmax': self._viewPlot,
                 'doShowSignalChange': self._viewPlot,
                 'doShowMirror': self._viewPlot}
         
     def _viewAll(self, *args):
+        if self.doShowClasses:
+            self._viewIterRefs()
         plots = [p for p in ['doShowLL', 'doShowPmax', 'doShowSignalChange', 'doShowMirror'] if self.getAttributeValue(p)]
         self.createPlots(self.protocol, plots).show()
-        print "HERE ALL SELECTED VISUALIZATORS WILL BE OPEN"
         
     def _viewPlot(self, paramName):
         print "viewing param: ", paramName
