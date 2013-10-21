@@ -1,0 +1,157 @@
+; Template Spider script originated from: 
+;       http://spider.wadsworth.org/spider_doc/spider/docs/techs/MSA/batch/apsr4class.spi
+;
+; Template params:
+; %(innerRadius)d : x55 (first ring radius for alignment, pixels)
+; %(outerRadius)d : x60 (expected object diameter, pixels)
+;
+;
+;
+; RUN REFERENCE-FREE ALIGNMENT
+;
+; Using SPIDER command AP SR
+
+; ---------------- Parameters ----------------
+x55 = %(innerRadius)d        ; first ring radius for alignment, pixels
+x60 = %(outerRadius)d        ; expected object diameter, pixels
+
+; ---------------- Input files ----------------
+fr g
+[group_particles]input_particles_sel  ; group-particle list
+fr g
+[unaligned]input_particles@******  ; input (filtered?) particles
+
+; --------------- Output files ---------------
+fr g
+[apsr_dir]aligndocs               ; output AP SR directory
+fr g
+[apsr_avg][apsr_dir]/iteravg***   ; reference-free average template
+fr g
+[apsr_doc][apsr_dir]/docapsr***   ; reference-free alignment doc template
+fr g
+[aligned]output_particles@******  ; aligned particles
+
+; ------------- END BATCH HEADER -------------
+
+vm
+echo "Performing reference-free alignment"; date
+
+vm
+echo "if(! -d [apsr_dir]) mkdir -p [apsr_dir]"|csh
+;vm
+;echo "if(! -d [aligned_dir]) mkdir -p [aligned_dir]"|csh
+
+; GET IMAGE DIMENSION
+
+; get 1st particle#
+ud 1,x13
+[group_particles]
+ud e  ; close doc
+
+; get image dimension
+fi x65
+[group_particles]x13
+(12)  ; header position for x-dim
+
+; calculate center coordinate
+x32 = (x65+1)/2
+
+; calculate radius for last alignment ring
+x30=(x60-1)/2
+
+
+; GENERATE BLOB FOR CENTRATION
+
+; generate disc
+pt
+_1       ; OUTPUT
+x65,x65  ; dimensions
+C        ; _C_ircle
+x32,x32  ; center coords
+x30      ; object radius
+
+; low-pass filter disc
+fq
+_1      ; INPUT
+_2      ; OUTPUT
+(3)     ; Gaussian low-pass
+(0.02)  ; filter radius
+
+
+;; use all processors
+;md
+;set mp
+;(0)
+
+; run reference-free alignment
+AP SR
+[unaligned]        ; particles to be aligned
+[group_particles]  ; selection file
+x60                ; expected size of the object
+x55,x30            ; first and last ring radius
+_2                 ; centering image
+[apsr_avg]
+[apsr_doc]
+ 
+
+; COUNT #ITERATIONS
+
+x31=100  ; max #iterations
+
+; loop through iterations
+do lb1 x20=1,x31
+    ; check if file exists
+    iq fi x33
+    [apsr_doc]x20
+ 
+    ; if file doesn't exist, then exit loop
+    if (x33.lt.1) goto lb7
+lb1
+; end iteration-loop
+ 
+lb7  ; jump here when iteration file not found
+
+x88=x20-1  ; previous iteration's file exists
+
+
+vm
+echo "Aligning particles"; date
+
+; get #particles
+ud n x11
+[group_particles]
+
+; loop through particles
+DO LB2 x12=1,x11
+    ; get particle#
+    ud ic,x12,x13
+    [group_particles]
+
+    ; get alignment parameters
+    UD IC, x12,x21,x22,x23
+    [apsr_doc]x88
+ 
+    RT SQ
+    [unaligned]x13
+    [aligned]x13
+    (x21,1)  ; angle, scale
+    x22,x23  ; x,y-shift
+LB2
+; end particle-loop
+ 
+ud ice
+[group_particles]
+UD ICE
+[apsr_doc]x88
+ 
+vm
+echo "Done"; date
+
+en d
+
+; Modified 2008-11-12
+;    2008-11-12 (trs & th) -- generates centration reference
+;    2008-04-10 (trs) -- seems to dump core if all processors used
+;    2008-04-02 (trs & th) -- bug fix for AP SR iteration-counter
+;    2007-11-20 (trs & djt) -- bug fix for non-consecutive selection file
+;    2007-11-01 (trs) -- adapted from common-lines tutorial

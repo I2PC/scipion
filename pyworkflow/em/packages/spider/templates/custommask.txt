@@ -1,0 +1,94 @@
+; CREATE CUSTOM MASK
+; FOR CORRESPONDENCE ANALYSIS
+
+; ----------- Parameters -----------
+[filter-radius1]  = %(filterRadius1)f   ; Fourier radius for input image
+[sd-factor]       = %(sdFactor)f        ; first threshold == image average plus this number * s.d.
+[filter-radius2]  = %(filterRadius2)f   ; Fourier radius for initial binary mask
+[mask-threshold2] = %(maskThreshold)f   ; threshold for filtered mask
+
+; ------------- Input -------------
+fr l
+[input_image]%(inputImage)s@1  ; image to binarize
+
+; ------------- Output -------------
+fr l
+[output_mask]%(outputMask)s             ; mask stack (binary mask at slice #4)
+
+; -------- END BATCH HEADER --------
+
+md
+tr on
+
+; delete pre-existing stack
+de
+[output_mask]
+
+; filter input image
+fq
+[input_image]
+[output_mask]@1
+(3)  ; filter type: Gaussian low-pass
+[filter-radius1]
+
+; get image avg, s.d.
+fs
+[input_image]
+fi [img-avg], [img-sd]
+[input_image]
+(9,10)  ; header positions for avg, s.d.
+
+; calculate threshold
+[img-threshold1] = [img-avg] + [img-sd]*[sd-factor]
+
+; threshold image
+th m
+[output_mask]@1  ; INPUT: filtered image
+[output_mask]@2  ; OUTPUT
+B                ; mask _B_elow threshold
+[img-threshold1]
+
+; filter thresholded image
+fq
+[output_mask]@2  ; INPUT: thresholded image
+[output_mask]@3  ; OUTPUT
+(3)              ; filter type: Gaussian low-pass
+[filter-radius1]
+
+; threshold filtered mask
+th m
+[output_mask]@3  ; INPUT: filtered mask
+[output_mask]@4  ; OUTPUT
+B  ; mask _B_elow threshold
+[mask-threshold2]
+
+; copy image to be masked
+cp
+[input_image]
+[output_mask]@5
+
+; apply mask
+mm c
+[output_mask]@4  ; INPUT: mask
+[output_mask]@5  ; OUTPUT: mask-multiplied image
+
+; invert mask
+ar
+[output_mask]@4  ; INPUT: mask
+[output_mask]@6
+-1*(p1-1)
+
+; copy image to be masked
+cp
+[input_image]
+[output_mask]@7
+
+; apply inverted mask
+mm c
+[output_mask]@6  ; INPUT: inverted mask
+[output_mask]@7  ; OUTPUT: inverted-mask-multiplied image
+
+en d
+
+; Modified 2012-04-19
+

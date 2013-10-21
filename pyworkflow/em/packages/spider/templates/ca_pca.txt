@@ -1,0 +1,319 @@
+; RUNS CORRESPONDENCE ANALYSIS OR PRINCIPLE COMPONENT ANALYSIS
+
+; NOTES: 
+;   uses Python script eigendoc.py (jsl & trs)
+
+; ---------------- Parameters ----------------
+
+[idim]          = 80    ; image dimension (square)
+[radius]        = -1    ; particle radius (pixels, used if no custom mask, <0==IDIM/2)
+[cas-option]    = 1     ; correspondence analysis (1), PCA (2), IPCA (3)
+[add-constant]  = 0     ; additive constant if using correspondence analysis (0==automatic)
+[num-factors]   = 25    ; number of eigenfactors to calculate
+
+; ------------------ Inputs ------------------
+fr l
+[selection_doc]listparticles   ; selection doc file
+fr l
+[particles]Filtered/flt*****   ; particle file-pattern
+;[particles]ali/sar******       ; particle file-pattern
+fr l
+[custom_mask]stkmask@4         ; (optional) custom mask
+
+; ------------------ Outputs ------------------
+
+fr l
+[ca_dir]CA                                     ; output directory
+fr l
+[cas_prefix][ca_dir]/cas                       ; correspondence-analysis output prefix
+fr l
+[ps_eigenvalue_hist][ca_dir]/ps_eigenvalues    ; eigenvalue histogram, encapsulated PostScript
+fr l
+[eigen_img][ca_dir]/eigenimg***                ; eigenimage template
+fr l
+[reconstituted_img][ca_dir]/reconstituted***   ; reconstituted image template
+fr l
+[ps_factor_map][ca_dir]/factormap              ; eigenvalue factor map, PostScript format
+fr l
+[sdc_doc][ca_dir]/doccorrmap                   ; eigenvalue (1-9) document file (for WEB->CorrMap)
+
+; ------------- END BATCH HEADER -------------
+
+; Temporary files
+fr l
+[temp_mask]_6
+fr l
+[temp_gnuplot]tmp2.gnu
+fr l
+[temp_eigenvalues_text]eigenvalues.txt
+
+vm
+echo "if(! -d [ca_dir]) mkdir [ca_dir]"|csh
+
+md
+set mp
+0
+
+;; get window dimension
+;ud 17, [idim]
+;[parameter_doc]
+;ud e
+;
+;; divide by decimation-factor
+;[idim] = [idim]/[reduce-factor]
+
+; check if custom mask present
+iq fi [mask-exists]
+[custom_mask]
+
+; if custom mask present, copy it into memory
+if([mask-exists].eq.1) then
+    cp
+    [custom_mask]  ; INPUT
+    [temp_mask]    ; OUTPUT
+; if custom mask not present, make circular mask
+else
+    ; check if radius undefined
+    if([radius].le.0) [radius] = ([idim]-1)/2
+
+    mo  
+    [temp_mask]    ; output mask file
+    [idim],[idim]  ; dimensions
+    C              ; _C_ircle
+    [radius]
+endif
+
+; if CA selected:
+if([cas-option].eq.1) then
+    ; CHECK FOR SMALL PIXEL INTENSITIES
+
+    ; initialize minimum
+    [global-min] = 999999
+
+    ; get #particles
+    ud n [num-parts]
+    [selection_doc]
+
+    ; loop through particles
+    do lb5 [part-key] = 1,[num-parts]
+        ; get particle number
+        ud ic [part-key],[part-num]
+        [selection_doc]
+
+        ; get image-minimum
+        fs
+        [particles][part-num]
+        fi [img-min]
+        [particles][part-num]
+        (8)  ; header location for minimum intensity
+
+        ; update if necessary
+        if([img-min].lt.[global-min]) then
+            [global-min] = [img-min]
+            [min-part] = [part-num]  ; particle#
+        endif
+    lb5
+    ; end particle-loop
+
+    ud ice  ; close document
+    [selection_doc]
+
+    ; if additive constant set to automatic, set it
+    if ([global-min].lt.0.05) then
+        if([add-constant].eq.0) [add-constant] = 0.05-[global-min]
+;    else
+;        [add-constant] = [add-constant]
+    endif
+
+    vm
+    echo "Minimum intensity: {%f10.4%[global-min]} (image #{******[min-part]}), additive constant: {%f5.3%[add-constant]}"; echo
+endif
+
+vm
+echo "Running correspondence analysis"; date
+
+if([cas-option].eq.1) then
+    ; run correspondence analysis
+    ca s
+    [particles]
+    [selection_doc]
+    [temp_mask]
+    [num-factors]
+    C             ; _C_orrespondence analysis
+    [add-constant]
+    [cas_prefix]  ; OUTPUT: file prefix
+endif
+
+if([cas-option].eq.2) then
+    ; run principle component analysis
+    ca s
+    [particles]
+    [selection_doc]
+    [temp_mask]
+    [num-factors]
+    P             ; _P_rinciple component analysis
+    [cas_prefix]  ; OUTPUT: file prefix
+endif
+
+if([cas-option].eq.3) then
+    ; run iterative principle component analysis
+    ca s
+    [particles]
+    [selection_doc]
+    [temp_mask]
+    [num-factors]
+    I             ; _I_terative PCA
+    [cas_prefix]  ; OUTPUT: file prefix
+endif
+
+vm m
+echo "Preparing eigenvalue plot" ;
+rm -f [temp_gnuplot] [temp_eigenvalues_text] ;
+python eigendoc.py [cas_prefix]_EIG.$DATEXT > [temp_eigenvalues_text]
+.
+vm m
+echo ' 'set terminal postscript eps enhanced monochrome \"Times-Roman\" 24 > [temp_gnuplot] ;
+echo ' 'set encoding iso_8859_1 >> [temp_gnuplot] ;
+echo ' 'set xlabel \"Eigenvalue number\"   >> [temp_gnuplot] ; 
+echo ' 'set ylabel \"%\" >> [temp_gnuplot] ; 
+echo ' 'set boxwidth 0.5 >> [temp_gnuplot] ;
+echo ' 'set xrange \[0.2:{**[num-factors]}.5\] >> [temp_gnuplot] ;
+echo ' 'set output \'[ps_eigenvalue_hist].ps\' >> [temp_gnuplot] ;
+echo ' 'plot \'[temp_eigenvalues_text]\' using 1:3 title \'eigenvalues\' with boxes >> [temp_gnuplot] ;
+gnuplot [temp_gnuplot] ;
+rm -f [temp_gnuplot] [temp_eigenvalues_text]
+.
+
+; RECONSTITUTE EIGENIMAGES
+
+vm
+echo "Reconstituting eigenimages"; date
+
+[double-dim]=[idim]*2  ; double image-dimension
+[idim-plus1]=[idim]+1
+
+; loop through eigenfactors
+do lb9 [factor-num] = 1,[num-factors]
+    ; syntax is different for CA ([cas-option]=1) than for (I)PCA
+    if([cas-option].eq.1) then
+        ; generate eigenimage
+        ca sre
+        [cas_prefix]
+        [factor-num]
+        [eigen_img][factor-num]
+
+        ; generate positive reconstituted image
+        ca sra
+        [cas_prefix]
+        [factor-num]
+        (0.2)  ; eigenvalue
+        _1   ; WAS [temp_posrec]   ; OUTPUT
+
+        ; generate negative reconstituted image
+        ca sra
+        [cas_prefix]
+        [factor-num]
+        (-0.2)          ; eigenvalue
+        _3   ; WAS [temp_negrec]   ; OUTPUT
+
+        ; montage positive and negative reconstituted image
+        mn s
+        _*      ; input template
+        (1,3)   ; image #s
+        (1,1)   ; images/row, margin-width
+        (0)     ; margin value
+        [reconstituted_img][factor-num]
+        
+    ; syntax for PCA/IPCA ([cas-option]={2,3})
+    else
+        ; generate eigenimage
+        ca sre
+        [cas_prefix]
+        Y             ; subtract average?
+        [factor-num]  ; eigenvector
+        [eigen_img][factor-num]
+
+        ; generate positive reconstituted image
+        ca sra
+        [cas_prefix]
+        Y      ; subtract average?
+        [factor-num]
+        (0.2)  ; eigenvalue
+        _1   ; WAS [temp_posrec]
+
+        ; generate negative reconstituted image
+        ca sra
+        [cas_prefix]
+        Y       ; subtract average?
+        [factor-num]
+        (-0.2)  ; eigenvalue
+        _3   ; WAS [temp_negrec]
+
+        ; montage positive and negative reconstituted image
+        mn s
+        _*      ; input template
+        (1,3)   ; image #s
+        (1,1)   ; images/row, margin-width
+        (0)     ; margin value
+        [reconstituted_img][factor-num]
+    endif
+lb9
+
+
+; PREPARE FACTOR MAPS
+
+vm
+echo "Generating factor maps"; date
+
+[num-pairs] = [num-factors] - 1  ; number of eigenfactor-pairs to plot
+
+; loop through eigenfactor-pairs
+do lb2 [factor1] = 1,[num-pairs]
+    [factor2] = [factor1] + 1  ; second factor to plot
+
+    ; generate factor map
+    ca sm
+    I        ; plot _I_mage coordinates
+    [cas_prefix]  ; INPUT
+    (0)      ; #horizontal patches
+    [factor1],[factor2]  ; factors to plot
+    S        ; plot _S_ymbol
+    +        ; symbol to plot
+    Y        ; output to PostScript?
+    (2.3)    ; #standard devations to plot
+    (0)      ; no axis-flip
+    [ps_factor_map]{**[factor1]}{**[factor2]}  ; OUTPUT
+             ; TEXT SIZE FOR AXIS AND DATA
+             ; X AXIS OFFSET
+             ; LOWER, UPPER AXIS BOUNDS
+             ; AXIS LABEL UNIT AND TICKS / LABEL
+             ; LABEL NO. TO EDIT
+             ; Y AXIS OFFSET
+             ; LOWER, UPPER AXIS BOUNDS
+             ; AXIS LABEL UNIT AND TICKS / LABEL
+             ; LABEL NO. TO EDIT
+lb2
+; end pair-loop
+
+
+; write eigenvalues to document file
+sd c
+[cas_prefix]
+1-9  ; eigenfactor range (past nine crashes)
+[sdc_doc]
+
+vm
+echo "Done"; date
+
+en
+
+; Modified 2012-09-07
+;   TO DO: use whole image if radius not specified
+;   2012-09-07 (trs) -- better scales reconstituted images
+;   2012-09-07 (trs) -- generates Gnuplot script from scratch, ploteigen.gnu no longer needed
+;   2012-04-18 (trs) -- reads optional custom mask
+;   2010-02-09 (trs) -- CA SR* asks extra question if using PCA/IPCA
+;   2008-11-26 (trs) -- now a parameter to specify CA, PCA, or IPCA
+;   2007-11-02 (trs) -- added reconstituted images
+;   2006-05-11 (trs) -- bug fix if more than nine eigenfactors
+;   2005-08-23 (trs) -- factor maps adapted from jsl's casm.bat
