@@ -377,8 +377,8 @@ public:
 #define BLACKMAN_MASK             7
 #define SINC_MASK                 8
 #define SINC_BLACKMAN_MASK        9
-#define READ_BINARY_MASK                10
-#define READ_REAL_MASK                11
+#define READ_BINARY_MASK         10
+#define READ_REAL_MASK           11
 #define RAISED_CROWN_MASK        12
 #define BINARY_DWT_CIRCULAR_MASK 13
 #define BINARY_DWT_SPHERICAL_MASK 14
