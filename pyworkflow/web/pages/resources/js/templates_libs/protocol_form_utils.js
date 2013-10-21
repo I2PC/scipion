@@ -115,6 +115,15 @@ $(document).ready(function() {
 					customPopupHTML(html,775,470);
 				}
 			});
+		} else if (mode == 'viewer') {
+			
+			/* Launch the viewers with the options chosen */
+			var action = "/viewer/";
+			
+			$.post(action, $("#protocolForm").serialize(), function(html) {
+	
+
+			});
 		}
 		// Important. Stop the normal POST
 		return false;

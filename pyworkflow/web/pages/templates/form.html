@@ -199,12 +199,11 @@
 					<tr>
 						<td>
 							<button class="buttonClose" type="button" onclick="window.close()">Close</button>
-							<input type="submit" class="buttonSave" value="Save" onclick="javascript:putMode('save');">
-							
 							{% if visualize == 0 %}
+							<input type="submit" class="buttonSave" value="Save" onclick="javascript:putMode('save');">
 							<input type="submit" class="buttonExec" value="Execute" onclick="javascript:putMode('execute');">
 							{% else %}
-							<input type="submit" class="buttonExec" value="Visualize" onclick="javascript:putMode('visualize');">
+							<input type="submit" class="buttonExec" value="Visualize" onclick="javascript:putMode('viewer');">
 							{% endif %}							
 						</td>
 					</tr>

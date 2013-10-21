@@ -11,6 +11,7 @@ from django.contrib.gis.shortcuts import render_to_text
 
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
 from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
+from pyworkflow.viewer import WEB_DJANGO
 
 def projects(request):
     manager = Manager()
@@ -227,6 +228,31 @@ def protocol_summary(request):
 #        print jsonStr
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
+def launch_viewer(request):
+    if request.is_ajax():
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        protId = request.GET.get('protocolId', None)
+        protocol = project.mapper.selectById(int(protId))
+        
+        print "======================= in launch_viewer...."
+        
+        viewers = findViewers(protocol.getClassName(), WEB_DJANGO)
+        print viewers
+        
+        if isinstance(protocol, XmippProtML2D):
+            ioDict = {"url_form": "/form/?protocolClass=XmippML2DViewer&action=visualize"}
+        elif isinstance(protocol, XmippProtCL2D):
+            ioDict = {"url_form": "/form/?protocolClass=XmippCL2DViewer&action=visualize"}
+        elif isinstance(protocol, XmippProtML3D):
+            ioDict = {"url_form": "/form/?protocolClass=XmippML3DViewer&action=visualize"}
+        else:
+            ioDict = viewer_default(protId, protocol)
+       
+        jsonStr = json.dumps(ioDict, ensure_ascii=False)
+        
+    return HttpResponse(jsonStr, mimetype='application/javascript')
+
 def view_plot(request):
     projectName = request.session['projectName']
     project = loadProject(projectName)
@@ -248,7 +274,6 @@ def view_plot(request):
         from matplotlib.dates import DateFormatter
         
 #        print "MD contains ZSCORE"
-        
         xplotter = XmippPlotter(windowTitle="Zscore particles sorting")
         xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
         xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_ZSCORE)
@@ -259,52 +284,26 @@ def view_plot(request):
         canvas.print_png(response)
         return response
 
-def viewer(request):    
-    if request.is_ajax():
-        projectPath= request.session['projectPath']
-        projectName = request.session['projectName']
-        project = loadProject(projectName)
-        protId = request.GET.get('protocolId', None)
-        protocol = project.mapper.selectById(int(protId))
-        
-        print "======================= in viewer...."
-          
-        request.GET = request.GET.copy()
-        
-        # TODO: This should be changed to a more general approach 
-        # when the different protocol viewer be defined (in the same way of wizards.)
-
-        if getattr(protocol, 'outputMicrographs', False):
-            objId = protocol.outputMicrographs.getObjId()
-            request.GET['objectId'] = protocol.outputMicrographs.getObjId()
-        elif getattr(protocol, 'outputParticles', False):
-            objId = protocol.outputParticles.getObjId()
-            request.GET['objectId'] = protocol.outputParticles.getObjId()
-        
-        if isinstance(protocol, XmippProtML2D):
-            ioDict = viewer_ML2D(protId)
-        else:
-            ioDict = viewer_default(protId, objId)
+def viewer_default(protId, protocol):
+    print "======================= in viewer_default...."
        
-        jsonStr = json.dumps(ioDict, ensure_ascii=False)
-                
-    return HttpResponse(jsonStr, mimetype='application/javascript')
-
-def viewer_default(protId, objId):
-    #==XmippPloter Functionality============================================
+    if getattr(protocol, 'outputMicrographs', False):
+        objId = protocol.outputMicrographs.getObjId()
+    elif getattr(protocol, 'outputParticles', False):
+        objId = protocol.outputParticles.getObjId()
+    
     url_plotter = "/view_plot/?protocolId="+protId
-    #==Showj visualizer=====================================================
-    from views_showj import visualizeObject
-#   response = visualizeObject(request)
-    url_showj = "/visualize_object/?objectId="+str(objId)
-                
-    ioDict = {"url": url_showj , "plot" : url_plotter}
     
+    from views_showj import visualizeObject
+    url_showj = "/visualize_object/?objectId="+str(objId)
+    
+    ioDict = {"url": url_showj , "plot" : url_plotter}
     return ioDict
 
-def viewer_ML2D(protId):
-    url_form = "/form/?protocolId=" + protId + "&action=visualize"
-    ioDict = {"url_form": url_form}
+def viewer(request):
+    project, protocol = loadProtocolProject(request)
+    pass
     
-    return ioDict
-  
+    
+    
+    

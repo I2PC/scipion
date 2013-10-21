@@ -53,7 +53,6 @@ emViewersDict = getSubClassesFromPath(Viewer, PACKAGES_PATH)
 # Load all subclasses of Wizards
 emWizardsDict = getSubClassesFromPath(Wizard, PACKAGES_PATH)
         
-        
 def findClass(className):
     if className in emProtocolsDict:
         return emProtocolsDict[className]
@@ -67,7 +66,7 @@ def findViewers(className, environment):
     cls = findClass(className)
     baseClasses = cls.mro()
     for viewer in emViewersDict.values():
-        if viewer._environment == environment:
+        if environment in viewer._environments:
             for t in viewer._targets:
                 if t in baseClasses:
                     viewers.append(viewer)
