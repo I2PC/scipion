@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 """
-This sub-package contains protocol for particles filters operations
+This sub-package contains Spider protocol for PCA.
 """
 
 
@@ -34,17 +34,20 @@ from constants import *
 from spider import SpiderShell
 from convert import locationToSpider
 from glob import glob
-        
-class SpiderDefCustomMask(Form):        
+
+      
+class SpiderDefPCA(Form):        
     """Definition of parameters for Spider protocol: Align APSR"""
     def __init__(self):
         Form.__init__(self)
 
         self.addSection(label='Input')
-        self.addParam('inputImage', PointerParam, label="Input image", important=True, 
-                      pointerClass='Particle',
-                      help='Select the input image to create the mask. \n'
-                           'It is recommended to used an average image.')        
+        self.addParam('inputImages', PointerParam, label="Input images", important=True, 
+                      pointerClass='SetOfParticles',
+                      help='Input images to perform PCA')
+        
+        #self.addParam('maskType', )
+              
         self.addParam('filterRadius1', FloatParam, default=0.6,
                       label='Fourier radius for input image',
                       help='Fourier radius for input image.')        
@@ -59,11 +62,11 @@ class SpiderDefCustomMask(Form):
                       help='Threshold for filtered mask.')
 
 # TODO: Remove from ProtAlign, and put in other category     
-class SpiderProtCustomMask(ProtAlign):
+class SpiderProtPCA(ProtAlign):
     """ Reference-free alignment shift and rotational alignment of an image series. 
     Uses Spider AP SR command.
     """
-    _definition = SpiderDefCustomMask()
+    _definition = SpiderDefPCA()
     
     def __init__(self):
         ProtAlign.__init__(self)
@@ -98,7 +101,7 @@ class SpiderProtCustomMask(ProtAlign):
         self._enterWorkingDir() # Do operations inside the run working dir
 
         spi = SpiderShell(ext=self._params['ext'], log='script.stk') # Create the Spider process to send commands 
-        spi.runScript('custommask.txt', self._params)
+        spi.runScript('PCA.txt', self._params)
         spi.close(end=False)
         
         self._leaveWorkingDir() # Go back to project dir
