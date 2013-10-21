@@ -604,9 +604,6 @@ class ProtocolsView(tk.Frame):
         from pyworkflow.em import findViewers
         from pyworkflow.viewer import DESKTOP_TKINTER
 
-        print "PROTOCOL TO ANALIZE"
-        print prot.getClassName()
-
         self.viewers = findViewers(prot.getClassName(), DESKTOP_TKINTER)
         self.viewer = self.viewers[0]()
         self.viewer.visualize(prot, windows=self.windows)

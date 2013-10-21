@@ -29,8 +29,8 @@ visualization program.
 """
 
 import os
-from pyworkflow.viewer import Viewer, Wizard
-from pyworkflow.em import Image, SetOfImages, SetOfMicrographs, SetOfParticles, SetOfCoordinates, SetOfClasses2D, SetOfVolumes, SetOfCTF
+from pyworkflow.viewer import Viewer, Wizard, DESKTOP_TKINTER, WEB_DJANGO
+from pyworkflow.em import SetOfImages, SetOfMicrographs, SetOfParticles, SetOfCoordinates, DefCTFMicrographs, SetOfClasses2D, SetOfVolumes, SetOfCTF
 from pyworkflow.utils.process import runJob
 from xmipp3 import getXmippPath
 from pyworkflow.em.protocol import ProtImportMicrographs, ProtCTFMicrographs
@@ -54,10 +54,11 @@ class XmippViewer(Viewer):
     """ Wrapper to visualize different type of objects
     with the Xmipp program xmipp_showj
     """
-    _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, 
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _targets = [SetOfImages, SetOfCoordinates, SetOfClasses2D, 
                 ProtImportMicrographs, XmippProtPreprocessMicrographs, ProtCTFMicrographs,
                 XmippProtParticlePicking, ProtImportParticles, XmippProtExtractParticles,
-                XmippProtCL2DAlign, XmippProtCL2D, SetOfClasses2D, SetOfCTF]
+                XmippProtCL2DAlign, SetOfClasses2D, SetOfCTF]
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
@@ -153,10 +154,6 @@ class XmippViewer(Viewer):
               issubclass(cls, XmippProtCL2DAlign)):
             self.visualize(obj.outputParticles)
             # If Zscore on output images plot Zscore particle sorting            
-   
-        
-        elif (issubclass(cls, XmippProtCL2D)):
-            self.visualize(obj.outputClasses)
         
         elif issubclass(cls, XmippProtRotSpectra):
             self.visualize(obj.outputClasses, extraParams='--mode rotspectra --columns %d' % obj.SomXdim.get())
@@ -205,4 +202,5 @@ def runShowJ(inputFiles, memory="1g", extraParams=""):
 
 def runParticlePicker(inputMics, inputCoords, memory="1g", extraParams=""):
     runJavaIJapp(memory, "xmipp.viewer.particlepicker.training.Main", "%s %s %s" % (inputMics, inputCoords, extraParams), True)
+
 

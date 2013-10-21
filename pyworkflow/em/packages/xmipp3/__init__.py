@@ -31,6 +31,8 @@ from xmipp3 import *
 from convert import *
 from viewer import XmippViewer
 from viewer_ml2d import XmippML2DViewer
+from viewer_cl2d import XmippCL2DViewer
+from plotter import XmippPlotter
 from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from protocol_particle_pick import XmippProtParticlePicking 

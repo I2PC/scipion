@@ -45,7 +45,7 @@ class Viewer(object):
     For example: _targets = ['Image', 'SetOfImages']
     """
     _targets = []
-    _environment = DESKTOP_TKINTER
+    _environments = [DESKTOP_TKINTER]
     
     def __init__(self, tmpPath='./Tmp', **args):
         self._tmpPath = tmpPath
