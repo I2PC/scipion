@@ -1,5 +1,5 @@
 #!/bin/sh
-set -x #uncomment for debugging
+#set -x #uncomment for debugging
 
 #############################
 # XMIPP installation script #
@@ -41,18 +41,15 @@ IS_LINUX=0
 DO_UNTAR=1
 DO_COMPILE=1
 DO_CONFIGURE=1
+DO_CLEAN=1
+DO_SETUP=1
+DO_GUI=1
+DO_UNATTENDED=0
 
-DO_CLTOMO=false #for scipy
+DO_CLTOMO=0 #for scipy
 CONFIGURE_ARGS=""
 COMPILE_ARGS=""
 GUI_ARGS="gui"
-
-DO_CLEAN=true
-DO_STATIC=false
-DO_UPDATE=false
-DO_SETUP=true
-DO_GUI=true
-DO_UNATTENDED=false
 
 
 #External libraries definitions
@@ -137,7 +134,7 @@ PYTHON_TAR="${PYTHON_FOLDER}.tgz"
 DO_PYTHON=false
 
 #Python modules
-DO_PYMOD=true
+DO_PYMOD=0
 
 VMATLIBPLOT=1.1.0
 MATLIBPLOT_FOLDER="matplotlib-${VMATLIBPLOT}"
@@ -160,7 +157,7 @@ SCIPY_TAR="${SCIPY_FOLDER}.tgz"
 DO_SCIPY=0
 
 VTCLTK=8.5.10
-DO_TCLTK=true
+DO_TCLTK=1
 TCL_FOLDER="tcl${VTCLTK}"
 TCL_TAR="${TCL_FOLDER}.tgz"
 DO_TCL=0
@@ -524,11 +521,11 @@ takeArguments()
         doIt pymodule ${SCIPY_TAR} 0
         doIt pymodule ${TCL_TAR} 0
         doIt pymodule ${TK_TAR} 0
-        DO_PYTHON=false
-        DO_TCLTK=false
-        DO_PYMOD=false
-        DO_CLTOMO=false
-        DO_SETUP=false
+        DO_PYTHON=0
+        DO_TCLTK=0
+        DO_PYMOD=0
+        DO_CLTOMO=0
+        DO_SETUP=0
         ;;
       --num-cpus=*)
         ;;
@@ -548,9 +545,9 @@ takeArguments()
       --unattended=*) #[true|false]
         WITH_UNATTENDED=$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_UNATTENDED}" == "true" ]; then
-          DO_UNATTENDED=true
+          DO_UNATTENDED=1
         elif [ "${WITH_UNATTENDED}" == "false" ];then 
-          DO_UNATTENDED=false
+          DO_UNATTENDED=0
         else
           echoRed "Parameter --unattended only accept true or false values. Ignored and assuming default value."
         fi
@@ -595,7 +592,7 @@ takeArguments()
         fi
         ;;
       --condor)
-        doIt library ${CONDOR_TAR} true
+        doIt library ${CONDOR_TAR} 1
         ;;
       --condor=*)
         WITH_CONDOR=$(echo "$1"|cut -d '=' -f2)
@@ -738,30 +735,30 @@ takeArguments()
         fi
         ;;
       --cltomo)
-        DO_CLTOMO=true
+        DO_CLTOMO=1
         ;;
       --cltomo=*)
         WITH_CLTOMO=$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_CLTOMO}" == "true" ]; then
-          DO_CLTOMO=true
+          DO_CLTOMO=1
         elif [ "${WITH_CLTOMO}" == "false" ]; then
-          DO_CLTOMO=false
+          DO_CLTOMO=0
         else
           echoRed "Parameter --cltomo only accept true or false values. Ignored and assuming default value."
         fi
         ;;
       --python)
-        DO_PYTHON=true
-        DO_PYMOD=true
+        DO_PYTHON=1
+        DO_PYMOD=1
         ;;
       --python=*)
         WITH_PYTHON=$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_PYTHON}" == "true" ]; then
-          DO_PYTHON=true
-          DO_PYMOD=true
+          DO_PYTHON=1
+          DO_PYMOD=1
         elif [ "${WITH_PYTHON}" == "false" ]; then
-          DO_PYTHON=false
-          DO_PYMOD=false
+          DO_PYTHON=1
+          DO_PYMOD=1
         else
           echoRed "Parameter --python only accept true or false values. Ignored and assuming default value."
         fi
@@ -819,12 +816,12 @@ takeArguments()
         fi
         ;;
       --tcl-tk)
-        DO_TCLTK=true
+        DO_TCLTK=1
         ;;
       --tcl-tk=*)
         WITH_TCLTK=$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_TCLTK}" == "true" ]; then
-          DO_TCLTK=true
+          DO_TCLTK=1
         elif [ "${WITH_TCLTK}" == "false" ]; then
           DO_TCLTK=false
         else
@@ -858,12 +855,12 @@ takeArguments()
         fi
         ;;
       --pymodules)
-        DO_PYMOD=true
+        DO_PYMOD=1
         ;;
       --pymodules=*)
         WITH_PYMOD=$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_PYMOD}" == "true" ]; then
-          DO_PYMOD=true
+          DO_PYMOD=1
         elif [ "${WITH_PYMOD}" == "false" ]; then
           DO_PYMOD=false
         else
@@ -873,7 +870,7 @@ takeArguments()
       --gui=*)
         WITH_GUI==$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_GUI}" == "true" ]; then
-          WITH_GUI=true
+          WITH_GUI=1
         elif [ "${WITH_GUI}" == "false" ]; then
           WITH_GUI=false
         else
@@ -891,8 +888,6 @@ takeArguments()
 
 #        "clean=true")         DO_CLEAN=true;;
 #        "clean=false")        DO_CLEAN=false;;
-#        "static=true")        DO_STATIC=true;;
-#        "static=false")       DO_STATIC=false;;
 #        "gui=false")          GUI_ARGS="";;
 #        "setup=true")         DO_SETUP=true;;
 
@@ -1100,10 +1095,10 @@ configure_library()
   echo
   echoGreen "*** Configuring ${LIB} ..."
   echoExecRedirectEverything "cd ${_PATH}" "/dev/null"
-  if [ $DO_STATIC -eq 0 ]; then
-    echo "--> Enabling shared libraries..."
-    CONFIGFLAGS="--enable-shared ${CONFIGFLAGS}"
-  fi
+
+  echo "--> Enabling shared libraries..."
+  CONFIGFLAGS="--enable-shared ${CONFIGFLAGS}"
+  
   echoExecRedirectEverything "./configure ${CONFIGFLAGS}" "${BUILD_PATH}/${LIB}_configure.log"
   echoExecRedirectEverything "cd -" "/dev/null"
   toc
@@ -1156,9 +1151,6 @@ install_libs()
   for suffix in $SUFFIXES; do
      LIBNAME=$COMMON$suffix
      if $COPY; then
-     	     if [ -e lib/$LIBNAME ]; then
-	         echoExecRedirectEverything "rm -f lib/$LIBNAME" "/dev/null"
-             fi
 	     echoExecRedirectEverything "cp -f $LIBPATH/$LIBNAME lib/$LIBNAME" "/dev/null"
      else
 	     echoExecRedirectEverything "ln -sf ../$LIBPATH/$LIBNAME lib/$LIBNAME " "/dev/null"
@@ -1187,13 +1179,8 @@ uninstall_libs()
   
   for suffix in $SUFFIXES; do
      LIBNAME=$COMMON$suffix
-     if $COPY; then
-     	     if [ -e lib/$LIBNAME ]; then
-	         echoExecRedirectEverything "rm -f lib/$LIBNAME" "/dev/null"
-             fi
-	     echoExecRedirectEverything "cp -f $LIBPATH/$LIBNAME lib/$LIBNAME" "/dev/null"
-     else
-	     echoExecRedirectEverything "ln -sf ../$LIBPATH/$LIBNAME lib/$LIBNAME " "/dev/null"
+     if [ -e lib/$LIBNAME ]; then
+       echoExecRedirectEverything "rm -f lib/$LIBNAME" "/dev/null"
      fi
   done
   echoExecRedirectEverything "cd -" "/dev/null"
@@ -1250,7 +1237,7 @@ decompressExternals()
   while [ ${lib} -le ${#EXTERNAL_LIBRARIES[@]} ]; do
     if [ ${EXTERNAL_LIBRARIES_DO[$lib]} -eq 1 ]; then
       if [ -d ${EXTERNAL_LIBRARIES[$lib]} ]; then
-        if ! ( $DO_UNATTENDED ) && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]; then
+        if [ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]; then
           echo "${EXTERNAL_LIBRARIES[$lib]} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
           read DELETE_ANSWER
         else
@@ -1278,9 +1265,9 @@ decompressPython()
   echo
   echoExecRedirectEverything "cd ${EXT_PATH}/python" "/dev/null"
   echoGreen "*** Decompressing Python ***"
-  if ${DO_PYTHON}; then
+  if [ ${DO_PYTHON} -eq 1 ]; then
     if [ -d ${PYTHON_FOLDER} ]; then
-      if ! ( $DO_UNATTENDED ) && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]; then
+      if [ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]; then
         echo "${PYTHON_FOLDER} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
         read DELETE_ANSWER
       else
@@ -1309,7 +1296,7 @@ decompressPythonModules()
   while [ ${lib} -le ${#PYTHON_MODULES[@]} ]; do
     if [ ${PYTHON_MODULES_DO[$lib]} -eq 1 ]; then
       if [ -d ${PYTHON_MODULES[$lib]} ]; then
-        if ! ( $DO_UNATTENDED ) && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]; then
+        if [ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]; then
           echo "${PYTHON_MODULES[$lib]} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
           read DELETE_ANSWER
         else
@@ -1393,7 +1380,7 @@ decideOS
 create_bashrc_file .xmipp.bashrc # Create file to include from BASH this Xmipp installation
 create_tcsh_file .xmipp.csh      # for CSH or TCSH
 
-if $DO_UNATTENDED; then
+if [ $DO_UNATTENDED -eq 1 ]; then
   CONFIGURE_ARGS="$CONFIGURE_ARGS unattended "
 fi
 
@@ -1665,34 +1652,39 @@ fi
 #################### COMPILING PYTHON MODULES ####################################
 ##################################################################################
 
-if $DO_PYMOD; then
-  preparePythonEnvironment
+preparePythonEnvironment
 
-  shouldIDoIt pymodule ${NUMPY_TAR}
+if [ $DO_PYMOD -eq 1 ]; then
+doIt pymodule ${NUMPY_TAR}
+doIt pymodule ${MATLIBPLOT_TAR}
+doIt pymodule ${PYMPI_TAR}
+doIt pymodule ${SCIPY_TAR}
+fi
+
+shouldIDoIt pymodule ${NUMPY_TAR}
+if [ $? -eq 1 ]; then
+  compile_pymodule ${NUMPY_FOLDER}
+fi
+shouldIDoIt pymodule ${MATLIBPLOT_TAR}
+if [ $? -eq 1 ]; then
+  compile_pymodule ${MATLIBPLOT_FOLDER}
+fi
+shouldIDoIt pymodule ${PYMPI_TAR}
+if [ $? -eq 1 ]; then
+  compile_pymodule ${PYMPI_FOLDER}
+fi
+
+if [ $DO_CLTOMO -eq 1 ]; then
+  # Fast Rotational Matching
+  export LDFLAGS="-shared ${LDFLAGS}"
+  shouldIDoIt pymodule ${SCIPY_TAR}
   if [ $? -eq 1 ]; then
-    compile_pymodule ${NUMPY_FOLDER}
+    compile_pymodule ${SCIPY_FOLDER}
   fi
-  shouldIDoIt pymodule ${MATLIBPLOT_TAR}
+  shouldIDoIt library ${SHALIGNMENT_TAR}
   if [ $? -eq 1 ]; then
-    compile_pymodule ${MATLIBPLOT_FOLDER}
-  fi
-  shouldIDoIt pymodule ${PYMPI_TAR}
-  if [ $? -eq 1 ]; then
-    compile_pymodule ${PYMPI_FOLDER}
-  fi
-  
-  if $DO_CLTOMO; then
-    # Fast Rotational Matching
-    export LDFLAGS="-shared ${LDFLAGS}"
-    shouldIDoIt pymodule ${SCIPY_TAR}
-    if [ $? -eq 1 ]; then
-      compile_pymodule ${SCIPY_FOLDER}
-    fi
-    shouldIDoIt library ${SHALIGNMENT_TAR}
-    if [ $? -eq 1 ]; then
-      echoExecRedirectEverything "cd ${EXT_PATH}/${SHALIGNMENT_FOLDER}" "/dev/null"
-      echoExecRedirectEverything "./compile.sh" "/dev/null"
-    fi
+    echoExecRedirectEverything "cd ${EXT_PATH}/${SHALIGNMENT_FOLDER}" "/dev/null"
+    echoExecRedirectEverything "./compile.sh" "/dev/null"
   fi
 fi
 
@@ -1704,7 +1696,7 @@ echoGreen "Compiling XMIPP ..."
 #echoGreen "COMPILE: $COMPILE_ARGS"
 #echoGreen "GUI: $GUI_ARGS"
 
-if $DO_SETUP; then
+if [ $DO_SETUP -eq 1 ]; then
   echoExec "./setup.py -j ${NUMBER_OF_CPU} configure ${CONFIGURE_ARGS} compile ${COMPILE_ARGS} ${GUI_ARGS} install"
 fi
 
