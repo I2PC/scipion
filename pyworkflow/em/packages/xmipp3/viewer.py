@@ -57,7 +57,7 @@ class XmippViewer(Viewer):
     _targets = [SetOfImages, SetOfCoordinates, SetOfClasses2D, 
                 ProtImportMicrographs, XmippProtPreprocessMicrographs, ProtCTFMicrographs,
                 XmippProtParticlePicking, ProtImportParticles, XmippProtExtractParticles,
-                XmippProtCL2DAlign, XmippProtCL2D, SetOfClasses2D, SetOfCTF]
+                XmippProtCL2DAlign, SetOfClasses2D, SetOfCTF]
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
@@ -148,10 +148,6 @@ class XmippViewer(Viewer):
               issubclass(cls, XmippProtCL2DAlign)):
             self.visualize(obj.outputParticles)
             # If Zscore on output images plot Zscore particle sorting            
-   
-        
-        elif (issubclass(cls, XmippProtCL2D)):
-            self.visualize(obj.outputClasses)
         
         elif issubclass(cls, XmippProtRotSpectra):
             self.visualize(obj.outputClasses, extraParams='--mode rotspectra --columns %d' % obj.SomXdim.get())
@@ -200,4 +196,5 @@ def runShowJ(inputFiles, memory="1g", extraParams=""):
 
 def runParticlePicker(inputMics, inputCoords, memory="1g", extraParams=""):
     runJavaIJapp(memory, "xmipp.viewer.particlepicker.training.Main", "%s %s %s" % (inputMics, inputCoords, extraParams), True)
+
 

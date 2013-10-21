@@ -466,6 +466,24 @@ class TextfileViewer(tk.Frame):
         text.tag_add('found_current', idx, lastidx)
         text.see(idx)
   
+def showTextfileViewer(title, filelist, parent=None, main=False):
+    if main:
+        root = tk.Tk()
+    else:
+        root = tk.Toplevel()
+    root.withdraw()
+    root.title(title)
+    from xmipp import FileName
+    files = [FileName(f).removeBlockName() for f in filelist]
+    l = TextfileViewer(root, files)
+    root.columnconfigure(0, weight=1)
+    root.rowconfigure(0, weight=1)
+    l.grid(column=0, row=0, sticky='nsew')
+    centerWindows(root, refWindows=parent)
+    root.deiconify()
+    root.mainloop()
+
+    
 if __name__ == '__main__':
     import sys
     root = tk.Tk()
