@@ -37,27 +37,6 @@ import numpy as np
 
 
 
-class XmippDefML2DViewer(Form):
-    """Create the definition of parameters for
-    the XmippProtML2D protocol"""
-    def __init__(self):
-        Form.__init__(self)
-    
-        self.addSection(label='Visualization')
-        self.addParam('doShowClasses', BooleanParam, label="Visualize last iter references", default=True, 
-                      help='Visualize last iteration references.')
-        self.addParam('doShowPlots', BooleanParam, label="Show all plots per iteration?", default=True)
-        
-        self.addSection(label='Iteration plots')    
-        self.addParam('doShowLL', BooleanParam, label="Show Log-Likehood over iterations?", default=False, 
-                      help='The Log-Likelihood value should increase.')      
-        self.addParam('doShowPmax', BooleanParam, label="Show maximum model probability?", default=False, 
-                      help='Show the maximum probability for a model, this should tend to be a deltha function.')      
-        self.addParam('doShowSignalChange', BooleanParam, label="Show plot for signal change?", default=False, 
-                      help='Should approach to zero when convergence.')      
-        self.addParam('doShowMirror', BooleanParam, label="Show mirror fraction for last iteration?", default=False, 
-                      help='he the mirror fraction of each reference in last iteration.')      
-        
 class XmippML2DViewer(ProtocolViewer):
     """ Wrapper to visualize different type of data objects
     with the Xmipp program xmipp_showj
@@ -65,8 +44,25 @@ class XmippML2DViewer(ProtocolViewer):
     _targets = [XmippProtML2D]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
-    _definition = XmippDefML2DViewer()
     _label = 'Xmipp Viewer ML2D'
+    _plotVars = ['doShowLL', 'doShowPmax', 'doShowSignalChange', 'doShowMirror'] 
+    
+    def _defineParams(self, form):
+        form.addSection(label='Visualization')
+        form.addParam('doShowClasses', BooleanParam, label="Visualize last iter references", default=True, 
+                      help='Visualize last iteration references.')
+        form.addParam('doShowPlots', BooleanParam, label="Show all plots per iteration?", default=True)
+        
+        form.addSection(label='Iteration plots')    
+        form.addParam('doShowLL', BooleanParam, label="Show Log-Likehood over iterations?", default=False, 
+                      help='The Log-Likelihood value should increase.')      
+        form.addParam('doShowPmax', BooleanParam, label="Show maximum model probability?", default=False, 
+                      help='Show the maximum probability for a model, this should tend to be a deltha function.')      
+        form.addParam('doShowSignalChange', BooleanParam, label="Show plot for signal change?", default=False, 
+                      help='Should approach to zero when convergence.')      
+        form.addParam('doShowMirror', BooleanParam, label="Show mirror fraction for last iteration?", default=False, 
+                      help='he the mirror fraction of each reference in last iteration.')      
+        
     
     def _getVisualizeDict(self):
         return {'doShowClasses': self._viewIterRefs,
@@ -78,11 +74,16 @@ class XmippML2DViewer(ProtocolViewer):
     def _viewAll(self, *args):
         if self.doShowClasses:
             self._viewIterRefs()
-        plots = [p for p in ['doShowLL', 'doShowPmax', 'doShowSignalChange', 'doShowMirror'] if self.getAttributeValue(p)]
-        self.createPlots(self.protocol, plots).show()
+        if self.doShowPlots:
+            self._viewAllPlots()
+        else:
+            plots = [p for p in  self._plotVars if self.getAttributeValue(p)]
+            self.createPlots(self.protocol, plots).show()
+        
+    def _viewAllPlots(self, e=None):
+        self.createPlots(self.protocol, self._plotVars).show()        
         
     def _viewPlot(self, paramName):
-        print "viewing param: ", paramName
         xplotter = self.createPlots(self.protocol, [paramName])
         if xplotter:
             xplotter.show()

@@ -33,42 +33,37 @@ import xmipp
 
 from convert import createXmippInputImages, readSetOfParticles
 from glob import glob
+       
+        
+class XmippProtCL2DAlign(ProtAlign):
+    """ Protocol to align a set of particles. """
+    _label = 'Xmipp CL2D Align'
 
-class XmippDefCL2DAlign(Form):
-    """Create the definition of parameters for
-    the XmippProtAlign2d protocol"""
-    def __init__(self):
-        Form.__init__(self)
-
-        self.addSection(label='Input')
-        self.addParam('inputImages', PointerParam, label="Input images", important=True, 
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        form.addParam('inputImages', PointerParam, label="Input images", important=True, 
                       pointerClass='SetOfParticles',
                       help='Select the input images from the project.'
                            'It should be a SetOfImages class')
         
-        self.addParam('useReferenceImage', BooleanParam, default=True,
+        form.addParam('useReferenceImage', BooleanParam, default=True,
                       label='Use a Reference Image ?', 
                       help='If you set to <Yes>, you should provide a reference image'
                            'If <No>, the default generation is done by averaging'
                            'subsets of the input images.')
-        self.addParam('ReferenceImage', StringParam , condition='useReferenceImage',
+        form.addParam('ReferenceImage', StringParam , condition='useReferenceImage',
                       label="Reference image(s)", 
                       help='Image that will serve as class reference')
         
-        self.addParam('maximumShift', IntParam, default=10,
+        form.addParam('maximumShift', IntParam, default=10,
                       label='Maximum shift:',
                       help='in pixels')
-        self.addParam('numberOfIterations', IntParam, default=10, expertLevel=LEVEL_ADVANCED,
+        form.addParam('numberOfIterations', IntParam, default=10, expertLevel=LEVEL_ADVANCED,
                       label='Number of iterations:',
                       help='Maximum number of iterations')
-        self.addParallelSection(threads=1, mpi=3)
+        form.addParallelSection(threads=1, mpi=3)
         
         
-class XmippProtCL2DAlign(ProtAlign):
-    """ Protocol to align a set of particles. """
-    _definition = XmippDefCL2DAlign()
-    _label = 'Xmipp CL2D Align'
-
     def _defineSteps(self):
         """ Mainly prepare the command line for call cl2d align program"""
         

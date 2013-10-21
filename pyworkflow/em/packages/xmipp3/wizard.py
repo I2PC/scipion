@@ -31,10 +31,10 @@ import os
 import Tkinter as tk
 import ttk
 from pyworkflow.viewer import Viewer, Wizard, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, DefCTFMicrographs
-from protocol_projmatch import XmippDefProjMatch, XmippProtProjMatch 
-from protocol_preprocess_micrographs import XmippDefPreprocessMicrograph
-from protocol_filters import XmippDefMask, XmippProtMask, XmippDefFourierFilter, XmippDefGaussianFilter
+from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, ProtCTFMicrographs
+from protocol_projmatch import XmippProtProjMatch 
+from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
+from protocol_filters import *
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider
 from pyworkflow.gui.tree import BoundTree, TreeProvider
@@ -43,7 +43,7 @@ from pyworkflow import findResource
 
 
 class XmippDownsampleWizard(Wizard):
-    _targets = [(XmippDefPreprocessMicrograph, ['downFactor'])]
+    _targets = [(XmippProtPreprocessMicrographs, ['downFactor'])]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
         
     def show(self, form):
@@ -82,7 +82,7 @@ class XmippCTFWizard(Wizard):
     """ Wrapper to visualize different type of objects
     with the Xmipp program xmipp_showj
     """
-    _targets = [(DefCTFMicrographs, ['lowRes', 'highRes'])]
+    _targets = [(ProtCTFMicrographs, ['lowRes', 'highRes'])]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
         
     def show(self, form):
@@ -130,7 +130,7 @@ class XmippMaskRadiusWizard(Wizard):
                 
 class XmippParticleMaskRadiusWizard(XmippMaskRadiusWizard):
 
-    _targets = [(XmippDefMask, ['maskRadius'])]
+    _targets = [(XmippProtMask, ['maskRadius'])]
         
     def _getText(self, obj):
         index = obj.getIndex()
@@ -161,7 +161,7 @@ class XmippParticleMaskRadiusWizard(XmippMaskRadiusWizard):
     
 class XmippVolumeMaskRadiusWizard(XmippMaskRadiusWizard):
 
-    _targets = [(XmippDefProjMatch, ['maskRadius'])]
+    _targets = [(XmippProtProjMatch, ['maskRadius'])]
         
     def _getProvider(self, protocol):
         """ This should be implemented to return the list
@@ -179,7 +179,7 @@ class XmippVolumeMaskRadiusWizard(XmippMaskRadiusWizard):
         
 class XmippRadiiWizard(XmippVolumeMaskRadiusWizard):
     
-    _targets = [(XmippDefProjMatch, ['innerRadius', 'outerRadius'])]
+    _targets = [(XmippProtProjMatch, ['innerRadius', 'outerRadius'])]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
     def show(self, form):
@@ -226,7 +226,7 @@ class XmippFilterParticlesWizard(Wizard):
 
 class XmippBandpassWizard(XmippFilterParticlesWizard):
     
-    _targets = [(XmippDefFourierFilter, ['lowFreq', 'highFreq', 'freqDecay'])]
+    _targets = [(XmippProtFourierFilter, ['lowFreq', 'highFreq', 'freqDecay'])]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
     def show(self, form):
@@ -249,7 +249,7 @@ class XmippBandpassWizard(XmippFilterParticlesWizard):
     
 class XmippGaussianWizard(XmippFilterParticlesWizard):
     
-    _targets = [(XmippDefGaussianFilter, ['freqSigma'])]
+    _targets = [(XmippProtGaussianFilter, ['freqSigma'])]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
     def show(self, form):

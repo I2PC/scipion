@@ -34,10 +34,16 @@ from constants import *
 from spider import SpiderShell
 from convert import locationToSpider
         
-class SpiderDefFilter(DefProcessParticles):
-        
-    def _addProcessParam(self):
-        self.addParam('filterType', EnumParam, choices=['Top-hat', 'Gaussian', 'Fermi', 'Butterworth', 'Raised cosine'],
+
+      
+class SpiderProtFilter(ProtFilterParticles):
+    """ Protocol base for Xmipp filters. """
+    def __init__(self):
+        ProtFilterParticles.__init__(self)
+        self._op = "FQ"
+
+    def _defineProcessParams(self, form):
+        form.addParam('filterType', EnumParam, choices=['Top-hat', 'Gaussian', 'Fermi', 'Butterworth', 'Raised cosine'],
                       label="Filter type", default=0,
                       help="""Select what type of filter do you want to apply.
                       
@@ -85,41 +91,32 @@ class SpiderDefFilter(DefProcessParticles):
                     1  if F < Flow, and 
                     1  if F > Fup. 
                            """)
-        self.addParam('filterMode', EnumParam, choices=['low-pass', 'high-pass'],
+        form.addParam('filterMode', EnumParam, choices=['low-pass', 'high-pass'],
                       label='Filter mode', default=0,
                       )
-        self.addParam('usePadding', BooleanParam, default=True, 
+        form.addParam('usePadding', BooleanParam, default=True, 
                       label='Use padding?',
                       help="If <No> padding is applied, this may lead to artifacts near boundary of image,\n"
                            "we suggest use of padding to avoid this.\n")  
-        self.addParam('filterRadius', DigFreqParam, default=0.12, 
+        form.addParam('filterRadius', DigFreqParam, default=0.12, 
                       label='Filter radius (0 < f < 0.5)',
                       condition='filterType <= %d' % FILTER_GAUSSIAN,
                       help='Low frequency cuttoff to apply the filter.\n')  
-        self.addParam('lowFreq', DigFreqParam, default=0.1, 
+        form.addParam('lowFreq', DigFreqParam, default=0.1, 
                       label='Low Frequency (0 < f < 0.5)',
                       condition='filterType > %d' % FILTER_GAUSSIAN,
                       help='Low frequency cuttoff to apply the filter.\n')          
-        self.addParam('highFreq', DigFreqParam, default=0.2, 
+        form.addParam('highFreq', DigFreqParam, default=0.2, 
                       label='High Frequency (0 < f < 0.5)', 
                       condition='filterType > %d' % FILTER_GAUSSIAN,
                       help='High frequency cuttoff to apply the filter.\n'
                            'Set to 0.5 for a <high pass> filter.')          
-        self.addParam('temperature', FloatParam, default=0.3, 
+        form.addParam('temperature', FloatParam, default=0.3, 
                       label='Temperature T:',
                       condition='filterType == %d' % FILTER_FERMI,
                       help='Enter a temperature parameter T The filter falls off roughly within \n'
-                           'this reciprocal distance (in terms of frequency units).') 
-      
-      
-class SpiderProtFilter(ProtFilterParticles):
-    """ Protocol base for Xmipp filters. """
-    _definition = SpiderDefFilter()
-    
-    def __init__(self):
-        ProtFilterParticles.__init__(self)
-        self._op = "FQ"
-    
+                           'this reciprocal distance (in terms of frequency units).')     
+        
     def _defineSteps(self):
         # Define some names
         self.inputStk = self._getPath('input_images.stk')

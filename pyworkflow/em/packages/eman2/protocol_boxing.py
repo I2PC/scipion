@@ -32,28 +32,23 @@ import eman2
 from data import *
 from convert import readSetOfCoordinates
 
-class EmanDefParticlePicking(Form):
-    """Create the definition of parameters for
-    the Eman Boxing protocol.
-    """
-    def __init__(self):
-        Form.__init__(self)        
-        self.addSection(label='Input')
-        self.addParam('inputMicrographs', PointerParam, label="Micrographs",
-                      pointerClass='SetOfMicrographs',
-                      help='Select the SetOfMicrograph ')
-        self.addParam('boxSize', IntParam, label='Box size',
-                      validators=[Positive])
 
 
 class EmanProtBoxing(ProtParticlePicking):
     """Protocol to pick particles manually of a set of micrographs in the project"""    
-    _definition = EmanDefParticlePicking()
-    
     def __init__(self, **args):     
         ProtParticlePicking.__init__(self, **args)
         # The following attribute is only for testing
         self.importFolder = String(args.get('importFolder', None))
+        
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        form.addParam('inputMicrographs', PointerParam, label="Micrographs",
+                      pointerClass='SetOfMicrographs',
+                      help='Select the SetOfMicrograph ')
+        form.addParam('boxSize', IntParam, label='Box size',
+                      validators=[Positive])
+        
         
     def _runSteps(self, startIndex):
         # Redefine run to change to workingDir path

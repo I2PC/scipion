@@ -40,82 +40,85 @@ from pyworkflow.em import *
 from pyworkflow.utils import *  
 import xmipp, xmipp3
 
-
-class XmippDefProjMatch(Form):
-    """Create the definition of parameters for
-    the XmippProtML2D protocol"""
-    def __init__(self):
-        Form.__init__(self)
+        
+class XmippProtProjMatch(xmipp3.XmippProtocol, ProtRefine3D, ProtClassify3D):
+    """ Protocol for Xmipp-based ProjMatch/MLF3D classification. """
+    _label = 'Xmipp ProjMatch'
     
-        self.addSection(label='Input')
+    # Reconstruction method constants
+    FOURIER = 0
+    WLSART = 1
+
+    def _defineParams(self, form):
+        form.addSection(label='Input')
         
         #SelFileName
-        self.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
+        form.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
                       pointerClass='SetOfParticles', 
                       help='Select the input particles.\n'
                            'If you want perform <CTF> correction the input particles\n'
                            'should have information about the CTF (hasCTF=True)')  
-        self.addParam('useInitialAngles', BooleanParam, default=False,
+        form.addParam('useInitialAngles', BooleanParam, default=False,
                       label="Use initial angles/shifts ? ", 
                       help='Set to <Yes> if you want to use the projection assignment (angles/shifts)\n'
                       'associated with the input particles (hasProjectionAssigment=True)')
         # ReferenceFileNames      
-        self.addParam('input3DReferences', PointerParam,
+        form.addParam('input3DReferences', PointerParam,
                       pointerClass='SetOfVolumes',
                       label='Initial 3D reference volumes', 
                       help='Initial 3D density maps with the same dimensions as your particles.\n'
                            'For example: reference1.vol reference2.vol\n'
                            'specifies two references.')
-        self.addParam('numberOfIterations', IntParam, default=4,
+        form.addParam('numberOfIterations', IntParam, default=4,
                       label='Number of iterations',
                       help='Number of iterations to perform.')
-        self.addParam('cleanUpFiles', BooleanParam, default=False,
+        form.addParam('cleanUpFiles', BooleanParam, default=False,
                       label="Clean up intermediate files?",  expertLevel=LEVEL_EXPERT,
                       help='Save disc space by cleaning up intermediate files.\n'
                            'Be careful, many options of the visualization protocol will not work anymore,\n'
                            'since all class averages, selfiles etc will be deleted. ')
         
-        self.addSection(label='CTF correction')
+        form.addSection(label='CTF correction')
         
-        self.addParam('doCTFCorrection', BooleanParam, default=True,
+        form.addParam('doCTFCorrection', BooleanParam, default=True,
                       label="Perform CTF correction?", 
                       help='If set to true, a CTF (amplitude and phase) corrected map will be refined,\n'
                            'and the data will be processed in CTF groups.\n'
                            'Note that you cannot combine CTF-correction with re-alignment of the classes.\n'
                            'Remember that CTF information should be provided in the images input file.\n')    
               
-        self.addParam('doAutoCTFGroup', BooleanParam, default=True, condition='doCTFCorrection',
+        form.addParam('doAutoCTFGroup', BooleanParam, default=True, condition='doCTFCorrection',
                       label="Make CTF groups automatically?", 
                       help='Make CTF groups based on a maximum differences at a given resolution limit.\n'
                            'If this option is set to false, a docfile with the defocus values where to \n'
                            'split the images in distinct defocus group has to be provided (see expert option below)\n')             
               
-        self.addParam('ctfGroupMaxDiff', FloatParam, default=0.1, condition='doCTFCorrection and doAutoCTFGroup',
+        form.addParam('ctfGroupMaxDiff', FloatParam, default=0.1, condition='doCTFCorrection and doAutoCTFGroup',
                       label='Maximum difference for grouping', validators=[Positive],
                       help='If the difference between the CTF-values up to the resolution limit specified\n'
                       'below is larger than the value given here, two images will be placed in\n'
                       'distinct CTF groups.')          
         
-        self.addParam('ctfGroupMaxResol', FloatParam, default=5.6, condition='doCTFCorrection and doAutoCTFGroup',
+        form.addParam('ctfGroupMaxResol', FloatParam, default=5.6, condition='doCTFCorrection and doAutoCTFGroup',
                       label='Resolution limit (Ang) for grouping', validators=[Positive],
                       help='Maximum resolution where to consider CTF-differences among different groups.\n'
                             'One should use somewhat higher resolutions than those aimed for in the refinement.')       
         
         # SplitDefocusDocFile
-        self.addParam('setOfDefocus', StringParam,
+        form.addParam('setOfDefocus', StringParam,
                       label='Set of defocus', default='', condition='doCTFCorrection and not doAutoCTFGroup',
                       help='Set with defocus values where to split into groups.\n'
                            'This field is compulsory if you do not want to make the CTF groups automatically.\n'
                            'Note that the requested docfile can be made initially with the <xmipp_ctf_group> program,\n'
                            'and then it can be edited manually to suit your needs.')
         
-        self.addParam('paddingFactor', FloatParam, default=2, condition='doCTFCorrection',
+        form.addParam('paddingFactor', FloatParam, default=2, condition='doCTFCorrection',
                       label='Padding factor', validators=[GE(1)],
                       help='Application of CTFs to reference projections and of Wiener filter\n'
                             'to class averages will be done using padded images.\n'
                             'Use values larger than one to pad the images.')        
         
-        self.addParam('wienerConstant', FloatParam, default=-1, condition='doCTFCorrection',
+        form.addParam('wienerConstant', FloatParam, default=-1, condition='doCTFCorrection',
                       label='Wiener constant',  expertLevel=LEVEL_EXPERT,
                       help='Term that will be added to the denominator of the Wiener filter.\n'
                             'In theory, this value is the inverse of the signal-to-noise ratio\n'
@@ -125,20 +128,20 @@ class XmippDefProjMatch(Form):
         
         #TODO: Use common mask parameters
         
-        self.addSection(label='Mask')
+        form.addSection(label='Mask')
         
         # doMask, doSphericalMask now merged into maskType
         
-        self.addParam('maskType', EnumParam, choices=['None', 'circular', 'binary file'], default=xmipp3.MASK_CIRCULAR, 
+        form.addParam('maskType', EnumParam, choices=['None', 'circular', 'binary file'], default=xmipp3.MASK_CIRCULAR, 
                       label="Mask reference volumes", display=EnumParam.DISPLAY_COMBO,
                       help='Masking the reference volume will increase the signal to noise ratio.\n'
                            'Do not provide a very tight mask.\n')
         
-        self.addParam('maskRadius', IntParam, default=-1, condition='maskType == 1',
+        form.addParam('maskRadius', IntParam, default=-1, condition='maskType == 1',
                       label='Radius of spherical mask (pix)',
                       help='This is the radius (in pixels) of the spherical mask ')       
         
-        self.addParam('maskFile', StringParam, default='maks.vol', 
+        form.addParam('maskFile', StringParam, default='maks.vol', 
                       label='Binary mask file', condition='maskType == 2',
                       help='The mask file should have the same dimensions as your input particles.\n'
                            'The protein region should be 1 and the solvent should be 0.')  
@@ -146,9 +149,9 @@ class XmippDefProjMatch(Form):
         # DataArePhaseFlipped , now taken from inputParticles.isPhaseFlipped()
         # ReferenceIsCtfCorrected, now taken from input3DReferences.isAmplitudeCorrected()
         
-        self.addSection(label='Projection Matching')
+        form.addSection(label='Projection Matching')
         
-        self.addParam('innerRadius', NumericListParam, default='0', 
+        form.addParam('innerRadius', NumericListParam, default='0', 
                       label='Inner radius for rotational correlation:', 
                       help=""" In pixels from the image center
     You may specify this option for each iteration. 
@@ -161,7 +164,7 @@ class XmippDefProjMatch(Form):
     <Note>: if there are more values than iterations the extra value are ignored
 """)
               
-        self.addParam('outerRadius', NumericListParam, default='64', 
+        form.addParam('outerRadius', NumericListParam, default='64', 
                       label='Outer radius for rotational correlation', 
                       help=""" In pixels from the image center. Use a negative number to use the entire image.
 <WARNING>: this radius will be use for masking before computing resolution
@@ -175,7 +178,7 @@ is ("2x8 2x0", i.e.,
 <Note>: if there are more values than iterations the extra value are ignored
 """)        
         
-        self.addParam('availableMemory', IntParam, default=2, expertLevel=LEVEL_ADVANCED, 
+        form.addParam('availableMemory', IntParam, default=2, expertLevel=LEVEL_ADVANCED, 
                       label='Available memory to store all references (Gb)',
                       help=""" This is only for the storage of the references. If your projections do not fit in memory, 
 the projection matching program will run MUCH slower. But, keep in mind that probably 
@@ -184,7 +187,7 @@ Note that the memory per computing node needs to be given. That is, when using t
 this value will be multiplied automatically by the number of (shared-memory) threads.
 """)
         
-        self.addParam('angSamplingRateDeg', NumericListParam, default='7 5 3 2', 
+        form.addParam('angSamplingRateDeg', NumericListParam, default='7 5 3 2', 
                       label='Angular sampling rate (deg)',
                       help=""" Angular distance (in degrees) between neighboring projection  points
 You may specify this option for each iteration. 
@@ -197,7 +200,7 @@ is ("2x8 2x0", i.e.,
 <Note:> if there are more values than iterations the extra value are ignored
 """)
         
-#        self.addParam('maxChangeInAngles', NumericListParam, default='1000 10 4 2', 
+#        form.addParam('maxChangeInAngles', NumericListParam, default='1000 10 4 2', 
 #                      label='Angular search range (deg)',
 #                      help=""" Maximum change in rot & tilt  (in +/- degrees)
 #    You may specify this option for each iteration. 
@@ -210,7 +213,7 @@ is ("2x8 2x0", i.e.,
 #    <Note:> if there are more values than iterations the extra value are ignored
 #""")        
         
-        self.addParam('perturbProjectionDirections', NumericListParam, default='0', 
+        form.addParam('perturbProjectionDirections', NumericListParam, default='0', 
                       label='Perturb projection directions?', expertLevel=LEVEL_EXPERT,
                       help=""" If set to 1, this option will result to a Gaussian perturbation to the 
 evenly sampled projection directions of the reference library. 
@@ -226,27 +229,27 @@ is ("2x1 0", i.e.,
 """)   
         
         # Changed from String to Int 
-        self.addParam('projectionMethod', EnumParam, choices=['fourier', 'real space'], 
+        form.addParam('projectionMethod', EnumParam, choices=['fourier', 'real space'], 
                       default=xmipp3.PROJECT_FOURIER, expertLevel=LEVEL_EXPERT, 
                       label="Projection method", display=EnumParam.DISPLAY_COMBO,
                       help='select projection method, by default Fourier with padding 1 and interpolation bspline')        
 
         
-        self.addParam('paddingAngularProjection', FloatParam, default=1, expertLevel=LEVEL_EXPERT,  
+        form.addParam('paddingAngularProjection', FloatParam, default=1, expertLevel=LEVEL_EXPERT,  
                       condition='projectionMethod == %d' % xmipp3.PROJECT_FOURIER,
                       label='Padding factor for projection', validators=[GE(1)],
                       help="""Increase the padding factor will improve projection quality but 
 projection generation will be slower. In general padding 1 and spline is OK
 """)       
         # Changed from String to Int 
-        self.addParam('kernelAngularProjection', EnumParam, choices=['neareast', 'linear', 'bspline'],
+        form.addParam('kernelAngularProjection', EnumParam, choices=['neareast', 'linear', 'bspline'],
                       default=xmipp3.KERNEL_BSPLINE, expertLevel=LEVEL_EXPERT,  
                       condition='projectionMethod == %d' % xmipp3.PROJECT_FOURIER,
                       label='Interpolation kernel for projection', 
                       help=""" Interpolation kernel for the generation of projections.
 """)
         
-        self.addParam('maxChangeOffset', NumericListParam, default='1000 10 5', 
+        form.addParam('maxChangeOffset', NumericListParam, default='1000 10 5', 
                       label='Perturb projection directions?', expertLevel=LEVEL_EXPERT,
                       help=""" If set to 1, this option will result to a Gaussian perturbation to the 
 evenly sampled projection directions of the reference library. 
@@ -261,7 +264,7 @@ is ("2x1 0", i.e.,
 <Note:> if there are more values than iterations the extra value are ignored
 """)          
 
-        self.addParam('search5DShift', NumericListParam, default='4x5 0', 
+        form.addParam('search5DShift', NumericListParam, default='4x5 0', 
                       label='Search range for 5D translational search',
                       help=""" Give search range from the image center for 5D searches (in +/- pixels).
 Values larger than 0 will results in 5D searches (which may be CPU-intensive)
@@ -276,7 +279,7 @@ An alternative compact notation is ("3x5 2x3 0", i.e.,
 <Note:> if there are more values than iterations the extra value are ignored
 
 """)  
-        self.addParam('search5DStep', NumericListParam, default='2', 
+        form.addParam('search5DStep', NumericListParam, default='2', 
                       label='Step size for 5D translational search', expertLevel=LEVEL_EXPERT,
                       help="""" Provide a sequence of numbers (for instance, "2 2 1 1" specifies 4 iterations,
     the first two set the value to 2, then two with 1 pixel.
@@ -286,24 +289,24 @@ An alternative compact notation is ("3x5 2x3 0", i.e.,
     <Note:> if there are more values than iterations the extra value are ignored
 """)          
 
-        self.addParam('doRestricSearchbyTiltAngle', BooleanParam, default=False, expertLevel=LEVEL_EXPERT,
+        form.addParam('doRestricSearchbyTiltAngle', BooleanParam, default=False, expertLevel=LEVEL_EXPERT,
                       label="Restrict tilt angle search?", 
                       help ='Restrict tilt angle search\n')             
 
-        self.addParam('tilt0', FloatParam, default=-91., condition='doRestricSearchbyTiltAngle',
+        form.addParam('tilt0', FloatParam, default=-91., condition='doRestricSearchbyTiltAngle',
                       label="Lower-value for restricted tilt angle search", 
                       help ='Lower-value for restricted tilt angle search\n')             
 
-        self.addParam('tiltF', FloatParam, default=-91., condition='doRestricSearchbyTiltAngle',
+        form.addParam('tiltF', FloatParam, default=-91., condition='doRestricSearchbyTiltAngle',
                       label="Higher-value for restricted tilt angle search", 
                       help ='Higher-value for restricted tilt angle search\n')             
-        self.addParam('symmetry', TextParam, default='c1',
+        form.addParam('symmetry', TextParam, default='c1',
                       label='Point group symmetry',
                       help=""" See [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry]
 for a description of the symmetry groups format
 If no symmetry is present, give c1
 """)
-        self.addParam('symmetryGroupNeighbourhood', TextParam, default='', expertLevel=LEVEL_EXPERT,
+        form.addParam('symmetryGroupNeighbourhood', TextParam, default='', expertLevel=LEVEL_EXPERT,
                       label='Symmetry group for Neighbourhood computations',
                       help=""" If you do not know what this is leave it blank.
 This symmetry will be using for compute neighboring points,
@@ -313,7 +316,7 @@ for a description of the symmetry groups format
 If no symmetry is present, give c1
 """
 )
-        self.addParam('onlyWinner', NumericListParam, default='0', 
+        form.addParam('onlyWinner', NumericListParam, default='0', 
                       label='compute only closest neighbor', expertLevel=LEVEL_EXPERT,
                       condition="symmetryGroupNeighbourhood != ''",
                       help="""This option is only relevant if symmetryGroupNeighbourhood !=''
@@ -328,7 +331,7 @@ is ("2x1 0", i.e.,
 <Note:> if there are more values than iterations the extra value are ignored
 """)     
 
-        self.addParam('discardImages', EnumParam, 
+        form.addParam('discardImages', EnumParam, 
                       choices=['None', 'maxCC', 'percentage', 'classPercentage'],
                       default=xmipp3.SELECT_NONE, display=EnumParam.DISPLAY_COMBO,
                       label='Discard images?', 
@@ -339,7 +342,7 @@ percentage : Discard percentage of images with less CC.
 classPercentage: Discard percentage of images in each projection direction with less CC.
 Value of each option is set below.
 """)
-        self.addParam('minimumCrossCorrelation', NumericListParam, default='0.1', 
+        form.addParam('minimumCrossCorrelation', NumericListParam, default='0.1', 
                       label='discard image if CC below', 
                       condition='discardImages==%d' % xmipp3.SELECT_MAXCC,
                       help=""" 
@@ -351,7 +354,7 @@ An alternative compact notation would be ("2x0.3 2x0.5").
 <Note:> if there are more values than iterations the extra value are ignored
 """)
          
-        self.addParam('discardPercentage', NumericListParam, default='10', 
+        form.addParam('discardPercentage', NumericListParam, default='10', 
                       label='discard image percentage with less CC',
                       condition='discardImages==%d'%xmipp3.SELECT_PERCENTAGE,
                       help=""" 
@@ -364,7 +367,7 @@ An alternative compact notation would be ("2x20 2x10").
 Set to zero to prevent discarding any images
 """)
          
-        self.addParam('discardPercentagePerClass', NumericListParam, default='10', 
+        form.addParam('discardPercentagePerClass', NumericListParam, default='10', 
                       label='discard image percentage in class with less CC',
                       condition='discardImages==%d'%xmipp3.SELECT_CLASSPERCENTAGE,
                       help=""" 
@@ -378,11 +381,11 @@ An alternative compact notation would be ("2x20 2x10").
 Set to zero to prevent discarding any images
 """)
      
-        self.addParam('doScale', BooleanParam, default=False,
+        form.addParam('doScale', BooleanParam, default=False,
                       label="Perform scale search?",  expertLevel=LEVEL_EXPERT,
                       help=' If true perform scale refinement. (UNDER DEVELOPMENT!!!!)\n ')
 
-        self.addParam('scaleStep', NumericListParam, default=1, condition='doScale',
+        form.addParam('scaleStep', NumericListParam, default=1, condition='doScale',
                       label='Step scale factors size',
                       help='''Scale step factor size (1 means 0.01 in/de-crements arround 1).
 Provide a sequence of numbers (for instance, "1 1 .5 .5" specifies 4 iterations,
@@ -392,7 +395,7 @@ An alternative compact notation would be ("2x1 2x0.5").
 <Note:> if there are more values than iterations the extra value are ignored
 Set to zero to prevent discarding any images''')  
 
-        self.addParam('ScaleNumberOfSteps', NumericListParam, default=3, condition='doScale',
+        form.addParam('ScaleNumberOfSteps', NumericListParam, default=3, condition='doScale',
                       label='Number of scale steps',
                       help=""" 
 Number of scale steps.
@@ -403,7 +406,7 @@ In general scale correction should only be applied to the last iteration. Do not
 your data is fairly well aligned.
 """)  
 
-        self.addParam('projMatchingExtra', StringParam, default='',
+        form.addParam('projMatchingExtra', StringParam, default='',
                       label='Additional options for Projection_Matching', expertLevel=LEVEL_EXPERT,
                       help=""" For details see:
 [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Projection_matching] and
@@ -412,12 +415,12 @@ try -Ri xx -Ro yy for restricting angular search (xx and yy are
 the particle inner and outter radius)
 """)
         #DoSaveImagesAssignedToClasses    you can get this information in visualize
-        self.addSection(label='2D re-alignment of classes', expertLevel=LEVEL_EXPERT)
+        form.addSection(label='2D re-alignment of classes', expertLevel=LEVEL_EXPERT)
         
-        self.addParam('performAlign2D', BooleanParam, default=False,
+        form.addParam('performAlign2D', BooleanParam, default=False,
                       label='Perform 2D re-alignment', expertLevel=LEVEL_EXPERT)
         
-        self.addParam('doAlign2D', NumericListParam, default='0', condition='performAlign2D',
+        form.addParam('doAlign2D', NumericListParam, default='0', condition='performAlign2D',
                       label='Perform 2D re-alignment of classes?', expertLevel=LEVEL_EXPERT,
                       help=""" After performing a 3D projection matching iteration, each of the
 subsets of images assigned to one of the library projections is
@@ -438,7 +441,7 @@ is ("2x1 2x0", i.e.,
 muching step will be copied as output of align2d
 """)
         
-        self.addParam('align2DIterNr', NumericListParam, default='4', condition='performAlign2D',
+        form.addParam('align2DIterNr', NumericListParam, default='4', condition='performAlign2D',
                       label='Number of align2d iterations:', expertLevel=LEVEL_EXPERT,
                       help=""" Use at least 3 iterations
 The number of align iteration may change in each projection matching iteration
@@ -453,7 +456,7 @@ is ("2x4 2x3", i.e.,
 """)        
   
   
-        self.addParam('align2dMaxChangeOffset', NumericListParam, default='2x1000 2x10', 
+        form.addParam('align2dMaxChangeOffset', NumericListParam, default='2x1000 2x10', 
                       condition='performAlign2D',
                       label='Maximum change in origin offset (+/- pixels)', expertLevel=LEVEL_EXPERT,
                       help="""Maximum change in shift  (+/- pixels)
@@ -467,7 +470,7 @@ is ("2x1000 2x10", i.e.,
 <Note:> if there are more values than iterations the extra value are ignored
 """)    
   
-        self.addParam('align2dMaxChangeRot', NumericListParam, default='2x1000 2x20', 
+        form.addParam('align2dMaxChangeRot', NumericListParam, default='2x1000 2x20', 
                       condition='performAlign2D',
                       label='Maximum change in rotation (+/- degrees)', expertLevel=LEVEL_EXPERT,
                       help="""Maximum change in shift  (+/- pixels)
@@ -482,9 +485,9 @@ is ("2x1000 2x10", i.e.,
 """)     
         
         
-        self.addSection(label='3D Reconstruction')
+        form.addSection(label='3D Reconstruction')
         
-        self.addParam('reconstructionMethod', EnumParam, expertLevel=LEVEL_EXPERT,
+        form.addParam('reconstructionMethod', EnumParam, expertLevel=LEVEL_EXPERT,
                       choices=['fourier', 'art', 'wbp'],
                       default=xmipp3.RECONSTRUCT_FOURIER, display=EnumParam.DISPLAY_COMBO,
                       label='Reconstruction method', 
@@ -494,20 +497,20 @@ art: Agebraic reconstruction technique
 wbp : Weight back project method.
 """)
         
-        self.addParam('fourierMaxFrequencyOfInterest', DigFreqParam, default=0.25,
+        form.addParam('fourierMaxFrequencyOfInterest', DigFreqParam, default=0.25,
                       condition='reconstructionMethod == %d' % xmipp3.RECONSTRUCT_FOURIER,
                       label='Initial maximum frequency', expertLevel=LEVEL_EXPERT,
                       help=""" This number is only used in the first iteration. 
 From then on, it will be set to resolution computed in the resolution section
 """)         
-        self.addParam('fourierReconstructionExtraCommand', StringParam, default='',
+        form.addParam('fourierReconstructionExtraCommand', StringParam, default='',
                       condition='reconstructionMethod == %d' % xmipp3.RECONSTRUCT_FOURIER,
                       label='Additional parameters for fourier', expertLevel=LEVEL_EXPERT,
                       help=""" For details see:
 [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Fourier]
 """)          
         
-        self.addParam('artLambda', NumericListParam, default='0.2', 
+        form.addParam('artLambda', NumericListParam, default='0.2', 
                       condition='reconstructionMethod == %d' % xmipp3.RECONSTRUCT_ART,
                       label='Values of lambda for ART', expertLevel=LEVEL_EXPERT,
                       help=""" <IMPORTANT>: ou must specify a value of lambda for each iteration even
@@ -526,28 +529,28 @@ is ("2x.1 2x.3").
 <Note:> if there are more values than iterations the extra value are ignored
 """)   
         
-        self.addParam('artReconstructionExtraCommand', StringParam, default='-k 0.5 -n 10 ',
+        form.addParam('artReconstructionExtraCommand', StringParam, default='-k 0.5 -n 10 ',
                       condition='reconstructionMethod == %d' % xmipp3.RECONSTRUCT_ART,
                       label='Additional parameters for ART', expertLevel=LEVEL_EXPERT,
                       help=""" For details see:
 [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Art]
 """)          
         
-        self.addParam('wbpReconstructionExtraCommand', StringParam, default='',
+        form.addParam('wbpReconstructionExtraCommand', StringParam, default='',
                       condition='reconstructionMethod == %d' % xmipp3.RECONSTRUCT_WBP,
                       label='Additional parameters for WBP', expertLevel=LEVEL_EXPERT,
                       help=""" For details see:
 [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Wbp]
 """)                  
 
-        self.addParam('doComputeResolution', NumericListParam, default='1',
+        form.addParam('doComputeResolution', NumericListParam, default='1',
                       label='Compute resolution?', expertLevel=LEVEL_EXPERT,
                       help=""" For details see:
     [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Resolution]
     Set to 1 to compute resolution and to 0 if you do not want to compute it.
 """)
     
-        self.addParam('doSplitReferenceImages', NumericListParam, default='1',
+        form.addParam('doSplitReferenceImages', NumericListParam, default='1',
                       label='Split references averages?', expertLevel=LEVEL_EXPERT,
                       condition="doComputeResolution!='0'",
                       help="""In theory each reference average should be splited
@@ -572,7 +575,7 @@ flag to be set to True
  <Note:> if there are more vapplications/scripts/protocols/new_protocol_projmatch.pyalues than iterations the extra value are ignored
 """)            
 
-        self.addParam('doLowPassFilter', BooleanParam, default=True,
+        form.addParam('doLowPassFilter', BooleanParam, default=True,
                       label="Low-pass filter the reference?",  expertLevel=LEVEL_ADVANCED,
                       help="""If set to true, the volume will be filtered at a frecuency equal to
 the  resolution computed with a FSC=0.5 threshold, possibly 
@@ -583,7 +586,7 @@ value provided by the user in the next box (in digital frequency,
 i.e. pixel-1: minimum 0, maximum 0.5) 
 """)
 
-        self.addParam('constantToAddToFiltration', NumericListParam, default='0.1 0',
+        form.addParam('constantToAddToFiltration', NumericListParam, default='0.1 0',
                       label='Constant to be added to the estimated resolution', expertLevel=LEVEL_ADVANCED,
                       condition="doLowPassFilter!='0'",
                       help=""" The meaning of this field depends on the previous flag.
@@ -606,7 +609,7 @@ is ("2x.15 2x0.1", i.e.,
 <Note:> if there are less values than iterations the last value is reused
 <Note:> if there are more values than iterations the extra value are ignored
 """)
-        self.addParam('ConstantToAddToMaxReconstructionFrequency', NumericListParam, default='0.1',
+        form.addParam('ConstantToAddToMaxReconstructionFrequency', NumericListParam, default='0.1',
                       label='Constant to be added to the reconstruction maximum frequency', expertLevel=LEVEL_ADVANCED,
                       condition="doLowPassFilter!='0'",
                       help=""" The meaning of this field depends on the UseFscForFilter flag.
@@ -628,22 +631,22 @@ is ("2x.15 2x0.1", i.e.,
 """)
         
 #        
-#        self.addSection(label='ML3D copy')       
+#        form.addSection(label='ML3D copy')       
 #        
-#        self.addParam('numberOfSeedsPerRef', IntParam, default=1,
+#        form.addParam('numberOfSeedsPerRef', IntParam, default=1,
 #                      label='Number of seeds per reference',
 #                      help='The total number of seeds generated will be the number of provided '
 #                      'reference volumes times the number of seeds per reference. '
 #                      'If you provide 2 initial volumes and 3 seeds per referece you will '
 #                      'produce 6 3D maps.')
-#        self.addParam('angularSampling', IntParam, default=10,
+#        form.addParam('angularSampling', IntParam, default=10,
 #                      label='Angular sampling for classification',
 #                      help='Fine samplings take huge amounts of CPU and memory. '
 #                      'Therefore, in general, dont use samplings finer than 10 degrees.')    
-#        self.addParam('symmetry', TextParam, default='c1',
+#        form.addParam('symmetry', TextParam, default='c1',
 #                      label='Point group symmetry',
 #                      help='Number of ML(F)3D iterations to perform.')        
-#        self.addParam('restartIter', IntParam, default=0,
+#        form.addParam('restartIter', IntParam, default=0,
 #                      expertLevel=LEVEL_ADVANCED,
 #                      label='Restart after iteration',
 #                      help='For previous runs that stopped before convergence, '
@@ -652,46 +655,46 @@ is ("2x.15 2x0.1", i.e.,
 #                      'Note that all flags about grey-scale correction, filtering and '
 #                      'seed generation will be ignored if a value larger than 0 is given, '
 #                      'since this option only concerns the ProjMatch classification part.')   
-#        self.addParam('extraParams', TextParam,
+#        form.addParam('extraParams', TextParam,
 #                      expertLevel=LEVEL_ADVANCED,
 #                      label='Additional parameters',
 #                      help='Additional xmipp_ml(f)_refine3d parameters.')                  
-#        self.addSection(label='MLF parameters', questionParam='doMlf')        
-#        self.addParam('doMlf', BooleanParam, default=False,
+#        form.addSection(label='MLF parameters', questionParam='doMlf')        
+#        form.addParam('doMlf', BooleanParam, default=False,
 #                      label='Use MLF2D instead of ML2D')
-#        self.addParam('doCorrectAmplitudes', BooleanParam, default=True,
+#        form.addParam('doCorrectAmplitudes', BooleanParam, default=True,
 #                      label='Use CTF-amplitude correction inside MLF?',
 #                      help='If set to <Yes>, the input images file should contain '
 #                           'the CTF information for each image.')
-#        self.addParam('highResLimit', IntParam, default=20,
+#        form.addParam('highResLimit', IntParam, default=20,
 #                      label='High-resolution limit (in Angstroms)',
 #                      help='No frequencies higher than this limit will be taken into account. '
 #                      'If zero is given, no limit is imposed.')     
-#        self.addParam('areImagesPhaseFlipped', BooleanParam, default=True,
+#        form.addParam('areImagesPhaseFlipped', BooleanParam, default=True,
 #                      label='Are the images CTF phase flipped?',
 #                      help='You can run MLF with or without having phase flipped the images.')     
-#        self.addParam('initialMapIsAmplitudeCorrected', BooleanParam, default=False,
+#        form.addParam('initialMapIsAmplitudeCorrected', BooleanParam, default=False,
 #                      label='Are initial references CTF-amplitude corrected?',
 #                      help='If coming from programs other than xmipp_mlf_refine3d this is '
 #                      'usually not the case. If you will perform a grey-scale correction, '
 #                      'this parameter becomes irrelevant as the output maps never have the '
 #                      'CTF-amplitudes corrected.')     
-#        self.addParam('seedsAreAmplitudeCorrected', BooleanParam, default=False,
+#        form.addParam('seedsAreAmplitudeCorrected', BooleanParam, default=False,
 #                      expertLevel=LEVEL_ADVANCED,
 #                      label='Are the seeds CTF-amplitude corrected?',
 #                      help='This option is only relevant if you provide your own seeds! '
 #                      'If the seeds are generated automatically, this parameter becomes '
 #                      'irrelevant as they will always be amplitude-corrected.') 
-#        self.addSection(label='3D Reconstruction', expertLevel=LEVEL_ADVANCED)    
-#        self.addParam('reconstructionMethod', EnumParam, choices=['fourier', 'wlsART'], 
+#        form.addSection(label='3D Reconstruction', expertLevel=LEVEL_ADVANCED)    
+#        form.addParam('reconstructionMethod', EnumParam, choices=['fourier', 'wlsART'], 
 #                      default=0, label='Reconstruction method', display=EnumParam.DISPLAY_LIST,
 #                      expertLevel=LEVEL_ADVANCED, 
 #                      help='Choose between wslART or fourier.')
-#        self.addParam('aRTExtraParams', TextParam,
+#        form.addParam('aRTExtraParams', TextParam,
 #                      condition='reconstructionMethod==1', expertLevel=LEVEL_ADVANCED,
 #                      label='Extra parameters',
 #                      help='Additional reconstruction parameters for ART.')  
-#        self.addParam('fourierExtraParams', TextParam, 
+#        form.addParam('fourierExtraParams', TextParam, 
 #                      condition='reconstructionMethod==0', expertLevel=LEVEL_ADVANCED,
 #                      label='Extra parameters',
 #                      help='The Fourier-interpolation reconstruction method is much faster than wlsART '
@@ -700,18 +703,8 @@ is ("2x.15 2x0.1", i.e.,
 #                      'maximum resolution of the fourier-interpolation using -max_resolution 0.3 '
 #                      '(to 0.3 digital frequency). Use the extra parameter entry below for that.')  
         
-        self.addParallelSection(threads=1, mpi=8)
+        form.addParallelSection(threads=1, mpi=8)
         
-        
-class XmippProtProjMatch(xmipp3.XmippProtocol, ProtRefine3D, ProtClassify3D):
-    """ Protocol for Xmipp-based ProjMatch/MLF3D classification. """
-    _definition = XmippDefProjMatch()
-    _label = 'Xmipp ProjMatch'
-    
-    # Reconstruction method constants
-    FOURIER = 0
-    WLSART = 1
-
     def getProgramId(self):
         progId = "ml"
         if self.doMlf:

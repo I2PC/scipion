@@ -35,35 +35,30 @@ from spider import SpiderShell
 from convert import locationToSpider
 from glob import glob
         
-class SpiderDefAlignAPSR(Form):        
-    """Create the definition of parameters for
-    the XmippProtAlign2d protocol"""
-    def __init__(self):
-        Form.__init__(self)
-
-        self.addSection(label='Input')
-        self.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
-                      pointerClass='SetOfParticles',
-                      help='Select the input particles to be aligned.')        
-        self.addParam('innerRadius', IntParam, default=5,
-                      label='Inner radius(px):',
-                      help='In the rotational alignment, only rings between\n'
-                           '<innerRadius> and <outerRadius> (in pixel units) will be analyzed.')
-        self.addParam('outerRadius', IntParam, default=50, 
-                      label='Outer radius(px):',
-                      help='In the rotational alignment, only rings between\n'
-                           '<innerRadius> and <outerRadius> (in pixel units) will be analyzed.')
 
       
 class SpiderProtAlignAPSR(ProtAlign):
     """ Reference-free alignment shift and rotational alignment of an image series. 
     Uses Spider AP SR command.
     """
-    _definition = SpiderDefAlignAPSR()
-    
     def __init__(self):
         ProtAlign.__init__(self)
         self._op = "FQ"
+        
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        form.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
+                      pointerClass='SetOfParticles',
+                      help='Select the input particles to be aligned.')        
+        form.addParam('innerRadius', IntParam, default=5,
+                      label='Inner radius(px):',
+                      help='In the rotational alignment, only rings between\n'
+                           '<innerRadius> and <outerRadius> (in pixel units) will be analyzed.')
+        form.addParam('outerRadius', IntParam, default=50, 
+                      label='Outer radius(px):',
+                      help='In the rotational alignment, only rings between\n'
+                           '<innerRadius> and <outerRadius> (in pixel units) will be analyzed.')
+        
     
     def _defineSteps(self):
         # Define some names

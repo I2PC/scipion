@@ -36,99 +36,10 @@ from pyworkflow.utils.path import makePath, removeBaseExt, join, exists
 from xmipp3 import XmippProtocol
 from glob import glob
 import xmipp
-
-
-class XmippDefExtractParticles(Form):
-    """Create the definition of parameters for
-    the XmippProtExtractParticles protocol"""
-    def __init__(self):
-        Form.__init__(self)
-    
-        self.addSection(label='Input')
-        self.addParam('inputCoordinates', PointerParam, label="Coordinates", 
-                      pointerClass='SetOfCoordinates',
-                      help='Select the SetOfCoordinates ')
-        self.addParam('downsampleType', EnumParam, choices=['original', 'same as picking', 'other'], 
-                      default=1, important=True, label='Downsampling type', display=EnumParam.DISPLAY_COMBO, 
-                      help='Select the downsampling type.')
-        self.addParam('downFactor', FloatParam, default=2, condition='downsampleType==2',
-                      label='Downsampling factor',
-                      help='This factor is always referred to the original sampling rate. '
-                      'You may use independent downsampling factors for extracting the '
-                      'particles, picking them and estimating the CTF. All downsampling '
-                      'factors are always referred to the original sampling rate, and '
-                      'the differences are correctly handled by Xmipp.')        
-        self.addParam('inputMicrographs', PointerParam, label="Micrographs", 
-                      condition='downsampleType != 1',
-                      pointerClass='SetOfMicrographs',
-                      help='Select the original SetOfMicrographs')
-
-        self.addParam('ctfRelations', RelationParam, allowNull=True,
-                      label='CTF relations', relationName=RELATION_CTF, relationParent='getInputMicrographs', 
-                      relationReverse=True, help='Choose the CTF.\n')     
-
-        self.addParam('boxSize', IntParam, default=0,
-                      label='Particle box size', validators=[Positive],
-                      help='In pixels. The box size is the size of the boxed particles, ' 
-                      'actual particles may be smaller than this.')
-        
-        self.addParam('rejectionMethod', EnumParam, choices=['None','MaxZscore', 'Percentage'], 
-                      default=0, display=EnumParam.DISPLAY_COMBO,
-                      label='Automatic particle rejection',
-                      help='How to automatically reject particles. It can be none (no rejection),'
-                      ' maxZscore (reject a particle if its Zscore is larger than this value), '
-                      'Percentage (reject a given percentage in each one of the screening criteria).', 
-                      expertLevel=LEVEL_ADVANCED)
-        
-        self.addParam('maxZscore', IntParam, default=3, condition='rejectionMethod==1',
-                      label='Maximum Zscore',
-                      help='Maximum Zscore above which particles are rejected.', 
-                      expertLevel=LEVEL_ADVANCED)
-        
-        self.addParam('percentage', IntParam, default=5, condition='rejectionMethod==2',
-                      label='Percentage (%)',
-                      help='Percentage of particles to reject', expertLevel=LEVEL_ADVANCED)
-        
-        self.addSection(label='Preprocess')
-        self.addParam('doRemoveDust', BooleanParam, default=True, important=True,
-                      label='Dust removal (Recommended)', 
-                      help='Sets pixels with unusually large values to random values from a Gaussian '
-                      'with zero-mean and unity-standard deviation.')
-        self.addParam('thresholdDust', FloatParam, default=3.5, condition='doRemoveDust',
-                      label='Threshold for dust removal',
-                      help='Pixels with a signal higher or lower than this value times the standard '
-                      'deviation of the image will be affected. For cryo, 3.5 is a good value.'
-                      'For high-contrast negative stain, the signal itself may be affected so '
-                      'that a higher value may be preferable.',
-                      expertLevel=LEVEL_ADVANCED)
-        self.addParam('doFlip', BooleanParam, default=True, important=True,
-                      label='Phase flipping (Recommended)', 
-                      help='Use the information from the CTF to compensate for phase reversals.')
-        self.addParam('doInvert', BooleanParam, default=False, important=True,
-                      label='Invert contrast', 
-                      help='Invert the contrast if your particles are black over a white background.')
-        self.addParam('doNormalize', BooleanParam, default=True, important=True,
-                      label='Normalize (Recommended)', 
-                      help='It subtract a ramp in the gray values and normalizes so that in the '
-                      'background there is 0 mean and standard deviation 1.')
-        self.addParam('normType', EnumParam, choices=['OldXmipp','NewXmipp','Ramp'], 
-                      default=2, condition='doNormalize', display=EnumParam.DISPLAY_COMBO,
-                      label='Normalization type', 
-                      help='OldXmipp (mean(Image)=0, stddev(Image)=1).\n'
-                           'NewXmipp (mean(background)=0, stddev(background)=1)\n'
-                           'Ramp (subtract background+NewXmipp).\n',
-                      expertLevel=LEVEL_ADVANCED)
-        self.addParam('backRadius', IntParam, default=-1, condition='doNormalize',
-                      label='Background radius',
-                      help='Pixels outside this circle are assumed to be noise and their stddev '
-                      'is set to 1. Radius for background circle definition (in pix.). '
-                      'If this value is 0, then half the box size is used.', 
-                      expertLevel=LEVEL_ADVANCED)
+   
                 
 class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     """Protocol to extract particles from a set of coordinates in the project"""
-    
-    _definition = XmippDefExtractParticles()
     
     # Normalization type constants
     ORIGINAL = 0
@@ -139,6 +50,88 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     NONE = 0
     MAXZSCORE = 1
     PERCENTAGE = 2
+        
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        form.addParam('inputCoordinates', PointerParam, label="Coordinates", 
+                      pointerClass='SetOfCoordinates',
+                      help='Select the SetOfCoordinates ')
+        form.addParam('downsampleType', EnumParam, choices=['original', 'same as picking', 'other'], 
+                      default=1, important=True, label='Downsampling type', display=EnumParam.DISPLAY_COMBO, 
+                      help='Select the downsampling type.')
+        form.addParam('downFactor', FloatParam, default=2, condition='downsampleType==2',
+                      label='Downsampling factor',
+                      help='This factor is always referred to the original sampling rate. '
+                      'You may use independent downsampling factors for extracting the '
+                      'particles, picking them and estimating the CTF. All downsampling '
+                      'factors are always referred to the original sampling rate, and '
+                      'the differences are correctly handled by Xmipp.')        
+        form.addParam('inputMicrographs', PointerParam, label="Micrographs", 
+                      condition='downsampleType != 1',
+                      pointerClass='SetOfMicrographs',
+                      help='Select the original SetOfMicrographs')
+
+        form.addParam('ctfRelations', RelationParam, allowNull=True,
+                      label='CTF relations', relationName=RELATION_CTF, relationParent='getInputMicrographs', 
+                      relationReverse=True, help='Choose the CTF.\n')     
+
+        form.addParam('boxSize', IntParam, default=0,
+                      label='Particle box size', validators=[Positive],
+                      help='In pixels. The box size is the size of the boxed particles, ' 
+                      'actual particles may be smaller than this.')
+        
+        form.addParam('rejectionMethod', EnumParam, choices=['None','MaxZscore', 'Percentage'], 
+                      default=0, display=EnumParam.DISPLAY_COMBO,
+                      label='Automatic particle rejection',
+                      help='How to automatically reject particles. It can be none (no rejection),'
+                      ' maxZscore (reject a particle if its Zscore is larger than this value), '
+                      'Percentage (reject a given percentage in each one of the screening criteria).', 
+                      expertLevel=LEVEL_ADVANCED)
+        
+        form.addParam('maxZscore', IntParam, default=3, condition='rejectionMethod==1',
+                      label='Maximum Zscore',
+                      help='Maximum Zscore above which particles are rejected.', 
+                      expertLevel=LEVEL_ADVANCED)
+        
+        form.addParam('percentage', IntParam, default=5, condition='rejectionMethod==2',
+                      label='Percentage (%)',
+                      help='Percentage of particles to reject', expertLevel=LEVEL_ADVANCED)
+        
+        form.addSection(label='Preprocess')
+        form.addParam('doRemoveDust', BooleanParam, default=True, important=True,
+                      label='Dust removal (Recommended)', 
+                      help='Sets pixels with unusually large values to random values from a Gaussian '
+                      'with zero-mean and unity-standard deviation.')
+        form.addParam('thresholdDust', FloatParam, default=3.5, condition='doRemoveDust',
+                      label='Threshold for dust removal',
+                      help='Pixels with a signal higher or lower than this value times the standard '
+                      'deviation of the image will be affected. For cryo, 3.5 is a good value.'
+                      'For high-contrast negative stain, the signal itself may be affected so '
+                      'that a higher value may be preferable.',
+                      expertLevel=LEVEL_ADVANCED)
+        form.addParam('doFlip', BooleanParam, default=True, important=True,
+                      label='Phase flipping (Recommended)', 
+                      help='Use the information from the CTF to compensate for phase reversals.')
+        form.addParam('doInvert', BooleanParam, default=False, important=True,
+                      label='Invert contrast', 
+                      help='Invert the contrast if your particles are black over a white background.')
+        form.addParam('doNormalize', BooleanParam, default=True, important=True,
+                      label='Normalize (Recommended)', 
+                      help='It subtract a ramp in the gray values and normalizes so that in the '
+                      'background there is 0 mean and standard deviation 1.')
+        form.addParam('normType', EnumParam, choices=['OldXmipp','NewXmipp','Ramp'], 
+                      default=2, condition='doNormalize', display=EnumParam.DISPLAY_COMBO,
+                      label='Normalization type', 
+                      help='OldXmipp (mean(Image)=0, stddev(Image)=1).\n'
+                           'NewXmipp (mean(background)=0, stddev(background)=1)\n'
+                           'Ramp (subtract background+NewXmipp).\n',
+                      expertLevel=LEVEL_ADVANCED)
+        form.addParam('backRadius', IntParam, default=-1, condition='doNormalize',
+                      label='Background radius',
+                      help='Pixels outside this circle are assumed to be noise and their stddev '
+                      'is set to 1. Radius for background circle definition (in pix.). '
+                      'If this value is 0, then half the box size is used.', 
+                      expertLevel=LEVEL_ADVANCED)
         
     def getInputMicrographs(self):
         """ Return the micrographs associated to the SetOfCoordinates. """

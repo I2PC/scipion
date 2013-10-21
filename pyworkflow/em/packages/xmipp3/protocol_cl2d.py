@@ -43,72 +43,67 @@ CMP_CORRENTROPY = 1
 CL_CLASSICAL = 0
 CL_ROBUST = 1
 
-
-class XmippDefCL2D(Form):
-    """Create the definition of parameters for
-    the XmippProtCL2D protocol"""
-    def __init__(self):
-        Form.__init__(self)
-    
-        self.addSection(label='Input')
-        self.addParam('inputImages', PointerParam, label="Input images", important=True, 
-                      pointerClass='SetOfParticles',
-                      help='Select the input images from the project.'
-                           'It should be a SetOfImages class')        
-        self.addParam('numberOfReferences', IntParam, default=64,
-                      label='Number of references:',
-                      help='Number of references (or classes) to be generated.')
-        self.addParam('numberOfInitialReferences', IntParam, default=4, expertLevel=LEVEL_ADVANCED,
-                      label='Number of initial references:',
-                      help='Initial number of references used in the first level.')
-        self.addParam('numberOfIterations', IntParam, default=4, expertLevel=LEVEL_ADVANCED,
-                      label='Number of iterations:',
-                      help='Maximum number of iterations within each level.')         
-        self.addParam('comparisonMethod', EnumParam, choices=['correlation', 'correntropy'],
-                      label="Comparison method", default=CMP_CORRELATION,
-                      display=EnumParam.DISPLAY_COMBO,
-                      help='Use correlation or correntropy')
-        self.addParam('clusteringMethod', EnumParam, choices=['classical', 'robust'],
-                      label="Clustering method", default=CL_CLASSICAL,
-                      display=EnumParam.DISPLAY_COMBO,
-                      help='Use the classical clustering criterion or the robust')
-        self.addParam('extraParams', StringParam, expertLevel=LEVEL_EXPERT,
-              label='Additional parameters',
-              help='Additional parameters for classify_CL2D:\n  --verbose, --corrSplit, ...')   
-        
-        self.addSection(label='Core analysis')        
-        self.addParam('thZscore', FloatParam, default=3,
-                      label='Junk Zscore',
-                      help='Which is the average Z-score to be considered as junk. Typical values'
-                           'go from 1.5 to 3. For the Gaussian distribution 99.5% of the data is'
-                           'within a Z-score of 3. Lower Z-scores reject more images. Higher Z-scores'
-                           'accept more images.')
-        self.addParam('thPCAZscore', FloatParam, default=3,
-                      label='PCA Zscore',
-                      help='Which is the PCA Z-score to be considered as junk. Typical values'
-                           'go from 1.5 to 3. For the Gaussian distribution 99.5% of the data is'
-                           'within a Z-score of 3. Lower Z-scores reject more images. Higher Z-scores'
-                           'accept more images.')        
-        self.addParam('tolerance', IntParam, default=1,
-                      label='Tolerance',
-                      help='An image belongs to the stable core if it has been with other images in the same class'
-                           'in all the previous levels except possibly a few of them. Tolerance defines how few is few.'
-                           'Tolerance=0 means that an image must be in all previous levels with the rest of images in'
-                           'the core.')          
-        
-        self.addParallelSection(threads=0, mpi=2)
         
         
 class XmippProtCL2D(ProtAlign, ProtClassify):
     """ Protocol to preprocess a set of micrographs in the project. """
-    _definition = XmippDefCL2D()
     _label = 'Xmipp CL2D'
     
     def __init__(self, **args):
         if 'numberOfMpi' not in args:
             args['numberOfMpi'] = 2
         Protocol.__init__(self, **args)        
+
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        form.addParam('inputImages', PointerParam, label="Input images", important=True, 
+                      pointerClass='SetOfParticles',
+                      help='Select the input images from the project.'
+                           'It should be a SetOfImages class')        
+        form.addParam('numberOfReferences', IntParam, default=64,
+                      label='Number of references:',
+                      help='Number of references (or classes) to be generated.')
+        form.addParam('numberOfInitialReferences', IntParam, default=4, expertLevel=LEVEL_ADVANCED,
+                      label='Number of initial references:',
+                      help='Initial number of references used in the first level.')
+        form.addParam('numberOfIterations', IntParam, default=4, expertLevel=LEVEL_ADVANCED,
+                      label='Number of iterations:',
+                      help='Maximum number of iterations within each level.')         
+        form.addParam('comparisonMethod', EnumParam, choices=['correlation', 'correntropy'],
+                      label="Comparison method", default=CMP_CORRELATION,
+                      display=EnumParam.DISPLAY_COMBO,
+                      help='Use correlation or correntropy')
+        form.addParam('clusteringMethod', EnumParam, choices=['classical', 'robust'],
+                      label="Clustering method", default=CL_CLASSICAL,
+                      display=EnumParam.DISPLAY_COMBO,
+                      help='Use the classical clustering criterion or the robust')
+        form.addParam('extraParams', StringParam, expertLevel=LEVEL_EXPERT,
+              label='Additional parameters',
+              help='Additional parameters for classify_CL2D:\n  --verbose, --corrSplit, ...')   
         
+        form.addSection(label='Core analysis')        
+        form.addParam('thZscore', FloatParam, default=3,
+                      label='Junk Zscore',
+                      help='Which is the average Z-score to be considered as junk. Typical values'
+                           'go from 1.5 to 3. For the Gaussian distribution 99.5% of the data is'
+                           'within a Z-score of 3. Lower Z-scores reject more images. Higher Z-scores'
+                           'accept more images.')
+        form.addParam('thPCAZscore', FloatParam, default=3,
+                      label='PCA Zscore',
+                      help='Which is the PCA Z-score to be considered as junk. Typical values'
+                           'go from 1.5 to 3. For the Gaussian distribution 99.5% of the data is'
+                           'within a Z-score of 3. Lower Z-scores reject more images. Higher Z-scores'
+                           'accept more images.')        
+        form.addParam('tolerance', IntParam, default=1,
+                      label='Tolerance',
+                      help='An image belongs to the stable core if it has been with other images in the same class'
+                           'in all the previous levels except possibly a few of them. Tolerance defines how few is few.'
+                           'Tolerance=0 means that an image must be in all previous levels with the rest of images in'
+                           'the core.')          
+        
+        form.addParallelSection(threads=0, mpi=2)
+        
+                
     def _defineSteps(self):
         """ Mainly prepare the command line for call cl2d program"""
         

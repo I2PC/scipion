@@ -36,8 +36,9 @@ import time
 from pyworkflow.object import *
 from pyworkflow.utils.path import replaceExt, makeFilePath, join, missingPaths, cleanPath, getFiles
 from pyworkflow.utils.log import *
-from pyworkflow.protocol.executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor
+from executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor
 from constants import *
+from params import Form
 
 
 
@@ -206,6 +207,8 @@ class Protocol(Step):
         self.mapper = args.get('mapper', None)
         self._inputs = []
         self._outputs = CsvList()
+        self._definition = Form()
+        self._defineParams(self._definition)
         self._createVarsFromDefinition(**args)
         
         # For non-parallel protocols mpi=1 and threads=1
@@ -373,6 +376,13 @@ class Protocol(Step):
         
     def _defineSteps(self):
         """ Define all the steps that will be executed. """
+        pass
+    
+    def _defineParams(self, form):
+        """ Define the input parameters that will be used.
+        Params:
+            form: this is the form to be populated with sections and params.
+        """
         pass
     
     def __insertStep(self, step, **args):

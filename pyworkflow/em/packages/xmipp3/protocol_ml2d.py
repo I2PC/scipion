@@ -34,90 +34,10 @@ import xmipp
 from convert import createXmippInputImages, readSetOfClasses2D
 
 #from xmipp3 import XmippProtocol
-
-
-class XmippDefML2D(Form):
-    """Create the definition of parameters for
-    the XmippProtML2D protocol"""
-    def __init__(self):
-        Form.__init__(self)
-    
-        self.addSection(label='Input')
-        self.addParam('inputImages', PointerParam, label="Input images", important=True, 
-                      pointerClass='SetOfParticles',
-                      help='Select the input images from the project.'
-                           'It should be a SetOfImages class')        
-        self.addParam('doGenerateReferences', BooleanParam, default=True,
-                      label='Generate references?', 
-                      help='If you set to <No>, you should provide references images'
-                           'If <Yes>, the default generation is done by averaging'
-                           'subsets of the input images.')
-        self.addParam('numberOfReferences', IntParam, default=3, condition='doGenerateReferences',
-                      label='Number of references:',
-                      help='Number of references to be generated.')
-        self.addParam('referenceImages', PointerParam, condition='not doGenerateReferences',
-                      label="Reference image(s)", 
-                      pointerClass='SetOfImages',
-                      help='Image(s) that will serve as class references')
-        
-        #self.addSection(label='MLF-specific parameters', questionParam='doMlf')        
-        self.addParam('doMlf', BooleanParam, default=False, important=True,
-                      label='Use MLF2D instead of ML2D?')
-        self.addParam('doCorrectAmplitudes', BooleanParam, default=True, condition='doMlf',
-                      label='Use CTF-amplitude correction?',
-                      help='If set to <Yes>, the input images file should contains'
-                           'the CTF information for each image.'
-                           'If set to <No>, provide the images pixel size in Angstrom.')
-        self.addParam('areImagesPhaseFlipped', BooleanParam, default=True, condition='doMlf',
-                      label='Are the images CTF phase flipped?',
-                      help='You can run MLF with or without having phase flipped the images.')        
-        self.addParam('highResLimit', IntParam, default=20, condition='doMlf',
-                      label='High-resolution limit (Ang)',
-                      help='No frequencies higher than this limit will be taken into account.'
-                           'If zero is given, no limit is imposed.')
-        
-        self.addSection(label='Advanced')#, questionParam='showAdvanced')        
-#        self.addParam('showAdvanced', BooleanParam, default=False,
-#                      label='Show advanced parameters')
-        self.addParam('doMirror', BooleanParam, default=True,
-                      label='Also include mirror in the alignment?',
-                      help='Including the mirror transformation is useful if your particles'
-                           'have a handedness and may fall either face-up or face-down on the grid.'
-                           )
-        self.addParam('doFast', BooleanParam, default=True, condition='not doMlf',
-                      label='Use the fast version of this algorithm?',
-                      help='For details see (and please cite):\n'
-                           '<Scheres et al., Bioinformatics, 21 (Suppl. 2), ii243-ii244>\n'
-                           '[http://dx.doi.org/10.1093/bioinformatics/bti1140]'
-                           )        
-        self.addParam('doNorm', BooleanParam, default=False,
-                      label='Refine the normalization for each image?',
-                      help='This variant of the algorithm deals with normalization errors.\n'
-                           'For details see (and please cite):\n'
-                           '<Scheres et. al. (2009) J. Struc. Biol., Vol 166, Issue 2, May 2009>\n'
-                           '[http://dx.doi.org/10.1016/j.jsb.2009.02.007]'
-                           )             
-        # Advance or expert parameters
-        self.addParam('maxIters', IntParam, default=100,# expertLevel=LEVEL_ADVANCED,
-                      label='Maximum number of iterations',
-                      help='If the convergence has not been reached after this number'
-                           'of iterations, the process will be stopped.')   
-        self.addParam('psiStep', FloatParam, default=5.0,# expertLevel=LEVEL_ADVANCED,
-                      label='In-plane rotation sampling (degrees)',
-                      help='In-plane rotation sampling interval (degrees).')          
-        self.addParam('stdNoise', FloatParam, default=1.0, expertLevel=LEVEL_EXPERT,
-                      label='Std for pixel noise',
-                      help='Expected standard deviation for pixel noise.')               
-        self.addParam('stdOffset', FloatParam, default=3.0, expertLevel=LEVEL_EXPERT,
-                      label='Std for origin offset',
-                      help='Expected standard deviation for origin offset (pixels).') 
-        
-        self.addParallelSection(threads=2, mpi=2)
         
         
 class XmippProtML2D(ProtAlign, ProtClassify):
     """ Protocol to preprocess a set of micrographs in the project. """
-    _definition = XmippDefML2D()
     _label = 'Xmipp ML2D'
     
     def __init__(self, **args):
@@ -130,7 +50,80 @@ class XmippProtML2D(ProtAlign, ProtClassify):
             progId += "f"
         self.program = "xmipp_%s_align2d" % progId
         self.prefix = '%s2d_' % progId
-    
+        
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        form.addParam('inputImages', PointerParam, label="Input images", important=True, 
+                      pointerClass='SetOfParticles',
+                      help='Select the input images from the project.'
+                           'It should be a SetOfImages class')        
+        form.addParam('doGenerateReferences', BooleanParam, default=True,
+                      label='Generate references?', 
+                      help='If you set to <No>, you should provide references images'
+                           'If <Yes>, the default generation is done by averaging'
+                           'subsets of the input images.')
+        form.addParam('numberOfReferences', IntParam, default=3, condition='doGenerateReferences',
+                      label='Number of references:',
+                      help='Number of references to be generated.')
+        form.addParam('referenceImages', PointerParam, condition='not doGenerateReferences',
+                      label="Reference image(s)", 
+                      pointerClass='SetOfImages',
+                      help='Image(s) that will serve as class references')
+        
+        #form.addSection(label='MLF-specific parameters', questionParam='doMlf')        
+        form.addParam('doMlf', BooleanParam, default=False, important=True,
+                      label='Use MLF2D instead of ML2D?')
+        form.addParam('doCorrectAmplitudes', BooleanParam, default=True, condition='doMlf',
+                      label='Use CTF-amplitude correction?',
+                      help='If set to <Yes>, the input images file should contains'
+                           'the CTF information for each image.'
+                           'If set to <No>, provide the images pixel size in Angstrom.')
+        form.addParam('areImagesPhaseFlipped', BooleanParam, default=True, condition='doMlf',
+                      label='Are the images CTF phase flipped?',
+                      help='You can run MLF with or without having phase flipped the images.')        
+        form.addParam('highResLimit', IntParam, default=20, condition='doMlf',
+                      label='High-resolution limit (Ang)',
+                      help='No frequencies higher than this limit will be taken into account.'
+                           'If zero is given, no limit is imposed.')
+        
+        form.addSection(label='Advanced')#, questionParam='showAdvanced')        
+#        form.addParam('showAdvanced', BooleanParam, default=False,
+#                      label='Show advanced parameters')
+        form.addParam('doMirror', BooleanParam, default=True,
+                      label='Also include mirror in the alignment?',
+                      help='Including the mirror transformation is useful if your particles'
+                           'have a handedness and may fall either face-up or face-down on the grid.'
+                           )
+        form.addParam('doFast', BooleanParam, default=True, condition='not doMlf',
+                      label='Use the fast version of this algorithm?',
+                      help='For details see (and please cite):\n'
+                           '<Scheres et al., Bioinformatics, 21 (Suppl. 2), ii243-ii244>\n'
+                           '[http://dx.doi.org/10.1093/bioinformatics/bti1140]'
+                           )        
+        form.addParam('doNorm', BooleanParam, default=False,
+                      label='Refine the normalization for each image?',
+                      help='This variant of the algorithm deals with normalization errors.\n'
+                           'For details see (and please cite):\n'
+                           '<Scheres et. al. (2009) J. Struc. Biol., Vol 166, Issue 2, May 2009>\n'
+                           '[http://dx.doi.org/10.1016/j.jsb.2009.02.007]'
+                           )             
+        # Advance or expert parameters
+        form.addParam('maxIters', IntParam, default=100,# expertLevel=LEVEL_ADVANCED,
+                      label='Maximum number of iterations',
+                      help='If the convergence has not been reached after this number'
+                           'of iterations, the process will be stopped.')   
+        form.addParam('psiStep', FloatParam, default=5.0,# expertLevel=LEVEL_ADVANCED,
+                      label='In-plane rotation sampling (degrees)',
+                      help='In-plane rotation sampling interval (degrees).')          
+        form.addParam('stdNoise', FloatParam, default=1.0, expertLevel=LEVEL_EXPERT,
+                      label='Std for pixel noise',
+                      help='Expected standard deviation for pixel noise.')               
+        form.addParam('stdOffset', FloatParam, default=3.0, expertLevel=LEVEL_EXPERT,
+                      label='Std for origin offset',
+                      help='Expected standard deviation for origin offset (pixels).') 
+        
+        form.addParallelSection(threads=2, mpi=2)
+            
     def _getIterClasses(self, iter=None, block=None):
         """ Return the classes metadata for this iteration.
         block parameter can be 'info' or 'classes'.

@@ -36,38 +36,11 @@ from convert import locationToSpider
 from glob import glob
 
       
-class SpiderDefPCA(Form):        
-    """Definition of parameters for Spider protocol: Align APSR"""
-    def __init__(self):
-        Form.__init__(self)
-
-        self.addSection(label='Input')
-        self.addParam('inputImages', PointerParam, label="Input images", important=True, 
-                      pointerClass='SetOfParticles',
-                      help='Input images to perform PCA')
-        
-        #self.addParam('maskType', )
-              
-        self.addParam('filterRadius1', FloatParam, default=0.6,
-                      label='Fourier radius for input image',
-                      help='Fourier radius for input image.')        
-        self.addParam('sdFactor', FloatParam, default=0.1,
-                      label='First threshold',
-                      help='first threshold == image average plus this number * s.d.')
-        self.addParam('filterRadius2', FloatParam, default=0.1,
-                      label='Fourier radius for initial binary mask',
-                      help='Fourier radius for initial binary mask.')       
-        self.addParam('maskThreshold', FloatParam, default=0.01,
-                      label='Mask threshold',
-                      help='Threshold for filtered mask.')
-
 # TODO: Remove from ProtAlign, and put in other category     
 class SpiderProtPCA(ProtAlign):
     """ Reference-free alignment shift and rotational alignment of an image series. 
     Uses Spider AP SR command.
     """
-    _definition = SpiderDefPCA()
-    
     def __init__(self):
         ProtAlign.__init__(self)
         self._params = {'ext': 'stk',
@@ -75,6 +48,28 @@ class SpiderProtPCA(ProtAlign):
                         'outputMask': 'output_mask'
                         }
     
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        form.addParam('inputImages', PointerParam, label="Input images", important=True, 
+                      pointerClass='SetOfParticles',
+                      help='Input images to perform PCA')
+        
+        #form.addParam('maskType', )
+              
+        form.addParam('filterRadius1', FloatParam, default=0.6,
+                      label='Fourier radius for input image',
+                      help='Fourier radius for input image.')        
+        form.addParam('sdFactor', FloatParam, default=0.1,
+                      label='First threshold',
+                      help='first threshold == image average plus this number * s.d.')
+        form.addParam('filterRadius2', FloatParam, default=0.1,
+                      label='Fourier radius for initial binary mask',
+                      help='Fourier radius for initial binary mask.')       
+        form.addParam('maskThreshold', FloatParam, default=0.01,
+                      label='Mask threshold',
+                      help='Threshold for filtered mask.')
+        
+        
     def _defineSteps(self):
         # Define some names
         # Insert processing steps

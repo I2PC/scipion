@@ -34,122 +34,10 @@ import xmipp
 from convert import createXmippInputImages, readSetOfVolumes
 
 #from xmipp3 import XmippProtocol
-
-
-class XmippDefML3D(Form):
-    """Create the definition of parameters for
-    the XmippProtML2D protocol"""
-    def __init__(self):
-        Form.__init__(self)
-    
-        self.addSection(label='Input')
-        self.addParam('inputImages', PointerParam, label="Input images", important=True, 
-                      pointerClass='SetOfParticles',
-                      help='Select the input images from the project.'
-                           'It should be a SetOfImages class')  
-        #TODO: the following parameter should be a Pointer to a Volume and not a string containing the path      
-        self.addParam('ini3DrefVolumes', TextParam,
-                      label='Initial 3D reference volumes', 
-                      help='Initial 3D density maps with the same dimensions as your particles.')
-        self.addParam('numberOfSeedsPerRef', IntParam, default=1,
-                      label='Number of seeds per reference',
-                      help='The total number of seeds generated will be the number of provided '
-                      'reference volumes times the number of seeds per reference. '
-                      'If you provide 2 initial volumes and 3 seeds per referece you will '
-                      'produce 6 3D maps.')
-        self.addParam('doCorrectGreyScale', BooleanParam, default=False,
-                      label="Correct the absolute grey-scale of initial references?", 
-                      help='The probabilities are based on squared differences, so that the '
-                      'absolute grey scale is important.')
-        self.addParam('projMatchSampling', FloatParam, default=15.0, condition='doCorrectGreyScale',
-                      label='Sampling for projection matching',
-                      help='Angular sampling for a quick projection matching '
-                      'to obtain right grey scale. As the resolution of the intial reference '
-                      'should be low, this sampling can be relatively crude, e.g. 15')          
-        self.addParam('doLowPassFilter', BooleanParam, default=True,
-                      label="Low-pass filter initial references?", 
-                      help='It is highly recommended to low-pass filter your initial reference '
-                      'volume as much as you can.')   
-        self.addParam('lowPassFilter', IntParam, default=50, condition='doLowPassFilter',
-                      label='Resolution of the low-pass filter (Ang)',
-                      help='Resolution of the low-pass filter in Angstroms.')       
-        self.addSection(label='ML3D classification')
-        self.addParam('angularSampling', IntParam, default=10,
-                      label='Angular sampling for classification',
-                      help='Fine samplings take huge amounts of CPU and memory. '
-                      'Therefore, in general, dont use samplings finer than 10 degrees.')    
-        self.addParam('numberOfIterations', IntParam, default=25,
-                      label='Number of ML(F)3D iterations to perform',
-                      help='Number of ML(F)3D iterations to perform.')
-        self.addParam('symmetry', TextParam, default='c1',
-                      label='Point group symmetry',
-                      help='Number of ML(F)3D iterations to perform.')        
-        self.addParam('doNorm', BooleanParam, default=False,
-                      label="Refine the normalization for each image?", 
-                      help='This variant of the algorithm deals with normalization errors.')    
-        self.addParam('restartIter', IntParam, default=0,
-                      expertLevel=LEVEL_ADVANCED,
-                      label='Restart after iteration',
-                      help='For previous runs that stopped before convergence, '
-                      'resume the calculations after the completely finished iteration, '
-                      'i.e. including all 3D reconstructions. '
-                      'Note that all flags about grey-scale correction, filtering and '
-                      'seed generation will be ignored if a value larger than 0 is given, '
-                      'since this option only concerns the ML3D classification part.')   
-        self.addParam('extraParams', TextParam,
-                      expertLevel=LEVEL_ADVANCED,
-                      label='Additional parameters',
-                      help='Additional xmipp_ml(f)_refine3d parameters.')                  
-        self.addSection(label='MLF parameters', questionParam='doMlf')        
-        self.addParam('doMlf', BooleanParam, default=False,
-                      label='Use MLF2D instead of ML2D')
-        self.addParam('doCorrectAmplitudes', BooleanParam, default=True,
-                      label='Use CTF-amplitude correction inside MLF?',
-                      help='If set to <Yes>, the input images file should contain '
-                           'the CTF information for each image.')
-        self.addParam('highResLimit', IntParam, default=20,
-                      label='High-resolution limit (in Angstroms)',
-                      help='No frequencies higher than this limit will be taken into account. '
-                      'If zero is given, no limit is imposed.')     
-        self.addParam('areImagesPhaseFlipped', BooleanParam, default=True,
-                      label='Are the images CTF phase flipped?',
-                      help='You can run MLF with or without having phase flipped the images.')     
-        self.addParam('initialMapIsAmplitudeCorrected', BooleanParam, default=False,
-                      label='Are initial references CTF-amplitude corrected?',
-                      help='If coming from programs other than xmipp_mlf_refine3d this is '
-                      'usually not the case. If you will perform a grey-scale correction, '
-                      'this parameter becomes irrelevant as the output maps never have the '
-                      'CTF-amplitudes corrected.')     
-        self.addParam('seedsAreAmplitudeCorrected', BooleanParam, default=False,
-                      expertLevel=LEVEL_ADVANCED,
-                      label='Are the seeds CTF-amplitude corrected?',
-                      help='This option is only relevant if you provide your own seeds! '
-                      'If the seeds are generated automatically, this parameter becomes '
-                      'irrelevant as they will always be amplitude-corrected.') 
-        self.addSection(label='3D Reconstruction', expertLevel=LEVEL_ADVANCED)    
-        self.addParam('reconstructionMethod', EnumParam, choices=['fourier', 'wlsART'], 
-                      default=0, label='Reconstruction method', display=EnumParam.DISPLAY_LIST,
-                      expertLevel=LEVEL_ADVANCED, 
-                      help='Choose between wslART or fourier.')
-        self.addParam('aRTExtraParams', TextParam,
-                      condition='reconstructionMethod==1', expertLevel=LEVEL_ADVANCED,
-                      label='Extra parameters',
-                      help='Additional reconstruction parameters for ART.')  
-        self.addParam('fourierExtraParams', TextParam, 
-                      condition='reconstructionMethod==0', expertLevel=LEVEL_ADVANCED,
-                      label='Extra parameters',
-                      help='The Fourier-interpolation reconstruction method is much faster than wlsART '
-                      'and may give similar results. It however is not guaranteed to optimize the '
-                      'likelihood function. This is an experimental feature. One may limit the '
-                      'maximum resolution of the fourier-interpolation using -max_resolution 0.3 '
-                      '(to 0.3 digital frequency). Use the extra parameter entry below for that.')  
-        
-        self.addParallelSection(threads=1, mpi=8)
         
         
 class XmippProtML3D(ProtRefine3D, ProtClassify3D):
     """ Protocol for Xmipp-based ML3D/MLF3D classification. """
-    _definition = XmippDefML3D()
     _label = 'Xmipp ML3D'
     
     # Reconstruction method constants
@@ -161,7 +49,112 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
         if self.doMlf:
             progId += "f" 
         return progId   
-         
+    
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        form.addParam('inputImages', PointerParam, label="Input images", important=True, 
+                      pointerClass='SetOfParticles',
+                      help='Select the input images from the project.'
+                           'It should be a SetOfImages class')  
+        #TODO: the following parameter should be a Pointer to a Volume and not a string containing the path      
+        form.addParam('ini3DrefVolumes', TextParam,
+                      label='Initial 3D reference volumes', 
+                      help='Initial 3D density maps with the same dimensions as your particles.')
+        form.addParam('numberOfSeedsPerRef', IntParam, default=1,
+                      label='Number of seeds per reference',
+                      help='The total number of seeds generated will be the number of provided '
+                      'reference volumes times the number of seeds per reference. '
+                      'If you provide 2 initial volumes and 3 seeds per referece you will '
+                      'produce 6 3D maps.')
+        form.addParam('doCorrectGreyScale', BooleanParam, default=False,
+                      label="Correct the absolute grey-scale of initial references?", 
+                      help='The probabilities are based on squared differences, so that the '
+                      'absolute grey scale is important.')
+        form.addParam('projMatchSampling', FloatParam, default=15.0, condition='doCorrectGreyScale',
+                      label='Sampling for projection matching',
+                      help='Angular sampling for a quick projection matching '
+                      'to obtain right grey scale. As the resolution of the intial reference '
+                      'should be low, this sampling can be relatively crude, e.g. 15')          
+        form.addParam('doLowPassFilter', BooleanParam, default=True,
+                      label="Low-pass filter initial references?", 
+                      help='It is highly recommended to low-pass filter your initial reference '
+                      'volume as much as you can.')   
+        form.addParam('lowPassFilter', IntParam, default=50, condition='doLowPassFilter',
+                      label='Resolution of the low-pass filter (Ang)',
+                      help='Resolution of the low-pass filter in Angstroms.')       
+        form.addSection(label='ML3D classification')
+        form.addParam('angularSampling', IntParam, default=10,
+                      label='Angular sampling for classification',
+                      help='Fine samplings take huge amounts of CPU and memory. '
+                      'Therefore, in general, dont use samplings finer than 10 degrees.')    
+        form.addParam('numberOfIterations', IntParam, default=25,
+                      label='Number of ML(F)3D iterations to perform',
+                      help='Number of ML(F)3D iterations to perform.')
+        form.addParam('symmetry', TextParam, default='c1',
+                      label='Point group symmetry',
+                      help='Number of ML(F)3D iterations to perform.')        
+        form.addParam('doNorm', BooleanParam, default=False,
+                      label="Refine the normalization for each image?", 
+                      help='This variant of the algorithm deals with normalization errors.')    
+        form.addParam('restartIter', IntParam, default=0,
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Restart after iteration',
+                      help='For previous runs that stopped before convergence, '
+                      'resume the calculations after the completely finished iteration, '
+                      'i.e. including all 3D reconstructions. '
+                      'Note that all flags about grey-scale correction, filtering and '
+                      'seed generation will be ignored if a value larger than 0 is given, '
+                      'since this option only concerns the ML3D classification part.')   
+        form.addParam('extraParams', TextParam,
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Additional parameters',
+                      help='Additional xmipp_ml(f)_refine3d parameters.')                  
+        form.addSection(label='MLF parameters', questionParam='doMlf')        
+        form.addParam('doMlf', BooleanParam, default=False,
+                      label='Use MLF2D instead of ML2D')
+        form.addParam('doCorrectAmplitudes', BooleanParam, default=True,
+                      label='Use CTF-amplitude correction inside MLF?',
+                      help='If set to <Yes>, the input images file should contain '
+                           'the CTF information for each image.')
+        form.addParam('highResLimit', IntParam, default=20,
+                      label='High-resolution limit (in Angstroms)',
+                      help='No frequencies higher than this limit will be taken into account. '
+                      'If zero is given, no limit is imposed.')     
+        form.addParam('areImagesPhaseFlipped', BooleanParam, default=True,
+                      label='Are the images CTF phase flipped?',
+                      help='You can run MLF with or without having phase flipped the images.')     
+        form.addParam('initialMapIsAmplitudeCorrected', BooleanParam, default=False,
+                      label='Are initial references CTF-amplitude corrected?',
+                      help='If coming from programs other than xmipp_mlf_refine3d this is '
+                      'usually not the case. If you will perform a grey-scale correction, '
+                      'this parameter becomes irrelevant as the output maps never have the '
+                      'CTF-amplitudes corrected.')     
+        form.addParam('seedsAreAmplitudeCorrected', BooleanParam, default=False,
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Are the seeds CTF-amplitude corrected?',
+                      help='This option is only relevant if you provide your own seeds! '
+                      'If the seeds are generated automatically, this parameter becomes '
+                      'irrelevant as they will always be amplitude-corrected.') 
+        form.addSection(label='3D Reconstruction', expertLevel=LEVEL_ADVANCED)    
+        form.addParam('reconstructionMethod', EnumParam, choices=['fourier', 'wlsART'], 
+                      default=0, label='Reconstruction method', display=EnumParam.DISPLAY_LIST,
+                      expertLevel=LEVEL_ADVANCED, 
+                      help='Choose between wslART or fourier.')
+        form.addParam('aRTExtraParams', TextParam,
+                      condition='reconstructionMethod==1', expertLevel=LEVEL_ADVANCED,
+                      label='Extra parameters',
+                      help='Additional reconstruction parameters for ART.')  
+        form.addParam('fourierExtraParams', TextParam, 
+                      condition='reconstructionMethod==0', expertLevel=LEVEL_ADVANCED,
+                      label='Extra parameters',
+                      help='The Fourier-interpolation reconstruction method is much faster than wlsART '
+                      'and may give similar results. It however is not guaranteed to optimize the '
+                      'likelihood function. This is an experimental feature. One may limit the '
+                      'maximum resolution of the fourier-interpolation using -max_resolution 0.3 '
+                      '(to 0.3 digital frequency). Use the extra parameter entry below for that.')  
+        
+        form.addParallelSection(threads=1, mpi=8)    
+             
     def _defineSteps(self):
 
         self.ParamsDict = {}

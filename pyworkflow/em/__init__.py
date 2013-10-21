@@ -74,16 +74,15 @@ def findViewers(className, environment):
                     break
     return viewers
 
-def findWizards(definition, environment):
+def findWizards(protocol, environment):
     """ Find availables wizards for this class. 
     Returns:
         a dict with the paramName and wizards for this class."""
     wizards = {}
-    baseClasses = definition.getClass().mro()
+    baseClasses = protocol.getClass().mro()
     for wiz in emWizardsDict.values():
         if environment in wiz._environments:
-            for t in wiz._targets:
-                cls, params = t
+            for cls, params in wiz._targets:
                 if cls in baseClasses:
                     for p in params:
                         wizards[p] = wiz

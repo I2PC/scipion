@@ -34,37 +34,13 @@ from constants import *
 from spider import SpiderShell
 from convert import locationToSpider
 from glob import glob
-        
-class SpiderDefCustomMask(Form):        
-    """Definition of parameters for Spider protocol: Align APSR"""
-    def __init__(self):
-        Form.__init__(self)
 
-        self.addSection(label='Input')
-        self.addParam('inputImage', PointerParam, label="Input image", important=True, 
-                      pointerClass='Particle',
-                      help='Select the input image to create the mask. \n'
-                           'It is recommended to used an average image.')        
-        self.addParam('filterRadius1', FloatParam, default=0.6,
-                      label='Fourier radius for input image',
-                      help='Fourier radius for input image.')        
-        self.addParam('sdFactor', FloatParam, default=0.1,
-                      label='First threshold',
-                      help='first threshold == image average plus this number * s.d.')
-        self.addParam('filterRadius2', FloatParam, default=0.1,
-                      label='Fourier radius for initial binary mask',
-                      help='Fourier radius for initial binary mask.')       
-        self.addParam('maskThreshold', FloatParam, default=0.01,
-                      label='Mask threshold',
-                      help='Threshold for filtered mask.')
 
 # TODO: Remove from ProtAlign, and put in other category     
 class SpiderProtCustomMask(ProtAlign):
     """ Reference-free alignment shift and rotational alignment of an image series. 
     Uses Spider AP SR command.
     """
-    _definition = SpiderDefCustomMask()
-    
     def __init__(self):
         ProtAlign.__init__(self)
         self._params = {'ext': 'stk',
@@ -72,6 +48,25 @@ class SpiderProtCustomMask(ProtAlign):
                         'outputMask': 'output_mask'
                         }
     
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        form.addParam('inputImage', PointerParam, label="Input image", important=True, 
+                      pointerClass='Particle',
+                      help='Select the input image to create the mask. \n'
+                           'It is recommended to used an average image.')        
+        form.addParam('filterRadius1', FloatParam, default=0.6,
+                      label='Fourier radius for input image',
+                      help='Fourier radius for input image.')        
+        form.addParam('sdFactor', FloatParam, default=0.1,
+                      label='First threshold',
+                      help='first threshold == image average plus this number * s.d.')
+        form.addParam('filterRadius2', FloatParam, default=0.1,
+                      label='Fourier radius for initial binary mask',
+                      help='Fourier radius for initial binary mask.')       
+        form.addParam('maskThreshold', FloatParam, default=0.01,
+                      label='Mask threshold',
+                      help='Threshold for filtered mask.')
+        
     def _defineSteps(self):
         # Define some names
         # Insert processing steps

@@ -77,45 +77,34 @@ class EMProtocol(Protocol):
         #self.mapper.commit()
         
 
-class DefImportMicrographs(Form):
-    """Create the definition of parameters for
-    the ImportMicrographs protocol
-    """
-    def __init__(self):
-        Form.__init__(self)
-    
-        self.addSection(label='Input')
-        self.addParam('pattern', StringParam, label="Pattern")
-#         self.addParam('tiltPairs', BooleanParam, default=False, important=True,
-#                    label='Are micrographs tilt pairs?')
-        
- #       self.addSection(label='Microscope description')
-        self.addParam('voltage', FloatParam, default=200,
-                   label='Microscope voltage (in kV)')
-        self.addParam('sphericalAberration', FloatParam, default=2.26,
-                   label='Spherical aberration (in mm)')
-        self.addParam('samplingRateMode', EnumParam, default=SAMPLING_FROM_IMAGE,
-                   label='Sampling rate mode',
-                   choices=['From image', 'From scanner'])
-        self.addParam('samplingRate', FloatParam, default=1, 
-                   label='Sampling rate (A/px)', 
-                   condition='samplingRateMode==%d' % SAMPLING_FROM_IMAGE)
-        self.addParam('magnification', IntParam, default=60000,
-                   label='Magnification rate', 
-                   condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
-        self.addParam('scannedPixelSize', FloatParam, default=7.0,
-                   label='Scanned pixel size', 
-                   condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
-        
-
 class ProtImportMicrographs(EMProtocol):
     """Protocol to import a set of micrographs in the project"""
-    _definition = DefImportMicrographs()
     _label = 'Import micrographs'
     _path = join('Micrographs', 'Import')
     
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)         
+        
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        form.addParam('pattern', StringParam, label="Pattern")
+        form.addParam('voltage', FloatParam, default=200,
+                   label='Microscope voltage (in kV)')
+        form.addParam('sphericalAberration', FloatParam, default=2.26,
+                   label='Spherical aberration (in mm)')
+        form.addParam('samplingRateMode', EnumParam, default=SAMPLING_FROM_IMAGE,
+                   label='Sampling rate mode',
+                   choices=['From image', 'From scanner'])
+        form.addParam('samplingRate', FloatParam, default=1, 
+                   label='Sampling rate (A/px)', 
+                   condition='samplingRateMode==%d' % SAMPLING_FROM_IMAGE)
+        form.addParam('magnification', IntParam, default=60000,
+                   label='Magnification rate', 
+                   condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
+        form.addParam('scannedPixelSize', FloatParam, default=7.0,
+                   label='Scanned pixel size', 
+                   condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
+        
         
     def _defineSteps(self):
         self._insertFunctionStep('importMicrographs', self.pattern.get(),
@@ -181,28 +170,21 @@ class ProtImportMicrographs(EMProtocol):
         return validateMsgs
 
 
-class DefImportParticles(Form):
-    """Create the definition of parameters for
-    the ImportParticles protocol
-    """
-    def __init__(self):
-        Form.__init__(self)
-    
-        self.addSection(label='Input')
-        self.addParam('pattern', StringParam, 
-                      label="Pattern")        
-        self.addParam('samplingRate', FloatParam,
-                   label='Sampling rate (A/px)')
-
-
 class ProtImportParticles(EMProtocol):
     """Protocol to import a set of particles in the project"""
-    _definition = DefImportParticles()
     _label = 'Import images'
     _path = join('Images', 'Import')
     
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)         
+        
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        form.addParam('pattern', StringParam, 
+                      label="Pattern")        
+        form.addParam('samplingRate', FloatParam,
+                   label='Sampling rate (A/px)')
+        
         
     def _defineSteps(self):
         self._insertFunctionStep('importParticles', self.pattern.get(), self.samplingRate.get())
@@ -235,24 +217,10 @@ class ProtImportParticles(EMProtocol):
     
     def getFiles(self):
         return self.outputParticles.getFiles()
-
-
-class DefImportVolumes(Form):
-    """Create the definition of parameters for
-    the ImportVolumes protocol
-    """
-    def __init__(self):
-        Form.__init__(self)
-    
-        self.addSection(label='Input')
-        self.addParam('pattern', StringParam, label="Pattern")
-        self.addParam('samplingRate', FloatParam,
-                   label='Sampling rate (A/px)')
         
 
 class ProtImportVolumes(EMProtocol):
     """Protocol to import a set of volumes in the project"""
-    _definition = DefImportVolumes()
     _label = 'Import volumes'
     _path = join('Volumes', 'Import')
     
@@ -261,7 +229,14 @@ class ProtImportVolumes(EMProtocol):
         
     def _defineSteps(self):
         self._insertFunctionStep('importVolumes', self.pattern.get(), self.samplingRate.get())
+       
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        form.addParam('pattern', StringParam, label="Pattern")
+        form.addParam('samplingRate', FloatParam,
+                   label='Sampling rate (A/px)')
         
+         
     def importVolumes(self, pattern, samplingRate):
         """ Copy volumes matching the filename pattern
         Register other parameters.
@@ -309,27 +284,28 @@ class ProtImportVolumes(EMProtocol):
             validateMsgs.append('Pattern cannot be EMPTY.')
         return validateMsgs
 
-class DefCTFMicrographs(Form):
-    """ Create the definition of parameters for
-    the XmippCtfMicrographs protocol.
-    """
-    def __init__(self):
-        Form.__init__(self)
-    
-        self.addSection(label='CTF Estimation')
+
+class ProtCTFMicrographs(EMProtocol):
+    """ Base class for all protocols that estimates the CTF"""
+    def __init__(self, **args):
+        EMProtocol.__init__(self, **args)
+        self.stepsExecutionMode = STEPS_PARALLEL
         
-        self.addParam('inputMicrographs', PointerParam, important=True,
+    def _defineParams(self, form):
+        form.addSection(label='CTF Estimation')
+        
+        form.addParam('inputMicrographs', PointerParam, important=True,
                       label="Input Micrographs", pointerClass='SetOfMicrographs')
-        self.addParam('ampContrast', FloatParam, default=0.1,
+        form.addParam('ampContrast', FloatParam, default=0.1,
                       label='Amplitude Contrast',
                       help='It should be a positive number, typically between 0.05 and 0.3.')
-        self.addParam('lowRes', FloatParam, default=0.05,
+        form.addParam('lowRes', FloatParam, default=0.05,
                       label='Lowest resolution',
                       help='Give a value in digital frequency (i.e. between 0.0 and 0.5). '
                            'This cut-off prevents the typically peak at the center of the PSD '
                            'to interfere with CTF estimation. The default value is 0.05, but for '
                            'micrographs with a very fine sampling this may be lowered towards 0.0')
-        self.addParam('highRes', FloatParam, default=0.35,
+        form.addParam('highRes', FloatParam, default=0.35,
                       label='Highest resolution', 
                       help='Give a value in digital frequency (i.e. between 0.0 and 0.5). '
                            'This cut-off prevents high-resolution terms where only noise exists '
@@ -337,33 +313,25 @@ class DefCTFMicrographs(Form):
                            'be increased for micrographs with signals extending beyond this value. '
                            'However, if your micrographs extend further than 0.35, you should consider '
                            'sampling them at a finer rate.')
-        self.addParam('minDefocus', FloatParam, default=0.5,
+        form.addParam('minDefocus', FloatParam, default=0.5,
                       label='Minimum defocus to search (in microns)',
                       help=' Minimum defocus value (in microns) to include in defocus search. ' 
                       'Underfocus is represented by a positive number.',
                       expertLevel=LEVEL_ADVANCED)
-        self.addParam('maxDefocus', FloatParam, default=10.,
+        form.addParam('maxDefocus', FloatParam, default=10.,
                       label='Maximum defocus to search (in microns)',
                       help='Maximum defocus value (in microns) to include in defocus search. '
                            'Underfocus is represented by a positive number.',
                       expertLevel=LEVEL_ADVANCED)
-        self.addParam('windowSize', IntParam, default=256,
+        form.addParam('windowSize', IntParam, default=256,
                       label='Window size',
                       help='The PSD is estimated from small patches of this size. Bigger patches '
                            'allow identifying more details. However, since there are fewer windows, '
                            'estimations are noisier',
                       expertLevel=LEVEL_ADVANCED)
         
-        self.addParallelSection(threads=2, mpi=1)       
-
-
-class ProtCTFMicrographs(EMProtocol):
-    """ Base class for all protocols that estimates the CTF"""
-    _definition = DefCTFMicrographs()
-
-    def __init__(self, **args):
-        EMProtocol.__init__(self, **args)
-        self.stepsExecutionMode = STEPS_PARALLEL 
+        form.addParallelSection(threads=2, mpi=1)       
+         
     
     def _getMicrographDir(self, mic):
         """ Return an unique dir name for results of the micrograph. """
@@ -443,34 +411,24 @@ class ProtExtractParticles(EMProtocol):
     pass
 
 
-class DefProcessParticles(Form):
-    """ Create the definition of parameters for
-    the ProtProcessParticles protocol.
-    """
-    def __init__(self):
-        Form.__init__(self)
-    
-        self.addSection(label='Input')
-        
-        self.addParam('inputParticles', PointerParam, important=True,
-                      label="Input Particles", pointerClass='SetOfParticles')
-        
-        self._addProcessParam()
-        
-        self.addParallelSection(threads=2, mpi=1)
-        
-    def _addProcessParam(self):
-        """ This method should be implemented by subclasses
-        to add other parameter relatives to the specific operation."""
-        pass  
-        
-        
 class ProtProcessParticles(EMProtocol):
     """ This class will serve as a base for all protocol
     that performs some operation on Partices (i.e. filters, mask, resize, etc)
     It is mainly defined by an inputParticles and outputParticles.
     """
-    pass
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        
+        form.addParam('inputParticles', PointerParam, important=True,
+                      label="Input Particles", pointerClass='SetOfParticles')
+        # Hook that should be implemented in subclasses
+        self._defineProcessParams(form)
+        form.addParallelSection(threads=2, mpi=1)
+        
+    def _defineProcessParams(self, form):
+        """ This method should be implemented by subclasses
+        to add other parameter relatives to the specific operation."""
+        pass  
 
 
 class ProtFilterParticles(ProtProcessParticles):

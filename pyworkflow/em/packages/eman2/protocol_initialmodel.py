@@ -36,37 +36,32 @@ from data import *
 from glob import glob
 import eman2
 
-class EmanDefInitModel(Form):
-    """Create the definition of parameters for
-    the Eman initialmodel.
-    """
+
+
+class EmanProtInitModel(ProtInitialVolume):
+    _label = 'Eman Initial Model'
     
-    def __init__(self):
-        Form.__init__(self)
-        self.addSection(label='Input')
-        self.addParam('inputClasses', PointerParam, label="Input classes", important=True, 
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        form.addParam('inputClasses', PointerParam, label="Input classes", important=True, 
                       pointerClass='SetOfClasses2D', pointerCondition='hasRepresentativeImages',
                       help='Select the input images from the project.'
                            'It should be a SetOfClasses2D class')
-        self.addParam('numberOfIterations', IntParam, default=8,
+        form.addParam('numberOfIterations', IntParam, default=8,
                       label='Number of iterations to perform',
                       help='The total number of refinement to perform.')
-        self.addParam('numberOfModels', IntParam, default=10,
+        form.addParam('numberOfModels', IntParam, default=10,
                       label='Number of different initial models',
                       help='The number of different initial models to generate in search of a good one.')
-        self.addParam('shrink', IntParam, default=1,expertLevel=LEVEL_ADVANCED,
+        form.addParam('shrink', IntParam, default=1,expertLevel=LEVEL_ADVANCED,
                       label='shrink',
                       help='Optionally shrink the input particles by an integer amount prior to recontruction.' 
                            'Default = 1, no shrinking')
-        self.addParam('symmetry', TextParam, default='c1',
+        form.addParam('symmetry', TextParam, default='c1',
                       label='Point group symmetry',
                       help='Specify the symmetry.Choices are: c(n), d(n), h(n), tet, oct, icos')        
-        self.addParallelSection(threads=3, mpi=0)
-
-class EmanProtInitModel(ProtInitialVolume):
-    _definition = EmanDefInitModel()
-    _label = 'Eman Initial Model'
-    
+        form.addParallelSection(threads=3, mpi=0)
+        
     def _defineSteps(self):        
         eman2.loadEnvironment()
         self._prepareDefinition()
