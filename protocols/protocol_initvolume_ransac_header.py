@@ -61,7 +61,9 @@ NumVolumes =10
 NumIter = 10
 
 #{file}(*.vol) Initial Volume:
-""" Initial volume to be used 
+""" You may provide a very rough initial volume as a way to constraint the angular search.
+    For instance, when reconstructing a fiber, you may provide a cylinder so that side views 
+    are assigned to the correct tilt angle, although the rotational angle may be completely wrong
 """
 InitialVolume = ''
 

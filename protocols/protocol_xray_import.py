@@ -16,7 +16,8 @@ class ProtXrayImport(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.xray_import.name, scriptname, project)
         self.Import = "from protocol_xray_import import *"
-            
+        self.TomogramsMd = self.getFilename('tomograms')
+           
     def defineSteps(self):
         tomograms = self.getTomograms()
         
@@ -25,7 +26,7 @@ class ProtXrayImport(XmippProtocol):
             
         self.insertStep('createResultMd',
                         WorkingDir=self.WorkingDir, 
-                        TomogramList=tomograms)
+                        TomogramList=tomograms, resultMd=self.TomogramsMd)
 
 
     def validate(self):
@@ -101,11 +102,11 @@ class ProtXrayImport(XmippProtocol):
 def getTomoDirs(WorkingDir, tomogram):
     """ Give the tomogram filename, return the root and prefix
     to store the result files. """
-    tomoPrefix = removeBasenameExt(tomogram)
-    tomoDir = join(WorkingDir, tomoPrefix)
-    tomoRoot = join(tomoDir, tomoPrefix)
+    tomoBaseName = removeBasenameExt(tomogram)
+    tomoDir = join(WorkingDir, tomoBaseName)
+    tomoRoot = join(tomoDir, tomoBaseName)
     
-    return tomoPrefix, tomoDir, tomoRoot
+    return tomoBaseName, tomoDir, tomoRoot
       
 
 def importTomogram(log, TomogramDir, TomogramRoot, params):
@@ -113,12 +114,15 @@ def importTomogram(log, TomogramDir, TomogramRoot, params):
     runJob(log, "xmipp_xray_import", params, NumberOfMpi=1)
     createLink(log, TomogramRoot + '.mrc', TomogramRoot + '.st')
     
-def createResultMd(log, WorkingDir, TomogramList):
+def createResultMd(log, WorkingDir, TomogramList, resultMd):
     md = xmipp.MetaData()
-    resultMd = join(WorkingDir, 'tomograms.xmd')
+    mdOut = xmipp.MetaData()
     
     for tomogram in TomogramList:
-        tomoPrefix, _, tomoRoot = getTomoDirs(WorkingDir, tomogram)
+        tomoBaseName, _, tomoRoot = getTomoDirs(WorkingDir, tomogram)
+        mdOut.setValue(xmipp.MDL_IMAGE, tomoRoot + '.mrc', mdOut.addObject())
         md.read(tomoRoot + ".xmd")
-        md.write('tomo_%s@%s' % (tomoPrefix, resultMd), xmipp.MD_APPEND)
+        md.write('tomo_%s@%s' % (tomoBaseName, resultMd), xmipp.MD_APPEND)
+    
+    mdOut.write('tomograms@%s' % (resultMd), xmipp.MD_APPEND)
         

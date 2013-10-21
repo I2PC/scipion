@@ -1,5 +1,14 @@
 #!/usr/bin/env xmipp_python
 #------------------------------------------------------------------------------------------------
+# General script for Xmipp-based pre-processing of x-ray tomograms: 
+#
+# For each tomogram given, this script will perform 
+# the requested operations below.
+# For each tomogram a subdirectory will be created
+#
+# Author: Joaquin Oton, October 2013
+#
+#------------------------------------------------------------------------------------------------
 # {begin_of_header}
 
 #{eval} expandCommentRun()
@@ -73,7 +82,7 @@ DoBadPixelsMask = False
 # {condition}(DoBadPixelsMask){file} Mask file
 BadPixelsMask = ""
 
-# {eval} expandParallel(threads=0,hours=6)
+# {eval} expandParallel(threads=0,hours=6,mpi=1)
 
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------

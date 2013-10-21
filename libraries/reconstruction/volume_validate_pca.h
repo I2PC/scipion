@@ -28,3 +28,62 @@
 
 
 #endif /* VOLUME_VALIDATE_PCA_H_ */
+
+#include <data/xmipp_program.h>
+#include <data/metadata.h>
+#include "reconstruct_fourier.h"
+#include "angular_project_library.h"
+#include "dimred/pca.h"
+
+/**@defgroup VolumeValidatePCA Validation of volume consistency with respect to the provided classes
+   @ingroup ReconsLibrary */
+//@{
+
+/** PCA validation volume parameters. */
+class ProgVolumeValidationPCA: public XmippProgram
+{
+public:
+    /** Filenames */
+    FileName fnClasses, fnOut,fnSym, fnAngles;
+
+    /** Number of intermediate volumes to generate*/
+    int NVols;
+
+    /** Number of classes to generate the intermediate volumes*/
+    int NClasses;
+
+private:
+    size_t xdim, ydim, zdim, ndim;
+    FileName fnVol;
+
+public: // Internal members
+    MetaData mdClasses, mdReconstruction;
+
+  public:
+    /// Read arguments from command line
+    void readParams();
+
+    /// Read arguments from command line
+    void defineParams();
+
+    /** Show. */
+    void show();
+
+    /** Run. */
+    void run();
+
+    /// Produce side info: fill arrays with relevant transformation matrices
+    void produceSideinfo();
+
+    /// Reconstruct current volume
+    void reconstructCurrent();
+
+    /// Reconstruct volume with all projections
+    void reconstruct();
+
+
+
+};
+//@}
+
+
