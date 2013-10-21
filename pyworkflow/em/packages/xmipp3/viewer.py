@@ -30,7 +30,7 @@ visualization program.
 
 import os
 from pyworkflow.viewer import Viewer, Wizard, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em import SetOfImages, SetOfMicrographs, SetOfParticles, SetOfCoordinates, SetOfClasses2D, SetOfVolumes, SetOfCTF
+from pyworkflow.em import Image, SetOfImages, SetOfMicrographs, SetOfParticles, SetOfCoordinates, SetOfClasses2D, SetOfVolumes, SetOfCTF
 from pyworkflow.utils.process import runJob
 from xmipp3 import getXmippPath
 from pyworkflow.em.protocol import ProtImportMicrographs, ProtCTFMicrographs

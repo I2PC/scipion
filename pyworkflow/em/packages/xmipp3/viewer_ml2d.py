@@ -51,7 +51,8 @@ class XmippML2DViewer(ProtocolViewer):
         form.addSection(label='Visualization')
         form.addParam('doShowClasses', BooleanParam, label="Visualize last iter references", default=True, 
                       help='Visualize last iteration references.')
-        form.addParam('doShowPlots', BooleanParam, label="Show all plots per iteration?", default=True)
+        form.addParam('doShowPlots', BooleanParam, label="Show all plots per iteration?", default=True,
+                      help='Visualize several plots.')
         
         form.addSection(label='Iteration plots')    
         form.addParam('doShowLL', BooleanParam, label="Show Log-Likehood over iterations?", default=False, 
@@ -69,7 +70,8 @@ class XmippML2DViewer(ProtocolViewer):
                 'doShowLL': self._viewPlot,
                 'doShowPmax': self._viewPlot,
                 'doShowSignalChange': self._viewPlot,
-                'doShowMirror': self._viewPlot}
+                'doShowMirror': self._viewPlot,
+                'doShowPlots': self._viewAllPlots}
         
     def _viewAll(self, *args):
         if self.doShowClasses:

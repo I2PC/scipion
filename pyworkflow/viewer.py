@@ -108,7 +108,8 @@ class ProtocolViewer(Protocol, Viewer):
         self.protocol = obj
         w = FormWindow("Protocol Viewer: " + self.getClassName(), self, 
                        self._viewAll, args.get('windows', None),
-                       visualizeDict=self._getVisualizeDict())
+                       visualizeDict=self._getVisualizeDict(),
+                       visualizeMode=True)
         w.visualizeMode = True
         w.show(center=True)     
 
