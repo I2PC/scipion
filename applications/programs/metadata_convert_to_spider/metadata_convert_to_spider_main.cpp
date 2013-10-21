@@ -34,6 +34,7 @@ public:
     bool new_style;
     int currentImage;
     ApplyGeoParams params;
+    bool ReadImg = true;
 
     void defineParams()
     {
@@ -51,6 +52,7 @@ public:
         addParamsLine("         generate_count                 : Generate a count file with as many");
         addParamsLine("                                        : numbers as enabled files in the metadata");
         addParamsLine("[--disregard_disabled]                  : Disregard disabled images from the metadata");
+        addParamsLine("[--do_not_read_img]                     : Ignore image label");
     }
 
     void readParams()
@@ -58,9 +60,10 @@ public:
         remove_disabled=checkParam("--disregard_disabled");
         XmippMetadataProgram::readParams();
         action=getParam("--action");
+        ReadImg=!checkParam("--do_not_read_img");
         if (action=="extract_selfile")
         {
-        	String style=getParam("--action",1);
+            String style=getParam("--action",1);
             new_style = style=="new";
         }
         else if (action=="extract_angles")
@@ -109,7 +112,7 @@ public:
             int enabled;
             Matrix1D<double> aux(1); // Auxiliary vector to be added to the docfile
             if (!rowIn.getValue( MDL_ENABLED, enabled))
-            	enabled=1;
+                enabled=1;
             if (enabled == 1)
                 aux(0) = (new_style) ? currentImage : 1;
             else
@@ -124,9 +127,23 @@ public:
         }
         else if (action=="extract_angles")
         {
-            Image<double> img;
-            img.readApplyGeo(fnImg,rowIn, params);
-            DF_out.append_angles(img.rot(), img.tilt(), img.psi(),
+        	double rot,tilt,psi;
+            if (ReadImg)
+            {
+                Image<double> img;
+                img.readApplyGeo(fnImg,rowIn, params);
+                rot = img.rot();
+                tilt =img.tilt();
+                psi =img.psi();
+            }
+            else
+            {
+            	rowIn.getValue(MDL_ANGLE_ROT, rot);
+            	rowIn.getValue(MDL_ANGLE_TILT, tilt);
+            	rowIn.getValue(MDL_ANGLE_PSI, psi);
+            }
+
+            DF_out.append_angles(rot,tilt,psi,
                                  ang1, ang2, ang3);
 
         }
