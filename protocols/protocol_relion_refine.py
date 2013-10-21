@@ -319,13 +319,19 @@ class ProtRelionRefinner(XmippProtocol):
             return plotName in selectedPlots
         DisplayRef3DNo = self.parser.getTkValue('DisplayRef3DNo')
         VisualizeIter = self.parser.getTkValue('VisualizeIter')
+
+        #Get last iteration
+        for i in range (0,1000):
+            fileName = relionDataTemplate.replace('000',"%03d",i)
+            if exists(fileName):
+                self.NumberOfIterations = i
+
         
         if DisplayRef3DNo == 'all':
             ref3Ds = range(1,self.NumberOfClasses+1)
         else:
             ref3Ds = map(int, getListFromVector(self.parser.getTkValue('SelectedRef3DNo')))
-                                                    
-            
+
         if VisualizeIter == 'last':
             iterations = [self.NumberOfIterations]
         elif VisualizeIter == 'all':
