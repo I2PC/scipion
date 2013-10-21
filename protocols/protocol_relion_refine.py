@@ -328,7 +328,7 @@ class ProtRelionRefinner(XmippProtocol):
 
         
         if DisplayRef3DNo == 'all':
-            ref3Ds = range(1,self.NumberOfClasses+1)
+            ref3Ds = range(1,1+1)
         else:
             ref3Ds = map(int, getListFromVector(self.parser.getTkValue('SelectedRef3DNo')))
 
