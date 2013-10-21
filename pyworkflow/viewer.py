@@ -119,8 +119,4 @@ class ProtocolViewer(Protocol, Viewer):
     def _viewAll(self, *args):
         """ Visualize all data give the parameters. """
         pass
-    
-    def _viewParam(self, paramName):
-        """ Visualize a specific parameter. """
-        pass
-        
+

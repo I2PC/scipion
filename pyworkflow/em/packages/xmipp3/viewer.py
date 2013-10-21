@@ -30,7 +30,7 @@ visualization program.
 
 import os
 from pyworkflow.viewer import Viewer, Wizard
-from pyworkflow.em import SetOfImages, SetOfMicrographs, SetOfParticles, SetOfCoordinates, DefCTFMicrographs, SetOfClasses2D, SetOfVolumes, SetOfCTF
+from pyworkflow.em import Image, SetOfImages, SetOfMicrographs, SetOfParticles, SetOfCoordinates, DefCTFMicrographs, SetOfClasses2D, SetOfVolumes, SetOfCTF
 from pyworkflow.utils.process import runJob
 from xmipp3 import getXmippPath
 from pyworkflow.em.protocol import ProtImportMicrographs, ProtCTFMicrographs
@@ -42,19 +42,19 @@ from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_rotational_spectra import XmippProtRotSpectra
-from convert import writeSetOfMicrographs, writeSetOfParticles, writeSetOfClasses2D, writeSetOfCoordinates, writeSetOfCTFs
+from convert import writeSetOfMicrographs, writeSetOfParticles, writeSetOfClasses2D, writeSetOfCoordinates, writeSetOfCTFs, locationToXmipp
 from os.path import dirname, join
 from pyworkflow.utils.path import makePath
 
 
 import xmipp
-from plotter import XmippPlotter
+
 
 class XmippViewer(Viewer):
     """ Wrapper to visualize different type of objects
     with the Xmipp program xmipp_showj
     """
-    _targets = [SetOfImages, SetOfCoordinates, SetOfClasses2D, 
+    _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, 
                 ProtImportMicrographs, XmippProtPreprocessMicrographs, ProtCTFMicrographs,
                 XmippProtParticlePicking, ProtImportParticles, XmippProtExtractParticles,
                 XmippProtCL2DAlign, XmippProtCL2D, SetOfClasses2D, SetOfCTF]
@@ -65,7 +65,11 @@ class XmippViewer(Viewer):
     def visualize(self, obj, **args):
         cls = type(obj)
         
-        if issubclass(cls, SetOfMicrographs):
+        if issubclass(cls, Image):
+            fn = locationToXmipp(*obj.getLocation())
+            runShowJ(fn)
+            
+        elif issubclass(cls, SetOfMicrographs):
             mdFn = getattr(obj, '_xmippMd', None)
             if mdFn:
                 fn = mdFn.get()
@@ -111,6 +115,7 @@ class XmippViewer(Viewer):
             #print "MD=%s" % obj.outputParticles.getFileName()
             if md.containsLabel(xmipp.MDL_ZSCORE):
                 print "MD contains ZSCORE"
+                from plotter import XmippPlotter
                 xplotter = XmippPlotter(windowTitle="Zscore particles sorting")
                 xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
                 xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_ZSCORE)

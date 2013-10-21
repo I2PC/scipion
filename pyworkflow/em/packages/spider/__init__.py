@@ -31,3 +31,4 @@ from spider import *
 
 from protocol_filters import SpiderProtFilter
 from protocol_align_apsr import SpiderProtAlignAPSR
+from protocol_custommask import SpiderProtCustomMask

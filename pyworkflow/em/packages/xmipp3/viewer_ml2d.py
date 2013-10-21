@@ -32,7 +32,7 @@ from pyworkflow.em import *
 from pyworkflow.gui.form import FormWindow
 from protocol_ml2d import XmippProtML2D
 from viewer import runShowJ
-from plotter import XmippPlotter
+
 import numpy as np
 
 
@@ -94,6 +94,8 @@ class XmippML2DViewer(ProtocolViewer):
         
     def createPlots(self, protML, selectedPlots):
         ''' Launch some plot for an ML2D protocol run '''
+        from plotter import XmippPlotter
+        
         protML._plot_count = 0
         lastIter = protML._lastIteration()
         if lastIter == 0:

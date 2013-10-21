@@ -157,6 +157,10 @@ class Image(Item):
         self.setIndex(index)
         self.setFileName(filename)
         
+    def copyInfo(self, other):
+        """ Copy basic information """
+        self.copyAttributes(other, '_samplingRate')
+        
     def hasCTF(self):
         return self._ctfModel is not None
     
@@ -323,7 +327,7 @@ class SetOfImages(Set):
     def copyInfo(self, other):
         """ Copy basic information (sampling rate, scannedPixelSize and ctf)
         from other set of images to current one"""
-        self.copyAttributes(other, '_samplingRate', '_hasCtf')
+        self.copyAttributes(other, '_samplingRate')
         
     def getFiles(self):
         filePaths = set()

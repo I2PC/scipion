@@ -103,7 +103,8 @@ class SpiderShell(object):
         if self._debug and self._log:
             self._log.close()
         
-    def close(self):
-        self.runCmd("end")
+    def close(self, end=True):
+        if end:
+            self.runCmd("end")
         self._proc.wait()
         # self._proc.kill() TODO: Check if necesary
