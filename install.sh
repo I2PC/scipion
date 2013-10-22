@@ -1489,6 +1489,7 @@ if [ $? -eq 1 ]; then
       FFTWFLAGS=""
     fi
     FLAGS="${FFTWFLAGS} --enable-threads"
+    configure_library ${FFTW_FOLDER} "." "." ${FLAGS}
   fi
   if [ $DO_COMPILE  -eq 1 ]; then
     compile_library ${FFTW_FOLDER} "." "." ${FLAGS}
@@ -1498,6 +1499,7 @@ if [ $? -eq 1 ]; then
 
   if [ $DO_CONFIGURE  -eq 1 ]; then
     FLAGS="${FFTWFLAGS} --enable-float"
+    configure_library ${FFTW_FOLDER} "." "." ${FLAGS}
   fi
   if [ $DO_COMPILE  -eq 1 ]; then
     compile_library ${FFTW_FOLDER} "." "." ${FLAGS}
@@ -1511,6 +1513,9 @@ if [ $? -eq 1 ]; then
   if [ $DO_CLEAN  -eq 1 ]; then
     uninstall_libs ${JPEG_FOLDER}/.libs libjpeg 8 false
   fi
+  if [ $DO_CONFIGURE  -eq 1 ]; then
+    configure_library ${JPEG_FOLDER} "." "." "CPPFLAGS=-w"
+  fi
   if [ $DO_COMPILE  -eq 1 ]; then
     compile_library ${JPEG_FOLDER} "." "." "CPPFLAGS=-w"
     install_libs ${JPEG_FOLDER}/.libs libjpeg 8 false
@@ -1522,6 +1527,9 @@ shouldIDoIt library ${TIFF_TAR}
 if [ $? -eq 1 ]; then
   if [ $DO_CLEAN  -eq 1 ]; then
     uninstall_libs ${TIFF_FOLDER}/libtiff/.libs libtiff 3 false
+  fi
+  if [ $DO_CONFIGURE  -eq 1 ]; then
+    configure_library ${TIFF_FOLDER} "." "." "CPPFLAGS=-w --with-jpeg-include-dir=${EXT_PATH}/${VJPEG} --with-jpeg-lib-dir=${XMIPP_HOME}/lib"
   fi
   if [ $DO_COMPILE  -eq 1 ]; then
     compile_library ${TIFF_FOLDER} "." "." "CPPFLAGS=-w --with-jpeg-include-dir=${EXT_PATH}/${VJPEG} --with-jpeg-lib-dir=${XMIPP_HOME}/lib"
@@ -1546,6 +1554,7 @@ fi
 #################### NMA ###########################
 shouldIDoIt library ${NMA_TAR}
 if [ $? -eq 1 ]; then
+  if [ $DO_COMPILE  -eq 1 ]; then
     echoExecRedirectEverything "cd ${XMIPP_HOME}/external/NMA/ElNemo" "/dev/null"
     echoExecRedirectEverything "make" "/dev/null"
     echoExecRedirectEverything "cp nma_* ${XMIPP_HOME}/bin" "/dev/null"
@@ -1556,6 +1565,7 @@ if [ $? -eq 1 ]; then
     echoExecRedirectEverything "cp ${XMIPP_HOME}/external/NMA/nma_* ${XMIPP_HOME}/bin" "/dev/null"
     echoExecRedirectEverything "cp ${XMIPP_HOME}/external/NMA/m_inout_Bfact.py ${XMIPP_HOME}/bin" "/dev/null"
     echoExecRedirectEverything "cp -" "/dev/null" 
+  fi
 fi
 
 #################### TCL/TK ###########################
@@ -1563,29 +1573,59 @@ if [ $DO_TCLTK -eq 1 ]; then
   if [ $IS_MAC -eq 1 ]; then
     shouldIDoIt pymodule ${TCL_TAR}
     if [ $? -eq 1 ]; then
-      compile_library ${TCL_FOLDER} python macosx "--disable-xft"
+      if [ $DO_CONFIGURE  -eq 1 ]; then
+        configure_library ${TCL_FOLDER} python macosx "--disable-xft"
+      fi
+      if [ $DO_COMPILE  -eq 1 ]; then
+        compile_library ${TCL_FOLDER} python macosx "--disable-xft"
+      fi
     fi
     shouldIDoIt pymodule ${TK_TAR}
     if [ $? -eq 1 ]; then
-      compile_library ${TK_FOLDER} python macosx "--disable-xft"
+      if [ $DO_CONFIGURE  -eq 1 ]; then
+        configure_library ${TK_FOLDER} python macosx "--disable-xft"
+      fi
+      if [ $DO_COMPILE  -eq 1 ]; then
+        compile_library ${TK_FOLDER} python macosx "--disable-xft"
+      fi
     fi
   elif [ $IS_MINGW -eq 1 ]; then
     shouldIDoIt pymodule ${TCL_TAR}
     if [ $? -eq 1 ]; then
-      compile_library ${TCL_FOLDER} python win "--disable-xft CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
+      if [ $DO_CONFIGURE  -eq 1 ]; then
+        configure_library ${TCL_FOLDER} python win "--disable-xft CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
+      fi
+      if [ $DO_COMPILE  -eq 1 ]; then
+        compile_library ${TCL_FOLDER} python win "--disable-xft CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
+      fi
     fi
     shouldIDoIt pymodule ${TK_TAR}
     if [ $? -eq 1 ]; then
-      compile_library ${TK_FOLDER} python win "--disable-xft --with-tcl=../../${TCL_FOLDER}/win CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
+      if [ $DO_CONFIGURE  -eq 1 ]; then
+        configure_library ${TK_FOLDER} python win "--disable-xft --with-tcl=../../${TCL_FOLDER}/win CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
+      fi
+      if [ $DO_COMPILE  -eq 1 ]; then
+        compile_library ${TK_FOLDER} python win "--disable-xft --with-tcl=../../${TCL_FOLDER}/win CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
+      fi
     fi
   else
     shouldIDoIt pymodule ${TCL_TAR}
     if [ $? -eq 1 ]; then
-      compile_library ${TCL_FOLDER} python unix "--enable-threads"
+      if [ $DO_CONFIGURE  -eq 1 ]; then
+        configure_library ${TCL_FOLDER} python unix "--enable-threads"
+      fi
+      if [ $DO_COMPILE  -eq 1 ]; then
+        compile_library ${TCL_FOLDER} python unix "--enable-threads"
+      fi
     fi
     shouldIDoIt pymodule ${TK_TAR}
     if [ $? -eq 1 ]; then
-      compile_library ${TK_FOLDER} python unix "--enable-threads"
+      if [ $DO_CONFIGURE  -eq 1 ]; then
+        configure_library ${TK_FOLDER} python unix "--enable-threads"
+      fi
+      if [ $DO_COMPILE  -eq 1 ]; then
+        compile_library ${TK_FOLDER} python unix "--enable-threads"
+      fi
     fi
   fi
 fi
@@ -1631,6 +1671,7 @@ if [ $DO_PYTHON -eq 1 ]; then
   #cp ./xmipp__iomodule.h $PYTHON_FOLDER/Modules/_io/_iomodule.h
   #echo "--> cp ./xmipp__iomodule.h $PYTHON_FOLDER/Modules/_io/_iomodule.h"
     
+  configure_library ${PYTHON_FOLDER} python "." ""
   compile_library ${PYTHON_FOLDER} python "." ""
 
   # Create the python launch script with necessary environment variable settings
@@ -1665,7 +1706,7 @@ if [ $DO_PYTHON -eq 1 ]; then
     printf 'export TCL_LIBRARY=$EXT_PYTHON/tcl$VTCLTK/library \n' >> $PYTHON_BIN
     printf 'export TK_LIBRARY=$EXT_PYTHON/tk$VTCLTK/library \n\n' >> $PYTHON_BIN
 #    printf 'source ${XMIPP_HOME}/bin/activate' >> $PYTHON_BIN
-#    printf '$EXT_PYTHON/$PYTHON_FOLDER/python "$@"\n' >> $PYTHON_BIN
+    printf '$EXT_PYTHON/$PYTHON_FOLDER/python "$@"\n' >> $PYTHON_BIN
   fi
   echoExec "chmod a+x ${PYTHON_BIN}"
   #make python directory accesible by anybody
