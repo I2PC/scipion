@@ -1,5 +1,5 @@
 #!/bin/sh
-#set -x #uncomment for debugging
+set -x #uncomment for debugging
 
 #############################
 # XMIPP installation script #
@@ -131,7 +131,7 @@ EXTERNAL_LIBRARIES_DEFAULT=(        1             1              1            1 
 VPYTHON=2.7.2
 PYTHON_FOLDER="Python-${VPYTHON}"
 PYTHON_TAR="${PYTHON_FOLDER}.tgz"
-DO_PYTHON=false
+DO_PYTHON=1
 
 #Python modules
 DO_PYMOD=0
@@ -233,7 +233,7 @@ echoRed()
 check_state()
 {
   if [ $GLOB_STATE -ne 0 ]; then
-    echoRed "WARNING: command returned a non-zero status"
+    echoRed "WARNING: command returned a non-zero status (${GLOB_STATE})"
     echoRed "COMMAND: $GLOB_COMMAND"
     case $1 in
       1)
@@ -823,7 +823,7 @@ takeArguments()
         if [ "${WITH_TCLTK}" == "true" ]; then
           DO_TCLTK=1
         elif [ "${WITH_TCLTK}" == "false" ]; then
-          DO_TCLTK=false
+          DO_TCLTK=0
         else
           echoRed "Parameter --tcl-tk only accept true or false values. Ignored and assuming default value."
         fi
@@ -862,7 +862,7 @@ takeArguments()
         if [ "${WITH_PYMOD}" == "true" ]; then
           DO_PYMOD=1
         elif [ "${WITH_PYMOD}" == "false" ]; then
-          DO_PYMOD=false
+          DO_PYMOD=0
         else
           echoRed "Parameter --pymodules only accept true or false values. Ignored and assuming default value."
         fi
@@ -872,7 +872,7 @@ takeArguments()
         if [ "${WITH_GUI}" == "true" ]; then
           WITH_GUI=1
         elif [ "${WITH_GUI}" == "false" ]; then
-          WITH_GUI=false
+          WITH_GUI=0
         else
           echoRed "Parameter --gui only accept true or false values. Ignored and assuming default value."
         fi
@@ -1081,6 +1081,7 @@ compile_library()
   echoExecRedirectEverything "make -j $NUMBER_OF_CPU" "$BUILD_PATH/${LIB}_make.log"
   echoExecRedirectEverything "cd -" "/dev/null"
   toc
+  echo
 }
 
 configure_library()
@@ -1102,6 +1103,7 @@ configure_library()
   echoExecRedirectEverything "./configure ${CONFIGFLAGS}" "${BUILD_PATH}/${LIB}_configure.log"
   echoExecRedirectEverything "cd -" "/dev/null"
   toc
+  echo
 }
 
 clean_library()
@@ -1119,27 +1121,36 @@ clean_library()
   echoExecRedirectEverything "make distclean" "/dev/null"
   echoExecRedirectEverything "cd -" "/dev/null"
   toc
+  echo
 }
 
 compile_pymodule()
 {
-   MOD=$1
-   _PATH=$EXT_PATH/python/$MOD
-   #_PYTHON=$EXT_PATH/python/$PYTHON_FOLDER/python
-   echoExecRedirectEverything "cd $_PATH" "/dev/null"
-   echoExecRedirectEverything "xmipp_python setup.py install --prefix $XMIPP_HOME" "$BUILD_PATH/${MOD}_setup_install.log"
+  tic
+  MOD=$1
+  _PATH=$EXT_PATH/python/$MOD
+  echo
+  echoGreen "*** Compiling ${MOD} ..."
+  #_PYTHON=$EXT_PATH/python/$PYTHON_FOLDER/python
+  echoExecRedirectEverything "cd $_PATH" "/dev/null"
+  echoExecRedirectEverything "xmipp_python setup.py install --prefix $XMIPP_HOME" "$BUILD_PATH/${MOD}_setup_install.log"
+  toc
+  echo
 }
 
 #This function should be called from XMIPP_HOME
 # Parameter: Library_Path Library_name Lib_Version_Number 
 install_libs()
 {
+  tic
   echoExecRedirectEverything "cd $XMIPP_HOME" "/dev/null"
   LIBPATH=external/$1; shift
   COMMON="$1"; shift
   VERSION=$1; shift
   COPY=$1
   SUFFIXES=".a .la "
+  echo
+  echoGreen "*** Installing lib ${LIBPATH} ..."
   if [ $IS_MAC -eq 1 ]; then
 	SUFFIXES="$SUFFIXES .dylib .$VERSION.dylib"
   elif [ $IS_MINGW -eq 1 ]; then
@@ -1157,18 +1168,23 @@ install_libs()
      fi
   done
   echoExecRedirectEverything "cd -" "/dev/null"
+  toc
+  echo
 }
 
 #This function should be called from XMIPP_HOME
 # Parameter: Library_Path Library_name Lib_Version_Number 
 uninstall_libs()
 {
+  tic
   echoExecRedirectEverything "cd $XMIPP_HOME" "/dev/null"
   LIBPATH=external/$1; shift
   COMMON="$1"; shift
   VERSION=$1; shift
   COPY=$1
   SUFFIXES=".a .la "
+  echo
+  echoGreen "*** Uninstalling lib ${LIBPATH} ..."
   if [ $IS_MAC -eq 1 ]; then
 	SUFFIXES="$SUFFIXES .dylib .$VERSION.dylib"
   elif [ $IS_MINGW -eq 1 ]; then
@@ -1184,15 +1200,22 @@ uninstall_libs()
      fi
   done
   echoExecRedirectEverything "cd -" "/dev/null"
+  toc
+  echo
 }
 
 install_bin()
 {
+  tic
   echoExecRedirectEverything "cd $XMIPP_HOME" "/dev/null"
   BINPATH=../external/$1
   LINKNAME=bin/$2
+  echo
+  echoGreen "*** Installing bin ${LINKNAME} ..."
   echoExecRedirectEverything "ln -sf $BINPATH $LINKNAME" "/dev/null"
   echoExecRedirectEverything "cd -" "/dev/null"
+  toc
+  echo
 }
 
 uninstall_bin()
@@ -1200,8 +1223,11 @@ uninstall_bin()
   echoExecRedirectEverything "cd $XMIPP_HOME" "/dev/null"
   BINPATH=../external/$1
   LINKNAME=bin/$2
+  echo
+  echoGreen "*** Uninstalling bin ${LINKNAME} ..."
   echoExecRedirectEverything "rm $LINKNAME" "/dev/null"
   echoExecRedirectEverything "cd -" "/dev/null"
+  echo
 }
 
 create_dir()
@@ -1279,7 +1305,7 @@ decompressPython()
         echoRed "${PYTHON_FOLDER} folder remains untouched."
       fi   
     fi
-    echoExecRedirectEverything "tar -xvzf ${PYTHON_FOLDER}" "/dev/null"
+    echoExecRedirectEverything "tar -xvzf ${PYTHON_TAR}" "/dev/null"
   fi
   echoExecRedirectEverything "cd -" "/dev/null"
   toc
@@ -1533,7 +1559,7 @@ if [ $? -eq 1 ]; then
 fi
 
 #################### TCL/TK ###########################
-if $DO_TCLTK; then
+if [ $DO_TCLTK -eq 1 ]; then
   if [ $IS_MAC -eq 1 ]; then
     shouldIDoIt pymodule ${TCL_TAR}
     if [ $? -eq 1 ]; then
@@ -1570,7 +1596,7 @@ fi
 
 EXT_PYTHON=${EXT_PATH}/python
 
-if $DO_PYTHON; then
+if [ $DO_PYTHON -eq 1 ]; then
   echoGreen "PYTHON SETUP"
   export CPPFLAGS="-I${EXT_PATH}/${SQLITE_FOLDER} -I${EXT_PYTHON}/${TK_FOLDER}/generic -I${EXT_PYTHON}/${TCL_FOLDER}/generic"
   if [ $IS_MAC -eq 1 ]; then
@@ -1689,9 +1715,9 @@ if [ $DO_CLTOMO -eq 1 ]; then
 fi
 
 # Launch the configure/compile python script 
-echoExecRedirectEverything "cd ${XMIPP_HOME}" "/dev/null"
 
 echoGreen "Compiling XMIPP ..."
+echoExecRedirectEverything "cd ${XMIPP_HOME}" "/dev/null"
 #echoGreen "CONFIGURE: $CONFIGURE_ARGS"
 #echoGreen "COMPILE: $COMPILE_ARGS"
 #echoGreen "GUI: $GUI_ARGS"
