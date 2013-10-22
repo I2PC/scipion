@@ -34,7 +34,7 @@ public:
     bool new_style;
     int currentImage;
     ApplyGeoParams params;
-    bool ReadImg = true;
+    bool ReadImg;
 
     void defineParams()
     {
