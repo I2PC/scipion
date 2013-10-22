@@ -224,9 +224,6 @@ def launchML2DPlots(protML, selectedPlots):
     ll = []
     pmax = []
     for iter in iters:
-#    for id in md:
-#        iter = md.getValue(MDL_ITER, id)
-#        if iter > 0:
         logs = protML.getFilename('iter_logs', iter=iter)
         md = MetaData(logs)
         id = md.firstObject()
@@ -282,9 +279,4 @@ def collectResults(log, WorkingDir, Prefix):
         dst = join(WorkingDir, 'result_%s.xmd' % k)
         renameFile(log, src, dst)
 
-
-def longSleep(log):
-    """ Just for test. """
-    import time
-    time.sleep(30)
     
