@@ -44,12 +44,6 @@ class XmippProtML2D(ProtAlign, ProtClassify):
         ProtAlign.__init__(self, **args)
         ProtClassify.__init__(self, **args)
         
-        progId = "ml"
-        
-        if self.doMlf:
-            progId += "f"
-        self.program = "xmipp_%s_align2d" % progId
-        self.prefix = '%s2d_' % progId
         
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -147,8 +141,17 @@ class XmippProtML2D(ProtAlign, ProtClassify):
         return iterNumber        
     
     def _defineSteps(self):
-        self.oroot = self._getPath(self.prefix)
         """ Mainly prepare the command line for call ml(f)2d program"""
+        
+        progId = "ml"
+        
+        if self.doMlf:
+            progId += "f"
+        self.program = "xmipp_%s_align2d" % progId
+        self.prefix = '%s2d_' % progId        
+        
+        self.oroot = self._getPath(self.prefix)
+        
         # Convert input images if necessary
         imgsFn = createXmippInputImages(self, self.inputImages.get())
         

@@ -112,18 +112,18 @@ function launchViewer(id){
 		url : "/launch_viewer/?protocolId=" + id,
 		dataType : "json",
 		success : function(json) {
-			$.each(json, function(key, value) {		
+			$.each(json, function(key, value) {
 				if(key=="url_form"){
-					popup(value);
+					customPopup(value,500,350);
 				}
 				else if(key=="html"){
 					customPopupHTML(value,800,600);
 				}
 				else if(key=="url"){
-					customPopup(value,1024,600)
+					customPopup(value,1024,600);
 				}
 				else if(key=="plot"){
-					customPopup(value,600,500)
+					customPopup(value,600,500);
 				}
 			});
 		}

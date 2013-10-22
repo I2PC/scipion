@@ -183,3 +183,7 @@ class XmippML2DViewer(ProtocolViewer):
         
         return xplotter
 
+    @classmethod
+    def getView(self):
+        return "viewerML2D"
+    

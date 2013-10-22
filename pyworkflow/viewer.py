@@ -59,6 +59,13 @@ class Viewer(object):
         particular object.
         """
         pass
+    
+    def getView(self):
+        """ This method should return the string value of the view in web
+        that will respond to this viewer. This method only should be implemented
+        in those viewers that have WEB_DJANGO environment defined. 
+        """
+        return None
 
 
 class Wizard(object):

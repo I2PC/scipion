@@ -32,9 +32,6 @@ urlpatterns = patterns('',
     url(r'^protocol_summary/$', 'app.views_project.protocol_summary'),
     url(r'^protocol_status/$', 'app.views_project.protocol_status'),
     url(r'^project_graph/$', 'app.views_project.project_graph'),
-    url(r'^launch_viewer/$', 'app.views_project.launch_viewer'),
-    url(r'^view_plot/$', 'app.views_project.view_plot'),
-    url(r'^viewer/$', 'app.views_project.viewer'),
     
     #UTILS
     url(r'^get_image/', 'app.views_util.get_image'), # Load images dynamically
@@ -53,6 +50,11 @@ urlpatterns = patterns('',
     url(r'^get_image_psd/$', 'app.em_wizard.get_image_psd'),
     url(r'^get_image_bandpass/$', 'app.em_wizard.get_image_bandpass'),
     url(r'^get_image_gaussian/$', 'app.em_wizard.get_image_gaussian'),
+    
+    #VIEWERS
+    url(r'^launch_viewer/$', 'app.em_viewer.launch_viewer'),
+    url(r'^view_plot/$', 'app.em_viewer.view_plot'),
+    url(r'^viewer/$', 'app.em_viewer.viewer'),
     
     #SHOWJ
     url(r'^showj/', 'app.views_showj.showj'), #Load web
