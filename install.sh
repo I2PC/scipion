@@ -1,5 +1,5 @@
 #!/bin/sh
-set -x #uncomment for debugging
+#set -x #uncomment for debugging
 
 #############################
 # XMIPP installation script #
@@ -174,7 +174,7 @@ DO_TK=0
 PYTHON_MODULES=(        $MATLIBPLOT_FOLDER $PYMPI_FOLDER $NUMPY_FOLDER $SCIPY_FOLDER $TCL_FOLDER $TK_FOLDER $PSUTIL_FOLDER )
 PYTHON_MODULES_FILES=(  $MATLIBPLOT_TAR    $PYMPI_TAR    $NUMPY_TAR    $SCIPY_TAR    $TCL_TAR    $TK_TAR    $PSUTIL_TAR    )
 PYTHON_MODULES_DO=(     $DO_MATLIBPLOT     $DO_PYMPI     $DO_NUMPY     $DO_SCIPY     $DO_TCL     $DO_TK     $DO_PSUTIL     )
-PYTHON_MODULES_DEFAULT=(           1             1             1             0           1          1                1           )
+PYTHON_MODULES_DEFAULT=(           1             1             1             0           1          1          1           )
 
 
 ##################################################################################
@@ -810,7 +810,7 @@ takeArguments()
         fi
         ;;
       --psutil)
-        doIt pymodule ${SCIPY_TAR} 1
+        doIt pymodule ${PSUTIL_TAR} 1
         ;;
       --psutil=*)
         WITH_PSUTIL=$(echo "$1"|cut -d '=' -f2)
@@ -1730,11 +1730,11 @@ fi
 preparePythonEnvironment
 
 if [ $DO_PYMOD -eq 1 ]; then
-doIt pymodule ${NUMPY_TAR}
-doIt pymodule ${MATLIBPLOT_TAR}
-doIt pymodule ${PYMPI_TAR}
-doIt pymodule ${SCIPY_TAR}
-doIt pymodule ${PSUTIL_TAR}
+  doIt pymodule ${NUMPY_TAR} 1
+  doIt pymodule ${MATLIBPLOT_TAR} 1
+  doIt pymodule ${PYMPI_TAR} 1
+  doIt pymodule ${SCIPY_TAR} 1
+  doIt pymodule ${PSUTIL_TAR} 1
 fi
 
 shouldIDoIt pymodule ${NUMPY_TAR}
