@@ -255,11 +255,14 @@ class RunIOTreeProvider(TreeProvider):
         return (None, desc)
     
     def getObjectActions(self, obj):
+        from pyworkflow.em import findViewers
+        from pyworkflow.viewer import DESKTOP_TKINTER
+        
         if isinstance(obj, Pointer):
             obj = obj.get()
             
         actions = []    
-        viewers = findViewers(obj.getClassName(), 'tkinter')
+        viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
         for v in viewers:
             actions.append(('Open with %s' % v.__name__, lambda : self.visualize(v, obj)))
             
