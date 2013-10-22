@@ -34,7 +34,7 @@ public:
     bool new_style;
     int currentImage;
     ApplyGeoParams params;
-    bool ReadImg = true;
+    bool ReadImg;
 
     void defineParams()
     {
@@ -60,6 +60,7 @@ public:
         remove_disabled=checkParam("--disregard_disabled");
         XmippMetadataProgram::readParams();
         action=getParam("--action");
+	ReadImg = true;
         ReadImg=!checkParam("--do_not_read_img");
         if (action=="extract_selfile")
         {
