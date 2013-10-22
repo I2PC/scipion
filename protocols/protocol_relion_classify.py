@@ -287,7 +287,12 @@ class ProtRelionClassifier(XmippProtocol):
         else:
             ref3Ds = map(int, getListFromVector(self.parser.getTkValue('SelectedRef3DNo')))
                                                     
-            
+        #Get last iteration
+        for i in range (0,1000):
+            fileName = relionDataTemplate.replace('000',"%03d",i)
+            if exists(fileName):
+                self.NumberOfIterations = i
+
         if VisualizeIter == 'last':
             iterations = [self.NumberOfIterations]
         elif VisualizeIter == 'all':
