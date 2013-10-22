@@ -51,7 +51,7 @@ public:
     FourierTransformer transformer3D, transformer2D;
 
     // Volume to project
-    const MultidimArray<double> *volume;
+    MultidimArray<double> *volume;
 
     // Real and imaginary B-spline coefficients for Fourier of the volume
     MultidimArray< double > VfourierRealCoefs, VfourierImagCoefs;
@@ -71,7 +71,7 @@ public:
     /*
      * The constructor of the class
      */
-    FourierProjector(const MultidimArray<double> &V, double paddFactor, double maxFreq, int BSplinedegree);
+    FourierProjector(MultidimArray<double> &V, double paddFactor, double maxFreq, int BSplinedegree);
     /**
      * This method gets the volume's Fourier and the Euler's angles as the inputs and interpolates the related projection
      */
