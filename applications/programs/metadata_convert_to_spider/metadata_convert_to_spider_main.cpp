@@ -60,6 +60,7 @@ public:
         remove_disabled=checkParam("--disregard_disabled");
         XmippMetadataProgram::readParams();
         action=getParam("--action");
+	ReadImg = true;
         ReadImg=!checkParam("--do_not_read_img");
         if (action=="extract_selfile")
         {

@@ -47,7 +47,9 @@ the same pixel size as your input images.
 Ref3D = ""
 
 # Ref. map is on absolute greyscale?
-""" The probabilities are based on squared differences, so that the absolute grey scale is important.
+""" {expert}
+Set this option to False unless you know what you are doing.
+The probabilities are based on squared differences, so that the absolute grey scale is important.
 Probabilities are calculated based on a Gaussian noise model, 
 which contains a squared difference term between the reference and the experimental image. 
 This has a consequence that the reference needs to be on the same absolute intensity 
@@ -59,7 +61,7 @@ will use a (grey-scale invariant) cross-correlation criterion in the first itera
 prior to the second iteration the map will be filtered again using the initial low-pass filter.
 This procedure is relatively quick and typically does not negatively affect the outcome of the
 subsequent MAP refinement. Therefore, if in doubt it is recommended to set this option to No."""
-IsMapAbsoluteGreyScale = True
+IsMapAbsoluteGreyScale = False
 
 #normalize input images
 """ 
