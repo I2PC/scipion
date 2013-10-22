@@ -97,7 +97,7 @@ def viewer(request):
     getParamsForm(request, protocol, project)
     
     
-    pass
+    return HttpResponse("<h1>Under Construction</h1>");
     
 def getParamsForm(request, protocol, project):
     for paramName, _ in protocol.iterDefinitionAttributes():

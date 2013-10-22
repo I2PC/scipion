@@ -127,7 +127,13 @@ $(document).ready(function() {
 			$.post(action, $("#protocolForm").serialize(), function(html) {
 				$('.messi').remove();
 				$('.messi-modal').remove();
-
+								
+				if(html=="errorInput"){
+					var msg = messiError("Input was not selected, please choose one.");
+					launchMessiSimple("Error",msg);
+				} else {
+					customPopupHTML(html,775,470);
+				}
 			});
 		}
 		// Important. Stop the normal POST
