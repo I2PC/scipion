@@ -607,9 +607,7 @@ def  filter_volume(_log
                FourierMaxFrequencyOfInterest = md.getValue(MDL_RESOLUTION_FREQREAL, id)
                FourierMaxFrequencyOfInterest = ResolSam / FourierMaxFrequencyOfInterest
             
-           filter_in_pixels_at = float(FourierMaxFrequencyOfInterest) 
-                                 #+\
-                                 #float(ConstantToAddToFiltration)
+           filter_in_pixels_at = float(FourierMaxFrequencyOfInterest) + float(ConstantToAddToFiltration)
         else:
            filter_in_pixels_at = float(ConstantToAddToFiltration)
 

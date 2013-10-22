@@ -156,6 +156,11 @@ SCIPY_FOLDER="scipy-${VSCIPY}"
 SCIPY_TAR="${SCIPY_FOLDER}.tgz"
 DO_SCIPY=0
 
+VPSUTIL=0.7.1
+PSUTIL_FOLDER="psutil-${VPSUTIL}"
+PSUTIL_TAR="${PSUTIL_FOLDER}.tgz"
+DO_PSUTIL=1
+
 VTCLTK=8.5.10
 DO_TCLTK=1
 TCL_FOLDER="tcl${VTCLTK}"
@@ -166,10 +171,10 @@ TK_TAR="${TK_FOLDER}.tgz"
 DO_TK=0
 
 #Python modules arrays. For adding a new python module, define his decompress folder and tar names, put them in PYTHON_MODULES and PYTHON_MODULES_FILES arrays, and put 1 whther it has to be installed by default, 0 otherwise in PYTHON_MODULES_DEFAULT in the appropiate position. You will also need to stablish a DO* variable in the *DO array, to let the script work
-PYTHON_MODULES=(        $MATLIBPLOT_FOLDER $PYMPI_FOLDER $NUMPY_FOLDER $SCIPY_FOLDER $TCL_FOLDER $TK_FOLDER )
-PYTHON_MODULES_FILES=(  $MATLIBPLOT_TAR    $PYMPI_TAR    $NUMPY_TAR    $SCIPY_TAR    $TCL_TAR    $TK_TAR    )
-PYTHON_MODULES_DO=(     $DO_MATLIBPLOT     $DO_PYMPI     $DO_NUMPY     $DO_SCIPY     $DO_TCL     $DO_TK     )
-PYTHON_MODULES_DEFAULT=(           1             1             1             0           1          1       )
+PYTHON_MODULES=(        $MATLIBPLOT_FOLDER $PYMPI_FOLDER $NUMPY_FOLDER $SCIPY_FOLDER $TCL_FOLDER $TK_FOLDER $PSUTIL_FOLDER )
+PYTHON_MODULES_FILES=(  $MATLIBPLOT_TAR    $PYMPI_TAR    $NUMPY_TAR    $SCIPY_TAR    $TCL_TAR    $TK_TAR    $PSUTIL_TAR    )
+PYTHON_MODULES_DO=(     $DO_MATLIBPLOT     $DO_PYMPI     $DO_NUMPY     $DO_SCIPY     $DO_TCL     $DO_TK     $DO_PSUTIL     )
+PYTHON_MODULES_DEFAULT=(           1             1             1             0           1          1                1           )
 
 
 ##################################################################################
@@ -475,6 +480,8 @@ helpMessage()
   echo -e "    Execute selected operation over numpy module. --numpy is equivalent to --numpy=true."
   echo -e "${BLUE}--scipy=${YELLOW}[true|false]${WHITE}"
   echo -e "    Execute selected operation over scipy module. --scipy is equivalent to --scipy=true."
+  echo -e "${BLUE}--psutil=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute selected operation over psutil module. --scipy is equivalent to --psutil=true."
   echo -e "${BLUE}--tcl-tk=${YELLOW}[true|false]${WHITE}"
   echo -e "    Execute selected operation over tcl and tk libraries. --tcl-tk is equivalent to --tcl-tk=true."
   echo -e "${BLUE}--tcl=${YELLOW}[true|false]${WHITE}"
@@ -502,25 +509,12 @@ takeArguments()
         DO_UNTAR=0
         DO_COMPILE=0
         DO_CONFIGURE=0
-	doIt library ${ALGLIB_TAR} 0
-	doIt library ${BILIB_TAR} 0
-	doIt library ${CONDOR_TAR} 0
-	doIt library ${FFTW_TAR} 0
-	doIt library ${GTEST_TAR} 0
-	doIt library ${HDF5_TAR} 0
-	doIt library ${IMAGEJ_TAR} 0
-	doIt library ${JPEG_TAR} 0
-	doIt library ${SCONS_TAR} 0
-	doIt library ${SQLITE_TAR} 0
-	doIt library ${TIFF_TAR} 0
-	doIt library ${NMA_TAR} 0
-	doIt library ${SHALIGNMENT_TAR} 0
-	doIt pymodule ${MATLIBPLOT_TAR} 0
-        doIt pymodule ${PYMPI_TAR} 0
-        doIt pymodule ${NUMPY_TAR} 0
-        doIt pymodule ${SCIPY_TAR} 0
-        doIt pymodule ${TCL_TAR} 0
-        doIt pymodule ${TK_TAR} 0
+        for lib in ${EXTERNAL_LIBRARIES_FILES}; do
+          doIt library ${lib} 0
+        done
+        for mod in ${PYTHON_MODULES_FILES}; do
+          doIt pymodule ${mod} 0
+        done
         DO_PYTHON=0
         DO_TCLTK=0
         DO_PYMOD=0
@@ -813,6 +807,19 @@ takeArguments()
           doIt pymodule ${SCIPY_TAR} 0
         else
           echoRed "Parameter --scipy only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --psutil)
+        doIt pymodule ${SCIPY_TAR} 1
+        ;;
+      --psutil=*)
+        WITH_PSUTIL=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_PSUTIL}" == "true" ]; then
+          doIt pymodule ${PSUTIL_TAR} 1
+        elif [ "${WITH_PSUTIL}" == "false" ]; then
+          doIt pymodule ${PSUTIL_TAR} 0
+        else
+          echoRed "Parameter --psutil only accept true or false values. Ignored and assuming default value."
         fi
         ;;
       --tcl-tk)
@@ -1727,6 +1734,7 @@ doIt pymodule ${NUMPY_TAR}
 doIt pymodule ${MATLIBPLOT_TAR}
 doIt pymodule ${PYMPI_TAR}
 doIt pymodule ${SCIPY_TAR}
+doIt pymodule ${PSUTIL_TAR}
 fi
 
 shouldIDoIt pymodule ${NUMPY_TAR}
@@ -1754,6 +1762,11 @@ if [ $DO_CLTOMO -eq 1 ]; then
     echoExecRedirectEverything "cd ${EXT_PATH}/${SHALIGNMENT_FOLDER}" "/dev/null"
     echoExecRedirectEverything "./compile.sh" "/dev/null"
   fi
+fi
+
+shouldIDoIt pymodule ${PSUTIL_TAR}
+if [ $? -eq 1 ]; then
+  compile_pymodule ${PSUTIL_FOLDER}
 fi
 
 # Launch the configure/compile python script 

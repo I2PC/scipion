@@ -88,6 +88,7 @@ public class XmippFilePreview extends JComponent implements
 				for (int l: labels)
 					if (MetaData.isImage(l))
 						loadImage(md.getValueString(l, md.firstObject()));
+				md.destroy();
 			}			
 				
            

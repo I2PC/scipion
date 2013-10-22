@@ -343,6 +343,9 @@ class ProcessManager():
         script = 'xmipp_protocol_script %s' % os.path.abspath(self.run['script'])
         return self.getProcessFromCmd('ps -A -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep "%(script)s" | grep -v grep ' % locals())
 
+    def getProcessGroup_(self):
+        pass
+        
     def stopProcessGroup(self, project=None):
         if project != None:
             from protlib_sql import SqliteDb
@@ -354,10 +357,7 @@ class ProcessManager():
             p = Popen(cmd % self.run, shell=True, stdout=PIPE)
             os.waitpid(p.pid, 0)
         else:
-            childs = self.getProcessGroup()
-            for c in childs:
-                c.terminate()
-        
+            self.psutilKillAll()
                 
     def isAlive(self):
         if self.isBatch:
@@ -373,8 +373,31 @@ class ProcessManager():
                 raise Exception("Failed %s, command: %s" % (e, cmd))
             return (retcode == 0)
         else:
-            childs = self.getProcessGroup()
-            return len(childs) > 0
+            return self.psutilIsAlive()
+
+    def psutilKillAll(self):
+        """ Kill all processes related to this job. """
+        import psutil
+        try:
+            proc = psutil.Process(int(self.pid))
+            for c in proc.get_children(recursive=True):
+                print "Terminating child pid: %d" % c.pid
+                c.kill()
+            print "Terminating process pid: %s" % self.pid
+            proc.kill()
+        except:
+            pass
+        
+    def psutilIsAlive(self):
+        import psutil
+        try:
+            proc = psutil.Process(int(self.pid))
+            return proc.is_running()
+        except:
+            return False
+#        for c in proc.get_children(recursive=True):
+#            return True
+#        return False     
     
 # The job should be launched from the working directory!
 def runJob(log, 
