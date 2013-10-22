@@ -1545,6 +1545,7 @@ if [ $? -eq 1 ]; then
     uninstall_libs ${HDF5_FOLDER}/c++/src/.libs libhdf5_cpp 7 false
   fi
   if [ $DO_COMPILE  -eq 1 ]; then
+    configure_library ${HDF5_FOLDER} "." "." "CPPFLAGS=-w --enable-cxx"
     compile_library ${HDF5_FOLDER} "." "." "CPPFLAGS=-w --enable-cxx"
     install_libs ${HDF5_FOLDER}/src/.libs libhdf5 7 false
     install_libs ${HDF5_FOLDER}/c++/src/.libs libhdf5_cpp 7 false
