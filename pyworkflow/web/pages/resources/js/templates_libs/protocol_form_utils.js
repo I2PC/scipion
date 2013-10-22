@@ -117,11 +117,16 @@ $(document).ready(function() {
 			});
 		} else if (mode == 'viewer') {
 			
+			new Messi("<img src='/resources/visualize.gif'/>  Loading Viewer...",{
+				modal : true
+				});
+			
 			/* Launch the viewers with the options chosen */
 			var action = "/viewer/";
 			
 			$.post(action, $("#protocolForm").serialize(), function(html) {
-	
+				$('.messi').remove();
+				$('.messi-modal').remove();
 
 			});
 		}

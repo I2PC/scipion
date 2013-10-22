@@ -2,6 +2,7 @@ import json
 import pyworkflow.gui.graph as gg
 from pyworkflow.em import *
 from views_util import * 
+from views_protocol import updateParam 
 from pyworkflow.utils.utils import prettyDate
 from pyworkflow.manager import Manager
 from pyworkflow.apps.pw_project_viewprotocols import STATUS_COLORS
@@ -159,6 +160,8 @@ def project_content(request):
     manager = Manager()
     request.session['projectPath'] = manager.getProjectPath(projectName)
         
+        
+   
     project = loadProject(projectName)    
     provider = ProjectRunsTreeProvider(project)
     
@@ -226,84 +229,5 @@ def protocol_summary(request):
         
 #        print "======================= in protocol_summary...."
 #        print jsonStr
-    return HttpResponse(jsonStr, mimetype='application/javascript')
-
-def launch_viewer(request):
-    if request.is_ajax():
-        projectName = request.session['projectName']
-        project = loadProject(projectName)
-        protId = request.GET.get('protocolId', None)
-        protocol = project.mapper.selectById(int(protId))
-        
-        print "======================= in launch_viewer...."
-        
-        viewers = findViewers(protocol.getClassName(), WEB_DJANGO)
-        print viewers
-        
-        if isinstance(protocol, XmippProtML2D):
-            ioDict = {"url_form": "/form/?protocolClass=XmippML2DViewer&action=visualize"}
-        elif isinstance(protocol, XmippProtCL2D):
-            ioDict = {"url_form": "/form/?protocolClass=XmippCL2DViewer&action=visualize"}
-        elif isinstance(protocol, XmippProtML3D):
-            ioDict = {"url_form": "/form/?protocolClass=XmippML3DViewer&action=visualize"}
-        else:
-            ioDict = viewer_default(protId, protocol)
-       
-        jsonStr = json.dumps(ioDict, ensure_ascii=False)
-        
-    return HttpResponse(jsonStr, mimetype='application/javascript')
-
-def view_plot(request):
-    projectName = request.session['projectName']
-    project = loadProject(projectName)
-    protId = request.GET.get('protocolId', None)
-    protocol = project.mapper.selectById(int(protId))
-    
-    mdFn = getattr(protocol.outputParticles, '_xmippMd', None)
-    if mdFn:
-        fn = mdFn.get()
-    else:
-        fn = project.getTmpPath(protocol.outputParticles.getName() + '_images.xmd')
-        writeSetOfParticles(protocol.outputParticles, fn, protocol.getTmpPath())
-        
-    md = xmipp.MetaData(fn)
-    if md.containsLabel(xmipp.MDL_ZSCORE):
-        
-        from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-        from matplotlib.figure import Figure
-        from matplotlib.dates import DateFormatter
-        
-#        print "MD contains ZSCORE"
-        xplotter = XmippPlotter(windowTitle="Zscore particles sorting")
-        xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
-        xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_ZSCORE)
-        figFn = fn.replace('.xmd', '.png')        
-        canvas = xplotter.getCanvas()
-        
-        response= HttpResponse(content_type='image/png')
-        canvas.print_png(response)
-        return response
-
-def viewer_default(protId, protocol):
-    print "======================= in viewer_default...."
-       
-    if getattr(protocol, 'outputMicrographs', False):
-        objId = protocol.outputMicrographs.getObjId()
-    elif getattr(protocol, 'outputParticles', False):
-        objId = protocol.outputParticles.getObjId()
-    
-    url_plotter = "/view_plot/?protocolId="+protId
-    
-    from views_showj import visualizeObject
-    url_showj = "/visualize_object/?objectId="+str(objId)
-    
-    ioDict = {"url": url_showj , "plot" : url_plotter}
-    return ioDict
-
-def viewer(request):
-    project, protocol = loadProtocolProject(request)
-    pass
-    
-    
-    
+    return HttpResponse(jsonStr, mimetype='application/javascript')    
     

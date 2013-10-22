@@ -185,5 +185,5 @@ class XmippML2DViewer(ProtocolViewer):
 
     @classmethod
     def getView(self):
-        return "viewer_ml2d"
+        return "viewerML2D"
     

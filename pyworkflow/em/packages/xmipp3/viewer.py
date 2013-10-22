@@ -166,7 +166,7 @@ class XmippViewer(Viewer):
         
     @classmethod
     def getView(self):
-        return "viewer_xmipp"
+        return "viewerXmipp"
         
 # ------------- Xmipp utilities function to launch Java applications ------------
 
