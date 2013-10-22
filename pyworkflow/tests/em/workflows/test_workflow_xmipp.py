@@ -347,10 +347,8 @@ class TestXmippWorkflow(TestWorkflow):
         self.validateFiles('protExtract', protExtract)
         
         print "Run ML2D"
-        #TODO: Set doMlf to True when CTF is infered
-        protML2D = XmippProtML2D(numberOfReferences=1, maxIters=4, 
+        protML2D = XmippProtML2D(numberOfReferences=1, maxIters=4, doMlf=True,
                                  numberOfMpi=2, numberOfThreads=1)
-        protML2D.doMlf.set(True)
         protML2D.inputImages.set(protExtract.outputParticles)
         self.proj.launchProtocol(protML2D, wait=True)        
         
