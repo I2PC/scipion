@@ -34,7 +34,7 @@ def showj(request, inputParameters=None):
         _labelsToRenderComboBox = inputParameters['labelsToRenderComboBox'] if 'labelsToRenderComboBox' in inputParameters else ''
         request.session['defaultZoom'] = inputParameters['zoom'] if 'zoom' in inputParameters else '150px' 
     
-#    print("path",_path)
+    print("path",_path)
     
     
     #Init Dataset
@@ -59,7 +59,12 @@ def showj(request, inputParameters=None):
 #            print request.POST.get('volumesToRenderComboBox') if ('volumesToRenderComboBox' in request.POST and request.POST.get('volumesToRenderComboBox') != '') else "taka"
             _imageVolName = request.POST.get('volumesToRenderComboBox') if ('volumesToRenderComboBox' in request.POST and request.POST.get('volumesToRenderComboBox') != '') else tableDataset.getElementById(0,_labelsToRenderComboBox)
             if request.POST.get('dims')=='3d':
-                _imageVolName = readVolumeAndReslice(request.session['projectPath'], _imageVolName, int(request.POST.get('resliceComboBox')))
+                if request.POST.get('mode')=='volume_astex':
+                    _imageVolName = readVolumeAndReslice(request.session['projectPath'], _imageVolName, int(request.POST.get('resliceComboBox')), xmipp.DT_FLOAT)
+                elif request.POST.get('mode')=='column' or request.POST.get('mode')=='gallery':        
+                    _imageVolName = readVolumeAndReslice(request.session['projectPath'], _imageVolName, int(request.POST.get('resliceComboBox')), xmipp.DT_UCHAR)
+                
+                
                 
             _imageDimensions = getImageDim(request, _imageVolName)
         else:
@@ -77,7 +82,10 @@ def showj(request, inputParameters=None):
         else:    
             _imageVolName = tableDataset.getElementById(0,inputParameters['labelsToRenderComboBox'])
             if inputParameters['dims']=='3d':
-                _imageVolName = readVolumeAndReslice(request.session['projectPath'], _imageVolName, inputParameters['resliceComboBox'])
+                if inputParameters['mode']=='volume_astex':
+                    _imageVolName = readVolumeAndReslice(request.session['projectPath'], _imageVolName, inputParameters['resliceComboBox'], xmipp.DT_FLOAT)
+                elif inputParameters['mode']=='column' or inputParameters['mode']=='gallery':    
+                    _imageVolName = readVolumeAndReslice(request.session['projectPath'], _imageVolName, inputParameters['resliceComboBox'], xmipp.DT_UCHAR)
                 
             _imageDimensions = getImageDim(request, _imageVolName)
             
@@ -100,33 +108,24 @@ def showj(request, inputParameters=None):
     dataset.setLabelToRender(_labelsToRenderComboBox)
     
     volLink=''
-    threshold =0
+#    threshold =0.285 #Para emd_1042.map
+    #threshold =11580 #Para hand.vol
+    threshold = 1
     chimeraHtml=''
     
-    print "path",_imageVolName
-    if showjForm.data['mode']=='volume':
+    
+    volPath = os.path.join(request.session['projectPath'], _imageVolName)
+    print "path",volPath
+    if showjForm.data['mode']=='volume_astex':
         
-        img = xmipp.Image()
-        imgFn = os.path.join(request.session['projectPath'], _imageVolName)
-        img.read(str(imgFn))
-        img.convert2DataType(xmipp.DT_SCHAR, xmipp.CW_CAST)
         fileName, fileExtension = os.path.splitext(_imageVolName)
-        _imageVolName2 = '%s_tmp%s' % (fileName, '.mrc')
-        img.write(str(_imageVolName2))
         
-#        fileName, fileExtension = os.path.splitext(volName)
-#        _imageVolName = '%s_tmp%s' % (fileName, '.mrc')
-#        img.write(str(_imageVolName))
-#        
+#        volPath='/home/adrian/Scipion/tests/input/showj/emd_1042.map'
         
-        
-        
-        volPath='/home/adrian/Scipion/tests/input/showj/emd_1042.map'
-        fileName, fileExtension = os.path.splitext(volPath)
         # Astex viewer            
         from random import randint
         #Hay qye ver como gestionamos el tema de la extension (con .map no me lei un map.gz)
-        linkName = 'test_link_' + str(randint(0, 10000)) + fileExtension
+        linkName = 'test_link_' + str(randint(0, 10000)) + '.map'
         volLinkPath = os.path.join(pw.HOME, 'web', 'pages', 'resources', 'astex', 'tmp', linkName)
         from pyworkflow.utils.path import cleanPath, createLink
         cleanPath(volLinkPath)
@@ -134,19 +133,19 @@ def showj(request, inputParameters=None):
         print "volLinkPath",volLinkPath
         createLink(volPath, volLinkPath)
         volLink = os.path.join('/', 'static', 'astex', 'tmp', linkName)
-        
+     
+    elif showjForm.data['mode']=='volume_chimera':   
         from subprocess import Popen, PIPE, STDOUT
         p = Popen(['/home/adrian/.local/UCSF-Chimera64-2013-10-16/bin/chimera', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
         outputHtmlFile = '/home/adrian/test.html'
-        threshold = 0.285
-        chimeraCommand= 'volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop'
+        #chimeraCommand= 'volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop'
+        chimeraCommand= 'export format WebGL ' + outputHtmlFile + '; stop'
         print "chimeraCommand",chimeraCommand 
-        stdout_data, stderr_data = p.communicate(input='volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop')
+        stdout_data, stderr_data = p.communicate(input=chimeraCommand)
         print "stdout_data",stdout_data
         print "stderr_data",stderr_data 
         f = open(outputHtmlFile)
         chimeraHtml = f.read().decode('string-escape').decode("utf-8").split("</html>")[1]
-
         
         
     #Store dataset and labelsToRender in session 
@@ -342,11 +341,31 @@ def showVolVisualization(request):
         form = VolVisualizationForm(request.POST, request.FILES)
         if form.is_valid():
             volPath = form.cleaned_data['volPath']
+            
             fileName, fileExtension = os.path.splitext(volPath)
+            
+            print "fileExtension",fileExtension
+            if (fileExtension != '.map' and fileExtension != '.map.gz') :
+                
+                img = xmipp.Image()
+    #            imgFn = os.path.join(request.session['projectPath'], _imageVolName)
+                img.read(str(volPath))
+                #img.convert2DataType(xmipp.DT_UCHAR, xmipp.CW_CAST)
+                img.convert2DataType(xmipp.DT_FLOAT, xmipp.CW_CAST)
+                
+                _imageVolName2 = '%s_tmp%s' % (fileName, '.map')
+                print "_imageVolName2",_imageVolName2 
+                print "_imageVolName22", os.path.basename(_imageVolName2)
+                volPathTmp=os.path.join(pw.HOME, 'web', 'pages', 'resources', 'astex', 'tmp', os.path.basename(_imageVolName2))
+                print "volPathTmp",volPathTmp
+                img.write(str(volPathTmp))
+                volPath=volPathTmp
+                
+            
             # Astex viewer            
             from random import randint
             #Hay qye ver como gestionamos el tema de la extension (con .map no me lei un map.gz)
-            linkName = 'test_link_' + str(randint(0, 10000)) +fileExtension
+            linkName = 'test_link_' + str(randint(0, 10000)) +'.map'
             volLinkPath = os.path.join(pw.HOME, 'web', 'pages', 'resources', 'astex', 'tmp', linkName)
             from pyworkflow.utils.path import cleanPath, createLink
             cleanPath(volLinkPath)
@@ -359,7 +378,7 @@ def showVolVisualization(request):
            
             # Chimera 
             from subprocess import Popen, PIPE, STDOUT
-#             p = Popen(['chimera', '--start', 'ReadStdin', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+##             p = Popen(['chimera', '--start', 'ReadStdin', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
             p = Popen(['/home/adrian/.local/UCSF-Chimera64-2013-10-16/bin/chimera', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
             outputHtmlFile = '/home/adrian/test.html'
@@ -375,7 +394,7 @@ def showVolVisualization(request):
         
     print "brokenpipe"    
     context = {'MEDIA_URL' : settings.MEDIA_URL, 'STATIC_URL' :settings.STATIC_URL, 'form': form, 'volLink': volLink, 'chimeraHtml': chimeraHtml}
-    print "context",context    
+#    print "context",context    
     return render_to_response('showVolVisualization.html',  RequestContext(request, context))   
 
 ###################################################################
@@ -402,7 +421,7 @@ def visualizeObject(request):
 
     #Initialize default values
     inputParameters = {'allowRender': True,
-                       'mode': 'gallery', #Gallery,table,column,volume
+                       'mode': 'gallery', #Gallery,table,column,volume_astex, volume_chimera
                        'zoom': '150px',
                        'dims': '2d',
                        'goto': 1,
