@@ -26,7 +26,7 @@
 #include "fourier_projection.h"
 #include <data/xmipp_fft.h>
 
-FourierProjector::FourierProjector(const MultidimArray<double> &V, double paddFactor, double maxFreq, int degree)
+FourierProjector::FourierProjector(MultidimArray<double> &V, double paddFactor, double maxFreq, int degree)
 {
     volume = &V;
     volumeSize=XSIZE(*volume);
@@ -128,7 +128,7 @@ void FourierProjector::produceSideInfo()
     int paddedDim=(int)(paddingFactor*volumeSize);
     volume->window(Vpadded,FIRST_XMIPP_INDEX(paddedDim),FIRST_XMIPP_INDEX(paddedDim),FIRST_XMIPP_INDEX(paddedDim),
                    LAST_XMIPP_INDEX(paddedDim),LAST_XMIPP_INDEX(paddedDim),LAST_XMIPP_INDEX(paddedDim));
-
+    volume->clear();
     // Make Fourier transform, shift the volume origin to the volume center and center it
     MultidimArray< std::complex<double> > Vfourier;
     transformer3D.completeFourierTransform(Vpadded,Vfourier);
@@ -140,7 +140,7 @@ void FourierProjector::produceSideInfo()
     double K=(double)(XSIZE(Vpadded)*XSIZE(Vpadded)*XSIZE(Vpadded))/(double)(volumeSize*volumeSize);
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Vfourier)
     DIRECT_MULTIDIM_ELEM(Vfourier,n)*=K;
-
+    Vpadded.clear();
     // Compute Bspline coefficients
     if (BSplineDeg==3)
     {

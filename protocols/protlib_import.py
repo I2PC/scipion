@@ -27,6 +27,7 @@
 '''
 
 from xmipp import *
+import os
 from os.path import  exists
 
 CTF_BASIC_LABELS = [
@@ -174,6 +175,28 @@ def exportSpiderParticles(inputMd, outputFile):
         y = float(md.getValue(MDL_YCOOR, objId))
         print >> fOut, " %(i)04d 6        %(i)04d  %(x)f  %(y)f  %(x)f  %(y)f           1" % locals()
     fOut.close()
+    
+def readMdFromSpider(inputDoc, labelsStr):
+    """ Read an Spider docfile as a metadata.
+    Params:
+        inputDoc: Spider docfile path
+        labelsStr: an string containing the names of labels to use.
+    """
+    labels = [str2Label(l) for l in labelsStr.split()]
+    fDoc = open(inputDoc, 'r')
+    md = MetaData()
+    
+    for line in fDoc:
+        # Read only non comment lines
+        if not line.strip().startswith(';'):
+            values = line.split()
+            objId = md.addObject()
+            md.setValue(MDL_ITEM_ID, long(values[0]), objId) # Read Spider key as item_id
+            for l, v in zip(labels, values[2:]): # Exclude key and number of colums
+                md.setValue(l, float(v), objId)
+    fDoc.close()
+    
+    return md
     
 def exportEman2Boxes(inputMd, outputFile, dim):
     ''' Read an Xmipp3.0 .pos metadata containing particles

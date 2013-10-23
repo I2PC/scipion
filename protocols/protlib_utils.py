@@ -378,17 +378,23 @@ class ProcessManager():
     def psutilKillAll(self):
         """ Kill all processes related to this job. """
         import psutil
-        proc = psutil.Process(int(self.pid))
-        for c in proc.get_children(recursive=True):
-            print "Terminating child pid: %d" % c.pid
-            c.kill()
-        print "Terminating process pid: %s" % self.pid
-        proc.kill()   
+        try:
+            proc = psutil.Process(int(self.pid))
+            for c in proc.get_children(recursive=True):
+                print "Terminating child pid: %d" % c.pid
+                c.kill()
+            print "Terminating process pid: %s" % self.pid
+            proc.kill()
+        except:
+            pass
         
     def psutilIsAlive(self):
         import psutil
-        proc = psutil.Process(int(self.pid))
-        return proc.is_running()
+        try:
+            proc = psutil.Process(int(self.pid))
+            return proc.is_running()
+        except:
+            return False
 #        for c in proc.get_children(recursive=True):
 #            return True
 #        return False     
