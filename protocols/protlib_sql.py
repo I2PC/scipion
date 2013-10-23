@@ -72,6 +72,9 @@ class SqliteDb:
             print errMsg, e.args[0]
             if(e.args[0].find('database is locked') != -1):
                 print 'consider deleting the database (%s)' % self.dbName
+                print >> sys.stderr, 'Trace: ' + e.args
+                print >> sys.stderr, 'Command: ' + sqlCmd
+                print >> sys.stderr, 'Database: ' + self.dbName
             sys.exit(1)  
         self.connection.commit()
     

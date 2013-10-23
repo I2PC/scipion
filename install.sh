@@ -1,321 +1,220 @@
 #!/bin/sh
+#set -x #uncomment for debugging
 
-#Some flags variables
+#############################
+# XMIPP installation script #
+# --------------------------################################################################################
+# X-Window-based Microscopy Image Processing Package                                                       #
+# Xmipp is a suite of image processing programs, primarily aimed at single-particle 3D electron microscopy #
+# More info: http://xmipp.cnb.csic.es - xmipp@cnb.csic.es                                                  #
+# Instruct Image Processing Center - National Center of Biotechnology - CSIC. Spain                        #
+############################################################################################################
 
-DO_UNTAR=true
-DO_SQLITE=true
-DO_TCLTK=true
-DO_PYTHON=true
-DO_PYMOD=true
-DO_FFTW=true
-DO_TIFF=true
-DO_JPEG=true
-DO_HDF5=true
-DO_CLTOMO=false
-DO_NMA=false
 
-DO_CLEAN=true
-DO_STATIC=false
-DO_UPDATE=false
-DO_SETUP=true
-DO_GUI=true
-DO_UNATTENDED=false
+##################################################################################
+#################### DEFINITIONS #################################################
+##################################################################################
+
+#Some interface definitions
+TITLE="Xmipp installation script"
+BLACK='\033[30m'
+WHITE='\033[37m'
+YELLOW='\033[33m'
+RED='\033[31m'
+BLUE='\033[36m'
+GREEN="\033[32m"
+RED="\033[31m"
+ENDC="\033[0m"
 
 export NUMBER_OF_CPU=1
+GLOB_STATE=0
+GLOB_COMMAND=""
+TIMESTAMP=""
+EXT_PATH=
+BUILD_PATH=
+OS_TYPE=$(uname)
+IS_MAC=0
+IS_MINGW=0
+IS_LINUX=0
 
-# Some other vars
+#Some flags variables
+DO_UNTAR=1
+DO_COMPILE=1
+DO_CONFIGURE=1
+DO_CLEAN=1
+DO_SETUP=1
+DO_GUI=1
+DO_UNATTENDED=0
 
-#################### PARSING PARAMETERS ###########################
-TAKE_CPU=false
-TAKE_CONFIGURE=false
-TAKE_COMPILE=false
+DO_CLTOMO=0 #for scipy
 CONFIGURE_ARGS=""
 COMPILE_ARGS=""
 GUI_ARGS="gui"
 
-OS_TYPE=`uname`
-IS_MAC=false
-IS_CYGWIN=false
-IS_MINGW=false
-IS_LINUX=false
-echo "The OS is $OS_TYPE"
-case "$OS_TYPE" in
-  Darwin)
-    IS_MAC=true
-    CONFIGURE_ARGS="mpi=True MPI_CXX=mpic++ MPI_LINKERFORPROGRAMS=mpic++"
-    ;;
-  CYGWIN*)
-    IS_CYGWIN=true
-    ;;
-  MINGW*)
-    IS_MINGW=true
-    ;;
-  *)
-    IS_LINUX=true
-    ;;
-esac
 
-for param in $@; do
- if $TAKE_CPU; then
-    NUMBER_OF_CPU=$param
-    TAKE_CPU=false
- elif $TAKE_CONFIGURE && [ "$param" != "compile" ]; then
-     echo "param: $param"
-     CONFIGURE_ARGS="$CONFIGURE_ARGS $param"
- elif $TAKE_COMPILE && [ "$param" != "configure" ]; then
-     COMPILE_ARGS="$COMPILE_ARGS $param"
- else
-    case $param in
-        "disable_all")
-			    DO_UNTAR=false
-			    DO_SQLITE=false
-			    DO_TCLTK=false
-			    DO_PYTHON=false
-			    DO_PYMOD=false
-			    DO_FFTW=false
-			    DO_TIFF=false
-			    DO_JPEG=false
-			    DO_HDF5=false
-			    DO_NMA=false
-			    DO_SETUP=false;;			
-        "-j")               TAKE_CPU=true;;
-        "untar=true")       DO_UNTAR=true;;
-        "untar=false")      DO_UNTAR=false;;
-        "sqlite=true")      DO_SQLITE=true;;
-        "sqlite=false")     DO_SQLITE=false;;
-        "tcltk=true")       DO_TCLTK=true;;
-        "tcltk=false")      DO_TCLTK=false;;
-        "python=true")      DO_PYTHON=true;DO_PYMOD=true;;
-        "python=false")     DO_PYTHON=false;DO_PYMOD=false;;
-        "pymodules=true")   DO_PYMOD=true;;
-        "pymodules=false")  DO_PYMOD=false;;
-        "fftw=true")        DO_FFTW=true;;
-        "fftw=false")       DO_FFTW=false;;
-        "tiff=true")        DO_TIFF=true;;
-        "tiff=false")       DO_TIFF=false;;
-        "jpeg=true")        DO_JPEG=true;;
-        "jpeg=false")       DO_JPEG=false;;
-        "hdf5=true")        DO_HDF5=true;;
-        "hdf5=false")       DO_HDF5=false;;
-        "cltomo=true")      DO_CLTOMO=true;;
-        "clromo=false")     DO_CLTOMO=false;;
-        "nma=true")         DO_NMA=true;;
-        "nma=false")        DO_NMA=false;;
-        "clean=true")       DO_CLEAN=true;;
-        "clean=false")      DO_CLEAN=false;;
-        "static=true")      DO_STATIC=true;;
-        "static=false")     DO_STATIC=false;;
-        "gui=false")        GUI_ARGS="";;
-        "setup=true")       DO_SETUP=true;;
-        # This two if passed should be at the end and 
-        # will setup arguments for configure and compilation steps
-        "configure")        TAKE_CONFIGURE=true;
-                            TAKE_COMPILE=false;;
-        "compile")          TAKE_CONFIGURE=false;
-                            TAKE_COMPILE=true;;
-        "unattended=true")  DO_UNATTENDED=true;;
-        "unattended=false") DO_UNATTENDED=false;;
-         *)          echo "Unrecognized option $param, exiting..."; exit 1
-    esac
- fi 
-done
+#External libraries definitions
+VALGLIB=3.8.0
+ALGLIB_FOLDER="alglib-${VALGLIB}.cpp"
+ALGLIB_TAR="${ALGLIB_FOLDER}.tgz"
+DO_ALGLIB=0
 
-if $DO_UNATTENDED; then
-  CONFIGURE_ARGS="$CONFIGURE_ARGS unattended"
-fi
+VBILIB=0.0
+BILIB_FOLDER=bilib
+BILIB_TAR="${BILIB_FOLDER}.tgz"
+DO_BILIB=0
 
-#Some path variables
-export XMIPP_HOME=$PWD
-export PATH=$XMIPP_HOME/bin:$PATH
-export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH
-if $IS_MAC; then
-	export DYLD_FALLBACK_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH
-fi
+VCONDOR=0.0
+CONDOR_FOLDER=condor
+CONDOR_TAR="${CONDOR_FOLDER}.tgz"
+DO_CONDOR=0
 
-# Create file to include from BASH this Xmipp installation
-INC_FILE=.xmipp.bashrc
-echo "export XMIPP_HOME=$PWD" > $INC_FILE
-echo 'export PATH=$XMIPP_HOME/bin:$PATH' >> $INC_FILE
-echo 'export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
-echo 'if [ "$BASH" != "" ]; then' >> $INC_FILE
-echo '# Load global autocomplete file ' >> $INC_FILE
-echo 'test -s $XMIPP_HOME/.xmipp.autocomplete && . $XMIPP_HOME/.xmipp.autocomplete || true' >> $INC_FILE
-echo '# Load programs autocomplete file ' >> $INC_FILE
-echo 'test -s $XMIPP_HOME/.xmipp_programs.autocomplete && . $XMIPP_HOME/.xmipp_programs.autocomplete || true' >> $INC_FILE
-echo 'fi' >> $INC_FILE
+VFFTW=3.3.3
+FFTW_FOLDER="fftw-${VFFTW}"
+FFTW_TAR="${FFTW_FOLDER}.tgz"
+DO_FFTW=0
 
-if $IS_MAC; then
-	echo 'export DYLD_FALLBACK_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
-fi
-echo " "    >> $INC_FILE
-echo " "    >> $INC_FILE
+VGTEST=1.6.0
+GTEST_FOLDER="gtest-${VGTEST}"
+GTEST_TAR="${GTEST_FOLDER}.tgz"
+DO_GTEST=0
 
-echo "# Xmipp Aliases 						 "    >> $INC_FILE
-echo "## Setup ##                        "    >> $INC_FILE
-echo "alias xconfigure='./setup.py -j $NUMBER_OF_CPU configure compile ' " >> $INC_FILE
-echo "alias xcompile='./setup.py -j $NUMBER_OF_CPU compile ' "             >> $INC_FILE
-echo "alias xupdate='./setup.py -j $NUMBER_OF_CPU update compile ' "       >> $INC_FILE
-echo "## Interface ##                        "    >> $INC_FILE
-echo "alias xa='xmipp_apropos'               "    >> $INC_FILE
-echo "alias xb='xmipp_browser'               "    >> $INC_FILE
-echo "alias xp='xmipp_protocols'             "    >> $INC_FILE
-echo "alias xmipp='xmipp_protocols'          "    >> $INC_FILE
-echo "alias xs='xmipp_showj'                 "    >> $INC_FILE
-echo "alias xmipp_show='xmipp_showj'         "    >> $INC_FILE
-echo "alias xsj='xmipp_showj'                "    >> $INC_FILE
-echo "alias xij='xmipp_imagej'               "    >> $INC_FILE
-echo "## Image ##                            "    >> $INC_FILE
-echo "alias xic='xmipp_image_convert'        "    >> $INC_FILE
-echo "alias xih='xmipp_image_header'         "    >> $INC_FILE
-echo "alias xio='xmipp_image_operate'        "    >> $INC_FILE
-echo "alias xis='xmipp_image_statistics'     "    >> $INC_FILE
-echo "## Metadata ##                         "    >> $INC_FILE
-echo "alias xmu='xmipp_metadata_utilities'   "    >> $INC_FILE
-echo "alias xmp='xmipp_metadata_plot'        "    >> $INC_FILE
-echo "## Transformation ##                   "    >> $INC_FILE
-echo "alias xtg='xmipp_transform_geometry'   "    >> $INC_FILE
-echo "alias xtf='xmipp_transform_filter'     "    >> $INC_FILE
-echo "alias xtn='xmipp_transform_normalize'  "    >> $INC_FILE
-echo "## Other ##                            "    >> $INC_FILE
-echo "alias xrf='xmipp_resolution_fsc'       "    >> $INC_FILE
-echo "alias xrs='xmipp_resolution_ssnr'      "    >> $INC_FILE
-echo "                                                                             "    >> $INC_FILE
-echo "                                                                             "    >> $INC_FILE
-echo "## Configuration ##                                                          "    >> $INC_FILE
-echo "                                                                             "    >> $INC_FILE
-echo "# This file will serve to customize some settings of you Xmipp installation  "    >> $INC_FILE
-echo "# Each setting will be in the form o a shell variable set to some value      "    >> $INC_FILE
-echo "                                                                             "    >> $INC_FILE
-echo "#---------- GUI ----------                                                   "    >> $INC_FILE
-echo "# If you set to 1 the value of this variable, by default the programs        "    >> $INC_FILE
-echo "# will launch the gui when call without argments, default is print the help  "    >> $INC_FILE
-echo "export XMIPP_GUI_DEFAULT=0                                                   "    >> $INC_FILE
-echo "                                                                             "    >> $INC_FILE
-echo "# If you set to 0 the value of this variable the script generated            "    >> $INC_FILE
-echo "# by programs gui will not be erased and you can use the same parameters     "    >> $INC_FILE
-echo "export XMIPP_GUI_CLEAN=1                                                     "    >> $INC_FILE
-echo "                                                                             "    >> $INC_FILE
-echo "#---------- Parallel ----------                                              "    >> $INC_FILE
-echo "# This variable will point to your job submition template file               "    >> $INC_FILE
-echo "export XMIPP_PARALLEL_LAUNCH=config_launch.py                                "    >> $INC_FILE
-echo "                                                                             "    >> $INC_FILE
-echo "# If you have .xmipp.cfg in your home folder it will override                "    >> $INC_FILE
-echo "# this configurations                                                        "    >> $INC_FILE
-echo "                                                                             "    >> $INC_FILE
-echo "test -s ~/.xmipp.cfg && . ~/.xmipp.cfg || true                               "    >> $INC_FILE
-echo "                                                                             "    >> $INC_FILE
+VHDF5=1.8.10
+HDF5_FOLDER="hdf5-${VHDF5}"
+HDF5_TAR="${HDF5_FOLDER}.tgz"
+DO_HDF5=0
 
-chmod a+x $INC_FILE
+VIMAGEJ=1.45g
+IMAGEJ_FOLDER="imagej"
+IMAGEJ_TAR="${IMAGEJ_FOLDER}.tgz"
+DO_IMAGEJ=0
+
+VJPEG=8c
+JPEG_FOLDER="jpeg-${VJPEG}"
+JPEG_TAR="jpegsrc.v${VJPEG}.tgz"
+DO_JPEG=0
+
+VSCONS=1.2.0
+SCONS_FOLDER="scons"
+SCONS_TAR="${SCONS_FOLDER}.tgz"
+DO_SCONS=0
+
+VSQLITE=3.6.23
+SQLITE_FOLDER="sqlite-${VSQLITE}"
+SQLITE_TAR="${SQLITE_FOLDER}.tgz"
+SQLITE_EXT_FOLDER=sqliteExt
+DO_SQLITE=0
+
+VTIFF=3.9.4
+TIFF_FOLDER="tiff-${VTIFF}"
+TIFF_TAR="${TIFF_FOLDER}.tgz"
+DO_TIFF=0
+
+VNMA=0.0
+NMA_FOLDER="NMA"
+NMA_TAR="${NMA_FOLDER}.tgz"
+DO_NMA=0
+
+VSHALIGNMENT=0.0
+SHALIGNMENT_FOLDER="sh_alignment"
+SHALIGNMENT_TAR="${SH_ALIGNMENT_FOLDER}.tgz"
+DO_SHALIGNMENT=0
+
+#External libraries arrays. For adding a new external library, define his decompress folder and tar names, put them in EXTERNAL_LIBRARIES and EXTERNAL_LIBRARIES_FILES arrays, and put 1 whther it has to be installed by default, 0 otherwise in EXTERNAL_LIBRARIES_DEFAULT in the appropiate positions. You will also need to stablish a DO* variable in the *DO array, to let the script work
+EXTERNAL_LIBRARIES=(         $ALGLIB_FOLDER $BILIB_FOLDER $CONDOR_FOLDER $FFTW_FOLDER $GTEST_FOLDER $HDF5_FOLDER $IMAGEJ_FOLDER $JPEG_FOLDER $SCONS_FOLDER $SQLITE_FOLDER $TIFF_FOLDER $NMA_FOLDER $SHALIGNMENT_FOLDER )
+EXTERNAL_LIBRARIES_FILES=(   $ALGLIB_TAR    $BILIB_TAR    $CONDOR_TAR    $FFTW_TAR    $GTEST_TAR    $HDF5_TAR    $IMAGEJ_TAR    $JPEG_TAR    $SCONS_TAR    $SQLITE_TAR    $TIFF_TAR    $NMA_TAR    $SHALIGNMENT_TAR    )
+EXTERNAL_LIBRARIES_DO=(      $DO_ALGLIB     $DO_BILIB     $DO_CONDOR     $DO_FFTW     $DO_GTEST     $DO_HDF5     $DO_IMAGEJ     $DO_JPEG     $DO_SCONS     $DO_SQLITE     $DO_TIFF     $DO_NMA     $DO_SHALIGNMENT     )
+EXTERNAL_LIBRARIES_DEFAULT=(        1             1              1            1             1            1              1            1             1              1            1           0                   0       )
 
 
-# for CSH or TCSH
-INC_FILE=.xmipp.csh
-echo "setenv XMIPP_HOME $PWD" > $INC_FILE
-echo 'setenv PATH $XMIPP_HOME/bin:$PATH' >> $INC_FILE
-echo 'if($?LD_LIBRARY_PATH) then' >> $INC_FILE
-echo '  setenv LD_LIBRARY_PATH $XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
-echo 'else' >> $INC_FILE
-echo '  setenv LD_LIBRARY_PATH $XMIPP_HOME/lib' >> $INC_FILE
-echo 'endif' >> $INC_FILE
+#Python definitions
+#Python
+VPYTHON=2.7.2
+PYTHON_FOLDER="Python-${VPYTHON}"
+PYTHON_TAR="${PYTHON_FOLDER}.tgz"
+DO_PYTHON=1
 
-if $IS_MAC; then
-  echo 'if($?DYLD_FALLBACK_LIBRARY_PATH) then' >> $INC_FILE
-  echo '  setenv DYLD_FALLBACK_LIBRARY_PATH $XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
-  echo 'else' >> $INC_FILE
-  echo '  setenv DYLD_FALLBACK_LIBRARY_PATH $XMIPP_HOME/lib' >> $INC_FILE
-  echo 'endif' >> $INC_FILE
-fi
-echo 'test -s $XMIPP_HOME/.xmipp.alias && source $XMIPP_HOME/.xmipp.alias || true' >> $INC_FILE
+#Python modules
+DO_PYMOD=0
 
-echo " "    >> $INC_FILE
-echo " "    >> $INC_FILE
+VMATLIBPLOT=1.1.0
+MATLIBPLOT_FOLDER="matplotlib-${VMATLIBPLOT}"
+MATLIBPLOT_TAR="${MATLIBPLOT_FOLDER}.tgz"
+DO_MATLIBPLOT=0
 
-echo "# Xmipp Aliases 						 "    >> $INC_FILE
-echo "## Setup ##                        "    >> $INC_FILE
-echo "alias xconfigure './setup.py -j $NUMBER_OF_CPU configure compile ' " >> $INC_FILE
-echo "alias xcompile './setup.py -j $NUMBER_OF_CPU compile ' "             >> $INC_FILE
-echo "alias xupdate './setup.py -j $NUMBER_OF_CPU update compile ' "       >> $INC_FILE
-echo "## Interface ##                        "    >> $INC_FILE
-echo "alias xa 'xmipp_apropos'               "    >> $INC_FILE
-echo "alias xb 'xmipp_browser'               "    >> $INC_FILE
-echo "alias xp 'xmipp_protocols'             "    >> $INC_FILE
-echo "alias xmipp 'xmipp_protocols'          "    >> $INC_FILE
-echo "alias xs 'xmipp_showj'                 "    >> $INC_FILE
-echo "alias xmipp_show 'xmipp_showj'         "    >> $INC_FILE
-echo "alias xsj 'xmipp_showj'                "    >> $INC_FILE
-echo "## Image ##                            "    >> $INC_FILE
-echo "alias xic 'xmipp_image_convert'        "    >> $INC_FILE
-echo "alias xih 'xmipp_image_header'         "    >> $INC_FILE
-echo "alias xio 'xmipp_image_operate'        "    >> $INC_FILE
-echo "alias xis 'xmipp_image_statistics'     "    >> $INC_FILE
-echo "## Metadata ##                         "    >> $INC_FILE
-echo "alias xmu 'xmipp_metadata_utilities'   "    >> $INC_FILE
-echo "alias xmp 'xmipp_metadata_plot'        "    >> $INC_FILE
-echo "## Transformation ##                   "    >> $INC_FILE
-echo "alias xtg 'xmipp_transform_geometry'   "    >> $INC_FILE
-echo "alias xtf 'xmipp_transform_filter'     "    >> $INC_FILE
-echo "alias xtn 'xmipp_transform_normalize'  "    >> $INC_FILE
-echo "## Other ##                            "    >> $INC_FILE
-echo "alias xrf 'xmipp_resolution_fsc'       "    >> $INC_FILE
-echo "alias xrs 'xmipp_resolution_ssnr'      "    >> $INC_FILE
-echo "                                                                             "    >> $INC_FILE
-echo "                                                                             "    >> $INC_FILE
-echo "## Configuration ##                                                          "    >> $INC_FILE
-echo "                                                                             "    >> $INC_FILE
-echo "# This file will serve to customize some settings of you Xmipp installation  "    >> $INC_FILE
-echo "# Each setting will be in the form o a shell variable set to some value      "    >> $INC_FILE
-echo "                                                                             "    >> $INC_FILE
-echo "#---------- GUI ----------                                                   "    >> $INC_FILE
-echo "# If you set to 1 the value of this variable, by default the programs        "    >> $INC_FILE
-echo "# will launch the gui when call without argments, default is print the help  "    >> $INC_FILE
-echo "setenv XMIPP_GUI_DEFAULT 0                                                   "    >> $INC_FILE
-echo "                                                                             "    >> $INC_FILE
-echo "# If you set to 0 the value of this variable the script generated            "    >> $INC_FILE
-echo "# by programs gui will not be erased and you can use the same parameters     "    >> $INC_FILE
-echo "setenv XMIPP_GUI_CLEAN 1                                                     "    >> $INC_FILE
-echo "                                                                             "    >> $INC_FILE
-echo "#---------- Parallel ----------                                              "    >> $INC_FILE
-echo "# This variable will point to your job submition template file               "    >> $INC_FILE
-echo "setenv XMIPP_PARALLEL_LAUNCH config_launch.py                                "    >> $INC_FILE
-echo "                                                                             "    >> $INC_FILE
-echo "# If you have .xmipp.cfg in your home folder it will override                "    >> $INC_FILE
-echo "# this configurations                                                        "    >> $INC_FILE
-echo "                                                                             "    >> $INC_FILE
-echo "test -s ~/.xmipp.cfg && source ~/.xmipp.cfg || true                          "    >> $INC_FILE
-echo "                                                                             "    >> $INC_FILE
+VPYMPI=1.2.2
+PYMPI_FOLDER="mpi4py-${VPYMPI}"
+PYMPI_TAR="${PYMPI_FOLDER}.tgz"
+DO_PYMPI=0
 
-chmod a+x $INC_FILE
+VNUMPY=1.6.1
+NUMPY_FOLDER="numpy-${VNUMPY}"
+NUMPY_TAR="${NUMPY_FOLDER}.tgz"
+DO_NUMPY=0
 
+VSCIPY=0.12.0
+SCIPY_FOLDER="scipy-${VSCIPY}"
+SCIPY_TAR="${SCIPY_FOLDER}.tgz"
+DO_SCIPY=0
 
+VPSUTIL=0.7.1
+PSUTIL_FOLDER="psutil-${VPSUTIL}"
+PSUTIL_TAR="${PSUTIL_FOLDER}.tgz"
+DO_PSUTIL=1
 
-EXT_PATH=$XMIPP_HOME/external
-BUILD_PATH=$XMIPP_HOME/build
-
-#External libraries versions
-VSQLITE=sqlite-3.6.23
-VSQLITE_EXT=sqliteExt
 VTCLTK=8.5.10
-VPYTHON=Python-2.7.2
-VFFTW=fftw-3.3.3
-VTIFF=tiff-3.9.4
-VJPEG=jpeg-8c
-VHDF5=hdf5-1.8.10
-VNUMPY=numpy-1.6.1
-VSCIPY=scipy-0.12.0
-VMATLIBPLOT=matplotlib-1.1.0
-VPYMPI=mpi4py-1.2.2
-#read star files
-VPYCIFRW=PyCifRW-3.3
-VPSUTIL=psutil-0.7.1
+DO_TCLTK=1
+TCL_FOLDER="tcl${VTCLTK}"
+TCL_TAR="${TCL_FOLDER}.tgz"
+DO_TCL=0
+TK_FOLDER="tk${VTCLTK}"
+TK_TAR="${TK_FOLDER}.tgz"
+DO_TK=0
 
-################# HELPER FUNCTIONS ##################
-TIMESTAMP=""
+#Python modules arrays. For adding a new python module, define his decompress folder and tar names, put them in PYTHON_MODULES and PYTHON_MODULES_FILES arrays, and put 1 whther it has to be installed by default, 0 otherwise in PYTHON_MODULES_DEFAULT in the appropiate position. You will also need to stablish a DO* variable in the *DO array, to let the script work
+PYTHON_MODULES=(        $MATLIBPLOT_FOLDER $PYMPI_FOLDER $NUMPY_FOLDER $SCIPY_FOLDER $TCL_FOLDER $TK_FOLDER $PSUTIL_FOLDER )
+PYTHON_MODULES_FILES=(  $MATLIBPLOT_TAR    $PYMPI_TAR    $NUMPY_TAR    $SCIPY_TAR    $TCL_TAR    $TK_TAR    $PSUTIL_TAR    )
+PYTHON_MODULES_DO=(     $DO_MATLIBPLOT     $DO_PYMPI     $DO_NUMPY     $DO_SCIPY     $DO_TCL     $DO_TK     $DO_PSUTIL     )
+PYTHON_MODULES_DEFAULT=(           1             1             1             0           1          1          1           )
 
+
+##################################################################################
+#################### FUNCTIONS ###################################################
+##################################################################################
+
+#function that searchs in an array for an element and returns the position of that element in the array
+indexOf(){
+  local i=1 S=$1; shift
+  while [ $S != $1 ]
+  do    ((i++)); shift
+        [ -z "$1" ] && { i=0; break; }
+  done
+  return $i
+}
+
+decideOS()
+{
+  echo "The OS is $OS_TYPE"
+  case "$OS_TYPE" in
+    Darwin)
+      IS_MAC=1
+      CONFIGURE_ARGS="mpi=True MPI_CXX=mpic++ MPI_LINKERFORPROGRAMS=mpic++"
+      ;;
+    MINGW*)
+      IS_MINGW=1
+      ;;
+    *)
+      IS_LINUX=1
+      ;;
+  esac
+}
+
+# Helping function to get the timestamp for measuring the time spent at any part of the code
 tic()
 {
    TIMESTAMP="$(date +%s)"
 }
 
+# Helping function to get the second timestamp for measuring the difference with the first and then know the time spent at any part of the code
 toc()
 {
    NOW="$(date +%s)"
@@ -323,79 +222,945 @@ toc()
    echo "*** Elapsed time: $ELAPSED seconds"
 }
 
-GREEN="\033[32m"
-RED="\033[31m"
-ENDC="\033[0m"
-
 # Print a green msg using terminal escaped color sequence
 echoGreen()
 {
     printf "$GREEN %b $ENDC\n" "$1"
 }
 
+# Pinrt a red msg using terminal escaped color sequence
+echoRed()
+{
+    printf "$RED %b $ENDC\n" "$1"
+}
+
+# Check last return status by checking GLOB_STATE and GLOB_COMMAND vars. It can receive a parameter, If 1 is given means the program has to exit if non-zero return state is detected
+check_state()
+{
+  if [ $GLOB_STATE -ne 0 ]; then
+    echoRed "WARNING: command returned a non-zero status (${GLOB_STATE})"
+    echoRed "COMMAND: $GLOB_COMMAND"
+    case $1 in
+      1)
+        exitGracefully $GLOB_STATE "$GLOB_COMMAND"
+      ;;
+    esac
+  fi
+  return $GLOB_STATE
+}
+
 # Execute and print the sequence
 echoExec()
 {
- COMMAND="$@"
- echo '-->' $COMMAND
- $COMMAND
+  COMMAND="$@"
+  GLOB_COMMAND=${COMMAND}
+  echo '-->' ${COMMAND}
+  $COMMAND
+  GLOB_STATE=$?
+  check_state
+  return $GLOB_STATE
 }
 
-compile_library()
+echoExecRedirectEverything()
 {
-   tic
-   LIB=$1
-   PREFIX_PATH=$2
-   SUFFIX_PATH=$3
-   CONFIGFLAGS=$4
-   LIBS_PATH=$5
-   _PATH=$EXT_PATH/$PREFIX_PATH/$LIB/$SUFFIX_PATH
+  COMMAND="$1"
+  REDIRECTION="$2"
+  GLOB_COMMAND=${COMMAND}
+  echo '-->' $COMMAND '>' $REDIRECTION '2>&1'
+  ${COMMAND} > ${REDIRECTION} 2>&1
+  GLOB_STATE=$?
+  check_state
+  return $GLOB_STATE
+}
+
+# Function that retreives from *DO arrays whether the asked external library or python module is enabled or not. It receives exactly 2 parameters:
+# The first one can be "library" for external libraries or "pymodule" for python module
+# The second one is the *TAR name of the library/module to search for
+shouldIDoIt()
+{
+  ANS=0
+  if [ $# -ne 2 ]; then
+    echoRed "Error: bad parameter number on shouldIDoIt function. Exiting"
+    exitGracefully
+  fi
+
+  case $1 in
+    library)
+      indexOf $2 ${EXTERNAL_LIBRARIES_FILES[@]}
+      ind=$(expr $? - 1)
+      if [ ${ind} -lt 0 ]; then
+        echoRed "Error: bad parameter ($2) on shouldIDoIt. File not found. Exiting"
+        exitGracefully
+      fi
+      ANS=${EXTERNAL_LIBRARIES_DO[$ind]}
+      ;;
+    pymodule)
+      indexOf $2 ${PYTHON_MODULES_FILES[@]}
+      ind=$(expr $? - 1)
+      if [ ${ind} -lt 0 ]; then
+        echoRed "Error: bad parameter ($2) on shouldIDoIt. File not found. Exiting"
+        exitGracefully
+      fi
+      ANS=${PYTHON_MODULES_DO[$ind]}
+      ;;
+    *)
+      echoRed "Error: bad parameter ($1) on shouldIDoIt function. Exiting"
+      exitGracefully
+      ;;
+  esac
+
+  return $ANS
+}
+
+# Function that set a value in the *DO arrays. It receives exactly 3 parameters:
+# The first one can be "library" for external libraries or "pymodule" for python module
+# The second one is the *TAR name of the library/module to search
+# The third value is the value to set. It can be true or false
+doIt()
+{
+  ANS=0
+  if [ $# -ne 2 ]; then
+    echoRed "Error: bad parameter number on doIt function. Exiting"
+    exitGracefully
+  fi
+
+  case $1 in
+    library)
+      indexOf $2 ${EXTERNAL_LIBRARIES_FILES[@]}
+      ind=$(expr $? - 1)
+      if [ ${ind} -lt 0 ]; then
+        echoRed "Error: bad parameter ($2) on doIt. File not found. Exiting"
+        exitGracefully
+      fi
+      EXTERNAL_LIBRARIES_DO[$ind]=$3
+      ;;
+    pymodule)
+      indexOf $2 ${PYTHON_MODULES_FILES[@]}
+      ind=$(expr $? - 1)
+      if [ ${ind} -lt 0 ]; then
+        echoRed "Error: bad parameter ($2) on shouldIDoIt. File not found. Exiting"
+        exitGracefully
+      fi
+      PYTHON_MODULES_DO[$ind]=$3
+      ;;
+    *)
+      echoRed "Error: bad parameter ($1) on shouldIDoIt function. Exiting"
+      exitGracefully
+      ;;
+  esac
+
+  return $ANS
+}
+
+welcomeMessage()
+{
+  echo -e "${BLACK}0000000000000000000000000000000000000000000000000001"              
+  echo -e "${BLACK}0000000000000000P!!00000!!!!!00000!!0000000000000001"
+  echo -e "${BLACK}000000000000P'  ${RED}.:==.           ,=;:.  ${BLACK}\"400000000001"
+  echo -e "${BLACK}0000000000!  ${RED}.;=::.::,         .=:.-:=,.  ${BLACK}!000000001"
+  echo -e "${BLACK}0000000P' ${RED}.=:-......::=      ::;.......-:=. ${BLACK}\"0000001"
+  echo -e "${BLACK}0000000,${RED}.==-.........::;.   .;::.-.......-=:${BLACK}.a#00001"
+  echo -e "${BLACK}0000000'${RED}.=;......--:.:.:=:.==::.:--:.:...,=- ${BLACK}!000001"
+  echo -e "${BLACK}000000    ${RED}-=...:.:.:-:::::=;::.::.:.:..-:=-    ${BLACK}00001"
+  echo -e "${BLACK}0000P       ${RED}==:.:-::. ${YELLOW}.aa.${RED} :::::::::.::=:      ${BLACK}\"4001"
+  echo -e "${BLACK}00001        ${RED}:;:::::..${YELLOW}:#0:${RED} =::::::::::::        ${BLACK}j#01"
+  echo -e "${BLACK}0001   ${YELLOW}aa _aas  _aa_  .aa, _a__aa_.  .a__aas,    ${BLACK}j#1"
+  echo -e "${BLACK}"'0001   '"${YELLOW}"'4WU*!4#gW9!##i .##; 3##P!9#Ai .##U!!Q#_   '"${BLACK}"'j#1'
+  echo -e "${BLACK}"'001    '"${YELLOW}"'3O.  :xO.  ]Oi .XX: ]O( .  X2 .XC;  :xX.   '"${BLACK}"'01'
+  echo -e "${BLACK}"'001    '"${YELLOW}"'dU.  :jU.  %Ui .WW: ]UL,..aXf .Ums  jd*    '"${BLACK}"'01'
+  echo -e "${BLACK}"'0001   '"${YELLOW}"'4W.  :dW. .%W1 :WW: %WVXNWO~  .#U*#WV!    _'"${BLACK}"'01'
+  echo -e "${BLACK}"'0001        '"${RED}"'.............. '"${YELLOW}"'%#1  '"${RED}"'.... '"${YELLOW}"'.#A)        '"${BLACK}"'j01'
+  echo -e "${BLACK}"'00001      '"${RED}"':=::-:::::;;;;: '"${YELLOW}"'301 '"${RED}"'::::: '"${YELLOW}"'.0A)       '"${BLACK}"'j#01'
+  echo -e "${BLACK}0000L    ${RED}.;::.--::::::::;: ,,..:::::... .::.   ${BLACK}_d001"
+  echo -e "${BLACK}000000  ${RED}:;:...-.-.:.:::=;   =;:::---.:....::,  ${BLACK}00001"
+  echo -e "${BLACK}000000!${RED}:::.....-.:.::::-     :=:-.:.-......:= ${BLACK}!00001"
+  echo -e "${BLACK}000000a  ${RED}=;.........:;        .:;........,;;  ${BLACK}a00001"
+  echo -e "${BLACK}"'0000000La '"${RED}"'--:_....:=-           :=:...:_:--'"${BLACK}"'_a#000001'
+  echo -e "${BLACK}"'0000000000a  '"${RED}"'-=;,:=              -;::=:-  '"${BLACK}"'a000000001'
+  echo -e "${BLACK}"'00000000000Laaa '"${RED}"'-\aa              ar- '"${BLACK}"'aaa00000000001'
+  echo -e "${BLACK}00000000000000#00000000aaaaaad000000#00#0#0000000001"
+  echo ""
+  echo -e "${WHITE}Welcome to $TITLE ${ENDC}"
+  echo ""
+  return 0;
+}
+
+#function that prints the script usage help
+helpMessage()
+{
+  echo -e ""
+  echo -e "###################################"
+  echo -e '# XMIPP INSTALLATION SCRIPT USAGE #'
+  echo -e "###################################"
+  echo -e "${RED}NAME"
+  echo -e "${WHITE}  install.sh - XMIPP installation script. "
+  echo -e ""
+  echo -e "${RED}SYNOPSIS"
+  echo -e "${WHITE}  ./install.sh ${BLUE}[OPERATIONS] [OPTIONS]${WHITE}"
+  echo -e ""
+  echo -e "${RED}DESCRIPTION"
+  echo -e "${WHITE}  Script that automates the XMIPP compilation process. When this script is executed, the compilation sequence starts, depending on the selected options. If no option is given, the script follows the sequence:"
+  echo -e "1- untar the external libraries, xmipp_python and xmipp_python modules."
+  echo -e "2- Configure and compile one by one every external library"
+  echo -e "3- Configure and compile xmipp_python"
+  echo -e "4- Compile and install python modules in xmipp_python"
+  echo -e "5- Launch SConscript to compile Xmipp"
+  echo -e "6- Run the unitary tests"
+  echo -e ""
+  echo -e "No option is mandatory. The default behaviour (without any given option) Following options are accepted:"
+  echo -e ""
+  echo -e ""
+  echo -e "GENERAL OPTIONS:"
+  echo -e ""
+  echo -e "${BLUE}--disable-all${WHITE},${BLUE} -d${WHITE}"
+  echo -e "    Disable every option in order to let the user to enable just some of them."
+  echo -e "${BLUE}--num-cpus=${YELLOW}<NUMCPU>${WHITE},${BLUE} -j ${YELLOW}<NUMCPU>${WHITE}"
+  echo -e "    Provides a number of CPUs for the compilation process. Default value is 2."
+  echo -e "${BLUE}--configure-args=${YELLOW}<ARGS>${WHITE}"
+  echo -e "    Store the arguments the user wants to provide to configure process before compilation start."
+  echo -e "${BLUE}--compile-args=${YELLOW}<ARGS>${WHITE}"
+  echo -e "    Store the arguments the user wants to provide to compilation process."
+  echo -e "${BLUE}--unattended=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Tells the script to asume default where no option is given on every question and don't show any GUI. This is intended to be used when no human will be watching the screen (i.e. other scripts)."
+  echo -e "${BLUE}--help,${BLUE} -h${WHITE}"
+  echo -e "    Shows this help message"
+  echo -e ""
+  echo -e ""
+  echo -e "OPERATIONS:"
+  echo -e ""
+  echo -e "${BLUE}--untar${WHITE},${BLUE} -u${WHITE}"
+  echo -e "    Untar the list of libraries provided to the script (or default libraries array if not provided)."
+  echo -e "${BLUE}--configure${WHITE},${BLUE} -f${WHITE}"
+  echo -e "    Configure the list of libraries provided to the script (or default libraries array if not provided)."
+  echo -e "${BLUE}--compile${WHITE},${BLUE} -c${WHITE}"
+  echo -e "    Compile the list of libraries provided to the script (or default libraries array if not provided)."
+  echo -e ""
+  echo -e ""
+  echo -e "EXTERNAL LIBRARIES OPTIONS:"
+  echo -e ""
+  echo -e "${BLUE}--alglib=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over alglib library. When just --alglib is given, true is asumed."
+  echo -e "${BLUE}--bilib=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over bilib library. When just --bilib is given, true is asumed."
+  echo -e "${BLUE}--condor=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over condor library. When just --condor is given, true is asumed."
+  echo -e "${BLUE}--fftw=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over fftw library. When just --fftw is given, true is asumed."
+  echo -e "${BLUE}--gtest=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over gtest library. When just --gtest is given, true is asumed."
+  echo -e "${BLUE}--hdf5=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over hdf5 library. When just --hdf5 is given, true is asumed."
+  echo -e "${BLUE}--imagej=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over imagej library. When just --hdf5 is given, true is asumed."
+  echo -e "${BLUE}--jpeg=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over jpeg library. When just --jpeg is given, true is asumed."
+  echo -e "${BLUE}--scons=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over scons library. When just --scons is given, true is asumed."
+  echo -e "${BLUE}--sqlite=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over sqlite library. When just --sqlite is given, true is asumed."
+  echo -e "${BLUE}--tiff=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over tiff library. When just --tiff is given, true is asumed."
+  echo -e "${BLUE}--nma=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over nma library. When just --nma is given, true is asumed."
+  echo -e "${BLUE}--sh-alignment=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over nma library. When just --sh-alignment is given, true is asumed."
+  echo -e "${BLUE}--cltomo=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over cltomo library. When just --cltomo is given, true is asumed."
+  echo -e ""
+  echo -e ""
+  echo -e "PYTHON-RELATED OPTIONS:"
+  echo -e ""
+  echo -e "${BLUE}--python=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute selected operation over xmipp_python. Just --python is equal to --python=true."
+  echo -e "${BLUE}--matplotlib=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute selected operation over matplotlib module. --matplotlib is equivalent to --matplotlib=true."
+  echo -e "${BLUE}--mpi4py=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute selected operation over mpi4py module. --mpi4py is equivalent to --mpi4py=true."
+  echo -e "${BLUE}--numpy=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute selected operation over numpy module. --numpy is equivalent to --numpy=true."
+  echo -e "${BLUE}--scipy=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute selected operation over scipy module. --scipy is equivalent to --scipy=true."
+  echo -e "${BLUE}--psutil=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute selected operation over psutil module. --scipy is equivalent to --psutil=true."
+  echo -e "${BLUE}--tcl-tk=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute selected operation over tcl and tk libraries. --tcl-tk is equivalent to --tcl-tk=true."
+  echo -e "${BLUE}--tcl=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute selected operation over tcl library. If --tcl is given, --tcl=true will be understood."
+  echo -e "${BLUE}--tk=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute selected operation over tk library. Where --tk means --tk=true."
+  echo -e "${BLUE}--pymodules=${YELLOW}[true|false]${WHITE}"
+  echo -e "    Execute or not selected operation over every python modules. When just --pymodules is given, true is asumed."
+  echo -e ""
+  echo -e ""
+  echo -e "XMIPP-RELATED OPTIONS:"
+  echo -e ""
+  echo -e "${BLUE}--gui=${YELLOW}[true|false]${WHITE}"
+  echo -e "    When launching scons compilation, select true whether you want the Xmipp compilation GUI or false otherwise. Where --gui means --gui=true."
+  echo -e ""
+  echo -e ""
+  return 0;
+}
+
+takeArguments()
+{
+  while [ "$1" ]; do
+    case $1 in
+      --disable-all|-d)
+        DO_UNTAR=0
+        DO_COMPILE=0
+        DO_CONFIGURE=0
+        for lib in ${EXTERNAL_LIBRARIES_FILES}; do
+          doIt library ${lib} 0
+        done
+        for mod in ${PYTHON_MODULES_FILES}; do
+          doIt pymodule ${mod} 0
+        done
+        DO_PYTHON=0
+        DO_TCLTK=0
+        DO_PYMOD=0
+        DO_CLTOMO=0
+        DO_SETUP=0
+        ;;
+      --num-cpus=*)
+        ;;
+      -j)
+        NUMBER_OF_CPU=$2
+        shift
+        ;;
+      -j*)
+        NUMBER_OF_CPU=$(echo "$1"|sed -e 's/-j//g')
+        ;;
+      --configure-args=*)
+        CONFIGURE_ARGS=$(echo "$1"|cut -d '=' -f2)
+        ;;
+      --compile-args=*)
+        COMPILE_ARGS=$(echo "$1"|cut -d '=' -f2)
+        ;;
+      --unattended=*) #[true|false]
+        WITH_UNATTENDED=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_UNATTENDED}" == "true" ]; then
+          DO_UNATTENDED=1
+        elif [ "${WITH_UNATTENDED}" == "false" ];then 
+          DO_UNATTENDED=0
+        else
+          echoRed "Parameter --unattended only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --help|-h)
+        helpMessage
+        exitGracefully
+        ;;
+      --untar|-u)
+        DO_UNTAR=1
+        ;;
+      --configure|-f)
+        DO_CONFIGURE=1
+        ;;
+      --compile|-c)
+        DO_COMPILE=1
+        ;;
+      --alglib)
+        doIt library ${ALGLIB_TAR} 1
+        ;;
+      --alglib=*)
+        WITH_ALGLIB=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_ALGLIB}" == "true" ]; then
+          doIt library ${ALGLIB_TAR} 1
+        elif [ "${WITH_ALGLIB}" == "false" ]; then
+          doIt library ${ALGLIB_TAR} 0
+        else
+          echoRed "Parameter --alglib only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --bilib)
+        doIt library ${BILIB_TAR} 1
+        ;;
+      --bilib=*)
+        WITH_BILIB=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_BILIB}" == "true" ]; then
+          doIt library ${BILIB_TAR} 1
+        elif [ "${WITH_BILIB}" == "false" ]; then
+          doIt library ${BILIB_TAR} 0
+        else
+          echoRed "Parameter --bilib only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --condor)
+        doIt library ${CONDOR_TAR} 1
+        ;;
+      --condor=*)
+        WITH_CONDOR=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_CONDOR}" == "true" ]; then
+          doIt library ${CONDOR_TAR} 1
+        elif [ "${WITH_CONDOR}" == "false" ]; then
+          doIt library ${CONDOR_TAR} 0
+        else
+          echoRed "Parameter --condor only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --fftw)
+        doIt library ${FFTW_TAR} 1
+        ;;
+      --fftw=*)
+        WITH_FFTW=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_FFTW}" == "true" ]; then
+          doIt library ${FFTW_TAR} 1
+        elif [ "${WITH_FFTW}" == "false" ]; then
+          doIt library ${FFTW_TAR} 0
+        else
+          echoRed "Parameter --fftw only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --gtest)
+        doIt library ${GTEST_TAR} 1
+        ;;
+      --gtest=*)
+        WITH_GTEST=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_GTEST}" == "true" ]; then
+          doIt library ${GTEST_TAR} 1
+        elif [ "${WITH_GTEST}" == "false" ]; then
+          doIt library ${GTEST_TAR} 0
+        else
+          echoRed "Parameter --gtest only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --hdf5)
+        doIt library ${HDF5_TAR} 1
+        ;;
+      --hdf5=*)
+        WITH_HDF5=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_HDF5}" == "true" ]; then
+          doIt library ${HDF5_TAR} 1
+        elif [ "${WITH_HDF5}" == "false" ]; then
+          doIt library ${HDF5_TAR} 0
+        else
+          echoRed "Parameter --hdf5 only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --imagej)
+        doIt library ${IMAGEJ_TAR} 1
+        ;;
+      --imagej=*)
+        WITH_IMAGEJ=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_IMAGEJ}" == "true" ]; then
+          doIt library ${IMAGEJ_TAR} 1
+        elif [ "${WITH_IMAGEJ}" == "false" ]; then
+          doIt library ${IMAGEJ_TAR} 0
+        else
+          echoRed "Parameter --imagej only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --jpeg)
+        doIt library ${JPEG_TAR} 1
+        ;;
+      --jpeg=*)
+        WITH_JPEG=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_JPEG}" == "true" ]; then
+          doIt library ${JPEG_TAR} 1
+        elif [ "${WITH_JPEG}" == "false" ]; then
+          doIt library ${JPEG_TAR} 0
+        else
+          echoRed "Parameter --jpeg only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --scons)
+        doIt library ${SCONS_TAR} 1
+        ;;
+      --scons=*)
+        WITH_SCONS=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_SCONS}" == "true" ]; then
+          doIt library ${SCONS_TAR} 1
+        elif [ "${WITH_SCONS}" == "false" ]; then
+          doIt library ${SCONS_TAR} 0
+        else
+          echoRed "Parameter --scons only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --sqlite)
+        doIt library ${SQLITE_TAR} 1
+        ;;
+      --sqlite=*)
+        WITH_SQLITE=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_SQLITE}" == "true" ]; then
+          doIt library ${SQLITE_TAR} 1
+        elif [ "${WITH_SQLITE}" == "false" ]; then
+          doIt library ${SQLITE_TAR} 0
+        else
+          echoRed "Parameter --sqlite only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --tiff)
+        doIt library ${TIFF_TAR} 1
+        ;;
+      --tiff=*)
+        WITH_TIFF=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_TIFF}" == "true" ]; then
+          doIt library ${TIFF_TAR} 1
+        elif [ "${WITH_TIFF}" == "false" ]; then
+          doIt library ${TIFF_TAR} 0
+        else
+          echoRed "Parameter --tiff only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --nma)
+        doIt library ${NMA_TAR} 1
+        ;;
+      --nma=*)
+        WITH_NMA=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_NMA}" == "true" ]; then
+          doIt library ${NMA_TAR} 1
+        elif [ "${WITH_NMA}" == "false" ]; then
+          doIt library ${NMA_TAR} 0
+        else
+          echoRed "Parameter --nma only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --sh-alignment)
+        doIt library ${SHALIGNMENT_TAR} 1
+        ;;
+      --sh-alignment=*)
+        WITH_SHALIGNMENT=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_SHALIGNMENT}" == "true" ]; then
+          doIt library ${ALIGNMENT_TAR} 1
+        elif [ "${WITH_ALIGNMENT}" == "false" ]; then
+          doIt library ${ALIGNMENT_TAR} 0
+        else
+          echoRed "Parameter --sh-alignment only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --cltomo)
+        DO_CLTOMO=1
+        ;;
+      --cltomo=*)
+        WITH_CLTOMO=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_CLTOMO}" == "true" ]; then
+          DO_CLTOMO=1
+        elif [ "${WITH_CLTOMO}" == "false" ]; then
+          DO_CLTOMO=0
+        else
+          echoRed "Parameter --cltomo only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --python)
+        DO_PYTHON=1
+        DO_PYMOD=1
+        ;;
+      --python=*)
+        WITH_PYTHON=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_PYTHON}" == "true" ]; then
+          DO_PYTHON=1
+          DO_PYMOD=1
+        elif [ "${WITH_PYTHON}" == "false" ]; then
+          DO_PYTHON=1
+          DO_PYMOD=1
+        else
+          echoRed "Parameter --python only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --matplotlib)
+        doIt pymodule ${MATLIBPLOT_TAR} 1
+        ;;
+      --matplotlib=*)
+        WITH_MATLIBPLOT=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_MATLIBPLOT}" == "true" ]; then
+          doIt pymodule ${MATLIBPLOT_TAR} 1
+        elif [ "${WITH_MATLIBPLOT}" == "false" ]; then
+          doIt pymodule ${MATLIBPLOT_TAR} 0
+        else
+          echoRed "Parameter --matplotlib only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --mpi4py)
+        doIt pymodule ${PYMPI_TAR} 1
+        ;;
+      --mpi4py=*)
+        WITH_PYMPI=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_PYMPI}" == "true" ]; then
+          doIt pymodule ${PYMPI_TAR} 1
+        elif [ "${WITH_PYMPI}" == "false" ]; then
+          doIt pymodule ${PYMPI_TAR} 0
+        else
+          echoRed "Parameter --mpi4py only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --numpy)
+        doIt pymodule ${NUMPY_TAR} 1
+        ;;
+      --numpy=*)
+        WITH_NUMPY=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_NUMPY}" == "true" ]; then
+          doIt pymodule ${NUMPY_TAR} 1
+        elif [ "${WITH_NUMPY}" == "false" ]; then
+          doIt pymodule ${NUMPY_TAR} 0
+        else
+          echoRed "Parameter --numpy only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --scipy)
+        doIt pymodule ${SCIPY_TAR} 1
+        ;;
+      --scipy=*)
+        WITH_SCIPY=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_SCIPY}" == "true" ]; then
+          doIt pymodule ${SCIPY_TAR} 1
+        elif [ "${WITH_SCIPY}" == "false" ]; then
+          doIt pymodule ${SCIPY_TAR} 0
+        else
+          echoRed "Parameter --scipy only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --psutil)
+        doIt pymodule ${PSUTIL_TAR} 1
+        ;;
+      --psutil=*)
+        WITH_PSUTIL=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_PSUTIL}" == "true" ]; then
+          doIt pymodule ${PSUTIL_TAR} 1
+        elif [ "${WITH_PSUTIL}" == "false" ]; then
+          doIt pymodule ${PSUTIL_TAR} 0
+        else
+          echoRed "Parameter --psutil only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --tcl-tk)
+        DO_TCLTK=1
+        ;;
+      --tcl-tk=*)
+        WITH_TCLTK=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_TCLTK}" == "true" ]; then
+          DO_TCLTK=1
+        elif [ "${WITH_TCLTK}" == "false" ]; then
+          DO_TCLTK=0
+        else
+          echoRed "Parameter --tcl-tk only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --tcl)
+        doIt pymodule ${TCL_TAR} 1
+        ;;
+      --tcl=*)
+        WITH_TCL=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_TCL}" == "true" ]; then
+          doIt pymodule ${TCL_TAR} 1
+        elif [ "${WITH_TCL}" == "false" ]; then
+          doIt pymodule ${TCL_TAR} 0
+        else
+          echoRed "Parameter --tcl only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --tk)
+        doIt pymodule ${TK_TAR} 1
+        ;;
+      --tk=*)
+        WITH_TK=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_TK}" == "true" ]; then
+          doIt pymodule ${TK_TAR} 1
+        elif [ "${WITH_TK}" == "false" ]; then
+          doIt pymodule ${TK_TAR} 0
+        else
+          echoRed "Parameter --tk only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --pymodules)
+        DO_PYMOD=1
+        ;;
+      --pymodules=*)
+        WITH_PYMOD=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_PYMOD}" == "true" ]; then
+          DO_PYMOD=1
+        elif [ "${WITH_PYMOD}" == "false" ]; then
+          DO_PYMOD=0
+        else
+          echoRed "Parameter --pymodules only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      --gui=*)
+        WITH_GUI==$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_GUI}" == "true" ]; then
+          WITH_GUI=1
+        elif [ "${WITH_GUI}" == "false" ]; then
+          WITH_GUI=0
+        else
+          echoRed "Parameter --gui only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+      *)
+        echoRed "Error: Unrecognized option $1, exiting..."
+        helpMessage
+        exitGracefully
+        ;;
+    esac
+    shift
+  done
+
+#        "clean=true")         DO_CLEAN=true;;
+#        "clean=false")        DO_CLEAN=false;;
+#        "gui=false")          GUI_ARGS="";;
+#        "setup=true")         DO_SETUP=true;;
+
+}
+
+takeDefaults()
+{
+# Update *_DO arrays to represent what the *_DEFAULT arrays say we should do by default
+  lib=0
+  while [ $lib -lt ${#EXTERNAL_LIBRARIES_FILES[@]} ]; do
+    EXTERNAL_LIBRARIES_DO[$lib]=${EXTERNAL_LIBRARIES_DEFAULT[$lib]}
+    lib=$(expr $lib + 1)
+  done
+
+  mod=0
+  while [ ${mod} -lt ${#PYTHON_MODULES_FILES[@]} ]; do
+    PYTHON_MODULES_DO[$mod]=${PYTHON_MODULES_DEFAULT[$mod]}
+    mod=$(expr $mod + 1)
+  done
+}
+
+create_bashrc_file()
+{
+  INC_FILE=$1
+  echo "export XMIPP_HOME=$PWD" > $INC_FILE
+  echo 'export PATH=$XMIPP_HOME/bin:$PATH' >> $INC_FILE
+  echo 'export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
+  echo 'if [ "$BASH" != "" ]; then' >> $INC_FILE
+  echo '# Load global autocomplete file ' >> $INC_FILE
+  echo 'test -s $XMIPP_HOME/.xmipp.autocomplete && . $XMIPP_HOME/.xmipp.autocomplete || true' >> $INC_FILE
+  echo '# Load programs autocomplete file ' >> $INC_FILE
+  echo 'test -s $XMIPP_HOME/.xmipp_programs.autocomplete && . $XMIPP_HOME/.xmipp_programs.autocomplete || true' >> $INC_FILE
+  echo 'fi' >> $INC_FILE
+  
+  if [ $IS_MAC -eq 1 ]; then
+    echo 'export DYLD_FALLBACK_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
+  fi
+  echo " "    >> $INC_FILE
+  echo " "    >> $INC_FILE
+  
+  echo "# Xmipp Aliases 						 "    >> $INC_FILE
+  echo "## Setup ##                        "    >> $INC_FILE
+  echo "alias xconfigure='./setup.py -j $NUMBER_OF_CPU configure compile ' " >> $INC_FILE
+  echo "alias xcompile='./setup.py -j $NUMBER_OF_CPU compile ' "             >> $INC_FILE
+  echo "alias xupdate='./setup.py -j $NUMBER_OF_CPU update compile ' "       >> $INC_FILE
+  echo "## Interface ##                        "    >> $INC_FILE
+  echo "alias xa='xmipp_apropos'               "    >> $INC_FILE
+  echo "alias xb='xmipp_browser'               "    >> $INC_FILE
+  echo "alias xp='xmipp_protocols'             "    >> $INC_FILE
+  echo "alias xmipp='xmipp_protocols'          "    >> $INC_FILE
+  echo "alias xs='xmipp_showj'                 "    >> $INC_FILE
+  echo "alias xmipp_show='xmipp_showj'         "    >> $INC_FILE
+  echo "alias xsj='xmipp_showj'                "    >> $INC_FILE
+  echo "alias xij='xmipp_imagej'               "    >> $INC_FILE
+  echo "## Image ##                            "    >> $INC_FILE
+  echo "alias xic='xmipp_image_convert'        "    >> $INC_FILE
+  echo "alias xih='xmipp_image_header'         "    >> $INC_FILE
+  echo "alias xio='xmipp_image_operate'        "    >> $INC_FILE
+  echo "alias xis='xmipp_image_statistics'     "    >> $INC_FILE
+  echo "## Metadata ##                         "    >> $INC_FILE
+  echo "alias xmu='xmipp_metadata_utilities'   "    >> $INC_FILE
+  echo "alias xmp='xmipp_metadata_plot'        "    >> $INC_FILE
+  echo "## Transformation ##                   "    >> $INC_FILE
+  echo "alias xtg='xmipp_transform_geometry'   "    >> $INC_FILE
+  echo "alias xtf='xmipp_transform_filter'     "    >> $INC_FILE
+  echo "alias xtn='xmipp_transform_normalize'  "    >> $INC_FILE
+  echo "## Other ##                            "    >> $INC_FILE
+  echo "alias xrf='xmipp_resolution_fsc'       "    >> $INC_FILE
+  echo "alias xrs='xmipp_resolution_ssnr'      "    >> $INC_FILE
+  echo "                                                                             "    >> $INC_FILE
+  echo "                                                                             "    >> $INC_FILE
+  echo "## Configuration ##                                                          "    >> $INC_FILE
+  echo "                                                                             "    >> $INC_FILE
+  echo "# This file will serve to customize some settings of you Xmipp installation  "    >> $INC_FILE
+  echo "# Each setting will be in the form o a shell variable set to some value      "    >> $INC_FILE
+  echo "                                                                             "    >> $INC_FILE
+  echo "#---------- GUI ----------                                                   "    >> $INC_FILE
+  echo "# If you set to 1 the value of this variable, by default the programs        "    >> $INC_FILE
+  echo "# will launch the gui when call without argments, default is print the help  "    >> $INC_FILE
+  echo "export XMIPP_GUI_DEFAULT=0                                                   "    >> $INC_FILE
+  echo "                                                                             "    >> $INC_FILE
+  echo "# If you set to 0 the value of this variable the script generated            "    >> $INC_FILE
+  echo "# by programs gui will not be erased and you can use the same parameters     "    >> $INC_FILE
+  echo "export XMIPP_GUI_CLEAN=1                                                     "    >> $INC_FILE
+  echo "                                                                             "    >> $INC_FILE
+  echo "#---------- Parallel ----------                                              "    >> $INC_FILE
+  echo "# This variable will point to your job submition template file               "    >> $INC_FILE
+  echo "export XMIPP_PARALLEL_LAUNCH=config_launch.py                                "    >> $INC_FILE
+  echo "                                                                             "    >> $INC_FILE
+  echo "# If you have .xmipp.cfg in your home folder it will override                "    >> $INC_FILE
+  echo "# this configurations                                                        "    >> $INC_FILE
+  echo "                                                                             "    >> $INC_FILE
+  echo "test -s ~/.xmipp.cfg && . ~/.xmipp.cfg || true                               "    >> $INC_FILE
+  echo "                                                                             "    >> $INC_FILE
+
+  chmod a+x $INC_FILE
+}
+
+create_tcsh_file()
+{
+  INC_FILE=$1
+  echo "setenv XMIPP_HOME $PWD" > $INC_FILE
+  echo 'setenv PATH $XMIPP_HOME/bin:$PATH' >> $INC_FILE
+  echo 'if($?LD_LIBRARY_PATH) then' >> $INC_FILE
+  echo '  setenv LD_LIBRARY_PATH $XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
+  echo 'else' >> $INC_FILE
+  echo '  setenv LD_LIBRARY_PATH $XMIPP_HOME/lib' >> $INC_FILE
+  echo 'endif' >> $INC_FILE
+  
+  if [ $IS_MAC -eq 1 ]; then
+    echo 'if($?DYLD_FALLBACK_LIBRARY_PATH) then' >> $INC_FILE
+    echo '  setenv DYLD_FALLBACK_LIBRARY_PATH $XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
+    echo 'else' >> $INC_FILE
+    echo '  setenv DYLD_FALLBACK_LIBRARY_PATH $XMIPP_HOME/lib' >> $INC_FILE
+    echo 'endif' >> $INC_FILE
+  fi
+  echo 'test -s $XMIPP_HOME/.xmipp.alias && source $XMIPP_HOME/.xmipp.alias || true' >> $INC_FILE
+  
+  echo " "    >> $INC_FILE
+  echo " "    >> $INC_FILE
+
+  echo "# Xmipp Aliases 						 "    >> $INC_FILE
+  echo "## Setup ##                        "    >> $INC_FILE
+  echo "alias xconfigure './setup.py -j $NUMBER_OF_CPU configure compile ' " >> $INC_FILE
+  echo "alias xcompile './setup.py -j $NUMBER_OF_CPU compile ' "             >> $INC_FILE
+  echo "alias xupdate './setup.py -j $NUMBER_OF_CPU update compile ' "       >> $INC_FILE
+  echo "## Interface ##                        "    >> $INC_FILE
+  echo "alias xa 'xmipp_apropos'               "    >> $INC_FILE
+  echo "alias xb 'xmipp_browser'               "    >> $INC_FILE
+  echo "alias xp 'xmipp_protocols'             "    >> $INC_FILE
+  echo "alias xmipp 'xmipp_protocols'          "    >> $INC_FILE
+  echo "alias xs 'xmipp_showj'                 "    >> $INC_FILE
+  echo "alias xmipp_show 'xmipp_showj'         "    >> $INC_FILE
+  echo "alias xsj 'xmipp_showj'                "    >> $INC_FILE
+  echo "## Image ##                            "    >> $INC_FILE
+  echo "alias xic 'xmipp_image_convert'        "    >> $INC_FILE
+  echo "alias xih 'xmipp_image_header'         "    >> $INC_FILE
+  echo "alias xio 'xmipp_image_operate'        "    >> $INC_FILE
+  echo "alias xis 'xmipp_image_statistics'     "    >> $INC_FILE
+  echo "## Metadata ##                         "    >> $INC_FILE
+  echo "alias xmu 'xmipp_metadata_utilities'   "    >> $INC_FILE
+  echo "alias xmp 'xmipp_metadata_plot'        "    >> $INC_FILE
+  echo "## Transformation ##                   "    >> $INC_FILE
+  echo "alias xtg 'xmipp_transform_geometry'   "    >> $INC_FILE
+  echo "alias xtf 'xmipp_transform_filter'     "    >> $INC_FILE
+  echo "alias xtn 'xmipp_transform_normalize'  "    >> $INC_FILE
+  echo "## Other ##                            "    >> $INC_FILE
+  echo "alias xrf 'xmipp_resolution_fsc'       "    >> $INC_FILE
+  echo "alias xrs 'xmipp_resolution_ssnr'      "    >> $INC_FILE
+  echo "                                                                             "    >> $INC_FILE
+  echo "                                                                             "    >> $INC_FILE
+  echo "## Configuration ##                                                          "    >> $INC_FILE
+  echo "                                                                             "    >> $INC_FILE
+  echo "# This file will serve to customize some settings of you Xmipp installation  "    >> $INC_FILE
+  echo "# Each setting will be in the form o a shell variable set to some value      "    >> $INC_FILE
+  echo "                                                                             "    >> $INC_FILE
+  echo "#---------- GUI ----------                                                   "    >> $INC_FILE
+  echo "# If you set to 1 the value of this variable, by default the programs        "    >> $INC_FILE
+  echo "# will launch the gui when call without argments, default is print the help  "    >> $INC_FILE
+  echo "setenv XMIPP_GUI_DEFAULT 0                                                   "    >> $INC_FILE
+  echo "                                                                             "    >> $INC_FILE
+  echo "# If you set to 0 the value of this variable the script generated            "    >> $INC_FILE
+  echo "# by programs gui will not be erased and you can use the same parameters     "    >> $INC_FILE
+  echo "setenv XMIPP_GUI_CLEAN 1                                                     "    >> $INC_FILE
+  echo "                                                                             "    >> $INC_FILE
+  echo "#---------- Parallel ----------                                              "    >> $INC_FILE
+  echo "# This variable will point to your job submition template file               "    >> $INC_FILE
+  echo "setenv XMIPP_PARALLEL_LAUNCH config_launch.py                                "    >> $INC_FILE
+  echo "                                                                             "    >> $INC_FILE
+  echo "# If you have .xmipp.cfg in your home folder it will override                "    >> $INC_FILE
+  echo "# this configurations                                                        "    >> $INC_FILE
+  echo "                                                                             "    >> $INC_FILE
+  echo "test -s ~/.xmipp.cfg && source ~/.xmipp.cfg || true                          "    >> $INC_FILE
+  echo "                                                                             "    >> $INC_FILE
+  
+  chmod a+x $INC_FILE
+}
+ 
+compile_library()
+  {
+  tic
+  LIB=$1
+  PREFIX_PATH=$2
+  SUFFIX_PATH=$3
+  CONFIGFLAGS=$4
+  LIBS_PATH=$5
+  _PATH=${EXT_PATH}/${PREFIX_PATH}/${LIB}/${SUFFIX_PATH}
   echo
-  echoGreen "*** Compiling $LIB ..."
-  echoExec "cd $_PATH"
-
- if ! $DO_STATIC; then
-	echo "--> Enabling shared libraries..."
-	CONFIGFLAGS="--enable-shared $CONFIGFLAGS"
- fi
-
- if $DO_CLEAN; then
-    echo "--> make distclean > /dev/null 2>&1"
-    make distclean > /dev/null 2>&1
- fi
-
-  echo "--> ./configure $CONFIGFLAGS >$BUILD_PATH/${LIB}_configure.log 2>&1"
-  ./configure $CONFIGFLAGS >$BUILD_PATH/${LIB}_configure.log 2>&1
-  echo "--> make -j $NUMBER_OF_CPU >$BUILD_PATH/${LIB}_make.log 2>&1"
-  make -j $NUMBER_OF_CPU >$BUILD_PATH/${LIB}_make.log 2>&1
+  echoGreen "*** Compiling ${LIB} ..."
+  echoExecRedirectEverything "cd ${_PATH}" "/dev/null"
+  echoExecRedirectEverything "make -j $NUMBER_OF_CPU" "$BUILD_PATH/${LIB}_make.log"
+  echoExecRedirectEverything "cd -" "/dev/null"
   toc
+  echo
+}
+
+configure_library()
+{
+  tic
+  LIB=$1
+  PREFIX_PATH=$2
+  SUFFIX_PATH=$3
+  CONFIGFLAGS=$4
+  LIBS_PATH=$5
+  _PATH=${EXT_PATH}/${PREFIX_PATH}/${LIB}/${SUFFIX_PATH}
+  echo
+  echoGreen "*** Configuring ${LIB} ..."
+  echoExecRedirectEverything "cd ${_PATH}" "/dev/null"
+
+  echo "--> Enabling shared libraries..."
+  CONFIGFLAGS="--enable-shared ${CONFIGFLAGS}"
+  
+  echoExecRedirectEverything "./configure ${CONFIGFLAGS}" "${BUILD_PATH}/${LIB}_configure.log"
+  echoExecRedirectEverything "cd -" "/dev/null"
+  toc
+  echo
+}
+
+clean_library()
+{
+  tic
+  LIB=$1
+  PREFIX_PATH=$2
+  SUFFIX_PATH=$3
+  CONFIGFLAGS=$4
+  LIBS_PATH=$5
+  _PATH=${EXT_PATH}/${PREFIX_PATH}/${LIB}/${SUFFIX_PATH}
+  echo
+  echoGreen "*** Cleaning ${LIB} ..."
+  echoExecRedirectEverything "cd ${_PATH}" "/dev/null"
+  echoExecRedirectEverything "make distclean" "/dev/null"
+  echoExecRedirectEverything "cd -" "/dev/null"
+  toc
+  echo
 }
 
 compile_pymodule()
 {
-   MOD=$1
-   _PATH=$EXT_PATH/python/$MOD
-   #_PYTHON=$EXT_PATH/python/$VPYTHON/python
-   echo "--> cd $_PATH"
-   cd $_PATH
-   echo "--> xmipp_python setup.py install --prefix $XMIPP_HOME >$BUILD_PATH/${MOD}_setup_install.log 2>&1"
-   xmipp_python setup.py install --prefix $XMIPP_HOME >$BUILD_PATH/${MOD}_setup_install.log 2>&1 
-   
+  tic
+  MOD=$1
+  _PATH=$EXT_PATH/python/$MOD
+  echo
+  echoGreen "*** Compiling ${MOD} ..."
+  #_PYTHON=$EXT_PATH/python/$PYTHON_FOLDER/python
+  echoExecRedirectEverything "cd $_PATH" "/dev/null"
+  echoExecRedirectEverything "xmipp_python setup.py install --prefix $XMIPP_HOME" "$BUILD_PATH/${MOD}_setup_install.log"
+  toc
+  echo
 }
 
 #This function should be called from XMIPP_HOME
 # Parameter: Library_Path Library_name Lib_Version_Number 
 install_libs()
 {
-  cd $XMIPP_HOME
+  tic
+  echoExecRedirectEverything "cd $XMIPP_HOME" "/dev/null"
   LIBPATH=external/$1; shift
   COMMON="$1"; shift
   VERSION=$1; shift
   COPY=$1
   SUFFIXES=".a .la "
-  if $IS_MAC; then
+  echo
+  echoGreen "*** Installing lib ${LIBPATH} ..."
+  if [ $IS_MAC -eq 1 ]; then
 	SUFFIXES="$SUFFIXES .dylib .$VERSION.dylib"
-  elif $IS_MINGW; then
+  elif [ $IS_MINGW -eq 1 ]; then
         SUFFIXES="$SUFFIXES .dll.a -$VERSION.dll"
   else 
 	SUFFIXES="$SUFFIXES .so .so.$VERSION"
@@ -404,350 +1169,617 @@ install_libs()
   for suffix in $SUFFIXES; do
      LIBNAME=$COMMON$suffix
      if $COPY; then
-     	     if [ -e lib/$LIBNAME ]; then
-	         rm -f lib/$LIBNAME
-             fi
-	     echo "--> cp -f $LIBPATH/$LIBNAME lib/$LIBNAME"
-	     cp -f $LIBPATH/$LIBNAME lib/$LIBNAME  
+	     echoExecRedirectEverything "cp -f $LIBPATH/$LIBNAME lib/$LIBNAME" "/dev/null"
      else
-	     echo "--> ln -sf ../$LIBPATH/$LIBNAME lib/$LIBNAME"
-	     ln -sf ../$LIBPATH/$LIBNAME lib/$LIBNAME  
+	     echoExecRedirectEverything "ln -sf ../$LIBPATH/$LIBNAME lib/$LIBNAME " "/dev/null"
      fi
   done
+  echoExecRedirectEverything "cd -" "/dev/null"
+  toc
+  echo
+}
+
+#This function should be called from XMIPP_HOME
+# Parameter: Library_Path Library_name Lib_Version_Number 
+uninstall_libs()
+{
+  tic
+  echoExecRedirectEverything "cd $XMIPP_HOME" "/dev/null"
+  LIBPATH=external/$1; shift
+  COMMON="$1"; shift
+  VERSION=$1; shift
+  COPY=$1
+  SUFFIXES=".a .la "
+  echo
+  echoGreen "*** Uninstalling lib ${LIBPATH} ..."
+  if [ $IS_MAC -eq 1 ]; then
+	SUFFIXES="$SUFFIXES .dylib .$VERSION.dylib"
+  elif [ $IS_MINGW -eq 1 ]; then
+        SUFFIXES="$SUFFIXES .dll.a -$VERSION.dll"
+  else 
+	SUFFIXES="$SUFFIXES .so .so.$VERSION"
+  fi
+  
+  for suffix in $SUFFIXES; do
+     LIBNAME=$COMMON$suffix
+     if [ -e lib/$LIBNAME ]; then
+       echoExecRedirectEverything "rm -f lib/$LIBNAME" "/dev/null"
+     fi
+  done
+  echoExecRedirectEverything "cd -" "/dev/null"
+  toc
+  echo
 }
 
 install_bin()
 {
-  cd $XMIPP_HOME
+  tic
+  echoExecRedirectEverything "cd $XMIPP_HOME" "/dev/null"
   BINPATH=../external/$1
   LINKNAME=bin/$2
-  echoExec "ln -sf $BINPATH $LINKNAME"
+  echo
+  echoGreen "*** Installing bin ${LINKNAME} ..."
+  echoExecRedirectEverything "ln -sf $BINPATH $LINKNAME" "/dev/null"
+  echoExecRedirectEverything "cd -" "/dev/null"
+  toc
+  echo
+}
+
+uninstall_bin()
+{
+  echoExecRedirectEverything "cd $XMIPP_HOME" "/dev/null"
+  BINPATH=../external/$1
+  LINKNAME=bin/$2
+  echo
+  echoGreen "*** Uninstalling bin ${LINKNAME} ..."
+  echoExecRedirectEverything "rm $LINKNAME" "/dev/null"
+  echoExecRedirectEverything "cd -" "/dev/null"
+  echo
 }
 
 create_dir()
 {
   DIR=$1
   if [ -d $DIR ]; then 
-      echo "--> Dir $DIR exists."
+    echoRed "--> Dir $DIR exists."
   else
-    echoExec "mkdir $DIR"
+    echoExecRedirectEverything "mkdir $DIR" "/dev/null"
   fi
 }
 
-#################### NEEDED FOLDERS: bin lib build ##############
+initial_definitions()
+{
+  export XMIPP_HOME=$PWD
+  export PATH=$XMIPP_HOME/bin:$PATH
+  export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH
+  if [ $IS_MAC -eq 1 ]; then
+    export DYLD_FALLBACK_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH
+  fi
+  EXT_PATH=$XMIPP_HOME/external
+  BUILD_PATH=$XMIPP_HOME/build
+}
+
+decompressExternals()
+{
+  DELETE_ANSWER="n"
+  tic
+  echo
+  echoExecRedirectEverything "cd ${EXT_PATH}" "/dev/null"
+  echoGreen "*** Decompressing external libraries ..."
+  lib=0
+  while [ ${lib} -lt ${#EXTERNAL_LIBRARIES[@]} ]; do
+    if [ ${EXTERNAL_LIBRARIES_DO[$lib]} -eq 1 ]; then
+      if [ -d ${EXTERNAL_LIBRARIES[$lib]} ]; then
+        if [ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]; then
+          echo "${EXTERNAL_LIBRARIES[$lib]} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
+          read DELETE_ANSWER
+        else
+          DELETE_ANSWER="Y"
+        fi
+        if [ ${DELETE_ANSWER} == "y" -o ${DELETE_ANSWER} == "Y" ]; then
+          echoExecRedirectEverything "rm -rf ${EXTERNAL_LIBRARIES[$lib]}" "/dev/null"
+        else
+          echoRed "Library ${EXTERNAL_LIBRARIES[$lib]} folder remains untouched."
+        fi
+      fi
+      #echoExec "tar -xvzf ${EXTERNAL_LIBRARIES_FILES[$lib]}"
+      echoExecRedirectEverything "tar -xvzf ${EXTERNAL_LIBRARIES_FILES[$lib]}" "/dev/null"
+    fi
+    lib=$(expr $lib + 1)
+  done
+  echoExecRedirectEverything "cd -" "/dev/null"
+  toc
+}
+
+decompressPython()
+{
+  DELETE_ANSWER="n"
+  tic
+  echo
+  echoExecRedirectEverything "cd ${EXT_PATH}/python" "/dev/null"
+  echoGreen "*** Decompressing Python ***"
+  if [ ${DO_PYTHON} -eq 1 ]; then
+    if [ -d ${PYTHON_FOLDER} ]; then
+      if [ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]; then
+        echo "${PYTHON_FOLDER} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
+        read DELETE_ANSWER
+      else
+        DELETE_ANSWER="Y"
+      fi
+      if [ ${DELETE_ANSWER} == "y" -o ${DELETE_ANSWER} == "Y" ]; then
+        echoExecRedirectEverything "rm -rf ${PYTHON_FOLDER}" "/dev/null"
+      else
+        echoRed "${PYTHON_FOLDER} folder remains untouched."
+      fi   
+    fi
+    echoExecRedirectEverything "tar -xvzf ${PYTHON_TAR}" "/dev/null"
+  fi
+  echoExecRedirectEverything "cd -" "/dev/null"
+  toc
+}
+
+decompressPythonModules()
+{
+  DELETE_ANSWER="n"
+  tic
+  echo
+  echoExecRedirectEverything "cd ${EXT_PATH}/python" "/dev/null"
+  echoGreen "*** Decompressing Python modules ..."
+  lib=0
+  while [ ${lib} -lt ${#PYTHON_MODULES[@]} ]; do
+    if [ ${PYTHON_MODULES_DO[$lib]} -eq 1 ]; then
+      if [ -d ${PYTHON_MODULES[$lib]} ]; then
+        if [ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]; then
+          echo "${PYTHON_MODULES[$lib]} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
+          read DELETE_ANSWER
+        else
+          DELETE_ANSWER="Y"
+        fi
+        if [ ${DELETE_ANSWER} == "y" -o ${DELETE_ANSWER} == "Y" ]; then
+          echoExecRedirectEverything "rm -rf ${PYTHON_MODULES[$lib]}" "/dev/null"
+        else
+          echoRed "Library ${PYTHON_MODULES[$lib]} folder remains untouched."
+        fi
+      fi
+      echoExecRedirectEverything "tar -xvzf ${PYTHON_MODULES_FILES[$lib]}" "/dev/null"
+    fi
+    lib=$(expr $lib + 1)
+  done
+  echoExecRedirectEverything "cd -" "/dev/null"
+  toc
+}
+
+preparePythonEnvironment()
+{
+  export CPPFLAGS="-I${EXT_PATH}/${SQLITE_FOLDER} -I${EXT_PYTHON}/${TK_FOLDER}/generic -I${EXT_PYTHON}/${TCL_FOLDER}/generic"
+  if [ $IS_MAC -eq 1 ]; then
+    export LDFLAGS="-L${EXT_PYTHON}/${PYTHON_FOLDER} -L${XMIPP_HOME}/lib -L${EXT_PYTHON}/${TK_FOLDER}/macosx -L${EXT_PYTHON}/${TCL_FOLDER}/macosx"
+    export LD_LIBRARY_PATH="${EXT_PYTHON}/${PYTHON_FOLDER}:${EXT_PYTHON}/${TK_FOLDER}/macosx:${EXT_PYTHON}/${TCL_FOLDER}/macosx:${LD_LIBRARY_PATH}"
+    export DYLD_FALLBACK_LIBRARY_PATH="${EXT_PYTHON}/${PYTHON_FOLDER}:${EXT_PYTHON}/${TK_FOLDER}/macosx:${EXT_PYTHON}/${TCL_FOLDER}/macosx:${DYLD_FALLBACK_LIBRARY_PATH}"
+    echoExec "ln -s ${XMIPP_HOME}/bin/xmipp_python ${XMIPP_HOME}/bin/python2.7"
+    echoExec "cd ${EXT_PYTHON}/${MATLIBPLOT_FOLDER}"
+    echoExec "ln -s ${XMIPP_HOME}/bin/xmipp_python ${XMIPP_HOME}/bin/pythonXmipp" 
+    echoExec "make -f make.osx clean"
+    echoExec "make -f make.osx PREFIX=${XMIPP_HOME} PYVERSION=Xmipp fetch deps mpl_install"
+    echoExec "rm ${XMIPP_HOME}/bin/pythonXmipp"
+    echoExec "rm ${XMIPP_HOME}/bin/python2.7"
+  elif [ $IS_MINGW -eq 1 ]; then
+    export LDFLAGS="-L${EXT_PYTHON}/${PYTHON_FOLDER} -L${XMIPP_HOME}/lib -L${EXT_PYTHON}/${TK_FOLDER}/win -L${EXT_PYTHON}/${TCL_FOLDER}/win"
+    export LD_LIBRARY_PATH="${EXT_PYTHON}/${PYTHON_FOLDER}:${EXT_PYTHON}/${TK_FOLDER}/win:${EXT_PYTHON}/${TCL_FOLDER}/win:${LD_LIBRARY_PATH}"
+    echoExec "ln -s ${XMIPP_HOME}/bin/xmipp_python ${XMIPP_HOME}/bin/python2.7"
+    echoExec "cd ${EXT_PYTHON}/${MATLIBPLOT_FOLDER}"
+    echoExec "ln -s ${XMIPP_HOME}/bin/xmipp_python ${XMIPP_HOME}/bin/pythonXmipp"
+  else
+    export LDFLAGS="-L${EXT_PYTHON}/${PYTHON_FOLDER} -L${XMIPP_HOME}/lib -L${EXT_PYTHON}/${TK_FOLDER}/unix -L${EXT_PYTHON}/${TCL_FOLDER}/unix"
+    export LD_LIBRARY_PATH="${EXT_PYTHON}/${PYTHON_FOLDER}:${EXT_PYTHON}/${TK_FOLDER}/unix:${EXT_PYTHON}/${TCL_FOLDER}/unix:${LD_LIBRARY_PATH}"
+    echoExec "cp ${EXT_PYTHON}/matplotlib_setupext.py ${EXT_PYTHON}/${MATLIBPLOT_FOLDER}/setupext.py"
+    #The following is needed from matplotlib to works
+    echoExec "cd ${EXT_PYTHON}/${TK_FOLDER}/unix/"
+    echoExec "ln -sf libtk8.5.so  libtk.so"
+    echoExec "cd ${EXT_PYTHON}/${TCL_FOLDER}/unix/"
+    echoExec "ln -sf libtcl8.5.so  libtcl.so"
+  fi
+}
+
+exitGracefully()
+{
+  if [ $# -eq 1 ]; then
+    GLOB_STATE=$1
+    GLOB_COMMAND="Unknown"
+  elif [ $# -eq 2 ]; then
+    GLOB_STATE=$1
+    GLOB_COMMAND="$2"
+  elif [ $# -gt 2 ]; then
+    echoRed "Error: too much parameters passed to exitGracefully function."
+  fi
+
+  if [ ${GLOB_STATE} -eq 0 ]; then
+    echoGreen "Program exited succesfully."
+  else
+    echoRed "Program exited with non-zero status (${GLOB_STATE}), produced by command ${GLOB_COMMAND}."
+  fi
+  exit $GLOB_STATE
+}
+
+##################################################################################
+#################### INITIAL TASKS ###############################################
+##################################################################################
+
+welcomeMessage
+initial_definitions
+takeDefaults
+takeArguments $@
+decideOS
+create_bashrc_file .xmipp.bashrc # Create file to include from BASH this Xmipp installation
+create_tcsh_file .xmipp.csh      # for CSH or TCSH
+
+if [ $DO_UNATTENDED -eq 1 ]; then
+  CONFIGURE_ARGS="$CONFIGURE_ARGS unattended "
+fi
+
+
+##################################################################################
+#################### NEEDED FOLDERS: bin lib build ###############################
+##################################################################################
+
 echoGreen "*** Checking needed folders ..."
 create_dir build
 create_dir bin
 create_dir lib
 
 
-#################### DECOMPRESSING EXTERNAL LIBRARIES ###########################
-if $DO_UNTAR; then  
-  tic
-  dirs=". python"
-  echo
-  echoGreen "*** Decompressing external libraries ..."
-  #Enter to external dir
-  echo "--> cd $EXT_PATH"
-  cd $EXT_PATH
-  for d in $dirs; do
-    echo "--> cd $d"
-    cd $d 
-    for file in $(ls *.tgz); do
-      echo "--> tar -xvzf $file > /dev/null"
-      tar -xvzf $file > /dev/null 2>&1
-    done
-    echo "--> cd -"
-    cd - > /dev/null 2>&1
-  done
-  toc
+##################################################################################
+#################### DECOMPRESSING EVERYTHING ####################################
+##################################################################################
+
+if [ $DO_UNTAR -eq 1 ]; then 
+  decompressExternals
+  decompressPython
+  decompressPythonModules
 fi
 
+##################################################################################
+#################### COMPILING EXTERNAL LIBRARIES ################################
+##################################################################################
+
 #################### SQLITE ###########################
-if $DO_SQLITE; then
-  if $IS_MAC; then
-    #compile_library $VSQLITE "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1 -I/opt/local/include -I/opt/local/lib -I/sw/include -I/sw/lib -lsqlite3" ".libs"
-    compile_library $VSQLITE "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
-  else
-    compile_library $VSQLITE "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
+shouldIDoIt library ${SQLITE_TAR}
+if [ $? -eq 1 ]; then
+  if [ $DO_CLEAN  -eq 1 ]; then
+    clean_library ${SQLITE_FOLDER} "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
+    if [ $IS_MINGW -eq 1 ]; then
+      rm ${EXT_PATH}/${SQLITE_EXT_FOLDER}/libsqlitefunctions.dll ${XMIPP_HOME}/lib/libXmippSqliteExt.dll
+    elif [ $IS_MAC -eq 1 ]; then
+      rm ${EXT_PATH}/${SQLITE_EXT_FOLDER}/libsqlitefunctions.dylib ${XMIPP_HOME}/lib/libXmippSqliteExt.dylib
+    else  
+      rm ${EXT_PATH}/${SQLITE_EXT_FOLDER}/libsqlitefunctions.so ${XMIPP_HOME}/lib/libXmippSqliteExt.so
+    fi
+    uninstall_bin ${SQLITE_FOLDER}/sqlite3 xmipp_sqlite3
+    uninstall_libs ${SQLITE_FOLDER}/.libs libsqlite3 0 false
   fi
-  #execute sqlite to avoid relinking in the future
-  echo "select 1+1 ;" | $XMIPP_HOME/external/$VSQLITE/sqlite3
-  install_bin $VSQLITE/sqlite3 xmipp_sqlite3
-  install_libs $VSQLITE/.libs libsqlite3 0 false
-  #compile math library for sqlite
-  cd $EXT_PATH/$VSQLITE_EXT
-  if $IS_MINGW; then
-    gcc -shared -I. -o libsqlitefunctions.dll extension-functions.c
-    cp libsqlitefunctions.dll $XMIPP_HOME/lib/libXmippSqliteExt.dll
-  elif $IS_MAC; then
-    gcc -fno-common -dynamiclib extension-functions.c -o libsqlitefunctions.dylib
-    cp libsqlitefunctions.dylib $XMIPP_HOME/lib/libXmippSqliteExt.dylib
-  else  
-    gcc -fPIC  -shared  extension-functions.c -o libsqlitefunctions.so -lm
-    cp libsqlitefunctions.so $XMIPP_HOME/lib/libXmippSqliteExt.so
+  if [ $DO_CONFIGURE -eq 1 ]; then
+    configure_library ${SQLITE_FOLDER} "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
+  fi
+  if [ $DO_COMPILE -eq 1 ]; then
+    compile_library ${SQLITE_FOLDER} "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
+    #execute sqlite to avoid relinking in the future
+    echo "select 1+1 ;" | ${XMIPP_HOME}/external/${SQLITE_FOLDER}/sqlite3
+    install_bin ${SQLITE_FOLDER}/sqlite3 xmipp_sqlite3
+    install_libs ${SQLITE_FOLDER}/.libs libsqlite3 0 false
+    #compile math library for sqlite
+    cd ${EXT_PATH}/${SQLITE_EXT_FOLDER}
+    if [ $IS_MINGW -eq 1 ]; then
+      gcc -shared -I. -o libsqlitefunctions.dll extension-functions.c
+      cp libsqlitefunctions.dll ${XMIPP_HOME}/lib/libXmippSqliteExt.dll
+    elif [ $IS_MAC -eq 1 ]; then
+      gcc -fno-common -dynamiclib extension-functions.c -o libsqlitefunctions.dylib
+      cp libsqlitefunctions.dylib ${XMIPP_HOME}/lib/libXmippSqliteExt.dylib
+    else  
+      gcc -fPIC  -shared  extension-functions.c -o libsqlitefunctions.so -lm
+      cp libsqlitefunctions.so ${XMIPP_HOME}/lib/libXmippSqliteExt.so
+    fi
   fi
 fi
 
 #################### FFTW ###########################
-if $DO_FFTW; then
-  if $IS_MINGW; then
-    FFTWFLAGS=" CPPFLAGS=-I/c/MinGW/include CFLAGS=-I/c/MinGW/include"
-  else
-    FFTWFLAGS=""
+shouldIDoIt library ${FFTW_TAR}
+if [ $? -eq 1 ]; then
+  if [ $DO_CLEAN  -eq 1 ]; then
+    uninstall_libs ${FFTW_FOLDER}/.libs libfftw3 3 true
+    uninstall_libs ${FFTW_FOLDER}/threads/.libs libfftw3_threads 3 true
+    uninstall_libs ${FFTW_FOLDER}/.libs libfftw3f 3 true
   fi
-  FLAGS="$FFTWFLAGS --enable-threads"
-  compile_library $VFFTW "." "." $FLAGS
-  install_libs $VFFTW/.libs libfftw3 3 true
-  install_libs $VFFTW/threads/.libs libfftw3_threads 3 true
+  if [ $DO_CONFIGURE  -eq 1 ]; then
+    if [ $IS_MINGW -eq 1 ]; then
+      FFTWFLAGS=" CPPFLAGS=-I/c/MinGW/include CFLAGS=-I/c/MinGW/include"
+    else
+      FFTWFLAGS=""
+    fi
+    FLAGS="${FFTWFLAGS} --enable-threads"
+    configure_library ${FFTW_FOLDER} "." "." ${FLAGS}
+  fi
+  if [ $DO_COMPILE  -eq 1 ]; then
+    compile_library ${FFTW_FOLDER} "." "." ${FLAGS}
+    install_libs ${FFTW_FOLDER}/.libs libfftw3 3 true
+    install_libs ${FFTW_FOLDER}/threads/.libs libfftw3_threads 3 true
+  fi
 
-  FLAGS="$FFTWFLAGS --enable-float"
-  compile_library $VFFTW "." "." $FLAGS
-  install_libs $VFFTW/.libs libfftw3f 3 true
+  if [ $DO_CONFIGURE  -eq 1 ]; then
+    FLAGS="${FFTWFLAGS} --enable-float"
+    configure_library ${FFTW_FOLDER} "." "." ${FLAGS}
+  fi
+  if [ $DO_COMPILE  -eq 1 ]; then
+    compile_library ${FFTW_FOLDER} "." "." ${FLAGS}
+    install_libs ${FFTW_FOLDER}/.libs libfftw3f 3 true
+  fi
 fi
 
 #################### JPEG ###########################
-if $DO_JPEG; then
-compile_library $VJPEG "." "." "CPPFLAGS=-w"
-install_libs $VJPEG/.libs libjpeg 8 false
+shouldIDoIt library ${JPEG_TAR}
+if [ $? -eq 1 ]; then
+  if [ $DO_CLEAN  -eq 1 ]; then
+    uninstall_libs ${JPEG_FOLDER}/.libs libjpeg 8 false
+  fi
+  if [ $DO_CONFIGURE  -eq 1 ]; then
+    configure_library ${JPEG_FOLDER} "." "." "CPPFLAGS=-w"
+  fi
+  if [ $DO_COMPILE  -eq 1 ]; then
+    compile_library ${JPEG_FOLDER} "." "." "CPPFLAGS=-w"
+    install_libs ${JPEG_FOLDER}/.libs libjpeg 8 false
+  fi
 fi
 
 #################### TIFF ###########################
-if $DO_TIFF; then
-  compile_library $VTIFF "." "." "CPPFLAGS=-w --with-jpeg-include-dir=$EXT_PATH/$VJPEG --with-jpeg-lib-dir=$XMIPP_HOME/lib"
-  install_libs $VTIFF/libtiff/.libs libtiff 3 false
+shouldIDoIt library ${TIFF_TAR}
+if [ $? -eq 1 ]; then
+  if [ $DO_CLEAN  -eq 1 ]; then
+    uninstall_libs ${TIFF_FOLDER}/libtiff/.libs libtiff 3 false
+  fi
+  if [ $DO_CONFIGURE  -eq 1 ]; then
+    configure_library ${TIFF_FOLDER} "." "." "CPPFLAGS=-w --with-jpeg-include-dir=${EXT_PATH}/${VJPEG} --with-jpeg-lib-dir=${XMIPP_HOME}/lib"
+  fi
+  if [ $DO_COMPILE  -eq 1 ]; then
+    compile_library ${TIFF_FOLDER} "." "." "CPPFLAGS=-w --with-jpeg-include-dir=${EXT_PATH}/${VJPEG} --with-jpeg-lib-dir=${XMIPP_HOME}/lib"
+    install_libs ${TIFF_FOLDER}/libtiff/.libs libtiff 3 false
+  fi
 fi
 
 #################### HDF5 ###########################
-if $DO_HDF5; then
-compile_library $VHDF5 "." "." "CPPFLAGS=-w --enable-cxx"
-install_libs $VHDF5/src/.libs libhdf5 7 false
-install_libs $VHDF5/c++/src/.libs libhdf5_cpp 7 false
+shouldIDoIt library ${HDF5_TAR}
+if [ $? -eq 1 ]; then
+  if [ $DO_CLEAN  -eq 1 ]; then
+    uninstall_libs ${HDF5_FOLDER}/src/.libs libhdf5 7 false
+    uninstall_libs ${HDF5_FOLDER}/c++/src/.libs libhdf5_cpp 7 false
+  fi
+  if [ $DO_COMPILE  -eq 1 ]; then
+    configure_library ${HDF5_FOLDER} "." "." "CPPFLAGS=-w --enable-cxx"
+    compile_library ${HDF5_FOLDER} "." "." "CPPFLAGS=-w --enable-cxx"
+    install_libs ${HDF5_FOLDER}/src/.libs libhdf5 7 false
+    install_libs ${HDF5_FOLDER}/c++/src/.libs libhdf5_cpp 7 false
+  fi
+fi
+
+#################### NMA ###########################
+shouldIDoIt library ${NMA_TAR}
+if [ $? -eq 1 ]; then
+  if [ $DO_COMPILE  -eq 1 ]; then
+    echoExecRedirectEverything "cd ${XMIPP_HOME}/external/NMA/ElNemo" "/dev/null"
+    echoExecRedirectEverything "make" "/dev/null"
+    echoExecRedirectEverything "cp nma_* ${XMIPP_HOME}/bin" "/dev/null"
+    echoExecRedirectEverything "cd ${XMIPP_HOME}/external/NMA/NMA_cart" "/dev/null"
+    echoExecRedirectEverything "make" "/dev/null" 
+    echoExecRedirectEverything "cp nma_* ${XMIPP_HOME}/bin" "/dev/null"
+    echoExecRedirectEverything "cd ${XMIPP_HOME}" "/dev/null"
+    echoExecRedirectEverything "cp ${XMIPP_HOME}/external/NMA/nma_* ${XMIPP_HOME}/bin" "/dev/null"
+    echoExecRedirectEverything "cp ${XMIPP_HOME}/external/NMA/m_inout_Bfact.py ${XMIPP_HOME}/bin" "/dev/null"
+    echoExecRedirectEverything "cp -" "/dev/null" 
+  fi
 fi
 
 #################### TCL/TK ###########################
-if $DO_TCLTK; then
-  if $IS_MAC; then
-    compile_library tcl$VTCLTK python macosx "--disable-xft"
-    compile_library tk$VTCLTK python macosx "--disable-xft"
-  elif $IS_MINGW; then
-    compile_library tcl$VTCLTK python win "--disable-xft CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
-    compile_library tk$VTCLTK python win "--disable-xft --with-tcl=../../tcl$VTCLTK/win CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
+if [ $DO_TCLTK -eq 1 ]; then
+  if [ $IS_MAC -eq 1 ]; then
+    shouldIDoIt pymodule ${TCL_TAR}
+    if [ $? -eq 1 ]; then
+      if [ $DO_CONFIGURE  -eq 1 ]; then
+        configure_library ${TCL_FOLDER} python macosx "--disable-xft"
+      fi
+      if [ $DO_COMPILE  -eq 1 ]; then
+        compile_library ${TCL_FOLDER} python macosx "--disable-xft"
+      fi
+    fi
+    shouldIDoIt pymodule ${TK_TAR}
+    if [ $? -eq 1 ]; then
+      if [ $DO_CONFIGURE  -eq 1 ]; then
+        configure_library ${TK_FOLDER} python macosx "--disable-xft"
+      fi
+      if [ $DO_COMPILE  -eq 1 ]; then
+        compile_library ${TK_FOLDER} python macosx "--disable-xft"
+      fi
+    fi
+  elif [ $IS_MINGW -eq 1 ]; then
+    shouldIDoIt pymodule ${TCL_TAR}
+    if [ $? -eq 1 ]; then
+      if [ $DO_CONFIGURE  -eq 1 ]; then
+        configure_library ${TCL_FOLDER} python win "--disable-xft CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
+      fi
+      if [ $DO_COMPILE  -eq 1 ]; then
+        compile_library ${TCL_FOLDER} python win "--disable-xft CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
+      fi
+    fi
+    shouldIDoIt pymodule ${TK_TAR}
+    if [ $? -eq 1 ]; then
+      if [ $DO_CONFIGURE  -eq 1 ]; then
+        configure_library ${TK_FOLDER} python win "--disable-xft --with-tcl=../../${TCL_FOLDER}/win CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
+      fi
+      if [ $DO_COMPILE  -eq 1 ]; then
+        compile_library ${TK_FOLDER} python win "--disable-xft --with-tcl=../../${TCL_FOLDER}/win CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
+      fi
+    fi
   else
-    compile_library tcl$VTCLTK python unix "--enable-threads"
-    compile_library tk$VTCLTK python unix "--enable-threads"
+    shouldIDoIt pymodule ${TCL_TAR}
+    if [ $? -eq 1 ]; then
+      if [ $DO_CONFIGURE  -eq 1 ]; then
+        configure_library ${TCL_FOLDER} python unix "--enable-threads"
+      fi
+      if [ $DO_COMPILE  -eq 1 ]; then
+        compile_library ${TCL_FOLDER} python unix "--enable-threads"
+      fi
+    fi
+    shouldIDoIt pymodule ${TK_TAR}
+    if [ $? -eq 1 ]; then
+      if [ $DO_CONFIGURE  -eq 1 ]; then
+        configure_library ${TK_FOLDER} python unix "--enable-threads"
+      fi
+      if [ $DO_COMPILE  -eq 1 ]; then
+        compile_library ${TK_FOLDER} python unix "--enable-threads"
+      fi
+    fi
   fi
 fi
 
-#################### PYTHON ###########################
-EXT_PYTHON=$EXT_PATH/python
+##################################################################################
+#################### COMPILING PYTHON ############################################
+##################################################################################
 
-if $DO_PYTHON; then
+EXT_PYTHON=${EXT_PATH}/python
+
+if [ $DO_PYTHON -eq 1 ]; then
   echoGreen "PYTHON SETUP"
-  export CPPFLAGS="-I$EXT_PATH/$VSQLITE/ -I$EXT_PYTHON/tk$VTCLTK/generic -I$EXT_PYTHON/tcl$VTCLTK/generic"
-  if $IS_CYGWIN; then
-    export CPPFLAGS="-I/usr/include -I/usr/include/ncurses $CPPFLAGS"
-    export LDFLAGS="-L$EXT_PYTHON/$VPYTHON -L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/unix -L$EXT_PYTHON/tcl$VTCLTK/unix"
-    export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/unix:$EXT_PYTHON/tcl$VTCLTK/unix:$LD_LIBRARY_PATH"
-    echo "--> export CPPFLAGS=$CPPFLAGS"
-    echo "--> export LDFLAGS=$LDFLAGS"
-    echo "--> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"	 
-  elif $IS_MAC; then
-    export LDFLAGS="-L$EXT_PYTHON/$VPYTHON -L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/macosx -L$EXT_PYTHON/tcl$VTCLTK/macosx"
-    export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/macosx:$EXT_PYTHON/tcl$VTCLTK/macosx:$LD_LIBRARY_PATH"
-    export DYLD_FALLBACK_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/macosx:$EXT_PYTHON/tcl$VTCLTK/macosx:$DYLD_FALLBACK_LIBRARY_PATH"
-    echo "--> export CPPFLAGS=$CPPFLAGS"
-    echo "--> export LDFLAGS=$LDFLAGS"
-    echo "--> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-    echo "--> export DYLD_FALLBACK_LIBRARY_PATH=$DYLD_FALLBACK_LIBRARY_PATH"
-  elif $IS_MINGW; then
-    export CPPFLAGS="-I/usr/include -I/usr/include/ncurses -I/c/MinGW/include $CPPFLAGS -D__MINGW32__ -I$EXT_PYTHON/$VPYTHON/Include -I$EXT_PYTHON/$VPYTHON/PC "
-    export CFLAGS="$CPPFLAGS"
-    export LDFLAGS="-L$EXT_PYTHON/$VPYTHON -L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/win -L$EXT_PYTHON/tcl$VTCLTK/win"
-    export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/win:$EXT_PYTHON/tcl$VTCLTK/win:$LD_LIBRARY_PATH"
-    echo "--> export CPPFLAGS=$CPPFLAGS"
-    echo "--> export LDFLAGS=$LDFLAGS"
-    echo "--> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+  export CPPFLAGS="-I${EXT_PATH}/${SQLITE_FOLDER} -I${EXT_PYTHON}/${TK_FOLDER}/generic -I${EXT_PYTHON}/${TCL_FOLDER}/generic"
+  if [ $IS_MAC -eq 1 ]; then
+    export LDFLAGS="-L${EXT_PYTHON}/${PYTHON_FOLDER} -L${XMIPP_HOME}/lib -L${EXT_PYTHON}/${TK_FOLDER}/macosx -L${EXT_PYTHON}/${TCL_FOLDER}/macosx"
+    export LD_LIBRARY_PATH="${EXT_PYTHON}/${PYTHON_FOLDER}:${EXT_PYTHON}/${TK_FOLDER}/macosx:${EXT_PYTHON}/${TCL_FOLDER}/macosx:${LD_LIBRARY_PATH}"
+    export DYLD_FALLBACK_LIBRARY_PATH="${EXT_PYTHON}/${PYTHON_FOLDER}:${EXT_PYTHON}/${TK_FOLDER}/macosx:${EXT_PYTHON}/${TCL_FOLDER}/macosx:${DYLD_FALLBACK_LIBRARY_PATH}"
+    echo "--> export CPPFLAGS=${CPPFLAGS}"
+    echo "--> export LDFLAGS=${LDFLAGS}"
+    echo "--> export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
+    echo "--> export DYLD_FALLBACK_LIBRARY_PATH=${DYLD_FALLBACK_LIBRARY_PATH}"
+  elif [ $IS_MINGW -eq 1 ]; then
+    export CPPFLAGS="-I/usr/include -I/usr/include/ncurses -I/c/MinGW/include ${CPPFLAGS} -D__MINGW32__ -I${EXT_PYTHON}/${PYTHON_FOLDER}/Include -I${EXT_PYTHON}/${PYTHON_FOLDER}/PC "
+    export CFLAGS="${CPPFLAGS}"
+    export LDFLAGS="-L${EXT_PYTHON}/${PYTHON_FOLDER} -L${XMIPP_HOME}/lib -L${EXT_PYTHON}/${TK_FOLDER}/win -L${EXT_PYTHON}/${TCL_FOLDER}/win"
+    export LD_LIBRARY_PATH="${EXT_PYTHON}/${PYTHON_FOLDER}:${EXT_PYTHON}/${TK_FOLDER}/win:${EXT_PYTHON}/${TCL_FOLDER}/win:${LD_LIBRARY_PATH}"
+    echo "--> export CPPFLAGS=${CPPFLAGS}"
+    echo "--> export LDFLAGS=${LDFLAGS}"
+    echo "--> export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
   else
-    export LDFLAGS="-L$EXT_PYTHON/$VPYTHON -L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/unix -L$EXT_PYTHON/tcl$VTCLTK/unix"
-    export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/unix:$EXT_PYTHON/tcl$VTCLTK/unix:$LD_LIBRARY_PATH"
-    echo "--> export CPPFLAGS=$CPPFLAGS"
-    echo "--> export LDFLAGS=$LDFLAGS"
-    echo "--> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"     
+    export LDFLAGS="-L${EXT_PYTHON/$PYTHON_FOLDER} -L${XMIPP_HOME}/lib -L${EXT_PYTHON}/${TK_FOLDER}/unix -L${EXT_PYTHON}/${TCL_FOLDER}/unix"
+    export LD_LIBRARY_PATH="${EXT_PYTHON}/${PYTHON_FOLDER}:${EXT_PYTHON}/${TK_FOLDER}/unix:${EXT_PYTHON}/${TCL_FOLDER}/unix:${LD_LIBRARY_PATH}"
+    echo "--> export CPPFLAGS=${CPPFLAGS}"
+    echo "--> export LDFLAGS=${LDFLAGS}"
+    echo "--> export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
   fi
   echoGreen "Copying our custom python files ..."
-  echoExec "cd $EXT_PYTHON"
-  echoExec "cp ./xmipp_setup.py $VPYTHON/setup.py"
-  echoExec "chmod a+x $VPYTHON/setup.py"
-  #cp ./xmipp_setup.py $VPYTHON/setup.py
+  echoExec "cd ${EXT_PYTHON}"
+  echoExec "cp ./xmipp_setup.py ${PYTHON_FOLDER}/setup.py"
+  echoExec "chmod a+x ${PYTHON_FOLDER}/setup.py"
+  #cp ./xmipp_setup.py $PYTHON_FOLDER/setup.py
   #I thick these two are not needed
-  #cp ./xmipp__iomodule.h $VPYTHON/Modules/_io/_iomodule.h
-  #echo "--> cp ./xmipp__iomodule.h $VPYTHON/Modules/_io/_iomodule.h"
+  #cp ./xmipp__iomodule.h $PYTHON_FOLDER/Modules/_io/_iomodule.h
+  #echo "--> cp ./xmipp__iomodule.h $PYTHON_FOLDER/Modules/_io/_iomodule.h"
     
-  compile_library $VPYTHON python "." ""
+  configure_library ${PYTHON_FOLDER} python "." ""
+  compile_library ${PYTHON_FOLDER} python "." ""
 
   # Create the python launch script with necessary environment variable settings
-  PYTHON_BIN=$XMIPP_HOME/bin/xmipp_python
+  PYTHON_BIN=${XMIPP_HOME}/bin/xmipp_python
   echo "--> Creating python launch script $PYTHON_BIN ..."
   printf "#!/bin/sh\n\n" > $PYTHON_BIN
-  if $IS_CYGWIN; then
-    printf 'VPYTHON=%b \n' "$VPYTHON" >> $PYTHON_BIN
-    printf 'VTCLTK=%b \n\n' "$VTCLTK" >> $PYTHON_BIN
-    printf 'EXT_PYTHON=$XMIPP_HOME/external/python \n' >> $PYTHON_BIN
-    printf 'export LD_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tcl$VTCLTK/unix:$EXT_PYTHON/tk$VTCLTK/unix:$LD_LIBRARY_PATH \n' >> $PYTHON_BIN
-    printf 'export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$XMIPP_HOME/applications/tests/pythonlib:$XMIPP_HOME/lib/python2.7/site-packages:$PYTHONPATH \n' >> $PYTHON_BIN
-    printf 'export TCL_LIBRARY=$EXT_PYTHON/tcl$VTCLTK/library \n' >> $PYTHON_BIN
-    printf 'export TK_LIBRARY=$EXT_PYTHON/tk$VTCLTK/library \n\n' >> $PYTHON_BIN
-    printf 'PYTHONCYGWINLIB=`find $EXT_PYTHON/$VPYTHON/build -name "lib.cygwin*" -type d`\n' >> $PYTHON_BIN
-    printf 'export LD_LIBRARY_PATH=$PYTHONCYGWINLIB:$LD_LIBRARY_PATH\n' >> $PYTHON_BIN
-    printf 'export PYTHONPATH=$PYTHONCYGWINLIB:$PYTHONPATH\n' >> $PYTHON_BIN
-    printf '$EXT_PYTHON/$VPYTHON/python.exe "$@"\n' >> $PYTHON_BIN
-  elif $IS_MINGW; then
-    printf 'VPYTHON=Python27 \n' >> $PYTHON_BIN
+  if [ $IS_MINGW -eq 1 ]; then
+    printf 'PYTHON_FOLDER=Python27 \n' >> $PYTHON_BIN
     printf 'VTCLTK=8.5 \n\n' >> $PYTHON_BIN
     printf 'EXT_PYTHON=/c \n' >> $PYTHON_BIN
-    printf 'export LD_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/$VPYTHON/tcl/tcl$VTCLTK:$EXT_PYTHON/$VPYTHON/tcl/tk$VTCLTK:$LD_LIBRARY_PATH \n' >> $PYTHON_BIN
-    printf 'export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$XMIPP_HOME/applications/tests/pythonlib:$EXT_PYTHON/$VPYTHON:$XMIPP_HOME/lib:$PYTHONPATH \n' >> $PYTHON_BIN
-    printf 'export TCL_LIBRARY=$EXT_PYTHON/$VPYTHON/tcl/tcl$VTCLTK \n' >> $PYTHON_BIN
-    printf 'export TK_LIBRARY=$EXT_PYTHON/$VPYTHON/tcl/tk$VTCLTK \n\n' >> $PYTHON_BIN
-    printf '$EXT_PYTHON/$VPYTHON/python.exe "$@"\n' >> $PYTHON_BIN
-  elif $IS_MAC; then
-    printf 'VPYTHON=%b \n' "$VPYTHON" >> $PYTHON_BIN
-    printf 'VTCLTK=%b \n\n' "$VTCLTK" >> $PYTHON_BIN
+    printf 'export LD_LIBRARY_PATH=$EXT_PYTHON/$PYTHON_FOLDER:$EXT_PYTHON/$PYTHON_FOLDER/tcl/tcl$VTCLTK:$EXT_PYTHON/$PYTHON_FOLDER/tcl/tk$VTCLTK:$LD_LIBRARY_PATH \n' >> $PYTHON_BIN
+    printf 'export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$XMIPP_HOME/applications/tests/pythonlib:$EXT_PYTHON/$PYTHON_FOLDER:$XMIPP_HOME/lib:$PYTHONPATH \n' >> $PYTHON_BIN
+    printf 'export TCL_LIBRARY=$EXT_PYTHON/$PYTHON_FOLDER/tcl/tcl$VTCLTK \n' >> $PYTHON_BIN
+    printf 'export TK_LIBRARY=$EXT_PYTHON/$PYTHON_FOLDER/tcl/tk$VTCLTK \n\n' >> $PYTHON_BIN
+    printf '$EXT_PYTHON/$PYTHON_FOLDER/python.exe "$@"\n' >> $PYTHON_BIN
+  elif [ $IS_MAC -eq 1 ]; then
+    printf 'PYTHON_FOLDER=%b \n' "${PYTHON_FOLDER}" >> $PYTHON_BIN
+    printf 'VTCLTK=%b \n\n' "${VTCLTK}" >> $PYTHON_BIN
     printf 'EXT_PYTHON=$XMIPP_HOME/external/python \n' >> $PYTHON_BIN
-    printf 'export LD_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tcl$VTCLTK/macosx:$EXT_PYTHON/tk$VTCLTK/macosx:$LD_LIBRARY_PATH \n' >> $PYTHON_BIN
+    printf 'export LD_LIBRARY_PATH=$EXT_PYTHON/$PYTHON_FOLDER:$EXT_PYTHON/tcl$VTCLTK/macosx:$EXT_PYTHON/tk$VTCLTK/macosx:$LD_LIBRARY_PATH \n' >> $PYTHON_BIN
     printf 'export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$XMIPP_HOME/applications/tests/pythonlib:$XMIPP_HOME/lib/python2.7/site-packages:$PYTHONPATH \n' >> $PYTHON_BIN
     printf 'export TCL_LIBRARY=$EXT_PYTHON/tcl$VTCLTK/library \n' >> $PYTHON_BIN
     printf 'export TK_LIBRARY=$EXT_PYTHON/tk$VTCLTK/library \n\n' >> $PYTHON_BIN
-    printf 'export DYLD_FALLBACK_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tcl$VTCLTK/macosx:$EXT_PYTHON/tk$VTCLTK/macosx:$DYLD_FALLBACK_LIBRARY_PATH \n' >> $PYTHON_BIN	
-    printf '$EXT_PYTHON/$VPYTHON/python.exe "$@"\n' >> $PYTHON_BIN
+    printf 'export DYLD_FALLBACK_LIBRARY_PATH=$EXT_PYTHON/$PYTHON_FOLDER:$EXT_PYTHON/tcl$VTCLTK/macosx:$EXT_PYTHON/tk$VTCLTK/macosx:$DYLD_FALLBACK_LIBRARY_PATH \n' >> $PYTHON_BIN	
+    printf '$EXT_PYTHON/$PYTHON_FOLDER/python.exe "$@"\n' >> $PYTHON_BIN
   else
-    printf 'VPYTHON=%b \n' "$VPYTHON" >> $PYTHON_BIN
-    printf 'VTCLTK=%b \n\n' "$VTCLTK" >> $PYTHON_BIN
+    printf 'PYTHON_FOLDER=%b \n' "${PYTHON_FOLDER}" >> $PYTHON_BIN
+    printf 'VTCLTK=%b \n\n' "${VTCLTK}" >> $PYTHON_BIN
     printf 'EXT_PYTHON=$XMIPP_HOME/external/python \n' >> $PYTHON_BIN
-    printf 'export LD_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tcl$VTCLTK/unix:$EXT_PYTHON/tk$VTCLTK/unix:$LD_LIBRARY_PATH \n' >> $PYTHON_BIN
+    printf 'export LD_LIBRARY_PATH=$EXT_PYTHON/$PYTHON_FOLDER:$EXT_PYTHON/tcl$VTCLTK/unix:$EXT_PYTHON/tk$VTCLTK/unix:$LD_LIBRARY_PATH \n' >> $PYTHON_BIN
     printf 'export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$XMIPP_HOME/applications/tests/pythonlib:$XMIPP_HOME/lib/python2.7/site-packages:$PYTHONPATH \n' >> $PYTHON_BIN
     printf 'export TCL_LIBRARY=$EXT_PYTHON/tcl$VTCLTK/library \n' >> $PYTHON_BIN
     printf 'export TK_LIBRARY=$EXT_PYTHON/tk$VTCLTK/library \n\n' >> $PYTHON_BIN
-
-    printf '$EXT_PYTHON/$VPYTHON/python "$@"\n' >> $PYTHON_BIN
+#    printf 'source ${XMIPP_HOME}/bin/activate' >> $PYTHON_BIN
+    printf '$EXT_PYTHON/$PYTHON_FOLDER/python "$@"\n' >> $PYTHON_BIN
   fi
-  echoExec "chmod a+x $PYTHON_BIN"
+  echoExec "chmod a+x ${PYTHON_BIN}"
   #make python directory accesible by anybody
-  echoExec "chmod -R a+x $XMIPP_HOME/external/python/Python-2.7.2"
+  echoExec "chmod -R a+x ${XMIPP_HOME}/external/python/Python-2.7.2"
 
-fi    
+fi
 
-#################### PYTHON MODULES ###########################
-if $DO_PYMOD; then
-  compile_pymodule $VNUMPY
-  export CPPFLAGS="-I$EXT_PATH/$VSQLITE/ -I$EXT_PYTHON/tk$VTCLTK/generic -I$EXT_PYTHON/tcl$VTCLTK/generic"
-  if $IS_MAC; then
-    export LDFLAGS="-L$EXT_PYTHON/$VPYTHON -L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/macosx -L$EXT_PYTHON/tcl$VTCLTK/macosx"
-    export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/macosx:$EXT_PYTHON/tcl$VTCLTK/macosx:$LD_LIBRARY_PATH"
-    export DYLD_FALLBACK_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/macosx:$EXT_PYTHON/tcl$VTCLTK/macosx:$DYLD_FALLBACK_LIBRARY_PATH"
-    echoExec "ln -s $XMIPP_HOME/bin/xmipp_python $XMIPP_HOME/bin/python2.7"
-    echoExec "cd $EXT_PYTHON/$VMATLIBPLOT"
-    echoExec "ln -s $XMIPP_HOME/bin/xmipp_python $XMIPP_HOME/bin/pythonXmipp" 
-    echoExec "make -f make.osx clean"
-    echoExec "make -f make.osx PREFIX=$XMIPP_HOME PYVERSION=Xmipp fetch deps mpl_install"
-    echoExec "rm $XMIPP_HOME/bin/pythonXmipp"
-    echoExec "rm $XMIPP_HOME/bin/python2.7"
-  elif $IS_MINGW; then
-    export LDFLAGS="-L$EXT_PYTHON/$VPYTHON -L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/win -L$EXT_PYTHON/tcl$VTCLTK/win"
-    export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/win:$EXT_PYTHON/tcl$VTCLTK/win:$LD_LIBRARY_PATH"
-    echoExec "ln -s $XMIPP_HOME/bin/xmipp_python $XMIPP_HOME/bin/python2.7"
-    echoExec "cd $EXT_PYTHON/$VMATLIBPLOT"
-    echoExec "ln -s $XMIPP_HOME/bin/xmipp_python $XMIPP_HOME/bin/pythonXmipp"
-  else
-    export LDFLAGS="-L$EXT_PYTHON/$VPYTHON -L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/unix -L$EXT_PYTHON/tcl$VTCLTK/unix"
-    export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/unix:$EXT_PYTHON/tcl$VTCLTK/unix:$LD_LIBRARY_PATH"
-    echoExec "cp $EXT_PYTHON/matplotlib_setupext.py $EXT_PYTHON/$VMATLIBPLOT/setupext.py"
-    #The following is needed from matplotlib to works
-    echoExec "cd $EXT_PYTHON/tk$VTCLTK/unix/"
-    echoExec "ln -sf libtk8.5.so  libtk.so"
-    echoExec "cd $EXT_PYTHON/tcl$VTCLTK/unix/"
-    echoExec "ln -sf libtcl8.5.so  libtcl.so"
+
+##################################################################################
+#################### COMPILING PYTHON MODULES ####################################
+##################################################################################
+
+preparePythonEnvironment
+
+if [ $DO_PYMOD -eq 1 ]; then
+  doIt pymodule ${NUMPY_TAR} 1
+  doIt pymodule ${MATLIBPLOT_TAR} 1
+  doIt pymodule ${PYMPI_TAR} 1
+  doIt pymodule ${SCIPY_TAR} 1
+  doIt pymodule ${PSUTIL_TAR} 1
+fi
+
+shouldIDoIt pymodule ${NUMPY_TAR}
+if [ $? -eq 1 ]; then
+  compile_pymodule ${NUMPY_FOLDER}
+fi
+shouldIDoIt pymodule ${MATLIBPLOT_TAR}
+if [ $? -eq 1 ]; then
+  compile_pymodule ${MATLIBPLOT_FOLDER}
+fi
+shouldIDoIt pymodule ${PYMPI_TAR}
+if [ $? -eq 1 ]; then
+  compile_pymodule ${PYMPI_FOLDER}
+fi
+
+if [ $DO_CLTOMO -eq 1 ]; then
+  # Fast Rotational Matching
+  export LDFLAGS="-shared ${LDFLAGS}"
+  shouldIDoIt pymodule ${SCIPY_TAR}
+  if [ $? -eq 1 ]; then
+    compile_pymodule ${SCIPY_FOLDER}
   fi
-  compile_pymodule $VMATLIBPLOT
-  compile_pymodule $VPYMPI
-  compile_pymodule $VPYCIFRW
-  compile_pymodule $VPSUTIL
-  
-  if $DO_CLTOMO; then
-    # Fast Rotational Matching
-    export LDFLAGS="-shared $LDFLAGS"
-    compile_pymodule $VSCIPY
-    cd $EXT_PATH/sh_alignment
-    ./compile.sh
+  shouldIDoIt library ${SHALIGNMENT_TAR}
+  if [ $? -eq 1 ]; then
+    echoExecRedirectEverything "cd ${EXT_PATH}/${SHALIGNMENT_FOLDER}" "/dev/null"
+    echoExecRedirectEverything "./compile.sh" "/dev/null"
   fi
+fi
+
+shouldIDoIt pymodule ${PSUTIL_TAR}
+if [ $? -eq 1 ]; then
+  compile_pymodule ${PSUTIL_FOLDER}
 fi
 
 # Launch the configure/compile python script 
-cd $XMIPP_HOME
 
-#echoGreen "Compiling XMIPP ..."
+echoGreen "Compiling XMIPP ..."
+echoExecRedirectEverything "cd ${XMIPP_HOME}" "/dev/null"
 #echoGreen "CONFIGURE: $CONFIGURE_ARGS"
 #echoGreen "COMPILE: $COMPILE_ARGS"
 #echoGreen "GUI: $GUI_ARGS"
 
-if $DO_SETUP; then
-	echoExec "./setup.py -j $NUMBER_OF_CPU configure $CONFIGURE_ARGS compile $COMPILE_ARGS $GUI_ARGS install"
+if [ $DO_SETUP -eq 1 ]; then
+  echoExec "./setup.py -j ${NUMBER_OF_CPU} configure ${CONFIGURE_ARGS} compile ${COMPILE_ARGS} ${GUI_ARGS} install"
 fi
 
-#################### NMA ###########################
-if $DO_NMA; then
-    echoExec "cd $XMIPP_HOME/external/NMA/ElNemo"
-    echoExec "make" 
-    echoExec "cp nma_* $XMIPP_HOME/bin"
-    echoExec "cd $XMIPP_HOME/external/NMA/NMA_cart"
-    echoExec "make" 
-    echoExec "cp nma_* $XMIPP_HOME/bin"
-    echoExec "cd $XMIPP_HOME"
-    echoExec "cp $XMIPP_HOME/external/NMA/nma_* $XMIPP_HOME/bin"
-    echoExec "cp $XMIPP_HOME/external/NMA/m_inout_Bfact.py $XMIPP_HOME/bin"
-fi
+exit ${GLOB_STATE}
 
-#################### JAVA ###########################
-install_jdk()
-{
-  LINUX="http://download.oracle.com/otn-pub/java/jdk/6u27-b07/jdk-6u27-linux-i586.bin"
-  LINUX64="http://download.oracle.com/otn-pub/java/jdk/6u27-b07/jdk-6u27-linux-x64.bin"
-  MACOSX="PENDING"
-
-  # Which is our OS?
-  case "$(uname -s)" in
-  Darwin)
-	  JDK_URL=$MACOSX;;
-  Linux)
-	  case "$(uname -m)" in
-		  x86_64) JDK_URL=$LINUX64;;
-		  *) JDK_URL=$LINUX;;
-	  esac;;
-  esac
-  # Download jdk from Oracle site
-  echo "wget $JDK_URL -o /dev/null -O $EXT_PATH/java/jdk.bin"
-  wget $JDK_URL -o /dev/null -O $EXT_PATH/java/jdk.bin
-  # Install jdk
-  $EXT_PATH/java/jdk.bin
-}
-
-exit 0
-if $DO_JAVA; then
-  echo -e "$GREEN*** Checking jdk ...$ENDC"  
-  JAVA_HOME=$EXT_PATH/java/jvm
-  
-  if [ `which java`) ]; then 
-      JAVAC=$(readlink -f `which javac`)
-      echo "Java found at: $JAVAC"
-      JDK_PATH=$(dirname `dirname $JAVAC`)
-  else
-    echo "Java jdk folder not found"
-    read -p "Do you want to install java-jdk(inside xmipp, doesn't require admin privileges)? (Y/n)" ANSWER
-    if [ $ANSWER -eq 'y' ]; then
-       install_jdk
-       JDK_PATH=$EXT_PATH/java/jdk1.6.0_27
-    fi
-    ln -sf $JDK_PATH $JAVA_HOME 
-  fi
-fi

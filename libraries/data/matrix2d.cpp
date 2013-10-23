@@ -26,8 +26,8 @@
 #include <algorithm>
 #include <queue>
 #include "matrix2d.h"
-#include "../../external/alglib/src/ap.h"
-#include "../../external/alglib/src/linalg.h"
+#include "../../external/alglib-3.8.0.cpp/src/ap.h"
+#include "../../external/alglib-3.8.0.cpp/src/linalg.h"
 
 /* Cholesky decomposition -------------------------------------------------- */
 void cholesky(const Matrix2D<double> &M, Matrix2D<double> &L)
