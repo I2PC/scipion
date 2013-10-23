@@ -80,10 +80,14 @@ class XmippML2DViewer(ProtocolViewer):
             self._viewAllPlots()
         else:
             plots = [p for p in  self._plotVars if self.getAttributeValue(p)]
-            self.createPlots(self.protocol, plots).show()
+            xplotter = self.createPlots(self.protocol, plots)
+            if xplotter:
+                xplotter.show()
         
     def _viewAllPlots(self, e=None):
-        self.createPlots(self.protocol, self._plotVars).show()        
+        xplotter = self.createPlots(self.protocol, self._plotVars)
+        if xplotter:
+            xplotter.show()
         
     def _viewPlot(self, paramName):
         xplotter = self.createPlots(self.protocol, [paramName])
@@ -183,3 +187,7 @@ class XmippML2DViewer(ProtocolViewer):
         
         return xplotter
 
+    @classmethod
+    def getView(self):
+        return "viewerML2D"
+    

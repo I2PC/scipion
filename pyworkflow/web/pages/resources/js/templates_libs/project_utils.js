@@ -1,8 +1,8 @@
 /**
  * Methods used in the project template
  * 
- * createProject(elm);
  * createProjectForm();
+ * createProject(elm);
  * deleteProjectForm(projName);
  * deleteProject(elm);
  * 

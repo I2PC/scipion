@@ -165,6 +165,10 @@ class XmippViewer(Viewer):
         else:
             raise Exception('XmippViewer.visualize: can not visualize class: %s' % obj.getClassName())
         
+    @classmethod
+    def getView(self):
+        return "viewerXmipp"
+        
 # ------------- Xmipp utilities function to launch Java applications ------------
 
 def getArchitecture():

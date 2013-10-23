@@ -9,8 +9,11 @@
  * setParamValue(paramId, value);
  * evalDependencies(row, newLevel);
  * evalCondition(row);
+ * normalizeConditions(cond);
  * help(title, msg);
  * browseObjects(node, projName, objClass);
+ * showComment();
+ * putComment();
  * getListFormatted(node, list, id);
  * getTableFormatted(node, list, id);
  * selectDialog(objClass, msg, funcName);
@@ -117,12 +120,23 @@ $(document).ready(function() {
 			});
 		} else if (mode == 'viewer') {
 			
+			new Messi("<img src='/resources/visualize.gif'/>  Loading Viewer...",{
+				modal : true
+				});
+			
 			/* Launch the viewers with the options chosen */
 			var action = "/viewer/";
 			
 			$.post(action, $("#protocolForm").serialize(), function(html) {
-	
-
+				$('.messi').remove();
+				$('.messi-modal').remove();
+								
+				if(html=="errorInput"){
+					var msg = messiError("Input was not selected, please choose one.");
+					launchMessiSimple("Error",msg);
+				} else {
+					customPopupHTML(html,775,470);
+				}
 			});
 		}
 		// Important. Stop the normal POST

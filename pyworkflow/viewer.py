@@ -59,6 +59,13 @@ class Viewer(object):
         particular object.
         """
         pass
+    
+    def getView(self):
+        """ This method should return the string value of the view in web
+        that will respond to this viewer. This method only should be implemented
+        in those viewers that have WEB_DJANGO environment defined. 
+        """
+        return None
 
 
 class Wizard(object):
@@ -106,12 +113,12 @@ class ProtocolViewer(Protocol, Viewer):
         """Open the Protocol GUI Form given a Protocol instance"""
         from gui.form import FormWindow
         self.protocol = obj
-        w = FormWindow("Protocol Viewer: " + self.getClassName(), self, 
+        self.formWindow = FormWindow("Protocol Viewer: " + self.getClassName(), self, 
                        self._viewAll, args.get('windows', None),
                        visualizeDict=self._getVisualizeDict(),
                        visualizeMode=True)
-        w.visualizeMode = True
-        w.show(center=True)     
+        self.formWindow.visualizeMode = True
+        self.formWindow.show(center=True)     
 
     def _getVisualizeDict(self):
         """ Create the visualization dict for view individual params. """

@@ -8,6 +8,7 @@
  * fillTabsSummary(id);
  * fillUL(list, ulId, icon);
  * launchViewer(id);
+ * updateButtons(projName, id, elm)
  * updateTree(id, elm);
  * updateRow(id, elm, row);
  * switchGraph();
@@ -112,18 +113,18 @@ function launchViewer(id){
 		url : "/launch_viewer/?protocolId=" + id,
 		dataType : "json",
 		success : function(json) {
-			$.each(json, function(key, value) {		
+			$.each(json, function(key, value) {
 				if(key=="url_form"){
-					popup(value);
+					customPopup(value,500,350);
 				}
 				else if(key=="html"){
 					customPopupHTML(value,800,600);
 				}
 				else if(key=="url"){
-					customPopup(value,1024,600)
+					customPopup(value,1024,600);
 				}
 				else if(key=="plot"){
-					customPopup(value,600,500)
+					customPopup(value,600,500);
 				}
 			});
 		}
@@ -151,7 +152,6 @@ function updateButtons(projName, id, elm){
 	fillTabsSummary(id);
 }
 
-
 function updateTree(id, elm){
 	var oldSelect = $("div#graphActiv").attr("data-option");
 	var selected = "graph_" + id;
@@ -176,7 +176,6 @@ function updateRow(id, elm, row){
 	elm.attr('style', 'background-color: LightSteelBlue;');
 	elm.attr('class', 'selected');
 }
-
 
 function switchGraph() {
 	var status = $("div#graphActiv").attr("data-mode");

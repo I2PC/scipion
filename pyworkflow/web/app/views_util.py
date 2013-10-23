@@ -241,12 +241,12 @@ def getImageDim(request, imagePath):
     img.read(str(imgFn), xmipp.HEADER)
     return img.getDimensions()
 
-def readVolumeAndReslice(projectPath, volName, axis):
+def readVolumeAndReslice(projectPath, volName, axis, dataType):
     img = xmipp.Image()
     imgFn = os.path.join(projectPath, volName)
     #FALTARIA LO DEL MAPPED
     img.read(str(imgFn))
-    img.convert2DataType(xmipp.DT_UCHAR, xmipp.CW_ADJUST)
+    img.convert2DataType(dataType, xmipp.CW_ADJUST)
     if axis !=xmipp.VIEW_Z_NEG:
         img.reslice(axis)
     fileName, fileExtension = os.path.splitext(volName)

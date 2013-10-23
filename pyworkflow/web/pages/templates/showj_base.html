@@ -411,8 +411,20 @@
 					 
 					
 					{% if form.dims.value == '3d' %} 
-					<input type="submit" value="volume" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='volume';" class="submitButton
-					 {% if form.mode.value != 'volume' %}
+					<input type="submit" value="volume_astex" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='volume_astex';" class="submitButton
+					 {% if form.mode.value != 'volume_astex' %}
+					 visualizeVolOff
+					 {% else %}
+					  visualizeVolOn
+					 {% endif %}
+					 "
+					 
+					   
+					 />
+					 {% endif %}
+					 {% if form.dims.value == '3d' %} 
+					<input type="submit" value="volume_chimera" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='volume_chimera';" class="submitButton
+					 {% if form.mode.value != 'volume_chimera' %}
 					 visualizeVolOff
 					 {% else %}
 					  visualizeVolOn
@@ -565,6 +577,7 @@
 		</section>
 	</div>
 	
+	{% block content_end_page %}	{% endblock %}
 
 </body>
 </html>
