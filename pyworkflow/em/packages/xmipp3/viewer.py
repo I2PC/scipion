@@ -55,7 +55,7 @@ class XmippViewer(Viewer):
     with the Xmipp program xmipp_showj
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [SetOfImages, SetOfCoordinates, SetOfClasses2D, 
+    _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, 
                 ProtImportMicrographs, XmippProtPreprocessMicrographs, ProtCTFMicrographs,
                 XmippProtParticlePicking, ProtImportParticles, XmippProtExtractParticles,
                 XmippProtCL2DAlign, SetOfClasses2D, SetOfCTF]
@@ -65,8 +65,9 @@ class XmippViewer(Viewer):
 
     def visualize(self, obj, **args):
         cls = type(obj)
-        
+        print "cls:", cls
         if issubclass(cls, Image):
+            print "visualizing Image"
             fn = locationToXmipp(*obj.getLocation())
             runShowJ(fn)
             

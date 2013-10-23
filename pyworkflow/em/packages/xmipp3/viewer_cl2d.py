@@ -32,28 +32,13 @@ from pyworkflow.em import *
 from protocol_cl2d import XmippProtCL2D
 from viewer import runShowJ
 from pyworkflow.gui.text import *
+from pyworkflow.gui.dialog import showError, showWarning
 import glob
 
 CLASSES = 0
 CLASS_CORES = 1
 CLASS_STABLE_CORES = 2
-
-class XmippDefCL2DViewer(Form):
-    """Create the definition of parameters for
-    the XmippProtCL2D protocol"""
-    def __init__(self):
-        Form.__init__(self)
-    
-        self.addSection(label='Visualization')
-        self.addParam('classesToShow', EnumParam, choices=['Classes', 'Class Cores', 'Class Stable Cores'],
-                      label="What to show", default=CLASS_CORES,
-                      display=EnumParam.DISPLAY_COMBO)
-        self.addParam('doShowClassHierarchy', BooleanParam, label="Visualize class hierarchy.", default=True)      
-        self.addParam('doShowLastLevel', BooleanParam, label="Visualize last level.", default=True)     
-        self.addParam('showSeveralLevels', StringParam, default='',
-              label='Visualize several levels', condition='not doShowLastLevel',
-              help='Create a  list of levels like: 0,1,3 or 0-3 ')    
-
+   
         
 class XmippCL2DViewer(ProtocolViewer):
     """ Wrapper to visualize different type of data objects
@@ -62,44 +47,77 @@ class XmippCL2DViewer(ProtocolViewer):
     _targets = [XmippProtCL2D]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
-    _definition = XmippDefCL2DViewer()
     _label = 'Xmipp Viewer CL2D'
+   
+
+    def _defineParams(self, form):
+        form.addSection(label='Visualization')
+        form.addParam('classesToShow', EnumParam, choices=['Classes', 'Class Cores', 'Class Stable Cores'],
+                      label="What to show", default=CLASS_CORES,
+                      display=EnumParam.DISPLAY_COMBO)
+        form.addParam('doShowClassHierarchy', BooleanParam, label="Visualize class hierarchy.", default=True)      
+        form.addParam('doShowLastLevel', BooleanParam, label="Visualize last level.", default=True)     
+        form.addParam('showSeveralLevels', StringParam, default='',
+              label='Visualize several levels', condition='not doShowLastLevel',
+              help='Create a  list of levels like: 0,1,3 or 0-3 ')    
     
-        
-    def _viewAll(self, *args):
-        classesToShow = self.classesToShow.get()
-        
+    def _getVisualizeDict(self):
+        return {'doShowClassHierarchy': self._viewClassHierarchy,
+                'doShowLastLevel': self._viewLevelFiles}        
+
+    def _getSubset(self):
         fnSubset = ""
+        classesToShow = self.classesToShow.get()
         if classesToShow == CLASSES:
             fnSubset = ""
         elif classesToShow == CLASS_CORES:
             fnSubset = "_core"
         elif classesToShow == CLASS_STABLE_CORES:
             fnSubset = "_stable_core"
-        
+        return fnSubset
+                        
+    def _viewClassHierarchy(self, e=None):
+        fnSubset = self._getSubset()
+        fnHierarchy = self.protocol._getExtraPath("classes%s_hierarchy.txt" % fnSubset)
+        if os.path.exists(fnHierarchy):
+            showTextfileViewer(fnHierarchy,[fnHierarchy]) 
+            
+    def _viewLevelFiles(self, e=None):
+        fnSubset = self._getSubset()
         levelFiles = self.protocol._getLevelMdFiles(fnSubset)
         if levelFiles:
             levelFiles.sort()
             lastLevelFile = levelFiles[-1]
-            if self.doShowLastLevel.get():
+            if self.doShowLastLevel:
                 runShowJ("classes@"+lastLevelFile)
             else:
-                listOfLevels = self.__getListFromRangeString(self.showSeveralLevels.get())
-                lastLevel = int(re.search('level_(\d\d)',lastLevelFile).group(1))
-                if max(listOfLevels) <= lastLevel:
+                if self.showSeveralLevels.empty():
+                    self.formWindow.showError('Please select the levels that you want to visualize.')
+                else:
+                    listOfLevels = []
+                    try:
+                        listOfLevels = self.__getListFromRangeString(self.showSeveralLevels.get())
+                    except Exception, ex:
+                        self.formWindow.showError('Invalid levels range.')
+                        
+                    #lastLevel = int(re.search('level_(\d\d)',lastLevelFile).group(1))
+                    #if max(listOfLevels) <= lastLevel:
                     files = "";
                     for level in listOfLevels:
-                        print "en for con level=%s" % level
                         fn = self.protocol._getExtraPath("level_%02d/level_classes%s.xmd"%(level,fnSubset))
                         if os.path.exists(fn):
                             files += "classes_sorted@"+fn+" "
+                        else:
+                            self.formWindow.showError('Level %s does not exist.' % level)
                     if files != "":
-                        runShowJ(files)
-        if self.doShowClassHierarchy.get():
-            fnHierarchy = self.protocol._getExtraPath("classes%s_hierarchy.txt" % fnSubset)
-            #TODO: Adapt showTextFileViewer not to use Xmipp objects and to be scrollable
-#            if os.path.exists(fnHierarchy):
-#                showTextfileViewer(fnHierarchy,[fnHierarchy])
+                        runShowJ(files)        
+        
+    def _viewAll(self, *args):
+
+        self._viewLevelFiles()
+            
+        if self.doShowClassHierarchy:
+            self._viewClassHierarchy()
 
 #TODO: This method should not be necessary, instead NumericListParam should return a list and not a String 
     def __getListFromRangeString(self, rangeStr):
@@ -120,6 +138,5 @@ class XmippCL2DViewer(ProtocolViewer):
                 values += map(int, e.split())
         return values
             
-
         
 

@@ -38,28 +38,26 @@ $(document).ready(function(){
 
 {% block content_menu %}{% endblock %}
 			
-{% block content_view %}
+{% block content_view %}{% endblock %}
 
+{% block content_end_page %}	
+<!-- CHIMERA -->
+<div id="fallback" class="fallback"></div>
+<canvas id="molview" width="512" height="334"></canvas>
 
-	<!-- CHIMERA -->
-<div id="chimeraContainer">
-	<div id="fallback" class="fallback"></div>
-    <canvas id="molview" width="512" height="334"></canvas>
+<script>
+if (!PhiloGL.hasWebGL()) {
+	document.body.className = 'no-webgl';
+	document.getElementById('fallback').innerHTML = ''
+	+ '<div style="margin:10px;">'
+	+ 'Your web browser does not support or is not configured for WebGL.'
+	+ '  See <a href="http://get.webgl.org/">WebGL Support</a>'
+	+ ' for more information.'
+	+ '</div>';
+}
+</script>
+{% autoescape off %}
+	{{chimeraHtml}}
+{% endautoescape %}	
 
-    <script>
-	if (!PhiloGL.hasWebGL()) {
-		document.body.className = 'no-webgl';
-		document.getElementById('fallback').innerHTML = ''
-		+ '<div style="margin:10px;">'
-		+ 'Your web browser does not support or is not configured for WebGL.'
-		+ '  See <a href="http://get.webgl.org/">WebGL Support</a>'
-		+ ' for more information.'
-		+ '</div>';
-	}
-    </script>
-	{% autoescape off %}
-		{{chimeraHtml}}
-	{% endautoescape %}	
-
-</div> 
 {% endblock %}

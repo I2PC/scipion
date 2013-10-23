@@ -44,6 +44,8 @@ class XmippProtML2D(ProtAlign, ProtClassify):
         ProtAlign.__init__(self, **args)
         ProtClassify.__init__(self, **args)
         
+        self.progId = "ml"
+        self.oroot = ""
         
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -124,7 +126,7 @@ class XmippProtML2D(ProtAlign, ProtClassify):
         """
         if iter is None:
             iter = self._lastIteration()
-        extra = self._getPath(self.prefix) + 'extra'
+        extra = self.oroot + 'extra'
         mdFile = join(extra, 'iter%03d' % iter, 'iter_classes.xmd')
         if block:
             mdFile = block + '@' + mdFile
@@ -133,6 +135,8 @@ class XmippProtML2D(ProtAlign, ProtClassify):
     
     def _lastIteration(self):
         """ Find the last iteration number """
+        if self.oroot == "":
+            self.oroot = self._getOroot()
         iterNumber = 0        
         while True:
             if not exists(self._getIterClasses(iterNumber+1)):
@@ -140,17 +144,17 @@ class XmippProtML2D(ProtAlign, ProtClassify):
             iterNumber = iterNumber + 1
         return iterNumber        
     
+    def _getOroot(self):
+        
+        if self.doMlf:
+            self.progId += "f"
+        return self._getPath('%s2d_' % self.progId)       
+        
     def _defineSteps(self):
         """ Mainly prepare the command line for call ml(f)2d program"""
         
-        progId = "ml"
-        
-        if self.doMlf:
-            progId += "f"
-        self.program = "xmipp_%s_align2d" % progId
-        self.prefix = '%s2d_' % progId        
-        
-        self.oroot = self._getPath(self.prefix)
+        self.oroot = self._getOroot()
+        self.program = "xmipp_%s_align2d" % self.progId       
         
         # Convert input images if necessary
         imgsFn = createXmippInputImages(self, self.inputImages.get())

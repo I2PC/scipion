@@ -129,21 +129,19 @@ def showj(request, inputParameters=None):
         volLinkPath = os.path.join(pw.HOME, 'web', 'pages', 'resources', 'astex', 'tmp', linkName)
         from pyworkflow.utils.path import cleanPath, createLink
         cleanPath(volLinkPath)
-        print "volPath",volPath
-        print "volLinkPath",volLinkPath
         createLink(volPath, volLinkPath)
         volLink = os.path.join('/', 'static', 'astex', 'tmp', linkName)
      
     elif showjForm.data['mode']=='volume_chimera':   
         from subprocess import Popen, PIPE, STDOUT
-        p = Popen(['/home/adrian/.local/UCSF-Chimera64-2013-10-16/bin/chimera', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
-        outputHtmlFile = '/home/adrian/test.html'
+#        p = Popen(['/home/adrian/.local/UCSF-Chimera64-2013-10-16/bin/chimera', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+        p = Popen([os.environ.get('CHIMERA_HEADLESS'), volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+        outputHtmlFile = os.path.join(pw.HOME, 'web', 'pages', 'resources', 'astex', 'tmp', 'test.html')
         #chimeraCommand= 'volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop'
         chimeraCommand= 'export format WebGL ' + outputHtmlFile + '; stop'
-        print "chimeraCommand",chimeraCommand 
         stdout_data, stderr_data = p.communicate(input=chimeraCommand)
         print "stdout_data",stdout_data
-        print "stderr_data",stderr_data 
+        print "stderr_data",stderr_data
         f = open(outputHtmlFile)
         chimeraHtml = f.read().decode('string-escape').decode("utf-8").split("</html>")[1]
         
@@ -184,7 +182,7 @@ def showj(request, inputParameters=None):
                
                'STATIC_URL' :settings.STATIC_URL,
                'volLink': volLink,
-               'volType': 1,
+               'volType': 2, #0->byte, 1 ->Integer, 2-> Float
                'threshold': threshold,
                'chimeraHtml':chimeraHtml} #Form
     
@@ -379,7 +377,8 @@ def showVolVisualization(request):
             # Chimera 
             from subprocess import Popen, PIPE, STDOUT
 ##             p = Popen(['chimera', '--start', 'ReadStdin', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
-            p = Popen(['/home/adrian/.local/UCSF-Chimera64-2013-10-16/bin/chimera', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+#            p = Popen(['/home/adrian/.local/UCSF-Chimera64-2013-10-16/bin/chimera', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+            p = Popen(['$CHIMERA_HEADLESS', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
             outputHtmlFile = '/home/adrian/test.html'
             threshold = form.cleaned_data['threshold']
