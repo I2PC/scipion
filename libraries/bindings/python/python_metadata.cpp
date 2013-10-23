@@ -344,6 +344,9 @@ PyMethodDef MetaData_methods[] =
         { "readPlain", (PyCFunction) MetaData_readPlain,
           METH_VARARGS,
           "Import metadata from a plain text file." },
+          { "addPlain", (PyCFunction) MetaData_addPlain,
+          METH_VARARGS,
+          "Add imported metadata from a plain text file." },
         {"intersection",
          (PyCFunction) MetaData_intersection,
          METH_VARARGS,
@@ -561,6 +564,43 @@ MetaData_readPlain(PyObject *obj, PyObject *args, PyObject *kwargs)
                     str = PyString_AsString(pyStr);
                     labels = PyString_AsString(pyLabels);
                     self->metadata->readPlain(str, labels);
+                    Py_RETURN_NONE;
+                }
+                else
+                    return NULL;
+            }
+            catch (XmippError &xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+                return NULL;
+            }
+        }
+    }
+    return NULL;
+}
+
+/* addPlain */
+PyObject *
+MetaData_addPlain(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    MetaDataObject *self = (MetaDataObject*) obj;
+
+    if (self != NULL)
+    {
+        PyObject *input = NULL, *input2 = NULL;
+        PyObject *pyStr = NULL, *pyLabels = NULL, *pySep = NULL;
+        char *str = NULL, *labels = NULL;
+
+        if (PyArg_ParseTuple(args, "OO|O", &input, &input2, &pySep))
+        {
+            try
+            {
+                if ((pyStr = PyObject_Str(input)) != NULL && (pyLabels
+                        = PyObject_Str(input2)))
+                {
+                    str = PyString_AsString(pyStr);
+                    labels = PyString_AsString(pyLabels);
+                    self->metadata->addPlain(str, labels);
                     Py_RETURN_NONE;
                 }
                 else

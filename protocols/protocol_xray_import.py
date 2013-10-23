@@ -26,7 +26,7 @@ class ProtXrayImport(XmippProtocol):
             
         self.insertStep('createResultMd',
                         WorkingDir=self.WorkingDir, 
-                        TomogramList=tomograms, resultMd=self.TomogramsMd)
+                        TomogramList=tomograms, resultMd=self.TomogramsMd, verifyfiles=[self.TomogramsMd])
 
 
     def validate(self):
@@ -48,7 +48,7 @@ class ProtXrayImport(XmippProtocol):
             else:
                 message.append("Import of <%d> tomograms from [%s]" % (len(self.getTomograms()), self.DirTomograms))   
         else:
-            message.append("Import of Bessy tomogram from [%s] and initial index %d" % (self.DirBessyData, self.TIni))
+            message.append("Import of Bessy tomogram from [%s] and initial index %s" % (self.DirBessyData, self.TIni))
 
     
            
@@ -96,7 +96,7 @@ class ProtXrayImport(XmippProtocol):
         self.insertStep("importTomogram", 
                         TomogramDir=tomoDir,
                         TomogramRoot=tomoRoot,
-                        params=params % self.ParamsDict)
+                        params=params % self.ParamsDict, verifyfiles=[tomoRoot+'.mrc'])
        
 
 def getTomoDirs(WorkingDir, tomogram):
@@ -112,7 +112,7 @@ def getTomoDirs(WorkingDir, tomogram):
 def importTomogram(log, TomogramDir, TomogramRoot, params):
     createDir(log, TomogramDir)
     runJob(log, "xmipp_xray_import", params, NumberOfMpi=1)
-    createLink(log, TomogramRoot + '.mrc', TomogramRoot + '.st')
+#     createLink(log, TomogramRoot + '.mrc', TomogramRoot + '.st')
     
 def createResultMd(log, WorkingDir, TomogramList, resultMd):
     md = xmipp.MetaData()
@@ -121,8 +121,11 @@ def createResultMd(log, WorkingDir, TomogramList, resultMd):
     for tomogram in TomogramList:
         tomoBaseName, _, tomoRoot = getTomoDirs(WorkingDir, tomogram)
         mdOut.setValue(xmipp.MDL_IMAGE, tomoRoot + '.mrc', mdOut.addObject())
-        md.read(tomoRoot + ".xmd")
-        md.write('tomo_%s@%s' % (tomoBaseName, resultMd), xmipp.MD_APPEND)
+        
+        blockList = xmipp.getBlocksInMetaDataFile(tomoRoot+'.xmd')
+        for block in blockList:
+            md.read("%(block)s@%(tomoRoot)s.xmd" % locals())
+            md.write('%(block)s_%(tomoBaseName)s@%(resultMd)s' % locals(), xmipp.MD_APPEND)
     
     mdOut.write('tomograms@%s' % (resultMd), xmipp.MD_APPEND)
         

@@ -94,6 +94,13 @@ public:
      * a negative number
      */
     int getDataset(const char* dsname, Matrix1D<double> &data, bool reportError = true) const;
+
+    /** Return true if the dataset dsname exists in the file
+     *
+     * @param dsname Dataset name to check
+     * @return true if dataset exists, false otherwise.
+     */
+    bool checkDataset(const char* dsname) const;
 };
 
 herr_t showObjectInfo(hid_t group, const char *name, void *op_data);

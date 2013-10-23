@@ -81,6 +81,8 @@ public:
     MetaData inMD;
     /// List of output images
     MetaData outMD;
+    /// List of flatfield images
+    MetaData fMD;
 
     // Intermediate results
     Image<double> IavgFlat;
