@@ -23,33 +23,30 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.constants import NO_INDEX
 """
 This sub-package contains protocol for particles filters operations
 """
 
 
 from pyworkflow.em import *  
-from pyworkflow.utils import removeExt, removeBaseExt, makePath
+from pyworkflow.utils import removeExt, removeBaseExt, makePath, getLastFile
 from constants import *
 from spider import SpiderShell
 from convert import locationToSpider
 from glob import glob
         
 
+PART_INPUT = 'particles_input'
+PART_BIGEN = 'particles_big' 
+PART_OUTPUT = 'particles_output'
+
       
 class SpiderProtAlignAPSR(ProtAlign):
     """ Reference-free alignment shift and rotational alignment of an image series. 
     Uses Spider AP SR command.
     """
-    def __init__(self):
-        ProtAlign.__init__(self)
-        self._op = "FQ"
-        
-    def _defineParams(self, form):
-        form.addSection(label='Input')
-        form.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
-                      pointerClass='SetOfParticles',
-                      help='Select the input particles to be aligned.')        
+    def _defineAlignParams(self, form):
         form.addParam('innerRadius', IntParam, default=5,
                       label='Inner radius(px):',
                       help='In the rotational alignment, only rings between\n'
@@ -61,19 +58,23 @@ class SpiderProtAlignAPSR(ProtAlign):
         
     
     def _defineSteps(self):
+        self._op = "FQ"
         # Define some names
-        self.inputStk = self._getPath('input_particles.stk')
-        self.outputStk = self._getPath('output_particles.stk')
+        self.inputStk = self._getPath('%s.stk' % PART_INPUT)
+        self.bigenStk = self._getPath('%s.stk' % PART_BIGEN)
+        self.outputStk = self._getPath('%s.stk' % PART_OUTPUT)
         # Insert processing steps
         self._insertFunctionStep('convertInput')
         self._insertFunctionStep('alignParticles', 
                                  self.innerRadius.get(), self.outerRadius.get())
+        self._insertFunctionStep('createOutput')
         #self._insertFunctionStep('createOutput')
         
     def convertInput(self):
         """ Convert the input particles to a Spider stack. """
         particles = self.inputParticles.get()
         ih = ImageHandler()
+        inputStk = self._getPath('%s.stk' % PART_INPUT)
         
         for i, p in enumerate(particles):
             ih.convert(p.getLocation(), (i+1, self.inputStk))
@@ -82,69 +83,89 @@ class SpiderProtAlignAPSR(ProtAlign):
         """ Apply the selected filter to particles. 
         Create the set of particles.
         """
-        particles = self.inputParticles.get()
-        n = particles.getSize()
         
-        imgSet = self._createSetOfParticles()
-        imgSet.copyInfo(self.inputParticles.get())
-        imgSet.load() # Force to create mapper before entering working dir
-
         self._enterWorkingDir() # Do operations inside the run working dir
         
         spi = SpiderShell(ext='stk', log='script.log') # Create the Spider process to send commands        
-        #inputStk = removeBaseExt(self.inputStk)
-        outputStk = removeBaseExt(self.outputStk)
-        inputStk = outputStk
-        
         # Create the images docfile
-        selfile = 'input_particles_sel'
-        spi.runFunction('DOC CREATE', selfile, 0, '1-%d' % n)
+        #selfile = 'input_particles_sel'
+        #spi.runFunction('DOC CREATE', selfile, 0, '1-%d' % n)
+        particles = self.inputParticles.get()
+        n = particles.getSize()
+        
         # Generate a filtered disc
         spi.runFunction('PT', '_1', (100,100), 'C', (50,50), 45, 'N')
         spi.runFunction('FQ', '_1', '_2', 3, 0.02)
         # Ensure the stack has Big endian as expected by SPIDER
         for i in range(1, n+1):
-            spi.runFunction('CP', 'input_particles@%d' % i, 'output_particles@%d' % i)
+            spi.runFunction('CP', '%s@%d' % (PART_INPUT, i), '%s@%d' % (PART_BIGEN, i))
         # Align images
         alignDir = 'align'
         makePath(alignDir)
         avgPattern = join(alignDir, 'avg_iter***')
         docPattern = join(alignDir, 'doc_iter***')
-        spi.runFunction('AP SR', 'output_particles@******', '1-%d' % n, 
+
+        spi.runFunction('AP SR', 
+                        '%s@******' % PART_BIGEN, '1-%d' % n, 
                         90, (1,45), '_2', avgPattern, docPattern)
         
+        spi.close() # This is done to ensure that AP SR is done
+                    # we need a better way to wait on completion
+                    
+        
+        spi = SpiderShell(ext='stk', log='script2.log') # Create the Spider process to send commands
+        # TODO: Remove this, only testing for creating Xmipp metadata
+#        import xmipp
+#        from protlib_import import readMdFromSpider
+#        
+        lastAvg = getLastFile(avgPattern)
+        avg = Particle()
+        avg.copyInfo(particles)
+        avg.setLocation(NO_INDEX, self._getPath(lastAvg))
+        self._defineOutputs(outputAverage=avg)
+        
+#        md = xmipp.MetaData()
+#        for avg in sorted(avgFiles):
+#            objId = md.addObject()
+#            md.setValue(xmipp.MDL_IMAGE, self._getPath(avg), objId)
+#        md.write('averages.xmd')
+        
+        #md.read('%s.stk' % PART_OUTPUT)
+        lastDoc = getLastFile(docPattern)
+        f = open(lastDoc) # Open last doc
+        
+        for i, line in enumerate(f):
+            line = line.strip()
+            if len(line) and not line.startswith(';'):
+                angle, shiftX, shiftY = [float(s) for s in line.split()[2:]]
+                spi.runFunction('RT SQ', 
+                                '%s@%d' % (PART_BIGEN, i), '%s@%d' % (PART_OUTPUT, i),
+                                (angle, 1), (shiftX, shiftY))
+            
         spi.close()
-        
-        
-        import xmipp
-        from protlib_import import readMdFromSpider
-        
-        avgFiles = glob(avgPattern)
-        md = xmipp.MetaData()
-        for avg in sorted(avgFiles):
-            objId = md.addObject()
-            md.setValue(xmipp.MDL_IMAGE, self._getPath(avg), objId)
-        md.write('averages.xmd')
-        
-        md.read('output_particles.stk')
-        docFiles = glob(docPattern)
-        for doc in docFiles:
-            mdDoc = readMdFromSpider(doc, 'anglePsi shiftX shiftY')
-            md.merge(mdDoc)
-            md.write(doc.replace('.stk', '.xmd'))
+#        for doc in docFiles:
+#            mdDoc = readMdFromSpider(doc, 'anglePsi shiftX shiftY')
+#            md.merge(mdDoc)
+#            md.write(doc.replace('.stk', '.xmd'))
             
-            
-        
-            
-        
         self._leaveWorkingDir() # Go back to project dir
             
-#        for i in range(1, n+1):
-#            img = Image()
-#            img.setLocation(i, self.outputStk)
-#            imgSet.append(img)
-#        imgSet.write()
-#        self._defineOutputs(outputParticles=imgSet)
+    def createOutput(self):
+        """ Register the output (the alignment and the aligned particles.)
+        """
+        particles = self.inputParticles.get()
+        n = particles.getSize()
+        
+        imgSet = self._createSetOfParticles()
+        imgSet.copyInfo(particles)
+        
+        outputStk = self._getPath('%s.stk' % PART_OUTPUT)
+        for i in range(1, n+1):
+            img = Image()
+            img.setLocation(i, outputStk)
+            imgSet.append(img)
+        imgSet.write()
+        self._defineOutputs(outputParticles=imgSet)
         
     def _summary(self):
         summary = []
