@@ -759,6 +759,9 @@ class XmippProtocol(object):
         ''' Shortcut to inserting a createLink step '''
         self.insertStep('createLink', source=src, dest=dst, verifyfiles=[dst])
         
+    def insertDeleteTmpDir(self):
+        self.insertStep('deleteFilesInDir', dir=self.TmpDir, verbose=True)
+        
     def getProtocolFromRunName(self, extendedRunName):
         ''' This function will be helpful to create an instance
         of another protocol providing the extendedRunName.

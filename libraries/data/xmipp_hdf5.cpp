@@ -117,6 +117,22 @@ void XmippH5File::openFile(const H5std_string& name, unsigned int flags,
         REPORT_ERROR(ERR_IMG_UNKNOWN, formatString("XmippH5File: Format of %s is not HDF5.",name.c_str()));
 }
 
+bool XmippH5File::checkDataset(const char* dsname) const
+{
+    H5::DataSet dataset;
+    // Open the dataset
+    try
+    {
+        dataset = openDataSet(dsname);
+    }
+    catch (H5::Exception &h5e)
+    {
+        return false;
+    }
+    dataset.close();
+    return true;
+}
+
 int XmippH5File::getDataset(const char* dsname, Matrix1D<double> &data, bool reportError) const
 {
     H5::DataSet dataset;

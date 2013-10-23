@@ -96,7 +96,7 @@ void ProgXrayImport::defineParams()
     addParamsLine("   == Filters                                          ");
     addParamsLine("  [--bad_pixels_filter  <mask_image_file=\"\">]   : Apply a boundaries median filter to bad pixels given in mask.");
     addParamsLine("  alias -f;");
-    addParamsLine("  [--log]                            : Apply log10 to pixel values");
+    addParamsLine("  [--log]                            : Apply log to pixel values");
     addParamsLine("  [--correct]                        : Correct for the self-attenuation of X-ray projections applying ");
     addParamsLine("           : a log10 and multiplying by -1");
     addParamsLine("  alias -c;");
@@ -270,7 +270,6 @@ void ProgXrayImport::getDarkfield(const FileName &fnDir, Image<double> &IavgDark
     IavgDark.clear();
     std::vector<FileName> listDir;
     fnDir.getFiles(listDir);
-    bool found = false;
 
     for (size_t i=0; i<listDir.size(); i++)
         if (listDir[i]=="darkfields")
@@ -306,7 +305,7 @@ void ProgXrayImport::getFlatfield(const FileName &fnFFinput,
 {
 
     // Process the flatfield images
-    MetaData fMD;
+
     Matrix1D<double> expTimeArray, cBeamArray, slitWidthArray;
 
     switch (dSource)
@@ -529,7 +528,11 @@ void ProgXrayImport::run()
         std::cout << "Getting flatfield from "+fnFlat << " ..." << std::endl;
         getFlatfield(fnFlat,IavgFlat);
         if ( XSIZE(IavgFlat()) != 0 )
-            IavgFlat.write(fnRoot+"_flatfield_avg.xmp");
+        {
+            FileName ffName = fnRoot+"_flatfield_avg.xmp";
+            IavgFlat.write(ffName);
+            fMD.setValue(MDL_IMAGE, ffName, fMD.addObject());
+        }
     }
 
 
@@ -607,7 +610,6 @@ void ProgXrayImport::run()
     size_t nIm = inMD.size();
 
     // Create empty output stack file
-    size_t Xdim, Ydim, Zdim, Ndim;
     ImageInfo imgInfo;
     getImageInfo(inMD, imgInfo);
 
@@ -624,7 +626,25 @@ void ProgXrayImport::run()
     // Write Metadata and angles
     MetaData MDSorted;
     MDSorted.sort(outMD,MDL_ANGLE_TILT);
-    MDSorted.write(fnRoot + ".xmd");
+    MDSorted.write("tomo@"+fnRoot + ".xmd");
+    if ( fMD.size() > 0 )
+        fMD.write("flatfield@"+fnRoot + ".xmd", MD_APPEND);
+
+    // We also reference initial and final images at 0 degrees for Mistral tomograms
+    if ( dSource == MISTRAL )
+    {
+        fMD.clear();
+        FileName degree0Fn = "NXtomo/instrument/sample/0_degrees_initial_image";
+        if ( H5File.checkDataset(degree0Fn.c_str()))
+            fMD.setValue(MDL_IMAGE, degree0Fn + "@" + fnInput, fMD.addObject());
+        degree0Fn = "NXtomo/instrument/sample/0_degrees_final_image";
+        if ( H5File.checkDataset(degree0Fn.c_str()))
+            fMD.setValue(MDL_IMAGE, degree0Fn + "@" + fnInput, fMD.addObject());
+        if ( fMD.size() > 0 )
+            fMD.write("degree0@"+fnRoot + ".xmd", MD_APPEND);
+    }
+
+    // Write tlt file for IMOD
     std::ofstream fhTlt;
     fhTlt.open((fnRoot+".tlt").c_str());
     if (!fhTlt)
