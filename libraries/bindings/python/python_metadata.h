@@ -150,6 +150,8 @@ MetaData_replace(PyObject *obj, PyObject *args, PyObject *kwargs);
  PyObject *
 MetaData_readPlain(PyObject *obj, PyObject *args, PyObject *kwargs);
  PyObject *
+MetaData_addPlain(PyObject *obj, PyObject *args, PyObject *kwargs);
+ PyObject *
 MetaData_setComment(PyObject *obj, PyObject *args, PyObject *kwargs);
  PyObject *
 MetaData_getComment(PyObject *obj, PyObject *args, PyObject *kwargs);
