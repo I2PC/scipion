@@ -28,8 +28,9 @@ Text based widgets.
 """
         
 import Tkinter as tk
-import gui
-from widgets import Scrollable
+import ttk, os, gui
+from widgets import Scrollable, Button
+from pyworkflow.utils.path import exists
 
 
 class HyperlinkManager:
@@ -334,6 +335,9 @@ class OutputText(Text):
   
 class TextfileViewer(tk.Frame):
     """ Implementation of a simple textfile viewer """
+    
+    LabelBgColor = "white"
+    
     def __init__(self, master, filelist):
         tk.Frame.__init__(self, master)
         self.searchList = None
@@ -350,34 +354,16 @@ class TextfileViewer(tk.Frame):
         tab = tk.Frame(self.notebook)
         tab.rowconfigure(0, weight=1)
         tab.columnconfigure(0, weight=1)
-        t = OutputText(tab, filename, width=100, height=30)
+        t = OutputText(tab, filename, width=100, height=30, bg='black', fg='white')
         t.frame.grid(column=0, row=0, padx=5, pady=5, sticky='nsew')
         self.taList.append(t)
-        tabText = "   %s   " % basename(filename)
+        tabText = "   %s   " % os.path.basename(filename)
         self.notebook.add(tab, text=tabText)        
     
     def createWidgets(self):
-        registerCommonFonts()
+        #registerCommonFonts()
         self.columnconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)        
-        #Create toolbar frame
-        toolbarFrame = tk.Frame(self)
-        toolbarFrame.grid(column=0, row=0, padx=5, sticky='new')
-        toolbarFrame.columnconfigure(0, weight=1)
-        toolbarFrame.columnconfigure(1, weight=1)
-        #Add the search box
-        left = tk.Frame(toolbarFrame)
-        left.grid(column=0, row=0, sticky='nw')
-        XmippButton(left, "Open", 'folderopen.gif').grid(row=0, column=0, padx=(0, 5))
-        XmippButton(left, "Save", 'save.gif').grid(row=0, column=1, padx=(0, 5))
-        XmippButton(left, "Refresh", 'refresh.gif', command=self.refreshAll).grid(row=0, column=2, padx=(0, 5))
-        right = tk.Frame(toolbarFrame)
-        right.grid(column=1, row=0, sticky='ne')        
-        self.searchVar = tk.StringVar()
-        tk.Label(right, text='Search:').grid(row=0, column=3, padx=5, pady=5, )
-        self.searchEntry = tk.Entry(right, textvariable=self.searchVar, bg=LabelBgColor)
-        self.searchEntry.grid(row=0, column=4, sticky='ew', padx=5, pady=5)
-        XmippButton(right, "Search", 'search.gif').grid(row=0, column=5, padx=(0, 5))
         
         #Create tabs frame
         tabsFrame = tk.Frame(self)
@@ -389,15 +375,12 @@ class TextfileViewer(tk.Frame):
         self.notebook.columnconfigure(0, weight=1)      
         for f in self.filelist:
             self.addFileTab(f)
-        self.notebook.grid(column=0, row=0, sticky='nsew', padx=5, pady=5)
-        
-        self.searchEntry.focus_set()
+        self.notebook.grid(column=0, row=0, sticky='nsew', padx=5, pady=5)        
 
     def addBinding(self):
         self.master.bind('<Control_L><Home>', lambda e: self.changePosition(1.0))
         self.master.bind('<Control_L><End>', lambda e: self.changePosition(tk.END))
         self.master.bind('<Alt_L><c>', lambda e: self.master.destroy())
-        self.master.bind('<Control_L><f>', lambda e: self.searchEntry.focus_set())
         self.master.bind('<Return>', lambda e: self.findText())
         self.master.bind('<Control_L><n>', lambda e: self.findText())
         self.master.bind('<Control_L><p>', lambda e: self.findText(-1))
@@ -409,7 +392,7 @@ class TextfileViewer(tk.Frame):
     
     def changeFont(self, event=""):
         for font in self.fontDict.values():
-            changeFontSize(font, event)
+            gui.changeFontSize(font, event)
               
     def refreshAll(self, e=None):
         """ Refresh all output textareas. """
@@ -479,7 +462,7 @@ def showTextfileViewer(title, filelist, parent=None, main=False):
     root.columnconfigure(0, weight=1)
     root.rowconfigure(0, weight=1)
     l.grid(column=0, row=0, sticky='nsew')
-    centerWindows(root, refWindows=parent)
+    gui.centerWindows(root, refWindows=parent)
     root.deiconify()
     root.mainloop()
 
@@ -491,6 +474,6 @@ if __name__ == '__main__':
     root.title("View files")
     l = TextfileViewer(root, filelist=sys.argv[1:])
     l.pack(side=tk.TOP, fill=tk.BOTH)
-    centerWindows(root)
+    gui.centerWindows(root)
     root.deiconify()
     root.mainloop()               
