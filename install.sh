@@ -1267,7 +1267,7 @@ decompressExternals()
   echoExecRedirectEverything "cd ${EXT_PATH}" "/dev/null"
   echoGreen "*** Decompressing external libraries ..."
   lib=0
-  while [ ${lib} -le ${#EXTERNAL_LIBRARIES[@]} ]; do
+  while [ ${lib} -lt ${#EXTERNAL_LIBRARIES[@]} ]; do
     if [ ${EXTERNAL_LIBRARIES_DO[$lib]} -eq 1 ]; then
       if [ -d ${EXTERNAL_LIBRARIES[$lib]} ]; then
         if [ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]; then
@@ -1326,7 +1326,7 @@ decompressPythonModules()
   echoExecRedirectEverything "cd ${EXT_PATH}/python" "/dev/null"
   echoGreen "*** Decompressing Python modules ..."
   lib=0
-  while [ ${lib} -le ${#PYTHON_MODULES[@]} ]; do
+  while [ ${lib} -lt ${#PYTHON_MODULES[@]} ]; do
     if [ ${PYTHON_MODULES_DO[$lib]} -eq 1 ]; then
       if [ -d ${PYTHON_MODULES[$lib]} ]; then
         if [ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]; then
