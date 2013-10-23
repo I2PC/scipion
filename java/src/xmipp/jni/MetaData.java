@@ -29,6 +29,8 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.logging.Level;
 
+import xmipp.utils.DEBUG;
+
 /**
  * Protocol for integrating native C++ code - @see ImageDouble.java
  */
@@ -283,10 +285,8 @@ public class MetaData {
 	}
 	
 	/** Return a new metadata containing the values of one row */
-	public MetaData getRow(long objId){
-		MetaData mdRow = new MetaData();
+	public void getRow(long objId, MetaData mdRow){
 		mdRow.importObjects(this, new long[]{objId});
-		return mdRow;
 	}
 	
 	public void setRow(MetaData mdRow, long objId){
@@ -452,11 +452,15 @@ public class MetaData {
 	/*********** Non-native functions ********************/
 	/** Create empty metadata */
 	public MetaData() {
+		DEBUG.printFormat("Java: Creating metadata\n");
+		DEBUG.printStackTrace();
 		create();
 	}
 
 	/** Create a metadata and read data from filename */
 	public MetaData(String filename) {
+		DEBUG.printFormat("Java: Creating metadata from filename: %s\n", filename);
+		DEBUG.printStackTrace();
 		create();
 		read(filename);
 	}
