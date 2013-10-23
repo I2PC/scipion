@@ -140,10 +140,7 @@ def showj(request, inputParameters=None):
         outputHtmlFile = '/home/adrian/test.html'
         #chimeraCommand= 'volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop'
         chimeraCommand= 'export format WebGL ' + outputHtmlFile + '; stop'
-        print "chimeraCommand",chimeraCommand 
         stdout_data, stderr_data = p.communicate(input=chimeraCommand)
-        print "stdout_data",stdout_data
-        print "stderr_data",stderr_data 
         f = open(outputHtmlFile)
         chimeraHtml = f.read().decode('string-escape').decode("utf-8").split("</html>")[1]
         
