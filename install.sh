@@ -538,9 +538,9 @@ takeArguments()
         ;;
       --unattended=*) #[true|false]
         WITH_UNATTENDED=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_UNATTENDED}" == "true" ]; then
+        if [ "${WITH_UNATTENDED}" = "true" ]; then
           DO_UNATTENDED=1
-        elif [ "${WITH_UNATTENDED}" == "false" ];then 
+        elif [ "${WITH_UNATTENDED}" = "false" ];then 
           DO_UNATTENDED=0
         else
           echoRed "Parameter --unattended only accept true or false values. Ignored and assuming default value."
@@ -564,9 +564,9 @@ takeArguments()
         ;;
       --alglib=*)
         WITH_ALGLIB=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_ALGLIB}" == "true" ]; then
+        if [ "${WITH_ALGLIB}" = "true" ]; then
           doIt library ${ALGLIB_TAR} 1
-        elif [ "${WITH_ALGLIB}" == "false" ]; then
+        elif [ "${WITH_ALGLIB}" = "false" ]; then
           doIt library ${ALGLIB_TAR} 0
         else
           echoRed "Parameter --alglib only accept true or false values. Ignored and assuming default value."
@@ -577,9 +577,9 @@ takeArguments()
         ;;
       --bilib=*)
         WITH_BILIB=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_BILIB}" == "true" ]; then
+        if [ "${WITH_BILIB}" = "true" ]; then
           doIt library ${BILIB_TAR} 1
-        elif [ "${WITH_BILIB}" == "false" ]; then
+        elif [ "${WITH_BILIB}" = "false" ]; then
           doIt library ${BILIB_TAR} 0
         else
           echoRed "Parameter --bilib only accept true or false values. Ignored and assuming default value."
@@ -590,9 +590,9 @@ takeArguments()
         ;;
       --condor=*)
         WITH_CONDOR=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_CONDOR}" == "true" ]; then
+        if [ "${WITH_CONDOR}" = "true" ]; then
           doIt library ${CONDOR_TAR} 1
-        elif [ "${WITH_CONDOR}" == "false" ]; then
+        elif [ "${WITH_CONDOR}" = "false" ]; then
           doIt library ${CONDOR_TAR} 0
         else
           echoRed "Parameter --condor only accept true or false values. Ignored and assuming default value."
@@ -603,9 +603,9 @@ takeArguments()
         ;;
       --fftw=*)
         WITH_FFTW=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_FFTW}" == "true" ]; then
+        if [ "${WITH_FFTW}" = "true" ]; then
           doIt library ${FFTW_TAR} 1
-        elif [ "${WITH_FFTW}" == "false" ]; then
+        elif [ "${WITH_FFTW}" = "false" ]; then
           doIt library ${FFTW_TAR} 0
         else
           echoRed "Parameter --fftw only accept true or false values. Ignored and assuming default value."
@@ -616,9 +616,9 @@ takeArguments()
         ;;
       --gtest=*)
         WITH_GTEST=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_GTEST}" == "true" ]; then
+        if [ "${WITH_GTEST}" = "true" ]; then
           doIt library ${GTEST_TAR} 1
-        elif [ "${WITH_GTEST}" == "false" ]; then
+        elif [ "${WITH_GTEST}" = "false" ]; then
           doIt library ${GTEST_TAR} 0
         else
           echoRed "Parameter --gtest only accept true or false values. Ignored and assuming default value."
@@ -629,9 +629,9 @@ takeArguments()
         ;;
       --hdf5=*)
         WITH_HDF5=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_HDF5}" == "true" ]; then
+        if [ "${WITH_HDF5}" = "true" ]; then
           doIt library ${HDF5_TAR} 1
-        elif [ "${WITH_HDF5}" == "false" ]; then
+        elif [ "${WITH_HDF5}" = "false" ]; then
           doIt library ${HDF5_TAR} 0
         else
           echoRed "Parameter --hdf5 only accept true or false values. Ignored and assuming default value."
@@ -642,9 +642,9 @@ takeArguments()
         ;;
       --imagej=*)
         WITH_IMAGEJ=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_IMAGEJ}" == "true" ]; then
+        if [ "${WITH_IMAGEJ}" = "true" ]; then
           doIt library ${IMAGEJ_TAR} 1
-        elif [ "${WITH_IMAGEJ}" == "false" ]; then
+        elif [ "${WITH_IMAGEJ}" = "false" ]; then
           doIt library ${IMAGEJ_TAR} 0
         else
           echoRed "Parameter --imagej only accept true or false values. Ignored and assuming default value."
@@ -655,9 +655,9 @@ takeArguments()
         ;;
       --jpeg=*)
         WITH_JPEG=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_JPEG}" == "true" ]; then
+        if [ "${WITH_JPEG}" = "true" ]; then
           doIt library ${JPEG_TAR} 1
-        elif [ "${WITH_JPEG}" == "false" ]; then
+        elif [ "${WITH_JPEG}" = "false" ]; then
           doIt library ${JPEG_TAR} 0
         else
           echoRed "Parameter --jpeg only accept true or false values. Ignored and assuming default value."
@@ -668,9 +668,9 @@ takeArguments()
         ;;
       --scons=*)
         WITH_SCONS=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_SCONS}" == "true" ]; then
+        if [ "${WITH_SCONS}" = "true" ]; then
           doIt library ${SCONS_TAR} 1
-        elif [ "${WITH_SCONS}" == "false" ]; then
+        elif [ "${WITH_SCONS}" = "false" ]; then
           doIt library ${SCONS_TAR} 0
         else
           echoRed "Parameter --scons only accept true or false values. Ignored and assuming default value."
@@ -681,9 +681,9 @@ takeArguments()
         ;;
       --sqlite=*)
         WITH_SQLITE=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_SQLITE}" == "true" ]; then
+        if [ "${WITH_SQLITE}" = "true" ]; then
           doIt library ${SQLITE_TAR} 1
-        elif [ "${WITH_SQLITE}" == "false" ]; then
+        elif [ "${WITH_SQLITE}" = "false" ]; then
           doIt library ${SQLITE_TAR} 0
         else
           echoRed "Parameter --sqlite only accept true or false values. Ignored and assuming default value."
@@ -694,9 +694,9 @@ takeArguments()
         ;;
       --tiff=*)
         WITH_TIFF=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_TIFF}" == "true" ]; then
+        if [ "${WITH_TIFF}" = "true" ]; then
           doIt library ${TIFF_TAR} 1
-        elif [ "${WITH_TIFF}" == "false" ]; then
+        elif [ "${WITH_TIFF}" = "false" ]; then
           doIt library ${TIFF_TAR} 0
         else
           echoRed "Parameter --tiff only accept true or false values. Ignored and assuming default value."
@@ -707,9 +707,9 @@ takeArguments()
         ;;
       --nma=*)
         WITH_NMA=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_NMA}" == "true" ]; then
+        if [ "${WITH_NMA}" = "true" ]; then
           doIt library ${NMA_TAR} 1
-        elif [ "${WITH_NMA}" == "false" ]; then
+        elif [ "${WITH_NMA}" = "false" ]; then
           doIt library ${NMA_TAR} 0
         else
           echoRed "Parameter --nma only accept true or false values. Ignored and assuming default value."
@@ -720,9 +720,9 @@ takeArguments()
         ;;
       --sh-alignment=*)
         WITH_SHALIGNMENT=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_SHALIGNMENT}" == "true" ]; then
+        if [ "${WITH_SHALIGNMENT}" = "true" ]; then
           doIt library ${ALIGNMENT_TAR} 1
-        elif [ "${WITH_ALIGNMENT}" == "false" ]; then
+        elif [ "${WITH_ALIGNMENT}" = "false" ]; then
           doIt library ${ALIGNMENT_TAR} 0
         else
           echoRed "Parameter --sh-alignment only accept true or false values. Ignored and assuming default value."
@@ -733,9 +733,9 @@ takeArguments()
         ;;
       --cltomo=*)
         WITH_CLTOMO=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_CLTOMO}" == "true" ]; then
+        if [ "${WITH_CLTOMO}" = "true" ]; then
           DO_CLTOMO=1
-        elif [ "${WITH_CLTOMO}" == "false" ]; then
+        elif [ "${WITH_CLTOMO}" = "false" ]; then
           DO_CLTOMO=0
         else
           echoRed "Parameter --cltomo only accept true or false values. Ignored and assuming default value."
@@ -747,10 +747,10 @@ takeArguments()
         ;;
       --python=*)
         WITH_PYTHON=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_PYTHON}" == "true" ]; then
+        if [ "${WITH_PYTHON}" = "true" ]; then
           DO_PYTHON=1
           DO_PYMOD=1
-        elif [ "${WITH_PYTHON}" == "false" ]; then
+        elif [ "${WITH_PYTHON}" = "false" ]; then
           DO_PYTHON=1
           DO_PYMOD=1
         else
@@ -762,9 +762,9 @@ takeArguments()
         ;;
       --matplotlib=*)
         WITH_MATLIBPLOT=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_MATLIBPLOT}" == "true" ]; then
+        if [ "${WITH_MATLIBPLOT}" = "true" ]; then
           doIt pymodule ${MATLIBPLOT_TAR} 1
-        elif [ "${WITH_MATLIBPLOT}" == "false" ]; then
+        elif [ "${WITH_MATLIBPLOT}" = "false" ]; then
           doIt pymodule ${MATLIBPLOT_TAR} 0
         else
           echoRed "Parameter --matplotlib only accept true or false values. Ignored and assuming default value."
@@ -775,9 +775,9 @@ takeArguments()
         ;;
       --mpi4py=*)
         WITH_PYMPI=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_PYMPI}" == "true" ]; then
+        if [ "${WITH_PYMPI}" = "true" ]; then
           doIt pymodule ${PYMPI_TAR} 1
-        elif [ "${WITH_PYMPI}" == "false" ]; then
+        elif [ "${WITH_PYMPI}" = "false" ]; then
           doIt pymodule ${PYMPI_TAR} 0
         else
           echoRed "Parameter --mpi4py only accept true or false values. Ignored and assuming default value."
@@ -788,9 +788,9 @@ takeArguments()
         ;;
       --numpy=*)
         WITH_NUMPY=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_NUMPY}" == "true" ]; then
+        if [ "${WITH_NUMPY}" = "true" ]; then
           doIt pymodule ${NUMPY_TAR} 1
-        elif [ "${WITH_NUMPY}" == "false" ]; then
+        elif [ "${WITH_NUMPY}" = "false" ]; then
           doIt pymodule ${NUMPY_TAR} 0
         else
           echoRed "Parameter --numpy only accept true or false values. Ignored and assuming default value."
@@ -801,9 +801,9 @@ takeArguments()
         ;;
       --scipy=*)
         WITH_SCIPY=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_SCIPY}" == "true" ]; then
+        if [ "${WITH_SCIPY}" = "true" ]; then
           doIt pymodule ${SCIPY_TAR} 1
-        elif [ "${WITH_SCIPY}" == "false" ]; then
+        elif [ "${WITH_SCIPY}" = "false" ]; then
           doIt pymodule ${SCIPY_TAR} 0
         else
           echoRed "Parameter --scipy only accept true or false values. Ignored and assuming default value."
@@ -814,9 +814,9 @@ takeArguments()
         ;;
       --psutil=*)
         WITH_PSUTIL=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_PSUTIL}" == "true" ]; then
+        if [ "${WITH_PSUTIL}" = "true" ]; then
           doIt pymodule ${PSUTIL_TAR} 1
-        elif [ "${WITH_PSUTIL}" == "false" ]; then
+        elif [ "${WITH_PSUTIL}" = "false" ]; then
           doIt pymodule ${PSUTIL_TAR} 0
         else
           echoRed "Parameter --psutil only accept true or false values. Ignored and assuming default value."
@@ -827,9 +827,9 @@ takeArguments()
         ;;
       --tcl-tk=*)
         WITH_TCLTK=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_TCLTK}" == "true" ]; then
+        if [ "${WITH_TCLTK}" = "true" ]; then
           DO_TCLTK=1
-        elif [ "${WITH_TCLTK}" == "false" ]; then
+        elif [ "${WITH_TCLTK}" = "false" ]; then
           DO_TCLTK=0
         else
           echoRed "Parameter --tcl-tk only accept true or false values. Ignored and assuming default value."
@@ -840,9 +840,9 @@ takeArguments()
         ;;
       --tcl=*)
         WITH_TCL=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_TCL}" == "true" ]; then
+        if [ "${WITH_TCL}" = "true" ]; then
           doIt pymodule ${TCL_TAR} 1
-        elif [ "${WITH_TCL}" == "false" ]; then
+        elif [ "${WITH_TCL}" = "false" ]; then
           doIt pymodule ${TCL_TAR} 0
         else
           echoRed "Parameter --tcl only accept true or false values. Ignored and assuming default value."
@@ -853,9 +853,9 @@ takeArguments()
         ;;
       --tk=*)
         WITH_TK=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_TK}" == "true" ]; then
+        if [ "${WITH_TK}" = "true" ]; then
           doIt pymodule ${TK_TAR} 1
-        elif [ "${WITH_TK}" == "false" ]; then
+        elif [ "${WITH_TK}" = "false" ]; then
           doIt pymodule ${TK_TAR} 0
         else
           echoRed "Parameter --tk only accept true or false values. Ignored and assuming default value."
@@ -866,19 +866,19 @@ takeArguments()
         ;;
       --pymodules=*)
         WITH_PYMOD=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_PYMOD}" == "true" ]; then
+        if [ "${WITH_PYMOD}" = "true" ]; then
           DO_PYMOD=1
-        elif [ "${WITH_PYMOD}" == "false" ]; then
+        elif [ "${WITH_PYMOD}" = "false" ]; then
           DO_PYMOD=0
         else
           echoRed "Parameter --pymodules only accept true or false values. Ignored and assuming default value."
         fi
         ;;
       --gui=*)
-        WITH_GUI==$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_GUI}" == "true" ]; then
+        WITH_GUI=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_GUI}" = "true" ]; then
           WITH_GUI=1
-        elif [ "${WITH_GUI}" == "false" ]; then
+        elif [ "${WITH_GUI}" = "false" ]; then
           WITH_GUI=0
         else
           echoRed "Parameter --gui only accept true or false values. Ignored and assuming default value."
@@ -1270,13 +1270,13 @@ decompressExternals()
   while [ ${lib} -lt ${#EXTERNAL_LIBRARIES[@]} ]; do
     if [ ${EXTERNAL_LIBRARIES_DO[$lib]} -eq 1 ]; then
       if [ -d ${EXTERNAL_LIBRARIES[$lib]} ]; then
-        if [ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]; then
+        if ([ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]); then
           echo "${EXTERNAL_LIBRARIES[$lib]} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
           read DELETE_ANSWER
         else
           DELETE_ANSWER="Y"
         fi
-        if [ ${DELETE_ANSWER} == "y" -o ${DELETE_ANSWER} == "Y" ]; then
+	if ([ ${DELETE_ANSWER} = "y" ] || [ ${DELETE_ANSWER} = "Y" ]); then
           echoExecRedirectEverything "rm -rf ${EXTERNAL_LIBRARIES[$lib]}" "/dev/null"
         else
           echoRed "Library ${EXTERNAL_LIBRARIES[$lib]} folder remains untouched."
@@ -1300,13 +1300,13 @@ decompressPython()
   echoGreen "*** Decompressing Python ***"
   if [ ${DO_PYTHON} -eq 1 ]; then
     if [ -d ${PYTHON_FOLDER} ]; then
-      if [ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]; then
+      if ([ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]); then
         echo "${PYTHON_FOLDER} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
         read DELETE_ANSWER
       else
         DELETE_ANSWER="Y"
       fi
-      if [ ${DELETE_ANSWER} == "y" -o ${DELETE_ANSWER} == "Y" ]; then
+      if ([ ${DELETE_ANSWER} = "y" ] || [ ${DELETE_ANSWER} = "Y" ]); then
         echoExecRedirectEverything "rm -rf ${PYTHON_FOLDER}" "/dev/null"
       else
         echoRed "${PYTHON_FOLDER} folder remains untouched."
@@ -1329,13 +1329,13 @@ decompressPythonModules()
   while [ ${lib} -lt ${#PYTHON_MODULES[@]} ]; do
     if [ ${PYTHON_MODULES_DO[$lib]} -eq 1 ]; then
       if [ -d ${PYTHON_MODULES[$lib]} ]; then
-        if [ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]; then
+        if ([ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]); then
           echo "${PYTHON_MODULES[$lib]} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
           read DELETE_ANSWER
         else
           DELETE_ANSWER="Y"
         fi
-        if [ ${DELETE_ANSWER} == "y" -o ${DELETE_ANSWER} == "Y" ]; then
+	if ([ ${DELETE_ANSWER} = "y" ] || [ ${DELETE_ANSWER} = "Y" ]); then
           echoExecRedirectEverything "rm -rf ${PYTHON_MODULES[$lib]}" "/dev/null"
         else
           echoRed "Library ${PYTHON_MODULES[$lib]} folder remains untouched."
