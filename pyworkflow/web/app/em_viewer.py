@@ -85,7 +85,7 @@ def view_plot(request):
         xplotter = XmippPlotter(windowTitle="Zscore particles sorting")
         xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
         xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_ZSCORE)
-        figFn = fn.replace('.xmd', '.png')        
+        figFn = fn.replace('.xmd', '.png') 
         canvas = xplotter.getCanvas()
         
         response= HttpResponse(content_type='image/png')
@@ -101,6 +101,7 @@ def viewer(request):
     
 def getParamsForm(request, protocol, project):
     for paramName, _ in protocol.iterDefinitionAttributes():
-        attr = getattr(protocol, paramName)
-        print "setting attr %s with value:" % paramName, attr 
+        value = request.POST.get(paramName)
+        
+        print "setting attr %s with value:" % paramName, value
     pass
