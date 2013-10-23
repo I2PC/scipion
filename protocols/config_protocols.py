@@ -46,7 +46,8 @@ protocols = {
         'emx_export_micrographs': ('Export micrographs', 'Micrographs/EmxExported'),
         'emx_export_particles': ('Export particles', 'Images/EmxExported'),
         'xray_import': ('Import tomograms', 'XrayTomo/Imported'),
-        'xray_fast_align': ('Fast align tomograms', 'XrayTomo/FastAlignment')
+        'xray_fast_align': ('Fast align tomograms', 'XrayTomo/FastAlignment'),
+        'xray_reconstruct': ('Reconstruct tomograms', 'XrayTomo/Reconstruct')
         }
 
 #--------------------------------------------------------------------------------
@@ -69,8 +70,8 @@ sections = [
    ['Flexibility', 'nma', 'nma_alignment'],
    ['Virus', 'subtraction'],
    ['Tomography', 'mltomo', 'cltomo'],
+   ['X-ray', 'xray_import', 'xray_fast_align', 'xray_reconstruct'],
    ['Tools', 'image_operate', 'metadata_utilities', 'metadata_split'],
-   ['X-ray', 'xray_import', 'xray_fast_align'],
    ['EMX', 'emx_import_micrographs', 'emx_import_particles', 'emx_export_micrographs', 'emx_export_particles']]])
 ]
 
