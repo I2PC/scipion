@@ -319,7 +319,7 @@ shouldIDoIt()
 doIt()
 {
   ANS=0
-  if [ $# -ne 2 ]; then
+  if [ $# -ne 3 ]; then
     echoRed "Error: bad parameter number on doIt function. Exiting"
     exitGracefully
   fi
@@ -509,10 +509,10 @@ takeArguments()
         DO_UNTAR=0
         DO_COMPILE=0
         DO_CONFIGURE=0
-        for lib in ${EXTERNAL_LIBRARIES_FILES}; do
+        for lib in ${EXTERNAL_LIBRARIES_FILES[@]}; do
           doIt library ${lib} 0
         done
-        for mod in ${PYTHON_MODULES_FILES}; do
+        for mod in ${PYTHON_MODULES_FILES[@]}; do
           doIt pymodule ${mod} 0
         done
         DO_PYTHON=0
@@ -1356,28 +1356,39 @@ preparePythonEnvironment()
     export LDFLAGS="-L${EXT_PYTHON}/${PYTHON_FOLDER} -L${XMIPP_HOME}/lib -L${EXT_PYTHON}/${TK_FOLDER}/macosx -L${EXT_PYTHON}/${TCL_FOLDER}/macosx"
     export LD_LIBRARY_PATH="${EXT_PYTHON}/${PYTHON_FOLDER}:${EXT_PYTHON}/${TK_FOLDER}/macosx:${EXT_PYTHON}/${TCL_FOLDER}/macosx:${LD_LIBRARY_PATH}"
     export DYLD_FALLBACK_LIBRARY_PATH="${EXT_PYTHON}/${PYTHON_FOLDER}:${EXT_PYTHON}/${TK_FOLDER}/macosx:${EXT_PYTHON}/${TCL_FOLDER}/macosx:${DYLD_FALLBACK_LIBRARY_PATH}"
-    echoExec "ln -s ${XMIPP_HOME}/bin/xmipp_python ${XMIPP_HOME}/bin/python2.7"
-    echoExec "cd ${EXT_PYTHON}/${MATLIBPLOT_FOLDER}"
-    echoExec "ln -s ${XMIPP_HOME}/bin/xmipp_python ${XMIPP_HOME}/bin/pythonXmipp" 
-    echoExec "make -f make.osx clean"
-    echoExec "make -f make.osx PREFIX=${XMIPP_HOME} PYVERSION=Xmipp fetch deps mpl_install"
-    echoExec "rm ${XMIPP_HOME}/bin/pythonXmipp"
-    echoExec "rm ${XMIPP_HOME}/bin/python2.7"
+    echoExecRedirectEverything "ln -s ${XMIPP_HOME}/bin/xmipp_python ${XMIPP_HOME}/bin/python2.7" "/dev/null"
+    echoExecRedirectEverything "cd ${EXT_PYTHON}/${MATLIBPLOT_FOLDER}" "/dev/null"
+    echoExecRedirectEverything "ln -s ${XMIPP_HOME}/bin/xmipp_python ${XMIPP_HOME}/bin/pythonXmipp" "/dev/null" 
+    echoExecRedirectEverything "make -f make.osx clean" "/dev/null"
+    echoExecRedirectEverything "make -f make.osx PREFIX=${XMIPP_HOME} PYVERSION=Xmipp fetch deps mpl_install" "/dev/null"
+    echoExecRedirectEverything "rm ${XMIPP_HOME}/bin/pythonXmipp" "/dev/null"
+    echoExecRedirectEverything "rm ${XMIPP_HOME}/bin/python2.7" "/dev/null"
   elif [ $IS_MINGW -eq 1 ]; then
     export LDFLAGS="-L${EXT_PYTHON}/${PYTHON_FOLDER} -L${XMIPP_HOME}/lib -L${EXT_PYTHON}/${TK_FOLDER}/win -L${EXT_PYTHON}/${TCL_FOLDER}/win"
     export LD_LIBRARY_PATH="${EXT_PYTHON}/${PYTHON_FOLDER}:${EXT_PYTHON}/${TK_FOLDER}/win:${EXT_PYTHON}/${TCL_FOLDER}/win:${LD_LIBRARY_PATH}"
-    echoExec "ln -s ${XMIPP_HOME}/bin/xmipp_python ${XMIPP_HOME}/bin/python2.7"
-    echoExec "cd ${EXT_PYTHON}/${MATLIBPLOT_FOLDER}"
-    echoExec "ln -s ${XMIPP_HOME}/bin/xmipp_python ${XMIPP_HOME}/bin/pythonXmipp"
+    echoExecRedirectEverything "ln -s ${XMIPP_HOME}/bin/xmipp_python ${XMIPP_HOME}/bin/python2.7" "/dev/null"
+    echoExecRedirectEverything "cd ${EXT_PYTHON}/${MATLIBPLOT_FOLDER}" "/dev/null"
+    echoExecRedirectEverything "ln -s ${XMIPP_HOME}/bin/xmipp_python ${XMIPP_HOME}/bin/pythonXmipp" "/dev/null"
   else
     export LDFLAGS="-L${EXT_PYTHON}/${PYTHON_FOLDER} -L${XMIPP_HOME}/lib -L${EXT_PYTHON}/${TK_FOLDER}/unix -L${EXT_PYTHON}/${TCL_FOLDER}/unix"
     export LD_LIBRARY_PATH="${EXT_PYTHON}/${PYTHON_FOLDER}:${EXT_PYTHON}/${TK_FOLDER}/unix:${EXT_PYTHON}/${TCL_FOLDER}/unix:${LD_LIBRARY_PATH}"
-    echoExec "cp ${EXT_PYTHON}/matplotlib_setupext.py ${EXT_PYTHON}/${MATLIBPLOT_FOLDER}/setupext.py"
+
+    shouldIDoIt pymodule ${MATLIBPLOT_TAR}
+    if [ $? -eq 1 ]; then
+      echoExecRedirectEverything "cp ${EXT_PYTHON}/matplotlib_setupext.py ${EXT_PYTHON}/${MATLIBPLOT_FOLDER}/setupext.py" "/dev/null"
+    fi
     #The following is needed from matplotlib to works
-    echoExec "cd ${EXT_PYTHON}/${TK_FOLDER}/unix/"
-    echoExec "ln -sf libtk8.5.so  libtk.so"
-    echoExec "cd ${EXT_PYTHON}/${TCL_FOLDER}/unix/"
-    echoExec "ln -sf libtcl8.5.so  libtcl.so"
+    shouldIDoIt pymodule ${TK_TAR}
+    if [ $? -eq 1 ]; then
+      echoExecRedirectEverything "cd ${EXT_PYTHON}/${TK_FOLDER}/unix/" "/dev/null"
+      echoExecRedirectEverything "ln -sf libtk8.5.so  libtk.so" "/dev/null"
+      echoExecRedirectEverything "ln -sf libtk8.5.so  libtk.so" "/dev/null"
+    fi
+    shouldIDoIt pymodule ${TK_TAR}
+    if [ $? -eq 1 ]; then
+      echoExecRedirectEverything "cd ${EXT_PYTHON}/${TCL_FOLDER}/unix/" "/dev/null"
+      echoExecRedirectEverything "ln -sf libtcl8.5.so  libtcl.so" "/dev/null"
+    fi
   fi
 }
 
@@ -1771,13 +1782,13 @@ fi
 
 # Launch the configure/compile python script 
 
-echoGreen "Compiling XMIPP ..."
-echoExecRedirectEverything "cd ${XMIPP_HOME}" "/dev/null"
 #echoGreen "CONFIGURE: $CONFIGURE_ARGS"
 #echoGreen "COMPILE: $COMPILE_ARGS"
 #echoGreen "GUI: $GUI_ARGS"
 
 if [ $DO_SETUP -eq 1 ]; then
+  echoGreen "Compiling XMIPP ..."
+  echoExecRedirectEverything "cd ${XMIPP_HOME}" "/dev/null"
   echoExec "./setup.py -j ${NUMBER_OF_CPU} configure ${CONFIGURE_ARGS} compile ${COMPILE_ARGS} ${GUI_ARGS} install"
 fi
 
