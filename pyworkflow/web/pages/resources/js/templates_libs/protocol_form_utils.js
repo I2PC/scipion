@@ -9,8 +9,11 @@
  * setParamValue(paramId, value);
  * evalDependencies(row, newLevel);
  * evalCondition(row);
+ * normalizeConditions(cond);
  * help(title, msg);
  * browseObjects(node, projName, objClass);
+ * showComment();
+ * putComment();
  * getListFormatted(node, list, id);
  * getTableFormatted(node, list, id);
  * selectDialog(objClass, msg, funcName);

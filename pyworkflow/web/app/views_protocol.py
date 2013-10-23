@@ -81,6 +81,39 @@ def form(request):
     
     return render_to_response('form.html', context)
     
+# Method to launch a protocol #
+def protocol(request):
+    project, protocol = loadProtocolProject(request)
+    updateProtocolParams(request, protocol, project)    
+    errors = protocol.validate()
+
+    if len(errors) == 0:
+        # No errors 
+        # Finally, launch the protocol
+        project.launchProtocol(protocol)
+    jsonStr = json.dumps({'errors' : errors}, ensure_ascii=False)
+    
+    return HttpResponse(jsonStr, mimetype='application/javascript')   
+
+SPECIAL_PARAMS = ['numberOfMpi', 'numberOfThreads', 'hostName', 'expertLevel', '_useQueue']
+OBJ_PARAMS =['runName', 'comment']
+
+def updateProtocolParams(request, protocol, project):
+    """ Update the protocol values from the Web-form.
+    This function will be used from save_protocol and execute_protocol.
+    """
+    # PARAMS
+    for paramName, _ in protocol.iterDefinitionAttributes():
+        updateParam(request, project, protocol, paramName)
+    
+    # SPECIAL_PARAMS
+    for paramName in SPECIAL_PARAMS:
+        updateParam(request, project, protocol, paramName)
+        
+    # OBJ_PARAMS
+    protocol.setObjLabel(request.POST.get('runName'))
+    protocol.setObjComment(request.POST.get('comment'))
+
 def updateParam(request, project, protocol, paramName):
     """
     Params:
@@ -102,22 +135,6 @@ def updateParam(request, project, protocol, paramName):
             value = None
     attr.set(value)
 #    print "setting attr %s with value:" % paramName, value 
-    
-SPECIAL_PARAMS = ['numberOfMpi', 'numberOfThreads', 'hostName', 'expertLevel', '_useQueue']
-OBJ_PARAMS =['runName', 'comment']
-
-def updateProtocolParams(request, protocol, project):
-    """ Update the protocol values from the Web-form.
-    This function will be used from save_protocol and execute_protocol.
-    """    
-    for paramName, _ in protocol.iterDefinitionAttributes():
-        updateParam(request, project, protocol, paramName)
-        
-    for paramName in SPECIAL_PARAMS:
-        updateParam(request, project, protocol, paramName)
-
-    protocol.setObjLabel(request.POST.get('runName'))
-    protocol.setObjComment(request.POST.get('comment'))
         
 def save_protocol(request):
     project, protocol = loadProtocolProject(request)
@@ -126,19 +143,6 @@ def save_protocol(request):
     
     return HttpResponse(mimetype='application/javascript')
 
-# Method to launch a protocol #
-def protocol(request):
-    project, protocol = loadProtocolProject(request)
-    updateProtocolParams(request, protocol, project)    
-    errors = protocol.validate()
-
-    if len(errors) == 0:
-        # No errors 
-        # Finally, launch the protocol
-        project.launchProtocol(protocol)
-    jsonStr = json.dumps({'errors' : errors}, ensure_ascii=False)
-    
-    return HttpResponse(jsonStr, mimetype='application/javascript')   
 
 # Method to delete a protocol #
 def delete_protocol(request):
