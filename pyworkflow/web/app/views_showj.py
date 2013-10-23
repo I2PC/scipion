@@ -134,7 +134,8 @@ def showj(request, inputParameters=None):
      
     elif showjForm.data['mode']=='volume_chimera':   
         from subprocess import Popen, PIPE, STDOUT
-        p = Popen(['/home/adrian/.local/UCSF-Chimera64-2013-10-16/bin/chimera', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+#        p = Popen(['/home/adrian/.local/UCSF-Chimera64-2013-10-16/bin/chimera', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+        p = Popen([os.environ.get('CHIMERA_HEADLESS'), volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
         outputHtmlFile = os.path.join(pw.HOME, 'web', 'pages', 'resources', 'astex', 'tmp', 'test.html')
         #chimeraCommand= 'volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop'
         chimeraCommand= 'export format WebGL ' + outputHtmlFile + '; stop'
