@@ -94,6 +94,7 @@ class XmippCL2DViewer(ProtocolViewer):
                 if self.showSeveralLevels.empty():
                     self.formWindow.showError('Please select the levels that you want to visualize.')
                 else:
+                    listOfLevels = []
                     try:
                         listOfLevels = self.__getListFromRangeString(self.showSeveralLevels.get())
                     except Exception, ex:
