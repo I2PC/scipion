@@ -8,6 +8,7 @@
  * fillTabsSummary(id);
  * fillUL(list, ulId, icon);
  * launchViewer(id);
+ * updateButtons(projName, id, elm)
  * updateTree(id, elm);
  * updateRow(id, elm, row);
  * switchGraph();
@@ -151,7 +152,6 @@ function updateButtons(projName, id, elm){
 	fillTabsSummary(id);
 }
 
-
 function updateTree(id, elm){
 	var oldSelect = $("div#graphActiv").attr("data-option");
 	var selected = "graph_" + id;
@@ -176,7 +176,6 @@ function updateRow(id, elm, row){
 	elm.attr('style', 'background-color: LightSteelBlue;');
 	elm.attr('class', 'selected');
 }
-
 
 function switchGraph() {
 	var status = $("div#graphActiv").attr("data-mode");
