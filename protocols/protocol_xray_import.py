@@ -16,7 +16,8 @@ class ProtXrayImport(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.xray_import.name, scriptname, project)
         self.Import = "from protocol_xray_import import *"
-            
+        self.TomogramsMd = self.getFilename('tomograms')
+           
     def defineSteps(self):
         tomograms = self.getTomograms()
         
@@ -25,7 +26,7 @@ class ProtXrayImport(XmippProtocol):
             
         self.insertStep('createResultMd',
                         WorkingDir=self.WorkingDir, 
-                        TomogramList=tomograms)
+                        TomogramList=tomograms, resultMd=self.TomogramsMd, verifyfiles=[self.TomogramsMd])
 
 
     def validate(self):
@@ -47,7 +48,7 @@ class ProtXrayImport(XmippProtocol):
             else:
                 message.append("Import of <%d> tomograms from [%s]" % (len(self.getTomograms()), self.DirTomograms))   
         else:
-            message.append("Import of Bessy tomogram from [%s] and initial index %d" % (self.DirBessyData, self.TIni))
+            message.append("Import of Bessy tomogram from [%s] and initial index %s" % (self.DirBessyData, self.TIni))
 
     
            
@@ -95,30 +96,36 @@ class ProtXrayImport(XmippProtocol):
         self.insertStep("importTomogram", 
                         TomogramDir=tomoDir,
                         TomogramRoot=tomoRoot,
-                        params=params % self.ParamsDict)
+                        params=params % self.ParamsDict, verifyfiles=[tomoRoot+'.mrc'])
        
 
 def getTomoDirs(WorkingDir, tomogram):
     """ Give the tomogram filename, return the root and prefix
     to store the result files. """
-    tomoPrefix = removeBasenameExt(tomogram)
-    tomoDir = join(WorkingDir, tomoPrefix)
-    tomoRoot = join(tomoDir, tomoPrefix)
+    tomoBaseName = removeBasenameExt(tomogram)
+    tomoDir = join(WorkingDir, tomoBaseName)
+    tomoRoot = join(tomoDir, tomoBaseName)
     
-    return tomoPrefix, tomoDir, tomoRoot
+    return tomoBaseName, tomoDir, tomoRoot
       
 
 def importTomogram(log, TomogramDir, TomogramRoot, params):
     createDir(log, TomogramDir)
     runJob(log, "xmipp_xray_import", params, NumberOfMpi=1)
-    createLink(log, TomogramRoot + '.mrc', TomogramRoot + '.st')
+#     createLink(log, TomogramRoot + '.mrc', TomogramRoot + '.st')
     
-def createResultMd(log, WorkingDir, TomogramList):
+def createResultMd(log, WorkingDir, TomogramList, resultMd):
     md = xmipp.MetaData()
-    resultMd = join(WorkingDir, 'tomograms.xmd')
+    mdOut = xmipp.MetaData()
     
     for tomogram in TomogramList:
-        tomoPrefix, _, tomoRoot = getTomoDirs(WorkingDir, tomogram)
-        md.read(tomoRoot + ".xmd")
-        md.write('tomo_%s@%s' % (tomoPrefix, resultMd), xmipp.MD_APPEND)
+        tomoBaseName, _, tomoRoot = getTomoDirs(WorkingDir, tomogram)
+        mdOut.setValue(xmipp.MDL_IMAGE, tomoRoot + '.mrc', mdOut.addObject())
+        
+        blockList = xmipp.getBlocksInMetaDataFile(tomoRoot+'.xmd')
+        for block in blockList:
+            md.read("%(block)s@%(tomoRoot)s.xmd" % locals())
+            md.write('%(block)s_%(tomoBaseName)s@%(resultMd)s' % locals(), xmipp.MD_APPEND)
+    
+    mdOut.write('tomograms@%s' % (resultMd), xmipp.MD_APPEND)
         

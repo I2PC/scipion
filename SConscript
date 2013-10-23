@@ -578,11 +578,11 @@ INRIASources = Glob('external/inria', '*.cc', [])
 CondorSources = Glob('external/condor', '*.cpp', [])
 
 # AlgLib
-AlglibSources = Glob('external/alglib/src', '*.cpp', [])
+AlglibSources = Glob('external/alglib-3.8.0.cpp/src', '*.cpp', [])
 
 AddLibrary('XmippExternal', 'external',
    INRIASources + BilibSources + CondorSources + AlglibSources,
-   ['bilib', 'bilib/headers', 'bilib/types'])
+   ['bilib', 'bilib/headers', 'bilib/types', 'alglib-3.8.0.cpp/src'])
 
 # sqliteExt
 SqliteExtSources = Glob('external/sqliteExt', '*.c', [])
@@ -614,6 +614,7 @@ PyExtSources = Glob('libraries/bindings/python', '*.cpp', [])
 pythonLibName = 'xmipp'
 pythonIncludes = ["#" + join(PythonDir, dir) for dir in [".", "Include"]]
 pythonIncludes.append("#lib/python2.7/site-packages/numpy/core/include") 
+#pythonIncludes.append(os.path.join(os.environ['VIRTUAL_ENV'], "lib", "python2.7", "site-packages", "numpy", "core", "include")) 
 
 libpath = ['lib']
 libraries = ['XmippData', 'XmippRecons', 'XmippExternal'] + FFTWLibs + TIFFLibs + JPEGLibs + HDF5Libs + SQLiteLibs
@@ -881,6 +882,7 @@ AddXmippProgram('volume_enhance_contrast', ['XmippRecons'])
 AddXmippProgram('volume_find_symmetry')
 AddXmippProgram('volume_from_pdb', ['XmippRecons'])
 AddXmippProgram('volume_initial_simulated_annealing', ['XmippRecons'])
+AddXmippProgram('volume_validate_pca', ['XmippRecons'])
 AddXmippProgram('volume_reslice')
 AddXmippProgram('volume_segment', ['XmippRecons'])
 AddXmippProgram('volume_structure_factor')

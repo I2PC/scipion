@@ -328,7 +328,7 @@ enum MDLabel
     MDL_SUM, ///< Sum of elements of a given type (double) [this is a genereic type do not use to transfer information to another program]
     MDL_SUMWEIGHT, ///< Sum of all weights in ML model
     MDL_SYMNO, ///< Symmetry number for a projection (used in ART)
-    MDL_TRANSFORMATIONMTRIX, ///< transformation matrix(vector double)
+    MDL_TRANSFORM_MATRIX, ///< transformation matrix(vector double)
 
     MDL_TEST_SIZE,// < number of test assigned to a program
 
@@ -1105,7 +1105,7 @@ private:
         MDL::addLabel(MDL_SUM, LABEL_DOUBLE, "sum");
         MDL::addLabel(MDL_SUMWEIGHT, LABEL_DOUBLE, "sumWeight");
         MDL::addLabel(MDL_SYMNO, LABEL_INT, "symNo");
-        MDL::addLabel(MDL_TRANSFORMATIONMTRIX, LABEL_VECTOR_DOUBLE, "transMat");
+        MDL::addLabel(MDL_TRANSFORM_MATRIX, LABEL_VECTOR_DOUBLE, "transformMatrix");
 
         MDL::addLabel(MDL_VOLTAGE, LABEL_DOUBLE, "voltage");
         MDL::addLabel(MDL_VOLUME_SCORE1, LABEL_DOUBLE, "volScore1");

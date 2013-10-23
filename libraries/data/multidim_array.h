@@ -1502,6 +1502,9 @@ public:
         this->nzyxdimAlloc = this->nzyxdim;
         this->destroyData = false;
     }
+
+
+
     //@}
 
     /// @name Size
@@ -2022,7 +2025,7 @@ public:
      */
     void* getArrayPointer() const
     {
-    	return (void*) data;
+        return (void*) data;
 
     }
 
@@ -2167,8 +2170,19 @@ public:
     /** Get Z slice as matrix */
     void getSliceAsMatrix(size_t k, Matrix2D<T> &m) const
     {
-    	m.resizeNoCopy(YSIZE(*this),XSIZE(*this));
-    	memcpy(&MAT_ELEM(m,0,0),&A3D_ELEM(*this,k,0,0),YSIZE(*this),XSIZE(*this)*sizeof(double));
+        m.resizeNoCopy(YSIZE(*this),XSIZE(*this));
+        memcpy(&MAT_ELEM(m,0,0),&A3D_ELEM(*this,k,0,0),YSIZE(*this),XSIZE(*this)*sizeof(double));
+    }
+
+
+    /** Return the data aliased as a row vector in a Matrix1D
+     */
+    void getAliasAsRowVector(Matrix1D<T> &m) const
+    {
+        m.vdim = NZYXSIZE(*this);
+        m.destroyData = false;
+        m.row = true;
+        m.vdata = data;
     }
 
     /** Slice access for writing.
@@ -3473,7 +3487,7 @@ public:
     void rangeAdjust(const MultidimArray<T> &example,
                      const MultidimArray<int> *mask=NULL)
     {
-    	if (NZYXSIZE(*this) <= 0)
+        if (NZYXSIZE(*this) <= 0)
             return;
 
         double avgExample, stddevExample, avgThis, stddevThis;
@@ -4428,15 +4442,15 @@ public:
      * For each entry in the array, give what is the probability of having a value smaller or equal than this entry.*/
     void cumlativeDensityFunction(MultidimArray<double> &cdf)
     {
-    	MultidimArray<int> indx;
-    	indexSort(indx);
-    	cdf.resizeNoCopy(*this);
-    	double iSize=1.0/XSIZE(indx);
-    	FOR_ALL_ELEMENTS_IN_ARRAY1D(indx)
-    	{
-    		int ii=A1D_ELEM(indx,i)-1;
-    		A1D_ELEM(cdf,ii)=(i+1)*iSize;
-    	}
+        MultidimArray<int> indx;
+        indexSort(indx);
+        cdf.resizeNoCopy(*this);
+        double iSize=1.0/XSIZE(indx);
+        FOR_ALL_ELEMENTS_IN_ARRAY1D(indx)
+        {
+            int ii=A1D_ELEM(indx,i)-1;
+            A1D_ELEM(cdf,ii)=(i+1)*iSize;
+        }
     }
 
     /** Several thresholding.

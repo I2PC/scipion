@@ -422,7 +422,8 @@ _baseProtocolNames = {
         'images_tilted_stk': join("%(WorkingDir)s", 'images_tilted.stk'),
         'images_untilted_stk': join("%(WorkingDir)s", 'images_untilted.stk'),
         'classes':      join('%(WorkingDir)s', 'classes.xmd'),
-        'class_block':  'class%(ClassNo)06d_images@%(ClassMd)s'
+        'class_block':  'class%(ClassNo)06d_images@%(ClassMd)s',
+        'tomograms':    join('%(WorkingDir)s','tomograms.xmd')
      }
 
 def cleanRunSummaryCache(script):
@@ -503,9 +504,8 @@ class XmippProtocol(object):
         
     def getFilename(self, key, **params):
         """Has the same function as getProtocolFilename but using 
-        the internal params dictionary 
-        Is desirable the names comming in params doesn't overlap
-        with the variables in the header dictionary """
+        the internal params dictionary. Names in params should not
+        overlap the variables in the header dictionary """
         params.update(self.ParamsDict)
         if self.FilenamesDict.has_key(key):
             return self.FilenamesDict[key] % params
@@ -758,6 +758,9 @@ class XmippProtocol(object):
     def insertCreateLink(self, src, dst):
         ''' Shortcut to inserting a createLink step '''
         self.insertStep('createLink', source=src, dest=dst, verifyfiles=[dst])
+        
+    def insertDeleteTmpDir(self):
+        self.insertStep('deleteFilesInDir', dir=self.TmpDir, verbose=True)
         
     def getProtocolFromRunName(self, extendedRunName):
         ''' This function will be helpful to create an instance

@@ -1,6 +1,6 @@
 /***************************************************************************
+ * Authors:     AUTHOR_NAME (jvargas@cnb.csic.es)
  *
- * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -23,23 +23,12 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "xmipp_color.h"
+#include <reconstruction/volume_validate_pca.h>
 
-void textcolor(int attr, int fg, int bg)
+int main(int argc, char **argv)
 {
-    char command[13];
-
-    /* Command is the control command to the terminal */
-    sprintf(command, "%c[%d;%d;%dm", 0x1B, attr, fg + 30, bg + 40);
-    printf("%s", command);
+	ProgVolumeValidationPCA prm;
+    prm.read(argc,argv);
+    return prm.tryRun();
 }
 
-String colorString(const char * msg, int color, int attribute, int bgcolor)
-{
-	size_t n = strlen(msg);
-    char *formatBuffer = new char[n+20]; // Extra space for color characters
-    sprintf(formatBuffer, "%c[%d;%dm%s%c[0m", 0x1B, attribute, color + 30, msg, 0x1B);
-    String s = formatBuffer;
-    delete[] formatBuffer;
-    return s;
-}

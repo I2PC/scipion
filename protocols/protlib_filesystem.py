@@ -34,7 +34,7 @@ from protlib_utils import printLog
 from shutil import copyfile
 from config_protocols import PROJECT_DB
 from fnmatch import fnmatch
-#from xmipp import *
+# from xmipp import *
 
 # The following are Wrappers to be used from Protocols
 # providing filesystem utilities
@@ -48,16 +48,16 @@ def createDir(log, path):
             mkpath(path, 0777, True)
             printLog("Created dir " + path, log)
     except DistutilsFileError, e:
-        printLog("Couldn't create dir: '%(path)s': %(e)s" % locals(), 
+        printLog("Couldn't create dir: '%(path)s': %(e)s" % locals(),
                  log, err=True, isError=True)
 
 def changeDir(log, path):
     """ Change to Directory """
     try:
         os.chdir(path)
-        printLog("Changed to dir " + path,log)
+        printLog("Changed to dir " + path, log)
     except os.error, (errno, errstr):
-        printLog("Could not change to directory '%s': Error (%d): %s" % (path, errno, errstr),log,err=True,isError=True)
+        printLog("Could not change to directory '%s': Error (%d): %s" % (path, errno, errstr), log, err=True, isError=True)
 
 def deleteDir(log, path):
     from distutils.dir_util import remove_tree
@@ -69,10 +69,10 @@ def deleteFile(log, filename, verbose=True):
     if exists(filename):
         os.remove(filename)
         if verbose:
-            printLog('Deleted file %s' % filename,log)
+            printLog('Deleted file %s' % filename, log)
     else:
         if verbose:
-            printLog('Do not need to delete %s; already gone' % filename,log)
+            printLog('Do not need to delete %s; already gone' % filename, log)
             
 def copyFile(log, source, dest):
     try:
@@ -92,7 +92,7 @@ def copyDir(log, source, dest):
     try:
         from shutil import copytree
         if exists(dest):
-            deleteDir(log,dest)
+            deleteDir(log, dest)
         copytree(source, dest, symlinks=True)
         printLog("Copied '%s' to '%s'" % (source, dest))
     except Exception, e:
@@ -106,24 +106,29 @@ def deleteFiles(log, filelist, verbose):
     for file in filelist:
         deleteFile(log, file, verbose)
 
+def deleteFilesInDir(log, dir, verbose):
+    for root, _, files in os.walk(dir):
+        for file in files:
+            deleteFile(log, join(root, file), verbose)
+
 def createLink(log, source, dest):
     try:
         if exists(dest):
             os.remove(dest)
         destDir = split(dest)[0]
-        os.symlink(relpath(source,destDir),dest)
+        os.symlink(relpath(source, destDir), dest)
         printLog("Linked '%s' to '%s'" % (source, dest))
     except Exception, e:
         printLog("Could not link '%s' to '%s'. Error: %s" % (source, dest, str(e)), log, err=True, isError=True)
 
 def createLink2(log, filename, dirSrc, dirDest):
-    createLink(log, join(dirSrc,filename), join(dirDest,filename))
+    createLink(log, join(dirSrc, filename), join(dirDest, filename))
 
 def uniqueFilename(file_name):
     ''' Create a unique filename (not file handler)
        this approach is insecure but good enough for most purposes'''
     counter = 1
-    file_name_parts = splitext(file_name) # returns ('/path/file', '.ext')
+    file_name_parts = splitext(file_name)  # returns ('/path/file', '.ext')
     while isfile(file_name):
         file_name = file_name_parts[0] + '_' + str(counter) + file_name_parts[1]
         counter += 1
@@ -131,16 +136,16 @@ def uniqueFilename(file_name):
 
 def random_alphanumeric(limit):
     import random
-    #ascii alphabet of all alphanumerals
-    r = (range(48,58) + range(65,91) + range(97,123))
+    # ascii alphabet of all alphanumerals
+    r = (range(48, 58) + range(65, 91) + range(97, 123))
     random.shuffle(r)
-    return reduce(lambda i,s: i + chr(s),r[:limit],"")
+    return reduce(lambda i, s: i + chr(s), r[:limit], "")
 
-def uniqueRandomFilename(file_name,randomLength=5):
+def uniqueRandomFilename(file_name, randomLength=5):
     ''' Create a unique filename (not file handler)
        this approach is insecure but good enough for most purposes'''
     counter = 1
-    file_name_parts = splitext(file_name) # returns ('/path/file', '.ext')
+    file_name_parts = splitext(file_name)  # returns ('/path/file', '.ext')
     file_name = file_name_parts[0] + '_' + random_alphanumeric(randomLength) + file_name_parts[1]
     while isfile(file_name):
         file_name = file_name_parts[0] + '_' + str(counter) + file_name_parts[1]
@@ -199,11 +204,11 @@ def matchPattern(filename, patterns):
 def findFiles(path, *patterns):
     '''Find recursively in path all the files matching a specific pattern
     '''
-    matchingFiles=[]
+    matchingFiles = []
     for root, dirs, files in os.walk(path):
         for file in files:
-            if matchPattern(file,patterns):
-                matchingFiles.append(join(root,file))
+            if matchPattern(file, patterns):
+                matchingFiles.append(join(root, file))
     return matchingFiles
 
 #--------------------------- Xmipp specific tools ---------------------------------
@@ -223,7 +228,7 @@ def includeProtocolsDir():
 def getProtocolTemplate(prot):
     protDir = getXmippPath('protocols')
     srcProtName = '%s.py' % prot.key
-    #srcProtDir = getXmippPath('protocols')
+    # srcProtDir = getXmippPath('protocols')
     srcProtAbsPath = join(protDir, srcProtName)
     return srcProtAbsPath
 
@@ -307,7 +312,7 @@ def linkAcquisitionInfo(log, InputFile, dirDest):
     exists create a link in the specified folder'''
     acquisitionInfo = findAcquisitionInfo(InputFile)
     if acquisitionInfo is None:
-        printLog("Couldn't find acquisition_info.xmd from file path: '%(InputFile)s'" % locals(), 
+        printLog("Couldn't find acquisition_info.xmd from file path: '%(InputFile)s'" % locals(),
                  log, err=True, isError=True)
     else:        
         createLink(log, acquisitionInfo, join(dirDest, ACQUISITION_INFO))

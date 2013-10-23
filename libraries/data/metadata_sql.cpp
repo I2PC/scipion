@@ -1071,6 +1071,7 @@ bool MDSql::createTable(const std::vector<MDLabel> * labelsVector, bool withObjI
         }
     }
     ss << ");";
+    //std::cerr << "DEBUG_JM: MDSql::createTable " << ss.str() << std::endl;
     return execSingleStmt(ss);
 }
 

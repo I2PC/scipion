@@ -8,15 +8,18 @@
 #
 
 from os.path import join, exists
-from os import remove, rename
+from os import remove, rename, environ
 from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
 from xmipp import *
 from xmipp import MetaDataInfo
-from protlib_utils import runShowJ, getListFromVector, getListFromRangeString, runJob, runChimera, which
+from protlib_utils import runShowJ, getListFromVector, getListFromRangeString, \
+                          runJob, runChimera, which, runChimeraClient
 from protlib_parser import ProtocolParser
 from protlib_xmipp import redStr, cyanStr
-from protlib_filesystem import xmippExists, findAcquisitionInfo, moveFile, replaceBasenameExt
+from protlib_gui_ext import showWarning, showTable, showError
+from protlib_filesystem import xmippExists, findAcquisitionInfo, moveFile, \
+                               replaceBasenameExt
 from protocol_ml2d import lastIteration
 from protlib_filesystem import createLink
 from protlib_import import exportReliontoMetadataFile
@@ -69,18 +72,19 @@ class ProtRelionRefinner(XmippProtocol):
             errors.append("CTF correction selected and input metadata <%s> doesn't contains CTF information" % self.ImgMd)
             
         # Check relion is installed
-        if len(which('relion_classify')) == 0:
-            errors.append('<relion_classify> was not found.') 
-        if len(which('relion_movie_handlerr')) == 0:
+        if len(which('relion_refine')) == 0:
+            errors.append('<relion_refine> was not found.') 
+        if len(which('relion_movie_handler')) == 0:
+            import os
             errors.append('''program "relion_movie_handler" is missing. 
-                             Are you sure you have relion version 1.2?
-                             If you want to continue create a file named relion_movie_handler
-                             and place it in the path.''') 
+                             Are you sure you have relion version 1.2?.\n''' + environ['PATH']) 
+        if self.NumberOfMpi < 3:
+            errors.append('''relion refine requires at least 3 mpi proesses to compute golden standard''')
         return errors 
     
     def defineSteps(self): 
         self.doContinue = len(self.ContinueFrom) > 0
-        
+        #in the future we need to deal with continue
         restart = False
         #temporary normalized files
         tmpFileNameSTK = join(self.ExtraDir, 'norRelion.stk')
@@ -100,11 +104,11 @@ class ProtRelionRefinner(XmippProtocol):
                                 outputMd = tmpFileNameSTK,
                                 normType = 'NewXmipp',
                                 bgRadius = int(self.MaskDiameterA/2.0/self.SamplingRate),
-                                Nproc    = self.NumberOfMpi
+                                Nproc    = self.NumberOfMpi*self.NumberOfThreads
                                 )
             else:
                 self.Db.insertStep('createLink',
-                                   verifyfiles=[tmpFileName],
+                                   verifyfiles=[tmpFileNameXMD],
                                    source=self.ImgMd,
                                    dest=tmpFileNameXMD)
             # convert input metadata to relion model
@@ -115,51 +119,68 @@ class ProtRelionRefinner(XmippProtocol):
                             )
             # launch relion program
             self.insertRelionRefine()
+            
             # convert relion output to xmipp
             # relion_it00N_data.star, angular assigment
-            self.ImgStar = self.extraPath(replaceBasenameExt(tmpFileNameXMD, '.star'))
+            #self.ImgStar = self.extraPath(replaceBasenameExt(tmpFileNameXMD, '.star'))
+################################
+            #horrible hack since I do not know apriory the number of iterations
             verifyFiles=[]
             inputs=[]
-            for i in range (0,self.NumberOfIterations+1):
-                for v in self.relionFiles:
-                     verifyFiles += [self.getFilename(v+'Xm', iter=i )]
-                for v in self.relionFiles:
-                     inputs += [self.getFilename(v+'Re', iter=i )]
+            for v in self.relionFiles:
+                 verifyFiles += [self.getFilename(v+'Xm', iter=0 )]
+            for v in self.relionFiles:
+                 inputs += [self.getFilename(v+'Re', iter=0 )]
             #data to store in Working dir so it can be easily accessed by users
-            lastIteration = self.NumberOfIterations
+            #lastIteration = self.NumberOfIterations
             lastIterationVolumeFns = []
             standardOutputClassFns = []
-            for ref3d in range (1,self.NumberOfClasses+1):
-                lastIterationVolumeFns += [self.getFilename('volume', iter=lastIteration, ref3d=ref3d )]
-                standardOutputClassFns += ["images_ref3d%06d@"%ref3d + self.workingDirPath("classes_ref3D.xmd")]
-            lastIterationMetadata = "images@"+self.getFilename('data'+'Xm', iter=lastIteration )
+            lastIterationVolumeFns += [self.getFilename('volume', iter=0, ref3d=1 )]
+            standardOutputClassFns += ["images_ref3d%06d@"%1 + self.workingDirPath("classes_ref3D.xmd")]
+            lastIterationMetadata = "images@"+self.getFilename('data'+'Xm', iter=0 )
 
-            self.insertStep('convertRelionMetadata', verifyfiles=verifyFiles,
+            self.insertStep('convertRelionMetadata2', verifyfiles=verifyFiles,
                             inputs  = inputs,
-                            outputs = verifyFiles,
                             lastIterationVolumeFns = lastIterationVolumeFns,
                             lastIterationMetadata  = lastIterationMetadata,
-                            NumberOfClasses        = self.NumberOfClasses,
+                            #standardOutputClassFns = standardOutputClassFns,
+                            outputs = verifyFiles,
+                            relionFiles = self.relionFiles,
+                            relionDataTemplate = self.getFilename('dataRe', iter=0 ),
                             standardOutputClassFns = standardOutputClassFns,
                             standardOutputImageFn  = "images@" + self.workingDirPath("images.xmd"),
-                            standardOutputVolumeFn = "volumes@" + self.workingDirPath("volumes.xmd")
+                            standardOutputVolumeFn = "volumes@" + self.workingDirPath("volumes.xmd"),
+                            workingDir = self.ExtraDir
                             )
+
+
+            
             inputs=[]
             outputs=[]
-            for it in range (0,self.NumberOfIterations+1):
-                 for ref3d in range(1,self.NumberOfClasses+1):
-                       inputs  += [self.getFilename('volumeMRC', iter=it, ref3d=ref3d )]
-                       outputs += [self.getFilename('volume', iter=it, ref3d=ref3d )]
-            self.insertStep('convertRelionBinaryData',
-                            inputs  = inputs,
-                            outputs = outputs
-                            )
+            inputs  += [self.getFilename('volumeMRC', iter=0, ref3d=1 )]
+            outputs += [self.getFilename('volume', iter=0, ref3d=1 )]
+            self.insertStep('convertRelionBinaryData2',
+                        inputs  = inputs,
+                        outputs = outputs
+                        )
+
+#            for it in range (0,self.NumberOfIterations+1):
+#                 for ref3d in range(1,self.NumberOfClasses+1):
+#                       inputs  += [self.getFilename('volumeMRC', iter=it, ref3d=ref3d )]
+#                       outputs += [self.getFilename('volume', iter=it, ref3d=ref3d )]
+#            self.insertStep('convertRelionBinaryData2',
+#                            inputs  = inputs,
+#                            NumberOfClasses = self.NumberOfClasses
+#                            outputs = outputs,
+#                            )
+ 
+ #####################
                        
     def insertRelionRefine(self):
         args = {#'--iter': self.NumberOfIterations,
                 #'--tau2_fudge': self.RegularisationParamT,
                 '--flatten_solvent': '',
-                '--zero_mask': '',# this is an option but is almost always true
+                #'--zero_mask': '',# this is an option but is almost always true
                 '--norm': '',
                 '--scale': '',
                 '--o': '%s/relion' % self.ExtraDir
@@ -218,7 +239,7 @@ class ProtRelionRefinner(XmippProtocol):
         # Sampling stuff
         # Find the index(starting at 0) of the selected
         # sampling rate, as used in relion program
-        iover = 1 
+        iover = 1 #TODO: check this DROP THIS
         index = ['30','15','7.5','3.7','1.8',
                  '0.9','0.5','0.2','0.1'].index(self.AngularSamplingDeg)
         args['--healpix_order'] = float(index + 1 - iover)
@@ -237,8 +258,11 @@ class ProtRelionRefinner(XmippProtocol):
         params += self.AdditionalArguments
         verifyFiles=[]
         #relionFiles=['data','model','optimiser','sampling']
+        #refine does not predefine the number of iterations so no verify is possible
+        #let us check that at least iter 1 is done
         for v in self.relionFiles:
-             verifyFiles += [self.getFilename(v+'Re', iter=self.NumberOfIterations )]
+             verifyFiles += [self.getFilename(v+'Re', iter=1 )]
+             #verifyFiles += [self.getFilename(v+'Re', iter=self.NumberOfIterations )]
 #        f = open('/tmp/myfile','w')
 #        for item in verifyFiles:
 #            f.write("%s\n" % item)
@@ -254,7 +278,7 @@ class ProtRelionRefinner(XmippProtocol):
             myDict[v+'Re']=extraIter + v +'.star'
             myDict[v+'Xm']=extraIter + v +'.xmd'
         myDict['volume']=extraIter + "class%(ref3d)03d.spi"
-        myDict['volumeMRC']=extraIter + "class%(ref3d)03d.mrc"
+        myDict['volumeMRC']=extraIter + "class%(ref3d)03d.mrc:mrc"
         
         return myDict
     def visualize(self):
@@ -295,22 +319,78 @@ class ProtRelionRefinner(XmippProtocol):
             return plotName in selectedPlots
         DisplayRef3DNo = self.parser.getTkValue('DisplayRef3DNo')
         VisualizeIter = self.parser.getTkValue('VisualizeIter')
+
+        #Get last iteration
+        for i in range (0,1000):
+            fileName = relionDataTemplate.replace('000',"%03d",i)
+            if exists(fileName):
+                self.NumberOfIterations = i
+
         
         if DisplayRef3DNo == 'all':
-            ref3Ds = range(1,self.NumberOfClasses+1)
+            ref3Ds = range(1,1+1)
         else:
             ref3Ds = map(int, getListFromVector(self.parser.getTkValue('SelectedRef3DNo')))
-                                                    
-            
+
         if VisualizeIter == 'last':
             iterations = [self.NumberOfIterations]
         elif VisualizeIter == 'all':
             iterations = range(1,self.NumberOfIterations+1)
         else:
             iterations = map(int, getListFromVector(self.parser.getTkValue('SelectedIters')))
+        #check if last iteration exists
+
         runShowJExtraParameters = ' --dont_wrap --view '+ self.parser.getTkValue('DisplayVolumeSlicesAlong') 
         self.DisplayVolumeSlicesAlong=self.parser.getTkValue('DisplayVolumeSlicesAlong')
+        lastIteration = iterations[-1]
+        lastRef3D = ref3Ds[-1]
+        lastVolume = self.getFilename('volumeMRC', iter=lastIteration, ref3d=lastRef3D )
+        if not xmippExists(lastVolume):
+            print "does not exists"
+            message = "No data available for <iteration %d> and <class %d>"%\
+                       (int(lastIteration),int(lastRef3D))
+            showError("File not Found", message, self.master)
+            return
         
+        #if relion has not finished metadata has not been converted to xmipp
+        #do it now if needed
+        #=============
+        outputs=[]#output files
+        inputs=[]
+        for i in iterations:
+            for v in self.relionFiles:
+                fileName =self.getFilename(v+'Xm', iter=i )
+                if not xmippExists(fileName):
+                    outputs += [fileName]
+                    inputs += [self.getFilename(v+'Re', iter=i )]
+        lastIterationVolumeFns = []
+        standardOutputClassFns = []
+        for ref3d in range (1,self.NumberOfClasses+1):
+            lastIterationVolumeFns += [self.getFilename('volume', iter=lastIteration, ref3d=ref3d )]
+            standardOutputClassFns += ["images_ref3d%06d@"%ref3d + self.workingDirPath("classes_ref3D.xmd")]
+        lastIterationMetadata = "images@"+self.getFilename('data'+'Xm', iter=lastIteration )
+
+        convertRelionMetadata(None
+                              , inputs
+                              , outputs
+                              , lastIterationVolumeFns
+                              , lastIterationMetadata
+                              , self.NumberOfClasses
+                              , standardOutputClassFns
+                              , "images@" + self.workingDirPath("images.xmd")
+                              , "volumes@" + self.workingDirPath("volumes.xmd")
+                            )
+#        inputs=[]
+#        outputs=[]
+#        for it in iterations:
+#             for ref3d in range(1,self.NumberOfClasses+1):
+#                 fileName = self.getFilename('volume', iter=it, ref3d=ref3d )
+#                 if not xmippExists(fileName):
+#                     inputs  += [self.getFilename('volumeMRC', iter=it, ref3d=ref3d )]
+#                     outputs += [fileName]
+#        convertRelionBinaryData(None, inputs, outputs)
+                       
+        #============
         if doPlot('TableImagesPerClass'):
             _r = []
             mdOut = MetaData()
@@ -388,7 +468,7 @@ class ProtRelionRefinner(XmippProtocol):
                 for it in iterations:
                     file_name = blockName + self.getFilename('model'+'Xm', iter=it )
                     #file_name = self.getFilename('ResolutionXmdFile', iter=it, ref=ref3d)
-                    print file_name
+                    #print file_name
                     if xmippExists(file_name):
                         #print 'it: ',it, ' | file_name:',file_name
                         mdOut = MetaData(file_name)
@@ -461,27 +541,31 @@ class ProtRelionRefinner(XmippProtocol):
 
             for ref3d in ref3Ds:
                 for it in iterations:
-                    file_name = self.getFilename('volume', iter=it, ref3d=ref3d )
+                    #relion save volume either in spider or mrc therefore try first one of them and then the other
+                    file_name = self.getFilenameAlternative('volume','volumeMRC', iter=it, ref3d=ref3d )
                     if xmippExists(file_name):
                         #Chimera
                         if(self.DisplayVolumeSlicesAlong == 'surface'):
-                            runChimera(file_name)
+                            runChimeraClient(file_name)
                         else:
                         #Xmipp_showj (x,y and z shows the same)
                             try:
                                 runShowJ(file_name, extraParams = runShowJExtraParameters)
                             except Exception, e:
-                                showError("Error launching java app", str(e),self.master)
-                                
+                                showError("Error launching java app", str(e), self.master)
+                    else:
+                        print "file ", file_name, "those not exits"
         from tempfile import NamedTemporaryFile    
         if doPlot('DisplayAngularDistribution'):
             self.DisplayAngularDistributionWith = self.parser.getTkValue('DisplayAngularDistributionWith')
             if(self.DisplayAngularDistributionWith == '3D'):
-                fileNameVol = self.getFilename('volume', iter=self.NumberOfIterations, ref3d=1 )
+                    #relion save volume either in spider or mrc therefore try first one of them and then the other
+                fileNameVol = self.getFilenameAlternative('volume', 'volumeMRC', iter=iterations[-1], ref3d=1 )
                 (Xdim, Ydim, Zdim, Ndim) = getImageSize(fileNameVol)
                 for ref3d in ref3Ds:
-                    fileNameVol = self.getFilename('volume', iter=self.NumberOfIterations, ref3d=ref3d )
-                    md=MetaData('images@'+ self.getFilename('data'+'Xm', iter=self.NumberOfIterations ))
+                    #relion save volume either in spider or mrc therefore try first one of them and then the other
+                    fileNameVol = self.getFilenameAlternative('volume', 'volumeMRC',iter=iterations[-1], ref3d=ref3d )
+                    md=MetaData('images@'+ self.getFilename('data'+'Xm', iter=iterations[-1] ))
                     mdOut = MetaData()
                     mdOut.importObjects(md, MDValueEQ(MDL_REF3D, ref3d))
                     md.clear()
@@ -491,13 +575,9 @@ class ProtRelionRefinner(XmippProtocol):
                     #do not delete file since chimera needs it
                     ntf = NamedTemporaryFile(dir="/tmp/", suffix='.xmd',delete=False)
                     md.write("angularDist@"+ntf.name)
-                    parameters =  ' -i ' + fileNameVol + \
-                        ' --mode projector 256 -a ' + "angularDist@"+ ntf.name + " red "+\
+                    parameters = ' --mode projector 256 -a ' + "angularDist@"+ ntf.name + " red "+\
                          str(float(_OuterRadius) * 1.1)
-                    runJob(_log,
-                           'xmipp_chimera_client',
-                           parameters,1,1,True
-                           ) # run in background
+                    runChimeraClient(fileNameVol,parameters)
             else: #DisplayAngularDistributionWith == '2D'
                 if(len(ref3Ds) == 1):
                     gridsize1 = [1, 1]
@@ -506,11 +586,12 @@ class ProtRelionRefinner(XmippProtocol):
                 else:
                     gridsize1 = [(len(ref3Ds)+1)/2, 2]
                 
-                xplotter = XmippPlotter(*gridsize1, mainTitle='Iteration_%d' % self.NumberOfIterations, windowTitle="AngularDistribution")
+                xplotter = XmippPlotter(*gridsize1, mainTitle='Iteration_%d' % iterations[-1], windowTitle="AngularDistribution")
                 
                 for ref3d in ref3Ds:
-                    fileNameVol = self.getFilename('volume', iter=self.NumberOfIterations, ref3d=ref3d )
-                    md=MetaData('images@'+ self.getFilename('data'+'Xm', iter=self.NumberOfIterations ))
+                    #relion save volume either in spider or mrc therefore try first one of them and then the other
+                    fileNameVol = self.getFilenameAlternative('volume', 'volumeMRC', iter=iterations[-1], ref3d=ref3d )
+                    md=MetaData('images@'+ self.getFilename('data'+'Xm', iter=iterations[-1] ))
                     mdOut = MetaData()
                     mdOut.importObjects(md, MDValueEQ(MDL_REF3D, ref3d))
                     md.clear()
@@ -551,12 +632,55 @@ def convertImagesMd(log, inputMd, outputRelion):
     md.fillExpand(MDL_CTF_MODEL)
     # Create the mapping between relion labels and xmipp labels
     exportMdToRelion(md, outputRelion)
-    
+import os
+def convertRelionMetadata2(log,
+                            inputs,
+                            lastIterationVolumeFns,
+                            lastIterationMetadata,
+                            outputs,
+                            relionFiles,
+                            relionDataTemplate,
+                            standardOutputClassFns,
+                            standardOutputImageFn ,
+                            standardOutputVolumeFn,
+                            workingDir
+                            ):
+    #find last iteration
+    NumberOfIterations=0
+    _outputs=[]
+    _inputs=[]
+    for i in range (0,1000):
+        fileName = relionDataTemplate.replace('000',"%03d",i)
+        if exists(fileName):
+            NumberOfIterations = i
+            for v in outputs:
+                 _outputs += v.replace('000',"%03d",i)
+            for v in inputs:
+                 _inputs  += v.replace('000',"%03d",i)
+        else:
+            break
+    #data to store in Working dir so it can be easily accessed by users
+    lastIteration = NumberOfIterations
+    _lastIterationVolumeFns = []
+    for v in lastIterationVolumeFns:
+        _lastIterationVolumeFns += v.replace('000',"%03d",lastIteration)
+    #standardOutputClassFns += ["images_ref3d%06d@"%ref3d + self.workingDirPath("classes_ref3D.xmd")]
+    _lastIterationMetadata = lastIterationMetadata.replace('000',"%03d",lastIteration)
+
+    convertRelionMetadata(None,
+                    _inputs,
+                    _outputs,
+                    _lastIterationVolumeFns,
+                    _lastIterationMetadata,
+                    standardOutputClassFns,
+                    standardOutputImageFn,
+                    standardOutputVolumeFn = "volumes@" + self.workingDirPath("volumes.xmd")
+                    )
+
 def convertRelionMetadata(log, inputs,
                           outputs,
                           lastIterationVolumeFns,
                           lastIterationMetadata,
-                          NumberOfClasses,
                           standardOutputClassFns,
                           standardOutputImageFn,
                           standardOutputVolumeFn
@@ -582,8 +706,6 @@ def convertRelionMetadata(log, inputs,
     md = MetaData(lastIterationMetadata)
     #total number Image
     numberImages = md.size()
-
-
     #total number volumes 
     comment  = " numberImages=%d..................................................... "%numberImages
     comment += " numberRef3D=%d........................................................."%NumberOfClasses
@@ -596,10 +718,9 @@ def convertRelionMetadata(log, inputs,
     f=f.removeBlockName()
     if exists(f):
         os.remove(f)
-    for i in range (0,NumberOfClasses):
-        mdOut.clear()
-        mdOut.importObjects(md, MDValueEQ(MDL_REF3D, i+1))
-        mdOut.write(standardOutputClassFns[i],MD_APPEND)
+    mdOut.clear()
+    mdOut.importObjects(md, MDValueEQ(MDL_REF3D, 1))
+    mdOut.write(standardOutputClassFns[i],MD_APPEND)
         
     #volume.xmd, metada with volumes
     mdOut.clear()
@@ -608,13 +729,34 @@ def convertRelionMetadata(log, inputs,
         mdOut.setValue(MDL_IMAGE, lastIterationVolumeFn, objId)
     mdOut.write(standardOutputVolumeFn)
     
+def convertRelionBinaryData2(log, inputs, outputs):
+    #find last iteration
+    NumberOfIterations=0
+    _outputs=[]
+    _inputs=[]
+    for i in range (0,1000):
+        fileName = relionDataTemplate.replace('000',"%03d",i)
+        if exists(fileName):
+            NumberOfIterations = i
+            for v in outputs:
+                 _outputs += v.replace('000',"%03d",i)
+            for v in inputs:
+                 _inputs  += v.replace('000',"%03d",i)
+        else:
+            break
+    #data to store in Working dir so it can be easily accessed by users
+    lastIteration = NumberOfIterations
+    convertRelionMetadata(None,
+                    _inputs,
+                    _outputs)
+    
 def convertRelionBinaryData(log, inputs,outputs):
     """Make sure mrc files are volumes properlly defined"""
     program = "xmipp_image_convert"
     for i,o in zip(inputs,outputs):
         args = "-i %s -o %s  --type vol"%(i,o)
         runJob(log, program, args )
-        
+
 def renameOutput(log, WorkingDir, ProgId):
     ''' Remove ml2d prefix from:
         ml2dclasses.stk, ml2dclasses.xmd and ml2dimages.xmd'''
