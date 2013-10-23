@@ -1,19 +1,42 @@
 {% extends 'showj_base.html' %} 
 {% block head %}
-<script type="text/javascript" src="http://www.cgl.ucsf.edu/chimera/webgl/PhiloGL-1.3.0.js"></script>
+<!-- CSS -->
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
+
+<!-- TABLE STYLES 
+Overwrite general section property for table view -->
+<style type="text/css">
+section {
+  display: -webkit-box;
+  -webkit-box-orient: horizontal;
+  -webkit-box-pack: center;
+  -webkit-box-align: center;
+ 
+  display: -moz-box;
+  -moz-box-orient: horizontal;
+  -moz-box-pack: center;
+  -moz-box-align: center;
+  
+  display: box;
+  box-orient: horizontal;
+  box-pack: center;
+  box-align: center;
+}
+</style>
+
+<!-- JS -->
 <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
 
 <script type="text/javascript">
 $(document).ready(function(){
-	webGLStart();
+	/* webGLStart(); */
 })
 $(function() {
 	$( "#slider" ).slider({
 		range: "min",
 		value: {{threshold}},
-		min: 1,
-		max: 1000,
+		min: 0,
+		max: 20000,
 		change: function( event, ui ) {
 			value = ui.value/100
 			$( "#amount" ).val(+ (value) );
@@ -42,6 +65,7 @@ function av_map_level(l){
 
 <div id="astexContainer">
 
+	<!-- ASTEX VIEWER -->
 	<applet
 		width="600px" height="600px" name="av"
 		archive="{{ STATIC_URL }}astex/OpenAstexViewer.jar"
@@ -64,7 +88,7 @@ function av_map_level(l){
 		map volMap -reread true;">  
 	</applet>
 
-	<div>
+ 	<div>
 		<p>
 			<label for="amount">Threshold:</label>
 			<input type="text" id="amount" style="border: 0; color: #f6931f; font-weight: bold;" />
@@ -72,26 +96,6 @@ function av_map_level(l){
 		<div id="slider"></div>
 	</div>
 	
-</div>
-<div id="chimeraContainer">
-	<div id="fallback" class="fallback"></div>
-    <canvas id="molview" width="512" height="334"></canvas>
-
-    <script>
-	if (!PhiloGL.hasWebGL()) {
-		document.body.className = 'no-webgl';
-		document.getElementById('fallback').innerHTML = ''
-		+ '<div style="margin:10px;">'
-		+ 'Your web browser does not support or is not configured for WebGL.'
-		+ '  See <a href="http://get.webgl.org/">WebGL Support</a>'
-		+ ' for more information.'
-		+ '</div>';
-	}
-    </script>
-	{% autoescape off %}
-		{{chimeraHtml}}
-	{% endautoescape %}	
-
 </div>
 			
 {% endblock %}
