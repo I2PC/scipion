@@ -458,9 +458,17 @@ def visualizeObject(request):
         inputParameters['path']= join(projectPath, fn)
     elif isinstance(obj, Image):
         fn = project.getTmpPath(obj.getName() + '_image.xmd')
-        writeSetOfParticles(obj, fn)
-        inputParameters['path']= join(projectPath, fn)
+        fnSet = fn.replace('.xmd', '.sqlite')
+        cleanPath(fn, fnSet)
         
+        imgSet = SetOfImages()
+        imgSet.setFileName(fnSet)
+        img = Image()
+        #img.copyInfo(obj)
+        img.copyLocation(obj)
+        imgSet.append(img)
+        writeSetOfParticles(imgSet, fn)
+        inputParameters['path']= join(projectPath, fn)
         
     elif isinstance(obj, SetOfClasses2D):
         fn = project.getTmpPath(obj.getName() + '_classes.xmd')
