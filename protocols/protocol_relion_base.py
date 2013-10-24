@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------------------------
 #Wrapper for relion 1.2
 
-#   Author: Roberto Marabini
+#   Author: Roberto Marabini ()
 #
 from protlib_base import XmippProtocol, protocolMain
 from xmipp import MetaData, MDL_SAMPLINGRATE, MDL_IMAGE, MDL_CTF_MODEL, FileName,\
