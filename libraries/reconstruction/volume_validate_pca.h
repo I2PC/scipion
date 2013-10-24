@@ -53,7 +53,7 @@ public:
     /** Number of classes to generate the intermediate volumes*/
     int NClasses;
 
-    bool doProjMatch=false;
+    bool doProjMatch;
 
 private:
     size_t xdim, ydim, zdim, ndim;

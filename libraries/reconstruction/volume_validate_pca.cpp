@@ -66,6 +66,7 @@ void ProgVolumeValidationPCA::show()
 
 void ProgVolumeValidationPCA::produceSideinfo()
 {
+	doProjMatch = false;
     mdClasses.read(fnClasses);
     mdClasses.removeDisabled();
     getImageSize(mdClasses,xdim, ydim, zdim, ndim);
